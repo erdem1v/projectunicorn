@@ -75,7 +75,7 @@
       "effects": [
         {
           "verb": "sprint_card_effort",
-          "amount": 1
+          "amount": 5
         }
       ]
     },
@@ -85,7 +85,7 @@
       "effects": [
         {
           "verb": "sprint_card_effort",
-          "amount": -1
+          "amount": -5
         },
         {
           "verb": "trust_delta",

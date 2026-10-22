@@ -118,7 +118,7 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   mesai, sözü bir sprint ileri al (`PromiseRegistry.extend`, bir kez, hesabın izine bedel) ya da bırak (`PromiseRegistry.break_promise`).
   Çip yüzde yazmaz, sonucu yazar. Kısaltılmış testin ihtimali `data/product/sprint.json` `promise.cut_test_escape`'te, mesainin
   moral bedeli ve ek sürenin izi kartın (`promise_due.json`) seçeneklerinde [WORKING].
-- **Karar kâğıdı.** Sprint başına tek zar (`SprintSystem._request_decision`): 1 haftalık sprintte başlarken, 2 haftalıkta ilk haftanın
+- **Karar kâğıdı.** Sprint başına tek zar (`SprintSystem._request_decision`): sprint iki haftadır, zar ilk haftanın
   sonunda, `data/product/sprint.json` `decision.sprint_chance` ihtimaliyle sprintin bir kartı için `decision.cards` havuzundan bir kâğıt
   istenir, yoksa sprint kâğıtsızdır ([WORKING]: sprintlerin en az üçte biri). Havuz ağırlıklı sırayla denenir (görülmemiş kâğıt önde,
   `decision.seen_weight`) ve her kâğıt 52 haftada bir, koşuda en çok 3 kez gelir (`latch`, `latch_key: run`). Kâğıt beklerken kartı ilerlemez ve ona kimse atanmaz; cevap gelince haftanın ataması baştan yapılır ve ekip karta döner (`_clear_decision`). Kesinti sırası: söz olayı
@@ -176,7 +176,7 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   Kitlenin büyüme ve erime terimi, B2C memnuniyetinin hedefi ve fiyat önerisi ürünün kitleye uyumunu okur
   (`ProductQuality`, kitle bağlamı; `SalesSystem.b2c_quality`): kitle büyüdükçe beklenti yükselir. Ürün sayfasının sözcüğü ve
   cümlesi B2C'de kitlenin yıldızı ile 2★'ın büyüğünü okur (küçük kitlede de 2★ satırı); ekonomi sayfanın referansını okumaz.
-- Kayıt: JSON; `SaveManager.SCHEMA_VERSION` 18, `MIN_LOADABLE_VERSION` 10. `SaveCodec` GameState değişkenlerini ve
+- Kayıt: JSON; `SaveManager.SCHEMA_VERSION` 19, `MIN_LOADABLE_VERSION` 10. `SaveCodec` GameState değişkenlerini ve
   modellerin `@export` alanlarını kendisi bulur; eski kayıtta varsayılan göç yerine geçtiği için yeni alan anlamlı
   varsayılan taşır. Tarih kayıtta saklanmaz, `GameState.day`'den türer; yıl tutan tek alan `Character.leave_taken_year`'dır ve
   2026 takvimiyle yazılmış değeri `SaveCodec.restore_registries` her yüklemede geri alır (`OLD_CALENDAR_YEAR_SHIFT`).
@@ -290,7 +290,7 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   `bash tools/run_gate.sh` (`full_run`, `full_run_b2c`, `full_run_vc_cautious`; `WEEKS` varsayılan 730): her koşu bir
   sonla bitmeli ve sıfır `ERROR` satırı taşımalıdır.
 - Sprint planı: `--sprint-probe=hours=<h>:cards=<1|2>:ticks=<t>[:<alan>=<değer>…]` (isteğe bağlı alanlar `start`,
-  `seeds`, `seed`, `events`, `rate`, `lead`, `gate`, `team` (1 ile 6, 12, 25, 50), `weeks`, `fill`, `market`, `incident`, `promise`, `tstar`,
+  `seeds`, `seed`, `events`, `rate`, `lead`, `gate`, `team` (1 ile 6, 12, 25, 50), `fill`, `market`, `incident`, `promise`, `tstar`,
   `pmstar`, `plus`, `founder`, `fixture`, `build`, `planms`; anlamları HARITA Ürün'de ve Araçlar'da) headless
   koşar: kurucunun (`team=` ile ekibin) koşusunda ekranın sprint planını (`plan_outcome`) kapanışla karşılaştırır,
   `SPRINTPROBE` satırları basar (`PRED`, `CLOSE`, `SKIP`, `MVP`, `LOAD`, `SUMMARY`, `LOADSUM`, `PAPER`, `PAPERSUM`; MVP tahmini `mvp_eta`
@@ -336,7 +336,7 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   kabuğun içinde `--vc-shot=<masa türü>:shell`. Ürün sekmesi: `--product-shot=<c1..c5|cards|flow|edge:<ad>>` debug
   fikstürüyle (`scripts/debug/product_fixtures.gd`; `edge:` adları HARITA Ürün'de), `--product-shot=live:<tür>` sprint
   motoruyla kurulan koşuda
-  (`pick`, `pick_named`, `pick_relang`, `plan`, `week1`, `active`, `decision_paper`, `b2c_mvp`, `b2c_live`, `b2b_mvp`, `b2b_mature`, `b2b_quarter`, `b2b_requests`,
+  (`pick`, `pick_named`, `pick_relang`, `plan`, `active`, `decision_paper`, `b2c_mvp`, `b2c_live`, `b2b_mvp`, `b2b_mature`, `b2b_quarter`, `b2b_requests`,
   `gate`, `delegate`, `rnd`, `solo15`, `solo15_tip`, `solo12_active`, `overview_pre`, `server_80`, `server_94`,
   `server_104`, `server_growth`, `server_auto`, `server_tier`, `server_final`, `server_clause`, `server_b2c`;
   kurulumları ve ikinci, üçüncü kareleri HARITA

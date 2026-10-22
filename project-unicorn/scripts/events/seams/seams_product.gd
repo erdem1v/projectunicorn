@@ -41,7 +41,7 @@ static func _install_product() -> void:
 		"Product", "1 or 2 inside a running sprint")
 	EvSeams.register("urun.sprint_last_week", G, TYPE_BOOL,
 		func() -> bool: return SprintSystem.week() == SprintSystem.sprint_weeks(),
-		"Product", "a running sprint is in its last week: week 2 of a two-week sprint, the only week of a one-week one")
+		"Product", "a running sprint is in its last week, week 2")
 	EvSeams.register("urun.sprint_running", G, TYPE_BOOL,
 		func() -> bool: return SprintSystem.mode() == "active",
 		"Product", "a sprint is under way: not planning, not the release note")
@@ -287,10 +287,10 @@ static func _install_paper_asks() -> void:
 		"Product", "1 the first time an account asks for its colours, 0 the second time")
 	EvSeams.register("urun.colors_hand", G, TYPE_INT,
 		func() -> int: return _colors_points("hand"),
-		"Product", "the points of changing the colours by hand; one more for each page added since the first change")
+		"Product", "the points of changing the colours by hand; five more for each page added since the first change")
 	EvSeams.register("urun.colors_central", G, TYPE_INT,
 		func() -> int: return _colors_points("central"),
-		"Product", "the points of pulling every colour into one file; one more for each page added since the first change")
+		"Product", "the points of pulling every colour into one file; five more for each page added since the first change")
 	EvSeams.register("urun.paper_ask_silent", G, TYPE_INT,
 		func() -> int: return int(EvSeams.read("urun.decision_request_votes")) * int(SprintCatalog.cfg("paper.ask_silent_mult")),
 		"Product", "the audience that goes quiet when a request is not met: the people who asked, times the quiet ones behind each")

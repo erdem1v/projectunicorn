@@ -13,13 +13,13 @@ extends Node
 # NegotiationSystem) are reset, never serialised: can_save() refuses while any of them
 # is_active(), so a sitting is always idle at the moment a save is taken.
 
-const SCHEMA_VERSION := 18
+const SCHEMA_VERSION := 19
 
 ## GDD ÜRÜN rev 6.1 §22.5 — eski kayıt TAŞINMAZ. "Yükleyici eski sürümü görürse kullanıcıya
 ## AÇIK MESAJ verir, sessizce bozuk state üretmez." Düz özellik listesi hat durumlarına
 ## çevrilemez ve v9 olay bloğu v10 motorunun arklarını/latch'lerini taşımaz; çevirmeye
 ## çalışmak çalışıyor görünen ve yanlış olan bir koşu üretir. O yüzden kapı sürümdedir.
-## v11-v18 alanlarının hepsi bildirilmiş varsayılan ya da göç taşıdığı için v10 hâlâ yüklenir.
+## v11-v19 alanlarının hepsi bildirilmiş varsayılan ya da göç taşıdığı için v10 hâlâ yüklenir.
 const MIN_LOADABLE_VERSION := 10
 const SAVE_DIR := "user://saves/"
 
@@ -203,6 +203,8 @@ func _read_file(path: String) -> Dictionary:
 		_migrate_16(state)
 	if version < 18:
 		_migrate_17(state)
+	if version < 19:
+		_migrate_18(state)
 	return {"ok": true, "error_key": "", "meta": meta, "state": state}
 
 
@@ -812,6 +814,10 @@ const _POLISH_HALF_STAMP := 1.0     # above the one-turn baseline: a second desi
 const _POLISH_FULL_STAMP := 1.11    # three design turns
 const _BUILD_FLAG_PREFIXES := ["creation_draft", "cancelled_build_prefill", "product_path_frank_seen", "mvp_sprint_",
 	"mvp_bug_sprint_", "bug_count_at_bugfix_start_", "mvp_bug_count_at_launch"]
+## The sprint card this migration writes is the v18 one (_migrate_18 turns it into the current shape): the points of a tier
+## and the phases' shares as the sprint engine had them then.
+const _V14_EFFORT := {1: 3, 2: 5, 3: 8}
+const _V14_SHARES := [0.2, 0.6, 0.2]
 
 
 func _migrate_15(state: Dictionary) -> void:
@@ -860,16 +866,16 @@ func _migrate_15(state: Dictionary) -> void:
 			var tier: int = base.right(1).to_int()
 			var area: Dictionary = areas.filter(func(a: Dictionary) -> bool:
 				return (a.get("identity", false) and line == line_base) or line_base in a.lines)[0]
-			var effort: int = int(SprintCatalog.cfg("effort.k%d" % tier))
+			var effort: int = _V14_EFFORT[tier]
 			if lighter and ProductLines.work_profile(line) == "design":
 				effort = maxi(1, roundi(effort * ProductLines.RND_DESIGN_EFFORT_MULT))
-			var card: Dictionary = SprintCatalog.new_card("feat:" + step, "feature", area.id, effort, line, step, tier)
-			# Progress is in points: a phase is full at effort × its share.
-			card.progress = [effort * card.shares[0], effort * card.shares[1] * done, 0.0]
-			card.state = "planned"
-			# The old build charged the licence when it committed; the sprint start must not again.
-			card.paid = true
-			cards[card.id] = card
+			# Progress is in points: a phase is full at effort × its share. The old build charged the licence when it
+			# committed; the sprint start must not again.
+			cards["feat:" + step] = {"id": "feat:" + step, "kind": "feature", "line": line, "step": step, "target_tier": tier,
+				"area": area.id, "effort": effort, "roles": ["design", "dev", "test"], "shares": _V14_SHARES.duplicate(),
+				"progress": [effort * _V14_SHARES[0], effort * _V14_SHARES[1] * done, 0.0], "state": "planned",
+				"assignees": [], "bugs": 0, "customer_id": "", "request_id": "", "decision": false, "effort_mod": 0,
+				"faulty": false, "cut": false, "paid": true}
 
 	# The version history becomes the release list Geçmiş reads. A release from before sprints
 	# has no sprint and no cards: -1 is the release record's "unknown".
@@ -987,6 +993,56 @@ func _migrate_17(state: Dictionary) -> void:
 		if not refs.has(key):
 			refs[key] = ProductQuality.market_ref_for(star, sector, subtype)
 		row["market_ref"] = refs[key].duplicate()
+
+
+## v18 → v19: sprint points grow five times and a card keeps what each phase needs (`need`) instead of an effort, shares and the
+## paper's effort_mod. A card's points (effort plus effort_mod) ×5 are shared out by its line's work profile
+## (`SprintCatalog.card_need`); the work done stays the same fraction of each phase, and a card in testing starts its test over.
+## `faulty`, `shares`, `effort_mod` and the sprint's `weeks` go. The release records keep their cards in the new shape and
+## count their velocity and carried points ×5 too. Pure and cheap: list_slots reads every slot through here.
+const _V18_POINT := 5
+
+
+func _migrate_18(state: Dictionary) -> void:
+	var product: Dictionary = (state.get("game_state", {}) as Dictionary).get("product", {}) as Dictionary
+	if not product.has("sprint"):
+		return
+	var sprint: Dictionary = product.sprint
+	sprint.erase("weeks")
+	sprint.capacity = float(sprint.capacity) * _V18_POINT
+	for card: Dictionary in product.cards.values():
+		_scale_sprint_card(card)
+	for record: Dictionary in product.releases + [product.release]:
+		for card: Dictionary in record.get("shipped", []):
+			_scale_sprint_card(card)
+		for points: Dictionary in [record.get("velocity", {})] + (record.get("carried", []) as Array):
+			for key in ["done", "total"]:
+				if points.has(key):
+					points[key] = float(points[key]) * _V18_POINT
+
+
+func _scale_sprint_card(card: Dictionary) -> void:
+	var points: float = float(card.effort) + float(card.effort_mod)
+	var shares: Array = card.shares
+	var need: Array = SprintCatalog.card_need(String(card.kind), String(card.line), int(card.target_tier), points * _V18_POINT)
+	var progress: Array = card.progress
+	var old_sum: float = float(progress[0]) + float(progress[1]) + float(progress[2])
+	var at: int = SprintSystem.PHASE_DONE
+	for i in SprintSystem.PHASE_DONE:
+		var asked: float = float(shares[i]) * points
+		if asked - float(progress[i]) > SprintSystem.EPS:
+			at = mini(at, i)
+			progress[i] = float(progress[i]) / asked * float(need[i])
+		else:
+			progress[i] = need[i]
+	if at == SprintSystem.TEST_PHASE:
+		progress[SprintSystem.TEST_PHASE] = 0.0
+	if card.has("base"):
+		var new_sum: float = float(progress[0]) + float(progress[1]) + float(progress[2])
+		card["base"] = float(card.base) / old_sum * new_sum if old_sum > SprintSystem.EPS else 0.0
+	card["need"] = need
+	for key in ["effort", "effort_mod", "shares", "faulty"]:
+		card.erase(key)
 
 
 func _retire_stability(row: Dictionary, reason_key: String, target_key: String) -> void:

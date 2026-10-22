@@ -53,12 +53,12 @@
       {
         "seam": "urun.decision_card_effort",
         "op": ">=",
-        "value": 5
+        "value": 25
       },
       {
         "seam": "urun.decision_card_done",
         "op": ">=",
-        "value": 1
+        "value": 5
       }
     ]
   },
@@ -69,7 +69,7 @@
       "effects": [
         {
           "verb": "sprint_card_effort",
-          "amount": -3
+          "amount": -15
         },
         {
           "verb": "sprint_card_progress",

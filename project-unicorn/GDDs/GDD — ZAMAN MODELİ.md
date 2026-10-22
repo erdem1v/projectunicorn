@@ -208,7 +208,7 @@ kullanılan gün değişmez.
 
 | sabit | gün modeli (gün) | yürürlükte (hafta) | not |
 |---|---|---|---|
-| sprint (`data/product/sprint.json` `sprint_lengths`, varsayılan `sprint_weeks`) | yok | 1 ya da 2, varsayılan 2 [WORKING] | oyuncu planlamada seçer; başlatıldığı tik 1. hafta, ertesi tik 2. hafta; kartlarının hepsi biten sprint o haftanın sonunda kapanır; çeyrek 6 sprint |
+| sprint (`data/product/sprint.json` `sprint_weeks`) | yok | 2 [WORKING] | sabit; başlatıldığı tik 1. hafta, ertesi tik 2. hafta; kartlarının hepsi biten sprint o haftanın sonunda kapanır; çeyrek 6 sprint |
 | sprint karar kartı (`sprint.json` `decision`) | yok | 2. haftanın tikinde, oran 0,35 [WORKING]; kâğıt 1 hafta bekler | koşan kart başına koşu tohumlu zar; kartlar `decision.cards` havuzundaki kâğıtlardır (§4.10); `sprint_hours` çarpımla yığılır, 0,5–1,5 (`hours_mult`) |
 | `INFLOW_TAU` | 21 | 3 | §3.5 |
 | itibar ihmal kuralı (`SupportSystem.NEGLECT_BUGS` 30, `NEGLECT_WEEKS` 4) | yok | açık hata 30 ve üstü üst üste 4 haftalık tikte itibar −1, koşul sürdükçe her tik [ÇALIŞMA] | taban GameState'in −10'u; GUNCELLEMELER "Faz A · tek hata sayısı" |

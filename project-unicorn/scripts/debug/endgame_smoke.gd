@@ -549,6 +549,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"paper_seams":                           fail = _case_paper_seams()
 		"save_v14_build_becomes_sprint_plan":    fail = _case_save_v14_build_becomes_sprint_plan()
 		"save_v14_history_becomes_releases":     fail = _case_save_v14_history_becomes_releases()
+		"save_v19_cards_scale_and_shape":        fail = _case_save_v19_cards_scale_and_shape()
+		"save_v19_running_sprint_continues":     fail = _case_save_v19_running_sprint_continues()
 		"save_v15_tickets_become_open_bugs":     fail = _case_save_v15_tickets_become_open_bugs()
 		"save_v15_callback_bugs_under":          fail = _case_save_v15_callback_bugs_under()
 		"callback_churn_window":                 fail = _case_callback_churn_window()
@@ -15451,7 +15453,7 @@ static func _case_rnd_design_discount_reads_profile() -> String:
 			"product": {"active_build": {"planned_step_ids": planned, "total_efor": 8.0, "efor_spent": 2.0}}}}
 		SaveManager._migrate_15(state)
 		return planned.map(func(s: String) -> int: return int(state.game_state.product.cards["feat:" + s].effort))
-	var base: Array = [int(SprintCatalog.cfg("effort.k2")), int(SprintCatalog.cfg("effort.k1")), int(SprintCatalog.cfg("effort.k3"))]
+	var base: Array = [SaveManager._V14_EFFORT[2], SaveManager._V14_EFFORT[1], SaveManager._V14_EFFORT[3]]
 	var planned: Array = ["line_note_tool_editor_k2", "line_note_tool_capture_k1", "line_note_tool_sync_k3"]
 	var lighter: Array = [maxi(1, roundi(base[0] * mult)), base[1], base[2]]
 	var open_read: Array = migrated.call("note_tool", "b2c", planned, false)
@@ -18220,11 +18222,11 @@ static func _case_incident_sprint_stop_moves_the_card() -> String:
 	if not SprintSystem.start():
 		return "fixture: the sprint did not start"
 	var line := "line_erp_ledger"
-	(SprintCatalog.cfg("fix_effort") as Dictionary).points = [6, 8]   # a fix this big leaves the full sprint no room for it
+	(SprintCatalog.cfg("fix_effort") as Dictionary).points = [30, 40]   # a fix this big leaves the full sprint no room for it
 	ProductState.add_bugs(line, 1)
 	var bumped: Dictionary = SprintSystem.fix_first_bumps(line)
 	if bumped.is_empty():
-		return "fixture: a fix of six points never pushed a card out of a full sprint"
+		return "fixture: a fix of thirty points never pushed a card out of a full sprint"
 	var chip: String = ",".join(EvChips.describe({"verb": "sprint_fix_first", "line": line}, {}, {}, false).map(EvChips.text))
 	var slips: String = TranslationServer.translate("EFFECT_SPRINT_BUMP").format({"card": SprintCatalog.card_name(bumped)})
 	if chip != slips:
@@ -20383,11 +20385,14 @@ static func _seed_sprint(subtype: String = "note_tool") -> void:
 	SprintSystem.choose_type(subtype, "Notly")
 
 
-## Sprint karar kâğıdı zarının ihtimali (test sabiti), bir ve iki haftalık sprintte aynı. Açan vaka önceki ihtimalleri
-## kendi süresince tutar ve geri koyar.
+## Sprint karar kâğıdı zarının ihtimali (test sabiti). Açan vaka önceki ihtimali kendi süresince tutar ve geri koyar.
 static func _paper_chance(chance: float) -> void:
-	for weeks in SprintCatalog.cfg("decision.sprint_chance"):
-		SprintCatalog._data.decision.sprint_chance[weeks] = chance
+	(SprintCatalog.cfg("decision") as Dictionary).sprint_chance = chance
+
+
+## Kartı `points` puanlık yapar; aşamalara paylaşım kartın türünden ve hattının iş profilinden gelir.
+static func _size(card: Dictionary, points: float) -> void:
+	card.need = SprintCatalog.card_need(card.kind, card.line, card.target_tier, points)
 
 
 ## Yayındaki ürün: Çekirdek'in ilk üç kimlik yeteneği K1'de, MVP sürümü çıkmış. Sprint kapanışı
@@ -20467,7 +20472,7 @@ static func _case_sprint_two_days_close() -> String:
 	return ""
 
 
-## Kapasite Ekip'ten okunur ve yuvarlanmaz: kişi başına haftada iki puan × beceri bandı × moral
+## Kapasite Ekip'ten okunur ve yuvarlanmaz: kişi başına haftada on puan × beceri bandı × moral
 ## payı × çalışma saati, iki hafta; kurucunun bandı sabittir. Moral payı kişinin puanını değiştirir, Ar-Ge'ye
 ## alınan ve izne çıkan kişi ekipten düşer; kimse kalmayınca "+" kapanır.
 static func _case_sprint_capacity_from_team() -> String:
@@ -20851,7 +20856,7 @@ static func _case_sprint_faulty_bug_on_card_line() -> String:
 			if not _play_sprint([id]):
 				return "fixture: sprint %d did not start" % (i + 1)
 			var shipped: Array = GameState.product.release.shipped.filter(func(c: Dictionary) -> bool: return c.id == id)
-			if shipped.is_empty() or not shipped[0].faulty:
+			if shipped.is_empty() or not shipped[0].get("faulty", false):
 				return "fixture: %s did not ship marked faulty from a team with no Test role" % id
 			if ProductState.open_bugs() - before != int(lands):
 				return "a faulty card rolling %.3f against %.3f gave %d bug(s), want %d" % [roll,
@@ -20954,7 +20959,7 @@ static func _case_sprint_fix_card_clears_its_line() -> String:
 		if c.kind == "fix":
 			fixes[c.line] = c
 	if fixes.size() != 2 or fixes[hit].bugs != priority or not SprintCatalog.is_priority(fixes[hit]) \
-			or int(fixes[hit].effort) != SprintCatalog.fix_effort(priority) \
+			or roundi(SprintSystem.total(fixes[hit])) != SprintCatalog.fix_effort(priority) \
 			or fixes[spared].bugs != 2 or SprintCatalog.is_priority(fixes[spared]):
 		return "%d bugs on one line and 2 on another read fix cards %s, want one card per line with its own count" % [priority, fixes]
 	if not SprintCatalog.area_alert("core"):
@@ -20995,11 +21000,11 @@ static func _case_sprint_fix_card_clears_its_line() -> String:
 ## Düzeltme kartının önizlemesi kapanışla eşleşir. SPRINT SONUNDA "N hata kapanır" der; sprintte o hatta yeni hata
 ## düşmezse kapanış tam N hatayı siler, düşerse hattın o anki sayısını siler ve sürüm notu gerçek sayıyı yazar (satırda
 ## "N → 0", sonuç cümlesinde "N hata kapandı"). Kart etki satırında hata sayısını ve B2C'de kullanıcıyı (kitle × hattın
-## payı) söyler; 4 hata 1 puan, 5 hata 2 puan ve öncelikli.
+## payı) söyler; 4 hata 5 puan, 5 hata 10 puan ve öncelikli.
 ## FALSİFİKASYON: SprintCatalog.forecast'te `closed += c.bugs`'ı `closed += 1` yap → önizleme iddiası FAIL;
 ## SprintSystem._close'ta `clear_line_bugs` yerine `c.bugs`'ı koru (hattı silme) → hat temizlenmedi iddiası FAIL;
 ## ProductModel._shipped'ta `"to": int(c.bugs_after)`'ı `"to": int(c.bugs)` yap → satır iddiası FAIL;
-## SprintCatalog.fix_effort'ta `bugs > top`'u `bugs >= top` yap → 4 hata 2 puan olur ve efor iddiası FAIL;
+## SprintCatalog.fix_effort'ta `bugs > top`'u `bugs >= top` yap → 4 hata 10 puan olur ve efor iddiası FAIL;
 ## SprintCatalog.line_share'te `maxi(1, total)`'u `total * 2` yap → payların toplamı 1 olmaz ve pay iddiası FAIL.
 static func _case_sprint_fix_preview_matches_close() -> String:
 	_seed_sprint_live("note_tool")
@@ -21014,9 +21019,10 @@ static func _case_sprint_fix_preview_matches_close() -> String:
 	for c in SprintCatalog.candidates("core"):
 		if c.kind == "fix":
 			fixes[c.line] = c
-	if fixes.size() != 2 or int(fixes[small].effort) != 1 or SprintCatalog.is_priority(fixes[small]) \
-			or int(fixes[big].effort) != 2 or not SprintCatalog.is_priority(fixes[big]):
-		return "4 bugs and 5 bugs read fix cards %s, want 1 point unmarked and 2 points priority" % [fixes]
+	var points: Array = SprintCatalog.cfg("fix_effort.points")
+	if fixes.size() != 2 or roundi(SprintSystem.total(fixes[small])) != int(points[0]) or SprintCatalog.is_priority(fixes[small]) \
+			or roundi(SprintSystem.total(fixes[big])) != int(points[1]) or not SprintCatalog.is_priority(fixes[big]):
+		return "4 bugs and 5 bugs read fix cards %s, want %d points unmarked and %d points priority" % [fixes, points[0], points[1]]
 	var share_sum: float = 0.0
 	for line in ProductState.live_lines():
 		share_sum += SprintCatalog.line_share(line)
@@ -21071,9 +21077,11 @@ static func _case_sprint_fix_preview_matches_close() -> String:
 ## §4.6(c): başlamamış (aday, planlı, devreden) düzeltme kartının hata sayısı ve eforu günlük tikte ve başlatmadan
 ## önce hata deposundan yenilenir, hattında hata kalmayan kart silinir; koşan kartın sayısı ve eforu kilitlidir ve hattı
 ## dışarıdan boşalsa da kart silinmez.
-## FALSİFİKASYON: SprintSystem._refresh_fix_cards'ta `c.effort = ...` satırını sil → "grows" efor iddiası FAIL;
-## yenilenen durumlar listesine "running" ekle → kilit iddiası FAIL; `SprintSystem.start`'tan `_refresh_fix_cards()`'ı sil →
-## başlatma iddiası FAIL.
+## Kâğıdın karta eklediği puan hata sayısı değişince de kalır.
+## FALSİFİKASYON: SprintSystem._refresh_fix_cards'ta `_scale_need(...)` satırını sil → "grows" efor iddiası FAIL;
+## onu `c.need = SprintCatalog.card_need("fix", c.line, 0, SprintCatalog.fix_effort(c.bugs))` yap → "grows" efor iddiası
+## FAIL (kâğıdın puanı düşer); yenilenen durumlar listesine "running" ekle → kilit iddiası FAIL; `SprintSystem.start`'tan
+## `_refresh_fix_cards()`'ı sil → başlatma iddiası FAIL.
 static func _case_sprint_fix_card_refreshes_until_it_runs() -> String:
 	_seed_sprint_live("note_tool")
 	_sprint_hire("char_fix_refresh_dev", HRConstants.ROLE_DEVELOPER)
@@ -21092,30 +21100,35 @@ static func _case_sprint_fix_card_refreshes_until_it_runs() -> String:
 		return "fixture: the four fix cards were not all planned"
 	ProductState.clear_line_bugs(gone)
 	ProductState.add_bugs(grows, 2)
+	var paper_points := 5
+	SprintSystem._scale_need(card.call(grows), paper_points)
 	_sim_day()
 	if not card.call(gone).is_empty() or ("fix:" + gone) in GameState.product.sprint.cards:
 		return "the card of a line with no bugs left stayed in the plan"
-	if int(card.call(grows).bugs) != 5 or int(card.call(grows).effort) != 2 or not SprintCatalog.is_priority(card.call(grows)):
-		return "a day on, the card of 3 bugs plus 2 reads %d bugs, %d points; want 5 bugs, 2 points, priority" % [
-			int(card.call(grows).bugs), int(card.call(grows).effort)]
-	if int(card.call(late).bugs) != 1 or int(card.call(late).effort) != 1 or int(card.call(locked).bugs) != 1:
+	var points: Array = SprintCatalog.cfg("fix_effort.points")
+	var size := func(line: String) -> int: return roundi(SprintSystem.total(card.call(line)))
+	if int(card.call(grows).bugs) != 5 or size.call(grows) != int(points[1]) + paper_points \
+			or not SprintCatalog.is_priority(card.call(grows)):
+		return "a day on, the card of 3 bugs plus 2 and a paper's %d points reads %d bugs, %d points; want 5 bugs, %d points, priority" % [
+			paper_points, int(card.call(grows).bugs), size.call(grows), int(points[1]) + paper_points]
+	if int(card.call(late).bugs) != 1 or size.call(late) != int(points[0]) or int(card.call(locked).bugs) != 1:
 		return "the cards of the untouched lines read %d and %d bugs, want 1 and 1" % [
 			int(card.call(late).bugs), int(card.call(locked).bugs)]
 	# Four bugs land on `late` just before the sprint starts: the start reads the store once more.
 	ProductState.add_bugs(late, 4)
 	if not SprintSystem.start():
 		return "fixture: the sprint did not start"
-	if card.call(late).state != "running" or int(card.call(late).bugs) != 5 or int(card.call(late).effort) != 2:
-		return "the card started with 4 fresh bugs reads %s with %d bugs, %d points; want running, 5, 2" % [
-			card.call(late).state, int(card.call(late).bugs), int(card.call(late).effort)]
+	if card.call(late).state != "running" or int(card.call(late).bugs) != 5 or size.call(late) != int(points[1]):
+		return "the card started with 4 fresh bugs reads %s with %d bugs, %d points; want running, 5, %d" % [
+			card.call(late).state, int(card.call(late).bugs), size.call(late), points[1]]
 	# The running card keeps what it started with, and keeps standing when its line empties from outside.
 	ProductState.add_bugs(locked, 4)
 	ProductState.clear_line_bugs(late)
 	SprintSystem._refresh_fix_cards()
-	if card.call(locked).state != "running" or int(card.call(locked).bugs) != 1 or int(card.call(locked).effort) != 1 \
+	if card.call(locked).state != "running" or int(card.call(locked).bugs) != 1 or size.call(locked) != int(points[0]) \
 			or card.call(late).is_empty():
-		return "the running cards read %s and %s; want the locked one at 1 bug, 1 point and the emptied line's card still in" % [
-			card.call(locked), card.call(late)]
+		return "the running cards read %s and %s; want the locked one at 1 bug, %d points and the emptied line's card still in" % [
+			card.call(locked), card.call(late), points[0]]
 	while SprintSystem.mode() == "active":
 		_sim_day()
 	var shipped: Array = GameState.product.release.shipped.filter(func(c: Dictionary) -> bool: return c.id == "fix:" + locked)
@@ -21168,9 +21181,11 @@ static func _case_sprint_fix_first_puts_the_card_on_top() -> String:
 	ProductState.add_bugs(lines[2], 3)
 	SprintSystem.fix_first(lines[2])
 	var joined: Dictionary = GameState.product.cards["fix:" + lines[2]]
-	if order.call()[0] != "fix:" + lines[2] or joined.state != "running" or joined.assignees.is_empty() 			or int(joined.bugs) != 5 or int(joined.effort) != 2:
-		return "a card added to the running sprint reads order %s, state %s, assignees %s, %d bugs, %d points; want it first, running, with someone on it, 5 bugs, 2 points" % [
-			order.call(), joined.state, joined.assignees, int(joined.bugs), int(joined.effort)]
+	var joined_points: int = int((SprintCatalog.cfg("fix_effort.points") as Array)[1])
+	if order.call()[0] != "fix:" + lines[2] or joined.state != "running" or joined.assignees.is_empty() \
+			or int(joined.bugs) != 5 or roundi(SprintSystem.total(joined)) != joined_points:
+		return "a card added to the running sprint reads order %s, state %s, assignees %s, %d bugs, %d points; want it first, running, with someone on it, 5 bugs, %d points" % [
+			order.call(), joined.state, joined.assignees, int(joined.bugs), roundi(SprintSystem.total(joined)), joined_points]
 	while SprintSystem.mode() == "active":
 		_sim_day()
 	ProductState.add_bugs(lines[4], 2)
@@ -21831,7 +21846,7 @@ const PROMISE_DUE := "product.promise_due"
 ## hesaba söz verilmiş kademenin kartıdır ve test aşamasındadır; son haftanın başında testten kalan iş, o aşamada
 ## çalışanların bir haftalık işinin `late` katıdır (1,1: fazla mesai yetiştirir; 1,4: yetiştirmez; ikisinde de testi
 ## kısaltmak yetiştirir; 0,5: kart yetişir). Söz `due` kadar sonraki sprintedir. Sprint başlamazsa {}.
-static func _promise_world(late: float, weeks := 2, due := 0) -> Dictionary:
+static func _promise_world(late: float, due := 0) -> Dictionary:
 	SaveManager.reset_all_owners()
 	GameState.initialize_run({"seed": 424242})
 	EvCatalog.ensure_loaded()
@@ -21843,7 +21858,6 @@ static func _promise_world(late: float, weeks := 2, due := 0) -> Dictionary:
 	var step: String = "%s_k1" % SprintCatalog.capabilities("core")[3]
 	var card: Dictionary = SprintCatalog.candidates(SprintCatalog.area_of_line(ProductLines.step(step).line_id)).filter(
 		func(c: Dictionary) -> bool: return c.step == step)[0]
-	SprintSystem.set_weeks(weeks)
 	SprintSystem.add(card.id)
 	var stored: Dictionary = GameState.product.cards.get(card.id, {})
 	if stored.is_empty():
@@ -21852,9 +21866,8 @@ static func _promise_world(late: float, weeks := 2, due := 0) -> Dictionary:
 	for member in SprintSystem.team():
 		if not member.ahead:
 			week += member.points * (1.0 if "test" in member.fits else float(SprintCatalog.cfg("no_role_speed")))
-	stored.effort = 100
-	stored.progress = [float(stored.shares[0]) * 100.0, float(stored.shares[1]) * 100.0,
-		float(stored.shares[2]) * 100.0 - late * week - (week if weeks == 2 else 0.0)]
+	_size(stored, 500.0)
+	stored.progress = [stored.need[0], stored.need[1], stored.need[2] - late * week - week]
 	var promise: Promise = PromiseRegistry.create(account.id, step, B2BConstants.PROMISE_DEADLINE_WEEKS)
 	promise.due_sprint = SprintSystem.sprint_number() + due
 	if SprintSystem.team().size() < 3 or not SprintSystem.start():
@@ -21889,7 +21902,7 @@ static func _case_promise_due_fires_when_late() -> String:
 	_paper_pool([PAPER_CRUNCH])
 	# Gelmeyenler; ilkinde karar kâğıdı gelir (kontrol): kart geç ama söz bu sprinte değil.
 	for control in [{"late": 1.1, "due": 1}, {"late": 0.5, "due": 0}]:
-		var idle: Dictionary = _promise_world(control.late, 2, control.due)
+		var idle: Dictionary = _promise_world(control.late, control.due)
 		if idle.is_empty():
 			return "fixture: the promise world's sprint did not start"
 		_paper_chance(1.0)
@@ -21957,10 +21970,6 @@ static func _case_promise_due_fires_when_late() -> String:
 	if hard.crunch.open or not hard.cut_test.open:
 		return "a card 1.4 weeks from done: overtime open %s, cut open %s; want a locked overtime and an open cut" % [
 			hard.crunch.open, hard.cut_test.open]
-	# Bir haftalık sprintte kart sprint başlarken gelir.
-	var one: Dictionary = _promise_world(1.1, 1)
-	if one.is_empty() or EventGate.active_id() != PROMISE_DUE:
-		return "a one-week sprint with a late promised card started without the promise card (active '%s')" % EventGate.active_id()
 	return ""
 
 
@@ -21968,7 +21977,7 @@ static func _case_promise_due_fires_when_late() -> String:
 ## fonksiyondur (SprintSystem.escape_chance) ve kapanış zarı ondan okur: testi kısaltılmamış kartta 0, kısaltılmışta
 ## en az sprint.json promise.cut_test_escape, test rolü olmadan test edilmiş (hatalı) kartta büyüğü. Çip yüzde yazmaz.
 ## FALSİFİKASYON: _close'daki zarı escape_chance yerine `c.faulty and ... faulty_chance`e çevir → zar iddiası FAIL;
-## _halve_test'te `c.cut = true`yu sil → kısaltılmış kart FAIL; shares'ı yarılamayı sil → iş iddiası FAIL;
+## _halve_test'te `c.cut = true`yu sil → kısaltılmış kart FAIL; test ihtiyacını yarılamayı sil → iş iddiası FAIL;
 ## escape_chance'te maxf'yi `cut_test_escape`e indir → hatalı kart FAIL.
 static func _case_promise_cut_test_escape() -> String:
 	var floor_chance: float = float(SprintCatalog.cfg("promise.cut_test_escape"))
@@ -21983,10 +21992,10 @@ static func _case_promise_cut_test_escape() -> String:
 				float(SprintCatalog.cfg("faulty_chance"))):
 			return "before the cut a tested card reads %s and an untested one %s, want 0 and the faulty chance" % [
 				SprintSystem.escape_chance(card), SprintSystem.escape_chance(twin)]
-		var left: float = float(card.shares[2]) * SprintSystem.total(card) - float(card.progress[2])
+		var left: float = float(card.need[2]) - float(card.progress[2])
 		var done: float = float(card.progress[2])
 		EventGate.resolve(PROMISE_DUE, "cut_test")
-		var halved: float = float(card.shares[2]) * SprintSystem.total(card) - float(card.progress[2])
+		var halved: float = float(card.need[2]) - float(card.progress[2])
 		if not is_equal_approx(halved, left / 2.0) or not is_equal_approx(float(card.progress[2]), done):
 			return "the cut left %.3f of %.3f test points with %.3f done (was %.3f)" % [halved, left, card.progress[2], done]
 		twin.cut = true
@@ -22158,7 +22167,7 @@ static func _case_quiet_cards_fill_empty_floor() -> String:
 		if ((c as Dictionary)["tags"] as Array).has("quiet"):
 			return "the weighted pool offers the quiet card %s" % (c as Dictionary)["id"]
 	# The rhythm includes the sprint decision papers: their real chance, not _seed_sprint's zero.
-	var chance: Dictionary = (SprintCatalog.cfg("decision.sprint_chance") as Dictionary).duplicate()
+	var chance: float = float(SprintCatalog.cfg("decision.sprint_chance"))
 	_seed_sprint()
 	SprintCatalog._data.decision.sprint_chance = chance
 	FinanceSystem.set_burn_category("marketing", 50)
@@ -22193,25 +22202,24 @@ static func _case_quiet_cards_fill_empty_floor() -> String:
 	return ""
 
 
-## Sprint karar kartları gerçek destededir: kâğıt ihtimali 1 iken tek kurucunun ilk hafta geliştirmede çalıştığı sekiz puanlık
+## Sprint karar kartları gerçek destededir: kâğıt ihtimali 1 iken tek kurucunun ilk hafta geliştirmede çalıştığı kırk puanlık
 ## kart (hattı ilk sürümle çıkmış ve bir açık hatası var: aceleyle yazılmış kod kâğıdı), ilk haftanın sonunda bir product.sprint_*
 ## kâğıdını masaya koyar ve gövdesi hattın adını okur. Vaka fikstür kapsamını açmaz; ihtimali (test sabiti) kendi süresince açar ve
-## geri koyar. Tasarımı biten sekiz puanlık tek kart 1 haftalık sprintte kararını sprint başlarken çeker.
+## geri koyar.
 ## FALSİFİKASYON: kartlardan birinin version_scope'unu "fixture" yap ya da sprint.json
-## decision.cards'ı fixture kimliklerine çevir → karar istenmez; SprintSystem._begin'deki
-## _request_decision çağrısını sil → 1 haftalık sprint karar çekmez.
+## decision.cards'ı fixture kimliklerine çevir → karar istenmez.
 static func _case_sprint_decision_card_fires_shipped() -> String:
 	if EvTuning.SHIPPED_SCOPES.has("fixture"):
 		return "fixture: the shipped scopes already admit fixtures"
 	_seed_sprint()
 	WorkHoursSystem.set_company_hours(12)
-	var chance: Dictionary = (SprintCatalog.cfg("decision.sprint_chance") as Dictionary).duplicate()
+	var chance: float = float(SprintCatalog.cfg("decision.sprint_chance"))
 	_paper_chance(1.0)
 	var lines: Array = SprintCatalog.capabilities("core").slice(0, 2)
 	for line_id in lines:
 		SprintSystem.add("feat:%s_k1" % line_id)
 	for id in GameState.product.sprint.cards:
-		GameState.product.cards[id].effort = 8   # a card the founder is still building after the first week
+		_size(GameState.product.cards[id], 40.0)   # a card the founder is still building after the first week
 	_seed_hasty_first_version(lines)
 	var started: bool = SprintSystem.start()
 	if started:
@@ -22228,21 +22236,6 @@ static func _case_sprint_decision_card_fires_shipped() -> String:
 	var body: String = EventGate.render(event_id).body_text
 	if name == "" or not body.contains(name) or body.contains("{"):
 		return "the decision paper reads '%s', want it to name '%s'" % [body, name]
-	SaveManager.reset_all_owners()
-	GameState.initialize_run({"seed": 424242})
-	_seed_sprint()
-	SprintSystem.set_weeks(1)
-	var built: String = "feat:%s_k1" % SprintCatalog.capabilities("core")[0]
-	SprintSystem.add(built)
-	GameState.product.cards[built].effort = 8
-	GameState.product.cards[built].progress = [1.6, 0.0, 0.0]   # the design is done: the founder starts in the build
-	_seed_hasty_first_version([SprintCatalog.capabilities("core")[0]])
-	_paper_chance(1.0)
-	started = SprintSystem.start()
-	SprintCatalog._data.decision.sprint_chance = chance
-	if not started or not String(GameState.product.decision.get("event_id", "")) in (SprintCatalog.cfg("decision.cards") as Array):
-		return "a one-week sprint started (%s) with decision %s, want a pool paper drawn at its start" % [
-			started, GameState.product.decision]
 	return ""
 
 
@@ -22342,11 +22335,11 @@ static func _case_promise_row_locked_when_no_room() -> String:
 				owed.append(card.step)
 	if owed.size() < 2:
 		return "fixture: no two steps that fit beside the word once but not twice (capacity %.2f)" % cap
-	# Feature steps that are no word go to `place` until fewer than three points are free.
+	# Feature steps that are no word go to `place` until fewer than fifteen points are free.
 	var fill := func(place: Callable, load: Callable) -> float:
 		for area_id in SprintCatalog.area_ids():
 			for card in SprintCatalog.candidates(area_id):
-				if load.call() < SprintSystem.capacity() - 2 and free.call(card) and card.step not in owed:
+				if load.call() < SprintSystem.capacity() - 10 and free.call(card) and card.step not in owed:
 					place.call(card)
 		return SprintSystem.capacity() - load.call()
 	var fail: String = check.call(true, "an empty plan")
@@ -22362,7 +22355,7 @@ static func _case_promise_row_locked_when_no_room() -> String:
 	if fail != "":
 		return fail
 	var add := func(card: Dictionary) -> void: SprintSystem.add(card.id)
-	if fill.call(add, func() -> float: return SprintSystem.used()) >= 3.0:
+	if fill.call(add, func() -> float: return SprintSystem.used()) >= 15.0:
 		return "fixture: the plan could not be filled"
 	fail = check.call(false, "a full plan")
 	if fail != "":
@@ -22379,7 +22372,7 @@ static func _case_promise_row_locked_when_no_room() -> String:
 		return fail
 	var send := func(card: Dictionary) -> void: SprintSystem.send_next(card.id)
 	var next_load := func() -> float: return SprintSystem.points_left(GameState.product.next.cards)
-	if fill.call(send, next_load) >= 3.0:
+	if fill.call(send, next_load) >= 15.0:
 		return "fixture: the next sprint could not be filled"
 	return check.call(false, "a full next sprint")
 
@@ -22449,7 +22442,7 @@ static func _case_paper_line_harden() -> String:
 	ProductState.add_bugs(rolled[1], 1)
 	for id in ["feat:%s_k1" % rolled[0], "fix:" + rolled[1]]:
 		SprintSystem.add(id)
-		GameState.product.cards[id].effort = 1
+		_size(GameState.product.cards[id], 5.0)
 	var started: bool = SprintSystem.start()
 	while SprintSystem.mode() == "active":
 		_sim_day()
@@ -22476,25 +22469,25 @@ static func _case_paper_card_effects() -> String:
 	var card: Dictionary = GameState.product.cards.get(card_id, {})
 	if card.is_empty() or not SprintSystem.start():
 		return "fixture: the sprint did not start"
-	card.effort = 8
-	card.progress = [1.6, 0.4, 0.0]
+	_size(card, 40.0)
+	card.progress = [10.0, 0.0, 0.0]
 	GameState.product.decision = {"card_id": card_id, "event_id": "fixture.paper_dev", "speaker": ""}
 	var name: String = SprintCatalog.card_name(card)
 	var lost: Dictionary = {"verb": "sprint_card_progress", "amount_seam": "urun.decision_card_done", "amount_mult": -1}
 	var chips := func(effect: Dictionary) -> Array:
 		return EvChips.describe(effect, {}, {}, false)
-	if int(EvSeams.read("urun.decision_card_done")) != 2 or EvEffects.amount(lost) != -2:
-		return "two points are done and the seam reads %s, the amount %d" % [EvSeams.read("urun.decision_card_done"),
+	if int(EvSeams.read("urun.decision_card_done")) != 10 or EvEffects.amount(lost) != -10:
+		return "ten points are done and the seam reads %s, the amount %d" % [EvSeams.read("urun.decision_card_done"),
 			EvEffects.amount(lost)]
 	var lost_chip: Array = chips.call(lost)
-	if lost_chip.size() != 1 or lost_chip[0].polarity != "danger" or not String(lost_chip[0].label).contains("2"):
-		return "the chip for 2 finished points thrown away reads %s" % str(lost_chip)
-	var gain_chip: Array = chips.call({"verb": "sprint_card_effort", "amount": 2})
+	if lost_chip.size() != 1 or lost_chip[0].polarity != "danger" or not String(lost_chip[0].label).contains("10"):
+		return "the chip for 10 finished points thrown away reads %s" % str(lost_chip)
+	var gain_chip: Array = chips.call({"verb": "sprint_card_effort", "amount": 10})
 	if gain_chip.size() != 1 or not String(gain_chip[0].label).contains(name) or gain_chip[0].polarity != "cost":
-		return "the chip for 2 more points reads %s, want it to name '%s' and cost" % [str(gain_chip), name]
-	var cut_chip: Array = chips.call({"verb": "sprint_card_effort", "amount": -3})
-	if cut_chip.size() != 1 or cut_chip[0].polarity != "gain" or not String(cut_chip[0].label).contains("3"):
-		return "the chip for 3 points off reads %s" % str(cut_chip)
+		return "the chip for 10 more points reads %s, want it to name '%s' and cost" % [str(gain_chip), name]
+	var cut_chip: Array = chips.call({"verb": "sprint_card_effort", "amount": -15})
+	if cut_chip.size() != 1 or cut_chip[0].polarity != "gain" or not String(cut_chip[0].label).contains("15"):
+		return "the chip for 15 points off reads %s" % str(cut_chip)
 	EvEffects.run_played([lost], {})
 	if _card_worked(card_id) > 0.0001:
 		return "the finished work was not thrown away: %.2f points still done" % _card_worked(card_id)
@@ -22640,7 +22633,6 @@ static func _late_world(solo: bool, request: bool, promised := false) -> String:
 			"status": "open", "created_sprint": 1, "due_sprint": 99, "value": 21600, "card_id": card_id, "day": GameState.day})
 	if promised:
 		PromiseRegistry.create(account.id, step, B2BConstants.PROMISE_DEADLINE_WEEKS).due_sprint = SprintSystem.sprint_number() + 1
-	SprintSystem.set_weeks(2)
 	SprintSystem.add(card_id)
 	var stored: Dictionary = GameState.product.cards.get(card_id, {})
 	if stored.is_empty():
@@ -22649,9 +22641,8 @@ static func _late_world(solo: bool, request: bool, promised := false) -> String:
 	for member in SprintSystem.team():
 		if not member.ahead:
 			week += member.points * (1.0 if "test" in member.fits else float(SprintCatalog.cfg("no_role_speed")))
-	stored.effort = 100
-	stored.progress = [float(stored.shares[0]) * 100.0, float(stored.shares[1]) * 100.0,
-		float(stored.shares[2]) * 100.0 - 1.1 * week - week]
+	_size(stored, 500.0)
+	stored.progress = [stored.need[0], stored.need[1], stored.need[2] - 1.1 * week - week]
 	_paper_chance(1.0)
 	return card_id if SprintSystem.start() else ""
 
@@ -22664,7 +22655,7 @@ static func _late_world(solo: bool, request: bool, promised := false) -> String:
 ## yaprağını sil → sözlü kartta geldi FAIL; `crunch_finishes` yaprağını sil → yetişmeyen kartta geldi FAIL; sprint.json
 ## `decision.cards`tan `product.sprint_late_solo`yu çıkar → kurucu tekken gelmedi FAIL.
 static func _case_sprint_late_for_requests() -> String:
-	var chance: Dictionary = (SprintCatalog.cfg("decision.sprint_chance") as Dictionary).duplicate()
+	var chance: float = float(SprintCatalog.cfg("decision.sprint_chance"))
 	var cards: Variant = SprintCatalog.cfg("decision.cards")
 	var run := func() -> String:
 		# [ekip yalnız kurucu mu, kart bir istek mi, kart sözlü mü, gelmesi gereken kâğıt ("" = hiçbiri)]
@@ -22717,7 +22708,7 @@ const PAPER_CRUNCH := "fixture.paper_crunch"
 ## Eski değerleri verir; `_paper_pool_end` geri koyar. `_seed_sprint` ihtimali sıfırlar: sahne ondan sonra kurulur.
 static func _paper_pool(papers: Array) -> Array:
 	var saved: Array = [EvTuning.SHIPPED_SCOPES.duplicate(), SprintCatalog.cfg("decision.cards"),
-		(SprintCatalog.cfg("decision.sprint_chance") as Dictionary).duplicate()]
+		float(SprintCatalog.cfg("decision.sprint_chance"))]
 	EvTuning.SHIPPED_SCOPES.append("fixture")
 	SprintCatalog._data.decision.cards = papers
 	_paper_chance(1.0)
@@ -22746,9 +22737,9 @@ static func _case_paper_speaker_is_assignee() -> String:
 		var speaker: String = GameState.product.decision.speaker
 		seen.append({"speaker": speaker, "kind": card.kind, "assignees": card.assignees.duplicate(),
 			"stage": SprintSystem.role_of(speaker)}))
-	# Bir sprint: ekip `roles` (kurucu ayrıca) ve havuzda yalnız `paper`. 1 haftalık sprint kâğıdı başlarken ister, her kart
-	# tasarımda; 2 haftalık ilk haftanın sonunda, her kart geliştirmede. Kâğıt gelmediyse {}.
-	var play := func(roles: Array, paper: String, weeks: int, b2b: bool, desk_dev: bool) -> Dictionary:
+	# Bir sprint: ekip `roles` (kurucu ayrıca) ve havuzda yalnız `paper`; kâğıt ilk haftanın sonunda istenir. Kartlar `points`
+	# puanlıktır: kırk puanlık kart ilk haftanın sonunda geliştirmededir, çok büyük kart hâlâ tasarımda. Kâğıt gelmediyse {}.
+	var play := func(roles: Array, paper: String, b2b: bool, desk_dev: bool, points: float) -> Dictionary:
 		SaveManager.reset_all_owners()
 		GameState.initialize_run({"seed": 424242})
 		seen.clear()
@@ -22776,15 +22767,13 @@ static func _case_paper_speaker_is_assignee() -> String:
 		else:
 			for line_id in SprintCatalog.capabilities("core").slice(0, 3):
 				cards.append("feat:%s_k1" % line_id)
-		SprintSystem.set_weeks(weeks)
 		for id in cards:
 			SprintSystem.add(id)
 		for id in GameState.product.sprint.cards:
-			GameState.product.cards[id].effort = 8   # a card no team of this size finishes in a week
+			_size(GameState.product.cards[id], points)
 		if not SprintSystem.start():
 			return {"error": "the sprint did not start"}
-		if weeks == 2:
-			_sim_day()
+		_sim_day()
 		return seen[0] if not seen.is_empty() else {}
 	var fail := ""
 	var worked := func(paper: Dictionary, role_id: String, stage: String) -> String:
@@ -22796,22 +22785,22 @@ static func _case_paper_speaker_is_assignee() -> String:
 				role_id, paper.speaker, who.role, str(paper.assignees), paper.stage, role_id, stage]
 		return ""
 	var dev: Dictionary = play.call([HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_DESIGNER, HRConstants.ROLE_TESTER],
-		PAPER_DEV, 2, false, false)
+		PAPER_DEV, false, false, 40.0)
 	fail = worked.call(dev, HRConstants.ROLE_DEVELOPER, "dev")
 	if fail == "" and (not EventGate.open_paper(PAPER_DEV) or EventGate.active_context().employee.id != dev.speaker):
 		fail = "the developer paper is not bound to the developer on the card (%s)" % str(EventGate.active_context())
 	if fail == "":
-		var early: Dictionary = play.call([HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_DESIGNER], PAPER_DEV, 1, false, false)
+		var early: Dictionary = play.call([HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_DESIGNER], PAPER_DEV, false, false, 100000.0)
 		if not early.is_empty():
-			fail = "the developer paper came in the first week, with every card in design and the developer drawing on one (%s)" \
+			fail = "the developer paper came with every card still in design and the developer drawing on one (%s)" \
 				% str(early)
 	if fail == "":
 		var design: Dictionary = play.call([HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER,
-			HRConstants.ROLE_PRODUCT_MANAGER], PAPER_DESIGN, 1, false, false)
+			HRConstants.ROLE_PRODUCT_MANAGER], PAPER_DESIGN, false, false, 100000.0)
 		fail = worked.call(design, HRConstants.ROLE_DESIGNER, "design")
 	if fail == "":
 		var pm_card: Dictionary = play.call([HRConstants.ROLE_PRODUCT_MANAGER, HRConstants.ROLE_DEVELOPER],
-			PAPER_DESIGN, 1, false, false)
+			PAPER_DESIGN, false, false, 100000.0)
 		var pm_works: bool = GameState.product.cards.values().any(func(c: Dictionary) -> bool:
 			return "char_paper_" + HRConstants.ROLE_PRODUCT_MANAGER in c.assignees)
 		if not pm_works:
@@ -22819,12 +22808,12 @@ static func _case_paper_speaker_is_assignee() -> String:
 		elif not pm_card.is_empty():
 			fail = "the product manager on a design card spoke the designer's paper (%s)" % str(pm_card)
 	if fail == "":
-		var desk: Dictionary = play.call([HRConstants.ROLE_DEVELOPER], PAPER_DEV, 2, false, true)
+		var desk: Dictionary = play.call([HRConstants.ROLE_DEVELOPER], PAPER_DEV, false, true, 40.0)
 		if SprintSystem.team().size() != 1 or not desk.is_empty():
 			fail = "a developer whose whole share is the desk is in the sprint team (%d) or spoke (%s)" % [
 				SprintSystem.team().size(), str(desk)]
 	if fail == "":
-		var pm: Dictionary = play.call([HRConstants.ROLE_PRODUCT_MANAGER, HRConstants.ROLE_DEVELOPER], PAPER_PM, 2, true, false)
+		var pm: Dictionary = play.call([HRConstants.ROLE_PRODUCT_MANAGER, HRConstants.ROLE_DEVELOPER], PAPER_PM, true, false, 40.0)
 		var pm_id: String = "" if SprintCatalog.quarter_pm() == null else SprintCatalog.quarter_pm().id
 		_drain_all_modals()   # the account's first-contact card is on screen; one modal at a time
 		if pm.is_empty() or pm.get("speaker", "") != pm_id or pm.get("kind", "") != "request":
@@ -22833,11 +22822,11 @@ static func _case_paper_speaker_is_assignee() -> String:
 				or EventGate.active_context().customer.id != "co_paper":
 			fail = "the product manager paper is bound to %s" % str(EventGate.active_context())
 	if fail == "":
-		var no_pm: Dictionary = play.call([HRConstants.ROLE_DEVELOPER], PAPER_PM, 2, true, false)
+		var no_pm: Dictionary = play.call([HRConstants.ROLE_DEVELOPER], PAPER_PM, true, false, 40.0)
 		if not no_pm.is_empty():
 			fail = "a product manager paper came to a team with no product manager (%s)" % str(no_pm)
 	if fail == "":
-		var own: Dictionary = play.call([], PAPER_FOUNDER, 2, false, false)
+		var own: Dictionary = play.call([], PAPER_FOUNDER, false, false, 40.0)
 		var founder: String = CharacterRegistry.get_founder().id
 		if own.get("speaker", "") != founder or not EventGate.open_paper(PAPER_FOUNDER) \
 				or EventGate.active_context().founder.id != founder:
@@ -22856,7 +22845,7 @@ static func _case_decision_one_per_sprint() -> String:
 	var asked: Array = []
 	EventBus.card_decision_requested.connect(func(_id: String) -> void: asked.append(SprintSystem.sprint_number()))
 	SprintSystem.add("feat:%s_k1" % SprintCatalog.capabilities("core")[0])
-	GameState.product.cards["feat:%s_k1" % SprintCatalog.capabilities("core")[0]].effort = 100000
+	_size(GameState.product.cards["feat:%s_k1" % SprintCatalog.capabilities("core")[0]], 100000.0)
 	var fail := ""
 	for sprint in 5:
 		if SprintSystem.mode() == "release":
@@ -22880,7 +22869,7 @@ static func _case_decision_one_per_sprint() -> String:
 
 
 ## Aynı kâğıt bekleme süresi geçmeden dönmez ve bir koşuda en çok 3 kez görünür (mandalın `cooldown_weeks` ve `max_fires`'ı
-## birlikte uygulanır): 1 haftalık sprintlerde ihtimal 1 iken tek kâğıtlık havuz ilk sprintte gelir, ertesi sprintte
+## birlikte uygulanır): ihtimal 1 iken tek kâğıtlık havuz ilk sprintte gelir, ertesi sprintte
 ## beklemede kalır, bekleme süresi dolunca her seferinde gelir ve üçüncüden sonra hiç gelmez. Kâğıdın 52 haftası vaka için 12
 ## haftaya iner (koşunun 104 haftasına sığsın diye); iki sayı da kartın verisidir.
 ## FALSİFİKASYON: kâğıdın latch'inden `max_fires`'ı sil → dördüncü sprintte kâğıt geldi FAIL; `cooldown_weeks`'i sil →
@@ -22890,9 +22879,8 @@ static func _case_decision_no_fourth_show() -> String:
 	var saved: Array = _paper_pool([PAPER_FOUNDER])
 	var shows: Array = []
 	EventBus.card_decision_requested.connect(func(_id: String) -> void: shows.append(GameState.day))
-	SprintSystem.set_weeks(1)
 	SprintSystem.add("feat:%s_k1" % SprintCatalog.capabilities("core")[0])
-	GameState.product.cards["feat:%s_k1" % SprintCatalog.capabilities("core")[0]].effort = 100000
+	_size(GameState.product.cards["feat:%s_k1" % SprintCatalog.capabilities("core")[0]], 100000.0)
 	var fail := ""
 	var latch: Dictionary = EvCatalog.card(PAPER_FOUNDER).latch
 	var cooldown: int = latch.cooldown_weeks
@@ -22912,6 +22900,7 @@ static func _case_decision_no_fourth_show() -> String:
 			fail = "after %d weeks the paper %s (latch said '%s'), want it %s ('%s')" % [step[0],
 				"came" if shows.size() > before else "did not come", reason, "to come" if step[1] else "to stay away", step[2]]
 			break
+		_sim_day()
 	latch.cooldown_weeks = cooldown
 	_paper_pool_end(saved)
 	return fail
@@ -22985,7 +22974,7 @@ static func _case_paper_interrupt_order() -> String:
 	return fail
 
 
-## Kâğıtsız sprintler: ihtimal sprint.json'daki (bir ve iki haftalık sprintte ayrı) iken sprintlerin en az üçte biri kâğıtsız
+## Kâğıtsız sprintler: ihtimal sprint.json'daki iken sprintlerin en az üçte biri kâğıtsız
 ## kalır, hiçbir sprint iki kâğıt almaz ve kâğıt gelir. Havuzdaki kâğıt her sprintte kabul edilir, boş sprintleri yalnız zar belirler.
 ## FALSİFİKASYON: sprint.json `decision.sprint_chance`'ı 1 yap → kâğıtsız sprint kalmadı FAIL; 0 yap → hiç kâğıt gelmedi FAIL.
 static func _case_paper_empty_sprint_ratio() -> String:
@@ -22993,29 +22982,26 @@ static func _case_paper_empty_sprint_ratio() -> String:
 	var papers: Dictionary = {}
 	EventBus.card_decision_requested.connect(func(_id: String) -> void:
 		papers[SprintSystem.sprint_number()] = int(papers.get(SprintSystem.sprint_number(), 0)) + 1)
-	for weeks in [1, 2]:
-		SaveManager.reset_all_owners()
-		GameState.initialize_run({"seed": 424242})
-		_seed_sprint()
-		SprintCatalog._data.decision.sprint_chance = (saved[2] as Dictionary).duplicate()
-		papers.clear()
-		SprintSystem.set_weeks(weeks)
-		SprintSystem.add("feat:%s_k1" % SprintCatalog.capabilities("core")[0])
-		GameState.product.cards["feat:%s_k1" % SprintCatalog.capabilities("core")[0]].effort = 100000
-		var sprints := 0
-		while sprints < 30:
-			if SprintSystem.mode() == "release":
-				SprintSystem.plan_next()
-			if not SprintSystem.start():
-				return "fixture: sprint %d of the %d-week run did not start" % [sprints + 1, weeks]
-			while SprintSystem.mode() == "active":
-				_sim_day()
-			sprints += 1
-		var empty: int = sprints - papers.size()
-		if papers.values().any(func(n: int) -> bool: return n > 1) or papers.is_empty() or float(empty) / sprints < 1.0 / 3.0:
-			return "%d-week sprints: %d of %d had no paper (papers by sprint %s), want at least a third empty, some papers and never two" % [
-				weeks, empty, sprints, str(papers)]
-		print("PAPER_EMPTY weeks=%d sprints=%d empty=%d" % [weeks, sprints, empty])
+	SaveManager.reset_all_owners()
+	GameState.initialize_run({"seed": 424242})
+	_seed_sprint()
+	SprintCatalog._data.decision.sprint_chance = saved[2]
+	SprintSystem.add("feat:%s_k1" % SprintCatalog.capabilities("core")[0])
+	_size(GameState.product.cards["feat:%s_k1" % SprintCatalog.capabilities("core")[0]], 100000.0)
+	var sprints := 0
+	while sprints < 30:
+		if SprintSystem.mode() == "release":
+			SprintSystem.plan_next()
+		if not SprintSystem.start():
+			return "fixture: sprint %d did not start" % (sprints + 1)
+		while SprintSystem.mode() == "active":
+			_sim_day()
+		sprints += 1
+	var empty: int = sprints - papers.size()
+	if papers.values().any(func(n: int) -> bool: return n > 1) or papers.is_empty() or float(empty) / sprints < 1.0 / 3.0:
+		return "%d of %d sprints had no paper (papers by sprint %s), want at least a third empty, some papers and never two" % [
+			empty, sprints, str(papers)]
+	print("PAPER_EMPTY sprints=%d empty=%d" % [sprints, empty])
 	_paper_pool_end(saved)
 	return ""
 
@@ -23028,14 +23014,13 @@ static func _paper_world() -> void:
 	_incident_world(false)
 	_sprint_hire("char_b6a_design", HRConstants.ROLE_DESIGNER)
 	_sprint_hire("char_b6a_pm", HRConstants.ROLE_PRODUCT_MANAGER)
-	SprintSystem.set_weeks(2)
 
 
 ## Çekirdeğin `slot`'uncu hattının K1 kartını sprinte koyar ve eforunu `effort` yapar; kartın kimliği.
 static func _paper_card(slot: int, effort: int) -> String:
 	var id: String = "feat:%s_k1" % SprintCatalog.capabilities("core")[slot]
 	SprintSystem.add(id)
-	GameState.product.cards[id].effort = effort
+	_size(GameState.product.cards[id], effort)
 	return id
 
 
@@ -23062,26 +23047,26 @@ static func _paper_sprint_closes() -> bool:
 ## `leaks` döngüsünü sil → hata düşmedi FAIL; `trim_plan`daki `work`ü hep 0 yap → takip kartı yok FAIL.
 static func _case_paper_card_trim() -> String:
 	_paper_world()
-	var big: String = _paper_card(3, 8)
+	var big: String = _paper_card(3, 40)
 	if not SprintSystem.start():
 		return "fixture: the sprint did not start"
 	_paper_waits_on(big)
 	var card: Dictionary = GameState.product.cards[big]
 	var trim := {"verb": "sprint_card_trim", "share": true, "follow": true}
 	var plan: Dictionary = EvEffects.trim_plan(trim)
-	if plan.cut != 4 or plan.work != 5:
-		return "40%% of an 8 point card with a follow reads %s, want 4 points off and 5 left for the next sprint" % str(plan)
+	if plan.cut != 16 or plan.work != 21:
+		return "40%% of a 40 point card with a follow reads %s, want 16 points off and 21 left for the next sprint" % str(plan)
 	var shown: Array = EvChips.describe(trim, {}, {}, false).map(EvChips.text)
 	var row: Dictionary = EvEffects.run_played([trim], {})[0]
 	var kept: Array = EvChips.describe(row, {}, {}, true).map(EvChips.text)
 	if shown.size() != 2 or shown != kept:
 		return "the card showed %s, its history row reads %s" % [str(shown), str(kept)]
-	if SprintSystem.total(card) != 4.0:
-		return "the trimmed card is %s points, want 4" % SprintSystem.total(card)
+	if not is_equal_approx(SprintSystem.total(card), 24.0):
+		return "the trimmed card is %s points, want 24" % SprintSystem.total(card)
 	var follows: Array = GameState.product.cards.values().filter(func(c: Dictionary) -> bool: return c.get("follow", false))
-	if follows.size() != 1 or int(follows[0].effort) != 5 or follows[0].id not in GameState.product.next.cards \
+	if follows.size() != 1 or roundi(SprintSystem.total(follows[0])) != 21 or follows[0].id not in GameState.product.next.cards \
 			or follows[0].step != card.step:
-		return "the follow card is %s, want one of 5 points in the next sprint on the same step" % str(follows)
+		return "the follow card is %s, want one of 21 points in the next sprint on the same step" % str(follows)
 	var followed: String = follows[0].id
 	ProductModel.live()   # the sprint screen draws the follow card in the next column
 	if not _paper_sprint_closes() or ProductState.line_tier(card.line) < 1:
@@ -23091,7 +23076,7 @@ static func _case_paper_card_trim() -> String:
 		return "planning the next sprint dropped the follow card, whose tier the first card reached"
 	ProductModel.live()
 	# A card that ships with a bug: the bug lands on its line when the card ships and the release is not faulty.
-	var small: String = _paper_card(4, 2)
+	var small: String = _paper_card(4, 10)
 	if not SprintSystem.start():
 		return "fixture: sprint 2 did not start"
 	_paper_waits_on(small)
@@ -23120,7 +23105,7 @@ static func _case_paper_card_trim() -> String:
 ## geçmiş satırı çiple ayrıştı FAIL.
 static func _case_paper_outlook_reads_the_plan() -> String:
 	_paper_world()
-	var id: String = _paper_card(3, 3)
+	var id: String = _paper_card(3, 15)
 	if not SprintSystem.start():
 		return "fixture: the sprint did not start"
 	_paper_waits_on(id)
@@ -23129,17 +23114,17 @@ static func _case_paper_outlook_reads_the_plan() -> String:
 	var late: String = TranslationServer.translate("EFFECT_CARD_LATE").format({"card": name})
 	var plain := {"verb": "sprint_card_outlook"}
 	if EvChips.text(EvChips.describe(plain, {}, {}, false)[0]) != on_time:
-		return "a 3 point card the team finishes reads '%s', want '%s'" % [EvChips.text(EvChips.describe(plain, {}, {}, false)[0]), on_time]
-	var heavy := {"verb": "sprint_card_outlook", "amount": 40}
+		return "a 15 point card the team finishes reads '%s', want '%s'" % [EvChips.text(EvChips.describe(plain, {}, {}, false)[0]), on_time]
+	var heavy := {"verb": "sprint_card_outlook", "amount": 200}
 	if EvChips.text(EvChips.describe(heavy, {}, {}, false)[0]) != late:
-		return "with 40 points more the card reads '%s', want '%s'" % [EvChips.text(EvChips.describe(heavy, {}, {}, false)[0]), late]
-	var effects: Array = [{"verb": "sprint_card_effort", "amount": 40}, heavy]
+		return "with 200 points more the card reads '%s', want '%s'" % [EvChips.text(EvChips.describe(heavy, {}, {}, false)[0]), late]
+	var effects: Array = [{"verb": "sprint_card_effort", "amount": 200}, heavy]
 	var rows: Array = EvEffects.run_played(effects, {})
 	if bool(rows[1].finishes) or EvChips.text(EvChips.describe(rows[1], {}, {}, true)[0]) != late:
 		return "the history row of the outlook reads %s, want the late card" % str(rows[1])
-	var relief := {"verb": "sprint_card_outlook", "amount": -39}
+	var relief := {"verb": "sprint_card_outlook", "amount": -195}
 	if EvChips.text(EvChips.describe(relief, {}, {}, false)[0]) != on_time:
-		return "taking 39 points off the 43 point card still reads late"
+		return "taking 195 points off the 215 point card still reads late"
 	return ""
 
 
@@ -23184,7 +23169,7 @@ static func _case_paper_renewal_card_first() -> String:
 	_paper_world()
 	var account: Customer = _incident_account("co_renewal", "Renewal Co", "retail", 40, 1800)
 	var lines: Array = SprintCatalog.capabilities("core")
-	var first_id: String = _paper_card(3, 6)
+	var first_id: String = _paper_card(3, 30)
 	var req := {"id": "co_renewal.1", "customer_id": account.id, "step": lines[4] + "_k1", "line": lines[4],
 		"status": "open", "created_sprint": 1, "due_sprint": 99, "value": 21600, "card_id": "req:co_renewal.1",
 		"day": GameState.day}
@@ -23196,10 +23181,10 @@ static func _case_paper_renewal_card_first() -> String:
 	_paper_waits_on(asked)
 	# Efforts that leave the request behind the first card, and finish it when it stands first.
 	var found := false
-	for a in [4, 6, 8, 10]:
-		for b in [4, 6, 8, 10]:
-			GameState.product.cards[first_id].effort = a
-			GameState.product.cards[asked].effort = b
+	for a in [20, 30, 40, 50]:
+		for b in [20, 30, 40, 50]:
+			_size(GameState.product.cards[first_id], a)
+			_size(GameState.product.cards[asked], b)
 			if SprintSystem.card_late(asked) and SprintSystem.decision_first_finishes():
 				found = true
 				break
@@ -23248,31 +23233,31 @@ static func _case_paper_colors_two_arrivals() -> String:
 	var card: Dictionary = EvCatalog.card(id)
 	var points := func() -> Array:
 		return [EvSeams.read("urun.colors_hand"), EvSeams.read("urun.colors_central")]
-	if points.call() != [2, 4]:
-		return "the first arrival prices %s, want [2, 4]" % str(points.call())
+	if points.call() != [10, 20]:
+		return "the first arrival prices %s, want [10, 20]" % str(points.call())
 	var first_body: String = EvPresenter.resolve_text(EvPresenter.text_block(card).body, ctx)
 	var first_note: String = EvPresenter.resolve_text(EvPresenter.text_block(card).expire_note, ctx)
 	EvFlags.set_flag("colors_by_hand")
-	if points.call() != [3, 5]:
-		return "the second arrival prices %s, want [3, 5]" % str(points.call())
+	if points.call() != [15, 25]:
+		return "the second arrival prices %s, want [15, 25]" % str(points.call())
 	var second_body: String = EvPresenter.resolve_text(EvPresenter.text_block(card).body, ctx)
 	var second_note: String = EvPresenter.resolve_text(EvPresenter.text_block(card).expire_note, ctx)
 	if first_body == second_body or first_note == second_note or not second_body.contains("Demir Holding"):
 		return "the two arrivals read alike: '%s' / '%s'" % [first_note, second_note]
 	# What an unanswered paper does: the first arrival loses the account's trust, the second changes the pages by hand.
-	var id_card: String = _paper_card(3, 6)
+	var id_card: String = _paper_card(3, 30)
 	if not SprintSystem.start():
 		return "fixture: the sprint did not start"
 	_paper_waits_on(id_card)
 	var effort: float = SprintSystem.total(GameState.product.cards[id_card])
 	EvEffects.run_expire(card.on_expire.penalties, ctx, id)
-	if SprintSystem.total(GameState.product.cards[id_card]) != effort + 3.0 or account.trust_offset != 0.0:
-		return "the second arrival's expiry moved the card to %s and the trust to %s, want +3 points and no trust hit" % [
+	if not is_equal_approx(SprintSystem.total(GameState.product.cards[id_card]), effort + 15.0) or account.trust_offset != 0.0:
+		return "the second arrival's expiry moved the card to %s and the trust to %s, want +15 points and no trust hit" % [
 			SprintSystem.total(GameState.product.cards[id_card]), account.trust_offset]
 	EvFlags.clear_flag("colors_by_hand")
 	effort = SprintSystem.total(GameState.product.cards[id_card])
 	EvEffects.run_expire(card.on_expire.penalties, ctx, id)
-	if SprintSystem.total(GameState.product.cards[id_card]) != effort or account.trust_offset > -7.0:
+	if not is_equal_approx(SprintSystem.total(GameState.product.cards[id_card]), effort) or account.trust_offset > -7.0:
 		return "the first arrival's expiry moved the card to %s and the trust to %s, want no points and -8" % [
 			SprintSystem.total(GameState.product.cards[id_card]), account.trust_offset]
 	return ""
@@ -23283,7 +23268,7 @@ static func _case_paper_colors_two_arrivals() -> String:
 ## FALSİFİKASYON: `trust_plan`dan `until`i sil → çip hat temizlenene dek metnine düştü FAIL.
 static func _case_paper_trust_until_ships() -> String:
 	_paper_world()
-	var id: String = _paper_card(3, 6)
+	var id: String = _paper_card(3, 30)
 	if not SprintSystem.start():
 		return "fixture: the sprint did not start"
 	_paper_waits_on(id)
@@ -23366,7 +23351,7 @@ static func _case_paper_cards_render() -> String:
 		if String(name).begins_with("urun.") and EvSeams.kind_of(name) == EvSeams.Kind.GLOBAL:
 			EvSeams.read(name)
 	_paper_world()
-	var id: String = _paper_card(3, 6)
+	var id: String = _paper_card(3, 30)
 	if not SprintSystem.start():
 		return "fixture: the sprint did not start"
 	_paper_waits_on(id)
@@ -23406,14 +23391,15 @@ static func _case_paper_cards_render() -> String:
 ## `urun.decision_line` yaprağını sil → fatura hattındaki kartta da istendi FAIL; `sprint_dev` seçicisinde rol süzgecini sil →
 ## yazılımcı olmayan bağlandı FAIL.
 static func _case_paper_cards_are_asked() -> String:
-	var ask := func(paper: String, line: String, effort: int, progress: Array) -> Dictionary:
+	var ask := func(paper: String, line: String, effort: int, phases_done: int) -> Dictionary:
 		_paper_world()
 		# A designer who sorts before the developer: `sprint_dev` must take the developer by role, not the first on the team.
 		_incident_hire("char_a_early", "Aaron Early", HRConstants.ROLE_DESIGNER, 4)
 		var saved: Array = _paper_pool([paper])
 		var lines: Array = SprintCatalog.capabilities("core")
 		var id: String = _paper_card(lines.find(line), effort)
-		GameState.product.cards[id].progress = progress
+		var need: Array = GameState.product.cards[id].need
+		GameState.product.cards[id].progress = [need[0] if phases_done > 0 else 0.0, need[1] if phases_done > 1 else 0.0, 0.0]
 		var out := {"asked": false}
 		if SprintSystem.start():
 			GameState.product.decision = {}
@@ -23432,24 +23418,24 @@ static func _case_paper_cards_are_asked() -> String:
 	var role_of := func(ctx: Dictionary, slot: String) -> String:
 		return String(CharacterRegistry.get_character(ctx.get(slot, {}).get("id", "")).role) if ctx.has(slot) else ""
 	var stock := "line_erp_stock"
-	var got: Dictionary = ask.call("product.sprint_design_drawings_late", stock, 100, [0.0, 0.0, 0.0])
+	var got: Dictionary = ask.call("product.sprint_design_drawings_late", stock, 500, 0)
 	if not got.asked or role_of.call(got.ctx, "employee") != HRConstants.ROLE_DESIGNER:
 		return "the designer's late drawings paper was not asked or not spoken by the designer (%s)" % str(got)
-	got = ask.call("product.sprint_design_empty_state", stock, 40, [0.0, 0.0, 0.0])
+	got = ask.call("product.sprint_design_empty_state", stock, 200, 0)
 	if not got.asked or got.ctx.get("customer", {}).get("id", "") == "":
 		return "the first screen paper of a new line was not asked or has no account (%s)" % str(got)
-	got = ask.call("product.sprint_test_stock_transfer", stock, 40, [8.0, 24.0, 0.0])
+	got = ask.call("product.sprint_test_stock_transfer", stock, 200, 2)
 	if not got.asked or role_of.call(got.ctx, "employee") != HRConstants.ROLE_TESTER \
 			or got.ctx.get("customer", {}).get("id", "") != got.warehouse:
 		return "the stock transfer paper was not asked, not spoken by the tester or not about the stock line's warehouse account (%s)" % str(got)
-	got = ask.call("product.sprint_test_stock_transfer", "line_erp_invoicing", 40, [8.0, 24.0, 0.0])
+	got = ask.call("product.sprint_test_stock_transfer", "line_erp_invoicing", 200, 2)
 	if got.asked:
 		return "the stock transfer paper was asked about the invoicing line"
-	got = ask.call("product.sprint_test_readonly_delete", "line_erp_invoicing", 40, [8.0, 24.0, 0.0])
+	got = ask.call("product.sprint_test_readonly_delete", "line_erp_invoicing", 200, 2)
 	if not got.asked or role_of.call(got.ctx, "employee") != HRConstants.ROLE_TESTER \
 			or role_of.call(got.ctx, "dev") != HRConstants.ROLE_DEVELOPER:
 		return "the read only delete paper was not asked, not spoken by the tester or names no developer (%s)" % str(got)
-	got = ask.call("product.sprint_test_their_data", stock, 40, [8.0, 24.0, 0.0])
+	got = ask.call("product.sprint_test_their_data", stock, 200, 2)
 	if not got.asked or got.ctx.get("customer", {}).get("id", "") == "":
 		return "the paper about a customer's own data was not asked or has no account (%s)" % str(got)
 	return _paper_pm_asked()
@@ -23463,7 +23449,7 @@ static func _paper_pm_asked() -> String:
 	var saved: Array = _paper_pool([paper])
 	var lines: Array = SprintCatalog.capabilities("core")
 	var account: Customer = _incident_account("co_asked", "Asked Co", "technology", 40, 1800)
-	var first_id: String = _paper_card(3, 6)
+	var first_id: String = _paper_card(3, 30)
 	GameState.product.requests.append({"id": "co_asked.1", "customer_id": account.id, "step": lines[4] + "_k1", "line": lines[4],
 		"status": "open", "created_sprint": 1, "due_sprint": 99, "value": 21600, "card_id": "req:co_asked.1", "day": GameState.day})
 	var asked: String = "req:co_asked.1"
@@ -23473,10 +23459,10 @@ static func _paper_pm_asked() -> String:
 		return "fixture: the sprint did not start"
 	_paper_waits_on(asked)
 	var found := false
-	for a in [4, 6, 8, 10]:
-		for b in [6, 8, 10, 14]:
-			GameState.product.cards[first_id].effort = a
-			GameState.product.cards[asked].effort = b
+	for a in [20, 30, 40, 50]:
+		for b in [30, 40, 50, 70]:
+			_size(GameState.product.cards[first_id], a)
+			_size(GameState.product.cards[asked], b)
 			if bool(EvSeams.read("urun.decision_card_late")) and bool(EvSeams.read("urun.decision_trim_finishes")):
 				found = true
 				break
@@ -23558,14 +23544,17 @@ static func _case_save_v14_build_becomes_sprint_plan() -> String:
 		return done.call("the migrated product opens in %s, sprint %s %s with %s; want Sprint 1 planning with %s" % [
 			product.get("mode", ""), product.get("sprint", {}).get("number"), product.get("sprint", {}).get("status"),
 			product.get("sprint", {}).get("cards"), ids])
-	var shares: Array = SprintCatalog.card_shares("feature")
 	var left: float = 0.0
-	for id in ids:
+	for i in ids.size():
+		var id: String = ids[i]
 		var c: Dictionary = product.cards[id]
-		var effort: float = float(c.effort)
-		var want: Array = [effort * shares[0], effort * shares[1] * 0.25, 0.0]
-		for i in 3:
-			if not is_equal_approx(float(c.progress[i]), want[i]):
+		# The v14 build sized a K2 at 5 points and a K1 at 3; the sprint scale grew five times and the profile splits them.
+		var effort: float = SprintSystem.total(c)
+		if not is_equal_approx(effort, [25.0, 15.0][i]):
+			return done.call("%s is %.2f points, want %.2f" % [id, effort, [25.0, 15.0][i]])
+		var want: Array = [c.need[0], c.need[1] * 0.25, 0.0]
+		for phase in 3:
+			if not is_equal_approx(float(c.progress[phase]), want[phase]):
 				return done.call("%s carries progress %s, want design done and development a quarter in %s" % [
 					id, c.progress, want])
 		if c.state != "planned" or not c.paid:
@@ -23619,6 +23608,177 @@ static func _case_save_v14_history_becomes_releases() -> String:
 	return ""
 
 
+## v18 → v19: sprint puanı ×5 olur ve kart efor, pay ve karar kâğıdının `effort_mod`u yerine aşama ihtiyacı (`need`) taşır. Kartın puanı
+## (efor artı `effort_mod`) ×5 hattın iş profilinin satırıyla paylaşılır, yapılmış iş her aşamada aynı oranda kalır, testi sürmekte olan
+## kart testi baştan alır; `faulty`, `shares`, `effort_mod` ve sprintin `weeks`'i düşer, `cut` kalır. Sürüm kayıtlarının kartları yeni
+## biçime, `velocity` ve `carried` puanları ×5 gelir.
+## FALSİFİKASYON: `_migrate_18`de `_V18_POINT`i 1 yap → ölçek iddiası FAIL; `_scale_sprint_card`taki test sıfırlamasını sil → test iddiası
+## FAIL; `effort_mod`u toplamdan çıkar → efor iddiası FAIL; `record.get("shipped", [])` döngüsünü sil → sürüm kaydı iddiası FAIL.
+static func _case_save_v19_cards_scale_and_shape() -> String:
+	ProductLines.reload()
+	var editor := "line_note_tool_editor"     # tasarım profili
+	var capture := "line_note_tool_capture"   # geliştirme profili
+	var sync := "line_note_tool_sync"         # test profili
+	var old_card := func(id: String, kind: String, line: String, tier: int, effort: int, mod: int, shares: Array, progress: Array) -> Dictionary:
+		return {"id": id, "kind": kind, "line": line, "step": "%s_k%d" % [line, tier] if tier > 0 else "", "target_tier": tier,
+			"area": "core", "effort": effort, "roles": ["design", "dev", "test"], "shares": shares, "progress": progress,
+			"state": "running", "assignees": [], "bugs": 0, "customer_id": "", "request_id": "", "decision": false,
+			"effort_mod": mod, "faulty": true, "cut": false, "base": 1.2, "paid": true}
+	var fixed := [0.2, 0.6, 0.2]
+	var cards := {
+		# K2, kâğıt 1 puan ekledi: 6 puan, tasarım bitti, geliştirme yarıda.
+		"feat:a": old_card.call("feat:a", "feature", editor, 2, 5, 1, fixed.duplicate(), [1.2, 1.8, 0.0]),
+		# K1 testte, testin yarısı yapılmış.
+		"feat:b": old_card.call("feat:b", "feature", capture, 1, 3, 0, fixed.duplicate(), [0.6, 1.8, 0.3]),
+		# K1, testi kısaltılmış (payı 0,2'den 0,1'e indi) ve henüz teste girmemiş.
+		"feat:c": old_card.call("feat:c", "feature", sync, 1, 3, 0, [0.2, 0.6, 0.1], [0.6, 0.9, 0.0]),
+		# Düzeltme kartı: 0/70/30, geliştirmenin yarısı yapılmış.
+		"fix:d": old_card.call("fix:d", "fix", editor, 0, 2, 0, [0.0, 0.7, 0.3], [0.0, 0.7, 0.0]),
+		# Araştırma kartı: yalnız Ürün aşaması, yarısı yapılmış.
+		"res:e": old_card.call("res:e", "research", "", 0, 1, 0, [1.0, 0.0, 0.0], [0.5, 0.0, 0.0]),
+		# Ücretli plan: hattı yok, kendi satırı var.
+		"plan:f": old_card.call("plan:f", "feature", SprintCatalog.PAID_PLAN, 1, 3, 0, fixed.duplicate(), [0.0, 0.0, 0.0]),
+		# Kayıt okunurken henüz açılmamış gizli hat: profilini Ar-Ge tanımı söyler (test).
+		"feat:g": old_card.call("feat:g", "feature", "line_hidden_self_serve@note_tool", 2, 5, 0, fixed.duplicate(), [0.0, 0.0, 0.0]),
+	}
+	cards["feat:c"].cut = true
+	var shipped_old: Dictionary = old_card.call("feat:s", "feature", capture, 1, 3, 0, fixed.duplicate(), [0.6, 1.8, 0.6])
+	shipped_old.state = "done"
+	var state := {"game_state": {"product": {
+		"sprint": {"number": 3, "start_day": 10, "status": "running", "cards": cards.keys(), "capacity": 4.0,
+			"lead_applied": false, "weeks": 1},
+		"next": {"number": 4, "cards": []}, "mode": "active", "cards": cards, "release": {},
+		"releases": [{"number": 1, "sprint": 2, "shipped": [shipped_old], "velocity": {"done": 3.0, "total": 4.0},
+			"carried": [{"id": "feat:x", "done": 2.5, "total": 5, "to_sprint": 3}]}]}}}
+	SaveManager._migrate_18(state)
+	var product: Dictionary = state.game_state.product
+	if product.sprint.has("weeks") or not is_equal_approx(float(product.sprint.capacity), 20.0):
+		return "the migrated sprint reads %s, want no weeks and a capacity of 20" % str(product.sprint)
+	for id in product.cards:
+		for gone in ["effort", "effort_mod", "shares", "faulty"]:
+			if product.cards[id].has(gone):
+				return "%s still carries '%s' after the migration" % [id, gone]
+	# Beklenen ihtiyaç tablodan, kartın puanı ×5: tasarım profilinin K2 satırı 9/11/5, 6 puan → 30 puan.
+	var rows: Dictionary = SprintCatalog.cfg("need")
+	var a: Dictionary = product.cards["feat:a"]
+	var want_a: Array = (rows.design[1] as Array).map(func(part: float) -> float: return part * 30.0 / 25.0)
+	if a.need.size() != 3 or not is_equal_approx(a.need[0], want_a[0]) or not is_equal_approx(a.need[1], want_a[1]) \
+			or not is_equal_approx(a.need[2], want_a[2]):
+		return "a design-profile K2 of 5 + 1 points reads %s, want %s" % [a.need, want_a]
+	if not is_equal_approx(a.progress[0], want_a[0]) or not is_equal_approx(a.progress[1], want_a[1] / 2.0) or a.progress[2] != 0.0:
+		return "its progress reads %s, want the design done and the development half done (%s)" % [a.progress, want_a]
+	if not is_equal_approx(float(a.base), 1.2 * (a.progress[0] + a.progress[1]) / 3.0):
+		return "its base reads %s, want the old base scaled by the progress it carries" % a.base
+	# Testte yarım kalan test baştan alınır, öncekiler dolu kalır.
+	var b: Dictionary = product.cards["feat:b"]
+	if not is_equal_approx(b.progress[0], b.need[0]) or not is_equal_approx(b.progress[1], b.need[1]) or b.progress[2] != 0.0 \
+			or SprintSystem.phase(b) != SprintSystem.TEST_PHASE or not is_equal_approx(SprintSystem.total(b), 15.0):
+		return "a card half tested reads progress %s of %s (%.1f points), want design and development done and the test started over" % [
+			b.progress, b.need, SprintSystem.total(b)]
+	# Kısaltılmış test tablodan tam gelir, kısaltma izi kalır.
+	var c: Dictionary = product.cards["feat:c"]
+	if not is_equal_approx(float(c.need[2]), float((rows.test[0] as Array)[2])) or not bool(c.cut):
+		return "a card with a shortened test reads %s and cut %s, want the table's 5 test points and the cut kept" % [c.need, c.cut]
+	var d: Dictionary = product.cards["fix:d"]
+	if not is_equal_approx(d.need[0], 0.0) or not is_equal_approx(d.need[1], 7.0) or not is_equal_approx(d.need[2], 3.0) \
+			or not is_equal_approx(d.progress[1], 3.5):
+		return "a fix card of 2 points reads %s with progress %s, want 0/7/3 and 3.5 of the development done" % [d.need, d.progress]
+	var e: Dictionary = product.cards["res:e"]
+	if not is_equal_approx(e.need[0], 5.0) or not is_equal_approx(e.need[1], 0.0) or not is_equal_approx(e.progress[0], 2.5):
+		return "a research card reads %s with progress %s, want 5 product points and 2.5 done" % [e.need, e.progress]
+	var f: Dictionary = product.cards["plan:f"]
+	if f.need != [2.0, 10.0, 3.0]:
+		return "the paid plan reads %s, want its own 2/10/3" % str(f.need)
+	var g: Dictionary = product.cards["feat:g"]
+	if g.need != (rows.test[1] as Array):
+		return "a card on a hidden line not yet opened reads %s, want the test profile's K2 row %s" % [g.need, rows.test[1]]
+	# Sürüm kaydı: kart yeni biçimde, hız ve devreden puanlar ×5.
+	var record: Dictionary = product.releases[0]
+	var snap: Dictionary = record.shipped[0]
+	if snap.has("effort") or not is_equal_approx(SprintSystem.total(snap), 15.0) or SprintSystem.phase(snap) != SprintSystem.PHASE_DONE:
+		return "the release record's card reads %s, want the new shape with 15 points done" % str(snap)
+	if not is_equal_approx(record.velocity.done, 15.0) or not is_equal_approx(record.velocity.total, 20.0) \
+			or not is_equal_approx(record.carried[0].done, 12.5) or not is_equal_approx(record.carried[0].total, 25.0):
+		return "the release record's velocity reads %s and carried %s, want 15/20 and 12.5/25" % [record.velocity, record.carried]
+	return ""
+
+
+## Bugünkü kartı v18 kaydındaki biçimine çevirir: puan ihtiyaçların beşte biri, paylar ihtiyaçların oranı, ilerleme beşte biri.
+static func _as_v18_card(card: Dictionary) -> void:
+	var need: Array = card.need
+	var total: float = float(need[0]) + float(need[1]) + float(need[2])
+	card.erase("need")
+	card.merge({"effort": total / 5.0, "effort_mod": 0, "faulty": false,
+		"shares": need.map(func(n: float) -> float: return n / total),
+		"progress": (card.progress as Array).map(func(v: float) -> float: return v / 5.0)}, true)
+
+
+## Sprint ortasında yazılmış v18 kaydı yüklenir ve oyun kaldığı yerden sürer: iki haftalığa uzayan sprint, ×5 puanlarla kartlar, testi
+## baştan alınan kart ve kapanışta sürüme çıkan kartlar. Kayıt dosyası gerçek yoldan (`save_to_slot`, `read_slot`,
+## `apply_loaded_state`) geçer; v18 biçimi koşan sprintin kartlarını eski değerleriyle yeniden yazarak kurulur.
+## FALSİFİKASYON: `read_slot`taki `_migrate_18` çağrısını sil → kart biçimi iddiası FAIL (`need` yok); `_scale_sprint_card`taki test
+## sıfırlamasını sil → test iddiası FAIL; `_V18_POINT`i 1 yap → toplam puan iddiası FAIL.
+static func _case_save_v19_running_sprint_continues() -> String:
+	var slot: String = "smoke_v19_running_%d" % OS.get_process_id()
+	var done := func(why: String) -> String:
+		SaveManager.delete_slot(slot)
+		return why
+	_seed_sprint_live("note_tool")
+	_sprint_hire("char_v19_dev", HRConstants.ROLE_DEVELOPER)
+	_sprint_hire("char_v19_test", HRConstants.ROLE_TESTER)
+	var ids: Array = SprintCatalog.open_cards([]).filter(func(c: Dictionary) -> bool: return c.kind == "feature").slice(0, 2).map(
+		func(c: Dictionary) -> String: return c.id)
+	for id in ids:
+		SprintSystem.add(id)
+	if ids.size() < 2 or not SprintSystem.start():
+		return done.call("fixture: the sprint did not start")
+	# Koşan sprintin kartları v18'deki hâliyle: 3 puanlık kartlar, ilki geliştirmede yarıda, ikincisi testte yarıda; sprint 1 haftalık.
+	var p: Dictionary = GameState.product
+	var old_progress: Dictionary = {ids[0]: [0.6, 0.9, 0.0], ids[1]: [0.6, 1.8, 0.3]}
+	for id in ids:
+		var card: Dictionary = p.cards[id]
+		_as_v18_card(card)
+		card.merge({"effort": 3, "shares": [0.2, 0.6, 0.2], "progress": old_progress[id], "base": 0.0}, true)
+	p.sprint.capacity = 4.0
+	p.sprint["weeks"] = 1
+	_drain_all_modals()
+	if not SaveManager.save_to_slot(slot):
+		return done.call("save_to_slot failed (%s)" % SaveManager.cannot_save_reason_key())
+	var path: String = SaveManager.SAVE_DIR + slot + ".json"
+	var raw: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path)) as Dictionary
+	raw["schema_version"] = 18
+	var w := FileAccess.open(path, FileAccess.WRITE)
+	w.store_string(JSON.stringify(raw, "\t", false, true))
+	w.close()
+	var payload: Dictionary = SaveManager.read_slot(slot)
+	if not bool(payload.get("ok", false)):
+		return done.call("the v18 save was refused: %s" % payload.get("error_key", ""))
+	if not SaveManager.apply_loaded_state(payload):
+		return done.call("apply_loaded_state returned false")
+	if SprintSystem.mode() != "active" or SprintSystem.sprint_weeks() != 2 or SprintSystem.week() != 1:
+		return done.call("the loaded sprint reads %s, week %d of %d; want a running sprint in week 1 of 2" % [
+			SprintSystem.mode(), SprintSystem.week(), SprintSystem.sprint_weeks()])
+	var first: Dictionary = GameState.product.cards[ids[0]]
+	var second: Dictionary = GameState.product.cards[ids[1]]
+	if not is_equal_approx(SprintSystem.total(first), 15.0) or SprintSystem.phase(first) != 1 \
+			or not is_equal_approx(float(first.progress[0]), float(first.need[0])) \
+			or not is_equal_approx(float(first.progress[1]), float(first.need[1]) / 2.0):
+		return done.call("the first card reads %s of %s after the load, want 15 points, design done and development half done" % [
+			first.progress, first.need])
+	if SprintSystem.phase(second) != SprintSystem.TEST_PHASE or float(second.progress[2]) != 0.0:
+		return done.call("the half tested card reads phase %d with test progress %s, want its test started over" % [
+			SprintSystem.phase(second), second.progress[2]])
+	var guard := 0
+	while SprintSystem.mode() == "active" and guard < 6:
+		_sim_day()
+		guard += 1
+	var shipped: Array = GameState.product.release.shipped.map(func(c: Dictionary) -> String: return c.id)
+	if SprintSystem.mode() != "release" or not (ids[0] in shipped and ids[1] in shipped):
+		return done.call("the loaded sprint ended %s with %s shipped after %d days, want both cards out" % [
+			SprintSystem.mode(), str(shipped), guard])
+	return done.call("")
+
+
 ## v15 → v16: ticket defteri ve doğrulanmış hata sayacı hat başına açık hata deposu olur. Her ticket kendi hattında sayılır;
 ## deftere yetişmemiş doğrulanmış hata canlı hatlara kimliğe göre birer birer dağılır, sayaç defterin altına düşmüşse (haftalık
 ## eşitlemeden önce düzeltme koşusu) en yeni ticket'lar kalır; düzeltme kartının ticket kimlikleri sayı
@@ -23661,6 +23821,7 @@ static func _case_save_v15_tickets_become_open_bugs() -> String:
 	var ids := func(n: int) -> Array:
 		return range(1, n + 1)
 	var retire := func(card: Dictionary) -> void:
+		_as_v18_card(card)
 		if card.kind == "fix":
 			card["tickets"] = ids.call(int(card["bugs"]))
 		else:
@@ -25349,7 +25510,8 @@ static func _thanks_release(number: int, steps: Array) -> Dictionary:
 ## A feature card that took its line to the step's tier.
 static func _release_card(step: String) -> Dictionary:
 	var s: Dictionary = ProductLines.step(step)
-	return {"kind": "feature", "line": s.line_id, "step": step, "target_tier": s.tier, "effort": 8, "bugs": 0}
+	return {"kind": "feature", "line": s.line_id, "step": step, "target_tier": s.tier,
+		"need": SprintCatalog.card_need("feature", s.line_id, s.tier, 40.0), "bugs": 0}
 
 
 static func _keep_word(customer_id: String, step: String) -> Promise:
@@ -25568,7 +25730,8 @@ static func _case_release_reviews_pick() -> String:
 	var mobile: String = shared.call("line_shared_mobile")
 	var release := func(number: int, cards: Array, faulty: Array) -> Dictionary:
 		return {"number": number, "day": GameState.day, "shipped": cards, "faulty": faulty}
-	var fix := {"kind": "fix", "line": integrations, "step": "", "target_tier": 0, "effort": 2, "bugs": 6}
+	var fix := {"kind": "fix", "line": integrations, "step": "", "target_tier": 0,
+		"need": SprintCatalog.card_need("fix", integrations, 0, 10.0), "bugs": 6}
 	var picks := func(cards: Array, faulty: Array, number: int) -> Array:
 		return SprintBridges.pick_reviews(release.call(number, cards, faulty)).get("ids", [])
 	for n in range(2, 14):

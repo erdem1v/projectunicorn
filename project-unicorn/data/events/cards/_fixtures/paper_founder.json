@@ -40,7 +40,7 @@
       "id": "go_on",
       "outcome_id": "go_on",
       "effects": [
-        {"verb": "sprint_card_effort", "amount": 1}
+        {"verb": "sprint_card_effort", "amount": 5}
       ]
     }
   ],

@@ -16,7 +16,7 @@ extends RefCounted
 ## ve her yenilemeden `before_renewal_weeks` önce açılan pencerede bir kez doğar, kaçırılan eski
 ## pencere atlanır. Yetenek hesabın sektörünün vurgu 1 alanından, kilidi açık ve başka açık
 ## talepte olmayan sonraki kademelerden hash'le seçilir. Son tarih planlanabilir sprintten
-## `deadline_weeks` sonraki sprinttir (seçilen süreyle sayılır); o sprint kapanmış ya da hesabı
+## `deadline_weeks` sonraki sprinttir; o sprint kapanmış ya da hesabı
 ## kapanan açık talep sessizce düşer (zamanında olan kapanışta on_release'te karşılanmıştır). Yenileme penceresinin
 ## açıldığı gün hesap pazar referansını yeniden kopyalar (`Customer.market_ref`).
 static func tick_requests() -> void:
@@ -273,7 +273,7 @@ static func pick_reviews(release: Dictionary) -> Dictionary:
 		return c.kind in ["feature", "request"] and c.line != SprintCatalog.PAID_PLAN)
 	var identity: Array = tiers.filter(func(c: Dictionary) -> bool: return not ProductLines.line(c.line).shared)
 	identity.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		return [a.target_tier, a.effort] > [b.target_tier, b.effort])
+		return [a.target_tier, SprintSystem.total(a)] > [b.target_tier, SprintSystem.total(b)])
 	var feature: String = String(identity[0].step) if not identity.is_empty() else ""
 	var fixed: bool = release.shipped.any(func(c: Dictionary) -> bool: return c.kind == "fix" and int(c.bugs) > 0)
 	var unhappy: Dictionary = _unhappy(release, int(cfg.neg_line_bugs))

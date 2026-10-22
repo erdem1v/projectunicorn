@@ -77,11 +77,11 @@
       "effects": [
         {
           "verb": "sprint_card_effort",
-          "amount": 1
+          "amount": 5
         },
         {
           "verb": "sprint_card_outlook",
-          "amount": 1
+          "amount": 5
         }
       ]
     },
@@ -139,7 +139,7 @@
     "penalties": [
       {
         "verb": "sprint_card_effort",
-        "amount": 1
+        "amount": 5
       }
     ]
   },

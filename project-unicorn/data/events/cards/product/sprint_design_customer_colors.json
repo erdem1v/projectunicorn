@@ -72,7 +72,7 @@
       {
         "seam": "urun.decision_card_effort",
         "op": ">=",
-        "value": 3
+        "value": 15
       },
       {
         "entity_seam": "musteri.scale",
@@ -199,7 +199,7 @@
       {
         "verb": "sprint_card_effort",
         "amount_seam": "urun.colors_again",
-        "amount_mult": 3
+        "amount_mult": 15
       },
       {
         "verb": "b2b_expand_decline",

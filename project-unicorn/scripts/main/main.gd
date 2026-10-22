@@ -884,10 +884,8 @@ func _stage_emergency(kind: String, b2b: bool, given: Dictionary) -> Dictionary:
 	SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id; the B2C world chose its type before its audience
 	for line_id in SprintCatalog.capabilities("core").slice(0, int(SprintCatalog.cfg("mvp_lines"))):
 		ProductState.set_line_tier(line_id, 1)
-	var chance: Dictionary = SprintCatalog.cfg("decision.sprint_chance")
-	for weeks in chance:
-		chance[weeks] = 0.0
-	(SprintCatalog.cfg("fix_effort") as Dictionary).points = [6, 8]   # a fix this big leaves the full sprint no room for it
+	(SprintCatalog.cfg("decision") as Dictionary).sprint_chance = 0.0
+	(SprintCatalog.cfg("fix_effort") as Dictionary).points = [30, 40]   # a fix this big leaves the full sprint no room for it
 	for card in SprintCatalog.open_cards([]):
 		SprintSystem.add(card.id)
 		if not GameState.product.sprint.cards.has(card.id):
@@ -1011,9 +1009,8 @@ func _seed_promise_world() -> Dictionary:
 		if not member.ahead:
 			week += member.points * (1.0 if "test" in member.fits else float(SprintCatalog.cfg("no_role_speed")))
 	var stored: Dictionary = GameState.product.cards[card.id]
-	stored.effort = 100
-	stored.progress = [float(stored.shares[0]) * 100.0, float(stored.shares[1]) * 100.0,
-		float(stored.shares[2]) * 100.0 - 2.1 * week]
+	stored.need = SprintCatalog.card_need(stored.kind, stored.line, stored.target_tier, 500.0)
+	stored.progress = [stored.need[0], stored.need[1], stored.need[2] - 2.1 * week]
 	PromiseRegistry.create("co_nordica", step, 1).due_sprint = SprintSystem.sprint_number()
 	SprintSystem.start()
 	GameState.advance_day()
@@ -1068,8 +1065,8 @@ func _seed_paper_world(event_id: String) -> Dictionary:
 	SprintSystem.start()
 	var card: Dictionary = GameState.product.cards[id]
 	var phase: int = {"design": 0, "dev": 1, "test": 2}.get(String(paper.stage), 1)
-	card.effort = 20
-	card.progress = [4.0 if phase > 0 else 0.0, 12.0 if phase > 1 else 0.0, 0.0]
+	card.need = SprintCatalog.card_need(card.kind, card.line, card.target_tier, 100.0)
+	card.progress = [card.need[0] if phase > 0 else 0.0, card.need[1] if phase > 1 else 0.0, 0.0]
 	var roles: Array = paper.speaker_role if paper.speaker_role is Array else [paper.speaker_role]
 	var crew: Array = CharacterRegistry.get_employees().filter(func(c: Character) -> bool: return c.role in roles)
 	var speaker: Character = crew[0] if not crew.is_empty() else CharacterRegistry.get_founder()
@@ -3699,12 +3696,11 @@ func _run_ending_shot(key: String) -> void:
 # English (<stem>_rebuilt: the rebuilt picker keeps the picks); live:decision_paper presses the decision row's
 # Karara git, so the frame is Olaylar on the sprint paper; live:gate saves the MVP gate, presses its
 # Yayınla and saves the v1.0 note (<stem>_publish); live:plan saves the plan, presses Bu sprinti boş
-# geçir (<stem>_skip, its confirm row open) and then Sprinti başlat (<stem>_start); live:week1 saves the
-# 1-week plan, presses Sprinti başlat (<stem>_run) and plays the week, the sprint closing onto its release note
-# (<stem>_close); live:rnd saves the planning with the founder in R&D, presses Ar-Ge'ye git and saves R&D with the
-# founder's node selected (<stem>_go). live:overview_pre is the Sprint-1 plan with the pointer on the locked GENEL BAKIŞ tab
-# (<stem>_tip); live:server_* is GENEL BAKIŞ on the live ERP (see _seed_server), the plain frame and, for the states that
-# have a tip to read, <stem>_tip with the pointer on the control it belongs to.
+# geçir (<stem>_skip, its confirm row open) and then Sprinti başlat (<stem>_start); live:rnd saves the planning with the
+# founder in R&D, presses Ar-Ge'ye git and saves R&D with the founder's node selected (<stem>_go). live:overview_pre is
+# the Sprint-1 plan with the pointer on the locked GENEL BAKIŞ tab (<stem>_tip); live:server_* is GENEL BAKIŞ on the
+# live ERP (see _seed_server), the plain frame and, for the states that have a tip to read, <stem>_tip with the pointer
+# on the control it belongs to.
 func _run_product_shot(id: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
@@ -3742,12 +3738,8 @@ func _run_product_shot(id: String) -> void:
 		var to_en := func() -> void:
 			TranslationServer.set_locale("en")
 			EventBus.language_changed.emit("en")
-		var week := func() -> void:
-			GameState.advance_day()
-			SprintSystem.daily_tick()
 		var then: Dictionary = {"live:gate": [[press.call("PROD_SHIP_PUBLISH"), "_publish"]],
 			"live:plan": [[press.call("PRODUCT_SKIP_SPRINT"), "_skip"], [press.call("PRODUCT_START_SPRINT"), "_start"]],
-			"live:week1": [[press.call("PRODUCT_START_SPRINT"), "_run"], [week, "_close"]],
 			"live:rnd": [[press.call("PRODUCT_GO_RND"), "_go"]],
 			"live:pick_relang": [[to_en, "_rebuilt"]]}
 		var base := stem
@@ -3824,17 +3816,17 @@ func _product_overview_shot(scenario: String, stem: String) -> void:
 	await _finish_shot(stem + "_tip", 1.2)
 
 
-## live:<pick|pick_named|pick_relang|plan|week1|active|decision_paper|b2c_mvp|b2c_live|b2b_mvp|b2b_mature|b2b_quarter|
+## live:<pick|pick_named|pick_relang|plan|active|decision_paper|b2c_mvp|b2c_live|b2b_mvp|b2b_mature|b2b_quarter|
 ## b2b_requests|gate|rnd|delegate|solo15|solo15_tip|solo12_active|overview_pre|server_80|server_94|server_104|server_growth|
 ## server_auto|server_tier|server_final|server_clause|server_b2c>. The pick ones leave the product untyped (the type picker). The solo ones
 ## leave the founder alone from 09:00: solo15 and solo15_tip stop in Sprint 1 planning at 15 hours, solo15 with
 ## the lead's plan applied (its hover on the carried card), solo15_tip with the plan only offered; solo12_active
-## starts the lead's plan at 12 hours, two cards over capacity (6/5). The rest choose a type, staff it with the
+## starts the lead's plan at 12 hours, two cards over capacity (30/28). The rest choose a type, staff it with the
 ## HR shot roster (gate and rnd keep the founder alone at the default hours) and play through SprintSystem with
 ## only its own daily step ticking, so no card mounts: plan stops in Sprint 1 planning with the lead's plan and
-## the first open card in the next column (the product and design roles go ahead on it), week1 the same with the
-## 1-week length picked before the lead plans, active (that card too) and decision_paper in its second week with
-## a sprint paper on the desk (drawn at chance 1: the developer fixture paper, spoken by the person on the card), gate on the MVP gate, rnd
+## the first open card in the next column (the product and design roles go ahead on it), active (that card too) and
+## decision_paper in its second week with a sprint paper on the desk (drawn at chance 1: the developer fixture paper,
+## spoken by the person on the card), gate on the MVP gate, rnd
 ## publishes it, plans the next sprint and puts the founder on the Data Model research, b2c_mvp on the CANLI
 ## v1.0 release note it publishes, delegate on Sprint 2, started by the PM once Sprint 1's note is left (shipped
 ## at the gate) with planning delegated. b2c_live publishes as b2c_mvp and plays four weeks with the audience
@@ -3880,19 +3872,15 @@ func _seed_product_live(scenario: String) -> void:
 		start_next.call()
 		while SprintSystem.mode() == "active":
 			day.call()
-	if scenario == "week1":
-		SprintSystem.set_weeks(1)
 	SprintSystem.apply_lead()
-	if scenario in ["plan", "week1", "active"]:
+	if scenario in ["plan", "active"]:
 		SprintSystem.send_next(SprintCatalog.open_cards([])[0].id)
-	if scenario in ["plan", "week1", "overview_pre"]:
+	if scenario in ["plan", "overview_pre"]:
 		return
 	if scenario in ["active", "decision_paper"]:
 		# The week's tick draws the paper at once; decision_paper's is the developer's, about the card in its
 		# development phase.
-		var chance: Dictionary = SprintCatalog.cfg("decision.sprint_chance")
-		for weeks in chance:
-			chance[weeks] = 1.0
+		(SprintCatalog.cfg("decision") as Dictionary).sprint_chance = 1.0
 		if scenario == "decision_paper":
 			MailClock.instant = true   # the tick is driven here, no hour delivers the paper
 			if paper == "":
@@ -3904,10 +3892,9 @@ func _seed_product_live(scenario: String) -> void:
 		for id in kept.slice(1):
 			SprintSystem.remove(id)
 		var tuned: Dictionary = GameState.product.cards[kept[0]]
-		var work: Array = [8, 1.6, 0.0, 0.0] if alone else [40, 8.0, 24.0, 0.0] if paper.begins_with("product.sprint_untested") \
-			else [20, 4.0, 0.0, 0.0]
-		tuned.effort = work[0]
-		tuned.progress = work.slice(1)
+		var work: Array = [40.0, 1] if alone else [200.0, 2] if paper.begins_with("product.sprint_untested") else [100.0, 1]
+		tuned.need = SprintCatalog.card_need(tuned.kind, tuned.line, tuned.target_tier, work[0])
+		tuned.progress = [tuned.need[0] if work[1] > 0 else 0.0, tuned.need[1] if work[1] > 1 else 0.0, 0.0]
 	SprintSystem.start()
 	day.call()
 	if scenario in ["active", "decision_paper"]:

@@ -7,11 +7,10 @@ extends RefCounted
 # (SprintCatalog). Sinyaller EventBus'ın Sprint bölümündedir.
 #
 # Bir gün bir haftadır. Başlatılan sprintin ilk haftası başlatma günüdür; her günlük tik biten
-# haftanın işini kartlara döker. Sprint oyuncunun seçtiği sürenin sonunda, kartlarının hepsi daha
-# önce biterse o haftanın sonunda kapanır ve sürüm yazılır. Atama hafta başında yapılır ve hafta
-# boyunca kartta görünür.
+# haftanın işini kartlara döker. Sprint iki haftadır; kartlarının hepsi daha önce biterse o haftanın
+# sonunda kapanır ve sürüm yazılır. Atama hafta başında yapılır ve hafta boyunca kartta görünür.
 
-## Kartın progress ve shares dizilerinin sırası: Tasarım (araştırmada Ürün), Geliştirme, Test.
+## Kartın progress ve need dizilerinin sırası: Tasarım (araştırmada Ürün), Geliştirme, Test.
 const TEST_PHASE := 2
 const PHASE_DONE := 3
 const EPS := 0.001
@@ -75,7 +74,7 @@ static func set_type_draft(d: Dictionary) -> void:
 static func new_state(day: int) -> Dictionary:
 	return {
 		"sprint": {"number": 1, "start_day": day, "status": "planning", "cards": [], "capacity": 0,
-			"lead_applied": false, "weeks": int(SprintCatalog.cfg("sprint_weeks"))},
+			"lead_applied": false},
 		"next": {"number": 2, "cards": []},
 		"mode": "plan", "cards": {}, "release": {}, "releases": [], "polish": {},
 		"requests": [], "rival_hits": [],
@@ -137,7 +136,6 @@ static func start() -> bool:
 ## Başlatmanın kendisi: kapısı sonradan kapanmış kart sonraki sütuna geçer, kalanlar kilitlenir,
 ## lisans bedeli bir kez alınır, ilk haftanın ataması yapılır. Kartsız başlayan sprint (boş geçirme,
 ## planlanacak kart yokken otomatik başlangıç) boş sprinttir; damgası ilk çizimden önce yazılır.
-## Kapanmayan haftası olmayan 1 haftalık sprint, karar kâğıdını ve demo gününü başlarken çeker.
 static func _begin() -> void:
 	var p: Dictionary = _p()
 	for card in _sprint_cards():
@@ -161,9 +159,7 @@ static func _begin() -> void:
 		FinanceSystem.apply_one_time_cost(cost, "build_commit")
 	p.mode = "active"
 	SprintBridges.tick_rivals(int(sprint.number))
-	_staff_week(sprint_weeks() == 1)
-	if sprint_weeks() == 1:
-		EventGate.request("team.demo_day")
+	_staff_week(false)
 	_ask_promise()
 	EventBus.sprint_started.emit(int(sprint.number))
 	_changed()
@@ -183,7 +179,7 @@ static func plan_next() -> void:
 			p.next.cards.erase(c.id)
 	var number: int = int(p.next.number)
 	p.sprint = {"number": number, "start_day": GameState.day, "status": "planning", "cards": p.next.cards,
-		"capacity": 0, "lead_applied": false, "weeks": sprint_weeks()}
+		"capacity": 0, "lead_applied": false}
 	p.next = {"number": number + 1, "cards": []}
 	p.release = {}
 	p.mode = "plan"
@@ -319,15 +315,6 @@ static func finish_beta_cards() -> void:
 		(p.next if p.mode == "release" else p.sprint).cards.append(c.id)
 
 
-## Sprintin süresi oyuncunun seçimidir (sprint.json `sprint_lengths`), yalnız planlamada değişir; sonraki
-## sprintler seçimi taşır.
-static func set_weeks(weeks: int) -> void:
-	if mode() != "plan":
-		return
-	_p().sprint.weeks = weeks
-	_changed()
-
-
 ## Liderin önerisi bu sprintin boş yerlerini doldurur.
 static func apply_lead() -> void:
 	if mode() != "plan":
@@ -340,20 +327,21 @@ static func apply_lead() -> void:
 
 # --- Karar kartının etkileri (olay motorunun sprint fiilleri) --------------------------
 
-## Bekleyen kararın kartının eforu ± puan; kartın kimliği, karar yoksa "".
+## Bekleyen kararın kartının eforu ± puan, aşamalarına ihtiyaçlarıyla orantılı dağılır; kartın kimliği, karar yoksa "".
 static func decision_effort(amount: int) -> String:
 	var c: Dictionary = decision_card()
 	if not c.is_empty():
-		c.effort_mod = int(c.effort_mod) + effort_change(amount)
+		_scale_need(c, effort_change(amount))
 		_changed()
 	return c.get("id", "")
 
 
-## Eforun gerçekten değişeceği puan: kart en az 1 puan kalır ve yapılmış işin altına inmez. Olay
-## çipi de bunu gösterir, yazılan ile görünen aynıdır; bekleyen karar yoksa istenen puan.
+## Eforun gerçekten değişeceği puan: kart sprint.json `paper.min_points` puanın altına ve yapılmış işin altına inmez.
+## Olay çipi de bunu gösterir, yazılan ile görünen aynıdır; bekleyen karar yoksa istenen puan.
 static func effort_change(amount: int) -> int:
 	var c: Dictionary = decision_card()
-	return amount if c.is_empty() else maxi(amount, maxi(1, ceili(_worked(c) - EPS)) - roundi(total(c)))
+	return amount if c.is_empty() else maxi(amount,
+		maxi(int(SprintCatalog.cfg("paper.min_points")), ceili(_worked(c) - EPS)) - roundi(total(c)))
 
 
 ## Bekleyen kararın kartına ± puan ilerleme: artı sıradaki fazlardan dolar, eksi son fazdan geri alır.
@@ -406,11 +394,11 @@ static func decision_carry() -> String:
 	return c.id
 
 
-## Bekleyen kararın kartından `share` payı (kartın eforunun, yukarı yuvarlanır) çıksa kaç puan çıkar: yapılmış işin ve 1
-## puanın altına inilmez (effort_change).
+## Bekleyen kararın kartından `share` payı (kartın eforunun, yukarı yuvarlanır) çıksa kaç puan çıkar: yapılmış işin ve
+## `paper.min_points` puanın altına inilmez (effort_change).
 static func trim_points(share: float) -> int:
 	var c: Dictionary = decision_card()
-	return 0 if c.is_empty() else -effort_change(-ceili(share * total(c)))
+	return 0 if c.is_empty() else -effort_change(-ceili(share * total(c) - EPS))
 
 
 ## Kâğıdın karttan iş almasının bedeli (`sprint_card_trim`): {of (card_ref), share, cut (karttan çıkan puan), work (sonraki
@@ -428,7 +416,7 @@ static func decision_trim(plan: Dictionary) -> String:
 	var c: Dictionary = decision_card()
 	if c.is_empty():
 		return ""
-	c.effort_mod = int(c.effort_mod) - int(plan.cut)
+	_scale_need(c, -float(plan.cut))
 	if int(plan.work) > 0:
 		_place(_follow_card(c, int(plan.work)), false)
 	if int(plan.bugs) > 0:
@@ -505,7 +493,7 @@ static func decision_test_half() -> int:
 	var c: Dictionary = decision_card()
 	if c.is_empty() or phase(c) != TEST_PHASE:
 		return 0
-	return ceili((float(c.shares[TEST_PHASE]) * total(c) - float(c.progress[TEST_PHASE])) / 2.0)
+	return ceili((float(c.need[TEST_PHASE]) - float(c.progress[TEST_PHASE])) / 2.0)
 
 
 ## Koşan sprintin çalışma saati çarpanı (fazla mesai kararı) sprint sonuna kadar. Döndürdüğü
@@ -608,13 +596,13 @@ static func plannable_sprint() -> int:
 	return sprint_number() + (0 if mode() == "plan" else 1)
 
 
-## Sprintin süresi (hafta), oyuncunun seçimi; seçimden önceki kayıtta ve tür seçilmeden varsayılan.
+## Sprintin süresi (hafta): hep sprint.json `sprint_weeks`.
 static func sprint_weeks() -> int:
-	return int(_p().get("sprint", {}).get("weeks", SprintCatalog.cfg("sprint_weeks")))
+	return int(SprintCatalog.cfg("sprint_weeks"))
 
 
-## Haftayla sayılan süre seçilen sprint süresiyle kaç sprint eder: talep ve söz son tarihi, çeyrek,
-## rakip penceresi ve araştırma cümlesi hafta sayar ve sprint sırasıyla okunur.
+## Haftayla sayılan süre kaç sprint eder: talep ve söz son tarihi, çeyrek, rakip penceresi ve araştırma cümlesi
+## hafta sayar ve sprint sırasıyla okunur.
 static func sprints_in(weeks: int) -> int:
 	return int(float(weeks) / sprint_weeks())
 
@@ -652,13 +640,12 @@ static func card_load(c: Dictionary) -> float:
 	return remaining(c) + (_worked(c) - float(c.base) if mode() == "active" else 0.0)
 
 
-## Kartın kalan puanı: fazların payından eksik kalan iş. Karar eforu düşürdüyse bir fazın fazlası
+## Kartın kalan puanı: fazların ihtiyacından eksik kalan iş. Karar eforu düşürdüyse bir fazın fazlası
 ## öbürüne sayılmaz; devreden kartın biten puanı eforundan bunu çıkarır.
 static func remaining(c: Dictionary) -> float:
-	var effort: float = total(c)
 	var left: float = 0.0
 	for i in PHASE_DONE:
-		left += maxf(0.0, float(c.shares[i]) * effort - float(c.progress[i]))
+		left += maxf(0.0, float(c.need[i]) - float(c.progress[i]))
 	return left
 
 
@@ -673,9 +660,9 @@ static func points_left(ids: Array) -> float:
 ## Kartın geliştirmeye hazır payı (0..1): ilk fazının (tasarım) biten oranı. Önden hazırlanmayan kartta -1:
 ## araştırmanın geliştirmesi, düzeltmenin tasarımı yoktur.
 static func ready_share(c: Dictionary) -> float:
-	if float(c.shares[0]) <= 0.0 or float(c.shares[1]) <= 0.0:
+	if float(c.need[0]) <= 0.0 or float(c.need[1]) <= 0.0:
 		return -1.0
-	return 1.0 if phase(c) > 0 else float(c.progress[0]) / (float(c.shares[0]) * total(c))
+	return 1.0 if phase(c) > 0 else float(c.progress[0]) / float(c.need[0])
 
 
 ## Bu sprintte bitirilen puan (yarım kalan ve kararla erken devreden işler dahil).
@@ -899,7 +886,7 @@ static func _unfinished(id := "", extra := 0) -> Array:
 	var cards: Array = _played_copies()
 	for c in cards:
 		if c.id == id:
-			c.effort_mod = int(c.effort_mod) + extra
+			_scale_need(c, extra)
 	_play_out(cards, weeks_left(), team())
 	return cards.filter(func(c: Dictionary) -> bool: return phase(c) < PHASE_DONE).map(
 		func(c: Dictionary) -> String: return c.id)
@@ -923,11 +910,10 @@ static func _in_sprint(id: String) -> bool:
 	return mode() == "active" and id in _p().sprint.cards
 
 
-## Kartın kalan test işi yarıya iner (payından düşer; biten iş ve öbür aşamalar değişmez) ve kart kısaltılmış testle
+## Kartın kalan test işi yarıya iner (ihtiyacından düşer; biten iş ve öbür aşamalar değişmez) ve kart kısaltılmış testle
 ## çıkmış sayılır (escape_chance).
 static func _halve_test(c: Dictionary) -> void:
-	var left: float = float(c.shares[TEST_PHASE]) * total(c) - float(c.progress[TEST_PHASE])
-	c.shares[TEST_PHASE] = float(c.shares[TEST_PHASE]) - left / 2.0 / total(c)
+	c.need[TEST_PHASE] = float(c.need[TEST_PHASE]) - (float(c.need[TEST_PHASE]) - float(c.progress[TEST_PHASE])) / 2.0
 	c.cut = true
 
 
@@ -943,7 +929,7 @@ static func cut_test(c: Dictionary) -> String:
 ## Kartın sürümde hatalı çıkma ihtimali: testi test rolü olmayan biri yaptıysa `faulty_chance`, testi kısaltıldıysa en az
 ## sprint.json `promise.cut_test_escape` [WORKING]; yoksa 0. Kapanış zarı (`_close`) bunu okur.
 static func escape_chance(c: Dictionary) -> float:
-	var chance: float = float(SprintCatalog.cfg("faulty_chance")) if c.faulty else 0.0
+	var chance: float = float(SprintCatalog.cfg("faulty_chance")) if c.get("faulty", false) else 0.0
 	return maxf(chance, float(SprintCatalog.cfg("promise.cut_test_escape"))) if c.get("cut", false) else chance
 
 
@@ -1072,7 +1058,7 @@ static func worked(character_id: String) -> bool:
 # --- Hafta ve kapanış ----------------------------------------------------------------
 
 ## Biten haftanın işi kartlara, sonra sonraki sütunun önden hazırlanan kartlarına dökülür; sprintin
-## süresi dolduysa ya da kartlarının hepsi bittiyse sprint kapanır, değilse yeni haftanın kararı ve
+## süresi dolduysa ya da kartlarının hepsi bittiyse sprint kapanır, değilse 2. haftanın kararı ve
 ## ataması yapılır. Kişinin haftalık puanı atamanın sırasıyla harcanır: ekip hafta içinde değişmediyse
 ## sonuç önizlemeyle aynıdır.
 static func _end_week() -> void:
@@ -1151,11 +1137,10 @@ static func _assign(cards: Array, people: Array, ahead: Array = []) -> void:
 ## yarı hızla, önden giden ilk fazın ardında durur. Test fazı Test rolü olmadan yapılırsa kart sürümde
 ## hatalı çıkabilir.
 static func _work(c: Dictionary, person: Dictionary, budget: float) -> float:
-	var effort: float = total(c)
 	var at: int = phase(c)
 	while at < PHASE_DONE and budget > EPS and (at == 0 or not person.ahead):
 		var speed: float = 1.0 if _role(c, at) in person.fits else float(SprintCatalog.cfg("no_role_speed"))
-		var work: float = minf(float(c.shares[at]) * effort - float(c.progress[at]), budget * speed)
+		var work: float = minf(float(c.need[at]) - float(c.progress[at]), budget * speed)
 		c.progress[at] = float(c.progress[at]) + work
 		budget -= work / speed
 		if at == TEST_PHASE and speed < 1.0:
@@ -1193,9 +1178,9 @@ static func _play_out(cards: Array, weeks: int, people: Array, ahead: Array = []
 	return {"split": split, "spare": spare}
 
 
-## Sprintin kâğıt fırsatında (1 haftalık sprintte başlarken, 2 haftalıkta ilk haftanın sonunda) sprint başına tek zar
-## atılır: `sprint.json` `decision.sprint_chance`'ın [WORKING] (sprint süresine göre) altında kalırsa sprintin bir kartı
-## için havuzdan bir kâğıt istenir, yoksa sprint kâğıtsızdır. Söz olayı ya da acil durum gelen sprintte kâğıt gelmez
+## Sprintin kâğıt fırsatında (ilk haftanın sonunda) sprint başına tek zar atılır: `sprint.json`
+## `decision.sprint_chance`'ın [WORKING] altında kalırsa sprintin bir kartı için havuzdan bir kâğıt istenir, yoksa
+## sprint kâğıtsızdır. Söz olayı ya da acil durum gelen sprintte kâğıt gelmez
 ## (`_paper_blocked`); aynı anda tek karar bekler. Havuz ağırlıklı sırayla denenir (`decision.seen_weight` [WORKING]: kâğıt kaç
 ## kez görüldüyse ağırlığı 1 / (1 + seen_weight × görülme)), her kâğıt sprintin bitmemiş kartlarında sırayla. Kâğıdın
 ## konuşanı varsa (`speaker_role`) o kartın konuşanı `_speaker`'dır ve kimsesi olmayan kart için kâğıt gelmez.
@@ -1207,8 +1192,7 @@ static func _request_decision() -> bool:
 	if not p.decision.is_empty() or int(p.get("decision_sprint", -1)) == number or _paper_blocked():
 		return false
 	p["decision_sprint"] = number
-	if EvDice.unit("paper", GameState.day, "sprint", "") >= float(
-			SprintCatalog.cfg("decision.sprint_chance." + str(sprint_weeks()))):
+	if EvDice.unit("paper", GameState.day, "sprint", "") >= float(SprintCatalog.cfg("decision.sprint_chance")):
 		return false
 	var pool: Array = (SprintCatalog.cfg("decision.cards") as Array).duplicate()
 	var order: Dictionary = {}
@@ -1632,8 +1616,10 @@ static func _refresh_fix_cards() -> void:
 	var p: Dictionary = _p()
 	for c in p.cards.values():
 		if c.kind == "fix" and c.state in ["candidate", "planned", "carried"]:
+			# Kâğıdın eklediği ya da aldığı puan ve kısaltılmış test kalır: aşamalar oranıyla büyür ya da küçülür.
+			var was: int = SprintCatalog.fix_effort(c.bugs)
 			c.bugs = ProductState.line_bugs(c.line)
-			c.effort = SprintCatalog.fix_effort(c.bugs)
+			_scale_need(c, SprintCatalog.fix_effort(c.bugs) - was)
 			# A card a decision paper waits on stays until the paper settles: its expiry acts on it.
 			if c.bugs == 0 and not c.decision:
 				p.cards.erase(c.id)
@@ -1672,20 +1658,26 @@ static func _to_next(ids: Array) -> void:
 		_place(SprintCatalog.card_by_id(id), false)
 
 
-## Kartın eforu, karar fiilinin değişikliğiyle.
+## Kartın eforu: aşama ihtiyaçlarının toplamı, karar fiilinin değişikliğiyle.
 static func total(c: Dictionary) -> float:
-	return float(int(c.effort) + int(c.effort_mod))
+	return float(c.need[0]) + float(c.need[1]) + float(c.need[2])
+
+
+## Kartın eforu `points` puan değişir (eksi: azalır): her aşamanın ihtiyacı payı kadar dağılır.
+static func _scale_need(c: Dictionary, points: float) -> void:
+	var scale: float = 1.0 + points / total(c)
+	for i in PHASE_DONE:
+		c.need[i] = float(c.need[i]) * scale
 
 
 static func _worked(c: Dictionary) -> float:
 	return float(c.progress[0]) + float(c.progress[1]) + float(c.progress[2])
 
 
-## Kartın sıradaki fazı; üçü dolmuşsa PHASE_DONE. Payı olmayan faz öncekiler bitince biter.
+## Kartın sıradaki fazı; üçü dolmuşsa PHASE_DONE. İhtiyacı olmayan faz öncekiler bitince biter.
 static func phase(c: Dictionary) -> int:
-	var effort: float = total(c)
 	for i in PHASE_DONE:
-		if float(c.shares[i]) * effort - float(c.progress[i]) > EPS:
+		if float(c.need[i]) - float(c.progress[i]) > EPS:
 			return i
 	return PHASE_DONE
 
@@ -1715,7 +1707,7 @@ static func _fits(c: Character) -> Array:
 	return areas.keys().filter(func(r: String) -> bool: return HRConstants.can_hold_area(c.role, areas[r], c.category))
 
 
-## Kişisiz haftalık puan (işe alım dosyası da okur): 2 × beceri bandı (rolün ana alanının 0-10 puanı) ×
+## Kişisiz haftalık puan (işe alım dosyası da okur): 10 × beceri bandı (rolün ana alanının 0-10 puanı) ×
 ## çalışma saati; verim kişinindir, burada yok.
 static func points_for(role_id: String, role_stats: Dictionary, hours: int) -> float:
 	var stat: int = int(role_stats.get(HRConstants.role_key_area(role_id), 0))
@@ -1725,7 +1717,7 @@ static func points_for(role_id: String, role_stats: Dictionary, hours: int) -> f
 	return float(SprintCatalog.cfg("person_points_week")) * mult * HRConstants.hours_output_mult(hours)
 
 
-## Haftalık puan: 2 × beceri bandı (ana alanın 0-10 puanı; kurucu sabit) × verim × çalışma saati × sprint payı.
+## Haftalık puan: 10 × beceri bandı (ana alanın 0-10 puanı; kurucu sabit) × verim × çalışma saati × sprint payı.
 static func _points(c: Character, hours: int) -> float:
 	var week: float = points_for(c.role, c.role_stats, hours) * HRSystem.productivity(c) if c.category != "founder" \
 		else float(SprintCatalog.cfg("person_points_week")) * float(SprintCatalog.cfg("founder_mult")) \

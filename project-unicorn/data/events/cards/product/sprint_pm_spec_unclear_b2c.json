@@ -62,7 +62,7 @@
       {
         "seam": "urun.decision_card_effort",
         "op": ">=",
-        "value": 5
+        "value": 25
       },
       {
         "seam": "urun.decision_phase",
@@ -78,7 +78,7 @@
       "effects": [
         {
           "verb": "sprint_card_effort",
-          "amount": 1
+          "amount": 5
         }
       ]
     },
@@ -88,7 +88,7 @@
       "effects": [
         {
           "verb": "sprint_card_effort",
-          "amount": -1
+          "amount": -5
         },
         {
           "verb": "audience_delta",
@@ -103,7 +103,7 @@
       "effects": [
         {
           "verb": "sprint_card_effort",
-          "amount": 3
+          "amount": 15
         }
       ]
     }
@@ -135,7 +135,7 @@
     "penalties": [
       {
         "verb": "sprint_card_effort",
-        "amount": -1
+        "amount": -5
       },
       {
         "verb": "audience_delta",

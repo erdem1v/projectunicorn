@@ -75,7 +75,7 @@
       "effects": [
         {
           "verb": "sprint_card_effort",
-          "amount": 2
+          "amount": 10
         }
       ]
     },
@@ -85,7 +85,7 @@
       "effects": [
         {
           "verb": "sprint_card_trim",
-          "amount": 2,
+          "amount": 10,
           "follow": true
         }
       ]

@@ -39,7 +39,6 @@ extends RefCounted
 #             value (yıllık $), area_name, card_id (talebin kartı), buttons: [...],
 #             addable ("+" bu talep için açık)}
 # center = {mode: "plan"|"active"|"release", sprint (-1 = sprint yok), weeks (sprintin süresi), week (active),
-#           lengths: [int] (planlamada seçilebilen süreler),
 #           capacity: {used, total, done, state: "ok"|"over"|"blocked", segments: [{pts}]} or null (puanlar kesirli),
 #           team: [person + {share}] (share: sprint payı, 1 ya da Yapım ve Destek tutanda 0,5), staffed (kadroda çalışan var),
 #           warning_text: "" or String (eksik rol),
@@ -284,7 +283,7 @@ static func _center(mode: String, release: Dictionary, outcome: Dictionary) -> D
 				status[part] += 1
 				card = _card(c, SprintCard.State.SPRINT_AKTIF, {"assignees": people, "queued": part == "queued",
 					"phases": _phases(c) if part == "running" else ["waiting", "waiting", "waiting"],
-					"phase_pts": {"done": float(c.progress[at]), "total": float(c.shares[at]) * SprintSystem.total(c)}
+					"phase_pts": {"done": float(c.progress[at]), "total": float(c.need[at])}
 						if at < SprintSystem.PHASE_DONE else null,
 					"decision": decision if c.decision else null})
 		segments.append({"pts": pts})
@@ -310,7 +309,6 @@ static func _center(mode: String, release: Dictionary, outcome: Dictionary) -> D
 		reason = (_t("PRODUCT_TEAM_NOBODY_JOBS") if rnd == null else rnd.text) if total == 0 else _t("PRODUCT_START_NEED_CARD")
 	return {
 		"mode": mode, "sprint": n if n > 0 else -1, "weeks": SprintSystem.sprint_weeks(), "week": SprintSystem.week(),
-		"lengths": (SprintCatalog.cfg("sprint_lengths") as Array).map(func(w: float) -> int: return int(w)),
 		"capacity": _bar(load, total, SprintSystem.done_points(), segments) if n > 0 else null,
 		"team": team.map(func(t: Dictionary) -> Dictionary:
 			return _person(CharacterRegistry.get_character(t.id)).merged({"share": t.share})),
@@ -417,10 +415,8 @@ static func _flags(n: int) -> Array:
 
 # --- Çeyrek ----------------------------------------------------------------------------
 
-## ÇEYREK PM varken açılır. Sütunlar bu sprint, PM'in planladığı sprintler ve çeyreği varsayılan sprint
-## süresiyle altı sütuna tamamlayan boşlardır (1 haftalık sprintin on iki sütunu pencereye sığmaz);
-## sonraki sprintin sütunu orada duran kartların üstüne PM'in önerisini ekler. Gelecek sprintin
-## kapasitesi bugünkü ekiptir.
+## ÇEYREK PM varken açılır. Sütunlar bu sprint, PM'in planladığı sprintler ve çeyreği altı sütuna tamamlayan boşlardır;
+## sonraki sprintin sütunu orada duran kartların üstüne PM'in önerisini ekler. Gelecek sprintin kapasitesi bugünkü ekiptir.
 static func _quarter(center: Dictionary, next: Dictionary) -> Dictionary:
 	if SprintCatalog.quarter_pm() == null:
 		return {"state": "locked_no_pm", "goal": null, "columns": []}

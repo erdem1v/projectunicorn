@@ -405,7 +405,7 @@ static func _first_name(id: String, ctx: Dictionary, names: Dictionary, fallback
 	return full.split(" ", false)[0] if full != "" else fallback
 
 
-## "Batch Invoicing +2 points": a card and the points it gains or sheds.
+## "Batch Invoicing +10 points": a card and the points it gains or sheds.
 static func _card_points(item: Dictionary, points: int, polarity: String) -> Dictionary:
 	return _part(_t(Fmt.count_key("EFFECT_CARD_POINTS", absi(points))).format(
 		{"card": _card_name(item), "v": _num(points)}), "", polarity)

@@ -89,9 +89,9 @@ func _build(id: String) -> Dictionary:
 			m.center.cards = [
 				_deck("gorusme", SprintCard.State.ADAY, {"priority": true, "addable": true}),
 				_deck("ilk_tur", SprintCard.State.ADAY_ALINMIS, {"tag_sprint": 8}),
-				_deck("mobil_giris", SprintCard.State.SPRINT_PLAN, {"spills": true, "planned_done": 1.5}),
+				_deck("mobil_giris", SprintCard.State.SPRINT_PLAN, {"spills": true, "planned_done": 7.5}),
 				_deck("ucretli", SprintCard.State.SPRINT_PLAN, {"no_start": 8}),
-				_deck("oto_yedek", SprintCard.State.DEVREDEN, {"remaining": 0.25}),
+				_deck("oto_yedek", SprintCard.State.DEVREDEN, {"remaining": 1.25}),
 				_deck("etiketler", SprintCard.State.PLANLANAN),
 				_deck("akilli_arama", SprintCard.State.KILITLI, {"locked_node": tr("PROD_LOCK_RESEARCH").format({"node": _p("Gelişmiş arama", "Advanced search")}),
 					"locked_rnd": "semantic_index"}),
@@ -115,7 +115,7 @@ func _build(id: String) -> Dictionary:
 			# Deniz Yapım ve Destek tutar: sprintte yarım payla; Kaan yalnız Destek'te, ekipte yok.
 			var team: Array = _team()
 			m.center.team = [team[0], team[1].merged({"share": 0.5}, true), team[2]]
-			m.center.capacity.total = 10
+			m.center.capacity.total = 50
 			_resum(m.center)
 		"team_none":
 			# Kadro var ama Yapım ya da Test işinde kimse yok: kartlar planda, sprint başlamaz.
@@ -236,8 +236,6 @@ func _apply(m: Dictionary, kind: String, args: Dictionary) -> void:
 		"add", "pull": _place(m, args.card_id, "center")
 		"send_next": _place(m, args.card_id, "next")
 		"remove": _place(m, args.card_id, "")
-		"weeks":
-			m.center.weeks = args.weeks
 		"apply_lead":
 			m.center.lead_tip = null   # fikstür yuvaları doldurmaz; öneri kullanıldı diye düşer
 		"publish":
@@ -356,7 +354,7 @@ func _c2() -> Dictionary:
 	var m := _c1()
 	m.ui = _ui_state("", "")
 	m.center = _center("active", _active_cards(), {
-		"capacity": {"total": 12, "done": 2},
+		"capacity": {"total": 60, "done": 10},
 		"status": {"done": 1, "running": 1, "queued": 0, "decisions": 1},
 		"next_version": {"label": _version("1.5"), "weeks": 1},
 	})
@@ -374,8 +372,8 @@ func _c3() -> Dictionary:
 		"gate": false,
 		"rnd_open": false,
 		"shipped": [_deck("kisa_kayit", SprintCard.State.BITTI), _shipped_fix("kesinti", 5, 0)],
-		"carried": [{"name": carried.name, "kind": carried.kind, "done": 3, "total": 5, "to_sprint": 8}],
-		"velocity": {"done": 8, "total": 12},
+		"carried": [{"name": carried.name, "kind": carried.kind, "done": 15, "total": 25, "to_sprint": 8}],
+		"velocity": {"done": 40, "total": 60},
 		"result": {"kind": "actual", "text": _p("10 yeni kullanıcıdan 6'sı ilk hafta kaldı (önce 4).",
 			"6 of 10 new users stayed the first week (4 before).")},
 		"press": {"outlet": "WORLD_OUTLET_TEKNOGUNDEM",
@@ -465,7 +463,7 @@ func _notly_areas(released: bool) -> Array:
 func _notly_next(carried: bool) -> Dictionary:
 	var cards: Array = [_deck("ilk_tur", SprintCard.State.PLANLANAN), _deck("oto_yedek", SprintCard.State.PLANLANAN)]
 	if carried:
-		cards.push_front(_deck("filtreli", SprintCard.State.DEVREDEN, {"remaining": 2}))
+		cards.push_front(_deck("filtreli", SprintCard.State.DEVREDEN, {"remaining": 10}))
 	return {"sprint": 8, "flags": [_rival_flag()], "cards": cards}
 
 
@@ -491,7 +489,7 @@ func _column(sprint: int, kind: String, cards: Array, flags: Array) -> Dictionar
 	var col := {"sprint": sprint, "kind": kind, "capacity": null, "pm": kind == "proposed", "flags": flags,
 		"cards": cards, "approved": false}
 	if kind != "empty":
-		col.capacity = _capacity(cards, 12, 0, sprint + 1)
+		col.capacity = _capacity(cards, 60, 0, sprint + 1)
 	return col
 
 
@@ -500,7 +498,7 @@ func _active_cards() -> Array:
 	return [
 		_deck("kesinti", SprintCard.State.BITTI, {"phases": ["done", "done", "done"], "assignees": [_person("Kaan")]}),
 		_deck("kisa_kayit", SprintCard.State.SPRINT_AKTIF, {"phases": ["done", "done", "active"],
-			"phase_pts": {"done": 0.4, "total": 0.6}, "assignees": [_person("Ece"), _person("Kaan")]}),
+			"phase_pts": {"done": 2.0, "total": 3.0}, "assignees": [_person("Ece"), _person("Kaan")]}),
 		_deck("filtreli", SprintCard.State.SPRINT_AKTIF, {"phases": WAITING, "decision": {"event_id": "fixture.thesis_open",
 			"item": "", "sender": INBOX.named_employee("Deniz", ""), "subject": EvPresenter.text_block(EvCatalog.card("product.sprint_dev_shorter_path")).title,
 			"weeks_left": 1, "last": true}}),
@@ -517,37 +515,37 @@ func _sprint_cards() -> Array:
 func _deck_table() -> Dictionary:
 	var founder := _p("Kurucu", "Founder")
 	return {
-		"kesinti": ["fix", "trust", ["dev"], 2, _p("Kesinti düzeltmesi", "Outage fix"), [_bugs(5, -1, 300), _clear("trust")],
+		"kesinti": ["fix", "trust", ["dev"], 10, _p("Kesinti düzeltmesi", "Outage fix"), [_bugs(5, -1, 300), _clear("trust")],
 			[["Kaan", 1]]],
-		"esitleme": ["fix", "core", ["dev"], 2, _p("Eşitleme düzeltmesi", "Sync fix"), [_bugs(5, -1, 300)], [["Kaan", 1]]],
-		"fatura_fix": ["fix", "core", ["dev"], 2, _p("Fatura düzeltmesi", "Invoicing fix"),
+		"esitleme": ["fix", "core", ["dev"], 10, _p("Eşitleme düzeltmesi", "Sync fix"), [_bugs(5, -1, 300)], [["Kaan", 1]]],
+		"fatura_fix": ["fix", "core", ["dev"], 10, _p("Fatura düzeltmesi", "Invoicing fix"),
 			[_bugs(6, 3, 140, "Nordica", 100)], [["Kaan", 1]]],
-		"kisa_kayit": ["feature", "onboarding", ["design", "dev"], 3, _p("Kısa kayıt", "Short sign-up"),
+		"kisa_kayit": ["feature", "onboarding", ["design", "dev"], 15, _p("Kısa kayıt", "Short sign-up"),
 			[_level("onboarding", 1, 2)], [["Ece", 1], ["Kaan", 1]]],
-		"ilk_tur": ["feature", "onboarding", ["design", "dev"], 2, _p("İlk tur rehberi", "First-run guide"),
+		"ilk_tur": ["feature", "onboarding", ["design", "dev"], 10, _p("İlk tur rehberi", "First-run guide"),
 			[_level("onboarding", 1, 2)], [["Ece", 1], ["Kaan", 1]]],
-		"mobil_giris": ["feature", "onboarding", ["dev", "test"], 4, _p("Mobil giriş", "Mobile login"),
+		"mobil_giris": ["feature", "onboarding", ["dev", "test"], 20, _p("Mobil giriş", "Mobile login"),
 			[_level("onboarding", 1, 2)], [["Kaan", 2]]],
-		"gorusme": ["research", "onboarding", ["product"], 1, _p("5 kullanıcıyla görüş", "Talk to 5 users"),
+		"gorusme": ["research", "onboarding", ["product"], 5, _p("5 kullanıcıyla görüş", "Talk to 5 users"),
 			[{"k": "research", "area": _short("onboarding")}], [[founder, 1]]],
-		"filtreli": ["polish", "core", ["dev"], 5, _p("Filtreli arama", "Filtered search"),
+		"filtreli": ["polish", "core", ["dev"], 25, _p("Filtreli arama", "Filtered search"),
 			[{"k": "holds", "area": _short("core"), "word": "strong"}, _cap_fx(_p("Arama", "Search"), 2, 3)],
 			[["Deniz", 2]]],
-		"oto_yedek": ["feature", "trust", ["dev"], 3, _p("Otomatik yedekleme", "Automatic backups"),
+		"oto_yedek": ["feature", "trust", ["dev"], 15, _p("Otomatik yedekleme", "Automatic backups"),
 			[_level("trust", 1, 2)], [["Deniz", 1], ["Kaan", 1]]],
-		"etiketler": ["feature", "core", ["design", "dev"], 4, _p("Etiketler", "Tags"),
+		"etiketler": ["feature", "core", ["design", "dev"], 20, _p("Etiketler", "Tags"),
 			[_cap_fx(_p("Etiketler", "Tags"), 0, 1)], [["Ece", 1], ["Deniz", 1]]],
-		"baglanti": ["feature", "growth", ["dev"], 4, _p("Bağlantıyla paylaşım", "Share by link"),
+		"baglanti": ["feature", "growth", ["dev"], 20, _p("Bağlantıyla paylaşım", "Share by link"),
 			[_level("growth", 2, 3)], [["Kaan", 2]]],
-		"ucretli": ["feature", "revenue", ["design", "dev"], 6, _p("Ücretli plan", "Paid plan"),
+		"ucretli": ["feature", "revenue", ["design", "dev"], 30, _p("Ücretli plan", "Paid plan"),
 			[_level("revenue", 0, 1)], [["Ece", 1], ["Deniz", 2]]],
-		"akilli_arama": ["feature", "core", ["dev"], 8, _p("Akıllı arama", "Smart search"),
+		"akilli_arama": ["feature", "core", ["dev"], 40, _p("Akıllı arama", "Smart search"),
 			[_cap_fx(_p("Arama", "Search"), 2, 3)], []],
-		"sso": ["feature", "trust", ["dev", "test"], 5, "SSO (Nordica)",
+		"sso": ["feature", "trust", ["dev", "test"], 25, "SSO (Nordica)",
 			[_level("trust", 1, 2), {"k": "request", "customer": "Nordica", "value": 12000}], [["Kaan", 2]]],
-		"excel": ["feature", "integrations", ["dev"], 3, _p("Tablo dışa aktarma (Palmiye)", "Spreadsheet export (Palmiye)"),
+		"excel": ["feature", "integrations", ["dev"], 15, _p("Tablo dışa aktarma (Palmiye)", "Spreadsheet export (Palmiye)"),
 			[_level("integrations", 1, 2), {"k": "request", "customer": "Palmiye", "value": 4000}], [["Deniz", 1]]],
-		"efatura": ["feature", "integrations", ["dev", "test"], 5, _p("e-Fatura entegrasyonu", "e-Invoice integration"),
+		"efatura": ["feature", "integrations", ["dev", "test"], 25, _p("e-Fatura entegrasyonu", "e-Invoice integration"),
 			[_level("integrations", 1, 2)], [["Deniz", 2]]],
 	}
 
@@ -603,7 +601,7 @@ func _cap(cap_name: String, tier: int) -> Dictionary:
 
 
 func _center(mode: String, cards: Array, extra: Dictionary) -> Dictionary:
-	var c := {"mode": mode, "sprint": 7, "weeks": 2, "week": 1, "lengths": [1, 2], "capacity": {"total": 12, "done": 0},
+	var c := {"mode": mode, "sprint": 7, "weeks": 2, "week": 1, "capacity": {"total": 60, "done": 0},
 		"team": _team(), "staffed": true, "warning_text": tr("PRODUCT_ROLE_MISSING").format({"role": _p("Test", "QA")}),
 		"idle_text": "", "cards": cards, "forecast": [], "status": {"done": 0, "running": 0, "queued": 0, "decisions": 0},
 		"empty": false, "pm_started": "", "plan_hold": false, "delegate": null,

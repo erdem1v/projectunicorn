@@ -2751,14 +2751,14 @@ fırtına 11:00 ile 16:00. Sürümü hatalı kritik hattı bozan hafta zarsız `
 slotundan gelir); §3.1: mandalın `one_shot`, `max_fires` ve `cooldown_weeks` alanları birbirinin alternatifidir.
 
 *Ne yapıldı.* Kâğıt sprint başına tek zarla gelir ve konuşanı kartta o fazda çalışan kişidir.
-- `SprintSystem._request_decision`: sprintin kâğıt fırsatında (1 haftalık sprintte `_begin`, 2 haftalıkta ilk haftanın sonu) tek zar
-  `EvDice.unit("paper", gün, "sprint")` atılır, ihtimal `sprint.json` `decision.sprint_chance` (`{"1": 0,3, "2": 0,5}`, bir ve iki haftalık sprintte
-  ayrı [WORKING, onay bekliyor]; sprintlerin en az üçte biri kâğıtsız kalır). Zar atılan sprint `GameState.product.decision_sprint`'tedir
+- `SprintSystem._request_decision`: sprintin kâğıt fırsatında (ilk haftanın sonu) tek zar
+  `EvDice.unit("paper", gün, "sprint")` atılır, ihtimal `sprint.json` `decision.sprint_chance` (0,5
+  [WORKING, onay bekliyor]; sprintlerin en az üçte biri kâğıtsız kalır). Zar atılan sprint `GameState.product.decision_sprint`'tedir
   (eski kayıtta `.get(…, -1)`): aynı sprintte ikinci kâğıt istenmez. Havuz `decision.cards` ağırlıklı sırayla denenir (ağırlık
   `1 / (1 + decision.seen_weight × EvLatches.fires)`, `seen_weight` 2 [WORKING, onay bekliyor]; sıra `u ^ (1 + seen_weight × görülme)`
   anahtarıyla, yani yerine koymadan ağırlıklı çekim) ve her kâğıt sprintin bitmemiş kartlarında sırayla; kartın koşulları bekleyen
   kartı okuduğu için `product.decision` (`{card_id, event_id, speaker}`) istekten önce yazılır, ret gelirse silinir. `decision.rate` ve kart
-  başı haftalık `hash()` zarı kalktı; `--sprint-probe` `rate=` her iki süreye aynı ihtimali verir.
+  başı haftalık `hash()` zarı kalktı; `--sprint-probe` `rate=` ihtimali ezer.
 - Hafta ataması kâğıttan önce yapılır (`_staff_week`: `_assign`, sonra kâğıt, kâğıt gelirse yeniden `_assign`): konuşan istek anında yakalanır
   (kartın `assignees`'i dolu), kâğıt gelince kartı beklediği için `assignees`'i boşalır (`card_decision_requested` anında okunur).
 - **Kâğıt sözleşmesi.** Kâğıt kartının JSON'unda `speaker_role` (karakterin rolü: `product_manager | designer | developer | tester |
@@ -2844,7 +2844,7 @@ yalnız bir pazara aitse onu gizleyen yol yoktur (§3.3: kilitli seçenek görü
 
 *Ne yapıldı.* Havuza PM (6), tasarımcı (7) ve testçi (8) kâğıtları girdi (W2); bedel seçeneğin kendisidir ve çip sayıyı söyler.
 - `sprint_card_trim` (nötr; `WRITER_VERBS`, O2 için sonuç fiilidir): `share` karar kartının `paper.trim_share` payını (yukarı yuvarlanır, yapılmış
-  işin ve 1 puanın altına inmez) karttan alır, `amount` kartın hiç almadığı iştir, `follow` ikisini ve `paper.reopen_points`'i sonraki
+  işin ve `paper.min_points` puanın altına inmez) karttan alır, `amount` kartın hiç almadığı iştir, `follow` ikisini ve `paper.reopen_points`'i sonraki
   sprintin kartı yapar, `bugs` ve `line` kart çıkınca o hatta açık hata yazar. Takip kartı (`follow: true`) kademesi aynı özellik kartıdır:
   kademeyi tutmuş kartı silen `plan_next` onu silmez ve kademenin lisansı yeniden kesilmez. Hata `leaks`te bekler, kapanışta
   `pending_faulty`ye girer (ürün canlı olana dek bekler) ve sürümü hatalı saydırmaz. Plan (`SprintSystem.trim_plan`) çipin, geçmiş

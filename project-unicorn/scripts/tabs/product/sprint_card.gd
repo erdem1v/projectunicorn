@@ -297,7 +297,7 @@ func _decision_rows(body: VBoxContainer, d: Dictionary) -> void:
 	body.add_child(SprintUiShared.pad(wait, Vector4i(UiTokens.D_AVATAR_ROW_SM + UiTokens.SPACE_M, 0, 0, 0)))
 
 
-## Efor dökümü: "3 puan · Ece 1 hafta · Kaan 1 hafta", kartın üstüne gelince.
+## Efor dökümü: "15 puan · Ece 1 hafta · Kaan 1 hafta", kartın üstüne gelince.
 func _effort(points: float) -> void:
 	var split: Array = _card.effort_split
 	if split.is_empty():

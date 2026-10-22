@@ -13,6 +13,8 @@ const PAUSE := "res://assets/icons/util/pause.svg"
 const INBOX_GLYPH := "res://assets/icons/util/inbox.svg"
 const TEAM_GLYPH := "res://assets/icons/rail/hr.svg"
 const PLUS := "res://assets/icons/util/plus.svg"
+## Devreden kartın ilerleme karesi 5 puandır: K3 sekiz kare tutar.
+const SQUARE_POINTS := 5.0
 
 
 ## Başlık ve alt sabit, arada kart yığını kayar: yığın uzasa da düğmeler yerinde kalır. Alt şerit ilk
@@ -69,16 +71,10 @@ func _center(model: Dictionary) -> void:
 	if c.mode == "release":
 		_release(col, c, model.next.sprint)
 		return
-	var meta: Control
+	var meta: Control = null
 	if c.mode == "active":
 		meta = SprintUiShared.label(SprintUiShared.SEP.strip_edges() + " " + tr("PRODUCT_WEEK_OF").format(
 			{"w": c.week, "t": c.weeks}), &"MetaMuted")
-	else:
-		# Süre planlamada seçilir: başlıktaki süre iki konumlu seçicidir.
-		var lengths: Array = c.lengths
-		meta = UiFactory.D_seg_pick(lengths.map(func(n: int) -> Dictionary:
-			return {"text": tr(Fmt.count_key("PRODUCT_WEEKS", n)).format({"n": n})}), lengths.find(c.weeks),
-			func(i: int) -> void: action.emit("weeks", {"weeks": lengths[i]}))
 	col.head.add_child(_title_row(c.sprint, meta, "PRODUCT_THIS_SPRINT"))
 	if c.sprint < 0:
 		return
@@ -271,7 +267,8 @@ func _release(col: Column, c: Dictionary, next_sprint: int) -> void:
 	for item in r.carried:
 		var row := _release_row(col.stack, item.kind, item.name)
 		# Biten puan dolu, kalan boş kare: devreden kart ilerlemesiyle taşınır.
-		row.add_child(SprintUiShared.squares(float(item.done), UiTokens.D_SQUARE_SM, UiTokens.D_BAR_EMPH, int(item.total)))
+		row.add_child(SprintUiShared.squares(float(item.done) / SQUARE_POINTS, UiTokens.D_SQUARE_SM, UiTokens.D_BAR_EMPH,
+			ceili(float(item.total) / SQUARE_POINTS)))
 		row.add_child(UiFactory.make_glyph(SprintUiShared.ARROW, UiTokens.D_ICON_PART, UiTokens.D_INK_4))
 		row.add_child(SprintUiShared.label(tr("PRODUCT_TAG_SPRINT").format({"n": item.to_sprint}), &"KeyText"))
 
@@ -344,7 +341,7 @@ func _next(next: Dictionary) -> void:
 		col.tooltip_text = tr("PRODUCT_NEXT_EMPTY")
 
 
-## "SPRINT 7 · Hafta 1/2 ... BU SPRINT"; `meta` başlığın ardındaki parçadır (süre seçici ya da hafta). Sprint
+## "SPRINT 7 · Hafta 1/2 ... BU SPRINT"; `meta` başlığın ardındaki parçadır (koşan sprintin haftası). Sprint
 ## yokken (canlı model) yalnız sağdaki etiket kalır.
 func _title_row(sprint: int, meta: Control, tag_key: String) -> HBoxContainer:
 	var row := SprintUiShared.box(UiTokens.SPACE_M)

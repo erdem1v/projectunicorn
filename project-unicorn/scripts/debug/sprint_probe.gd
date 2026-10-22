@@ -1,14 +1,14 @@
 extends RefCounted
 
 # --sprint-probe=hours=<h>:cards=<1|2>:ticks=<t>[:start=<hour>][:seeds=1][:seed=424242][:events=0|1][:rate=<r>]
-# [:lead=0|1][:gate=publish|more][:team=<n>][:weeks=<1|2>][:fill=0|1][:market=b2c|b2b][:incident=<kind>@<tick>]
+# [:lead=0|1][:gate=publish|more][:team=<n>][:fill=0|1][:market=b2c|b2b][:incident=<kind>@<tick>]
 # [:promise=0|1][:tstar=<1-5>][:pmstar=<1-5>][:plus=<role>@<stars>][:founder=0|1][:fixture=iz1|iz1b|iz2][:build=demo|ea|full]
 # [:planms=0|1]:
 # does the Product screen's sprint plan come true? A founder builds note_tool (market=b2b: the erp product, four
 # accounts signed the tick it goes live, two of a night-shift sector) for t ticks on each of the seeds seed,
 # seed+1, …, the company working h hours from start (the game's default start hour unless given); team=N adds N-1
-# mid-skilled employees in RunProbe.SMALL_CREW order (team=4: a developer, a designer and a tester), weeks= picks the sprint length
-# in Sprint 1's planning; incident=outage@8 makes tick 8's die an emergency of that kind (outage, month_close,
+# mid-skilled employees in RunProbe.SMALL_CREW order (team=4: a developer, a designer and a tester);
+# incident=outage@8 makes tick 8's die an emergency of that kind (outage, month_close,
 # checkout, regression or storm; it needs a live product past its launch weeks, so a run that lasts that long: fill=1;
 # events=1: the card stops the night and is answered with the rest of the desk, the line a kind hits is given the
 # bug it needs the tick before). An emergency answered with its fix first re-reads the plan, and the close is checked
@@ -38,8 +38,8 @@ extends RefCounted
 # The plan the screen draws (SprintSystem.plan_outcome) is read when its sprint starts and checked when it
 # closes. events=0 runs only the sprint's daily step, with no decision paper; events=1 runs the whole clock
 # in batches (each visible hour, then the night up to 08:00), answers the desk through RunProbe after every
-# batch and draws each sprint's decision paper at sprint.json's `decision.sprint_chance` (for either sprint
-# length) unless rate= gives one chance for both.
+# batch and draws each sprint's decision paper at sprint.json's `decision.sprint_chance` unless rate= gives
+# another chance.
 #
 #   SPRINTPROBE SKIP|<seed>|<sprint>|<card>|full|ceiling   add() refused the card (no point left for it, or
 #                                                         the load past the ceiling), the sprint stays short
@@ -100,9 +100,8 @@ static func run(spec: String, payload: Dictionary) -> bool:
 	if o.fixture == "iz2":
 		o.cards = 4
 	var events: bool = o.events == 1
-	var chance: Dictionary = SprintCatalog.cfg("decision.sprint_chance")
-	for weeks in chance:
-		chance[weeks] = o.get("rate", chance[weeks]) if events else 0.0
+	(SprintCatalog.cfg("decision") as Dictionary).sprint_chance = \
+		float(o.get("rate", SprintCatalog.cfg("decision.sprint_chance"))) if events else 0.0
 	EventBus.card_decision_requested.connect(func(_card: String) -> void: _paper_asked())
 	EventBus.event_resolved.connect(func(id: String, _choice: int) -> void: _changed_by(id))
 	EventBus.day_tick_completed.connect(func(_day: int) -> void: _changed_by("team"))
@@ -122,8 +121,6 @@ static func run(spec: String, payload: Dictionary) -> bool:
 			IncidentSystem.force_on(String(o.incident).get_slice("@", 0), int(String(o.incident).get_slice("@", 1)))
 		WorkHoursSystem.set_company_start_hour(int(o.start))
 		WorkHoursSystem.set_company_hours(int(o.hours))
-		if o.has("weeks"):
-			SprintSystem.set_weeks(int(o.weeks))
 		if String(o.fixture).begins_with("iz1"):
 			_example_cards(o.fixture == "iz1")
 		var going: bool = _plan(seed_value, o, verdicts)
@@ -279,7 +276,7 @@ static func _example_cards(big_first: bool) -> void:
 	var sizes: Array = [big, roundi(week), roundi(week)] if big_first else [roundi(week), roundi(week), big]
 	for i in ids.size():
 		var card: Dictionary = GameState.product.cards[ids[i]]
-		card.effort = sizes[i]
+		card.need = SprintCatalog.card_need(card.kind, card.line, card.target_tier, sizes[i])
 
 
 ## planms=1: what the Product screen asks of the engine in this plan, timed on this machine (PLANMS rows). The first call of

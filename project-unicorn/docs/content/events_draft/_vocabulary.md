@@ -383,9 +383,9 @@ slot of that type (§17.12).
 | `urun.capacity_state` | global | string | Product | normal | amber | over | unprovisioned |
 | `urun.capacity_tier` | global | int | Product | provisioned infra units |
 | `urun.colors_again` | global | bool | Product | the colours were changed by hand once, so the account asks for its colours on the pages added since |
-| `urun.colors_central` | global | int | Product | the points of pulling every colour into one file; one more for each page added since the first change |
+| `urun.colors_central` | global | int | Product | the points of pulling every colour into one file; five more for each page added since the first change |
 | `urun.colors_first` | global | int | Product | 1 the first time an account asks for its colours, 0 the second time |
-| `urun.colors_hand` | global | int | Product | the points of changing the colours by hand; one more for each page added since the first change |
+| `urun.colors_hand` | global | int | Product | the points of changing the colours by hand; five more for each page added since the first change |
 | `urun.crunch_finishes` | global | bool | Product | the crunch's hours finish the decision card this sprint; false when none waits |
 | `urun.cut_test_finishes` | global | bool | Product | the decision card is in testing and cutting its test in half finishes it this sprint |
 | `urun.decision_by_founder` | global | bool | Product | the founder speaks the pending paper (works the card's phase), not an employee |
@@ -443,7 +443,7 @@ slot of that type (§17.12).
 | `urun.security_fix_planned` | global | bool | Product | the Security and Access fix card is in the running sprint |
 | `urun.security_tier` | global | int | Product | the tier the Security and Access line has reached; 0 before it is built |
 | `urun.sprint_has_tester` | global | bool | Product | a tester works in the sprint's team (the Test job); the founder testing is not one |
-| `urun.sprint_last_week` | global | bool | Product | a running sprint is in its last week: week 2 of a two-week sprint, the only week of a one-week one |
+| `urun.sprint_last_week` | global | bool | Product | a running sprint is in its last week, week 2 |
 | `urun.sprint_number` | global | int | Product | the open sprint; 0 before the product type is chosen |
 | `urun.sprint_running` | global | bool | Product | a sprint is under way: not planning, not the release note |
 | `urun.sprint_single_card` | global | bool | Product | the open sprint holds one card; carried over, it leaves the sprint nothing to work on |

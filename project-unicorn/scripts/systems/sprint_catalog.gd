@@ -161,13 +161,13 @@ static func area_sentence(area_id: String) -> String:
 # --- Kartlar ---------------------------------------------------------------------
 
 ## Düzeltme kartının eforu hata sayısına göre: `steps` basamakların son hata sayısı, `points` basamakların puanı
-## (4 ve altı 1 puan, 5 ve üstü 2).
+## (4 ve altı 5 puan, 5 ve üstü 10).
 static func fix_effort(bugs: int) -> int:
 	var tiers: Dictionary = cfg("fix_effort")
 	return int(tiers.points[(tiers.steps as Array).filter(func(top: float) -> bool: return bugs > top).size()])
 
 
-## K1 3 · K2 5 · K3 8; Ar-Ge "design_system" tasarım profilli hatların kademe eforunu %20 indirir.
+## K1 15 · K2 25 · K3 40; Ar-Ge "design_system" tasarım profilli hatların kademe eforunu %20 indirir.
 static func step_effort(step_id: String) -> int:
 	if step_id == PAID_PLAN:
 		return int(cfg("paid_plan.effort"))
@@ -178,17 +178,13 @@ static func step_effort(step_id: String) -> int:
 	return effort
 
 
-## Faz payları [Tasarım, Geliştirme, Test]; araştırmada ilk faz Ürün'ündür.
-static func card_shares(kind: String) -> Array:
-	return (cfg("shares." + kind) as Array).duplicate()
-
-
-## Payı olan fazların rolleri, en çok üç.
-static func card_roles(kind: String) -> Array:
-	var roles: Array = cfg("roles." + kind)
-	var shares: Array = card_shares(kind)
-	return range(shares.size()).filter(func(i: int) -> bool: return shares[i] > 0.0).map(
-		func(i: int) -> String: return roles[i])
+## Kartın aşama ihtiyacı [Tasarım, Geliştirme, Test] puan (araştırmada ilk aşama Ürün'ündür): `effort` puan, kartın türünün
+## ya da hattın iş profilinin kademe satırının (sprint.json `need`) oranlarıyla paylaşılır. Ücretli planın kendi satırı
+## vardır; kademesi ya da profili olmayan özellik kartı (ör. kademesiz kartın takip kartı) `unprofiled` oranını alır.
+static func card_need(kind: String, line: String, tier: int, effort: float) -> Array:
+	var row: Array = _need_row(kind, line, tier)
+	var sum: float = float(row[0]) + float(row[1]) + float(row[2])
+	return row.map(func(part: float) -> float: return part * effort / sum)
 
 
 ## Alanın aday kartları (PRD §3.2): yetenek başına sonraki kademe (kapısı kapalıysa da görünür),
@@ -250,12 +246,16 @@ static func is_priority_count(bugs: int) -> bool:
 	return bugs >= int(cfg("fix_effort.priority"))
 
 
+## Yeni kart: `effort` puanlık ihtiyaç aşamalara paylaşılır, rolleri ihtiyacı olan aşamaların rolleridir (en çok üç).
 static func new_card(id: String, kind: String, area_id: String, effort: int, line := "", step := "",
 		target_tier := 0) -> Dictionary:
+	var need: Array = card_need(kind, line, target_tier, effort)
+	var roles: Array = cfg("roles." + kind)
 	return {"id": id, "kind": kind, "line": line, "step": step, "target_tier": target_tier, "area": area_id,
-		"effort": effort, "roles": card_roles(kind), "shares": card_shares(kind), "progress": [0.0, 0.0, 0.0],
-		"state": "candidate", "assignees": [], "bugs": 0, "customer_id": "", "request_id": "",
-		"decision": false, "effort_mod": 0, "faulty": false, "cut": false}
+		"need": need, "roles": range(need.size()).filter(func(i: int) -> bool: return need[i] > 0.0).map(
+			func(i: int) -> String: return roles[i]),
+		"progress": [0.0, 0.0, 0.0], "state": "candidate", "assignees": [], "bugs": 0, "customer_id": "",
+		"request_id": "", "decision": false, "cut": false}
 
 
 ## Saklanan kart ya da adayı; yoksa {}.
@@ -521,7 +521,9 @@ static func mvp_candidates() -> Array:
 	var open: Array = candidates(_identity_area()).filter(func(c: Dictionary) -> bool:
 		return c.state == "candidate" and int(c.target_tier) == 1)
 	open.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		return a.effort < b.effort if a.effort != b.effort else a.id < b.id)
+		var size_a: int = roundi(SprintSystem.total(a))
+		var size_b: int = roundi(SprintSystem.total(b))
+		return size_a < size_b if size_a != size_b else a.id < b.id)
 	return open
 
 
@@ -651,6 +653,20 @@ static func _identity_area() -> String:
 
 static func _identity_lines() -> Array[String]:
 	return capabilities(_identity_area())
+
+
+## `card_need`in oran satırı: düzeltme ve araştırmanın türünden, ücretli planın kendinden, öbürlerinin hattın iş profilinin
+## kademe satırından. Kayıt göçü hattı henüz açılmamış bir gizli hat için profili Ar-Ge tanımından okur.
+static func _need_row(kind: String, line: String, tier: int) -> Array:
+	if kind in ["fix", "research"]:
+		return cfg("need." + kind)
+	if line == PAID_PLAN:
+		return cfg("need.paid_plan")
+	var profile: String = ProductLines.work_profile(line)
+	if profile == "":
+		profile = ResearchTree.hidden_line_profile(line.get_slice("@", 0))
+	var by_tier: Variant = (cfg("need") as Dictionary).get(profile)
+	return cfg("need.unprofiled") if by_tier == null or tier < 1 else by_tier[tier - 1]
 
 
 ## Hattın en üst kademesi: Ücretli plan tek kademelidir.
@@ -812,7 +828,7 @@ static func _impact(card: Dictionary) -> float:
 
 
 static func _ratio(card: Dictionary) -> float:
-	return _impact(card) / maxi(1, int(card.effort))
+	return _impact(card) / maxi(1, roundi(SprintSystem.total(card)))
 
 
 ## Seviyesi sıradaki yıldızın beklentisine en az ulaşmış alan (ProductQuality.next_ratio). Yuvarlanmamış seviye okunur,
