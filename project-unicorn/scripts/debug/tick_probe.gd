@@ -100,7 +100,7 @@ func run(speed: int, win: String) -> void:
 	print("TICK|hour|n=%d|p50=%.2f|p95=%.2f|max=%.2f" % [hours.size(), hours[int(hours.size() * 0.5)],
 		hours[int(hours.size() * 0.95)], hours[-1]])
 	print("TICK|after_hour|max=%.2f" % after_hour)
-	print("TICK|night|n=%d|max=%.2f|each=%s" % [nights.size(), nights.max(), ";".join(each)])
+	print("TICK|night|n=%d|max=%.2f|each=%s" % [nights.size(), nights.max() if not nights.is_empty() else -1.0, ";".join(each)])
 	print("TICK|after_night|max=%.2f" % after_night)
 	print("TICK|first_hour=%.2f" % first_hour)
 	print("TICK|first_night=%.2f" % first_night)

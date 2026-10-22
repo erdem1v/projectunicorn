@@ -2,11 +2,12 @@ extends RefCounted
 
 # --sprint-probe=hours=<h>:cards=<1|2>:ticks=<t>[:start=<hour>][:seeds=1][:seed=424242][:events=0|1][:rate=<r>]
 # [:lead=0|1][:gate=publish|more][:team=<n>][:weeks=<1|2>][:fill=0|1][:market=b2c|b2b][:incident=<kind>@<tick>]
-# [:promise=0|1]:
+# [:promise=0|1][:tstar=<1-5>][:pmstar=<1-5>][:plus=<role>@<stars>][:founder=0|1][:fixture=iz1|iz1b|iz2][:build=demo|ea|full]
+# [:planms=0|1]:
 # does the Product screen's sprint plan come true? A founder builds note_tool (market=b2b: the erp product, four
 # accounts signed the tick it goes live, two of a night-shift sector) for t ticks on each of the seeds seed,
 # seed+1, …, the company working h hours from start (the game's default start hour unless given); team=N adds N-1
-# mid-skilled employees in HIRES order (team=4: a developer, a designer and a tester), weeks= picks the sprint length
+# mid-skilled employees in RunProbe.SMALL_CREW order (team=4: a developer, a designer and a tester), weeks= picks the sprint length
 # in Sprint 1's planning; incident=outage@8 makes tick 8's die an emergency of that kind (outage, month_close,
 # checkout, regression or storm; it needs a live product past its launch weeks, so a run that lasts that long: fill=1;
 # events=1: the card stops the night and is answered with the rest of the desk, the line a kind hits is given the
@@ -20,6 +21,20 @@ extends RefCounted
 # lead=1 takes the lead's plan instead; a sprint with nothing to start ends the seed.
 # The MVP gate is answered on the tick it opens: gate=publish (the default) ships v1.0 there, gate=more takes
 # one more sprint and ships at the next close's gate.
+# The larger companies: team=12|25|50 seat product managers, designers, developers and testers beside the founder
+# (RunProbe.seed_crew, each person's stat drawn from the seed); tstar= and pmstar= pin every tester's and product
+# manager's stars, plus=developer@3 hires one more person (a role id and its stars), founder=0 takes the founder off the
+# sprint team, build=ea plays the EA build's cards and endings. fixture= seats a small company by hand:
+#   iz1   three developers of 4, 3 and 3 stars (founder=1 keeps the founder) and the first sprint's three Core K1 cards in
+#         plan order: the big one two people finish in two sprints (three cannot end it in one), then two small ones one
+#         person finishes in a week each, sized in person-weeks of the game's person_points_week; iz1b: the big card last
+#         (ticks=4 plays the example's two sprints)
+#   iz2   the founder, a 3-star developer and a 2-star designer, and four Core K1 cards in plan order (cards= is not read)
+# planms=1 plays no tick: it times what the Product screen asks of the engine while the sprint is planned, in the world the
+# other options build (fill=1 for the fullest plan), the first call of each a warm-up, then PLANMS_REPS calls:
+#   SPRINTPROBE PLANMS|team=<sprint team>|cards=<sprint cards + open candidates>|what=<w>|n=<calls>|median_ms=|max_ms=
+# what: plan_outcome, can_add (one call per open candidate), mvp_eta, lead (the lead's suggestion) and screen (ProductModel.live,
+# the page's whole model); the milliseconds are this machine's.
 # The plan the screen draws (SprintSystem.plan_outcome) is read when its sprint starts and checked when it
 # closes. events=0 runs only the sprint's daily step, with no decision paper; events=1 runs the whole clock
 # in batches (each visible hour, then the night up to 08:00), answers the desk through RunProbe after every
@@ -51,8 +66,12 @@ extends RefCounted
 # answered event changed the team's points or a card's effort, progress or place (cause=<event id>), or the
 # week's tick changed the team (cause=team). The run passes when no mismatch is unnamed.
 
-const HIRES := [HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_DESIGNER, HRConstants.ROLE_TESTER,
-	HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_PRODUCT_MANAGER]
+## fixture=iz1: its developers' stars, and the big card's size in person-weeks per week of the sprint (two people for two
+## sprints, a little short of full so that three people still cannot end it in the first).
+const EXAMPLE_STARS := [4, 3, 3]
+const EXAMPLE_BIG := 3.5
+## planms=1: the calls timed after the warm-up.
+const PLANMS_REPS := 9
 
 static var _said: Dictionary = {}   # the running sprint: card id -> [plan finishes, plan's points, points before]
 static var _seed: int = 0           # the seed being run
@@ -65,13 +84,21 @@ static var _papered: Dictionary = {}  # "<seed>|<sprint>" -> true for a sprint t
 
 static func run(spec: String, payload: Dictionary) -> bool:
 	var o: Dictionary = {"start": HRConstants.START_HOUR_DEFAULT, "seeds": 1, "seed": 424242, "events": 0,
-		"lead": 0, "gate": "publish", "team": 1, "fill": 0, "market": "b2c", "incident": "", "promise": 0}
+		"lead": 0, "gate": "publish", "team": 1, "fill": 0, "market": "b2c", "incident": "", "promise": 0,
+		"tstar": 0, "pmstar": 0, "plus": "", "founder": -1, "fixture": "", "build": "", "planms": 0}
 	for part in spec.split(":"):
 		var key: String = part.get_slice("=", 0)
-		if key in ["gate", "market", "incident"]:
+		if key in ["gate", "market", "incident", "plus", "fixture", "build"]:
 			o[key] = part.get_slice("=", 1)
 		else:
 			o[key] = part.get_slice("=", 1).to_float()
+	if o.build != "":
+		if o.build not in EndingsSystem.SHIPPED_SCOPES_BY_BUILD:
+			print("SPRINTPROBE ERROR bad build '%s'" % o.build)
+			return false
+		EndingsSystem.build_scope_override = o.build
+	if o.fixture == "iz2":
+		o.cards = 4
 	var events: bool = o.events == 1
 	var chance: Dictionary = SprintCatalog.cfg("decision.sprint_chance")
 	for weeks in chance:
@@ -90,14 +117,15 @@ static func run(spec: String, payload: Dictionary) -> bool:
 		GameState.initialize_run(payload.merged({"seed": seed_value}))
 		var subtype: String = "erp" if o.market == "b2b" else "note_tool"
 		SprintSystem.choose_type(subtype, RunProbe.PRODUCT_NAMES[subtype])
-		for n in int(o.team) - 1:
-			_hire(n)
+		_seat(o)
 		if o.incident != "":
 			IncidentSystem.force_on(String(o.incident).get_slice("@", 0), int(String(o.incident).get_slice("@", 1)))
 		WorkHoursSystem.set_company_start_hour(int(o.start))
 		WorkHoursSystem.set_company_hours(int(o.hours))
 		if o.has("weeks"):
 			SprintSystem.set_weeks(int(o.weeks))
+		if String(o.fixture).begins_with("iz1"):
+			_example_cards(o.fixture == "iz1")
 		var going: bool = _plan(seed_value, o, verdicts)
 		while going and GameState.day < int(o.ticks) and GameState.run_active:
 			if events:
@@ -119,6 +147,8 @@ static func run(spec: String, payload: Dictionary) -> bool:
 			going = _plan(seed_value, o, verdicts)
 		var mvp: int = GameState.get_flag("mvp_launch_day", -1)
 		days[mvp] = days.get(mvp, 0) + 1
+	if o.planms == 1:
+		return true
 	var order: Array = days.keys()
 	order.sort()
 	print("SPRINTPROBE SUMMARY|match=%d/%d|mvp_days=%s" % [verdicts.count("MATCH"), verdicts.size(),
@@ -166,6 +196,8 @@ static func _plan(seed_value: int, o: Dictionary, verdicts: Array) -> bool:
 	var limit: String = "lead"
 	if o.lead == 1:
 		SprintSystem.apply_lead()
+	elif String(o.fixture).begins_with("iz1") and SprintSystem.sprint_number() == 1:
+		limit = "fixture"
 	else:
 		limit = "pool"
 		for c in (SprintCatalog.open_cards([]) if o.fill == 1 else SprintCatalog.mvp_candidates()):
@@ -180,6 +212,9 @@ static func _plan(seed_value: int, o: Dictionary, verdicts: Array) -> bool:
 				break
 	if o.promise == 1:
 		_promise_late_card()
+	if o.planms == 1:
+		_plan_ms()
+		return false
 	var plan: Dictionary = SprintSystem.plan_outcome().cards
 	var eta: Dictionary = SprintSystem.mvp_eta()
 	_said = {}
@@ -212,19 +247,74 @@ static func _paper_asked() -> void:
 		"-" if decision.speaker == "" else decision.speaker])
 
 
-## A mid-skilled, mid-morale employee whose annual leave never comes (team=).
-static func _hire(n: int) -> void:
-	var c := Character.new()
-	c.id = "char_probe_%d" % n
-	c.character_name = c.id
-	c.role = HIRES[n]
-	c.category = "employee"
-	c.morale = 60
-	c.role_stats = HRConstants.seed_skills(c.role, 5, 3, 2)
-	c.traits = ["picks_it_up_fast"]
-	c.status = HRConstants.STATUS_ACTIVE
-	c.leave_week = -1
-	CharacterRegistry.add(c)
+## The sprint team: team= people (the fixture's own few instead), plus= one more, the founder off it with founder=0 (a fixture
+## named iz1 takes him off unless founder=1).
+static func _seat(o: Dictionary) -> void:
+	match o.fixture:
+		"iz1", "iz1b":
+			for i in EXAMPLE_STARS.size():
+				RunProbe.seed_hire("char_probe_%d" % i, HRConstants.ROLE_DEVELOPER, HRConstants.POINTS_PER_STAR * EXAMPLE_STARS[i])
+		"iz2":
+			RunProbe.seed_hire("char_probe_0", HRConstants.ROLE_DEVELOPER, HRConstants.POINTS_PER_STAR * 3)
+			RunProbe.seed_hire("char_probe_1", HRConstants.ROLE_DESIGNER, HRConstants.POINTS_PER_STAR * 2)
+		_:
+			RunProbe.seed_crew(int(o.team), _seed, int(o.tstar), int(o.pmstar))
+	if o.plus != "":
+		RunProbe.seed_hire("char_probe_plus", String(o.plus).get_slice("@", 0),
+			HRConstants.POINTS_PER_STAR * int(String(o.plus).get_slice("@", 1)))
+	if o.founder == 0 or (o.founder < 0 and String(o.fixture).begins_with("iz1")):
+		CharacterRegistry.clear_jobs(CharacterRegistry.get_founder().id)
+
+
+## fixture=iz1: the first sprint's three Core K1 cards, the big one first (last with iz1b). They go in at their catalog
+## size and are resized after, as the product shots do, because the plan takes no small card behind a big full one. The big
+## card is EXAMPLE_BIG person-weeks per week of the sprint, each small one a person-week, a person-week being what a 3-star
+## developer of this company makes in one (person_points_week through the skill band, the hours and the pace).
+static func _example_cards(big_first: bool) -> void:
+	var week: float = SprintSystem.team().filter(func(t: Dictionary) -> bool: return t.id == "char_probe_1")[0].points
+	var big: int = roundi(EXAMPLE_BIG * SprintSystem.sprint_weeks() * week)
+	var ids: Array = SprintCatalog.mvp_candidates().slice(0, 3).map(func(c: Dictionary) -> String: return c.id)
+	for id in ids:
+		SprintSystem.add(id)
+	var sizes: Array = [big, roundi(week), roundi(week)] if big_first else [roundi(week), roundi(week), big]
+	for i in ids.size():
+		var card: Dictionary = GameState.product.cards[ids[i]]
+		card.effort = sizes[i]
+
+
+## planms=1: what the Product screen asks of the engine in this plan, timed on this machine (PLANMS rows). The first call of
+## each is a warm-up and is not counted; the sprint is never started.
+static func _plan_ms() -> void:
+	var open: Array = SprintCatalog.open_cards([])
+	var team: int = SprintSystem.team().size()
+	var cards: int = GameState.product.sprint.cards.size() + open.size()
+	_plan_row(team, cards, "plan_outcome", _timed(func() -> void: SprintSystem.plan_outcome()))
+	var adds: Array = []
+	for c in open:
+		adds.append_array(_timed(func() -> void: SprintSystem.can_add(c.id)))
+	_plan_row(team, cards, "can_add", adds)
+	_plan_row(team, cards, "mvp_eta", _timed(func() -> void: SprintSystem.mvp_eta()))
+	_plan_row(team, cards, "lead", _timed(func() -> void: SprintCatalog.lead_suggestion()))
+	_plan_row(team, cards, "screen", _timed(func() -> void: ProductModel.live()))
+
+
+## PLANMS_REPS timings (milliseconds) of `work`, after one call that is not counted.
+static func _timed(work: Callable) -> Array:
+	work.call()
+	var ms: Array = []
+	for _i in PLANMS_REPS:
+		var started: int = Time.get_ticks_usec()
+		work.call()
+		ms.append((Time.get_ticks_usec() - started) / 1000.0)
+	return ms
+
+
+static func _plan_row(team: int, cards: int, what: String, ms: Array) -> void:
+	if ms.is_empty():
+		return
+	ms.sort()
+	print("SPRINTPROBE PLANMS|team=%d|cards=%d|what=%s|n=%d|median_ms=%.3f|max_ms=%.3f" % [team, cards, what, ms.size(),
+		ms[int(ms.size() * 0.5)], ms[-1]])
 
 
 ## Four signed accounts, the biggest two of a night-shift sector: the book an emergency lands on (market=b2b).

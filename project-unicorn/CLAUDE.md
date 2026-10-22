@@ -262,8 +262,10 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   kurallarına (koruma, makullük, bilinen saçmalık, aile aralığı, `critical` kapsamı) sınar ve `PLAUS FIRE` / `PLAUS FAIL` /
   `PLAUS RATE` / `PLAUS SUMMARY` basar; kapısı `bash tools/plausibility_run.sh` (40 koşu × 16 hafta + `PLAUS LONG` 4 × 60
   hafta, koşu başına ayrı süreç ve kullanıcı dizini; `fails=0` ister).
-- Probe: `--run-log=<preset>:<hafta>:sim[:<seed>][:window=<başlangıç saati>-<saat>]` (`window=11-13` şirketin mesaisini 11:00 –
-  24:00 kurar), preset'ler `RunProbe.PRESETS`'te (düzeltme kolları
+- Probe: `--run-log=<preset>:<hafta>:sim[:<seed>][:window=<başlangıç saati>-<saat>][:build=ea|full]` (`window=11-13` şirketin mesaisini 11:00 –
+  24:00 kurar; `build=` yalnız `sim`'de, EA'da bootstrap zaferi koşuyu bitirmez, `PROBE MILESTONE` basar), preset'ler `RunProbe.PRESETS`'te (ölçek fikstürleri
+  `full_run_staff25/50` (B2B merdiveni kurucuyla 25 ve 50 kişiye uzar) ve `b2b_book20/330` (canlı ERP, 20 ve 330 hesap, 6 ve 50 kişi,
+  moral sabit); düzeltme kolları
   `full_run_fix_{none,worst,due,off}` ve `full_run_b2c_fix_*`, preset anahtarı `fix`; her sprint başında `PROBE FIX`,
   her hafta `PROBE BUGS` basar; bot acil durum kartını fiile göre cevaplar, `fix_none` erteler, öbürleri sprinti durdurur ve
   durdurduğu anda `PROBE STOP` basar; `*_free` kolları sprinti hiç durdurmaz; `*_desk` kollarında (anahtar `desk`)
@@ -285,20 +287,23 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   `bash tools/run_gate.sh` (`full_run`, `full_run_b2c`, `full_run_vc_cautious`; `WEEKS` varsayılan 730): her koşu bir
   sonla bitmeli ve sıfır `ERROR` satırı taşımalıdır.
 - Sprint planı: `--sprint-probe=hours=<h>:cards=<1|2>:ticks=<t>[:<alan>=<değer>…]` (isteğe bağlı alanlar `start`,
-  `seeds`, `seed`, `events`, `rate`, `lead`, `gate`, `team`, `weeks`, `fill`, `market`, `incident`, `promise`; anlamları HARITA Ürün'de) headless
+  `seeds`, `seed`, `events`, `rate`, `lead`, `gate`, `team` (1 ile 6, 12, 25, 50), `weeks`, `fill`, `market`, `incident`, `promise`, `tstar`,
+  `pmstar`, `plus`, `founder`, `fixture`, `build`, `planms`; anlamları HARITA Ürün'de ve Araçlar'da) headless
   koşar: kurucunun (`team=` ile ekibin) koşusunda ekranın sprint planını (`plan_outcome`) kapanışla karşılaştırır,
   `SPRINTPROBE` satırları basar (`PRED`, `CLOSE`, `SKIP`, `MVP`, `LOAD`, `SUMMARY`, `LOADSUM`, `PAPER`, `PAPERSUM`; MVP tahmini `mvp_eta`
-  `PRED`'in son alanıdır, karşılaştırılmaz) ve adsız uyuşmazlıkta 1 ile çıkar.
+  `PRED`'in son alanıdır, karşılaştırılmaz) ve adsız uyuşmazlıkta 1 ile çıkar. `planms=1` tik oynamaz, plan ekranının motor
+  çağrılarının ortanca ve en çok süresini `PLANMS` satırlarında basar.
 - Tempo: `--tempo-probe=<hız>[:shell]` gerçek saatle koşar, her haftayı 08:00'den 08:00'e ölçer ve
   `TimeModel.seconds_per_tick` hedefinden sapmayı basar. Çıplak hâli headless'tır ve yalnız saati ölçer; `:shell`
   pencerelidir, kabuğu ve ofisi kurar, gece çıkış kapısının maliyetini de ölçer. Kare maliyeti:
-  `--tick-probe=<hız>[:<pencere>][:accounts=<n>]` headless'tır, kabuğu tempo dünyasıyla (`accounts=<n>` ile n B2B hesaplı
-  ERP dünyasıyla, `TICK WORLD` satırı) kurar ve beş haftayı gerçek saatle koşar; saat adımı, gece, sonraki kare ve ilk
+  `--tick-probe=<hız>[:<pencere>][:accounts=<n>][:team=<n>]` headless'tır, kabuğu tempo dünyasıyla (`accounts=<n>` ile n B2B hesaplı
+  ERP dünyasıyla, `TICK WORLD` satırı; `team=<n>` o kadar kişiyi sprinte oturtur) kurar ve beş haftayı gerçek saatle koşar; saat adımı, gece, sonraki kare ve ilk
   saat karelerinin süresini, TopBar'ın gece başına yenilemesini ve otomatik kaydın karesini `TICK` satırlarında basar.
   `auto_*` yazar: ayrı `APPDATA` ile koşulur (`TICK START udir=`); kayıt taşıyan kullanıcı dizininde çalışmaz. Üst barın saat hâlleri:
   `--clock-shot=<running|paused|held|released|gate|incident|focus_out|focus_out_off>` (`CLOCKSHOT` satırı: birincil pencere,
   sprint kipi, tutuşlar, hız; odak kollarında önce ve sonraki hız; dar bar `paused` ve `--shot-scale=1.25`).
-- Smoke ve probe demo yapısına sabitlidir; EA akışı editörde Main Run Args'a `--build=ea` yazılarak oynanır.
+- Smoke ve probe demo yapısına sabitlidir; `--run-log` (yalnız `sim`) ve `--sprint-probe` `build=ea|full` ile o yapının kartlarını
+  ve sonlarını koşar. EA akışı editörde Main Run Args'a `--build=ea` yazılarak oynanır.
 - Görsel kontrol (pencereli): `--<yüzey>-shot=<tür>` ailesi (tab, modal, onboard, office, event, ending, vc, sales,
   negotiation, meeting, invite, product, hr, finance, personal, rnd, b2b, inbox), `--probe-shot[=menajer]`,
   `--theme-audit=<sekme | modal:<tür> | onboard:<adım>>`, `--shot-size=GxY`, `--lang=tr|en` (kayıtlı dili ezer),

@@ -146,6 +146,8 @@ extends RefCounted
 #   PROBE MARKET day=<d> total=<$M> leader=<id> leader_value=<$M> listed=<n> player=<valuation $M>
 #               (the Piyasa list at the week's open, every MARKET_LOG_WEEKS weeks from week 1;
 #               a pure read of MarketCatalog, so the line is byte-identical for one seed)
+#   PROBE MILESTONE day=<d> id=<milestone>
+#                                           (build=ea runs only: a win the EA build lives through, the bootstrap one, as the run goes on)
 #   PROBE VC_*  (the presets with a Series A policy): VC_CONFIG, VC_BOOK, VC_MEET,
 #               VC_TABLE_OPEN, VC_PUSH, VC_TABLE_END, VC_REPLAY, VC_REPLAY_SUM
 
@@ -155,7 +157,8 @@ extends RefCounted
 ##   policy    — the event answers (default "sensible", below);
 ##   vc        — the Series A policy, sim only (none: the run never sits at a Series A table); "product" signs
 ##               the opening terms like "cautious" and sits at the product fund first, at the seed and at Series A;
-##   staff_cap — the headcount the B2B staffing ladder stops at (default: the whole ladder);
+##   staff_cap — the employees the B2B staffing ladder stops at (default: its thirteen STAFF_LADDER rungs; full_run_staff25
+##               and full_run_staff50 go on up the growth rungs to 24 and 49, 25 and 50 people with the founder);
 ##   k1_only   — the founder never plans a K2 or K3 step;
 ##   fix       — the sprint's fix cards (default: whatever the lead plans): "none" takes no fix card, "worst" the
 ##               line with the most open bugs, "due" every line with DUE_BUGS or more (B2B: a line an active or
@@ -175,7 +178,10 @@ extends RefCounted
 ##               months and never moves; every other arm hires and moves at six months. A company that moves goes up a step
 ##               (the flat to the business block once the seed is in, then whenever its desks are full) once the cash
 ##               covers the up-front rent and those months of today's costs; short of that it stays, and a full office
-##               hires nobody.
+##               hires nobody;
+##   accounts, staff — the scale fixtures (b2b_book20, b2b_book330): the live ERP with that many B2B accounts signed and that
+##               many people (the founder among them) on the sprint engine, which the lead plans from the first morning
+##               (_seed_book); their morale stays where it was seeded (_pin_the_morale), or the unmanaged roster would resign in one week.
 const PRESETS := {
 	"b2b_reps": {}, "b2b_solo": {}, "b2b_risk": {}, "b2b_slip": {}, "b2c": {}, "b2c_neglect": {},
 	"full_run": {"subtype": "erp"},
@@ -218,6 +224,10 @@ const PRESETS := {
 	"full_run_cash_hoard": {"subtype": "erp", "cash": "hoard"},
 	"full_run_b2c_cash_spend": {"subtype": "note_tool", "cash": "spend"},
 	"full_run_b2c_cash_hoard": {"subtype": "note_tool", "cash": "hoard"},
+	"full_run_staff25": {"subtype": "erp", "staff_cap": 24},
+	"full_run_staff50": {"subtype": "erp", "staff_cap": 49},
+	"b2b_book20": {"accounts": 20, "staff": 6},
+	"b2b_book330": {"accounts": 330, "staff": 50},
 }
 ## The load, in percent, a manual founder holds the servers under (the default is the amber line).
 const SERVER_LINES := {"lean": 95, "wide": 60}
@@ -231,6 +241,15 @@ const FIRST_HIRE_MONTHS := {"spend": 2.0, "hoard": 6.7}    # [WORKING]
 const MOVE_MONTHS := {"": 6.0, "spend": 2.0}               # [WORKING]
 const NEXT_OFFICE := {"home": "ishani", "ishani": "plaza", "plaza": "loft"}
 const PRODUCT_NAMES := {"erp": "Sahra", "note_tool": "Notly", "video_clip": "Klipo"}
+## The employees of a probe company up to six people (the founder is the n-th), in turn.
+const SMALL_CREW := [HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_DESIGNER, HRConstants.ROLE_TESTER,
+	HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_PRODUCT_MANAGER]
+## The larger companies: how many employees of each CREW_ROLES role beside the founder.
+const CREW_ROLES := [HRConstants.ROLE_PRODUCT_MANAGER, HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER,
+	HRConstants.ROLE_TESTER]
+const CREW_MIX := {12: [2, 2, 5, 2], 25: [3, 4, 12, 5], 50: [6, 8, 25, 10]}
+## What one person of a larger company draws for the stat (0 to 10) of their role: 1.5 to 4 stars, 2.7 on average.
+const STAT_SPREAD := [6, 4, 8, 5, 3, 6, 7, 4, 5, 6]
 # The played run has three answer policies on one world, a controlled experiment on what
 # the event cards do to the revenue curve:
 #   full_run          — "sensible": a promise when one is open, then a stall, and a
@@ -331,10 +350,12 @@ static func run(spec: String, payload: Dictionary) -> void:
 	_mode = String(parts[2]) if parts.size() > 2 else "sim"
 	# Optional 4th part: the run seed, so one preset can be sampled across seeds.
 	_run_seed = int(parts[3]) if parts.size() > 3 else 424242
-	# Optional 5th+ parts: named options. replay=<K> (full_run_vc_naive) and window=<start hour>-<hours>, the
-	# company's workday (11-13 is 11:00 to 24:00).
+	# Optional 5th+ parts: named options. replay=<K> (full_run_vc_naive), window=<start hour>-<hours>, the
+	# company's workday (11-13 is 11:00 to 24:00), and build=<demo|ea|full>, the build whose cards and endings the run
+	# plays (the demo unless named; sim only, as a milestone's paper stops the real clock).
 	_replay_k = -1
 	_window = Vector2i.ZERO
+	var build: String = EndingsSystem.BUILD_DEMO
 	for idx in range(4, parts.size()):
 		var extra: String = String(parts[idx])
 		if extra.begins_with("replay="):
@@ -342,8 +363,13 @@ static func run(spec: String, payload: Dictionary) -> void:
 		elif extra.begins_with("window="):
 			var hours: PackedStringArray = extra.trim_prefix("window=").split("-")
 			_window = Vector2i(int(hours[0]), int(hours[1]))
+		elif extra.begins_with("build="):
+			build = extra.trim_prefix("build=")
 	if not PRESETS.has(_preset):
 		print("PROBE ERROR unknown preset '%s' (have %s)" % [_preset, ", ".join(PRESETS.keys())])
+		return
+	if build not in EndingsSystem.SHIPPED_SCOPES_BY_BUILD or (build != EndingsSystem.BUILD_DEMO and _mode != "sim"):
+		print("PROBE ERROR bad build '%s' (have %s, sim only past the demo)" % [build, ", ".join(EndingsSystem.SHIPPED_SCOPES_BY_BUILD.keys())])
 		return
 
 	_fires.clear()
@@ -387,9 +413,9 @@ static func run(spec: String, payload: Dictionary) -> void:
 	_first_sign_day = -1
 	_first_revenue_day = -1
 	_open_weeks = []
-	# The presets measure the demo. A --build=ea in Main Run Args would otherwise turn the
+	# The presets measure the demo unless the spec names a build. A --build=ea in Main Run Args would otherwise turn the
 	# bootstrap win into a non-terminal milestone and a real-clock run would sit on its paper.
-	EndingsSystem.build_scope_override = EndingsSystem.BUILD_DEMO
+	EndingsSystem.build_scope_override = build
 	# The summary frequency is the player's setting; the probe logs the monthly cadence.
 	SummarySystem.frequency_override = "monthly"
 	GameState.initialize_run(payload)
@@ -459,6 +485,8 @@ static func _wire_log() -> void:
 	EventBus.prospect_arrived.connect(_on_lead)
 	EventBus.version_shipped.connect(func(_n: int) -> void: _release_seen = true)
 	EventBus.infra_changed.connect(_on_infra_changed)
+	EventBus.milestone_reached.connect(func(id: String, _data: Dictionary) -> void:
+		print("PROBE MILESTONE day=%d id=%s" % [GameState.day, id]))
 
 
 static func _on_month_ended(_data: Dictionary) -> void:
@@ -1229,6 +1257,8 @@ static func _play_the_hour() -> void:
 	if _full_run:
 		_hire_the_team()
 		_run_the_company()
+	elif PRESETS[_preset].has("staff"):
+		_pin_the_morale()
 
 
 ## The Product tab at the week's 08:00. Sprints close in the night's daily tick, so the morning
@@ -1470,9 +1500,22 @@ const B2C_LADDER := [
 	{"role": "developer", "min_mrr": 25000},
 	{"role": "product_manager", "min_mrr": 40000},
 ]
+## Past STAFF_LADDER (the presets with a staff_cap above its thirteen rungs) the B2B run hires the mix of a larger
+## company, developers half, in turn, each head when the MRR is GROWTH_MRR_PER_HEAD for every head it will then count.
+const GROWTH_ROLES := ["developer", "developer", "tester", "designer", "developer", "product_manager", "developer", "tester",
+	"designer", "developer"]
+const GROWTH_MRR_PER_HEAD := 6200   # [WORKING] the last STAFF_LADDER rung asks 80,000 for the 13th head
 
 
-## The role the ladder hires next, or "" while it waits. B2B climbs STAFF_LADDER by headcount up
+## The B2B rung that hires the next head of `heads` employees: STAFF_LADDER, then the growth rungs.
+static func _rung(heads: int) -> Dictionary:
+	if heads < STAFF_LADDER.size():
+		return STAFF_LADDER[heads]
+	return {"role": GROWTH_ROLES[(heads - STAFF_LADDER.size()) % GROWTH_ROLES.size()], "min_customers": 0,
+		"min_mrr": GROWTH_MRR_PER_HEAD * (heads + 1)}
+
+
+## The role the ladder hires next, or "" while it waits. B2B climbs the rungs (_rung) by headcount up
 ## to the preset's cap. B2C first hires a support rep whenever someone pays, reports are waiting
 ## and the desk validates fewer a day than arrive: the release-to-release swing in the inflow
 ## alone does not hire while the desk keeps the queue empty, and a rep away on leave or in
@@ -1483,7 +1526,7 @@ static func _next_role() -> String:
 	if SalesSystem.is_b2b_market():
 		if staff.size() >= _staff_cap:
 			return ""
-		var want: Dictionary = STAFF_LADDER[staff.size()]
+		var want: Dictionary = _rung(staff.size())
 		if CustomerRegistry.account_count() < int(want.min_customers) or GameState.mrr < int(want.min_mrr):
 			return ""
 		return String(want.role)
@@ -2103,6 +2146,8 @@ static func _seed_world(preset: String) -> void:
 			_seed_b2c_neglect()
 		"b2b_solo", "b2b_reps", "b2b_risk", "b2b_slip":
 			_seed_b2b_world(preset)
+		"b2b_book20", "b2b_book330":
+			_seed_book(PRESETS[preset])
 
 
 ## A product already live on day 1. mvp_launch_day is stamped here because the fixture skips
@@ -2193,14 +2238,19 @@ static func _check_b2b_fixture(preset: String) -> void:
 		print("PROBE ERROR fixture drifted: %s no longer satisfies its intent (re-derive after a table or tolerance move)" % preset)
 
 
-static func _seed_b2b_world(preset: String) -> void:
-	var spec: Dictionary = B2B_PRODUCTS[preset]
-	_seed_live_product("b2b", "erp", "Sahra")
+## The ERP's lines shipped to `spec`'s tiers: every line at `rest`, the core lines at `core`.
+static func _ship_erp_lines(spec: Dictionary) -> void:
 	for line_id in ProductLines.line_ids("erp"):
 		ProductState.set_line_tier(String(line_id), int(spec.rest))
 	var core: Array[String] = SprintCatalog.capabilities("core")
 	for i in core.size():
 		ProductState.set_line_tier(core[i], int(spec.core[i]))
+
+
+static func _seed_b2b_world(preset: String) -> void:
+	var spec: Dictionary = B2B_PRODUCTS[preset]
+	_seed_live_product("b2b", "erp", "Sahra")
+	_ship_erp_lines(spec)
 	ProductState.add_bugs(FIXTURE_BUG_LINE, int(spec.bugs))
 
 	# Five accounts through the real signing seam (SalesSystem.add_b2b_customer — the
@@ -2254,3 +2304,84 @@ static func _seed_b2b_world(preset: String) -> void:
 		c.role_stats = HRConstants.seed_skills(c.role, 2, 2)
 		c.traits = ["last_one_out"]
 		CharacterRegistry.add(c)
+
+
+# --- The scale fixtures' world (the sprint probe and --tick-probe seed their companies here too) ---
+
+## What b2b_book20 and b2b_book330 start with in cash: some three years of the 50-person payroll less the book's MRR.
+const BOOK_CASH := 5_000_000   # [WORKING]
+## The morale a probe employee is seeded with.
+const SEED_MORALE := 60
+
+
+## The live ERP, every line at K1, with `accounts` B2B accounts signed through the signing seam (the sectors in turn, the stars
+## the bot's signing mix of 56% one, 42% two and 2% three, spread over every fifty so a small book has it too, the seat
+## band's low end at the lowest seat price so the MRR stays under the Traction bar, settled past onboarding) and `staff`
+## people (the founder among them, the rest on the junior salary) on the sprint engine, which the lead plans from the first
+## morning.
+static func _seed_book(spec: Dictionary) -> void:
+	SprintSystem.choose_type("erp", PRODUCT_NAMES["erp"])
+	_seed_live_product("b2b", "erp", PRODUCT_NAMES["erp"])
+	_ship_erp_lines(B2B_PRODUCTS["b2b_solo"])
+	var sectors: Array = B2BConstants.SECTORS
+	for i in int(spec.accounts):
+		var lead := Prospect.new()
+		lead.id = "book_%03d" % i
+		lead.company_name = "Book %03d" % i
+		lead.industry = String(sectors[i % sectors.size()])
+		var slot: int = (i * 37) % 50
+		lead.star = 1 if slot < 28 else (2 if slot < 49 else 3)
+		var account: Customer = SalesSystem.add_b2b_customer(lead, int(SalesConstants.seat_band(lead.star).low),
+			SalesConstants.SEAT_PRICE_MIN, 85)
+		account.acquired_on_day = GameState.day - TimeModel.ticks(B2BConstants.ONBOARDING_GRACE_WEEKS)
+	seed_crew(int(spec.staff), _run_seed)
+	for employee in CharacterRegistry.get_employees():
+		employee.monthly_salary = int(HRConstants.salary_band_for_level(employee.role, HRConstants.LEVEL_JUNIOR)[1])
+	GameState.set_cash(BOOK_CASH)
+
+
+## The employees of an `n`-person probe company (the founder is the n-th), hired past the desk cap the way
+## OfficeCrowdProbe seeds its staff. Up to six people they are SMALL_CREW in turn at stat 5; 12, 25 and 50 people are
+## CREW_MIX, each drawing the stat of their role from `rng_seed` (every draw is made, so pinning a role leaves the others'
+## stars alone). `tester_star` and `pm_star` (1 to 5; 0 leaves them to the draw) pin those two roles' stars.
+static func seed_crew(n: int, rng_seed: int, tester_star := 0, pm_star := 0) -> void:
+	var roles: Array = SMALL_CREW.slice(0, n - 1)
+	var drawn: bool = n > SMALL_CREW.size() + 1
+	if drawn:
+		if not CREW_MIX.has(n):
+			push_error("[RunProbe] no company of %d people (have 1 to %d and %s)" % [n, SMALL_CREW.size() + 1, str(CREW_MIX.keys())])
+			return
+		roles = []
+		for i in CREW_ROLES.size():
+			for _k in int(CREW_MIX[n][i]):
+				roles.append(CREW_ROLES[i])
+	var rng := RandomNumberGenerator.new()
+	rng.seed = rng_seed
+	for i in roles.size():
+		var stat: int = int(STAT_SPREAD[rng.randi() % STAT_SPREAD.size()]) if drawn else 5
+		if roles[i] == HRConstants.ROLE_TESTER and tester_star > 0:
+			stat = HRConstants.POINTS_PER_STAR * tester_star
+		elif roles[i] == HRConstants.ROLE_PRODUCT_MANAGER and pm_star > 0:
+			stat = HRConstants.POINTS_PER_STAR * pm_star
+		seed_hire("char_probe_%d" % i, roles[i], stat)
+
+
+## One probe employee at mid morale, `stat` (0 to 10) in their role's area, hired past the desk cap.
+static func seed_hire(id: String, role: String, stat: int) -> void:
+	var c := Character.new()
+	c.id = id
+	c.character_name = id
+	c.role = role
+	c.category = "employee"
+	c.morale = SEED_MORALE
+	c.role_stats = HRConstants.seed_skills(role, stat, 3, 2)
+	c.traits = ["picks_it_up_fast"]
+	CharacterRegistry.add(c)
+
+
+## The scale fixtures' people stay as content as they were seeded: the morale of a company nobody looks after drifts down in
+## step and the whole roster resigns in a single week.
+static func _pin_the_morale() -> void:
+	for employee in CharacterRegistry.get_employees():
+		employee.morale = SEED_MORALE
+		employee.morale_target = float(SEED_MORALE)
