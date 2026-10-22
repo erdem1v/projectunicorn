@@ -140,7 +140,7 @@ static func band_for(conviction: int) -> String:
 	return BAND_HARSH
 
 
-## The band's index into BAND_IDS, for the `by_seam` card bodies: EvPresenter._resolve_variant
+## The band's index into BAND_IDS, for the `by_seam` card bodies: EvPresenter.leaf_text
 ## runs the seam value through int(), so the seam carries an INDEX, never the id string (a
 ## String would collapse to 0 and every variant body would render the harsh arm forever).
 ## Unknown ids read as harsh rather than erroring: a body that renders the wrong arm is

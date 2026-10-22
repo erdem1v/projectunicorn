@@ -93,8 +93,8 @@ extends Resource
 @export var morale_target: float = -1.0
 
 # --- Olay kartlarının yazdığı süreli verim satırları ---
-# {pct, until_day, card_id, title_key}: kart başına bir satır; title_key kartın başlık anahtarıdır
-# (birkaç kart aynı başlığı paylaşabilir). Yalnız CharacterRegistry yazar;
+# {pct, until_day, card_id, title_key}: kart başına bir satır; title_key kartın başlık anahtarıdır, satır içi
+# başlıkta başlığın metni (birkaç kart aynı başlığı paylaşabilir). Yalnız CharacterRegistry yazar;
 # HRSystem.productivity okur, süresi dolan satırı günlük dağıtım budar.
 @export var productivity_mods: Array[Dictionary] = []
 

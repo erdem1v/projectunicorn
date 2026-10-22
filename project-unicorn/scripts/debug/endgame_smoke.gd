@@ -3090,11 +3090,15 @@ static func _case_gross_runway_months() -> String:
 ## finance.runway_weeks counts the whole weeks the net flow leaves the cash, rounded down like every screen that counts
 ## them; a treasury below zero has none left whatever the flow, and a flow that is not negative has no clock (9999). The
 ## investor's monthly update reads it live while it waits on the desk, so in a company that no longer drains it says
-## nothing of a runway.
+## nothing of a runway: its title and body change, its pay cut and its burying of the runway line are locked (the
+## reason is the authored one, the engine's own evaluator decides), its two other options stay open. The lint reads every
+## arm of every line a card shows, a selector that is no seam included.
 ##
 ## FALSIFICATION: drop the `GameState.cash < 0` branch of the seam → a negative treasury reads -1; round instead of
 ## floor in TimeModel.whole_ticks → 5500 at a burn of 50 reads 16; take the 9999 variant out of the card's body → the
-## earning company's note prints "9999 weeks".
+## earning company's note prints "9999 weeks"; take it out of the title, or the seam leaf out of pay_cut's requires →
+## the earning note still reads the runway line or offers the pay cut; take the lock reasons or the title out of
+## EvLint._lint_text's read, or the selector check out of _lint_variants → the faulty fixture loses a finding.
 static func _case_runway_weeks_seam() -> String:
 	GameState.set_cash(5500)
 	GameState.set_daily_burn(50)   # 110 days of cash: 15.7 weeks, which a countdown says as 15
@@ -3109,18 +3113,68 @@ static func _case_runway_weeks_seam() -> String:
 		if EvSeams.read("finance.runway_weeks") != 0:
 			return "a negative treasury at a burn of %d reads %s weeks, want 0" % [burn, str(EvSeams.read("finance.runway_weeks"))]
 	var card: Dictionary = EvCatalog.card("funding.monthly_update")
+	var note := func(runway: int) -> Dictionary:
+		EvSeams.mock("finance.runway_weeks", runway)
+		var ev: GameEvent = EvPresenter.build_view(card.id, {})
+		var out := {"title": ev.title, "body": ev.body_text, "locked": {}}
+		for i in ev.choices.size():
+			var c: EventChoice = ev.choices[i]
+			if not EventGate.condition_met(c.unlock_condition, {}):
+				var live: String = EventGate.condition_reason(c.unlock_condition, {})
+				out.locked[card.options[i].id] = TranslationServer.translate(live) if live != "" else c.unlock_reason_text
+		EvSeams.clear_mocks()
+		return out
+	var founder: Character = CharacterRegistry.get_founder()
+	var as_founder := {"founder": {"type": "founder", "id": founder.id}}
 	for locale in ["en", "tr"]:
 		TranslationServer.set_locale(locale)
-		var body: Variant = EvPresenter.text_block(card).body
-		EvSeams.mock("finance.runway_weeks", 9999)
-		var earning: String = EvPresenter.resolve_text(body, {}, {})
-		EvSeams.mock("finance.runway_weeks", 8)
-		var draining: String = EvPresenter.resolve_text(body, {}, {})
-		EvSeams.clear_mocks()
-		if earning.contains("9999") or earning.to_lower().contains("runway"):
-			return "[%s] the note of a company that earns its costs reads '%s'" % [locale, earning]
-		if not draining.contains(" 8 "):
-			return "[%s] the note of a company with 8 weeks left reads '%s'" % [locale, draining]
+		var earning: Dictionary = note.call(9999)
+		var draining: Dictionary = note.call(8)
+		EvHistory.record(card.id, EvHistory.RESOLUTION_CHOSEN, "line_last", "buried_runway", {}, [])
+		var repeated: Dictionary = note.call(8)
+		EvHistory.reset()
+		if earning.body.contains("9999") or earning.body.to_lower().contains("runway"):
+			return "[%s] the note of a company that earns its costs reads '%s'" % [locale, earning.body]
+		if not draining.body.contains(" 8 "):
+			return "[%s] the note of a company with 8 weeks left reads '%s'" % [locale, draining.body]
+		if earning.title.to_lower().contains("runway") or earning.title == draining.title:
+			return "[%s] the earning company's note is titled '%s' (draining: '%s')" % [locale, earning.title, draining.title]
+		if draining.title != TranslationServer.translate("EV_FUNDING_MONTHLY_UPDATE_TITLE"):
+			return "[%s] the note of a company with 8 weeks left is titled '%s'" % [locale, draining.title]
+		if earning.locked.keys() != ["pay_cut", "line_last"]:
+			return "[%s] the earning company's note locks %s, want pay_cut and line_last only" % [locale, str(earning.locked.keys())]
+		var once_only: String = TranslationServer.translate("EV_FUNDING_MONTHLY_UPDATE_LINE_LAST_LOCK")
+		if earning.locked.pay_cut == "" or earning.locked.line_last in ["", once_only]:
+			return "[%s] the earning company's locks read '%s' and '%s'" % [locale, earning.locked.pay_cut, earning.locked.line_last]
+		if not draining.locked.is_empty():
+			return "[%s] a company with 8 weeks left finds %s locked" % [locale, str(draining.locked.keys())]
+		if repeated.locked != {"line_last": once_only}:
+			return "[%s] with the line buried once, the note locks %s" % [locale, str(repeated.locked)]
+		# The intros row paces the founder under the card's title: the key while the title is a key, the words of an inline arm.
+		var kept: Array = []
+		for runway in [8, 9999]:
+			EvSeams.mock("finance.runway_weeks", runway)
+			EvEffects.run_played([{"verb": "productivity_mod", "scope": "founder", "pct": -25, "weeks": 2}], as_founder, card.id)
+			EvSeams.clear_mocks()
+			kept.append(String(founder.productivity_mods[0].title_key))
+		founder.productivity_mods.clear()
+		if kept != ["EV_FUNDING_MONTHLY_UPDATE_TITLE", earning.title]:
+			return "[%s] the intros pace row keeps the titles %s, want the key and '%s'" % [locale, str(kept), earning.title]
+	var lint_text := func(text: Dictionary) -> String:
+		EvLint._findings.clear()
+		EvLint._lint_text("fixture.runway_note", {"tick": "daily", "text": {"tr": text, "en": text}}, "fixture")
+		return " | ".join(PackedStringArray(EvLint._findings.map(func(f: Dictionary) -> String: return f.message)))
+	var runway_title := {"by_seam": "finance.runway_weeks", "variants": {"0": "The runway line", "9999": "The monthly update"}}
+	var lint_clean: String = lint_text.call({"title": runway_title})
+	if lint_clean != "":
+		return "the lint flags a clean variant title: %s" % lint_clean
+	var faulty := {
+		"title": {"by_seam": "no.such_seam", "variants": {"0": "Call at 09:30", "9999": "A note %s late" % EvLint.DASH_CHARS[0]}},
+		"locked_reasons": {"x": {"by_seam": "finance.runway_weeks", "variants": {"0": "Fine", "9999": "Mail it through Stripe"}}}}
+	var lint_found: String = lint_text.call(faulty)
+	for want in ["trademark", "asserts a clock", "contains a dash", "not a registered seam"]:
+		if not lint_found.contains(want):
+			return "the lint did not report '%s' in the arms of a variant title and lock reason: %s" % [want, lint_found]
 	return ""
 
 
@@ -6273,7 +6327,7 @@ static func _case_event_beat_is_note() -> String:
 ## §27.17: a history row prints what its card read when it was written, not today's state. The runway in a note's
 ## body stays the week's; a flag-picked variant keeps the variant the flag chose.
 ## FALSIFICATION: drop the names lookup from EvPresenter._interpolate → the row prints today's runway; drop it from
-## _resolve_variant → the variant follows the flag.
+## EvPresenter.leaf_text → the variant follows the flag.
 static func _case_event_beat_freezes_seams() -> String:
 	GameState.day = 5
 	EvSeams.mock("finance.runway_weeks", 14)

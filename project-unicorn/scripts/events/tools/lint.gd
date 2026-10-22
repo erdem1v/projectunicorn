@@ -758,17 +758,24 @@ static func _lint_text(id: String, card: Dictionary, where: String) -> void:
 
 	for locale in ["tr", "en"]:
 		var block: Dictionary = text[locale]
-		_lint_variant_keys(where, locale, block)
-		# A body may be a variant set; every arm is checked, and the panel holds one of them at a time.
+		_lint_variants(where, locale, block)
+		# Any line the player reads may be a variant set (a title, a body, an option's label, a lock's reason); every
+		# arm is checked, and the panel holds one of them at a time.
 		var arms: Array = body_strings(block)
-		var body: String = " ".join(PackedStringArray(arms))
+		var read: Array = arms.duplicate()
+		for field in ["title", "subtitle"]:
+			read.append_array(_arms(block.get(field, "")))
+		for group in ["options", "locked_reasons"]:
+			for line in (block.get(group, {}) as Dictionary).values():
+				read.append_array(_arms(line))
+		var prose: String = " ".join(PackedStringArray(read))
 		var shown: String = " ".join(PackedStringArray(_strings_in(block)))
 		for dash in DASH_CHARS:
 			if shown.contains(dash):
 				_add(SEVERITY_ERROR, "17.8", where, "[%s] text contains a dash" % locale)
 				break
 
-		var lowered: String = (body + " " + String(block.get("title", ""))).to_lower()
+		var lowered: String = prose.to_lower()
 		for term in FORBIDDEN_TERMS:
 			if lowered.contains(term):
 				_add(SEVERITY_ERROR, "17.8", where,
@@ -777,8 +784,7 @@ static func _lint_text(id: String, card: Dictionary, where: String) -> void:
 		# §17.8 / D7: a daily beat fires at the day boundary, so a clock on one is a claim the
 		# TopBar contradicts 40 pixels away.
 		if String(card["tick"]) == "daily":
-			var subtitle: String = String(block.get("subtitle", ""))
-			if _clock_re.search(subtitle) != null or _clock_re.search(body) != null:
+			if _clock_re.search(prose) != null:
 				_add(SEVERITY_ERROR, "17.8", where,
 					"[%s] a tick:daily card asserts a clock; daily beats fire at hour 0" % locale)
 
@@ -791,17 +797,21 @@ static func _lint_text(id: String, card: Dictionary, where: String) -> void:
 
 
 ## EvPresenter picks a variant by a seam's INTEGER value, so a key that is not an integer
-## ("default", "high") can never be chosen.
-static func _lint_variant_keys(where: String, locale: String, value: Variant) -> void:
+## ("default", "high") can never be chosen, and a selector that is no registered seam reads 0 for good.
+static func _lint_variants(where: String, locale: String, value: Variant) -> void:
 	if typeof(value) != TYPE_DICTIONARY:
 		return
-	for k in (value as Dictionary).get("variants", {}):
+	var spec: Dictionary = value
+	if spec.has("variants") and not EvSeams.has(String(spec.get("by_seam", ""))):
+		_add(SEVERITY_ERROR, "17.8", where,
+			"[%s] variant selector '%s' is not a registered seam" % [locale, spec.get("by_seam", "")])
+	for k in spec.get("variants", {}):
 		if not String(k).is_valid_int():
 			_add(SEVERITY_ERROR, "17.8", where,
 				"[%s] variant key '%s' is not an integer; variants are picked by a seam's value"
 				% [locale, k])
-	for v in (value as Dictionary).values():
-		_lint_variant_keys(where, locale, v)
+	for v in spec.values():
+		_lint_variants(where, locale, v)
 
 
 # --- §17.6 arcs ------------------------------------------------------------

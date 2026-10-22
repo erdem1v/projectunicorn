@@ -2330,7 +2330,7 @@ gövdesi geçmişte düşüyordu.
 `str(değer)`, bool `"0"` ya da `"1"` olarak donar; varlık seam'i bağlamın bağladığı özneden okunur. TYPE_STRING seam
 donmaz: satır çevrilmiş metin taşımaz (§7.4). Dondurma çözümde (`resolve`, etkilerden önce), süre dolumunda (cezalardan
 önce ve yalnız kâğıdın öznesi hâlâ varken: bekleyişte ayrılan öznenin seam'i yedek değeri okurdu; satır adını
-kâğıttan alır, seam okuyan gövdesi çizilmez) ve not yazılırken olur. `_interpolate` ve `_resolve_variant` önce
+kâğıttan alır, seam okuyan gövdesi çizilmez) ve not yazılırken olur. `_interpolate` ve `leaf_text` önce
 `names`'e bakar; varyant donmuş değeri `int()` ile okur. Okuma bölmesi geçmiş satırın gövdesini, gövdenin okuduğu
 her seam satırda donmuşsa çizer (`EvPresenter.seams_of`); donmayan seam'li gövde ve dondurmadan önce yazılmış
 satırlar gövdesiz kalır. Katalogda gövdesi donan 12 kart vardır (dört not ve varlık seam'i `musteri.seats` ile
@@ -3093,8 +3093,7 @@ Seam'in "bu sayının saati yok" değerini kartın nasıl karşılayacağı yaz�
 - Masada bekleyen kâğıt yalnız adları taşır (`EvPapers.names_of`); seam değerlerini cevapta ve süre dolumunda dondurur (`EvPresenter.freeze_seams`),
   bekledikçe canlı okur. `funding.monthly_update` runway 2 ile 11 hafta arasındayken gelir ve bir hafta bekleyebilir: bu sürede şirket kâra geçerse
   gövde "9999 hafta" yazardı. Gövde artık `by_seam: finance.runway_weeks` varyantıdır: `0` anahtarı runway cümlesini, `9999` anahtarı runway'den
-  söz etmeyen cümleyi taşır (TR/EN onay bekliyor). Başlık ve seçenek metinleri değişmedi; başlık varyantı desteklenmiyor (`lint.gd` başlığı
-  düz metin okur).
+  söz etmeyen cümleyi taşır (TR/EN onay bekliyor). Başlık ve şıklar §27.46'da kâra göre değişir.
 - `--event-shot` `founder.savings_note` ve `founder.side_contract`'ı birikimi biten kurucuda, `funding.monthly_update`'i kasası aylık akışının
   8,5 haftasına inmiş şirkette çeker (`:runway=profit` aynı şirketi giderini karşılarken çeker). Vaka `runway_weeks_seam` yeni.
 
@@ -3109,3 +3108,16 @@ etiketleri, kilit gerekçeleri, süre notları ve her gövde varyantı (`text.<d
 `loc_csv_integrity` vakasında aynı sabitle aranır. İleti "[tr] text contains a dash".
 
 *Neden.* Erdem 2026-10-20 kararı 14: oyuncuya görünen hiçbir metinde tire yoktur (CLAUDE.md §5); gövde dışındaki alanlar kuralın dışında kalamaz.
+
+### §27.46 · Faz C C2c: başlık, şık etiketi ve kilit nedeni de varyant olabilir; kârdaki yatırımcı notu başlığını ve iki şıkkını değiştirir
+
+*Belge ne diyordu.* §3.2: varyant yalnız gövde için anlatılmıştı. Başlığı ve kilit nedenini düz metin ya da anahtar sayan kod vardı: lint başlığı `String(başlık)` okuyordu, `productivity_mod` etkisi verim satırına kartın başlığını `String(başlık)` ile yazıyordu ve ikisi de sözlük başlıkta "Nonexistent 'String' constructor" hatasıyla düşerdi.
+
+*Ne yapıldı.*
+- `EvPresenter.leaf_text` (eski `_resolve_variant`'ın yerini aldı) bir metin değerinin seam'e göre seçilen kolunu çevirmeden ve doldurmadan verir; `resolve_text` onu çevirir ve doldurur. Verim satırı kartın başlığını `leaf_text` ile okur: anahtar kolu anahtar olarak, satır içi kol metniyle kalır.
+- `EvLint._lint_text`: yasak marka ve saat iddiası başlık, alt başlık, gövde, şık etiketleri ve kilit nedenlerinin her kolunu okur (eskiden yalnız gövde ile başlık). `_lint_variants` (eski `_lint_variant_keys`) tam sayı anahtarına ek olarak seçicinin kayıtlı seam olmasını da arar: olmayan seçici her değeri 0 okuyup hep ilk kolu çizerdi.
+- `funding.monthly_update`: başlık `by_seam: finance.runway_weeks` varyantıdır (`0` eski anahtar, `9999` TR "Aylık not", EN "The monthly update"). Maaş indirimi `finance.runway_weeks < 9999` ister; runway satırını gömmek aynı koşulu ve geçmişte seçilmemiş olmayı ister (`all`). Kilit nedenleri `locked_reasons`'ta yazılır: maaş indirimi satır içi, gömme `by_seam` varyantı (`0` kolu eski anahtar, `9999` kolu gömülecek satır olmadığını söyler). Ek yatırım ve tanıştırma kârda açık kalır; etkiler, koşul, gecikme ve süre değişmedi.
+- İki şıkkın `requires`'ındaki `reason` anahtarı kalktı: canlı neden `locked_reasons`'tan önce okunur ve masadaki kâğıtta yalnız `tr()`'den geçer, yani `{investor}` yer tutucusu doldurulmazdı. Kilit nedeni artık tek yerde, `build_view`'in doldurduğu yerde yazılır.
+- Vaka `runway_weeks_seam` genişledi (yeni vaka yok): iki dilde başlık, gövde, kilitler, intros'un verim satırı başlığı ve lint'in varyant kollarını okuması.
+
+*Neden.* Genel kural (dokunulan her yer düzeltilir): kâra geçmiş şirkette not "Runway satırı" başlığıyla açılır, maaş kesmek ve runway satırını gömmek gerekçesiz açık kalırdı. TR/EN onay bekliyor.

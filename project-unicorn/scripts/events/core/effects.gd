@@ -374,8 +374,9 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 				HRMoraleSystem.apply_delta(CharacterRegistry.get_character(id), hit)
 			return {"verb": verb, "amount": hit, "names": crew_names(crew)}
 		"productivity_mod":
-			# The row keeps the card's title key, not text, so the tooltip reads in the live language.
-			var title: String = String(EvPresenter.text_block(EvCatalog.card(card_id)).get("title", ""))
+			# The row keeps the card's title key, not text, so the tooltip reads in the live language (a variant
+			# title keeps the arm its seam picks now; an inline arm is the words themselves).
+			var title: String = EvPresenter.leaf_text(EvPresenter.text_block(EvCatalog.card(card_id)).get("title", ""))
 			var pct: int = int(e.get("pct", 0))
 			var weeks: int = int(e.get("weeks", 1))
 			if String(e.get("scope", "")) == "team":

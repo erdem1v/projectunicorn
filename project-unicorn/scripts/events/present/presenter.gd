@@ -220,9 +220,7 @@ static func desk_papers(visible_slots: int) -> Array:
 ## `names` are the names a desk paper or a history row kept; a slot they name reads that name, so
 ## a subject who has left still reads by name, and a seam they kept reads the value it had.
 static func resolve_text(value: Variant, context: Dictionary, names: Dictionary = {}) -> String:
-	if typeof(value) == TYPE_DICTIONARY:
-		return _resolve_variant(value as Dictionary, context, names)
-	var text: String = String(value)
+	var text: String = leaf_text(value, names)
 	if text == "":
 		return ""
 	if is_key(text):
@@ -235,10 +233,15 @@ static func is_key(text: String) -> bool:
 	return _KEY_RE.search(text) != null
 
 
-## The variant with the largest key not above the seam's value; the lowest key when every key
-## is above it. So a counter that grows past the authored range stays on the last variant, and
-## a sparse map ({"0", "3"}) keeps "0" for the values in between.
-static func _resolve_variant(spec: Dictionary, context: Dictionary, names: Dictionary) -> String:
+## What a text value comes down to before it is translated or interpolated: a plain value as it stands, variant
+## text the arm its seam's value picks now (a key stays a key, which is what a stored title needs to read in the
+## live language later). The arm is the one with the largest key not above the value; the lowest key when every
+## key is above it. So a counter that grows past the authored range stays on the last arm, and a sparse map
+## ({"0", "3"}) keeps "0" for the values in between.
+static func leaf_text(text: Variant, names: Dictionary = {}) -> String:
+	if typeof(text) != TYPE_DICTIONARY:
+		return String(text)
+	var spec: Dictionary = text
 	var seam: String = String(spec.get("by_seam", ""))
 	var variants: Dictionary = spec.get("variants", {})
 	if variants.is_empty():
@@ -259,7 +262,7 @@ static func _resolve_variant(spec: Dictionary, context: Dictionary, names: Dicti
 	for k in keys:
 		if k <= value:
 			chosen = k
-	return resolve_text(variants[by_int[chosen]], context, names)
+	return leaf_text(variants[by_int[chosen]], names)
 
 
 ## `{slot}` / `{slot.name}` -> the bound entity's display name. `{seam:name}` -> a seam's value

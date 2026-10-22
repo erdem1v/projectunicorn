@@ -80,6 +80,11 @@
     {
       "id": "pay_cut",
       "outcome_id": "pay_cut_announced",
+      "requires": {
+        "seam": "finance.runway_weeks",
+        "op": "<",
+        "value": 9999
+      },
       "effects": [
         {
           "verb": "add_cash",
@@ -102,8 +107,7 @@
             "event": "funding.monthly_update",
             "option": "bridge"
           }
-        ],
-        "reason": "EV_FUNDING_MONTHLY_UPDATE_BRIDGE_LOCK"
+        ]
       },
       "effects": [
         {
@@ -140,14 +144,22 @@
       "id": "line_last",
       "outcome_id": "buried_runway",
       "requires": {
-        "none": [
+        "all": [
           {
-            "history": "chose",
-            "event": "funding.monthly_update",
-            "option": "line_last"
+            "none": [
+              {
+                "history": "chose",
+                "event": "funding.monthly_update",
+                "option": "line_last"
+              }
+            ]
+          },
+          {
+            "seam": "finance.runway_weeks",
+            "op": "<",
+            "value": 9999
           }
-        ],
-        "reason": "EV_FUNDING_MONTHLY_UPDATE_LINE_LAST_LOCK"
+        ]
       },
       "effects": [
         {
@@ -165,7 +177,13 @@
   ],
   "text": {
     "tr": {
-      "title": "EV_FUNDING_MONTHLY_UPDATE_TITLE",
+      "title": {
+        "by_seam": "finance.runway_weeks",
+        "variants": {
+          "0": "EV_FUNDING_MONTHLY_UPDATE_TITLE",
+          "9999": "Aylık not"
+        }
+      },
       "body": {
         "by_seam": "finance.runway_weeks",
         "variants": {
@@ -180,13 +198,26 @@
         "line_last": "EV_FUNDING_MONTHLY_UPDATE_LINE_LAST"
       },
       "locked_reasons": {
+        "pay_cut": "Maaşlar şu an gelirden ödeniyor.",
         "bridge": "EV_FUNDING_MONTHLY_UPDATE_BRIDGE_LOCK",
-        "line_last": "EV_FUNDING_MONTHLY_UPDATE_LINE_LAST_LOCK"
+        "line_last": {
+          "by_seam": "finance.runway_weeks",
+          "variants": {
+            "0": "EV_FUNDING_MONTHLY_UPDATE_LINE_LAST_LOCK",
+            "9999": "Bu ay notta gömülecek bir runway satırı yok."
+          }
+        }
       },
       "expire_note": "EV_FUNDING_MONTHLY_UPDATE_EXPIRED"
     },
     "en": {
-      "title": "EV_FUNDING_MONTHLY_UPDATE_TITLE",
+      "title": {
+        "by_seam": "finance.runway_weeks",
+        "variants": {
+          "0": "EV_FUNDING_MONTHLY_UPDATE_TITLE",
+          "9999": "The monthly update"
+        }
+      },
       "body": {
         "by_seam": "finance.runway_weeks",
         "variants": {
@@ -201,8 +232,15 @@
         "line_last": "EV_FUNDING_MONTHLY_UPDATE_LINE_LAST"
       },
       "locked_reasons": {
+        "pay_cut": "Payroll is paid out of revenue right now.",
         "bridge": "EV_FUNDING_MONTHLY_UPDATE_BRIDGE_LOCK",
-        "line_last": "EV_FUNDING_MONTHLY_UPDATE_LINE_LAST_LOCK"
+        "line_last": {
+          "by_seam": "finance.runway_weeks",
+          "variants": {
+            "0": "EV_FUNDING_MONTHLY_UPDATE_LINE_LAST_LOCK",
+            "9999": "There is no runway line to bury this month."
+          }
+        }
       },
       "expire_note": "EV_FUNDING_MONTHLY_UPDATE_EXPIRED"
     }
