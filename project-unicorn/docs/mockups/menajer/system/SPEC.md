@@ -879,10 +879,8 @@ sentence case; `ANGEL_NUDGE_ACK` "İK'ya git" (the tab is Ekip).
 **Rewrite (symbols):** `MONTH_EVENT_OF_THE_MONTH`, `SUMMARY_EVENT_WEEK/QUARTER/YEAR` drop "✦"; `SALES_BAND_STAR`
 becomes "{n}" + star icon; `RND_CROSS_MARK` "⇠" becomes an icon (it has no face today). §3.1 lists all.
 
-**Dash law:** 36 TR strings still carry an em or en dash (`DESK_PAPER_GATE_TITLE`, `HR_TASK_NONE`,
-`HR_HOURS_WINDOW`, `HR_IDLE_HINT`, `ANGEL_MONTH_HIGHLIGHT`, `HUNT_EMPTY_SLOT`, `HUNT_CB_NONE`, `HUNT_EST_*`,
-`PER_NO_VALUATION`, `PERSONAL_MS_SHIP_NOTE`, `END_HL_SHUTTER_STARTED`, ...). Several are Frank's lines (Erdem's
-corpus). The system's rule for empty data is an empty cell.
+**Dash law:** no player string carries an em or en dash; `loc_csv_integrity` holds the CSV to it and event-lint
+§17.8 every card text. The system's rule for empty data is an empty cell.
 
 **Number format (code, no text):** display minus is U+2212 ("−$4.200") in `Fmt.money_exact` and `money_chip`
 (same width as "+"); TR "%4", EN "4%"; cash exact, flows abbreviated (K, M).

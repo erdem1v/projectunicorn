@@ -385,25 +385,25 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     "bandın üstünde" diye güncellenir.
   - Kaynak: Satış GDD §3 (yıldız karışımı), §7.3, §8, §10.
 
-- **35 · Satış kartındaki sorumlu satırı kurucu masasını ve sahipsiz hesabı aynı ham "—" ile gösteriyor.**
-  - Ne oluyor: `_account_foot` sorumlu adı bulamazsa CSV anahtarı olmayan sabit "—" yazıyor ("Müşteri temsilcisi:
-    —"). Bu tek işaret iki ayrı durumu kapsıyor. (1) `assigned_to == ""`: hesap kurucunun masasında; `assign_customer`
-    sözleşmesi ve `B2BSalesSystem._account_owner` kurucuyu sahip sayar, bakım yavaşlatması işler. (2) Temsilcisi
-    ayrılmış hesap: `CharacterRegistry.remove` karakteri siler, `assigned_to` eski id'de kalır; `_account_owner` null
-    döner ve hesap bakımsız aşınır; `founder_managed_count` ile `_delegate_excess` onu saymaz. Literal CLAUDE.md §5'i
-    çiğniyor (anahtar yok, tire var).
+- **35 · Satış kartındaki sorumlu satırı kurucu masasını ve sahipsiz hesabı aynı "atanmadı" ile gösteriyor.**
+  - Ne oluyor: `_account_foot` sorumlu adı bulamazsa `REC_AM_NONE` ("atanmadı") yazıyor ("Müşteri temsilcisi:
+    atanmadı"; Olaylar'daki müşteri raporu aynı anahtarı okur). Bu tek işaret iki ayrı durumu kapsıyor. (1)
+    `assigned_to == ""`: hesap kurucunun masasında; `assign_customer` sözleşmesi ve `B2BSalesSystem._account_owner`
+    kurucuyu sahip sayar, bakım yavaşlatması işler. (2) Temsilcisi ayrılmış hesap: `CharacterRegistry.remove`
+    karakteri siler, `assigned_to` eski id'de kalır; `_account_owner` null döner ve hesap bakımsız aşınır;
+    `founder_managed_count` ile `_delegate_excess` onu saymaz.
   - Nerede: `scripts/tabs/sales_tab.gd` (`_account_foot`); `scripts/autoload/customer_registry.gd`
     (`assign_customer`); `scripts/systems/b2b_sales_system.gd` (`_account_owner`, `founder_managed_count`);
     `scripts/systems/customer_rep_system.gd` (`_delegate_excess`); `scripts/autoload/character_registry.gd`
     (`remove`).
   - Oyuncuya etkisi: Oyuncu kendi masasındaki hesabı, temsilcisi gidip bakımsız kalan hesaptan ayıramıyor. Ekip §11.3
-    boşalan işin "boş göründüğü için okunur" olmasını istiyor. Ekranda tire var.
+    boşalan işin "boş göründüğü için okunur" olmasını istiyor.
   - Seçenekler: A) İki anahtar: kurucu durumu için mevcut `HR_ROLE_FOUNDER` ("Kurucu"/"Founder") ya da yeni bir Satış
     anahtarı, sahipsiz durum için yeni `SALES_STEWARD_NONE` (EN önce, TR yerelleştirme adımı, onay bekler). B) İki
-    durum için tek yeni anahtar ("atanmamış"); kurucu masası ayrıca belirtilmez. C) Ayrılışta hesaplar kurucuya döner
-    (`assigned_to = ""`) ve yalnız kurucu etiketi gerekir; Ekip §11.3'ün "otomatik kurucuya devir varsayılan değildir"
-    hükmüyle çelişir.
-  - Kaynak: CLAUDE.md §5 (BILINGUAL BIRTH LAW, tire yasağı); Ekip GDD §11.3; ch01 §9.
+    durum için bugünkü tek anahtar (`REC_AM_NONE`) kalır; kurucu masası ayrıca belirtilmez. C) Ayrılışta hesaplar
+    kurucuya döner (`assigned_to = ""`) ve yalnız kurucu etiketi gerekir; Ekip §11.3'ün "otomatik kurucuya devir
+    varsayılan değildir" hükmüyle çelişir.
+  - Kaynak: Ekip GDD §11.3.
 
 - **38 · Müşteri masası Destek işindeki temsilciyi de sayıyor.**
   - Ne oluyor: Masa (`CustomerRepSystem.ranked_reps`) ve iki girişi (`reconcile_assignments`, `daily_tick`) unvanı
@@ -1216,17 +1216,13 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
 - **Son ve kapı metinleri (K23 dahil).** `END_BS_HEAD` "{company} Kimseye El Açmadan Ayakta", `END_BS_SUB` "Dışarıdan
   tek kuruş almadan büyüyen bir şirket…" diyor. Oysa Frank'in çeki normal modda reddedilemiyor ve seed alınmış koşu da
   bootstrap'a ulaşıyor. `ENDING_CARD_SERIESB_BODY` "Series A oyunu bitirmez" diyor; `ENDING_BADGE_EA` Series B'yi
-  Erken Erişim'e koyuyor (ch14 §5: tam sürüm). `ENDING_RUN_META` sabit "NORMAL MOD" yazıyor. Canlı metinde tire (ch01
-  §9, ch11 §7): `GATE_ADVANCE`, `GATE_SERIES_A_BODY_0`, `END_META_SERIES_A_CLOSE_FRANK`, `END_META_BANKRUPTCY_FRANK`,
-  `END_HL_SHUTTER_STARTED`; CSV'nin TR sütununda toplam 28 satır tire taşıyor (EN'de 27); Erdem'in 2026-10-20 kararı
-  14 gereği tire kalkar (sorulmaz, yapılır), bu satırların tiresiz yazımı onay bekleyen metin işidir.
+  Erken Erişim'e koyuyor (ch14 §5: tam sürüm). `ENDING_RUN_META` sabit "NORMAL MOD" yazıyor.
   `END_META_*_FRANK` satırları FRANK_ORPHANS'ta. Kaynak: ONERI_v3 K23, SONLAR_GAZETE_MODLAR §1.6 ve §5.6, SONLAR #17
   ve #21, PUSH_ONCESI_KONTROL §10.
 
 - **Karışık dilli satırlar.** TR ekranda İngilizce kalanlar: `TERM_LEVER_BOARD` "Board", `EFFECT_TERM_TABLE`
-  "Term sheet masası açılır". Av listesindeki "— · Tier 2'de" ise CSV'de değil, `InvestorRegistry` içinde sabit bir Türkçe
-  literal. Hiçbiri sözlükte ya da ödünç kelime listesinde yok. Seçenek: Türkçeleştir ya da listeye ekle.
-  Kaynak: RAPOR_LOKAL T2.4, TOPLANTI_VE_SERIES_A_ONERI §D9.
+  "Term sheet masası açılır". İkisi de sözlükte ya da ödünç kelime listesinde yok. Seçenek: Türkçeleştir ya da
+  listeye ekle. Kaynak: RAPOR_LOKAL T2.4, TOPLANTI_VE_SERIES_A_ONERI §D9.
 
 - **DRAFT-EN kaydı.** EN'i "düz doğru" ama ses geçişi görmemiş aileler (kayıt 2026-08-19, TR önce kuralından önce).
   Kayıttaki anahtarlardan CSV'de duran ve üretim kodunun okudukları (`6e3e190`):
@@ -1265,18 +1261,6 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     ile silinir.
   - Kaynak: ofis tasarımının şart metni; CLAUDE.md §1, §5.
 
-- **68 · Yeniden adlandırılan iki anahtarın TR metninde oyuncuya görünen tire.**
-  - Ne oluyor: `DESK_PAPER_GATE_TITLE` (TR "Faz kapısı açık — karar bekliyor") ve `PERSONAL_MS_SHIP_NOTE` (TR "Ürün
-    raflara çıktı — artık dünya da oynuyor.") metinlerini aynen taşıyor. EN tiresiz yeniden yazıldı ("Phase gate open:
-    decision pending", "The product hit the shelves; now the world plays too."). `DESK_PAPER_SHEET_TITLE` tiresiz
-    yazıldı ("Yatırım teklifi masada, son {weeks} hafta").
-  - Nerede: `localization/strings.csv`; okuyanlar `scripts/ui/components/inbox.gd` ve `scripts/tabs/personal_tab.gd`
-    (`_milestones`).
-  - Oyuncuya etkisi: TR'de Olaylar gelen kutusu ve Kişisel'in Kilometre Taşları kartı ekranda tire gösteriyor
-    (ch01 §9).
-  - Seçenekler: Erdem'in 2026-10-20 kararı 14 gereği tire kalkar; iki TR satırı tiresiz yazılır, TR metni onay bekler.
-  - Kaynak: ch01 §9; CLAUDE.md §5; Erdem, 2026-10-20 kararı 14.
-
 - **69 · Frank'in taşınma kartı taslak; onaya kadar demo destesinde değil.**
   - Ne oluyor: `funding.frank_office_move` Frank'in çekinden sonra, şirket hâlâ Ev'deyken bir kez gelir
     (`investor.angel_taken`, `office.current == home`); tek seçenekli bir beat. TR ve EN metni ajan taslağıdır; kart
@@ -1296,8 +1280,8 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     "Another stretch behind you." / "Bir dönem daha geride." Onaya kadar bu üç kural aylık kip dışında susar
     (`SummarySystem.PERIOD_NEUTRAL_FRANK`). (2) `END_META_BANKRUPTCY_FRANK`: "You stayed in the red for {weeks}
     weeks. Numbers are not cruel, only patient." / "{weeks} hafta kırmızıda kaldın. Rakamlar kaba değildir, sadece
-    sabırlıdır." Onaylı metin `{days}` okur (`EndingsSystem.ending_frank_line` 28 verir) ve tire taşır; taslak
-    tiresizdir, onaylanırsa kod `{weeks}` (`SHUTTER_WEEKS`) verir. (3) `VC_EV_LAST_DAY_BODY` (`funding.last_answer`):
+    sabırlıdır." Onaylı metin aynı cümleyi `{days}` ile söyler (`EndingsSystem.ending_frank_line` 28 verir);
+    onaylanırsa kod `{weeks}` (`SHUTTER_WEEKS`) verir. (3) `VC_EV_LAST_DAY_BODY` (`funding.last_answer`):
     "This is the last week to give the investors an answer." / "Yatırımcılara dönüş için son hafta."; Frank "Nowhere
     left to run. If you're signing, sign this week." / "Artık kaçış yok. İmzalayacaksan bu hafta imzala." (4)
     `SEED_STALL_VERDICT` ve `world.final_stretch_verdict` kartının 0. varyantı (kart JSON'u): son paragraf "Next week
@@ -1376,7 +1360,7 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
 
 ## Kod ve test altyapısı
 
-- **EA/tam'da kalan "yakında" izleri.** Av'daki kilitli "— · Tier 2'de" fon satırı (`InvestorRegistry` `locked_tier2`)
+- **EA/tam'da kalan "yakında" izleri.** Av'daki kilitli "2. kademe fonu" satırı (`InvestorRegistry` `locked_tier2`)
   ve Pazarlama sekmesinin koşulsuz `"lock": "ea"` kilidi her build'de görünüyor. Seçenekler: build kapsamına bağla ya da
   olduğu gibi bırak. Kaynak: SONLAR_GAZETE_MODLAR §U.4 madde 3.
 

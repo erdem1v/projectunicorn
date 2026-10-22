@@ -153,10 +153,6 @@ The three surfaces already cut (rows 2, 5, 26) were cut for exactly this reason,
 
 ---
 
-## Sweep item (not one of the classes)
-
-**Dashes in the shipped Frank corpus.** 15 of the Frank keys contain an em or en dash in TR, EN, or both: `MENTOR_INTRO_BODY`, `ANGEL_EVENT_BODY`, `GATE_TRACTION_BODY_0`, `GATE_SERIES_A_BODY_0`, `GATE_ADVANCE`, `MONTH_FRANK_GOOD`, `TERM_FRANK_RESISTED`, `TERM_FRANK_OTHER_TABLE`, `DEAL_PROMPT_LINE`, `DEAL_PROMPT_DEFER`, `VC_EV_MEETING_BODY`, `VC_EV_OFFER_EXPIRING_BODY`, `END_EV_PIVOT_BODY`, `END_EV_ACQ_BODY`, `END_EV_ACQ_DECLINE`. Every one is a clause joint that a full stop, comma or colon would carry. The standing rule bans them in new bodies; the existing corpus needs the same sweep when these keys are replaced.
-
 ## Cross-cutting notes for the dev track
 1. `[VOCAB?] navigate_to_tab{tab}` unblocks B1 to B5 (five cards) and is the single highest-value item in this report.
 2. Effect chips for the eight blind modifier types (D4) turn four run-ending or irreversible clicks from blind into readable.

@@ -642,7 +642,7 @@ func _satisfaction_row(c: Customer) -> HBoxContainer:
 func _account_foot(c: Customer, off: bool) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", UiTokens.SPACE_M)
-	var who: String = "—"
+	var who: String = tr("REC_AM_NONE")
 	if c.assigned_to != "":
 		var cs: Character = CharacterRegistry.get_character(c.assigned_to)
 		if cs != null:

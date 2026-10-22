@@ -923,7 +923,7 @@ static func _expect_gate1_opens_and_advances() -> String:
 		return "phase changed before the Frank scene (%d)" % GameState.phase
 	if not _drain_to(GATE1_ID):
 		return "gate scene never became active"
-	EventGate.resolve(GATE1_ID, 0)  # "Hazırız — geçelim"
+	EventGate.resolve(GATE1_ID, 0)
 	if GameState.phase != 2:
 		return "advance_phase did not run (phase=%d)" % GameState.phase
 	if GameState.phase_gate_ready or GameState.pending_next_phase != 0:
@@ -10840,6 +10840,10 @@ static func _case_loc_csv_integrity() -> String:
 		if tr_v.strip_edges() == "" or en_v.strip_edges() == "":
 			return "%s is single-locale (tr=%d chars, en=%d chars)" % [
 				key, tr_v.length(), en_v.length()]
+		# No dash (— –) in any player text (CLAUDE.md §5); the same set the card lint's 17.8 reads.
+		for dash: String in EvLint.DASH_CHARS:
+			if tr_v.contains(dash) or en_v.contains(dash):
+				return "%s carries a dash (%s) in tr or en: rewrite the sentence" % [key, dash]
 		if re_printf.search(tr_v) != null or re_printf.search(en_v) != null:
 			return "%s still carries a positional printf token" % key
 		var tr_tokens: Array[String] = []

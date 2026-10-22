@@ -3099,3 +3099,13 @@ Seam'in "bu sayının saati yok" değerini kartın nasıl karşılayacağı yaz�
   8,5 haftasına inmiş şirkette çeker (`:runway=profit` aynı şirketi giderini karşılarken çeker). Vaka `runway_weeks_seam` yeni.
 
 *Neden.* Faz C Karar 7 ve 2026-10-20 seçimi: runway yalnız net akış eksideyken yazılır; kârdaki şirketin kartı hiçbir yerde saat yokken saat sayısı yazmaz.
+
+### §27.45 · Faz Q K20: kart lint'i oyuncu metninin bütününde tire arar
+
+*Belge ne diyordu.* §17.8 ve D8: "Kart gövdesinde tire" E-lint'tir.
+
+*Ne yapıldı.* Aynı kural aynı kodda (`EvLint.DASH_CHARS`) artık kartın her dilde oyuncuya görünen bütün metnine bakar: başlık, alt başlık, seçenek
+etiketleri, kilit gerekçeleri, süre notları ve her gövde varyantı (`text.<dil>` bloğunun bütün dizgileri). Çip etiketleri, imza ve öbür CSV metinleri
+`loc_csv_integrity` vakasında aynı sabitle aranır. İleti "[tr] text contains a dash".
+
+*Neden.* Erdem 2026-10-20 kararı 14: oyuncuya görünen hiçbir metinde tire yoktur (CLAUDE.md §5); gövde dışındaki alanlar kuralın dışında kalamaz.

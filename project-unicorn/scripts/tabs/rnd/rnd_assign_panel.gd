@@ -176,12 +176,12 @@ func _cell(part: Control, width: int) -> CenterContainer:
 	return cell
 
 
-## The role, and what they are on today; the founder's row is the founder's task alone, someone away their role.
+## The role, and what they are on today; the founder's row is the founder's task alone, someone away or idle their role.
 func _role_line(c: Character, at_work: bool) -> String:
 	if c.category == "founder":
 		return HRSystem.founder_task_label()
 	var title: String = HRUiShared.roster_title(c)
-	return "%s · %s" % [title, HRLedger.task_text(c)] if at_work else title
+	return "%s · %s" % [title, HRLedger.task_text(c)] if at_work and not c.assigned_job_ids.is_empty() else title
 
 
 # ---------------------------------------------------------------- alt bant

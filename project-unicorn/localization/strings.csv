@@ -170,7 +170,7 @@ WIN_PAGE_PLACEHOLDER,İçerik yolda,Content on the way
 DESK_PAPER_TAG_GATE,EŞİK,GATE
 DESK_PAPER_TAG_FUNDING,YATIRIM,FUNDING
 DESK_PAPER_TAG_ATLAS,ATLAS,ATLAS
-DESK_PAPER_GATE_TITLE,Faz kapısı açık — karar bekliyor,Phase gate open: decision pending
+DESK_PAPER_GATE_TITLE,Faz kapısı açık: karar bekliyor,Phase gate open: decision pending
 DESK_PAPER_SHEET_TITLE,"Yatırım teklifi masada, son {weeks} hafta","Offer on the table, {weeks} weeks left"
 DESK_PAPER_SHEET_TITLE_ONE,"Yatırım teklifi masada, son hafta","Offer on the table, final week"
 DESK_PAPER_SHEETS_TITLE,{n} yatırım teklifi masada,{n} offers on the table
@@ -198,7 +198,7 @@ MILESTONE_FIRST_SHIP,İlk sürüm,First release
 MILESTONE_FIRST_FUNDING,İlk yatırım,First funding
 PERSONAL_MILESTONES_TITLE,Kilometre Taşları,Milestones
 PERSONAL_MS_FOUNDING_NOTE,Kapıya isim asıldı; defterin ilk satırı.,The name went on the door; the ledger's first line.
-PERSONAL_MS_SHIP_NOTE,Ürün raflara çıktı — artık dünya da oynuyor.,The product hit the shelves; now the world plays too.
+PERSONAL_MS_SHIP_NOTE,Ürün raflara çıktı; artık dünya da oynuyor.,The product hit the shelves; now the world plays too.
 PERSONAL_MS_FUNDING_NOTE,İlk çek yazıldı; masadaki sandalyeler arttı.,The first cheque was signed; more chairs at the table.
 FIN_MARKET_EMPTY,Piyasadasın. Kimse almadı.,You are on the market. Nobody has bought.
 FIN_MARKET_OTHERS,diğerleri,others
@@ -401,7 +401,6 @@ HR_COL_TASK,GÖREV,TASK
 HR_COL_ROLES,ROLLER,ROLES
 HR_COL_ROLE,Rol,Role
 HR_COL_TRAIT,Huy,Trait
-HR_TASK_NONE,—,—
 HR_SKILL_LEGEND_MAIN,ana,main
 HR_SKILL_LEGEND_SECONDARY,ikincil,secondary
 HR_LEGEND_NO_AREA,alanı yok,no area
@@ -495,7 +494,7 @@ ANGEL_CHOICE_REFUSE,Reddet,Refuse
 ANGEL_CHOICE_REFUSE_LOCK,Zor modda açılır.,Unlocks in hard mode.
 ANGEL_TX_LABEL,Melek yatırımı · Frank,Angel investment · Frank
 ANGEL_CAP_ROW,Melek · %{pct},Angel · {pct}%
-ANGEL_MONTH_HIGHLIGHT,Frank çeki yazdı — melek turu kapandı,Frank wrote the cheque — angel round closed
+ANGEL_MONTH_HIGHLIGHT,Frank çeki yazdı: melek turu kapandı,Frank wrote the cheque: angel round closed
 ANGEL_NUDGE_TITLE,Tek kişilik şirket,A company of one
 ANGEL_NUDGE_BODY,"Frank'ten mesaj.
 
@@ -751,6 +750,7 @@ HUNT_SEC_INVESTORS,Yatırımcılar,Investors
 HUNT_SEC_OFFERS,Teklifler,Offers
 HUNT_SEC_PENDING,Bekleyen,Pending
 HUNT_LOCKED_SOON,Yakında,Soon
+HUNT_TIER2_SLOT,2. kademe fonu,Tier 2 fund
 HUNT_CONDITION,Koşul: {condition},Condition: {condition}
 HUNT_MEETING_SET,Toplantı ayarlandı.,Meeting is set.
 HUNT_NO_OFFERS,Henüz teklif yok.,No offers yet.
@@ -774,7 +774,7 @@ HUNT_WEEKS,{n} hafta sonra,in {n} weeks
 HUNT_THIS_WEEK,bu hafta,this week
 HUNT_NEXT_WEEK,gelecek hafta,next week
 HUNT_NONE_PENDING,Bekleyen yok.,Nothing pending.
-HUNT_COUNTER_PIVOT,Pivot — bootstrap yolu,Pivot — the bootstrap road
+HUNT_COUNTER_PIVOT,Pivot: bootstrap yolu,Pivot: the bootstrap road
 HUNT_COUNTER_TABLES,Kapanan masa: {closed}/{total},Tables closed: {closed}/{total}
 HUNT_BADGE_OFFERED,Teklif var,Offer in
 HUNT_BADGE_PENDING_SHEET,Teklif bekliyor,Offer pending
@@ -788,7 +788,6 @@ HUNT_CB_MRR,MRR {target} ({current}/{target}),MRR {target} ({current}/{target})
 HUNT_CB_CHURN,{weeks} içinde müşteri kaybı {target} altında (şu an {current}),Customer churn under {target} in {weeks} ({current} so far)
 HUNT_CB_FIRST_ENGINEER,İlk mühendisi işe al,Hire the first engineer
 HUNT_CB_SCANDAL,Skandalı çöz,Resolve the scandal
-HUNT_CB_NONE,—,—
 HUNT_FRANK_LINE,Av açık. Kapanan masa: {n}. Üçüncüde yol biter.,The hunt is on. Tables closed: {n}. The third one ends it.
 HUNT_REQUEST_AGAIN,Tekrar iste ({when}),Ask again ({when})
 HUNT_REQUEST_MEETING,Toplantı iste ({when}),Request a meeting ({when})
@@ -968,7 +967,7 @@ PROD_FEAT_SAAS_OPS_MOBILE_NAME,Mobil Uygulama,Mobile App
 PROD_FEAT_AI_ASSISTANT_CHAT_VOICE,Kullanıcının asistanla konuştuğu ekran. Olmazsa olmaz; müşteri ilk buna bakar.,The screen where the user talks to the assistant. Non-negotiable; it is the first thing a customer looks at.
 PROD_FEAT_AI_ASSISTANT_MEMORY_VOICE,Önceki konuşmaları hatırlayan asistan. Pahalı ama vazgeçilmez.,"An assistant that remembers earlier conversations. Expensive, and impossible to do without."
 PROD_FEAT_AI_ASSISTANT_TOOLS_VOICE,"Asistan sadece konuşmaz, işlemi de yapar. Yazması ayrı bir cehennem.","The assistant does not just talk, it acts. Writing it is its own particular hell."
-PROD_FEAT_AI_ASSISTANT_VOICE_VOICE,Asistanla sesli konuşma. Konuşmak yazmaktan kolay — çoğu zaman.,Talking to the assistant out loud. Speaking is easier than typing — most of the time.
+PROD_FEAT_AI_ASSISTANT_VOICE_VOICE,Asistanla sesli konuşma. Konuşmak yazmaktan kolay. Çoğu zaman.,Talking to the assistant out loud. Speaking is easier than typing. Most of the time.
 PROD_FEAT_AI_ASSISTANT_IMAGE_VOICE,Asistan görsele bakıp anlıyor. En azından biz öyle söylüyoruz.,"The assistant looks at an image and understands it. That is what we say, anyway."
 PROD_FEAT_AI_ASSISTANT_STREAMING_VOICE,"Cevaplar bir anda değil, yazarak gelir. Daha az korkutucu.",Answers arrive as they are written rather than all at once. Less intimidating.
 PROD_FEAT_AI_PHOTO_BG_REMOVAL_VOICE,Arka planı tek tıkla sil. Herkesin beklediği şey; olmazsa uygulama indirilmez bile.,Delete the background in one click. Everyone expects it; without it nobody even downloads the app.
@@ -988,7 +987,7 @@ PROD_FEAT_AI_VEC_EMBED_API_VOICE,Metni anlam taşıyan vektöre çeviren API. M�
 PROD_FEAT_AI_VEC_SEARCH_API_VOICE,"Bir sorgu ver, anlamca en yakın kayıtları bulsun. Ürünün kalbi burası.","Give it a query, get the closest records by meaning. This is the heart of the product."
 PROD_FEAT_AI_VEC_FILTER_VOICE,Anlam aramasını tarih ve etiketle daralt. Kurumsal müşterinin ilk sorduğu şey.,Narrow a semantic search by date and tag. The first thing an enterprise buyer asks about.
 PROD_FEAT_AI_VEC_DASHBOARD_VOICE,"Kullanım grafiklerini gösteren yönetim paneli. Geliştirici bakmaz, CTO bakar.",An admin panel showing usage charts. The developer never looks; the CTO does.
-PROD_FEAT_AI_VEC_SCALING_VOICE,Trafik arttıkça sistem kendini büyütür. Kimse fark etmez — çökene kadar.,The system grows itself as traffic rises. Nobody notices — until it falls over.
+PROD_FEAT_AI_VEC_SCALING_VOICE,Trafik arttıkça sistem kendini büyütür. Kimse fark etmez. Çökene kadar.,The system grows itself as traffic rises. Nobody notices. Until it falls over.
 PROD_FEAT_AI_VEC_SDK_VOICE,Python ve JS için hazır kütüphane. Yoksa kimse entegre etmeye uğraşmaz.,A ready library for Python and JS. Without it nobody bothers integrating.
 PROD_FEAT_SAAS_PM_TASKS_VOICE,Görevlerin sürüklendiği Kanban panosu. Yoksa ürün sayılmazsın.,The Kanban board tasks get dragged across. Without it you do not count as a product.
 PROD_FEAT_SAAS_PM_GANTT_VOICE,"Projeyi zaman çizelgesi olarak göster. Kullanıcı istemez, satın alan yönetici ister.",Show the project as a timeline. Users do not want it; the manager who signs does.
@@ -1006,11 +1005,11 @@ PROD_FEAT_SAAS_AN_DASHBOARDS_VOICE,Herkes kendi panosunu sürükle-bırakla kura
 PROD_FEAT_SAAS_AN_QUERY_VOICE,SQL yazıp veriyi doğrudan sorgulama. Veri ekibi bunu bulamazsa rakibe gider.,Write SQL directly for those who want to. The analyst's respect is earned here.
 PROD_FEAT_SAAS_AN_ALERTS_VOICE,Bir metrik ters gittiğinde ekip sohbetine uyarı düşer. Geç düşerse iş işten geçmiş olur.,Warns when a number goes strange. Too sensitive and it gets muted.
 PROD_FEAT_SAAS_AN_SHARE_VOICE,Raporu tek linkle dışarı paylaş. Kimin görebileceği kısmı 'küçük' bir detay.,A report you can send by link. It spreads the product for free.
-PROD_FEAT_SAAS_AN_ETL_VOICE,"Kasadar, veritabanı, ürün analitiği — veriyi hepsinden içeri çek. Bakımı ayrı bir işkence.","Pull data in from other systems. The unglamorous work, and the reason the product is bought."
+PROD_FEAT_SAAS_AN_ETL_VOICE,"Kasadar, veritabanı, ürün analitiği: veriyi hepsinden içeri çek. Bakımı ayrı bir işkence.","Pull data in from other systems. The unglamorous work, and the reason the product is bought."
 PROD_FEAT_SAAS_AN_EMBED_VOICE,Müşterinin kendi ürününe gömülen dashboard. Enterprise satışın anahtarı.,"The customer puts your panels inside their own product. Sticky, and hard to build."
 PROD_FEAT_SAAS_BILL_SUBSCRIPTIONS_VOICE,"Abonelikleri kur, aylık tahsilatı otomatik yürüt. Ürünün varlık sebebi.","Plans, upgrades, cancellations. The engine of the whole product."
 PROD_FEAT_SAAS_BILL_INVOICE_VOICE,"PDF üret, mail at. Muhasebenin kalbini kazan.","A legally valid invoice, generated automatically. Finance will not sign without it."
-PROD_FEAT_SAAS_BILL_TAX_VOICE,"KDV, satış vergisi, VAT — vergiyi doğru hesapla. Ülke sayısı kadar kural, ülke sayısı kadar bug.","Calculates the right rate per country. Nobody enjoys it, everybody needs it."
+PROD_FEAT_SAAS_BILL_TAX_VOICE,"KDV, satış vergisi, VAT: vergiyi doğru hesapla. Ülke sayısı kadar kural, ülke sayısı kadar bug.","Calculates the right rate per country. Nobody enjoys it, everybody needs it."
 PROD_FEAT_SAAS_BILL_DUNNING_VOICE,"Reddedilen kartı tekrar dene, müşteriye hatırlatma gönder. Sessizce kaybedilen aboneleri kurtarır.",Chases a failed payment instead of losing the customer. Quietly saves real revenue.
 PROD_FEAT_SAAS_BILL_WEBHOOKS_VOICE,Ödeme olaylarını müşterinin kendi sistemine anında bildir. Kasadar standardı; herkes bekler.,Notifies other systems the moment something happens. The developer's first question.
 PROD_FEAT_SAAS_BILL_PRORATION_VOICE,"Plan değişince kalan günleri kuruşuna kadar hesapla. Tek bug, support cehennemi demek.","Fair billing for a mid-month plan change. Small feature, endless support tickets without it."
@@ -1096,11 +1095,11 @@ PROD_DESIGN_DECISION_TITLE,Tasarım masasında karar,A decision at the design ta
 PROD_TO_DEVELOPMENT_PLAIN,Geliştirmeye geç,Move to development
 PROD_EV_VERSION_SHIP_BODY,"Yeni sürümü yayına gönderiyorsun. Frank ekrana bakıyor, başını hafifçe sallıyor.
 
-""Büyüdü. Yeni özellikler tuttu — ama yeni yüzey, yeni hata demek. Gözünü ayırma.""
+""Büyüdü. Yeni özellikler tuttu. Ama yeni yüzey, yeni hata demek. Gözünü ayırma.""
 
 Kullanıcılar farkı görecek. Rakipler de.","You push the new version live. Frank watches the screen and gives a small nod.
 
-""It grew. The new features landed — but new surface means new bugs. Don't take your eyes off it.""
+""It grew. The new features landed. But new surface means new bugs. Don't take your eyes off it.""
 
 Users will notice the difference. So will your rivals."
 PROD_EV_FIRST_SHIP_BODY,"İmleç Yayınla'nın üstünde. Telefonda Frank'ten bir mesaj var.
@@ -1216,7 +1215,7 @@ PITCH_DIFF_EASY,Kolay,Easy
 PITCH_DIFF_MEDIUM,Orta,Medium
 PITCH_DIFF_HARD,Zorlu,Hard
 GATE_OPENED,{phase} kapısı açıldı,The {phase} gate is open
-GATE_ADVANCE,Hazırız — geçelim,We are ready — let us move
+GATE_ADVANCE,"Hazırız, geçelim","We are ready, let us move"
 GATE_DECLINE,Henüz değil,Not yet
 GATE_TRACTION_TITLE,İlk ödeme,The first payment
 GATE_TRACTION_ADVANCE,Tamam,All right
@@ -1228,11 +1227,11 @@ GATE_TRACTION_BODY_0,"Frank'ten mesaj.
 GATE_SERIES_A_TITLE,Series A masası,The Series A table
 GATE_SERIES_A_BODY_0,"Frank telefonunu ters çevirip masaya koyuyor. Ciddi olduğunda yapar bunu.
 
-""MRR tutuyor, marka ayakta. Series A avı açık. Runway'in dar mı geniş mi — girebilirsin, ama masada kokusunu alırlar.""
+""MRR tutuyor, marka ayakta. Series A avı açık. Runway'in dar da olsa girebilirsin, ama masada kokusunu alırlar.""
 
 Bundan sonrası saatli bir av: pitch takvimi ve runway, ikisi de sayacak.","Frank turns his phone face down on the table. He does that when he is serious.
 
-""MRR is holding, the brand is standing. The Series A hunt is open. Thin runway or not — you can walk in, but they will smell it at the table.""
+""MRR is holding, the brand is standing. The Series A hunt is open. Thin runway or not, you can walk in, but they will smell it at the table.""
 
 From here it is a hunt on a clock: the pitch calendar and the runway both count down."
 GATE_SERIES_A_BODY_1,"Frank pencereden dışarı bakıyor.
@@ -1727,11 +1726,11 @@ INV_CHIP_TEAM,EKİP,TEAM
 INV_CHIP_NARRATIVE,ANLATI,NARRATIVE
 INV_CHIP_PRODUCT,ÜRÜN,PRODUCT
 END_META_SERIES_A_CLOSE_TITLE,Series A Kapandı,Series A Closed
-END_META_SERIES_A_CLOSE_FRANK,İmzaladın. Şimdi asıl iş başlıyor — ama o başka bir oyunun konusu.,You signed. Now the real work starts — but that is another game's subject.
+END_META_SERIES_A_CLOSE_FRANK,İmzaladın. Şimdi asıl iş başlıyor. Ama o başka bir oyunun konusu.,You signed. Now the real work starts. But that is another game's subject.
 END_META_ACQUISITION_TITLE,Şirket Satıldı,The Company Was Sold
 END_META_ACQUISITION_FRANK,Sattın. Kazanmak değil; kaybetmek de değil. Çoğu kurucu bunu bile göremez.,You sold. Not winning; not losing either. Most founders never even get this far.
 END_META_BANKRUPTCY_TITLE,Kepenk İndi,The Shutters Came Down
-END_META_BANKRUPTCY_FRANK,{days} gün kırmızıda kaldın. Rakamlar kaba değildir — sadece sabırlıdır.,You stayed in the red for {days} days. Numbers are not cruel — only patient.
+END_META_BANKRUPTCY_FRANK,"{days} gün kırmızıda kaldın. Rakamlar kaba değildir, sadece sabırlıdır.","You stayed in the red for {days} days. Numbers are not cruel, only patient."
 END_META_BRAND_COLLAPSE_TITLE,Marka Çöktü,The Brand Collapsed
 END_META_BRAND_COLLAPSE_FRANK,Skandalı sen yönetmedin; o seni yönetti.,You did not manage the scandal; it managed you.
 END_META_VC_REJECTION_CASCADE_TITLE,"Üç Masa, Üç Ret","Three Tables, Three Rejections"
@@ -1740,7 +1739,7 @@ END_META_PROFITABLE_BOOTSTRAP_TITLE,Kendi Paranla,On Your Own Money
 END_META_PROFITABLE_BOOTSTRAP_FRANK,Onlara ihtiyacın yokmuş. Gerçek bir şey kurdun.,It turns out you did not need them. You built something real.
 END_META_RUNNING_ON_FUMES_TITLE,İlgi Söndü,Interest Faded
 END_META_RUNNING_ON_FUMES_FRANK,"Takvim bitti. Kapı açıktı, kimse girmedi. Kaybetmedin. Sadece kazanmadın.",The calendar ran out before you did. The door was open; nobody walked through it. Nobody took it from you. You just didn't win.
-END_HL_SHUTTER_STARTED,Kepenk sayacı başladı — kasa ekside,The shutter clock has started — the account is in the red
+END_HL_SHUTTER_STARTED,Kepenk sayacı başladı: kasa ekside,The shutter clock has started: the account is in the red
 END_EV_SHUTTER_TITLE,Hesap kırmızıda,In the red
 END_EV_GO_FINANCE,Finans'a git,Go to Finance
 END_EV_SHUTTER_BODY,"Tırnaklarını kemirmenin sebebi belli: şirketin banka hesabı ekside.

@@ -20,7 +20,7 @@ These fire in a normal run today.
 |---|---|---|---|
 | `PROD_EV_VERSION_SHIP_BODY` (+ `PROD_SHIP_VERSION_TITLE`, `PROD_SHIP_CONTINUE`) | EventModal, every v2+ ship | `ProductSystem._trigger_ship_moment(is_version = true)` | **Same shape.** Bölüm 3 lists "her sürüm yayını" as a place Frank is removed; no replacement text exists. Note the first-ship twin (surface 4) *was* rewritten, so this card now sits next to a rewritten sibling in a different voice |
 | `PROD_EV_ITER_DECISION_BODY` (+ `PROD_DESIGN_DECISION_TITLE`, `PROD_ITER_KEEP_GOING`, `PROD_TO_DEVELOPMENT_PLAIN`) | EventModal, end of design round 1 | `product_system.gd` hourly build seam, latched once per run | **Explicitly deferred, not missed.** The document's closing section says the design-round card (3) is not being written until the Build Bar work is finished, and flags that one of its two options does nothing. Awaiting authoring |
-| `GATE_SERIES_A_TITLE`, `GATE_SERIES_A_BODY_0/1/2`, `GATE_ADVANCE`, `GATE_DECLINE` | EventModal, the Series A gate | `PhaseGateSystem`, MRR + growth streak + brand | **Awaiting design** (surface 12). Also the last live Frank copy still carrying em dashes: `GATE_ADVANCE` "Hazırız — geçelim" and `GATE_SERIES_A_BODY_0`. The dash ban applies to whatever key is touched, so they clear when this surface is rewritten. `GATE_SERIES_A_BODY_2` was byte-identical to the Traction gate's `_BODY_2`; that duplicate is now gone from the other side |
+| `GATE_SERIES_A_TITLE`, `GATE_SERIES_A_BODY_0/1/2`, `GATE_ADVANCE`, `GATE_DECLINE` | EventModal, the Series A gate | `PhaseGateSystem`, MRR + growth streak + brand | **Awaiting design** (surface 12). Their dashes are gone (Faz Q K20): `GATE_ADVANCE` reads "Hazırız, geçelim" / "We are ready, let us move", and `GATE_SERIES_A_BODY_0` carries "Runway'in dar da olsa girebilirsin" / "Thin runway or not, you can walk in". `GATE_SERIES_A_BODY_2` was byte-identical to the Traction gate's `_BODY_2`; that duplicate is now gone from the other side |
 
 ---
 
@@ -41,11 +41,12 @@ Frank *from the paper*, and the paper never carried him. `EndingScene._build_fra
 outside `_export_paper_png`'s crop by construction, so the shared image is still a newspaper.
 
 *The number:* `END_META_BANKRUPTCY_FRANK` now says **thirty**, in both columns, and nothing else
-in the line moved — not a word, not the em dashes, which belong to a dash sweep this task did not
-run. The smoke case `bankruptcy_frank_line_says_thirty` pins the copy to
-`EndingsSystem.SHUTTER_DAYS`, so the next retune of that constant cannot silently orphan it
-again. The contradiction this row sharpened — `FIN_SHUTTER_COUNTDOWN` putting `KEPENK: 30 GÜN`
-on the top bar for all thirty days — is gone.
+in the line moved — not a word. The em dashes went in the later dash sweep (Faz Q K20): the line
+now reads "Rakamlar kaba değildir, sadece sabırlıdır." / "Numbers are not cruel, only patient."
+The smoke case `bankruptcy_frank_line_says_thirty` pins the copy to `EndingsSystem.SHUTTER_DAYS`,
+so the next retune of that constant cannot silently orphan it again. The contradiction this row
+sharpened — `FIN_SHUTTER_COUNTDOWN` putting `KEPENK: 30 GÜN` on the top bar for all thirty days —
+is gone.
 
 *What was true when this row was written and is now history:*
 `END_META_BANKRUPTCY_FRANK` said "Yedi gün kırmızıda kaldın" / "You stayed in the red for seven

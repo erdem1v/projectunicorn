@@ -49,9 +49,9 @@ const FORBIDDEN_TERMS := [
 	"y combinator", "techcrunch", "sequoia", "andreessen", "a16z",
 ]
 
-## §17.8 bans the dash in card bodies. The reason is editorial: the em dash is the tic this
-## project's prose falls into, and banning it forces the sentence to be rewritten rather than
-## hinged.
+## §17.8 bans the dash in everything a card shows the player (title, subtitle, option labels, lock reasons,
+## expire notes, every body variant). The reason is editorial: the em dash is the tic this project's prose
+## falls into, and banning it forces the sentence to be rewritten rather than hinged.
 const DASH_CHARS := ["—", "–"]
 
 ## The sprint paper's contract: who may speak (a character role), at which phase of the card they work (the sprint
@@ -762,9 +762,10 @@ static func _lint_text(id: String, card: Dictionary, where: String) -> void:
 		# A body may be a variant set; every arm is checked, and the panel holds one of them at a time.
 		var arms: Array = body_strings(block)
 		var body: String = " ".join(PackedStringArray(arms))
+		var shown: String = " ".join(PackedStringArray(_strings_in(block)))
 		for dash in DASH_CHARS:
-			if body.contains(dash):
-				_add(SEVERITY_ERROR, "17.8", where, "[%s] body contains a dash" % locale)
+			if shown.contains(dash):
+				_add(SEVERITY_ERROR, "17.8", where, "[%s] text contains a dash" % locale)
 				break
 
 		var lowered: String = (body + " " + String(block.get("title", ""))).to_lower()

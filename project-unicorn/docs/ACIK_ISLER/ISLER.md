@@ -28,10 +28,6 @@ Açık işlerin tek yeri bu klasördür.
   aday yön C'nin istek verisi gelince en çok istenen şeyin sürüm yorumlarında “hâlâ yok” diye görünmesi.
 
 ## Oyuncu metni
-- Oyuncu metinlerinde tire (— –) kalan yerler var (CLAUDE.md §5; Erdem 2026-10-20 kararı 14: hiçbir yerde tire yok,
-  sorulmaz, yapılır; değişen metin commit mesajında "TR/EN onay bekliyor" diye işaretlenir): CSV'de iki dilden birinde
-  tire taşıyan 22 satır (ör. `HR_TASK_NONE`, `HUNT_CB_NONE`, `GATE_ADVANCE`, `END_META_*_FRANK`) ve
-  `scripts/tabs/sales_tab.gd` `_account_foot`'taki "—" literal'i (sorumlu satırı, ACIK_KARARLAR 35).
 - EN çoğul ikizi: `DESK_PAPER_ATLAS_TITLE` ("{n} candidate files ready") n=1'de çoğul okunuyor; tekil ikiz anahtar ve
   seçimi gerekir (TR sayıdan sonra çoğul eki almaz).
 

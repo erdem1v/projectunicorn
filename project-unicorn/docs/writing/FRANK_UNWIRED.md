@@ -34,9 +34,7 @@ remains a separate gate — none of which is decided.
 shipped copy. It is listed here because the document names it as awaiting design, not because it
 is inert.
 
-**Attaching it.** A design session first, then one body rewrite. Note that this card still
-carries em dashes (`GATE_ADVANCE` "Hazırız — geçelim", `GATE_SERIES_A_BODY_0`); the dash ban
-applies to whatever key is touched, so they clear when this surface is rewritten.
+**Attaching it.** A design session first, then one body rewrite.
 
 ---
 

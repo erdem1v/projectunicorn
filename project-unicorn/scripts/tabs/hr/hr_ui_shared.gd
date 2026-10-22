@@ -379,8 +379,6 @@ static func D_state_cell(emp: Character, all: bool, width: int) -> Control:
 		var note := _caption(said[-1])
 		note.add_theme_color_override("font_color", UiTokens.D_warn() if delta > 0 else UiTokens.D_pos())
 		cell.add_child(note)
-	if cell.get_child_count() == 0:
-		cell.add_child(_caption(TranslationServer.translate("HR_TASK_NONE")))
 	set_mouse_ignore(cell)
 	# The overload tag explains itself on hover; PASS keeps the row's click.
 	if hint != null:

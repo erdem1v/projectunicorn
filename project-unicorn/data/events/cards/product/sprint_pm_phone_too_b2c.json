@@ -117,7 +117,7 @@
   "text": {
     "tr": {
       "title": "Telefondan da kullanmak istiyorlar",
-      "body": "Bu kartı isteyen {seam:urun.decision_request_votes} kişinin çoğu telefondan yazmış, biz yalnız masaüstüne göre çizdik. Telefon desteğini şimdi eklersek kart bu sprintte bitmez.",
+      "body": "Bu kartı isteyen {seam:urun.decision_request_votes} kişinin çoğu telefondan yazmış, biz yalnız masaüstüne göre tasarladık. Telefon desteğini şimdi eklersek kart bu sprintte bitmez.",
       "options": {
         "add_now": "Telefon desteğini şimdi ekle",
         "phone_next": "Telefon desteğini önümüzdeki sprinte at",

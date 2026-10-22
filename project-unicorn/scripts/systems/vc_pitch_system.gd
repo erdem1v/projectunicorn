@@ -500,7 +500,7 @@ static func callback_text(cb: Dictionary) -> String:
 			"weeks": Fmt.weeks(PitchConstants.CALLBACK_CHURN_WEEKS), "current": Fmt.percent(_churn_pct(cb))})
 		"first_engineer": return _t("HUNT_CB_FIRST_ENGINEER")
 		"scandal_resolved": return _t("HUNT_CB_SCANDAL")
-		_: return _t("HUNT_CB_NONE")
+		_: return ""
 
 
 ## The product fund's callback: lose fewer than `target` percent of the customers in the quarter that follows. The

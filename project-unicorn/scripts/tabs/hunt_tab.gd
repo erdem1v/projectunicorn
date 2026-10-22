@@ -292,7 +292,7 @@ func _fund_row(inv: Dictionary) -> PanelContainer:
 		middle.add_child(UiFactory.make_glyph("res://assets/icons/util/lock.svg", UiTokens.D_ICON_ROW, UiTokens.D_INK_OFF))
 		disc.add_child(middle)
 		line.add_child(disc)
-		body.add_child(UiFactory.make_label(String(inv.get("display_name", "")), &"SubjectLabel", UiTokens.D_INK_OFF))
+		body.add_child(UiFactory.make_label(tr("HUNT_TIER2_SLOT"), &"SubjectLabel", UiTokens.D_INK_OFF))
 		body.add_child(UiFactory.make_label(tr("HUNT_LOCKED_SOON"), &"Caption"))
 		line.add_child(body)
 		return row

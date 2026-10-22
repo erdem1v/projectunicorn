@@ -70,10 +70,9 @@ const INVESTORS := [
 		"opening_terms": {"valuation_m": 16, "dilution_pct": 18, "board_seats": 0, "board_veto": false},
 		"warm_intro": false,
 	},
-	# Locked Tier-2 teaser (wishlist telegraph) — no meeting, greyed card.
+	# Locked Tier-2 teaser (wishlist telegraph) — no meeting, greyed card; the Hunt names it from HUNT_TIER2_SLOT.
 	{
 		"id": "locked_tier2",
-		"display_name": "— · Tier 2'de",
 		"role_key": "",
 		"archetype_key": "",
 		"domain": "",

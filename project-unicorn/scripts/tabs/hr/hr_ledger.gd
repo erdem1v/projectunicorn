@@ -218,7 +218,7 @@ static func _gap(w: int) -> Control:
 
 
 ## §12.2 GÖREV metni: tek iş → cümle; iki iş → orta noktalı kısa etiketler (cümle satırı
-## taşırır); hiç iş → veri yok işareti. Ekip dosyası da buradan okur.
+## taşırır); hiç iş → boş, çünkü Boşta Durum sütununun etiketidir. Ekip dosyası da buradan okur.
 static func task_text(emp: Character) -> String:
 	var jobs: Array[String] = emp.assigned_job_ids
 	if jobs.size() >= 2:
@@ -228,7 +228,7 @@ static func task_text(emp: Character) -> String:
 		return " · ".join(labels)
 	if jobs.size() == 1:
 		return _job_text(jobs[0], false)
-	return tr_key("HR_TASK_NONE")
+	return ""
 
 
 ## §12.2 iş metni. Sprint koşarken Build çıkacak sürümün adıyla okunur ("Notly v1.5"):

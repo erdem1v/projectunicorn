@@ -120,7 +120,7 @@
   "text": {
     "tr": {
       "title": "Telefondan da kullanmak istiyorlar",
-      "body": "{customer} bunu telefondan da kullanmak istiyor, biz yalnız masaüstüne göre çizdik. Telefon desteğini şimdi eklersek kart bu sprintte bitmez.",
+      "body": "{customer} bunu telefondan da kullanmak istiyor, biz yalnız masaüstüne göre tasarladık. Telefon desteğini şimdi eklersek kart bu sprintte bitmez.",
       "options": {
         "add_now": "Telefon desteğini şimdi ekle",
         "phone_next": "Telefon desteğini önümüzdeki sprinte at",
