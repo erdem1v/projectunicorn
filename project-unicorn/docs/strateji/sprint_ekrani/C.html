@@ -1,0 +1,1295 @@
+<title>Sprint Ekranı C</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Red+Hat+Mono:wght@400..600&family=Red+Hat+Text:ital,wght@0,400..700;1,400..500&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;
+--s0:#100E0B;--s1:#15120F;--s2:#1A1714;--s3:#1E1B18;--s4:#27231F;--s5:#2E2924;
+--l1:#3A342D;--l2:#4A4239;--l3:#6A5F52;--lh:#958C7E;
+--i1:#FFFFFF;--i2:#E9E4DA;--i3:#B3AA9E;--i4:#9A9184;--off:#6B6358;
+--acc:#F2B53A;--acch:#F7C65F;--warn:#E8913A;
+--tas:#C29BD8;--gel:#7EA8CC;--tst:#8FBF86;
+--hatch:repeating-linear-gradient(135deg,#E8913A 0 3px,rgba(232,145,58,.22) 3px 6px);
+--disp:'Archivo',system-ui,sans-serif;--body:'Red Hat Text',system-ui,sans-serif;--mono:'Red Hat Mono',ui-monospace,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:#0B0A08;color:var(--i2);font-family:var(--body);font-size:15px;line-height:1.5;
+padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 80px}
+.page{max-width:1440px;margin:0 auto}
+/* giriş */
+.intro h1{font-family:var(--disp);font-stretch:72%;font-weight:850;font-size:clamp(40px,7vw,72px);line-height:.95;margin:0 0 6px;color:var(--i1);letter-spacing:.005em}
+.intro .kick{font-family:var(--disp);font-stretch:85%;font-weight:700;font-size:14px;letter-spacing:.08em;color:var(--acc);margin:0 0 14px}
+.intro .lede{font-size:18px;color:var(--i2);max-width:820px;margin:0 0 28px}
+.ig{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:28px}
+@media (max-width:960px){.ig{grid-template-columns:minmax(0,1fr)}}
+.box{background:var(--s2);border:1px solid var(--l1);border-radius:10px;padding:18px 20px}
+.box h2{font-family:var(--disp);font-stretch:80%;font-weight:750;font-size:20px;margin:0 0 10px;color:var(--i1)}
+.box ol{margin:0;padding-left:20px;display:grid;gap:9px;font-size:14.5px;color:var(--i2)}
+.box ol b{color:var(--i1)}
+.box p{margin:0 0 10px;font-size:14.5px}
+.fnt{display:grid;gap:10px;margin-bottom:12px}
+.fnt div{border-bottom:1px solid var(--l1);padding-bottom:10px}
+.fnt .a{font-family:var(--disp);font-stretch:72%;font-weight:800;font-size:28px;color:var(--i1);line-height:1.05}
+.fnt .b{font-family:var(--body);font-size:16px;color:var(--i1)}
+.fnt .c{font-family:var(--mono);font-size:15px;color:var(--i1)}
+.fnt small{display:block;color:var(--i3);font-size:13px;margin-top:3px}
+.cls{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:22px}
+@media (max-width:960px){.cls{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.cls{grid-template-columns:minmax(0,1fr)}}
+.cls div{background:var(--s2);border:1px solid var(--l1);border-radius:8px;padding:12px 14px;font-size:13.5px;color:var(--i3)}
+.cls b{display:block;font-family:var(--disp);font-stretch:85%;font-size:15px;color:var(--i1);margin-bottom:4px}
+.note{font-size:13px;color:var(--i4);margin-top:16px}
+/* kare başlığı */
+.cap{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;margin:56px 0 12px}
+.cap .no{font-family:var(--mono);font-size:13px;color:var(--acc);border:1px solid rgba(242,181,58,.45);border-radius:4px;padding:1px 7px}
+.cap b{font-family:var(--disp);font-stretch:80%;font-weight:750;font-size:22px;color:var(--i1)}
+.cap span.d{color:var(--i3);font-size:14.5px;flex-basis:100%}
+.fw{overflow-x:auto;border:1px solid var(--l1);border-radius:10px;background:var(--s0)}
+/* kare */
+.frame{width:1440px;height:810px;position:relative;overflow:hidden;background:var(--s3);font-family:var(--body);font-size:13px;line-height:1.35;color:var(--i2)}
+.chrome{height:52px;display:flex;align-items:center;gap:18px;padding:0 20px;background:var(--s1);border-bottom:1px solid var(--l1)}
+.brand{font-family:var(--disp);font-stretch:68%;font-weight:850;font-size:26px;color:var(--i1);letter-spacing:.02em}
+.prod{color:var(--i3);font-size:13px;padding-left:16px;border-left:1px solid var(--l1)}
+.prod b{color:var(--i1);font-weight:600;font-size:14px}
+.tabs{display:flex;gap:2px;margin-left:18px}
+.tab{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;font-family:var(--disp);font-stretch:82%;font-weight:700;font-size:14px;letter-spacing:.04em;color:var(--i4);border-radius:5px}
+.tab.on{color:var(--i1);background:var(--s4);box-shadow:inset 0 -2px 0 var(--acc)}
+.tab.lk{color:var(--off)}
+.hist{margin-left:auto;display:inline-flex;align-items:center;gap:8px;color:var(--i3)}
+.tg{width:30px;height:16px;border-radius:9px;background:var(--s5);border:1px solid var(--l2);position:relative}
+.tg::after{content:"";position:absolute;left:2px;top:2px;width:10px;height:10px;border-radius:50%;background:var(--i4)}
+.xx{color:var(--i3);margin-left:8px}
+.bd{display:grid;grid-template-columns:268px minmax(0,1fr) 232px;grid-template-rows:758px;height:758px}
+/* ikonlar */
+.ic{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none;display:inline-block;vertical-align:middle}
+.ic.s{width:12px;height:12px}
+.ic.l{width:16px;height:16px}
+/* portreler */
+.av{width:22px;height:22px;border-radius:50%;overflow:hidden;display:inline-block;flex:none;background:#3A342D;box-shadow:0 0 0 1.5px var(--s4)}
+.av svg{width:100%;height:100%;display:block}
+.av.xs{width:16px;height:16px;box-shadow:0 0 0 1px var(--s2)}
+.av.m{width:24px;height:24px}
+.av.l{width:34px;height:34px}
+.av.fd{box-shadow:0 0 0 1.5px var(--acc)}
+.idle{opacity:.33;outline:1px dashed var(--i3);outline-offset:1px}
+.half{opacity:.62}
+.ppl{display:flex;gap:3px;align-items:center}
+.pp{display:inline-grid;justify-items:center;gap:3px}
+.st{display:block;width:24px;height:4px;background:linear-gradient(90deg,var(--acc) calc(var(--s)*20%),var(--l2) 0);-webkit-mask:repeating-linear-gradient(90deg,#000 0 3.8px,transparent 3.8px 4.8px);mask:repeating-linear-gradient(90deg,#000 0 3.8px,transparent 3.8px 4.8px)}
+.p-kur{--sk:#D9A47A;--hr:#2B211A;--sh:#A87C2E}.p-ece{--sk:#E6B990;--hr:#6B3A1F;--sh:#6E5A8C}.p-den{--sk:#C68A5E;--hr:#1D1814;--sh:#3F5F78}
+.p-mer{--sk:#E0B08A;--hr:#4A3020;--sh:#5B6B4A}.p-kaa{--sk:#B97D55;--hr:#121010;--sh:#7A4A3A}.p-ays{--sk:#EBC29C;--hr:#2C1C14;--sh:#4F6F5A}
+.p-sel{--sk:#D8A580;--hr:#8A4A24;--sh:#8A6A3A}.p-can{--sk:#CF9A70;--hr:#3A2A1E;--sh:#5E6680}.p-bur{--sk:#E2B38E;--hr:#5A2E1C;--sh:#7A5A6A}
+.p-def{--sk:#F0C8A4;--hr:#B07A3A;--sh:#5A6A8A}.p-giz{--sk:#C99064;--hr:#1A1410;--sh:#6A5A3A}.p-zey{--sk:#DEB08A;--hr:#2A1A12;--sh:#3A5A6A}
+.p-brk{--sk:#D4A07A;--hr:#5A4030;--sh:#6A4A4A}.p-onu{--sk:#B88560;--hr:#222;--sh:#4A5A3A}.p-cem{--sk:#E4B896;--hr:#7A5A3A;--sh:#5A5A6A}
+.p-g1{--sk:#C9946C;--hr:#3A2618;--sh:#55606E}.p-g2{--sk:#E8BE98;--hr:#7A4524;--sh:#6A5878}.p-g3{--sk:#B07A52;--hr:#151110;--sh:#5E6A4E}
+.p-g4{--sk:#DDAA82;--hr:#4E3424;--sh:#7A5E3E}.p-g5{--sk:#F0CAA6;--hr:#A06C34;--sh:#4E6474}.p-g6{--sk:#C08860;--hr:#2A1C14;--sh:#6E4A4A}
+/* sol sütun */
+.side{background:var(--s2);border-right:1px solid var(--l1);padding:18px 16px;display:flex;flex-direction:column;gap:22px;overflow:hidden}
+.sh{font-family:var(--disp);font-stretch:85%;font-weight:750;font-size:13px;letter-spacing:.09em;color:var(--i4);margin-bottom:9px}
+.reqs{display:grid;gap:8px}
+.req{background:var(--s4);border:1px solid var(--l1);border-radius:7px;padding:9px 11px;display:grid;gap:3px;position:relative}
+.req .cn{font-weight:650;color:var(--i1);font-size:14px}
+.req .ft{color:var(--i3);font-size:13px}
+.dl{display:inline-flex;gap:5px;align-items:center;font-size:12.5px;color:var(--i3)}
+.dl.now{color:var(--acch)}
+.stamp{position:absolute;right:9px;top:9px;display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--acc);font-weight:600}
+.empty{border:1px dashed var(--l2);border-radius:7px;padding:14px 12px;color:var(--i4);font-size:13px;text-align:center}
+.area{display:flex;align-items:center;justify-content:space-between;padding:8px 2px;border-bottom:1px solid var(--l1);font-size:14px;color:var(--i2)}
+.area .an{display:inline-flex;align-items:center;gap:6px}
+.area.weak .an svg{color:var(--warn)}
+.lv{display:flex;gap:3px}
+.lv i{width:15px;height:8px;background:var(--l1);border-radius:1px}
+.lv i.on{background:var(--i3)}
+.lv i.up{background:transparent;box-shadow:inset 0 0 0 1.5px var(--acc)}
+.lv.weak i.on{background:var(--warn)}
+/* orta */
+.main{display:flex;flex-direction:column;padding:14px 20px 14px;gap:10px;min-width:0;min-height:0;--cols:252px repeat(3,minmax(0,1fr))}
+.mh{display:flex;align-items:center;gap:16px;min-height:52px}
+.sn{font-family:var(--disp);font-stretch:68%;font-weight:850;font-size:36px;color:var(--i1);line-height:1;letter-spacing:.01em;white-space:nowrap}
+.spt{display:flex;gap:3px}
+.spt span{width:60px;height:24px;border:1px solid var(--l2);border-radius:4px;display:grid;place-items:center;font-size:12px;color:var(--i3);background:var(--s2)}
+.spt .dn{background:var(--s5);color:var(--i2);border-color:var(--l3)}
+.spt .now{border-color:var(--acc);color:var(--i1);background:linear-gradient(90deg,rgba(242,181,58,.28) 50%,var(--s2) 50%)}
+.goal{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 11px;border:1px solid var(--l2);border-radius:6px;background:var(--s2);color:var(--i3);font-size:13px;white-space:nowrap}
+.goal b{color:var(--i1);font-weight:600}
+.goal.none b{color:var(--i3);font-style:italic;font-weight:500}
+.goal.lk{border-style:dashed}
+.pm{margin-left:auto;display:flex;align-items:center;gap:12px;background:var(--s4);border:1px solid var(--l2);border-radius:9px;padding:6px 14px 6px 8px;min-height:52px}
+.pmu{display:flex;align-items:center;gap:10px}
+.pmu .who{display:grid;justify-items:center;gap:3px}
+.kv{display:grid;line-height:1.05;white-space:nowrap}
+.kv b{font-family:var(--disp);font-stretch:78%;font-weight:800;font-size:22px;color:var(--i1)}
+.kv b.gn{color:var(--acc)}
+.kv small{font-size:13px;color:var(--i3);margin-top:2px}
+.risk{display:block;width:56px;height:7px;margin:4px 0 5px;background:linear-gradient(90deg,var(--i3) var(--r),var(--s5) 0);-webkit-mask:repeating-linear-gradient(90deg,#000 0 4.6px,transparent 4.6px 5.6px);mask:repeating-linear-gradient(90deg,#000 0 4.6px,transparent 4.6px 5.6px)}
+.vsep{width:1px;align-self:stretch;background:var(--l2)}
+.pm.nopm{border-style:dashed;background:transparent;color:var(--i4);padding:6px 14px}
+.ghosth{width:34px;height:34px;border-radius:50%;border:1.5px dashed var(--l3)}
+.mvpp{display:flex;gap:4px}
+.mvpp i{width:18px;height:18px;border-radius:3px;background:var(--s2);border:1px solid var(--l2)}
+.mvpp i.up{border:1.5px solid var(--acc);background:rgba(242,181,58,.12)}
+/* aşama sayaçları */
+.gr{display:grid;grid-template-columns:var(--cols);column-gap:10px;padding:0 11px}
+.leg{display:flex;flex-direction:column;justify-content:center;gap:5px;font-size:13px;color:var(--i3)}
+.leg .cnt{font-family:var(--disp);font-stretch:78%;font-weight:800;font-size:24px;color:var(--i1);line-height:1}
+.leg .cnt small{font-family:var(--body);font-size:13px;font-weight:500;color:var(--i3);margin-left:4px}
+.leg .ky{display:flex;gap:12px}
+.leg .ky span{display:inline-flex;align-items:center;gap:5px}
+.lf{width:12px;height:8px;background:var(--i3);display:inline-block}
+.lc{width:2px;height:12px;background:var(--i1);display:inline-block}
+.lo{width:12px;height:8px;background:var(--hatch);display:inline-block}
+.lp{width:12px;height:8px;box-shadow:inset 0 0 0 1px var(--i3);display:inline-block}
+.g{background:var(--s2);border:1px solid var(--l1);border-radius:8px;padding:10px 12px 12px;display:grid;gap:9px;min-width:0;position:relative}
+.stk{position:absolute;top:-11px;right:10px;display:inline-flex;align-items:center;gap:6px;background:var(--warn);color:#1A1408;font:600 12px/1 var(--mono);padding:4px 7px;border-radius:4px}
+.stk .streak i{background:#1A1408}
+.tas{--c:var(--tas)}.gel{--c:var(--gel)}.tst{--c:var(--tst)}
+.gt{display:flex;align-items:center;gap:7px;font-family:var(--disp);font-stretch:82%;font-weight:750;font-size:16px;color:var(--i1)}
+.gt .ic{color:var(--c)}
+.nums{margin-left:auto;font-family:var(--mono);font-size:15px;color:var(--i3);display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.nums b{color:var(--i1);font-weight:600}
+.ovn{display:inline-flex;align-items:center;gap:3px;color:var(--warn);font-weight:600;font-style:normal}
+.gb{position:relative;height:12px;background:var(--s5);border-radius:2px}
+.gb i{position:absolute;top:0;bottom:0;display:block}
+.gb .f{left:0;width:var(--f);background:var(--c)}
+.gb .pl{left:0;width:var(--f);box-shadow:inset 0 0 0 1.5px var(--c)}
+.gb .ov{left:var(--k);width:var(--o);background:var(--hatch)}
+.gb .cap{top:-5px;bottom:-5px;left:var(--k);width:2px;margin-left:-1px;background:var(--i1)}
+.g.over{border-color:rgba(232,145,58,.7)}
+.g.hot{border-color:var(--warn);box-shadow:0 0 0 1px var(--warn),0 0 18px rgba(232,145,58,.18)}
+.g.empty{place-content:center;justify-items:center;gap:6px;border-style:dashed;background:transparent;padding:10px 4px}
+.g.empty .ic{color:var(--off)}
+.g.empty span{font-family:var(--mono);color:var(--off);font-size:13px}
+.streak{display:inline-flex;align-items:flex-end;gap:2px;height:14px;margin-left:2px}
+.streak i{width:3px;background:var(--warn);display:block}
+.streak i:nth-child(1){height:6px}.streak i:nth-child(2){height:10px}.streak i:nth-child(3){height:14px}
+.streak em{font-style:normal;color:var(--warn);font-size:13px;margin-left:3px;line-height:1}
+/* satırlar */
+.rows{display:grid;gap:6px;align-content:start;flex:1;min-height:0;overflow:hidden;position:relative}
+.r{display:grid;grid-template-columns:var(--cols);column-gap:10px;background:var(--s4);border:1px solid var(--l1);border-radius:7px;padding:9px 10px;align-items:center;position:relative}
+.r:hover{border-color:var(--lh)}
+.r.hl{border-color:var(--lh);background:#2C2722}
+.nm{display:grid;gap:6px;min-width:0}
+.t{display:flex;align-items:center;gap:7px;min-width:0}
+.t .ty{color:var(--i4)}
+.nmt{font-weight:650;font-size:14.5px;color:var(--i1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.oz{color:var(--acc);display:inline-flex}
+.sp{margin-left:auto;font-family:var(--disp);font-stretch:78%;font-weight:800;font-size:22px;color:var(--i1);line-height:1}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.ch{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:var(--i3);background:var(--s2);border:1px solid var(--l1);border-radius:4px;padding:0 6px;height:21px;white-space:nowrap}
+.ch s{color:var(--i4);text-decoration-thickness:1px}
+.ch b{color:var(--i1);font-weight:600}
+.ch.cu{color:var(--i2)}
+.ch.cu .ic{color:var(--acc)}
+.ch.st8{font-weight:600;color:#16120D;background:var(--c);border-color:var(--c)}
+.sc{display:grid;gap:7px;min-width:0}
+.sc .top{display:flex;align-items:center;gap:7px}
+.rq{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--acc);border:1px solid rgba(242,181,58,.55);border-radius:3px;padding:0 4px;height:18px;display:inline-flex;align-items:center;flex:none}
+.bar{flex:1;height:10px;background:var(--s2);border-radius:2px;display:flex;overflow:hidden;min-width:0}
+.bar i{height:100%;width:var(--w);background:var(--c);display:block;flex:none}
+.bar i.k{background:var(--hatch)}
+.bar i.nx{background:repeating-linear-gradient(135deg,var(--c) 0 3px,rgba(255,255,255,.04) 3px 6px)}
+.bar i.rem{background:transparent;box-shadow:inset 0 0 0 1.5px var(--c);opacity:.75}
+.bar i.fr{background:transparent;box-shadow:inset 0 0 0 1.5px var(--i4)}
+.v{font-family:var(--mono);font-size:13.5px;color:var(--i2);min-width:20px;text-align:right;white-space:nowrap}
+.v small{color:var(--i4);font-size:12px}
+.bot{display:flex;align-items:center;gap:6px;min-height:22px}
+.wk{margin-left:auto;display:inline-flex;gap:2px}
+.wk b{width:18px;height:18px;border-radius:3px;display:grid;place-items:center;font:600 12px/1 var(--mono);color:var(--off);background:var(--s2);border:1px solid var(--l1)}
+.wk.e1 b:nth-child(1),.wk.e2 b:nth-child(2){background:var(--c);color:#16120D;border-color:var(--c)}
+.wk b.cr{background:var(--hatch);color:#16120D;border-color:var(--warn)}
+.wk b.cn{background:repeating-linear-gradient(135deg,var(--c) 0 3px,transparent 3px 6px);border-color:var(--c);color:var(--i1)}
+.sc.none{align-self:stretch;background:linear-gradient(var(--l1),var(--l1)) center/40% 1px no-repeat}
+.sc.cur{background:color-mix(in srgb,var(--c) 10%,transparent);border-radius:5px;box-shadow:0 0 0 1px color-mix(in srgb,var(--c) 55%,transparent);padding:5px 6px;margin:-6px -7px}
+.stx{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--i4)}
+.stx.ok{color:var(--c)}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--c);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 30%,transparent)}
+.ra{position:absolute;right:8px;top:-10px;display:inline-flex;align-items:center;gap:4px;padding:2px 8px;font-size:12px;color:var(--i2);background:var(--s5);border:1px solid var(--l3);border-radius:4px;opacity:0;transition:opacity .12s}
+.r:hover .ra{opacity:1}
+.r.free{background:transparent;border:1px dashed var(--l2)}
+.r.free .nmt{color:var(--i3);font-weight:600}
+.r.free .sc.nar .bar i.fr{box-shadow:inset 0 0 0 1.5px var(--acc)}
+.r.free .sc.nar .v{color:var(--acc)}
+.r.c{padding:3px 10px;border-radius:5px}
+.r.c .nmt{font-size:13px;font-weight:600}
+.r.c .sp{font-size:15px}
+.r.c .bar{height:7px}
+.r.c .v{font-size:12.5px}
+.grp{display:flex;align-items:center;gap:8px;padding:5px 2px 1px;font-size:12.5px;color:var(--i3)}
+.grp b{color:var(--i1);font-weight:650;font-size:13px}
+.grp .sav{margin-left:auto;font-family:var(--mono);color:var(--acc);font-weight:600}
+.grp .ln{flex:1;height:1px;background:var(--l1)}
+.fade{position:absolute;left:0;right:0;bottom:0;height:70px;background:linear-gradient(transparent,var(--s3) 70%);display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;color:var(--i3);font-size:12.5px;gap:6px}
+.scrl{position:absolute;right:-12px;top:0;width:4px;height:42%;border-radius:2px;background:var(--l2)}
+/* ekip */
+.tm{display:grid;grid-template-columns:var(--cols);column-gap:10px;padding:10px 11px 0;border-top:1px solid var(--l1)}
+.tm .lab{display:flex;flex-direction:column;justify-content:center;gap:2px;font-size:12.5px;color:var(--i4)}
+.tm .lab b{font-family:var(--disp);font-stretch:78%;font-weight:800;font-size:22px;color:var(--i1);line-height:1}
+.crew{display:flex;flex-wrap:wrap;gap:6px 2px;align-items:flex-start;padding-left:2px}
+.crew.dense{gap:3px}
+.idn{display:inline-flex;align-items:center;gap:6px;color:var(--i3);margin-top:6px}
+.idn .idc{font:600 15px/1 var(--mono);color:var(--i3)}
+/* eylem çubuğu */
+.ab{display:flex;align-items:center;gap:12px;border-top:1px solid var(--l1);padding-top:12px;margin-top:auto;min-height:52px}
+.sug{display:flex;align-items:center;gap:10px}
+.sug .n{font-family:var(--disp);font-stretch:78%;font-weight:850;font-size:28px;color:var(--acc);line-height:1}
+.sug .n small{font-size:16px;margin-left:2px}
+.sug .tx{color:var(--i3);font-size:13px;line-height:1.2}
+.btn{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 16px;border-radius:6px;font-family:var(--disp);font-stretch:85%;font-weight:750;font-size:15px;border:1px solid var(--l3);background:var(--s5);color:var(--i1);white-space:nowrap}
+.btn.pri{background:var(--acc);color:#1A1408;border-color:var(--acc)}
+.btn.dis{color:var(--off);background:transparent;border-style:dashed;border-color:var(--l2)}
+.btn.sm{height:30px;font-size:14px;padding:0 12px}
+.ab .rt{margin-left:auto;display:flex;gap:10px;align-items:center}
+.dlg{display:flex;align-items:center;gap:10px;background:var(--s4);border:1px solid var(--l2);border-radius:8px;padding:5px 12px 5px 6px}
+.dlg .tx{display:grid;line-height:1.15}
+.dlg .tx b{color:var(--i1);font-weight:650;font-size:14px}
+.dlg .tx small{color:var(--i4);font-size:12px}
+.lock{display:inline-flex;align-items:center;gap:7px;color:var(--i3);font-size:13px}
+/* sağ sütun */
+.nx{background:var(--s2);border-left:1px dashed var(--l2);padding:18px 14px;display:flex;flex-direction:column;gap:10px;overflow:hidden}
+.nh{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:2px}
+.nh b{font-family:var(--disp);font-stretch:72%;font-weight:850;font-size:24px;color:var(--i3)}
+.nh span{font-size:13px;color:var(--i4)}
+.nc{border:1px dashed var(--l2);border-radius:7px;padding:9px 10px;display:grid;gap:8px;--c:var(--acc)}
+.nc .t .nmt{font-size:14px;color:var(--i2);white-space:normal;line-height:1.2}
+.nc .sp{font-size:19px;color:var(--i2)}
+.nc.pull{border-style:solid;border-color:rgba(242,181,58,.55);background:rgba(242,181,58,.04)}
+.nc.carry{border-style:solid;border-color:rgba(232,145,58,.6);background:repeating-linear-gradient(135deg,rgba(232,145,58,.07) 0 6px,transparent 6px 12px)}
+.nc.cont{border-style:solid;border-color:var(--l3)}
+.seg{display:flex;gap:2px;height:6px}
+.seg i{display:block;height:100%;border-radius:1px}
+.seg .a{background:var(--tas)}.seg .b{background:var(--gel)}.seg .c{background:var(--tst)}
+.nr{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--i3)}
+.nr s{color:var(--i4)}
+.nr b{color:var(--i1);font-family:var(--mono);font-weight:600}
+.nempty{flex:1;border:1px dashed var(--l2);border-radius:8px;display:grid;place-content:center;justify-items:center;gap:8px;color:var(--i4);font-size:13px}
+/* ipucu */
+.tip{position:absolute;z-index:6;background:#2B2621;border:1px solid var(--l3);border-radius:9px;box-shadow:0 22px 50px rgba(0,0,0,.65),0 0 0 1px rgba(0,0,0,.4);padding:14px 16px 14px;color:var(--i2);font-size:13px}
+.tip::before{content:"";position:absolute;width:12px;height:12px;background:#2B2621;border-left:1px solid var(--l3);border-top:1px solid var(--l3);transform:rotate(45deg);top:-7px;left:var(--ax,40px)}
+.tip h4{margin:0 0 2px;font-family:var(--disp);font-stretch:78%;font-weight:800;font-size:22px;color:var(--i1);display:flex;align-items:center;gap:8px}
+.tip h4 .sp{font-size:22px;color:var(--i3)}
+.tip .sub{color:var(--i4);font-size:12.5px;margin-bottom:12px}
+.tip .lbl{font-family:var(--disp);font-stretch:85%;font-weight:750;font-size:12px;letter-spacing:.09em;color:var(--i4);margin:12px 0 6px}
+.need{display:flex;gap:2px;height:12px;margin-bottom:6px}
+.need i{display:block;height:100%}
+.needl{display:flex;gap:14px;font-size:12.5px;color:var(--i3)}
+.needl span{display:inline-flex;align-items:center;gap:5px}
+.needl b{font-family:var(--mono);color:var(--i1);font-weight:600}
+.dot{width:8px;height:8px;border-radius:2px;background:var(--c);display:inline-block}
+.tline{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px;font-size:12.5px;color:var(--i3)}
+.whog{display:grid;grid-template-columns:96px 1fr 72px;gap:6px 10px;align-items:center}
+.whog .sg{display:inline-flex;align-items:center;gap:6px;color:var(--i3);font-size:12.5px}
+.whog .sg .ic{color:var(--c)}
+.whog .ps{display:flex;gap:10px;flex-wrap:wrap}
+.whog .pn{display:inline-flex;align-items:center;gap:6px;color:var(--i1);font-size:13px}
+.whog .pn i{font-style:normal;color:var(--acc);font-family:var(--mono);font-size:12px}
+.whog .wk{margin-left:0;justify-self:end}
+.rule{font-style:italic;color:var(--i3);font-size:12.5px;line-height:1.4;margin:4px 0 0;padding-left:10px;border-left:2px solid var(--l2)}
+.ann{position:absolute;z-index:6;border:1.5px dashed var(--acc);border-radius:9px;background:rgba(21,18,15,.96);padding:12px 14px;color:var(--i2);font-size:13px;box-shadow:0 18px 40px rgba(0,0,0,.55)}
+.ann .h{font-family:var(--disp);font-stretch:85%;font-weight:750;font-size:12px;letter-spacing:.08em;color:var(--acc);margin-bottom:8px}
+.ann p{margin:0 0 8px}
+.cmp{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center;font-size:12.5px}
+.cmpbar{height:8px;background:var(--s5);position:relative;border-radius:1px}
+.cmpbar i{position:absolute;left:0;top:0;bottom:0;background:var(--i3)}
+.cmpbar em{position:absolute;top:0;bottom:0;background:var(--acc)}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs>
+<symbol id="hs" viewBox="0 0 32 32"><rect width="32" height="32" style="fill:#3A342D"/><path d="M3 33c1-7.5 6-11 13-11s12 3.5 13 11z" style="fill:var(--sh)"/><rect x="13" y="17" width="6" height="6" style="fill:var(--sk)"/><circle cx="16" cy="13.5" r="6.6" style="fill:var(--sk)"/><path d="M9.2 13c-.3-5 2.6-8 6.9-8s7.2 2.8 6.8 7.6l-1.3-.3c-.5-2.4-2.5-3.7-5.6-3.7s-5 1.5-5.5 4.6z" style="fill:var(--hr)"/></symbol>
+<symbol id="hl" viewBox="0 0 32 32"><rect width="32" height="32" style="fill:#3A342D"/><path d="M8.3 14c0-5.6 3.3-9 7.7-9s7.7 3.4 7.7 9v10.5H8.3z" style="fill:var(--hr)"/><path d="M3 33c1-7.5 6-11 13-11s12 3.5 13 11z" style="fill:var(--sh)"/><rect x="13" y="17" width="6" height="6" style="fill:var(--sk)"/><circle cx="16" cy="13.5" r="6.4" style="fill:var(--sk)"/><path d="M9.4 12.8c.4-4.3 3-6.9 6.6-6.9s6.2 2.6 6.6 6.9c-2.7-.4-5.2-1.8-6.6-3.9-1.4 2.1-3.9 3.5-6.6 3.9z" style="fill:var(--hr)"/></symbol>
+<symbol id="hb" viewBox="0 0 32 32"><rect width="32" height="32" style="fill:#3A342D"/><circle cx="16" cy="5.2" r="3.6" style="fill:var(--hr)"/><path d="M3 33c1-7.5 6-11 13-11s12 3.5 13 11z" style="fill:var(--sh)"/><rect x="13" y="17" width="6" height="6" style="fill:var(--sk)"/><circle cx="16" cy="13.5" r="6.4" style="fill:var(--sk)"/><path d="M9.5 13c0-4.4 2.8-6.9 6.5-6.9s6.5 2.5 6.5 6.9c-1.8-1.6-3.6-3.2-6.5-3.2s-4.7 1.6-6.5 3.2z" style="fill:var(--hr)"/></symbol>
+<symbol id="i-tas" viewBox="0 0 24 24"><path d="M4 20l1-4.5L16.5 4 20 7.5 8.5 19z"/><path d="M14 6.5l3.5 3.5"/></symbol>
+<symbol id="i-gel" viewBox="0 0 24 24"><path d="M8 6l-6 6 6 6M16 6l6 6-6 6"/></symbol>
+<symbol id="i-tst" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6.5L4.6 18.4A1.8 1.8 0 0 0 6.2 21h11.6a1.8 1.8 0 0 0 1.6-2.6L14 9.5V3"/><path d="M7 15h10"/></symbol>
+<symbol id="i-fix" viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0 5 5L11 20a2.1 2.1 0 0 1-3-3l8.7-8.7a4 4 0 0 0-2-2z"/></symbol>
+<symbol id="i-feat" viewBox="0 0 24 24"><path d="M12 2.5l2.1 7.4 7.4 2.1-7.4 2.1L12 21.5l-2.1-7.4L2.5 12l7.4-2.1z" style="fill:currentColor;stroke:none"/></symbol>
+<symbol id="i-bug" viewBox="0 0 24 24"><rect x="7.5" y="7.5" width="9" height="12" rx="4.5"/><path d="M12 11v8.5M7.5 12H3.5M20.5 12h-4M7.5 16.5H4M20 16.5h-3.5M9 7.5 7 5M15 7.5l2-2.5"/></symbol>
+<symbol id="i-acct" viewBox="0 0 24 24"><path d="M4 21V5l8-2v18M12 8h8v13M3 21h18M7 8h2M7 12h2M7 16h2M15 12h2M15 16h2"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4.2 4-6.3 8-6.3s7 2.1 8 6.3"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M4.5 12.5l5 5L19.5 7"/></symbol>
+<symbol id="i-hour" viewBox="0 0 24 24"><path d="M6 3h12M6 21h12M7.5 3v3.5L12 12l-4.5 5.5V21M16.5 3v3.5L12 12l4.5 5.5V21"/></symbol>
+<symbol id="i-pen" viewBox="0 0 24 24"><rect x="5.5" y="4" width="13" height="17" rx="2"/><path d="M9 4V2.8h6V4M8.5 10h7M8.5 14h7M8.5 18h4"/></symbol>
+<symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 3.5l9.5 17h-19z"/><path d="M12 10v4.5M12 17.5v.2"/></symbol>
+<symbol id="i-up" viewBox="0 0 24 24"><path d="M12 5l8 13H4z" style="fill:currentColor;stroke:none"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+<symbol id="i-care" viewBox="0 0 24 24"><path d="M12 3l7.5 9-7.5 9-7.5-9z"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+<symbol id="i-arr" viewBox="0 0 24 24"><path d="M4 12h15M13 6l6 6-6 6"/></symbol>
+<symbol id="i-auto" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v4.5h-4.5"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v15M6 13l6 6 6-6"/></symbol>
+</defs>
+</svg>
+
+<div class="page" lang="tr">
+
+<header class="intro">
+<p class="kick">YORUM C · CLAUDE CODE GAME STUDIOS</p>
+<h1>Sprint Ekranı C</h1>
+<p class="lede"><b>Aşama matrisi.</b> Her kart bir satır, her aşama bir sütun. Sütunun tepesinde o aşamanın işi ile ekibi, dibinde o ekibin yüzleri durur. Darboğaz bir cümle olarak yazılmaz: Test sütununun sayacı taşar, taşan satırlar taranır, sütunun dibinde iki portre görünür. Oyuncu "test yetişmiyor" sonucunu kendisi çıkarır.</p>
+<div class="ig">
+<div class="box">
+<h2>Skill ve ilkeler</h2>
+<p style="color:var(--i3)">Kaynak: ux-designer ajanı, /ux-design skill'i (UX spec ve HUD kipleri, sections-ux-spec ve sections-hud), art-director ajanı, ui-code kuralı. Yalnız tasarım yönergesi olarak kullanıldı.</p>
+<ol>
+<li><b>Bilgi envanteri dört sınıfa ayrıldı</b> (HUD §B: Must Show, Contextual, On Demand, Hidden). Ekranda yalnız karar verdiren bilgi kalır; her açıklayıcı cümle üstüne gelince açılan ipucuna gider.</li>
+<li><b>Görsel bütçe</b> (HUD Visual Budget): her karede beş bölge, kart satırında en çok üç çip. 6 kişiden 50 kişiye ekran büyümez; satır sıkışır, kartlar hazırlayan PM'e göre gruplanır, kişiler kümeye döner.</li>
+<li><b>Renge tek başına anlam yüklenmez</b> (Accessibility checklist): taşma turuncu + tarama deseni + ▲ sayı; boşta olan kişi soluk + kesikli halka; zayıf alan tek dolu kutu + üçgen; aşamalar renk + ikon.</li>
+<li><b>Yakınlık ve ortak bölge</b> (art-director görsel hiyerarşi, Gestalt): iş ile o işi yapacak ekip aynı dikeyde. Kartın aşama dökümü üç sütuna dağıldığı için kartın hangi aşamada, hangi haftada, kimle olduğu kendi satırında okunur.</li>
+<li><b>Durumlar ve varyantlar tablosu</b> (UX spec §D): 11 durum aynı iskelette birer varyant; boş aşama, kilitli devir, devredilmiş plan ve koşan sprint ayrı kurallarla çizildi. Bu tablo aynı zamanda görsel kabulün test matrisidir.</li>
+</ol>
+</div>
+<div class="box">
+<h2>Tipografi</h2>
+<div class="fnt">
+<div><span class="a">SPRINT 14 · İŞ 26 · EKİP 66</span><small>Archivo, genişlik ekseni 68 ile 85 arası: dar ve ağır başlık, büyük sayılar. Skorbord ve menajer panosu duruşu; tek aile içinde genişlik değiştiği için ayrı bir "condensed" yüze gerek yok.</small></div>
+<div><span class="b">Çığır şöyle açıldı: İstanbul, ışık, öğrenci, ürün, Güneş, ĞÜŞİÖÇ ğüşıöç.</span><small>Red Hat Text: gövde ve küçük metin. Büyük x yüksekliği ve açık harf içleri 12 ile 13 px'te "2 talep" gibi küçük metni dağıtmaz; ı ile i, ğ ile g ayrımı küçükte bile net.</small></div>
+<div><span class="c">54 / 36 · 121 / 138 · ×0,85 · −20 SP</span><small>Red Hat Mono: tabular rakam. Aşama sayıları sütun sütun hizalanır, satır satır karşılaştırılır.</small></div>
+</div>
+<p style="color:var(--i3);font-size:13.5px">En küçük metin 12 px. Büyük harf elle yazıldı (SPRINT gövdesi Latin I), tarayıcının Türkçe büyük harf dönüşümüne bırakılmadı.</p>
+</div>
+</div>
+<div class="cls">
+<div><b>Ekranda (Must Show)</b>Aşama sayaçları (iş / ekip), kart adı ve SP, aşama dökümü, ★ şartı, bitiş haftası, ekip portreleri, sprint başlat.</div>
+<div><b>Bağlamsal (Contextual)</b>▲ taşma sayısı ve ardışık sprint işareti, "+X SP alınabilir", boş yer satırı, PM hazırlık çipi, müşteri çipi, satır üstünde "Çıkar".</div>
+<div><b>İpucunda (On Demand)</b>Alan cümleleri, kişi hızı ve kalır satırı, kurucunun görüşme payı, kadro tavanı, kurallar, talep tutarı, devir kilidinin nedeni, sayaç cümlesi.</div>
+<div><b>Kalktı (Hidden)</b>"Öncelikli" etiketi, "test yetişmiyor", "Sırada" satırı, "Bu sprinti boş geçir", DMK gibi kısaltmalar, rol dışı iş.</div>
+</div>
+<p class="note">Kareler 1440×810 tasarım ölçüsünde, Ürün penceresinin içi olarak çizildi; oyundaki 1424×928 pencerede yükseklik farkı satır alanına gider. Portre, alan, talep, öneri ve kilitli düğmenin üstüne gelince tarayıcının ipucu açılır. Skill metnindeki iş akışı adımları (her bölümden önce soru sorma, yazmadan önce izin isteme, yaml-helper betiği, oturum durumu dosyası, ajan çağırma) bu görevde uygulanmadı. [EK] işaretli veri şartnamenin gösterim verisidir.</p>
+</header>
+
+<!-- ============ 01 ============ -->
+<div class="cap"><span class="no">01</span><b>Tek kurucu, ilk sürümden önce</b><span class="d">Sprint 1: kurucu üç aşamanın da tek yüzü; v1.0 hedefi üç kutu, devir kilidi yalnız düğmenin kendisi.</span></div>
+<div class="fw"><div class="frame">
+<div class="chrome"><span class="brand">ÜRÜN</span><span class="prod"><b>Ledgerly</b> · B2B ERP · v1.0 öncesi</span>
+<nav class="tabs"><span class="tab lk" title="İlk sürümden sonra açılır"><svg class="ic s"><use href="#i-lock"/></svg>GENEL BAKIŞ</span><span class="tab on">SPRINT</span><span class="tab">ÇEYREK</span></nav>
+<span class="hist">Geçmiş <i class="tg"></i></span><svg class="ic l xx"><use href="#i-x"/></svg></div>
+<div class="bd">
+<aside class="side">
+<div><div class="sh">TALEPLER</div><div class="empty">Henüz talep yok</div></div>
+<div><div class="sh">ALANLAR</div>
+<div class="area" title="Çekirdek: ilk sürümün alanı. Fatura Kesme seviyeyi 0'dan 1'e çıkarır."><span class="an">Çekirdek</span><span class="lv"><i class="up"></i><i></i><i></i></span></div>
+</div>
+</aside>
+<div class="main">
+<div class="mh"><span class="sn">SPRINT 1</span>
+<span class="goal lk" title="İlk sürüme kadar hedef Çekirdek'tir"><svg class="ic s"><use href="#i-lock"/></svg>Bu çeyrek: <b>Çekirdek</b></span>
+<div class="pm" title="v1.0 için 3 Çekirdek kartı gerekir. Tahmini çıkış: Sprint 3, 6. hafta.">
+<div class="kv"><b>v1.0</b><small>ilk sürüm</small></div><span class="mvpp"><i class="up"></i><i></i><i></i></span>
+<div class="kv"><b>0 / 3</b><small>Çekirdek kartı</small></div><span class="vsep"></span>
+<div class="kv"><b>Sprint 3</b><small>tahmini çıkış</small></div></div>
+</div>
+<div class="gr">
+<div class="leg"><span class="cnt">1<small>kart</small></span><span class="ky"><span><i class="lf"></i>iş</span><span><i class="lc"></i>ekip</span></span></div>
+<div class="g tas"><div class="gt"><svg class="ic"><use href="#i-tas"/></svg>Tasarım<span class="nums"><b>3</b>/ 14</span></div><div class="gb"><i class="f" style="--f:21.4%"></i><i class="cap" style="--k:100%"></i></div></div>
+<div class="g gel"><div class="gt"><svg class="ic"><use href="#i-gel"/></svg>Geliştirme<span class="nums"><b>9</b>/ 14</span></div><div class="gb"><i class="f" style="--f:64.3%"></i><i class="cap" style="--k:100%"></i></div></div>
+<div class="g tst"><div class="gt"><svg class="ic"><use href="#i-tst"/></svg>Test<span class="nums"><b>3</b>/ 14</span></div><div class="gb"><i class="f" style="--f:21.4%"></i><i class="cap" style="--k:100%"></i></div></div>
+</div>
+<div class="rows">
+<div class="r"><span class="ra"><svg class="ic s"><use href="#i-x"/></svg>Çıkar</span>
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Fatura Kesme</span><span class="sp">15</span></div>
+<div class="chips"><span class="ch" title="Çekirdek 0 → 1"><svg class="ic s"><use href="#i-up"/></svg>Çekirdek <b>0 → 1</b></span></div></div>
+<div class="sc tas"><div class="top"><div class="bar"><i style="--w:30%"></i></div><span class="v">3</span></div><div class="bot"><span class="ppl"><span class="av fd" title="Kurucu"><svg class="p-kur"><use href="#hs"/></svg></span></span></div></div>
+<div class="sc gel"><div class="top"><div class="bar"><i style="--w:90%"></i></div><span class="v">9</span></div><div class="bot"><span class="ppl"><span class="av fd" title="Kurucu"><svg class="p-kur"><use href="#hs"/></svg></span></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i style="--w:30%"></i></div><span class="v">3</span></div><div class="bot"><span class="ppl"><span class="av fd" title="Kurucu"><svg class="p-kur"><use href="#hs"/></svg></span></span></div></div>
+</div>
+</div>
+<div class="tm"><div class="lab"><b>1</b>kişi</div>
+<div class="crew"><span class="pp" title="Kurucu · 3★ · üç aşamada da çalışır · Kurucu bu hafta 4 görüşmede: sprint payı %80."><span class="av m fd"><svg class="p-kur"><use href="#hs"/></svg></span><i class="st" style="--s:3"></i></span></div>
+<div class="crew"><span class="pp" title="Kurucu · Geliştirme 9/hf"><span class="av m fd"><svg class="p-kur"><use href="#hs"/></svg></span><i class="st" style="--s:3"></i></span></div>
+<div class="crew"><span class="pp" title="Kurucu · ekipte testi yapacak başka kimse yok"><span class="av m fd"><svg class="p-kur"><use href="#hs"/></svg></span><i class="st" style="--s:3"></i></span></div>
+</div>
+<div class="ab"><div class="rt">
+<span class="btn dis" title="Planlamayı devretmek için ekipte bir ürün yöneticisi olmalı."><svg class="ic s"><use href="#i-lock"/></svg>Planlamayı devret</span>
+<span class="btn pri">Sprint'i başlat</span></div></div>
+</div>
+<aside class="nx">
+<div class="nh"><b>SPRINT 2</b><span>sonraki</span></div>
+<div class="nc"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Elle Giriş</span><span class="sp">15</span></div><div class="seg"><i class="a" style="flex:3"></i><i class="b" style="flex:8"></i><i class="c" style="flex:4"></i></div></div>
+<div class="nc"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Ön Muhasebe</span><span class="sp">15</span></div><div class="seg"><i class="a" style="flex:3"></i><i class="b" style="flex:8"></i><i class="c" style="flex:4"></i></div></div>
+</aside>
+</div></div></div>
+
+<!-- ============ 02 ============ -->
+<div class="cap"><span class="no">02</span><b>3 kişi: büyük kart ve iki küçük kart</b><span class="d">Ekibi olmayan Tasarım ve Test daralmış boş çerçeve; 100 puanlık kart sonraki sprinte çizgili uzar (taşma değil, devam), Kaan iki küçük kartı sırayla bitirir.</span></div>
+<div class="fw"><div class="frame">
+<div class="chrome"><span class="brand">ÜRÜN</span><span class="prod"><b>Ledgerly</b> · B2B ERP · v1.4</span>
+<nav class="tabs"><span class="tab">GENEL BAKIŞ</span><span class="tab on">SPRINT</span><span class="tab">ÇEYREK</span></nav>
+<span class="hist">Geçmiş <i class="tg"></i></span><svg class="ic l xx"><use href="#i-x"/></svg></div>
+<div class="bd">
+<aside class="side">
+<div><div class="sh">TALEPLER</div><div class="reqs">
+<div class="req" title="$9.600/yıl · Entegrasyonlar"><span class="cn">Ege Sigorta</span><span class="ft">Çoklu Entegrasyon</span><span class="dl now"><svg class="ic s"><use href="#i-clock"/></svg>bu çeyrek sonu</span></div>
+<div class="req" title="$4.800/yıl · Çekirdek"><span class="cn">Kuzey Lojistik</span><span class="ft">Tahsilat Döngüsü</span><span class="dl"><svg class="ic s"><use href="#i-clock"/></svg>gelecek çeyrek sonu</span></div>
+</div></div>
+<div><div class="sh">ALANLAR</div>
+<div class="area" title="Yeterli: fatura kesme çalışıyor, tahsilat takibi zayıf"><span class="an">Çekirdek</span><span class="lv"><i class="on"></i><i class="on"></i><i></i></span></div>
+<div class="area weak" title="Zayıf: muhasebe programına aktarım yok"><span class="an">Entegrasyonlar<svg class="ic s"><use href="#i-warn"/></svg></span><span class="lv weak"><i class="on"></i><i></i><i></i></span></div>
+<div class="area" title="Yeterli: kurulum bir günde biter"><span class="an">Güven &amp; Ölçek</span><span class="lv"><i class="on"></i><i class="on"></i><i></i></span></div>
+<div class="area" title="Otomatik Mutabakat Defter'i 2'den 3'e çıkarır"><span class="an">Defter</span><span class="lv"><i class="on"></i><i class="on"></i><i class="up"></i></span></div>
+</div>
+</aside>
+<div class="main" style="--cols:252px 66px minmax(0,1fr) 66px">
+<div class="mh"><span class="sn">SPRINT 14</span>
+<span class="goal">Bu çeyrek: <b>Çekirdek</b><svg class="ic s"><use href="#i-chev"/></svg></span>
+<div class="pm nopm" title="Ekipte ürün yöneticisi yok: kartlar hazırlıksız girer."><span class="ghosth"></span><div class="kv"><small>Ürün yöneticisi</small><b style="font-size:18px;color:var(--i4)">yok</b></div></div>
+</div>
+<div class="gr">
+<div class="leg"><span class="cnt">3<small>kart</small></span><span class="ky"><span><i class="lf"></i>iş</span><span><i class="lc"></i>ekip</span><span><i class="lp" style="box-shadow:none;background:repeating-linear-gradient(135deg,var(--gel) 0 3px,transparent 3px 6px)"></i>devam</span></span></div>
+<div class="g tas empty" title="Tasarım · iş 0 · ekip 0"><svg class="ic l"><use href="#i-tas"/></svg><span>0/0</span></div>
+<div class="g gel"><div class="gt"><svg class="ic"><use href="#i-gel"/></svg>Geliştirme<span class="nums"><b>74</b>/ 78</span></div><div class="gb"><i class="f" style="--f:94.9%"></i><i class="cap" style="--k:100%"></i></div></div>
+<div class="g tst empty" title="Test · iş 0 · ekip 0"><svg class="ic l"><use href="#i-tst"/></svg><span>0/0</span></div>
+</div>
+<div class="rows">
+<div class="r"><span class="ra"><svg class="ic s"><use href="#i-x"/></svg>Çıkar</span>
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Otomatik Mutabakat</span><span class="sp">100</span></div>
+<div class="chips"><span class="ch" title="Defter 2 → 3"><svg class="ic s"><use href="#i-up"/></svg>Defter <b>2 → 3</b></span></div></div>
+<div class="sc none"></div>
+<div class="sc gel"><div class="top"><span class="rq" title="Geliştirme en az 2★">2★</span><div class="bar"><i style="--w:54%"></i><i class="nx" style="--w:46%"></i></div><span class="v">100</span></div>
+<div class="bot"><span class="ppl"><span class="av" title="Deniz · 4★ · Geliştirme 15/hf"><svg class="p-den"><use href="#hs"/></svg></span><span class="av" title="Mert · 3★ · Geliştirme 12/hf"><svg class="p-mer"><use href="#hs"/></svg></span></span><span class="wk" title="Bu sprintte 54 SP, kalan 46 SP sonraki sprintte; sonraki sprintin 2. haftasında biter (toplam 4. hafta)"><b>1</b><b>2</b><b class="cn">2</b></span></div></div>
+<div class="sc none"></div>
+</div>
+<div class="r"><span class="ra"><svg class="ic s"><use href="#i-x"/></svg>Çıkar</span>
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Elle Giriş</span><span class="sp">10</span></div></div>
+<div class="sc none"></div>
+<div class="sc gel"><div class="top"><span class="rq" title="Geliştirme en az 1★">1★</span><div class="bar"><i style="--w:10%"></i></div><span class="v">10</span></div>
+<div class="bot"><span class="ppl"><span class="av" title="Kaan · 3★ · 1. haftada biter, sonra Kasa Hareketleri"><svg class="p-kaa"><use href="#hs"/></svg></span></span><span class="wk e1"><b>1</b><b>2</b></span></div></div>
+<div class="sc none"></div>
+</div>
+<div class="r"><span class="ra"><svg class="ic s"><use href="#i-x"/></svg>Çıkar</span>
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Kasa Hareketleri</span><span class="sp">10</span></div></div>
+<div class="sc none"></div>
+<div class="sc gel"><div class="top"><span class="rq" title="Geliştirme en az 1★">1★</span><div class="bar"><i style="--w:10%"></i></div><span class="v">10</span></div>
+<div class="bot"><span class="ppl"><span class="av" title="Kaan · 3★ · 2. haftada biter"><svg class="p-kaa"><use href="#hs"/></svg></span></span><span class="wk e2"><b>1</b><b>2</b></span></div></div>
+<div class="sc none"></div>
+</div>
+<div class="r free" title="Boş kapasite: Geliştirme 4 SP. Sığan aday kart yok.">
+<div class="nm"><div class="t"><span class="nmt">Boş yer</span></div></div>
+<div class="sc none"></div>
+<div class="sc gel nar"><div class="top"><div class="bar"><i class="fr" style="--w:4%"></i></div><span class="v">4</span></div></div>
+<div class="sc none"></div>
+</div>
+</div>
+<div class="tm"><div class="lab"><b>3</b>kişi</div>
+<div class="crew"></div>
+<div class="crew">
+<span class="pp" title="Deniz · 4★ · Geliştirme 15/hf"><span class="av m"><svg class="p-den"><use href="#hs"/></svg></span><i class="st" style="--s:4"></i></span>
+<span class="pp" title="Mert · 3★ · Geliştirme 12/hf"><span class="av m"><svg class="p-mer"><use href="#hs"/></svg></span><i class="st" style="--s:3"></i></span>
+<span class="pp" title="Kaan · 3★ · Geliştirme 12/hf"><span class="av m"><svg class="p-kaa"><use href="#hs"/></svg></span><i class="st" style="--s:3"></i></span>
+</div>
+<div class="crew"></div>
+</div>
+<div class="ab">
+<div class="sug" title="Boş kapasite Geliştirme 4 SP; sığan aday kart yok."><span class="n">+4<small>SP</small></span><span class="tx">bu sprinte<br>daha alınabilir</span><span class="btn sm dis">Öneriyi uygula</span></div>
+<div class="rt"><span class="btn dis" title="Planlamayı devretmek için ekipte bir ürün yöneticisi olmalı."><svg class="ic s"><use href="#i-lock"/></svg>Planlamayı devret</span><span class="btn pri">Sprint'i başlat</span></div></div>
+</div>
+<aside class="nx">
+<div class="nh"><b>SPRINT 15</b><span>sonraki</span></div>
+<div class="nc cont" title="Otomatik Mutabakat'ın kalan 46 SP'si; sonraki sprintin 2. haftasında biter"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Otomatik Mutabakat</span><span class="sp">46</span></div><div class="seg"><i class="b" style="flex:1;background:repeating-linear-gradient(135deg,var(--gel) 0 3px,transparent 3px 6px)"></i></div><div class="nr"><svg class="ic s"><use href="#i-gel"/></svg>devam<span class="wk e2" style="--c:var(--gel)"><b>1</b><b>2</b></span></div></div>
+</aside>
+</div></div></div>
+
+<!-- ============ 03 ============ -->
+<div class="cap"><span class="no">03</span><b>6 kişi, taşma yok</b><span class="d">Hedefsiz çeyrek. "Boş yer" satırı üç aşamanın boş kapasitesini gösterir; en dar olan (Test 5) kehribar, öneri tek sayı: +24 SP.</span></div>
+<div class="fw"><div class="frame">
+<div class="chrome"><span class="brand">ÜRÜN</span><span class="prod"><b>Ledgerly</b> · B2B ERP · v1.4</span>
+<nav class="tabs"><span class="tab">GENEL BAKIŞ</span><span class="tab on">SPRINT</span><span class="tab">ÇEYREK</span></nav>
+<span class="hist">Geçmiş <i class="tg"></i></span><svg class="ic l xx"><use href="#i-x"/></svg></div>
+<div class="bd">
+<aside class="side">
+<div><div class="sh">TALEPLER</div><div class="reqs">
+<div class="req" title="$9.600/yıl · Entegrasyonlar"><span class="cn">Ege Sigorta</span><span class="ft">Çoklu Entegrasyon</span><span class="dl now"><svg class="ic s"><use href="#i-clock"/></svg>bu çeyrek sonu</span></div>
+<div class="req" title="$4.800/yıl · Çekirdek"><span class="cn">Kuzey Lojistik</span><span class="ft">Tahsilat Döngüsü</span><span class="dl"><svg class="ic s"><use href="#i-clock"/></svg>gelecek çeyrek sonu</span></div>
+</div></div>
+<div><div class="sh">ALANLAR</div>
+<div class="area" title="Yeterli: fatura kesme çalışıyor, tahsilat takibi zayıf. Toplu Fatura seviyeyi 3'e çıkarır."><span class="an">Çekirdek</span><span class="lv"><i class="on"></i><i class="on"></i><i class="up"></i></span></div>
+<div class="area weak" title="Zayıf: muhasebe programına aktarım yok"><span class="an">Entegrasyonlar<svg class="ic s"><use href="#i-warn"/></svg></span><span class="lv weak"><i class="on"></i><i></i><i></i></span></div>
+<div class="area" title="Yeterli: kurulum bir günde biter"><span class="an">Güven &amp; Ölçek</span><span class="lv"><i class="on"></i><i class="on"></i><i></i></span></div>
+</div>
+</aside>
+<div class="main">
+<div class="mh"><span class="sn">SPRINT 14</span>
+<span class="goal none">Bu çeyrek: <b>hedef yok</b><svg class="ic s"><use href="#i-chev"/></svg></span>
+<div class="pm" title="Selin 5★ · hazırlık 20/hf · hız +%30 · hata ×0,6. En karmaşık kartı en iyi ürün yöneticisi, basit kartı onu hazırlamaya yeten ürün yöneticisi hazırlar.">
+<div class="pmu"><span class="who"><span class="av l"><svg class="p-sel"><use href="#hl"/></svg></span><i class="st" style="--s:5"></i></span>
+<div class="kv"><b class="gn">−9 SP</b><small>hazırlık · 1 kart</small></div>
+<div class="kv"><span class="risk" style="--r:60%"></span><small>hata ×0,6</small></div></div></div>
+</div>
+<div class="gr">
+<div class="leg"><span class="cnt">2<small>kart</small></span><span class="ky"><span><i class="lf"></i>iş</span><span><i class="lc"></i>ekip</span><span><i class="lp"></i>boş</span></span></div>
+<div class="g tas"><div class="gt"><svg class="ic"><use href="#i-tas"/></svg>Tasarım<span class="nums"><b>9</b>/ 24</span></div><div class="gb"><i class="f" style="--f:37.5%"></i><i class="cap" style="--k:100%"></i></div></div>
+<div class="g gel"><div class="gt"><svg class="ic"><use href="#i-gel"/></svg>Geliştirme<span class="nums"><b>22</b>/ 58</span></div><div class="gb"><i class="f" style="--f:37.9%"></i><i class="cap" style="--k:100%"></i></div></div>
+<div class="g tst"><div class="gt"><svg class="ic"><use href="#i-tst"/></svg>Test<span class="nums"><b>13</b>/ 18</span></div><div class="gb"><i class="f" style="--f:72.2%"></i><i class="cap" style="--k:100%"></i></div></div>
+</div>
+<div class="rows">
+<div class="r"><span class="ra"><svg class="ic s"><use href="#i-x"/></svg>Çıkar</span>
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-fix"/></svg><span class="nmt">Fatura düzeltmesi</span><span class="sp">15</span></div>
+<div class="chips"><span class="ch" title="5 açık hata"><svg class="ic s"><use href="#i-bug"/></svg><b>5</b></span><span class="ch" title="3 hesap etkileniyor"><svg class="ic s"><use href="#i-acct"/></svg><b>3</b></span><span class="ch" title="120 kullanıcı etkileniyor"><svg class="ic s"><use href="#i-user"/></svg><b>120</b></span></div></div>
+<div class="sc none"></div>
+<div class="sc gel"><div class="top"><span class="rq" title="Geliştirme en az 1★">1★</span><div class="bar"><i style="--w:41.7%"></i></div><span class="v">10</span></div><div class="bot"><span class="ppl"><span class="av fd" title="Kurucu · 3★ · 2. haftada biter"><svg class="p-kur"><use href="#hs"/></svg></span></span><span class="wk e2"><b>1</b><b>2</b></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i style="--w:20.8%"></i></div><span class="v">5</span></div><div class="bot"><span class="ppl"><span class="av" title="Ayşe · 2★ · Test"><svg class="p-ays"><use href="#hb"/></svg></span></span></div></div>
+</div>
+<div class="r"><span class="ra"><svg class="ic s"><use href="#i-x"/></svg>Çıkar</span>
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Toplu Fatura</span><span class="oz" title="Özenli"><svg class="ic s"><use href="#i-care"/></svg></span><span class="sp">29</span></div>
+<div class="chips"><span class="ch" title="Selin 5★ hazırladı · hız +%30 · hata ×0,6"><span class="av xs"><svg class="p-sel"><use href="#hl"/></svg></span><s>38</s>→<b>29</b></span><span class="ch" title="Çekirdek 2 → 3"><svg class="ic s"><use href="#i-up"/></svg>Çekirdek <b>2 → 3</b></span></div></div>
+<div class="sc tas"><div class="top"><div class="bar"><i style="--w:37.5%"></i></div><span class="v">9</span></div><div class="bot"><span class="ppl"><span class="av" title="Ece · 3★ · 1. haftada biter"><svg class="p-ece"><use href="#hl"/></svg></span></span><span class="wk e1"><b>1</b><b>2</b></span></div></div>
+<div class="sc gel"><div class="top"><span class="rq" title="Geliştirme en az 2★">2★</span><div class="bar"><i style="--w:50%"></i></div><span class="v">12</span></div><div class="bot"><span class="ppl"><span class="av" title="Deniz · 4★ · 2. haftada biter"><svg class="p-den"><use href="#hs"/></svg></span><span class="av" title="Kaan · 2★ · 2. haftada biter"><svg class="p-kaa"><use href="#hs"/></svg></span></span><span class="wk e2"><b>1</b><b>2</b></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i style="--w:33.3%"></i></div><span class="v">8</span></div><div class="bot"><span class="ppl"><span class="av" title="Ayşe · 2★ · 2. haftada biter"><svg class="p-ays"><use href="#hb"/></svg></span></span><span class="wk e2"><b>1</b><b>2</b></span></div></div>
+</div>
+<div class="r free" title="Boş kapasite: Tasarım 15 · Geliştirme 36 · Test 5. En dar aşama Test.">
+<div class="nm"><div class="t"><span class="nmt">Boş yer</span></div></div>
+<div class="sc tas"><div class="top"><div class="bar"><i class="fr" style="--w:62.5%"></i></div><span class="v">15</span></div></div>
+<div class="sc gel"><div class="top"><div class="bar"><i class="fr" style="--w:100%"></i></div><span class="v">36</span></div></div>
+<div class="sc tst nar"><div class="top"><div class="bar"><i class="fr" style="--w:20.8%"></i></div><span class="v">5</span></div></div>
+</div>
+</div>
+<div class="tm"><div class="lab"><b>6</b>kişi</div>
+<div class="crew"><span class="pp" title="Ece · 3★ · Tasarım 12/hf · Toplu Fatura, 1. haftada biter"><span class="av m"><svg class="p-ece"><use href="#hl"/></svg></span><i class="st" style="--s:3"></i></span></div>
+<div class="crew">
+<span class="pp" title="Kurucu · 3★ · Fatura düzeltmesi, 2. haftada biter"><span class="av m fd"><svg class="p-kur"><use href="#hs"/></svg></span><i class="st" style="--s:3"></i></span>
+<span class="pp" title="Deniz · 4★ · Geliştirme 15/hf"><span class="av m"><svg class="p-den"><use href="#hs"/></svg></span><i class="st" style="--s:4"></i></span>
+<span class="pp" title="Kaan · 2★ · Geliştirme 9/hf"><span class="av m"><svg class="p-kaa"><use href="#hs"/></svg></span><i class="st" style="--s:2"></i></span></div>
+<div class="crew"><span class="pp" title="Ayşe · 2★ · Test 9/hf"><span class="av m"><svg class="p-ays"><use href="#hb"/></svg></span><i class="st" style="--s:2"></i></span></div>
+</div>
+<div class="ab">
+<div class="sug" title="Hedef yok: öneri en zayıf alanı öne alıyor: Entegrasyonlar. Örnek: Çoklu Entegrasyon (3/16/5)."><span class="n">+24<small>SP</small></span><span class="tx">bu sprinte<br>daha alınabilir</span><span class="btn sm">Öneriyi uygula</span></div>
+<div class="rt"><span class="btn" title="Planlamayı Selin yürütür. Her sprint önerilen planla kendiliğinden başlar."><span class="av xs"><svg class="p-sel"><use href="#hl"/></svg></span>Planlamayı devret: Selin</span><span class="btn pri">Sprint'i başlat</span></div></div>
+</div>
+<aside class="nx">
+<div class="nh"><b>SPRINT 15</b><span>sonraki</span></div>
+<div class="nc"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Stok Uyarısı</span><span class="sp">17</span></div><div class="seg"><i class="a" style="flex:3"></i><i class="b" style="flex:9"></i><i class="c" style="flex:5"></i></div>
+<div class="nr" title="Selin hazırlıyor, 1. haftada biter"><span class="av xs"><svg class="p-sel"><use href="#hl"/></svg></span><svg class="ic s"><use href="#i-pen"/></svg><s>22</s>→<b>17</b></div></div>
+</aside>
+</div></div></div>
+
+<!-- ============ 04 ============ -->
+<div class="cap"><span class="no">04</span><b>6 kişi, iyi PM (Selin 5★)</b><span class="d">Test sayacı ekip çizgisini geçer, ▲6; taşan pay Hesap Planı'nın Test hücresinde taranır ve sağ sütuna iner. PM kutusu: −20 SP, hata ×0,6.</span></div>
+<div class="fw"><div class="frame">
+<div class="chrome"><span class="brand">ÜRÜN</span><span class="prod"><b>Ledgerly</b> · B2B ERP · v1.4</span>
+<nav class="tabs"><span class="tab">GENEL BAKIŞ</span><span class="tab on">SPRINT</span><span class="tab">ÇEYREK</span></nav>
+<span class="hist">Geçmiş <i class="tg"></i></span><svg class="ic l xx"><use href="#i-x"/></svg></div>
+<div class="bd">
+<aside class="side">
+<div><div class="sh">TALEPLER</div><div class="reqs">
+<div class="req" title="$9.600/yıl · Entegrasyonlar"><span class="cn">Ege Sigorta</span><span class="ft">Çoklu Entegrasyon</span><span class="dl now"><svg class="ic s"><use href="#i-clock"/></svg>bu çeyrek sonu</span></div>
+<div class="req" title="$4.800/yıl · Toplu Fatura bu sprintte [EK]"><span class="stamp"><svg class="ic s"><use href="#i-check"/></svg>planda</span><span class="cn">Kuzey Lojistik</span><span class="ft">Tahsilat Döngüsü</span><span class="dl"><svg class="ic s"><use href="#i-clock"/></svg>gelecek çeyrek sonu</span></div>
+</div></div>
+<div><div class="sh">ALANLAR</div>
+<div class="area" title="Yeterli: fatura kesme çalışıyor, tahsilat takibi zayıf"><span class="an">Çekirdek</span><span class="lv"><i class="on"></i><i class="on"></i><i class="up"></i></span></div>
+<div class="area weak" title="Zayıf: muhasebe programına aktarım yok"><span class="an">Entegrasyonlar<svg class="ic s"><use href="#i-warn"/></svg></span><span class="lv weak"><i class="on"></i><i></i><i></i></span></div>
+<div class="area" title="Yeterli: kurulum bir günde biter"><span class="an">Güven &amp; Ölçek</span><span class="lv"><i class="on"></i><i class="on"></i><i></i></span></div>
+</div>
+</aside>
+<div class="main">
+<div class="mh"><span class="sn">SPRINT 14</span>
+<span class="goal">Bu çeyrek: <b>Entegrasyonlar</b><svg class="ic s"><use href="#i-chev"/></svg></span>
+<div class="pm" title="Selin 5★ hazırladı: hız +%30, hata ×0,6. Toplu Fatura 38 → 29, Hesap Planı 48 → 37. Sırada: Stok Uyarısı.">
+<div class="pmu"><span class="who"><span class="av l"><svg class="p-sel"><use href="#hl"/></svg></span><i class="st" style="--s:5"></i></span>
+<div class="kv"><b class="gn">−20 SP</b><small>hazırlık · 2 kart</small></div>
+<div class="kv"><span class="risk" style="--r:60%"></span><small>hata ×0,6</small></div></div></div>
+</div>
+<div class="gr">
+<div class="leg"><span class="cnt">3<small>kart</small></span><span class="ky"><span><i class="lf"></i>iş</span><span><i class="lc"></i>ekip</span><span><i class="lo"></i>kalır</span></span></div>
+<div class="g tas"><div class="gt"><svg class="ic"><use href="#i-tas"/></svg>Tasarım<span class="nums"><b>17</b>/ 24</span></div><div class="gb"><i class="f" style="--f:70.8%"></i><i class="cap" style="--k:100%"></i></div></div>
+<div class="g gel"><div class="gt"><svg class="ic"><use href="#i-gel"/></svg>Geliştirme<span class="nums"><b>40</b>/ 58</span></div><div class="gb"><i class="f" style="--f:69%"></i><i class="cap" style="--k:100%"></i></div></div>
+<div class="g tst over" title="Test · iş 24 · ekip 18 · 6 puan sonraki sprinte kalır. Testte kalacak kart: Hesap Planı."><div class="gt"><svg class="ic"><use href="#i-tst"/></svg>Test<span class="nums"><b>24</b>/ 18<em class="ovn"><svg class="ic s"><use href="#i-up"/></svg>6</em></span></div><div class="gb"><i class="f" style="--f:75%"></i><i class="ov" style="--k:75%;--o:25%"></i><i class="cap" style="--k:75%"></i></div></div>
+</div>
+<div class="rows">
+<div class="r"><span class="ra"><svg class="ic s"><use href="#i-x"/></svg>Çıkar</span>
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-fix"/></svg><span class="nmt">Fatura düzeltmesi</span><span class="sp">15</span></div>
+<div class="chips"><span class="ch" title="5 açık hata"><svg class="ic s"><use href="#i-bug"/></svg><b>5</b></span><span class="ch" title="3 hesap"><svg class="ic s"><use href="#i-acct"/></svg><b>3</b></span><span class="ch" title="120 kullanıcı"><svg class="ic s"><use href="#i-user"/></svg><b>120</b></span></div></div>
+<div class="sc none"></div>
+<div class="sc gel"><div class="top"><span class="rq" title="Geliştirme en az 1★">1★</span><div class="bar"><i style="--w:41.7%"></i></div><span class="v">10</span></div><div class="bot"><span class="ppl"><span class="av fd" title="Kurucu · 3★ · 2. haftada biter"><svg class="p-kur"><use href="#hs"/></svg></span></span><span class="wk e2"><b>1</b><b>2</b></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i style="--w:20.8%"></i></div><span class="v">5</span></div><div class="bot"><span class="ppl"><span class="av" title="Ayşe · 2★"><svg class="p-ays"><use href="#hb"/></svg></span></span></div></div>
+</div>
+<div class="r"><span class="ra"><svg class="ic s"><use href="#i-x"/></svg>Çıkar</span>
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Toplu Fatura</span><span class="sp">29</span></div>
+<div class="chips"><span class="ch" title="Selin 5★ hazırladı · hız +%30 · hata ×0,6"><span class="av xs"><svg class="p-sel"><use href="#hl"/></svg></span><s>38</s>→<b>29</b></span><span class="ch cu" title="Kuzey Lojistik · $4.800/yıl · gelecek çeyrek sonu [EK]"><svg class="ic s"><use href="#i-acct"/></svg>Kuzey Lojistik<svg class="ic s" style="color:var(--i4)"><use href="#i-clock"/></svg></span><span class="ch" title="Çekirdek 2 → 3"><svg class="ic s"><use href="#i-up"/></svg>Çekirdek</span></div></div>
+<div class="sc tas"><div class="top"><div class="bar"><i style="--w:37.5%"></i></div><span class="v">9</span></div><div class="bot"><span class="ppl"><span class="av" title="Ece · 3★ · 1. haftada biter, sonra Hesap Planı"><svg class="p-ece"><use href="#hl"/></svg></span></span><span class="wk e1"><b>1</b><b>2</b></span></div></div>
+<div class="sc gel"><div class="top"><span class="rq" title="Geliştirme en az 2★">2★</span><div class="bar"><i style="--w:50%"></i></div><span class="v">12</span></div><div class="bot"><span class="ppl"><span class="av" title="Deniz · 4★ · 1. haftada biter, sonra Hesap Planı"><svg class="p-den"><use href="#hs"/></svg></span><span class="av" title="Kaan · 2★ · 1. haftada biter, sonra Hesap Planı"><svg class="p-kaa"><use href="#hs"/></svg></span></span><span class="wk e1"><b>1</b><b>2</b></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i style="--w:33.3%"></i></div><span class="v">8</span></div><div class="bot"><span class="ppl"><span class="av" title="Ayşe · 2★ · 2. haftada biter, sonra Hesap Planı"><svg class="p-ays"><use href="#hb"/></svg></span></span><span class="wk e2"><b>1</b><b>2</b></span></div></div>
+</div>
+<div class="r"><span class="ra"><svg class="ic s"><use href="#i-x"/></svg>Çıkar</span>
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Hesap Planı</span><span class="sp">37</span></div>
+<div class="chips"><span class="ch" title="Selin 5★ hazırladı · hız +%30 · hata ×0,6"><span class="av xs"><svg class="p-sel"><use href="#hl"/></svg></span><s>48</s>→<b>37</b></span></div></div>
+<div class="sc tas"><div class="top"><div class="bar"><i style="--w:33.3%"></i></div><span class="v">8</span></div><div class="bot"><span class="ppl"><span class="av" title="Ece · 3★"><svg class="p-ece"><use href="#hl"/></svg></span></span></div></div>
+<div class="sc gel"><div class="top"><span class="rq" title="Geliştirme en az 2★">2★</span><div class="bar"><i style="--w:75%"></i></div><span class="v">18</span></div><div class="bot"><span class="ppl"><span class="av" title="Deniz · 4★"><svg class="p-den"><use href="#hs"/></svg></span><span class="av" title="Kaan · 2★"><svg class="p-kaa"><use href="#hs"/></svg></span></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i style="--w:20.8%"></i><i class="k" style="--w:25%"></i></div><span class="v">11</span></div><div class="bot"><span class="ppl"><span class="av" title="Ayşe · 2★"><svg class="p-ays"><use href="#hb"/></svg></span></span><span class="wk" title="Testi sonraki sprinte kalır: 6 SP"><b>1</b><b>2</b><b class="cr">6</b></span></div></div>
+</div>
+</div>
+<div class="tm"><div class="lab"><b>6</b>kişi</div>
+<div class="crew"><span class="pp" title="Ece · 3★ · Tasarım 12/hf"><span class="av m"><svg class="p-ece"><use href="#hl"/></svg></span><i class="st" style="--s:3"></i></span></div>
+<div class="crew">
+<span class="pp" title="Kurucu · 3★"><span class="av m fd"><svg class="p-kur"><use href="#hs"/></svg></span><i class="st" style="--s:3"></i></span>
+<span class="pp" title="Deniz · 4★ · Geliştirme 15/hf"><span class="av m"><svg class="p-den"><use href="#hs"/></svg></span><i class="st" style="--s:4"></i></span>
+<span class="pp" title="Kaan · 2★ · Geliştirme 9/hf"><span class="av m"><svg class="p-kaa"><use href="#hs"/></svg></span><i class="st" style="--s:2"></i></span></div>
+<div class="crew"><span class="pp" title="Ayşe · 2★ · Test 9/hf"><span class="av m"><svg class="p-ays"><use href="#hb"/></svg></span><i class="st" style="--s:2"></i></span></div>
+</div>
+<div class="ab">
+<div class="rt"><span class="btn" title="Planlamayı Selin yürütür. Her sprint önerilen planla kendiliğinden başlar."><span class="av xs"><svg class="p-sel"><use href="#hl"/></svg></span>Planlamayı devret: Selin</span><span class="btn pri">Sprint'i başlat</span></div></div>
+</div>
+<aside class="nx">
+<div class="nh"><b>SPRINT 15</b><span>sonraki</span></div>
+<div class="nc carry" title="Hesap Planı'nın testi: 6 puan sonraki sprinte kalır"><div class="t"><svg class="ic ty" style="color:var(--warn)"><use href="#i-tst"/></svg><span class="nmt">Hesap Planı</span><span class="sp">6</span></div><div class="nr">test kalanı</div></div>
+<div class="nc pull"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Stok Uyarısı</span><span class="sp">17</span></div><div class="seg"><i class="a" style="flex:3"></i><i class="b" style="flex:9"></i><i class="c" style="flex:5"></i></div>
+<div class="nr" title="Selin hazırlıyor, 1. haftada biter. Ekip 2. haftada çeker."><span class="av xs"><svg class="p-sel"><use href="#hl"/></svg></span><svg class="ic s"><use href="#i-pen"/></svg><s>22</s>→<b>17</b><span class="wk e2"><b>1</b><b>2</b></span></div></div>
+</aside>
+</div></div></div>
+
+<!-- ============ 05 ============ -->
+<div class="cap"><span class="no">05</span><b>6 kişi, zayıf PM (Can 2★)</b><span class="d">Durum 4 ile aynı ekip ve kartlar. Fark üç yerde, hepsi aynı konumda: PM kutusu −11 SP ve daha dolu hata çubuğu, kart çiplerinde 38 → 33 ve 48 → 42, Test ▲8.</span></div>
+<div class="fw"><div class="frame">
+<div class="chrome"><span class="brand">ÜRÜN</span><span class="prod"><b>Ledgerly</b> · B2B ERP · v1.4</span>
+<nav class="tabs"><span class="tab">GENEL BAKIŞ</span><span class="tab on">SPRINT</span><span class="tab">ÇEYREK</span></nav>
+<span class="hist">Geçmiş <i class="tg"></i></span><svg class="ic l xx"><use href="#i-x"/></svg></div>
+<div class="bd">
+<aside class="side">
+<div><div class="sh">TALEPLER</div><div class="reqs">
+<div class="req" title="$9.600/yıl · Entegrasyonlar"><span class="cn">Ege Sigorta</span><span class="ft">Çoklu Entegrasyon</span><span class="dl now"><svg class="ic s"><use href="#i-clock"/></svg>bu çeyrek sonu</span></div>
+<div class="req" title="$4.800/yıl · Toplu Fatura bu sprintte [EK]"><span class="stamp"><svg class="ic s"><use href="#i-check"/></svg>planda</span><span class="cn">Kuzey Lojistik</span><span class="ft">Tahsilat Döngüsü</span><span class="dl"><svg class="ic s"><use href="#i-clock"/></svg>gelecek çeyrek sonu</span></div>
+</div></div>
+<div><div class="sh">ALANLAR</div>
+<div class="area" title="Yeterli: fatura kesme çalışıyor, tahsilat takibi zayıf"><span class="an">Çekirdek</span><span class="lv"><i class="on"></i><i class="on"></i><i class="up"></i></span></div>
+<div class="area weak" title="Zayıf: muhasebe programına aktarım yok"><span class="an">Entegrasyonlar<svg class="ic s"><use href="#i-warn"/></svg></span><span class="lv weak"><i class="on"></i><i></i><i></i></span></div>
+<div class="area" title="Yeterli: kurulum bir günde biter"><span class="an">Güven &amp; Ölçek</span><span class="lv"><i class="on"></i><i class="on"></i><i></i></span></div>
+</div>
+</aside>
+<div class="main">
+<div class="mh"><span class="sn">SPRINT 14</span>
+<span class="goal">Bu çeyrek: <b>Entegrasyonlar</b><svg class="ic s"><use href="#i-chev"/></svg></span>
+<div class="pm" title="Can 2★ hazırladı: hız +%15, hata ×0,85. Toplu Fatura 38 → 33, Hesap Planı 48 → 42. Sırada: Stok Uyarısı.">
+<div class="pmu"><span class="who"><span class="av l"><svg class="p-can"><use href="#hs"/></svg></span><i class="st" style="--s:2"></i></span>
+<div class="kv"><b class="gn">−11 SP</b><small>hazırlık · 2 kart</small></div>
+<div class="kv"><span class="risk" style="--r:85%"></span><small>hata ×0,85</small></div></div></div>
+</div>
+<div class="gr">
+<div class="leg"><span class="cnt">3<small>kart</small></span><span class="ky"><span><i class="lf"></i>iş</span><span><i class="lc"></i>ekip</span><span><i class="lo"></i>kalır</span></span></div>
+<div class="g tas"><div class="gt"><svg class="ic"><use href="#i-tas"/></svg>Tasarım<span class="nums"><b>19</b>/ 24</span></div><div class="gb"><i class="f" style="--f:79.2%"></i><i class="cap" style="--k:100%"></i></div></div>
+<div class="g gel"><div class="gt"><svg class="ic"><use href="#i-gel"/></svg>Geliştirme<span class="nums"><b>45</b>/ 58</span></div><div class="gb"><i class="f" style="--f:77.6%"></i><i class="cap" style="--k:100%"></i></div></div>
+<div class="g tst over" title="Test · iş 26 · ekip 18 · 8 puan sonraki sprinte kalır. Testte kalacak kart: Hesap Planı."><div class="gt"><svg class="ic"><use href="#i-tst"/></svg>Test<span class="nums"><b>26</b>/ 18<em class="ovn"><svg class="ic s"><use href="#i-up"/></svg>8</em></span></div><div class="gb"><i class="f" style="--f:69.2%"></i><i class="ov" style="--k:69.2%;--o:30.8%"></i><i class="cap" style="--k:69.2%"></i></div></div>
+</div>
+<div class="rows">
+<div class="r"><span class="ra"><svg class="ic s"><use href="#i-x"/></svg>Çıkar</span>
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-fix"/></svg><span class="nmt">Fatura düzeltmesi</span><span class="sp">15</span></div>
+<div class="chips"><span class="ch" title="5 açık hata"><svg class="ic s"><use href="#i-bug"/></svg><b>5</b></span><span class="ch" title="3 hesap"><svg class="ic s"><use href="#i-acct"/></svg><b>3</b></span><span class="ch" title="120 kullanıcı"><svg class="ic s"><use href="#i-user"/></svg><b>120</b></span></div></div>
+<div class="sc none"></div>
+<div class="sc gel"><div class="top"><span class="rq" title="Geliştirme en az 1★">1★</span><div class="bar"><i style="--w:41.7%"></i></div><span class="v">10</span></div><div class="bot"><span class="ppl"><span class="av fd" title="Kurucu · 3★ · 2. haftada biter"><svg class="p-kur"><use href="#hs"/></svg></span></span><span class="wk e2"><b>1</b><b>2</b></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i style="--w:20.8%"></i></div><span class="v">5</span></div><div class="bot"><span class="ppl"><span class="av" title="Ayşe · 2★"><svg class="p-ays"><use href="#hb"/></svg></span></span></div></div>
+</div>
+<div class="r"><span class="ra"><svg class="ic s"><use href="#i-x"/></svg>Çıkar</span>
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Toplu Fatura</span><span class="sp">33</span></div>
+<div class="chips"><span class="ch" title="Can 2★ hazırladı · hız +%15 · hata ×0,85"><span class="av xs"><svg class="p-can"><use href="#hs"/></svg></span><s>38</s>→<b>33</b></span><span class="ch cu" title="Kuzey Lojistik · $4.800/yıl · gelecek çeyrek sonu [EK]"><svg class="ic s"><use href="#i-acct"/></svg>Kuzey Lojistik<svg class="ic s" style="color:var(--i4)"><use href="#i-clock"/></svg></span><span class="ch" title="Çekirdek 2 → 3"><svg class="ic s"><use href="#i-up"/></svg>Çekirdek</span></div></div>
+<div class="sc tas"><div class="top"><div class="bar"><i style="--w:41.7%"></i></div><span class="v">10</span></div><div class="bot"><span class="ppl"><span class="av" title="Ece · 3★"><svg class="p-ece"><use href="#hl"/></svg></span></span></div></div>
+<div class="sc gel"><div class="top"><span class="rq" title="Geliştirme en az 2★">2★</span><div class="bar"><i style="--w:58.3%"></i></div><span class="v">14</span></div><div class="bot"><span class="ppl"><span class="av" title="Deniz · 4★"><svg class="p-den"><use href="#hs"/></svg></span><span class="av" title="Kaan · 2★"><svg class="p-kaa"><use href="#hs"/></svg></span></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i style="--w:37.5%"></i></div><span class="v">9</span></div><div class="bot"><span class="ppl"><span class="av" title="Ayşe · 2★"><svg class="p-ays"><use href="#hb"/></svg></span></span></div></div>
+</div>
+<div class="r"><span class="ra"><svg class="ic s"><use href="#i-x"/></svg>Çıkar</span>
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Hesap Planı</span><span class="sp">42</span></div>
+<div class="chips"><span class="ch" title="Can 2★ hazırladı · hız +%15 · hata ×0,85"><span class="av xs"><svg class="p-can"><use href="#hs"/></svg></span><s>48</s>→<b>42</b></span></div></div>
+<div class="sc tas"><div class="top"><div class="bar"><i style="--w:37.5%"></i></div><span class="v">9</span></div><div class="bot"><span class="ppl"><span class="av" title="Ece · 3★"><svg class="p-ece"><use href="#hl"/></svg></span></span></div></div>
+<div class="sc gel"><div class="top"><span class="rq" title="Geliştirme en az 2★">2★</span><div class="bar"><i style="--w:87.5%"></i></div><span class="v">21</span></div><div class="bot"><span class="ppl"><span class="av" title="Deniz · 4★"><svg class="p-den"><use href="#hs"/></svg></span><span class="av" title="Kaan · 2★"><svg class="p-kaa"><use href="#hs"/></svg></span></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i style="--w:16.7%"></i><i class="k" style="--w:33.3%"></i></div><span class="v">12</span></div><div class="bot"><span class="ppl"><span class="av" title="Ayşe · 2★"><svg class="p-ays"><use href="#hb"/></svg></span></span><span class="wk" title="Testi sonraki sprinte kalır: 8 SP"><b>1</b><b>2</b><b class="cr">8</b></span></div></div>
+</div>
+</div>
+<div class="tm"><div class="lab"><b>6</b>kişi</div>
+<div class="crew"><span class="pp" title="Ece · 3★ · Tasarım 12/hf"><span class="av m"><svg class="p-ece"><use href="#hl"/></svg></span><i class="st" style="--s:3"></i></span></div>
+<div class="crew">
+<span class="pp" title="Kurucu · 3★ · Kurucu bu hafta 2 görüşmede: sprint payı %90."><span class="av m fd"><svg class="p-kur"><use href="#hs"/></svg></span><i class="st" style="--s:3"></i></span>
+<span class="pp" title="Deniz · 4★ · Geliştirme 15/hf"><span class="av m"><svg class="p-den"><use href="#hs"/></svg></span><i class="st" style="--s:4"></i></span>
+<span class="pp" title="Kaan · 2★ · Geliştirme 9/hf"><span class="av m"><svg class="p-kaa"><use href="#hs"/></svg></span><i class="st" style="--s:2"></i></span></div>
+<div class="crew"><span class="pp" title="Ayşe · 2★ · Test 9/hf"><span class="av m"><svg class="p-ays"><use href="#hb"/></svg></span><i class="st" style="--s:2"></i></span></div>
+</div>
+<div class="ab">
+<div class="rt"><span class="btn" title="Planlamayı Can yürütür. Her sprint önerilen planla kendiliğinden başlar."><span class="av xs"><svg class="p-can"><use href="#hs"/></svg></span>Planlamayı devret: Can</span><span class="btn pri">Sprint'i başlat</span></div></div>
+</div>
+<aside class="nx">
+<div class="nh"><b>SPRINT 15</b><span>sonraki</span></div>
+<div class="nc carry" title="Hesap Planı'nın testi: 8 puan sonraki sprinte kalır"><div class="t"><svg class="ic ty" style="color:var(--warn)"><use href="#i-tst"/></svg><span class="nmt">Hesap Planı</span><span class="sp">8</span></div><div class="nr">test kalanı</div></div>
+<div class="nc pull"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Stok Uyarısı</span><span class="sp">18</span></div><div class="seg"><i class="a" style="flex:4"></i><i class="b" style="flex:12"></i><i class="c" style="flex:6"></i></div>
+<div class="nr" title="Can hazırlıyor. Ekip 2. haftada çeker."><span class="av xs"><svg class="p-can"><use href="#hs"/></svg></span><svg class="ic s"><use href="#i-pen"/></svg><s>22</s>→<b>18</b><span class="wk e2"><b>1</b><b>2</b></span></div></div>
+</aside>
+</div></div></div>
+
+<!-- ============ 06 ============ -->
+<div class="cap"><span class="no">06</span><b>12 kişi, taşmanın ilk sprinti</b><span class="d">Test sütunu: iş 54, ekip 36, ▲18; dipte iki testçi, Geliştirme'de yedi kişi. İki kartın Test hücresi taranır. Cümle yok, öneri yok, "Öncelikli" yok.</span></div>
+<div class="fw"><div class="frame">
+<div class="chrome"><span class="brand">ÜRÜN</span><span class="prod"><b>Ledgerly</b> · B2B ERP · v1.4</span>
+<nav class="tabs"><span class="tab">GENEL BAKIŞ</span><span class="tab on">SPRINT</span><span class="tab">ÇEYREK</span></nav>
+<span class="hist">Geçmiş <i class="tg"></i></span><svg class="ic l xx"><use href="#i-x"/></svg></div>
+<div class="bd">
+<aside class="side">
+<div><div class="sh">TALEPLER</div><div class="reqs">
+<div class="req" title="$9.600/yıl · Entegrasyonlar"><span class="cn">Ege Sigorta</span><span class="ft">Çoklu Entegrasyon</span><span class="dl now"><svg class="ic s"><use href="#i-clock"/></svg>bu çeyrek sonu</span></div>
+<div class="req" title="$4.800/yıl · Toplu Fatura bu sprintte [EK]"><span class="stamp"><svg class="ic s"><use href="#i-check"/></svg>planda</span><span class="cn">Kuzey Lojistik</span><span class="ft">Tahsilat Döngüsü</span><span class="dl"><svg class="ic s"><use href="#i-clock"/></svg>gelecek çeyrek sonu</span></div>
+</div></div>
+<div><div class="sh">ALANLAR</div>
+<div class="area" title="Yeterli: fatura kesme çalışıyor, tahsilat takibi zayıf"><span class="an">Çekirdek</span><span class="lv"><i class="on"></i><i class="on"></i><i class="up"></i></span></div>
+<div class="area weak" title="Zayıf: muhasebe programına aktarım yok"><span class="an">Entegrasyonlar<svg class="ic s"><use href="#i-warn"/></svg></span><span class="lv weak"><i class="on"></i><i></i><i></i></span></div>
+<div class="area" title="Yeterli: kurulum bir günde biter"><span class="an">Güven &amp; Ölçek</span><span class="lv"><i class="on"></i><i class="on"></i><i></i></span></div>
+<div class="area" title="Hesap Planı Defter'i 0'dan 1'e çıkarır"><span class="an">Defter</span><span class="lv"><i class="up"></i><i></i><i></i></span></div>
+<div class="area" title="Stok Sayacı Stok'u 0'dan 1'e çıkarır"><span class="an">Stok</span><span class="lv"><i class="up"></i><i></i><i></i></span></div>
+</div>
+</aside>
+<div class="main">
+<div class="mh"><span class="sn">SPRINT 21</span>
+<span class="goal">Bu çeyrek: <b>Entegrasyonlar</b><svg class="ic s"><use href="#i-chev"/></svg></span>
+<div class="pm nopm" title="Ekipte ürün yöneticisi yok: kartlar hazırlıksız girer."><span class="ghosth"></span><div class="kv"><small>Ürün yöneticisi</small><b style="font-size:18px;color:var(--i4)">yok</b></div></div>
+</div>
+<div class="gr">
+<div class="leg"><span class="cnt">6<small>kart</small></span><span class="ky"><span><i class="lf"></i>iş</span><span><i class="lc"></i>ekip</span><span><i class="lo"></i>kalır</span></span></div>
+<div class="g tas"><div class="gt"><svg class="ic"><use href="#i-tas"/></svg>Tasarım<span class="nums"><b>26</b>/ 66</span></div><div class="gb"><i class="f" style="--f:39.4%"></i><i class="cap" style="--k:100%"></i></div></div>
+<div class="g gel"><div class="gt"><svg class="ic"><use href="#i-gel"/></svg>Geliştirme<span class="nums"><b>106</b>/ 160</span></div><div class="gb"><i class="f" style="--f:66.3%"></i><i class="cap" style="--k:100%"></i></div></div>
+<div class="g tst over" title="Test · iş 54 · ekip 36 · 18 puan sonraki sprinte kalır. Testte kalacak kartlar: Hesap Planı (33), Stok Sayacı (37)."><div class="gt"><svg class="ic"><use href="#i-tst"/></svg>Test<span class="nums"><b>54</b>/ 36<em class="ovn"><svg class="ic s"><use href="#i-up"/></svg>18</em></span></div><div class="gb"><i class="f" style="--f:66.7%"></i><i class="ov" style="--k:66.7%;--o:33.3%"></i><i class="cap" style="--k:66.7%"></i></div></div>
+</div>
+<div class="rows">
+<div class="r"><span class="ra"><svg class="ic s"><use href="#i-x"/></svg>Çıkar</span>
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-fix"/></svg><span class="nmt">Fatura düzeltmesi</span><span class="sp">20</span></div>
+<div class="chips"><span class="ch" title="7 açık hata"><svg class="ic s"><use href="#i-bug"/></svg><b>7</b></span><span class="ch" title="4 hesap"><svg class="ic s"><use href="#i-acct"/></svg><b>4</b></span><span class="ch" title="190 kullanıcı"><svg class="ic s"><use href="#i-user"/></svg><b>190</b></span></div></div>
+<div class="sc none"></div>
+<div class="sc gel"><div class="top"><span class="rq" title="Geliştirme en az 1★">1★</span><div class="bar"><i style="--w:58.3%"></i></div><span class="v">14</span></div><div class="bot"><span class="ppl"><span class="av" title="Kaan · 2★"><svg class="p-kaa"><use href="#hs"/></svg></span></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i style="--w:25%"></i></div><span class="v">6</span></div><div class="bot"><span class="ppl"><span class="av" title="Cem · 1★"><svg class="p-cem"><use href="#hs"/></svg></span></span></div></div>
+</div>
+<div class="r"><span class="ra"><svg class="ic s"><use href="#i-x"/></svg>Çıkar</span>
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Toplu Fatura</span><span class="oz" title="Özenli"><svg class="ic s"><use href="#i-care"/></svg></span><span class="sp">42</span></div>
+<div class="chips"><span class="ch cu" title="Kuzey Lojistik · $4.800/yıl · gelecek çeyrek sonu [EK]"><svg class="ic s"><use href="#i-acct"/></svg>Kuzey Lojistik<svg class="ic s" style="color:var(--i4)"><use href="#i-clock"/></svg></span><span class="ch" title="Çekirdek 2 → 3"><svg class="ic s"><use href="#i-up"/></svg>Çekirdek</span></div></div>
+<div class="sc tas"><div class="top"><div class="bar"><i style="--w:33.3%"></i></div><span class="v">8</span></div><div class="bot"><span class="ppl"><span class="av" title="Ece · 3★ · 1. haftada biter"><svg class="p-ece"><use href="#hl"/></svg></span></span><span class="wk e1"><b>1</b><b>2</b></span></div></div>
+<div class="sc gel"><div class="top"><span class="rq" title="Geliştirme en az 2★">2★</span><div class="bar"><i style="--w:100%"></i></div><span class="v">24</span></div><div class="bot"><span class="ppl"><span class="av" title="Deniz · 3★ · 2. haftada biter"><svg class="p-den"><use href="#hs"/></svg></span><span class="av" title="Onur · 2★ · 2. haftada biter"><svg class="p-onu"><use href="#hs"/></svg></span></span><span class="wk e2"><b>1</b><b>2</b></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i style="--w:41.7%"></i></div><span class="v">10</span></div><div class="bot"><span class="ppl"><span class="av" title="Ayşe · 3★ · 2. haftada biter"><svg class="p-ays"><use href="#hb"/></svg></span></span><span class="wk e2"><b>1</b><b>2</b></span></div></div>
+</div>
+<div class="r"><span class="ra"><svg class="ic s"><use href="#i-x"/></svg>Çıkar</span>
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Hesap Planı</span><span class="oz" title="Özenli"><svg class="ic s"><use href="#i-care"/></svg></span><span class="sp">33</span></div>
+<div class="chips"><span class="ch" title="Defter 0 → 1"><svg class="ic s"><use href="#i-up"/></svg>Defter <b>0 → 1</b></span></div></div>
+<div class="sc tas"><div class="top"><div class="bar"><i style="--w:37.5%"></i></div><span class="v">9</span></div><div class="bot"><span class="ppl"><span class="av" title="Gizem · 3★"><svg class="p-giz"><use href="#hl"/></svg></span></span></div></div>
+<div class="sc gel"><div class="top"><div class="bar"><i style="--w:66.7%"></i></div><span class="v">16</span></div><div class="bot"><span class="ppl"><span class="av" title="Mert · 4★"><svg class="p-mer"><use href="#hs"/></svg></span><span class="av" title="Zeynep · 4★"><svg class="p-zey"><use href="#hb"/></svg></span></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i style="--w:12.5%"></i><i class="k" style="--w:20.8%"></i></div><span class="v">8</span></div><div class="bot"><span class="ppl"><span class="av" title="Ayşe · 3★"><svg class="p-ays"><use href="#hb"/></svg></span></span><span class="wk" title="Testin 5 SP'si sonraki sprinte kalır"><b>1</b><b>2</b><b class="cr">5</b></span></div></div>
+</div>
+<div class="r"><span class="ra"><svg class="ic s"><use href="#i-x"/></svg>Çıkar</span>
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Stok Sayacı</span><span class="sp">37</span></div>
+<div class="chips"><span class="ch" title="Stok 0 → 1"><svg class="ic s"><use href="#i-up"/></svg>Stok <b>0 → 1</b></span></div></div>
+<div class="sc tas"><div class="top"><div class="bar"><i style="--w:8.3%"></i></div><span class="v">2</span></div><div class="bot"><span class="ppl"><span class="av" title="Defne · 2★"><svg class="p-def"><use href="#hl"/></svg></span></span></div></div>
+<div class="sc gel"><div class="top"><span class="rq" title="Geliştirme en az 1★">1★</span><div class="bar"><i style="--w:91.7%"></i></div><span class="v">22</span></div><div class="bot"><span class="ppl"><span class="av" title="Burak · 3★"><svg class="p-brk"><use href="#hs"/></svg></span><span class="av fd" title="Kurucu · 3★"><svg class="p-kur"><use href="#hs"/></svg></span></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i class="k" style="--w:54.2%"></i></div><span class="v">13</span></div><div class="bot"><span class="ppl"><span class="av" title="Cem · 1★"><svg class="p-cem"><use href="#hs"/></svg></span></span><span class="wk" title="Testin 13 SP'si sonraki sprinte kalır"><b>1</b><b>2</b><b class="cr">13</b></span></div></div>
+</div>
+<div class="r"><span class="ra"><svg class="ic s"><use href="#i-x"/></svg>Çıkar</span>
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Tablo İçe Aktarma</span><span class="sp">25</span></div></div>
+<div class="sc tas"><div class="top"><div class="bar"><i style="--w:16.7%"></i></div><span class="v">4</span></div><div class="bot"><span class="ppl"><span class="av" title="Defne · 2★"><svg class="p-def"><use href="#hl"/></svg></span></span></div></div>
+<div class="sc gel"><div class="top"><span class="rq" title="Geliştirme en az 2★">2★</span><div class="bar"><i style="--w:66.7%"></i></div><span class="v">16</span></div><div class="bot"><span class="ppl"><span class="av" title="Deniz · 3★"><svg class="p-den"><use href="#hs"/></svg></span></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i style="--w:20.8%"></i></div><span class="v">5</span></div><div class="bot"><span class="ppl"><span class="av" title="Cem · 1★"><svg class="p-cem"><use href="#hs"/></svg></span></span></div></div>
+</div>
+<div class="r"><span class="ra"><svg class="ic s"><use href="#i-x"/></svg>Çıkar</span>
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Kasa Hareketleri</span><span class="sp">29</span></div></div>
+<div class="sc tas"><div class="top"><div class="bar"><i style="--w:12.5%"></i></div><span class="v">3</span></div><div class="bot"><span class="ppl"><span class="av" title="Gizem · 3★"><svg class="p-giz"><use href="#hl"/></svg></span></span></div></div>
+<div class="sc gel"><div class="top"><span class="rq" title="Geliştirme en az 1★">1★</span><div class="bar"><i style="--w:58.3%"></i></div><span class="v">14</span></div><div class="bot"><span class="ppl"><span class="av fd" title="Kurucu · 3★"><svg class="p-kur"><use href="#hs"/></svg></span></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i style="--w:50%"></i></div><span class="v">12</span></div><div class="bot"><span class="ppl"><span class="av" title="Ayşe · 3★"><svg class="p-ays"><use href="#hb"/></svg></span></span></div></div>
+</div>
+</div>
+<div class="tm"><div class="lab"><b>12</b>kişi</div>
+<div class="crew">
+<span class="pp" title="Ece · 3★ · Tasarım 12/hf"><span class="av m"><svg class="p-ece"><use href="#hl"/></svg></span><i class="st" style="--s:3"></i></span>
+<span class="pp" title="Defne · 2★ · Tasarım 9/hf"><span class="av m"><svg class="p-def"><use href="#hl"/></svg></span><i class="st" style="--s:2"></i></span>
+<span class="pp" title="Gizem · 3★ · Tasarım 12/hf"><span class="av m"><svg class="p-giz"><use href="#hl"/></svg></span><i class="st" style="--s:3"></i></span></div>
+<div class="crew">
+<span class="pp" title="Kurucu · 3★ · Geliştirme 8/hf · Kurucu bu hafta 2 görüşmede: sprint payı %90."><span class="av m fd"><svg class="p-kur"><use href="#hs"/></svg></span><i class="st" style="--s:3"></i></span>
+<span class="pp" title="Mert · 4★ · 15/hf"><span class="av m"><svg class="p-mer"><use href="#hs"/></svg></span><i class="st" style="--s:4"></i></span>
+<span class="pp" title="Zeynep · 4★ · 15/hf"><span class="av m"><svg class="p-zey"><use href="#hb"/></svg></span><i class="st" style="--s:4"></i></span>
+<span class="pp" title="Deniz · 3★ · 12/hf"><span class="av m"><svg class="p-den"><use href="#hs"/></svg></span><i class="st" style="--s:3"></i></span>
+<span class="pp" title="Burak · 3★ · 12/hf"><span class="av m"><svg class="p-brk"><use href="#hs"/></svg></span><i class="st" style="--s:3"></i></span>
+<span class="pp" title="Kaan · 2★ · 9/hf"><span class="av m"><svg class="p-kaa"><use href="#hs"/></svg></span><i class="st" style="--s:2"></i></span>
+<span class="pp" title="Onur · 2★ · 9/hf"><span class="av m"><svg class="p-onu"><use href="#hs"/></svg></span><i class="st" style="--s:2"></i></span></div>
+<div class="crew">
+<span class="pp" title="Ayşe · 3★ · Test 12/hf"><span class="av m"><svg class="p-ays"><use href="#hb"/></svg></span><i class="st" style="--s:3"></i></span>
+<span class="pp" title="Cem · 1★ · Test 6/hf"><span class="av m"><svg class="p-cem"><use href="#hs"/></svg></span><i class="st" style="--s:1"></i></span></div>
+</div>
+<div class="ab">
+<div class="rt"><span class="btn dis" title="Planlamayı devretmek için ekipte bir ürün yöneticisi olmalı."><svg class="ic s"><use href="#i-lock"/></svg>Planlamayı devret</span><span class="btn pri">Sprint'i başlat</span></div></div>
+</div>
+<aside class="nx">
+<div class="nh"><b>SPRINT 22</b><span>sonraki</span></div>
+<div class="nc carry" title="Testte kalan 18 puan: Hesap Planı ve Stok Sayacı"><div class="t"><svg class="ic ty" style="color:var(--warn)"><use href="#i-tst"/></svg><span class="nmt">Test kalanı</span><span class="sp">18</span></div><div class="nr">Hesap Planı · Stok Sayacı</div></div>
+<div class="nc pull" title="Ekip 2. haftada çeker"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Depo ve Raf</span><span class="sp">22</span></div><div class="seg"><i class="a" style="flex:4"></i><i class="b" style="flex:12"></i><i class="c" style="flex:6"></i></div><div class="nr"><span class="wk e2"><b>1</b><b>2</b></span></div></div>
+<div class="nc"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Nakit Akış Tablosu</span><span class="sp">23</span></div><div class="seg"><i class="a" style="flex:3"></i><i class="b" style="flex:14"></i><i class="c" style="flex:6"></i></div></div>
+</aside>
+</div></div></div>
+
+<!-- ============ 07 ============ -->
+<div class="cap"><span class="no">07</span><b>12 kişi, taşma sürüyor (3. sprint)</b><span class="d">Durum 6 ile tek fark sayaçta: Test kutusu kalın turuncu çerçeve alır ve ▲18'in yanında yükselen üç çubuk durur. Üstüne gelince şeridin ipucu açılır (karede açık gösterildi).</span></div>
+<div class="fw"><div class="frame">
+<div class="chrome"><span class="brand">ÜRÜN</span><span class="prod"><b>Ledgerly</b> · B2B ERP · v1.4</span>
+<nav class="tabs"><span class="tab">GENEL BAKIŞ</span><span class="tab on">SPRINT</span><span class="tab">ÇEYREK</span></nav>
+<span class="hist">Geçmiş <i class="tg"></i></span><svg class="ic l xx"><use href="#i-x"/></svg></div>
+<div class="bd">
+<aside class="side">
+<div><div class="sh">TALEPLER</div><div class="reqs">
+<div class="req" title="$9.600/yıl · Entegrasyonlar"><span class="cn">Ege Sigorta</span><span class="ft">Çoklu Entegrasyon</span><span class="dl now"><svg class="ic s"><use href="#i-clock"/></svg>bu çeyrek sonu</span></div>
+<div class="req" title="$4.800/yıl · Toplu Fatura bu sprintte [EK]"><span class="stamp"><svg class="ic s"><use href="#i-check"/></svg>planda</span><span class="cn">Kuzey Lojistik</span><span class="ft">Tahsilat Döngüsü</span><span class="dl"><svg class="ic s"><use href="#i-clock"/></svg>gelecek çeyrek sonu</span></div>
+</div></div>
+<div><div class="sh">ALANLAR</div>
+<div class="area" title="Yeterli: fatura kesme çalışıyor, tahsilat takibi zayıf"><span class="an">Çekirdek</span><span class="lv"><i class="on"></i><i class="on"></i><i class="up"></i></span></div>
+<div class="area weak" title="Zayıf: muhasebe programına aktarım yok"><span class="an">Entegrasyonlar<svg class="ic s"><use href="#i-warn"/></svg></span><span class="lv weak"><i class="on"></i><i></i><i></i></span></div>
+<div class="area" title="Yeterli: kurulum bir günde biter"><span class="an">Güven &amp; Ölçek</span><span class="lv"><i class="on"></i><i class="on"></i><i></i></span></div>
+<div class="area"><span class="an">Defter</span><span class="lv"><i class="up"></i><i></i><i></i></span></div>
+<div class="area"><span class="an">Stok</span><span class="lv"><i class="up"></i><i></i><i></i></span></div>
+</div>
+</aside>
+<div class="main">
+<div class="mh"><span class="sn">SPRINT 21</span>
+<span class="goal">Bu çeyrek: <b>Entegrasyonlar</b><svg class="ic s"><use href="#i-chev"/></svg></span>
+<div class="pm nopm"><span class="ghosth"></span><div class="kv"><small>Ürün yöneticisi</small><b style="font-size:18px;color:var(--i4)">yok</b></div></div>
+</div>
+<div class="gr">
+<div class="leg"><span class="cnt">6<small>kart</small></span><span class="ky"><span><i class="lf"></i>iş</span><span><i class="lc"></i>ekip</span><span><i class="lo"></i>kalır</span></span></div>
+<div class="g tas"><div class="gt"><svg class="ic"><use href="#i-tas"/></svg>Tasarım<span class="nums"><b>26</b>/ 66</span></div><div class="gb"><i class="f" style="--f:39.4%"></i><i class="cap" style="--k:100%"></i></div></div>
+<div class="g gel"><div class="gt"><svg class="ic"><use href="#i-gel"/></svg>Geliştirme<span class="nums"><b>106</b>/ 160</span></div><div class="gb"><i class="f" style="--f:66.3%"></i><i class="cap" style="--k:100%"></i></div></div>
+<div class="g tst over hot"><div class="gt"><svg class="ic"><use href="#i-tst"/></svg>Test<span class="nums"><b>54</b>/ 36<em class="ovn"><svg class="ic s"><use href="#i-up"/></svg>18</em></span></div><span class="stk"><span class="streak"><i></i><i></i><i></i></span>3. sprint</span><div class="gb"><i class="f" style="--f:66.7%"></i><i class="ov" style="--k:66.7%;--o:33.3%"></i><i class="cap" style="--k:66.7%"></i></div></div>
+</div>
+<div class="rows">
+<div class="r">
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-fix"/></svg><span class="nmt">Fatura düzeltmesi</span><span class="sp">20</span></div>
+<div class="chips"><span class="ch"><svg class="ic s"><use href="#i-bug"/></svg><b>7</b></span><span class="ch"><svg class="ic s"><use href="#i-acct"/></svg><b>4</b></span><span class="ch"><svg class="ic s"><use href="#i-user"/></svg><b>190</b></span></div></div>
+<div class="sc none"></div>
+<div class="sc gel"><div class="top"><span class="rq">1★</span><div class="bar"><i style="--w:58.3%"></i></div><span class="v">14</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-kaa"><use href="#hs"/></svg></span></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i style="--w:25%"></i></div><span class="v">6</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-cem"><use href="#hs"/></svg></span></span></div></div>
+</div>
+<div class="r">
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Toplu Fatura</span><span class="oz"><svg class="ic s"><use href="#i-care"/></svg></span><span class="sp">42</span></div>
+<div class="chips"><span class="ch cu"><svg class="ic s"><use href="#i-acct"/></svg>Kuzey Lojistik<svg class="ic s" style="color:var(--i4)"><use href="#i-clock"/></svg></span><span class="ch"><svg class="ic s"><use href="#i-up"/></svg>Çekirdek</span></div></div>
+<div class="sc tas"><div class="top"><div class="bar"><i style="--w:33.3%"></i></div><span class="v">8</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-ece"><use href="#hl"/></svg></span></span><span class="wk e1"><b>1</b><b>2</b></span></div></div>
+<div class="sc gel"><div class="top"><span class="rq">2★</span><div class="bar"><i style="--w:100%"></i></div><span class="v">24</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-den"><use href="#hs"/></svg></span><span class="av"><svg class="p-onu"><use href="#hs"/></svg></span></span><span class="wk e2"><b>1</b><b>2</b></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i style="--w:41.7%"></i></div><span class="v">10</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-ays"><use href="#hb"/></svg></span></span><span class="wk e2"><b>1</b><b>2</b></span></div></div>
+</div>
+<div class="r">
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Hesap Planı</span><span class="oz"><svg class="ic s"><use href="#i-care"/></svg></span><span class="sp">33</span></div>
+<div class="chips"><span class="ch"><svg class="ic s"><use href="#i-up"/></svg>Defter <b>0 → 1</b></span></div></div>
+<div class="sc tas"><div class="top"><div class="bar"><i style="--w:37.5%"></i></div><span class="v">9</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-giz"><use href="#hl"/></svg></span></span></div></div>
+<div class="sc gel"><div class="top"><div class="bar"><i style="--w:66.7%"></i></div><span class="v">16</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-mer"><use href="#hs"/></svg></span><span class="av"><svg class="p-zey"><use href="#hb"/></svg></span></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i style="--w:12.5%"></i><i class="k" style="--w:20.8%"></i></div><span class="v">8</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-ays"><use href="#hb"/></svg></span></span><span class="wk"><b>1</b><b>2</b><b class="cr">5</b></span></div></div>
+</div>
+<div class="r">
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Stok Sayacı</span><span class="sp">37</span></div>
+<div class="chips"><span class="ch"><svg class="ic s"><use href="#i-up"/></svg>Stok <b>0 → 1</b></span></div></div>
+<div class="sc tas"><div class="top"><div class="bar"><i style="--w:8.3%"></i></div><span class="v">2</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-def"><use href="#hl"/></svg></span></span></div></div>
+<div class="sc gel"><div class="top"><span class="rq">1★</span><div class="bar"><i style="--w:91.7%"></i></div><span class="v">22</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-brk"><use href="#hs"/></svg></span><span class="av fd"><svg class="p-kur"><use href="#hs"/></svg></span></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i class="k" style="--w:54.2%"></i></div><span class="v">13</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-cem"><use href="#hs"/></svg></span></span><span class="wk"><b>1</b><b>2</b><b class="cr">13</b></span></div></div>
+</div>
+<div class="r">
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Tablo İçe Aktarma</span><span class="sp">25</span></div></div>
+<div class="sc tas"><div class="top"><div class="bar"><i style="--w:16.7%"></i></div><span class="v">4</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-def"><use href="#hl"/></svg></span></span></div></div>
+<div class="sc gel"><div class="top"><span class="rq">2★</span><div class="bar"><i style="--w:66.7%"></i></div><span class="v">16</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-den"><use href="#hs"/></svg></span></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i style="--w:20.8%"></i></div><span class="v">5</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-cem"><use href="#hs"/></svg></span></span></div></div>
+</div>
+<div class="r">
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Kasa Hareketleri</span><span class="sp">29</span></div></div>
+<div class="sc tas"><div class="top"><div class="bar"><i style="--w:12.5%"></i></div><span class="v">3</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-giz"><use href="#hl"/></svg></span></span></div></div>
+<div class="sc gel"><div class="top"><span class="rq">1★</span><div class="bar"><i style="--w:58.3%"></i></div><span class="v">14</span></div><div class="bot"><span class="ppl"><span class="av fd"><svg class="p-kur"><use href="#hs"/></svg></span></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i style="--w:50%"></i></div><span class="v">12</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-ays"><use href="#hb"/></svg></span></span></div></div>
+</div>
+</div>
+<div class="tm"><div class="lab"><b>12</b>kişi</div>
+<div class="crew">
+<span class="pp"><span class="av m"><svg class="p-ece"><use href="#hl"/></svg></span><i class="st" style="--s:3"></i></span>
+<span class="pp"><span class="av m"><svg class="p-def"><use href="#hl"/></svg></span><i class="st" style="--s:2"></i></span>
+<span class="pp"><span class="av m"><svg class="p-giz"><use href="#hl"/></svg></span><i class="st" style="--s:3"></i></span></div>
+<div class="crew">
+<span class="pp"><span class="av m fd"><svg class="p-kur"><use href="#hs"/></svg></span><i class="st" style="--s:3"></i></span>
+<span class="pp"><span class="av m"><svg class="p-mer"><use href="#hs"/></svg></span><i class="st" style="--s:4"></i></span>
+<span class="pp"><span class="av m"><svg class="p-zey"><use href="#hb"/></svg></span><i class="st" style="--s:4"></i></span>
+<span class="pp"><span class="av m"><svg class="p-den"><use href="#hs"/></svg></span><i class="st" style="--s:3"></i></span>
+<span class="pp"><span class="av m"><svg class="p-brk"><use href="#hs"/></svg></span><i class="st" style="--s:3"></i></span>
+<span class="pp"><span class="av m"><svg class="p-kaa"><use href="#hs"/></svg></span><i class="st" style="--s:2"></i></span>
+<span class="pp"><span class="av m"><svg class="p-onu"><use href="#hs"/></svg></span><i class="st" style="--s:2"></i></span></div>
+<div class="crew">
+<span class="pp"><span class="av m"><svg class="p-ays"><use href="#hb"/></svg></span><i class="st" style="--s:3"></i></span>
+<span class="pp"><span class="av m"><svg class="p-cem"><use href="#hs"/></svg></span><i class="st" style="--s:1"></i></span></div>
+</div>
+<div class="ab">
+<div class="rt"><span class="btn dis"><svg class="ic s"><use href="#i-lock"/></svg>Planlamayı devret</span><span class="btn pri">Sprint'i başlat</span></div></div>
+</div>
+<aside class="nx">
+<div class="nh"><b>SPRINT 22</b><span>sonraki</span></div>
+<div class="nc carry"><div class="t"><svg class="ic ty" style="color:var(--warn)"><use href="#i-tst"/></svg><span class="nmt">Test kalanı</span><span class="sp">18</span></div><div class="nr">Hesap Planı · Stok Sayacı</div></div>
+<div class="nc pull"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Depo ve Raf</span><span class="sp">22</span></div><div class="seg"><i class="a" style="flex:4"></i><i class="b" style="flex:12"></i><i class="c" style="flex:6"></i></div><div class="nr"><span class="wk e2"><b>1</b><b>2</b></span></div></div>
+<div class="nc"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Nakit Akış Tablosu</span><span class="sp">23</span></div><div class="seg"><i class="a" style="flex:3"></i><i class="b" style="flex:14"></i><i class="c" style="flex:6"></i></div></div>
+</aside>
+</div>
+<div class="tip" style="left:880px;top:204px;width:330px;--ax:250px">
+<h4><svg class="ic l" style="color:var(--tst)"><use href="#i-tst"/></svg>Test<span class="sp" style="margin-left:auto;font-family:var(--mono);font-size:16px;font-weight:500">iş 54 · ekip 36</span></h4>
+<div class="tline" style="margin-top:8px;color:var(--warn)"><svg class="ic s"><use href="#i-up"/></svg><span style="color:var(--i1)">18 puan sonraki sprinte kalır</span></div>
+<div class="lbl">TESTTE KALACAK</div>
+<div class="tline" style="margin-top:0"><span class="ch"><b>Hesap Planı</b> 33</span><span class="ch"><b>Stok Sayacı</b> 37</span></div>
+<div class="tline" style="margin-top:12px;color:var(--i2)"><span class="streak"><i></i><i></i><i></i></span>Bu sorun 3 sprinttir sürüyor.</div>
+</div>
+</div></div>
+
+<!-- ============ 08 ============ -->
+<div class="cap"><span class="no">08</span><b>12 kişi, iki PM</b><span class="d">PM kutusu iki kişiyi yan yana tartar: Selin 4★ iki büyük kartta −20 SP ve ×0,7; Can 2★ küçük kartta −2 SP ve ×0,85. Boş yer satırında en dar aşama Tasarım: +44 SP [EK hesap].</span></div>
+<div class="fw"><div class="frame">
+<div class="chrome"><span class="brand">ÜRÜN</span><span class="prod"><b>Ledgerly</b> · B2B ERP · v1.4</span>
+<nav class="tabs"><span class="tab">GENEL BAKIŞ</span><span class="tab on">SPRINT</span><span class="tab">ÇEYREK</span></nav>
+<span class="hist">Geçmiş <i class="tg"></i></span><svg class="ic l xx"><use href="#i-x"/></svg></div>
+<div class="bd">
+<aside class="side">
+<div><div class="sh">TALEPLER</div><div class="reqs">
+<div class="req" title="$9.600/yıl · Entegrasyonlar"><span class="cn">Ege Sigorta</span><span class="ft">Çoklu Entegrasyon</span><span class="dl now"><svg class="ic s"><use href="#i-clock"/></svg>bu çeyrek sonu</span></div>
+<div class="req" title="$4.800/yıl · Toplu Fatura bu sprintte [EK]"><span class="stamp"><svg class="ic s"><use href="#i-check"/></svg>planda</span><span class="cn">Kuzey Lojistik</span><span class="ft">Tahsilat Döngüsü</span><span class="dl"><svg class="ic s"><use href="#i-clock"/></svg>gelecek çeyrek sonu</span></div>
+</div></div>
+<div><div class="sh">ALANLAR</div>
+<div class="area" title="Yeterli: fatura kesme çalışıyor, tahsilat takibi zayıf"><span class="an">Çekirdek</span><span class="lv"><i class="on"></i><i class="on"></i><i class="up"></i></span></div>
+<div class="area weak" title="Zayıf: muhasebe programına aktarım yok"><span class="an">Entegrasyonlar<svg class="ic s"><use href="#i-warn"/></svg></span><span class="lv weak"><i class="on"></i><i></i><i></i></span></div>
+<div class="area" title="Yeterli: kurulum bir günde biter"><span class="an">Güven &amp; Ölçek</span><span class="lv"><i class="on"></i><i class="on"></i><i></i></span></div>
+<div class="area" title="Otomatik Mutabakat Defter'i 2'den 3'e çıkarır"><span class="an">Defter</span><span class="lv"><i class="on"></i><i class="on"></i><i class="up"></i></span></div>
+<div class="area" title="Stok Sayacı Stok'u 0'dan 1'e çıkarır"><span class="an">Stok</span><span class="lv"><i class="up"></i><i></i><i></i></span></div>
+</div>
+</aside>
+<div class="main">
+<div class="mh"><span class="sn">SPRINT 18</span>
+<span class="goal">Bu çeyrek: <b>Çekirdek</b><svg class="ic s"><use href="#i-chev"/></svg></span>
+<div class="pm" title="En karmaşık kartı en iyi ürün yöneticisi, basit kartı onu hazırlamaya yeten ürün yöneticisi hazırlar.">
+<div class="pmu" title="Selin 4★ · hazırlık 20/hf · hız +%25 · hata ×0,7"><span class="who"><span class="av l"><svg class="p-sel"><use href="#hl"/></svg></span><i class="st" style="--s:4"></i></span>
+<div class="kv"><b class="gn">−20 SP</b><small>2 kart</small></div>
+<div class="kv"><span class="risk" style="--r:70%"></span><small>hata ×0,7</small></div></div>
+<span class="vsep"></span>
+<div class="pmu" title="Can 2★ · hazırlık 15/hf · hız +%15 · hata ×0,85"><span class="who"><span class="av l"><svg class="p-can"><use href="#hs"/></svg></span><i class="st" style="--s:2"></i></span>
+<div class="kv"><b class="gn">−2 SP</b><small>1 kart</small></div>
+<div class="kv"><span class="risk" style="--r:85%"></span><small>hata ×0,85</small></div></div>
+</div>
+</div>
+<div class="gr">
+<div class="leg"><span class="cnt">3<small>kart</small></span><span class="ky"><span><i class="lf"></i>iş</span><span><i class="lc"></i>ekip</span><span><i class="lp"></i>boş</span></span></div>
+<div class="g tas"><div class="gt"><svg class="ic"><use href="#i-tas"/></svg>Tasarım<span class="nums"><b>16</b>/ 24</span></div><div class="gb"><i class="f" style="--f:66.7%"></i><i class="cap" style="--k:100%"></i></div></div>
+<div class="g gel"><div class="gt"><svg class="ic"><use href="#i-gel"/></svg>Geliştirme<span class="nums"><b>52</b>/ 160</span></div><div class="gb"><i class="f" style="--f:32.5%"></i><i class="cap" style="--k:100%"></i></div></div>
+<div class="g tst"><div class="gt"><svg class="ic"><use href="#i-tst"/></svg>Test<span class="nums"><b>23</b>/ 36</span></div><div class="gb"><i class="f" style="--f:63.9%"></i><i class="cap" style="--k:100%"></i></div></div>
+</div>
+<div class="rows">
+<div class="r"><span class="ra"><svg class="ic s"><use href="#i-x"/></svg>Çıkar</span>
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Otomatik Mutabakat</span><span class="oz" title="Özenli"><svg class="ic s"><use href="#i-care"/></svg></span><span class="sp">43</span></div>
+<div class="chips"><span class="ch" title="Selin 4★ hazırladı · hız +%25 · hata ×0,7"><span class="av xs"><svg class="p-sel"><use href="#hl"/></svg></span><s>54</s>→<b>43</b></span><span class="ch" title="Defter 2 → 3"><svg class="ic s"><use href="#i-up"/></svg>Defter <b>2 → 3</b></span></div></div>
+<div class="sc tas"><div class="top"><div class="bar"><i style="--w:33.3%"></i></div><span class="v">8</span></div><div class="bot"><span class="ppl"><span class="av" title="Ece · 3★"><svg class="p-ece"><use href="#hl"/></svg></span></span></div></div>
+<div class="sc gel"><div class="top"><span class="rq" title="Geliştirme en az 3★">3★</span><div class="bar"><i style="--w:100%"></i></div><span class="v">24</span></div><div class="bot"><span class="ppl"><span class="av" title="Mert · 4★"><svg class="p-mer"><use href="#hs"/></svg></span><span class="av" title="Zeynep · 4★"><svg class="p-zey"><use href="#hb"/></svg></span></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i style="--w:45.8%"></i></div><span class="v">11</span></div><div class="bot"><span class="ppl"><span class="av" title="Ayşe · 3★"><svg class="p-ays"><use href="#hb"/></svg></span></span></div></div>
+</div>
+<div class="r"><span class="ra"><svg class="ic s"><use href="#i-x"/></svg>Çıkar</span>
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Toplu Fatura</span><span class="oz" title="Özenli"><svg class="ic s"><use href="#i-care"/></svg></span><span class="sp">33</span></div>
+<div class="chips"><span class="ch" title="Selin 4★ hazırladı · hız +%25 · hata ×0,7"><span class="av xs"><svg class="p-sel"><use href="#hl"/></svg></span><s>42</s>→<b>33</b></span><span class="ch cu" title="Kuzey Lojistik · $4.800/yıl · gelecek çeyrek sonu [EK]"><svg class="ic s"><use href="#i-acct"/></svg>Kuzey Lojistik<svg class="ic s" style="color:var(--i4)"><use href="#i-clock"/></svg></span></div></div>
+<div class="sc tas"><div class="top"><div class="bar"><i style="--w:25%"></i></div><span class="v">6</span></div><div class="bot"><span class="ppl"><span class="av" title="Ece · 3★"><svg class="p-ece"><use href="#hl"/></svg></span></span></div></div>
+<div class="sc gel"><div class="top"><span class="rq" title="Geliştirme en az 2★">2★</span><div class="bar"><i style="--w:79.2%"></i></div><span class="v">19</span></div><div class="bot"><span class="ppl"><span class="av" title="Deniz · 3★"><svg class="p-den"><use href="#hs"/></svg></span><span class="av" title="Burak · 3★"><svg class="p-brk"><use href="#hs"/></svg></span></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i style="--w:33.3%"></i></div><span class="v">8</span></div><div class="bot"><span class="ppl"><span class="av" title="Ayşe · 3★"><svg class="p-ays"><use href="#hb"/></svg></span></span></div></div>
+</div>
+<div class="r"><span class="ra"><svg class="ic s"><use href="#i-x"/></svg>Çıkar</span>
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Stok Sayacı</span><span class="sp">15</span></div>
+<div class="chips"><span class="ch" title="Can 2★ hazırladı · hız +%15 · hata ×0,85"><span class="av xs"><svg class="p-can"><use href="#hs"/></svg></span><s>17</s>→<b>15</b></span><span class="ch" title="Stok 0 → 1"><svg class="ic s"><use href="#i-up"/></svg>Stok <b>0 → 1</b></span></div></div>
+<div class="sc tas"><div class="top"><div class="bar"><i style="--w:8.3%"></i></div><span class="v">2</span></div><div class="bot"><span class="ppl"><span class="av" title="Ece · 3★ · ekibin tek tasarımcısı, üç kartın Tasarım'ını da yapar"><svg class="p-ece"><use href="#hl"/></svg></span></span></div></div>
+<div class="sc gel"><div class="top"><span class="rq" title="Geliştirme en az 1★">1★</span><div class="bar"><i style="--w:37.5%"></i></div><span class="v">9</span></div><div class="bot"><span class="ppl"><span class="av" title="Kaan · 2★"><svg class="p-kaa"><use href="#hs"/></svg></span></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i style="--w:16.7%"></i></div><span class="v">4</span></div><div class="bot"><span class="ppl"><span class="av" title="Cem · 1★"><svg class="p-cem"><use href="#hs"/></svg></span></span></div></div>
+</div>
+<div class="r free" title="Boş kapasite: Tasarım 8 · Geliştirme 108 · Test 13. En dar aşama Tasarım.">
+<div class="nm"><div class="t"><span class="nmt">Boş yer</span></div></div>
+<div class="sc tas nar"><div class="top"><div class="bar"><i class="fr" style="--w:33.3%"></i></div><span class="v">8</span></div></div>
+<div class="sc gel"><div class="top"><div class="bar"><i class="fr" style="--w:100%"></i></div><span class="v">108</span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i class="fr" style="--w:54.2%"></i></div><span class="v">13</span></div></div>
+</div>
+</div>
+<div class="tm"><div class="lab"><b>12</b>kişi</div>
+<div class="crew"><span class="pp" title="Ece · 3★ · Tasarım 12/hf"><span class="av m"><svg class="p-ece"><use href="#hl"/></svg></span><i class="st" style="--s:3"></i></span></div>
+<div class="crew">
+<span class="pp" title="Kurucu · 3★ · Geliştirme 8/hf"><span class="av m fd"><svg class="p-kur"><use href="#hs"/></svg></span><i class="st" style="--s:3"></i></span>
+<span class="pp" title="Mert · 4★"><span class="av m"><svg class="p-mer"><use href="#hs"/></svg></span><i class="st" style="--s:4"></i></span>
+<span class="pp" title="Zeynep · 4★"><span class="av m"><svg class="p-zey"><use href="#hb"/></svg></span><i class="st" style="--s:4"></i></span>
+<span class="pp" title="Deniz · 3★"><span class="av m"><svg class="p-den"><use href="#hs"/></svg></span><i class="st" style="--s:3"></i></span>
+<span class="pp" title="Burak · 3★"><span class="av m"><svg class="p-brk"><use href="#hs"/></svg></span><i class="st" style="--s:3"></i></span>
+<span class="pp" title="Kaan · 2★"><span class="av m"><svg class="p-kaa"><use href="#hs"/></svg></span><i class="st" style="--s:2"></i></span>
+<span class="pp" title="Onur · 2★"><span class="av m"><svg class="p-onu"><use href="#hs"/></svg></span><i class="st" style="--s:2"></i></span></div>
+<div class="crew">
+<span class="pp" title="Ayşe · 3★"><span class="av m"><svg class="p-ays"><use href="#hb"/></svg></span><i class="st" style="--s:3"></i></span>
+<span class="pp" title="Cem · 1★"><span class="av m"><svg class="p-cem"><use href="#hs"/></svg></span><i class="st" style="--s:1"></i></span></div>
+</div>
+<div class="ab">
+<div class="sug" title="En dar aşama Tasarım (8 SP boş)."><span class="n">+44<small>SP</small></span><span class="tx">bu sprinte<br>daha alınabilir</span><span class="btn sm">Öneriyi uygula</span></div>
+<div class="rt"><span class="btn" title="Devir en yüksek ★'lı ürün yöneticisine gider. Her sprint önerilen planla kendiliğinden başlar."><span class="av xs"><svg class="p-sel"><use href="#hl"/></svg></span>Planlamayı devret: Selin</span><span class="btn pri">Sprint'i başlat</span></div></div>
+</div>
+<aside class="nx">
+<div class="nh"><b>SPRINT 19</b><span>sonraki</span></div>
+<div class="nc pull" title="Ekip 2. haftada çeker"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Stok Uyarısı</span><span class="sp">22</span></div><div class="seg"><i class="a" style="flex:4"></i><i class="b" style="flex:12"></i><i class="c" style="flex:6"></i></div><div class="nr"><span class="wk e2"><b>1</b><b>2</b></span></div></div>
+</aside>
+</div></div></div>
+
+<!-- ============ 09 ============ -->
+<div class="cap"><span class="no">09</span><b>50 kişi, planlama PM'de</b><span class="d">24 kart hazırlayan PM'e göre gruplanır; grup başlığı PM'in kazancını yazar (Selin −72, Burcu −27, Can −7). Kadro yüz kümesi, boşta 6 kişi soluk. Başlat yerine "Selin planlıyor" ve geri al.</span></div>
+<div class="fw"><div class="frame">
+<div class="chrome"><span class="brand">ÜRÜN</span><span class="prod"><b>Ledgerly</b> · B2B ERP · v1.4</span>
+<nav class="tabs"><span class="tab">GENEL BAKIŞ</span><span class="tab on">SPRINT</span><span class="tab">ÇEYREK</span></nav>
+<span class="hist">Geçmiş <i class="tg"></i></span><svg class="ic l xx"><use href="#i-x"/></svg></div>
+<div class="bd">
+<aside class="side">
+<div><div class="sh">TALEPLER</div><div class="reqs">
+<div class="req" title="$9.600/yıl · Çoklu Entegrasyon bu sprintte"><span class="stamp"><svg class="ic s"><use href="#i-check"/></svg>planda</span><span class="cn">Ege Sigorta</span><span class="ft">Çoklu Entegrasyon</span><span class="dl now"><svg class="ic s"><use href="#i-clock"/></svg>bu çeyrek sonu</span></div>
+<div class="req" title="$4.800/yıl · Tahsilat Döngüsü bu sprintte"><span class="stamp"><svg class="ic s"><use href="#i-check"/></svg>planda</span><span class="cn">Kuzey Lojistik</span><span class="ft">Tahsilat Döngüsü</span><span class="dl"><svg class="ic s"><use href="#i-clock"/></svg>gelecek çeyrek sonu</span></div>
+</div></div>
+<div><div class="sh">ALANLAR</div>
+<div class="area" title="Yeterli: fatura kesme çalışıyor, tahsilat takibi zayıf"><span class="an">Çekirdek</span><span class="lv"><i class="on"></i><i class="on"></i><i></i></span></div>
+<div class="area weak" title="Zayıf: muhasebe programına aktarım yok"><span class="an">Entegrasyonlar<svg class="ic s"><use href="#i-warn"/></svg></span><span class="lv weak"><i class="on"></i><i></i><i></i></span></div>
+<div class="area" title="Yeterli: kurulum bir günde biter"><span class="an">Güven &amp; Ölçek</span><span class="lv"><i class="on"></i><i class="on"></i><i></i></span></div>
+</div>
+</aside>
+<div class="main">
+<div class="mh"><span class="sn">SPRINT 31</span>
+<span class="goal">Bu çeyrek: <b>Entegrasyonlar</b><svg class="ic s"><use href="#i-chev"/></svg></span>
+<div class="pm" title="En karmaşık kartı en iyi ürün yöneticisi, basit kartı onu hazırlamaya yeten ürün yöneticisi hazırlar." style="gap:10px">
+<div class="pmu" title="Selin 5★ · hız +%30 · hata ×0,6"><span class="who"><span class="av m"><svg class="p-sel"><use href="#hl"/></svg></span><i class="st" style="--s:5"></i></span><div class="kv"><b class="gn" style="font-size:20px">−72</b><span class="risk" style="--r:60%;width:45px"></span></div></div>
+<span class="vsep"></span>
+<div class="pmu" title="Burcu 3★ · hız +%20 · hata ×0,75"><span class="who"><span class="av m"><svg class="p-bur"><use href="#hb"/></svg></span><i class="st" style="--s:3"></i></span><div class="kv"><b class="gn" style="font-size:20px">−27</b><span class="risk" style="--r:75%;width:45px"></span></div></div>
+<span class="vsep"></span>
+<div class="pmu" title="Can 2★ · hız +%15 · hata ×0,85"><span class="who"><span class="av m"><svg class="p-can"><use href="#hs"/></svg></span><i class="st" style="--s:2"></i></span><div class="kv"><b class="gn" style="font-size:20px">−7</b><span class="risk" style="--r:85%;width:45px"></span></div></div>
+</div>
+</div>
+<div class="gr">
+<div class="leg"><span class="cnt">24<small>kart</small></span><span class="ky"><span><i class="lf"></i>iş</span><span><i class="lc"></i>ekip</span></span></div>
+<div class="g tas"><div class="gt"><svg class="ic"><use href="#i-tas"/></svg>Tasarım<span class="nums"><b>121</b>/ 138</span></div><div class="gb"><i class="f" style="--f:87.7%"></i><i class="cap" style="--k:100%"></i></div></div>
+<div class="g gel"><div class="gt"><svg class="ic"><use href="#i-gel"/></svg>Geliştirme<span class="nums"><b>308</b>/ 350</span></div><div class="gb"><i class="f" style="--f:88%"></i><i class="cap" style="--k:100%"></i></div></div>
+<div class="g tst"><div class="gt"><svg class="ic"><use href="#i-tst"/></svg>Test<span class="nums"><b>143</b>/ 163</span></div><div class="gb"><i class="f" style="--f:87.7%"></i><i class="cap" style="--k:100%"></i></div></div>
+</div>
+<div class="rows" style="gap:3px">
+<span class="scrl"></span>
+<div class="grp"><span class="av xs"><svg class="p-sel"><use href="#hl"/></svg></span><b>Selin</b><i class="st" style="--s:5"></i><span>8 kart</span><span class="ln"></span><span class="sav">−72 SP</span></div>
+<div class="r c"><div class="nm"><div class="t"><span class="nmt">Tahsilat Döngüsü</span><span class="oz" title="Kuzey Lojistik · gelecek çeyrek sonu"><svg class="ic s"><use href="#i-acct"/></svg></span><span class="sp">31</span></div></div><div class="sc tas"><div class="top"><div class="bar"><i style="--w:18.2%"></i></div><span class="v">4</span></div></div><div class="sc gel"><div class="top"><div class="bar"><i style="--w:72.7%"></i></div><span class="v">16</span></div></div><div class="sc tst"><div class="top"><div class="bar"><i style="--w:50%"></i></div><span class="v">11</span></div></div></div>
+<div class="r c"><div class="nm"><div class="t"><span class="nmt">Otomatik Mutabakat</span><span class="sp">31</span></div></div><div class="sc tas"><div class="top"><div class="bar"><i style="--w:50%"></i></div><span class="v">11</span></div></div><div class="sc gel"><div class="top"><div class="bar"><i style="--w:63.6%"></i></div><span class="v">14</span></div></div><div class="sc tst"><div class="top"><div class="bar"><i style="--w:27.3%"></i></div><span class="v">6</span></div></div></div>
+<div class="r c"><div class="nm"><div class="t"><span class="nmt">El Terminali</span><span class="sp">31</span></div></div><div class="sc tas"><div class="top"><div class="bar"><i style="--w:22.7%"></i></div><span class="v">5</span></div></div><div class="sc gel"><div class="top"><div class="bar"><i style="--w:90.9%"></i></div><span class="v">20</span></div></div><div class="sc tst"><div class="top"><div class="bar"><i style="--w:27.3%"></i></div><span class="v">6</span></div></div></div>
+<div class="r c"><div class="nm"><div class="t"><span class="nmt">Nakit Öngörüsü</span><span class="sp">31</span></div></div><div class="sc tas"><div class="top"><div class="bar"><i style="--w:18.2%"></i></div><span class="v">4</span></div></div><div class="sc gel"><div class="top"><div class="bar"><i style="--w:72.7%"></i></div><span class="v">16</span></div></div><div class="sc tst"><div class="top"><div class="bar"><i style="--w:50%"></i></div><span class="v">11</span></div></div></div>
+<div class="r c"><div class="nm"><div class="t"><span class="nmt">Açık API &amp; Webhook</span><span class="sp">31</span></div></div><div class="sc tas"><div class="top"><div class="bar"><i style="--w:22.7%"></i></div><span class="v">5</span></div></div><div class="sc gel"><div class="top"><div class="bar"><i style="--w:90.9%"></i></div><span class="v">20</span></div></div><div class="sc tst"><div class="top"><div class="bar"><i style="--w:27.3%"></i></div><span class="v">6</span></div></div></div>
+<div class="r c"><div class="nm"><div class="t"><span class="nmt">Denetim İzi &amp; Şifreleme</span><span class="sp">31</span></div></div><div class="sc tas"><div class="top"><div class="bar"><i style="--w:18.2%"></i></div><span class="v">4</span></div></div><div class="sc gel"><div class="top"><div class="bar"><i style="--w:72.7%"></i></div><span class="v">16</span></div></div><div class="sc tst"><div class="top"><div class="bar"><i style="--w:50%"></i></div><span class="v">11</span></div></div></div>
+<div class="r c"><div class="nm"><div class="t"><span class="nmt">Çevrimdışı Çalışma</span><span class="sp">31</span></div></div><div class="sc tas"><div class="top"><div class="bar"><i style="--w:50%"></i></div><span class="v">11</span></div></div><div class="sc gel"><div class="top"><div class="bar"><i style="--w:63.6%"></i></div><span class="v">14</span></div></div><div class="sc tst"><div class="top"><div class="bar"><i style="--w:27.3%"></i></div><span class="v">6</span></div></div></div>
+<div class="r c"><div class="nm"><div class="t"><span class="nmt">Çevrimdışı Mobil</span><span class="sp">31</span></div></div><div class="sc tas"><div class="top"><div class="bar"><i style="--w:22.7%"></i></div><span class="v">5</span></div></div><div class="sc gel"><div class="top"><div class="bar"><i style="--w:90.9%"></i></div><span class="v">20</span></div></div><div class="sc tst"><div class="top"><div class="bar"><i style="--w:27.3%"></i></div><span class="v">6</span></div></div></div>
+<div class="grp"><span class="av xs"><svg class="p-bur"><use href="#hb"/></svg></span><b>Burcu</b><i class="st" style="--s:3"></i><span>7 kart</span><span class="ln"></span><span class="sav">−27 SP</span></div>
+<div class="r c"><div class="nm"><div class="t"><span class="nmt">Hesap Planı</span><span class="sp">22</span></div></div><div class="sc tas"><div class="top"><div class="bar"><i style="--w:13.6%"></i></div><span class="v">3</span></div></div><div class="sc gel"><div class="top"><div class="bar"><i style="--w:50%"></i></div><span class="v">11</span></div></div><div class="sc tst"><div class="top"><div class="bar"><i style="--w:36.4%"></i></div><span class="v">8</span></div></div></div>
+<div class="r c"><div class="nm"><div class="t"><span class="nmt">Depo ve Raf</span><span class="sp">21</span></div></div><div class="sc tas"><div class="top"><div class="bar"><i style="--w:36.4%"></i></div><span class="v">8</span></div></div><div class="sc gel"><div class="top"><div class="bar"><i style="--w:40.9%"></i></div><span class="v">9</span></div></div><div class="sc tst"><div class="top"><div class="bar"><i style="--w:18.2%"></i></div><span class="v">4</span></div></div></div>
+<div class="r c"><div class="nm"><div class="t"><span class="nmt">Nakit Akış Tablosu</span><span class="sp">20</span></div></div><div class="sc tas"><div class="top"><div class="bar"><i style="--w:13.6%"></i></div><span class="v">3</span></div></div><div class="sc gel"><div class="top"><div class="bar"><i style="--w:59.1%"></i></div><span class="v">13</span></div></div><div class="sc tst"><div class="top"><div class="bar"><i style="--w:18.2%"></i></div><span class="v">4</span></div></div></div>
+<div class="r c"><div class="nm"><div class="t"><span class="nmt">Tablo İçe Aktarma</span><span class="sp">22</span></div></div><div class="sc tas"><div class="top"><div class="bar"><i style="--w:13.6%"></i></div><span class="v">3</span></div></div><div class="sc gel"><div class="top"><div class="bar"><i style="--w:50%"></i></div><span class="v">11</span></div></div><div class="sc tst"><div class="top"><div class="bar"><i style="--w:36.4%"></i></div><span class="v">8</span></div></div></div>
+<div class="r c"><div class="nm"><div class="t"><span class="nmt">Roller ve İzinler</span><span class="sp">20</span></div></div><div class="sc tas"><div class="top"><div class="bar"><i style="--w:13.6%"></i></div><span class="v">3</span></div></div><div class="sc gel"><div class="top"><div class="bar"><i style="--w:59.1%"></i></div><span class="v">13</span></div></div><div class="sc tst"><div class="top"><div class="bar"><i style="--w:18.2%"></i></div><span class="v">4</span></div></div></div>
+<div class="r c"><div class="nm"><div class="t"><span class="nmt">Sürüm Geçmişi</span><span class="sp">22</span></div></div><div class="sc tas"><div class="top"><div class="bar"><i style="--w:13.6%"></i></div><span class="v">3</span></div></div><div class="sc gel"><div class="top"><div class="bar"><i style="--w:50%"></i></div><span class="v">11</span></div></div><div class="sc tst"><div class="top"><div class="bar"><i style="--w:36.4%"></i></div><span class="v">8</span></div></div></div>
+<div class="r c"><div class="nm"><div class="t"><span class="nmt">Mobil Uygulama</span><span class="sp">21</span></div></div><div class="sc tas"><div class="top"><div class="bar"><i style="--w:36.4%"></i></div><span class="v">8</span></div></div><div class="sc gel"><div class="top"><div class="bar"><i style="--w:40.9%"></i></div><span class="v">9</span></div></div><div class="sc tst"><div class="top"><div class="bar"><i style="--w:18.2%"></i></div><span class="v">4</span></div></div></div>
+<div class="grp"><span class="av xs"><svg class="p-can"><use href="#hs"/></svg></span><b>Can</b><i class="st" style="--s:2"></i><span>4 kart</span><span class="ln"></span><span class="sav">−7 SP</span></div>
+<div class="r c"><div class="nm"><div class="t"><span class="nmt">Fatura Kesme</span><span class="sp">13</span></div></div><div class="sc tas"><div class="top"><div class="bar"><i style="--w:18.2%"></i></div><span class="v">4</span></div></div><div class="sc gel"><div class="top"><div class="bar"><i style="--w:27.3%"></i></div><span class="v">6</span></div></div><div class="sc tst"><div class="top"><div class="bar"><i style="--w:13.6%"></i></div><span class="v">3</span></div></div></div>
+<div class="r c"><div class="nm"><div class="t"><span class="nmt">Stok Sayacı</span><span class="sp">13</span></div></div><div class="sc tas"><div class="top"><div class="bar"><i style="--w:9.1%"></i></div><span class="v">2</span></div></div><div class="sc gel"><div class="top"><div class="bar"><i style="--w:31.8%"></i></div><span class="v">7</span></div></div><div class="sc tst"><div class="top"><div class="bar"><i style="--w:18.2%"></i></div><span class="v">4</span></div></div></div>
+<div class="r c"><div class="nm"><div class="t"><span class="nmt">Kasa Hareketleri</span><span class="sp">13</span></div></div><div class="sc tas"><div class="top"><div class="bar"><i style="--w:18.2%"></i></div><span class="v">4</span></div></div><div class="sc gel"><div class="top"><div class="bar"><i style="--w:27.3%"></i></div><span class="v">6</span></div></div><div class="sc tst"><div class="top"><div class="bar"><i style="--w:13.6%"></i></div><span class="v">3</span></div></div></div>
+<div class="r c"><div class="nm"><div class="t"><span class="nmt">Elle Giriş</span><span class="sp">14</span></div></div><div class="sc tas"><div class="top"><div class="bar"><i style="--w:9.1%"></i></div><span class="v">2</span></div></div><div class="sc gel"><div class="top"><div class="bar"><i style="--w:40.9%"></i></div><span class="v">9</span></div></div><div class="sc tst"><div class="top"><div class="bar"><i style="--w:13.6%"></i></div><span class="v">3</span></div></div></div>
+<div class="grp"><span class="ghosth" style="width:16px;height:16px;border-width:1px"></span><b>Hazırlıksız</b><span>5 kart</span><span class="ln"></span><span class="sav" style="color:var(--i4)">0 SP</span></div>
+<div class="r c"><div class="nm"><div class="t"><svg class="ic s ty"><use href="#i-fix"/></svg><span class="nmt">Fatura düzeltmesi</span><span class="sp">18</span></div></div><div class="sc none"></div><div class="sc gel"><div class="top"><div class="bar"><i style="--w:54.5%"></i></div><span class="v">12</span></div></div><div class="sc tst"><div class="top"><div class="bar"><i style="--w:27.3%"></i></div><span class="v">6</span></div></div></div>
+<div class="r c"><div class="nm"><div class="t"><span class="nmt">Belge Okuma</span><span class="sp">40</span></div></div><div class="sc tas"><div class="top"><div class="bar"><i style="--w:63.6%"></i></div><span class="v">14</span></div></div><div class="sc gel"><div class="top"><div class="bar"><i style="--w:81.8%"></i></div><span class="v">18</span></div></div><div class="sc tst"><div class="top"><div class="bar"><i style="--w:36.4%"></i></div><span class="v">8</span></div></div></div>
+<div class="fade"><svg class="ic s"><use href="#i-down"/></svg>12 kart daha · Burcu 3 · Can 4 · hazırlıksız 5</div>
+</div>
+<div class="tm" style="padding-top:8px"><div class="lab"><b>50</b>kişi<span class="idn" title="Planlanacak kart kalmadı: 6 kişi bu sprint boşta."><span class="av xs idle"><svg class="p-g1"><use href="#hs"/></svg></span><span class="idc">6</span></span></div>
+<div class="crew dense" title="Tasarım · 5 kişi · 1 boşta">
+<span class="av xs"><svg class="p-ece"><use href="#hl"/></svg></span><span class="av xs"><svg class="p-giz"><use href="#hl"/></svg></span><span class="av xs"><svg class="p-g2"><use href="#hl"/></svg></span><span class="av xs"><svg class="p-g4"><use href="#hs"/></svg></span><span class="av xs idle"><svg class="p-def"><use href="#hl"/></svg></span></div>
+<div class="crew dense" title="Geliştirme · 24 kişi ve kurucu · 3 boşta">
+<span class="av xs fd"><svg class="p-kur"><use href="#hs"/></svg></span><span class="av xs"><svg class="p-mer"><use href="#hs"/></svg></span><span class="av xs"><svg class="p-zey"><use href="#hb"/></svg></span><span class="av xs"><svg class="p-den"><use href="#hs"/></svg></span><span class="av xs"><svg class="p-brk"><use href="#hs"/></svg></span><span class="av xs"><svg class="p-g1"><use href="#hs"/></svg></span><span class="av xs"><svg class="p-g2"><use href="#hl"/></svg></span><span class="av xs"><svg class="p-g3"><use href="#hs"/></svg></span><span class="av xs"><svg class="p-g4"><use href="#hb"/></svg></span><span class="av xs"><svg class="p-g5"><use href="#hs"/></svg></span>
+<span class="av xs"><svg class="p-g6"><use href="#hl"/></svg></span><span class="av xs"><svg class="p-g3"><use href="#hb"/></svg></span><span class="av xs"><svg class="p-g5"><use href="#hl"/></svg></span><span class="av xs"><svg class="p-g1"><use href="#hb"/></svg></span><span class="av xs"><svg class="p-g6"><use href="#hs"/></svg></span><span class="av xs"><svg class="p-g2"><use href="#hs"/></svg></span><span class="av xs"><svg class="p-g4"><use href="#hl"/></svg></span><span class="av xs"><svg class="p-g3"><use href="#hs"/></svg></span><span class="av xs"><svg class="p-g5"><use href="#hb"/></svg></span><span class="av xs"><svg class="p-g6"><use href="#hs"/></svg></span>
+<span class="av xs"><svg class="p-g1"><use href="#hl"/></svg></span><span class="av xs"><svg class="p-g2"><use href="#hb"/></svg></span><span class="av xs idle"><svg class="p-kaa"><use href="#hs"/></svg></span><span class="av xs idle"><svg class="p-onu"><use href="#hs"/></svg></span><span class="av xs idle"><svg class="p-g4"><use href="#hs"/></svg></span></div>
+<div class="crew dense" title="Test · 11 kişi · 2 boşta">
+<span class="av xs"><svg class="p-ays"><use href="#hb"/></svg></span><span class="av xs"><svg class="p-cem"><use href="#hs"/></svg></span><span class="av xs"><svg class="p-g3"><use href="#hl"/></svg></span><span class="av xs"><svg class="p-g5"><use href="#hs"/></svg></span><span class="av xs"><svg class="p-g6"><use href="#hb"/></svg></span><span class="av xs"><svg class="p-g1"><use href="#hs"/></svg></span><span class="av xs"><svg class="p-g2"><use href="#hl"/></svg></span><span class="av xs"><svg class="p-g4"><use href="#hs"/></svg></span><span class="av xs"><svg class="p-g6"><use href="#hl"/></svg></span><span class="av xs idle"><svg class="p-g3"><use href="#hs"/></svg></span><span class="av xs idle"><svg class="p-g5"><use href="#hb"/></svg></span></div>
+</div>
+<div class="ab">
+<div class="dlg" title="Planlamayı Selin yürütüyor. Her sprint önerilen planla kendiliğinden başlar."><span class="av l"><svg class="p-sel"><use href="#hl"/></svg></span><span class="tx"><b>Selin planlıyor</b></span><svg class="ic" style="color:var(--acc)"><use href="#i-auto"/></svg></div>
+<div class="rt"><span class="btn">Planlamayı geri al</span></div></div>
+</div>
+<aside class="nx">
+<div class="nh"><b>SPRINT 32</b><span>sonraki</span></div>
+<div class="nempty"><svg class="ic l"><use href="#i-pen"/></svg>Planlanacak kart yok</div>
+</aside>
+</div></div></div>
+
+<!-- ============ 10 ============ -->
+<div class="cap"><span class="no">10</span><b>Sprint sürüyor: 2. haftanın başı</b><span class="d">Durum 4'ün ekibi. Her kart kendi satırında hangi aşamada olduğunu çip ve çerçeveyle söyler; biten hücre dolu ve ✓, süren hücre kısmen dolu, bekleyen hücre boş çerçeve ve kum saati. [EK] gösterim verisi.</span></div>
+<div class="fw"><div class="frame">
+<div class="chrome"><span class="brand">ÜRÜN</span><span class="prod"><b>Ledgerly</b> · B2B ERP · v1.4</span>
+<nav class="tabs"><span class="tab">GENEL BAKIŞ</span><span class="tab on">SPRINT</span><span class="tab">ÇEYREK</span></nav>
+<span class="hist">Geçmiş <i class="tg"></i></span><svg class="ic l xx"><use href="#i-x"/></svg></div>
+<div class="bd">
+<aside class="side">
+<div><div class="sh">TALEPLER</div><div class="reqs">
+<div class="req" title="$9.600/yıl · Entegrasyonlar"><span class="cn">Ege Sigorta</span><span class="ft">Çoklu Entegrasyon</span><span class="dl now"><svg class="ic s"><use href="#i-clock"/></svg>bu çeyrek sonu</span></div>
+<div class="req" title="$4.800/yıl · Toplu Fatura bu sprintte [EK]"><span class="stamp"><svg class="ic s"><use href="#i-check"/></svg>planda</span><span class="cn">Kuzey Lojistik</span><span class="ft">Tahsilat Döngüsü</span><span class="dl"><svg class="ic s"><use href="#i-clock"/></svg>gelecek çeyrek sonu</span></div>
+</div></div>
+<div><div class="sh">ALANLAR</div>
+<div class="area"><span class="an">Çekirdek</span><span class="lv"><i class="on"></i><i class="on"></i><i class="up"></i></span></div>
+<div class="area weak"><span class="an">Entegrasyonlar<svg class="ic s"><use href="#i-warn"/></svg></span><span class="lv weak"><i class="on"></i><i></i><i></i></span></div>
+<div class="area"><span class="an">Güven &amp; Ölçek</span><span class="lv"><i class="on"></i><i class="on"></i><i></i></span></div>
+</div>
+</aside>
+<div class="main">
+<div class="mh"><span class="sn">SPRINT 14</span><span class="spt"><span class="dn">1. hafta</span><span class="now">2. hafta</span></span>
+<span class="goal lk"><svg class="ic s"><use href="#i-lock"/></svg>Bu çeyrek: <b>Entegrasyonlar</b></span>
+<div class="pm" title="Selin 5★: hazırlık bitti, Stok Uyarısı hazır.">
+<div class="pmu"><span class="who"><span class="av l"><svg class="p-sel"><use href="#hl"/></svg></span><i class="st" style="--s:5"></i></span>
+<div class="kv"><b class="gn">−20 SP</b><small>hazırlık · 2 kart</small></div>
+<div class="kv"><span class="risk" style="--r:60%"></span><small>hata ×0,6</small></div></div></div>
+</div>
+<div class="gr">
+<div class="leg"><span class="cnt">3<small>kart</small></span><span class="ky"><span><i class="lf"></i>yapıldı</span><span><i class="lp"></i>plan</span></span><span class="ky"><span><i class="lc"></i>ekip</span><span><i class="lo"></i>kalır</span></span></div>
+<div class="g tas"><div class="gt"><svg class="ic"><use href="#i-tas"/></svg>Tasarım<span class="nums"><b>12</b>/ 17</span></div><div class="gb"><i class="pl" style="--f:70.8%"></i><i class="f" style="--f:50%"></i><i class="cap" style="--k:100%"></i></div></div>
+<div class="g gel"><div class="gt"><svg class="ic"><use href="#i-gel"/></svg>Geliştirme<span class="nums"><b>17</b>/ 40</span></div><div class="gb"><i class="pl" style="--f:69%"></i><i class="f" style="--f:29.3%"></i><i class="cap" style="--k:100%"></i></div></div>
+<div class="g tst over"><div class="gt"><svg class="ic"><use href="#i-tst"/></svg>Test<span class="nums"><b>0</b>/ 24<em class="ovn"><svg class="ic s"><use href="#i-up"/></svg>6</em></span></div><div class="gb"><i class="pl" style="--f:75%"></i><i class="ov" style="--k:75%;--o:25%"></i><i class="cap" style="--k:75%"></i></div></div>
+</div>
+<div class="rows">
+<div class="r">
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-fix"/></svg><span class="nmt">Fatura düzeltmesi</span><span class="sp">15</span></div>
+<div class="chips"><span class="ch st8 gel">Geliştirmede</span><span class="ch"><svg class="ic s"><use href="#i-bug"/></svg><b>5</b></span></div></div>
+<div class="sc none"></div>
+<div class="sc gel cur"><div class="top"><div class="bar"><i style="--w:20.8%"></i><i class="rem" style="--w:20.8%"></i></div><span class="v">5<small>/10</small></span></div><div class="bot"><span class="ppl"><span class="av fd" title="Kurucu · sürüyor, 2. haftada biter"><svg class="p-kur"><use href="#hs"/></svg></span></span><span class="pulse"></span><span class="wk e2"><b>1</b><b>2</b></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i class="rem" style="--w:20.8%"></i></div><span class="v">0<small>/5</small></span></div><div class="bot"><span class="stx" title="Bekliyor: Ayşe başka kartta"><svg class="ic s"><use href="#i-hour"/></svg></span></div></div>
+</div>
+<div class="r">
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Toplu Fatura</span><span class="sp">29</span></div>
+<div class="chips"><span class="ch st8 tst">Testte</span><span class="ch cu"><svg class="ic s"><use href="#i-acct"/></svg>Kuzey Lojistik</span></div></div>
+<div class="sc tas"><div class="top"><div class="bar"><i style="--w:37.5%"></i></div><span class="v">9</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-ece"><use href="#hl"/></svg></span></span><span class="stx ok" style="margin-left:auto"><svg class="ic s"><use href="#i-check"/></svg></span></div></div>
+<div class="sc gel"><div class="top"><div class="bar"><i style="--w:50%"></i></div><span class="v">12</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-den"><use href="#hs"/></svg></span><span class="av"><svg class="p-kaa"><use href="#hs"/></svg></span></span><span class="stx ok" style="margin-left:auto"><svg class="ic s"><use href="#i-check"/></svg></span></div></div>
+<div class="sc tst cur"><div class="top"><div class="bar"><i class="rem" style="--w:33.3%;opacity:1"></i></div><span class="v">0<small>/8</small></span></div><div class="bot"><span class="ppl"><span class="av" title="Ayşe · bu hafta biter"><svg class="p-ays"><use href="#hb"/></svg></span></span><span class="pulse"></span><span class="wk e2"><b>1</b><b>2</b></span></div></div>
+</div>
+<div class="r">
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Hesap Planı</span><span class="sp">37</span></div>
+<div class="chips"><span class="ch st8 tas">Tasarımda</span></div></div>
+<div class="sc tas cur"><div class="top"><div class="bar"><i style="--w:12.5%"></i><i class="rem" style="--w:20.8%"></i></div><span class="v">3<small>/8</small></span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-ece"><use href="#hl"/></svg></span></span><span class="pulse"></span></div></div>
+<div class="sc gel"><div class="top"><div class="bar"><i class="rem" style="--w:75%"></i></div><span class="v">0<small>/18</small></span></div><div class="bot"><span class="ppl"><span class="av half" title="Deniz · Tasarım bitmedi, bu hafta kısmen boşta"><svg class="p-den"><use href="#hs"/></svg></span><span class="av half" title="Kaan · bu hafta kısmen boşta"><svg class="p-kaa"><use href="#hs"/></svg></span></span><span class="stx" style="margin-left:auto" title="Bekliyor: Tasarım bitmedi"><svg class="ic s"><use href="#i-hour"/></svg></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i class="rem" style="--w:20.8%"></i><i class="k" style="--w:25%"></i></div><span class="v">0<small>/11</small></span></div><div class="bot"><span class="stx"><svg class="ic s"><use href="#i-hour"/></svg></span><span class="wk" title="Testi bu sprinte yetişmez: 6 SP taşar"><b>1</b><b>2</b><b class="cr">6</b></span></div></div>
+</div>
+</div>
+<div class="tm"><div class="lab"><b>6</b>kişi</div>
+<div class="crew"><span class="pp" title="Ece · Hesap Planı tasarımı"><span class="av m"><svg class="p-ece"><use href="#hl"/></svg></span><i class="st" style="--s:3"></i></span></div>
+<div class="crew">
+<span class="pp" title="Kurucu · Fatura düzeltmesi"><span class="av m fd"><svg class="p-kur"><use href="#hs"/></svg></span><i class="st" style="--s:3"></i></span>
+<span class="pp" title="Deniz · bu hafta kısmen boşta"><span class="av m half"><svg class="p-den"><use href="#hs"/></svg></span><i class="st" style="--s:4"></i></span>
+<span class="pp" title="Kaan · bu hafta kısmen boşta"><span class="av m half"><svg class="p-kaa"><use href="#hs"/></svg></span><i class="st" style="--s:2"></i></span></div>
+<div class="crew"><span class="pp" title="Ayşe · Toplu Fatura testi"><span class="av m"><svg class="p-ays"><use href="#hb"/></svg></span><i class="st" style="--s:2"></i></span></div>
+</div>
+<div class="ab"><span class="lock"><svg class="ic"><use href="#i-lock"/></svg>Plan kilitli</span></div>
+</div>
+<aside class="nx">
+<div class="nh"><b>SPRINT 15</b><span>sonraki</span></div>
+<div class="nc carry"><div class="t"><svg class="ic ty" style="color:var(--warn)"><use href="#i-tst"/></svg><span class="nmt">Hesap Planı</span><span class="sp">6</span></div><div class="nr">test kalanı</div></div>
+<div class="nc pull"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Stok Uyarısı</span><span class="sp">17</span></div><div class="seg"><i class="a" style="flex:3"></i><i class="b" style="flex:9"></i><i class="c" style="flex:5"></i></div>
+<div class="nr" title="Selin hazırladı, 1. haftada bitti. Ekip 2. haftada çekmeye hazır."><span class="av xs"><svg class="p-sel"><use href="#hl"/></svg></span><svg class="ic s" style="color:var(--tst)"><use href="#i-check"/></svg><s>22</s>→<b>17</b><span class="wk e2"><b>1</b><b>2</b></span></div></div>
+</aside>
+</div></div></div>
+
+<!-- ============ 11 ============ -->
+<div class="cap"><span class="no">11</span><b>Kartın üstüne gelince: Toplu Fatura</b><span class="d">Durum 6 ekranı. Ekrandan kalkan her şey burada: ihtiyaç ve tavan, aşama başına kişi ve bitiş haftası, müşteri ve tutar, etki, iki kural. Sağdaki kesikli kutu tasarım notu: PM'li kartta ipucuna eklenen satırlar.</span></div>
+<div class="fw"><div class="frame">
+<div class="chrome"><span class="brand">ÜRÜN</span><span class="prod"><b>Ledgerly</b> · B2B ERP · v1.4</span>
+<nav class="tabs"><span class="tab">GENEL BAKIŞ</span><span class="tab on">SPRINT</span><span class="tab">ÇEYREK</span></nav>
+<span class="hist">Geçmiş <i class="tg"></i></span><svg class="ic l xx"><use href="#i-x"/></svg></div>
+<div class="bd">
+<aside class="side">
+<div><div class="sh">TALEPLER</div><div class="reqs">
+<div class="req"><span class="cn">Ege Sigorta</span><span class="ft">Çoklu Entegrasyon</span><span class="dl now"><svg class="ic s"><use href="#i-clock"/></svg>bu çeyrek sonu</span></div>
+<div class="req"><span class="stamp"><svg class="ic s"><use href="#i-check"/></svg>planda</span><span class="cn">Kuzey Lojistik</span><span class="ft">Tahsilat Döngüsü</span><span class="dl"><svg class="ic s"><use href="#i-clock"/></svg>gelecek çeyrek sonu</span></div>
+</div></div>
+<div><div class="sh">ALANLAR</div>
+<div class="area"><span class="an">Çekirdek</span><span class="lv"><i class="on"></i><i class="on"></i><i class="up"></i></span></div>
+<div class="area weak"><span class="an">Entegrasyonlar<svg class="ic s"><use href="#i-warn"/></svg></span><span class="lv weak"><i class="on"></i><i></i><i></i></span></div>
+<div class="area"><span class="an">Güven &amp; Ölçek</span><span class="lv"><i class="on"></i><i class="on"></i><i></i></span></div>
+<div class="area"><span class="an">Defter</span><span class="lv"><i class="up"></i><i></i><i></i></span></div>
+<div class="area"><span class="an">Stok</span><span class="lv"><i class="up"></i><i></i><i></i></span></div>
+</div>
+</aside>
+<div class="main">
+<div class="mh"><span class="sn">SPRINT 21</span>
+<span class="goal">Bu çeyrek: <b>Entegrasyonlar</b><svg class="ic s"><use href="#i-chev"/></svg></span>
+<div class="pm nopm"><span class="ghosth"></span><div class="kv"><small>Ürün yöneticisi</small><b style="font-size:18px;color:var(--i4)">yok</b></div></div>
+</div>
+<div class="gr">
+<div class="leg"><span class="cnt">6<small>kart</small></span><span class="ky"><span><i class="lf"></i>iş</span><span><i class="lc"></i>ekip</span><span><i class="lo"></i>kalır</span></span></div>
+<div class="g tas"><div class="gt"><svg class="ic"><use href="#i-tas"/></svg>Tasarım<span class="nums"><b>26</b>/ 66</span></div><div class="gb"><i class="f" style="--f:39.4%"></i><i class="cap" style="--k:100%"></i></div></div>
+<div class="g gel"><div class="gt"><svg class="ic"><use href="#i-gel"/></svg>Geliştirme<span class="nums"><b>106</b>/ 160</span></div><div class="gb"><i class="f" style="--f:66.3%"></i><i class="cap" style="--k:100%"></i></div></div>
+<div class="g tst over"><div class="gt"><svg class="ic"><use href="#i-tst"/></svg>Test<span class="nums"><b>54</b>/ 36<em class="ovn"><svg class="ic s"><use href="#i-up"/></svg>18</em></span></div><div class="gb"><i class="f" style="--f:66.7%"></i><i class="ov" style="--k:66.7%;--o:33.3%"></i><i class="cap" style="--k:66.7%"></i></div></div>
+</div>
+<div class="rows">
+<div class="r">
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-fix"/></svg><span class="nmt">Fatura düzeltmesi</span><span class="sp">20</span></div>
+<div class="chips"><span class="ch"><svg class="ic s"><use href="#i-bug"/></svg><b>7</b></span><span class="ch"><svg class="ic s"><use href="#i-acct"/></svg><b>4</b></span><span class="ch"><svg class="ic s"><use href="#i-user"/></svg><b>190</b></span></div></div>
+<div class="sc none"></div>
+<div class="sc gel"><div class="top"><span class="rq">1★</span><div class="bar"><i style="--w:58.3%"></i></div><span class="v">14</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-kaa"><use href="#hs"/></svg></span></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i style="--w:25%"></i></div><span class="v">6</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-cem"><use href="#hs"/></svg></span></span></div></div>
+</div>
+<div class="r hl"><span class="ra" style="opacity:1"><svg class="ic s"><use href="#i-x"/></svg>Çıkar</span>
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Toplu Fatura</span><span class="oz"><svg class="ic s"><use href="#i-care"/></svg></span><span class="sp">42</span></div>
+<div class="chips"><span class="ch cu"><svg class="ic s"><use href="#i-acct"/></svg>Kuzey Lojistik<svg class="ic s" style="color:var(--i4)"><use href="#i-clock"/></svg></span><span class="ch"><svg class="ic s"><use href="#i-up"/></svg>Çekirdek</span></div></div>
+<div class="sc tas"><div class="top"><div class="bar"><i style="--w:33.3%"></i></div><span class="v">8</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-ece"><use href="#hl"/></svg></span></span><span class="wk e1"><b>1</b><b>2</b></span></div></div>
+<div class="sc gel"><div class="top"><span class="rq">2★</span><div class="bar"><i style="--w:100%"></i></div><span class="v">24</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-den"><use href="#hs"/></svg></span><span class="av"><svg class="p-onu"><use href="#hs"/></svg></span></span><span class="wk e2"><b>1</b><b>2</b></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i style="--w:41.7%"></i></div><span class="v">10</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-ays"><use href="#hb"/></svg></span></span><span class="wk e2"><b>1</b><b>2</b></span></div></div>
+</div>
+<div class="r">
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Hesap Planı</span><span class="oz"><svg class="ic s"><use href="#i-care"/></svg></span><span class="sp">33</span></div>
+<div class="chips"><span class="ch"><svg class="ic s"><use href="#i-up"/></svg>Defter <b>0 → 1</b></span></div></div>
+<div class="sc tas"><div class="top"><div class="bar"><i style="--w:37.5%"></i></div><span class="v">9</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-giz"><use href="#hl"/></svg></span></span></div></div>
+<div class="sc gel"><div class="top"><div class="bar"><i style="--w:66.7%"></i></div><span class="v">16</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-mer"><use href="#hs"/></svg></span><span class="av"><svg class="p-zey"><use href="#hb"/></svg></span></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i style="--w:12.5%"></i><i class="k" style="--w:20.8%"></i></div><span class="v">8</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-ays"><use href="#hb"/></svg></span></span><span class="wk"><b>1</b><b>2</b><b class="cr">5</b></span></div></div>
+</div>
+<div class="r">
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Stok Sayacı</span><span class="sp">37</span></div>
+<div class="chips"><span class="ch"><svg class="ic s"><use href="#i-up"/></svg>Stok <b>0 → 1</b></span></div></div>
+<div class="sc tas"><div class="top"><div class="bar"><i style="--w:8.3%"></i></div><span class="v">2</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-def"><use href="#hl"/></svg></span></span></div></div>
+<div class="sc gel"><div class="top"><span class="rq">1★</span><div class="bar"><i style="--w:91.7%"></i></div><span class="v">22</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-brk"><use href="#hs"/></svg></span><span class="av fd"><svg class="p-kur"><use href="#hs"/></svg></span></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i class="k" style="--w:54.2%"></i></div><span class="v">13</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-cem"><use href="#hs"/></svg></span></span><span class="wk"><b>1</b><b>2</b><b class="cr">13</b></span></div></div>
+</div>
+<div class="r">
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Tablo İçe Aktarma</span><span class="sp">25</span></div></div>
+<div class="sc tas"><div class="top"><div class="bar"><i style="--w:16.7%"></i></div><span class="v">4</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-def"><use href="#hl"/></svg></span></span></div></div>
+<div class="sc gel"><div class="top"><span class="rq">2★</span><div class="bar"><i style="--w:66.7%"></i></div><span class="v">16</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-den"><use href="#hs"/></svg></span></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i style="--w:20.8%"></i></div><span class="v">5</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-cem"><use href="#hs"/></svg></span></span></div></div>
+</div>
+<div class="r">
+<div class="nm"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Kasa Hareketleri</span><span class="sp">29</span></div></div>
+<div class="sc tas"><div class="top"><div class="bar"><i style="--w:12.5%"></i></div><span class="v">3</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-giz"><use href="#hl"/></svg></span></span></div></div>
+<div class="sc gel"><div class="top"><span class="rq">1★</span><div class="bar"><i style="--w:58.3%"></i></div><span class="v">14</span></div><div class="bot"><span class="ppl"><span class="av fd"><svg class="p-kur"><use href="#hs"/></svg></span></span></div></div>
+<div class="sc tst"><div class="top"><div class="bar"><i style="--w:50%"></i></div><span class="v">12</span></div><div class="bot"><span class="ppl"><span class="av"><svg class="p-ays"><use href="#hb"/></svg></span></span></div></div>
+</div>
+</div>
+<div class="tm"><div class="lab"><b>12</b>kişi</div>
+<div class="crew"><span class="pp"><span class="av m"><svg class="p-ece"><use href="#hl"/></svg></span><i class="st" style="--s:3"></i></span><span class="pp"><span class="av m"><svg class="p-def"><use href="#hl"/></svg></span><i class="st" style="--s:2"></i></span><span class="pp"><span class="av m"><svg class="p-giz"><use href="#hl"/></svg></span><i class="st" style="--s:3"></i></span></div>
+<div class="crew"><span class="pp"><span class="av m fd"><svg class="p-kur"><use href="#hs"/></svg></span><i class="st" style="--s:3"></i></span><span class="pp"><span class="av m"><svg class="p-mer"><use href="#hs"/></svg></span><i class="st" style="--s:4"></i></span><span class="pp"><span class="av m"><svg class="p-zey"><use href="#hb"/></svg></span><i class="st" style="--s:4"></i></span><span class="pp"><span class="av m"><svg class="p-den"><use href="#hs"/></svg></span><i class="st" style="--s:3"></i></span><span class="pp"><span class="av m"><svg class="p-brk"><use href="#hs"/></svg></span><i class="st" style="--s:3"></i></span><span class="pp"><span class="av m"><svg class="p-kaa"><use href="#hs"/></svg></span><i class="st" style="--s:2"></i></span><span class="pp"><span class="av m"><svg class="p-onu"><use href="#hs"/></svg></span><i class="st" style="--s:2"></i></span></div>
+<div class="crew"><span class="pp"><span class="av m"><svg class="p-ays"><use href="#hb"/></svg></span><i class="st" style="--s:3"></i></span><span class="pp"><span class="av m"><svg class="p-cem"><use href="#hs"/></svg></span><i class="st" style="--s:1"></i></span></div>
+</div>
+<div class="ab">
+<div class="rt"><span class="btn dis"><svg class="ic s"><use href="#i-lock"/></svg>Planlamayı devret</span><span class="btn pri">Sprint'i başlat</span></div></div>
+</div>
+<aside class="nx">
+<div class="nh"><b>SPRINT 22</b><span>sonraki</span></div>
+<div class="nc carry"><div class="t"><svg class="ic ty" style="color:var(--warn)"><use href="#i-tst"/></svg><span class="nmt">Test kalanı</span><span class="sp">18</span></div><div class="nr">Hesap Planı · Stok Sayacı</div></div>
+<div class="nc pull"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Depo ve Raf</span><span class="sp">22</span></div><div class="seg"><i class="a" style="flex:4"></i><i class="b" style="flex:12"></i><i class="c" style="flex:6"></i></div><div class="nr"><span class="wk e2"><b>1</b><b>2</b></span></div></div>
+<div class="nc"><div class="t"><svg class="ic ty"><use href="#i-feat"/></svg><span class="nmt">Nakit Akış Tablosu</span><span class="sp">23</span></div><div class="seg"><i class="a" style="flex:3"></i><i class="b" style="flex:14"></i><i class="c" style="flex:6"></i></div></div>
+</aside>
+</div>
+<div class="tip" style="left:420px;top:338px;width:450px;--ax:60px">
+<h4><svg class="ic l" style="color:var(--i4)"><use href="#i-feat"/></svg>Toplu Fatura<span class="oz"><svg class="ic s"><use href="#i-care"/></svg></span><span class="sp" style="margin-left:auto">42 SP</span></h4>
+<div class="sub">Özenli · Hazırlayan ürün yöneticisi yok</div>
+<div class="lbl" style="margin-top:4px">İHTİYAÇ</div>
+<div class="need"><i style="flex:8;background:var(--tas)"></i><i style="flex:24;background:var(--gel)"></i><i style="flex:10;background:var(--tst)"></i></div>
+<div class="needl"><span><i class="dot tas"></i>Tasarım <b>8</b></span><span><i class="dot gel"></i>Geliştirme <b>24</b></span><span><i class="dot tst"></i>Test <b>10</b></span></div>
+<div class="tline"><span class="rq">2★</span>Geliştirme en az 2★<span style="color:var(--l3)">·</span><span title="Hızı en çok kısan tavan">Tasarım en çok 1 kişi</span></div>
+<div class="tline" style="margin-top:4px;color:var(--i4)">Ekip: 3 tasarımcı · 7 geliştirici · 2 testçi</div>
+<div class="lbl">KİM, NE ZAMAN</div>
+<div class="whog">
+<span class="sg tas"><svg class="ic s"><use href="#i-tas"/></svg>Tasarım</span><span class="ps"><span class="pn"><span class="av"><svg class="p-ece"><use href="#hl"/></svg></span>Ece <i>3★</i></span></span><span class="wk e1 tas"><b>1</b><b>2</b></span>
+<span class="sg gel"><svg class="ic s"><use href="#i-gel"/></svg>Geliştirme</span><span class="ps"><span class="pn"><span class="av"><svg class="p-den"><use href="#hs"/></svg></span>Deniz <i>3★</i></span><span class="pn"><span class="av"><svg class="p-onu"><use href="#hs"/></svg></span>Onur <i>2★</i></span></span><span class="wk e2 gel"><b>1</b><b>2</b></span>
+<span class="sg tst"><svg class="ic s"><use href="#i-tst"/></svg>Test</span><span class="ps"><span class="pn"><span class="av"><svg class="p-ays"><use href="#hb"/></svg></span>Ayşe <i>3★</i></span></span><span class="wk e2 tst"><b>1</b><b>2</b></span>
+</div>
+<div class="lbl">MÜŞTERİ VE ETKİ</div>
+<div class="tline" style="margin-top:0"><span class="ch cu"><svg class="ic s"><use href="#i-acct"/></svg><b>Kuzey Lojistik</b></span><span style="color:var(--i1);font-family:var(--mono)">$4.800/yıl</span><span class="dl"><svg class="ic s"><use href="#i-clock"/></svg>gelecek çeyrek sonu</span></div>
+<div class="tline"><span>Çekirdek</span><span class="lv"><i class="on"></i><i class="on"></i><i class="up"></i></span><span style="font-family:var(--mono);color:var(--i1)">2 → 3</span></div>
+<div class="lbl">KURAL</div>
+<p class="rule">En zor işe en iyi kişiler, küçük işe onu bitirmeye yeten kişi atanır.</p>
+<p class="rule">Kişi, aşaması bitene kadar kartında kalır.</p>
+</div>
+<div class="ann" style="left:1000px;top:420px;width:300px">
+<div class="h">TASARIM NOTU · PM'Lİ KARTTA EK SATIRLAR</div>
+<p style="color:var(--i3);font-size:12.5px">Durum 4'teki Toplu Fatura'nın ipucuna, İHTİYAÇ'tan önce bu blok girer:</p>
+<div class="tline" style="margin-top:0"><span class="av"><svg class="p-sel"><use href="#hl"/></svg></span><b style="color:var(--i1)">Selin 5★ hazırladı</b></div>
+<div class="cmp" style="margin-top:8px">
+<span>hazırlıksız</span><span class="cmpbar"><i style="width:100%;background:var(--l3)"></i></span>
+<span>hazırlıkla</span><span class="cmpbar"><i style="width:76.3%"></i></span>
+</div>
+<div class="tline"><span style="font-family:var(--mono);color:var(--i1)">38 → 29 SP</span><span>hız +%30</span><span>hata ×0,6</span></div>
+<p class="rule" style="margin-top:8px">En karmaşık kartı en iyi ürün yöneticisi, basit kartı onu hazırlamaya yeten ürün yöneticisi hazırlar.</p>
+</div>
+</div></div>
+
+</div>

@@ -1,0 +1,120 @@
+<title>Araç Değerlendirmesi</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: üç araç kartı, her biri hüküm şeridiyle; altta yeni çalışma yöntemine giren bedava adımlar. */
+:root{
+  --bg:#f3efe7; --surface:#fbf8f2; --ink:#26221c; --muted:#6d6457; --line:#d9d0c1;
+  --accent:#b8761c; --good:#3d7a4a; --warn:#a8741a; --bad:#a3402f; --info:#3f6f8f;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#1c1915; --surface:#25211c; --ink:#ece5d8; --muted:#a59a89; --line:#3b352d;
+  --accent:#e0a03e; --good:#7cbf87; --warn:#e3b456; --bad:#e07a66; --info:#7fb2d4; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1c1915; --surface:#25211c; --ink:#ece5d8; --muted:#a59a89; --line:#3b352d;
+  --accent:#e0a03e; --good:#7cbf87; --warn:#e3b456; --bad:#e07a66; --info:#7fb2d4; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--f-body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 64px}
+main{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:40px}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;line-height:1.1;text-wrap:balance;margin:0}
+h1{font-size:46px} h2{font-size:30px} h3{font-size:22px}
+p{margin:0;max-width:72ch}
+ul,ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+section{display:flex;flex-direction:column;gap:14px}
+a{color:var(--info)}
+.eyebrow{font:500 12px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.lead{font-size:18px;max-width:66ch}
+.note{font-size:13px;color:var(--muted)}
+.tool{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:18px 20px;display:flex;flex-direction:column;gap:12px}
+.tool header{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px}
+.chip{display:inline-block;font:500 11px/1 var(--f-mono);letter-spacing:.04em;padding:4px 7px;border-radius:3px;border:1px solid currentColor;white-space:nowrap}
+.no{color:var(--bad)} .part{color:var(--warn)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.cols > div{display:flex;flex-direction:column;gap:6px;min-width:0}
+.lbl{font:500 11px/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.cols li{font-size:14px}
+.verdict{border-left:3px solid var(--accent);padding-left:12px}
+.steps{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--good);border-radius:6px;padding:16px 18px}
+@media (max-width:560px){h1{font-size:36px} h2{font-size:26px} .lead{font-size:16px}}
+</style>
+
+<main>
+
+<header style="display:flex;flex-direction:column;gap:12px">
+  <span class="eyebrow">Project Unicorn · 22 Ekim 2026 · yeni çalışma yöntemi için</span>
+  <h1>Araç Değerlendirmesi</h1>
+  <p class="lead">Gönderdiğin üç kaynak: kod tabanını dizinleyen bir MCP sunucusu, Claude Code'u oyun stüdyosuna çeviren bir şablon repo ve bir oyun arayüzü skill'i. Hiçbiri kurulmadı, indirilen hiçbir kod çalıştırılmadı; yalnız okundu, bizim oturumlarımız sayıldı.</p>
+</header>
+
+<section class="tool">
+  <header><h3>codebase-memory-mcp</h3><span class="chip no">şimdi kurma</span><span class="note">DeusData · MIT · 8 aylık</span></header>
+  <p>Kodu ayrıştırıp "kim kimi çağırıyor" grafına çeviren bir MCP sunucusu; Claude dosya okumak yerine bu dizine sorar.</p>
+  <div class="cols">
+    <div><span class="lbl">Bize uyumu</span><ul>
+      <li>GDScript'i yüzeysel okuyor: fonksiyon ve çağrı var; sinyal bağları, sahneler (.tscn/.tres), autoload'lar ve strings.csv anahtarları yok.</li>
+      <li>Kurulum Claude'un genel ayarlarına kanca yazıyor; çalışan oturumlar (D) bunu hemen alır. Makinedeki öbür kodlama araçlarını da yapılandırıyor.</li>
+      <li>16 GB makinede bellek tavanı bağlayıcı değil; Windows ve bellek hataları açık.</li>
+    </ul></div>
+    <div><span class="lbl">Token kazancı</span><ul>
+      <li>"10 kat az token" iddiası yazarın kendi makalesinden; aynı makalede cevap kalitesi daha düşük.</li>
+      <li>Bizim son 5 oturumda harcamanın çoğu kod taramadan değil, uzun süren alt ajanların her turda taşıdığı bağlamdan: en uzun %10'luk alt ajanlar, alt ajan bağlam harcamasının %64'ü.</li>
+      <li>Bu araç en iyi ihtimalle %5–8 kazandırır; ölçülmedi.</li>
+    </ul></div>
+  </div>
+  <p class="verdict">Denemek istersen: ayrı klasörde, elle kurulum, üç kol × üç koşu; kalite düşmeyecek, token en az %30 azalacak, bellek 1,5 GB'ı geçmeyecek. Ayrı klasör senin "tek klasör" kuralına değdiği için senin onayın gerekir.</p>
+</section>
+
+<section class="tool">
+  <header><h3>Claude-Code-Game-Studios</h3><span class="chip part">parça parça al</span><span class="note">Donchitos · MIT · v1.2.0</span></header>
+  <p>Claude Code'u bir oyun stüdyosuna çeviren şablon: 49 ajan, 74 skill, 15 kanca, yönetmenler, lead'ler, uzmanlar ve her adımda onay isteyen süreç. Çıktısı belge (GDD, UX şartnamesi, sprint planı); ekran çizmiyor.</p>
+  <div class="cols">
+    <div><span class="lbl">Alınacaklar</span><ul>
+      <li>Ekran şartnamesi iskeleti: "oyuncu burada ne yapmak ister" cümlesi, bilgi sırası yerleşimden önce, durumlar tablosu, test edilebilir kabul maddeleri.</li>
+      <li>"Her zaman görünür / bağlama göre / istenince / gizli" sınıflaması ve ekran başına görsel bütçe.</li>
+      <li>Aynı anda iki olay gelince öncelik ve kuyruk kuralı.</li>
+    </ul></div>
+    <div><span class="lbl">Alınmayacaklar</span><ul>
+      <li>Ajan ve kanca altyapısı: her Read/Write/Bash çağrısını kendi betiklerinden geçiriyor, bizim düzenimizle çakışır.</li>
+      <li>Ağır onay süreci: bizim adım tablosu ve soru disiplinimiz bunun karşılığını zaten yapıyor.</li>
+      <li>Godot başvurusu 4.7'ye göre, biz 4.6.2'deyiz; yol varsayımları da bizim yapıya uymuyor.</li>
+    </ul></div>
+  </div>
+  <p class="verdict">Altı fikir, kendi yardımcı yönetmen skill'imize tek sayfalık kontrol listesi olarak girsin; repo kurulmasın. C yorumu bu iskeletle yapıldı.</p>
+</section>
+
+<section class="tool">
+  <header><h3>game-ui-design skill'i</h3><span class="chip part">parça parça al</span><span class="note">claudemarketplace.net · üçüncü taraf · tek commit, lisans yok</span></header>
+  <p>Bir persona ve üç başvuru dosyası: oyun arayüzü ilkeleri, tuzaklar, denetimler. Ağırlığı aksiyon ve konsol HUD'u.</p>
+  <div class="cols">
+    <div><span class="lbl">İşe yarayan</span><ul>
+      <li>Kademeli bilgi: bakış, odak, inceleme katmanları; kart arayüzünün iskeleti.</li>
+      <li>Durumları yalnız renkle değil renk, ikon ve etiketle ayırmak.</li>
+      <li>Bildirim önceliği, birleştirme ve geçmiş kaydı.</li>
+    </ul></div>
+    <div><span class="lbl">Eksik ya da riskli</span><ul>
+      <li>Yoğun tablo, hizalama, tipografi, yönetim oyunu deseni yok; asıl sorunumuzu örtmüyor.</li>
+      <li>"Kullanıcı başvurularla çelişirse düzelt" talimatı senin kararlarını ezmeye yönelebilir.</li>
+      <li>Lisans yok: metni kopyalamak yerine ilkeleri kendi sözümüzle kullanmak güvenli.</li>
+    </ul></div>
+  </div>
+  <p class="verdict">Kurulmasın; birkaç ilke kendi skill'imize girsin. B yorumu bu skill'le yapıldı.</p>
+</section>
+
+<section>
+  <span class="eyebrow">Önce bunlar</span>
+  <h2>Bedava ve risksiz adımlar</h2>
+  <div class="steps"><ol>
+    <li><b>Uzun yaşayan alt ajanları kısalt.</b> Uzun işler kısa bir devir notuyla yeni ajana bölünür, büyük çıktılar kesilir. Harcamanın en büyük kalemi bu.</li>
+    <li><b>Kod haritasını düzelt.</b> Ajanlar haritayı yoğun kullanıyor ama en uzun satırı 10.698 karakter; 2.000 karakterden uzun 27 satır bölünür, görev yazısına ilgili satırlar ve dosya yolları konur.</li>
+    <li><b>CLAUDE.md'yi buda.</b> Kazancı küçük (~%1–2), ama bedava.</li>
+    <li><b>Kurulu Godot MCP'sini dene.</b> Betikleri, sahne düğümlerini ve kaynak bağımlılıklarını görebiliyor; gezinti için hiç denenmedi.</li>
+    <li><b>İki skill'in fikirlerini ekle.</b> Ekran şartnamesi iskeleti, görsel bütçe, bildirim önceliği ve kademeli bilgi; yardımcı yönetmen skill'imize tek sayfa.</li>
+  </ol></div>
+</section>
+
+</main>

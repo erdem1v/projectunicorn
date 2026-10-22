@@ -1,0 +1,325 @@
+<title>Ekip Kararları</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: tek okuma şeridi; her soru bir blok: bulgular, seçenek kartları ızgarası, öneri. Menajer Masası dili. */
+:root{
+  --bg:#f3efe7; --surface:#fbf8f2; --ink:#26221c; --muted:#6d6457; --line:#d9d0c1;
+  --accent:#b8761c; --good:#3d7a4a; --warn:#a8741a; --bad:#a3402f; --info:#3f6f8f;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#1c1915; --surface:#25211c; --ink:#ece5d8; --muted:#a59a89; --line:#3b352d;
+  --accent:#e0a03e; --good:#7cbf87; --warn:#e3b456; --bad:#e07a66; --info:#7fb2d4; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1c1915; --surface:#25211c; --ink:#ece5d8; --muted:#a59a89; --line:#3b352d;
+  --accent:#e0a03e; --good:#7cbf87; --warn:#e3b456; --bad:#e07a66; --info:#7fb2d4; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--f-body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 64px}
+main{max-width:960px;margin:0 auto;display:flex;flex-direction:column;gap:48px}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;line-height:1.1;text-wrap:balance;margin:0}
+h1{font-size:46px} h2{font-size:32px} h3{font-size:21px}
+p{margin:0;max-width:72ch}
+ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+section{display:flex;flex-direction:column;gap:14px}
+a{color:var(--info)}
+a.ref{font:500 11px/1 var(--f-mono);text-decoration:none;padding:0 1px;vertical-align:1px}
+a.ref::before{content:"["} a.ref::after{content:"]"}
+.eyebrow{font:500 12px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.lead{font-size:18px;max-width:68ch}
+.note{font-size:13px;color:var(--muted)}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px 18px}
+.find li{font-size:14px}
+.find b{font-weight:600}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.opt{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.opt.rec{border-color:var(--accent);box-shadow:inset 0 3px 0 var(--accent)}
+.opt h3{display:flex;gap:10px;align-items:baseline}
+.opt h3 .k{font:600 26px/1 var(--f-display);color:var(--accent)}
+.opt dl{margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 10px;font-size:13.5px}
+.opt dt{font:500 11px/1.6 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.opt dd{margin:0}
+.opt .ex{font-size:13.5px;border-left:2px solid var(--line);padding-left:10px;color:var(--ink)}
+.opt .cost{font-size:13px;color:var(--bad)}
+.tag{align-self:flex-start;font:500 11px/1 var(--f-mono);letter-spacing:.06em;padding:4px 7px;border-radius:3px;border:1px solid var(--accent);color:var(--accent)}
+.ask{border-left:4px solid var(--accent)}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 12px/1.3 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+ol.pr{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px;font-size:14.5px}
+.src-list{font-size:13px;gap:4px;padding-left:30px}
+.src-list li{overflow-wrap:anywhere}
+.src-list li:target{background:color-mix(in srgb,var(--accent) 18%,transparent)}
+@media (max-width:560px){h1{font-size:36px} h2{font-size:26px} .lead{font-size:16px}}
+</style>
+
+<main>
+
+<header style="display:flex;flex-direction:column;gap:12px">
+  <span class="eyebrow">Project Unicorn · 22 Ekim 2026 · Ekip PRD'si için</span>
+  <h1>Ekip Kararları</h1>
+  <p class="lead">Maket incelemende açtığın dört konu için oyun oyun araştırma: kurucunun rolü, işi biten çalışan ve istifa, PM farkının görünmesi, sprint ekranının ilkeleri. Her soruda önce araştırmanın bulduğu, sonra seçenekler; her seçenekte 1 kişide ve 50 kişide ne olduğu ve bir oyuncu örneği.</p>
+  <div class="box ask"><p><b>Nasıl cevaplarsın:</b> "1-B, 2-D, 3-D" gibi tek satır yeterli; istediğin seçeneği değiştirerek ya da birleştirerek de yazabilirsin. Öneri etiketleri yalnız benim görüşüm, kararı sen veriyorsun. Soru 4'ün seçeneği yok; ilkeler sprint ekranının A, B, C yorumlarına girdi.</p></div>
+  <p class="note">Sınırlar: Reddit sonuç vermedi, oyuncu tepkileri Steam başlıklarından ve yorumlarından. Forum yazılarının çoğu 2015–2019 tarihli. 12 iddia ikinci bir turda kaynağından yeniden okundu; yanlış çıkan üç iddia (Project Hospital, Software Inc. ve Big Ambitions eşikleri) düzeltildi ya da çıkarıldı.</p>
+</header>
+
+<section>
+  <span class="eyebrow">Soru 1</span>
+  <h2>Şirket büyüyünce kurucu ne yapar?</h2>
+  <div class="box find"><ul>
+    <li><b>Big Ambitions</b> (iyi örnek): avatar önce her şeyi kendi yapıyor; iş yükü artınca oyuncu Genel Merkez açıp İK Müdürü ve İşe Alım Uzmanı atıyor. Devredilen şey kişi başına iş, karar değil. Geçişin zamanını oyun değil oyuncu seçiyor <a class="ref" href="#k-14">14</a><a class="ref" href="#k-15">15</a><a class="ref" href="#k-16">16</a>.</li>
+    <li><b>Football Manager 26</b> (iyi örnek): "Sorumluluklar" menüsünde hangi görevin sende olduğunu görüp istediğini yardımcılara devrediyorsun; devrin işe yaraması personelin niteliğine bağlı <a class="ref" href="#k-18">18</a><a class="ref" href="#k-19">19</a>.</li>
+    <li><b>Software Inc.</b>: işler takım liderine devrediliyor; kurucu takıma konan bir çalışan gibi. "2×12 kişiyi yönetmek kabus" diyen var; 300 kişide oyun çoğunlukla duraklatılarak oynanıyor <a class="ref" href="#k-1">1</a><a class="ref" href="#k-4">4</a><a class="ref" href="#k-62">62</a>.</li>
+    <li><b>Startup Company</b>: oyuncu CEO, erken oyunda boşta oturuyor; kurucunun kod yazıp yazmadığı belli değil <a class="ref" href="#k-11">11</a><a class="ref" href="#k-34">34</a>.</li>
+    <li><b>Gerçek dünya</b>: tek bir eşik yok. Teachable'ın CTO'su ~10 mühendiste yönetime geçti ama kritik yol dışında kod yazmayı sürdürdü; karşıt görüşe göre üründen erken kopmak daha hızlı batırıyor. Ortak nokta: kurucu kritik yolda olmamalı <a class="ref" href="#k-24">24</a><a class="ref" href="#k-25">25</a><a class="ref" href="#k-26">26</a>.</li>
+    <li><b>Bulunamayan</b>: kurucuyu "joker / yönetici / üretici" diye oyuncunun seçtiği bir oyun yok.</li>
+  </ul></div>
+  <div class="opts">
+    <div class="opt"><h3><span class="k">A</span>Kurucu her zaman joker</h3>
+      <p>Sprintte en zor karta girer, bitince sıradakine geçer; şirket ne kadar büyürse büyüsün böyle kalır.</p>
+      <dl><dt>1 kişi</dt><dd>Değişen bir şey yok.</dd><dt>50 kişi</dt><dd>Kurucu yine bir kartın sahibi; görüşme haftasında o kart bekler.</dd></dl>
+      <p class="ex">"22 kişilik ekipte en zor kart kurucuda. Aynı hafta iki yatırımcı görüşmesi var; sprint sonunda tek eksik o kart."</p>
+      <p class="cost">Bedel: gerçek dünyanın uyardığı "kritik yolda kurucu" durumu <a class="ref" href="#k-24">24</a><a class="ref" href="#k-26">26</a>.</p></div>
+    <div class="opt rec"><span class="tag">önerim</span><h3><span class="k">B</span>Kademeli devir, oyuncu seçer</h3>
+      <p>Kurucu koddayken senin joker kuralınla çalışır. Oyuncu "kurucu koddan çekilsin" deyince kart almayı bırakır; haftası satış ve yatırımcı görüşmesine, işe alıma, ürün sorularına kalır. Geri alınabilir.</p>
+      <dl><dt>1 kişi</dt><dd>Seçenek kapalı; kart alacak başka kimse yok.</dd><dt>50 kişi</dt><dd>Kurucu kartta değil; istersen yine sokarsın, bedeli kurucu işlerinin yavaşlaması.</dd></dl>
+      <p class="ex">"6 kişilik ekipte kıdemli geliştirici Can gelince oyuncu kurucuyu koddan çekiyor; en zor kart Can'a gidiyor, kurucunun haftası satışa açılıyor."</p>
+      <p class="cost">Bedel: oyuncu hiç çekilmezse A'nın sorunu yaşanır; kurucu işlerinin biriktiği bir yerde görünmesi gerekir.</p></div>
+    <div class="opt"><h3><span class="k">C</span>Otomatik geçiş</h3>
+      <p>Kurucunun kod saati ekip büyüdükçe kendiliğinden azalır; oyuncu seçmez, haftanın yüzde kaçının kodda olduğunu görür.</p>
+      <dl><dt>1 kişi</dt><dd>Saatin tamamı kodda.</dd><dt>50 kişi</dt><dd>Kurucu kodda neredeyse hiç yok.</dd></dl>
+      <p class="ex">"12 kişide kurucunun haftasının üçte biri kodda; kurucu kartında yarım dolu bir bant."</p>
+      <p class="cost">Bedel: gerçek dünyada eşik yok, eğrinin her biçimi tartışmalı; oyuncu kararı elinden alınmış hisseder.</p></div>
+    <div class="opt"><h3><span class="k">D</span>Yardımcı joker</h3>
+      <p>Kurucu en zor kartı değil, ekibin o sprint bitiremeyeceği kartı alıp tamamlar.</p>
+      <dl><dt>1 kişi</dt><dd>Tek kişi her kartı yapar.</dd><dt>50 kişi</dt><dd>Kurucu yalnız boşluk doldurur; görüşme haftasında sprint bozulmaz.</dd></dl>
+      <p class="ex">"6 kişilik ekipte en zor kart Defne'de; kurucu sprint sonunda geride kalan iki küçük kartı kapatıyor."</p>
+      <p class="cost">Bedel: senin "en iyiyse en zor karta" eğilimine ters.</p></div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Soru 2</span>
+  <h2>İşi biten çalışan ne yapar; bir ay sonra gelen istifa</h2>
+  <div class="box find"><ul>
+    <li><b>RimWorld</b> (iyi örnek): "yapamaz" denen iş hiç yapılmıyor, beceri 0 ise çok yavaş; rol dışı iş cezayla değil yasakla ya da yavaşlıkla engelleniyor. Tutku işi +8/+14 moral veriyor; moral kırılma eşikleri açık: %35, %20, %5 <a class="ref" href="#k-20">20</a><a class="ref" href="#k-51">51</a><a class="ref" href="#k-52">52</a>.</li>
+    <li><b>Oxygen Not Included</b> (iyi örnek): herkes temel bir hızla kendiliğinden deneyim kazanıyor; öğrenilen her beceri moral beklentisini kendi kademesi kadar artırıyor; sayılar açıkça görünüyor <a class="ref" href="#k-53">53</a><a class="ref" href="#k-54">54</a><a class="ref" href="#k-55">55</a>.</li>
+    <li><b>Software Inc.</b>: "işim tatmin edici değil" şikâyetinin en çok oy alan nedeni sık boşta kalmak ve yanlış rolde çalışmak; proje ekranındaki "5/1 developers" yazısı kimin gerçekten çalıştığını göstermiyor <a class="ref" href="#k-30">30</a>.</li>
+    <li><b>Startup Company</b> (eleştirilen): mutluluk erken oyunda hızla düşüyor, masa ve bitki alınsa da istifa geliyor; tatil yönetimi "elle yapılmaması gereken bir mikro yönetim daha" diye eleştiriliyor <a class="ref" href="#k-32">32</a><a class="ref" href="#k-35">35</a>.</li>
+    <li><b>Mad Games Tycoon 2</b>: ikincil beceri eğitimi gereksiz bulundu; oyuncular uzmanlığı seçti, "All-Rounder" özelliğini "en kötü kusurlardan biri" saydı <a class="ref" href="#k-38">38</a>.</li>
+    <li><b>Project Hospital</b> (eleştirilen): boşta duran doktorların nedeni söylenmiyor, oyuncu forumda neden arıyor; çare atamayı değiştirmek çıktı <a class="ref" href="#k-44">44</a><a class="ref" href="#k-45">45</a>.</li>
+    <li><b>Ortak desen</b>: iyi örneklerde istifa ani gelmiyor, önce bir eşik ya da uyarı sayıyla görünüyor. Bizim oyundaki bir aylık istifanın nedeni bilinmiyor; önce bir koşuda istifa edenlerin moral geçmişi kaydedilmeli.</li>
+  </ul></div>
+  <p class="note">Bütün seçeneklerde rol dışı iş kapalı: tasarımcı test yapmaz. Boşta kalmak tek başına moral düşürmez.</p>
+  <div class="opts">
+    <div class="opt"><h3><span class="k">A</span>Rol içi yardım</h3>
+      <p>İşi biten kişi kendi rolündeki en yüklü karta ikinci kişi olarak girer; ikinci kişi daha az katar.</p>
+      <dl><dt>1 kişi</dt><dd>Geçerli değil.</dd><dt>50 kişi</dt><dd>Rol kalabalık, çoğu zaman yetiyor.</dd></dl>
+      <p class="ex">"Defne'nin kartı bitti; öbür tasarımcı Elif'in kartı geride, Defne yardıma giriyor, kart bir gün erken bitiyor."</p>
+      <p class="cost">Bedel: rolde açık kart yoksa ne olacağı cevapsız.</p></div>
+    <div class="opt"><h3><span class="k">B</span>Rol içi hazırlık</h3>
+      <p>Tasarımcı gelecek sprintin kartlarını önden çizer, geliştirici teknik borç ve hata kapatır, testçi eski özellikleri yeniden dener; sonraki sprintte o aşama kısalır.</p>
+      <dl><dt>1 kişi</dt><dd>Seyrek görülür.</dd><dt>50 kişi</dt><dd>Aynı kural, daha çok kişi.</dd></dl>
+      <p class="ex">"Defne 4. sprintin iki kartının ekranlarını önden çiziyor; 4. sprintte o kartların tasarımı yarıya iniyor."</p>
+      <p class="cost">Bedel: hiçbir oyunda doğrulanmış karşılığı yok; birikirse sprintleri fazla kolaylaştırır, üst sınır gerekir.</p></div>
+    <div class="opt"><h3><span class="k">C</span>Eğitim ya da dinlenme</h3>
+      <p>İşi biten kişi yalnız kendi rolünde beceri kazanır; morali düşükse kendiliğinden dinlenir.</p>
+      <dl><dt>1 kişi</dt><dd>Aynı çalışır.</dd><dt>50 kişi</dt><dd>Aynı çalışır.</dd></dl>
+      <p class="ex">"Defne'nin işi bitti; sprintin geri kalanında tasarım becerisi biraz ilerliyor."</p>
+      <p class="cost">Bedel: oyuncuya iş çıkarmamalı (Startup Company'nin tatil dersi).</p></div>
+    <div class="opt rec"><span class="tag">önerim</span><h3><span class="k">D</span>Merdiven: A, yoksa B, yoksa C</h3>
+      <p>Sistem sırayla bakar: rolde yardım edilecek kart, yoksa hazırlık işi, yoksa eğitim; moral düşükse doğrudan dinlenme. Kişinin yanında küçük bir ikon ne yaptığını gösterir; neden ipucunda.</p>
+      <dl><dt>1 kişi</dt><dd>Hep B ya da C.</dd><dt>50 kişi</dt><dd>Çoğunlukla A.</dd></dl>
+      <p class="ex">"Küçük ekipte Defne hazırlığa, büyük ekipte Elif'in kartına yardıma gidiyor; ikon ne yaptığını söylüyor."</p>
+      <p class="cost">Bedel: üç mekanik demek, kod ve denge işi en büyük seçenek.</p></div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Soru 3</span>
+  <h2>PM 5★ ile 2★ farkı ve ürün sorularını kim getirir</h2>
+  <div class="box find"><ul>
+    <li><b>Software Inc.</b> (görünmeyen çarpan): liderlik takım verimini etkiliyor ama oyuncu etkiyi göremiyor; forumda "eminim bonus veriyor ama emin değilim" diye tahmin yürütülüyor. Senin PM sorununun gerçek bir oyundaki karşılığı bu <a class="ref" href="#k-61">61</a><a class="ref" href="#k-62">62</a>.</li>
+    <li><b>Football Manager</b>: yardımcı menajer maç öncesi rapor ve takım konuşmasına tepki tavsiyesi veriyor; oyuncu tavsiyeyi kendi yargısıyla tartıyor. Tavsiyeye uyup kaybeden bir oyuncu tavsiyeyi yok saymaya başladı <a class="ref" href="#k-63">63</a><a class="ref" href="#k-64">64</a><a class="ref" href="#k-65">65</a>.</li>
+    <li><b>Prison Architect</b>: Güvenlik Şefi tehlike raporunu ve istihbarat menülerini açıyor; yöneticinin etkisi beceri çarpanı değil, bilgi katmanı <a class="ref" href="#k-46">46</a><a class="ref" href="#k-117">117</a>.</li>
+    <li><b>Big Ambitions</b>: İK Müdürü otomasyonu güvenilmez bulunca oyuncu işi elle geri alıyor; kalite güvensizse devir işe yaramıyor <a class="ref" href="#k-14">14</a><a class="ref" href="#k-16">16</a>.</li>
+    <li><b>Ölçek deseni</b>: küçük ekipte rol yok, rol sonradan açılıyor; rol yokken işi oyuncu ya da kurucu yapıyor. Ürün sorularının belirli bir rolden geldiği bir oyun bulunamadı.</li>
+  </ul></div>
+  <div class="opts">
+    <div class="opt"><h3><span class="k">A</span>Görünür çarpan</h3>
+      <p>PM'in yıldızı sprint hızına ya da kaliteye yüzde olarak eklenir ve ekranda yazar ("+%12 hız").</p>
+      <dl><dt>1 kişi</dt><dd>PM yok, çarpan yok.</dd><dt>50 kişi</dt><dd>Her PM kendi ürününe çarpan verir.</dd></dl>
+      <p class="ex">"5★ Ayşe'de '+%15', 2★ Murat'ta '+%5' yazıyor; oyuncu farkı görüyor ama sebebini görmüyor."</p>
+      <p class="cost">Bedel: PM'in neye baktığı yine görünmez.</p></div>
+    <div class="opt"><h3><span class="k">B</span>PM önceden görür</h3>
+      <p>PM sprint başında riskleri işaretler: belirsiz kart, ekibin yetmeyeceği kart, gecikecek aşama. Yıldız kaç riski ve ne kadar isabetli gördüğünü belirler; işaretlenen risk önceden çözülür.</p>
+      <dl><dt>1 kişi</dt><dd>PM yok; risk sprint ortasında sürpriz olarak gelir.</dd><dt>50 kişi</dt><dd>Her PM kendi ürününü işaretler.</dd></dl>
+      <p class="ex">"5★ Ayşe üç kartı işaretliyor, ikisi gerçekten sorun çıkarırdı; 2★ Murat yanlış kartı işaretliyor, sprint ortasında 'şartname belirsiz' sorusu geliyor."</p>
+      <p class="cost">Bedel: 2★ PM'in yanlış işareti tavsiyeyi değersiz gösterebilir.</p></div>
+    <div class="opt"><h3><span class="k">C</span>PM soruları getirir</h3>
+      <p>Ürün soruları PM'in ağzından gelir; 5★ PM seçeneklerin bedelini ve kendi önerisini söyler, 2★ yalnız soruyu getirir. Oyuncu uymak zorunda değil.</p>
+      <dl><dt>PM yokken</dt><dd>Soru kurucuya kendi düşüncesi olarak, ek bilgisiz gelir.</dd><dt>50 kişi</dt><dd>Soru o ürünün PM'inden gelir.</dd></dl>
+      <p class="ex">"5★ Ayşe: 'Kabul edersek tasarım 2 gün kayar, etmezsek müşteri biraz soğur; önerim kabul.' 2★ Murat: 'Müşteri renk istiyor.'"</p></div>
+    <div class="opt rec"><span class="tag">önerim</span><h3><span class="k">D</span>B ve C birlikte</h3>
+      <p>PM sprint başında riskleri işaretler, sprint içinde soruları getirir; yıldız iki yerde de görünür. PM yokken ikisi de kurucuya düşer.</p>
+      <dl><dt>1 kişi</dt><dd>Kurucu PM'siz oynar; ilk PM alındığı gün fark hissedilir.</dd><dt>50 kişi</dt><dd>Ürün başına bir PM, sorular kendi PM'inden.</dd></dl>
+      <p class="cost">Bedel: iki mekanik; kart metinleri PM yıldızına göre iki üç biçimde yazılır.</p></div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Soru 4</span>
+  <h2>Sprint ekranı: ilkeler ve yazı tipi</h2>
+  <p>Bu sorunun seçeneği yok; ilkeler sprint ekranının A, B, C yorumlarının ölçütü.</p>
+  <div class="box"><ol class="pr">
+    <li><b>Durum görselde, neden ipucunda.</b> Sayılar ekranda kalır; ana bilgi ipucuna gömülmez. FM26 sayıları ipucuna gömünce ağır eleştiri aldı <a class="ref" href="#k-101">101</a><a class="ref" href="#k-102">102</a>.</li>
+    <li><b>Tek darboğaz, tek vurgu.</b> En çok tıkanan aşama ya da kişi tek bir renkle öne çıkar.</li>
+    <li><b>Aşamalar bant olarak.</b> Tasarım, geliştirme, test birer bant; genişleyen bant darboğazdır (Kanban ve birikimli akış okuması) <a class="ref" href="#k-76">76</a><a class="ref" href="#k-77">77</a><a class="ref" href="#k-112">112</a>.</li>
+    <li><b>Kişi ikonla, beceri renkle;</b> kesin sayı ipucunda (RimWorld'ün iş ızgarası) <a class="ref" href="#k-20">20</a>.</li>
+    <li><b>Boşta olmanın nedeni ikonla:</b> yardım, hazırlık, eğitim, dinlenme, bekleme.</li>
+    <li><b>Cümle yerine değişim:</b> açıklayıcı satır yerine renk ya da sayı değişimi.</li>
+    <li><b>Sprint sonu raporu nedeni söyler;</b> "neyi düzelteceğimi söylemiyor" eleştirisine düşmez <a class="ref" href="#k-88">88</a><a class="ref" href="#k-98">98</a>.</li>
+    <li><b>50 kişide gruplama:</b> satırlar role ya da ürüne göre gruplanır, kapatılabilir; etiket kesilmez.</li>
+    <li><b>Arayüz ölçeği ayarı baştan olur;</b> yazı tipi şikâyetlerinin hemen hepsi harf biçimiyle değil boyut ve ölçekle ilgili <a class="ref" href="#k-102">102</a><a class="ref" href="#k-104">104</a><a class="ref" href="#k-108">108</a>.</li>
+    <li><b>Aşırı sadeleştirmeye dikkat:</b> yoğun ekranı büyük kartlara çevirmek sayı kaybettirir (FM26, Against the Storm'un geri alınan sade arayüzü) <a class="ref" href="#k-101">101</a><a class="ref" href="#k-107">107</a>.</li>
+  </ol></div>
+  <div class="box scroll"><table>
+    <thead><tr><th>Yazı tipi yönü</th><th>Gerekçe</th><th>Risk</th></tr></thead>
+    <tbody>
+      <tr><td>Bugünkü seti daraltmak: gövdede yalnız IBM Plex Sans, sayılarda eş genişlikli rakam; Barlow Condensed yalnız başlıkta</td><td>Oyunun kimliği bozulmaz; dar yüz küçük puntoda harf boşluğunu daraltıyor</td><td>Senin "çirkin" dediğin his tam geçmeyebilir; karede denenmeli</td></tr>
+      <tr><td>Tek nötr grotesk: Inter / Inter Display</td><td>Linear'ın yoğun arayüzünde kullanılıyor (kaynaklı) <a class="ref" href="#k-114">114</a></td><td>Menajer'in sıcak diline göre fazla "yazılım aracı" görünebilir</td></tr>
+      <tr><td>Okunurluk için tasarlanmış insancıl yüz: Atkinson Hyperlegible ya da Source Sans 3</td><td>1/l/I ve 0/O ayrımı, küçük boyut önde <a class="ref" href="#k-115">115</a></td><td>Türkçe karakterler seçilen sürümde denetlenmeli</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section>
+  <span class="eyebrow">Kaynaklar</span>
+  <h2>Kaynak listesi</h2>
+  <div class="box"><ol class="src-list">
+<li id="k-1" value="1">Software Inc. Steam mağaza sayfası: <a href="https://store.steampowered.com/app/362620/Software_Inc/" target="_blank" rel="noopener">store.steampowered.com/app/362620/Software_Inc/</a></li>
+<li id="k-2" value="2">Software Inc. Steam, takım nasıl kuruluyor: <a href="https://steamcommunity.com/app/362620/discussions/0/3159763879074407751/" target="_blank" rel="noopener">steamcommunity.com/app/362620/discussions/0/3159763879074407751/</a></li>
+<li id="k-3" value="3">Software Inc. Steam, tek lider kuralı (oyuncu sözü, 2016): <a href="https://steamcommunity.com/app/362620/discussions/0/365163686055481264" target="_blank" rel="noopener">steamcommunity.com/app/362620/discussions/0/365163686055481264</a></li>
+<li id="k-4" value="4">Software Inc. Steam, çalışan sayısı ve mikro yönetim: <a href="https://steamcommunity.com/app/362620/discussions/0/2521353993648497161" target="_blank" rel="noopener">steamcommunity.com/app/362620/discussions/0/2521353993648497161</a></li>
+<li id="k-5" value="5">Software Inc. Steam, üretim neden uzun sürüyor: <a href="https://steamcommunity.com/app/362620/discussions/0/358417008728912137" target="_blank" rel="noopener">steamcommunity.com/app/362620/discussions/0/358417008728912137</a></li>
+<li id="k-6" value="6">Software Inc. Wiki, Quickstart Guide (eskimiş): <a href="https://softwareinc.coredumping.com/wiki/index.php/Quickstart_Guide" target="_blank" rel="noopener">softwareinc.coredumping.com/wiki/index.php/Quickstart_Guide</a></li>
+<li id="k-7" value="7">SteamPulse, Software Inc.: <a href="https://edge-test.steampulse.org/game/362620" target="_blank" rel="noopener">edge-test.steampulse.org/game/362620</a></li>
+<li id="k-8" value="8">Game Dev Tycoon Steam mağaza sayfası: <a href="https://store.steampowered.com/app/239820/Game_Dev_Tycoon/" target="_blank" rel="noopener">store.steampowered.com/app/239820/Game_Dev_Tycoon/</a></li>
+<li id="k-9" value="9">Game Dev Tycoon Steam, işe alım ve ekip: <a href="https://steamcommunity.com/app/239820/discussions/0/864977564029712433" target="_blank" rel="noopener">steamcommunity.com/app/239820/discussions/0/864977564029712433</a></li>
+<li id="k-10" value="10">Mad Games Tycoon 2 Steam, mikro yönetim ve geç oyun: <a href="https://steamcommunity.com/app/1342330/discussions/0/3374907622941669830" target="_blank" rel="noopener">steamcommunity.com/app/1342330/discussions/0/3374907622941669830</a></li>
+<li id="k-11" value="11">Startup Company Steam mağaza sayfası: <a href="https://store.steampowered.com/app/606800/Startup_Company/" target="_blank" rel="noopener">store.steampowered.com/app/606800/Startup_Company/</a></li>
+<li id="k-12" value="12">Startup Company olumsuz yorumlar (API): <a href="https://store.steampowered.com/appreviews/606800?json=1&amp;filter=all&amp;language=english&amp;num_per_page=100&amp;review_type=negative&amp;purchase_type=all" target="_blank" rel="noopener">store.steampowered.com/appreviews/606800?json=1&amp;filter=all&amp;language=en…</a></li>
+<li id="k-13" value="13">Software Inc. ile Startup Company karşılaştırması: <a href="https://steamcommunity.com/app/362620/discussions/0/1470842897550126050" target="_blank" rel="noopener">steamcommunity.com/app/362620/discussions/0/1470842897550126050</a></li>
+<li id="k-14" value="14">Whisper of the House, Big Ambitions İK rehberi: <a href="https://www.whisperofthehouse.com/big-ambitions/employees-hr-guide" target="_blank" rel="noopener">whisperofthehouse.com/big-ambitions/employees-hr-guide</a></li>
+<li id="k-15" value="15">Big Ambitions Steam, işe alım uzmanı oranı (geliştirici yanıtı): <a href="https://steamcommunity.com/app/1331550/discussions/0/787664008885829784" target="_blank" rel="noopener">steamcommunity.com/app/1331550/discussions/0/787664008885829784</a></li>
+<li id="k-16" value="16">Big Ambitions Steam, manuel erken oyun ve İK devri: <a href="https://steamcommunity.com/app/1331550/discussions/0/3827536762648450587" target="_blank" rel="noopener">steamcommunity.com/app/1331550/discussions/0/3827536762648450587</a></li>
+<li id="k-17" value="17">NoobFeed, Big Ambitions incelemesi: <a href="https://www.noobfeed.com/reviews/big-ambitions-review" target="_blank" rel="noopener">noobfeed.com/reviews/big-ambitions-review</a></li>
+<li id="k-18" value="18">FM26 The Dugout, delegasyon: <a href="https://www.footballmanager.com/the-dugout/delegating-success-football-manager-26" target="_blank" rel="noopener">footballmanager.com/the-dugout/delegating-success-football-manager-26</a></li>
+<li id="k-19" value="19">FM24 Steam, antrenman devri: <a href="https://steamcommunity.com/app/2252570/discussions/0/5715692378857437753" target="_blank" rel="noopener">steamcommunity.com/app/2252570/discussions/0/5715692378857437753</a></li>
+<li id="k-20" value="20">RimWorld Wiki, Work: <a href="https://rimworldwiki.com/wiki/Work" target="_blank" rel="noopener">rimworldwiki.com/wiki/Work</a></li>
+<li id="k-21" value="21">RimWorld Steam, iş önceliklendirme: <a href="https://steamcommunity.com/app/294100/discussions/0/2381701715727097818" target="_blank" rel="noopener">steamcommunity.com/app/294100/discussions/0/2381701715727097818</a></li>
+<li id="k-22" value="22">RimWorld Steam, öncelik şikâyetleri: <a href="https://steamcommunity.com/app/294100/discussions/0/3279191623106894422" target="_blank" rel="noopener">steamcommunity.com/app/294100/discussions/0/3279191623106894422</a></li>
+<li id="k-23" value="23">ONI Wiki, Priority: <a href="https://oxygennotincluded.wiki.gg/wiki/Priority" target="_blank" rel="noopener">oxygennotincluded.wiki.gg/wiki/Priority</a></li>
+<li id="k-24" value="24">Teachable CTO (Noah Pryor): <a href="https://wiln.substack.com/p/noah-pryor-cto-teachable" target="_blank" rel="noopener">wiln.substack.com/p/noah-pryor-cto-teachable</a></li>
+<li id="k-25" value="25">SaaStr, teknik kurucu ne zaman bırakmalı: <a href="https://www.saastr.com/when-should-a-technical-founder-stop-doing-technical-work/" target="_blank" rel="noopener">saastr.com/when-should-a-technical-founder-stop-doing-technical-work/</a></li>
+<li id="k-26" value="26">a16z, Product CEO Paradox: <a href="https://a16z.com/why-founders-fail-the-product-ceo-paradox/" target="_blank" rel="noopener">a16z.com/why-founders-fail-the-product-ceo-paradox/</a></li>
+<li id="k-27" value="27">madewithlove, Stop Coding, Start Leading: <a href="https://madewithlove.com/blog/stop-coding-start-leading-shifting-dynamics-for-startup-ceos.md" target="_blank" rel="noopener">madewithlove.com/blog/stop-coding-start-leading-shifting-dynamics-for-…</a></li>
+<li id="k-28" value="28">Gusto mühendislik blogu (yalnız arama özeti): <a href="https://engineering.gusto.com/how-my-role-as-cto-has-changed-as-weve-grown-to-100-engineers" target="_blank" rel="noopener">engineering.gusto.com/how-my-role-as-cto-has-changed-as-weve-grown-to-…</a></li>
+<li id="k-29" value="29">Wavect CTO sözlüğü (satıcı iddiası): <a href="https://wavect.io/de/glossary/cto/" target="_blank" rel="noopener">wavect.io/de/glossary/cto/</a></li>
+<li id="k-30" value="30">Software Inc. Steam, Job is not fulfilling: <a href="https://steamcommunity.com/app/362620/discussions/0/2619338518534253048" target="_blank" rel="noopener">steamcommunity.com/app/362620/discussions/0/2619338518534253048</a></li>
+<li id="k-31" value="31">Software Inc. Steam, birden çok projede takım stresi: <a href="https://steamcommunity.com/app/362620/discussions/0/3288067088097196186" target="_blank" rel="noopener">steamcommunity.com/app/362620/discussions/0/3288067088097196186</a></li>
+<li id="k-32" value="32">Startup Company Steam, Developers get depressed early on: <a href="https://steamcommunity.com/app/606800/discussions/0/1471967615874402168" target="_blank" rel="noopener">steamcommunity.com/app/606800/discussions/0/1471967615874402168</a></li>
+<li id="k-33" value="33">Startup Company Steam, Starting Out Tips: <a href="https://steamcommunity.com/app/606800/discussions/0/1471967615878120865" target="_blank" rel="noopener">steamcommunity.com/app/606800/discussions/0/1471967615878120865</a></li>
+<li id="k-34" value="34">Startup Company Steam, CEO rolü: <a href="https://steamcommunity.com/app/606800/discussions/0/3647273545686180155" target="_blank" rel="noopener">steamcommunity.com/app/606800/discussions/0/3647273545686180155</a></li>
+<li id="k-35" value="35">KeenGamer, Startup Company önizleme: <a href="https://www.keengamer.com/articles/previews/startup-company-preview/" target="_blank" rel="noopener">keengamer.com/articles/previews/startup-company-preview/</a></li>
+<li id="k-36" value="36">Game Dev Tycoon Steam, personel ve orta boy oyunlar: <a href="https://steamcommunity.com/app/239820/discussions/0/648814845135478267" target="_blank" rel="noopener">steamcommunity.com/app/239820/discussions/0/648814845135478267</a></li>
+<li id="k-37" value="37">Game Dev Tycoon Steam, araştırma puanı ve eğitim: <a href="https://steamcommunity.com/app/239820/discussions/0/864978835604524993" target="_blank" rel="noopener">steamcommunity.com/app/239820/discussions/0/864978835604524993</a></li>
+<li id="k-38" value="38">Mad Games Tycoon 2 Steam, Secondary Skills: <a href="https://steamcommunity.com/app/1342330/discussions/0/4632610189255704513" target="_blank" rel="noopener">steamcommunity.com/app/1342330/discussions/0/4632610189255704513</a></li>
+<li id="k-39" value="39">Big Ambitions Steam, Calling in sick (geliştirici yanıtı): <a href="https://steamcommunity.com/app/1331550/discussions/0/5440953210428017203" target="_blank" rel="noopener">steamcommunity.com/app/1331550/discussions/0/5440953210428017203</a></li>
+<li id="k-40" value="40">Big Ambitions forum, çalışan koşulları (öneri başlığı): <a href="https://forum.bigambitionsgame.com/t/adding-more-and-changeable-worker-conditions-hinzufugen-weiterer-und-veranderbarer-arbeitsbedingungen/3473" target="_blank" rel="noopener">forum.bigambitionsgame.com/t/adding-more-and-changeable-worker-conditi…</a></li>
+<li id="k-41" value="41">Big Ambitions Steam, çalışan memnuniyeti: <a href="https://steamcommunity.com/app/1331550/discussions/0/6620894968760128766" target="_blank" rel="noopener">steamcommunity.com/app/1331550/discussions/0/6620894968760128766</a></li>
+<li id="k-42" value="42">Two Point Hospital Steam, moral %75: <a href="https://steamcommunity.com/app/535930/discussions/0/1737715419905040465" target="_blank" rel="noopener">steamcommunity.com/app/535930/discussions/0/1737715419905040465</a></li>
+<li id="k-43" value="43">Magic Game World, Two Point Hospital personel özellikleri: <a href="https://www.magicgameworld.com/?p=23543" target="_blank" rel="noopener">magicgameworld.com/?p=23543</a></li>
+<li id="k-44" value="44">Project Hospital Steam, hastalar taburcu olmuyor: <a href="https://steamcommunity.com/app/868360/discussions/0/2995417278821701093" target="_blank" rel="noopener">steamcommunity.com/app/868360/discussions/0/2995417278821701093</a></li>
+<li id="k-45" value="45">Project Hospital Steam, personel başlıkları: <a href="https://steamcommunity.com/app/868360/discussions/0/2275953283821372448" target="_blank" rel="noopener">steamcommunity.com/app/868360/discussions/0/2275953283821372448</a></li>
+<li id="k-46" value="46">Prison Architect Wiki, Staff: <a href="https://prison-architect.fandom.com/wiki/Staff" target="_blank" rel="noopener">prison-architect.fandom.com/wiki/Staff</a></li>
+<li id="k-47" value="47">Prison Architect Steam, çizelgeler: <a href="https://steamcommunity.com/app/233450/discussions/0/1291817208492333432" target="_blank" rel="noopener">steamcommunity.com/app/233450/discussions/0/1291817208492333432</a></li>
+<li id="k-48" value="48">FM Scout, moral ve ilişkiler: <a href="https://www.fmscout.com/a-morale-and-relationships-in-football-manager.html" target="_blank" rel="noopener">fmscout.com/a-morale-and-relationships-in-football-manager.html</a></li>
+<li id="k-49" value="49">FM24 Steam, oyuncu sözleri: <a href="https://steamcommunity.com/app/2252570/discussions/0/3957036557672386650" target="_blank" rel="noopener">steamcommunity.com/app/2252570/discussions/0/3957036557672386650</a></li>
+<li id="k-50" value="50">FM24 Steam, oyun süresi: <a href="https://steamcommunity.com/app/2252570/discussions/0/5715692378855527354/" target="_blank" rel="noopener">steamcommunity.com/app/2252570/discussions/0/5715692378855527354/</a></li>
+<li id="k-51" value="51">RimWorld Wiki, Passion: <a href="https://rimworldwiki.com/wiki/Passion" target="_blank" rel="noopener">rimworldwiki.com/wiki/Passion</a></li>
+<li id="k-52" value="52">RimWorld Wiki, Mood: <a href="https://rimworldwiki.com/wiki/Mood" target="_blank" rel="noopener">rimworldwiki.com/wiki/Mood</a></li>
+<li id="k-53" value="53">ONI Wiki, Stress: <a href="https://oxygennotincluded.wiki.gg/wiki/Stress" target="_blank" rel="noopener">oxygennotincluded.wiki.gg/wiki/Stress</a></li>
+<li id="k-54" value="54">ONI Wiki, Morale: <a href="https://oxygennotincluded.wiki.gg/wiki/Morale" target="_blank" rel="noopener">oxygennotincluded.wiki.gg/wiki/Morale</a></li>
+<li id="k-55" value="55">ONI Wiki, Skills: <a href="https://oxygennotincluded.wiki.gg/wiki/Skills" target="_blank" rel="noopener">oxygennotincluded.wiki.gg/wiki/Skills</a></li>
+<li id="k-56" value="56">Against the Storm Wiki, Resolve: <a href="https://wiki.hoodedhorse.com/Against_the_Storm/Resolve" target="_blank" rel="noopener">wiki.hoodedhorse.com/Against_the_Storm/Resolve</a></li>
+<li id="k-57" value="57">Adrian Hon, Against the Storm: <a href="https://adrianhon.substack.com/p/against-the-storm" target="_blank" rel="noopener">adrianhon.substack.com/p/against-the-storm</a></li>
+<li id="k-58" value="58">Frostpunk 2 Steam, konut ve işgücü: <a href="https://steamcommunity.com/app/1601580/discussions/0/4851029693349458061" target="_blank" rel="noopener">steamcommunity.com/app/1601580/discussions/0/4851029693349458061</a></li>
+<li id="k-59" value="59">Game Informer, Frostpunk 2 önizleme: <a href="https://www.gameinformer.com/preview/2024/05/27/breaking-the-ice" target="_blank" rel="noopener">gameinformer.com/preview/2024/05/27/breaking-the-ice</a></li>
+<li id="k-60" value="60">Software Inc. Wiki, Project Management: <a href="https://softwareinc.coredumping.com/wiki/index.php/Project_Management" target="_blank" rel="noopener">softwareinc.coredumping.com/wiki/index.php/Project_Management</a></li>
+<li id="k-61" value="61">Software Inc. Wiki, Teams: <a href="https://softwareinc.coredumping.com/wiki/index.php/Teams" target="_blank" rel="noopener">softwareinc.coredumping.com/wiki/index.php/Teams</a></li>
+<li id="k-62" value="62">Software Inc. Steam, leader search: <a href="https://steamcommunity.com/app/362620/discussions/0/133259227517675456" target="_blank" rel="noopener">steamcommunity.com/app/362620/discussions/0/133259227517675456</a></li>
+<li id="k-63" value="63">FM Scout, personel nitelikleri ve antrenman yıldızları: <a href="https://www.fmscout.com/a-staff-attributes-and-training-ratings-explained.html" target="_blank" rel="noopener">fmscout.com/a-staff-attributes-and-training-ratings-explained.html</a></li>
+<li id="k-64" value="64">Passion4FM, personel nitelikleri: <a href="https://www.passion4fm.com/football-manager-staff-attributes/" target="_blank" rel="noopener">passion4fm.com/football-manager-staff-attributes/</a></li>
+<li id="k-65" value="65">FM Scout forum, yardımcının maç öncesi raporları: <a href="https://www.fmscout.com/q-1955-Assistant-Pre-Match-Reports.html?n=last" target="_blank" rel="noopener">fmscout.com/q-1955-Assistant-Pre-Match-Reports.html?n=last</a></li>
+<li id="k-66" value="66">Bit-tech, Football Manager 2010 incelemesi: <a href="https://www.bit-tech.net/reviews/gaming/pc/football-manager-2010-review/2/" target="_blank" rel="noopener">bit-tech.net/reviews/gaming/pc/football-manager-2010-review/2/</a></li>
+<li id="k-67" value="67">Two Point Hospital Steam, üç istatistik: <a href="https://steamcommunity.com/app/535930/discussions/0/1737715419909041491" target="_blank" rel="noopener">steamcommunity.com/app/535930/discussions/0/1737715419909041491</a></li>
+<li id="k-68" value="68">Common Sense Gamer, Two Point Hospital uzmanlaştırma: <a href="https://commonsensegamer.com/two-point-hospital-staff-management-guide-to-specialize-doctors-nurses-and-assistants/" target="_blank" rel="noopener">commonsensegamer.com/two-point-hospital-staff-management-guide-to-spec…</a></li>
+<li id="k-69" value="69">GameSpew, Two Point Hospital personel eğitimi: <a href="https://www.gamespew.com/2018/09/how-to-train-staff-in-two-point-hospital/" target="_blank" rel="noopener">gamespew.com/2018/09/how-to-train-staff-in-two-point-hospital/</a></li>
+<li id="k-70" value="70">RimWorld Wiki, Handle: <a href="https://rimworldwiki.com/wiki/Handle" target="_blank" rel="noopener">rimworldwiki.com/wiki/Handle</a></li>
+<li id="k-71" value="71">PC Gamer, RimWorld rehberi: <a href="https://www.pcgamer.com/rimworld-guide/" target="_blank" rel="noopener">pcgamer.com/rimworld-guide/</a></li>
+<li id="k-72" value="72">Steam Workshop, Work Manager tartışması: <a href="https://steamcommunity.com/workshop/filedetails/discussion/2029596262/4518884884066882707" target="_blank" rel="noopener">steamcommunity.com/workshop/filedetails/discussion/2029596262/45188848…</a></li>
+<li id="k-73" value="73">ONI Wiki, Schedule: <a href="https://oxygennotincluded.wiki.gg/wiki/Schedule" target="_blank" rel="noopener">oxygennotincluded.wiki.gg/wiki/Schedule</a></li>
+<li id="k-74" value="74">Mad Games Tycoon 2 Steam, tartışma 2: <a href="https://steamcommunity.com/app/1342330/discussions/0/4034727291135746253" target="_blank" rel="noopener">steamcommunity.com/app/1342330/discussions/0/4034727291135746253</a></li>
+<li id="k-75" value="75">Giant Bomb, Prison Architect: <a href="https://giantbomb.com/wiki/Games/Prison_Architect" target="_blank" rel="noopener">giantbomb.com/wiki/Games/Prison_Architect</a></li>
+<li id="k-76" value="76">Microsoft Learn, birikimli akış diyagramı: <a href="https://learn.microsoft.com/en-us/azure/devops/report/dashboards/cumulative-flow-cycle-lead-time-guidance?view=azure-devops" target="_blank" rel="noopener">learn.microsoft.com/en-us/azure/devops/report/dashboards/cumulative-fl…</a></li>
+<li id="k-77" value="77">Shortcut, CFD nasıl çalışır: <a href="https://shortcut.com/blog/how-do-cumulative-flow-diagrams-work" target="_blank" rel="noopener">shortcut.com/blog/how-do-cumulative-flow-diagrams-work</a></li>
+<li id="k-78" value="78">Screenful, Cumulative Flow diagram: <a href="https://screenful.com/blog/cumulative-flow-diagram" target="_blank" rel="noopener">screenful.com/blog/cumulative-flow-diagram</a></li>
+<li id="k-79" value="79">RimWorld Steam, Work sekmesi şikâyeti: <a href="https://steamcommunity.com/app/294100/discussions/0/1736594593603694059" target="_blank" rel="noopener">steamcommunity.com/app/294100/discussions/0/1736594593603694059</a></li>
+<li id="k-80" value="80">RimWorld Steam yorumları (API): <a href="https://store.steampowered.com/appreviews/294100?json=1&amp;filter=all&amp;language=english&amp;num_per_page=100&amp;review_type=all&amp;purchase_type=all&amp;day_range=3650" target="_blank" rel="noopener">store.steampowered.com/appreviews/294100?json=1&amp;filter=all&amp;language=en…</a></li>
+<li id="k-81" value="81">Klei forum, ilk 100 saat geri bildirimi: <a href="https://forums.kleientertainment.com/forums/topic/79562-first-100-hours-of-oxygen-not-included-feedback/" target="_blank" rel="noopener">forums.kleientertainment.com/forums/topic/79562-first-100-hours-of-oxy…</a></li>
+<li id="k-82" value="82">ONI Steam tartışması: <a href="https://steamcommunity.com/app/457140/discussions/0/1488861734118395135" target="_blank" rel="noopener">steamcommunity.com/app/457140/discussions/0/1488861734118395135</a></li>
+<li id="k-83" value="83">ONI Steam yorumları (API): <a href="https://store.steampowered.com/appreviews/457140?json=1&amp;filter=all&amp;language=english&amp;num_per_page=100&amp;review_type=all&amp;purchase_type=all&amp;day_range=3650" target="_blank" rel="noopener">store.steampowered.com/appreviews/457140?json=1&amp;filter=all&amp;language=en…</a></li>
+<li id="k-84" value="84">Software Inc. Steam, takım boyutları ve roller: <a href="https://steamcommunity.com/app/362620/discussions/0/5829413623767242744" target="_blank" rel="noopener">steamcommunity.com/app/362620/discussions/0/5829413623767242744</a></li>
+<li id="k-85" value="85">Software Inc. olumsuz yorumlar (API): <a href="https://store.steampowered.com/appreviews/362620?json=1&amp;filter=all&amp;language=english&amp;num_per_page=100&amp;review_type=negative&amp;purchase_type=all&amp;day_range=3650" target="_blank" rel="noopener">store.steampowered.com/appreviews/362620?json=1&amp;filter=all&amp;language=en…</a></li>
+<li id="k-86" value="86">Software Inc. olumlu yorumlar (API): <a href="https://store.steampowered.com/appreviews/362620?json=1&amp;filter=all&amp;language=english&amp;num_per_page=100&amp;review_type=positive&amp;purchase_type=all&amp;day_range=3650" target="_blank" rel="noopener">store.steampowered.com/appreviews/362620?json=1&amp;filter=all&amp;language=en…</a></li>
+<li id="k-87" value="87">Game Dev Tycoon Steam, aşama ve oran (2014): <a href="https://steamcommunity.com/app/239820/discussions/0/46476144936605557" target="_blank" rel="noopener">steamcommunity.com/app/239820/discussions/0/46476144936605557</a></li>
+<li id="k-88" value="88">Game Dev Tycoon Steam yorumları (API): <a href="https://store.steampowered.com/appreviews/239820?json=1&amp;filter=all&amp;language=english&amp;num_per_page=100&amp;review_type=all&amp;purchase_type=all&amp;day_range=3650" target="_blank" rel="noopener">store.steampowered.com/appreviews/239820?json=1&amp;filter=all&amp;language=en…</a></li>
+<li id="k-89" value="89">Mad Games Tycoon 2 Steam, çalışan ve oda yerleşimi: <a href="https://steamcommunity.com/app/1342330/discussions/0/3058492406517208479" target="_blank" rel="noopener">steamcommunity.com/app/1342330/discussions/0/3058492406517208479</a></li>
+<li id="k-90" value="90">Mad Games Tycoon 2 Steam yorumları (API): <a href="https://store.steampowered.com/appreviews/1342330?json=1&amp;filter=all&amp;language=english&amp;num_per_page=100&amp;review_type=all&amp;purchase_type=all&amp;day_range=3650" target="_blank" rel="noopener">store.steampowered.com/appreviews/1342330?json=1&amp;filter=all&amp;language=e…</a></li>
+<li id="k-91" value="91">Startup Company Steam yorumları (API): <a href="https://store.steampowered.com/appreviews/606800?json=1&amp;filter=all&amp;language=english&amp;num_per_page=100&amp;review_type=all&amp;purchase_type=all&amp;day_range=3650" target="_blank" rel="noopener">store.steampowered.com/appreviews/606800?json=1&amp;filter=all&amp;language=en…</a></li>
+<li id="k-92" value="92">Startup Panic Steam yorumları (API): <a href="https://store.steampowered.com/appreviews/1045610?json=1&amp;filter=all&amp;language=english&amp;num_per_page=100&amp;review_type=all&amp;purchase_type=all&amp;day_range=3650" target="_blank" rel="noopener">store.steampowered.com/appreviews/1045610?json=1&amp;filter=all&amp;language=e…</a></li>
+<li id="k-93" value="93">Big Ambitions Steam yorumları (API): <a href="https://store.steampowered.com/appreviews/1331550?json=1&amp;filter=all&amp;language=english&amp;num_per_page=100&amp;review_type=all&amp;purchase_type=all&amp;day_range=3650" target="_blank" rel="noopener">store.steampowered.com/appreviews/1331550?json=1&amp;filter=all&amp;language=e…</a></li>
+<li id="k-94" value="94">Project Hospital Steam, ameliyat darboğazı: <a href="https://steamcommunity.com/app/868360/discussions/0/4351114280575139058" target="_blank" rel="noopener">steamcommunity.com/app/868360/discussions/0/4351114280575139058</a></li>
+<li id="k-95" value="95">Project Hospital Steam, fazla ya da boşta kadro: <a href="https://steamcommunity.com/app/868360/discussions/0/1752358461535394791" target="_blank" rel="noopener">steamcommunity.com/app/868360/discussions/0/1752358461535394791</a></li>
+<li id="k-96" value="96">Project Hospital Steam yorumları (API): <a href="https://store.steampowered.com/appreviews/868360?json=1&amp;filter=all&amp;language=english&amp;num_per_page=100&amp;review_type=all&amp;purchase_type=all&amp;day_range=3650" target="_blank" rel="noopener">store.steampowered.com/appreviews/868360?json=1&amp;filter=all&amp;language=en…</a></li>
+<li id="k-97" value="97">GameSpew, Two Point Hospital katmanlar: <a href="https://www.gamespew.com/?p=103114" target="_blank" rel="noopener">gamespew.com/?p=103114</a></li>
+<li id="k-98" value="98">Two Point Hospital Steam yorumları (API): <a href="https://store.steampowered.com/appreviews/535930?json=1&amp;filter=all&amp;language=english&amp;num_per_page=100&amp;review_type=all&amp;purchase_type=all&amp;day_range=3650" target="_blank" rel="noopener">store.steampowered.com/appreviews/535930?json=1&amp;filter=all&amp;language=en…</a></li>
+<li id="k-99" value="99">Double Eleven forum, konsol arayüz yeniden tasarımı: <a href="https://forums.double11.com/t/what-s-the-difference/33" target="_blank" rel="noopener">forums.double11.com/t/what-s-the-difference/33</a></li>
+<li id="k-100" value="100">Prison Architect Steam yorumları (API): <a href="https://store.steampowered.com/appreviews/233450?json=1&amp;filter=all&amp;language=english&amp;num_per_page=100&amp;review_type=all&amp;purchase_type=all&amp;day_range=3650" target="_blank" rel="noopener">store.steampowered.com/appreviews/233450?json=1&amp;filter=all&amp;language=en…</a></li>
+<li id="k-101" value="101">Digitec, FM26 arayüz labirenti: <a href="https://www.digitec.ch/en/page/football-manager-26-is-floundering-in-an-interface-labyrinth-40507" target="_blank" rel="noopener">digitec.ch/en/page/football-manager-26-is-floundering-in-an-interface-…</a></li>
+<li id="k-102" value="102">FM26 olumsuz Steam yorumları (API): <a href="https://store.steampowered.com/appreviews/3551340?json=1&amp;filter=all&amp;language=english&amp;num_per_page=100&amp;review_type=negative&amp;purchase_type=all&amp;day_range=365" target="_blank" rel="noopener">store.steampowered.com/appreviews/3551340?json=1&amp;filter=all&amp;language=e…</a></li>
+<li id="k-103" value="103">FM24 Steam yorumları (API): <a href="https://store.steampowered.com/appreviews/2252570?json=1&amp;filter=all&amp;language=english&amp;num_per_page=100&amp;review_type=all&amp;purchase_type=all&amp;day_range=3650" target="_blank" rel="noopener">store.steampowered.com/appreviews/2252570?json=1&amp;filter=all&amp;language=e…</a></li>
+<li id="k-104" value="104">PCGamesN, Frostpunk 2 arayüz iyileştirmeleri: <a href="https://www.pcgamesn.com/frostpunk-2/ui-improvements" target="_blank" rel="noopener">pcgamesn.com/frostpunk-2/ui-improvements</a></li>
+<li id="k-105" value="105">Frostpunk 2 Steam, arayüz tartışması: <a href="https://steamcommunity.com/app/1601580/discussions/0/7845908683578775181" target="_blank" rel="noopener">steamcommunity.com/app/1601580/discussions/0/7845908683578775181</a></li>
+<li id="k-106" value="106">Frostpunk 2 Steam yorumları (API): <a href="https://store.steampowered.com/appreviews/1601580?json=1&amp;filter=all&amp;language=english&amp;num_per_page=100&amp;review_type=all&amp;purchase_type=all&amp;day_range=3650" target="_blank" rel="noopener">store.steampowered.com/appreviews/1601580?json=1&amp;filter=all&amp;language=e…</a></li>
+<li id="k-107" value="107">Eremite Games, Interface hotfix: <a href="https://eremitegames.com/interface-hotfix-we-hear-you/" target="_blank" rel="noopener">eremitegames.com/interface-hotfix-we-hear-you/</a></li>
+<li id="k-108" value="108">Against the Storm Steam yorumları (API): <a href="https://store.steampowered.com/appreviews/1336490?json=1&amp;filter=all&amp;language=english&amp;num_per_page=100&amp;review_type=all&amp;purchase_type=all&amp;day_range=3650" target="_blank" rel="noopener">store.steampowered.com/appreviews/1336490?json=1&amp;filter=all&amp;language=e…</a></li>
+<li id="k-109" value="109">Shadow Empire Steam yorumları (API): <a href="https://store.steampowered.com/appreviews/1154840?json=1&amp;filter=all&amp;language=english&amp;num_per_page=100&amp;review_type=all&amp;purchase_type=all&amp;day_range=3650" target="_blank" rel="noopener">store.steampowered.com/appreviews/1154840?json=1&amp;filter=all&amp;language=e…</a></li>
+<li id="k-110" value="110">Production Line Steam yorumları (API): <a href="https://store.steampowered.com/appreviews/591370?json=1&amp;filter=all&amp;language=english&amp;num_per_page=100&amp;review_type=all&amp;purchase_type=all&amp;day_range=3650" target="_blank" rel="noopener">store.steampowered.com/appreviews/591370?json=1&amp;filter=all&amp;language=en…</a></li>
+<li id="k-111" value="111">Rise of Industry Steam yorumları (API): <a href="https://store.steampowered.com/appreviews/671440?json=1&amp;filter=all&amp;language=english&amp;num_per_page=100&amp;review_type=all&amp;purchase_type=all&amp;day_range=3650" target="_blank" rel="noopener">store.steampowered.com/appreviews/671440?json=1&amp;filter=all&amp;language=en…</a></li>
+<li id="k-112" value="112">Microsoft Learn, What is Kanban: <a href="https://learn.microsoft.com/devops/plan/what-is-kanban" target="_blank" rel="noopener">learn.microsoft.com/devops/plan/what-is-kanban</a></li>
+<li id="k-113" value="113">Atlassian, Kanban: <a href="https://www.atlassian.com/agile/kanban" target="_blank" rel="noopener">atlassian.com/agile/kanban</a></li>
+<li id="k-114" value="114">Linear, arayüz yeniden tasarımı: <a href="https://linear.app/now/how-we-redesigned-the-linear-ui" target="_blank" rel="noopener">linear.app/now/how-we-redesigned-the-linear-ui</a></li>
+<li id="k-115" value="115">Monotype, oyun yazı tipleri: <a href="https://www.monotype.com/pt/node/2836" target="_blank" rel="noopener">monotype.com/pt/node/2836</a></li>
+<li id="k-116" value="116">Factorio yazı tipi yazısı (fontu doğrulamıyor): <a href="https://madegooddesigns.com/?p=10967" target="_blank" rel="noopener">madegooddesigns.com/?p=10967</a></li>
+<li id="k-117" value="117">Prison Architect Steam, tehlike göstergesini Güvenlik Şefi açıyor (oyuncu sözü, 2016): <a href="https://steamcommunity.com/app/233450/discussions/0/364042262876946660" target="_blank" rel="noopener">steamcommunity.com/app/233450/discussions/0/364042262876946660</a></li>
+</ol></div>
+</section>
+
+</main>

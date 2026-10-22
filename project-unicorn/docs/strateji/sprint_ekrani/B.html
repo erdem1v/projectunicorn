@@ -1,0 +1,1221 @@
+<title>Sprint Ekranı B</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;
+--s0:#100E0B;--s1:#15120F;--s2:#1A1714;--s3:#1E1B18;--s4:#27231F;--s5:#2E2924;
+--l1:#3A342D;--l2:#4A4239;--l3:#6A5F52;--lh:#958C7E;
+--i1:#FFFFFF;--i2:#E9E4DA;--i3:#B3AA9E;--i4:#9A9184;--io:#6B6358;
+--acc:#F2B53A;--acch:#F7C65F;--warn:#E8913A;
+--hatch:repeating-linear-gradient(135deg,rgba(232,145,58,.55) 0 6px,rgba(232,145,58,.14) 6px 12px)}
+*{box-sizing:border-box}
+html{background:#0B0907}
+body{margin:0;background:#0B0907;color:#E9E4DA;font-family:'Archivo',system-ui,sans-serif;font-variant-numeric:tabular-nums;
+padding-block:28px 72px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));-webkit-font-smoothing:antialiased}
+.page{max-width:1440px;margin:0 auto}
+.des{--c:#C49BE3;--cr:196,155,227}
+.dev{--c:#6CB4DE;--cr:108,180,222}
+.tst{--c:#7FCBA4;--cr:127,203,164}
+.ic{width:18px;height:18px;flex:none;display:inline-block;vertical-align:middle}
+
+/* ---------- intro ---------- */
+.intro{max-width:1100px}
+.kick{font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#9A9184;margin:0 0 10px;font-stretch:90%}
+.intro h1{font-size:clamp(30px,5vw,46px);font-weight:850;font-stretch:118%;color:#fff;margin:0 0 14px;line-height:1.02;letter-spacing:-.005em}
+.lede{font-size:17px;line-height:1.55;color:#E9E4DA;margin:0 0 26px;max-width:860px}
+.lede b{color:#F2B53A;font-weight:700}
+.cols{display:grid;grid-template-columns:1.15fr 1fr;gap:32px}
+@media (max-width:860px){.cols{grid-template-columns:1fr}}
+.intro h2{font-size:13px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#9A9184;margin:0 0 12px;font-stretch:90%}
+.intro ol{margin:0;padding-left:20px}
+.intro li{font-size:15.5px;line-height:1.55;color:#B3AA9E;margin-bottom:9px}
+.intro li b{color:#E9E4DA}
+.intro p.t{font-size:15.5px;line-height:1.55;color:#B3AA9E;margin:0 0 12px}
+.intro p.t b{color:#E9E4DA}
+.spec{border:1px solid #3A342D;border-radius:6px;padding:14px 16px;background:#15120F;margin:0 0 20px}
+.spec .a{font-size:clamp(20px,4.6vw,30px);font-weight:850;font-stretch:118%;color:#fff;line-height:1.1}
+.spec .b{font-size:18px;font-weight:500;color:#E9E4DA;margin-top:8px;line-height:1.35}
+.spec .c{font-size:15px;font-weight:650;font-stretch:80%;letter-spacing:.06em;color:#B3AA9E;margin-top:6px}
+.lg{display:grid;grid-template-columns:auto 1fr;gap:9px 12px;align-items:center;font-size:14.5px;color:#B3AA9E}
+.lg .sw{display:flex;gap:4px;align-items:center;min-width:92px}
+.lg .bx{width:26px;height:14px;border-radius:2px}
+.note{font-size:14px;color:#9A9184;line-height:1.5;margin:22px 0 0;border-top:1px solid #3A342D;padding-top:14px;max-width:1100px}
+.note b{color:#B3AA9E}
+
+/* ---------- frame ---------- */
+.fr{margin:44px 0 0}
+.frcap{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;padding:12px 16px;background:#17130F;border:1px solid #3A342D;border-bottom:none;border-radius:8px 8px 0 0}
+.frcap .no{font-size:14px;font-weight:800;color:#F2B53A;font-stretch:110%}
+.frcap b{font-size:17px;font-weight:750;color:#fff}
+.frcap span.d{font-size:15px;color:#B3AA9E;flex:1 1 380px}
+.frbox{overflow-x:auto;border:1px solid #3A342D;border-radius:0 0 8px 8px;background:#000}
+.stage{width:1440px;height:810px;position:relative;overflow:hidden}
+.game{position:absolute;left:0;top:0;width:1920px;height:1080px;transform:scale(.75);transform-origin:0 0;
+background:radial-gradient(ellipse at 72% 38%,#2A2219 0,#15110D 46%,#0C0A08 80%);overflow:hidden}
+.game::before{content:"";position:absolute;inset:0;opacity:.07;background:
+repeating-linear-gradient(30deg,#E9E4DA 0 1px,transparent 1px 64px),repeating-linear-gradient(150deg,#E9E4DA 0 1px,transparent 1px 64px)}
+.shell{position:absolute;left:0;top:0;bottom:0;width:184px;background:rgba(12,10,8,.82);border-right:1px solid #2A251F}
+.brand{position:absolute;left:20px;top:22px;font-size:26px;font-weight:850;font-stretch:96%;color:#fff;white-space:nowrap}
+.nav{position:absolute;left:20px;top:88px;display:flex;flex-direction:column;gap:22px}
+.nav span{display:flex;align-items:center;gap:12px;font-size:16px;font-weight:700;font-stretch:88%;letter-spacing:.08em;color:#9A9184}
+.nav span i{width:14px;height:14px;border:2px solid currentColor;border-radius:3px}
+.nav span.on{color:#fff}
+.nav span.on i{background:#F2B53A;border-color:#F2B53A}
+
+/* ---------- window ---------- */
+.win{position:absolute;left:208px;top:88px;width:1424px;height:928px;background:var(--s3);border:1px solid var(--l2);border-radius:6px;
+box-shadow:0 30px 90px rgba(0,0,0,.65);display:flex;flex-direction:column;overflow:hidden;color:var(--i2)}
+.whead{height:64px;flex:none;display:flex;align-items:center;gap:26px;padding:0 18px 0 24px;background:var(--s2);border-bottom:1px solid var(--l1)}
+.wt{font-size:30px;font-weight:850;font-stretch:118%;color:#fff;letter-spacing:.01em}
+.wm{display:flex;flex-direction:column;gap:3px;padding-left:22px;border-left:1px solid var(--l1)}
+.wm small{font-size:14px;font-weight:700;font-stretch:85%;letter-spacing:.1em;color:var(--i4)}
+.wm b{font-size:18px;font-weight:650;color:var(--i2);line-height:1}
+.wm b.off{color:var(--io)}
+.tabs{display:flex;gap:30px;align-self:stretch;margin-left:18px}
+.tabs span{display:flex;align-items:center;gap:7px;font-size:17px;font-weight:750;font-stretch:88%;letter-spacing:.08em;color:var(--i4);border-bottom:3px solid transparent;padding-top:3px}
+.tabs span.on{color:#fff;border-bottom-color:var(--acc)}
+.tabs span.lk{color:var(--io)}
+.tabs .ic{width:15px;height:15px}
+.hist{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:16px;color:var(--i3)}
+.hist i{width:40px;height:22px;border-radius:11px;background:var(--s5);border:1px solid var(--l2);position:relative}
+.hist i::after{content:"";position:absolute;left:3px;top:3px;width:14px;height:14px;border-radius:50%;background:var(--i4)}
+.xb{width:40px;height:40px;display:grid;place-items:center;color:var(--i3)}
+.wbody{flex:1;min-height:0;display:grid;grid-template-columns:300px 1fr 280px;gap:16px;padding:16px 20px 20px}
+
+/* left */
+.colL{display:flex;flex-direction:column;gap:12px;min-height:0;overflow:hidden}
+.pnl{background:var(--s2);border:1px solid var(--l1);border-radius:6px;padding:14px 14px 12px}
+.sh{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:800;font-stretch:86%;letter-spacing:.12em;color:var(--i4);margin:0 0 10px}
+.cr{display:grid;grid-template-columns:1fr auto;gap:6px 8px;align-items:center;padding:10px 11px;background:var(--s3);border:1px solid var(--l2);border-radius:5px}
+.cr+.cr{margin-top:8px}
+.cr .cn{display:flex;align-items:center;gap:8px;font-size:17px;font-weight:650;color:#fff;white-space:nowrap}
+.cr .cn .ic{color:var(--i3);width:17px;height:17px}
+.cr .rqn{font-size:16px;color:var(--i3);white-space:nowrap;grid-column:1/3}
+.cr .dl{grid-column:1/3}
+.dl{display:inline-flex;align-items:center;gap:6px;font-size:16px;font-weight:650;color:var(--i3);white-space:nowrap}
+.dl .ic{width:16px;height:16px}
+.dl.now{color:var(--acc)}
+.pl{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 7px;border-radius:4px;background:rgba(127,203,164,.14);border:1.5px solid rgba(127,203,164,.6);color:#9EE0BE;font-size:15px;font-weight:800;letter-spacing:.04em}
+.pl .ic{width:14px;height:14px}
+.ar{display:flex;align-items:center;gap:9px;height:40px;border-top:1px solid var(--l1);font-size:17px;font-weight:550;color:var(--i2)}
+.ar:first-of-type{border-top:none}
+.ar .ic.fl{color:var(--acc);width:16px;height:16px}
+.ar.lk{color:var(--io)}
+.pips{display:inline-flex;gap:3px;margin-left:auto}
+.pips i{width:12px;height:12px;border:1.5px solid var(--l3);border-radius:2px}
+.pips i.f{background:var(--i2);border-color:var(--i2)}
+.pips.weak i.f{background:var(--warn);border-color:var(--warn)}
+.pips i.nx{border:2px dashed var(--acc);background:rgba(242,181,58,.18)}
+.cand{display:grid;grid-template-columns:auto 1fr auto auto;gap:4px 9px;align-items:center;padding:8px 8px 8px 10px;margin:2px 0 8px;background:var(--s3);border:1px solid var(--l2);border-radius:5px}
+.cand .ic{color:var(--i3);width:16px;height:16px}
+.cand .n{font-size:16px;font-weight:600;color:var(--i1);white-space:nowrap;display:flex;align-items:center;gap:6px}
+.cand .n .ic{color:var(--acc)}
+.cand .v{font-size:19px;font-weight:800;color:var(--i1)}
+.cand .mb{grid-column:2/4}
+.cand.sg{border:1.5px dashed var(--acc);background:rgba(242,181,58,.05)}
+.cand .pb{grid-row:1/3;grid-column:4;width:34px;height:34px;border:1.5px solid var(--l3);border-radius:4px;display:grid;place-items:center;color:var(--i2)}
+.sst{font-size:15px;font-weight:800;font-stretch:88%;letter-spacing:.06em;padding:2px 6px;border:1.5px solid var(--l3);border-radius:3px;color:var(--i3);white-space:nowrap;grid-row:1/3;grid-column:4}
+.sst.cur{border-color:var(--acc);color:var(--acc)}
+.mb{display:flex;gap:2px;height:6px}
+.mb i{background:var(--c);border-radius:1px;opacity:.85}
+
+/* center */
+.colC{display:flex;flex-direction:column;gap:12px;background:var(--s2);border:1px solid var(--l1);border-radius:6px;padding:14px 18px 16px;min-height:0;overflow:hidden;position:relative}
+.sph{display:flex;align-items:center;gap:14px;height:44px;flex:none}
+.spn{font-size:30px;font-weight:850;font-stretch:118%;color:#fff;line-height:1}
+.spw{display:flex;align-items:center;gap:8px;font-size:17px;font-weight:650;color:var(--i3)}
+.goal{margin-left:auto;display:inline-flex;align-items:center;gap:9px;height:42px;padding:0 12px;border:1.5px solid var(--l2);border-radius:5px;background:var(--s3);font-size:16px;font-weight:600;color:var(--i2)}
+.goal .ic.fl{color:var(--acc);width:16px;height:16px}
+.goal .ic.cv{color:var(--i4);width:16px;height:16px}
+.goal.none{color:var(--i3)}
+.goal.none .ic.fl{color:var(--i4)}
+.goal.lk{color:var(--i4);border-style:dashed}
+.mvp{display:inline-flex;align-items:center;gap:9px;height:42px;padding:0 12px;border:1.5px solid rgba(242,181,58,.45);border-radius:5px;font-size:16px;font-weight:650;color:var(--i2)}
+.mvp .pips{margin-left:0}
+.mvp .eta{display:inline-flex;align-items:center;gap:5px;color:var(--i3);font-weight:600}
+.mvp .eta .ic{width:16px;height:16px}
+
+.gz{flex:none;display:grid;grid-template-columns:124px 190px 1fr 104px;column-gap:14px;row-gap:6px;align-items:center;padding:10px 14px 12px;background:var(--s1);border:1px solid var(--l1);border-radius:5px}
+.gh{white-space:nowrap;font-size:15px;font-weight:800;font-stretch:86%;letter-spacing:.12em;color:var(--i4);height:18px}
+.gh.r{text-align:right}
+.gl{display:flex;align-items:center;gap:9px;font-size:17px;font-weight:650;color:var(--i2);height:36px}
+.gl .ic{color:var(--c)}
+.gl.pm .ic{color:var(--acc)}
+.ros{display:flex;align-items:center;gap:10px;height:36px}
+.gb{position:relative;height:24px}
+.gb::before{content:"";position:absolute;inset:0;background:var(--s0);border-radius:3px}
+.cap{position:absolute;left:0;top:0;bottom:0;border:2px solid var(--c);background:rgba(var(--cr),.10);border-radius:3px}
+.wk{position:absolute;left:0;top:6px;bottom:6px;background:var(--c);border-radius:2px}
+.wk.lt{background:rgba(var(--cr),.32)}
+.dnf{position:absolute;left:0;top:6px;bottom:6px;background:var(--c);border-radius:2px}
+.ovs{position:absolute;top:2px;bottom:2px;background:var(--hatch);border:2px solid var(--warn);border-left:none;border-radius:0 3px 3px 0}
+.ovc{position:absolute;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;gap:5px;font-size:18px;font-weight:850;color:var(--warn);white-space:nowrap}
+.ovc .ic{width:15px;height:15px}
+.zero{position:absolute;left:0;top:0;bottom:0;width:22px;border:2px dashed var(--l2);border-radius:3px}
+.gn{text-align:right;white-space:nowrap}
+.gn b{font-size:24px;font-weight:850;color:#fff}
+.gn span{font-size:18px;font-weight:500;color:var(--i4);margin-left:4px}
+.gn.ov b{color:var(--warn)}
+.gn.z b,.gn.z span{color:var(--io)}
+.strk{display:inline-flex;align-items:center;gap:3px;height:26px;padding:0 7px 0 5px;margin-left:8px;border:2px solid var(--warn);border-radius:4px;outline:2px solid rgba(232,145,58,.35);outline-offset:2px;color:var(--warn);font-size:17px;font-weight:900;background:rgba(232,145,58,.12)}
+.strk .ic{width:16px;height:16px}
+.pmrow{grid-column:2/5;display:flex;gap:10px;align-items:center;height:40px}
+.pmc{display:inline-flex;align-items:center;gap:10px;height:40px;padding:0 13px 0 6px;background:var(--s3);border:1.5px solid rgba(242,181,58,.5);border-radius:20px;font-size:16px;color:var(--i2);white-space:nowrap}
+.pmc .nm{font-weight:650}
+.pmc .dl2{font-size:19px;font-weight:850;color:#fff}
+.pmc .sep{display:none}
+.pmc .bg{display:inline-flex;align-items:center;gap:5px;color:var(--i3);font-weight:650}
+.pmc .bg .ic{width:16px;height:16px}
+
+.sug{flex:none;display:flex;align-items:center;gap:10px;height:52px;padding:0 6px 0 14px;border:1.5px dashed rgba(242,181,58,.55);border-radius:5px;background:rgba(242,181,58,.05);font-size:17px;color:var(--i3)}
+.sug .ic{color:var(--acc);width:20px;height:20px}
+.sug b{font-size:24px;font-weight:850;color:var(--acc)}
+.sug .btn2{margin-left:auto;height:40px;font-size:16px}
+
+.cards{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px;overflow:hidden}
+.cd{display:grid;grid-template-columns:1fr 86px;column-gap:16px;row-gap:5px;padding:6px 12px 7px;background:var(--s4);border:1px solid var(--l2);border-radius:5px;position:relative;flex:none}
+.cd.big{padding:12px 14px 14px;row-gap:10px}
+.cd .hd{display:flex;align-items:center;gap:10px;min-width:0;height:24px}
+.cd .ty{color:var(--i3);width:18px;height:18px}
+.cd .nm{font-size:18px;font-weight:680;color:#fff;white-space:nowrap}
+.chip{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 8px;border:1.5px solid var(--l2);border-radius:4px;font-size:16px;font-weight:600;color:var(--i3);white-space:nowrap}
+.chip .ic{width:15px;height:15px}
+.chip.cu .ic.b{color:var(--i2)}
+.chip.cu .now{color:var(--acc)}
+.chip.oz{border-style:double;border-width:3px;padding:0 7px;color:var(--i3)}
+.chip.st{border-color:rgba(var(--cr),.7);color:var(--c);background:rgba(var(--cr),.12);font-weight:750}
+.chip.st .ic{color:var(--c)}
+.fx{display:inline-flex;align-items:center;gap:12px;font-size:16px;font-weight:650;color:var(--i2)}
+.fx span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.fx .ic{width:16px;height:16px;color:var(--i3)}
+.spb{grid-row:1/3;grid-column:2;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:3px;border-left:1px solid var(--l1);padding-left:10px}
+.spb b{font-size:28px;font-weight:850;color:#fff;line-height:1}
+.spb .pr{display:inline-flex;align-items:center;gap:6px;font-size:16px;color:var(--i4)}
+.spb .pr s{text-decoration-thickness:2px}
+.trk{display:flex;gap:4px;height:30px}
+.cd.big .trk{height:40px}
+.seg{flex:var(--g) 1 0px;min-width:max-content;display:flex;align-items:center;gap:7px;padding:0 8px 0 8px;background:rgba(var(--cr),.16);border-left:3px solid var(--c);border-radius:3px;position:relative;overflow:hidden}
+.seg>*{position:relative;z-index:1}
+.seg .ic{width:17px;height:17px;color:var(--c)}
+.seg b{font-size:17px;font-weight:850;color:#fff}
+.seg b small{font-size:15px;font-weight:600;color:var(--i3)}
+.rq{font-style:normal;font-size:15px;font-weight:850;color:var(--acc);border:1.5px solid rgba(242,181,58,.6);border-radius:3px;padding:0 4px;line-height:18px;white-space:nowrap}
+.who{display:flex;align-items:center;gap:12px;margin-left:auto;padding-right:6px}
+.seg .wp{margin-left:4px}
+.seg .lbl{font-size:15px;font-weight:600;color:var(--i3)}
+.seg.ov{background:var(--hatch);border-left-color:var(--warn)}
+.seg .ovp{position:absolute;right:0;top:0;bottom:0;background:var(--hatch);border-left:2px solid var(--warn);z-index:0}
+.seg .ic.w{color:var(--warn);width:15px;height:15px}
+.seg.cont{background:transparent;border:2px dashed rgba(var(--cr),.55);border-left:3px dashed rgba(var(--cr),.75)}
+.seg.done{background:rgba(var(--cr),.42)}
+.seg.done .ic.ck{color:#fff}
+.seg.run{box-shadow:inset 0 0 0 2px var(--c),0 0 12px rgba(var(--cr),.35)}
+.seg .pf{position:absolute;left:0;top:0;bottom:0;background:rgba(var(--cr),.42);z-index:0}
+.seg.wait{background:transparent;border:1.5px solid var(--l2);border-left:3px solid rgba(var(--cr),.45)}
+.seg.wait .ic{opacity:.7}
+.seg.wait b{color:var(--i3)}
+.cd.focus{outline:2px solid var(--acc);outline-offset:2px;box-shadow:0 0 0 7px rgba(242,181,58,.13)}
+.acts{margin-left:auto;display:flex;gap:6px}
+.ab{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 9px 0 5px;border:1.5px solid var(--l3);border-radius:4px;background:var(--s3);font-size:15px;font-weight:650;color:var(--i2);white-space:nowrap}
+.ab.ico{padding:0 4px}
+.kg{display:inline-grid;place-items:center;min-width:24px;height:22px;padding:0 5px;border:1.5px solid currentColor;border-bottom-width:3px;border-radius:4px;font-size:14px;font-weight:800;line-height:1;opacity:.9}
+.kg .ic{width:14px;height:14px}
+
+.wp{display:inline-flex;gap:2px;align-items:center;color:var(--i2)}
+.wp i{width:9px;height:16px;border:1.5px solid var(--i3);border-radius:2px}
+.wp i.f{background:var(--i2);border-color:var(--i2)}
+.wp i.a{border-color:var(--acc);background:rgba(242,181,58,.35);box-shadow:0 0 6px rgba(242,181,58,.6)}
+.wp.lg i{width:11px;height:20px;border-width:2px}
+
+.act{flex:none;display:flex;align-items:center;gap:12px;padding-top:12px;border-top:1px solid var(--l1);margin-top:auto}
+.btn1{display:inline-flex;align-items:center;gap:12px;height:52px;padding:0 18px 0 22px;background:var(--acc);color:#1A1408;border-radius:5px;font-size:20px;font-weight:850;font-stretch:104%;white-space:nowrap}
+.btn1 .kg{color:#1A1408}
+.btn2{display:inline-flex;align-items:center;gap:10px;height:52px;padding:0 14px 0 16px;border:1.5px solid var(--l3);border-radius:5px;background:var(--s3);color:#fff;font-size:18px;font-weight:700;white-space:nowrap}
+.btn2 .kg{color:var(--i3)}
+.btn2.dis{color:var(--io);border-color:var(--l1);background:transparent}
+.btn2.dis .ic{color:var(--io)}
+.act .ml{margin-left:auto}
+.stat{display:inline-flex;align-items:center;gap:12px;font-size:17px;font-weight:650;color:var(--i2)}
+.stat .ic{color:var(--i4)}
+.lockt{display:inline-flex;align-items:center;gap:8px;font-size:16px;color:var(--i4)}
+
+/* right */
+.colR{border:2px dashed var(--l2);border-radius:6px;padding:14px 14px;display:flex;flex-direction:column;gap:10px;background:rgba(21,18,15,.55);min-height:0;overflow:hidden}
+.nxh{display:flex;align-items:baseline;gap:10px;margin-bottom:2px}
+.nxh b{font-size:22px;font-weight:850;font-stretch:115%;color:var(--i2)}
+.nxh span{margin-left:auto;font-size:15px;font-weight:800;font-stretch:86%;letter-spacing:.12em;color:var(--i4)}
+.nc{display:grid;grid-template-columns:1fr auto;gap:7px 10px;align-items:center;padding:10px 12px;border:1px solid var(--l2);border-radius:5px;background:var(--s3)}
+.nc .n{font-size:17px;font-weight:620;color:var(--i2);display:flex;align-items:center;gap:7px;white-space:nowrap}
+.nc .n .ic{width:16px;height:16px;color:var(--i4)}
+.nc .v{text-align:right;white-space:nowrap}
+.nc .v b{font-size:22px;font-weight:850;color:var(--i2)}
+.nc .v s{font-size:16px;color:var(--i4);margin-right:6px;text-decoration-thickness:2px}
+.nc .mb{grid-column:1/3}
+.nc .pull{grid-column:1/3;display:flex;align-items:center;gap:8px;font-size:16px;font-weight:600;color:var(--i3)}
+.nc .pull .ic{width:16px;height:16px;color:var(--acc)}
+.nc .pull.prep{gap:10px;color:var(--i2)}
+.nc .pull.prep .wp{margin-left:4px}
+.nc.cont{border-style:dashed;background:transparent}
+.empty{height:86px;border:2px dashed var(--l1);border-radius:5px;display:grid;place-items:center;color:var(--io)}
+.empty .ic{width:24px;height:24px}
+.pw{margin-top:auto;padding:12px;border:1.5px solid rgba(242,181,58,.45);border-radius:6px;background:rgba(242,181,58,.05)}
+.pw .sh{margin-bottom:10px}
+.pw .sh .ic{color:var(--acc);width:16px;height:16px}
+.pwr{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:center}
+.pwr .pt{grid-row:1/3}
+.pwr .n{font-size:17px;font-weight:650;color:#fff;white-space:nowrap}
+.pwr .d{display:flex;align-items:center;gap:8px;font-size:17px;color:var(--i3)}
+.pwr .d b{color:#fff;font-weight:850;font-size:19px}
+.pwr .d .ic{width:15px;height:15px}
+.pwr .d .ok{color:#9EE0BE;width:17px;height:17px}
+
+/* portraits */
+.pt{--sz:28px;--bgc:#2A251F;--ring:#958C7E;width:var(--sz);height:var(--sz);border-radius:50%;position:relative;flex:none;box-shadow:0 0 0 2px var(--ring);display:inline-block}
+.pt svg{width:100%;height:100%;border-radius:50%;display:block}
+.pt>i{position:absolute;left:calc(100% + 4px);top:50%;transform:translateY(-50%);font-style:normal;font-size:15px;font-weight:850;line-height:1;color:var(--acc);white-space:nowrap;text-shadow:0 1px 2px #000,0 0 3px #000}
+.pt:has(>i){margin-right:28px}
+.pt.s24{--sz:24px}
+.pt.s32{--sz:32px}
+.pt.s40{--sz:40px}
+.pt.dim{opacity:.3;box-shadow:none;outline:1.5px dashed var(--i3);outline-offset:1px}
+.pt.half{opacity:.55;box-shadow:none;outline:2px dashed var(--ring);outline-offset:1px}
+.pt.none{background:transparent;box-shadow:none;border:2px dashed var(--l2)}
+.stk{display:flex;align-items:center}
+.stk .pt+.pt{margin-left:-9px}
+.stk .pt{box-shadow:0 0 0 2px var(--ring),0 0 0 4px var(--s1)}
+.more{display:inline-grid;place-items:center;height:26px;min-width:34px;padding:0 6px;margin-left:6px;border-radius:13px;background:var(--s5);border:1px solid var(--l2);font-size:15px;font-weight:800;color:var(--i2)}
+.idle{display:inline-flex;align-items:center;gap:5px;font-size:16px;font-weight:800;color:var(--i4)}
+.r-des{--ring:#C49BE3;--shirt:#7E5E9C}
+.r-dev{--ring:#6CB4DE;--shirt:#36719A}
+.r-tst{--ring:#7FCBA4;--shirt:#3F8566}
+.r-pm{--ring:#F2B53A;--shirt:#A8792A}
+.r-fnd{--ring:#E9E4DA;--shirt:#5E554C}
+.p-kurucu{--skin:#E2B48F;--hair:#3B2A20}
+.p-ece{--skin:#F0C9A8;--hair:#8A4B2A}
+.p-defne{--skin:#D9A47E;--hair:#1F1A17}
+.p-gizem{--skin:#C98E6A;--hair:#5A3A2A}
+.p-deniz{--skin:#E8BC97;--hair:#2A2420}
+.p-mert{--skin:#C79067;--hair:#1A1512}
+.p-kaan{--skin:#EDC4A0;--hair:#6B4A30}
+.p-zeynep{--skin:#DDA985;--hair:#2E211A}
+.p-burak{--skin:#B98260;--hair:#141110}
+.p-onur{--skin:#E6B793;--hair:#9A6B3F}
+.p-ayse{--skin:#F2CDAE;--hair:#4A2E20}
+.p-cem{--skin:#D4A07A;--hair:#3A3A3A}
+.p-selin{--skin:#EAC09C;--hair:#2B1D16}
+.p-can{--skin:#CF9A74;--hair:#57402E}
+.p-burcu{--skin:#E9BE98;--hair:#A0522D}
+.p-x1{--skin:#D8A47C;--hair:#2C211B}
+.p-x2{--skin:#F1C7A3;--hair:#6E3F22}
+.p-x3{--skin:#BF8A62;--hair:#191513}
+.p-x4{--skin:#E5B690;--hair:#C08A4E}
+
+/* tooltip */
+.tip{position:absolute;z-index:30;background:#0F0D0B;border:1.5px solid var(--l3);border-radius:6px;box-shadow:0 22px 60px rgba(0,0,0,.75);padding:14px 16px;color:var(--i2)}
+.tip::before{content:"";position:absolute;width:14px;height:14px;background:#0F0D0B;border-left:1.5px solid var(--l3);border-top:1.5px solid var(--l3);transform:rotate(45deg)}
+.tip.up::before{top:-8.5px;left:var(--ax,40px)}
+.tip.dn::before{bottom:-8.5px;left:var(--ax,40px);transform:rotate(225deg)}
+.tip .tt{font-size:17px;font-weight:750;color:#fff;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.tip .tl{font-size:16px;line-height:1.45;color:var(--i3)}
+.tip .tl b{color:#fff}
+.mouse{position:absolute;z-index:40;width:22px;height:30px}
+
+/* 50-person tiles */
+.grid50{flex:1;min-height:0;display:flex;flex-direction:column;gap:3px;overflow:hidden}
+.gh2{display:flex;align-items:center;gap:9px;height:24px;font-size:15px;font-weight:700;color:var(--i3);white-space:nowrap}
+.gh2 .nm{color:#fff;font-weight:700;font-size:16px}
+.gh2 .dl2{color:#fff;font-weight:850;font-size:16px}
+.gh2 .ln{flex:1;height:1px;background:var(--l1)}
+.gh2 .bg{display:inline-flex;align-items:center;gap:4px}
+.gh2 .bg .ic{width:15px;height:15px}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:2px}
+.tile{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 8px;align-items:center;padding:4px 9px 5px;background:var(--s4);border:1px solid var(--l2);border-radius:4px;min-width:0}
+.tile .n{grid-column:1/3;font-size:16px;font-weight:620;font-stretch:92%;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:5px}
+.tile .n .ic{width:14px;height:14px;color:var(--i3)}
+.tile .n .ic.c{color:var(--acc)}
+.tile .mb{height:7px}
+.tile .v{font-size:17px;font-weight:850;color:#fff;line-height:1}
+
+.toast{position:absolute;z-index:30;left:600px;top:690px;width:480px;display:flex;gap:12px;align-items:flex-start;padding:12px 14px;background:#0F0D0B;border:1.5px solid var(--l3);border-left:4px solid #7FCBA4;border-radius:5px;box-shadow:0 18px 40px rgba(0,0,0,.6)}
+.toast .ic{color:#7FCBA4;width:20px;height:20px;margin-top:2px}
+.toast .t1{font-size:16px;font-weight:650;color:#fff;line-height:1.35}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs>
+<symbol id="i-des" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1-4.5L15.5 5 19 8.5 8.5 19z"/><path d="M13 7.5l3.5 3.5"/></symbol>
+<symbol id="i-dev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M13.5 4.5l-3 15"/></symbol>
+<symbol id="i-tst" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21M7.6 10.6l2 2 3.4-3.8"/></symbol>
+<symbol id="i-fix" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4a5 5 0 0 0-4.6 6.9L4 17.3V20h2.7l6.4-6.4A5 5 0 0 0 20 9l-3 1-3-3 1-3z"/></symbol>
+<symbol id="i-feat" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2.5l2 6.2 6.5 1.8-6.5 1.8-2 6.2-2-6.2-6.5-1.8 6.5-1.8z"/><path d="M19 15l.8 2.2 2.2.8-2.2.8L19 21l-.8-2.2-2.2-.8 2.2-.8z"/></symbol>
+<symbol id="i-bug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="7" width="8" height="13" rx="4"/><path d="M12 7V5.5M9.5 4.5l1.2 2M14.5 4.5l-1.2 2M4 11h4M16 11h4M4.5 16H8M16 16h3.5"/></symbol>
+<symbol id="i-acct" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5l8-2v18M12 9h8v12M7.5 8h1.5M7.5 12h1.5M7.5 16h1.5M15 13h2M15 17h2M2.5 21h19"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4.5 4.5-6.5 8-6.5s7 2 8 6.5"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></symbol>
+<symbol id="i-hour" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 3h11M6.5 21h11M8 3v3.5l4 5.5-4 5.5V21M16 3v3.5L12 12l4 5.5V21"/></symbol>
+<symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+<symbol id="i-tri" viewBox="0 0 24 24"><path d="M12 2.5L23 21H1z" fill="currentColor"/><path d="M12 9v5" stroke="#100E0B" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="17.3" r="1.4" fill="#100E0B"/></symbol>
+<symbol id="i-pm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2.8h6V4M8.5 10h7M8.5 14h7M8.5 18h4"/></symbol>
+<symbol id="i-flag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4M5 4h12l-2.5 4.5L17 13H5"/></symbol>
+<symbol id="i-loop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3M18.5 3v4h-4M5.5 21v-4h4"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-streak" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 20l6-5 6 5M6 14l6-5 6 5M6 8l6-5 6 5"/></symbol>
+<symbol id="i-cursor" viewBox="0 0 22 30"><path d="M2 2v22l6-5.5 4 9 4-1.8-4-8.7h8z" fill="#fff" stroke="#000" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+
+<symbol id="h-short" viewBox="0 0 32 32"><rect width="32" height="32" style="fill:var(--bgc)"/><path d="M3 34c1.2-7.4 6.4-11 13-11s11.8 3.6 13 11z" style="fill:var(--shirt)"/><rect x="13.6" y="17" width="4.8" height="7" rx="2" style="fill:var(--skin)"/><ellipse cx="16" cy="14.2" rx="6.2" ry="6.8" style="fill:var(--skin)"/><path d="M9.6 13.6C9.3 8.6 12.3 6 16 6s6.7 2.6 6.4 7.6c-1.2-2.5-3.4-3.8-6.4-3.8s-5.2 1.3-6.4 3.8z" style="fill:var(--hair)"/></symbol>
+<symbol id="h-beard" viewBox="0 0 32 32"><rect width="32" height="32" style="fill:var(--bgc)"/><path d="M3 34c1.2-7.4 6.4-11 13-11s11.8 3.6 13 11z" style="fill:var(--shirt)"/><rect x="13.6" y="17" width="4.8" height="7" rx="2" style="fill:var(--skin)"/><ellipse cx="16" cy="14.2" rx="6.2" ry="6.8" style="fill:var(--skin)"/><path d="M9.6 13.6C9.3 8.6 12.3 6 16 6s6.7 2.6 6.4 7.6c-1.2-2.5-3.4-3.8-6.4-3.8s-5.2 1.3-6.4 3.8z" style="fill:var(--hair)"/><path d="M9.9 15.4c.3 4.8 2.8 7.4 6.1 7.4s5.8-2.6 6.1-7.4c-1 1.7-2.9 2.4-6.1 2.4s-5.1-.7-6.1-2.4z" style="fill:var(--hair)"/></symbol>
+<symbol id="h-long" viewBox="0 0 32 32"><rect width="32" height="32" style="fill:var(--bgc)"/><path d="M8.6 24V13.4c0-4.9 3.2-7.6 7.4-7.6s7.4 2.7 7.4 7.6V24z" style="fill:var(--hair)"/><path d="M3 34c1.2-7.4 6.4-11 13-11s11.8 3.6 13 11z" style="fill:var(--shirt)"/><rect x="13.6" y="17" width="4.8" height="7" rx="2" style="fill:var(--skin)"/><ellipse cx="16" cy="14.4" rx="6" ry="6.7" style="fill:var(--skin)"/><path d="M9.6 14C9.4 9 12.4 6.6 16 6.6s6.6 2.4 6.4 7.4c-1.6-1.6-2.4-3.4-3.2-4.6-1.4 1.6-4.4 2.6-9.6 4.6z" style="fill:var(--hair)"/></symbol>
+<symbol id="h-bun" viewBox="0 0 32 32"><rect width="32" height="32" style="fill:var(--bgc)"/><circle cx="16" cy="5.6" r="3.4" style="fill:var(--hair)"/><path d="M3 34c1.2-7.4 6.4-11 13-11s11.8 3.6 13 11z" style="fill:var(--shirt)"/><rect x="13.6" y="17" width="4.8" height="7" rx="2" style="fill:var(--skin)"/><ellipse cx="16" cy="14.4" rx="6.1" ry="6.7" style="fill:var(--skin)"/><path d="M9.7 14.4C9.4 9.2 12.4 7 16 7s6.6 2.2 6.3 7.4c-.8-2.8-3.4-4.4-6.3-4.4s-5.5 1.6-6.3 4.4z" style="fill:var(--hair)"/></symbol>
+<symbol id="h-curly" viewBox="0 0 32 32"><rect width="32" height="32" style="fill:var(--bgc)"/><path d="M3 34c1.2-7.4 6.4-11 13-11s11.8 3.6 13 11z" style="fill:var(--shirt)"/><rect x="13.6" y="17" width="4.8" height="7" rx="2" style="fill:var(--skin)"/><ellipse cx="16" cy="14.4" rx="6.1" ry="6.7" style="fill:var(--skin)"/><path d="M9 14.4c-1.8-1.3-1-4.2 1-4.6-.2-2.3 2.2-3.8 4-3 1.1-1.8 3.8-1.8 4.6 0 2-.9 4.2.7 3.8 3 2 .4 2.8 3.3 1 4.6-1-2.1-3.8-3.4-7.2-3.4S10 12.3 9 14.4z" style="fill:var(--hair)"/></symbol>
+</defs>
+</svg>
+
+<div class="page">
+
+<header class="intro">
+<p class="kick">Project Unicorn · Ürün penceresi · SPRINT görünümü</p>
+<h1>Sprint ekranı, yorum B</h1>
+<p class="lede">Bu yorum <b>game-ui-design</b> skill'iyle yapıldı (claudemarketplace.net üzerinden omer-metin/skills-for-antigravity: SKILL.md, patterns, sharp_edges, validations). Ekran bir web paneli gibi değil, bir strateji oyununun HUD'u gibi kuruldu: tek bakışta durum, üstüne gelince ayrıntı. Kurgu, sayılar ve kurallar şartnamedeki gibi; değişen yalnız sunum. On bir durumun her biri aşağıda ayrı bir kare.</p>
+<div class="cols">
+<section>
+<h2>Skill'den alınan ilkeler</h2>
+<ol>
+<li><b>Kademeli bilgi (Progressive Information Disclosure).</b> Bakış katmanı: aşama çubukları, kart dilimleri, portreler. Odak katmanı: üstüne gelince açılan ipucu (300 ms gecikme). Açıklayıcı cümlelerin hepsi ekrandan kalktı, ipucuna taşındı.</li>
+<li><b>"Oyuncunun buna ŞİMDİ ihtiyacı var mı?" (Cluttered HUD karşıtı).</b> Öneri satırı yalnız alınabilir SP varken, taşma sayacı yalnız taşma sürerken, Çıkar ve → yalnız odaktaki kartta görünür.</li>
+<li><b>Renk tek başına anlam taşımaz (Color-Only Information).</b> Aşama renk ve ikonla, taşma turuncu + tarama deseni + ▲ + sayıyla, hafta dolu hücre sayısıyla, boşta olan soluk portre + kesikli halkayla okunur.</li>
+<li><b>Bekleme göstergesi durumları (Cooldown Indicator).</b> Kartın her aşama dilimi beş hâlden birindedir: bekliyor (soluk, kum saati), sürüyor (dolum ve parlak kenar), bitti (dolu, onay), sonraki sprinte uzanır (kesikli), taşar (tarama).</li>
+<li><b>Okunurluk eşikleri ve odak (Font Size, Touch Target, Controller-First).</b> 1080p'de rozet ve etiket en az 15 px, ikincil metin 16, gövde 17–18, kritik sayı 24 ve üstü; ★ rozeti portrenin yüzüne binmez, yanında gölgeli yazıyla durur (No Text Outline); ana düğmeler 52 px; odak halkası renk değişimi değil kalın kenar + parıltı; düğmelerde tuş işareti.</li>
+</ol>
+</section>
+<section>
+<h2>Tipografi</h2>
+<div class="spec">
+<div class="a">SPRINT 14 · İŞ 26 · EKİP 66</div>
+<div class="b">Çığır şöyle açıldı: İstanbul, ışık, öğrenci, ürün, Güneş, ĞÜŞİÖÇ ğüşıöç.</div>
+<div class="c">TESTTE KALIR · GELİŞTİRME EN AZ 2★ · 0123456789</div>
+</div>
+<p class="t"><b>Archivo</b> (Omnibus-Type), tek aile; değişken genişlik (62–125) ve ağırlık ekseniyle üç rol: başlık ve büyük sayılar geniş ve kalın (skorbord duruşu), gövde normal genişlikte 500–650, sıkışık etiketler dar ve harf aralıklı. Neden: Barlow Condensed'in dar gövdesi küçük boyda çamurlaşıyordu; Archivo'nun x-yüksekliği yüksek, ince ağırlık hiç kullanılmadı (skill: "avoid thin weights"), rakamları tabular, ğ ş ı İ ç ö ü glifleri tam ve tek aile "uyumsuz font" yasağını kendiliğinden karşılıyor.</p>
+<h2>Görsel sözlük</h2>
+<div class="lg">
+<span class="sw"><svg class="ic des" style="color:var(--c)"><use href="#i-des"/></svg><svg class="ic dev" style="color:var(--c)"><use href="#i-dev"/></svg><svg class="ic tst" style="color:var(--c)"><use href="#i-tst"/></svg></span><span>Tasarım (kalem) · Geliştirme (kod) · Test (büyüteç); her yerde aynı renk ve ikon.</span>
+<span class="sw"><span class="wp lg"><i class="f"></i><i></i></span><span class="wp lg" style="margin-left:6px"><i class="f"></i><i class="f"></i></span></span><span>Aşamanın bittiği hafta: bir dolu hücre 1. hafta, iki dolu hücre 2. hafta.</span>
+<span class="sw"><span class="bx" style="background:var(--hatch);border:2px solid var(--warn)"></span></span><span>Ekip çerçevesini aşan iş: sonraki sprinte kalır.</span>
+<span class="sw"><span class="bx" style="border:2px dashed rgba(108,180,222,.7)"></span></span><span>Plana göre sonraki sprintte süren iş (taşma değil).</span>
+<span class="sw"><span class="pt s24 r-dev p-deniz"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span><span class="pt s24 r-dev p-onur dim" style="margin-left:8px"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span></span><span>Halka rengi rol; soluk ve kesikli halka boşta.</span>
+<span class="sw"><span class="rq">≥2★</span></span><span>Aşamanın en az yıldız şartı.</span>
+</div>
+</section>
+</div>
+<p class="note">Her kare oyunun 1920×1080 ekranının %75 ölçeğidir; ölçüler oyun pikseliyle yazıldı. Telefonda kare yana kaydırılır. Tuş işaretleri (Enter, D, X, →) bağlama önerisidir. Kartın alan etkisi (Çekirdek 2 → 3) kartta yazmaz: soldaki alan satırında dolacak basamak kesikli amber kutu olarak görünür, sayısı ipucundadır. Skill'in diegetic UI, radial menü ve minimap kalıpları alınmadı (skill'in kendisi istatistik ağırlıklı oyunda diegetic'i önermiyor); 50 kişilik karede 24 kart minimap mantığıyla tek bakışlık karolara indirildi. <b>[EK]</b> şartnamede gösterim için eklenmiş veridir.</p>
+</header>
+
+<!-- ============================ 1 ============================ -->
+<section class="fr">
+<div class="frcap"><span class="no">01</span><b>Tek kurucu, ilk sürümden önce</b><span class="d">Kurucu üç aşamanın üçünde de tek portre; v1.0 ilerlemesi başlıkta üç hücre. İmleç kilitli devret düğmesinde: nedeni yalnız ipucunda.</span></div>
+<div class="frbox"><div class="stage"><div class="game">
+<div class="shell"><div class="brand">Project Unicorn</div><div class="nav"><span class="on"><i></i>ÜRÜN</span><span><i></i>SATIŞ</span><span><i></i>EKİP</span><span><i></i>FİNANS</span><span><i></i>KİŞİSEL</span><span><i></i>AR-GE</span><span><i></i>OLAYLAR</span></div></div>
+<div class="win">
+<div class="whead"><div class="wt">ÜRÜN</div><div class="wm"><small>B2B · ERP</small><b>Ledgerly</b></div><div class="wm"><small>SÜRÜM</small><b class="off">v1.0 öncesi</b></div><div class="tabs"><span class="lk"><svg class="ic"><use href="#i-lock"/></svg>GENEL BAKIŞ</span><span class="on">SPRINT</span><span>ÇEYREK</span></div><div class="hist">Geçmiş<i></i></div><div class="xb"><svg class="ic"><use href="#i-x"/></svg></div></div>
+<div class="wbody">
+<aside class="colL">
+<div class="pnl">
+<div class="sh">ALANLAR</div>
+<div class="ar"><svg class="ic fl"><use href="#i-flag"/></svg>Çekirdek<span class="pips"><i class="nx"></i><i></i><i></i></span></div>
+<div class="cand"><svg class="ic"><use href="#i-feat"/></svg><span class="n">Fatura Kesme</span><span class="v">15</span><span class="sst cur">SPRINT 1</span><span class="mb"><i class="des" style="flex:3"></i><i class="dev" style="flex:9"></i><i class="tst" style="flex:3"></i></span></div>
+<div class="cand"><svg class="ic"><use href="#i-feat"/></svg><span class="n">Elle Giriş</span><span class="v">15</span><span class="sst">SPRINT 2</span><span class="mb"><i class="des" style="flex:3"></i><i class="dev" style="flex:8"></i><i class="tst" style="flex:4"></i></span></div>
+<div class="cand"><svg class="ic"><use href="#i-feat"/></svg><span class="n">Ön Muhasebe</span><span class="v">15</span><span class="sst">SPRINT 2</span><span class="mb"><i class="des" style="flex:3"></i><i class="dev" style="flex:8"></i><i class="tst" style="flex:4"></i></span></div>
+<div class="ar lk"><svg class="ic" style="width:16px;height:16px"><use href="#i-lock"/></svg>Entegrasyonlar<span class="pips"><i></i><i></i><i></i></span></div>
+<div class="ar lk"><svg class="ic" style="width:16px;height:16px"><use href="#i-lock"/></svg>Güven &amp; Ölçek<span class="pips"><i></i><i></i><i></i></span></div>
+</div>
+</aside>
+<section class="colC">
+<div class="sph"><span class="spn">SPRINT 1</span><span class="spw"><span class="wp lg"><i></i><i></i></span>2 hafta</span>
+<span class="mvp" style="margin-left:auto">v1.0<span class="pips"><i class="nx"></i><i></i><i></i></span><span class="eta"><svg class="ic"><use href="#i-clock"/></svg>≈ Sprint 3</span></span>
+<span class="goal lk" style="margin-left:0"><svg class="ic"><use href="#i-lock"/></svg>Bu çeyrek: Çekirdek</span></div>
+<div class="gz">
+<span class="gh"></span><span class="gh">EKİP</span><span class="gh"></span><span class="gh r">İŞ / EKİP</span>
+<div class="gl des"><svg class="ic"><use href="#i-des"/></svg>Tasarım</div><div class="ros"><span class="pt r-fnd p-kurucu"><svg viewBox="0 0 32 32"><use href="#h-beard"/></svg></span></div><div class="gb des"><div class="cap" style="width:93.3%"></div><div class="wk" style="width:20%"></div></div><div class="gn"><b>3</b><span>/ 14</span></div>
+<div class="gl dev"><svg class="ic"><use href="#i-dev"/></svg>Geliştirme</div><div class="ros"><span class="pt r-fnd p-kurucu"><svg viewBox="0 0 32 32"><use href="#h-beard"/></svg></span></div><div class="gb dev"><div class="cap" style="width:93.3%"></div><div class="wk" style="width:60%"></div></div><div class="gn"><b>9</b><span>/ 14</span></div>
+<div class="gl tst"><svg class="ic"><use href="#i-tst"/></svg>Test</div><div class="ros"><span class="pt r-fnd p-kurucu"><svg viewBox="0 0 32 32"><use href="#h-beard"/></svg></span></div><div class="gb tst"><div class="cap" style="width:93.3%"></div><div class="wk" style="width:20%"></div></div><div class="gn"><b>3</b><span>/ 14</span></div>
+</div>
+<div class="cards">
+<div class="cd big"><div class="hd"><svg class="ty"><use href="#i-feat"/></svg><span class="nm">Fatura Kesme</span></div>
+<div class="spb"><b>15</b></div>
+<div class="trk">
+<div class="seg des" style="--g:3"><svg class="ic"><use href="#i-des"/></svg><b>3</b><span class="who"><span class="pt s24 r-fnd p-kurucu"><svg viewBox="0 0 32 32"><use href="#h-beard"/></svg><i>3★</i></span></span></div>
+<div class="seg dev" style="--g:9"><svg class="ic"><use href="#i-dev"/></svg><b>9</b><span class="who"><span class="pt s24 r-fnd p-kurucu"><svg viewBox="0 0 32 32"><use href="#h-beard"/></svg><i>3★</i></span></span></div>
+<div class="seg tst" style="--g:3"><svg class="ic"><use href="#i-tst"/></svg><b>3</b><span class="who"><span class="pt s24 r-fnd p-kurucu"><svg viewBox="0 0 32 32"><use href="#h-beard"/></svg><i>3★</i></span></span></div>
+</div></div>
+</div>
+<div class="act"><span class="btn2 dis ml"><svg class="ic"><use href="#i-lock"/></svg>Planlamayı devret</span><span class="btn1">Sprint'i başlat<span class="kg">Enter</span></span></div>
+</section>
+<aside class="colR">
+<div class="nxh"><b>SPRINT 2</b><span>SONRAKİ</span></div>
+<div class="nc"><span class="n"><svg class="ic"><use href="#i-feat"/></svg>Elle Giriş</span><span class="v"><b>15</b></span><span class="mb"><i class="des" style="flex:3"></i><i class="dev" style="flex:8"></i><i class="tst" style="flex:4"></i></span></div>
+<div class="nc"><span class="n"><svg class="ic"><use href="#i-feat"/></svg>Ön Muhasebe</span><span class="v"><b>15</b></span><span class="mb"><i class="des" style="flex:3"></i><i class="dev" style="flex:8"></i><i class="tst" style="flex:4"></i></span></div>
+</aside>
+</div>
+<div class="tip dn" style="left:690px;bottom:96px;width:330px;--ax:110px"><div class="tl">Planlamayı devretmek için ekipte bir ürün yöneticisi olmalı.</div></div>
+<svg class="mouse" style="left:808px;top:862px"><use href="#i-cursor"/></svg>
+</div>
+</div></div></div>
+</section>
+
+<!-- ============================ 2 ============================ -->
+<section class="fr">
+<div class="frcap"><span class="no">02</span><b>3 geliştirici: büyük kart ve iki küçük kart</b><span class="d">100 SP'lik kart bu sprintte 54 SP koşar, kalan 46 SP kesikli dilimle Sprint 15'in 2. haftasına uzanır: taşma değil, plan. Tasarım ve Test boş çerçeve.</span></div>
+<div class="frbox"><div class="stage"><div class="game">
+<div class="shell"><div class="brand">Project Unicorn</div><div class="nav"><span class="on"><i></i>ÜRÜN</span><span><i></i>SATIŞ</span><span><i></i>EKİP</span><span><i></i>FİNANS</span><span><i></i>KİŞİSEL</span><span><i></i>AR-GE</span><span><i></i>OLAYLAR</span></div></div>
+<div class="win">
+<div class="whead"><div class="wt">ÜRÜN</div><div class="wm"><small>B2B · ERP</small><b>Ledgerly</b></div><div class="wm"><small>SÜRÜM</small><b>v1.4</b></div><div class="tabs"><span>GENEL BAKIŞ</span><span class="on">SPRINT</span><span>ÇEYREK</span></div><div class="hist">Geçmiş<i></i></div><div class="xb"><svg class="ic"><use href="#i-x"/></svg></div></div>
+<div class="wbody">
+<aside class="colL">
+<div class="pnl">
+<div class="sh">ALANLAR</div>
+<div class="ar"><svg class="ic fl"><use href="#i-flag"/></svg>Çekirdek<span class="pips"><i class="f"></i><i class="f"></i><i></i></span></div>
+<div class="ar">Defter<span class="pips"><i class="f"></i><i class="f"></i><i class="nx"></i></span></div>
+<div class="ar">Entegrasyonlar<span class="pips weak"><i class="f"></i><i></i><i></i></span></div>
+<div class="ar">Güven &amp; Ölçek<span class="pips"><i class="f"></i><i class="f"></i><i></i></span></div>
+</div>
+</aside>
+<section class="colC">
+<div class="sph"><span class="spn">SPRINT 14</span><span class="spw"><span class="wp lg"><i></i><i></i></span>2 hafta</span><span class="goal"><svg class="ic fl"><use href="#i-flag"/></svg>Bu çeyrek: Çekirdek<svg class="ic cv"><use href="#i-chev"/></svg></span></div>
+<div class="gz">
+<span class="gh"></span><span class="gh">EKİP</span><span class="gh"></span><span class="gh r">İŞ / EKİP</span>
+<div class="gl des"><svg class="ic"><use href="#i-des"/></svg>Tasarım</div><div class="ros"><span class="pt none"></span></div><div class="gb des"><div class="zero"></div></div><div class="gn z"><b>0</b><span>/ 0</span></div>
+<div class="gl dev"><svg class="ic"><use href="#i-dev"/></svg>Geliştirme</div><div class="ros"><span class="stk"><span class="pt r-dev p-deniz"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span><span class="pt r-dev p-mert"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span><span class="pt r-dev p-kaan"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg></span></span></div><div class="gb dev"><div class="cap" style="width:95.1%"></div><div class="wk" style="width:90.2%"></div></div><div class="gn"><b>74</b><span>/ 78</span></div>
+<div class="gl tst"><svg class="ic"><use href="#i-tst"/></svg>Test</div><div class="ros"><span class="pt none"></span></div><div class="gb tst"><div class="zero"></div></div><div class="gn z"><b>0</b><span>/ 0</span></div>
+</div>
+<div class="sug"><svg class="ic"><use href="#i-plus"/></svg>Bu sprinte <b>4 SP</b> daha alınabilir</div>
+<div class="cards">
+<div class="cd big"><div class="hd"><svg class="ty"><use href="#i-feat"/></svg><span class="nm">Otomatik Mutabakat</span></div>
+<div class="spb"><b>100</b></div>
+<div class="trk">
+<div class="seg dev" style="--g:54"><svg class="ic"><use href="#i-dev"/></svg><b>54</b><em class="rq">≥2★</em><span class="who"><span class="pt s24 r-dev p-deniz"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg><i>4★</i></span><span class="pt s24 r-dev p-mert"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg><i>3★</i></span></span></div>
+<div class="seg dev cont" style="--g:46"><b>46</b><span class="lbl">Sprint 15</span><span class="wp" style="margin-left:auto"><i class="f"></i><i class="f"></i></span></div>
+</div></div>
+<div class="cd big"><div class="hd"><svg class="ty"><use href="#i-feat"/></svg><span class="nm">Elle Giriş</span></div>
+<div class="spb"><b>10</b></div>
+<div class="trk">
+<div class="seg dev" style="--g:10"><svg class="ic"><use href="#i-dev"/></svg><b>10</b><em class="rq">≥1★</em><span class="who"><span class="pt s24 r-dev p-kaan"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg><i>3★</i></span></span><span class="wp"><i class="f"></i><i></i></span></div>
+</div></div>
+<div class="cd big"><div class="hd"><svg class="ty"><use href="#i-feat"/></svg><span class="nm">Kasa Hareketleri</span></div>
+<div class="spb"><b>10</b></div>
+<div class="trk">
+<div class="seg dev" style="--g:10"><svg class="ic"><use href="#i-dev"/></svg><b>10</b><em class="rq">≥1★</em><span class="who"><span class="pt s24 r-dev p-kaan"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg><i>3★</i></span></span><span class="wp"><i class="f"></i><i class="f"></i></span></div>
+</div></div>
+</div>
+<div class="act"><span class="btn2 dis ml"><svg class="ic"><use href="#i-lock"/></svg>Planlamayı devret</span><span class="btn1">Sprint'i başlat<span class="kg">Enter</span></span></div>
+</section>
+<aside class="colR">
+<div class="nxh"><b>SPRINT 15</b><span>SONRAKİ</span></div>
+<div class="nc cont"><span class="n"><svg class="ic"><use href="#i-feat"/></svg>Otomatik Mutabakat</span><span class="v"><b>46</b></span><span class="mb"><i class="dev" style="flex:1;opacity:.5"></i></span><span class="pull"><span class="wp"><i class="f"></i><i class="f"></i></span>2. haftada biter</span></div>
+</aside>
+</div>
+</div>
+</div></div></div>
+</section>
+
+<!-- ============================ 3 ============================ -->
+<section class="fr">
+<div class="frcap"><span class="no">03</span><b>6 kişi, taşma yok, çeyrek hedefi yok</b><span class="d">Üç çubuk da ekip çerçevesinin içinde. Boş kapasite tek sayı: bu sprinte 24 SP daha alınabilir; önerilen kart solda kesikli amber çerçevede. Selin'in hazırlığı kartta 38 → 29; sonraki sprintte neye baktığı, sağdaki Stok Uyarısı kartında kendi portresiyle.</span></div>
+<div class="frbox"><div class="stage"><div class="game">
+<div class="shell"><div class="brand">Project Unicorn</div><div class="nav"><span class="on"><i></i>ÜRÜN</span><span><i></i>SATIŞ</span><span><i></i>EKİP</span><span><i></i>FİNANS</span><span><i></i>KİŞİSEL</span><span><i></i>AR-GE</span><span><i></i>OLAYLAR</span></div></div>
+<div class="win">
+<div class="whead"><div class="wt">ÜRÜN</div><div class="wm"><small>B2B · ERP</small><b>Ledgerly</b></div><div class="wm"><small>SÜRÜM</small><b>v1.4</b></div><div class="tabs"><span>GENEL BAKIŞ</span><span class="on">SPRINT</span><span>ÇEYREK</span></div><div class="hist">Geçmiş<i></i></div><div class="xb"><svg class="ic"><use href="#i-x"/></svg></div></div>
+<div class="wbody">
+<aside class="colL">
+<div class="pnl">
+<div class="sh">MÜŞTERİ TALEPLERİ</div>
+<div class="cr"><span class="cn"><svg class="ic"><use href="#i-acct"/></svg>Ege Sigorta</span><span></span><span class="rqn">Çoklu Entegrasyon</span><span class="dl now"><svg class="ic"><use href="#i-clock"/></svg>bu çeyrek sonu</span></div>
+<div class="cr"><span class="cn"><svg class="ic"><use href="#i-acct"/></svg>Kuzey Lojistik</span><span></span><span class="rqn">Tahsilat Döngüsü</span><span class="dl"><svg class="ic"><use href="#i-clock"/></svg>gelecek çeyrek sonu</span></div>
+</div>
+<div class="pnl">
+<div class="sh">ALANLAR</div>
+<div class="ar">Çekirdek<span class="pips"><i class="f"></i><i class="f"></i><i class="nx"></i></span></div>
+<div class="ar">Entegrasyonlar<span class="pips weak"><i class="f"></i><i></i><i></i></span></div>
+<div class="cand sg"><svg class="ic"><use href="#i-feat"/></svg><span class="n">Çoklu Entegrasyon<svg class="ic"><use href="#i-acct"/></svg></span><span class="v">24</span><span class="pb"><svg class="ic"><use href="#i-plus"/></svg></span><span class="mb"><i class="des" style="flex:3"></i><i class="dev" style="flex:16"></i><i class="tst" style="flex:5"></i></span></div>
+<div class="ar">Güven &amp; Ölçek<span class="pips"><i class="f"></i><i class="f"></i><i></i></span></div>
+</div>
+</aside>
+<section class="colC">
+<div class="sph"><span class="spn">SPRINT 14</span><span class="spw"><span class="wp lg"><i></i><i></i></span>2 hafta</span><span class="goal none"><svg class="ic fl"><use href="#i-flag"/></svg>Bu çeyrek: hedef yok<svg class="ic cv"><use href="#i-chev"/></svg></span></div>
+<div class="gz">
+<span class="gh"></span><span class="gh">EKİP</span><span class="gh"></span><span class="gh r">İŞ / EKİP</span>
+<div class="gl des"><svg class="ic"><use href="#i-des"/></svg>Tasarım</div><div class="ros"><span class="stk"><span class="pt r-des p-ece"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span></span></div><div class="gb des"><div class="cap" style="width:38.7%"></div><div class="wk" style="width:14.5%"></div></div><div class="gn"><b>9</b><span>/ 24</span></div>
+<div class="gl dev"><svg class="ic"><use href="#i-dev"/></svg>Geliştirme</div><div class="ros"><span class="stk"><span class="pt r-fnd p-kurucu"><svg viewBox="0 0 32 32"><use href="#h-beard"/></svg></span><span class="pt r-dev p-deniz"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span><span class="pt r-dev p-kaan"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg></span></span></div><div class="gb dev"><div class="cap" style="width:93.5%"></div><div class="wk" style="width:35.5%"></div></div><div class="gn"><b>22</b><span>/ 58</span></div>
+<div class="gl tst"><svg class="ic"><use href="#i-tst"/></svg>Test</div><div class="ros"><span class="stk"><span class="pt r-tst p-ayse"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg></span></span></div><div class="gb tst"><div class="cap" style="width:29%"></div><div class="wk" style="width:21%"></div></div><div class="gn"><b>13</b><span>/ 18</span></div>
+<div class="gl pm"><svg class="ic"><use href="#i-pm"/></svg>Hazırlık</div>
+<div class="pmrow"><span class="pmc"><span class="pt r-pm p-selin"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span><span class="nm">Selin</span><span class="rq">5★</span><span class="sep"></span><span class="dl2">−9 SP</span><span class="sep"></span><span class="bg">hata ×0,6</span></span></div>
+</div>
+<div class="sug"><svg class="ic"><use href="#i-plus"/></svg>Bu sprinte <b>24 SP</b> daha alınabilir<span class="btn2">Öneriyi uygula<span class="kg">A</span></span></div>
+<div class="cards">
+<div class="cd big"><div class="hd"><svg class="ty"><use href="#i-fix"/></svg><span class="nm">Fatura düzeltmesi</span><span class="fx"><span><svg class="ic"><use href="#i-bug"/></svg>5 hata</span><span><svg class="ic"><use href="#i-acct"/></svg>3 hesap</span><span><svg class="ic"><use href="#i-user"/></svg>120 kullanıcı</span></span></div>
+<div class="spb"><b>15</b></div>
+<div class="trk">
+<div class="seg dev" style="--g:10"><svg class="ic"><use href="#i-dev"/></svg><b>10</b><em class="rq">≥1★</em><span class="who"><span class="pt s24 r-fnd p-kurucu"><svg viewBox="0 0 32 32"><use href="#h-beard"/></svg><i>3★</i></span></span><span class="wp"><i class="f"></i><i class="f"></i></span></div>
+<div class="seg tst" style="--g:5"><svg class="ic"><use href="#i-tst"/></svg><b>5</b><span class="who"><span class="pt s24 r-tst p-ayse"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg><i>2★</i></span></span></div>
+</div></div>
+<div class="cd big focus"><div class="hd"><svg class="ty"><use href="#i-feat"/></svg><span class="nm">Toplu Fatura</span><span class="chip oz">Özenli</span><span class="acts"><span class="ab ico"><span class="kg"><svg class="ic"><use href="#i-arrow"/></svg></span></span><span class="ab"><span class="kg">X</span>Çıkar</span></span></div>
+<div class="spb"><span class="pr"><s>38</s><span class="pt s24 r-pm p-selin"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span></span><b>29</b></div>
+<div class="trk">
+<div class="seg des" style="--g:9"><svg class="ic"><use href="#i-des"/></svg><b>9</b><span class="who"><span class="pt s24 r-des p-ece"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg><i>3★</i></span></span><span class="wp"><i class="f"></i><i></i></span></div>
+<div class="seg dev" style="--g:12"><svg class="ic"><use href="#i-dev"/></svg><b>12</b><em class="rq">≥2★</em><span class="who"><span class="pt s24 r-dev p-deniz"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg><i>4★</i></span><span class="pt s24 r-dev p-kaan"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg><i>2★</i></span></span><span class="wp"><i class="f"></i><i class="f"></i></span></div>
+<div class="seg tst" style="--g:8"><svg class="ic"><use href="#i-tst"/></svg><b>8</b><span class="who"><span class="pt s24 r-tst p-ayse"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg><i>2★</i></span></span><span class="wp"><i class="f"></i><i class="f"></i></span></div>
+</div></div>
+</div>
+<div class="act"><span class="btn2 ml"><span class="pt s24 r-pm p-selin"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span>Planlamayı devret: Selin<span class="kg">D</span></span><span class="btn1">Sprint'i başlat<span class="kg">Enter</span></span></div>
+</section>
+<aside class="colR">
+<div class="nxh"><b>SPRINT 15</b><span>SONRAKİ</span></div>
+<div class="nc"><span class="n"><svg class="ic"><use href="#i-feat"/></svg>Stok Uyarısı</span><span class="v"><s>22</s><b>≈17</b></span><span class="mb"><i class="des" style="flex:3"></i><i class="dev" style="flex:9"></i><i class="tst" style="flex:5"></i></span><span class="pull prep"><span class="pt s24 r-pm p-selin"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg><i>5★</i></span><span class="wp"><i class="f"></i><i></i></span>hazırlıyor</span></div>
+</aside>
+</div>
+</div>
+</div></div></div>
+</section>
+
+<!-- ============================ 4 ============================ -->
+<section class="fr">
+<div class="frcap"><span class="no">04</span><b>6 kişi, iyi PM (Selin 5★)</b><span class="d">Test çubuğu ekip çerçevesini aşar, aşan 6 SP taramalı; Hesap Planı'nın test dilimi aynı desenle biter. Hazırlık şeridinde Selin: −20 SP, hata ×0,6. Cümle yok, darboğaz biçimden okunur.</span></div>
+<div class="frbox"><div class="stage"><div class="game">
+<div class="shell"><div class="brand">Project Unicorn</div><div class="nav"><span class="on"><i></i>ÜRÜN</span><span><i></i>SATIŞ</span><span><i></i>EKİP</span><span><i></i>FİNANS</span><span><i></i>KİŞİSEL</span><span><i></i>AR-GE</span><span><i></i>OLAYLAR</span></div></div>
+<div class="win">
+<div class="whead"><div class="wt">ÜRÜN</div><div class="wm"><small>B2B · ERP</small><b>Ledgerly</b></div><div class="wm"><small>SÜRÜM</small><b>v1.4</b></div><div class="tabs"><span>GENEL BAKIŞ</span><span class="on">SPRINT</span><span>ÇEYREK</span></div><div class="hist">Geçmiş<i></i></div><div class="xb"><svg class="ic"><use href="#i-x"/></svg></div></div>
+<div class="wbody">
+<aside class="colL">
+<div class="pnl">
+<div class="sh">MÜŞTERİ TALEPLERİ</div>
+<div class="cr"><span class="cn"><svg class="ic"><use href="#i-acct"/></svg>Ege Sigorta</span><span></span><span class="rqn">Çoklu Entegrasyon</span><span class="dl now"><svg class="ic"><use href="#i-clock"/></svg>bu çeyrek sonu</span></div>
+<div class="cr"><span class="cn"><svg class="ic"><use href="#i-acct"/></svg>Kuzey Lojistik</span><span class="pl"><svg class="ic"><use href="#i-check"/></svg>PLANDA</span><span class="rqn">Toplu Fatura</span><span class="dl"><svg class="ic"><use href="#i-clock"/></svg>gelecek çeyrek sonu</span></div>
+</div>
+<div class="pnl">
+<div class="sh">ALANLAR</div>
+<div class="ar">Çekirdek<span class="pips"><i class="f"></i><i class="f"></i><i class="nx"></i></span></div>
+<div class="ar"><svg class="ic fl"><use href="#i-flag"/></svg>Entegrasyonlar<span class="pips weak"><i class="f"></i><i></i><i></i></span></div>
+<div class="cand"><svg class="ic"><use href="#i-feat"/></svg><span class="n">Çoklu Entegrasyon<svg class="ic"><use href="#i-acct"/></svg></span><span class="v">24</span><span class="pb"><svg class="ic"><use href="#i-plus"/></svg></span><span class="mb"><i class="des" style="flex:3"></i><i class="dev" style="flex:16"></i><i class="tst" style="flex:5"></i></span></div>
+<div class="ar">Güven &amp; Ölçek<span class="pips"><i class="f"></i><i class="f"></i><i></i></span></div>
+</div>
+</aside>
+<section class="colC">
+<div class="sph"><span class="spn">SPRINT 14</span><span class="spw"><span class="wp lg"><i></i><i></i></span>2 hafta</span><span class="goal"><svg class="ic fl"><use href="#i-flag"/></svg>Bu çeyrek: Entegrasyonlar<svg class="ic cv"><use href="#i-chev"/></svg></span></div>
+<div class="gz">
+<span class="gh"></span><span class="gh">EKİP</span><span class="gh"></span><span class="gh r">İŞ / EKİP</span>
+<div class="gl des"><svg class="ic"><use href="#i-des"/></svg>Tasarım</div><div class="ros"><span class="stk"><span class="pt r-des p-ece"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span></span></div><div class="gb des"><div class="cap" style="width:38.7%"></div><div class="wk" style="width:27.4%"></div></div><div class="gn"><b>17</b><span>/ 24</span></div>
+<div class="gl dev"><svg class="ic"><use href="#i-dev"/></svg>Geliştirme</div><div class="ros"><span class="stk"><span class="pt r-fnd p-kurucu"><svg viewBox="0 0 32 32"><use href="#h-beard"/></svg></span><span class="pt r-dev p-deniz"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span><span class="pt r-dev p-kaan"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg></span></span></div><div class="gb dev"><div class="cap" style="width:93.5%"></div><div class="wk" style="width:64.5%"></div></div><div class="gn"><b>40</b><span>/ 58</span></div>
+<div class="gl tst"><svg class="ic"><use href="#i-tst"/></svg>Test</div><div class="ros"><span class="stk"><span class="pt r-tst p-ayse"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg></span></span></div><div class="gb tst"><div class="cap" style="width:29%"></div><div class="wk" style="width:29%"></div><div class="ovs" style="left:29%;width:9.7%"></div><span class="ovc" style="left:calc(38.7% + 10px)"><svg class="ic"><use href="#i-tri"/></svg>+6</span></div><div class="gn ov"><b>24</b><span>/ 18</span></div>
+<div class="gl pm"><svg class="ic"><use href="#i-pm"/></svg>Hazırlık</div>
+<div class="pmrow"><span class="pmc"><span class="pt r-pm p-selin"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span><span class="nm">Selin</span><span class="rq">5★</span><span class="sep"></span><span class="dl2">−20 SP</span><span class="sep"></span><span class="bg">hata ×0,6</span></span></div>
+</div>
+<div class="cards">
+<div class="cd big"><div class="hd"><svg class="ty"><use href="#i-fix"/></svg><span class="nm">Fatura düzeltmesi</span><span class="fx"><span><svg class="ic"><use href="#i-bug"/></svg>5 hata</span><span><svg class="ic"><use href="#i-acct"/></svg>3 hesap</span><span><svg class="ic"><use href="#i-user"/></svg>120 kullanıcı</span></span></div>
+<div class="spb"><b>15</b></div>
+<div class="trk">
+<div class="seg dev" style="--g:10"><svg class="ic"><use href="#i-dev"/></svg><b>10</b><span class="who"><span class="pt s24 r-fnd p-kurucu"><svg viewBox="0 0 32 32"><use href="#h-beard"/></svg><i>3★</i></span></span><span class="wp"><i class="f"></i><i class="f"></i></span></div>
+<div class="seg tst" style="--g:5"><svg class="ic"><use href="#i-tst"/></svg><b>5</b><span class="who"><span class="pt s24 r-tst p-ayse"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg><i>2★</i></span></span></div>
+</div></div>
+<div class="cd big"><div class="hd"><svg class="ty"><use href="#i-feat"/></svg><span class="nm">Toplu Fatura</span><span class="chip cu"><svg class="ic b"><use href="#i-acct"/></svg>Kuzey Lojistik<svg class="ic"><use href="#i-clock"/></svg>gelecek çeyrek sonu</span></div>
+<div class="spb"><span class="pr"><s>38</s><span class="pt s24 r-pm p-selin"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span></span><b>29</b></div>
+<div class="trk">
+<div class="seg des" style="--g:9"><svg class="ic"><use href="#i-des"/></svg><b>9</b><span class="who"><span class="pt s24 r-des p-ece"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg><i>3★</i></span></span><span class="wp"><i class="f"></i><i></i></span></div>
+<div class="seg dev" style="--g:12"><svg class="ic"><use href="#i-dev"/></svg><b>12</b><em class="rq">≥2★</em><span class="who"><span class="pt s24 r-dev p-deniz"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg><i>4★</i></span><span class="pt s24 r-dev p-kaan"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg><i>2★</i></span></span><span class="wp"><i class="f"></i><i></i></span></div>
+<div class="seg tst" style="--g:8"><svg class="ic"><use href="#i-tst"/></svg><b>8</b><span class="who"><span class="pt s24 r-tst p-ayse"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg><i>2★</i></span></span><span class="wp"><i class="f"></i><i class="f"></i></span></div>
+</div></div>
+<div class="cd big focus"><div class="hd"><svg class="ty"><use href="#i-feat"/></svg><span class="nm">Hesap Planı</span><span class="acts"><span class="ab ico"><span class="kg"><svg class="ic"><use href="#i-arrow"/></svg></span></span><span class="ab"><span class="kg">X</span>Çıkar</span></span></div>
+<div class="spb"><span class="pr"><s>48</s><span class="pt s24 r-pm p-selin"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span></span><b>37</b></div>
+<div class="trk">
+<div class="seg des" style="--g:8"><svg class="ic"><use href="#i-des"/></svg><b>8</b><span class="who"><span class="pt s24 r-des p-ece"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg><i>3★</i></span></span></div>
+<div class="seg dev" style="--g:18"><svg class="ic"><use href="#i-dev"/></svg><b>18</b><em class="rq">≥2★</em><span class="who"><span class="pt s24 r-dev p-deniz"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg><i>4★</i></span><span class="pt s24 r-dev p-kaan"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg><i>2★</i></span></span></div>
+<div class="seg tst" style="--g:11"><span class="ovp" style="width:55%"></span><svg class="ic"><use href="#i-tst"/></svg><b>11</b><span class="who"><span class="pt s24 r-tst p-ayse"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg><i>2★</i></span></span><svg class="ic w"><use href="#i-tri"/></svg></div>
+</div></div>
+</div>
+<div class="act"><span class="btn2 ml"><span class="pt s24 r-pm p-selin"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span>Planlamayı devret: Selin<span class="kg">D</span></span><span class="btn1">Sprint'i başlat<span class="kg">Enter</span></span></div>
+</section>
+<aside class="colR">
+<div class="nxh"><b>SPRINT 15</b><span>SONRAKİ</span></div>
+<div class="nc"><span class="n"><svg class="ic"><use href="#i-feat"/></svg>Stok Uyarısı</span><span class="v"><s>22</s><b>≈17</b></span><span class="mb"><i class="des" style="flex:3"></i><i class="dev" style="flex:9"></i><i class="tst" style="flex:5"></i></span><span class="pull prep"><span class="pt s24 r-pm p-selin"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg><i>5★</i></span><span class="wp"><i class="f"></i><i></i></span>hazırlıyor</span><span class="pull"><svg class="ic"><use href="#i-arrow"/></svg><span class="wp"><i class="f"></i><i class="a"></i></span>ekip 2. haftada çeker</span></div>
+</aside>
+</div>
+</div>
+</div></div></div>
+</section>
+
+<!-- ============================ 5 ============================ -->
+<section class="fr">
+<div class="frcap"><span class="no">05</span><b>6 kişi, zayıf PM (Can 2★)</b><span class="d">Durum 4 ile aynı plan, aynı yerleşim; alt alta okunur. Kartlar büyür (29 → 33, 37 → 42), Test taşması 6'dan 8'e çıkar, hazırlık şeridi −20 yerine −11 SP ve hata ×0,6 yerine ×0,85 yazar.</span></div>
+<div class="frbox"><div class="stage"><div class="game">
+<div class="shell"><div class="brand">Project Unicorn</div><div class="nav"><span class="on"><i></i>ÜRÜN</span><span><i></i>SATIŞ</span><span><i></i>EKİP</span><span><i></i>FİNANS</span><span><i></i>KİŞİSEL</span><span><i></i>AR-GE</span><span><i></i>OLAYLAR</span></div></div>
+<div class="win">
+<div class="whead"><div class="wt">ÜRÜN</div><div class="wm"><small>B2B · ERP</small><b>Ledgerly</b></div><div class="wm"><small>SÜRÜM</small><b>v1.4</b></div><div class="tabs"><span>GENEL BAKIŞ</span><span class="on">SPRINT</span><span>ÇEYREK</span></div><div class="hist">Geçmiş<i></i></div><div class="xb"><svg class="ic"><use href="#i-x"/></svg></div></div>
+<div class="wbody">
+<aside class="colL">
+<div class="pnl">
+<div class="sh">MÜŞTERİ TALEPLERİ</div>
+<div class="cr"><span class="cn"><svg class="ic"><use href="#i-acct"/></svg>Ege Sigorta</span><span></span><span class="rqn">Çoklu Entegrasyon</span><span class="dl now"><svg class="ic"><use href="#i-clock"/></svg>bu çeyrek sonu</span></div>
+<div class="cr"><span class="cn"><svg class="ic"><use href="#i-acct"/></svg>Kuzey Lojistik</span><span class="pl"><svg class="ic"><use href="#i-check"/></svg>PLANDA</span><span class="rqn">Toplu Fatura</span><span class="dl"><svg class="ic"><use href="#i-clock"/></svg>gelecek çeyrek sonu</span></div>
+</div>
+<div class="pnl">
+<div class="sh">ALANLAR</div>
+<div class="ar">Çekirdek<span class="pips"><i class="f"></i><i class="f"></i><i class="nx"></i></span></div>
+<div class="ar"><svg class="ic fl"><use href="#i-flag"/></svg>Entegrasyonlar<span class="pips weak"><i class="f"></i><i></i><i></i></span></div>
+<div class="cand"><svg class="ic"><use href="#i-feat"/></svg><span class="n">Çoklu Entegrasyon<svg class="ic"><use href="#i-acct"/></svg></span><span class="v">24</span><span class="pb"><svg class="ic"><use href="#i-plus"/></svg></span><span class="mb"><i class="des" style="flex:3"></i><i class="dev" style="flex:16"></i><i class="tst" style="flex:5"></i></span></div>
+<div class="ar">Güven &amp; Ölçek<span class="pips"><i class="f"></i><i class="f"></i><i></i></span></div>
+</div>
+</aside>
+<section class="colC">
+<div class="sph"><span class="spn">SPRINT 14</span><span class="spw"><span class="wp lg"><i></i><i></i></span>2 hafta</span><span class="goal"><svg class="ic fl"><use href="#i-flag"/></svg>Bu çeyrek: Entegrasyonlar<svg class="ic cv"><use href="#i-chev"/></svg></span></div>
+<div class="gz">
+<span class="gh"></span><span class="gh">EKİP</span><span class="gh"></span><span class="gh r">İŞ / EKİP</span>
+<div class="gl des"><svg class="ic"><use href="#i-des"/></svg>Tasarım</div><div class="ros"><span class="stk"><span class="pt r-des p-ece"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span></span></div><div class="gb des"><div class="cap" style="width:38.7%"></div><div class="wk" style="width:30.6%"></div></div><div class="gn"><b>19</b><span>/ 24</span></div>
+<div class="gl dev"><svg class="ic"><use href="#i-dev"/></svg>Geliştirme</div><div class="ros"><span class="stk"><span class="pt r-fnd p-kurucu"><svg viewBox="0 0 32 32"><use href="#h-beard"/></svg></span><span class="pt r-dev p-deniz"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span><span class="pt r-dev p-kaan"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg></span></span></div><div class="gb dev"><div class="cap" style="width:93.5%"></div><div class="wk" style="width:72.6%"></div></div><div class="gn"><b>45</b><span>/ 58</span></div>
+<div class="gl tst"><svg class="ic"><use href="#i-tst"/></svg>Test</div><div class="ros"><span class="stk"><span class="pt r-tst p-ayse"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg></span></span></div><div class="gb tst"><div class="cap" style="width:29%"></div><div class="wk" style="width:29%"></div><div class="ovs" style="left:29%;width:12.9%"></div><span class="ovc" style="left:calc(41.9% + 10px)"><svg class="ic"><use href="#i-tri"/></svg>+8</span></div><div class="gn ov"><b>26</b><span>/ 18</span></div>
+<div class="gl pm"><svg class="ic"><use href="#i-pm"/></svg>Hazırlık</div>
+<div class="pmrow"><span class="pmc"><span class="pt r-pm p-can"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span><span class="nm">Can</span><span class="rq">2★</span><span class="sep"></span><span class="dl2">−11 SP</span><span class="sep"></span><span class="bg">hata ×0,85</span></span></div>
+</div>
+<div class="cards">
+<div class="cd big"><div class="hd"><svg class="ty"><use href="#i-fix"/></svg><span class="nm">Fatura düzeltmesi</span><span class="fx"><span><svg class="ic"><use href="#i-bug"/></svg>5 hata</span><span><svg class="ic"><use href="#i-acct"/></svg>3 hesap</span><span><svg class="ic"><use href="#i-user"/></svg>120 kullanıcı</span></span></div>
+<div class="spb"><b>15</b></div>
+<div class="trk">
+<div class="seg dev" style="--g:10"><svg class="ic"><use href="#i-dev"/></svg><b>10</b><span class="who"><span class="pt s24 r-fnd p-kurucu"><svg viewBox="0 0 32 32"><use href="#h-beard"/></svg><i>3★</i></span></span><span class="wp"><i class="f"></i><i class="f"></i></span></div>
+<div class="seg tst" style="--g:5"><svg class="ic"><use href="#i-tst"/></svg><b>5</b><span class="who"><span class="pt s24 r-tst p-ayse"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg><i>2★</i></span></span></div>
+</div></div>
+<div class="cd big"><div class="hd"><svg class="ty"><use href="#i-feat"/></svg><span class="nm">Toplu Fatura</span><span class="chip cu"><svg class="ic b"><use href="#i-acct"/></svg>Kuzey Lojistik<svg class="ic"><use href="#i-clock"/></svg>gelecek çeyrek sonu</span></div>
+<div class="spb"><span class="pr"><s>38</s><span class="pt s24 r-pm p-can"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span></span><b>33</b></div>
+<div class="trk">
+<div class="seg des" style="--g:10"><svg class="ic"><use href="#i-des"/></svg><b>10</b><span class="who"><span class="pt s24 r-des p-ece"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg><i>3★</i></span></span><span class="wp"><i class="f"></i><i></i></span></div>
+<div class="seg dev" style="--g:14"><svg class="ic"><use href="#i-dev"/></svg><b>14</b><em class="rq">≥2★</em><span class="who"><span class="pt s24 r-dev p-deniz"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg><i>4★</i></span><span class="pt s24 r-dev p-kaan"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg><i>2★</i></span></span><span class="wp"><i class="f"></i><i></i></span></div>
+<div class="seg tst" style="--g:9"><svg class="ic"><use href="#i-tst"/></svg><b>9</b><span class="who"><span class="pt s24 r-tst p-ayse"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg><i>2★</i></span></span><span class="wp"><i class="f"></i><i class="f"></i></span></div>
+</div></div>
+<div class="cd big focus"><div class="hd"><svg class="ty"><use href="#i-feat"/></svg><span class="nm">Hesap Planı</span><span class="acts"><span class="ab ico"><span class="kg"><svg class="ic"><use href="#i-arrow"/></svg></span></span><span class="ab"><span class="kg">X</span>Çıkar</span></span></div>
+<div class="spb"><span class="pr"><s>48</s><span class="pt s24 r-pm p-can"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span></span><b>42</b></div>
+<div class="trk">
+<div class="seg des" style="--g:9"><svg class="ic"><use href="#i-des"/></svg><b>9</b><span class="who"><span class="pt s24 r-des p-ece"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg><i>3★</i></span></span></div>
+<div class="seg dev" style="--g:21"><svg class="ic"><use href="#i-dev"/></svg><b>21</b><em class="rq">≥2★</em><span class="who"><span class="pt s24 r-dev p-deniz"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg><i>4★</i></span><span class="pt s24 r-dev p-kaan"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg><i>2★</i></span></span></div>
+<div class="seg tst" style="--g:12"><span class="ovp" style="width:67%"></span><svg class="ic"><use href="#i-tst"/></svg><b>12</b><span class="who"><span class="pt s24 r-tst p-ayse"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg><i>2★</i></span></span><svg class="ic w"><use href="#i-tri"/></svg></div>
+</div></div>
+</div>
+<div class="act"><span class="btn2 ml"><span class="pt s24 r-pm p-can"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span>Planlamayı devret: Can<span class="kg">D</span></span><span class="btn1">Sprint'i başlat<span class="kg">Enter</span></span></div>
+</section>
+<aside class="colR">
+<div class="nxh"><b>SPRINT 15</b><span>SONRAKİ</span></div>
+<div class="nc"><span class="n"><svg class="ic"><use href="#i-feat"/></svg>Stok Uyarısı</span><span class="v"><s>22</s><b>≈18</b></span><span class="mb"><i class="des" style="flex:4"></i><i class="dev" style="flex:10"></i><i class="tst" style="flex:5"></i></span><span class="pull prep"><span class="pt s24 r-pm p-can"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg><i>2★</i></span><span class="wp"><i class="f"></i><i></i></span>hazırlıyor</span><span class="pull"><svg class="ic"><use href="#i-arrow"/></svg><span class="wp"><i class="f"></i><i class="a"></i></span>ekip 2. haftada çeker</span></div>
+</aside>
+</div>
+</div>
+</div></div></div>
+</section>
+
+<!-- ============================ 6 ============================ -->
+<section class="fr">
+<div class="frcap"><span class="no">06</span><b>12 kişi, taşmanın ilk sprinti</b><span class="d">Ortak ölçekte Test ekibi Geliştirme'nin yanında küçücük kalır: 54 iş, 36 ekip, aşan 18 SP taramalı. Testte kalacak iki kart aynı desenle kendini gösterir. "Test yetişmiyor" yazısı yok.</span></div>
+<div class="frbox"><div class="stage"><div class="game">
+<div class="shell"><div class="brand">Project Unicorn</div><div class="nav"><span class="on"><i></i>ÜRÜN</span><span><i></i>SATIŞ</span><span><i></i>EKİP</span><span><i></i>FİNANS</span><span><i></i>KİŞİSEL</span><span><i></i>AR-GE</span><span><i></i>OLAYLAR</span></div></div>
+<div class="win">
+<div class="whead"><div class="wt">ÜRÜN</div><div class="wm"><small>B2B · ERP</small><b>Ledgerly</b></div><div class="wm"><small>SÜRÜM</small><b>v1.4</b></div><div class="tabs"><span>GENEL BAKIŞ</span><span class="on">SPRINT</span><span>ÇEYREK</span></div><div class="hist">Geçmiş<i></i></div><div class="xb"><svg class="ic"><use href="#i-x"/></svg></div></div>
+<div class="wbody">
+<aside class="colL">
+<div class="pnl">
+<div class="sh">MÜŞTERİ TALEPLERİ</div>
+<div class="cr"><span class="cn"><svg class="ic"><use href="#i-acct"/></svg>Ege Sigorta</span><span></span><span class="rqn">Çoklu Entegrasyon</span><span class="dl now"><svg class="ic"><use href="#i-clock"/></svg>bu çeyrek sonu</span></div>
+<div class="cr"><span class="cn"><svg class="ic"><use href="#i-acct"/></svg>Kuzey Lojistik</span><span class="pl"><svg class="ic"><use href="#i-check"/></svg>PLANDA</span><span class="rqn">Toplu Fatura</span><span class="dl"><svg class="ic"><use href="#i-clock"/></svg>gelecek çeyrek sonu</span></div>
+</div>
+<div class="pnl">
+<div class="sh">ALANLAR</div>
+<div class="ar">Çekirdek<span class="pips"><i class="f"></i><i class="f"></i><i class="nx"></i></span></div>
+<div class="ar"><svg class="ic fl"><use href="#i-flag"/></svg>Entegrasyonlar<span class="pips weak"><i class="f"></i><i></i><i></i></span></div>
+<div class="cand"><svg class="ic"><use href="#i-feat"/></svg><span class="n">Çoklu Entegrasyon<svg class="ic"><use href="#i-acct"/></svg></span><span class="v">24</span><span class="pb"><svg class="ic"><use href="#i-plus"/></svg></span><span class="mb"><i class="des" style="flex:3"></i><i class="dev" style="flex:16"></i><i class="tst" style="flex:5"></i></span></div>
+<div class="ar">Güven &amp; Ölçek<span class="pips"><i class="f"></i><i class="f"></i><i></i></span></div>
+<div class="ar">Defter<span class="pips"><i class="nx"></i><i></i><i></i></span></div>
+<div class="ar">Stok<span class="pips"><i class="nx"></i><i></i><i></i></span></div>
+</div>
+</aside>
+<section class="colC">
+<div class="sph"><span class="spn">SPRINT 21</span><span class="spw"><span class="wp lg"><i></i><i></i></span>2 hafta</span><span class="goal"><svg class="ic fl"><use href="#i-flag"/></svg>Bu çeyrek: Entegrasyonlar<svg class="ic cv"><use href="#i-chev"/></svg></span></div>
+<div class="gz">
+<span class="gh"></span><span class="gh">EKİP</span><span class="gh"></span><span class="gh r">İŞ / EKİP</span>
+<div class="gl des"><svg class="ic"><use href="#i-des"/></svg>Tasarım</div><div class="ros"><span class="stk"><span class="pt r-des p-ece"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span><span class="pt r-des p-defne"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg></span><span class="pt r-des p-gizem"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg></span></span></div><div class="gb des"><div class="cap" style="width:38.8%"></div><div class="wk" style="width:15.3%"></div></div><div class="gn"><b>26</b><span>/ 66</span></div>
+<div class="gl dev"><svg class="ic"><use href="#i-dev"/></svg>Geliştirme</div><div class="ros"><span class="stk"><span class="pt r-fnd p-kurucu"><svg viewBox="0 0 32 32"><use href="#h-beard"/></svg></span><span class="pt r-dev p-mert"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span><span class="pt r-dev p-zeynep"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span><span class="pt r-dev p-deniz"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span><span class="pt r-dev p-burak"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span><span class="pt r-dev p-kaan"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg></span><span class="pt r-dev p-onur"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span></span></div><div class="gb dev"><div class="cap" style="width:94.1%"></div><div class="wk" style="width:62.4%"></div></div><div class="gn"><b>106</b><span>/ 160</span></div>
+<div class="gl tst"><svg class="ic"><use href="#i-tst"/></svg>Test</div><div class="ros"><span class="stk"><span class="pt r-tst p-ayse"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg></span><span class="pt r-tst p-cem"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg></span></span></div><div class="gb tst"><div class="cap" style="width:21.2%"></div><div class="wk" style="width:21.2%"></div><div class="ovs" style="left:21.2%;width:10.6%"></div><span class="ovc" style="left:calc(31.8% + 10px)"><svg class="ic"><use href="#i-tri"/></svg>+18</span></div><div class="gn ov"><b>54</b><span>/ 36</span></div>
+</div>
+<div class="cards">
+<div class="cd"><div class="hd"><svg class="ty"><use href="#i-fix"/></svg><span class="nm">Fatura düzeltmesi</span><span class="fx"><span><svg class="ic"><use href="#i-bug"/></svg>7 hata</span><span><svg class="ic"><use href="#i-acct"/></svg>4 hesap</span><span><svg class="ic"><use href="#i-user"/></svg>190 kullanıcı</span></span></div>
+<div class="spb"><b>20</b></div>
+<div class="trk">
+<div class="seg dev" style="--g:14"><svg class="ic"><use href="#i-dev"/></svg><b>14</b><em class="rq">≥1★</em><span class="who"><span class="pt s24 r-dev p-kaan"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg><i>2★</i></span></span></div>
+<div class="seg tst" style="--g:6"><svg class="ic"><use href="#i-tst"/></svg><b>6</b><span class="who"><span class="pt s24 r-tst p-cem"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg><i>1★</i></span></span></div>
+</div></div>
+<div class="cd"><div class="hd"><svg class="ty"><use href="#i-feat"/></svg><span class="nm">Toplu Fatura</span><span class="chip cu"><svg class="ic b"><use href="#i-acct"/></svg>Kuzey Lojistik<svg class="ic"><use href="#i-clock"/></svg>gelecek çeyrek sonu</span><span class="chip oz">Özenli</span></div>
+<div class="spb"><b>42</b></div>
+<div class="trk">
+<div class="seg des" style="--g:8"><svg class="ic"><use href="#i-des"/></svg><b>8</b><span class="who"><span class="pt s24 r-des p-ece"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg><i>3★</i></span></span><span class="wp"><i class="f"></i><i></i></span></div>
+<div class="seg dev" style="--g:24"><svg class="ic"><use href="#i-dev"/></svg><b>24</b><em class="rq">≥2★</em><span class="who"><span class="pt s24 r-dev p-deniz"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg><i>3★</i></span><span class="pt s24 r-dev p-onur"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg><i>2★</i></span></span><span class="wp"><i class="f"></i><i class="f"></i></span></div>
+<div class="seg tst" style="--g:10"><svg class="ic"><use href="#i-tst"/></svg><b>10</b><span class="who"><span class="pt s24 r-tst p-ayse"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg><i>3★</i></span></span><span class="wp"><i class="f"></i><i class="f"></i></span></div>
+</div></div>
+<div class="cd"><div class="hd"><svg class="ty"><use href="#i-feat"/></svg><span class="nm">Hesap Planı</span><span class="chip oz">Özenli</span></div>
+<div class="spb"><b>33</b></div>
+<div class="trk">
+<div class="seg des" style="--g:9"><svg class="ic"><use href="#i-des"/></svg><b>9</b><span class="who"><span class="pt s24 r-des p-gizem"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg><i>3★</i></span></span></div>
+<div class="seg dev" style="--g:16"><svg class="ic"><use href="#i-dev"/></svg><b>16</b><span class="who"><span class="pt s24 r-dev p-mert"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg><i>4★</i></span><span class="pt s24 r-dev p-zeynep"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg><i>4★</i></span></span></div>
+<div class="seg tst" style="--g:8"><span class="ovp" style="width:62.5%"></span><svg class="ic"><use href="#i-tst"/></svg><b>8</b><span class="who"><span class="pt s24 r-tst p-ayse"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg><i>3★</i></span></span><svg class="ic w"><use href="#i-tri"/></svg></div>
+</div></div>
+<div class="cd"><div class="hd"><svg class="ty"><use href="#i-feat"/></svg><span class="nm">Stok Sayacı</span></div>
+<div class="spb"><b>37</b></div>
+<div class="trk">
+<div class="seg des" style="--g:2"><svg class="ic"><use href="#i-des"/></svg><b>2</b><span class="who"><span class="pt s24 r-des p-defne"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg><i>2★</i></span></span></div>
+<div class="seg dev" style="--g:22"><svg class="ic"><use href="#i-dev"/></svg><b>22</b><em class="rq">≥1★</em><span class="who"><span class="pt s24 r-dev p-burak"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg><i>3★</i></span><span class="pt s24 r-fnd p-kurucu"><svg viewBox="0 0 32 32"><use href="#h-beard"/></svg><i>3★</i></span></span></div>
+<div class="seg tst ov" style="--g:13"><svg class="ic w"><use href="#i-tri"/></svg><b>13</b><span class="who"><span class="pt s24 r-tst p-cem"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg><i>1★</i></span></span></div>
+</div></div>
+<div class="cd"><div class="hd"><svg class="ty"><use href="#i-feat"/></svg><span class="nm">Tablo İçe Aktarma</span></div>
+<div class="spb"><b>25</b></div>
+<div class="trk">
+<div class="seg des" style="--g:4"><svg class="ic"><use href="#i-des"/></svg><b>4</b><span class="who"><span class="pt s24 r-des p-defne"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg><i>2★</i></span></span></div>
+<div class="seg dev" style="--g:16"><svg class="ic"><use href="#i-dev"/></svg><b>16</b><em class="rq">≥2★</em><span class="who"><span class="pt s24 r-dev p-deniz"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg><i>3★</i></span></span></div>
+<div class="seg tst" style="--g:5"><svg class="ic"><use href="#i-tst"/></svg><b>5</b><span class="who"><span class="pt s24 r-tst p-cem"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg><i>1★</i></span></span></div>
+</div></div>
+<div class="cd"><div class="hd"><svg class="ty"><use href="#i-feat"/></svg><span class="nm">Kasa Hareketleri</span></div>
+<div class="spb"><b>29</b></div>
+<div class="trk">
+<div class="seg des" style="--g:3"><svg class="ic"><use href="#i-des"/></svg><b>3</b><span class="who"><span class="pt s24 r-des p-gizem"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg><i>3★</i></span></span></div>
+<div class="seg dev" style="--g:14"><svg class="ic"><use href="#i-dev"/></svg><b>14</b><em class="rq">≥1★</em><span class="who"><span class="pt s24 r-fnd p-kurucu"><svg viewBox="0 0 32 32"><use href="#h-beard"/></svg><i>3★</i></span></span></div>
+<div class="seg tst" style="--g:12"><svg class="ic"><use href="#i-tst"/></svg><b>12</b><span class="who"><span class="pt s24 r-tst p-ayse"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg><i>3★</i></span></span></div>
+</div></div>
+</div>
+<div class="act"><span class="btn2 dis ml"><svg class="ic"><use href="#i-lock"/></svg>Planlamayı devret</span><span class="btn1">Sprint'i başlat<span class="kg">Enter</span></span></div>
+</section>
+<aside class="colR">
+<div class="nxh"><b>SPRINT 22</b><span>SONRAKİ</span></div>
+<div class="nc"><span class="n"><svg class="ic"><use href="#i-feat"/></svg>Depo ve Raf</span><span class="v"><b>22</b></span><span class="mb"><i class="des" style="flex:4"></i><i class="dev" style="flex:12"></i><i class="tst" style="flex:6"></i></span><span class="pull"><svg class="ic"><use href="#i-arrow"/></svg><span class="wp"><i class="f"></i><i class="a"></i></span>ekip 2. haftada çeker</span></div>
+<div class="nc"><span class="n"><svg class="ic"><use href="#i-feat"/></svg>Nakit Akış Tablosu</span><span class="v"><b>23</b></span><span class="mb"><i class="des" style="flex:3"></i><i class="dev" style="flex:14"></i><i class="tst" style="flex:6"></i></span></div>
+</aside>
+</div>
+</div>
+</div></div></div>
+</section>
+
+<!-- ============================ 7 ============================ -->
+<section class="fr">
+<div class="frcap"><span class="no">07</span><b>12 kişi, taşma 3. sprintinde</b><span class="d">Durum 6'dan tek fark Test satırındaki sayaç rozeti (üç ok ve 3) ile çift kenar. İmleç rozetin üstünde: tam cümle ve testte kalacak kartlar yalnız ipucunda.</span></div>
+<div class="frbox"><div class="stage"><div class="game">
+<div class="shell"><div class="brand">Project Unicorn</div><div class="nav"><span class="on"><i></i>ÜRÜN</span><span><i></i>SATIŞ</span><span><i></i>EKİP</span><span><i></i>FİNANS</span><span><i></i>KİŞİSEL</span><span><i></i>AR-GE</span><span><i></i>OLAYLAR</span></div></div>
+<div class="win">
+<div class="whead"><div class="wt">ÜRÜN</div><div class="wm"><small>B2B · ERP</small><b>Ledgerly</b></div><div class="wm"><small>SÜRÜM</small><b>v1.4</b></div><div class="tabs"><span>GENEL BAKIŞ</span><span class="on">SPRINT</span><span>ÇEYREK</span></div><div class="hist">Geçmiş<i></i></div><div class="xb"><svg class="ic"><use href="#i-x"/></svg></div></div>
+<div class="wbody">
+<aside class="colL">
+<div class="pnl">
+<div class="sh">MÜŞTERİ TALEPLERİ</div>
+<div class="cr"><span class="cn"><svg class="ic"><use href="#i-acct"/></svg>Ege Sigorta</span><span></span><span class="rqn">Çoklu Entegrasyon</span><span class="dl now"><svg class="ic"><use href="#i-clock"/></svg>bu çeyrek sonu</span></div>
+<div class="cr"><span class="cn"><svg class="ic"><use href="#i-acct"/></svg>Kuzey Lojistik</span><span class="pl"><svg class="ic"><use href="#i-check"/></svg>PLANDA</span><span class="rqn">Toplu Fatura</span><span class="dl"><svg class="ic"><use href="#i-clock"/></svg>gelecek çeyrek sonu</span></div>
+</div>
+<div class="pnl">
+<div class="sh">ALANLAR</div>
+<div class="ar">Çekirdek<span class="pips"><i class="f"></i><i class="f"></i><i class="nx"></i></span></div>
+<div class="ar"><svg class="ic fl"><use href="#i-flag"/></svg>Entegrasyonlar<span class="pips weak"><i class="f"></i><i></i><i></i></span></div>
+<div class="cand"><svg class="ic"><use href="#i-feat"/></svg><span class="n">Çoklu Entegrasyon<svg class="ic"><use href="#i-acct"/></svg></span><span class="v">24</span><span class="pb"><svg class="ic"><use href="#i-plus"/></svg></span><span class="mb"><i class="des" style="flex:3"></i><i class="dev" style="flex:16"></i><i class="tst" style="flex:5"></i></span></div>
+<div class="ar">Güven &amp; Ölçek<span class="pips"><i class="f"></i><i class="f"></i><i></i></span></div>
+<div class="ar">Defter<span class="pips"><i class="nx"></i><i></i><i></i></span></div>
+<div class="ar">Stok<span class="pips"><i class="nx"></i><i></i><i></i></span></div>
+</div>
+</aside>
+<section class="colC">
+<div class="sph"><span class="spn">SPRINT 21</span><span class="spw"><span class="wp lg"><i></i><i></i></span>2 hafta</span><span class="goal"><svg class="ic fl"><use href="#i-flag"/></svg>Bu çeyrek: Entegrasyonlar<svg class="ic cv"><use href="#i-chev"/></svg></span></div>
+<div class="gz">
+<span class="gh"></span><span class="gh">EKİP</span><span class="gh"></span><span class="gh r">İŞ / EKİP</span>
+<div class="gl des"><svg class="ic"><use href="#i-des"/></svg>Tasarım</div><div class="ros"><span class="stk"><span class="pt r-des p-ece"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span><span class="pt r-des p-defne"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg></span><span class="pt r-des p-gizem"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg></span></span></div><div class="gb des"><div class="cap" style="width:38.8%"></div><div class="wk" style="width:15.3%"></div></div><div class="gn"><b>26</b><span>/ 66</span></div>
+<div class="gl dev"><svg class="ic"><use href="#i-dev"/></svg>Geliştirme</div><div class="ros"><span class="stk"><span class="pt r-fnd p-kurucu"><svg viewBox="0 0 32 32"><use href="#h-beard"/></svg></span><span class="pt r-dev p-mert"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span><span class="pt r-dev p-zeynep"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span><span class="pt r-dev p-deniz"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span><span class="pt r-dev p-burak"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span><span class="pt r-dev p-kaan"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg></span><span class="pt r-dev p-onur"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span></span></div><div class="gb dev"><div class="cap" style="width:94.1%"></div><div class="wk" style="width:62.4%"></div></div><div class="gn"><b>106</b><span>/ 160</span></div>
+<div class="gl tst"><svg class="ic"><use href="#i-tst"/></svg>Test</div><div class="ros"><span class="stk"><span class="pt r-tst p-ayse"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg></span><span class="pt r-tst p-cem"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg></span></span></div><div class="gb tst"><div class="cap" style="width:21.2%"></div><div class="wk" style="width:21.2%"></div><div class="ovs" style="left:21.2%;width:10.6%;outline:2px solid rgba(232,145,58,.4);outline-offset:2px"></div><span class="ovc" style="left:calc(31.8% + 12px)"><svg class="ic"><use href="#i-tri"/></svg>+18<span class="strk"><svg class="ic"><use href="#i-streak"/></svg>3</span></span></div><div class="gn ov"><b>54</b><span>/ 36</span></div>
+</div>
+<div class="cards">
+<div class="cd"><div class="hd"><svg class="ty"><use href="#i-fix"/></svg><span class="nm">Fatura düzeltmesi</span><span class="fx"><span><svg class="ic"><use href="#i-bug"/></svg>7 hata</span><span><svg class="ic"><use href="#i-acct"/></svg>4 hesap</span><span><svg class="ic"><use href="#i-user"/></svg>190 kullanıcı</span></span></div>
+<div class="spb"><b>20</b></div>
+<div class="trk">
+<div class="seg dev" style="--g:14"><svg class="ic"><use href="#i-dev"/></svg><b>14</b><em class="rq">≥1★</em><span class="who"><span class="pt s24 r-dev p-kaan"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg><i>2★</i></span></span></div>
+<div class="seg tst" style="--g:6"><svg class="ic"><use href="#i-tst"/></svg><b>6</b><span class="who"><span class="pt s24 r-tst p-cem"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg><i>1★</i></span></span></div>
+</div></div>
+<div class="cd"><div class="hd"><svg class="ty"><use href="#i-feat"/></svg><span class="nm">Toplu Fatura</span><span class="chip cu"><svg class="ic b"><use href="#i-acct"/></svg>Kuzey Lojistik<svg class="ic"><use href="#i-clock"/></svg>gelecek çeyrek sonu</span><span class="chip oz">Özenli</span></div>
+<div class="spb"><b>42</b></div>
+<div class="trk">
+<div class="seg des" style="--g:8"><svg class="ic"><use href="#i-des"/></svg><b>8</b><span class="who"><span class="pt s24 r-des p-ece"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg><i>3★</i></span></span><span class="wp"><i class="f"></i><i></i></span></div>
+<div class="seg dev" style="--g:24"><svg class="ic"><use href="#i-dev"/></svg><b>24</b><em class="rq">≥2★</em><span class="who"><span class="pt s24 r-dev p-deniz"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg><i>3★</i></span><span class="pt s24 r-dev p-onur"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg><i>2★</i></span></span><span class="wp"><i class="f"></i><i class="f"></i></span></div>
+<div class="seg tst" style="--g:10"><svg class="ic"><use href="#i-tst"/></svg><b>10</b><span class="who"><span class="pt s24 r-tst p-ayse"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg><i>3★</i></span></span><span class="wp"><i class="f"></i><i class="f"></i></span></div>
+</div></div>
+<div class="cd"><div class="hd"><svg class="ty"><use href="#i-feat"/></svg><span class="nm">Hesap Planı</span><span class="chip oz">Özenli</span></div>
+<div class="spb"><b>33</b></div>
+<div class="trk">
+<div class="seg des" style="--g:9"><svg class="ic"><use href="#i-des"/></svg><b>9</b><span class="who"><span class="pt s24 r-des p-gizem"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg><i>3★</i></span></span></div>
+<div class="seg dev" style="--g:16"><svg class="ic"><use href="#i-dev"/></svg><b>16</b><span class="who"><span class="pt s24 r-dev p-mert"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg><i>4★</i></span><span class="pt s24 r-dev p-zeynep"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg><i>4★</i></span></span></div>
+<div class="seg tst" style="--g:8"><span class="ovp" style="width:62.5%"></span><svg class="ic"><use href="#i-tst"/></svg><b>8</b><span class="who"><span class="pt s24 r-tst p-ayse"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg><i>3★</i></span></span><svg class="ic w"><use href="#i-tri"/></svg></div>
+</div></div>
+<div class="cd"><div class="hd"><svg class="ty"><use href="#i-feat"/></svg><span class="nm">Stok Sayacı</span></div>
+<div class="spb"><b>37</b></div>
+<div class="trk">
+<div class="seg des" style="--g:2"><svg class="ic"><use href="#i-des"/></svg><b>2</b><span class="who"><span class="pt s24 r-des p-defne"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg><i>2★</i></span></span></div>
+<div class="seg dev" style="--g:22"><svg class="ic"><use href="#i-dev"/></svg><b>22</b><em class="rq">≥1★</em><span class="who"><span class="pt s24 r-dev p-burak"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg><i>3★</i></span><span class="pt s24 r-fnd p-kurucu"><svg viewBox="0 0 32 32"><use href="#h-beard"/></svg><i>3★</i></span></span></div>
+<div class="seg tst ov" style="--g:13"><svg class="ic w"><use href="#i-tri"/></svg><b>13</b><span class="who"><span class="pt s24 r-tst p-cem"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg><i>1★</i></span></span></div>
+</div></div>
+<div class="cd"><div class="hd"><svg class="ty"><use href="#i-feat"/></svg><span class="nm">Tablo İçe Aktarma</span></div>
+<div class="spb"><b>25</b></div>
+<div class="trk">
+<div class="seg des" style="--g:4"><svg class="ic"><use href="#i-des"/></svg><b>4</b><span class="who"><span class="pt s24 r-des p-defne"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg><i>2★</i></span></span></div>
+<div class="seg dev" style="--g:16"><svg class="ic"><use href="#i-dev"/></svg><b>16</b><em class="rq">≥2★</em><span class="who"><span class="pt s24 r-dev p-deniz"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg><i>3★</i></span></span></div>
+<div class="seg tst" style="--g:5"><svg class="ic"><use href="#i-tst"/></svg><b>5</b><span class="who"><span class="pt s24 r-tst p-cem"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg><i>1★</i></span></span></div>
+</div></div>
+<div class="cd"><div class="hd"><svg class="ty"><use href="#i-feat"/></svg><span class="nm">Kasa Hareketleri</span></div>
+<div class="spb"><b>29</b></div>
+<div class="trk">
+<div class="seg des" style="--g:3"><svg class="ic"><use href="#i-des"/></svg><b>3</b><span class="who"><span class="pt s24 r-des p-gizem"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg><i>3★</i></span></span></div>
+<div class="seg dev" style="--g:14"><svg class="ic"><use href="#i-dev"/></svg><b>14</b><em class="rq">≥1★</em><span class="who"><span class="pt s24 r-fnd p-kurucu"><svg viewBox="0 0 32 32"><use href="#h-beard"/></svg><i>3★</i></span></span></div>
+<div class="seg tst" style="--g:12"><svg class="ic"><use href="#i-tst"/></svg><b>12</b><span class="who"><span class="pt s24 r-tst p-ayse"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg><i>3★</i></span></span></div>
+</div></div>
+</div>
+<div class="act"><span class="btn2 dis ml"><svg class="ic"><use href="#i-lock"/></svg>Planlamayı devret</span><span class="btn1">Sprint'i başlat<span class="kg">Enter</span></span></div>
+</section>
+<aside class="colR">
+<div class="nxh"><b>SPRINT 22</b><span>SONRAKİ</span></div>
+<div class="nc"><span class="n"><svg class="ic"><use href="#i-feat"/></svg>Depo ve Raf</span><span class="v"><b>22</b></span><span class="mb"><i class="des" style="flex:4"></i><i class="dev" style="flex:12"></i><i class="tst" style="flex:6"></i></span><span class="pull"><svg class="ic"><use href="#i-arrow"/></svg><span class="wp"><i class="f"></i><i class="a"></i></span>ekip 2. haftada çeker</span></div>
+<div class="nc"><span class="n"><svg class="ic"><use href="#i-feat"/></svg>Nakit Akış Tablosu</span><span class="v"><b>23</b></span><span class="mb"><i class="des" style="flex:3"></i><i class="dev" style="flex:14"></i><i class="tst" style="flex:6"></i></span></div>
+</aside>
+</div>
+<div class="tip up" style="left:640px;top:318px;width:440px;--ax:150px">
+<div class="tt"><svg class="ic tst" style="color:var(--c)"><use href="#i-tst"/></svg>Test · iş 54 · ekip 36</div>
+<div class="tl"><b>18 puan sonraki sprinte kalır.</b> Testte kalacak kartlar: <b>Hesap Planı</b> (33), <b>Stok Sayacı</b> (37).<br>Bu sorun 3 sprinttir sürüyor.</div>
+</div>
+<svg class="mouse" style="left:796px;top:294px"><use href="#i-cursor"/></svg>
+</div>
+</div></div></div>
+</section>
+
+<!-- ============================ 8 ============================ -->
+<section class="fr">
+<div class="frcap"><span class="no">08</span><b>12 kişi, iki PM (kural A)</b><span class="d">Büyük ve orta kartı Selin 4★, küçük kartı Can 2★ hazırlar: hazırlık şeridinde iki çip yan yana (−20 SP ×0,7 ile −2 SP ×0,85). Tek tasarımcı darboğazı Tasarım çubuğunun kısalığından okunur; 44 SP alınabilir [EK hesap].</span></div>
+<div class="frbox"><div class="stage"><div class="game">
+<div class="shell"><div class="brand">Project Unicorn</div><div class="nav"><span class="on"><i></i>ÜRÜN</span><span><i></i>SATIŞ</span><span><i></i>EKİP</span><span><i></i>FİNANS</span><span><i></i>KİŞİSEL</span><span><i></i>AR-GE</span><span><i></i>OLAYLAR</span></div></div>
+<div class="win">
+<div class="whead"><div class="wt">ÜRÜN</div><div class="wm"><small>B2B · ERP</small><b>Ledgerly</b></div><div class="wm"><small>SÜRÜM</small><b>v1.4</b></div><div class="tabs"><span>GENEL BAKIŞ</span><span class="on">SPRINT</span><span>ÇEYREK</span></div><div class="hist">Geçmiş<i></i></div><div class="xb"><svg class="ic"><use href="#i-x"/></svg></div></div>
+<div class="wbody">
+<aside class="colL">
+<div class="pnl">
+<div class="sh">MÜŞTERİ TALEPLERİ</div>
+<div class="cr"><span class="cn"><svg class="ic"><use href="#i-acct"/></svg>Ege Sigorta</span><span></span><span class="rqn">Çoklu Entegrasyon</span><span class="dl now"><svg class="ic"><use href="#i-clock"/></svg>bu çeyrek sonu</span></div>
+<div class="cr"><span class="cn"><svg class="ic"><use href="#i-acct"/></svg>Kuzey Lojistik</span><span class="pl"><svg class="ic"><use href="#i-check"/></svg>PLANDA</span><span class="rqn">Toplu Fatura</span><span class="dl"><svg class="ic"><use href="#i-clock"/></svg>gelecek çeyrek sonu</span></div>
+</div>
+<div class="pnl">
+<div class="sh">ALANLAR</div>
+<div class="ar"><svg class="ic fl"><use href="#i-flag"/></svg>Çekirdek<span class="pips"><i class="f"></i><i class="f"></i><i class="nx"></i></span></div>
+<div class="ar">Defter<span class="pips"><i class="f"></i><i class="f"></i><i class="nx"></i></span></div>
+<div class="ar">Stok<span class="pips"><i class="nx"></i><i></i><i></i></span></div>
+<div class="ar">Entegrasyonlar<span class="pips weak"><i class="f"></i><i></i><i></i></span></div>
+<div class="ar">Güven &amp; Ölçek<span class="pips"><i class="f"></i><i class="f"></i><i></i></span></div>
+</div>
+</aside>
+<section class="colC">
+<div class="sph"><span class="spn">SPRINT 18</span><span class="spw"><span class="wp lg"><i></i><i></i></span>2 hafta</span><span class="goal"><svg class="ic fl"><use href="#i-flag"/></svg>Bu çeyrek: Çekirdek<svg class="ic cv"><use href="#i-chev"/></svg></span></div>
+<div class="gz">
+<span class="gh"></span><span class="gh">EKİP</span><span class="gh"></span><span class="gh r">İŞ / EKİP</span>
+<div class="gl des"><svg class="ic"><use href="#i-des"/></svg>Tasarım</div><div class="ros"><span class="stk"><span class="pt r-des p-ece"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span></span></div><div class="gb des"><div class="cap" style="width:14.1%"></div><div class="wk" style="width:9.4%"></div></div><div class="gn"><b>16</b><span>/ 24</span></div>
+<div class="gl dev"><svg class="ic"><use href="#i-dev"/></svg>Geliştirme</div><div class="ros"><span class="stk"><span class="pt r-dev p-mert"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span><span class="pt r-dev p-zeynep"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span><span class="pt r-dev p-deniz"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span><span class="pt r-dev p-burak"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span><span class="pt r-dev p-kaan"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg></span></span><span class="pt s24 r-fnd p-kurucu dim"><svg viewBox="0 0 32 32"><use href="#h-beard"/></svg></span><span class="pt s24 r-dev p-onur dim" style="margin-left:-4px"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span></div><div class="gb dev"><div class="cap" style="width:94.1%"></div><div class="wk" style="width:30.6%"></div></div><div class="gn"><b>52</b><span>/ 160</span></div>
+<div class="gl tst"><svg class="ic"><use href="#i-tst"/></svg>Test</div><div class="ros"><span class="stk"><span class="pt r-tst p-ayse"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg></span><span class="pt r-tst p-cem"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg></span></span></div><div class="gb tst"><div class="cap" style="width:21.2%"></div><div class="wk" style="width:13.5%"></div></div><div class="gn"><b>23</b><span>/ 36</span></div>
+<div class="gl pm"><svg class="ic"><use href="#i-pm"/></svg>Hazırlık</div>
+<div class="pmrow"><span class="pmc"><span class="pt r-pm p-selin"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span><span class="nm">Selin</span><span class="rq">4★</span><span class="sep"></span><span class="dl2">−20 SP</span><span class="sep"></span><span class="bg">hata ×0,7</span></span><span class="pmc"><span class="pt r-pm p-can"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span><span class="nm">Can</span><span class="rq">2★</span><span class="sep"></span><span class="dl2">−2 SP</span><span class="sep"></span><span class="bg">hata ×0,85</span></span></div>
+</div>
+<div class="sug"><svg class="ic"><use href="#i-plus"/></svg>Bu sprinte <b>44 SP</b> daha alınabilir<span class="btn2">Öneriyi uygula<span class="kg">A</span></span></div>
+<div class="cards">
+<div class="cd big"><div class="hd"><svg class="ty"><use href="#i-feat"/></svg><span class="nm">Otomatik Mutabakat</span><span class="chip oz">Özenli</span></div>
+<div class="spb"><span class="pr"><s>54</s><span class="pt s24 r-pm p-selin"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span></span><b>43</b></div>
+<div class="trk">
+<div class="seg des" style="--g:8"><svg class="ic"><use href="#i-des"/></svg><b>8</b><span class="who"><span class="pt s24 r-des p-ece"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg><i>3★</i></span></span></div>
+<div class="seg dev" style="--g:24"><svg class="ic"><use href="#i-dev"/></svg><b>24</b><em class="rq">≥3★</em><span class="who"><span class="pt s24 r-dev p-mert"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg><i>4★</i></span><span class="pt s24 r-dev p-zeynep"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg><i>4★</i></span></span></div>
+<div class="seg tst" style="--g:11"><svg class="ic"><use href="#i-tst"/></svg><b>11</b><span class="who"><span class="pt s24 r-tst p-ayse"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg><i>3★</i></span></span></div>
+</div></div>
+<div class="cd big"><div class="hd"><svg class="ty"><use href="#i-feat"/></svg><span class="nm">Toplu Fatura</span><span class="chip cu"><svg class="ic b"><use href="#i-acct"/></svg>Kuzey Lojistik<svg class="ic"><use href="#i-clock"/></svg>gelecek çeyrek sonu</span><span class="chip oz">Özenli</span></div>
+<div class="spb"><span class="pr"><s>42</s><span class="pt s24 r-pm p-selin"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span></span><b>33</b></div>
+<div class="trk">
+<div class="seg des" style="--g:6"><svg class="ic"><use href="#i-des"/></svg><b>6</b><span class="who"><span class="pt s24 r-des p-ece"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg><i>3★</i></span></span></div>
+<div class="seg dev" style="--g:19"><svg class="ic"><use href="#i-dev"/></svg><b>19</b><em class="rq">≥2★</em><span class="who"><span class="pt s24 r-dev p-deniz"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg><i>3★</i></span><span class="pt s24 r-dev p-burak"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg><i>3★</i></span></span></div>
+<div class="seg tst" style="--g:8"><svg class="ic"><use href="#i-tst"/></svg><b>8</b><span class="who"><span class="pt s24 r-tst p-ayse"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg><i>3★</i></span></span></div>
+</div></div>
+<div class="cd big"><div class="hd"><svg class="ty"><use href="#i-feat"/></svg><span class="nm">Stok Sayacı</span></div>
+<div class="spb"><span class="pr"><s>17</s><span class="pt s24 r-pm p-can"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span></span><b>15</b></div>
+<div class="trk">
+<div class="seg des" style="--g:2"><svg class="ic"><use href="#i-des"/></svg><b>2</b><span class="who"><span class="pt s24 r-des p-ece"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg><i>3★</i></span></span></div>
+<div class="seg dev" style="--g:9"><svg class="ic"><use href="#i-dev"/></svg><b>9</b><em class="rq">≥1★</em><span class="who"><span class="pt s24 r-dev p-kaan"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg><i>2★</i></span></span></div>
+<div class="seg tst" style="--g:4"><svg class="ic"><use href="#i-tst"/></svg><b>4</b><span class="who"><span class="pt s24 r-tst p-cem"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg><i>1★</i></span></span></div>
+</div></div>
+</div>
+<div class="act"><span class="btn2 ml"><span class="pt s24 r-pm p-selin"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span>Planlamayı devret: Selin<span class="kg">D</span></span><span class="btn1">Sprint'i başlat<span class="kg">Enter</span></span></div>
+</section>
+<aside class="colR">
+<div class="nxh"><b>SPRINT 19</b><span>SONRAKİ</span></div>
+<div class="nc"><span class="n"><svg class="ic"><use href="#i-feat"/></svg>Stok Uyarısı</span><span class="v"><b>22</b></span><span class="mb"><i class="des" style="flex:4"></i><i class="dev" style="flex:12"></i><i class="tst" style="flex:6"></i></span><span class="pull"><svg class="ic"><use href="#i-arrow"/></svg><span class="wp"><i class="f"></i><i class="a"></i></span>ekip 2. haftada çeker</span></div>
+</aside>
+</div>
+</div>
+</div></div></div>
+</section>
+
+<!-- ============================ 9 ============================ -->
+<section class="fr">
+<div class="frcap"><span class="no">09</span><b>50 kişi, planlama Selin'de</b><span class="d">24 kart dört hazırlık kümesinde tek bakışlık karolara iner; her küme başında PM'in kazandırdığı SP ve hata çarpanı. Roller portre yığını ve sayı, boşta olan 6 kişi soluk portre. Başlat yok, yalnız "Planlamayı geri al".</span></div>
+<div class="frbox"><div class="stage"><div class="game">
+<div class="shell"><div class="brand">Project Unicorn</div><div class="nav"><span class="on"><i></i>ÜRÜN</span><span><i></i>SATIŞ</span><span><i></i>EKİP</span><span><i></i>FİNANS</span><span><i></i>KİŞİSEL</span><span><i></i>AR-GE</span><span><i></i>OLAYLAR</span></div></div>
+<div class="win">
+<div class="whead"><div class="wt">ÜRÜN</div><div class="wm"><small>B2B · ERP</small><b>Ledgerly</b></div><div class="wm"><small>SÜRÜM</small><b>v1.4</b></div><div class="tabs"><span>GENEL BAKIŞ</span><span class="on">SPRINT</span><span>ÇEYREK</span></div><div class="hist">Geçmiş<i></i></div><div class="xb"><svg class="ic"><use href="#i-x"/></svg></div></div>
+<div class="wbody">
+<aside class="colL">
+<div class="pnl">
+<div class="sh">MÜŞTERİ TALEPLERİ</div>
+<div class="cr"><span class="cn"><svg class="ic"><use href="#i-acct"/></svg>Ege Sigorta</span><span class="pl"><svg class="ic"><use href="#i-check"/></svg>PLANDA</span><span class="rqn">Çoklu Entegrasyon</span><span class="dl now"><svg class="ic"><use href="#i-clock"/></svg>bu çeyrek sonu</span></div>
+<div class="cr"><span class="cn"><svg class="ic"><use href="#i-acct"/></svg>Kuzey Lojistik</span><span class="pl"><svg class="ic"><use href="#i-check"/></svg>PLANDA</span><span class="rqn">Tahsilat Döngüsü</span><span class="dl"><svg class="ic"><use href="#i-clock"/></svg>gelecek çeyrek sonu</span></div>
+</div>
+<div class="pnl">
+<div class="sh">ALANLAR</div>
+<div class="ar">Çekirdek<span class="pips"><i class="f"></i><i class="f"></i><i class="nx"></i></span></div>
+<div class="ar"><svg class="ic fl"><use href="#i-flag"/></svg>Entegrasyonlar<span class="pips weak"><i class="f"></i><i class="nx"></i><i></i></span></div>
+<div class="ar">Güven &amp; Ölçek<span class="pips"><i class="f"></i><i class="f"></i><i class="nx"></i></span></div>
+<div class="ar">Defter<span class="pips"><i class="f"></i><i class="f"></i><i class="nx"></i></span></div>
+<div class="ar">Stok<span class="pips"><i class="f"></i><i class="nx"></i><i></i></span></div>
+</div>
+</aside>
+<section class="colC">
+<div class="sph"><span class="spn">SPRINT 31</span><span class="spw"><span class="wp lg"><i></i><i></i></span>2 hafta</span><span class="goal"><svg class="ic fl"><use href="#i-flag"/></svg>Bu çeyrek: Entegrasyonlar<svg class="ic cv"><use href="#i-chev"/></svg></span></div>
+<div class="gz">
+<span class="gh"></span><span class="gh">EKİP</span><span class="gh"></span><span class="gh r">İŞ / EKİP</span>
+<div class="gl des"><svg class="ic"><use href="#i-des"/></svg>Tasarım</div><div class="ros"><span class="stk"><span class="pt r-des p-ece"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span><span class="pt r-des p-defne"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg></span><span class="pt r-des p-gizem"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg></span><span class="pt r-des p-x2"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span></span><span class="idle"><span class="pt s24 r-des p-x4 dim"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span>1</span></div><div class="gb des"><div class="cap" style="width:37.3%"></div><div class="wk" style="width:32.7%"></div></div><div class="gn"><b>121</b><span>/ 138</span></div>
+<div class="gl dev"><svg class="ic"><use href="#i-dev"/></svg>Geliştirme</div><div class="ros"><span class="stk"><span class="pt r-dev p-mert"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span><span class="pt r-dev p-zeynep"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span><span class="pt r-dev p-deniz"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span><span class="pt r-dev p-x3"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg></span></span><span class="more" style="margin-left:-2px">+17</span><span class="idle"><span class="pt s24 r-dev p-x1 dim"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span>3</span></div><div class="gb dev"><div class="cap" style="width:94.6%"></div><div class="wk" style="width:83.2%"></div></div><div class="gn"><b>308</b><span>/ 350</span></div>
+<div class="gl tst"><svg class="ic"><use href="#i-tst"/></svg>Test</div><div class="ros"><span class="stk"><span class="pt r-tst p-ayse"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg></span><span class="pt r-tst p-cem"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg></span><span class="pt r-tst p-x4"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span><span class="pt r-tst p-x2"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg></span></span><span class="more" style="margin-left:-2px">+5</span><span class="idle"><span class="pt s24 r-tst p-x3 dim"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span>2</span></div><div class="gb tst"><div class="cap" style="width:44.1%"></div><div class="wk" style="width:38.6%"></div></div><div class="gn"><b>143</b><span>/ 163</span></div>
+</div>
+<div class="grid50">
+<div class="gh2"><span class="pt s24 r-pm p-selin"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span><span class="nm">Selin</span><span class="rq">5★</span><span class="dl2">−72 SP</span><span class="bg">hata ×0,6</span><span class="ln"></span>8 kart</div>
+<div class="tiles">
+<div class="tile"><span class="n"><svg class="ic c"><use href="#i-acct"/></svg>Tahsilat Döngüsü</span><span class="mb"><i class="des" style="flex:4"></i><i class="dev" style="flex:16"></i><i class="tst" style="flex:11"></i></span><span class="v">31</span></div>
+<div class="tile"><span class="n">Otomatik Mutabakat</span><span class="mb"><i class="des" style="flex:11"></i><i class="dev" style="flex:14"></i><i class="tst" style="flex:6"></i></span><span class="v">31</span></div>
+<div class="tile"><span class="n">El Terminali</span><span class="mb"><i class="des" style="flex:5"></i><i class="dev" style="flex:20"></i><i class="tst" style="flex:6"></i></span><span class="v">31</span></div>
+<div class="tile"><span class="n">Nakit Öngörüsü</span><span class="mb"><i class="des" style="flex:4"></i><i class="dev" style="flex:16"></i><i class="tst" style="flex:11"></i></span><span class="v">31</span></div>
+<div class="tile"><span class="n">Açık API &amp; Webhook</span><span class="mb"><i class="des" style="flex:5"></i><i class="dev" style="flex:20"></i><i class="tst" style="flex:6"></i></span><span class="v">31</span></div>
+<div class="tile"><span class="n">Denetim İzi &amp; Şifreleme</span><span class="mb"><i class="des" style="flex:4"></i><i class="dev" style="flex:16"></i><i class="tst" style="flex:11"></i></span><span class="v">31</span></div>
+<div class="tile"><span class="n">Çevrimdışı Çalışma</span><span class="mb"><i class="des" style="flex:11"></i><i class="dev" style="flex:14"></i><i class="tst" style="flex:6"></i></span><span class="v">31</span></div>
+<div class="tile"><span class="n">Çevrimdışı Mobil</span><span class="mb"><i class="des" style="flex:5"></i><i class="dev" style="flex:20"></i><i class="tst" style="flex:6"></i></span><span class="v">31</span></div>
+</div>
+<div class="gh2"><span class="pt s24 r-pm p-burcu"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg></span><span class="nm">Burcu</span><span class="rq">3★</span><span class="dl2">−27 SP</span><span class="bg">hata ×0,75</span><span class="ln"></span>7 kart</div>
+<div class="tiles">
+<div class="tile"><span class="n">Hesap Planı</span><span class="mb"><i class="des" style="flex:3"></i><i class="dev" style="flex:11"></i><i class="tst" style="flex:8"></i></span><span class="v">22</span></div>
+<div class="tile"><span class="n">Depo ve Raf</span><span class="mb"><i class="des" style="flex:8"></i><i class="dev" style="flex:9"></i><i class="tst" style="flex:4"></i></span><span class="v">21</span></div>
+<div class="tile"><span class="n">Nakit Akış Tablosu</span><span class="mb"><i class="des" style="flex:3"></i><i class="dev" style="flex:13"></i><i class="tst" style="flex:4"></i></span><span class="v">20</span></div>
+<div class="tile"><span class="n">Tablo İçe Aktarma</span><span class="mb"><i class="des" style="flex:3"></i><i class="dev" style="flex:11"></i><i class="tst" style="flex:8"></i></span><span class="v">22</span></div>
+<div class="tile"><span class="n">Roller ve İzinler</span><span class="mb"><i class="des" style="flex:3"></i><i class="dev" style="flex:13"></i><i class="tst" style="flex:4"></i></span><span class="v">20</span></div>
+<div class="tile"><span class="n">Sürüm Geçmişi</span><span class="mb"><i class="des" style="flex:3"></i><i class="dev" style="flex:11"></i><i class="tst" style="flex:8"></i></span><span class="v">22</span></div>
+<div class="tile"><span class="n">Mobil Uygulama</span><span class="mb"><i class="des" style="flex:8"></i><i class="dev" style="flex:9"></i><i class="tst" style="flex:4"></i></span><span class="v">21</span></div>
+</div>
+<div class="gh2"><span class="pt s24 r-pm p-can"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span><span class="nm">Can</span><span class="rq">2★</span><span class="dl2">−7 SP</span><span class="bg">hata ×0,85</span><span class="ln"></span>4 kart</div>
+<div class="tiles">
+<div class="tile"><span class="n">Fatura Kesme</span><span class="mb"><i class="des" style="flex:4"></i><i class="dev" style="flex:6"></i><i class="tst" style="flex:3"></i></span><span class="v">13</span></div>
+<div class="tile"><span class="n">Stok Sayacı</span><span class="mb"><i class="des" style="flex:2"></i><i class="dev" style="flex:7"></i><i class="tst" style="flex:4"></i></span><span class="v">13</span></div>
+<div class="tile"><span class="n">Kasa Hareketleri</span><span class="mb"><i class="des" style="flex:4"></i><i class="dev" style="flex:6"></i><i class="tst" style="flex:3"></i></span><span class="v">13</span></div>
+<div class="tile"><span class="n">Elle Giriş</span><span class="mb"><i class="des" style="flex:2"></i><i class="dev" style="flex:9"></i><i class="tst" style="flex:3"></i></span><span class="v">14</span></div>
+</div>
+<div class="gh2"><span class="pt s24 none"></span><span class="nm" style="color:var(--i3)">Hazırlıksız</span><span class="ln"></span>5 kart</div>
+<div class="tiles">
+<div class="tile"><span class="n"><svg class="ic"><use href="#i-fix"/></svg>Fatura düzeltmesi</span><span class="mb"><i class="dev" style="flex:12"></i><i class="tst" style="flex:6"></i></span><span class="v">18</span></div>
+<div class="tile"><span class="n">Belge Okuma</span><span class="mb"><i class="des" style="flex:14"></i><i class="dev" style="flex:18"></i><i class="tst" style="flex:8"></i></span><span class="v">40</span></div>
+<div class="tile"><span class="n">Toplu Fatura</span><span class="mb"><i class="des" style="flex:4"></i><i class="dev" style="flex:16"></i><i class="tst" style="flex:5"></i></span><span class="v">25</span></div>
+<div class="tile"><span class="n"><svg class="ic c"><use href="#i-acct"/></svg>Çoklu Entegrasyon</span><span class="mb"><i class="des" style="flex:9"></i><i class="dev" style="flex:11"></i><i class="tst" style="flex:5"></i></span><span class="v">25</span></div>
+<div class="tile"><span class="n">Ön Muhasebe</span><span class="mb"><i class="des" style="flex:2"></i><i class="dev" style="flex:10"></i><i class="tst" style="flex:3"></i></span><span class="v">15</span></div>
+</div>
+</div>
+<div class="act"><span class="stat"><span class="pt s40 r-pm p-selin"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg><i>5★</i></span><span style="margin-left:6px">Selin planlıyor</span><svg class="ic" style="color:var(--acc)"><use href="#i-loop"/></svg></span><span class="idle" style="margin-left:22px"><span class="stk"><span class="pt s24 r-des p-x4 dim"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span><span class="pt s24 r-dev p-x1 dim"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span><span class="pt s24 r-tst p-x3 dim"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span></span><span style="font-size:22px;color:var(--i3);margin-left:4px">6</span></span><span class="btn2 ml">Planlamayı geri al<span class="kg">D</span></span></div>
+</section>
+<aside class="colR">
+<div class="nxh"><b>SPRINT 32</b><span>SONRAKİ</span></div>
+<div class="empty"><svg class="ic"><use href="#i-feat"/></svg></div>
+</aside>
+</div>
+</div>
+</div></div></div>
+</section>
+
+<!-- ============================ 10 ============================ -->
+<section class="fr">
+<div class="frcap"><span class="no">10</span><b>Sprint sürerken: 1. haftanın sonu, 2. hafta başı</b><span class="d">Plan kilitli; çubuklar artık yapılan işi doldurur. Her kartın üstünde şimdiki aşaması, dilimlerde bitti / sürüyor / bekliyor hâlleri. Deniz ve Kaan kısmen boşta: yarı soluk. Kartların altındaki bildirim, bir kart testi bitirdiğinde düşen satırın örneğidir [EK].</span></div>
+<div class="frbox"><div class="stage"><div class="game">
+<div class="shell"><div class="brand">Project Unicorn</div><div class="nav"><span class="on"><i></i>ÜRÜN</span><span><i></i>SATIŞ</span><span><i></i>EKİP</span><span><i></i>FİNANS</span><span><i></i>KİŞİSEL</span><span><i></i>AR-GE</span><span><i></i>OLAYLAR</span></div></div>
+<div class="win">
+<div class="whead"><div class="wt">ÜRÜN</div><div class="wm"><small>B2B · ERP</small><b>Ledgerly</b></div><div class="wm"><small>SÜRÜM</small><b>v1.4</b></div><div class="tabs"><span>GENEL BAKIŞ</span><span class="on">SPRINT</span><span>ÇEYREK</span></div><div class="hist">Geçmiş<i></i></div><div class="xb"><svg class="ic"><use href="#i-x"/></svg></div></div>
+<div class="wbody">
+<aside class="colL">
+<div class="pnl">
+<div class="sh">MÜŞTERİ TALEPLERİ</div>
+<div class="cr"><span class="cn"><svg class="ic"><use href="#i-acct"/></svg>Ege Sigorta</span><span></span><span class="rqn">Çoklu Entegrasyon</span><span class="dl now"><svg class="ic"><use href="#i-clock"/></svg>bu çeyrek sonu</span></div>
+<div class="cr"><span class="cn"><svg class="ic"><use href="#i-acct"/></svg>Kuzey Lojistik</span><span class="pl"><svg class="ic"><use href="#i-check"/></svg>PLANDA</span><span class="rqn">Toplu Fatura</span><span class="dl"><svg class="ic"><use href="#i-clock"/></svg>gelecek çeyrek sonu</span></div>
+</div>
+<div class="pnl">
+<div class="sh">ALANLAR</div>
+<div class="ar">Çekirdek<span class="pips"><i class="f"></i><i class="f"></i><i class="nx"></i></span></div>
+<div class="ar"><svg class="ic fl"><use href="#i-flag"/></svg>Entegrasyonlar<span class="pips weak"><i class="f"></i><i></i><i></i></span></div>
+<div class="ar">Güven &amp; Ölçek<span class="pips"><i class="f"></i><i class="f"></i><i></i></span></div>
+</div>
+</aside>
+<section class="colC">
+<div class="sph"><span class="spn">SPRINT 14</span><span class="spw"><span class="wp lg"><i class="f"></i><i class="a"></i></span>2. hafta</span><span class="goal lk"><svg class="ic"><use href="#i-flag"/></svg>Bu çeyrek: Entegrasyonlar</span></div>
+<div class="gz">
+<span class="gh"></span><span class="gh">EKİP</span><span class="gh"></span><span class="gh r">YAPILAN / İŞ</span>
+<div class="gl des"><svg class="ic"><use href="#i-des"/></svg>Tasarım</div><div class="ros"><span class="stk"><span class="pt r-des p-ece"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span></span></div><div class="gb des"><div class="cap" style="width:38.7%"></div><div class="wk lt" style="width:27.4%"></div><div class="dnf" style="width:19.4%"></div></div><div class="gn"><b>12</b><span>/ 17</span></div>
+<div class="gl dev"><svg class="ic"><use href="#i-dev"/></svg>Geliştirme</div><div class="ros"><span class="stk"><span class="pt r-fnd p-kurucu"><svg viewBox="0 0 32 32"><use href="#h-beard"/></svg></span></span><span class="pt r-dev p-deniz half"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span><span class="pt r-dev p-kaan half"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg></span></div><div class="gb dev"><div class="cap" style="width:93.5%"></div><div class="wk lt" style="width:64.5%"></div><div class="dnf" style="width:27.4%"></div></div><div class="gn"><b>17</b><span>/ 40</span></div>
+<div class="gl tst"><svg class="ic"><use href="#i-tst"/></svg>Test</div><div class="ros"><span class="stk"><span class="pt r-tst p-ayse"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg></span></span></div><div class="gb tst"><div class="cap" style="width:29%"></div><div class="wk lt" style="width:29%"></div><div class="ovs" style="left:29%;width:9.7%"></div><span class="ovc" style="left:calc(38.7% + 10px)"><svg class="ic"><use href="#i-tri"/></svg>+6</span></div><div class="gn"><b>0</b><span>/ 24</span></div>
+</div>
+<div class="cards">
+<div class="cd big"><div class="hd"><svg class="ty"><use href="#i-fix"/></svg><span class="nm">Fatura düzeltmesi</span><span class="chip st dev"><svg class="ic"><use href="#i-dev"/></svg>Geliştirme</span><span class="fx"><span><svg class="ic"><use href="#i-bug"/></svg>5 hata</span><span><svg class="ic"><use href="#i-acct"/></svg>3 hesap</span><span><svg class="ic"><use href="#i-user"/></svg>120 kullanıcı</span></span></div>
+<div class="spb"><b>15</b></div>
+<div class="trk">
+<div class="seg dev run" style="--g:10"><span class="pf" style="width:50%"></span><svg class="ic"><use href="#i-dev"/></svg><b>5<small> / 10</small></b><span class="who"><span class="pt s24 r-fnd p-kurucu"><svg viewBox="0 0 32 32"><use href="#h-beard"/></svg><i>3★</i></span></span><span class="wp"><i class="f"></i><i class="f"></i></span></div>
+<div class="seg tst wait" style="--g:5"><svg class="ic"><use href="#i-hour"/></svg><b>0<small> / 5</small></b></div>
+</div></div>
+<div class="cd big"><div class="hd"><svg class="ty"><use href="#i-feat"/></svg><span class="nm">Toplu Fatura</span><span class="chip st tst"><svg class="ic"><use href="#i-tst"/></svg>Test</span><span class="chip cu"><svg class="ic b"><use href="#i-acct"/></svg>Kuzey Lojistik<svg class="ic"><use href="#i-clock"/></svg>gelecek çeyrek sonu</span></div>
+<div class="spb"><span class="pr"><s>38</s><span class="pt s24 r-pm p-selin"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span></span><b>29</b></div>
+<div class="trk">
+<div class="seg des done" style="--g:9"><svg class="ic ck"><use href="#i-check"/></svg><b>9</b><span class="who"><span class="pt s24 r-des p-ece"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span></span></div>
+<div class="seg dev done" style="--g:12"><svg class="ic ck"><use href="#i-check"/></svg><b>12</b><span class="who"><span class="pt s24 r-dev p-deniz"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span><span class="pt s24 r-dev p-kaan"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg></span></span></div>
+<div class="seg tst run" style="--g:8"><span class="pf" style="width:4%"></span><svg class="ic"><use href="#i-tst"/></svg><b>0<small> / 8</small></b><span class="who"><span class="pt s24 r-tst p-ayse"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg><i>2★</i></span></span><span class="wp"><i class="f"></i><i class="f"></i></span></div>
+</div></div>
+<div class="cd big"><div class="hd"><svg class="ty"><use href="#i-feat"/></svg><span class="nm">Hesap Planı</span><span class="chip st des"><svg class="ic"><use href="#i-des"/></svg>Tasarım</span></div>
+<div class="spb"><span class="pr"><s>48</s><span class="pt s24 r-pm p-selin"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span></span><b>37</b></div>
+<div class="trk">
+<div class="seg des run" style="--g:8"><span class="pf" style="width:37.5%"></span><svg class="ic"><use href="#i-des"/></svg><b>3<small> / 8</small></b><span class="who"><span class="pt s24 r-des p-ece"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg><i>3★</i></span></span></div>
+<div class="seg dev wait" style="--g:18"><svg class="ic"><use href="#i-hour"/></svg><b>0<small> / 18</small></b><span class="who"><span class="pt s24 r-dev p-deniz half"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span><span class="pt s24 r-dev p-kaan half"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg></span></span></div>
+<div class="seg tst wait" style="--g:11"><span class="ovp" style="width:55%"></span><svg class="ic"><use href="#i-hour"/></svg><b>0<small> / 11</small></b><svg class="ic w" style="margin-left:auto"><use href="#i-tri"/></svg></div>
+</div></div>
+</div>
+<div class="act"><span class="stat"><svg class="ic"><use href="#i-clock"/></svg>Sprint sürüyor</span><span class="lockt ml"><svg class="ic"><use href="#i-lock"/></svg>Plan kilitli</span></div>
+</section>
+<aside class="colR">
+<div class="nxh"><b>SPRINT 15</b><span>SONRAKİ</span></div>
+<div class="nc"><span class="n"><svg class="ic"><use href="#i-feat"/></svg>Stok Uyarısı</span><span class="v"><s>22</s><b>≈17</b></span><span class="mb"><i class="des" style="flex:3"></i><i class="dev" style="flex:9"></i><i class="tst" style="flex:5"></i></span><span class="pull prep"><span class="pt s24 r-pm p-selin"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg><i>5★</i></span><svg class="ic" style="color:#9EE0BE"><use href="#i-check"/></svg>hazır</span><span class="pull"><svg class="ic"><use href="#i-arrow"/></svg><span class="wp"><i class="f"></i><i class="a"></i></span>ekip 2. haftada çeker</span></div>
+</aside>
+</div>
+<div class="toast"><svg class="ic"><use href="#i-tst"/></svg><div class="t1"><b style="color:#9EE0BE;font-weight:750">Toplu Fatura</b> · Test: 2 hata buldu, 1 tanesi düzeltildi.</div></div>
+</div>
+</div></div></div>
+</section>
+
+<!-- ============================ 11 ============================ -->
+<section class="fr">
+<div class="frcap"><span class="no">11</span><b>Kartın ipucu: Durum 6'nın ekranı, imleç Toplu Fatura'da</b><span class="d">Ekrandan kalkan her şeyin yeri burası: ihtiyaç ve kadro tavanı, kim hangi aşamada ve hangi haftada bitiriyor, müşteri ve tutar, alan etkisi, atama kuralları. Kart odakta: Çıkar ve → yalnız şimdi görünür.</span></div>
+<div class="frbox"><div class="stage"><div class="game">
+<div class="shell"><div class="brand">Project Unicorn</div><div class="nav"><span class="on"><i></i>ÜRÜN</span><span><i></i>SATIŞ</span><span><i></i>EKİP</span><span><i></i>FİNANS</span><span><i></i>KİŞİSEL</span><span><i></i>AR-GE</span><span><i></i>OLAYLAR</span></div></div>
+<div class="win">
+<div class="whead"><div class="wt">ÜRÜN</div><div class="wm"><small>B2B · ERP</small><b>Ledgerly</b></div><div class="wm"><small>SÜRÜM</small><b>v1.4</b></div><div class="tabs"><span>GENEL BAKIŞ</span><span class="on">SPRINT</span><span>ÇEYREK</span></div><div class="hist">Geçmiş<i></i></div><div class="xb"><svg class="ic"><use href="#i-x"/></svg></div></div>
+<div class="wbody">
+<aside class="colL">
+<div class="pnl">
+<div class="sh">MÜŞTERİ TALEPLERİ</div>
+<div class="cr"><span class="cn"><svg class="ic"><use href="#i-acct"/></svg>Ege Sigorta</span><span></span><span class="rqn">Çoklu Entegrasyon</span><span class="dl now"><svg class="ic"><use href="#i-clock"/></svg>bu çeyrek sonu</span></div>
+<div class="cr"><span class="cn"><svg class="ic"><use href="#i-acct"/></svg>Kuzey Lojistik</span><span class="pl"><svg class="ic"><use href="#i-check"/></svg>PLANDA</span><span class="rqn">Toplu Fatura</span><span class="dl"><svg class="ic"><use href="#i-clock"/></svg>gelecek çeyrek sonu</span></div>
+</div>
+<div class="pnl">
+<div class="sh">ALANLAR</div>
+<div class="ar">Çekirdek<span class="pips"><i class="f"></i><i class="f"></i><i class="nx"></i></span></div>
+<div class="ar"><svg class="ic fl"><use href="#i-flag"/></svg>Entegrasyonlar<span class="pips weak"><i class="f"></i><i></i><i></i></span></div>
+<div class="cand"><svg class="ic"><use href="#i-feat"/></svg><span class="n">Çoklu Entegrasyon<svg class="ic"><use href="#i-acct"/></svg></span><span class="v">24</span><span class="pb"><svg class="ic"><use href="#i-plus"/></svg></span><span class="mb"><i class="des" style="flex:3"></i><i class="dev" style="flex:16"></i><i class="tst" style="flex:5"></i></span></div>
+<div class="ar">Güven &amp; Ölçek<span class="pips"><i class="f"></i><i class="f"></i><i></i></span></div>
+<div class="ar">Defter<span class="pips"><i class="nx"></i><i></i><i></i></span></div>
+<div class="ar">Stok<span class="pips"><i class="nx"></i><i></i><i></i></span></div>
+</div>
+</aside>
+<section class="colC">
+<div class="sph"><span class="spn">SPRINT 21</span><span class="spw"><span class="wp lg"><i></i><i></i></span>2 hafta</span><span class="goal"><svg class="ic fl"><use href="#i-flag"/></svg>Bu çeyrek: Entegrasyonlar<svg class="ic cv"><use href="#i-chev"/></svg></span></div>
+<div class="gz">
+<span class="gh"></span><span class="gh">EKİP</span><span class="gh"></span><span class="gh r">İŞ / EKİP</span>
+<div class="gl des"><svg class="ic"><use href="#i-des"/></svg>Tasarım</div><div class="ros"><span class="stk"><span class="pt r-des p-ece"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span><span class="pt r-des p-defne"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg></span><span class="pt r-des p-gizem"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg></span></span></div><div class="gb des"><div class="cap" style="width:38.8%"></div><div class="wk" style="width:15.3%"></div></div><div class="gn"><b>26</b><span>/ 66</span></div>
+<div class="gl dev"><svg class="ic"><use href="#i-dev"/></svg>Geliştirme</div><div class="ros"><span class="stk"><span class="pt r-fnd p-kurucu"><svg viewBox="0 0 32 32"><use href="#h-beard"/></svg></span><span class="pt r-dev p-mert"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span><span class="pt r-dev p-zeynep"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg></span><span class="pt r-dev p-deniz"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span><span class="pt r-dev p-burak"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span><span class="pt r-dev p-kaan"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg></span><span class="pt r-dev p-onur"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg></span></span></div><div class="gb dev"><div class="cap" style="width:94.1%"></div><div class="wk" style="width:62.4%"></div></div><div class="gn"><b>106</b><span>/ 160</span></div>
+<div class="gl tst"><svg class="ic"><use href="#i-tst"/></svg>Test</div><div class="ros"><span class="stk"><span class="pt r-tst p-ayse"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg></span><span class="pt r-tst p-cem"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg></span></span></div><div class="gb tst"><div class="cap" style="width:21.2%"></div><div class="wk" style="width:21.2%"></div><div class="ovs" style="left:21.2%;width:10.6%"></div><span class="ovc" style="left:calc(31.8% + 10px)"><svg class="ic"><use href="#i-tri"/></svg>+18</span></div><div class="gn ov"><b>54</b><span>/ 36</span></div>
+</div>
+<div class="cards">
+<div class="cd"><div class="hd"><svg class="ty"><use href="#i-fix"/></svg><span class="nm">Fatura düzeltmesi</span><span class="fx"><span><svg class="ic"><use href="#i-bug"/></svg>7 hata</span><span><svg class="ic"><use href="#i-acct"/></svg>4 hesap</span><span><svg class="ic"><use href="#i-user"/></svg>190 kullanıcı</span></span></div>
+<div class="spb"><b>20</b></div>
+<div class="trk">
+<div class="seg dev" style="--g:14"><svg class="ic"><use href="#i-dev"/></svg><b>14</b><em class="rq">≥1★</em><span class="who"><span class="pt s24 r-dev p-kaan"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg><i>2★</i></span></span></div>
+<div class="seg tst" style="--g:6"><svg class="ic"><use href="#i-tst"/></svg><b>6</b><span class="who"><span class="pt s24 r-tst p-cem"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg><i>1★</i></span></span></div>
+</div></div>
+<div class="cd focus"><div class="hd"><svg class="ty"><use href="#i-feat"/></svg><span class="nm">Toplu Fatura</span><span class="chip cu"><svg class="ic b"><use href="#i-acct"/></svg>Kuzey Lojistik<svg class="ic"><use href="#i-clock"/></svg>gelecek çeyrek sonu</span><span class="acts"><span class="ab ico"><span class="kg"><svg class="ic"><use href="#i-arrow"/></svg></span></span><span class="ab"><span class="kg">X</span>Çıkar</span></span></div>
+<div class="spb"><b>42</b></div>
+<div class="trk">
+<div class="seg des" style="--g:8"><svg class="ic"><use href="#i-des"/></svg><b>8</b><span class="who"><span class="pt s24 r-des p-ece"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg><i>3★</i></span></span><span class="wp"><i class="f"></i><i></i></span></div>
+<div class="seg dev" style="--g:24"><svg class="ic"><use href="#i-dev"/></svg><b>24</b><em class="rq">≥2★</em><span class="who"><span class="pt s24 r-dev p-deniz"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg><i>3★</i></span><span class="pt s24 r-dev p-onur"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg><i>2★</i></span></span><span class="wp"><i class="f"></i><i class="f"></i></span></div>
+<div class="seg tst" style="--g:10"><svg class="ic"><use href="#i-tst"/></svg><b>10</b><span class="who"><span class="pt s24 r-tst p-ayse"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg><i>3★</i></span></span><span class="wp"><i class="f"></i><i class="f"></i></span></div>
+</div></div>
+<div class="cd"><div class="hd"><svg class="ty"><use href="#i-feat"/></svg><span class="nm">Hesap Planı</span><span class="chip oz">Özenli</span></div>
+<div class="spb"><b>33</b></div>
+<div class="trk">
+<div class="seg des" style="--g:9"><svg class="ic"><use href="#i-des"/></svg><b>9</b><span class="who"><span class="pt s24 r-des p-gizem"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg><i>3★</i></span></span></div>
+<div class="seg dev" style="--g:16"><svg class="ic"><use href="#i-dev"/></svg><b>16</b><span class="who"><span class="pt s24 r-dev p-mert"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg><i>4★</i></span><span class="pt s24 r-dev p-zeynep"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg><i>4★</i></span></span></div>
+<div class="seg tst" style="--g:8"><span class="ovp" style="width:62.5%"></span><svg class="ic"><use href="#i-tst"/></svg><b>8</b><span class="who"><span class="pt s24 r-tst p-ayse"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg><i>3★</i></span></span><svg class="ic w"><use href="#i-tri"/></svg></div>
+</div></div>
+<div class="cd"><div class="hd"><svg class="ty"><use href="#i-feat"/></svg><span class="nm">Stok Sayacı</span></div>
+<div class="spb"><b>37</b></div>
+<div class="trk">
+<div class="seg des" style="--g:2"><svg class="ic"><use href="#i-des"/></svg><b>2</b><span class="who"><span class="pt s24 r-des p-defne"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg><i>2★</i></span></span></div>
+<div class="seg dev" style="--g:22"><svg class="ic"><use href="#i-dev"/></svg><b>22</b><em class="rq">≥1★</em><span class="who"><span class="pt s24 r-dev p-burak"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg><i>3★</i></span><span class="pt s24 r-fnd p-kurucu"><svg viewBox="0 0 32 32"><use href="#h-beard"/></svg><i>3★</i></span></span></div>
+<div class="seg tst ov" style="--g:13"><svg class="ic w"><use href="#i-tri"/></svg><b>13</b><span class="who"><span class="pt s24 r-tst p-cem"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg><i>1★</i></span></span></div>
+</div></div>
+<div class="cd"><div class="hd"><svg class="ty"><use href="#i-feat"/></svg><span class="nm">Tablo İçe Aktarma</span></div>
+<div class="spb"><b>25</b></div>
+<div class="trk">
+<div class="seg des" style="--g:4"><svg class="ic"><use href="#i-des"/></svg><b>4</b><span class="who"><span class="pt s24 r-des p-defne"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg><i>2★</i></span></span></div>
+<div class="seg dev" style="--g:16"><svg class="ic"><use href="#i-dev"/></svg><b>16</b><em class="rq">≥2★</em><span class="who"><span class="pt s24 r-dev p-deniz"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg><i>3★</i></span></span></div>
+<div class="seg tst" style="--g:5"><svg class="ic"><use href="#i-tst"/></svg><b>5</b><span class="who"><span class="pt s24 r-tst p-cem"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg><i>1★</i></span></span></div>
+</div></div>
+<div class="cd"><div class="hd"><svg class="ty"><use href="#i-feat"/></svg><span class="nm">Kasa Hareketleri</span></div>
+<div class="spb"><b>29</b></div>
+<div class="trk">
+<div class="seg des" style="--g:3"><svg class="ic"><use href="#i-des"/></svg><b>3</b><span class="who"><span class="pt s24 r-des p-gizem"><svg viewBox="0 0 32 32"><use href="#h-curly"/></svg><i>3★</i></span></span></div>
+<div class="seg dev" style="--g:14"><svg class="ic"><use href="#i-dev"/></svg><b>14</b><em class="rq">≥1★</em><span class="who"><span class="pt s24 r-fnd p-kurucu"><svg viewBox="0 0 32 32"><use href="#h-beard"/></svg><i>3★</i></span></span></div>
+<div class="seg tst" style="--g:12"><svg class="ic"><use href="#i-tst"/></svg><b>12</b><span class="who"><span class="pt s24 r-tst p-ayse"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg><i>3★</i></span></span></div>
+</div></div>
+</div>
+<div class="act"><span class="btn2 dis ml"><svg class="ic"><use href="#i-lock"/></svg>Planlamayı devret</span><span class="btn1">Sprint'i başlat<span class="kg">Enter</span></span></div>
+</section>
+<aside class="colR">
+<div class="nxh"><b>SPRINT 22</b><span>SONRAKİ</span></div>
+<div class="nc"><span class="n"><svg class="ic"><use href="#i-feat"/></svg>Depo ve Raf</span><span class="v"><b>22</b></span><span class="mb"><i class="des" style="flex:4"></i><i class="dev" style="flex:12"></i><i class="tst" style="flex:6"></i></span><span class="pull"><svg class="ic"><use href="#i-arrow"/></svg><span class="wp"><i class="f"></i><i class="a"></i></span>ekip 2. haftada çeker</span></div>
+<div class="nc"><span class="n"><svg class="ic"><use href="#i-feat"/></svg>Nakit Akış Tablosu</span><span class="v"><b>23</b></span><span class="mb"><i class="des" style="flex:3"></i><i class="dev" style="flex:14"></i><i class="tst" style="flex:6"></i></span></div>
+</aside>
+</div>
+<!-- tooltip: layer 2 -->
+<div class="tip up" style="left:354px;top:500px;width:900px;padding:16px 18px 14px;--ax:120px">
+<div style="display:grid;grid-template-columns:1.25fr 1fr;gap:22px">
+<div>
+<div class="sh" style="margin-bottom:8px">İHTİYAÇ</div>
+<div class="trk" style="height:44px">
+<div class="seg des" style="--g:8;box-shadow:inset 0 0 0 2px var(--acc)"><svg class="ic"><use href="#i-des"/></svg><b>8</b><span class="lbl" style="color:var(--acc);font-weight:750">en çok 1 kişi</span></div>
+<div class="seg dev" style="--g:24"><svg class="ic"><use href="#i-dev"/></svg><b>24</b><em class="rq">≥2★</em><span class="lbl">en çok 3 kişi</span></div>
+<div class="seg tst" style="--g:10"><svg class="ic"><use href="#i-tst"/></svg><b>10</b><span class="lbl">en çok 2 kişi</span></div>
+</div>
+<div class="tl" style="font-size:15px;margin:8px 0 14px;color:var(--i3)">Hızı en çok kısan tavan Tasarım'da. Ekip: 3 tasarımcı, 7 geliştirici, 2 testçi.</div>
+<div class="sh" style="margin-bottom:6px">KİMLER</div>
+<div style="display:grid;grid-template-columns:auto 1fr auto;gap:8px 12px;align-items:center;font-size:16px">
+<svg class="ic des" style="color:var(--c)"><use href="#i-des"/></svg><span style="display:flex;align-items:center;gap:16px"><span class="pt s32 r-des p-ece"><svg viewBox="0 0 32 32"><use href="#h-long"/></svg><i>3★</i></span><b style="color:#fff;font-weight:650">Ece</b></span><span style="display:flex;align-items:center;gap:8px;color:var(--i3)"><span class="wp"><i class="f"></i><i></i></span>1. haftada biter</span>
+<svg class="ic dev" style="color:var(--c)"><use href="#i-dev"/></svg><span style="display:flex;align-items:center;gap:16px"><span class="pt s32 r-dev p-deniz"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg><i>3★</i></span><b style="color:#fff;font-weight:650">Deniz</b><span class="pt s32 r-dev p-onur"><svg viewBox="0 0 32 32"><use href="#h-short"/></svg><i>2★</i></span><b style="color:#fff;font-weight:650">Onur</b><span class="chip oz" style="height:24px">Özenli</span></span><span style="display:flex;align-items:center;gap:8px;color:var(--i3)"><span class="wp"><i class="f"></i><i class="f"></i></span>2. haftada biter</span>
+<svg class="ic tst" style="color:var(--c)"><use href="#i-tst"/></svg><span style="display:flex;align-items:center;gap:16px"><span class="pt s32 r-tst p-ayse"><svg viewBox="0 0 32 32"><use href="#h-bun"/></svg><i>3★</i></span><b style="color:#fff;font-weight:650">Ayşe</b></span><span style="display:flex;align-items:center;gap:8px;color:var(--i3)"><span class="wp"><i class="f"></i><i class="f"></i></span>2. haftada biter</span>
+</div>
+</div>
+<div style="border-left:1px solid var(--l1);padding-left:20px">
+<div class="sh" style="margin-bottom:8px">MÜŞTERİ</div>
+<div style="display:flex;align-items:center;gap:9px;font-size:17px;font-weight:650;color:#fff"><svg class="ic" style="color:var(--i2)"><use href="#i-acct"/></svg>Kuzey Lojistik<span style="margin-left:auto;font-size:20px;font-weight:850">$4.800<span style="font-size:15px;font-weight:600;color:var(--i3)">/yıl</span></span></div>
+<div class="dl" style="margin:6px 0 16px"><svg class="ic"><use href="#i-clock"/></svg>gelecek çeyrek sonu</div>
+<div class="sh" style="margin-bottom:8px">ETKİ</div>
+<div style="display:flex;align-items:center;gap:10px;font-size:17px;color:var(--i2);margin-bottom:16px">Çekirdek<span class="pips" style="margin-left:6px"><i class="f"></i><i class="f"></i><i class="nx"></i></span><b style="color:#fff;margin-left:auto;font-size:19px">2 → 3</b></div>
+<div class="sh" style="margin-bottom:6px">KURAL</div>
+<div class="tl" style="font-size:15px">En zor işe en iyi kişiler, küçük işe onu bitirmeye yeten kişi atanır.<br>Kişi, aşaması bitene kadar kartında kalır.</div>
+</div>
+</div>
+</div>
+<svg class="mouse" style="left:520px;top:462px"><use href="#i-cursor"/></svg>
+</div>
+</div></div></div>
+</section>
+
+</div>
