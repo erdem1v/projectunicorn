@@ -1776,14 +1776,14 @@ static func _funds() -> Array:
 
 static func _take_the_seed() -> void:
 	if GameState.seed_sheet == null and SeedRoundSystem.door_open() \
-			and WorkHoursSystem.sitting_open(PitchConstants.MEETING_HOURS):
+			and WorkHoursSystem.sitting_open(TimeModel.SITTING_HOURS["vc"]):
 		for fund in _funds():
 			if SeedRoundSystem.begin_pitch(fund):
 				var path: String = _sit_the_meeting()
 				print("PROBE PLAY day=%d seed meeting fund=%s path=%s" % [GameState.day, fund, path])
 				break
 	var sheet: TermSheet = GameState.seed_sheet
-	if sheet == null or not WorkHoursSystem.sitting_open(PitchConstants.TERM_TABLE_HOURS):
+	if sheet == null or not WorkHoursSystem.sitting_open(TimeModel.SITTING_HOURS["table"]):
 		return
 	TermSheetTableSystem.open(sheet.vc_id, PitchConstants.STAGE_SEED)
 	var pushes: int = 0

@@ -21,7 +21,7 @@
   },
   "role_areas": {"design": "design", "dev": "engineering", "test": "qa", "product": "product"},
   "person_points_week": 10,
-  "skill": {"low_max": 3, "mid_max": 6, "mult": [0.75, 1.0, 1.25]},
+  "skill_curve": [0.5, 0.05, 0.01],
   "founder_mult": 1.0,
   "founder_roles": ["product", "design", "dev", "test"],
   "no_role_speed": 0.5,
@@ -38,7 +38,7 @@
   "polish_max": 1.0,
   "research_users": 5,
   "request": {"deadline_weeks": 8, "first_after_weeks": 2, "before_renewal_weeks": 12, "contract_weeks": 52},
-  "pm": {"horizon": 3, "goal_weight": 1.5, "low_skill_cards": 0.8, "goal_squares": 10, "goal_mark": 5},
+  "pm": {"horizon": 3, "goal_weight": 1.5, "low_skill_cards": 0.8, "low_skill_max": 3, "goal_squares": 10, "goal_mark": 5},
   "decision": {"sprint_chance": 0.5, "seen_weight": 2, "cards": ["product.sprint_dev_root_cause", "product.sprint_dev_shorter_path", "product.sprint_dev_unasked_rewrite", "product.sprint_dev_security_update", "product.sprint_dev_multi_currency", "product.sprint_dev_import_tool", "product.sprint_dev_backfill", "product.sprint_dev_old_phones", "product.sprint_dev_relogin", "product.sprint_untested_own_code", "product.sprint_untested_old_screens", "product.sprint_founder_test_pile", "product.sprint_solo_rushed_code", "product.sprint_solo_backup", "product.sprint_solo_server_bill", "product.sprint_solo_watch", "product.sprint_solo_signup_code", "product.sprint_late", "product.sprint_late_solo", "product.sprint_pm_scope_grew", "product.sprint_pm_phone_too", "product.sprint_pm_phone_too_b2c", "product.sprint_pm_two_accounts", "product.sprint_pm_renewal", "product.sprint_pm_spec_unclear", "product.sprint_pm_spec_unclear_b2c", "product.sprint_pm_core_first", "product.sprint_design_customer_colors", "product.sprint_design_gloves", "product.sprint_design_first_screen", "product.sprint_design_notifications", "product.sprint_design_drawings_late", "product.sprint_design_color_blind", "product.sprint_design_empty_state", "product.sprint_design_empty_state_b2c", "product.sprint_test_stock_transfer", "product.sprint_test_readonly_delete", "product.sprint_test_their_data", "product.sprint_test_coupon", "product.sprint_test_devices", "product.sprint_test_after_midnight", "product.sprint_test_slow_many", "product.sprint_test_slow_many_b2c", "product.sprint_test_too_much"]},
   "paper": {
     "trim_share": 0.4, "reopen_points": 5, "ask_silent_mult": 5, "phone_points": 10, "min_points": 5,

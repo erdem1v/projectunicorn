@@ -9,7 +9,13 @@ extends RefCounted
 const SECONDS_PER_HOUR := [0.0, 2.5, 1.25, 2.5 / 3.0]   # pause / 1× / 2× / 3× [WORKING]
 const WEEK_START_HOUR := 8            # a new week starts at 08:00
 const WORKDAY_LATEST_END := 24        # the workday ends at 00:00 at the latest
-const WEEK_WORK_HOURS := 40           # a meeting costs the founder hours / 40 of the week [WORKING]
+const WEEK_WORK_HOURS := 40           # the founder's week a meeting's hours and days are a share of [WORKING]
+## What each outside sitting costs, the only place it is written: the sales meeting, the seed or Series A
+## pitch, the term-sheet table. SITTING_HOURS is the sitting itself, the clock hours the skip runs and a pitch's
+## or table's entry gate asks of the founder's day [WORKING]; MEETING_DAYS is what it takes out of the founder's
+## sprint week, in workdays [WORKING].
+const SITTING_HOURS := {"sales": 2, "vc": 2, "table": 1}
+const MEETING_DAYS := {"sales": 1.0, "vc": 1.0, "table": 2.0}
 const CLOCK_STEP_MIN := 5             # the clock on screen moves in steps of this many game minutes
 
 # --- Units ---
@@ -17,6 +23,11 @@ const DAYS_PER_TICK := 7
 const DAYS_PER_MONTH := 30            # the economy month
 const HOURS_PER_DAY := 24             # hourly ticks per tick
 const WEEKS_PER_YEAR := 52            # severance counts whole years of weeks
+
+
+## The share of the founder's sprint week that `days` of meetings take: a day is a standard workday.
+static func days_share(days: float) -> float:
+	return days * HRConstants.WORK_HOURS_DEFAULT / WEEK_WORK_HOURS
 
 
 ## Week data → ticks. One to one, but every duration read goes through here.

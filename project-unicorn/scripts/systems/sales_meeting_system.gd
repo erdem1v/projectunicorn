@@ -108,15 +108,15 @@ static func open(lead_id: String) -> Dictionary:
 	return view_state()
 
 
-## §5.0 — closing costs MEETING_SKIP_HOURS, and those hours RUN. The meeting batch ends the
-## founder's sitting, stops at midnight and charges the founder hours / WEEK_WORK_HOURS of the
-## week; everyone else works normally.
+## §5.0 — closing costs the sales sitting's hours (TimeModel.SITTING_HOURS), and those hours RUN. The meeting
+## batch ends the founder's sitting, stops at midnight and charges the founder hours / WEEK_WORK_HOURS of his
+## hourly work and the sitting's days (TimeModel.MEETING_DAYS) of his sprint week; everyone else works normally.
 static func close() -> void:
 	if not _active:
 		return
 	_active = false
 	HRSystem.founder_in_meeting = false
-	TimeManager.advance_hours(SalesConstants.MEETING_SKIP_HOURS, true)
+	TimeManager.advance_hours(TimeModel.SITTING_HOURS["sales"], "sales")
 	EventBus.pitch_finished.emit()
 	# ONE SITTING, and nothing of it survives. Clearing here rather than on the next open() is
 	# what makes "never serialised" a fact rather than a promise: between two meetings there

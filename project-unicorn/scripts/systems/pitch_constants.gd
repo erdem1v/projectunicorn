@@ -81,12 +81,6 @@ const STRAIN_MAX := 15
 const STRAIN_WEEKS_MIN := 4
 const STRAIN_WEEKS_MAX := 52
 
-# --- The clock a sitting costs ---
-# A sitting stops the clock; when it ends the clock runs these hours (end_sitting). A pitch
-# withdrawn at beat 1 costs half. [WORKING]
-const MEETING_HOURS := 2               # a seed or Series A pitch
-const TERM_TABLE_HOURS := 1            # the term-sheet table
-
 # --- Sheet economy ---
 # A Series A sheet is valid for a fixed number of weeks. TermSheet.expires_day is the tick its
 # window closes on; weeks_left() counts down to it. A queued sheet gets a fresh window on delivery.

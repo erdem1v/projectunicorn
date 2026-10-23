@@ -91,7 +91,7 @@ Günün süresi ve birimler tek dosyadadır: `scripts/systems/time_model.gd` (`T
 | `SECONDS_PER_HOUR` | `[0.0, 2.5, 1.25, 2.5 / 3.0]` [WORKING] | oyun saati başına gerçek saniye: duraklat, 1×, 2×, 3× |
 | `WEEK_START_HOUR` | 8 | hafta 08:00'de başlar |
 | `WORKDAY_LATEST_END` | 24 | mesai en geç 00:00'da biter |
-| `WEEK_WORK_HOURS` | 40 [WORKING] | toplantının kurucu çıktı payı = saat / 40 (§8.4) |
+| `WEEK_WORK_HOURS` | 40 [WORKING] | toplantının kurucu çıktı payı = saat / 40, sprint payı = gün × 8 / 40 (§8.4) |
 | `CLOCK_STEP_MIN` | 5 | üst barın saati bu kadar oyun dakikasıyla ilerler |
 | `DAYS_PER_TICK` | 7 | tik başına takvim günü |
 | `DAYS_PER_MONTH` | 30 | ekonomi ayı (oranlar ve runway) |
@@ -271,7 +271,7 @@ kullanılan gün değişmez.
 | B2C memnuniyet kayması | ±1 / gün | deneyim puanına doğru en çok 1,5 / gün (tik başına 10) [WORKING] | kapı değil hedef (GUNCELLEMELER "Kalibrasyon turu · ürün rev 7"); açık hata memnuniyeti itmez, bedeli kitle kaybıdır (GUNCELLEMELER "Faz A · tek hata sayısı") |
 | B2C saatlik kitle katsayıları | saatlik adımda ×1 | saatlik adımda ×7 | `growth_band` eşikleri aynı |
 | günde bir satış toplantısı | kural | haftada en fazla 4 (`MEETINGS_PER_WEEK` [WORKING]) + saat bütçesi | §8 |
-| `MEETING_SKIP_HOURS` | 2 saat [K] | 2 saat [K] | §8 |
+| `TimeModel.SITTING_HOURS` `sales` | 2 saat [K] | 2 saat [K] | §8 |
 | `MEETING_ENTRY_CUTOFF_HOURS` | 2 saat [ÇALIŞMA] | 2 saat [ÇALIŞMA] | kurucunun mesai bitişine göre, §8.2 |
 | müşteri kıdemi | (gün - kazanım) / 30 | `months(tik farkı)` | |
 
@@ -297,8 +297,8 @@ kullanılan gün değişmez.
 | `SHEET_VALIDITY_BUSINESS_DAYS` → `SHEET_VALIDITY_WEEKS` | 10 iş günü | 3 hafta | sahip kararı: teklif 3 tik canlıdır, karar 4. tikte |
 | `WARNING_DAYS` → `WARNING_WEEKS` | 3 iş günü | 2 hafta | uyarı kartı ve TopBar çipi son 2 haftada, son cevap (`last_answer`) son haftada |
 | `EXPECT_GRACE_*` | 60 gün | 9 hafta | |
-| `MEETING_HOURS` | yok | 2 saat [WORKING] | seed ve Series A pitch'i; 1. vuruşta çekilme 1 saat |
-| `TERM_TABLE_HOURS` | yok | 1 saat [WORKING] | term sheet masası |
+| `TimeModel.SITTING_HOURS` `vc` | yok | 2 saat [WORKING] | seed ve Series A pitch'i; 1. vuruşta çekilme 1 saat |
+| `TimeModel.SITTING_HOURS` `table` | yok | 1 saat [WORKING] | term sheet masası |
 
 ### 4.8 Sonlar ve olay motoru
 
@@ -551,10 +551,10 @@ yüklemez, süreleri okunmaz.
 
 | oturum | süre | sabit |
 |---|---|---|
-| satış toplantısı | 2 saat [K] | `SalesConstants.MEETING_SKIP_HOURS` |
-| seed ve Series A pitch'i | 2 saat [WORKING] | `PitchConstants.MEETING_HOURS` |
-| 1. vuruşta çekilinen pitch | yarı süre, 1 saat | `MEETING_HOURS / 2` |
-| term sheet masası | 1 saat [WORKING] | `PitchConstants.TERM_TABLE_HOURS` |
+| satış toplantısı | 2 saat [K] | `TimeModel.SITTING_HOURS` `sales` |
+| seed ve Series A pitch'i | 2 saat [WORKING] | `TimeModel.SITTING_HOURS` `vc` |
+| 1. vuruşta çekilinen pitch | yarı süre, 1 saat | `SITTING_HOURS` `vc` / 2 |
+| term sheet masası | 1 saat [WORKING] | `TimeModel.SITTING_HOURS` `table` |
 | koşuyu bitiren imza | atlama yok | |
 
 - Atlama sistemde durur, ana sahnede değil: satışta `SalesMeetingSystem.close()`, VC'de ve masada `end_sitting()`
@@ -588,8 +588,9 @@ yüklemez, süreleri okunmaz.
   haftalık kurucu çıktısının %5'idir; 4 toplantı %20.
 - Saatlik sistemler (destek masası) toplantı atlamasının saatlerinde kurucuyu
   `1 - HOURS_PER_DAY / WEEK_WORK_HOURS` = 0,4 katsayısıyla sayar. Atlanan her saat haftanın 1/24'ü olduğundan toplam
-  kayıp tam saat / 40 eder. Ürünün sprint kapasitesi haftalık puandır ve toplantı payını okumaz
-  (`docs/ACIK_ISLER/ACIK_KARARLAR.md` 96).
+  kayıp tam saat / 40 eder. Ürünün sprint kapasitesi bu saat payını okumaz: kurucunun sprint payı görüşmenin
+  günlerinden gelir (`TimeModel.MEETING_DAYS`, gün ÷ 5) ve hafta dönerken donar (`GameState.founder_sprint_pay`,
+  GUNCELLEMELER).
 - Günlük sistemler (Ar-Ge birikimi) kurucu terimini `1 - haftanın toplantı saati / 40` ile çarpar. Sayaç
   `founder_meeting_hours` (GameState) haftalık payın tek kaynağıdır.
 - Aynı pay kuralı VC ve seed pitch'i ile term sheet masasına da uygulanır.

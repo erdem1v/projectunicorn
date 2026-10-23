@@ -133,7 +133,7 @@ static func install() -> void:
 	# WorkHoursSystem.sitting_open, the one entry gate of every VC sitting: not at night, and the
 	# sitting ends inside the founder's workday. The cards that open a sitting lock or wait on it.
 	EvSeams.register("funding.table_sitting_open", G, TYPE_BOOL,
-		func() -> bool: return WorkHoursSystem.sitting_open(PitchConstants.TERM_TABLE_HOURS),
+		func() -> bool: return WorkHoursSystem.sitting_open(TimeModel.SITTING_HOURS["table"]),
 		"Funding", "the term-sheet table can open now")
 
 	# --- funding. · the seed rung ---------------------------------------

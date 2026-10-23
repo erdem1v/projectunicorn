@@ -565,20 +565,20 @@ static func sign() -> void:
 
 
 ## Runs the finished sitting's hours once the scene is gone: main after releasing it, the probe
-## after sign or leave. The founder pays hours / WEEK_WORK_HOURS of the week and the skip stops
-## at midnight (TimeManager.advance_hours).
+## after sign or leave. The founder pays for them as a meeting and the skip stops at midnight
+## (TimeManager.advance_hours).
 static func end_sitting() -> void:
 	var hours: int = _owed_hours
 	_owed_hours = 0
 	if hours > 0:
-		TimeManager.advance_hours(hours, true)
+		TimeManager.advance_hours(hours, "table")
 
 
 ## The sitting is over: reset() clears it and releases the founder, and its hours wait for
 ## end_sitting.
 static func _close_sitting() -> void:
 	reset()
-	_owed_hours = PitchConstants.TERM_TABLE_HOURS
+	_owed_hours = TimeModel.SITTING_HOURS["table"]
 
 
 ## Walk the table → VC seam (sheet destroyed, fund closed, others survive; the player's

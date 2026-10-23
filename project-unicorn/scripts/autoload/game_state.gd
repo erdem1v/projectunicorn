@@ -182,6 +182,20 @@ var runway_warn_band: int = 0
 # Hours spent in meetings this working week; TimeManager starts a new week at WEEK_START_HOUR, so
 # the night and its 00:00 daily tick still read the week that just ended.
 var founder_meeting_hours: float = 0.0
+# The founder's meeting ledger, [{kind: "sales"|"vc"|"table", day: GameState.day}]: the sittings held this
+# working week, and the meetings behind the frozen sprint pay (the week before's sittings but a booked one, and
+# the Series A meeting booked for the week now running, whose day is that week's).
+var founder_meetings_week: Array = []
+var founder_meetings_frozen: Array = []
+# The founder's sprint pay (0..1): the share of his sprint work that meetings left him, frozen when the
+# week turns (SprintSystem) so that the plan, the week's assignment and its spending read one number.
+# A booked Series A meeting lowers its own week's; a sitting held on the spot lowers the next week's.
+var founder_sprint_pay: float = 1.0
+# The booked Series A meeting has been charged to a week's pay and its sitting is still to come: when it is
+# held, put off or not, it is not charged again.
+var founder_booking_charged: bool = false
+# Whether the founder takes sprint cards at all (SprintSystem.team); off, his work is the desk and the meetings.
+var founder_in_sprint: bool = true
 # Sales meetings held this week: {tick, count}.
 var sales_meetings_week: Dictionary = {}
 
@@ -412,8 +426,10 @@ func set_shutter_weeks_left(value: int) -> void:
 	EventBus.shutter_changed.emit(shutter_weeks_left)
 
 
-func add_founder_meeting_hours(h: float) -> void:
-	founder_meeting_hours += h
+## A sitting held: its clock hours into the week's share, the sitting itself into the ledger.
+func add_founder_meeting(kind: String, hours: float) -> void:
+	founder_meeting_hours += hours
+	founder_meetings_week.append({"kind": kind, "day": day})
 
 
 ## The share of this working week's founder output that meetings took (0..1).
@@ -423,6 +439,31 @@ func founder_meeting_share() -> float:
 
 func start_work_week() -> void:
 	founder_meeting_hours = 0.0
+	founder_meetings_week.clear()
+
+
+## The week turns: the sittings of the week that ended and the Series A meeting booked for the week now
+## opening become the ledger behind its sprint pay. A booking is charged once, to the first week it falls in:
+## a call put off (`postponed`) rang in a week already charged, and the sitting it leads to (the week's vc
+## sitting: the seed pitch is Traction's, a booking Series A's) is not charged when held.
+func freeze_founder_sprint_pay() -> void:
+	var behind: Array = founder_meetings_week.duplicate()
+	var held: int = behind.find_custom(func(m: Dictionary) -> bool: return m.kind == "vc")
+	if founder_booking_charged and held >= 0:
+		behind.remove_at(held)
+		founder_booking_charged = false
+	if int(pending_meeting.get("day", -1)) == day and not pending_meeting.get("postponed", false):
+		behind.append({"kind": "vc", "day": day})
+		founder_booking_charged = true
+	founder_meetings_frozen = behind
+	var days: float = 0.0
+	for m: Dictionary in behind:
+		days += TimeModel.MEETING_DAYS[m.kind]
+	founder_sprint_pay = 1.0 - clampf(TimeModel.days_share(days), 0.0, 1.0)
+
+
+func set_founder_in_sprint(on: bool) -> void:
+	founder_in_sprint = on
 
 
 func register_look(sig: String) -> void:
@@ -828,6 +869,11 @@ func initialize_run(payload: Dictionary) -> void:
 	summary_ledger.clear()
 	runway_warn_band = 0
 	founder_meeting_hours = 0.0
+	founder_meetings_week.clear()
+	founder_meetings_frozen.clear()
+	founder_sprint_pay = 1.0
+	founder_booking_charged = false
+	founder_in_sprint = true
 	sales_meetings_week.clear()
 	run_customers_signed = 0
 	run_customers_lost = 0

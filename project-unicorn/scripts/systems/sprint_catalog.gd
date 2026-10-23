@@ -558,7 +558,7 @@ static func pm_plans() -> Array:
 		stored[int(plan.number)] = plan
 	var taken: Array = _approved_ahead()
 	var keep: float = float(cfg("pm.low_skill_cards")) \
-		if HRSystem.skill(pm, HRConstants.role_key_area(pm.role)) <= int(cfg("skill.low_max")) else 1.0
+		if HRSystem.skill(pm, HRConstants.role_key_area(pm.role)) <= int(cfg("pm.low_skill_max")) else 1.0
 	var capacity: float = SprintSystem.capacity()
 	var goal: String = quarter_goal()
 	var first: int = int(_p().next.number)

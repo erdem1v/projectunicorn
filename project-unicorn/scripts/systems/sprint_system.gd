@@ -25,6 +25,8 @@ const SPRINT_JOBS := [HRConstants.JOB_BUILD, HRConstants.JOB_TEST]
 
 
 static func daily_tick() -> void:
+	if mode() != "active":
+		GameState.freeze_founder_sprint_pay()
 	if not is_typed():
 		return
 	_settle_decision()
@@ -687,12 +689,14 @@ static func week_points(draft: Dictionary = {}) -> float:
 
 
 ## Bu sprintte çalışabilecekler: Görevler matrisinde Yapım ya da Test işini tutan aktif kişiler, kurucu
-## dahil. {id, name, points (haftalık, sprint payıyla), share (sprint payı), fits (uyduğu roller), founder,
-## ahead (ürün ve tasarım rolü: geliştirme ve teste uymaz, yalnız ilk fazda çalışır ve önden gider)}.
+## dahil (`founder_in_sprint` açıkken ve haftanın donmuş payı 0'dan büyükken). {id, name, points (haftalık, sprint
+## payıyla), share (sprint payı), fits (uyduğu roller), founder, ahead (ürün ve tasarım rolü: geliştirme ve teste
+## uymaz, yalnız ilk fazda çalışır ve önden gider)}.
 static func team() -> Array:
 	var people: Array[Character] = CharacterRegistry.get_active_employees()
 	var founder: Character = CharacterRegistry.get_founder()
-	if founder != null and founder.status == HRConstants.STATUS_ACTIVE:
+	if founder != null and founder.status == HRConstants.STATUS_ACTIVE and GameState.founder_in_sprint \
+			and GameState.founder_sprint_pay > 0.0:
 		people.push_front(founder)
 	var hours: float = float(_p().sprint.get("hours_mult", 1.0)) if mode() == "active" else 1.0
 	var out: Array = []
@@ -1060,7 +1064,8 @@ static func worked(character_id: String) -> bool:
 ## Biten haftanın işi kartlara, sonra sonraki sütunun önden hazırlanan kartlarına dökülür; sprintin
 ## süresi dolduysa ya da kartlarının hepsi bittiyse sprint kapanır, değilse 2. haftanın kararı ve
 ## ataması yapılır. Kişinin haftalık puanı atamanın sırasıyla harcanır: ekip hafta içinde değişmediyse
-## sonuç önizlemeyle aynıdır.
+## sonuç önizlemeyle aynıdır. Kurucunun sprint payı harcamadan sonra yenilenir: harcama ve atama
+## haftanın başında donmuş aynı sayıyı okur.
 static func _end_week() -> void:
 	var people: Dictionary = {}
 	for person in team():
@@ -1083,6 +1088,7 @@ static func _end_week() -> void:
 			c.state = "done"
 			EventBus.card_done.emit(c.id)
 	_p().worked = {"day": GameState.day, "ids": worked_ids}
+	GameState.freeze_founder_sprint_pay()
 	if week() > sprint_weeks() or _finished(_sprint_cards()):
 		_close()
 	else:
@@ -1707,21 +1713,23 @@ static func _fits(c: Character) -> Array:
 	return areas.keys().filter(func(r: String) -> bool: return HRConstants.can_hold_area(c.role, areas[r], c.category))
 
 
-## Kişisiz haftalık puan (işe alım dosyası da okur): 10 × beceri bandı (rolün ana alanının 0-10 puanı) ×
-## çalışma saati; verim kişinindir, burada yok.
+## Kişisiz haftalık puan (işe alım dosyası da okur): 10 × Y(s) × çalışma saati; s rolün ana alanının 0-10 puanı,
+## Y(s) = a + b·s + c·s² (`sprint.json` `skill_curve` [a, b, c], [WORKING]); verim kişinindir, burada yok.
 static func points_for(role_id: String, role_stats: Dictionary, hours: int) -> float:
-	var stat: int = int(role_stats.get(HRConstants.role_key_area(role_id), 0))
-	var bands: Array = SprintCatalog.cfg("skill.mult")
-	var mult: float = bands[0] if stat <= int(SprintCatalog.cfg("skill.low_max")) \
-		else bands[1] if stat <= int(SprintCatalog.cfg("skill.mid_max")) else bands[2]
-	return float(SprintCatalog.cfg("person_points_week")) * mult * HRConstants.hours_output_mult(hours)
+	var s: float = float(int(role_stats.get(HRConstants.role_key_area(role_id), 0)))
+	var curve: Array = SprintCatalog.cfg("skill_curve")
+	return float(SprintCatalog.cfg("person_points_week")) * (curve[0] + curve[1] * s + curve[2] * s * s) \
+		* HRConstants.hours_output_mult(hours)
 
 
-## Haftalık puan: 10 × beceri bandı (ana alanın 0-10 puanı; kurucu sabit) × verim × çalışma saati × sprint payı.
+## Haftalık puan: 10 × Y(s) (kurucu sabit) × verim × çalışma saati × sprint payı; çalışanda huyun hız ve verim
+## çarpanı, kurucuda toplantılardan kalan pay (sprint payı değil, `GameState.founder_sprint_pay`).
 static func _points(c: Character, hours: int) -> float:
-	var week: float = points_for(c.role, c.role_stats, hours) * HRSystem.productivity(c) if c.category != "founder" \
+	var week: float = points_for(c.role, c.role_stats, hours) * HRSystem.productivity(c) \
+		* HRConstants.trait_mult(c.traits, "speed_mult") * HRConstants.trait_mult(c.traits, "output_mult") \
+		if c.category != "founder" \
 		else float(SprintCatalog.cfg("person_points_week")) * float(SprintCatalog.cfg("founder_mult")) \
-		* HRSystem.productivity(c) * HRConstants.hours_output_mult(hours)
+		* HRSystem.productivity(c) * HRConstants.hours_output_mult(hours) * GameState.founder_sprint_pay
 	return week * _share(c)
 
 

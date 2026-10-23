@@ -121,18 +121,18 @@ static func withdraw() -> void:
 	if not _active:
 		return
 	GameState.pending_meeting.clear()
-	_close_sitting(PitchConstants.MEETING_HOURS / 2)
+	_close_sitting(TimeModel.SITTING_HOURS["vc"] / 2)
 	EventBus.pitch_finished.emit()
 
 
 ## Runs the finished sitting's hours once the panel is gone: main after releasing it, the probe
-## after `done`. The founder pays hours / WEEK_WORK_HOURS of the week and the skip stops at
-## midnight (TimeManager.advance_hours).
+## after `done`. The founder pays for them as a meeting and the skip stops at midnight
+## (TimeManager.advance_hours).
 static func end_sitting() -> void:
 	var hours: int = _owed_hours
 	_owed_hours = 0
 	if hours > 0:
-		TimeManager.advance_hours(hours, true)
+		TimeManager.advance_hours(hours, "vc")
 
 
 ## The sitting is over: reset() clears it and releases the founder, and `hours` wait for
@@ -383,7 +383,7 @@ static func _finish() -> Dictionary:
 	# signature came") means a Series A table, the reason _grant_seed_sheet skips run_sheets_won.
 	if _stage == PitchConstants.STAGE_SERIES_A:
 		GameState.run_pitches += 1
-	_close_sitting(PitchConstants.MEETING_HOURS)
+	_close_sitting(TimeModel.SITTING_HOURS["vc"])
 	EventBus.pitch_finished.emit()
 	return {"done": true}
 
@@ -784,7 +784,7 @@ static func request_meeting(vc_id: String) -> bool:
 static func call_waiting() -> String:
 	var pm: Dictionary = GameState.pending_meeting
 	if pm.is_empty() or int(pm.get("day", 0)) > GameState.day or _active or not GameState.run_active \
-			or not WorkHoursSystem.sitting_open(PitchConstants.MEETING_HOURS):
+			or not WorkHoursSystem.sitting_open(TimeModel.SITTING_HOURS["vc"]):
 		return ""
 	return String(pm.get("vc_id", ""))
 

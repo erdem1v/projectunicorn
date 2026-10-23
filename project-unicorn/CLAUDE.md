@@ -291,7 +291,7 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   sonla bitmeli ve sıfır `ERROR` satırı taşımalıdır.
 - Sprint planı: `--sprint-probe=hours=<h>:cards=<1|2>:ticks=<t>[:<alan>=<değer>…]` (isteğe bağlı alanlar `start`,
   `seeds`, `seed`, `events`, `rate`, `lead`, `gate`, `team` (1 ile 6, 12, 25, 50), `fill`, `market`, `incident`, `promise`, `tstar`,
-  `pmstar`, `plus`, `founder`, `fixture`, `build`, `planms`; anlamları HARITA Ürün'de ve Araçlar'da) headless
+  `pmstar`, `plus`, `founder`, `fixture`, `build`, `planms`, `meetings`; anlamları HARITA Ürün'de ve Araçlar'da) headless
   koşar: kurucunun (`team=` ile ekibin) koşusunda ekranın sprint planını (`plan_outcome`) kapanışla karşılaştırır,
   `SPRINTPROBE` satırları basar (`PRED`, `CLOSE`, `SKIP`, `MVP`, `LOAD`, `SUMMARY`, `LOADSUM`, `PAPER`, `PAPERSUM`; MVP tahmini `mvp_eta`
   `PRED`'in son alanıdır, karşılaştırılmaz) ve adsız uyuşmazlıkta 1 ile çıkar. `planms=1` tik oynamaz, plan ekranının motor

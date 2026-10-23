@@ -2047,7 +2047,7 @@ func _run_travel_shot(spec: String) -> void:
 	_seed_sales_world()
 	GameState.office_id = office_id
 	GameState.set_current_hour(WorkHoursSystem.end_hour_for(CharacterRegistry.get_founder())
-		- SalesConstants.MEETING_SKIP_HOURS if night else 10)
+		- TimeModel.SITTING_HOURS["sales"] if night else 10)
 	TimeManager.sync_to_current_hour()
 	if night:
 		TimeManager.freeze_clock(SHOT_FREEZE)   # the last hour the sitting fits, at any speed
@@ -2164,7 +2164,7 @@ func _run_invite_shot(kind: String) -> void:
 				return
 		"lapse", "lapse_vc":
 			TimeManager.advance_hours(WorkHoursSystem.end_hour_for(CharacterRegistry.get_founder())
-				- (PitchConstants.MEETING_HOURS if vc else SalesConstants.MEETING_ENTRY_CUTOFF_HOURS) + 1
+				- (TimeModel.SITTING_HOURS["vc"] if vc else SalesConstants.MEETING_ENTRY_CUTOFF_HOURS) + 1
 				- GameState.current_hour)
 			await get_tree().create_timer(0.5).timeout
 			_save_shot("invite_shot_%s_ring" % kind)

@@ -167,15 +167,17 @@ func _can_step() -> bool:
 
 ## Simulates n hours through the real hourly path; the fraction of the current hour is kept
 ## (10:45 + 2 = 12:45). The skip stops before 00:00 so the rollover and its daily tick never run
-## inside a meeting batch (founder_output_factor would reach into the next week). A meeting's hours
-## cost the founder the weekly share through founder_output_factor(); the sitting has released the
-## founder before calling, so nothing zeroes them.
-func advance_hours(n: int, meeting: bool = false) -> void:
-	if meeting:
+## inside a meeting batch (founder_output_factor would reach into the next week). A sitting (`sitting`,
+## a TimeModel.SITTING_HOURS key) costs the founder the weekly share of his hourly work through
+## founder_output_factor() and the clock hours it runs; the sitting has released the founder before
+## calling, so nothing zeroes them. The sitting also goes into the founder's meeting ledger, which sets his
+## sprint pay (TimeModel.MEETING_DAYS).
+func advance_hours(n: int, sitting: String = "") -> void:
+	if sitting != "":
 		var last_hour: int = mini(WorkHoursSystem.end_hour_for(CharacterRegistry.get_founder()), TimeModel.HOURS_PER_DAY - 1)
 		n = mini(n, maxi(0, last_hour - GameState.current_hour))
-		GameState.add_founder_meeting_hours(n)
-	_run_batch(n, fposmod(_in_game_hours, 1.0), meeting)
+		GameState.add_founder_meeting(sitting, n)
+	_run_batch(n, fposmod(_in_game_hours, 1.0), sitting != "")
 
 
 ## Skips the night to the absolute target, the next WEEK_START_HOUR. Its hours, the 00:00

@@ -63,7 +63,6 @@ const ROUTE_REP := "rep"                 # "Temsilciye ver" — first in the ban
 
 
 # ============================ §5.0 · Time model ==============================
-const MEETING_SKIP_HOURS := 2            # [K] the clock the sitting costs
 const MEETING_ENTRY_CUTOFF_HOURS := 2    # [ÇALIŞMA] no entry this close to the end of the workday
 const MEETINGS_PER_WEEK := 4             # [WORKING] sales meetings a week holds, whatever the workday length
 

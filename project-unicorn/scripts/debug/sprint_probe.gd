@@ -3,7 +3,7 @@ extends RefCounted
 # --sprint-probe=hours=<h>:cards=<1|2>:ticks=<t>[:start=<hour>][:seeds=1][:seed=424242][:events=0|1][:rate=<r>]
 # [:lead=0|1][:gate=publish|more][:team=<n>][:fill=0|1][:market=b2c|b2b][:incident=<kind>@<tick>]
 # [:promise=0|1][:tstar=<1-5>][:pmstar=<1-5>][:plus=<role>@<stars>][:founder=0|1][:fixture=iz1|iz1b|iz2][:build=demo|ea|full]
-# [:planms=0|1]:
+# [:planms=0|1][:meetings=<n>]:
 # does the Product screen's sprint plan come true? A founder builds note_tool (market=b2b: the erp product, four
 # accounts signed the tick it goes live, two of a night-shift sector) for t ticks on each of the seeds seed,
 # seed+1, …, the company working h hours from start (the game's default start hour unless given); team=N adds N-1
@@ -24,7 +24,8 @@ extends RefCounted
 # The larger companies: team=12|25|50 seat product managers, designers, developers and testers beside the founder
 # (RunProbe.seed_crew, each person's stat drawn from the seed); tstar= and pmstar= pin every tester's and product
 # manager's stars, plus=developer@3 hires one more person (a role id and its stars), founder=0 takes the founder off the
-# sprint team, build=ea plays the EA build's cards and endings. fixture= seats a small company by hand:
+# sprint team (GameState.set_founder_in_sprint), meetings=N has the founder sit N sales meetings in the first hour of each
+# week (events=1; each the sitting's cost, as many as the entry gate lets in), build=ea plays the EA build's cards and endings. fixture= seats a small company by hand:
 #   iz1   three developers of 4, 3 and 3 stars (founder=1 keeps the founder) and the first sprint's three Core K1 cards in
 #         plan order: the big one two people finish in two sprints (three cannot end it in one), then two small ones one
 #         person finishes in a week each, sized in person-weeks of the game's person_points_week; iz1b: the big card last
@@ -47,7 +48,7 @@ extends RefCounted
 #   SPRINTPROBE PRED|<seed>|<sprint>|<card>|<split id:weeks+…>|<done>|<finishes 1|0>|<no_start 1|0>|<mvp_eta>
 #   SPRINTPROBE REPRED|<seed>|<sprint>|<card>|<done>|<finishes 1|0>|<emergency card>   the plan read again after an
 #                                                         emergency answered with its fix first; CLOSE compares it
-#   SPRINTPROBE CLOSE|<seed>|<sprint>|<card>|<shipped 1|0>|<carried_done>|MATCH|MISMATCH[|cause=<event id>|cause=team]
+#   SPRINTPROBE CLOSE|<seed>|<sprint>|<card>|<shipped 1|0>|<carried_done>|MATCH|MISMATCH[|cause=<event id>|cause=team|cause=founder_meeting]
 #   SPRINTPROBE MVP|<seed>|<tick>
 #   SPRINTPROBE PAPER|<seed>|<sprint>|<event id>|<speaker id, - for a paper no one speaks>   a decision paper asked
 #   SPRINTPROBE PAPERSUM|weeks=<w>|sprints=<n>|papers=<k>|empty=<n-k>|empty_rate=<share of sprints with no paper>
@@ -64,7 +65,9 @@ extends RefCounted
 # MATCH: the card finished in its sprint exactly when the plan said it finishes, and a carried card got
 # the points the plan gave it. A mismatch is named when, inside its sprint, a decision paper was asked or an
 # answered event changed the team's points or a card's effort, progress or place (cause=<event id>), or the
-# week's tick changed the team (cause=team). The run passes when no mismatch is unnamed.
+# week's tick changed the team (cause=team), or only the founder's pay (cause=founder_meeting: the plan holds the
+# week's frozen pay for every week it has left, and the next week's follows the meetings of this one). The run passes
+# when no mismatch is unnamed.
 
 ## fixture=iz1: its developers' stars, and the big card's size in person-weeks per week of the sprint (two people for two
 ## sprints, a little short of full so that three people still cannot end it in the first).
@@ -85,7 +88,7 @@ static var _papered: Dictionary = {}  # "<seed>|<sprint>" -> true for a sprint t
 static func run(spec: String, payload: Dictionary) -> bool:
 	var o: Dictionary = {"start": HRConstants.START_HOUR_DEFAULT, "seeds": 1, "seed": 424242, "events": 0,
 		"lead": 0, "gate": "publish", "team": 1, "fill": 0, "market": "b2c", "incident": "", "promise": 0,
-		"tstar": 0, "pmstar": 0, "plus": "", "founder": -1, "fixture": "", "build": "", "planms": 0}
+		"tstar": 0, "pmstar": 0, "plus": "", "founder": -1, "fixture": "", "build": "", "planms": 0, "meetings": 0}
 	for part in spec.split(":"):
 		var key: String = part.get_slice("=", 0)
 		if key in ["gate", "market", "incident", "plus", "fixture", "build"]:
@@ -134,6 +137,8 @@ static func run(spec: String, payload: Dictionary) -> bool:
 						TimeManager.skip_night()
 					else:
 						TimeManager.advance_hours(1)
+						if GameState.current_hour == WorkHoursSystem.start_hour() + 1:
+							_sit_meetings(int(o.meetings))
 					RunProbe._drain_modals()
 			else:
 				GameState.advance_day()
@@ -260,7 +265,14 @@ static func _seat(o: Dictionary) -> void:
 		RunProbe.seed_hire("char_probe_plus", String(o.plus).get_slice("@", 0),
 			HRConstants.POINTS_PER_STAR * int(String(o.plus).get_slice("@", 1)))
 	if o.founder == 0 or (o.founder < 0 and String(o.fixture).begins_with("iz1")):
-		CharacterRegistry.clear_jobs(CharacterRegistry.get_founder().id)
+		GameState.set_founder_in_sprint(false)
+
+
+## The founder's week of sales meetings: up to `n` sittings, each running its hours through the clock, while the entry gate lets one in.
+static func _sit_meetings(n: int) -> void:
+	for _i in n:
+		if WorkHoursSystem.sitting_open(SalesConstants.MEETING_ENTRY_CUTOFF_HOURS):
+			TimeManager.advance_hours(TimeModel.SITTING_HOURS["sales"], "sales")
 
 
 ## fixture=iz1: the first sprint's three Core K1 cards, the big one first (last with iz1b). They go in at their catalog
@@ -387,11 +399,16 @@ static func _count_idle() -> void:
 	_tally.idle += SprintSystem.team().size() - ids.size()
 
 
-## What the running sprint works with: the team at its weekly points and each card's remaining effort.
+## What the running sprint works with: the team at its weekly points, each card's remaining effort and the founder's pay.
 static func _inputs() -> Array:
 	var p: Dictionary = GameState.product
 	return [SprintSystem.team(), p.sprint.cards.map(func(id: String) -> Array:
-		return [id, SprintSystem.remaining(p.cards[id])])]
+		return [id, SprintSystem.remaining(p.cards[id])]), GameState.founder_sprint_pay]
+
+
+## The team without the founder.
+static func _crew(team: Array) -> Array:
+	return team.filter(func(t: Dictionary) -> bool: return not t.founder)
 
 
 ## At a tick's end the week's work is already in the cards, so the tick compares only the team. An emergency answered
@@ -401,7 +418,7 @@ static func _changed_by(who: String) -> void:
 		return
 	var now: Array = _inputs()
 	if _cause == "" and (now[0] != _seen[0] or (who != "team" and now[1] != _seen[1])):
-		_cause = who
+		_cause = "founder_meeting" if who == "team" and now[2] != _seen[2] and _crew(now[0]) == _crew(_seen[0]) else who
 	var promise: bool = who == "product.promise_due"
 	var moved: bool = now[1] != _seen[1] or (promise and now[0] != _seen[0])
 	if who != "team" and moved and (promise or EvCatalog.card(who).get("tags", []).has("incident")):

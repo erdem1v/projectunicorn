@@ -495,6 +495,9 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sprint_two_days_close":                 fail = _case_sprint_two_days_close()
 		"sprint_capacity_from_team":             fail = _case_sprint_capacity_from_team()
 		"sprint_team_follows_job_matrix":        fail = _case_sprint_team_follows_job_matrix()
+		"sprint_speed_curve_y":                  fail = _case_sprint_speed_curve_y()
+		"sprint_founder_share_frozen":           fail = _case_sprint_founder_share_frozen()
+		"sprint_founder_switch_off":             fail = _case_sprint_founder_switch_off()
 		"productivity_mod_paces_the_sprint":     fail = _case_productivity_mod_paces_the_sprint()  # EXPECT-ERROR 'productivity_mod' found no target
 		"sprint_ceiling_125_blocks_add":         fail = _case_sprint_ceiling_125_blocks_add()
 		"sprint_carry_keeps_progress":           fail = _case_sprint_carry_keeps_progress()
@@ -10492,7 +10495,7 @@ static func _case_vc_call_postpones_once() -> String:
 		return "the call was put off twice"
 	# Left ringing past the sitting: main's _process would lapse it, and this static case does so by hand.
 	TimeManager.advance_hours(WorkHoursSystem.end_hour_for(CharacterRegistry.get_founder())
-		- PitchConstants.MEETING_HOURS + 1 - GameState.current_hour)
+		- TimeModel.SITTING_HOURS["vc"] + 1 - GameState.current_hour)
 	if VCPitchSystem.call_waiting() != "":
 		return "the fund still calls once no sitting fits the founder's day"
 	if not VCPitchSystem.lapse_call():
@@ -16557,7 +16560,7 @@ static func _case_research_occupies_person() -> String:
 		return "a researching founder's card kept moving (%.4f -> %.4f)" % [frozen, _card_worked(card_id)]
 
 	# (f) data_model bitti; ai_engine'de pay 0,2 iken bir tik tahminden tam bir hafta siler.
-	GameState.add_founder_meeting_hours(0.2 * TimeModel.WEEK_WORK_HOURS)
+	GameState.add_founder_meeting("sales", 0.2 * TimeModel.WEEK_WORK_HOURS)
 	if RnDSystem.start("ai_engine", [founder.id]) != "":
 		return "fixture: ai_engine would not start once data_model was done"
 	var before: float = RnDSystem.weeks_estimate("ai_engine", [founder.id])
@@ -18895,17 +18898,20 @@ static func _case_sales_lead_expiry_and_return_lock() -> String:
 	return ""
 
 
-## §5.0 THE TIME SKIP AND THE ENTRY GATE. Closing a sitting costs MEETING_SKIP_HOURS and those
+## §5.0 THE TIME SKIP AND THE ENTRY GATE. Closing a sitting costs the sales sitting's hours and those
 ## hours are SIMULATED through the real hourly path. The founder is not zeroed: each skipped hour
 ## keeps 1 − HOURS_PER_DAY / WEEK_WORK_HOURS of the founder's output, so a meeting costs the week
 ## exactly hours / WEEK_WORK_HOURS (5 % for two hours). The output measured is the support desk's
-## validation, the hourly work the founder's share reaches; the sprint works by the week. The busy
+## validation, the hourly work the founder's share reaches. What the sitting takes out of his sprint week is
+## a different number, its days of a workday (TimeModel.MEETING_DAYS), written beside the clock hours and
+## charged to the next week's pay (sprint_founder_share_frozen). The busy
 ## flag lives only while the sitting is open and never reaches a save. Entry is shut at night and
 ## near the founder's end, four meetings fill the week whatever the workday's length, and a skip
 ## never crosses midnight.
 ## FALSIFICATION: drop founder_share from SupportSystem's hourly validation and the solo ratio
 ## reads 1.0; drop the midnight clamp in TimeManager.advance_hours and the late skip runs the
-## daily tick.
+## daily tick; give the sales meeting the clock's share in TimeModel.MEETING_DAYS (0,25) and "a fifth of
+## the week" reads five percent.
 static func _case_sales_meeting_time_skip_founder_share() -> String:
 	_seed_support_fixture("b2b")
 	GameState.set_flag("mvp_sub_product_type_id", "erp")
@@ -18919,7 +18925,7 @@ static func _case_sales_meeting_time_skip_founder_share() -> String:
 		return "fixture: the founder could not take the support desk"
 	var validated := func() -> float:
 		return float(ProductState.open_bugs()) + float(GameState.get_flag(ProductState.VALIDATION_PROGRESS, 0.0))
-	var skip: int = SalesConstants.MEETING_SKIP_HOURS
+	var skip: int = TimeModel.SITTING_HOURS["sales"]
 
 	# SOLO — the founder is the desk: two ordinary hours, then a meeting's two hours.
 	var lead: Prospect = SalesFaucetSystem.spawn(1, "faucet")
@@ -18952,6 +18958,12 @@ static func _case_sales_meeting_time_skip_founder_share() -> String:
 	if absf(week_loss - want_share) > 0.0001 or not is_equal_approx(GameState.founder_meeting_share(), want_share):
 		return "one meeting cost %.4f of the week (share %.4f), want %.4f" % [
 			week_loss, GameState.founder_meeting_share(), want_share]
+	# What the sitting takes out of the sprint week is its day, a fifth of it, not its clock hours: one ledger entry.
+	var day_share: float = TimeModel.days_share(TimeModel.MEETING_DAYS["sales"])
+	if GameState.founder_meetings_week.size() != 1 or GameState.founder_meetings_week[0].kind != "sales" \
+			or not is_equal_approx(day_share, 0.2) or day_share <= want_share:
+		return "one sales sitting left the week's ledger %s and a share of %.3f, want one sales entry and a fifth of the week (clock hours: %.3f)" % [
+			str(GameState.founder_meetings_week), day_share, want_share]
 
 	# TEAM — a rep at the desk, and the same two hours flow at full rate for them.
 	var rep: Character = _make_employee("char_rep_skip", "Deniz", HRConstants.ROLE_CUSTOMER_REP)
@@ -18992,6 +19004,9 @@ static func _case_sales_meeting_time_skip_founder_share() -> String:
 	if not is_equal_approx(GameState.founder_meeting_share(),
 			float(SalesConstants.MEETINGS_PER_WEEK * skip) / float(TimeModel.WEEK_WORK_HOURS)):
 		return "four meetings cost %.3f of the week" % GameState.founder_meeting_share()
+	if GameState.founder_meetings_week.size() != SalesConstants.MEETINGS_PER_WEEK \
+			or GameState.founder_meetings_week.any(func(m: Dictionary) -> bool: return m.kind != "sales"):
+		return "four meetings left the week's ledger %s" % str(GameState.founder_meetings_week)
 
 	# A DAY ENDING AT 24:00 counts as 23:00 for a sitting: the last entry runs its full hours and
 	# lands at 23:00, so the rollover with its daily tick waits for the night skip.
@@ -20472,7 +20487,13 @@ static func _case_sprint_two_days_close() -> String:
 	return ""
 
 
-## Kapasite Ekip'ten okunur ve yuvarlanmaz: kişi başına haftada on puan × beceri bandı × moral
+## Y(s), s puanlık ana alanın hız çarpanı (sprint.json `skill_curve`).
+static func _skill_y(s: int) -> float:
+	var curve: Array = SprintCatalog.cfg("skill_curve")
+	return curve[0] + curve[1] * s + curve[2] * s * s
+
+
+## Kapasite Ekip'ten okunur ve yuvarlanmaz: kişi başına haftada on puan × Y(s) × moral
 ## payı × çalışma saati, iki hafta; kurucunun bandı sabittir. Moral payı kişinin puanını değiştirir, Ar-Ge'ye
 ## alınan ve izne çıkan kişi ekipten düşer; kimse kalmayınca "+" kapanır.
 static func _case_sprint_capacity_from_team() -> String:
@@ -20482,7 +20503,7 @@ static func _case_sprint_capacity_from_team() -> String:
 	var weeks: int = int(SprintCatalog.cfg("sprint_weeks"))
 	var point: float = float(SprintCatalog.cfg("person_points_week"))
 	var founder_pts: float = point * float(SprintCatalog.cfg("founder_mult"))
-	var mid: float = point * float((SprintCatalog.cfg("skill.mult") as Array)[1])
+	var mid: float = point * _skill_y(5)
 	if not is_equal_approx(SprintSystem.capacity(), founder_pts * weeks):
 		return "a solo founder's sprint holds %.2f points, want %.2f" % [SprintSystem.capacity(), founder_pts * weeks]
 	var dev: Character = _sprint_hire("char_cap_dev", HRConstants.ROLE_DEVELOPER)
@@ -20527,7 +20548,7 @@ static func _case_sprint_team_follows_job_matrix() -> String:
 	var weeks: int = int(SprintCatalog.cfg("sprint_weeks"))
 	var point: float = float(SprintCatalog.cfg("person_points_week"))
 	var founder_pts: float = point * float(SprintCatalog.cfg("founder_mult"))
-	var mid: float = point * float((SprintCatalog.cfg("skill.mult") as Array)[1])
+	var mid: float = point * _skill_y(5)
 	var founder: Character = CharacterRegistry.get_founder()
 	var dev: Character = _sprint_hire("char_matrix_dev", HRConstants.ROLE_DEVELOPER)
 	var whole: float = SprintSystem.capacity()
@@ -20612,6 +20633,260 @@ static func _case_sprint_team_follows_job_matrix() -> String:
 		return "the founder back on Build left a team of %d, held %s; want 1 and the plan waiting" % [
 			SprintSystem.team().size(), held.call()]
 	return ""
+
+
+## Y(s) = a + b·s + c·s² ile kişinin haftalık hızı: ana alanı 2, 5, 6 ve 10 puan olan geliştirici haftada 6,4 / 10 / 11,6 /
+## 20 puan yapar (işe alım dosyasının `points_for`'u aynı sayıyı verir); TİTİZ hızı ×0,85, GÖZÜ YÜKSEKTE ×1,15 çarpar, ikisi
+## birlikte çarpılır; kurucu ana alanı kaç olursa olsun düz 10 yapar.
+##
+## FALSİFİKASYON: SprintSystem.points_for'da `curve[2] * s * s` terimini sil → "s=" FAIL; SprintSystem._points'ten
+## `speed_mult` huy çarpanını sil → "TİTİZ" FAIL; kurucunun dalına `points_for`'u koy → "founder" FAIL.
+static func _case_sprint_speed_curve_y() -> String:
+	_seed_sprint()
+	var dev: Character = _sprint_hire("char_curve_dev", HRConstants.ROLE_DEVELOPER)
+	var area: String = HRConstants.role_key_area(HRConstants.ROLE_DEVELOPER)
+	for row in [[2, 6.4], [5, 10.0], [6, 11.6], [10, 20.0]]:
+		dev.role_stats[area] = row[0]
+		dev.morale = 60   # the pace of morale is not under test
+		if not is_equal_approx(_sprint_points(dev.id), row[1]) \
+				or not is_equal_approx(SprintSystem.points_for(dev.role, dev.role_stats, HRConstants.WORK_HOURS_DEFAULT), row[1]):
+			return "s=%d: the developer works %.3f a week and the hiring file reads %.3f, want %.1f" % [row[0],
+				_sprint_points(dev.id), SprintSystem.points_for(dev.role, dev.role_stats, HRConstants.WORK_HOURS_DEFAULT), row[1]]
+	dev.role_stats[area] = 5
+	for row in [[["double_checker"], 0.85, "TİTİZ"], [["bag_packed"], 1.15, "GÖZÜ YÜKSEKTE"],
+			[["double_checker", "bag_packed"], 0.85 * 1.15, "both traits"]]:
+		dev.traits.assign(row[0])
+		if not is_equal_approx(_sprint_points(dev.id), 10.0 * row[1]):
+			return "%s: the developer works %.3f a week, want %.3f" % [row[2], _sprint_points(dev.id), 10.0 * row[1]]
+	var founder: Character = CharacterRegistry.get_founder()
+	for key in HRConstants.AREAS:
+		founder.role_stats[key] = 10
+	var high: float = _sprint_points(founder.id)
+	for key in HRConstants.AREAS:
+		founder.role_stats[key] = 0
+	if not is_equal_approx(high, 10.0) or not is_equal_approx(_sprint_points(founder.id), 10.0):
+		return "the founder works %.3f a week at ten points and %.3f at none, want a flat 10" % [high, _sprint_points(founder.id)]
+	return ""
+
+
+## Kurucunun sprint payı 1 − (görüşme günleri ÷ 5) ve haftanın başında donar; bir satış görüşmesi tam 1 gün, yani haftanın beşte biri
+## (pay 0,8) yer. Haftanın içinde yapılan görüşme o haftanın puanına dokunmaz, ertesi haftanınkini düşürür; o hafta için kurulmuş
+## Series A görüşmesi ise kendi haftasının payını baştan düşürür ve yapılınca ertesi haftayı bir daha düşürmez; çağrısı ertelenen
+## randevu ne yeni haftasında ne yapıldığında yeniden düşer (bir görüşme bir kez). Defter (haftanın görüşmeleri, donan payın
+## görüşmeleri) görüşmeyi tür ve günüyle taşır. Plan donmuş payı sprintin kalan bütün haftalarına uygular, harcama ve atama aynı
+## sayıyı okur (kapanışta hafta puanı tahminin dediği çıkar). Pay 0'a inerse kurucu o hafta ekipten çıkar: karta atanmaz, kâğıdın
+## konuşanı olmaz.
+##
+## FALSİFİKASYON: TimeModel.MEETING_DAYS'te satışı 0,25 yap (görüşme saatiyle aynı sabit) → "one sales" FAIL;
+## GameState.freeze_founder_sprint_pay'i `founder_sprint_pay = 1.0` yap → "after the tick" FAIL; SprintSystem._end_week'teki
+## `freeze_founder_sprint_pay`'i sil → "week 2" FAIL, harcamadan önceye al → "week 1" FAIL; SprintSystem.team'deki
+## `founder_sprint_pay > 0.0` denetimini sil → "zero pay" FAIL; `freeze_founder_sprint_pay`'ten kurulu görüşmeyi sil → "booked" FAIL,
+## yapılan randevunun oturumunu düşüren `behind.remove_at(held)`'i sil → "twice" FAIL, `postponed` denetimini sil → "new week" FAIL.
+static func _case_sprint_founder_share_frozen() -> String:
+	_seed_sprint()
+	var founder: Character = CharacterRegistry.get_founder()
+	var full: float = _sprint_points(founder.id)
+	if full <= 0.0:
+		return "fixture: the founder works %.2f a week" % full
+	var sit := func(kind: String) -> void:
+		TimeManager.advance_hours(TimeModel.SITTING_HOURS[kind], kind)
+	# One sales meeting, held in the week, leaves that week's pay as it was frozen and takes a day (a fifth of the week) from the next.
+	var held_day: int = GameState.day
+	sit.call("sales")
+	if GameState.founder_meetings_week != [{"kind": "sales", "day": held_day}]:
+		return "the ledger of the week reads %s, want one sales meeting on day %d" % [str(GameState.founder_meetings_week), held_day]
+	if not is_equal_approx(_sprint_points(founder.id), full):
+		return "a meeting held this week cut this week's pay to %.3f of %.3f" % [_sprint_points(founder.id), full]
+	_sim_day()
+	GameState.start_work_week()
+	var pay: float = 0.8
+	if not is_equal_approx(GameState.founder_sprint_pay, pay) or not is_equal_approx(_sprint_points(founder.id), full * pay):
+		return "one sales meeting: after the tick the pay reads %.3f and the founder works %.3f, want %.3f and %.3f (one day of five)" % [
+			GameState.founder_sprint_pay, _sprint_points(founder.id), pay, full * pay]
+	if GameState.founder_meetings_frozen != [{"kind": "sales", "day": held_day}] or not GameState.founder_meetings_week.is_empty():
+		return "after the tick the ledger behind the pay reads %s and the week's %s" % [
+			str(GameState.founder_meetings_frozen), str(GameState.founder_meetings_week)]
+	# The plan holds that pay for both weeks of the sprint.
+	var id: String = SprintCatalog.mvp_candidates()[0].id
+	SprintSystem.add(id)
+	_size(GameState.product.cards[id], 100.0)
+	var plan: Dictionary = SprintSystem.plan_outcome().cards[id]
+	if not is_equal_approx(plan.done, full * pay * SprintSystem.sprint_weeks()):
+		return "the plan gives the card %.3f, want the frozen pay's %d weeks, %.3f" % [plan.done, SprintSystem.sprint_weeks(),
+			full * pay * SprintSystem.sprint_weeks()]
+	if not SprintSystem.start():
+		return "fixture: the sprint did not start"
+	# A term-sheet table (two days) added during week 1 leaves week 1 as planned and takes two fifths from week 2.
+	sit.call("table")
+	if not is_equal_approx(_sprint_points(founder.id), full * pay):
+		return "a meeting added in week 1 moved week 1's pay to %.3f" % _sprint_points(founder.id)
+	_sim_day()
+	GameState.start_work_week()
+	if not is_equal_approx(_card_worked(id), full * pay):
+		return "week 1: the card got %.3f, want the frozen %.3f" % [_card_worked(id), full * pay]
+	var next: float = 0.6
+	if not is_equal_approx(GameState.founder_sprint_pay, next) or not is_equal_approx(_sprint_points(founder.id), full * next):
+		return "week 2 opens at pay %.3f with the founder at %.3f, want %.3f and %.3f" % [
+			GameState.founder_sprint_pay, _sprint_points(founder.id), next, full * next]
+	# The plan read now, the assignment of the week and the close agree.
+	var before: float = _card_worked(id)
+	var said: float = SprintSystem.plan_outcome().cards[id].done
+	if not is_equal_approx(said, full * next):
+		return "the plan for week 2 gives %.3f, want %.3f" % [said, full * next]
+	if founder.id not in GameState.product.cards[id].assignees:
+		return "the founder was not assigned in week 2"
+	_sim_day()
+	if not is_equal_approx(_card_worked(id) - before, said):
+		return "week 2: the plan said %.3f and the close made %.3f" % [said, _card_worked(id) - before]
+
+	# A Series A meeting booked for a week takes its day from that week before it is held, and holding it takes nothing more.
+	SaveManager.reset_all_owners()
+	GameState.initialize_run({"seed": 424242})
+	_seed_sprint()
+	founder = CharacterRegistry.get_founder()
+	full = _sprint_points(founder.id)
+	GameState.pending_meeting = {"vc_id": "anchor", "day": GameState.day + 1}
+	if not is_equal_approx(_sprint_points(founder.id), full):
+		return "a booking for next week already cut this week's pay"
+	_sim_day()
+	GameState.start_work_week()
+	if not is_equal_approx(GameState.founder_sprint_pay, 0.8) or not is_equal_approx(_sprint_points(founder.id), full * 0.8) \
+			or GameState.founder_meetings_frozen != [{"kind": "vc", "day": GameState.day}]:
+		return "booked for the week: the pay reads %.3f, the founder works %.3f and the ledger %s, want 0.800, %.3f and one vc meeting on day %d" % [
+			GameState.founder_sprint_pay, _sprint_points(founder.id), str(GameState.founder_meetings_frozen), full * 0.8, GameState.day]
+	GameState.pending_meeting.clear()
+	sit.call("vc")
+	_sim_day()
+	GameState.start_work_week()
+	if not is_equal_approx(GameState.founder_sprint_pay, 1.0) or not GameState.founder_meetings_frozen.is_empty():
+		return "the booked meeting, once held, left the pay at %.3f and the ledger %s the week after (charged twice)" % [
+			GameState.founder_sprint_pay, str(GameState.founder_meetings_frozen)]
+	# Its call put off, a booking stays charged to the week it rang in: neither its new week nor its sitting pays again.
+	GameState.pending_meeting = {"vc_id": "anchor", "day": GameState.day + 1}
+	_sim_day()
+	GameState.start_work_week()
+	if not is_equal_approx(GameState.founder_sprint_pay, 0.8) or not VCPitchSystem.lapse_call():
+		return "put off: the booking's week reads %.3f, want 0.800, or its call did not lapse" % GameState.founder_sprint_pay
+	_sim_day()
+	GameState.start_work_week()
+	if not is_equal_approx(GameState.founder_sprint_pay, 1.0):
+		return "put off: the booking's new week reads %.3f, want 1.000 (charged twice)" % GameState.founder_sprint_pay
+	GameState.pending_meeting.clear()
+	sit.call("vc")
+	_sim_day()
+	GameState.start_work_week()
+	if not is_equal_approx(GameState.founder_sprint_pay, 1.0) or not GameState.founder_meetings_frozen.is_empty():
+		return "put off: the sitting held in the new week left the pay at %.3f and the ledger %s the week after (charged twice)" % [
+			GameState.founder_sprint_pay, str(GameState.founder_meetings_frozen)]
+	sit.call("sales")
+	if not is_equal_approx(GameState.founder_sprint_pay, 1.0):
+		return "a sitting held on the spot cut this week's pay to %.3f" % GameState.founder_sprint_pay
+	_sim_day()
+	GameState.start_work_week()
+	if not is_equal_approx(GameState.founder_sprint_pay, 0.8):
+		return "a sitting held on the spot left next week's pay at %.3f, want 0.800" % GameState.founder_sprint_pay
+
+	# Zero pay: a whole week of meetings (five days) takes the founder out of the team for the week.
+	SaveManager.reset_all_owners()
+	GameState.initialize_run({"seed": 424242})
+	_seed_sprint()
+	var dev: Character = _sprint_hire("char_zero_dev", HRConstants.ROLE_DEVELOPER)
+	for _i in TimeModel.WEEK_WORK_HOURS / HRConstants.WORK_HOURS_DEFAULT:
+		sit.call("vc")
+	_sim_day()
+	if GameState.founder_sprint_pay != 0.0 or SprintSystem.team().any(func(t: Dictionary) -> bool: return t.founder):
+		return "zero pay: the pay reads %.3f and the founder is still on the team" % GameState.founder_sprint_pay
+	for c in SprintCatalog.mvp_candidates().slice(0, 2):
+		SprintSystem.add(c.id)
+	var cards: Array = GameState.product.sprint.cards.duplicate()
+	if not SprintSystem.start():
+		return "fixture: the sprint did not start without the founder"
+	for card_id in cards:
+		var card: Dictionary = GameState.product.cards[card_id]
+		if CharacterRegistry.get_founder().id in card.assignees:
+			return "zero pay: %s was assigned to the founder" % card_id
+		if SprintSystem._speaker(card, [HRConstants.ROLE_FOUNDER, HRConstants.ROLE_DEVELOPER], "any") == CharacterRegistry.get_founder().id:
+			return "zero pay: the founder speaks for %s" % card_id
+	if cards.all(func(card_id: String) -> bool: return dev.id not in GameState.product.cards[card_id].assignees):
+		return "fixture: the developer works no card"
+	return ""
+
+
+## "Kurucu sprintte" anahtarı (GameState.founder_in_sprint, varsayılan açık): kapalıyken kurucu ekipte yok, karta atanmaz,
+## kâğıdın konuşanı olmaz; açıkken bugünkü gibi. Anahtar ve donmuş pay kayıtla gidip gelir; bu alanları taşımayan eski kayıt
+## varsayılanlarıyla (açık, pay 1) yüklenir.
+##
+## FALSİFİKASYON: SprintSystem.team'deki `GameState.founder_in_sprint` denetimini sil → "off" FAIL.
+static func _case_sprint_founder_switch_off() -> String:
+	var slot: String = "smoke_founder_switch_%d" % OS.get_process_id()
+	var done := func(why: String) -> String:
+		SaveManager.delete_slot(slot)
+		return why
+	_seed_sprint()
+	var dev: Character = _sprint_hire("char_switch_dev", HRConstants.ROLE_DEVELOPER)
+	var founder: Character = CharacterRegistry.get_founder()
+	if not GameState.founder_in_sprint or SprintSystem.team().size() != 2:
+		return done.call("fixture: the switch starts %s with a team of %d, want on and 2" % [
+			GameState.founder_in_sprint, SprintSystem.team().size()])
+	for c in SprintCatalog.mvp_candidates().slice(0, 2):
+		SprintSystem.add(c.id)
+	var cards: Array = GameState.product.sprint.cards.duplicate()
+	if not SprintSystem.start():
+		return done.call("fixture: the sprint did not start")
+	var spoken := func(card_id: String) -> String:
+		return SprintSystem._speaker(GameState.product.cards[card_id], [HRConstants.ROLE_FOUNDER, HRConstants.ROLE_DEVELOPER], "any")
+	if not cards.any(func(card_id: String) -> bool: return founder.id in GameState.product.cards[card_id].assignees):
+		return done.call("on: the founder works no card")
+	if not cards.any(func(card_id: String) -> bool: return spoken.call(card_id) == founder.id):
+		return done.call("on: the founder speaks for no card")
+	# Off before the sprint starts.
+	SaveManager.reset_all_owners()
+	GameState.initialize_run({"seed": 424242})
+	_seed_sprint()
+	dev = _sprint_hire("char_switch_dev", HRConstants.ROLE_DEVELOPER)
+	GameState.set_founder_in_sprint(false)
+	founder = CharacterRegistry.get_founder()
+	if SprintSystem.team().size() != 1 or SprintSystem.team()[0].id != dev.id:
+		return done.call("off: the team is %s, want the developer alone" % str(SprintSystem.team().map(func(t: Dictionary) -> String: return t.id)))
+	for c in SprintCatalog.mvp_candidates().slice(0, 2):
+		SprintSystem.add(c.id)
+	cards = GameState.product.sprint.cards.duplicate()
+	if not SprintSystem.start():
+		return done.call("fixture: the sprint did not start with the switch off")
+	for card_id in cards:
+		var card: Dictionary = GameState.product.cards[card_id]
+		if founder.id in card.assignees or SprintSystem._speaker(card, [HRConstants.ROLE_FOUNDER, HRConstants.ROLE_DEVELOPER], "any") == founder.id:
+			return done.call("off: the founder works or speaks for %s" % card_id)
+	# The switch and the frozen pay go through a save; a save without them reads the defaults.
+	GameState.founder_sprint_pay = 0.6
+	_drain_all_modals()   # a card on screen refuses the save (can_save)
+	if not SaveManager.save_to_slot(slot):
+		return done.call("save_to_slot failed (%s)" % SaveManager.cannot_save_reason_key())
+	GameState.set_founder_in_sprint(true)
+	GameState.founder_sprint_pay = 1.0
+	if not SaveManager.apply_loaded_state(SaveManager.read_slot(slot)):
+		return done.call("apply_loaded_state returned false")
+	if GameState.founder_in_sprint or not is_equal_approx(GameState.founder_sprint_pay, 0.6):
+		return done.call("the save came back with the switch %s and the pay %.2f, want off and 0.60" % [
+			GameState.founder_in_sprint, GameState.founder_sprint_pay])
+	var path: String = SaveManager.SAVE_DIR + slot + ".json"
+	var raw: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path)) as Dictionary
+	var gs: Dictionary = raw["state"]["game_state"]
+	if not gs.has("founder_in_sprint") or not gs.has("founder_sprint_pay"):
+		return done.call("the save does not carry the switch and the pay")
+	gs.erase("founder_in_sprint")
+	gs.erase("founder_sprint_pay")
+	GameState.set_founder_in_sprint(false)
+	GameState.founder_sprint_pay = 0.6
+	var w := FileAccess.open(path, FileAccess.WRITE)
+	w.store_string(JSON.stringify(raw, "\t", false, true))
+	w.close()
+	if not SaveManager.apply_loaded_state(SaveManager.read_slot(slot)):
+		return done.call("apply_loaded_state returned false for the old save")
+	if not GameState.founder_in_sprint or not is_equal_approx(GameState.founder_sprint_pay, 1.0):
+		return done.call("a save without the fields reads the switch %s and the pay %.2f, want on and 1.00" % [
+			GameState.founder_in_sprint, GameState.founder_sprint_pay])
+	return done.call("")
 
 
 ## Olay kartının verim satırı (productivity_mod) sprint puanını çarpar. Tek başına kurucuya yazılan

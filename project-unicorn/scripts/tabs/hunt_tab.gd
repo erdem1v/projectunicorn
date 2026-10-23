@@ -94,15 +94,15 @@ func _on_advisory(key: String, args: Dictionary) -> void:
 
 
 func _on_gate_input(_arg = null) -> void:
-	if WorkHoursSystem.sitting_open(PitchConstants.MEETING_HOURS) != _pitch_open \
-			or WorkHoursSystem.sitting_open(PitchConstants.TERM_TABLE_HOURS) != _table_open:
+	if WorkHoursSystem.sitting_open(TimeModel.SITTING_HOURS["vc"]) != _pitch_open \
+			or WorkHoursSystem.sitting_open(TimeModel.SITTING_HOURS["table"]) != _table_open:
 		_on_changed()
 
 
 func _refresh() -> void:
 	_stale = false
-	_pitch_open = WorkHoursSystem.sitting_open(PitchConstants.MEETING_HOURS)
-	_table_open = WorkHoursSystem.sitting_open(PitchConstants.TERM_TABLE_HOURS)
+	_pitch_open = WorkHoursSystem.sitting_open(TimeModel.SITTING_HOURS["vc"])
+	_table_open = WorkHoursSystem.sitting_open(TimeModel.SITTING_HOURS["table"])
 	_off = EventGate.active_id() != ""
 	UiFactory.clear(content)
 	var road_closed: bool = VCPitchSystem.series_a_road_closed()
