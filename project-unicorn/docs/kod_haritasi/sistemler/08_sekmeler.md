@@ -35,7 +35,7 @@ Alt klasörler:
 - `scripts/tabs/product/area_panel.gd` (232): `AreaPanel`: sol panel: Geçmiş, Müşteriler, alan akordeonu, açık hatlar, aday kartları.
 - `scripts/tabs/product/quarter_view.gd` (209): `QuarterView`: ÇEYREK görünümü: hedef şeridi, dar alan paneli, altı sprint sütunu, onay düğmeleri.
 - `scripts/tabs/product/overview_view.gd` (95): GENEL BAKIŞ kâğıdı (şimdilik yalnız Sunucu bloğu); class_name yok.
-- `scripts/tabs/product/type_picker.gd` (127): `TypePicker`: MVP öncesi pazar/tür/ad seçici; taslak `SprintSystem`'e yazılır, onay `chosen` olur.
+- `scripts/tabs/product/type_picker.gd` (116): `TypePicker`: MVP öncesi tek ekranlık tür ve ad seçici (iki pazar sütunu, kart pazarı da seçer); taslak `SprintSystem`'e yazılır, onay `chosen` olur.
 - `scripts/tabs/rnd/rnd_tree_view.gd` (433): `RnDTreeView`: aile sütunları (3 satır kafes), karolar, seçili düğümün kartı alanı.
 - `scripts/tabs/rnd/rnd_detail_panel.gd` (272): `RnDDetailPanel`: düğüm kartı (durumlar, gereksinim çipleri, Başlat/Duraklat/Vazgeç).
 - `scripts/tabs/rnd/rnd_assign_panel.gd` (236): `RnDAssignPanel`: kartın içindeki atama paneli (alan grupları, onay kutuları, yüzler).
@@ -103,7 +103,7 @@ Sekmelerin tanımladığı sinyaller (DIZIN.md "Sinyaller" bölümü):
 - `close_requested`: yayan `scripts/tabs/hr/hr_dossier.gd:83,132` · dinleyen `window_frame.gd:62`.
 - `state_changed`: yayan Atlas/Eğitim/Mesai panelleri (hr_atlas_modal.gd:439,465,483; training_modal.gd:174; work_hours_modal.gd:491) · dinleyen `hr_ui_shared.gd:85`.
 - `action(kind, args)`: yayan area_panel:9, overview_view:7, quarter_view:8, sprint_card:15, sprint_panel:8 · dinleyen product_tab.gd:70,77,80, area_panel.gd:166, quarter_view.gd:57, sprint_panel.gd:362.
-- `ui_changed(open_area)`: yayan `area_panel.gd:232` · dinleyen `product_tab.gd:71`. `chosen(subtype, name)`: yayan `type_picker.gd:67` · dinleyen `product_tab.gd:101`.
+- `ui_changed(open_area)`: yayan `area_panel.gd:232` · dinleyen `product_tab.gd:71`. `chosen(subtype, name)`: yayan `type_picker.gd:65` · dinleyen `product_tab.gd:101`.
 - `started` / `closed`: yayan `rnd_assign_panel.gd:230,232` / `:203` · dinleyen `rnd_detail_panel.gd:76,77`. `selection_changed(node_id)`: yayan `rnd_tree_view.gd:339` · dinleyen `rnd_tab.gd:144`.
 
 Sekmelerin yaydığı EventBus sinyalleri:

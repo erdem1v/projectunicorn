@@ -1083,7 +1083,6 @@ PROD_PATH_SUB,Bu seçim ürünün nasıl para kazandığını belirler. Sonradan
 PROD_PATH_B2C,Kitle,Consumer
 PROD_PATH_B2C_DESC,"Kitleye satarsın. Kullanıcılar gelir, gider, sayılar dalgalanır.","You sell to a crowd. Users arrive, users leave, the numbers swing."
 PROD_PATH_B2B_DESC,"Şirketlere satarsın. Kontratlar büyük, ama ilk müşteriler sağlam bir ürün bekler.","You sell to companies. Contracts are big, but first customers expect a product that holds up."
-PROD_TYPE_STEP_TITLE,{market} · Ürün tipini seç,{market} · Choose a product type
 PROD_NAME_LABEL,Ürün adı,Product name
 PROD_CONFIRM_START,Onayla ve başlat,Confirm and start
 PROD_DEV_VERSION,Geliştir · v{version},Build · v{version}

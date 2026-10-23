@@ -1,10 +1,11 @@
 class_name TypePicker
 extends VBoxContainer
 
-# MVP'den önce Ürün sekmesinde ürünün pazarı, türü ve adı seçilir. Seçim taslak olarak SprintSystem'e
-# yazılır (sayfa yeniden kurulunca kalır) ve her tıkta kutu baştan kurulur; onay `chosen` olarak sekmeye
-# çıkar, sekme SprintSystem.choose_type'a iletir. Seçili kart yükselir ve sol kenarında işaret, sağ üstünde
-# tik taşır.
+# MVP'den önce Ürün sekmesinde ürünün türü, pazarı ve adı tek ekranda seçilir: yan yana iki pazar sütunu, her
+# sütunun başında pazarın düz başlığı, altında o pazarın oynanabilir türleri. Kartı seçmek türü ve pazarı
+# birlikte yazar. Seçim taslak olarak SprintSystem'e yazılır (sayfa yeniden kurulunca kalır) ve her tıkta kutu
+# baştan kurulur; onay `chosen` olarak sekmeye çıkar, sekme SprintSystem.choose_type'a iletir. Seçili kart
+# yükselir ve sol kenarında işaret, sağ üstünde tik taşır.
 
 signal chosen(subtype: String, name: String)
 
@@ -20,6 +21,8 @@ func setup() -> void:
 	_market = draft.get("market", "")
 	_subtype = draft.get("subtype", "")
 	_name = draft.get("name", "")
+	if _subtype != "":
+		_market = ProductCatalog.get_market_type(_subtype)
 	UiFactory.clear(self)
 	add_theme_constant_override("separation", UiTokens.SPACE_XL)
 	var intro := SprintUiShared.column(UiTokens.SPACE_M)
@@ -28,28 +31,23 @@ func setup() -> void:
 	add_child(intro)
 	var paths := SprintUiShared.box(UiTokens.SPACE_L)
 	for market: String in PATH_KEYS:
-		var box := _choice(paths, market == _market, _pick_market.bind(market),
-			[SprintUiShared.label(Fmt.upper(tr(PATH_KEYS[market][0])), &"KeyLabel")])
-		box.add_child(UiFactory.make_label(market.to_upper(), &"OptionLabel"))
-		box.add_child(SprintUiShared.prose(tr(PATH_KEYS[market][1]), &"MetaMuted"))
+		var col := SprintUiShared.column(UiTokens.SPACE_L)
+		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var head := SprintUiShared.column(UiTokens.SPACE_S)
+		head.add_child(SprintUiShared.label(Fmt.upper(tr(PATH_KEYS[market][0])), &"KeyLabel"))
+		head.add_child(UiFactory.make_label(market.to_upper(), &"OptionLabel"))
+		head.add_child(SprintUiShared.prose(tr(PATH_KEYS[market][1]), &"MetaMuted"))
+		col.add_child(SprintUiShared.pad(head, Vector4i(UiTokens.SPACE_XXL, 0, UiTokens.SPACE_XL, 0)))
+		for st in ProductCatalog.playable_types(market):
+			var id: String = st.id
+			# Ad sarar: sarmayan uzun ad sütunun asgari enini büyütür ve iki sütun eşit kalmaz.
+			var box := _choice(col, id == _subtype, _pick_type.bind(id),
+				[SprintUiShared.prose(ProductCatalog.type_name(id), &"DataStrong"),
+				SprintUiShared.label(Fmt.upper(ProductCatalog.type_category(id)), &"KeySmall")])
+			box.add_child(SprintUiShared.prose(ProductCatalog.type_desc(id), &"MetaText"))
+			box.add_child(SprintUiShared.prose(ProductCatalog.type_tradeoff(id), &"MetaMuted"))
+		paths.add_child(col)
 	add_child(paths)
-	if _market == "":
-		return
-
-	var step := SprintUiShared.box(UiTokens.SPACE_L)
-	step.add_child(SprintUiShared.label(tr("PROD_TYPE_STEP_TITLE").format({"market": _market.to_upper()}), &"OptionLabel"))
-	var rule := HSeparator.new()
-	rule.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	rule.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	step.add_child(rule)
-	add_child(step)
-	for st in ProductCatalog.playable_types(_market):
-		var id: String = st.id
-		var box := _choice(self, id == _subtype, _pick_type.bind(id),
-			[SprintUiShared.label(ProductCatalog.type_name(id), &"DataStrong"), RnDUiShared.spacer(),
-			SprintUiShared.label(Fmt.upper(ProductCatalog.type_category(id)), &"KeySmall")])
-		box.add_child(SprintUiShared.prose(ProductCatalog.type_desc(id), &"MetaText"))
-		box.add_child(SprintUiShared.prose(ProductCatalog.type_tradeoff(id), &"MetaMuted"))
 	if _subtype == "":
 		return
 
@@ -73,15 +71,8 @@ func setup() -> void:
 		confirm.disabled = text.strip_edges() == "")
 
 
-func _pick_market(market: String) -> void:
-	if market != _market:
-		_market = market
-		_subtype = ""
-	_save_draft()
-	setup.call_deferred()
-
-
 func _pick_type(subtype: String) -> void:
+	_market = ProductCatalog.get_market_type(subtype)
 	_subtype = subtype
 	_save_draft()
 	setup.call_deferred()
@@ -116,8 +107,6 @@ func _choice(host: Control, selected: bool, on_pick: Callable, head: Array) -> V
 	for part: Control in head:
 		top.add_child(part)
 	if selected:
-		if top.get_child_count() == 1:
-			top.add_child(RnDUiShared.spacer())
 		top.add_child(UiFactory.make_glyph(SprintUiShared.CHECK, UiTokens.D_ICON_ROW, UiTokens.D_INK_1))
 	box.add_child(top)
 	var inner := SprintUiShared.pad(box, Vector4i(UiTokens.SPACE_XXL, UiTokens.SPACE_XL, UiTokens.SPACE_XL, UiTokens.SPACE_XL))

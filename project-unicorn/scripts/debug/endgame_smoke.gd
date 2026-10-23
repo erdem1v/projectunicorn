@@ -465,6 +465,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"save_v10_product_state":         fail = _case_save_v10_product_state()
 		# --- rev 6.1 · router devri (2026-08-25). İkisi de ÖNCEKİ ağaca karşı DÜŞER.
 		"type_screen_matches_line_content": fail = _case_type_screen_matches_line_content()
+		"type_picker_one_screen":         fail = _case_type_picker_one_screen()
 		# --- Funding ladder + phase/endings (2026-08-27) ---
 		"seed_door_traction_only":               fail = _case_seed_door_traction_only()
 		"seed_door_below_bar":                   fail = _case_seed_door_below_bar()
@@ -14132,6 +14133,73 @@ static func _case_type_screen_matches_line_content() -> String:
 		if not pool in ["ai", "saas", "social"]:
 			return "%s resolves to pool '%s', which news_feed_system does not know" % [pid, pool]
 	return ""
+
+
+## The type picker is ONE screen: both markets' playable cards are there with an empty draft and no click,
+## picking a card writes its market with it, and a typed name confirms as `chosen(subtype, name)`.
+## FALSIFICATION: restoring the two-step market gate hides every card until a path is clicked, and a
+## `_pick_type` that leaves `_market` alone writes "" (or the old market) into the draft.
+static func _case_type_picker_one_screen() -> String:
+	var host: Node = _ui_host()
+	if host == null:
+		return "no UI host to mount the type picker under"
+	var had_draft: bool = GameState.product.has("type_draft")
+	var prev_draft: Variant = GameState.product.get("type_draft")
+	SprintSystem.set_type_draft({})
+	var picker := TypePicker.new()
+	host.add_child(picker)
+	picker.setup()
+	var fail: String = ""
+	var want := 0
+	for market in ["b2c", "b2b"]:
+		want += ProductCatalog.playable_types(market).size()
+	var cards := picker.find_children("*", "PanelContainer", true, false).filter(func(c: Node) -> bool:
+		return (c as PanelContainer).theme_type_variation in [&"PickCard", &"PickCardSelected", &"PickCardHover"])
+	if cards.size() != want:
+		fail = "the empty picker shows %d cards, the two markets offer %d" % [cards.size(), want]
+	for market in ["b2c", "b2b"]:
+		for st in ProductCatalog.playable_types(market):
+			var tid: String = String((st as Dictionary).get("id", ""))
+			var found := false
+			for c in cards:
+				for l in c.find_children("*", "Label", true, false):
+					found = found or (l as Label).text == ProductCatalog.type_name(tid)
+			if fail == "" and not found:
+				fail = "%s has no card on the empty picker" % tid
+	for c in cards:
+		if fail == "" and c.theme_type_variation == &"PickCardSelected":
+			fail = "a card is selected before any pick"
+	if fail == "":
+		picker._pick_type("erp")
+		var draft: Dictionary = GameState.product.get("type_draft", {})
+		if draft.get("market", "") != "b2b" or draft.get("subtype", "") != "erp":
+			fail = "picking erp wrote the draft %s" % str(draft)
+	if fail == "":
+		picker.setup()
+		var got: Array = []
+		picker.chosen.connect(func(subtype: String, name: String) -> void: got.assign([subtype, name]))
+		var edits := picker.find_children("*", "LineEdit", true, false)
+		var edit: LineEdit = edits[0] if not edits.is_empty() else null
+		var go: Button = null
+		for b in picker.find_children("*", "Button", true, false):
+			if (b as Button).text == TranslationServer.translate("PROD_CONFIRM_START"):
+				go = b
+		if edit == null or go == null:
+			fail = "the picked erp card did not open the name box and confirm button"
+		else:
+			edit.text_changed.emit("Defter")   # LOC-DATA test name
+			if go.disabled:
+				fail = "a typed name left the confirm button disabled"
+			else:
+				go.pressed.emit()
+				if got != ["erp", "Defter"]:   # LOC-DATA test name
+					fail = "confirming emitted %s, expected [erp, Defter]" % str(got)
+	picker.free()
+	if had_draft:
+		GameState.product["type_draft"] = prev_draft
+	else:
+		GameState.product.erase("type_draft")
+	return fail
 
 
 # --- Held-back strings landed ---
