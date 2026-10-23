@@ -25,19 +25,14 @@ extends RefCounted
 #                 (itibar) ve haftalık destek raporu da burada işler.
 
 # ------------------------------------------------------ §9 canlı hata akışı
-# gelen bildirim/gün = (0,1 + 0,03 × yeni_kod_eforu × e^(−sürüm_yaşı/3)) × kullanım_çarpanı
-# Sürüm yaşı haftadır ve saat kesrini taşır. Açık hata akışı beslemez: hata yalnız kullanımdan ve
-# yeni koddan doğar.
+# gelen bildirim/gün = 0,1 × kullanım_çarpanı × altyapı_çarpanı
+# Açık hata akışı beslemez: bildirim yalnız kullanımdan doğar. Yeni sürümün hatası bildirim değildir: testten kaçan hata
+# sürüm çıkınca kartın hattında açık hata olur (SprintBugs).
 #
 ## §9 taban — "hiçbir ürün %100 hatasız değildir; akış asla sıfırlanmaz."
 const INFLOW_BASE := 0.1
 ## Ar-Ge §4.3 `self_service` — aynı tabanın araştırılmış hâli. Akışı KISAR, kapatmaz.
 const INFLOW_BASE_RESEARCHED := 0.07
-## §9 yeni kod terimi — yeni sürümün efor büyüklüğüyle orantılı yeni havuz.
-const INFLOW_NEWCODE_COEF := 0.03
-## §9 "~3 haftada söner" — YALNIZ yeni kod terimi söner. Yeni sürüm sıfırdan havuz
-## yaratmaz: olgun ürün altta durur, tazelenen tek şey bu terimdir. Birim hafta.
-const INFLOW_TAU := 3.0
 ## §9 kullanım çarpanı: 1 + aktif kullanıcı/10000 (B2C) · 1 + hesap sayısı/80 (B2B). B2B'de aynı hatayı
 ## çok hesap bildirir, akış hesapla yavaş büyür.
 const USAGE_DIV_B2C := 10000.0
@@ -155,17 +150,13 @@ static func from_dict(d: Dictionary) -> void:
 #  §9 · CANLI HATA AKIŞI
 # =========================================================================
 
-## §9'un tam formülü, GÜNLÜK bildirim sayısı olarak. Canlı ürün yoksa akış yoktur. Saatlik tik
-## okur: yaş saatin başından ölçülür.
+## §9'un tam formülü, GÜNLÜK bildirim sayısı olarak. Canlı ürün yoksa akış yoktur.
 static func reports_per_day() -> float:
 	if not ProductState.is_live():
 		return 0.0
 	var floor_rate: float = INFLOW_BASE_RESEARCHED if ResearchSeam.completed("self_service") else INFLOW_BASE
-	var new_code: float = ProductState.new_code_effort() \
-		* exp(-ProductState.version_age(ProductSystem.hour_start_fraction()) / INFLOW_TAU)
-	var base: float = floor_rate + INFLOW_NEWCODE_COEF * new_code
 	# §10 — altyapı akışı çarpar (ucuz sağlayıcı ×1,25); InfraSystem'den okunur, burada yeniden türetilmez.
-	return base * usage_multiplier() * InfraSystem.report_inflow_multiplier()
+	return floor_rate * usage_multiplier() * InfraSystem.report_inflow_multiplier()
 
 
 ## §9 kullanım çarpanı — "farklı kullanıcı farklı hataya çarpar". B2C'de kaynak ödeyen

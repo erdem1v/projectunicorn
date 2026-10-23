@@ -124,8 +124,8 @@ extends RefCounted
 #   PROBE MONTH_BURN day=<d> n=<n> ticks=<n> <burn id>=<n>... one_time=<n>   (full_run*: beside each PROBE MONTH)
 #               The burn ids are FinanceSystem.BURN_IDS, in its order.
 #   PROBE SPRINT day=<d> n=<n> label=<v1.x|-> shipped=<card ids> carried=<n> velocity=<done>/<capacity>
-#   PROBE SHIP  day=<d> version=<n> ...      (a public release: the MVP and every version after it; faulty = the
-#                                           lines the release's faulty cards put a bug on)
+#   PROBE SHIP  day=<d> version=<n> ...      (a public release: the MVP and every version after it; escaped = the
+#                                           bugs that escaped the release's testing, one per bug on its card's line)
 #   PROBE FIX   day=<d> sprint=<n> weeks=<n> fix_load=<f> capacity=<f> share=<f> cards=<fix card ids|-> bug_sprint=<b>
 #                                           (every sprint start: the fix cards' remaining points over the plan's
 #                                           capacity; a bug sprint spends more than half the capacity on fixes)
@@ -525,9 +525,9 @@ static func _on_build_phase(new_phase: String) -> void:
 	# A public release. open_bugs is the product's bug store after the close.
 	if new_phase != "shipped":
 		return
-	print("PROBE SHIP day=%d version=%d label=%s open_bugs=%d faulty=%d" % [
+	print("PROBE SHIP day=%d version=%d label=%s open_bugs=%d escaped=%d" % [
 		GameState.day, ProductState.version(), SprintSystem.version_label(ProductState.version()),
-		ProductState.open_bugs(), (GameState.product.release.get("faulty", []) as Array).size()])
+		ProductState.open_bugs(), (GameState.product.release.get("escaped", []) as Array).size()])
 
 
 ## Every sprint start: the fix cards in the plan against the capacity it was planned for (stored when the sprint

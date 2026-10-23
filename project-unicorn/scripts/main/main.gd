@@ -904,7 +904,7 @@ func _stage_emergency(kind: String, b2b: bool, given: Dictionary) -> Dictionary:
 			began = 40
 		"regression":
 			ProductState.add_bugs(line, 1)
-			GameState.product.releases.append({"number": 5, "sprint": 5, "day": GameState.day, "faulty": [line], "shipped": []})
+			GameState.product.releases.append({"number": 5, "sprint": 5, "day": GameState.day, "escaped": [line], "shipped": []})
 		"storm":
 			line = "line_shared_durability@note_tool"
 			hour = 14

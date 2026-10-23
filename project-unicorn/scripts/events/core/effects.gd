@@ -480,11 +480,13 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 			return _on_card(verb, SprintSystem.decision_progress(amount(e)), amount(e))
 		"sprint_card_carry":
 			return _on_card(verb, SprintSystem.decision_carry(), 0)
-		# The test of the promise card (or, with `card` DECISION, of the pending decision's card) is cut in half: it can
-		# leave in the release with a bug (SprintSystem.escape_chance).
+		# The test of the promise card (or, with `card` DECISION, of the pending decision's card) is cut in half: the test
+		# catches less of its bugs (SprintBugs.catch_rate). The promise card is sent (SprintSystem.send).
 		"sprint_card_test":
-			var cut_card: Dictionary = SprintSystem.decision_card() if String(e.get("card", "")) == DECISION \
-				else SprintSystem.promise_card()
+			var promised: bool = String(e.get("card", "")) != DECISION
+			var cut_card: Dictionary = SprintSystem.promise_card() if promised else SprintSystem.decision_card()
+			if promised:
+				SprintSystem.send(cut_card)
 			return _on_card(verb, SprintSystem.cut_test(cut_card), 0)
 		"sprint_hours":
 			var mult: float = float(e.get("mult", 1.0))
@@ -492,6 +494,8 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 			var sprint: int = SprintSystem.set_hours_mult(mult)
 			if sprint == 0:
 				return _no_target(verb, "")
+			if bool(e.get("promise", false)):
+				SprintSystem.send(SprintSystem.promise_card())
 			return {"verb": verb, "sprint": sprint, "mult": mult, "hours": hours, "solo": SprintSystem.payers("").is_empty()}
 		# A line's fix card stands first in the sprint; the row keeps the card it bumped (what the chip said).
 		"sprint_fix_first":

@@ -998,8 +998,10 @@ func _migrate_17(state: Dictionary) -> void:
 ## v18 → v19: sprint points grow five times and a card keeps what each phase needs (`need`) instead of an effort, shares and the
 ## paper's effort_mod. A card's points (effort plus effort_mod) ×5 are shared out by its line's work profile
 ## (`SprintCatalog.card_need`); the work done stays the same fraction of each phase, and a card in testing starts its test over.
-## `faulty`, `shares`, `effort_mod` and the sprint's `weeks` go. The release records keep their cards in the new shape and
-## count their velocity and carried points ×5 too. Pure and cheap: list_slots reads every slot through here.
+## `faulty`, `shares`, `effort_mod` and the sprint's `weeks` go; a card has no shortened test left (`cut` 0, its test
+## started over). The release records keep their cards in the new shape and count their velocity and carried points ×5
+## too, and the lines of the cards that went out faulty become the bugs that `escaped`. Pure and cheap: list_slots reads
+## every slot through here.
 const _V18_POINT := 5
 
 
@@ -1013,6 +1015,9 @@ func _migrate_18(state: Dictionary) -> void:
 	for card: Dictionary in product.cards.values():
 		_scale_sprint_card(card)
 	for record: Dictionary in product.releases + [product.release]:
+		if record.has("faulty"):
+			record["escaped"] = record["faulty"]
+			record.erase("faulty")
 		for card: Dictionary in record.get("shipped", []):
 			_scale_sprint_card(card)
 		for points: Dictionary in [record.get("velocity", {})] + (record.get("carried", []) as Array):
@@ -1041,6 +1046,7 @@ func _scale_sprint_card(card: Dictionary) -> void:
 		var new_sum: float = float(progress[0]) + float(progress[1]) + float(progress[2])
 		card["base"] = float(card.base) / old_sum * new_sum if old_sum > SprintSystem.EPS else 0.0
 	card["need"] = need
+	card["cut"] = 0.0
 	for key in ["effort", "effort_mod", "shares", "faulty"]:
 		card.erase(key)
 

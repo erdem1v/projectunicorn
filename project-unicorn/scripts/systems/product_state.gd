@@ -34,9 +34,6 @@ const INFRA_UNITS := "mvp_infra_units"
 const INFRA_AUTO := "mvp_infra_auto"
 const INFRA_AUTO_LAST := "mvp_infra_auto_last"
 const INFRA_SERVED_WEEKS := "mvp_infra_served_weeks"
-## §9 — "yeni kod terimi": son sürümün efor büyüklüğü, yayında damgalanır ve sürüm
-## yaşıyla söner. Yeni sürüm sıfırdan havuz yaratmaz; yalnız bu terim tazelenir.
-const NEW_CODE_EFFORT := "mvp_new_code_effort"
 
 ## §9 — her yayın ilgiyi buraya tazeler.
 const INTEREST_MAX := 100.0
@@ -255,12 +252,12 @@ static func _sum(bugs: Dictionary) -> int:
 # ------------------------------------------------------- §9 age, interest
 
 ## SÜRÜM yaşı hafta olarak, ürün yaşı DEĞİL (§17); her yayında sıfırlanır. Yayın saat kesriyle
-## damgalanır, yaş kesirli okunur: `into_tick` ölçülen anın tik içindeki yeridir (tik başı 0).
-static func version_age(into_tick: float = 0.0) -> float:
+## damgalanır, yaş kesirli okunur.
+static func version_age() -> float:
 	var stamped: float = float(GameState.get_flag(VERSION_LAUNCH_DAY, 0.0))
 	if not is_live() or stamped <= 0.0:
 		return 0.0
-	return maxf(0.0, float(GameState.day) + into_tick - stamped)
+	return maxf(0.0, float(GameState.day) - stamped)
 
 
 ## Rozet ve seam için yayından bu yana dönen tik sayısı.
@@ -272,17 +269,12 @@ static func interest() -> float:
 	return float(GameState.get_flag(INTEREST, 0.0))
 
 
-static func new_code_effort() -> float:
-	return float(GameState.get_flag(NEW_CODE_EFFORT, 0.0))
-
-
-## §9 — "her yayın ilgiyi 100'e tazeler". Sürüm yaşı, ilgi ve yeni-kod terimi
-## BİRLİKTE burada sıfırlanır, çünkü üçü aynı olayın üç yüzüdür; ayrı yazılırlarsa
-## ayrışırlar ve akış modeli sessizce yanlış bir yaşı okur.
-static func refresh_on_publish(new_effort: float = 0.0) -> void:
+## §9 — "her yayın ilgiyi 100'e tazeler". Sürüm yaşı ve ilgi BİRLİKTE burada sıfırlanır,
+## çünkü ikisi aynı olayın iki yüzüdür; ayrı yazılırlarsa ayrışırlar ve ilgi sessizce
+## yanlış bir yaşı okur.
+static func refresh_on_publish() -> void:
 	GameState.set_flag(VERSION_LAUNCH_DAY, ProductSystem.clock_stamp())
 	GameState.set_flag(INTEREST, INTEREST_MAX)
-	GameState.set_flag(NEW_CODE_EFFORT, maxf(0.0, new_effort))
 
 
 # ------------------------------------------------------------ §10 infra

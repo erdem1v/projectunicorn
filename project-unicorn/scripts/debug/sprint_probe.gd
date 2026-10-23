@@ -45,10 +45,10 @@ extends RefCounted
 #   SPRINTPROBE SKIP|<seed>|<sprint>|<card>|full|ceiling   add() refused the card (no point left for it, or
 #                                                         the load past the ceiling), the sprint stays short
 #   SPRINTPROBE SKIP|<seed>|<sprint>|-|empty          the sprint has nothing to start, the seed ends
-#   SPRINTPROBE PRED|<seed>|<sprint>|<card>|<split id:weeks+…>|<done>|<finishes 1|0>|<no_start 1|0>|<mvp_eta>
+#   SPRINTPROBE PRED|<seed>|<sprint>|<card>|<split id:weeks+…>|<done>|<finishes 1|0>|<no_start 1|0>|bugs=<n>/<F>/<K>/<fix>|<mvp_eta>
 #   SPRINTPROBE REPRED|<seed>|<sprint>|<card>|<done>|<finishes 1|0>|<emergency card>   the plan read again after an
 #                                                         emergency answered with its fix first; CLOSE compares it
-#   SPRINTPROBE CLOSE|<seed>|<sprint>|<card>|<shipped 1|0>|<carried_done>|out=<design>/<dev>/<test>|streak=<design>/<dev>/<test>|MATCH|MISMATCH[|cause=<event id>|cause=team|cause=founder_meeting|cause=bugs]
+#   SPRINTPROBE CLOSE|<seed>|<sprint>|<card>|<shipped 1|0>|<carried_done>|bugs=<n>/<F>/<K>/<fix>|out=<design>/<dev>/<test>|streak=<design>/<dev>/<test>|MATCH|MISMATCH[|cause=<event id>|cause=team|cause=founder_meeting|cause=bugs]
 #   SPRINTPROBE MVP|<seed>|<tick>
 #   SPRINTPROBE PAPER|<seed>|<sprint>|<event id>|<speaker id, - for a paper no one speaks>   a decision paper asked
 #   SPRINTPROBE PAPERSUM|weeks=<w>|sprints=<n>|papers=<k>|empty=<n-k>|empty_rate=<share of sprints with no paper>
@@ -56,7 +56,9 @@ extends RefCounted
 #   SPRINTPROBE SUMMARY|match=<matched>/<closes>|mvp_days=<tick>x<seeds>,…   (- = no MVP within t ticks)
 #   SPRINTPROBE LOADSUM|team=<n>|weeks=<w>|sprints=<n>|planned=<n>|finished=<n>|idle=<n>|limits=<limit>:<n>,…
 # done and carried_done are the points the card gets in this sprint (carried_done - for a card that
-# finished). mvp_eta is the screen's MVP forecast when the sprint starts (SprintSystem.mvp_eta),
+# finished). bugs is the card's testing when it is done by the sprint's end: bugs born (n), found (F), escaped (K = n - F)
+# and the fix work the found ones add to its development (- = the card is not tested yet). mvp_eta is the screen's MVP
+# forecast when the sprint starts (SprintSystem.mvp_eta),
 # <sprint>/<week>: the sprint whose close ships v1.0 and the week before that close's tick (- = none).
 # out and streak are the closed sprint's, not the card's, so every card of a sprint prints the same pair: per stage the
 # need its cards leave unfinished and how many closes in a row that stage has left some (the release record's
@@ -65,11 +67,12 @@ extends RefCounted
 # no card (SprintSystem's worked list), limit why the plan stopped: ceiling or full (add refused a card), pool
 # (fill=1: every open card is in), cards (cards=N reached) or lead.
 #
-# MATCH: the card finished in its sprint exactly when the plan said it finishes, and a carried card got
-# the points the plan gave it. A mismatch is named when, inside its sprint, a decision paper was asked or an
-# answered event changed the team's points or a card's effort, progress or place (cause=<event id>), or the
-# week's tick changed the team (cause=team), or only the founder's pay (cause=founder_meeting: the plan holds the
-# week's frozen pay for every week it has left, and the next week's follows the meetings of this one), or the start read
+# MATCH: the card finished in its sprint exactly when the plan said it finishes, a carried card got
+# the points the plan gave it, and the bugs of its testing are the plan's. A mismatch is named when, inside its
+# sprint, a decision paper was asked or an answered event changed the team's points or a card's effort, progress or
+# place (cause=<event id>), or the week's tick changed the team (cause=team), or only the founder's pay
+# (cause=founder_meeting: the plan holds the week's frozen pay for every week it has left, and the next week's follows
+# the meetings of this one), or the start read
 # a fix card's size from the bug store again (cause=bugs: bugs landed after the last tick's read, which the plan the
 # screen drew still held). A card the start moved to the next column (its gate closed since it was placed) is
 # checked at once: the plan must have said it makes no point (CLOSE with shipped 0 and 0.00 carried). The run passes
@@ -180,12 +183,14 @@ static func _plan(seed_value: int, o: Dictionary, verdicts: Array) -> bool:
 		for id in _said:
 			var carried: Array = p.release.carried.filter(func(c: Dictionary) -> bool: return c.id == id)
 			var got: float = 0.0 if carried.is_empty() else float(carried[0].done) - _said[id][2]
+			var shipped: Array = p.release.shipped.filter(func(c: Dictionary) -> bool: return c.id == id)
+			var bugs: String = _bugs(SprintBugs.tally(shipped[0] if not shipped.is_empty() else p.cards.get(id, {})))
 			var verdict: String = "MATCH" if carried.is_empty() == _said[id][0] \
-				and (carried.is_empty() or absf(got - _said[id][1]) <= SprintSystem.EPS) \
+				and (carried.is_empty() or absf(got - _said[id][1]) <= SprintSystem.EPS) and bugs == _said[id][3] \
 				else "MISMATCH" + ("" if _cause == "" else "|cause=" + _cause)
 			verdicts.append(verdict)
-			print("SPRINTPROBE CLOSE|%d|%d|%s|%d|%s|out=%s|streak=%s|%s" % [seed_value, p.release.sprint, id,
-				int(carried.is_empty()), "-" if carried.is_empty() else "%.2f" % got, out, streak, verdict])
+			print("SPRINTPROBE CLOSE|%d|%d|%s|%d|%s|bugs=%s|out=%s|streak=%s|%s" % [seed_value, p.release.sprint, id,
+				int(carried.is_empty()), "-" if carried.is_empty() else "%.2f" % got, bugs, out, streak, verdict])
 			finished += int(carried.is_empty())
 		print("SPRINTPROBE LOAD|%d|%d|%d|%d|%d|%s" % [seed_value, p.release.sprint, _tally.planned, finished,
 			_tally.idle, _tally.limit])
@@ -231,10 +236,11 @@ static func _plan(seed_value: int, o: Dictionary, verdicts: Array) -> bool:
 	_said = {}
 	for id in p.sprint.cards:
 		var card: Dictionary = plan[id]
-		_said[id] = [card.finishes, card.done, SprintSystem.total(p.cards[id]) - SprintSystem.remaining(p.cards[id])]
-		print("SPRINTPROBE PRED|%d|%d|%s|%s|%.2f|%d|%d|%s" % [seed_value, SprintSystem.sprint_number(), id,
+		_said[id] = [card.finishes, card.done, SprintSystem.total(p.cards[id]) - SprintSystem.remaining(p.cards[id]),
+			_bugs(card.bugs)]
+		print("SPRINTPROBE PRED|%d|%d|%s|%s|%.2f|%d|%d|bugs=%s|%s" % [seed_value, SprintSystem.sprint_number(), id,
 			"+".join(card.split.map(func(w: Dictionary) -> String: return "%s:%d" % [w.id, w.weeks])), card.done,
-			int(card.finishes), int(card.done <= SprintSystem.EPS),
+			int(card.finishes), int(card.done <= SprintSystem.EPS), _said[id][3],
 			"-" if eta.is_empty() else "%d/%d" % [eta.sprint, eta.week]])
 	var read: Array = _inputs()[1]
 	if not SprintSystem.start():
@@ -254,6 +260,11 @@ static func _plan(seed_value: int, o: Dictionary, verdicts: Array) -> bool:
 		_cause = "bugs"
 	_tally = {"planned": p.sprint.cards.size(), "idle": 0, "limit": limit}
 	return true
+
+
+## The bugs of a card's testing as n/F/K/fix work (SprintBugs.tally), - for a card not tested yet.
+static func _bugs(tally: Array) -> String:
+	return "-" if tally.is_empty() else "%d/%d/%d/%.2f" % tally
 
 
 ## A decision paper was asked: the speaker is the person the engine bound it to (the decision record keeps them).
@@ -456,6 +467,6 @@ static func _reread(who: String) -> void:
 		var card: Dictionary = p.cards[id]
 		var made: float = SprintSystem.total(card) - SprintSystem.remaining(card)
 		var before: float = _said[id][2] if _said.has(id) else made
-		_said[id] = [plan[id].finishes, plan[id].done + made - before, before]
+		_said[id] = [plan[id].finishes, plan[id].done + made - before, before, _bugs(plan[id].bugs)]
 		print("SPRINTPROBE REPRED|%d|%d|%s|%.2f|%d|%s" % [_seed, SprintSystem.sprint_number(), id, _said[id][1],
 			int(plan[id].finishes), who])

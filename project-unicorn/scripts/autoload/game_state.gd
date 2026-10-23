@@ -74,7 +74,6 @@ const FLAG_TYPES := {
 	# SÜRÜM yaşı (§17): mvp_launch_day ilk yayında bir kez damgalanır, bu her yayında yeniden.
 	"mvp_version_launch_day": TYPE_FLOAT,
 	"mvp_interest": TYPE_FLOAT,                 # her yayında 100'e tazelenir, yarı ömür 30 gün
-	"mvp_new_code_effort": TYPE_FLOAT,          # §9 yeni-kod terimi; τ=21 günde söner
 	# --- §10 altyapı ---
 	"mvp_infra_provider": TYPE_STRING,          # sağlayıcı kimliği
 	"mvp_infra_units": TYPE_INT,                # satın alınan kapasite birimi

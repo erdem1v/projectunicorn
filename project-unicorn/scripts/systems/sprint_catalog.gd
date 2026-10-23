@@ -247,6 +247,7 @@ static func is_priority_count(bugs: int) -> bool:
 
 
 ## Yeni kart: `effort` puanlık ihtiyaç aşamalara paylaşılır, rolleri ihtiyacı olan aşamaların rolleridir (en çok üç).
+## `cut` kısaltılmış testin karttan düşen işidir (SprintBugs).
 static func new_card(id: String, kind: String, area_id: String, effort: int, line := "", step := "",
 		target_tier := 0) -> Dictionary:
 	var need: Array = card_need(kind, line, target_tier, effort)
@@ -255,7 +256,7 @@ static func new_card(id: String, kind: String, area_id: String, effort: int, lin
 		"need": need, "roles": range(need.size()).filter(func(i: int) -> bool: return need[i] > 0.0).map(
 			func(i: int) -> String: return roles[i]),
 		"progress": [0.0, 0.0, 0.0], "state": "candidate", "assignees": [], "bugs": 0, "customer_id": "",
-		"request_id": "", "decision": false, "cut": false}
+		"request_id": "", "decision": false, "cut": 0.0}
 
 
 ## Saklanan kart ya da adayı; yoksa {}.

@@ -114,10 +114,18 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   [WORKING].
 - **Söz olayı.** Sprintin son haftasında bu sprinte söz verilmiş kart ekibin hızıyla yetişmiyorsa sistem `product.promise_due`'yu
   ister (`SprintSystem.late_promise`, `_ask_promise`): sprintin tek kesintisi sayılır ve o hafta karar kâğıdı çekilmez. Hamleler:
-  testi kısalt (`sprint_card_test`; kısaltılmış kart sürümde `SprintSystem.escape_chance` ihtimaliyle hatalı çıkabilir), fazla
-  mesai, sözü bir sprint ileri al (`PromiseRegistry.extend`, bir kez, hesabın izine bedel) ya da bırak (`PromiseRegistry.break_promise`).
-  Çip yüzde yazmaz, sonucu yazar. Kısaltılmış testin ihtimali `data/product/sprint.json` `promise.cut_test_escape`'te, mesainin
-  moral bedeli ve ek sürenin izi kartın (`promise_due.json`) seçeneklerinde [WORKING].
+  testi kısalt (`sprint_card_test`: kalan test işi yarıya iner ve test gereken testin yapılan payı kadar hata yakalar,
+  `SprintBugs.catch_rate`), fazla mesai, sözü bir sprint ileri al (`PromiseRegistry.extend`, bir kez, hesabın izine bedel) ya da bırak
+  (`PromiseRegistry.break_promise`). İlk ikisi kartı gönderir (`SprintSystem.send`): testi bitmişse düzeltmesi bitmese de kapanışta
+  sürüme çıkar ve düzeltilmemiş bulunan hata kartın hattında açık hata olur; öbür ikisinde kart kalan düzeltmesiyle devreder. Çip yüzde
+  yazmaz, sonucu yazar. Mesainin moral bedeli ve ek sürenin izi kartın (`promise_due.json`) seçeneklerinde [WORKING].
+- **Hata modeli.** Kartın hatası test bittiği an belirlenir (`SprintBugs`, sayılar `data/product/sprint.json` `bugs` bloğunda
+  [WORKING]): beklenen hata H = c × kartın puanı × R × tür × Σ iş payı × m(Δ) × TİTİZ, R kartın Geliştirme aşamasındaki Yazılım
+  kapısı (kilitsiz kart 1★), Δ = kişinin Yazılım yıldızı − R, m(Δ) = 0,20 × 0,5^(Δ ÷ 2). Kartın tohumundan Poisson(H) çekilir
+  (`RngStreams` ilerlemez, plan ile kapanış aynı sayıyı görür); testin yakaladığı pay 0,57 × √Y(Test), kendi geliştirdiğini test eden
+  ×0,6. Bulunan her hata kartın Geliştirme satırına düzeltme işi ekler (5,3 ya da 1,3 puan), kart düzeltmesi de bitince biter, bitmeyen
+  kart kalan işiyle devreder. Kaçan hata kart sürüme çıkınca kartın kendi hattında açık hata olur (v1.0'dan önce `pending_faulty`'de
+  bekler, yeniden yazılmış hatta yazılmaz) ve sürüm kaydına `escaped` yazılır; "sürüm sonrası bozulma" acil durumu onu okur.
 - **Karar kâğıdı.** Sprint başına tek zar (`SprintSystem._request_decision`): sprint iki haftadır, zar ilk haftanın
   sonunda, `data/product/sprint.json` `decision.sprint_chance` ihtimaliyle sprintin bir kartı için `decision.cards` havuzundan bir kâğıt
   istenir, yoksa sprint kâğıtsızdır ([WORKING]: sprintlerin en az üçte biri). Havuz ağırlıklı sırayla denenir (görülmemiş kâğıt önde,
@@ -293,8 +301,8 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   `seeds`, `seed`, `events`, `rate`, `lead`, `gate`, `team` (1 ile 6, 12, 25, 50), `fill`, `market`, `incident`, `promise`, `tstar`,
   `pmstar`, `plus`, `founder`, `fixture`, `build`, `planms`, `meetings`; anlamları HARITA Ürün'de ve Araçlar'da) headless
   koşar: kurucunun (`team=` ile ekibin) koşusunda ekranın sprint planını (`plan_outcome`) kapanışla karşılaştırır,
-  `SPRINTPROBE` satırları basar (`PRED`, `CLOSE`, `SKIP`, `MVP`, `LOAD`, `SUMMARY`, `LOADSUM`, `PAPER`, `PAPERSUM`; MVP tahmini `mvp_eta`
-  `PRED`'in son alanıdır, karşılaştırılmaz) ve adsız uyuşmazlıkta 1 ile çıkar. `planms=1` tik oynamaz, plan ekranının motor
+  `SPRINTPROBE` satırları basar (`PRED`, `CLOSE`, `SKIP`, `MVP`, `LOAD`, `SUMMARY`, `LOADSUM`, `PAPER`, `PAPERSUM`; `PRED` ve `CLOSE` kartın
+  testinin hatasını `bugs=<n>/<F>/<K>/<düzeltme işi>` taşır ve karşılaştırılır; MVP tahmini `mvp_eta` `PRED`'in son alanıdır, karşılaştırılmaz) ve adsız uyuşmazlıkta 1 ile çıkar. `planms=1` tik oynamaz, plan ekranının motor
   çağrılarının ortanca ve en çok süresini `PLANMS` satırlarında basar.
 - Tempo: `--tempo-probe=<hız>[:shell]` gerçek saatle koşar, her haftayı 08:00'den 08:00'e ölçer ve
   `TimeModel.seconds_per_tick` hedefinden sapmayı basar. Çıplak hâli headless'tır ve yalnız saati ölçer; `:shell`

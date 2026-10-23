@@ -72,13 +72,13 @@ static func _install_product() -> void:
 		func() -> bool: return SprintSystem.event_promises().any(func(word: Promise) -> bool: return word.extended),
 		"Product", "one of those promises has already moved a sprint; a word moves once")
 	EvSeams.register("urun.promise_cut_finishes", G, TYPE_BOOL,
-		func() -> bool: return SprintSystem.cut_test_finishes(SprintSystem.promise_event().get("card", "")),
-		"Product", "the promise card is in testing and cutting its test in half finishes it this sprint")
+		func() -> bool: return SprintSystem.cut_test_finishes(SprintSystem.promise_event().get("card", ""), true),
+		"Product", "the promise card is in testing and cutting its test in half gets its testing done this sprint, which sends it")
 	EvSeams.register("urun.promise_crunch_finishes", G, TYPE_BOOL,
 		func() -> bool:
 			return not SprintSystem.promise_crew().is_empty() \
-				and SprintSystem.crunch_finishes(SprintSystem.promise_event().get("card", "")),
-		"Product", "employees work the promise card and the crunch's hours finish it this sprint")
+				and SprintSystem.crunch_finishes(SprintSystem.promise_event().get("card", ""), true),
+		"Product", "employees work the promise card and the crunch's hours get its testing done this sprint, which sends it")
 	EvSeams.register("urun.paid_plan_set", G, TYPE_BOOL,
 		func() -> bool:
 			var p: Dictionary = GameState.product

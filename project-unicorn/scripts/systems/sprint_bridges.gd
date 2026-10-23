@@ -298,12 +298,12 @@ static func pick_reviews(release: Dictionary) -> Dictionary:
 		"at": MailClock.arrival("reviews:%d" % number)}
 
 
-## Olumsuz yorumu yazacak hat ve yorumun güncellemeyi suçlayıp suçlamadığı: sürüm hatalı çıktıysa o hat, değilse açık
+## Olumsuz yorumu yazacak hat ve yorumun güncellemeyi suçlayıp suçlamadığı: sürümden hata kaçtıysa o hat, değilse açık
 ## hatası eşikte ya da üstünde olan en kötü hat; yoksa {}.
 static func _unhappy(release: Dictionary, line_bugs: int) -> Dictionary:
-	var faulty: Array = release.get("faulty", [])
-	var blames: bool = not faulty.is_empty()
-	var lines: Array = faulty.duplicate() if blames else ProductState.open_bugs_by_line().keys().filter(
+	var escaped: Array = release.get("escaped", [])
+	var blames: bool = not escaped.is_empty()
+	var lines: Array = escaped.duplicate() if blames else ProductState.open_bugs_by_line().keys().filter(
 		func(l: String) -> bool: return ProductState.costed(ProductState.line_bugs(l)) >= line_bugs)
 	lines.sort()
 	var worst: String = ""

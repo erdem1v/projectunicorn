@@ -434,8 +434,8 @@ slot of that type (§17.12).
 | `urun.paper_signup_loss` | global | int | Product | the sign ups a week of a broken sign up code costs, in people |
 | `urun.paper_test_phones` | global | int | Product | what a few phones to test on cost, in dollars, once |
 | `urun.promise_card` | global | string | Product | name of the card the latest promise event is about; a history row reads the latest event's |
-| `urun.promise_crunch_finishes` | global | bool | Product | employees work the promise card and the crunch's hours finish it this sprint |
-| `urun.promise_cut_finishes` | global | bool | Product | the promise card is in testing and cutting its test in half finishes it this sprint |
+| `urun.promise_crunch_finishes` | global | bool | Product | employees work the promise card and the crunch's hours get its testing done this sprint, which sends it |
+| `urun.promise_cut_finishes` | global | bool | Product | the promise card is in testing and cutting its test in half gets its testing done this sprint, which sends it |
 | `urun.promise_extended` | global | bool | Product | one of those promises has already moved a sprint; a word moves once |
 | `urun.promise_open` | global | int | Product | promises the latest promise event is about that are still open |
 | `urun.responsive_shipped` | global | bool | Product | the Responsive Interface step is live |

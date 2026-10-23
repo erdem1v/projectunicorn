@@ -20,9 +20,10 @@ extends RefCounted
 
 const TYPE_TAG := "__res"
 
-# The product's quality axes and the stamps that fed them. A save written while they lived still carries the flags,
-# whatever its schema number; they are dropped on every load, after the migrations that read them.
-const RETIRED_PRODUCT_FLAGS := ["mvp_innovation", "mvp_stability", "mvp_experience", "mvp_step_realization"]
+# The product's quality axes and the stamps that fed them, and the new-code term of the report inflow. A save written
+# while they lived still carries the flags, whatever its schema number; they are dropped on every load, after the
+# migrations that read them.
+const RETIRED_PRODUCT_FLAGS := ["mvp_innovation", "mvp_stability", "mvp_experience", "mvp_step_realization", "mvp_new_code_effort"]
 
 # One-time charge ids no card writes any more. A save still carries their rows in the transactions log, and the Finance
 # tab would draw the raw id; they are dropped on every load.

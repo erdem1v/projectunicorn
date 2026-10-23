@@ -408,7 +408,7 @@ static func future_role_hint(role_id: String) -> String:
 #   experience_mult         HRSystem.tick_experience — kendi deneyim kazancı
 #   lead_experience_mult    OKUYUCUSU YOK — GERÇEK LİDER'in yalnız ayrılış bedeli işler (açık hata)
 #   departure_morale_extra  HRMoraleSystem — ayrılışın ekibe EK moral bedeli
-#   bug_rate_mult           OKUYUCUSU YOK — TİTİZ'in hata etkisi sprint motorunda bağlı değil
+#   bug_rate_mult           SprintBugs — kartın hata yükünde Geliştirmeyi yapanın payı
 #   speed_mult              HRSystem.effective_skill ve SprintSystem._points — kişinin katkı çarpanı
 #   output_mult             HRSystem.effective_skill ve SprintSystem._points — aynı yer, ters yön
 #   promise_chance_mult     CustomerRepSystem — söz olaylarının bu kişide ateşlenme oranı

@@ -12,7 +12,7 @@ extends RefCounted
 # outages likelier and no other emergency, and the cap cannot swallow it. Two emergencies are at least MIN_GAP ticks
 # apart. The die is rolled once, in the 00:00 daily slice, and only decides: whether this week has one, which kind (by
 # weight, among the kinds the world allows) and the minute its mail is stamped (`pending`; an outage also keeps the
-# server load it was rolled at, which its card reads). A release that shipped a faulty card on a
+# server load it was rolled at, which its card reads). A release that let a bug escape testing on a
 # critical line brings its own emergency (regression) the morning after, with no die. A sprint that brought a decision
 # paper has room for a service going down only (SERVICE_DOWN): any other kind is kept whole (`shifted`) and comes the
 # first week of a sprint without one. The card is asked for in the hourly slice of the first full hour after the stamp, with the clock held (a
@@ -23,7 +23,7 @@ extends RefCounted
 #   outage      the service went down between 00:30 and 04:30; the mail carries the minute the card opens.
 #   month_close B2B, the last week of a calendar month, a line of the books with bugs; 22:10 to 22:55, card at 23:00.
 #   checkout    B2C with a paid plan: payments broke the night before; 10 to 50 minutes into the workday.
-#   regression  a release's faulty card broke a critical line; 10 to 50 minutes into the workday after it shipped.
+#   regression  a bug that escaped testing in a release broke a critical line; 10 to 50 minutes into the workday after it shipped.
 #   storm       B2C, an audience and a shared line with many bugs; a post goes round between 11:00 and 16:00.
 #
 # Every number is in data/product/sprint.json `incident` and is [WORKING], except the server tiers'
@@ -364,14 +364,14 @@ static func _worst(bases: Array, floor_bugs: int, waive: bool) -> String:
 	return worst
 
 
-## The critical line the release that closed today shipped a faulty card on (the one more people use), "" when there is
+## The critical line a bug escaped testing on in the release that closed today (the one more people use), "" when there is
 ## none. `waive`: with none, the critical line with the most bugs.
 static func _regression_line(waive := false) -> String:
 	var critical: Array = _cfg("regression." + ProductState.market_type())
 	var releases: Array = GameState.product.get("releases", [])
 	var line: String = ""
 	if not releases.is_empty() and int(releases.back().day) == GameState.day:
-		for hit in releases.back().faulty:
+		for hit in releases.back().get("escaped", []):
 			if String(hit).get_slice("@", 0) in critical and (line == "" or SprintCatalog.line_users(hit)
 					> SprintCatalog.line_users(line)):
 				line = hit

@@ -38,15 +38,7 @@ static func has_b2b_product() -> bool:
 	return String(GameState.get_flag("mvp_market_type", "")) == "b2b"
 
 
-# --- Saatlik tik ---
-# Bir tik yedi takvim günü ve 24 saatlik tiktir: takvim saati başına katsayının tikteki payı
-# per_tick(katsayı).
-
-## Saatlik tikin kapsadığı saatin tik içindeki başlangıcı (0 ile 23/24). Yalnız saatlik tikte
-## geçerlidir: 00:00'ın saatlik tiki devirden önce koşar, o saat biten tikin son saatidir.
-static func hour_start_fraction() -> float:
-	return float(posmod(GameState.current_hour - 1, TimeModel.HOURS_PER_DAY)) / float(TimeModel.HOURS_PER_DAY)
-
+# --- Saat damgası ---
 
 ## Oyuncu eyleminin tik damgası, saat kesriyle: sürüm yaşı eylemin saatinden ölçülür.
 static func clock_stamp() -> float:

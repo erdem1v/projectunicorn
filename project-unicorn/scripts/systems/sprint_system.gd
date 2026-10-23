@@ -11,6 +11,7 @@ extends RefCounted
 # sonunda kapanır ve sürüm yazılır. Atama hafta başında yapılır ve hafta boyunca kartta görünür.
 
 ## Kartın progress ve need dizilerinin sırası: Tasarım (araştırmada Ürün), Geliştirme, Test.
+const DEV_PHASE := 1
 const TEST_PHASE := 2
 const PHASE_DONE := 3
 ## Aşama adları, ihtiyaç dizisinin sırasıyla; sürüm kaydının `overflow`'u bunlarla anahtarlanır.
@@ -295,7 +296,7 @@ static func publish() -> void:
 	var p: Dictionary = _p()
 	if not p.release.get("gate", false):
 		return
-	_go_public(1, _shipped_code())
+	_go_public(1)
 	_land_faulty()
 	var release: Dictionary = p.release
 	release.number = 1
@@ -354,7 +355,7 @@ static func decision_progress(amount: int) -> String:
 	if c.is_empty():
 		return ""
 	if amount >= 0:
-		_work(c, {"fits": SprintCatalog.cfg("roles." + String(c.kind)), "ahead": false}, float(amount))
+		_work(c, {"id": "", "fits": SprintCatalog.cfg("roles." + String(c.kind)), "ahead": false}, float(amount))
 	else:
 		var left: float = -amount
 		for i in range(TEST_PHASE, -1, -1):
@@ -767,14 +768,15 @@ static func starting() -> Array:
 
 ## Planın oynatması: sprintin başlayacak kartları (`starting`) sırasıyla bugünkü ekiple, sprintin kalan haftalarında
 ## kopyalarda oynanır; sonraki sütunun kartları önden hazırlanır. Kapısı kapanmış kart başlamaz: puan almaz, devretmez
-## sayılır. Plan ekranı ve prob aynı oynatmayı okur. {cards: {kart: {split: [{id, name, weeks}], done, finishes}}, spare,
-## ready}: done kartın bu sprintte alacağı puan, spare sprintin hiçbir kartına gitmeyen puan, ready sonraki sütunun
-## kartlarının sprint sonundaki hazır payı (ready_share).
+## sayılır. Plan ekranı ve prob aynı oynatmayı okur. {cards: {kart: {split: [{id, name, weeks}], done, finishes, bugs}},
+## spare, ready}: done kartın bu sprintte alacağı puan (testin eklediği düzeltme işi dahil), bugs testi bu sprintte biten
+## kartın [n, F, K, düzeltme işi] (SprintBugs.tally, kartın tohumlu zarı; yoksa []), spare sprintin hiçbir kartına gitmeyen
+## puan, ready sonraki sütunun kartlarının sprint sonundaki hazır payı (ready_share).
 static func plan_outcome() -> Dictionary:
 	var out: Dictionary = _outcome(starting(), weeks_left(), true, team())
 	for c in _sprint_cards():
 		if not out.cards.has(c.id):
-			out.cards[c.id] = {"split": [], "done": 0.0, "finishes": false}
+			out.cards[c.id] = {"split": [], "done": 0.0, "finishes": false, "bugs": []}
 	return out
 
 
@@ -783,13 +785,15 @@ static func plan_outcome() -> Dictionary:
 static func _outcome(cards: Array, weeks: int, with_ahead: bool, people: Array) -> Dictionary:
 	var played_cards: Array = cards.map(func(c: Dictionary) -> Dictionary: return c.duplicate(true))
 	var ahead: Array = _ahead_cards().map(func(c: Dictionary) -> Dictionary: return c.duplicate(true)) if with_ahead else []
-	var before: Array = played_cards.map(remaining)
+	# Kalanın azalması değil biten işin artışı: testin bulduğu hata kalana düzeltme işi ekler.
+	var made := func(c: Dictionary) -> float: return total(c) - remaining(c)
+	var before: Array = played_cards.map(made)
 	var played: Dictionary = _play_out(played_cards, weeks, people, ahead)
 	var out: Dictionary = {}
 	for i in played_cards.size():
 		var c: Dictionary = played_cards[i]
-		out[c.id] = {"split": (played.split.get(c.id, {}) as Dictionary).values(), "done": before[i] - remaining(c),
-			"finishes": phase(c) == PHASE_DONE}
+		out[c.id] = {"split": (played.split.get(c.id, {}) as Dictionary).values(), "done": made.call(c) - before[i],
+			"finishes": phase(c) == PHASE_DONE, "bugs": SprintBugs.tally(c)}
 	var ready: Dictionary = {}
 	for c in ahead:
 		ready[c.id] = ready_share(c)
@@ -865,7 +869,8 @@ static func finishes_with(id: String, extra: int) -> bool:
 ## Fazla mesai kartı bu sprintte bitirir mi (sprint_hours'un varacağı çarpanla); sprintte olmayan kart için yanlış.
 ## Karar bekleyen kart haftanın işine girmemiştir; cevap gelince haftanın ataması baştan yapılır (_clear_decision), bu yüzden
 ## kalan haftalar baştan atanarak oynanır (_play_out). Atanmış kartı kendi çalışanları yetiştirir (_finish_sprint).
-static func crunch_finishes(id: String) -> bool:
+## `sends`: söz olayının seçeneği kartı gönderir (`send`), testi biten kart da sayılır.
+static func crunch_finishes(id: String, sends := false) -> bool:
 	if not _in_sprint(id):
 		return false
 	var scale: float = hours_after(CRUNCH_MULT) / float(_p().sprint.get("hours_mult", 1.0))
@@ -875,11 +880,11 @@ static func crunch_finishes(id: String) -> bool:
 		_play_out(cards, weeks_left(), people)
 	else:
 		_finish_sprint(cards, people)
-	return cards.any(func(c: Dictionary) -> bool: return c.id == id and phase(c) == PHASE_DONE)
+	return _ends(cards, id, sends)
 
 
-## Testi kısaltmak test aşamasındaki kartı bu sprintte bitirir mi.
-static func cut_test_finishes(id: String) -> bool:
+## Testi kısaltmak test aşamasındaki kartı bu sprintte bitirir mi (`sends`: crunch_finishes'taki gibi).
+static func cut_test_finishes(id: String, sends := false) -> bool:
 	if not _in_sprint(id) or phase(_p().cards[id]) != TEST_PHASE:
 		return false
 	var cards: Array = _played_copies()
@@ -887,7 +892,13 @@ static func cut_test_finishes(id: String) -> bool:
 		if c.id == id:
 			_halve_test(c)
 	_finish_sprint(cards, team())
-	return cards.any(func(c: Dictionary) -> bool: return c.id == id and phase(c) == PHASE_DONE)
+	return _ends(cards, id, sends)
+
+
+## Oynatılmış kopyalarda `id` kartı sprinti bitirmiş mi; `sends` ise testi bitmiş kart da bitmiş sayılır.
+static func _ends(cards: Array, id: String, sends: bool) -> bool:
+	return cards.any(func(c: Dictionary) -> bool:
+		return c.id == id and (phase(c) == PHASE_DONE or (sends and bool(c.get("tested", false)))))
 
 
 ## Sprintin kartlarının kopyaları, karar beklemiyormuş gibi.
@@ -925,11 +936,12 @@ static func _in_sprint(id: String) -> bool:
 	return mode() == "active" and id in _p().sprint.cards
 
 
-## Kartın kalan test işi yarıya iner (ihtiyacından düşer; biten iş ve öbür aşamalar değişmez) ve kart kısaltılmış testle
-## çıkmış sayılır (escape_chance).
+## Kartın kalan test işi yarıya iner (ihtiyacından düşer; biten iş ve öbür aşamalar değişmez); düşen iş `cut`ta kalır,
+## yakalama gereken testin yapılan payı kadardır (SprintBugs.catch_rate).
 static func _halve_test(c: Dictionary) -> void:
-	c.need[TEST_PHASE] = float(c.need[TEST_PHASE]) - (float(c.need[TEST_PHASE]) - float(c.progress[TEST_PHASE])) / 2.0
-	c.cut = true
+	var half: float = (float(c.need[TEST_PHASE]) - float(c.progress[TEST_PHASE])) / 2.0
+	c.need[TEST_PHASE] = float(c.need[TEST_PHASE]) - half
+	c.cut = float(c.get("cut", 0.0)) + half
 
 
 ## "Testi kısalt": söz olayının ya da karar kâğıdının kartının testi kısalır; kartın kimliği, kart yoksa "".
@@ -941,11 +953,11 @@ static func cut_test(c: Dictionary) -> String:
 	return c.id
 
 
-## Kartın sürümde hatalı çıkma ihtimali: testi test rolü olmayan biri yaptıysa `faulty_chance`, testi kısaltıldıysa en az
-## sprint.json `promise.cut_test_escape` [WORKING]; yoksa 0. Kapanış zarı (`_close`) bunu okur.
-static func escape_chance(c: Dictionary) -> float:
-	var chance: float = float(SprintCatalog.cfg("faulty_chance")) if c.get("faulty", false) else 0.0
-	return maxf(chance, float(SprintCatalog.cfg("promise.cut_test_escape"))) if c.get("cut", false) else chance
+## Söz olayının seçeneği (testi kısalt, fazla mesai) kartı gönderir: testi bitmişse düzeltmesi bitmese de sprint
+## kapanışında sürüme girer, düzeltilmemiş bulunan hata kartın hattında açık hata olur (SprintBugs.sent).
+static func send(c: Dictionary) -> void:
+	if not c.is_empty():
+		c.send = true
 
 
 # --- Söz olayı -------------------------------------------------------------------------
@@ -1151,17 +1163,18 @@ static func _assign(cards: Array, people: Array, ahead: Array = []) -> void:
 
 
 ## Kişinin bütçesi kartın sıradaki fazlarına dökülür, harcanmayanı döner; uymadığı rolün fazında
-## yarı hızla, önden giden ilk fazın ardında durur. Test fazı Test rolü olmadan yapılırsa kart sürümde
-## hatalı çıkabilir.
+## yarı hızla, önden giden ilk fazın ardında durur. Yapılan iş kartta kişiye yazılır (SprintBugs.record); test
+## biten kartın hatası o anda belirlenir ve bulunanların düzeltmesi Geliştirme satırına eklenir (SprintBugs.settle).
 static func _work(c: Dictionary, person: Dictionary, budget: float) -> float:
 	var at: int = phase(c)
 	while at < PHASE_DONE and budget > EPS and (at == 0 or not person.ahead):
 		var speed: float = 1.0 if _role(c, at) in person.fits else float(SprintCatalog.cfg("no_role_speed"))
 		var work: float = minf(float(c.need[at]) - float(c.progress[at]), budget * speed)
 		c.progress[at] = float(c.progress[at]) + work
+		SprintBugs.record(c, at, person.id, work)
 		budget -= work / speed
-		if at == TEST_PHASE and speed < 1.0:
-			c.faulty = true
+		if at == TEST_PHASE and not c.get("tested", false) and float(c.need[at]) - float(c.progress[at]) <= EPS:
+			SprintBugs.settle(c)
 		at = phase(c)
 	return budget
 
@@ -1405,9 +1418,11 @@ static func _auto_start() -> void:
 ## canlıda çıkan kart her sürümde +0.1.
 ## Hâlâ bekleyen karar açık kalır: kâğıdı aynı dağıtımın olay yuvasında süresi dolup on_expire
 ## ile çözülür ve ertesi okumada kart serbest kalır; beklerken ilerlemediği için devretmiştir.
-## Düzeltme kartı hattının bütün açık hatasını düşer; hatalı kapanan kartın hatası kartının hattına düşer, ürün canlı
-## olana dek bekler. Sürüm kaydı aşama başına kapanışta kalan ihtiyacı ve o aşamanın art arda taşan kapanış sayısını
-## taşır (`overflow`).
+## Düzeltme kartı hattının bütün açık hatasını düşer; testten kaçan hata kartının hattına düşer, ürün canlı olana dek
+## bekler. Söz olayında gönderilen kart (`send`) testi bittiyse düzeltmesi bitmeden çıkar, düzeltilmemiş hata da hattına
+## düşer. Düzeltmesi bitmemiş öbür kart sessizce bırakılır: kalan işiyle sonraki sprinte devreder. Sürüm kaydı aşama
+## başına kapanışta kalan ihtiyacı ve o aşamanın art arda taşan kapanış sayısını taşır (`overflow`), kaçan hatanın
+## hatlarını `escaped`ta.
 static func _close() -> void:
 	var p: Dictionary = _p()
 	var sprint: Dictionary = p.sprint
@@ -1416,7 +1431,7 @@ static func _close() -> void:
 	var ship: Array = []
 	var carried: Array = []
 	for c in _sprint_cards():
-		if c.state == "done":
+		if c.state == "done" or SprintBugs.sent(c):
 			ship.append(c)
 		else:
 			carried.append(c)
@@ -1437,8 +1452,7 @@ static func _close() -> void:
 		levels[a] = ProductQuality.level(a)
 		alerts[a] = SprintCatalog.area_alert(a)
 	var closed: int = 0
-	var new_code: float = 0.0
-	var faulty: Array = []
+	var escaped: Array = []
 	for c in ship:
 		match c.kind:
 			"fix":
@@ -1458,12 +1472,11 @@ static func _close() -> void:
 					if tier >= ProductLines.TIER_MAX:
 						EventBus.line_completed.emit(c.line)
 						EventBus.delighter_shipped.emit(c.step)
-					new_code += ProductLines.effort_of(c.step)
-		# Yeniden yazılmış hatta (ProductState.line_blocked) kapanış zarı hata yazmaz; oyuncunun seçtiği çıkış hatası
+		# Yeniden yazılmış hatta (ProductState.line_blocked) kaçan hata yazılmaz; oyuncunun seçtiği çıkış hatası
 		# (`leaks`) yine düşer.
-		if not ProductState.line_blocked(c.line) \
-				and float(absi(hash(str([c.id, number]))) % 1000) / 1000.0 < escape_chance(c):
-			faulty.append(c.line)
+		if not ProductState.line_blocked(c.line):
+			for _i in SprintBugs.leaving(c):
+				escaped.append(c.line)
 		c.state = "done"
 		p.cards.erase(c.id)
 	# Araştırma ve düzeltecek hata bulamayan düzeltme kartı sürüm yapmaz.
@@ -1474,21 +1487,22 @@ static func _close() -> void:
 	var public: bool = ProductState.is_live() and ship.any(releases)
 	var n: int = ProductState.version() + 1 if public else 0
 	if public:
-		_go_public(n, new_code)
+		_go_public(n)
 	# Hatayı bulan kullanıcıdır: biten kartın hatası kartının hattına düşer, ürün canlı olana dek bekler.
 	for c in ship:
 		for line in c.get("leaks", {}):
 			for _i in int(c.leaks[line]):
 				p.pending_faulty.append(line)
-	p.pending_faulty.append_array(faulty)
+	p.pending_faulty.append_array(escaped)
 	_land_faulty()
-	# Sürüm notu hattın kapanıştan sonraki sayısını da yazar: hatalı kapanan bir kartın hatası aynı hatta düşmüş olabilir.
+	# Sürüm notu hattın kapanıştan sonraki sayısını da yazar: kaçan bir hata aynı hatta düşmüş olabilir.
 	for c in ship:
 		if c.kind == "fix":
 			c.bugs_after = ProductState.line_bugs(c.line)
 	for c in carried:
 		c.state = "carried"
 		c.assignees = []
+		c.erase("send")
 	# Devreden düzeltme kartı hata deposundan okunur; hattında hata kalmadıysa silinmiştir.
 	_refresh_fix_cards()
 	carried = carried.filter(func(c: Dictionary) -> bool: return p.cards.has(c.id))
@@ -1507,7 +1521,7 @@ static func _close() -> void:
 			return {"id": c.id, "done": total(c) - remaining(c), "total": roundi(total(c)), "to_sprint": number + 1}),
 		"velocity": velocity, "expected": _expected(changed, closed), "actual": {}, "press": {},
 		"gate": gate, "day": GameState.day, "changed_areas": changed,
-		"alerts_cleared": cleared, "faulty": faulty, "overflow": overflow}
+		"alerts_cleared": cleared, "escaped": escaped, "overflow": overflow}
 	release.press = SprintBridges.press_line(release)
 	var carried_ids: Array = carried.map(func(c: Dictionary) -> String: return c.id)
 	p.next.cards = carried_ids + p.next.cards.filter(func(id: String) -> bool: return id not in carried_ids)
@@ -1528,7 +1542,7 @@ static func _close() -> void:
 
 ## Ürün kamuya açılır: sürüm bayrakları ve geçmişi, ayın öne çıkanı ve köprüler. v1.0 MVP'dir:
 ## ürün canlıya geçer, sunucu açılır. Sinyalleri çağıran sürüm kaydını yazdıktan sonra atar.
-static func _go_public(n: int, new_code: float) -> void:
+static func _go_public(n: int) -> void:
 	if n == 1:
 		GameState.set_flag("mvp_shipped", true)
 		GameState.set_flag("mvp_launch_day", GameState.day)
@@ -1538,13 +1552,13 @@ static func _go_public(n: int, new_code: float) -> void:
 	GameState.set_flag("mvp_version_history", history)
 	GameState.submit_month_highlight("PROD_SHIP_FIRST_TITLE" if n == 1 else "PROD_SHIP_VERSION_TITLE",
 		{"version": version_text(n)}, 50)
-	ProductState.refresh_on_publish(new_code)
+	ProductState.refresh_on_publish()
 	if n == 1:
 		SprintBridges.on_mvp()
 	SprintBridges.on_release()
 
 
-## Hatalı kapanan kartların hataları kartlarının hattına düşer; ürün canlı olana dek (v1.0) bekler.
+## Sürüme kaçan hatalar kartlarının hattına düşer; ürün canlı olana dek (v1.0) bekler.
 static func _land_faulty() -> void:
 	if not ProductState.is_live():
 		return
@@ -1575,16 +1589,6 @@ static func _fill_actual() -> void:
 		if not p.release.is_empty() and int(p.release.sprint) == int(r.sprint):
 			p.release.actual = r.actual
 			p.release.reviews = r.reviews
-
-
-## MVP'nin yeni kod terimi: o güne kadar yapılmış bütün kademelerin katalog eforu.
-static func _shipped_code() -> float:
-	var code: float = 0.0
-	var tiers: Dictionary = ProductState.line_tiers()
-	for line_id in tiers:
-		for t in range(1, int(tiers[line_id]) + 1):
-			code += ProductLines.effort_of(String(ProductLines.step_at(line_id, t).id))
-	return code
 
 
 # --- İç -------------------------------------------------------------------------------
@@ -1696,11 +1700,13 @@ static func total(c: Dictionary) -> float:
 	return float(c.need[0]) + float(c.need[1]) + float(c.need[2])
 
 
-## Kartın eforu `points` puan değişir (eksi: azalır): her aşamanın ihtiyacı payı kadar dağılır.
+## Kartın eforu `points` puan değişir (eksi: azalır): her aşamanın ihtiyacı payı kadar dağılır, kısaltılmış testin düşen
+## işi de (yakalama oranı sabit kalır).
 static func _scale_need(c: Dictionary, points: float) -> void:
 	var scale: float = 1.0 + points / total(c)
 	for i in PHASE_DONE:
 		c.need[i] = float(c.need[i]) * scale
+	c.cut = float(c.get("cut", 0.0)) * scale
 
 
 static func _worked(c: Dictionary) -> float:
@@ -1740,13 +1746,18 @@ static func _fits(c: Character) -> Array:
 	return areas.keys().filter(func(r: String) -> bool: return HRConstants.can_hold_area(c.role, areas[r], c.category))
 
 
-## Kişisiz haftalık puan (işe alım dosyası da okur): 10 × Y(s) × çalışma saati; s rolün ana alanının 0-10 puanı,
-## Y(s) = a + b·s + c·s² (`sprint.json` `skill_curve` [a, b, c], [WORKING]); verim kişinindir, burada yok.
+## Y(s): alanın 0-10 puanının hız çarpanı, a + b·s + c·s² (`sprint.json` `skill_curve` [a, b, c], [WORKING]). Testin
+## yakalaması da aynı eğriden okur (SprintBugs.catch_rate).
+static func skill_y(s: float) -> float:
+	var curve: Array = SprintCatalog.cfg("skill_curve")
+	return curve[0] + curve[1] * s + curve[2] * s * s
+
+
+## Kişisiz haftalık puan (işe alım dosyası da okur): 10 × Y(s) × çalışma saati; s rolün ana alanının 0-10 puanı;
+## verim kişinindir, burada yok.
 static func points_for(role_id: String, role_stats: Dictionary, hours: int) -> float:
 	var s: float = float(int(role_stats.get(HRConstants.role_key_area(role_id), 0)))
-	var curve: Array = SprintCatalog.cfg("skill_curve")
-	return float(SprintCatalog.cfg("person_points_week")) * (curve[0] + curve[1] * s + curve[2] * s * s) \
-		* HRConstants.hours_output_mult(hours)
+	return float(SprintCatalog.cfg("person_points_week")) * skill_y(s) * HRConstants.hours_output_mult(hours)
 
 
 ## Haftalık puan: 10 × Y(s) (kurucu sabit) × verim × çalışma saati × sprint payı; çalışanda huyun hız ve verim

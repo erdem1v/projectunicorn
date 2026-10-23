@@ -3123,3 +3123,16 @@ etiketleri, kilit gerekçeleri, süre notları ve her gövde varyantı (`text.<d
 - Vaka `runway_weeks_seam` genişledi (yeni vaka yok): iki dilde başlık, gövde, kilitler, intros'un verim satırı başlığı ve lint'in varyant kollarını okuması.
 
 *Neden.* Genel kural (dokunulan her yer düzeltilir): kâra geçmiş şirkette not "Runway satırı" başlığıyla açılır, maaş kesmek ve runway satırını gömmek gerekçesiz açık kalırdı. TR/EN onay bekliyor.
+
+
+### §27.47 · Faz D D3: kartın hatası test bittiği an belirlenir, testi kısaltmak yakalamayı düşürür, söz olayının seçeneği kartı gönderir
+
+*Belge ne diyordu.* §27.30: kartın sürümde hatalı çıkma ihtimali tek sabitti (`faulty_chance`; kısaltılmış kartta en az `promise.cut_test_escape`), `SprintSystem.escape_chance(kart)` onu kapanış zarına verirdi ve "testi kısalt" kartı bu ihtimale sokardı. §27.34 ve §27.35 aynı işlevi anar.
+
+*Ne yapıldı.*
+- Zar kalktı: kartın `faulty` işareti, `faulty_chance`, `escape_chance`, kapanış zarı ve `promise.cut_test_escape` yok. Yerine kartın hata modeli geldi (`SprintBugs`, sayılar `sprint.json` `bugs` bloğunda [WORKING]): test bittiği an kartın hatası kartın tohumundan belirlenir, bulunanlar kartın Geliştirme satırına düzeltme işi ekler, kaçanlar sürüm çıkınca kartın hattında açık hata olur. Sürüm kaydının `faulty`'si `escaped` oldu (hata başına bir hat); "sürüm sonrası bozulma" acil durumu ve B2C yorum seçimi onu okur.
+- `sprint_card_test {act: cut}` kalan testi yine yarıya indirir; düşen iş kartın `cut`ında kalır ve test gereken testin yapılan payı kadar yakalar. Söz olayında bu seçenek ve `sprint_hours {promise}` kartı ayrıca gönderir (`SprintSystem.send`): testi bitmişse düzeltmesi bitmese de kapanışta sürüme çıkar, düzeltilmemiş bulunan hata kartın hattına düşer. `urun.promise_cut_finishes` ve `urun.promise_crunch_finishes` bu yüzden testi biten kartı da "bitirir" sayar (`cut_test_finishes` ve `crunch_finishes`in ikinci parametresi `sends`); karar kâğıdının `urun.cut_test_finishes` ve `urun.crunch_finishes`ı kartın tam bitmesini sorar.
+- Çip değişmedi: "kart: test işi yarıya iner" ve "Söz tutulur" kısaltılmış testin doğru sonuçlarıdır; yakalamanın düşmesi çipe yazılmaz.
+- Vakalar `promise_cut_test_escape` (yeni modelde), `incident_regression_fixture`, yeni `sprint_bug_ceiling_formula`, `sprint_test_seed_deterministic`, `sprint_expected_bug_no_rng`, `sprint_plan_done_counts_fix_work` (planın puanı düzeltme işini de sayar), `sprint_escaped_bug_on_card_line` ve `sprint_escaped_pre_launch_lands_at_v1` (eski `sprint_faulty_*`ın karşılıkları).
+
+*Neden.* Erdem'in cevabı 19 ve 24 (hata işin karmaşıklığıyla ölçeklenir; biçim Erdem'in sayılarıyla, toplam hacim bugünkü) ve PRD Faz D Karar 6 ile 7.
