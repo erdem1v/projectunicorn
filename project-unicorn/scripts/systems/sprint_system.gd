@@ -172,7 +172,7 @@ static func _begin() -> void:
 
 ## Sürüm notundan sonraki sprintin planlamasına: sonraki sütun (devredenler önde) bu sprint olur,
 ## yeni sonraki sütuna onaylı PM planı geçer. Çeyreğin haftaları sprintlerle dolunca çeyrek döner, hedef
-## PM'in önerisine (en zayıf alan) geri düşer. Kademesine başka bir kartla varılmış saklı kart düşer
+## boşalır (PM'in planı en zayıf alana bakar). Kademesine başka bir kartla varılmış saklı kart düşer
 ## (geç kalan talebin kartı ile aynı kademenin özellik kartı ikisi de saklanabilir); kâğıdın takip kartı (`follow`) kalır.
 static func plan_next() -> void:
 	if mode() != "release":
@@ -283,9 +283,10 @@ static func skip() -> void:
 	_begin()
 
 
-## Planlamayı PM'e devretme anahtarı: devirde sprint oyuncuyu beklemeden PM'in planıyla başlar.
+## Planlamayı PM'e devretme anahtarı: devirde sprint oyuncuyu beklemeden PM'in planıyla başlar. Çeyreği planlayan
+## PM yokken açılmaz.
 static func set_delegate(on: bool) -> void:
-	_p().delegate = on
+	_p().delegate = on and SprintCatalog.quarter_pm() != null
 	_changed()
 
 
@@ -546,6 +547,7 @@ static func edit(sprint: int) -> void:
 	_changed()
 
 
+## Çeyreğin hedefi: bir alan, `SprintCatalog.GOAL_BUGS` ya da "" (hedef yok). PM'siz de seçilir.
 static func pick_goal(area_id: String) -> void:
 	_p().quarter.goal_area = area_id
 	_changed()
@@ -581,7 +583,7 @@ static func awaits_plan() -> bool:
 		return SprintCatalog.gate_reason(p.cards[id].step) == "") or not SprintCatalog.open_cards([]).is_empty())
 
 
-## Planlama PM'e devredilmiş ve çeyreği planlayan PM var.
+## Planlama PM'e devredilmiş ve çeyreği planlayan PM var; PM ayrılınca devir kalkar, plan oyuncuyu bekler.
 static func delegated() -> bool:
 	return bool(_p().get("delegate", false)) and SprintCatalog.quarter_pm() != null
 

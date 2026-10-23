@@ -577,6 +577,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"vc_weakest_area":                       fail = _case_vc_weakest_area()
 		"product_paid_plan_locked_until_mvp":    fail = _case_product_paid_plan_locked_until_mvp()
 		"product_pm_plan_opens_as_next_sprint":  fail = _case_product_pm_plan_opens_as_next_sprint()
+		"quarter_goal_without_pm":               fail = _case_quarter_goal_without_pm()
+		"delegate_needs_pm":                     fail = _case_delegate_needs_pm()
 		"market_catalog_lint":              fail = _case_market_catalog_lint()
 		"market_value_deterministic":       fail = _case_market_value_deterministic()
 		"market_listed_week_gating":        fail = _case_market_listed_week_gating()
@@ -15623,10 +15625,10 @@ static func _case_fit_star_context() -> String:
 				return "%s at %d star reads %.2f on the page and %.2f at its highest sector" % [
 					area, star, ProductQuality.expectation(area, {"star": star}), highest]
 
-	# Sıradaki yıldız: MVP'den sonra lider ve çeyrek hedefi 2★'ın baktığı boş bir alana bakar. Çekirdek MVP'nin altına inince
+	# Sıradaki yıldız: MVP'den sonra lider ve PM'in hedefi 2★'ın baktığı boş bir alana bakar. Çekirdek MVP'nin altına inince
 	# sıradaki yıldız 1'dir ve 1★'ın bakmadığı alan 2★'ın değeriyle tartılır: sıfıra bölme olmaz, şerit 0 kare der.
-	if SprintCatalog.quarter_goal() not in ["onboarding", "integrations", "trust"]:
-		return "right after the MVP the quarter goal reads '%s', want an empty area the next star looks at" % SprintCatalog.quarter_goal()
+	if SprintCatalog.pm_goal() not in ["onboarding", "integrations", "trust"]:
+		return "right after the MVP the PM's goal reads '%s', want an empty area the next star looks at" % SprintCatalog.pm_goal()
 	var wobble: String = SprintCatalog.capabilities("core")[0]
 	ProductState.set_line_tier(wobble, 0)
 	for line_id in SprintCatalog.capabilities("trust"):
@@ -24999,6 +25001,82 @@ static func _case_product_pm_plan_opens_as_next_sprint() -> String:
 		var missing: Array = approved.filter(func(id: String) -> bool: return id not in holder)
 		if not missing.is_empty():
 			return "at sprint %d %s is missing %s" % [n, "next" if n == 2 else "open", str(missing)]
+	return ""
+
+
+## Çeyrek hedefi PM'siz de seçilir ve lider önerisini sürer; seçim yokken `quarter_goal()` boştur (PM planının en zayıf alan
+## yedeği `pm_goal`dadır). "Hatalar" hedefi düzeltme kartlarını öne alır.
+## FALSİFİKASYON: SprintSystem.pick_goal'a `if SprintCatalog.quarter_pm() == null: return` ekle → PM'siz seçim iddiası FAIL;
+## quarter_goal'a en zayıf alan yedeğini koy (`goal if goal != "" else _weakest(...)`) → "boş" iddiası FAIL; lead_suggestion'da
+## `quarter_goal()` yerine "" ver → öneri iddiaları FAIL; _suggest'in hedef sınamasından GOAL_BUGS dalını sil → Hatalar iddiası FAIL;
+## pm_goal'ı `quarter_goal()`a eşitle → PM'li iddia FAIL (PM planının yedeği `fit_star_context`ta da sınanır).
+static func _case_quarter_goal_without_pm() -> String:
+	_seed_sprint_live("note_tool")
+	_sprint_hire("char_goal_dev", HRConstants.ROLE_DEVELOPER)
+	var fix_line: String = SprintCatalog.capabilities("core")[0]
+	ProductState.add_bugs(fix_line, 2)
+	var fix_id: String = "fix:" + fix_line
+	var area_of := func(id: String) -> String: return SprintCatalog.card_by_id(id).area
+	if SprintCatalog.quarter_pm() != null or SprintCatalog.quarter_goal() != "":
+		return "with no PM and no pick the quarter goal reads '%s', want empty" % SprintCatalog.quarter_goal()
+	var base: Array = SprintCatalog.lead_suggestion()
+	if fix_id in base or base.any(func(id: String) -> bool: return area_of.call(id) == "core"):
+		return "the lead with no goal suggests %s, want no Core card and no fix card (the capacity is full without them)" % [base]
+	SprintSystem.pick_goal("core")
+	var core: Array = SprintCatalog.lead_suggestion()
+	if SprintCatalog.quarter_goal() != "core" or fix_id not in core:
+		return "no PM, goal Core: the goal reads '%s' and the lead suggests %s, want Core and its fix card in" % [
+			SprintCatalog.quarter_goal(), core]
+	SprintSystem.pick_goal("trust")
+	var trust: Array = SprintCatalog.lead_suggestion()
+	if fix_id in trust or not trust.any(func(id: String) -> bool: return area_of.call(id) == "trust"):
+		return "no PM, goal Trust: the lead suggests %s, want a Trust card and no fix card" % [trust]
+	SprintSystem.pick_goal(SprintCatalog.GOAL_BUGS)
+	var bugs: Array = SprintCatalog.lead_suggestion()
+	if SprintCatalog.quarter_goal() != SprintCatalog.GOAL_BUGS or fix_id not in bugs \
+			or bugs.any(func(id: String) -> bool: return area_of.call(id) == "core" and id != fix_id):
+		return "no PM, goal Bugs: the goal reads '%s' and the lead suggests %s, want the fix card and no Core feature" % [
+			SprintCatalog.quarter_goal(), bugs]
+	SprintSystem.pick_goal("")
+	if SprintCatalog.quarter_goal() != "" or SprintCatalog.lead_suggestion() != base:
+		return "goal cleared: reads '%s' and the lead suggests %s, want empty and %s" % [
+			SprintCatalog.quarter_goal(), SprintCatalog.lead_suggestion(), base]
+	# A PM keeps planning toward the weakest area while nothing is picked; the pick itself stays empty.
+	_sprint_hire("char_goal_pm", HRConstants.ROLE_PRODUCT_MANAGER)
+	if SprintCatalog.quarter_goal() != "" or SprintCatalog.pm_goal() == "" or SprintCatalog.pm_plans().is_empty():
+		return "with a PM and no pick the quarter goal reads '%s', the plan's goal '%s' over %d plans; want empty, an area and plans" % [
+			SprintCatalog.quarter_goal(), SprintCatalog.pm_goal(), SprintCatalog.pm_plans().size()]
+	SprintSystem.pick_goal("trust")
+	if SprintCatalog.pm_goal() != "trust":
+		return "with a PM, goal Trust: the plan's goal reads '%s', want trust" % SprintCatalog.pm_goal()
+	return ""
+
+
+## Planlamayı devret PM olmadan açılmaz; PM ayrılınca devir kalkar ve plan oyuncuyu bekler (kapatmak her zaman olur).
+## FALSİFİKASYON: SprintSystem.set_delegate'ten `and SprintCatalog.quarter_pm() != null` şartını sil → PM'siz iddiası FAIL;
+## SprintSystem.delegated'tan `and SprintCatalog.quarter_pm() != null` şartını sil → PM ayrılınca iddiası FAIL.
+static func _case_delegate_needs_pm() -> String:
+	_seed_sprint()
+	_sprint_hire("char_deleg_dev", HRConstants.ROLE_DEVELOPER)
+	var held := func() -> bool: return TimeManager.holds().has(SprintSystem.HOLD_PLAN)
+	SprintSystem.set_delegate(true)
+	if SprintSystem.delegated() or bool(GameState.product.delegate) or not SprintSystem.awaits_plan() or not held.call():
+		return "no PM, set_delegate(true): delegated %s, flag %s, awaits %s, held %s; want a closed switch and the plan waiting" % [
+			SprintSystem.delegated(), GameState.product.delegate, SprintSystem.awaits_plan(), held.call()]
+	var pm: Character = _sprint_hire("char_deleg_pm", HRConstants.ROLE_PRODUCT_MANAGER)
+	if SprintSystem.delegated() or not SprintSystem.awaits_plan():
+		return "a hired PM delegated the plan on its own: delegated %s, awaits %s" % [SprintSystem.delegated(), SprintSystem.awaits_plan()]
+	SprintSystem.set_delegate(true)
+	if not SprintSystem.delegated() or SprintSystem.awaits_plan() or held.call():
+		return "PM hired, set_delegate(true): delegated %s, awaits %s, held %s; want delegated, the plan not waiting, the clock free" % [
+			SprintSystem.delegated(), SprintSystem.awaits_plan(), held.call()]
+	CharacterRegistry.remove(pm.id)
+	if SprintSystem.delegated() or not SprintSystem.awaits_plan() or not held.call():
+		return "the PM left: delegated %s, awaits %s, held %s; want the delegation gone and the plan waiting for the player" % [
+			SprintSystem.delegated(), SprintSystem.awaits_plan(), held.call()]
+	SprintSystem.set_delegate(false)
+	if bool(GameState.product.delegate):
+		return "set_delegate(false) without a PM left the flag on"
 	return ""
 
 

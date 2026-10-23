@@ -446,7 +446,7 @@ static func _quarter(center: Dictionary, next: Dictionary) -> Dictionary:
 ## Hedef şeridi: alan seviyesinin sıradaki yıldızın beklentisine oranı onluk vekil ölçekte, hedef ortadaki
 ## çizgidedir; alanın cümlesi o çizgiyi anlatır.
 static func _goal() -> Dictionary:
-	var id: String = SprintCatalog.quarter_goal()
+	var id: String = SprintCatalog.pm_goal()
 	var mark: int = int(SprintCatalog.cfg("pm.goal_mark"))
 	var total: int = int(SprintCatalog.cfg("pm.goal_squares"))
 	var now: int = mini(roundi(ProductQuality.next_ratio(id) * mark), total)

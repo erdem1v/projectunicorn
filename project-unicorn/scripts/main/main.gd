@@ -3699,7 +3699,9 @@ func _run_ending_shot(key: String) -> void:
 # the type picker with B2C, a type and a name picked, live:pick_relang saves it and switches this run to
 # English (<stem>_rebuilt: the rebuilt picker keeps the picks); live:decision_paper presses the decision row's
 # Karara git, so the frame is Olaylar on the sprint paper; live:gate saves the MVP gate, presses its
-# Yayınla and saves the v1.0 note (<stem>_publish); live:plan saves the plan, presses Bu sprinti boş
+# Yayınla and saves the v1.0 note (<stem>_publish); live:b2c_goal saves the planning with the lead's plan offered, applies
+# it with no quarter goal (<stem>_lead), then takes the lead's cards back out, picks the goal Trust and applies the lead's
+# plan again (<stem>_trust); live:plan saves the plan, presses Bu sprinti boş
 # geçir (<stem>_skip, its confirm row open) and then Sprinti başlat (<stem>_start); live:rnd saves the planning with the
 # founder in R&D, presses Ar-Ge'ye git and saves R&D with the founder's node selected (<stem>_go). live:overview_pre is
 # the Sprint-1 plan with the pointer on the locked GENEL BAKIŞ tab (<stem>_tip); live:server_* is GENEL BAKIŞ on the
@@ -3740,10 +3742,21 @@ func _run_product_shot(id: String) -> void:
 		var to_en := func() -> void:
 			TranslationServer.set_locale("en")
 			EventBus.language_changed.emit("en")
+		var kept: Array = []   # live:b2c_goal: the sprint's cards before the lead's plan
+		var lead := func() -> void:
+			kept.assign(GameState.product.sprint.cards)
+			SprintSystem.apply_lead()
+		var toward_trust := func() -> void:
+			for card_id in GameState.product.sprint.cards.duplicate():
+				if card_id not in kept:
+					SprintSystem.remove(card_id)
+			SprintSystem.pick_goal("trust")
+			SprintSystem.apply_lead()
 		var then: Dictionary = {"live:gate": [[press.call("PROD_SHIP_PUBLISH"), "_publish"]],
 			"live:plan": [[press.call("PRODUCT_SKIP_SPRINT"), "_skip"], [press.call("PRODUCT_START_SPRINT"), "_start"]],
 			"live:rnd": [[press.call("PRODUCT_GO_RND"), "_go"]],
-			"live:pick_relang": [[to_en, "_rebuilt"]]}
+			"live:pick_relang": [[to_en, "_rebuilt"]],
+			"live:b2c_goal": [[lead, "_lead"], [toward_trust, "_trust"]]}
 		var base := stem
 		for step: Array in then.get(id, []):
 			await get_tree().process_frame
@@ -3818,7 +3831,7 @@ func _product_overview_shot(scenario: String, stem: String) -> void:
 	await _finish_shot(stem + "_tip", 1.2)
 
 
-## live:<pick|pick_named|pick_relang|plan|active|decision_paper|b2c_mvp|b2c_live|b2b_mvp|b2b_mature|b2b_quarter|
+## live:<pick|pick_named|pick_relang|plan|active|decision_paper|b2c_mvp|b2c_live|b2c_goal|b2b_mvp|b2b_mature|b2b_quarter|
 ## b2b_requests|gate|rnd|delegate|solo15|solo15_tip|solo12_active|overview_pre|server_80|server_94|server_104|server_growth|
 ## server_auto|server_tier|server_final|server_clause|server_b2c>. The pick ones leave the product untyped (the type picker). The solo ones
 ## leave the founder alone from 09:00: solo15 and solo15_tip stop in Sprint 1 planning at 15 hours, solo15 with
@@ -3832,7 +3845,8 @@ func _product_overview_shot(scenario: String, stem: String) -> void:
 ## publishes it, plans the next sprint and puts the founder on the Data Model research, b2c_mvp on the CANLI
 ## v1.0 release note it publishes, delegate on Sprint 2, started by the PM once Sprint 1's note is left (shipped
 ## at the gate) with planning delegated. b2c_live publishes as b2c_mvp and plays four weeks with the audience
-## flowing hour by hour, starting each sprint itself, and prints the live audience as `SHOT|b2c`.
+## flowing hour by hour, starting each sprint itself, and prints the live audience as `SHOT|b2c`. b2c_goal publishes as b2c_mvp
+## and opens the next planning.
 ## b2b_mvp is b2c_mvp on the ERP: the v1.0 release note of a B2B product. b2b_mature builds every line to its second tier
 ## and opens the next planning, so every area reads the third star. b2b_quarter is delegate on the ERP with the quarter
 ## view open: the PM's goal strip right after the MVP. b2b_requests signs two accounts once the faucet
@@ -3918,6 +3932,9 @@ func _seed_product_live(scenario: String) -> void:
 	if scenario.begins_with("server"):
 		SprintSystem.plan_next()
 		_seed_server(scenario)
+		return
+	if scenario == "b2c_goal":
+		SprintSystem.plan_next()
 		return
 	if scenario == "rnd":
 		SprintSystem.plan_next()

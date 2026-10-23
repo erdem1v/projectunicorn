@@ -13,6 +13,8 @@ const RIVALS_PATH := "res://data/product/rivals.json"
 ## Gelir alanının tek yeteneği: katalogda hattı yok, ücretli katmanın açık olmasından okunur.
 const PAID_PLAN := "cap_paid_plan"
 const PAID_PLAN_NAME_KEY := "PRODUCT_CAP_PAID_PLAN"
+## Çeyrek hedefinin alan olmayan seçeneği ("Hatalar"): hedefin kartları düzeltme kartlarıdır.
+const GOAL_BUGS := "bugs"
 const SEP := " · "
 const STAR := "★"
 
@@ -489,7 +491,7 @@ static func bugs_part(line_id: String, n: int) -> Dictionary:
 ## Onaylı PM planlarının kartları o sprintlere ayrılmıştır; lider onlara dokunmaz. Lider bu sprinti
 ## oynatarak doldurur: yalnız bitecek kartlar ve en çok bir devreden kart.
 static func lead_suggestion() -> Array:
-	return _suggest(SprintSystem.capacity(), SprintSystem.used(), _approved_ahead(), "", true)
+	return _suggest(SprintSystem.capacity(), SprintSystem.used(), _approved_ahead(), quarter_goal(), true)
 
 
 ## "{kart1} ve {kart2} bu sprintte bitmeli."; öneride zamanında yetişecek talep varsa son tarihi en
@@ -551,9 +553,14 @@ static func quarter_pm() -> Character:
 	return null
 
 
-## Çeyreğin hedef alanı: oyuncunun seçtiği, seçmediyse PM'in önerisi olan en zayıf alan.
+## Çeyreğin hedefi: oyuncunun seçtiği alan ya da `GOAL_BUGS`; seçmediyse boş. PM'siz de seçilir.
 static func quarter_goal() -> String:
-	var goal: String = _p().quarter.goal_area
+	return _p().quarter.goal_area
+
+
+## PM'in planının baktığı hedef: çeyrek hedefi, yoksa en zayıf alan.
+static func pm_goal() -> String:
+	var goal: String = quarter_goal()
 	return goal if goal != "" else _weakest(area_ids(), open_cards([]))
 
 
@@ -574,7 +581,7 @@ static func pm_plans() -> Array:
 	var keep: float = float(cfg("pm.low_skill_cards")) \
 		if HRSystem.skill(pm, HRConstants.role_key_area(pm.role)) <= int(cfg("pm.low_skill_max")) else 1.0
 	var capacity: float = SprintSystem.capacity()
-	var goal: String = quarter_goal()
+	var goal: String = pm_goal()
 	var first: int = int(_p().next.number)
 	var out: Array = []
 	for n in range(first, first + int(cfg("pm.horizon"))):
@@ -899,14 +906,15 @@ static func _lead_area(pool: Array, capacity: float) -> String:
 ## seçilenlerin hepsi bitiyorsa; bitmeyecek kartı aldıktan sonra durur, sprint en çok bir
 ## devreden kart taşır. Bu ya da sonraki sprintte duran ve kilitli kartlar önerilmez. `taken` başka
 ## sprintlere ayrılmış kartlardır (onaylı planlar, PM'in önceki sütunları). PM aynı kuralla planlar;
-## `goal` alanının kartları sırada hedef ağırlığıyla öne çıkar.
+## `goal` (çeyrek hedefi ya da PM'in en zayıf alanı) kartları sırada hedef ağırlığıyla öne çıkar.
 static func _suggest(capacity: float, used: float, taken: Array = [], goal := "", played := false) -> Array:
 	var pool: Array = open_cards(taken)
 	if pool.is_empty() or capacity <= 0.0:
 		return []
 	var score: Dictionary = {}
 	for c in pool:
-		score[c.id] = _ratio(c) * (float(cfg("pm.goal_weight")) if c.area == goal else 1.0)
+		var aimed: bool = c.kind == "fix" if goal == GOAL_BUGS else c.area == goal
+		score[c.id] = _ratio(c) * (float(cfg("pm.goal_weight")) if aimed else 1.0)
 	pool.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return score[a.id] > score[b.id] if score[a.id] != score[b.id] else a.id < b.id)
 	var weakest: String = _lead_area(pool, capacity)
