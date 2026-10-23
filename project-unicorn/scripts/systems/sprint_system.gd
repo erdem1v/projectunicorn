@@ -693,8 +693,8 @@ static func week_points(draft: Dictionary = {}) -> float:
 
 ## Bu sprintte çalışabilecekler: Görevler matrisinde Yapım ya da Test işini tutan aktif kişiler, kurucu
 ## dahil (`founder_in_sprint` açıkken ve haftanın donmuş payı 0'dan büyükken). {id, name, points (haftalık, sprint
-## payıyla), share (sprint payı), fits (uyduğu roller), founder, ahead (ürün ve tasarım rolü: geliştirme ve teste
-## uymaz, yalnız ilk fazda çalışır ve önden gider)}.
+## payıyla; PM'inki 0), prep (PM'in haftalık hazırlık puanı, öbürlerinin 0), share (sprint payı), fits (uyduğu roller),
+## founder, ahead (ürün ve tasarım rolü: geliştirme ve teste uymaz, yalnız ilk fazda çalışır ve önden gider)}.
 static func team() -> Array:
 	var people: Array[Character] = CharacterRegistry.get_active_employees()
 	var founder: Character = CharacterRegistry.get_founder()
@@ -709,24 +709,27 @@ static func team() -> Array:
 			continue
 		var fits: Array = _fits(c)
 		out.append({"id": c.id, "name": c.character_name, "points": _points(c, WorkHoursSystem.hours_for(c)) * hours,
+			"prep": SprintPrep.rate(c, WorkHoursSystem.hours_for(c)) * hours,
 			"share": share, "fits": fits, "founder": c.category == "founder",
 			"ahead": not (fits.has("dev") or fits.has("test"))})
 	return out
 
 
 ## Bir olayın düzeltmesinin moral bedelini ödeyenler (kimlik, sprint payı çoktan aza, eşitse ad). Kurucu ödemez:
-## onun yolu "Kendin düzelt". Önce koşan sprintte `line` hattının kartlarına atanmış geliştirici ve testçiler; hiçbiri
-## yoksa ya da hat yoksa Görevler matrisinde Yapım ya da Test işini tutan herkes. İkisi de boşsa [] döner ve bedeli
-## ödeyecek seçenek kilitli kalır.
+## onun yolu "Kendin düzelt". Önce koşan sprintte `line` hattının kartlarına atanmış geliştirici ve testçiler ile o
+## kartları hazırlayan PM'ler; hiçbiri yoksa ya da hat yoksa Görevler matrisinde Yapım ya da Test işini tutan herkes.
+## İkisi de boşsa [] döner ve bedeli ödeyecek seçenek kilitli kalır.
 static func payers(line: String) -> Array:
 	var crew: Array = team().filter(func(t: Dictionary) -> bool: return not t.founder)
 	var carded: Array = []
 	if line != "":
 		var on_line: Array = []
+		var prepared: Array = []
 		for c in _sprint_cards():
 			if c.line == line:
 				on_line.append_array(c.assignees)
-		carded = crew.filter(func(t: Dictionary) -> bool: return t.id in on_line and not t.ahead)
+				prepared.append(c.get("prep_by", ""))
+		carded = crew.filter(func(t: Dictionary) -> bool: return (t.id in on_line and not t.ahead) or t.id in prepared)
 	var paying: Array = carded if not carded.is_empty() else crew
 	paying.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return a.share > b.share if a.share != b.share else a.name < b.name)
@@ -1084,8 +1087,8 @@ static func worked(character_id: String) -> bool:
 
 # --- Hafta ve kapanış ----------------------------------------------------------------
 
-## Biten haftanın işi kartlara, sonra sonraki sütunun önden hazırlanan kartlarına dökülür; sprintin
-## süresi dolduysa ya da kartlarının hepsi bittiyse sprint kapanır, değilse 2. haftanın kararı ve
+## Biten haftanın işi kartlara, sonra sonraki sütunun önden hazırlanan kartlarına dökülür, PM'ler o kartları hazırlar
+## (SprintPrep); sprintin süresi dolduysa ya da kartlarının hepsi bittiyse sprint kapanır, değilse 2. haftanın kararı ve
 ## ataması yapılır. Kişinin haftalık puanı atamanın sırasıyla harcanır: ekip hafta içinde değişmediyse
 ## sonuç önizlemeyle aynıdır. Kurucunun sprint payı harcamadan sonra yenilenir: harcama ve atama
 ## haftanın başında donmuş aynı sayıyı okur.
@@ -1110,6 +1113,7 @@ static func _end_week() -> void:
 		if after == PHASE_DONE:
 			c.state = "done"
 			EventBus.card_done.emit(c.id)
+	worked_ids.append_array(SprintPrep.week(_ahead_cards(), people.values(), weeks_left()))
 	_p().worked = {"day": GameState.day, "ids": worked_ids}
 	GameState.freeze_founder_sprint_pay()
 	if week() > sprint_weeks() or _finished(_sprint_cards()):
@@ -1129,11 +1133,12 @@ static func _staff_week(ask_paper: bool) -> void:
 
 ## Haftanın ataması: önce sprintin kartları sırasıyla, sonra sonraki sütunun önden hazırlanan kartları
 ## (`ahead`). Kartın sıradaki fazına uyan kişi önce, sonra haftasından çok puanı kalan; kart bu hafta
-## bitecek kadar kişi alır. Kartını bitirenin kalan puanı sıradaki karta geçer. Ürün ve tasarım rolü
-## yalnız ilk fazda çalışır; sprintte o fazı bekleyen kart kalmayınca sonraki sütuna önden gider, oraya
-## başkası gitmez.
+## bitecek kadar kişi alır. Kartını bitirenin kalan puanı sıradaki karta geçer. Tasarım rolü yalnız ilk
+## fazda çalışır; sprintte o fazı bekleyen kart kalmayınca sonraki sütuna önden gider, oraya başkası
+## gitmez. Sprint puanı olmayan PM atamaya girmez: haftasını sonraki sütunun kartlarını hazırlamaya verir (SprintPrep).
 static func _assign(cards: Array, people: Array, ahead: Array = []) -> void:
-	var free: Array = people.map(func(person: Dictionary) -> Dictionary: return person.merged({"left": person.points}))
+	var free: Array = people.filter(func(person: Dictionary) -> bool: return person.points > 0.0).map(
+		func(person: Dictionary) -> Dictionary: return person.merged({"left": person.points}))
 	var all: Array = cards + ahead
 	for i in all.size():
 		var c: Dictionary = all[i]
@@ -1163,12 +1168,14 @@ static func _assign(cards: Array, people: Array, ahead: Array = []) -> void:
 
 
 ## Kişinin bütçesi kartın sıradaki fazlarına dökülür, harcanmayanı döner; uymadığı rolün fazında
-## yarı hızla, önden giden ilk fazın ardında durur. Yapılan iş kartta kişiye yazılır (SprintBugs.record); test
-## biten kartın hatası o anda belirlenir ve bulunanların düzeltmesi Geliştirme satırına eklenir (SprintBugs.settle).
+## yarı hızla, hazırlanmış kartta PM'in hazırlık kazancı (`prep_gain`, SprintPrep) kadar hızlı, önden giden ilk fazın ardında
+## durur. Yapılan iş kartta kişiye yazılır (SprintBugs.record); test biten kartın hatası o anda belirlenir ve bulunanların
+## düzeltmesi Geliştirme satırına eklenir (SprintBugs.settle).
 static func _work(c: Dictionary, person: Dictionary, budget: float) -> float:
 	var at: int = phase(c)
 	while at < PHASE_DONE and budget > EPS and (at == 0 or not person.ahead):
-		var speed: float = 1.0 if _role(c, at) in person.fits else float(SprintCatalog.cfg("no_role_speed"))
+		var speed: float = (1.0 if _role(c, at) in person.fits else float(SprintCatalog.cfg("no_role_speed"))) \
+			* (1.0 + float(c.get("prep_gain", 0.0)))
 		var work: float = minf(float(c.need[at]) - float(c.progress[at]), budget * speed)
 		c.progress[at] = float(c.progress[at]) + work
 		SprintBugs.record(c, at, person.id, work)
@@ -1180,8 +1187,8 @@ static func _work(c: Dictionary, person: Dictionary, budget: float) -> float:
 
 
 ## Kartların kopyaları `people` ekibiyle (team() biçimi) `weeks` hafta oynanır; hafta _end_week gibi atama
-## sırasıyla dökülür, sprintin kartlarından sonra sonraki sütunun kopyalarına (`ahead`). Kartların hepsi
-## biten haftada sprint kapanır: sonrasında önden gidilmez. {split: {kart: {kişi: {id, name, weeks}}},
+## sırasıyla dökülür, sprintin kartlarından sonra sonraki sütunun kopyalarına (`ahead`), PM'ler o kopyaları hazırlar.
+## Kartların hepsi biten haftada sprint kapanır: sonrasında önden gidilmez. {split: {kart: {kişi: {id, name, weeks}}},
 ## spare: sprintin hiçbir kartına harcanmayan puan, önden gidilen de}.
 static func _play_out(cards: Array, weeks: int, people: Array, ahead: Array = []) -> Dictionary:
 	var by_id: Dictionary = {}
@@ -1203,6 +1210,7 @@ static func _play_out(cards: Array, weeks: int, people: Array, ahead: Array = []
 		for c in ahead:
 			for id in c.assignees:
 				budget[id] = _work(c, by_id[id], budget.get(id, by_id[id].points))
+		SprintPrep.week(ahead, people, weeks - _w - 1)
 		if _finished(cards):
 			ahead = []
 	return {"split": split, "spare": spare}
@@ -1725,16 +1733,18 @@ static func _role(c: Dictionary, at: int) -> String:
 	return (SprintCatalog.cfg("roles." + String(c.kind)) as Array)[at]
 
 
-## Kişinin koşan sprintte bu hafta çalıştığı fazın rolü, sonraki sütunda önden hazırladığı kart da; kartı
-## yoksa "".
+## Kişinin koşan sprintte bu hafta çalıştığı fazın rolü, sonraki sütunda önden çalıştığı kart da (PM'in hazırlığı
+## "product"); işi yoksa "".
 static func role_of(person_id: String) -> String:
 	if mode() != "active":
 		return ""
-	for c in _sprint_cards() + _ahead_cards():
+	var ahead: Array = _ahead_cards()
+	for c in _sprint_cards() + ahead:
 		var at: int = phase(c)
 		if person_id in c.assignees and at < PHASE_DONE:
 			return _role(c, at)
-	return ""
+	return "product" if ahead.any(func(c: Dictionary) -> bool:
+		return c.get("prep_by", "") == person_id and float(c.get("prep_done", 0.0)) < 1.0 - EPS) else ""
 
 
 ## Kişinin uyduğu sprint rolleri: kurucu sprint.json'daki rollerde, çalışan ana ya da ikincil
@@ -1761,14 +1771,19 @@ static func points_for(role_id: String, role_stats: Dictionary, hours: int) -> f
 
 
 ## Haftalık puan: 10 × Y(s) (kurucu sabit) × verim × çalışma saati × sprint payı; çalışanda huyun hız ve verim
-## çarpanı, kurucuda toplantılardan kalan pay (sprint payı değil, `GameState.founder_sprint_pay`).
+## çarpanı, kurucuda toplantılardan kalan pay (sprint payı değil, `GameState.founder_sprint_pay`). PM puan üretmez,
+## haftasını hazırlığa verir (SprintPrep).
 static func _points(c: Character, hours: int) -> float:
-	var week: float = points_for(c.role, c.role_stats, hours) * HRSystem.productivity(c) \
-		* HRConstants.trait_mult(c.traits, "speed_mult") * HRConstants.trait_mult(c.traits, "output_mult") \
-		if c.category != "founder" \
-		else float(SprintCatalog.cfg("person_points_week")) * float(SprintCatalog.cfg("founder_mult")) \
-		* HRSystem.productivity(c) * HRConstants.hours_output_mult(hours) * GameState.founder_sprint_pay
-	return week * _share(c)
+	if c.category == "founder":
+		return float(SprintCatalog.cfg("person_points_week")) * float(SprintCatalog.cfg("founder_mult")) \
+			* HRSystem.productivity(c) * HRConstants.hours_output_mult(hours) * GameState.founder_sprint_pay * _share(c)
+	return 0.0 if c.role == HRConstants.ROLE_PRODUCT_MANAGER else paced(c, points_for(c.role, c.role_stats, hours))
+
+
+## Çalışanın haftalık işi: rolünün kişisiz hızı `base`, verim, huyun hız ve verim çarpanı ve sprint payıyla çarpılır.
+static func paced(c: Character, base: float) -> float:
+	return base * HRSystem.productivity(c) * HRConstants.trait_mult(c.traits, "speed_mult") \
+		* HRConstants.trait_mult(c.traits, "output_mult") * _share(c)
 
 
 ## Kişinin sprint payı: Yapım ve Test işlerinin her biri odak payını (HRConstants.focus_mult) getirir. Tek

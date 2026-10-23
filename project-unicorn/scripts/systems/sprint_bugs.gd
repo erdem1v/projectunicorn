@@ -10,14 +10,19 @@ extends RefCounted
 # data/product/sprint.json `bugs` bloğunda [WORKING].
 
 
-## Kartın Geliştirme aşamasındaki Yazılım kapısı (yıldız); kilitsiz kart 1★.
-static func requirement(c: Dictionary) -> int:
-	var req: int = 1
-	var gate: Dictionary = ProductLines.step(c.step).get("requires", {}) as Dictionary
-	for d in (gate.get("person", []) as Array):
-		if String(d.get("area", "")) == HRConstants.AREA_ENGINEERING:
+## Kartın kademesinin `area` alanında tek kişiden istediği yıldız; kapısı yoksa 0.
+static func gate(c: Dictionary, area: String) -> int:
+	var req: int = 0
+	var gates: Dictionary = ProductLines.step(c.step).get("requires", {}) as Dictionary
+	for d in (gates.get("person", []) as Array):
+		if String(d.get("area", "")) == area:
 			req = maxi(req, int(d.get("stars", 0)))
 	return req
+
+
+## Kartın Geliştirme aşamasındaki Yazılım kapısı (yıldız); kilitsiz kart 1★.
+static func requirement(c: Dictionary) -> int:
+	return maxi(1, gate(c, HRConstants.AREA_ENGINEERING))
 
 
 ## Kişilerin kartın bir aşamasında yaptığı iş (kişi: puan): hatanın iş payı ve testin yakalama payı bundan çıkar. İş kaydı

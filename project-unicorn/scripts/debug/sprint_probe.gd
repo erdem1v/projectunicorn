@@ -3,7 +3,7 @@ extends RefCounted
 # --sprint-probe=hours=<h>:cards=<1|2>:ticks=<t>[:start=<hour>][:seeds=1][:seed=424242][:events=0|1][:rate=<r>]
 # [:lead=0|1][:gate=publish|more][:team=<n>][:fill=0|1][:market=b2c|b2b][:incident=<kind>@<tick>]
 # [:promise=0|1][:tstar=<1-5>][:pmstar=<1-5>][:plus=<role>@<stars>][:founder=0|1][:fixture=iz1|iz1b|iz2][:build=demo|ea|full]
-# [:planms=0|1][:meetings=<n>]:
+# [:planms=0|1][:meetings=<n>][:queue=<n>]:
 # does the Product screen's sprint plan come true? A founder builds note_tool (market=b2b: the erp product, four
 # accounts signed the tick it goes live, two of a night-shift sector) for t ticks on each of the seeds seed,
 # seed+1, …, the company working h hours from start (the game's default start hour unless given); team=N adds N-1
@@ -25,7 +25,8 @@ extends RefCounted
 # (RunProbe.seed_crew, each person's stat drawn from the seed); tstar= and pmstar= pin every tester's and product
 # manager's stars, plus=developer@3 hires one more person (a role id and its stars), founder=0 takes the founder off the
 # sprint team (GameState.set_founder_in_sprint), meetings=N has the founder sit N sales meetings in the first hour of each
-# week (events=1; each the sitting's cost, as many as the entry gate lets in), build=ea plays the EA build's cards and endings. fixture= seats a small company by hand:
+# week (events=1; each the sitting's cost, as many as the entry gate lets in), queue=N sends N open cards to the next column
+# once each sprint is planned, which the product managers prepare, build=ea plays the EA build's cards and endings. fixture= seats a small company by hand:
 #   iz1   three developers of 4, 3 and 3 stars (founder=1 keeps the founder) and the first sprint's three Core K1 cards in
 #         plan order: the big one two people finish in two sprints (three cannot end it in one), then two small ones one
 #         person finishes in a week each, sized in person-weeks of the game's person_points_week; iz1b: the big card last
@@ -97,7 +98,7 @@ static var _papered: Dictionary = {}  # "<seed>|<sprint>" -> true for a sprint t
 static func run(spec: String, payload: Dictionary) -> bool:
 	var o: Dictionary = {"start": HRConstants.START_HOUR_DEFAULT, "seeds": 1, "seed": 424242, "events": 0,
 		"lead": 0, "gate": "publish", "team": 1, "fill": 0, "market": "b2c", "incident": "", "promise": 0,
-		"tstar": 0, "pmstar": 0, "plus": "", "founder": -1, "fixture": "", "build": "", "planms": 0, "meetings": 0}
+		"tstar": 0, "pmstar": 0, "plus": "", "founder": -1, "fixture": "", "build": "", "planms": 0, "meetings": 0, "queue": 0}
 	for part in spec.split(":"):
 		var key: String = part.get_slice("=", 0)
 		if key in ["gate", "market", "incident", "plus", "fixture", "build"]:
@@ -226,6 +227,8 @@ static func _plan(seed_value: int, o: Dictionary, verdicts: Array) -> bool:
 				limit = "ceiling" if SprintSystem.plan_outcome().spare > SprintSystem.EPS else "full"
 				print("SPRINTPROBE SKIP|%d|%d|%s|%s" % [seed_value, SprintSystem.sprint_number(), c.id, limit])
 				break
+	for c in SprintCatalog.open_cards([]).slice(0, int(o.queue)):
+		SprintSystem.send_next(c.id)
 	if o.promise == 1:
 		_promise_late_card()
 	if o.planms == 1:

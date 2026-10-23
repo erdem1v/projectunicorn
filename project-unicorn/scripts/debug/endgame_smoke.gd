@@ -508,6 +508,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sprint_bug_ceiling_formula":            fail = _case_sprint_bug_ceiling_formula()
 		"sprint_test_seed_deterministic":        fail = _case_sprint_test_seed_deterministic()
 		"sprint_expected_bug_no_rng":            fail = _case_sprint_expected_bug_no_rng()
+		"sprint_skill_assignment":               fail = _case_sprint_skill_assignment()
+		"sprint_pm_prep_benefit":                fail = _case_sprint_pm_prep_benefit()
 		"sprint_plan_done_counts_fix_work":      fail = _case_sprint_plan_done_counts_fix_work()
 		"sprint_escaped_bug_on_card_line":       fail = _case_sprint_escaped_bug_on_card_line()
 		"sprint_escaped_pre_launch_lands_at_v1": fail = _case_sprint_escaped_pre_launch_lands_at_v1()
@@ -17396,10 +17398,12 @@ static func _trust_standing_cost() -> String:
 
 
 ## B2 · WHO PAYS for a night fix (Karar 6) is one rule, SprintSystem.payers: first the developers and testers
-## holding a card on the incident's line in the running sprint, else everyone the task matrix puts on Build or
-## Test but the founder (his way is "fix it yourself"), designers and product managers included; nobody left
-## locks the option. `morale_crew` lands the morale on exactly them and the chip names them.
-## FALSIFICATION: let payers() return the card holders without the `ahead` filter and the second check fails;
+## holding a card on the incident's line in the running sprint and the product managers who prepared those cards,
+## else everyone the task matrix puts on Build or Test but the founder (his way is "fix it yourself"), designers and
+## product managers included; nobody left locks the option. `morale_crew` lands the morale on exactly them and the
+## chip names them.
+## FALSIFICATION: let payers() return the card holders without the `ahead` filter and the second check fails; leave the
+## preparer out of the card's payers and the prepared-card check fails;
 ## let it keep the founder and the third does; let a Support-only hire into team() and the Support check fails;
 ## drop the sort and the chip's names come out of order.
 static func _case_event_morale_payers() -> String:
@@ -17424,6 +17428,12 @@ static func _case_event_morale_payers() -> String:
 	if SprintSystem.payers(line) != [dev.id, tester.id]:
 		return "with the developer, tester, designer and founder on the card the payers read %s, want the developer and the tester" % [
 			str(SprintSystem.payers(line))]
+	# The product manager who prepared the card pays with them (by share, then name).
+	card.prep_by = pm.id
+	if SprintSystem.payers(line) != [dev.id, pm.id, tester.id]:
+		return "with a product manager's preparation on the card the payers read %s, want the developer, the product manager and the tester" % [
+			str(SprintSystem.payers(line))]
+	card.erase("prep_by")
 	# Support alone in the task matrix builds and tests nothing, so it pays nothing.
 	var support: Character = hire.call("char_pay_sup", "Ada Tan", HRConstants.ROLE_CUSTOMER_REP)
 	CharacterRegistry.clear_jobs(support.id)
@@ -21524,6 +21534,186 @@ static func _case_sprint_expected_bug_no_rng() -> String:
 	return ""
 
 
+## PM'in kart eşlemesi (SprintPrep): hazırlanacak kartlar karmaşıklığa (puan × Yazılım kapısı) göre büyükten küçüğe dizilir, PM'ler yıldızdan
+## aza ve her PM'e kapasitesiyle orantılı ardışık bir dilim düşer: en karmaşık kart en iyi PM'e, en basit kart en zayıf PM'e. Karmaşıklık
+## puanın tek başına değil puan × kapıdır (15 puanlık 2★ Yazılım kapılı kart 25 puanlık kapısız karttan karmaşıktır). Kartın Ürün kapısını
+## geçemeyen PM'in dilimi en yakın uygun PM'e kayar. Bir kartı tek PM hazırlar ve hazırlayan değişmez: sonradan gelen daha iyi PM, başlanmış
+## ya da sahibi olan kartı almaz, yalnız sahipsiz kalanı alır.
+## FALSİFİKASYON: SprintPrep.week'te kartları küçükten büyüğe diz → "ters" iddiası FAIL; karmaşıklığı yalnız puandan kur (`* requirement`i sil)
+## → "kapı" iddiası FAIL; `_own`'daki Ürün kapısı koşulunu sil → "Ürün kapısı" iddiası FAIL; `_own`'da sahipli kartları da sahipsiz say
+## (`fresh = queue`) → "hazırlayan değişmez" iddiası FAIL.
+static func _case_sprint_skill_assignment() -> String:
+	_seed_sprint()
+	var hire := func(id: String, stat: int) -> Character:
+		var pm: Character = _sprint_hire(id, HRConstants.ROLE_PRODUCT_MANAGER)
+		pm.role_stats[HRConstants.AREA_PRODUCT] = stat
+		return pm
+	var card := func(id: String, points: int, line: String, tier: int) -> Dictionary:
+		var c: Dictionary = SprintCatalog.new_card("feat:" + id, "feature", "core", points, line, "%s_k%d" % [line, tier], tier)
+		c.state = "planned"
+		return c
+	var owner_of := func(c: Dictionary) -> String: return c.get("prep_by", "")
+	var five: Character = hire.call("char_skill_5", 10)
+	var three: Character = hire.call("char_skill_3", 6)
+	var one: Character = hire.call("char_skill_1", 2)
+	var week := func(cards: Array) -> void: SprintPrep.week(cards, SprintSystem.team(), 1)
+	var capture := "line_note_tool_capture"
+	# 1 · Altı kart, üç PM: en karmaşık kart 5★'a, en basit ikisi 1★'a; sahip yıldızı karmaşıklık sırasında azalır.
+	var big: Dictionary = card.call("big", 40, capture, 1)
+	var gated: Dictionary = card.call("gated", 15, capture, 2)
+	var mid: Dictionary = card.call("mid", 25, capture, 1)
+	var small: Dictionary = card.call("small", 15, capture, 1)
+	var tiny_a: Dictionary = card.call("tiny_a", 10, capture, 1)
+	var tiny_b: Dictionary = card.call("tiny_b", 10, capture, 1)
+	week.call([tiny_b, small, mid, gated, tiny_a, big])
+	if owner_of.call(big) != five.id or owner_of.call(tiny_a) != one.id or owner_of.call(tiny_b) != one.id:
+		return "the 40-point card went to %s, the two 10-point cards to %s and %s; want the 5-star manager on the big one and the 1-star on the small ones" % [
+			owner_of.call(big), owner_of.call(tiny_a), owner_of.call(tiny_b)]
+	var stars := func(c: Dictionary) -> float:
+		return HRConstants.stars_for(HRSystem.skill(CharacterRegistry.get_character(owner_of.call(c)), HRConstants.AREA_PRODUCT))
+	var order: Array = [big, gated, mid, small, tiny_a, tiny_b]
+	for i in order.size() - 1:
+		if stars.call(order[i]) < stars.call(order[i + 1]):
+			return "card %d (complexity order) went to a %.1f-star manager and the simpler card %d to a %.1f-star one; want the stars to fall down the list" % [
+				i, stars.call(order[i]), i + 1, stars.call(order[i + 1])]
+	# 2 · Karmaşıklık puan × Yazılım kapısıdır: aynı iki PM'e 15 puanlık 2★ kapılı kart (30), 25 puanlık kapısız karttan (25) önce gelir.
+	CharacterRegistry.remove(three.id)
+	var heavy: Dictionary = card.call("heavy", 15, capture, 2)
+	var wide: Dictionary = card.call("wide", 25, capture, 1)
+	week.call([wide, heavy])
+	if owner_of.call(heavy) != five.id or owner_of.call(wide) != one.id:
+		return "the 15-point card behind a 2-star Software gate went to %s and the 25-point open card to %s; want the 5-star manager on the gated one (complexity is points times the gate)" % [
+			owner_of.call(heavy), owner_of.call(wide)]
+	# 3 · Ürün kapısı: 2★ Ürün isteyen küçük kartın dilimi 1★ PM'e düşer ama kapıyı geçemez, 5★ PM alır; kapısız ikizi 1★'a gider.
+	var linking := "line_note_tool_linking"
+	var anchor: Dictionary = card.call("anchor", 40, capture, 1)
+	var locked: Dictionary = card.call("locked", 15, linking, 2)
+	var open: Dictionary = card.call("open", 15, linking, 1)
+	week.call([anchor, locked])
+	var control: Array = [card.call("anchor2", 40, capture, 1), open]
+	week.call(control)
+	if owner_of.call(locked) != five.id or owner_of.call(open) != one.id:
+		return "a 15-point card behind a 2-star Product gate went to %s and its gate-free twin to %s; want the 5-star manager and the 1-star one" % [
+			owner_of.call(locked), owner_of.call(open)]
+	# 4 · Hazırlayan değişmez: yalnız zayıf PM varken başlanan kartlar, 5★ PM gelince de onda kalır; yeni PM sahipsiz kartı alır.
+	CharacterRegistry.remove(five.id)
+	var huge: Array = [card.call("huge_1", 400, capture, 1), card.call("huge_2", 400, capture, 1), card.call("huge_3", 400, capture, 1)]
+	week.call(huge)
+	var first_owner: String = owner_of.call(huge[0])
+	if first_owner != one.id or float(huge[0].get("prep_done", 0.0)) <= 0.0 or float(huge[0].get("prep_done", 0.0)) >= 1.0:
+		return "fixture: the lone 1-star manager's first card is %s prepared %.3f; want it started and not finished" % [
+			first_owner, float(huge[0].get("prep_done", 0.0))]
+	var late: Character = hire.call("char_skill_late", 10)
+	week.call(huge)
+	var kept: Array = huge.map(func(c: Dictionary) -> String: return owner_of.call(c))
+	if kept[0] != one.id or kept[1] != late.id:
+		return "after a 5-star manager joined the cards belong to %s; want the 1-star manager to keep the card it had started and the newcomer to take the next one" % str(kept)
+	return ""
+
+
+## PM'in hazırlığı ve faydası. PM sprint puanı üretmez (puanı 0, hazırlık puanı P(s) = 15 + 10 × √((s − 2) ÷ 8) ile verim ve saatin
+## çarpımıdır; 1★'ın altı sıfıra doğrusal iner), kapasiteye girmez, hiçbir karta atanmaz; haftasını sonraki sütundaki henüz koşmamış
+## kartların hazırlığına verir (kartın puanının %20'si) ve hazırladığı hafta çalışmış sayılır. Hazırlanan kart, hazırlığı bittiği oranda
+## kartı hazırlayan PM'in yıldızından fayda alır: hız 1★'ta %10, 5★'ta %25, hata yükü ×0,90 ve ×0,60, ikisi arada doğrusal; yarım
+## hazırlık yarısını alır. Hız kartın her aşamasında işler, hata çarpanı beklenen hatayı düşürür (SprintBugs.expected); hazırlanmış kart
+## kayıtla gidip gelir.
+## FALSİFİKASYON: SprintSystem._points'teki PM istisnasını sil → "puan 0" iddiası FAIL; SprintPrep._at'te iki ucu değiştir → 1★ ve 5★
+## iddiası FAIL; SprintPrep._prepare'de `part *` çarpanını sil (kartın faydası tam hazırlıkla gelsin) → yarım hazırlık iddiası FAIL;
+## SprintSystem._work'ten `prep_gain` çarpanını sil → hız iddiası FAIL; `_prepare`de prep_cut'ı yazma → hata iddiası FAIL;
+## `_end_week`teki `SprintPrep.week` satırını sil → "hazırlanmadı" FAIL; `role_of`taki "product" dalını sil → rol iddiası FAIL.
+static func _case_sprint_pm_prep_benefit() -> String:
+	# Bir sprint koşar, sonraki sütunda `points` puanlık bir kart bekler, bir hafta geçer: PM'in (ana alanı `stat`) hazırladığı kart.
+	var prepare := func(stat: int, points: float, half: bool) -> Dictionary:
+		SaveManager.reset_all_owners()
+		GameState.initialize_run({"seed": 424242})
+		_seed_sprint()
+		_bugs_c(0.212)
+		var pm: Character = _sprint_hire("char_prep_pm", HRConstants.ROLE_PRODUCT_MANAGER)
+		pm.role_stats[HRConstants.AREA_PRODUCT] = stat
+		var core: Array = SprintCatalog.capabilities("core")
+		var running: String = "feat:%s_k1" % core[0]
+		SprintSystem.add(running)
+		_size(GameState.product.cards[running], 100000.0)
+		var waiting: String = "feat:%s_k1" % core[1]
+		SprintSystem.send_next(waiting)
+		var week: float = _sprint_row(pm.id).prep
+		_size(GameState.product.cards[waiting], 10.0 * week if half else points)
+		if not SprintSystem.start():
+			return {"error": "the sprint did not start"}
+		var before: Dictionary = _sprint_row(pm.id)
+		_sim_day()
+		return {"card": GameState.product.cards[waiting], "pm": pm, "row": before, "week": week}
+	# 1 · PM sprint puanı üretmez ama hazırlık puanı vardır; hızı P(s)'in şekliyle (15 + 10 × √((s − 2) ÷ 8), 1★ altında doğrusal).
+	var tops: Dictionary = prepare.call(10, 15.0, false)
+	if tops.has("error"):
+		return "fixture: %s" % tops.error
+	var scale: float = float(tops.row.prep) / 25.0
+	if float(tops.row.points) != 0.0 or float(tops.row.prep) <= 0.0:
+		return "the product manager reads %.3f sprint points and %.3f preparation points; want 0 and a positive rate" % [
+			float(tops.row.points), float(tops.row.prep)]
+	var others: float = 0.0
+	for person in SprintSystem.team():
+		if person.id != tops.pm.id:
+			others += float(person.points)
+	if not is_equal_approx(SprintSystem.capacity(), others * SprintSystem.sprint_weeks()):
+		return "the capacity is %.3f, want the rest of the team's %.3f without the product manager" % [
+			SprintSystem.capacity(), others * SprintSystem.sprint_weeks()]
+	for row in [[1, 7.5], [2, 15.0], [6, 15.0 + 10.0 * sqrt(0.5)], [10, 25.0]]:
+		var world: Dictionary = prepare.call(row[0], 15.0, false)
+		if not is_equal_approx(float(world.row.prep), float(row[1]) * scale):
+			return "a product manager at %d points prepares %.3f a week, want %.3f" % [row[0], float(world.row.prep), float(row[1]) * scale]
+	# 2 · Tam hazırlıkta fayda yıldıza bağlıdır; PM kartlara atanmaz, kartın hazırlayanı o PM'dir.
+	for row in [[2, 0.10, 0.10], [6, 0.175, 0.25], [10, 0.25, 0.40]]:
+		var world: Dictionary = prepare.call(row[0], 15.0, false)
+		var c: Dictionary = world.card
+		if c.get("prep_by", "") != world.pm.id or not is_equal_approx(float(c.get("prep_done", 0.0)), 1.0):
+			return "at %d points the card is prepared by '%s' to %.3f; want the product manager and 1.0" % [row[0], c.get("prep_by", ""), float(c.get("prep_done", 0.0))]
+		if not is_equal_approx(float(c.get("prep_gain", 0.0)), row[1]) or not is_equal_approx(float(c.get("prep_cut", 0.0)), row[2]):
+			return "at %d points the prepared card reads speed +%.4f and bugs -%.4f; want +%.4f and -%.4f" % [
+				row[0], float(c.get("prep_gain", 0.0)), float(c.get("prep_cut", 0.0)), row[1], row[2]]
+		for card in GameState.product.cards.values():
+			if world.pm.id in card.assignees:
+				return "the product manager is assigned to card %s; want no sprint card" % card.id
+		var h: Dictionary = SprintBugs.expected(c)
+		if not is_equal_approx(float(h.h), float(h.h0) * (1.0 - row[2])):
+			return "at %d points the prepared card's bug load is %.4f of %.4f; want a cut of %.2f" % [row[0], float(h.h), float(h.h0), row[2]]
+	# 3 · Yarım hazırlık yarısını alır; hazırlayan PM o hafta çalışmış sayılır ve rolü "product"tır.
+	var half: Dictionary = prepare.call(10, 0.0, true)
+	var hc: Dictionary = half.card
+	if not is_equal_approx(float(hc.get("prep_done", 0.0)), 0.5) or not is_equal_approx(float(hc.get("prep_gain", 0.0)), 0.125) \
+			or not is_equal_approx(float(hc.get("prep_cut", 0.0)), 0.20):
+		return "half a preparation by a 5-star manager reads done %.4f, speed +%.4f, bugs -%.4f; want 0.5, +0.125 and -0.20" % [
+			float(hc.get("prep_done", 0.0)), float(hc.get("prep_gain", 0.0)), float(hc.get("prep_cut", 0.0))]
+	if not SprintSystem.worked(half.pm.id) or SprintSystem.role_of(half.pm.id) != "product":
+		return "the product manager preparing a card reads worked %s and role '%s'; want worked and 'product'" % [
+			SprintSystem.worked(half.pm.id), SprintSystem.role_of(half.pm.id)]
+	# 4 · Kayıtla gidip gelir: yarım hazırlanmış kart hazırlayanını, ilerlemesini ve faydasını aynen geri alır.
+	var slot: String = "smoke_prep_%d" % OS.get_process_id()
+	_drain_all_modals()
+	if not SaveManager.save_to_slot(slot):
+		return "fixture: save_to_slot failed (%s)" % SaveManager.cannot_save_reason_key()
+	var loaded: bool = SaveManager.apply_loaded_state(SaveManager.read_slot(slot))
+	SaveManager.delete_slot(slot)
+	var back: Dictionary = GameState.product.cards.get(hc.id, {})
+	if not loaded or back.get("prep_by", "") != half.pm.id:
+		return "the loaded game (%s) holds the half-prepared card as %s; want it prepared by the product manager" % [loaded, str(back)]
+	for key in ["prep_done", "prep_gain", "prep_cut"]:
+		if not is_equal_approx(float(back.get(key, -1.0)), float(hc[key])):
+			return "the loaded card reads %s %.6f, saved %.6f" % [key, float(back.get(key, -1.0)), float(hc[key])]
+	# 5 · Hız kartın her aşamasında işler: aynı bütçe hazırlanmış kartta (1 + g) kat iş yapar.
+	var plain: Dictionary = SprintCatalog.new_card("feat:speed", "feature", "core", 100, "line_note_tool_capture", "line_note_tool_capture_k1", 1)
+	var swift: Dictionary = plain.duplicate(true)
+	swift.prep_gain = 0.25
+	var worker := {"id": "char_prep_worker", "fits": ["design", "dev", "test"], "ahead": false}
+	SprintSystem._work(plain, worker, 8.0)
+	SprintSystem._work(swift, worker, 8.0)
+	if not is_equal_approx(SprintSystem.total(plain) - SprintSystem.remaining(plain), 8.0) \
+			or not is_equal_approx(SprintSystem.total(swift) - SprintSystem.remaining(swift), 10.0):
+		return "eight points of work made %.3f on a plain card and %.3f on a card prepared for +25%%; want 8 and 10" % [
+			SprintSystem.total(plain) - SprintSystem.remaining(plain), SprintSystem.total(swift) - SprintSystem.remaining(swift)]
+	return ""
+
+
 ## Planın verdiği puan kapanışınkidir, testin bulduğu hata kartın kalanına düzeltme işi eklese de: testini sprintin son
 ## puanlarıyla bitiren kart düzeltmesine yetişmez ve devreder; plan ona sprintte yapılan işi verir (kalanının azalmasını değil),
 ## sürüm kaydının `carried`ı aynı sayıyı yazar.
@@ -23486,10 +23676,10 @@ static func _paper_pool_end(saved: Array) -> void:
 
 ## Kâğıt, kartta o aşamada çalışan kişinin ağzından gelir: konuşan istek anında kartın atananlarındadır, `role_of` o
 ## aşamanın rolünü verir, karakter rolü kâğıdın `speaker_role`'üdür ve kâğıt ona bağlanır (`employee` slotu; kurucuysa
-## `founder`). Tasarım aşamasında kartta atanmış PM tasarımcı kâğıdını söylemez; payı Destek'e geçmiş yazılımcı atanmaz ve
-## konuşmaz. PM kâğıdını çeyreği planlayan PM söyler, konusu sprintteki müşteri isteği kartıdır, hesap isteğin hesabıdır;
-## PM yoksa gelmez. Tek kurucunun kâğıdı kendi notudur.
-## FALSİFİKASYON: SprintSystem._speaker'daki `.role == role` koşulunu sil → PM'li ekipte tasarımcı kâğıdı geldi FAIL;
+## `founder`). Tasarım aşamasında kartta atanmış yazılımcı tasarımcı kâğıdını söylemez, PM sprint puanı üretmediği için hiçbir
+## kartta atanmış olmaz; payı Destek'e geçmiş yazılımcı atanmaz ve konuşmaz. PM kâğıdını çeyreği planlayan PM söyler, konusu
+## sprintteki müşteri isteği kartıdır, hesap isteğin hesabıdır; PM yoksa gelmez. Tek kurucunun kâğıdı kendi notudur.
+## FALSİFİKASYON: SprintSystem._speaker'daki `.role == role` koşulunu sil → yazılımcılı ekipte tasarımcı kâğıdı geldi FAIL;
 ## `role_of(id) == stage` koşulunu sil → yazılımcı kâğıdının aşaması FAIL; PM dalındaki `c.kind == "request"` koşulunu
 ## sil → PM kâğıdı istek olmayan karta düştü FAIL.
 static func _case_paper_speaker_is_assignee() -> String:
@@ -23562,14 +23752,17 @@ static func _case_paper_speaker_is_assignee() -> String:
 			HRConstants.ROLE_PRODUCT_MANAGER], PAPER_DESIGN, false, false, 100000.0)
 		fail = worked.call(design, HRConstants.ROLE_DESIGNER, "design")
 	if fail == "":
-		var pm_card: Dictionary = play.call([HRConstants.ROLE_PRODUCT_MANAGER, HRConstants.ROLE_DEVELOPER],
+		var no_designer: Dictionary = play.call([HRConstants.ROLE_PRODUCT_MANAGER, HRConstants.ROLE_DEVELOPER],
 			PAPER_DESIGN, false, false, 100000.0)
-		var pm_works: bool = GameState.product.cards.values().any(func(c: Dictionary) -> bool:
-			return "char_paper_" + HRConstants.ROLE_PRODUCT_MANAGER in c.assignees)
-		if not pm_works:
-			fail = "fixture: the product manager works no card of a design-phase sprint"
-		elif not pm_card.is_empty():
-			fail = "the product manager on a design card spoke the designer's paper (%s)" % str(pm_card)
+		var works := func(role_id: String) -> bool:
+			return GameState.product.cards.values().any(func(c: Dictionary) -> bool:
+				return "char_paper_" + role_id in c.assignees)
+		if works.call(HRConstants.ROLE_PRODUCT_MANAGER):
+			fail = "the product manager, who makes no sprint points, is assigned to a card of a design-phase sprint"
+		elif not works.call(HRConstants.ROLE_DEVELOPER):
+			fail = "fixture: the developer works no card of a design-phase sprint"
+		elif not no_designer.is_empty():
+			fail = "the developer on a design card spoke the designer's paper (%s)" % str(no_designer)
 	if fail == "":
 		var desk: Dictionary = play.call([HRConstants.ROLE_DEVELOPER], PAPER_DEV, false, true, 40.0)
 		if SprintSystem.team().size() != 1 or not desk.is_empty():

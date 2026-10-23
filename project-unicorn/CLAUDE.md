@@ -120,12 +120,24 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   sürüme çıkar ve düzeltilmemiş bulunan hata kartın hattında açık hata olur; öbür ikisinde kart kalan düzeltmesiyle devreder. Çip yüzde
   yazmaz, sonucu yazar. Mesainin moral bedeli ve ek sürenin izi kartın (`promise_due.json`) seçeneklerinde [WORKING].
 - **Hata modeli.** Kartın hatası test bittiği an belirlenir (`SprintBugs`, sayılar `data/product/sprint.json` `bugs` bloğunda
-  [WORKING]): beklenen hata H = c × kartın puanı × R × tür × Σ iş payı × m(Δ) × TİTİZ, R kartın Geliştirme aşamasındaki Yazılım
-  kapısı (kilitsiz kart 1★), Δ = kişinin Yazılım yıldızı − R, m(Δ) = 0,20 × 0,5^(Δ ÷ 2). Kartın tohumundan Poisson(H) çekilir
-  (`RngStreams` ilerlemez, plan ile kapanış aynı sayıyı görür); testin yakaladığı pay 0,57 × √Y(Test), kendi geliştirdiğini test eden
-  ×0,6. Bulunan her hata kartın Geliştirme satırına düzeltme işi ekler (5,3 ya da 1,3 puan), kart düzeltmesi de bitince biter, bitmeyen
-  kart kalan işiyle devreder. Kaçan hata kart sürüme çıkınca kartın kendi hattında açık hata olur (v1.0'dan önce `pending_faulty`'de
-  bekler, yeniden yazılmış hatta yazılmaz) ve sürüm kaydına `escaped` yazılır; "sürüm sonrası bozulma" acil durumu onu okur.
+  [WORKING]): beklenen hata H = c × kartın puanı × R × tür × (1 − PM hazırlığı) × Σ iş payı × m(Δ) × TİTİZ, R kartın Geliştirme
+  aşamasındaki Yazılım kapısı (kilitsiz kart 1★), Δ = kişinin Yazılım yıldızı − R, m(Δ) = 0,20 × 0,5^(Δ ÷ 2). Kartın tohumundan
+  Poisson(H) çekilir (`RngStreams` ilerlemez, plan ile kapanış aynı sayıyı görür); testin yakaladığı pay 0,57 × √Y(Test), kendi
+  geliştirdiğini test eden ×0,6. Bulunan her hata kartın Geliştirme satırına düzeltme işi ekler (5,3 ya da 1,3 puan), kart
+  düzeltmesi de bitince biter, bitmeyen kart kalan işiyle devreder. Kaçan hata kart sürüme çıkınca kartın kendi hattında açık hata
+  olur (v1.0'dan önce `pending_faulty`'de bekler, yeniden yazılmış hatta yazılmaz) ve sürüm kaydına `escaped` yazılır; "sürüm
+  sonrası bozulma" acil durumu onu okur.
+- **PM hazırlığı.** PM sprint puanı üretmez (`SprintSystem.team()`'de `points` 0: kapasiteye girmez, hiçbir karta atanmaz);
+  haftasını sonraki sütunda bir sprintte hiç koşmamış özellik ve istek kartlarını hazırlamaya verir (`SprintPrep`, sayılar
+  `data/product/sprint.json` `prep` bloğunda [WORKING]). Hazırlık işi kartın puanının %20'sidir; PM'in hızı
+  P(s) = 15 + 10 × √((s − 2) ÷ 8) puan/hafta (s Ürün puanı: 1★ 15, 3★ 22, 5★ 25) çarpı çalışma saati, verim, huy ve sprint
+  payıdır. Kural A: kartlar karmaşıklığa (puan × Yazılım kapısı R) göre büyükten küçüğe dizilir, PM'ler yıldızdan aza; her PM'e
+  sprintin sonuna dek kalan hazırlık kapasitesiyle orantılı ardışık bir dilim düşer (en karmaşık dilim en iyi PM'e) ve kartın Ürün
+  kapısını geçemeyen PM'in payı en yakın uygun PM'e kayar. Bir kartı tek PM hazırlar, hazırlayan (`prep_by`) kendisi ekipte
+  durdukça değişmez. Hazırlığın biten oranıyla orantılı olarak kart hazırlayan PM'in yıldızından fayda alır: her aşamada hız
+  (`prep_gain`, `SprintSystem._work`: 1★ %10, 5★ %25, arası doğrusal) ve hata yükünde azalma (`prep_cut`, H'nin (1 − PM hazırlığı)
+  terimi: 1★ ×0,90, 5★ ×0,60). Sütun boşsa PM'in hazırlayacak kartı yoktur. Olayın düzeltmesinin moral bedelini hattın kartını
+  hazırlayan PM de öder (`payers`).
 - **Karar kâğıdı.** Sprint başına tek zar (`SprintSystem._request_decision`): sprint iki haftadır, zar ilk haftanın
   sonunda, `data/product/sprint.json` `decision.sprint_chance` ihtimaliyle sprintin bir kartı için `decision.cards` havuzundan bir kâğıt
   istenir, yoksa sprint kâğıtsızdır ([WORKING]: sprintlerin en az üçte biri). Havuz ağırlıklı sırayla denenir (görülmemiş kâğıt önde,
@@ -299,7 +311,7 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   sonla bitmeli ve sıfır `ERROR` satırı taşımalıdır.
 - Sprint planı: `--sprint-probe=hours=<h>:cards=<1|2>:ticks=<t>[:<alan>=<değer>…]` (isteğe bağlı alanlar `start`,
   `seeds`, `seed`, `events`, `rate`, `lead`, `gate`, `team` (1 ile 6, 12, 25, 50), `fill`, `market`, `incident`, `promise`, `tstar`,
-  `pmstar`, `plus`, `founder`, `fixture`, `build`, `planms`, `meetings`; anlamları HARITA Ürün'de ve Araçlar'da) headless
+  `pmstar`, `plus`, `founder`, `fixture`, `build`, `planms`, `meetings`, `queue`; anlamları HARITA Ürün'de ve Araçlar'da) headless
   koşar: kurucunun (`team=` ile ekibin) koşusunda ekranın sprint planını (`plan_outcome`) kapanışla karşılaştırır,
   `SPRINTPROBE` satırları basar (`PRED`, `CLOSE`, `SKIP`, `MVP`, `LOAD`, `SUMMARY`, `LOADSUM`, `PAPER`, `PAPERSUM`; `PRED` ve `CLOSE` kartın
   testinin hatasını `bugs=<n>/<F>/<K>/<düzeltme işi>` taşır ve karşılaştırılır; MVP tahmini `mvp_eta` `PRED`'in son alanıdır, karşılaştırılmaz) ve adsız uyuşmazlıkta 1 ile çıkar. `planms=1` tik oynamaz, plan ekranının motor
