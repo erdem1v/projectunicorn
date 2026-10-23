@@ -500,6 +500,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sprint_founder_switch_off":             fail = _case_sprint_founder_switch_off()
 		"productivity_mod_paces_the_sprint":     fail = _case_productivity_mod_paces_the_sprint()  # EXPECT-ERROR 'productivity_mod' found no target
 		"sprint_ceiling_125_blocks_add":         fail = _case_sprint_ceiling_125_blocks_add()
+		"sprint_intake_uses_applied_plan":       fail = _case_sprint_intake_uses_applied_plan()
 		"sprint_carry_keeps_progress":           fail = _case_sprint_carry_keeps_progress()
 		"sprint_mvp_three_identity_k1":          fail = _case_sprint_mvp_three_identity_k1()
 		"sprint_faulty_bug_on_card_line":        fail = _case_sprint_faulty_bug_on_card_line()
@@ -20987,6 +20988,99 @@ static func _case_sprint_ceiling_125_blocks_add() -> String:
 	if refused.full == 0 or refused.ceiling == 0:
 		return "fixture: the core cards never met both closures (refused %s, load %.2f, ceiling %.2f)" % [
 			refused, SprintSystem.used(), ceiling]
+	return ""
+
+
+## Alım sınaması tek kuraldır (`SprintSystem.intake`): aday kart sprintin uygulanan yerleşiminin sonuna eklenip oynanır,
+## bu sprintte puan alıyorsa ve yük tavanı (%125) aşılmıyorsa girer. "+", liderin önerisi, MVP tahmini ve kapanış aynı
+## kararı verir. Yazılımcı ile tasarımcılı ekipte yazılımcıyı iki haftaya dolduran büyük bir kart sprintte iken tasarımcı
+## ilk aşamayı bitirip boşta kalır, yani oynatmada boş puan vardır; ama yazılım aşamasından başlayan düzeltme kartı onu
+## kullanamaz. Boş puana bakan eski sınama o kartı alırdı, kart sprintte hiç puan almazdı.
+## FALSİFİKASYON: SprintSystem.intake'te `got`'u `played.spare` yap (eski boş puan sınaması) → düzeltme kartı "+" iddiası FAIL;
+## SprintSystem.mvp_eta'da `intake(cards, queue[0], plain).takes`'i `cards.is_empty()` yap (sprint başına tek kart) → MVP tahmini
+## kapanıştan ayrılır FAIL; SprintCatalog._suggest'te `not take.takes`'i `take.cards.is_empty()` yap (yalnız tavan) → öneri düzeltme
+## kartını koyar FAIL.
+static func _case_sprint_intake_uses_applied_plan() -> String:
+	_seed_sprint("note_tool")
+	_sprint_hire("char_in_dev", HRConstants.ROLE_DEVELOPER)
+	_sprint_hire("char_in_des", HRConstants.ROLE_DESIGNER)
+	GameState.set_founder_in_sprint(false)
+	# MVP tahmini: sprintler "+"nın aldığı kartlarla dolar; tahmin kapıda duran kapanışın sprintini ve haftasını söyler.
+	var eta: Dictionary = SprintSystem.mvp_eta()
+	var guard: int = 0
+	while not GameState.product.release.get("gate", false) and guard < 8:
+		guard += 1
+		if SprintSystem.mode() == "release":
+			SprintSystem.plan_next()
+		for c in SprintCatalog.mvp_candidates():
+			SprintSystem.add(c.id)
+			if not GameState.product.sprint.cards.has(c.id):
+				break
+		if not SprintSystem.start():
+			return "fixture: sprint %d did not start" % SprintSystem.sprint_number()
+		while SprintSystem.mode() == "active":
+			_sim_day()
+	if eta.is_empty() or int(eta.sprint) != int(GameState.product.release.sprint) or int(eta.week) != GameState.day - 1:
+		return "mvp_eta said %s, the sprints the adds fill closed the MVP at sprint %d, week %d" % [
+			eta, int(GameState.product.release.sprint), GameState.day - 1]
+	SprintSystem.publish()
+	# Yayındaki ürün, boş sprint: büyük kart yazılımcıyı iki hafta doldurur, tasarımcı ilk aşamayı bitirip boşta kalır.
+	SprintSystem.plan_next()
+	for id in GameState.product.sprint.cards.duplicate() + GameState.product.next.cards.duplicate():
+		SprintSystem.remove(id)
+	var line: String = SprintCatalog.capabilities("core")[0]
+	ProductState.add_bugs(line, 2)
+	var big: Dictionary = SprintCatalog.candidates("core").filter(
+		func(c: Dictionary) -> bool: return c.kind == "feature" and int(c.target_tier) == 2)[0]
+	SprintSystem.add(big.id)
+	_size(GameState.product.cards[big.id], 3.8 * _sprint_points("char_in_dev"))
+	var fix: Dictionary = SprintCatalog.card_by_id("fix:" + line)
+	var ceiling: float = SprintSystem.capacity() * float(SprintCatalog.cfg("cap_ceiling"))
+	if SprintSystem.plan_outcome().spare <= SprintSystem.EPS or SprintSystem.used() + SprintSystem.remaining(fix) > ceiling:
+		return "fixture: the fix card must meet free points and a load under the ceiling (spare %.2f, load %.2f + %.2f, ceiling %.2f)" % [
+			SprintSystem.plan_outcome().spare, SprintSystem.used(), SprintSystem.remaining(fix), ceiling]
+	if SprintSystem.plan_outcome().cards[big.id].finishes:
+		return "fixture: the big card finishes, so the developer is not full"
+	# "+": tasarımcıdan boş puan var ama kartı yapacak yazılımcı yok.
+	if SprintSystem.can_add(fix.id):
+		return "+ takes the fix card, which starts at the developer's phase while the developer is full"
+	# Öneri: aynı sınamadan geçen kartları sırayla koyar; hiçbiri o ana kadarki yerleşime eklenince puansız kalmaz.
+	var lead: Array = SprintCatalog.lead_suggestion()
+	if lead.has(fix.id):
+		return "the lead suggests the fix card %s that the sprint gives no point" % [lead]
+	var placed: Array = SprintSystem.starting()
+	for id in lead:
+		var card: Dictionary = SprintCatalog.card_by_id(id)
+		if not SprintSystem.intake(placed, card, SprintSystem.team()).takes:
+			return "the lead suggested %s where the intake refuses it (placed %s)" % [id, placed.map(func(c: Dictionary) -> String: return c.id)]
+		placed = placed + [card]
+	# Yazılımcıya yer açılınca ilk aşamadan başlayan kart girer; aynı oynatma ona puan verir.
+	_size(GameState.product.cards[big.id], 3.0 * _sprint_points("char_in_dev"))
+	var open: Array = []
+	for area in SprintCatalog.area_ids():
+		open.append_array(SprintCatalog.candidates(area))
+	var small: Dictionary = open.filter(
+		func(c: Dictionary) -> bool: return c.kind == "feature" and int(c.target_tier) == 1 and SprintSystem.phase(c) == 0)[0]
+	if SprintSystem.can_add(fix.id) or not SprintSystem.can_add(small.id):
+		return "+ reads the fix card %s and the K1 card %s, want the fix card refused (it starts at the developer's phase) and the K1 card taken" % [
+			SprintSystem.can_add(fix.id), SprintSystem.can_add(small.id)]
+	# Kapanış: kabul edilen kart planın dediği puanı alır, zorla konan reddedilen kart hiç puan almaz.
+	SprintSystem.add(small.id)
+	SprintSystem._place(fix, true)
+	var plan: Dictionary = SprintSystem.plan_outcome().cards
+	if plan[small.id].done <= SprintSystem.EPS or plan[fix.id].done > SprintSystem.EPS:
+		return "the plan gives the K1 card %.2f and the fix card %.2f points, want points for the first and none for the second" % [
+			plan[small.id].done, plan[fix.id].done]
+	if not SprintSystem.start():
+		return "fixture: the sprint did not start"
+	while SprintSystem.mode() == "active":
+		_sim_day()
+	var got: Dictionary = {}
+	for row in GameState.product.release.carried:
+		got[row.id] = float(row.done)
+	if absf(float(got.get(small.id, -1.0)) - plan[small.id].done) > SprintSystem.EPS or float(got.get(fix.id, -1.0)) != 0.0:
+		return "the close gave the K1 card %s and the fix card %s points, the plan said %.2f and 0 (carried %s)" % [
+			got.get(small.id), got.get(fix.id), plan[small.id].done, got]
 	return ""
 
 

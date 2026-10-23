@@ -48,7 +48,7 @@ extends RefCounted
 #   SPRINTPROBE PRED|<seed>|<sprint>|<card>|<split id:weeks+…>|<done>|<finishes 1|0>|<no_start 1|0>|<mvp_eta>
 #   SPRINTPROBE REPRED|<seed>|<sprint>|<card>|<done>|<finishes 1|0>|<emergency card>   the plan read again after an
 #                                                         emergency answered with its fix first; CLOSE compares it
-#   SPRINTPROBE CLOSE|<seed>|<sprint>|<card>|<shipped 1|0>|<carried_done>|MATCH|MISMATCH[|cause=<event id>|cause=team|cause=founder_meeting]
+#   SPRINTPROBE CLOSE|<seed>|<sprint>|<card>|<shipped 1|0>|<carried_done>|MATCH|MISMATCH[|cause=<event id>|cause=team|cause=founder_meeting|cause=bugs]
 #   SPRINTPROBE MVP|<seed>|<tick>
 #   SPRINTPROBE PAPER|<seed>|<sprint>|<event id>|<speaker id, - for a paper no one speaks>   a decision paper asked
 #   SPRINTPROBE PAPERSUM|weeks=<w>|sprints=<n>|papers=<k>|empty=<n-k>|empty_rate=<share of sprints with no paper>
@@ -66,7 +66,10 @@ extends RefCounted
 # the points the plan gave it. A mismatch is named when, inside its sprint, a decision paper was asked or an
 # answered event changed the team's points or a card's effort, progress or place (cause=<event id>), or the
 # week's tick changed the team (cause=team), or only the founder's pay (cause=founder_meeting: the plan holds the
-# week's frozen pay for every week it has left, and the next week's follows the meetings of this one). The run passes
+# week's frozen pay for every week it has left, and the next week's follows the meetings of this one), or the start read
+# a fix card's size from the bug store again (cause=bugs: bugs landed after the last tick's read, which the plan the
+# screen drew still held). A card the start moved to the next column (its gate closed since it was placed) is
+# checked at once: the plan must have said it makes no point (CLOSE with shipped 0 and 0.00 carried). The run passes
 # when no mismatch is unnamed.
 
 ## fixture=iz1: its developers' stars, and the big card's size in person-weeks per week of the sprint (two people for two
@@ -227,12 +230,22 @@ static func _plan(seed_value: int, o: Dictionary, verdicts: Array) -> bool:
 			"+".join(card.split.map(func(w: Dictionary) -> String: return "%s:%d" % [w.id, w.weeks])), card.done,
 			int(card.finishes), int(card.done <= SprintSystem.EPS),
 			"-" if eta.is_empty() else "%d/%d" % [eta.sprint, eta.week]])
+	var read: Array = _inputs()[1]
 	if not SprintSystem.start():
 		print("SPRINTPROBE SKIP|%d|%d|-|empty" % [seed_value, SprintSystem.sprint_number()])
 		return false
+	# The start moves a card whose gate closed since it was placed to the next column: the plan said it makes no point.
+	for id in _said.keys().filter(func(id: String) -> bool: return not p.sprint.cards.has(id)):
+		var verdict: String = "MATCH" if not _said[id][0] and _said[id][1] <= SprintSystem.EPS else "MISMATCH"
+		verdicts.append(verdict)
+		print("SPRINTPROBE CLOSE|%d|%d|%s|0|0.00|%s" % [seed_value, SprintSystem.sprint_number(), id, verdict])
+		_said.erase(id)
 	var papered: bool = _papered.has("%d|%d" % [seed_value, SprintSystem.sprint_number()])
 	_cause = GameState.product.decision.event_id if papered else ""
 	_seen = _inputs()
+	# The start reads a fix card's size from the bug store again: bugs that landed since the last tick's read change the plan.
+	if _cause == "" and _seen[1] != read.filter(func(row: Array) -> bool: return p.sprint.cards.has(row[0])):
+		_cause = "bugs"
 	_tally = {"planned": p.sprint.cards.size(), "idle": 0, "limit": limit}
 	return true
 

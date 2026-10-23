@@ -877,18 +877,18 @@ static func _lead_area(pool: Array, capacity: float) -> String:
 	return _weakest(areas, pool)
 
 
-## Liderin kuralı. Zorunlu kartlar sırasıyla tavana (%125) kadar: verilmiş sözlerin kartları (son
+## Liderin kuralı. Zorunlu kartlar sırasıyla tavana (%125) kadar, oynatmadan yükle: verilmiş sözlerin kartları (son
 ## tarihi yakın önde), son tarihi en yakın talep, ücretli plan (B2C'de yayından sonra gelirin
 ## kapısıdır), liderin alanının en iyi kartı ve açık öncelikli düzeltmeler; boş sprint, "+" gibi, tavanı
 ## aşan kartı da alır. Kalan yer etkisi olan, etki/efor oranı en yüksek kartlarla dolar: PM kapasiteye
-## kadar; `played` (bu sprintin lideri) sprinti oynatarak, önceki seçilenlerin hepsi bitiyor, yeni kart
-## puan alıyor ve yük tavanı aşmıyorsa; bitmeyecek kartı aldıktan sonra durur, sprint en çok bir
+## kadar; `played` (bu sprintin lideri) alım sınamasıyla (`SprintSystem.intake`: "+" ile aynı kural), önceki
+## seçilenlerin hepsi bitiyorsa; bitmeyecek kartı aldıktan sonra durur, sprint en çok bir
 ## devreden kart taşır. Bu ya da sonraki sprintte duran ve kilitli kartlar önerilmez. `taken` başka
 ## sprintlere ayrılmış kartlardır (onaylı planlar, PM'in önceki sütunları). PM aynı kuralla planlar;
 ## `goal` alanının kartları sırada hedef ağırlığıyla öne çıkar.
 static func _suggest(capacity: float, used: float, taken: Array = [], goal := "", played := false) -> Array:
 	var pool: Array = open_cards(taken)
-	if pool.is_empty():
+	if pool.is_empty() or capacity <= 0.0:
 		return []
 	var score: Dictionary = {}
 	for c in pool:
@@ -910,20 +910,22 @@ static func _suggest(capacity: float, used: float, taken: Array = [], goal := ""
 	var ceiling: float = capacity * float(cfg("cap_ceiling"))
 	for c in must:
 		var load: float = SprintSystem.remaining(c)
-		if not picks.has(c.id) and ((is_zero_approx(used) and capacity > 0) or used + load <= ceiling):
+		if not picks.has(c.id) and (is_zero_approx(used) or used + load <= ceiling):
 			picks.append(c.id)
 			used += load
 	for c in pool:
-		var load: float = SprintSystem.remaining(c)
-		if picks.has(c.id) or score[c.id] <= 0.0 or used + load > (ceiling if played else capacity):
+		if picks.has(c.id) or score[c.id] <= 0.0:
 			continue
+		var load: float = SprintSystem.remaining(c)
 		if played:
-			var plan: Dictionary = SprintSystem.plan_outcome(_p().sprint.cards + picks + [c.id]).cards
-			if picks.any(func(id: String) -> bool: return not plan[id].finishes) or plan[c.id].done <= SprintSystem.EPS:
+			var take: Dictionary = SprintSystem.intake(SprintSystem.starting() + picks.map(card_by_id), c, SprintSystem.team())
+			if not take.takes or picks.any(func(id: String) -> bool: return not take.cards[id].finishes):
 				continue
-			if not plan[c.id].finishes:
+			if not take.cards[c.id].finishes:
 				picks.append(c.id)
 				break
+		elif used + load > capacity:
+			continue
 		picks.append(c.id)
 		used += load
 	return picks
