@@ -501,6 +501,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"productivity_mod_paces_the_sprint":     fail = _case_productivity_mod_paces_the_sprint()  # EXPECT-ERROR 'productivity_mod' found no target
 		"sprint_ceiling_125_blocks_add":         fail = _case_sprint_ceiling_125_blocks_add()
 		"sprint_intake_uses_applied_plan":       fail = _case_sprint_intake_uses_applied_plan()
+		"sprint_overflow_phase_recorded":        fail = _case_sprint_overflow_phase_recorded()
 		"sprint_carry_keeps_progress":           fail = _case_sprint_carry_keeps_progress()
 		"sprint_mvp_three_identity_k1":          fail = _case_sprint_mvp_three_identity_k1()
 		"sprint_faulty_bug_on_card_line":        fail = _case_sprint_faulty_bug_on_card_line()
@@ -21081,6 +21082,83 @@ static func _case_sprint_intake_uses_applied_plan() -> String:
 	if absf(float(got.get(small.id, -1.0)) - plan[small.id].done) > SprintSystem.EPS or float(got.get(fix.id, -1.0)) != 0.0:
 		return "the close gave the K1 card %s and the fix card %s points, the plan said %.2f and 0 (carried %s)" % [
 			got.get(small.id), got.get(fix.id), plan[small.id].done, got]
+	return ""
+
+
+## Sürüm kaydı aşama başına kapanışta kalan ihtiyacı (`out`) ve o aşamanın art arda taşan kapanış sayısını (`streak`)
+## yazar. Testçisi yetişmeyen ekipte Test üst üste taşar (sayaç 1, 2, …), `out` kapanışta kartta kalan test ihtiyacıdır
+## ve kart bitince ikisi de 0 olur. Yazılım aşamasında takılan kartta Geliştirme ile Test aynı kapanışta birlikte
+## sayılır. Önceki kayıtta alan yoksa sayaç 0'dan başlar.
+static func _case_sprint_overflow_phase_recorded() -> String:
+	_seed_sprint()
+	for role_id in [HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_TESTER]:
+		_sprint_hire("char_of_" + role_id, role_id)
+	GameState.set_founder_in_sprint(false)
+	var week: float = _sprint_points("char_of_" + HRConstants.ROLE_TESTER)
+	var k1s: Array = SprintCatalog.candidates("core").filter(
+		func(c: Dictionary) -> bool: return c.kind == "feature" and int(c.target_tier) == 1)
+	var streak: Dictionary = {"design": 0, "dev": 0, "test": 0}
+	var seen: Array = []
+	# Kapanıştan sonra kayıt, kapanışta kalan kartların ihtiyacından ve sayaçtan ayrıca hesaplananla eşit olmalı.
+	var closes := func() -> String:
+		var record: Dictionary = GameState.product.release.overflow
+		var left_over: Array = GameState.product.cards.values().filter(
+			func(card: Dictionary) -> bool: return card.state == "carried")
+		var row: Dictionary = {}
+		for i in SprintSystem.STAGES.size():
+			var stage: String = SprintSystem.STAGES[i]
+			var left: float = 0.0
+			for card in left_over:
+				left += maxf(0.0, float(card.need[i]) - float(card.progress[i]))
+			streak[stage] = streak[stage] + 1 if left > SprintSystem.EPS else 0
+			row[stage] = {"out": float(record[stage].out), "streak": int(record[stage].streak)}
+			if absf(row[stage].out - left) > SprintSystem.EPS or row[stage].streak != streak[stage]:
+				return "sprint %d closed with %s at %s: out %.2f, streak %d; the cards leave %.2f and the count after the last close is %d" % [
+					int(GameState.product.release.sprint), stage, record, row[stage].out, row[stage].streak, left, streak[stage]]
+		seen.append(row)
+		return ""
+	var open := func(card: Dictionary, need: Array) -> void:
+		if SprintSystem.mode() == "release":
+			SprintSystem.plan_next()
+		SprintSystem.add(card.id)
+		GameState.product.cards[card.id].need = need
+	# A: tasarım ve yazılım kısa, test tester'ın birkaç sprintinden uzun.
+	open.call(k1s[0], [0.5 * week, 0.5 * week, 9.0 * week])
+	while GameState.product.cards.has(k1s[0].id) and seen.size() < 8:
+		if not _play_sprint([]):
+			return "fixture: sprint %d did not start" % SprintSystem.sprint_number()
+		var bad: String = closes.call()
+		if bad != "":
+			return bad
+	var tests: Array = seen.map(func(row: Dictionary) -> int: return row.test.streak)
+	if GameState.product.cards.has(k1s[0].id) or tests.size() < 3 or tests.slice(0, 2) != [1, 2] or tests.back() != 0 \
+			or seen.any(func(row: Dictionary) -> bool: return row.design.streak != 0 or row.dev.streak != 0 or row.design.out != 0.0 or row.dev.out != 0.0):
+		return "the tester-bound card's closes count Test %s, want 1, 2, … and 0 once it ships, with Design and Development never over" % [tests]
+	# B: yazılım aşamasında takılır, testi baştan bekler; iki aşama aynı kapanışta sayılır.
+	var first: int = seen.size()
+	open.call(k1s[1], [0.5 * week, 6.0 * week, 9.0 * week])
+	if not _play_sprint([]):
+		return "fixture: sprint %d did not start" % SprintSystem.sprint_number()
+	var why: String = closes.call()
+	if why != "":
+		return why
+	var both: Dictionary = seen[first]
+	if both.dev.streak != 1 or both.test.streak != 1 or both.dev.out <= SprintSystem.EPS \
+			or absf(both.test.out - 9.0 * week) > SprintSystem.EPS:
+		return "the card stuck in development closed with %s, want Development and Test both over (Test the whole 9 weeks of tester points)" % [both]
+	# Önceki kayıtta alan yoksa sayaç 0'dan başlar.
+	GameState.product.releases.back().erase("overflow")
+	streak.assign({"design": 0, "dev": 0, "test": 0})
+	while GameState.product.cards.has(k1s[1].id) and seen.size() < first + 8:
+		if not _play_sprint([]):
+			return "fixture: sprint %d did not start" % SprintSystem.sprint_number()
+		why = closes.call()
+		if why != "":
+			return why
+	var after: Dictionary = seen[first + 1]
+	if after.test.streak != 1 or seen.back().test.streak != 0 or seen.back().test.out != 0.0:
+		return "after the record lost its field the next close counts Test %d, want 1 (not 2), and the closing one %s" % [
+			after.test.streak, seen.back()]
 	return ""
 
 

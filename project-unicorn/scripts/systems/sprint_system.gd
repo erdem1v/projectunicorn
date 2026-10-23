@@ -13,6 +13,8 @@ extends RefCounted
 ## Kartın progress ve need dizilerinin sırası: Tasarım (araştırmada Ürün), Geliştirme, Test.
 const TEST_PHASE := 2
 const PHASE_DONE := 3
+## Aşama adları, ihtiyaç dizisinin sırasıyla; sürüm kaydının `overflow`'u bunlarla anahtarlanır.
+const STAGES := ["design", "dev", "test"]
 const EPS := 0.001
 ## MVP tahmininin ufku (hafta); ötesinde tahmin yoktur.
 const MVP_HORIZON := 24
@@ -1404,7 +1406,8 @@ static func _auto_start() -> void:
 ## Hâlâ bekleyen karar açık kalır: kâğıdı aynı dağıtımın olay yuvasında süresi dolup on_expire
 ## ile çözülür ve ertesi okumada kart serbest kalır; beklerken ilerlemediği için devretmiştir.
 ## Düzeltme kartı hattının bütün açık hatasını düşer; hatalı kapanan kartın hatası kartının hattına düşer, ürün canlı
-## olana dek bekler.
+## olana dek bekler. Sürüm kaydı aşama başına kapanışta kalan ihtiyacı ve o aşamanın art arda taşan kapanış sayısını
+## taşır (`overflow`).
 static func _close() -> void:
 	var p: Dictionary = _p()
 	var sprint: Dictionary = p.sprint
@@ -1417,6 +1420,16 @@ static func _close() -> void:
 			ship.append(c)
 		else:
 			carried.append(c)
+	# Araştırmanın işi bir aşamaya yazılmaz; sayaç bir önceki sürüm kaydından sürer, kaydın alanı yoksa 0'dan.
+	var before: Dictionary = p.releases.back().get("overflow", {}) if not p.releases.is_empty() else {}
+	var overflow: Dictionary = {}
+	for i in PHASE_DONE:
+		var out: float = 0.0
+		for c in carried:
+			var left: float = float(c.need[i]) - float(c.progress[i])
+			out += left if c.kind != "research" and left > EPS else 0.0
+		overflow[STAGES[i]] = {"out": out,
+			"streak": int(before.get(STAGES[i], {}).get("streak", 0)) + 1 if out > 0.0 else 0}
 	var areas: Array = SprintCatalog.area_ids()
 	var levels: Dictionary = {}
 	var alerts: Dictionary = {}
@@ -1494,7 +1507,7 @@ static func _close() -> void:
 			return {"id": c.id, "done": total(c) - remaining(c), "total": roundi(total(c)), "to_sprint": number + 1}),
 		"velocity": velocity, "expected": _expected(changed, closed), "actual": {}, "press": {},
 		"gate": gate, "day": GameState.day, "changed_areas": changed,
-		"alerts_cleared": cleared, "faulty": faulty}
+		"alerts_cleared": cleared, "faulty": faulty, "overflow": overflow}
 	release.press = SprintBridges.press_line(release)
 	var carried_ids: Array = carried.map(func(c: Dictionary) -> String: return c.id)
 	p.next.cards = carried_ids + p.next.cards.filter(func(id: String) -> bool: return id not in carried_ids)

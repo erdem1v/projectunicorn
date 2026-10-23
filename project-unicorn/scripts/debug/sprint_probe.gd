@@ -48,7 +48,7 @@ extends RefCounted
 #   SPRINTPROBE PRED|<seed>|<sprint>|<card>|<split id:weeks+…>|<done>|<finishes 1|0>|<no_start 1|0>|<mvp_eta>
 #   SPRINTPROBE REPRED|<seed>|<sprint>|<card>|<done>|<finishes 1|0>|<emergency card>   the plan read again after an
 #                                                         emergency answered with its fix first; CLOSE compares it
-#   SPRINTPROBE CLOSE|<seed>|<sprint>|<card>|<shipped 1|0>|<carried_done>|MATCH|MISMATCH[|cause=<event id>|cause=team|cause=founder_meeting|cause=bugs]
+#   SPRINTPROBE CLOSE|<seed>|<sprint>|<card>|<shipped 1|0>|<carried_done>|out=<design>/<dev>/<test>|streak=<design>/<dev>/<test>|MATCH|MISMATCH[|cause=<event id>|cause=team|cause=founder_meeting|cause=bugs]
 #   SPRINTPROBE MVP|<seed>|<tick>
 #   SPRINTPROBE PAPER|<seed>|<sprint>|<event id>|<speaker id, - for a paper no one speaks>   a decision paper asked
 #   SPRINTPROBE PAPERSUM|weeks=<w>|sprints=<n>|papers=<k>|empty=<n-k>|empty_rate=<share of sprints with no paper>
@@ -58,6 +58,9 @@ extends RefCounted
 # done and carried_done are the points the card gets in this sprint (carried_done - for a card that
 # finished). mvp_eta is the screen's MVP forecast when the sprint starts (SprintSystem.mvp_eta),
 # <sprint>/<week>: the sprint whose close ships v1.0 and the week before that close's tick (- = none).
+# out and streak are the closed sprint's, not the card's, so every card of a sprint prints the same pair: per stage the
+# need its cards leave unfinished and how many closes in a row that stage has left some (the release record's
+# `overflow`); they are information, never compared. The start's CLOSE of a card it moved carries neither.
 # planned is the sprint's cards when it starts, finished those done when it closes, idle the person-weeks with
 # no card (SprintSystem's worked list), limit why the plan stopped: ceiling or full (add refused a card), pool
 # (fill=1: every open card is in), cards (cards=N reached) or lead.
@@ -171,6 +174,9 @@ static func _plan(seed_value: int, o: Dictionary, verdicts: Array) -> bool:
 	var p: Dictionary = GameState.product
 	if SprintSystem.mode() == "release":
 		var finished: int = 0
+		var overflow: Dictionary = p.release.overflow
+		var out: String = "/".join(SprintSystem.STAGES.map(func(s: String) -> String: return "%.2f" % overflow[s].out))
+		var streak: String = "/".join(SprintSystem.STAGES.map(func(s: String) -> String: return str(int(overflow[s].streak))))
 		for id in _said:
 			var carried: Array = p.release.carried.filter(func(c: Dictionary) -> bool: return c.id == id)
 			var got: float = 0.0 if carried.is_empty() else float(carried[0].done) - _said[id][2]
@@ -178,8 +184,8 @@ static func _plan(seed_value: int, o: Dictionary, verdicts: Array) -> bool:
 				and (carried.is_empty() or absf(got - _said[id][1]) <= SprintSystem.EPS) \
 				else "MISMATCH" + ("" if _cause == "" else "|cause=" + _cause)
 			verdicts.append(verdict)
-			print("SPRINTPROBE CLOSE|%d|%d|%s|%d|%s|%s" % [seed_value, p.release.sprint, id, int(carried.is_empty()),
-				"-" if carried.is_empty() else "%.2f" % got, verdict])
+			print("SPRINTPROBE CLOSE|%d|%d|%s|%d|%s|out=%s|streak=%s|%s" % [seed_value, p.release.sprint, id,
+				int(carried.is_empty()), "-" if carried.is_empty() else "%.2f" % got, out, streak, verdict])
 			finished += int(carried.is_empty())
 		print("SPRINTPROBE LOAD|%d|%d|%d|%d|%d|%s" % [seed_value, p.release.sprint, _tally.planned, finished,
 			_tally.idle, _tally.limit])

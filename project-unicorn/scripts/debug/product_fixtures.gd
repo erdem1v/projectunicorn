@@ -41,10 +41,11 @@ func model() -> Dictionary:
 	var m: Dictionary = _build(_stage)
 	for entry in _log:
 		_apply(m, entry[0], entry[1])
-	# Fikstürde "+" sprintin geneline bağlıdır: her aday ve talep satırı merkezin can_add'ini okur.
+	# Fikstürde "+" sprintin geneline bağlıdır: her aday ve talep satırı merkezin can_add'ini okur; `no_room` işaretli
+	# kart sprintte boş puan kalsa da o puanı kullanamaz.
 	for list in m.areas.map(func(a: Dictionary) -> Array: return a.candidates) + [m.customers if m.customers != null else []]:
 		for c in list:
-			c.addable = m.center.can_add
+			c.addable = m.center.can_add and not c.get("no_room", false)
 	return m
 
 
@@ -130,6 +131,20 @@ func _build(id: String) -> Dictionary:
 		"over_125":
 			_place(m, "mobil_giris", "center")
 			_place(m, "ilk_tur", "center")
+		"plus_closed":
+			# Sprintte boş puan var (50/60) ama Mobil giriş yazılım aşamasından başlar ve yazılımcı dolu: "+" kapalı;
+			# araştırma kartı ilk aşamadan başlar, "+" açık.
+			for c in _area_of(m, "onboarding").candidates:
+				c["no_room"] = c.id == "mobil_giris"
+		"start_shut":
+			# Planlandıktan sonra kapısı kapanan Kısa kayıt: plan baştan "Bu sprint başlamaz" der, puan almaz, sprint sonunda
+			# Zayıf → Yeterli satırı yoktur; kapasite çubuğu yükünü hâlâ sayar.
+			for c in m.center.cards:
+				c["gate_closed"] = c.id == "kisa_kayit"
+				if c.gate_closed:
+					c.effort_split = []
+			_resum(m.center)
+			m.center.forecast = m.center.forecast.filter(func(part: Dictionary) -> bool: return part.k != "level")
 		"empty_start":
 			_clear_sprint(m)
 		"no_release":
@@ -323,9 +338,10 @@ func _capacity(cards: Array, total: float, done: float, next: int) -> Dictionary
 	var segments: Array = []
 	for card in cards:
 		var pts: float = card.remaining if card.remaining >= 0 else card.effort
-		card.spills = used < total and used + pts > total
-		card.no_start = next if used >= total else -1
-		card.planned_done = card.effort - pts + clampf(total - used, 0.0, pts)
+		var shut: bool = card.get("gate_closed", false)
+		card.spills = not shut and used < total and used + pts > total
+		card.no_start = next if shut or used >= total else -1
+		card.planned_done = card.effort - pts if shut else card.effort - pts + clampf(total - used, 0.0, pts)
 		used += pts
 		segments.append({"pts": pts})
 	var state: String = "blocked" if total == 0 else ("over" if used > total else "ok")
