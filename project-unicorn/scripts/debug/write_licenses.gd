@@ -5,7 +5,7 @@
 extends SceneTree
 
 const FONT_FAMILIES := {
-	"cond": "BarlowCondensed", "sans": "IBMPlexSans", "serif": "SourceSerif4",
+	"archivo": "Archivo", "sans": "IBMPlexSans", "serif": "SourceSerif4",
 	"mono": "JetBrainsMono", "fallback": "NotoSansSymbols2",
 }
 const LUCIDE := "res://assets/art/office/icons/LICENSE-lucide.txt"

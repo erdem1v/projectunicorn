@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git d325f885 · 2026-10-23 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 66f35700 · 2026-10-23 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -59,9 +59,9 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/data_models/rival.gd · 38 · Rival · Resource · 0 sinyal · 1 func
 - scripts/data_models/term_sheet.gd · 63 · TermSheet · Resource · 0 sinyal · 3 func
 
-### scripts/debug/ (11 dosya, 31066 satır)
+### scripts/debug/ (11 dosya, 31060 satır)
 - scripts/debug/endgame_smoke.gd · 25931 · EndgameSmoke · RefCounted · 0 sinyal · 612 func
-- scripts/debug/glyph_audit.gd · 113 · - · SceneTree · 0 sinyal · 6 func
+- scripts/debug/glyph_audit.gd · 107 · - · SceneTree · 0 sinyal · 6 func
 - scripts/debug/kit_probe.gd · 298 · - · RefCounted · 0 sinyal · 10 func
 - scripts/debug/loc_residue.gd · 265 · - · SceneTree · 0 sinyal · 9 func
 - scripts/debug/office_crowd_probe.gd · 326 · OfficeCrowdProbe · Node · 0 sinyal · 15 func
@@ -271,9 +271,9 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/tabs/rnd/rnd_tree_view.gd · 433 · RnDTreeView · Control · 1 sinyal · 25 func
 - scripts/tabs/rnd/rnd_ui_shared.gd · 290 · RnDUiShared · RefCounted · 0 sinyal · 22 func
 
-### scripts/theme/ (4 dosya, 3296 satır)
-- scripts/theme/build_theme.gd · 1521 · - · SceneTree · 0 sinyal · 27 func
-- scripts/theme/theme_check.gd · 270 · - · SceneTree · 0 sinyal · 11 func
+### scripts/theme/ (4 dosya, 3304 satır)
+- scripts/theme/build_theme.gd · 1528 · - · SceneTree · 0 sinyal · 28 func
+- scripts/theme/theme_check.gd · 271 · - · SceneTree · 0 sinyal · 11 func
 - scripts/theme/ui_factory.gd · 533 · UiFactory · RefCounted · 0 sinyal · 38 func
 - scripts/theme/ui_tokens.gd · 972 · UiTokens · RefCounted · 0 sinyal · 39 func
 

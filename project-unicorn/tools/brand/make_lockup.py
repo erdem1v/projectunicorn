@@ -23,7 +23,7 @@ ORANGE = "#FFA028"     # UiTokens.D_BRAND_MARK
 INK = "#FFFFFF"        # UiTokens.D_INK_1
 ICON = 256
 
-font = TTFont(ROOT / "assets" / "fonts" / "cond" / "BarlowCondensed-Bold.ttf")
+font = TTFont(Path(__file__).parent / "BarlowCondensed-Bold.ttf")
 glyphs, cmap, hmtx = font.getGlyphSet(), font.getBestCmap(), font["hmtx"]
 F = S / 1.68
 k = F / font["head"].unitsPerEm

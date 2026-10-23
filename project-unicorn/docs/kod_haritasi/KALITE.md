@@ -1,6 +1,6 @@
 # Kod haritası · KALITE
 
-Üretildi: git d325f885 · 2026-10-23 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git 66f35700 · 2026-10-23 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 243 .gd (tools/ ve sandbox/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
@@ -9,7 +9,7 @@ Kapsam: scripts/ altındaki 243 .gd (tools/ ve sandbox/ hariç). Kod temizliği 
 - scripts/main/main.gd · 5165 satır · 185 func
 - scripts/debug/run_probe.gd · 2420 satır · 94 func
 - scripts/systems/sprint_system.gd · 1732 satır · 146 func
-- scripts/theme/build_theme.gd · 1521 satır · 27 func
+- scripts/theme/build_theme.gd · 1528 satır · 28 func
 - scripts/systems/vc_pitch_system.gd · 1327 satır · 91 func
 - scripts/autoload/save_manager.gd · 1289 satır · 61 func
 - scripts/events/tools/lint.gd · 1186 satır · 43 func
@@ -34,10 +34,10 @@ Kapsam: scripts/ altındaki 243 .gd (tools/ ve sandbox/ hariç). Kod temizliği 
 ## 80 satırdan uzun fonksiyonlar (88 tane, en uzun 40)
 
 Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları arada sayılır).
-- scripts/theme/build_theme.gd:421 · _menajer · 786 satır
+- scripts/theme/build_theme.gd:418 · _menajer · 785 satır
 - scripts/debug/endgame_smoke.gd:51 · run_case · 541 satır
 - scripts/events/core/effects.gd:225 · _apply · 441 satır
-- scripts/theme/build_theme.gd:42 · _initialize · 324 satır
+- scripts/theme/build_theme.gd:39 · _initialize · 324 satır
 - scripts/events/tools/vocab_gen.gd:20 · run · 297 satır
 - scripts/main/main.gd:3301 · _run_hr_shot · 252 satır
 - scripts/debug/endgame_smoke.gd:7970 · _case_hr_constants_contract · 220 satır
@@ -198,7 +198,7 @@ Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: 
 - Model · 2 dosya · scripts/ui/components/build_bar.gd:13, scripts/ui/components/research_bar.gd:25
 - NAME_W · 2 dosya · scripts/onboarding/steps/character_step.gd:10, scripts/onboarding/steps/company_step.gd:7
 - ONBOARDING_VOICE_TENURE_WEEKS · 2 dosya · scripts/events/tools/plausibility.gd:56, scripts/systems/b2b_constants.gd:270
-- OUT_PATH · 2 dosya · scripts/events/tools/vocab_gen.gd:15, scripts/theme/build_theme.gd:37
+- OUT_PATH · 2 dosya · scripts/events/tools/vocab_gen.gd:15, scripts/theme/build_theme.gd:34
 - PANE · 2 dosya · scripts/tabs/events_tab.gd:9, scripts/tabs/rnd/rnd_history.gd:10
 - PAUSE · 2 dosya · scripts/tabs/product/sprint_panel.gd:12, scripts/tabs/rnd/rnd_ui_shared.gd:53
 - PHASE_KEYS · 2 dosya · scripts/autoload/game_state.gd:396, scripts/tabs/product/sprint_card.gd:22

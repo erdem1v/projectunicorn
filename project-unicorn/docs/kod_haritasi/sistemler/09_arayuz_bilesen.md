@@ -10,7 +10,7 @@ Oyuncu metni `tr(ANAHTAR)` ile `localization/strings.csv`den okunur; ayrı bir C
 ## Dosyalar
 - `scripts/theme/ui_tokens.gd` (972): `UiTokens`; tüm renkler, SIZE_* merdiveni, krem palet, koyu dil `D_*`, `TABS`, `THEME_STAMP`, renk körü anahtarı ve `D_` yardımcıları
 - `scripts/theme/ui_factory.gd` (533): `UiFactory`; statik Control üreticileri (label, pill, badge, kart, avatar, `D_tag`, `D_kpi`, `D_seg_tabs`, `D_said`, `D_stars`) hep tema varyasyonu adlarıyla
-- `scripts/theme/build_theme.gd` (1521): `-s` betiği; UiTokens'tan `themes/master_theme.tres` (krem) ve `themes/menajer_theme.tres` (koyu) üretir, FontVariation sarmalarını kurar
+- `scripts/theme/build_theme.gd` (1521): `-s` betiği; UiTokens'tan `themes/master_theme.tres` (krem) ve `themes/menajer_theme.tres` (koyu) üretir, FontVariation sarmalarını kurar (koyu yüzler Archivo'nun değişken yüzü, yedek Plex)
 - `scripts/theme/theme_check.gd` (270): tema denetçisi (eksik öğe, içerik payı, WCAG kontrastı) ve koyu temanın `contrast_audit` kapısı
 - `scripts/ui/components/top_bar.gd` (458): üst bar; iki satırlık metrik ızgarası, gün/saat/hafta çubuğu, hız tuşları, Sıradaki ve karar kapısı yuvası
 - `scripts/ui/components/left_tabs.gd` (326): sol ray; `UiTokens.TABS` ile sahne düğmeleri, kilit, rozet sayaçları, simge kipi

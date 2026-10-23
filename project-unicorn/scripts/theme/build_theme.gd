@@ -8,9 +8,9 @@ extends SceneTree
 # ARTIFACT of UiTokens, so re-run this whenever tokens or faces change. Master is written first.
 # - themes/master_theme.tres, the project theme (cream): Source Serif 4, IBM Plex Sans and
 #   JetBrains Mono, every face falling back to Noto Sans Symbols 2.
-# - themes/menajer_theme.tres (the dark language), set on the roots of migrated screens: Barlow
-#   Condensed (falls back to Plex), IBM Plex Sans and Plex Sans Condensed, Source Serif 4; no
-#   text face falls back to Noto, whose height would set every Label's line.
+# - themes/menajer_theme.tres (the dark language), set on the roots of migrated screens: Archivo's
+#   variable weight and width axes (a glyph it lacks falls back to the Plex face of its weight) and
+#   Source Serif 4; no text face falls back to Noto, whose height would set every Label's line.
 #
 # Every size here is a UiTokens scale step: a variation picks a step, it never invents a number.
 # ============================================================================
@@ -24,11 +24,8 @@ const FONT_SERIF_SB := "res://assets/fonts/serif/SourceSerif4-Semibold.ttf"
 const FONT_SERIF_IT := "res://assets/fonts/serif/SourceSerif4-It.ttf"
 const FONT_SANS_REG := "res://assets/fonts/sans/IBMPlexSans-Regular.ttf"
 const FONT_SANS_SB := "res://assets/fonts/sans/IBMPlexSans-SemiBold.ttf"
-const FONT_SANS_MED := "res://assets/fonts/sans/IBMPlexSans-Medium.ttf"
 const FONT_SANS_B := "res://assets/fonts/sans/IBMPlexSans-Bold.ttf"
-const FONT_SANSC_REG := "res://assets/fonts/sans/IBMPlexSansCondensed-Regular.ttf"
-const FONT_COND_SB := "res://assets/fonts/cond/BarlowCondensed-SemiBold.ttf"
-const FONT_COND_B := "res://assets/fonts/cond/BarlowCondensed-Bold.ttf"
+const FONT_ARCHIVO := "res://assets/fonts/archivo/Archivo[wdth,wght].ttf"
 const FONT_MONO_REG := "res://assets/fonts/mono/JetBrainsMono-Regular.ttf"
 const FONT_MONO_SB := "res://assets/fonts/mono/JetBrainsMono-SemiBold.ttf"
 const FONT_SYMBOLS := "res://assets/fonts/fallback/NotoSansSymbols2-Regular.ttf"
@@ -422,24 +419,23 @@ func _menajer(master: Theme) -> Theme:
 	var plex_reg: FontFile = load(FONT_SANS_REG)
 	var plex_sb: FontFile = load(FONT_SANS_SB)
 	var plex_b: FontFile = load(FONT_SANS_B)
-	# Barlow's figures are proportional; Plex's are already equal width.
-	var tnum := {TextServerManager.get_primary_interface().name_to_tag("tnum"): 1}
-	var cond_sb := _mkfont(FONT_COND_SB, plex_sb, "d_cond_sb", 0, tnum)
-	var cond_sb_caps := _mkfont(FONT_COND_SB, plex_sb, "d_cond_sb_caps", 1, tnum)
-	var cond_b := _mkfont(FONT_COND_B, plex_b, "d_cond_b", 0, tnum)
-	var cond_b_caps := _mkfont(FONT_COND_B, plex_b, "d_cond_b_caps", 1, tnum)
-	var sans_reg := _mkfont(FONT_SANS_REG, null, "d_sans_reg")
-	var sans_med := _mkfont(FONT_SANS_MED, null, "d_sans_med")
-	var sans_sb := _mkfont(FONT_SANS_SB, null, "d_sans_sb")
-	var sans_b := _mkfont(FONT_SANS_B, null, "d_sans_b")
-	var sansc := _mkfont(FONT_SANSC_REG, plex_reg, "d_sansc_reg")
-	var sansc_caps := _mkfont(FONT_SANSC_REG, plex_reg, "d_sansc_caps", 1)
+	# Archivo lacks ★ ✓ ▾ ˅ ⌛ ✕, so each face falls back to the Plex face of its weight.
+	# The condensed faces take Archivo's narrowest width: the screens are measured for condensed type.
+	var cond_sb := _archivo("d_cond_sb", 650, 62, plex_sb)
+	var cond_sb_caps := _archivo("d_cond_sb_caps", 650, 62, plex_sb, 1)
+	var cond_b := _archivo("d_cond_b", 800, 62, plex_b)
+	var cond_b_caps := _archivo("d_cond_b_caps", 800, 62, plex_b, 1)
+	var sans_reg := _archivo("d_sans_reg", 500, 100, plex_reg)
+	var sans_sb := _archivo("d_sans_sb", 650, 100, plex_sb)
+	var sans_b := _archivo("d_sans_b", 800, 100, plex_b)
+	var sansc := _archivo("d_sansc_reg", 500, 87, plex_reg)
+	var sansc_caps := _archivo("d_sansc_caps", 650, 87, plex_reg, 1)
 	var serif_reg := _mkfont(FONT_SERIF_REG, null, "d_serif_reg")
 	var serif_sb := _mkfont(FONT_SERIF_SB, null, "d_serif_sb")
 	var serif_it := _mkfont(FONT_SERIF_IT, null, "d_serif_it")
 
 	var th := Theme.new()
-	# Mono's jobs move to Plex and its caps labels to Barlow.
+	# Mono's jobs move to the regular sans and its caps labels to the condensed semibold caps.
 	var errors := _copy_dark(master, th, {"serif_reg": serif_reg, "serif_sb": serif_sb,
 		"serif_it": serif_it, "sans_reg": sans_reg, "sans_sb": sans_sb, "mono_reg": sans_reg,
 		"mono_label": cond_sb_caps, "mono_sb": sans_sb})
@@ -464,7 +460,7 @@ func _menajer(master: Theme) -> Theme:
 	# A window's shadow is its halo over the office.
 	th.set_stylebox("panel", &"WindowPanel", _shadow(_flat(T.D_SURFACE_3, T.D_RADIUS_4,
 		_pad_of(th.get_stylebox("panel", &"WindowPanel")), T.D_LINE_2), T.D_HALO, T.D_SHADOW_WINDOW))
-	# The newspaper stays cream with its own faces and sizes; its meta line is Plex Sans Condensed.
+	# The newspaper stays cream with its own faces and sizes; its meta line is the narrow-column caps face.
 	for row in [
 		[&"MastheadSerif", serif_sb, T.D_PAPER_FS_MASTHEAD, T.PAPER_INK_MAST],
 		[&"NewsHeadlineSerif", serif_sb, T.D_PAPER_FS_HEADLINE, T.PAPER_INK],
@@ -520,7 +516,7 @@ func _menajer(master: Theme) -> Theme:
 		[&"GhostButtonSmall", ghost, small],
 	]:
 		_dbtn(th, row[0], row[1], row[2][0], row[2][1], row[2][2])
-	# The main menu's items: Barlow 30 on a 56 px row in ink-3, ink-1 under the pointer or the focus; the primary
+	# The main menu's items: condensed bold 30 on a 56 px row in ink-3, ink-1 under the pointer or the focus; the primary
 	# item reads ink-1 from the start.
 	for row in [[&"MainMenuItem", T.D_INK_3], [&"MainMenuItemPrimary", T.D_INK_1]]:
 		_dbtn(th, row[0], {"normal": [clear, clear, row[1]], "hover": [clear, T.D_LINE_HOVER, T.D_INK_1],
@@ -561,7 +557,7 @@ func _menajer(master: Theme) -> Theme:
 	th.set_constant("arrow_margin", &"OptionButton", T.SPACE_M)
 	th.set_constant("h_separation", &"OptionButton", T.SPACE_M)
 
-	# A check box or switch is its icon and a Plex label; Button's boxes must not reach it.
+	# A check box or switch is its icon and a sans label; Button's boxes must not reach it.
 	for toggle in [&"CheckBox", &"CheckButton"]:
 		for state in ["normal", "hover", "pressed", "disabled", "hover_pressed"]:
 			th.set_stylebox(state, toggle, bare)
@@ -654,7 +650,7 @@ func _menajer(master: Theme) -> Theme:
 		[&"CompanyTitle", cond_b, T.D_FS_26, T.D_INK_1],
 		[&"DialogTitle", cond_b, T.D_FS_22, T.D_INK_1],
 		[&"NameTitle", cond_b, T.D_FS_20, T.D_INK_1],
-		[&"LeadText", sans_med, T.D_FS_20, T.D_INK_2],
+		[&"LeadText", sans_reg, T.D_FS_20, T.D_INK_2],
 		[&"SubheadLabel", cond_b, T.D_FS_20, T.D_INK_2],
 		[&"OptionLabel", cond_b, T.D_FS_20, T.D_INK_1],
 		[&"OptionLabelLocked", cond_b, T.D_FS_20, T.D_INK_OFF],
@@ -675,27 +671,27 @@ func _menajer(master: Theme) -> Theme:
 		[&"KpiValue", sans_sb, T.D_FS_26, T.D_INK_2],
 		[&"PartValueArmed", sans_b, T.D_FS_26, T.D_INK_2],
 		[&"ClockLabel", sans_sb, T.D_FS_22, T.D_INK_2],
-		[&"ValueText", sans_med, T.D_FS_18, T.D_INK_2],
+		[&"ValueText", sans_reg, T.D_FS_18, T.D_INK_2],
 		[&"ValueTextStrong", sans_sb, T.D_FS_18, T.D_INK_1],
 		[&"BodyLabel", sans_reg, T.D_FS_16, T.D_INK_2],
 		[&"BodyMuted", sans_reg, T.D_FS_16, T.D_INK_3],
 		[&"SenderName", sans_sb, T.D_FS_16, T.D_INK_2],
 		[&"RiskName", sans_sb, T.D_FS_16, T.D_INK_1],
-		[&"SubjectLabel", sans_med, T.D_FS_16, T.D_INK_2],
+		[&"SubjectLabel", sans_reg, T.D_FS_16, T.D_INK_2],
 		[&"SubjectStrong", sans_sb, T.D_FS_16, T.D_INK_1],
-		[&"SkillValue", sans_med, T.D_FS_16, T.D_SKILL_3],   # its host paints D_skill(value)
+		[&"SkillValue", sans_reg, T.D_FS_16, T.D_SKILL_3],   # its host paints D_skill(value)
 		[&"SkillMain", sans_b, T.D_FS_16, T.D_SKILL_3],
 		[&"SkillSecondary", sans_sb, T.D_FS_16, T.D_SKILL_3],
 		[&"MoraleValue", sans_b, T.D_FS_16, T.D_INK_2],   # its host paints the morale band
 		[&"DataText", sans_reg, T.D_FS_15, T.D_INK_2],
 		[&"DataStrong", sans_sb, T.D_FS_15, T.D_INK_1],
-		[&"DataMedium", sans_med, T.D_FS_15, T.D_INK_2],
-		[&"NoticeText", sans_med, T.D_FS_15, T.D_INK_2],
+		[&"DataMedium", sans_reg, T.D_FS_15, T.D_INK_2],
+		[&"NoticeText", sans_reg, T.D_FS_15, T.D_INK_2],
 		[&"NoteMuted", sans_reg, T.D_FS_15, T.D_INK_3],
 		[&"CondData", sansc, T.D_FS_15, T.D_INK_2],
 		[&"TipTitle", sans_sb, T.D_FS_14, T.D_INK_1],
-		[&"KeyText", sans_med, T.D_FS_14, T.D_INK_2],
-		[&"KeyTextMuted", sans_med, T.D_FS_14, T.D_INK_3],
+		[&"KeyText", sans_reg, T.D_FS_14, T.D_INK_2],
+		[&"KeyTextMuted", sans_reg, T.D_FS_14, T.D_INK_3],
 		[&"MetaMuted", sans_reg, T.D_FS_14, T.D_INK_3],
 		[&"MetaFaint", sans_reg, T.D_FS_14, T.D_INK_4],
 		[&"Caption", sans_reg, T.D_FS_13, T.D_INK_3],
@@ -703,8 +699,8 @@ func _menajer(master: Theme) -> Theme:
 		[&"CaptionPrimary", sans_reg, T.D_FS_13, T.D_INK_2],
 		[&"CaptionFaint", sans_reg, T.D_FS_13, T.D_INK_4],
 		[&"CondCaption", sansc, T.D_FS_13, T.D_INK_3],
-		[&"SegCount", sans_med, T.D_FS_13, T.D_INK_4],
-		[&"SegCountActive", sans_med, T.D_FS_13, T.D_INK_3],
+		[&"SegCount", sans_reg, T.D_FS_13, T.D_INK_4],
+		[&"SegCountActive", sans_reg, T.D_FS_13, T.D_INK_3],
 		[&"SmallMuted", sans_reg, T.D_FS_12, T.D_INK_3],
 		[&"FrankQuote", serif_reg, T.D_FS_20, T.D_INK_2],
 	]:
@@ -729,8 +725,8 @@ func _menajer(master: Theme) -> Theme:
 		[&"BadgeDangerIcon", sans_b, T.D_FS_12, T.D_ON_NEG, _flat(T.D_NEG, T.RADIUS_PILL, badge_icon)],
 		[&"DocStamp", cond_b_caps, T.D_FS_14, T.D_STAMP, _flat(clear, T.D_RADIUS_1,
 			_fit(cond_b_caps, T.D_FS_14, T.D_H_STAMP, T.SPACE_M, T.SPACE_M), T.D_STAMP, thick)],
-		[&"FxPart", sans_med, T.D_FS_14, T.D_INK_2, _flat(T.D_SURFACE_2, T.D_RADIUS_2,
-			_fit(sans_med, T.D_FS_14, T.D_H_FX, T.SPACE_M, T.SPACE_M), T.D_LINE_1)],
+		[&"FxPart", sans_reg, T.D_FS_14, T.D_INK_2, _flat(T.D_SURFACE_2, T.D_RADIUS_2,
+			_fit(sans_reg, T.D_FS_14, T.D_H_FX, T.SPACE_M, T.SPACE_M), T.D_LINE_1)],
 	]:
 		_lbl(th, row[0], row[1], row[2], row[3])
 		th.set_stylebox("normal", row[0], row[4])
@@ -738,7 +734,7 @@ func _menajer(master: Theme) -> Theme:
 	# helpers: the colour-blind one is the "Cb" twin, which the host picks through UiTokens.D_variation.
 	var strip_pad := Vector4(T.SPACE_XL, 0, T.SPACE_L, 0)
 	var meet_pad := Vector4(T.SPACE_L, T.SPACE_L, T.SPACE_XL, T.SPACE_L)
-	var chip_pad := _fit(sans_med, T.D_FS_13, T.D_H_TAG, T.SPACE_S, T.SPACE_S)
+	var chip_pad := _fit(sans_reg, T.D_FS_13, T.D_H_TAG, T.SPACE_S, T.SPACE_S)
 	var flag_pad := Vector4(T.SPACE_M, chip_pad.y, T.SPACE_M, chip_pad.w)
 	for cb in [false, true]:
 		T.set_colorblind(cb)
@@ -756,7 +752,7 @@ func _menajer(master: Theme) -> Theme:
 		_panel(th, "RiskStrip" + twin, "PanelContainer", _flat(T.D_neg_bg(), T.D_RADIUS_3, strip_pad, T.D_neg_rule()))
 		var risk: Dictionary = T.D_badge_palette(&"negative")
 		_panel(th, "FxChipDanger" + twin, "PanelContainer", _flat(risk.bg, T.D_RADIUS_2,
-			_fit(sans_med, T.D_FS_14, T.D_H_FX, T.SPACE_M, T.SPACE_M), risk.line))
+			_fit(sans_reg, T.D_FS_14, T.D_H_FX, T.SPACE_M, T.SPACE_M), risk.line))
 		_panel(th, "RiskStripHover" + twin, "PanelContainer", _flat(T.D_neg_bg(), T.D_RADIUS_3, strip_pad, T.D_neg()))
 		# A deadline that ends this sprint or the next.
 		var warn: Dictionary = T.D_badge_palette(&"accent")
@@ -838,7 +834,7 @@ func _menajer(master: Theme) -> Theme:
 		# A sender with no face: a company's initials or a desk's glyph.
 		[&"MonoBox", _flat(T.D_SURFACE_2, T.D_RADIUS_2, Vector4.ZERO, T.D_LINE_2)],
 		# An effect part in an option's row: its glyph and its words.
-		[&"FxChip", _flat(T.D_SURFACE_2, T.D_RADIUS_2, _fit(sans_med, T.D_FS_14, T.D_H_FX, T.SPACE_M, T.SPACE_M), T.D_LINE_1)],
+		[&"FxChip", _flat(T.D_SURFACE_2, T.D_RADIUS_2, _fit(sans_reg, T.D_FS_14, T.D_H_FX, T.SPACE_M, T.SPACE_M), T.D_LINE_1)],
 		# A table head the list has scrolled under.
 		[&"TableHeadStuck", _flat(T.D_SURFACE_2, 0, Vector4(0, 0, 0, T.SPACE_M), T.D_LINE_2, bottom)],
 		# A neutral strip over a table, the risk strip's shape (the agency's search and files).
@@ -942,8 +938,8 @@ func _menajer(master: Theme) -> Theme:
 		"pressed": [T.D_SURFACE_4, clear, T.D_INK_1], "disabled": [T.D_SURFACE_4, clear, T.D_INK_OFF]}, cond_sb_caps, T.D_FS_16, rail_pad)
 	var float_look := {"normal": [T.D_SURFACE_3, T.D_LINE_1, T.D_INK_2], "hover": [T.D_SURFACE_3, T.D_LINE_HOVER, T.D_INK_1],
 		"pressed": [T.D_SURFACE_2, T.D_LINE_HOVER, T.D_INK_1], "disabled": [T.D_SURFACE_3, T.D_LINE_1, T.D_INK_OFF]}
-	_dbtn(th, &"FloatButton", float_look, sans_med, T.D_FS_15,
-		_fit(sans_med, T.D_FS_15, T.D_H_FLOAT_BTN, T.SPACE_L, T.SPACE_XL), T.D_RADIUS_3)
+	_dbtn(th, &"FloatButton", float_look, sans_reg, T.D_FS_15,
+		_fit(sans_reg, T.D_FS_15, T.D_H_FLOAT_BTN, T.SPACE_L, T.SPACE_XL), T.D_RADIUS_3)
 	for state in float_look:
 		_shadow(th.get_stylebox(state, &"FloatButton"), T.D_SHADOW_FLOAT, T.D_SHADOW_FLOATING)
 	_dbtn(th, &"TickerToggle", {"normal": [clear, T.D_LINE_1, T.D_INK_3], "hover": [clear, T.D_LINE_HOVER, T.D_INK_1],
@@ -1111,7 +1107,7 @@ func _menajer(master: Theme) -> Theme:
 		[&"RndTileSelected", T.D_SURFACE_4, T.D_INK_1],
 	]:
 		_panel(th, row[0], "Panel", _flat(row[1], T.D_RADIUS_2, Vector4.ZERO, row[2]))
-	var req := _fit(sans_med, T.D_FS_15, T.D_H_REQ_CHIP, T.SPACE_L, T.SPACE_L)
+	var req := _fit(sans_reg, T.D_FS_15, T.D_H_REQ_CHIP, T.SPACE_L, T.SPACE_L)
 	for row in [
 		# The node card is a document under the tree.
 		[&"NodeCard", _doc(_flat(T.D_SURFACE_4, 0, Vector4(T.SPACE_3XL, T.SPACE_XL, T.SPACE_XXL, T.SPACE_XL), T.D_LINE_2), T.D_CUT)],
@@ -1355,8 +1351,10 @@ func _dbtn(th: Theme, name: StringName, look: Dictionary, face: Font, size: int,
 
 # --- helpers ----------------------------------------------------------------
 
-## A face with its fallback (none for a chain of one) and whole-pixel tracking.
-func _mkfont(ttf_path: String, fallback: Font, vname: String, spacing: int = 0, features: Dictionary = {}) -> FontVariation:
+## A face with its fallback (none for a chain of one) and whole-pixel tracking; axes are a variable font's
+## variation coordinates.
+func _mkfont(ttf_path: String, fallback: Font, vname: String, spacing: int = 0, features: Dictionary = {},
+		axes: Dictionary = {}) -> FontVariation:
 	var base: FontFile = load(ttf_path)
 	if base == null:
 		push_error("[build_theme] font load failed: %s" % ttf_path)
@@ -1366,9 +1364,18 @@ func _mkfont(ttf_path: String, fallback: Font, vname: String, spacing: int = 0, 
 	fv.fallbacks = [fallback] if fallback != null else []
 	fv.spacing_glyph = spacing
 	fv.opentype_features = features
+	fv.variation_opentype = axes
 	var path := VAR_DIR + vname + ".tres"
 	_save(fv, path)
 	return load(path)
+
+
+## An Archivo instance at a weight and width, figures equal width. The keys are INT OpenType tags: a String
+## key is accepted and silently renders the default instance.
+func _archivo(vname: String, wght: int, wdth: int, fallback: Font, spacing: int = 0) -> FontVariation:
+	var ts := TextServerManager.get_primary_interface()
+	return _mkfont(FONT_ARCHIVO, fallback, vname, spacing, {ts.name_to_tag("tnum"): 1},
+		{ts.name_to_tag("wght"): wght, ts.name_to_tag("wdth"): wdth})
 
 
 ## Saves with ids derived from content instead of the saver's random ones, so an unchanged rebuild

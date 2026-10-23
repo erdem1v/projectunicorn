@@ -199,10 +199,10 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   atanır; CanvasLayer ve açılır pencere kalıtımı kestiği için her katman kökü ayrıca. Master'ın her varyasyonunu master
   ölçüleriyle koyu renkte taşır, taban tiplerini ve yeni varyasyonları yeni dille kurar; doğrulayıcı eksik varyasyonda
   ya da içerik payı açık kutuda üretimi düşürür. Koyu yüzey yalnız `D_*` token'larını ve `D_` helper'larını okur
-  (renk körü ikizleri helper'dadır, merdiven `D_FS_12` … `D_FS_40`). Yazı Barlow Condensed + IBM Plex Sans (dar
-  sütunda Plex Sans Condensed) + Source Serif 4'tür ve Set A'nın yerini alır; JetBrains Mono yalnız krem ailede
-  kalır, koyu yüzlerin yedek zincirinde Noto Sans Symbols 2 yoktur. Gazete iki temada da kremdir. Kontrast kapısı
-  `--theme-contrast-audit`.
+  (renk körü ikizleri helper'dadır, merdiven `D_FS_12` … `D_FS_40`). Koyu yüzler Archivo'nun değişken yüzüdür
+  (ağırlık ve genişlik ekseni, rakamlar tablo) + Source Serif 4; Archivo'da olmayan glif aynı ağırlıktaki IBM Plex
+  Sans'a düşer. JetBrains Mono ve Plex'in metin yüzü yalnız krem ailede kalır, koyu yüzlerin yedek zincirinde Noto
+  Sans Symbols 2 yoktur. Gazete iki temada da kremdir. Kontrast kapısı `--theme-contrast-audit`.
 - Krem dil: mono yazı, hairline çizgi, amber vurgu; hover dolgu değil kenardır (`ACCENT_DEEP`, kartta `BORDER_HOVER`).
   Gövde krem kâğıttır (sayfa `#F6F1E6`, kart ve pencere `#FBF7EE`, `INK` `#2B2722`); çerçeve koyudur (`#07090B`:
   TopBar, NewsTicker) ve `CREAM*`, `*_CHROME`, `*_BRIGHT` okur; sinematik koyu register

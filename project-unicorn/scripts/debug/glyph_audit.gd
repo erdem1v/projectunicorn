@@ -7,13 +7,7 @@ extends SceneTree
 ## Prints GLYPH|MISS|<face or chain>|U+XXXX|<char>|<uses>|<first use> per missing character.
 
 const FACES := [
-	"res://assets/fonts/cond/BarlowCondensed-SemiBold.ttf",
-	"res://assets/fonts/cond/BarlowCondensed-Bold.ttf",
-	"res://assets/fonts/sans/IBMPlexSans-Regular.ttf",
-	"res://assets/fonts/sans/IBMPlexSans-Medium.ttf",
-	"res://assets/fonts/sans/IBMPlexSans-SemiBold.ttf",
-	"res://assets/fonts/sans/IBMPlexSans-Bold.ttf",
-	"res://assets/fonts/sans/IBMPlexSansCondensed-Regular.ttf",
+	"res://assets/fonts/archivo/Archivo[wdth,wght].ttf",
 	"res://assets/fonts/serif/SourceSerif4-Regular.ttf",
 	"res://assets/fonts/serif/SourceSerif4-Semibold.ttf",
 	"res://assets/fonts/serif/SourceSerif4-It.ttf",

@@ -89,7 +89,7 @@ Durumlar birbirinden ayırt edilmeli.
 ## 7. Arayüz görsel yönü
 
 [Tasarlanacak] Ekran üstü arayüz ile sahne nasıl tek dünya olur? Şunlar yazılır:
-- tipografi (bugün Barlow Condensed, IBM Plex Sans, Source Serif 4),
+- tipografi (bugün Archivo, Source Serif 4),
 - ikon dili,
 - hareket,
 - sanat ile okunabilirlik çatıştığında hangisinin seçildiği.

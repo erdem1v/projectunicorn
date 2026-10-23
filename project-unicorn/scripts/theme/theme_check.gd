@@ -221,7 +221,8 @@ static func _category(th: Theme, type: StringName, key: String, fg: Color, T) ->
 	var face = _up(th, Theme.DATA_TYPE_FONT, "normal_font" if rich else "font", type)
 	size = th.default_font_size if size == null else size
 	face = th.default_font if face == null else face
-	var bold: bool = face is FontVariation and face.base_font.resource_path.contains("-Bold")
+	var wght_tag := TextServerManager.get_primary_interface().name_to_tag("wght")
+	var bold: bool = face is FontVariation and face.variation_opentype.get(wght_tag, 0) >= 700
 	return "large" if size >= 24 or (bold and size >= 19) else "body"
 
 

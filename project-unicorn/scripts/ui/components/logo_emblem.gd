@@ -173,7 +173,7 @@ func _draw() -> void:
 	_draw_glyphs(self, ground if logo.style == "filled" else hue)
 
 
-## The initials in Barlow Condensed Bold, at pixel size: a scaled raster would blur.
+## The initials in the CompanyTitle face, at pixel size: a scaled raster would blur.
 func _draw_glyphs(item: CanvasItem, ink: Color) -> void:
 	item.draw_set_transform(Vector2.ZERO)
 	var glyphs: String = logo.glyphs

@@ -9,7 +9,7 @@ signal dismissed
 
 const HEIGHT := 920
 const SCREEN_GAP := 52   # the room the window leaves above and below on a short screen (864 → 760)
-const FONT_DIRS := ["cond", "sans", "serif", "mono", "fallback"]
+const FONT_DIRS := ["archivo", "sans", "serif", "mono", "fallback"]
 const LUCIDE := "res://assets/art/office/icons/LICENSE-lucide.txt"
 
 @onready var _sections: VBoxContainer = %Sections
