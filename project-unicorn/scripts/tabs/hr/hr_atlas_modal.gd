@@ -299,9 +299,9 @@ func _build_files_step() -> void:
 
 
 ## Aday dosyası (11b), köşesi kesik bir belge: künye ve seçim diski · yüz, ad, unvan · iki alan ve Liderlik ·
-## huy · esneyen boşluk (dosyalar eşit boyda) · maaş talebi · haftalık sprint puanı (ürün tarafı rollerinde) ·
-## komisyon · devralınan mesai (sekizi aşan saatte) · runway. Rolün tanımı dosyada yok: oyuncu onu rol adımında
-## okudu, üç dosyada aynı cümle tekrar ederdi.
+## huy · esneyen boşluk (dosyalar eşit boyda) · maaş talebi · haftalık sprint puanı (tasarımcı, geliştirici ve
+## testçide) · komisyon · devralınan mesai (sekizi aşan saatte) · runway. Rolün tanımı dosyada yok: oyuncu onu rol
+## adımında okudu, üç dosyada aynı cümle tekrar ederdi.
 func _file_card(index: int, file: Dictionary) -> PanelContainer:
 	var pv: Dictionary = HRSearchSystem.preview_hire(index)
 	var role_id: String = String(file.get("role", ""))
@@ -384,9 +384,11 @@ func _file_card(index: int, file: Dictionary) -> PanelContainer:
 	for part: Control in ask.get_children():
 		part.size_flags_vertical = Control.SIZE_SHRINK_END
 	col.add_child(spaced(ask, UiTokens.SPACE_L))
-	# Maaşın aldığı: sprintte haftalık puan, devralacağı saatle. Satış ve müşteri rolleri sprint rolü
-	# tutmaz, onların dosyasında satır yok. Fmt.number tam sayıya da ondalık yazar ("2,0"); tam puan "2".
-	if HRConstants.ROLE_GROUP[role_id] in [HRConstants.GROUP_PRODUCT_DESIGN, HRConstants.GROUP_DEVELOPMENT]:
+	# Maaşın aldığı: sprintte haftalık puan, devralacağı saatle. Satış ve müşteri rolleri sprint rolü tutmaz, ürün
+	# yöneticisi puan üretmez (haftasını sonraki sütunun kartlarını hazırlamaya verir): onların dosyasında satır yok.
+	# Fmt.number tam sayıya da ondalık yazar ("2,0"); tam puan "2".
+	if role_id != HRConstants.ROLE_PRODUCT_MANAGER and HRConstants.ROLE_GROUP[role_id] in [
+			HRConstants.GROUP_PRODUCT_DESIGN, HRConstants.GROUP_DEVELOPMENT]:
 		var pts: String = Fmt.number(SprintSystem.points_for(role_id, axes, int(pv["hours"])), 1)
 		col.add_child(_file_row("rail/product", UiFactory.make_label(tr("HR_ATLAS_WEEK_POINTS").format({
 			"pts": pts.trim_suffix(tr("NUM_DECIMAL_SEP") + "0")}), &"Caption"), []))

@@ -3274,7 +3274,7 @@ func _press_button_labelled(root: Node, label: String) -> bool:
 
 
 # --hr-shot=<ekip|ekip-saat|atlas|atlas-secili|atlas-ofis|atlas-dolu|dosyalar|gider|saatler|saatler-gece|gorevler|gorevler-arge|
-# gorevler-bos|egitim|egitim-modal|egitim-secili|zam|menu|menu-kilit|cikar|cikar-eksi|bos|dosya|dosya-kilit|
+# dosyalar-pm|dosyalar-tasarim|gorevler-bos|egitim|egitim-modal|egitim-secili|zam|menu|menu-kilit|cikar|cikar-eksi|bos|dosya|dosya-kilit|
 # dosya-kurucu|kalabalik|verim|saatler-sprint|urunsuz|dosyalar-tehlike|dosyalar-onay|dosyalar-mesai|izin>:
 # a roster across all three departments (one on leave, one burning out, one fresh hire), driven to the
 # requested HR surface. kalabalik = forty on the roster (the compact Kadro), Geliştirme folded and the
@@ -3287,6 +3287,8 @@ func _press_button_labelled(root: Node, label: String) -> bool:
 # (hr_shot_verim_dosya), her file back from a leave today, its leave row locked (hr_shot_verim_dosya_izin), the
 # founder's file (hr_shot_verim_kurucu). saatler-sprint = no roster: the founder alone
 # with a product type chosen, the hours panel's draft at 15 hours.
+# dosyalar = a Mid developer's files on the table, dosyalar-tasarim a designer's (both carry the weekly sprint points
+# row), dosyalar-pm a product manager's (no such row: the PM makes no sprint points).
 # atlas = the search at home (no desk line, no strip); atlas-ofis = the company in İş hanı with free desks (the head's
 # desk line and the way to the city map); atlas-dolu = every one of its thirteen desks taken (the amber line and the strip).
 # urunsuz = no roster: a developer and a customer rep, no product type yet (hr_shot_urunsuz), then the type
@@ -3336,9 +3338,11 @@ func _run_hr_shot(kind: String) -> void:
 				emp.traits = ["picks_it_up_fast"]
 				CharacterRegistry.add(emp)
 				emp.hire_day = GameState.day - 4
-		"dosyalar":
+		"dosyalar", "dosyalar-pm", "dosyalar-tasarim":   # LOC-DATA debug seed / id
 			# Files on the table: the arrival window's worth of real generator output.
-			HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, HRConstants.LEVEL_MID)
+			HRSearchSystem.start_search({"dosyalar-pm": HRConstants.ROLE_PRODUCT_MANAGER,
+				"dosyalar-tasarim": HRConstants.ROLE_DESIGNER}.get(kind, HRConstants.ROLE_DEVELOPER),   # LOC-DATA debug seed / id
+				HRConstants.LEVEL_MID)
 			for _i in TimeModel.ticks(HRConstants.SEARCH_ARRIVAL_WEEKS):
 				GameState.day += 1
 				HRSearchSystem.daily_tick()
@@ -3405,7 +3409,7 @@ func _run_hr_shot(kind: String) -> void:
 		_shot_fail("[HRShot] sekme gövdesi bulunamadı (get_current_page_body null)")
 		return
 	match kind:
-		"atlas", "dosyalar", "atlas-secili", "atlas-ofis", "atlas-dolu":   # LOC-DATA debug seed / id
+		"atlas", "dosyalar", "dosyalar-pm", "dosyalar-tasarim", "atlas-secili", "atlas-ofis", "atlas-dolu":   # LOC-DATA debug seed / id
 			tab.open_atlas()
 			if kind == "atlas-secili":   # LOC-DATA debug seed / id
 				var atlas: Node = get_tree().get_root().find_child("PanelLayer", true, false).get_child(-1)
