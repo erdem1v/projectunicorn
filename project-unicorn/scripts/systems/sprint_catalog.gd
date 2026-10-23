@@ -160,11 +160,24 @@ static func area_sentence(area_id: String) -> String:
 
 # --- Kartlar ---------------------------------------------------------------------
 
-## Düzeltme kartının eforu hata sayısına göre: `steps` basamakların son hata sayısı, `points` basamakların puanı
-## (4 ve altı 5 puan, 5 ve üstü 10).
+## Düzeltme kartının eforu: hattın açık hatası başına `fix_effort.per_bug` puan, alt sınır yok.
 static func fix_effort(bugs: int) -> int:
-	var tiers: Dictionary = cfg("fix_effort")
-	return int(tiers.points[(tiers.steps as Array).filter(func(top: float) -> bool: return bugs > top).size()])
+	return bugs * int(cfg("fix_effort.per_bug"))
+
+
+## k: mutlak hata eşiklerinin (itibar ihmal eşiği, botun düzeltme eşiği) ekiple oranlanan çarpanı. En büyüğü:
+## 1, canlı hat ÷ `limit_k.lines`, √(son `limit_k.weeks` haftanın haftalık teslimi ÷ `limit_k.delivery`); haftalık teslim
+## son sprintlerin sürüm kayıtlarında bitirilen puanın koştukları haftaya bölümüdür (erken kapanan sprint bir haftadır).
+static func limit_k() -> float:
+	var k: Dictionary = cfg("limit_k")
+	var recent: Array = _p().get("releases", []).slice(-SprintSystem.sprints_in(int(k.weeks)))
+	var done: float = 0.0
+	var weeks: int = 0
+	for r in recent:
+		done += float(r.velocity.done)
+		weeks += int(r.velocity.get("weeks", SprintSystem.sprint_weeks()))
+	var weekly: float = done / maxi(1, weeks)
+	return maxf(1.0, maxf(ProductState.live_lines().size() / float(k.lines), sqrt(weekly / float(k.delivery))))
 
 
 ## K1 15 · K2 25 · K3 40; Ar-Ge "design_system" tasarım profilli hatların kademe eforunu %20 indirir.

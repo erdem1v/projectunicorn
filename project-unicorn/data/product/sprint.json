@@ -3,7 +3,8 @@
   "quarter_weeks": 12,
   "mvp_lines": 3,
   "effort": {"k1": 15, "k2": 25, "k3": 40, "research": 5},
-  "fix_effort": {"steps": [4], "points": [5, 10], "priority": 5},
+  "fix_effort": {"per_bug": 2, "priority": 5},
+  "limit_k": {"lines": 9, "delivery": 55, "weeks": 8},
   "need": {
     "design": [[5, 7, 3], [9, 11, 5], [14, 18, 8]],
     "dev": [[2, 10, 3], [4, 16, 5], [6, 26, 8]],

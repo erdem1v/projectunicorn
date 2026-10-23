@@ -178,7 +178,8 @@ func _build(id: String) -> Dictionary:
 				for c in list:
 					if c.id == "kesinti":
 						c.effect = effect
-			m.next.cards.push_front(_deck("kesinti", SprintCard.State.PLANLANAN, {"id": "kesinti_sonraki", "effect": effect}))
+			m.next.cards.push_front(_deck("kesinti", SprintCard.State.PLANLANAN,
+				{"id": "kesinti_sonraki", "effect": effect, "effort": 12}))
 		"release_fix":
 			# Düzeltme satırları kapanıştaki gerçek sayıyı yazar: planlanırken 5 olan hat kapanışta 9'du; öbürü, hatalı
 			# kapanan bir kartın hatası aynı hatta düştüğü için 1'e indi.
@@ -422,7 +423,7 @@ func _c5() -> Dictionary:
 				"capabilities": [_cap(_p("Kullanıcı rolleri", "User roles"), 2),
 					_cap(_p("Yedekleme", "Backups"), 0), _cap("SSO", 0)],
 				"candidates": [_deck("sso", alinmis, {"tag_sprint": 7}),
-					_deck("kesinti", alinmis, {"tag_sprint": 7, "effect": _fix_b2b()}),
+					_deck("kesinti", alinmis, {"tag_sprint": 7, "effect": _fix_b2b(), "effort": 12}),
 					_deck("oto_yedek", aday, {"effect": [_level("trust", 2, 3)]})],
 			}),
 		],
@@ -430,7 +431,8 @@ func _c5() -> Dictionary:
 			_customer("Nordica", "SSO", "sso", 8, 12000, "trust"),
 			_customer("Palmiye", _p("Tablo dışa aktarma", "Spreadsheet export"), "excel", 10, 4000, "integrations"),
 		],
-		"center": _center("plan", [_deck("sso", plan), _deck("kesinti", plan, {"effect": _fix_b2b()}), _deck("excel", plan)], {
+		"center": _center("plan", [_deck("sso", plan), _deck("kesinti", plan, {"effect": _fix_b2b(), "effort": 12}),
+			_deck("excel", plan)], {
 			"forecast": [_level("trust", 1, 2), {"k": "request_on_time", "customer": "Nordica"},
 				{"k": "request_on_time", "customer": "Palmiye"}, _clear("trust"), {"k": "bugs_closed", "n": 6}],
 			"lead_tip": _lead(_p("SSO gecikirse Nordica yenilemez.", "If SSO slips, Nordica won't renew.")),
@@ -534,7 +536,7 @@ func _deck_table() -> Dictionary:
 		"kesinti": ["fix", "trust", ["dev"], 10, _p("Kesinti düzeltmesi", "Outage fix"), [_bugs(5, -1, 300), _clear("trust")],
 			[["Kaan", 1]]],
 		"esitleme": ["fix", "core", ["dev"], 10, _p("Eşitleme düzeltmesi", "Sync fix"), [_bugs(5, -1, 300)], [["Kaan", 1]]],
-		"fatura_fix": ["fix", "core", ["dev"], 10, _p("Fatura düzeltmesi", "Invoicing fix"),
+		"fatura_fix": ["fix", "core", ["dev"], 12, _p("Fatura düzeltmesi", "Invoicing fix"),
 			[_bugs(6, 3, 140, "Nordica", 100)], [["Kaan", 1]]],
 		"kisa_kayit": ["feature", "onboarding", ["design", "dev"], 15, _p("Kısa kayıt", "Short sign-up"),
 			[_level("onboarding", 1, 2)], [["Ece", 1], ["Kaan", 1]]],

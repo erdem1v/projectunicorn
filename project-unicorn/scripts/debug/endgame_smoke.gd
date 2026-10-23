@@ -517,6 +517,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sprint_fix_preview_matches_close":      fail = _case_sprint_fix_preview_matches_close()
 		"sprint_fix_card_refreshes_until_it_runs": fail = _case_sprint_fix_card_refreshes_until_it_runs()
 		"sprint_fix_first_puts_the_card_on_top": fail = _case_sprint_fix_first_puts_the_card_on_top()
+		"sprint_fix_card_double":                fail = _case_sprint_fix_card_double()
 		"line_impact_names_the_accounts":        fail = _case_line_impact_names_the_accounts()
 		"product_bug_rows_read_the_store":       fail = _case_product_bug_rows_read_the_store()
 		"worst_bug_line_breaks_ties_by_users":   fail = _case_worst_bug_line_breaks_ties_by_users()
@@ -571,6 +572,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"support_inflow_is_bug_free":            fail = _case_support_inflow_is_bug_free()
 		"support_report_quiet_week":             fail = _case_support_report_quiet_week()
 		"neglect_reputation_below_zero":         fail = _case_neglect_reputation_below_zero()
+		"support_neglect_scales_with_k":         fail = _case_support_neglect_scales_with_k()
 		"bugs_leave_sales_and_vc_alone":         fail = _case_bugs_leave_sales_and_vc_alone()
 		"vc_weakest_area":                       fail = _case_vc_weakest_area()
 		"product_paid_plan_locked_until_mvp":    fail = _case_product_paid_plan_locked_until_mvp()
@@ -18301,7 +18303,7 @@ static func _case_incident_sprint_stop_moves_the_card() -> String:
 	if not SprintSystem.start():
 		return "fixture: the sprint did not start"
 	var line := "line_erp_ledger"
-	(SprintCatalog.cfg("fix_effort") as Dictionary).points = [30, 40]   # a fix this big leaves the full sprint no room for it
+	(SprintCatalog.cfg("fix_effort") as Dictionary).per_bug = 30   # a fix this big leaves the full sprint no room for it
 	ProductState.add_bugs(line, 1)
 	var bumped: Dictionary = SprintSystem.fix_first_bumps(line)
 	if bumped.is_empty():
@@ -20563,7 +20565,10 @@ static func _play_sprint_escaping(card_ids: Array) -> bool:
 
 
 ## Sprint tam iki gün (iki hafta) sürer: başlatıldığı gün birinci hafta, ertesi gün ikinci, bir
-## sonraki günün tikinde kapanır ve sürüm notu o gün yazılır.
+## sonraki günün tikinde kapanır ve sürüm notu o gün yazılır; kayıt iki hafta sayar (`velocity.weeks`). Kartları ilk
+## haftasında biten sprint ertesi tikte kapanır ve bir hafta sayar.
+## FALSİFİKASYON: SprintSystem._close'ta `week() - 1`'i `week()` yap → iki hafta iddiası FAIL; `sprint_weeks()` yap →
+## bir hafta iddiası FAIL.
 static func _case_sprint_two_days_close() -> String:
 	_seed_sprint()
 	var closed: Array = []
@@ -20580,8 +20585,19 @@ static func _case_sprint_two_days_close() -> String:
 	_sim_day()
 	if closed != [1] or SprintSystem.mode() != "release":
 		return "two days in: closes %s, %s; want sprint 1 closed onto its release note" % [closed, SprintSystem.mode()]
-	if int(GameState.product.release.day) != start_day + 2:
-		return "the release note is dated %d, want start %d + 2" % [int(GameState.product.release.day), start_day]
+	if int(GameState.product.release.day) != start_day + 2 or int(GameState.product.release.velocity.weeks) != 2:
+		return "the release note is dated %d and counts %d weeks, want start %d + 2 and 2 weeks" % [
+			int(GameState.product.release.day), int(GameState.product.release.velocity.weeks), start_day]
+	SprintSystem.plan_next()
+	SprintSystem.add(SprintCatalog.open_cards([])[0].id)
+	for id in GameState.product.sprint.cards:
+		GameState.product.cards[id].need = [0.1, 0.1, 0.1]
+	if not SprintSystem.start():
+		return "fixture: sprint 2 did not start"
+	_sim_day()
+	if closed != [1, 2] or int(GameState.product.release.velocity.weeks) != 1:
+		return "a sprint whose cards are done in its first week closes %s and counts %d weeks, want sprint 2 closed after 1" % [
+			closed, int(GameState.product.release.velocity.weeks)]
 	return ""
 
 
@@ -21910,11 +21926,11 @@ static func _case_sprint_fix_card_clears_its_line() -> String:
 ## Düzeltme kartının önizlemesi kapanışla eşleşir. SPRINT SONUNDA "N hata kapanır" der; sprintte o hatta yeni hata
 ## düşmezse kapanış tam N hatayı siler, düşerse hattın o anki sayısını siler ve sürüm notu gerçek sayıyı yazar (satırda
 ## "N → 0", sonuç cümlesinde "N hata kapandı"). Kart etki satırında hata sayısını ve B2C'de kullanıcıyı (kitle × hattın
-## payı) söyler; 4 hata 5 puan, 5 hata 10 puan ve öncelikli.
+## payı) söyler; 4 hata 8 puan, 5 hata 10 puan ve öncelikli.
 ## FALSİFİKASYON: SprintCatalog.forecast'te `closed += c.bugs`'ı `closed += 1` yap → önizleme iddiası FAIL;
 ## SprintSystem._close'ta `clear_line_bugs` yerine `c.bugs`'ı koru (hattı silme) → hat temizlenmedi iddiası FAIL;
 ## ProductModel._shipped'ta `"to": int(c.bugs_after)`'ı `"to": int(c.bugs)` yap → satır iddiası FAIL;
-## SprintCatalog.fix_effort'ta `bugs > top`'u `bugs >= top` yap → 4 hata 10 puan olur ve efor iddiası FAIL;
+## SprintCatalog.fix_effort'ta `bugs * ...`ı `maxi(bugs, 5) * ...` yap → 4 hata 10 puan olur ve efor iddiası FAIL;
 ## SprintCatalog.line_share'te `maxi(1, total)`'u `total * 2` yap → payların toplamı 1 olmaz ve pay iddiası FAIL.
 static func _case_sprint_fix_preview_matches_close() -> String:
 	_seed_sprint_live("note_tool")
@@ -21929,10 +21945,10 @@ static func _case_sprint_fix_preview_matches_close() -> String:
 	for c in SprintCatalog.candidates("core"):
 		if c.kind == "fix":
 			fixes[c.line] = c
-	var points: Array = SprintCatalog.cfg("fix_effort.points")
-	if fixes.size() != 2 or roundi(SprintSystem.total(fixes[small])) != int(points[0]) or SprintCatalog.is_priority(fixes[small]) \
-			or roundi(SprintSystem.total(fixes[big])) != int(points[1]) or not SprintCatalog.is_priority(fixes[big]):
-		return "4 bugs and 5 bugs read fix cards %s, want %d points unmarked and %d points priority" % [fixes, points[0], points[1]]
+	var per_bug: int = int(SprintCatalog.cfg("fix_effort.per_bug"))
+	if fixes.size() != 2 or roundi(SprintSystem.total(fixes[small])) != 4 * per_bug or SprintCatalog.is_priority(fixes[small]) \
+			or roundi(SprintSystem.total(fixes[big])) != 5 * per_bug or not SprintCatalog.is_priority(fixes[big]):
+		return "4 bugs and 5 bugs read fix cards %s, want %d points unmarked and %d points priority" % [fixes, 4 * per_bug, 5 * per_bug]
 	var share_sum: float = 0.0
 	for line in ProductState.live_lines():
 		share_sum += SprintCatalog.line_share(line)
@@ -22015,30 +22031,30 @@ static func _case_sprint_fix_card_refreshes_until_it_runs() -> String:
 	_sim_day()
 	if not card.call(gone).is_empty() or ("fix:" + gone) in GameState.product.sprint.cards:
 		return "the card of a line with no bugs left stayed in the plan"
-	var points: Array = SprintCatalog.cfg("fix_effort.points")
+	var per_bug: int = int(SprintCatalog.cfg("fix_effort.per_bug"))
 	var size := func(line: String) -> int: return roundi(SprintSystem.total(card.call(line)))
-	if int(card.call(grows).bugs) != 5 or size.call(grows) != int(points[1]) + paper_points \
+	if int(card.call(grows).bugs) != 5 or size.call(grows) != 5 * per_bug + paper_points \
 			or not SprintCatalog.is_priority(card.call(grows)):
 		return "a day on, the card of 3 bugs plus 2 and a paper's %d points reads %d bugs, %d points; want 5 bugs, %d points, priority" % [
-			paper_points, int(card.call(grows).bugs), size.call(grows), int(points[1]) + paper_points]
-	if int(card.call(late).bugs) != 1 or size.call(late) != int(points[0]) or int(card.call(locked).bugs) != 1:
+			paper_points, int(card.call(grows).bugs), size.call(grows), 5 * per_bug + paper_points]
+	if int(card.call(late).bugs) != 1 or size.call(late) != per_bug or int(card.call(locked).bugs) != 1:
 		return "the cards of the untouched lines read %d and %d bugs, want 1 and 1" % [
 			int(card.call(late).bugs), int(card.call(locked).bugs)]
 	# Four bugs land on `late` just before the sprint starts: the start reads the store once more.
 	ProductState.add_bugs(late, 4)
 	if not SprintSystem.start():
 		return "fixture: the sprint did not start"
-	if card.call(late).state != "running" or int(card.call(late).bugs) != 5 or size.call(late) != int(points[1]):
+	if card.call(late).state != "running" or int(card.call(late).bugs) != 5 or size.call(late) != 5 * per_bug:
 		return "the card started with 4 fresh bugs reads %s with %d bugs, %d points; want running, 5, %d" % [
-			card.call(late).state, int(card.call(late).bugs), size.call(late), points[1]]
+			card.call(late).state, int(card.call(late).bugs), size.call(late), 5 * per_bug]
 	# The running card keeps what it started with, and keeps standing when its line empties from outside.
 	ProductState.add_bugs(locked, 4)
 	ProductState.clear_line_bugs(late)
 	SprintSystem._refresh_fix_cards()
-	if card.call(locked).state != "running" or int(card.call(locked).bugs) != 1 or size.call(locked) != int(points[0]) \
+	if card.call(locked).state != "running" or int(card.call(locked).bugs) != 1 or size.call(locked) != per_bug \
 			or card.call(late).is_empty():
 		return "the running cards read %s and %s; want the locked one at 1 bug, %d points and the emptied line's card still in" % [
-			card.call(locked), card.call(late), points[0]]
+			card.call(locked), card.call(late), per_bug]
 	while SprintSystem.mode() == "active":
 		_sim_day()
 	var shipped: Array = GameState.product.release.shipped.filter(func(c: Dictionary) -> bool: return c.id == "fix:" + locked)
@@ -22091,7 +22107,7 @@ static func _case_sprint_fix_first_puts_the_card_on_top() -> String:
 	ProductState.add_bugs(lines[2], 3)
 	SprintSystem.fix_first(lines[2])
 	var joined: Dictionary = GameState.product.cards["fix:" + lines[2]]
-	var joined_points: int = int((SprintCatalog.cfg("fix_effort.points") as Array)[1])
+	var joined_points: int = 5 * int(SprintCatalog.cfg("fix_effort.per_bug"))
 	if order.call()[0] != "fix:" + lines[2] or joined.state != "running" or joined.assignees.is_empty() \
 			or int(joined.bugs) != 5 or roundi(SprintSystem.total(joined)) != joined_points:
 		return "a card added to the running sprint reads order %s, state %s, assignees %s, %d bugs, %d points; want it first, running, with someone on it, 5 bugs, %d points" % [
@@ -22105,6 +22121,37 @@ static func _case_sprint_fix_first_puts_the_card_on_top() -> String:
 	SprintSystem.plan_next()
 	if order.call()[0] != "fix:" + lines[4]:
 		return "the next sprint opened with %s, want the card first" % [order.call()]
+	return ""
+
+
+## Düzeltme kartının büyüklüğü hattın açık hatasının iki katıdır: alt sınır yok (1 hata 2 puan), aşama payı 0 / 0,7 / 0,3
+## (Tasarım, Geliştirme, Test); planlı kart hata değişince aynı kuralla tazelenir.
+## FALSİFİKASYON: `SprintCatalog.fix_effort`i eski kademeye çevir (`5 if bugs <= 4 else 10`) → 6 hata iddiası FAIL;
+## `fix_effort`e `maxi(..., 5)` alt sınırı koy → 1 hata iddiası FAIL; `sprint.json` `need.fix`i [0.0, 0.5, 0.5] yap → pay iddiası FAIL.
+static func _case_sprint_fix_card_double() -> String:
+	_seed_sprint_live("note_tool")
+	_sprint_hire("char_fix_double_dev", HRConstants.ROLE_DEVELOPER)
+	var lines: Array = SprintCatalog.capabilities("core")
+	var six: String = lines[0]
+	var one: String = lines[1]
+	ProductState.add_bugs(six, 6)
+	ProductState.add_bugs(one, 1)
+	var fixes: Dictionary = {}
+	for c in SprintCatalog.candidates("core"):
+		if c.kind == "fix":
+			fixes[c.line] = c
+	if fixes.size() != 2 or roundi(SprintSystem.total(fixes[six])) != 12 or roundi(SprintSystem.total(fixes[one])) != 2:
+		return "6 bugs and 1 bug read fix cards %s, want 12 and 2 points (twice the open bugs, no floor)" % [fixes]
+	var need: Array = fixes[six].need
+	if not is_equal_approx(need[0], 0.0) or not is_equal_approx(need[1], 8.4) or not is_equal_approx(need[2], 3.6):
+		return "the 12-point fix card splits %s over design, development and test, want 0, 8.4 and 3.6" % [need]
+	# A planned card follows its line: a day on, 3 more bugs make it 18 points.
+	SprintSystem.add(fixes[six].id)
+	ProductState.add_bugs(six, 3)
+	_sim_day()
+	var planned: Dictionary = GameState.product.cards.get("fix:" + six, {})
+	if planned.is_empty() or int(planned.bugs) != 9 or roundi(SprintSystem.total(planned)) != 18:
+		return "the planned card of 9 bugs reads %d points, want 18" % roundi(SprintSystem.total(planned))
 	return ""
 
 
@@ -26315,6 +26362,46 @@ static func _case_neglect_reputation_below_zero() -> String:
 		return "with the cost off the pile took reputation to %d" % GameState.reputation
 	ProductState.bugs_free = false
 	return ""
+
+
+## İhmal eşiği ekiple oranlanır: eşik 30 × k, k = en büyüğü(1; canlı hat ÷ 9; √(son 8 haftanın haftalık teslimi ÷ 55)).
+## Küçük üründe 30; 18 canlı hatta 60; son dört sprintte haftada 220 puan teslim eden ekipte de 60 (bir haftada kapanan sprint bir
+## hafta sayılır). Eşiğin bir altı itibarı düşürmez, eşik düşürür.
+## FALSİFİKASYON: `SprintCatalog.limit_k`ı 1.0 döndürür yap → 18 hat ve teslim iddiaları FAIL; `limit_k`dan canlı hat terimini sil →
+## 18 hat iddiası FAIL; teslim terimini sil → teslim iddiası FAIL; kayıtlardaki `weeks`i yok say → teslim iddiası FAIL; `_tick_neglect`te `neglect_threshold()` yerine `NEGLECT_BUGS` oku →
+## 18 hat ve teslim iddiaları FAIL.
+static func _case_support_neglect_scales_with_k() -> String:
+	_seed_support_fixture("b2c")
+	var line := "line_note_tool_search"
+	var falls := func(bugs: int) -> bool:
+		ProductState.clear_line_bugs(line)
+		ProductState.add_bugs(line, bugs)
+		GameState.set_reputation(0)
+		GameState.set_flag(ProductState.BUG_STREAK, 0)
+		for i in SupportSystem.NEGLECT_WEEKS:
+			GameState.advance_day()
+			SupportSystem.daily_tick()
+		return GameState.reputation < 0
+	# One bug under the threshold must not drop reputation, the threshold must.
+	var verdict := func(what: String, threshold: int) -> String:
+		var under: bool = falls.call(threshold - 1)
+		var at: bool = falls.call(threshold)
+		return "" if not under and at else "%s: %d bugs fall %s, %d bugs fall %s; want no, then yes" % [
+			what, threshold - 1, under, threshold, at]
+	var base: int = SupportSystem.NEGLECT_BUGS
+	var wrong: Array = [verdict.call("a small product", base)]
+	# 18 live lines: k = 2.
+	var tiers: Dictionary = {}
+	for i in 18:
+		tiers["line_%d" % i] = 1
+	GameState.set_flag(ProductState.LINE_TIERS, tiers)
+	wrong.append(verdict.call("18 live lines", 2 * base))
+	# One live line again, but the last four sprints delivered 220 points a week (two of two weeks, two closed after one): k = 2.
+	GameState.set_flag(ProductState.LINE_TIERS, {line: 1})
+	GameState.product["releases"] = [440.0, 220.0, 440.0, 220.0].map(func(done: float) -> Dictionary:
+		return {"velocity": {"done": done, "weeks": 2 if done > 300.0 else 1}})
+	wrong.append(verdict.call("a delivery of 220 a week", 2 * base))
+	return "; ".join(wrong.filter(func(w: String) -> bool: return w != ""))
 
 
 ## Satış ve yatırımcı hatayı okumaz: 0 ve 50 açık hatalı iki dünyada dönüşüm, ürün değeri, toplantı ihtimali

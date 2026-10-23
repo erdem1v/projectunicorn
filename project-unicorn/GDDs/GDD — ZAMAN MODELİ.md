@@ -211,7 +211,7 @@ kullanılan gün değişmez.
 | sprint (`data/product/sprint.json` `sprint_weeks`) | yok | 2 [WORKING] | sabit; başlatıldığı tik 1. hafta, ertesi tik 2. hafta; kartlarının hepsi biten sprint o haftanın sonunda kapanır; çeyrek 6 sprint |
 | sprint karar kartı (`sprint.json` `decision`) | yok | 2. haftanın tikinde, oran 0,35 [WORKING]; kâğıt 1 hafta bekler | koşan kart başına koşu tohumlu zar; kartlar `decision.cards` havuzundaki kâğıtlardır (§4.10); `sprint_hours` çarpımla yığılır, 0,5–1,5 (`hours_mult`) |
 | `INFLOW_TAU` | 21 | 3 | §3.5 |
-| itibar ihmal kuralı (`SupportSystem.NEGLECT_BUGS` 30, `NEGLECT_WEEKS` 4) | yok | açık hata 30 ve üstü üst üste 4 haftalık tikte itibar −1, koşul sürdükçe her tik [ÇALIŞMA] | taban GameState'in −10'u; GUNCELLEMELER "Faz A · tek hata sayısı" |
+| itibar ihmal kuralı (`SupportSystem.NEGLECT_BUGS` 30, `NEGLECT_WEEKS` 4) | yok | açık hata 30 × k ve üstü (k `SprintCatalog.limit_k`, ekiple oranlanır) üst üste 4 haftalık tikte itibar −1, koşul sürdükçe her tik [ÇALIŞMA] | taban GameState'in −10'u; GUNCELLEMELER "Faz A · tek hata sayısı" |
 | ürün fonunun geri dönüşü (`PitchConstants.CALLBACK_CHURN_WEEKS`) | yok | 12 hafta; pencere dolmadan koşul karşılanmaz [WORKING] | kaybedilen müşteri oranı: B2B %5, B2C %15 altında |
 | `INTEREST_HALF_LIFE` | 30 | 30 / 7 ≈ 4,29 | §3.5 |
 | `DAMAGE_DAILY_CAP` | -2 / gün | -2 / gün, tik başına -14 | §3.3 |

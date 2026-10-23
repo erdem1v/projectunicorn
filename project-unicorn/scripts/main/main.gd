@@ -885,7 +885,7 @@ func _stage_emergency(kind: String, b2b: bool, given: Dictionary) -> Dictionary:
 	for line_id in SprintCatalog.capabilities("core").slice(0, int(SprintCatalog.cfg("mvp_lines"))):
 		ProductState.set_line_tier(line_id, 1)
 	(SprintCatalog.cfg("decision") as Dictionary).sprint_chance = 0.0
-	(SprintCatalog.cfg("fix_effort") as Dictionary).points = [30, 40]   # a fix this big leaves the full sprint no room for it
+	(SprintCatalog.cfg("fix_effort") as Dictionary).per_bug = 30   # a fix this big leaves the full sprint no room for it
 	for card in SprintCatalog.open_cards([]):
 		SprintSystem.add(card.id)
 		if not GameState.product.sprint.cards.has(card.id):

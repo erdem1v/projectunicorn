@@ -77,7 +77,7 @@ const BAND_HOT := "hot"
 const INTEREST_HALF_LIFE := 30.0 / TimeModel.DAYS_PER_TICK
 
 # ------------------------------------------------------- hata ihmali ve itibar
-## Açık hata bu sayıya ya da üstüne varınca o haftalık tik ihmal sayılır.
+## Açık hata bu sayının `SprintCatalog.limit_k` katına ya da üstüne varınca o haftalık tik ihmal sayılır.
 const NEGLECT_BUGS := 30                # [ÇALIŞMA] onay bekliyor
 ## Üst üste bu kadar haftalık tikte ihmal sürerse itibar her hafta bir düşer (alt sınır GameState'in −10'u).
 const NEGLECT_WEEKS := 4                # [ÇALIŞMA] onay bekliyor
@@ -272,13 +272,18 @@ static func apply_daily_satisfaction_damage() -> void:
 ## sürdükçe her hafta) itibar bir düşer. Düzenli düzelten oyuncu eşiğe varmaz.
 static func _tick_neglect() -> void:
 	var streak: int = int(GameState.get_flag(ProductState.BUG_STREAK, 0))
-	streak = streak + 1 if ProductState.costed(ProductState.open_bugs()) >= NEGLECT_BUGS else 0
+	streak = streak + 1 if ProductState.costed(ProductState.open_bugs()) >= neglect_threshold() else 0
 	GameState.set_flag(ProductState.BUG_STREAK, streak)
 	if streak >= NEGLECT_WEEKS:
 		var before: int = GameState.reputation
 		GameState.set_reputation(before - 1)
 		if GameState.reputation < before:
 			GameState.set_flag(ProductState.BUG_DROP_DAY, GameState.day)
+
+
+## İhmal eşiği: `NEGLECT_BUGS` × `SprintCatalog.limit_k`.
+static func neglect_threshold() -> float:
+	return NEGLECT_BUGS * SprintCatalog.limit_k()
 
 
 ## İhmalin son itibar düşüşü: {day, reason}, reason bir CSV anahtarı; hiç düşürmediyse boş.

@@ -126,9 +126,10 @@ extends RefCounted
 #   PROBE SPRINT day=<d> n=<n> label=<v1.x|-> shipped=<card ids> carried=<n> velocity=<done>/<capacity>
 #   PROBE SHIP  day=<d> version=<n> ...      (a public release: the MVP and every version after it; escaped = the
 #                                           bugs that escaped the release's testing, one per bug on its card's line)
-#   PROBE FIX   day=<d> sprint=<n> weeks=<n> fix_load=<f> capacity=<f> share=<f> cards=<fix card ids|-> bug_sprint=<b>
+#   PROBE FIX   day=<d> sprint=<n> weeks=<n> fix_load=<f> capacity=<f> share=<f> cards=<fix card ids|-> bug_sprint=<b> k=<f>
 #                                           (every sprint start: the fix cards' remaining points over the plan's
-#                                           capacity; a bug sprint spends more than half the capacity on fixes)
+#                                           capacity; a bug sprint spends more than half the capacity on fixes; k is
+#                                           SprintCatalog.limit_k, the factor of the neglect threshold and DUE_BUGS)
 #   PROBE STOP  day=<d> sprint=<n> id=<emergency card> fix_load=<f> capacity=<f> share=<f> cards=<fix card ids|-> bug_sprint=<b>
 #                                           (an emergency answered with its line's fix card first: the fix cards'
 #                                           remaining points over the sprint's capacity, as PROBE FIX reads them at
@@ -164,7 +165,7 @@ extends RefCounted
 ##               and full_run_staff50 go on up the growth rungs to 24 and 49, 25 and 50 people with the founder);
 ##   k1_only   — the founder never plans a K2 or K3 step;
 ##   fix       — the sprint's fix cards (default: whatever the lead plans): "none" takes no fix card, "worst" the
-##               line with the most open bugs, "due" every line with DUE_BUGS or more (B2B: a line an active or
+##               line with the most open bugs, "due" every line with DUE_BUGS × k or more (B2B: a line an active or
 ##               trial account uses), "off" is "worst" with the cost of open bugs switched off (the baseline).
 ##               It also decides the answer to an emergency card: "none" leaves the fix for the next sprint, every
 ##               other arm stops the sprint for it;
@@ -340,7 +341,7 @@ static var _vc_done: bool = false           # the one table this run gets has be
 static var _vc_booked: String = ""          # the fund the current booking is with
 static var _vc_meet_day: int = -1           # the day the last meeting was played
 const TABLE_PUSH_CAP := 64                  # runaway backstop for a push loop, never reached in play
-const DUE_BUGS := 2                         # the "due" arm fixes every line with this many open bugs
+const DUE_BUGS := 2                         # the "due" arm fixes every line with this many open bugs, times k
 const FIXTURE_BUG_LINE := "line_erp_ledger"   # the ERP core line the fixture presets put their bugs on (every B2B account uses it)
 
 
@@ -533,7 +534,8 @@ static func _on_build_phase(new_phase: String) -> void:
 ## Every sprint start: the fix cards in the plan against the capacity it was planned for (stored when the sprint
 ## began, before the hours decision could move it).
 static func _on_sprint_started(number: int) -> void:
-	print("PROBE FIX day=%d sprint=%d weeks=%d %s" % [GameState.day, number, SprintSystem.sprint_weeks(), _fix_ledger()])
+	print("PROBE FIX day=%d sprint=%d weeks=%d %s k=%.3f" % [GameState.day, number, SprintSystem.sprint_weeks(), _fix_ledger(),
+		SprintCatalog.limit_k()])
 
 
 ## The sprint's fix cards (ids, or "-") and their remaining points against the sprint's capacity; a bug sprint spends
@@ -1351,7 +1353,8 @@ static func _plan_fix_arm() -> void:
 	var due: Array = bugs.keys()
 	due.sort_custom(func(a: String, b: String) -> bool: return bugs[a] > bugs[b] if bugs[a] != bugs[b] else a < b)
 	if _fix_arm == "due":
-		due = due.filter(func(line: String) -> bool: return bugs[line] >= DUE_BUGS and (
+		var due_at: float = DUE_BUGS * SprintCatalog.limit_k()
+		due = due.filter(func(line: String) -> bool: return bugs[line] >= due_at and (
 			ProductState.market_type() != "b2b" or not SprintCatalog.line_accounts(line).is_empty()))
 	else:
 		due = due.slice(0, 0 if _fix_arm == "none" else 1)

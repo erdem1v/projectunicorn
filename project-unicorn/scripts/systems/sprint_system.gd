@@ -1430,12 +1430,12 @@ static func _auto_start() -> void:
 ## bekler. Söz olayında gönderilen kart (`send`) testi bittiyse düzeltmesi bitmeden çıkar, düzeltilmemiş hata da hattına
 ## düşer. Düzeltmesi bitmemiş öbür kart sessizce bırakılır: kalan işiyle sonraki sprinte devreder. Sürüm kaydı aşama
 ## başına kapanışta kalan ihtiyacı ve o aşamanın art arda taşan kapanış sayısını taşır (`overflow`), kaçan hatanın
-## hatlarını `escaped`ta.
+## hatlarını `escaped`ta, sprintin koştuğu haftayı `velocity.weeks`te (erken kapanan sprint bir haftadır).
 static func _close() -> void:
 	var p: Dictionary = _p()
 	var sprint: Dictionary = p.sprint
 	var number: int = int(sprint.number)
-	var velocity: Dictionary = {"done": done_points(), "total": sprint.capacity}
+	var velocity: Dictionary = {"done": done_points(), "total": sprint.capacity, "weeks": week() - 1}
 	var ship: Array = []
 	var carried: Array = []
 	for c in _sprint_cards():
