@@ -61,10 +61,10 @@ Fon merdiveni:
 - `PhaseGateSystem.on_gate_declined()` `phase_gate_system.gd:94`: "Henüz değil" · `events/core/effects.gd:555` (`phase_gate_decline` fiili).
 - `PhaseGateSystem.on_shutter_started()` `:102`: sıradaki kapı kartlarını kuyruktan çeker · `EndingsSystem._tick_shutter` `endings_system.gd:119`.
 - `PhaseGateSystem.series_a_signal()/series_a_approach()` `:135/:157`: kapalı, ısınıyor, açık okuması · `seams_world.gd:37`, `finance_ozet_view.gd:328`, `investor_appetite_ui.gd`.
-- `VCPitchSystem.request_meeting()` `vc_pitch_system.gd:772`: görüşme rezervasyonu · `main/main.gd:4031` (Av sekmesinin düğmesi).
-- `VCPitchSystem.begin_meeting()` `:59`: görüşmeyi açar, `meeting_scene_requested` yayar · `main.gd:4269`, `main.gd:4682`, seed için `seed_round_system.gd:109`.
+- `VCPitchSystem.request_meeting()` `vc_pitch_system.gd:772`: görüşme rezervasyonu · `main/main.gd:4265` (Av sekmesinin düğmesi).
+- `VCPitchSystem.begin_meeting()` `:59`: görüşmeyi açar, `meeting_scene_requested` yayar · `main.gd:4503`, `main.gd:4916`, seed için `seed_round_system.gd:109`.
 - `VCPitchSystem.advance()` `:107` ve `withdraw()` `:118`: vuruş çözümü · `ui/meeting/vc_meeting_adapter.gd:67`, `:99`; kapanışta `end_sitting()` `vc_pitch_system.gd:131` (adapter `vc_meeting_adapter.gd:104`) saati ilerletir.
-- `VCPitchSystem.call_waiting()/lapse_call()/postpone_call()` `:784/:801/:794`: fonun çağrısı · `main.gd:4602`, `:4603`, `:4691`.
+- `VCPitchSystem.call_waiting()/lapse_call()/postpone_call()` `:784/:801/:794`: fonun çağrısı · `main.gd:4836`, `:4603`, `:4691`.
 - `VCPitchSystem.sign_table()/walk_table()` `:554/:608`: masa sonuçları · `term_sheet_table_system.gd:562`, `:350`, `:602`; sign Series A'da `EndingsSystem.trigger_ending("series_a_close")` çağırır.
 - `VCPitchSystem.decline_expired_sheet()` `:637`: süresi dolan teklifi kapatır, ret sayılmaz · `events/core/effects.gd:574`.
 - `VCPitchSystem.add_strain()` `:262`: fona kırgınlık · `events/core/effects.gd:581` (`investor_strain` fiili).
@@ -106,15 +106,15 @@ Hepsi `EventBus`te (`autoload/event_bus.gd`); satır numarası tanım satırı.
 - `offer_countdown_changed` `event_bus.gd:268`: yayan `vc_pitch_system.gd:914` · `ui/components/top_bar.gd:117`.
 - `meeting_scene_requested` `event_bus.gd:261`: yayan `vc_pitch_system.gd:104` · `main/main.gd:2061`, `:4268`, `:4467` (VcMeetingAdapter ve MeetingPanel kurulumu).
 - `pitch_finished` `event_bus.gd:203`: yayan `vc_pitch_system.gd:125`, `:387` (ve `sales_meeting_system.gd:120`) · `hunt_tab.gd:48`, `sales_tab.gd:76`.
-- `term_table_requested` `event_bus.gd:269`: yayan `events/core/effects.gd:568`, `:587`, `hunt_tab.gd:521`, `game_shell.gd:163` · `main.gd:4468`.
+- `term_table_requested` `event_bus.gd:269`: yayan `events/core/effects.gd:568`, `:587`, `hunt_tab.gd:521`, `game_shell.gd:163` · `main.gd:4702`.
 - `mentor_advisory_changed` `event_bus.gd:231`: yayan `vc_pitch_system.gd:890` (geri arama açıldı) · `hunt_tab.gd:59`, `office_notice_stack.gd:43`, `game_state.gd:333`.
-- `run_ended` `event_bus.gd:245`: yayan `endings_system.gd:484` · `main.gd:4463` (`_on_run_ended` `:4993`); `milestone_reached` `event_bus.gd:248`: yayan `endings_system.gd:448` · `main.gd:4464`.
+- `run_ended` `event_bus.gd:245`: yayan `endings_system.gd:484` · `main.gd:4697` (`_on_run_ended` `:4993`); `milestone_reached` `event_bus.gd:248`: yayan `endings_system.gd:448` · `main.gd:4698`.
 - `shutter_changed` `event_bus.gd:250`: yayan `game_state.gd:412` (`set_shutter_weeks_left`) · `top_bar.gd:109`, `finance_ozet_view.gd:80`, `finance_tab.gd:51`.
 - `equity_changed` `event_bus.gd:18`: yayan `game_state.gd:615`, `:626` (tur kayıtları) · `finance_ozet_view.gd:65`.
 - `cash_changed` `event_bus.gd:7`, `burn_changed` `:9`, `runway_recalculated` `:15`: `GameState.set_cash/set_daily_burn` (`game_state.gd:340`, `:351`) yayar · TopBar, Finans.
 - `month_ended` `event_bus.gd:253`: yayan `summary_system.gd:126` · `save_manager.gd:62`, `top_bar.gd:112`, `finance_ozet_view.gd:68`.
 - `messages_changed` `event_bus.gd:129`: yayan `message_system.gd:55`, `:69`, `:76`, `events/core/history.gd:81` · gelen kutusu arayüzü (`inbox.gd`, `events_tab.gd`).
-- `summary_ready` `event_bus.gd:256` ve `product_note_issued` `:179`: yayan `message_system.gd:58`, `:60` (teslimde) · `main.gd:4465`, `:4466`.
+- `summary_ready` `event_bus.gd:256` ve `product_note_issued` `:179`: yayan `message_system.gd:58`, `:60` (teslimde) · `main.gd:4699`, `:4466`.
 - `desk_changed` `event_bus.gd:125`: yayan `mail_clock.gd:72`, `:108`, `events/present/papers.gd` · `top_bar.gd:116`, `left_tabs.gd:114`, `product_tab.gd:114`.
 - `news_stream_changed` `event_bus.gd:94`: yayan `news_feed_system.gd:169` · `news_ticker.gd:77`.
 - `headline_added` `event_bus.gd:236`: yayan `hr_system.gd:100`, `sales_ledger.gd:280`, `sprint_bridges.gd:117`, `events/present/ticker.gd:25` · `news_ticker.gd:72`, `NewsFeedSystem.on_headline_added`.

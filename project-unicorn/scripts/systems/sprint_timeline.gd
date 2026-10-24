@@ -70,6 +70,28 @@ static func done_at(stage: Dictionary, at: float) -> float:
 	return done
 
 
+## Kartın satırındaki boşluklar [[örtülen son an, sonraki öğenin başı], …]: öğeler aşamaların eksendeki aralığı, beklemeler ve
+## sprint dışı payların taralı alanıdır; bir öğe kendinden öncekilerin hepsinin bitişinden `EPS`ten fazla geç başlıyorsa aradaki
+## boşluğu hiçbir bekleme ya da çubuk kapatmamıştır. Smoke'un Z3'ü ve `live:a4_*` karelerinin `row_gaps`ı bunu okur.
+static func row_gaps(stages: Array) -> Array:
+	var items: Array = []
+	for stage in stages:
+		if stage.start >= 0.0:
+			items.append([stage.start, stage.end])
+		for wait in stage.waits:
+			items.append([wait.from, wait.to])
+		if stage.out_from >= 0.0:
+			items.append([stage.out_from, stage.out_to])
+	items.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
+	var gaps: Array = []
+	var reach: float = items[0][0] if not items.is_empty() else 0.0
+	for item in items:
+		if item[0] > reach + SprintSystem.EPS:
+			gaps.append([reach, item[0]])
+		reach = maxf(reach, item[1])
+	return gaps
+
+
 ## Günlüğün her kaydına kişinin zamanında yerini (`from`, `to`) yazar. {kişi: {pieces, spent (önden iş dahil kartlara harcanan
 ## bütçe), roles (sprintin kartlarında aşama başına süre)}}.
 static func _clock(log: Array, by_id: Dictionary, start: int) -> Dictionary:

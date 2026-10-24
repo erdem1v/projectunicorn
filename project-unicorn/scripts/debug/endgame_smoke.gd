@@ -21857,8 +21857,8 @@ static func _case_sprint_away_lists_who_cannot_work() -> String:
 
 ## Zaman ekseni motorun oynatmasının aynasıdır, ona yeni bir şey öğretmez. Planlamada ve koşan sprintin haftalarında: Z1 kart başına
 ## sprint içi iş ve aşama parçalarının işi `plan_outcome`un `done`ı (ve `outcome` plan_outcome'un kendisi), Z2 aşama öncekinin
-## bitişinden önce başlamaz, Z3 satırdaki her boşluk bir beklemeyle kapalı, Z4 kimse aynı anda iki işte değil, Z5 hafta sınırında
-## ekranın "yapılan"ı motorun gerçek ilerlemesi, Z7 üç aşamanın oluğu (iş + hiçbir karta, önden işe de, harcanmayan puan) ekibin
+## bitişinden önce başlamaz, Z3 satırdaki her boşluk (sprint dışı paylar da öğedir) bir beklemeyle kapalı, Z4 kimse aynı anda iki işte
+## değil, Z5 hafta sınırında ekranın "yapılan"ı motorun gerçek ilerlemesi, Z7 üç aşamanın oluğu (iş + hiçbir karta, önden işe de, harcanmayan puan) ekibin
 ## kapasitesini aşmaz ve testçisiz planda Test oluğu 0'dan büyük; önden çalışan kişinin harcanmayan puanı önden işi kadar azdır.
 ## Sprintten önce tasarlanmış kartın tasarımı planlamada önden yapılmıştır (`pre`), koşan sprintin 1. haftasında eksenden önce
 ## bitmiştir (`before`); 1. haftada başka aşama `before` değildir. Sonraki sütunun kartı bu sprintte hem hazırlanır hem önden
@@ -21870,8 +21870,9 @@ static func _case_sprint_away_lists_who_cannot_work() -> String:
 ## (E1); aşamanın oluğu öngörüleni de sayar (E2); koşan sprintte eksenden önce biten aşama `before` taşır; zaman ekseninin
 ## anahtarları sözleşmedeki gibidir; sürüm notunda sonraki sütunun yükü planlamayla aynı işlevlerden gelir.
 ## FALSİFİKASYON: SprintTimeline._lay'de `at = piece.to` satırını `at = first` yap (aşamalar üst üste biner) → "Z2" FAIL; _span'da
-## `_wait` eklemesini sil → "Z3" FAIL; SprintSystem._finish_sprint'te bu haftanın kartlara harcamasını sil (`_work` çağrısını `pass`
-## yap) → "Z5" FAIL; bütçeyi kartlar arasında paylaşma (`budget.get(id, …)` yerine kişinin tam puanı) → "Z4" FAIL; SprintTimeline._clock'ta
+## `_wait` eklemesini sil → "Z3" FAIL; SprintTimeline.row_gaps'te `waits` öğelerini çıkar → "Z3" FAIL ve `live:a4_*` karelerinde
+## row_gaps > 0; SprintSystem._finish_sprint'te bu haftanın kartlara harcamasını sil (`_work` çağrısını `pass` yap) → "Z5" FAIL;
+## bütçeyi kartlar arasında paylaşma (`budget.get(id, …)` yerine kişinin tam puanı) → "Z4" FAIL; SprintTimeline._clock'ta
 ## kişinin saatini sıfırda tut → "Z4" FAIL; _hatches'ta payı 2 ile çarp → "A17" FAIL; _lay'de `work[e.kind] +=` yerine `=` →
 ## "Z1" FAIL; _clock'ta önden işin harcamasını `spent`e katma → "E2" FAIL; _card'da `before`dan `ctx.running`i sil → "B" FAIL.
 static func _case_sprint_timeline_matches_play_out() -> String:
@@ -22147,7 +22148,6 @@ static func _case_sprint_timeline_matches_play_out() -> String:
 static func _timeline_flaws(tl: Dictionary, label: String) -> String:
 	var eps: float = SprintSystem.EPS
 	for id in tl.cards:
-		var items: Array = []
 		var behind: float = -1.0
 		for s in tl.cards[id].stages:
 			if typeof(s.before) != TYPE_BOOL or (s.before and (s.start != -1.0 or s.end != -1.0 or s.need - s.done0 > eps
@@ -22159,15 +22159,9 @@ static func _timeline_flaws(tl: Dictionary, label: String) -> String:
 					return "Z2 (%s): %s's %s%s starts at %.3f, before the stage ahead of it ends at %.3f" % [
 						label, id, s.stage, " fix" if s.fix else "", s.start, behind]
 				behind = s.end
-				items.append([s.start, s.end])
-			for w in s.waits:
-				items.append([w.from, w.to])
-		items.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
-		var reach: float = items[0][1] if not items.is_empty() else 0.0
-		for item in items:
-			if item[0] > reach + eps:
-				return "Z3 (%s): %s has a gap from %.3f to %.3f that no wait covers" % [label, id, reach, item[0]]
-			reach = maxf(reach, item[1])
+		var gaps: Array = SprintTimeline.row_gaps(tl.cards[id].stages)
+		if not gaps.is_empty():
+			return "Z3 (%s): %s has a gap from %.3f to %.3f that no wait covers" % [label, id, gaps[0][0], gaps[0][1]]
 	for id in tl.people:
 		var behind: float = -1.0
 		for p in tl.people[id].pieces:

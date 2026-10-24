@@ -9,7 +9,7 @@ Ar-Ge 19 düğümlü ağaçtır; tamamlanan düğüm hat kapılarını ve katsay
 
 - `scripts/systems/sprint_system.gd` (1734): sprint motoru: tür seçimi, plan eylemleri, haftalık atama/ilerleme, kapanış ve sürüm, karar kâğıdı, söz olayı, plan tutuşu; `GameState.product`'ın tek yazarı
 - `scripts/systems/sprint_catalog.gd` (929): salt okur katalog: alanlar, aday kartlar, kilit gerekçesi, etki/öngörü satırları, lider ve PM planı, rakipler, `cfg("a.b")` ile sprint.json
-- `scripts/systems/sprint_timeline.gd` (304): sprint ekranının zaman ekseni: motorun oynatma günlüğünden aşama yerleşimi, bekleme, kurucunun görüşme taraması, kişi parçaları, kapasite satırı kuralı; yalnız okur
+- `scripts/systems/sprint_timeline.gd` (326): sprint ekranının zaman ekseni: motorun oynatma günlüğünden aşama yerleşimi, bekleme, kurucunun görüşme taraması, kişi parçaları, kapasite satırı kuralı; yalnız okur
 - `scripts/systems/sprint_bridges.gd` (346): B2B talepleri, rakip çıkışları, basın satırı, MVP/ücretli plan ekonomisi, sürüm notu cümleleri, teşekkür notu ve B2C yorumları
 - `scripts/systems/product_state.gd` (341): `mvp_*` bayraklarının evi: kimlik, hat kademeleri, açık hata deposu, sürüm yaşı/ilgi, sunucu sağlayıcı ve kapasite yazma yolu
 - `scripts/systems/product_system.gd` (53): koşu sınırı (reset/to_dict/from_dict), haftalık açık hata görüntüsü, saat damgası okumaları
@@ -57,11 +57,11 @@ Ar-Ge 19 düğümlü ağaçtır; tamamlanan düğüm hat kapılarını ve katsay
 - `SprintSystem.prep_gains(weeks)` `sprint_system.gd:856`: sonraki sütunun kartlarının `weeks` hafta sonraki hazırlık kazancı (kopyalarda yalnız PM'lerin haftaları) · `ProductModel._next`
 - `SprintSystem.away()` `sprint_system.gd:737`: ekip dışı kişiler [{id, reason}]: `training`, `leave`, `research`, kurucu `meetings` · `ProductModel._crew`
 - `SprintSystem.set_founder_in_sprint()` `sprint_system.gd:299`: kurucu sprint kartı alır mı (planlamada ve sürüm notunda yazılır) · smoke `sprint_away_lists_who_cannot_work`
-- `SprintTimeline.build()/done_at()/capacity_rows()/row_power()` `scripts/systems/sprint_timeline.gd:39`/`:66`/`:121`/`:140`: günlükten eksen; aşamanın `at` anına dek yaptığı iş; ekibin kapasite satırı kuralı ve satır başına sprint puanı (sürüm notunda da) · `SprintSystem.timeline`, `ProductModel._progress`, `_next`
+- `SprintTimeline.build()/done_at()/row_gaps()/capacity_rows()/row_power()` `scripts/systems/sprint_timeline.gd:39`/`:66`/`:76`/`:143`/`:162`: günlükten eksen; aşamanın `at` anına dek yaptığı iş; kart satırının bekleme ya da çubukla kapanmayan boşlukları (smoke Z3 ve `live:a4_*` `row_gaps`); ekibin kapasite satırı kuralı ve satır başına sprint puanı (sürüm notunda da) · `SprintSystem.timeline`, `ProductModel._progress`, `_next`
 - `SprintSystem.capacity()/capacity_of()` `sprint_system.gd:640`/`:645`: ekibin ya da verilen `team` satırlarının sprint boyunca puanı; ekip ve satır toplamları yalnız buradan okunur (`SprintTimeline.capacity_rows`/`row_power`, smoke `sprint_timeline_matches_play_out`) · `SprintCatalog.lead_suggestion`, `ProductModel._center`
 - `SprintCatalog.row_of()/due_sprint()` `sprint_catalog.gd:120`/`:317`: çalışanın kapasite satırı; kartın söz ya da talep son tarihi · `SprintTimeline`, `ProductModel._row`
 - `SprintSystem.plan_outcome()/mvp_eta()/team()/payers()` `sprint_system.gd:761`/`:791`/`:692`/`:714`: plan önizlemesi, MVP tahmini, ekip, bedel ödeyenler · ProductModel, effects.gd
-- `SprintCatalog.cfg()` `scripts/systems/sprint_catalog.gd:29`: sprint.json okuması (yoksa yükler) · yaklaşık her sistem; `load_data()` :23 → `main.gd:4449`
+- `SprintCatalog.cfg()` `scripts/systems/sprint_catalog.gd:29`: sprint.json okuması (yoksa yükler) · yaklaşık her sistem; `load_data()` :23 → `main.gd:4683`
 - `SprintCatalog.candidates()` `sprint_catalog.gd:194`: alanın aday kartları (feat:/req:/plan:/fix:/res:) · ProductModel, `SprintSystem`
 - `SprintCatalog.lead_suggestion()/pm_plans()` `sprint_catalog.gd:477`/`:552`: lider ve PM planı (`_suggest` :889) · `apply_lead`, ÇEYREK görünümü
 - `SprintCatalog.gate_reason()` `sprint_catalog.gd:290`: kilitli kademenin gerekçesi (`LineGates.unmet_parts`) · `_begin`, `product_model.gd:574`
@@ -116,7 +116,7 @@ Ar-Ge 19 düğümlü ağaçtır; tamamlanan düğüm hat kapılarını ve katsay
 - `research_completed`: yayan `rnd_system.gd:462` · left_tabs.gd:119, research_bar.gd:50
 - `research_frozen`, `research_resumed`: yayan `rnd_system.gd:145`, `:147` · left_tabs.gd:120-121, research_bar.gd:51-52
 - `node_revealed`, `hidden_line_unlocked`: yayan `rnd_system.gd:481`, `:502` · dinleyen yok
-- `product_note_read`: yayan `rnd_system.gd:659` · left_tabs.gd:123; `product_note_issued` MessageSystem'den (`message_system.gd:60`) · main.gd:4466
+- `product_note_read`: yayan `rnd_system.gd:659` · left_tabs.gd:123; `product_note_issued` MessageSystem'den (`message_system.gd:60`) · main.gd:4700
 - `research_progress_changed`: yayan `time_manager.gd:400` · research_bar.gd:48, build_hud_panel.gd:53
 - `headline_added`, `ticker_live_line`, `mentor_advisory_changed`: yayan `sprint_bridges.gd:117`, `:89`, `:134` · haber bandı ve Frank satırı
 - `module_unlocked`: yayan `scripts/events/core/engine.gd:270` (`EvDelays.module_openings`, ModuleLocks'u okur) · olay motoru `signals.gd:41`

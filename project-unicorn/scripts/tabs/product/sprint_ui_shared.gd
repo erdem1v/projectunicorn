@@ -278,15 +278,15 @@ static func button(text: String, variation: StringName, on_press: Callable) -> B
 ## kendi satırında sarar: en büyük hesabın adı uzun olabilir, akıştaki etiket sarılmaz.
 static func effect_line(parts: Array) -> VBoxContainer:
 	var col := column(UiTokens.SPACE_XS)
-	var flow := HFlowContainer.new()
-	flow.add_theme_constant_override("h_separation", UiTokens.SPACE_L)
-	flow.add_theme_constant_override("v_separation", UiTokens.SPACE_XS)
-	for part in parts:
-		if part.k == "bugs":
-			col.add_child(prose(bugs_text(part), &"MetaMuted"))
-		else:
+	for part in parts.filter(func(p: Dictionary) -> bool: return p.k == "bugs"):
+		col.add_child(prose(bugs_text(part), &"MetaMuted"))
+	var rest: Array = parts.filter(func(p: Dictionary) -> bool: return p.k != "bugs")
+	if not rest.is_empty():
+		var flow := HFlowContainer.new()
+		flow.add_theme_constant_override("h_separation", UiTokens.SPACE_L)
+		flow.add_theme_constant_override("v_separation", UiTokens.SPACE_XS)
+		for part in rest:
 			flow.add_child(_part(part, false))
-	if flow.get_child_count() > 0:
 		col.add_child(flow)
 	return col
 

@@ -49,6 +49,11 @@ static func texture(look: Dictionary, px: int) -> ImageTexture:
 	return _cache[key]
 
 
+## Whether a portrait handed out is still waiting to be drawn; screenshots wait for it.
+static func drawing() -> bool:
+	return _studio != null and (_studio._busy or not _studio._queue.is_empty())
+
+
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	viewport = SubViewport.new()

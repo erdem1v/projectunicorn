@@ -3706,7 +3706,8 @@ func _run_ending_shot(key: String) -> void:
 # founder in R&D, presses Ar-Ge'ye git and saves R&D with the founder's node selected (<stem>_go). live:overview_pre is
 # the Sprint-1 plan with the pointer on the locked GENEL BAKIŞ tab (<stem>_tip); live:server_* is GENEL BAKIŞ on the
 # live ERP (see _seed_server), the plain frame and, for the states that have a tip to read, <stem>_tip with the pointer
-# on the control it belongs to.
+# on the control it belongs to. live:a4_<frame> are the Ürün > Sprint frame worlds (_seed_product_a4), each printing
+# its PRODUCTSHOT line.
 func _run_product_shot(id: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
@@ -3732,6 +3733,8 @@ func _run_product_shot(id: String) -> void:
 			if id != "live:decision_paper":   # a real paper: its answer is open, so its options and their chips are in the frame
 				await get_tree().create_timer(0.4).timeout
 				_press_button_labelled(_shell, tr("MAIL_RESPOND"))
+		if id.begins_with("live:a4_") and not await _product_a4_ready(id.trim_prefix("live:")):
+			return
 		if id == "live:solo15":
 			await get_tree().process_frame
 			(_shell.find_children("*", "SprintCard", true, false).filter(func(card: SprintCard) -> bool:
@@ -3852,9 +3855,12 @@ func _product_overview_shot(scenario: String, stem: String) -> void:
 ## and opens the next planning, so every area reads the third star. b2b_quarter is delegate on the ERP with the quarter
 ## view open: the PM's goal strip right after the MVP. b2b_requests signs two accounts once the faucet
 ## opens at MVP and plays one more sprint, so the next planning carries their request cards. overview_pre is plan on the
-## ERP, before v1.0; server_* are the ERP past v1.0 on its next planning (_seed_server).
+## ERP, before v1.0; server_* are the ERP past v1.0 on its next planning (_seed_server); a4_* are the A4 frames (_seed_product_a4).
 func _seed_product_live(scenario: String) -> void:
 	if scenario.begins_with("pick"):
+		return
+	if scenario.begins_with("a4_"):
+		_seed_product_a4(scenario)
 		return
 	var b2b: bool = scenario.begins_with("b2b") or (scenario.begins_with("server") and scenario != "server_b2c") \
 		or scenario == "overview_pre"
@@ -3973,6 +3979,234 @@ func _seed_product_live(scenario: String) -> void:
 	sprint.call()
 	SprintSystem.plan_next()
 	SprintSystem.apply_lead()
+
+
+## live:a4_<frame>: the frames of the Ürün > Sprint screen as worlds the engine plays; each prints
+## `PRODUCTSHOT|kind=|cards=|people=|row_gaps=` once its tab is mounted. A world (_A4_WORLDS) is a company (`crew`: a token per
+## employee, the role letter p d v t for product manager, designer, developer, tester and its stars, then `:training`, `:leave`,
+## `:research` or `:support` for one the sprint cannot seat), the sprints played before the frame (`before`, each a plan) and the
+## frame's moment. `pre` stays before v1.0; `accounts` customers are signed (their requests are the frame's); `off` is the
+## founder's switch; `sit` the sittings of the founder's week; `bugs` open bug lines (fix cards); `twin` two employees of one
+## first name; `queue` open cards sent to the next column (the PMs prepare them, the designers work ahead); `fill` the plan ("lead",
+## "over" every card "+" takes, "long" the longest English names, "none" or that many cards); `load` the plan's cards sized to
+## that share of the capacity (`card_need`, the one fixture size); `run` the sprint started and the clock moved to that sprint
+## week; `delegate` the planning handed to the PM; `paper` a decision paper asked in the first week (off in every other world).
+const _A4_ROLES := {"p": HRConstants.ROLE_PRODUCT_MANAGER, "d": HRConstants.ROLE_DESIGNER, "v": HRConstants.ROLE_DEVELOPER,
+	"t": HRConstants.ROLE_TESTER}
+const _A4_FIRST := ["Ece", "Mert", "Zeynep", "Deniz", "Burak", "Ayşe", "Kaan", "Gizem", "Onur", "Defne"]   # LOC-DATA debug seed / names
+const _A4_LAST := ["Aydın", "Kaya", "Çelik", "Demir", "Şahin"]   # LOC-DATA debug seed / names
+const _A4_SIX := "d4 v3 v2 t3 p"
+const _A4_ELEVEN := "d3 d3 v4 v4 v3 v3 v2 v2 t3 t1"
+const _A4_FIFTY := "p5 p4 p2 d4 d3 d3 d3 d2 d2 d3:training d4:research " \
+	+ "v5 v5 v4 v4 v4 v4 v4 v4 v3 v3 v3 v3 v3 v3 v2 v2 v2 v2 v2 v3:training v2:training v2:training v3:leave " \
+	+ "v3:support v3:support v2:support v2:support t4 t4 t3 t3 t3 t3 t2 t2 t2 t2:training t3:support t2:support"
+const _A4_PREP := {"fill": "over", "queue": 2}
+const _A4_FACE_FRAMES := 1200   # PersonBust draws a portrait every few frames; fifty faces fit well within
+const _A4_WORLDS := {
+	"a4_solo": {"pre": true, "sit": ["vc"]},
+	"a4_devs3": {"crew": "v3 v4 v2", "off": true},
+	"a4_six_hover": {"crew": _A4_SIX + "5", "bugs": 1, "fill": 5},
+	"a4_six_pm5": {"crew": _A4_SIX + "5", "before": [_A4_PREP], "bugs": 1, "fill": "over", "load": 1.15, "queue": 1},
+	"a4_six_pm2": {"crew": _A4_SIX + "2", "before": [_A4_PREP], "bugs": 1, "fill": "over", "load": 1.15, "queue": 1},
+	"a4_eleven": {"crew": _A4_ELEVEN, "sit": ["table"], "bugs": 1, "fill": "over", "load": 1.25},
+	"a4_eleven_streak": {"crew": _A4_ELEVEN, "sit": ["table"], "bugs": 1, "fill": "over", "load": 1.25,
+		"before": [{"fill": "over", "load": 1.25}, {"fill": "over", "load": 1.25}]},
+	"a4_two_pm": {"crew": "d3 v4 v4 v3 v2 v2 t3 t1 p5 p2", "sit": ["sales"], "before": [{"queue": 4, "fill": 4}], "fill": "over", "load": 1.25},
+	"a4_fifty": {"crew": _A4_FIFTY, "off": true, "delegate": true, "before": [{"queue": 6, "fill": 4}]},
+	"a4_run_w2": {"crew": _A4_SIX + "5", "before": [_A4_PREP], "fill": "over", "load": 1.15, "queue": 1, "run": 1.0, "paper": true},
+	"a4_eleven_tip": {"crew": _A4_ELEVEN, "twin": [2, 6], "accounts": 4, "fill": "long"},
+	"a4_twelve_dev": {"crew": "d3 d3 v4 v4 v4 v3 v3 v3 v3 v2 v2 v2 v2 v2 t3 t1", "off": true, "fill": "over", "load": 1.3},
+	"a4_fourteen": {"crew": _A4_ELEVEN, "bugs": 4, "fill": 14, "load": 1.6},
+	"a4_requests": {"crew": "d3 v3 v2 v4 t3", "off": true, "accounts": 4},
+	"a4_empty": {"crew": "d3 v3 v2:training t3 p5", "fill": "none"},
+	"a4_run_end": {"crew": _A4_SIX + "5", "before": [_A4_PREP], "fill": "over", "load": 1.15, "queue": 2, "run": 1.9},
+	"a4_next_prefilled": {"crew": _A4_SIX + "5", "before": [_A4_PREP, {"fill": "over", "load": 1.15, "queue": 2}], "fill": "none"},
+	"a4_early": {"crew": _A4_SIX + "5", "fill": 2},
+	"a4_first_sprint": {"pre": true, "crew": "d3 v5", "queue": 2},
+	"a4_first_next": {"pre": true, "crew": "d3 v5", "before": [{"queue": 2}]},
+	"a4_six_founder_off": {"crew": _A4_SIX + "5", "before": [_A4_PREP], "bugs": 1, "fill": "over", "load": 1.15, "queue": 1, "off": true},
+	"a4_six_meetings2": {"crew": _A4_SIX + "5", "before": [_A4_PREP], "bugs": 1, "fill": "over", "load": 1.15, "queue": 1,
+		"sit": ["sales", "sales"]},
+	"a4_run_table": {"crew": _A4_ELEVEN, "sit": ["table"], "fill": "over", "load": 1.25, "run": 0.7},
+}
+
+
+func _seed_product_a4(kind: String) -> void:
+	var world: Dictionary = _A4_WORLDS[kind]
+	GameState.set_cash(1_000_000)
+	(SprintCatalog.cfg("decision") as Dictionary).sprint_chance = 0.0
+	SprintSystem.choose_type("erp", "Fatura")
+	var live: bool = not world.get("pre", false)
+	if live:
+		_a4_live()
+	_a4_seat(_a4_hire(String(world.get("crew", "")), world.get("twin", [])))
+	if live:
+		_a4_sign(int(world.get("accounts", 2)))
+	for spec: Dictionary in world.get("before", []):
+		_a4_plan(spec)
+		_a4_play()
+		SprintSystem.plan_next()
+	if world.get("off", false):
+		SprintSystem.set_founder_in_sprint(false)
+	for line: String in SprintCatalog.capabilities("core").slice(0, int(world.get("bugs", 0))):
+		ProductState.add_bugs(line, 5)
+	var sittings: Array = world.get("sit", [])
+	for sitting: String in sittings:
+		TimeManager.advance_hours(TimeModel.SITTING_HOURS[sitting], sitting)
+	if not sittings.is_empty():
+		_a4_week()
+	_a4_plan(world)
+	if world.get("delegate", false):
+		SprintSystem.set_delegate(true)
+	if world.get("paper", false):
+		(SprintCatalog.cfg("decision") as Dictionary).sprint_chance = 1.0
+	if world.has("run"):
+		var run: float = world.run
+		SprintSystem.start()
+		for _w in int(run):
+			_a4_week()
+		var start: int = WorkHoursSystem.start_hour()
+		TimeManager.advance_hours(roundi(start + (run - int(run)) * (WorkHoursSystem.workday_end() - start) - TimeManager.day_minute() / 60.0))
+
+
+## The employees of a crew string, hired through the registry: [[id, state], …].
+func _a4_hire(crew: String, twin: Array) -> Array:
+	var tokens: PackedStringArray = crew.split(" ", false)
+	var names: Array = []
+	for i in tokens.size():
+		names.append("%s %s" % [_A4_FIRST[i % _A4_FIRST.size()], _A4_LAST[(i + int(i / 10.0)) % _A4_LAST.size()]])
+	if not twin.is_empty():
+		names[twin[1]] = "%s %s" % [names[twin[0]].get_slice(" ", 0), names[twin[1]].get_slice(" ", 1)]
+	var staff: Array = []
+	for i in tokens.size():
+		var c := Character.new()
+		c.id = "char_a4_%d" % i
+		c.character_name = names[i]
+		c.role = _A4_ROLES[tokens[i][0]]
+		c.category = "employee"
+		c.morale = 60
+		c.role_stats = HRConstants.seed_skills(c.role, tokens[i][1].to_int() * HRConstants.POINTS_PER_STAR, 3, 2)
+		c.traits.assign(["picks_it_up_fast"])
+		CharacterRegistry.add(c)
+		staff.append([c.id, tokens[i].get_slice(":", 1)])
+	return staff
+
+
+## The founder alone plays a live ERP (the MVP gate answered with Yayınla) and the next planning opens.
+func _a4_live() -> void:
+	SprintSystem.apply_lead()
+	for _i in 12:
+		_a4_play()
+		if GameState.product.release.get("gate", false):
+			SprintSystem.publish()
+		if ProductState.is_live():
+			break
+		SprintSystem.plan_next()
+		SprintSystem.apply_lead()
+	SprintSystem.plan_next()
+
+
+## Signs `accounts` customers in the planning that waits, two weeks for their first requests. A request asks one line of the
+## area its sector leads with, so a prospect is taken while its area has a line left.
+func _a4_sign(accounts: int) -> void:
+	var asking: Dictionary = {}
+	var signed := 0
+	var tries := 0
+	while signed < accounts and tries < 60:
+		tries += 1
+		var lead: Prospect = SalesFaucetSystem.spawn_prospect("mid", "event")
+		var area: String = ProductQuality.emphasis(lead.industry)[0]
+		if int(asking.get(area, 0)) < SprintCatalog.capabilities(area).size():
+			asking[area] = int(asking.get(area, 0)) + 1
+			signed += 1
+			SalesSystem.add_b2b_customer(lead, 12, 50, 85)
+		ProspectRegistry.remove(lead.id)
+	for _w in 2:
+		_a4_week()
+
+
+## Training and leave through the registry's status seam, research through Ar-Ge's start, the support desk through the jobs.
+func _a4_seat(staff: Array) -> void:
+	for row: Array in staff:
+		match row[1]:
+			"training": CharacterRegistry.set_status(row[0], HRConstants.STATUS_TRAINING)
+			"leave": CharacterRegistry.set_status(row[0], HRConstants.STATUS_ON_LEAVE)
+			"research": RnDSystem.start("data_model", [row[0]])
+			"support":
+				var job: String = CharacterRegistry.get_character(row[0]).assigned_job_ids[0]
+				CharacterRegistry.assign_job(row[0], HRConstants.JOB_SUPPORT)
+				CharacterRegistry.unassign_job(row[0], job)
+
+
+## The plan of the sprint in planning: `queue`, `fill` and `load` of `spec`.
+func _a4_plan(spec: Dictionary) -> void:
+	var built: Array = SprintCatalog.open_cards([]).filter(func(c: Dictionary) -> bool: return c.kind in ["feature", "request"])
+	for c: Dictionary in built.slice(0, int(spec.get("queue", 0))):
+		SprintSystem.send_next(c.id)
+	var fill: String = str(spec.get("fill", "lead"))
+	if fill == "lead":
+		SprintSystem.apply_lead()
+	elif fill != "none":
+		var open: Array = SprintCatalog.open_cards([])
+		if fill == "long":
+			var lang: String = TranslationServer.get_locale()
+			TranslationServer.set_locale("en")
+			open = open.filter(func(c: Dictionary) -> bool: return c.kind in ["feature", "request"])
+			open.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+				return SprintCatalog.card_name(a).length() > SprintCatalog.card_name(b).length())
+			TranslationServer.set_locale(lang)
+		for c: Dictionary in open:
+			if SprintSystem.sprint_card_count() >= (6 if fill == "long" else 99 if fill == "over" else fill.to_int()):
+				break
+			SprintSystem.add(c.id)
+	if spec.has("load"):
+		_a4_size(spec.load)
+
+
+## The plan's untouched feature and request cards grow together until the plan holds `load` times the team's capacity.
+func _a4_size(load: float) -> void:
+	var cards: Array = GameState.product.sprint.cards.map(func(id: String) -> Dictionary: return GameState.product.cards[id])
+	var fresh: Array = cards.filter(func(c: Dictionary) -> bool:
+		return c.kind in ["feature", "request"] and c.progress.all(func(done: float) -> bool: return done == 0.0))
+	var total: float = fresh.reduce(func(sum: float, c: Dictionary) -> float: return sum + SprintSystem.total(c), 0.0)
+	var grow: float = (load * SprintSystem.capacity() - SprintSystem.used() + total) / total
+	for c: Dictionary in fresh:
+		c.need = SprintCatalog.card_need(c.kind, c.line, c.target_tier, SprintSystem.total(c) * grow)
+
+
+## Starts the planned sprint and plays it to its close, a tick a week.
+func _a4_play() -> void:
+	SprintSystem.start()
+	while SprintSystem.mode() == "active":
+		_a4_week()
+
+
+## One tick the way the clock turns it: the day's step, then the founder's meeting week starts over.
+func _a4_week() -> void:
+	GameState.advance_day()
+	SprintSystem.daily_tick()
+	GameState.start_work_week()
+
+
+## live:a4_* once the tab is mounted: a4_six_hover's hover ghost, every face drawn (a frame with empty faces is not saved,
+## the run fails), then the line the frames' gates read (`row_gaps` counts the gaps of every card row of the timeline).
+func _product_a4_ready(kind: String) -> bool:
+	await get_tree().process_frame
+	if kind == "a4_six_hover":
+		var open: Array = SprintCatalog.open_cards([]).filter(func(c: Dictionary) -> bool: return SprintSystem.can_add(c.id))
+		get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()._set_ui(open[0].id, "hover_card")
+	for _f in _A4_FACE_FRAMES:
+		await get_tree().process_frame
+		if not PersonBust.drawing():
+			break
+	if PersonBust.drawing():
+		_shot_fail("live:%s: faces still drawing after %d frames, frame not saved" % [kind, _A4_FACE_FRAMES])
+		return false
+	var gaps := 0
+	for card: Dictionary in SprintSystem.timeline().cards.values():
+		gaps += SprintTimeline.row_gaps(card.stages).size()
+	print("PRODUCTSHOT|kind=%s|cards=%d|people=%d|row_gaps=%d" % [kind, SprintSystem.sprint_card_count(), SprintSystem.team().size(), gaps])
+	return true
 
 
 ## The Sunucu block's states on the live ERP, one account on 20 units (1.000 seats) of the Standard tier: 800 seats (`server_80`),
