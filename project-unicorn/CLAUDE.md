@@ -357,7 +357,7 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   fikstürüyle (`scripts/debug/product_fixtures.gd`; `edge:` adları HARITA Ürün'de), `--product-shot=live:<tür>` sprint
   motoruyla kurulan koşuda
   (`pick`, `pick_named`, `pick_relang`, `plan`, `active`, `decision_paper`, `b2c_mvp`, `b2c_live`, `b2c_goal`, `b2b_mvp`, `b2b_mature`, `b2b_quarter`, `b2b_requests`,
-  `gate`, `delegate`, `rnd`, `solo15`, `solo15_tip`, `solo12_active`, `overview_pre`, `server_80`, `server_94`,
+  `gate`, `delegate`, `delegate_rehire`, `rnd`, `solo15`, `solo15_tip`, `solo12_active`, `overview_pre`, `server_80`, `server_94`,
   `server_104`, `server_growth`, `server_auto`, `server_tier`, `server_final`, `server_clause`, `server_b2c`;
   kurulumları ve ikinci, üçüncü kareleri HARITA
   Ürün'de). Satış'ın B2C sayfası `--sales-shot=b2c_live` (`live:b2c_live`'ın dünyası, `SHOT|b2c` satırı), MVP öncesi

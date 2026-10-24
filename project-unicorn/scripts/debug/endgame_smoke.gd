@@ -25137,9 +25137,12 @@ static func _case_quarter_goal_without_pm() -> String:
 	return ""
 
 
-## Planlamayı devret PM olmadan açılmaz; PM ayrılınca devir kalkar ve plan oyuncuyu bekler (kapatmak her zaman olur).
+## Planlamayı devret PM olmadan açılmaz; son PM ayrılınca bayrak silinir ve sonraki PM devri açmaz, izindeki PM devri durdurur
+## ama bayrağı tutar, iki PM'den biri ayrılınca devir sürer (kapatmak her zaman olur).
 ## FALSİFİKASYON: SprintSystem.set_delegate'ten `and SprintCatalog.quarter_pm() != null` şartını sil → PM'siz iddiası FAIL;
-## SprintSystem.delegated'tan `and SprintCatalog.quarter_pm() != null` şartını sil → PM ayrılınca iddiası FAIL.
+## SprintSystem.delegated'tan aynı şartı sil → izin iddiası FAIL; _on_team_changed'ın bayrak silmesini kaldır → yeni PM iddiası
+## FAIL; `get_employees()`'ı `get_active_employees()` yap → izin iddiası FAIL; bayrağı her ayrılışta, kalan PM'e bakmadan sil → iki
+## PM iddiası FAIL.
 static func _case_delegate_needs_pm() -> String:
 	_seed_sprint()
 	_sprint_hire("char_deleg_dev", HRConstants.ROLE_DEVELOPER)
@@ -25159,9 +25162,30 @@ static func _case_delegate_needs_pm() -> String:
 	if SprintSystem.delegated() or not SprintSystem.awaits_plan() or not held.call():
 		return "the PM left: delegated %s, awaits %s, held %s; want the delegation gone and the plan waiting for the player" % [
 			SprintSystem.delegated(), SprintSystem.awaits_plan(), held.call()]
+	var pm2: Character = _sprint_hire("char_deleg_pm2", HRConstants.ROLE_PRODUCT_MANAGER)
+	if SprintSystem.delegated() or bool(GameState.product.delegate) or not SprintSystem.awaits_plan() or not held.call():
+		return "a PM hired after the last one left: delegated %s, flag %s, awaits %s, held %s; want the switch closed and the plan waiting" % [
+			SprintSystem.delegated(), GameState.product.delegate, SprintSystem.awaits_plan(), held.call()]
+	SprintSystem.set_delegate(true)
+	HRMoraleSystem.send_on_leave(pm2, HRConstants.LEAVE_WEEKS, false)
+	EventBus.hr_day_processed.emit()
+	if SprintSystem.delegated() or not bool(GameState.product.delegate) or not SprintSystem.awaits_plan() or not held.call():
+		return "the PM on leave: delegated %s, flag %s, awaits %s, held %s; want the switch closed, the flag kept and the plan waiting" % [
+			SprintSystem.delegated(), GameState.product.delegate, SprintSystem.awaits_plan(), held.call()]
+	pm2.leave_until_day = GameState.day
+	HRMoraleSystem.tick_leave_returns()
+	EventBus.hr_day_processed.emit()
+	if not SprintSystem.delegated() or SprintSystem.awaits_plan() or held.call():
+		return "the PM back from leave: delegated %s, awaits %s, held %s; want the delegation back and the clock free" % [
+			SprintSystem.delegated(), SprintSystem.awaits_plan(), held.call()]
+	_sprint_hire("char_deleg_pm3", HRConstants.ROLE_PRODUCT_MANAGER)
+	CharacterRegistry.remove(pm2.id)
+	if not SprintSystem.delegated() or not bool(GameState.product.delegate) or SprintSystem.awaits_plan() or held.call():
+		return "one of two PMs left: delegated %s, flag %s, awaits %s, held %s; want the delegation kept and the clock free" % [
+			SprintSystem.delegated(), GameState.product.delegate, SprintSystem.awaits_plan(), held.call()]
 	SprintSystem.set_delegate(false)
 	if bool(GameState.product.delegate):
-		return "set_delegate(false) without a PM left the flag on"
+		return "set_delegate(false) left the flag on"
 	return ""
 
 

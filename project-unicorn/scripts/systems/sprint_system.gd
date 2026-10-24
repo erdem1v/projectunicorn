@@ -583,7 +583,8 @@ static func awaits_plan() -> bool:
 		return SprintCatalog.gate_reason(p.cards[id].step) == "") or not SprintCatalog.open_cards([]).is_empty())
 
 
-## Planlama PM'e devredilmiş ve çeyreği planlayan PM var; PM ayrılınca devir kalkar, plan oyuncuyu bekler.
+## Planlama PM'e devredilmiş ve çeyreği planlayan PM işbaşında. İzindeki ya da eğitimdeki PM'de devir işlemez,
+## bayrak kalır ve PM dönünce devir geri gelir; son PM ayrılınca bayrak silinir (`_on_team_changed`) ve plan oyuncuyu bekler.
 static func delegated() -> bool:
 	return bool(_p().get("delegate", false)) and SprintCatalog.quarter_pm() != null
 
@@ -1359,9 +1360,13 @@ static func _watch_team() -> void:
 		EventBus.training_started.connect(_on_assignment_changed.unbind(1))
 
 
+## Şirkette hiç PM kalmayınca devir bayrağı silinir: sonraki PM devri kendiliğinden açmaz. İzindeki ya da
+## eğitimdeki PM şirkettedir ve bayrağı tutar.
 static func _on_team_changed() -> void:
 	if not is_typed():
 		return
+	if not CharacterRegistry.get_employees().any(func(c: Character) -> bool: return c.role == HRConstants.ROLE_PRODUCT_MANAGER):
+		_p().delegate = false
 	if mode() == "active":
 		_restaff()
 	_changed()

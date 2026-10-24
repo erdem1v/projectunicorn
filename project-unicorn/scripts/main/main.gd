@@ -3832,7 +3832,7 @@ func _product_overview_shot(scenario: String, stem: String) -> void:
 
 
 ## live:<pick|pick_named|pick_relang|plan|active|decision_paper|b2c_mvp|b2c_live|b2c_goal|b2b_mvp|b2b_mature|b2b_quarter|
-## b2b_requests|gate|rnd|delegate|solo15|solo15_tip|solo12_active|overview_pre|server_80|server_94|server_104|server_growth|
+## b2b_requests|gate|rnd|delegate|delegate_rehire|solo15|solo15_tip|solo12_active|overview_pre|server_80|server_94|server_104|server_growth|
 ## server_auto|server_tier|server_final|server_clause|server_b2c>. The pick ones leave the product untyped (the type picker). The solo ones
 ## leave the founder alone from 09:00: solo15 and solo15_tip stop in Sprint 1 planning at 15 hours, solo15 with
 ## the lead's plan applied (its hover on the carried card), solo15_tip with the plan only offered; solo12_active
@@ -3844,7 +3844,8 @@ func _product_overview_shot(scenario: String, stem: String) -> void:
 ## spoken by the person on the card), gate on the MVP gate, rnd
 ## publishes it, plans the next sprint and puts the founder on the Data Model research, b2c_mvp on the CANLI
 ## v1.0 release note it publishes, delegate on Sprint 2, started by the PM once Sprint 1's note is left (shipped
-## at the gate) with planning delegated. b2c_live publishes as b2c_mvp and plays four weeks with the audience
+## at the gate) with planning delegated; delegate_rehire has that PM leave and another PM join before the planning, so
+## the switch is off and Sprint 2's planning waits for the player. b2c_live publishes as b2c_mvp and plays four weeks with the audience
 ## flowing hour by hour, starting each sprint itself, and prints the live audience as `SHOT|b2c`. b2c_goal publishes as b2c_mvp
 ## and opens the next planning.
 ## b2b_mvp is b2c_mvp on the ERP: the v1.0 release note of a B2B product. b2b_mature builds every line to its second tier
@@ -3915,10 +3916,21 @@ func _seed_product_live(scenario: String) -> void:
 	day.call()
 	if scenario in ["active", "decision_paper"]:
 		return
-	if scenario in ["delegate", "b2b_quarter"]:
+	if scenario in ["delegate", "delegate_rehire", "b2b_quarter"]:
 		day.call()
 		SprintSystem.publish()
 		SprintSystem.set_delegate(true)
+		if scenario == "delegate_rehire":
+			CharacterRegistry.remove("char_emp_shot_0")   # the roster's PM
+			var pm := Character.new()
+			pm.id = "char_emp_shot_pm"
+			pm.character_name = "Burcu Çetin"   # LOC-DATA debug seed / id
+			pm.role = HRConstants.ROLE_PRODUCT_MANAGER
+			pm.category = "employee"
+			pm.monthly_salary = 9000
+			pm.role_stats = HRConstants.seed_skills(pm.role, 7, 4, 6)
+			pm.traits.assign(["takes_them_under"])
+			CharacterRegistry.add(pm)
 		SprintSystem.plan_next()
 		return
 	for i in 12:
