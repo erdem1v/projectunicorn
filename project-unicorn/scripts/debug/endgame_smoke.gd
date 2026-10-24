@@ -544,6 +544,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sprint_departure_restaffs_card":        fail = _case_sprint_departure_restaffs_card()
 		"sprint_never_stalls_in_plan":           fail = _case_sprint_never_stalls_in_plan()
 		"sprint_lead_offers_paid_plan_b2c":      fail = _case_sprint_lead_offers_paid_plan_b2c()
+		"sprint_lead_fills_to_ceiling":          fail = _case_sprint_lead_fills_to_ceiling()
 		"sprint_solo_mvp_by_week_six":           fail = _case_sprint_solo_mvp_by_week_six()
 		"promise_due_sprint_kept_when_shipped_next_sprint": fail = _case_promise_due_sprint_kept_when_shipped_next_sprint()
 		"promise_due_sprint_breaks_after_close": fail = _case_promise_due_sprint_breaks_after_close()
@@ -21113,8 +21114,8 @@ static func _case_sprint_ceiling_125_blocks_add() -> String:
 ## kullanamaz. Boş puana bakan eski sınama o kartı alırdı, kart sprintte hiç puan almazdı.
 ## FALSİFİKASYON: SprintSystem.intake'te `got`'u `played.spare` yap (eski boş puan sınaması) → düzeltme kartı "+" iddiası FAIL;
 ## SprintSystem.mvp_eta'da `intake(cards, queue[0], plain).takes`'i `cards.is_empty()` yap (sprint başına tek kart) → MVP tahmini
-## kapanıştan ayrılır FAIL; SprintCatalog._suggest'te `not take.takes`'i `take.cards.is_empty()` yap (yalnız tavan) → öneri düzeltme
-## kartını koyar FAIL.
+## kapanıştan ayrılır FAIL; SprintCatalog.lead_suggestion'da `fits = take.takes`'i `fits = not take.cards.is_empty()` yap (yalnız tavan) → öneri
+## düzeltme kartını koyar FAIL.
 static func _case_sprint_intake_uses_applied_plan() -> String:
 	_seed_sprint("note_tool")
 	_sprint_hire("char_in_dev", HRConstants.ROLE_DEVELOPER)
@@ -23106,14 +23107,98 @@ static func _case_promise_break_chain() -> String:
 	return ""
 
 
-## B2C'de yayından sonra ücretli plan liderin zorunlu kartıdır: gelirin kapısıdır, tek kurucunun dar
+## B2C'de yayından sonra ücretli plan önerinin ilk basamağındadır: gelirin kapısıdır, tek kurucunun dar
 ## sprintinde de önce o önerilir.
-## FALSİFİKASYON: SprintCatalog._suggest'teki PAID_PLAN satırını sil → FAIL.
+## FALSİFİKASYON: SprintCatalog._lead_steps'teki PAID_PLAN satırını sil → FAIL.
 static func _case_sprint_lead_offers_paid_plan_b2c() -> String:
 	_seed_sprint_live("note_tool")
 	var lead: Array = SprintCatalog.lead_suggestion()
 	if lead.is_empty() or lead[0] != "plan:" + SprintCatalog.PAID_PLAN:
 		return "the solo founder's lead after MVP suggests %s, want the paid plan first" % str(lead)
+	return ""
+
+
+## Liderin önerisi altı basamakla ekibin yapabileceği kadar dolar (PRD Faz D Karar 12 ve 14): sıra ücretli plan, bırakılan kart,
+## öncelikli düzeltme, hedefin kartı, kalanlar; sığmayan aday atlanır ve önerinin düzeltme işi ekibin kapasitesinin yarısını aşmaz.
+## Sprintte düzeltme işi yoksa ilk düzeltme kartı yarıdan büyük olsa da girer. Ekip: iki geliştirici, bir tasarımcı, bir testçi
+## (kapasite 80); hatalar çekirdek hatlarında 12, 10 ve 4 (düzeltme kartları 24, 20 ve 8 puan, yarı 40).
+## FALSİFİKASYON: SprintSystem.fix_share_takes'in son satırını `return true` yap → ikinci düzeltme kartı girer FAIL; satırdaki
+## `work <= EPS or`'u sil → 25 hatalı hattın 50 puanlık kartı girmez FAIL; SprintCatalog.lead_suggestion'da `skipped >` dalını
+## sil → `lead.skip` 0 iken öneri durmaz FAIL; pay tavanına takılan düzeltmeyi uymayan aday say → `lead.skip` 0 iken öneri ikinci
+## düzeltmede durur FAIL; _lead_steps'ten bırakılan kart satırını ya da hedef alanın kartını sil → sıra iddiası FAIL; "Hatalar"
+## dalını sil → küçük düzeltme girmez FAIL.
+static func _case_sprint_lead_fills_to_ceiling() -> String:
+	_seed_sprint_live("note_tool")
+	GameState.set_founder_in_sprint(false)
+	var crew: Array = [HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_DESIGNER, HRConstants.ROLE_TESTER, HRConstants.ROLE_DEVELOPER]
+	for i in crew.size():
+		_sprint_hire("char_lead_%d" % i, crew[i])
+	var lines: Array = SprintCatalog.capabilities("core")
+	var paid: String = "plan:" + SprintCatalog.PAID_PLAN
+	var dropped: String = SprintCatalog.candidates("core").filter(
+		func(c: Dictionary) -> bool: return c.kind == "feature" and int(c.target_tier) == 1)[0].id
+	SprintSystem.add(dropped)
+	GameState.product.cards[dropped].progress[0] = GameState.product.cards[dropped].need[0]
+	SprintSystem.remove(dropped)
+	var fixes: Array = lines.slice(0, 3).map(func(line: String) -> String: return "fix:" + line)
+	for i in 3:
+		ProductState.add_bugs(lines[i], [12, 10, 4][i])
+	var cap: float = SprintSystem.capacity()
+	var ceiling: float = cap * float(SprintCatalog.cfg("cap_ceiling"))
+	var load := func(ids: Array, kind: String) -> float:
+		return ids.reduce(func(sum: float, id: String) -> float:
+			var c: Dictionary = SprintCatalog.card_by_id(id)
+			return sum + (SprintSystem.remaining(c) if kind == "" or c.kind == kind else 0.0), 0.0)
+	if GameState.product.cards[dropped].state != "candidate" or cap != 80.0:
+		return "fixture: the dropped card reads '%s' and the capacity %.1f, want a candidate and 80" % [
+			GameState.product.cards[dropped].state, cap]
+	var lead: Array = SprintCatalog.lead_suggestion()
+	# Sıra: ücretli plan, bırakılan kart, öncelikli düzeltme, sonra kalanlar; ikinci düzeltme pay tavanına takılır ve atlanır.
+	if lead.slice(0, 3) != [paid, dropped, fixes[0]] or lead.has(fixes[1]) or lead.size() <= 3:
+		return "the lead is %s, want the paid plan, the dropped card and the biggest priority fix first, the second fix out and cards after it" % [lead]
+	if load.call(lead, "fix") > cap * 0.5 or load.call(lead, "") < cap * 0.9 or load.call(lead, "") > ceiling:
+		return "the lead puts %.1f fix points and %.1f points in a capacity of %.1f (ceiling %.1f), want at most half in fixes and 90%% to the ceiling filled" % [
+			load.call(lead, "fix"), load.call(lead, ""), cap, ceiling]
+	var placed: Array = SprintSystem.starting()
+	for id in lead:
+		var card: Dictionary = SprintCatalog.card_by_id(id)
+		if not SprintSystem.intake(placed, card, SprintSystem.team()).takes or not SprintSystem.fix_share_takes(placed, card, SprintSystem.team()):
+			return "the lead suggested %s where the intake or the fix share refuses it (placed %s)" % [id, placed.map(func(c: Dictionary) -> String: return c.id)]
+		placed = placed + [card]
+	# Hedef: "Hatalar" düzeltmeyi öne alır (öncelikli olmayan küçük düzeltme de girer, pay tavanını aşmadan); alan hedefi o alanın kartını.
+	SprintSystem.pick_goal(SprintCatalog.GOAL_BUGS)
+	var bugs: Array = SprintCatalog.lead_suggestion()
+	if lead.has(fixes[2]) or not bugs.has(fixes[2]) or bugs.has(fixes[1]) or load.call(bugs, "fix") > cap * 0.5:
+		return "goal Bugs: the lead is %s (fix points %.1f), want the small fix %s in, the second fix out and the fixes within half the capacity" % [
+			bugs, load.call(bugs, "fix"), fixes[2]]
+	SprintSystem.pick_goal("trust")
+	var trust: Array = SprintCatalog.lead_suggestion()
+	var in_trust := func(ids: Array) -> bool:
+		return ids.any(func(id: String) -> bool: return SprintCatalog.card_by_id(id).area == "trust")
+	if not in_trust.call(trust) or in_trust.call(lead):
+		return "goal Trust: the lead is %s against %s with no goal, want a Trust card in that was not" % [trust, lead]
+	SprintSystem.pick_goal("")
+	# Atlama sınırı: tavan kapasitenin %95'iyken (76 puan) dördüncü karttan sonraki 15 puanlık kart sığmaz, ardındaki 8 puanlık
+	# düzeltme sığar; `lead.skip` 0 iken öneri o 15 puanlık kartta durur. Pay tavanına takılan düzeltme atlama sayılmaz.
+	var skip: int = int(SprintCatalog.cfg("lead.skip"))
+	var mult: float = float(SprintCatalog.cfg("cap_ceiling"))
+	SprintCatalog._data.cap_ceiling = 0.95
+	var skipping: Array = SprintCatalog.lead_suggestion()
+	SprintCatalog._data.lead.skip = 0
+	var stopped: Array = SprintCatalog.lead_suggestion()
+	SprintCatalog._data.lead.skip = skip
+	SprintCatalog._data.cap_ceiling = mult
+	if not skipping.has(fixes[2]) or stopped.has(fixes[2]) or stopped.size() <= 3 or skipping.slice(0, stopped.size()) != stopped:
+		return "a 95%% ceiling: the lead is %s, with no skip allowed %s; want the small fix %s in past the card that does not fit, and the no skip lead to stop there, past the second fix" % [
+			skipping, stopped, fixes[2]]
+	# Sprintte düzeltme işi yokken ilk düzeltme kartı yarıdan büyük olsa da girer.
+	ProductState.clear_line_bugs(lines[1])
+	ProductState.clear_line_bugs(lines[2])
+	ProductState.add_bugs(lines[0], 13)
+	var big: Array = SprintCatalog.lead_suggestion()
+	if not big.has(fixes[0]) or load.call(big, "fix") <= cap * 0.5:
+		return "a 25 bug line: the lead is %s with %.1f fix points, want the 50 point fix card in though it is over half the capacity" % [
+			big, load.call(big, "fix")]
 	return ""
 
 
@@ -25008,7 +25093,7 @@ static func _case_product_pm_plan_opens_as_next_sprint() -> String:
 ## yedeği `pm_goal`dadır). "Hatalar" hedefi düzeltme kartlarını öne alır.
 ## FALSİFİKASYON: SprintSystem.pick_goal'a `if SprintCatalog.quarter_pm() == null: return` ekle → PM'siz seçim iddiası FAIL;
 ## quarter_goal'a en zayıf alan yedeğini koy (`goal if goal != "" else _weakest(...)`) → "boş" iddiası FAIL; lead_suggestion'da
-## `quarter_goal()` yerine "" ver → öneri iddiaları FAIL; _suggest'in hedef sınamasından GOAL_BUGS dalını sil → Hatalar iddiası FAIL;
+## `quarter_goal()` yerine "" ver → öneri iddiaları FAIL; _lead_steps'in GOAL_BUGS dalını sil → Hatalar iddiası FAIL;
 ## pm_goal'ı `quarter_goal()`a eşitle → PM'li iddia FAIL (PM planının yedeği `fit_star_context`ta da sınanır).
 static func _case_quarter_goal_without_pm() -> String:
 	_seed_sprint_live("note_tool")

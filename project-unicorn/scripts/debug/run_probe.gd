@@ -265,10 +265,8 @@ const STAT_SPREAD := [6, 4, 8, 5, 3, 6, 7, 4, 5, 6]
 # sets the naive table's per-fund replays (default 20; 0 turns them off).
 #   full_run_lean     — B2B that stops hiring at seven people and walks the table: the bootstrap
 #                       road, since profitable_bootstrap needs the Series A decision faced.
-#   full_run_b2c*     — the consumer runs: the founder adds the paid plan card once it unlocks,
-#                       never starts a sprint of research alone while a step is open, takes the
-#                       support desk once anyone pays, and hires on B2C_LADDER beside the reps
-#                       the desk needs.
+#   full_run_b2c*     — the consumer runs: the founder takes the support desk once anyone pays,
+#                       and hires on B2C_LADDER beside the reps the desk needs.
 #   full_run_b2c_k1   — the consumer run that stops at the K1 steps: how far K1 alone carries.
 # Every played run takes the seed round the week its door opens — see "The seed round".
 # The fixtures:
@@ -297,6 +295,7 @@ static var _k1_only: bool = false           # full_run*: never plan a K2 or K3 s
 static var _fix_arm: String = ""            # full_run*: "" | none | worst | due | off (see PRESETS)
 static var _no_stop: bool = false           # full_run*: an emergency never stops the sprint for its fix
 static var _core_only: bool = false         # full_run*: the sprint keeps no feature or request card outside the core
+static var _plan_actions: int = 0           # the plan's Sprint-tab actions: apply the lead, each add and remove, start (the arms' parking is not one)
 static var _desk: bool = false              # full_run*: the founder leaves the reps' band to the reps
 static var _release_seen: bool = false      # PROBE UFLUX: a version shipped since the last weekly reading
 static var _account_u: Dictionary = {}      # PROBE UFLUX: account id -> its fit at the last reading or its signature
@@ -1298,8 +1297,8 @@ static func _play_the_hour() -> void:
 
 ## The Product tab at the week's 08:00. Sprints close in the night's daily tick, so the morning
 ## finds either a running sprint or the release note: at the MVP gate the founder ships, then the
-## note is read, the next sprint planned (the promised steps first, on B2C the paid plan, the
-## lead's suggestion around them) and started. A decision paper waiting on a card was already
+## note is read, the next sprint planned on the lead's suggestion alone (promised steps and the paid plan
+## are its first steps) and started; the arms below edit it. A decision paper waiting on a card was already
 ## answered off the desk (_drain_modals).
 static func _plan_the_sprint() -> void:
 	if not SprintSystem.is_typed():
@@ -1312,33 +1311,28 @@ static func _plan_the_sprint() -> void:
 		SprintSystem.plan_next()
 	if SprintSystem.mode() != "plan":
 		return
-	_plan_promises()
-	var b2c: bool = ProductState.market_type() == "b2c"
-	var paid: String = "plan:" + SprintCatalog.PAID_PLAN
-	if b2c and not GameState.product.sprint.cards.has(paid):
-		SprintSystem.add(paid)
-		if GameState.product.sprint.cards.has(paid):
-			print("PROBE PLAY day=%d paid plan card" % GameState.day)
 	SprintSystem.apply_lead()
+	_plan_actions = 1
 	if _fix_arm != "":
 		_plan_fix_arm()
 	if _k1_only:
 		for id in GameState.product.sprint.cards.duplicate():
 			if not _plannable(GameState.product.cards[id]):
 				SprintSystem.remove(id)
-	if b2c:
-		_keep_building()
+				_plan_actions += 1
 	# With no K1 step or fix left to plan, a research sprint; a plan that still cannot start is _run_sim's error.
 	if _k1_only and not SprintSystem.can_start():
 		for area in SprintCatalog.areas_for(ProductState.subtype(), ProductState.market_type()):
 			var research: Array = SprintCatalog.candidates(area.id).filter(func(c: Dictionary) -> bool: return c.kind == "research")
 			if not research.is_empty():
 				SprintSystem.add(research[0].id)
+				_plan_actions += 1
 				break
+	_plan_actions += 1
 	if SprintSystem.start():
-		print("PROBE PLAY day=%d sprint %d start cards=%s used=%.2f capacity=%.2f" % [GameState.day,
+		print("PROBE PLAY day=%d sprint %d start cards=%s used=%.2f capacity=%.2f actions=%d" % [GameState.day,
 			SprintSystem.sprint_number(), ",".join(GameState.product.sprint.cards), SprintSystem.used(),
-			SprintSystem.capacity()])
+			SprintSystem.capacity(), _plan_actions])
 
 
 ## The fix arms on top of the lead's plan: every fix card out, the arm's cards in first (past the capacity ceiling
@@ -1349,6 +1343,7 @@ static func _plan_fix_arm() -> void:
 	for id in p.sprint.cards.duplicate():
 		if p.cards[id].kind == "fix" or _outside_core(p.cards[id]):
 			SprintSystem.remove(id)
+			_plan_actions += 1
 	var bugs: Dictionary = ProductState.open_bugs_by_line()
 	var due: Array = bugs.keys()
 	due.sort_custom(func(a: String, b: String) -> bool: return bugs[a] > bugs[b] if bugs[a] != bugs[b] else a < b)
@@ -1360,6 +1355,7 @@ static func _plan_fix_arm() -> void:
 		due = due.slice(0, 0 if _fix_arm == "none" else 1)
 	for line in due:
 		SprintSystem.add("fix:" + line)
+		_plan_actions += 1
 		if not p.sprint.cards.has("fix:" + line):
 			SprintSystem._place(SprintCatalog.card_by_id("fix:" + line), true)
 	var parked: Array = bugs.keys().filter(func(line: String) -> bool: return not due.has(line)).map(
@@ -1371,6 +1367,7 @@ static func _plan_fix_arm() -> void:
 	SprintSystem.apply_lead()
 	for id in parked:
 		SprintSystem.remove(id)
+	_plan_actions += 1
 
 
 ## A feature or request card of another area than the core, which the core-only arm never plans. Fix and research
@@ -1389,41 +1386,9 @@ static func _start_on_lead() -> void:
 	SprintSystem.start()
 
 
-## A sprint with research alone (or nothing) in it releases nothing, so while a step is open the
-## founder plans the first one beside the research. With no open step the research sprint runs:
-## there is nothing to build.
-static func _keep_building() -> void:
-	var p: Dictionary = GameState.product
-	if p.sprint.cards.any(func(id: String) -> bool: return p.cards[id].kind != "research"):
-		return
-	for area in SprintCatalog.areas_for(ProductState.subtype(), ProductState.market_type()):
-		for c in SprintCatalog.candidates(area.id):
-			if c.kind != "research" and c.state == "candidate" and _plannable(c) and SprintCatalog.gate_reason(c.step) == "":
-				SprintSystem.add(c.id)
-				if p.sprint.cards.has(c.id):
-					print("PROBE PLAY day=%d step beside research: %s" % [GameState.day, c.id])
-				return
-
-
 ## The K1-only founder plans no step past K1: fixes, research and the paid plan stay open.
 static func _plannable(c: Dictionary) -> bool:
 	return not _k1_only or int(c.target_tier) <= 1
-
-
-## Keeping the word: an open promise whose step is the line's next one goes into the sprint, as
-## its feature card or, when the account asked for it, as the request card.
-static func _plan_promises() -> void:
-	for p in PromiseRegistry.get_all():
-		if p.status != "open" or ProductState.is_feature_live(p.feature_id):
-			continue
-		for area in SprintCatalog.areas_for(ProductState.subtype(), ProductState.market_type()):
-			for c in SprintCatalog.candidates(area.id):
-				if c.step != p.feature_id or c.state != "candidate":
-					continue
-				SprintSystem.add(c.id)
-				if GameState.product.sprint.cards.has(c.id):
-					print("PROBE PLAY day=%d promise card=%s (promise %s deadline=%d)" % [
-						GameState.day, c.id, p.id, p.deadline_day])
 
 
 static func _work_the_pipeline() -> void:

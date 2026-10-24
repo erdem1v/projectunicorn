@@ -28,7 +28,7 @@
   "no_role_speed": 0.5,
   "cap_ceiling": 1.25,
   "hours_mult": {"min": 0.5, "max": 1.5},
-  "lead": {"small_team_cards": 2},
+  "lead": {"small_team_cards": 2, "fix_share": 0.5, "skip": 12},
   "bugs": {
     "c": 0.212,
     "rate": 0.2,

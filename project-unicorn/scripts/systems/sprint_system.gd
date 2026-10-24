@@ -626,10 +626,12 @@ static func weeks_left() -> int:
 
 ## Ekibin sprint boyunca puanı.
 static func capacity() -> float:
-	var points: float = 0.0
-	for person in team():
-		points += person.points
-	return points * sprint_weeks()
+	return capacity_of(team())
+
+
+## `people` satırlarının (`team`) sprint boyunca puanı.
+static func capacity_of(people: Array) -> float:
+	return people.reduce(func(sum: float, t: Dictionary) -> float: return sum + t.points, 0.0) * sprint_weeks()
 
 
 ## Sprintteki kartların yükü; kapasite çubuğunun dilimleri kart yükleridir. Puanlar tamdır,
@@ -753,12 +755,23 @@ static func can_add(card_id := "") -> bool:
 ## oynatılmaz ve `cards` boştur.
 static func intake(cards: Array, card: Dictionary, people: Array) -> Dictionary:
 	var load: float = cards.reduce(func(sum: float, c: Dictionary) -> float: return sum + remaining(c), 0.0)
-	var cap: float = people.reduce(func(sum: float, t: Dictionary) -> float: return sum + t.points, 0.0) * sprint_weeks()
+	var cap: float = capacity_of(people)
 	if load > EPS and load + (0.0 if card.is_empty() else remaining(card)) > cap * float(SprintCatalog.cfg("cap_ceiling")):
 		return {"takes": false, "cards": {}}
 	var played: Dictionary = _outcome(cards if card.is_empty() else cards + [card], sprint_weeks(), false, people)
 	var got: float = played.spare if card.is_empty() else played.cards[card.id].done
 	return {"takes": load <= EPS or got > EPS, "cards": played.cards}
+
+
+## Düzeltme pay tavanı: sistemin kendiliğinden aldığı düzeltme işi, uygulanan yerleşimin (`cards`) düzeltme işiyle birlikte,
+## ekibin kapasitesinin `lead.fix_share`'ini aşmaz; yerleşimde düzeltme işi yoksa ilk düzeltme kartı girer. "+" bu tavana
+## tabi değildir, oyuncu kendisi seçer. Düzeltme olmayan kart her zaman geçer.
+static func fix_share_takes(cards: Array, card: Dictionary, people: Array) -> bool:
+	if card.kind != "fix":
+		return true
+	var work: float = cards.reduce(func(sum: float, c: Dictionary) -> float:
+		return sum + (remaining(c) if c.kind == "fix" else 0.0), 0.0)
+	return work <= EPS or work + remaining(card) <= capacity_of(people) * float(SprintCatalog.cfg("lead.fix_share"))
 
 
 ## Başlatmak ekip ve başlayacak en az bir kart ister.

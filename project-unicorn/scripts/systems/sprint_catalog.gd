@@ -488,10 +488,74 @@ static func bugs_part(line_id: String, n: int) -> Dictionary:
 
 # --- Lider ---------------------------------------------------------------------------
 
-## Onaylı PM planlarının kartları o sprintlere ayrılmıştır; lider onlara dokunmaz. Lider bu sprinti
-## oynatarak doldurur: yalnız bitecek kartlar ve en çok bir devreden kart.
+## Liderin önerisi: sprintin uygulanan yerleşimine altı basamak sırasıyla kart ekler: (1) verilmiş sözlerin kartları,
+## son tarihi yakın önde, ardından ücretli plan; (2) son tarihi bu ya da sonraki sprint olan en yakın talep (sprintte en çok
+## bir talep); (3) bırakılan ve devreden kartlar; (4) öncelikli düzeltmeler; (5) çeyrek hedefinin en iyi kartı ("Hatalar"
+## hedefinde düzeltme kartları), hedef yoksa liderin alanının; (6) kalanlar etki ÷ iş sırasıyla. Düzeltme pay tavanını
+## (`SprintSystem.fix_share_takes`) aşan düzeltme kartı alınmaz. Her aday sprintin alım kuralından (`SprintSystem.intake`, "+"
+## ile aynı) geçer; uymayan atlanır, öneri art arda en çok `lead.skip` aday atlar ve bir sonraki uymayanda durur. Kalan yeri
+## dolduran 6. basamak yalnız bitecek kartları alır, en çok bir devreden kartla durur. Onaylı PM planlarının kartları o
+## sprintlere ayrılmıştır; lider onlara dokunmaz.
 static func lead_suggestion() -> Array:
-	return _suggest(SprintSystem.capacity(), SprintSystem.used(), _approved_ahead(), quarter_goal(), true)
+	var pool: Array = open_cards(_approved_ahead())
+	var people: Array = SprintSystem.team()
+	var capacity: float = SprintSystem.capacity_of(people)
+	if pool.is_empty() or capacity <= 0.0:
+		return []
+	var score: Dictionary = {}
+	for c in pool:
+		score[c.id] = _ratio(c)
+	pool.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return score[a.id] > score[b.id] if score[a.id] != score[b.id] else a.id < b.id)
+	var steps: Array = _lead_steps(pool, quarter_goal(), capacity)
+	var placed: Array = SprintSystem.starting()
+	var tried: Dictionary = {}
+	var picks: Array = []
+	var skipped: int = 0
+	var order: Array = steps + pool.filter(func(c: Dictionary) -> bool: return score[c.id] > 0.0)
+	for i in order.size():
+		var c: Dictionary = order[i]
+		if tried.has(c.id):
+			continue
+		tried[c.id] = true
+		if not SprintSystem.fix_share_takes(placed, c, people):
+			continue
+		var take: Dictionary = SprintSystem.intake(placed, c, people)
+		var fits: bool = take.takes
+		var carries: bool = false
+		if fits and i >= steps.size():
+			fits = picks.all(func(id: String) -> bool: return take.cards[id].finishes)
+			carries = not take.cards[c.id].finishes
+		if not fits:
+			skipped += 1
+			if skipped > int(cfg("lead.skip")):
+				break
+			continue
+		picks.append(c.id)
+		skipped = 0
+		placed = placed + [c]
+		if carries:
+			break
+	return picks
+
+
+## Önerinin 1 ile 5. basamakları sırasıyla (bir kart birden çok basamakta olabilir); `ranked` etki ÷ iş sırasındaki açık
+## adaylardır. Hedef yokken 5. basamak liderin alanına bakar.
+static func _lead_steps(ranked: Array, goal: String, capacity: float) -> Array:
+	var due: int = SprintSystem.sprint_number() + 1
+	var out: Array = _promised(ranked)
+	out.append_array(ranked.filter(func(c: Dictionary) -> bool: return c.line == PAID_PLAN))
+	out.append_array(_requested(ranked).filter(func(c: Dictionary) -> bool:
+		return int(_request_of(c).due_sprint) <= due).slice(0, 1))
+	out.append_array(ranked.filter(func(c: Dictionary) -> bool:
+		return SprintSystem.total(c) - SprintSystem.remaining(c) > SprintSystem.EPS))
+	out.append_array(ranked.filter(is_priority))
+	if goal == GOAL_BUGS:
+		out.append_array(ranked.filter(func(c: Dictionary) -> bool: return c.kind == "fix"))
+	else:
+		var area: String = goal if goal != "" else _lead_area(ranked, capacity)
+		out.append_array(ranked.filter(func(c: Dictionary) -> bool: return c.area == area).slice(0, 1))
+	return out
 
 
 ## "{kart1} ve {kart2} bu sprintte bitmeli."; öneride zamanında yetişecek talep varsa son tarihi en
@@ -566,7 +630,7 @@ static func pm_goal() -> String:
 
 ## PM'in planı: sonraki sprintten başlayıp ufuk kadar sprint, bugünkü ekibin kapasitesiyle.
 ## Onaylanan plan saklanır ve hâlâ yapılabilecek kartlarıyla döner. Onaysız plan saklanmaz, her
-## okumada liderin kuralıyla hedef alana ağırlık verilerek bugünkü durumdan kurulur: yapılan ya
+## okumada PM'in kuralıyla (`_suggest`) hedef alana ağırlık verilerek bugünkü durumdan kurulur: yapılan ya
 ## da sprinte alınan kart plandan kendiliğinden düşer. Sonraki sprintin planı o sütunda duran
 ## kartların üstüne kurulur. Ürün alanı zayıf PM'in planı daha az kart taşır.
 ## [{number, cards: [card_id], approved}]; PM yoksa ya da tür seçilmediyse [].
@@ -898,16 +962,13 @@ static func _lead_area(pool: Array, capacity: float) -> String:
 	return _weakest(areas, pool)
 
 
-## Liderin kuralı. Zorunlu kartlar sırasıyla tavana (%125) kadar, oynatmadan yükle: verilmiş sözlerin kartları (son
-## tarihi yakın önde), son tarihi en yakın talep, ücretli plan (B2C'de yayından sonra gelirin
-## kapısıdır), liderin alanının en iyi kartı ve açık öncelikli düzeltmeler; boş sprint, "+" gibi, tavanı
-## aşan kartı da alır. Kalan yer etkisi olan, etki/efor oranı en yüksek kartlarla dolar: PM kapasiteye
-## kadar; `played` (bu sprintin lideri) alım sınamasıyla (`SprintSystem.intake`: "+" ile aynı kural), önceki
-## seçilenlerin hepsi bitiyorsa; bitmeyecek kartı aldıktan sonra durur, sprint en çok bir
-## devreden kart taşır. Bu ya da sonraki sprintte duran ve kilitli kartlar önerilmez. `taken` başka
-## sprintlere ayrılmış kartlardır (onaylı planlar, PM'in önceki sütunları). PM aynı kuralla planlar;
-## `goal` (çeyrek hedefi ya da PM'in en zayıf alanı) kartları sırada hedef ağırlığıyla öne çıkar.
-static func _suggest(capacity: float, used: float, taken: Array = [], goal := "", played := false) -> Array:
+## PM'in planının kuralı. Zorunlu kartlar sırasıyla tavana (%125) kadar, oynatmadan yüklenir: verilmiş sözlerin kartları
+## (son tarihi yakın önde), son tarihi en yakın talep, ücretli plan (B2C'de yayından sonra gelirin kapısıdır), alanın en iyi
+## kartı ve açık öncelikli düzeltmeler; boş sprint, "+" gibi, tavanı aşan kartı da alır. Kalan yer etkisi olan, etki/efor
+## oranı en yüksek kartlarla kapasiteye kadar dolar. Bu ya da sonraki sprintte duran ve kilitli kartlar önerilmez. `taken`
+## başka sprintlere ayrılmış kartlardır (onaylı planlar, PM'in önceki sütunları); `goal` (çeyrek hedefi ya da PM'in en zayıf
+## alanı) kartları sırada hedef ağırlığıyla öne çıkar.
+static func _suggest(capacity: float, used: float, taken: Array = [], goal := "") -> Array:
 	var pool: Array = open_cards(taken)
 	if pool.is_empty() or capacity <= 0.0:
 		return []
@@ -918,13 +979,8 @@ static func _suggest(capacity: float, used: float, taken: Array = [], goal := ""
 	pool.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return score[a.id] > score[b.id] if score[a.id] != score[b.id] else a.id < b.id)
 	var weakest: String = _lead_area(pool, capacity)
-	var must: Array = pool.filter(func(c: Dictionary) -> bool: return not _promises_on(c.step).is_empty())
-	must.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		return _promises_on(a.step)[0].due_sprint < _promises_on(b.step)[0].due_sprint)
-	var requests: Array = pool.filter(func(c: Dictionary) -> bool: return c.kind == "request")
-	requests.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		return int(_request_of(a).due_sprint) < int(_request_of(b).due_sprint))
-	must.append_array(requests.slice(0, 1))
+	var must: Array = _promised(pool)
+	must.append_array(_requested(pool).slice(0, 1))
 	must.append_array(pool.filter(func(c: Dictionary) -> bool: return c.line == PAID_PLAN))
 	must.append(pool.filter(func(c: Dictionary) -> bool: return c.area == weakest)[0])
 	must.append_array(pool.filter(is_priority))
@@ -936,18 +992,25 @@ static func _suggest(capacity: float, used: float, taken: Array = [], goal := ""
 			picks.append(c.id)
 			used += load
 	for c in pool:
-		if picks.has(c.id) or score[c.id] <= 0.0:
-			continue
 		var load: float = SprintSystem.remaining(c)
-		if played:
-			var take: Dictionary = SprintSystem.intake(SprintSystem.starting() + picks.map(card_by_id), c, SprintSystem.team())
-			if not take.takes or picks.any(func(id: String) -> bool: return not take.cards[id].finishes):
-				continue
-			if not take.cards[c.id].finishes:
-				picks.append(c.id)
-				break
-		elif used + load > capacity:
+		if picks.has(c.id) or score[c.id] <= 0.0 or used + load > capacity:
 			continue
 		picks.append(c.id)
 		used += load
 	return picks
+
+
+## Verilmiş sözü olan kartlar, söz tarihi yakın önde.
+static func _promised(cards: Array) -> Array:
+	var out: Array = cards.filter(func(c: Dictionary) -> bool: return not _promises_on(c.step).is_empty())
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return _promises_on(a.step)[0].due_sprint < _promises_on(b.step)[0].due_sprint)
+	return out
+
+
+## Talep kartları, son tarihi yakın önde.
+static func _requested(cards: Array) -> Array:
+	var out: Array = cards.filter(func(c: Dictionary) -> bool: return c.kind == "request")
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return int(_request_of(a).due_sprint) < int(_request_of(b).due_sprint))
+	return out
