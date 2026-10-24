@@ -84,7 +84,7 @@ static func new_state(day: int) -> Dictionary:
 		"mode": "plan", "cards": {}, "release": {}, "releases": [], "polish": {},
 		"requests": [], "rival_hits": [],
 		"research_done": {}, "decision": {}, "decision_sprint": -1, "auto_started": -1,
-		"quarter": {"goal_area": "", "start_sprint": 1, "plans": []},
+		"quarter": {"goal_area": "", "start_sprint": 1, "start_day": day, "plans": []},
 		"worked": {"day": -1, "ids": []}, "pending_faulty": [], "delegate": false, "empty_sprint": -1,
 	}
 
@@ -109,11 +109,12 @@ static func send_next(card_id: String) -> void:
 
 ## Kart adaylara döner; ilerlemesi, ödenmiş lisansı ya da bekleyen kararı varsa saklanır ve yeniden
 ## alındığında kaldığı yerden, bedeli yeniden kesilmeden sürer. Koşan sprintte kartın kişileri
-## haftanın kalanında kimsesiz kartlara geçer.
+## haftanın kalanında kimsesiz kartlara geçer. Kâğıdın takip kartı (`follow`) çıkmaz: kâğıdın bedeli onda durur ve aday
+## listesinde yeri yoktur.
 static func remove(card_id: String) -> void:
 	var p: Dictionary = _p()
 	var card: Dictionary = p.cards.get(card_id, {})
-	if card.is_empty() or card.state == "done":
+	if card.is_empty() or card.state == "done" or card.get("follow", false):
 		return
 	p.sprint.cards.erase(card_id)
 	p.next.cards.erase(card_id)
@@ -138,9 +139,10 @@ static func start() -> bool:
 	return true
 
 
-## Başlatmanın kendisi: kapısı sonradan kapanmış kart sonraki sütuna geçer, kalanlar kilitlenir,
-## lisans bedeli bir kez alınır, ilk haftanın ataması yapılır. Kartsız başlayan sprint (boş geçirme,
-## planlanacak kart yokken otomatik başlangıç) boş sprinttir; damgası ilk çizimden önce yazılır.
+## Başlatmanın kendisi: kapısı sonradan kapanmış kart sonraki sütuna geçer, kalanlar kilitlenir (`base` ve
+## `progress_at_start`: sprintin başındaki iş), lisans bedeli bir kez alınır, ilk haftanın ataması yapılır. Kartsız
+## başlayan sprint (boş geçirme, planlanacak kart yokken otomatik başlangıç) boş sprinttir; damgası ilk çizimden
+## önce yazılır.
 static func _begin() -> void:
 	var p: Dictionary = _p()
 	for card in _sprint_cards():
@@ -156,6 +158,7 @@ static func _begin() -> void:
 	for card in _sprint_cards():
 		card.state = "running"
 		card.base = _worked(card)
+		card.progress_at_start = card.progress.duplicate()
 		if not card.get("paid", false):
 			card.paid = true
 			steps.append(card.step)
@@ -191,6 +194,7 @@ static func plan_next() -> void:
 	var quarter: Dictionary = p.quarter
 	if number >= int(quarter.start_sprint) + sprints_in(int(SprintCatalog.cfg("quarter_weeks"))):
 		quarter.start_sprint = number
+		quarter.start_day = GameState.day
 		quarter.goal_area = ""
 	quarter.plans = quarter.plans.filter(func(plan: Dictionary) -> bool: return int(plan.number) > number)
 	for plan in quarter.plans:
@@ -227,7 +231,8 @@ static func put_first(card: Dictionary) -> void:
 	column.push_front(card.id)
 	if mode() == "active":
 		if not next and card.state != "running":
-			card.merge({"state": "running", "base": _worked(card), "paid": true}, true)
+			card.merge({"state": "running", "base": _worked(card), "progress_at_start": card.progress.duplicate(),
+				"paid": true}, true)
 		_assign(_sprint_cards(), team(), _ahead_cards())
 	_changed()
 
@@ -288,6 +293,13 @@ static func skip() -> void:
 static func set_delegate(on: bool) -> void:
 	_p().delegate = on and SprintCatalog.quarter_pm() != null
 	_changed()
+
+
+## Kurucu sprint kartı alır mı: planlamanın kararıdır, planlamada ve sürüm notunda değişir, koşan sprintte değişmez.
+static func set_founder_in_sprint(on: bool) -> void:
+	if mode() != "active":
+		GameState.set_founder_in_sprint(on)
+		_changed()
 
 
 ## Kapıda "Yayınla": ürün CANLI v1.0 olur, kapanışın notu v1.0'ın sürüm notu olur; v1.0'ı bekleyen
@@ -720,6 +732,28 @@ static func team() -> Array:
 	return out
 
 
+## `team()`in dışında kalan ve nedeni olan kişiler [{id, reason}]: çalışanlar "training" ve "leave" (durum, Ar-Ge'den önce
+## okunur) ya da "research" (Ar-Ge işini tutan); kurucu yalnız anahtarı açıkken ve payını toplantılar bitirmişse "meetings".
+## Yalnız Destek'te çalışan ya da işsiz kişi sprint dışıdır ama nedeni yoktur, listede değildir.
+static func away() -> Array:
+	var out: Array = []
+	for c in CharacterRegistry.get_employees():
+		var reason := ""
+		match c.status:
+			HRConstants.STATUS_TRAINING:
+				reason = "training"
+			HRConstants.STATUS_ON_LEAVE:
+				reason = "leave"
+			_:
+				if c.assigned_job_ids.has(HRConstants.JOB_RESEARCH):
+					reason = "research"
+		if reason != "":
+			out.append({"id": c.id, "reason": reason})
+	if GameState.founder_in_sprint and GameState.founder_sprint_pay == 0.0:
+		out.append({"id": CharacterRegistry.get_founder().id, "reason": "meetings"})
+	return out
+
+
 ## Bir olayın düzeltmesinin moral bedelini ödeyenler (kimlik, sprint payı çoktan aza, eşitse ad). Kurucu ödemez:
 ## onun yolu "Kendin düzelt". Önce koşan sprintte `line` hattının kartlarına atanmış geliştirici ve testçiler ile o
 ## kartları hazırlayan PM'ler; hiçbiri yoksa ya da hat yoksa Görevler matrisinde Yapım ya da Test işini tutan herkes.
@@ -792,31 +826,91 @@ static func starting() -> Array:
 ## kartın [n, F, K, düzeltme işi] (SprintBugs.tally, kartın tohumlu zarı; yoksa []), spare sprintin hiçbir kartına gitmeyen
 ## puan, ready sonraki sütunun kartlarının sprint sonundaki hazır payı (ready_share).
 static func plan_outcome() -> Dictionary:
-	var out: Dictionary = _outcome(starting(), weeks_left(), true, team())
+	return _planned(_replay(starting(), weeks_left(), true, team()))
+
+
+## Ekranın zaman ekseni (`SprintTimeline`): planlamada planın (sonuna eklenen `extra` aday kartlarla birlikte) oynatması, koşan
+## sprintte bu haftanın ataması korunarak haftanın başından oynanan kalan sprint; oynatma tek ve günlüğe yazılır.
+## Planlamada `outcome`, aynı oynatmanın `plan_outcome` biçimindeki sonucudur (başka kipte null): ekran ikisini birden okur,
+## plan iki kez oynanmaz. Sürüm notunda eksendeki kart yoktur.
+static func timeline(extra: Array = []) -> Dictionary:
+	var people: Array = team()
+	var log: Array = []
+	var running: bool = mode() == "active"
+	var run: Dictionary
+	if running:
+		run = {"from": _sprint_cards(), "ahead_from": _ahead_cards()}
+		run.cards = _copies(run.from)
+		run.ahead = _copies(run.ahead_from)
+		_finish_sprint(run.cards, people, run.ahead, log)
+	else:
+		run = _replay(starting() + extra, weeks_left(), true, people, log)
+	var out: Dictionary = SprintTimeline.build(run, log, people, maxi(week() - 1, 0), running)
+	out["outcome"] = _planned(run) if mode() == "plan" else null
+	return out
+
+
+## Sonraki sütunun önden hazırlanan kartlarının, sprintin `weeks` haftası daha geçince varacağı hazırlık kazancı {kart: g}: PM'ler
+## kopyalarda o haftaları hazırlar. Hazırlık kartın yapılan işinden bağımsızdır, bu yüzden kartlar oynanmaz; zaman ekseninin
+## kapanışına dek sayılan haftalarda eksenin oynatmasının kazancıdır (sprint kapanınca hazırlık durur).
+static func prep_gains(weeks: int) -> Dictionary:
+	var ahead: Array = _copies(_ahead_cards())
+	var people: Array = team()
+	for w in weeks:
+		SprintPrep.week(ahead, people, weeks_left() - w - 1)
+	var out: Dictionary = {}
+	for c in ahead:
+		out[c.id] = float(c.get("prep_gain", 0.0))
+	return out
+
+
+## `run`ın (`_replay`) plan ekranı biçimi: sprintin başlamayan kartı puan almaz, bitmez sayılır.
+static func _planned(run: Dictionary) -> Dictionary:
+	var out: Dictionary = _read(run)
 	for c in _sprint_cards():
 		if not out.cards.has(c.id):
 			out.cards[c.id] = {"split": [], "done": 0.0, "finishes": false, "bugs": []}
 	return out
 
 
-## Planın oynatması verilen kartlarla (kopyalarda) `weeks` hafta, `people` ekibiyle; `with_ahead` sonraki sütunun önden
-## hazırlanan kartlarını da oynatır.
+## Verilen kartların oynatmasının kart başına sonucu (`_read`).
 static func _outcome(cards: Array, weeks: int, with_ahead: bool, people: Array) -> Dictionary:
-	var played_cards: Array = cards.map(func(c: Dictionary) -> Dictionary: return c.duplicate(true))
-	var ahead: Array = _ahead_cards().map(func(c: Dictionary) -> Dictionary: return c.duplicate(true)) if with_ahead else []
-	# Kalanın azalması değil biten işin artışı: testin bulduğu hata kalana düzeltme işi ekler.
-	var made := func(c: Dictionary) -> float: return total(c) - remaining(c)
-	var before: Array = played_cards.map(made)
-	var played: Dictionary = _play_out(played_cards, weeks, people, ahead)
+	return _read(_replay(cards, weeks, with_ahead, people))
+
+
+## Kartlar kopyalarda `weeks` hafta, `people` ekibiyle oynanır; `with_ahead` sonraki sütunun önden hazırlanan kartlarını da
+## oynatır. `log` verilirse oynatma oraya yazılır (`_work`). {from (verilen kartlar), cards ve ahead (oynanmış kopyalar),
+## ahead_from (sonraki sütunun gerçek kartları), before (kartların oynatmadan önce biten işi), split, spare}.
+static func _replay(cards: Array, weeks: int, with_ahead: bool, people: Array, log = null) -> Dictionary:
+	var played_cards: Array = _copies(cards)
+	var ahead_from: Array = _ahead_cards() if with_ahead else []
+	var ahead: Array = _copies(ahead_from)
+	var before: Array = played_cards.map(_made)
+	var played: Dictionary = _play_out(played_cards, weeks, people, ahead, log)
+	return {"from": cards, "cards": played_cards, "ahead": ahead, "ahead_from": ahead_from, "before": before,
+		"split": played.split, "spare": played.spare}
+
+
+## `_replay` oynatmasının kart başına sonucu (`plan_outcome`un gövdesi).
+static func _read(run: Dictionary) -> Dictionary:
 	var out: Dictionary = {}
-	for i in played_cards.size():
-		var c: Dictionary = played_cards[i]
-		out[c.id] = {"split": (played.split.get(c.id, {}) as Dictionary).values(), "done": made.call(c) - before[i],
+	for i in run.cards.size():
+		var c: Dictionary = run.cards[i]
+		out[c.id] = {"split": (run.split.get(c.id, {}) as Dictionary).values(), "done": _made(c) - run.before[i],
 			"finishes": phase(c) == PHASE_DONE, "bugs": SprintBugs.tally(c)}
 	var ready: Dictionary = {}
-	for c in ahead:
+	for c in run.ahead:
 		ready[c.id] = ready_share(c)
-	return {"cards": out, "spare": played.spare, "ready": ready}
+	return {"cards": out, "spare": run.spare, "ready": ready}
+
+
+## Kartın biten işi: kalanın azalması değil biten işin artışı, çünkü testin bulduğu hata kalana düzeltme işi ekler.
+static func _made(c: Dictionary) -> float:
+	return total(c) - remaining(c)
+
+
+static func _copies(cards: Array) -> Array:
+	return cards.map(func(c: Dictionary) -> Dictionary: return c.duplicate(true))
 
 
 ## MVP tahmini: Çekirdek'in kalan K1'leri hangi sprintin kapanışında yayına girer. Oyuncu sprinti dolu
@@ -939,16 +1033,26 @@ static func _unfinished(id := "", extra := 0) -> Array:
 
 ## Kopya kartlar `people` ekibiyle sprintin sonuna oynanır: içinde bulunulan hafta _end_week gibi, atamasını koruyarak
 ## (mesai ya da kısalan test bu haftanın işini hızlandırır, kimse yer değiştirmez), kalan haftalar yeniden atanarak.
-static func _finish_sprint(cards: Array, people: Array) -> void:
+## `ahead` verilirse sonraki sütunun kopyaları da oynanır (önce sprintin kartları, sonra onlar; PM'ler hazırlar) ve kartların
+## hepsi bu hafta biterse sprint kapanır, sonrasında önden gidilmez. `log` `_play_out`taki gibi doldurulur.
+static func _finish_sprint(cards: Array, people: Array, ahead: Array = [], log = null) -> void:
 	var by_id: Dictionary = {}
 	for person in people:
 		by_id[person.id] = person
+	var week: Dictionary = {"cards": [], "ahead": []} if log != null else {}
+	if log != null:
+		log.append(week)
 	var budget: Dictionary = {}
 	for c in cards:
 		for id in c.assignees:
 			if by_id.has(id):
-				budget[id] = _work(c, by_id[id], budget.get(id, by_id[id].points))
-	_play_out(cards, weeks_left() - 1, people)
+				budget[id] = _work(c, by_id[id], budget.get(id, by_id[id].points), week.get("cards"))
+	for c in ahead:
+		for id in c.assignees:
+			if by_id.has(id):
+				budget[id] = _work(c, by_id[id], budget.get(id, by_id[id].points), week.get("ahead"))
+	SprintPrep.week(ahead, people, weeks_left() - 1)
+	_play_out(cards, weeks_left() - 1, people, [] if _finished(cards) else ahead, log)
 
 
 static func _in_sprint(id: String) -> bool:
@@ -1186,15 +1290,20 @@ static func _assign(cards: Array, people: Array, ahead: Array = []) -> void:
 ## Kişinin bütçesi kartın sıradaki fazlarına dökülür, harcanmayanı döner; uymadığı rolün fazında
 ## yarı hızla, hazırlanmış kartta PM'in hazırlık kazancı (`prep_gain`, SprintPrep) kadar hızlı, önden giden ilk fazın ardında
 ## durur. Yapılan iş kartta kişiye yazılır (SprintBugs.record); test biten kartın hatası o anda belirlenir ve bulunanların
-## düzeltmesi Geliştirme satırına eklenir (SprintBugs.settle).
-static func _work(c: Dictionary, person: Dictionary, budget: float) -> float:
+## düzeltmesi Geliştirme satırına eklenir (SprintBugs.settle). `log` verilirse yapılan her iş parçası oraya yazılır (kart,
+## kişi, aşama, aşamanın rolü, yapılan iş, harcanan bütçe): oynatma zaman eksenine buradan dökülür (SprintTimeline). Atamanın
+## sınaması (`_assign`) yazmaz.
+static func _work(c: Dictionary, person: Dictionary, budget: float, log = null) -> float:
 	var at: int = phase(c)
 	while at < PHASE_DONE and budget > EPS and (at == 0 or not person.ahead):
-		var speed: float = (1.0 if _role(c, at) in person.fits else float(SprintCatalog.cfg("no_role_speed"))) \
+		var role: String = _role(c, at)
+		var speed: float = (1.0 if role in person.fits else float(SprintCatalog.cfg("no_role_speed"))) \
 			* (1.0 + float(c.get("prep_gain", 0.0)))
 		var work: float = minf(float(c.need[at]) - float(c.progress[at]), budget * speed)
 		c.progress[at] = float(c.progress[at]) + work
 		SprintBugs.record(c, at, person.id, work)
+		if log != null:
+			log.append({"card": c.id, "person": person.id, "stage": at, "role": role, "work": work, "spent": work / speed})
 		budget -= work / speed
 		if at == TEST_PHASE and not c.get("tested", false) and float(c.need[at]) - float(c.progress[at]) <= EPS:
 			SprintBugs.settle(c)
@@ -1205,8 +1314,9 @@ static func _work(c: Dictionary, person: Dictionary, budget: float) -> float:
 ## Kartların kopyaları `people` ekibiyle (team() biçimi) `weeks` hafta oynanır; hafta _end_week gibi atama
 ## sırasıyla dökülür, sprintin kartlarından sonra sonraki sütunun kopyalarına (`ahead`), PM'ler o kopyaları hazırlar.
 ## Kartların hepsi biten haftada sprint kapanır: sonrasında önden gidilmez. {split: {kart: {kişi: {id, name, weeks}}},
-## spare: sprintin hiçbir kartına harcanmayan puan, önden gidilen de}.
-static func _play_out(cards: Array, weeks: int, people: Array, ahead: Array = []) -> Dictionary:
+## spare: sprintin hiçbir kartına harcanmayan puan, önden gidilen de}. `log` verilirse her hafta `{cards, ahead}` olarak
+## ona eklenir: sprintin kartlarına ve sonraki sütunun kartlarına harcamanın `_work` kayıtları, harcama sırasıyla.
+static func _play_out(cards: Array, weeks: int, people: Array, ahead: Array = [], log = null) -> Dictionary:
 	var by_id: Dictionary = {}
 	for person in people:
 		by_id[person.id] = person
@@ -1214,10 +1324,13 @@ static func _play_out(cards: Array, weeks: int, people: Array, ahead: Array = []
 	var spare: float = 0.0
 	for _w in weeks:
 		_assign(cards, by_id.values(), ahead)
+		var week: Dictionary = {"cards": [], "ahead": []} if log != null else {}
+		if log != null:
+			log.append(week)
 		var budget: Dictionary = {}
 		for c in cards:
 			for id in c.assignees:
-				budget[id] = _work(c, by_id[id], budget.get(id, by_id[id].points))
+				budget[id] = _work(c, by_id[id], budget.get(id, by_id[id].points), week.get("cards"))
 				var row: Dictionary = (split.get_or_add(c.id, {}) as Dictionary).get_or_add(id,
 					{"id": id, "name": by_id[id].name, "weeks": 0})
 				row.weeks += 1
@@ -1225,7 +1338,7 @@ static func _play_out(cards: Array, weeks: int, people: Array, ahead: Array = []
 			spare += budget.get(id, by_id[id].points)
 		for c in ahead:
 			for id in c.assignees:
-				budget[id] = _work(c, by_id[id], budget.get(id, by_id[id].points))
+				budget[id] = _work(c, by_id[id], budget.get(id, by_id[id].points), week.get("ahead"))
 		SprintPrep.week(ahead, people, weeks - _w - 1)
 		if _finished(cards):
 			ahead = []

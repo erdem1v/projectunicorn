@@ -511,6 +511,9 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sprint_skill_assignment":               fail = _case_sprint_skill_assignment()
 		"sprint_pm_prep_benefit":                fail = _case_sprint_pm_prep_benefit()
 		"sprint_plan_done_counts_fix_work":      fail = _case_sprint_plan_done_counts_fix_work()
+		"sprint_timeline_matches_play_out":      fail = _case_sprint_timeline_matches_play_out()
+		"sprint_away_lists_who_cannot_work":     fail = _case_sprint_away_lists_who_cannot_work()
+		"sprint_follow_card_cannot_be_removed":  fail = _case_sprint_follow_card_cannot_be_removed()
 		"sprint_escaped_bug_on_card_line":       fail = _case_sprint_escaped_bug_on_card_line()
 		"sprint_escaped_pre_launch_lands_at_v1": fail = _case_sprint_escaped_pre_launch_lands_at_v1()
 		"sprint_fix_card_clears_its_line":       fail = _case_sprint_fix_card_clears_its_line()
@@ -21761,6 +21764,644 @@ static func _case_sprint_plan_done_counts_fix_work() -> String:
 	var got: float = float(carried[0].done) - before
 	if absf(got - float(plan.done)) > SprintSystem.EPS:
 		return "the plan gave the card %.2f points and the close %.2f" % [float(plan.done), got]
+	return ""
+
+
+## Kâğıdın takip kartı kaldırılamaz: sonraki sütundan çıkarılsa hiçbir listede görünmeyen yetim bir kart olur ve kâğıdın bedeli
+## bedavaya silinirdi. Motor `remove`u reddeder, ekran kartın "Kaldır" düğmesini vermez; sıradan kart çıkarılabilir ve düğmesi durur.
+## FALSİFİKASYON: SprintSystem.remove'daki `card.get("follow", false)` koşulunu sil → "kept" iddiası FAIL; ProductModel._card'daki
+## takip kartı süzgecini sil → "button" iddiası FAIL.
+static func _case_sprint_follow_card_cannot_be_removed() -> String:
+	_paper_world()
+	var big: String = _paper_card(3, 40)
+	var other: String = _paper_card(4, 10)
+	SprintSystem.send_next(other)
+	if not SprintSystem.start():
+		return "fixture: the sprint did not start"
+	_paper_waits_on(big)
+	SprintSystem.decision_trim(SprintSystem.trim_plan(true, 0, true, 0, ""))
+	var follows: Array = GameState.product.cards.values().filter(func(c: Dictionary) -> bool: return c.get("follow", false))
+	if follows.size() != 1 or follows[0].id not in GameState.product.next.cards:
+		return "fixture: the paper left %s, want one follow card in the next column" % str(follows.map(func(c: Dictionary) -> String: return c.id))
+	var follow: String = follows[0].id
+	var buttons := func(id: String) -> Array:
+		return ProductModel.live().next.cards.filter(func(c: Dictionary) -> bool: return c.id == id)[0].buttons
+	if "remove" in buttons.call(follow) or "remove" not in buttons.call(other):
+		return "button: the next column gives the follow card %s and the ordinary card %s, want no Remove on the first and Remove on the second" % [
+			str(buttons.call(follow)), str(buttons.call(other))]
+	SprintSystem.remove(follow)
+	SprintSystem.remove(other)
+	var next: Array = GameState.product.next.cards
+	if follow not in next or not GameState.product.cards.has(follow) or other in next:
+		return "kept: after removing both, the next column holds %s, want the follow card kept and the ordinary card gone" % str(next)
+	return ""
+
+
+## `away()` ekip dışında kalan kişileri nedenleriyle sayar: eğitimdeki, izindeki ve Ar-Ge'deki çalışan; toplantılarda payı biten
+## kurucu (anahtarı açıkken). Yalnız Destek'te çalışan sprint dışıdır ama nedeni yoktur, listede değildir; ekipte çalışan da.
+## Hiç kimse hem ekipte hem listede değildir. Ekip özeti (`center.crew`) bir aşamanın satırı 9'dan çok yüz tutunca dolar; ekip
+## dışı nedeni olan yüz satırında durur, yalnız Destek'tekinin yüzü yoktur ve satırı doldurmaz.
+## Kurucu anahtarı `SprintSystem` üzerinden yazılır: planlamada değişir, koşan sprintte değişmez.
+## FALSİFİKASYON: SprintSystem.away'deki `research` dalını sil → Ar-Ge'deki FAIL; kurucunun `founder_in_sprint` koşulunu sil → kapalı
+## anahtarlı kurucu FAIL; ProductModel._crew'da `seated and` koşulunu sil → Destek'teki kişi satırı doldurur, "crew" FAIL.
+## SprintSystem.set_founder_in_sprint'te `mode() != "active"` koşulunu sil → koşan sprintte anahtar FAIL.
+static func _case_sprint_away_lists_who_cannot_work() -> String:
+	_seed_sprint()
+	var hire := func(id: String) -> Character: return _sprint_hire("char_away_" + id, HRConstants.ROLE_DEVELOPER)
+	var worker: Character = hire.call("worker")
+	var trainee: Character = hire.call("trainee")
+	var leaver: Character = hire.call("leaver")
+	var scholar: Character = hire.call("scholar")
+	var support: Character = hire.call("support")
+	CharacterRegistry.set_status(trainee.id, HRConstants.STATUS_TRAINING)
+	CharacterRegistry.set_status(leaver.id, HRConstants.STATUS_ON_LEAVE)
+	CharacterRegistry.assign_job(scholar.id, HRConstants.JOB_RESEARCH)
+	CharacterRegistry.unassign_job(support.id, HRConstants.JOB_BUILD)
+	CharacterRegistry.assign_job(support.id, HRConstants.JOB_SUPPORT)
+	var want: Array = [{"id": trainee.id, "reason": "training"}, {"id": leaver.id, "reason": "leave"},
+		{"id": scholar.id, "reason": "research"}]
+	if SprintSystem.away() != want:
+		return "away reads %s, want the trainee, the one on leave and the researcher (not the worker or the Support-only developer)" % str(SprintSystem.away())
+	var crew: Array = SprintSystem.team().map(func(t: Dictionary) -> String: return t.id)
+	if worker.id not in crew or SprintSystem.away().any(func(a: Dictionary) -> bool: return a.id in crew):
+		return "the team %s and the away list %s share a person, or lost the worker" % [str(crew), str(SprintSystem.away())]
+	GameState.founder_sprint_pay = 0.0
+	var founder: String = CharacterRegistry.get_founder().id
+	if SprintSystem.away() != want + [{"id": founder, "reason": "meetings"}]:
+		return "a founder whose week the meetings took reads %s, want him last, in meetings" % str(SprintSystem.away())
+	SprintSystem.set_founder_in_sprint(false)
+	if SprintSystem.away() != want:
+		return "with the founder off the sprint away reads %s, want him left out" % str(SprintSystem.away())
+	if ProductModel.live().center.crew != null:
+		return "four developers in the row read a crew summary, want none"
+	for i in 5:
+		hire.call("extra%d" % i)
+	if ProductModel.live().center.crew != null:
+		return "nine faces in the developer row and a tenth on Support alone read a crew summary, want none (Support-only is no face)"
+	hire.call("extra5")
+	var crowd := {"n": 11, "sprint": 7, "training": 1, "leave": 1, "research": 1, "pm": 0, "out": 1}
+	if ProductModel.live().center.crew != crowd:
+		return "ten faces in the developer row read the crew %s, want %s" % [str(ProductModel.live().center.crew), str(crowd)]
+	SprintSystem.set_founder_in_sprint(true)
+	crowd.merge({"n": 12, "out": 2}, true)
+	if ProductModel.live().center.crew != crowd:
+		return "with the founder in meetings the crew reads %s, want %s (he is outside the sprint)" % [str(ProductModel.live().center.crew), str(crowd)]
+	SprintSystem.add(SprintCatalog.mvp_candidates()[0].id)
+	if not SprintSystem.start():
+		return "fixture: the sprint does not start"
+	SprintSystem.set_founder_in_sprint(false)
+	if not GameState.founder_in_sprint:
+		return "the founder switch moved while the sprint runs, want it held until the next plan"
+	return ""
+
+
+## Zaman ekseni motorun oynatmasının aynasıdır, ona yeni bir şey öğretmez. Planlamada ve koşan sprintin haftalarında: Z1 kart başına
+## sprint içi iş ve aşama parçalarının işi `plan_outcome`un `done`ı (ve `outcome` plan_outcome'un kendisi), Z2 aşama öncekinin
+## bitişinden önce başlamaz, Z3 satırdaki her boşluk bir beklemeyle kapalı, Z4 kimse aynı anda iki işte değil, Z5 hafta sınırında
+## ekranın "yapılan"ı motorun gerçek ilerlemesi, Z7 üç aşamanın oluğu (iş + hiçbir karta, önden işe de, harcanmayan puan) ekibin
+## kapasitesini aşmaz ve testçisiz planda Test oluğu 0'dan büyük; önden çalışan kişinin harcanmayan puanı önden işi kadar azdır.
+## Sprintten önce tasarlanmış kartın tasarımı planlamada önden yapılmıştır (`pre`), koşan sprintin 1. haftasında eksenden önce
+## bitmiştir (`before`); 1. haftada başka aşama `before` değildir. Sonraki sütunun kartı bu sprintte hem hazırlanır hem önden
+## tasarlanır: yükü sprint sonundaki kazançla okunur. Tek kurucuda bir satış görüşmesi onun haftasından 1 gün (0,2 hafta) tarar ve puanını ×0,8 yapar (A17), term sheet masası
+## 2 gün (A16); görüşmesi olan kurucunun yetişmeyen kartı `late`. Kartın H'si oynatılmış kopyadan okunur (atanan geliştiricilerle),
+## hazırlanmış kartta H < H0; hazırlayan kayıttan, sonraki sütunun kartının hazırlığı planlamada oynatmanın sonundan koşarken
+## bugünkünden; sprintin başındaki iş `progress_at_start`tır (kayıtsız eski kayıtta `progress`); kartlar erken biterse eksen o
+## haftanın sonunda kapanır ve motor orada kapatır. Kartın eforu testin bulduğu düzeltmeyi sayar, oynatmanın öngördüğünü saymaz
+## (E1); aşamanın oluğu öngörüleni de sayar (E2); koşan sprintte eksenden önce biten aşama `before` taşır; zaman ekseninin
+## anahtarları sözleşmedeki gibidir; sürüm notunda sonraki sütunun yükü planlamayla aynı işlevlerden gelir.
+## FALSİFİKASYON: SprintTimeline._lay'de `at = piece.to` satırını `at = first` yap (aşamalar üst üste biner) → "Z2" FAIL; _span'da
+## `_wait` eklemesini sil → "Z3" FAIL; SprintSystem._finish_sprint'te bu haftanın kartlara harcamasını sil (`_work` çağrısını `pass`
+## yap) → "Z5" FAIL; bütçeyi kartlar arasında paylaşma (`budget.get(id, …)` yerine kişinin tam puanı) → "Z4" FAIL; SprintTimeline._clock'ta
+## kişinin saatini sıfırda tut → "Z4" FAIL; _hatches'ta payı 2 ile çarp → "A17" FAIL; _lay'de `work[e.kind] +=` yerine `=` →
+## "Z1" FAIL; _clock'ta önden işin harcamasını `spent`e katma → "E2" FAIL; _card'da `before`dan `ctx.running`i sil → "B" FAIL.
+static func _case_sprint_timeline_matches_play_out() -> String:
+	_seed_sprint()
+	_bugs_c(0.212)
+	var founder: Character = CharacterRegistry.get_founder()
+	var full: float = _sprint_points(founder.id)
+	var pin := func() -> void:
+		for c in CharacterRegistry.get_employees():
+			c.morale = 60   # the pace of morale is not under test
+	# 1 · Tek kurucu bir kartın başında: görüşmeler onun haftasından gün yer.
+	var core: Array = SprintCatalog.capabilities("core")
+	var flaw: String = _predicted_fix_flaws("feat:%s_k1" % core[1])
+	if flaw != "":
+		return flaw
+	var solo: String = "feat:%s_k1" % core[0]
+	SprintSystem.add(solo)
+	_size(GameState.product.cards[solo], 100.0)
+	var hatch := func(tl: Dictionary, week: int) -> float:
+		var sum := 0.0
+		for s in tl.cards[solo].stages:
+			for m in s.meet:
+				sum += m.to - m.from if m.week == week else 0.0
+		return sum
+	var tl: Dictionary = SprintSystem.timeline()
+	var why: String = _timeline_flaws(tl, "solo")
+	if why != "":
+		return why
+	if hatch.call(tl, 1) != 0.0 or tl.cards[solo].late or not tl.cards[solo].founder:
+		return "a founder with no meeting reads hatch %.3f and late %s, want none and on time" % [hatch.call(tl, 1), tl.cards[solo].late]
+	TimeManager.advance_hours(TimeModel.SITTING_HOURS["sales"], "sales")
+	pin.call()
+	_sim_day()
+	GameState.start_work_week()
+	tl = SprintSystem.timeline()
+	if not is_equal_approx(_sprint_points(founder.id), full * 0.8) or not is_equal_approx(hatch.call(tl, 1), 0.2) \
+			or not is_equal_approx(hatch.call(tl, 2), 0.2) or not tl.cards[solo].late:
+		return "A17: one sales meeting leaves the founder %.3f of %.3f with hatches %.3f and %.3f and late %s; want 0.8 of it, 0.2 and 0.2 weeks, late" % [
+			_sprint_points(founder.id), full, hatch.call(tl, 1), hatch.call(tl, 2), tl.cards[solo].late]
+	why = _contract_flaws(tl, "meeting")
+	if why != "":
+		return why
+	TimeManager.advance_hours(TimeModel.SITTING_HOURS["table"], "table")
+	pin.call()
+	_sim_day()
+	GameState.start_work_week()
+	tl = SprintSystem.timeline()
+	var kinds: Array = tl.cards[solo].stages.filter(func(s: Dictionary) -> bool: return not s.meet.is_empty()).map(
+		func(s: Dictionary) -> Array: return s.meet[0].kinds)
+	if not is_equal_approx(hatch.call(tl, 1), 0.4) or kinds.is_empty() or kinds[0] != ["table"]:
+		return "A16: a term sheet table hatches %.3f of the founder's week as %s, want 0.4 as the table" % [hatch.call(tl, 1), str(kinds)]
+	SprintSystem.remove(solo)
+
+	# 2 · Takım: planlama.
+	var pm: Character = _sprint_hire("char_tl_pm", HRConstants.ROLE_PRODUCT_MANAGER)
+	pm.role_stats[HRConstants.AREA_PRODUCT] = 10
+	_sprint_hire("char_tl_des", HRConstants.ROLE_DESIGNER)
+	_sprint_hire("char_tl_dev1", HRConstants.ROLE_DEVELOPER)
+	_sprint_hire("char_tl_dev2", HRConstants.ROLE_DEVELOPER)
+	var tester: Character = _sprint_hire("char_tl_qa", HRConstants.ROLE_TESTER)
+	pin.call()
+	_sim_day()
+	GameState.start_work_week()
+	var ids: Array = []
+	for slot in 4:
+		ids.append("feat:%s_k1" % core[slot])
+		SprintSystem.add(ids[slot])
+		_size(GameState.product.cards[ids[slot]], [40.0, 30.0, 24.0, 16.0][slot])
+	GameState.product.cards[ids[0]].progress = [2.0, 0.0, 0.0]
+	# The last card was designed before the plan: its design stage is done when the sprint begins.
+	var drawn: Dictionary = GameState.product.cards[ids[3]]
+	drawn.progress = [float(drawn.need[0]), 0.0, 0.0]
+	var waiting: String = "feat:%s_k1" % core[4]
+	SprintSystem.send_next(waiting)
+	_size(GameState.product.cards[waiting], 20.0)
+	if GameState.product.sprint.cards.size() != 4:
+		return "fixture: the plan holds %s, want the four cards" % str(GameState.product.sprint.cards)
+	GameState.product.cards[ids[2]].merge({"prep_by": pm.id, "prep_done": 1.0, "prep_gain": 0.25, "prep_cut": 0.4}, true)
+	var stored: Dictionary = GameState.product.duplicate(true)
+	tl = SprintSystem.timeline()
+	if GameState.product != stored:
+		return "the timeline wrote the product state"
+	if tl.outcome != SprintSystem.plan_outcome():
+		return "the timeline's outcome differs from plan_outcome"
+	if float(GameState.product.cards[waiting].get("prep_done", 0.0)) > 0.0 or tl.ahead[waiting].prep.done <= 0.0 \
+			or float(tl.ahead[waiting].get("design", {}).get("done", 0.0)) <= 0.0:
+		return "fixture: the next card reads %s after the plan, want it unprepared now and both prepared and designed ahead in this sprint" % str(tl.ahead[waiting])
+	why = _timeline_flaws(tl, "plan")
+	if why == "":
+		why = _contract_flaws(tl, "plan")
+	if why == "":
+		why = _next_load_flaws(tl, "plan")
+	if why != "":
+		return why
+	var plan: Dictionary = tl.outcome.cards
+	for id in ids:
+		var gain: float = 1.0 + float(GameState.product.cards[id].get("prep_gain", 0.0))
+		var made := 0.0
+		var drawn_work := 0.0
+		for s in tl.cards[id].stages:
+			made += s.in_sprint * gain
+			for piece in s.pieces:
+				drawn_work += piece.work * gain
+		if absf(made - plan[id].done) > SprintSystem.EPS or absf(drawn_work - plan[id].done) > SprintSystem.EPS \
+				or tl.cards[id].finishes != plan[id].finishes:
+			return "Z1: %s does %.3f in the timeline (its pieces %.3f, finishes %s) and %.3f in the plan (finishes %s)" % [
+				id, made, drawn_work, tl.cards[id].finishes, plan[id].done, plan[id].finishes]
+	var designed: Dictionary = tl.cards[ids[3]].stages[0]
+	if designed.before or not is_equal_approx(designed.pre, float(drawn.need[0])) or designed.need > SprintSystem.EPS \
+			or designed.start != -1.0 or designed.end != -1.0:
+		return "B: in planning the design of the card designed before the plan reads before %s, pre %.3f of %.3f, %.3f left, span %.2f to %.2f; want before false, all of it pre, nothing left, no span" % [
+			str(designed.before), designed.pre, float(drawn.need[0]), designed.need, designed.start, designed.end]
+	var plain: Dictionary = tl.cards[ids[0]]
+	if plain.h0 <= 0.0 or not is_equal_approx(plain.h, plain.h0):
+		return "H: an unprepared card reads h %.4f and h0 %.4f, want them equal and positive" % [plain.h, plain.h0]
+	if plain.stages[1].in_sprint <= 0.0 or is_equal_approx(plain.h, SprintBugs.expected(GameState.product.cards[ids[0]]).h):
+		return "H: the card's load equals the stored card's, want it read from the played copy with its assigned developers"
+	var cut: Dictionary = tl.cards[ids[2]]
+	if not (cut.h < cut.h0) or not is_equal_approx(cut.h, cut.h0 * 0.6) or cut.prep != {"by": pm.id, "gain": 0.25, "done": 1.0}:
+		return "H: the prepared card reads h %.4f of h0 %.4f with prep %s, want h = 0.6 h0 and the manager's preparation" % [
+			cut.h, cut.h0, str(cut.prep)]
+	var next_prep: Dictionary = tl.ahead[waiting].prep
+	if next_prep.by != pm.id or next_prep.done <= 0.0:
+		return "the next card's preparation reads %s after the plan, want the manager's, started" % str(next_prep)
+	var designer: Dictionary = tl.people["char_tl_des"]
+	var points: float = SprintSystem.team().filter(func(t: Dictionary) -> bool: return t.id == "char_tl_des")[0].points
+	var spent := {"sprint": 0.0, "ahead": 0.0}
+	for piece in designer.pieces:
+		spent["ahead" if piece.ahead else "sprint"] += (piece.to - piece.from) * points
+	if spent.ahead <= SprintSystem.EPS \
+			or absf(designer.unspent - (SprintSystem.weeks_left() * points - spent.sprint - spent.ahead)) > SprintSystem.EPS:
+		return "E2: the designer spends %.3f on the sprint's cards and %.3f ahead of %.3f and reads unspent %.3f, want the work ahead spent too" % [
+			spent.sprint, spent.ahead, SprintSystem.weeks_left() * points, designer.unspent]
+	if not tl.has("team") or tl.team.get("design", 0.0) <= 0.0:
+		return "the timeline reads no design team: %s" % str(tl.get("team"))
+
+	# 3 · Testçisiz plan: Test oluğunu geliştiriciler doldurur.
+	CharacterRegistry.remove(tester.id)
+	var bare: Dictionary = SprintSystem.timeline()
+	why = _timeline_flaws(bare, "no tester")
+	if why != "":
+		return why
+	if _grooves(bare).test <= 0.0:
+		return "Z7: without a tester the Test groove is %.3f, want the developers' Test work" % _grooves(bare).test
+
+	# 4 · Koşan sprint, 1. hafta: hafta sınırında ekran motorun ilerlemesidir (Z5), sprintin başındaki iş `progress_at_start`.
+	pin.call()
+	if not SprintSystem.start():
+		return "fixture: the sprint did not start"
+	var running: Array = ids.map(func(id: String) -> Dictionary: return GameState.product.cards[id])
+	if running[0].progress_at_start != [2.0, 0.0, 0.0]:
+		return "V11: the first card began with %s, want the [2, 0, 0] it had" % str(running[0].progress_at_start)
+	var made_by := func(timeline: Dictionary, at: float) -> Array:
+		return running.map(func(c: Dictionary) -> float:
+			var sum := 0.0
+			for s in timeline.cards[c.id].stages:
+				sum += SprintTimeline.done_at(s, at)
+			return sum * (1.0 + float(c.get("prep_gain", 0.0))))
+	var made_real := func() -> Array:
+		return running.map(func(c: Dictionary) -> float: return SprintSystem._worked(c) - float(c.base))
+	tl = SprintSystem.timeline()
+	why = _timeline_flaws(tl, "week 1")
+	if why == "":
+		why = _next_load_flaws(tl, "week 1")
+	if why != "":
+		return why
+	var early: Array = []
+	for id in tl.cards:
+		for j in tl.cards[id].stages.size():
+			if tl.cards[id].stages[j].before:
+				early.append([id, j])
+	var designed_1: Dictionary = tl.cards[ids[3]].stages[0]
+	if tl.outcome != null or early != [[ids[3], 0]] or designed_1.start != -1.0 or designed_1.end != -1.0:
+		return "B: the first week of a running sprint reads outcome %s and finished before the axis %s (span %.2f to %.2f); want null and only the design that was done when the sprint began, with no span" % [
+			str(tl.outcome != null), str(early), designed_1.start, designed_1.end]
+	var said: Array = made_by.call(tl, 1.0)
+	TimeManager.advance_hours(TimeModel.SITTING_HOURS["table"], "table")
+	pin.call()
+	_sim_day()
+	var real: Array = made_real.call()
+	for i in running.size():
+		if absf(real[i] - said[i]) > SprintSystem.EPS:
+			return "Z5: at the week 1 boundary %s shows %.3f done and the engine made %.3f" % [ids[i], said[i], real[i]]
+	if running[0].progress_at_start != [2.0, 0.0, 0.0]:
+		return "V11: the first card's start moved to %s with the week" % str(running[0].progress_at_start)
+
+	# 5 · 2. hafta: sprintin sonunda ekran motorun ilerlemesidir; sonraki sütunun hazırlığı bugünkü.
+	tl = SprintSystem.timeline()
+	why = _timeline_flaws(tl, "week 2")
+	if why == "":
+		why = _contract_flaws(tl, "week 2")
+	if why == "":
+		why = _next_load_flaws(tl, "week 2")
+	if why != "":
+		return why
+	var before := 0
+	for i in running.size():
+		for j in 3:
+			if tl.cards[ids[i]].stages[j].before:
+				before += 1
+				if j >= SprintSystem.phase(running[i]):
+					return "B: %s's stage %d reads finished before the axis while the card is still in phase %d" % [ids[i], j, SprintSystem.phase(running[i])]
+	if before == 0:
+		return "B: in week 2 no stage reads finished before the axis, want the stages week 1 completed"
+	if not is_equal_approx(tl.start, 1.0):
+		return "the timeline of week 2 starts at %.2f, want 1.0" % tl.start
+	var today: float = float(GameState.product.cards[waiting].get("prep_done", 0.0))
+	if not is_equal_approx(tl.ahead[waiting].prep.done, today):
+		return "the next card's preparation reads %.3f while running, want today's %.3f" % [tl.ahead[waiting].prep.done, today]
+	said = made_by.call(tl, 2.0)
+	pin.call()
+	_sim_day()
+	real = made_real.call()
+	for i in running.size():
+		if absf(real[i] - said[i]) > SprintSystem.EPS:
+			return "Z5: %s was shown to make %.3f by the sprint's end and the engine made %.3f" % [ids[i], said[i], real[i]]
+	if SprintSystem.mode() != "release":
+		return "fixture: the sprint did not close after two weeks (%s)" % SprintSystem.mode()
+	if absf(float(GameState.product.cards[waiting].prep_done) - next_prep.done) > SprintSystem.EPS:
+		return "the plan said the next card is %.3f prepared after the sprint, the engine made it %.3f" % [
+			next_prep.done, float(GameState.product.cards[waiting].prep_done)]
+
+	# 6 · Erken biten plan o haftanın sonunda kapanır; kayıtsız eski kayıtta sprintin başı bugünkü ilerlemedir.
+	_bugs_c(0.0)
+	SprintSystem.plan_next()
+	for id in GameState.product.sprint.cards.duplicate():
+		SprintSystem.remove(id)
+	var tiny: String = SprintCatalog.open_cards([])[0].id
+	SprintSystem.add(tiny)
+	_size(GameState.product.cards[tiny], 3.0)
+	if not is_equal_approx(SprintSystem.timeline().close_at, 1.0):
+		return "a plan that finishes in its first week closes at %.2f, want 1.0" % SprintSystem.timeline().close_at
+	if not SprintSystem.start():
+		return "fixture: the early sprint did not start"
+	GameState.product.cards[tiny].progress = [1.0, 0.0, 0.0]
+	GameState.product.cards[tiny].erase("progress_at_start")
+	var pre: float = SprintSystem.timeline().cards[tiny].stages[0].pre
+	if not is_equal_approx(pre, 1.0 / (1.0 + float(GameState.product.cards[tiny].get("prep_gain", 0.0)))):
+		return "an old save without progress_at_start reads %.3f done before the sprint, want its progress" % pre
+	pin.call()
+	_sim_day()
+	if SprintSystem.mode() != "release":
+		return "the plan said the sprint closes in week 1, the engine is in %s" % SprintSystem.mode()
+
+	# 7 · Testi bitmiş kartın bulunmuş düzeltmesi eforuna girer; sürüm notunda sonraki sütun devreden kartın kalanını yükler.
+	_bugs_c(0.212)
+	SprintSystem.plan_next()
+	for id in GameState.product.sprint.cards.duplicate():
+		SprintSystem.remove(id)
+	var spare: Array = SprintCatalog.open_cards([]).filter(func(c: Dictionary) -> bool: return c.kind == "feature").map(
+		func(c: Dictionary) -> String: return c.id)
+	if spare.size() < 3:
+		return "fixture: %d open feature cards, want three" % spare.size()
+	flaw = _found_fix_flaws(spare[0])
+	if flaw != "":
+		return flaw
+	SprintSystem.add(spare[1])
+	_size(GameState.product.cards[spare[1]], 200.0)
+	SprintSystem.send_next(spare[2])
+	_size(GameState.product.cards[spare[2]], 20.0)
+	if not SprintSystem.start():
+		return "fixture: the last sprint did not start"
+	for _week in 2:
+		pin.call()
+		_sim_day()
+	if SprintSystem.mode() != "release":
+		return "fixture: the last sprint did not close (%s)" % SprintSystem.mode()
+	return _release_load_flaws(spare[2])
+
+
+## Zaman ekseninin değişmezleri: aşama sırası (Z2), satırdaki boşluklar (Z3), kişinin tek işi (Z4), oluk toplamı (Z7); ihlal varsa
+## metni, yoksa "".
+static func _timeline_flaws(tl: Dictionary, label: String) -> String:
+	var eps: float = SprintSystem.EPS
+	for id in tl.cards:
+		var items: Array = []
+		var behind: float = -1.0
+		for s in tl.cards[id].stages:
+			if typeof(s.before) != TYPE_BOOL or (s.before and (s.start != -1.0 or s.end != -1.0 or s.need - s.done0 > eps
+					or tl.outcome != null)):
+				return "B (%s): %s's %s reads before %s with start %.3f, end %.3f and %.3f left in a %s timeline" % [
+					label, id, s.stage, str(s.before), s.start, s.end, s.need - s.done0, "planning" if tl.outcome != null else "running"]
+			if s.start >= 0.0:
+				if s.start < behind - eps:
+					return "Z2 (%s): %s's %s%s starts at %.3f, before the stage ahead of it ends at %.3f" % [
+						label, id, s.stage, " fix" if s.fix else "", s.start, behind]
+				behind = s.end
+				items.append([s.start, s.end])
+			for w in s.waits:
+				items.append([w.from, w.to])
+		items.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
+		var reach: float = items[0][1] if not items.is_empty() else 0.0
+		for item in items:
+			if item[0] > reach + eps:
+				return "Z3 (%s): %s has a gap from %.3f to %.3f that no wait covers" % [label, id, reach, item[0]]
+			reach = maxf(reach, item[1])
+	for id in tl.people:
+		var behind: float = -1.0
+		for p in tl.people[id].pieces:
+			if p.from < behind - eps or p.to < p.from:
+				return "Z4 (%s): %s works on two things at %.3f" % [label, id, p.from]
+			behind = p.to
+	var grooves: Dictionary = _grooves(tl)
+	var capacity: float = SprintSystem.capacity() * SprintSystem.weeks_left() / SprintSystem.sprint_weeks()
+	if grooves.design + grooves.dev + grooves.test > capacity + eps:
+		return "Z7 (%s): the grooves hold %.3f of the team's %.3f" % [label, grooves.design + grooves.dev + grooves.test, capacity]
+	return ""
+
+
+## Aşama satırlarının oluğu (E2): aşamaya giden iş artı o satırın kişilerinin kartlara harcamadığı puan.
+static func _grooves(tl: Dictionary) -> Dictionary:
+	var out := {"design": 0.0, "dev": 0.0, "test": 0.0}
+	for id in tl.cards:
+		for s in tl.cards[id].stages:
+			if out.has(s.stage):
+				out[s.stage] += s.in_sprint - s.done0
+	for id in tl.people:
+		if tl.people[id].row != "":
+			out[tl.people[id].row] += tl.people[id].unspent
+	return out
+
+
+## Zaman ekseninin anahtarları sözleşmedekiyle birebir aynıdır: arayüz adlarla okur, fazlası ya da eksiği ikinci üreticiyi de bağlar.
+## FALSİFİKASYON: SprintTimeline._ahead'te `by` anahtarını `pm` yap → "contract" FAIL.
+static func _contract_flaws(tl: Dictionary, label: String) -> String:
+	var checks: Array = [[tl, ["start", "close_at", "team", "outcome", "cards", "ahead", "people"], "the timeline"]]
+	for id in tl.cards:
+		var card: Dictionary = tl.cards[id]
+		checks.append([card, ["finishes", "founder", "late", "h", "h0", "prep", "stages"], "the card " + id])
+		checks.append([card.prep, ["by", "gain", "done"], "the prep of " + id])
+		for s in card.stages:
+			checks.append([s, ["stage", "fix", "need", "need_raw", "pre", "in_sprint", "out", "start", "end", "before", "done0",
+				"out_from", "out_to", "people", "waits", "meet", "pieces"], "a stage of " + id])
+			for piece in s.pieces:
+				checks.append([piece, ["from", "to", "work", "people"], "a stage piece of " + id])
+			for wait in s.waits:
+				checks.append([wait, ["from", "to", "person", "role", "busy"], "a wait of " + id])
+			for meet in s.meet:
+				checks.append([meet, ["from", "to", "kinds", "week"], "a meeting of " + id])
+	for id in tl.ahead:
+		for key in tl.ahead[id]:
+			checks.append([tl.ahead[id][key], ["by", "done"] if key == "prep" else ["done", "people", "start"],
+				"the %s of the ahead card %s" % [key, id]])
+	for id in tl.people:
+		checks.append([tl.people[id], ["busy", "unspent", "row", "pieces"], "the person " + id])
+		for piece in tl.people[id].pieces:
+			checks.append([piece, ["from", "to", "card", "stage", "ahead"], "a person piece of " + id])
+	for check in checks:
+		var have: Array = check[0].keys()
+		var want: Array = check[1].duplicate()
+		have.sort()
+		want.sort()
+		if have != want:
+			return "contract (%s): %s has the keys %s, the contract lists %s" % [label, check[2], str(have), str(want)]
+	return ""
+
+
+## Öngörülen düzeltme (tek kurucu, küçük kart): testin bulduğu hata dördüncü girdi olur; kartın eforu onu saymaz (E1: kalan
+## ihtiyaç), aşamanın oluğu sayar (kurucunun bütün puanı oluklara bölünür).
+## FALSİFİKASYON: ProductModel._row'da eforu `_effort(c)` yerine bütün girdilerin ihtiyacının toplamı yap → "E1" FAIL;
+## SprintTimeline._card'da düzeltme girdisinin `stage`ini "fix" yap (oluk onu görmez) → "E2" FAIL.
+static func _predicted_fix_flaws(id: String) -> String:
+	_bugs_c(1.0)
+	SprintSystem.add(id)
+	var card: Dictionary = GameState.product.cards[id]
+	_size(card, 12.0)
+	var seed0: int = GameState.run_seed
+	var tl: Dictionary = {}
+	for guess in range(1, 400):
+		GameState.run_seed = guess
+		tl = SprintSystem.timeline()
+		if tl.cards[id].stages.size() == 4:
+			break
+	var flaw := ""
+	var stages: Array = tl.cards[id].stages
+	if stages.size() != 4:
+		flaw = "fixture: no seed of 400 let the test find a bug on a 12 point card"
+	else:
+		var row: Dictionary = ProductModel._row(card, tl.cards[id], [])
+		var base: float = stages[0].need + stages[1].need + stages[2].need
+		var grooves: Dictionary = _grooves(tl)
+		var held: float = grooves.design + grooves.dev + grooves.test
+		var capacity: float = SprintSystem.capacity()
+		if not stages[3].fix or stages[3].stage != "dev" or roundi(base + stages[3].need) == roundi(base):
+			flaw = "fixture: the fourth entry reads %s, want the predicted fix work of the dev row" % str(stages[3])
+		elif row.effort != roundi(base) or row.raw_effort != roundi(SprintSystem.remaining(card)):
+			flaw = "E1: a card whose fix is only predicted reads effort %d (raw %d), want its own remaining %d without the predicted %.2f" % [
+				row.effort, row.raw_effort, roundi(base), stages[3].need]
+		elif not is_equal_approx(held, capacity):
+			flaw = "E2: the grooves hold %.3f of the founder's %.3f, want all of it (the predicted fix of %.3f counts under dev)" % [
+				held, capacity, stages[3].need]
+	GameState.run_seed = seed0
+	_bugs_c(0.212)
+	SprintSystem.remove(id)
+	return flaw
+
+
+## Bulunmuş düzeltme (testi önceki sprintte bitmiş, hata bulmuş, PM'in hazırladığı kart): kartın eforu kalan düzeltmeyi sayar,
+## hazırlık kazancına bölünmüş (3 ham iş, kazanç 0,25: efor 2,4 → 2); kart planda kalır.
+## FALSİFİKASYON: ProductModel._row'da eforu düzeltme girdisi hariç aşama ihtiyaçlarının toplamı yap → "E1" FAIL.
+static func _found_fix_flaws(id: String) -> String:
+	SprintSystem.add(id)
+	var card: Dictionary = GameState.product.cards[id]
+	_size(card, 20.0)
+	var dev: float = float(card.need[1])
+	card.merge({"tested": true, "born": 2, "found": 1, "fix": [4.0], "prep_gain": 0.25}, true)
+	card.need[1] = dev + 4.0
+	card.progress = [float(card.need[0]), dev + 1.0, float(card.need[2])]
+	var tl: Dictionary = SprintSystem.timeline()
+	var stages: Array = tl.cards[id].stages
+	var row: Dictionary = ProductModel._row(card, tl.cards[id], [])
+	var fix_stage: bool = stages.size() == 4 and stages[3].fix and is_equal_approx(stages[3].need_raw, 3.0)
+	if not fix_stage or stages[0].need + stages[1].need + stages[2].need > SprintSystem.EPS:
+		return "fixture: the card reads the stages %s, want only the 3 of fix work left" % str(stages)
+	if row.effort != 2 or row.raw_effort != 3:
+		return "E1: a card whose test already found a bug reads effort %d (raw %d), want the 2 (raw 3) of fix work it still has" % [
+			row.effort, row.raw_effort]
+	return ""
+
+
+## Sonraki sütunun aşama yükü motorun kendi oynatmasının kopyalarından ölçülür, modelin formülünden değil: devreden = sprintin
+## oynanmış kartlarının kalan ihtiyacı (düzeltme işi Geliştirme'de), planlı = sonraki sütunun kartlarının sprint sonundaki kalan
+## ihtiyacı (önden iş yapılmış, sprint sonundaki hazırlık kazancına bölünmüş), ekip = satır başına haftalık puan x sprint haftası;
+## devreden satırlarında kartın aynı aşaması tek satırdır; zaman ekseninin önden işi motorun kopyasındaki iştir, sprint sonundaki
+## kazançla.
+## FALSİFİKASYON: ProductModel._load'ta `ahead` düşümünü sil → "E2" FAIL; ProductModel._next'te `gains`i {} yap (bugünkü kazanç)
+## → planlamada "E2" FAIL; SprintTimeline._ahead'te kazancı koşarken bugünkü karttan oku → koşarken "E2" FAIL; _carried'ta satır
+## anahtarını her paya özel yap → "R4" FAIL.
+static func _next_load_flaws(tl: Dictionary, label: String) -> String:
+	var p: Dictionary = GameState.product
+	var people: Array = SprintSystem.team()
+	var copy := func(c: Dictionary) -> Dictionary: return c.duplicate(true)
+	var sprint: Array = SprintSystem._sprint_cards().map(copy)
+	var ahead: Array = SprintSystem._ahead_cards().map(copy)
+	if SprintSystem.mode() == "active":
+		SprintSystem._finish_sprint(sprint, people, ahead)
+	else:
+		var run: Dictionary = SprintSystem._replay(SprintSystem.starting(), SprintSystem.weeks_left(), true, people)
+		sprint = run.cards
+		ahead = run.ahead
+	var ended: Dictionary = {}
+	for c in ahead:
+		ended[c.id] = c
+		var roles: Array = SprintCatalog.cfg("roles." + String(c.kind))
+		for i in 3:
+			var made: float = (float(c.progress[i]) - float(p.cards[c.id].progress[i])) / (1.0 + float(c.get("prep_gain", 0.0)))
+			var read: float = float(tl.ahead[c.id].get(roles[i], {}).get("done", 0.0))
+			if absf(read - made) > SprintSystem.EPS:
+				return "E2 (%s): %s reads %.3f of its %s done ahead, the engine makes %.3f at the sprint's closing gain" % [
+					label, c.id, read, roles[i], made]
+	var left := func(c: Dictionary, into: Dictionary) -> void:
+		var roles: Array = SprintCatalog.cfg("roles." + String(c.kind))
+		for i in 3:
+			if into.has(roles[i]):
+				into[roles[i]] += maxf(0.0, float(c.need[i]) - float(c.progress[i])) / (1.0 + float(c.get("prep_gain", 0.0)))
+	var out := {"design": 0.0, "dev": 0.0, "test": 0.0}
+	var planned := {"design": 0.0, "dev": 0.0, "test": 0.0}
+	var listed := {"design": 0.0, "dev": 0.0, "test": 0.0}
+	for c in sprint:
+		left.call(c, out)
+	for id in p.next.cards:
+		left.call(ended.get(id, p.cards[id]), planned)
+	var next: Dictionary = ProductModel.live().next
+	var seated: Dictionary = {}
+	for t in SprintSystem.team():
+		(seated.get_or_add(tl.people[t.id].row, []) as Array).append(t)
+	var seen: Dictionary = {}
+	for row in next.carried:
+		var key: String = row.card_id + "|" + row.stage
+		if seen.has(key):
+			return "R4 (%s): %s is listed twice for %s" % [label, row.card_id, row.stage]
+		seen[key] = true
+		listed[row.stage] += row.effort
+	for row in next.load:
+		var team: float = SprintSystem.capacity_of(seated.get(row.stage, []))
+		var read := [row.carried, listed[row.stage], row.planned, row.team]
+		var want := [out[row.stage], out[row.stage], planned[row.stage], team]
+		for i in 4:
+			if absf(read[i] - want[i]) > SprintSystem.EPS:
+				return "E2 (%s): the %s load reads carried %.3f, listed %.3f, planned %.3f, team %.3f; want %.3f, %.3f, %.3f, %.3f" % [
+					label, row.stage, read[0], read[1], read[2], read[3], want[0], want[1], want[2], want[3]]
+	return ""
+
+
+## Sürüm notunda sonraki sütun: devreden kartın kalan ihtiyacı (E1) planlamanın işlevlerinden gelir, ekip aynı satır kuralından;
+## bir kartın aynı aşamadaki payları tek satırdır ve düzeltme payı Geliştirme'ye yazılır.
+## FALSİFİKASYON: ProductModel._next'te sürüm notunun paylarını `[]` yap → "R3" FAIL; _out_shares'te düzeltme girdilerini atla →
+## "E2" FAIL; _carried'ta satır anahtarını her paya özel yap → "R4" FAIL.
+static func _release_load_flaws(side: String) -> String:
+	var p: Dictionary = GameState.product
+	var carried: Array = p.next.cards.filter(func(id: String) -> bool: return p.cards[id].state == "carried")
+	var planned: Array = p.next.cards.filter(func(id: String) -> bool: return id not in carried)
+	if carried.is_empty() or side not in planned:
+		return "fixture: the next column holds %s, want a carried card and the planned %s" % [str(p.next.cards), side]
+	var want := {"carried": {"design": 0.0, "dev": 0.0, "test": 0.0}, "planned": {"design": 0.0, "dev": 0.0, "test": 0.0}}
+	for id in p.next.cards:
+		var c: Dictionary = p.cards[id]
+		var roles: Array = SprintCatalog.cfg("roles." + String(c.kind))
+		var group: Dictionary = want.carried if id in carried else want.planned
+		for i in 3:
+			if group.has(roles[i]):
+				group[roles[i]] += maxf(0.0, float(c.need[i]) - float(c.progress[i])) / (1.0 + float(c.get("prep_gain", 0.0)))
+	var of: Dictionary = SprintTimeline.capacity_rows(SprintSystem.team()).of
+	var seated: Dictionary = {}
+	for t in SprintSystem.team():
+		(seated.get_or_add(of[t.id], []) as Array).append(t)
+	var power: Dictionary = SprintTimeline.row_power(SprintSystem.team(), of)
+	var next: Dictionary = ProductModel.live().next
+	if next.load.size() != 3 or next.carried.is_empty():
+		return "R3: the release note's next column reads %d stage rows and %d carried rows, want 3 and some" % [
+			next.load.size(), next.carried.size()]
+	for row in next.load:
+		var team: float = SprintSystem.capacity_of(seated.get(row.stage, []))
+		var read := [row.carried, row.planned, row.team]
+		var due := [want.carried[row.stage], want.planned[row.stage], team]
+		for i in 3:
+			if absf(read[i] - due[i]) > SprintSystem.EPS:
+				return "R3: the release note's %s load reads carried %.3f, planned %.3f, team %.3f; want %.3f, %.3f, %.3f" % [
+					row.stage, read[0], read[1], read[2], due[0], due[1], due[2]]
+	var shares: Array = ProductModel._shares(carried)
+	if next.load != ProductModel._load(shares, planned, {}, power, {}) or next.carried != ProductModel._carried(shares):
+		return "R3: the release note's next column differs from what the planning functions return for the same inputs"
+	var twice: Array = ProductModel._carried([{"card_id": carried[0], "stage": "dev", "effort": 2.0},
+		{"card_id": carried[0], "stage": "dev", "effort": 3.0}, {"card_id": carried[0], "stage": "product", "effort": 9.0}])
+	if twice.size() != 1 or not is_equal_approx(twice[0].effort, 5.0):
+		return "R4: a card's two shares of one stage read %s, want one row of 5 (and no research stage)" % str(twice)
+	var fix_run := {"cards": {carried[0]: {"stages": [{"stage": "dev", "fix": false, "out": 2.0}, {"stage": "dev", "fix": true, "out": 3.0}]}}}
+	var dev: Dictionary = ProductModel._load(ProductModel._out_shares(fix_run), [], {}, {}, {})[1]
+	if not is_equal_approx(dev.carried, 5.0):
+		return "E2: a base dev share of 2 and a fix share of 3 load the dev row with %.3f, want 5" % dev.carried
 	return ""
 
 

@@ -115,6 +115,17 @@ static func area_def(area_id: String) -> Dictionary:
 	return (cfg("areas") as Array).filter(func(a: Dictionary) -> bool: return a.id == area_id)[0]
 
 
+## Çalışanın kapasite satırı ("design", "dev", "test"): rolünün ana alanının aşaması (`role_areas`). Ürün rolünün (PM)
+## satırı yoktur, "".
+static func row_of(c: Character) -> String:
+	var area: String = HRConstants.role_key_area(c.role)
+	var roles: Dictionary = cfg("role_areas")
+	for stage in ["design", "dev", "test"]:
+		if roles[stage] == area:
+			return stage
+	return ""
+
+
 # --- Seviye, durum ------------------------------------------------------------------
 
 ## Ekranın gösterdiği seviye: yarıma yuvarlanmış (0..3). Kelime ve ekonomi yuvarlanmamışı okur (ProductQuality).
@@ -299,6 +310,16 @@ static func card_name(card: Dictionary) -> String:
 			if customer != "":
 				return _t("PRODUCT_REQUEST_CARD").format({"step": step_name(card.step), "customer": customer})
 	return step_name(card.step)
+
+
+## Kartın son tarihi (sprint numarası): kademesine verilmiş en yakın açık söz, yoksa karşıladığı açık talebin son tarihi;
+## ikisi de yoksa -1. Sprint hesabı olmayan (gün sayan) söz son tarih vermez.
+static func due_sprint(card: Dictionary) -> int:
+	for p in _promises_on(card.step):
+		if p.due_sprint >= 0:
+			return p.due_sprint
+	var request: Dictionary = _request_of(card)
+	return -1 if request.is_empty() else int(request.due_sprint)
 
 
 ## Kilitli kademenin gerekçesi ("2★ Tasarım gerekli"), yalnız karşılanmayan parçalarla; kilitsizse "". Ücretli

@@ -35,8 +35,9 @@ extends RefCounted
 # planms=1 plays no tick: it times what the Product screen asks of the engine while the sprint is planned, in the world the
 # other options build (fill=1 for the fullest plan), the first call of each a warm-up, then PLANMS_REPS calls:
 #   SPRINTPROBE PLANMS|team=<sprint team>|cards=<sprint cards + open candidates>|what=<w>|n=<calls>|median_ms=|max_ms=
-# what: plan_outcome, can_add (one call per open candidate), mvp_eta, lead (the lead's suggestion) and screen (ProductModel.live,
-# the page's whole model); the milliseconds are this machine's.
+# what: plan_outcome, can_add (one call per open candidate), mvp_eta, lead (the lead's suggestion), screen (ProductModel.live,
+# the page's whole model) and ghost (one candidate's hover: the plan with it played and laid out, SprintSystem.timeline, one
+# call per open candidate); the milliseconds are this machine's.
 # The plan the screen draws (SprintSystem.plan_outcome) is read when its sprint starts and checked when it
 # closes. events=0 runs only the sprint's daily step, with no decision paper; events=1 runs the whole clock
 # in batches (each visible hour, then the night up to 08:00), answers the desk through RunProbe after every
@@ -338,6 +339,10 @@ static func _plan_ms() -> void:
 	_plan_row(team, cards, "mvp_eta", _timed(func() -> void: SprintSystem.mvp_eta()))
 	_plan_row(team, cards, "lead", _timed(func() -> void: SprintCatalog.lead_suggestion()))
 	_plan_row(team, cards, "screen", _timed(func() -> void: ProductModel.live()))
+	var ghosts: Array = []
+	for c in open:
+		ghosts.append_array(_timed(func() -> void: SprintSystem.timeline([c])))
+	_plan_row(team, cards, "ghost", ghosts)
 
 
 ## PLANMS_REPS timings (milliseconds) of `work`, after one call that is not counted.

@@ -2557,6 +2557,11 @@ PRODUCT_REQUESTS_COUNT_ONE,{n} talep,{n} request
 PRODUCT_CUSTOMERS_NONE,Açık talep yok,No open requests
 PRODUCT_DUE_SPRINT,Sprint {n} sonuna kadar,By the end of sprint {n}
 PRODUCT_PER_YEAR,{amount}/yıl,{amount}/yr
+PRODUCT_DUE_THIS_Q,bu çeyrek,this quarter
+PRODUCT_DUE_NEXT_Q,gelecek çeyrek,next quarter
+PRODUCT_DUE_Q,{q}. çeyrek,Q{q}
+PRODUCT_TIP_PROMISE,söz: {when},promised: {when}
+PRODUCT_TIP_CARD_MODULE,{card} ({module}),{card} ({module})
 PRODUCT_TAG_SPRINT,Sprint {n},Sprint {n}
 PRODUCT_SPRINT_TITLE,Sprint {n},Sprint {n}
 PRODUCT_WEEKS,{n} hafta,{n} weeks
@@ -2713,6 +2718,12 @@ PRODUCT_AREA_TRUST,Güven & Ölçek,Trust & Scale
 PRODUCT_AREA_TRUST_SHORT,Güven,Trust
 PRODUCT_AREA_REVENUE,Gelir,Revenue
 PRODUCT_AREA_REVENUE_SHORT,Gelir,Revenue
+PRODUCT_AREA_CORE_MONO,ÇK,CO
+PRODUCT_AREA_ONBOARDING_MONO,İK,ON
+PRODUCT_AREA_GROWTH_MONO,BÜ,GR
+PRODUCT_AREA_INTEGRATIONS_MONO,EN,IN
+PRODUCT_AREA_TRUST_MONO,GÜ,TS
+PRODUCT_AREA_REVENUE_MONO,GE,RV
 PRODUCT_STAR_NONE,Henüz hiçbir şirkete yetmez.,Not enough for any company yet.
 PRODUCT_STAR_SKIPPED,1★ şirketler bu alana bakmaz. 2★ şirketler bir başlangıç ister.,1★ companies do not look at this area. 2★ companies want a start.
 PRODUCT_STAR_SERVES,Bu hâliyle {star}★ şirketlere yeter. {next}★ şirketler daha fazlasını ister.,As it stands it is enough for {star}★ companies. {next}★ companies want more.

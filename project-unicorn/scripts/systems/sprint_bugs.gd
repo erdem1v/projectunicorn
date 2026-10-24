@@ -47,6 +47,14 @@ static func expected(c: Dictionary) -> Dictionary:
 	return {"h": h0 * (1.0 - float(c.get("prep_cut", 0.0))), "h0": h0}
 
 
+## Hata göstergesinin tavanı: 40 eforluk (`effort.k3`), gereksinimi 5★, Δ = 0, PM'siz ve TİTİZ'siz özellik kartının beklenen
+## hatası, yani standart bir kartın ulaşabileceği en yüksek yük.
+static func ceiling() -> float:
+	var cfg: Dictionary = SprintCatalog.cfg("bugs")
+	return float(cfg.c) * float(SprintCatalog.cfg("effort.k3")) * HRConstants.STAR_MAX * float(cfg.kind.feature) \
+		* _miss(0.0, cfg)
+
+
 ## Testin kartta yakaladığı pay C: testi yapanların iş payıyla ağırlıklı 0,57 × √Y(Test); kendi geliştirdiği kartı test
 ## edenin oranı ×0,6'dır. Payda gereken testtir (kısaltılmış test o kadarını yakalar); bir kâğıt yapılmış testi geri aldıysa
 ## yeniden yapılan iş de paydaya girer. Böylece paylar 1'i aşmaz ve C en iyi testçinin oranını geçmez.

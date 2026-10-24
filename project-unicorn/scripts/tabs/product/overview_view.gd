@@ -88,6 +88,7 @@ func _controls(server: Dictionary) -> HBoxContainer:
 		var button := SprintUiShared.button(server[step[0]].text, &"SecondaryButtonSmall",
 			action.emit.bind("server_step", {"direction": step[1]}))
 		button.tooltip_text = server[step[0]].tip
+		button.disabled = server[step[0]].get("off", false)
 		row.add_child(button)
 	row.add_child(RnDUiShared.spacer())
 	SprintUiShared.switch(row, tr("PRODUCT_SERVER_AUTO_TOGGLE"), server.auto.on,

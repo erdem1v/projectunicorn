@@ -248,7 +248,7 @@ func _set_ui(value: Variant, key: String) -> void:
 
 ## SPRINT görünümünde bu alan açık: Destek kartı en çok açık hatası olan hattın alanına götürür.
 func open_area(area_id: String) -> void:
-	_ui.view = "sprint"
+	_set_ui("sprint", "view")
 	_reveal_open = true
 	_on_ui_changed(area_id)
 
@@ -264,7 +264,7 @@ func _on_action(kind: String, args: Dictionary) -> void:
 		_set_ui(args.id, "server_preview")
 		return
 	if kind == "edit":
-		_ui.view = "sprint"
+		_set_ui("sprint", "view")
 	if _source != null:
 		_source.act(kind, args)
 	else:

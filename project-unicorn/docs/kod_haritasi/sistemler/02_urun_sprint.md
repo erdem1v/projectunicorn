@@ -9,6 +9,7 @@ Ar-Ge 19 düğümlü ağaçtır; tamamlanan düğüm hat kapılarını ve katsay
 
 - `scripts/systems/sprint_system.gd` (1734): sprint motoru: tür seçimi, plan eylemleri, haftalık atama/ilerleme, kapanış ve sürüm, karar kâğıdı, söz olayı, plan tutuşu; `GameState.product`'ın tek yazarı
 - `scripts/systems/sprint_catalog.gd` (929): salt okur katalog: alanlar, aday kartlar, kilit gerekçesi, etki/öngörü satırları, lider ve PM planı, rakipler, `cfg("a.b")` ile sprint.json
+- `scripts/systems/sprint_timeline.gd` (304): sprint ekranının zaman ekseni: motorun oynatma günlüğünden aşama yerleşimi, bekleme, kurucunun görüşme taraması, kişi parçaları, kapasite satırı kuralı; yalnız okur
 - `scripts/systems/sprint_bridges.gd` (346): B2B talepleri, rakip çıkışları, basın satırı, MVP/ücretli plan ekonomisi, sürüm notu cümleleri, teşekkür notu ve B2C yorumları
 - `scripts/systems/product_state.gd` (341): `mvp_*` bayraklarının evi: kimlik, hat kademeleri, açık hata deposu, sürüm yaşı/ilgi, sunucu sağlayıcı ve kapasite yazma yolu
 - `scripts/systems/product_system.gd` (53): koşu sınırı (reset/to_dict/from_dict), haftalık açık hata görüntüsü, saat damgası okumaları
@@ -52,6 +53,13 @@ Ar-Ge 19 düğümlü ağaçtır; tamamlanan düğüm hat kapılarını ve katsay
 - `SprintSystem._close()` `sprint_system.gd:1395`: kartları çıkarır, hata/kademe/sürüm kaydı yazar, `sprint_closed` yayar · `_end_week`
 - `SprintSystem.sync_plan_hold()` `sprint_system.gd:1579`: plan beklerken `TimeManager.hold_clock("sprint_plan")` · `scripts/main/game_shell.gd:28`, `_changed`
 - `SprintSystem.record_interrupt()` `sprint_system.gd:552`: sprintin kesinti kaydı (incident|promise|paper) · `IncidentSystem._ask` `incident_system.gd:272`
+- `SprintSystem.timeline(extra)` `sprint_system.gd:836`: planlamada plan (artı `extra` aday) ya da koşan sprintin kalanı tek oynatmayla `SprintTimeline.build`e girer; planlamada `outcome` = `plan_outcome` biçimi · `ProductModel.live`
+- `SprintSystem.prep_gains(weeks)` `sprint_system.gd:856`: sonraki sütunun kartlarının `weeks` hafta sonraki hazırlık kazancı (kopyalarda yalnız PM'lerin haftaları) · `ProductModel._next`
+- `SprintSystem.away()` `sprint_system.gd:737`: ekip dışı kişiler [{id, reason}]: `training`, `leave`, `research`, kurucu `meetings` · `ProductModel._crew`
+- `SprintSystem.set_founder_in_sprint()` `sprint_system.gd:299`: kurucu sprint kartı alır mı (planlamada ve sürüm notunda yazılır) · smoke `sprint_away_lists_who_cannot_work`
+- `SprintTimeline.build()/done_at()/capacity_rows()/row_power()` `scripts/systems/sprint_timeline.gd:39`/`:66`/`:121`/`:140`: günlükten eksen; aşamanın `at` anına dek yaptığı iş; ekibin kapasite satırı kuralı ve satır başına sprint puanı (sürüm notunda da) · `SprintSystem.timeline`, `ProductModel._progress`, `_next`
+- `SprintSystem.capacity()/capacity_of()` `sprint_system.gd:640`/`:645`: ekibin ya da verilen `team` satırlarının sprint boyunca puanı; ekip ve satır toplamları yalnız buradan okunur (`SprintTimeline.capacity_rows`/`row_power`, smoke `sprint_timeline_matches_play_out`) · `SprintCatalog.lead_suggestion`, `ProductModel._center`
+- `SprintCatalog.row_of()/due_sprint()` `sprint_catalog.gd:120`/`:317`: çalışanın kapasite satırı; kartın söz ya da talep son tarihi · `SprintTimeline`, `ProductModel._row`
 - `SprintSystem.plan_outcome()/mvp_eta()/team()/payers()` `sprint_system.gd:761`/`:791`/`:692`/`:714`: plan önizlemesi, MVP tahmini, ekip, bedel ödeyenler · ProductModel, effects.gd
 - `SprintCatalog.cfg()` `scripts/systems/sprint_catalog.gd:29`: sprint.json okuması (yoksa yükler) · yaklaşık her sistem; `load_data()` :23 → `main.gd:4449`
 - `SprintCatalog.candidates()` `sprint_catalog.gd:194`: alanın aday kartları (feat:/req:/plan:/fix:/res:) · ProductModel, `SprintSystem`
@@ -119,6 +127,8 @@ Ar-Ge 19 düğümlü ağaçtır; tamamlanan düğüm hat kapılarını ve katsay
 
 - `GameState.product` `scripts/autoload/game_state.gd:302`: sprint, next, mode(plan|active|release), cards, release, releases, requests, rival_hits, quarter, decision, delegate… (`new_state` sprint_system.gd:74-84)
 - `GameState.product` ek alanlar: `interrupt` {sprint, kind} (sprint_system.gd:553), `promise_due` {card, step, promises}, `type_draft`, `pending_faulty`, `empty_sprint`, `decision_sprint`
+- Koşan kartta `progress_at_start`: sprintin başındaki `progress` (`_begin`, `put_first`; eski kayıtta `progress` okunur)
+- Çeyrekte `quarter.start_day`: çeyreğin başladığı gün (`new_state`, `plan_next`; eski kayıtta sprintin başından geri sayılır)
 - Kart `SprintCatalog.new_card` `sprint_catalog.gd:250`: id, kind(feature|request|fix|research), line, step, target_tier, area, need[3], progress[3], state, assignees, bugs, decision, cut
 - Kart kimlik önekleri `sprint_catalog.gd:194-222`: `feat:<kademe>`, `req:<talep>`, `plan:cap_paid_plan`, `fix:<hat>`, `res:<alan>`; kart `need`/`progress` sırası [Tasarım, Geliştirme, Test]
 - Sürüm kaydı `sprint_system.gd:1479-1484`: number, sprint, shipped, carried, velocity, expected, actual, press, gate, day, changed_areas, alerts_cleared, faulty (+ `thanks`, `reviews`)
@@ -150,6 +160,9 @@ Ar-Ge 19 düğümlü ağaçtır; tamamlanan düğüm hat kapılarını ve katsay
 ## Testler
 
 - Tek vaka: `bash tools/smoke_run.sh <vaka>` (`tools/smoke_run.sh:14`); vaka listesi `scripts/debug/endgame_smoke.gd` match tablosu (:78-587), gövde `_case_<ad>` (örn. `_case_sprint_two_days_close` :20455)
+- Zaman ekseni: `sprint_timeline_matches_play_out` (eksen oynatmanın aynası: aşama sırası, beklemeler, kişi tek işte, hafta sınırında yapılan; kurucunun görüşme taraması; H/H0 ve hazırlık; sprint başı ilerleme)
+  ve ekranın sayıları: bulunmuş ve öngörülen düzeltmenin efora ve oluğa girişi, eksenden önce biten aşama, anahtarların sözleşmesi, sonraki sütunun yükü (planlamada, koşarken, sürüm notunda)
+- Ekip dışı ve takip kartı: `sprint_away_lists_who_cannot_work` (ekip özeti dahil), `sprint_follow_card_cannot_be_removed`
 - Sprint: `sprint_two_days_close`, `sprint_capacity_from_team`, `sprint_ceiling_125_blocks_add`, `sprint_carry_keeps_progress`, `sprint_mvp_three_identity_k1`, `sprint_fix_card_clears_its_line`, `sprint_starts_only_with_consent`
 - Sprint: `sprint_request_on_time_met`, `sprint_paid_plan_opens_paid_tier`, `sprint_departure_restaffs_card`, `sprint_never_stalls_in_plan`, `sprint_lead_offers_paid_plan_b2c`, `product_pm_plan_opens_as_next_sprint`
 - Kâğıt/karar/söz: `sprint_decision_blocks_progress`, `decision_one_per_sprint`, `paper_interrupt_order`, `paper_card_trim`, `paper_line_harden`, `promise_due_fires_when_late`, `promise_extend_once`, `promise_cut_test_escape`
@@ -164,6 +177,14 @@ Ar-Ge 19 düğümlü ağaçtır; tamamlanan düğüm hat kapılarını ve katsay
 
 ## Dikkat
 
+- Oynatma tek yoldur: `plan_outcome`, `timeline`, `intake` ve `first_bumps` `_replay`i okur
+- `_work`/`_play_out`/`_finish_sprint`in `log` parametresi yalnız `timeline` içindir; kapalıyken sonuçlar bayt eşit kalır (`--sprint-probe` `^SPRINTPROBE`)
+- Zaman ekseni: testten sonra Geliştirmeye dönen düzeltme işi ayrı aşamadır (`fix: true`, sonda): testin bulduğu da, oynatmanın öngördüğü de oradadır (kartın gerçek bitişi); sayılar görünen efordur (kalan ihtiyaç ÷ hazırlık kazancı)
+- Kartın eforu (`ProductModel._effort`: satırın `effort`ı, önerinin `effort`ı) oynanmamış karttan okunur: testin bulduğu düzeltmeyi sayar, oynatmanın öngördüğünü saymaz; aşama yükleri (`next.load`, `next.carried`, oluk) öngörüleni de Geliştirme'de sayar
+- Gösterim kuralı: planlamada ve kartın testi bitmeden dördüncü parça çizilir ama ekranda da ipucunda da hata sayısı yazmaz (plan sayıyı bulur, göstermez); sayı test bitince kartın "Test: N hata buldu" satırıyla gelir. Hiçbir model alanı öngörülen hata sayısı taşımaz (`h`/`h0` göstergedir)
+- Koşan sprintte eksen bu haftanın başındandır: önceki haftaların işi `done0`dır; eksenden önce biten aşama `before: true` ile gelir ve start = end = -1 olur, -1 tek başına "bu eksende aralığı yok" demektir
+- Sonraki sütunun yükü her kipte aynı işlevlerden çıkar (`ProductModel._load`, `_carried`): planlamada ve koşarken devreden zaman ekseninin `out`u, sürüm notunda sonraki sütunun devreden kartlarının kalan ihtiyacı; planlı pay planlamada ve koşarken kartın sprint sonundaki kalan ihtiyacıdır (önden iş düşülmüş, `SprintSystem.prep_gains`in kazancıyla), sürüm notunda bugünkü; ekip satırları `SprintTimeline.row_power`dan (her satırın kişileri `SprintSystem.capacity_of`a)
+- `remove()` kâğıdın takip kartını (`follow`) reddeder; `ProductModel._card` ona Kaldır düğmesi vermez
 - Kirli ağaç: bu haritanın üretildiği sırada başka bir oturum sprint puan birimini ×5'e çekiyordu (sprint.json `effort` 15/25/40, `need` tablosu, `_migrate_18`, şema 19); HEAD'de yok. Satırlar kayabilir
 - İki ayrı efor tablosu: hat JSON `effort` (bant 5-7/7-9/9-12, `ProductLines.effort_of`, yalnız yeni-kod terimi ve doğrulama) ile sprint.json `effort` k1 15·k2 25·k3 40 (`SprintCatalog.step_effort` :171, kart eforu). Karıştırma
 - `SprintCatalog.cfg()` (:29) eksik anahtarda sert hata verir (`v[key]`); sprint.json bozuksa `JSON.parse_string` null döner. Yeni anahtar eklerken okuyan her çağrı yerini birlikte ekle

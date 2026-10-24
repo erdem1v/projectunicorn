@@ -28,13 +28,14 @@ Alt klasörler:
 - `scripts/tabs/hr/hr_dossier.gd` (232): Ekip dosyası: kişinin ayrıntı penceresi (`DETAILS["hr_dossier"]`), kişi ayrılınca kendini kapatır.
 - `scripts/tabs/hr/hr_popover.gd` (113): `HRPopover`: çapaya bağlı tek açılır panel (satır menüsü, zam kutusu, sorumlu seçici).
 - `scripts/tabs/hr/hr_ui_shared.gd` (506): `HRUiShared`: koyu tablo kiti (`D_*`), rozetler, moral, deneyim, durum hücresi, `mount_panel_modal`; tabloların dışında da kullanılır.
-- `scripts/tabs/product/product_model.gd` (644): `ProductModel`: sprint ekranının görünüm sözleşmesi; `live()` GameState/SprintSystem'den Dictionary kurar.
+- `scripts/tabs/product/product_model.gd` (1034): `ProductModel`: sprint ekranının görünüm sözleşmesi; `live()` GameState/SprintSystem'den Dictionary kurar.
+  Başlık yorumu yeni ekranın alanlarını da tanımlar: `founder`, `requests`, `modules`, `prep`, çeyreğin saati, merkez ve sonraki sütun eklemeleri, kart satırı; düzeltme işinin efora girişi ve gösterim kuralı.
 - `scripts/tabs/product/sprint_panel.gd` (423): `SprintPanel`: orta (bu sprint) ve sağ (sonraki sprint) sütunlar; başlık/alt sabit, kart yığını kayar.
 - `scripts/tabs/product/sprint_card.gd` (370): `SprintCard`: tek kart (`State`, `Look` kipleri); yalnız sözlüğünü çizer, düğme olaylarını `action` ile yayar.
 - `scripts/tabs/product/sprint_ui_shared.gd` (398): `SprintUiShared`: ortak statik parçalar (label, box, pad, avatar, kapasite çubuğu); Ürün dışında 10+ dosya kullanır.
 - `scripts/tabs/product/area_panel.gd` (232): `AreaPanel`: sol panel: Geçmiş, Müşteriler, alan akordeonu, açık hatlar, aday kartları.
 - `scripts/tabs/product/quarter_view.gd` (209): `QuarterView`: ÇEYREK görünümü: hedef şeridi, dar alan paneli, altı sprint sütunu, onay düğmeleri.
-- `scripts/tabs/product/overview_view.gd` (95): GENEL BAKIŞ kâğıdı (şimdilik yalnız Sunucu bloğu); class_name yok.
+- `scripts/tabs/product/overview_view.gd` (96): GENEL BAKIŞ kâğıdı (şimdilik yalnız Sunucu bloğu; Azalt düğmesi kapasite 0 birimdeyken `server.decrease.off` ile kapalı); class_name yok.
 - `scripts/tabs/product/type_picker.gd` (116): `TypePicker`: MVP öncesi tek ekranlık tür ve ad seçici (iki pazar sütunu, kart pazarı da seçer); taslak `SprintSystem`'e yazılır, onay `chosen` olur.
 - `scripts/tabs/rnd/rnd_tree_view.gd` (433): `RnDTreeView`: aile sütunları (3 satır kafes), karolar, seçili düğümün kartı alanı.
 - `scripts/tabs/rnd/rnd_detail_panel.gd` (272): `RnDDetailPanel`: düğüm kartı (durumlar, gereksinim çipleri, Başlat/Duraklat/Vazgeç).
@@ -61,9 +62,10 @@ Sekme sözleşmesi (sayfanın taşıdığı, çerçevenin çağırdığı):
 Ürün:
 - `ProductTab._ready()` `scripts/tabs/product_tab.gd:49`: sekme açılınca görünümleri kurar, 5 EventBus sinyaline bağlar (:111-115) · WindowLayer.
 - `ProductTab._rebuild()` `product_tab.gd:141`: her değişimde modelden baştan kurar; `_queue_rebuild` (:310) call_deferred ile tekler · sinyaller ve `_on_action`.
-- `ProductModel.live()` `scripts/tabs/product/product_model.gd:110`: GameState.product + SprintSystem/ProductState'ten model · product_tab.gd:145, sprint_probe.gd:295.
+- `ProductModel.live()` `scripts/tabs/product/product_model.gd:138`: GameState.product + SprintSystem/ProductState'ten model · product_tab.gd:145, sprint_probe.gd:295.
+  Planlamada ve koşarken tek oynatma (`SprintSystem.timeline`) merkezin `close_at`, `progress`, `crew`, `suggest`, `candidates` ve sonraki sütunun `load`, `carried` alanlarını besler.
 - `ProductTab._on_action(kind, args)` `product_tab.gd:261`: kart/panel eylemlerini `_act` (:277) ile SprintSystem/InfraSystem'e verir · tüm alt panellerin `action` sinyali.
-- `ProductTab.open_area(area_id)` `product_tab.gd:250`: DESTEK kartı alanı açık açar · `SprintUiShared.open_product_area` `sprint_ui_shared.gd:333`.
+- `ProductTab.open_area(area_id)` `product_tab.gd:250`: DESTEK kartı alanı açık açar; görünümü `_set_ui` ile SPRINT yapar, böylece son açık sayfa hatırlanır ("edit" eylemi de) · `SprintUiShared.open_product_area` `sprint_ui_shared.gd:333`.
 - `ProductTab._hold_clock(on)` `product_tab.gd:317`: sürüm notu açıkken saati tutar (`HOLD_RELEASE_NOTE` :16) · `_rebuild`, `on_page_closing`.
 
 Ekip:
@@ -123,7 +125,7 @@ Sekmelerin dinlediği EventBus sinyalleri (hepsi `_exit_tree`'de ya da düğüml
 
 ## Durum ve veri
 
-- Sekmeler kayıt şeması tanımlamaz (`scripts/tabs` içinde SaveManager yok); okudukları durum sistemlerde: `GameState.product` (`product_model.gd:112`), `ProductState`, `SprintSystem`, `HRSystem`, `CharacterRegistry`.
+- Sekmeler kayıt şeması tanımlamaz (`scripts/tabs` içinde SaveManager yok); okudukları durum sistemlerde: `GameState.product` (`product_model.gd:139`), `ProductState`, `SprintSystem`, `HRSystem`, `CharacterRegistry`.
 - Yerel durum sayfaya aittir ve dil/palet değişiminde kaybolur (WindowLayer yıkıp kurar, `window_layer.gd:66-67,156`): hr_tab `_view`/`_collapsed`, piyasa `_filter`/`_selected`, finance `_current`.
 - İstisnalar: `ProductTab._last_view` (static, `product_tab.gd:22`, kayda yazılmaz) ve `GameState.flags["rnd_selected"]` (`rnd_tab.gd:64-65,99`, `_ready`'de tüketilip silinir).
 - Diğer bayraklar: `finance_runway_warn_snooze_until_day` (`finance_ozet_view.gd:21,479,499`, ertele 2 hafta); `b2c_paid_tier_open`, `b2c_price`, `b2c_audience_history` yalnız okunur (`sales_tab.gd:261-275`).
@@ -157,7 +159,7 @@ Anahtarlar `localization/strings.csv`'de (sütunlar keys,tr,en); sekmeler `tr("A
 Smoke (tek vaka: `bash tools/smoke_run.sh <vaka>`; tam süit yalnız push öncesi, CLAUDE.md §10, §12). Arayüz doğrulaması esas olarak görsel kabuldür.
 - Ekip: `hr_active_filters`, `hr_overload_badge`, `gorevler_has_no_founder`, `menu_has_one_path` (HRLedger/HRPopover sabitlerini ve silinen `W_MENU`, `_place_notch`, `_draw_notch` adlarını sınar, endgame_smoke.gd:14323).
 - Ürün: `product_bug_rows_read_the_store`, `fit_star_context`, `capacity_step_immediate`, `sprint_fix_card_clears_its_line`, `sprint_fix_preview_matches_close`,
-  `line_impact_names_the_accounts`, `paper_card_trim` (hepsi ProductModel/SprintUiShared okur).
+  `line_impact_names_the_accounts`, `paper_card_trim`, `sprint_follow_card_cannot_be_removed`, `sprint_timeline_matches_play_out` (hepsi ProductModel/SprintUiShared okur).
 - Ar-Ge: `rnd_rail_open_with_locked_tree`, `split_bars_name_their_cause` (RnDUiShared). Yatırım: `hunt_offer_lifecycle` (endgame_smoke.gd:2095). Olaylar: `mail_pending_survives_save` (:6542).
 - Kabuk: `rail_tabs_match_scene_order` (endgame_smoke.gd:4451), `clock_resumes_only_by_player` (:13700; product_tab ve hunt_tab'ı örnekler), `all_scripts_load`, `loc_product_derived_keys`.
 - Görsel (pencereli, PNG `%APPDATA%\Godot\app_userdata\Project Unicorn\`): `--tab-shot=<product|sales|hr|finance|piyasa[:durum]|personal|marketing|rnd|events>` `main.gd:2338`; `--lang=tr|en`, `--palette=cb`, `--shot-size=GxY`.
@@ -191,7 +193,8 @@ Smoke (tek vaka: `bash tools/smoke_run.sh <vaka>`; tam süit yalnız push önces
 ## Bir değişiklik yaparken
 
 - Yeni sekme ya da pencere boyu: `UiTokens.TABS` (ui_tokens.gd:294), `WindowLayer.TAB_SCENES` (window_layer.gd:13) ve `SPECS` (:38), `scenes/tabs/<Ad>Tab.tscn`, `TAB_<AD>` anahtarı, `left_tabs.gd`, smoke `rail_tabs_match_scene_order`.
-- Sprint kartı alanı ya da düğmesi: `ProductModel` (sözleşme, `BUTTONS` product_model.gd:98) + `SprintCard.setup` + `scripts/debug/product_fixtures.gd` (fikstür aynı alanı taşımalı) + `ProductTab._act` + ilgili `PRODUCT_*` anahtarları.
+- Sprint kartı alanı ya da düğmesi: `ProductModel` (sözleşme, `BUTTONS` product_model.gd:126; `follow` kartı Kaldır almaz, `_card`) + `SprintCard.setup`
+  + `scripts/debug/product_fixtures.gd` (fikstür aynı alanı taşımalı) + `ProductTab._act` + ilgili `PRODUCT_*` anahtarları.
 - Satır menüsü eylemi (Ekip): `HRLedger._action_specs`/`run_action` (hr_ledger.gd:283,356), `hr_dossier.gd` (aynı kapı), `HRActions` sistemi ve smoke `menu_has_one_path`.
 - Kadro sütunu: `HRLedger.COLUMNS`/`COLUMNS_COMPACT`/`TABLE_W` (hr_ledger.gd:8-16), `HRAssignments.W`, `scripts/debug/kit_probe.gd` `W`, Ekip pencere eni `SPECS["hr"]`.
 - Yeni bir sistem sinyali sayfayı etkiliyorsa: ilgili sekmenin `_signals` listesine (tablo yukarıda) ekle, `_exit_tree`'de kopar, karar kapısı etkisi varsa `event_*` üçlüsünü de dinle.
