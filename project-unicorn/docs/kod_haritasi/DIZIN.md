@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git ccb1677 · 2026-10-26 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git aafcc4e · 2026-10-26 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -153,7 +153,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/onboarding/steps/origin_traits_step.gd · 332 · - · OnboardingStep · 0 sinyal · 18 func
 - scripts/onboarding/steps/step_base.gd · 118 · OnboardingStep · Control · 1 sinyal · 10 func
 
-### scripts/systems/ (72 dosya, 24292 satır)
+### scripts/systems/ (72 dosya, 24299 satır)
 - scripts/systems/angel_round_system.gd · 52 · AngelRoundSystem · RefCounted · 0 sinyal · 1 func
 - scripts/systems/b2b_constants.gd · 286 · B2BConstants · RefCounted · 0 sinyal · 9 func
 - scripts/systems/b2b_sales_system.gd · 644 · B2BSalesSystem · RefCounted · 0 sinyal · 42 func
@@ -204,7 +204,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/systems/sales_constants.gd · 298 · SalesConstants · RefCounted · 0 sinyal · 10 func
 - scripts/systems/sales_faucet_system.gd · 307 · SalesFaucetSystem · RefCounted · 0 sinyal · 19 func
 - scripts/systems/sales_finalizer.gd · 108 · SalesFinalizer · RefCounted · 0 sinyal · 6 func
-- scripts/systems/sales_ledger.gd · 425 · SalesLedger · RefCounted · 0 sinyal · 46 func
+- scripts/systems/sales_ledger.gd · 432 · SalesLedger · RefCounted · 0 sinyal · 48 func
 - scripts/systems/sales_meeting_system.gd · 489 · SalesMeetingSystem · RefCounted · 0 sinyal · 32 func
 - scripts/systems/sales_name_pool.gd · 103 · SalesNamePool · RefCounted · 0 sinyal · 3 func
 - scripts/systems/sales_probes.gd · 337 · SalesProbes · RefCounted · 0 sinyal · 9 func

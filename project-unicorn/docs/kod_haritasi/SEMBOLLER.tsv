@@ -104,6 +104,7 @@ _answered_outage	func	scripts/debug/endgame_smoke.gd:27418	EndgameSmoke
 _answers	func	scripts/ui/meeting/sales_meeting_adapter.gd:172	SalesMeetingAdapter
 _any_pending_sheet	func	scripts/systems/endings_system.gd:192	EndingsSystem
 _append	func	scripts/systems/news_feed_system.gd:413	NewsFeedSystem
+_append_row	func	scripts/systems/sales_ledger.gd:423	SalesLedger
 _apply	func	scripts/debug/office_pan_probe.gd:217	office_pan_probe.gd
 _apply	func	scripts/debug/product_fixtures.gd:250	product_fixtures.gd
 _apply	func	scripts/events/core/effects.gd:225	EvEffects
@@ -1027,6 +1028,7 @@ _close_escaped	func	scripts/debug/endgame_smoke.gd:18095	EndgameSmoke
 _close_gap	func	scripts/systems/term_sheet_table_system.gd:432	TermSheetTableSystem
 _close_meeting	func	scripts/main/main.gd:5058	main.gd
 _close_month	func	scripts/systems/summary_system.gd:103	SummarySystem
+_CLOSE_ROWS	const	scripts/systems/sales_ledger.gd:394	SalesLedger
 _close_sitting	func	scripts/systems/term_sheet_table_system.gd:579	TermSheetTableSystem
 _close_sitting	func	scripts/systems/vc_pitch_system.gd:140	VCPitchSystem
 _close_slot	var	scripts/ui/components/window_frame.gd:20	window_frame.gd
@@ -2064,6 +2066,7 @@ _loop	var	scripts/ui/office/office_person.gd:240	OfficePerson
 _lose	func	scripts/systems/sales_meeting_system.gd:326	SalesMeetingSystem
 _lose	func	scripts/systems/sales_rep_system.gd:245	SalesRepSystem
 _loss_reason	var	scripts/systems/sales_meeting_system.gd:42	SalesMeetingSystem
+_LOSS_ROWS	const	scripts/systems/sales_ledger.gd:395	SalesLedger
 _loss_target	func	scripts/systems/sales_meeting_system.gd:358	SalesMeetingSystem
 _lost_lead	var	scripts/debug/run_probe.gd:314	RunProbe
 _low	var	scripts/ui/meeting/meeting_ruler.gd:16	MeetingRuler
@@ -3737,6 +3740,7 @@ _tabs	var	scripts/tabs/rnd_tab.gd:41	rnd_tab.gd
 _tags	func	scripts/tabs/product/sprint_card.gd:185	SprintCard
 _tail	func	scripts/ui/office/office_person.gd:959	OfficePerson
 _take_break	func	scripts/ui/office/office_people.gd:338	OfficePeople
+_take_rows	func	scripts/systems/sales_ledger.gd:429	SalesLedger
 _take_the_seed	func	scripts/debug/run_probe.gd:1745	RunProbe
 _tally	var	scripts/debug/sprint_probe.gd:94	sprint_probe.gd
 _target_on	func	scripts/systems/b2b_sales_system.gd:151	B2BSalesSystem
@@ -4793,7 +4797,7 @@ CLOSE_ICON	const	scripts/theme/ui_factory.gd:9	UiFactory
 close_map	func	scripts/ui/office/office_view.gd:73	office_view.gd
 close_requested	signal	scripts/tabs/hr/hr_dossier.gd:11	hr_dossier.gd
 close_top	func	scripts/ui/components/window_layer.gd:114	window_layer.gd
-close_week	func	scripts/systems/sales_ledger.gd:405	SalesLedger
+close_week	func	scripts/systems/sales_ledger.gd:407	SalesLedger
 CLOSED	const	scripts/tabs/hunt_tab.gd:21	hunt_tab.gd
 closed	signal	scripts/modals/term_sheet_table_scene.gd:17	TermSheetTableScene
 closed	signal	scripts/tabs/rnd/rnd_assign_panel.gd:20	RnDAssignPanel
@@ -6996,7 +7000,7 @@ LOSS_WEAK_AREA	const	scripts/systems/sales_constants.gd:204	SalesConstants
 lost_area	func	scripts/systems/sales_rep_system.gd:239	SalesRepSystem
 lost_body	func	scripts/ui/components/inbox.gd:344	inbox.gd
 lost_line	func	scripts/ui/components/inbox.gd:381	inbox.gd
-lost_week	func	scripts/systems/sales_ledger.gd:421	SalesLedger
+lost_week	func	scripts/systems/sales_ledger.gd:419	SalesLedger
 LOW	const	scripts/tabs/product/sprint_card.gd:11	SprintCard.Look
 LUCIDE	const	scripts/debug/write_licenses.gd:11	write_licenses.gd
 LUCIDE	const	scripts/menu/licenses.gd:13	licenses.gd
@@ -8021,7 +8025,7 @@ record	func	scripts/events/core/history.gd:33	EvHistory
 record	func	scripts/systems/sprint_bugs.gd:35	SprintBugs
 record_angel_round	func	scripts/autoload/game_state.gd:652	GameState
 record_broken_promise	func	scripts/systems/sales_ledger.gd:230	SalesLedger
-record_close	func	scripts/systems/sales_ledger.gd:397	SalesLedger
+record_close	func	scripts/systems/sales_ledger.gd:401	SalesLedger
 record_family	func	scripts/events/present/tempo.gd:246	EvTempo
 record_insult	func	scripts/systems/sales_ledger.gd:219	SalesLedger
 record_interrupt	func	scripts/systems/sprint_system.gd:571	SprintSystem

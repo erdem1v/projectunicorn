@@ -391,35 +391,42 @@ static func spend_inner_voice() -> void:
 # a desk close or a lost desk deal, its rows become the week's report: SalesRepSystem posts them to the inbox as they
 # stand, and the inbox draws its table from those rows whenever it is opened.
 
+const _CLOSE_ROWS := "sales_weekly_close_rows"
+const _LOSS_ROWS := "sales_weekly_loss_rows"
+
+
 ## One close into the open window, with the name of the rep who closed it, "" for the founder.
 ## The desk's closes raise the report and sign it; the name is stored, not looked up, because
 ## the rep can leave before the report is read. The founder's closes are listed beside them.
 static func record_close(c: Customer, rep: String) -> void:
-	var rows: Array = GameState.get_flag("sales_weekly_close_rows", [])
-	rows.append({"company": c.company_name, "star": c.scale, "seats": c.seats,
+	_append_row(_CLOSE_ROWS, {"company": c.company_name, "star": c.scale, "seats": c.seats,
 		"price": c.seat_price, "mrr": c.mrr, "rep": rep})
-	GameState.set_flag("sales_weekly_close_rows", rows)
 
 
 ## Ends the open window and returns its closes.
 static func close_week() -> Array:
-	var rows: Array = GameState.get_flag("sales_weekly_close_rows", [])
-	GameState.set_flag("sales_weekly_close_rows", [])
-	return rows
+	return _take_rows(_CLOSE_ROWS)
 
 
 ## One lost desk deal into the open window's lost rows, the ones the founder was not mailed about: the seller's name (stored,
 ## like a close's), the company and the area id found lacking. They sit beside the closes' rows, so the report's table and
 ## total read the closes alone.
 static func record_loss(rep: String, company: String, area: String) -> void:
-	var rows: Array = GameState.get_flag("sales_weekly_loss_rows", [])
-	rows.append({"company": company, "area": area, "rep": rep})
-	GameState.set_flag("sales_weekly_loss_rows", rows)
+	_append_row(_LOSS_ROWS, {"company": company, "area": area, "rep": rep})
 
 
 ## Ends the open window and returns its lost rows.
 static func lost_week() -> Array:
-	var rows: Array = GameState.get_flag("sales_weekly_loss_rows", [])
-	GameState.set_flag("sales_weekly_loss_rows", [])
-	return rows
+	return _take_rows(_LOSS_ROWS)
 
+
+static func _append_row(flag: String, row: Dictionary) -> void:
+	var rows: Array = GameState.get_flag(flag, [])
+	rows.append(row)
+	GameState.set_flag(flag, rows)
+
+
+static func _take_rows(flag: String) -> Array:
+	var rows: Array = GameState.get_flag(flag, [])
+	GameState.set_flag(flag, [])
+	return rows
