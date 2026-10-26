@@ -192,7 +192,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - Tam smoke bellek baskısı altında yarıda kalabilir (Faz A raporu); arka plan kabuğu biçilirse Godot alt ağacı yetim kalır (hafıza: bg-shell-memory-reap). Erdem 2026-10-06: "push et" = doğrudan push, öncesinde tam smoke yok.
 - Paylaşılan ağaçta ikinci oturum yazabilir: harness koşusu `user://`ı ve ağacı paylaşır; sahipsiz değişikliği commit etmeyin, `git checkout -- <yol>` kullanmayın (hafıza: shared-tree-revert-rule).
 - `endgame_smoke.gd` 25951 satırdır; okurken `grep -n "_case_<ad>"` ile gidin, tam dosyayı okumayın. `SEMBOLLER.tsv` vaka fonksiyonlarını (`_case_*`) listeler.
-- `.githooks/pre-commit` yalnız lint ve `loc_residue` koşar, `git config core.hooksPath .githooks` ile elle açılır; smoke'u commit kancasına koymayın (kanca yorumu bunu zaten söyler).
+- `.githooks/pre-commit` yalnız lint ve `loc_residue` koşar, `git config core.hooksPath .githooks` ile elle açılır; smoke'u commit kancasına koymayın (kanca yorumu bunu zaten söyler; yorumdaki "278-case" sayısı bayat, süit 475 vakadır).
 
 ## Bir değişiklik yaparken
 
@@ -206,9 +206,3 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - `RunProbe` ya da `OfficeCrowdProbe` yardımcısını (`seed_crew`, `seed_staff`) yeniden adlandırırsan `main.gd`, `sprint_probe.gd` çağrılarını da tara; smoke özel fonksiyonları doğrudan çağırır.
 - Sahne düğümü ya da metin anahtarı adı değişirse smoke vakaları ve çekimler düğümü adıyla bulur (`find_child`, `get_node`); `endgame_smoke.gd` ve `main.gd`'de ara, sonra `loc_csv_integrity` ve `all_scripts_load` koştur.
 - Yeni kayıt şeması ya da yuva: `manual_9001/9002` kullanan kayıt vakalarını (`save_*`, `legacy_v12_*`) ve `--tick-probe`un `list_slots().is_empty()` korumasını gözden geçir.
-
-## HARITA'da bayat
-
-- HARITA Araçlar bölümünde (`docs/HARITA.md:380-392`) bu sistemle ilgili kodda bulunmayan ad ya da bayrak bulunamadı: preset, kayıt türü, bayrak ve fonksiyon adları kodla eşleşti.
-- Eksik, bayat değil: HARITA `tools/` satırı (`:390`) `plausibility_run.sh` ve `lint_v3_frozen.json`u saymaz; `plausibility_run.sh` yalnız olay araçları satırında (`:389`) geçer.
-- `.githooks/pre-commit` yorumu "278-case smoke suite ... takes hours" der; süit bugün 475 vakadır (HARITA dışı, aynı alan).

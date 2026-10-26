@@ -238,8 +238,3 @@ Smoke (tek vaka: `bash tools/smoke_run.sh <vaka>`; tam süit yalnız push önces
 - Olaylar okuma bölmesi: `mail_pane.gd` kipleri `Inbox.items()` öğe alanlarına bağlı (inbox.gd:42); öğe alanı eklersen `Inbox`, `MailPane`, `Ar-Ge geçmişi` (`rnd_history.gd`) ve `--inbox-shot` durumlarına bak.
 - Ar-Ge ağacı karosu ya da düğüm durumu: `RnDUiShared.tile_state` (rnd_ui_shared.gd:182), `RnDTab._compute_structure_key` (rnd_tab.gd:209; yeni durum anahtara girmezse yerinde boyama yeniden kurmaz), `research_bar_model.gd`.
 - Yatırım sayfası eylemi: `VCPitchSystem`/`SeedRoundSystem` çağrısı + `HuntTab._act` (hunt_tab.gd:536) + `--vc-shot=hunt*` ile görsel kabul + `hunt_offer_lifecycle`.
-
-## HARITA'da bayat
-
-- `docs/HARITA.md:158` Ürün DESTEK maddesi `MailPane._support_report` der; `MailPane` adlı sınıf yok, `scripts/tabs/events/mail_pane.gd` class_name taşımaz, fonksiyon `mail_pane.gd:688`'dedir.
-- `docs/HARITA.md:141` Ürün "Yer" satırı `scripts/tabs/product/overview_view.gd`'yi saymaz (dosya var, 95 satır; satır 155 GENEL BAKIŞ'ı anlatır): bayat değil, eksik kayıt.

@@ -232,6 +232,3 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 - Avatar ya da portre davranışı: `UiFactory.make_person_avatar`/`make_bust` `ui_factory.gd:106,142` + `avatar_bust.gdshader` + `PersonBust` (Ofis, 06_ofis.md)
 - Avatar çağıranları: `meeting_panel.gd:576`, `term_sheet_table_scene.gd:110,224`, Ekip ve Gelen kutusu satırları
 - Yeni oyuncu metni: `strings.csv` TR+EN aynı anda (anahtar bayt-aralığı ile eklenir), `tr()` ile oku, sonra `loc_residue.gd` ve `loc_csv_integrity`
-
-## HARITA'da bayat
-- HARITA "Onboarding": akış `Footer/Reason`a yazar; sahnede düğüm `Paper/Col/Foot/Row/Reason` (`OnboardingFlow.tscn:121`, kodda `%Reason`)

@@ -1,5 +1,5 @@
 # Project Unicorn — ajan giriş noktası
-Bu dosya bugün geçerli kuralları ve gerçekleri taşır. Kod haritası: `docs/HARITA.md`.
+Bu dosya bugün geçerli kuralları ve gerçekleri taşır. Kod haritası: `docs/kod_haritasi/README.md`.
 
 ## 1. Oyun bugün
 Oyuncu bir teknoloji girişimi kurar ve onu Series A'ya taşımaya çalışır; oyun Türkçe ve İngilizce oynanır. Koşu
@@ -38,7 +38,7 @@ ayrışıyor: `docs/ACIK_ISLER/ACIK_KARARLAR.md`.
 
 ## 4. Verimlilik
 Hızlı ve doğru çalış. Süreyi uzatan ya da token harcayan gereksiz işlem yapma: ihtiyacın olmayan dosyayı okuma,
-gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için önce `docs/HARITA.md`.
+gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için önce `docs/kod_haritasi/README.md`.
 
 ## 5. Oyuncuya görünen metin
 - **BILINGUAL BIRTH LAW.** Oyuncuya görünen her metin bir anahtar olarak doğar. Anahtarlar
@@ -146,7 +146,7 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   ödeme; `IncidentSystem.SERVICE_DOWN`) yaşatır, öbür acil durum kaybolmaz, sonraki sprinte kalır (`record_interrupt("paper")`,
   `GameState.incident.shifted`). Konuşan kâğıdın kartında o fazda çalışan kişidir: kartın JSON'unda `speaker_role`, `stage`, `pool_group` yazılır, konuşan `EventGate.request(id, {"employee": id})`
   ile (kurucu `{"founder": id}`) kartın `assignees`'inden, rolü ve fazı uyan ilk kişiden bağlanır; PM kâğıdını çeyreğin PM'i söyler
-  ve konusu sprintteki müşteri isteği kartıdır; payı Destek'te kalan kişi konuşmaz (ayrıntı HARITA Ürün). Kâğıdın bedeli seçeneğin kendisidir ve çipte sayıyla yazılır: kartın puanı, yapılmış işin silinmesi, hemen düşen hata (`damage_product`) ve hattın yeniden yazımı (`line_harden`: hatta 26 hafta yeni hata düşmez). PM, tasarımcı ve testçi kâğıtları bedeli ayrıca kartın işini sonraki sprinte bırakarak (`sprint_card_trim`: karttan pay çıkar, takip kartı sonraki sprinte girer), kartı bilinen hatayla çıkararak (hata kart çıkınca kendi hattında açık hata olur), hesabın memnuniyetine (`trust_delta`, kart çıkana kadar sürebilir) ya da kitleye yazar; renk kâğıdı tek karttır, iki gelişi vardır. Sistem kâğıdı `product.sprint_late` (kurucu tekken `sprint_late_solo`) yalnız kartı bekleyen biri varken gelir.
+  ve konusu sprintteki müşteri isteği kartıdır; payı Destek'te kalan kişi konuşmaz (ayrıntı `docs/kod_haritasi/sistemler/02_urun_sprint.md`). Kâğıdın bedeli seçeneğin kendisidir ve çipte sayıyla yazılır: kartın puanı, yapılmış işin silinmesi, hemen düşen hata (`damage_product`) ve hattın yeniden yazımı (`line_harden`: hatta 26 hafta yeni hata düşmez). PM, tasarımcı ve testçi kâğıtları bedeli ayrıca kartın işini sonraki sprinte bırakarak (`sprint_card_trim`: karttan pay çıkar, takip kartı sonraki sprinte girer), kartı bilinen hatayla çıkararak (hata kart çıkınca kendi hattında açık hata olur), hesabın memnuniyetine (`trust_delta`, kart çıkana kadar sürebilir) ya da kitleye yazar; renk kâğıdı tek karttır, iki gelişi vardır. Sistem kâğıdı `product.sprint_late` (kurucu tekken `sprint_late_solo`) yalnız kartı bekleyen biri varken gelir.
 - **Sürüm anı.** Sprint kapanışı sürüm çıkardığında (`SprintBridges.thank`, sürüm kaydına `thanks`) sözü tutulan, isteği
   karşılanan ve acil durumu hızla kapanan B2B hesapları teşekkür notu yazar (`customer.release_thanks`, tek düğmeli not
   kartı): hesap sürümde en çok bir, sürüm en çok üç not alır, öncelik söz, istek, acil durum sırasıdır. B2C güncellemesinin
@@ -249,7 +249,7 @@ Kod tabanı şiştiği için her iş pahalılaştı; yeni kod aynı hataları te
 Her commit'ten önce diff, ayrı bir agent tarafından kıdemli bir mühendis gözüyle incelenir; yalnız diff okunur. Soru:
 bu kod en kısa ve en açık doğru hâlinde mi?
 - İki satırda yazılabilecek şey on satırda mı yazılmış?
-- HARITA'daki mevcut bir yardımcı yeniden mi yazılmış?
+- Kod haritasındaki (`docs/kod_haritasi/SEMBOLLER.tsv`) mevcut bir yardımcı yeniden mi yazılmış?
 - İleride lazım olur diye eklenmiş soyutlama, parametre ya da dal var mı?
 - Olamayacak durumlar için savunma, tarihçe anlatan ya da kodu tekrar eden yorum var mı?
 
@@ -275,7 +275,7 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
 - **Sıra:** `"$GODOT" --headless --path . --event-lint` (kabul edilen bulgu gerekçesiyle `tools/lint_baseline.json`'a;
   onu `--event-lint=baseline` yazar, doğrulamada koşulmaz)
   → `"$GODOT" --headless --path . -s res://scripts/debug/loc_residue.gd` → `bash tools/smoke_run.sh loc_csv_integrity`
-  → hedefli smoke (`smoke_run.sh <vaka>`, önekler HARITA'da); tam smoke (`--all`) yalnız push öncesi.
+  → hedefli smoke (`smoke_run.sh <vaka>`, önekler `docs/kod_haritasi/sistemler/10_test_harness.md`'de); tam smoke (`--all`) yalnız push öncesi.
 - Motor: `--event-probe`, `--why-fire=<kart id>`, `--event-harness=random:seeds=N:weeks=M | guided[:seeds=N:weeks=M]`,
   `--event-vocab` (`_vocabulary.md`'yi üretir, KEEP bloğu kalır); `python tools/gen_signal_manifest.py`.
 - Makullük defteri: `--event-plausibility=<spec>` (kabuğun içinden) ya da
@@ -312,7 +312,7 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   sonla bitmeli ve sıfır `ERROR` satırı taşımalıdır.
 - Sprint planı: `--sprint-probe=hours=<h>:cards=<1|2>:ticks=<t>[:<alan>=<değer>…]` (isteğe bağlı alanlar `start`,
   `seeds`, `seed`, `events`, `rate`, `lead`, `gate`, `team` (1 ile 6, 12, 25, 50), `fill`, `market`, `incident`, `promise`, `tstar`,
-  `pmstar`, `plus`, `founder`, `fixture`, `build`, `planms`, `meetings`, `queue`; anlamları HARITA Ürün'de ve Araçlar'da) headless
+  `pmstar`, `plus`, `founder`, `fixture`, `build`, `planms`, `meetings`, `queue`; anlamları `sistemler/02_urun_sprint.md`'de ve `sistemler/10_test_harness.md`'de) headless
   koşar: kurucunun (`team=` ile ekibin) koşusunda ekranın sprint planını (`plan_outcome`) kapanışla karşılaştırır,
   `SPRINTPROBE` satırları basar (`PRED`, `CLOSE`, `SKIP`, `MVP`, `LOAD`, `SUMMARY`, `LOADSUM`, `PAPER`, `PAPERSUM`; `PRED` ve `CLOSE` kartın
   testinin hatasını `bugs=<n>/<F>/<K>/<düzeltme işi>` taşır ve karşılaştırılır; MVP tahmini `mvp_eta` `PRED`'in son alanıdır, karşılaştırılmaz) ve adsız uyuşmazlıkta 1 ile çıkar; bilinmeyen alan ya da oturtulamayan `team` `SPRINTPROBE ERROR` basıp 1 ile çıkar, `LOADSUM`un `team=`i oturan sprint ekibinin büyüklüğüdür. `planms=1` tik oynamaz, plan ekranının motor
@@ -332,7 +332,7 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   negotiation, meeting, invite, product, hr, finance, personal, rnd, b2b, inbox), `--probe-shot[=menajer]`,
   `--theme-audit=<sekme | modal:<tür> | onboard:<adım>>`, `--shot-size=GxY`, `--lang=tr|en` (kayıtlı dili ezer),
   `--palette=cb` (renk körü paleti, yalnız o koşu). PNG'ler `%APPDATA%\Godot\app_userdata\Project Unicorn\`'a iner;
-  EN `_en`, renk körü `_cb` alır. Gelen kutusu: `--inbox-shot=<durum>` (durumlar HARITA'da); `flow` karar kapısını
+  EN `_en`, renk körü `_cb` alır. Gelen kutusu: `--inbox-shot=<durum>` (durumlar `sistemler/08_sekmeler.md`'de); `flow` karar kapısını
   kabuğun kendi girdisiyle oynar (karar gelir, saat tutulur, Ekip yalnız okunur, hız tuşu reddedilir, Esc Olaylar'a
   döner, aynı karar için sonraki Esc sistem menüsünü açar, Ekip'in üstündeki dosyanın şeridi karara döner, karar
   verilir, saat durmuş kalır, Boşluk saati sürdürür) ve kare başına `GATEFLOW` satırı basar.
@@ -356,13 +356,12 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   VC `open|sorgu|sheet|callback|ret|seed|long`; `open:tip` ve `sorgu:tip` zar ipucunu açar), `--negotiation-shot=<open|countered|insult|last|confirm>`; en dar dok
   `--shot-scale=1.25`; davet `--invite-shot=<ring|card|vc|postpone|postpone_vc|held|lapse|lapse_vc>`; term sheet masası
   kabuğun içinde `--vc-shot=<masa türü>:shell`. Ürün sekmesi: `--product-shot=<c1..c5|cards|flow|edge:<ad>>` debug
-  fikstürüyle (`scripts/debug/product_fixtures.gd`; `edge:` adları HARITA Ürün'de), `--product-shot=live:<tür>` sprint
+  fikstürüyle (`scripts/debug/product_fixtures.gd`; `edge:` adları `sistemler/02_urun_sprint.md`'de), `--product-shot=live:<tür>` sprint
   motoruyla kurulan koşuda
   (`pick`, `pick_named`, `pick_relang`, `plan`, `active`, `decision_paper`, `b2c_mvp`, `b2c_live`, `b2c_goal`, `b2b_mvp`, `b2b_mature`, `b2b_quarter`, `b2b_requests`,
   `gate`, `delegate`, `delegate_rehire`, `rnd`, `solo15`, `solo15_tip`, `solo12_active`, `overview_pre`, `server_80`, `server_94`,
   `server_104`, `server_growth`, `server_auto`, `server_tier`, `server_final`, `server_clause`, `server_b2c`;
-  kurulumları ve ikinci, üçüncü kareleri HARITA
-  Ürün'de). Satış'ın B2C sayfası `--sales-shot=b2c_live` (`live:b2c_live`'ın dünyası, `SHOT|b2c` satırı), MVP öncesi
+  kurulumları ve ikinci, üçüncü kareleri `sistemler/02_urun_sprint.md`'de). Satış'ın B2C sayfası `--sales-shot=b2c_live` (`live:b2c_live`'ın dünyası, `SHOT|b2c` satırı), MVP öncesi
   B2B boş hâli `--sales-shot=b2b_pre`, kayıptan dönen lead'lerin kapısı `--sales-shot=returning`.
   Kişilerin bir günü gerçek saatle: `--office-crowd-probe=<ofis>:<kişi>:<hız>` (sıçrama,
   duraklatmada kıpırtı, takılma, çakışma, kapı ve kesme, kuyruk, toplantı, gece kapısı; `CROWD` satırları ve
@@ -397,7 +396,7 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
 
 **Tuzaklar**
 - Bayrak `--` ayracının arkasına konmaz: `main.gd` `OS.get_cmdline_args()` okur, `--` sonrası sessizce düşer.
-- Smoke, shot ve probe `user://`'ya yazar; kayıt yuvası paylaşan vakalar paralelde çakışır (liste HARITA'da).
+- Smoke, shot ve probe `user://`'ya yazar; kayıt yuvası paylaşan vakalar paralelde çakışır (liste `sistemler/10_test_harness.md`'de).
   `APPDATA` başka bir dizine verilirse `user://` oraya taşınır: her koşuya ayrı dizin gerçek kayıtları korur ve
   paralel koşuyu güvenli kılar.
 - `xargs -P 2` altında `CASE_TIMEOUT=300` verilir; varsayılan 120 sahte FAIL üretir. `--run-log` her zaman 0 ile çıkar;
@@ -416,7 +415,7 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   `# --- X ---` başlıkları manifest bölümleri, `# LOC-DATA` işaretleri `loc_residue` istisnalarıdır; silinmez.
 
 ## 13. Belgeler
-- `docs/HARITA.md` — dizin → sistem → sahip → giriş noktası → smoke öneki → probe kayıt türü.
+- `docs/kod_haritasi/README.md` — kod haritası girişi: dosya dizini, sembol dizini, sinyaller; `sistemler/NN_*.md` sistem başına giriş noktası, durum, test ve tuzaklar (smoke önekleri ve probe kayıt türleri `10_test_harness.md`'de).
 - `docs/ACIK_ISLER/` — açık işlerin tek yeri: `ACIK_KARARLAR.md` sahip onayı bekleyen maddeler ve GDD'ye işlenmemiş
   sahip kararları, `ISLER.md` kararlaştırılmış ama yapılmamış işler.
 - `docs/content/` — Frank külliyatı ve üretilmiş `events_draft/_vocabulary.md` (güncel seam ve fiil listesi).

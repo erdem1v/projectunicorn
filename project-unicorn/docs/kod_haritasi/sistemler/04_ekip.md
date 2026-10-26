@@ -172,6 +172,7 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
 - Üretim kodunda çağıranı olmayan (yalnız smoke): `HRSystem.output_mult_for_area`, `HRSystem.leadership_output_mult`, `HRConstants.climate_*`, `coordination_for_*`
 - Hiçbir yerde okunmayan: `HRConstants.LEAVE_MAX_DEFERRALS`, `LEAVE_DEFER_WEEKS`, `MORALE_LEAVE_DEFER`, `Character.leave_deferrals` (yalnız kayıt göçü yazar). Silmeden önce GDD'ye bak (CLAUDE.md §2)
 - `MIX_*` sabitleri `hr_candidate_generator.gd:30-33` ile `sales_constants.gd:271-274`'te ikizdir (KALITE.md); birini değiştirirsen aday dosyaları baytça değişir
+- Kişisel penceresi seçilen huyları yalnız huy kutusu ve adıyla çizer (`personal_tab.gd:124-134`); "yakında" etiketi kodda ve CSV'de yoktur
 - Ekran karesi (görsel kabul) paralel koşmaz, `--hr-shot` pencerelidir; smoke headless
 
 ## Bir değişiklik yaparken
@@ -185,6 +186,3 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
 - Yeni görünüş parçası: `PeopleParts` (SURFACES, STYLES, HEM/SHOE_TOP), `OfficeBody` yüzey eşlemesi, `LookSystem` sabitleri; kurucu/Frank portreleri etkileniyorsa `tools/people/bake_portraits.gd` ve `assets/art/portraits/README.md`
 - Yeni kurucu becerisi/huyu: `FounderConstants` (SKILLS, TRAITS, üç `*_KEYS` tablosu), `ONB_SKILL_*`/`TRAIT_*`/`SKILL_LABEL_*` CSV, `origin_traits_step.gd`, `first_week_doc.gd`, `GameState._build_founder`; `alloc_guard`, `trait_formula`
 - Olaya açılan okuma: `scripts/events/seams/seams_hr.gd` (adlar sözleşme, `hr.*` ve `founder.*`), fiil için `effects.gd`; `_vocabulary.md` `--event-vocab` ile yenilenir
-
-## HARITA'da bayat
-- `docs/HARITA.md` Ekip bölümü, Kişisel penceresi maddesi: "huylar (seçilenler adıyla, YAKINDA etiketinin altında)". `personal_tab.gd:124-134` yalnız huy kutusunu ve adı çizer; YAKINDA etiketi kodda ve ilgili CSV anahtarında yok.

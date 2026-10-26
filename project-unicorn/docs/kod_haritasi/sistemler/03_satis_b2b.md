@@ -264,8 +264,3 @@ Hepsi `tools/smoke_run.sh <vaka>` ile (komutlar `project-unicorn/`'dan, `GODOT` 
 - Müşteri masası kapasitesi/talep türü değişirse: `CustomerRepSystem` + `B2BConstants.CS_*` + `musteri.request_kind` seam'i + üç `customer.request_*` kartı; `pick_request_kind` skorları RNG'siz kalmalı.
 - Destek akışı ya da zarar formülü değişirse: `SupportSystem` sabitleri + `ProductState` bayrak adları (tek ev) + `ProductSystem.to_dict` kaydı + `support_*` ve `neglect_*` vakaları; destek raporu metni `SUPPORT_RPT_*`.
 - Piyasa verisi değişirse: `data/market/*.json` + `meta.version` artır (`GameState.market_catalog_version` kayıtta karşılaştırılır) + vaka `market_catalog_lint`; sektör slotları `RivalCatalog` ile sıra kilitlidir.
-
-## HARITA'da bayat
-HARITA Satış bölümü (`docs/HARITA.md:201-226`) ile Görüşme, Fonlama, Dünya ve Kayıt satırlarının bu sisteme değen sembolleri (backtick'li sınıf.üye, sabit, vaka adı, dosya yolu) koda karşı tarandı. Kodda artık olmayan iddia bulunamadı.
-- `InfraSystem.blocks_enterprise_signature`, `WHALE_COND_PROVIDER`, `probe_capacity`: HARITA:210'da "kalktı" diye geçer; kodda yok, doğru yazılmış (bayat sayılmadı).
-- Bayat değil, eksik: HARITA:203 "Yer" satırı `counterpart_system`, `market_catalog`, `support_system`, `sales_probes`, `sales_name_pool`'u listelemez; ilk ikisi başka bölümlerde (Fonlama:254, Dünya:284), Destek Ürün bölümündedir (:142).

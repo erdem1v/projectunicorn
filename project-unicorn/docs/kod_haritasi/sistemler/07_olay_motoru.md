@@ -219,9 +219,3 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - Sunum alanı (başlık, çip, gönderen) değişirse `present/presenter.gd`, `present/chips.gd`, `mail_pane.gd`, `inbox.gd` ve `office_notice_stack.gd` birlikte okunur; geçmiş satırı çipi `EvChips.describe(...,
   ↳ true)` ile canlı çip aynı olmalı (`event_history_chip_matches_live`)
 - Kayıt bloğuna yeni depo eklersen `EvSave.to_dict/from_dict/reset` üçünü birden yaz, `BLOCK_VERSION`'ı göz önünde tut ve `verify_no_resources` skaler kuralına uy
-
-## HARITA'da bayat
-- `docs/HARITA.md` "Olay içeriği": "`_` ya da `ev_debug_` ile başlayan dosyaları havuza almaz" yanlış okunuyor; kod bu dosyaları hiç yüklemez, katalogda yoktur (`catalog.gd:19,61-63`)
-- `docs/HARITA.md` "Olay içeriği": "`unwired` ve `drafts` adlı dizinlere hiç girmez": `drafts/` dizini diskte yok, yalnız `EXCLUDED_DIRS` sabitinde (`catalog.gd:17`); gerçek dizin yalnız `unwired/` (3 kart)
-- EKSİK (bayat değil) `docs/HARITA.md` "Araçlar": fiil sözlüğü ile `_apply` farkı hiç anılmaz; yedi fiil (`assign_to`, `start_training`, `add_customer`, `convert_audience`, `open_paid_tier`, `change_salary`,
-  ↳ `fire_employee`) kolsuz (`effects.gd:32-82` ile `:225-665`)

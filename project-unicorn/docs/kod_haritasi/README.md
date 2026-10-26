@@ -7,7 +7,6 @@ Yollar `project-unicorn/` köküne göredir; komutlar oradan koşulur. Her satı
 - Kod tabanının aranabilir dizinidir: hangi dosya ne yapar, hangi sembol nerede tanımlı, hangi sinyali kim yayar ve kim dinler, bir sistemi değiştirirken neye dokunulur.
 - KOD ARAMADAN ÖNCE buraya bak. Önce soruya uyan dosyayı grep'le, sonra yalnız gösterdiği `yol:satır`ı aç. Tam dosya okuma ve depo çapında tarama son çaredir.
 - Harita yön gösterir, kanıt değildir: satır numaraları üretildiği ağaca göredir (başlıktaki git sha). Düzenlemeden önce hedef satırı kaynakta doğrula.
-- `docs/HARITA.md` hâlâ ana giriş belgesidir; bu haritaya geçiş planı `HARITA_GECIS.md`'dedir.
 
 ## 2. Nasıl kullanılır
 
@@ -35,7 +34,7 @@ grep -n "^## " docs/kod_haritasi/sistemler/02_urun_sprint.md                    
 - Claude Code Grep aracında sembol deseni `^reflect_mrr\t`, yol `docs/kod_haritasi/SEMBOLLER.tsv`.
 - Sinyal satırı uzunsa yerler alt satıra `  ↳ ad emit:` / `  ↳ ad connect:` diye taşar; bu yüzden desen iki biçimi de arar.
 - Eşleme ada göredir (tür çözümü yok): iki sınıfta aynı adlı fonksiyon ikisini de döndürür, sınıf sütunuyla süz.
-- Sistem sayfalarının bölüm sırası sabittir: Dosyalar · Giriş noktaları · Sinyaller · Durum ve veri · Metin anahtarları · Testler · Dikkat · Bir değişiklik yaparken · HARITA'da bayat.
+- Sistem sayfalarının bölüm sırası sabittir: Dosyalar · Giriş noktaları · Sinyaller · Durum ve veri · Metin anahtarları · Testler · Dikkat · Bir değişiklik yaparken.
 
 ## 3. Sistemler
 
@@ -48,12 +47,12 @@ grep -n "^## " docs/kod_haritasi/sistemler/02_urun_sprint.md                    
 - `sistemler/07_olay_motoru.md`: `EventGate`, `Ev*` sınıfları, kapı G1-G8, kuyruk ve masa, etki fiilleri, seam'ler, sinyal izin listesi, kart JSON şeması, lint ve sözlük araçları. Kart ve olay.
 - `sistemler/08_sekmeler.md`: `scripts/tabs/` pencereleri (Ürün, Satış, Ekip, Finans, Yatırım, Piyasa, Kişisel, Ar-Ge, Olaylar), sekme sözleşmesi, kalabalık kadroda tablo düzeni. Sekme arayüzü.
 - `sistemler/09_arayuz_bilesen.md`: UiTokens, UiFactory, tema üretimi, TopBar, sol ray, pencere katmanı, modallar, ana menü, onboarding, görüşme paneli, portre ve avatar. Ortak UI ve tema.
-- `sistemler/10_test_harness.md`: smoke süiti, `--run-log` probe, sprint/tempo/tick/render probe'ları, `--*-shot` ailesi, kabuk kapıları, `tools/`, sandbox. Test koşmak ya da harness eklemek.
+- `sistemler/10_test_harness.md`: smoke süiti, `--run-log` probe, sprint/tempo/tick/render probe'ları, `--*-shot` ailesi, kabuk kapıları, `tools/`. Test koşmak ya da harness eklemek.
 - Bir dosya birden çok sayfada geçebilir: ana anlatım "Dosyalar" bölümünde ayrıntılı satırı olan sayfadadır, öbürleri "Dışarıda ama ayrılmaz" ya da "Komşu" diye yalnız anar.
 
 ## 4. Kod incelemesi ve temizlik
 
-- `KALITE.md` yalnız `scripts/` altını kapsar (tools/ ve sandbox/ hariç). Her liste bir başlangıç noktasıdır, hüküm değildir.
+- `KALITE.md` yalnız `scripts/` altını kapsar (tools/ hariç). Her liste bir başlangıç noktasıdır, hüküm değildir.
 - "En büyük 25 .gd" ve "80 satırdan uzun fonksiyonlar": bölme ve sadeleştirme adayları; `endgame_smoke.gd` ve `main.gd` harness'leri listeyi doldurur, oyun kodunu ayrı değerlendir.
 - "Ölü kod adayları": tanım dışında adı hiç geçmeyen func. YANLIŞ POZİTİF OLABİLİR: `call("a"+b)` ile kurulan ad, sinyale adla bağlama, harness bayrağı, `tools/*.sh`, GDD'de adı geçen bağlanmamış kod.
 - Ölü adayı silmeden önce: depo çapında `grep -rn "ad" scripts scenes data tools` koş, CLAUDE.md §2'ye bak (GDD'de adı geçen bağlı olmayan kod silinmez), sonra ilgili sistem sayfasının "Dikkat" bölümünü oku.
@@ -72,7 +71,7 @@ grep -n "^## " docs/kod_haritasi/sistemler/02_urun_sprint.md                    
 - Başvuru biçimi: `` `Sınıf.fonksiyon()` `yol/dosya.gd:satır` ``; aynı dosyada sonraki başvurular `` `:satır` ``. Dosya yolu tam yazılır ki grep bulsun.
 - Satır en çok 240 karakter; uzun madde `  ↳ ` ile alt satıra taşınır. Denetim: `awk 'length>240' docs/kod_haritasi/sistemler/*.md` (Git Bash awk bayt sayar; Türkçe harf 2 sayılır, şüphede Python ile say).
 - Bir sistem sayfası başka sayfanın konusunu ayrıntılı anlatmaz, dosya adıyla oraya gösterir (örnek: "ana anlatım 05_fon_finans.md").
-- `docs/HARITA.md` ile çelişki bulunursa sayfanın "HARITA'da bayat" bölümüne yazılır; HARITA'nın kendisi geçiş tamamlanana kadar ayrı bir işle düzeltilir (`HARITA_GECIS.md`).
+- Sayfa kodla ya da CLAUDE.md ile çelişirse çelişkiyi fark eden commit çözer: sayfa bugünkü kodu, CLAUDE.md kuralı söyler; kaynağa bakılır, yanlış olan düzeltilir.
 
 ## 6. Alt ajan görev yazısı
 

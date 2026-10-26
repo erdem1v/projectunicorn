@@ -194,7 +194,3 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - Yeni sinyal: `event_bus.gd`de ilgili `# --- X ---` bölümüne ekle ve `python tools/gen_signal_manifest.py` çalıştır; bağlanan dosyalar `_exit_tree`de ayırmalı; kayıt yükü taşıyan sinyali `game_loaded` sonrası boyamayla karıştırma
 - Yeni dil ya da biçim: `Fmt` kodu değil `strings.csv` sütunu/anahtarı (`NUM_*`, `PCT_PATTERN_*`, `MONTH_*`); `Localization.SUPPORTED` `:15` ve `loc_*` vakaları, `docs/design/localization_glossary.md`
 - Autoload ekler ya da sıralarsan: `project.godot:24-39`, CLAUDE.md autoload listesi, `DIZIN.md`yi yeniden üret (`python -I tools/kod_haritasi/uret.py`); `_ready`de sonraki autoload'a bağlanma
-
-## HARITA'da bayat
-- HARITA Kayıt bölümü (satır 39) ve CLAUDE.md "göçler `read_slot` sırayla uygular" der: zincir `_read_file`dadır (`save_manager.gd:170-209`); `read_slot` yalnız onu çağırır ve bozuk dosyada `.bak`a düşer
-- HARITA Platform bölümü (satır 52) "AudioManager yalnız ayarlar modalı kullanır" der: `Settings.apply_all` `settings.gd:125` onu da çağırır (`is_node_ready` korumasıyla)

@@ -751,7 +751,7 @@ def main():
     K.append("# Kod haritası · KALITE")
     K.append("")
     K.append("Üretildi: git %s · %s · `python -I tools/kod_haritasi/uret.py`" % (head, today))
-    K.append("Kapsam: scripts/ altındaki %d .gd (tools/ ve sandbox/ hariç). Kod temizliği ve kıdemli "
+    K.append("Kapsam: scripts/ altındaki %d .gd (tools/ hariç). Kod temizliği ve kıdemli "
              "denetimde başlangıç listesi; kanıt değil, aday." % len(game_gd))
     K.append("")
     K.append("## En büyük 25 .gd")

@@ -235,9 +235,3 @@ Pencereli görsel ve ölçüm (bayrak `main.gd` tablosunda, `:271-276`; PNG `%AP
   Ayrıca `scripts/ui/meeting/meeting_panel.gd`; sına: `--travel-shot` ve `--invite-shot`
 - `OfficeView.tscn` düğüm adı/yapısı değişirse: `menu_backdrop.gd`, `window_layer.gd:56` (`$OfficeView`), `office_pan_probe.gd`, `main.gd` yol dizeleri (`Viewport3D/SubViewport/World/City` `main.gd:1789`) ve grup adları birlikte güncellenir
 - Ofis durumu alanı eklenirse: `GameState` alanı + `initialize_run` sıfırlaması (`game_state.gd:890`) + kayıt göçü (`save_manager.gd`, şema sürümü) + yalnız `OfficeSystem` yazar; `office_move_gates_and_save` vakası kayıt turunu sınar
-
-## HARITA'da bayat
-
-- `docs/HARITA.md:129` Ofis: gün tohumu `OfficeConstants.SALT_DAY` denir; sabit kodda `SalesConstants.SALT_DAY` (`scripts/systems/sales_constants.gd:282`), `OfficePeople` onu oradan okur (`office_people.gd:548`)
-- `docs/HARITA.md:127` Ofis: `OfficeView.current_layout` denir; kodda böyle üye yok, yerleşim `OfficeView.layout` alanındadır (`office_view.gd:31`)
-- Bayat değil, eksik: `docs/HARITA.md:403` dışa aktarım çıktılarını `home, ishani, plaza, loft, city` sayar; `meet` (görüşme odası, `art/office3d/meet.*`) listede yok, README ve `export_office.js:31` altı yeri yazar

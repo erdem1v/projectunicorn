@@ -363,9 +363,3 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - Yeni `mvp_*` bayrağı: sabit `product_state.gd` + `FLAG_TYPES` `game_state.gd:48` (yoksa kayıt tipini yitirir) + gerekiyorsa göç
 - EventBus sinyali eklersen/silersen: `python tools/gen_signal_manifest.py`; olay tetikleyicisi olacaksa `scripts/events/core/signals.gd` BINDINGS (:23-41)
 - Günlük tik sırası ya da yeni sistem: `time_manager.gd:385-434`, `rnd_system.gd:94-100` yorumu ve 01_cekirdek.md'deki dağıtım sırası maddesi; `incident_*` ve `sprint_*` vakalarını koş
-
-## HARITA'da bayat
-
-- Kesin bayat madde bulunmadı: HARITA Ürün (satır 139-164) ve Ar-Ge (166-181) bölümlerinin kod adları, yolları, vaka adları, sprint.json yolları ve CSV anahtarları kodda var.
-- Bayat değil, eksik: Çekirdek dağıtım satırı (HARITA :16) saatlik dilimde `InfraSystem.auto_adjust` (`time_manager.gd:445`) adımını saymaz; Ürün maddesi sayar.
-- Bayat değil, eksik: HARITA, okuyucusu olmayan `cicd`/`test_automation` etkilerini, ölü `speed_bonus_for`, `type_sector_labels`, `family_root_done`'u ve dinleyicisiz sinyalleri belirtmez.

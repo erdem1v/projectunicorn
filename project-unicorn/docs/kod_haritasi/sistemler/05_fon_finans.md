@@ -267,8 +267,3 @@ Tek koşturucu `bash tools/smoke_run.sh <vaka>`; vaka listesi `scripts/debug/end
 - Mesaj türü ekleme: `MessageSystem.post` çağrısı, `MailClock` geliş davranışı (acil mi), gelen kutusu arayüzü (`mail_pane.gd`), `messages_*` ve `mail_pending_survives_save`; teslimde atılacak sinyal `_deliver` `match`ine.
 - Şerit kaynağı ya da kota: `NewsFeedSystem` sabitleri (toplam 1,0), `GameState.news_feed` şekli (`_ensure_state` eski kaydı doldurur), `NEWS_*` / `PIYASA_*` CSV, `news_feed_weights_and_no_repeat`, `news_piyasa_reason_lines`.
 - Yeni alt tür ya da rakip: `RivalCatalog.NAMES`, `data/product/rivals.json` (aynı sıra), `MarketCatalog.sector_slots` (`data/market/companies.json` meta), `rival_composite_table`, `market_catalog_lint`.
-
-## HARITA'da bayat
-
-- `docs/HARITA.md:299` (Sonlar): "Projede henüz export ön ayarı yok: `ea` etiketi olmayan bir EA export'u demo gibi davranır". `export_presets.cfg` üç preset taşır (`custom_features` "", "ea", "full");
-  HARITA'nın kendi 405. satırı da öyle der.
