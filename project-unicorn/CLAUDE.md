@@ -315,7 +315,7 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   `pmstar`, `plus`, `founder`, `fixture`, `build`, `planms`, `meetings`, `queue`; anlamları HARITA Ürün'de ve Araçlar'da) headless
   koşar: kurucunun (`team=` ile ekibin) koşusunda ekranın sprint planını (`plan_outcome`) kapanışla karşılaştırır,
   `SPRINTPROBE` satırları basar (`PRED`, `CLOSE`, `SKIP`, `MVP`, `LOAD`, `SUMMARY`, `LOADSUM`, `PAPER`, `PAPERSUM`; `PRED` ve `CLOSE` kartın
-  testinin hatasını `bugs=<n>/<F>/<K>/<düzeltme işi>` taşır ve karşılaştırılır; MVP tahmini `mvp_eta` `PRED`'in son alanıdır, karşılaştırılmaz) ve adsız uyuşmazlıkta 1 ile çıkar. `planms=1` tik oynamaz, plan ekranının motor
+  testinin hatasını `bugs=<n>/<F>/<K>/<düzeltme işi>` taşır ve karşılaştırılır; MVP tahmini `mvp_eta` `PRED`'in son alanıdır, karşılaştırılmaz) ve adsız uyuşmazlıkta 1 ile çıkar; bilinmeyen alan ya da oturtulamayan `team` `SPRINTPROBE ERROR` basıp 1 ile çıkar, `LOADSUM`un `team=`i oturan sprint ekibinin büyüklüğüdür. `planms=1` tik oynamaz, plan ekranının motor
   çağrılarının ortanca ve en çok süresini `PLANMS` satırlarında basar.
 - Tempo: `--tempo-probe=<hız>[:shell]` gerçek saatle koşar, her haftayı 08:00'den 08:00'e ölçer ve
   `TimeModel.seconds_per_tick` hedefinden sapmayı basar. Çıplak hâli headless'tır ve yalnız saati ölçer; `:shell`

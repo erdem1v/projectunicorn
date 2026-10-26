@@ -497,8 +497,9 @@ func _run_tempo_probe(spec: String) -> void:
 ## flow and bug inflow) and the daily path a sprint, because that is where a speed-coupled bug
 ## would surface. mvp_shipped is load-bearing: SalesSystem.hourly_tick gates the whole B2C half on
 ## it. Real bools, not strings: event conditions compare via bool(). Sprint 1 starts on the lead's
-## plan as the player starts it: a plan holds the clock. `team` people sit on the sprint (RunProbe.seed_crew).
-func _seed_tempo_state(team: int = 1) -> void:
+## plan as the player starts it: a plan holds the clock. `team` people sit on the sprint (RunProbe.seed_crew, false for a
+## size it has no company of).
+func _seed_tempo_state(team: int = 1) -> bool:
 	_seed_run_reproducible()
 	GameState.set_cash(50000)
 	SprintSystem.choose_type("note_tool", "Nova")
@@ -506,17 +507,20 @@ func _seed_tempo_state(team: int = 1) -> void:
 	GameState.set_flag("mvp_version", 2)
 	GameState.set_flag("b2c_audience", 4000)
 	SalesSystem.open_b2c_paid_tier(15)   # makes MRR derive hourly too
-	RunProbe.seed_crew(team, GameState.run_seed)
+	if not RunProbe.seed_crew(team, GameState.run_seed):
+		return false
 	SprintSystem.apply_lead()
 	SprintSystem.start()
+	return true
 
 
 ## The tick probe's book world: the live ERP product on its real lines and `count` B2B accounts, thirteen sectors
 ## by three stars in turn, signed through the signing seam. A seat each at a small price keeps the book's MRR under
 ## the Series A bar, so no fund calls inside the five weeks, and a tolerance of 0 keeps every account out of Risk,
 ## so no retention card queues: the weeks time the healthy path.
-## TICK WORLD reports the book that signed. `team` people sit on the sprint (RunProbe.seed_crew).
-func _seed_accounts_state(count: int, team: int = 1) -> void:
+## TICK WORLD reports the book that signed. `team` people sit on the sprint (RunProbe.seed_crew, false for a size it has
+## no company of).
+func _seed_accounts_state(count: int, team: int = 1) -> bool:
 	_seed_run_reproducible()
 	GameState.set_cash(50000)
 	SprintSystem.choose_type("erp", "Sahra")
@@ -532,10 +536,12 @@ func _seed_accounts_state(count: int, team: int = 1) -> void:
 		lead.industry = String(sectors[i % sectors.size()])
 		lead.star = 1 + floori(i / float(sectors.size())) % 3
 		SalesSystem.add_b2b_customer(lead, 1, 10, 85).tolerance = 0
-	RunProbe.seed_crew(team, GameState.run_seed)
+	if not RunProbe.seed_crew(team, GameState.run_seed):
+		return false
 	SprintSystem.apply_lead()
 	SprintSystem.start()
 	print("TICK WORLD accounts=%d mrr=%d" % [CustomerRegistry.get_by_market("b2b").size(), GameState.mrr])
+	return true
 
 
 # --tick-probe=<speed idx>[:<window>][:accounts=<n>][:team=<n>]: the cost of the frames that step the hour or the
@@ -564,10 +570,10 @@ func _run_tick_probe(spec: String) -> void:
 			team = int(part.trim_prefix("team="))
 		else:
 			win = part
-	if accounts > 0:
-		_seed_accounts_state(accounts, team)
-	else:
-		_seed_tempo_state(team)
+	if not (_seed_accounts_state(accounts, team) if accounts > 0 else _seed_tempo_state(team)):
+		print("TICK ERROR no company of %d people" % team)
+		_quit_with(false)
+		return
 	_begin_shot()
 	await _mount_shot_shell()
 	OS.low_processor_usage_mode_sleep_usec = 0

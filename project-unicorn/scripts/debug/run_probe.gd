@@ -2345,14 +2345,14 @@ static func _seed_book(spec: Dictionary) -> void:
 ## The employees of an `n`-person probe company (the founder is the n-th), hired past the desk cap the way
 ## OfficeCrowdProbe seeds its staff. Up to six people they are SMALL_CREW in turn at stat 5; 12, 25 and 50 people are
 ## CREW_MIX, each drawing the stat of their role from `rng_seed` (every draw is made, so pinning a role leaves the others'
-## stars alone). `tester_star` and `pm_star` (1 to 5; 0 leaves them to the draw) pin those two roles' stars.
-static func seed_crew(n: int, rng_seed: int, tester_star := 0, pm_star := 0) -> void:
-	var roles: Array = SMALL_CREW.slice(0, n - 1)
+## stars alone). `tester_star` and `pm_star` (1 to 5; 0 leaves them to the draw) pin those two roles' stars. False, with
+## nobody hired, for any other size: the caller reports it.
+static func seed_crew(n: int, rng_seed: int, tester_star := 0, pm_star := 0) -> bool:
 	var drawn: bool = n > SMALL_CREW.size() + 1
+	if n < 1 or (drawn and not CREW_MIX.has(n)):
+		return false
+	var roles: Array = SMALL_CREW.slice(0, n - 1)
 	if drawn:
-		if not CREW_MIX.has(n):
-			push_error("[RunProbe] no company of %d people (have 1 to %d and %s)" % [n, SMALL_CREW.size() + 1, str(CREW_MIX.keys())])
-			return
 		roles = []
 		for i in CREW_ROLES.size():
 			for _k in int(CREW_MIX[n][i]):
@@ -2366,6 +2366,7 @@ static func seed_crew(n: int, rng_seed: int, tester_star := 0, pm_star := 0) -> 
 		elif roles[i] == HRConstants.ROLE_PRODUCT_MANAGER and pm_star > 0:
 			stat = HRConstants.POINTS_PER_STAR * pm_star
 		seed_hire("char_probe_%d" % i, roles[i], stat)
+	return true
 
 
 ## One probe employee at mid morale, `stat` (0 to 10) in their role's area, hired past the desk cap.

@@ -3,7 +3,8 @@ extends RefCounted
 # --sprint-probe=hours=<h>:cards=<1|2>:ticks=<t>[:start=<hour>][:seeds=1][:seed=424242][:events=0|1][:rate=<r>]
 # [:lead=0|1][:gate=publish|more][:team=<n>][:fill=0|1][:market=b2c|b2b][:incident=<kind>@<tick>]
 # [:promise=0|1][:tstar=<1-5>][:pmstar=<1-5>][:plus=<role>@<stars>][:founder=0|1][:fixture=iz1|iz1b|iz2][:build=demo|ea|full]
-# [:planms=0|1][:meetings=<n>][:queue=<n>]:
+# [:planms=0|1][:meetings=<n>][:queue=<n>]
+# (an option not named here, or a team= the probe cannot seat, prints SPRINTPROBE ERROR and fails the run):
 # does the Product screen's sprint plan come true? A founder builds note_tool (market=b2b: the erp product, four
 # accounts signed the tick it goes live, two of a night-shift sector) for t ticks on each of the seeds seed,
 # seed+1, …, the company working h hours from start (the game's default start hour unless given); team=N adds N-1
@@ -56,7 +57,7 @@ extends RefCounted
 #   SPRINTPROBE PAPERSUM|weeks=<w>|sprints=<n>|papers=<k>|empty=<n-k>|empty_rate=<share of sprints with no paper>
 #   SPRINTPROBE LOAD|<seed>|<sprint>|<planned>|<finished>|<idle>|<limit>   one closed sprint
 #   SPRINTPROBE SUMMARY|match=<matched>/<closes>|mvp_days=<tick>x<seeds>,…   (- = no MVP within t ticks)
-#   SPRINTPROBE LOADSUM|team=<n>|weeks=<w>|sprints=<n>|planned=<n>|finished=<n>|idle=<n>|limits=<limit>:<n>,…
+#   SPRINTPROBE LOADSUM|team=<sprint team size once seated>|weeks=<w>|sprints=<n>|planned=<n>|finished=<n>|idle=<n>|limits=<limit>:<n>,…
 # done and carried_done are the points the card gets in this sprint (carried_done - for a card that
 # finished). bugs is the card's testing when it is done by the sprint's end: bugs born (n), found (F), escaped (K = n - F)
 # and the fix work the found ones add to its development (- = the card is not tested yet). mvp_eta is the screen's MVP
@@ -102,6 +103,9 @@ static func run(spec: String, payload: Dictionary) -> bool:
 		"tstar": 0, "pmstar": 0, "plus": "", "founder": -1, "fixture": "", "build": "", "planms": 0, "meetings": 0, "queue": 0}
 	for part in spec.split(":"):
 		var key: String = part.get_slice("=", 0)
+		if not o.has(key) and key not in ["hours", "cards", "ticks", "rate"]:
+			print("SPRINTPROBE ERROR unknown option '%s'" % key)
+			return false
 		if key in ["gate", "market", "incident", "plus", "fixture", "build"]:
 			o[key] = part.get_slice("=", 1)
 		else:
@@ -121,7 +125,7 @@ static func run(spec: String, payload: Dictionary) -> bool:
 	EventBus.day_tick_completed.connect(func(_day: int) -> void: _changed_by("team"))
 	var verdicts: Array = []
 	var days: Dictionary = {}
-	_sum = {"sprints": 0, "planned": 0, "finished": 0, "idle": 0, "limits": {}, "papers": 0}
+	_sum = {"team": 0, "sprints": 0, "planned": 0, "finished": 0, "idle": 0, "limits": {}, "papers": 0}
 	for i in int(o.seeds):
 		var seed_value: int = int(o.seed) + i
 		_seed = seed_value
@@ -130,7 +134,10 @@ static func run(spec: String, payload: Dictionary) -> bool:
 		GameState.initialize_run(payload.merged({"seed": seed_value}))
 		var subtype: String = "erp" if o.market == "b2b" else "note_tool"
 		SprintSystem.choose_type(subtype, RunProbe.PRODUCT_NAMES[subtype])
-		_seat(o)
+		if not _seat(o):
+			print("SPRINTPROBE ERROR no company of %d people" % int(o.team))
+			return false
+		_sum.team = SprintSystem.team().size()
 		if o.incident != "":
 			IncidentSystem.force_on(String(o.incident).get_slice("@", 0), int(String(o.incident).get_slice("@", 1)))
 		WorkHoursSystem.set_company_start_hour(int(o.start))
@@ -166,7 +173,7 @@ static func run(spec: String, payload: Dictionary) -> bool:
 	order.sort()
 	print("SPRINTPROBE SUMMARY|match=%d/%d|mvp_days=%s" % [verdicts.count("MATCH"), verdicts.size(),
 		",".join(order.map(func(d: int) -> String: return "%sx%d" % ["-" if d < 0 else str(d), days[d]]))])
-	print("SPRINTPROBE LOADSUM|team=%d|weeks=%d|sprints=%d|planned=%d|finished=%d|idle=%d|limits=%s" % [int(o.team),
+	print("SPRINTPROBE LOADSUM|team=%d|weeks=%d|sprints=%d|planned=%d|finished=%d|idle=%d|limits=%s" % [_sum.team,
 		SprintSystem.sprint_weeks(), _sum.sprints, _sum.planned, _sum.finished, _sum.idle,
 		",".join(_sum.limits.keys().map(func(k: String) -> String: return "%s:%d" % [k, _sum.limits[k]]))])
 	print("SPRINTPROBE PAPERSUM|weeks=%d|sprints=%d|papers=%d|empty=%d|empty_rate=%.2f" % [SprintSystem.sprint_weeks(),
@@ -284,8 +291,8 @@ static func _paper_asked() -> void:
 
 
 ## The sprint team: team= people (the fixture's own few instead), plus= one more, the founder off it with founder=0 (a fixture
-## named iz1 takes him off unless founder=1).
-static func _seat(o: Dictionary) -> void:
+## named iz1 takes him off unless founder=1). False when RunProbe.seed_crew has no company of team= people.
+static func _seat(o: Dictionary) -> bool:
 	match o.fixture:
 		"iz1", "iz1b":
 			for i in EXAMPLE_STARS.size():
@@ -294,12 +301,14 @@ static func _seat(o: Dictionary) -> void:
 			RunProbe.seed_hire("char_probe_0", HRConstants.ROLE_DEVELOPER, HRConstants.POINTS_PER_STAR * 3)
 			RunProbe.seed_hire("char_probe_1", HRConstants.ROLE_DESIGNER, HRConstants.POINTS_PER_STAR * 2)
 		_:
-			RunProbe.seed_crew(int(o.team), _seed, int(o.tstar), int(o.pmstar))
+			if not RunProbe.seed_crew(int(o.team), _seed, int(o.tstar), int(o.pmstar)):
+				return false
 	if o.plus != "":
 		RunProbe.seed_hire("char_probe_plus", String(o.plus).get_slice("@", 0),
 			HRConstants.POINTS_PER_STAR * int(String(o.plus).get_slice("@", 1)))
 	if o.founder == 0 or (o.founder < 0 and String(o.fixture).begins_with("iz1")):
 		GameState.set_founder_in_sprint(false)
+	return true
 
 
 ## The founder's week of sales meetings: up to `n` sittings, each running its hours through the clock, while the entry gate lets one in.
