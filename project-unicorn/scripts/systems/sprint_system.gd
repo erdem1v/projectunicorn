@@ -1289,18 +1289,23 @@ static func _assign(cards: Array, people: Array, ahead: Array = [], day: int = G
 		while phase(probe) < PHASE_DONE:
 			var at: int = phase(probe)
 			var able: Array = free.filter(func(p: Dictionary) -> bool:
-				return (at == 0 or not p.ahead) and (p.ahead or i < cards.size()) and locked.get(p.id, c.id) == c.id)
+				return (at == 0 or not p.ahead) and (p.ahead or i < cards.size()))
+			# Kilit yokken kilidin süzgeci ve sırası koşmaz: plan ekranı haftaları kurulum başına onlarca kez oynatır.
+			if not locked.is_empty():
+				able = able.filter(func(p: Dictionary) -> bool: return locked.get(p.id, c.id) == c.id)
 			if able.is_empty():
 				break
 			var role: String = _role(probe, at)
 			able.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-				if (locked.get(a.id) == c.id) != (locked.get(b.id) == c.id):
-					return locked.get(a.id) == c.id
 				if (role in a.fits) != (role in b.fits):
 					return role in a.fits
 				if a.left != b.left:
 					return a.left > b.left
 				return a.id < b.id)
+			if not locked.is_empty():
+				var k: int = able.find_custom(func(p: Dictionary) -> bool: return locked.get(p.id) == c.id)
+				if k > 0:
+					able.push_front(able.pop_at(k))
 			var person: Dictionary = able[0]
 			free.erase(person)
 			person.left = _work(probe, person, person.left)

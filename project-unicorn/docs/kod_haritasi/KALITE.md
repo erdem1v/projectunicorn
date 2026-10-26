@@ -1,6 +1,6 @@
 # Kod haritası · KALITE
 
-Üretildi: git e54999e · 2026-10-26 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git 7059e7e · 2026-10-26 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 246 .gd (tools/ ve sandbox/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
@@ -8,7 +8,7 @@ Kapsam: scripts/ altındaki 246 .gd (tools/ ve sandbox/ hariç). Kod temizliği 
 - scripts/debug/endgame_smoke.gd · 28238 satır · 649 func
 - scripts/main/main.gd · 5477 satır · 196 func
 - scripts/debug/run_probe.gd · 2390 satır · 92 func
-- scripts/systems/sprint_system.gd · 1949 satır · 162 func
+- scripts/systems/sprint_system.gd · 1954 satır · 162 func
 - scripts/theme/build_theme.gd · 1528 satır · 28 func
 - scripts/systems/vc_pitch_system.gd · 1327 satır · 91 func
 - scripts/autoload/save_manager.gd · 1297 satır · 61 func
@@ -73,7 +73,7 @@ Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları
 - scripts/debug/endgame_smoke.gd:1389 · _case_month_summary · 116 satır
 - scripts/debug/endgame_smoke.gd:16328 · _case_save_v10_product_state · 116 satır
 - scripts/tabs/hr/hr_atlas_modal.gd:309 · _file_card · 116 satır
-- scripts/systems/sprint_system.gd:1590 · _close · 115 satır
+- scripts/systems/sprint_system.gd:1595 · _close · 115 satır
 
 ## Ölü kod adayları (23)
 

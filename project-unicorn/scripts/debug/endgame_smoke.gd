@@ -23578,8 +23578,8 @@ static func _case_sprint_departure_restaffs_card() -> String:
 ## atamasında rol uyumundan önce gelir; başkaları o karta normal kuralla girer. Kişi o hafta çalışamıyorsa kart kimsesiz
 ## bekler. Süre dolunca ya da kart bitince kişi serbesttir. Plan ileriki haftaları o haftanın günüyle oynar: kilit sprint
 ## ortasında biterse tahmin kapanışla eşit kalır.
-## FALSİFİKASYON: SprintSystem._assign'da `locked.get(p.id, c.id) == c.id` süzgecini sil → "week one" FAIL; sıralamadaki
-## `locked.get(a.id) == c.id` ilk koşulunu sil → "first on its card" FAIL; `_play_out`ta `from_day + _w` yerine `GameState.day` ver →
+## FALSİFİKASYON: SprintSystem._assign'da `locked.get(p.id, c.id) == c.id` süzgecini sil → "week one" FAIL; kartın kilitlisini
+## sıralamadan sonra başa alan bloğu (`if k > 0:` ve gövdesi) sil → "first on its card" FAIL; `_play_out`ta `from_day + _w` yerine `GameState.day` ver →
 ## "plan said" FAIL; `_finish_sprint`te `GameState.day + 1`'in `+ 1`'ini sil → "running plan" FAIL; `c.id in waits` denetimini sil →
 ## "idle card" FAIL; `day < pin.get("until", 0)`'ı `day <=` yap → "plan said" FAIL; `phase(c) < PHASE_DONE` denetimini sil →
 ## "finished card" FAIL.
