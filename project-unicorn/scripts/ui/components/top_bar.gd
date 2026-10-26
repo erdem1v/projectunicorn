@@ -83,7 +83,7 @@ var _offer_weeks_left: int = -1
 ## "trip", "sitting" ve "home" saati tutar.
 var _meeting := {}
 var _compact := false
-var _g: Dictionary          # yürürlükteki ızgara (`_grid`); her `_refresh` kurar
+var _g: Dictionary          # yürürlükteki ızgara; her `_refresh` kurar
 var _slot_x := 0.0
 var _pulse: Tween
 var _pause_blink: Tween
@@ -173,32 +173,28 @@ func _refresh() -> void:
 	_queued = false
 	_compact = get_viewport_rect().size.x < DisplaySettings.COMPACT_SHELL_BELOW
 	var reading: Dictionary = UiTokens.D_runway_reading()
-	_g = _grid(reading.text == "")
-	_refresh_brand(_g)
-	_refresh_metrics(_g, reading)
+	_g = GRID[int(_compact)].duplicate()
+	# RUNWAY hücresi gizliyken çizgi, ikinci metrik grubu ve gün bloğu onun bıraktığı boşluğu kapatır.
+	if reading.text == "":
+		var closed: int = _g.rule - _g.C
+		for key in ["rule", "E", "F", "G", "H", "day"]:
+			_g[key] -= closed
+	_refresh_brand()
+	_refresh_metrics(reading)
 	_slot_x = minf(size.x - _g.time - _g.slot, _g.day + _g.pad + MAX_WEEK_BAR + _g.pad)
-	_refresh_time(_g)
-	_refresh_day(_g)
+	_refresh_time()
+	_refresh_day()
 	queue_redraw()
 
 
-## Yürürlükteki ızgara: RUNWAY hücresi gizliyken çizgi, ikinci metrik grubu ve gün bloğu onun bıraktığı boşluğu kapatır.
-func _grid(runway_hidden: bool) -> Dictionary:
-	var g: Dictionary = GRID[int(_compact)].duplicate()
-	var closed: int = g.rule - g.C if runway_hidden else 0
-	for key in ["rule", "E", "F", "G", "H", "day"]:
-		g[key] -= closed
-	return g
-
-
 ## Marka bloğu: turuncu kare + şirketin adı ve evre; sıkışık kipte yalnız kare.
-func _refresh_brand(g: Dictionary) -> void:
+func _refresh_brand() -> void:
 	$Logo.position = LOGO_COMPACT if _compact else LOGO
 	$LogoName.text = GameState.company_name
 	var phase: int = clampi(GameState.phase, 1, GameState.PHASE_KEYS.size())
 	# Ham to_upper bilerek: İngilizce kanon terim; Fmt.upper'ın Türkçe dalı "TRACTİON" yapardı.
 	$Phase.text = tr(GameState.PHASE_KEYS[phase - 1]).to_upper()
-	_put($LogoName, NAME_X, NAME_LINE, g.brand - NAME_X - NAME_RIGHT)
+	_put($LogoName, NAME_X, NAME_LINE, _g.brand - NAME_X - NAME_RIGHT)
 	_put($Phase, NAME_X, PHASE_LINE)
 	for i in 3:
 		var dot: Panel = get_node("PhaseDot%d" % (i + 1))
@@ -210,7 +206,7 @@ func _refresh_brand(g: Dictionary) -> void:
 
 ## KASA tek kahraman, NET altında. Kepenk sayacı koşarken RUNWAY hücresi o sayaçtır. Kırmızı yalnız
 ## tehlikede: eksi kasa, kepenk, ilk runway eşiğinin altı; kasa artıdayken eksi NET mürekkeptir.
-func _refresh_metrics(g: Dictionary, reading: Dictionary) -> void:
+func _refresh_metrics(reading: Dictionary) -> void:
 	var flow: Dictionary = FinanceSystem.get_monthly_flow()
 	var net: int = int(flow.net)
 	_paint($CashValue, Fmt.money_exact(GameState.cash), UiTokens.D_neg() if GameState.cash < 0 else null)
@@ -221,7 +217,7 @@ func _refresh_metrics(g: Dictionary, reading: Dictionary) -> void:
 	var runway: Label = $RunwayValue
 	runway.theme_type_variation = &"ValueText" if reading.ink == null else &"ValueTextStrong"
 	_paint(runway, reading.text, reading.ink)
-	# Net akış eksi değilken okunacak sayaç yok: hücre çizilmez ve yeri kapanır (_grid).
+	# Net akış eksi değilken okunacak sayaç yok: hücre çizilmez ve yeri kapanır (_refresh).
 	$RunwayKey.visible = reading.text != ""
 	runway.visible = reading.text != ""
 	$MrrValue.text = Fmt.money_chip(GameState.mrr)
@@ -237,8 +233,8 @@ func _refresh_metrics(g: Dictionary, reading: Dictionary) -> void:
 			[$RunwayKey, runway, "C", "D", ROW_1], [$MrrKey, $MrrValue, "E", "F", ROW_1],
 			[$BrandKey, $BrandValue, "E", "F", ROW_2], [$BurnKey, $BurnValue, "G", "H", ROW_1],
 			[$RepKey, $RepValue, "G", "H", ROW_2]]:
-		_put(row[0], g[row[2]], row[4])
-		_put(row[1], g[row[3]], row[4])
+		_put(row[0], _g[row[2]], row[4])
+		_put(row[1], _g[row[3]], row[4])
 	for row in [[$NetUnit, $NetValue, ROW_2], [$BurnUnit, $BurnValue, ROW_1]]:
 		_put(row[0], row[1].position.x + row[1].get_minimum_size().x + UNIT_GAP, row[2])
 
@@ -247,17 +243,17 @@ func _refresh_metrics(g: Dictionary, reading: Dictionary) -> void:
 ## son haftasında kırmızı; teklif yoksa son haftasındaki sprint kararı kâğıdı, o da yoksa son haftasındaki başka bir
 ## kâğıt (ikisi de uyarı renginde), o da yoksa çalan görüşme, o da yoksa hedef listesinin sıradaki adımı, o da yoksa
 ## mesainin bitimine kalan saat. Saat görüşme için tutulurken yuva görüşmenindir.
-func _refresh_day(g: Dictionary) -> void:
+func _refresh_day() -> void:
 	var d: Dictionary = GameState.get_date_dict()
 	$Date.text = tr("TOPBAR_DATE_COMPACT").format({"week": int(d.week), "mon": Fmt.month_abbr(int(d.month))}) \
 		if _compact else Fmt.date_line(d)
-	var x0: float = g.day + g.pad
+	var x0: float = _g.day + _g.pad
 	_put($Date, x0, DATE_LINE)
 	_week_end = WorkHoursSystem.workday_end()
 	$WeekStart.text = "%02d:00" % TimeModel.WEEK_START_HOUR
 	$WeekEnd.text = "%02d:00" % (_week_end % 24)
 	_put($WeekStart, x0, HOUR_LINE)
-	_put($WeekEnd, _slot_x - g.pad - $WeekEnd.get_minimum_size().x, HOUR_LINE)
+	_put($WeekEnd, _slot_x - _g.pad - $WeekEnd.get_minimum_size().x, HOUR_LINE)
 	$NextKey.text = Fmt.upper(tr("TOPBAR_NEXT"))
 	var line: String = tr("TOPBAR_NEXT_WORKDAY_END").format({"n": maxi(_week_end - GameState.current_hour, 0)})
 	var ink = null
@@ -290,9 +286,9 @@ func _refresh_day(g: Dictionary) -> void:
 			var bar: PackedStringArray = line.split("{bar}")
 			line = _fit_next(bar[0], Fmt.money_chip(step.target) + bar[1])
 	_paint($NextLine, line, ink)
-	_put($NextKey, _slot_x + g.pad, NEXT_KEY_LINE)
-	_put($NextLine, _slot_x + g.pad, NEXT_LINE, g.slot - 2 * g.pad)
-	_refresh_gate(g)
+	_put($NextKey, _slot_x + _g.pad, NEXT_KEY_LINE)
+	_put($NextLine, _slot_x + _g.pad, NEXT_LINE, _g.slot - 2 * _g.pad)
+	_refresh_gate()
 
 
 ## Sıradaki satırının sözü sondadır (kâğıdın "bu hafta son"u, adımın çıtası): `tail` bütün kalır, satır
@@ -309,7 +305,7 @@ func _fit_next(head: String, tail: String) -> String:
 
 ## The gate: while a decision waits the slot says so and the clock's keys are off. A meeting or any other
 ## hold turns the keys off too, without the gate's amber.
-func _refresh_gate(g: Dictionary) -> void:
+func _refresh_gate() -> void:
 	var held := _held()
 	var gated: bool = GameState.run_active and EventGate.active_id() != "" and not held
 	for part: Control in [$NextKey, $NextLine]:
@@ -323,20 +319,20 @@ func _refresh_gate(g: Dictionary) -> void:
 			_pulse.kill()
 			_pulse = null
 		return
-	var dot := Vector2(_slot_x + g.pad, GATE_LINE - UiTokens.SPACE_M)
+	var dot := Vector2(_slot_x + _g.pad, GATE_LINE - UiTokens.SPACE_M)
 	$GateDot.position = dot
 	$GateRing.position = dot
 	$GateLabel.text = Fmt.upper(tr("TOPBAR_GATE"))
 	var left: float = dot.x + UiTokens.SPACE_M + UiTokens.SPACE_M
-	_put($GateLabel, left, GATE_LINE, _slot_x + g.slot - g.pad - left)
+	_put($GateLabel, left, GATE_LINE, _slot_x + _g.slot - _g.pad - left)
 	var waiting: int = 1 + EventGate.queue_size()
 	$GateLine.text = tr("TOPBAR_GATE_COUNT").format({"n": waiting}) if waiting > 1 \
 		else String(INBOX.active_item().sender.name)
-	_put($GateLine, left, GATE_SUB_LINE, _slot_x + g.slot - g.pad - left)
+	_put($GateLine, left, GATE_SUB_LINE, _slot_x + _g.slot - _g.pad - left)
 	$GateHit.position = Vector2(_slot_x, 0)
-	$GateHit.size = Vector2(g.slot, size.y)
+	$GateHit.size = Vector2(_g.slot, size.y)
 	$GateFrame.position = Vector2(_slot_x, 0)
-	$GateFrame.size = Vector2(g.slot + g.time, size.y)
+	$GateFrame.size = Vector2(_g.slot + _g.time, size.y)
 	if _pulse == null:
 		_pulse = create_tween().set_loops()
 		_pulse.tween_property($GateRing, "scale", Vector2.ONE * PULSE_SCALE, PULSE_S).from(Vector2.ONE)
@@ -353,16 +349,16 @@ func blink_held() -> void:
 		tw.tween_property(part, "modulate:a", 1.0, BLINK_S)
 
 
-func _refresh_time(g: Dictionary) -> void:
+func _refresh_time() -> void:
 	var block: Panel = $TimeBlock
-	block.position = Vector2(_slot_x + g.slot, 0)
-	block.size = Vector2(g.time, size.y)
+	block.position = Vector2(_slot_x + _g.slot, 0)
+	block.size = Vector2(_g.time, size.y)
 	_show_clock()
-	_put($TimeBlock/Clock, g.time_pad, CLOCK_LINE)
-	_put($TimeBlock/State, g.time_pad, HOUR_LINE, g.time - 2 * g.time_pad)
+	_put($TimeBlock/Clock, _g.time_pad, CLOCK_LINE)
+	_put($TimeBlock/State, _g.time_pad, HOUR_LINE, _g.time - 2 * _g.time_pad)
 	for i in speed_btns.size():
-		speed_btns[i].position = Vector2(g.time_pad + CLOCK_W + g.gap + i * (g.key + KEY_GAP), KEYS_Y)
-		speed_btns[i].size = Vector2(g.key, UiTokens.D_H_SPEED_KEY)
+		speed_btns[i].position = Vector2(_g.time_pad + CLOCK_W + _g.gap + i * (_g.key + KEY_GAP), KEYS_Y)
+		speed_btns[i].size = Vector2(_g.key, UiTokens.D_H_SPEED_KEY)
 	_refresh_state()
 
 

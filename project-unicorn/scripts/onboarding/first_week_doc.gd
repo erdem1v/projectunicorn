@@ -222,7 +222,6 @@ func show_draft(draft: Dictionary, step: int) -> void:
 	_v.cash.text = Fmt.money_exact(cash)
 	UiFactory.clear(_v.cash_tag)
 	_v.cash_tag.add_child(UiFactory.D_tag(tr("ONB_DIFF_" + draft.difficulty.to_upper()), &"outline"))
-	# The run opens with nothing to pay and no revenue: there is no runway to read, so the table has no row for it.
 	_v.burn.text = Fmt.money_chip(FinanceSystem.starting_daily_burn() * TimeModel.DAYS_PER_MONTH)
 	_v.guided.set_pressed_no_signal(draft.frank_guided)
 	_v.guided_note.visible = _v.guided.disabled or draft.frank_guided

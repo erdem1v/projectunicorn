@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git 10e4eee · 2026-10-26 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 31861c7 · 2026-10-26 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -143,8 +143,8 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/modals/training_modal.gd · 175 · - · "res://scripts/tabs/hr/hr_panel.gd" · 0 sinyal · 7 func
 - scripts/modals/work_hours_modal.gd · 492 · - · "res://scripts/tabs/hr/hr_panel.gd" · 0 sinyal · 28 func
 
-### scripts/onboarding/ (2 dosya, 448 satır)
-- scripts/onboarding/first_week_doc.gd · 235 · - · PanelContainer · 1 sinyal · 3 func
+### scripts/onboarding/ (2 dosya, 447 satır)
+- scripts/onboarding/first_week_doc.gd · 234 · - · PanelContainer · 1 sinyal · 3 func
 - scripts/onboarding/onboarding_flow.gd · 213 · - · Control · 2 sinyal · 12 func
 
 ### scripts/onboarding/steps/ (4 dosya, 666 satır)
@@ -279,7 +279,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 ### scripts/ui/ (1 dosya, 138 satır)
 - scripts/ui/menu_backdrop.gd · 138 · - · Control · 1 sinyal · 6 func
 
-### scripts/ui/components/ (20 dosya, 3405 satır)
+### scripts/ui/components/ (20 dosya, 3401 satır)
 - scripts/ui/components/bar_kit.gd · 37 · - · RefCounted · 0 sinyal · 3 func
 - scripts/ui/components/build_bar.gd · 168 · - · PanelContainer · 0 sinyal · 11 func
 - scripts/ui/components/build_bar_model.gd · 46 · - · RefCounted · 0 sinyal · 2 func
@@ -297,7 +297,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/ui/components/research_bar_model.gd · 86 · - · RefCounted · 0 sinyal · 2 func
 - scripts/ui/components/segment_bar.gd · 39 · SegmentBar · Control · 0 sinyal · 3 func
 - scripts/ui/components/toast.gd · 94 · - · PanelContainer · 0 sinyal · 4 func
-- scripts/ui/components/top_bar.gd · 458 · - · Panel · 0 sinyal · 23 func
+- scripts/ui/components/top_bar.gd · 454 · - · Panel · 0 sinyal · 22 func
 - scripts/ui/components/window_frame.gd · 119 · - · PanelContainer · 0 sinyal · 4 func
 - scripts/ui/components/window_layer.gd · 247 · - · Panel · 0 sinyal · 16 func
 

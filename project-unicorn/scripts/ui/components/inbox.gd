@@ -365,7 +365,7 @@ static func clause_sender(a: Dictionary) -> Dictionary:
 ## The support report's sender: the rep who wrote it, named with the title the report carries; the report leaves
 ## the room to its table.
 static func support_sender(rep: String) -> Dictionary:
-	return named_employee(rep, HRConstants.ROLE_CUSTOMER_REP).merged({"well": false, "title": "", "sig_name": "",
+	return named_employee(rep, "").merged({"well": false, "title": "", "sig_name": "",
 		"sig_line": "", "name": TranslationServer.translate("SUPPORT_RPT_SENDER").format({"name": rep})}, true)
 
 
