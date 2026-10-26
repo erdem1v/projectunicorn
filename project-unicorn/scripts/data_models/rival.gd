@@ -23,7 +23,6 @@ extends Resource
 
 # --- forward-compat reserves (mirror Customer/Character) ---
 @export var founder_name: String = ""
-@export var narrative_tags: Array[String] = []
 @export var notes: String = ""
 
 

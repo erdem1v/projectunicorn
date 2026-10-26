@@ -1,6 +1,6 @@
 # Kod haritası · KALITE
 
-Üretildi: git a80a608 · 2026-10-26 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git 74674f4 · 2026-10-26 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 246 .gd (tools/ ve sandbox/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
@@ -75,11 +75,10 @@ Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları
 - scripts/debug/endgame_smoke.gd:16576 · _case_save_v10_product_state · 116 satır
 - scripts/systems/sprint_system.gd:1633 · _close · 116 satır
 
-## Ölü kod adayları (22)
+## Ölü kod adayları (21)
 
 Tanım satırı dışında scripts/, scenes/, data/ içinde adı hiç geçmeyen func (yorumlar sayılmaz, dizeler sayılır). Godot geri çağrıları hariç.
 UYARI: call("a"+b) gibi kurulmuş adlar, sinyal adıyla bağlama, harness bayrakları ve tools/*.sh çağrıları yüzünden yanlış pozitif olabilir; silmeden önce grep ile doğrula.
-- scripts/autoload/character_registry.gd:382 · count_on_leave
 - scripts/debug/endgame_smoke.gd:2813 · _one_choice_event · debug
 - scripts/debug/office_crowd_probe.gd:48 · _log_error · debug
 - scripts/main/game_shell.gd:167 · debug_force_vc_meeting · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)

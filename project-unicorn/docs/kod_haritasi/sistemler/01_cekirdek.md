@@ -152,7 +152,7 @@ Yardımcı: `Fmt` konuma duyarlı biçimlendirme. Dışarıdan: `TimeModel`, `Sa
 - `AudioManager` `Settings`ten sonra yüklenir; `Settings.apply_all` onu `is_node_ready` ile korur (`settings.gd:124-125`). SFX bus'ında oynatıcı yok; kaydırıcı boş bus'ı oynatır
 - `Localization.pick(tr, en)` çizimde çözer; olay önbelleği açılışta bir kez kurulduğu için yükleme anında dil dondurmak yanlıştır. Boş `en` "metin zaten yerelleşmiş" sözleşmesidir (`localization.gd:73-80`)
 - `Character`/`Customer`/`Prospect` `name` alanı taşımaz (Node/Object ayrılmış): `character_name`, `company_name`; kayıt defterlerinde `get_character` gibi adlar `Object.get`i gölgelememek içindir
-- Ölü aday (KALITE.md): `CharacterRegistry.count_on_leave` `character_registry.gd:382`, `RivalRegistry.get_by_type` `rival_registry.gd:61` çağrısız; EventBus'ta `employee_eligible_for_promotion` ve `raise_requested` yayansız
+- Ölü aday (KALITE.md): `RivalRegistry.get_by_type` `rival_registry.gd:61` çağrısız; EventBus'ta `employee_eligible_for_promotion` ve `raise_requested` yayansız
 - CLAUDE.md §9: yerini alan kod eskisini aynı commit'te siler; ölü göç yardımcıları, ölü sinyaller ve tarihçe yorumları bu kuralın dışında kalmış (özellikle `save_manager.gd` göç yorumları)
 
 ## Bir değişiklik yaparken

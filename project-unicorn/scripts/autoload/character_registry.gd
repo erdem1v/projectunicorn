@@ -379,14 +379,6 @@ func count_employees() -> int:
 	return get_employees().size()
 
 
-func count_on_leave() -> int:
-	var n: int = 0
-	for c in get_employees():
-		if c.status == HRConstants.STATUS_ON_LEAVE:
-			n += 1
-	return n
-
-
 func get_mentor() -> Character:
 	for c in _characters.values():
 		if c.category == "mentor":

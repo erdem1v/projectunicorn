@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git a80a608 · 2026-10-26 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 74674f4 · 2026-10-26 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -30,9 +30,9 @@ Bölümler: Autoload'lar · Dosyalar · Sinyaller · Sahneler · Veri dosyaları
 
 Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar dahil). Autoload dosyalarında class_name yerine [AutoloadAdı].
 
-### scripts/autoload/ (13 dosya, 5141 satır)
+### scripts/autoload/ (13 dosya, 5133 satır)
 - scripts/autoload/audio_manager.gd · 172 · [AudioManager] · Node · 0 sinyal · 17 func
-- scripts/autoload/character_registry.gd · 647 · [CharacterRegistry] · Node · 0 sinyal · 52 func
+- scripts/autoload/character_registry.gd · 639 · [CharacterRegistry] · Node · 0 sinyal · 51 func
 - scripts/autoload/customer_registry.gd · 321 · [CustomerRegistry] · Node · 0 sinyal · 29 func
 - scripts/autoload/event_bus.gd · 301 · [EventBus] · Node · 145 sinyal · 0 func
 - scripts/autoload/game_state.gd · 1049 · [GameState] · Node · 0 sinyal · 55 func
@@ -45,14 +45,14 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/autoload/settings.gd · 174 · [Settings] · Node · 0 sinyal · 12 func
 - scripts/autoload/time_manager.gd · 453 · [TimeManager] · Node · 2 sinyal · 34 func
 
-### scripts/data_models/ (8 dosya, 502 satır)
+### scripts/data_models/ (8 dosya, 501 satır)
 - scripts/data_models/character.gd · 115 · Character · Resource · 0 sinyal · 0 func
 - scripts/data_models/customer.gd · 124 · Customer · Resource · 0 sinyal · 3 func
 - scripts/data_models/event.gd · 21 · GameEvent · Resource · 0 sinyal · 0 func
 - scripts/data_models/event_choice.gd · 12 · EventChoice · Resource · 0 sinyal · 0 func
 - scripts/data_models/promise.gd · 22 · Promise · Resource · 0 sinyal · 0 func
 - scripts/data_models/prospect.gd · 111 · Prospect · Resource · 0 sinyal · 6 func
-- scripts/data_models/rival.gd · 34 · Rival · Resource · 0 sinyal · 1 func
+- scripts/data_models/rival.gd · 33 · Rival · Resource · 0 sinyal · 1 func
 - scripts/data_models/term_sheet.gd · 63 · TermSheet · Resource · 0 sinyal · 3 func
 
 ### scripts/debug/ (11 dosya, 33667 satır)
@@ -394,13 +394,13 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
   ↳ palette_changed emit: scripts/modals/settings_modal.gd:251,282
   ↳ palette_changed connect: scripts/tabs/hr_tab.gd:85, scripts/ui/components/left_tabs.gd:130, scripts/ui/components/news_ticker.gd:81, scripts/ui/components/top_bar.gd:111, scripts/ui/components/window_layer.gd:66 +2
 - character_added(character_id: String) · scripts/autoload/event_bus.gd:50
-  ↳ character_added emit: scripts/autoload/character_registry.gd:460
+  ↳ character_added emit: scripts/autoload/character_registry.gd:452
   ↳ character_added connect: scripts/tabs/hr_tab.gd:74, scripts/ui/components/left_tabs.gd:108, scripts/ui/office/office_people.gd:83
 - character_removed(character_id: String) · scripts/autoload/event_bus.gd:51
-  ↳ character_removed emit: scripts/autoload/character_registry.gd:560
+  ↳ character_removed emit: scripts/autoload/character_registry.gd:552
   ↳ character_removed connect: scripts/systems/sprint_system.gd:1535, scripts/tabs/hr/hr_dossier.gd:55, scripts/tabs/hr_tab.gd:74, scripts/ui/components/inbox.gd:161, scripts/ui/components/left_tabs.gd:109 +1
 - morale_changed(character_id: String, new_morale: int) · scripts/autoload/event_bus.gd:52
-  ↳ morale_changed emit: scripts/autoload/character_registry.gd:644
+  ↳ morale_changed emit: scripts/autoload/character_registry.gd:636
   ↳ morale_changed connect: scripts/tabs/hr/hr_dossier.gd:49, scripts/tabs/hr_tab.gd:74, scripts/ui/components/inbox.gd:161, scripts/ui/components/left_tabs.gd:107
 - employee_experience_changed(character_id: String, new_experience: int) · scripts/autoload/event_bus.gd:54
   ↳ employee_experience_changed emit: scripts/autoload/character_registry.gd:129,181
@@ -409,14 +409,14 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
   ↳ employee_training_changed emit: scripts/autoload/character_registry.gd:153,164,180
   ↳ employee_training_changed connect: scripts/tabs/hr/hr_dossier.gd:50, scripts/tabs/hr_tab.gd:79, scripts/tabs/personal_tab.gd:52, scripts/ui/components/build_bar.gd:45, scripts/ui/components/research_bar.gd:59
 - employee_promoted(character_id: String, new_level: int) · scripts/autoload/event_bus.gd:58 · emit: scripts/systems/hr_actions.gd:156 · connect: scripts/tabs/hr/hr_dossier.gd:50
-- productivity_changed(character_id: String) · scripts/autoload/event_bus.gd:60 · emit: scripts/autoload/character_registry.gd:585,596 · connect: scripts/tabs/hr/hr_dossier.gd:51, scripts/tabs/hr_tab.gd:80
+- productivity_changed(character_id: String) · scripts/autoload/event_bus.gd:60 · emit: scripts/autoload/character_registry.gd:577,588 · connect: scripts/tabs/hr/hr_dossier.gd:51, scripts/tabs/hr_tab.gd:80
 - experience_bar_full(character_id: String) · scripts/autoload/event_bus.gd:66 · emit: scripts/autoload/character_registry.gd:130 · connect: scripts/debug/endgame_smoke.gd:11841
-- morale_band_changed(character_id: String, band_id: String) · scripts/autoload/event_bus.gd:69 · emit: scripts/autoload/character_registry.gd:647 · connect: scripts/debug/endgame_smoke.gd:11830
+- morale_band_changed(character_id: String, band_id: String) · scripts/autoload/event_bus.gd:69 · emit: scripts/autoload/character_registry.gd:639 · connect: scripts/debug/endgame_smoke.gd:11830
 - employee_eligible_for_promotion(character_id: String) · scripts/autoload/event_bus.gd:73 · emit: - · connect: -
 - raise_requested(character_id: String) · scripts/autoload/event_bus.gd:76 · emit: - · connect: -
 - leave_requested(character_id: String) · scripts/autoload/event_bus.gd:79 · emit: scripts/systems/hr_morale_system.gd:71 · connect: -
-- employee_hired(character_id: String) · scripts/autoload/event_bus.gd:81 · emit: scripts/autoload/character_registry.gd:462 · connect: scripts/events/core/signals.gd:28, scripts/systems/sprint_system.gd:1537
-- employee_departed(character_id: String) · scripts/autoload/event_bus.gd:82 · emit: scripts/autoload/character_registry.gd:561 · connect: scripts/events/core/signals.gd:27
+- employee_hired(character_id: String) · scripts/autoload/event_bus.gd:81 · emit: scripts/autoload/character_registry.gd:454 · connect: scripts/events/core/signals.gd:28, scripts/systems/sprint_system.gd:1537
+- employee_departed(character_id: String) · scripts/autoload/event_bus.gd:82 · emit: scripts/autoload/character_registry.gd:553 · connect: scripts/events/core/signals.gd:27
 - training_started(character_id: String, area_key: String) · scripts/autoload/event_bus.gd:83 · emit: scripts/autoload/character_registry.gd:154 · connect: scripts/systems/sprint_system.gd:1538
 - training_completed(character_id: String, area_key: String) · scripts/autoload/event_bus.gd:84 · emit: scripts/autoload/character_registry.gd:182 · connect: -
 - assignment_changed(character_id: String) · scripts/autoload/event_bus.gd:88

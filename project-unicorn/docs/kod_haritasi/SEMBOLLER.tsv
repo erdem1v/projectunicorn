@@ -3626,7 +3626,7 @@ _stamp_audit	var	scripts/debug/endgame_smoke.gd:6489	EndgameSmoke
 _stamp_each	func	scripts/autoload/save_manager.gd:797	SaveManager
 _stamp_ids	func	scripts/theme/build_theme.gd:1406	build_theme.gd
 _stamp_keys	func	scripts/autoload/save_manager.gd:789	SaveManager
-_stamp_look	func	scripts/autoload/character_registry.gd:529	CharacterRegistry
+_stamp_look	func	scripts/autoload/character_registry.gd:521	CharacterRegistry
 _stamp_urgent	func	scripts/debug/endgame_smoke.gd:6556	EndgameSmoke
 _stamps	var	scripts/events/core/flags.gd:23	EvFlags
 _stance	var	scripts/tabs/sales_tab.gd:42	sales_tab.gd
@@ -3944,7 +3944,7 @@ _validate_hidden_k3	func	scripts/systems/research_tree.gd:278	ResearchTree
 _validate_hidden_lines	func	scripts/systems/research_tree.gd:221	ResearchTree
 _validate_node_set	func	scripts/systems/research_tree.gd:118	ResearchTree
 _validate_rows	func	scripts/systems/research_tree.gd:128	ResearchTree
-_validate_shape	func	scripts/autoload/character_registry.gd:468	CharacterRegistry
+_validate_shape	func	scripts/autoload/character_registry.gd:460	CharacterRegistry
 _validate_step	func	scripts/systems/product_lines.gd:212	ProductLines
 _valuation_tr	func	scripts/systems/endings_copy.gd:502	EndingsCopy
 _value	var	scripts/modals/hr_action_modal.gd:27	hr_action_modal.gd
@@ -4163,7 +4163,7 @@ active_lead_id	func	scripts/systems/sales_meeting_system.gd:53	SalesMeetingSyste
 active_scandal	var	scripts/autoload/game_state.gd:139	GameState
 active_sheets	var	scripts/autoload/game_state.gd:259	GameState
 actual_sentence	func	scripts/systems/sprint_bridges.gd:142	SprintBridges
-add	func	scripts/autoload/character_registry.gd:431	CharacterRegistry
+add	func	scripts/autoload/character_registry.gd:423	CharacterRegistry
 add	func	scripts/autoload/customer_registry.gd:94	CustomerRegistry
 add	func	scripts/autoload/prospect_registry.gd:41	ProspectRegistry
 add	func	scripts/events/core/schedule.gd:28	EvSchedule
@@ -4173,7 +4173,7 @@ add_b2c_audience	func	scripts/systems/sales_system.gd:298	SalesSystem
 add_bugs	func	scripts/systems/product_state.gd:196	ProductState
 add_experience	func	scripts/autoload/character_registry.gd:122	CharacterRegistry
 add_founder_meeting	func	scripts/autoload/game_state.gd:429	GameState
-add_productivity_mod	func	scripts/autoload/character_registry.gd:580	CharacterRegistry
+add_productivity_mod	func	scripts/autoload/character_registry.gd:572	CharacterRegistry
 add_productivity_mod	func	scripts/systems/hr_system.gd:426	HRSystem
 add_strain	func	scripts/systems/vc_pitch_system.gd:262	VCPitchSystem
 add_trust_drain	func	scripts/systems/b2b_sales_system.gd:209	B2BSalesSystem
@@ -4874,7 +4874,7 @@ completed	signal	scripts/onboarding/onboarding_flow.gd:11	onboarding_flow.gd
 completed	func	scripts/systems/research_seam.gd:64	ResearchSeam
 completed_count	func	scripts/systems/rnd_system.gd:723	RnDSystem
 compose_note	func	scripts/systems/rnd_system.gd:612	RnDSystem
-composite	func	scripts/data_models/rival.gd:31	Rival
+composite	func	scripts/data_models/rival.gd:30	Rival
 COMPOSITE_AXES	const	scripts/systems/rival_catalog.gd:33	RivalCatalog
 composite_quality	func	scripts/systems/quality_model.gd:29	QualityModel
 compute_total_burn	func	scripts/systems/finance_system.gd:213	FinanceSystem
@@ -4964,7 +4964,6 @@ count_employees	func	scripts/autoload/character_registry.gd:378	CharacterRegistr
 count_key	func	scripts/util/fmt.gd:57	Fmt
 count_meeting	func	scripts/systems/sales_ledger.gd:315	SalesLedger
 count_of	func	scripts/events/gate/scope.gd:179	EvScope
-count_on_leave	func	scripts/autoload/character_registry.gd:382	CharacterRegistry
 COUNTER_STEP_MAX	const	scripts/systems/sales_constants.gd:141	SalesConstants
 COUNTER_STEP_MIN	const	scripts/systems/sales_constants.gd:140	SalesConstants
 CounterpartSystem	class	scripts/systems/counterpart_system.gd:1	CounterpartSystem
@@ -5744,7 +5743,7 @@ employee_promoted	signal	scripts/autoload/event_bus.gd:58	EventBus
 EMPLOYEE_ROLES	const	scripts/systems/hr_constants.gd:316	HRConstants
 EMPLOYEE_SKILL_KEYS	const	scripts/systems/hr_constants.gd:23	HRConstants
 employee_training_changed	signal	scripts/autoload/event_bus.gd:56	EventBus
-employees_by_hire	func	scripts/autoload/character_registry.gd:520	CharacterRegistry
+employees_by_hire	func	scripts/autoload/character_registry.gd:512	CharacterRegistry
 employment_history	var	scripts/data_models/character.gd:112	Character
 EMPTY	const	scripts/tabs/events_tab.gd:11	events_tab.gd
 empty_floor_ticks	func	scripts/events/core/engine.gd:62	EvEngine
@@ -5776,7 +5775,7 @@ ensure_installed	func	scripts/events/seams/seams.gd:39	EvSeams
 ensure_loaded	func	scripts/events/catalog/catalog.gd:32	EvCatalog
 ensure_loaded	func	scripts/systems/product_lines.gd:58	ProductLines
 ensure_loaded	func	scripts/systems/research_tree.gd:68	ResearchTree
-ensure_mentor	func	scripts/autoload/character_registry.gd:407	CharacterRegistry
+ensure_mentor	func	scripts/autoload/character_registry.gd:399	CharacterRegistry
 ENTER	const	scripts/ui/meeting/meeting_panel.gd:22	MeetingPanel
 ENTER_GUARD_MS	const	scripts/tabs/events/mail_pane.gd:20	mail_pane.gd
 ENTITY	const	scripts/events/seams/seams.gd:19	EvSeams.Kind
@@ -5948,7 +5947,7 @@ FH	const	scripts/ui/office/office_camera.gd:10	OfficeCamera
 FILE_INSET	const	scripts/tabs/hr/hr_atlas_modal.gd:28	hr_atlas_modal.gd
 fill	var	scripts/ui/components/research_bar_model.gd:33	research_bar_model.gd
 fill_investor_people	func	scripts/systems/counterpart_system.gd:33	CounterpartSystem
-fill_missing_looks	func	scripts/autoload/character_registry.gd:513	CharacterRegistry
+fill_missing_looks	func	scripts/autoload/character_registry.gd:505	CharacterRegistry
 fillable	var	scripts/ui/components/segment_bar.gd:17	SegmentBar
 filled	var	scripts/ui/components/segment_bar.gd:18	SegmentBar
 filler	func	scripts/ui/components/bar_kit.gd:32	bar_kit.gd
@@ -6245,7 +6244,7 @@ get_employees	func	scripts/autoload/character_registry.gd:41	CharacterRegistry
 get_feature_pool	func	scripts/systems/product_catalog.gd:193	ProductCatalog
 get_files	func	scripts/systems/hr_search_system.gd:67	HRSearchSystem
 get_flag	func	scripts/autoload/game_state.gd:510	GameState
-get_founder	func	scripts/autoload/character_registry.gd:398	CharacterRegistry
+get_founder	func	scripts/autoload/character_registry.gd:390	CharacterRegistry
 get_founder_skill	func	scripts/autoload/game_state.gd:691	GameState
 get_investor	func	scripts/autoload/investor_registry.gd:92	InvestorRegistry
 get_investor_equity_pct	func	scripts/autoload/game_state.gd:642	GameState
@@ -6254,7 +6253,7 @@ get_lines_for_day	func	scripts/systems/news_feed_system.gd:205	NewsFeedSystem
 get_market_snapshot	func	scripts/autoload/rival_registry.gd:125	RivalRegistry
 get_market_type	func	scripts/systems/product_catalog.gd:198	ProductCatalog
 get_master_volume	func	scripts/autoload/audio_manager.gd:116	AudioManager
-get_mentor	func	scripts/autoload/character_registry.gd:390	CharacterRegistry
+get_mentor	func	scripts/autoload/character_registry.gd:382	CharacterRegistry
 get_min_satisfaction	func	scripts/autoload/customer_registry.gd:83	CustomerRegistry
 get_mom_growth_avg_pct	func	scripts/autoload/game_state.gd:587	GameState
 get_monthly_flow	func	scripts/systems/finance_system.gd:275	FinanceSystem
@@ -6279,7 +6278,7 @@ get_state	func	scripts/systems/hr_search_system.gd:51	HRSearchSystem
 get_stream	func	scripts/systems/news_feed_system.gd:197	NewsFeedSystem
 get_stream	func	scripts/systems/rng_streams.gd:30	RngStreams
 get_sub_product_type_by_id	func	scripts/systems/product_catalog.gd:186	ProductCatalog
-get_total_monthly_salaries	func	scripts/autoload/character_registry.gd:422	CharacterRegistry
+get_total_monthly_salaries	func	scripts/autoload/character_registry.gd:414	CharacterRegistry
 get_total_mrr	func	scripts/autoload/customer_registry.gd:58	CustomerRegistry
 get_total_raised	func	scripts/autoload/game_state.gd:647	GameState
 get_total_seats	func	scripts/autoload/customer_registry.gd:75	CustomerRegistry
@@ -6604,7 +6603,7 @@ INNER_VOICE_BUDGET_PER_RUN	const	scripts/systems/sales_constants.gd:107	SalesCon
 inner_voice_left	func	scripts/systems/sales_ledger.gd:372	SalesLedger
 innovation	var	scripts/data_models/rival.gd:17	Rival
 ins	var	scripts/ui/meeting/meeting_ruler.gd:30	MeetingRuler._Rail
-insert_raw	func	scripts/autoload/character_registry.gd:502	CharacterRegistry
+insert_raw	func	scripts/autoload/character_registry.gd:494	CharacterRegistry
 insert_raw	func	scripts/autoload/customer_registry.gd:105	CustomerRegistry
 insert_raw	func	scripts/autoload/promise_registry.gd:116	PromiseRegistry
 insert_raw	func	scripts/autoload/prospect_registry.gd:52	ProspectRegistry
@@ -7034,7 +7033,7 @@ look_pitch	var	scripts/ui/office/office_gesture.gd:19	OfficeGesture
 LOOK_YAW	const	scripts/ui/office/office_person.gd:150	OfficePerson
 look_yaw	var	scripts/ui/office/office_gesture.gd:20	OfficeGesture
 LOOKS	const	scripts/tabs/product/quarter_view.gd:12	QuarterView
-looks_around	func	scripts/autoload/character_registry.gd:540	CharacterRegistry
+looks_around	func	scripts/autoload/character_registry.gd:532	CharacterRegistry
 looks_line	func	scripts/debug/office_crowd_probe.gd:243	OfficeCrowdProbe
 LookSystem	class	scripts/systems/look_system.gd:1	LookSystem
 LOOP_MIN_PARTS	const	scripts/ui/components/news_ticker.gd:48	news_ticker.gd
@@ -7358,7 +7357,6 @@ NAMES	const	scripts/systems/rival_catalog.gd:96	RivalCatalog
 names_for_sector	func	scripts/systems/company_catalog.gd:111	CompanyCatalog
 names_of	func	scripts/events/present/papers.gd:161	EvPapers
 NAMES_SHOWN	const	scripts/events/present/chips.gd:50	EvChips
-narrative_tags	var	scripts/data_models/rival.gd:26	Rival
 NARROW	const	scripts/tabs/product/sprint_card.gd:10	SprintCard.Look
 native_resolution	func	scripts/systems/display_settings.gd:151	DisplaySettings
 NAV_DOOR	const	scripts/debug/office_crowd_probe.gd:25	OfficeCrowdProbe
@@ -7443,7 +7441,7 @@ note_lines	func	scripts/ui/components/inbox.gd:389	inbox.gd
 note_of	func	scripts/events/seams/seams.gd:109	EvSeams
 note_pending	func	scripts/systems/rnd_system.gd:638	RnDSystem
 NOTE_POOL_COUNT	const	scripts/systems/rnd_system.gd:560	RnDSystem
-notes	var	scripts/data_models/rival.gd:27	Rival
+notes	var	scripts/data_models/rival.gd:26	Rival
 notes_awaiting_arrival	func	scripts/events/core/history.gd:174	EvHistory
 notes_issued	func	scripts/systems/rnd_system.gd:643	RnDSystem
 notice_end_day	var	scripts/data_models/customer.gd:95	Customer
@@ -7979,7 +7977,7 @@ PROVIDER_CLOUD	const	scripts/systems/infra_system.gd:16	InfraSystem
 PROVIDER_ENTERPRISE	const	scripts/systems/infra_system.gd:17	InfraSystem
 PROVIDER_IDS	const	scripts/systems/infra_system.gd:20	InfraSystem
 PROVIDER_LOCAL	const	scripts/systems/infra_system.gd:15	InfraSystem
-prune_productivity_mods	func	scripts/autoload/character_registry.gd:590	CharacterRegistry
+prune_productivity_mods	func	scripts/autoload/character_registry.gd:582	CharacterRegistry
 publish	func	scripts/systems/sprint_system.gd:345	SprintSystem
 PULSE_ALPHA	const	scripts/ui/components/top_bar.gd:45	top_bar.gd
 PULSE_ALPHA	const	scripts/ui/office/office_hud.gd:14	office_hud.gd
@@ -8132,7 +8130,7 @@ remaining	func	scripts/systems/sprint_system.gd:707	SprintSystem
 remember	func	scripts/systems/sales_probes.gd:277	SalesProbes
 reminder_at	func	scripts/systems/mail_clock.gd:100	MailClock
 reminders	func	scripts/systems/mail_clock.gd:80	MailClock
-remove	func	scripts/autoload/character_registry.gd:553	CharacterRegistry
+remove	func	scripts/autoload/character_registry.gd:545	CharacterRegistry
 remove	func	scripts/autoload/customer_registry.gd:124	CustomerRegistry
 remove	func	scripts/autoload/prospect_registry.gd:69	ProspectRegistry
 remove	func	scripts/events/core/queue.gd:203	EvQueue
@@ -8199,7 +8197,7 @@ RESEED	const	scripts/systems/look_system.gd:11	LookSystem
 reseed	func	scripts/systems/rng_streams.gd:37	RngStreams
 RESERVE_SENSITIVITY_MAX	const	scripts/systems/sales_constants.gd:138	SalesConstants
 RESERVE_SENSITIVITY_MIN	const	scripts/systems/sales_constants.gd:137	SalesConstants
-reset	func	scripts/autoload/character_registry.gd:565	CharacterRegistry
+reset	func	scripts/autoload/character_registry.gd:557	CharacterRegistry
 reset	func	scripts/autoload/customer_registry.gd:113	CustomerRegistry
 reset	func	scripts/autoload/promise_registry.gd:95	PromiseRegistry
 reset	func	scripts/autoload/prospect_registry.gd:63	ProspectRegistry
@@ -8686,7 +8684,7 @@ set_active	func	scripts/events/core/queue.gd:114	EvQueue
 set_aside	func	scripts/events/core/engine.gd:795	EvEngine
 set_aside	func	scripts/events/event_gate.gd:151	EventGate
 set_assignees	func	scripts/systems/rnd_system.gd:284	RnDSystem
-set_away	func	scripts/autoload/character_registry.gd:613	CharacterRegistry
+set_away	func	scripts/autoload/character_registry.gd:605	CharacterRegistry
 set_bottom_clearance	func	scripts/ui/components/left_tabs.gd:271	left_tabs.gd
 set_brand	func	scripts/autoload/game_state.gd:369	GameState
 set_burn_category	func	scripts/systems/finance_system.gd:220	FinanceSystem
@@ -8726,7 +8724,7 @@ set_layout	func	scripts/ui/office/meeting_cast.gd:44	MeetingCast
 set_layout	func	scripts/ui/office/office_city.gd:105	OfficeCity
 set_layout	func	scripts/ui/office/office_lighting.gd:137	OfficeLighting
 set_layout	func	scripts/ui/office/office_people.gd:173	OfficePeople
-set_leave_override	func	scripts/autoload/character_registry.gd:623	CharacterRegistry
+set_leave_override	func	scripts/autoload/character_registry.gd:615	CharacterRegistry
 set_lifecycle_phase	func	scripts/autoload/customer_registry.gd:177	CustomerRegistry
 set_line_tier	func	scripts/systems/product_state.gd:89	ProductState
 set_links	func	scripts/ui/office/office_person.gd:316	OfficePerson
@@ -8735,7 +8733,7 @@ set_map_open	func	scripts/ui/office/office_hud.gd:69	office_hud.gd
 set_map_open	func	scripts/ui/office/office_notice_stack.gd:57	office_notice_stack.gd
 set_market_ref	func	scripts/autoload/customer_registry.gd:229	CustomerRegistry
 set_master_volume	func	scripts/autoload/audio_manager.gd:110	AudioManager
-set_morale	func	scripts/autoload/character_registry.gd:634	CharacterRegistry
+set_morale	func	scripts/autoload/character_registry.gd:626	CharacterRegistry
 set_mouse_ignore	func	scripts/tabs/hr/hr_ui_shared.gd:90	HRUiShared
 set_mrr	func	scripts/autoload/customer_registry.gd:131	CustomerRegistry
 set_mrr	func	scripts/autoload/game_state.gd:358	GameState
@@ -8762,14 +8760,14 @@ set_risk_streak	func	scripts/autoload/customer_registry.gd:211	CustomerRegistry
 set_routing	func	scripts/systems/sales_ledger.gd:52	SalesLedger
 set_run_active	func	scripts/autoload/game_state.gd:418	GameState
 set_safe_left	func	scripts/ui/office/office_view.gd:131	office_view.gd
-set_salary	func	scripts/autoload/character_registry.gd:570	CharacterRegistry
+set_salary	func	scripts/autoload/character_registry.gd:562	CharacterRegistry
 set_satisfaction	func	scripts/autoload/customer_registry.gd:158	CustomerRegistry
 set_seats	func	scripts/autoload/customer_registry.gd:143	CustomerRegistry
 set_sfx_volume	func	scripts/autoload/audio_manager.gd:120	AudioManager
 set_shutter_weeks_left	func	scripts/autoload/game_state.gd:423	GameState
 set_source	func	scripts/tabs/product_tab.gd:121	product_tab.gd
 set_station_state	func	scripts/ui/office/office_lighting.gd:171	OfficeLighting
-set_status	func	scripts/autoload/character_registry.gd:601	CharacterRegistry
+set_status	func	scripts/autoload/character_registry.gd:593	CharacterRegistry
 set_subgenre	func	scripts/autoload/game_state.gd:386	GameState
 set_support_request	func	scripts/autoload/customer_registry.gd:250	CustomerRegistry
 set_suspended	func	scripts/autoload/time_manager.gd:277	TimeManager
