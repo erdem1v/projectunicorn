@@ -165,6 +165,7 @@ Ar-Ge 19 düğümlü ağaçtır; tamamlanan düğüm hat kapılarını ve katsay
 - Zaman ekseni: `sprint_timeline_matches_play_out` (eksen oynatmanın aynası: aşama sırası, beklemeler, kişi tek işte, hafta sınırında yapılan; kurucunun görüşme taraması; H/H0 ve hazırlık; sprint başı ilerleme)
   ve ekranın sayıları: bulunmuş ve öngörülen düzeltmenin efora ve oluğa girişi, eksenden önce biten aşama, anahtarların sözleşmesi, sonraki sütunun yükü (planlamada, koşarken, sürüm notunda)
 - Ekip dışı ve takip kartı: `sprint_away_lists_who_cannot_work` (ekip özeti dahil), `sprint_follow_card_cannot_be_removed`
+- Kart kilidi: `sprint_pin_holds_person` (kilitli kişi yalnız kendi kartında ve ilk sırada, çalışamıyorsa kart kimsesiz, süre ya da bitiş serbest bırakır, plan kilidin sprint ortası bitişini görür)
 - Sprint: `sprint_two_days_close`, `sprint_capacity_from_team`, `sprint_ceiling_125_blocks_add`, `sprint_carry_keeps_progress`, `sprint_mvp_three_identity_k1`, `sprint_fix_card_clears_its_line`, `sprint_starts_only_with_consent`
 - Sprint: `sprint_request_on_time_met`, `sprint_paid_plan_opens_paid_tier`, `sprint_departure_restaffs_card`, `sprint_never_stalls_in_plan`, `sprint_lead_offers_paid_plan_b2c`, `product_pm_plan_opens_as_next_sprint`
 - Lider: `sprint_lead_fills_next_column` (öneri sonraki sütunu da doldurur: tavan, sıra, onaysız PM planı, devir), `sprint_lead_fills_to_ceiling`
@@ -181,6 +182,8 @@ Ar-Ge 19 düğümlü ağaçtır; tamamlanan düğüm hat kapılarını ve katsay
 ## Dikkat
 
 - Oynatma tek yoldur: `plan_outcome`, `timeline`, `intake` ve `first_bumps` `_replay`i okur
+- `_assign` kartın `pinned` alanını ({person, until}) okur: gün < until ve kart bitmemişse kişi yalnız o karta gider, onda ilk gelir, çalışamıyorsa kart o hafta kimsesiz; yazarı Olaylar'ın `pin_card`'ı, `_play_out` haftanın gününü verir
+  ↳ İleriki sprintleri sınayan `intake` (MVP tahmini, liderin sütunu) kilidi bugünün günüyle okur: sonraki bir sprintte biten kilidi o sprintin tahmini sürüyor sayar
 - `_work`/`_play_out`/`_finish_sprint`in `log` parametresi yalnız `timeline` içindir; kapalıyken sonuçlar bayt eşit kalır (`--sprint-probe` `^SPRINTPROBE`)
 - Zaman ekseni: testten sonra Geliştirmeye dönen düzeltme işi ayrı aşamadır (`fix: true`, sonda): testin bulduğu da, oynatmanın öngördüğü de oradadır (kartın gerçek bitişi); sayılar görünen efordur (kalan ihtiyaç ÷ hazırlık kazancı)
 - Kartın eforu (`ProductModel._effort`: satırın `effort`ı, önerinin `effort`ı) oynanmamış karttan okunur: testin bulduğu düzeltmeyi sayar, oynatmanın öngördüğünü saymaz; aşama yükleri (`next.load`, `next.carried`, oluk) öngörüleni de Geliştirme'de sayar

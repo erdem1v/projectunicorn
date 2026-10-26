@@ -545,6 +545,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"paper_cards_are_asked":                 fail = _case_paper_cards_are_asked()
 		"sprint_legacy_beta_cards_ship":         fail = _case_sprint_legacy_beta_cards_ship()
 		"sprint_departure_restaffs_card":        fail = _case_sprint_departure_restaffs_card()
+		"sprint_pin_holds_person":               fail = _case_sprint_pin_holds_person()
 		"sprint_never_stalls_in_plan":           fail = _case_sprint_never_stalls_in_plan()
 		"sprint_lead_offers_paid_plan_b2c":      fail = _case_sprint_lead_offers_paid_plan_b2c()
 		"sprint_lead_fills_to_ceiling":          fail = _case_sprint_lead_fills_to_ceiling()
@@ -23368,6 +23369,84 @@ static func _case_sprint_departure_restaffs_card() -> String:
 	EventBus.hr_day_processed.emit()
 	if not (orphan.assignees as Array).is_empty():
 		return "the developer went on leave and still works %s" % orphan.id
+	return ""
+
+
+## Karta kilitli kişi (`pinned`: {person, until}) `until` gününe dek haftalık atamada yalnız o karta gider ve kendi kartının
+## atamasında rol uyumundan önce gelir; başkaları o karta normal kuralla girer. Kişi o hafta çalışamıyorsa kart kimsesiz
+## bekler. Süre dolunca ya da kart bitince kişi serbesttir. Plan ileriki haftaları o haftanın günüyle oynar: kilit sprint
+## ortasında biterse tahmin kapanışla eşit kalır.
+## FALSİFİKASYON: SprintSystem._assign'da `locked.get(p.id, c.id) == c.id` süzgecini sil → "week one" FAIL; sıralamadaki
+## `locked.get(a.id) == c.id` ilk koşulunu sil → "first on its card" FAIL; `_play_out`ta `from_day + _w` yerine `GameState.day` ver →
+## "plan said" FAIL; `_finish_sprint`te `GameState.day + 1`'in `+ 1`'ini sil → "running plan" FAIL; `c.id in waits` denetimini sil →
+## "idle card" FAIL; `day < pin.get("until", 0)`'ı `day <=` yap → "plan said" FAIL; `phase(c) < PHASE_DONE` denetimini sil →
+## "finished card" FAIL.
+static func _case_sprint_pin_holds_person() -> String:
+	_seed_sprint()
+	var des: Character = _sprint_hire("char_pin_des", HRConstants.ROLE_DESIGNER)
+	var lock: Character = _sprint_hire("char_pin_lock", HRConstants.ROLE_DEVELOPER)
+	var rest: Array = ["char_pin_a", "char_pin_b", "char_pin_c"].map(
+		func(id: String) -> String: return _sprint_hire(id, HRConstants.ROLE_DEVELOPER).id)
+	GameState.set_founder_in_sprint(false)
+	var k1s: Array = SprintCatalog.candidates("core").filter(
+		func(c: Dictionary) -> bool: return c.kind == "feature" and int(c.target_tier) == 1)
+	var open := func(card: Dictionary, need: Array) -> Dictionary:
+		SprintSystem.add(card.id)
+		GameState.product.cards[card.id].need = need
+		return GameState.product.cards[card.id]
+	# 1 · Kilit sprint ortasında biter: ilk hafta kişi kendi kartında, ikinci hafta serbest; plan bunu önceden görür.
+	var big: Dictionary = open.call(k1s[0], [0.0, 70.0, 0.0])
+	var held: Dictionary = open.call(k1s[1], [0.0, 40.0, 0.0])
+	held.pinned = {"person": lock.id, "until": GameState.day + 1}
+	var plan: Dictionary = SprintSystem.plan_outcome().cards
+	if not plan[big.id].finishes or plan[held.id].finishes or absf(plan[held.id].done - 10.0) > SprintSystem.EPS:
+		return "plan said: %s, want the free card done and the locked one at 10 points (its lock runs out in week two)" % [plan]
+	if not SprintSystem.start():
+		return "fixture: the sprint did not start"
+	var rest_of: Array = SprintSystem._copies(SprintSystem._sprint_cards())
+	SprintSystem._finish_sprint(rest_of, SprintSystem.team())
+	if SprintSystem.phase(rest_of[0]) != SprintSystem.PHASE_DONE:
+		return "running plan: the rest of the sprint leaves the free card at %s, want it done (the lock runs out in week two)" % [rest_of[0].progress]
+	if held.assignees != [lock.id] or lock.id in big.assignees:
+		return "week one: the locked developer works %s and %s, want only the pinned card" % [held.assignees, big.assignees]
+	_sim_day()
+	if lock.id not in big.assignees:
+		return "week two: the lock ran out and the developer still sits on %s, want %s" % [held.assignees, big.assignees]
+	_sim_day()
+	for id in plan:
+		var left: Array = GameState.product.release.carried.filter(func(row: Dictionary) -> bool: return row.id == id)
+		if left.is_empty() != plan[id].finishes or (not left.is_empty() and absf(float(left[0].done) - plan[id].done) > SprintSystem.EPS):
+			return "the plan said %s finishes %s with %.2f points, the close %s with %s" % [
+				id, plan[id].finishes, plan[id].done, left.is_empty(), left]
+	# 2 · Sonraki sprint: kilitli kişi öndeki kartın işine girmez, kendi kartında rolden önce gelir, tasarımcı da o karta girer.
+	SprintSystem.plan_next()
+	var filler: Dictionary = GameState.product.cards[held.id]
+	filler.need[1] = float(filler.progress[1]) + 35.0
+	var pinned: Dictionary = open.call(k1s[2], [8.0, 20.0, 0.0])
+	pinned.pinned = {"person": lock.id, "until": GameState.day + 10}
+	if GameState.product.sprint.cards != [filler.id, pinned.id] or not SprintSystem.start():
+		return "fixture: the second sprint holds %s and did not start" % [GameState.product.sprint.cards]
+	if lock.id in filler.assignees or filler.assignees != rest:
+		return "locked elsewhere: the pinned developer works %s on the card ahead, want only %s" % [filler.assignees, rest]
+	if pinned.assignees != [lock.id, des.id]:
+		return "first on its card: the pinned card is staffed %s, want the pinned developer before the designer %s" % [
+			pinned.assignees, [lock.id, des.id]]
+	# 3 · Süre dolunca ve kart bitince kişi serbesttir (aynı atama, kilidin gününden ve bitmiş kartla).
+	var cards: Array = SprintSystem._copies(SprintSystem._sprint_cards())
+	SprintSystem._assign(cards, SprintSystem.team(), [], int(pinned.pinned.until))
+	if lock.id not in cards[0].assignees:
+		return "the lock held on its last day: the card ahead is staffed %s, want the developer free" % [cards[0].assignees]
+	cards[1].progress = cards[1].need.duplicate()
+	SprintSystem._assign(cards, SprintSystem.team())
+	if lock.id not in cards[0].assignees:
+		return "the lock held on a finished card: the card ahead is staffed %s, want the developer free" % [cards[0].assignees]
+	# 4 · Kilitli kişi o hafta çalışamıyorsa kart kimsesiz bekler, boşta tasarımcı olsa da.
+	HRMoraleSystem.send_on_leave(lock, HRConstants.LEAVE_WEEKS, false)
+	_sim_day()
+	if SprintSystem.team().any(func(t: Dictionary) -> bool: return t.id == lock.id) or not pinned.assignees.is_empty() \
+			or filler.assignees.is_empty():
+		return "idle card: the pinned developer is out and the cards read %s and %s, want the pinned card empty and the other staffed" % [
+			pinned.assignees, filler.assignees]
 	return ""
 
 

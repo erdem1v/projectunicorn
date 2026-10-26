@@ -957,7 +957,7 @@ static func mvp_eta() -> Dictionary:
 			while not queue.is_empty() and intake(cards, queue[0], plain).takes:
 				cards.append(queue.pop_front())
 			locked = true
-		_play_out(cards, 1, people)
+		_play_out(cards, 1, people, [], null, GameState.day + _w)
 		left -= 1
 		var shut: bool = left == 0 or _finished(cards)
 		if all.filter(func(c: Dictionary) -> bool: return k1.call(c) and phase(c) == PHASE_DONE).size() >= need:
@@ -1062,7 +1062,7 @@ static func _finish_sprint(cards: Array, people: Array, ahead: Array = [], log =
 			if by_id.has(id):
 				budget[id] = _work(c, by_id[id], budget.get(id, by_id[id].points), week.get("ahead"))
 	SprintPrep.week(ahead, people, weeks_left() - 1)
-	_play_out(cards, weeks_left() - 1, people, [] if _finished(cards) else ahead, log)
+	_play_out(cards, weeks_left() - 1, people, [] if _finished(cards) else ahead, log, GameState.day + 1)
 
 
 static func _in_sprint(id: String) -> bool:
@@ -1266,24 +1266,36 @@ static func _staff_week(ask_paper: bool) -> void:
 ## bitecek kadar kişi alır. Kartını bitirenin kalan puanı sıradaki karta geçer. Tasarım rolü yalnız ilk
 ## fazda çalışır; sprintte o fazı bekleyen kart kalmayınca sonraki sütuna önden gider, oraya başkası
 ## gitmez. Sprint puanı olmayan PM atamaya girmez: haftasını sonraki sütunun kartlarını hazırlamaya verir (SprintPrep).
-static func _assign(cards: Array, people: Array, ahead: Array = []) -> void:
+## Kilitli kişi (kartın `pinned`ı, `until` gününe `day` varmadıkça) yalnız o karta gider ve onun atamasında rolden önce gelir;
+## o hafta çalışamıyorsa kart kimsesiz bekler.
+static func _assign(cards: Array, people: Array, ahead: Array = [], day: int = GameState.day) -> void:
 	var free: Array = people.filter(func(person: Dictionary) -> bool: return person.points > 0.0).map(
 		func(person: Dictionary) -> Dictionary: return person.merged({"left": person.points}))
 	var all: Array = cards + ahead
+	var locked: Dictionary = {}
+	var waits: Array = []
+	for c in all:
+		var pin: Dictionary = c.get("pinned", {})
+		if day < pin.get("until", 0) and phase(c) < PHASE_DONE:
+			locked[pin.person] = c.id
+			if free.all(func(person: Dictionary) -> bool: return person.id != pin.person):
+				waits.append(c.id)
 	for i in all.size():
 		var c: Dictionary = all[i]
 		c.assignees = []
-		if c.decision:
+		if c.decision or c.id in waits:
 			continue
 		var probe: Dictionary = c.duplicate(true)
 		while phase(probe) < PHASE_DONE:
 			var at: int = phase(probe)
 			var able: Array = free.filter(func(p: Dictionary) -> bool:
-				return (at == 0 or not p.ahead) and (p.ahead or i < cards.size()))
+				return (at == 0 or not p.ahead) and (p.ahead or i < cards.size()) and locked.get(p.id, c.id) == c.id)
 			if able.is_empty():
 				break
 			var role: String = _role(probe, at)
 			able.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+				if (locked.get(a.id) == c.id) != (locked.get(b.id) == c.id):
+					return locked.get(a.id) == c.id
 				if (role in a.fits) != (role in b.fits):
 					return role in a.fits
 				if a.left != b.left:
@@ -1325,15 +1337,16 @@ static func _work(c: Dictionary, person: Dictionary, budget: float, log = null) 
 ## sırasıyla dökülür, sprintin kartlarından sonra sonraki sütunun kopyalarına (`ahead`), PM'ler o kopyaları hazırlar.
 ## Kartların hepsi biten haftada sprint kapanır: sonrasında önden gidilmez. {split: {kart: {kişi: {id, name, weeks}}},
 ## spare: sprintin hiçbir kartına harcanmayan puan, önden gidilen de}. `log` verilirse her hafta `{cards, ahead}` olarak
-## ona eklenir: sprintin kartlarına ve sonraki sütunun kartlarına harcamanın `_work` kayıtları, harcama sırasıyla.
-static func _play_out(cards: Array, weeks: int, people: Array, ahead: Array = [], log = null) -> Dictionary:
+## ona eklenir: sprintin kartlarına ve sonraki sütunun kartlarına harcamanın `_work` kayıtları, harcama sırasıyla. `from_day`
+## ilk oynanan haftanın günüdür: kart kilitleri her haftanın gününe göre okunur.
+static func _play_out(cards: Array, weeks: int, people: Array, ahead: Array = [], log = null, from_day: int = GameState.day) -> Dictionary:
 	var by_id: Dictionary = {}
 	for person in people:
 		by_id[person.id] = person
 	var split: Dictionary = {}
 	var spare: float = 0.0
 	for _w in weeks:
-		_assign(cards, by_id.values(), ahead)
+		_assign(cards, by_id.values(), ahead, from_day + _w)
 		var week: Dictionary = {"cards": [], "ahead": []} if log != null else {}
 		if log != null:
 			log.append(week)
