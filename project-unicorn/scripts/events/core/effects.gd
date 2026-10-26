@@ -206,13 +206,16 @@ static func _permitted(verb: String, effect: Dictionary, origin: Origin) -> Stri
 	return ""
 
 
-## Is this economic effect a cost rather than a gain? Reads the amount AS COMPUTED, which is
-## the whole point — a literal is easy, a seam-derived figure is what lint cannot see.
+## Is this economic effect a cost rather than a gain? A literal figure is read as it lands; a seam's
+## figure by the sign of its `amount_mult`, which is how lint judges it too, because the figure the
+## seam yields can round down to nothing and a cost that reads zero is still a cost.
 static func _is_negative(effect: Dictionary) -> bool:
 	# A marketing push spends money to buy growth: never only a cost, so never an expiry's.
 	if String(effect.get("verb", "")) == "marketing_push":
 		return false
-	for key in ["amount_seam", "amount", "delta", "value"]:
+	if effect.has("amount_seam"):
+		return not is_authored_gain(effect)
+	for key in ["amount", "delta", "value"]:
 		if effect.has(key):
 			return amount(effect) < 0
 	# A verb with no signed amount at all (churn_customer, employee_leaves) is a loss by
@@ -681,6 +684,15 @@ static func amount(e: Dictionary) -> int:
 		if e.has(key):
 			return int(e[key])
 	return 0
+
+
+## Does the sign the author wrote make this effect a gain? Needs no run: a seam yields a magnitude, so
+## its `amount_mult` is the signed figure; else the literal `amount` or `delta`, and an effect naming
+## neither is a cost. Lint and the expiry's check both ask here.
+static func is_authored_gain(e: Dictionary) -> bool:
+	if e.has("amount_seam"):
+		return float(e.get("amount_mult", 1.0)) > 0.0
+	return float(e.get("amount", e.get("delta", -1))) > 0.0
 
 
 ## What a `trust_delta` writes and what the player reads for it, worked out the way the arm applies it:

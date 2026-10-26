@@ -240,11 +240,7 @@ static func _lint_effects(where: String, effects: Array, context: String, card: 
 
 		match context:
 			"expire":
-				# A seam yields a magnitude, so its multiplier carries the sign.
-				var figure: float = float(effect.get("amount", effect.get("delta", -1)))
-				if effect.has("amount_seam"):
-					figure = float(effect.get("amount_mult", 1.0))
-				if economic and figure > 0.0:
+				if economic and EvEffects.is_authored_gain(effect):
 					_add(SEVERITY_ERROR, "17.3", where,
 						"I2: on_expire applies a POSITIVE '%s' — an expiry is a cost" % verb)
 				if verb == "marketing_push":

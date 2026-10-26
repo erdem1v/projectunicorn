@@ -18423,7 +18423,8 @@ static func _case_event_i1_single_gate() -> String:
 
 ## I2 — an economic delta needs a played decision.
 ##
-## FALSIFICATION: move "add_cash" into EvEffects.NEUTRAL_VERBS and the first assertion fails.
+## FALSIFICATION: move "add_cash" into EvEffects.NEUTRAL_VERBS and the first assertion fails; judge a seam's
+## expiry by the figure it reads (`amount(effect) < 0`) instead of its multiplier and the zero-seam step fails.
 static func _case_event_i2_economy_played_only() -> String:
 	GameState.initialize_run({"seed": 424242})
 	var before: int = GameState.cash
@@ -18443,6 +18444,15 @@ static func _case_event_i2_economy_played_only() -> String:
 	EvEffects.run_played([{"verb": "add_cash", "amount": 200}], {})
 	if GameState.cash != before:
 		return "a played decision could not move cash"
+
+	# A seam can read zero (a small audience rounds a share of it down to nothing): its multiplier still
+	# says cost, so the expiry applies it and the log carries no refusal.
+	EvSeams.mock("urun.open_bugs", 0)
+	var zero_cost: Array = EvEffects.run_expire(
+		[{"verb": "add_cash", "amount_seam": "urun.open_bugs", "amount_mult": -120}], {})
+	EvSeams.clear_mocks()
+	if zero_cost.size() != 1 or (zero_cost[0] as Dictionary).has("refused") or GameState.cash != before:
+		return "on_expire refused a seam-made cost that read zero: %s" % str(zero_cost)
 	return ""
 
 
