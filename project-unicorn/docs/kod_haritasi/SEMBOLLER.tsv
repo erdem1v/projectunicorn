@@ -52,7 +52,7 @@ _actors	var	scripts/ui/office/office_people.gd:57	OfficePeople
 _acts	func	scripts/ui/office/office_person.gd:1081	OfficePerson
 _adapter	var	scripts/ui/meeting/meeting_panel.gd:51	MeetingPanel
 _add	func	scripts/debug/glyph_audit.gd:61	glyph_audit.gd
-_add	func	scripts/events/tools/lint.gd:1123	EvLint
+_add	func	scripts/events/tools/lint.gd:1128	EvLint
 _add	func	scripts/ui/office/office_notice_stack.gd:172	office_notice_stack.gd
 _add_area_row	func	scripts/tabs/product/area_panel.gd:77	AreaPanel
 _add_card	func	scripts/tabs/product/sprint_panel.gd:358	SprintPanel
@@ -137,7 +137,7 @@ _areas	var	scripts/tabs/product_tab.gd:37	product_tab.gd
 _areas_scroll	var	scripts/tabs/product_tab.gd:36	product_tab.gd
 _armed	var	scripts/events/core/delays.gd:26	EvDelays
 _armed	var	scripts/tabs/events/mail_pane.gd:31	mail_pane.gd
-_arms	func	scripts/events/tools/lint.gd:1098	EvLint
+_arms	func	scripts/events/tools/lint.gd:1103	EvLint
 _as_v18_card	func	scripts/debug/endgame_smoke.gd:25444	EndgameSmoke
 _aside	func	scripts/modals/system_menu_modal.gd:52	system_menu_modal.gd
 _ask	func	scripts/systems/incident_system.gd:254	IncidentSystem
@@ -1441,7 +1441,7 @@ _final_counter	func	scripts/systems/term_sheet_table_system.gd:318	TermSheetTabl
 _final_move	var	scripts/systems/term_sheet_table_system.gd:143	TermSheetTableSystem
 _find	func	scripts/tabs/events_tab.gd:176	events_tab.gd
 _findings	var	scripts/events/tools/lint.gd:70	EvLint
-_fingerprint	func	scripts/events/tools/lint.gd:1127	EvLint
+_fingerprint	func	scripts/events/tools/lint.gd:1132	EvLint
 _finish	func	scripts/debug/run_probe.gd:1213	RunProbe
 _finish	func	scripts/menu/godot_card.gd:29	godot_card.gd
 _finish	func	scripts/systems/vc_pitch_system.gd:381	VCPitchSystem
@@ -1610,7 +1610,7 @@ _grant_seed_sheet	func	scripts/systems/vc_pitch_system.gd:401	VCPitchSystem
 _grant_sheet	func	scripts/systems/vc_pitch_system.gd:408	VCPitchSystem
 _graphics_body	var	scripts/modals/settings_modal.gd:72	settings_modal.gd
 _grep	func	scripts/events/tools/why.gd:236	EvWhy
-_grep_scripts	func	scripts/events/tools/lint.gd:1003	EvLint
+_grep_scripts	func	scripts/events/tools/lint.gd:1008	EvLint
 _grid	func	scripts/ui/components/top_bar.gd:186	top_bar.gd
 _grid_step	func	scripts/tabs/piyasa_tab.gd:655	piyasa_tab.gd
 _grooves	func	scripts/debug/endgame_smoke.gd:22179	EndgameSmoke
@@ -1635,7 +1635,7 @@ _hand_act	func	scripts/ui/office/office_person.gd:563	OfficePerson
 _hand_at	var	scripts/ui/office/office_person.gd:234	OfficePerson
 _hand_w	var	scripts/ui/office/office_person.gd:233	OfficePerson
 _hands	var	scripts/ui/office/office_person.gd:231	OfficePerson
-_has_arc_verb	func	scripts/events/tools/lint.gd:1115	EvLint
+_has_arc_verb	func	scripts/events/tools/lint.gd:1120	EvLint
 _has_cost	func	scripts/events/tools/lint.gd:645	EvLint
 _has_reference	func	scripts/systems/sales_probes.gd:107	SalesProbes
 _hatches	func	scripts/systems/sprint_timeline.gd:129	SprintTimeline
@@ -1812,7 +1812,7 @@ _investment_tr	func	scripts/systems/endings_copy.gd:506	EndingsCopy
 _is_b2b	func	scripts/systems/infra_system.gd:103	InfraSystem
 _is_b2c	func	scripts/systems/endings_copy.gd:386	EndingsCopy
 _is_chained	func	scripts/events/tools/lint.gd:490	EvLint
-_is_day_name	func	scripts/events/tools/lint.gd:1062	EvLint
+_is_day_name	func	scripts/events/tools/lint.gd:1067	EvLint
 _is_fixture_arc	func	scripts/events/tools/harness.gd:261	EvHarness
 _is_generic_voice	func	scripts/events/tools/plausibility.gd:375	plausibility.gd
 _is_harness_arg	func	scripts/autoload/save_manager.gd:497	SaveManager
@@ -1986,15 +1986,15 @@ _link_path	var	scripts/ui/office/office_person.gd:223	OfficePerson
 _links	var	scripts/ui/components/research_bar.gd:38	research_bar.gd
 _links	var	scripts/ui/office/office_person.gd:178	OfficePerson
 _links	func	tools/office3d/bake_nav.gd:136	bake_nav.gd
-_lint_arc	func	scripts/events/tools/lint.gd:819	EvLint
+_lint_arc	func	scripts/events/tools/lint.gd:824	EvLint
 _lint_card	func	scripts/events/tools/lint.gd:107	EvLint
-_lint_condition	func	scripts/events/tools/lint.gd:927	EvLint
-_lint_day_names	func	scripts/events/tools/lint.gd:1047	EvLint
+_lint_condition	func	scripts/events/tools/lint.gd:932	EvLint
+_lint_day_names	func	scripts/events/tools/lint.gd:1052	EvLint
 _lint_effects	func	scripts/events/tools/lint.gd:226	EvLint
-_lint_gdscript_triggers	func	scripts/events/tools/lint.gd:992	EvLint
+_lint_gdscript_triggers	func	scripts/events/tools/lint.gd:997	EvLint
 _lint_options	func	scripts/events/tools/lint.gd:173	EvLint
-_lint_reachability	func	scripts/events/tools/lint.gd:883	EvLint
-_lint_signals	func	scripts/events/tools/lint.gd:979	EvLint
+_lint_reachability	func	scripts/events/tools/lint.gd:888	EvLint
+_lint_signals	func	scripts/events/tools/lint.gd:984	EvLint
 _lint_speaker	func	scripts/events/tools/lint.gd:674	EvLint
 _lint_text	func	scripts/events/tools/lint.gd:714	EvLint
 _lint_trust_delta	func	scripts/events/tools/lint.gd:319	EvLint
@@ -2003,8 +2003,8 @@ _lint_v3_block	func	scripts/events/tools/lint.gd:421	EvLint
 _lint_v3_options	func	scripts/events/tools/lint.gd:521	EvLint
 _lint_v3_repeats	func	scripts/events/tools/lint.gd:582	EvLint
 _lint_v3_verbs	func	scripts/events/tools/lint.gd:501	EvLint
-_lint_variants	func	scripts/events/tools/lint.gd:801	EvLint
-_lint_where	func	scripts/events/tools/lint.gd:957	EvLint
+_lint_variants	func	scripts/events/tools/lint.gd:806	EvLint
+_lint_where	func	scripts/events/tools/lint.gd:962	EvLint
 _list	var	scripts/modals/save_load_modal.gd:33	save_load_modal.gd
 _list	var	scripts/tabs/hr_tab.gd:46	hr_tab.gd
 _list	var	scripts/tabs/piyasa_tab.gd:42	piyasa_tab.gd
@@ -2025,7 +2025,7 @@ _load_csv_translations	func	scripts/autoload/localization.gd:91	Localization
 _load_errors	var	scripts/events/catalog/catalog.gd:26	EvCatalog
 _load_errors	var	scripts/systems/product_lines.gd:50	ProductLines
 _load_errors	var	scripts/systems/research_tree.gd:64	ResearchTree
-_load_id_set	func	scripts/events/tools/lint.gd:1134	EvLint
+_load_id_set	func	scripts/events/tools/lint.gd:1139	EvLint
 _load_slot	func	scripts/main/main.gd:5215	main.gd
 _load_subtype	func	scripts/systems/product_lines.gd:96	ProductLines
 _loaded	var	scripts/events/catalog/catalog.gd:27	EvCatalog
@@ -3067,7 +3067,7 @@ _reply_head	func	scripts/tabs/events/mail_pane.gd:283	mail_pane.gd
 _report	func	scripts/debug/glyph_audit.gd:52	glyph_audit.gd
 _report	func	scripts/debug/office_pan_probe.gd:99	office_pan_probe.gd
 _report	func	scripts/events/tools/harness.gd:318	EvHarness
-_report	func	scripts/events/tools/lint.gd:1163	EvLint
+_report	func	scripts/events/tools/lint.gd:1168	EvLint
 _report_draws	func	scripts/debug/office_crowd_probe.gd:234	OfficeCrowdProbe
 _report_period	var	scripts/systems/research_tree.gd:62	ResearchTree
 _request_cards_up	func	scripts/debug/endgame_smoke.gd:5119	EndgameSmoke
@@ -3679,7 +3679,7 @@ _stream_for	func	scripts/systems/rng_streams.gd:50	RngStreams
 _streams	var	scripts/systems/rng_streams.gd:24	RngStreams
 _stride	func	scripts/ui/office/office_person.gd:881	OfficePerson
 _strings	func	scripts/debug/glyph_audit.gd:78	glyph_audit.gd
-_strings_in	func	scripts/events/tools/lint.gd:1067	EvLint
+_strings_in	func	scripts/events/tools/lint.gd:1072	EvLint
 _strip	var	scripts/ui/components/window_frame.gd:19	window_frame.gd
 _strips	var	scripts/tabs/hr_tab.gd:43	hr_tab.gd
 _structure_key	var	scripts/tabs/hr_tab.gd:48	hr_tab.gd
@@ -3756,8 +3756,8 @@ _terms	var	scripts/systems/term_sheet_table_system.gd:126	TermSheetTableSystem
 _terms_text	func	scripts/systems/term_sheet_table_system.gd:919	TermSheetTableSystem
 _text	func	scripts/debug/kit_probe.gd:197	kit_probe.gd
 _text	func	scripts/tabs/hr/hr_ledger.gd:182	HRLedger
-_text_block	func	scripts/events/tools/lint.gd:1107	EvLint
-_text_has	func	scripts/events/tools/lint.gd:1111	EvLint
+_text_block	func	scripts/events/tools/lint.gd:1112	EvLint
+_text_has	func	scripts/events/tools/lint.gd:1116	EvLint
 _text_of	func	scripts/systems/term_sheet_table_system.gd:903	TermSheetTableSystem
 _thanks_body	func	scripts/debug/endgame_smoke.gd:27413	EndgameSmoke
 _thanks_candidates	func	scripts/systems/sprint_bridges.gd:216	SprintBridges
@@ -3849,7 +3849,7 @@ _tree	var	scripts/tabs/rnd_tab.gd:45	rnd_tab.gd
 _tree	var	scripts/ui/office/office_person.gd:201	OfficePerson
 _tree_body	var	scripts/tabs/rnd_tab.gd:44	rnd_tab.gd
 _tree_root	var	scripts/ui/office/office_person.gd:173	OfficePerson
-_trees_of	func	scripts/events/tools/lint.gd:1081	EvLint
+_trees_of	func	scripts/events/tools/lint.gd:1086	EvLint
 _trim_parts	func	scripts/events/present/chips.gd:333	EvChips
 _trip_label	var	scripts/main/main.gd:70	main.gd
 _trust_part	func	scripts/events/present/chips.gd:312	EvChips
@@ -3983,7 +3983,7 @@ _walk_minutes	func	scripts/ui/office/office_people.gd:572	OfficePeople
 _walk_out	func	scripts/ui/office/office_person.gd:807	OfficePerson
 _walk_param	var	scripts/ui/office/office_person.gd:203	OfficePerson
 _walk_s	func	scripts/ui/office/office_people.gd:567	OfficePeople
-_walk_scripts	func	scripts/events/tools/lint.gd:1009	EvLint
+_walk_scripts	func	scripts/events/tools/lint.gd:1014	EvLint
 _walk_why	var	scripts/modals/term_sheet_table_scene.gd:41	TermSheetTableScene
 _wanted	func	scripts/ui/office/office_people.gd:277	OfficePeople
 _wants_cost_trait	func	scripts/systems/hr_candidate_generator.gd:207	HRCandidateGenerator
@@ -4045,7 +4045,7 @@ _worst	func	scripts/systems/incident_system.gd:351	IncidentSystem
 _wrapped	func	scripts/tabs/events/mail_pane.gd:872	mail_pane.gd
 _write	func	tools/people/setup_import.gd:80	setup_import.gd
 _write_atomic	func	scripts/autoload/save_manager.gd:520	SaveManager
-_write_baseline	func	scripts/events/tools/lint.gd:1146	EvLint
+_write_baseline	func	scripts/events/tools/lint.gd:1151	EvLint
 _write_complete	func	scripts/autoload/save_manager.gd:555	SaveManager
 _write_readme	func	tools/people/portrait_baker.gd:186	portrait_baker.gd
 _write_task	var	scripts/autoload/save_manager.gd:54	SaveManager
@@ -4478,7 +4478,7 @@ body	var	scripts/tabs/hr/hr_panel.gd:13	hr_panel.gd
 body	func	scripts/tabs/hr/hr_popover.gd:42	HRPopover
 BODY_HEIGHT	const	scripts/ui/office/office_person.gd:146	OfficePerson
 BODY_PAD	const	scripts/tabs/product_tab.gd:19	product_tab.gd
-body_strings	func	scripts/events/tools/lint.gd:1094	EvLint
+body_strings	func	scripts/events/tools/lint.gd:1099	EvLint
 body_text	var	scripts/data_models/event.gd:18	GameEvent
 BONUS_STEP	const	scripts/systems/skill_check.gd:14	SkillCheck
 BOOK_CASH	const	scripts/debug/run_probe.gd:2313	RunProbe

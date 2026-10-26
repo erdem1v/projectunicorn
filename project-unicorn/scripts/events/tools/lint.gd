@@ -768,6 +768,11 @@ static func _lint_text(id: String, card: Dictionary, where: String) -> void:
 		for group in ["options", "locked_reasons"]:
 			for line in (block.get(group, {}) as Dictionary).values():
 				read.append_array(_arms(line))
+		# The ticker line of an expiry: the engine reads the card's `expire_note` as a name in this block, and as the
+		# line itself when the block has no such name.
+		var note: String = String(card.get("expire_note", ""))
+		if note != "":
+			read.append_array(_arms(block.get(note, note)))
 		var prose: String = " ".join(PackedStringArray(read))
 		var shown: String = " ".join(PackedStringArray(_strings_in(block)))
 		for dash in DASH_CHARS:

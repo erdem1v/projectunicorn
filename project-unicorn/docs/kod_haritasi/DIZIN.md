@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git aafcc4e · 2026-10-26 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git a8c8dc6 · 2026-10-26 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -112,10 +112,10 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/events/seams/seams_sales.gd · 132 · EvSeamsSales · RefCounted · 0 sinyal · 3 func
 - scripts/events/seams/seams_world.gd · 160 · EvSeamsWorld · RefCounted · 0 sinyal · 7 func
 
-### scripts/events/tools/ (7 dosya, 3364 satır)
+### scripts/events/tools/ (7 dosya, 3369 satır)
 - scripts/events/tools/engine_probe.gd · 700 · EvProbe · RefCounted · 0 sinyal · 17 func
 - scripts/events/tools/harness.gd · 424 · EvHarness · RefCounted · 0 sinyal · 10 func
-- scripts/events/tools/lint.gd · 1186 · EvLint · RefCounted · 0 sinyal · 43 func
+- scripts/events/tools/lint.gd · 1191 · EvLint · RefCounted · 0 sinyal · 43 func
 - scripts/events/tools/plausibility.gd · 396 · - · RefCounted · 0 sinyal · 20 func
 - scripts/events/tools/plausibility_main.gd · 41 · - · SceneTree · 0 sinyal · 2 func
 - scripts/events/tools/vocab_gen.gd · 351 · EvVocabGen · RefCounted · 0 sinyal · 5 func
