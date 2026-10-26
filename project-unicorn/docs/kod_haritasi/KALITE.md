@@ -1,7 +1,7 @@
 # Kod haritası · KALITE
 
-Üretildi: git 925748a · 2026-10-26 · `python -I tools/kod_haritasi/uret.py`
-Kapsam: scripts/ altındaki 246 .gd (tools/ ve sandbox/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
+Üretildi: git 80c6033 · 2026-10-27 · `python -I tools/kod_haritasi/uret.py`
+Kapsam: scripts/ altındaki 245 .gd (tools/ ve sandbox/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
 
@@ -75,7 +75,7 @@ Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları
 - scripts/debug/run_probe.gd:351 · run · 117 satır
 - scripts/debug/endgame_smoke.gd:1396 · _case_month_summary · 116 satır
 
-## Ölü kod adayları (19)
+## Ölü kod adayları (18)
 
 Tanım satırı dışında scripts/, scenes/, data/ içinde adı hiç geçmeyen func (yorumlar sayılmaz, dizeler sayılır). Godot geri çağrıları hariç.
 UYARI: call("a"+b) gibi kurulmuş adlar, sinyal adıyla bağlama, harness bayrakları ve tools/*.sh çağrıları yüzünden yanlış pozitif olabilir; silmeden önce grep ile doğrula.
@@ -97,7 +97,6 @@ UYARI: call("a"+b) gibi kurulmuş adlar, sinyal adıyla bağlama, harness bayrak
 - scripts/theme/ui_tokens.gd:384 · format_money
 - scripts/theme/ui_tokens.gd:954 · D_health_color
 - scripts/theme/ui_tokens.gd:963 · D_relationship_palette
-- scripts/ui/components/dialogue_portrait_card.gd:21 · set_portrait
 
 ## Yarım sinyaller (18)
 

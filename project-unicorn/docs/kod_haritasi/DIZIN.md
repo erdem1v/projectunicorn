@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git 925748a · 2026-10-26 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 80c6033 · 2026-10-27 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -26,7 +26,7 @@ Bölümler: Autoload'lar · Dosyalar · Sinyaller · Sahneler · Veri dosyaları
 - AudioManager · scripts/autoload/audio_manager.gd
 - MCPRuntime · addons/godot_mcp_runtime/mcp_runtime_autoload.gd · uid://bvdfxyfwqs84q
 
-## Dosyalar (250 .gd)
+## Dosyalar (249 .gd)
 
 Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar dahil). Autoload dosyalarında class_name yerine [AutoloadAdı].
 
@@ -279,13 +279,12 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 ### scripts/ui/ (1 dosya, 138 satır)
 - scripts/ui/menu_backdrop.gd · 138 · - · Control · 1 sinyal · 6 func
 
-### scripts/ui/components/ (20 dosya, 3412 satır)
+### scripts/ui/components/ (19 dosya, 3384 satır)
 - scripts/ui/components/bar_kit.gd · 37 · - · RefCounted · 0 sinyal · 3 func
 - scripts/ui/components/build_bar.gd · 168 · - · PanelContainer · 0 sinyal · 11 func
 - scripts/ui/components/build_bar_model.gd · 46 · - · RefCounted · 0 sinyal · 2 func
 - scripts/ui/components/build_hud_panel.gd · 108 · - · Control · 0 sinyal · 6 func
 - scripts/ui/components/cash_curve.gd · 272 · CashCurve · Control · 0 sinyal · 16 func
-- scripts/ui/components/dialogue_portrait_card.gd · 28 · DialoguePortraitCard · PanelContainer · 0 sinyal · 2 func
 - scripts/ui/components/gate_strip.gd · 53 · - · PanelContainer · 0 sinyal · 2 func
 - scripts/ui/components/inbox.gd · 581 · - · RefCounted · 0 sinyal · 42 func
 - scripts/ui/components/investor_appetite_ui.gd · 40 · InvestorAppetiteUi · RefCounted · 0 sinyal · 3 func
@@ -815,7 +814,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - founder_arrived() · scripts/ui/office/office_people.gd:16 · emit: scripts/ui/office/office_people.gd:235 · connect: scripts/ui/office/office_travel.gd:75
 - founder_settled() · scripts/ui/office/office_people.gd:17 · emit: scripts/ui/office/office_people.gd:142,239,658 · connect: scripts/main/main.gd:2132, scripts/ui/office/office_travel.gd:106
 
-## Sahneler (39 .tscn)
+## Sahneler (38 .tscn)
 
 Biçim: yol · kök düğüm türü (örnek: = miras alınan sahne) · kök betik
 - scenes/debug/ThemeProbe.tscn · Control · -
@@ -852,7 +851,6 @@ Biçim: yol · kök düğüm türü (örnek: = miras alınan sahne) · kök beti
 - scenes/tabs/product/SprintCard.tscn · PanelContainer · scripts/tabs/product/sprint_card.gd
 - scenes/ui/components/BuildBar.tscn · PanelContainer · scripts/ui/components/build_bar.gd
 - scenes/ui/components/BuildHUDPanel.tscn · Control · scripts/ui/components/build_hud_panel.gd
-- scenes/ui/components/DialoguePortraitCard.tscn · PanelContainer · scripts/ui/components/dialogue_portrait_card.gd
 - scenes/ui/components/LeftTabs.tscn · Panel · scripts/ui/components/left_tabs.gd
 - scenes/ui/components/NewsTicker.tscn · Panel · scripts/ui/components/news_ticker.gd
 - scenes/ui/components/ResearchBar.tscn · PanelContainer · scripts/ui/components/research_bar.gd

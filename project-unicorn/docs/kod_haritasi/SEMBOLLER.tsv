@@ -1429,8 +1429,6 @@ _fail	func	tools/people/portrait_baker.gd:214	portrait_baker.gd
 _failed	var	tools/office3d/bake_nav.gd:32	bake_nav.gd
 _failed	var	tools/people/portrait_baker.gd:45	portrait_baker.gd
 _fails	var	scripts/events/tools/plausibility.gd:76	plausibility.gd
-_fallback	var	scripts/ui/components/dialogue_portrait_card.gd:13	DialoguePortraitCard
-_fallback_bg	var	scripts/ui/components/dialogue_portrait_card.gd:12	DialoguePortraitCard
 _family_counter	func	scripts/tabs/rnd/rnd_tree_view.gd:209	RnDTreeView
 _family_days	var	scripts/events/present/tempo.gd:34	EvTempo
 _family_subject_days	var	scripts/events/present/tempo.gd:36	EvTempo
@@ -2766,7 +2764,6 @@ _POLISH_FULL_STAMP	const	scripts/autoload/save_manager.gd:816	SaveManager
 _POLISH_HALF_STAMP	const	scripts/autoload/save_manager.gd:815	SaveManager
 _polygon_distance	func	tools/office3d/bake_nav.gd:244	bake_nav.gd
 _pools	var	scripts/systems/sales_name_pool.gd:61	SalesNamePool
-_portrait	var	scripts/ui/components/dialogue_portrait_card.gd:14	DialoguePortraitCard
 _portrait	var	scripts/ui/meeting/meeting_panel.gd:71	MeetingPanel
 _portrait_id	var	scripts/onboarding/steps/character_step.gd:12	character_step.gd
 _pose	func	scripts/debug/office_pan_probe.gd:146	office_pan_probe.gd
@@ -2966,7 +2963,6 @@ _ready	func	scripts/tabs/rnd_tab.gd:60	rnd_tab.gd
 _ready	func	scripts/tabs/sales_tab.gd:62	sales_tab.gd
 _ready	func	scripts/ui/components/build_bar.gd:33	build_bar.gd
 _ready	func	scripts/ui/components/build_hud_panel.gd:36	build_hud_panel.gd
-_ready	func	scripts/ui/components/dialogue_portrait_card.gd:17	DialoguePortraitCard
 _ready	func	scripts/ui/components/left_tabs.gd:62	left_tabs.gd
 _ready	func	scripts/ui/components/news_ticker.gd:67	news_ticker.gd
 _ready	func	scripts/ui/components/research_bar.gd:43	research_bar.gd
@@ -5607,7 +5603,6 @@ DIALOGUE_BG	const	scripts/theme/ui_tokens.gd:154	UiTokens
 DIALOGUE_CARD_BG	const	scripts/theme/ui_tokens.gd:155	UiTokens
 DIALOGUE_CARD_BORDER	const	scripts/theme/ui_tokens.gd:156	UiTokens
 DIALOGUE_LOCKED_ALPHA	const	scripts/theme/ui_tokens.gd:157	UiTokens
-DialoguePortraitCard	class	scripts/ui/components/dialogue_portrait_card.gd:1	DialoguePortraitCard
 DIE	const	scripts/ui/meeting/meeting_panel_option.gd:12	meeting_panel_option.gd
 DIFF_CETIN	const	scripts/systems/pitch_constants.gd:38	PitchConstants
 DIFF_KOLAY	const	scripts/systems/pitch_constants.gd:35	PitchConstants
@@ -8771,7 +8766,6 @@ set_pain_feature	func	scripts/autoload/customer_registry.gd:291	CustomerRegistry
 set_person_hours	func	scripts/systems/work_hours_system.gd:296	WorkHoursSystem
 set_phase	func	scripts/autoload/game_state.gd:391	GameState
 set_pitch_focus	func	scripts/systems/sales_meeting_system.gd:133	SalesMeetingSystem
-set_portrait	func	scripts/ui/components/dialogue_portrait_card.gd:21	DialoguePortraitCard
 set_preset	func	scripts/systems/graphics_settings.gd:105	graphics_settings.gd
 set_price_stance	func	scripts/systems/sales_ledger.gd:131	SalesLedger
 set_provider	func	scripts/systems/infra_system.gd:175	InfraSystem

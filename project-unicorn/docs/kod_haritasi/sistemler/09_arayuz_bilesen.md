@@ -28,7 +28,6 @@ Oyuncu metni `tr(ANAHTAR)` ile `localization/strings.csv`den okunur; ayrı bir C
 - `scripts/ui/components/logo_emblem.gd` (188): `LogoEmblem`; çizilen şirket amblemi (6 şekil, 3 stil), `candidates` ile addan 12 aday
 - `scripts/ui/components/segment_bar.gd` (39): `SegmentBar`; onboarding beceri cetveli · `radial_dial.gd` (95): `RadialDial`; term sheet itme kadranı
 - `scripts/ui/components/investor_appetite_ui.gd` (40): `InvestorAppetiteUi`; Seri A kapısının tek oyuncuya görünen okuması (etiket + tek satır)
-- `scripts/ui/components/dialogue_portrait_card.gd` (28): `DialoguePortraitCard`; 4:5 portre kartı; kodda ve sahnede kullanan yok (bkz. HARITA'da bayat)
 - `scripts/ui/meeting/meeting_panel.gd` (805): `MeetingPanel`; satış ve VC görüşmesinin dok paneli (baş, dökümcük, güverte), adaptörün adımlarını oynatır
 - `scripts/ui/meeting/meeting_panel_option.gd` (125): güvertedeki seçenek kartı (tuş, etiket, zar, kilit) · `meeting_ruler.gd` (122): `MeetingRuler`; fiyat cetveli
 - `scripts/ui/meeting/sales_meeting_adapter.gd` (320) ve `vc_meeting_adapter.gd` (200): sistemin görünümünü panelin "adım" sözlüğüne çevirir (RefCounted)
@@ -41,7 +40,7 @@ Oyuncu metni `tr(ANAHTAR)` ile `localization/strings.csv`den okunur; ayrı bir C
 - `scripts/modals/training_modal.gd` (175) ve `work_hours_modal.gd` (492): HR paneli modalları; `scripts/tabs/hr/hr_panel.gd`i genişletir, PanelLayer'a `HRUiShared.mount_panel_modal` ile takılır
 - `scripts/onboarding/onboarding_flow.gd` (213): ilk kullanım akışı, `draft` sahibi · `first_week_doc.gd` (235): yandaki "ilk hafta" belgesi
 - `scripts/onboarding/steps/step_base.gd` (118): `OnboardingStep` sözleşmesi · `character_step.gd` (111) · `origin_traits_step.gd` (332) · `company_step.gd` (105)
-- Sahneler: `scenes/ui/components/` (TopBar, LeftTabs, NewsTicker, BuildBar, BuildHUDPanel, ResearchBar, DialoguePortraitCard, `avatar_bust.gdshader`), `scenes/menu/` (5 tscn, `menu_grade.gdshader`)
+- Sahneler: `scenes/ui/components/` (TopBar, LeftTabs, NewsTicker, BuildBar, BuildHUDPanel, ResearchBar, `avatar_bust.gdshader`), `scenes/menu/` (5 tscn, `menu_grade.gdshader`)
 - Sahneler (devam): `scenes/modals/` (10 tscn; HRAtlasModal'ın betiği `scripts/tabs/hr/hr_atlas_modal.gd`), `scenes/onboarding/` (OnboardingFlow, 3 adım), `scenes/debug/ThemeProbe.tscn`
 - Veri: `themes/master_theme.tres`, `themes/menajer_theme.tres` (üretilmiş, elle düzenlenmez), `localization/strings.csv`, `data/credits.json`; debug: `scripts/debug/kit_probe.gd`, `glyph_audit.gd`
 - Dışarıda ama ayrılmaz: portre ve kişi büstü `scripts/ui/office/person_bust.gd` (`PersonBust`), kurucu/Frank portre yolları `scripts/systems/founder_constants.gd`, ekran ölçüsü `scripts/systems/display_settings.gd`
@@ -186,6 +185,4 @@ Oyuncu metni `tr(ANAHTAR)` ile `localization/strings.csv`den okunur; ayrı bir C
 - Yeni oyuncu metni: `strings.csv` TR+EN aynı anda (anahtar bayt-aralığı ile eklenir), `tr()` ile oku, sonra `loc_residue.gd` ve `loc_csv_integrity`
 
 ## HARITA'da bayat
-- HARITA "Tema ve UI kiti": "`DialoguePortraitCard`'ı onboarding'in karakter adımı kullanır"; `character_step.gd` onu kullanmaz, portreyi doku olarak koyar (`character_step.gd:55`)
-  ↳ `DialoguePortraitCard` sınıfını yalnız kendi tscn'si referanslar (kodda `new`, `preload` ya da sahne örneği yok)
 - HARITA "Onboarding": akış `Footer/Reason`a yazar; sahnede düğüm `Paper/Col/Foot/Row/Reason` (`OnboardingFlow.tscn:121`, kodda `%Reason`)
