@@ -554,7 +554,6 @@ func _export_paper_png() -> String:
 	if err != OK:
 		push_warning("[EndingScene] gazete PNG save failed: %d" % err)
 		return ""
-	print("[EndingScene] gazete saved %s" % ProjectSettings.globalize_path(path))
 	return path
 
 

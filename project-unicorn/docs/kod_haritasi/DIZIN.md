@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git 199e41f · 2026-10-26 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git e11e414 · 2026-10-26 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -132,9 +132,9 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/menu/licenses.gd · 80 · - · Control · 2 sinyal · 5 func
 - scripts/menu/main_menu.gd · 100 · - · Control · 2 sinyal · 5 func
 
-### scripts/modals/ (9 dosya, 2817 satır)
+### scripts/modals/ (9 dosya, 2816 satır)
 - scripts/modals/confirm_modal.gd · 65 · - · Control · 3 sinyal · 4 func
-- scripts/modals/ending_scene.gd · 563 · EndingScene · Control · 2 sinyal · 25 func
+- scripts/modals/ending_scene.gd · 562 · EndingScene · Control · 2 sinyal · 25 func
 - scripts/modals/hr_action_modal.gd · 237 · - · Control · 2 sinyal · 10 func
 - scripts/modals/save_load_modal.gd · 262 · - · Control · 3 sinyal · 18 func
 - scripts/modals/settings_modal.gd · 480 · - · Control · 1 sinyal · 26 func
@@ -153,7 +153,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/onboarding/steps/origin_traits_step.gd · 332 · - · OnboardingStep · 0 sinyal · 18 func
 - scripts/onboarding/steps/step_base.gd · 118 · OnboardingStep · Control · 1 sinyal · 10 func
 
-### scripts/systems/ (72 dosya, 24479 satır)
+### scripts/systems/ (72 dosya, 24469 satır)
 - scripts/systems/angel_round_system.gd · 52 · AngelRoundSystem · RefCounted · 0 sinyal · 1 func
 - scripts/systems/b2b_constants.gd · 286 · B2BConstants · RefCounted · 0 sinyal · 9 func
 - scripts/systems/b2b_sales_system.gd · 652 · B2BSalesSystem · RefCounted · 0 sinyal · 43 func
@@ -163,7 +163,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/systems/customer_rep_system.gd · 380 · CustomerRepSystem · RefCounted · 0 sinyal · 19 func
 - scripts/systems/display_settings.gd · 350 · DisplaySettings · RefCounted · 0 sinyal · 27 func
 - scripts/systems/endings_copy.gd · 539 · EndingsCopy · RefCounted · 0 sinyal · 31 func
-- scripts/systems/endings_system.gd · 527 · EndingsSystem · RefCounted · 0 sinyal · 28 func
+- scripts/systems/endings_system.gd · 518 · EndingsSystem · RefCounted · 0 sinyal · 28 func
 - scripts/systems/finance_system.gd · 329 · FinanceSystem · RefCounted · 0 sinyal · 22 func
 - scripts/systems/founder_constants.gd · 196 · FounderConstants · RefCounted · 0 sinyal · 9 func
 - scripts/systems/graphics_settings.gd · 211 · - · RefCounted · 0 sinyal · 14 func
@@ -186,7 +186,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/systems/office_constants.gd · 109 · OfficeConstants · RefCounted · 0 sinyal · 0 func
 - scripts/systems/office_system.gd · 91 · OfficeSystem · RefCounted · 0 sinyal · 12 func
 - scripts/systems/people_parts.gd · 165 · PeopleParts · RefCounted · 0 sinyal · 2 func
-- scripts/systems/phase_gate_system.gd · 178 · PhaseGateSystem · RefCounted · 0 sinyal · 9 func
+- scripts/systems/phase_gate_system.gd · 177 · PhaseGateSystem · RefCounted · 0 sinyal · 9 func
 - scripts/systems/pitch_constants.gd · 181 · PitchConstants · RefCounted · 0 sinyal · 1 func
 - scripts/systems/product_catalog.gd · 241 · ProductCatalog · RefCounted · 0 sinyal · 14 func
 - scripts/systems/product_lines.gd · 432 · ProductLines · RefCounted · 0 sinyal · 26 func
@@ -554,10 +554,10 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
   ↳ phase_gate_reached emit: scripts/systems/phase_gate_system.gd:85
   ↳ phase_gate_reached connect: scripts/events/core/signals.gd:36, scripts/tabs/finance/finance_ozet_view.gd:69, scripts/debug/endgame_smoke.gd:74, scripts/debug/run_probe.gd:490
 - run_ended(ending_id: String, ending_data: Dictionary) · scripts/autoload/event_bus.gd:245
-  ↳ run_ended emit: scripts/systems/endings_system.gd:484
+  ↳ run_ended emit: scripts/systems/endings_system.gd:475
   ↳ run_ended connect: scripts/main/main.gd:4780, scripts/debug/endgame_smoke.gd:75,1878, scripts/debug/run_probe.gd:1200
 - milestone_reached(milestone_id: String, ending_data: Dictionary) · scripts/autoload/event_bus.gd:248
-  ↳ milestone_reached emit: scripts/systems/endings_system.gd:448
+  ↳ milestone_reached emit: scripts/systems/endings_system.gd:441
   ↳ milestone_reached connect: scripts/main/main.gd:4781, scripts/debug/endgame_smoke.gd:13780, scripts/debug/run_probe.gd:501
 - shutter_changed(weeks_left: int) · scripts/autoload/event_bus.gd:250 · emit: scripts/autoload/game_state.gd:425 · connect: scripts/tabs/finance/finance_ozet_view.gd:80, scripts/tabs/finance_tab.gd:51, scripts/ui/components/top_bar.gd:109
 - month_ended(month_close: Dictionary) · scripts/autoload/event_bus.gd:253

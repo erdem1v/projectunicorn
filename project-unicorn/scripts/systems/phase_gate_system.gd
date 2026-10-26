@@ -119,7 +119,6 @@ static func debug_force_gate() -> void:
 		return
 	var gate: Dictionary = _gate_for_phase(GameState.phase)
 	if gate.is_empty():
-		print("[PhaseGateSystem] debug_force_gate: no gate for phase %d" % GameState.phase)
 		return
 	_open_gate(gate)
 

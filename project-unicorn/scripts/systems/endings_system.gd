@@ -184,8 +184,6 @@ static func on_pivot_accepted() -> void:
 	# callbacks, remove a queued meeting prompt. Active sheets are impossible here
 	# (the buyout card is gated on road_over(), which needs no live sheet), so none to clear.
 	VCPitchSystem.on_pivot()
-	if OS.is_debug_build():
-		print("[EndingsSystem] Pivot accepted — VC path closed; the bootstrap road continues (goal: %d Artıda months)" % PROFIT_STREAK_MONTHS)
 
 
 # Cascade-deferral helper: any VC awaiting delayed sheet delivery counts as a live win path.
@@ -330,9 +328,6 @@ static func _tick_acquisition_window() -> void:
 	if GameState.acq_road_over_day >= 0 or not road_over():
 		return
 	GameState.acq_road_over_day = GameState.day
-	if OS.is_debug_build():
-		print("[EndingsSystem] Series A road closed by '%s' (day %d) — buyout window open"
-			% [GameState.faced_series_a_by, GameState.day])
 
 
 ## "Kendi paramla devam" — the refusal, and BOTH of its consequences.
@@ -443,8 +438,6 @@ static func trigger_milestone(milestone_id: String) -> void:
 			return
 	var data: Dictionary = _build_ending_data(milestone_id, {})
 	data["mode"] = MODE_MILESTONE
-	if OS.is_debug_build():
-		print("[EndingsSystem] MILESTONE: %s (Day %d) — the run continues" % [milestone_id, GameState.day])
 	EventBus.milestone_reached.emit(milestone_id, data)
 	EventBus.speed_change_requested.emit(0)
 
@@ -479,8 +472,6 @@ static func trigger_ending(ending_id: String, telegraph: String,
 	GameState.set_run_active(false)
 	GameState.ending_id = ending_id
 	EventGate.flush()  # pending scenes (incl. Frank gate) die
-	if OS.is_debug_build():
-		print("[EndingsSystem] RUN ENDED: %s (Day %d)" % [ending_id, GameState.day])
 	EventBus.run_ended.emit(ending_id, _build_ending_data(ending_id, extra))
 	EventBus.speed_change_requested.emit(0)  # freeze clock, pause tree
 
