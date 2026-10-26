@@ -2695,6 +2695,7 @@ PRODUCT_SERVER_TIER_TIP_FINAL,Kurumsal kademeden geri dönülmez.,There is no mo
 PRODUCT_SERVER_TIER_LOCKED,Kurumsal sunucudasın; geri dönüş yok.,You are on Enterprise servers; there is no moving back.
 PRODUCT_SERVER_TIER_PREVIEW,{from} → {to} · ayda {old} → {new},{from} → {to} · {old} → {new} a month
 PRODUCT_SERVER_TIER_SWITCH,Geç,Switch
+PRODUCT_SERVER_LOCK_REASON,"Sunucu sözleşmen sürüyor, kademe {weeks} daha değişmez.",Your server contract is running; the tier stays fixed for another {weeks}.
 PRODUCT_NEXT_EMPTY,→ ile kart gönder,Send cards with →
 PRODUCT_FLAG_DEADLINE,{customer} · {request} · son tarih,{customer} · {request} · deadline
 PRODUCT_THIS_QUARTER,Bu çeyrek,This quarter
@@ -3228,6 +3229,10 @@ EFFECT_PROSPECT_LOST,Aday düşer: {prospect},Lead lost: {prospect}
 EFFECT_OFFER_DISCOUNT,Teklif: {prospect} imzalarsa {weeks} MRR {pct},"Offer: if {prospect} signs, MRR {pct} for {weeks}"
 EFFECT_OFFER_PROMISE,"Teklif: {prospect} imzalarsa söz verilir, {step}","Offer: if {prospect} signs, we promise {step}"
 EFFECT_PITCH_FOCUS,{weeks} satış görüşmelerinde öne çıkan: {area},Sales meetings lean on {area} for {weeks}
+EFFECT_SERVER_PRICE,"Sunucu fiyatı {pct}, ayda {v}","Server price {pct}, {v} a month"
+EFFECT_SERVER_PRICE_TIERS,Standart ve Kurumsal sunucu {pct} ucuz,Standard and Enterprise servers {pct} cheaper
+EFFECT_SERVER_LOCK_SEATS,"Sunucu sözleşmesi {weeks}: kademe sabit, kapasite en az {n} koltuk","Server contract for {weeks}: tier fixed, capacity at least {n} seats"
+EFFECT_SERVER_LOCK_USERS,"Sunucu sözleşmesi {weeks}: kademe sabit, kapasite en az {n} kullanıcı","Server contract for {weeks}: tier fixed, capacity at least {n} users"
 VC_WHY_STRAIN,Aranızda hâlâ bir kırgınlık var.,There is still some friction between you.
 FIN_ONETIME_LEGAL,Hukuk masrafı,Legal fees
 FIN_ONETIME_PAY_CUT,Maaş indirimi,Pay cut

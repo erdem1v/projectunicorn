@@ -100,7 +100,7 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - Kapsam: `version_scope` değerleri `demo` (130 dosya), `ea`, `draft`, `retired`, `fixture`; G2 `EvTuning.SHIPPED_SCOPES` `tuning.gd:169` içinde mi diye bakar, değeri `EndingsSystem.shipped_scopes()` (`endings_system.gd:366,408`) verir
 - Ayar sabitleri `scripts/events/core/tuning.gd`: `MIN_GAP_WEEKS_DEFAULT` 4 (`:14`), `FAMILY_GAP_WEEKS` (`:33`), `CATEGORY_QUOTA_WEEK` (`:61`), `MAX_INTERRUPTS_PER_DAY` 2 (`:80`), `START_IMMUNITY_WEEKS` 3, `DISARM_WEEKS` 4, `BUDGETS`
 - Kapı sabitleri: `EvGate.DEFAULT_ALLOWED_HOURS` [8, 20] (`gate.gd:39`), `EvQueue.PRIORITY` (`queue.gd:23`), `EvLatches.DEFAULT_COOLDOWN_WEEKS` 4 (`latches.gd:21`), `EvCatalog.EXCLUDED_DIRS/EXCLUDED_PREFIXES` (`catalog.gd:17,19`)
-- Fiil sözlüğü `core/effects.gd`: `NEUTRAL_VERBS` (`:32`, 52), `ECONOMIC_VERBS` (`:71`, 22), `TERMINAL_VERBS` (`:82`, 1) = 75 fiil; `_apply` kolu 68 fiile var (aşağıda Dikkat)
+- Fiil sözlüğü `core/effects.gd`: `NEUTRAL_VERBS` (`:32`, 57), `ECONOMIC_VERBS` (`:75`, 27), `TERMINAL_VERBS` (`:86`, 1) = 85 fiil; `_apply` kolu 78 fiile var (aşağıda Dikkat)
 - Lint taban dosyaları: `tools/lint_baseline.json` (parmak izi listesi `accepted`), `tools/lint_v3_frozen.json` (`cards`: O2, O4, O5, T2, T3 bu kartlarda uyarı); `EvLint.BASELINE_PATH/FROZEN_PATH` `lint.gd:36-37`
 - Sözlük çıktısı `docs/content/events_draft/_vocabulary.md` (751 satır; 256 seam, 75 fiil, 146 kart, 3 ark; KEEP bloğu 743-751 elle); fikstür kartları `version_scope: "fixture"` taşır
 
@@ -178,6 +178,11 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
   ↳ `pitch_focus {area, weeks}` (`SalesMeetingSystem.set_pitch_focus`; terim yalnız o alanı bekleyen ve ürünün karşıladığı masada, `sales.pitch_focus`). `account_notice`, `prospect_offer`,
   ↳ `drop_prospect` EKONOMİK listede (işaretsiz tutar = bedel, `on_expire`da yasal). `promise_extend` / `promise_break` `scope`lu yazılırsa o hesabın sözlerine iner (oldest-first;
   ↳ uzatmada en eskisine) ve SYSTEM kartı gerektirmez (lint V2 `SCOPED_VERBS`)
+- Altyapı fiilleri: `server_price {mult, tiers?}` (`InfraSystem.scale_price`; çarpan birim fiyata biner, `tiers` yoksa her kademeye, varsa yalnız adlı kademelere;
+  ↳ EKONOMİK listede, `mult` > 1 bedel, `on_expire`da yalnız zam yasal; çipi ve satırı `EvEffects.server_price_plan`ın `{before, after}` faturasıyla yazar; lint: `mult` > 0,
+  ↳ `tiers` yalnız `["cloud", "enterprise"]` ve `mult` < 1, çünkü çip o ikiliyi ve ucuzlamayı yazar), `server_lock {weeks}` (`InfraSystem.lock`: `weeks` hafta kademe sabit,
+  ↳ kapasite bugünkü birimin altına inmez; NÖTR, çip bedel; satır imzadaki kapasiteyi koşucu pazarının koltuğu ya da kullanıcısı olarak tutar). Sözleşme kuralı
+  ↳ `InfraSystem.set_provider` / `set_capacity`dedir, olay yalnız imzalar
 - `trust_delta accounts`: `slots` (+ `slots: [yuva...]`), `others` (kartın müşteri yuvaları dışındaki bütün B2B hesaplar; `line` verilirse o hattı kullananlar), `all`, `onboarding` (`day < onboarding_until`);
   ↳ çip grubu plan satırının `group` alanı (`all` / `other` / `new`)
 - Aday ve hesap seam'leri: `aday.sector` (ad alanı `aday` → `prospect` yuvası), `musteri.sector`, `musteri.bugs`, `musteri.onboarding_short`, `musteri.promise_late` (en eski açık sözün kademesi koşan sprintte ve hiçbir kartı yetişmiyor;

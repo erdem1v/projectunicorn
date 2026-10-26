@@ -320,6 +320,7 @@ static func _lint_effects(where: String, effects: Array, context: String, card: 
 		if verb == "trust_delta":
 			_lint_trust_delta(where, effect, card)
 		_lint_sales_effect(where, effect, card)
+		_lint_server_effect(where, effect)
 		if verb == "morale_crew" and String(effect.get("crew", "")) not in MORALE_CREWS:
 			_add(SEVERITY_ERROR, "17.1", where, "morale_crew crew '%s' is not one of %s"
 				% [effect.get("crew", ""), str(MORALE_CREWS)])
@@ -356,6 +357,20 @@ static func _lint_sales_effect(where: String, effect: Dictionary, card: Dictiona
 	if verb == "pitch_focus" and (not ProductQuality.weights("b2b", "").has(String(effect.get("area", "")))
 			or int(effect.get("weeks", 0)) < 1):
 		_add(SEVERITY_ERROR, "17.1", where, "pitch_focus needs a ProductQuality area and weeks of 1 or more")
+
+
+## The server verbs' arguments: a price scales by a multiplier above 0, the tier form is the Standard and Enterprise pair
+## with a cut (the chip names exactly those two and a cheaper price), a contract runs for weeks.
+static func _lint_server_effect(where: String, effect: Dictionary) -> void:
+	var verb: String = String(effect.get("verb", ""))
+	if verb == "server_price":
+		var mult: float = float(effect.get("mult", 0.0))
+		if mult <= 0.0:
+			_add(SEVERITY_ERROR, "17.1", where, "server_price needs a mult above 0")
+		if effect.has("tiers") and (effect["tiers"] != [InfraSystem.PROVIDER_CLOUD, InfraSystem.PROVIDER_ENTERPRISE] or mult >= 1.0):
+			_add(SEVERITY_ERROR, "17.1", where, "server_price tiers is [\"cloud\", \"enterprise\"] with a mult under 1: the chip names those two and a cut")
+	if verb == "server_lock" and int(effect.get("weeks", 0)) < 1:
+		_add(SEVERITY_ERROR, "17.1", where, "server_lock needs weeks of 1 or more")
 
 
 ## A `trust_delta` names whose ledger it writes, and a standing cost names its end.
@@ -412,7 +427,7 @@ const WRITER_VERBS := [
 	"send_on_leave", "summer_leave", "sick_leave", "promote", "work_hours",
 	"damage_product", "line_harden", "sprint_card_test", "sprint_fix_first",
 	"sprint_card_trim", "sprint_card_outlook", "sprint_card_first", "b2b_month_discount",
-	"account_notice", "prospect_offer", "drop_prospect", "take_account", "pitch_focus",
+	"account_notice", "prospect_offer", "drop_prospect", "take_account", "pitch_focus", "server_price", "server_lock",
 ]
 
 ## V2: reserved for a system card. Each moves the run itself — a phase, a table, an arc, an
@@ -433,7 +448,7 @@ const SCOPED_VERBS := ["promise_extend", "promise_break"]
 ## edit cannot move the rule.
 const CONSEQUENCE_VERBS := ["sprint_card_carry", "b2b_retain_delay", "b2b_retain_ignore",
 	"b2b_expand_decline", "promise_create", "sprint_card_trim", "sprint_card_outlook", "sprint_card_first",
-	"sprint_fix_first", "summer_leave", "prospect_offer"]
+	"sprint_fix_first", "summer_leave", "prospect_offer", "server_lock"]
 
 ## O4: the verbs that land on a subject, and the slot type each lands on.
 const SUBJECT_VERBS := {

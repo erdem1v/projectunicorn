@@ -34,6 +34,12 @@ const INFRA_UNITS := "mvp_infra_units"
 const INFRA_AUTO := "mvp_infra_auto"
 const INFRA_AUTO_LAST := "mvp_infra_auto_last"
 const INFRA_SERVED_WEEKS := "mvp_infra_served_weeks"
+## Birim fiyatın olay çarpanı: her kademede ve kademe başına ek ({kademe: çarpan}). Yazan InfraSystem.scale_price.
+const INFRA_PRICE_MULT := "mvp_infra_price_mult"
+const INFRA_TIER_MULT := "mvp_infra_tier_mult"
+## Sunucu sözleşmesi: kademe `INFRA_LOCK_UNTIL` tikine dek sabit, kapasite `INFRA_LOCK_UNITS` biriminin altına inmez; -1 = sözleşme yok.
+const INFRA_LOCK_UNTIL := "mvp_infra_lock_until"
+const INFRA_LOCK_UNITS := "mvp_infra_lock_units"
 
 ## §9 — her yayın ilgiyi buraya tazeler.
 const INTEREST_MAX := 100.0
@@ -331,3 +337,31 @@ static func infra_served_weeks() -> Array:
 
 static func set_infra_served_weeks(served: Array) -> void:
 	GameState.set_flag(INFRA_SERVED_WEEKS, served)
+
+
+static func infra_price_mult() -> float:
+	return float(GameState.get_flag(INFRA_PRICE_MULT, 1.0))
+
+
+static func infra_tier_mult() -> Dictionary:
+	return (GameState.get_flag(INFRA_TIER_MULT, {}) as Dictionary).duplicate()
+
+
+static func set_infra_price(mult: float, tiers: Dictionary) -> void:
+	GameState.set_flag(INFRA_PRICE_MULT, mult)
+	GameState.set_flag(INFRA_TIER_MULT, tiers)
+	EventBus.infra_changed.emit()
+
+
+static func infra_lock_until() -> int:
+	return int(GameState.get_flag(INFRA_LOCK_UNTIL, -1))
+
+
+static func infra_lock_units() -> int:
+	return int(GameState.get_flag(INFRA_LOCK_UNITS, 0))
+
+
+static func set_infra_lock(until: int, units: int) -> void:
+	GameState.set_flag(INFRA_LOCK_UNTIL, until)
+	GameState.set_flag(INFRA_LOCK_UNITS, units)
+	EventBus.infra_changed.emit()

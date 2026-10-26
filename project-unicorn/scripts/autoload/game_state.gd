@@ -80,6 +80,10 @@ const FLAG_TYPES := {
 	"mvp_infra_auto": TYPE_BOOL,                # Otomatik ayarla anahtarı
 	"mvp_infra_auto_last": TYPE_DICTIONARY,     # son otomatik büyüme {day, old, new}
 	"mvp_infra_served_weeks": TYPE_ARRAY,       # büyüme satırının geçmişi: son haftaların hizmet edilen sayısı
+	"mvp_infra_price_mult": TYPE_FLOAT,         # olayların birim fiyata bindirdiği çarpan, her kademede
+	"mvp_infra_tier_mult": TYPE_DICTIONARY,     # {kademe: çarpan}: yalnız adlı kademelere binen ek çarpan
+	"mvp_infra_lock_until": TYPE_INT,           # sunucu sözleşmesinin bitiş tiki, -1 = sözleşme yok
+	"mvp_infra_lock_units": TYPE_INT,           # sözleşme sürerken kapasitenin inemeyeceği birim
 	# --- B2C economy ---
 	# FLOAT so the hourly tick's slow erosion survives instead of rounding to zero each hour.
 	"b2c_audience": TYPE_FLOAT,

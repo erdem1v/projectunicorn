@@ -212,6 +212,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"load_mult_steps":                fail = _case_load_mult_steps(pinned)
 		"auto_capacity_grows_only":       fail = _case_auto_capacity_grows_only()
 		"infra_local_provider_tradeoff": fail = _case_infra_local_provider_tradeoff()
+		"infra_price_lock":            fail = _case_infra_price_lock()
 		"enterprise_clause_timeline":    fail = _case_enterprise_clause_timeline()
 		"b2b_exit_notice":               fail = _case_b2b_exit_notice()
 		"b2b_timed_discount":            fail = _case_b2b_timed_discount()
@@ -15204,6 +15205,115 @@ static func _case_infra_local_provider_tradeoff() -> String:
 	for tier in [InfraSystem.PROVIDER_CLOUD, InfraSystem.PROVIDER_LOCAL]:
 		if InfraSystem.set_provider(tier) or InfraSystem.provider() != InfraSystem.PROVIDER_ENTERPRISE:
 			return "the enterprise provider let the company back down to '%s'" % tier
+	return ""
+
+
+## Sunucu fiyat çarpanı ve sözleşmesi (olay fiilleri `server_price`, `server_lock`): çarpan birim fiyata biner ve B2C ile B2B faturasına
+## iner, kademe çarpanı yalnız adlı kademelere; kartın çipi yazılacak faturayı söyler ve geçmiş satırı aynı çipi okur. Sözleşme
+## sürerken hiçbir kademeye geçilmez (Kurumsal dahil), kapasite imzadaki birimin altına inmez ama büyür (Otomatik ayar dahil),
+## sözleşme tam süresinde biter ve çarpan ile sözleşme kayıttan geçer.
+## FALSİFİKASYON: `unit_price`taki çarpanı sil → fatura iddiası FAIL; `scale_price`ta kademe çarpanını `all`a yaz → kademe fiyatı
+## iddiası FAIL; `set_provider`daki `lock_reason` denetimini sil → kademe iddiası FAIL; `capacity_floor`u hep CAPACITY_MIN yap →
+## kapasite iddiası FAIL; `lock_weeks_left`e bir tik ekle → süre iddiası FAIL; `server_price` kolunda planı yazmadan sonra al → satır
+## iddiası FAIL; `server_price_plan`da `hit`i hep true yap → Ekonomik iddiası FAIL; çipin kutbunu ters çevir → çip iddiası FAIL.
+static func _case_infra_price_lock() -> String:
+	_seed_support_fixture("b2c")
+	InfraSystem.set_provider(InfraSystem.PROVIDER_CLOUD)
+	InfraSystem.set_capacity(10)
+	if InfraSystem.monthly_bill() != 2500 or ProductState.infra_price_mult() != 1.0 or InfraSystem.lock_reason() != "":
+		return "servers no event has touched bill %d, multiplier %s, lock '%s'; want 2500, 1 and none" % [
+			InfraSystem.monthly_bill(), ProductState.infra_price_mult(), InfraSystem.lock_reason()]
+	var prices := func(market: String) -> Array:
+		return [InfraSystem.PROVIDER_LOCAL, InfraSystem.PROVIDER_CLOUD, InfraSystem.PROVIDER_ENTERPRISE].map(
+			func(id: String) -> int: return InfraSystem.unit_price(id, market))
+	var chip := func(effect: Dictionary, as_row: bool) -> Dictionary:
+		return EvChips.describe(effect, {}, {}, as_row)[0]
+
+	# A rise on every tier: the chip names the bill before the effect writes it, the row keeps it and reads the same chip.
+	var rise := {"verb": "server_price", "mult": 1.2}
+	var rise_chip: Dictionary = chip.call(rise, false)
+	var rise_row: Dictionary = EvEffects.run_played([rise], {})[0]
+	if int(rise_row.before) != 2500 or int(rise_row.after) != 3000 or InfraSystem.monthly_bill() != 3000:
+		return "a x1.2 rise took the bill from %s to %s (now %d), want 2500 to 3000" % [rise_row.get("before"), rise_row.get("after"), InfraSystem.monthly_bill()]
+	var rise_text: String = EvChips.text(rise_chip)
+	if rise_chip.polarity != "cost" or not rise_text.contains("20") or not rise_text.contains("500") \
+			or EvChips.text(chip.call(rise_row, true)) != rise_text:
+		return "the rise reads '%s' (%s) on the card and '%s' on the row" % [rise_text, rise_chip.polarity, EvChips.text(chip.call(rise_row, true))]
+	if prices.call("b2c") != [150, 300, 600] or prices.call("b2b") != [72, 144, 288]:
+		return "x1.2 gave B2C prices %s and B2B prices %s, want [150, 300, 600] and [72, 144, 288]" % [prices.call("b2c"), prices.call("b2b")]
+	GameState.set_flag("mvp_market_type", "b2b")
+	var b2b_bill: int = InfraSystem.monthly_bill()
+	GameState.set_flag("mvp_market_type", "b2c")
+	InfraSystem.daily_tick()
+	if b2b_bill != 1440 or int(FinanceSystem.get_burn_breakdown().get(InfraSystem.BURN_CATEGORY, -1)) != FinanceSystem.daily_rate(3000):
+		return "the multiplier reached the B2B bill as %d (want 1440) or the burn as %s" % [b2b_bill, FinanceSystem.get_burn_breakdown()]
+
+	# A cut on two tiers only: the local tier keeps its price, a company on it is promised no change.
+	var cut := {"verb": "server_price", "mult": 0.75, "tiers": [InfraSystem.PROVIDER_CLOUD, InfraSystem.PROVIDER_ENTERPRISE]}
+	var cut_chip: Dictionary = chip.call(cut, false)
+	var cut_row: Dictionary = EvEffects.run_played([cut], {})[0]
+	if int(cut_row.before) != 3000 or int(cut_row.after) != 2250 or prices.call("b2c") != [150, 225, 450] or prices.call("b2b") != [72, 108, 216]:
+		return "a x0.75 cut on Standard and Enterprise took the bill from %s to %s, prices %s and %s" % [
+			cut_row.get("before"), cut_row.get("after"), prices.call("b2c"), prices.call("b2b")]
+	var cut_text: String = EvChips.text(cut_chip)
+	if cut_chip.polarity != "gain" or not cut_text.contains("25") or EvChips.text(chip.call(cut_row, true)) != cut_text:
+		return "the cut reads '%s' (%s) on the card and '%s' on the row" % [cut_text, cut_chip.polarity, EvChips.text(chip.call(cut_row, true))]
+	InfraSystem.set_provider(InfraSystem.PROVIDER_LOCAL)
+	var local_plan: Dictionary = EvEffects.server_price_plan(cut)
+	InfraSystem.set_provider(InfraSystem.PROVIDER_CLOUD)
+	if local_plan.before != local_plan.after:
+		return "a cut on Standard and Enterprise promised a company on Economy a bill of %d, was %d" % [local_plan.after, local_plan.before]
+
+	# The contract: the tier is fixed and the capacity holds at the 10 units it was signed at, but may grow.
+	var signed: int = GameState.day
+	var contract := {"verb": "server_lock", "weeks": 52}
+	var contract_chip: String = EvChips.text(chip.call(contract, false))
+	var contract_row: Dictionary = EvEffects.run_played([contract], {})[0]
+	if int(contract_row.capacity) != 10000 or not contract_chip.contains("52") or not contract_chip.contains(Fmt.group(10000)) \
+			or EvChips.text(chip.call(contract_row, true)) != contract_chip:
+		return "the contract reads '%s' on the card and '%s' on the row (capacity %s)" % [contract_chip, EvChips.text(chip.call(contract_row, true)), contract_row.get("capacity")]
+	var reason: String = InfraSystem.lock_reason()
+	if reason == "" or TranslationServer.translate(reason) == reason or InfraSystem.lock_weeks_left() != 52:
+		return "the contract's reason is '%s' (%s) with %d weeks left, want a key that resolves and 52" % [reason, TranslationServer.translate(reason), InfraSystem.lock_weeks_left()]
+	for tier in [InfraSystem.PROVIDER_ENTERPRISE, InfraSystem.PROVIDER_LOCAL]:
+		if InfraSystem.set_provider(tier) or InfraSystem.provider() != InfraSystem.PROVIDER_CLOUD:
+			return "the company moved to '%s' under a contract" % tier
+	if InfraSystem.set_capacity(4) != 10 or InfraSystem.adjust_capacity(-1) != 10 or InfraSystem.units() != 10:
+		return "capacity went under the contract's 10 units (%d)" % InfraSystem.units()
+	if InfraSystem.set_capacity(15) != 15:
+		return "a contract kept the capacity from growing"
+	ProductState.set_infra_auto(true)
+	GameState.set_flag("b2c_audience", 12500.0)
+	InfraSystem.auto_adjust()
+	ProductState.set_infra_auto(false)
+	if InfraSystem.units() != 20 or InfraSystem.set_capacity(4) != 10:
+		return "Auto adjust under a contract left %d units, or the floor moved with the growth" % InfraSystem.units()
+
+	# It ends in its last week and not a tick earlier or later; then the tier and the capacity are free.
+	while GameState.day < signed + 51:
+		GameState.advance_day()
+	if InfraSystem.lock_weeks_left() != 1 or InfraSystem.lock_reason() == "" or InfraSystem.set_provider(InfraSystem.PROVIDER_ENTERPRISE):
+		return "the contract let go early (%d weeks left)" % InfraSystem.lock_weeks_left()
+	GameState.advance_day()
+	if InfraSystem.lock_weeks_left() != 0 or InfraSystem.lock_reason() != "" or InfraSystem.set_capacity(3) != 3 \
+			or not InfraSystem.set_provider(InfraSystem.PROVIDER_ENTERPRISE):
+		return "the contract held after its %d weeks (units %d, tier %s)" % [52, InfraSystem.units(), InfraSystem.provider()]
+
+	# Multipliers and the contract survive a save.
+	InfraSystem.lock(8)
+	var until: int = ProductState.infra_lock_until()
+	if not SaveManager.save_to_slot(SAVE_SLOT_A):
+		return "save_to_slot refused"
+	var loaded: bool = SaveManager.apply_loaded_state(SaveManager.read_slot(SAVE_SLOT_A))
+	_cleanup_save_slots()
+	if not loaded:
+		return "the slot did not load back"
+	var tiers: Dictionary = ProductState.infra_tier_mult()
+	if not is_equal_approx(ProductState.infra_price_mult(), 1.2) or tiers.size() != 2 or not is_equal_approx(float(tiers.get("cloud", 0.0)), 0.75) \
+			or prices.call("b2c") != [150, 225, 450]:
+		return "the multipliers came back as %s and %s, prices %s" % [ProductState.infra_price_mult(), tiers, prices.call("b2c")]
+	if ProductState.infra_lock_until() != until or ProductState.infra_lock_units() != 3 or InfraSystem.lock_weeks_left() != 8 or InfraSystem.set_capacity(1) != 3:
+		return "the contract came back as until %d for %d units (%d weeks left)" % [ProductState.infra_lock_until(), ProductState.infra_lock_units(), InfraSystem.lock_weeks_left()]
 	return ""
 
 

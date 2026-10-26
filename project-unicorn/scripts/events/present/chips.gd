@@ -275,6 +275,20 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 		"pitch_focus":
 			return [_part(_t("EFFECT_PITCH_FOCUS").format({"weeks": Fmt.weeks(int(item.get("weeks", 1))),
 				"area": SprintCatalog.area_short(String(item.get("area", "")))}), "", "gain")]
+		# The unit price's change and what it does to the month's bill (the row keeps both); a cut on named tiers reads as the cut alone.
+		"server_price":
+			var price_pct: int = roundi((float(item.get("mult", 1.0)) - 1.0) * 100.0)
+			if not (item.get("tiers", []) as Array).is_empty():
+				return [_part(_t("EFFECT_SERVER_PRICE_TIERS").format({"pct": Fmt.percent(-price_pct, 0)}), "", "gain")]
+			var quote: Dictionary = item if is_delta else EvEffects.server_price_plan(item)
+			return [_part(_t("EFFECT_SERVER_PRICE").format({"pct": Fmt.signed_percent(price_pct),
+				"v": _money(int(quote.get("after", 0)) - int(quote.get("before", 0)))}), "", _signed(-price_pct))]
+		# The contract: the weeks the tier stays and the capacity it may not fall under (the row keeps the one it was signed at).
+		"server_lock":
+			var in_seats: bool = ProductState.market_type() == "b2b"
+			return [_part(_t("EFFECT_SERVER_LOCK_SEATS" if in_seats else "EFFECT_SERVER_LOCK_USERS").format(
+				{"weeks": Fmt.weeks(int(item.get("weeks", 1))),
+				"n": Fmt.group(int(item.get("capacity", InfraSystem.purchased_capacity())))}), "", "cost")]
 		# What the scheduled card lands whichever way it is answered, under the wait. Those are the target
 		# card's effects, not landed deltas, so a history row reads them as the live chip does.
 		"schedule_event":

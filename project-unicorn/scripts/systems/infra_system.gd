@@ -95,14 +95,16 @@ static func unit_size() -> int:
 
 
 ## Bir birimin aylık fiyatı. Boş sağlayıcı (henüz seçilmemiş) meşrudur ve 0'dır;
-## bilinmeyen sağlayıcı 0 döner ve bağırır.
-static func unit_price(provider_id: String, market: String = "") -> int:
+## bilinmeyen sağlayıcı 0 döner ve bağırır. Olayların koyduğu çarpanlar (`scale_price`) burada tek yerde uygulanır; fatura,
+## ipucu, posta ve bot bu fiyatı okur. `scale`, henüz yazılmamış bir çarpanın fiyatıdır (çipin vaat ettiği fatura).
+static func unit_price(provider_id: String, market: String = "", scale: float = 1.0) -> int:
 	if provider_id == "":
 		return 0
 	if not is_provider(provider_id):
 		push_error("[InfraSystem] unit_price on unknown provider '%s'" % provider_id)
 		return 0
-	return int((UNIT_PRICE_B2B if _is_b2b(market) else UNIT_PRICE_B2C)[provider_id])
+	var base: int = (UNIT_PRICE_B2B if _is_b2b(market) else UNIT_PRICE_B2C)[provider_id]
+	return roundi(base * ProductState.infra_price_mult() * float(ProductState.infra_tier_mult().get(provider_id, 1.0)) * scale)
 
 
 static func _is_b2b(market: String) -> bool:
@@ -171,12 +173,13 @@ static func weeks_to_amber() -> int:
 
 ## Ekonomik ile Standart arasında geçiş her an ve bedelsizdir; yeni fiyat bir sonraki günden işler (fatura yalnız
 ## daily_tick()'te yayımlandığı için bugünün burn'ü zaten yazılmıştır). Kurumsal'a geçiş geri dönüşsüzdür ve hesapların
-## sunucu maddelerini karşılar: kural burada, çünkü seçici, posta düğmesi, bot ve debug aynı kapıdan geçer.
+## sunucu maddelerini karşılar: kural burada, çünkü seçici, posta düğmesi, bot ve debug aynı kapıdan geçer. Sunucu
+## sözleşmesi sürerken hiçbir kademeye (Kurumsal dahil) geçilmez.
 static func set_provider(provider_id: String) -> bool:
 	if not is_provider(provider_id):
 		push_error("[InfraSystem] set_provider on unknown provider '%s'" % provider_id)
 		return false
-	if provider() == PROVIDER_ENTERPRISE and provider_id != PROVIDER_ENTERPRISE:
+	if lock_reason() != "" or (provider() == PROVIDER_ENTERPRISE and provider_id != PROVIDER_ENTERPRISE):
 		return false
 	var moves_up: bool = provider_id == PROVIDER_ENTERPRISE and provider() != PROVIDER_ENTERPRISE
 	ProductState.set_infra_provider(provider_id)
@@ -185,9 +188,9 @@ static func set_provider(provider_id: String) -> bool:
 	return true
 
 
-## Tavan yok, taban CAPACITY_MIN. Yerleşen birim sayısını döndürür.
+## Tavan yok, taban `capacity_floor()`. Yerleşen birim sayısını döndürür.
 static func set_capacity(new_units: int) -> int:
-	var clamped: int = maxi(new_units, CAPACITY_MIN)
+	var clamped: int = maxi(new_units, capacity_floor())
 	ProductState.set_infra_units(clamped)
 	return clamped
 
@@ -216,13 +219,46 @@ static func auto_adjust() -> void:
 	set_capacity(grown)
 
 
+# ---------------------------------------------------------------- olayların yazdığı: fiyat çarpanı ve sözleşme
+
+## Birim fiyata `mult` biner: her kademeye, ya da yalnız `tiers`a. Çarpanlar üst üste biner.
+static func scale_price(mult: float, tiers: Array = []) -> void:
+	var all: float = ProductState.infra_price_mult()
+	var by_tier: Dictionary = ProductState.infra_tier_mult()
+	if tiers.is_empty():
+		all *= mult
+	for id in tiers:
+		by_tier[id] = float(by_tier.get(id, 1.0)) * mult
+	ProductState.set_infra_price(all, by_tier)
+
+
+## Sunucu sözleşmesi: `weeks` hafta kademe sabit, kapasite bugünkü birimin altına inmez.
+static func lock(weeks: int) -> void:
+	ProductState.set_infra_lock(GameState.day + TimeModel.ticks(weeks), units())
+
+
+## Sözleşme sürüyorsa gerekçesinin CSV anahtarı, yoksa "". Static içinde tr() ölür: çeviriyi ve `{weeks}`i
+## (Fmt.weeks(lock_weeks_left())) çağıran doldurur.
+static func lock_reason() -> String:
+	return "PRODUCT_SERVER_LOCK_REASON" if lock_weeks_left() > 0 else ""
+
+
+static func lock_weeks_left() -> int:
+	return maxi(ProductState.infra_lock_until() - GameState.day, 0)
+
+
+## Kapasitenin inemeyeceği birim: sözleşme sürerken imzadaki, yoksa CAPACITY_MIN.
+static func capacity_floor() -> int:
+	return ProductState.infra_lock_units() if lock_reason() != "" else CAPACITY_MIN
+
+
 # ---------------------------------------------------------------- §10 fatura
 
 ## "aylık fatura = birim sayısı × birim fiyatı", mevcut sağlayıcıda ya da `on_provider`'da. Canlı ürün yoksa 0.
-static func monthly_bill(on_provider: String = "") -> int:
+static func monthly_bill(on_provider: String = "", scale: float = 1.0) -> int:
 	if not ProductState.is_live():
 		return 0
-	return units() * unit_price(on_provider if on_provider != "" else provider())
+	return units() * unit_price(on_provider if on_provider != "" else provider(), "", scale)
 
 
 static func daily_bill() -> int:

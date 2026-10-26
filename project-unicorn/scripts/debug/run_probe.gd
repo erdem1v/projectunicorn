@@ -1615,7 +1615,8 @@ static func _decide(surface: String, target: String) -> void:
 
 ## The servers, as the Sunucu block lets a player run them, at the week's open: the default founder presses Increase while
 ## the load is over the amber line, "lean" and "wide" hold it near their own line (Decrease too, while a step would still
-## leave the load under it), "auto" switches Auto adjust on once and never presses. A press is a click, counted for PROBE END.
+## leave the load under it and the capacity over a server contract's floor), "auto" switches Auto adjust on once and never
+## presses. A press is a click, counted for PROBE END.
 static func _run_the_servers() -> void:
 	if _server_policy == "auto":
 		if not ProductState.infra_auto():
@@ -1628,6 +1629,7 @@ static func _run_the_servers() -> void:
 		InfraSystem.adjust_capacity(1)
 		presses += 1
 	while _server_policy != "" and InfraSystem.units() > 1 and presses < SERVER_PRESSES \
+			and InfraSystem.units() - InfraSystem.capacity_step() >= InfraSystem.capacity_floor() \
 			and InfraSystem.load_percent(InfraSystem.units() - InfraSystem.capacity_step()) <= line:
 		InfraSystem.adjust_capacity(-1)
 		presses += 1
@@ -1639,7 +1641,7 @@ static func _run_the_servers() -> void:
 ## The server clause, as a player reads the Sunucu block's row: the move to Enterprise once the MRR of the accounts waiting on
 ## it outgrows what Enterprise adds to the bill.
 static func _answer_the_clause() -> void:
-	if InfraSystem.provider() == InfraSystem.PROVIDER_ENTERPRISE:
+	if InfraSystem.provider() == InfraSystem.PROVIDER_ENTERPRISE or InfraSystem.lock_reason() != "":
 		return
 	var waiting: int = 0
 	for c: Customer in CustomerRegistry.get_by_market("b2b"):

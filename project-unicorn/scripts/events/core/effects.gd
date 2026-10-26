@@ -48,6 +48,8 @@ const NEUTRAL_VERBS := [
 	"satisfaction_delta", "trust_delta", "promise_create", "promise_extend", "take_account",
 	# the sales meeting's emphasis
 	"pitch_focus",
+	# the server contract: the tier stays and the capacity does not fall, which moves no money by itself
+	"server_lock",
 	# world and surfaces
 	"ticker_push", "goto_tab", "unlock_content", "spend_budget", "notify",
 	# investor flow that moves no money by itself
@@ -76,7 +78,7 @@ const ECONOMIC_VERBS := [
 	"audience_delta", "convert_audience", "open_paid_tier",
 	"change_salary", "fire_employee", "employee_leaves", "promote",
 	"add_prospect", "angel_accept", "b2b_expand", "b2b_retain_discount", "b2b_month_discount", "marketing_push", "incident",
-	"promise_break", "account_notice", "prospect_offer", "drop_prospect",
+	"promise_break", "account_notice", "prospect_offer", "drop_prospect", "server_price",
 ]
 
 ## Ends the run. Played decisions only — never a dice branch (I6), never an expiry, never an
@@ -215,7 +217,7 @@ static func _is_negative(effect: Dictionary, ctx: Dictionary) -> bool:
 	# A marketing push spends money to buy growth: never only a cost, so never an expiry's.
 	if String(effect.get("verb", "")) == "marketing_push":
 		return false
-	if effect.has("amount_seam"):
+	if String(effect.get("verb", "")) == "server_price" or effect.has("amount_seam"):
 		return not is_authored_gain(effect)
 	for key in ["amount", "delta", "value"]:
 		if effect.has(key):
@@ -737,6 +739,19 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 			SalesMeetingSystem.set_pitch_focus(String(e.get("area", "")), GameState.day + TimeModel.ticks(focus_weeks))
 			return {"verb": verb, "area": e.get("area", ""), "weeks": focus_weeks}
 
+		# --- the servers, each through InfraSystem ------------------------------
+		# The unit price scales by `mult` for good, on every tier or only on `tiers`; the row keeps the bill before and
+		# after, which the chip said.
+		"server_price":
+			var quote: Dictionary = server_price_plan(e)
+			InfraSystem.scale_price(float(e.get("mult", 1.0)), e.get("tiers", []))
+			return quote.merged({"verb": verb, "mult": e.get("mult", 1.0), "tiers": e.get("tiers", [])})
+		# A contract: the tier stays and the capacity does not fall under today's for `weeks`; the row keeps that capacity.
+		"server_lock":
+			var contract_weeks: int = int(e.get("weeks", 1))
+			InfraSystem.lock(contract_weeks)
+			return {"verb": verb, "weeks": contract_weeks, "capacity": InfraSystem.purchased_capacity()}
+
 		# --- terminal -----------------------------------------------------------
 		"trigger_ending":
 			# _permitted already refused an untelegraphed ending.
@@ -768,8 +783,10 @@ static func amount(e: Dictionary, ctx: Dictionary = {}) -> int:
 
 ## Does the sign the author wrote make this effect a gain? Needs no run: a seam yields a magnitude, so
 ## its `amount_mult` is the signed figure; else the literal `amount` or `delta`, and an effect naming
-## neither is a cost. Lint and the expiry's check both ask here.
+## neither is a cost; a `server_price` is a gain when its multiplier cuts the bill. Lint and the expiry's check both ask here.
 static func is_authored_gain(e: Dictionary) -> bool:
+	if String(e.get("verb", "")) == "server_price":
+		return float(e.get("mult", 1.0)) < 1.0
 	if e.has("amount_seam"):
 		return float(e.get("amount_mult", 1.0)) > 0.0
 	return float(e.get("amount", e.get("delta", -1))) > 0.0
@@ -817,6 +834,15 @@ static func month_discount_plan(e: Dictionary, ctx: Dictionary) -> Dictionary:
 	var pct: float = float(SprintCatalog.cfg("paper.renewal_discount"))
 	return {"id": id, "name": c.display_name() if c != null else "", "pct": roundi(pct * 100.0),
 		"amount": -roundi(float(c.mrr) * pct) if c != null else 0}
+
+
+## What a `server_price` does to the month's bill and what the player reads for it: the bill now, and the bill once `mult`
+## is on the unit price of the company's tier (every tier's, or the `tiers` named).
+static func server_price_plan(e: Dictionary) -> Dictionary:
+	var tiers: Array = e.get("tiers", [])
+	var hit: bool = tiers.is_empty() or tiers.has(InfraSystem.provider())
+	return {"before": InfraSystem.monthly_bill(),
+		"after": InfraSystem.monthly_bill("", float(e.get("mult", 1.0)) if hit else 1.0)}
 
 
 ## The B2B accounts a `trust_delta` lands on, largest first: the slot's, or the users of the pending

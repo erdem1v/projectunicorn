@@ -28,7 +28,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `scripts/systems/line_gates.gd` (130): kademe gereksinim doğrulayıcı (Ar-Ge düğümü, kişi ★, şirket toplamı ★); kart, tooltip ve satış aynı fonksiyonu okur
 - `scripts/systems/module_locks.gd` (35): sekme/modül sayfası bu yapıda açık mı; `UiTokens.TABS` satırındaki `lock` adı kilitler
 - `scripts/systems/incident_system.gd` (664): gecenin acil durumları: zar, tür, damga, kart isteği, saat tutuşu, cevabın bedeli (`plan`) ve uygulaması (`resolve`)
-- `scripts/systems/infra_system.gd` (249): sunucu sağlayıcı kademesi, kapasite birimi, yük yüzdesi, otomatik ayar, fatura; durumu `ProductState`'te tutar
+- `scripts/systems/infra_system.gd` (290): sunucu sağlayıcı kademesi, kapasite birimi, yük yüzdesi, otomatik ayar, fatura, olayların fiyat çarpanı ve sözleşme kilidi; durumu `ProductState`'te tutar
 - `scripts/systems/rnd_system.gd` (814): Ar-Ge motoru: başlat/duraklat/vazgeç, atananlar, birikim, donma, tamamlama, gizli hat, aylık ürün notu, kayıt
 - `scripts/systems/research_tree.gd` (427): `rnd_tree.json` yükleyici ve doğrulayıcı: efor/nakit/yıldız bantları, çapraz koşul, 8 katsayı, gizli hat profilleri
 - `scripts/systems/research_seam.gd` (100): Ürün tarafının Ar-Ge'ye açılan kapısı: 19 düğüm kimliği tablosu, `completed()`, yerleşim ve aile
@@ -102,7 +102,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `ProductState.worst_bug_line()/lines_by_bugs()` `product_state.gd:178`/`:165`: en çok hatalı hat (eşitlikte en çok kullanıcıyı etkileyen hat, o da eşitse küçük kimlik; `defter` varsayılan olarak şimdiki depo)
   ↳ · `IncidentSystem._worst` `incident_system.gd:351` ve `SprintBridges._unhappy` `sprint_bridges.gd:311` kritik hat süzgecinden sonra bunu çağırır
 - `ProductState.set_line_tier()` `product_state.gd:92`: kademe yazma (merdiveni sormaz) · `SprintSystem._close` :1430
-- `ProductState.set_infra_provider()/set_infra_units()` `product_state.gd:301`/`:308`: sunucu durumu yazma, `infra_changed` yayar · `InfraSystem` tek çağıran
+- `ProductState.set_infra_provider()/set_infra_units()/set_infra_price()/set_infra_lock()` `product_state.gd:299`/`:306`/`:350`/`:364`: sunucu durumu yazma, `infra_changed` yayar · `InfraSystem` tek çağıran
 - `ProductSystem.daily_tick()/reset()` `scripts/systems/product_system.gd:29`/`:11`: açık hata görüntüsü; koşu sınırı · TimeManager, `save_manager.gd:347`
 - `ProductRead.emit_edges()` `scripts/systems/product_read.gd:144`: bug/uyarı/taban kenar sinyalleri · `time_manager.gd:397`
 - `ProductRead.step_unlockable()` `product_read.gd:78`: kademe şimdi alınabilir mi · seam `urun.*` (`seams_product.gd:8`)
@@ -114,9 +114,10 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `LineGates.evaluate()/is_unlocked()/unmet_parts()` `scripts/systems/line_gates.gd:65`/`:88`/`:95`: kademe kapısı · `product_read.gd:79`, `sprint_catalog.gd:296`, `b2b_sales_system.gd:597`
 - `ModuleLocks.is_open()/ids()` `scripts/systems/module_locks.gd:21`/`:17`: sekme açık mı · `left_tabs.gd:258`, `events/core/delays.gd:108`, `seams_world.gd:148`
 - `InfraSystem.daily_tick()` `scripts/systems/infra_system.gd:244`: faturayı "servers" burn kalemine yazar, hizmet edilen geçmişini tutar · `time_manager.gd:396`
-- `InfraSystem.set_provider()/adjust_capacity()/auto_adjust()` `infra_system.gd:170`/`:196`/`:206`: oyuncu kararları ve otomatik ayar · `product_tab.gd:294-297`, `time_manager.gd:445`
+- `InfraSystem.set_provider()/adjust_capacity()/auto_adjust()` `infra_system.gd:178`/`:204`/`:214`: oyuncu kararları ve otomatik ayar · `product_tab.gd:294-297`, `time_manager.gd:445`
 - `InfraSystem.is_economy()` `infra_system.gd:83`: seçili sağlayıcı Ekonomik mi; satış masasının `provider_not_economy` olgusunun, kayıp engelinin ve `report_inflow_multiplier`'ın tek okuması · `sales_probes.gd`,
   ↳ `sales_meeting_system.gd`, `sales_ledger.gd`
+- `InfraSystem.scale_price()/lock()/lock_reason()/lock_weeks_left()/capacity_floor()` `infra_system.gd:225`/`:236`/`:242`/`:246`/`:251`: olay fiilleri `server_price` / `server_lock` ve onların kuralı · `effects.gd:745-753`, `mail_pane.gd:159`, `run_probe.gd` (`_run_the_servers`, `_answer_the_clause`)
 - `IncidentSystem.daily_tick()` `scripts/systems/incident_system.gd:121`: 00:00 zarı (yalnız karar verir) · `time_manager.gd:419` (EventGate'ten sonra)
 - `IncidentSystem.hourly_tick()` `incident_system.gd:219`: damgadan sonraki ilk tam saatte kartı ister (`_ask` :254) · `time_manager.gd:449`
 - `IncidentSystem.plan()/resolve()` `incident_system.gd:473`/`:510`: cevabın bedeli ve uygulaması · çip, geçmiş, olay fiili `incident` `effects.gd:300`
@@ -144,7 +145,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `line_upgraded`, `line_completed`, `delighter_shipped`: yayan `sprint_system.gd:1431`, `:1433`, `:1434` · dinleyen yok
 - `build_progress_changed`: yayan `product_state.gd:203`,`:213` · product_tab.gd:112, build_bar.gd:44, build_hud_panel.gd:52
 - `line_bugs_cleared`: yayan `product_state.gd:214` · yalnız smoke/run_probe
-- `infra_changed`: yayan `product_state.gd:305`,`:313`,`:324` · product_tab.gd:115
+- `infra_changed`: yayan `product_state.gd:303`,`:311`,`:322`,`:353`,`:367` · product_tab.gd:115
 - `bug_confirmed`, `unconfirmed_threshold_crossed`: yayan `product_read.gd:155`, `:158` · yalnız smoke
 - `axis_floor_warning`, `axis_floor_crossed`: yayan `product_read.gd:165`, `:167` · olay motoru (`signals.gd:37-38`; `b2c_floor_signal`, `b2c_floor_churn`)
 - `research_started`: yayan `rnd_system.gd:279` · left_tabs.gd:118, research_bar.gd:49
@@ -203,7 +204,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 ## Metin anahtarları
 
 - `PRODUCT_*` (80 aile, 278 anahtar): Ürün sayfası, sprint kartı, sürüm notu, sunucu bloğu; okuyanlar `scripts/tabs/product/*.gd`, `product_tab.gd`, `sprint_catalog.gd`, `sprint_bridges.gd`, `sprint_system.gd`
-- `PRODUCT_SERVER_*` (36 anahtar): sunucu/kapasite arayüzü: `overview_view.gd`, `product_model.gd`, `main.gd`
+- `PRODUCT_SERVER_*` (37 anahtar): sunucu/kapasite arayüzü: `overview_view.gd`, `product_model.gd`, `main.gd`
 - `PRODUCT_REVIEW_*` (29): B2C yorum havuzu; `data/product/sprint.json` `reviews` bloğu ve `sprint_bridges.gd`
 - `PROD_LINE_*` (20) ve `PROD_STEP_*` (150): hat ve kademe adı; anahtar `ProductLines.line_name_key` (:290) ve `product_lines.gd:177`; `PROD_TYPE_*` tür adı (`product_catalog.gd`)
 - `PROD_LOCK_*` (kilit gerekçesi, `sprint_catalog.gd`), `PROD_SHIP_*`/`PROD_VERSION_*` (sürüm başlığı, `sprint_system.gd`), `PROD_RND_NODE_*` (düğüm adı, `ResearchSeam.node_name`)
@@ -223,7 +224,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - Sprint: `sprint_request_on_time_met`, `sprint_paid_plan_opens_paid_tier`, `sprint_departure_restaffs_card`, `sprint_never_stalls_in_plan`, `sprint_lead_offers_paid_plan_b2c`, `product_pm_plan_opens_as_next_sprint`
 - Lider: `sprint_lead_fills_next_column` (öneri sonraki sütunu da doldurur: tavan, sıra, onaysız PM planı, devir), `sprint_lead_fills_to_ceiling`
 - Kâğıt/karar/söz: `sprint_decision_blocks_progress`, `decision_one_per_sprint`, `paper_interrupt_order`, `paper_card_trim`, `paper_line_harden`, `promise_due_fires_when_late`, `promise_extend_once`, `promise_cut_test_escape`
-- Acil durum/sunucu: `incident_gap_and_spread`, `incident_night_hold_resumes`, `incident_scale`, `incident_save_roundtrip`, `incident_gates`, `infra_capacity_moves_both_ways`, `auto_capacity_grows_only`, `capacity_step_immediate`
+- Acil durum/sunucu: `incident_gap_and_spread`, `incident_night_hold_resumes`, `incident_scale`, `incident_save_roundtrip`, `incident_gates`, `infra_capacity_moves_both_ways`, `auto_capacity_grows_only`, `capacity_step_immediate`, `infra_price_lock`
 - Hat/kalite: `product_lines_catalog_loads`, `line_k3_locked_without_research`, `product_fit_table`, `product_quality_sector_table`, `product_line_profiles`, `product_area_row`
 - Ar-Ge: `research_node_map_binds`, `rnd_tree_loads_and_validates`, `research_freezes_and_resumes`, `research_abandon_keeps_progress`, `rnd_note_author_and_lines`
 - Kayıt: `sprint_save_roundtrip`, `save_v14_build_becomes_sprint_plan`, `save_v19_running_sprint_continues`, `save_v10_product_state`, `save_retired_product_flags`
@@ -337,6 +338,11 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `SprintCatalog.cfg()` (:29) eksik anahtarda sert hata verir (`v[key]`); sprint.json bozuksa `JSON.parse_string` null döner. Yeni anahtar eklerken okuyan her çağrı yerini birlikte ekle
 - Tik sırası bir sözleşmedir (`time_manager.gd:383-432`): Ar-Ge bir tik gecikmeli okur (`rnd_system.gd:94-100`); IncidentSystem EventGate'ten sonra koşar; sırayı değiştirme
 - Tek yazıcı: `GameState.product` → SprintSystem (SprintBridges yalnız `requests`, `rival_hits`, `thanks`); açık hata → `add_bugs`/`clear_line_bugs`; `GameState.incident` → IncidentSystem; sunucu → `ProductState.set_infra_*`
+- Sunucu fiyatı olay çarpanlarından geçer: `unit_price` (`scale` parametresi çipin vaat ettiği faturayı önizler) tek çarpma noktasıdır, `monthly_bill`, ipuçları, posta ve bot ondan okur;
+  ↳ `server_price` çarpanları üst üste bindirir (`mvp_infra_price_mult` her kademeye, `mvp_infra_tier_mult` yalnız adlı kademelere). `server_lock` sözleşmesi sürerken (`lock_reason() != ""`)
+  ↳ `set_provider` Kurumsal dahil her kademeyi reddeder ve `set_capacity` imzadaki birimin altına inmez (`capacity_floor()`), büyütmek ve Otomatik ayar serbesttir; sözleşme `mvp_infra_lock_until`
+  ↳ tikinde kendiliğinden biter. Kilidin gerekçesi `PRODUCT_SERVER_LOCK_REASON`dır, `{weeks}`i çağıran `Fmt.weeks(lock_weeks_left())` ile doldurur; sözleşmeyi imzalatan kart canlı üründedir (MVP'deki
+  ↳ `set_provider` kilitten önce olur)
 - Sunucu kapasitesini yalnız oyuncu ve Otomatik ayar değiştirir; `SprintBridges.on_release` ona dokunmaz (`sprint_bridges.gd:71`); dolu sunucunun tek bedeli kesinti ihtimalidir (`IncidentSystem.load_mult` incident_system.gd:75)
 - Saat tutuşları: `sprint_plan` (`sprint_system.gd:22`), `incident` (`incident_system.gd:48`), `product_release_note` (`product_tab.gd:16`); toplu adımda `clock_batch_ended`'e ertelenir; harness zarı kapatmazsa saat takılır
 - Kesinti sırası: söz olayı veya acil durum gelen sprintte kâğıt gelmez; kâğıtlı sprintte yalnız `SERVICE_DOWN` (outage, checkout) gelir, öbürü `incident.shifted`'e kalır (`sprint_system.gd:1247`)

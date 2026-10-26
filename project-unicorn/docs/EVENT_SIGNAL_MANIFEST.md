@@ -2,7 +2,7 @@
 
 **GENERATED — do not hand-edit.** Regenerate with `python tools/gen_signal_manifest.py`.
 Source: `scripts/autoload/event_bus.gd`, every `.gd` under `scripts/`, `EvSignals.BINDINGS` and the card triggers.
-Last generated 2026-10-26.
+Last generated 2026-10-27.
 
 Authority: [`GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](<../GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md>) §15. The read side of
 the same idea is the seam list in [`content/events_draft/_vocabulary.md`](content/events_draft/_vocabulary.md) §b.
@@ -152,7 +152,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `build_phase_changed` | `new_phase: String` | sprint_system | 2 | 2 | promise_registry · left_tabs · EvSignals (bindable) |
 | `build_progress_changed` | `—` | product_state | 2 | 3 | product_tab · build_bar · build_hud_panel |
 | `line_bugs_cleared` | `line: String, n: int` | product_state | 1 | 0 | — |
-| `infra_changed` | `—` | product_state | 3 | 1 | product_tab |
+| `infra_changed` | `—` | product_state | 5 | 1 | product_tab |
 
 ### GDD ÜRÜN rev 6.1 §19 · OKUMA YÜZEYİNİN SİNYALLERİ
 

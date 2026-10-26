@@ -13,7 +13,7 @@ Counts are what the engine actually has, at generation time:
 | | count |
 |---|---|
 | Seams (read) | **274** |
-| Effect verbs (write) | **83** |
+| Effect verbs (write) | **85** |
 | Cards in the catalogue | 146 |
 | Arcs | 3 |
 
@@ -70,6 +70,7 @@ so a verb absent from a group is unreachable from it rather than merely discoura
 - `promise_extend`
 - `take_account`
 - `pitch_focus`
+- `server_lock`
 - `ticker_push`
 - `goto_tab`
 - `unlock_content`
@@ -119,6 +120,7 @@ Barred from ambient origins entirely; on expiry, allowed only in the negative.
 - `account_notice`
 - `prospect_offer`
 - `drop_prospect`
+- `server_price`
 
 ### Terminal
 
@@ -701,7 +703,7 @@ AUTHORITY, which is the linter's §17.14: a verb is writable only when it has a
 working arm in `EvEffects._apply` AND a chip in `EvChips`, so what an option promises
 is what the player is shown and what lands.
 
-### Writer verbs (49) — any card, inside the two rules below
+### Writer verbs (51) — any card, inside the two rules below
 
 - `add_cash`
 - `add_brand`
@@ -752,6 +754,8 @@ is what the player is shown and what lands.
 - `drop_prospect`
 - `take_account`
 - `pitch_focus`
+- `server_price`
+- `server_lock`
 
 Two rules narrow the list. A `sprint_card_*` verb belongs to a `tick: request` sprint
 decision and to no other card (§17.14, V3). A module verb spends a page the build may
