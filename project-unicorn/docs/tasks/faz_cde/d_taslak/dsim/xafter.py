@@ -1,7 +1,0 @@
-exec(open("mkreport.py", encoding="utf-8").read())
-for v in V: print(v)
-print("KIR", KIR)
-print("min marg", min(marg.items(), key=lambda t:t[1]), "min curve", min(curve_m.items(), key=lambda t:t[1]))
-print("neg/zero curve", sorted((k,v) for k,v in curve_m.items() if v<=0))
-print("marg<=0", sorted((k,v) for k,v in marg.items() if v<=0))
-print("pred max", max(A[n]["pred"] for n in A if not n.startswith("M|")))

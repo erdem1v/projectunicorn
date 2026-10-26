@@ -3,7 +3,7 @@ Cap tops sit on the square's top edge and the "Unicorn" baseline on its bottom e
 import os
 from fontTools.ttLib import TTFont
 
-FONT = os.path.join(os.path.dirname(os.path.abspath(__file__)), *[".."] * 6, "assets", "fonts", "cond", "BarlowCondensed-Bold.ttf")
+FONT = os.path.join(os.path.dirname(os.path.abspath(__file__)), *[".."] * 6, "tools", "brand", "BarlowCondensed-Bold.ttf")
 _t = TTFont(FONT)
 _cmap, _hmtx = _t.getBestCmap(), _t["hmtx"]
 
