@@ -1085,7 +1085,8 @@ func _seed_paper_world(event_id: String) -> Dictionary:
 ##   line, so its first line names that line) · rnd_discovery (week 16's, on the Ar-Ge timeline) ·
 ##   weekly_sales · clause_sign · clause_reserve · clause_notice · clause_withdraw (the server clause's four mails of a 3★ account on
 ##   Standard servers, the newest open: its signing, the day its period ends over a satisfied account and over one it does not
-##   satisfy, and that notice taken back by the move to Enterprise) ·
+##   satisfy, and that notice taken back by the move to Enterprise; a CLAUSE line names the decision on screen and whether the
+##   mail's switch button is there and locked) · clause_locked (the signing mail read while a decision waits) ·
 ##   rep_lost (the sales rep's mail of a desk deal lost over an area, through the real close) · weekly_lost
 ##   (the same week's summary: two closes and the two lost deals the rep did not mail) · weekly_lost_only (a week of the
 ##   lost deals alone: no table) · support_week (the weekly support report of a Müşteri İlişkileri rep, through the real weekly
@@ -1254,8 +1255,14 @@ func _run_inbox_shot(state: String) -> void:
 			var id: String = MessageSystem.post("sales_week", "SALES_WEEKLY_TITLE",
 				{"rows": rows, "accounts": CustomerRegistry.account_count()})
 			INBOX.show("m:" + id)
-		"clause_sign", "clause_reserve", "clause_notice", "clause_withdraw":
+		"clause_sign", "clause_reserve", "clause_notice", "clause_withdraw", "clause_locked":
+			if state == "clause_locked":
+				_shot_card("funding.frank_cheque", {}, 11)
 			INBOX.show("m:" + String(GameState.messages.filter(func(m: Dictionary) -> bool: return m.kind == "clause")[-1].id))
+			await get_tree().process_frame
+			var move: Button = _clause_switch_button()
+			print("CLAUSE|active=%s|button=%s|disabled=%s" % [EventGate.active_id(), move != null,
+				move != null and move.disabled])
 		"rep_lost", "weekly_lost", "weekly_lost_only":
 			var kind: String = "sales_loss" if state == "rep_lost" else "sales_week"
 			INBOX.show("m:" + String(GameState.messages.filter(func(m: Dictionary) -> bool: return m.kind == kind)[-1].id))
@@ -1682,13 +1689,19 @@ func _stage_clause(state: String) -> void:
 	var prospect: Prospect = SalesFaucetSystem.spawn_prospect("enterprise", "event")
 	var account: Customer = SalesSystem.add_b2b_customer(prospect, 60, 35, 70)
 	ProspectRegistry.remove(prospect.id)
-	if state == "clause_sign":
+	if state in ["clause_sign", "clause_locked"]:
 		return
 	GameState.day = account.clause_due_day
 	CustomerRegistry.set_satisfaction(account.id, 90 if state == "clause_reserve" else 55)
 	B2BSalesSystem._tick_clause(account)
 	if state == "clause_withdraw":
 		InfraSystem.set_provider(InfraSystem.PROVIDER_ENTERPRISE)
+
+
+## The reading pane's last action button, as the clause mail draws it: the switch to Enterprise; null when the mail has none.
+func _clause_switch_button() -> Button:
+	var row: Control = get_tree().get_first_node_in_group(INBOX.GROUP)._pane._col.get_children()[-1]
+	return row.get_children()[-1] as Button
 
 
 ## --inbox-shot=support_*: the theme seed's company with a Müşteri İlişkileri rep and the weekly tick that follows a week of

@@ -158,7 +158,7 @@ func _message() -> void:
 			if account != null and account.clause_due_day >= 0:
 				_actions("", [[tr("SALES_CLAUSE_BTN_SWITCH").format({"old": Fmt.money_exact(InfraSystem.monthly_bill()),
 					"new": Fmt.money_exact(InfraSystem.monthly_bill(InfraSystem.PROVIDER_ENTERPRISE))}),
-					_move_to_enterprise, true]])
+					_move_to_enterprise, true]], EventGate.active_id() != "")
 		"rnd_note", "rnd_discovery":
 			var note: bool = m.kind == "rnd_note"
 			if note:
