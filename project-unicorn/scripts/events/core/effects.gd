@@ -147,7 +147,7 @@ static func _run(effects: Array, ctx: Dictionary, origin: Origin, card_id: Strin
 		var effect: Dictionary = raw
 		var verb: String = String(effect.get("verb", ""))
 
-		var refusal: String = _permitted(verb, effect, origin)
+		var refusal: String = _permitted(verb, effect, origin, ctx)
 		if refusal != "":
 			# §8.2: loud in the log, silent to the player; the run continues.
 			push_error("[EvEffects] refused '%s' from %s: %s"
@@ -162,7 +162,7 @@ static func _run(effects: Array, ctx: Dictionary, origin: Origin, card_id: Strin
 
 
 ## "" when the verb may run from this origin. THE ENFORCEMENT.
-static func _permitted(verb: String, effect: Dictionary, origin: Origin) -> String:
+static func _permitted(verb: String, effect: Dictionary, origin: Origin, ctx: Dictionary = {}) -> String:
 	if verb == "":
 		return "no verb named"
 
@@ -182,7 +182,7 @@ static func _permitted(verb: String, effect: Dictionary, origin: Origin) -> Stri
 		Origin.EXPIRE:
 			if is_terminal:
 				return "I3: an expiry may not end the run"
-			if is_economic and not _is_negative(effect):
+			if is_economic and not _is_negative(effect, ctx):
 				return "I2: on_expire may apply a negative delta, never a positive one"
 		Origin.AMBIENT:
 			if is_economic:
@@ -209,7 +209,7 @@ static func _permitted(verb: String, effect: Dictionary, origin: Origin) -> Stri
 ## Is this economic effect a cost rather than a gain? A literal figure is read as it lands; a seam's
 ## figure by the sign of its `amount_mult`, which is how lint judges it too, because the figure the
 ## seam yields can round down to nothing and a cost that reads zero is still a cost.
-static func _is_negative(effect: Dictionary) -> bool:
+static func _is_negative(effect: Dictionary, ctx: Dictionary) -> bool:
 	# A marketing push spends money to buy growth: never only a cost, so never an expiry's.
 	if String(effect.get("verb", "")) == "marketing_push":
 		return false
@@ -217,7 +217,7 @@ static func _is_negative(effect: Dictionary) -> bool:
 		return not is_authored_gain(effect)
 	for key in ["amount", "delta", "value"]:
 		if effect.has(key):
-			return amount(effect) < 0
+			return amount(effect, ctx) < 0
 	# A verb with no signed amount at all (churn_customer, employee_leaves) is a loss by
 	# nature, so expiry may apply it.
 	return true
@@ -231,7 +231,7 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 		"add_cash":
 			# Through Finance's one-time door, so a card's money reaches the month's books and
 			# the transactions list; `label` is the line the player reads there.
-			var cash: int = amount(e)
+			var cash: int = amount(e, ctx)
 			var label: String = String(e.get("label", ""))
 			if cash < 0:
 				FinanceSystem.apply_one_time_cost(-cash, label)
@@ -245,25 +245,25 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 				+ "Use customer_mrr_delta on a named account, or seats.")
 			return {"verb": verb, "refused": "no aggregate MRR seam"}
 		"add_brand":
-			GameState.set_brand(GameState.brand + amount(e))
-			return {"verb": verb, "amount": amount(e)}
+			GameState.set_brand(GameState.brand + amount(e, ctx))
+			return {"verb": verb, "amount": amount(e, ctx)}
 		"add_reputation":
-			GameState.set_reputation(GameState.reputation + amount(e))
-			return {"verb": verb, "amount": amount(e)}
+			GameState.set_reputation(GameState.reputation + amount(e, ctx))
+			return {"verb": verb, "amount": amount(e, ctx)}
 		"customer_mrr_delta":
 			var cid: String = entity_of(e, ctx, EvScope.TYPE_CUSTOMER)
 			var c: Customer = CustomerRegistry.get_customer(cid)
 			if c == null:
 				return _no_target(verb, cid)
-			CustomerRegistry.set_mrr(cid, c.mrr + amount(e))
+			CustomerRegistry.set_mrr(cid, c.mrr + amount(e, ctx))
 			SalesSystem.reflect_mrr()
-			return {"verb": verb, "customer": cid, "amount": amount(e)}
+			return {"verb": verb, "customer": cid, "amount": amount(e, ctx)}
 		"seats":
 			var sid: String = entity_of(e, ctx, EvScope.TYPE_CUSTOMER)
 			var sc: Customer = CustomerRegistry.get_customer(sid)
 			if sc == null:
 				return _no_target(verb, sid)
-			var add_seats: int = amount(e)
+			var add_seats: int = amount(e, ctx)
 			var per_seat: int = int(e.get("per_seat_mrr", 0))
 			CustomerRegistry.set_seats(sid, sc.seats + add_seats)
 			if per_seat != 0:
@@ -285,7 +285,7 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 			SalesSystem.reflect_mrr()
 			return {"verb": verb, "customer": chid}
 		"audience_delta":
-			var n: int = amount(e)
+			var n: int = amount(e, ctx)
 			if e.has("pct"):
 				n = int(round(SalesSystem.b2c_audience() * float(e["pct"])))
 			SalesSystem.add_b2c_audience(n)
@@ -319,10 +319,14 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 
 		# --- scheduling -----------------------------------------------------
 		"schedule_event":
-			EvSchedule.add(String(e.get("event_id", "")), int(e.get("delay_weeks", 1)),
+			# A window draws its week from the day, the card that schedules and the card it schedules, so a
+			# reload and a second look at the same day get the same week.
+			var span: Array = delay_bounds(e)
+			var weeks: int = span[0] + floori(EvDice.unit("schedule", GameState.day, card_id,
+				String(e.get("event_id", ""))) * (span[1] - span[0] + 1))
+			EvSchedule.add(String(e.get("event_id", "")), weeks,
 				(e.get("context", ctx) as Dictionary), String(e.get("arc_id", "")))
-			return {"verb": verb, "event_id": e.get("event_id", ""),
-				"delay_weeks": e.get("delay_weeks", 1)}
+			return {"verb": verb, "event_id": e.get("event_id", ""), "delay_weeks": weeks}
 		"cancel_scheduled":
 			var dropped: int = EvSchedule.cancel(String(e.get("event_id", "")))
 			return {"verb": verb, "event_id": e.get("event_id", ""), "dropped": dropped}
@@ -360,19 +364,19 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 			# Through HRMoraleSystem.apply_delta, where the trait multiplier and the founder's
 			# Liderlik climate coefficient live; a raw write would skip both.
 			if emp.category == "employee":
-				HRMoraleSystem.apply_delta(emp, amount(e))
+				HRMoraleSystem.apply_delta(emp, amount(e, ctx))
 			else:
-				CharacterRegistry.set_morale(eid, emp.morale + amount(e))
-			return {"verb": verb, "employee": eid, "amount": amount(e)}
+				CharacterRegistry.set_morale(eid, emp.morale + amount(e, ctx))
+			return {"verb": verb, "employee": eid, "amount": amount(e, ctx)}
 		"morale_all":
 			for worker in CharacterRegistry.get_employees():
-				HRMoraleSystem.apply_delta(worker, amount(e))
-			return {"verb": verb, "amount": amount(e)}
+				HRMoraleSystem.apply_delta(worker, amount(e, ctx))
+			return {"verb": verb, "amount": amount(e, ctx)}
 		"morale_crew":
 			var crew: Array = crew_of(e, ctx)
 			if crew.is_empty():
 				return _no_target(verb, String(e.get("crew", "")))
-			var hit: int = amount(e)
+			var hit: int = amount(e, ctx)
 			for id in crew:
 				HRMoraleSystem.apply_delta(CharacterRegistry.get_character(id), hit)
 			return {"verb": verb, "amount": hit, "names": crew_names(crew)}
@@ -426,8 +430,8 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 			var sat_c: Customer = CustomerRegistry.get_customer(scid)
 			if sat_c == null:
 				return _no_target(verb, scid)
-			CustomerRegistry.set_satisfaction(scid, sat_c.satisfaction + amount(e))
-			return {"verb": verb, "customer": scid, "amount": amount(e)}
+			CustomerRegistry.set_satisfaction(scid, sat_c.satisfaction + amount(e, ctx))
+			return {"verb": verb, "customer": scid, "amount": amount(e, ctx)}
 		# The lasting half of a satisfaction hit: the trust ledger, never the visible number the drift
 		# erases within a tick. The row keeps what the chip showed (trust_plan).
 		"trust_delta":
@@ -477,10 +481,10 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 		# knows which card the pending decision is about and answers its id, or "" with none.
 		# Effort and hours record the clamped value that lands, the one the chip showed.
 		"sprint_card_effort":
-			var effort: int = SprintSystem.effort_change(amount(e))
-			return _on_card(verb, SprintSystem.decision_effort(amount(e)), effort)
+			var effort: int = SprintSystem.effort_change(amount(e, ctx))
+			return _on_card(verb, SprintSystem.decision_effort(amount(e, ctx)), effort)
 		"sprint_card_progress":
-			return _on_card(verb, SprintSystem.decision_progress(amount(e)), amount(e))
+			return _on_card(verb, SprintSystem.decision_progress(amount(e, ctx)), amount(e, ctx))
 		"sprint_card_carry":
 			return _on_card(verb, SprintSystem.decision_carry(), 0)
 		# The test of the promise card (or, with `card` DECISION, of the pending decision's card) is cut in half: the test
@@ -585,7 +589,7 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 			var svc: String = entity_of(e, ctx, EvScope.TYPE_INVESTOR)
 			if svc == "":
 				return _no_target(verb, svc)
-			var strain: Dictionary = VCPitchSystem.add_strain(svc, amount(e), int(e.get("weeks", 0)))
+			var strain: Dictionary = VCPitchSystem.add_strain(svc, amount(e, ctx), int(e.get("weeks", 0)))
 			return {"verb": verb, "vc": svc, "amount": strain.amount, "weeks": strain.weeks}
 		"open_seed_table":
 			# The seed offer knows whose it is, and there is only ever one.
@@ -675,11 +679,15 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 # --- Helpers ---------------------------------------------------------------
 
 ## The signed figure an effect names: a seam's value times `amount_mult` (a seam yields a magnitude, the
-## multiplier carries the sign), else its literal `amount`, `delta` or `value`. EvChips and the bot read
-## the figure here too, so what a chip shows is what lands.
-static func amount(e: Dictionary) -> int:
+## multiplier carries the sign), else its literal `amount`, `delta` or `value`. An entity seam is read for
+## the entity `amount_slot` binds in `ctx`. EvChips and the bot read the figure here too, so what a chip
+## shows is what lands.
+static func amount(e: Dictionary, ctx: Dictionary = {}) -> int:
 	if e.has("amount_seam"):
-		return roundi(float(EvSeams.read(String(e["amount_seam"]))) * float(e.get("amount_mult", 1.0)))
+		var seam: String = String(e["amount_seam"])
+		var read: Variant = EvSeams.read_for(seam, EvScope.id_in(ctx, String(e["amount_slot"]))) \
+			if e.has("amount_slot") else EvSeams.read(seam)
+		return roundi(float(read) * float(e.get("amount_mult", 1.0)))
 	for key in ["amount", "delta", "value"]:
 		if e.has(key):
 			return int(e[key])
@@ -695,10 +703,16 @@ static func is_authored_gain(e: Dictionary) -> bool:
 	return float(e.get("amount", e.get("delta", -1))) > 0.0
 
 
+## The weeks a `schedule_event` may wait: `delay_weeks` is a number or a window [lo, hi].
+static func delay_bounds(e: Dictionary) -> Array:
+	var delay: Variant = e.get("delay_weeks", 1)
+	return [int(delay[0]), int(delay[1])] if delay is Array else [int(delay), int(delay)]
+
+
 ## What a `trust_delta` writes and what the player reads for it, worked out the way the arm applies it:
 ## per account, largest first, the satisfaction now and the one a tick after its ledger takes `amount`.
 static func trust_plan(e: Dictionary, ctx: Dictionary) -> Dictionary:
-	var delta: int = amount(e)
+	var delta: int = amount(e, ctx)
 	var rows: Array = []
 	for c in trust_accounts(e, ctx):
 		rows.append({"id": c.id, "name": c.display_name(), "from": c.satisfaction, "to":

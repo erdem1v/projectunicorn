@@ -140,9 +140,10 @@ static func percent(v: float, decimals: int = 1) -> String:
 	return _t("PCT_PATTERN").format({"v": number(v, decimals)})
 
 
-## Whole percentage points with their sign outside the locale's shape: "-%20" / "-20%", "+%15" / "+15%".
-static func signed_percent(points: int) -> String:
-	return ("-" if points < 0 else "+") + percent(absi(points), 0)
+## Percentage points with their sign outside the locale's shape: "-%20" / "-20%", "+%15" / "+15%"; `decimals` 1
+## for "-%0,5" / "-0.5%".
+static func signed_percent(points: float, decimals: int = 0) -> String:
+	return ("-" if points < 0 else "+") + percent(absf(points), decimals)
 
 
 # --- Money ------------------------------------------------------------------

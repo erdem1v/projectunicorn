@@ -226,7 +226,8 @@ static func tenure_floor(card: Dictionary, slot: String) -> int:
 
 ## Coerce every condition literal to its seam's declared type, once, here. Godot's JSON parser
 ## returns every number as a float, so `"value": [1,2,3]` would never match an int seam under
-## `in`; coercing at load lets the hot path compare like with like.
+## `in`; coercing at load lets the hot path compare like with like. The same walk gives a `year_roll`
+## leaf the card's id as its key: a condition does not know the card it sits in.
 ##
 ## A leaf naming an unknown seam is recorded and left alone — the linter makes it a build error,
 ## and refusing the whole card at runtime would lose every leaf that was fine.
@@ -247,6 +248,9 @@ static func _coerce_conditions(card: Dictionary) -> void:
 	for tree in trees:
 		for leaf in EvCondition.leaves(tree):
 			var d: Dictionary = leaf
+			# A year's roll is the card's own unless the leaf names a key to share one with another card.
+			if d.has("year_roll") and not d.has("key"):
+				d["key"] = card["id"]
 			var seam_name: String = String(d.get("seam", d.get("entity_seam", "")))
 			if seam_name == "":
 				continue

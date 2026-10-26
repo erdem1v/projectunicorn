@@ -806,14 +806,14 @@ func _run_event_shot(spec: String) -> void:
 	elif event_id == "founder.unseen_build":
 		SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
 		GameState.product.sprint.number = 2
-	elif event_id.begins_with("rival.") or not bool(EvScope.resolve(scope, given).get("ok", false)):
+	elif event_id.begins_with("rival.") or not bool(EvScope.resolve(scope, given, event_id).get("ok", false)):
 		_seed_company_world(event_id, selects)
 	var ctx: Dictionary = EventGate.bind_scope(event_id, given)
 	if ctx.is_empty() and not scope.is_empty():
 		var open: Dictionary = scope.duplicate(true)
 		for slot in open:
 			open[slot].erase("where")
-		var bound: Dictionary = EvScope.resolve(open, given)
+		var bound: Dictionary = EvScope.resolve(open, given, event_id)
 		ctx = bound.context if bound.ok else {}
 	for slot in given:
 		if String(ctx.get(slot, {}).get("id", "")) != given[slot]:
@@ -1439,7 +1439,7 @@ func _shot_answered(card_id: String, given: Dictionary, option: String, day: int
 
 ## A paper on the desk for `weeks`, landed this week; its key.
 func _shot_paper(card_id: String, given: Dictionary, weeks: int) -> String:
-	var bound: Dictionary = EvScope.resolve(EventGate.catalogue_card(card_id).get("scope", {}), given)
+	var bound: Dictionary = EvScope.resolve(EventGate.catalogue_card(card_id).get("scope", {}), given, card_id)
 	EvPapers.place(card_id, bound.context, weeks)
 	return EvLatches.key_of(card_id, bound.context)
 

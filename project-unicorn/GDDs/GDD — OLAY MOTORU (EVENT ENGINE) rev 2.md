@@ -3136,3 +3136,15 @@ etiketleri, kilit gerekçeleri, süre notları ve her gövde varyantı (`text.<d
 - Vakalar `promise_cut_test_escape` (yeni modelde), `incident_regression_fixture`, yeni `sprint_bug_ceiling_formula`, `sprint_test_seed_deterministic`, `sprint_expected_bug_no_rng`, `sprint_plan_done_counts_fix_work` (planın puanı düzeltme işini de sayar), `sprint_escaped_bug_on_card_line` ve `sprint_escaped_pre_launch_lands_at_v1` (eski `sprint_faulty_*`ın karşılıkları).
 
 *Neden.* Erdem'in cevabı 19 ve 24 (hata işin karmaşıklığıyla ölçeklenir; biçim Erdem'in sayılarıyla, toplam hacim bugünkü) ve PRD Faz D Karar 6 ile 7.
+
+### §27.48 · Olaylar 1: şıkta etki ve zar birlikte, sabit oranın seam'i, yuva `subject: false`, yıl zarı, tohumlu seçiciler
+
+*Belge ne diyordu.* §3.3 şıkta `effects` ve `check`'i yan yana sayar, ama kod `check` varken `effects`'i hiç koşmuyordu. §17.11: her zar `modifier_lines` ister (I7). §3.1: kartın `employee` yuvası kartın öznesidir, şıkların biri ona bir şey düşürmezse O4 düşer. §4.3: seçiciler belirlenimcidir ve bilinmeyen bir ad sessizce "id sırasıyla ilk boş" olur.
+
+*Ne yapıldı.*
+- 17.11 sabit oran muafiyeti (GDD §17.11'den sapma): zarın oranı `EvTuning.ODDS` tablosundan gelen bir seam ise (`olay.odds_10/15/20/25`) kart `modifier_lines` taşımaz, çünkü sabit oranın arkasında durum yoktur ve I7'nin "seam yoksa modifier yok" kuralı ona satır bulamaz. Durumdan gelen oran (`olay.award_live_odds`) `modifier_lines` ister.
+- Yuva `"subject": false` (GDD §3.1'e not): lint'in O4 kuralı o yuvayı özne saymaz; motor alanı okumaz. Çalışan yuvası gönderen ya da metinde anılan kişiyse ve kartın öznesi şirketin faturası, markası ya da itibarıysa yuva bunu kendisi söyler; tabana kart yazılmaz.
+- `EvEngine.resolve` şıkın `effects`'ini her zaman koşar, `check` varsa arkasından zarın seçtiği dalı koşar (I6 aynen); zar anahtarı değişmez. `EvChips.describe_check` her dalı kendi oranıyla çizer; risk dalı `on_pass`tadır.
+- `year_roll` yaprağı (takvim yılı başına zar), `random` ve rakip seçicileri (`EvScope.resolve`'a kart kimliği), lint 17.12 (seçici adı), `amount_slot`, `schedule_event.delay_weeks` aralığı ve çipi, ondalık yüzde çipi. Kod haritası: `sistemler/07_olay_motoru.md` "Dikkat".
+
+*Neden.* Olaylar görevi (2026-10-26) kararları 1 ile 16: bir şıkın kesin bir parçası ve kumarı olabilir; kartlara sayı yazılmaz; rastgele seçici tohumludur.

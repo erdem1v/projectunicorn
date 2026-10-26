@@ -330,6 +330,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"event_i6_dice_never_kill":       fail = _case_event_i6_dice_never_kill()  # EXPECT-ERROR I6: a dice branch may not end the run
 		"event_i7_modifier_needs_seam":   fail = _case_event_i7_modifier_needs_seam()
 		"event_dice_is_stable":           fail = _case_event_dice_is_stable()
+		"event_check_with_effects":       fail = _case_event_check_with_effects()
+		"event_year_roll":                fail = _case_event_year_roll()
 		"event_thesis_day10_to_day90":    fail = _case_event_thesis_day10_to_day90()
 		"event_thesis_through_presenter": fail = _case_event_thesis_through_presenter()
 		"event_chip_coverage":       fail = _case_event_chip_coverage()
@@ -17257,7 +17259,9 @@ static func _case_event_chip_coverage() -> String:
 			for lst in lists:
 				for e in (lst as Array):
 					var verb: String = String((e as Dictionary).get("verb", ""))
-					if verb == "" or silent.has(verb):
+					# A scheduled card whose every-path landing is all silent has nothing to say.
+					if verb == "" or silent.has(verb) or (verb == "schedule_event" and EvChips.landing(
+							String(e.get("event_id", ""))).all(func(l: Dictionary) -> bool: return silent.has(l.get("verb")))):
 						continue
 					if EvChips.describe(e, {}, {}, false).is_empty():
 						var row: String = "%s/%s:%s" % [id, opt.get("id", "?"), verb]
@@ -17265,6 +17269,35 @@ static func _case_event_chip_coverage() -> String:
 							blind.append(row)
 	if not blind.is_empty():
 		return "card rows that render no chip: %s" % ", ".join(blind)
+
+	# A scheduled card's wait heads what it lands on every path; one that lands nothing in common says nothing.
+	_plain_card("fixture.later_target", {"options": [
+		{"id": "a", "outcome_id": "a", "effects": [{"verb": "add_brand", "amount": -1}, {"verb": "add_reputation", "amount": 2}]},
+		{"id": "b", "outcome_id": "b", "effects": [{"verb": "add_brand", "amount": -1}]}]})
+	for delta in [4, [2, 4]]:
+		var later: Dictionary = {"verb": "schedule_event", "event_id": "fixture.later_target", "delay_weeks": delta}
+		for as_row in [false, true]:
+			var parts: Array = EvChips.describe(later, {}, {}, as_row)
+			if parts.size() != 2 or parts[0]["polarity"] != "neutral" or parts[1]["polarity"] != "cost" \
+					or not EvChips.text(parts[0]).contains("4"):
+				return "a wait of %s drew %s" % [str(delta), str(parts)]
+	if not EvChips.describe({"verb": "schedule_event", "event_id": "fixture.later_target", "delay_weeks": [2, 4]},
+			{}, {}, false)[0]["label"].contains("2"):
+		return "a window of weeks did not name its first week"
+	if not EvChips.describe({"verb": "schedule_event", "event_id": "customer.new_owner", "delay_weeks": 2}, {}, {}, false).is_empty():
+		return "a card with no common landing drew a wait"
+	# The landing is the target card's effects, so the history row names the person the live chip names.
+	_make_employee("char_later", "Defne Kaya", HRConstants.ROLE_DEVELOPER)
+	var sad: Dictionary = {"verb": "change_morale", "scope": "employee", "amount": -3}
+	_plain_card("fixture.later_person", {"options": [{"id": "a", "outcome_id": "a", "effects": [sad]},
+		{"id": "b", "outcome_id": "b", "effects": [sad]}]})
+	var person: Dictionary = {"employee": {"type": "employee", "id": "char_later"}}
+	var reads: Array = []
+	for as_row in [false, true]:
+		reads.append(EvChips.describe({"verb": "schedule_event", "event_id": "fixture.later_person", "delay_weeks": 3},
+			person, {}, as_row).map(func(p: Dictionary) -> String: return EvChips.text(p)))
+	if reads[0].size() != 2 or not String(reads[0][1]).contains("Defne") or reads[1] != reads[0]:
+		return "a scheduled morale cost reads %s on the card and %s on the row, want Defne's on both" % [str(reads[0]), str(reads[1])]
 	return ""
 
 
@@ -17307,6 +17340,22 @@ static func _case_event_amount_seam() -> String:
 		return "an expiry could not apply a cost made of a seam"
 	if EvEffects._permitted("add_cash", cost.merged({"amount_mult": 120}, true), EvEffects.Origin.EXPIRE) == "":
 		return "an expiry applied a gain made of a seam"
+	# An entity seam is read for the entity `amount_slot` binds: what a card gives the person it is about.
+	var worker: Character = _make_employee("char_gift", "Gift Dev", HRConstants.ROLE_DEVELOPER, SEED_PACE, 4000)
+	var held: Dictionary = {"employee": {"type": "employee", "id": worker.id, "bound_day": GameState.day}}
+	var gift: Dictionary = {"verb": "add_cash", "amount_seam": "hr.salary", "amount_slot": "employee",
+		"amount_mult": -1.0, "label": "refunds"}
+	if EvEffects.amount(gift, held) != -4000:
+		return "the gift reads %d for a salary of 4,000" % EvEffects.amount(gift, held)
+	var gift_chip: String = EvChips.text(EvChips.describe(gift, held, {}, false)[0])
+	if gift_chip != EvChips.text(EvChips.describe(literal.merged({"amount": -4000}, true), {}, {}, false)[0]):
+		return "the gift's chip reads '%s'" % gift_chip
+	cash = GameState.cash
+	var gift_row: Dictionary = EvEffects.run_played([gift], held)[0]
+	if GameState.cash != cash - 4000 or int(gift_row.amount) != -4000:
+		return "the gift moved the cash by %d and logged %s, want -4000" % [GameState.cash - cash, str(gift_row)]
+	if EvEffects._permitted("add_cash", gift, EvEffects.Origin.EXPIRE, held) != "":
+		return "an expiry could not apply a cost made of a salary"
 	EvSeams.clear_mocks()
 	return ""
 
@@ -18692,6 +18741,160 @@ static func _case_event_dice_is_stable() -> String:
 		return "two options on one card shared a roll; save-scumming is back"
 	if is_equal_approx(a, EvDice.unit("check", 43, "ev.x", "opt_a")):
 		return "the day is not in the hash"
+	return ""
+
+
+## §9.2 · A choice that is sure of one thing and gambles on another. The option's effects land whatever the dice say,
+## then the branch the roll picks; the roll is the one `EvDice.check` gives for the day, the card and the option, so a
+## reload lands the same branch, and the chips head each branch with its own odds.
+## FALSIFICATION: run only the check branch when an option has one (the old engine) and the sure brand never lands; swap
+## on_pass and on_fail in EvEngine.resolve and the outcome check fails; read another seam in describe_check and the
+## chips fail.
+static func _case_event_check_with_effects() -> String:
+	const ID := "fixture.check_with_effects"
+	for pair in [["olay.odds_10", 0.10], ["olay.odds_15", 0.15], ["olay.odds_20", 0.20], ["olay.odds_25", 0.25]]:
+		if not is_equal_approx(float(EvSeams.read(String(pair[0]))), float(pair[1])):
+			return "%s reads %s, want %s" % [pair[0], str(EvSeams.read(String(pair[0]))), pair[1]]
+	var check: Dictionary = {"odds_seam": "olay.odds_25",
+		"on_pass": [{"verb": "add_brand", "amount": -5}],
+		"on_fail": [{"verb": "add_reputation", "amount": 1}]}
+	_plain_card(ID, {"options": [
+		{"id": "gamble", "outcome_id": "gamble", "effects": [{"verb": "add_brand", "amount": 2}], "check": check},
+		{"id": "skip", "outcome_id": "skip", "effects": []}]})
+	var landed: Dictionary = {}
+	for day in range(10, 60):
+		EvEngine.reset()
+		GameState.day = day
+		GameState.set_brand(50)
+		GameState.set_reputation(10)
+		if not EvEngine.force_fire(ID):
+			return "day %d: the card would not fire" % day
+		EvEngine.resolve(ID, "gamble")
+		var passed: bool = EvDice.check(0.25, ID, "gamble")
+		var row: Dictionary = EvHistory.rows()[-1]
+		if EvHistory.last_outcome(ID) != ("gamble_pass" if passed else "gamble_fail"):
+			return "day %d: the dice said %s, the row says %s" % [day, passed, EvHistory.last_outcome(ID)]
+		if GameState.brand != (47 if passed else 52) or GameState.reputation != (10 if passed else 11):
+			return "day %d: brand %d and reputation %d after the %s branch" % [
+				day, GameState.brand, GameState.reputation, "pass" if passed else "fail"]
+		var deltas: Array = row["deltas"]
+		if deltas.size() != 2 or String(deltas[0]["verb"]) != "add_brand" or int(deltas[0]["amount"]) != 2:
+			return "day %d: the row's deltas are %s, want the sure brand and one branch" % [day, str(deltas)]
+		for delta in deltas:
+			if EvChips.describe(delta, row["entities"], {}, true).is_empty():
+				return "day %d: the row's %s draws no chip" % [day, delta["verb"]]
+		landed[passed] = true
+	if landed.size() != 2:
+		return "50 days landed only the branches %s" % str(landed.keys())
+
+	var parts: Array = EvChips.describe_check(check, {}, {})
+	if parts.size() != 4 or parts[0]["polarity"] != "danger" or parts[2]["polarity"] != "gain" \
+			or not EvChips.text(parts[0]).contains("25") or not EvChips.text(parts[2]).contains("75"):
+		return "the dice chips read %s" % str(parts.map(func(p: Dictionary) -> String: return EvChips.text(p)))
+	if not EvChips.describe_check({}, {}, {}).is_empty():
+		return "an option with no dice drew dice chips"
+	if (EvPresenter.build_view(ID, {}).choices[0] as EventChoice).check != check:
+		return "the view did not carry the option's dice"
+
+	EvEngine.reset()
+	GameState.day = 10
+	EvEngine.force_fire(ID)
+	var block: Dictionary = JSON.parse_string(JSON.stringify(EvSave.to_dict()))
+	EvEngine.resolve(ID, "gamble")
+	var first: String = EvHistory.last_outcome(ID)
+	EvEngine.reset()
+	EvSave.from_dict(block)
+	EvEngine.resolve(ID, "gamble")
+	if first == "" or EvHistory.last_outcome(ID) != first:
+		return "the reload landed '%s' after '%s'" % [EvHistory.last_outcome(ID), first]
+	return ""
+
+
+## §5 · A coin per year and a draw that remembers. `year_roll` holds in some calendar years and not in others, the same
+## way on every look within a year, and the catalogue gives each card its own coin; a `random` slot binds the same
+## entity on the same day, seed and card, other entities under other seeds; the rival selectors choose among the
+## player's market and the slot's name reads as the product's.
+## FALSIFICATION: leave the day out of the hash in EvScope.resolve and one seed draws one person on every day; drop
+## the key stamp in EvCatalog and the card's key reads ''; read `company_name` in EvPresenter._name_of and the rival's
+## name fails; draw a select-less rival slot and the seeds bind more than the market's first rival.
+static func _case_event_year_roll() -> String:
+	const ID := "fixture.year_roll"
+	var card: Dictionary = _plain_card(ID, {"condition": {"year_roll": 0.5}})
+	if String(card["condition"].get("key", "")) != ID:
+		return "the catalogue wrote key '%s' on the leaf, want the card's id" % card["condition"].get("key", "")
+	var other: Dictionary = {"year_roll": 0.5, "key": "fixture.other_roll"}
+	var holds: Array = []
+	var holds_other: Array = []
+	for i in 14:
+		GameState.day = 26 + 52 * i
+		if int(GameState.get_date_dict().year) != 2012 + i:
+			return "tick %d falls in %d, want %d" % [GameState.day, GameState.get_date_dict().year, 2012 + i]
+		var now: bool = EvCondition.eval(card["condition"])
+		GameState.day += 3
+		if EvCondition.eval(card["condition"]) != now:
+			return "the coin of %d changed within the year" % (2012 + i)
+		holds.append(now)
+		holds_other.append(EvCondition.eval(other))
+	if not holds.has(true) or not holds.has(false):
+		return "fourteen years of an even coin all fell one way: %s" % str(holds)
+	if holds == holds_other:
+		return "two keys rolled the same fourteen years: %s" % str(holds)
+	if EvCondition.explain(card["condition"]).kind != "year_roll":
+		return "the condition report names no year_roll leaf"
+
+	for i in 6:
+		_make_employee("char_pick_%d" % i, "Pick %d" % i, HRConstants.ROLE_DEVELOPER)
+	var slot: Dictionary = {"type": "employee", "required": true, "select": "random"}
+	GameState.day = 20
+	var pick: String = EvScope.resolve({"employee": slot}, {}, "fixture.pick").context.employee.id
+	if EvScope.resolve({"employee": slot}, {}, "fixture.pick").context.employee.id != pick:
+		return "the same day, seed and card drew two people"
+	var drawn: Dictionary = {}
+	for s in range(1000, 1020):
+		GameState.run_seed = s
+		drawn[EvScope.resolve({"employee": slot}, {}, "fixture.pick").context.employee.id] = true
+	GameState.run_seed = 424242
+	if drawn.size() < 2:
+		return "twenty seeds drew only %s" % str(drawn.keys())
+	var by_day: Dictionary = {}
+	for day in range(20, 40):
+		GameState.day = day
+		by_day[EvScope.resolve({"employee": slot}, {}, "fixture.pick").context.employee.id] = true
+	GameState.day = 20
+	if by_day.size() < 2:
+		return "twenty days under one seed drew only %s" % str(by_day.keys())
+	var pair: Dictionary = EvScope.resolve({"a": slot, "b": slot}, {}, "fixture.pick")
+	if not pair.ok or pair.context.a.id == pair.context.b.id:
+		return "two random slots bound %s" % str(pair.context)
+
+	GameState.set_flag("mvp_sub_product_type_id", "erp")
+	var sprint_rivals: Array = ["rv_erp_3", "rv_erp_5", "rv_erp_6"]
+	var seen: Dictionary = {}
+	for select in ["market_rival:startup", "market_rival:established", "market_rival:giant", "sprint_rival", "random"]:
+		var res: Dictionary = EvScope.resolve({"rival": {"type": "rival", "required": true, "select": select}}, {}, "fixture.rival")
+		if not res.ok:
+			return "%s bound nothing" % select
+		var rival: Rival = RivalRegistry.get_rival(res.context.rival.id)
+		var tier: String = select.trim_prefix("market_rival:")
+		if rival.sub_product_type_id != "erp" or (select.begins_with("market_rival:") and rival.tier != tier) \
+				or (select == "sprint_rival" and not sprint_rivals.has(rival.id)):
+			return "%s bound %s (%s, %s)" % [select, rival.id, rival.sub_product_type_id, rival.tier]
+		if EvPresenter.resolve_text("{rival}", res.context) != rival.product_name:
+			return "{rival} reads '%s', want '%s'" % [EvPresenter.resolve_text("{rival}", res.context), rival.product_name]
+	for s in range(1000, 1020):
+		GameState.run_seed = s
+		seen[EvScope.resolve({"rival": {"type": "rival", "required": true, "select": "sprint_rival"}}, {}, "fixture.rival").context.rival.id] = true
+	GameState.run_seed = 424242
+	if seen.size() < 2:
+		return "twenty seeds drew only %s of the sprint's rivals" % str(seen.keys())
+	var first_rival: String = RivalRegistry.get_by_type("erp").map(func(r: Rival) -> String: return r.id).min()
+	for s in range(1000, 1020):
+		GameState.run_seed = s
+		var plain: String = EvScope.resolve({"rival": {"type": "rival", "required": true}}, {}, "fixture.rival").context.rival.id
+		if plain != first_rival:
+			GameState.run_seed = 424242
+			return "a rival slot with no select bound %s under seed %d, want the market's first, %s" % [plain, s, first_rival]
+	GameState.run_seed = 424242
 	return ""
 
 

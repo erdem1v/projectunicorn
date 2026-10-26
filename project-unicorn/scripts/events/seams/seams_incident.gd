@@ -1,7 +1,8 @@
 class_name EvSeamsIncident
 extends RefCounted
 
-# The `olay.` namespace: what an emergency card says about the night it came in, and what its options may lock on.
+# The `olay.` namespace: what an emergency card says about the night it came in, and what its options may lock on;
+# the odds a dice reads (EvTuning.ODDS) and the award demo's (state-derived).
 # All global: the night's record is IncidentSystem's (GameState.incident.open), the accounts are the live book.
 
 static func install() -> void:
@@ -43,3 +44,15 @@ static func install() -> void:
 	EvSeams.register("olay.variant", G, TYPE_INT,
 		func() -> int: return IncidentSystem.variant(),
 		"Incident", "which line-specific body a card reads (IncidentSystem.variant), for by_seam text")
+
+	for key in EvTuning.ODDS:
+		EvSeams.register("olay." + key, G, TYPE_FLOAT,
+			func() -> float: return EvTuning.ODDS[key],
+			"Events", "a fixed dice odds, EvTuning.ODDS")
+	EvSeams.register("olay.award_live_odds", G, TYPE_FLOAT,
+		func() -> float: return maxf(EvTuning.AWARD_LIVE_FLOOR, EvTuning.AWARD_LIVE_BASE
+			- EvTuning.AWARD_LIVE_PER_BUG * mini(ProductState.open_bugs(), EvTuning.AWARD_LIVE_BUG_CAP)),
+		"Events", "the award's live demo lands: odds fall with the product's open bugs")
+	EvSeams.register("olay.award_live_slip", G, TYPE_INT,
+		func() -> int: return EvTuning.AWARD_SLIP_CLEAN if ProductState.open_bugs() == 0 else EvTuning.AWARD_SLIP_BUGGY,
+		"Events", "the brand a lost live demo moves: a clean product slips less, a buggy one loses")

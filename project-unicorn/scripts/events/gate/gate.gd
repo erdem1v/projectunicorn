@@ -87,7 +87,7 @@ static func propose(event_id: String, origin: Origin, given: Dictionary = {}) ->
 	var scope_result: Dictionary = {}
 
 	if entity_keyed:
-		scope_result = EvScope.resolve(card["scope"], given)
+		scope_result = EvScope.resolve(card["scope"], given, event_id)
 		if not scope_result["ok"]:
 			return Verdict.refuse("G5", scope_result["reason"])
 
@@ -106,7 +106,7 @@ static func propose(event_id: String, origin: Origin, given: Dictionary = {}) ->
 
 	# G5 — scope (unless already resolved above)
 	if not entity_keyed:
-		scope_result = EvScope.resolve(card["scope"], given)
+		scope_result = EvScope.resolve(card["scope"], given, event_id)
 		if not scope_result["ok"]:
 			# §4.3: a silent refusal, logged, never an error and never a guess.
 			return Verdict.refuse("G5", scope_result["reason"])

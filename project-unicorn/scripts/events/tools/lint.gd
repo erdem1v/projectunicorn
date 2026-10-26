@@ -125,6 +125,7 @@ static func _lint_card(id: String, card: Dictionary) -> void:
 	for tree in _trees_of(card):
 		_lint_condition(where, tree as Dictionary)
 	_lint_where(where, card)
+	_lint_selectors(where, card)
 	_lint_speaker(where, card)
 
 	# §17.7 paper ----------------------------------------------------------
@@ -211,7 +212,9 @@ static func _lint_options(id: String, card: Dictionary, where: String) -> void:
 				_add(SEVERITY_ERROR, "17.5", where, "option '%s' has a check with no odds_seam" % opt_id)
 			elif not EvSeams.has(odds_seam):
 				_add(SEVERITY_ERROR, "17.1", where, "unknown odds_seam '%s'" % odds_seam)
-			if not _text_block(card, "tr").has("modifier_lines"):
+			# A fixed odds (EvTuning.ODDS) has no state behind it for a modifier line to name.
+			if not _text_block(card, "tr").has("modifier_lines") \
+					and not EvTuning.ODDS.has(odds_seam.trim_prefix("olay.")):
 				_add(SEVERITY_ERROR, "17.11", where,
 					"option '%s' rolls a check but the card declares no modifier_lines — " % opt_id
 					+ "I7: no seam, no modifier, and a naked percentage is a blind decision")
@@ -288,16 +291,28 @@ static func _lint_effects(where: String, effects: Array, context: String, card: 
 		if verb == "schedule_event" and not EvCatalog.has_card(String(effect.get("event_id", ""))):
 			_add(SEVERITY_ERROR, "17.1", where,
 				"schedule_event names unknown card '%s'" % effect.get("event_id", ""))
+		if verb == "schedule_event" and effect.get("delay_weeks") is Array:
+			var window: Array = effect["delay_weeks"]
+			if window.size() != 2 or int(window[0]) < 0 or int(window[0]) > int(window[1]):
+				_add(SEVERITY_ERROR, "17.1", where, "schedule_event delay_weeks %s is not [lo, hi] with 0 <= lo <= hi"
+					% str(effect["delay_weeks"]))
 		if verb in ["start_arc", "advance_arc", "end_arc", "abort_arc", "set_arc_var"]:
 			if not EvCatalog.has_arc(String(effect.get("arc_id", ""))):
 				_add(SEVERITY_ERROR, "17.1", where,
 					"%s names unknown arc '%s'" % [verb, effect.get("arc_id", "")])
 		if verb == "productivity_mod" and int(effect.get("pct", 0)) == 0:
 			_add(SEVERITY_ERROR, "17.1", where, "productivity_mod names no pct; a pace row must move the pace")
-		if effect.has("amount_seam") and (not EvSeams.has(String(effect["amount_seam"]))
-				or EvSeams.kind_of(String(effect["amount_seam"])) != EvSeams.Kind.GLOBAL):
-			_add(SEVERITY_ERROR, "17.1", where, "amount_seam '%s' is not a registered global seam"
-				% effect["amount_seam"])
+		if effect.has("amount_seam"):
+			var amount_seam: String = String(effect["amount_seam"])
+			if effect.has("amount_slot"):
+				# An entity seam is read for the slot's entity, so the slot must hold the seam's kind of entity.
+				var slot: Dictionary = card["scope"].get(String(effect["amount_slot"]), {})
+				if not EvSeams.has(amount_seam) or EvSeams.kind_of(amount_seam) != EvSeams.Kind.ENTITY \
+						or EvScope._type_for_seam(amount_seam) != String(slot.get("type", "")):
+					_add(SEVERITY_ERROR, "17.1", where, "amount_slot '%s' is not a slot of the type of entity seam '%s'"
+						% [effect["amount_slot"], amount_seam])
+			elif not EvSeams.has(amount_seam) or EvSeams.kind_of(amount_seam) != EvSeams.Kind.GLOBAL:
+				_add(SEVERITY_ERROR, "17.1", where, "amount_seam '%s' is not a registered global seam" % amount_seam)
 		if verb == "trust_delta":
 			_lint_trust_delta(where, effect)
 		if verb == "morale_crew" and String(effect.get("crew", "")) not in MORALE_CREWS:
@@ -484,12 +499,10 @@ static func _lint_v3_block(id: String, card: Dictionary, where: String) -> void:
 
 ## Is `parent` really upstream: does it schedule this card, or does this card read its history?
 static func _is_chained(parent: String, id: String, card: Dictionary) -> bool:
-	for o in (EvCatalog.card(parent).get("options", []) as Array):
-		for e in ((o as Dictionary).get("effects", []) as Array):
-			var effect: Dictionary = e
-			if String(effect.get("verb", "")) == "schedule_event" \
-					and String(effect.get("event_id", "")) == id:
-				return true
+	for e in _card_effects(EvCatalog.card(parent)):
+		var effect: Dictionary = e
+		if String(effect.get("verb", "")) == "schedule_event" and String(effect.get("event_id", "")) == id:
+			return true
 	return not EvCondition.leaves_named(card.get("condition", {}), "event", parent).is_empty()
 
 
@@ -522,7 +535,9 @@ static func _lint_v3_options(id: String, card: Dictionary, where: String) -> voi
 	var subject_types: Array = SUBJECT_VERBS.values()
 	var subject_slots: Dictionary = {}
 	for slot in slots:
-		if subject_types.has(String((slots[slot] as Dictionary).get("type", ""))):
+		# A slot with `subject: false` only speaks or is named; the card is about something else.
+		if subject_types.has(String((slots[slot] as Dictionary).get("type", ""))) \
+				and bool((slots[slot] as Dictionary).get("subject", true)):
 			subject_slots[slot] = slots[slot]
 	# A system card is the run speaking, so it owes the player no price. A note owes none either,
 	# and needs no clause here: its one option carries nothing, so it is O1's branch (C R5).
@@ -892,10 +907,9 @@ static func _lint_reachability() -> void:
 		referenced[String(inv.get("reassign_event", ""))] = true
 		referenced[String(inv.get("close_event", ""))] = true
 	for id in EvCatalog.card_ids():
-		for o in (EvCatalog.card(id).get("options", []) as Array):
-			for e in ((o as Dictionary).get("effects", []) as Array):
-				if typeof(e) == TYPE_DICTIONARY and String((e as Dictionary).get("verb", "")) == "schedule_event":
-					referenced[String((e as Dictionary).get("event_id", ""))] = true
+		for e in _card_effects(EvCatalog.card(id)):
+			if typeof(e) == TYPE_DICTIONARY and String((e as Dictionary).get("verb", "")) == "schedule_event":
+				referenced[String((e as Dictionary).get("event_id", ""))] = true
 
 	for id in EvCatalog.card_ids():
 		var card: Dictionary = EvCatalog.card(id)
@@ -942,6 +956,8 @@ static func _lint_condition(where: String, tree: Dictionary) -> void:
 			_add(SEVERITY_ERROR, "17.1", where, "unknown seam '%s'" % d["seam"])
 		if d.has("entity_seam") and not EvSeams.has(String(d["entity_seam"])):
 			_add(SEVERITY_ERROR, "17.1", where, "unknown entity_seam '%s'" % d["entity_seam"])
+		if d.has("year_roll") and (float(d["year_roll"]) < 0.0 or float(d["year_roll"]) > 1.0):
+			_add(SEVERITY_ERROR, "17.1", where, "year_roll %s is not a chance between 0 and 1" % d["year_roll"])
 		if d.has("history") and d.has("event") and not EvCatalog.has_card(String(d["event"])):
 			_add(SEVERITY_ERROR, "17.1", where,
 				"a history leaf names unknown card '%s'" % d["event"])
@@ -973,6 +989,19 @@ static func _lint_where(path: String, card: Dictionary) -> void:
 			if seam == "" or String(d.get("scope", "")) != slot or other_type:
 				_add(SEVERITY_ERROR, "17.1", path,
 					"slot '%s': a where leaf must be an entity_seam of this slot and its type, not %s" % [slot, str(d)])
+
+
+## A slot's `select` names a selector its type answers to (EvScope.SELECTORS). The scope falls back to the first free
+## entity on any other name, so a misspelling would bind someone and say nothing.
+static func _lint_selectors(path: String, card: Dictionary) -> void:
+	for slot in (card["scope"] as Dictionary):
+		var spec: Dictionary = card["scope"][slot]
+		var select: String = String(spec.get("select", ""))
+		var known: bool = select == "" or select == EvScope.ASKED \
+			or (EvScope.SELECTORS.get(String(spec.get("type", "")), []) as Array).any(
+				func(name: String) -> bool: return select == name or (name.ends_with(":") and select.begins_with(name)))
+		if not known:
+			_add(SEVERITY_ERROR, "17.12", path, "slot '%s': no %s selector is named '%s'" % [slot, spec.get("type", ""), select])
 
 
 # --- §17.1 / §15.2 signals -------------------------------------------------

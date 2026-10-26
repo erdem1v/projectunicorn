@@ -294,7 +294,8 @@ func _reply_head(live: bool, key := "MAIL_REPLY") -> void:
 func _reply() -> void:
 	var ev: GameEvent = _item.event
 	var ctx: Dictionary = _item.ctx
-	var readout: bool = ev.choices.size() == 1 and (ev.choices[0] as EventChoice).modifiers.is_empty()
+	var readout: bool = ev.choices.size() == 1 and (ev.choices[0] as EventChoice).modifiers.is_empty() \
+		and (ev.choices[0] as EventChoice).check.is_empty()
 	_reply_head(_mode == "live" and not readout)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", UiTokens.SPACE_M)
@@ -341,6 +342,7 @@ func _paint_option(k: int) -> void:
 	var parts: Array = []
 	for m in c.modifiers:
 		parts.append_array(EvChips.describe(m, _item.ctx, {}, false))
+	parts.append_array(EvChips.describe_check(c.check, _item.ctx, {}))
 	UiFactory.clear(holder)
 	var inert: bool = _mode != "live"
 	if _single() or k == _armed:

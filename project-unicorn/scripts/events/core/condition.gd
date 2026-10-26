@@ -193,6 +193,8 @@ static func _leaf(node: Dictionary, ctx: Dictionary, report) -> bool:
 		return _leaf_entity_count(node, report)
 	if node.has("entity_seam"):
 		return _leaf_entity_seam(node, ctx, report)
+	if node.has("year_roll"):
+		return _leaf_year_roll(node, report)
 
 	# §5.3: an unknown leaf is FALSE plus an error, never a silent true. Lint refuses it at build
 	# time; this only fires for content that reached runtime some other way.
@@ -328,6 +330,16 @@ static func _leaf_entity_seam(node: Dictionary, ctx: Dictionary, report) -> bool
 	var ok: bool = _compare(actual, String(node.get("op", ">=")), node.get("value"))
 	_stamp(report, node, "entity_seam", ok, [],
 		{"seam": seam, "slot": slot, "entity": entity_id, "actual": actual, "want": node.get("value")})
+	return ok
+
+
+## A coin per calendar year: the roll hashes the year and `key` (the catalogue writes the card's id there when the leaf
+## names none), so a card holds in some years and not in others, the same way on every look within a year.
+static func _leaf_year_roll(node: Dictionary, report) -> bool:
+	var year: int = int(GameState.get_date_dict().year)
+	var roll: float = EvDice.unit("year", year, String(node.get("key", "")), "")
+	var ok: bool = roll < float(node["year_roll"])
+	_stamp(report, node, "year_roll", ok, [], {"year": year, "roll": roll, "want": node["year_roll"]})
 	return ok
 
 

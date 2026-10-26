@@ -161,6 +161,23 @@ const BUDGETS := {
 const ANCHOR_MINUTES_PER_DECISION := 2.5
 const ANCHOR_MAX_INTERRUPTS_PER_3_MIN := 3
 
+# --- §9.2 Fixed odds ---------------------------------------------------------
+#
+# A dice odds that does not come from the state is named here once and read through the
+# `olay.odds_*` seams: a card never carries the figure (I7), and a retune changes this table.
+
+const ODDS := {"odds_10": 0.10, "odds_15": 0.15, "odds_20": 0.20, "odds_25": 0.25}
+
+# The live demo of an award: the odds fall with the product's open bugs, and a lost demo costs
+# the brand more when the product was buggy.
+
+const AWARD_LIVE_BASE := 0.25
+const AWARD_LIVE_PER_BUG := 0.05
+const AWARD_LIVE_BUG_CAP := 3
+const AWARD_LIVE_FLOOR := 0.10
+const AWARD_SLIP_CLEAN := 1
+const AWARD_SLIP_BUGGY := -2
+
 # --- Build scope -----------------------------------------------------------
 
 ## Which version_scope values ship in this build; EndingsSystem.shipped_scopes() owns the answer.

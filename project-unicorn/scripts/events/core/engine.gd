@@ -636,19 +636,19 @@ static func resolve(event_id: String, option_id: String) -> void:
 	# row must still say who it was about (§7.1 `names`) and what its text read (§27.17).
 	var names: Dictionary = EvPresenter.freeze_names(context)
 	names.merge(EvPresenter.freeze_seams(card, context))
-	var deltas: Array
 	var outcome: String = String(option.get("outcome_id", option_id))
+	# §9: the dice roll at the odds the chip showed, so they are read before the option's sure effects
+	# can move the seam behind them.
+	var check: Dictionary = option.get("check", {})
+	var passed: bool = not check.is_empty() and EvDice.check(
+		float(EvSeams.read(String(check.get("odds_seam", "")))), event_id, option_id)
 	_resolving = true
-	if option.has("check"):
-		# §9: the dice. Both branches run through the check-branch vocabulary, where I6 lives.
-		var check: Dictionary = option["check"]
-		var odds: float = float(EvSeams.read(String(check.get("odds_seam", ""))))
-		var passed: bool = EvDice.check(odds, event_id, option_id)
-		deltas = EvEffects.run_check_branch(check.get("on_pass" if passed else "on_fail", []),
-			context, event_id)
+	var deltas: Array = EvEffects.run_played(option.get("effects", []), context, event_id)
+	if not check.is_empty():
+		# The branch lands after the sure effects, through the check-branch vocabulary, where I6 lives.
+		deltas.append_array(EvEffects.run_check_branch(check.get("on_pass" if passed else "on_fail", []),
+			context, event_id))
 		outcome = "%s_%s" % [outcome, "pass" if passed else "fail"]
-	else:
-		deltas = EvEffects.run_played(option.get("effects", []), context, event_id)
 	_resolving = false
 
 	var arc_id: String = String(card.get("arc", ""))
@@ -725,7 +725,7 @@ static func reset() -> void:
 static func request(event_id: String, context: Dictionary = {}, immediate: bool = false, stamp: int = -1) -> bool:
 	if not GameState.run_active:
 		return false
-	var bound: Dictionary = EvScope.resolve(EvCatalog.card(event_id).get("scope", {}), context)
+	var bound: Dictionary = EvScope.resolve(EvCatalog.card(event_id).get("scope", {}), context, event_id)
 	if bool(bound["ok"]):
 		var key: String = EvLatches.key_of(event_id, bound["context"])
 		if EvPapers.has(key):

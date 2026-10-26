@@ -68,8 +68,9 @@ static func build_view(event_id: String, context: Dictionary, names: Dictionary 
 		choice.unlock_condition = opt.get("requires", {})
 		choice.unlock_reason_text = resolve_text(reasons.get(opt_id, ""), context, names)
 		# Carried only for the chips (EvChips); EvEngine.resolve is the one path that
-		# applies effects and writes history.
+		# applies effects and the dice and writes history.
 		choice.modifiers = opt.get("effects", [])
+		choice.check = opt.get("check", {})
 		ev.choices.append(choice)
 	return ev
 
@@ -159,7 +160,7 @@ static func _name_of(entity_type: String, entity_id: String) -> Variant:
 			return cu.company_name if cu.name_key == "" else {"key": cu.name_key, "arg": cu.name_arg}
 		EvScope.TYPE_RIVAL:
 			var r: Rival = RivalRegistry.get_rival(entity_id)
-			return r.company_name if r != null else null
+			return r.product_name if r != null else null
 		EvScope.TYPE_INVESTOR:
 			var inv: Dictionary = InvestorRegistry.get_investor(entity_id)
 			return String(inv["display_name"]) if inv.has("display_name") else null

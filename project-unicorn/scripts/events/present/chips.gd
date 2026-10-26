@@ -18,7 +18,7 @@ extends RefCounted
 ## consequence of its own. `event_chip_coverage` in the smoke suite fails on any card verb
 ## that describe() neither labels nor finds here.
 const SILENT_VERBS := [
-	"set_flag", "set_game_flag", "stamp_day", "schedule_event", "cancel_scheduled",
+	"set_flag", "set_game_flag", "stamp_day", "cancel_scheduled",
 	"start_arc", "advance_arc", "end_arc", "abort_arc", "set_arc_var",
 	"mentor_advisory", "unlock_content", "spend_budget",
 	# The chip names the card it bumps; a sprint with room for the fix has nothing to say.
@@ -71,7 +71,7 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 		return []
 	if FIXED_CHIPS.has(verb):
 		return [_part(_t(FIXED_CHIPS[verb][0]), "", FIXED_CHIPS[verb][1])]
-	var d: int = EvEffects.amount(item)
+	var d: int = EvEffects.amount(item, ctx)
 	match verb:
 		"add_cash": return [_figure("EFFECT_CASH", _money(d), _signed(d))]
 		"add_brand": return [_figure("EFFECT_BRAND", _num(d), _signed(d))]
@@ -193,8 +193,9 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 					"weeks": span}), "", "gain")]
 		"audience_delta":
 			if item.has("pct"):
-				var pts: int = int(round(float(item["pct"]) * 100.0))
-				return [_figure("EFFECT_AUDIENCE_PCT", Fmt.signed_percent(pts), _signed(pts), {"pct": ""})]
+				var tenths: int = roundi(float(item["pct"]) * 1000.0)
+				return [_figure("EFFECT_AUDIENCE_PCT", Fmt.signed_percent(tenths / 10.0, int(tenths % 10 != 0)),
+					_signed(tenths), {"pct": ""})]
 			return [_figure("EFFECT_AUDIENCE", _num(d), _signed(d))]
 		"convert_audience":
 			var conv: String = Fmt.percent(int(round(float(item.get("pct", 0.0)) * 100.0)), 0)
@@ -226,6 +227,19 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 					seats = B2BConstants.expansion_seats(ec.company_size)
 					mrr = seats * (ec.seat_price if ec.seat_price > 0 else B2BConstants.EXPANSION_PER_SEAT_MRR)
 			return [_figure("EFFECT_EXPAND", _money(mrr), "gain", {"seats": seats, "mrr": ""})]
+		# What the scheduled card lands whichever way it is answered, under the wait. Those are the target
+		# card's effects, not landed deltas, so a history row reads them as the live chip does.
+		"schedule_event":
+			var landed: Array = []
+			var scheduled: Dictionary = item.get("context", ctx)
+			for effect in landing(String(item.get("event_id", ""))):
+				landed.append_array(describe(effect, scheduled, names, false))
+			if landed.is_empty():
+				return []
+			var span: Array = EvEffects.delay_bounds(item)
+			var wait: String = _t(Fmt.count_key("EFFECT_LATER", span[0])).format({"n": span[0]}) \
+				if span[0] == span[1] else _t("EFFECT_LATER_RANGE").format({"lo": span[0], "hi": span[1]})
+			return [_part(wait, "", "neutral")] + landed
 		# The cheque is cash in and equity out: the equity is the decision's cost, drawn as the slice.
 		"angel_accept":
 			var stake: Dictionary = _part(_t("EFFECT_TO_FRANK"),
@@ -235,6 +249,39 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 	if verb != "" and not SILENT_VERBS.has(verb):
 		push_warning("[EvChips] effect '%s' renders no chip — add a label or list it in SILENT_VERBS" % verb)
 	return []
+
+
+## The parts of an option's dice: each branch that does anything, headed by its own odds. The branch that
+## carries a cost or a danger is the risky one and reads as danger, whichever side of the dice it sits on.
+static func describe_check(check: Dictionary, ctx: Dictionary, names: Dictionary) -> Array:
+	var parts: Array = []
+	if check.is_empty():
+		return parts
+	var pass_pct: int = roundi(clampf(float(EvSeams.read(String(check["odds_seam"]))), 0.0, 1.0) * 100.0)
+	for branch in [["on_pass", pass_pct], ["on_fail", 100 - pass_pct]]:
+		var chips: Array = []
+		for effect in check.get(branch[0], []):
+			chips.append_array(describe(effect, ctx, names, false))
+		if chips.is_empty():
+			continue
+		var risky: bool = chips.any(func(p: Dictionary) -> bool: return p.polarity in ["cost", "danger"])
+		parts.append(_part(_t("EFFECT_CHANCE").format({"pct": branch[1]}), "", "danger" if risky else "gain"))
+		parts.append_array(chips)
+	return parts
+
+
+## The effects a scheduled card lands on every path: the ones each of its options carries, and its expiry too.
+## A `schedule_event` among them is a further step of its own, not a landing.
+static func landing(event_id: String) -> Array:
+	var card: Dictionary = EvCatalog.card(event_id)
+	var paths: Array = (card.get("options", []) as Array).map(
+		func(o: Dictionary) -> Array: return o.get("effects", []))
+	if card.has("on_expire"):
+		paths.append(card["on_expire"].get("penalties", []))
+	if paths.is_empty():
+		return []
+	return paths[0].filter(func(e: Dictionary) -> bool:
+		return e.get("verb") != "schedule_event" and paths.all(func(path: Array) -> bool: return path.has(e)))
 
 
 ## How a part reads on a chip.

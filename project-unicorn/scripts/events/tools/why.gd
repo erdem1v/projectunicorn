@@ -174,6 +174,8 @@ static func _detail_line(detail: Dictionary) -> String:
 		return "stamp %s: %s" % [detail["stamp"],
 			("%d week(s) ago" % int(detail.get("weeks", 0))) if bool(detail.get("stamped", false))
 				else "NEVER STAMPED"]
+	if detail.has("roll"):
+		return "year %d rolled %.3f, wanted below %s" % [detail["year"], detail["roll"], str(detail["want"])]
 	if detail.has("form"):
 		var bits: PackedStringArray = []
 		for k in detail:

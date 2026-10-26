@@ -31,6 +31,17 @@ const TYPES := [TYPE_EMPLOYEE, TYPE_FOUNDER, TYPE_CUSTOMER, TYPE_PROSPECT, TYPE_
 ## A slot with this `select` binds only the entity the requester names, and stays empty (if optional) without one.
 const ASKED := "asked"
 
+## The selectors a slot may name, by type; the lint refuses any other. A name ending in ':' is a prefix and takes a
+## parameter (`market_rival:giant`). `random` is seeded: the same day, card and slot pick the same entity.
+const SELECTORS := {
+	TYPE_EMPLOYEE: ["lowest_morale", "newest_hire", "most_senior", "account_rep", "support_lead", "sprint_dev", "random"],
+	TYPE_CUSTOMER: ["at_risk", "escalated", "expansion_ready", "open_request", "largest", "smallest", "line_top",
+		"line_warehouse", "line_newest", "line_slow", "request", "random"],
+	TYPE_PROSPECT: ["random"],
+	TYPE_RIVAL: ["sprint_rival", "market_rival:", "random"],
+	TYPE_INVESTOR: ["expiring_sheet", "decision_sheet", "seed_lead", "random"],
+}
+
 
 # --- Resolution ------------------------------------------------------------
 
@@ -51,7 +62,10 @@ const ASKED := "asked"
 ##
 ## REQUIRED SLOTS ARE RESOLVED FIRST. With two slots of one type and one candidate, declaration
 ## order could hand the only candidate to an optional slot and then fail the required one.
-static func resolve(slots: Dictionary, given: Dictionary = {}) -> Dictionary:
+##
+## `card_id` seeds the selectors that draw (`random`, the rival ones), so asking again on the same day
+## (the gate, a request, --why-fire) binds the same entity.
+static func resolve(slots: Dictionary, given: Dictionary = {}, card_id: String = "") -> Dictionary:
 	var context: Dictionary = {}
 	var used: Dictionary = {}          # entity id -> slot that took it
 
@@ -81,7 +95,8 @@ static func resolve(slots: Dictionary, given: Dictionary = {}) -> Dictionary:
 					if not _passes_where(spec, slot_name, candidate):
 						hidden[candidate] = slot_name
 			var mode: String = String(spec.get("select", ""))
-			chosen = "" if mode == ASKED else _select(type_id, mode, hidden, context)
+			chosen = "" if mode == ASKED else _select(type_id, mode, hidden, context,
+				EvDice.unit("pick", GameState.day, card_id, slot_name))
 			if chosen == "":
 				if bool(spec.get("required", true)):
 					return {"ok": false, "context": context,
@@ -201,14 +216,19 @@ static func _exists(entity_id: String, type_id: String) -> bool:
 
 # --- Selectors -------------------------------------------------------------
 #
-# Every selector is DETERMINISTIC: no RNG, ties broken by id, so the same world state always
-# selects the same subject and a reload cannot reshuffle who a card was about. An unnamed or
-# unknown mode takes the first free entity by id.
+# Every selector is DETERMINISTIC: no RNG stream, ties broken by id, so the same world state always
+# selects the same subject and a reload cannot reshuffle who a card was about. The ones that draw take
+# `roll`, a hash of the day, the card and the slot (EvDice), and index the candidates sorted by id. An
+# unnamed or unknown mode takes the first free entity by id.
 #
 # `bound` carries the slots resolved BEFORE this one, which is what lets a selector be relative
 # to another slot (`account_rep`: the rep on the customer this card already bound).
 
-static func _select(type_id: String, mode: String, used: Dictionary, bound: Dictionary) -> String:
+static func _select(type_id: String, mode: String, used: Dictionary, bound: Dictionary, roll: float) -> String:
+	if type_id == TYPE_RIVAL:
+		return _select_rival(mode, used, roll)
+	if mode == "random":
+		return _first_free(_ids(type_id), used, roll)
 	match type_id:
 		TYPE_EMPLOYEE: return _select_employee(mode, used, bound)
 		TYPE_CUSTOMER: return _select_customer(mode, used)
@@ -249,6 +269,20 @@ static func _select_employee(mode: String, used: Dictionary, bound: Dictionary) 
 					return id
 			return ""
 	return _first_by(pool, func(c): return c.id)
+
+
+## A rival of the player's market (RivalRegistry.get_by_type): the ones the sprint plan names (`sprint_rival`,
+## sprint.json's rival table), one tier (`market_rival:giant`, `:established`, `:startup`), or any (`random`).
+## Without a `select` it is the market's first free rival by id, undrawn.
+static func _select_rival(mode: String, used: Dictionary, roll: float) -> String:
+	var pool: Array = RivalRegistry.get_by_type(ProductState.subtype())
+	if mode == "sprint_rival":
+		var named: Array = SprintCatalog.rival_table().rivals.map(
+			func(i: Variant) -> String: return "rv_%s_%d" % [ProductState.subtype(), int(i)])   # LOC-DATA rival id
+		pool = pool.filter(func(r: Rival) -> bool: return named.has(r.id))
+	elif mode.begins_with("market_rival:"):
+		pool = pool.filter(func(r: Rival) -> bool: return r.tier == mode.trim_prefix("market_rival:"))
+	return _first_free(pool.map(func(r: Rival) -> String: return r.id), used, roll if mode != "" else 0.0)
 
 
 static func _select_investor(mode: String, used: Dictionary) -> String:
@@ -320,10 +354,8 @@ static func _first_by(pool: Array, key: Callable) -> String:
 	return String(pool[0].id)
 
 
-static func _first_free(ids: Array, used: Dictionary) -> String:
-	var sorted_ids: Array = ids.duplicate()
-	sorted_ids.sort()
-	for entity_id in sorted_ids:
-		if not used.has(entity_id):
-			return String(entity_id)
-	return ""
+## The free id at `roll` (0..1) of the ids sorted; the first free one by default.
+static func _first_free(ids: Array, used: Dictionary, roll: float = 0.0) -> String:
+	var free: Array = ids.filter(func(entity_id: String) -> bool: return not used.has(entity_id))
+	free.sort()
+	return "" if free.is_empty() else String(free[floori(roll * free.size())])

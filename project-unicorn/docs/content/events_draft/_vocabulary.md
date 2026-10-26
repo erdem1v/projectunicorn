@@ -12,7 +12,7 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **256** |
+| Seams (read) | **262** |
 | Effect verbs (write) | **75** |
 | Cards in the catalogue | 146 |
 | Arcs | 3 |
@@ -117,6 +117,14 @@ Barred from ambient origins entirely; on expiry, allowed only in the negative.
 Requires `requires_telegraph` naming a card or flag that has already fired (I3).
 
 - `trigger_ending`
+
+### Parameters worth knowing
+
+- `amount_seam` × `amount_mult` is a figure read from a seam. A global seam needs nothing more; an entity seam
+  needs `amount_slot`, the scope slot whose entity it is read for (the slot's type must be the seam's).
+- `schedule_event.delay_weeks` is a number or a window `[lo, hi]`; a window's week is drawn from the day, the
+  scheduling card and the scheduled one, so the same day gives the same week.
+- An option may carry `effects` and a `check` together: the effects land first, then the branch the dice picks.
 
 ## b · Seams — everything a condition may read
 
@@ -320,9 +328,15 @@ slot of that type (§17.12).
 | `olay.accounts` | global | int | Incident | active B2B accounts |
 | `olay.affected_accounts` | global | int | Incident | active B2B accounts that use the line the emergency hit |
 | `olay.affected_users` | global | int | Incident | B2C: people who tried the app between the outage's start and the card's opening |
+| `olay.award_live_odds` | global | float | Events | the award's live demo lands: odds fall with the product's open bugs |
+| `olay.award_live_slip` | global | int | Events | the brand a lost live demo moves: a clean product slips less, a buggy one loses |
 | `olay.clock` | global | string | Incident | when the open emergency began, 02:10; a history row reads the latest emergency's |
 | `olay.line_users` | global | int | Incident | people the line the emergency hit reaches each day (B2C: the audience's share of it) |
 | `olay.night_accounts` | global | int | Incident | active B2B accounts of a night-shift sector |
+| `olay.odds_10` | global | float | Events | a fixed dice odds, EvTuning.ODDS |
+| `olay.odds_15` | global | float | Events | a fixed dice odds, EvTuning.ODDS |
+| `olay.odds_20` | global | float | Events | a fixed dice odds, EvTuning.ODDS |
+| `olay.odds_25` | global | float | Events | a fixed dice odds, EvTuning.ODDS |
 | `olay.outage_load` | global | int | Incident | the server load, in percent, the open outage was rolled at, for by_seam text; 0 for another kind |
 | `olay.payers` | global | int | Incident | people a fix outside the sprint costs morale (SprintSystem.payers, on the line the emergency hit); 0 locks the option |
 | `olay.service_up` | global | bool | Incident | no emergency is open, or the fix it was answered with is done |
@@ -486,7 +500,11 @@ branch failed, and naming one of them is arbitrary and usually misleading.
 {"entity_exists": "employee_a"}
 {"entity_count": "employee", "op": ">=", "value": 2}
 {"entity_seam": "hr.morale", "scope": "employee_a", "op": "<", "value": 50}
+{"year_roll": 0.5}
 ```
+
+`year_roll` is a coin per calendar year: the chance (0 to 1) that the card holds in a given year, rolled from
+the year and the card's id, so every look within a year agrees. A `key` shares one roll across cards.
 
 **A flag is engine memory, not game state.** `flag` and `flag_unset` read the
 engine's own store. Anything a SYSTEM owns — `series_a_closed`, `mvp_shipped` —
@@ -626,6 +644,21 @@ pool. A paper carries `latch: {cooldown_weeks: 52, max_fires: 3}` (the two stack
 A paper's `customer` slot may take `select: line_top | line_warehouse | line_newest | line_slow | request` (an account of
 the decision card's line, SprintCatalog.paper_account) and a second `employee` slot `select: sprint_dev` (a developer of
 the sprint's team); an option that fits one market only is a card of its own (`_b2c`), since a locked option is never hidden.
+
+### `select` — how a slot picks its entity
+
+A slot's `select` names a selector its type answers to (any other name is a build error, §17.12); `asked` binds only
+what the requester names. A name ending in `:` takes a parameter (`market_rival:giant`). `random` draws by a
+hash of the day, the card and the slot: the same day binds the same entity, and a rival is drawn from the
+player's market. A slot with no `select` takes the first free entity by id.
+
+| slot type | selectors |
+|---|---|
+| `employee` | `lowest_morale`, `newest_hire`, `most_senior`, `account_rep`, `support_lead`, `sprint_dev`, `random` |
+| `customer` | `at_risk`, `escalated`, `expansion_ready`, `open_request`, `largest`, `smallest`, `line_top`, `line_warehouse`, `line_newest`, `line_slow`, `request`, `random` |
+| `prospect` | `random` |
+| `rival` | `sprint_rival`, `market_rival:`, `random` |
+| `investor` | `expiring_sheet`, `decision_sheet`, `seed_lead`, `random` |
 
 ### The window, the immunity and the demo's reach
 

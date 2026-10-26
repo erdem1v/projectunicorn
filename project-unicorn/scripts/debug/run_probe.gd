@@ -1103,7 +1103,7 @@ static func _cash_delta_of(choice: EventChoice) -> int:
 	var total: int = 0
 	for m in choice.modifiers:
 		if String(m.get("verb", "")) == "add_cash":
-			total += EvEffects.amount(m)
+			total += EvEffects.amount(m, EventGate.active_context())
 		elif String(m.get("type", "")) == "cash":
 			total += int(m.get("delta", 0))
 	return total

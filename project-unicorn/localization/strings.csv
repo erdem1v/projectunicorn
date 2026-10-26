@@ -3201,6 +3201,10 @@ EFFECT_NEW_BUGS_ONE,{line}: {n} yeni açık hata,{line}: {n} new open bug
 EFFECT_LINE_HARDEN,{line}: {weeks} hafta yeni hata çıkmaz,{line}: no new bugs for {weeks} weeks
 EFFECT_FIX_FRONT,{card} sprintin başına girer,{card} goes to the front of the sprint
 EFFECT_SPRINT_HOURS_SOLO,Bu sprint çalışma saatin ×{v},Your work hours ×{v} this sprint
+EFFECT_CHANCE,%{pct} ihtimalle:,{pct}% chance:
+EFFECT_LATER,{n} hafta sonra:,In {n} weeks:
+EFFECT_LATER_ONE,{n} hafta sonra:,In {n} week:
+EFFECT_LATER_RANGE,{lo} ile {hi} hafta sonra:,In {lo} to {hi} weeks:
 VC_WHY_STRAIN,Aranızda hâlâ bir kırgınlık var.,There is still some friction between you.
 FIN_ONETIME_LEGAL,Hukuk masrafı,Legal fees
 FIN_ONETIME_PAY_CUT,Maaş indirimi,Pay cut

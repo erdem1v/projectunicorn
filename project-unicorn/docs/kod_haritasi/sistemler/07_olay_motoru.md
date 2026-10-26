@@ -111,7 +111,8 @@ Oyuncu seçince etkileri (`EvEffects`) uygular, geçmişe yazar. Sistemler kart�
 - Neden gelmedi: `--why-fire=<kart id>` (`why.gd`); otomatik oynatma: `--event-harness=random:seeds=N:weeks=M` ya da `guided[:seeds=N:weeks=M]` (`harness.gd:84`); sözlük: `--event-vocab` (dosya yazar)
 - Makullük defteri: `--event-plausibility=<spec>` kabuk içinden ya da `tools/plausibility_run.sh` (koşu başına süreç ve kullanıcı dizini; `PLAUS FIRE/FAIL/RATE/SUMMARY`); spec `seeds=<N|A-B>:weeks=<N>:variant=<plain|early|both>:preset=`
 - Smoke (`tools/smoke_run.sh <vaka>`, vakalar `scripts/debug/endgame_smoke.gd`): `event_*` 33 vaka (ör. `event_i1_single_gate` `:325`, `event_critical_drop_refunds_latch` `:294`, `event_lint_v3_rules` `:580`, `event_delay_window` `:584`)
-- Smoke devamı: `card_body_tokens_resolve` `endgame_smoke.gd:490`, `loc_event_en_coverage` `:318`, `event_chip_coverage` `:335`, `quiet_cards_fill_empty_floor` `:542`, `event_no_double_resolution_after_load` `:355`,
+- Smoke devamı: `event_check_with_effects` (şıkta etki ve zar birlikte, zar çipi, yükle-tekrar aynı dal), `event_year_roll` (yıl zarı, tohumlu `random` ve rakip seçicileri, `{rival}` adı),
+  ↳ `card_body_tokens_resolve` `endgame_smoke.gd:490`, `loc_event_en_coverage` `:318`, `event_chip_coverage` `:335`, `quiet_cards_fill_empty_floor` `:542`, `event_no_double_resolution_after_load` `:355`,
   ↳ `event_thesis_day10_to_day90` `:333`, `harness_sniffer_matches_run_log` `:368`
 - Oynanan koşu: `--run-log=<preset>:<hafta>:sim` `PROBE FIRE/PICK/TALLY/WEEK` basar (`run_probe.gd:30-99`); `tools/run_gate.sh` üç koşu; görsel: `--event-shot=<kart id>[:<slot>=<varlık id>]` (`main.gd:764`, pencereli)
 - Kural: yeni smoke vakası yalnız çekirdek mantık için; tam süit yalnız entegrasyonda (CLAUDE.md "Smoke ve probe"); bayrak `--` ayıracının ARKASINA konmaz
@@ -127,6 +128,17 @@ Oyuncu seçince etkileri (`EvEffects`) uygular, geçmişe yazar. Sistemler kart�
 - Katalog `_` ile başlayan dosyaları ve `unwired/`, `drafts/` dizinlerini HİÇ yüklemez (`catalog.gd:17-19,61-63`); `lint_v3/_bad_*.json` yalnız `event_lint_v3_rules` vakasınca doğrudan okunur. `_fixtures/` dizini yüklenir,
   ↳ `version_scope: fixture` ile G2'de kesilir
 - Kapsam tuzağı: `EvTuning.SHIPPED_SCOPES` statik değişken; probe ve bazı smoke vakaları `fixture` ekler ve aynı fonksiyonda geri yükler. Geri yüklemeyi unutmak sonraki vakaya fikstür kartı sızdırır
+- Şıkta `effects` ve `check` birlikte yazılabilir: `EvEngine.resolve` önce `effects`'i (`run_played`), sonra zarın seçtiği dalı (`run_check_branch`, I6) koşar; geçmiş satırının `deltas`'ı ikisini taşır. Zar `EvDice.check(oran, kart, şık)`:
+  ↳ aynı gün, kart ve şık aynı dalı verir. Risk dalı `on_pass`a yazılır, oran o dalın oranıdır (`on_fail` = 100 - oran); `EvChips.describe_check` boş olmayan her dalı kendi oranıyla çizer, bedel ya da tehlike taşıyan dalın başlığı tehlike renginde
+- Sabit oran `EvTuning.ODDS` ve `olay.odds_10/15/20/25` seam'leridir; kartta sayı yazılmaz. Lint 17.11 sabit oranlı zardan `modifier_lines` istemez (arkasında durum yok); durumdan gelen oran (`olay.award_live_odds`) ister
+- `schedule_event.delay_weeks` sayı ya da `[lo, hi]`; aralığın haftası `EvDice.unit("schedule", gün, zamanlayan kart, hedef kart)`'tan çekilir. Çip hedef kartın her yolda (bütün şıklarda ve süre dolumunda) birebir aynı indirdiği etkileri bekleme başlığıyla yazar
+  ↳ (`EvChips.landing`); ortak etki yoksa ya da hepsi sessizse çipsizdir. Lint dalda ve `on_expire`da zamanlananı da "referanslı" sayar (`_card_effects`)
+- `amount_slot`: `amount_seam` bir ENTITY seam ise tutar o yuvanın varlığı için okunur (`EvEffects.amount(e, ctx)`); çip, geçmiş satırı ve bot aynı `ctx` ile okur (bot `EventGate.active_context()`). Lint seam'in türünü yuvanın türüyle eşler
+- Seçiciler `EvScope.SELECTORS` listesindedir; lint 17.12 listede olmayan `select`i reddeder (`:` ile biten ad önektir, `market_rival:giant`). `random` ve rakip seçicileri tohumludur: `EvScope.resolve(yuvalar, verilen, kart_id)` gün, kart ve yuvanın hash'iyle
+  ↳ sıralı adaylardan birini seçer; kart kimliği geçilmezse çekiliş kartın gerçek çekilişinden farklı çıkar. Rakip havuzu `RivalRegistry.get_by_type(ProductState.subtype())`, `select`siz rakip yuvası havuzun ilk boş id'sini alır; `{rival}` ürün adını okur
+- `year_roll` yaprağı: `{"year_roll": 0.5}` takvim yılı başına bir zardır, anahtarı yükleme sırasında kartın kimliğine damgalanır (`EvCatalog._coerce_conditions`); `key` yazılırsa kartlar aynı zarı paylaşır
+- Yuva `"subject": false` (yalnız lint): çalışan yuvası gönderen ya da anılan kişidir, kartın öznesi değildir; O4 o yuvayı özne saymaz
+
 - Fiil sözlüğü ile `_apply` ayrışık: `assign_to`, `start_training`, `add_customer`, `convert_audience`, `open_paid_tier`, `change_salary`, `fire_employee` listelerde var ama `_apply` kolu YOK;
   ↳ çağrı `not implemented` döner (`effects.gd:663-665`)
 - Bu yedi fiil `_vocabulary.md`'de de görünür; `add_customer` yalnız `_fixtures/lint_v3/_bad_v1.json`'da geçer, gerçek kartta kullanımı yok; yeni fiil yazarken sözlükte olması uygulandığını GÖSTERMEZ
@@ -142,6 +154,7 @@ Oyuncu seçince etkileri (`EvEffects`) uygular, geçmişe yazar. Sistemler kart�
 - Smoke vakaları `EvSeams.mock`, `EvTuning` ve statik Ev* durumlarına dokunur; paylaşılan kayıt yuvasına yazan vakalar paralel koşmaz (CLAUDE.md); `run_case` her vakada build kapsamını demo'ya sabitler
 
 ## Bir değişiklik yaparken
+- Yeni seçici: `EvScope._select*` kolu + `EvScope.SELECTORS` listesi (lint 17.12 buradan okur); tohumlu çekiliş `_first_free(ids, used, roll)`'dur
 - Yeni seam: ilgili `seams/seams_*.gd` dosyasına `EvSeams.register(ad, kind, type, fn, owner, note)`; ad tek yerde tanımlı olmalı (çift kayıt hata). Sonra `--event-vocab` koş, `_vocabulary.md` değişir,
   ↳ `--event-lint` ile kartları denetle
 - Yeni etki fiili: `NEUTRAL_VERBS`/`ECONOMIC_VERBS` listesi + `_apply` kolu (`effects.gd`) + çip (`EvChips.describe`) ya da `EvChips.SILENT_VERBS` + `EvLint.WRITER_VERBS` ya da `SYSTEM_VERBS`; sonra `--event-vocab`,
