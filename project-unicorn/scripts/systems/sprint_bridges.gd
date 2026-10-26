@@ -303,15 +303,12 @@ static func pick_reviews(release: Dictionary) -> Dictionary:
 static func _unhappy(release: Dictionary, line_bugs: int) -> Dictionary:
 	var escaped: Array = release.get("escaped", [])
 	var blames: bool = not escaped.is_empty()
-	var lines: Array = escaped.duplicate() if blames else ProductState.open_bugs_by_line().keys().filter(
+	var lines: Array = escaped if blames else ProductState.open_bugs_by_line().keys().filter(
 		func(l: String) -> bool: return ProductState.costed(ProductState.line_bugs(l)) >= line_bugs)
-	lines.sort()
-	var worst: String = ""
+	var bugs: Dictionary = {}
 	for line in lines:
-		if worst == "" or ProductState.line_bugs(line) > ProductState.line_bugs(worst) \
-				or (ProductState.line_bugs(line) == ProductState.line_bugs(worst)
-				and SprintCatalog.line_users(line) > SprintCatalog.line_users(worst)):
-			worst = line
+		bugs[line] = ProductState.line_bugs(line)
+	var worst: String = ProductState.worst_bug_line(bugs)
 	return {} if worst == "" else {"line": worst, "blames": blames}
 
 

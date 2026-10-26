@@ -350,18 +350,14 @@ static func _line_of(kind: String, waive := false) -> String:
 ## B2B line must have an account that uses it. Ties go to the line more people use, then to the smaller id.
 static func _worst(bases: Array, floor_bugs: int, waive: bool) -> String:
 	var bugs: Dictionary = ProductState.open_bugs_by_line()
-	var ids: Array = bugs.keys()
-	ids.sort()
-	var worst: String = ""
-	for line in ids:
+	var kept: Dictionary = {}
+	for line in bugs:
 		if line.get_slice("@", 0) not in bases or ProductState.costed(int(bugs[line])) < (1 if waive else floor_bugs):
 			continue
 		if ProductState.market_type() == "b2b" and SprintCatalog.line_accounts(line).is_empty():
 			continue
-		if worst == "" or int(bugs[line]) > int(bugs[worst]) or (int(bugs[line]) == int(bugs[worst])
-				and SprintCatalog.line_users(line) > SprintCatalog.line_users(worst)):
-			worst = line
-	return worst
+		kept[line] = bugs[line]
+	return ProductState.worst_bug_line(kept)
 
 
 ## The critical line a bug escaped testing on in the release that closed today (the one more people use), "" when there is

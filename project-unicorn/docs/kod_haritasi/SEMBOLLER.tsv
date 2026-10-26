@@ -68,7 +68,7 @@ _add_open_body	func	scripts/tabs/product/area_panel.gd:134	AreaPanel
 _add_profit_progress	func	scripts/tabs/finance/finance_ozet_view.gd:230	FinanceOzetView
 _add_promise	func	scripts/tabs/sales_tab.gd:581	sales_tab.gd
 _add_prospect	func	scripts/debug/endgame_smoke.gd:8440	EndgameSmoke
-_add_review	func	scripts/systems/sprint_bridges.gd:319	SprintBridges
+_add_review	func	scripts/systems/sprint_bridges.gd:316	SprintBridges
 _add_risk_b2b	func	scripts/debug/endgame_smoke.gd:3465	EndgameSmoke
 _add_row	func	scripts/modals/settings_modal.gd:407	settings_modal.gd
 _add_section	func	scripts/menu/licenses.gd:59	licenses.gd
@@ -77,7 +77,7 @@ _admit	func	scripts/events/core/engine.gd:478	EvEngine
 _advance_probe	func	scripts/systems/sales_meeting_system.gd:229	SalesMeetingSystem
 _advance_real	func	scripts/autoload/time_manager.gd:100	TimeManager
 _advancing	var	scripts/autoload/time_manager.gd:72	TimeManager
-_affected	func	scripts/systems/incident_system.gd:654	IncidentSystem
+_affected	func	scripts/systems/incident_system.gd:650	IncidentSystem
 _after_follow	var	scripts/ui/office/office_person.gd:206	OfficePerson
 _agent	var	scripts/ui/office/office_person.gd:204	OfficePerson
 _ahead	func	scripts/systems/sprint_timeline.gd:298	SprintTimeline
@@ -163,7 +163,7 @@ _attitude	var	scripts/ui/meeting/meeting_panel.gd:65	MeetingPanel
 _attitude_row	var	scripts/ui/meeting/meeting_panel.gd:78	MeetingPanel
 _audience_delta_per_hour	func	scripts/systems/sales_system.gd:188	SalesSystem
 _audience_fit	func	scripts/systems/product_quality.gd:300	ProductQuality
-_audience_loss	func	scripts/systems/incident_system.gd:640	IncidentSystem
+_audience_loss	func	scripts/systems/incident_system.gd:636	IncidentSystem
 _audience_loss_per_hour	func	scripts/systems/sales_system.gd:211	SalesSystem
 _audience_star	func	scripts/systems/product_quality.gd:312	ProductQuality
 _audience_stat	func	scripts/systems/endings_copy.gd:427	EndingsCopy
@@ -197,7 +197,7 @@ _b2b_concentration	func	scripts/systems/vc_pitch_system.gd:1279	VCPitchSystem
 _b2c	var	scripts/tabs/sales_tab.gd:47	sales_tab.gd
 _b2c_delta	func	scripts/debug/endgame_smoke.gd:13060	EndgameSmoke
 _b2c_wom	func	scripts/debug/endgame_smoke.gd:13068	EndgameSmoke
-_back	func	scripts/systems/incident_system.gd:547	IncidentSystem
+_back	func	scripts/systems/incident_system.gd:543	IncidentSystem
 _back_btn	var	scripts/menu/licenses.gd:16	licenses.gd
 _back_to_decision	func	scripts/modals/save_load_modal.gd:248	save_load_modal.gd
 _backups	func	scripts/modals/save_load_modal.gd:98	save_load_modal.gd
@@ -1126,7 +1126,7 @@ _counters	var	scripts/onboarding/steps/origin_traits_step.gd:23	origin_traits_st
 _counters	var	scripts/systems/negotiation_system.gd:50	NegotiationSystem
 _counts	var	scripts/debug/office_crowd_probe.gd:29	OfficeCrowdProbe
 _cover	var	scripts/tabs/hr/hr_panel.gd:19	hr_panel.gd
-_credit	func	scripts/systems/incident_system.gd:627	IncidentSystem
+_credit	func	scripts/systems/incident_system.gd:623	IncidentSystem
 _crew	func	scripts/debug/sprint_probe.gd:448	sprint_probe.gd
 _crew	func	scripts/tabs/product/product_model.gd:576	ProductModel
 _crowded	var	scripts/debug/office_crowd_probe.gd:38	OfficeCrowdProbe
@@ -1266,7 +1266,7 @@ _dragging	var	scripts/ui/components/build_hud_panel.gd:30	build_hud_panel.gd
 _drain	func	scripts/events/tools/harness.gd:202	EvHarness
 _drain_active	func	scripts/events/tools/harness.gd:226	EvHarness
 _drain_all_modals	func	scripts/debug/endgame_smoke.gd:4670	EndgameSmoke
-_drain_audience	func	scripts/systems/incident_system.gd:536	IncidentSystem
+_drain_audience	func	scripts/systems/incident_system.gd:532	IncidentSystem
 _drain_boundaries	func	scripts/autoload/time_manager.gd:127	TimeManager
 _drain_modals	func	scripts/debug/run_probe.gd:973	RunProbe
 _drain_to	func	scripts/debug/endgame_smoke.gd:834	EndgameSmoke
@@ -1479,7 +1479,7 @@ _fix_arm	var	scripts/debug/run_probe.gd:295	RunProbe
 _fix_b2b	func	scripts/debug/product_fixtures.gd:704	product_fixtures.gd
 _fix_goes_next	func	scripts/systems/sprint_system.gd:278	SprintSystem
 _fix_ledger	func	scripts/debug/run_probe.gd:542	RunProbe
-_fix_minutes	func	scripts/systems/incident_system.gd:566	IncidentSystem
+_fix_minutes	func	scripts/systems/incident_system.gd:562	IncidentSystem
 _flag	var	scripts/debug/office_pan_probe.gd:34	office_pan_probe.gd
 _flag	var	scripts/systems/graphics_settings.gd:41	graphics_settings.gd
 _flag_value	func	scripts/main/main.gd:183	main.gd
@@ -1536,7 +1536,7 @@ _free_flow	func	scripts/main/main.gd:161	main.gd
 _free_hands	func	scripts/ui/office/office_people.gd:485	OfficePeople
 _free_line	func	scripts/debug/sprint_probe.gd:419	sprint_probe.gd
 _free_menu	func	scripts/main/main.gd:137	main.gd
-_free_month	func	scripts/systems/incident_system.gd:661	IncidentSystem
+_free_month	func	scripts/systems/incident_system.gd:657	IncidentSystem
 _freeze_job	var	scripts/systems/rnd_system.gd:45	RnDSystem
 _freezes	var	scripts/autoload/time_manager.gd:64	TimeManager
 _frequency	func	scripts/systems/summary_system.gd:97	SummarySystem
@@ -1581,7 +1581,7 @@ _get_minimum_size	func	scripts/tabs/product/sprint_card.gd:42	SprintCard.NameRow
 _gfx_controls	var	scripts/modals/settings_modal.gd:87	settings_modal.gd
 _gfx_preset	var	scripts/modals/settings_modal.gd:86	settings_modal.gd
 _ghost_text	func	scripts/systems/term_sheet_table_system.gd:927	TermSheetTableSystem
-_give_up	func	scripts/systems/incident_system.gd:647	IncidentSystem
+_give_up	func	scripts/systems/incident_system.gd:643	IncidentSystem
 _glance	func	scripts/systems/look_system.gd:142	LookSystem
 _glasses	func	scripts/ui/office/office_body.gd:183	OfficeBody
 _glow_mats	var	scripts/ui/office/office_lighting.gd:81	OfficeLighting
@@ -1673,7 +1673,7 @@ _hire_the_team	func	scripts/debug/run_probe.gd:1554	RunProbe
 _history	var	scripts/tabs/rnd_tab.gd:47	rnd_tab.gd
 _history_item	func	scripts/ui/components/inbox.gd:261	inbox.gd
 _hit	func	scripts/ui/office/office_people.gd:704	OfficePeople
-_hit_accounts	func	scripts/systems/incident_system.gd:589	IncidentSystem
+_hit_accounts	func	scripts/systems/incident_system.gd:585	IncidentSystem
 _hit_at	func	scripts/ui/office/office_city.gd:392	OfficeCity
 _hits	var	scripts/debug/loc_residue.gd:56	loc_residue.gd
 _hold	func	scripts/systems/incident_system.gd:310	IncidentSystem
@@ -1880,7 +1880,7 @@ _lane	func	scripts/tabs/sales_tab.gd:740	sales_tab.gd
 _lane	var	scripts/ui/office/office_person.gd:222	OfficePerson
 _lanes	var	scripts/ui/office/office_person.gd:181	OfficePerson
 _lang_option	var	scripts/modals/settings_modal.gd:96	settings_modal.gd
-_largest_night_account	func	scripts/systems/incident_system.gd:427	IncidentSystem
+_largest_night_account	func	scripts/systems/incident_system.gd:423	IncidentSystem
 _last	var	scripts/ui/office/office_camera.gd:41	OfficeCamera
 _last_appetite	var	scripts/debug/run_probe.gd:289	RunProbe
 _last_autosave_msec	var	scripts/autoload/save_manager.gd:46	SaveManager
@@ -2526,7 +2526,7 @@ _owed_hours	var	scripts/systems/term_sheet_table_system.gd:150	TermSheetTableSys
 _owed_hours	var	scripts/systems/vc_pitch_system.gd:47	VCPitchSystem
 _own	func	scripts/systems/sprint_prep.gd:72	SprintPrep
 _p	func	scripts/debug/product_fixtures.gd:716	product_fixtures.gd
-_p	func	scripts/systems/sprint_bridges.gd:345	SprintBridges
+_p	func	scripts/systems/sprint_bridges.gd:342	SprintBridges
 _p	func	scripts/systems/sprint_catalog.gd:748	SprintCatalog
 _p	func	scripts/systems/sprint_system.gd:1737	SprintSystem
 _pace	func	scripts/systems/sprint_timeline.gd:287	SprintTimeline
@@ -3030,7 +3030,7 @@ _registries	func	scripts/systems/save_codec.gd:262	SaveCodec
 _regression_audience	func	scripts/debug/endgame_smoke.gd:18154	EndgameSmoke
 _regression_book	func	scripts/debug/endgame_smoke.gd:18116	EndgameSmoke
 _regression_card	func	scripts/debug/endgame_smoke.gd:18103	EndgameSmoke
-_regression_line	func	scripts/systems/incident_system.gd:369	IncidentSystem
+_regression_line	func	scripts/systems/incident_system.gd:365	IncidentSystem
 _reject	func	scripts/systems/vc_pitch_system.gd:535	VCPitchSystem
 _relay	func	scripts/events/core/signals.gd:99	EvSignals
 _relayout	func	scripts/tabs/rnd/rnd_tree_view.gd:159	RnDTreeView
@@ -3615,7 +3615,7 @@ _standing	func	scripts/systems/sprint_catalog.gd:804	SprintCatalog
 _standing	func	scripts/tabs/personal_tab.gd:176	personal_tab.gd
 _star_holders	func	scripts/systems/rnd_system.gd:404	RnDSystem
 _star_value	func	scripts/systems/product_quality.gd:341	ProductQuality
-_stars	func	scripts/systems/incident_system.gd:582	IncidentSystem
+_stars	func	scripts/systems/incident_system.gd:578	IncidentSystem
 _start	func	tools/people/bake_portraits.gd:15	bake_portraits.gd
 _start_on_lead	func	scripts/debug/run_probe.gd:1382	RunProbe
 _start_processing	func	scripts/systems/sales_rep_system.gd:150	SalesRepSystem
@@ -3850,8 +3850,8 @@ _trim_parts	func	scripts/events/present/chips.gd:333	EvChips
 _trip_label	var	scripts/main/main.gd:70	main.gd
 _trust_part	func	scripts/events/present/chips.gd:312	EvChips
 _trust_parts	func	scripts/events/present/chips.gd:291	EvChips
-_trust_row	func	scripts/systems/incident_system.gd:599	IncidentSystem
-_trust_rows	func	scripts/systems/incident_system.gd:608	IncidentSystem
+_trust_row	func	scripts/systems/incident_system.gd:595	IncidentSystem
+_trust_rows	func	scripts/systems/incident_system.gd:604	IncidentSystem
 _trust_standing_cost	func	scripts/debug/endgame_smoke.gd:17336	EndgameSmoke
 _try_autosave	func	scripts/autoload/save_manager.gd:434	SaveManager
 _turn	func	scripts/ui/office/office_gesture.gd:43	OfficeGesture
@@ -4085,7 +4085,7 @@ account_capacity	func	scripts/systems/b2b_constants.gd:190	B2BConstants
 account_count	func	scripts/autoload/customer_registry.gd:48	CustomerRegistry
 account_fit	func	scripts/systems/product_quality.gd:246	ProductQuality
 account_item	func	scripts/ui/components/inbox.gd:206	inbox.gd
-accounts	func	scripts/systems/incident_system.gd:415	IncidentSystem
+accounts	func	scripts/systems/incident_system.gd:411	IncidentSystem
 accounts_of	func	scripts/systems/hr_system.gd:165	HRSystem
 accrue_month_expense	func	scripts/autoload/game_state.gd:554	GameState
 accrue_month_flow	func	scripts/autoload/game_state.gd:546	GameState
@@ -6397,7 +6397,7 @@ history	func	scripts/events/event_gate.gd:91	EventGate
 HISTORY_WEEKS	const	scripts/tabs/sales_tab.gd:29	sales_tab.gd
 hit	func	scripts/ui/office/office_actor.gd:124	OfficeActor
 HIT_BOX	const	scripts/ui/office/office_actor.gd:38	OfficeActor
-hit_line	func	scripts/systems/incident_system.gd:382	IncidentSystem
+hit_line	func	scripts/systems/incident_system.gd:378	IncidentSystem
 HOLD	const	scripts/systems/incident_system.gd:48	IncidentSystem
 hold	func	scripts/systems/b2b_sales_system.gd:396	B2BSalesSystem
 hold_changed	signal	scripts/autoload/time_manager.gd:46	TimeManager
@@ -7357,7 +7357,7 @@ next_ratio	func	scripts/systems/product_quality.gd:172	ProductQuality
 next_renewal_day	func	scripts/systems/sprint_bridges.gd:62	SprintBridges
 next_star	func	scripts/systems/product_quality.gd:163	ProductQuality
 next_tier	func	scripts/systems/product_lines.gd:409	ProductLines
-night_accounts	func	scripts/systems/incident_system.gd:422	IncidentSystem
+night_accounts	func	scripts/systems/incident_system.gd:418	IncidentSystem
 NIGHT_FADE_S	const	scripts/ui/office/office_view.gd:16	office_view.gd
 night_skipped	signal	scripts/autoload/event_bus.gd:23	EventBus
 NIGHT_WAIT_S	const	scripts/systems/office_constants.gd:84	OfficeConstants
@@ -7519,7 +7519,7 @@ OUT_PATH	const	scripts/theme/build_theme.gd:34	build_theme.gd
 OUT_S	const	scripts/ui/components/toast.gd:13	toast.gd
 OUTAGE_B2B	const	scripts/debug/endgame_smoke.gd:17513	EndgameSmoke
 OUTAGE_B2C	const	scripts/debug/endgame_smoke.gd:17514	EndgameSmoke
-outage_load	func	scripts/systems/incident_system.gd:392	IncidentSystem
+outage_load	func	scripts/systems/incident_system.gd:388	IncidentSystem
 OUTCOME_INSULTED	const	scripts/systems/negotiation_system.gd:28	NegotiationSystem
 outcome_of	func	scripts/events/core/arcs.gd:185	EvArcs
 OUTCOME_SIGNED	const	scripts/systems/negotiation_system.gd:26	NegotiationSystem
@@ -7731,7 +7731,7 @@ PLACE_CONT	const	scripts/systems/research_seam.gd:16	ResearchSeam
 PLACE_ROOT	const	scripts/systems/research_seam.gd:14	ResearchSeam
 placement	func	scripts/systems/research_seam.gd:75	ResearchSeam
 places	func	scripts/ui/office/office_venue.gd:71	OfficeVenue
-plan	func	scripts/systems/incident_system.gd:473	IncidentSystem
+plan	func	scripts/systems/incident_system.gd:469	IncidentSystem
 plan	var	scripts/ui/office/office_actor.gd:59	OfficeActor
 plan_next	func	scripts/systems/sprint_system.gd:180	SprintSystem
 plan_outcome	func	scripts/systems/sprint_system.gd:828	SprintSystem
@@ -7956,7 +7956,7 @@ QUEUE_STEP	const	scripts/ui/office/office_venue.gd:10	OfficeVenue
 queued	var	scripts/ui/office/office_actor.gd:63	OfficeActor
 queued_ids	func	scripts/events/event_gate.gd:183	EventGate
 QUICK_ACTS	const	scripts/systems/incident_system.gd:58	IncidentSystem
-quick_fix	func	scripts/systems/incident_system.gd:451	IncidentSystem
+quick_fix	func	scripts/systems/incident_system.gd:447	IncidentSystem
 quick_slot_id	func	scripts/autoload/save_manager.gd:244	SaveManager
 quickload_requested	signal	scripts/autoload/event_bus.gd:297	EventBus
 quicksave_requested	signal	scripts/autoload/event_bus.gd:296	EventBus
@@ -8188,7 +8188,7 @@ RESOLUTIONS	const	scripts/systems/display_settings.gd:24	DisplaySettings
 resolve	func	scripts/events/core/engine.gd:613	EvEngine
 resolve	func	scripts/events/event_gate.gd:26	EventGate
 resolve	func	scripts/events/gate/scope.gd:54	EvScope
-resolve	func	scripts/systems/incident_system.gd:510	IncidentSystem
+resolve	func	scripts/systems/incident_system.gd:506	IncidentSystem
 resolve	func	scripts/systems/skill_check.gd:66	SkillCheck
 resolve	func	scripts/systems/sprint_bridges.gd:163	SprintBridges
 resolve_text	func	scripts/events/present/presenter.gd:222	EvPresenter
@@ -8222,7 +8222,7 @@ RETIRED_TRANSACTION_LABELS	const	scripts/systems/save_codec.gd:30	SaveCodec
 RETURN_LOCK_WEEKS	const	scripts/systems/sales_constants.gd:57	SalesConstants
 revalidate	func	scripts/events/gate/gate.gd:122	EvGate
 revealed	func	scripts/systems/rnd_system.gd:715	RnDSystem
-review_lines	func	scripts/systems/sprint_bridges.gd:328	SprintBridges
+review_lines	func	scripts/systems/sprint_bridges.gd:325	SprintBridges
 rgb	func	scripts/ui/office/office_lighting.gd:327	OfficeLighting
 RIM_BAR	const	scripts/ui/office/office_body.gd:29	OfficeBody
 RIM_FRONT	const	scripts/ui/office/office_body.gd:28	OfficeBody
@@ -8615,7 +8615,7 @@ SERVER_LINES	const	scripts/debug/run_probe.gd:237	RunProbe
 SERVER_PRESSES	const	scripts/debug/run_probe.gd:239	RunProbe
 serves	func	scripts/systems/product_quality.gd:153	ProductQuality
 SERVICE_DOWN	const	scripts/systems/incident_system.gd:46	IncidentSystem
-service_up	func	scripts/systems/incident_system.gd:443	IncidentSystem
+service_up	func	scripts/systems/incident_system.gd:439	IncidentSystem
 set_action	func	scripts/ui/components/toast.gd:58	toast.gd
 set_active	func	scripts/events/core/queue.gd:114	EvQueue
 set_aside	func	scripts/events/core/engine.gd:785	EvEngine
@@ -9009,7 +9009,7 @@ start	func	scripts/systems/sprint_system.gd:133	SprintSystem
 start	func	scripts/ui/meeting/sales_meeting_adapter.gd:56	SalesMeetingAdapter
 start	func	scripts/ui/meeting/vc_meeting_adapter.gd:49	VcMeetingAdapter
 start	func	scripts/ui/menu_backdrop.gd:40	menu_backdrop.gd
-start_clock	func	scripts/systems/incident_system.gd:434	IncidentSystem
+start_clock	func	scripts/systems/incident_system.gd:430	IncidentSystem
 START_DATE	const	scripts/autoload/game_state.gd:8	GameState
 start_hour	func	scripts/systems/work_hours_system.gd:100	WorkHoursSystem
 START_HOUR_DEFAULT	const	scripts/systems/hr_constants.gd:726	HRConstants
@@ -9366,7 +9366,7 @@ TRAVEL_SHOT_STAFF	const	scripts/main/main.gd:2027	main.gd
 tree_open	func	scripts/systems/rnd_system.gd:62	RnDSystem
 TREE_PATH	const	scripts/systems/research_tree.gd:22	ResearchTree
 TREND_ICONS	const	scripts/tabs/product/sprint_ui_shared.gd:28	SprintUiShared
-tried	func	scripts/systems/incident_system.gd:439	IncidentSystem
+tried	func	scripts/systems/incident_system.gd:435	IncidentSystem
 TRIES	const	scripts/systems/look_system.gd:18	LookSystem
 trigger_ending	func	scripts/systems/endings_system.gd:471	EndingsSystem
 trigger_milestone	func	scripts/systems/endings_system.gd:433	EndingsSystem
@@ -9489,7 +9489,7 @@ VALUE_FEATURE_COEF	const	scripts/systems/sales_system.gd:102	SalesSystem
 VALUE_FLOOR_RATIO	const	scripts/systems/sales_system.gd:104	SalesSystem
 VALUE_QUALITY_COEF	const	scripts/systems/sales_system.gd:99	SalesSystem
 VAR_DIR	const	scripts/theme/build_theme.gd:33	build_theme.gd
-variant	func	scripts/systems/incident_system.gd:399	IncidentSystem
+variant	func	scripts/systems/incident_system.gd:395	IncidentSystem
 VARIANTS	const	scripts/events/tools/plausibility.gd:41	plausibility.gd
 vc_frank_cold_shown	var	scripts/autoload/game_state.gd:265	GameState
 vc_id	var	scripts/data_models/term_sheet.gd:28	TermSheet
@@ -9509,7 +9509,7 @@ VERB_STRENGTH	const	scripts/systems/sales_probes.gd:32	SalesProbes
 Verdict	class	scripts/events/gate/gate.gd:44	EvGate
 VERDICT_GESTURES	const	scripts/ui/meeting/vc_meeting_adapter.gd:30	VcMeetingAdapter
 verify_no_resources	func	scripts/events/core/save.gd:81	EvSave
-version	func	scripts/systems/incident_system.gd:387	IncidentSystem
+version	func	scripts/systems/incident_system.gd:383	IncidentSystem
 version	func	scripts/systems/market_catalog.gd:73	MarketCatalog
 version	func	scripts/systems/product_state.gd:56	ProductState
 version_age	func	scripts/systems/product_read.gd:29	ProductRead
