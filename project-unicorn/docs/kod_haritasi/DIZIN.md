@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git 74674f4 · 2026-10-26 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 8edf5c3 · 2026-10-26 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -1042,7 +1042,7 @@ Biçim: yol · boyut · üst düzey anahtarlar (en çok 10)
 - data/product/sprint.json · 9.2 KB · {sprint_weeks, quarter_weeks, mvp_lines, effort, fix_effort, limit_k, need, roles, role_areas, person_points_week, +27}
 - data/techtree/rnd_tree.json · 6.3 KB · {_doc, _stars, _cross, _areas, k_arge, report_period_weeks, nodes, _hidden_doc, _hidden_k3_doc, hidden_lines}
 
-## Metin anahtarı aileleri (837 aile, 3208 anahtar)
+## Metin anahtarı aileleri (834 aile, 3205 anahtar)
 
 Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak geçiren .gd/.json (en çok 5). '-' = dinamik kurulmuş olabilir ya da kullanılmıyor.
 - ANGEL_CAP_* · 1 · scripts/tabs/finance/finance_ozet_view.gd
@@ -1216,9 +1216,6 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - GATE_TRACTION_* · 3 · data/events/cards/funding/gate_traction.json, scripts/debug/endgame_smoke.gd
 - GOAL_STEP_* · 2 · scripts/systems/cheque_read.gd
 - GOAL_TOAST_* · 1 · scripts/ui/components/inbox.gd
-- HEALTH_AT_* · 1 · -
-- HEALTH_CHURNING_* · 1 · -
-- HEALTH_HEALTHY_* · 1 · -
 - HR_AGENCY_* · 1 · scripts/systems/hr_constants.gd
 - HR_APPLY_* · 2 · scripts/tabs/hr/hr_ledger.gd
 - HR_AREA_* · 7 · scripts/systems/hr_constants.gd, scripts/tabs/hr/hr_ledger.gd, scripts/debug/kit_probe.gd

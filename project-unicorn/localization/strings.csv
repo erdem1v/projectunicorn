@@ -798,9 +798,6 @@ HUNT_CANCEL_TIP,Bu fonun bir sonraki toplantısında ikna −{n}. Bu hafta yeni 
 HUNT_RESCHEDULE_TIP,Bu fonun bir sonraki toplantısında ikna −{n}.,Conviction −{n} at this fund's next meeting.
 HUNT_MEETING_CANCELLED_THIS_WEEK,Bu hafta bir toplantı iptal edildi. Yenisi gelecek hafta ayarlanabilir.,A meeting was cancelled this week. The next one can be booked next week.
 PRODUCT_FALLBACK_NAME,Ürün,Product
-HEALTH_HEALTHY,sağlıklı,healthy
-HEALTH_AT_RISK,riskli,at risk
-HEALTH_CHURNING,kaçıyor,churning
 NOTICE_SRC_SALES,Satış,Sales
 NOTICE_SRC_FINANCE,Finans,Finance
 HR_BADGE_NEW,Yeni,New
