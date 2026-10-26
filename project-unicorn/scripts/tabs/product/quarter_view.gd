@@ -1,11 +1,12 @@
 class_name QuarterView
 extends VBoxContainer
 
-# ÇEYREK görünümü: üstte hedef şeridi, altta dar alan paneli ve altı sprint sütunu (bu sprint, PM'in
-# önerdikleri, boşlar); sütunlar en uzununun içeriği kadar uzar, onay düğmeleri kartların hemen altında.
-# Yalnız modeli çizer; onay ve hedef seçimi eylem olarak çıkar.
+# ÇEYREK görünümü: üstte hedef şeridi, altta SPRINT'in sol sütunu (modüller ve talepler) ve altı sprint sütunu (bu sprint,
+# PM'in önerdikleri, boşlar); sütunlar en uzununun içeriği kadar uzar, onay düğmeleri kartların hemen altında.
+# Yalnız modeli çizer; onay ve hedef seçimi eylem olarak, açık modül yerel durum olarak çıkar.
 
 signal action(kind: String, args: Dictionary)   # approve {sprint} · approve_all · edit {sprint} · pick_goal {area_id}
+signal ui_changed(key: String, value: Variant)   # sol sütunun yerel durumu (açık modül, talep listesinin açıklığı)
 
 const SPRINT_CARD := preload("res://scenes/tabs/product/SprintCard.tscn")
 const LOOKS := {"current": &"SprintColumnCurrent", "proposed": &"SprintColumn", "empty": &"SprintColumnNext"}
@@ -39,7 +40,7 @@ class GoalMeter extends Control:
 		draw_rect(Rect2(line_x, 0.0, UiTokens.D_GOAL_TICK.x, size.y), UiTokens.D_INK_1)
 
 
-## Hedef seçilmemişse şerit yok. Dar alan paneli sahnedeyken kurulur.
+## Hedef seçilmemişse şerit yok.
 func setup(model: Dictionary) -> void:
 	UiFactory.clear(self)
 	add_theme_constant_override("separation", UiTokens.SPACE_XL)
@@ -51,13 +52,14 @@ func setup(model: Dictionary) -> void:
 	add_child(body)
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.custom_minimum_size.x = UiTokens.D_W_AREAS_NARROW
+	scroll.custom_minimum_size.x = UiTokens.D_W_LEFT
 	var areas := AreaPanel.new()
-	areas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	areas.action.connect(action.emit)
+	areas.ui_changed.connect(ui_changed.emit)
+	areas.request_picked.connect(func(area_id: String) -> void: ui_changed.emit("open_area", area_id))
 	scroll.add_child(areas)
 	body.add_child(scroll)
-	areas.setup(model, true)
+	areas.setup(model)
 
 	var right := SprintUiShared.column(UiTokens.SPACE_XL)
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL

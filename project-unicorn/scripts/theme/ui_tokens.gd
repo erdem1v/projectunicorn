@@ -41,7 +41,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 40
+const THEME_STAMP := 41
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -472,6 +472,13 @@ const D_ACCENT_PRESSED := Color("#DDA12D")
 const D_ON_ACCENT := Color("#17130A")       # text and glyph on amber
 const D_ACCENT_GLOW := Color(D_ACCENT, 0.24)   # the ring around a waiting-decision dot
 
+# --- stage bands: design, development, test (the colour-blind palette keeps them; the stage's glyph tells them apart) ---
+const D_ST_DESIGN := Color("#8E78BE")
+const D_ST_DEV := Color("#6A9CCB")
+const D_ST_TEST := Color("#A3D4B2")
+const D_PLANNED_ALPHA := 0.72   # a request whose card is already in this sprint's plan
+const D_TAKEN_ALPHA := 0.6      # a candidate already in this sprint's plan or in another sprint
+
 # --- meaning: gain, danger, attention, notice ---
 const D_POS := Color("#4FD27A")
 const D_NEG := Color("#EC6A5E")
@@ -687,11 +694,13 @@ const D_ICON_MARK := 12      # a mark on another glyph's corner (the rail lock)
 const D_ICON_TAG := 12       # a tag's leading glyph
 const D_ICON_EMPTY := 32     # an empty state's glyph
 # --- the sprint screen (Ürün) ---
-const D_W_AREAS := 430                # the areas column, its scrollbar lane included
-const D_W_AREAS_NARROW := 280         # the areas column beside the quarter's sprints
+const D_W_LEFT := 288                 # the left column, customer requests and modules, its scrollbar lane included
+const D_BOX_MONO := 24                # a module's two-letter mark box
+const D_H_KEY_CAND := 24              # the "+" key of a module's candidate
+const D_W_STAGE_STRIP := 168          # a candidate's stage strip
+const D_H_STAGE_STRIP := 6
 const D_W_PICKER := 640               # the type picker's column
 const D_H_SECTION := 28              # a section's caps label and its rule
-const D_H_SECTION_SM := 24           # a sub-section inside an open area row
 const D_SPRINT_COLUMNS := Vector2(590, 322)   # this sprint's column against the next one's
 const D_SQUARE := 10                  # a level square
 const D_SQUARE_SM := 8                # a level square in an effect line, a carry's progress square
@@ -850,6 +859,14 @@ static func D_warn() -> Color:
 
 static func D_info() -> Color:
 	return D_INFO_CB if _cb_palette else D_INFO
+
+## The band of a card's stage ("design", "dev", "test"); any other stage (research's product) reads neutral.
+static func D_stage(stage: String) -> Color:
+	match stage:
+		"design": return D_ST_DESIGN
+		"dev": return D_ST_DEV
+		"test": return D_ST_TEST
+	return D_INK_3
 
 ## The danger strip's fill, border and text, and the text on a solid danger badge.
 static func D_neg_bg() -> Color:

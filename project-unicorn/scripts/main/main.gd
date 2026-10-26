@@ -3737,7 +3737,7 @@ func _run_ending_shot(key: String) -> void:
 # through the shell's debug relays, the same path an MCP session takes; flow starts from c1 and
 # saves one frame after each of start, advance and plan_next; cards saves a second frame with the sprint
 # column scrolled to its locked card (<stem>_locked); edge:goal_menu opens the quarter goal's
-# menu with a click on its strip; edge:bug_lines_* open the core area on its open-bug lines. live draws
+# menu with a click on its strip. live draws
 # ProductModel.live() over a run seeded through SprintSystem (_seed_product_live); live:pick_named is
 # the type picker with B2C, a type and a name picked, live:pick_relang saves it and switches this run to
 # English (<stem>_rebuilt: the rebuilt picker keeps the picks); live:decision_paper presses the decision row's
@@ -4235,13 +4235,18 @@ func _a4_week() -> void:
 	GameState.start_work_week()
 
 
-## live:a4_* once the tab is mounted: a4_six_hover's hover ghost, every face drawn (a frame with empty faces is not saved,
-## the run fails), then the line the frames' gates read (`row_gaps` counts the gaps of every card row of the timeline).
+## live:a4_* once the tab is mounted: a4_six_hover's hover ghost with its module open in the left column (a4_requests opens its
+## first request's module), every face drawn (a frame with empty faces is not saved, the run fails), then the line the frames'
+## gates read (`row_gaps` counts the gaps of every card row of the timeline).
 func _product_a4_ready(kind: String) -> bool:
 	await get_tree().process_frame
+	var page: Control = get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()
 	if kind == "a4_six_hover":
 		var open: Array = SprintCatalog.open_cards([]).filter(func(c: Dictionary) -> bool: return SprintSystem.can_add(c.id))
-		get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()._set_ui(open[0].id, "hover_card")
+		page._set_ui(open[0].area, "open_area")
+		page._set_ui(open[0].id, "hover_card")
+	elif kind == "a4_requests":
+		page._set_ui(ProductModel.live().requests[0].module_id, "open_area")
 	for _f in _A4_FACE_FRAMES:
 		await get_tree().process_frame
 		if not PersonBust.drawing():

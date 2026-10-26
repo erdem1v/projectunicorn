@@ -1,22 +1,21 @@
 class_name SprintCard
 extends PanelContainer
 
-# Ürün sprint ekranının tek kartı, küçük bir belge: aday listesi, bu sprint, sonraki sprint ve çeyrek
-# sütunu aynı sahneyi kullanır. Kart yalnız sözlüğünü çizer: hangi düğmenin olduğu (`buttons`) ve
-# "+"nın açıklığı (`addable`) modelden gelir. Sonraki sprinte planlanmış kart kesikli kenarlıdır.
+# Ürün sprint ekranının tek kartı, küçük bir belge: bu sprint, sonraki sprint ve çeyrek sütunu aynı sahneyi
+# kullanır. Kart yalnız sözlüğünü çizer: hangi düğmenin olduğu (`buttons`) modelden gelir. Sonraki sprinte
+# planlanmış kart kesikli kenarlıdır.
 
-enum State { ADAY, ADAY_ALINMIS, SPRINT_PLAN, SPRINT_AKTIF, BITTI, DEVREDEN, PLANLANAN, KILITLI }
-## WIDE orta sütun; NARROW sonraki sütun (ad iki satıra iner, durum etiketleri kendi satırında); LOW açık
-## alan satırının içindeki dar kart; MINI çeyrek sütunu.
-enum Look { WIDE, NARROW, LOW, MINI }
+enum State { SPRINT_PLAN, SPRINT_AKTIF, BITTI, DEVREDEN, PLANLANAN, KILITLI }
+## WIDE orta sütun; NARROW sonraki sütun (ad iki satıra iner, durum etiketleri kendi satırında); MINI çeyrek sütunu.
+enum Look { WIDE, NARROW, MINI }
 
 ## args her eylemde {card_id}; karar satırının düğmesi "decide" ({card_id, item}), araştırma kilidinin
 ## bağlantısı "rnd" ({card_id, node}) yayar.
 signal action(kind: String, args: Dictionary)
 
-## Aday ve kilitli kartın düğmeleri üst satırda, hep parlak; sprint ve sonraki sütun kartınınkiler altta, sönük,
-## fare kartın üstüne gelince parlak.
-const BUTTONS_ALWAYS := [State.ADAY, State.KILITLI]
+## Kilitli kartın düğmesi üst satırda, hep parlak; sprint ve sonraki sütun kartınınkiler altta, sönük, fare kartın
+## üstüne gelince parlak.
+const BUTTONS_ALWAYS := [State.KILITLI]
 const BUTTONS_DIM := [State.SPRINT_PLAN, State.SPRINT_AKTIF, State.PLANLANAN, State.DEVREDEN]
 const PLANNED := [State.PLANLANAN, State.DEVREDEN]
 const PHASE_KEYS := ["PRODUCT_PHASE_DESIGN", "PRODUCT_PHASE_DEV", "PRODUCT_PHASE_TEST"]
@@ -110,10 +109,8 @@ func setup(card: Dictionary, look := Look.WIDE) -> void:
 		var acts := SprintUiShared.box(UiTokens.SPACE_XS)
 		for kind in _card.buttons:
 			# Kilitli kart iki sprinte de gidemez.
-			acts.add_child(_key(kind, (state == State.KILITLI and kind != "remove") or (kind == "add" and not _card.addable)))
+			acts.add_child(_key(kind, kind != "remove"))
 		top.add_child(acts)
-	if int(_card.tag_sprint) >= 0:
-		top.add_child(UiFactory.D_tag(tr("PRODUCT_TAG_SPRINT").format({"n": int(_card.tag_sprint)}), &"outline"))
 	_align(top)
 	if look != Look.WIDE and not tags.is_empty():
 		var row := HFlowContainer.new()
@@ -160,11 +157,9 @@ func show_effort() -> void:
 	_hover(true)
 
 
-## {glyph, name, title}: alınmış aday ikincil mürekkepte, kilitli kart kapalı mürekkepte okunur.
+## {glyph, name, title}: kilitli kart kapalı mürekkepte, biten kart ikincil mürekkepte okunur.
 func _ink() -> Dictionary:
 	match state:
-		State.ADAY_ALINMIS:
-			return {"glyph": UiTokens.D_INK_4, "name": UiTokens.D_INK_3, "title": &"DataMedium"}
 		State.KILITLI:
 			return {"glyph": UiTokens.D_INK_OFF, "name": UiTokens.D_INK_OFF, "title": &"DataStrong"}
 		State.BITTI:
@@ -333,7 +328,7 @@ func _paint() -> void:
 	elif state in PLANNED:
 		theme_type_variation = &"SprintCardPlanned"
 	else:
-		theme_type_variation = StringName(("SprintCardLow" if _look == Look.LOW else "SprintCard") + ("Hover" if hot else ""))
+		theme_type_variation = &"SprintCardHover" if hot else &"SprintCard"
 	if _effort_box != null:
 		_effort_box.visible = hot
 		if not hot:

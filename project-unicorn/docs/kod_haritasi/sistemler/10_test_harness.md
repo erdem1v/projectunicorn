@@ -14,7 +14,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - `scripts/debug/tick_probe.gd` (133): `--tick-probe`; gerçek saatte kare maliyeti (gece, saat adımı, otomatik kayıt) `TICK` satırları
 - `scripts/debug/office_crowd_probe.gd` (326): `OfficeCrowdProbe`; ofis kalabalığı sağlığı (`CROWD` satırları) ve ofis çekimlerinin yardımcıları
 - `scripts/debug/office_pan_probe.gd` (398): `--pan*`; ofisin 3B görüntüsünü kamera ofsetlerinde kaydeder ve ölçer (`PAN*` satırları)
-- `scripts/debug/product_fixtures.gd` (699): Ürün sekmesinin debug kaynağı (mockup c1..c5, kart galerisi, uç durumlar); `--product-shot` besler
+- `scripts/debug/product_fixtures.gd` (554): Ürün sekmesinin debug kaynağı (mockup c1..c5, kart galerisi, uç durumlar); `--product-shot` besler
 - `scripts/debug/kit_probe.gd` (298): `--probe-shot=kit`; koyu kit bileşenlerini durumlarıyla bir pencere gövdesinde dizer
 - `scripts/debug/loc_residue.gd` (265): `-s` betiği; Türkçe literal, CSV'de olmayan sahne metni, statikte `tr()` arar, vuruşta sıfır dışı çıkar
 - `scripts/debug/glyph_audit.gd` (113): `-s` betiği; oyunun çizebileceği her karakteri yüz ve zincirlere sorar, eksiği `GLYPH|MISS` basar
@@ -103,6 +103,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - Oynanan koşu kapısı: `bash tools/run_gate.sh` (3 preset x 730 hafta, `RUN_TIMEOUT` 900). Tek koşu: `"$GODOT" --headless --path . --run-log=full_run:730:sim[:seed][:window=11-13][:build=ea|full]`.
 - `RunProbe` yalnız defter basar, her zaman 0 çıkar; `^PROBE` satırları aynı tohum, binary ve `--lang=tr` ile bayt-deterministiktir. Hata `PROBE ERROR`dır. Gerçek saat modları `1|2|3`.
 - Sprint planı: `--sprint-probe=hours=<h>:cards=<1|2>:ticks=<t>[:team=][:market=][:fixture=][:build=][:planms=1]`; `SPRINTPROBE PRED/CLOSE/SKIP/MVP/LOAD/SUMMARY/PAPER/PLANMS`; adsız uyuşmazlıkta 1.
+  ↳ `planms=1` ekran için iki satır basar: `screen` (ilk kare, "+" ertelenmiş) ve `screen_total` (ilk kare ve ertelenen bütün `can_add`'ler); sonra her ertelenen değeri `can_add(id)` ile karşılaştırır, uyuşmazlıkta 1.
 - Ölçüm: `--tempo-probe=<hız>[:shell]` (`TEMPO`), `--tick-probe=<hız>[:<pencere>][:accounts=][:team=]` (`TICK`, ayrı `APPDATA` ister), `--render-probe[=<sekme>:...]`, `--office-crowd-probe=<ofis>:<kişi>:<hız>`.
 - Çekim ailesi (pencereli, `valued` tablosu `main.gd:242-276`): `--tab-shot`, `--modal-shot`, `--onboard-shot`, `--office-shot=<ofis>:<saat>[:ek]`, `--event-shot`, `--ending-shot`,
   `--vc-shot`, `--sales-shot`, `--negotiation-shot`, `--meeting-shot`,

@@ -23382,44 +23382,57 @@ static func _seed_line_accounts() -> void:
 		c.status = row[4]
 
 
-## Hat paneli: alanın AÇIK HATALAR satırları yalnız hatası olan hatları, en çok hatalısı önde, `ProductModel.bug_row`'dan yazar. Satır
-## hattın adını, açık hatayı, hesap ve kullanıcı sayısını söyler (B2C'de hesapsız); ipucu geçen haftanın sayısını ve B2B'de en
-## büyük hesabı; `delta` son haftalık tikin görüntüsüne göre değişimdir (okun yönü). Alan cümlesi aynı toplamı söyler ve araştırmadan
-## sonraki iki haftada kullanıcıların sözünü sonuna ekler, sonra düşürür.
-## FALSİFİKASYON: ProductModel._bug_rows'tan `> 0` süzgecini sil → hatasız hat iddiası FAIL; sıralamayı ters çevir → sıra iddiası
-## FAIL; bug_row'da `open_bugs_delta(line_id)` yerine `0` yaz → ok iddiası FAIL; bug_row_of'ta en büyük hesabın ipucu satırını sil →
+## Hata sayısı: modülün düzeltme adayı yalnız hatası olan hat için vardır, kartın hata sayısı hattın açık hatasıdır ve metni
+## (`fix_text`) hata, hesap ve kullanıcı sayısını ve B2B'de en büyük hesabı söyler; Destek raporunun hat satırı (`bug_row_of`) hattın
+## adını, açık hatayı, hesap ve kullanıcı sayısını söyler (B2C'de hesapsız), ipucu geçen haftanın sayısını ve B2B'de en büyük hesabı;
+## `delta` son haftalık tikin görüntüsüne göre değişimdir (okun yönü). Alan cümlesi aynı toplamı söyler ve araştırmadan sonraki iki
+## haftada kullanıcıların sözünü sonuna ekler, sonra düşürür.
+## FALSİFİKASYON: ProductModel._module_card'da `bugs`i `0` yap → sayı iddiası FAIL, `fix_text`i `""` yap → metin iddiası FAIL; kilitsiz
+## adaylar süzgecini hatasız hatları da alacak biçimde gevşet (SprintCatalog.candidates'ta `bugs.has(line_id)`yi sil) → hatasız hat
+## iddiası FAIL; ProductState.open_bugs_delta yerine `0` ver → ok iddiası FAIL; bug_row_of'ta en büyük hesabın ipucu satırını sil →
 ## ipucu iddiası FAIL; SprintCatalog.area_sentence'ta araştırma penceresinin `<=`'sini `<` yap ya da bir sprint uzat (`+ 1`) →
 ## pencere iddiası FAIL, araştırma cümlesini hiç ekleme → söz iddiası FAIL, hata sayısı cümlesini düşür → toplam iddiası FAIL;
 ## SprintUiShared.impact_bits'te `int(part.accounts) >= 0` denetimini `true` yap → B2C satırı iddiası FAIL.
 static func _case_product_bug_rows_read_the_store() -> String:
 	_seed_sprint_live("erp")
 	_seed_line_accounts()
-	var rows := func() -> Array:
-		return ProductModel.live().areas.filter(func(a: Dictionary) -> bool: return a.id == "core")[0].bug_rows
-	if not rows.call().is_empty():
-		return "a product with no open bugs wrote the bug rows %s" % [rows.call()]
+	var fixes := func() -> Array:
+		var core: Array = ProductModel.live().modules.filter(func(m: Dictionary) -> bool: return m.id == "core")
+		return [] if core.is_empty() else core[0].candidates.filter(func(c: Dictionary) -> bool: return c.id.begins_with("fix:"))
+	if not fixes.call().is_empty():
+		return "a product with no open bugs offered the fix candidates %s" % [fixes.call()]
 	ProductState.add_bugs("line_erp_ledger", 8)
 	ProductState.add_bugs("line_erp_stock", 3)
 	ProductState.add_bugs("line_erp_cashflow", 1)
 	# A week ago the ledger had 6 and the stock 5; the cash flow had none.
 	GameState.set_flag(ProductState.OPEN_BUGS_PREV, {"line_erp_ledger": 6, "line_erp_stock": 5})
 	var lines: Array = ["line_erp_ledger", "line_erp_stock", "line_erp_cashflow"]
-	var read: Array = rows.call()
+	var read: Array = fixes.call()
 	if read.size() != lines.size():
-		return "the core rows read %d lines, want the %d with open bugs and no line without" % [read.size(), lines.size()]
-	for i in lines.size():
-		if not String(read[i].text).begins_with(SprintCatalog.cap_name(lines[i])):
-			return "row %d reads '%s', want the %s line (most bugs first)" % [i, read[i].text, lines[i]]
+		return "the core module offers %d fix cards, want the %d lines with open bugs and none without" % [read.size(), lines.size()]
+	var rows: Array = []
+	for line in lines:
+		var card: Array = read.filter(func(c: Dictionary) -> bool: return c.id == "fix:" + line)
+		var bugs: int = ProductState.line_bugs(line)
+		if card.size() != 1 or card[0].bugs != bugs:
+			return "the %s fix card reads %s, want its %d open bugs" % [line, card, bugs]
+		if card[0].fix_text != SprintUiShared.bugs_text(SprintCatalog.bugs_part(line, bugs)) \
+				or not String(card[0].fix_text).begins_with(SprintUiShared.count("PRODUCT_FX_BUGS", bugs)):
+			return "the %s fix card's text reads '%s', want its bug count first" % [line, card[0].fix_text]
+		rows.append(ProductModel.bug_row_of(SprintCatalog.cap_name(line), SprintCatalog.bugs_part(line, bugs),
+			ProductState.open_bugs_delta(line)))
+	if not String(read.filter(func(c: Dictionary) -> bool: return c.id == "fix:line_erp_ledger")[0].fix_text).contains("Firm co_aa"):
+		return "the ledger fix card does not name the largest account"
 	var ledger: String = SprintUiShared.SEP.join([SprintCatalog.cap_name(lines[0]),
 		SprintUiShared.count("PRODUCT_BUG_COUNT", 8), SprintUiShared.count("PRODUCT_ACCOUNT_COUNT", 5),
 		SprintUiShared.count("PRODUCT_USER_COUNT", 350)])
-	if read[0].text != ledger:
-		return "the ledger row reads '%s', want '%s'" % [read[0].text, ledger]
-	if [read[0].delta, read[1].delta, read[2].delta] != [2, -2, 1]:
-		return "the rows' changes read %s, want 2 (6 to 8), -2 (5 to 3) and 1 (0 to 1)" % [[read[0].delta, read[1].delta, read[2].delta]]
-	if not read[0].tip.contains("Firm co_aa") or not read[0].tip.contains("100") \
-			or not read[0].tip.contains(SprintUiShared.count("PRODUCT_BUG_COUNT", 6)):
-		return "the ledger row's tip reads '%s', want last week's 6 and the largest account with its seats" % read[0].tip
+	if rows[0].text != ledger:
+		return "the ledger row reads '%s', want '%s'" % [rows[0].text, ledger]
+	if [rows[0].delta, rows[1].delta, rows[2].delta] != [2, -2, 1]:
+		return "the rows' changes read %s, want 2 (6 to 8), -2 (5 to 3) and 1 (0 to 1)" % [[rows[0].delta, rows[1].delta, rows[2].delta]]
+	if not rows[0].tip.contains("Firm co_aa") or not rows[0].tip.contains("100") \
+			or not rows[0].tip.contains(SprintUiShared.count("PRODUCT_BUG_COUNT", 6)):
+		return "the ledger row's tip reads '%s', want last week's 6 and the largest account with its seats" % rows[0].tip
 	var b2c: Dictionary = ProductModel.bug_row_of("Sync", {"k": "bugs", "n": 5, "accounts": -1, "users": 300, "top": "",
 		"top_users": 0}, -1)
 	if b2c.text != SprintUiShared.SEP.join(["Sync", SprintUiShared.count("PRODUCT_BUG_COUNT", 5),

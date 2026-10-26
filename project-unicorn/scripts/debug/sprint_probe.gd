@@ -37,8 +37,10 @@ extends RefCounted
 # other options build (fill=1 for the fullest plan), the first call of each a warm-up, then PLANMS_REPS calls:
 #   SPRINTPROBE PLANMS|team=<sprint team>|cards=<sprint cards + open candidates>|what=<w>|n=<calls>|median_ms=|max_ms=
 # what: plan_outcome, can_add (one call per open candidate), mvp_eta, lead (the lead's suggestion), screen (ProductModel.live,
-# the page's whole model) and ghost (one candidate's hover: the plan with it played and laid out, SprintSystem.timeline, one
-# call per open candidate); the milliseconds are this machine's.
+# the page's first frame: the candidates' "+" values are left for later frames), screen_total (the first frame and every
+# deferred can_add, asked the way the page asks them, ProductModel.resolve_addable) and ghost (one candidate's hover: the plan
+# with it played and laid out, SprintSystem.timeline, one call per open candidate); the milliseconds are this machine's. Every
+# deferred value is then compared with a direct can_add(id); a difference prints PLANMS|ADDABLE and the run exits 1.
 # The plan the screen draws (SprintSystem.plan_outcome) is read when its sprint starts and checked when it
 # closes. events=0 runs only the sprint's daily step, with no decision paper; events=1 runs the whole clock
 # in batches (each visible hour, then the night up to 08:00), answers the desk through RunProbe after every
@@ -168,7 +170,7 @@ static func run(spec: String, payload: Dictionary) -> bool:
 		var mvp: int = GameState.get_flag("mvp_launch_day", -1)
 		days[mvp] = days.get(mvp, 0) + 1
 	if o.planms == 1:
-		return true
+		return not verdicts.has("MISMATCH")
 	var order: Array = days.keys()
 	order.sort()
 	print("SPRINTPROBE SUMMARY|match=%d/%d|mvp_days=%s" % [verdicts.count("MATCH"), verdicts.size(),
@@ -240,7 +242,7 @@ static func _plan(seed_value: int, o: Dictionary, verdicts: Array) -> bool:
 	if o.promise == 1:
 		_promise_late_card()
 	if o.planms == 1:
-		_plan_ms()
+		_plan_ms(verdicts)
 		return false
 	var plan: Dictionary = SprintSystem.plan_outcome().cards
 	var eta: Dictionary = SprintSystem.mvp_eta()
@@ -335,8 +337,9 @@ static func _example_cards(big_first: bool) -> void:
 
 
 ## planms=1: what the Product screen asks of the engine in this plan, timed on this machine (PLANMS rows). The first call of
-## each is a warm-up and is not counted; the sprint is never started.
-static func _plan_ms() -> void:
+## each is a warm-up and is not counted; the sprint is never started. A deferred "+" value that differs from can_add(id) asked
+## directly is a MISMATCH verdict.
+static func _plan_ms(verdicts: Array) -> void:
 	var open: Array = SprintCatalog.open_cards([])
 	var team: int = SprintSystem.team().size()
 	var cards: int = GameState.product.sprint.cards.size() + open.size()
@@ -348,10 +351,34 @@ static func _plan_ms() -> void:
 	_plan_row(team, cards, "mvp_eta", _timed(func() -> void: SprintSystem.mvp_eta()))
 	_plan_row(team, cards, "lead", _timed(func() -> void: SprintCatalog.lead_suggestion()))
 	_plan_row(team, cards, "screen", _timed(func() -> void: ProductModel.live()))
+	_plan_row(team, cards, "screen_total", _timed(func() -> void: _resolve_all(ProductModel.live())))
 	var ghosts: Array = []
 	for c in open:
 		ghosts.append_array(_timed(func() -> void: SprintSystem.timeline([c])))
 	_plan_row(team, cards, "ghost", ghosts)
+	var page: Dictionary = ProductModel.live()
+	_resolve_all(page)
+	for id: String in _deferred(page):
+		if ProductModel.addable(id) != SprintSystem.can_add(id):
+			print("SPRINTPROBE PLANMS|ADDABLE|card=%s|deferred=%s|direct=%s" % [id, ProductModel.addable(id), SprintSystem.can_add(id)])
+			verdicts.append("MISMATCH")
+
+
+## The cards whose "+" the page's first frame leaves unknown, in screen order.
+static func _deferred(page: Dictionary) -> Array:
+	var ids: Array = []
+	for module: Dictionary in page.modules:
+		for c: Dictionary in module.candidates:
+			if c.addable == null:
+				ids.append(c.id)
+	return ids
+
+
+## Frames until every deferred "+" value has come, as the page asks for them.
+static func _resolve_all(page: Dictionary) -> void:
+	var ids: Array = _deferred(page)
+	while not ProductModel.resolve_addable(ids).is_empty():
+		pass
 
 
 ## PLANMS_REPS timings (milliseconds) of `work`, after one call that is not counted.

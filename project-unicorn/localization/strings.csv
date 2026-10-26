@@ -2538,10 +2538,6 @@ FRANK_OFFICE_MOVE_BODY,"Frank'ten mesaj.
 FRANK_OFFICE_MOVE_OK,Bakacağım,I'll look into it
 FRANK_ADVISORY_MEETING_SET,Görüşme ayarlandı. Hazırlıklı git.,Meeting's set. Go in prepared.
 FRANK_ADVISORY_PAID_TIER,Artık ücret almanın vakti. Fiyatı belirle.,Time to start charging. Set the price.
-PRODUCT_AREAS,Alanlar,Areas
-PRODUCT_BUILT,Yapılanlar,Built
-PRODUCT_POSSIBLE,Yapılabilecekler,To build
-PRODUCT_BUGS,Açık hatalar,Open bugs
 PRODUCT_BUG_COUNT,{n} açık hata,{n} open bugs
 PRODUCT_BUG_COUNT_ONE,{n} açık hata,{n} open bug
 PRODUCT_BUGS_TIP_PREV,Geçen hafta: {bugs},Last week: {bugs}
@@ -2551,12 +2547,6 @@ PRODUCT_LEVEL_STRONG,Güçlü,Strong
 PRODUCT_LEVEL_ENOUGH,Yeterli,Solid
 PRODUCT_LEVEL_WEAK,Zayıf,Weak
 PRODUCT_LEVEL_NONE,Yok,None
-PRODUCT_AREA_NOTHING_LEFT,Bu alanda yapılacak bir şey kalmadı,Nothing left to build here
-PRODUCT_CUSTOMERS,Müşteriler,Customers
-PRODUCT_REQUESTS_COUNT,{n} talep,{n} requests
-PRODUCT_REQUESTS_COUNT_ONE,{n} talep,{n} request
-PRODUCT_CUSTOMERS_NONE,Açık talep yok,No open requests
-PRODUCT_DUE_SPRINT,Sprint {n} sonuna kadar,By the end of sprint {n}
 PRODUCT_PER_YEAR,{amount}/yıl,{amount}/yr
 PRODUCT_DUE_THIS_Q,bu çeyrek,this quarter
 PRODUCT_DUE_NEXT_Q,gelecek çeyrek,next quarter
@@ -2725,6 +2715,21 @@ PRODUCT_AREA_GROWTH_MONO,BÜ,GR
 PRODUCT_AREA_INTEGRATIONS_MONO,EN,IN
 PRODUCT_AREA_TRUST_MONO,GÜ,TS
 PRODUCT_AREA_REVENUE_MONO,GE,RV
+PRODUCT_FOUNDER_IN_SPRINT,Kurucu sprintte,Founder in sprint
+PRODUCT_FOUNDER_ON_TIP,Açık: kurucu sprint kartlarında çalışır,On: the founder works on sprint cards
+PRODUCT_FOUNDER_OFF_TIP,Kapalı: kurucu sprint kartı almaz,Off: the founder takes no sprint card
+PRODUCT_FOUNDER_LOCKED_TIP,Sonraki planlamada değişir,Changes at the next planning
+PRODUCT_REQUESTS,Müşteri talepleri,Customer requests
+PRODUCT_MORE_REQUESTS,+{n} talep,+{n} requests
+PRODUCT_MORE_REQUESTS_ONE,+{n} talep,+{n} request
+PRODUCT_REQUEST_PLANNED_TIP,Kartı bu sprintin planında,Its card is in this sprint's plan
+PRODUCT_MODULES,Modüller,Modules
+PRODUCT_IN_PLAN,planda,planned
+PRODUCT_IN_PLAN_TIP,Bu sprintte kartı var,Has a card in this sprint
+PRODUCT_CAND_IN_PLAN_TIP,Bu sprintin planında,In this sprint's plan
+PRODUCT_STAMP,S{n},S{n}
+PRODUCT_ADD_TO_PLAN,Plana ekle,Add to plan
+PRODUCT_STAGE_RESEARCH,Araştırma,Research
 PRODUCT_STAR_NONE,Henüz hiçbir şirkete yetmez.,Not enough for any company yet.
 PRODUCT_STAR_SKIPPED,1★ şirketler bu alana bakmaz. 2★ şirketler bir başlangıç ister.,1★ companies do not look at this area. 2★ companies want a start.
 PRODUCT_STAR_SERVES,Bu hâliyle {star}★ şirketlere yeter. {next}★ şirketler daha fazlasını ister.,As it stands it is enough for {star}★ companies. {next}★ companies want more.
@@ -2832,7 +2837,7 @@ PRODUCT_PLAN_HOLD,Sprint başlayana kadar oyun durur,Paused until the sprint sta
 PRODUCT_OVER_CAPACITY,Kapasite aşıldı · {n} kart devreder,Over capacity · {n} cards carry over
 PRODUCT_OVER_CAPACITY_ONE,Kapasite aşıldı · {n} kart devreder,Over capacity · {n} card carries over
 PRODUCT_ADD_CLOSED,{pct} üstünde kart eklenmez,Adding closes above {pct}
-PRODUCT_ADD_CLOSED_FULL,Bu sprintte boş puan kalmadı,No spare points left this sprint
+PRODUCT_ADD_CLOSED_FULL,Bu sprintte boş efor kalmadı,No effort left to fill this sprint
 PRODUCT_GO_TEAM,Ekip'e git,Go to Team
 PRODUCT_GO_RND,Ar-Ge'ye git,Go to R&D
 SALES_PROMISE_OPEN_SPRINT,Açık söz: {feature} · Sprint {n} sonuna kadar,Open promise: {feature} · by the end of sprint {n}

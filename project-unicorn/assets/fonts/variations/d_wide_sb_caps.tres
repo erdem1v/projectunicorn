@@ -1,0 +1,16 @@
+[gd_resource type="FontVariation" format=3]
+
+[ext_resource type="FontFile" path="res://assets/fonts/archivo/Archivo[wdth,wght].ttf" id="Archivo[wdth,wght]_51021"]
+[ext_resource type="FontFile" path="res://assets/fonts/sans/IBMPlexSans-SemiBold.ttf" id="IBMPlexSans-SemiBold_25acc"]
+
+[resource]
+fallbacks = Array[Font]([ExtResource("IBMPlexSans-SemiBold_25acc")])
+base_font = ExtResource("Archivo[wdth,wght]_51021")
+variation_opentype = {
+2003072104: 110,
+2003265652: 650
+}
+opentype_features = {
+1953396077: 1
+}
+spacing_glyph = 1

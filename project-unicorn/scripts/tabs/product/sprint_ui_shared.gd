@@ -14,6 +14,8 @@ const ARROW := "res://assets/icons/util/arrow_right.svg"
 const WARN := "res://assets/icons/util/warn.svg"
 const CHECK := "res://assets/icons/util/check.svg"
 const CLOCK := "res://assets/icons/util/clock.svg"
+const HOURGLASS := "res://assets/icons/util/hourglass.svg"
+const BUILDING := "res://assets/icons/util/building.svg"
 const LOCK := "res://assets/icons/util/lock.svg"
 const GAIN := "res://assets/icons/stake/cash_in.svg"
 const LEVEL_KEYS := {
@@ -143,8 +145,8 @@ static func label(text: String, variation: StringName, color: Variant = null) ->
 	return l
 
 
-static func prose(text: String, variation: StringName) -> Label:
-	var l := UiFactory.make_label(text, variation)
+static func prose(text: String, variation: StringName, color: Variant = null) -> Label:
+	var l := UiFactory.make_label(text, variation, color)
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	return l
@@ -190,11 +192,11 @@ static func empty_line(text: String, glyph_path := "", room := UiTokens.SPACE_M)
 	return pad(line, Vector4i(0, room, 0, room))
 
 
-## Büyük harfli bölüm etiketi ve sağa uzanan çizgi; `small` açık alanın alt bölümleri.
-static func section(key: String, small := false) -> HBoxContainer:
+## Büyük harfli bölüm etiketi ve sağa uzanan çizgi.
+static func section(key: String) -> HBoxContainer:
 	var row := box(UiTokens.SPACE_L)
-	row.custom_minimum_size.y = UiTokens.D_H_SECTION_SM if small else UiTokens.D_H_SECTION
-	row.add_child(label(Fmt.upper(RnDUiShared.t(key)), &"KeySmall" if small else &"KeyLabel"))
+	row.custom_minimum_size.y = UiTokens.D_H_SECTION
+	row.add_child(label(Fmt.upper(RnDUiShared.t(key)), &"KeyLabel"))
 	var rule := HSeparator.new()
 	rule.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rule.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -226,6 +228,22 @@ static func flag(text: String, warn := false) -> PanelContainer:
 	return chip
 
 
+## Söz tarihinin çipi: kum saati ve "bu çeyrek", "gelecek çeyrek" ya da "{q}. çeyrek" (`glyph` "" ise yalnız yazı: sprint damgası).
+## Hâlleri aynı boydadır; yakın olan yalnız daha açık mürekkep ve kenarla ayrılır.
+static func due_chip(text: String, soon := false, glyph := HOURGLASS) -> PanelContainer:
+	var chip := PanelContainer.new()
+	chip.theme_type_variation = &"DueChipSoon" if soon else &"DueChip"
+	chip.size_flags_horizontal = Control.SIZE_SHRINK_END
+	chip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var ink: Color = UiTokens.D_INK_1 if soon else UiTokens.D_INK_2
+	var row := box(UiTokens.SPACE_XS)
+	if glyph != "":
+		row.add_child(UiFactory.make_glyph(glyph, UiTokens.D_ICON_TAG, ink))
+	row.add_child(label(text, &"CaptionName", ink))
+	chip.add_child(row)
+	return chip
+
+
 ## Kartın tuşunun tema görünümü: parlak ya da sönük (sprint kartında fare kartın üstünde değilken).
 static func key_variation(kind: String, lit: bool) -> StringName:
 	return StringName(("IconKey" if KEY_GLYPHS.has(kind) else "CardKeyText") + ("" if lit else "Idle"))
@@ -247,9 +265,10 @@ static func key_button(kind: String, disabled: bool) -> Button:
 	return b
 
 
-## Şeridin etiketli anahtarı: soluk adı ve yanında anahtar `row`'a eklenir; `tip` ikisinin de ipucudur.
-static func switch(row: Control, text: String, on: bool, toggled: Callable, tip := "") -> void:
-	var title := label(text, &"MetaMuted")
+## Şeridin etiketli anahtarı: soluk adı ve yanında anahtar `row`'a eklenir; `tip` ikisinin de ipucudur. `off` anahtarı soluk
+## ve basılmaz yapar, değeri gösterir.
+static func switch(row: Control, text: String, on: bool, toggled: Callable, tip := "", off := false) -> void:
+	var title := label(text, &"MetaMuted", UiTokens.D_INK_OFF if off else null)
 	if tip != "":
 		title.mouse_filter = Control.MOUSE_FILTER_STOP
 		title.tooltip_text = tip
@@ -260,6 +279,7 @@ static func switch(row: Control, text: String, on: bool, toggled: Callable, tip 
 	toggle.tooltip_text = tip
 	toggle.button_pressed = on
 	toggle.toggled.connect(toggled)
+	toggle.disabled = off
 	row.add_child(toggle)
 
 
@@ -311,7 +331,7 @@ static func impact_bits(part: Dictionary) -> PackedStringArray:
 	return bits
 
 
-## Hat satırı (`ProductModel.bug_row`): metni, sağında son haftalık tikten bu yana değişim oku (artış uyarı renginde,
+## Hat satırı (`ProductModel.bug_row_of`): metni, sağında son haftalık tikten bu yana değişim oku (artış uyarı renginde,
 ## azalış olumlu renkte; değişmediyse yuvası boş kalır, satırlar aynı genişlikte sarar); ayrıntı ipucunda.
 static func bug_line(row: Dictionary, variation: StringName) -> HBoxContainer:
 	var line := box(UiTokens.SPACE_M)

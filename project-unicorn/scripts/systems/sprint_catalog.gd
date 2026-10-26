@@ -734,11 +734,6 @@ static func rival_name(rival: int) -> String:
 	return RivalCatalog.NAMES[ProductState.subtype()][int(rival_table().rivals[rival])]
 
 
-## "Rakip: …" çipi: alana son pencerede çıkış yapan rakibin konusu, yoksa "".
-static func rival_topic(area_id: String) -> String:
-	return String(_launch_of(_recent_hit(area_id)).get("topic", ""))
-
-
 ## Sprintin rakip çıkışları; tablodaki kayda ad, konu ve çıkan kademenin adı eklenir.
 static func rival_launch_in(sprint: int) -> Array:
 	var table: Dictionary = rival_table()
@@ -864,7 +859,7 @@ static func _closes_rival_gap(card: Dictionary) -> bool:
 
 
 ## Verilen hatlara son `rival_window_weeks` haftanın sprintlerinde düşen rakip çıkışları, çıkış kaydı başına. Aday
-## beklentisinin artışı ve alanın "Rakip" çipi aynı pencereyi okur.
+## beklentisinin artışı ve alanın cümlesi aynı pencereyi okur.
 static func recent_hits(lines: Array) -> Array:
 	var window: int = SprintSystem.sprints_in(int(cfg("rival_window_weeks")))
 	return (_p().get("rival_hits", []) as Array).filter(func(h: Dictionary) -> bool:
@@ -878,15 +873,6 @@ static func _recent_hit(area_id: String) -> Dictionary:
 		if int(h.sprint) >= int(latest.get("sprint", -1)):
 			latest = h
 	return latest
-
-
-static func _launch_of(hit: Dictionary) -> Dictionary:
-	if hit.is_empty():
-		return {}
-	for launch in rival_launch_in(int(hit.sprint)):
-		if int(launch.rival) == int(hit.rival) and launch.line == hit.line:
-			return launch
-	return {}
 
 
 ## Kartın karşıladığı açık talep: talep kartının kendisi ya da aynı kademeyi yapan özellik kartı.

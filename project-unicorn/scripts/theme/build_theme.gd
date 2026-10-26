@@ -423,6 +423,9 @@ func _menajer(master: Theme) -> Theme:
 	var sans_reg := _archivo("d_sans_reg", 500, 100, plex_reg)
 	var sans_sb := _archivo("d_sans_sb", 650, 100, plex_sb)
 	var sans_b := _archivo("d_sans_b", 800, 100, plex_b)
+	# The sprint screen's wide faces: a module's mark and its eyebrow captions.
+	var wide_b := _archivo("d_wide_b", 800, 118, plex_b)
+	var wide_sb_caps := _archivo("d_wide_sb_caps", 650, 110, plex_sb, 1)
 	var sansc := _archivo("d_sansc_reg", 500, 87, plex_reg)
 	var sansc_caps := _archivo("d_sansc_caps", 650, 87, plex_reg, 1)
 	var serif_reg := _mkfont(FONT_SERIF_REG, null, "d_serif_reg")
@@ -563,10 +566,10 @@ func _menajer(master: Theme) -> Theme:
 			th.set_color(key, toggle, T.D_INK_2)
 		th.set_color("font_disabled_color", toggle, T.D_INK_OFF)
 		th.set_constant("h_separation", toggle, T.SPACE_M)
-	for key in ["checked", "checked_disabled"]:
-		th.set_icon(key, &"CheckButton", load(DARK_ICONS + "switch_on.svg"))
-	for key in ["unchecked", "unchecked_disabled"]:
-		th.set_icon(key, &"CheckButton", load(DARK_ICONS + "switch_off.svg"))
+	# A switch that cannot be pressed keeps its value, drawn in the off ink.
+	for row in [["checked", "switch_on"], ["unchecked", "switch_off"]]:
+		th.set_icon(row[0], &"CheckButton", load(DARK_ICONS + row[1] + ".svg"))
+		th.set_icon(row[0] + "_disabled", &"CheckButton", load(DARK_ICONS + row[1] + "_disabled.svg"))
 	# The switch keeps its drawn size: Button's glyph cap would scale it down to a glyph.
 	th.set_constant("icon_max_width", &"CheckButton", 0)
 
@@ -658,6 +661,8 @@ func _menajer(master: Theme) -> Theme:
 		[&"KeyLabel", cond_sb_caps, T.D_FS_14, T.D_INK_3],
 		[&"KeyLabelStrong", cond_sb_caps, T.D_FS_14, T.D_INK_1],
 		[&"KeySmall", cond_sb_caps, T.D_FS_12, T.D_INK_3],
+		[&"Eyebrow", wide_sb_caps, T.D_FS_12, T.D_INK_4],
+		[&"MonoMark", wide_b, T.D_FS_12, T.D_INK_2],
 		[&"FloatKey", cond_sb_caps, T.D_FS_14, T.D_INK_2],
 		[&"NavReason", cond_sb_caps, T.D_FS_12, T.D_INK_4],
 		[&"PartValue", sans_b, T.D_FS_36, T.D_INK_2],
@@ -953,15 +958,13 @@ func _menajer(master: Theme) -> Theme:
 	th.set_stylebox("fill", &"ProgressPaused", _flat(T.D_LINE_3, T.D_RADIUS_1, Vector4.ZERO))
 
 	# ---- Ürün: the sprint screen ----
-	# A sprint card is a small document, raised on its column; inside an open area row it sits a step
-	# lower, and a card planned for the next sprint has no edge of its own (its host draws it dashed).
+	# A sprint card is a small document, raised on its column; a card planned for the next sprint has no
+	# edge of its own (its host draws it dashed).
 	var card_pad := Vector4(T.SPACE_XL, T.SPACE_L, T.SPACE_XL, T.SPACE_L)
 	var mini_pad: Vector4 = Vector4.ONE * T.SPACE_M
 	for row in [
 		[&"SprintCard", T.D_SURFACE_4, T.D_LINE_2, card_pad],
 		[&"SprintCardHover", T.D_SURFACE_4, T.D_LINE_HOVER, card_pad],
-		[&"SprintCardLow", T.D_SURFACE_3, T.D_LINE_2, card_pad],
-		[&"SprintCardLowHover", T.D_SURFACE_3, T.D_LINE_HOVER, card_pad],
 		[&"SprintCardPlanned", T.D_SURFACE_3, clear, card_pad],
 		[&"SprintCardMini", T.D_SURFACE_4, T.D_LINE_2, mini_pad],
 		[&"SprintCardMiniPlanned", T.D_SURFACE_3, clear, mini_pad],
@@ -983,8 +986,26 @@ func _menajer(master: Theme) -> Theme:
 		[&"FlagChip", _flat(clear, T.D_RADIUS_2, flag_pad, T.D_LINE_3)],
 		# A segmented pick's box.
 		[&"SegPickBox", _flat(clear, T.D_RADIUS_2, hairline, T.D_LINE_2)],
+		# The left column: a customer's request (flat once its card is in the plan), a module (its edge drawn
+		# open or under the pointer), the module's candidate card, and a due date's chip (the soon one in the
+		# lighter ink and edge, same size).
+		[&"RequestRow", _flat(T.D_SURFACE_3, T.D_RADIUS_2, Vector4.ONE * T.SPACE_M, T.D_LINE_1)],
+		[&"RequestRowHover", _flat(T.D_SURFACE_3, T.D_RADIUS_2, Vector4.ONE * T.SPACE_M, T.D_LINE_HOVER)],
+		[&"RequestRowPlanned", _flat(clear, T.D_RADIUS_2, Vector4(T.SPACE_M, T.SPACE_XS, T.SPACE_M, T.SPACE_XS))],
+		[&"ModuleRow", _flat(clear, T.D_RADIUS_2, Vector4.ONE * T.SPACE_M)],
+		[&"ModuleRowHover", _flat(clear, T.D_RADIUS_2, Vector4.ONE * T.SPACE_M, T.D_LINE_HOVER)],
+		[&"ModuleRowOpen", _flat(T.D_SURFACE_3, T.D_RADIUS_2, Vector4.ONE * T.SPACE_M, T.D_LINE_1)],
+		[&"ModuleCandidate", _flat(T.D_SURFACE_2, T.D_RADIUS_2, Vector4.ONE * T.SPACE_M, T.D_LINE_1)],
+		[&"DueChip", _flat(clear, T.D_RADIUS_2, _fit(sans_sb, T.D_FS_13, T.D_H_TAG, T.SPACE_S, T.SPACE_S), T.D_LINE_2)],
+		[&"DueChipSoon", _flat(clear, T.D_RADIUS_2, _fit(sans_sb, T.D_FS_13, T.D_H_TAG, T.SPACE_S, T.SPACE_S), T.D_INK_3)],
 	]:
 		_panel(th, row[0], "PanelContainer", row[1])
+	# The request list's fold: "+3 requests" with its chevron after the words.
+	_dbtn(th, &"MoreLink", {"normal": [clear, clear, T.D_INK_3], "hover": [clear, T.D_LINE_HOVER, T.D_INK_1],
+		"pressed": [T.D_SURFACE_2, T.D_LINE_HOVER, T.D_INK_1], "disabled": [clear, clear, T.D_INK_OFF]},
+		sans_sb, T.D_FS_13, _fit(sans_sb, T.D_FS_13, T.D_H_LINK, T.SPACE_S, T.SPACE_S))
+	th.set_constant("icon_max_width", &"MoreLink", T.D_ICON_MARK)
+	th.set_constant("h_separation", &"MoreLink", T.SPACE_XS)
 	# A card's points; a release note's row sits on the column, so its box is raised.
 	var pts := _fit(sans_b, T.D_FS_13, T.D_H_TAG, T.SPACE_S, T.SPACE_S)
 	for row in [[&"PtsBox", T.D_SURFACE_2], [&"PtsBoxRaised", T.D_SURFACE_4]]:

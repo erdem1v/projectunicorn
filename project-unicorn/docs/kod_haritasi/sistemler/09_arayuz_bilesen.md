@@ -8,9 +8,9 @@ Her yüzey oyun durumunu yazmaz, sistemlerden okur ve olaylara EventBus ile bağ
 Oyuncu metni `tr(ANAHTAR)` ile `localization/strings.csv`den okunur; ayrı bir Control ağacı kuran statik yardımcılar `TranslationServer.translate` kullanır.
 
 ## Dosyalar
-- `scripts/theme/ui_tokens.gd` (972): `UiTokens`; tüm renkler, SIZE_* merdiveni, krem palet, koyu dil `D_*`, `TABS`, `THEME_STAMP`, renk körü anahtarı ve `D_` yardımcıları
+- `scripts/theme/ui_tokens.gd` (989): `UiTokens`; tüm renkler, SIZE_* merdiveni, krem palet, koyu dil `D_*`, `TABS`, `THEME_STAMP`, renk körü anahtarı ve `D_` yardımcıları
 - `scripts/theme/ui_factory.gd` (533): `UiFactory`; statik Control üreticileri (label, pill, badge, kart, avatar, `D_tag`, `D_kpi`, `D_seg_tabs`, `D_said`, `D_stars`) hep tema varyasyonu adlarıyla
-- `scripts/theme/build_theme.gd` (1521): `-s` betiği; UiTokens'tan `themes/master_theme.tres` (krem) ve `themes/menajer_theme.tres` (koyu) üretir, FontVariation sarmalarını kurar (koyu yüzler Archivo'nun değişken yüzü, yedek Plex)
+- `scripts/theme/build_theme.gd` (1549): `-s` betiği; UiTokens'tan `themes/master_theme.tres` (krem) ve `themes/menajer_theme.tres` (koyu) üretir, FontVariation sarmalarını kurar (koyu yüzler Archivo'nun değişken yüzü, yedek Plex)
 - `scripts/theme/theme_check.gd` (270): tema denetçisi (eksik öğe, içerik payı, WCAG kontrastı) ve koyu temanın `contrast_audit` kapısı
 - `scripts/ui/components/top_bar.gd` (458): üst bar; iki satırlık metrik ızgarası, gün/saat/hafta çubuğu, hız tuşları, Sıradaki ve karar kapısı yuvası
 - `scripts/ui/components/left_tabs.gd` (326): sol ray; `UiTokens.TABS` ile sahne düğmeleri, kilit, rozet sayaçları, simge kipi
@@ -108,7 +108,11 @@ Oyuncu metni `tr(ANAHTAR)` ile `localization/strings.csv`den okunur; ayrı bir C
 - `GameState`ten okunanlar: `company_name`, `get_date_dict`, `day`, `phase`, `messages`, `desk_arrivals`, `founder_portrait`, `logo` (ContinueCard `row.meta.logo`), `vc_states`, `active_sheets` (en çok `top_bar.gd`, `inbox.gd`)
 - Kalıcı kullanıcı ayarları `user://settings.json` (`Settings.DEFAULTS` `settings.gd:24`): `window_mode`, `ui_scale`, `colorblind_palette`, `ticker_open`, `master_volume`, `music_*`, `sfx_volume`, `pause_unfocused`, `language`
 - `runs_finished` profil sayacı `Settings` anahtarı, `main.gd:5230`'da artar; Onboarding Zor kipi açılışını buradan okur (`first_week_doc.gd:15`)
-- Tema sürümü: `UiTokens.THEME_STAMP := 38` `ui_tokens.gd:44`; .tres'in gömülü `UiTokensStamp.stamp` sabiti ile `main.gd:99-100` karşılaştırılır (debug uyarısı)
+- Tema sürümü: `UiTokens.THEME_STAMP := 40` `ui_tokens.gd:44`; .tres'in gömülü `UiTokensStamp.stamp` sabiti ile `main.gd:99-100` karşılaştırılır (debug uyarısı)
+- Ürün sol sütunu: ölçüler `D_W_LEFT` 288, `D_BOX_MONO` 24, `D_H_KEY_CAND` 24, `D_W_STAGE_STRIP` 168, `D_H_STAGE_STRIP` 6, `D_PLANNED_ALPHA` (planlı talep), `D_TAKEN_ALPHA` (planlı ya da damgalı aday); aşama bantları `D_ST_DESIGN/DEV/TEST` ve `UiTokens.D_stage(aşama)`.
+- Yüzler: `d_wide_b` (Archivo 800, genişlik 118: modül işareti `MonoMark`) ve `d_wide_sb_caps` (650, genişlik 110, harf aralığı 1: göz başlığı `Eyebrow`); `d_num` (650/108) okuyanı gelene dek kurulmadı.
+- Sol sütunun varyasyonları yalnız koyu temadadır (master taşımaz, `theme_check` ikisinde geçer): `RequestRow` (+`Hover`, `Planned`), `ModuleRow` (+`Hover`, `Open`), `ModuleCandidate`, `DueChip`, `DueChipSoon`, `MoreLink`
+  ↳ `MonoBox` HR ve posta ile ortaktır.
 - Tema yolu: `UiTokens.MENAJER_THEME` `ui_tokens.gd:450`; proje teması `project.godot` `theme/custom` = `master_theme.tres`; Menajer teması taşınan her alt ağacın köküne ve her CanvasLayer köküne elle atanır
 - Boyut merdiveni: `SIZE_MICRO 9 … SIZE_DISPLAY 22` `ui_tokens.gd:196-203`, editorial `SIZE_ED_*` `:208-212`, koyu `D_FS_12 … D_FS_40` `:603-614`; term sheet sütunu `D_STAGE` `:816`
 - `UiTokens.TABS` `ui_tokens.gd:294`: id sırası = `LeftTabs.tscn` düğme sırası; `lock: "ea"` bu yapıda kilitli sekme; sekme başlığı anahtarı `TAB_` + ID büyük harf (`left_tabs.gd:145`, `window_layer.gd:246`)

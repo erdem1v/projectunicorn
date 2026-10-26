@@ -8,7 +8,7 @@ Hesap yapmaz; eylemi sisteme verir. Yatırım ("av") sayfası `hunt_tab.gd`'dir,
 ## Dosyalar
 
 Sekme kökleri (scripts/tabs/):
-- `scripts/tabs/product_tab.gd` (321): Ürün penceresi kabuğu: başlık KPI'ları, GENEL BAKIŞ/SPRINT/ÇEYREK şeridi, yerel `_ui` durumu, eylem yönlendirme (`_act`).
+- `scripts/tabs/product_tab.gd` (329): Ürün penceresi kabuğu: başlık KPI'ları, GENEL BAKIŞ/SPRINT/ÇEYREK şeridi (Kurucu sprintte ve Geçmiş anahtarları), yerel `_ui` durumu, eylem yönlendirme (`_act`).
 - `scripts/tabs/sales_tab.gd` (834): Satış: fiyat duruşu, boru hattı (lead belgesi), satış masası, son hareketler, müşteri portföyü, canlı B2C kitle sayfası.
 - `scripts/tabs/hr_tab.gd` (542): Ekip: Kadro/Görevler görünümleri, Atlas ve Mesai panel açıcıları, satır menüsü, yapı anahtarıyla yerinde boyama.
 - `scripts/tabs/finance_tab.gd` (144): Finans kabuğu: nakit/net/runway KPI'ları, ÖZET|YATIRIM şeridi, Yatırım kilidi (`_yatirim_locked`).
@@ -28,13 +28,14 @@ Alt klasörler:
 - `scripts/tabs/hr/hr_dossier.gd` (232): Ekip dosyası: kişinin ayrıntı penceresi (`DETAILS["hr_dossier"]`), kişi ayrılınca kendini kapatır.
 - `scripts/tabs/hr/hr_popover.gd` (113): `HRPopover`: çapaya bağlı tek açılır panel (satır menüsü, zam kutusu, sorumlu seçici).
 - `scripts/tabs/hr/hr_ui_shared.gd` (506): `HRUiShared`: koyu tablo kiti (`D_*`), rozetler, moral, deneyim, durum hücresi, `mount_panel_modal`; tabloların dışında da kullanılır.
-- `scripts/tabs/product/product_model.gd` (1034): `ProductModel`: sprint ekranının görünüm sözleşmesi; `live()` GameState/SprintSystem'den Dictionary kurar.
+- `scripts/tabs/product/product_model.gd` (999): `ProductModel`: sprint ekranının görünüm sözleşmesi; `live()` GameState/SprintSystem'den Dictionary kurar.
   Başlık yorumu yeni ekranın alanlarını da tanımlar: `founder`, `requests`, `modules`, `prep`, çeyreğin saati, merkez ve sonraki sütun eklemeleri, kart satırı; düzeltme işinin efora girişi ve gösterim kuralı.
+  Sol sütunun "+" değerleri ve hayalet hesabı `live()`dan ayrıdır: `addable`, `resolve_addable`, `ghost` (kart kimliğiyle sayfanın bir sonraki kurulumuna kadar saklanır).
 - `scripts/tabs/product/sprint_panel.gd` (423): `SprintPanel`: orta (bu sprint) ve sağ (sonraki sprint) sütunlar; başlık/alt sabit, kart yığını kayar.
-- `scripts/tabs/product/sprint_card.gd` (370): `SprintCard`: tek kart (`State`, `Look` kipleri); yalnız sözlüğünü çizer, düğme olaylarını `action` ile yayar.
-- `scripts/tabs/product/sprint_ui_shared.gd` (398): `SprintUiShared`: ortak statik parçalar (label, box, pad, avatar, kapasite çubuğu); Ürün dışında 10+ dosya kullanır.
-- `scripts/tabs/product/area_panel.gd` (232): `AreaPanel`: sol panel: Geçmiş, Müşteriler, alan akordeonu, açık hatlar, aday kartları.
-- `scripts/tabs/product/quarter_view.gd` (209): `QuarterView`: ÇEYREK görünümü: hedef şeridi, dar alan paneli, altı sprint sütunu, onay düğmeleri.
+- `scripts/tabs/product/sprint_card.gd` (365): `SprintCard`: tek kart (`State`, `Look` kipleri); yalnız sözlüğünü çizer, düğme olaylarını `action` ile yayar.
+- `scripts/tabs/product/sprint_ui_shared.gd` (418): `SprintUiShared`: ortak statik parçalar (label, box, pad, avatar, kapasite çubuğu, `switch`, söz çipi `due_chip`); Ürün dışında 10+ dosya kullanır.
+- `scripts/tabs/product/area_panel.gd` (311): `AreaPanel`: sol sütun (SPRINT ve ÇEYREK): Geçmiş, MÜŞTERİ TALEPLERİ, MODÜLLER ve açık modülün adayları; "+" değerleri sonraki karelerde gelir.
+- `scripts/tabs/product/quarter_view.gd` (211): `QuarterView`: ÇEYREK görünümü: hedef şeridi, sol sütun (`AreaPanel`), altı sprint sütunu, onay düğmeleri.
 - `scripts/tabs/product/overview_view.gd` (96): GENEL BAKIŞ kâğıdı (şimdilik yalnız Sunucu bloğu; Azalt düğmesi kapasite 0 birimdeyken `server.decrease.off` ile kapalı); class_name yok.
 - `scripts/tabs/product/type_picker.gd` (116): `TypePicker`: MVP öncesi tek ekranlık tür ve ad seçici (iki pazar sütunu, kart pazarı da seçer); taslak `SprintSystem`'e yazılır, onay `chosen` olur.
 - `scripts/tabs/rnd/rnd_tree_view.gd` (433): `RnDTreeView`: aile sütunları (3 satır kafes), karolar, seçili düğümün kartı alanı.
@@ -62,10 +63,15 @@ Sekme sözleşmesi (sayfanın taşıdığı, çerçevenin çağırdığı):
 Ürün:
 - `ProductTab._ready()` `scripts/tabs/product_tab.gd:49`: sekme açılınca görünümleri kurar, 5 EventBus sinyaline bağlar (:111-115) · WindowLayer.
 - `ProductTab._rebuild()` `product_tab.gd:141`: her değişimde modelden baştan kurar; `_queue_rebuild` (:310) call_deferred ile tekler · sinyaller ve `_on_action`.
-- `ProductModel.live()` `scripts/tabs/product/product_model.gd:138`: GameState.product + SprintSystem/ProductState'ten model · product_tab.gd:145, sprint_probe.gd:295.
+- `ProductModel.live()` `scripts/tabs/product/product_model.gd:130`: GameState.product + SprintSystem/ProductState'ten model · product_tab.gd:145, sprint_probe.gd:295.
   Planlamada ve koşarken tek oynatma (`SprintSystem.timeline`) merkezin `close_at`, `progress`, `crew`, `suggest`, `candidates` ve sonraki sütunun `load`, `carried` alanlarını besler.
+  Sol sütunu `requests` (B2B'de, B2C'de `null`) ve `modules` besler; adayların `addable`ı `null` gelir ve `live()` önbelleği (`_addable`, `_ghosts`) atar.
+- `ProductModel.resolve_addable(ids)` `product_model.gd:218`: bilinmeyen "+" değerlerini sırayla hesaplar (`SprintSystem.can_add`; en az bir kart, `ADDABLE_FRAME_MS` 8 dolunca durur)
+  ↳ çağıran `AreaPanel._process` ve `sprint_probe.gd` `_resolve_all`.
 - `ProductTab._on_action(kind, args)` `product_tab.gd:261`: kart/panel eylemlerini `_act` (:277) ile SprintSystem/InfraSystem'e verir · tüm alt panellerin `action` sinyali.
-- `ProductTab.open_area(area_id)` `product_tab.gd:250`: DESTEK kartı alanı açık açar; görünümü `_set_ui` ile SPRINT yapar, böylece son açık sayfa hatırlanır ("edit" eylemi de) · `SprintUiShared.open_product_area` `sprint_ui_shared.gd:333`.
+- `ProductTab.open_area(area_id)` `product_tab.gd:254`: DESTEK kartı ve talep satırı modülü açık açar; görünümü `_set_ui` ile SPRINT yapar (son açık sayfa hatırlanır, "edit" eylemi de)
+  ↳ çağıran `SprintUiShared.open_product_area` ve `AreaPanel.request_picked`.
+- `ProductTab._on_candidate_hover(card_id)` `product_tab.gd:262`: imleç adayın açık "+"ında: `ui.hover_card` kartın kimliği olur ve hayaletin hesabı (`ProductModel.ghost`) kurulur, ayrılınca boşalır; sayfa kurulmaz · `AreaPanel.hovered`.
 - `ProductTab._hold_clock(on)` `product_tab.gd:317`: sürüm notu açıkken saati tutar (`HOLD_RELEASE_NOTE` :16) · `_rebuild`, `on_page_closing`.
 
 Ekip:
@@ -104,8 +110,10 @@ Sekmelerin tanımladığı sinyaller (DIZIN.md "Sinyaller" bölümü):
 - `fit_changed`: yayan finance_tab:10, hr_tab:22, personal_tab:23, product_tab:12, rnd_tab:28, sales_tab:17, hr_dossier:12 · dinleyen `window_layer.gd:169` (`_place`).
 - `close_requested`: yayan `scripts/tabs/hr/hr_dossier.gd:83,132` · dinleyen `window_frame.gd:62`.
 - `state_changed`: yayan Atlas/Eğitim/Mesai panelleri (hr_atlas_modal.gd:439,465,483; training_modal.gd:174; work_hours_modal.gd:491) · dinleyen `hr_ui_shared.gd:85`.
-- `action(kind, args)`: yayan area_panel:9, overview_view:7, quarter_view:8, sprint_card:15, sprint_panel:8 · dinleyen product_tab.gd:70,77,80, area_panel.gd:166, quarter_view.gd:57, sprint_panel.gd:362.
-- `ui_changed(open_area)`: yayan `area_panel.gd:232` · dinleyen `product_tab.gd:71`. `chosen(subtype, name)`: yayan `type_picker.gd:65` · dinleyen `product_tab.gd:101`.
+- `action(kind, args)`: yayan area_panel:10, overview_view:7, quarter_view:8, sprint_card:15, sprint_panel:8 · dinleyen product_tab.gd:70,77,80, quarter_view.gd:60, sprint_panel.gd:362.
+- `ui_changed(key, value)` (açık modül, talep listesinin açıklığı): yayan `area_panel.gd:11`, `quarter_view.gd:9` · dinleyen `product_tab.gd:72,81` (`_set_ui`).
+- `request_picked(area_id)` ve `hovered(card_id)`: yayan `area_panel.gd:13,15` · dinleyen `product_tab.gd:73` (`open_area`) ve `:74` (`_on_candidate_hover`).
+- `chosen(subtype, name)`: yayan `type_picker.gd:65` · dinleyen `product_tab.gd:101`.
 - `started` / `closed`: yayan `rnd_assign_panel.gd:230,232` / `:203` · dinleyen `rnd_detail_panel.gd:76,77`. `selection_changed(node_id)`: yayan `rnd_tree_view.gd:339` · dinleyen `rnd_tab.gd:144`.
 
 Sekmelerin yaydığı EventBus sinyalleri:
@@ -131,7 +139,7 @@ Sekmelerin dinlediği EventBus sinyalleri (hepsi `_exit_tree`'de ya da düğüml
 - Diğer bayraklar: `finance_runway_warn_snooze_until_day` (`finance_ozet_view.gd:21,479,499`, ertele 2 hafta); `b2c_paid_tier_open`, `b2c_price`, `b2c_audience_history` yalnız okunur (`sales_tab.gd:261-275`).
 - Düzen sabitleri: `WindowLayer.SPECS` `window_layer.gd:38` (Ürün/Piyasa 1424×928, Ekip 1352×928, Finans 1344×720, Satış 1280×760, Ar-Ge 1280×928, Kişisel 1000×928, Olaylar 1240×900, dosya 320×928).
 - Tablo sabitleri: `HRLedger.COMPACT_FROM = 12` (`hr_ledger.gd:16`), `TABLE_W` 1302 (:8), `COLUMNS` (:10) ve `COLUMNS_COMPACT` (:13); `HRAssignments.W` ve `W_JOBS` (`hr_assignments.gd:16-17`).
-- Boyut belirteçleri `scripts/theme/ui_tokens.gd`: `TABS` :294, `D_H_WIN_CTL` :653, `D_W_AREAS` :696, `D_W_PICKER` :698, `D_W_INVESTORS` :744, `D_H_HUNT_HEAD` :746, `D_H_PERSONAL_BODY` :766, `D_H_RND_HISTORY` :780, `D_AVATAR_*` :672-797.
+- Boyut belirteçleri `scripts/theme/ui_tokens.gd`: `TABS` :294, `D_H_WIN_CTL` :659, `D_W_LEFT` :702, `D_W_PICKER` :707, `D_W_INVESTORS` :744, `D_H_HUNT_HEAD` :746, `D_H_PERSONAL_BODY` :766, `D_H_RND_HISTORY` :780, `D_AVATAR_*` :672-797.
 - Sayfa sabitleri: Olaylar `LIST_W` 400/`ROW_H` 96 (`events_tab.gd:12-16`); Satış `SAT_MID` 50/`HISTORY_WEEKS` 26/`LOG_ROWS` 5 (`sales_tab.gd:20-29`); Piyasa `NEW_WEEKS` 4/`SHARE_FLOOR` 0,1 (`piyasa_tab.gd:15-19`).
 - Diğer sabitler: Finans özeti `RUNWAY_WARN_MONTHS` 6/`TX_SHOWN` 8 (`finance_ozet_view.gd:19-22`); `MailPane.ENTER_GUARD_MS` 400/`AVATAR` 40 (`mail_pane.gd:20-21`); Atlas `W_SEARCH` 1440/`W_FILES` 1560 (`hr_atlas_modal.gd:25-26`).
 - JSON'u sekmeler doğrudan okumaz (`scripts/tabs` içinde FileAccess/res://data yok); sistemler okur:
@@ -178,6 +186,11 @@ Smoke (tek vaka: `bash tools/smoke_run.sh <vaka>`; tam süit yalnız push önces
   Yatırım sayfası ise `day_advanced`'e doğrudan bağlıdır (hunt_tab.gd:47); kalan-hafta sayaçları bir tik geriden okunabilir (doğrulanmadı).
 - Dil ve palet değişince WindowLayer sayfayı yıkıp yeniden kurar (`window_layer.gd:66-67`); sekmeden ayrıca bağlanma, yoksa çift kurulum olur (rnd_tab.gd:20-21). Yerel durum kaybolur; korunacaksa bayrak ya da static gerekir.
 - Ürün sekmesi `fit_height()` ÇEYREK dışında `INF` döner (product_tab.gd:135-139). Sayfa boyunu `SPECS` ve `fit_height` birlikte belirler; yeni sayfada ikisine de bak.
+- Ürün sol sütunu `AreaPanel` SPRINT'te (`product_tab.gd`) ve ÇEYREK'te (`quarter_view.gd`) aynı panel; açık modül `ui.open_area`, talep listesinin açıklığı `ui.requests_open` (yerel, kayda girmez).
+- Adayın "+"ı kurulumda hesaplanmaz: `live()` `addable: null` verir, bilinmeyen "+" nötr ve basılmaz durur, değerler `ProductModel.resolve_addable` ile kare kare gelir (kare 8 ms)
+  ↳ yeni bir "+" okuyucusu değeri `ProductModel.addable`'dan okur.
+- `ProductModel.bug_row_of` Destek raporunun hat satırıdır (`mail_pane.gd`); sol sütunda hata satırı yoktur, düzeltme adayı hata sayısını (`bugs`) ve metnini (`fix_text`) taşır.
+- Fikstür kaynağı (`product_fixtures.gd`) sol sütuna `modules` ve `requests` vermez (`model()`ın başındaki üç alanlık kalıp); sol sütun kareleri `live:a4_*` türlerindendir.
 - Statik fonksiyonlarda `tr()` çalışmaz; SprintUiShared, RnDUiShared, MailPane statikleri `TranslationServer.translate` kullanır. Çözülmeyen anahtar kendine döner ve ham token olarak görünür.
 - `HBoxContainer` bir çocuğun asgari boyutunu kırpmaz; sabit sütun için hücreyi düz `Control` + `clip_contents` yap
   (hafıza: ekip-rev11-closing-round; kanon `work_hours_modal._pin`). `HRLedger` sütun hücreleri `_span` ile genişlik alır (hr_ledger.gd:66).
@@ -193,6 +206,7 @@ Smoke (tek vaka: `bash tools/smoke_run.sh <vaka>`; tam süit yalnız push önces
 ## Bir değişiklik yaparken
 
 - Yeni sekme ya da pencere boyu: `UiTokens.TABS` (ui_tokens.gd:294), `WindowLayer.TAB_SCENES` (window_layer.gd:13) ve `SPECS` (:38), `scenes/tabs/<Ad>Tab.tscn`, `TAB_<AD>` anahtarı, `left_tabs.gd`, smoke `rail_tabs_match_scene_order`.
+- Sol sütuna alan: `ProductModel._module_card`/`_requests` (sözleşme başlığı) + `AreaPanel` + `build_theme.gd` varyasyonu + `PRODUCT_*` anahtarı; "+" değeri `ProductModel.resolve_addable`'dan gelir.
 - Sprint kartı alanı ya da düğmesi: `ProductModel` (sözleşme, `BUTTONS` product_model.gd:126; `follow` kartı Kaldır almaz, `_card`) + `SprintCard.setup`
   + `scripts/debug/product_fixtures.gd` (fikstür aynı alanı taşımalı) + `ProductTab._act` + ilgili `PRODUCT_*` anahtarları.
 - Satır menüsü eylemi (Ekip): `HRLedger._action_specs`/`run_action` (hr_ledger.gd:283,356), `hr_dossier.gd` (aynı kapı), `HRActions` sistemi ve smoke `menu_has_one_path`.

@@ -1,12 +1,12 @@
 extends Control
 
 # Ürün penceresi. Ortak koyu başlıkta Ürün ve iki ölçü (tür ile ürün adı, sürüm); altında denetim şeridi
-# (GENEL BAKIŞ | SPRINT | ÇEYREK; Genel Bakış v1.0'a, ÇEYREK PM'e kadar gerekçesiyle kilitli; Geçmiş ve devir
-# anahtarı), gövdede GENEL BAKIŞ (sunucu), SPRINT görünümü (alanlar · bu sprint · sonraki) ya da ÇEYREK görünümü.
+# (GENEL BAKIŞ | SPRINT | ÇEYREK; Genel Bakış v1.0'a, ÇEYREK PM'e kadar gerekçesiyle kilitli; Kurucu sprintte ve Geçmiş
+# anahtarları), gövdede GENEL BAKIŞ (sunucu), SPRINT görünümü (modüller · bu sprint · sonraki) ya da ÇEYREK görünümü.
 # Her değişiklikte kaynağın modelinden baştan kurulur; kaynak yoksa canlı model ve eylemler sistemlere gider, ürün
-# türü seçilmemişse şerit yoktur ve ortada tür seçici durur. Akordeon, geçmiş ve görünüm sekmenin yerel durumudur:
-# modelin `ui`'sinden tohumlanır, tek sahibi `_ui`'dir; Destek kartı alanı `open_area` ile açar. Son açık kâğıt
-# pencere kapanıp açılınca (ve dil değişince) hatırlanır, kayda yazılmaz.
+# türü seçilmemişse şerit yoktur ve ortada tür seçici durur. Açık modül, talep listesinin açıklığı, geçmiş ve görünüm
+# sekmenin yerel durumudur: modelin `ui`'sinden tohumlanır, tek sahibi `_ui`'dir; Destek kartı alanı `open_area` ile açar.
+# Son açık kâğıt pencere kapanıp açılınca (ve dil değişince) hatırlanır, kayda yazılmaz.
 
 ## ÇEYREK'te pencere içeriği kadar uzar (WindowLayer fit_height okur).
 signal fit_changed
@@ -63,21 +63,21 @@ func _ready() -> void:
 	_sprint_view = SprintUiShared.box(UiTokens.SPACE_XL)
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.custom_minimum_size.x = UiTokens.D_W_AREAS
+	scroll.custom_minimum_size.x = UiTokens.D_W_LEFT
 	_sprint_view.add_child(scroll)
 	_areas_scroll = scroll
 	_areas = AreaPanel.new()
 	_areas.action.connect(_on_action)
-	_areas.ui_changed.connect(_on_ui_changed)
-	# The areas end this far inside the column: the scrollbar's lane.
-	var lane := SprintUiShared.pad(_areas, Vector4i(0, 0, UiTokens.SPACE_L, 0))
-	lane.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(lane)
+	_areas.ui_changed.connect(func(key: String, value: Variant) -> void: _set_ui(value, key))
+	_areas.request_picked.connect(open_area)
+	_areas.hovered.connect(_on_candidate_hover)
+	scroll.add_child(_areas)
 	_sprint = SprintPanel.new()
 	_sprint.action.connect(_on_action)
 	_sprint_view.add_child(_sprint)
 	_quarter = QuarterView.new()
 	_quarter.action.connect(_on_action)
+	_quarter.ui_changed.connect(func(key: String, value: Variant) -> void: _set_ui(value, key))
 	_overview_view = ScrollContainer.new()
 	_overview_view.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_overview = OVERVIEW.new()
@@ -172,7 +172,7 @@ func _rebuild() -> void:
 	elif _overview_view.get_parent().visible:
 		_overview.setup(m)
 	elif _sprint_view.get_parent().visible:
-		_areas.setup(m, false)
+		_areas.setup(m)
 		_sprint.setup(m)
 		if _reveal_open:
 			_reveal_open = false
@@ -187,8 +187,7 @@ func _refit() -> void:
 	fit_changed.emit()
 
 
-## Üstteki Müşteriler listesi sütunu uzatabilir: açılan alan yerleştikten sonra, sütunun alt yarısında başlıyorsa sütunun
-## başına gelir.
+## Üstteki talepler sütunu uzatabilir: açılan modül yerleştikten sonra, sütunun alt yarısında başlıyorsa sütunun başına gelir.
 func _scroll_to_open_area() -> void:
 	var offset: int = _areas.open_offset()
 	if offset > _areas_scroll.size.y / 2.0:
@@ -215,7 +214,7 @@ func _build_head(h: Dictionary) -> void:
 
 
 ## GENEL BAKIŞ | SPRINT | ÇEYREK (v1.0'dan önce GENEL BAKIŞ, PM yokken ÇEYREK kilitli, gerekçesi ipucunda) ...
-## Geçmiş anahtarı; PM varken planlamayı ona devretme anahtarı.
+## Kurucu sprintte ve Geçmiş anahtarları. Kurucu anahtarı koşan sprintte ve kurucu Ar-Ge'deyken soluk ve basılmaz, değerini gösterir.
 func _build_ctl(m: Dictionary, view: String) -> void:
 	UiFactory.clear(_ctl_row)
 	var open_views: Array = VIEW_KEYS.keys().filter(func(id: String) -> bool:
@@ -231,14 +230,18 @@ func _build_ctl(m: Dictionary, view: String) -> void:
 		quarter.tooltip_text = tr("PRODUCT_QUARTER_NEED_PM")
 		_ctl_row.add_child(quarter)
 	_ctl_row.add_child(RnDUiShared.spacer())
+	var founder: Dictionary = m.founder
+	var founder_tip: String = tr("PRODUCT_FOUNDER_ON_TIP" if founder.on else "PRODUCT_FOUNDER_OFF_TIP")
+	if founder.locked == "running":
+		founder_tip = tr("PRODUCT_FOUNDER_LOCKED_TIP")
+	elif founder.locked == "rnd":
+		founder_tip = founder.rnd_text
+	SprintUiShared.switch(_ctl_row, tr("PRODUCT_FOUNDER_IN_SPRINT"), founder.on,
+		func(on: bool) -> void: _on_action("founder", {"on": on}), founder_tip, founder.locked != "")
 	SprintUiShared.switch(_ctl_row, tr("PRODUCT_HISTORY"), _ui.history_open, _set_ui.bind("history_open"))
-	var delegate: Variant = m.center.delegate
-	if delegate != null:
-		SprintUiShared.switch(_ctl_row, tr("PRODUCT_DELEGATE").format(delegate), delegate.on,
-			func(on: bool) -> void: _on_action("delegate", {"on": on}))
 
 
-## Yalnız yerel durum: geçmiş anahtarı, görünüm ve açık kademe önizlemesi.
+## Yalnız yerel durum: geçmiş anahtarı, görünüm, açık modül, talep listesinin açıklığı ve açık kademe önizlemesi.
 func _set_ui(value: Variant, key: String) -> void:
 	_ui[key] = value
 	if key == "view":
@@ -246,16 +249,20 @@ func _set_ui(value: Variant, key: String) -> void:
 	_queue_rebuild()
 
 
-## SPRINT görünümünde bu alan açık: Destek kartı en çok açık hatası olan hattın alanına götürür.
+## SPRINT görünümünde bu modül açık ve görünür: Destek kartı en çok açık hatası olan hattın modülüne, bir talep satırı kendi
+## modülüne götürür.
 func open_area(area_id: String) -> void:
 	_set_ui("sprint", "view")
 	_reveal_open = true
-	_on_ui_changed(area_id)
+	_set_ui(area_id, "open_area")
 
 
-func _on_ui_changed(open_area_id: String) -> void:
-	_ui.open_area = open_area_id
-	_queue_rebuild()
+## İmleç bir adayın "+"ında: sayfa kurulmaz, kartın kimliği `ui.hover_card` olur ve hayaletin hesabı kurulur (sayfanın bir sonraki
+## kurulumuna kadar saklanır); ayrılınca boşalır.
+func _on_candidate_hover(card_id: String) -> void:
+	_ui.hover_card = card_id
+	if card_id != "":
+		ProductModel.ghost(card_id)
 
 
 func _on_action(kind: String, args: Dictionary) -> void:
@@ -279,6 +286,7 @@ func _act(kind: String, args: Dictionary) -> void:
 		"add", "pull": SprintSystem.add(args.card_id)
 		"send_next": SprintSystem.send_next(args.card_id)
 		"remove": SprintSystem.remove(args.card_id)
+		"founder": SprintSystem.set_founder_in_sprint(args.on)
 		"start": SprintSystem.start()
 		"skip": SprintSystem.skip()
 		"delegate": SprintSystem.set_delegate(args.on)
