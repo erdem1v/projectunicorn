@@ -1,6 +1,6 @@
 # Kod haritası · KALITE
 
-Üretildi: git d7525a3 · 2026-10-26 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git 10e4eee · 2026-10-26 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 246 .gd (tools/ ve sandbox/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
@@ -64,6 +64,7 @@ Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları
 - scripts/debug/endgame_smoke.gd:993 · _case_gate_decline_reminder · 125 satır
 - scripts/debug/endgame_smoke.gd:18766 · _thesis_presenter_body · 124 satır
 - scripts/debug/endgame_smoke.gd:18999 · _case_sales_meeting_time_skip_founder_share · 124 satır
+- scripts/ui/office/office_map_card.gd:17 · _init · 124 satır
 - scripts/main/main.gd:3859 · _seed_product_live · 123 satır
 - scripts/events/tools/why.gd:28 · report · 121 satır
 - scripts/events/seams/seams_product.gd:15 · _install_product · 120 satır
@@ -73,7 +74,6 @@ Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları
 - scripts/debug/endgame_smoke.gd:16307 · _case_save_v10_product_state · 116 satır
 - scripts/tabs/hr/hr_atlas_modal.gd:305 · _file_card · 116 satır
 - scripts/systems/sprint_system.gd:1567 · _close · 115 satır
-- scripts/ui/office/office_map_card.gd:17 · _init · 115 satır
 
 ## Ölü kod adayları (24)
 

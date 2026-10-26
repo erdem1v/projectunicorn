@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git d7525a3 · 2026-10-26 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 10e4eee · 2026-10-26 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -153,7 +153,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/onboarding/steps/origin_traits_step.gd · 332 · - · OnboardingStep · 0 sinyal · 18 func
 - scripts/onboarding/steps/step_base.gd · 118 · OnboardingStep · Control · 1 sinyal · 10 func
 
-### scripts/systems/ (72 dosya, 24296 satır)
+### scripts/systems/ (72 dosya, 24297 satır)
 - scripts/systems/angel_round_system.gd · 52 · AngelRoundSystem · RefCounted · 0 sinyal · 1 func
 - scripts/systems/b2b_constants.gd · 286 · B2BConstants · RefCounted · 0 sinyal · 9 func
 - scripts/systems/b2b_sales_system.gd · 644 · B2BSalesSystem · RefCounted · 0 sinyal · 42 func
@@ -183,7 +183,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/systems/module_locks.gd · 35 · - · RefCounted · 0 sinyal · 4 func
 - scripts/systems/negotiation_system.gd · 276 · NegotiationSystem · RefCounted · 0 sinyal · 13 func
 - scripts/systems/news_feed_system.gd · 429 · NewsFeedSystem · RefCounted · 0 sinyal · 19 func
-- scripts/systems/office_constants.gd · 108 · OfficeConstants · RefCounted · 0 sinyal · 0 func
+- scripts/systems/office_constants.gd · 109 · OfficeConstants · RefCounted · 0 sinyal · 0 func
 - scripts/systems/office_system.gd · 91 · OfficeSystem · RefCounted · 0 sinyal · 12 func
 - scripts/systems/people_parts.gd · 165 · PeopleParts · RefCounted · 0 sinyal · 2 func
 - scripts/systems/phase_gate_system.gd · 178 · PhaseGateSystem · RefCounted · 0 sinyal · 9 func
@@ -308,7 +308,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/ui/meeting/sales_meeting_adapter.gd · 320 · SalesMeetingAdapter · RefCounted · 0 sinyal · 18 func
 - scripts/ui/meeting/vc_meeting_adapter.gd · 200 · VcMeetingAdapter · RefCounted · 0 sinyal · 12 func
 
-### scripts/ui/office/ (19 dosya, 5180 satır)
+### scripts/ui/office/ (19 dosya, 5176 satır)
 - scripts/ui/office/meeting_cast.gd · 186 · MeetingCast · Node3D · 2 sinyal · 13 func
 - scripts/ui/office/meeting_invite.gd · 198 · MeetingInvite · Control · 2 sinyal · 12 func
 - scripts/ui/office/office_actor.gd · 160 · OfficeActor · OfficePerson · 0 sinyal · 6 func
@@ -319,7 +319,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/ui/office/office_hud.gd · 126 · - · Control · 1 sinyal · 7 func
 - scripts/ui/office/office_layout.gd · 99 · OfficeLayout · RefCounted · 0 sinyal · 4 func
 - scripts/ui/office/office_lighting.gd · 328 · OfficeLighting · RefCounted · 0 sinyal · 12 func
-- scripts/ui/office/office_map_card.gd · 158 · - · PanelContainer · 2 sinyal · 4 func
+- scripts/ui/office/office_map_card.gd · 154 · - · PanelContainer · 2 sinyal · 3 func
 - scripts/ui/office/office_materials.gd · 105 · OfficeMaterials · RefCounted · 0 sinyal · 3 func
 - scripts/ui/office/office_notice_stack.gd · 196 · - · VBoxContainer · 0 sinyal · 10 func
 - scripts/ui/office/office_people.gd · 763 · OfficePeople · Node3D · 2 sinyal · 48 func
@@ -794,11 +794,11 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - road_done() · scripts/ui/office/office_city.gd:14 · emit: scripts/ui/office/office_city.gd:152 · connect: scripts/ui/office/office_travel.gd:82,102
 
 ### scripts/ui/office/office_hud.gd
-- move_pressed() · scripts/ui/office/office_hud.gd:10 · emit: scripts/ui/office/office_hud.gd:49, scripts/ui/office/office_map_card.gd:128 · connect: scripts/ui/office/office_city.gd:112,379 · (ad 2 yerde tanımlı)
+- move_pressed() · scripts/ui/office/office_hud.gd:10 · emit: scripts/ui/office/office_hud.gd:49, scripts/ui/office/office_map_card.gd:137 · connect: scripts/ui/office/office_city.gd:112,379 · (ad 2 yerde tanımlı)
 
 ### scripts/ui/office/office_map_card.gd
-- cancel_pressed() · scripts/ui/office/office_map_card.gd:8 · emit: scripts/ui/office/office_map_card.gd:113 · connect: scripts/ui/office/office_city.gd:378
-- move_pressed() · scripts/ui/office/office_map_card.gd:9 · emit: scripts/ui/office/office_hud.gd:49, scripts/ui/office/office_map_card.gd:128 · connect: scripts/ui/office/office_city.gd:112,379 · (ad 2 yerde tanımlı)
+- cancel_pressed() · scripts/ui/office/office_map_card.gd:8 · emit: scripts/ui/office/office_map_card.gd:122 · connect: scripts/ui/office/office_city.gd:378
+- move_pressed() · scripts/ui/office/office_map_card.gd:9 · emit: scripts/ui/office/office_hud.gd:49, scripts/ui/office/office_map_card.gd:137 · connect: scripts/ui/office/office_city.gd:112,379 · (ad 2 yerde tanımlı)
 
 ### scripts/ui/office/office_people.gd
 - founder_arrived() · scripts/ui/office/office_people.gd:16 · emit: scripts/ui/office/office_people.gd:235 · connect: scripts/ui/office/office_travel.gd:75
@@ -1175,7 +1175,7 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - FIN_NET_* · 1 · scripts/tabs/finance/finance_ozet_view.gd
 - FIN_NO_* · 1 · scripts/tabs/finance/finance_ozet_view.gd
 - FIN_OFFICE_* · 1 · scripts/tabs/finance/finance_ozet_view.gd
-- FIN_ONETIME_* · 18 · scripts/systems/finance_system.gd
+- FIN_ONETIME_* · 18 · scripts/systems/finance_system.gd, scripts/systems/office_constants.gd
 - FIN_PER_* · 1 · scripts/tabs/finance/finance_ozet_view.gd
 - FIN_PHASE_* · 3 · scripts/autoload/game_state.gd
 - FIN_PROFIT_* · 4 · scripts/tabs/finance/finance_ozet_view.gd
@@ -1409,10 +1409,10 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - OFFICE_HINT_* · 1 · scripts/ui/office/office_notice_stack.gd
 - OFFICE_HOVER_* · 2 · scripts/ui/office/office_city.gd
 - OFFICE_MAP_* · 3 · scripts/systems/office_constants.gd, scripts/ui/office/office_city.gd
-- OFFICE_MOVE_* · 3 · scripts/ui/office/office_hud.gd, scripts/ui/office/office_map_card.gd
+- OFFICE_MOVE_* · 3 · scripts/systems/office_constants.gd, scripts/ui/office/office_hud.gd, scripts/ui/office/office_map_card.gd
 - OFFICE_MOVING_* · 2 · scripts/ui/office/office_hud.gd, scripts/ui/office/office_map_card.gd
 - OFFICE_NAME_* · 4 · scripts/onboarding/first_week_doc.gd, scripts/onboarding/steps/origin_traits_step.gd, scripts/systems/office_constants.gd, scripts/debug/kit_probe.gd
-- OFFICE_REQ_* · 2 · scripts/main/main.gd, scripts/ui/office/office_map_card.gd
+- OFFICE_REQ_* · 2 · scripts/main/main.gd, scripts/systems/office_constants.gd, scripts/ui/office/office_map_card.gd
 - OFFICE_ROOM_* · 23 · scripts/systems/office_constants.gd
 - OFFICE_STATUS_* · 3 · scripts/ui/office/office_map_card.gd
 - OFFICE_TIER_* · 3 · scripts/systems/office_constants.gd

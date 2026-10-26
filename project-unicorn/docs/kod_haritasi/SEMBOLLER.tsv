@@ -1467,7 +1467,7 @@ _first_with_role	func	scripts/systems/incident_system.gd:292	IncidentSystem
 _fit	var	scripts/systems/sales_meeting_system.gd:44	SalesMeetingSystem
 _fit	func	scripts/theme/build_theme.gd:1301	build_theme.gd
 _fit	func	scripts/ui/components/window_layer.gd:222	window_layer.gd
-_fit	func	scripts/ui/office/office_map_card.gd:141	office_map_card.gd
+_fit	func	scripts/ui/office/office_map_card.gd:150	office_map_card.gd
 _fit	func	scripts/ui/office/office_view.gd:213	office_view.gd
 _fit_columns	func	scripts/modals/term_sheet_table_scene.gd:100	TermSheetTableScene
 _fit_effort	func	scripts/tabs/product/sprint_card.gd:362	SprintCard
@@ -2959,7 +2959,7 @@ _ready	func	scripts/ui/menu_backdrop.gd:34	menu_backdrop.gd
 _ready	func	scripts/ui/office/meeting_invite.gd:52	MeetingInvite
 _ready	func	scripts/ui/office/office_city.gd:99	OfficeCity
 _ready	func	scripts/ui/office/office_hud.gd:29	office_hud.gd
-_ready	func	scripts/ui/office/office_map_card.gd:134	office_map_card.gd
+_ready	func	scripts/ui/office/office_map_card.gd:143	office_map_card.gd
 _ready	func	scripts/ui/office/office_notice_stack.gd:30	office_notice_stack.gd
 _ready	func	scripts/ui/office/office_people.gd:82	OfficePeople
 _ready	func	scripts/ui/office/office_travel.gd:43	office_travel.gd
@@ -3903,7 +3903,6 @@ _up	func	scripts/theme/theme_check.gd:118	theme_check.gd
 _update_notes	func	scripts/tabs/piyasa_tab.gd:363	piyasa_tab.gd
 _update_pct_labels	func	scripts/modals/settings_modal.gd:368	settings_modal.gd
 _update_trackers	func	scripts/systems/endings_system.gd:100	EndingsSystem
-_upfront_row	func	scripts/ui/office/office_map_card.gd:149	office_map_card.gd
 _use_dir	func	scripts/autoload/save_manager.gd:515	SaveManager
 _used_families	var	scripts/systems/sales_meeting_system.gd:31	SalesMeetingSystem
 _users_of	func	scripts/systems/sprint_catalog.gd:827	SprintCatalog
@@ -4175,8 +4174,8 @@ AGENT_CLIMB	const	tools/office3d/bake_nav.gd:18	bake_nav.gd
 AGENT_SLOPE	const	tools/office3d/bake_nav.gd:19	bake_nav.gd
 ago	func	scripts/util/fmt.gd:103	Fmt
 ALL	const	scripts/events/core/condition.gd:22	EvCondition
-ALL_HANDS_MINUTE	const	scripts/systems/office_constants.gd:103	OfficeConstants
-ALL_HANDS_S	const	scripts/systems/office_constants.gd:104	OfficeConstants
+ALL_HANDS_MINUTE	const	scripts/systems/office_constants.gd:104	OfficeConstants
+ALL_HANDS_S	const	scripts/systems/office_constants.gd:105	OfficeConstants
 all_ids	func	scripts/events/core/arcs.gd:202	EvArcs
 all_names	func	scripts/events/seams/seams.gd:114	EvSeams
 alloc_remaining	func	scripts/systems/founder_constants.gd:127	FounderConstants
@@ -4195,7 +4194,7 @@ ANCHOR_WINDOW_SECONDS	const	scripts/events/tools/harness.gd:46	EvHarness
 ANGEL_ID	const	scripts/debug/endgame_smoke.gd:27	EndgameSmoke
 AngelRoundSystem	class	scripts/systems/angel_round_system.gd:1	AngelRoundSystem
 ANGLE_SKILL	const	scripts/systems/pitch_constants.gd:68	PitchConstants
-ANIM_LOOP_MAX	const	scripts/systems/office_constants.gd:68	OfficeConstants
+ANIM_LOOP_MAX	const	scripts/systems/office_constants.gd:69	OfficeConstants
 announce_signing	func	scripts/systems/sales_ledger.gd:277	SalesLedger
 answer_key	func	scripts/systems/sales_probes.gd:336	SalesProbes
 answers_for	func	scripts/systems/sales_probes.gd:312	SalesProbes
@@ -4299,8 +4298,8 @@ ARR_MULTIPLE	const	scripts/systems/pitch_constants.gd:159	PitchConstants
 ARR_WINDOW_MONTHS	const	scripts/systems/pitch_constants.gd:162	PitchConstants
 arrival	func	scripts/systems/mail_clock.gd:55	MailClock
 arrival_day	func	scripts/systems/office_system.gd:20	OfficeSystem
-ARRIVE_JITTER	const	scripts/systems/office_constants.gd:72	OfficeConstants
-ARRIVE_LATE_OK	const	scripts/systems/office_constants.gd:76	OfficeConstants
+ARRIVE_JITTER	const	scripts/systems/office_constants.gd:73	OfficeConstants
+ARRIVE_LATE_OK	const	scripts/systems/office_constants.gd:77	OfficeConstants
 ARRIVE_S	const	scripts/ui/office/office_notice_stack.gd:17	office_notice_stack.gd
 ARRIVE_SLIDE	const	scripts/ui/office/office_notice_stack.gd:18	office_notice_stack.gd
 ARROW	const	scripts/modals/hr_action_modal.gd:19	hr_action_modal.gd
@@ -4351,7 +4350,7 @@ AVATAR	const	scripts/tabs/events/mail_pane.gd:21	mail_pane.gd
 avatar	func	scripts/tabs/events/mail_pane.gd:834	mail_pane.gd
 avatar	func	scripts/tabs/product/sprint_ui_shared.gd:206	SprintUiShared
 average_morale	func	scripts/systems/hr_morale_system.gd:225	HRMoraleSystem
-AVOID_MAX_K	const	scripts/systems/office_constants.gd:66	OfficeConstants
+AVOID_MAX_K	const	scripts/systems/office_constants.gd:67	OfficeConstants
 awaiting_timed_out	func	scripts/events/core/arcs.gd:167	EvArcs
 awaits_plan	func	scripts/systems/sprint_system.gd:588	SprintSystem
 AWAY	const	scripts/ui/office/office_layout.gd:10	OfficeLayout
@@ -4502,7 +4501,7 @@ brand_jump	func	scripts/systems/office_system.gd:51	OfficeSystem
 brand_low_since_day	var	scripts/autoload/game_state.gd:141	GameState
 break_plan	func	scripts/events/core/effects.gd:739	EvEffects
 break_promise	func	scripts/autoload/promise_registry.gd:91	PromiseRegistry
-BREAK_WEIGHTS	const	scripts/systems/office_constants.gd:90	OfficeConstants
+BREAK_WEIGHTS	const	scripts/systems/office_constants.gd:91	OfficeConstants
 breakdown	func	scripts/systems/skill_check.gd:40	SkillCheck
 BROW	const	scripts/ui/office/office_body.gd:20	OfficeBody
 budget_exempt	func	scripts/events/present/tempo.gd:109	EvTempo
@@ -4668,7 +4667,7 @@ cast	var	scripts/ui/office/office_view.gd:34	office_view.gd
 CAST_CLOSE	const	scripts/main/main.gd:1972	main.gd
 CAST_WALK_EVERY	const	scripts/main/main.gd:1970	main.gd
 CAST_WALK_MAX	const	scripts/main/main.gd:1971	main.gd
-CATALOG	const	scripts/systems/office_constants.gd:17	OfficeConstants
+CATALOG	const	scripts/systems/office_constants.gd:18	OfficeConstants
 CATALOGUE	const	scripts/systems/sales_probes.gd:141	SalesProbes
 catalogue_card	func	scripts/events/event_gate.gd:214	EventGate
 Catch	class	scripts/debug/office_crowd_probe.gd:45	OfficeCrowdProbe
@@ -5539,8 +5538,8 @@ desk	func	scripts/ui/components/inbox.gd:76	inbox.gd
 desk_arrivals	var	scripts/autoload/game_state.gd:335	GameState
 desk_changed	signal	scripts/autoload/event_bus.gd:125	EventBus
 desk_id	var	scripts/ui/office/office_actor.gd:48	OfficeActor
-DESK_IDLE_EVERY	const	scripts/systems/office_constants.gd:96	OfficeConstants
-DESK_IDLE_S	const	scripts/systems/office_constants.gd:97	OfficeConstants
+DESK_IDLE_EVERY	const	scripts/systems/office_constants.gd:97	OfficeConstants
+DESK_IDLE_S	const	scripts/systems/office_constants.gd:98	OfficeConstants
 DESK_IDLES	const	scripts/ui/office/office_people.gd:46	OfficePeople
 DESK_LAMP	const	scripts/ui/office/office_lighting.gd:34	OfficeLighting
 desk_papers	func	scripts/events/event_gate.gd:163	EventGate
@@ -5609,12 +5608,12 @@ domain_chip	func	scripts/autoload/investor_registry.gd:139	InvestorRegistry
 done_at	func	scripts/systems/sprint_timeline.gd:66	SprintTimeline
 done_points	func	scripts/systems/sprint_system.gd:691	SprintSystem
 DOOR	const	scripts/debug/office_crowd_probe.gd:17	OfficeCrowdProbe
-DOOR_CLEAR	const	scripts/systems/office_constants.gd:82	OfficeConstants
+DOOR_CLEAR	const	scripts/systems/office_constants.gd:83	OfficeConstants
 DOOR_MRR	const	scripts/systems/seed_constants.gd:21	SeedConstants
 door_open	func	scripts/systems/seed_round_system.gd:41	SeedRoundSystem
 DOOR_OPEN_ID	const	scripts/debug/endgame_smoke.gd:26	EndgameSmoke
 DOOR_PHASE	const	scripts/systems/seed_constants.gd:22	SeedConstants
-DOOR_S	const	scripts/systems/office_constants.gd:83	OfficeConstants
+DOOR_S	const	scripts/systems/office_constants.gd:84	OfficeConstants
 DOOR_WAIT	const	scripts/ui/office/office_person.gd:140	OfficePerson
 DOT_IDLE_CHROME	const	scripts/theme/ui_tokens.gd:147	UiTokens
 DOWN	const	scripts/ui/office/office_person.gd:157	OfficePerson
@@ -5814,7 +5813,7 @@ EXCLUDED_DIRS	const	scripts/events/catalog/catalog.gd:17	EvCatalog
 EXCLUDED_PREFIXES	const	scripts/events/catalog/catalog.gd:19	EvCatalog
 EXIT_S	const	scripts/ui/office/office_travel.gd:14	office_travel.gd
 exit_save_requested	signal	scripts/modals/system_menu_modal.gd:20	system_menu_modal.gd
-EXIT_SLACK	const	scripts/systems/office_constants.gd:78	OfficeConstants
+EXIT_SLACK	const	scripts/systems/office_constants.gd:79	OfficeConstants
 exit_slot_id	func	scripts/autoload/save_manager.gd:249	SaveManager
 expand	func	scripts/systems/b2b_sales_system.gd:437	B2BSalesSystem
 EXPANSION_CARD	const	scripts/ui/components/inbox.gd:26	inbox.gd
@@ -5927,7 +5926,7 @@ finishes_with	func	scripts/systems/sprint_system.gd:978	SprintSystem
 fire	func	scripts/systems/hr_actions.gd:251	HRActions
 fire_count	func	scripts/events/core/history.gd:87	EvHistory
 fires	func	scripts/events/core/latches.gd:109	EvLatches
-FIRST_BREAK	const	scripts/systems/office_constants.gd:85	OfficeConstants
+FIRST_BREAK	const	scripts/systems/office_constants.gd:86	OfficeConstants
 first_bumps	func	scripts/systems/sprint_system.gd:253	SprintSystem
 first_dead_slot	func	scripts/events/gate/scope.gd:124	EvScope
 FIRST_HIRE_MONTHS	const	scripts/debug/run_probe.gd:242	RunProbe
@@ -6067,7 +6066,7 @@ founder_output_factor	func	scripts/autoload/time_manager.gd:227	TimeManager
 founder_passive_care	func	scripts/systems/support_system.gd:195	SupportSystem
 founder_portrait	var	scripts/autoload/game_state.gd:21	GameState
 FOUNDER_POST	const	scripts/ui/meeting/meeting_panel.gd:34	MeetingPanel
-FOUNDER_RING	const	scripts/systems/office_constants.gd:107	OfficeConstants
+FOUNDER_RING	const	scripts/systems/office_constants.gd:108	OfficeConstants
 FOUNDER_RING_LIFT	const	scripts/ui/office/office_actor.gd:32	OfficeActor
 FOUNDER_RING_SIZE	const	scripts/ui/office/office_actor.gd:31	OfficeActor
 founder_seated	signal	scripts/ui/office/meeting_cast.gd:14	MeetingCast
@@ -6781,9 +6780,9 @@ last_running_speed	var	scripts/autoload/time_manager.gd:41	TimeManager
 last_saved_at	var	scripts/autoload/save_manager.gd:52	SaveManager
 last_signed_star	func	scripts/systems/sales_ledger.gd:252	SalesLedger
 last_unlocked_module	func	scripts/events/core/delays.gd:120	EvDelays
-LATE_EXTRA	const	scripts/systems/office_constants.gd:74	OfficeConstants
+LATE_EXTRA	const	scripts/systems/office_constants.gd:75	OfficeConstants
 late_promise	func	scripts/systems/sprint_system.gd:1091	SprintSystem
-LATE_SHARE	const	scripts/systems/office_constants.gd:73	OfficeConstants
+LATE_SHARE	const	scripts/systems/office_constants.gd:74	OfficeConstants
 late_with	func	scripts/systems/sprint_system.gd:973	SprintSystem
 lay_out	func	scripts/onboarding/first_week_doc.gd:20	first_week_doc.gd
 LAYERED	const	scripts/theme/theme_check.gd:16	theme_check.gd
@@ -6820,7 +6819,7 @@ LEAVE_COOLDOWN_WEEKS	const	scripts/systems/hr_constants.gd:1078	HRConstants
 LEAVE_DEFER_WEEKS	const	scripts/systems/hr_constants.gd:1087	HRConstants
 leave_deferrals	var	scripts/data_models/character.gd:87	Character
 leave_gain	func	scripts/systems/hr_actions.gd:187	HRActions
-LEAVE_JITTER	const	scripts/systems/office_constants.gd:75	OfficeConstants
+LEAVE_JITTER	const	scripts/systems/office_constants.gd:76	OfficeConstants
 leave_line	func	scripts/systems/hr_system.gd:542	HRSystem
 LEAVE_MAX_DEFERRALS	const	scripts/systems/hr_constants.gd:1086	HRConstants
 leave_requested	signal	scripts/autoload/event_bus.gd:79	EventBus
@@ -7006,7 +7005,7 @@ LUCIDE	const	scripts/debug/write_licenses.gd:11	write_licenses.gd
 LUCIDE	const	scripts/menu/licenses.gd:13	licenses.gd
 LUKEWARM_MIN	const	scripts/ui/meeting/sales_meeting_adapter.gd:23	SalesMeetingAdapter
 lunch_day	var	scripts/ui/office/office_actor.gd:64	OfficeActor
-LUNCH_WINDOW	const	scripts/systems/office_constants.gd:95	OfficeConstants
+LUNCH_WINDOW	const	scripts/systems/office_constants.gd:96	OfficeConstants
 LYING	const	scripts/ui/office/office_person.gd:155	OfficePerson.Phase
 LYING_BOX	const	scripts/ui/office/office_actor.gd:39	OfficeActor
 MAIL	const	scripts/tabs/sales_tab.gd:34	sales_tab.gd
@@ -7103,7 +7102,7 @@ may_gate_visible_step	func	scripts/systems/research_seam.gd:87	ResearchSeam
 meet_clauses	func	scripts/systems/b2b_sales_system.gd:339	B2BSalesSystem
 meet_hit	var	scripts/ui/office/office_layout.gd:27	OfficeLayout
 meet_rooms	var	scripts/ui/office/office_layout.gd:20	OfficeLayout
-MEETING_ACT_S	const	scripts/systems/office_constants.gd:100	OfficeConstants
+MEETING_ACT_S	const	scripts/systems/office_constants.gd:101	OfficeConstants
 MEETING_ACTS	const	scripts/ui/office/office_people.gd:47	OfficePeople
 meeting_block_reason	func	scripts/systems/sales_ledger.gd:324	SalesLedger
 meeting_blocked_reason	func	scripts/systems/vc_pitch_system.gd:735	VCPitchSystem
@@ -7112,13 +7111,13 @@ meeting_day	signal	scripts/autoload/event_bus.gd:267	EventBus
 MEETING_DAYS	const	scripts/systems/time_model.gd:18	TimeModel
 meeting_entered	signal	scripts/autoload/event_bus.gd:213	EventBus
 MEETING_ENTRY_CUTOFF_HOURS	const	scripts/systems/sales_constants.gd:66	SalesConstants
-MEETING_EVERY	const	scripts/systems/office_constants.gd:98	OfficeConstants
-MEETING_FOUNDER	const	scripts/systems/office_constants.gd:102	OfficeConstants
+MEETING_EVERY	const	scripts/systems/office_constants.gd:99	OfficeConstants
+MEETING_FOUNDER	const	scripts/systems/office_constants.gd:103	OfficeConstants
 MEETING_LEAD_WEEKS	const	scripts/systems/pitch_constants.gd:71	PitchConstants
-MEETING_LEN	const	scripts/systems/office_constants.gd:99	OfficeConstants
+MEETING_LEN	const	scripts/systems/office_constants.gd:100	OfficeConstants
 meeting_lost	signal	scripts/autoload/event_bus.gd:215	EventBus
 MEETING_RESCHEDULE_PENALTY	const	scripts/systems/pitch_constants.gd:76	PitchConstants
-MEETING_RETRY	const	scripts/systems/office_constants.gd:101	OfficeConstants
+MEETING_RETRY	const	scripts/systems/office_constants.gd:102	OfficeConstants
 meeting_scene_requested	signal	scripts/autoload/event_bus.gd:261	EventBus
 MEETING_SHOT_EMPHASIS	const	scripts/main/main.gd:4382	main.gd
 MEETING_SHOT_VC	const	scripts/main/main.gd:4487	main.gd
@@ -7173,7 +7172,7 @@ MIN_GAP_WEEKS_DEFAULT	const	scripts/events/core/tuning.gd:14	EvTuning
 MIN_LEDGER_LINES	const	scripts/systems/endings_copy.gd:27	EndingsCopy
 MIN_LOADABLE_VERSION	const	scripts/autoload/save_manager.gd:23	SaveManager
 MIN_PIECE	const	tools/office3d/bake_nav.gd:25	bake_nav.gd
-MIN_PRESENCE	const	scripts/systems/office_constants.gd:80	OfficeConstants
+MIN_PRESENCE	const	scripts/systems/office_constants.gd:81	OfficeConstants
 MIN_RATIO	const	scripts/theme/theme_check.gd:149	theme_check.gd
 MIN_READABLE_FONT_PX	const	scripts/systems/display_settings.gd:57	DisplaySettings
 MIN_WIDTH	const	scripts/tabs/hr/hr_popover.gd:16	HRPopover
@@ -7364,7 +7363,7 @@ next_tier	func	scripts/systems/product_lines.gd:409	ProductLines
 night_accounts	func	scripts/systems/incident_system.gd:418	IncidentSystem
 NIGHT_FADE_S	const	scripts/ui/office/office_view.gd:16	office_view.gd
 night_skipped	signal	scripts/autoload/event_bus.gd:23	EventBus
-NIGHT_WAIT_S	const	scripts/systems/office_constants.gd:84	OfficeConstants
+NIGHT_WAIT_S	const	scripts/systems/office_constants.gd:85	OfficeConstants
 NO_EDGE	const	scripts/ui/office/office_materials.gd:11	OfficeMaterials
 NO_EXPIRY_DAY	const	scripts/systems/seed_constants.gd:127	SeedConstants
 NO_PAD	const	scripts/theme/build_theme.gd:37	build_theme.gd
@@ -7551,7 +7550,7 @@ overtime_weeks	var	scripts/data_models/character.gd:56	Character
 OVERVIEW	const	scripts/tabs/product_tab.gd:18	product_tab.gd
 owner_of	func	scripts/events/seams/seams.gd:104	EvSeams
 PACE_LINES	const	scripts/tabs/hr/hr_dossier.gd:15	hr_dossier.gd
-PACE_MINUTES	const	scripts/systems/office_constants.gd:64	OfficeConstants
+PACE_MINUTES	const	scripts/systems/office_constants.gd:65	OfficeConstants
 PACE_MOD_MULT_MAX	const	scripts/systems/hr_constants.gd:861	HRConstants
 PACE_MOD_MULT_MIN	const	scripts/systems/hr_constants.gd:860	HRConstants
 PACE_MOD_PCT_MAX	const	scripts/systems/hr_constants.gd:857	HRConstants
@@ -7797,7 +7796,7 @@ post	func	scripts/ui/office/meeting_cast.gd:104	MeetingCast
 POST_ARMS	const	scripts/ui/office/meeting_cast.gd:28	MeetingCast
 post_money_m	func	scripts/autoload/game_state.gd:670	GameState
 POST_MONEY_STEP_M	const	scripts/autoload/game_state.gd:280	GameState
-POSTPONE	const	scripts/systems/office_constants.gd:87	OfficeConstants
+POSTPONE	const	scripts/systems/office_constants.gd:88	OfficeConstants
 postpone_call	func	scripts/systems/vc_pitch_system.gd:794	VCPitchSystem
 POSTPONE_GLYPH	const	scripts/ui/office/meeting_invite.gd:19	MeetingInvite
 postponed	signal	scripts/ui/office/meeting_invite.gd:15	MeetingInvite
@@ -8588,7 +8587,7 @@ select_lever	func	scripts/systems/term_sheet_table_system.gd:243	TermSheetTableS
 select_node	func	scripts/tabs/rnd_tab.gd:114	rnd_tab.gd
 select_person	func	scripts/ui/office/office_view.gd:172	office_view.gd
 select_price	func	scripts/systems/negotiation_system.gd:154	NegotiationSystem
-SELECT_RING	const	scripts/systems/office_constants.gd:108	OfficeConstants
+SELECT_RING	const	scripts/systems/office_constants.gd:109	OfficeConstants
 SELECT_RING_LIFT	const	scripts/ui/office/office_actor.gd:34	OfficeActor
 SELECT_RING_SIZE	const	scripts/ui/office/office_actor.gd:33	OfficeActor
 selected	var	scripts/ui/office/office_actor.gd:51	OfficeActor
@@ -9069,7 +9068,7 @@ STATUS_ON_LEAVE	const	scripts/systems/hr_constants.gd:927	HRConstants
 STATUS_TAGS	const	scripts/tabs/hunt_tab.gd:15	hunt_tab.gd
 STATUS_TRAINING	const	scripts/systems/hr_constants.gd:930	HRConstants
 stay	var	scripts/ui/office/office_actor.gd:69	OfficeActor
-STAYS	const	scripts/systems/office_constants.gd:93	OfficeConstants
+STAYS	const	scripts/systems/office_constants.gd:94	OfficeConstants
 STEAM_PAGE_URL	const	scripts/modals/ending_scene.gd:34	EndingScene
 steer_ferry	func	scripts/ui/office/office_lighting.gd:255	OfficeLighting
 STEMS	const	scripts/systems/sales_name_pool.gd:26	SalesNamePool
@@ -9378,9 +9377,9 @@ trim_plan	func	scripts/events/core/effects.gd:701	EvEffects
 trim_plan	func	scripts/systems/sprint_system.gd:425	SprintSystem
 trim_points	func	scripts/systems/sprint_system.gd:417	SprintSystem
 TRIO_COST_TRAIT_MIN	const	scripts/systems/hr_constants.gd:702	HRConstants
-TRIP_EVERY	const	scripts/systems/office_constants.gd:86	OfficeConstants
+TRIP_EVERY	const	scripts/systems/office_constants.gd:87	OfficeConstants
 trip_in	var	scripts/ui/office/office_actor.gd:68	OfficeActor
-TRIP_K	const	scripts/systems/office_constants.gd:70	OfficeConstants
+TRIP_K	const	scripts/systems/office_constants.gd:71	OfficeConstants
 TRUST_ACCOUNTS	const	scripts/events/tools/lint.gd:352	EvLint
 trust_accounts	func	scripts/events/core/effects.gd:717	EvEffects
 trust_drains	var	scripts/autoload/game_state.gd:338	GameState
@@ -9456,7 +9455,7 @@ untelegraphed	var	scripts/events/tools/harness.gd:54	EvHarness.Result
 untelegraphed_refusals	func	scripts/events/core/effects.gd:103	EvEffects
 update_health_from_satisfaction	func	scripts/data_models/customer.gd:100	Customer
 upfront	func	scripts/systems/office_system.gd:25	OfficeSystem
-UPFRONT_MONTHS	const	scripts/systems/office_constants.gd:12	OfficeConstants
+UPFRONT_MONTHS	const	scripts/systems/office_constants.gd:13	OfficeConstants
 upper	func	scripts/util/fmt.gd:36	Fmt
 usable_size	func	scripts/systems/display_settings.gd:158	DisplaySettings
 usage	func	scripts/systems/product_read.gd:34	ProductRead

@@ -88,7 +88,16 @@ func _init(office_id: String) -> void:
 
 	if target:
 		col.add_child(UiFactory.make_section_header(tr("OFFICE_CARD_REQS")))
-		col.add_child(_upfront_row(upfront))
+		# The up-front rent: met or not against the cash today, with the cash on the right.
+		var req := HBoxContainer.new()
+		req.add_theme_constant_override("separation", UiTokens.SPACE_M)
+		req.add_child(UiFactory.make_label("✗" if short else "✓", &"RowName",
+			UiTokens.negative() if short else UiTokens.positive()))
+		var need := UiFactory.make_label(tr("OFFICE_REQ_CASH").format({"money": Fmt.money_exact(upfront)}), &"BodySerif")
+		need.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		req.add_child(need)
+		req.add_child(UiFactory.make_label(tr("OFFICE_REQ_NOW").format({"value": Fmt.money_exact(GameState.cash)}), &"RowMeta"))
+		col.add_child(req)
 		var costs: int = GameState.daily_burn * TimeModel.DAYS_PER_MONTH
 		var tip := UiFactory.make_label(tr("OFFICE_MOVE_TIP").format({"rent": rent,
 			"upfront": Fmt.money_exact(upfront), "old": Fmt.money_exact(costs),
@@ -143,16 +152,3 @@ func _fit() -> void:
 	size = Vector2(WIDTH, minf(_content.get_combined_minimum_size().y + get_combined_minimum_size().y,
 		room.y - 2.0 * UiTokens.SPACE_XL))
 	position = Vector2(room.x - size.x - UiTokens.SPACE_XL, UiTokens.SPACE_XL)
-
-
-## The row of the up-front rent: met or not against the cash today, with the cash on the right.
-func _upfront_row(upfront: int) -> HBoxContainer:
-	var ok := GameState.cash >= upfront
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", UiTokens.SPACE_M)
-	row.add_child(UiFactory.make_label("✓" if ok else "✗", &"RowName", UiTokens.positive() if ok else UiTokens.negative()))
-	var label := UiFactory.make_label(tr("OFFICE_REQ_CASH").format({"money": Fmt.money_exact(upfront)}), &"BodySerif")
-	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(label)
-	row.add_child(UiFactory.make_label(tr("OFFICE_REQ_NOW").format({"value": Fmt.money_exact(GameState.cash)}), &"RowMeta"))
-	return row

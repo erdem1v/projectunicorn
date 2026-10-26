@@ -6,9 +6,10 @@ extends RefCounted
 # A move's one condition is the cash for its up-front rent; the rent itself runs every week from the
 # week the company arrives.
 
-## OFFICE_MAP_SUB spells this out as "a week": a change here changes that row too.
+## OFFICE_MAP_SUB and OFFICE_MOVE_TIP spell this out as "a week": a change here changes those rows too.
 const MOVE_WEEKS := 1                       # [WORKING] weeks from move_to to arrival
-## A move pays this many months of the new office's rent up front.
+## A move pays this many months of the new office's rent up front. OFFICE_REQ_CASH and FIN_ONETIME_OFFICE
+## spell it out as "two months": a change here changes those rows too.
 const UPFRONT_MONTHS := 2                   # [WORKING]
 
 ## id -> {tier_key, name_key, desc_key, desks, rent, brand, room_keys}; the flat has no tier_key, being
