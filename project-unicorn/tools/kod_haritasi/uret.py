@@ -264,9 +264,6 @@ class GdFile:
         parts = [self.rows[i][key]]
         j = i + 1
         while j < len(self.rows) and not self.rows[j][3]:
-            if self.rows[j][0].strip() == "":
-                # bos ya da yorum satiri: parantez kapandiysa deyim bitmis olabilir, devam et
-                pass
             parts.append(self.rows[j][key])
             # deyim bir sonraki stmt_start'a kadar suruyor; enum/signal icin yeterli
             j += 1
@@ -742,9 +739,8 @@ def main():
         mentions.update(g.code_tokens())
     for t in scene_texts:
         mentions.update(RE_WORD.findall(t))
-    for p in walk_files("data", (".json", ".csv", ".tres", ".cfg", ".txt", ".md", ".gd")):
-        if not p.endswith(".gd"):
-            mentions.update(RE_WORD.findall(texts.get(rel(p)) or read_text(p)))
+    for p in walk_files("data", (".json", ".csv", ".tres", ".cfg", ".txt", ".md")):
+        mentions.update(RE_WORD.findall(texts.get(rel(p)) or read_text(p)))
     def_occ = Counter()
     for g in gd_files:
         for name, idxs in g.def_lines.items():

@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git a8c8dc6 · 2026-10-26 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 24ab32a · 2026-10-26 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
