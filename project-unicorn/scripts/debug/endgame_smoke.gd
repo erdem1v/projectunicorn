@@ -23755,9 +23755,11 @@ static func _case_promise_extend_once() -> String:
 
 ## "Söz kaçsın": söz bugünkü yoldan kırılır, aynı zincirle (memnuniyet -20, güven izi -12, marka -3, tarih ve 8 hafta
 ## yeni söz yok); çipteki memnuniyet oyuncunun bir tik sonra okuduğu değerdir. Sprint kapanışında kırılan söz için kâğıt
-## süresi dolunca yeniden kırılmaz ve hata vermez.
+## süresi dolunca yeniden kırılmaz ve hata vermez. Onboarding tabanındaki hesapta söz bozulunca eşik yükselir ve zemin
+## (eşik + pay) onunla yükselir; çip bu yeni zemini de okur.
 ## FALSİFİKASYON: satisfaction_after_break'te anlık düşüşü (`sat`) sil → çip iddiası FAIL; promise_break'te break_promise
-## çağrısını sil → söz durumu FAIL; `broken.accounts.is_empty()` dönüşünü sil → süre dolumu iddiası FAIL.
+## çağrısını sil → söz durumu FAIL; `broken.accounts.is_empty()` dönüşünü sil → süre dolumu iddiası FAIL;
+## satisfaction_after_break'in `_target_on`a verdiği yeni eşiği sil → onboarding çip iddiası FAIL.
 static func _case_promise_break_chain() -> String:
 	var w: Dictionary = _promise_world(1.1)
 	if w.is_empty():
@@ -23794,6 +23796,30 @@ static func _case_promise_break_chain() -> String:
 	B2BSalesSystem.daily_tick()
 	if account.satisfaction != int(plan.accounts[0].to):
 		return "the chip said satisfaction %d a tick on, the player reads %d" % [plan.accounts[0].to, account.satisfaction]
+	w = _promise_world(1.1)
+	if w.is_empty():
+		return "fixture: the onboarding promise world's sprint did not start"
+	account = w.account
+	account.scale = 5
+	account.tolerance = B2BConstants.seed_tolerance(account.scale, account.industry)
+	account.acquired_on_day = GameState.day
+	_sim_day()
+	if EventGate.active_id() != PROMISE_DUE:
+		return "fixture: no promise card came for the account inside its onboarding floor"
+	var bar: int = account.tolerance
+	var fit: int = ProductQuality.account_fit(account).value
+	if fit >= bar + B2BConstants.ONBOARDING_GRACE_MARGIN or GameState.day + 1 >= B2BSalesSystem.onboarding_floor_until(account):
+		return "fixture: the fit %d is not under the floor %d, or the floor lifts (day %d of %d) before the tick the chip reads" % [
+			fit, bar + B2BConstants.ONBOARDING_GRACE_MARGIN, GameState.day, B2BSalesSystem.onboarding_floor_until(account)]
+	plan = EvEffects.break_plan()
+	EventGate.resolve(PROMISE_DUE, "slip")
+	if account.tolerance <= bar:
+		return "fixture: the break left the bar at %d (was %d)" % [account.tolerance, bar]
+	GameState.advance_day()
+	B2BSalesSystem.daily_tick()
+	if account.satisfaction != int(plan.accounts[0].to):
+		return "inside the onboarding floor the chip said satisfaction %d a tick on, the player reads %d (bar %d, was %d)" % [
+			plan.accounts[0].to, account.satisfaction, account.tolerance, bar]
 	return ""
 
 

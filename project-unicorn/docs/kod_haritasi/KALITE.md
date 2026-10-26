@@ -1,11 +1,11 @@
 # Kod haritası · KALITE
 
-Üretildi: git 41650e9 · 2026-10-26 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git 25a1416 · 2026-10-26 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 246 .gd (tools/ ve sandbox/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
 
-- scripts/debug/endgame_smoke.gd · 27931 satır · 646 func
+- scripts/debug/endgame_smoke.gd · 27957 satır · 646 func
 - scripts/main/main.gd · 5454 satır · 196 func
 - scripts/debug/run_probe.gd · 2389 satır · 92 func
 - scripts/systems/sprint_system.gd · 1936 satır · 162 func
@@ -60,7 +60,7 @@ Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları
 - scripts/debug/endgame_smoke.gd:11599 · _case_effective_skill_formula · 132 satır
 - scripts/debug/endgame_smoke.gd:17086 · _case_rnd_note_author_and_lines · 129 satır
 - scripts/debug/endgame_smoke.gd:20860 · _case_sprint_founder_share_frozen · 128 satır
-- scripts/debug/endgame_smoke.gd:25653 · _case_save_v15_tickets_become_open_bugs · 128 satır
+- scripts/debug/endgame_smoke.gd:25679 · _case_save_v15_tickets_become_open_bugs · 128 satır
 - scripts/debug/endgame_smoke.gd:994 · _case_gate_decline_reminder · 125 satır
 - scripts/debug/endgame_smoke.gd:18798 · _thesis_presenter_body · 124 satır
 - scripts/debug/endgame_smoke.gd:19031 · _case_sales_meeting_time_skip_founder_share · 124 satır

@@ -86,12 +86,20 @@ static func satisfaction_next_tick(c: Customer, trust: float) -> int:
 
 
 ## The satisfaction the player reads one tick after a promise to this account breaks (on_promise_resolved "broken"):
-## the drop lands at once, the trust ledger takes its hit, then the drift walks back toward the target.
+## the drop lands at once, the trust ledger takes its hit and the bar rises, then the drift walks back toward the
+## target (the onboarding floor stands on the raised bar).
 static func satisfaction_after_break(c: Customer) -> int:
 	var day: int = GameState.day + 1
 	var sat: int = clampi(c.satisfaction + B2BConstants.PROMISE_BROKEN_SAT, 0, 100)
 	var trust: float = B2BConstants.clamp_trust(c.trust_offset + B2BConstants.PROMISE_BROKEN_OFFSET)
-	return sat + _drift(c, _target_on(c, day, _forgiven_trust(trust)), day, sat)
+	return sat + _drift(c, _target_on(c, day, _forgiven_trust(trust), _tolerance_after_break(c)), day, sat)
+
+
+## The bar a broken word leaves the account at: pickier, but never more than PROMISE_TOLERANCE_CEILING over where
+## it was seeded.
+static func _tolerance_after_break(c: Customer) -> int:
+	return mini(c.tolerance + B2BConstants.PROMISE_BROKEN_TOLERANCE,
+		B2BConstants.seed_tolerance(c.scale, c.industry) + B2BConstants.PROMISE_TOLERANCE_CEILING)
 
 
 ## How far satisfaction, standing at `sat`, moves toward `target` on tick `day`.
@@ -147,8 +155,9 @@ static func satisfaction_target(c: Customer) -> int:
 	return _target_on(c, GameState.day, c.trust_offset)
 
 
-## An account's satisfaction target on tick `day` with the trust ledger at `trust`.
-static func _target_on(c: Customer, day: int, trust: float) -> int:
+## An account's satisfaction target on tick `day` with the trust ledger at `trust`, and its bar at `bar`
+## (the account's own when `bar` is negative).
+static func _target_on(c: Customer, day: int, trust: float, bar: int = -1) -> int:
 	# Product-health channel — how well the product fits THIS account (ProductQuality.account_fit), less what the
 	# open bugs on the lines it uses cost it. NO price link (B2B is not price-driven).
 	# Kept promises lift the target and broken ones depress it through the per-customer trust
@@ -159,7 +168,7 @@ static func _target_on(c: Customer, day: int, trust: float) -> int:
 	# The onboarding floor holds a new account just over its bar, after the bug penalty. The trust
 	# ledger lands on top of it, so a word broken inside the window still bites.
 	if day < onboarding_floor_until(c):
-		health = maxf(health, c.tolerance + B2BConstants.ONBOARDING_GRACE_MARGIN)
+		health = maxf(health, (c.tolerance if bar < 0 else bar) + B2BConstants.ONBOARDING_GRACE_MARGIN)
 	return clampi(int(round(health + trust)), 0, 100)
 
 
@@ -536,8 +545,7 @@ static func on_promise_resolved(p: Promise) -> void:
 			# brand takes a hit, and a future "Söz ver" is less credible with them.
 			if c != null:
 				CustomerRegistry.set_satisfaction(c.id, c.satisfaction + B2BConstants.PROMISE_BROKEN_SAT)
-				CustomerRegistry.set_tolerance(c.id, mini(c.tolerance + B2BConstants.PROMISE_BROKEN_TOLERANCE,
-					B2BConstants.seed_tolerance(c.scale, c.industry) + B2BConstants.PROMISE_TOLERANCE_CEILING))
+				CustomerRegistry.set_tolerance(c.id, _tolerance_after_break(c))
 				# THE DURABLE HALF. Without this the -20 above is walked back by SAT_DRIFT_STEP
 				# within one tick and a broken word leaves no trace at all.
 				CustomerRegistry.set_trust_offset(c.id, c.trust_offset + B2BConstants.PROMISE_BROKEN_OFFSET)
