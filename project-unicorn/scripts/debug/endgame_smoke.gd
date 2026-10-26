@@ -524,6 +524,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sprint_fix_preview_matches_close":      fail = _case_sprint_fix_preview_matches_close()
 		"sprint_fix_card_refreshes_until_it_runs": fail = _case_sprint_fix_card_refreshes_until_it_runs()
 		"sprint_fix_first_puts_the_card_on_top": fail = _case_sprint_fix_first_puts_the_card_on_top()
+		"sprint_fix_first_leads_the_carried":    fail = _case_sprint_fix_first_leads_the_carried()
 		"sprint_fix_card_double":                fail = _case_sprint_fix_card_double()
 		"line_impact_names_the_accounts":        fail = _case_line_impact_names_the_accounts()
 		"product_bug_rows_read_the_store":       fail = _case_product_bug_rows_read_the_store()
@@ -23294,6 +23295,99 @@ static func _case_sprint_fix_first_puts_the_card_on_top() -> String:
 	SprintSystem.plan_next()
 	if order.call()[0] != "fix:" + lines[4]:
 		return "the next sprint opened with %s, want the card first" % [order.call()]
+	return ""
+
+
+## Son gecenin düzeltme kartı: sprintin son haftasında mesai bittikten sonra kart sonraki sprintin başına girer ve kapanış
+## devredenleri onun arkasına dizer; çip, devredenler önde oynanan sonraki sprintten kayan ilk kartı söyler ve o kart
+## orada gerçekten devreder. Kartın sırası kayıttan geçer. Koşan sprintte duran düzeltme kartı sonraki sütuna geçmez:
+## yerinde kalır, kapanışta devreden sayılır ve devredenlerin önüne girer.
+## FALSİFİKASYON: SprintSystem._close'ta devredenleri işaretin önüne diz (`carried_ids + ...`) → sıra iddiası FAIL;
+## put_first'te `first` yazısını sil → sıra iddiası FAIL; first_bumps'tan devredenleri çıkar → çip iddiası FAIL;
+## put_first'te koşan kartın dönüşünü sil → koşan kart yerinde kalmadı iddiası FAIL.
+static func _case_sprint_fix_first_leads_the_carried() -> String:
+	MailClock.instant = false
+	_seed_sprint_live("note_tool")
+	for pair in [["char_lead_dev", HRConstants.ROLE_DEVELOPER], ["char_lead_des", HRConstants.ROLE_DESIGNER],
+			["char_lead_test", HRConstants.ROLE_TESTER]]:
+		_sprint_hire(pair[0], pair[1])
+	var lines: Array = SprintCatalog.capabilities("core")
+	var week_points: float = SprintSystem.capacity() / SprintSystem.sprint_weeks()
+	# A fix five weeks big: it outlasts two sprints, and whatever stands behind it cannot finish in the first.
+	(SprintCatalog.cfg("fix_effort") as Dictionary).per_bug = roundi(5.0 * week_points)
+	var slow: String = "feat:%s_k1" % lines[3]
+	var waiting: String = "feat:%s_k1" % lines[4]
+	var fix_line: String = lines[0]
+	var fix: String = "fix:" + fix_line
+	var ids := func(rows: Array) -> Array:
+		return rows.map(func(c: Dictionary) -> String: return c.id)
+	var to_last_night := func() -> void:
+		while SprintSystem.week() < SprintSystem.sprint_weeks():
+			_sim_day()
+		GameState.set_current_hour(23)
+		TimeManager.sync_to_current_hour()
+	SprintSystem.add(slow)
+	SprintSystem.send_next(waiting)
+	_size(GameState.product.cards[slow], 2.3 * week_points)
+	_size(GameState.product.cards[waiting], 0.5 * week_points)
+	if not SprintSystem.start():
+		return "fixture: the sprint did not start"
+	to_last_night.call()
+	var left: Dictionary = GameState.product.cards[slow]
+	if SprintSystem.week() != SprintSystem.sprint_weeks() or left.state != "running" or SprintSystem.remaining(left) < 0.8 * week_points \
+			or SprintSystem.remaining(left) > 1.8 * week_points:
+		return "fixture: the card due to carry reads state %s with %.1f points left of %.1f a week, want running and between 0.8 and 1.8 weeks" % [
+			left.state, SprintSystem.remaining(left), week_points]
+	ProductState.add_bugs(fix_line, 1)
+	var bumped: Dictionary = SprintSystem.fix_first_bumps(fix_line)
+	var slow_name: String = SprintCatalog.card_name(left)
+	if bumped.is_empty() or SprintCatalog.card_name(bumped) != slow_name:
+		return "the chip names '%s' as the card that slips, want the carried '%s' that the fix stands before" % [
+			SprintCatalog.card_name(bumped) if not bumped.is_empty() else "", slow_name]
+	SprintSystem.fix_first(fix_line)
+	var column: Array = GameState.product.next.cards
+	if column.is_empty() or column[0] != fix or fix in GameState.product.sprint.cards:
+		return "at 23:00 of the last week the fix went to sprint %s / next %s, want the front of the next one" % [
+			str(GameState.product.sprint.cards), str(column)]
+	# The night's order survives a save.
+	var slot: String = "smoke_lead_%d" % OS.get_process_id()
+	_drain_all_modals()
+	var saved: bool = SaveManager.save_to_slot(slot) and SaveManager.apply_loaded_state(SaveManager.read_slot(slot))
+	SaveManager.delete_slot(slot)
+	if not saved:
+		return "the night's save or its load failed"
+	_sim_day()
+	var p: Dictionary = GameState.product
+	if SprintSystem.mode() != "release" or p.next.cards != [fix, slow, waiting] or not ids.call(p.release.carried).has(slow):
+		return "the close left the next column %s (mode %s, carried %s), want the fix card, then the carried %s, then the planned %s" % [
+			str(p.next.cards), SprintSystem.mode(), str(p.release.carried), slow, waiting]
+	SprintSystem.plan_next()
+	if not SprintSystem.start():
+		return "fixture: the next sprint did not start"
+	while SprintSystem.mode() == "active":
+		_sim_day()
+	if not ids.call(GameState.product.release.carried).has(slow):
+		return "the chip said '%s' slips out of the sprint behind the fix, the close carried %s" % [
+			slow_name, str(GameState.product.release.carried)]
+	# The fix card runs in this sprint, the next one's last night finds it running: it stays, carries and leads.
+	SprintSystem.plan_next()
+	if not SprintSystem.start():
+		return "fixture: the third sprint did not start"
+	to_last_night.call()
+	var running: Dictionary = GameState.product.cards[fix]
+	if running.state != "running" or fix not in GameState.product.sprint.cards:
+		return "fixture: the fix card reads %s in sprint %s" % [running.state, str(GameState.product.sprint.cards)]
+	ProductState.add_bugs(fix_line, 1)
+	SprintSystem.fix_first(fix_line)
+	if fix not in GameState.product.sprint.cards or fix in GameState.product.next.cards or running.state != "running":
+		return "a running fix card asked first on the last night went to sprint %s / next %s as %s, want it left in the sprint, running" % [
+			str(GameState.product.sprint.cards), str(GameState.product.next.cards), running.state]
+	_sim_day()
+	p = GameState.product
+	var state: String = p.cards.get(fix, {}).get("state", "gone")
+	if p.next.cards.is_empty() or p.next.cards[0] != fix or state != "carried" or not ids.call(p.release.carried).has(fix):
+		return "the close left the next column %s and the fix card %s (carried %s), want the card carried and first" % [
+			str(p.next.cards), state, str(p.release.carried)]
 	return ""
 
 

@@ -221,10 +221,19 @@ static func fix_first(line: String, bugs := 0) -> void:
 
 ## Kart sprintin başına girer: sprintteyse başa taşınır, sonraki sütundaysa ya da aday ise sprinte alınır, ikinci kart
 ## açılmaz. Sürüm notundayken ve koşan sprintin son gecesi mesai bittikten sonra (ekip yeni sprintle başlar) sonraki
-## sprintin başına girer. Koşan sprintte sprinte giren kart hemen koşmaya başlar ve haftanın ataması iki durumda da
-## baştan yapılır: sprintten çıkan kartın kişileri öbür kartlara geçer, kapanış planın gösterdiğini yapar.
+## sprintin başına girer. Son gecede kapanış devredenleri sonraki sütunun başına dizer; kartın onların önünde kalması
+## için kimliği `next.first`e yazılır (son çağrılan önde, `_next_column`) ve koşan sprintte duran kart sonraki sütuna
+## geçmez, yalnız bu sırayı alır. Koşan sprintte sprinte giren kart hemen koşmaya başlar ve haftanın ataması iki durumda
+## da baştan yapılır: sprintten çıkan kartın kişileri öbür kartlara geçer, kapanış planın gösterdiğini yapar.
 static func put_first(card: Dictionary) -> void:
 	var next: bool = _fix_goes_next()
+	if next and mode() == "active":
+		var asked: Array = _p().next.get_or_add("first", [])
+		asked.erase(card.id)
+		asked.push_front(card.id)
+		if card.state == "running":
+			_changed()
+			return
 	_place(card, not next)
 	var column: Array = _p().next.cards if next else _p().sprint.cards
 	column.erase(card.id)
@@ -249,11 +258,19 @@ static func fix_first_bumps(line: String, bugs := 0) -> Dictionary:
 
 
 ## `card` sütunun başına girse hangi kart sprintten kayardı: bugünkü sırada biten, kart başa geçince bitmeyen ilk kart
-## (`card_ref`), yoksa {}. Kartlar karar beklemiyormuş gibi oynanır: kâğıdın kartı da başa geçince çalışır.
+## (`card_ref`), yoksa {}. Kartlar karar beklemiyormuş gibi oynanır: kâğıdın kartı da başa geçince çalışır. Son gecede
+## sonraki sprint kapanışın devrettikleriyle, son haftanın işi dökülmüş hâlleriyle başlar (`_closing_carry`); bu hafta
+## bitecek kart sonraki sprinte geçmez, kimseyi kaydırmaz.
 static func first_bumps(card: Dictionary) -> Dictionary:
 	var next: bool = _fix_goes_next()
-	var column: Array = _p().next.cards if next else _p().sprint.cards
-	var undecided := func(c: Dictionary) -> Dictionary: return c.merged({"decision": false}, true)
+	var carried: Array = _closing_carry() if next else []
+	var carried_ids: Array = carried.map(func(c: Dictionary) -> String: return c.id)
+	if next and card.id in _p().sprint.cards and card.id not in carried_ids:
+		return {}
+	var column: Array = _next_column(carried_ids) if next else _p().sprint.cards
+	var undecided := func(c: Dictionary) -> Dictionary:
+		var at: int = carried_ids.find(c.id)
+		return (carried[at] if at >= 0 else c).merged({"decision": false}, true)
 	var rest: Array = column.filter(func(id: String) -> bool: return id != card.id).map(
 		func(id: String) -> Dictionary: return undecided.call(_p().cards[id]))
 	var today: Array = column.map(func(id: String) -> Dictionary: return undecided.call(_p().cards[id])) \
@@ -278,6 +295,26 @@ static func card_ref(c: Dictionary) -> Dictionary:
 static func _fix_goes_next() -> bool:
 	return mode() == "release" or (mode() == "active" and week() >= sprint_weeks() and not MailClock.in_window()
 		and MailClock.now() % MailClock.DAY_MINUTES >= int(WorkHoursSystem.company_window()["end"]) * 60)
+
+
+## Koşan sprint bu gece kapanırsa sonraki sprinte devredecek kartlar: sprintteki sırayla, haftanın işi dökülmüş
+## kopyalar (`_close`un `carried`ı); koşan sprint yoksa [].
+static func _closing_carry() -> Array:
+	if mode() != "active":
+		return []
+	var cards: Array = _played_copies()
+	_finish_sprint(cards, team())
+	return cards.filter(func(c: Dictionary) -> bool: return phase(c) < PHASE_DONE and not SprintBugs.sent(c))
+
+
+## Sonraki sütunun kapanıştaki sırası, `carried` kapanışın devrettiği kimlikler olsun: son gecede başa alınanlar
+## (son çağrılan önde; devreden ya da sütunda olanlar), sonra devredenler, sonra planlı kartlar.
+static func _next_column(carried: Array) -> Array:
+	var next_cards: Array = _p().next.cards
+	var asked: Array = (_p().next.get("first", []) as Array).filter(func(id: String) -> bool:
+		return id in carried or id in next_cards)
+	var lead: Array = asked + carried.filter(func(id: String) -> bool: return id not in asked)
+	return lead + next_cards.filter(func(id: String) -> bool: return id not in lead)
 
 
 ## "Bu sprinti boş geçir", oyuncunun onayıyla: planın kartları sonraki sprinte geçer, sprint kartsız başlar.
@@ -1589,7 +1626,8 @@ static func _auto_start() -> void:
 ## ile çözülür ve ertesi okumada kart serbest kalır; beklerken ilerlemediği için devretmiştir.
 ## Düzeltme kartı hattının bütün açık hatasını düşer; testten kaçan hata kartının hattına düşer, ürün canlı olana dek
 ## bekler. Söz olayında gönderilen kart (`send`) testi bittiyse düzeltmesi bitmeden çıkar, düzeltilmemiş hata da hattına
-## düşer. Düzeltmesi bitmemiş öbür kart sessizce bırakılır: kalan işiyle sonraki sprinte devreder. Sürüm kaydı aşama
+## düşer. Düzeltmesi bitmemiş öbür kart sessizce bırakılır: kalan işiyle sonraki sprinte devreder; devredenler sonraki
+## sütunun başına dizilir, son gecede başa alınan kart onların da önündedir (`_next_column`). Sürüm kaydı aşama
 ## başına kapanışta kalan ihtiyacı ve o aşamanın art arda taşan kapanış sayısını taşır (`overflow`), kaçan hatanın
 ## hatlarını `escaped`ta, sprintin koştuğu haftayı `velocity.weeks`te (erken kapanan sprint bir haftadır).
 static func _close() -> void:
@@ -1693,7 +1731,8 @@ static func _close() -> void:
 		"alerts_cleared": cleared, "escaped": escaped, "overflow": overflow}
 	release.press = SprintBridges.press_line(release)
 	var carried_ids: Array = carried.map(func(c: Dictionary) -> String: return c.id)
-	p.next.cards = carried_ids + p.next.cards.filter(func(id: String) -> bool: return id not in carried_ids)
+	p.next.cards = _next_column(carried_ids)
+	p.next.erase("first")
 	sprint.status = "closed"
 	sprint.cards = []
 	p.release = release

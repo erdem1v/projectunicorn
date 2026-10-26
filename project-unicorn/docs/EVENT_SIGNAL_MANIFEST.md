@@ -2,7 +2,7 @@
 
 **GENERATED — do not hand-edit.** Regenerate with `python tools/gen_signal_manifest.py`.
 Source: `scripts/autoload/event_bus.gd`, every `.gd` under `scripts/`, `EvSignals.BINDINGS` and the card triggers.
-Last generated 2026-10-21.
+Last generated 2026-10-26.
 
 Authority: [`GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](<../GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md>) §15. The read side of
 the same idea is the seam list in [`content/events_draft/_vocabulary.md`](content/events_draft/_vocabulary.md) §b.
@@ -242,7 +242,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
 | `mentor_advisory_changed` | `key: String, args: Dictionary` | effects · sprint_bridges · vc_pitch_system | 3 | 3 | game_state · hunt_tab · office_notice_stack |
-| `headline_added` | `source: String, line: Dictionary` | effects · ticker · hr_morale_system · hr_search_system · hr_system · sales_ledger · sprint_bridges | 8 | 2 | time_manager · news_ticker |
+| `headline_added` | `source: String, line: Dictionary` | effects · ticker · hr_morale_system · hr_search_system · hr_system · sales_ledger · sprint_bridges | 9 | 2 | time_manager · news_ticker |
 | `ticker_live_line` | `source: String, line: Dictionary` | news_feed_system · sprint_bridges · summary_system · office_travel | 5 | 1 | news_ticker |
 
 ### Endgame signals
