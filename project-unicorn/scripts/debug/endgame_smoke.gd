@@ -2810,19 +2810,6 @@ static func _case_meeting_during_kepenk() -> String:
 
 # --- Stage C: state-seam cases (WRITE-THROUGH LAW) ---
 
-static func _one_choice_event(id: String, modifiers: Array) -> GameEvent:
-	# Minimal synthetic event carrier for modifier-routing cases (ship-moment pattern).
-	var ev := GameEvent.new()
-	ev.id = id
-	ev.title = id
-	var ch := EventChoice.new()
-	ch.label = "ok"
-	ch.modifiers = modifiers
-	var choices: Array[EventChoice] = [ch]
-	ev.choices = choices
-	return ev
-
-
 static func _case_seat_upsell_moves_seats() -> String:
 	# The seat-upsell now moves SEATS (and prices MRR off seats) on the named account,
 	# emits customer_seats_changed, and reflects the aggregate into GameState.mrr.
@@ -20094,8 +20081,6 @@ static func _case_sales_candidate_curve_and_traits() -> String:
 # ============================================================================
 
 const SEED_DOOR_ID := "funding.seed_door"
-const SEED_OFFER_ID := "funding.seed_offer"
-const SEED_CLOSED_ID := "funding.seed_closed"
 const BUYOUT_ID := "funding.acquisition_offer"
 
 
