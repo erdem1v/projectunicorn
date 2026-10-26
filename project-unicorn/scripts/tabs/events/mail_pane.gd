@@ -135,7 +135,7 @@ func _message() -> void:
 	var m: Dictionary = _item.msg
 	var a: Dictionary = m.args
 	var kind: String = {"intro": "MAIL_KIND_MESSAGE", "sales_loss": "MAIL_KIND_MESSAGE", "clause": "MAIL_KIND_MESSAGE",
-		"rnd_discovery": "RND_DISCOVERY_TITLE"}.get(m.kind, "MAIL_KIND_REPORT")
+		"exit_notice": "MAIL_KIND_MESSAGE", "rnd_discovery": "RND_DISCOVERY_TITLE"}.get(m.kind, "MAIL_KIND_REPORT")
 	match String(m.kind):
 		"intro":
 			_mail(_kicker(kind), _item.subject, tr("MENTOR_INTRO_BODY"))
@@ -159,6 +159,8 @@ func _message() -> void:
 				_actions("", [[tr("SALES_CLAUSE_BTN_SWITCH").format({"old": Fmt.money_exact(InfraSystem.monthly_bill()),
 					"new": Fmt.money_exact(InfraSystem.monthly_bill(InfraSystem.PROVIDER_ENTERPRISE))}),
 					_move_to_enterprise, true]], EventGate.active_id() != "")
+		"exit_notice":
+			_mail(_kicker(kind), _item.subject, INBOX.exit_body(a))
 		"rnd_note", "rnd_discovery":
 			var note: bool = m.kind == "rnd_note"
 			if note:

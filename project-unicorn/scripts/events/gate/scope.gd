@@ -35,10 +35,10 @@ const ASKED := "asked"
 ## parameter (`market_rival:giant`). `random` is seeded: the same day, card and slot pick the same entity.
 const SELECTORS := {
 	TYPE_EMPLOYEE: ["lowest_morale", "newest_hire", "most_senior", "top_skill:", "account_rep", "support_lead", "sprint_dev",
-		"leave_pair", "leave_partner", "random"],
+		"leave_pair", "leave_partner", "lead_rep", "random"],
 	TYPE_CUSTOMER: ["at_risk", "escalated", "expansion_ready", "open_request", "largest", "smallest", "line_top",
 		"line_warehouse", "line_newest", "line_slow", "request", "random"],
-	TYPE_PROSPECT: ["random"],
+	TYPE_PROSPECT: ["rep_lead", "random"],
 	TYPE_RIVAL: ["sprint_rival", "market_rival:", "random"],
 	TYPE_INVESTOR: ["expiring_sheet", "decision_sheet", "seed_lead", "random"],
 }
@@ -169,6 +169,7 @@ static func _type_for_seam(seam_name: String) -> String:
 		"hr": return TYPE_EMPLOYEE
 		"founder": return TYPE_FOUNDER
 		"musteri": return TYPE_CUSTOMER   # LOC-DATA seam namespace, not copy
+		"aday": return TYPE_PROSPECT      # LOC-DATA seam namespace, not copy
 		"rival": return TYPE_RIVAL
 		"investor": return TYPE_INVESTOR
 	return ""
@@ -233,6 +234,9 @@ static func _select(type_id: String, mode: String, used: Dictionary, bound: Dict
 	match type_id:
 		TYPE_EMPLOYEE: return _select_employee(mode, used, bound)
 		TYPE_CUSTOMER: return _select_customer(mode, used)
+		TYPE_PROSPECT:
+			if mode == "rep_lead":
+				return _first_free(_rep_leads(), used, roll)
 		TYPE_INVESTOR: return _select_investor(mode, used)
 	return _first_free(_ids(type_id), used)
 
@@ -266,6 +270,11 @@ static func _select_employee(mode: String, used: Dictionary, bound: Dictionary) 
 			var first: Character = CharacterRegistry.get_character(String((bound.get("employee", {}) as Dictionary).get("id", "")))
 			var partner_id: String = HRMoraleSystem.leave_partner(first) if first != null else ""
 			return partner_id if pool.any(func(c: Character) -> bool: return c.id == partner_id) else ""
+		# The employee working the already-bound prospect (`rep_lead` picks the lead by the same fact): a lead the founder
+		# works at his table names nobody.
+		"lead_rep":
+			var lead: Prospect = ProspectRegistry.get_prospect(String((bound.get("prospect", {}) as Dictionary).get("id", "")))
+			return lead.worked_by if lead != null and pool.any(func(c: Character) -> bool: return c.id == lead.worked_by) else ""
 		"account_rep":
 			# The rep stewarding the already-bound customer. No rep leaves the slot UNFILLED
 			# rather than handing "your rep says" to someone who is not one.
@@ -334,6 +343,13 @@ static func _select_investor(mode: String, used: Dictionary) -> String:
 			var lead: String = String(sheet.vc_id) if sheet != null else String(GameState.seed_lead)
 			return "" if lead == "" or used.has(lead) else lead
 	return _first_free(_ids(TYPE_INVESTOR), used)
+
+
+## The leads an employee is working; one the founder works at his table is not among them.
+static func _rep_leads() -> Array:
+	var staff: Array = CharacterRegistry.get_employees().map(func(c: Character) -> String: return c.id)
+	return ProspectRegistry.get_all().filter(func(p: Prospect) -> bool: return staff.has(p.worked_by)).map(
+		func(p: Prospect) -> String: return p.id)
 
 
 static func _select_customer(mode: String, used: Dictionary) -> String:

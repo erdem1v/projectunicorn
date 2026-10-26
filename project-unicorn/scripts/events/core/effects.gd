@@ -44,8 +44,10 @@ const NEUTRAL_VERBS := [
 	# sprint — the card a sprint decision is about, and the sprint's work hours
 	"sprint_card_effort", "sprint_card_progress", "sprint_card_carry", "sprint_card_test", "sprint_hours",
 	"sprint_fix_first", "sprint_card_trim", "sprint_card_outlook", "sprint_card_first",
-	# customers — satisfaction is a relationship, not a payment
-	"satisfaction_delta", "trust_delta", "promise_create", "promise_extend",
+	# customers — satisfaction is a relationship, not a payment; whose desk an account sits on is not either
+	"satisfaction_delta", "trust_delta", "promise_create", "promise_extend", "take_account",
+	# the sales meeting's emphasis
+	"pitch_focus",
 	# world and surfaces
 	"ticker_push", "goto_tab", "unlock_content", "spend_budget", "notify",
 	# investor flow that moves no money by itself
@@ -74,7 +76,7 @@ const ECONOMIC_VERBS := [
 	"audience_delta", "convert_audience", "open_paid_tier",
 	"change_salary", "fire_employee", "employee_leaves", "promote",
 	"add_prospect", "angel_accept", "b2b_expand", "b2b_retain_discount", "b2b_month_discount", "marketing_push", "incident",
-	"promise_break",
+	"promise_break", "account_notice", "prospect_offer", "drop_prospect",
 ]
 
 ## Ends the run. Played decisions only — never a dice branch (I6), never an expiry, never an
@@ -471,6 +473,23 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 			if plan.per_sprint != 0:
 				B2BSalesSystem.add_trust_drain(ids, plan.per_sprint, _until(e))
 			return plan.merged({"verb": verb})
+		# The account leaves in EXIT_NOTICE_WEEKS whatever the server does; `mail` false when the card is the notice.
+		"account_notice":
+			var nid: String = entity_of(e, ctx, EvScope.TYPE_CUSTOMER)
+			var noticed: Customer = CustomerRegistry.get_customer(nid)
+			if noticed == null:
+				return _no_target(verb, nid)
+			if not B2BSalesSystem.give_notice(noticed, String(e.get("reason", "")), bool(e.get("mail", true))):
+				return {"verb": verb, "refused": "the account has given notice already"}
+			return {"verb": verb, "customer": nid, "company": noticed.display_name(), "weeks": B2BConstants.EXIT_NOTICE_WEEKS}
+		# The account's calls come to the founder's desk and stay there (cs_pinned keeps the stewardship rule off it).
+		"take_account":
+			var tid: String = entity_of(e, ctx, EvScope.TYPE_CUSTOMER)
+			var taken: Customer = CustomerRegistry.get_customer(tid)
+			if taken == null:
+				return _no_target(verb, tid)
+			CustomerRegistry.assign_customer(tid, "", true)
+			return {"verb": verb, "customer": tid, "company": taken.display_name()}
 		"promise_create":
 			var pcid: String = entity_of(e, ctx, EvScope.TYPE_CUSTOMER)
 			var pfid: String = String(e.get("feature_id", ""))
@@ -483,22 +502,24 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 				int(e.get("deadline_weeks", B2BConstants.PROMISE_DEADLINE_WEEKS)))
 			return {"verb": verb, "customer": pcid, "feature": pfid}
 
-		# The words an open promise event waits on move one sprint; what that costs the accounts is the option's own
-		# trust_delta, listed first (it reads the open words).
+		# The words an open promise event waits on move one sprint, or with a `scope` the oldest open word of that account;
+		# what that costs the accounts is the option's own trust_delta, listed first (it reads the open words).
 		"promise_extend":
-			var moved: Array = SprintSystem.event_promises()
+			var moved: Array = promises_of(e, ctx)
 			if moved.is_empty():
 				return _no_target(verb, "")
+			if e.has("scope"):
+				moved = moved.slice(0, 1)
 			for word in moved:
 				PromiseRegistry.extend(word.id)
 			return {"verb": verb, "n": moved.size()}
-		# The player gives the words up; the row keeps what the chip showed (break_plan). A paper that expires after
-		# the sprint's own sweep broke them has nothing left to break.
+		# The player gives the words up (with a `scope`, that account's); the row keeps what the chip showed
+		# (break_plan). A paper that expires after the sprint's own sweep broke them has nothing left to break.
 		"promise_break":
-			var broken: Dictionary = break_plan()
+			var broken: Dictionary = break_plan(e, ctx)
 			if broken.accounts.is_empty():
 				return {}
-			for word in SprintSystem.event_promises():
+			for word in promises_of(e, ctx):
 				PromiseRegistry.break_promise(word.id)
 			return broken.merged({"verb": verb})
 
@@ -691,6 +712,31 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 			B2BSalesSystem.decline_expansion(entity_of(e, ctx, EvScope.TYPE_CUSTOMER))
 			return {"verb": verb}
 
+		# --- the sales desk, each through its owning seam ----------------------
+		# Terms on the lead that become the account's if it signs (B2BSalesSystem.apply_offer); the card never signs it.
+		"prospect_offer":
+			var oid: String = entity_of(e, ctx, EvScope.TYPE_PROSPECT)
+			var offered: Prospect = ProspectRegistry.get_prospect(oid)
+			if offered == null:
+				return _no_target(verb, oid)
+			var terms: Dictionary = {"discount_pct": e.get("discount_pct", 0.0), "discount_weeks": e.get("discount_weeks", 0),
+				"promise_step": SprintCatalog.in_product(String(e.get("promise_step", ""))), "promise_weeks": e.get("promise_weeks", 0)}
+			ProspectRegistry.set_offer(oid, terms)
+			return terms.merged({"verb": verb, "prospect": oid, "company": offered.company_name})
+		# The lead walks the way a lead the desk lost walks (SalesFinalizer.lose): out of the pipeline, locked out for a while.
+		"drop_prospect":
+			var did: String = entity_of(e, ctx, EvScope.TYPE_PROSPECT)
+			var dropped: Prospect = ProspectRegistry.get_prospect(did)
+			if dropped == null:
+				return _no_target(verb, did)
+			SalesFinalizer.lose(did, dropped.company_name, SalesConstants.LOSS_EVENT, "", SalesConstants.RETURN_LOCK_WEEKS)
+			return {"verb": verb, "prospect": did, "company": dropped.company_name}
+		# For `weeks` the sales meetings lean on `area` (SalesMeetingSystem.set_pitch_focus).
+		"pitch_focus":
+			var focus_weeks: int = int(e.get("weeks", 1))
+			SalesMeetingSystem.set_pitch_focus(String(e.get("area", "")), GameState.day + TimeModel.ticks(focus_weeks))
+			return {"verb": verb, "area": e.get("area", ""), "weeks": focus_weeks}
+
 		# --- terminal -----------------------------------------------------------
 		"trigger_ending":
 			# _permitted already refused an untelegraphed ending.
@@ -752,7 +798,8 @@ static func trust_plan(e: Dictionary, ctx: Dictionary) -> Dictionary:
 		rows.append({"id": c.id, "name": c.display_name(), "from": c.satisfaction, "to":
 			B2BSalesSystem.satisfaction_next_tick(c, B2BConstants.clamp_trust(c.trust_offset + delta))})
 	return {"amount": delta, "per_sprint": int(e.get("per_sprint", 0)), "accounts": rows,
-		"until": _until(e) if e.has("until") else {}}
+		"until": _until(e) if e.has("until") else {},
+		"group": {"others": "other", "onboarding": "new"}.get(String(e.get("accounts", "slot")), "all")}
 
 
 ## What a `sprint_card_trim` gives up and what the player reads for it (SprintSystem.trim_plan): `share` takes the
@@ -784,24 +831,62 @@ static func trust_accounts(e: Dictionary, ctx: Dictionary) -> Array:
 		"decision_line":
 			accounts = SprintCatalog.line_accounts(_named(DECISION, "line"))
 		"promise":
-			accounts = SprintSystem.event_promises().map(
-				func(word: Promise) -> Customer: return CustomerRegistry.get_customer(word.customer_id))
+			return promise_accounts(SprintSystem.event_promises())
 		"second":
 			var second: Customer = SprintCatalog.second_account(SprintSystem.decision_card())
 			if second != null:
 				accounts.append(second)
+		# The card's own accounts: the slots it names, every B2B account, every one but the card's (those of `line` when it
+		# names one), or the ones still in their onboarding window.
+		"slots":
+			for slot in e.get("slots", []):
+				var named: Customer = CustomerRegistry.get_customer(EvScope.id_in(ctx, String(slot)))
+				if named != null and named.market_type == "b2b":
+					accounts.append(named)
+		"all":
+			accounts = CustomerRegistry.get_by_market("b2b")
+		"others":
+			var bound: Array = ctx.values().filter(func(b: Dictionary) -> bool: return b.type == EvScope.TYPE_CUSTOMER).map(
+				func(b: Dictionary) -> String: return b.id)
+			accounts = CustomerRegistry.get_by_market("b2b").filter(func(c: Customer) -> bool: return not bound.has(c.id))
+			if e.has("line"):
+				var users: Array = SprintCatalog.line_accounts(line_of(e))
+				accounts = accounts.filter(func(c: Customer) -> bool: return users.has(c))
+		"onboarding":
+			accounts = CustomerRegistry.get_by_market("b2b").filter(
+				func(c: Customer) -> bool: return GameState.day < c.onboarding_until)
 	accounts.sort_custom(SprintCatalog.larger_account)
 	return accounts
 
 
 ## What a `promise_break` lands on and what the player reads for it: the accounts whose words are still open, largest
 ## first, each with its satisfaction now and a tick after the break, and the brand the broken words cost.
-static func break_plan() -> Dictionary:
+static func break_plan(e: Dictionary = {}, ctx: Dictionary = {}) -> Dictionary:
+	var words: Array = promises_of(e, ctx)
 	var rows: Array = []
-	for c in trust_accounts({"accounts": "promise"}, {}):
+	for c in promise_accounts(words):
 		rows.append({"id": c.id, "name": c.display_name(), "from": c.satisfaction,
 			"to": B2BSalesSystem.satisfaction_after_break(c)})
-	return {"accounts": rows, "brand": SprintSystem.event_promises().size() * B2BConstants.PROMISE_BROKEN_BRAND}
+	return {"accounts": rows, "brand": words.size() * B2BConstants.PROMISE_BROKEN_BRAND}
+
+
+## The open words a `promise_extend` or `promise_break` lands on: those of the slot's account when the effect names a `scope`
+## (oldest first), else the open promise event's.
+static func promises_of(e: Dictionary, ctx: Dictionary) -> Array:
+	if e.has("scope"):
+		return PromiseRegistry.get_open_for(entity_of(e, ctx, EvScope.TYPE_CUSTOMER))
+	return SprintSystem.event_promises()
+
+
+## The accounts these words were given to, once each, largest first.
+static func promise_accounts(words: Array) -> Array:
+	var accounts: Array = []
+	for word in words:
+		var account: Customer = CustomerRegistry.get_customer(word.customer_id)
+		if not accounts.has(account):
+			accounts.append(account)
+	accounts.sort_custom(SprintCatalog.larger_account)
+	return accounts
 
 
 ## The people a `morale_crew` lands on, by id: employees only, the founder's morale is not managed.

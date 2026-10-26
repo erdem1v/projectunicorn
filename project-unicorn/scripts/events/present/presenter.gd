@@ -158,6 +158,9 @@ static func _name_of(entity_type: String, entity_id: String) -> Variant:
 			if cu == null:
 				return null
 			return cu.company_name if cu.name_key == "" else {"key": cu.name_key, "arg": cu.name_arg}
+		EvScope.TYPE_PROSPECT:
+			var lead: Prospect = ProspectRegistry.get_prospect(entity_id)
+			return lead.company_name if lead != null else null
 		EvScope.TYPE_RIVAL:
 			var r: Rival = RivalRegistry.get_rival(entity_id)
 			return r.product_name if r != null else null

@@ -94,6 +94,17 @@ extends Resource
 @export var clause_due_day: int = -1
 @export var notice_end_day: int = -1
 
+# --- Maddeden bağımsız fesih bildirimi (B2BSalesSystem.give_notice): sunucu maddesinin alanlarını paylaşmaz, çünkü
+# Kurumsal'a geçiş maddeli hesabın bildirimini geri aldırır ve bu bildirimi aldırmaz. -1 = bildirim yok; yoksa sözleşmenin
+# biteceği tik ve bildirimin sebebi.
+@export var exit_notice_day: int = -1
+@export var exit_notice_reason: String = ""
+
+# --- Süreli MRR indirimi (B2BSalesSystem.apply_timed_discount): MRR'dan çekilen TUTAR ve onu geri veren tik. Yüzde değil tutar
+# saklanır, çünkü MRR saklı alandır ve genişleme ona yazar; bitişte yüzde yanlış tutar verirdi.
+@export var timed_discount_amount: int = 0
+@export var timed_discount_until: int = -1
+
 
 # Map the satisfaction int onto the `health` band string. CustomerRegistry.set_satisfaction
 # re-derives it on every change.

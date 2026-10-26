@@ -213,6 +213,10 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"auto_capacity_grows_only":       fail = _case_auto_capacity_grows_only()
 		"infra_local_provider_tradeoff": fail = _case_infra_local_provider_tradeoff()
 		"enterprise_clause_timeline":    fail = _case_enterprise_clause_timeline()
+		"b2b_exit_notice":               fail = _case_b2b_exit_notice()
+		"b2b_timed_discount":            fail = _case_b2b_timed_discount()
+		"sales_offer_signing":           fail = _case_sales_offer_signing()
+		"sales_promise_late_request_card": fail = _case_sales_promise_late_request_card()
 		"product_read_catalogue":        fail = _case_product_read_catalogue()
 		"floor_ladder_areas":            fail = _case_floor_ladder_areas()
 		"hr_frank_guard":           fail = _case_hr_frank_guard()
@@ -15292,6 +15296,343 @@ static func _case_enterprise_clause_timeline() -> String:
 	var later: Customer = SalesSystem.add_b2b_customer(_add_prospect("clause_c", 3, ""), 60, 100, 70)
 	if later.clause_due_day != -1 or mails.call("sign") != 2:
 		return "a 3★ account signed on Enterprise with a clause (due %d)" % later.clause_due_day
+	return ""
+
+
+## Maddeden bağımsız fesih bildirimi (olay fiili `account_notice`): hesap bildirim gününden EXIT_NOTICE_WEEKS sonra gider, MRR toplamı
+## onunla düşer, marka cezası yazılmaz ve satış günlüğüne `notice_ended` satırı sebebiyle düşer. Sunucu maddesinin alanlarını
+## paylaşmaz: Kurumsal'a geçiş (`meet_clauses`) bildirimi geri aldırmaz ve maddesiz hesap da gider. Postalı bildirim bir
+## `exit_notice` postası yazar (konu ve gövde iki dilde çözülür), `mail: false` yazmaz; ikinci bildirim reddedilir; kayıttan geçer.
+## FALSİFİKASYON: `_tick_customer`daki `notice_ended` dalını sil → "did not leave" iddiası FAIL; `meet_clauses`a `exit_notice_day`ı
+## da silen satır ekle → "taken back" iddiası FAIL; `give_notice`ın ilk denetimini sil → ikinci bildirim iddiası FAIL.
+static func _case_b2b_exit_notice() -> String:
+	_seed_b2b(2000)
+	InfraSystem.set_provider(InfraSystem.PROVIDER_CLOUD)
+	InfraSystem.set_capacity(20)
+	RnDSystem.from_dict({"states": {"security_cert": RnDSystem.STATE_DONE}})
+	var kept: Customer = CustomerRegistry.get_customer("co_lead_smoke")
+	var served: Customer = SalesSystem.add_b2b_customer(_add_prospect("exit_a", 3, ""), 60, 100, 70)   # 3★: server clause
+	var plain: Customer = SalesSystem.add_b2b_customer(_add_prospect("exit_b", 1, ""), 8, 100, 70)     # 1★: no clause
+	if served.clause_due_day < 0 or plain.clause_due_day != -1:
+		return "fixture: the 3★ account has no server clause, or the 1★ one has"
+	var mails := func() -> Array:
+		return (GameState.messages + GameState.mail_outbox).filter(func(m: Dictionary) -> bool: return m.kind == "exit_notice")
+	var brand: int = GameState.brand
+	var lost: int = GameState.run_customers_lost
+
+	var notice: Dictionary = {"verb": "account_notice", "scope": "customer", "reason": "rude_call"}
+	var ctx: Dictionary = _ctx_customer(served)
+	var card_chip: Array = EvChips.describe(notice, ctx, {}, false)
+	var row: Dictionary = EvEffects.run_played([notice], ctx)[0]
+	var row_chip: Array = EvChips.describe(row, ctx, {}, true)
+	var end: int = GameState.day + TimeModel.ticks(B2BConstants.EXIT_NOTICE_WEEKS)
+	if row.has("refused") or served.exit_notice_day != end or served.exit_notice_reason != "rude_call":
+		return "the notice landed as %s (day %d, reason '%s'), want day %d" % [str(row), served.exit_notice_day, served.exit_notice_reason, end]
+	if card_chip.size() != 1 or card_chip[0].polarity != "danger" or EvChips.text(card_chip[0]) != EvChips.text(row_chip[0]) \
+			or not EvChips.text(card_chip[0]).contains(served.company_name) or not EvChips.text(card_chip[0]).contains("4"):
+		return "the notice reads %s on the card and %s on the row" % [str(card_chip), str(row_chip)]
+	var sent: Array = mails.call()
+	if sent.size() != 1 or sent[0].args.reason != "rude_call" or sent[0].args.id != served.id or int(sent[0].args.end) != end:
+		return "the notice sent %s, want one mail naming the reason and the day" % [str(sent)]
+	var loc0: String = TranslationServer.get_locale()
+	for locale in ["tr", "en"]:
+		TranslationServer.set_locale(locale)
+		for key in B2BConstants.EXIT_NOTICE_MAILS["rude_call"]:
+			if TranslationServer.translate(key) == key:
+				TranslationServer.set_locale(loc0)
+				return "%s does not resolve in %s" % [key, locale]
+	TranslationServer.set_locale(loc0)
+	if not EvEffects.run_played([notice], ctx)[0].has("refused") or served.exit_notice_day != end or mails.call().size() != 1:
+		return "a second notice was not refused, or moved the first, or mailed again"
+	# A notice the card itself is carries no mail.
+	var silent: Dictionary = {"verb": "account_notice", "scope": "customer", "reason": "data_claim", "mail": false}
+	if EvEffects.run_played([silent], _ctx_customer(plain))[0].has("refused") or plain.exit_notice_reason != "data_claim" \
+			or mails.call().size() != 1:
+		return "a `mail: false` notice failed to land or sent a mail"
+	if not EvSeams.read_for("musteri.has_notice", served.id) or EvSeams.read_for("musteri.has_notice", kept.id):
+		return "musteri.has_notice does not tell the noticed account from the one that is not"
+
+	# The notice outlives a save.
+	if not SaveManager.save_to_slot(SAVE_SLOT_A):
+		return "save_to_slot refused"
+	var loaded: bool = SaveManager.apply_loaded_state(SaveManager.read_slot(SAVE_SLOT_A))
+	_cleanup_save_slots()
+	if not loaded:
+		return "the slot did not load back"
+	kept = CustomerRegistry.get_customer("co_lead_smoke")
+	served = CustomerRegistry.get_customer("co_exit_a")
+	plain = CustomerRegistry.get_customer("co_exit_b")
+	if served.exit_notice_day != end or served.exit_notice_reason != "rude_call" or plain.exit_notice_day != end:
+		return "the notice did not survive a save (%d '%s', %d)" % [served.exit_notice_day, served.exit_notice_reason, plain.exit_notice_day]
+
+	# Enterprise meets the server clause and leaves the notice alone.
+	if not InfraSystem.set_provider(InfraSystem.PROVIDER_ENTERPRISE):
+		return "the move up to Enterprise was refused"
+	if served.clause_due_day != -1 or served.exit_notice_day != end or not EvSeams.read_for("musteri.has_notice", served.id):
+		return "Enterprise left the clause open (due %d) or took the notice back (day %d)" % [served.clause_due_day, served.exit_notice_day]
+
+	var step := func() -> void:
+		for c: Customer in [served, plain]:
+			if CustomerRegistry.get_customer(c.id) != null:
+				CustomerRegistry.set_satisfaction(c.id, 90)
+		GameState.advance_day()
+		B2BSalesSystem.daily_tick()
+	while GameState.day < end - 1:
+		step.call()
+	if CustomerRegistry.get_customer(served.id) == null or CustomerRegistry.get_customer(plain.id) == null:
+		return "an account left before its notice ran out (day %d, notice %d)" % [GameState.day, end]
+	step.call()
+	if CustomerRegistry.get_customer(served.id) != null or CustomerRegistry.get_customer(plain.id) != null:
+		return "did not leave: the accounts are still on the book the tick their notice ends (day %d)" % GameState.day
+	if GameState.run_customers_lost != lost + 2 or GameState.brand != brand:
+		return "two accounts left with lost %d (was %d) and brand %d (was %d); want two lost and no brand cost" % [
+			GameState.run_customers_lost, lost, GameState.brand, brand]
+	if GameState.mrr != kept.mrr or CustomerRegistry.get_total_mrr() != kept.mrr:
+		return "the MRR reads %d with %d on the book, want the %d that is left" % [GameState.mrr, CustomerRegistry.get_total_mrr(), kept.mrr]
+	var logged: Array = GameState.sales_log.filter(func(r: Dictionary) -> bool: return r.kind == "notice_ended")
+	if logged.map(func(r: Dictionary) -> String: return "%s|%s" % [r.company, r.actor]) != [
+			"Lead exit_a|rude_call", "Lead exit_b|data_claim"]:
+		return "the sales log reads %s, want both notices with their reasons" % [str(logged)]
+	return ""
+
+
+## Süreli MRR indirimi: imzalı hesabın MRR'ı yüzdesi kadar düşer, çekilen TUTAR hesapta saklanır ve bitiş tikinde geri verilir;
+## aradaki genişleme ve "indirim ver" kararı MRR'a yazar ama çekilen tutarı değiştirmez, yani bitişte geri verilen tutar yüzdeden
+## değil kayıttandır. Toplam MRR köprüden geçer, bitiş satış günlüğüne `discount_ended` yazar ve her şey kayıttan geçer.
+## FALSİFİKASYON: `set_timed_discount`ta eski kesintiyi MRR'a geri ekleyen terimi sil → bitiş iddiası FAIL; `_tick_customer`daki
+## bitiş dalını sil → "never given back" iddiası FAIL.
+static func _case_b2b_timed_discount() -> String:
+	_seed_b2b(2000)
+	var c: Customer = CustomerRegistry.get_customer("co_lead_smoke")
+	_past_onboarding(c)
+	var start: int = GameState.day
+	var until: int = start + TimeModel.ticks(52)
+	var cut: int = B2BSalesSystem.apply_timed_discount(c, 0.15, 52)
+	if cut != 300 or c.mrr != 1700 or c.timed_discount_amount != 300 or c.timed_discount_until != until or GameState.mrr != 1700:
+		return "a 15%% discount on 2000 took %d, left %d (stored %d until %d), total %d; want 300, 1700, 300 until %d" % [
+			cut, c.mrr, c.timed_discount_amount, c.timed_discount_until, GameState.mrr, until]
+	# Seats added and a retention discount given meanwhile move the MRR; the stored cut stays what it was.
+	B2BSalesSystem.expand(c.id, 2, 120)
+	var grown: int = c.mrr
+	if grown != 1700 + 2 * c.seat_price or c.timed_discount_amount != 300:
+		return "an expansion under a discount left MRR %d and cut %d" % [grown, c.timed_discount_amount]
+	B2BSalesSystem.apply_discount(c.id, -100)
+	if c.mrr != grown - 100 or c.timed_discount_amount != 300:
+		return "a retention discount under a timed one left MRR %d and cut %d" % [c.mrr, c.timed_discount_amount]
+	var before_end: int = c.mrr
+
+	# The cut and its end survive a save.
+	if not SaveManager.save_to_slot(SAVE_SLOT_A):
+		return "save_to_slot refused"
+	var loaded: bool = SaveManager.apply_loaded_state(SaveManager.read_slot(SAVE_SLOT_A))
+	_cleanup_save_slots()
+	if not loaded:
+		return "the slot did not load back"
+	c = CustomerRegistry.get_customer("co_lead_smoke")
+	if c.timed_discount_amount != 300 or c.timed_discount_until != until or c.mrr != before_end:
+		return "the discount did not survive a save (%d until %d, MRR %d)" % [c.timed_discount_amount, c.timed_discount_until, c.mrr]
+
+	var step := func() -> void:
+		CustomerRegistry.set_satisfaction(c.id, 90)
+		GameState.advance_day()
+		B2BSalesSystem.daily_tick()
+	while GameState.day < until - 1:
+		step.call()
+	if c.timed_discount_amount != 300 or c.mrr != before_end:
+		return "the discount ended early (day %d of %d: cut %d, MRR %d)" % [GameState.day, until, c.timed_discount_amount, c.mrr]
+	step.call()
+	if c.timed_discount_amount != 0 or c.timed_discount_until != -1 or c.mrr != before_end + 300 or GameState.mrr != c.mrr:
+		return "never given back: the tick it ends reads cut %d until %d, MRR %d, total %d; want 0, -1, %d" % [
+			c.timed_discount_amount, c.timed_discount_until, c.mrr, GameState.mrr, before_end + 300]
+	var logged: Array = GameState.sales_log.filter(func(r: Dictionary) -> bool: return r.kind == "discount_ended")
+	if logged.size() != 1 or logged[0].company != c.company_name or int(logged[0].mrr) != c.mrr:
+		return "the end of the discount is in the sales log as %s, want once with the MRR it gave back to" % [str(logged)]
+	return ""
+
+
+## Aday teklifi: bir olay adaya imza anında hesaba geçecek koşulu yazar (süreli indirim, bir kademede söz) ve imzalatmaz. Aday
+## kurucunun masasından (`SalesFinalizer.sign_deal`) ya da temsilcinin kapanışından (`SalesRepSystem._close`) imzalarsa hesap
+## indirimli ve sözlü açılır (söz tek açık söz kilidini almaz, kapanış zarına teklif girmez); teklifsiz aday tam fiyatla ve sözsüz
+## açılır; kademe imzadan önce yayına çıktıysa hesap indirimli ama sözsüz açılır; aday `drop_prospect` ile düşerse satışın kendi
+## kayıp yolundan gider (sebep `event`, dönüş kilidi) ve teklifi onunla gider. Kart ve geçmiş satırı aynı çipi okur, teklif kayıttan
+## geçer. Temsilcinin adayı `rep_lead` / `lead_rep` seçicileriyle bağlanır, `aday.sector` seam'i sektörü okur ve `{prospect}` şirket
+## adını basar.
+## FALSİFİKASYON: `add_b2b_customer`daki `apply_offer` satırını sil → iki imza yolunun indirim iddiası FAIL; `apply_offer`daki söz
+## dalını sil → söz iddiası FAIL; `apply_offer`ın `is_feature_live` şartını sil → canlı kademe iddiası FAIL; `drop_prospect`un
+## `lose` çağrısını `ProspectRegistry.remove`a çevir → kayıp sebebi iddiası FAIL; `_rep_leads`teki işçi süzgecini sil → kurucunun
+## adayı da bağlanır ve "did not bind" iddiası FAIL.
+static func _case_sales_offer_signing() -> String:
+	_seed_b2b(1000)
+	var rep: Character = _make_sales_rep("char_so_rep", 0, 9)
+	var founder_id: String = CharacterRegistry.get_founder().id
+
+	# The rep's lead, its rep, its sector and its name.
+	var worked: Prospect = _add_prospect("offer_a", 2, "")
+	worked.industry = "health"
+	worked.worked_by = rep.id
+	var other_sector: Prospect = _add_prospect("offer_b", 2, "")
+	other_sector.industry = "finance"
+	other_sector.worked_by = rep.id
+	var idle: Prospect = _add_prospect("offer_c", 2, "")
+	idle.industry = "health"
+	var table: Prospect = _add_prospect("offer_d", 2, "")
+	table.industry = "health"
+	table.worked_by = founder_id
+	var slots: Dictionary = {
+		"prospect": {"type": "prospect", "required": true, "select": "rep_lead",
+			"where": {"entity_seam": "aday.sector", "scope": "prospect", "op": "==", "value": "health"}},
+		"employee": {"type": "employee", "required": true, "select": "lead_rep"}}
+	var bound: Dictionary = EvScope.resolve(slots, {}, "fixture.offer")
+	if not bound.ok or bound.context.prospect.id != worked.id or bound.context.employee.id != rep.id:
+		return "the rep's health lead did not bind with its rep: %s" % [str(bound)]
+	if EvSeams.read_for("aday.sector", worked.id) != "health" or EvSeams.read_for("aday.sector", other_sector.id) != "finance":
+		return "aday.sector does not read the lead's sector"
+	if EvPresenter.name_text(EvPresenter.freeze_names(bound.context).prospect) != worked.company_name:
+		return "the {prospect} slot keeps '%s', want the company's name" % [str(EvPresenter.freeze_names(bound.context).prospect)]
+	worked.worked_by = founder_id
+	if EvScope.resolve(slots, {}, "fixture.offer").ok:
+		return "a lead the founder works at his table bound as a rep's lead"
+	worked.worked_by = rep.id
+
+	# The offer: written on the lead, read the same on the card and on the row, kept by a save.
+	var ctx: Dictionary = {"prospect": {"type": "prospect", "id": worked.id}}
+	var offer: Dictionary = {"verb": "prospect_offer", "scope": "prospect", "discount_pct": 0.15, "discount_weeks": 52,
+		"promise_step": "line_shared_mobile_k3"}
+	var step_id: String = SprintCatalog.in_product("line_shared_mobile_k3")
+	var card_chips: Array = EvChips.describe(offer, ctx, {}, false)
+	var row: Dictionary = EvEffects.run_played([offer], ctx)[0]
+	var row_chips: Array = EvChips.describe(row, ctx, {}, true)
+	var texts := func(parts: Array) -> Array:
+		return parts.map(func(p: Dictionary) -> String: return EvChips.text(p))
+	if row.has("refused") or card_chips.size() != 2 or texts.call(card_chips) != texts.call(row_chips) \
+			or card_chips.any(func(p: Dictionary) -> bool: return p.polarity != "cost" or not EvChips.text(p).contains(worked.company_name)) \
+			or not EvChips.text(card_chips[0]).contains("52") or not EvChips.text(card_chips[1]).contains(B2BConstants.feature_label(step_id)):
+		return "the offer reads %s on the card and %s on the row" % [str(texts.call(card_chips)), str(texts.call(row_chips))]
+	if not is_equal_approx(worked.offer_discount_pct, 0.15) or worked.offer_discount_weeks != 52 or worked.offer_promise_step != step_id:
+		return "the offer landed as %.2f for %d weeks and step '%s'" % [worked.offer_discount_pct, worked.offer_discount_weeks, worked.offer_promise_step]
+	if ProspectRegistry.get_prospect(worked.id) == null or CustomerRegistry.get_customer("co_" + worked.id) != null:
+		return "the offer signed the lead"
+	if not SaveManager.save_to_slot(SAVE_SLOT_A):
+		return "save_to_slot refused"
+	var loaded: bool = SaveManager.apply_loaded_state(SaveManager.read_slot(SAVE_SLOT_A))
+	_cleanup_save_slots()
+	if not loaded:
+		return "the slot did not load back"
+	worked = ProspectRegistry.get_prospect("offer_a")
+	rep = CharacterRegistry.get_character("char_so_rep")
+	if worked == null or not is_equal_approx(worked.offer_discount_pct, 0.15) or worked.offer_discount_weeks != 52 \
+			or worked.offer_promise_step != step_id:
+		return "the offer did not survive a save"
+
+	# Signed at the founder's table: the account opens discounted and with the word owed.
+	worked.worked_by = founder_id
+	worked.work_started_day = GameState.day
+	worked.deal_seats = 40
+	worked.deal_price = 100
+	SalesFinalizer.sign_deal(worked)
+	var signed: Customer = CustomerRegistry.get_customer("co_offer_a")
+	if signed == null:
+		return "the table's deal did not sign"
+	var words: Array = PromiseRegistry.get_open_for(signed.id)
+	var until: int = GameState.day + TimeModel.ticks(52)
+	if signed.mrr != 3400 or signed.timed_discount_amount != 600 or signed.timed_discount_until != until \
+			or GameState.mrr != CustomerRegistry.get_total_mrr():
+		return "the founder's signature opened MRR %d (cut %d until %d), want 3400 (600 until %d)" % [
+			signed.mrr, signed.timed_discount_amount, signed.timed_discount_until, until]
+	if words.size() != 1 or words[0].feature_id != step_id \
+			or words[0].deadline_day != GameState.day + TimeModel.ticks(B2BConstants.PROMISE_DEADLINE_WEEKS) \
+			or SalesLedger.open_pitch_promise() == signed.id:
+		return "the founder's signature opened %d words %s, want one on %s, and no pitch lock" % [words.size(), str(words), step_id]
+
+	# No offer, no terms.
+	var bare: Prospect = _add_prospect("offer_e", 2, "")
+	bare.worked_by = founder_id
+	bare.deal_seats = 40
+	bare.deal_price = 100
+	SalesFinalizer.sign_deal(bare)
+	var full: Customer = CustomerRegistry.get_customer("co_offer_e")
+	if full == null or full.mrr != 4000 or full.timed_discount_until != -1 or PromiseRegistry.has_open_for(full.id):
+		return "a lead with no offer signed with a discount or a word"
+
+	# Signed by the rep's close: the same terms.
+	var desk: Prospect = _die_lead("offer_rep", 1, "testing", false)
+	if desk == null:
+		return "fixture: no lead id passes the rep's die"
+	desk.worked_by = rep.id
+	var chance: float = ProductQuality.close_chance(desk)
+	EvEffects.run_played([offer], {"prospect": {"type": "prospect", "id": desk.id}})
+	if not is_equal_approx(ProductQuality.close_chance(desk), chance):
+		return "the offer moved the rep's close chance %.3f -> %.3f" % [chance, ProductQuality.close_chance(desk)]
+	SalesRepSystem._close(rep, desk)
+	var closed: Customer = CustomerRegistry.get_customer("co_" + desk.id)
+	if closed == null:
+		return "the rep's close did not sign the lead"
+	var cut: int = roundi(float(closed.mrr + closed.timed_discount_amount) * 0.15)
+	words = PromiseRegistry.get_open_for(closed.id)
+	if closed.timed_discount_amount != cut or cut <= 0 or closed.timed_discount_until != until \
+			or words.size() != 1 or words[0].feature_id != step_id:
+		return "the rep's close opened MRR %d (cut %d until %d) with %d words, want the offer's terms" % [
+			closed.mrr, closed.timed_discount_amount, closed.timed_discount_until, words.size()]
+
+	# A step that went live before the signature is owed nothing: the discount lands, the word does not.
+	var shipped: Prospect = _add_prospect("offer_f", 2, "")
+	EvEffects.run_played([offer], {"prospect": {"type": "prospect", "id": shipped.id}})
+	ProductState.set_line_tier(String(ProductLines.step(step_id).line_id), int(ProductLines.step(step_id).tier))
+	shipped.worked_by = founder_id
+	shipped.deal_seats = 40
+	shipped.deal_price = 100
+	SalesFinalizer.sign_deal(shipped)
+	var live: Customer = CustomerRegistry.get_customer("co_offer_f")
+	if not ProductState.is_feature_live(step_id) or live == null or live.mrr != 3400 or PromiseRegistry.has_open_for(live.id):
+		return "a lead offered a word on a step that went live before it signed opened MRR %s with a word %s" % [
+			live.mrr if live != null else -1, live != null and PromiseRegistry.has_open_for(live.id)]
+
+	# A dropped lead leaves by the desk's own loss path, and its offer with it.
+	var company: String = idle.company_name
+	EvEffects.run_played([offer], {"prospect": {"type": "prospect", "id": idle.id}})
+	var drop: Dictionary = {"verb": "drop_prospect", "scope": "prospect"}
+	var idle_ctx: Dictionary = {"prospect": {"type": "prospect", "id": idle.id}}
+	var drop_chip: Array = EvChips.describe(drop, idle_ctx, {}, false)
+	var drop_row: Dictionary = EvEffects.run_played([drop], idle_ctx)[0]
+	if drop_row.has("refused") or ProspectRegistry.get_prospect(idle.id) != null or CustomerRegistry.get_customer("co_" + idle.id) != null:
+		return "the dropped lead is still on the book, or signed (%s)" % [str(drop_row)]
+	if SalesLedger.loss_reason(company) != SalesConstants.LOSS_EVENT or not SalesFaucetSystem.is_return_locked(company):
+		return "the dropped lead left reason '%s' and lock %s; want '%s' and a lock" % [
+			SalesLedger.loss_reason(company), SalesFaucetSystem.is_return_locked(company), SalesConstants.LOSS_EVENT]
+	if drop_chip.size() != 1 or drop_chip[0].polarity != "danger" or EvChips.text(drop_chip[0]) != EvChips.text(EvChips.describe(drop_row, idle_ctx, {}, true)[0]) \
+			or not EvChips.text(drop_chip[0]).contains(company):
+		return "the drop reads %s on the card" % [str(drop_chip)]
+	if TranslationServer.translate("SALES_MEMORY_EVENT") == "SALES_MEMORY_EVENT":
+		return "the memory a dropped lead carries back has no line"
+	return ""
+
+
+## `musteri.promise_late`: hesabın en eski açık sözünün kademesi koşan sprintte ve ekibin hızıyla yetişmiyor. Hesabın istediği
+## kademe sprinte istek kartı olarak (`req:<istek>`) girer; seam kartı kademesinden bulur. Sprintte olmayan ve yetişen kart geç
+## okunmaz.
+## FALSİFİKASYON: seam'i kartı `"feat:" + kademe` kimliğiyle arayan hâline döndür → istek kartı iddiası FAIL.
+static func _case_sales_promise_late_request_card() -> String:
+	var account: Customer = _seed_open_request()
+	if account == null:
+		return "fixture: sprint 1 did not start"
+	var open: Array = GameState.product.requests.filter(func(r: Dictionary) -> bool: return r.status == "open")
+	if open.size() != 1:
+		return "fixture: the account holds requests %s, want one" % [open]
+	var req: Dictionary = open[0]
+	PromiseRegistry.create(account.id, req.step, B2BConstants.PROMISE_DEADLINE_WEEKS)
+	if EvSeams.read_for("musteri.promise_late", account.id):
+		return "a word whose card is in no running sprint reads late"
+	SprintSystem.plan_next()
+	SprintSystem.add(req.card_id)
+	var card: Dictionary = GameState.product.cards.get(req.card_id, {})
+	if card.get("kind", "") != "request" or not SprintSystem.start():
+		return "fixture: the request card %s did not start a sprint (%s)" % [req.card_id, card]
+	_size(card, 500.0)
+	if not EvSeams.read_for("musteri.promise_late", account.id):
+		return "the word on %s reads on time while its request card %s will not finish this sprint" % [req.step, req.card_id]
+	_size(card, 1.0)
+	if EvSeams.read_for("musteri.promise_late", account.id):
+		return "a request card that finishes this sprint reads late"
 	return ""
 
 

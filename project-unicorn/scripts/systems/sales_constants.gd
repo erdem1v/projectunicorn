@@ -79,6 +79,7 @@ const W_FOUNDER_SALES := 0.22            # [K] the founder's Satış, the base
 const W_PRICE_SIGNAL := 0.10             # [K] the stance dial read at the table (§7.5)
 const W_PROVIDER_TIER := 0.10            # [K] the Ürün §10 provider ladder
 const W_ANSWER := 0.08                   # [K] per played ▲/▼ verb
+const PITCH_FOCUS_DELTA := 0.05          # [WORKING] a running pitch focus (`pitch_focus`) on an area the product meets
 
 # Star mismatch is a HARD curve (§5.1): a founder two leagues under the table pays for it.
 # Indexed by (customer star - founder star), clamped. A founder ABOVE the table pays zero
@@ -206,6 +207,7 @@ const LOSS_MISSING_TIER := "missing_tier"
 const LOSS_PROVIDER_TRUST := "provider_trust"
 const LOSS_PRICE := "price"
 const LOSS_SWITCHING_RISK := "switching_risk"
+const LOSS_EVENT := "event"              # a card dropped the lead (`drop_prospect`); no target, and it clears by itself
 const LOSS_REASONS := [LOSS_WEAK_AREA, LOSS_MISSING_TIER, LOSS_PROVIDER_TRUST,
 	LOSS_PRICE, LOSS_SWITCHING_RISK]
 

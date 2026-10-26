@@ -318,7 +318,8 @@ static func _lint_effects(where: String, effects: Array, context: String, card: 
 			if String(partner.get("type", "")) != EvScope.TYPE_EMPLOYEE:
 				_add(SEVERITY_ERROR, "17.1", where, "summer_leave other '%s' is not an employee slot of the card" % effect.get("other", ""))
 		if verb == "trust_delta":
-			_lint_trust_delta(where, effect)
+			_lint_trust_delta(where, effect, card)
+		_lint_sales_effect(where, effect, card)
 		if verb == "morale_crew" and String(effect.get("crew", "")) not in MORALE_CREWS:
 			_add(SEVERITY_ERROR, "17.1", where, "morale_crew crew '%s' is not one of %s"
 				% [effect.get("crew", ""), str(MORALE_CREWS)])
@@ -330,11 +331,43 @@ static func _lint_effects(where: String, effects: Array, context: String, card: 
 				% effect.get("label", ""))
 
 
+## The sales verbs' arguments: a scoped promise verb names a customer slot, a mailed notice has its mail, an offer carries
+## a term (a cut with its weeks), a pitch focus a real area.
+static func _lint_sales_effect(where: String, effect: Dictionary, card: Dictionary) -> void:
+	var verb: String = String(effect.get("verb", ""))
+	if verb in SCOPED_VERBS and effect.has("scope") \
+			and String(card["scope"].get(String(effect["scope"]), {}).get("type", "")) != EvScope.TYPE_CUSTOMER:
+		_add(SEVERITY_ERROR, "17.1", where, "%s scope '%s' is not a customer slot of the card" % [verb, effect["scope"]])
+	if verb == "account_notice" and bool(effect.get("mail", true)) \
+			and not B2BConstants.EXIT_NOTICE_MAILS.has(String(effect.get("reason", ""))):
+		_add(SEVERITY_ERROR, "17.1", where, "account_notice reason '%s' has no mail in B2BConstants.EXIT_NOTICE_MAILS "
+			% effect.get("reason", "") + "(`mail: false` for a notice the card itself is)")
+	if verb == "prospect_offer":
+		var pct: float = float(effect.get("discount_pct", 0.0))
+		var step: String = String(effect.get("promise_step", ""))
+		if step == "" and pct <= 0.0:
+			_add(SEVERITY_ERROR, "17.1", where, "prospect_offer names no term: a discount_pct or a promise_step")
+		# A cut with no weeks would end the tick it signs, and weeks with no cut would be a chip for nothing.
+		if (pct > 0.0) != (int(effect.get("discount_weeks", 0)) >= 1):
+			_add(SEVERITY_ERROR, "17.1", where, "prospect_offer discount_pct and discount_weeks come together: a cut above 0 for 1 week or more")
+		if step != "" and ProductLines.step(step).is_empty() \
+				and not ProductLines.subtypes().any(func(sub: String) -> bool: return not ProductLines.step("%s@%s" % [step, sub]).is_empty()):
+			_add(SEVERITY_ERROR, "17.1", where, "prospect_offer promise_step '%s' is a step of no product" % step)
+	if verb == "pitch_focus" and (not ProductQuality.weights("b2b", "").has(String(effect.get("area", "")))
+			or int(effect.get("weeks", 0)) < 1):
+		_add(SEVERITY_ERROR, "17.1", where, "pitch_focus needs a ProductQuality area and weeks of 1 or more")
+
+
 ## A `trust_delta` names whose ledger it writes, and a standing cost names its end.
-static func _lint_trust_delta(where: String, effect: Dictionary) -> void:
+static func _lint_trust_delta(where: String, effect: Dictionary, card: Dictionary) -> void:
 	if String(effect.get("accounts", "slot")) not in TRUST_ACCOUNTS:
 		_add(SEVERITY_ERROR, "17.1", where, "trust_delta accounts '%s' is not one of %s"
 			% [effect.get("accounts", ""), str(TRUST_ACCOUNTS)])
+	elif String(effect.get("accounts", "slot")) == "slots":
+		var slots: Array = effect.get("slots", [])
+		if slots.is_empty() or slots.any(func(slot: Variant) -> bool:
+				return String(card["scope"].get(String(slot), {}).get("type", "")) != EvScope.TYPE_CUSTOMER):
+			_add(SEVERITY_ERROR, "17.1", where, "trust_delta slots %s is empty or names a slot that is not a customer slot" % str(slots))
 	var until: Variant = effect.get("until")
 	if effect.has("per_sprint") != (until != null):
 		_add(SEVERITY_ERROR, "17.1", where, "trust_delta per_sprint and until come together")
@@ -364,7 +397,7 @@ const V3_WARN_RULES := ["P3"]
 const FROZEN_SOFT_RULES := ["O2", "O4", "O5", "T2", "T3"]
 
 ## What a `trust_delta` accounts and a `morale_crew` crew may name (EvEffects.trust_accounts, crew_of).
-const TRUST_ACCOUNTS := ["slot", "decision_line", "promise", "second"]
+const TRUST_ACCOUNTS := ["slot", "decision_line", "promise", "second", "slots", "others", "all", "onboarding"]
 const MORALE_CREWS := ["incident_crew", "card_crew", "promise_crew", "sprint_crew", "speaker"]
 
 ## V1: the verbs an author may write. Each has a working arm in EvEffects._apply AND a chip in
@@ -379,6 +412,7 @@ const WRITER_VERBS := [
 	"send_on_leave", "summer_leave", "sick_leave", "promote", "work_hours",
 	"damage_product", "line_harden", "sprint_card_test", "sprint_fix_first",
 	"sprint_card_trim", "sprint_card_outlook", "sprint_card_first", "b2b_month_discount",
+	"account_notice", "prospect_offer", "drop_prospect", "take_account", "pitch_focus",
 ]
 
 ## V2: reserved for a system card. Each moves the run itself — a phase, a table, an arc, an
@@ -390,12 +424,16 @@ const SYSTEM_VERBS := [
 	"abort_arc", "set_arc_var", "incident", "promise_extend", "promise_break",
 ]
 
+## V2: the system verbs a card may also write, when the effect names a `scope` slot: the account's own words, not the promise
+## event's.
+const SCOPED_VERBS := ["promise_extend", "promise_break"]
+
 ## O2: a chip whose CONSEQUENCE is the cost — the sprint carries the card over, the account is
 ## left waiting, the promise becomes a debt. Read here rather than off the chip, so a polarity
 ## edit cannot move the rule.
 const CONSEQUENCE_VERBS := ["sprint_card_carry", "b2b_retain_delay", "b2b_retain_ignore",
 	"b2b_expand_decline", "promise_create", "sprint_card_trim", "sprint_card_outlook", "sprint_card_first",
-	"sprint_fix_first", "summer_leave"]
+	"sprint_fix_first", "summer_leave", "prospect_offer"]
 
 ## O4: the verbs that land on a subject, and the slot type each lands on.
 const SUBJECT_VERBS := {
@@ -405,7 +443,8 @@ const SUBJECT_VERBS := {
 	"satisfaction_delta": "customer", "trust_delta": "customer", "customer_mrr_delta": "customer", "seats": "customer",
 	"churn_customer": "customer", "promise_create": "customer", "b2b_retain_discount": "customer",
 	"b2b_retain_delay": "customer", "b2b_retain_ignore": "customer", "b2b_expand": "customer",
-	"b2b_expand_decline": "customer",
+	"b2b_expand_decline": "customer", "account_notice": "customer", "take_account": "customer",
+	"prospect_offer": "prospect", "drop_prospect": "prospect",
 }
 
 ## O5: a verb that spends a module the build may not have opened.
@@ -525,7 +564,7 @@ static func _lint_v3_verbs(id: String, card: Dictionary, where: String) -> void:
 			continue
 		if not WRITER_VERBS.has(verb) and not SYSTEM_VERBS.has(verb):
 			_v3(id, "V1", where, "'%s' has no working arm or no chip, so it may not be written" % verb)
-		elif SYSTEM_VERBS.has(verb) and not system:
+		elif SYSTEM_VERBS.has(verb) and not system and not (verb in SCOPED_VERBS and (e as Dictionary).has("scope")):
 			_v3(id, "V2", where, "'%s' is reserved for a system card" % verb)
 		if verb.begins_with("sprint_card_") and String(card["tick"]) != "request":
 			_v3(id, "V3", where, "'%s' belongs to a tick:request sprint decision" % verb)
@@ -710,6 +749,12 @@ static func _touched_slots(effects: Array, slots: Dictionary) -> Array:
 	for e in effects:
 		var effect: Dictionary = e
 		var type_id: String = String(SUBJECT_VERBS.get(String(effect.get("verb", "")), ""))
+		# A trust_delta over named slots lands on each of them.
+		if String(effect.get("accounts", "")) == "slots":
+			for slot in effect.get("slots", []):
+				if slots.has(slot) and not out.has(slot):
+					out.append(slot)
+			continue
 		# A crew or a decision line's accounts are no slot: only the speaker and the slot's account are.
 		if type_id == "" or String(effect.get("crew", "speaker")) != "speaker" \
 				or String(effect.get("accounts", "slot")) != "slot":

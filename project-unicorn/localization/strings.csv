@@ -2137,6 +2137,8 @@ SALES_ROUTE_REP,Temsilcide,With a rep
 SALES_TAG_FRANK_INTRO,Frank'in tanıştırdığı,Frank's introduction
 SALES_ROUTE_NO_REP,Temsilci yok,No rep to take it
 SALES_ABOVE_LEAGUE,Bu masa liginin üstünde.,This table is above your league.
+SALES_OFFER_DISCOUNT,Teklif: imzalarsa {weeks} MRR {pct},"Offer: if they sign, MRR {pct} for {weeks}"
+SALES_OFFER_PROMISE,"Teklif: imzalarsa söz verilir, {step}","Offer: if they sign, we promise {step}"
 SALES_DESK_HEADER,Satış masası,Sales desk
 SALES_DESK_EMPTY,Satış işine atanmış kimse yok.,Nobody is assigned to the sales job.
 SALES_REP_DEAL,{company} · {deal},{company} · {deal}
@@ -2163,6 +2165,7 @@ SALES_STANCE_HINT_STANDARD,Koltuk fiyatı bandın ortasında.,Seat price sits mi
 SALES_STANCE_HINT_PREMIUM,Koltuk fiyatı bandın üstünde. Temsilcinin işlemesi uzar.,Seat price sits high in the band. A rep takes longer to work it.
 SALES_SEAT_PRICE,{price}/koltuk,{price}/seat
 SALES_SIGNING_DISCOUNT,imza indirimi %{pct},signing discount {pct}%
+SALES_TIMED_DISCOUNT,{date} tarihine kadar indirimli,Discounted until {date}
 SALES_ODDS,İkna %{n},Persuasion {n}%
 SALES_MEETING_SKIP,Teklife geç,Skip to the offer
 SALES_MEETING_OPEN_OFFER,Rakamı konuş,Talk numbers
@@ -2176,6 +2179,7 @@ SALES_MOD_CHARISMA,Karizman,Your charisma
 SALES_MOD_WARM_INTRO,Frank'in tanıştırması,Frank's introduction
 SALES_MOD_RETURNED,Geçmiş bir görüşme,An earlier meeting
 SALES_MOD_ANSWERS,Verdiğin cevaplar,The answers you gave
+SALES_MOD_PITCH_FOCUS,Bu çeyreğin vurgusu,This quarter's emphasis
 SALES_BLOCK_NO_B2B,Canlı B2B ürün yok.,No live B2B product.
 SALES_BLOCK_WEEK_FULL,Bu haftaki toplantı hakların doldu. Yeni hafta başında yenilenir.,This week's meetings are spent. They come back when the new week starts.
 SALES_BLOCK_TOO_LATE,Mesai bitiyor. Bu hafta yeni bir masaya oturulmaz.,The workday is ending. No new table this week.
@@ -2227,6 +2231,7 @@ SALES_MEMORY_MISSING_TIER,Geçen sefer eksik kademe konuşulmuştu.,Last time we
 SALES_MEMORY_PROVIDER_TRUST,Geçen sefer altyapı konuşulmuştu.,Last time we talked about infrastructure.
 SALES_MEMORY_PRICE,Geçen sefer rakamda anlaşamamıştık.,Last time we did not meet on the number.
 SALES_MEMORY_SWITCHING_RISK,Geçen sefer bizimle kimin ilgileneceği konuşulmuştu.,Last time we talked about who would look after us.
+SALES_MEMORY_EVENT,Geçen sefer olmamıştı.,Last time it did not work out.
 SALES_LOCK_EMPHASIS_ENOUGH,{area} bunu henüz desteklemiyor.,{area} does not back that up yet.
 SALES_LOCK_STEPS_SHIPPED,Yayınlanmış kademeler bunu henüz desteklemiyor.,Shipped tiers do not back that up yet.
 SALES_LOCK_PROVIDER,Sunucuların Ekonomik kademede.,Your servers are on the Economy tier.
@@ -2269,6 +2274,10 @@ SALES_CLAUSE_WITHDRAW_SUBJECT,Fesih bildirimimizi geri alıyoruz,We are withdraw
 SALES_CLAUSE_WITHDRAW_BODY,Verilerimizin kurumsal sunucuya taşındığını gördük. Fesih bildirimimizi geri alıyoruz; sözleşmemiz sürüyor.,"We see our data has been moved to an enterprise server. We are withdrawing our notice, and the contract continues."
 SALES_CLAUSE_BTN_SWITCH,Kurumsal sunucuya geç · ayda {old} → {new},Move to Enterprise · {old} → {new} a month
 SALES_LOG_CLAUSE_ENDED,{company} · sözleşme feshedildi · sunucu maddesi,{company} · contract ended · server clause
+SALES_LOG_NOTICE_ENDED,{company} · sözleşme feshedildi,{company} · contract ended
+SALES_LOG_DISCOUNT_ENDED,{company} · indirimli dönem bitti · {amount}/ay,{company} · discount period ended · {amount}/mo
+SALES_EXIT_RUDE_CALL_SUBJECT,Sözleşmemizi sonlandırıyoruz,We are ending our contract
+SALES_EXIT_RUDE_CALL_BODY,Müdürümüzle yaptığınız görüşmeden sonra sözleşmemizi {end} tarihinde sonlandırmaya karar verdik. O güne kadar hizmeti kullanmaya devam edeceğiz.,"After your call to our manager, we have decided to end our contract on {end}. We will keep using the service until then."
 NEG_HOLD,Rakamında ısrar et,Hold your number
 NEG_HOLD_REASON,Anlaşma olmaz. Fiyattan kalkarlar ve bunu hatırlarlar.,No deal. They walk on the price and remember it.
 NEG_LAST_OFFER_REASON,Sabır bitti. Bu rakam ya kabul edilir ya masa kapanır.,Patience is out. Take this number or the table closes.
@@ -3183,6 +3192,7 @@ EFFECT_OUTAGE_CREDIT_ONE,Kesinti kredisi · {n} hesap · %{pct} {v},Outage credi
 EFFECT_FREE_MONTH,Bir ay ücretsiz · {n} kişi · ödeyen {paying} {v},Free month · {n} people · {paying} paying {v}
 EFFECT_TRUST_NIGHT_ACCOUNTS,{n} gece vardiyalı hesap: memnuniyet {v} · {customer} {from} → {to},{n} night shift accounts: satisfaction {v} · {customer} {from} → {to}
 EFFECT_TRUST_OTHER_ACCOUNTS,Öbür {n} hesap: memnuniyet {v},Other {n} accounts: satisfaction {v}
+EFFECT_TRUST_NEW_ACCOUNTS,Yeni hesapların memnuniyeti {v},New accounts' satisfaction {v}
 EFFECT_FIXED_AROUND,Sorun {clock} sularında çözülür,Fixed around {clock}
 EFFECT_FIXED_TOMORROW,Sorun yarın {clock} sularında çözülür,Fixed tomorrow around {clock}
 EFFECT_SPRINT_BUMP,{card} sonraki sprinte kayar,{card} moves to the next sprint
@@ -3212,6 +3222,12 @@ EFFECT_LEAVE_SHIFT,"Yaz izni kayar: {name}, {weeks}","Summer leave moves: {name}
 EFFECT_LEAVE_TOGETHER,"Yaz izni: {a} ile {b} aynı iki hafta, {weeks} sonra","Summer leave: {a} and {b} away the same two weeks, in {weeks}"
 EFFECT_SICK_LEAVE,{name} {weeks} yok,{name} is away for {weeks}
 EFFECT_PROMOTION,"{name} {level} olur, maaşı ayda {v}","{name} becomes {level}, salary {v} a month"
+EFFECT_ACCOUNT_NOTICE,"Fesih bildirimi: {company}, sözleşme {weeks} sonra biter",Notice given: {company} leaves in {weeks}
+EFFECT_ACCOUNT_TO_FOUNDER,Hesap sende: {company},Account now yours: {company}
+EFFECT_PROSPECT_LOST,Aday düşer: {prospect},Lead lost: {prospect}
+EFFECT_OFFER_DISCOUNT,Teklif: {prospect} imzalarsa {weeks} MRR {pct},"Offer: if {prospect} signs, MRR {pct} for {weeks}"
+EFFECT_OFFER_PROMISE,"Teklif: {prospect} imzalarsa söz verilir, {step}","Offer: if {prospect} signs, we promise {step}"
+EFFECT_PITCH_FOCUS,{weeks} satış görüşmelerinde öne çıkan: {area},Sales meetings lean on {area} for {weeks}
 VC_WHY_STRAIN,Aranızda hâlâ bir kırgınlık var.,There is still some friction between you.
 FIN_ONETIME_LEGAL,Hukuk masrafı,Legal fees
 FIN_ONETIME_PAY_CUT,Maaş indirimi,Pay cut

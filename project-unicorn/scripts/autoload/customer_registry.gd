@@ -247,6 +247,29 @@ func set_clause(customer_id: String, due_day: int, notice_end_day: int) -> void:
 	c.notice_end_day = notice_end_day
 
 
+func set_exit_notice(customer_id: String, end_day: int, reason: String) -> void:
+	# The notice an account gave outside the server clause (B2BSalesSystem.give_notice), no signal: its readers repaint
+	# on the day's tick. -1 / "" = no notice.
+	var c: Customer = _customers.get(customer_id, null)
+	if c == null:
+		push_warning("[CustomerRegistry] set_exit_notice on unknown id: %s" % customer_id)
+		return
+	c.exit_notice_day = end_day
+	c.exit_notice_reason = reason
+
+
+func set_timed_discount(customer_id: String, amount: int, until_day: int) -> void:
+	# The cut a timed discount takes off the MRR and the tick it is given back (B2BSalesSystem.apply_timed_discount);
+	# (0, -1) ends it. The MRR moves by the change in the cut alone, so what it grew by meanwhile stays.
+	var c: Customer = _customers.get(customer_id, null)
+	if c == null:
+		push_warning("[CustomerRegistry] set_timed_discount on unknown id: %s" % customer_id)
+		return
+	set_mrr(customer_id, c.mrr + c.timed_discount_amount - amount)
+	c.timed_discount_amount = amount
+	c.timed_discount_until = until_day
+
+
 func set_support_request(customer_id: String, since_day: int) -> void:
 	# HIDDEN request-channel bookkeeping — no signal. since_day == -1 means the account has
 	# no open request; any other value is the tick one opened (the escalation clock AND the

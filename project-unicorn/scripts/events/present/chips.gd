@@ -51,7 +51,7 @@ const NAMES_SHOWN := 4   # [WORKING]
 
 ## The chip of a group of accounts that took a trust hit together; one account reads by its name.
 const TRUST_GROUP_KEYS := {"all": "EFFECT_TRUST_ACCOUNTS", "night": "EFFECT_TRUST_NIGHT_ACCOUNTS",
-	"other": "EFFECT_TRUST_OTHER_ACCOUNTS"}
+	"other": "EFFECT_TRUST_OTHER_ACCOUNTS", "new": "EFFECT_TRUST_NEW_ACCOUNTS"}
 
 ## The polarity's glyph (A2's icon names); a neutral part has none.
 const GLYPHS := {"gain": "up", "cost": "cost", "danger": "warn", "neutral": ""}
@@ -87,7 +87,7 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 			return [_figure("EFFECT_NIGHT_CREW", _num(d), _signed(d), {"names": _name_list(crew)})]
 		"trust_delta": return _trust_parts(item if is_delta else EvEffects.trust_plan(item, ctx))
 		"incident": return _incident_parts(item if is_delta else IncidentSystem.plan(String(item.get("act", ""))))
-		"promise_break": return _break_parts(item if is_delta else EvEffects.break_plan())
+		"promise_break": return _break_parts(item if is_delta else EvEffects.break_plan(item, ctx))
 		"sprint_fix_first":
 			var bumped: Dictionary = item.get("bumps", {}) if is_delta \
 				else SprintSystem.fix_first_bumps(EvEffects.line_of(item), int(item.get("bugs", 0)))
@@ -250,6 +250,31 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 					seats = B2BConstants.expansion_seats(ec.company_size)
 					mrr = seats * (ec.seat_price if ec.seat_price > 0 else B2BConstants.EXPANSION_PER_SEAT_MRR)
 			return [_figure("EFFECT_EXPAND", _money(mrr), "gain", {"seats": seats, "mrr": ""})]
+		# Who leaves and when, whatever the server does.
+		"account_notice":
+			return [_part(_t("EFFECT_ACCOUNT_NOTICE").format({"company": _company(item, ctx, is_delta, EvScope.TYPE_CUSTOMER),
+				"weeks": Fmt.weeks(int(item.get("weeks", B2BConstants.EXIT_NOTICE_WEEKS)))}), "", "danger")]
+		"take_account":
+			return [_part(_t("EFFECT_ACCOUNT_TO_FOUNDER").format(
+				{"company": _company(item, ctx, is_delta, EvScope.TYPE_CUSTOMER)}), "", "cost")]
+		"drop_prospect":
+			return [_part(_t("EFFECT_PROSPECT_LOST").format(
+				{"prospect": _company(item, ctx, is_delta, EvScope.TYPE_PROSPECT)}), "", "danger")]
+		# The terms the lead takes into its signature: a discount that runs for weeks, a word owed on a step.
+		"prospect_offer":
+			var lead: String = _company(item, ctx, is_delta, EvScope.TYPE_PROSPECT)
+			var terms: Array = []
+			if float(item.get("discount_pct", 0.0)) > 0.0:
+				terms.append(_part(_t("EFFECT_OFFER_DISCOUNT").format({"prospect": lead,
+					"weeks": Fmt.weeks(int(item.get("discount_weeks", 0))),
+					"pct": Fmt.signed_percent(-roundi(float(item.discount_pct) * 100.0))}), "", "cost"))
+			if String(item.get("promise_step", "")) != "":
+				terms.append(_part(_t("EFFECT_OFFER_PROMISE").format({"prospect": lead,
+					"step": B2BConstants.feature_label(SprintCatalog.in_product(String(item.promise_step)))}), "", "cost"))
+			return terms
+		"pitch_focus":
+			return [_part(_t("EFFECT_PITCH_FOCUS").format({"weeks": Fmt.weeks(int(item.get("weeks", 1))),
+				"area": SprintCatalog.area_short(String(item.get("area", "")))}), "", "gain")]
 		# What the scheduled card lands whichever way it is answered, under the wait. Those are the target
 		# card's effects, not landed deltas, so a history row reads them as the live chip does.
 		"schedule_event":
@@ -364,7 +389,7 @@ static func _trust_parts(plan: Dictionary) -> Array:
 	if delta != 0:
 		var accounts: Array = plan.accounts if plan.get("accounts") is Array else []
 		var top: Dictionary = accounts[0] if not accounts.is_empty() else {}
-		parts.append(_trust_part("all", accounts.size(), delta, top))
+		parts.append(_trust_part(String(plan.get("group", "all")), accounts.size(), delta, top))
 	var per_sprint: int = int(plan.get("per_sprint", 0))
 	if per_sprint != 0:
 		var step: String = String((plan.get("until", {}) as Dictionary).get("step_live", ""))
@@ -456,6 +481,18 @@ static func _signed(delta: int) -> String:
 	if delta > 0: return "gain"
 	if delta < 0: return "cost"
 	return "neutral"
+
+
+## The company an effect lands on, as the row recorded it (a card read as a delta has no name yet), else the slot's own.
+static func _company(item: Dictionary, ctx: Dictionary, is_delta: bool, type_id: String) -> String:
+	if is_delta:
+		return String(item.get("company", ""))
+	var id: String = EvEffects.entity_of(item, ctx, type_id)
+	if type_id == EvScope.TYPE_PROSPECT:
+		var lead: Prospect = ProspectRegistry.get_prospect(id)
+		return lead.company_name if lead != null else ""
+	var account: Customer = CustomerRegistry.get_customer(id)
+	return account.display_name() if account != null else ""
 
 
 static func _employee(item: Dictionary, ctx: Dictionary, is_delta: bool) -> String:

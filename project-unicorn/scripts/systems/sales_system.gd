@@ -321,8 +321,8 @@ static func pipeline_optimistic_mrr() -> int:
 
 # --- Sales desk activity log. The owning system holds the seam, GameState holds the array +
 #     cap — the same split FinanceSystem.record_transaction uses. `kind` is an internal id
-#     ("lead_expired" | "auto_close" | "founder_close" | "cs_absorb" | "clause_ended"); the Sales tab maps it
-#     to a localized line, so nothing player-facing is stored here. ---
+#     ("lead_expired" | "auto_close" | "founder_close" | "cs_absorb" | "clause_ended" | "notice_ended" |
+#     "discount_ended"); the Sales tab maps it to a localized line, so nothing player-facing is stored here. ---
 
 static func record_sales_event(kind: String, actor: String, company: String, mrr: int) -> void:
 	GameState.sales_log.append({
@@ -410,6 +410,7 @@ static func add_b2b_customer(prospect: Prospect, seats: int, seat_price: int,
 	# MRR is not collected cash, so a signed "+$1,100" beside a real "−$600" hire would read
 	# as treasury income the player never received. The signing reaches them through the
 	# headline/news channel instead, and the MRR itself lands via the bridge below.
+	B2BSalesSystem.apply_offer(c, prospect)
 	reflect_mrr()
 	return c
 

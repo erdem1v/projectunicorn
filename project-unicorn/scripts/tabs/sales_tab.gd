@@ -362,6 +362,14 @@ func _lead_card(p: Prospect, off: bool) -> PanelContainer:
 	if p.whale_condition != "":
 		words.add_child(_glyph_line(INFO, UiTokens.D_INK_3, UiFactory.make_label(
 			tr("SALES_WHALE_" + p.whale_condition.to_upper()), &"CaptionPrimary")))
+	# Bir olayın bu adaya yazdığı teklif: imzalarsa hesaba geçer.
+	if p.offer_discount_pct > 0.0:
+		words.add_child(_glyph_line(INFO, UiTokens.D_INK_3, UiFactory.make_label(tr("SALES_OFFER_DISCOUNT").format({
+			"weeks": Fmt.weeks(p.offer_discount_weeks), "pct": Fmt.signed_percent(-roundi(p.offer_discount_pct * 100.0))}),
+			&"CaptionPrimary")))
+	if p.offer_promise_step != "":
+		words.add_child(_glyph_line(INFO, UiTokens.D_INK_3, UiFactory.make_label(
+			tr("SALES_OFFER_PROMISE").format({"step": B2BConstants.feature_label(p.offer_promise_step)}), &"CaptionPrimary")))
 	# §4: kilit değil telgraf, kurucu her masaya oturabilir.
 	if p.is_above_league(SalesLedger.founder_star()):
 		words.add_child(_line(tr("SALES_ABOVE_LEAGUE"), &"Caption"))
@@ -505,6 +513,10 @@ func _log_line(row: Dictionary) -> String:
 				"actor": String(row.get("actor", "")), "company": company})
 		"clause_ended":
 			return tr("SALES_LOG_CLAUSE_ENDED").format({"company": company})
+		"notice_ended":
+			return tr("SALES_LOG_NOTICE_ENDED").format({"company": company})
+		"discount_ended":
+			return tr("SALES_LOG_DISCOUNT_ENDED").format({"company": company, "amount": Fmt.money(int(row.get("mrr", 0)))})
 	return ""
 
 
@@ -539,10 +551,11 @@ func _account_card(c: Customer, off: bool) -> PanelContainer:
 	var calm: bool = not ATTENTION_RANK.has(c.lifecycle_phase)
 	var head := _name_row(c.display_name(), &"DataMedium" if calm and c.assigned_to != "" else &"DataStrong", c.scale)
 	head.add_child(UiFactory.D_tag(tr(tag[0]), tag[1]))
-	if c.clause_due_day >= 0:
-		var notice: bool = c.notice_end_day >= 0
+	var notice_end: int = c.exit_notice_day if c.exit_notice_day >= 0 else c.notice_end_day
+	if c.clause_due_day >= 0 or notice_end >= 0:
+		var notice: bool = notice_end >= 0
 		head.add_child(UiFactory.D_tag(tr("SALES_CLAUSE_LABEL_NOTICE" if notice else "SALES_CLAUSE_LABEL").format({
-			"date": Fmt.day_month(GameState.get_date_dict(c.notice_end_day if notice else c.clause_due_day), true)}),
+			"date": Fmt.day_month(GameState.get_date_dict(notice_end if notice else c.clause_due_day), true)}),
 			&"risk" if notice else &"warn"))
 	words.add_child(head)
 	words.add_child(_line(_meta_line(c), &"MetaMuted"))
@@ -559,7 +572,7 @@ func _account_card(c: Customer, off: bool) -> PanelContainer:
 	return _card(UiTokens.D_variation(&"DealRisk") if risk else &"DealDoc", col)
 
 
-## "$1,0K/ay · 12 koltuk · 2 aydır müşteri · $83/koltuk", varsa imza indirimiyle (§5.4). Koltuk fiyatı bir koltuğun
+## "$1,0K/ay · 12 koltuk · 2 aydır müşteri · $83/koltuk", varsa imza indirimiyle (§5.4) ve süreli indirimin bitişiyle. Koltuk fiyatı bir koltuğun
 ## bugün ödediğidir (MRR / koltuk): sonradan verilen indirim MRR'ı düşürür ve burada görünür; imzadaki damga büyümenin
 ## fiyatı olarak kalır.
 func _meta_line(c: Customer) -> String:
@@ -573,6 +586,9 @@ func _meta_line(c: Customer) -> String:
 		parts.append(tr("SALES_SEAT_PRICE").format({"price": Fmt.money_exact(roundi(float(c.mrr) / c.seats))}))
 	if c.signing_discount > 0.0:
 		parts.append(tr("SALES_SIGNING_DISCOUNT").format({"pct": int(round(c.signing_discount * 100.0))}))
+	if c.timed_discount_until >= 0:
+		parts.append(tr("SALES_TIMED_DISCOUNT").format({
+			"date": Fmt.day_month(GameState.get_date_dict(c.timed_discount_until), true)}))
 	return " · ".join(parts)
 
 

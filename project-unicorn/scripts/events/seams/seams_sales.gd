@@ -1,7 +1,7 @@
 class_name EvSeamsSales
 extends RefCounted
 
-# The `musteri.`, `sales.` and `destek.` namespaces.
+# The `musteri.`, `aday.`, `sales.` and `destek.` namespaces.
 #
 # A B2B account carries TWO satisfaction numbers: `satisfaction`, which the player sees, and
 # `tolerance`, the hidden floor THIS account will put up with. It goes to Risk when the first
@@ -81,6 +81,54 @@ static func install() -> void:
 			return SprintCatalog.step_name_key(step) if step != "" else "",
 		"Sales", "the name KEY of the step the account's latest thanks is for; text reads it in the live language, a history row keeps the key")
 
+	EvSeams.register("musteri.sector", E, TYPE_STRING, customer_field("industry", ""),
+		"Sales", "WRAPPER; the sector id (health, finance, logistics ...)")
+	EvSeams.register("musteri.bugs", E, TYPE_INT,
+		func(id: String) -> int:
+			var c: Customer = CustomerRegistry.get_customer(id)
+			return B2BSalesSystem.account_bugs(c) if c != null else 0,
+		"Sales", "open bugs on the lines this account uses")
+	EvSeams.register("musteri.onboarding_short", E, TYPE_BOOL,
+		func(id: String) -> bool:
+			var c: Customer = CustomerRegistry.get_customer(id)
+			if c == null:
+				return false
+			var ref: Dictionary = c.market_ref if not c.market_ref.is_empty() else ProductQuality.market_ref_for(c.scale, c.industry)
+			return ProductQuality.level("onboarding") < float(ref.get("onboarding", 0.0)),
+		"Sales", "the product's Onboarding is under what this account expects of it")
+	EvSeams.register("musteri.promise_late", E, TYPE_BOOL,
+		func(id: String) -> bool:
+			var open: Array = PromiseRegistry.get_open_for(id)
+			if open.is_empty():
+				return false
+			# By step, not by id: a step the account asked for runs as its request card (`req:<id>`).
+			var cards: Array = (GameState.product.get("sprint", {}).get("cards", []) as Array).filter(
+				func(card: String) -> bool: return SprintCatalog.card_by_id(card).get("step", "") == open[0].feature_id)
+			return not cards.is_empty() and cards.all(SprintSystem.card_late),
+		"Sales", "the step of the account's oldest open promise is in the running sprint and none of its cards will finish in it")
+	EvSeams.register("musteri.promise_extended", E, TYPE_BOOL,
+		func(id: String) -> bool:
+			var open: Array = PromiseRegistry.get_open_for(id)
+			return not open.is_empty() and open[0].extended,
+		"Sales", "the account's oldest open promise has already moved a sprint; a word moves once")
+	EvSeams.register("musteri.promise_card", E, TYPE_STRING,
+		func(id: String) -> String:
+			var open: Array = PromiseRegistry.get_open_for(id)
+			return SprintCatalog.step_name_key(open[0].feature_id) if not open.is_empty() else "",
+		"Sales", "the name KEY of the step the account's oldest open promise is for, '' with none; text reads it in the live language, a history row keeps the key")
+	EvSeams.register("musteri.has_notice", E, TYPE_BOOL,
+		func(id: String) -> bool:
+			var c: Customer = CustomerRegistry.get_customer(id)
+			return c != null and (c.exit_notice_day >= 0 or c.notice_end_day >= 0),
+		"Sales", "the account has given notice, outside the server clause or under it")
+
+	# --- Prospects ----------------------------------------------------------
+	EvSeams.register("aday.sector", E, TYPE_STRING,
+		func(id: String) -> String:
+			var p: Prospect = ProspectRegistry.get_prospect(id)
+			return p.industry if p != null else "",
+		"Sales", "the lead's sector id (health, finance, logistics ...)")
+
 	# --- Book-wide ----------------------------------------------------------
 	# RECORDS, NOT ACCOUNTS, and the difference is load-bearing: the Traction gate asks
 	# `musteri.count >= 1` for "your first real customer", and on a B2C run that customer IS
@@ -117,6 +165,11 @@ static func install() -> void:
 	EvSeams.register("sales.account_count", G, TYPE_INT,
 		func() -> int: return CustomerRegistry.account_count(),
 		"Sales", "accounts in the book; excludes the B2C aggregate userbase")
+	EvSeams.register("sales.big_accounts", G, TYPE_INT,
+		func() -> int:
+			return CustomerRegistry.get_by_market("b2b").filter(
+				func(c: Customer) -> bool: return c.scale >= B2BConstants.CLAUSE_STAR).size(),
+		"Sales", "B2B accounts of the server clause's size (CLAUSE_STAR stars and up)")
 	EvSeams.register("sales.market_share_pct", G, TYPE_FLOAT,
 		func() -> float: return RivalRegistry.get_player_share_pct(),
 		"Sales", "one global figure; per-segment share does not exist yet")

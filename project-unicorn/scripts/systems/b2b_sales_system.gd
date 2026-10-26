@@ -46,7 +46,16 @@ static func daily_tick() -> void:
 
 
 static func _tick_customer(c: Customer) -> void:
-	if c.clause_due_day >= 0 and _tick_clause(c):
+	if c.exit_notice_day >= 0 and GameState.day >= c.exit_notice_day:
+		SalesSystem.record_sales_event("notice_ended", c.exit_notice_reason, c.company_name, c.mrr)
+		_remove_lost(c)
+		return
+	if c.timed_discount_until >= 0 and GameState.day >= c.timed_discount_until:
+		CustomerRegistry.set_timed_discount(c.id, 0, -1)
+		SalesSystem.reflect_mrr()
+		SalesSystem.record_sales_event("discount_ended", "", c.company_name, c.mrr)
+	# An account already leaving on an event's notice gets no second notice from its clause.
+	if c.clause_due_day >= 0 and c.exit_notice_day < 0 and _tick_clause(c):
 		return
 	# The trust ledger forgives on its own, BEFORE the satisfaction drift, so this tick's target
 	# already reflects the (slightly smaller) grudge — a broken promise makes an account
@@ -378,6 +387,44 @@ static func _post_clause(c: Customer, stage: String) -> void:
 	MessageSystem.post("clause", B2BConstants.CLAUSE_MAILS[stage][0], {"id": c.id, "stage": stage,
 		"company": c.company_name, "name": CounterpartSystem.buyer_of(c).name, "due": c.clause_due_day,
 		"end": c.notice_end_day})
+
+
+# --- Maddeden bağımsız fesih bildirimi ---
+# Bir olayın hesaba verdirdiği bildirim: sözleşme EXIT_NOTICE_WEEKS sonra biter (`_tick_customer`). Sunucu maddesinin
+# bildiriminden ayrı alanlardadır, yani Kurumsal'a geçiş (`meet_clauses`) onu geri aldırmaz ve maddesiz hesap da gider.
+
+## Hesaba fesih bildirimi verdirir; hesabın zaten bir bildirimi (sunucu maddesininki dahil) varsa false. `mail`: müşteri
+## bildirimi bir postayla da söyler; kartın kendisi bildirimse postasızdır.
+static func give_notice(c: Customer, reason: String, mail: bool) -> bool:
+	if c.exit_notice_day >= 0 or c.notice_end_day >= 0:
+		return false
+	CustomerRegistry.set_exit_notice(c.id, GameState.day + TimeModel.ticks(B2BConstants.EXIT_NOTICE_WEEKS), reason)
+	if mail:
+		MessageSystem.post("exit_notice", B2BConstants.EXIT_NOTICE_MAILS[reason][0], {"id": c.id, "reason": reason,
+			"company": c.company_name, "name": CounterpartSystem.buyer_of(c).name, "end": c.exit_notice_day})
+	return true
+
+
+# --- Süreli indirim ---
+
+## Hesabın MRR'ından `weeks` hafta boyunca %`pct` düşer, süre dolunca çekilen tutar geri verilir (`_tick_customer`).
+## Düşen tutarı döndürür.
+static func apply_timed_discount(c: Customer, pct: float, weeks: int) -> int:
+	var cut: int = roundi(c.mrr * pct)
+	CustomerRegistry.set_timed_discount(c.id, cut, GameState.day + TimeModel.ticks(weeks))
+	SalesSystem.reflect_mrr()
+	return cut
+
+
+## Bir olayın adaya yazdığı teklif imza gününde hesaba geçer (`SalesSystem.add_b2b_customer`): süreli indirim ve verilen söz.
+## Söz `accept_promise` ile açılmaz; o riskteki hesabı da toparlar, yeni imzada toparlanacak bir şey yok. Kademe imzadan önce
+## yayına çıktıysa söz açılmaz: canlı kademedeki açık söz sonraki ilgisiz yayında tutulmuş sayılırdı.
+static func apply_offer(c: Customer, lead: Prospect) -> void:
+	if lead.offer_discount_pct > 0.0:
+		apply_timed_discount(c, lead.offer_discount_pct, lead.offer_discount_weeks)
+	if lead.offer_promise_step != "" and not ProductState.is_feature_live(lead.offer_promise_step):
+		PromiseRegistry.create(c.id, lead.offer_promise_step,
+			lead.offer_promise_weeks if lead.offer_promise_weeks > 0 else B2BConstants.PROMISE_DEADLINE_WEEKS)
 
 
 # --- Retention outcomes (called by the event effect verbs; WRITE-THROUGH LAW) ---

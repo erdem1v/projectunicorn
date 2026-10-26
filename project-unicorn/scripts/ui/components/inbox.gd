@@ -16,7 +16,8 @@ const MENTOR_ID := "char_mentor_frank"
 ## A message kind's topic.
 const MESSAGE_TOPICS := {"intro": "EVENT_TAG_MENTOR", "summary": "EVENT_TAG_AGENDA",
 	"sales_week": "EVENT_TAG_CUSTOMER", "sales_loss": "EVENT_TAG_CUSTOMER", "clause": "EVENT_TAG_CUSTOMER",
-	"support_week": "EVENT_TAG_PRODUCT", "rnd_note": "EVENT_TAG_PRODUCT", "rnd_discovery": "EVENT_TAG_PRODUCT"}
+	"exit_notice": "EVENT_TAG_CUSTOMER", "support_week": "EVENT_TAG_PRODUCT", "rnd_note": "EVENT_TAG_PRODUCT",
+	"rnd_discovery": "EVENT_TAG_PRODUCT"}
 ## A category's sender when the card's speaker and slots name none.
 const CATEGORY_SENDERS := {"funding": "frank", "founder": "self", "team": "self", "world": "press",
 	"rival": "press", "customer": "desk", "product": "desk"}
@@ -314,8 +315,12 @@ static func _message_item(m: Dictionary) -> Dictionary:
 			it.line = first_line(lost_body(a))
 			it.right = ""
 		"clause":
-			it.sender = clause_sender(a)
+			it.sender = account_sender(a, TranslationServer.translate("SALES_CLAUSE_SENDER").format(a))
 			it.line = first_line(clause_body(a))
+			it.right = ""
+		"exit_notice":
+			it.sender = account_sender(a, "%s · %s" % [a.name, a.company])
+			it.line = first_line(exit_body(a))
 			it.right = ""
 		"support_week":
 			it.sender = support_sender(String(a.rep))
@@ -353,13 +358,19 @@ static func clause_body(a: Dictionary) -> String:
 		{"date": due, "since": due, "end": Fmt.day_month(GameState.get_date_dict(int(a.end)))})
 
 
-## The account's IT contact: the buyer met at the table while the account is on the book, initials after it left.
-static func clause_sender(a: Dictionary) -> Dictionary:
+## An exit-notice mail's body in the live language; the day it names is a tick.
+static func exit_body(a: Dictionary) -> String:
+	return TranslationServer.translate(B2BConstants.EXIT_NOTICE_MAILS[String(a.reason)][1]).format(
+		{"end": Fmt.day_month(GameState.get_date_dict(int(a.end)))})
+
+
+## The account's buyer writing under `line`: the person met at the table while the account is on the book, initials after
+## it left.
+static func account_sender(a: Dictionary, line: String) -> Dictionary:
 	var c: Customer = CustomerRegistry.get_customer(String(a.id))
 	var face: Dictionary = {"mono": UiFactory.initials_of(String(a.name))} if c == null \
 		else {"look": CounterpartSystem.buyer_of(c).look}
-	return _sender("contact", TranslationServer.translate("SALES_CLAUSE_SENDER").format(a), "", String(a.name),
-		String(a.company), face)
+	return _sender("contact", line, "", String(a.name), String(a.company), face)
 
 
 ## The support report's sender: the rep who wrote it, named with the title the report carries; the report leaves

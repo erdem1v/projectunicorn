@@ -128,6 +128,12 @@ static func close() -> void:
 #  §5.1 — the reading
 # ============================================================================
 
+## A card's pitch emphasis: until tick `until_day`, a table whose expectation the product meets in `area` reads stronger
+## (`_build_base_contributions`). It lives in GameState's flags, and a new one replaces the running one.
+static func set_pitch_focus(area: String, until_day: int) -> void:
+	GameState.set_flag("sales_pitch_focus", {"area": area, "until": until_day})
+
+
 ## The persuasion inputs (§5.1, "şekil mühürlü, ağırlıklar K"). Each entry is a
 ## {seam, delta} pair in the engine's §9.6 shape, so the hover list is built by the engine's
 ## own `EvDice.modifier_lines` rather than by a second display rule.
@@ -174,6 +180,13 @@ static func _build_base_contributions(p: Prospect, fit: Dictionary) -> Array:
 	# §9 — the first loss leaves a permanent mark on the return.
 	if p.loss_count > 0:
 		out.append({"seam": "sales.loss_reason", "delta": -SalesConstants.REPITCH_PENALTY})
+
+	# A running pitch focus (`pitch_focus`) on an area this table expects and the product meets.
+	var focus: Dictionary = GameState.get_flag("sales_pitch_focus", {})
+	if not focus.is_empty() and GameState.day < int(focus.until):
+		var expect: float = ProductQuality.expectation(focus.area, _ctx)
+		if expect > 0.0 and ProductQuality.level(focus.area) >= expect:
+			out.append({"seam": "sales.pitch_focus", "delta": SalesConstants.PITCH_FOCUS_DELTA})
 	return out
 
 
@@ -202,6 +215,7 @@ static func _modifier_labels() -> Dictionary:
 		"founder.charisma": TranslationServer.translate("SALES_MOD_CHARISMA"),
 		"sales.warm_intro": TranslationServer.translate("SALES_MOD_WARM_INTRO"),
 		"sales.loss_reason": TranslationServer.translate("SALES_MOD_RETURNED"),
+		"sales.pitch_focus": TranslationServer.translate("SALES_MOD_PITCH_FOCUS"),
 		"sales.answer": TranslationServer.translate("SALES_MOD_ANSWERS"),
 	}
 

@@ -31,6 +31,7 @@ const CHIP_BY_SEAM := {
 	"urun.product_fit": "MEETING_CHIP_PREP",
 	"urun.capacity_tier": "MEETING_CHIP_PREP",
 	"sales.price_stance": "MEETING_CHIP_PREP",
+	"sales.pitch_focus": "MEETING_CHIP_PREP",
 	"sales.reach_band": "MEETING_CHIP_ROOM",
 	"sales.answer": "MEETING_CHIP_ROOM",
 	"sales.warm_intro": "MEETING_CHIP_ROOM",

@@ -12,8 +12,8 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **264** |
-| Effect verbs (write) | **78** |
+| Seams (read) | **274** |
+| Effect verbs (write) | **83** |
 | Cards in the catalogue | 146 |
 | Arcs | 3 |
 
@@ -68,6 +68,8 @@ so a verb absent from a group is unreachable from it rather than merely discoura
 - `trust_delta`
 - `promise_create`
 - `promise_extend`
+- `take_account`
+- `pitch_focus`
 - `ticker_push`
 - `goto_tab`
 - `unlock_content`
@@ -114,6 +116,9 @@ Barred from ambient origins entirely; on expiry, allowed only in the negative.
 - `marketing_push`
 - `incident`
 - `promise_break`
+- `account_notice`
+- `prospect_offer`
+- `drop_prospect`
 
 ### Terminal
 
@@ -134,6 +139,12 @@ Requires `requires_telegraph` naming a card or flag that has already fired (I3).
 A name not on this list is a **build error** (§17.1), not a runtime warning. An
 entity-scoped seam needs a `scope` naming the slot when the card has more than one
 slot of that type (§17.12).
+
+### `aday.`
+
+| seam | scope | type | owner | note |
+|---|---|---|---|---|
+| `aday.sector` | entity | string | Sales | the lead's sector id (health, finance, logistics ...) |
 
 ### `arge.`
 
@@ -286,12 +297,14 @@ slot of that type (§17.12).
 |---|---|---|---|---|
 | `musteri.at_risk_count` | global | int | Sales | accounts currently in Risk |
 | `musteri.broke_promise` | entity | bool | Sales | a promise to this account broke inside the relock window and nothing earlier locks the promise row |
+| `musteri.bugs` | entity | int | Sales | open bugs on the lines this account uses |
 | `musteri.churn_countdown` | entity | int | Sales | WRAPPER; -1 when not counting, else weeks to churn |
 | `musteri.company_name` | entity | string | Sales | for {customer} in prose |
 | `musteri.complaint_voice` | entity | string | Sales | the per-sector complaint line |
 | `musteri.count` | global | int | Sales | active customer RECORDS — includes the B2C aggregate; see sales.account_count |
 | `musteri.cs_escalated` | entity | bool | Sales | an escalation is already open on this account |
 | `musteri.discounts_used` | entity | int | Sales | 0-2; the discount row locks at the cap |
+| `musteri.has_notice` | entity | bool | Sales | the account has given notice, outside the server clause or under it |
 | `musteri.has_open_promise` | entity | bool | Sales | a feature was promised and has not resolved |
 | `musteri.has_pain_feature` | entity | bool | Sales | the account wants a specific feature |
 | `musteri.is_assigned` | entity | bool | Sales | WRAPPER; a CS rep carries it, rather than the founder |
@@ -302,15 +315,20 @@ slot of that type (§17.12).
 | `musteri.met_feature` | entity | string | Sales | the name KEY of the step the account's latest thanks is for; text reads it in the live language, a history row keeps the key |
 | `musteri.min_satisfaction` | global | int | Sales | worst account |
 | `musteri.mrr` | entity | int | Sales | WRAPPER |
+| `musteri.onboarding_short` | entity | bool | Sales | the product's Onboarding is under what this account expects of it |
 | `musteri.pain_buildable` | entity | bool | Sales | gates the promise row: nobody can promise what the company cannot build yet |
 | `musteri.pain_feature_label` | entity | string | Sales | the feature the promise row names |
 | `musteri.pain_feature_shipped` | entity | bool | Sales | gates the promise row: promising work already done pays for nothing |
+| `musteri.promise_card` | entity | string | Sales | the name KEY of the step the account's oldest open promise is for, '' with none; text reads it in the live language, a history row keeps the key |
+| `musteri.promise_extended` | entity | bool | Sales | the account's oldest open promise has already moved a sprint; a word moves once |
 | `musteri.promise_fits` | entity | bool | Sales | the account's wish fits the free points of the next plannable sprint, or another clause locks the promise row |
+| `musteri.promise_late` | entity | bool | Sales | the step of the account's oldest open promise is in the running sprint and none of its cards will finish in it |
 | `musteri.request_kind` | entity | string | Sales | complaint | feature | renewal — state-scored, no RNG |
 | `musteri.risk_voice` | entity | string | Sales | what an account in Risk says, by the cause of the Risk |
 | `musteri.satisfaction` | entity | int | Sales | WRAPPER; 0-100, the number the player can see |
 | `musteri.scale` | entity | int | Sales | WRAPPER; 1-5, demo binds to 1-3 |
 | `musteri.seats` | entity | int | Sales | WRAPPER |
+| `musteri.sector` | entity | string | Sales | WRAPPER; the sector id (health, finance, logistics ...) |
 | `musteri.sector_contact` | entity | string | Sales | the speaker's role line |
 | `musteri.stalls_used` | entity | int | Sales | 0-2; the stall row locks at the cap |
 | `musteri.tenure_weeks` | entity | int | Sales | WRAPPER; weeks since signature |
@@ -378,6 +396,7 @@ slot of that type (§17.12).
 | `sales.account_count` | global | int | Sales | accounts in the book; excludes the B2C aggregate userbase |
 | `sales.b2c_audience` | global | float | Sales | float: it carries a sub-unit accumulator |
 | `sales.b2c_price` | global | int | Sales | WRAPPER; monthly price |
+| `sales.big_accounts` | global | int | Sales | B2B accounts of the server clause's size (CLAUSE_STAR stars and up) |
 | `sales.growth_band` | global | string | Sales | melting | flat | steady | fast |
 | `sales.is_b2b` | global | bool | Sales | reads the SHIPPED market, not one being built |
 | `sales.market_share_pct` | global | float | Sales | one global figure; per-segment share does not exist yet |
@@ -390,6 +409,7 @@ slot of that type (§17.12).
 | `time.hour` | global | int | Time | WRAPPER; 0-23 |
 | `time.is_paused` | global | bool | Time | WRAPPER; there is no named predicate for this |
 | `time.month` | global | int | Time | 1-12; the month of the week's date on the real calendar |
+| `time.quarter_start` | global | bool | Time | the week's date falls in the first seven days of a calendar quarter |
 | `time.run_active` | global | bool | Time | WRAPPER; false once a terminal has fired |
 | `time.speed` | global | int | Time | WRAPPER; 0 paused, 1-4 |
 | `time.week` | global | int | Time | WRAPPER; absolute game week (the tick), starts at 1. GameState owns it, not TimeManager |
@@ -659,9 +679,9 @@ player's market. A slot with no `select` takes the first free entity by id.
 
 | slot type | selectors |
 |---|---|
-| `employee` | `lowest_morale`, `newest_hire`, `most_senior`, `top_skill:`, `account_rep`, `support_lead`, `sprint_dev`, `leave_pair`, `leave_partner`, `random` |
+| `employee` | `lowest_morale`, `newest_hire`, `most_senior`, `top_skill:`, `account_rep`, `support_lead`, `sprint_dev`, `leave_pair`, `leave_partner`, `lead_rep`, `random` |
 | `customer` | `at_risk`, `escalated`, `expansion_ready`, `open_request`, `largest`, `smallest`, `line_top`, `line_warehouse`, `line_newest`, `line_slow`, `request`, `random` |
-| `prospect` | `random` |
+| `prospect` | `rep_lead`, `random` |
 | `rival` | `sprint_rival`, `market_rival:`, `random` |
 | `investor` | `expiring_sheet`, `decision_sheet`, `seed_lead`, `random` |
 
@@ -681,7 +701,7 @@ AUTHORITY, which is the linter's §17.14: a verb is writable only when it has a
 working arm in `EvEffects._apply` AND a chip in `EvChips`, so what an option promises
 is what the player is shown and what lands.
 
-### Writer verbs (44) — any card, inside the two rules below
+### Writer verbs (49) — any card, inside the two rules below
 
 - `add_cash`
 - `add_brand`
@@ -727,6 +747,11 @@ is what the player is shown and what lands.
 - `sprint_card_outlook`
 - `sprint_card_first`
 - `b2b_month_discount`
+- `account_notice`
+- `prospect_offer`
+- `drop_prospect`
+- `take_account`
+- `pitch_focus`
 
 Two rules narrow the list. A `sprint_card_*` verb belongs to a `tick: request` sprint
 decision and to no other card (§17.14, V3). A module verb spends a page the build may

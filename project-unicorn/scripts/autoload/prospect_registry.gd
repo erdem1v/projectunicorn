@@ -60,6 +60,19 @@ func insert_raw(prospect: Prospect) -> void:
 	_prospects[prospect.id] = prospect
 
 
+func set_offer(prospect_id: String, offer: Dictionary) -> void:
+	# The terms a card puts on the lead (B2BSalesSystem.apply_offer reads them at the signature), no signal: nothing
+	# listens. A new offer takes the place of the one before it.
+	var p: Prospect = _prospects.get(prospect_id, null)
+	if p == null:
+		push_warning("[ProspectRegistry] set_offer on unknown id: %s" % prospect_id)
+		return
+	p.offer_discount_pct = float(offer.discount_pct)
+	p.offer_discount_weeks = int(offer.discount_weeks)
+	p.offer_promise_step = String(offer.promise_step)
+	p.offer_promise_weeks = int(offer.promise_weeks)
+
+
 func reset() -> void:
 	# Run-boundary reset (SaveManager.reset_all_owners). Direct clear, no prospect_removed
 	# emits — same doctrine as CustomerRegistry.reset().

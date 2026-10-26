@@ -57,6 +57,11 @@ const CLAUSE_MAILS := {
 	"notice": ["SALES_CLAUSE_NOTICE_SUBJECT", "SALES_CLAUSE_NOTICE_BODY"],
 	"withdraw": ["SALES_CLAUSE_WITHDRAW_SUBJECT", "SALES_CLAUSE_WITHDRAW_BODY"],
 }
+const EXIT_NOTICE_WEEKS := 4            # [ÇALIŞMA] onay bekliyor: maddeden bağımsız fesih bildiriminden sözleşmenin bitişine
+## Posta yazan fesih bildiriminin sebebi → [konu anahtarı, gövde anahtarı]; postasız sebep (kartın kendisi bildirimdir) burada yoktur.
+const EXIT_NOTICE_MAILS := {
+	"rude_call": ["SALES_EXIT_RUDE_CALL_SUBJECT", "SALES_EXIT_RUDE_CALL_BODY"],
+}
 
 
 static func seed_tolerance(scale: int, industry: String) -> int:

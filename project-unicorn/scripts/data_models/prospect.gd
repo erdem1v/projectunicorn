@@ -73,6 +73,15 @@ extends Resource
 ## request channel (§19 "Korunanlar").
 @export var pain_feature_id: String = ""
 
+# --- Offer (ProspectRegistry.set_offer): the terms a card put on the lead for the day it signs ---
+## The account opens with `offer_discount_pct` off its MRR for `offer_discount_weeks`, and with a word owed on
+## `offer_promise_step` due in `offer_promise_weeks` (0 = the usual promise span). A lead that never signs takes them
+## with it. No discount (0.0) and no step ("") = no offer.
+@export var offer_discount_pct: float = 0.0
+@export var offer_discount_weeks: int = 0
+@export var offer_promise_step: String = ""
+@export var offer_promise_weeks: int = 0
+
 # --- Provenance ---
 @export var source: String = "faucet"         # "faucet" | "event" | "referral" | "frank_intro"
 
