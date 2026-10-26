@@ -84,7 +84,6 @@ const ORIGINS := [
 const PORTRAIT_DIR := "res://assets/art/portraits/"
 const MENTOR_PORTRAIT := "frank"
 const PORTRAIT_CELL := Vector2i(132, 165)   # the onboarding grid's cells, Kişisel
-const PORTRAIT_THUMB := Vector2i(32, 40)    # the company step's founder line
 const PORTRAIT_IDS := [
 	"founder_01", "founder_02", "founder_03", "founder_04", "founder_05", "founder_06",
 	"founder_07", "founder_08", "founder_09", "founder_10", "founder_11",

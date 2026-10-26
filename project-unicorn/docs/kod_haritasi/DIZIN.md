@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git 29ae999 · 2026-10-24 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git f21b961 · 2026-10-26 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -26,13 +26,9 @@ Bölümler: Autoload'lar · Dosyalar · Sinyaller · Sahneler · Veri dosyaları
 - AudioManager · scripts/autoload/audio_manager.gd
 - MCPRuntime · addons/godot_mcp_runtime/mcp_runtime_autoload.gd · uid://bvdfxyfwqs84q
 
-## Dosyalar (252 .gd)
+## Dosyalar (250 .gd)
 
 Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar dahil). Autoload dosyalarında class_name yerine [AutoloadAdı].
-
-### sandbox/asset_lab/ (2 dosya, 839 satır)
-- sandbox/asset_lab/asset_lab.gd · 352 · - · Node · 0 sinyal · 18 func
-- sandbox/asset_lab/lab_scene.gd · 487 · - · RefCounted · 0 sinyal · 28 func
 
 ### scripts/autoload/ (13 dosya, 5121 satır)
 - scripts/autoload/audio_manager.gd · 172 · [AudioManager] · Node · 0 sinyal · 17 func
@@ -157,7 +153,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/onboarding/steps/origin_traits_step.gd · 332 · - · OnboardingStep · 0 sinyal · 18 func
 - scripts/onboarding/steps/step_base.gd · 118 · OnboardingStep · Control · 1 sinyal · 10 func
 
-### scripts/systems/ (72 dosya, 24300 satır)
+### scripts/systems/ (72 dosya, 24299 satır)
 - scripts/systems/angel_round_system.gd · 52 · AngelRoundSystem · RefCounted · 0 sinyal · 1 func
 - scripts/systems/b2b_constants.gd · 286 · B2BConstants · RefCounted · 0 sinyal · 9 func
 - scripts/systems/b2b_sales_system.gd · 644 · B2BSalesSystem · RefCounted · 0 sinyal · 42 func
@@ -169,7 +165,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/systems/endings_copy.gd · 539 · EndingsCopy · RefCounted · 0 sinyal · 31 func
 - scripts/systems/endings_system.gd · 527 · EndingsSystem · RefCounted · 0 sinyal · 28 func
 - scripts/systems/finance_system.gd · 325 · FinanceSystem · RefCounted · 0 sinyal · 22 func
-- scripts/systems/founder_constants.gd · 197 · FounderConstants · RefCounted · 0 sinyal · 9 func
+- scripts/systems/founder_constants.gd · 196 · FounderConstants · RefCounted · 0 sinyal · 9 func
 - scripts/systems/graphics_settings.gd · 211 · - · RefCounted · 0 sinyal · 14 func
 - scripts/systems/hr_actions.gd · 332 · HRActions · RefCounted · 0 sinyal · 28 func
 - scripts/systems/hr_candidate_generator.gd · 276 · HRCandidateGenerator · RefCounted · 0 sinyal · 14 func
@@ -375,7 +371,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - equity_changed(investor_pct: int) · scripts/autoload/event_bus.gd:18
   ↳ equity_changed emit: scripts/autoload/game_state.gd:655,666
   ↳ equity_changed connect: scripts/tabs/finance/finance_ozet_view.gd:65, scripts/tabs/personal_tab.gd:51, scripts/tabs/piyasa_tab.gd:82, scripts/ui/office/office_hud.gd:55, scripts/debug/endgame_smoke.gd:4741
-- speed_change_requested(speed: int) · scripts/autoload/event_bus.gd:21 · emit: scripts/autoload/save_manager.gd:370, scripts/main/game_shell.gd:121, scripts/main/main.gd:93,420,493,1378 +52 · connect: scripts/autoload/time_manager.gd:81
+- speed_change_requested(speed: int) · scripts/autoload/event_bus.gd:21 · emit: scripts/autoload/save_manager.gd:370, scripts/main/game_shell.gd:121, scripts/main/main.gd:93,420,493,1378 +51 · connect: scripts/autoload/time_manager.gd:81
 - night_skipped() · scripts/autoload/event_bus.gd:23
   ↳ night_skipped emit: scripts/autoload/time_manager.gd:192
   ↳ night_skipped connect: scripts/events/tools/plausibility.gd:160, scripts/main/main.gd:478,2285, scripts/ui/office/office_people.gd:86, scripts/ui/office/office_view.gd:64, scripts/debug/endgame_smoke.gd:8276 +3
@@ -808,14 +804,9 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - founder_arrived() · scripts/ui/office/office_people.gd:16 · emit: scripts/ui/office/office_people.gd:235 · connect: scripts/ui/office/office_travel.gd:75
 - founder_settled() · scripts/ui/office/office_people.gd:17 · emit: scripts/ui/office/office_people.gd:142,239,658 · connect: scripts/main/main.gd:2096, scripts/ui/office/office_travel.gd:106
 
-## Sahneler (44 .tscn)
+## Sahneler (39 .tscn)
 
 Biçim: yol · kök düğüm türü (örnek: = miras alınan sahne) · kök betik
-- docs/mockups/menajer/tools/lab_archive/ui_lab/UiLab.tscn · Node · sandbox/ui_lab/core/ui_lab.gd
-- docs/mockups/menajer/tools/lab_archive/ui_lab/themes/dosya/StyleTile.tscn · Control · sandbox/ui_lab/core/style_tile.gd
-- docs/mockups/menajer/tools/lab_archive/ui_lab/themes/evrak/StyleTile.tscn · Control · sandbox/ui_lab/core/style_tile.gd
-- docs/mockups/menajer/tools/lab_archive/ui_lab/themes/gazete/StyleTile.tscn · Control · sandbox/ui_lab/core/style_tile.gd
-- sandbox/asset_lab/AssetLab.tscn · Node · sandbox/asset_lab/asset_lab.gd
 - scenes/debug/ThemeProbe.tscn · Control · -
 - scenes/main/GameShell.tscn · Control · scripts/main/game_shell.gd
 - scenes/main/Main.tscn · Node · scripts/main/main.gd
