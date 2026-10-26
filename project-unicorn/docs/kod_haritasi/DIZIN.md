@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git 5d02d99 · 2026-10-26 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git d7525a3 · 2026-10-26 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -153,12 +153,12 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/onboarding/steps/origin_traits_step.gd · 332 · - · OnboardingStep · 0 sinyal · 18 func
 - scripts/onboarding/steps/step_base.gd · 118 · OnboardingStep · Control · 1 sinyal · 10 func
 
-### scripts/systems/ (72 dosya, 24299 satır)
+### scripts/systems/ (72 dosya, 24296 satır)
 - scripts/systems/angel_round_system.gd · 52 · AngelRoundSystem · RefCounted · 0 sinyal · 1 func
 - scripts/systems/b2b_constants.gd · 286 · B2BConstants · RefCounted · 0 sinyal · 9 func
 - scripts/systems/b2b_sales_system.gd · 644 · B2BSalesSystem · RefCounted · 0 sinyal · 42 func
 - scripts/systems/cheque_read.gd · 60 · - · RefCounted · 0 sinyal · 3 func
-- scripts/systems/company_catalog.gd · 116 · CompanyCatalog · RefCounted · 0 sinyal · 1 func
+- scripts/systems/company_catalog.gd · 113 · CompanyCatalog · RefCounted · 0 sinyal · 1 func
 - scripts/systems/counterpart_system.gd · 101 · CounterpartSystem · RefCounted · 0 sinyal · 9 func
 - scripts/systems/customer_rep_system.gd · 380 · CustomerRepSystem · RefCounted · 0 sinyal · 19 func
 - scripts/systems/display_settings.gd · 350 · DisplaySettings · RefCounted · 0 sinyal · 27 func
