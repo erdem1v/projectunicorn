@@ -857,6 +857,7 @@ HR_STATE_ON_LEAVE_WEEKS_ONE,İzinde · 1 hafta kaldı,On leave · 1 week left
 HR_STATE_ON_LEAVE,İzinde,On leave
 HR_STATE_IN_TRAINING,Eğitimde,In training
 HR_NEWS_BACK_FROM,{name} izinden döndü,{name} is back from leave
+HR_NEWS_BACK_TO_WORK,{name} işe döndü,{name} is back at work
 HR_NEWS_ON_LEAVE,{name} {n} hafta izinde,{name} is on leave for {n} weeks
 HR_NEWS_ON_LEAVE_ONE,{name} bir hafta izinde,{name} is on leave for a week
 HR_NEWS_ON_HOLIDAY,{name} {n} haftalığına izne çıktı,{name} is sent on leave for {n} weeks
@@ -3205,11 +3206,18 @@ EFFECT_CHANCE,%{pct} ihtimalle:,{pct}% chance:
 EFFECT_LATER,{n} hafta sonra:,In {n} weeks:
 EFFECT_LATER_ONE,{n} hafta sonra:,In {n} week:
 EFFECT_LATER_RANGE,{lo} ile {hi} hafta sonra:,In {lo} to {hi} weeks:
+EFFECT_LEAVE_SHIFT,"Yaz izni kayar: {name}, {weeks}","Summer leave moves: {name}, {weeks}"
+EFFECT_LEAVE_TOGETHER,"Yaz izni: {a} ile {b} aynı iki hafta, {weeks} sonra","Summer leave: {a} and {b} away the same two weeks, in {weeks}"
+EFFECT_SICK_LEAVE,{name} {weeks} yok,{name} is away for {weeks}
+EFFECT_PROMOTION,"{name} {level} olur, maaşı ayda {v}","{name} becomes {level}, salary {v} a month"
 VC_WHY_STRAIN,Aranızda hâlâ bir kırgınlık var.,There is still some friction between you.
 FIN_ONETIME_LEGAL,Hukuk masrafı,Legal fees
 FIN_ONETIME_PAY_CUT,Maaş indirimi,Pay cut
 FIN_ONETIME_DATA_PURCHASE,Veri alımı,Data purchase
 FIN_ONETIME_OUTAGE_CREDIT,Kesinti kredisi,Outage credit
+FIN_ONETIME_EQUIPMENT,Ekipman,Equipment
+FIN_ONETIME_GIFT,Hediye,Gift
+FIN_ONETIME_AWARD,Ödül,Award
 EV_TEAM_CONFERENCE_TRIP_TITLE,Konferans,The conference
 EV_TEAM_CONFERENCE_TRIP_BODY,"{employee} başka şehirde yapılacak bir konferansa gitmek istiyor. İki gün sürüyor; bilet, tren ve otelle $1.200 tutuyor. Bildiklerinin çoğunu bu konferansın internetteki ücretsiz kayıtlarından öğrendi. Şimdiye kadar hiçbir şey istememişti.","{employee} wants to attend a conference in another city: two days, $1,200 with the ticket, train and hotel. Most of what they know came from its free talk videos. It is the first thing they have asked for."
 EV_TEAM_CONFERENCE_TRIP_PAY,Bütün masrafı öde,Pay for the whole trip

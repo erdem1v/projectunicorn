@@ -38,6 +38,8 @@ const FAMILY_GAP_WEEKS := {
 	"founder_network": 4,
 	"customer_risk": 2,
 	"product_floor": 4,
+	# Three variants of one summer-leave overlap: at most one a year.
+	"team_summer_leave": 52,
 }
 
 

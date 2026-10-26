@@ -609,6 +609,26 @@ func set_status(id: String, value: String) -> void:
 	c.status = value
 
 
+## İzin dışı yokluğun nedeni ve dönüş günü (Character.leave_kind); status'u set_status ayrıca yazar. "" ve 0 yokluğu kapatır.
+func set_away(id: String, kind: String, until_day: int) -> void:
+	var c: Character = _characters.get(id, null)
+	if c == null:
+		push_warning("[CharacterRegistry] set_away on unknown id: %s" % id)
+		return
+	c.leave_kind = kind
+	c.away_until_day = until_day
+
+
+## Yaz izninin bu yıl için kaydırılmış haftası (HRMoraleSystem.summer_week okur); sonraki yıl leave_week döner.
+func set_leave_override(id: String, week: int, year: int) -> void:
+	var c: Character = _characters.get(id, null)
+	if c == null:
+		push_warning("[CharacterRegistry] set_leave_override on unknown id: %s" % id)
+		return
+	c.leave_week_override = week
+	c.leave_override_year = year
+
+
 ## Sınırlar HRConstants'ta adlıdır ve önizleme de onları okur (§15.2). Band KENARI ayrıca
 ## yayılır (§15.3): motorun sorusu "moral kaç" değil "hangi banda düştü".
 func set_morale(id: String, value: int) -> void:

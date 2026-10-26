@@ -52,7 +52,7 @@ const FAMILY_BRAKED_SRC := ["pool", "floor", "signal", "schedule"]
 const START_IMMUNITY_WEEKS := 3
 const FAMILY_GAP_WEEKS_DEFAULT := 6
 const FAMILY_GAP_WEEKS := {"employee_asks_money": 12, "world_offer_b2c": 8, "world_offer_b2b": 8,
-	"founder_solitude": 3, "founder_network": 4, "customer_risk": 2, "product_floor": 4}
+	"founder_solitude": 3, "founder_network": 4, "customer_risk": 2, "product_floor": 4, "team_summer_leave": 52}
 const ONBOARDING_VOICE_TENURE_WEEKS := 4
 const RENEWAL_MIN_TENURE_WEEKS := 44
 const CONFERENCE_TENURE_WEEKS := 28

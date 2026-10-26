@@ -85,6 +85,15 @@ extends Resource
 # Haziran–Ağustos penceresinde 0..12 hafta indeksi; -1 = henüz atanmadı.
 @export var leave_week: int = -1
 @export var leave_deferrals: int = 0        # §11.4: bu yıl kaç kez ertelendi, en fazla 2
+# Bir olay kartının bu yıl için kaydırdığı hafta; yalnız leave_override_year yılında geçerli, sonraki yıl leave_week döner.
+@export var leave_week_override: int = -1   # -1 = kayma yok
+@export var leave_override_year: int = 0
+
+# --- İzin dışı yokluk ---
+# "" = yok, HRConstants.LEAVE_KIND_SICK = hasta. Status on_leave kalır; dönüş günü leave_until_day'de değil burada durur,
+# böylece yaz izni mandalı ve oyuncunun izin beklemesi hastalıktan etkilenmez.
+@export var leave_kind: String = ""
+@export var away_until_day: int = 0
 
 # --- §7 moral hedefi ---
 # "Hedefe doğru sürüklenir, anında sıçramaz": deltalar hedefe yazılır, görünen moral günde en

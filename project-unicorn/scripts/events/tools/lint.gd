@@ -313,6 +313,10 @@ static func _lint_effects(where: String, effects: Array, context: String, card: 
 						% [effect["amount_slot"], amount_seam])
 			elif not EvSeams.has(amount_seam) or EvSeams.kind_of(amount_seam) != EvSeams.Kind.GLOBAL:
 				_add(SEVERITY_ERROR, "17.1", where, "amount_seam '%s' is not a registered global seam" % amount_seam)
+		if verb == "summer_leave":
+			var partner: Dictionary = card["scope"].get(String(effect.get("other", "")), {})
+			if String(partner.get("type", "")) != EvScope.TYPE_EMPLOYEE:
+				_add(SEVERITY_ERROR, "17.1", where, "summer_leave other '%s' is not an employee slot of the card" % effect.get("other", ""))
 		if verb == "trust_delta":
 			_lint_trust_delta(where, effect)
 		if verb == "morale_crew" and String(effect.get("crew", "")) not in MORALE_CREWS:
@@ -372,7 +376,7 @@ const WRITER_VERBS := [
 	"sprint_card_effort", "sprint_card_progress", "sprint_card_carry",
 	"b2b_retain_delay", "b2b_retain_ignore", "b2b_expand_decline", "set_flag", "stamp_day",
 	"schedule_event", "cancel_scheduled", "productivity_mod", "investor_strain", "marketing_push",
-	"send_on_leave", "work_hours",
+	"send_on_leave", "summer_leave", "sick_leave", "promote", "work_hours",
 	"damage_product", "line_harden", "sprint_card_test", "sprint_fix_first",
 	"sprint_card_trim", "sprint_card_outlook", "sprint_card_first", "b2b_month_discount",
 ]
@@ -391,12 +395,13 @@ const SYSTEM_VERBS := [
 ## edit cannot move the rule.
 const CONSEQUENCE_VERBS := ["sprint_card_carry", "b2b_retain_delay", "b2b_retain_ignore",
 	"b2b_expand_decline", "promise_create", "sprint_card_trim", "sprint_card_outlook", "sprint_card_first",
-	"sprint_fix_first"]
+	"sprint_fix_first", "summer_leave"]
 
 ## O4: the verbs that land on a subject, and the slot type each lands on.
 const SUBJECT_VERBS := {
 	"change_morale": "employee", "morale_crew": "employee", "productivity_mod": "employee", "employee_leaves": "employee",
-	"send_on_leave": "employee", "work_hours": "employee",
+	"send_on_leave": "employee", "summer_leave": "employee", "sick_leave": "employee", "promote": "employee",
+	"work_hours": "employee",
 	"satisfaction_delta": "customer", "trust_delta": "customer", "customer_mrr_delta": "customer", "seats": "customer",
 	"churn_customer": "customer", "promise_create": "customer", "b2b_retain_discount": "customer",
 	"b2b_retain_delay": "customer", "b2b_retain_ignore": "customer", "b2b_expand": "customer",
@@ -1002,6 +1007,9 @@ static func _lint_selectors(path: String, card: Dictionary) -> void:
 				func(name: String) -> bool: return select == name or (name.ends_with(":") and select.begins_with(name)))
 		if not known:
 			_add(SEVERITY_ERROR, "17.12", path, "slot '%s': no %s selector is named '%s'" % [slot, spec.get("type", ""), select])
+		# A misspelt area reads every score as 0 and binds the first id.
+		elif select.begins_with("top_skill:") and not HRConstants.EMPLOYEE_SKILL_KEYS.has(select.trim_prefix("top_skill:")):
+			_add(SEVERITY_ERROR, "17.12", path, "slot '%s': '%s' names no skill area" % [slot, select])
 
 
 # --- §17.1 / §15.2 signals -------------------------------------------------

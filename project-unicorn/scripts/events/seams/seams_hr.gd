@@ -70,6 +70,11 @@ static func _install_people() -> void:
 			var c: Character = _emp(id)
 			return c.level if c != null else 0,
 		"HR", "WRAPPER over Character.level. 0 = junior, 1 = mid, 2 = senior")
+	EvSeams.register("hr.role", E, TYPE_STRING,
+		func(id: String) -> String:
+			var c: Character = _emp(id)
+			return c.role if c != null else "",
+		"HR", "WRAPPER over Character.role: product_manager | designer | developer | tester | sales_rep | customer_rep")
 	EvSeams.register("hr.salary", E, TYPE_INT,
 		func(id: String) -> int:
 			var c: Character = _emp(id)
@@ -100,6 +105,11 @@ static func _install_people() -> void:
 			var c: Character = _emp(id)
 			return HRActions.leave_cooldown_left(c) if c != null else 0,
 		"HR", "weeks until the player may send this person on leave again; 0 means now")
+	EvSeams.register("hr.leave_weeks_left", E, TYPE_INT,
+		func(id: String) -> int:
+			var c: Character = _emp(id)
+			return HRMoraleSystem.leave_weeks_left(c) if c != null else -1,
+		"HR", "weeks until this person's summer leave starts; -1 once taken, once the window has passed, or without a week")
 
 	# The retention modifier "maaşı bandın altında" needs this (I7: no seam, no modifier).
 	# A promotion raises by a percent and does not reseat the salary into the new band, so

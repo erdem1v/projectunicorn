@@ -31,10 +31,16 @@ static var _pending: Array[String] = []
 static func tick_leave_returns() -> void:
 	# İlk koşar ki günün geri kalanı geri gelen `active` durumunu okusun.
 	for emp in CharacterRegistry.get_employees():
-		if emp.status != HRConstants.STATUS_ON_LEAVE or GameState.day < emp.leave_until_day:
+		if emp.status != HRConstants.STATUS_ON_LEAVE or GameState.day < _return_day(emp):
+			continue
+		CharacterRegistry.set_status(emp.id, HRConstants.STATUS_ACTIVE)
+		if emp.leave_kind == HRConstants.LEAVE_KIND_SICK:
+			# Hastalıktan dönüş tatilden dönüş değildir: ne moral verir ne de oyuncunun izin beklemesini başlatır.
+			CharacterRegistry.set_away(emp.id, "", 0)
+			EventBus.headline_added.emit(HRConstants.NEWS_SOURCE,
+				{"key": "HR_NEWS_BACK_TO_WORK", "args": {"name": emp.character_name}})
 			continue
 		var manual_weeks: int = int(GameState.get_flag(FLAG_MANUAL_LEAVE_PREFIX + emp.id, 0))
-		CharacterRegistry.set_status(emp.id, HRConstants.STATUS_ACTIVE)
 		GameState.set_flag(FLAG_MANUAL_LEAVE_PREFIX + emp.id, 0)
 		# leave_until_day dönüş günü olarak kalır: oyuncunun yeni izni ondan LEAVE_COOLDOWN_WEEKS sonra açılır.
 		apply_delta(emp, HRConstants.MORALE_VACATION_RETURN.get(manual_weeks, HRConstants.MORALE_LEAVE_RETURN))
@@ -55,7 +61,7 @@ static func tick_leave_departures() -> void:
 		{"year": year, "month": HRConstants.LEAVE_WINDOW_START_MONTH, "day": 1})
 	var week_index: int = int(float(since_june) / (7.0 * 86400.0))
 	for emp in CharacterRegistry.get_employees():
-		if emp.status != HRConstants.STATUS_ACTIVE or emp.leave_week != week_index:
+		if emp.status != HRConstants.STATUS_ACTIVE or summer_week(emp, year) != week_index:
 			continue
 		# Bu yılın iznini almış olan (bugün dönen dahil) yeniden gönderilmez.
 		if emp.leave_taken_year == year:
@@ -236,7 +242,73 @@ static func average_morale() -> float:
 static func weeks_until_return(emp: Character) -> int:
 	if emp == null or emp.status != HRConstants.STATUS_ON_LEAVE:
 		return 0
-	return maxi(emp.leave_until_day - GameState.day, 0)
+	return maxi(_return_day(emp) - GameState.day, 0)
+
+
+## Bu yıl için yaz izni haftası: bir olay kartı kaydırdıysa o, değilse işe girişte atanan.
+static func summer_week(emp: Character, year: int) -> int:
+	return emp.leave_week_override if emp.leave_override_year == year else emp.leave_week
+
+
+## Bu yılın yaz izninin başlamasına kalan hafta; izin alınmışsa, pencere geçtiyse ya da hafta atanmadıysa -1.
+static func leave_weeks_left(emp: Character) -> int:
+	var date: Dictionary = GameState.get_date_dict()
+	var week: int = summer_week(emp, int(date.year))
+	if emp.leave_taken_year == int(date.year) or week < 0:
+		return -1
+	return _weeks_until(week, date)
+
+
+## Yaz izni bloğu bununkiyle örtüşen, aynı roldeki iş arkadaşı: çalışıyor, bu yılın iznini almamış ve başlangıcı en çok bir
+## hafta uzakta. En yakın hafta kazanır, eşitlikte önce işe giren. Yoksa "".
+static func leave_partner(emp: Character) -> String:
+	var year: int = int(GameState.get_date_dict().year)
+	var week: int = summer_week(emp, year)
+	var best: String = ""
+	var gap: int = HRConstants.LEAVE_WEEKS
+	for other in CharacterRegistry.employees_by_hire():
+		var apart: int = absi(summer_week(other, year) - week)
+		if other.id != emp.id and other.role == emp.role and other.status == HRConstants.STATUS_ACTIVE \
+				and other.leave_taken_year != year and apart < gap:
+			best = other.id
+			gap = apart
+	return best
+
+
+## `summer_leave` fiilinin bir çifte bu yıl yaptığı: `apart` geç başlayanı (eşitlikte `b`) erken başlayanın iki hafta arkasına
+## alır; blokları zaten ayrı olana ve arkası pencereye sığmayana dokunmaz. Öne alınan izin geçmiş bir haftaya düşebilirdi, bu yüzden
+## kayan hep geç başlayandır. `together` ikisini de erken başlayanın haftasına alır: iki izin aynı iki haftadır.
+## {a_id, b_id, apart, moved_id: kayan ("" yoksa), a_week, b_week: sonraki haftalar, shift: kaç hafta kaydığı, weeks_away:
+## ikisinden önce gidenin başlamasına kalan hafta}.
+static func plan_summer_leave(a: Character, b: Character, apart: bool) -> Dictionary:
+	var date: Dictionary = GameState.get_date_dict()
+	var year: int = int(date.year)
+	var a_week: int = summer_week(a, year)
+	var b_week: int = summer_week(b, year)
+	var moved_id: String = ""
+	var shift: int = 0
+	var early_week: int = mini(a_week, b_week)
+	var late_week: int = maxi(a_week, b_week)
+	if not apart:
+		a_week = early_week
+		b_week = early_week
+	elif late_week - early_week < HRConstants.LEAVE_WEEKS and early_week + HRConstants.LEAVE_WEEKS < HRConstants.LEAVE_WEEK_COUNT:
+		shift = early_week + HRConstants.LEAVE_WEEKS - late_week
+		if a_week <= b_week:
+			moved_id = b.id
+			b_week += shift
+		else:
+			moved_id = a.id
+			a_week += shift
+	return {"a_id": a.id, "b_id": b.id, "apart": apart, "moved_id": moved_id, "shift": shift, "a_week": a_week, "b_week": b_week,
+		"weeks_away": _weeks_until(mini(a_week, b_week), date)}
+
+
+## `summer_leave`: planın iki haftasını da bu yıla sabitler; kayan yoksa yazılan yerinde durandır.
+static func apply_summer_leave(plan: Dictionary) -> void:
+	var year: int = int(GameState.get_date_dict().year)
+	CharacterRegistry.set_leave_override(plan.a_id, plan.a_week, year)
+	CharacterRegistry.set_leave_override(plan.b_id, plan.b_week, year)
 
 
 ## Bu kişi için bekleyen bir istifa kartı var; HRActions bu sürede kart eylemlerini reddeder.
@@ -263,6 +335,16 @@ static func send_on_leave(emp: Character, weeks: int, is_manual: bool) -> void:
 	var key: String = "HR_NEWS_ON_HOLIDAY" if is_manual else "HR_NEWS_ON_LEAVE"
 	EventBus.headline_added.emit(HRConstants.NEWS_SOURCE,
 		{"key": Fmt.count_key(key, weeks), "args": {"name": emp.character_name, "n": weeks}})
+
+
+## Hastalık: on_leave'e girer, ama o yılın yaz izni sayılmaz ve oyuncunun izin beklemesi başlamaz (leave_taken_year ve
+## leave_until_day yazılmaz). Gidişte haber, dönüşte moral yoktur. Çalışmayan kişi hasta olmaz: o zaman false.
+static func send_on_sick_leave(emp: Character, weeks: int) -> bool:
+	if emp == null or emp.category != "employee" or weeks <= 0 or emp.status != HRConstants.STATUS_ACTIVE:
+		return false
+	CharacterRegistry.set_status(emp.id, HRConstants.STATUS_ON_LEAVE)
+	CharacterRegistry.set_away(emp.id, HRConstants.LEAVE_KIND_SICK, GameState.day + TimeModel.ticks(weeks))
+	return true
 
 
 ## hr_departure modifier'ı oyuncu istifayı kabul edince çağırır. İstifanın kadrodan çıktığı
@@ -324,6 +406,20 @@ static func from_dict(d: Dictionary) -> void:
 # ============================================================================
 #  İç
 # ============================================================================
+
+## Kişinin yokluğunun bittiği gün: hastalık away_until_day'de, izin leave_until_day'de biter.
+static func _return_day(emp: Character) -> int:
+	return emp.away_until_day if emp.leave_kind == HRConstants.LEAVE_KIND_SICK else emp.leave_until_day
+
+
+## Yaz penceresinin `week` indeksli haftasının başlayacağı tike kalan hafta (`date` bugünün tarihi); geçtiyse -1.
+static func _weeks_until(week: int, date: Dictionary) -> int:
+	var window_start: int = Time.get_unix_time_from_datetime_dict(
+		{"year": int(date.year), "month": HRConstants.LEAVE_WINDOW_START_MONTH, "day": 1})
+	var week_start: int = window_start + week * 7 * 86400
+	var left: int = ceili(float(week_start - Time.get_unix_time_from_datetime_dict(date)) / (7.0 * 86400.0))
+	return left if left >= 0 else -1
+
 
 ## Kaçma riski ihmal edilirse istifa (§11.3). Ucuz tamsayı testleri RNG'den önce: sağlıklı
 ## bir ekip hiç çekiliş tüketmez.

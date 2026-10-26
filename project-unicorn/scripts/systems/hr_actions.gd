@@ -121,6 +121,8 @@ static func preview_promotion(emp: Character, pct: int) -> Dictionary:
 		"ok": true,
 		"reason": "",
 		"pct": p,
+		"level": emp.level + 1,
+		"salary": after,
 		"rows": [
 			_delta(TranslationServer.translate("HR_ROW_TITLE"),
 				HRConstants.job_title(emp.role, emp.level),

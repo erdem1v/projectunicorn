@@ -195,6 +195,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"hr_morale_drift_shape":    fail = _case_hr_morale_drift_shape()
 		"hr_recovery_channels":     fail = _case_hr_recovery_channels()
 		"hr_raise_and_leave":    fail = _case_hr_raise_and_leave()
+		"hr_leave_shift":        fail = _case_hr_leave_shift()
+		"hr_sick_leave":         fail = _case_hr_sick_leave()
 		"hr_burnout_streak":        fail = _case_hr_burnout_streak()
 		# --- İK modulü kapanışı (2026-08-22) ---
 		"menu_has_one_path":        fail = _case_menu_has_one_path()
@@ -7826,6 +7828,251 @@ static func _case_hr_raise_and_leave() -> String:
 	GameState.day += TimeModel.ticks(HRConstants.LEAVE_COOLDOWN_WEEKS)
 	if HRActions.leave_block_reason(e) != "":
 		return "the leave action stayed shut %d weeks after the return" % HRConstants.LEAVE_COOLDOWN_WEEKS
+	return ""
+
+
+## Aynı roldeki iki kişinin yaz izni blokları örtüşünce bir olay kartı geç başlayanı bu yıl için kaydırır (`apart`) ya da ikisini
+## erken başlayanın haftasına alır (`together`). Kayma yalnız bu yılın haftasıdır: kişi kaydığı haftada izne çıkar, ertesi yıl atanan
+## haftaya döner, kayıt gidiş-dönüşte alanları korur; arkası pencereye sığmayan çift kaymaz ve kart onu bağlamaz. Partner aynı roldeki,
+## çalışan, o yıl izin almamış kişidir, önce çıkan da çalışıyor olmalıdır; çip kartta ve geçmiş satırında aynı metindir. `top_skill:`
+## seçicisi ve lint'in yanlış yazılan alanı da burada sınanır.
+## FALSİFİKASYON: HRMoraleSystem.tick_leave_departures'ta summer_week(emp, year) yerine emp.leave_week oku → "kaydırılan kişi" FAIL;
+## summer_week'ten `leave_override_year == year` koşulunu sil → "ertesi yıl" FAIL; plan_summer_leave'de `apart` dalını sil → plan FAIL;
+## `together`ı yerinde bırak → "together" FAIL; leave_pair'den pencere ya da ACTIVE koşulunu sil → "pencere"/"eğitimdeki" FAIL.
+static func _case_hr_leave_shift() -> String:
+	GameState.set_cash(500000)
+	var june: int = 1
+	while int(GameState.get_date_dict(june).month) != HRConstants.LEAVE_WINDOW_START_MONTH:
+		june += 1
+	var year: int = int(GameState.get_date_dict(june).year)
+	_park_leave(CharacterRegistry.get_employees())
+	var early: Character = _make_employee("lv_early", "Ada Erken", HRConstants.ROLE_DEVELOPER, SEED_PACE, 0, 60)
+	var late: Character = _make_employee("lv_late", "Bora Geç", HRConstants.ROLE_DEVELOPER, SEED_PACE, 0, 60)
+	var tester: Character = _make_employee("lv_tester", "Can Test", HRConstants.ROLE_TESTER, SEED_PACE, 0, 60)
+	early.leave_week = 3
+	late.leave_week = 4
+	tester.leave_week = 4
+	GameState.day = june
+
+	# Partner: aynı rol, bir haftalık fark; başka rolün kişisi partner olmaz.
+	if HRMoraleSystem.leave_partner(early) != late.id or HRMoraleSystem.leave_partner(late) != early.id:
+		return "the two developers a week apart are not each other's partner (%s, %s)" % [
+			HRMoraleSystem.leave_partner(early), HRMoraleSystem.leave_partner(late)]
+	if HRMoraleSystem.leave_partner(tester) != "":
+		return "a tester found %s as a partner, want nobody of the same role" % HRMoraleSystem.leave_partner(tester)
+	if HRMoraleSystem.leave_weeks_left(early) != 3 or HRMoraleSystem.leave_weeks_left(late) != 4:
+		return "weeks left read %d and %d, want 3 and 4" % [
+			HRMoraleSystem.leave_weeks_left(early), HRMoraleSystem.leave_weeks_left(late)]
+	if EvSeams.read_for("hr.leave_weeks_left", late.id) != 4 or EvSeams.read_for("hr.role", late.id) != HRConstants.ROLE_DEVELOPER:
+		return "the seams hr.leave_weeks_left and hr.role do not read the registry"
+
+	# Seçici: önce çıkan ve partneri; başka rol aranmaz.
+	var slots: Dictionary = {"employee": {"type": "employee", "select": "leave_pair", "where": {
+			"entity_seam": "hr.role", "scope": "employee", "op": "==", "value": HRConstants.ROLE_DEVELOPER}},
+		"other": {"type": "employee", "select": "leave_partner"}}
+	var bound: Dictionary = EvScope.resolve(slots, {}, "fixture.leave")
+	if not bool(bound.ok) or bound.context.employee.id != early.id or bound.context.other.id != late.id:
+		return "the pair slots bound %s, want the earlier leaver and then the later one" % str(bound)
+	# `top_skill:<alan>`: alanda en yüksek puan, eşitlikte kimlik sırası.
+	var best: Dictionary = EvScope.resolve({"dev": {"type": "employee", "select": "top_skill:engineering"}})
+	if best.context.dev.id != early.id:
+		return "an engineering tie bound %s, want the first id (%s)" % [best.context.dev.id, early.id]
+	late.role_stats["engineering"] = 9
+	best = EvScope.resolve({"dev": {"type": "employee", "select": "top_skill:engineering"}})
+	if best.context.dev.id != late.id:
+		return "top_skill:engineering bound %s, want the developer with the highest engineering score" % best.context.dev.id
+	late.role_stats["engineering"] = early.role_stats["engineering"]
+	EvLint._findings.clear()
+	EvLint._lint_selectors("fixture", {"scope": {"dev": {"type": "employee", "select": "top_skill:enginering"}}})
+	var typo_caught: bool = EvLint._findings.any(func(f: Dictionary) -> bool: return f.rule == "17.12")
+	EvLint._findings.clear()
+	EvLint._lint_selectors("fixture", {"scope": {"dev": {"type": "employee", "select": "top_skill:engineering"}}})
+	if not typo_caught or not EvLint._findings.is_empty():
+		return "the lint let a misspelt skill area pass (%s) or refused a real one (%s)" % [str(typo_caught), str(EvLint._findings)]
+
+	# apart: geç başlayan erken başlayanın iki hafta arkasına, yalnız bu yıl.
+	var plan: Dictionary = HRMoraleSystem.plan_summer_leave(early, late, true)
+	if plan.moved_id != late.id or plan.shift != 1 or plan.a_week != 3 or plan.b_week != 5 or plan.weeks_away != 3:
+		return "the plan moves %s by %s to weeks %s and %s, %s weeks away; want Bora by 1 to 3 and 5, 3 away" % [
+			plan.moved_id, plan.shift, plan.a_week, plan.b_week, plan.weeks_away]
+	if late.leave_week_override != -1:
+		return "planning wrote the shift"
+	var ctx: Dictionary = {"employee": {"type": "employee", "id": early.id}, "other": {"type": "employee", "id": late.id}}
+	var shift: Dictionary = {"verb": "summer_leave", "scope": "employee", "other": "other", "apart": true}
+	var card_chip: Array = EvChips.describe(shift, ctx, {}, false).map(func(p: Dictionary) -> String: return EvChips.text(p))
+	var row: Dictionary = EvEffects.run_played([shift], ctx)[0]
+	if row.has("refused") or str(row.moved_id) != late.id:
+		return "summer_leave landed as %s" % str(row)
+	var row_chip: Array = EvChips.describe(row, ctx, {}, true).map(func(p: Dictionary) -> String: return EvChips.text(p))
+	if card_chip.size() != 1 or not String(card_chip[0]).contains("Bora") or card_chip != row_chip:
+		return "the shift reads %s on the card and %s on the history row, want Bora's on both" % [str(card_chip), str(row_chip)]
+	if late.leave_week != 4 or late.leave_week_override != 5 or late.leave_override_year != year \
+			or HRMoraleSystem.summer_week(late, year) != 5 or HRMoraleSystem.summer_week(late, year + 1) != 4:
+		return "the shift is not this year's alone: assigned %d, override %d for %d" % [
+			late.leave_week, late.leave_week_override, late.leave_override_year]
+	if HRMoraleSystem.summer_week(early, year) != 3 or HRMoraleSystem.leave_weeks_left(late) != 5 \
+			or HRMoraleSystem.leave_partner(early) != "":
+		return "after the shift the pair still overlaps"
+
+	# Kişi kaydığı haftada gider: 3. haftada ilki, 4.da hâlâ ikincisi çalışıyor, 5.te o da izinde.
+	for i in 3:
+		_sim_day()
+	if early.status != HRConstants.STATUS_ON_LEAVE or late.status != HRConstants.STATUS_ACTIVE:
+		return "in week 3 the earlier one reads '%s' and the later one '%s'" % [early.status, late.status]
+	_sim_day()
+	if late.status != HRConstants.STATUS_ACTIVE:
+		return "the shifted person left in his assigned week 4 anyway"
+	_sim_day()
+	if late.status != HRConstants.STATUS_ON_LEAVE or late.leave_taken_year != year:
+		return "the shifted person is '%s' in the week he was moved to" % late.status
+	if tester.status != HRConstants.STATUS_ON_LEAVE:
+		return "the tester did not take his own week 4 (read '%s')" % tester.status
+
+	# together: ikisi de erken başlayanın haftasında, yılın haftası sabit.
+	var pair_a: Character = _make_employee("lv_pair_a", "Deniz Bir", HRConstants.ROLE_DESIGNER, SEED_PACE, 0, 60)
+	var pair_b: Character = _make_employee("lv_pair_b", "Ece İki", HRConstants.ROLE_DESIGNER, SEED_PACE, 0, 60)
+	pair_a.leave_week = 9
+	pair_b.leave_week = 10
+	var both: Dictionary = {"verb": "summer_leave", "scope": "employee", "other": "other", "apart": false}
+	var pair_ctx: Dictionary = {"employee": {"type": "employee", "id": pair_a.id}, "other": {"type": "employee", "id": pair_b.id}}
+	var together_chip: Array = EvChips.describe(both, pair_ctx, {}, false).map(func(p: Dictionary) -> String: return EvChips.text(p))
+	var kept: Dictionary = EvEffects.run_played([both], pair_ctx)[0]
+	if str(kept.moved_id) != "" or kept.shift != 0:
+		return "a pair that stays together moved: %s" % str(kept)
+	if HRMoraleSystem.summer_week(pair_a, year) != 9 or HRMoraleSystem.summer_week(pair_b, year) != 9 \
+			or pair_a.leave_override_year != year or pair_b.leave_override_year != year:
+		return "together put the pair in weeks %d and %d, want both in 9 for this year" % [
+			HRMoraleSystem.summer_week(pair_a, year), HRMoraleSystem.summer_week(pair_b, year)]
+	if together_chip.size() != 1 or not String(together_chip[0]).contains("Deniz") or not String(together_chip[0]).contains("Ece") \
+			or together_chip != EvChips.describe(kept, pair_ctx, {}, true).map(func(p: Dictionary) -> String: return EvChips.text(p)):
+		return "the together chip reads %s" % str(together_chip)
+
+	# Pencere sonu: 11. haftadaki iki kişinin arkası pencereye sığmaz. Kayma olmaz (öne almak bugünü geçerdi) ve kart çifti bağlamaz.
+	GameState.day = june + TimeModel.ticks(9)
+	var edge_a: Character = _make_employee("lv_edge_a", "Ege Son", HRConstants.ROLE_PRODUCT_MANAGER, SEED_PACE, 0, 60)
+	var edge_b: Character = _make_employee("lv_edge_b", "Fuat Son", HRConstants.ROLE_PRODUCT_MANAGER, SEED_PACE, 0, 60)
+	edge_a.leave_week = 11
+	edge_b.leave_week = 11
+	var edge: Dictionary = HRMoraleSystem.plan_summer_leave(edge_a, edge_b, true)
+	if edge.moved_id != "" or edge.shift != 0 or edge.a_week != 11 or edge.b_week != 11:
+		return "a pair in week 11 with today in week 9 planned %s, want nobody moved" % str(edge)
+	var soon: Dictionary = {"employee": {"type": "employee", "select": "leave_pair", "where": {
+			"entity_seam": "hr.leave_weeks_left", "scope": "employee", "op": ">=", "value": 1}},
+		"other": {"type": "employee", "select": "leave_partner"}}
+	if bool(EvScope.resolve(soon, {}, "fixture.leave").ok):
+		return "a pair whose later leave cannot fit behind the earlier one was bound"
+	edge_a.leave_week = 10
+	if EvScope.resolve(soon, {}, "fixture.leave").context.get("employee", {}).get("id", "") != edge_a.id:
+		return "a pair in weeks 10 and 11 was not bound"
+	CharacterRegistry.set_status(edge_a.id, HRConstants.STATUS_TRAINING)
+	if bool(EvScope.resolve(soon, {}, "fixture.leave").ok):
+		return "a person in training was bound as the one who leaves first"
+	CharacterRegistry.set_status(edge_a.id, HRConstants.STATUS_ACTIVE)
+
+	# Kayıt: kayma ve sabitleme alanları gidiş-dönüşte durur.
+	var slot: String = "smoke_leave_shift_%d" % OS.get_process_id()
+	_drain_all_modals()
+	if not SaveManager.save_to_slot(slot):
+		SaveManager.delete_slot(slot)
+		return "save_to_slot failed (%s)" % SaveManager.cannot_save_reason_key()
+	var payload: Dictionary = SaveManager.read_slot(slot)
+	SaveManager.delete_slot(slot)
+	if not bool(payload.get("ok", false)) or not SaveManager.apply_loaded_state(payload):
+		return "the save did not load back"
+	var loaded: Character = CharacterRegistry.get_character(late.id)
+	if loaded.leave_week != 4 or loaded.leave_week_override != 5 or loaded.leave_override_year != year \
+			or HRMoraleSystem.summer_week(loaded, year + 1) != 4:
+		return "the shift did not survive a save (assigned %d, override %d for %d)" % [
+			loaded.leave_week, loaded.leave_week_override, loaded.leave_override_year]
+	return ""
+
+
+## Hastalık yokluğu: kişi sprint ekibinden düşer, ama yaz izni sayılmaz (leave_taken_year ve leave_until_day yazılmaz), gidişte
+## haber ve dönüşte moral yoktur, oyuncunun izin beklemesi (leave_cooldown_left) kendi yolunda akar ve çalışmayan kişi hasta olmaz.
+## Hastalık kayıttan geçer.
+## FALSİFİKASYON: send_on_sick_leave'e `emp.leave_taken_year = ...` ekle → "yaz izni" FAIL; tick_leave_returns'te hasta dalını sil
+## (dönüş izin gibi moral verir) → "moral" FAIL; weeks_until_return'de _return_day yerine leave_until_day oku → "kalan hafta" FAIL;
+## sick_leave kolunda send_on_sick_leave'in false'unu yok say → "izindeki" FAIL.
+static func _case_hr_sick_leave() -> String:
+	var news: Array = []
+	var probe := func(_src: String, line: Dictionary) -> void: news.append(String(line.get("key", "")))
+	EventBus.headline_added.connect(probe)
+	var fail: String = _sick_leave_steps(news)
+	EventBus.headline_added.disconnect(probe)
+	return fail
+
+
+static func _sick_leave_steps(news: Array) -> String:
+	_seed_sprint()
+	var dev: Character = _sprint_hire("char_sick_dev", HRConstants.ROLE_DEVELOPER)
+	var mate: Character = _sprint_hire("char_sick_mate", HRConstants.ROLE_DEVELOPER)
+	dev.leave_until_day = GameState.day   # oyuncunun son izni bugün bitti: sekiz haftalık bekleme sürüyor
+	var cooldown: int = HRActions.leave_cooldown_left(dev)
+	var morale: int = dev.morale
+	var in_team := func(id: String) -> bool:
+		return SprintSystem.team().any(func(t: Dictionary) -> bool: return t.id == id)
+	if cooldown != HRConstants.LEAVE_COOLDOWN_WEEKS or not in_team.call(dev.id):
+		return "fixture: cooldown %d, in the sprint team %s" % [cooldown, str(in_team.call(dev.id))]
+
+	var ctx: Dictionary = {"dev": {"type": "employee", "id": dev.id}}
+	var sick: Dictionary = {"verb": "sick_leave", "scope": "dev", "weeks": 2}
+	var card_chip: Array = EvChips.describe(sick, ctx, {}, false).map(func(p: Dictionary) -> String: return EvChips.text(p))
+	var row: Dictionary = EvEffects.run_played([sick], ctx)[0]
+	var row_chip: Array = EvChips.describe(row, ctx, {}, true).map(func(p: Dictionary) -> String: return EvChips.text(p))
+	if row.has("refused") or card_chip.size() != 1 or card_chip != row_chip or not String(card_chip[0]).contains(dev.character_name):
+		return "sick_leave landed as %s and reads %s on the card, %s on the row" % [str(row), str(card_chip), str(row_chip)]
+	if dev.status != HRConstants.STATUS_ON_LEAVE or dev.leave_kind != HRConstants.LEAVE_KIND_SICK or in_team.call(dev.id) \
+			or not in_team.call(mate.id):
+		return "the sick one reads '%s'/'%s', in the team %s; want out of the sprint team, the other developer in" % [
+			dev.status, dev.leave_kind, str(in_team.call(dev.id))]
+	if not SprintSystem.away().any(func(a: Dictionary) -> bool: return a.id == dev.id):
+		return "the sprint does not list the sick developer as away"
+	if dev.leave_taken_year != 0 or dev.leave_until_day != GameState.day or HRActions.leave_cooldown_left(dev) != cooldown:
+		return "sickness touched the summer-leave latch (%d) or the player's leave wait (%d)" % [
+			dev.leave_taken_year, HRActions.leave_cooldown_left(dev)]
+	if HRMoraleSystem.weeks_until_return(dev) != 2 or not news.is_empty():
+		return "the return reads %d weeks, and %d ticker lines came on the way out; want 2 and none" % [
+			HRMoraleSystem.weeks_until_return(dev), news.size()]
+
+	# Kayıttan geçer.
+	var slot: String = "smoke_sick_leave_%d" % OS.get_process_id()
+	_drain_all_modals()
+	if not SaveManager.save_to_slot(slot):
+		SaveManager.delete_slot(slot)
+		return "save_to_slot failed (%s)" % SaveManager.cannot_save_reason_key()
+	var payload: Dictionary = SaveManager.read_slot(slot)
+	SaveManager.delete_slot(slot)
+	if not bool(payload.get("ok", false)) or not SaveManager.apply_loaded_state(payload):
+		return "the save did not load back"
+	dev = CharacterRegistry.get_character("char_sick_dev")
+	mate = CharacterRegistry.get_character("char_sick_mate")
+	if dev.status != HRConstants.STATUS_ON_LEAVE or dev.leave_kind != HRConstants.LEAVE_KIND_SICK \
+			or dev.away_until_day != GameState.day + 2:
+		return "the sickness did not survive a save ('%s', '%s', until %d)" % [dev.status, dev.leave_kind, dev.away_until_day]
+
+	# İki hafta sonra döner: ne moral ne oyuncunun beklemesi değişir, haber "işe döndü".
+	_sim_day()
+	if dev.status != HRConstants.STATUS_ON_LEAVE:
+		return "the sick one came back after one week of two"
+	_sim_day()
+	if dev.status != HRConstants.STATUS_ACTIVE or dev.leave_kind != "" or dev.away_until_day != 0:
+		return "after two weeks the sick one reads '%s'/'%s'/%d" % [dev.status, dev.leave_kind, dev.away_until_day]
+	if dev.morale != morale:
+		return "coming back from sickness moved morale %d -> %d, want no return bonus" % [morale, dev.morale]
+	if news != ["HR_NEWS_BACK_TO_WORK"]:
+		return "the ticker read %s, want the one back-to-work line" % str(news)
+	if dev.leave_taken_year != 0 or HRActions.leave_cooldown_left(dev) != cooldown - 2:
+		return "the player's leave wait is %d after two weeks, want %d, and the latch %d" % [
+			HRActions.leave_cooldown_left(dev), cooldown - 2, dev.leave_taken_year]
+	if not in_team.call(dev.id):
+		return "the recovered developer did not rejoin the sprint team"
+
+	# Çalışmayan kişi hasta olmaz: izindeki kişide kayıt değişmez ve geçmiş satırı reddi taşır.
+	CharacterRegistry.set_status(mate.id, HRConstants.STATUS_ON_LEAVE)
+	var refused: Dictionary = EvEffects.run_played([{"verb": "sick_leave", "scope": "mate", "weeks": 2}],
+		{"mate": {"type": "employee", "id": mate.id}})[0]
+	if mate.leave_kind != "" or mate.away_until_day != 0 or not refused.has("refused"):
+		return "a person already on leave was marked sick, or the row reads %s" % str(refused)
 	return ""
 
 
@@ -17297,6 +17544,36 @@ static func _case_event_chip_coverage() -> String:
 			person, {}, as_row).map(func(p: Dictionary) -> String: return EvChips.text(p)))
 	if reads[0].size() != 2 or not String(reads[0][1]).contains("Defne") or reads[1] != reads[0]:
 		return "a scheduled morale cost reads %s on the card and %s on the row, want Defne's on both" % [str(reads[0]), str(reads[1])]
+	# The people verbs of a pair's leave, a sickness and a promotion render a chip even with nobody bound.
+	for bare in [{"verb": "summer_leave", "scope": "employee", "other": "other", "apart": true},
+			{"verb": "summer_leave", "scope": "employee", "other": "other", "apart": false},
+			{"verb": "sick_leave", "scope": "dev", "weeks": 2}, {"verb": "promote", "scope": "employee", "pct": 15}]:
+		if EvChips.describe(bare, {}, {}, false).size() != 1:
+			return "%s with nobody bound draws %s, want one chip" % [bare.verb, str(EvChips.describe(bare, {}, {}, false))]
+	# A promotion reads the level and the salary it lands on, the same on the card and on the row; the top level refuses.
+	var junior: Character = _make_employee("char_promo", "Selin Kara", HRConstants.ROLE_DEVELOPER, SEED_PACE, 4000, 60)
+	junior.level = HRConstants.LEVEL_JUNIOR
+	var promo_ctx: Dictionary = {"employee": {"type": "employee", "id": junior.id}}
+	var promo: Dictionary = {"verb": "promote", "scope": "employee", "pct": 15}
+	var promo_card: String = EvChips.text(EvChips.describe(promo, promo_ctx, {}, false)[0])
+	var promo_row: Dictionary = EvEffects.run_played([promo], promo_ctx)[0]
+	var landed_well: bool = junior.level == HRConstants.LEVEL_MID and junior.monthly_salary == 4600 and int(promo_row.salary) == 4600
+	var reads_well: bool = promo_card.contains("Selin") and promo_card.contains(HRConstants.level_label(HRConstants.LEVEL_MID)) \
+		and promo_card == EvChips.text(EvChips.describe(promo_row, promo_ctx, {}, true)[0])
+	if not landed_well or not reads_well:
+		return "a promotion landed as %s (level %d, salary %d) and reads '%s' on the card" % [
+			str(promo_row), junior.level, junior.monthly_salary, promo_card]
+	EvEffects.run_played([promo], promo_ctx)   # mid -> senior
+	if not EvEffects.run_played([promo], promo_ctx)[0].has("refused") or junior.level != HRConstants.LEVEL_SENIOR:
+		return "a senior was promoted past the top level (level %d)" % junior.level
+	var top_card: Array = EvChips.describe(promo, promo_ctx, {}, false).map(func(p: Dictionary) -> String: return EvChips.text(p))
+	if top_card != [String(TranslationServer.translate("HR_ERR_TOP_LEVEL"))]:
+		return "a promotion the dossier refuses reads %s on the card, want the refusal" % str(top_card)
+	# The three one-time labels a card's cash may name print as words, not as their keys.
+	for label in ["equipment", "gift", "award"]:
+		var shown: String = FinanceSystem.one_time_label_display(label)
+		if shown == label or shown.begins_with("FIN_ONETIME_"):
+			return "the cash label '%s' prints as '%s'" % [label, shown]
 	return ""
 
 

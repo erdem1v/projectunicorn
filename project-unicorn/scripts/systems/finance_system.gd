@@ -52,9 +52,13 @@ const ONE_TIME_LABELS := {
 	"user_tests": "FIN_ONETIME_USER_TESTS",
 	"trade_fair": "FIN_ONETIME_TRADE_FAIR",
 	"legal": "FIN_ONETIME_LEGAL",
+	"equipment": "FIN_ONETIME_EQUIPMENT",
+	"gift": "FIN_ONETIME_GIFT",
 	# A positive add_cash: the one-time saving of a salary cut.
 	"pay_cut": "FIN_ONETIME_PAY_CUT",
 	"data_purchase": "FIN_ONETIME_DATA_PURCHASE",
+	# A positive add_cash: prize money.
+	"award": "FIN_ONETIME_AWARD",
 }
 
 # A card's marketing push (marketing_push) [WORKING]: for `weeks` the marketing line costs `burn_pct`

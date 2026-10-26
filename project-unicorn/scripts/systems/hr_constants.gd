@@ -928,6 +928,8 @@ const STATUS_ON_LEAVE := "on_leave"
 # Eğitimde: kapasite dışı, mesai dışı, SORUMLU seçilemez. `on_leave`'den ayrı olmalı, yoksa
 # yıllık izin latch'i ve izin dönüşü ödülü tetiklenirdi.
 const STATUS_TRAINING := "training"
+# Character.leave_kind: on_leave durumunun izin olmayan nedeni.
+const LEAVE_KIND_SICK := "sick"
 
 # --- Deneyim / eğitim ---
 const EXPERIENCE_LEAD_BONUS_MAX := 1.5  # WORKING: Liderlik tavanındaki lider altında öğrenme hızı

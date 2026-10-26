@@ -37,8 +37,8 @@ const NEUTRAL_VERBS := [
 	# arcs
 	"start_arc", "advance_arc", "set_arc_var", "abort_arc", "end_arc",
 	# people — morale, pace, hours and assignment are not economy; salary is, and lives below
-	"change_morale", "morale_all", "morale_crew", "assign_to", "send_on_leave", "start_training", "productivity_mod",
-	"work_hours",
+	"change_morale", "morale_all", "morale_crew", "assign_to", "send_on_leave", "summer_leave", "sick_leave",
+	"start_training", "productivity_mod", "work_hours",
 	# product — a line's bugs: one that lands now, and the rewrite that keeps new ones off it
 	"damage_product", "line_harden",
 	# sprint — the card a sprint decision is about, and the sprint's work hours
@@ -72,7 +72,7 @@ const ECONOMIC_VERBS := [
 	"add_cash", "add_mrr", "add_brand", "add_reputation",
 	"add_customer", "churn_customer", "customer_mrr_delta", "seats",
 	"audience_delta", "convert_audience", "open_paid_tier",
-	"change_salary", "fire_employee", "employee_leaves",
+	"change_salary", "fire_employee", "employee_leaves", "promote",
 	"add_prospect", "angel_accept", "b2b_expand", "b2b_retain_discount", "b2b_month_discount", "marketing_push", "incident",
 	"promise_break",
 ]
@@ -410,6 +410,32 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 			if not HRActions.apply_leave(away, leave_weeks):
 				return {"verb": verb, "refused": HRActions.leave_block_reason(away)}
 			return {"verb": verb, "employee": vid, "weeks": leave_weeks, "gain": HRActions.leave_gain(away, leave_weeks)}
+		# Two colleagues' summer leaves this year (HRMoraleSystem.plan_summer_leave); the leave itself still starts on HR's tick.
+		"summer_leave":
+			var leave: Dictionary = summer_leave_plan(e, ctx)
+			if leave.is_empty():
+				return _no_target(verb, String(e.get("other", "")))
+			HRMoraleSystem.apply_summer_leave(leave)
+			return leave.merged({"verb": verb})
+		# Sickness: out of work for a while, but not the player's leave (HRMoraleSystem.send_on_sick_leave).
+		"sick_leave":
+			var sid: String = entity_of(e, ctx, EvScope.TYPE_EMPLOYEE)
+			var sick: Character = CharacterRegistry.get_character(sid)
+			if sick == null:
+				return _no_target(verb, sid)
+			var sick_weeks: int = int(e.get("weeks", 1))
+			if not HRMoraleSystem.send_on_sick_leave(sick, sick_weeks):
+				return {"verb": verb, "refused": HRActions.leave_block_reason(sick)}
+			return {"verb": verb, "employee": sid, "weeks": sick_weeks}
+		# One step up the levels under the dossier's rules; the raise and the morale come with it, so no raise verb follows.
+		"promote":
+			var rid: String = entity_of(e, ctx, EvScope.TYPE_EMPLOYEE)
+			var risen: Character = CharacterRegistry.get_character(rid)
+			if risen == null:
+				return _no_target(verb, rid)
+			if not HRActions.apply_promotion(risen, int(e.get("pct", HRConstants.PROMOTION_MIN_PCT))):
+				return {"verb": verb, "refused": HRActions.promotion_block_reason(risen)}
+			return {"verb": verb, "employee": rid, "level": risen.level, "salary": risen.monthly_salary}
 		"work_hours":
 			var hid: String = entity_of(e, ctx, EvScope.TYPE_EMPLOYEE)
 			if CharacterRegistry.get_character(hid) == null:
@@ -707,6 +733,14 @@ static func is_authored_gain(e: Dictionary) -> bool:
 static func delay_bounds(e: Dictionary) -> Array:
 	var delay: Variant = e.get("delay_weeks", 1)
 	return [int(delay[0]), int(delay[1])] if delay is Array else [int(delay), int(delay)]
+
+
+## What a `summer_leave` does and what the player reads for it: HRMoraleSystem's plan for the pair the effect names (`scope`
+## and the slot `other`), {} when either is gone.
+static func summer_leave_plan(e: Dictionary, ctx: Dictionary) -> Dictionary:
+	var a: Character = CharacterRegistry.get_character(entity_of(e, ctx, EvScope.TYPE_EMPLOYEE))
+	var b: Character = CharacterRegistry.get_character(EvScope.id_in(ctx, String(e.get("other", ""))))
+	return {} if a == null or b == null else HRMoraleSystem.plan_summer_leave(a, b, bool(e.get("apart", false)))
 
 
 ## What a `trust_delta` writes and what the player reads for it, worked out the way the arm applies it:

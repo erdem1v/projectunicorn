@@ -172,6 +172,29 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 			return [_part(_t("EFFECT_LEAVE").format({"name": _first_name(lid, ctx, names, _t("EFFECT_AN_EMPLOYEE")),
 					"weeks": Fmt.weeks(away_weeks)}), "", "cost"),
 				_figure("HR_ROW_MORALE_RETURN", _num(gain), "gain")]
+		# Two colleagues' summer leaves: who moves and how far, or both away the same weeks and when that starts.
+		"summer_leave":
+			var leave: Dictionary = item if is_delta else EvEffects.summer_leave_plan(item, ctx)
+			var someone: String = _t("EFFECT_AN_EMPLOYEE")
+			if bool(item.get("apart", false)):
+				return [_part(_t("EFFECT_LEAVE_SHIFT").format({"name": _first_name(String(leave.get("moved_id", "")), ctx, names, someone),
+					"weeks": Fmt.weeks(int(leave.get("shift", 0)))}), "", "cost")]
+			return [_part(_t("EFFECT_LEAVE_TOGETHER").format({"a": _first_name(String(leave.get("a_id", "")), ctx, names, someone),
+				"b": _first_name(String(leave.get("b_id", "")), ctx, names, someone),
+				"weeks": Fmt.weeks(int(leave.get("weeks_away", 0)))}), "", "cost")]
+		# Out for weeks, and nothing like the player's leave: no morale comes back.
+		"sick_leave":
+			return [_part(_t("EFFECT_SICK_LEAVE").format({"name": _first_name(_employee(item, ctx, is_delta), ctx, names, _t("EFFECT_AN_EMPLOYEE")),
+				"weeks": Fmt.weeks(int(item.get("weeks", 1)))}), "", "cost")]
+		# The level it lands on and the salary it lands at: the dossier's preview, or what the row recorded.
+		"promote":
+			var promoted: String = _employee(item, ctx, is_delta)
+			var terms: Dictionary = item if is_delta \
+				else HRActions.preview_promotion(CharacterRegistry.get_character(promoted), int(item.get("pct", 0)))
+			if not bool(terms.get("ok", true)):
+				return [_part(String(terms.reason), "", "neutral")]
+			return [_part(_t("EFFECT_PROMOTION").format({"name": _first_name(promoted, ctx, names, _t("EFFECT_AN_EMPLOYEE")),
+				"level": HRConstants.level_label(int(terms.level)), "v": Fmt.money_chip(int(terms.salary))}), "", "cost")]
 		"work_hours":
 			return [_part(_t("EFFECT_WORK_HOURS").format({"n": int(item.get("hours", HRConstants.WORK_HOURS_DEFAULT)),
 				"name": _first_name(_employee(item, ctx, is_delta), ctx, names, _t("EFFECT_AN_EMPLOYEE"))}), "", "neutral")]

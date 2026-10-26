@@ -34,7 +34,8 @@ const ASKED := "asked"
 ## The selectors a slot may name, by type; the lint refuses any other. A name ending in ':' is a prefix and takes a
 ## parameter (`market_rival:giant`). `random` is seeded: the same day, card and slot pick the same entity.
 const SELECTORS := {
-	TYPE_EMPLOYEE: ["lowest_morale", "newest_hire", "most_senior", "account_rep", "support_lead", "sprint_dev", "random"],
+	TYPE_EMPLOYEE: ["lowest_morale", "newest_hire", "most_senior", "top_skill:", "account_rep", "support_lead", "sprint_dev",
+		"leave_pair", "leave_partner", "random"],
 	TYPE_CUSTOMER: ["at_risk", "escalated", "expansion_ready", "open_request", "largest", "smallest", "line_top",
 		"line_warehouse", "line_newest", "line_slow", "request", "random"],
 	TYPE_PROSPECT: ["random"],
@@ -240,12 +241,31 @@ static func _select_employee(mode: String, used: Dictionary, bound: Dictionary) 
 	var pool: Array = CharacterRegistry.get_employees().filter(func(c): return not used.has(c.id))
 	if pool.is_empty():
 		return ""
+	# The best in one area (`top_skill:engineering`): the highest score on the area's ruler, ties by id.
+	if mode.begins_with("top_skill:"):
+		var area: String = mode.trim_prefix("top_skill:")
+		return _first_by(pool, func(c): return -int(c.role_stats.get(area, 0)))
 	match mode:
 		# Ekip §17.3 names these two for content; the catalogue is where they belong.
 		"lowest_morale": return _first_by(pool, func(c): return c.morale)
 		"newest_hire": return _first_by(pool, func(c): return -c.hire_day)
 		# The highest level, and among them the longest on the payroll (Arrays compare in order).
 		"most_senior": return _first_by(pool, func(c): return [-c.level, c.hire_day])
+		# `leave_pair`: the most senior working person whose summer leave overlaps a colleague's and starts no later than
+		# theirs, early enough that the colleague's leave still fits in the window behind it (summer_leave's `apart`);
+		# `leave_partner`: that colleague, relative to the already-bound `employee`.
+		"leave_pair":
+			var year: int = int(GameState.get_date_dict().year)
+			return _first_by(pool.filter(func(c: Character) -> bool:
+				var partner: Character = CharacterRegistry.get_character(HRMoraleSystem.leave_partner(c))
+				var week: int = HRMoraleSystem.summer_week(c, year)
+				return partner != null and c.status == HRConstants.STATUS_ACTIVE and week <= HRMoraleSystem.summer_week(partner, year) \
+					and week + HRConstants.LEAVE_WEEKS < HRConstants.LEAVE_WEEK_COUNT),
+				func(c): return [-c.level, c.hire_day])
+		"leave_partner":
+			var first: Character = CharacterRegistry.get_character(String((bound.get("employee", {}) as Dictionary).get("id", "")))
+			var partner_id: String = HRMoraleSystem.leave_partner(first) if first != null else ""
+			return partner_id if pool.any(func(c: Character) -> bool: return c.id == partner_id) else ""
 		"account_rep":
 			# The rep stewarding the already-bound customer. No rep leaves the slot UNFILLED
 			# rather than handing "your rep says" to someone who is not one.

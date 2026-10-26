@@ -12,8 +12,8 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **262** |
-| Effect verbs (write) | **75** |
+| Seams (read) | **264** |
+| Effect verbs (write) | **78** |
 | Cards in the catalogue | 146 |
 | Arcs | 3 |
 
@@ -48,6 +48,8 @@ so a verb absent from a group is unreachable from it rather than merely discoura
 - `morale_crew`
 - `assign_to`
 - `send_on_leave`
+- `summer_leave`
+- `sick_leave`
 - `start_training`
 - `productivity_mod`
 - `work_hours`
@@ -103,6 +105,7 @@ Barred from ambient origins entirely; on expiry, allowed only in the negative.
 - `change_salary`
 - `fire_employee`
 - `employee_leaves`
+- `promote`
 - `add_prospect`
 - `angel_accept`
 - `b2b_expand`
@@ -242,6 +245,7 @@ slot of that type (§17.12).
 | `hr.job` | entity | string | HR | WRAPPER: the first job held, build | test | support | accounts | sales | research; "" with none |
 | `hr.job_count` | entity | int | HR | 0, 1 or 2 |
 | `hr.leave_cooldown_left` | entity | int | HR | weeks until the player may send this person on leave again; 0 means now |
+| `hr.leave_weeks_left` | entity | int | HR | weeks until this person's summer leave starts; -1 once taken, once the window has passed, or without a week |
 | `hr.level` | entity | int | HR | WRAPPER over Character.level. 0 = junior, 1 = mid, 2 = senior |
 | `hr.morale` | entity | int | HR | 0-100 |
 | `hr.morale_avg` | global | float | HR | 0.0-100.0, and 0.0 when there are no employees at all |
@@ -250,6 +254,7 @@ slot of that type (§17.12).
 | `hr.payroll_monthly` | global | int | HR | not status-filtered: leave is paid |
 | `hr.raise_cooldown_left` | entity | int | HR | weeks until a raise is allowed again; 0 means now |
 | `hr.resign_voice` | entity | string | HR | the per-person resignation line |
+| `hr.role` | entity | string | HR | WRAPPER over Character.role: product_manager | designer | developer | tester | sales_rep | customer_rep |
 | `hr.run_hires` | global | int | HR | WRAPPER; hires made this run, the founder excluded. Counts a person who has since left |
 | `hr.salary` | entity | int | HR | WRAPPER over Character.monthly_salary, USD/month |
 | `hr.salary_band_position` | entity | float | HR | WRAPPER: <0 under the band, 0..1 inside it |
@@ -654,7 +659,7 @@ player's market. A slot with no `select` takes the first free entity by id.
 
 | slot type | selectors |
 |---|---|
-| `employee` | `lowest_morale`, `newest_hire`, `most_senior`, `account_rep`, `support_lead`, `sprint_dev`, `random` |
+| `employee` | `lowest_morale`, `newest_hire`, `most_senior`, `top_skill:`, `account_rep`, `support_lead`, `sprint_dev`, `leave_pair`, `leave_partner`, `random` |
 | `customer` | `at_risk`, `escalated`, `expansion_ready`, `open_request`, `largest`, `smallest`, `line_top`, `line_warehouse`, `line_newest`, `line_slow`, `request`, `random` |
 | `prospect` | `random` |
 | `rival` | `sprint_rival`, `market_rival:`, `random` |
@@ -676,7 +681,7 @@ AUTHORITY, which is the linter's §17.14: a verb is writable only when it has a
 working arm in `EvEffects._apply` AND a chip in `EvChips`, so what an option promises
 is what the player is shown and what lands.
 
-### Writer verbs (41) — any card, inside the two rules below
+### Writer verbs (44) — any card, inside the two rules below
 
 - `add_cash`
 - `add_brand`
@@ -710,6 +715,9 @@ is what the player is shown and what lands.
 - `investor_strain`
 - `marketing_push`
 - `send_on_leave`
+- `summer_leave`
+- `sick_leave`
+- `promote`
 - `work_hours`
 - `damage_product`
 - `line_harden`
