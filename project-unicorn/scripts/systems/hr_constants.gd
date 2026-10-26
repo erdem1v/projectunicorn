@@ -811,12 +811,8 @@ static func overtime_pay_for_day(monthly_salary: int, hours: int) -> int:
 	return int(round(hourly_wage(monthly_salary) * float(extra) * OVERTIME_WAGE_MULT
 		* (float(HOURS_PER_MONTH) / float(WORK_HOURS_DEFAULT)) / float(TimeModel.DAYS_PER_MONTH)))
 
-# FinanceSystem.apply_one_time_cost defter etiketleri. Const değil fonksiyon: const yüklemede
+# İşten çıkarma modalının tazminat satırı etiketi. Const değil fonksiyon: const yüklemede
 # bir kez değerlendirilir ve o anki dili dondururdu.
-static func cost_label_hire() -> String:
-	return TranslationServer.translate("HR_COST_HIRING")
-
-
 static func cost_label_severance() -> String:
 	return TranslationServer.translate("HR_COST_SEVERANCE")
 

@@ -1,6 +1,6 @@
 # Kod haritası · KALITE
 
-Üretildi: git 8edf5c3 · 2026-10-26 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git 199e41f · 2026-10-26 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 246 .gd (tools/ ve sandbox/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
@@ -13,7 +13,7 @@ Kapsam: scripts/ altındaki 246 .gd (tools/ ve sandbox/ hariç). Kod temizliği 
 - scripts/systems/vc_pitch_system.gd · 1327 satır · 91 func
 - scripts/autoload/save_manager.gd · 1297 satır · 61 func
 - scripts/events/tools/lint.gd · 1224 satır · 44 func
-- scripts/systems/hr_constants.gd · 1166 satır · 91 func
+- scripts/systems/hr_constants.gd · 1162 satır · 90 func
 - scripts/ui/office/office_person.gd · 1128 satır · 51 func
 - scripts/autoload/game_state.gd · 1049 satır · 55 func
 - scripts/systems/sprint_catalog.gd · 1038 satır · 91 func
@@ -75,7 +75,7 @@ Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları
 - scripts/debug/endgame_smoke.gd:16576 · _case_save_v10_product_state · 116 satır
 - scripts/systems/sprint_system.gd:1633 · _close · 116 satır
 
-## Ölü kod adayları (21)
+## Ölü kod adayları (20)
 
 Tanım satırı dışında scripts/, scenes/, data/ içinde adı hiç geçmeyen func (yorumlar sayılmaz, dizeler sayılır). Godot geri çağrıları hariç.
 UYARI: call("a"+b) gibi kurulmuş adlar, sinyal adıyla bağlama, harness bayrakları ve tools/*.sh çağrıları yüzünden yanlış pozitif olabilir; silmeden önce grep ile doğrula.
@@ -85,7 +85,6 @@ UYARI: call("a"+b) gibi kurulmuş adlar, sinyal adıyla bağlama, harness bayrak
 - scripts/main/main.gd:5423 · _dbg_close_request · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
 - scripts/main/main.gd:5428 · _dbg_onb_random_x20 · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
 - scripts/main/main.gd:5441 · _dbg_finish_run · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/systems/hr_constants.gd:816 · cost_label_hire
 - scripts/systems/line_gates.gd:126 · speed_bonus_for
 - scripts/systems/product_catalog.gd:237 · type_sector_labels
 - scripts/systems/rnd_system.gd:707 · family_root_done

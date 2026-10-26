@@ -140,7 +140,7 @@ Bir kişinin etkin çıktısı, çalışma saati, görünüşü ve kurucunun onb
 - Yaz izni haftasını yalnız `summer_week` okur; `leave_week`i doğrudan okuyan yeni kod olay kaymasını görmez
 - Yorum bayatlığı: `hr_morale_system.gd:268` "hr_departure modifier" der, gerçek fiil `employee_leaves` (`effects.gd:413`); `game_state.gd:280` yorumu `band` yazar, anahtar artık `level`
 - Üretim kodunda çağıranı olmayan (yalnız smoke): `HRSystem.output_mult_for_area`, `HRSystem.leadership_output_mult`, `HRConstants.climate_*`, `coordination_for_*`
-- Hiçbir yerde okunmayan: `HRConstants.LEAVE_MAX_DEFERRALS`, `LEAVE_DEFER_WEEKS`, `MORALE_LEAVE_DEFER`, `Character.leave_deferrals` (yalnız kayıt göçü yazar); `cost_label_hire` KALITE.md'de ölü aday. Silmeden önce GDD'ye bak (CLAUDE.md §2)
+- Hiçbir yerde okunmayan: `HRConstants.LEAVE_MAX_DEFERRALS`, `LEAVE_DEFER_WEEKS`, `MORALE_LEAVE_DEFER`, `Character.leave_deferrals` (yalnız kayıt göçü yazar). Silmeden önce GDD'ye bak (CLAUDE.md §2)
 - `MIX_*` sabitleri `hr_candidate_generator.gd:30-33` ile `sales_constants.gd:271-274`'te ikizdir (KALITE.md); birini değiştirirsen aday dosyaları baytça değişir
 - Ekran karesi (görsel kabul) paralel koşmaz, `--hr-shot` pencerelidir; smoke headless
 

@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git 8edf5c3 · 2026-10-26 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 199e41f · 2026-10-26 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -153,7 +153,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/onboarding/steps/origin_traits_step.gd · 332 · - · OnboardingStep · 0 sinyal · 18 func
 - scripts/onboarding/steps/step_base.gd · 118 · OnboardingStep · Control · 1 sinyal · 10 func
 
-### scripts/systems/ (72 dosya, 24483 satır)
+### scripts/systems/ (72 dosya, 24479 satır)
 - scripts/systems/angel_round_system.gd · 52 · AngelRoundSystem · RefCounted · 0 sinyal · 1 func
 - scripts/systems/b2b_constants.gd · 286 · B2BConstants · RefCounted · 0 sinyal · 9 func
 - scripts/systems/b2b_sales_system.gd · 652 · B2BSalesSystem · RefCounted · 0 sinyal · 43 func
@@ -169,7 +169,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/systems/graphics_settings.gd · 211 · - · RefCounted · 0 sinyal · 14 func
 - scripts/systems/hr_actions.gd · 334 · HRActions · RefCounted · 0 sinyal · 28 func
 - scripts/systems/hr_candidate_generator.gd · 276 · HRCandidateGenerator · RefCounted · 0 sinyal · 14 func
-- scripts/systems/hr_constants.gd · 1166 · HRConstants · RefCounted · 0 sinyal · 91 func
+- scripts/systems/hr_constants.gd · 1162 · HRConstants · RefCounted · 0 sinyal · 90 func
 - scripts/systems/hr_morale_system.gd · 449 · HRMoraleSystem · RefCounted · 0 sinyal · 33 func
 - scripts/systems/hr_search_system.gd · 307 · HRSearchSystem · RefCounted · 0 sinyal · 15 func
 - scripts/systems/hr_system.gd · 554 · HRSystem · RefCounted · 0 sinyal · 49 func
