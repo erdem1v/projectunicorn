@@ -145,6 +145,10 @@ static func dismiss_files() -> bool:
 # --- The hire ---
 
 static func hire(candidate_index: int) -> Character:
+	# The files outlive a move: a company that moved into a full office while the search ran has no desk for them.
+	if OfficeSystem.hiring_closed():
+		push_warning("[HRSearchSystem] hire() with no free desk in the office (%d taken)" % OfficeSystem.desks_taken())
+		return null
 	if get_state() != HRConstants.SEARCH_FILES_READY:
 		push_warning("[HRSearchSystem] hire() with no files on the table (state '%s')" % get_state())
 		return null

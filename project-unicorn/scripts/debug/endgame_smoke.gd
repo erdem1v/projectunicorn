@@ -20369,9 +20369,12 @@ static func _case_office_move_gates_and_save() -> String:
 
 ## THE DESK CAP: home has none, an office hires as many as it has desks (the founder takes one). At home the 15th
 ## person is hired; a company of 15 moves into the business block's 13 desks, all of them along, and cannot start a
-## search there; once desks free up the search starts and the hire fills them again; a bigger office opens it.
+## search there; once desks free up the search starts and the hire fills them again; a bigger office opens it. A search
+## begun with desks free outlives a move into a full office: its files arrive there and cannot be hired until a desk frees.
 ##
-## FALSIFICATION: take `not OfficeSystem.hiring_closed()` out of HRSearchSystem.can_start -> the full office starts a search.
+## FALSIFICATION: take `not OfficeSystem.hiring_closed()` out of HRSearchSystem.can_start -> the full office starts a search;
+## take the `OfficeSystem.hiring_closed()` guard out of HRSearchSystem.hire -> the files that outlived the move hire a
+## 14th person into 13 desks and FAIL.
 static func _case_desk_cap_blocks_hire() -> String:
 	GameState.set_cash(1_000_000)
 	var crew: Array[String] = []
@@ -20430,6 +20433,26 @@ static func _case_desk_cap_blocks_hire() -> String:
 		return "the move into Plaza failed"
 	if OfficeSystem.hiring_closed() or not HRSearchSystem.can_start():
 		return "Plaza stayed closed with %d of %d desks taken" % [OfficeSystem.desks_taken(), OfficeConstants.CATALOG["plaza"].desks]
+
+	# A search opened in Plaza and a move back down to the business block: the 13 fill its 13 desks before the files land.
+	if not HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, HRConstants.LEVEL_JUNIOR) \
+			or not OfficeSystem.move_to("ishani"):
+		return "could not open a search and a move back to the business block together"
+	GameState.day += TimeModel.ticks(maxi(HRConstants.SEARCH_ARRIVAL_WEEKS, OfficeConstants.MOVE_WEEKS))
+	OfficeSystem.daily_tick()
+	HRSearchSystem.daily_tick()
+	if OfficeSystem.current() != "ishani" or not HRSearchSystem.has_files_ready() or not OfficeSystem.hiring_closed():
+		return "the search and the move did not both land (office '%s', files ready %s, %d free desk(s))" \
+			% [OfficeSystem.current(), HRSearchSystem.has_files_ready(), OfficeSystem.desks_free()]
+	var cash_before: int = GameState.cash
+	if HRSearchSystem.hire(0) != null or OfficeSystem.desks_taken() != 13 or GameState.cash != cash_before:
+		return "the files that outlived the move hired into a full office (%d at the desks, cash %d -> %d)" \
+			% [OfficeSystem.desks_taken(), cash_before, GameState.cash]
+	if not HRSearchSystem.has_files_ready():
+		return "the refused hire took the files off the table"
+	CharacterRegistry.remove(crew.pop_back())
+	if HRSearchSystem.hire(0) == null or OfficeSystem.desks_taken() != 13:
+		return "the same files did not hire into the desk that freed up (%d at the desks)" % OfficeSystem.desks_taken()
 	return ""
 
 

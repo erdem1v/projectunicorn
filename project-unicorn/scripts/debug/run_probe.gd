@@ -1550,8 +1550,15 @@ static func _next_role() -> String:
 
 ## The hires, driven through HRSearchSystem exactly as the HR tab does it: start a search, wait for the files to
 ## arrive, hire the first one. A person is hired when the cash covers six months of the costs they leave (the first
-## one by the preset's cash arm); an office with no free desk starts no search, so its hires wait for a bigger office.
+## one by the preset's cash arm); an office with no free desk starts no search and hires nobody off the files already on
+## the table, so its hires wait for a bigger office.
 static func _hire_the_team() -> void:
+	if OfficeSystem.hiring_closed():
+		if not _desks_full and (HRSearchSystem.has_files_ready() or _next_role() != ""):
+			_desks_full = true
+			_decide("hire", "desks_full")
+		return
+	_desks_full = false
 	if HRSearchSystem.has_files_ready():
 		var preview: Dictionary = HRSearchSystem.preview_hire(0)
 		var hired: Character = HRSearchSystem.hire(0)
@@ -1563,12 +1570,6 @@ static func _hire_the_team() -> void:
 			print("PROBE PLAY day=%d hire %s salary=%d burn=%d" % [
 				GameState.day, hired.role, hired.monthly_salary, GameState.daily_burn])
 		return
-	if OfficeSystem.hiring_closed():
-		if not _desks_full and _next_role() != "":
-			_desks_full = true
-			_decide("hire", "desks_full")
-		return
-	_desks_full = false
 	if _hire_started or not HRSearchSystem.can_start():
 		return
 	var role: String = _next_role()

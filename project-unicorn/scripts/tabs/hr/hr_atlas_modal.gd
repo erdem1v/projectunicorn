@@ -147,7 +147,8 @@ func _build_search_step() -> void:
 	foot.add_child(button(cta, &"PrimaryButtonDark", _on_start_pressed if can else Callable()))
 
 
-## Every desk of the office is taken: the search cannot start, and the strip says why in the warning colour.
+## Every desk of the office is taken: neither a search starts nor the files on the table can be hired, and the strip
+## says why in the warning colour.
 func _desk_strip() -> PanelContainer:
 	var strip := PanelContainer.new()
 	strip.theme_type_variation = UiTokens.D_variation(&"TagWarnBox")
@@ -277,7 +278,10 @@ func _first_warning(pv: Dictionary) -> String:
 
 func _build_files_step() -> void:
 	var files: Array = HRSearchSystem.get_files()
-	body.add_child(_step(tr("HR_ATLAS_FILES_COUNT").format({"n": files.size()})))
+	var full: bool = OfficeSystem.hiring_closed()
+	if full:
+		body.add_child(_desk_strip())
+	body.add_child(spaced(_step(tr("HR_ATLAS_FILES_COUNT").format({"n": files.size()})), UiTokens.SPACE_XL if full else 0))
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", UiTokens.SPACE_XL)
 	for i in files.size():
@@ -295,7 +299,7 @@ func _build_files_step() -> void:
 		String(pv.get("job_title", HRConstants.role_label(String(file.get("role", "")))))] if warning == ""
 		else warning, &"MetaMuted"))
 	foot.add_child(button(tr("HR_ATLAS_HIRE").format({"amount": Fmt.money_exact(int(file.get("salary", 0)))}),
-		&"PrimaryButtonDark", _on_hire_pressed if affordable else Callable()))
+		&"PrimaryButtonDark", _on_hire_pressed if affordable and not full else Callable()))
 
 
 ## Aday dosyası (11b), köşesi kesik bir belge: künye ve seçim diski · yüz, ad, unvan · iki alan ve Liderlik ·

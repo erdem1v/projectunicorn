@@ -163,7 +163,8 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   (`OfficeSystem.can_move_to`); bu peşin kira karar anında bir kez düşer (`FinanceSystem.apply_one_time_cost`, kimlik
   `office_upfront`), taşınma bir hafta sürer ve bulunulan ofisin kirası varış haftasından her tik `office` kalemine yazılır
   (`OfficeSystem.daily_tick`, finanstan önce). Masa tavanı yalnız ofiste vardır: kadro (kurucu dahil) masaya varınca arama
-  başlamaz (`HRSearchSystem.can_start`); evde sınır yoktur ve masadan büyük ekiple taşınmak serbesttir, herkes gelir. Ofisin ödülü marka sıçramasıdır: bir kademeye koşuda ilk varış markayı bir kez yükseltir (`OfficeConstants.CATALOG` `brand`: İş hanı 3, Plaza 6, Loft 10; `OfficeSystem.brand_jump`, varılan kademeler `offices_reached` bayrağında), aşağı taşınınca marka geri alınmaz.
+  başlamaz (`HRSearchSystem.can_start`) ve masadaki dosyalar işe alınmaz (`HRSearchSystem.hire` null döner: arama sürerken
+  dolu ofise taşınan şirket); evde sınır yoktur ve masadan büyük ekiple taşınmak serbesttir, herkes gelir. Ofisin ödülü marka sıçramasıdır: bir kademeye koşuda ilk varış markayı bir kez yükseltir (`OfficeConstants.CATALOG` `brand`: İş hanı 3, Plaza 6, Loft 10; `OfficeSystem.brand_jump`, varılan kademeler `offices_reached` bayrağında), aşağı taşınınca marka geri alınmaz.
 - Ay kapanışı sessizdir: günlük dağıtımın 0. yuvasında ay defteri kapanır ve `EventBus.month_ended` yayılır; haber
   şeridine 10. yuvada tek satır düşer; modal açılmaz. Dönem özeti oyuncunun seçtiği sıklıkta
   gelen kutusuna mesaj olarak gelir (`summary_frequency`: haftalık, aylık, çeyreklik ya da yıllık; varsayılan
