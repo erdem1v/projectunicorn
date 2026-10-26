@@ -1765,7 +1765,8 @@ func _seed_goal(state: String) -> void:
 # open; card_over (city only) = the same flat with fourteen on the roster, İş hanı's card telling a team of fifteen what
 # thirteen desks mean; card_here (city only) = the company in İş hanı, its own card (desks taken, rent); card_tick (city
 # only) = Plaza's card open through one daily tick: a _before frame, and an OFFICECARD line with the cash reading the
-# card draws before and after.
+# card draws before and after; card_moving (city only) = the move from the flat to İş hanı under way with cash left for
+# Plaza's up-front rent: İş hanı's card (_ishani), then Plaza's.
 # desk_shut = a live B2C product, the founder on the build, nobody at the support desk, seven open bugs on two
 # lines: the DESTEK card's one line (_01), then a click on it: the Product window on the worst line's area (_02).
 # With --pan / --pan-gpu (OFFICE_PAN) the shot is handed over after the extra: the camera moves by pixel
@@ -1787,7 +1788,7 @@ func _run_office_shot(spec: String) -> void:
 	# Debug path: the shot writes the office straight past OfficeSystem. The map and the meeting
 	# room are no office: the company sits in a real one, which the map's pin and chips read.
 	GameState.office_id = "ishani" if office_id in OfficeLayout.AWAY else office_id
-	if extra in ["card_ishani", "card_home", "card_over"]:
+	if extra in ["card_ishani", "card_home", "card_over", "card_moving"]:
 		# The flat's card, and İş hanı's as the move out of it: the company still lives in the flat.
 		GameState.office_id = "home"
 		if extra == "card_over":
@@ -1824,6 +1825,13 @@ func _run_office_shot(spec: String) -> void:
 			city.debug_pick(extra.trim_prefix("card_"))
 		"card_over", "card_here":
 			city.debug_pick("ishani")
+		"card_moving":
+			GameState.set_cash(OfficeSystem.upfront("ishani") + OfficeSystem.upfront("plaza"))
+			OfficeSystem.move_to("ishani")
+			city.debug_pick("ishani")
+			await get_tree().create_timer(1.2).timeout
+			_save_shot("office_shot_city_%02d_card_moving_ishani" % hour)
+			city.debug_pick("plaza")
 		"card_tick":
 			city.debug_pick("plaza")
 			# Today's cash as the card's reading draws it, if one of its labels does.

@@ -337,14 +337,15 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   döner, aynı karar için sonraki Esc sistem menüsünü açar, Ekip'in üstündeki dosyanın şeridi karara döner, karar
   verilir, saat durmuş kalır, Boşluk saati sürdürür) ve kare başına `GATEFLOW` satırı basar.
   Ofis: `--office-shot=<home|ishani|plaza|loft|city|meet>:<saat>[:<ek>]`, ek `full|card|<sekme>|hr_dossier|crowd40|
-  founders|nav|crown|cast|cheque|untyped|v1|card_ishani|card_home|card_over|card_here|card_tick|desk_shut` (`crowd40` kırk kişilik kadro,
+  founders|nav|crown|cast|cheque|untyped|v1|card_ishani|card_home|card_over|card_here|card_tick|card_moving|desk_shut` (`crowd40` kırk kişilik kadro,
   `LOOKS` satırı ve dört yakın kare;
   `founders` portre ile bust yan yana; `nav` fırınlanmış zemin; `meet` toplantı odası, `cast` bakış, duruş ve jest
   dizisi; `cheque` çek listesinin ilk haftası (`_01` tür seçili, `_02` ilk sprint başlamış), `untyped` aynı hafta
   tür seçilmeden, `v1` v1.0 yayınlanınca (`_01`) ve Ar-Ge açılınca (`_02`); `card_ishani` ve `card_home` yalnız
   `city`'de, şirket Ev'de iken İş hanı'nın ve Ev'in kartı açık; `card_over` aynı Ev'de on dört çalışanla İş hanı'nın kartı,
   `card_here` şirket İş hanı'nda kendi kartı; `card_tick` yalnız `city`'de, Plaza'nın kartı bir günlük
-  tikten geçer (`_before` karesi, `OFFICECARD` satırı); `desk_shut` canlı B2C, iki hatta yedi açık hata: DESTEK
+  tikten geçer (`_before` karesi, `OFFICECARD` satırı); `card_moving` yalnız `city`'de, Ev'den İş hanı'na taşınma sürerken İş hanı'nın
+  kartı (`_ishani`) ve Plaza'nın kartı; `desk_shut` canlı B2C, iki hatta yedi açık hata: DESTEK
   kartının tek satırı (`_01`), kartın tıklanışı ve en çok hatalı hattın alanı açık Ürün penceresi (`_02`);
   `city:<saat>:crown` kulenin tacı). `--office-shot`'a `--pan=<adım;…>` eklenirse koşu yalnız 3B görüntüyü kamera
   ofsetlerinde kaydeder ve `PAN|` satırı basar (gölge kutusu ve ilk kareye fark; adım `dx,dy[,zm]`,

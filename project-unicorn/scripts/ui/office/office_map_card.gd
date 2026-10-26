@@ -29,10 +29,16 @@ func _init(office_id: String) -> void:
 
 	var office: Dictionary = OfficeConstants.CATALOG[office_id]
 	var current := office_id == OfficeSystem.current()
-	# The flat is never a move target, so the card of a move is any office but this one and the flat.
-	var target := not current and office_id != "home"
+	var moving := OfficeSystem.is_moving()
+	# The flat is never a move target, nor is any office while a move is on the road: the card of a move is
+	# any office but this one and the flat, with no move under way.
+	var target := not current and office_id != "home" and not moving
 	var upfront: int = OfficeSystem.upfront(office_id)
 	var short := target and GameState.cash < upfront
+	var moving_text := ""
+	if moving:
+		var weeks := OfficeSystem.arrival_day() - GameState.day
+		moving_text = tr(Fmt.count_key("OFFICE_MOVING_BADGE", weeks)).format({"weeks": weeks})
 
 	var thumb := TextureRect.new()
 	thumb.texture = load("res://assets/art/office/thumb_%s.jpg" % office_id)
@@ -51,7 +57,9 @@ func _init(office_id: String) -> void:
 	head.add_child(tier)
 	if current:
 		head.add_child(UiFactory.make_pill(tr("OFFICE_STATUS_CURRENT"), UiTokens.BG_TOPBAR, UiTokens.CREAM, false))
-	else:
+	elif office_id == GameState.office_move_to:
+		head.add_child(UiFactory.make_pill(moving_text, UiTokens.BADGE_BG, UiTokens.BADGE_FG, false))
+	elif not moving:
 		var look := UiTokens.badge_palette(&"negative" if short else &"positive")
 		head.add_child(UiFactory.make_pill(tr("OFFICE_STATUS_BLOCKED" if short else "OFFICE_STATUS_MOVABLE"),
 			look.bg, look.fg, false))
@@ -99,9 +107,12 @@ func _init(office_id: String) -> void:
 		req.add_child(UiFactory.make_label(tr("OFFICE_REQ_NOW").format({"value": Fmt.money_exact(GameState.cash)}), &"RowMeta"))
 		col.add_child(req)
 		var costs: int = GameState.daily_burn * TimeModel.DAYS_PER_MONTH
+		# The books carry the rent as a rounded daily rate: the monthly figure on the card is the one they will show.
+		var rent_now := int(OfficeConstants.CATALOG[OfficeSystem.current()].rent)
+		var daily_step := FinanceSystem.daily_rate(int(office.rent)) - FinanceSystem.daily_rate(rent_now)
 		var tip := UiFactory.make_label(tr("OFFICE_MOVE_TIP").format({"rent": rent,
 			"upfront": Fmt.money_exact(upfront), "old": Fmt.money_exact(costs),
-			"new": Fmt.money_exact(costs + int(office.rent) - int(OfficeConstants.CATALOG[OfficeSystem.current()].rent))}),
+			"new": Fmt.money_exact(costs + daily_step * TimeModel.DAYS_PER_MONTH)}),
 			&"CaptionMuted")
 		tip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		col.add_child(tip)
@@ -128,9 +139,8 @@ func _init(office_id: String) -> void:
 	go.disabled = true
 	if current:
 		go.text = tr("OFFICE_CARD_HERE")
-	elif OfficeSystem.is_moving():
-		var weeks := OfficeSystem.arrival_day() - GameState.day
-		go.text = tr(Fmt.count_key("OFFICE_MOVING_BADGE", weeks)).format({"weeks": weeks})
+	elif moving:
+		go.text = moving_text
 	elif OfficeSystem.can_move_to(office_id):
 		go.text = tr("OFFICE_CARD_MOVE_GO")
 		go.disabled = false
