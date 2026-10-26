@@ -192,7 +192,7 @@ func _read_file(path: String) -> Dictionary:
 		return _refused("SAVE_ERR_TOO_OLD", meta)
 	var state: Dictionary = data["state"]
 	if version < 11:
-		_migrate_sales_rev6(state)
+		_migrate_11(state)
 	if version < 13:
 		_migrate_13(state)
 	if version < 14:
@@ -202,9 +202,9 @@ func _read_file(path: String) -> Dictionary:
 	if version < 16:
 		_migrate_16(state)
 	if version < 18:
-		_migrate_17(state)
-	if version < 19:
 		_migrate_18(state)
+	if version < 19:
+		_migrate_19(state)
 	return {"ok": true, "error_key": "", "meta": meta, "state": state}
 
 
@@ -615,6 +615,8 @@ func _game_version() -> String:
 #  Migration
 # ============================================================================
 
+# `_migrate_N` brings a save written before schema N up to N.
+
 ## v10 → v11: SATIŞ rev 6. The lead's size became a star (§2) and leads gained an expiry;
 ## leaving `expires_on_day` at 0 would drop every restored lead on the first sweep. An
 ## account whose MRR and seats are both known gets its truthful `seat_price` (§5.4) instead
@@ -625,7 +627,7 @@ const _LEGACY_SIZE_TO_STAR := {"small": 1, "mid": 2, "enterprise": 3}
 const _LEGACY_LEAD_LIFE_DAYS := 7
 
 
-func _migrate_sales_rev6(state: Dictionary) -> void:
+func _migrate_11(state: Dictionary) -> void:
 	var reg: Dictionary = state.get("registries", {}) as Dictionary
 	var day: int = int((state.get("game_state", {}) as Dictionary).get("day", 1))
 
@@ -814,7 +816,7 @@ const _POLISH_HALF_STAMP := 1.0     # above the one-turn baseline: a second desi
 const _POLISH_FULL_STAMP := 1.11    # three design turns
 const _BUILD_FLAG_PREFIXES := ["creation_draft", "cancelled_build_prefill", "product_path_frank_seen", "mvp_sprint_",
 	"mvp_bug_sprint_", "bug_count_at_bugfix_start_", "mvp_bug_count_at_launch"]
-## The sprint card this migration writes is the v18 one (_migrate_18 turns it into the current shape): the points of a tier
+## The sprint card this migration writes is the v18 one (_migrate_19 turns it into the current shape): the points of a tier
 ## and the phases' shares as the sprint engine had them then.
 const _V14_EFFORT := {1: 3, 2: 5, 3: 8}
 const _V14_SHARES := [0.2, 0.6, 0.2]
@@ -972,7 +974,7 @@ func _migrate_16(state: Dictionary) -> void:
 ## kaydı atlanır. Satır, kaydın kendi ürününün hatlarıyla okunur: kayıt okunurken canlı ürün başka ya da boş olabilir
 ## (`list_slots` her yuvayı buradan geçirir). Eski "stability" kayıp nedeni (hesap hafızası, kayıp günlüğü, aday) Güven & Ölçek
 ## alanını zayıf bulmak olur.
-func _migrate_17(state: Dictionary) -> void:
+func _migrate_18(state: Dictionary) -> void:
 	var gs: Dictionary = state.get("game_state", {}) as Dictionary
 	for mem: Dictionary in (gs.get("sales_account_memory", {}) as Dictionary).values():
 		_retire_stability(mem, "loss_reason", "loss_target")
@@ -1005,7 +1007,7 @@ func _migrate_17(state: Dictionary) -> void:
 const _V18_POINT := 5
 
 
-func _migrate_18(state: Dictionary) -> void:
+func _migrate_19(state: Dictionary) -> void:
 	var product: Dictionary = (state.get("game_state", {}) as Dictionary).get("product", {}) as Dictionary
 	if not product.has("sprint"):
 		return

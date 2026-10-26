@@ -20,10 +20,11 @@ extends RefCounted
 
 const TYPE_TAG := "__res"
 
-# The product's quality axes and the stamps that fed them, and the new-code term of the report inflow. A save written
-# while they lived still carries the flags, whatever its schema number; they are dropped on every load, after the
-# migrations that read them.
-const RETIRED_PRODUCT_FLAGS := ["mvp_innovation", "mvp_stability", "mvp_experience", "mvp_step_realization", "mvp_new_code_effort"]
+# Flags no system owns any more: the product's quality axes and the stamps that fed them, the new-code term of the report
+# inflow, and the investor-prep switch. A save written while they lived still carries them, whatever its schema number;
+# they are dropped on every load, after the migrations that read them.
+const RETIRED_FLAGS := ["mvp_innovation", "mvp_stability", "mvp_experience", "mvp_step_realization", "mvp_new_code_effort",
+	"pitch_prep_active"]
 
 # One-time charge ids no card writes any more. A save still carries their rows in the transactions log, and the Finance
 # tab would draw the raw id; they are dropped on every load.
@@ -247,8 +248,7 @@ static func _decode_flags(raw: Variant) -> Dictionary:
 			TYPE_ARRAY:      out[key] = from_json(v) if typeof(v) == TYPE_ARRAY else []
 			TYPE_DICTIONARY: out[key] = from_json(v) if typeof(v) == TYPE_DICTIONARY else {}
 			_:               out[key] = from_json(v)
-	out.erase("pitch_prep_active")   # a key an old save carries and no system owns
-	for key in RETIRED_PRODUCT_FLAGS:
+	for key in RETIRED_FLAGS:
 		out.erase(key)
 	return out
 

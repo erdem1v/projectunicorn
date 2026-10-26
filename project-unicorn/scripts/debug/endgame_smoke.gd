@@ -2673,8 +2673,7 @@ static func _case_series_a_road_closed_when_all_funds_close() -> String:
 ## the `prep` block and the `pitch_prep_active` flag back into the file at the CURRENT schema (the
 ## drop hangs on no version); what loads carries neither.
 ##
-## FALSİFİKASYON: `SaveCodec._decode_flags`'taki `out.erase("pitch_prep_active")` satırını sil →
-## bayrak geri gelir ve FAIL.
+## FALSİFİKASYON: `SaveCodec.RETIRED_FLAGS`tan "pitch_prep_active"i çıkar → bayrak geri gelir ve FAIL.
 static func _case_save_drops_retired_prep() -> String:
 	var slot: String = "smoke_retired_prep_%d" % OS.get_process_id()
 	_seed_save_world()
@@ -15940,9 +15939,9 @@ static func _case_fit_account_ref() -> String:
 ## ilk tik hiçbir hesabın memnuniyetini aynı dünyanın şema 18 olarak kaydedilmiş hâlinin ilk tikinden farklı yazmaz. Eski "stability"
 ## kayıp nedeni (hesap hafızası, kayıp günlüğü, aday) Güven & Ölçek alanını zayıf bulmak olur, öbür nedenler olduğu gibi kalır.
 ##
-## FALSİFİKASYON: _migrate_17'deki B2C süzgecini (`!= "b2b"`) sil → kitle kaydı referans alır FAIL; `subtype` argümanını sil → canlı
-## ürün boşken referanslar boş kalır FAIL; read_slot'taki `_migrate_17` çağrısını sil → şema 17 kaydı boş referansla açılır FAIL;
-## `_retire_stability`'yi `_migrate_17`'den çıkar → eski kayıp nedeni FAIL.
+## FALSİFİKASYON: _migrate_18'deki B2C süzgecini (`!= "b2b"`) sil → kitle kaydı referans alır FAIL; `subtype` argümanını sil → canlı
+## ürün boşken referanslar boş kalır FAIL; read_slot'taki `_migrate_18` çağrısını sil → şema 17 kaydı boş referansla açılır FAIL;
+## `_retire_stability`'yi `_migrate_18`'den çıkar → eski kayıp nedeni FAIL.
 static func _case_save_v17_market_ref() -> String:
 	# Canlı ürün yokken (ana menüden Devam): referans yine kaydın ürününden dolar.
 	var v17 := {"game_state": {"flags": {"mvp_sub_product_type_id": "erp"},
@@ -15959,7 +15958,7 @@ static func _case_save_v17_market_ref() -> String:
 			"prospects": [{"id": "p_old", "last_loss_reason": "stability"}, {"id": "p_price", "last_loss_reason": "price"}]}}
 	if ProductState.subtype() != "":
 		return "fixture: the live product is '%s', the migration is meant to run with none" % ProductState.subtype()
-	SaveManager._migrate_17(v17)
+	SaveManager._migrate_18(v17)
 	var rows: Array = v17.registries.customers
 	if rows[3].has("market_ref") or rows[0].market_ref.is_empty() or rows[0].market_ref != rows[2].market_ref \
 			or rows[0].market_ref == rows[1].market_ref:
@@ -16324,7 +16323,7 @@ static func _case_card_math_matches_gdd_example() -> String:
 ##
 ## Hat kademeleri, açık hata deposu, yayın yaşı, ilgi ve altyapı seçimi yeniden yüklemeden sağ çıkar.
 ##
-## FALSİFİKASYON: `SaveCodec.RETIRED_PRODUCT_FLAGS`a "mvp_line_tiers" ekle → hat kademesi iddiası
+## FALSİFİKASYON: `SaveCodec.RETIRED_FLAGS`a "mvp_line_tiers" ekle → hat kademesi iddiası
 ## FAIL. MIN_LOADABLE_VERSION'ı 8'e indir → red iddiası FAIL.
 static func _case_save_v10_product_state() -> String:
 	ProductLines.reload()
@@ -25769,7 +25768,7 @@ static func _case_save_v14_history_becomes_releases() -> String:
 ## kart testi baştan alır; `faulty`, `shares`, `effort_mod` ve sprintin `weeks`'i düşer, `cut` 0 olur (kısaltılmış test tam gelir). İş
 ## kaydı (`by`) olmayan kart ilk işinde kaydını açar. Sürüm kayıtlarının kartları yeni biçime, `velocity` ve `carried` puanları ×5 gelir,
 ## `faulty` hatları `escaped` olur.
-## FALSİFİKASYON: `_migrate_18`de `_V18_POINT`i 1 yap → ölçek iddiası FAIL; `_scale_sprint_card`taki test sıfırlamasını sil → test iddiası
+## FALSİFİKASYON: `_migrate_19`da `_V18_POINT`i 1 yap → ölçek iddiası FAIL; `_scale_sprint_card`taki test sıfırlamasını sil → test iddiası
 ## FAIL; `effort_mod`u toplamdan çıkar → efor iddiası FAIL; `record.get("shipped", [])` döngüsünü sil → sürüm kaydı iddiası FAIL;
 ## `SprintBugs.worked`te `by` varsayılanını `c.by` yap → iş kaydı iddiası FAIL (kayıtsız kart okunamaz).
 static func _case_save_v19_cards_scale_and_shape() -> String:
@@ -25808,7 +25807,7 @@ static func _case_save_v19_cards_scale_and_shape() -> String:
 		"next": {"number": 4, "cards": []}, "mode": "active", "cards": cards, "release": {},
 		"releases": [{"number": 1, "sprint": 2, "shipped": [shipped_old], "velocity": {"done": 3.0, "total": 4.0},
 			"carried": [{"id": "feat:x", "done": 2.5, "total": 5, "to_sprint": 3}], "faulty": ["line_x"]}]}}}
-	SaveManager._migrate_18(state)
+	SaveManager._migrate_19(state)
 	var product: Dictionary = state.game_state.product
 	if product.sprint.has("weeks") or not is_equal_approx(float(product.sprint.capacity), 20.0):
 		return "the migrated sprint reads %s, want no weeks and a capacity of 20" % str(product.sprint)
@@ -25884,7 +25883,7 @@ static func _as_v18_card(card: Dictionary) -> void:
 ## Sprint ortasında yazılmış v18 kaydı yüklenir ve oyun kaldığı yerden sürer: iki haftalığa uzayan sprint, ×5 puanlarla kartlar, testi
 ## baştan alınan kart ve kapanışta sürüme çıkan kartlar. Kayıt dosyası gerçek yoldan (`save_to_slot`, `read_slot`,
 ## `apply_loaded_state`) geçer; v18 biçimi koşan sprintin kartlarını eski değerleriyle yeniden yazarak kurulur.
-## FALSİFİKASYON: `read_slot`taki `_migrate_18` çağrısını sil → kart biçimi iddiası FAIL (`need` yok); `_scale_sprint_card`taki test
+## FALSİFİKASYON: `read_slot`taki `_migrate_19` çağrısını sil → kart biçimi iddiası FAIL (`need` yok); `_scale_sprint_card`taki test
 ## sıfırlamasını sil → test iddiası FAIL; `_V18_POINT`i 1 yap → toplam puan iddiası FAIL.
 static func _case_save_v19_running_sprint_continues() -> String:
 	var slot: String = "smoke_v19_running_%d" % OS.get_process_id()
@@ -28166,7 +28165,7 @@ static func _case_release_through_close() -> String:
 ## taşır. Bayraklar her yüklemede düşer, öbür bayraklar ve cila olduğu gibi kalır. Damgayı cilaya çeviren göç
 ## (`_migrate_15`) onu düşmeden önce ham sözlükten okur: bu `save_v14_build_becomes_sprint_plan`ın konusudur.
 ##
-## FALSİFİKASYON: `SaveCodec._decode_flags`taki düşürme döngüsünü sil → bayrak iddiası FAIL; `RETIRED_PRODUCT_FLAGS`a
+## FALSİFİKASYON: `SaveCodec._decode_flags`taki düşürme döngüsünü sil → bayrak iddiası FAIL; `RETIRED_FLAGS`a
 ## "mvp_line_tiers" ekle → hat kademesi iddiası FAIL.
 static func _case_save_retired_product_flags() -> String:
 	var slot: String = "smoke_retired_flags_%d" % OS.get_process_id()
