@@ -15156,7 +15156,7 @@ static func _case_product_read_catalogue() -> String:
 ## 2★ tabanını değil. Not aracının 5 Çekirdek hattı, her alanda bir hat (Güven'de iki) vardır; 10.000 kullanıcıda Çekirdek 1,25
 ## ve vurgular 1 ister, 50.000'de 2 ve 1,5.
 ##
-## FALSİFİKASYON: ProductRead.FLOOR_CROSSED_RATIO'yu 0 yap → eşik iddiası FAIL. worst_floor'da `<` yerine `<=` yaz → eşitlik
+## FALSİFİKASYON: ProductRead.FLOOR_CROSSED_RATIO'yu 0 yap → eşik iddiası FAIL. `ProductQuality.lowest`te `<` yerine `<=` yaz → eşitlik
 ## iddiası FAIL. floor_ratios'ta `weights("b2c", "")` yerine `SprintCatalog.area_ids()` oku → Gelir iddiası FAIL. B2B
 ## koşulunu kaldır → B2B iddiası FAIL. floor_ratios'ta `{"audience": true}`yu sil → "kitlenin altında yalnız Çekirdek" iddiası FAIL.
 static func _case_floor_ladder_areas() -> String:
@@ -27732,7 +27732,7 @@ static func _case_bugs_leave_sales_and_vc_alone() -> String:
 ## olanların oranı en düşüğü; tam beklentide olan, beklentisi 0 olan ve `areas`ın dışında kalan alan sayılmaz; yoksa "".
 ## Series A sorusu o alanı adıyla söyler, tohum sorusu `how_big` olur, yoksa ikisi temizdir. Meridian'ın masa uyumu
 ## `E_FIT_PRODUCT_DIMS`'i yalnız yayındaki ürünün hiçbir alanı eksik değilken alır.
-## FALSİFİKASYON: `weakest_area`da `lvl < expect` yerine `<=` yaz → "bar" FAIL; `_lowest` yerine ilk eksik alanı
+## FALSİFİKASYON: `weakest_area`da `lvl < expect` yerine `<=` yaz → "bar" FAIL; `lowest` yerine ilk eksik alanı
 ## döndür → "lowest" FAIL; `_sorgu_product`ta `area_short` yerine boş dize ver → "series_a" FAIL; beklentiyi 1'e yükselt
 ## (`lvl < maxf(expect, 1.0)`) → "star" FAIL; `_domain_fit`te `shipped and`'i kaldır → "unshipped" FAIL.
 static func _case_vc_weakest_area() -> String:

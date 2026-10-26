@@ -184,7 +184,7 @@ static func weakest_area(ctx: Dictionary = {}) -> String:
 		var expect: float = expectation(area, ctx)
 		if lvl < expect:
 			ratios[area] = _ratio(lvl, expect)
-	return _lowest(ratios.keys(), ratios)
+	return lowest(ratios.keys(), ratios)
 
 
 ## Genel Bakış'ın ürün durumu satırı: alanın ürün sayfasındaki hâli, `word` ve `serves` ile aynı referans. `word`: sözcüğün kimliği;
@@ -285,15 +285,15 @@ static func fit_from_levels(levels: Dictionary, ctx: Dictionary) -> Dictionary:
 	var ceiling: float = ratios.core + CORE_LEAD
 	var capped: bool = mean > ceiling
 	var uyum: float = minf(mean, ceiling)
-	var weakest: String = _lowest(emphasis(ctx.sector), ratios)
-	var lowest: String = _lowest(ratios.keys(), ratios)
+	var weakest: String = lowest(emphasis(ctx.sector), ratios)
+	var lowest_area: String = lowest(ratios.keys(), ratios)
 	var note: Array = []
 	for area in ["core", weakest]:
 		if ratios.has(area):
 			note.append({"area": area, "word": word_for(float(levels[area]), float(ref[area]))})
 	return {"value": mini(100, roundi(FIT_SCALE * uyum)), "match": uyum, "capped": capped,
 		"weakest_emphasis": weakest,
-		"loss_area": "core" if capped else (lowest if ratios[lowest] < 1.0 else ""),
+		"loss_area": "core" if capped else (lowest_area if ratios[lowest_area] < 1.0 else ""),
 		"note": note, "label_key": LABEL_KEY}
 
 
@@ -386,7 +386,7 @@ static func _row(sector: String) -> Array:
 
 
 ## `areas` içinde oranı en düşük alan; eşitlikte öndeki. Oranı olan alan yoksa "".
-static func _lowest(areas: Array, ratios: Dictionary) -> String:
+static func lowest(areas: Array, ratios: Dictionary) -> String:
 	var out: String = ""
 	for area in areas:
 		if ratios.has(area) and (out == "" or ratios[area] < ratios[out]):

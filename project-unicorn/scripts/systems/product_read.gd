@@ -115,10 +115,7 @@ static func floor_state(ratio: float) -> String:
 ## En düşük oranlı alan ve basamağı ({area, state}); oranlar eşitse öndeki. Hiçbir alan uyarıya inmediyse ikisi de boş.
 static func worst_floor() -> Dictionary:
 	var ratios: Dictionary = floor_ratios()
-	var worst: String = ""
-	for area in ratios:
-		if worst == "" or ratios[area] < ratios[worst]:
-			worst = area
+	var worst: String = ProductQuality.lowest(ratios.keys(), ratios)
 	var state: String = floor_state(ratios[worst]) if worst != "" else ""
 	return {"area": worst if state != "" else "", "state": state}
 

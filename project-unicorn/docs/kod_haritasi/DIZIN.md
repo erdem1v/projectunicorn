@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git 20636e7 · 2026-10-26 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git d8f21ae · 2026-10-26 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -153,7 +153,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/onboarding/steps/origin_traits_step.gd · 332 · - · OnboardingStep · 0 sinyal · 18 func
 - scripts/onboarding/steps/step_base.gd · 118 · OnboardingStep · Control · 1 sinyal · 10 func
 
-### scripts/systems/ (72 dosya, 24347 satır)
+### scripts/systems/ (72 dosya, 24344 satır)
 - scripts/systems/angel_round_system.gd · 52 · AngelRoundSystem · RefCounted · 0 sinyal · 1 func
 - scripts/systems/b2b_constants.gd · 286 · B2BConstants · RefCounted · 0 sinyal · 9 func
 - scripts/systems/b2b_sales_system.gd · 652 · B2BSalesSystem · RefCounted · 0 sinyal · 43 func
@@ -191,7 +191,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/systems/product_catalog.gd · 241 · ProductCatalog · RefCounted · 0 sinyal · 14 func
 - scripts/systems/product_lines.gd · 432 · ProductLines · RefCounted · 0 sinyal · 26 func
 - scripts/systems/product_quality.gd · 394 · ProductQuality · RefCounted · 0 sinyal · 34 func
-- scripts/systems/product_read.gd · 172 · ProductRead · RefCounted · 0 sinyal · 18 func
+- scripts/systems/product_read.gd · 169 · ProductRead · RefCounted · 0 sinyal · 18 func
 - scripts/systems/product_state.gd · 333 · ProductState · RefCounted · 0 sinyal · 43 func
 - scripts/systems/product_system.gd · 45 · ProductSystem · RefCounted · 0 sinyal · 6 func
 - scripts/systems/quality_model.gd · 37 · QualityModel · RefCounted · 0 sinyal · 2 func
@@ -477,10 +477,10 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - version_shipped(version: int) · scripts/autoload/event_bus.gd:149
   ↳ version_shipped emit: scripts/systems/sprint_system.gd:323,1701
   ↳ version_shipped connect: scripts/events/core/signals.gd:30, scripts/tabs/finance/finance_ozet_view.gd:72, scripts/tabs/personal_tab.gd:52, scripts/tabs/rnd_tab.gd:76, scripts/ui/components/inbox.gd:162 +6
-- bug_confirmed(total_confirmed: int) · scripts/autoload/event_bus.gd:150 · emit: scripts/systems/product_read.gd:155 · connect: scripts/debug/endgame_smoke.gd:15133
-- unconfirmed_threshold_crossed(band: String) · scripts/autoload/event_bus.gd:151 · emit: scripts/systems/product_read.gd:158 · connect: scripts/debug/endgame_smoke.gd:15134
-- axis_floor_warning(area: String) · scripts/autoload/event_bus.gd:152 · emit: scripts/systems/product_read.gd:165 · connect: scripts/events/core/signals.gd:37, scripts/debug/endgame_smoke.gd:15202
-- axis_floor_crossed(area: String) · scripts/autoload/event_bus.gd:153 · emit: scripts/systems/product_read.gd:167 · connect: scripts/events/core/signals.gd:38, scripts/debug/endgame_smoke.gd:15203
+- bug_confirmed(total_confirmed: int) · scripts/autoload/event_bus.gd:150 · emit: scripts/systems/product_read.gd:152 · connect: scripts/debug/endgame_smoke.gd:15133
+- unconfirmed_threshold_crossed(band: String) · scripts/autoload/event_bus.gd:151 · emit: scripts/systems/product_read.gd:155 · connect: scripts/debug/endgame_smoke.gd:15134
+- axis_floor_warning(area: String) · scripts/autoload/event_bus.gd:152 · emit: scripts/systems/product_read.gd:162 · connect: scripts/events/core/signals.gd:37, scripts/debug/endgame_smoke.gd:15202
+- axis_floor_crossed(area: String) · scripts/autoload/event_bus.gd:153 · emit: scripts/systems/product_read.gd:164 · connect: scripts/events/core/signals.gd:38, scripts/debug/endgame_smoke.gd:15203
 - line_upgraded(line_id: String, tier: int) · scripts/autoload/event_bus.gd:154 · emit: scripts/systems/sprint_system.gd:1635 · connect: -
 - line_completed(line_id: String) · scripts/autoload/event_bus.gd:155 · emit: scripts/systems/sprint_system.gd:1637 · connect: -
 - delighter_shipped(step_id: String) · scripts/autoload/event_bus.gd:156 · emit: scripts/systems/sprint_system.gd:1638 · connect: -

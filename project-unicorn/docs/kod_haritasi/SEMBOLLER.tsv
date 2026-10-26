@@ -2077,7 +2077,6 @@ _LOSS_ROWS	const	scripts/systems/sales_ledger.gd:395	SalesLedger
 _loss_target	func	scripts/systems/sales_meeting_system.gd:358	SalesMeetingSystem
 _lost_lead	var	scripts/debug/run_probe.gd:314	RunProbe
 _low	var	scripts/ui/meeting/meeting_ruler.gd:16	MeetingRuler
-_lowest	func	scripts/systems/product_quality.gd:389	ProductQuality
 _lowest	var	scripts/ui/office/office_camera.gd:38	OfficeCamera
 _lowest	var	scripts/ui/office/office_view.gd:40	office_view.gd
 _made	func	scripts/systems/sprint_system.gd:918	SprintSystem
@@ -2779,10 +2778,10 @@ _preset_for	func	scripts/events/tools/plausibility.gd:140	plausibility.gd
 _press	var	scripts/ui/office/office_camera.gd:40	OfficeCamera
 _press_button_labelled	func	scripts/main/main.gd:3283	main.gd
 _prev	var	scripts/debug/office_crowd_probe.gd:31	OfficeCrowdProbe
-_prev_band	var	scripts/systems/product_read.gd:133	ProductRead
-_prev_floor	var	scripts/systems/product_read.gd:134	ProductRead
+_prev_band	var	scripts/systems/product_read.gd:130	ProductRead
+_prev_floor	var	scripts/systems/product_read.gd:131	ProductRead
 _prev_k	var	scripts/debug/office_crowd_probe.gd:32	OfficeCrowdProbe
-_prev_open	var	scripts/systems/product_read.gd:132	ProductRead
+_prev_open	var	scripts/systems/product_read.gd:129	ProductRead
 _prev_pos	var	scripts/ui/office/office_person.gd:227	OfficePerson
 _prev_yaw	var	scripts/ui/office/office_person.gd:228	OfficePerson
 _preview	var	scripts/modals/hr_action_modal.gd:21	hr_action_modal.gd
@@ -3362,7 +3361,7 @@ _seed_theme_surface	func	scripts/main/main.gd:1626	main.gd
 _seed_world	func	scripts/debug/run_probe.gd:2123	RunProbe
 _seed_world	func	scripts/events/tools/engine_probe.gd:47	EvProbe
 _seeded	var	scripts/events/core/budgets.gd:11	EvBudgets
-_seeded	var	scripts/systems/product_read.gd:135	ProductRead
+_seeded	var	scripts/systems/product_read.gd:132	ProductRead
 _seeded_for	var	scripts/systems/rng_streams.gd:25	RngStreams
 _seen	var	scripts/debug/glyph_audit.gd:18	glyph_audit.gd
 _seen	var	scripts/debug/sprint_probe.gd:93	sprint_probe.gd
@@ -5703,7 +5702,7 @@ eligible_assignees	func	scripts/systems/rnd_system.gd:416	RnDSystem
 EMBLEM	const	scripts/menu/continue_card.gd:6	continue_card.gd
 EMBLEM	const	scripts/onboarding/first_week_doc.gd:9	first_week_doc.gd
 EMBLEM	const	scripts/onboarding/steps/company_step.gd:10	company_step.gd
-emit_edges	func	scripts/systems/product_read.gd:144	ProductRead
+emit_edges	func	scripts/systems/product_read.gd:141	ProductRead
 emit_edges	func	scripts/systems/rnd_system.gd:139	RnDSystem
 EMITTERS	const	scripts/ui/office/office_materials.gd:20	OfficeMaterials
 emphasis	func	scripts/systems/product_quality.gd:79	ProductQuality
@@ -7022,6 +7021,7 @@ lost_body	func	scripts/ui/components/inbox.gd:344	inbox.gd
 lost_line	func	scripts/ui/components/inbox.gd:381	inbox.gd
 lost_week	func	scripts/systems/sales_ledger.gd:419	SalesLedger
 LOW	const	scripts/tabs/product/sprint_card.gd:11	SprintCard.Look
+lowest	func	scripts/systems/product_quality.gd:389	ProductQuality
 LUCIDE	const	scripts/debug/write_licenses.gd:11	write_licenses.gd
 LUCIDE	const	scripts/menu/licenses.gd:13	licenses.gd
 LUKEWARM_MIN	const	scripts/ui/meeting/sales_meeting_adapter.gd:23	SalesMeetingAdapter
@@ -8189,7 +8189,7 @@ reset	func	scripts/systems/finance_system.gd:79	FinanceSystem
 reset	func	scripts/systems/hr_morale_system.gd:306	HRMoraleSystem
 reset	func	scripts/systems/hr_system.gd:497	HRSystem
 reset	func	scripts/systems/negotiation_system.gd:59	NegotiationSystem
-reset	func	scripts/systems/product_read.gd:139	ProductRead
+reset	func	scripts/systems/product_read.gd:136	ProductRead
 reset	func	scripts/systems/product_system.gd:11	ProductSystem
 reset	func	scripts/systems/rnd_system.gd:66	RnDSystem
 reset	func	scripts/systems/rng_streams.gd:45	RngStreams
