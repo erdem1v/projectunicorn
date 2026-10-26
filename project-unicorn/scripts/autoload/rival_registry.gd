@@ -6,8 +6,7 @@ extends Node
 #
 # Seeded from RivalCatalog at _ready. Rivals evolve slowly on the daily tick
 # (advance_all, called by TimeManager) — startups fast, established slow, giants
-# static — so a player who stops feeding their product gets passed. Momentum is a
-# per-day rate; each tick applies a week of it.
+# static. Momentum is a per-day rate; each tick applies a week of it.
 #
 # STRUCTURAL CEILING: rival advancement uses QualityModel.grow with per-tier
 # asymptotes (startup 100, established 200, giant 330), so a tier never reaches the
@@ -38,7 +37,7 @@ func insert_raw(rival: Rival) -> void:
 	# SAVE RESTORE ONLY. OVERWRITES the catalog-seeded record of the same id rather than
 	# rejecting it, which is what makes restore an OVERLAY on top of reset(): a save written
 	# before a catalog entry existed still gets that rival at its catalog starting values
-	# instead of leaving a hole every share/league query would have to guard against.
+	# instead of leaving a hole every share query would have to guard against.
 	if rival == null or rival.id == "":
 		push_warning("[RivalRegistry] insert_raw() called with null or missing id")
 		return
@@ -103,8 +102,7 @@ func _status_for(r: Rival) -> String:
 # MARKET_TOTAL_MRR) girdilerinden türetilen SAF fonksiyondur — canlı kalite
 # eksenleri OKUNMAZ (advance_all onları her tik mutasyona uğratır; bu tikten
 # "geçen haftanın payı"nı hesaplamak ancak saf bir fonksiyonla doğru kalır).
-# Kalite ligi (composite, rank API, ekonomi bağı) ayrıdır: pay, MRR
-# anlatısıdır, kalite yarışı değil. RNG yok — doku, hafta-bloklu hash wobble.
+# RNG yok — doku, hafta-bloklu hash wobble.
 #
 # Tüketiciler: Finans Özet'in pazar payı kartı, Ürün detay görünümü ve haber akışı
 # (get_market_snapshot / format_share); olay seam'leri (get_player_share_pct). Repaint

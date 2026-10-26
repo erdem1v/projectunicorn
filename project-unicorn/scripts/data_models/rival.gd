@@ -5,11 +5,7 @@ extends Resource
 # sub-product-type market. Plain data container held by RivalRegistry, mirrors the
 # Customer/Character model convention (@export fields + forward-compat reserves).
 #
-# Three tiers structure the competitive field (the number bands, not a clamp, keep a
-# Phase-1 player out of the giant band; see RivalRegistry's header):
-#   startup      — the player's league; real, catchable rivals.
-#   established  — ahead; a late-Phase-1 player may brush the bottom.
-#   giant        — aspirational, structurally unreachable in Phase 1.
+# Three tiers: startup, established, giant. The number bands keep a tier out of the next one's band.
 #
 # Dimensions are open-ended floats that QualityModel.grow advances. `momentum` is the per-day growth rate
 # rivals gain via RivalRegistry.advance_all (0 = static).

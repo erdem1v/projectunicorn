@@ -125,8 +125,8 @@ const NAMES := {
 const SHARE_SEED := [34.0, 16.0, 11.0, 2.6, 1.9, 1.4, 0.9, 0.5]
 
 # Yalnız-pay pazar aktörleri: her alt-tür pazarında AYNI adlarla görünen, holding
-# tarzı global oyuncular. Rival ENTITY DEĞİLLER — kalite ligi, VC sorgusu ve rank API'si
-# onları hiç görmez; yalnız get_market_snapshot dilim üretir. Adlandırılmış rakip sayısını pazar başına
+# tarzı global oyuncular. Rival ENTITY DEĞİLLER — VC sorgusu onları hiç görmez;
+# yalnız get_market_snapshot dilim üretir. Adlandırılmış rakip sayısını pazar başına
 # 8+3 = 11'e çıkarırlar. Paylar + momentum WORKING.
 # Adlar da yukarıdaki TESCİLLİ MARKA YASAĞI'na tabidir: Finans'ın pazar payı kartında satır
 # olarak görünürler. id'ler adlarla eşleşmek zorunda değildir ve değiştirilmez: pay

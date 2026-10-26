@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git 24ab32a · 2026-10-26 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 5d02d99 · 2026-10-26 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -30,7 +30,7 @@ Bölümler: Autoload'lar · Dosyalar · Sinyaller · Sahneler · Veri dosyaları
 
 Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar dahil). Autoload dosyalarında class_name yerine [AutoloadAdı].
 
-### scripts/autoload/ (13 dosya, 5121 satır)
+### scripts/autoload/ (13 dosya, 5119 satır)
 - scripts/autoload/audio_manager.gd · 172 · [AudioManager] · Node · 0 sinyal · 17 func
 - scripts/autoload/character_registry.gd · 627 · [CharacterRegistry] · Node · 0 sinyal · 50 func
 - scripts/autoload/customer_registry.gd · 321 · [CustomerRegistry] · Node · 0 sinyal · 29 func
@@ -40,19 +40,19 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/autoload/localization.gd · 114 · [Localization] · Node · 0 sinyal · 8 func
 - scripts/autoload/promise_registry.gd · 187 · [PromiseRegistry] · Node · 0 sinyal · 16 func
 - scripts/autoload/prospect_registry.gd · 73 · [ProspectRegistry] · Node · 0 sinyal · 8 func
-- scripts/autoload/rival_registry.gd · 210 · [RivalRegistry] · Node · 0 sinyal · 13 func
+- scripts/autoload/rival_registry.gd · 208 · [RivalRegistry] · Node · 0 sinyal · 13 func
 - scripts/autoload/save_manager.gd · 1295 · [SaveManager] · Node · 0 sinyal · 61 func
 - scripts/autoload/settings.gd · 174 · [Settings] · Node · 0 sinyal · 12 func
 - scripts/autoload/time_manager.gd · 453 · [TimeManager] · Node · 2 sinyal · 34 func
 
-### scripts/data_models/ (8 dosya, 496 satır)
+### scripts/data_models/ (8 dosya, 492 satır)
 - scripts/data_models/character.gd · 106 · Character · Resource · 0 sinyal · 0 func
 - scripts/data_models/customer.gd · 124 · Customer · Resource · 0 sinyal · 3 func
 - scripts/data_models/event.gd · 21 · GameEvent · Resource · 0 sinyal · 0 func
 - scripts/data_models/event_choice.gd · 11 · EventChoice · Resource · 0 sinyal · 0 func
 - scripts/data_models/promise.gd · 22 · Promise · Resource · 0 sinyal · 0 func
 - scripts/data_models/prospect.gd · 111 · Prospect · Resource · 0 sinyal · 6 func
-- scripts/data_models/rival.gd · 38 · Rival · Resource · 0 sinyal · 1 func
+- scripts/data_models/rival.gd · 34 · Rival · Resource · 0 sinyal · 1 func
 - scripts/data_models/term_sheet.gd · 63 · TermSheet · Resource · 0 sinyal · 3 func
 
 ### scripts/debug/ (11 dosya, 32978 satır)
@@ -515,8 +515,8 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - rnd_node_requested(node_id: String, open_assign: bool) · scripts/autoload/event_bus.gd:189
   ↳ rnd_node_requested emit: scripts/main/main.gd:2463,2477, scripts/tabs/product_tab.gd:302, scripts/ui/components/research_bar.gd:194, scripts/debug/product_fixtures.gd:63
   ↳ rnd_node_requested connect: scripts/tabs/rnd_tab.gd:80
-- rival_status_changed(rival_id: String, status: String) · scripts/autoload/event_bus.gd:194 · emit: scripts/autoload/rival_registry.gd:84 · connect: scripts/tabs/finance/finance_ozet_view.gd:79
-- rival_advanced() · scripts/autoload/event_bus.gd:195 · emit: scripts/autoload/rival_registry.gd:87 · connect: scripts/tabs/finance/finance_ozet_view.gd:78
+- rival_status_changed(rival_id: String, status: String) · scripts/autoload/event_bus.gd:194 · emit: scripts/autoload/rival_registry.gd:83 · connect: scripts/tabs/finance/finance_ozet_view.gd:79
+- rival_advanced() · scripts/autoload/event_bus.gd:195 · emit: scripts/autoload/rival_registry.gd:86 · connect: scripts/tabs/finance/finance_ozet_view.gd:78
 - prospect_added(prospect_id: String) · scripts/autoload/event_bus.gd:198 · emit: scripts/autoload/prospect_registry.gd:49 · connect: scripts/tabs/sales_tab.gd:66
 - prospect_removed(prospect_id: String) · scripts/autoload/event_bus.gd:199 · emit: scripts/autoload/prospect_registry.gd:73 · connect: scripts/tabs/sales_tab.gd:66
 - pitch_requested(prospect_id: String) · scripts/autoload/event_bus.gd:201 · emit: scripts/tabs/sales_tab.gd:412 · connect: scripts/main/main.gd:4727
