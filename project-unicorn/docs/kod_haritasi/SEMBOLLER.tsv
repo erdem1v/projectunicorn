@@ -119,7 +119,7 @@ _apply_reset	func	scripts/modals/settings_modal.gd:279	settings_modal.gd
 _apply_speed_visual	func	scripts/ui/components/top_bar.gd:452	top_bar.gd
 _apply_stations	func	scripts/ui/office/office_lighting.gd:266	OfficeLighting
 _approach	func	scripts/ui/office/office_person.gd:1013	OfficePerson
-_approved_ahead	func	scripts/systems/sprint_catalog.gd:690	SprintCatalog
+_approved_ahead	func	scripts/systems/sprint_catalog.gd:686	SprintCatalog
 _arc	func	scripts/tabs/piyasa_tab.gd:545	piyasa_tab.gd
 _arc	func	scripts/ui/components/logo_emblem.gd:126	LogoEmblem
 _arc_context	func	scripts/events/core/engine.gd:220	EvEngine
@@ -132,7 +132,7 @@ _area	func	scripts/ui/components/window_layer.gd:199	window_layer.gd
 _area_label	var	scripts/ui/components/research_bar.gd:35	research_bar.gd
 _area_name	func	scripts/systems/sales_meeting_system.gd:427	SalesMeetingSystem
 _area_of	func	scripts/debug/product_fixtures.gd:601	product_fixtures.gd
-_areas	func	scripts/systems/sprint_catalog.gd:752	SprintCatalog
+_areas	func	scripts/systems/sprint_catalog.gd:748	SprintCatalog
 _areas	var	scripts/tabs/product_tab.gd:37	product_tab.gd
 _areas_scroll	var	scripts/tabs/product_tab.gd:36	product_tab.gd
 _armed	var	scripts/events/core/delays.gd:26	EvDelays
@@ -1003,7 +1003,7 @@ _clear_deck	func	scripts/ui/meeting/meeting_panel.gd:530	MeetingPanel
 _clear_scope	func	scripts/modals/work_hours_modal.gd:478	work_hours_modal.gd
 _clear_sprint	func	scripts/debug/product_fixtures.gd:317	product_fixtures.gd
 _clear_stop	func	scripts/debug/tick_probe.gd:123	tick_probe.gd
-_clears_alert	func	scripts/systems/sprint_catalog.gd:831	SprintCatalog
+_clears_alert	func	scripts/systems/sprint_catalog.gd:827	SprintCatalog
 _clip	func	scripts/ui/office/office_person.gd:1104	OfficePerson
 _clock	func	scripts/systems/sprint_timeline.gd:97	SprintTimeline
 _clock	var	scripts/ui/office/office_people.gd:70	OfficePeople
@@ -1035,7 +1035,7 @@ _close_slot	var	scripts/ui/components/window_frame.gd:20	window_frame.gd
 _close_term_table	func	scripts/main/main.gd:5345	main.gd
 _close_top	var	scripts/ui/components/window_frame.gd:21	window_frame.gd
 _closed	func	scripts/tabs/hr/hr_assignments.gd:144	HRAssignments
-_closes_rival_gap	func	scripts/systems/sprint_catalog.gd:844	SprintCatalog
+_closes_rival_gap	func	scripts/systems/sprint_catalog.gd:840	SprintCatalog
 _closing	var	scripts/tabs/product_tab.gd:27	product_tab.gd
 _cmdline_language	func	scripts/autoload/localization.gd:43	Localization
 _code_part	func	scripts/debug/loc_residue.gd:224	loc_residue.gd
@@ -1708,12 +1708,12 @@ _icon	var	scripts/ui/office/office_actor.gd:78	OfficeActor
 _id	var	scripts/tabs/hr/hr_dossier.gd:18	hr_dossier.gd
 _identifier_re	var	scripts/events/tools/lint.gd:68	EvLint
 _identity	func	scripts/tabs/hr/hr_dossier.gd:120	hr_dossier.gd
-_identity_area	func	scripts/systems/sprint_catalog.gd:756	SprintCatalog
-_identity_lines	func	scripts/systems/sprint_catalog.gd:760	SprintCatalog
+_identity_area	func	scripts/systems/sprint_catalog.gd:752	SprintCatalog
+_identity_lines	func	scripts/systems/sprint_catalog.gd:756	SprintCatalog
 _idle_offset	var	scripts/ui/office/office_person.gd:243	OfficePerson
 _ids	func	scripts/events/gate/scope.gd:168	EvScope
 _iks	var	scripts/ui/office/office_person.gd:230	OfficePerson
-_impact	func	scripts/systems/sprint_catalog.gd:918	SprintCatalog
+_impact	func	scripts/systems/sprint_catalog.gd:914	SprintCatalog
 _in_column	func	scripts/modals/term_sheet_table_scene.gd:92	TermSheetTableScene
 _in_game_hours	var	scripts/autoload/time_manager.gd:47	TimeManager
 _in_sprint	func	scripts/systems/sprint_system.gd:1058	SprintSystem
@@ -1896,7 +1896,7 @@ _last_row	func	scripts/events/core/history.gd:177	EvHistory
 _last_unlocked	var	scripts/events/core/delays.gd:33	EvDelays
 _last_view	var	scripts/tabs/product_tab.gd:22	product_tab.gd
 _late_world	func	scripts/debug/endgame_smoke.gd:24339	EndgameSmoke
-_launch_of	func	scripts/systems/sprint_catalog.gd:868	SprintCatalog
+_launch_of	func	scripts/systems/sprint_catalog.gd:864	SprintCatalog
 _lay	func	scripts/systems/sprint_timeline.gd:244	SprintTimeline
 _lay_ticker	func	scripts/main/game_shell.gd:36	game_shell.gd
 _layer_busy	func	scripts/main/game_shell.gd:50	game_shell.gd
@@ -1908,7 +1908,7 @@ _lbl	func	scripts/theme/build_theme.gd:1446	build_theme.gd
 _lead	func	scripts/debug/product_fixtures.gd:648	product_fixtures.gd
 _lead	func	scripts/tabs/product/product_model.gd:1002	ProductModel
 _lead_actions	func	scripts/tabs/sales_tab.gd:386	sales_tab.gd
-_lead_area	func	scripts/systems/sprint_catalog.gd:973	SprintCatalog
+_lead_area	func	scripts/systems/sprint_catalog.gd:969	SprintCatalog
 _lead_card	func	scripts/tabs/sales_tab.gd:323	sales_tab.gd
 _lead_fit	func	scripts/debug/run_probe.gd:778	RunProbe
 _lead_id	var	scripts/systems/sales_meeting_system.gd:29	SalesMeetingSystem
@@ -1951,7 +1951,7 @@ _legend	func	scripts/tabs/hr/hr_assignments.gd:158	HRAssignments
 _lerp_gain	func	scripts/systems/hr_constants.gd:1107	HRConstants
 _let_go	func	scripts/systems/incident_system.gd:323	IncidentSystem
 _level	func	scripts/debug/product_fixtures.gd:686	product_fixtures.gd
-_level_part	func	scripts/systems/sprint_catalog.gd:793	SprintCatalog
+_level_part	func	scripts/systems/sprint_catalog.gd:789	SprintCatalog
 _levels	func	scripts/systems/product_quality.gd:373	ProductQuality
 _lever_at_best	func	scripts/systems/term_sheet_table_system.gd:879	TermSheetTableSystem
 _lever_locked	func	scripts/systems/term_sheet_table_system.gd:265	TermSheetTableSystem
@@ -2229,7 +2229,7 @@ _named	func	scripts/events/core/effects.gd:790	EvEffects
 _names	func	scripts/modals/work_hours_modal.gd:269	work_hours_modal.gd
 _nearest_ids	func	scripts/events/tools/why.gd:258	EvWhy
 _nearest_polygon	func	tools/office3d/bake_nav.gd:228	bake_nav.gd
-_need_row	func	scripts/systems/sprint_catalog.gd:766	SprintCatalog
+_need_row	func	scripts/systems/sprint_catalog.gd:762	SprintCatalog
 _needle	var	scripts/systems/sales_meeting_system.gd:35	SalesMeetingSystem
 _needle	var	scripts/ui/components/radial_dial.gd:14	RadialDial
 _needle	var	scripts/ui/meeting/meeting_panel.gd:98	MeetingPanel
@@ -2443,7 +2443,7 @@ _on_tab_changed	func	scripts/ui/components/research_bar.gd:177	research_bar.gd
 _on_team_changed	func	scripts/systems/sprint_system.gd:1478	SprintSystem
 _on_term_table_requested	func	scripts/main/main.gd:5321	main.gd
 _on_tile_input	func	scripts/tabs/rnd/rnd_tree_view.gd:323	RnDTreeView
-_on_time	func	scripts/systems/sprint_catalog.gd:892	SprintCatalog
+_on_time	func	scripts/systems/sprint_catalog.gd:888	SprintCatalog
 _on_ui_changed	func	scripts/tabs/product_tab.gd:256	product_tab.gd
 _on_version_shipped	func	scripts/ui/components/left_tabs.gd:250	left_tabs.gd
 _on_walk_pressed	func	scripts/modals/term_sheet_table_scene.gd:404	TermSheetTableScene
@@ -2518,7 +2518,7 @@ _outer	var	scripts/tabs/sales_tab.gd:40	sales_tab.gd
 _outline	func	scripts/ui/components/logo_emblem.gd:96	LogoEmblem
 _outranks	func	scripts/systems/sales_rep_system.gd:125	SalesRepSystem
 _outside_core	func	scripts/debug/run_probe.gd:1375	RunProbe
-_over_capacity	func	scripts/systems/sprint_catalog.gd:823	SprintCatalog
+_over_capacity	func	scripts/systems/sprint_catalog.gd:819	SprintCatalog
 _overdue	func	scripts/autoload/promise_registry.gd:172	PromiseRegistry
 _overlay	var	scripts/ui/office/office_city.gd:70	OfficeCity
 _override	var	scripts/systems/module_locks.gd:12	module_locks.gd
@@ -2529,7 +2529,7 @@ _owed_hours	var	scripts/systems/vc_pitch_system.gd:47	VCPitchSystem
 _own	func	scripts/systems/sprint_prep.gd:72	SprintPrep
 _p	func	scripts/debug/product_fixtures.gd:716	product_fixtures.gd
 _p	func	scripts/systems/sprint_bridges.gd:342	SprintBridges
-_p	func	scripts/systems/sprint_catalog.gd:748	SprintCatalog
+_p	func	scripts/systems/sprint_catalog.gd:744	SprintCatalog
 _p	func	scripts/systems/sprint_system.gd:1737	SprintSystem
 _pace	func	scripts/systems/sprint_timeline.gd:287	SprintTimeline
 _pace	func	scripts/ui/office/office_people.gd:589	OfficePeople
@@ -2820,15 +2820,15 @@ _progress_strip	func	scripts/tabs/rnd/rnd_tree_view.gd:292	RnDTreeView
 _promise_late_card	func	scripts/debug/sprint_probe.gd:386	sprint_probe.gd
 _promise_lock	func	scripts/systems/sales_meeting_system.gd:373	SalesMeetingSystem
 _promise_options	func	scripts/debug/endgame_smoke.gd:23474	EndgameSmoke
-_promise_parts	func	scripts/systems/sprint_catalog.gd:905	SprintCatalog
+_promise_parts	func	scripts/systems/sprint_catalog.gd:901	SprintCatalog
 _promise_row_index	func	scripts/debug/endgame_smoke.gd:5101	EndgameSmoke
 _promise_row_locked_earlier	func	scripts/events/seams/seams_sales.gd:19	EvSeamsSales
 _promise_step	func	scripts/systems/sales_meeting_system.gd:385	SalesMeetingSystem
 _promise_world	func	scripts/debug/endgame_smoke.gd:23444	EndgameSmoke
-_promised	func	scripts/systems/sprint_catalog.gd:1025	SprintCatalog
+_promised	func	scripts/systems/sprint_catalog.gd:1021	SprintCatalog
 _promised_feature	var	scripts/systems/sales_meeting_system.gd:39	SalesMeetingSystem
 _promises	var	scripts/autoload/promise_registry.gd:10	PromiseRegistry
-_promises_on	func	scripts/systems/sprint_catalog.gd:897	SprintCatalog
+_promises_on	func	scripts/systems/sprint_catalog.gd:893	SprintCatalog
 _propose	func	scripts/events/core/engine.gd:433	EvEngine
 _props	var	scripts/ui/office/office_person.gd:241	OfficePerson
 _prospect	var	scripts/ui/meeting/sales_meeting_adapter.gd:42	SalesMeetingAdapter
@@ -2879,7 +2879,7 @@ _range_slot	var	scripts/tabs/finance/finance_ozet_view.gd:41	FinanceOzetView
 _rank	func	scripts/events/present/tempo.gd:102	EvTempo
 _rate	var	scripts/events/tools/plausibility.gd:78	plausibility.gd
 _ratio	func	scripts/systems/product_quality.gd:380	ProductQuality
-_ratio	func	scripts/systems/sprint_catalog.gd:936	SprintCatalog
+_ratio	func	scripts/systems/sprint_catalog.gd:932	SprintCatalog
 _re_filler	var	scripts/debug/loc_residue.gd:65	loc_residue.gd
 _re_key	var	scripts/debug/loc_residue.gd:64	loc_residue.gd
 _re_logcall	var	scripts/debug/loc_residue.gd:66	loc_residue.gd
@@ -2976,7 +2976,7 @@ _rebuild	func	scripts/tabs/rnd/rnd_detail_panel.gd:69	RnDDetailPanel
 _rebuild	func	scripts/ui/components/window_layer.gd:156	window_layer.gd
 _rebuild_controls	func	scripts/ui/office/office_city.gd:316	OfficeCity
 _rebuild_queued	var	scripts/tabs/product_tab.gd:28	product_tab.gd
-_recent_hit	func	scripts/systems/sprint_catalog.gd:860	SprintCatalog
+_recent_hit	func	scripts/systems/sprint_catalog.gd:856	SprintCatalog
 _recolor	func	scripts/theme/build_theme.gd:1272	build_theme.gd
 _record	func	scripts/events/present/tempo.gd:233	EvTempo
 _record	func	scripts/tabs/events/mail_pane.gd:745	mail_pane.gd
@@ -3071,8 +3071,8 @@ _report_draws	func	scripts/debug/office_crowd_probe.gd:234	OfficeCrowdProbe
 _report_period	var	scripts/systems/research_tree.gd:62	ResearchTree
 _request_cards_up	func	scripts/debug/endgame_smoke.gd:5119	EndgameSmoke
 _request_decision	func	scripts/systems/sprint_system.gd:1356	SprintSystem
-_request_of	func	scripts/systems/sprint_catalog.gd:878	SprintCatalog
-_requested	func	scripts/systems/sprint_catalog.gd:1033	SprintCatalog
+_request_of	func	scripts/systems/sprint_catalog.gd:874	SprintCatalog
+_requested	func	scripts/systems/sprint_catalog.gd:1029	SprintCatalog
 _requests	func	scripts/tabs/product/product_model.gd:323	ProductModel
 _required_first	func	scripts/events/gate/scope.gd:104	EvScope
 _reread	func	scripts/debug/sprint_probe.gd:469	sprint_probe.gd
@@ -3127,7 +3127,7 @@ _rival_ahead	func	scripts/systems/vc_pitch_system.gd:1290	VCPitchSystem
 _rival_candidates	func	scripts/systems/news_feed_system.gd:326	NewsFeedSystem
 _rival_flag	func	scripts/debug/product_fixtures.gd:682	product_fixtures.gd
 _rival_name	func	scripts/systems/rnd_system.gd:573	RnDSystem
-_rival_tier	func	scripts/systems/sprint_catalog.gd:835	SprintCatalog
+_rival_tier	func	scripts/systems/sprint_catalog.gd:831	SprintCatalog
 _rivals	var	scripts/autoload/rival_registry.gd:17	RivalRegistry
 _rivals	var	scripts/systems/sprint_catalog.gd:22	SprintCatalog
 _rnd_new	var	scripts/ui/components/left_tabs.gd:59	left_tabs.gd
@@ -3613,7 +3613,7 @@ _stance	var	scripts/tabs/sales_tab.gd:42	sales_tab.gd
 _stand_figure	func	scripts/ui/menu_backdrop.gd:84	menu_backdrop.gd
 _stand_in_shell	func	scripts/debug/endgame_smoke.gd:13660	EndgameSmoke
 _stand_s	var	scripts/ui/office/office_person.gd:176	OfficePerson
-_standing	func	scripts/systems/sprint_catalog.gd:804	SprintCatalog
+_standing	func	scripts/systems/sprint_catalog.gd:800	SprintCatalog
 _standing	func	scripts/tabs/personal_tab.gd:176	personal_tab.gd
 _star_holders	func	scripts/systems/rnd_system.gd:404	RnDSystem
 _star_value	func	scripts/systems/product_quality.gd:341	ProductQuality
@@ -3694,7 +3694,7 @@ _subject_gap_for	func	scripts/events/present/tempo.gd:207	EvTempo
 _subtype	var	scripts/debug/run_probe.gd:292	RunProbe
 _subtype	var	scripts/tabs/product/type_picker.gd:15	TypePicker
 _subtypes	var	scripts/systems/product_lines.gd:48	ProductLines
-_suggest	func	scripts/systems/sprint_catalog.gd:992	SprintCatalog
+_suggest	func	scripts/systems/sprint_catalog.gd:988	SprintCatalog
 _suggest	func	scripts/tabs/product/product_model.gd:605	ProductModel
 _sum	var	scripts/debug/sprint_probe.gd:95	sprint_probe.gd
 _sum	func	scripts/systems/product_state.gd:245	ProductState
@@ -3723,7 +3723,7 @@ _system_menu	var	scripts/main/main.gd:58	main.gd
 _t	func	scripts/events/present/chips.gd:436	EvChips
 _t	func	scripts/systems/endings_copy.gd:538	EndingsCopy
 _t	func	scripts/systems/hr_system.gd:476	HRSystem
-_t	func	scripts/systems/sprint_catalog.gd:744	SprintCatalog
+_t	func	scripts/systems/sprint_catalog.gd:740	SprintCatalog
 _t	func	scripts/systems/vc_pitch_system.gd:1326	VCPitchSystem
 _t	func	scripts/tabs/product/product_model.gd:1038	ProductModel
 _t	var	scripts/ui/office/office_person.gd:209	OfficePerson
@@ -3904,7 +3904,7 @@ _update_pct_labels	func	scripts/modals/settings_modal.gd:368	settings_modal.gd
 _update_trackers	func	scripts/systems/endings_system.gd:100	EndingsSystem
 _use_dir	func	scripts/autoload/save_manager.gd:515	SaveManager
 _used_families	var	scripts/systems/sales_meeting_system.gd:31	SalesMeetingSystem
-_users_of	func	scripts/systems/sprint_catalog.gd:827	SprintCatalog
+_users_of	func	scripts/systems/sprint_catalog.gd:823	SprintCatalog
 _ushr	func	scripts/systems/market_catalog.gd:205	MarketCatalog
 _v	var	scripts/onboarding/first_week_doc.gd:16	first_week_doc.gd
 _V14_EFFORT	const	scripts/autoload/save_manager.gd:819	SaveManager
@@ -3995,7 +3995,7 @@ _watch_team	func	scripts/systems/sprint_system.gd:1467	SprintSystem
 _water	var	scripts/ui/office/office_city.gd:94	OfficeCity
 _way_in	func	tools/office3d/bake_nav.gd:130	bake_nav.gd
 _way_out	func	scripts/tabs/product/sprint_panel.gd:187	SprintPanel
-_weakest	func	scripts/systems/sprint_catalog.gd:942	SprintCatalog
+_weakest	func	scripts/systems/sprint_catalog.gd:938	SprintCatalog
 _week	var	scripts/tabs/piyasa_tab.gd:27	piyasa_tab.gd
 _week_end	var	scripts/ui/components/top_bar.gd:93	top_bar.gd
 _week_stamp	func	scripts/autoload/save_manager.gd:776	SaveManager
@@ -5000,7 +5000,7 @@ customer_field	func	scripts/events/seams/seams_sales.gd:12	EvSeamsSales
 customer_health_changed	signal	scripts/autoload/event_bus.gd:105	EventBus
 customer_id	var	scripts/data_models/promise.gd:13	Promise
 customer_mrr_changed	signal	scripts/autoload/event_bus.gd:99	EventBus
-customer_name	func	scripts/systems/sprint_catalog.gd:911	SprintCatalog
+customer_name	func	scripts/systems/sprint_catalog.gd:907	SprintCatalog
 customer_removed	signal	scripts/autoload/event_bus.gd:98	EventBus
 customer_satisfaction_changed	signal	scripts/autoload/event_bus.gd:101	EventBus
 customer_seats_changed	signal	scripts/autoload/event_bus.gd:100	EventBus
@@ -7095,7 +7095,7 @@ MAX_MONTHS	const	scripts/ui/components/cash_curve.gd:28	CashCurve
 max_n	var	scripts/ui/office/office_layout.gd:15	OfficeLayout
 MAX_PRINTED	const	scripts/debug/loc_residue.gd:27	loc_residue.gd
 MAX_SHEETS	const	scripts/systems/pitch_constants.gd:88	PitchConstants
-max_tier	func	scripts/systems/sprint_catalog.gd:779	SprintCatalog
+max_tier	func	scripts/systems/sprint_catalog.gd:775	SprintCatalog
 MAX_WEEK_BAR	const	scripts/ui/components/top_bar.gd:68	top_bar.gd
 may_gate_visible_step	func	scripts/systems/research_seam.gd:87	ResearchSeam
 meet_clauses	func	scripts/systems/b2b_sales_system.gd:339	B2BSalesSystem
@@ -7482,7 +7482,7 @@ open_bugs	var	scripts/ui/components/build_bar_model.gd:17	build_bar_model.gd
 open_bugs_by_line	func	scripts/systems/product_state.gd:155	ProductState
 open_bugs_delta	func	scripts/systems/product_state.gd:184	ProductState
 OPEN_BUGS_PREV	const	scripts/systems/product_state.gd:16	ProductState
-open_cards	func	scripts/systems/sprint_catalog.gd:961	SprintCatalog
+open_cards	func	scripts/systems/sprint_catalog.gd:957	SprintCatalog
 open_changed	signal	scripts/ui/components/news_ticker.gd:53	news_ticker.gd
 open_detail	func	scripts/ui/components/window_layer.gd:100	window_layer.gd
 open_hidden_line	func	scripts/systems/product_state.gd:101	ProductState
@@ -7496,7 +7496,7 @@ open_paper	func	scripts/tabs/events/mail_pane.gd:528	mail_pane.gd
 open_pitch_promise	func	scripts/systems/sales_ledger.gd:153	SalesLedger
 open_primary	func	scripts/ui/components/window_layer.gd:75	window_layer.gd
 open_product_area	func	scripts/tabs/product/sprint_ui_shared.gd:333	SprintUiShared
-open_requests	func	scripts/systems/sprint_catalog.gd:886	SprintCatalog
+open_requests	func	scripts/systems/sprint_catalog.gd:882	SprintCatalog
 OPEN_S	const	scripts/modals/term_sheet_table_scene.gd:19	TermSheetTableScene
 OPEN_ZOOM	const	scripts/ui/office/office_city.gd:20	OfficeCity
 opened_before	func	scripts/events/present/papers.gd:174	EvPapers
@@ -8017,7 +8017,7 @@ reassign_subject	func	scripts/events/core/arcs.gd:133	EvArcs
 rebuild	func	scripts/tabs/rnd/rnd_tree_view.gd:122	RnDTreeView
 rebuild_view	func	scripts/tabs/hr/hr_dossier.gd:80	hr_dossier.gd
 rebuild_view	func	scripts/tabs/hr_tab.gd:540	hr_tab.gd
-recent_hits	func	scripts/systems/sprint_catalog.gd:853	SprintCatalog
+recent_hits	func	scripts/systems/sprint_catalog.gd:849	SprintCatalog
 reconcile_assignments	func	scripts/systems/customer_rep_system.gd:89	CustomerRepSystem
 record	func	scripts/events/core/history.gd:33	EvHistory
 record	func	scripts/systems/sprint_bugs.gd:35	SprintBugs
@@ -8252,13 +8252,13 @@ RIVAL_BIG_MOVE_PCT	const	scripts/systems/news_feed_system.gd:64	NewsFeedSystem
 RIVAL_COMPOSITES	const	scripts/debug/endgame_smoke.gd:27777	EndgameSmoke
 RIVAL_COOLDOWN_WEEKS	const	scripts/systems/news_feed_system.gd:47	NewsFeedSystem
 RIVAL_DOWN_COUNT	const	scripts/systems/news_feed_system.gd:141	NewsFeedSystem
-rival_launch_in	func	scripts/systems/sprint_catalog.gd:728	SprintCatalog
-rival_leader	func	scripts/systems/sprint_catalog.gd:700	SprintCatalog
-rival_name	func	scripts/systems/sprint_catalog.gd:718	SprintCatalog
+rival_launch_in	func	scripts/systems/sprint_catalog.gd:724	SprintCatalog
+rival_leader	func	scripts/systems/sprint_catalog.gd:696	SprintCatalog
+rival_name	func	scripts/systems/sprint_catalog.gd:714	SprintCatalog
 RIVAL_NEAR_BAND_PCT	const	scripts/systems/news_feed_system.gd:65	NewsFeedSystem
 rival_status_changed	signal	scripts/autoload/event_bus.gd:194	EventBus
-rival_table	func	scripts/systems/sprint_catalog.gd:711	SprintCatalog
-rival_topic	func	scripts/systems/sprint_catalog.gd:723	SprintCatalog
+rival_table	func	scripts/systems/sprint_catalog.gd:707	SprintCatalog
+rival_topic	func	scripts/systems/sprint_catalog.gd:719	SprintCatalog
 RIVAL_UP_COUNT	const	scripts/systems/news_feed_system.gd:140	NewsFeedSystem
 RivalCatalog	class	scripts/systems/rival_catalog.gd:1	RivalCatalog
 RIVALS_PATH	const	scripts/systems/sprint_catalog.gd:12	SprintCatalog
@@ -9077,8 +9077,8 @@ step_at	func	scripts/systems/product_lines.gd:325	ProductLines
 step_blocked_note	func	scripts/systems/display_settings.gd:308	DisplaySettings
 step_effort	func	scripts/systems/sprint_catalog.gd:197	SprintCatalog
 STEP_KEY	const	scripts/modals/work_hours_modal.gd:32	work_hours_modal.gd
-step_name	func	scripts/systems/sprint_catalog.gd:783	SprintCatalog
-step_name_key	func	scripts/systems/sprint_catalog.gd:787	SprintCatalog
+step_name	func	scripts/systems/sprint_catalog.gd:779	SprintCatalog
+step_name_key	func	scripts/systems/sprint_catalog.gd:783	SprintCatalog
 STEP_NAME_KEYS	const	scripts/onboarding/onboarding_flow.gd:20	onboarding_flow.gd
 step_of	func	scripts/events/core/arcs.gd:181	EvArcs
 step_unlockable	func	scripts/systems/product_read.gd:78	ProductRead
@@ -9089,7 +9089,7 @@ steps_seen	var	scripts/events/tools/harness.gd:57	EvHarness.Result
 steps_shipped	func	scripts/systems/product_read.gd:56	ProductRead
 steps_shipped	func	scripts/systems/product_state.gd:110	ProductState
 STILL	const	scripts/ui/office/office_person.gd:155	OfficePerson.Phase
-still_open	func	scripts/systems/sprint_catalog.gd:684	SprintCatalog
+still_open	func	scripts/systems/sprint_catalog.gd:680	SprintCatalog
 still_valid	func	scripts/events/gate/scope.gd:119	EvScope
 STOCK_STEP	const	scripts/debug/endgame_smoke.gd:27376	EndgameSmoke
 stop	func	scripts/ui/menu_backdrop.gd:65	menu_backdrop.gd

@@ -653,18 +653,15 @@ static func pm_goal() -> String:
 ## Onaylanan plan saklanır ve hâlâ yapılabilecek kartlarıyla döner. Onaysız plan saklanmaz, her
 ## okumada PM'in kuralıyla (`_suggest`) hedef alana ağırlık verilerek bugünkü durumdan kurulur: yapılan ya
 ## da sprinte alınan kart plandan kendiliğinden düşer. Sonraki sprintin planı o sütunda duran
-## kartların üstüne kurulur. Ürün alanı zayıf PM'in planı daha az kart taşır.
+## kartların üstüne kurulur.
 ## [{number, cards: [card_id], approved}]; PM yoksa ya da tür seçilmediyse [].
 static func pm_plans() -> Array:
-	var pm: Character = quarter_pm()
-	if pm == null or SprintSystem.sprint_number() == 0:
+	if quarter_pm() == null or SprintSystem.sprint_number() == 0:
 		return []
 	var stored: Dictionary = {}
 	for plan in _p().quarter.plans:
 		stored[int(plan.number)] = plan
 	var taken: Array = _approved_ahead()
-	var keep: float = float(cfg("pm.low_skill_cards")) \
-		if HRSystem.skill(pm, HRConstants.role_key_area(pm.role)) <= int(cfg("pm.low_skill_max")) else 1.0
 	var capacity: float = SprintSystem.capacity()
 	var goal: String = pm_goal()
 	var first: int = int(_p().next.number)
@@ -674,7 +671,6 @@ static func pm_plans() -> Array:
 			out.append(stored[n].merged({"number": n, "cards": still_open(stored[n].cards)}, true))
 			continue
 		var ids: Array = _suggest(capacity, SprintSystem.points_left(_p().next.cards) if n == first else 0.0, taken, goal)
-		ids = ids.slice(0, roundi(ids.size() * keep))
 		taken.append_array(ids)
 		out.append({"number": n, "cards": ids, "approved": false})
 	return out
