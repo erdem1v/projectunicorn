@@ -1368,19 +1368,28 @@ func _gate_flow() -> void:
 			page.name if page != null else "", mounted[0]])
 		await get_tree().create_timer(0.4).timeout
 		_save_shot("inbox_flow_%02d" % n)
-	# The pointer moves onto the button first: the hover is what a read-only window reads.
+	# A player scrolls a button into view before pressing it (the inbox's reply sits under the pane's edge at the
+	# narrowest dock). The pointer moves onto it first: the hover is what a read-only window reads. The position
+	# is the button's own, in the viewport's coordinates: pushed as window pixels it would land at 1/scale of the
+	# way under --shot-scale.
 	var click := func(button: Button) -> void:
+		var up: Node = button.get_parent()
+		while up != null:
+			if up is ScrollContainer:
+				(up as ScrollContainer).ensure_control_visible(button)
+			up = up.get_parent()
+		await get_tree().process_frame
 		var move := InputEventMouseMotion.new()
 		move.position = button.get_global_rect().get_center()
 		move.global_position = move.position
-		get_viewport().push_input(move)
+		get_viewport().push_input(move, true)
 		for pressed in [true, false]:
 			var e := InputEventMouseButton.new()
 			e.button_index = MOUSE_BUTTON_LEFT
 			e.pressed = pressed
 			e.position = move.position
 			e.global_position = e.position
-			get_viewport().push_input(e)
+			get_viewport().push_input(e, true)
 			await get_tree().process_frame
 	var key := func(code: Key) -> void:
 		var e := InputEventKey.new()
