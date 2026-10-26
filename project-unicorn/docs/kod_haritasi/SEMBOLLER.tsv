@@ -1813,7 +1813,7 @@ _interrupted_by	func	scripts/systems/sprint_system.gd:1448	SprintSystem
 _interrupts_on	func	scripts/events/present/tempo.gd:273	EvTempo
 _invalidate	func	scripts/events/core/engine.gd:176	EvEngine
 _investment_tr	func	scripts/systems/endings_copy.gd:506	EndingsCopy
-_is_b2b	func	scripts/systems/infra_system.gd:103	InfraSystem
+_is_b2b	func	scripts/systems/infra_system.gd:108	InfraSystem
 _is_b2c	func	scripts/systems/endings_copy.gd:386	EndingsCopy
 _is_chained	func	scripts/events/tools/lint.gd:501	EvLint
 _is_day_name	func	scripts/events/tools/lint.gd:1092	EvLint
@@ -4164,7 +4164,7 @@ add_productivity_mod	func	scripts/autoload/character_registry.gd:580	CharacterRe
 add_productivity_mod	func	scripts/systems/hr_system.gd:426	HRSystem
 add_strain	func	scripts/systems/vc_pitch_system.gd:262	VCPitchSystem
 add_trust_drain	func	scripts/systems/b2b_sales_system.gd:209	B2BSalesSystem
-adjust_capacity	func	scripts/systems/infra_system.gd:196	InfraSystem
+adjust_capacity	func	scripts/systems/infra_system.gd:201	InfraSystem
 admit	func	scripts/events/core/queue.gd:43	EvQueue
 admitted	var	scripts/events/gate/gate.gd:45	EvGate.Verdict
 admitted_day_of	func	scripts/events/present/papers.gd:165	EvPapers
@@ -4344,7 +4344,7 @@ AUDIENCE_CREATOR	const	scripts/events/tools/plausibility.gd:59	plausibility.gd
 audience_growth_multiplier	func	scripts/systems/sales_system.gd:490	SalesSystem
 AUDIENCE_PLACEMENT	const	scripts/events/tools/plausibility.gd:60	plausibility.gd
 AUDIENCE_STARS	const	scripts/systems/product_quality.gd:44	ProductQuality
-auto_adjust	func	scripts/systems/infra_system.gd:206	InfraSystem
+auto_adjust	func	scripts/systems/infra_system.gd:211	InfraSystem
 auto_assign_new	func	scripts/systems/customer_rep_system.gd:131	CustomerRepSystem
 AUTO_EDGE	const	scripts/systems/infra_system.gd:53	InfraSystem
 AUTO_SLOTS_PER_RUN	const	scripts/autoload/save_manager.gd:28	SaveManager
@@ -4626,8 +4626,8 @@ capacity_of	func	scripts/systems/customer_rep_system.gd:60	CustomerRepSystem
 capacity_of	func	scripts/systems/sprint_system.gd:649	SprintSystem
 capacity_row	func	scripts/tabs/product/sprint_ui_shared.gd:112	SprintUiShared
 capacity_rows	func	scripts/systems/sprint_timeline.gd:143	SprintTimeline
-capacity_state	func	scripts/systems/infra_system.gd:142	InfraSystem
-capacity_step	func	scripts/systems/infra_system.gd:191	InfraSystem
+capacity_state	func	scripts/systems/infra_system.gd:147	InfraSystem
+capacity_step	func	scripts/systems/infra_system.gd:196	InfraSystem
 CAPACITY_STEP_SHARE	const	scripts/systems/infra_system.gd:40	InfraSystem
 capacity_tier	func	scripts/systems/product_read.gd:66	ProductRead
 CapacityBar	class	scripts/tabs/product/sprint_ui_shared.gd:51	SprintUiShared
@@ -5420,7 +5420,7 @@ D_who	func	scripts/tabs/hr/hr_ui_shared.gd:411	HRUiShared
 D_xp	func	scripts/tabs/hr/hr_ui_shared.gd:295	HRUiShared
 D_XP_BAR	const	scripts/theme/ui_tokens.gd:679	UiTokens
 D_XP_BAR_WIDE	const	scripts/theme/ui_tokens.gd:770	UiTokens
-daily_bill	func	scripts/systems/infra_system.gd:223	InfraSystem
+daily_bill	func	scripts/systems/infra_system.gd:228	InfraSystem
 daily_burn	var	scripts/autoload/game_state.gd:32	GameState
 daily_contribution	func	scripts/systems/hr_system.gd:491	HRSystem
 daily_overtime_in	func	scripts/systems/work_hours_system.gd:237	WorkHoursSystem
@@ -5435,7 +5435,7 @@ daily_tick	func	scripts/systems/finance_system.gd:119	FinanceSystem
 daily_tick	func	scripts/systems/hr_search_system.gd:39	HRSearchSystem
 daily_tick	func	scripts/systems/hr_system.gd:26	HRSystem
 daily_tick	func	scripts/systems/incident_system.gd:121	IncidentSystem
-daily_tick	func	scripts/systems/infra_system.gd:244	InfraSystem
+daily_tick	func	scripts/systems/infra_system.gd:249	InfraSystem
 daily_tick	func	scripts/systems/news_feed_system.gd:148	NewsFeedSystem
 daily_tick	func	scripts/systems/office_system.gd:76	OfficeSystem
 daily_tick	func	scripts/systems/phase_gate_system.gd:68	PhaseGateSystem
@@ -6632,6 +6632,7 @@ is_complete	func	scripts/systems/product_lines.gd:413	ProductLines
 is_continuous_job	func	scripts/systems/hr_constants.gd:115	HRConstants
 is_decision_due	func	scripts/data_models/term_sheet.gd:53	TermSheet
 is_dragging	func	scripts/ui/office/office_camera.gd:122	OfficeCamera
+is_economy	func	scripts/systems/infra_system.gd:83	InfraSystem
 is_employee_role	func	scripts/systems/hr_constants.gd:357	HRConstants
 is_empty	func	scripts/events/present/papers.gd:180	EvPapers
 is_english	func	scripts/util/fmt.gd:22	Fmt
@@ -6666,7 +6667,7 @@ is_node	func	scripts/systems/research_seam.gd:71	ResearchSeam
 is_non_dominated_set	func	scripts/systems/hr_candidate_generator.gd:112	HRCandidateGenerator
 is_note	func	scripts/events/present/presenter.gd:133	EvPresenter
 is_open	func	scripts/systems/module_locks.gd:21	module_locks.gd
-is_over_capacity	func	scripts/systems/infra_system.gd:137	InfraSystem
+is_over_capacity	func	scripts/systems/infra_system.gd:142	InfraSystem
 is_overloaded	func	scripts/systems/hr_system.gd:327	HRSystem
 is_overtime_hours	func	scripts/systems/hr_constants.gd:792	HRConstants
 is_price_sensitive	func	scripts/systems/sales_archetypes.gd:139	SalesArchetypes
@@ -6954,7 +6955,7 @@ load_errors	func	scripts/systems/research_tree.gd:85	ResearchTree
 load_layout	func	scripts/ui/office/office_view.gd:86	office_view.gd
 load_mult	func	scripts/systems/incident_system.gd:75	IncidentSystem
 LOAD_OVER	const	scripts/systems/infra_system.gd:48	InfraSystem
-load_percent	func	scripts/systems/infra_system.gd:124	InfraSystem
+load_percent	func	scripts/systems/infra_system.gd:129	InfraSystem
 load_requested	signal	scripts/menu/main_menu.gd:8	main_menu.gd
 load_requested	signal	scripts/modals/save_load_modal.gd:16	save_load_modal.gd
 LOAD_UNBOUNDED	const	scripts/systems/infra_system.gd:50	InfraSystem
@@ -7149,7 +7150,7 @@ MeetingPanel	class	scripts/ui/meeting/meeting_panel.gd:1	MeetingPanel
 MeetingRuler	class	scripts/ui/meeting/meeting_ruler.gd:1	MeetingRuler
 MEETINGS_PER_WEEK	const	scripts/systems/sales_constants.gd:67	SalesConstants
 meetings_this_week	func	scripts/systems/sales_ledger.gd:310	SalesLedger
-meets_enterprise_trust	func	scripts/systems/infra_system.gd:236	InfraSystem
+meets_enterprise_trust	func	scripts/systems/infra_system.gd:241	InfraSystem
 memo	var	scripts/systems/product_lines.gd:53	ProductLines
 memory_line	func	scripts/systems/sales_ledger.gd:203	SalesLedger
 MENAJER_THEME	const	scripts/theme/ui_tokens.gd:450	UiTokens
@@ -7257,7 +7258,7 @@ MONTH_HISTORY_CAP	const	scripts/autoload/game_state.gd:168	GameState
 month_key	func	scripts/util/fmt.gd:69	Fmt
 month_ledger	var	scripts/autoload/game_state.gd:163	GameState
 month_name	func	scripts/util/fmt.gd:74	Fmt
-monthly_bill	func	scripts/systems/infra_system.gd:217	InfraSystem
+monthly_bill	func	scripts/systems/infra_system.gd:222	InfraSystem
 monthly_salary	var	scripts/data_models/character.gd:26	Character
 months	func	scripts/systems/time_model.gd:49	TimeModel
 morale	var	scripts/data_models/character.gd:30	Character
@@ -7956,7 +7957,7 @@ PULSE_SCALE	const	scripts/ui/office/office_hud.gd:13	office_hud.gd
 PULSE_TIME	const	scripts/ui/office/office_hud.gd:15	office_hud.gd
 pump	func	scripts/events/core/engine.gd:554	EvEngine
 pump	func	scripts/events/event_gate.gd:157	EventGate
-purchased_capacity	func	scripts/systems/infra_system.gd:108	InfraSystem
+purchased_capacity	func	scripts/systems/infra_system.gd:113	InfraSystem
 push	func	scripts/events/present/ticker.gd:21	EvTicker
 push	func	scripts/systems/term_sheet_table_system.gd:272	TermSheetTableSystem
 PUSH_DECAY	const	scripts/systems/pitch_constants.gd:128	PitchConstants
@@ -8128,7 +8129,7 @@ report	var	scripts/events/gate/gate.gd:50	EvGate.Verdict
 report	func	scripts/events/tools/why.gd:28	EvWhy
 REPORT_BEHIND_ONE_IN	const	scripts/systems/support_system.gd:307	SupportSystem
 REPORT_BUGS	const	scripts/systems/product_state.gd:25	ProductState
-report_inflow_multiplier	func	scripts/systems/infra_system.gd:230	InfraSystem
+report_inflow_multiplier	func	scripts/systems/infra_system.gd:235	InfraSystem
 REPORT_KIND	const	scripts/systems/support_system.gd:310	SupportSystem
 report_loss	func	scripts/systems/sales_ledger.gd:179	SalesLedger
 report_news	func	scripts/systems/support_system.gd:342	SupportSystem
@@ -8639,7 +8640,7 @@ SERIES_A_DIL_MIN	const	scripts/systems/pitch_constants.gd:165	PitchConstants
 series_a_road_closed	func	scripts/systems/vc_pitch_system.gd:756	VCPitchSystem
 series_a_signal	func	scripts/systems/phase_gate_system.gd:135	PhaseGateSystem
 SERIES_A_VAL_ARCH_PCT	const	scripts/systems/pitch_constants.gd:168	PitchConstants
-served_count	func	scripts/systems/infra_system.gd:114	InfraSystem
+served_count	func	scripts/systems/infra_system.gd:119	InfraSystem
 SERVER_LINES	const	scripts/debug/run_probe.gd:237	RunProbe
 SERVER_PRESSES	const	scripts/debug/run_probe.gd:239	RunProbe
 serves	func	scripts/systems/product_quality.gd:153	ProductQuality
@@ -8654,7 +8655,7 @@ set_bottom_clearance	func	scripts/ui/components/left_tabs.gd:271	left_tabs.gd
 set_brand	func	scripts/autoload/game_state.gd:369	GameState
 set_burn_category	func	scripts/systems/finance_system.gd:216	FinanceSystem
 set_call_cover	func	scripts/ui/office/office_notice_stack.gd:79	office_notice_stack.gd
-set_capacity	func	scripts/systems/infra_system.gd:184	InfraSystem
+set_capacity	func	scripts/systems/infra_system.gd:189	InfraSystem
 set_cash	func	scripts/autoload/game_state.gd:353	GameState
 set_churn_countdown	func	scripts/autoload/customer_registry.gd:189	CustomerRegistry
 set_class	func	scripts/events/core/queue.gd:196	EvQueue
@@ -8715,7 +8716,7 @@ set_phase	func	scripts/autoload/game_state.gd:390	GameState
 set_portrait	func	scripts/ui/components/dialogue_portrait_card.gd:21	DialoguePortraitCard
 set_preset	func	scripts/systems/graphics_settings.gd:105	graphics_settings.gd
 set_price_stance	func	scripts/systems/sales_ledger.gd:131	SalesLedger
-set_provider	func	scripts/systems/infra_system.gd:170	InfraSystem
+set_provider	func	scripts/systems/infra_system.gd:175	InfraSystem
 set_rep_band_cap	func	scripts/systems/sales_ledger.gd:102	SalesLedger
 set_reputation	func	scripts/autoload/game_state.gd:373	GameState
 set_resolution	func	scripts/systems/display_settings.gd:209	DisplaySettings
@@ -9154,7 +9155,7 @@ subtitle	var	scripts/data_models/event.gd:15	GameEvent
 subtype	func	scripts/systems/product_state.gd:48	ProductState
 subtypes	func	scripts/systems/product_lines.gd:296	ProductLines
 SUGGESTED_START_UNITS	const	scripts/systems/infra_system.gd:44	InfraSystem
-suggested_start_units	func	scripts/systems/infra_system.gd:200	InfraSystem
+suggested_start_units	func	scripts/systems/infra_system.gd:205	InfraSystem
 SUIT_MATCH	const	scripts/systems/people_parts.gd:84	PeopleParts
 sum_license_cost	func	scripts/systems/product_lines.gd:394	ProductLines
 summary	func	scripts/systems/cheque_read.gd:53	cheque_read.gd
@@ -9461,12 +9462,12 @@ unconfirmed	func	scripts/systems/product_read.gd:24	ProductRead
 unconfirmed_threshold_crossed	signal	scripts/autoload/event_bus.gd:151	EventBus
 unit	func	scripts/events/core/dice.gd:31	EvDice
 UNIT_GAP	const	scripts/ui/components/top_bar.gd:64	top_bar.gd
-unit_price	func	scripts/systems/infra_system.gd:94	InfraSystem
+unit_price	func	scripts/systems/infra_system.gd:99	InfraSystem
 UNIT_PRICE_B2B	const	scripts/systems/infra_system.gd:25	InfraSystem
 UNIT_PRICE_B2C	const	scripts/systems/infra_system.gd:23	InfraSystem
-unit_size	func	scripts/systems/infra_system.gd:88	InfraSystem
-units	func	scripts/systems/infra_system.gd:83	InfraSystem
-units_for_load	func	scripts/systems/infra_system.gd:133	InfraSystem
+unit_size	func	scripts/systems/infra_system.gd:93	InfraSystem
+units	func	scripts/systems/infra_system.gd:88	InfraSystem
+units_for_load	func	scripts/systems/infra_system.gd:138	InfraSystem
 units_per_px	func	scripts/ui/office/office_camera.gd:107	OfficeCamera
 unlock_condition	var	scripts/data_models/event_choice.gd:11	EventChoice
 unlock_reason_text	var	scripts/data_models/event_choice.gd:12	EventChoice
@@ -9637,7 +9638,7 @@ WEEKS_PER_YEAR	const	scripts/systems/time_model.gd:25	TimeModel
 weeks_since	func	scripts/events/core/flags.gd:89	EvFlags
 weeks_since	func	scripts/events/core/history.gd:128	EvHistory
 weeks_text	func	scripts/tabs/rnd/rnd_ui_shared.gd:106	RnDUiShared
-weeks_to_amber	func	scripts/systems/infra_system.gd:153	InfraSystem
+weeks_to_amber	func	scripts/systems/infra_system.gd:158	InfraSystem
 weeks_until_arrival	func	scripts/systems/hr_search_system.gd:75	HRSearchSystem
 weeks_until_expiry	func	scripts/events/core/flags.gd:60	EvFlags
 weeks_until_return	func	scripts/systems/hr_morale_system.gd:236	HRMoraleSystem

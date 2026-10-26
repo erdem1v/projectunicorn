@@ -72,7 +72,7 @@ static func facts_for(p: Prospect) -> Dictionary:
 		"support_staffed": ProductRead.support_staffed(),
 		# --- infrastructure, through Ürün §10 ---
 		"provider": InfraSystem.provider(),
-		"provider_not_economy": InfraSystem.provider() != InfraSystem.PROVIDER_LOCAL,
+		"provider_not_economy": not InfraSystem.is_economy(),
 		# --- R&D ---
 		"security_cert": ResearchSeam.completed("security_cert"),
 		# --- the company, through Ekip §15.3 ---

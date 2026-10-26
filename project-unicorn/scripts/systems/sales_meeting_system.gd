@@ -154,7 +154,7 @@ static func _build_base_contributions(p: Prospect, fit: Dictionary) -> Array:
 	out.append({"seam": "sales.price_stance", "delta": SalesConstants.W_PRICE_SIGNAL * stance_signal})
 
 	# The provider ladder (Ürün §10).
-	var provider_ok: float = -1.0 if InfraSystem.provider() == InfraSystem.PROVIDER_LOCAL else 1.0
+	var provider_ok: float = 1.0 if bool(_facts.provider_not_economy) else -1.0
 	out.append({"seam": "urun.capacity_tier", "delta": SalesConstants.W_PROVIDER_TIER * provider_ok})
 
 	# Star mismatch — a HARD curve, and Charisma is one of only two moments it may be touched.
@@ -335,9 +335,9 @@ static func _lose(reason: String) -> Dictionary:
 
 # DESIGN-PARKED: §5.2 gives the taxonomy but not the PRECEDENCE. This order is the one a
 # buyer would actually weigh — does the product do what we need, do I trust who runs it, is
-# the next step there, who carries the switch — with price as the falling branch. Alternatives
-# seen: weight by the archetype's own priorities; or name whichever modifier is most negative
-# (which turns a number into a sentence and reads against §9.6's no-numbers rule).
+# the next step there, who carries the switch — with price as the falling branch. The other
+# order seen: name whichever modifier is most negative (which turns a number into a sentence
+# and reads against §9.6's no-numbers rule).
 ## §5.2 — the customer names its reason FROM REAL STATE: the area it said it finds lacking (the opening objection),
 ## or a gap it ASKED about this sitting; price is open at every table, so every other loss falls to it.
 static func _derive_loss_reason() -> String:

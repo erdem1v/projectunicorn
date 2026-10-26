@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git d8f21ae · 2026-10-26 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 89be9aa · 2026-10-26 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -153,7 +153,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/onboarding/steps/origin_traits_step.gd · 332 · - · OnboardingStep · 0 sinyal · 18 func
 - scripts/onboarding/steps/step_base.gd · 118 · OnboardingStep · Control · 1 sinyal · 10 func
 
-### scripts/systems/ (72 dosya, 24344 satır)
+### scripts/systems/ (72 dosya, 24349 satır)
 - scripts/systems/angel_round_system.gd · 52 · AngelRoundSystem · RefCounted · 0 sinyal · 1 func
 - scripts/systems/b2b_constants.gd · 286 · B2BConstants · RefCounted · 0 sinyal · 9 func
 - scripts/systems/b2b_sales_system.gd · 652 · B2BSalesSystem · RefCounted · 0 sinyal · 43 func
@@ -174,7 +174,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/systems/hr_search_system.gd · 307 · HRSearchSystem · RefCounted · 0 sinyal · 15 func
 - scripts/systems/hr_system.gd · 554 · HRSystem · RefCounted · 0 sinyal · 49 func
 - scripts/systems/incident_system.gd · 660 · IncidentSystem · RefCounted · 0 sinyal · 51 func
-- scripts/systems/infra_system.gd · 249 · InfraSystem · RefCounted · 0 sinyal · 24 func
+- scripts/systems/infra_system.gd · 254 · InfraSystem · RefCounted · 0 sinyal · 25 func
 - scripts/systems/line_gates.gd · 130 · LineGates · RefCounted · 0 sinyal · 10 func
 - scripts/systems/look_system.gd · 145 · LookSystem · RefCounted · 0 sinyal · 9 func
 - scripts/systems/mail_clock.gd · 121 · MailClock · RefCounted · 0 sinyal · 10 func

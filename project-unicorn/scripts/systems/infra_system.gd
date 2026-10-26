@@ -79,6 +79,11 @@ static func provider() -> String:
 	return ProductState.infra_provider()
 
 
+## Seçili sağlayıcı Ekonomi (yerel) sunucu mu. Satış masasının "sunucu Ekonomi" olgusunun tek kaynağı.
+static func is_economy() -> bool:
+	return provider() == PROVIDER_LOCAL
+
+
 ## Satın alınan BİRİM sayısı (kullanıcı/koltuk değil).
 static func units() -> int:
 	return maxi(ProductState.infra_units(), CAPACITY_MIN)
@@ -228,7 +233,7 @@ static func daily_bill() -> int:
 
 ## GELEN akışı çarpanı: ucuz sağlayıcının yavaşlığı (×1,25).
 static func report_inflow_multiplier() -> float:
-	return LOCAL_INFLOW_MULT if ProductState.is_live() and provider() == PROVIDER_LOCAL else 1.0
+	return LOCAL_INFLOW_MULT if ProductState.is_live() and is_economy() else 1.0
 
 
 ## Kartların okuduğu güven koşulu (`urun.enterprise_trust`): Kurumsal sunucu ya da Ar-Ge `security_cert`. Sözleşmenin
