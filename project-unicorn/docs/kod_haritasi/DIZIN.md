@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git 7059e7e · 2026-10-26 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 0f1114c · 2026-10-26 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -270,11 +270,11 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/tabs/rnd/rnd_tree_view.gd · 433 · RnDTreeView · Control · 1 sinyal · 25 func
 - scripts/tabs/rnd/rnd_ui_shared.gd · 290 · RnDUiShared · RefCounted · 0 sinyal · 22 func
 
-### scripts/theme/ (4 dosya, 3304 satır)
-- scripts/theme/build_theme.gd · 1528 · - · SceneTree · 0 sinyal · 28 func
+### scripts/theme/ (4 dosya, 3293 satır)
+- scripts/theme/build_theme.gd · 1523 · - · SceneTree · 0 sinyal · 28 func
 - scripts/theme/theme_check.gd · 271 · - · SceneTree · 0 sinyal · 11 func
 - scripts/theme/ui_factory.gd · 533 · UiFactory · RefCounted · 0 sinyal · 38 func
-- scripts/theme/ui_tokens.gd · 972 · UiTokens · RefCounted · 0 sinyal · 39 func
+- scripts/theme/ui_tokens.gd · 966 · UiTokens · RefCounted · 0 sinyal · 38 func
 
 ### scripts/ui/ (1 dosya, 138 satır)
 - scripts/ui/menu_backdrop.gd · 138 · - · Control · 1 sinyal · 6 func

@@ -225,12 +225,12 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   Sans'a düşer. JetBrains Mono ve Plex'in metin yüzü yalnız krem ailede kalır, koyu yüzlerin yedek zincirinde Noto
   Sans Symbols 2 yoktur. Gazete iki temada da kremdir. Kontrast kapısı `--theme-contrast-audit`.
 - Krem dil: mono yazı, hairline çizgi, amber vurgu; hover dolgu değil kenardır (`ACCENT_DEEP`, kartta `BORDER_HOVER`).
-  Gövde krem kâğıttır (sayfa `#F6F1E6`, kart ve pencere `#FBF7EE`, `INK` `#2B2722`); çerçeve koyudur (`#07090B`:
-  TopBar, NewsTicker) ve `CREAM*`, `*_CHROME`, `*_BRIGHT` okur; sinematik koyu register
-  (`DIALOGUE_*`) de `CREAM*` ve `VEIL_*_CHROME`. Tek ada gazetedir (`PaperPanel`, kendi `PAPER_*` merdiveni). 3B
+  Gövde krem kâğıttır (sayfa `#F6F1E6`, kart ve pencere `#FBF7EE`, `INK` `#2B2722`); sinematik koyu register
+  (`DIALOGUE_*`) `CREAM*` ve `*_CHROME` okur. Tek ada gazetedir (`PaperPanel`, kendi `PAPER_*` merdiveni). 3B
   ofisin renkleri UI token'ı değil sahne verisidir: `OfficeConstants`, `scripts/ui/office/`, `scenes/office/shaders/`.
-- **Chrome kuralı.** `Chrome*` (koyu kabuk ailesi) yalnız TopBar ve NewsTicker'da kullanılır; yeni yüzey eklemek
-  ayrı karardır.
+- **Chrome kuralı.** Çerçeve (TopBar, NewsTicker) koyu temayı okur: iki sahnenin kökünde `menajer_theme.tres`
+  atanmıştır ve çerçevenin yazı ile düğme varyasyonları (`HeroValue`, `ClockLabel`, `SpeedKey`, `TickerToggle` …)
+  o temada tanımlıdır.
 
 ## 8. Kod yazımı
 Kod tabanı şiştiği için her iş pahalılaştı; yeni kod aynı hataları tekrarlamaz.

@@ -75,11 +75,6 @@ func _initialize() -> void:
 	_lbl(th, &"MetricValue", mono_sb, T.SIZE_LEAD, T.CREAM)
 	_lbl(th, &"MetricUnit", mono_reg, T.SIZE_META, T.INK_FAINT_CHROME)
 	_lbl(th, &"BadgeLabel", mono_reg, T.SIZE_MICRO, T.INK)
-	_lbl(th, &"ChromeValue", sans_sb, T.SIZE_BODY, T.CREAM)
-	_lbl(th, &"ChromeClock", mono_reg, T.SIZE_DATA, T.CREAM_DIM)   # TopBar tarih/saat
-	# ChromeAlert: KEPENK / TEKLİF geri sayımı. Tema statiktir; renk körü takası bu
-	# etiketi top_bar.gd'de yeniden boyar.
-	_lbl(th, &"ChromeAlert", mono_sb, T.SIZE_SMALL, T.NEGATIVE_BRIGHT)
 	_lbl(th, &"RowName", sans_sb, T.SIZE_BODY, T.INK)
 	_lbl(th, &"RowMeta", mono_reg, T.SIZE_SMALL, T.INK_MUTED)
 	_lbl(th, &"AvatarInitial", sans_sb, T.SIZE_BODY, T.CREAM)
@@ -402,7 +397,7 @@ const DARK_OF := {
 		"INK": "D_INK_2", "CREAM": "D_INK_2", "INK_MUTED": "D_INK_3", "INK_DIM": "D_INK_3",
 		"CREAM_DIM": "D_INK_3", "INK_FAINT_CHROME": "D_INK_3", "INK_DIM_CHROME": "D_INK_3",
 		"INK_FAINT": "D_INK_4", "ACCENT": "D_INK_1", "ACCENT_DEEP": "D_INK_1", "ACCENT_CHROME": "D_INK_1",
-		"INK_MUTED_CHROME": "D_INK_1", "CARD_BG": "D_SURFACE_3", "NEGATIVE_BRIGHT": "D_NEG",
+		"INK_MUTED_CHROME": "D_INK_1", "CARD_BG": "D_SURFACE_3",
 		"PAPER_INK": "PAPER_INK", "PAPER_INK_BODY": "PAPER_INK_BODY", "PAPER_INK_DECK": "PAPER_INK_DECK",
 		"PAPER_INK_MAST": "PAPER_INK_MAST", "PAPER_INK_META": "D_PAPER_INK_META",
 	},

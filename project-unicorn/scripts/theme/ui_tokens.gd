@@ -21,11 +21,11 @@ extends RefCounted
 #
 # CONTEXT RULE — the body is cream paper inside a dark chrome frame. INK is text
 # on the cream body, CREAM is text on the dark frame. The frame (TopBar,
-# NewsTicker) reads CREAM*, the *_CHROME twins and *_BRIGHT;
+# NewsTicker) reads CREAM* and the *_CHROME twins;
 # the body reads INK*, the plain tokens and positive() / negative(). The dark
 # cinematic register (DIALOGUE_*) reads the frame's side as well: CREAM*,
 # ACCENT_CHROME, INK_*_CHROME, CARD_BORDER_CHROME, BORDER_HOVER_CHROME, the
-# VEIL_*_CHROME whites and *_BRIGHT. The newspaper keeps its own PAPER_*
+# VEIL_*_CHROME whites. The newspaper keeps its own PAPER_*
 # ladder.
 #
 # FONT IMPORT STANDARD: all faces share antialiasing=1 (grayscale), hinting=1
@@ -41,7 +41,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 39
+const THEME_STAMP := 40
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -104,19 +104,16 @@ const POSITIVE_RULE := Color(POSITIVE, 0.45)             # chip border
 const NEGATIVE := Color(0.608, 0.231, 0.157, 1)          # #9B3B28
 const NEGATIVE_BG := Color(0.953, 0.851, 0.816, 1)       # #F3D9D0
 const NEGATIVE_RULE := Color(NEGATIVE, 0.45)             # chip border
-const NEGATIVE_BRIGHT := Color(1.0, 0.361, 0.286, 1)     # #FF5C49 · on the dark frame
 
 # --- STATE · colourblind-safe counterparts (Settings > Erişilebilirlik) ---
 # Blue/orange survives all three dichromacies while green/red survives none
-# (Okabe-Ito hues, deepened to read as text on cream; the *_BRIGHT_CB pair keeps
-# screen brightness for the dark frame). Only the pair moves: amber already reads
-# as amber to a dichromat, so ACCENT stays put.
+# (Okabe-Ito hues, deepened to read as text on cream). Only the pair moves: amber
+# already reads as amber to a dichromat, so ACCENT stays put.
 # ALL # WORKING — Erdem's F5 seals the hues.
 const POSITIVE_CB := Color(0.173, 0.435, 0.682, 1)        # #2C6FAE · blue
 const POSITIVE_BG_CB := Color(0.851, 0.898, 0.941, 1)     # #D9E5F0
 const NEGATIVE_CB := Color(0.702, 0.420, 0.0, 1)          # #B36B00 · orange
 const NEGATIVE_BG_CB := Color(0.945, 0.894, 0.820, 1)     # #F1E4D1
-const NEGATIVE_BRIGHT_CB := Color(0.902, 0.624, 0.0, 1)   # #E69F00 · on the dark frame
 
 # --- BADGE / CHIP ---
 const BADGE_BG := Color(0.957, 0.769, 0.188, 1)          # #F4C430 · count badge (amber pill)
@@ -149,7 +146,7 @@ const VEIL_FAINT_CHROME := Color(1, 1, 1, 0.03)   # at-rest / disabled tint on d
 const VEIL_SOFT_CHROME := Color(1, 1, 1, 0.06)    # normal / pressed on dark
 
 # --- Cinematic dialogue register ---
-# Text on these surfaces uses CREAM* / *_BRIGHT. # WORKING — Erdem's F5 seals.
+# Text on these surfaces uses CREAM*. # WORKING — Erdem's F5 seals.
 const SCRIM_MODAL := Color(0.020, 0.027, 0.035, 0.62)  # rgba(5,7,9,.62) · modal dimmer
 # The founder's road on the city map to and from a meeting: cream dashes on a dark casing.
 const ROAD_CASING := Color(0.169, 0.153, 0.133, 0.55)  # #2B2722 .55 · road casing
@@ -331,9 +328,6 @@ static func positive_bg() -> Color:
 
 static func negative_bg() -> Color:
 	return NEGATIVE_BG_CB if _cb_palette else NEGATIVE_BG
-
-static func negative_bright() -> Color:
-	return NEGATIVE_BRIGHT_CB if _cb_palette else NEGATIVE_BRIGHT
 
 # ============================================================================
 # Runtime colour-decision helpers — the single home for sign/kind → colour.

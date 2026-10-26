@@ -1,6 +1,6 @@
 # Kod haritası · KALITE
 
-Üretildi: git 7059e7e · 2026-10-26 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git 0f1114c · 2026-10-26 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 246 .gd (tools/ ve sandbox/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
@@ -9,7 +9,7 @@ Kapsam: scripts/ altındaki 246 .gd (tools/ ve sandbox/ hariç). Kod temizliği 
 - scripts/main/main.gd · 5477 satır · 196 func
 - scripts/debug/run_probe.gd · 2390 satır · 92 func
 - scripts/systems/sprint_system.gd · 1954 satır · 162 func
-- scripts/theme/build_theme.gd · 1528 satır · 28 func
+- scripts/theme/build_theme.gd · 1523 satır · 28 func
 - scripts/systems/vc_pitch_system.gd · 1327 satır · 91 func
 - scripts/autoload/save_manager.gd · 1297 satır · 61 func
 - scripts/events/tools/lint.gd · 1216 satır · 44 func
@@ -19,7 +19,7 @@ Kapsam: scripts/ altındaki 246 .gd (tools/ ve sandbox/ hariç). Kod temizliği 
 - scripts/autoload/game_state.gd · 1049 satır · 55 func
 - scripts/tabs/product/product_model.gd · 1041 satır · 55 func
 - scripts/systems/term_sheet_table_system.gd · 987 satır · 57 func
-- scripts/theme/ui_tokens.gd · 972 satır · 39 func
+- scripts/theme/ui_tokens.gd · 966 satır · 38 func
 - scripts/tabs/events/mail_pane.gd · 887 satır · 46 func
 - scripts/events/core/effects.gd · 850 satır · 26 func
 - scripts/tabs/sales_tab.gd · 834 satır · 40 func
@@ -34,11 +34,11 @@ Kapsam: scripts/ altındaki 246 .gd (tools/ ve sandbox/ hariç). Kod temizliği 
 ## 80 satırdan uzun fonksiyonlar (94 tane, en uzun 40)
 
 Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları arada sayılır).
-- scripts/theme/build_theme.gd:418 · _menajer · 785 satır
+- scripts/theme/build_theme.gd:413 · _menajer · 785 satır
 - scripts/debug/endgame_smoke.gd:51 · run_case · 565 satır
 - scripts/events/core/effects.gd:228 · _apply · 449 satır
-- scripts/theme/build_theme.gd:39 · _initialize · 324 satır
 - scripts/events/tools/vocab_gen.gd:20 · run · 322 satır
+- scripts/theme/build_theme.gd:39 · _initialize · 319 satır
 - scripts/debug/endgame_smoke.gd:22136 · _case_sprint_timeline_matches_play_out · 266 satır
 - scripts/main/main.gd:3341 · _run_hr_shot · 259 satır
 - scripts/debug/endgame_smoke.gd:8011 · _case_hr_constants_contract · 220 satır
@@ -75,7 +75,7 @@ Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları
 - scripts/tabs/hr/hr_atlas_modal.gd:309 · _file_card · 116 satır
 - scripts/systems/sprint_system.gd:1595 · _close · 115 satır
 
-## Ölü kod adayları (23)
+## Ölü kod adayları (22)
 
 Tanım satırı dışında scripts/, scenes/, data/ içinde adı hiç geçmeyen func (yorumlar sayılmaz, dizeler sayılır). Godot geri çağrıları hariç.
 UYARI: call("a"+b) gibi kurulmuş adlar, sinyal adıyla bağlama, harness bayrakları ve tools/*.sh çağrıları yüzünden yanlış pozitif olabilir; silmeden önce grep ile doğrula.
@@ -97,10 +97,9 @@ UYARI: call("a"+b) gibi kurulmuş adlar, sinyal adıyla bağlama, harness bayrak
 - scripts/systems/sales_system.gd:500 · estimate_price_change
 - scripts/theme/ui_factory.gd:41 · make_badge
 - scripts/theme/ui_factory.gd:76 · make_stat
-- scripts/theme/ui_tokens.gd:335 · negative_bright
-- scripts/theme/ui_tokens.gd:390 · format_money
-- scripts/theme/ui_tokens.gd:943 · D_health_color
-- scripts/theme/ui_tokens.gd:952 · D_relationship_palette
+- scripts/theme/ui_tokens.gd:384 · format_money
+- scripts/theme/ui_tokens.gd:937 · D_health_color
+- scripts/theme/ui_tokens.gd:946 · D_relationship_palette
 - scripts/ui/components/dialogue_portrait_card.gd:21 · set_portrait
 
 ## Yarım sinyaller (18)
@@ -210,7 +209,7 @@ Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: 
 - SAVED_GLYPH · 2 dosya · scripts/main/main.gd:31, scripts/modals/ending_scene.gd:38
 - SCHEMA_VERSION · 2 dosya · scripts/autoload/save_manager.gd:16, scripts/autoload/settings.gd:11
 - SEP · 2 dosya · scripts/systems/sprint_catalog.gd:20, scripts/tabs/product/sprint_ui_shared.gd:8
-- SEPARATOR · 2 dosya · scripts/theme/ui_tokens.gd:134, scripts/ui/components/news_ticker.gd:36
+- SEPARATOR · 2 dosya · scripts/theme/ui_tokens.gd:131, scripts/ui/components/news_ticker.gd:36
 - STAGES · 2 dosya · scripts/systems/sprint_system.gd:18, scripts/debug/product_fixtures.gd:10
 - STALL_S · 2 dosya · scripts/ui/office/office_person.gd:131, scripts/debug/office_crowd_probe.gd:13
 - START_IMMUNITY_WEEKS · 2 dosya · scripts/events/core/tuning.gd:122, scripts/events/tools/plausibility.gd:52
