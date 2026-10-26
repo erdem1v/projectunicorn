@@ -63,8 +63,8 @@ static func roll_against(chance: float) -> bool:
 	return _rng().randf() < chance
 
 
-static func resolve(skill_name: String, difficulty: int, bonus: int = 0) -> Dictionary:
-	var chance: float = chance_for(skill_name, difficulty, bonus)
+static func resolve(skill_name: String, difficulty: int) -> Dictionary:
+	var chance: float = chance_for(skill_name, difficulty)
 	var roll: float
 	match _forced():
 		"pass":

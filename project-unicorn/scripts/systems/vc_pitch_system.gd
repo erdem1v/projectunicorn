@@ -297,7 +297,7 @@ static func _finish_conviction(base: int, why: Array) -> Dictionary:
 
 static func _resolve_beat1(_choice_id: String) -> Dictionary:
 	# Odayı Oku — perception. Success reveals the tell (Beat 2 marks the favored angle).
-	var chk: Dictionary = SkillCheck.resolve(PitchConstants.BEAT1_SKILL, PitchConstants.BEAT1_DIFF, 0)
+	var chk: Dictionary = SkillCheck.resolve(PitchConstants.BEAT1_SKILL, PitchConstants.BEAT1_DIFF)
 	_intel = chk.passed
 	_beat = 2
 	return {"done": false, "view_state": _beat2_view_state(), "check": chk}
@@ -359,7 +359,7 @@ static func _resolve_beat4(choice_id: String) -> Dictionary:
 			_set_callback()
 			return _to_result("callback")
 		"b4_zorla":
-			var chk: Dictionary = SkillCheck.resolve(PitchConstants.BEAT4_PUSH_SKILL, PitchConstants.MASAYI_ZORLA_DIFF, 0)
+			var chk: Dictionary = SkillCheck.resolve(PitchConstants.BEAT4_PUSH_SKILL, PitchConstants.MASAYI_ZORLA_DIFF)
 			if chk.passed:
 				_grant_sheet()
 				return _to_result("zorla_win", chk)
