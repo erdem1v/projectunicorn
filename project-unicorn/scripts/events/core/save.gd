@@ -59,6 +59,8 @@ static func from_dict(block: Dictionary) -> void:
 	EvTicker.from_dict(block)
 	EvTempo.from_dict(block)
 	EvDelays.from_dict(block)
+	# After the history and the clock: the engine's list of notes still to be named is derived from the rows.
+	EvEngine.restore_unannounced()
 
 
 static func reset() -> void:

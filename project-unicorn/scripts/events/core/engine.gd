@@ -678,6 +678,16 @@ static func resolving() -> bool:
 	return _resolving
 
 
+## The notes still waiting for their hour, rebuilt from the history rows a save holds: the list pump() names them from
+## is not saved, and a note a load forgot would reach the inbox without its re-validation or its `event_triggered`.
+static func restore_unannounced() -> void:
+	_unannounced.clear()
+	for waiting in EvHistory.notes_awaiting_arrival():
+		var row: Dictionary = waiting["row"]
+		_unannounced.append({"event_id": String(row.get("event_id", "")), "context": row.get("entities", {}),
+			"at": int(row["at"]), "row": int(waiting["index"])})
+
+
 static func _option_index(card: Dictionary, option_id: String) -> int:
 	var options: Array = card.get("options", [])
 	for i in options.size():

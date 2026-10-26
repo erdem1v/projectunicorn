@@ -6553,11 +6553,13 @@ static func _stamp_urgent(event_id: String) -> bool:
 
 
 ## What waits for the workday survives a save. At 00:00 a message waits in the outbox, a card in the queue, a paper on the
-## desk, and a reminder and Frank's line in their ledgers, each with its arrival time. After a save and a load the same
-## things wait with the same times, still out of sight, and come once the clock reaches them. A save from before
-## arrival times (no `at` anywhere) opens with all of it shown.
+## desk, a note in the history, and a reminder and Frank's line in their ledgers, each with its arrival time. After a
+## save and a load the same things wait with the same times, still out of sight, and come once the clock reaches them,
+## the note named to the inbox with `event_triggered` once, at its hour. A save from before arrival times (no `at`
+## anywhere) opens with all of it shown.
 ## FALSIFICATION: leave `mail_outbox` out of the saved GameState fields and the outbox check fails; give EvQueue.admit
-## no `at` and the queued card shows at 00:00.
+## no `at` and the queued card shows at 00:00; drop `EvEngine.restore_unannounced` from EvSave.from_dict and the note
+## is never named.
 static func _case_mail_pending_survives_save() -> String:
 	const INBOX := preload("res://scripts/ui/components/inbox.gd")
 	MailClock.instant = false
@@ -6572,6 +6574,8 @@ static func _case_mail_pending_survives_save() -> String:
 	MessageSystem.post("probe", "MONTH_TITLE")
 	if not EventGate.request("team.resignation", {"employee": dev.id}):
 		return "fixture: the resignation card was refused"
+	if not EventGate.request(THANKS_ID, {"customer": "co_lead_smoke"}):
+		return "fixture: the thank-you note was refused"
 	EvPapers.place(RETAIN_ID, _ctx_customer(risk), 2, "", MailClock.arrival("smoke paper"))
 	EventBus.mentor_advisory_changed.emit("FRANK_ADVISORY_PAID_TIER", {})
 	MailClock.sync_desk()
@@ -6593,13 +6597,19 @@ static func _case_mail_pending_survives_save() -> String:
 	if _mail_shown(INBOX, reminder) != "":
 		return "after the load: " + _mail_shown(INBOX, reminder)
 
+	var named: Array = []
+	var hear := func(id: String) -> void: named.append(id)
+	EventBus.event_triggered.connect(hear)
 	TimeManager.advance_hours(13)
+	EventBus.event_triggered.disconnect(hear)
 	var came: Array = [EventGate.active_id() == "team.resignation" or EvQueue.size() > 0,
 		GameState.messages.any(func(m: Dictionary) -> bool: return m.kind == "probe"),
 		EventGate.desk_papers().any(func(p: Dictionary) -> bool: return p.id == paper_key),
-		MailClock.delivered(MailClock.reminder_at(reminder)), MailClock.delivered(GameState.mentor_line_at)]
-	if came != [true, true, true, true, true]:
-		return "13 hours into the day not everything had arrived (card, message, paper, reminder, Frank): %s" % str(came)
+		MailClock.delivered(MailClock.reminder_at(reminder)), MailClock.delivered(GameState.mentor_line_at),
+		named.count(THANKS_ID)]
+	if came != [true, true, true, true, true, 1]:
+		return "13 hours into the day not everything had arrived (card, message, paper, reminder, Frank, the note named once): %s" \
+			% str(came)
 
 	for key in ["mail_outbox", "desk_arrivals", "mentor_line_at"]:
 		saved.state.game_state.erase(key)
@@ -6609,21 +6619,27 @@ static func _case_mail_pending_survives_save() -> String:
 		entry.erase("urgent")
 	for paper in engine_block.papers.values():
 		paper.erase("at")
+	for row in engine_block.rows:
+		row.erase("at")
 	if not SaveManager.apply_loaded_state(saved):
 		return "the save from before arrival times did not load"
 	if EventGate.queue_size() == 0 or not EventGate.desk_papers().any(func(p: Dictionary) -> bool: return p.id == paper_key):
 		return "a save from before arrival times kept its cards back (%d queued, %d on the desk)" \
 			% [EventGate.queue_size(), EventGate.desk_papers().size()]
+	if EvHistory.newest_unread_note().is_empty():
+		return "a save from before arrival times kept its note back"
 	return ""
 
 
 ## The arrival times of what the fixture made wait, in a fixed order: the probe message, the resignation card, the
-## paper, the reminder and Frank's line.
+## paper, the reminder, Frank's line and the thank-you note.
 static func _mail_times(paper_key: String, reminder: String) -> Array:
 	var message: Array = GameState.mail_outbox.filter(func(m: Dictionary) -> bool: return m.kind == "probe")
 	var card: Array = EvQueue.entries().filter(func(e: Dictionary) -> bool: return e.event_id == "team.resignation")
+	var note: Array = EventGate.history().filter(func(r: Dictionary) -> bool: return r.event_id == THANKS_ID)
 	return [int(message[0].at) if not message.is_empty() else -2, int(card[0].at) if not card.is_empty() else -2,
-		EvPapers.at_of(paper_key), MailClock.reminder_at(reminder), GameState.mentor_line_at]
+		EvPapers.at_of(paper_key), MailClock.reminder_at(reminder), GameState.mentor_line_at,
+		int(note[0].at) if not note.is_empty() else -2]
 
 
 ## What the player can see of the waiting things: "" when none of them shows.
@@ -6638,6 +6654,8 @@ static func _mail_shown(inbox: GDScript, reminder: String) -> String:
 		return "the message shows"
 	if MailClock.delivered(GameState.mentor_line_at):
 		return "Frank's line shows"
+	if not EvHistory.newest_unread_note().is_empty():
+		return "the note shows"
 	return ""
 
 

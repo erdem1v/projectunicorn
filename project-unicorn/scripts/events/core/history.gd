@@ -170,6 +170,16 @@ static func newest_unread_note() -> Dictionary:
 	return {}
 
 
+## The notes written down whose hour has not come, as {index, row}, oldest first: unread, and stamped later than now.
+static func notes_awaiting_arrival() -> Array:
+	var out: Array = []
+	for i in _rows.size():
+		var row: Dictionary = _rows[i]
+		if row.get("note", false) and row.get("unread", false) and not MailClock.delivered(int(row.get("at", -1))):
+			out.append({"index": i, "row": row.duplicate(true)})
+	return out
+
+
 static func _rows_for(event_id: String) -> Array:
 	return (_by_event.get(event_id, []) as Array).map(func(i): return _rows[int(i)])
 
