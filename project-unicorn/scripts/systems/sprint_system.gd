@@ -288,7 +288,7 @@ static func skip() -> void:
 	_begin()
 
 
-## Planlamayı PM'e devretme anahtarı: devirde sprint oyuncuyu beklemeden PM'in planıyla başlar. Çeyreği planlayan
+## Planlamayı PM'e devretme anahtarı: devirde sprint oyuncuyu beklemeden liderin önerisiyle başlar. Çeyreği planlayan
 ## PM yokken açılmaz.
 static func set_delegate(on: bool) -> void:
 	_p().delegate = on and SprintCatalog.quarter_pm() != null
@@ -333,12 +333,15 @@ static func finish_beta_cards() -> void:
 		(p.next if p.mode == "release" else p.sprint).cards.append(c.id)
 
 
-## Liderin önerisi bu sprintin boş yerlerini doldurur.
+## Liderin önerisi bu sprintin boş yerlerini doldurur ve sonraki sütundaki kartların sonuna kart ekler.
 static func apply_lead() -> void:
 	if mode() != "plan":
 		return
-	for id in SprintCatalog.lead_suggestion():
+	var lead: Dictionary = SprintCatalog.lead_suggestion()
+	for id in lead.this:
 		_place(SprintCatalog.card_by_id(id), true)
+	for id in lead.next:
+		_place(SprintCatalog.card_by_id(id), false)
 	_p().sprint.lead_applied = true
 	_changed()
 
@@ -796,6 +799,13 @@ static func intake(cards: Array, card: Dictionary, people: Array) -> Dictionary:
 	var played: Dictionary = _outcome(cards if card.is_empty() else cards + [card], sprint_weeks(), false, people)
 	var got: float = played.spare if card.is_empty() else played.cards[card.id].done
 	return {"takes": load <= EPS or got > EPS, "cards": played.cards}
+
+
+## `cards` bu sprintin haftalarında `people` ekibiyle oynanınca sonraki sprinte kalan iş: `intake` ile aynı oynatma, kapanışın
+## devredeceği iş, zaman ekseninin `out`u (hazırlık kazancına bölünmüş).
+static func carried_points(cards: Array, people: Array) -> float:
+	return _replay(cards, sprint_weeks(), false, people).cards.reduce(
+		func(sum: float, c: Dictionary) -> float: return sum + remaining(c) / (1.0 + float(c.get("prep_gain", 0.0))), 0.0)
 
 
 ## Düzeltme pay tavanı: sistemin kendiliğinden aldığı düzeltme işi, uygulanan yerleşimin (`cards`) düzeltme işiyle birlikte,
@@ -1530,9 +1540,9 @@ static func decision_card() -> Dictionary:
 	return _p().get("cards", {}).get(String(_p().get("decision", {}).get("card_id", "")), {})
 
 
-## Oyuncuyu beklemeyen sprint kendiliğinden başlar: devirde PM'in planıyla, planlanacak kart yokken boş.
-## Liderin önerisi, o boşsa sonraki sütunun kartları alınır; kapısı açık kart kalmazsa boş sprint başlar:
-## sprint numarası ilerler, talep, söz ve araştırma sprint sayar. Ekip yoksa başlamaz. MVP kapısı oyuncuyu
+## Oyuncuyu beklemeyen sprint kendiliğinden başlar: devirde liderin önerisiyle (bu sprint ve sonraki sütun dolar), planlanacak
+## kart yokken boş. Öneri boşsa sonraki sütunun kartları alınır; kapısı açık kart kalmazsa boş sprint başlar: sprint numarası
+## ilerler, talep, söz ve araştırma sprint sayar. Ekip yoksa başlamaz. MVP kapısı oyuncuyu
 ## bekler: ürün ne kendiliğinden yayınlanır ne bir sprint daha bekler.
 static func _auto_start() -> void:
 	if _p().release.get("gate", false):

@@ -4123,6 +4123,10 @@ func _a4_live() -> void:
 			break
 		SprintSystem.plan_next()
 		SprintSystem.apply_lead()
+	# The lead fills the next column too; the frame's planning opens with the carried cards alone.
+	for id in GameState.product.next.cards.duplicate():
+		if GameState.product.cards[id].state == "planned":
+			SprintSystem.remove(id)
 	SprintSystem.plan_next()
 
 

@@ -43,7 +43,8 @@ Ar-Ge 19 düğümlü ağaçtır; tamamlanan düğüm hat kapılarını ve katsay
 - `SprintSystem.start()` `sprint_system.gd:127` (`_begin` :139): sprinti başlatır, lisansı keser, plan tutuşunu kaldırır · `product_tab.gd:282`
 - `SprintSystem.plan_next()` `sprint_system.gd:172`: sürüm notundan sonraki sprinte geçer, çeyrek döner · `product_tab.gd:285`, `_auto_start`
 - `SprintSystem.publish()` `sprint_system.gd:290`: MVP kapısında ürünü CANLI v1.0 yapar · `product_tab.gd:286`
-- `SprintSystem.skip()/set_delegate()/apply_lead()` `sprint_system.gd:274`/`:282`/`:319`: boş geçir, PM'e devret, liderin planını uygula · `product_tab.gd`
+- `SprintSystem.skip()/set_delegate()/apply_lead()` `sprint_system.gd:284`/`:293`/`:337`: boş geçir, PM'e devret (devirde sprint liderin önerisiyle başlar), liderin önerisini uygula (bu sprint ve sonraki sütun) · `product_tab.gd`
+- `SprintSystem._auto_start()` `sprint_system.gd:1547`: oyuncuyu beklemeyen sprinti başlatır; `apply_lead` bu sprinti ve sonraki sütunu doldurur, kart yoksa boş sprint · `daily_tick`, `plan_next` (devirde)
 - `SprintSystem.approve()/approve_all()/edit()/pick_goal()` `sprint_system.gd:521`/`:528`/`:537`/`:544`: çeyrek PM planı ve hedef alan · `product_tab.gd:289-292`
 - `SprintSystem.fix_first()/put_first()` `sprint_system.gd:204`/`:217`: hattın düzeltme kartı sprintin başına · olay fiili `sprint_fix_first` `scripts/events/core/effects.gd:497`
 - `SprintSystem.decision_effort/progress/carry/trim/first()` `sprint_system.gd:331`-`:446`: karar kâğıdının kart fiilleri · `effects.gd:476-514` (`sprint_card_*`)
@@ -63,7 +64,8 @@ Ar-Ge 19 düğümlü ağaçtır; tamamlanan düğüm hat kapılarını ve katsay
 - `SprintSystem.plan_outcome()/mvp_eta()/team()/payers()` `sprint_system.gd:761`/`:791`/`:692`/`:714`: plan önizlemesi, MVP tahmini, ekip, bedel ödeyenler · ProductModel, effects.gd
 - `SprintCatalog.cfg()` `scripts/systems/sprint_catalog.gd:29`: sprint.json okuması (yoksa yükler) · yaklaşık her sistem; `load_data()` :23 → `main.gd:4683`
 - `SprintCatalog.candidates()` `sprint_catalog.gd:194`: alanın aday kartları (feat:/req:/plan:/fix:/res:) · ProductModel, `SprintSystem`
-- `SprintCatalog.lead_suggestion()/pm_plans()` `sprint_catalog.gd:520`/`:658`: lider ve PM planı (`_suggest` :988); PM planı PM'in puanından bağımsız tam kart taşır · `apply_lead`, ÇEYREK görünümü
+- `SprintCatalog.lead_suggestion()/pm_plans()` `sprint_catalog.gd:526`/`:677`: lider `{this, next}` (bu sprint, sonraki sütun) ve PM planı (`_suggest` :1007); PM planı Ürün puanından bağımsız tam kart taşır · `apply_lead`, ÇEYREK
+- `SprintCatalog._lead_picks()` `sprint_catalog.gd:549`: iki sütunun ortak alım döngüsü; sütunda tavan `room` = kapasite − sütunun kalanı − `SprintSystem.carried_points` `sprint_system.gd:806` · `lead_suggestion`
 - `SprintCatalog.gate_reason()` `sprint_catalog.gd:290`: kilitli kademenin gerekçesi (`LineGates.unmet_parts`) · `_begin`, `product_model.gd:574`
 - `SprintBridges.tick_requests()` `scripts/systems/sprint_bridges.gd:22`: B2B talep doğurur/düşürür · `SprintSystem.daily_tick` :33
 - `SprintBridges.on_mvp()/on_release()` `sprint_bridges.gd:124`/`:71`: MVP'de sunucu açar; sürümde talebi karşılar · `SprintSystem._go_public` (sprint_system.gd:1505)
@@ -102,7 +104,7 @@ Ar-Ge 19 düğümlü ağaçtır; tamamlanan düğüm hat kapılarını ve katsay
 - `card_phase_changed`, `card_done`: yayan `sprint_system.gd:1080`, `:1084` · dinleyen yok
 - `card_carried_over`: yayan `sprint_system.gd:390`,`:1494` · dinleyen yok
 - `card_decision_requested`: yayan `sprint_system.gd:1224` · yalnız smoke/probe
-- `sprint_auto_started`: yayan `sprint_system.gd:1385` · dinleyen yok
+- `sprint_auto_started`: yayan `sprint_system.gd:1564` · dinleyen yok
 - `product_state_changed`: yayan `sprint_system.gd:1572` (`_changed`) · product_tab.gd:111, build_bar.gd:46
 - `version_shipped`: yayan `sprint_system.gd:305`,`:1497` · left_tabs.gd:132, top_bar.gd:126; olay motoru `scripts/events/core/signals.gd:30`
 - `build_phase_changed("shipped")`: yayan `sprint_system.gd:304`,`:1496` · promise_registry.gd:15, left_tabs.gd:125; olay tetiği (`funding.frank_v1`)
@@ -165,6 +167,7 @@ Ar-Ge 19 düğümlü ağaçtır; tamamlanan düğüm hat kapılarını ve katsay
 - Ekip dışı ve takip kartı: `sprint_away_lists_who_cannot_work` (ekip özeti dahil), `sprint_follow_card_cannot_be_removed`
 - Sprint: `sprint_two_days_close`, `sprint_capacity_from_team`, `sprint_ceiling_125_blocks_add`, `sprint_carry_keeps_progress`, `sprint_mvp_three_identity_k1`, `sprint_fix_card_clears_its_line`, `sprint_starts_only_with_consent`
 - Sprint: `sprint_request_on_time_met`, `sprint_paid_plan_opens_paid_tier`, `sprint_departure_restaffs_card`, `sprint_never_stalls_in_plan`, `sprint_lead_offers_paid_plan_b2c`, `product_pm_plan_opens_as_next_sprint`
+- Lider: `sprint_lead_fills_next_column` (öneri sonraki sütunu da doldurur: tavan, sıra, onaysız PM planı, devir), `sprint_lead_fills_to_ceiling`
 - Kâğıt/karar/söz: `sprint_decision_blocks_progress`, `decision_one_per_sprint`, `paper_interrupt_order`, `paper_card_trim`, `paper_line_harden`, `promise_due_fires_when_late`, `promise_extend_once`, `promise_cut_test_escape`
 - Acil durum/sunucu: `incident_gap_and_spread`, `incident_night_hold_resumes`, `incident_scale`, `incident_save_roundtrip`, `incident_gates`, `infra_capacity_moves_both_ways`, `auto_capacity_grows_only`, `capacity_step_immediate`
 - Hat/kalite: `product_lines_catalog_loads`, `line_k3_locked_without_research`, `product_fit_table`, `product_quality_sector_table`, `product_line_profiles`, `product_area_row`

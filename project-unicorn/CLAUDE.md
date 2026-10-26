@@ -136,8 +136,8 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   kapısını geçemeyen PM'in payı en yakın uygun PM'e kayar. Bir kartı tek PM hazırlar, hazırlayan (`prep_by`) kendisi ekipte
   durdukça değişmez. Hazırlığın biten oranıyla orantılı olarak kart hazırlayan PM'in yıldızından fayda alır: her aşamada hız
   (`prep_gain`, `SprintSystem._work`: 1★ %10, 5★ %25, arası doğrusal) ve hata yükünde azalma (`prep_cut`, H'nin (1 − PM hazırlığı)
-  terimi: 1★ ×0,90, 5★ ×0,60). Sütun boşsa PM'in hazırlayacak kartı yoktur. Olayın düzeltmesinin moral bedelini hattın kartını
-  hazırlayan PM de öder (`payers`).
+  terimi: 1★ ×0,90, 5★ ×0,60). Sonraki sütunu oyuncunun "→"u, onaylı PM planı ve liderin önerisi doldurur (devirde de); sütun
+  boşsa PM'in hazırlayacak kartı yoktur. Olayın düzeltmesinin moral bedelini hattın kartını hazırlayan PM de öder (`payers`).
 - **Karar kâğıdı.** Sprint başına tek zar (`SprintSystem._request_decision`): sprint iki haftadır, zar ilk haftanın
   sonunda, `data/product/sprint.json` `decision.sprint_chance` ihtimaliyle sprintin bir kartı için `decision.cards` havuzundan bir kâğıt
   istenir, yoksa sprint kâğıtsızdır ([WORKING]: sprintlerin en az üçte biri). Havuz ağırlıklı sırayla denenir (görülmemiş kâğıt önde,

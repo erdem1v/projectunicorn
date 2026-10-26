@@ -15,6 +15,8 @@ const PAID_PLAN := "cap_paid_plan"
 const PAID_PLAN_NAME_KEY := "PRODUCT_CAP_PAID_PLAN"
 ## Çeyrek hedefinin alan olmayan seçeneği ("Hatalar"): hedefin kartları düzeltme kartlarıdır.
 const GOAL_BUGS := "bugs"
+## Liderin önerecek kartı yok: bu sprinte de sonraki sütuna da.
+const NO_LEAD := {"this": [], "next": []}
 const SEP := " · "
 const STAR := "★"
 
@@ -509,31 +511,47 @@ static func bugs_part(line_id: String, n: int) -> Dictionary:
 
 # --- Lider ---------------------------------------------------------------------------
 
-## Liderin önerisi: sprintin uygulanan yerleşimine altı basamak sırasıyla kart ekler: (1) verilmiş sözlerin kartları,
-## son tarihi yakın önde, ardından ücretli plan; (2) son tarihi bu ya da sonraki sprint olan en yakın talep (sprintte en çok
-## bir talep); (3) bırakılan ve devreden kartlar; (4) öncelikli düzeltmeler; (5) çeyrek hedefinin en iyi kartı ("Hatalar"
-## hedefinde düzeltme kartları), hedef yoksa liderin alanının; (6) kalanlar etki ÷ iş sırasıyla. Düzeltme pay tavanını
-## (`SprintSystem.fix_share_takes`) aşan düzeltme kartı alınmaz. Her aday sprintin alım kuralından (`SprintSystem.intake`, "+"
-## ile aynı) geçer; uymayan atlanır, öneri art arda en çok `lead.skip` aday atlar ve bir sonraki uymayanda durur. Kalan yeri
-## dolduran 6. basamak yalnız bitecek kartları alır, en çok bir devreden kartla durur. Onaylı PM planlarının kartları o
-## sprintlere ayrılmıştır; lider onlara dokunmaz.
-static func lead_suggestion() -> Array:
+## Liderin önerisi {this, next}: `this` bu sprintin, `next` sonraki sütunun kartları. `this` sprintin uygulanan yerleşimine altı
+## basamak sırasıyla kart ekler: (1) verilmiş sözlerin kartları, son tarihi yakın önde, ardından ücretli plan; (2) son tarihi bu
+## ya da sonraki sprint olan en yakın talep (sprintte en çok bir talep); (3) bırakılan ve devreden kartlar; (4) öncelikli
+## düzeltmeler; (5) çeyrek hedefinin en iyi kartı ("Hatalar" hedefinde düzeltme kartları), hedef yoksa liderin alanının;
+## (6) kalanlar etki ÷ iş sırasıyla. Düzeltme pay tavanını (`SprintSystem.fix_share_takes`) aşan düzeltme kartı alınmaz. Her aday
+## sprintin alım kuralından (`SprintSystem.intake`, "+" ile aynı) geçer; uymayan atlanır, öneri art arda en çok `lead.skip`
+## aday atlar ve bir sonraki uymayanda durur. Kalan yeri dolduran 6. basamak yalnız bitecek kartları alır, en çok bir devreden
+## kartla durur. `next` aynı sırayı baştan dolaşır: `this`'e giren kartlar atlanır, bu sprintte sığmadığı ya da tavana takıldığı
+## için atlanan kart yeniden denenir. Sütunun yerleşimi içinde duran kartlardır (oyuncunun "→"u ve onaylı PM planı önde); alım
+## sınaması, düzeltme payı, atlama sayacı ve 6. basamağın kalkanı sütun için ayrıca sayılır. Sütunun yükü, kartlarının kalanı
+## artı `this` oynatmasında sütuna devredecek iş, ekibin kapasitesini (%100, %125 tavanı sütunda yoktur) aşmaz. Onaylı PM
+## planlarının kartları o sprintlere ayrılmıştır, lider onlara dokunmaz; onaysız plan hiçbir sütuna konmaz.
+static func lead_suggestion() -> Dictionary:
 	var pool: Array = open_cards(_approved_ahead())
 	var people: Array = SprintSystem.team()
 	var capacity: float = SprintSystem.capacity_of(people)
 	if pool.is_empty() or capacity <= 0.0:
-		return []
+		return NO_LEAD
 	var score: Dictionary = {}
 	for c in pool:
 		score[c.id] = _ratio(c)
 	pool.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return score[a.id] > score[b.id] if score[a.id] != score[b.id] else a.id < b.id)
 	var steps: Array = _lead_steps(pool, quarter_goal(), capacity)
-	var placed: Array = SprintSystem.starting()
+	var order: Array = steps + pool.filter(func(c: Dictionary) -> bool: return score[c.id] > 0.0)
+	var this: Array = _lead_picks(order, steps.size(), SprintSystem.starting(), [], people, INF)
+	var column: Array = (_p().next.cards as Array).map(func(id: String) -> Dictionary: return _p().cards[id])
+	var room: float = capacity - SprintSystem.points_left(_p().next.cards) \
+		- SprintSystem.carried_points(SprintSystem.starting() + this, people)
+	var ids := func(cards: Array) -> Array: return cards.map(func(c: Dictionary) -> String: return c.id)
+	return {"this": ids.call(this), "next": ids.call(_lead_picks(order, steps.size(), column, this, people, room))}
+
+
+## `order` sırasıyla `placed` yerleşimine eklenecek kartlar (öneri iki sütunu da bununla kurar): `skip` o sütuna girmeyecek
+## kartlar, `room` eklenenlerin kalan puan toplamının üst sınırı. `steps` sıranın ilk kaç kartı 1 ile 5. basamaktır.
+static func _lead_picks(order: Array, steps: int, placed: Array, skip: Array, people: Array, room: float) -> Array:
 	var tried: Dictionary = {}
+	for c in skip:
+		tried[c.id] = true
 	var picks: Array = []
 	var skipped: int = 0
-	var order: Array = steps + pool.filter(func(c: Dictionary) -> bool: return score[c.id] > 0.0)
 	for i in order.size():
 		var c: Dictionary = order[i]
 		if tried.has(c.id):
@@ -541,20 +559,21 @@ static func lead_suggestion() -> Array:
 		tried[c.id] = true
 		if not SprintSystem.fix_share_takes(placed, c, people):
 			continue
-		var take: Dictionary = SprintSystem.intake(placed, c, people)
+		var take: Dictionary = SprintSystem.intake(placed, c, people) if SprintSystem.remaining(c) <= room else {"takes": false}
 		var fits: bool = take.takes
 		var carries: bool = false
-		if fits and i >= steps.size():
-			fits = picks.all(func(id: String) -> bool: return take.cards[id].finishes)
+		if fits and i >= steps:
+			fits = picks.all(func(pick: Dictionary) -> bool: return take.cards[pick.id].finishes)
 			carries = not take.cards[c.id].finishes
 		if not fits:
 			skipped += 1
 			if skipped > int(cfg("lead.skip")):
 				break
 			continue
-		picks.append(c.id)
+		picks.append(c)
 		skipped = 0
 		placed = placed + [c]
+		room -= SprintSystem.remaining(c)
 		if carries:
 			break
 	return picks

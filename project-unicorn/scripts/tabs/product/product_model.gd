@@ -102,7 +102,8 @@ extends RefCounted
 #   quarter: + {q, year (ürün çeyreğinin başladığı takvim çeyreği), pos, total (çeyreğin kaçıncı sprinti, kaç sprintlik)},
 #   center: + {now_at (koşan sprintin haftasında şimdiki an, sprint başından hafta), close_at (SprintTimeline), progress: {done,
 #             total} (koşarken), crew (bir aşamada 9'dan çok kişi varsa {n, sprint, training, leave, research, pm, out}),
-#             suggest: {amount, cards: [{name, done, effort}]} | null, candidates (boş planın ilk üç önerisi: kart satırı),
+#             suggest: {amount, cards: [{name, done, effort}]} | null (öneri bu sprinte de sütuna da kart eklemiyorsa; yalnız
+#             sütuna ekliyorsa {amount: 0.0, cards: []}: sayı çizilmez, yalnız düğme), candidates (boş planın ilk üç önerisi: kart satırı),
 #             start_skips, team_empty, mvp (v1.0'dan önce `mvp_line`ın aynısı, canlıda null)},
 #   next: + {load: [{stage, carried, planned, team}], carried: [{card, card_id, stage, effort}]} (devreden: planlamada ve koşarken
 #         zaman ekseninin `out`u, sürüm notunda sonraki sütunun devreden kartlarının kalan ihtiyacı; ikisini de aynı işlevler
@@ -164,7 +165,7 @@ static func live() -> Dictionary:
 	var outcome: Dictionary = run.outcome if mode == "plan" and not run.is_empty() else {}
 	# Liderin önerisi: eski çizim cümlesini plan uygulanmamışken, yeni çizim satırını devir kapalıyken okur.
 	var delegated: bool = SprintSystem.delegated()
-	var suggestion: Array = []
+	var suggestion: Dictionary = SprintCatalog.NO_LEAD
 	if mode == "plan" and n > 0 and not (p.sprint.get("lead_applied", false) and delegated):
 		suggestion = SprintCatalog.lead_suggestion()
 	var planned: Array = p.get("sprint", {}).get("cards", []).map(func(id: String) -> String: return p.cards[id].area)
@@ -180,8 +181,8 @@ static func live() -> Dictionary:
 		var module: Variant = _module(area, cards, a.id in planned, n)
 		if module != null:
 			modules.append(module)
-	var center: Dictionary = _center(mode, release, outcome, suggestion)
-	center.merge(_plan_view(mode, run, center, [] if delegated else suggestion, pool), true)
+	var center: Dictionary = _center(mode, release, outcome, suggestion.this)
+	center.merge(_plan_view(mode, run, center, SprintCatalog.NO_LEAD if delegated else suggestion, pool), true)
 	var next: Dictionary = _next(mode, outcome, run)
 	return {
 		"header": {
@@ -397,7 +398,7 @@ static func _prep() -> Dictionary:
 
 # --- Bu sprint ------------------------------------------------------------------------
 
-## `suggestion`: planlamada `SprintCatalog.lead_suggestion()` (planlama devredilmemişse ya da plan uygulanmamışsa okunur).
+## `suggestion`: planlamada `SprintCatalog.lead_suggestion().this` (planlama devredilmemişse ya da plan uygulanmamışsa okunur).
 static func _center(mode: String, release: Dictionary, outcome: Dictionary, suggestion: Array) -> Dictionary:
 	var p: Dictionary = GameState.product
 	var sprint: Dictionary = p.get("sprint", {})
@@ -534,12 +535,12 @@ static func _result(r: Dictionary) -> Variant:
 
 
 ## Merkezin yeni alanları: `run` zaman ekseni (`SprintSystem.timeline`; sürüm notunda {}), `offered` devir kapalıyken liderin
-## önerisi, `pool` aday kartlar (kimlikle).
-static func _plan_view(mode: String, run: Dictionary, center: Dictionary, offered: Array, pool: Dictionary) -> Dictionary:
+## önerisi (`SprintCatalog.lead_suggestion`), `pool` aday kartlar (kimlikle).
+static func _plan_view(mode: String, run: Dictionary, center: Dictionary, offered: Dictionary, pool: Dictionary) -> Dictionary:
 	var total: float = center.capacity.total if center.capacity != null else 0.0
 	var now: float = _now_at(mode)
 	return {"now_at": now, "close_at": run.get("close_at", 0.0), "progress": _progress(run, now) if mode == "active" else null,
-		"crew": _crew(run), "suggest": _suggest(offered, pool), "candidates": _candidates(offered, pool),
+		"crew": _crew(run), "suggest": _suggest(offered, pool), "candidates": _candidates(offered.this, pool),
 		"start_skips": mode == "plan" and total > 0.0 and SprintSystem.starting().is_empty(), "team_empty": total == 0.0,
 		"mvp": center.mvp_line}
 
@@ -600,15 +601,16 @@ static func _crew(run: Dictionary) -> Variant:
 	return counts if heads.values().max() > 9 else null
 
 
-## Planı boş sprintte liderin önerisi (devir kapalıyken, plana en az bir kart ekleyecekse): {amount, cards: [{name, done,
-## effort}]}. `done` her kartın plana eklenince bu sprintte yapacağı iş, `amount` onların toplamı; tek oynatma.
-static func _suggest(offered: Array, pool: Dictionary) -> Variant:
-	if offered.is_empty():
-		return null
-	var played: Dictionary = SprintSystem.timeline(offered.map(func(id: String) -> Dictionary: return pool[id]))
+## Liderin önerisi (devir kapalıyken, bu sprinte ya da sonraki sütuna kart ekleyecekse): {amount, cards: [{name, done, effort}]}.
+## `done` her kartın plana eklenince bu sprintte yapacağı iş, `amount` onların toplamı; tek oynatma. Yalnız sütuna ekliyorsa
+## {amount: 0.0, cards: []}: sayı ve "efor daha sığar" çizilmez, yalnız düğme.
+static func _suggest(offered: Dictionary, pool: Dictionary) -> Variant:
+	if offered.this.is_empty():
+		return null if offered.next.is_empty() else {"amount": 0.0, "cards": []}
+	var played: Dictionary = SprintSystem.timeline(offered.this.map(func(id: String) -> Dictionary: return pool[id]))
 	var cards: Array = []
 	var amount := 0.0
-	for id in offered:
+	for id in offered.this:
 		var done := 0.0
 		for stage in played.cards[id].stages:
 			done += stage.in_sprint
