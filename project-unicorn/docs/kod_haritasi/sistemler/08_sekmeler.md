@@ -4,6 +4,7 @@ Dizin sürümü: git `f3113fa4` (DIZIN.md başlığı) · 2026-10-22 · satır n
 
 Ne yapar: Sekmeler, ofisin üstünde `WindowLayer`'ın açtığı dokuz pencere sayfasıdır (Ürün, Satış, Ekip, Finans+Yatırım, Piyasa, Kişisel, Ar-Ge, Olaylar). Sayfa durumu sistemlerden okur ve çizer.
 Hesap yapmaz; eylemi sisteme verir. Yatırım ("av") sayfası `hunt_tab.gd`'dir, sahnesizdir ve Finans penceresi içinde kurulur. Karar beklerken pencereler yalnız okunur.
+Kaynak: Olaylar penceresi (gelen kutusu) GDD ch12; sekmelerin sistem tarafı GDD'leri ilgili sistem sayfalarında (02, 03, 04, 05).
 
 ## Dosyalar
 
@@ -173,6 +174,24 @@ Smoke (tek vaka: `bash tools/smoke_run.sh <vaka>`; tam süit yalnız push önces
 - Görsel (pencereli, PNG `%APPDATA%\Godot\app_userdata\Project Unicorn\`): `--tab-shot=<product|sales|hr|finance|piyasa[:durum]|personal|marketing|rnd|events>` `main.gd:2338`; `--lang=tr|en`, `--palette=cb`, `--shot-size=GxY`.
 - Sekmeye özel: `--product-shot=<c1..c5|cards|flow|edge:<ad>|live:<tür>>` (:3704), `--hr-shot=` (:3301), `--finance-shot=` (:3173), `--personal-shot=` (:2378),
   `--rnd-shot=` (:2416), `--inbox-shot=` (:1107), `--sales-shot=` (:1474), `--vc-shot=hunt*` (:3999); hepsi `scripts/main/main.gd`.
+- Görsel (Olaylar): `--inbox-shot=<durum>` Olaylar'ı tema tohumunun şirketinde (14. hafta, İş hanı) gerçek kapıdan çeker; kart ve kapı `offer`, `queue`, `customer` (bir seçenek hazır), `locked`,
+  ↳ `held_key` (hız tuşu reddi: çerçevenin yanıp sönmesi ve toast), `resignation`, `frank_moment`, `dying` (Olaylar açıkken aynı karede Ürün açılır ve kart gelir; `GATEFLOW window= active= pane=` satırı).
+  ↳ Karar beklerken salt okunur pencereler: `team_read_only` (Ekip), `team_tasks_read_only` (onun Görevler'i), `sales_read_only`, `finance_read_only`, `personal_read_only`,
+  ↳ `personal_cheque_read_only` (Frank'in çekinden sonra, bir müşterinin kartı beklerken). Masa: `paper`, `paper_open`, `paper_waiting`, `paper_last_week`, `attention`; geçmiş: `history`, `departed`,
+  ↳ `beat` (`founder.savings_note` `EventGate.request` ile not olur: önce ofisin not yığını `inbox_shot_beat_stack`, sonra geçmiş satırı),
+  ↳ `thanks` (bir sürümün iki teşekkür notu: tutulan söz ve karşılanan istek, `SprintBridges.thank` ile; en yenisi açık). Mesajlar: `intro`, `intro_go` (tanışmanın düğmesi Ürün'ü açar; `GATEFLOW tab= picking= speed=` satırı), `summary`,
+  ↳ `rnd_note`, `rnd_note_demand`, `rnd_discovery`, `weekly_sales`; liste `empty`, `long`; `--palette=cb` renk körü paletini yalnız o koşu için açar (PNG `_cb` alır); `clause_sign`, `clause_reserve`, `clause_notice`, `clause_withdraw`:
+  ↳ Kurumsal sunucu maddesinin dört postası (Standart sunucuda 3★ hesap gerçek imza yoluyla açılır, `main._stage_clause` `:1701`; `reserve` ve `notice` maddenin süresinin dolduğu tikte hesabın memnuniyeti 90 ya da 55 iken,
+  ↳ `withdraw` o bildirimin Kurumsal'a geçişle geri alınması); `clause_locked` imza mailini bir karar beklerken okur: "Kurumsal sunucuya geç" düğmesi kapalı, yanında "Önce bekleyen kararı cevapla." yazar;
+  ↳ her `clause_*` karesi `CLAUSE|active=|button=|disabled=` satırı basar (`_clause_switch_button` `:1717`);
+  ↳ `rep_lost` satış temsilcisinin kaybettiği anlaşmanın maili (gerçek `SalesRepSystem._close` ile kurulur, `main._stage_desk_losses` `:1667`: ERP MVP'de, Entegrasyonlar ve İlk kullanım boş, zarı kaybettiren kimlikler aranır),
+  ↳ `weekly_lost` aynı haftanın özeti (iki kapanış ve maille anlatılmayan iki kayıp satırı), `weekly_lost_only` yalnız kayıplı hafta (tablosuz özet); `support_week` müşteri temsilcisinin haftalık destek raporu,
+  ↳ gerçek haftalık tikle (bir düzeltme hattı boşaltır, bir hat Öncelikli eşiğe varır, en kötü hat değişir; `main._stage_support` `:1726`), `support_behind` aynı hafta temsilci yetişemedi (23 gelen, 15 doğrulanan),
+  ↳ `support_go` raporun düğmesine basılır: Ürün SPRINT'te en kötü hattın alanı açık; `night` 23:00'te tema tohumunun şirketiyle gece atlamasını koşturur (`main._night_emergency` `:1309`): acil durum o gece zorlanır,
+  ↳ mesai dışında bir müşterinin son uyarısı da bekler; acil durumun saatinde yalnız acil durum kartı gelen kutusundadır, öteki kart mesai başına kadar görünmez (`NIGHT|clock=|active=|waiting=|shown=|holds=` satırı);
+  ↳ `morning` gece 00:00'dan sonra gelen kutusunu gerçek saatlik yolla çeker (`inbox_shot_morning_0000` devrin hemen sonrası, `_0930` mesai başından yarım saat sonra, `inbox_shot_morning` dört saat sonra;
+  ↳ `MORNING|` satırı her karede listenin damgalı öğelerini yazar); `flow` kapıyı kabuğun kendi girdisiyle oynar (`main._gate_flow` `:1361`) ve kare başına `GATEFLOW` satırı ile `inbox_flow_NN.png` basar;
+  ↳ tıklamalar düğmenin gerçek yerine atılır, pencerenin altında kalan düğme önce görünür alana kaydırılır (1,25 ölçekte de)
 - Kontrast ve kit: `--theme-audit=<sekme>`, `--theme-contrast-audit`, `--probe-shot=kit` (`scripts/debug/kit_probe.gd`, Ekip satır ızgarasını örnekler). Ürün fikstürü: `scripts/debug/product_fixtures.gd`.
 - Metin kapıları: `"$GODOT" --headless --path . -s res://scripts/debug/loc_residue.gd` ve `bash tools/smoke_run.sh loc_csv_integrity`. Godot yolu `$GODOT` (CLAUDE.md §12); komutlar `project-unicorn/`'dan.
 
@@ -196,6 +215,9 @@ Smoke (tek vaka: `bash tools/smoke_run.sh <vaka>`; tam süit yalnız push önces
   (hafıza: ekip-rev11-closing-round; kanon `work_hours_modal._pin`). `HRLedger` sütun hücreleri `_span` ile genişlik alır (hr_ledger.gd:66).
 - Kalabalık kadroda hiyerarşi: Kadro `COMPACT_FROM = 12` kişide sıkı kipe geçer (hr_ledger.gd:16, hr_tab.gd:255); liste kendi içinde kayar ve pencere `fit_height` ile `SPECS` boyuna kadar uzar. Avatar çapları `D_AVATAR_*` merdivenindedir.
 - `MailPane.avatar` yalnız `px <= AVATAR (40)` iken Frank'in önceden işlenmiş portresini kullanır (mail_pane.gd:836-837); daha büyük çapta look/mono kutuya düşer.
+- `mail_pane.gd` `class_name` taşımaz (yolla preload edilir): bu sayfadaki `MailPane.` yazımı betiğin kısa adıdır;
+  ↳ DESTEK raporunun tablosu `mail_pane.gd` içindeki `_support_report` işlevidir (`:692`; hat satırı `ProductModel.bug_row_of`, `SprintUiShared.bug_line`)
+- Kişisel penceresinde huylar `personal_tab.gd`'de (`:123-133`) yalnız glif kutusu ve adla çizilir (`FounderConstants.trait_by_id(...).name_key`); YAKINDA etiketi yoktur
 - Sekmeler arası çapraz çağrı kırılgan: `product_tab._act("hire")` (product_tab.gd:304-305) ve `SprintUiShared.open_product_area` (sprint_ui_shared.gd:334-335) `tab_changed` senkron kurduğu varsayımıyla sayfa gövdesine metot çağırır.
 - `GameState.flags["rnd_selected"]` kayıtlı `flags` içinde durur (rnd_tab.gd:99); pencere kapanıp oyun kaydedilirse bayat seçim kayda sızabilir (`_ready` onu bir sonraki açılışta siler).
 - `SprintUiShared` ve `HRUiShared` sekme dışında da çağrılır (modals, ui/meeting, ui/office, ui/components: sırasıyla 11 ve 14 dosya); imza değişikliği bu dosyaları kırar. `FinanceOzetView` `cash_curve.gd` ve Kişisel'den çağrılır.

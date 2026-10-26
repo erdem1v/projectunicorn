@@ -4,6 +4,9 @@ Dizin sha: f3113fa4 (DIZIN.md başlığı; yollar:satırlar bu dizinin kirli ağ
 
 Ne yapar: Haftalık tikte (TimeManager yuva 3) izin, Atlas aday araması, moral, tükenmişlik, deneyim ve eğitimi sırayla işler. Oyuncu eylemlerini (zam, terfi, izin, çıkarma, eğitim, mesai) tek kapıdan yazar.
 Bir kişinin etkin çıktısı, çalışma saati, görünüşü ve kurucunun onboarding dağılımı da buradadır. Tüm HR sayıları `HRConstants`'ta; durumun sahibi `CharacterRegistry` ve `GameState`.
+Kaynak: GDD Ekip modülü ve GDD ch02.
+Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRConstants`, `HRActions`, `HRCandidateGenerator`, `HRSearchSystem`, `HRMoraleSystem`, `WorkHoursSystem`, `FounderConstants`; arayüz `HRUiShared`, `HRAssignments`,
+  ↳ `HRLedger`, `HRPopover` (08_sekmeler.md).
 
 ## Dosyalar
 - `scripts/systems/hr_system.gd` (554): günlük orkestratör + okuma yüzeyi (etkin çıktı, verim, atama sorguları, kurucu görev durumu, deneyim ve eğitim tiki)
@@ -38,18 +41,24 @@ Bir kişinin etkin çıktısı, çalışma saati, görünüşü ve kurucunun onb
 - `HRMoraleSystem.apply_delta(emp, delta)` `hr_morale_system.gd:186`: TEK moral girişi (huy ve Liderlik ölçeklemesi burada) · `effects.gd:360-374`, `hr_actions.gd`, `vc_pitch_system.gd:548`
 - `HRMoraleSystem.scaled_delta()` `hr_morale_system.gd:199`: aynı hesap, yazmadan; önizlemeler okur · `hr_actions.gd:58,119,188`
 - `HRMoraleSystem.send_on_leave(emp, weeks, manual)` `hr_morale_system.gd:252`: izne tek kapı · `HRActions.apply_leave`, yaz penceresi `:66`
-- `HRMoraleSystem.send_on_sick_leave(emp, weeks)` `hr_morale_system.gd:339`: hastalık yokluğu (çalışmayana false, kol `refused` yazar); status `on_leave`, `Character.leave_kind = "sick"`, dönüş `away_until_day`; `leave_taken_year` ve `leave_until_day` yazılmaz, gidişte haber ve dönüşte moral yok (dönüş `tick_leave_returns` `:31`, haber `HR_NEWS_BACK_TO_WORK`) · `effects.gd:418` (verb `sick_leave`)
-- `HRMoraleSystem.summer_week(emp, year)` `:249` bu yılın yaz izni haftası (kayma varsa o, yoksa `leave_week`) · `tick_leave_departures` `:51`; `leave_weeks_left(emp)` `:254` (başlamasına kalan hafta, alınmış ya da geçmişse -1) · seam `hr.leave_weeks_left`; `leave_partner(emp)` `:264` (aynı rol, çalışan, o yıl izni yok, haftalar en çok 1 farklı) · seçiciler `leave_pair`/`leave_partner`
-- `HRMoraleSystem.plan_summer_leave(a, b, apart)` `:282` yazmadan planlar (`apart` geç başlayanı iki hafta arkaya alır, arkası pencereye sığmazsa kaydırmaz; `together` ikisini erken başlayanın haftasına alır), `apply_summer_leave(plan)` `:305` iki haftayı da bu yıla yazar (`CharacterRegistry.set_leave_override`) · `effects.gd:411` (verb `summer_leave`) ve çipi
+- `HRMoraleSystem.send_on_sick_leave(emp, weeks)` `hr_morale_system.gd:339`: hastalık yokluğu (çalışmayana false, kol `refused` yazar); status `on_leave`, `Character.leave_kind = "sick"`, dönüş `away_until_day`;
+  ↳ `leave_taken_year` ve `leave_until_day` yazılmaz, gidişte haber ve dönüşte moral yok (dönüş `tick_leave_returns` `:31`, haber `HR_NEWS_BACK_TO_WORK`) · `effects.gd:418` (verb `sick_leave`)
+- `HRMoraleSystem.summer_week(emp, year)` `:249` bu yılın yaz izni haftası (kayma varsa o, yoksa `leave_week`) · `tick_leave_departures` `:51`; `leave_weeks_left(emp)` `:254` (başlamasına kalan hafta,
+  ↳ alınmış ya da geçmişse -1) · seam `hr.leave_weeks_left`; `leave_partner(emp)` `:264` (aynı rol, çalışan, o yıl izni yok, haftalar en çok 1 farklı) · seçiciler `leave_pair`/`leave_partner`
+- `HRMoraleSystem.plan_summer_leave(a, b, apart)` `:282` yazmadan planlar (`apart` geç başlayanı iki hafta arkaya alır, arkası pencereye sığmazsa kaydırmaz; `together` ikisini erken başlayanın haftasına alır),
+  ↳ `apply_summer_leave(plan)` `:305` iki haftayı da bu yıla yazar (`CharacterRegistry.set_leave_override`) · `effects.gd:411` (verb `summer_leave`) ve çipi
 - `HRMoraleSystem.confirm_departure(id)` `hr_morale_system.gd:270`: istifanın kadrodan çıktığı TEK yer · `effects.gd:417` (verb `employee_leaves`)
 - `HRMoraleSystem.forget_employee(id)` `hr_morale_system.gd:297`: ayrılanın latch temizliği · `confirm_departure`, `HRActions.fire`
 - `HRMoraleSystem.tick_burnout()` `hr_morale_system.gd:86`: `EventGate.request("team.burnout")` · `HRSystem.daily_tick`
 - `HRMoraleSystem._maybe_resign()` `hr_morale_system.gd:330`: `EventGate.request("team.resignation")`; `_pending` bu kişi için roll'u durdurur
 - `HRSearchSystem.start_search(role, level)` `hr_search_system.gd:97` · `hr_atlas_modal.gd:438`; `cancel_search` `hr_search_system.gd:130` ← `hr_tab.gd:347`; `dismiss_files` `hr_search_system.gd:138`
-- `HRSearchSystem.hire(index)` `hr_search_system.gd:147`: Character kurar, `CharacterRegistry.add`, komisyon keser · `hr_atlas_modal.gd:464`
+- `HRSearchSystem.hire(index)` `hr_search_system.gd:147`: Character kurar, `CharacterRegistry.add`, komisyon keser · `hr_atlas_modal.gd:464`;
+  ↳ `OfficeSystem.hiring_closed()` ise `null` döner ve dosyalar masada kalır (arama sürerken dolu ofise taşınan şirket). Atlas dosya adımı o zaman masa şeridini (`_desk_strip` `hr_atlas_modal.gd`) çizer ve İşe al kapanır;
+  ↳ `can_start` (`:61`) ve `preview_search` (`:204`) aynı kapıyı okur; evde sınır yoktur
 - `HRSearchSystem.preview_search()/preview_hire()` `hr_search_system.gd:200/221`: Atlas'ın basacağı rakamlar (burn, runway, mesai, uyarılar)
 - `HRCandidateGenerator.generate(role, level, seed, lang)` `hr_candidate_generator.gd:64`: yalnız `HRSearchSystem._deliver_files` (`hr_search_system.gd:290`)
-- `HRActions.apply_raise/apply_promotion/apply_leave/fire` `hr_actions.gd:74/136/206/251`: `hr_ledger.gd:384-433` (satır menüsü, dosya) ve `effects.gd:403` (send_on_leave), `effects.gd:427` (verb `promote` = `apply_promotion`; zam ayrı fiil değildir, terfi zammı ve morali getirir)
+- `HRActions.apply_raise/apply_promotion/apply_leave/fire` `hr_actions.gd:74/136/206/251`: `hr_ledger.gd:384-433` (satır menüsü, dosya) ve `effects.gd:403` (send_on_leave), `effects.gd:427` (verb `promote` = `apply_promotion`;
+  ↳ zam ayrı fiil değildir, terfi zammı ve morali getirir)
 - `HRActions.preview_*` `hr_actions.gd:48,111,193,222`: onay penceresinin satırları; `{ok, reason, rows}` aynı omurga
 - `WorkHoursSystem.hours_for(c)` `work_hours_system.gd:63`: zincirin canlı girişi; zincir yalnız `_resolve` `:34`'te yürür
 - `WorkHoursSystem.apply_state(draft)` `work_hours_system.gd:246`: modal "Uygula" · `work_hours_modal.gd:490`
@@ -83,7 +92,8 @@ Bir kişinin etkin çıktısı, çalışma saati, görünüşü ve kurucunun onb
 - `GameState.issued_looks` `:203` ve `register_look` `:428`: koşuda verilmiş görünüş imzaları; `run_hires` `:200` (aday tohumu, izin haftası, kimlik)
 - `GameState.founder_portrait` `:21`, `name_lang` `:27` (aday isim havuzu koşunun açıldığı dil); `get_founder_skill` `:651` (OLD_SKILLS okunursa push_error)
 - `Character` alanları `scripts/data_models/character.gd`: morale `:30`, morale_target `:93`, level `:41`, salary_floor `:44`, last_raise_day `:47`, status `:51`, leave_until_day `:53`, leave_taken_year `:54`
-- İzin alanları: `leave_week_override`/`leave_override_year` `character.gd:89-90` (olay kartının bu yıl için kaydırdığı hafta; ertesi yıl `leave_week` döner), `leave_kind`/`away_until_day` `:95-96` (izin dışı yokluk; `HRConstants.LEAVE_KIND_SICK`)
+- İzin alanları: `leave_week_override`/`leave_override_year` `character.gd:89-90` (olay kartının bu yıl için kaydırdığı hafta; ertesi yıl `leave_week` döner), `leave_kind`/`away_until_day` `:95-96` (izin dışı yokluk;
+  ↳ `HRConstants.LEAVE_KIND_SICK`)
 - Devamı: flight_risk_weeks `:55`, overtime_weeks `:56`, assigned_job_ids `:64`, training_weeks_left `:71`, training_area `:72`, experience_raw/threshold `:77-78`, work_hours_override `:82`, leave_week `:86`
 - Devamı: productivity_mods `:99`, employment_history `:103`, look `:22`, traits `:33`, role_stats `:36`; hepsi `@export`, `SaveCodec` kendisi bulur
 - Bayraklar: `hr_manual_leave_<id>` (`hr_morale_system.gd:19`; 0 = yaz izni, >0 oyuncu izninin haftası), `debug_hr_force` (`:348`, yalnız debug build)
@@ -109,13 +119,31 @@ Bir kişinin etkin çıktısı, çalışma saati, görünüşü ve kurucunun onb
 ## Testler
 - Hedefli smoke: `bash tools/smoke_run.sh <vaka>` (`CASE_TIMEOUT=300` xargs -P 2 altında). Vakalar `scripts/debug/endgame_smoke.gd` match tablosunda
 - Aday ve arama: `hr_candidate_invariants`, `hr_archetype_trio`, `hr_search_cycle`, `hr_search_cancel_dismiss`, `hr_axis_key_lock`, `hires_land_in_own_column`, `desk_cap_blocks_hire`
-- Moral ve izin: `hr_morale_drift_shape`, `hr_recovery_channels`, `hr_leave_cycle`, `hr_leave_shift` (olay kartının yaz izni kaydırması), `hr_sick_leave` (hastalık yokluğu), `hr_raise_and_leave`, `hr_burnout_streak`, `hr_resignation_path`, `leave_does_not_pause_build`, `save_old_calendar_leave_year`
+- Moral ve izin: `hr_morale_drift_shape`, `hr_recovery_channels`, `hr_leave_cycle`, `hr_leave_shift` (olay kartının yaz izni kaydırması), `hr_sick_leave` (hastalık yokluğu), `hr_raise_and_leave`, `hr_burnout_streak`, `hr_resignation_path`,
+  ↳ `leave_does_not_pause_build`, `save_old_calendar_leave_year`
 - Eylemler: `hr_fire_path`, `promotion_and_raise_gate`, `hr_frank_guard`, `money_never_double_minus`; okuma yüzeyi: `hr_read_catalogue`, `hr_active_filters`, `hr_overload_badge`, `hr_constants_contract`
 - Eğitim ve deneyim: `hr_training_locks`, `hr_training_eligibility_edge`, `hr_training_blocks_and_charges_once`, `hr_training_completion`, `hr_expertise_cap_respected`, `hr_experience_accrues`, `founder_trains_and_learns`
 - Çıktı formülü: `effective_skill_formula`, `overload_costs_output`, `job_assignment_and_idle`, `leadership_is_trainable`; mesai: `work_hours_three_scopes`, `work_hours_draft_commits`, `hire_preview_counts_inherited_overtime`
 - Kurucu ve görünüş: `founder_5skill_init`, `alloc_guard`, `trait_formula`, `single_trait_contract`, `founder_not_double_counted`, `founder_owns_accounts_manually`, `look_registry_unique_and_saved`
 - Harness: `run_probe.gd` `PLAY` (`_hire_the_team`, `_move_the_company`, `_keep_the_team`), `DECISION` ve `PROBE END first_hire_week=`; preset `full_run_staff25/50`, `b2b_book20/330`
-- Görsel: `--hr-shot=<tür>` (`main.gd:3301 _run_hr_shot`; ekip, gorevler, dosya, zam, cikar, egitim, saatler, atlas, kalabalik …), `--personal-shot=`, `--office-shot=…:crowd40` (`LOOKS` satırı), `--render-probe=hr:40:3`
+- Probe kayıt türleri (Ekip): `HR`, `GATE` (roller ve maaş), `STATE` içinde `emp=`, `PLAY` (`_hire_the_team`, `_move_the_company`, `_keep_the_team`), `DECISION` (hafta, yüzey: kademe, kapasite, taşınma, işe alım; hedef).
+  ↳ Dolu ofiste kadro masaya varınca `_hire_the_team` masadaki dosyaları da işe almaz (`PROBE DECISION … hire desks_full`), dosya ya da istenen rol bekliyorsa bir kez yazılır
+- Görsel: `--hr-shot=<tür>` (`main.gd` `_run_hr_shot` `:3341`): `ekip`, `ekip-saat`, `atlas`, `atlas-secili`, `atlas-ofis`, `atlas-dolu`, `dosyalar`, `dosyalar-pm`, `dosyalar-tasarim`, `dosyalar-dolu`, `dosyalar-tehlike`,
+  ↳ `dosyalar-onay`, `dosyalar-mesai`, `gider`, `saatler`, `saatler-gece`, `saatler-sprint`, `gorevler`, `gorevler-arge`, `gorevler-bos`. Ayrıca `egitim`, `egitim-modal`, `egitim-secili`, `zam`, `menu`, `menu-kilit`, `cikar`,
+  ↳ `cikar-eksi`, `bos`, `dosya`, `dosya-kilit`, `dosya-kurucu`, `kalabalik`, `verim`, `urunsuz`, `izin`; kadro üç bölümden (biri izinde, biri tükenmiş, biri yeni işe alınmış); `kalabalik` kırk kişilik sıkı Kadro, Geliştirme kapalı,
+  ↳ liste başlığın altına kaymış; `ekip-saat` Durum'da mesai istisnaları; `atlas-secili` rol ve seviye seçili arama; `saatler-sprint` kadro yok, kurucu tek başına, ürün türü seçili,
+  ↳ mesai modalinin taslağı 15 saatte (haftalık sprint puanı satırı); `dosyalar` Orta geliştirici, `dosyalar-tasarim` tasarımcı (ikisinde haftalık sprint puanı satırı var),
+  ↳ `dosyalar-pm` ürün yöneticisi dosyaları (satır yok: PM sprint puanı üretmez); `atlas-ofis` şirket İş hanı'nda, boş masalı arama (başlıkta masa satırı ve Ofisleri gör, şeritsiz); `atlas-dolu` on üç masanın hepsi dolu:
+  ↳ kehribar masa satırı ve uyarı renginde neden şeridi, Arayış başlat kapalı (evde `atlas` ikisini de çizmez); `dosyalar-dolu` evde başlamış aramanın dosyaları masada, şirket İş hanı'nda ve on üç masa dolu:
+  ↳ dosyaların üstünde masa şeridi, İşe al kapalı; `gorevler-arge` araştırmadaki kişiyle Görevler; `menu-kilit` ve `dosya-kilit` bugün zam almış kişiyle, Zam yap satırı bekleme gerekçesiyle kilitli;
+  ↳ `izin` ilk çalışanın dosyası ve İzne gönder onay penceresi (`hr_shot_izin_onay`), sonra pencerenin kendi düğmesiyle gönderilmiş: kişi izinde, satır kalan haftayla kilitli (`hr_shot_izin`), bir hafta sonra dönmüş:
+  ↳ satır sonraki izne kalan süreyle kilitli (`hr_shot_izin_donus`); `verim` düşük moralli tasarımcıda ve kurucuda olay kartı satırlarıyla Kadro satırının ipucu (`hr_shot_verim_ipucu`), izindeki geliştiricinin ipucu (`_izin`),
+  ↳ tasarımcının dosyası (`_dosya`), aynı dosya izinden bugün dönmüş (`_dosya_izin`) ve kurucunun dosyası (`_kurucu`); `urunsuz` kadro yok, ürün türü seçilmeden bir Geliştirici ve bir Müşteri Temsilcisi: bekleme cümlesi ve Boşta,
+  ↳ sonra tür seçili Kadro ve Görevler (`hr_shot_urunsuz`, `_tur`, `_tur_gorevler`; `HRSHOT|<durum>|idle=…|waiting=…`); `dosyalar-tehlike`, `dosyalar-onay` ve `dosyalar-mesai` kadro yok, kurucu tek başına, gelir yok, kasa 10.000,
+  ↳ masada Kıdemli geliştirici dosyaları ve ilki seçili: kırmızı runway ile gelir uyarısı, İşe al onay penceresi açık, şirket 15 saat iken devralınan mesai satırı; `gider` ürünü yayında olmayan şirketin gider dökümü
+- Görsel (devam): `--inbox-shot=team_read_only|team_tasks_read_only` (karar beklerken Kadro ve Görevler), `--tab-shot=hr|personal`,
+  ↳ `--personal-shot=<normal|cheque|ready|training|seed>` (Kişisel; `cheque` Frank'in çeki gerçek seam'iyle alındıktan sonra, `ready` deneyim barı dolu, `training` kurucu eğitimde, `seed` çek ve imzalı seed'den sonra Series A evresi);
+  ↳ `--inbox-shot=personal_read_only|personal_cheque_read_only` (karar beklerken Kişisel; ikincisi çekten sonra); ölçüm `--render-probe=hr:40:3` (kırk kişilik Kadro, saat 3×; `REBUILD_MS` tam yeniden kuruluş)
 - Portre yeniden üretimi: `"$GODOT" --path . -s res://tools/people/bake_portraits.gd` (pencereli, tek Godot), sonra `--headless --import`; ayrıntı `assets/art/portraits/README.md`
 
 ## Dikkat
@@ -135,8 +163,10 @@ Bir kişinin etkin çıktısı, çalışma saati, görünüşü ve kurucunun onb
 - Kurucu beceri birimi: onboarding dağıtımı 0-3 (6 puan), cetvel 0-10; `to_ruler` yazma anında çarpar, başka yerde ×2 yapma. `get_founder_skill` cetvel değeridir
 - Görünüş: `LookSystem.signature` imzası `GameState.issued_looks`'ta tutulur; aday dosyası görünüşünü `_deliver_files`'ta kaydeder, işe alınca `add()` aynı imzayı yeniden kaydeder (set gibi, çift yazmaz)
 - Frank'in saçı + sakallı kafa yalnız Frank'indir (`is_franks`); eski kayıtta Frank görünüşlü biri varsa `fill_missing_looks` yeniden çeker. `FRANK_LOOK` değişirse portre PNG'leri ve README tablosu yenilenir
-- Olay fiilleri `change_salary`, `fire_employee`, `assign_to`, `start_training` `effects.gd:40,75` listelerinde var ama `_apply` match'inde kolu YOK (kart bu fiillerle ne yazarsa yazsın uygulama yolu yok); `summer_leave`, `sick_leave` ve `promote` kollu
-- Hastalık yeni bir status değildir: `on_leave` + `leave_kind`. `SprintSystem.away`, `get_active_employees`, mesai ve verim okuyucuları bu yüzden değişmez; yokluğun bittiği günü `_return_day` söyler (`weeks_until_return`, `tick_leave_returns` ve HR sekmesi onu okur). Hasta kişinin yaz izni haftası denk gelirse o yılın yaz izni atlanır (telafi yok, eğitimdeki gibi)
+- Olay fiilleri `change_salary`, `fire_employee`, `assign_to`, `start_training` `effects.gd:40,75` listelerinde var ama `_apply` match'inde kolu YOK (kart bu fiillerle ne yazarsa yazsın uygulama yolu yok); `summer_leave`,
+  ↳ `sick_leave` ve `promote` kollu
+- Hastalık yeni bir status değildir: `on_leave` + `leave_kind`. `SprintSystem.away`, `get_active_employees`, mesai ve verim okuyucuları bu yüzden değişmez; yokluğun bittiği günü `_return_day` söyler (`weeks_until_return`,
+  ↳ `tick_leave_returns` ve HR sekmesi onu okur). Hasta kişinin yaz izni haftası denk gelirse o yılın yaz izni atlanır (telafi yok, eğitimdeki gibi)
 - Yaz izni haftasını yalnız `summer_week` okur; `leave_week`i doğrudan okuyan yeni kod olay kaymasını görmez
 - Yorum bayatlığı: `hr_morale_system.gd:268` "hr_departure modifier" der, gerçek fiil `employee_leaves` (`effects.gd:413`); `game_state.gd:280` yorumu `band` yazar, anahtar artık `level`
 - Üretim kodunda çağıranı olmayan (yalnız smoke): `HRSystem.output_mult_for_area`, `HRSystem.leadership_output_mult`, `HRConstants.climate_*`, `coordination_for_*`

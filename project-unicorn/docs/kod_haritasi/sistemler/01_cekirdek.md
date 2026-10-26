@@ -1,11 +1,13 @@
 # Çekirdek: autoload, kayıt ve göç, zaman, ayarlar, ses
 
 Dizin sha: f3113fa4 (DIZIN.md başlığı, 2026-10-22). Yollar `project-unicorn/` köküne göredir; satır numaraları diskteki (kirli ağaç) hâldir.
-Kirli ağaç notu: `scripts/autoload/save_manager.gd` ve `project.godot` HEAD'den farklıdır (v19 göçü, `SCHEMA_VERSION` 18 → 19 henüz commit'siz).
 
 Ne yapar: 14 autoload koşunun durumunu (GameState), saat ve haftalık tik dağıtımını (TimeManager), kayıt/yükleme/göçü (SaveManager), kalıcı ayarları, dili ve müziği taşır.
 EventBus sinyal merkezidir; beş kayıt defteri (karakter, müşteri, aday, söz, rakip) ve yatırımcı tablosu veriyi tutar. Veri modelleri düz `Resource`tur; `SaveCodec` onları `@export` alanlarından yazar.
 Yardımcı: `Fmt` konuma duyarlı biçimlendirme. Dışarıdan: `TimeModel`, `SaveCodec`, `RngStreams`, `EvSave` `scripts/systems/` ve `scripts/events/core/` altındadır; burada yalnız bağlantı noktaları anılır.
+Kaynak: Çekirdek ve zaman için GDD ch01 ve GDD Zaman Modeli (§10 kayıt göçü kuralları); Kayıt ile Platform bölümlerinin GDD atfı yok.
+Sahipler (Çekirdek): autoload `GameState`, `TimeManager`, `EventBus`; sınıf `TimeModel`, `RngStreams`, `SkillCheck`, `Fmt`. Sahipler (Kayıt): autoload `SaveManager`; sınıf `SaveCodec`.
+Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sınıf `DisplaySettings`; yol ile yüklenen `graphics_settings.gd` (`Settings` preload eder).
 
 ## Dosyalar
 - `project.godot:24-39` (autoload): sıra EventBus, GameState, 5 kayıt defteri (Character..Rival), InvestorRegistry, TimeManager, SaveManager, Settings, Localization, AudioManager, MCPRuntime
@@ -51,8 +53,12 @@ Yardımcı: `Fmt` konuma duyarlı biçimlendirme. Dışarıdan: `TimeModel`, `Sa
 - `TimeManager.hold_clock/release_clock` `time_manager.gd:350,359` · `main.gd:2160,4733,5257` (milestone_paper, event), `incident_system.gd:311`, `sprint_system.gd:1587`, `scripts/tabs/product_tab.gd:319`
 - `TimeManager.freeze_clock/thaw_clock` `time_manager.gd:250,256` · yolculuk için `main.gd:4946,4970` (`tree_runs` true), çekimlerde `main.gd:2053,2132`
 - `TimeManager.register_night_gate/unregister_night_gate` `time_manager.gd:264,269` · `scripts/ui/office/office_people.gd:100,104` (ofis boşalma yüklemi)
-- `TimeManager._dispatch_daily_tick` `time_manager.gd:383` ve `_dispatch_hourly_tick` `:437`: sistem sırası burada; yeni sistem tiki buraya takılır
+- `TimeManager._dispatch_daily_tick` `time_manager.gd:385` ve `_dispatch_hourly_tick` `:439`: sistem sırası burada; yeni sistem tiki buraya takılır. Günlük sıra: `SummarySystem.begin_day` (yuva 0),
+  ↳ ürün (`ProductSystem`, `SprintSystem`, `SupportSystem`, `InfraSystem`, `ProductRead.emit_edges`), Ar-Ge, ekip, satış, `CharacterRegistry.prune_productivity_mods`, rakipler, ofis, finans, faz kapısı ve seed, olaylar,
+  ↳ `IncidentSystem.daily_tick`, haber, VC, sonlar, `SummarySystem.daily_tick` (yuva 10), `MailClock.sync_desk`; gün `EventBus.day_tick_completed` ile kapanır (autosave sınırı). Saatlik sıra: `SupportSystem`, `SalesSystem`,
+  ↳ `InfraSystem.auto_adjust`, `MailClock.hourly_tick`, `IncidentSystem.hourly_tick`, `EventGate.hourly_tick`; 00:00'ın saatlik dilimi `advance_day()`'den önce koşar (`TimeManager.is_rolling_over()` o dilimde doğrudur)
 - `SaveManager.save_to_slot/read_slot/apply_loaded_state` `save_manager.gd:219,153,286` · `scripts/main/main.gd:5141,5189,5200`
+  ↳ Göç zincirini `read_slot` değil `_read_file` `:170` koşar; `read_slot` yalnız onu çağırır ve bozuk ya da eksik hedefte slotun `.bak`'ına düşer (sonuca `from_backup`); `SAVE_ERR_NEWER` ve `SAVE_ERR_TOO_OLD` geriye düşmez
 - `SaveManager.list_slots/list_runs` `save_manager.gd:120,138` · `scripts/menu/main_menu.gd:42`, `scripts/modals/save_load_modal.gd:55`
 - `SaveManager.end_run()` `save_manager.gd:364`: koşuyu süreç içinde bitirir · `scripts/main/main.gd:128,5374` (menüye dönüş)
 - `SaveManager.reset_all_owners()` `save_manager.gd:326`: statik/kayıtlı koşu durumunun tek sıfırlama listesi
@@ -100,8 +106,9 @@ Yardımcı: `Fmt` konuma duyarlı biçimlendirme. Dışarıdan: `TimeModel`, `Sa
 - Kayıt gövdesi `_payload` `save_manager.gd:231`: `schema_version`, `game_version`, `meta`, `state{game_state, registries, systems{product, rnd, finance, event_engine, hr, time, rng}}`
 - Kayıt sürümü: `SCHEMA_VERSION` 19 `save_manager.gd:16`, `MIN_LOADABLE_VERSION` 10 `:23`; autosave `AUTO_SLOTS_PER_RUN` 3 `:28`, `AUTOSAVE_MIN_REAL_SECONDS` 10 `:36`, `AUTOSAVE_FREQUENCIES` `:32`
 - Kayıt kayıtları: `SaveCodec._registries()` `save_codec.gd:261` sırası characters, customers, prospects, rivals, promises (sözler son: müşteri düşünce söz de düşer)
-- Göç zinciri `_read_file` `save_manager.gd:194-207`: `<11` `_migrate_sales_rev6` `:628`, `<13` `_migrate_13` `:654`, `<14` `_migrate_14` `:662`, `<15` `_migrate_15` `:823`, `<16` `_migrate_16` `:909`
-- Göç zinciri devamı: `<18` `_migrate_17` `:975` (v17 → v18 `market_ref`), `<19` `_migrate_18` `:1006` (v18 → v19 sprint puanı ×5, kartta `need`); yardımcılar `_scale_sprint_card` `:1024`, `_retire_stability` `:1048`
+- Göç zinciri `_read_file` `save_manager.gd:194-207`: `<11` `_migrate_11` `:630`, `<13` `_migrate_13` `:656`, `<14` `_migrate_14` `:664`, `<15` `_migrate_15` `:825`, `<16` `_migrate_16` `:911`
+- Göç zinciri devamı: `<18` `_migrate_18` `:977` (v17 → v18 `market_ref`), `<19` `_migrate_19` `:1010` (v18 → v19 sprint puanı ×5, kartta `need`); yardımcılar `_scale_sprint_card` `:1031`, `_retire_stability` `:1056`;
+  ↳ `_migrate_N` N'den önce yazılmış kaydı N'e getirir; emekli bayraklar göçlerden sonra `SaveCodec.RETIRED_FLAGS` ile her yüklemede düşer (`SaveCodec._decode_flags` `save_codec.gd:234`), şema artmaz
 - Ayar dosyası: `user://settings.json` `settings.gd:10`, `{schema_version:1, values}`; `DEFAULTS` `:24-53`; `SAVE_DEBOUNCE_SEC` 0,5 `:56`
 - Ayar anahtarları dışarıda: `language` (Localization'ın), `runs_finished` (`main.gd:5230`, `scripts/onboarding/first_week_doc.gd:15`); `reset_to_defaults` yalnız `DEFAULTS` anahtarlarını siler
 - Ses: `MUSIC_TRACK_PATH` `audio_manager.gd:10` = `res://assets/audio/Döngü Modu.mp3`; bus'lar Master(0), "Music", "SFX" çalışma anında kurulur `:63`
@@ -130,13 +137,35 @@ Yardımcı: `Fmt` konuma duyarlı biçimlendirme. Dışarıdan: `TimeModel`, `Sa
 - Yerelleştirme ve ayar: `loc_csv_integrity` `:316`, `loc_format_locale_flip` `:317`, `loc_pick_fallback` `:319`, `loc_language_switch` `:366`, `locale_switch`, `ui_scale_ladder_fits_settings` `:314`
 - Kapı sırası (CLAUDE.md §12): event-lint → `scripts/debug/loc_residue.gd` → `smoke_run.sh loc_csv_integrity` → hedefli vaka; yeni vaka yalnız çekirdek mantık için (§10)
 - Ölçüm: `--tempo-probe=<hız>[:shell]` saati gerçek zamanda ölçer; `--tick-probe=<hız>` `auto_*` yuvaları yazar (ayrı `APPDATA` ile koş); `--lang=tr|en` dili zorlar, Settings'e yazmaz
+  ↳ `--tempo-probe` her haftayı 08:00'den 08:00'e (gece atlamasının indiği an) ölçer, `TimeModel.seconds_per_tick` hedefinden sapmayı basar ve üçüncü haftada durur; çıplak hâli kabuk kurmaz,
+  ↳ `:shell` kabuğu ve ofisi kurar (gece çıkış kapısının maliyeti de ölçülür);
+  ↳ `--tick-probe=<hız>[:<pencere>][:accounts=<n>][:team=<n>]` (`scripts/debug/tick_probe.gd`) aynı tempo dünyasını (`main._seed_tempo_state`; `accounts=<n>` ile n B2B hesaplı canlı ERP dünyası `main._seed_accounts_state`:
+  ↳ 13 sektör × 3 yıldız, hesap başına tek koltuk, tolerans 0,
+  ↳ `TICK WORLD` satırı) başsız kabukla ve isteğe bağlı açık pencereyle beş hafta gerçek saatle koşar; her kareyi iki `process_frame` arası ölçer ve içinde yayılan sinyalle sınıflar; (gece `night_skipped`, saat `hour_changed`,
+  ↳ onlardan sonraki kare, koşunun ilk saati), TopBar'ın kare başına yenilemesini (`refresh_count`) ve autosave karesini sayar; `TICK` satırları basar. Karar kapısı bağlı değildir (shot kabuğu): kart saati tutmaz, geldiği kare sayılır;
+  ↳ bot kartı sonraki kare ölçülünce `RunProbe._drain_modals` ile cevaplar, sürüm notu tutuşunu oyuncu gibi kaldırır; duruşla biten adım `TICK|stopped` basar; `auto_*` yazar: kayıt taşıyan kullanıcı dizininde çalışmaz;
+  ↳ oturtulamayan `team=` `TICK ERROR` basıp 1 ile çıkar
+- Üst barın saat hâlleri: `--clock-shot=<running|paused|held|released|gate|incident|focus_out|focus_out_off>` (`main._run_clock_shot`) kabuğu kurar, karar kapısını bağlar,
+  ↳ her kare için `CLOCKSHOT` satırı basar (birincil pencere, sprint kipi, tutuşlar, hız). Odak kolları kareden önce `CLOCKSHOT|<kol>|before=|after=` basar (odak kaybından önceki ve sonraki hız); `held`, `released`,
+  ↳ `gate` B2C ürünün sürüm notu üstünde koşar; `incident` tema tohumunun şirketini 23:00'ten gece atlamasıyla acil durumun saatine koşturur; (`main._night_emergency`) ve saati hem acil durumun hem kartının tuttuğunu gösterir;
+  ↳ dar bar `paused` ve `--shot-scale=1.25` ile çekilir
+- Probe kayıt türleri (Çekirdek): `BEGIN`, `STATE`, `WEEK`, `END`, `ERROR`; gerçek saat modları (`--run-log=…:1|2|3`) `TimeManager._drain_boundaries`'ı gerçek saatle süren tek moddur
+- Probe kayıt türleri (Kayıt): `VC_REPLAY`, `VC_REPLAY_SUM`: masa tekrarlarının öncesini ve sonrasını `SaveCodec.capture_*` ve `SaveManager._capture_systems` ile yakalar, tekrar iz bırakırsa `ERROR` basar;
+  ↳ yalnız `full_run_vc_*` preset'lerinde
+- Probe kayıt türleri (Platform): adanmış kayıt yok; `PICK` etiketi seçili dilde basıldığı için probe `--lang=tr` ile koşar
+- Görsel (Kayıt): `--modal-shot=save_empty|save|save_overwrite|load_empty|load|load_gate|load_delete` (Kayıt ve Yükle penceresi, üzerine yazma onayı, karar beklerken Yükle); dört kaydı yazar ya da siler, ayrı `APPDATA` ile koşar.
+  ↳ Menüdeki Yükle ve Devam için `--menu-shot=load|continue` (09_arayuz_bilesen.md)
+- Görsel (Platform): `--modal-shot=settings|settings_end|settings_<mode|res|scale|autosave|summary|lang|graphics|gfx>|settings_reset|system|system_gate` (açık liste maketin üstündeki öğesiyle; `settings_scale` 1280×720 pencerede).
+  ↳ Ayrıca `--lang=en`, `--shot-scale=`, `--palette=cb`; metin kapısı `scripts/debug/loc_residue.gd` (10_test_harness.md)
+- Ölçüm (Platform): `--display-check` gerçek pencereyi tam ekran, çerçevesiz ve pencereli kiplerden, çözünürlüklerden ve vsync'ten geçirip DisplayServer'ın bildirdiğini basar;
+  ↳ kalıcı ayarlayıcıları kullandığı için `settings.json`'a yazar ve sonda eski değerleri geri yükler. Zaman aşımı ya da çökmede ayarlar değişmiş kalır; `--display-check` bilerek harness bayrağı sayılmaz (`SaveManager._is_harness_arg`)
 - Harness bayrağı sayılanlar `save_manager.gd:497`: `--` ile başlayıp "smoke", "-shot", "audit", "probe", "run-log", "plausibility" içerenler; autosave kapanır, `DisplaySettings.is_inert` de bunu okur
 
 ## Dikkat
-- Göç adları tutarsız: `_migrate_13..16` HEDEF sürümü, `_migrate_17` ve `_migrate_18` KAYNAK sürümü adlar (`<18` ve `<19` koşulları `save_manager.gd:204-207`); yeni göçte koşulu ve belgeyi birlikte yaz
+- Göç adı ve koşulu aynı N'dir (`_migrate_N` `version < N`, `save_manager.gd:194-207`); yeni göçte `SCHEMA_VERSION`, koşul, adı ve belgeyi birlikte yaz
 - `_migrate_sector_ids` `:1095`, `_migrate_character_areas` `:1108`, `_migrate_assignments_to_areas` `:1168`, `_migrate_to_rev11` `:1208` zincirde YOK (`MIN_LOADABLE_VERSION` 10); yalnız `endgame_smoke.gd:11984-12218` çağırır
-- Göç her yuva listelemesinde koşar (`list_slots` her dosyayı `_read_file`dan geçirir): saf, ucuz, canlı durumdan bağımsız olmalı; `_migrate_17` bu yüzden kaydın kendi ürün alt türünü okur
-- `_migrate_15` kartı v18 biçiminde yazar (`_V14_EFFORT`, `_V14_SHARES` `save_manager.gd:819-820`); ×5 ve `need` dönüşümünü yalnız `_migrate_18` yapar. `list_slots` ve `read_slot` her yuvada tam zinciri tekrar koşar
+- Göç her yuva listelemesinde koşar (`list_slots` her dosyayı `_read_file`dan geçirir): saf, ucuz, canlı durumdan bağımsız olmalı; `_migrate_18` bu yüzden kaydın kendi ürün alt türünü okur
+- `_migrate_15` kartı v18 biçiminde yazar (`_V14_EFFORT`, `_V14_SHARES` `save_manager.gd:821-822`); ×5 ve `need` dönüşümünü yalnız `_migrate_19` yapar. `list_slots` ve `read_slot` her yuvada tam zinciri tekrar koşar
 - `SaveCodec.game_state_fields()` `save_codec.gd:192` `GameState`in HER script `var`ını kaydeder; kaydedilmemesi gereken geçici alan eklenemez. Yeni alan makul varsayılan taşımalı (varsayılan = göç)
 - JSON her sayıyı float yapar: yeni `GameState.flags` anahtarı `FLAG_TYPES` ya da `FLAG_TYPE_PREFIXES` ister, yoksa tipi geri gelmez; debug yapıda `set_flag` sapmayı uyarır (`game_state.gd:441-467`)
 - Yükleme bir OS yeniden başlatması gibi davranmalı: statik/kayıtlı koşu durumu ekleyen sahip `reset_all_owners` `save_manager.gd:326`e girmeli, yoksa eski koşu sızar. Sıra bağımlıdır (saat önce, RNG son)
@@ -152,14 +181,14 @@ Yardımcı: `Fmt` konuma duyarlı biçimlendirme. Dışarıdan: `TimeModel`, `Sa
 - `AudioManager` `Settings`ten sonra yüklenir; `Settings.apply_all` onu `is_node_ready` ile korur (`settings.gd:124-125`). SFX bus'ında oynatıcı yok; kaydırıcı boş bus'ı oynatır
 - `Localization.pick(tr, en)` çizimde çözer; olay önbelleği açılışta bir kez kurulduğu için yükleme anında dil dondurmak yanlıştır. Boş `en` "metin zaten yerelleşmiş" sözleşmesidir (`localization.gd:73-80`)
 - `Character`/`Customer`/`Prospect` `name` alanı taşımaz (Node/Object ayrılmış): `character_name`, `company_name`; kayıt defterlerinde `get_character` gibi adlar `Object.get`i gölgelememek içindir
-- Ölü aday (KALITE.md): `RivalRegistry.get_by_type` `rival_registry.gd:61` çağrısız; EventBus'ta `employee_eligible_for_promotion` ve `raise_requested` yayansız
+- Ölü aday (KALITE.md): EventBus'ta `employee_eligible_for_promotion` ve `raise_requested` yayansız
 - CLAUDE.md §9: yerini alan kod eskisini aynı commit'te siler; ölü göç yardımcıları, ölü sinyaller ve tarihçe yorumları bu kuralın dışında kalmış (özellikle `save_manager.gd` göç yorumları)
 
 ## Bir değişiklik yaparken
 - `GameState`e alan eklersen: varsayılanı makul seç (göç yerine geçer), `initialize_run` `:769` içinde sıfırla (container ise `clear()` ile yerinde), bayraksa `FLAG_TYPES`e yaz; alan şemayı değiştiriyorsa `SCHEMA_VERSION` ve göç düşün
-- Kayıt şemasını bozan değişiklik (anahtar adı, birim) için: `SCHEMA_VERSION` artır `save_manager.gd:16`, `_read_file` zincirine koşul ve `_migrate_*` ekle `:194-207`, `CLAUDE.md` Kayıt maddesi, HARITA Kayıt bölümü, bir `save_v*` vaka
+- Kayıt şemasını bozan değişiklik (anahtar adı, birim) için: `SCHEMA_VERSION` artır `save_manager.gd:16`, `_read_file` zincirine koşul ve `_migrate_*` ekle `:194-207`, `CLAUDE.md` Kayıt maddesi, Durum ve veri bölümü, bir `save_v*` vaka
 - Yeni `Resource` modelini kayda sokarsan: `SaveCodec.script_for_class` `save_codec.gd:38` ve `_registries()` `:261` listesine, `SaveManager.reset_all_owners`a sıfırlayıcıyı, `insert_raw`/`reset` çiftini kayıt defterine ekle
-- Saatlik/günlük tike sistem eklersen: `TimeManager._dispatch_daily_tick` `:383` veya `_dispatch_hourly_tick` `:437` doğru yuvaya; `docs/HARITA.md` Çekirdek bölümünün dağıtım sırası satırını ve `CLAUDE.md` Zaman maddesini güncelle
+- Saatlik/günlük tike sistem eklersen: `TimeManager._dispatch_daily_tick` `:385` veya `_dispatch_hourly_tick` `:439` doğru yuvaya; bu sayfanın dağıtım sırası maddesini ve `CLAUDE.md` Zaman maddesini güncelle
 - Saati durduran yeni yüzey: `hold_clock(neden)`, `HOLD_LABELS`e anahtar + `CLOCK_HOLD_*` CSV satırı; kapanışta `release_clock`; hız merdiveni: `TimeModel.SECONDS_PER_HOUR`, `top_bar.gd`, `speed_*` vakaları, CLAUDE.md
 - Yeni ayar: `Settings.DEFAULTS` `:24`e anahtar (şemanın tamamı budur), `settings_modal.gd` satırı + `SET_*` CSV anahtarları, sahibine uygulama `apply_all` `settings.gd:113`; `reset_to_defaults` onu otomatik temizler
 - Yeni sinyal: `event_bus.gd`de ilgili `# --- X ---` bölümüne ekle ve `python tools/gen_signal_manifest.py` çalıştır; bağlanan dosyalar `_exit_tree`de ayırmalı; kayıt yükü taşıyan sinyali `game_loaded` sonrası boyamayla karıştırma
@@ -168,4 +197,4 @@ Yardımcı: `Fmt` konuma duyarlı biçimlendirme. Dışarıdan: `TimeModel`, `Sa
 
 ## HARITA'da bayat
 - HARITA Kayıt bölümü (satır 39) ve CLAUDE.md "göçler `read_slot` sırayla uygular" der: zincir `_read_file`dadır (`save_manager.gd:170-209`); `read_slot` yalnız onu çağırır ve bozuk dosyada `.bak`a düşer
-- HARITA Platform bölümü (satır 52) "AudioManager yalnız ayarlar modalı kullanır" der: `Settings.apply_all` `settings.gd:125` onu da çağırır ve `sandbox/asset_lab/asset_lab.gd:64` `MusicPlayer`ını durdurur
+- HARITA Platform bölümü (satır 52) "AudioManager yalnız ayarlar modalı kullanır" der: `Settings.apply_all` `settings.gd:125` onu da çağırır (`is_node_ready` korumasıyla)

@@ -6,6 +6,12 @@ Kapsam: scripts/ui (office hariç), scripts/theme, scripts/modals, scripts/menu,
 Ne yapar: Oyunun 2B kabuğunu (üst bar, sol ray, pencere katmanı, haber şeridi, yüzen kartlar, toast), modalları, ana menüyü, ilk kullanım akışını ve görüşme panelini çizer.
 Her yüzey oyun durumunu yazmaz, sistemlerden okur ve olaylara EventBus ile bağlanır. Renk, boyut ve yüz `UiTokens`tan, Control üretimi `UiFactory`den gelir; `build_theme.gd` iki .tres temayı üretir.
 Oyuncu metni `tr(ANAHTAR)` ile `localization/strings.csv`den okunur; ayrı bir Control ağacı kuran statik yardımcılar `TranslationServer.translate` kullanır.
+Kaynak (GDD): Tema ve UI kiti ch12 · Ana menü, açılış dizisi ve Jenerik ch12 §6 · Kabuk ch12 · Görüşme paneli ch09 §4 ve Satış §5 · Onboarding ch02 ve ch12.
+Sahipler (Tema): `UiTokens`, `UiFactory`. Sahipler (Ana menü): sahne betikleri sınıf adı taşımaz; `main.gd` kurar ve bağlar (`_mount_godot_card`, `_mount_menu`, `_free_menu`, `_mount_flow`),
+  ↳ `_state` açılışın evresini tutar (`card`, `menu`, `flow`, `loading`).
+Sahipler (Kabuk): `main.gd` (ana sahne kökü), `game_shell.gd` (`GameShell.tscn`), `window_layer.gd` (`CenterViewport`, grup `window_layer`); `window_frame.gd`, `inbox.gd` ve `mail_pane.gd` yolla preload edilir (sınıf adı yok).
+Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`, `SalesMeetingAdapter`; seçenek kartı `meeting_panel_option.gd` (sınıf adı yok, panel preload eder). Sahipler (Onboarding): `OnboardingStep`, `LogoEmblem`,
+  ↳ `SegmentBar`; kurallar `FounderConstants`'ta (04_ekip.md).
 
 ## Dosyalar
 - `scripts/theme/ui_tokens.gd` (989): `UiTokens`; tüm renkler, SIZE_* merdiveni, krem palet, koyu dil `D_*`, `TABS`, `THEME_STAMP`, renk körü anahtarı ve `D_` yardımcıları
@@ -108,7 +114,8 @@ Oyuncu metni `tr(ANAHTAR)` ile `localization/strings.csv`den okunur; ayrı bir C
 - Kalıcı kullanıcı ayarları `user://settings.json` (`Settings.DEFAULTS` `settings.gd:24`): `window_mode`, `ui_scale`, `colorblind_palette`, `ticker_open`, `master_volume`, `music_*`, `sfx_volume`, `pause_unfocused`, `language`
 - `runs_finished` profil sayacı `Settings` anahtarı, `main.gd:5230`'da artar; Onboarding Zor kipi açılışını buradan okur (`first_week_doc.gd:15`)
 - Tema sürümü: `UiTokens.THEME_STAMP := 40` `ui_tokens.gd:44`; .tres'in gömülü `UiTokensStamp.stamp` sabiti ile `main.gd:99-100` karşılaştırılır (debug uyarısı)
-- Ürün sol sütunu: ölçüler `D_W_LEFT` 288, `D_BOX_MONO` 24, `D_H_KEY_CAND` 24, `D_W_STAGE_STRIP` 168, `D_H_STAGE_STRIP` 6, `D_PLANNED_ALPHA` (planlı talep), `D_TAKEN_ALPHA` (planlı ya da damgalı aday); aşama bantları `D_ST_DESIGN/DEV/TEST` ve `UiTokens.D_stage(aşama)`.
+- Ürün sol sütunu: ölçüler `D_W_LEFT` 288, `D_BOX_MONO` 24, `D_H_KEY_CAND` 24, `D_W_STAGE_STRIP` 168, `D_H_STAGE_STRIP` 6, `D_PLANNED_ALPHA` (planlı talep), `D_TAKEN_ALPHA` (planlı ya da damgalı aday);
+  ↳ aşama bantları `D_ST_DESIGN/DEV/TEST` ve `UiTokens.D_stage(aşama)`.
 - Yüzler: `d_wide_b` (Archivo 800, genişlik 118: modül işareti `MonoMark`) ve `d_wide_sb_caps` (650, genişlik 110, harf aralığı 1: göz başlığı `Eyebrow`); `d_num` (650/108) okuyanı gelene dek kurulmadı.
 - Sol sütunun varyasyonları yalnız koyu temadadır (master taşımaz, `theme_check` ikisinde geçer): `RequestRow` (+`Hover`, `Planned`), `ModuleRow` (+`Hover`, `Open`), `ModuleCandidate`, `DueChip`, `DueChipSoon`, `MoreLink`
   ↳ `MonoBox` HR ve posta ile ortaktır.
@@ -142,6 +149,42 @@ Oyuncu metni `tr(ANAHTAR)` ile `localization/strings.csv`den okunur; ayrı bir C
 - Görsel kabul (pencereli, Godot MCP; `main.gd`): `--tab-shot` `:2338`, `--modal-shot` `:2539`, `--menu-shot` `:2691`, `--onboard-shot` `:2858`, `--meeting-shot` `:4255`, `--clock-shot` `:2196`
 - Görsel kabul (devam): `--theme-audit=<sekme|modal:<tür>|onboard:<adım>>` `:2908`, `--vc-shot=<tür>[:shell]` `:3999`, `--negotiation-shot` `:4351`, `--invite-shot` `:2124`, `--inbox-shot` `:1107`
 - Görsel kabul (devam): `--ending-shot` `:3602`, `--probe-shot[=menajer]` `:2927` (ThemeProbe), `--backdrop-probe` `:2788`, `--render-probe` `:389`
+- Görsel (Tema): `--theme-audit=<sekme id | modal:<tür> | onboard:<adım>>` yüzeyi `--tab-shot`, `--modal-shot`, `--onboard-shot` gibi kurar, kare yazmaz; her Control'ün çözülmüş değerlerini, içerik payını `cm`,
+  ↳ en küçük boyunu `min` ve öğeyi çözen temayı `src` (`o` override, `a:<tema>` ata teması, `p` proje teması, `d` motor varsayılanı), Control'ün kendi üstüne koyduğu her tema öğesini `ov` basar; `--probe-shot` (ThemeProbe),
+  ↳ `--probe-shot=menajer` (koyu temanın master dışı her varyasyonundan bir örnek), `--probe-shot=kit` (koyu kitin bileşenleri durumlarıyla: Ekip satır ızgarası, etiketler, bedel, toast'lar, odak halkası),
+  ↳ `--theme-contrast-audit` (başsız; koyu temanın her metin rengi çizildiği her zeminde ve `D_` yardımcılarının renkleri iki palette, `CONTRAST` satırları; düşen çiftte 1), `--tab-shot=`, `--shot-size=`
+- Görsel (Ana menü): `--menu-shot=<empty|continue|first_frame|godot_card|load|settings|credits|licenses|plate|live|return_confirm[:gate]|all>` açılışı oyuncunun gördüğü gibi kurar ve kare başına
+  ↳ `MENU|state=|focus=|continue=|groups=|paused=|joy_ui=` basar; `continue` ve `load` fikstür kayıtlarının üstünde koşar (yükleme penceresi oto yedekleri açık); `first_frame` menünün örtü altındaki ilk karesi,
+  ↳ `godot_card` kartı çerçeveler (sonra `ui_accept`, iki kare sonra menü), `live` canlı sahnenin solmasını bekler, öbürleri plakada durur; `return_confirm` `--modal-shot=return_confirm[_gate]`'e gider;
+  ↳ `all` her türü kendi pencereli sürecinde koşar ve `MENU|all|kind=|exit=` basar; `--menu-shot=bake_plate:<ofis>:<HHMM>` canlı sahneyi plaka olarak yazar (`assets/art/menu/`'ye kopyalanır);
+  ↳ 1536×864 kareler 1920 pencerede `--shot-scale=1.25` ile çekilir; ayrıca `--theme-audit=menu`, `--modal-shot=settings_end` (Veri satırı); `--menu-shot` fikstür kayıtlarını `user://shot_menu/`'ye yazar;
+  ↳ `user://saves`'te kayıt varsa `MENU|refused=user_saves` basıp 1 ile çıkar, ayrı `APPDATA` ister
+- Ölçüm (Ana menü): `--backdrop-probe[=<ofis>:<HHMM>]` (pencereli; çıplak hâli menünün akşam şehri): `BACKDROP|plate_frame=|live_ms=|fade_ms=|gpu_ms_p50=|gpu_ms_p95=|boot_to_menu_ms=`,
+  ↳ plaka ile canlı karenin ortalama mutlak farkı `BACKDROP|plate_vs_live=` (≤ 6/255) ve YENİ OYUN'dan sonra `BACKDROP|new_game|nodes=|backdrop=|tex_pct=`. Düşük ön ayarda yalnız plaka durur, ölçümler `n/a` olur;
+  ↳ probe kabuk ve onboarding kurmaz (kayıt türü yok)
+- Görsel (Kabuk): `--tab-shot=<product|sales|hr|finance|piyasa[:<durum>]|personal|rnd|marketing|events>` (pencere ofisin önünde; `<sekme>:cheque` ve `<sekme>:seed` sekmeyi hedef listelerinin ilk haftasında açar: çekin 2/5'i,
+  ↳ seed listesinin 0/2'si), `--modal-shot=confirm|confirm3|confirm3_gate|return_confirm|return_confirm_gate|f5_gate`; `confirm` tohum görüşmesinin onayı, `confirm3` sistem menüsünün üstünde çıkış onayı,
+  ↳ haftalar kaydedilmemişken (`confirm3_gate` karar beklerken), `return_confirm` aynısı Ana menüye dön onayı, `f5_gate` karar beklerken F5; `--office-shot=<ofis>:<saat>:toast` (06_ofis.md), `--shot-size=`, `--skip-onboarding`. Ölçüm:
+  ↳ `--render-probe[=<sekme>[:<kişi>[:<hız>]]]` (`--shot-size=` ile) kabuğu tek pencere boyutunda kurar, kare maliyetini ve doku ve video belleğini basar; `<kişi>` kadroyu o sayıya doldurur,
+  ↳ `<hız>` saati o hızda en az üç oyun saati koşturur, `rebuild_view` taşıyan sayfanın tam yeniden kuruluş karesini `REBUILD_MS` basar
+- Görsel (Görüşme paneli): `--meeting-shot=<probe|locked|won|lost|handoff|economy|frank|emph_trust|emph_integrations|emph_onboarding|weak_core|die|returning>` (satış): `probe` ilk soru,
+  ↳ `locked` kilitli cevabı olan soruya ve kilit satırına kadar, `won` müşterinin kesimine kadar oynanır (Devam teklife), `lost` kayba (sonuç kartı), `handoff` Devam'dan Perde 2'ye;
+  ↳ `economy` Ekonomik sunucuda kapasitesini aşan ürünle 3★ masa, kesime kadar oynanır ve Perde 2'ye geçer: yük sorusu yok, onay şeridinin uyarı satırı sunucu maddesini söyler,
+  ↳ `MEETINGSHOT|economy|load=|asked=` yükü ve sorulan aileleri basar; `frank` Satış'ı ve Karizma'sı sıfır kurucunun karşısına Frank'in tanıştırdığı 2★ adayı oturtur,
+  ↳ ilk soruda iğnenin hover satırlarının seam'lerini `MEETINGSHOT|frank|mods=…` basar; `emph_*` sektörü sabit 2★ masa vurgu sorusunu üç biçimiyle sorar (alanı Güven için kurulu: güçlü cevap açık; ikisi için boş: kilit satırı);
+  ↳ `weak_core` Çekirdek'i en zayıf alan olan 3★ masa (sorunun üstünde itiraz, güçlü cevabın altında kilit satırı); `returning` Entegrasyonlar yüzünden kaybedilmiş 2★ masa geri geldi (başlıktaki hafıza satırı);
+  ↳ `die` aynı masa bir cevap sonra, teklife geç seçeneğinin zarı üstünde: ipucu satırı alanı ve sözcüğünü söyler, dört satırdan sonrası "+N etken daha", kalanlar İkna'nın ipucunda;
+  ↳ ipucunun her satırı büyük harfle başlar (VC'nin beceri çipi `HRUiShared.skill_label`, "+ Karizma"), katlanan satır boş kategori etiketiyle öbür etkenlerin metin satırında durur; kare hover'ı göstermez;
+  ↳ `won` ve `handoff` ile `--negotiation-shot=<open|countered|insult|last|confirm>` ürünü her hattı K2 yapar, masa kazanılsın diye; VC:
+  ↳ `--meeting-shot=<open|sorgu|sheet|callback|ret|seed|long>` (`open:tip` ve `sorgu:tip` zar taşıyan ilk seçeneğin ipucunu açar): `open` Odayı Oku, HAFIZA satırı ve çekilme düğmesi, `sorgu` üçüncü vuruş,
+  ↳ `sheet` kazanılmış odanın sonuç kartı, `callback` ılık odanın geri araması ve şartı; `ret` soğuk odanın reddi, bedeli ve Frank'in çıkışı, `seed` seed odasının sonuç kartı,
+  ↳ `long` ılık odanın kapanış vuruşu ve altındaki bütün öncekiler (panelin alabildiği en çok; en dar dok için `--shot-scale=1.25`);
+  ↳ `--travel-shot=<ofis>[:vc|:night]` (06_ofis.md) ve `--invite-shot=<ring|card|vc|postpone|postpone_vc|held|lapse|lapse_vc>`: İş hanında arama (not yığını üç satırlı: halka, açık kart, fonun kartı), satışın ve fonun ertelenmesi,
+  ↳ tutuş altında reddedilen Kabul et, kesime düşen satış çağrısının tostu ve `INVITE|lapse` satırı. Tostsuz düşen fon çağrısının erteleme bedeli `INVITE|lapse_vc|ringing=…|penalty=…` satırı;
+  ↳ düşüşlerde önce `invite_shot_<tür>_ring` karesi, sonra `invite_shot_<tür>`
+- Görsel (Onboarding): `--onboard-shot=<1|2|3>[:<durum>]` | `curtain` (durumlar `1:plate`, `1:cancel`, `2:random`, `2:hard_locked`, `2:hard_open`, `3:guided_locked`, `3:reroll`; `2` taslakta bir beceriye 2 dağıtım puanı yazar:
+  ↳ cetvelde 4); kurulumun düğüm sayısını `ONB|nodes=|tex_mib=` basar, sahne gelince `ONB|stage=live|figure=`; `--theme-audit=onboard:<1|2|3>`, `--inbox-shot=intro`;
+  ↳ `project.godot` `main_args`'taki `--skip-onboarding` doğrudan kabuğa geçer; probe onboarding'i atlar (kayıt türü yok)
 - Ortak bayraklar: `--lang=tr|en`, `--shot-size=GxY`, `--shot-scale=1.25`, `--palette=cb` (`main.gd:597`). Kayıt yazan `--modal-shot=save*|load*` ve `--menu-shot` ayrı `APPDATA` ile koşar (CLAUDE.md §12)
 - Debug seam'leri (argsız, MCP): `_dbg_menu_digest()` `main.gd:5363`, `_dbg_close_request()` `:5106`, `_dbg_finish_run()` `:5124`, `_dbg_onb_random_x20()` `:5111`; `kit_probe.gd` `--probe-shot=kit` koyu kitin durumlarını çizer
 - CLAUDE.md §10: arayüz doğrulaması smoke'la değil görsel kabulle yapılır; yeni UI smoke vakası yazılmaz
@@ -154,9 +197,13 @@ Oyuncu metni `tr(ANAHTAR)` ile `localization/strings.csv`den okunur; ayrı bir C
 - Dil/palet değişiminde: pencereler `WindowLayer._rebuild` ile boşaltılıp yeniden kurulur (`window_layer.gd:156`); modaller (system_menu hariç) canlıyken yeniden çevrilmez; kendi `_retranslate` sahibi `settings_modal.gd:374`
 - Tema üretilmiştir: token ya da `build_theme.gd` değişince `THEME_STAMP` artar ve iki .tres yeniden üretilir (CLAUDE.md §7); ham `Color(...)`/boyut yazılmaz; sahne ve script yalnız yerleşimin sahibidir
 - Menajer teması CanvasLayer ve açılır pencere kalıtımını keser: her katman kökü kendi `theme`ini taşır
+- Çerçeve (TopBar, NewsTicker) koyu temayı okur: iki sahnenin kökünde `menajer_theme.tres` atanmıştır ve çerçevenin yazı ile düğme varyasyonları (`HeroValue`, `ClockLabel`, `SpeedKey`, `TickerToggle` …) o temada tanımlıdır.
+  ↳ Krem temadaki koyu yüzeyler gövdeyle değişen her rengi `*_CHROME` ikizinden okur (`ACCENT_CHROME`, `INK_*_CHROME`, `VEIL_*_CHROME`)
 - `BuildBar`/`ResearchBar` teması `BuildHUDPanel` kökünden çözülür (kendi tscn'lerinde yok); EndingScene krem kalır (`EndingScene.tscn`da menajer yok)
 - Hafıza: Godot tema motoru tuzakları (ata tema önceliği, `has_font`, `set_theme(String)` yasağı) `godot-theme-engine-facts.md`; HBox asgari-boyut tuzağı ve `CACHE_MODE_IGNORE` motoru düşürür: `ekip-rev11-closing-round.md`
 - TopBar sütunları TR ve EN'in en geniş değerinden ölçülüdür ve her yazı taban çizgisine konur (`GRID` `top_bar.gd:24`, `_put()` `:401`); yeni metin kalıbı en geniş değeri aşarsa hafta çubuğu kayar. Yenileme `_queue_refresh` ile birleşir
+  ↳ `_refresh` ızgarayı `GRID[int(_compact)]`'ten kopyalar; RUNWAY hücresi gizliyken (`UiTokens.D_runway_reading().text == ""`) çizgi, ikinci metrik grubu ve gün bloğu onun bıraktığı boşluğu kapatır; `_refresh_brand`, `_refresh_metrics`,
+  ↳ `_refresh_day`, `_refresh_gate` ve `_refresh_time` yürürlükteki ızgarayı `_g` alanından okur
 - Hız tuşlarının adları (`PauseBtn`, `Speed1Btn`..`Speed3Btn`) sahnede ve `top_bar.gd:72` `speed_btns` dizisinde sabit; `topbar_speed_cluster_three_rungs` onları okur
 - Ray: `LeftTabs.tscn` düğme sırası `UiTokens.TABS` ile aynı olmalı (`rail_tabs_match_scene_order`); kilit gerekçe satırı yalnız `lock` taşıyan satırlarda `_ready`de eklenir (`left_tabs.gd:76-92`)
 - Karar beklerken (`EventGate.active_id() != ""`) Olaylar dışı her pencere salt okunur: `WindowFrame` sayfa gövdesine tıklamayı keser (`window_frame.gd:106`), `GateStrip` geri yolu verir; pencere ModalLayer'a ASLA konmaz (Space/1-4'ü yutar)
@@ -165,6 +212,8 @@ Oyuncu metni `tr(ANAHTAR)` ile `localization/strings.csv`den okunur; ayrı bir C
 - Frank ve kurucu portreleri önceden render edilmiş PNG (`FounderConstants.portrait_path`, `assets/art/portraits/`); kurucuda 11 kimlik `PORTRAIT_IDS`
 - Kalabalık satır ölçümü için `--render-probe=hr:<kişi>` (`main.gd:389`) kare maliyetini ve doku belleğini basar
 - Onboarding yerleşimi iki değerli tablolardır (`PAPER`, `DOC`, `BUST` `onboarding_flow.gd:24-27`; 1080 yüksek ve daha kısa): yeni öğe ikisine de eklenir; `main_menu.gd` `COLUMN`/`LOCKUP_S` aynı desen
+- Onboarding'in neden etiketi alt şeritteki `Paper/Col/Foot/Row/Reason` düğümüdür (`OnboardingFlow.tscn:121`, kodda `%Reason`); karakter adımı portreyi doku olarak koyar (`character_step.gd:55`, `FounderConstants.portrait_path`),
+  ↳ ayrı bir portre kartı bileşeni yoktur
 - `NewsTicker` `PROCESS_MODE_ALWAYS`tır ve gerçek zamanda akar; `_exit_tree` bağlantıları elle koparır (`news_ticker.gd:85`); yeni `EventBus` bağlantısı eklersen kopar
 - Menü arka planı düşük grafik ön ayarında yalnız plakadır (`menu_backdrop.gd`); canlı sahne `live_ready` verince plakayı örter. Plaka dosyaları `assets/art/menu/backdrop_<ofis>_<HHMM>.png`
 - `inject-mouse-click` MCP aracı kırık, int arg marshal olmaz: UI doğrulaması argsız seam'lerle ve OS tıkıyla yapılır (hafıza: godot-mcp-runtime-verification)

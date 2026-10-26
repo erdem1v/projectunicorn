@@ -3,6 +3,10 @@
 Ne yapar: Şirketin çalıştığı ofis merdiveni (Ev, İş hanı, Plaza, Loft) kasa, kira, masa ve marka sıçraması olarak `office_system.gd` + `office_constants.gd`'dedir; oyuncunun gördüğü 3B ofis `scripts/ui/office/`'dedir.
 3B taraf Three.js'ten dışa aktarılan GLB ve yan JSON'u yükler, günün ışığını oyun saatine bağlar, kadroyu fırınlanmış zeminde yürütür; şehir haritası ofis seçer, kurucunun toplantı yolculuğu ve davet de burada oynanır.
 Dışa aktarım hattı çevrim dışıdır (`tools/office3d/`); oyun yalnız çıktılarını yükler.
+Kaynak: GDD ch12 (3B ofis).
+Sahipler: `OfficeSystem` (durumun tek yazarı), `OfficeConstants` (katalog; İş hanı'nın masası dışında sayılar [WORKING]), `OfficeLayout`, `OfficeMaterials`, `OfficeLighting`, `OfficeCamera`, `OfficePeople` (kadro ve ritim),
+  ↳ `OfficeActor` (kişi, ikon, halka), `OfficePerson` (gövde, yürüyüş, oturma, yatma), `OfficeVenue` (mola noktaları, kuyruk), `OfficeBody`, `OfficeGesture`, `PersonBust` (kart büstü), `LookSystem` ve `PeopleParts` (görünüm),
+  ↳ `OfficeCity`, `MeetingCast` (toplantı odasındaki kişiler), `MeetingInvite` (davet telefonu ve kartı); `OfficeView` `GameShell.tscn` içinde kalıcı çocuktur (`CenterViewport/OfficeView`, grup `office_view`).
 
 ## Dosyalar
 
@@ -32,7 +36,9 @@ Kişiler:
 
 Şehir haritası, taşınma arayüzü:
 - `scripts/ui/office/office_city.gd` (482): şehir haritası: bina bağlama, çipler, hover kartı, seçim, trafik, kurucunun yolu (`road`)
-- `scripts/ui/office/office_map_card.gd` (158): seçili ofisin kartı (ne getirir, peşin kira, taşı düğmesi)
+- `scripts/ui/office/office_map_card.gd` (158): seçili ofisin kartı (ne getirir, peşin kira satırı kartın içinde kurulur, taşı düğmesi); taşınma sürerken (`OfficeSystem.is_moving()`) hiçbir kart peşini şart yapmaz,
+  ↳ varış ofisinin rozeti ve düğmesi "Taşınıyor" der (`OFFICE_MOVING_BADGE`, kalan hafta). Aylık gider ipucu (`OFFICE_MOVE_TIP`) finansın yazacağı rakamı söyler: kira günlük yuvarlanmış oranla farkı alınır (`FinanceSystem.daily_rate`),
+  ↳ aylık gider eskisi artı bu fark × 30
 - `scripts/ui/office/office_hud.gd` (126): taşı düğmesi (sol alt), taşınma sayacı, taşınma ve varış toast'ı
 - `scripts/ui/office/office_notice_stack.gd` (196): sağ üstte gelen kutusu önizlemesi (Frank'in satırı, keşif, bekleyen kâğıtlar, hedef listesi toast'ı)
 
@@ -42,8 +48,13 @@ Toplantı ve yolculuk:
 - `scripts/ui/office/meeting_invite.gd` (198): ofiste çalan telefon, amber halka ve arama kartı (Kabul et / Ertele)
 
 Varlıklar:
-- `art/office3d/` (6 yer: home, ishani, plaza, loft, city, meet): her biri `<id>.glb` + `<id>.json`; `<id>_nav.tres` city hariç 5 yerde; 79 içe aktarıcı dokusu `<id>_<n>.png`
+- `art/office3d/` (6 yer: home, ishani, plaza, loft, city, meet): her biri `<id>.glb` + `<id>.json`; `<id>_nav.tres` city hariç 5 yerde; 78 içe aktarıcı dokusu `<id>_<n>.png`
 - `assets/art/office/`: harita kartı küçük resimleri `thumb_<id>.jpg` (4) ve kafa üstü ikonlar `icons/*.svg` (9, Lucide)
+- Üçüncü taraf: kafa üstü ikonlardaki glifler ve taşı düğmesinin dünyası (`assets/icons/util/globe.svg`),
+  ↳ Ürün sol sütununun bina ve kum saati glifleri (`assets/icons/util/building.svg`, `hourglass.svg`) Lucide'dir (ISC, `assets/art/office/icons/LICENSE-lucide.txt`)
+- Üçüncü taraf: ofis kişileri Quaternius Ultimate Modular Men/Women ve Universal Animation Library 1 ve 2 ile Mesh2Motion kliplerindendir (CC0; lisans metinleri `assets/art/people/LICENSES/`,
+  ↳ kaynak ve rig hattı `assets/art/people/README.md` ve `tools/people/README.md`). Frank'in ve kurucuların portreleri (`assets/art/portraits/`) bu gövdelerden `tools/people/bake_portraits.gd` ile pişirilir;
+  ↳ dosya başına görünüş imzası ve sha256 `assets/art/portraits/README.md`'dedir
 - `assets/art/people/` (q22 gövdeler 36 dosya, anims: ual1, ual2, m2m_addon): ofis kişilerinin gövdeleri ve klipleri
 
 Çevrim dışı araçlar (yalnız yapı; `.gdignore` Godot'yu dışarıda tutar):
@@ -63,7 +74,7 @@ Sistem:
 - `OfficeSystem.daily_tick()` `scripts/systems/office_system.gd:76`: her günlük tikte, FinanceSystem'den önce · `scripts/autoload/time_manager.gd:409`
 - `OfficeSystem.move_to(id)` `scripts/systems/office_system.gd:63`: taşınmayı başlatır, peşin kira düşer · `scripts/ui/office/office_city.gd:385`
 - `OfficeSystem.can_move_to(id)` `scripts/systems/office_system.gd:57`: tek şart para, ev hedef olamaz · `scripts/ui/office/office_map_card.gd:125`
-- `OfficeSystem.hiring_closed()` `scripts/systems/office_system.gd:40`: ofiste masa dolunca işe alım kapanır · `scripts/systems/hr_search_system.gd:64,100,207`
+- `OfficeSystem.hiring_closed()` `scripts/systems/office_system.gd:40`: ofiste masa dolunca arama başlamaz ve masadaki dosyalar işe alınmaz · `scripts/systems/hr_search_system.gd:64,100,149,211`, `scripts/tabs/hr/hr_atlas_modal.gd:75,281`
 - `OfficeSystem.desks_free()` `scripts/systems/office_system.gd:35`, `desks_taken()` `:30` · `scripts/tabs/hr/hr_atlas_modal.gd:49`, `scripts/ui/office/office_map_card.gd:68,99`
 - `OfficeSystem.brand_jump(id)` `scripts/systems/office_system.gd:51`, `reached()` `:46`: kademeye ilk varışın marka puanı · `scripts/ui/office/office_hud.gd:63`, `office_map_card.gd:82`
 - `OfficeSystem.upfront(id)` `scripts/systems/office_system.gd:25`: peşin kira (`UPFRONT_MONTHS` × kira) · `office_map_card.gd:34`, `can_move_to`, `move_to`
@@ -168,6 +179,22 @@ Pencereli görsel ve ölçüm (bayrak `main.gd` tablosunda, `:271-276`; PNG `%AP
 - `--office-crowd-probe=<ofis>:<kişi>:<hız>` `main.gd:2304`: sıçrama, takılma, kapı, kuyruk, toplantı, gece kapısı (`CROWD` satırları)
 - `--travel-shot=<ofis>[:vc|:night]` `main.gd:2030`, `--invite-shot=<ring|card|vc|...>` `main.gd:2112`, `--day-shot=<ofis>:<hız>` `main.gd:2266`
 - Dışa aktarım denetimi: `python tools/office3d/check_export.py [id ...]` (sözleşme ihlalinde çıkış 1); zemin: `bake_nav.gd` (giriş zeminde değilse çıkış 1)
+- Görsel: `--office-shot=<home|ishani|plaza|loft|city|meet>:<saat>[:<ek>]` ofisi kabuğun içinde, saat durmuş çeker; kare süresini ve çizim sayılarını basar. `<ek>`: `full` bütün masalar dolu ve kişiler içeride (gece aydınlık iç mekân),
+  ↳ `crowd40` kırk kişilik kadro, `LOOKS` satırı ve dört yakın kare, `founders` kurucu portreleri ile render edildikleri görünüşün büstü yan yana; `nav` fırınlanmış zemin ve noktaların girişleri; `<sekme>` o sekmenin penceresi açık;
+  ↳ `hr_dossier` Ekip penceresi ve ilk çalışanın dosyası;
+  ↳ `toast` toast'ın gerçek çağıranları sırayla (F5 açık pencerenin üstünde, reddedilen F5, ertelenen satış ve VC görüşmesi, gerçek bir taşınma ve İş hanı'na ilk varış ("Marka +3"; Ev'den koşulur), F9'un dört hâli `f9_none`, `f9_modal`,
+  ↳ `f9_confirm`, `f9_gate`), kare başına `office_shot_toast_<durum>.png`; gerçek bir quicksave yazar ve yükler; `city` Ev'deki İş hanı'ndan haritayı taşı düğmesi gibi açar: `card` (yalnız `city`) Plaza'nın kartı açık,
+  ↳ `crown` kulenin tacı, `card_ishani` ve `card_home` şirket hâlâ Ev'de iken İş hanı'nın ve Ev'in kartı, `card_over` aynı Ev'de on dört çalışanla İş hanı'nın kartı (kadro masayı aşıyor, taşınma ipucunun altında uyarı),
+  ↳ `card_here` şirket İş hanı'nda kendi kartı (masa, dolu, kira); `card_tick` Plaza'nın kartı bir günlük tikten geçer (`_before` karesi ve kartın çizdiği kasa okumasını önce ve sonra basan `OFFICECARD` satırı);
+  ↳ `card_moving` Ev'den İş hanı'na taşınma sürerken İş hanı'nın kartı (`_ishani`) ve Plaza'nın kartı; `meet` toplantı odası: üç kişi karşıda, kurucu oturmuş, `cast` bakış,
+  ↳ duruş ve jest dizisi (kurucu asansörden yürür, masa dinlenir, lider konuşur, her jest ortasında); `cheque` hedef listelerinin ilk haftası (`_01` tür seçili, `_02` ilk sprint başlamış), `untyped` aynı hafta tür seçilmeden,
+  ↳ `v1` v1.0 yayınlanınca `_01`, Ar-Ge açılınca `_02`; `desk_shut` canlı B2C ürün, kurucu yapımda, DESTEK masasında kimse yok, iki hatta yedi açık hata: DESTEK kartının tek satırı (`_01`), sonra kartın tıklanışı:
+  ↳ Ürün penceresi en çok hatalı hattın alanı açık (`_02`); `--travel-shot=<home|ishani|plaza|loft>[:vc|:night]` 10:00'da satış toplantısına (`:vc` ile Series A görüşmesine; `:night` toplantı kurucunun mesai bitişine iner) davet, gidiş,
+  ↳ panel ve dönüşü kare dizisi olarak çeker (`travel_shot_<ofis>[_vc|_night]_NN.png`) ve kurucu masasına oturunca `TRAVEL|settled` basar;
+  ↳ `--day-shot=<ofis>:<hız>` bir haftayı gerçek saatle 08:00'den gece atlamasıyla ertesi 08:00'e çeker (hafta Ocak'ın sonudur, sessiz ay kapanışının şerit satırı karelerde görünür; `day_shot_<ofis>_<hız>_NN.png`,
+  ↳ kare başına `DAYSHOT` satırı); `--pan` ailesi aynı koşuya eklenir ve 3B görüntüyü `office_pan_<ofis>_<SS>[_<ek>]_s<küme>_<i>_<dx>_<dy>_3d.png` diye yazar
+- Probe kayıt türleri: `--pan*` (`scripts/debug/office_pan_probe.gd`, sınıf adı yok, `main.gd`'de `OFFICE_PAN`) `--office-shot` koşusunun kamerasını piksel ofsetlerine kaydırır, yalnız 3B görüntüyü kaydeder; kayıt türleri `PANCFG`,
+  ↳ `PANCAM`, `PANSET`, `PANPNG`, `PAN`, `SETDIFF`, `DRAG`, `GPU`, `MEM`, `PANDONE`
 - Dışa aktarım: `bash tools/office3d/run_export.sh [durum_dizini] [sorgu]` (ağ ve ön plan Chrome gerekir); sorgu `only=<id,..>`, `thumbs=0`
 
 ## Dikkat
@@ -176,8 +203,9 @@ Pencereli görsel ve ölçüm (bayrak `main.gd` tablosunda, `:271-276`; PNG `%AP
 - `office_empty()` yan etkilidir: gece kapısı sorulurken ilk geçişte görüntüyü karartmaya başlar (`office_people.gd:119`); kapıyı salt-okunur sanmayın
 - `OfficeSystem.daily_tick` sırası kritik: `OfficeSystem` Finans'tan önce çalışır (`time_manager.gd:409-410`); varış haftası yeni kirayı ödemelidir ve `office.current` seam'i bugünün ofisini okur
 - `daily_tick` içinde `offices_reached` bayrağı `office_id` değişmeden SABİTLENİR (`office_system.gd:80`); marka sıçraması `office_changed` yayıldıktan SONRA alınır, dinleyiciler onu gelecek diye okur (`office_hud.gd:63`)
-- Katalog masa sayısı ile JSON `maxN` eşleşmek zorundadır (13 = 12 + kurucu); dışa aktarım masa sayısını değiştirirse `CATALOG`, HARITA ve CLAUDE.md §Ofis birlikte güncellenir
+- Katalog masa sayısı ile JSON `maxN` eşleşmek zorundadır (13 = 12 + kurucu); dışa aktarım masa sayısını değiştirirse `CATALOG`, bu sayfa ve CLAUDE.md §Ofis birlikte güncellenir
 - Ev'de masa sınırı yoktur (`hiring_closed` Ev'de `false`, `office_system.gd:41`) ve yalnız kurucu çizilir; ekip masadan büyükken taşınmak serbesttir (herkes gelir)
+- Yerleşim `OfficeView.layout` alanıdır (`office_view.gd:31`); kişinin gün tohumu `OfficeConstants`'ta değil `SalesConstants.SALT_DAY`'dedir (`sales_constants.gd:283`), `OfficePeople` oradan okur (`office_people.gd:548`)
 - Her GLB/JSON dışa aktarımından sonra `<id>_nav.tres` yeniden fırınlanır; eski zemin kişileri eski duvarların arasından yürütür. Şehir fırınlanmaz (kimse yürümez)
 - Dışa aktarım sırası: run_export → check_export → `--headless --import` → ısınma koşusu → kapı. `--import` sonraki ilk koşuyu class-cache hatasıyla düşürebilir (hafıza: godot-import-cache-gotchas)
 - GLB içine gömülü dokular koşudan koşuya bayt değiştirir; yalnız `only=` olmadan alınan TAM koşu commit'lenir, kaynağı değişmeyen yerin GLB'si repodakiyle aynı çıkmalıdır, yoksa koşu yinelenir
@@ -194,7 +222,7 @@ Pencereli görsel ve ölçüm (bayrak `main.gd` tablosunda, `:271-276`; PNG `%AP
 
 ## Bir değişiklik yaparken
 
-- Katalog (masa, kira, marka, peşin) değişirse: `office_constants.gd` + `art/office3d/<id>.json` `maxN` (yeniden dışa aktarım) + `OFFICE_DESC_*`/`OFFICE_MAP_SUB` metinleri + CLAUDE.md §Ofis + HARITA "Ofis (3B)"
+- Katalog (masa, kira, marka, peşin) değişirse: `office_constants.gd` + `art/office3d/<id>.json` `maxN` (yeniden dışa aktarım) + `OFFICE_DESC_*`/`OFFICE_MAP_SUB` metinleri + CLAUDE.md §Ofis + bu sayfanın Durum ve veri bölümü
   Okuyanlar `hr_atlas_modal.gd:49`, `finance_ozet_view.gd:396`; smoke: üç ofis vakası (`office_move_gates_and_save`, `desk_cap_blocks_hire`, `office_brand_once`)
 - Yeni ofis kademesi eklenirse: `CATALOG`; `tools/office3d/export_office.js` (builder, `setTier`) + `bake_nav.gd` `OFFICES`; `OfficeCamera.LOCKS`; `OFFICE_NAME/TIER/DESC/ROOM_*` (TR+EN); `thumb_<id>.jpg`
   Ayrıca `city.json` `mapHits`, seam `office.current` (`scripts/events/seams/seams_world.gd:135`) ve menü plakaları

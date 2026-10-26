@@ -31,9 +31,15 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - `tools/people/` (`bake_portraits.gd`, `portrait_baker.gd`, `setup_import.gd`, `fix_rig.py`): ofis kişileri ve portre pişirme hattı; test değil, çevrim dışı araç
 - `tools/office3d/` (`bake_nav.gd`, `check_export.py`, `run_export.sh`, `serve.py`, JS kaynağı): ofis 3B dışa aktarım hattı, `.gdignore` taşır
 - `tools/brand/make_lockup.py`: `assets/brand/` lock-up ve ikon üretir
-- `sandbox/asset_lab/` (`asset_lab.gd` 352, `lab_scene.gd` 487, `AssetLab.tscn`): paket asetleriyle kurulan ofisi oyunun kamerası, ışığı ve mürekkebiyle çeken deney sahnesi
-  ↳ bayraklar sahne yolundan sonra, `--` ayracı olmadan: `--lab-shot=`, `--lab-ref=`, `--lab-desks=`, `--lab-loader=gltf`, `--lab-gate` (`asset_lab.gd:3-15`); `office_pan_probe.gd`'yi preload eder; oyun kodu değil
 - `../.githooks/pre-commit` (git kökü, isteğe bağlı): ilgili yollar sahnelenince `--event-lint` ve `loc_residue` koşturur
+- `addons/` (`auto_reload`, `godot_mcp_editor`, `godot_mcp_runtime`): üçüncü taraf, dokunulmaz; `godot_mcp_runtime` `MCPRuntime` autoload'unu kaydeder (yalnız debug build, yerel TCP). `../.mcp.json` (git kökü):
+  ↳ Claude Code için Godot MCP sunucusu (gopeak), kalır
+- `export_presets.cfg`: üç Windows preset'i (Demo `custom_features` ""; EA `"ea"`; Full `"full"`; `EndingsSystem.build_scope()` bunu okur); paketten `addons/auto_reload`, `addons/godot_mcp_editor`, `docs/` ve `tools/` çıkar,
+  ↳ lisans dosyaları adıyla (`include_filter`) içeridedir
+- `tools/export_build.sh "<preset>" <dizin>` exe'yi dışa aktarır ve `scripts/debug/write_licenses.gd` ile yanına `LICENSES/` ve `GODOT_COPYRIGHT.txt` (koşan motorun kendisinden) yazar; dışa aktarma şablonları makinede kurulu olmalıdır
+- Kök dosyalar: `project.godot` (ana sahne, `main_args`, autoload sırası, viewport, `boot_splash/*`, `config/icon` = `assets/brand/icon.svg`, `config/windows_native_icon`, `config/version`), `export_presets.cfg`, `.editorconfig`,
+  ↳ `.gitattributes`, `.gitignore`; git kökündeki `.agents/`, `.claude/skills/` ve `skills-lock.json` projenin parçası değildir
+- Üçüncü taraf varlıklar (Lucide ikonları, Quaternius gövdeleri ve klipleri, Mesh2Motion) ile ofis dışa aktarım hattı 06_ofis.md'dedir
 
 ## Giriş noktaları
 
@@ -77,8 +83,9 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - `SaveManager._autosave_enabled` `scripts/autoload/save_manager.gd:44`: harness bayrağı varsa `_ready`de kapanır (`:67-69`); `--tick-probe` kendisi açar
 - `GameState.run_seed`: smoke ve çekimlerde 424242; `RunProbe` dördüncü spec parçasıyla tohumu değiştirir (`run_probe.gd:351+`)
 - `RunProbe.PRESETS` `scripts/debug/run_probe.gd:188`: preset adı -> alan sözlüğü (`subtype`, `policy`, `vc`, `staff_cap`, `fix`, `desk`, `core_only`, `server`, `cash`, `accounts`, `staff`); 49 anahtar
-- `RunProbe.SMALL_CREW` `run_probe.gd:248`, `GROWTH_ROLES` `:1538`, `seed_crew()` `:2380`: ekip tohumlama; `--sprint-probe team=` ve `--tick-probe team=` da kullanır
-- Smoke paylaşılan kayıt yuvaları `manual_9001`/`manual_9002` (`endgame_smoke.gd:9895-9896`); vakalar paralel koşturulmaz
+- `RunProbe.SMALL_CREW` `run_probe.gd:249`, `GROWTH_ROLES` `:1506`, `seed_crew()` `:2350`: ekip tohumlama; `seed_crew` oturtulamayan büyüklükte `false` döner (kimse işe alınmaz), çağıran bildirir: `--sprint-probe` `SPRINTPROBE ERROR`,
+  ↳ `--tick-probe` `TICK ERROR`; ikisi de `team=` ile kullanır
+- Smoke paylaşılan kayıt yuvaları `manual_9001` / `manual_9002` (`SAVE_SLOT_A`, `SAVE_SLOT_B` `endgame_smoke.gd:10174`); onları kullanan vakalar paralel koşturulmaz (aşağıda Testler)
 - `tools/lint_baseline.json` `tools/lint_v3_frozen.json`: kabul edilen lint bulguları; `--event-lint=baseline` yeniden yazar
 - Çekim PNG'leri `%APPDATA%\Godot\app_userdata\Project Unicorn\` (`user://`); EN `_en`, renk körü `_cb` soneki (`main.gd:654`)
 - `docs/EVENT_SIGNAL_MANIFEST.md`, `docs/content/events_draft/_vocabulary.md`: araçların ürettiği belgeler (`gen_signal_manifest.py`, `--event-vocab`)
@@ -99,8 +106,61 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - Smoke karar kuralı (`smoke_run.sh:38-66`): satırlarda `^ERROR:|SCRIPT ERROR|Parse Error|Compile Error` varsa vaka düşer, `SMOKE PASS` yazsa da; hiç verdict yoksa ya da süre aşıldıysa düşer.
 - `# EXPECT-ERROR <ileti parçası>` match kolunda kuralı bilerek bozan vakayı bağışlar; parça hiç basılmazsa "stale marker" ile düşer (örnek: `founder_5skill_init`, `endgame_smoke.gd:171`).
 - Vaka ailesi önekleri (475 vaka): sales 34, event 33, sprint 25, hr 23, save 21, b2b 19, seed 14, paper 14, loc 14, promise 13, incident 10, product 9, cs 9; kalan 237 vaka daha küçük ailelerde (market, hotfix, angel, research ...).
+- Smoke önek → sistem sayfası (kaba eşleşme: bir vaka iki sistemi birden sınayabilir, liste başlangıç noktasıdır, tam seçim değildir). 01 Çekirdek: `speed_*`, `smoke_seed_pinned`, `run_ledger`, `growth_streak_semantics`,
+  ↳ `month_history_*`; Kayıt: `save_*`, `menu_state_machine`, `autosave_writes_off_thread`, `legacy_v12_save_opens_live_table`, `sales_save_roundtrip_rev6`, `sales_check_replays_after_load`, `seed_sheet_round_trips`,
+  ↳ `loc_save_sector_migration`; Platform: `loc_*`, `locale_switch`, `ui_scale_ladder_fits_settings`, `borderless_note_key_exists`. 09 Tema, menü, kabuk, onboarding: `build_percent_single_source`, `star_ruler_contract`,
+  ↳ `rail_tabs_match_scene_order`, `onboarding_pages_contract`, `topbar_speed_cluster_three_rungs`, `milestone_paper_waits_for_card`, `event_gate_holds_clock`, `clock_resumes_only_by_player`, `rnd_rail_open_with_locked_tree`,
+  ↳ `all_scripts_load`. 06 Ofis: `office_*`, `desk_cap_blocks_hire`, `look_registry_unique_and_saved`; 02 Ürün: `sprint_*`, `paper_*`, `product_*`, `floor_ladder_areas`, `line_*`, `infra_*`, `capacity_step_immediate`, `load_mult_steps`,
+  ↳ `auto_capacity_grows_only`, `destek_*`, `incident_*`, `release_*`, `next_renewal_day_one_place`, `open_bugs_*`, `bug_cost_*`, `quarter_goal_without_pm`, `delegate_needs_pm`, `fit_*`, `split_bars_name_their_cause` (Ar-Ge ile ortak);
+  ↳ 02 Ar-Ge: `research_*`, `rnd_*`, `card_math_matches_gdd_example`, `paused_job_resumes_on_direct_return`, `line_k3_locked_without_research`; `coupling_*` Ürün ile Ekip ortak, `productivity_mod_paces_the_sprint` Ürün,
+  ↳ Ekip ve olay motoru ortak; 04 Ekip: `hr_*`, `founder_*`, `work_hours_*`, `alloc_guard`, `trait_formula`, `single_trait_contract`, `job_assignment_and_idle`, `overload_costs_output`, `leadership_is_trainable`,
+  ↳ `promotion_and_raise_gate`, `effective_skill_formula`, `menu_has_one_path`, `gorevler_has_no_founder`, `leave_does_not_pause_build`, `money_never_double_minus`; 03 Satış: `sales_*`, `b2b_*`, `b2c_*`, `cs_*`, `promise_*`,
+  ↳ `hotfix_*` (Satış yama turunun vakaları; Hotfix düğmesiyle ilgisi yok), `discount_*`, `risk_*`, `account_uses_area_rule`, `request_area_follows_emphasis`, `seat_upsell_moves_seats`, `enterprise_clause_timeline`,
+  ↳ `company_catalog_pool_integrity`, `retention_gate_shared`, `manual_retention_respects_cap`; 05 Finans: `month_summary`, `summary_frequency_ticks`, `burn_*`, `runway_*`, `gross_runway_months`, `add_cash_writes_ledger`,
+  ↳ `marketing_push_burns_and_ends`; Fonlama: `cheque_*`, `angel_*`, `seed_*`, `valuation_*`, `series_a_*`, `pitch_*`, `table_*`, `meeting_*`, `gate1_*`, `gate2`, `traction_gate_one_option`, `full_loop`, `callback_contract`,
+  ↳ `sheet_expiry_no_rejection`, `vc_weakest_area`, `hunt_offer_lifecycle`, `pivot_closes_hunt`, `frank_approach_lines_once`; Dünya: `market_*`, `rival_composite_table`, `news_feed_weights_and_no_repeat`, `news_piyasa_reason_lines`;
+  ↳ Sonlar: `bankruptcy*`, `soft_cap_*`, `profit_*`, `ending_*`, `bootstrap_*`, `milestone_*`, `buyout_*`, `faced_flag_*`, `shutter_*`, `brand_collapse`, `cascade`, `pivot_accept`, `pivot_decline`; 05 Mesajlar ve teslim saati:
+  ↳ `messages_*`, `inbox_no_night_stamp`, `mail_pending_survives_save`; 07 Olay motoru ve içerik: `event_*`, `ambient_*`, `harness_sniffer_matches_run_log`, `source_tag_speaker_wins`, `card_body_tokens_resolve`, `loc_event_en_coverage`,
+  ↳ `event_chip_coverage`, `quiet_cards_fill_empty_floor`
+- Paylaşılan kayıt yuvasına (`manual_9001`, `manual_9002`) yazan vakalar paralel koşturulmaz (koşturucu zorlamaz: `--all` sırayla koşar, elle paralel koşuda koruma yoktur): `account_ownership_round_trip`, `b2b_exit_notice`,
+  ↳ `b2b_timed_discount`, `event_trust_delta_lasting`, `incident_save_roundtrip`, `look_registry_unique_and_saved`, `mail_pending_survives_save`, `market_save_roundtrip`, `meeting_cast_seeded_and_saved`,
+  ↳ `messages_save_round_trip`, `month_history_save_typing`, `sales_offer_signing`, `sales_rep_close_die`, `sales_rep_loss_mail`, `save_backup_fallback`, `save_continuity_seeded`, `save_double_load_no_residue`,
+  ↳ `save_roundtrip_fingerprint`, `save_v10_product_state`, `valuation_old_save_derives_seed`. Kendi yuvası olanlar yuvaları paylaşmaz: `legacy_v12_save_opens_live_table` (işlem kimlikli yuva),
+  ↳ `sales_save_roundtrip_rev6` (`smoke_sales_v11`); `menu_state_machine` kayıt dizinini geçici bir dizine çevirir (`SaveManager._use_dir`);
+  ↳ `milestone_paper_waits_for_card` gerçek kayıt dizinine bir `manual_<n>` yazıp siler (`_keep_run_for_main_menu`)
 - `all_scripts_load` (`endgame_smoke.gd:324,12310`) `scripts/` ve `scenes/` altındaki her `.gd`yi ayrık GDScript kopyasıyla derler; `addons/` kapsam dışı. `ResourceLoader.load` ve `reload()` motoru düşürür, kullanmayın.
 - Oynanan koşu kapısı: `bash tools/run_gate.sh` (3 preset x 730 hafta, `RUN_TIMEOUT` 900). Tek koşu: `"$GODOT" --headless --path . --run-log=full_run:730:sim[:seed][:window=11-13][:build=ea|full]`.
+- Probe kayıt türleri (`run_probe.gd` başlık yorumu çıktı sözleşmesidir): `BEGIN`, `STATE`, `SIGNAL`, `GATE`, `LEAD` (gelen her B2B aday: arketip, sektör, yıldız, evre, geldiği günkü uyumu `u=` ve eksik alanı `loss=`),
+  ↳ `SIGN` (sonunda sektör, arketip, tolerans, evre ve imza anında pazarın her alanının yuvarlanmamış seviyesi `areas=`; lead'siz fikstür hesabında arketip `-`);
+  ↳ `FIT` (lead'li her imzada: aday bağlamının `ProductQuality.prospect_fit`'i, `by=founder|rep`, `capped`, `loss`, tolerans),
+  ↳ `REPLOSS` (satışçının kapanışta kaybettiği her aday: kaybedildiği andaki `prospect_fit` U'su, evre, sektör, yıldız, `capped`, `loss`; aday kayıttan düşmeden okunur, kurucunun kayıpları yazmaz),
+  ↳ `MLOSS` (kurucunun görüşme ve pazarlık kaybı, kayıp anında: sektör, yıldız, evre, hesap hafızasının nedeni `reason` ve hedefi `target`, aday kayıttan düşmeden okunan U, `capped`, `loss`);
+  ↳ `UFLUX` (haftalık: önceki okumadan ya da imzadan beri hesap uyumu değişen hesap sayısı; sürüm çıktı mı, yenileme penceresi o hafta açılan değişenler, ikisi de olmayan `unexplained`; `END`'de `u_unexplained_weeks`),
+  ↳ `VCQ` (her VC görüşmesinin 3. perde sorusunun anahtarı, ürün fonunun sorusunda en zayıf alan `dim=`), `AREAS`, `CUST`, `SAT`, `FIRE`, `PICK`, `DISCOUNT`, `CHURN`, `PROMISE`; `SPRINT`, `SHIP`, `FIX`, `BUGS`, `MARKET`, `MONTH`,
+  ↳ `MONTH_BURN`, `PLAY`, `FIXTURE` (b2b_* fikstürünün niyeti: her hesabın hedefi hata açıkken ve kapalıyken çıtasına karşı, `under_live`, `under_clear`, `slack`), `WEEK`, `B2C` (sonunda `u=` kitle bağlamındaki uyum ve `aud_star=`),
+  ↳ `SERVER` (canlı ürün varken her hafta: birim, kademe, yük yüzdesi, aylık fatura, anahtar; `END`'de `server_clicks`, `auto_grows` ve kademe başına gece kesintisi `outage_eko`, `outage_std`, `outage_kur`); `TALLY*`,
+  ↳ `END` (destek raporunun sıklığı dahil: `support_reports=`, `support_news=`), `HR`, `VC_*`, `ERROR`; probe hep 0 ile çıkar,
+  ↳ kapı kabuktadır (`tools/run_gate.sh`: üç oynanan koşuda tek `PROBE END`, dolu `ending=` ve sıfır `ERROR` / `PROBE ERROR` satırı arar)
+- Probe preset aileleri (`RunProbe.PRESETS` alanlarıyla):
+  ↳ `full_run*` oynanan koşu (alt-tür, cevap politikası, Series A politikası, kadro tavanı, K1 sınırı ve düzeltme kolu; bot sprintte liderin önerisini uygular, K1 sınırı ve düzeltme kolları onu düzenler);
+  ↳ `full_run_fix_*` ve `full_run_b2c_fix_*` (`none`, `worst`, `due`, `off`); `none` sprintte düzeltme kartı yok, `worst` en çok hatalı hat,
+  ↳ `due` en az `DUE_BUGS` × k (2 × k) hatalı her hat (B2B'de bir hesabın kullandığı; k `SprintCatalog.limit_k`, `PROBE FIX` satırı sonunda `k=` basar), `off` `worst` ve bedeller kapalı; liderin planı, tüm düzeltme kartları çıkar,
+  ↳ kolun kartları önce, lider doldurur; `full_run_fix_worst_desk`, `full_run_quality_core`, `full_run_quality_core_desk`:
+  ↳ preset anahtarı `desk` masada temsilci varken kurucuyu yalnız temsilcilerin yıldız bandının üstündeki adaylarla görüştürür (`_desk_ceiling`), `core_only` sprintte Çekirdek dışı özellik ve talep kartı bırakmaz,
+  ↳ düzeltme ve araştırma kartları kalır (`_outside_core`); `full_run_vc_*` ve `*_vc_walk` Series A masası, yalnız `sim` (`walk` ilk masadan kalkar; `product` seed'de ve Series A'da önce ürün fonuyla oturur);
+  ↳ `full_run_server_*` ve `full_run_b2c_server_*` (`lean`, `wide`, `auto`: kurucunun sunucu alışkanlığı; `lean` yükü %95'te, `wide` %60'ta tutar, `auto` Otomatik ayarla'yı açar ve hiç basmaz; `_run_the_servers`);
+  ↳ `full_run_cash_{spend,hoard}` ve `full_run_b2c_cash_{spend,hoard}` (`spend` ilk çalışanı kasa iki aylık giderini karşılayınca alır, `hoard` 6,7 aylık gideri bekler ve hiç taşınmaz, öbür kollar altı ayda alır;
+  ↳ şirket seed'den sonra kasa peşin kira ile giderin altı ayını karşılayınca bir üst ofise taşınır; `_hire_the_team`, `_move_the_company`; `PROBE END` `first_hire_week=`, `first_hire_runway=`, `move_weeks=`); `full_run_lean` (B2B,
+  ↳ kadro 7'de durur, masadan kalkar), `full_run_b2c`, `full_run_b2c_video`, `full_run_b2c_vc_cautious`, `full_run_b2c_vc_walk`, `full_run_b2c_k1` (tüketici koşuları; ödeyen gelince kurucu destek masasına geçer,
+  ↳ `B2C_LADDER` ile işe alır), `b2b_*` ve `b2c*` fikstür dünyası (`b2b_solo`, `b2b_reps`, `b2b_risk`,
+  ↳ `b2b_slip` ERP'yi `B2B_PRODUCTS`'ın hat kademelerinde kurar ve sprint başlatmaz). Oynanan her koşu seed turunu kapısı açıldığı hafta alır (`_take_the_seed`);
+  ↳ `sim` modunda gece atlaması acil durumda onun saatinde durur ve bot kartı cevaplar (`_run_sim`); gerçek saat modu acil durum zarı atmaz (`IncidentSystem.rolls`)
+- Ölçek ölçümü (ekip ve plan süresi): `--sprint-probe` anahtarlarının anlamı 02_urun_sprint.md'de; `--tick-probe` `team=<n>`;
+  ↳ `--run-log` `build=ea` (tohum parçasından sonra, yalnız `sim`; EA'da bootstrap zaferi kilometre taşıdır, koşu sürer, `PROBE MILESTONE` basar) ve preset'ler `full_run_staff25`,
+  ↳ `full_run_staff50` (B2B merdiveni `GROWTH_ROLES` ile kurucuyla 25 ve 50 kişiye uzar, `staff_cap` 24 ve 49); `b2b_book20`, `b2b_book330` canlı ERP, 20 ve 330 hesap (yıldızlar her elli hesapta botun imza karışımı), 6 ve 50 kişi,
+  ↳ sprint motorunu lider planlar; çalışanların morali tohumdaki değerde sabit tutulur (yoksa bakımsız kadro bir haftada topluca istifa eder, bu yüzden moralden doğan duruşlar bu iki fikstürde sayılmaz)
+- Ölçüm ayrıntıları: `--tempo-probe`, `--tick-probe`, `--clock-shot` 01_cekirdek.md'de; `--display-check` 01_cekirdek.md'de (`settings.json`'a yazar, sonda geri yükler);
+  ↳ `--render-probe[=<sekme>[:<kişi>[:<hız>]]]` ve `--backdrop-probe` alanları 09_arayuz_bilesen.md'de; `--office-crowd-probe` 06_ofis.md'de
 - `RunProbe` yalnız defter basar, her zaman 0 çıkar; `^PROBE` satırları aynı tohum, binary ve `--lang=tr` ile bayt-deterministiktir. Hata `PROBE ERROR`dır. Gerçek saat modları `1|2|3`.
 - Sprint planı: `--sprint-probe=hours=<h>:cards=<1|2>:ticks=<t>[:team=][:market=][:fixture=][:build=][:planms=1]`; `SPRINTPROBE PRED/CLOSE/SKIP/MVP/LOAD/SUMMARY/PAPER/PLANMS`; adsız uyuşmazlıkta 1.
   ↳ `planms=1` ekran için iki satır basar: `screen` (ilk kare, "+" ertelenmiş) ve `screen_total` (ilk kare ve ertelenen bütün `can_add`'ler); sonra her ertelenen değeri `can_add(id)` ile karşılaştırır, uyuşmazlıkta 1.
@@ -124,7 +184,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
   `--display-check` bilerek hiçbirini içermez, gerçek pencereyi sürmesi gerekir.
 - Kayıt yazan harness'ler: `--tick-probe` (`auto_*` yuvaları, kayıt varsa reddeder), `--modal-shot=save*|load*` (`_saves_refused` `main.gd:2671`), `--menu-shot` (`user://shot_menu/`),
   `--display-check` (`settings.json`). Hepsini ayrı `APPDATA` ile koşun.
-- Smoke'un paylaşılan yuvaları `manual_9001/9002`: bu yuvaya yazan vakalar paralel koşulursa birbirini bozar; `--all` sırayla koşar, elle paralel koşuda koruma yoktur (HARITA, Araçlar).
+- Smoke'un paylaşılan yuvaları `manual_9001/9002`: bu yuvaya yazan vakalar paralel koşulursa birbirini bozar; `--all` sırayla koşar, elle paralel koşuda koruma yoktur (vaka listesi yukarıda Testler)
 - `--import` sonrası sınıf önbelleği tuzağı: sıra import -> ısınma koşusu -> kapı. Bayat `.ctex` yeni sanatı gizler (hafıza: godot-import-cache-gotchas). `plausibility.gd` bu yüzden yoldan yüklenir, `--import` istemez.
 - `RunProbe` tek süreçte statik durum biriktirir (`run_probe.gd:302-330`); bir süreçte yalnız bir koşu. Makullük kapısı bu yüzden koşu başına ayrı süreç ve ayrı `APPDATA`/`HOME` açar.
 - `full_run*` botu kuralları ve politikaları PRESETS alanlarıdır; bot politikasını değiştirmek ölçülen ekonomiyi değiştirir. Eski ve yeni `PROBE` defterini karşılaştırırken tohum, build ve `--lang=tr` aynı olmalı.
@@ -139,7 +199,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - Yeni smoke vakası: `endgame_smoke.gd` `match case_name` tablosuna kol ekle (`:78-587`), `_case_<ad>() -> String` yaz (boş = geçti); `smoke_run.sh` listeyi tablodan okur, ayrıca kayıt gerekmez. Yeni vakayı önce bozup düştüğünü gösterin.
 - Kuralı bilerek bozan vaka eklersen kola `# EXPECT-ERROR <ileti parçası>` yaz; parça basılmazsa vaka "stale marker" ile düşer.
 - Yeni harness bayrağı: `main.gd` `bare` ya da `valued` tablosuna ekle (`:225-276`), `_run_*` koşucusunu yaz, adı `_is_harness_arg` alt dizilerinden birini içersin
-  (yoksa otomatik kayıt açık kalır); CLAUDE.md §12 ve HARITA Araçlar'ı güncelle.
+  (yoksa otomatik kayıt açık kalır); CLAUDE.md §12 ve bu sayfanın Testler bölümünü güncelle.
 - Yeni `PROBE` kaydı ya da preset: `run_probe.gd` başlık yorumundaki çıktı sözleşmesini (`:25-101`) ve `PRESETS`i (`:188`) güncelle; `run_gate.sh` `PRESETS` dizisi ve `PROBE END` ayrıştırması (`run_gate.sh:19,30`) bozulmasın.
 - Motor hata belirteci değişirse (`ERR_TOKENS`) yalnız `tools/gate_common.sh:9` değişir; `smoke_run.sh`, `run_gate.sh` ve `plausibility_run.sh` aynı süzgeci kullanır.
 - Yeni `EventBus` sinyali ya da emit/connect: `python tools/gen_signal_manifest.py` ile `docs/EVENT_SIGNAL_MANIFEST.md`yi yenile; kod haritası için `python -I tools/kod_haritasi/uret.py`.

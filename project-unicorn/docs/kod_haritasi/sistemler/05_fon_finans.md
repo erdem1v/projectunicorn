@@ -4,6 +4,13 @@ Dizin git sha: f3113fa4 (DIZIN.md, 2026-10-22). Yol:satır başvuruları bu ağa
 
 Ne yapar: Kasa, burn, tek seferlik giderler ve ay akışı `FinanceSystem`dedir. Fon merdiveni (Frank'in çeki, faz kapısı, VC görüşmesi, term sheet) ve koşuyu bitiren sonlar bu dosyadaki statik sistemlerdir.
 Rakip payı, Piyasa listesi, haber şeridi akışı ve gelen kutusu mesajlarının teslim saati de buradadır. Hepsi `TimeManager._dispatch_daily_tick` yuvalarından tik başına koşar; durum `GameState`'tedir.
+Kaynak (GDD): Finans ch08; Fonlama merdiveni ch09; Görüşme paneli ch09 §4 ve Satış §5 (sunum 09_arayuz_bilesen.md); Dünya (rakip, haber) ch10; Sonlar ve gazete ch13 ve ch14; Gelen kutusu mesajları ch12;
+  ↳ Teslim saati Olay Motoru rev 2 §27.27.
+Sahipler (Finans): sınıf `FinanceSystem`, `SummarySystem`, `FinanceOzetView`, `CashCurve`; kasa, ay defteri (`month_ledger`, `month_history`) ve dönem defteri (`summary_ledger`) `GameState`'tedir.
+Sahipler (Fonlama): autoload `InvestorRegistry`; sınıf `TermSheet`, `AngelRoundSystem`, `SeedRoundSystem`, `SeedConstants`, `PhaseGateSystem`, `VCPitchSystem`, `PitchConstants`, `TermSheetTableSystem`, `CounterpartSystem`,
+  ↳ `TermSheetTableScene`, `RadialDial`, `InvestorAppetiteUi`; `cheque_read.gd` yolla preload edilir (sınıf adı yok).
+Sahipler (Dünya): autoload `RivalRegistry`; sınıf `Rival`, `RivalCatalog`, `QualityModel`, `NewsFeedSystem`. Sahipler (Sonlar): sınıf `EndingsSystem`, `EndingsCopy`, `EndingScene` (autoload yok).
+Sahipler (Mesajlar ve teslim saati): `MessageSystem` (`GameState.messages` ve `mail_outbox`'ın tek yazarı; motor kartları burada değil `EvHistory`'dedir) ve `MailClock` (statik, durumsuz; `reset_all_owners` listesinde değil).
 
 ## Dosyalar
 
@@ -14,7 +21,8 @@ Kapsam içi (`scripts/`):
 - `systems/phase_gate_system.gd` (178): faz kapısı mandalı (Traction ve Series A), Series A sinyali ve yaklaşma adımı.
 - `systems/vc_pitch_system.gd` (1327): VC görüşmesi (5 vuruş), inanç, teklif üretimi, term sheet sonuçları, geri arama, görüşme takvimi.
 - `systems/pitch_constants.gd` (187): VC odasının ve masanın ayar sabitleri; `class_name PitchConstants`.
-- `systems/skill_check.gd` (104): `SkillCheck`, kurucu beceri zarı: `chance_for` `:35`, `breakdown` `:40`, `roll_against` `:57`, `resolve` `:66` (pay bandı), `can_read_prospect` `:103`.
+- `systems/skill_check.gd` (104): `SkillCheck`, kurucu beceri zarı: `chance_for` `:35`, `breakdown` `:40`, `roll_against` `:57`,
+  ↳ `resolve(skill_name, difficulty)` `:66` (pay bandı; `bonus` parametresi yalnız `chance_for` ve `breakdown`'da), `can_read_prospect` `:103`.
   ↳ okuyan `vc_pitch_system.gd`, `term_sheet_table_system.gd:276,649`, `vc_meeting_adapter.gd`, `origin_traits_step.gd:246` (`SALES_READ_THRESHOLD`); RNG akışı `skill` (`rng_streams.gd`).
 - `systems/quality_model.gd` (37): `QualityModel`, rakibin üç boyutunun azalan getirili büyümesi `grow` `:22` ve bileşik kalite `composite_quality` `:29`.
   ↳ okuyan `RivalRegistry.advance_all` (`rival_registry.gd:78-80`) ve `Rival.composite()`; oyuncunun ürün kalitesi değil (o `ProductQuality`, 02_urun_sprint.md).
@@ -133,6 +141,10 @@ GameState alanları (`autoload/game_state.gd`):
 - Series A: `vc_states` `:245` (fon başına `status`, `callback`, `pending_sheet`, `meeting_count`, `move_penalty`, `reentry_bonus`, `sheet_conviction`), `active_sheets` `:246`, `pending_meeting` `:247`, `run_pitches` `:248`.
 - Değerleme ve imza: `run_valuation_m` `:231`, `run_equity_pct` `:232`, `run_investment_amount` `:230`; `get_valuation_m()` `:635`, `mark_faced_series_a()` `:642`.
 - Haber ve posta: `news_feed` `:293` (`stream`, `counts`, `biz_buffer`, `recent_rivals`, `recent_piyasa`), `messages` `:318`, `mail_outbox` `:320`, `desk_arrivals` `:322`, `mentor_line_at` `:314`.
+- Mesaj şeması: `GameState.messages` öğesi `{id, kind, day, key, args, at, read}` (kimlik `kind:gün:n`, gün geliş saatinin gününden gelir, `at` geliş saati, -1 saatsiz; mesaj metin değil anahtar ve argümandır),
+  ↳ henüz teslim edilmemiş `GameState.mail_outbox` öğesi `{kind, key, args, at}`; ikisini yalnız `MessageSystem` yazar, kapasite `MessageSystem.CAPACITY`. Mesaj türleri ve gönderenleri: `intro` (`GameState.initialize_run`),
+  ↳ `summary` (`SummarySystem.daily_tick`), `rnd_note` ve `rnd_discovery` (`RnDSystem`), `sales_week` ve `sales_loss` (`SalesRepSystem`), `support_week` (`SupportSystem`),
+  ↳ `clause` (`B2BSalesSystem`: `{id, stage: sign|reserve|notice|withdraw, company, name, due, end}`)
 - Piyasa: `market_catalog_version` `:296`, `market_shocks` `:297`, `market_ownership` `:298`. Katalogun kendisi kaydedilmez.
 - `FinanceSystem.burn_breakdown` statik değişkendir (`finance_system.gd:23`), GameState'te değil; kayda `save_manager.gd:381` bloğuyla girer.
 - Rakipler: `RivalRegistry._rivals` kayda `save_codec.gd:266` (`["rivals", Rival, RivalRegistry]`) ile girer, yüklemede `insert_raw` (`rival_registry.gd:37`) katalog tohumunun üstüne biner.
@@ -186,6 +198,25 @@ Tek koşturucu `bash tools/smoke_run.sh <vaka>`; vaka listesi `scripts/debug/end
   `market_share_tracks_mrr`, `rival_composite_table`.
 - Piyasa: `market_catalog_lint`, `market_value_deterministic`, `market_listed_week_gating`, `market_price_band`, `market_value_texture`, `market_year_end_follows_anchors`, `market_save_roundtrip`.
 - Koşu probu: `--run-log=full_run:100:sim` (satırlar `PROBE STATE/GATE/SIGNAL/MONTH/MARKET/END`); VC preset'leri `full_run_vc_*` `VC_BOOK/VC_MEET/VC_PUSH/VC_TABLE_*` basar; kapı `bash tools/run_gate.sh`.
+- Probe kayıt türleri (Finans): `STATE` (`cash=`, `burn=`, `runway=`), `MONTH`, `MONTH_BURN` ve `GATE` içindeki gider kalemleri (`BURN_IDS` sırasıyla),
+  ↳ `END` içinde evre başına sonlu runway haftası (`finite_runway_p1/p2/p3`) ve seed öncesi asgari kasa (`min_cash_pre_seed`)
+- Probe kayıt türleri (Fonlama): `SIGNAL`, `GATE`, `STATE` (`appetite=`, `approach=`, `gate_ready=`); `VC_CONFIG`, `VC_BOOK`, `VC_MEET`, `VC_PUSH`, `VC_TABLE_OPEN`, `VC_TABLE_END`, `VC_REPLAY`,
+  ↳ `VC_REPLAY_SUM` yalnız `full_run_vc_*` preset'lerinde; görüşme paneli `VC_MEET path=` (her görüşme `b4_close` ile kapanır)
+- Probe kayıt türleri (Dünya ve Sonlar): `MARKET` (`MARKET_LOG_WEEKS` haftada bir: liste toplamı, lider ve değeri, listedeki satır sayısı, oyuncunun değerlemesi; saf okuma, aynı tohumda bayt-aynı);
+  ↳ `STATE` içindeki `q=` B2C kalite terimidir (`SalesSystem.b2c_quality`; tüketici ürünü canlı değilken -1); `END ... ending=` (`full_run*` preset'lerinde) ve `STATE` içinde `profit_streak=`;
+  ↳ teslim saati için `--run-log=<preset>:<hafta>:sim:<tohum>:window=<başlangıç saati>-<saat sayısı>` şirketin mesaisini kurar (`window=11-13` 11:00 – 24:00)
+- Görsel (Finans): `--finance-shot=<ozet|ipucu|artida|uyari|kepenk|signal|gider|gider_empty>` (altı hafta gerçek seam'lerle oynanır): `ozet` negatif net, mevcut gidiş projeksiyonu, iki imza; `ipucu` ozet'in akışı, eğrinin 4.
+  ↳ haftası üstüne gelinmiş; `artida` MRR > burn, runway yok, kırmızı erime projeksiyonu yok; `uyari` runway < 3 ay (Frank'in kartı BAND 1 ve Ertele, mevcut gidiş sıfırı ufukta keser); `kepenk` uyari'nin akışı,
+  ↳ kasa eksiye düşüp sayaç bir hafta işleyene kadar (BAND 2); `signal` artıda akış faz 2'de, ayları takvimle kapanarak dört ay artıda kapanana kadar (yatırımcı iştahı ve artıda ay sayısı); `gider` on saatlik mesai,
+  ↳ MVP'nin bulut sunucusu, İş hanı'na taşınma ve bir kartın pazarlama kampanyasıyla beş gider kalemi (Ofis'in ipucu `FINSHOT|office_tip=` satırında), son işlemlerde ofisin iki aylık peşin kirası ile kartların hukuk,
+  ↳ veri alımı ve maaş indirimi satırları; `gider_empty` ekibi ve sunucusu olmayan taze şirket. Ayrıca `--hr-shot=gider` (ürünü yayında olmayan şirketin gider dökümü), `--inbox-shot=summary`,
+  ↳ `--inbox-shot=finance_read_only` (karar beklerken Finans), `--tab-shot=finance`
+- Görsel (Fonlama): `--vc-shot=<hunt|hunt_closed|hunt_meeting|hunt_callback|hunt_seed|table|table_final|table_walk|table_other|seed_table|k10>`: `hunt_meeting` bir teklifin yanında ayarlı toplantı;
+  ↳ `hunt_callback` ürün fonunun müşteri kaybı geri dönüşü ve itibarı tabana indiren ihmal; `hunt_seed` Traction'da açık seed kapısı.
+  ↳ Masa türlerine `:shell` eklenince masa oyundaki gibi kabuğun ModalLayer'ına takılır (`vc_shot_<tür>_shell`); `k10` süresi dolmuş teklifin karar kartı; görüşme kareleri 09_arayuz_bilesen.md (Görüşme paneli)
+- Görsel (Dünya, Sonlar, Teslim saati): `--tab-shot=piyasa[:<seed_oncesi|seed_sonrasi|series_a|ipo|filtre|sektor>]`, `--theme-audit=piyasa`; şerit her kabuk karesinde görünür,
+  ↳ rakip adları Finans'ın pazar payı kartında (`--finance-shot=ozet`); `--ending-shot=<ending_id>` (takma adlar dahil; sonda gazeteyi paylaşır ve toast'lı ikinci kareyi `_share` ekiyle çeker). EA ve full akışı `--build=ea|full` ile;
+  ↳ `--inbox-shot=morning` gece 00:00'dan sonra gelen kutusunu gerçek saatlik yolla çeker (08_sekmeler.md)
 - Kart tarafı: `--why-fire=funding.frank_cheque` (kapı kartı neden gelmiyor), `--event-lint`; ekran kapısı `--tab-shot=finance|piyasa[:...]`, `--finance-shot=<tür>`, `--vc-shot=<tür>[:shell]`, `--ending-shot=<anahtar>`.
 - Debug tuşları `main/game_shell.gd:194`: F1 kapıyı aç, F2 faz atla, F3 Series A kapat, F5 kepenk (kasa -1000), F6 marka çöküşü ön şartı, F7 kaskad ön şartı, F8 kârlılık fikstürü.
 
@@ -203,6 +234,8 @@ Tek koşturucu `bash tools/smoke_run.sh <vaka>`; vaka listesi `scripts/debug/end
 - `EndingsSystem.trigger_ending` telegraph parametresinin varsayılanı YOK (I3: telgrafsız kayıp yok). Kayıp bitişi telegraph'ı geçmişte atılmamışsa `push_error` basar, engellemez (`endings_system.gd:489`).
 - `brand_collapse` yalnız debug ile ulaşılır: `active_scandal`ı F6 dışında yazan yok (`game_state.gd:140`, `game_shell.gd:215`). `unmanaged_major_scandal` da rezerve; `vc_pitch_system.gd:180` ve `:245` okur.
 - Bitiş kümesi 7 kimlik (`ENDINGS` `endings_system.gd:71`); EA/full'de yalnız kârlı bootstrap kilometre taşıdır (`ending_mode` `:422`). Yeni bir bitiş `END_META_*`, `EndingsCopy.build` kolu, `ENDINGS` ve telegraph ister.
+- `export_presets.cfg` üç Windows preset'i taşır (Demo `custom_features` "", EA `"ea"`, Full `"full"`); `EndingsSystem.build_scope()` `endings_system.gd:382` build kapsamını export'ta bu özellik etiketinden (`ea`, `full`),
+  ↳ debug build'de `--build=`'den okur, etiketsizse demo; smoke ve probe `build_scope_override` ile demoya sabitler
 - `soft_cap` 104 hafta (`SOFT_CAP_WEEK`); smoke adı `soft_cap_ends_run_at_730` eski gün sayımını taşır. Kilometre taşı alınmış koşuda tavan uygulanmaz (`endings_system.gd:240`).
 - `VCPitchSystem` görüşme durumu statik ve kayda girmez; `SaveManager.can_save` görüşme sürerken kaydı reddeder (`save_manager.gd:93`). `reset()` sıfırlar (`vc_pitch_system.gd:1301`).
 - `_vc(vc_id)` satır YARATIR; salt okunan yollar (`series_a_road_closed`, `is_last_answer_moment`, `meeting_blocked_reason`) `vc_states.get` kullanır, kart koşulu hiçbir şey yazmamalı.
@@ -216,7 +249,7 @@ Tek koşturucu `bash tools/smoke_run.sh <vaka>`; vaka listesi `scripts/debug/end
 - Haber: RNG yok, tüm seçim `hash()` aritmetiği; biz tamponu dolunca EN YENİ satır düşer (`news_feed_system.gd:172`). Rakip eşiği ölçülmüş banda oturur (`RIVAL_BIG_MOVE_PCT` yorumu); dev (momentum 0) hiç haber olmaz.
 - Rakip kimlikleri (`rv_<alt tür>_<i>`, `ma_*`) pay dokusunun hash'i ve kayıtlı cooldown için sabittir; `NAMES`, `TEMPLATE`, `SHARE_SEED` indeks-hizalıdır, sıra değişmez (`rival_catalog.gd:90-95`).
 - `RivalRegistry.reset()` boşaltmaz, katalogdan yeniden tohumlar; `get_market_snapshot` durumsuzdur ve canlı kalite eksenlerini okumaz (`rival_registry.gd:100-112`). `_share_at` içindeki wobble pratikte doku üretmiyor (kendi ölçüm notu).
-- `RivalRegistry.get_by_type()` `rival_registry.gd:61` hiçbir yerden çağrılmaz (ölü aday); `Rival.composite()` üretimde okunmaz, yalnız smoke.
+- `RivalRegistry.get_by_type()` `rival_registry.gd:60` yalnız olay motorunun rakip seçicisi (`scope.gd:307`) ve smoke okur; `Rival.composite()` üretimde okunmaz, yalnız smoke.
 - `MarketCatalog` değeri `(run_seed, katalog, market_shocks, hafta)` üzerinden saf hesaplanır; fiyat geçmişi saklanmaz. Oyuncu eylemi çapaları kıpırdatmaz. Katalog sürümü kayda yazılır (`market_catalog_version`).
 - Yerel kural: oyuncuya görünen metinde tire yok; bitiş gazetesi kuralları `endings_copy.gd:16-24`.
 

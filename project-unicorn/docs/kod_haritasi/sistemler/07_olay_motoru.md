@@ -4,6 +4,10 @@ Dizin sürümü: git f3113fa4 (DIZIN.md başlığı, 2026-10-22; yollar ve satı
 
 Ne yapar: Olay motoru autoload değildir; statik `EventGate` cephesi ve `Ev*` sınıfları JSON kartları (`data/events/cards`, `arcs`) yükler, her kartı tek kapıdan (G1-G8) geçirir, kuyruğa ya da masaya koyar.
 Oyuncu seçince etkileri (`EvEffects`) uygular, geçmişe yazar. Sistemler kartı kimliğiyle ister, kuramaz; durum yalnız `scripts/events/seams/` adlı okumalarından gelir. Motor md: `GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`.
+Kaynak: Olay motoru için GDD Olay Motoru rev 2 (.md); olay içeriği (`data/events`) için GDD ch11.
+Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalog`; `core/` `EvEngine`, `EvQueue`, `EvHistory`, `EvFlags`, `EvLatches`, `EvSchedule`, `EvDelays`, `EvArcs`, `EvEffects`, `EvCondition`, `EvDice`, `EvBudgets`,
+  ↳ `EvSignals`, `EvSave`, `EvTuning`; `gate/` `EvGate`, `EvScope`; `present/` `EvPresenter`, `EvPapers`, `EvTempo`, `EvTicker`, `EvChips`; `seams/` `EvSeams` ve `EvSeams*`; model `GameEvent`, `EventChoice`. Sahipler (içerik):
+  ↳ yükleyici `EvCatalog`; `cards/` altında özyinelemeli yürür.
 
 ## Dosyalar
 - `scripts/events/event_gate.gd` (227): `EventGate`, motorun tek dış cephesi (statik); her çağrıyı `EvEngine/EvQueue/EvPapers/EvPresenter`'a iletir
@@ -60,6 +64,9 @@ Oyuncu seçince etkileri (`EvEffects`) uygular, geçmişe yazar. Sistemler kart�
 - `EvCatalog.ensure_loaded()` `catalog.gd:32` / `reload()` `catalog.gd:37`: kartları ve arkları yükler, seam'leri kurar (`EvSeams.ensure_installed` `seams.gd:39`) · `main.gd:4682` (`_warm_catalogs`)
 - `EvSave.to_dict()` `save.gd:20` / `from_dict()` `save.gd:39` · `save_manager.gd:382,400`; `EvLint.run` `lint.gd:79`, `EvProbe.run` `engine_probe.gd:16`, `EvHarness.run` `harness.gd:84`, `EvWhy.report` `why.gd:28`,
   ↳ `EvVocabGen.run` `vocab_gen.gd:20`
+  ↳ `from_dict` geçmişten ve saatten sonra `EvEngine.restore_unannounced()` `engine.gd:683` çağırır:
+  ↳ motorun adını anacağı not listesi (`_unannounced`, kaydedilmez) kaydın geçmiş satırlarından yeniden kurulur (`EvHistory.notes_awaiting_arrival()` `history.gd:174`: okunmamış ve geliş saati şimdiden sonra not),
+  ↳ yoksa yüklemede unutulan not yeniden doğrulamasız ve `event_triggered`'siz gelen kutusuna düşerdi
 - Bayrak yönlendirmesi `scripts/main/main.gd:226-251`: `--event-probe`, `--event-lint[=baseline]`, `--event-vocab`, `--why-fire=` (`_run_why_fire`), `--event-harness=`, `--event-plausibility=`,
   ↳ `--event-shot=` (`_run_event_shot` `main.gd:764`)
 - Sunum yolu: `EvPresenter.build_view` `present/presenter.gd:40` -> `EventBus.modal_requested` -> `main.gd:4723` (`hold_clock("event")`, Olaylar kutusu açılır) -> `mail_pane.gd` -> `EventGate.resolve`
@@ -115,6 +122,24 @@ Oyuncu seçince etkileri (`EvEffects`) uygular, geçmişe yazar. Sistemler kart�
   ↳ `card_body_tokens_resolve` `endgame_smoke.gd:490`, `loc_event_en_coverage` `:318`, `event_chip_coverage` `:335`, `quiet_cards_fill_empty_floor` `:542`, `event_no_double_resolution_after_load` `:355`,
   ↳ `event_thesis_day10_to_day90` `:333`, `harness_sniffer_matches_run_log` `:368`
 - Oynanan koşu: `--run-log=<preset>:<hafta>:sim` `PROBE FIRE/PICK/TALLY/WEEK` basar (`run_probe.gd:30-99`); `tools/run_gate.sh` üç koşu; görsel: `--event-shot=<kart id>[:<slot>=<varlık id>]` (`main.gd:764`, pencereli)
+- Probe kayıt türleri: `FIRE`, `PICK`, `TALLY_BEGIN` / `TALLY` / `TALLY_END`, `WEEK`, `ERROR` (drain koruması, kilitsiz seçeneği olmayan kart)
+- Görsel: `--event-shot=<kart id>[:<slot>=<varlık id>...]`: her çift bir slotu seçicisiz o varlığa bağlar (ör. `investor=anchor`); bağlanamayan çift ve hiçbir dünyada bağlanmayan zorunlu slot kareyi düşürür, çiftler PNG adına girer;
+  ↳ çekilen kartın seam sayıları kartın tuttuğu adlarla okunur (`EvPresenter.freeze_seams`).
+  ↳ Slotlarını çıplak tohum bağlayamayan kart ve her `rival.` kartı tema tohumunun şirketinde çekilir (`main._seed_company_world`: 14. hafta, kurulu ERP, `--hr-shot` kadrosu, üç hesap; kadronun kimliği `char_emp_shot_<n>`:
+  ↳ `team.burnout:employee=char_emp_shot_1`); `open_request` ve `escalated` seçicileri Müşteri İlişkileri temsilcili bir hesap, `seed_lead` imzalı bir tohum turu, `customer.release_thanks` bir sürümün teşekkürü,
+  ↳ `product.support_overflow` sıcak bir destek yığını ekler; bir slotun `where`'ini bu şirket karşılamıyorsa slot seçicinin seçtiğini `where`'siz bağlar;
+  ↳ `founder.savings_note` ve `founder.side_contract` birikimi biten kurucuda çekilir (`main._seed_savings_ground`: 5. hafta, kasa $5.000, günlük gider 50; `--inbox-shot=beat` aynı zemini kullanır);
+  ↳ `funding.monthly_update` imzalı tohum turlu şirketin kasası aylık akışının 8,5 haftasına indirilmiş hâlinde (gövde '8 hafta' yazar), `:runway=profit` ile aynı şirket giderini karşılarken (gövde runway'den söz etmez).
+  ↳ Acil durum kartları (`main.gd` `INCIDENT_SHOTS` `:838`) kendi dünyalarını kurar: `product.incident_outage_b2b` ve `_b2c` gece 03:00'te, kesinti 02:10'da başlamış (B2B'de gece vardiyalı iki hesapla, B2C'de kitle ve ücretli planla),
+  ↳ gönderen için `:employee=char_emp_shot_2`, `:load=<yüzde>` kesintinin zarının atıldığı sunucu yükü (kart %90 üstünde yük cümlesini söyler).
+  ↳ Öbür dördü (`customer.incident_month_close` 23:00, `product.incident_checkout`, `product.incident_regression`, `product.incident_review_storm` gündüz) dolu bir sprintin koştuğu canlı üründe kurulur,
+  ↳ düzeltme kartı sprintten bir kartı kaydırır (`fix_effort.per_bug` bu çekim için büyütülür), çip adını yazar; bozulma B2B'de, `:market=b2c` ile B2C'de çekilir; `product.promise_due` sprintin son haftasının başında kurulur:
+  ↳ Nordica'ya bu sprint için verilmiş söz, testteki tek kart, `customer=co_nordica`; `product.b2c_floor_signal` ve `product.b2c_floor_churn` (`main._seed_floor_world` `:935`) 20.000 kitleli bir not uygulamasında çekilir,
+  ↳ Güven & Ölçek'in iki hattından biri kurulu, öbür alanlar kurulu: merdiven Güven'de uyarı tutar ve gövde alanın adını yazar; `funding.sheet_expiry` (`main._seed_expiring_sheet` `:957`, `--b2b-shot=deal`'ın dünyası da) Series A'da,
+  ↳ uyarının girdiği ilk haftada (iki hafta kalmış) bir teklifle çekilir ve gövde 14 gün yazar (`investor=` teklifin fonunu seçer, verilmezse anchor);
+  ↳ `funding.sheet_decision` aynı teklifin süresinin dolduğu günde çekilir (`--vc-shot=k10`'un dünyası); `founder.unseen_build` türü seçilmiş, hiç yayınlanmamış ürünün ikinci sprintinde çekilir;
+  ↳ kâğıt kartlarının hepsi (`pool_group` taşıyan sprint kâğıtları: pm, tasarımcı, geliştirici, testçi, testçisiz, sistem, kurucu) `_seed_paper_world`'de kurulur; `--b2b-shot=<tür>` kartı okuma bölmesinde önizler,
+  ↳ `--inbox-shot=<durum>` gelen kutusunu çeker (08_sekmeler.md)
 - Kural: yeni smoke vakası yalnız çekirdek mantık için; tam süit yalnız entegrasyonda (CLAUDE.md "Smoke ve probe"); bayrak `--` ayıracının ARKASINA konmaz
 
 ## Dikkat
@@ -129,19 +154,35 @@ Oyuncu seçince etkileri (`EvEffects`) uygular, geçmişe yazar. Sistemler kart�
   ↳ `version_scope: fixture` ile G2'de kesilir
 - Kapsam tuzağı: `EvTuning.SHIPPED_SCOPES` statik değişken; probe ve bazı smoke vakaları `fixture` ekler ve aynı fonksiyonda geri yükler. Geri yüklemeyi unutmak sonraki vakaya fikstür kartı sızdırır
 - Şıkta `effects` ve `check` birlikte yazılabilir: `EvEngine.resolve` önce `effects`'i (`run_played`), sonra zarın seçtiği dalı (`run_check_branch`, I6) koşar; geçmiş satırının `deltas`'ı ikisini taşır. Zar `EvDice.check(oran, kart, şık)`:
-  ↳ aynı gün, kart ve şık aynı dalı verir. Risk dalı `on_pass`a yazılır, oran o dalın oranıdır (`on_fail` = 100 - oran); `EvChips.describe_check` boş olmayan her dalı kendi oranıyla çizer, bedel ya da tehlike taşıyan dalın başlığı tehlike renginde
+  ↳ aynı gün, kart ve şık aynı dalı verir. Risk dalı `on_pass`a yazılır, oran o dalın oranıdır (`on_fail` = 100 - oran); `EvChips.describe_check` boş olmayan her dalı kendi oranıyla çizer,
+  ↳ bedel ya da tehlike taşıyan dalın başlığı tehlike renginde
 - Sabit oran `EvTuning.ODDS` ve `olay.odds_10/15/20/25` seam'leridir; kartta sayı yazılmaz. Lint 17.11 sabit oranlı zardan `modifier_lines` istemez (arkasında durum yok); durumdan gelen oran (`olay.award_live_odds`) ister
-- `schedule_event.delay_weeks` sayı ya da `[lo, hi]`; aralığın haftası `EvDice.unit("schedule", gün, zamanlayan kart, hedef kart)`'tan çekilir. Çip hedef kartın her yolda (bütün şıklarda ve süre dolumunda) birebir aynı indirdiği etkileri bekleme başlığıyla yazar
+- `schedule_event.delay_weeks` sayı ya da `[lo, hi]`; aralığın haftası `EvDice.unit("schedule", gün, zamanlayan kart, hedef kart)`'tan çekilir.
+  ↳ Çip hedef kartın her yolda (bütün şıklarda ve süre dolumunda) birebir aynı indirdiği etkileri bekleme başlığıyla yazar
   ↳ (`EvChips.landing`); ortak etki yoksa ya da hepsi sessizse çipsizdir. Lint dalda ve `on_expire`da zamanlananı da "referanslı" sayar (`_card_effects`)
 - `amount_slot`: `amount_seam` bir ENTITY seam ise tutar o yuvanın varlığı için okunur (`EvEffects.amount(e, ctx)`); çip, geçmiş satırı ve bot aynı `ctx` ile okur (bot `EventGate.active_context()`). Lint seam'in türünü yuvanın türüyle eşler
-- Seçiciler `EvScope.SELECTORS` listesindedir; lint 17.12 listede olmayan `select`i reddeder (`:` ile biten ad önektir, `market_rival:giant`). `random` ve rakip seçicileri tohumludur: `EvScope.resolve(yuvalar, verilen, kart_id)` gün, kart ve yuvanın hash'iyle
-  ↳ sıralı adaylardan birini seçer; kart kimliği geçilmezse çekiliş kartın gerçek çekilişinden farklı çıkar. Rakip havuzu `RivalRegistry.get_by_type(ProductState.subtype())`, `select`siz rakip yuvası havuzun ilk boş id'sini alır; `{rival}` ürün adını okur
+- Seçiciler `EvScope.SELECTORS` listesindedir; lint 17.12 listede olmayan `select`i reddeder (`:` ile biten ad önektir, `market_rival:giant`). `random` ve rakip seçicileri tohumludur: `EvScope.resolve(yuvalar, verilen, kart_id)` gün,
+  ↳ kart ve yuvanın hash'iyle
+  ↳ sıralı adaylardan birini seçer; kart kimliği geçilmezse çekiliş kartın gerçek çekilişinden farklı çıkar. Rakip havuzu `RivalRegistry.get_by_type(ProductState.subtype())`, `select`siz rakip yuvası havuzun ilk boş id'sini alır;
+  ↳ `{rival}` ürün adını okur
 - `year_roll` yaprağı: `{"year_roll": 0.5}` takvim yılı başına bir zardır, anahtarı yükleme sırasında kartın kimliğine damgalanır (`EvCatalog._coerce_conditions`); `key` yazılırsa kartlar aynı zarı paylaşır
-- Kişi seçicileri: `top_skill:<alan>` (havuzda `role_stats[alan]` en büyük, eşitlikte id), `leave_pair` (yaz izni başka birininkiyle örtüşen, partnerinden geç başlamayan, partnerinin izni arkasına sığacak kadar erken başlayan en kıdemli çalışan) ve `leave_partner` (yuvası `employee` olan kartın o kişisinin partneri; `HRMoraleSystem.leave_partner`). Seam `hr.role` (rol kimliği), `hr.leave_weeks_left`
-- İnsan fiilleri: `summer_leave {scope, other, apart}` (iki yuvanın bu yılki yaz izni haftası: `apart` geç başlayanı iki hafta arkaya alır, değilse ikisi erken başlayanın haftasına sabitlenir; çipi planı `EvEffects.summer_leave_plan`dan okur, geçmiş satırı planın kendisidir), `sick_leave {scope, weeks}` (yaz iznini yemeyen yokluk), `promote {scope, pct}` (`HRActions.apply_promotion`, EKONOMİK listede; dosyanın reddettiği terfide kart çipi reddin nedenini yazar). `top_skill:` alanı lint 17.12'de `HRConstants.EMPLOYEE_SKILL_KEYS`e karşı denetlenir. Üçü de `WRITER_VERBS` ve `SUBJECT_VERBS`te; `summer_leave` `CONSEQUENCE_VERBS`te ve lint `other`ın bir çalışan yuvası olmasını ister
-- Satış ve hesap fiilleri: `account_notice {scope, reason, mail}` (`B2BSalesSystem.give_notice`; sebebi postalı bildirim `B2BConstants.EXIT_NOTICE_MAILS`ta olmalı, `mail: false` kartın kendisi bildirimse), `prospect_offer {scope, discount_pct, discount_weeks, promise_step, promise_weeks}` (`ProspectRegistry.set_offer`, yeni teklif eskisinin yerine geçer; lint: `discount_pct` > 0 ile `discount_weeks` >= 1 birlikte; `promise_step` kart verisinde temel kimlikle yazılır, fiil `SprintCatalog.in_product` ile ürünün kimliğine çevirir), `drop_prospect {scope}` (`SalesFinalizer.lose`, sebep `event`), `take_account {scope}` (`assign_customer("", true)`), `pitch_focus {area, weeks}` (`SalesMeetingSystem.set_pitch_focus`; terim yalnız o alanı bekleyen ve ürünün karşıladığı masada, `sales.pitch_focus`). `account_notice`, `prospect_offer`, `drop_prospect` EKONOMİK listede (işaretsiz tutar = bedel, `on_expire`da yasal). `promise_extend` / `promise_break` `scope`lu yazılırsa o hesabın sözlerine iner (oldest-first; uzatmada en eskisine) ve SYSTEM kartı gerektirmez (lint V2 `SCOPED_VERBS`)
-- `trust_delta accounts`: `slots` (+ `slots: [yuva...]`), `others` (kartın müşteri yuvaları dışındaki bütün B2B hesaplar; `line` verilirse o hattı kullananlar), `all`, `onboarding` (`day < onboarding_until`); çip grubu plan satırının `group` alanı (`all` / `other` / `new`)
-- Aday ve hesap seam'leri: `aday.sector` (ad alanı `aday` → `prospect` yuvası), `musteri.sector`, `musteri.bugs`, `musteri.onboarding_short`, `musteri.promise_late` (en eski açık sözün kademesi koşan sprintte ve hiçbir kartı yetişmiyor; kart kademesinden bulunur, hesabın istediği kademe `req:<istek>` kartıdır), `musteri.promise_extended`, `musteri.promise_card` (kademenin ad ANAHTARI: geçmiş satırı donar, ekran çevirir), `musteri.has_notice`, `sales.big_accounts`, `time.quarter_start`. Seçiciler `rep_lead` (bir çalışanın işlediği aday) ve `lead_rep` (bağlı adayı işleyen çalışan; kurucunun masasındaki aday kimseyi adlandırmaz)
+- Kişi seçicileri: `top_skill:<alan>` (havuzda `role_stats[alan]` en büyük, eşitlikte id), `leave_pair` (yaz izni başka birininkiyle örtüşen, partnerinden geç başlamayan,
+  ↳ partnerinin izni arkasına sığacak kadar erken başlayan en kıdemli çalışan) ve `leave_partner` (yuvası `employee` olan kartın o kişisinin partneri; `HRMoraleSystem.leave_partner`). Seam `hr.role` (rol kimliği), `hr.leave_weeks_left`
+- İnsan fiilleri: `summer_leave {scope, other, apart}` (iki yuvanın bu yılki yaz izni haftası: `apart` geç başlayanı iki hafta arkaya alır, değilse ikisi erken başlayanın haftasına sabitlenir;
+  ↳ çipi planı `EvEffects.summer_leave_plan`dan okur, geçmiş satırı planın kendisidir), `sick_leave {scope, weeks}` (yaz iznini yemeyen yokluk), `promote {scope, pct}` (`HRActions.apply_promotion`, EKONOMİK listede;
+  ↳ dosyanın reddettiği terfide kart çipi reddin nedenini yazar). `top_skill:` alanı lint 17.12'de `HRConstants.EMPLOYEE_SKILL_KEYS`e karşı denetlenir. Üçü de `WRITER_VERBS` ve `SUBJECT_VERBS`te;
+  ↳ `summer_leave` `CONSEQUENCE_VERBS`te ve lint `other`ın bir çalışan yuvası olmasını ister
+- Satış ve hesap fiilleri: `account_notice {scope, reason, mail}` (`B2BSalesSystem.give_notice`; sebebi postalı bildirim `B2BConstants.EXIT_NOTICE_MAILS`ta olmalı, `mail: false` kartın kendisi bildirimse),
+  ↳ `prospect_offer {scope, discount_pct, discount_weeks, promise_step, promise_weeks}` (`ProspectRegistry.set_offer`, yeni teklif eskisinin yerine geçer; lint: `discount_pct` > 0 ile `discount_weeks` >= 1 birlikte;
+  ↳ `promise_step` kart verisinde temel kimlikle yazılır, fiil `SprintCatalog.in_product` ile ürünün kimliğine çevirir), `drop_prospect {scope}` (`SalesFinalizer.lose`, sebep `event`), `take_account {scope}` (`assign_customer("", true)`),
+  ↳ `pitch_focus {area, weeks}` (`SalesMeetingSystem.set_pitch_focus`; terim yalnız o alanı bekleyen ve ürünün karşıladığı masada, `sales.pitch_focus`). `account_notice`, `prospect_offer`,
+  ↳ `drop_prospect` EKONOMİK listede (işaretsiz tutar = bedel, `on_expire`da yasal). `promise_extend` / `promise_break` `scope`lu yazılırsa o hesabın sözlerine iner (oldest-first;
+  ↳ uzatmada en eskisine) ve SYSTEM kartı gerektirmez (lint V2 `SCOPED_VERBS`)
+- `trust_delta accounts`: `slots` (+ `slots: [yuva...]`), `others` (kartın müşteri yuvaları dışındaki bütün B2B hesaplar; `line` verilirse o hattı kullananlar), `all`, `onboarding` (`day < onboarding_until`);
+  ↳ çip grubu plan satırının `group` alanı (`all` / `other` / `new`)
+- Aday ve hesap seam'leri: `aday.sector` (ad alanı `aday` → `prospect` yuvası), `musteri.sector`, `musteri.bugs`, `musteri.onboarding_short`, `musteri.promise_late` (en eski açık sözün kademesi koşan sprintte ve hiçbir kartı yetişmiyor;
+  ↳ kart kademesinden bulunur, hesabın istediği kademe `req:<istek>` kartıdır), `musteri.promise_extended`, `musteri.promise_card` (kademenin ad ANAHTARI: geçmiş satırı donar, ekran çevirir), `musteri.has_notice`, `sales.big_accounts`,
+  ↳ `time.quarter_start`. Seçiciler `rep_lead` (bir çalışanın işlediği aday) ve `lead_rep` (bağlı adayı işleyen çalışan; kurucunun masasındaki aday kimseyi adlandırmaz)
 - Kart nakdinin etiketleri `ONE_TIME_LABELS`ta; `equipment`, `gift` ve `award` (pozitif `add_cash`) bu yüzden ekranda sözcük olarak çıkar
 - Yuva `"subject": false` (yalnız lint): çalışan yuvası gönderen ya da anılan kişidir, kartın öznesi değildir; O4 o yuvayı özne saymaz
 
@@ -149,12 +190,16 @@ Oyuncu seçince etkileri (`EvEffects`) uygular, geçmişe yazar. Sistemler kart�
   ↳ çağrı `not implemented` döner (`effects.gd:663-665`)
 - Bu yedi fiil `_vocabulary.md`'de de görünür; `add_customer` yalnız `_fixtures/lint_v3/_bad_v1.json`'da geçer, gerçek kartta kullanımı yok; yeni fiil yazarken sözlükte olması uygulandığını GÖSTERMEZ
 - I2/I3: ekonomik fiil yalnız oyuncunun oynadığı seçenekten (`run_played`); `on_expire` yalnız negatif, ambient hiçbiri; `trigger_ending` telegraph ister (`effects.gd:165-208`). Reddedilen fiil `push_error` basar ve smoke'u düşürür
+- Ekonomik etkinin kazanç mı maliyet mi olduğu yazarın işaretinden okunur: `EvEffects.is_authored_gain(effect)` `effects.gd:772` (seam'li tutarda `amount_mult`'un işareti, düz tutarda `amount` ya da `delta`; ikisi de yoksa maliyet);
+  ↳ lint 17.3 ve süre dolumunun denetimi aynı yardımcıyı sorar, böylece sıfıra yuvarlanan seam değeri maliyeti kazanca çevirmez
+- Lint süre dolumunun haber bandı satırını da (`expire_note`: kartın metin bloğundaki bir ad ya da satırın kendisi) marka yasağı ve saat denetiminden geçirir (`EvLint._lint_text` `lint.gd:775`)
 - Kayıt: etkin kartın `from_desk` ve `at` değeri kayda yazılmaz (`queue.gd:230-235`); yüklemeden sonra masadan açılmış kart kesinti gibi davranır (`set_aside` false döner). Bkz. `event_no_double_resolution_after_load`
 - Kaldırılan kart kayıtta yetim kalır: `SaveManager._REMOVED_CARD` (`save_manager.gd:906`, süzme `:958-967`) `product.bug_pile` için kuyruk, takvim, satır ve masayı temizler;
   ↳ kart silince benzer göç gerekir. `SCHEMA_VERSION` 19 (`save_manager.gd:16`)
 - Lint kuralları içerik ayrıntısıdır: marka listesi `FORBIDDEN_TERMS` (`lint.gd:44`), tire yasağı `DASH_CHARS` (`:55`), günlük kartta saat yasağı (`_clock_re` `:66`),
   ↳ yüklenmeyen seam/fiil hatası (`17.x`). Kabul edilen bulgu gerekçesiyle taban dosyasına gider
-- Aynı sabit iki yerde: `plausibility.gd` (`FAMILY_GAP_WEEKS`, `START_IMMUNITY_WEEKS`, satır 52-54) `EvTuning` değerlerinin kopyasıdır (KALITE.md de işaretler); `EvTuning` ayarlanınca defter bayat yargılar. `team_summer_leave: 52` iki yerde de yazılıdır
+- Aynı sabit iki yerde: `plausibility.gd` (`FAMILY_GAP_WEEKS`, `START_IMMUNITY_WEEKS`, satır 52-54) `EvTuning` değerlerinin kopyasıdır (KALITE.md de işaretler); `EvTuning` ayarlanınca defter bayat yargılar.
+  ↳ `team_summer_leave: 52` iki yerde de yazılıdır
 - `catalog.gd:18` yorumu ("Fixtures reachable by --event-shot") yanlış: `_` önekli dosyalar katalogda yoktur, `--event-shot` onlara ulaşamaz. Sürekli koşan `plausibility_main.gd` `-s` girişidir, `--import` istemez
 - Kart sayısı (146) `_vocabulary.md`, lint çıktısı ve `find` ile tutuyor; kategori sahipleri: customer Satış, funding Fonlama, product Ürün, team ve founder Ekip, rival Dünya, world Sonlar (pazar harcaması kartları Satış)
 - Smoke vakaları `EvSeams.mock`, `EvTuning` ve statik Ev* durumlarına dokunur; paylaşılan kayıt yuvasına yazan vakalar paralel koşmaz (CLAUDE.md); `run_case` her vakada build kapsamını demo'ya sabitler
