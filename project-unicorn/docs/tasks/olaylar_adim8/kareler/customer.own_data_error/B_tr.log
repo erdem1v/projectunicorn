@@ -1,0 +1,16 @@
+Godot Engine v4.6.2.stable.official.71f334935 - https://godotengine.org
+D3D12 12_0 - Forward+ - Using Device #0: AMD - AMD Radeon RX 9070 XT
+
+BOOT|lang=tr|source=arg
+[MCP Runtime] Server listening on port 7777
+[MCP Runtime] Autoload ready, server starting on port 7777
+BUILD|version=0.1.0|scope=demo
+EVENTSHOT|customer.own_data_error|customer=co_palmiye (Anadolu Endüstriyel Otomasyon)|employee=char_emp_shot_2 (Kerem Hasan Karaosmanoğlu)|founder=char_founder (Kurucu)|rep=char_cs_co_palmiye (Zeynep Nur Büyükkaragöz)|where=met|week=14
+EVENTSHOTTEXT|customer.own_data_error|Stok şikâyeti: Anadolu Endüstriyel Otomasyon|Anadolu Endüstriyel Otomasyon depo müdürü sabah aradı, sistemimizin stokları yanlış saydığını söyleyip bağırdı. Kayıtlara baktım: depodaki arkadaş 40 koli ürünü 4 diye girmiş, sistem stokta 4 koli gösterdiği için iki şubeye eksik mal gönderilmiş. Müdür hâlâ hatanın bizde olduğunu düşünüyor.
+EVENTSHOTOPTION|customer.own_data_error|Müşteri temsilcisi kayıtlarla müdüre gitsin
+EVENTSHOTOPTION|customer.own_data_error|Müdürü sen ara, kayıtları nazikçe anlat
+EVENTSHOTOPTION|customer.own_data_error|Sayım ekranına uyarı ekle, müdüre aldığımız önlemi anlat
+EVENTSHOTCHIPS|customer.own_data_error|rep_visits|Zeynep verimi -%20 · 1 hafta; Anadolu Endüstriyel Otomasyon: memnuniyet 72 → 80
+EVENTSHOTCHIPS|customer.own_data_error|founder_calls|Senin verimin -%10 · 1 hafta; Anadolu Endüstriyel Otomasyon: memnuniyet 72 → 76
+EVENTSHOTCHIPS|customer.own_data_error|warning_screen|Kerem verimi -%50 · 2 hafta; Anadolu Endüstriyel Otomasyon: memnuniyet 72 → 80; Öbür 3 hesap: memnuniyet +4
+[Shot] saved C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-Project-Unicorn/eeffbe9c-d5c1-4a8e-8ce4-9e4b60603345/scratchpad/appdata/c7c_win/Godot/app_userdata/Project Unicorn/event_shot_customer.own_data_error_long=1.png

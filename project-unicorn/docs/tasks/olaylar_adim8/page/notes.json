@@ -1,0 +1,86 @@
+{
+ "baslik": "Olaylar: önce ve sonra",
+ "giris": "Erdem'in iki kez yorumladığı olaylar oyuna girdi (Olaylar 1–7, push yok). Bu sayfada yalnız metni değişen kartların önce ve sonrası var: önce = Erdem'in okuduğu revize sayfası, sonra = oyundaki kart. Her kartın altında oyundan iki kare var; ikinci karede kartın kişileri ve hesabı bilerek başka birine bağlandı, iki karede farklı adlar okunur (karar 16). TR/EN düğmesi metinleri ve kareleri birlikte çevirir.",
+ "yuva_adlari": {
+  "employee": "çalışan",
+  "other": "öbür çalışan",
+  "customer": "hesap",
+  "rep": "temsilci",
+  "lead": "kıdemli geliştirici",
+  "dev": "devralan geliştirici",
+  "rival": "rakip",
+  "sprint_rival": "rakip",
+  "prospect": "aday",
+  "acct_1": "1. hesap",
+  "acct_2": "2. hesap",
+  "acct_3": "3. hesap",
+  "founder": "kurucu",
+  "seam:urun.decision_card": "kartın adı",
+  "investor": "yatırımcı",
+  "seam:musteri.promise_card": "söz verilen kart"
+ },
+ "yuva_adlari_en": {
+  "employee": "employee",
+  "other": "other employee",
+  "customer": "account",
+  "rep": "account manager",
+  "lead": "senior developer",
+  "dev": "covering developer",
+  "rival": "rival",
+  "sprint_rival": "rival",
+  "prospect": "prospect",
+  "acct_1": "account 1",
+  "acct_2": "account 2",
+  "acct_3": "account 3",
+  "founder": "founder",
+  "seam:urun.decision_card": "card name",
+  "investor": "investor",
+  "seam:musteri.promise_card": "promised card"
+ },
+ "bilgi": [
+  {
+   "baslik": "Temsilci yokken dört kart gelmez",
+   "metin": "#10 eğitim isteği, #12 muhasebe ekibi, #15 eski tarayıcı ve #18 rakibin kesintisi hesabın müşteri temsilcisinden gelir. Şirkette temsilci yoksa bu kartlar sıraya girmez; kurucunun konuştuğu yedek sürümler yazılmadı (yardımcı yönetmen kararı). Aşağıdaki tablo makullük koşularında ilk geliş haftasını gösterir (B2B, 40 koşu, 104 hafta). B2C koşularında hesap olmadığı için dördü de gelmez.",
+   "tablo": "ilk_gelis"
+  },
+  {
+   "baslik": "#3 düğün, çiçek şıkkı",
+   "metin": "Lint istisnası, onaylı metin gereği. Üç şık bir merdivendir: maaşın %10'u moral +10, %3'ü moral +5, %1,5'i moral değişmez. Çiçek en ucuz basamaktır, bedava çıkış değildir."
+  },
+  {
+   "baslik": "#12 muhasebe ekibi, talep kilidi",
+   "metin": "\"Tabloya aktarmayı sonraki sprinte al\" şıkkı, o hesap için yeni talep açılamıyorken kilitli görünür ve nedenini yazar. Gerekçe metni TR/EN onay bekliyor.",
+   "anahtar": "EV_LOCK_REQUEST_CLOSED"
+  },
+  {
+   "baslik": "#30 ödül finali, \"10 bin dolar\"",
+   "metin": "TR metinde \"$10.000\" yerine \"10 bin dolar\" yazıyor; metin denetimi \"$10.000\"ı saat sanıyordu. TR/EN onay bekliyor."
+  },
+  {
+   "baslik": "#11 stok şikâyeti, birinci şığın etiketi",
+   "metin": "Onaylı etiket \"Deniz kayıtlarla müdüre gitsin\" idi. Hesabın temsilcisi yokken bu şık kilitli görünür ve kilitli şıkta kişi adı olamaz; ekranda süslü parantezli yuva adı çıkıyordu. Etiket artık \"Müşteri temsilcisi kayıtlarla müdüre gitsin\" (EN \"Send the account manager to the warehouse manager with the records\"). TR/EN onay bekliyor."
+  },
+  {
+   "baslik": "#5 yüksek lisans vedası",
+   "metin": "\"Tebrik et\"ten dört hafta sonra gelir. Ana kartla aynı aileye yazılınca aile freni onu hiç getirmiyordu; veda kartı kendi ailesini taşır."
+  },
+  {
+   "baslik": "Karelerdeki çipler (Olaylar 7b)",
+   "metin": "Kareler Olaylar 7b'den (8fbb189) sonraki çipleri gösterir. Memnuniyet çipi kartın kendi payını okur: ok, hesabın şimdiki memnuniyetinden kartın hedefi kaydırdığı kadar gider (#25 veri yeri: üç şıkta 72 → 80, 72 → 82, 72 → 68; önce üçü de bir hafta sonraki kaymayla 72 → 51 yazıyordu). Aynı şıkta aynı çip tek çip olur (\"Yeni aday ×3\"); hedefi olmayan çip çizilmez. Çipi değişen 11 kartın kareleri 7b'den sonra yeniden çekildi; öbür kareler 7. adımın kareleridir ve çipleri değişmedi."
+  }
+ ],
+ "acik": [
+  {
+   "baslik": "#7 \"İkisi de gitsin\"",
+   "metin": "İki kişinin izni önce başlayanın haftasına çekilir; çip \"aynı iki hafta\" yazar. Öbür yol: haftalar yerinde kalır, çip \"izinleri çakışır\" yazar."
+  },
+  {
+   "baslik": "#7 \"Kendi aralarında karar versinler\"",
+   "metin": "Yalnız geç başlayanın izni kayar. Yılın izin penceresine sığmazsa kimse kaymaz; bu yüzden izin haftası 11 ya da 12 olan çiftlere bu kart hiç gelmez."
+  },
+  {
+   "baslik": "#32 PM hastanede",
+   "metin": "Hastalık izni, o hafta zaten izinde ya da eğitimde olan kişiye yazılmaz; o durumda çip de çıkmaz."
+  }
+ ]
+}

@@ -1,0 +1,20 @@
+Godot Engine v4.6.2.stable.official.71f334935 - https://godotengine.org
+D3D12 12_0 - Forward+ - Using Device #0: AMD - AMD Radeon RX 9070 XT
+
+BOOT|lang=tr|source=arg
+WARNING: [MCP Runtime] Port 7777 is unavailable (22), running without a server
+   at: push_warning (core/variant/variant_utility.cpp:1034)
+   GDScript backtrace (most recent call first):
+       [0] _start_server (res://addons/godot_mcp_runtime/mcp_runtime_autoload.gd:89)
+       [1] _ready (res://addons/godot_mcp_runtime/mcp_runtime_autoload.gd:32)
+[MCP Runtime] Autoload ready, server starting on port 7777
+BUILD|version=0.1.0|scope=demo
+EVENTSHOT|product.sprint_pm_hospital|employee=char_emp_shot_0 (Elif Demir)|customer=co_marmara (Marmara Lojistik)|dev=char_emp_shot_2 (Mert Yıldız)|where=met|week=14
+EVENTSHOTTEXT|product.sprint_pm_hospital|Mert Yıldız hastanede|Mert Yıldız acil bir durum yaşadı, hastanede ve iki hafta yok. Şirket olarak geçmiş olsun çiçeği gönderdik. Ama Marmara Lojistik için geliştirdiği iş yarıda kaldı, ne yapalım?
+EVENTSHOTOPTION|product.sprint_pm_hospital|Kart Mert Yıldız dönene kadar beklesin
+EVENTSHOTOPTION|product.sprint_pm_hospital|Kartı başka bir geliştirici devralsın
+EVENTSHOTOPTION|product.sprint_pm_hospital|Mert Yıldız taburcu olunca on dakika arayıp kaldığı yeri anlatsın
+EVENTSHOTCHIPS|product.sprint_pm_hospital|wait|Mert 2 hafta yok; Sonraki sprinte devreder
+EVENTSHOTCHIPS|product.sprint_pm_hospital|hand_over|Mert 2 hafta yok; Stok Sayacı (Marmara Lojistik) +20 puan
+EVENTSHOTCHIPS|product.sprint_pm_hospital|call_brief|Mert 2 hafta yok; Mert -6
+[Shot] saved C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-Project-Unicorn/eeffbe9c-d5c1-4a8e-8ce4-9e4b60603345/scratchpad/appdata/c7c_win/Godot/app_userdata/Project Unicorn/event_shot_product.sprint_pm_hospital.png

@@ -1,0 +1,5 @@
+{
+  "_not": "SIM3 katmanı (SENTEZ §13.4 madde 1-10): --mod sim2 --ek sim3.json ile sim2.json'un üstüne uygulanır. Yalnız kendi kapısını (iki turdan birinde) geçen sabitler burada; hepsi [WORKING], kaynaksız. Kural adayları (urun_disi_ayrilma, donem_ilk_yil_sart, dev_ihale_yili), Ar-Ge, kadro, rakip kasası ve fiyat kolu burada KAPALI, --ayar ile açılır.",
+  "eskime_memnuniyet": 2,
+  "istek_omur_hafta": 13
+}

@@ -1,0 +1,16 @@
+Godot Engine v4.6.2.stable.official.71f334935 - https://godotengine.org
+D3D12 12_0 - Forward+ - Using Device #0: AMD - AMD Radeon RX 9070 XT
+
+BOOT|lang=en|source=arg
+[MCP Runtime] Server listening on port 7777
+[MCP Runtime] Autoload ready, server starting on port 7777
+BUILD|version=0.1.0|scope=demo
+EVENTSHOT|product.encryption_flaw_b2b|employee=char_emp_shot_2 (Mert Yıldız)|where=met|week=14
+EVENTSHOTTEXT|product.encryption_flaw_b2b|Urgent: encryption flaw|Last night a flaw was announced in the encryption library most servers use. An attacker can read passwords straight out of server memory without leaving a trace. Our servers are affected too. I can patch it tonight; the real question is what we tell our accounts.
+EVENTSHOTOPTION|product.encryption_flaw_b2b|Patch it, tell the press, ask every account to change their passwords
+EVENTSHOTOPTION|product.encryption_flaw_b2b|Patch it, email accounts only
+EVENTSHOTOPTION|product.encryption_flaw_b2b|Patch it, tell no one
+EVENTSHOTCHIPS|product.encryption_flaw_b2b|announce|Reputation +3; 3 accounts: satisfaction -4 · Nordica 72 → 68
+EVENTSHOTCHIPS|product.encryption_flaw_b2b|mail_accounts|Reputation +1; 3 accounts: satisfaction -2 · Nordica 72 → 70
+EVENTSHOTCHIPS|product.encryption_flaw_b2b|stay_quiet|10% chance:; In 4 to 8 weeks:; Reputation -8; 3 accounts: satisfaction -8 · Nordica 72 → 64
+[Shot] saved C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-Project-Unicorn/eeffbe9c-d5c1-4a8e-8ce4-9e4b60603345/scratchpad/appdata/c7c_win/Godot/app_userdata/Project Unicorn/event_shot_product.encryption_flaw_b2b_en.png

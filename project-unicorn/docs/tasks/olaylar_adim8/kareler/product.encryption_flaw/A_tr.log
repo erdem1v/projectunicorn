@@ -1,0 +1,17 @@
+Godot Engine v4.6.2.stable.official.71f334935 - https://godotengine.org
+D3D12 12_0 - Forward+ - Using Device #0: AMD - AMD Radeon RX 9070 XT
+
+BOOT|lang=tr|source=arg
+[MCP Runtime] Server listening on port 7777
+[MCP Runtime] Autoload ready, server starting on port 7777
+BUILD|version=0.1.0|scope=demo
+EVENTSHOT|product.encryption_flaw|employee=char_emp_shot_2 (Mert Yıldız)|where=met|week=14
+EVENTSHOTTEXT|product.encryption_flaw|Acil: şifreleme açığı|Sunucuların çoğunun kullandığı şifreleme kütüphanesinde dün gece bir açık duyuruldu. Saldırgan sunucunun belleğinden şifreleri okuyabiliyor ve arkasında iz bırakmıyor. Bizim sunucular da etkileniyor. Yamayı bu akşam yapabilirim, asıl soru kullanıcılara ne diyeceğimiz.
+EVENTSHOTOPTION|product.encryption_flaw|Yamala, basına duyur, herkesten şifresini değiştirmesini iste
+EVENTSHOTOPTION|product.encryption_flaw|Yamala, yalnız kullanıcılara mail at
+EVENTSHOTOPTION|product.encryption_flaw|Yamala, kimseye duyurma
+EVENTSHOTCHIPS|product.encryption_flaw|announce|İtibar +3; Kitle -%1
+EVENTSHOTCHIPS|product.encryption_flaw|mail_users|İtibar +1; Kitle -%0,5
+EVENTSHOTCHIPS|product.encryption_flaw|stay_quiet|%10 ihtimalle:; 4 ile 8 hafta sonra:; İtibar -8; Kitle -%5
+[Shot] saved C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-Project-Unicorn/eeffbe9c-d5c1-4a8e-8ce4-9e4b60603345/scratchpad/appdata/c7b_g3/Godot/app_userdata/Project Unicorn/event_shot_product.encryption_flaw.png
+exit=0

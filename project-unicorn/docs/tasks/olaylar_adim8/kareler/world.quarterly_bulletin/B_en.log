@@ -1,0 +1,12 @@
+Godot Engine v4.6.2.stable.official.71f334935 - https://godotengine.org
+D3D12 12_0 - Forward+ - Using Device #0: AMD - AMD Radeon RX 9070 XT
+
+BOOT|lang=en|source=arg
+[MCP Runtime] Server listening on port 7777
+[MCP Runtime] Autoload ready, server starting on port 7777
+BUILD|version=0.1.0|scope=demo
+EVENTSHOT|world.quarterly_bulletin|week=14
+EVENTSHOTTEXT|world.quarterly_bulletin|Quarterly bulletin: how businesses pick software|A chamber of commerce asked its six hundred members what they look at when choosing software. Support during setup came first; price came third.
+EVENTSHOTOPTION|world.quarterly_bulletin|This quarter I'll lean on setup support in my sales meetings
+EVENTSHOTCHIPS|world.quarterly_bulletin|focus_onboarding|Sales meetings lean on Onboarding for 13 weeks
+[Shot] saved C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-Project-Unicorn/eeffbe9c-d5c1-4a8e-8ce4-9e4b60603345/scratchpad/appdata/c7b_g4/Godot/app_userdata/Project Unicorn/event_shot_world.quarterly_bulletin_long=1_en.png

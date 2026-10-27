@@ -1,0 +1,1086 @@
+[
+ {
+  "id": "calisan.bilgisayar",
+  "durum": "tut",
+  "kategori": "Çalışan",
+  "ton": "mizahi",
+  "an": "İlk çalışan, ikinci hafta, şirket Ev'deyken",
+  "gonderen": "Mert, Yazılım Mühendisi",
+  "gonderen_en": "Mert, Software Engineer",
+  "konu": "İş bilgisayarı",
+  "konu_en": "A work laptop",
+  "metin": "Patron, şimdilik kendi bilgisayarımla çalışıyorum ama bir iş bilgisayarı göndereceksiniz, değil mi? Benimki her açılışta kalkışa geçen uçak gibi ses çıkarıyor.",
+  "metin_en": "Boss, I'm on my own laptop for now, but you're sending me a work one, right? Mine sounds like a plane taking off every time I turn it on.",
+  "secenekler": [
+   {
+    "etiket": "Yeni bir bilgisayar gönder",
+    "etiket_en": "Send a new laptop",
+    "sonuc": "Kasa −$1.000, Mert'in morali biraz yükselir",
+    "sonuc_en": "Cash −$1,000, Mert's morale rises a little"
+   },
+   {
+    "etiket": "Kendi eski laptopunu gönder",
+    "etiket_en": "Send your own old laptop",
+    "sonuc": "Kasa değişmez, Mert'in morali biraz düşer",
+    "sonuc_en": "Cash unchanged, Mert's morale dips a little"
+   }
+  ],
+  "degisen": "Erdem: daha tatlı yazılsın, ikinci şık eski laptop olabilir. Metin onun cümlesine döndü ve küçük bir şaka aldı; yeni bilgisayar morali yükseltir, eski laptop parasızdır ama moral bedeli var.",
+  "kosul_notu": "Ev'de işe alınan ilk çalışan, ikinci haftası. Mert yuvası: ilk işe alınan kişi, rolü ne olursa olsun (gönderen satırı onun rolünü okur).",
+  "kod_notu": "Ekipman gideri için FinanceSystem.ONE_TIME_LABELS'ta etiket yok; add_cash negatif, moral change_morale.",
+  "ilham": "Erdem'in çıta örneği, onun sözüyle (görev metni; İncil §Olay çıtası, https://claude.ai/artifact/1uaJRpCkNCNRcxJBdf2fGU). Ofis Ev iken işe alınan kişi kendi evinden çalışır. 2012'de bir geliştirici laptopu yaklaşık $1.000 (kaynaksız). Ekipman gider etiketi FinanceSystem.ONE_TIME_LABELS'ta yok, kod işi. Eleştiri: tut."
+ },
+ {
+  "id": "calisan.yol_masrafi",
+  "durum": "sil",
+  "degisen": "Erdem: 'tamamen çöp'. Silindi."
+ },
+ {
+  "id": "calisan.dugun",
+  "durum": "tut",
+  "kategori": "Çalışan",
+  "ton": "sıcak",
+  "an": "Çalışanın altıncı ayı",
+  "gonderen": "Ece, Tasarımcı",
+  "gonderen_en": "Ece, UX/UI Designer",
+  "konu": "Düğün",
+  "konu_en": "Wedding",
+  "metin": "Patron, ayın sonunda evleniyorum. Düğünümde seni de görmeyi çok isterim, gelebilirsen çok sevinirim.",
+  "metin_en": "Boss, I'm getting married at the end of the month. I'd love to see you at the wedding, it would make me really happy if you could come.",
+  "secenekler": [
+   {
+    "etiket": "Düğüne git, tam altın tak",
+    "etiket_en": "Go, and bring an expensive gift",
+    "sonuc": "Kasa −$400, Ece'nin morali çok yükselir",
+    "sonuc_en": "Cash −$400, Ece's morale rises sharply"
+   },
+   {
+    "etiket": "Düğüne git, çeyrek altın tak",
+    "etiket_en": "Go, and bring a modest gift",
+    "sonuc": "Kasa −$100, Ece'nin morali yükselir",
+    "sonuc_en": "Cash −$100, Ece's morale rises"
+   },
+   {
+    "etiket": "Gidemeyeceğini söyle, çiçek gönder",
+    "etiket_en": "Say you can't make it, send flowers",
+    "sonuc": "Kasa −$60, Ece'nin morali değişmez",
+    "sonuc_en": "Cash −$60, Ece's morale unchanged"
+   }
+  ],
+  "degisen": "Erdem: davetiye cümlesi çıksın (ev adresini nereden biliyor), 'gelebilirsen sevinirim' diye bitsin, EN'de altın yerine hediye. Üçü de yapıldı; TR'de altın şıkları kaldı, EN'de pahalı hediye, mütevazı hediye, çiçek.",
+  "kosul_notu": "Ece yuvası: altı ayını dolduran bir çalışan, rol serbest.",
+  "kod_notu": "Hediye gideri için ONE_TIME_LABELS'ta etiket yok; moral change_morale.",
+  "ilham": "oyunlar.md (a)3: CK3'te kişiye bağlı duygusal olaylar övülüyor (https://vaporlens.app/app/1158310/crusader_kings_iii.md); (a)7 Software Inc'in kişisel personel anları. İlk kez patron olanın sürprizi: düğünde patronun altın takması beklenir. 2012'de çeyrek altın ~175 TL (~$100), tam altın ~700 TL (~$400) (kaynaksız). Hediye gider etiketi yok; moral change_morale. Eleştiri sonrası: davetiye cümlesi düzeldi, kasası dar oyuncu için çiçek şıkkı eklendi (2012'de düğüne gönderilen çiçek ~110 TL, ~$60, kaynaksız)."
+ },
+ {
+  "id": "calisan.uc_ay",
+  "durum": "sil",
+  "degisen": "Erdem: üç ayda böyle talep olmaz, çalışan tarafında maaş talebi mekaniği yok. Silindi."
+ },
+ {
+  "id": "calisan.yuksek_lisans",
+  "durum": "tut",
+  "kategori": "Çalışan",
+  "ton": "ciddi",
+  "an": "Junior çalışan, bahar sonu",
+  "gonderen": "Elif, Test Mühendisi",
+  "gonderen_en": "Elif, QA Engineer",
+  "konu": "Konuşmamız gerekiyor",
+  "konu_en": "Can we talk?",
+  "metin": "Yüksek lisansa kabul aldım ve yurt dışına taşınmam gerekiyor. Burada çok şey öğrendim, her şey için teşekkürler.",
+  "metin_en": "I got into a master's program abroad, so I'll be moving. I've learned so much here. Thank you for everything.",
+  "secenekler": [
+   {
+    "etiket": "Tebrik et, son ayında işini devretsin",
+    "etiket_en": "Congratulate Elif, plan the handover for the last month",
+    "sonuc": "Elif dört hafta sonra ayrılır",
+    "sonuc_en": "Elif leaves in four weeks"
+   },
+   {
+    "etiket": "Okulu bir yıl ertelemesini rica et, terfi teklif et",
+    "etiket_en": "Ask Elif to defer a year, offer a promotion",
+    "sonuc": "Elif kalır, Orta seviyeye geçer, maaşı %15 artar",
+    "sonuc_en": "Elif stays, moves up to Mid level, salary +15%"
+   }
+  ],
+  "degisen": "Erdem: kısalt, okul yurt dışında ve yer adı yok, 'yerime gelecek kişiye anlatırım' çıksın, yarı zamanlı şık yok. Metin onun cümlesine indi, iki şık aynı kaldı.",
+  "kosul_notu": "Elif yuvası: junior seviyede bir çalışan, rol serbest; bahar sonu.",
+  "kod_notu": "Ayrılış employee_leaves (dört hafta sonra, schedule_event); terfi oyuncu eylemi, kart fiili yok [VOCAB?]; maaş change_salary kolsuz.",
+  "ilham": "kurucular.md C#21: ilk çalışan okula dönmek için ayrılıyor, kurucu 'şirketten iyi bir tatla ayrılsın' istiyor (https://news.ycombinator.com/item?id=13616675). Öncül team.resignation'dan farklı: ayrılık moral düşüklüğünden değil, karşı teklif kararı var. Ayrılış employee_leaves; terfi oyuncu eylemi, kart fiili yok [VOCAB?]. Eleştiri sonrası: terfi zammı açık yazıldı (%15)."
+ },
+ {
+  "id": "calisan.kaba_musteri",
+  "durum": "tut",
+  "kategori": "Çalışan",
+  "ton": "ciddi",
+  "an": "B2B hesabın hatası bulunduğu gün, hesap aradığında",
+  "gonderen": "Zeynep, Müşteri Temsilcisi",
+  "gonderen_en": "Zeynep, Customer Success Manager",
+  "konu": "Kuzey İnşaat'la telefon",
+  "konu_en": "The call with Kuzey İnşaat",
+  "metin": "Kuzey İnşaat'ın muhasebe müdürü yarım saat boyunca telefonda bana bağırdı, sonunda “sizin gibi çocuklarla iş yapmak zorunda kaldık” diye söylenip kapattı. Geliştirme ekibi hatayı buldu, akşama düzeltirler. Ama onunla bir daha ben konuşmak istemiyorum.",
+  "metin_en": "Kuzey İnşaat's finance manager yelled at me on the phone for half an hour, then muttered “so now we're stuck with kids like you” and hung up. The dev team found the bug and will fix it tonight. But I'm not talking to that manager again.",
+  "secenekler": [
+   {
+    "etiket": "Kuzey İnşaat'ı bundan sonra sen ara",
+    "etiket_en": "From now on, you take Kuzey İnşaat's calls",
+    "sonuc": "Kuzey İnşaat'ın aramaları sana geçer, iki hafta verimin düşer",
+    "sonuc_en": "Kuzey İnşaat's calls come to you, your productivity drops for two weeks"
+   },
+   {
+    "etiket": "Müdürü ara, ekibine böyle konuşamayacağını söyle",
+    "etiket_en": "Call the manager, say nobody talks to your team like that",
+    "sonuc": "Zeynep'in morali yükselir, Kuzey İnşaat'ın memnuniyeti biraz düşer, %15 ihtimalle sözleşmesini yenilemez",
+    "sonuc_en": "Zeynep's morale rises, Kuzey İnşaat's satisfaction drops a little, 15% chance they don't renew"
+   },
+   {
+    "etiket": "Zeynep'e “müşteri bu, idare et” de",
+    "etiket_en": "Tell Zeynep “it's the customer, just deal with it”",
+    "sonuc": "Zeynep'in morali düşer",
+    "sonuc_en": "Zeynep's morale drops"
+   }
+  ],
+  "degisen": "Erdem: 'gayet iyi yazılmış'; gönderen müşteri temsilcisi olsun, tercihen kadın, hatayı geliştirme ekibi bulur, müdürü arama şıkkına düşük ihtimalli kumar. Gönderen Zeynep oldu, metin onun cümleleri, kumar %15 yenilememe.",
+  "kosul_notu": "Gönderen hesabın müşteri temsilcisi, tercihen kadın (Erdem; ad buna göre). Hesap: açık hatası o hafta bulunan B2B hesabı. Temsilci yoksa olay gelmez.",
+  "kod_notu": "Kumar check dalı; sabit %15 için odds seam'i yok, kod işi. Yenilememe: hesaba bayrak ve yenileme anında okunması kod işi. Kalıcı memnuniyet izi trust_delta (satisfaction_delta bir tikte geri çekilir). Kurucu verimi productivity_mod founder.",
+  "ilham": "kurucular.md B#18: teslimi geciktirip baskı kuran ve tehdit eden müşteri (https://news.ycombinator.com/item?id=8949933); oyunlar.md (a)2: kişinin değerine aykırı seçim stres bedeli doğurur (CK3, https://en.wikipedia.org/wiki/Crusader_Kings_III). Yazılım Mühendisi oyunda destek işi alabilir. Bedel kişiye (change_morale), hesaba (trust_delta) ya da kurucuya (productivity_mod founder). Eleştiri sonrası: alıntı tamamlandı, kurucu verim bedeli bir aydan iki haftaya indi."
+ },
+ {
+  "id": "ekip.ayni_izin.pm",
+  "durum": "tut",
+  "kategori": "Ekip içi tartışma ve arabuluculuk",
+  "ton": "sinir bozucu",
+  "an": "Yaz izni dönemi, iki PM aynı haftaları istediğinde",
+  "gonderen": "Selin, Ürün Yöneticisi",
+  "gonderen_en": "Selin, Product Manager",
+  "konu": "Ağustos izni",
+  "konu_en": "August leave",
+  "metin": "Baran'la ikimiz de ağustosun ilk iki haftasına izin istemişiz. İkimiz birden gidersek o iki hafta sprinti planlayacak kimse kalmıyor.",
+  "metin_en": "Baran and I both asked for the first two weeks of August off. If we both go, nobody's left to plan the sprint for those two weeks.",
+  "secenekler": [
+   {
+    "etiket": "Kartları önden hazırlasınlar, sonra ikisi de çıksın",
+    "etiket_en": "Have them prep the cards ahead, then both can go",
+    "sonuc": "İkisi de iki hafta izinde, ikisinin de morali yükselir; izinden önceki iki hafta ikisinin de verimi %30 düşer",
+    "sonuc_en": "Both on leave for two weeks, morale rises for both; in the two weeks before, both work 30% slower"
+   },
+   {
+    "etiket": "Selin gitsin, Baran ayın ikinci yarısında",
+    "etiket_en": "Selin goes, Baran takes the second half of the month",
+    "sonuc": "Selin iki hafta izinde, Baran'ın morali düşer",
+    "sonuc_en": "Selin on leave for two weeks, Baran's morale drops"
+   },
+   {
+    "etiket": "İkisi de gitsin, sürüm kaysın",
+    "etiket_en": "Both go, the release slips",
+    "sonuc": "İkisi de iki hafta izinde, ikisinin de morali yükselir, sürüm bir sprint kayar",
+    "sonuc_en": "Both on leave for two weeks, morale rises for both, the release slips one sprint"
+   }
+  ],
+  "degisen": "Erdem: iki kişi aynı rolden olsun; PM çiftinde kartları önden hazırlama, geliştirici çiftinde ikisini birden göndermek gerçekten pahalı, her varyantta insaflı patron şıkkı. Rol başına ayrı kayıt. PM varyantı: önden hazırlık şıkkı.",
+  "kosul_notu": "Ekipte iki PM, yaz izin penceresi (Haziran ile Ağustos), ikisinin de izin hakkı açık. Selin ve Baran yuvası iki PM; gönderen kıdemi yüksek olan.",
+  "kod_notu": "İzin send_on_leave (iki kişi); 'sürüm kayar' sprint_card_carry, olay kartından sprinte bağlanması kod işi [VOCAB?]; moral change_morale. Önden hazırlık productivity_mod −30, iki hafta.",
+  "ilham": "Oyunun izin sistemi (yaz penceresi Haziran-Ağustos, 1-2 hafta, aralık 8 hafta, send_on_leave). oyunlar.md (d): Mad Games Tycoon 2 çatışmayı politikayla önler (https://steamcommunity.com/app/1342330/discussions/0/3058492406517208479); hedef oyunlarda arabuluculuk olayı yok, tasarım boşluğu. Otel değişiklik bedeli için gider etiketi yok. Eleştiri sonrası: üçüncü şıkkın bedeli somutlaştı. Birinci şıktaki 'Baran ertesi ay' yaz penceresinin dışına düştüğü için 'ayın ikinci yarısında' oldu."
+ },
+ {
+  "id": "ekip.ayni_izin.gelistirici",
+  "durum": "tut",
+  "kategori": "Ekip içi tartışma ve arabuluculuk",
+  "ton": "sinir bozucu",
+  "an": "Yaz izni dönemi, iki geliştirici aynı haftaları istediğinde",
+  "gonderen": "Baran, Yazılım Mühendisi",
+  "gonderen_en": "Baran, Software Engineer",
+  "konu": "Ağustos izni",
+  "konu_en": "August leave",
+  "metin": "Onur'la ikimiz de ağustosun ilk iki haftasına izin istemişiz. İkimiz birden gidersek o iki hafta kod yazan kimse kalmıyor.",
+  "metin_en": "Onur and I both asked for the first two weeks of August off. If we both go, nobody's writing code for those two weeks.",
+  "secenekler": [
+   {
+    "etiket": "Baran gitsin, Onur ayın ikinci yarısında",
+    "etiket_en": "Baran goes, Onur takes the second half of the month",
+    "sonuc": "Baran iki hafta izinde, Onur'un morali düşer",
+    "sonuc_en": "Baran on leave for two weeks, Onur's morale drops"
+   },
+   {
+    "etiket": "İkisi de gitsin, sürüm kaysın",
+    "etiket_en": "Both go, the release slips",
+    "sonuc": "İkisi de iki hafta izinde, ikisinin de morali yükselir; geliştirme iki hafta durur",
+    "sonuc_en": "Both on leave for two weeks, morale rises for both; development stops for two weeks"
+   },
+   {
+    "etiket": "İzinleri şimdilik ertele",
+    "etiket_en": "Postpone both leaves for now",
+    "sonuc": "İkisinin de morali düşer, sprint aksamaz",
+    "sonuc_en": "Morale drops for both, the sprint stays on track"
+   }
+  ],
+  "degisen": "Erdem: iki kişi aynı rolden olsun; PM çiftinde kartları önden hazırlama, geliştirici çiftinde ikisini birden göndermek gerçekten pahalı, her varyantta insaflı patron şıkkı. Rol başına ayrı kayıt. Geliştirici varyantı: ikisini göndermek geliştirmeyi durdurur, erteleme şıkkı söz yaklaşırken en iyisi.",
+  "kosul_notu": "Ekipte tam iki geliştirici (ya da ikisi geliştiricilerin yarısından fazlası), yaz izin penceresi, ikisinin de izin hakkı açık. Baran ve Onur yuvası iki geliştirici.",
+  "kod_notu": "İzin send_on_leave (iki kişi); 'sürüm kayar' sprint_card_carry, olay kartından sprinte bağlanması kod işi [VOCAB?]; moral change_morale.",
+  "ilham": "Oyunun izin sistemi (yaz penceresi Haziran-Ağustos, 1-2 hafta, aralık 8 hafta, send_on_leave). oyunlar.md (d): Mad Games Tycoon 2 çatışmayı politikayla önler (https://steamcommunity.com/app/1342330/discussions/0/3058492406517208479); hedef oyunlarda arabuluculuk olayı yok, tasarım boşluğu. Otel değişiklik bedeli için gider etiketi yok. Eleştiri sonrası: üçüncü şıkkın bedeli somutlaştı. Birinci şıktaki 'Baran ertesi ay' yaz penceresinin dışına düştüğü için 'ayın ikinci yarısında' oldu."
+ },
+ {
+  "id": "ekip.ayni_izin.testci",
+  "durum": "tut",
+  "kategori": "Ekip içi tartışma ve arabuluculuk",
+  "ton": "sinir bozucu",
+  "an": "Yaz izni dönemi, iki testçi aynı haftaları istediğinde",
+  "gonderen": "Elif, Test Mühendisi",
+  "gonderen_en": "Elif, QA Engineer",
+  "konu": "Ağustos izni",
+  "konu_en": "August leave",
+  "metin": "Burcu'yla ikimiz de ağustosun ilk iki haftasına izin istemişiz. İkimiz birden gidersek o iki hafta biten kartları test edecek kimse kalmıyor.",
+  "metin_en": "Burcu and I both asked for the first two weeks of August off. If we both go, nobody's left to test finished cards for those two weeks.",
+  "secenekler": [
+   {
+    "etiket": "Elif gitsin, Burcu ayın ikinci yarısında",
+    "etiket_en": "Elif goes, Burcu takes the second half of the month",
+    "sonuc": "Elif iki hafta izinde, Burcu'nun morali düşer",
+    "sonuc_en": "Elif on leave for two weeks, Burcu's morale drops"
+   },
+   {
+    "etiket": "İkisi de gitsin, testi geliştiriciler yapsın",
+    "etiket_en": "Both go, developers do the testing",
+    "sonuc": "İkisi de iki hafta izinde, ikisinin de morali yükselir; o iki hafta testte daha az hata yakalanır",
+    "sonuc_en": "Both on leave for two weeks, morale rises for both; fewer bugs get caught in those two weeks"
+   },
+   {
+    "etiket": "İkisi de gitsin, sürüm kaysın",
+    "etiket_en": "Both go, the release slips",
+    "sonuc": "İkisi de iki hafta izinde, ikisinin de morali yükselir; test bekleyen kartlar sonraki sprinte kalır",
+    "sonuc_en": "Both on leave for two weeks, morale rises for both; cards waiting for testing roll to the next sprint"
+   }
+  ],
+  "degisen": "Erdem: iki kişi aynı rolden olsun; PM çiftinde kartları önden hazırlama, geliştirici çiftinde ikisini birden göndermek gerçekten pahalı, her varyantta insaflı patron şıkkı. Rol başına ayrı kayıt. Testçi varyantı: testi geliştiricilere bırakma şıkkı (hata bedeli) ile sürümü kaydırma (zaman bedeli) ayrıldı.",
+  "kosul_notu": "Ekipte iki testçi, yaz izin penceresi, ikisinin de izin hakkı açık. Elif ve Burcu yuvası iki testçi.",
+  "kod_notu": "İzin send_on_leave (iki kişi); 'sürüm kayar' sprint_card_carry, olay kartından sprinte bağlanması kod işi [VOCAB?]; moral change_morale. Geliştiricinin başkasının kartını test etmesi için yakalama kuralı yok (kendi kartını test eden ×0,6 var), kod işi.",
+  "ilham": "Oyunun izin sistemi (yaz penceresi Haziran-Ağustos, 1-2 hafta, aralık 8 hafta, send_on_leave). oyunlar.md (d): Mad Games Tycoon 2 çatışmayı politikayla önler (https://steamcommunity.com/app/1342330/discussions/0/3058492406517208479); hedef oyunlarda arabuluculuk olayı yok, tasarım boşluğu. Otel değişiklik bedeli için gider etiketi yok. Eleştiri sonrası: üçüncü şıkkın bedeli somutlaştı. Birinci şıktaki 'Baran ertesi ay' yaz penceresinin dışına düştüğü için 'ayın ikinci yarısında' oldu."
+ },
+ {
+  "id": "ekip.kod_inceleme",
+  "durum": "tut",
+  "kategori": "Ekip içi tartışma ve arabuluculuk",
+  "ton": "ciddi",
+  "an": "Takım lideri varken ya da kıdemliyle junior aynı hatta",
+  "gonderen": "Onur, Junior Yazılım Mühendisi",
+  "gonderen_en": "Onur, Junior Software Engineer",
+  "konu": "Kod incelemesi",
+  "konu_en": "Code review",
+  "metin": "Kerem kodumu üçüncü kez geri çevirdi. Haklı olabilir ama kartım iki haftadır incelemede bekliyor, artık ne yazsam yanlış gibi geliyor.",
+  "metin_en": "Kerem sent my code back for the third time. Maybe with good reason, but my card has been sitting in review for two weeks and now everything I write feels wrong.",
+  "secenekler": [
+   {
+    "etiket": "Kerem kartı bu hâliyle geçirsin",
+    "etiket_en": "Have Kerem pass the card as it is",
+    "sonuc": "Kart çıkar, hattına bir hata eklenir, Kerem'in morali düşer",
+    "sonuc_en": "The card ships, its line gets a bug, Kerem's morale drops"
+   },
+   {
+    "etiket": "Kerem bu hafta Onur'la yan yana çalışsın",
+    "etiket_en": "Kerem pairs with Onur this week",
+    "sonuc": "Kerem'in verimi bir hafta %30 düşer, Onur'un morali yükselir",
+    "sonuc_en": "Kerem's productivity drops 30% for a week, Onur's morale rises"
+   },
+   {
+    "etiket": "Onur notları tek tek düzeltsin",
+    "etiket_en": "Onur works through the notes one by one",
+    "sonuc": "Kart bir hafta daha sürer, Onur'un morali biraz düşer",
+    "sonuc_en": "The card takes another week, Onur's morale dips a little"
+   }
+  ],
+  "degisen": "Erdem: fikir ve kod incelemesi iyi, yazım dili ve şıklar beğenilmedi, takım lideri ya da kıdemli ile junior varken gelsin. Metin iki cümleye indi; şıklar üç somut hamle, her biri başka bir bedel (hata, kıdemlinin haftası, kartın süresi).",
+  "kosul_notu": "Takım lideri varken ya da aynı hatta kıdemli ile junior birlikte çalışırken (Erdem). Kerem yuvası: o hattın takım lideri, yoksa Yazılım yıldızı en yüksek kıdemli geliştirici. Onur yuvası: aynı hattaki junior, kartı Geliştirme'de iki haftadır kapanmamış.",
+  "kod_notu": "Hata damage_product (kartın hattına), verim productivity_mod, moral change_morale; 'kart bir hafta daha sürer' sprint_card_effort, olay kartından sprinte bağlanması kod işi [VOCAB?].",
+  "ilham": "kurucular.md C#22: kurucu mühendisin testsiz kodu ve kendine '10x' demesi üstüne kurucunun ikilemi (https://news.ycombinator.com/item?id=36796558); oyunlar.md (d): RimWorld'de çatışma ölçülebilir görüşten doğar (https://rimworldwiki.com/wiki/Social). Oyunun huyları: Double Checker (az hata, yavaş), Takes Them Under. Hata damage_product, verim productivity_mod, moral change_morale. Eleştiri: tut. Not ve video için ikiz gerekir: 'not eşitleme ekranı' (Eşitleme hattı) ve 'kırpma ekranı' (Klip Çıkarma hattı)."
+ },
+ {
+  "id": "ekip.soz_verdi",
+  "durum": "tut",
+  "kategori": "Ekip içi tartışma ve arabuluculuk",
+  "ton": "sinir bozucu",
+  "an": "Satışçı yeni hesap imzalattığında, hesaba söz verilmişken",
+  "gonderen": "Selin, Ürün Yöneticisi",
+  "gonderen_en": "Selin, Product Manager",
+  "konu": "Anadolu Market'e verilen söz",
+  "konu_en": "The promise to Anadolu Market",
+  "metin": "Bilge, Anadolu Market'i imzalatırken el terminaliyle stok sayımının ay sonunda hazır olacağını söylemiş. Bu işin yetişmesi için Kaan'ın ay sonuna kadar başka hiçbir şeye bakmaması lazım. Bilge'ye sorduk, “o söz olmasa imza gelmezdi” diyor. Nasıl ilerleyelim?",
+  "metin_en": "While closing Anadolu Market, Bilge told them handheld stock counting would be ready by the end of the month. To make that, Kaan can't look at anything else until then. We asked Bilge, and the answer was “without that promise, they'd never have signed.” How do we proceed?",
+  "secenekler": [
+   {
+    "etiket": "Kaan ay sonuna kadar yalnız buna baksın",
+    "etiket_en": "Kaan works on nothing else until month end",
+    "sonuc": "Kaan ay sonuna kadar başka karta bakamaz, söz tutulur, Kaan'ın morali düşer",
+    "sonuc_en": "Kaan can't touch other cards until month end, the promise is kept, Kaan's morale drops"
+   },
+   {
+    "etiket": "Bilge'yle birlikte ara, bir sprint ek süre iste",
+    "etiket_en": "Call them with Bilge, ask for one more sprint",
+    "sonuc": "Anadolu Market'in memnuniyeti biraz düşer, söz bir sprint uzar",
+    "sonuc_en": "Anadolu Market's satisfaction drops a little, the promise moves back one sprint"
+   },
+   {
+    "etiket": "Bu özelliğin şimdilik olmayacağını söyle",
+    "etiket_en": "Tell them the feature isn't coming for now",
+    "sonuc": "Anadolu Market'in memnuniyeti düşer, Bilge'nin morali düşer",
+    "sonuc_en": "Anadolu Market's satisfaction drops, Bilge's morale drops"
+   }
+  ],
+  "degisen": "Erdem: 'tebrik ederim'; gönderen PM olsun (kart planlamasını o yapar), geliştirici yuvası yıldıza göre otomatik, metin onun örneği tonunda. Gönderen Selin oldu, metin onun cümlesi; şıklar kaldı, yeni gönderene uyarlandı.",
+  "kosul_notu": "Gönderen çeyreğin PM'i. Kaan yuvası: kartın hattında Yazılım yıldızı en yüksek geliştirici (otomatik). Bilge yuvası: hesabı imzalatan Satış Temsilcisi. Hesabın söz verilmiş isteği varken.",
+  "kod_notu": "Söz uzatma promise_extend, bozma promise_break; 'yalnız buna baksın' kişiyi karta kilitleyen fiil yok (assign_to kolsuz) [VOCAB?]; moral change_morale, memnuniyet trust_delta.",
+  "ilham": "kurucular.md E#42: yöneticilerin ve satışçıların mühendise sormadan olmayan özellik sözü vermesi (https://news.ycombinator.com/item?id=4928751, zayıf genel gözlem). Oyunun söz sistemi (PromiseRegistry, bir kez uzatma) ve ERP Stok hattının üçüncü kademesi El Terminali. Söz uzatma ve bozma sistem fiili (promise_extend, promise_break) [VOCAB?]. Eleştiri sonrası: metindeki iki sprint ile birinci şık arasındaki çelişki kalktı; söz ancak Mert iki sprint yalnız buna bakarsa tutulur ve bedel Mert'e düşer, bütün ekibe değil."
+ },
+ {
+  "id": "musteri.egitim",
+  "durum": "tut",
+  "kategori": "Müşteri talebi B2B",
+  "ton": "sıcak",
+  "an": "Orta boy hesap, imzanın ertesi haftası, ürünün Onboarding alanı zayıfken",
+  "gonderen": "Sevim Aksoy, Anadolu Yapı muhasebe şefi",
+  "gonderen_en": "Sevim Aksoy, Head of Accounting, Anadolu Yapı",
+  "konu": "Eğitim rica ediyoruz",
+  "konu_en": "Could you train our team?",
+  "metin": "Ekibimiz bugüne kadar her şeyi kâğıtta tuttu, bizim için yeni bir sistem. Önümüzdeki hafta biri gelip ürünü anlatabilir mi? Yoksa ilk ay kimsenin sisteme girmeyeceğini şimdiden söyleyebilirim.",
+  "metin_en": "Our team has always kept everything on paper, so this is a whole new system for us. Could someone come over next week and walk us through it? Otherwise I can already tell you nobody will log in for the first month.",
+  "secenekler": [
+   {
+    "etiket": "Deniz gelecek hafta bir gün gidip anlatsın",
+    "etiket_en": "Send Deniz over for a day next week",
+    "sonuc": "Deniz'in bir günü gider, Anadolu Yapı'nın memnuniyeti artar",
+    "sonuc_en": "Deniz loses a day, Anadolu Yapı's satisfaction rises"
+   },
+   {
+    "etiket": "İki günlük eğitim teklif et, ücretini iste",
+    "etiket_en": "Offer a paid two-day training",
+    "sonuc": "Kasa +$600, Deniz'in iki günü gider, Anadolu Yapı'nın memnuniyeti biraz düşer",
+    "sonuc_en": "Cash +$600, Deniz loses two days, Anadolu Yapı's satisfaction drops a little"
+   },
+   {
+    "etiket": "Deniz ekran ekran anlatan bir onboarding dokümanı hazırlasın",
+    "etiket_en": "Have Deniz write a screen-by-screen onboarding guide",
+    "sonuc": "Deniz'in iki günü gider, ilk ayındaki bütün hesapların memnuniyeti biraz artar",
+    "sonuc_en": "Deniz loses two days, every account in its first month is a little more satisfied"
+   },
+   {
+    "etiket": "Ürüne yardım merkezi ekle",
+    "etiket_en": "Add a help center to the product",
+    "sonuc": "Sonraki sprinte bir Onboarding kartı girer, Anadolu Yapı'nın memnuniyeti bu ay biraz düşer",
+    "sonuc_en": "An Onboarding card joins the next sprint, Anadolu Yapı's satisfaction drops a little this month"
+   }
+  ],
+  "degisen": "Erdem: kısalt, ilk iki şık kalsın, kılavuz şıkkı yeniden ele alınsın ve yardım merkezi eklensin. Metin onun cümlesine indi; kılavuz geçici çözüm oldu (ilk ayındaki bütün hesaplara yarar), yardım merkezi kalıcı çözüm olarak sprinte kart koyar.",
+  "kosul_notu": "Ürünün Onboarding alanı pazarın beklentisinin altındayken (Erdem). Orta boy B2B hesap, imzanın ertesi haftası. Deniz yuvası: hesabın müşteri temsilcisi; temsilci yoksa kurucu ('Deniz' yerine 'sen', bedel kurucunun verimi).",
+  "kod_notu": "Eğitim geliri için ONE_TIME_LABELS'ta etiket yok; temsilcinin günleri productivity_mod; dokümanın ilk aydaki hesaplara etkisi yeni kod (onboarding evresindeki hesaplara trust_delta); kartı sonraki sprinte koymak olay kartından sprint planına yazan yeni fiil [VOCAB?].",
+  "ilham": "dönem.md D#25: KOBİ'nin ERP'den öngörülebilir değer kazanma süresi istemesi, kurulumun gözü korkutması (https://blog.nbs-us.com/blog/bid/314248/Cloud-SaaS-ERP-Where-It-s-Going, satıcı bloğu, zayıf); dunya.md: ERP'de ilk kurulum uzun sürer, hesabın 4 haftalık onboarding evresi. Eğitim geliri için ONE_TIME_LABELS'ta etiket yok. Eleştiri sonrası: bedel kurucudan müşteri temsilcisine geçti (temsilci yoksa kurucuya düşer); ücretli eğitim şıkkı artık güven bedeli taşıdığı için baskın değil."
+ },
+ {
+  "id": "musteri.kendi_hatasi",
+  "durum": "tut",
+  "kategori": "Müşteri talebi B2B",
+  "ton": "mizahi",
+  "an": "Perakende hesabı, ilk sayım haftası",
+  "gonderen": "Emre, Yazılım Mühendisi",
+  "gonderen_en": "Emre, Software Engineer",
+  "konu": "Ekin Gıda'nın stok şikâyeti",
+  "konu_en": "Ekin Gıda's stock complaint",
+  "metin": "Ekin Gıda'nın depo müdürü sabah aradı, sistemimizin stokları yanlış saydığını söyleyip bağırdı. Kayıtlara baktım: depodaki arkadaş 40 koli ürünü 4 diye girmiş, sistem stokta 4 koli gösterdiği için iki şubeye eksik mal gönderilmiş. Müdür hâlâ hatanın bizde olduğunu düşünüyor.",
+  "metin_en": "Ekin Gıda's warehouse manager called this morning, shouting that our system miscounts stock. I checked the records: someone at their warehouse entered 40 cases as 4, so the system showed 4 in stock and two branches got short deliveries. The manager still thinks it's our fault.",
+  "secenekler": [
+   {
+    "etiket": "Deniz kayıtlarla müdüre gitsin",
+    "etiket_en": "Send Deniz to the manager with the records",
+    "sonuc": "Deniz'in bir günü gider, Ekin Gıda'nın memnuniyeti artar",
+    "sonuc_en": "Deniz loses a day, Ekin Gıda's satisfaction rises"
+   },
+   {
+    "etiket": "Müdürü sen ara, kayıtları nazikçe anlat",
+    "etiket_en": "Call the manager yourself and walk through the records",
+    "sonuc": "Bu hafta verimin %10 düşer, Ekin Gıda'nın memnuniyeti biraz artar",
+    "sonuc_en": "Your productivity drops 10% this week, Ekin Gıda's satisfaction rises a little"
+   },
+   {
+    "etiket": "Sayım ekranına uyarı ekle, müdüre aldığımız önlemi anlat",
+    "etiket_en": "Add a warning to the count screen, tell the manager what we changed",
+    "sonuc": "Emre'nin bir haftası gider, Ekin Gıda'nın memnuniyeti artar",
+    "sonuc_en": "Emre loses a week, Ekin Gıda's satisfaction rises"
+   }
+  ],
+  "degisen": "Erdem: ayrıntı (ayçiçek yağı) çıksın, kurucu müşteriye bizzat gitmez. Şıklar onun üç hamlesine döndü: temsilci kayıtlarla gider, sen telefonla anlatırsın, sayım ekranına uyarı ve önlem (Emre'nin bir haftası).",
+  "kosul_notu": "Perakende B2B hesabı, Stok hattı canlı, ilk sayım haftası. Emre yuvası: Stok hattında çalışmış geliştirici. Deniz yuvası: hesabın müşteri temsilcisi; temsilci yoksa birinci şık görünmez.",
+  "kod_notu": "Temsilci ve kurucu zamanı productivity_mod; Emre'nin haftası productivity_mod ya da sprinte kart (kod işi); memnuniyet trust_delta.",
+  "ilham": "kurucular.md B#16: müşteri personelinin yazılımı atlayıp elle çalışması, ayrıntı kaybı (https://news.ycombinator.com/item?id=6545632); kaynaklı tekil 'kendi hatası' bulgusu yok. ERP Stok hattı (Stok Sayımı). Öncül customer.request_complaint'ten farklı: hata müşterinin. Bedel kurucuya, Emre'ye (productivity_mod) ya da hesaba (trust_delta); üçüncü şık küçük bir beyaz yalan. Eleştiri: tut; eksik sevkiyatın nedeni metinde netleşti."
+ },
+ {
+  "id": "musteri.muhasebeci",
+  "durum": "tut",
+  "kategori": "Müşteri talebi B2B",
+  "ton": "sinir bozucu",
+  "an": "Küçük ya da orta boy hesap, ilk ay kapanırken",
+  "gonderen": "Hakan Er, Kardelen Mağazacılık operasyon müdürü",
+  "gonderen_en": "Hakan Er, Head of Operations, Kardelen Mağazacılık",
+  "konu": "Finans ekibimiz",
+  "konu_en": "Our finance team",
+  "metin": "Finans ekibimiz sizin sisteme girmek istemiyor. Ay sonunda bütün satışları ve alışları kendi tablolarına aktarıyorlar, her ay iki günleri bununla geçiyor. Bunu kolaylaştırmanın bir yolu var mı?",
+  "metin_en": "Our finance team doesn't want to work in your system. At month end they copy every sale and purchase into their own spreadsheets, and it eats two days every month. Is there a way to make this easier?",
+  "secenekler": [
+   {
+    "etiket": "Tabloya aktarmayı sonraki sprinte al",
+    "etiket_en": "Put spreadsheet export in the next sprint",
+    "sonuc": "Sonraki sprinte bir istek kartı girer, Kardelen'in memnuniyeti artar",
+    "sonuc_en": "A request card joins the next sprint, Kardelen's satisfaction rises"
+   },
+   {
+    "etiket": "Deniz finans ekibine bir gün sistemi göstersin",
+    "etiket_en": "Deniz spends a day showing their finance team the system",
+    "sonuc": "Deniz'in bir günü gider, Kardelen'in memnuniyeti biraz artar",
+    "sonuc_en": "Deniz loses a day, Kardelen's satisfaction rises a little"
+   },
+   {
+    "etiket": "Şimdilik böyle devam etmelerini rica et",
+    "etiket_en": "Ask them to carry on like this for now",
+    "sonuc": "Kardelen'in memnuniyeti düşer",
+    "sonuc_en": "Kardelen's satisfaction drops"
+   }
+  ],
+  "degisen": "Erdem: dışarıdan çalışılan muhasebeci fazla küçük esnaf, gönderen şirketin kendisi olsun ('Finans ekibimiz sizin sisteme girmek istemiyor'), 'tabloyu kendin hazırla' çok kötü. Gönderen operasyon müdürü oldu, şıklar baştan: dışa aktarma kartı, temsilcinin bir günü, şimdilik böyle.",
+  "kosul_notu": "Küçük ya da orta boy B2B hesap, ilk ay kapanışında, ürünün Defter hattında dışa aktarma kademesi yokken. Deniz yuvası: hesabın müşteri temsilcisi; yoksa kurucu.",
+  "kod_notu": "İstek kartını sprinte koymak olay kartından yeni fiil [VOCAB?] (hesabın istek akışına bağlanabilir, musteri.request_kind); temsilci zamanı productivity_mod; memnuniyet trust_delta.",
+  "ilham": "kurucular.md B#16: muhasebeciler yazılımın modülü yerine tablo istiyor, personel yazdırıp elle dolduruyor (https://news.ycombinator.com/item?id=6545632). Türkiye'de KOBİ'nin dış muhasebecisi yazılım seçiminde söz sahibi (kaynaksız). Aday add_prospect; olay kartı istek kartı ekleyemez, sprint_card_* yalnız sprint kâğıdına ait [VOCAB?]. Eleştiri: tut."
+ },
+ {
+  "id": "b2c.tez",
+  "durum": "veto",
+  "degisen": "Erdem: B2C ürünü pazaryeri olacak, bu not uygulaması olayı. Veto."
+ },
+ {
+  "id": "b2c.kameraman",
+  "durum": "veto",
+  "degisen": "Erdem: aynı sebep, video uygulaması olayı. Veto."
+ },
+ {
+  "id": "urun.eski_tarayici",
+  "durum": "tut",
+  "kategori": "Ürün",
+  "ton": "sinir bozucu",
+  "an": "Sağlık adayı, satış görüşmesinde, imzadan önce",
+  "gonderen": "Bilge, Satış Temsilcisi",
+  "gonderen_en": "Bilge, Sales Representative",
+  "konu": "Aras Klinik'in şartı",
+  "konu_en": "Aras Klinik's condition",
+  "metin": "Aras Klinik demoyu çok beğendi ama bilgi işlem sorumlusu bir şart koydu. Klinikteki bütün bilgisayarlarda Fenstra'nın eski tarayıcısı var, hasta kayıt programları yalnız onda çalışıyor. Ürünümüz o tarayıcıda açılmazsa imza yok.",
+  "metin_en": "Aras Klinik loved the demo, but their IT lead set one condition. Every computer at the clinic runs Fenstra's old browser, because their patient records software only works there. If our product doesn't open in that browser, there's no deal.",
+  "secenekler": [
+   {
+    "etiket": "Eski tarayıcı desteğini sonraki sprinte al",
+    "etiket_en": "Put old browser support in the next sprint",
+    "sonuc": "Sonraki sprinte bir kart girer, Aras Klinik kart çıkınca imzalar",
+    "sonuc_en": "A card joins the next sprint, Aras Klinik signs when it ships"
+   },
+   {
+    "etiket": "Desteğe söz ver, imzayı şimdi al",
+    "etiket_en": "Promise the support, sign them now",
+    "sonuc": "Aras Klinik bugün imzalar, hesaba bir sprintlik söz yazılır",
+    "sonuc_en": "Aras Klinik signs today, with a promise due in one sprint"
+   },
+   {
+    "etiket": "Aras Klinik'i bırak",
+    "etiket_en": "Let Aras Klinik go",
+    "sonuc": "Aday düşer",
+    "sonuc_en": "The prospect is lost"
+   }
+  ],
+  "degisen": "Erdem'in iki itirazı: ERP tarayıcı ürünü mü, madem çalışmıyordu satıştan önce konuşulmadı mı. Kurgu önerildi, silinmedi: şart imzadan önce, demodan sonra çıkar ve metin ürünün tarayıcıda açıldığını söyler (bulut ERP); şıklar baştan (kart, söz verip imza, adayı bırak).",
+  "kosul_notu": "B2B sağlık adayı, satış görüşmesi aşamasında (imzadan önce); ürünün Mobil ve Erişim hattında eski tarayıcı kademesi yokken. Bilge yuvası: adayı işleyen Satış Temsilcisi; yoksa olay kurucunun görüşmesinden sonra adayın kendisinden gelir.",
+  "kod_notu": "Söz promise_create (imzayla birlikte); kartı sprinte koymak yeni fiil [VOCAB?]; 'kart çıkınca imzalar' adayı bekleten durum kod işi; adayı düşüren fiil yok [VOCAB?].",
+  "ilham": "dönem.md G (kaynaksız): 8 Nisan 2014'te bir masaüstü işletim sisteminin desteği bitti, KOBİ'ler eski bilgisayarlarla kaldı; kurucular.md B#14: kurumsal müşterinin tarayıcısı ve güvenlik yazılımı ürünü engelliyor (https://news.ycombinator.com/item?id=33036748). Fenstra oyunun Piyasa'sındaki masaüstü işletim sistemi parodisi. Hat: Mobil & Erişim. Öncül sprint_dev_old_phones'tan farklı: müşteri güncelleyemiyor, hamle müşteriye de yönelebiliyor. Eleştiri sonrası: ikinci tarayıcı kurma yolu metinde kapandı (klinikte yeni program kurma izni yok); 'sonraki büyük sürümü bekleyin' şıkkı yerine yönetimden izin önerisi geldi. Birinci şıktaki sprint_fix_first olay kartında kullanılamaz [VOCAB?]."
+ },
+ {
+  "id": "urun.dikey_video",
+  "durum": "veto",
+  "degisen": "Erdem: 'müthiş, bayıldım' ama video uygulaması kalkıyor. Veto; ayarı dört yeni pazaryeri olayına örnek oldu (pazaryeri.*)."
+ },
+ {
+  "id": "urun.dugme",
+  "durum": "veto",
+  "degisen": "Erdem: B2C not uygulaması olayı. Veto."
+ },
+ {
+  "id": "rakip.kesinti",
+  "durum": "tut",
+  "kategori": "Rakip",
+  "ton": "ciddi",
+  "an": "Rakibin çöktüğü sabah",
+  "gonderen": "Kaan, Satış Temsilcisi",
+  "gonderen_en": "Kaan, Sales Representative",
+  "konu": "Sumpter çökmüş",
+  "konu_en": "Sumpter is down",
+  "metin": "Sumpter iki gündür açılmıyor ve telefonlarına da kimse çıkmıyor. Müşterilerinden üçü bu sabah bizi aradı, ay sonu yaklaşırken kayıtlarına ulaşamıyorlar.",
+  "metin_en": "Sumpter has been down for two days and nobody's answering their phones. Three of their customers called us this morning; month end is coming and they can't get to their records.",
+  "secenekler": [
+   {
+    "etiket": "Kaan bu hafta üçüne de demo yapsın",
+    "etiket_en": "Have Kaan demo all three this week",
+    "sonuc": "Üç yeni aday, Kaan'ın bu haftası buna gider",
+    "sonuc_en": "Three new prospects, Kaan's week goes to this"
+   }
+  ],
+  "degisen": "Erdem: 'üçüne de demo' iyi; rakibin kurucusunu arayıp yardım ve tablo gönderme şıkları saçma (amme hizmeti), tek şık olabilir. O iki şık çıktı, olay tek şıklı.",
+  "kosul_notu": "B2B canlı ürün, Sumpter pazarda. Kaan yuvası: Satış Temsilcisi; temsilci yoksa şık 'Üçüyle de bu hafta görüş' olur ve bedel kurucunun görüşme günleridir.",
+  "kod_notu": "Aday add_prospect ×3; temsilcinin haftası productivity_mod; rakibin kesintisi için seam yok, tetik kod işi.",
+  "ilham": "kurucular.md D#38: hizmet çöktü, rakip ayakta kaldı, müşteriler kurucuyu suçladı (https://news.ycombinator.com/item?id=29197277, yalnız özet); burada ters yüzü. oyunlar.md (a)1: Papers Please'in ahlaki ikilemi. Öncül rival.shutdown_notice'tan farklı: rakip kapanmıyor, iki günlük kesinti. Aday add_prospect, itibar add_reputation. Eleştiri sonrası: demo bedeli kurucudan satış temsilcisine geçti. Eleştirinin 'kayıtlarını elle dışa almalarına yardım' önerisi Sumpter açılmadığı için uygulanamıyordu; şık, ay sonunu elle toparlamaları için tablo göndermeye döndü."
+ },
+ {
+  "id": "rakip.ayni_ozellik",
+  "durum": "tut",
+  "kategori": "Rakip",
+  "ton": "sinir bozucu",
+  "an": "Sprint ortası, Toplu Fatura kartının testi başlamamışken",
+  "gonderen": "Selin, Ürün Yöneticisi",
+  "gonderen_en": "Selin, Product Manager",
+  "konu": "Ardenna'nın toplu faturası",
+  "konu_en": "Ardenna's batch invoicing",
+  "metin": "Ardenna'nın bizim üzerinde çalıştığımız toplu fatura özelliğini geliştirdiğini duyduk. Bizde aynı kart hazır ama testine başlanmadı. Önce biz çıkarsak ilk duyulan isim biz oluruz.",
+  "metin_en": "We've heard Ardenna is building the same batch invoicing feature we're working on. Ours is built, but testing hasn't started. If we ship first, we're the name people hear first.",
+  "secenekler": [
+   {
+    "etiket": "En yakın üç müşterimiz bu hafta erkenden denesin",
+    "etiket_en": "Let our three closest customers try it early this week",
+    "sonuc": "Marka +1, olası hatayı yalnız bu üç hesap görür",
+    "sonuc_en": "Brand +1, any bug only reaches those three accounts"
+   },
+   {
+    "etiket": "Planı bozma, kart sırası gelince çıksın",
+    "etiket_en": "Stick to the plan, ship it when its turn comes",
+    "sonuc": "Ardenna önce duyurur, Marka −1",
+    "sonuc_en": "Ardenna announces first, Brand −1"
+   },
+   {
+    "etiket": "Testi kısalt, bu hafta yayınla",
+    "etiket_en": "Cut testing short, release this week",
+    "sonuc": "Marka +3, Fatura hattına hata kaçabilir",
+    "sonuc_en": "Brand +3, bugs may slip into the Invoicing line"
+   }
+  ],
+  "degisen": "Erdem: hikâye zorlama, onun örnek tonunda doğallaşsın. Metin onun cümlesine döndü; bekleme şıkkı 'eksiklerini gör' kazancı olmadan duruyordu, planı bozmayan yol oldu (riski yok, bedeli Marka −1).",
+  "kosul_notu": "B2B, Toplu Fatura kartının Geliştirme'si bitmiş ve Test'i başlamamışken; Ardenna pazarda. Selin yuvası: çeyreğin PM'i.",
+  "kod_notu": "Testi kısaltma sprint_card_test, olay kartından bağlanması kod işi [VOCAB?]; erken denemede hatanın yalnız üç hesaba düşmesi yeni kod; marka add_brand.",
+  "ilham": "dunya.md §4: sürüm yarışında çıkış yapan üç ERP rakibi Ardenna, Raketenhaus, Sumpter; kurucular.md D#35: iyi finanse rakipler çıkınca müşteriler 'yetişecek misiniz' diye sordu (https://donnfelker.com/why-you-should-never-quit-too-early/). Toplu Fatura, Fatura hattının ikinci kademesi. Testi kısaltmanın kaçış ihtimali söz olayındaki gibi; olay kartı sprint_card_test kullanamaz [VOCAB?]. Eleştiri sonrası: product.promise_due'yu tekrarlayan fazla mesai ve 'planı bozma' şıkları çıktı, yerlerine erken deneme ile bekleyip görme geldi. Erken deneme şıkkının hata riski üç hesapla sınırlı yazıldı; eleştirideki gibi 'Fatura hattına hata kaçabilir' yazılsaydı test kısaltma şıkkı onu her durumda geçerdi."
+ },
+ {
+  "id": "rakip.zam",
+  "durum": "sil",
+  "degisen": "Erdem: 'oldukça zayıf'. Silindi."
+ },
+ {
+  "id": "rakip.panel",
+  "durum": "tut",
+  "kategori": "Rakip",
+  "ton": "sinir bozucu",
+  "an": "Pazar payın büyürken, Pythia'nın da baktığı bir adayla görüşmeden sonra",
+  "gonderen": "Bilge, Satış Temsilcisi",
+  "gonderen_en": "Bilge, Sales Representative",
+  "konu": "Pythia bizden söz etmiş",
+  "konu_en": "Pythia brought us up",
+  "metin": "Bugün görüştüğüm aday, Pythia'nın satışçısının kendilerine bizim için “yeni bir firma, yarın olmayabilirler” dediğini anlattı. Aday hâlâ bizi istiyor ama içinin rahat etmesi lazım.",
+  "metin_en": "The prospect I met today said Pythia's sales rep warned them about us: “they're new, they may not be around tomorrow.” They still want us, but they need some reassurance.",
+  "secenekler": [
+   {
+    "etiket": "Bilge adayı memnun bir müşterimizle görüştürsün",
+    "etiket_en": "Have Bilge connect them with one of our happy customers",
+    "sonuc": "Bilge'nin iki günü gider, %20 ihtimalle aday yine de Pythia'yı seçer",
+    "sonuc_en": "Bilge loses two days; 20% chance they still pick Pythia"
+   },
+   {
+    "etiket": "İlk üç ay için indirim teklif et",
+    "etiket_en": "Offer a discount for the first three months",
+    "sonuc": "Aday imzalar, hesabın MRR'ı ilk üç ay %20 eksik",
+    "sonuc_en": "They sign, the account's MRR is 20% lower for three months"
+   }
+  ],
+  "degisen": "Erdem: girişimcilik panelinde büyük şirketin genel müdürü olmaz, bir şirket 'en çok şundan çekiniyoruz' demez. Yeniden kuruldu: büyük rakibin bizi fark ettiği, satışçısının adaya bizi kötülemesinden duyulur; tek satırlık haber yerine karar (referans müşteri ya da indirim).",
+  "kosul_notu": "Oyuncunun pazar payı büyürken (rival.player_share_pct eşiği), Pythia pazarda, Satış Temsilcisinin elinde açık bir aday varken. Bilge yuvası: adayı işleyen Satış Temsilcisi.",
+  "kod_notu": "İndirim b2b_month_discount (aday imzalarken uygulanması kod işi); referans görüşmesi check dalı, %20 için odds seam'i yok; adayı imzalatan bağlantı satış akışına kod işi.",
+  "ilham": "oyunlar.md (a)1 ve (c): Papers Please manşeti oyuncunun durumunu aynalar (https://papersplease.fandom.com/wiki/The_Truth_Of_Arstotzka); dunya.md §4: rival.player_share_pct okunur. Marka add_brand, aday add_prospect. Eleştiri: tut."
+ },
+ {
+  "id": "dunya.halka_arz",
+  "durum": "tut",
+  "kategori": "Dünyadan haberler ve çeyrek bülteni",
+  "ton": "ciddi",
+  "an": "B2C pazaryeri yayında, gelirin ilk ayları, Facewall'un düşüşünden sonra",
+  "gonderen": "Nexus Ventures ortağı",
+  "gonderen_en": "Partner, Nexus Ventures",
+  "konu": "Pazaryeriniz",
+  "konu_en": "Your marketplace",
+  "metin": "Pazaryerinizi kullanan bir arkadaşımdan duydum, ilgimi çekti. Facewall borsada değer kaybettiğinden beri ortaklarımız tüketici tarafında önce gelir görmek istiyor. Üç aylık gelir rakamınız olunca bir kahve içelim.",
+  "metin_en": "A friend of mine uses your marketplace, and it caught my eye. Since Facewall's slide on the stock market, our partners want to see revenue first on the consumer side. Once you have three months of revenue, let's grab a coffee.",
+  "secenekler": [
+   {
+    "etiket": "Teşekkür et, rakamlar oluşunca yazacağını söyle",
+    "etiket_en": "Thank them, say you'll write once the numbers are in",
+    "sonuc": "Nexus Ventures seed'e kadar seni hatırlar",
+    "sonuc_en": "Nexus Ventures remembers you until seed"
+   }
+  ],
+  "degisen": "Erdem: yatırımcının kendiliğinden kapımızı çalması doğal, metin daha az zorlama olsun, tüketici tarafı pazaryeri. Mektup üç kısa cümleye indi ve pazaryerini anıyor; şık Nexus'un ilgisini seed'e taşıyor.",
+  "kosul_notu": "B2C pazaryeri yayında, gelir üç aydan kısa; Piyasa'da Facewall listelenip düştükten sonra; seed kapısı açılmadan.",
+  "kod_notu": "Nexus'un ilgisini seed'e taşıyan yatırımcı seam'i yok (investor_favor ailesi) [VOCAB?].",
+  "ilham": "dönem.md A#1: 2012'de ABD girişim sermayesi ~%10 düştü, yatırımcı 'kanıtlanmış' ürün istiyor (https://www.fiercebiotech.com/biotech/annual-venture-investment-dollars-decline-for-first-time-three-years-according-to-moneytree); A#2: tüketici ve reklam payı düştü, SaaS tohum payı yükseldi (https://www.tomtunguz.com/hottest-startup-sectors-2016/index.md). Oyunun Piyasa'sında Facewall tik 20'de listelenir, çapası 2011'de 120.000, 2012'de 63.000. Eleştiri sonrası: haber bandı sesinden bir fon ortağının mektubuna döndü ve oyuncunun durumundan doğuyor (B2C ürün yayında, ücretli plan yok). Eleştiri 'seed ararken' diyordu; seed kapısı MRR ≥ $20.000'de açıldığı için orada 'önce gelir görelim' sözü çelişirdi, olay ücretli plandan önceye alındı. Nexus Ventures oyunun dört fonundan temkinli olanı. Sonuç yalnız bilgi, fiil gerekmez; seed kapısının gelir şartını oyunun içinden anlatır."
+ },
+ {
+  "id": "dunya.disk",
+  "durum": "tut",
+  "kategori": "Dünyadan haberler ve çeyrek bülteni",
+  "ton": "sinir bozucu",
+  "an": "Ürün yayında, ilk yılın içinde",
+  "gonderen": "Kerem, Kıdemli Yazılım Mühendisi",
+  "gonderen_en": "Kerem, Senior Software Engineer",
+  "konu": "Sunucu zammı",
+  "konu_en": "Server price increase",
+  "metin": "Sunucu sağlayıcımız gelecek aydan itibaren fiyatlarına %15 zam yapıyor. Daha ucuz bir sağlayıcıya geçebiliriz ama taşıma bir sprintimi alır.",
+  "metin_en": "Our server provider is raising prices 15% from next month. We could move to a cheaper provider, but the migration would take one of my sprints.",
+  "secenekler": [
+   {
+    "etiket": "Zammı kabul et, yerimizde kalalım",
+    "etiket_en": "Accept it, we stay put",
+    "sonuc": "Sunucu faturası %15 artar",
+    "sonuc_en": "Server bill +15%"
+   },
+   {
+    "etiket": "Ucuz sağlayıcıya geç",
+    "etiket_en": "Move to the cheaper provider",
+    "sonuc": "Sunucu faturası bugünkünden %10 düşer, Kerem'in bir sprinti taşımaya gider",
+    "sonuc_en": "Server bill 10% below today's, Kerem's next sprint goes to the migration"
+   },
+   {
+    "etiket": "Bir yıllık sözleşme imzala, zammı yarıya indir",
+    "etiket_en": "Sign a one-year contract to halve the increase",
+    "sonuc": "Sunucu faturası %7 artar, bir yıl sağlayıcı değiştiremezsin",
+    "sonuc_en": "Server bill +7%, no switching providers for a year"
+   }
+  ],
+  "degisen": "Erdem: kurumsal ve fazla ayrıntılı (sel anlatısı); bir çalışanın ağzından kısa bir cümle, şıklarda ucuz sağlayıcıya geçiş ve 3★ üstü müşteri varken geçememe. Sel anlatısı çıktı, karar üç şık oldu.",
+  "kosul_notu": "Ürün yayında. Kerem yuvası: Yazılım yıldızı en yüksek geliştirici. 3★ ve üstü hesap varken ikinci şık kilitli (Erdem), gerekçe TR 'Kurumsal sözleşmeli müşterilerimiz var.' EN 'We have customers on enterprise contracts.'",
+  "kod_notu": "Birim fiyat InfraSystem.UNIT_PRICE_* sabitinde, seam ve fiil yok [VOCAB?]; sağlayıcı değişimi ve bir yıllık kilit yeni durum; Kerem'in sprinti sprint_hours ya da productivity_mod.",
+  "ilham": "Kaynaksız (model bilgisi, dönem olayı): 2011 sonbaharındaki Tayland selleri sabit disk üretimini durdurdu, disk fiyatları 2012 boyunca yüksek kaldı, barındırma şirketleri depolama fiyatlarını artırdı. dönem.md B#12: donanım maliyeti bulut fiyatını belirliyor (https://www.computerweekly.com/news/2240236953/Price-cuts-and-posturing-in-the-public-cloud-war). Birim fiyat InfraSystem.UNIT_PRICE_* sabitinde, seam ve fiil yok [VOCAB?]. Sunucu gideri oyuncunun gördüğü ve yönettiği kalem. Eleştiri: tut."
+ },
+ {
+  "id": "dunya.bulut",
+  "durum": "tut",
+  "kategori": "Dünyadan haberler ve çeyrek bülteni",
+  "ton": "sıcak",
+  "an": "Bulut fiyat savaşı, dunya.disk'ten en az 26 hafta sonra",
+  "gonderen": "Sunucu sağlayıcın",
+  "gonderen_en": "Your server provider",
+  "konu": "Yeni fiyatlar",
+  "konu_en": "New prices",
+  "metin": "Önümüzdeki aydan itibaren Standart ve Kurumsal paketlerin fiyatı %30 düşüyor. Sunucularınız için bir şey yapmanız gerekmiyor.",
+  "metin_en": "Starting next month, Standard and Enterprise plans are 30% cheaper. You don't need to do anything with your servers.",
+  "secenekler": [
+   {
+    "etiket": "Anladım",
+    "etiket_en": "Got it",
+    "sonuc": "Standart ve Kurumsal sunucu %30 ucuzlar",
+    "sonuc_en": "Standard and Enterprise servers 30% cheaper"
+   }
+  ],
+  "degisen": "Erdem: 'yazım korkunç, işportacı mı'. Satıcı ağzı ve disk zammına dönen cümle çıktı; iki cümlelik sade duyuru.",
+  "kosul_notu": "Ürün yayında; dunya.disk'ten en az 26 hafta sonra. Oyuncu dunya.disk'te ucuz sağlayıcıya geçtiyse gelmez.",
+  "kod_notu": "Birim fiyat sabiti için fiil yok [VOCAB?].",
+  "ilham": "dönem.md B#11: 25 Mart-1 Nisan 2014'te üç büyük bulut sağlayıcısı peş peşe fiyat kesti (hesaplama ~%30, depolama ~%50-68; https://www.pcworld.com/article/2112420/amazon-counters-google-with-its-own-cloud-price-cuts.html); B#11'in 'bu bizim 42. kesintimiz' sözü kesintinin dönem boyunca tekrarlandığını gösteriyor. Kurumsal'a geçiş 3★ ve üstü hesabın sunucu maddesini karşılar, haber oyuncunun sunucu kararına doğrudan değer. Birim fiyat sabiti için fiil yok [VOCAB?]. Eleştiri sonrası: yalnız disk zammı olayından sonra gelir ve ona geri döner. Eleştirideki 'iki yıl önce' yerine 'hatırlarsanız' yazıldı, çünkü disk zammı ilk yılın herhangi bir haftasında gelebilir."
+ },
+ {
+  "id": "dunya.veri_nerede",
+  "durum": "tut",
+  "kategori": "Dünyadan haberler ve çeyrek bülteni",
+  "ton": "ciddi",
+  "an": "Dinleme haberlerinin ertesi haftası",
+  "gonderen": "Pınar Çetin, Bosphorus Sağlık bilgi işlem müdürü",
+  "gonderen_en": "Pınar Çetin, IT Director, Bosphorus Sağlık",
+  "konu": "Verilerimiz nerede duruyor?",
+  "konu_en": "Where is our data?",
+  "metin": "Dinleme haberlerinden sonra yönetimimiz tek bir soru sordu ve cevabı bu hafta istiyor: kayıtlarımız hangi ülkedeki sunucularda duruyor?",
+  "metin_en": "After the surveillance stories in the papers, our board asked one question and wants the answer this week: which country are our records stored in?",
+  "secenekler": [
+   {
+    "etiket": "Pınar'ı sen ara, sunucu düzenini anlat",
+    "etiket_en": "Call Pınar yourself and walk through the server setup",
+    "sonuc": "Bu hafta verimin %10 düşer, Bosphorus Sağlık'ın memnuniyeti artar",
+    "sonuc_en": "Your productivity drops 10% this week, Bosphorus Sağlık's satisfaction rises"
+   },
+   {
+    "etiket": "Bütün hesaplara aynı açıklamayı gönder",
+    "etiket_en": "Send the same statement to every account",
+    "sonuc": "Öbür hesapların memnuniyeti biraz artar, Bosphorus Sağlık'ınki biraz düşer",
+    "sonuc_en": "Every other account's satisfaction rises a little, Bosphorus Sağlık's drops a little"
+   },
+   {
+    "etiket": "Verilerine ayrı bir sunucu sözü ver",
+    "etiket_en": "Promise them a dedicated server for their data",
+    "sonuc": "Bosphorus Sağlık'ın memnuniyeti çok artar, bir söz borcun olur",
+    "sonuc_en": "Bosphorus Sağlık's satisfaction rises sharply, you owe them a promise"
+   }
+  ],
+  "degisen": "Erdem: daha iyi yazım, şıklar derli toplu, kurucu bizzat gitmez. Metin tek soruya indi; şıklar üç ayrı bedel (kurucunun haftası, öbür hesaplarla bu hesap, söz borcu), 'git' telefona döndü.",
+  "kosul_notu": "Dinleme haberlerinin (dönem olayı, haber bandı) ertesi haftası; sağlık ya da finans sektöründen B2B hesap. Pınar yuvası: hesabın bilgi işlem sorumlusu.",
+  "kod_notu": "Memnuniyet trust_delta (öbür bütün hesaplara toplu trust_delta yeni); söz promise_create; kurucu zamanı productivity_mod founder.",
+  "ilham": "dönem.md C#23: 5-6 Haziran 2013'te gizli devlet gözetim programlarının ilk haberleri çıktı (https://en.wikipedia.org/wiki/Global_surveillance_disclosures_(2013%E2%80%93present)); ticari etkisi kaynaksız. dönem.md D#26 (dönem dışı, 2019): bulut ERP'yi seçmeyenlerin %31'i güvenlik ihlali riskini gösteriyor. Güven trust_delta, söz promise_create ('Müşteri kalır · söz borcu' çipi var). Öncül customer.security_review'dan farklı: anket değil, haberden doğan tek soru. Eleştiri sonrası: genel açıklama şıkkı artık Bosphorus Sağlık'ın güvenine mal oluyor (genel mektupla yetinmez) ve birinci şıktan baskın değil."
+ },
+ {
+  "id": "dunya.ceyrek_bulteni",
+  "durum": "tut",
+  "kategori": "Dünyadan haberler ve çeyrek bülteni",
+  "ton": "ciddi",
+  "an": "Her çeyreğin ilk haftası, B2B oyuncu",
+  "gonderen": "Girişim Bülteni",
+  "gonderen_en": "Girişim Bülteni",
+  "konu": "Çeyrek bülteni: işletmeler yazılımı nasıl seçiyor",
+  "konu_en": "Quarterly bulletin: how businesses pick software",
+  "metin": "Bir ticaret odasının altı yüz üyesiyle yaptığı ankete göre işletmeler yazılım seçerken en çok kurulumda yanlarında olunmasına bakıyor. Fiyat ancak üçüncü sırada geliyor.",
+  "metin_en": "In a chamber of commerce survey of six hundred members, businesses said what they look at most when choosing software is support during setup. Price came only third.",
+  "secenekler": [
+   {
+    "etiket": "Anladım",
+    "etiket_en": "Got it",
+    "sonuc": "Bu çeyrek satış görüşmelerinde kurulum desteği daha çok tutar",
+    "sonuc_en": "This quarter, setup support counts for more in sales meetings"
+   }
+  ],
+  "degisen": "Erdem: ton zayıf, bilgi dağınık (girişimler, ticaret odası, yatırım turları bir pakette). Bülten tek konuya indi: KOBİ anketi. Yatırım turları ve girişim sayıları ayrı sayıların konusu.",
+  "kosul_notu": "Her çeyreğin ilk haftası, bülten başına tek konu. Bu sayı B2B oyuncu için (satış görüşmesine dokunur). Öbür sayılar ayrı kayıt olur (ör. tohum turlarının işletme yazılımına kayması; B2C oyuncu için pazaryeri konusu).",
+  "kod_notu": "Satış görüşmesinde kurulum vurgusunun (emph_onboarding) ağırlığını bir çeyrek artıran set_timed_flag ya da yeni seam; bugün fiil yok [VOCAB?].",
+  "ilham": "Erdem'in çeyrek bülteni fikri (2026-10-23); donem.md yatırımcı ilgisinin kayması; KOBİ alım anketleri; oyunda satış görüşmesinin kurulum vurgusu (emph_onboarding)"
+ },
+ {
+  "id": "dunya.okur_anketi",
+  "durum": "tut",
+  "kategori": "Dünyadan haberler ve çeyrek bülteni",
+  "ton": "sıcak",
+  "an": "B2C pazaryeri yayında, yıl sonu",
+  "gonderen": "Gökhan Yıldız, TeknoGündem editörü",
+  "gonderen_en": "Gökhan Yıldız, Editor, TeknoGündem",
+  "konu": "Okur anketi",
+  "konu_en": "Reader survey",
+  "metin": "Yarın yayımlanacak okur anketimizde alışveriş siteleri arasında ilk kez listeye girdiniz, dokuzuncusunuz. Önceden haber vermek istedim, belki okurlarımıza bir şey hazırlamak istersiniz.",
+  "metin_en": "Our reader survey comes out tomorrow, and you've made the list of shopping sites for the first time, at number nine. I wanted to give you a heads-up in case you'd like to offer our readers something.",
+  "secenekler": [
+   {
+    "etiket": "Teşekkür et",
+    "etiket_en": "Thank them",
+    "sonuc": "Marka +2, Kitle +%2",
+    "sonuc_en": "Brand +2, Audience +2%"
+   },
+   {
+    "etiket": "Okurlara ilk siparişte indirim kodu ver",
+    "etiket_en": "Give readers a first-order discount code",
+    "sonuc": "Marka +2, Kitle +%6, Kasa −$1.500",
+    "sonuc_en": "Brand +2, Audience +6%, Cash −$1,500"
+   }
+  ],
+  "degisen": "Erdem: yazım zayıf, getiri yalnız Marka +2, kitle getirmiyor. Not uygulaması anketi pazaryerine taşındı, metin iki cümle; iki şık da kitle getiriyor, indirim kodu daha çok ve paralı.",
+  "kosul_notu": "B2C pazaryeri yayında, yıl sonu; sıra oyuncunun payından gelir (örnekte dokuzuncu).",
+  "kod_notu": "Kitle audience_delta pct, marka add_brand; indirimin bedeli add_cash, kitleyle ölçeklenen tutar için amount_seam.",
+  "ilham": "Taslaktaki dunya.okur_anketi, eleştirinin düzeltmesiyle (sıra oyuncunun payından gelir); Erdem: kullanıcı anketi ve tercih haberleri"
+ },
+ {
+  "id": "basin.kayit",
+  "durum": "tut",
+  "kategori": "Ödül ve basın",
+  "ton": "ciddi",
+  "an": "B2C pazaryeri yayında, kapasite hiç otomatiğe alınmamışken, haftanın uygulaması seçildiğin sabah",
+  "gonderen": "Mert, Yazılım Mühendisi",
+  "gonderen_en": "Mert, Software Engineer",
+  "konu": "Haftanın uygulaması",
+  "konu_en": "App of the week",
+  "metin": "TeknoGündem bu sabah bizi haftanın uygulaması seçmiş. Sabahtan beri kayıt yağıyor, sunucunun yükü %95'e çıktı. Bu hafta böyle sürerse kapasite yetmeyecek.",
+  "metin_en": "TeknoGündem picked us as app of the week this morning. Sign-ups have been pouring in ever since, and server load is at 95%. If this keeps up all week, we'll run out of capacity.",
+  "secenekler": [
+   {
+    "etiket": "Kapasite yükle birlikte kendiliğinden büyüsün",
+    "etiket_en": "Let capacity scale with load automatically",
+    "sonuc": "Yük %80 civarında kalır, sunucu faturası yükle birlikte değişir",
+    "sonuc_en": "Load stays around 80%, the server bill follows the load"
+   },
+   {
+    "etiket": "Kapasiteyi şimdi %30 artır",
+    "etiket_en": "Add 30% capacity now",
+    "sonuc": "Sunucu faturası %30 artar, yük %75'e iner",
+    "sonuc_en": "Server bill +30%, load drops to 75%"
+   },
+   {
+    "etiket": "Bekle, ilgi bir haftada söner",
+    "etiket_en": "Wait it out, the buzz fades in a week",
+    "sonuc": "Fatura değişmez, bu hafta kesinti ihtimali artar",
+    "sonuc_en": "Bill unchanged, outage risk is higher this week"
+   }
+  ],
+  "degisen": "Erdem: kitlenin %50 büyümesi çok, %140 yükle 'sayfalar yarım dakikada açılıyor' tutarsız, belki oyuncunun sunucuyu otomatiğe alma kararını ilk kez verdiği an, 'Sunucu terliyor' başlığı kötü. Büyüme artık yükü %95'e taşıyacak kadar, karar otomatik ayar, elle artırma ve bekleme; başlık değişti, pazaryerine uyarlandı.",
+  "kosul_notu": "B2C pazaryeri yayında, Otomatik ayar hiç açılmamışken (oyuncunun bu kararı ilk kez verdiği an), yük %80'in altındayken gelir ve gelişte kitleyi yükü %95'e taşıyacak kadar büyütür (en çok %20). Mert yuvası: Yazılım yıldızı en yüksek geliştirici.",
+  "kod_notu": "Kitle audience_delta (yükü hedefe taşıyan tutar için amount_seam), olay gelince uygulanır; kapasite ve Otomatik ayar InfraSystem'in, olay kartından yazan fiil yok [VOCAB?]; üçüncü şıkta kesinti zarı IncidentSystem.load_mult ile zaten artar, ek fiil gerekmez.",
+  "ilham": "kurucular.md C#31: basın haberinin getirdiği yükle küçük işletme 'yangın söndürmeye' gömüldü (https://news.ycombinator.com/item?id=1772205); dönemin 'haber sonrası kayıt yağmuru' etkisi (kaynaksız). Kitle audience_delta; yük InfraSystem'in kendi hesabı, kapasiteyi oyuncu değiştirir. B2B ikizi: haberden sonra demo isteyen şirketler (add_prospect). Eleştiri sonrası: sabit 4.000 yerine mevcut kitlenin yarısı. An satırı artık 'ilk basın haberi' demiyor, basin.rakam ile ikisi birden 'ilk' olmasın diye."
+ },
+ {
+  "id": "basin.rakam",
+  "durum": "sil",
+  "degisen": "Erdem: 'çok kötü'. Silindi."
+ },
+ {
+  "id": "odul.final",
+  "durum": "tut",
+  "kategori": "Ödül ve basın",
+  "ton": "sıcak",
+  "an": "Yarışma finalinden bir hafta önce, ürün yayında",
+  "gonderen": "Girişim Bülteni yarışma ekibi",
+  "gonderen_en": "Girişim Bülteni competition team",
+  "konu": "Finaldesiniz",
+  "konu_en": "You're in the final",
+  "metin": "“Yılın Yeni Girişimi” yarışmasında son beşe kaldınız, tebrikler. Final gelecek hafta: her ekibe jüri önünde yedi dakika veriliyor, birinciye $10.000 ödül var. Sunumu nasıl yapacağınızı bu hafta teknik ekibimize bildirmeniz gerekiyor.",
+  "metin_en": "Congratulations, you're one of five finalists for “New Startup of the Year.” The final is next week: each team gets seven minutes in front of the jury, and the winner takes home $10,000. Please let our tech crew know this week how you'll present.",
+  "secenekler": [
+   {
+    "etiket": "Canlı demo yap",
+    "etiket_en": "Do a live demo",
+    "sonuc": "Marka +3, %20 ihtimalle birincilik (Kasa +$10.000); açık hatan varsa demo sahnede takılabilir (Marka −2)",
+    "sonuc_en": "Brand +3, 20% chance to win (Cash +$10,000); with open bugs, the demo may freeze on stage (Brand −2)"
+   },
+   {
+    "etiket": "Önceden çekilmiş demo videosu göster",
+    "etiket_en": "Show a pre-recorded demo video",
+    "sonuc": "Mert'in iki günü gider, Marka +2, %10 ihtimalle birincilik",
+    "sonuc_en": "Mert loses two days, Brand +2, 10% chance to win"
+   },
+   {
+    "etiket": "Slaytla anlat",
+    "etiket_en": "Present with slides",
+    "sonuc": "Marka +1, %5 ihtimalle birincilik",
+    "sonuc_en": "Brand +1, 5% chance to win"
+   }
+  ],
+  "degisen": "Erdem: fikir güzel, uygulama cheesy ('geçen yıl canlı demo yapan kazandı' ve sonrası), 'takılmazsa Kasa +$10.000' fazla düzgün, şıklar baştan. Metin yalnız davet ve soru; birincilik artık ihtimal, canlı demo açık hataya bağlı takılabilir, video şıkkı eklendi.",
+  "kosul_notu": "Ürün yayında, yıl sonu ödül dönemi, marka ya da kitle eşiğini geçmişken. Mert yuvası: Yazılım yıldızı en yüksek geliştirici. Takılma ihtimali açık hata sayısından.",
+  "kod_notu": "check dalları: birincilik odds'u şıkka göre sabit (%20, %10, %5) [WORKING], takılma odds'u açık hatadan (seam yok, kod işi); ödül add_cash (gelir etiketi yok), marka add_brand, video productivity_mod.",
+  "ilham": "oyunlar.md (a)1: sonuç oyuncunun önceki kararlarına bağlı ve görünür (Papers Please); burada şans ürünün açık hatasına ve kararlılığına bağlı (İncil'deki 'Riske gir' şıkkının kalıbı). kurucular.md C#34: konferans uygulaması bir gün önce bozuldu, 6 saatte yamalandı (https://news.ycombinator.com/item?id=16949209). İncil K2 (yıl sonu ödül gecesi önerisi, açık karar). Ödül nakdi add_cash (gelir etiketi yok), marka add_brand. Eleştiri sonrası: canlı demonun başarısız sonucu yazıldı, slayt şıkkı yalnız Marka +2. Slaytın neden birincilik getirmediği metne girdi (geçen yıl birinciliği canlı demo aldı)."
+ },
+ {
+  "id": "kriz.acik",
+  "durum": "tut",
+  "kategori": "Kriz",
+  "ton": "ciddi",
+  "an": "Canlı ürün, büyük açık duyurulunca",
+  "gonderen": "Kerem, Kıdemli Yazılım Mühendisi",
+  "gonderen_en": "Kerem, Senior Software Engineer",
+  "konu": "Acil: şifreleme açığı",
+  "konu_en": "Urgent: encryption flaw",
+  "metin": "Sunucuların çoğunun kullandığı şifreleme kütüphanesinde dün gece bir açık duyuruldu. Saldırgan sunucunun belleğinden şifreleri okuyabiliyor ve arkasında iz bırakmıyor. Bizim sunucular da etkileniyor. Yamayı bu akşam yapabilirim, asıl soru kullanıcılara ne diyeceğimiz.",
+  "metin_en": "Last night a flaw was announced in the encryption library most servers use. An attacker can read passwords straight out of server memory without leaving a trace. Our servers are affected too. I can patch it tonight; the real question is what we tell users.",
+  "secenekler": [
+   {
+    "etiket": "Yamala, basına duyur, herkesten şifresini değiştirmesini iste",
+    "etiket_en": "Patch it, tell the press, ask everyone to change their password",
+    "sonuc": "İtibar +3, Kitle −%1",
+    "sonuc_en": "Reputation +3, Audience −1%"
+   },
+   {
+    "etiket": "Yamala, yalnız kullanıcılara mail at",
+    "etiket_en": "Patch it, email users only",
+    "sonuc": "İtibar +1, Kitle −%0,5",
+    "sonuc_en": "Reputation +1, Audience −0.5%"
+   },
+   {
+    "etiket": "Yamala, kimseye duyurma",
+    "etiket_en": "Patch it, tell no one",
+    "sonuc": "Kitle değişmez; %10 ihtimalle haftalar sonra basında çıkar: İtibar −8, Kitle −%5",
+    "sonuc_en": "Audience unchanged; 10% chance it hits the press weeks later: Reputation −8, Audience −5%"
+   }
+  ],
+  "degisen": "Erdem: 'gayet güzel', şıklar beğenilmedi; yamala ve basına duyur, yamala ve kimseye söyleme (düşük ihtimalli risk), gerekirse üçüncü şık. Üçüncü şık yalnız kullanıcılara mail; sessizliğin bedeli Kerem'in morali değil %10 ihtimalli gecikmeli basın riski.",
+  "kosul_notu": "Canlı ürün; dönemin büyük şifreleme açığı (dünya olayı). Kerem yuvası: Yazılım yıldızı en yüksek geliştirici. B2B ikizinde kitle yerine bütün hesapların memnuniyeti.",
+  "kod_notu": "Gecikmeli risk: check dalı (%10, odds seam'i yok) ve schedule_event ile 4 ile 8 hafta sonra basın kartı; itibar add_reputation, kitle audience_delta pct.",
+  "ilham": "dönem.md C#17: 7 Nisan 2014'te yaygın bir şifreleme kitaplığındaki hata açıklandı, güvenli web sunucularının ~%17'si etkilendi, Haziran'da hâlâ 309 bin sunucu açıktı (https://en.wikipedia.org/wiki/Heartbleed). Öncül product.sprint_dev_security_update'ten farklı: dünya çapında açık ve kullanıcıya ne söyleneceği kararı. B2B ikizinde kitle yerine hesapların güveni. Hata damage_product, itibar add_reputation, kitle audience_delta pct. Eleştiri sonrası: 'kütüphane' yazıldı; sprint sonuna bırakma şıkkı (sprint_dev_security_update öncülü) yerine giriş ekranı notu geldi. Eleştirideki 'Kitle değişmez' sonucuyla not şıkkı sessiz kalma şıkkını her durumda geçerdi; bu yüzden nota küçük bir kitle bedeli (−%0,5), sessizliğe 'Kitle değişmez' yazıldı."
+ },
+ {
+  "id": "kriz.ameliyat",
+  "durum": "tut",
+  "kategori": "Kriz",
+  "ton": "ciddi",
+  "an": "Sprint ortası, kart Geliştirme'de yarıdayken",
+  "gonderen": "Selin, Ürün Yöneticisi",
+  "gonderen_en": "Selin, Product Manager",
+  "konu": "Mert hastanede",
+  "konu_en": "Mert is in hospital",
+  "metin": "Mert'in acil bir durumu oldu, hastanede ve iki hafta yok. Şirket olarak geçmiş olsun çiçeği gönderdik. Ama Beykoz Tekstil için geliştirdiği iş yarıda kaldı, ne yapalım?",
+  "metin_en": "Mert had an emergency and is in hospital, out for two weeks. We sent get-well flowers from the team. But the work Mert was building for Beykoz Tekstil is stuck halfway. What should we do?",
+  "secenekler": [
+   {
+    "etiket": "Kart Mert dönene kadar beklesin",
+    "etiket_en": "Let the card wait until Mert is back",
+    "sonuc": "Kart iki hafta ilerlemez, Mert dönünce kaldığı yerden sürer",
+    "sonuc_en": "The card stalls for two weeks, then picks up where it left off"
+   },
+   {
+    "etiket": "Kartı başka bir geliştirici devralsın",
+    "etiket_en": "Have another developer take over the card",
+    "sonuc": "Kart sürer, kalan işi %20 artar, devralanın kendi kartı bekler",
+    "sonuc_en": "The card keeps moving, its remaining work grows 20%, the other developer's own card waits"
+   },
+   {
+    "etiket": "Mert taburcu olunca on dakika arayıp kaldığı yeri anlatsın",
+    "etiket_en": "Ask Mert for a ten-minute call after discharge to explain where things stand",
+    "sonuc": "Kart sürer, Mert'in morali düşer",
+    "sonuc_en": "The card keeps moving, Mert's morale drops"
+   }
+  ],
+  "degisen": "Erdem: eşin patrona yazması olmaz, Mert'in ekibinden biri ya da PM söylesin, çiçek gönderildi, iş yarıda, Mert iki hafta yok. Gönderen PM oldu, metin onun örneği; şıklar kart üstünden (beklet, başkası devralsın, Mert kısa arasın).",
+  "kosul_notu": "Sprint ortası, Mert'in kartı Geliştirme'de yarıdayken. Mert yuvası: kartın geliştiricisi. Gönderen çeyreğin PM'i, PM yoksa Mert'in hattındaki başka bir çalışan. Hesap yuvası kartın bağlı olduğu B2B hesabı (B2C'de hesap adı geçmez, 'üzerinde çalıştığı iş'). Devralma şıkkı ekipte başka geliştirici varken.",
+  "kod_notu": "Yokluk send_on_leave iki hafta (hastalık olarak); devralma: kartın atananını değiştiren fiil kolsuz (assign_to) [VOCAB?], kalan işin artması sprint_card_effort; moral change_morale. Kart sözlüyse promise_due sonra kendiliğinden gelir.",
+  "ilham": "Kaynaklı tekil bulgu yok; tek kişiye bağımlılık dersi. oyunlar.md (b)5: adaletsiz rastgelelik uyarısı (https://destructoid.com/?p=188090). Eleştiri sonrası: şıklar product.promise_due'yu (ileri al, bırak) tekrarlıyordu; olay sprint ortasına alındı ve şıklar Mert'in kendisine döndü. Kart sözlüyse promise_due sonra kendiliğinden gelir. Mert'in yokluğu send_on_leave, moral change_morale. B2C ikizinde müşteri adı geçmez."
+ },
+ {
+  "id": "pazaryeri.yanlis_fiyat",
+  "durum": "yeni",
+  "kategori": "Ürün",
+  "ton": "mizahi",
+  "an": "Pazaryeri yayında, Ürün Yükleme'de fiyat denetimi yokken",
+  "gonderen": "Hülya Kara, Kilim Evi mağaza sahibi",
+  "gonderen_en": "Hülya Kara, owner of Kilim Evi",
+  "konu": "Halılar",
+  "konu_en": "The rugs",
+  "metin": "Dün akşam $125'lik bir halıyı yanlışlıkla $1,25 diye yüklemişim. Sabaha kadar kırk tane satılmış. Sistem bana bir kere bile sormadı, şimdi ne olacak?",
+  "metin_en": "Last night I accidentally listed a $125 rug for $1.25. By morning, forty of them had sold. Your system didn't ask me even once. What happens now?",
+  "secenekler": [
+   {
+    "etiket": "Siparişleri iptal et, yüklemeye fiyat uyarısı ekleyelim",
+    "etiket_en": "Cancel the orders, and we'll add a price warning to uploads",
+    "sonuc": "Kitle −%1, sonraki sprinte bir Ürün Yükleme kartı girer",
+    "sonuc_en": "Audience −1%, a Product Upload card joins the next sprint"
+   },
+   {
+    "etiket": "Siparişler gitsin, farkı Kilim Evi'ne biz ödeyelim",
+    "etiket_en": "Let the orders ship, we pay Kilim Evi the difference",
+    "sonuc": "Kasa −$4.950, Kitle +%1, Kilim Evi'nin memnuniyeti artar",
+    "sonuc_en": "Cash −$4,950, Audience +1%, Kilim Evi's satisfaction rises"
+   },
+   {
+    "etiket": "Siparişler geçerli, zarar mağazada kalsın",
+    "etiket_en": "The orders stand, the store takes the loss",
+    "sonuc": "Kilim Evi'nin memnuniyeti çok düşer, %15 ihtimalle pazaryerinden ayrılır",
+    "sonuc_en": "Kilim Evi's satisfaction drops sharply, 15% chance it leaves the marketplace"
+   }
+  ],
+  "degisen": "Yeni, #16'nın ayarında; satıcı tarafı (Ürün Yükleme). Bedel kitle ve kart, kasa ya da mağaza.",
+  "kosul_notu": "Pazaryeri yayında, Ürün Yükleme hattında fiyat denetimi kademesi yokken. Mağaza yuvası: satış hacmi orta bir mağaza. Tutar mağazanın bir ürününün fiyatından ve kırk siparişten türer (örnekte 40 × $123,75 = $4.950).",
+  "kod_notu": "Pazaryeri kavramları (mağaza memnuniyeti, mağazanın ayrılması, sipariş iptali) E'de kurulacak, seam ve fiil yok [VOCAB?]; ihtimal check dalı (%15); kartı sprinte koymak yeni fiil; kasa add_cash, kitle audience_delta pct. Hat adlarının EN karşılığı (Product Upload) E'nin metniyle eşlenecek.",
+  "ilham": "#16 urun.dikey_video'nun ayarı (Erdem: 'müthiş'). Fiyat girişindeki ondalık ya da sıfır hatasıyla dakikalar içinde satılan ürün e-ticarette bilinen bir olay (kaynaksız, model bilgisi). OYUN_SISTEMLERI §10: Ürün Yükleme, mağaza memnuniyeti."
+ },
+ {
+  "id": "pazaryeri.fare",
+  "durum": "yeni",
+  "kategori": "Ürün",
+  "ton": "mizahi",
+  "an": "Pazaryeri yayında, Keşif hattında arama zayıfken",
+  "gonderen": "Deniz, Müşteri Temsilcisi",
+  "gonderen_en": "Deniz, Customer Success Manager",
+  "konu": "Arama",
+  "konu_en": "Search",
+  "metin": "Destek kutusunda bu hafta otuz mail var, hepsi arama hakkında. En sevdiğim şu: “Bilgisayarım için fare aradım, iki sayfa fare kapanı çıktı. Birini aldım, iyi çalışıyor. Faremi hâlâ bulamadım.”",
+  "metin_en": "Thirty emails in the support inbox this week, all about search. My favorite: “I searched for a mouse for my computer and got two pages of mousetraps. Bought one, works great. Still can't find my mouse.”",
+  "secenekler": [
+   {
+    "etiket": "Arama düzeltmesini sprintin başına al",
+    "etiket_en": "Put the search fix at the top of the sprint",
+    "sonuc": "Bir kart sonraki sprinte kayar, aramanın hatası kapanır",
+    "sonuc_en": "One card slips to the next sprint, the search bug is fixed"
+   },
+   {
+    "etiket": "Arama kutusuna kategori seçimi ekle",
+    "etiket_en": "Add a category picker to the search box",
+    "sonuc": "Mert'in üç günü gider, Kitle −%1 kadar",
+    "sonuc_en": "Mert loses three days, Audience −1% or so"
+   },
+   {
+    "etiket": "Şimdilik kalsın, alıcı kategoriden gezer",
+    "etiket_en": "Leave it for now, buyers can browse categories",
+    "sonuc": "Kitle −%2 kadar",
+    "sonuc_en": "Audience −2% or so"
+   }
+  ],
+  "degisen": "Yeni, #16'nın ayarında; alıcı tarafı (Keşif). Şaka iki dilde aynı (fare ve mouse).",
+  "kosul_notu": "Pazaryeri yayında, Keşif hattında açık hata varken ya da arama kademesi yokken. Deniz yuvası: Müşteri Temsilcisi; yoksa olay gelmez. Mert yuvası: Keşif hattında çalışmış geliştirici.",
+  "kod_notu": "Hat düzeltmesi sprint_fix_first, olay kartından bağlanması kod işi [VOCAB?]; kitle audience_delta pct; geliştirici zamanı productivity_mod.",
+  "ilham": "#16'nın ayarı: destek kutusundan tek cümlelik komik şikâyet. Aramanın kelimeyi anlamına bakmadan eşlemesi e-ticarette bilinen bir dert (kaynaksız, model bilgisi); 'fare' ile 'mouse' iki dilde de iki anlamlı. OYUN_SISTEMLERI §10: Keşif."
+ },
+ {
+  "id": "pazaryeri.rekor_ay",
+  "durum": "yeni",
+  "kategori": "Ürün",
+  "ton": "mizahi",
+  "an": "Pazaryeri yayında, ay kapanışından sonra; Satıcı Paneli iadeleri ayırmıyorken",
+  "gonderen": "Cem Tunç, Tunç Spor mağaza sahibi",
+  "gonderen_en": "Cem Tunç, owner of Tunç Spor",
+  "konu": "Rekor ay",
+  "konu_en": "Record month",
+  "metin": "Paneliniz bu ay rekor satış gösterdi, ben de ekibime prim dağıttım. Bugün muhasebecim iadelerin de satış diye sayıldığını gösterdi. Bunu konuşmamız lazım.",
+  "metin_en": "Your dashboard showed a record month, so I paid my team bonuses. Today my accountant showed me that returns were counted as sales too. We need to talk.",
+  "secenekler": [
+   {
+    "etiket": "Tunç Spor'un bu ayki komisyonunu iade et",
+    "etiket_en": "Refund Tunç Spor's commission for this month",
+    "sonuc": "Kasa −$800, Tunç Spor'un memnuniyeti artar",
+    "sonuc_en": "Cash −$800, Tunç Spor's satisfaction rises"
+   },
+   {
+    "etiket": "Panel düzeltmesini sprintin başına al",
+    "etiket_en": "Put the dashboard fix at the top of the sprint",
+    "sonuc": "Bir kart sonraki sprinte kayar, bütün mağazaların memnuniyeti biraz artar",
+    "sonuc_en": "One card slips to the next sprint, every store's satisfaction rises a little"
+   },
+   {
+    "etiket": "Telefonla özür dile, düzelteceğimizi söyle",
+    "etiket_en": "Call to apologize and say we'll fix it",
+    "sonuc": "Tunç Spor'un memnuniyeti düşer, %15 ihtimalle başka pazaryerine geçer",
+    "sonuc_en": "Tunç Spor's satisfaction drops, 15% chance it moves to another marketplace"
+   }
+  ],
+  "degisen": "Yeni, #16'nın ayarında; satıcı tarafı (Satıcı Paneli). Bedel kasa, kart ya da mağaza.",
+  "kosul_notu": "Pazaryeri yayında, Satıcı Paneli hattında açık hata varken, ay kapanışının ertesi haftası. Mağaza yuvası: satış hacmi yüksek bir mağaza. Komisyon tutarı mağazanın o ayki komisyonundan.",
+  "kod_notu": "Mağaza memnuniyeti ve mağazanın ayrılması E'de kurulacak, seam ve fiil yok [VOCAB?]; ihtimal check dalı (%15); hat düzeltmesi sprint_fix_first (olay kartından bağlanması kod işi); kasa add_cash.",
+  "ilham": "#16'nın ayarı. Satıcı panellerinde brüt satışla iadeden sonraki net satışın karışması (kaynaksız, model bilgisi). OYUN_SISTEMLERI §10: Satıcı Paneli, komisyon, mağaza memnuniyeti."
+ },
+ {
+  "id": "pazaryeri.cift_siparis",
+  "durum": "yeni",
+  "kategori": "B2C kullanıcı",
+  "ton": "mizahi",
+  "an": "Pazaryeri yayında, Sepet ve Ödeme hattında açık hata varken",
+  "gonderen": "Gül Şahin, alıcı",
+  "gonderen_en": "Gül Şahin, buyer",
+  "konu": "İki buzdolabı",
+  "konu_en": "Two fridges",
+  "metin": "Ödeme düğmesine iki kez bastım, kapıma iki buzdolabı geldi. Kargocular ikisini de dördüncü kata çıkardı. Birini geri göndermek istiyorum ama mağaza iade kargosunu benim ödememi istiyor.",
+  "metin_en": "I clicked the pay button twice, and two fridges showed up at my door. The delivery guys carried both up to the fourth floor. I want to send one back, but the store wants me to pay for return shipping.",
+  "secenekler": [
+   {
+    "etiket": "Çift ödeme düzeltmesini sprintin başına al",
+    "etiket_en": "Put the double-charge fix at the top of the sprint",
+    "sonuc": "Bir kart sonraki sprinte kayar, çift sipariş biter",
+    "sonuc_en": "One card slips to the next sprint, double orders stop"
+   },
+   {
+    "etiket": "Çift siparişlerin iade kargosunu biz ödeyelim",
+    "etiket_en": "We pay return shipping on double orders",
+    "sonuc": "Kasa −$600, hata sürer",
+    "sonuc_en": "Cash −$600, the bug stays"
+   },
+   {
+    "etiket": "İade kuralı mağazanın, karışmayalım",
+    "etiket_en": "Returns are the store's call, stay out of it",
+    "sonuc": "Kitle −%2 kadar, hata sürer",
+    "sonuc_en": "Audience −2% or so, the bug stays"
+   }
+  ],
+  "degisen": "Yeni, #16'nın ayarında; alıcı tarafı (Sepet ve Ödeme, Siparişlerim), mağaza da işin içinde. Bedel kart, kasa ya da kitle.",
+  "kosul_notu": "Pazaryeri yayında, Sepet ve Ödeme hattında açık hata varken. Alıcı yuvası: o hafta büyük sipariş veren bir alıcı (ad üretilir). Kasa tutarı o haftaki çift siparişlerin iade kargosundan.",
+  "kod_notu": "Hat düzeltmesi sprint_fix_first (olay kartından bağlanması kod işi) [VOCAB?]; kasa add_cash (tutar için amount_seam); kitle audience_delta pct.",
+  "ilham": "#16'nın ayarı. Ödeme düğmesine çift tıklamanın iki sipariş açması e-ticarette bilinen bir hata (kaynaksız, model bilgisi). OYUN_SISTEMLERI §10: Sepet ve Ödeme, Siparişlerim, mağaza."
+ }
+]

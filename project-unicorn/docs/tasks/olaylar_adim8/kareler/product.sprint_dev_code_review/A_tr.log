@@ -1,0 +1,19 @@
+Godot Engine v4.6.2.stable.official.71f334935 - https://godotengine.org
+D3D12 12_0 - Forward+ - Using Device #0: AMD - AMD Radeon RX 9070 XT
+
+BOOT|lang=tr|source=arg
+[MCP Runtime] Server listening on port 7777
+[MCP Runtime] Autoload ready, server starting on port 7777
+BUILD|version=0.1.0|scope=demo
+EVENTSHOT|product.sprint_dev_code_review|employee=char_emp_shot_2 (Mert Yıldız)|lead=char_emp_shot_lead (Cansu Er)|where=met|week=14
+EVENTSHOTTEXT|product.sprint_dev_code_review|Kod incelemesi|Cansu Er kodumu üçüncü kez geri çevirdi. Haklı olabilir ama kart bu yüzden sprinte yetişmeyecek, artık ne yazsam yanlış geliyor.
+EVENTSHOTOPTION|product.sprint_dev_code_review|Cansu Er yalnız hataya yol açacak notlarda dursun, gerisini geçsin
+EVENTSHOTOPTION|product.sprint_dev_code_review|Cansu Er ile Mert Yıldız bir gün aynı masaya otursun, notları birlikte kapatsınlar
+EVENTSHOTOPTION|product.sprint_dev_code_review|Kart bu sprintte bu hâliyle kalsın, Mert Yıldız notları sonraki sprintte düzeltsin
+EVENTSHOTOPTION|product.sprint_dev_code_review|Mert Yıldız bu sefer notların hepsini kapatsın, kart sağlam çıksın
+EVENTSHOTCHIPS|product.sprint_dev_code_review|blockers_only|Stok Sayacı -5 puan; Stok: çıkışta 1 açık hata; Cansu -4
+EVENTSHOTCHIPS|product.sprint_dev_code_review|pair_up|Cansu verimi -%20 · 1 hafta; Mert verimi -%20 · 1 hafta; Mert +6
+EVENTSHOTCHIPS|product.sprint_dev_code_review|follow_up|Sonraki sprinte 10 puanlık iş kalır; Mert +4
+EVENTSHOTCHIPS|product.sprint_dev_code_review|close_all|Stok Sayacı +10 puan; Stok: 26 hafta yeni hata çıkmaz; Mert -6
+[Shot] saved C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-Project-Unicorn/eeffbe9c-d5c1-4a8e-8ce4-9e4b60603345/scratchpad/appdata/c7b_g3/Godot/app_userdata/Project Unicorn/event_shot_product.sprint_dev_code_review.png
+exit=0

@@ -1,0 +1,2 @@
+- U7: ÇEYREK sprint sütunlarında (SprintCard dar görünümü) EN kart adları kelime ortasından bölünüyor ya da kesiliyor ('Spreadshe / et Import', 'Basic Bookkeepin', 'Accounts and'); düzelt (co-director 2026-10-26, U2 karelerinden).
+- N4 ihlali (UE prototipi buldu, 2026-10-27): a4_two_pm_long / a4_fifty_long'da panoda uzun kart adları 2 satırdan sonra "…" ile kesiliyor ("Hesap & Oturum (Sultanahmet Prodüksiyon)"); UE'siz U6'da da aynı. U7'de düzelt, U8'de uzun adlı kare.

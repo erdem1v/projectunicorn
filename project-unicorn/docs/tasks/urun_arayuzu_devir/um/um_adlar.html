@@ -1,0 +1,242 @@
+<title>Modül ve Hat Adları</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+/* Düzen: tek okuma sütunu; üstte araştırma ve karar soruları, altta iki ad tablosu ve toplama. Sıcak krem, koyu temada kömür. */
+:root {
+  --bg: #F3EFE8; --panel: #FBF8F3; --line: #DDD5C8; --ink: #2A2621; --ink2: #5C554C; --ink3: #8A8175;
+  --accent: #B5622B; --accent-ink: #FFFFFF; --mono-bg: #ECE5DA; --ok: #3F7A55; --new: #FFF4E8;
+  --f-head: "Archivo", "Helvetica Neue", Arial, sans-serif; --f-body: "Source Serif 4", Georgia, serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #1C1916; --panel: #25211D; --line: #3A342D; --ink: #EDE6DB; --ink2: #BDB3A5; --ink3: #8E8579;
+  --accent: #E08A4F; --accent-ink: #1C1916; --mono-bg: #322C26; --ok: #7DBB8F; --new: #3A2A1C; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #1C1916; --panel: #25211D; --line: #3A342D; --ink: #EDE6DB; --ink2: #BDB3A5; --ink3: #8E8579;
+  --accent: #E08A4F; --accent-ink: #1C1916; --mono-bg: #322C26; --ok: #7DBB8F; --new: #3A2A1C; color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.55; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-block: 40px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 40px; }
+h1, h2, h3, .eyebrow, th, .chip, button, .mono { font-family: var(--f-head); }
+h1 { font-size: 36px; font-weight: 800; font-stretch: 112%; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+h2 { font-size: 22px; font-weight: 750; font-stretch: 105%; margin: 0 0 12px; text-wrap: balance; }
+h3 { font-size: 17px; font-weight: 700; margin: 0 0 6px; }
+.eyebrow { font-size: 12px; font-weight: 650; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink3); font-stretch: 110%; }
+p { margin: 0; max-width: 68ch; } .muted { color: var(--ink2); }
+.lede { display: grid; gap: 12px; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.fact { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; display: grid; gap: 4px; min-width: 0; }
+.fact b { font-family: var(--f-head); font-size: 14px; }
+.q { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 6px; padding: 18px 20px; display: grid; gap: 10px; }
+.opts { display: grid; gap: 8px; }
+.opt { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--line); border-radius: 5px; cursor: pointer; }
+.opt:has(input:checked) { border-color: var(--accent); background: var(--new); }
+.opt input { margin-top: 5px; accent-color: var(--accent); }
+.opt span { min-width: 0; }
+.scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); }
+table { border-collapse: collapse; width: 100%; min-width: 860px; font-size: 14.5px; }
+th { text-align: left; font-size: 12px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink3); padding: 10px 12px; border-bottom: 1px solid var(--line); }
+td { padding: 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td.name { font-family: var(--f-head); font-weight: 650; }
+.was { color: var(--ink3); }
+.chg { background: var(--new); border-radius: 3px; padding: 0 4px; font-family: var(--f-head); font-weight: 700; }
+.mono { display: inline-grid; place-items: center; min-width: 26px; height: 22px; padding: 0 3px; border-radius: 3px; background: var(--mono-bg); border: 1px solid var(--line); font-size: 12px; font-weight: 800; font-stretch: 112%; margin-right: 6px; }
+.id { font-family: ui-monospace, Consolas, monospace; font-size: 12px; color: var(--ink3); }
+.chip { display: inline-block; font-size: 12px; font-weight: 650; padding: 1px 7px; border-radius: 3px; border: 1px solid var(--line); color: var(--ink2); white-space: nowrap; }
+.chip.dev { border-color: var(--accent); color: var(--accent); }
+.choice { display: flex; flex-wrap: wrap; gap: 6px; }
+.choice label { font-family: var(--f-head); font-size: 13px; border: 1px solid var(--line); border-radius: 4px; padding: 3px 8px; cursor: pointer; white-space: nowrap; }
+.choice label:has(input:checked) { border-color: var(--accent); background: var(--new); }
+.choice input { accent-color: var(--accent); margin: 0 4px 0 0; vertical-align: -2px; }
+.why { font-size: 13.5px; color: var(--ink2); }
+.seen { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.seen div { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; font-size: 14px; min-width: 0; }
+.seen code { font-family: var(--f-head); font-weight: 650; }
+ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 72ch; }
+.bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+button { font-size: 15px; font-weight: 700; padding: 10px 18px; border-radius: 5px; border: 0; background: var(--accent); color: var(--accent-ink); cursor: pointer; }
+button:focus-visible, .opt:focus-within, .choice label:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+textarea { width: 100%; min-height: 160px; font-family: ui-monospace, Consolas, monospace; font-size: 13px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 10px; box-sizing: border-box; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="lede">
+    <div class="eyebrow">Ürün penceresi · Sprint ekranı · UM adımı · 2026-10-26</div>
+    <h1>Modül ve hat adları</h1>
+    <p>Erdem A4'te "Modül adları güzel olmalı, Defter diye bir modül adı olmamalı" dedi. Bu sayfa ERP'nin ekrandaki modül adlarını ve hat adlarını önerir. Onaydan sonra yalnız <code>strings.csv</code>'deki değer değişir, anahtar ve oyun mantığı değişmez. Her satır ayrı onaylanır.</p>
+    <p class="muted">Ölçüt: kısa, ilk okuyuşta anlaşılır, gerçek bir ERP ürününde görülebilecek ad; Türkçe ve İngilizce birlikte. Başlangıç önerisi Pazar 2 sentezinin 10 modül tablosu (Erdem'in 26. kararı); oradan sapılan her satır işaretli.</p>
+  </header>
+
+  <section>
+    <h2>Araştırma ne buldu</h2>
+    <div class="facts">
+      <div class="fact"><b>Türk ERP'leri</b><span class="muted">Netsis, Logo ve OpenERP kataloglarında modül sözcükleri "muhasebe", "finans", "satın alma", "stok", "fatura". "Defter" modül adı olarak hiçbirinde yok.</span></div>
+      <div class="fact"><b>İngilizce</b><span class="muted">Kaynaklarda modül adı olarak geçenler: Inventory (SAP Business One, Odoo), Invoicing (Odoo), Purchasing (SAP Business One). Accounting ve Cash Management yaygın ama bizim araştırma dosyalarımızda yazılı değil.</span></div>
+      <div class="fact"><b>Tablonun sınırı</b><span class="muted">Sentez Defter ile Nakit Akışı'nı "Finans ve Muhasebe" diye birleştiriyor. Birleşme parktaki yapı işi; bu tur anahtar değiştirmediği için ikisine ayrı ad verir.</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Ad oyuncuya nerede görünür</h2>
+    <div class="seen">
+      <div><span class="eyebrow">Sprint ekranı, sol sütun</span><br><span class="mono">ÇK</span><code>Çekirdek</code> satırı ve iki harfli işaret</div>
+      <div><span class="eyebrow">Düzeltme kartı</span><br><code>Muhasebe düzeltmesi</code> (bugün: Defter düzeltmesi)</div>
+      <div><span class="eyebrow">Olay çipi</span><br><code>Muhasebe: 2 yeni açık hata</code></div>
+      <div><span class="eyebrow">Destek raporu düğmesi</span><br><code>Muhasebe düzeltmesini aç</code></div>
+      <div><span class="eyebrow">Ar-Ge postası</span><br><code>Yeni özellik hattı açıldı: Kendi Kendine Servis</code></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Senin kararın gereken üç soru</h2>
+    <div style="display:grid;gap:16px">
+      <div class="q">
+        <div class="eyebrow">Soru 1 · Veri girişi hattı</div>
+        <p>Bugün adı "Veri Girişi". Sentez tablosu bu hattı "Satın Alma" diye yeniden adlandırıyor, ama hattın üç kademesi veri girişi: Elle Giriş, Tablo İçe Aktarma, Belge Okuma. Oyuncu "Satın Alma" modülünü açınca sipariş ve tedarikçi değil, bu üç kademeyi görür.</p>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="q1" value="A: Satın Alma / Purchasing"><span><b>A. Satın Alma / Purchasing.</b> Tabloya uyar ve gerçek ERP'lerin çoğunda var (10 katalogdan 8'i). Kademe adları ayrı bir işle sipariş ve tedarikçiye çevrilir; o işe kadar ad ile kademeler uyuşmaz.</span></label>
+          <label class="opt"><input type="radio" name="q1" value="B: Veri Girişi / Data Capture"><span><b>B. Veri Girişi / Data Capture.</b> Kademelere uyar, TR ad değişmez, EN "Data Entry" yerine "Data Capture". Gerçek bir modül adına en az benzeyen seçenek.</span></label>
+        </div>
+      </div>
+      <div class="q">
+        <div class="eyebrow">Soru 2 · Stok'un İngilizcesi</div>
+        <p>TR ad "Stok" kalıyor. İngilizcede gerçek ürünler "Inventory" diyor; bizim kademe adlarımız ve olay metinlerimiz ise "stock" kullanıyor (Stock Count, stock take).</p>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="q2" value="Inventory"><span><b>Inventory.</b> Gerçek ürünlerdeki ad. Modül adı "Inventory", kademe "Stock Count": İngilizce okuyan için ikisi de doğal.</span></label>
+          <label class="opt"><input type="radio" name="q2" value="Stock"><span><b>Stock.</b> Bugünkü ad. Metinlerle tek sözcük, ama İngilizce ERP'de modül adı olarak pek görülmez.</span></label>
+        </div>
+      </div>
+      <div class="q">
+        <div class="eyebrow">Soru 3 · İki harfli işaretler</div>
+        <p>Sol sütunda her modülün önünde iki harfli bir kutu durur. Türkçede iki işaret başka anlama kayıyor: <span class="mono">İK</span> insan kaynaklarıdır (sentezin 10 modülünde "İK ve Bordro" da var), <span class="mono">EN</span> "en" ve İngilizce kısaltmasıdır.</p>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="q3" value="Değişsin: İE ve EG"><span><b>Değişsin:</b> İlk kullanım <span class="mono">İE</span> (İlk + Erişim), Entegrasyonlar <span class="mono">EG</span>. Karışmaz, ama ikisi de bilinen bir kısaltma değil.</span></label>
+          <label class="opt"><input type="radio" name="q3" value="Kalsın: İK ve EN"><span><b>Kalsın:</b> <span class="mono">İK</span> ve <span class="mono">EN</span>. Okunur, ama İK ve Bordro modülü gelince aynı ekranda iki "İK" olur.</span></label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Tablo 1 · Ekrandaki modüller (alanlar)</h2>
+    <p class="muted" style="margin-bottom:12px">ERP dört alan görür (Çekirdek, İlk kullanım, Entegrasyonlar, Güven); B2C'nin kendine ait iki alanı Büyüme ve Gelir. Kısa adlar cümlelerde okunur ve hiçbiri değişmiyor. Değişiklik yalnız "&" yerine "ve" ile soru 3'ün işaretleri.</p>
+    <div class="scroll"><table id="t1">
+      <thead><tr><th>Alan</th><th>Bugün TR · EN (tam, kısa, işaret)</th><th>Öneri TR · EN</th><th>Tabloya göre</th><th>Gerekçe</th><th>Karar</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Tablo 2 · Hat adları</h2>
+    <p class="muted" style="margin-bottom:12px">Hat adı düzeltme kartında, olay çiplerinde, destek raporunda ve Ar-Ge postasında okunur. Kademe adları bu turda değişmez.</p>
+    <div class="scroll"><table id="t2">
+      <thead><tr><th>Hat</th><th>Bugün TR · EN</th><th>Öneri TR · EN</th><th>Kademeler</th><th>Tabloya göre</th><th>Gerekçe</th><th>Karar</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Onaydan sonra birlikte düzelecek metinler</h2>
+    <ul>
+      <li>Adı düz yazan iki Ar-Ge metni: "Güvenlik & Yetki hattının son kademesi", "Mobil & Erişim hattının son kademesi" yeni adla yazılır.</li>
+      <li>Satış kayıp nedeni "ürün yeterince güvenilir değil (Güven & Ölçek)" alanın yeni tam adını alır.</li>
+      <li>Hat adını şablona koyan yaklaşık 15 metin ("{hat} düzeltmesi", "{hat} tarafında açık hata …", "{hat} hattındaki eski ekranlar") yeni adlarla tek tek okunur; ek uyumu bozulan yer düzeltilir.</li>
+      <li>Ürün tanıtımı "Ön muhasebe · stok · fatura tek defterde" ve "işletmenin defterini tutan sistem" mecaz olarak "defter" der. Modül adı değil; dokunulmaz, istersen ayrıca söyle.</li>
+      <li>Kapsam dışı ama aynı kurala aykırı: üç kademe adında "&" var (Hesap & Oturum, Denetim İzi & Şifreleme, Açık API & Webhook). İstersen aynı turda "ve" olur.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Cevapları topla</h2>
+    <p class="muted" style="margin-bottom:12px">Seçimlerini yap, sonra düğmeyle metni kopyala ve yardımcı yönetmene yapıştır. Boş bıraktığın satır "karar yok" diye yazılır.</p>
+    <div class="bar"><button id="collect" type="button">Cevapları kopyala</button><span id="status" class="muted" aria-live="polite"></span></div>
+    <textarea id="out" readonly aria-label="Toplanan cevaplar" style="margin-top:12px"></textarea>
+  </section>
+</div>
+
+<script>
+const AREAS = [
+  { id: "core", market: "ERP + B2C", now: ["Çekirdek · Çekirdek · ÇK", "Core · Core · CO"], prop: null, tie: "tabloda yok", dev: false,
+    why: "ERP'nin kendi tanımı \"çekirdek + sektör eki\"; NetSuite \"çekirdek finans\" der. Değişiklik yok." },
+  { id: "onboarding", market: "ERP + B2C", now: ["İlk Kullanım ve Erişim · İlk kullanım · İK", "Onboarding & Access · Onboarding · ON"],
+    prop: ["İlk Kullanım ve Erişim · İlk kullanım · <span class=chg>İE</span> (soru 3)", "Onboarding <span class=chg>and</span> Access · Onboarding · ON"],
+    tie: "yalnız işaret ve &", dev: true, why: "TR ad senin 17 Ekim kararın, dokunulmadı. EN'de \"&\" yerine \"and\"." },
+  { id: "integrations", market: "ERP", now: ["Entegrasyonlar · Entegrasyonlar · EN", "Integrations · Integrations · IN"],
+    prop: ["Entegrasyonlar · Entegrasyonlar · <span class=chg>EG</span> (soru 3)", "değişmez"], tie: "yalnız işaret", dev: true,
+    why: "Ad, aynı adlı platform hattıyla tutarlı kalır." },
+  { id: "trust", market: "ERP + B2C", now: ["Güven & Ölçek · Güven · GÜ", "Trust & Scale · Trust · TS"],
+    prop: ["Güven <span class=chg>ve</span> Ölçek · Güven · GÜ", "Trust <span class=chg>and</span> Scale · Trust · TS"], tie: "yalnız &", dev: true,
+    why: "Güvenlik ve Dayanıklılık hatlarını ve sunucu uyarısını taşır. Kısa ad aynı kaldığı için cümleler değişmez." },
+  { id: "growth", market: "B2C", now: ["Büyüme · Büyüme · BÜ", "Growth · Growth · GR"], prop: null, tie: "ERP tablosunun dışında", dev: false, why: "Karışma yok, değişiklik yok." },
+  { id: "revenue", market: "B2C", now: ["Gelir · Gelir · GE", "Revenue · Revenue · RV"], prop: null, tie: "ERP tablosunun dışında", dev: false, why: "Karışma yok, değişiklik yok." },
+];
+const LINES = [
+  { id: "line_erp_ledger", now: "Defter · Ledger", prop: "<span class=chg>Muhasebe</span> · <span class=chg>Accounting</span>",
+    steps: "Ön Muhasebe, Hesap Planı, Otomatik Mutabakat", tie: "tablonun \"Finans ve Muhasebe\"sinin yarısı", dev: true,
+    why: "Kademelerin üstündeki doğal ad; Netsis, OpenERP ve ERP Research \"muhasebe ve finans\" der. Birleşme gelince \"Finans ve Muhasebe\" olur." },
+  { id: "line_erp_cashflow", now: "Nakit Akışı · Cash Flow", prop: "<span class=chg>Nakit Yönetimi</span> · <span class=chg>Cash Management</span>",
+    steps: "Kasa Hareketleri, Nakit Akış Tablosu, Nakit Öngörüsü", tie: "tablonun öbür yarısı", dev: true,
+    why: "Bugünkü ad ikinci kademenin raporunun adıyla aynı. \"Finans\" bilerek seçilmedi: oyunun Finans penceresiyle karışır." },
+  { id: "line_erp_intake", now: "Veri Girişi · Data Entry", prop: "Soru 1: <b>A</b> Satın Alma · Purchasing ya da <b>B</b> Veri Girişi · Data Capture",
+    steps: "Elle Giriş, Tablo İçe Aktarma, Belge Okuma", tie: "A tabloya uyar, B sapar", dev: true, ask: true,
+    why: "Tablo \"Satın Alma\" diyor; kademeler veri girişi." },
+  { id: "line_erp_stock", now: "Stok · Stock", prop: "Stok · <span class=chg>Inventory</span> (soru 2)", steps: "Stok Sayacı, Depo ve Raf, El Terminali",
+    tie: "TR tabloya uyar", dev: false, ask: true, why: "SAP Business One ve Odoo \"Inventory\" der." },
+  { id: "line_erp_invoicing", now: "Fatura · Invoicing", prop: "değişmez", steps: "Fatura Kesme, Toplu Fatura, Tahsilat Döngüsü",
+    tie: "tabloya uyar", dev: false, why: "Tablonun tam adı \"Fatura ve e-Belge\"; e-Belge kademeleri dönemle gelecek, bugün yok." },
+  { id: "line_shared_integrations", now: "Entegrasyonlar · Integrations", prop: "değişmez", steps: "Tekil Bağlantı, Çoklu Entegrasyon, Açık API & Webhook",
+    tie: "tabloya uyar", dev: false, why: "Platform hattı; sentezin yazımı." },
+  { id: "line_shared_security", now: "Güvenlik & Yetki · Security and Access", prop: "Güvenlik <span class=chg>ve</span> Yetki · Security and Access",
+    steps: "Hesap & Oturum, Roller ve İzinler, Denetim İzi & Şifreleme", tie: "tabloya uyar (& yerine ve)", dev: false, why: "Rol bazlı erişim ve denetim izi gerçek ERP'lerin sağlık sektörü şartı." },
+  { id: "line_shared_durability", now: "Dayanıklılık · Durability", prop: "değişmez", steps: "Otomatik Kayıt, Sürüm Geçmişi, Çevrimdışı Çalışma",
+    tie: "tabloya uyar", dev: false, why: "Tablo böyle yazdığı için korundu; gerçek bir ERP modül adına en az benzeyen platform hattı." },
+  { id: "line_shared_mobile", now: "Mobil & Erişim · Mobile and Access", prop: "Mobil <span class=chg>ve</span> Erişim · Mobile and Access",
+    steps: "Duyarlı Arayüz, Mobil Uygulama, Çevrimdışı Mobil", tie: "tabloya uyar (& yerine ve)", dev: false, why: "Sentezin yazımı." },
+  { id: "line_hidden_self_serve", now: "Kendi Kendine Servis · Self Service", prop: "değişmez", steps: "Sık Sorulanlar, Bilgi Bankası, Yerinde Çözüm",
+    tie: "tabloda yok (gizli hat)", dev: false, why: "\"Yardım Merkezi\" doğal aday ama Ar-Ge düğümünün adıyla aynı olur." },
+];
+const STORE = "um-adlar-v1";
+let saved = {};
+try { saved = JSON.parse(localStorage.getItem(STORE) || "{}"); } catch (e) { saved = {}; }
+function save() { try { localStorage.setItem(STORE, JSON.stringify(saved)); } catch (e) {} }
+function choice(id, hasProp) {
+  const opts = hasProp ? [["ok", "Öneri"], ["keep", "Bugünkü kalsın"]] : [["ok", "Tamam"]];
+  return '<div class="choice">' + opts.map(([v, t]) =>
+    `<label><input type="radio" name="r_${id}" value="${v}" ${saved["r_" + id] === v ? "checked" : ""}>${t}</label>`).join("") + "</div>";
+}
+document.querySelector("#t1 tbody").innerHTML = AREAS.map(a => `<tr>
+  <td class="name">${a.id}<br><span class="id">${a.market}</span></td>
+  <td><span class="was">${a.now[0]}<br>${a.now[1]}</span></td>
+  <td>${a.prop ? a.prop[0] + "<br>" + a.prop[1] : '<span class="was">değişmez</span>'}</td>
+  <td><span class="chip ${a.dev ? "dev" : ""}">${a.tie}</span></td>
+  <td class="why">${a.why}</td><td>${choice(a.id, !!a.prop)}</td></tr>`).join("");
+document.querySelector("#t2 tbody").innerHTML = LINES.map(l => `<tr>
+  <td class="name">${l.now.split(" · ")[0]}<br><span class="id">${l.id}</span></td>
+  <td><span class="was">${l.now}</span></td><td>${l.prop}</td><td class="why">${l.steps}</td>
+  <td><span class="chip ${l.dev ? "dev" : ""}">${l.tie}</span></td><td class="why">${l.why}</td>
+  <td>${l.ask ? '<span class="why">yukarıdaki soruda</span>' : choice(l.id, l.prop !== "değişmez")}</td></tr>`).join("");
+document.querySelectorAll('input[type="radio"]').forEach(i => {
+  if (saved[i.name] === i.value) i.checked = true;
+  i.addEventListener("change", () => { saved[i.name] = i.value; save(); });
+});
+const strip = s => s.replace(/<[^>]+>/g, "");
+function collect() {
+  const pick = n => { const el = document.querySelector(`input[name="${n}"]:checked`); return el ? el.value : "karar yok"; };
+  const label = v => ({ ok: "öneri", keep: "bugünkü kalsın" }[v] || v);
+  const lines = ["UM cevapları (Erdem)", "Soru 1 veri girişi hattı: " + pick("q1"), "Soru 2 Stok EN: " + pick("q2"), "Soru 3 işaretler: " + pick("q3"), "Alanlar:"];
+  AREAS.forEach(a => lines.push(`  ${a.id}: ${label(pick("r_" + a.id))}${a.prop ? " (" + strip(a.prop[0]) + " / " + strip(a.prop[1]) + ")" : ""}`));
+  lines.push("Hatlar:");
+  LINES.filter(l => !l.ask).forEach(l => lines.push(`  ${l.id}: ${label(pick("r_" + l.id))} (${strip(l.prop)})`));
+  return lines.join("\n");
+}
+document.getElementById("collect").addEventListener("click", () => {
+  const text = collect(); const out = document.getElementById("out"); out.value = text;
+  const st = document.getElementById("status");
+  navigator.clipboard.writeText(text).then(() => { st.textContent = "Kopyalandı."; },
+    () => { out.focus(); out.select(); st.textContent = "Kopyalanamadı; metin seçili, elle kopyala."; });
+});
+</script>

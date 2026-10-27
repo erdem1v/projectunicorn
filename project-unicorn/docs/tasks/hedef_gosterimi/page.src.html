@@ -1,0 +1,319 @@
+<title>Hedef Gösterimi Araştırması</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..100,400..800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: tek sütun okuma akışı; oyun kartları iki sütunlu ızgara, taslaklar oyunun üst çubuğunu taklit eder */
+:root {
+  --bg: #17130f;
+  --panel: #211b16;
+  --panel-2: #2a231c;
+  --line: #3a3027;
+  --ink: #efe6d8;
+  --ink-2: #b9ab97;
+  --ink-3: #8a7d6c;
+  --accent: #f0b43c;
+  --good: #7fbf7a;
+  --warn: #e0894a;
+  --bad: #d9655a;
+  --display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+  --body: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f5efe5; --panel: #fffaf2; --panel-2: #efe6d8; --line: #d9ccb8;
+    --ink: #221a12; --ink-2: #5a4c3c; --ink-3: #7d6e5c; --accent: #b37a12;
+    --good: #3f7d3b; --warn: #b4581c; --bad: #b0392f; color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #f5efe5; --panel: #fffaf2; --panel-2: #efe6d8; --line: #d9ccb8;
+  --ink: #221a12; --ink-2: #5a4c3c; --ink-3: #7d6e5c; --accent: #b37a12;
+  --good: #3f7d3b; --warn: #b4581c; --bad: #b0392f; color-scheme: light;
+}
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.55; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 40px 72px; display: grid; gap: 48px; }
+h1, h2, h3 { font-family: var(--display); font-stretch: 75%; text-wrap: balance; margin: 0; line-height: 1.1; }
+h1 { font-size: clamp(34px, 6vw, 56px); font-weight: 800; letter-spacing: -0.01em; }
+h2 { font-size: 28px; font-weight: 750; }
+h3 { font-size: 21px; font-weight: 700; }
+p { margin: 0; max-width: 68ch; }
+.eyebrow { font-family: var(--display); font-stretch: 75%; text-transform: uppercase; letter-spacing: 0.12em; font-size: 13px; color: var(--accent); font-weight: 700; }
+.lead { font-size: 19px; color: var(--ink-2); }
+section { display: grid; gap: 18px; }
+.meta { font-family: var(--mono); font-size: 13px; color: var(--ink-3); }
+.shot { margin: 0; display: grid; gap: 8px; }
+.shot img { display: block; border: 1px solid var(--line); border-radius: 4px; max-width: 100%; height: auto; }
+.shot figcaption { font-size: 14px; color: var(--ink-3); font-family: var(--mono); }
+.facts { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.facts li { padding-left: 22px; position: relative; max-width: 72ch; }
+.facts li::before { content: ""; position: absolute; left: 4px; top: 0.7em; width: 8px; height: 2px; background: var(--accent); }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+@media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } }
+.game { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 18px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+.game .imgbox { background: #0d0b09; border-radius: 4px; display: grid; place-items: center; padding: 8px; }
+.game .imgbox img { max-width: 100%; height: auto; display: block; }
+.kind { font-family: var(--display); font-stretch: 75%; font-weight: 700; font-size: 14px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); }
+.verdict { display: grid; gap: 6px; font-size: 15.5px; }
+.verdict div { padding-left: 22px; position: relative; }
+.verdict .plus::before, .verdict .minus::before, .verdict .gap::before { position: absolute; left: 0; top: 0; font-family: var(--mono); font-weight: 500; }
+.verdict .plus::before { content: "+"; color: var(--good); }
+.verdict .minus::before { content: "−"; color: var(--bad); }
+.verdict .gap::before { content: "?"; color: var(--ink-3); }
+.src { font-family: var(--mono); font-size: 12.5px; color: var(--accent); white-space: nowrap; }
+.tag { font-family: var(--mono); font-size: 12px; color: var(--ink-3); border: 1px solid var(--line); border-radius: 3px; padding: 0 5px; white-space: nowrap; }
+.textonly { background: var(--panel); border: 1px dashed var(--line); border-radius: 6px; padding: 16px 18px; display: grid; gap: 8px; min-width: 0; }
+.lessons { counter-reset: l; display: grid; gap: 14px; margin: 0; padding: 0; list-style: none; }
+.lessons li { counter-increment: l; display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; }
+.lessons li::before { content: counter(l); font-family: var(--display); font-stretch: 75%; font-weight: 800; font-size: 26px; color: var(--accent); line-height: 1; }
+/* Taslaklar: oyunun üst çubuğu */
+.sketchnote { font-family: var(--mono); font-size: 12.5px; color: var(--ink-3); }
+.bar { background: #1c1712; border: 1px solid #3a3027; border-radius: 4px; display: flex; flex-wrap: wrap; align-items: stretch; color: #efe6d8; overflow: hidden; }
+.bar .slot { padding: 10px 16px; display: grid; gap: 3px; border-right: 1px solid #3a3027; min-width: 0; }
+.bar .slot:last-child { border-right: 0; }
+.bar .k { font-family: var(--display); font-stretch: 75%; font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase; color: #9c8f7d; font-weight: 700; }
+.bar .v { font-family: var(--display); font-stretch: 85%; font-size: 16px; font-weight: 500; white-space: nowrap; }
+.bar .v b { font-weight: 700; }
+.bar .v .of { color: #9c8f7d; }
+.bar .clock { font-family: var(--display); font-size: 22px; font-weight: 700; }
+.prog { height: 4px; background: #3a3027; border-radius: 2px; overflow: hidden; width: 170px; max-width: 100%; }
+.prog i { display: block; height: 100%; background: #f0b43c; }
+.drop { background: #211b16; border: 1px solid #3a3027; border-radius: 4px; color: #efe6d8; padding: 12px 16px; display: grid; gap: 6px; max-width: 360px; font-family: var(--display); font-stretch: 85%; font-size: 15px; }
+.drop .done { color: #9c8f7d; }
+.drop .done::before { content: "✓ "; color: #7fbf7a; }
+.drop .open::before { content: "○ "; color: #f0b43c; }
+.drop .foot { border-top: 1px solid #3a3027; padding-top: 6px; color: #b9ab97; font-size: 13.5px; }
+.corner { background: rgba(23,19,15,0.86); border: 1px solid #3a3027; border-radius: 4px; color: #efe6d8; padding: 10px 14px; display: grid; gap: 4px; max-width: 320px; font-family: var(--display); font-stretch: 85%; }
+.corner .t { font-weight: 700; font-size: 16px; }
+.corner .s { font-size: 14.5px; color: #d8ccba; }
+.office { background: linear-gradient(160deg, #6e8a96 0%, #8ea3a8 40%, #b7a58a 100%); border-radius: 4px; padding: 14px; min-height: 150px; display: flex; align-items: flex-end; }
+.opt { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 18px; display: grid; gap: 14px; min-width: 0; }
+.opt.pick { border-color: var(--accent); }
+.opt h3 { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.badge { font-family: var(--display); font-stretch: 75%; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; background: var(--accent); color: #17130f; padding: 2px 8px; border-radius: 3px; font-weight: 800; }
+.cost { font-size: 15px; color: var(--ink-2); }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; }
+table { border-collapse: collapse; width: 100%; min-width: 720px; font-size: 14px; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--display); font-stretch: 75%; text-transform: uppercase; letter-spacing: 0.08em; font-size: 12.5px; color: var(--ink-3); background: var(--panel); }
+td a { color: var(--ink); text-decoration-color: var(--ink-3); word-break: break-all; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.callout { border-left: 3px solid var(--accent); padding: 4px 0 4px 16px; display: grid; gap: 8px; }
+</style>
+
+<div class="wrap">
+
+<header style="display:grid; gap:14px">
+  <div class="eyebrow">Project Unicorn · araştırma · 27 Ekim 2026</div>
+  <h1>Hedef Gösterimi Araştırması</h1>
+  <p class="lead">Soru: başka yönetim oyunları oyuncunun o anki hedefini ekranda nasıl gösteriyor? Bu sayfa öğretici ya da görev akışı tasarımı değildir. O iş en sona kalıyor. Amaç, bugünkü "Sıradaki" satırını oyuncunun okuyabileceği bir biçime getirmek için yön seçmek.</p>
+  <p class="meta">Yeni ajan açılmadan yardımcı yönetmen oturumunda yapıldı · 11 arama, 3 sayfa okuması · görseller Steam mağaza ekran görüntülerinden kırpıldı</p>
+</header>
+
+<section>
+  <div class="eyebrow">Bugün oyunda</div>
+  <h2>Üst çubukta tek satır: hedefin yalnız çıtası</h2>
+  <figure class="shot">
+    <img src="{{OURS}}" width="{{OURS_W}}" height="{{OURS_H}}" alt="Oyunun üst çubuğu: SIRADAKİ, Aylık gelir $2,5K; yanında saat 10:00 ve Sprint planı bekliyor">
+    <figcaption>Ürün ekranı karesi, U5 (two_pm, TR). Aynı karede MRR $1,2K yazıyor ama hedef satırında yazmıyor.</figcaption>
+  </figure>
+  <ul class="facts">
+    <li>Hedef aslında beş adımlı bir liste: "Frank'in çeki". Adımlar sırasıyla ürün tipini seç, ilk sprinti başlat, v1.0'ı yayınla, ilk ödeyen müşteri, aylık gelir $2,5K. Beşi bitince Frank'in çek kartı gelir. Ardından iki adımlı seed listesi açılır. <span class="tag">cheque_read.gd:36–48</span></li>
+    <li>Üst çubuk bu listenin yalnız sıradaki adımının adını yazar. Şimdiki değeri, kaçıncı adım olduğunu, kimin hedefi olduğunu ve ne kazandırdığını yazmaz.</li>
+    <li>"Sıradaki" yuvası yedi ayrı şeyi sırayla gösterir: toplantı, teklifin kalan haftası, son sprint kararı, kâğıdın son haftası, görüşme saati, hedef adımı, mesai bitişi. Hedef bunların en altındadır, acil bir şey varken görünmez. <span class="tag">top_bar.gd:257–288</span></li>
+    <li>Listenin tamamı ("Frank'in çeki · 2/5") Kişisel sekmede, Finans özetinde ve gelen kutusu bildiriminde zaten var. Eksik olan ana ekranda okunması.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="eyebrow">Beş oyun, beş biçim</div>
+  <h2>Hedefi ekranda tutan oyunlar</h2>
+  <div class="grid2">
+
+    <article class="game">
+      <div class="kind">Frostpunk · köşe takipçisi</div>
+      <div class="imgbox"><img src="{{FROST}}" width="{{FROST_W}}" height="{{FROST_H}}" alt="Frostpunk sol alt köşe: Convince people to trust you again, altında Raise hope to 15%; SURVIVE, altında Survive the storm"></div>
+      <p>Sol altta her hedef bir başlık ve altında ölçülebilir bir koşul olarak durur ("umudu %15'e çıkar"). Hedef uyarılardan ayrı bir yerde, oyun boyunca ekranda kalır. <span class="src">S2</span></p>
+      <div class="verdict">
+        <div class="plus">Eleştirmenler senaryoların oyuncuyu baskı altında tuttuğunu yazıyor. <span class="src">S17</span></div>
+        <div class="minus">Bir inceleme aynı çağrıların her oyunda aynı anda geldiğini, keşfin bu yüzden azaldığını söylüyor. <span class="src">S16</span></div>
+      </div>
+    </article>
+
+    <article class="game">
+      <div class="kind">Planet Zoo · simgeden açılan kademeli panel</div>
+      <div class="imgbox"><img src="{{PZOO}}" width="{{PZOO_W}}" height="{{PZOO_H}}" alt="Planet Zoo Objectives paneli: hayvanat bahçesinin hikâyesi, anlatıcı portresi, BRONZE kademesi altında tikli görev listesi"></div>
+      <p>Sol raydaki kupa simgesi paneli açar: bahçenin hikâyesi, hedefi veren karakter, sonra Bronz kademenin tikli listesi. Gümüş ve Altın kademeleri sonra gelir. <span class="src">S3</span></p>
+      <div class="verdict">
+        <div class="minus">Game Informer kariyer modunu angarya listesi ve uzun bir öğretici diye nitelendiriyor: refahı yükselt, nesneyi şuraya koy, şu kadar tür sahiplen. <span class="src">S6 ✓</span> PCWorld da aynı görüşte. <span class="src">S7</span></div>
+        <div class="minus">GamesRadar'a göre dördüncü bölüm oyuncuyu bir anda boş haritaya bırakıyor. <span class="src">S8</span></div>
+        <div class="plus">Karşı görüş: GameSpot ilk senaryoları başlamak için en iyi yer buluyor. <span class="src">S9</span></div>
+      </div>
+    </article>
+
+    <article class="game">
+      <div class="kind">Cities: Skylines II · kilometre taşı çubuğu</div>
+      <div class="imgbox"><img src="{{CS2}}" width="{{CS2_W}}" height="{{CS2_H}}" alt="Cities Skylines II sol alt: kupa simgesi, MEGALOPOLIS yazısı ve ilerleme çubukları"></div>
+      <p>Sol altta kupa simgesi, ulaşılan kilometre taşının adı ve bir ilerleme çubuğu durur. Çubuğa tıklayınca her taşın şartı ve açtığı şeyler (para, arazi izni, yeni hizmetler) listelenir. <span class="src">S5</span> <span class="src">S13</span> <span class="src">S14</span></p>
+      <div class="verdict">
+        <div class="minus">Forumda oyuncular taşların adı ile ölçtüğü şeyin uyuşmadığından şikâyet ediyor: nüfus şartı olmayan "büyük kasaba", ucuz parklarla satın alınan puan. <span class="src">S15 · Düşük</span></div>
+      </div>
+    </article>
+
+    <article class="game">
+      <div class="kind">Startup Company · şirket kartında tek satır</div>
+      <div class="imgbox"><img src="{{STARTUP}}" width="{{STARTUP_W}}" height="{{STARTUP_H}}" alt="Startup Company sağ üst şirket kartı: Musive, sıralama ve yüzdeler, altında Next milestone: Acquire at least 1 competitor(s)"></div>
+      <p>Bizimkine en yakın örnek bu. Şirket kartının altında "Sıradaki kilometre taşı: en az 1 rakip satın al" yazıyor. İlerleme, ödül ve kaçıncı adım olduğu yok. <span class="src">S4</span></p>
+      <div class="verdict">
+        <div class="gap">Bu satırın oyuncuda nasıl karşılandığına dair kaynak bulunamadı. [BOŞLUK]</div>
+      </div>
+    </article>
+
+    <article class="game">
+      <div class="kind">Prison Architect · yapılacaklar defteri</div>
+      <div class="imgbox"><img src="{{PRISON}}" width="{{PRISON_W}}" height="{{PRISON_H}}" alt="Prison Architect sol üst not defteri: Todo 0/6, gelen mahkûmlar ve sayaç, şartlı tahliye, ziyaretçiler, yorgun personel, idam sırası yüzdeleri, olay raporları"></div>
+      <p>Bu bir hedef değil, o an dikkat isteyenlerin defteri: gelen mahkûmlar ve geri sayımı, yorgun personel, yüzdeler. Hedef ve hibe listesi ayrı bir yerde durur. <span class="src">S1</span></p>
+      <div class="verdict">
+        <div class="plus">Bizim için dersi şu: "şimdi ne acil" ile "neye çalışıyorum" iki ayrı soru ve iki ayrı yerde cevaplanıyor.</div>
+      </div>
+    </article>
+
+    <div class="textonly">
+      <div class="kind">Görseli alınamayanlar</div>
+      <p><b>Two Point Hospital.</b> Her hastanenin üç yıldızlık üç hedef seti var. Bir yıldız sonraki hastaneyi açar, kalan yıldızlar isteğe bağlıdır. <span class="src">S10 ✓</span> Tekrar konusunda incelemeler ikiye ayrılıyor. <span class="src">S11</span> <span class="src">S12</span></p>
+      <p><b>Football Manager.</b> Yönetim kurulunun hedefleri ayrı bir güven ekranında durur. Kaçırılan hedef iyi bir sezona rağmen kovulmaya götürebilir. Bizdeki yatırımcı beklentisine en yakın örnek bu. <span class="src">S22</span></p>
+      <p class="meta">Wiki görselleri bot korumalı olduğu için indirilemedi. Korumayı aşmaya çalışılmadı.</p>
+    </div>
+
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">Başarısız ve eleştirilen örnekler</div>
+  <h2>Hedef gösterimi nerede ters tepti</h2>
+  <div class="grid2">
+    <div class="textonly">
+      <div class="kind">Big Ambitions · zorla tek yol</div>
+      <p>Bir incelemeye göre öğretici hedefleri oyuncuyu sabit bir yola sokuyor ve elinden tutuyor. Atlamak mümkün ama o zaman istemediğin işletmeleri kurmak gerekebiliyor. Hedefler her yeni işletmeyle çoğalıyor. <span class="src">S18 · Düşük-Orta, 2023 erken erişim</span></p>
+    </div>
+    <div class="textonly">
+      <div class="kind">Game Dev Tycoon · hedefsiz döngü</div>
+      <p>İncelemeler ve oyuncu özetleri, ilk oyunlardan sonra yeni hedef ya da meydan okuma olmadığı için oyunun tekrara döndüğünü yazıyor. Bir inceleme oyunun çoğunu sayıların artışını izlemek diye tarif ediyor. <span class="src">S20 · Düşük</span> <span class="src">S21</span></p>
+    </div>
+    <div class="textonly">
+      <div class="kind">Anno 1800 · takılan görev zinciri</div>
+      <p>Oyuncular görev zincirinin durduğunu ya da hiç tetiklenmediğini bildiriyor. Ubisoft'un önerisi yeni kampanya başlatmak. <span class="src">S19 · Düşük</span></p>
+    </div>
+    <div class="textonly">
+      <div class="kind">Planet Zoo · angarya listesi</div>
+      <p>Yukarıdaki karttaki eleştiri: hedefler karar istemeyen işlerden oluşunca liste uzun bir öğreticiye dönüyor. <span class="src">S6 ✓</span> <span class="src">S7</span></p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">Çıkarım</div>
+  <h2>İyi örneklerin ortak yanı</h2>
+  <ol class="lessons">
+    <li><p><b>Hedef uyarıdan ayrı durur.</b> Frostpunk, Cities: Skylines II ve Planet Zoo hedefi kendi yerinde tutar; Prison Architect acil işleri ayrı defterde toplar. Bizde ikisi tek yuvayı paylaşıyor ve acil iş varken hedef kayboluyor.</p></li>
+    <li><p><b>Koşul sayıyla ve şimdiki değerle okunur.</b> "Umudu %15'e çıkar" ya da dolan bir çubuk. Bizim satır çıtayı yazıyor ama nerede olduğunu yazmıyor.</p></li>
+    <li><p><b>Kimin hedefi olduğu ve ne kazandırdığı görünür.</b> Planet Zoo'da hedefi veren karakter, Cities'te açılan ödüller, Two Point'te sonraki hastane. Bizde hedefin adı "Frank'in çeki" ve ödülü Frank'in çeki, ama ikisi de üst çubukta yok.</p></li>
+    <li><p><b>Tıklayınca liste açılır.</b> Ana ekranda tek satır, ayrıntı bir tıkla.</p></li>
+    <li><p><b>Kötü örneklerin ortak yanı:</b> karar istemeyen angarya adımları, oyuncuyu tek yola zorlamak, adın ölçtüğü şeyle uyuşmaması, takılıp kalan hedef. Bizim beş adım gerçek kararlar ve hedef durumdan türetildiği için takılamıyor. Bu iyi; korunmalı.</p></li>
+  </ol>
+</section>
+
+<section>
+  <div class="eyebrow">Seçenekler</div>
+  <h2>Bizim için üç yön</h2>
+  <p class="sketchnote">Aşağıdakiler kaba HTML taslağıdır, oyun karesi değildir. Siz bir yön seçince oyunun kendi arayüzünde TR ve EN kare çekilir.</p>
+
+  <div class="opt">
+    <h3>A · Aynı yuva, daha çok bilgi</h3>
+    <div class="bar">
+      <div class="slot"><span class="k">Frank'in çeki · 4/5</span><span class="v">Aylık gelir <b>$1,2K</b> <span class="of">/ $2,5K</span></span><div class="prog"><i style="width:48%"></i></div></div>
+      <div class="slot"><span class="clock">10:00</span><span class="k">Sprint planı bekliyor</span></div>
+    </div>
+    <p>Yuva ve öncelik sırası aynı kalır. Yalnız hedef satırı listenin adını, adım sayısını, şimdiki değeri ve ince bir çubuğu gösterir. Acil bir şey varken hedef yine görünmez.</p>
+    <p class="cost">Bedel: en küçük iş, yalnız üst çubuk. Geri dönüşü kolay.</p>
+  </div>
+
+  <div class="opt pick">
+    <h3>B · Hedefin kendi kutusu <span class="badge">Önerim</span></h3>
+    <div class="bar">
+      <div class="slot"><span class="k">Frank'in çeki · 4/5 ▾</span><span class="v">Aylık gelir <b>$1,2K</b> <span class="of">/ $2,5K</span></span><div class="prog"><i style="width:48%"></i></div></div>
+      <div class="slot"><span class="k">Sıradaki</span><span class="v">Mesai bitimine 7 saat</span></div>
+      <div class="slot"><span class="clock">10:00</span><span class="k">Sprint planı bekliyor</span></div>
+    </div>
+    <div class="drop">
+      <span class="done">Ürün tipini seç</span>
+      <span class="done">İlk sprinti başlat</span>
+      <span class="done">v1.0'ı yayınla</span>
+      <span class="done">İlk ödeyen müşteri</span>
+      <span class="open">Aylık gelir $1,2K / $2,5K</span>
+      <span class="foot">Beşi bitince Frank'in çek kartı gelir.</span>
+    </div>
+    <p>Hedef üst çubukta kendi kutusunda sürekli durur. "Sıradaki" yalnız saatli ve acil işlere kalır. Kutuya tıklayınca beş adımlık liste ve sonunda ne olacağı açılır. Öğretici kurulduğunda aynı kutu genişler, yeni bir yer açmak gerekmez.</p>
+    <p class="cost">Bedel: üst çubuğa bir kutu ve bir açılır liste, birkaç yeni metin anahtarı. Veri hazır, liste zaten başka sekmelerde çiziliyor. Üst çubuk dar ekranda sıkışabilir; kare bunu gösterecek.</p>
+  </div>
+
+  <div class="opt">
+    <h3>C · Ofiste köşe takipçisi</h3>
+    <div class="office">
+      <div class="corner">
+        <span class="t">Frank'in çeki · 4/5</span>
+        <span class="s">○ Aylık gelir $1,2K / $2,5K</span>
+      </div>
+    </div>
+    <p>Frostpunk gibi, hedef ofis görünümünün köşesinde başlık ve koşul olarak durur. Üst çubuk hedefi hiç göstermez.</p>
+    <p class="cost">Bedel: ofis görünümüne yeni bir katman. Pencere açıkken (Ürün, Satış) görünmez ya da üstte kalır, ikisi de sorun. Öğretici turunda yeniden değerlendirilmesi daha doğru.</p>
+  </div>
+
+  <div class="callout">
+    <p><b>Önerim B.</b> Beş iyi örnekten dördü hedefi uyarıdan ayırıyor. Oyuncu ilerlemesini sayıyla görüyor, ayrıntı bir tıkla açılıyor. Öğretici geldiğinde aynı kutu büyüyebiliyor.</p>
+    <p><b>Ne yapmayacağız:</b> köşe takipçisi (C) şimdi yok. Görev ve öğretici kurgusu da şimdi yok, o en sona kalıyor. Hedeflerin içeriği (beş adım) değişmiyor, yalnız gösterimi değişiyor.</p>
+    <p><b>Bilemediğim:</b> B'nin oyuncunun ilk saatini ne kadar kolaylaştırdığı ancak oynayarak görülür. [DEĞERLENDİREMEM] Dar ekranda üst çubuğa üçüncü bir kutunun sığıp sığmadığını kare gösterecek.</p>
+    <p class="meta">Karar: siz işler bitince bakacaksınız. Bu araştırma yeni bir iş başlatmadı.</p>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">Kaynak sicili</div>
+  <h2>Kaynaklar</h2>
+  <p class="meta">✓ = sayfa açılıp okundu. İşaretsizler arama sonucu özetinden; sayfa açılmadı. Erişim tarihi hepsi için 27 Ekim 2026.</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>#</th><th>Kaynak</th><th>Yayıncı · tarih</th><th>Güven</th></tr></thead>
+      <tbody>
+        <tr><td>S1</td><td><a href="https://store.steampowered.com/app/233450/">Prison Architect, Steam mağaza ekran görüntüsü 00</a></td><td>Introversion / Paradox</td><td>Yüksek (birincil görsel)</td></tr>
+        <tr><td>S2</td><td><a href="https://store.steampowered.com/app/323190/">Frostpunk, Steam mağaza ekran görüntüsü 02</a></td><td>11 bit studios</td><td>Yüksek (birincil görsel)</td></tr>
+        <tr><td>S3</td><td><a href="https://store.steampowered.com/app/703080/">Planet Zoo, Steam mağaza ekran görüntüsü 03</a></td><td>Frontier</td><td>Yüksek (birincil görsel)</td></tr>
+        <tr><td>S4</td><td><a href="https://store.steampowered.com/app/606800/">Startup Company, Steam mağaza ekran görüntüsü 00</a></td><td>Hovgaard Games</td><td>Yüksek (birincil görsel)</td></tr>
+        <tr><td>S5</td><td><a href="https://store.steampowered.com/app/949230/">Cities: Skylines II, Steam mağaza ekran görüntüsü 02</a></td><td>Colossal Order / Paradox</td><td>Yüksek (birincil görsel)</td></tr>
+        <tr><td>S6 ✓</td><td><a href="https://www.gameinformer.com/index.php/review/planet-zoo/planet-zoo-review-wearing-down-barriers">Planet Zoo incelemesi</a></td><td>Game Informer, Kimberley Wallace · 7 Kas 2019</td><td>Orta-Yüksek</td></tr>
+        <tr><td>S7</td><td><a href="https://www.pcworld.com/article/398318/planet-zoo-review-zoo-tycoon.html">Planet Zoo incelemesi</a></td><td>PCWorld · 2019</td><td>Orta</td></tr>
+        <tr><td>S8</td><td><a href="https://gamesradar.com/planet-zoo-review">Planet Zoo incelemesi</a></td><td>GamesRadar · 2019</td><td>Orta</td></tr>
+        <tr><td>S9</td><td><a href="https://gamespot.com/reviews/planet-zoo-review-spreadsheet-safari/1900-6417370/">Planet Zoo incelemesi</a></td><td>GameSpot · 2019</td><td>Orta</td></tr>
+        <tr><td>S10 ✓</td><td><a href="https://en.wikipedia.org/wiki/Two_Point_Hospital">Two Point Hospital</a></td><td>Wikipedia</td><td>Orta (ikincil)</td></tr>
+        <tr><td>S11</td><td><a href="https://www.cityam.com/?p=218311">Two Point Hospital incelemesi</a></td><td>City AM · 2018</td><td>Orta-Düşük</td></tr>
+        <tr><td>S12</td><td><a href="https://nintendoworldreport.com/review/52928">Two Point Hospital incelemesi</a></td><td>Nintendo World Report</td><td>Orta</td></tr>
+        <tr><td>S13</td><td><a href="https://www.paradoxinteractive.com/games/cities-skylines-ii/features/game-progression">Game progression</a></td><td>Paradox Interactive (resmi)</td><td>Yüksek</td></tr>
+        <tr><td>S14</td><td><a href="https://www.thereviewgeek.com/citiesskylines2-guide-progressionsystem/">Cities: Skylines 2 progression rehberi</a></td><td>The Review Geek (sayfa 403 verdi)</td><td>Orta</td></tr>
+        <tr><td>S15</td><td><a href="https://steamcommunity.com/app/949230/discussions/0/3875967149488416337">Kilometre taşları tartışması</a></td><td>Steam forumu · Ekim 2023</td><td>Düşük</td></tr>
+        <tr><td>S16</td><td><a href="https://www.fandom.com/articles/frostpunk-review">Frostpunk incelemesi</a></td><td>Fandom · 2018</td><td>Orta</td></tr>
+        <tr><td>S17</td><td><a href="https://www.cgmagonline.com/reviews/frostpunk-pc-review-11-bit-studios">Frostpunk (PC) incelemesi</a></td><td>CGMagazine · 2018</td><td>Orta</td></tr>
+        <tr><td>S18</td><td><a href="https://itemlevel.net/big-ambitions-review-build-your-business-empire/">Big Ambitions incelemesi</a></td><td>itemlevel.net · 2023</td><td>Düşük-Orta</td></tr>
+        <tr><td>S19</td><td><a href="https://devtrackers.gg/anno-1800/p/3a7ecc1c-only-half-of-the-quests-are-triggering-buildings-cannot-be-used">Görevlerin yarısı tetiklenmiyor</a></td><td>devtrackers.gg (Ubisoft forum aynası)</td><td>Düşük</td></tr>
+        <tr><td>S20</td><td><a href="https://vaporlens.app/app/239820/game_dev_tycoon">Game Dev Tycoon yorum özeti</a></td><td>Vaporlens (toplayıcı)</td><td>Düşük</td></tr>
+        <tr><td>S21</td><td><a href="https://gamechronicles.com/game-dev-tycoon-review-pcsteam">Game Dev Tycoon incelemesi</a></td><td>Game Chronicles</td><td>Düşük-Orta</td></tr>
+        <tr><td>S22</td><td><a href="https://www.footballmanager.com/features/supporter-confidence">Supporter Confidence</a></td><td>Sports Interactive (resmi) · FM23</td><td>Orta</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="meta">Eksikler: Anno 1800'ün görev takipçisi ve Two Point Hospital'ın yıldız paneli görsel olarak alınamadı. Football Manager satırı arama özetinden geliyor. Görselli beş örneğin hepsi Steam'in kendi mağaza görselleri; oyun içi ekranın tamamı değil, ilgili köşe kırpıldı.</p>
+</section>
+
+</div>

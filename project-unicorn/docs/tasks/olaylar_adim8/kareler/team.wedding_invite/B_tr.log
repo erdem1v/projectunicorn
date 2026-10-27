@@ -1,0 +1,16 @@
+Godot Engine v4.6.2.stable.official.71f334935 - https://godotengine.org
+D3D12 12_0 - Forward+ - Using Device #0: AMD - AMD Radeon RX 9070 XT
+
+BOOT|lang=tr|source=arg
+[MCP Runtime] Server listening on port 7777
+[MCP Runtime] Autoload ready, server starting on port 7777
+BUILD|version=0.1.0|scope=demo
+EVENTSHOT|team.wedding_invite|employee=char_emp_shot_1 (Kerem Hasan Karaosmanoğlu)|where=met|week=27
+EVENTSHOTTEXT|team.wedding_invite|Düğün|Patron, ayın sonunda evleniyorum. Düğünümde seni de görmeyi çok isterim, gelebilirsen çok sevinirim.
+EVENTSHOTOPTION|team.wedding_invite|Düğüne git, tam altın tak
+EVENTSHOTOPTION|team.wedding_invite|Düğüne git, çeyrek altın tak
+EVENTSHOTOPTION|team.wedding_invite|Gidemeyeceğini söyle, çiçek gönder
+EVENTSHOTCHIPS|team.wedding_invite|gold_full|Nakit -$740; Kerem +10
+EVENTSHOTCHIPS|team.wedding_invite|gold_quarter|Nakit -$222; Kerem +5
+EVENTSHOTCHIPS|team.wedding_invite|flowers|Nakit -$111
+[Shot] saved C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-Project-Unicorn/eeffbe9c-d5c1-4a8e-8ce4-9e4b60603345/scratchpad/appdata/c7b_g1/Godot/app_userdata/Project Unicorn/event_shot_team.wedding_invite_employee=char_emp_shot_1_long=1.png

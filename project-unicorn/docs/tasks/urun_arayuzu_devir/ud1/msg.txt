@@ -1,0 +1,10 @@
+Ürün arayüzü UD1: "Öneriyi uygula" bu sprintin yanında sonraki sprint sütununu da doldurur; PM'in hazırlığı ve tasarımcının önden işi o sütunun kartlarına gider, devirde de öyle
+
+Liderin önerisi iki liste döndürür (SprintCatalog.lead_suggestion {this, next}): bu sprint bugünkü altı basamakla dolar; sütun aynı sırayı baştan dolaşır, bu sprinte giren kartları atlar, bu sprintte sığmayanı yeniden dener, oyuncunun ve onaylı PM planının kartlarının arkasına ekler. Sütunun yükü (kartlarının kalanı artı bu sprintten devredecek iş, zaman ekseninin out'u: SprintSystem.carried_points) ekibin kapasitesini aşmaz (%100; %125 tavanı sütunda yok); düzeltme payı, 12 atlama ve 6. basamağın kalkanı sütun için ayrıca sayılır; onaysız PM planı hiçbir sütuna konmaz. Planlama devredilmişken kendiliğinden başlayan sprint de sütunu doldurur. Öneri satırının verisi (center.suggest) öneri yalnız sütuna ekliyorsa sayısızdır. Yeni smoke sprint_lead_fills_next_column (beş falsifikasyonla); incident_defer_ends_with_line sprintini düzeltme kartına boşaltır (önerinin dolu planı düzeltme kartını %125 tavanına takıyordu). A4 karelerinin dünyası (main.gd _a4_live) planlamaya yalnız devreden kartlarla girer: önerinin sütuna koyduğu kartlar kare 16'yı (boş plan) dolduruyordu. GUNCELLEMELER ch03 notu, CLAUDE.md §6 PM hazırlığı cümlesi, HARITA ve kod haritası 02.
+
+Ölçüm (--run-log 104 hafta, tohum 1, önce/sonra): full_run MVP 7/7. hafta, son 104/104, bozulan söz 1 → 0; full_run_b2c MVP 7/7, son 104/104, bozulan söz 0 → 0. Z6 yedi yapılandırmada bayt eş. 23 live:a4_* dünyası row_gaps=0; kart sayıları önceyle aynı, yalnız a4_first_next 6 → 7 (ilk sprintin önerisi sütunu doldurur).
+
+Dayanak: Erdem 2026-10-26, Faz D sonucunun kararı 2 = B; PRD_URUN_SPRINT_ARAYUZU 2026-10-26 eki, UD1 1–9.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_019ChpgcFYBEYyUqK1PwNgG1

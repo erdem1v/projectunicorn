@@ -1,0 +1,16 @@
+Godot Engine v4.6.2.stable.official.71f334935 - https://godotengine.org
+D3D12 12_0 - Forward+ - Using Device #0: AMD - AMD Radeon RX 9070 XT
+
+BOOT|lang=tr|source=arg
+[MCP Runtime] Server listening on port 7777
+[MCP Runtime] Autoload ready, server starting on port 7777
+BUILD|version=0.1.0|scope=demo
+EVENTSHOT|team.promise_made|customer=co_nordica (Nordica)|employee=char_emp_shot_0 (Elif Demir)|dev=char_emp_shot_2 (Mert Yıldız)|where=met|week=2
+EVENTSHOTTEXT|team.promise_made|Verdiğimiz söz: Nordica|Nordica için verdiğimiz sözü tutmak istiyorsak Stok Sayacı ay sonunda hazır olmalı. Bunun için Mert Yıldız ay sonuna kadar başka hiçbir şeye bakmamalı. Nasıl ilerleyelim?
+EVENTSHOTOPTION|team.promise_made|Mert Yıldız ay sonuna kadar yalnız buna baksın
+EVENTSHOTOPTION|team.promise_made|Müşteriyi ara, ek süre iste
+EVENTSHOTOPTION|team.promise_made|Bu özelliğin şimdilik olmayacağını söyle
+EVENTSHOTCHIPS|team.promise_made|focus|Mert 4 hafta yalnız bu kartta: Stok Sayacı; Mert -6
+EVENTSHOTCHIPS|team.promise_made|ask_time|Nordica: memnuniyet 72 → 66; Söz sonraki sprintin sonuna kayar
+EVENTSHOTCHIPS|team.promise_made|drop|Nordica: memnuniyet 72 → 31; Marka -3; Bu hesaba 8 hafta yeni söz verilemez
+[Shot] saved C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-Project-Unicorn/eeffbe9c-d5c1-4a8e-8ce4-9e4b60603345/scratchpad/appdata/c7c_win/Godot/app_userdata/Project Unicorn/event_shot_team.promise_made.png

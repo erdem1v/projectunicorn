@@ -1,0 +1,5075 @@
+{
+ "kartlar": [
+  {
+   "no": "#1",
+   "revize": "calisan.bilgisayar",
+   "kart": "team.work_laptop",
+   "durum": "bagli",
+   "kategori": "Çalışan",
+   "degisti": true,
+   "onay": "bekliyor",
+   "neden": [
+    "Erdem: daha tatlı yazılsın, ikinci şık eski laptop olabilir. Metin onun cümlesine döndü ve küçük bir şaka aldı; yeni bilgisayar morali yükseltir, eski laptop parasızdır ama moral bedeli var.",
+    "Laptop tutarı sabit dolar yerine haftalık giderden ölçeklenir ve eski laptop şıkkı dört hafta %10 verim bedeli taşır."
+   ],
+   "once": {
+    "tr": {
+     "gonderen": "Mert, Yazılım Mühendisi",
+     "konu": "İş bilgisayarı",
+     "metin": "Patron, şimdilik kendi bilgisayarımla çalışıyorum ama bir iş bilgisayarı göndereceksiniz, değil mi? Benimki her açılışta kalkışa geçen uçak gibi ses çıkarıyor.",
+     "secenekler": [
+      {
+       "etiket": "Yeni bir bilgisayar gönder",
+       "sonuc": "Kasa −$1.000, Mert'in morali biraz yükselir"
+      },
+      {
+       "etiket": "Kendi eski laptopunu gönder",
+       "sonuc": "Kasa değişmez, Mert'in morali biraz düşer"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Mert, Software Engineer",
+     "konu": "A work laptop",
+     "metin": "Boss, I'm on my own laptop for now, but you're sending me a work one, right? Mine sounds like a plane taking off every time I turn it on.",
+     "secenekler": [
+      {
+       "etiket": "Send a new laptop",
+       "sonuc": "Cash −$1,000, Mert's morale rises a little"
+      },
+      {
+       "etiket": "Send your own old laptop",
+       "sonuc": "Cash unchanged, Mert's morale dips a little"
+      }
+     ]
+    }
+   },
+   "sonra": {
+    "tr": {
+     "gonderen": "{employee}, Yazılımcı",
+     "konu": "İş bilgisayarı",
+     "metin": "Patron, şimdilik kendi bilgisayarımla çalışıyorum ama bir iş bilgisayarı göndereceksiniz, değil mi? Benimki her açılışta kalkışa geçen uçak gibi ses çıkarıyor.",
+     "secenekler": [
+      {
+       "id": "send_new",
+       "etiket": "Yeni bir bilgisayar gönder",
+       "kilit": "",
+       "sonuc": "Kasa yaklaşık bir haftalık gider kadar azalır, {employee}'in morali biraz yükselir"
+      },
+      {
+       "id": "send_old",
+       "etiket": "Kendi eski laptopunu gönder",
+       "kilit": "",
+       "sonuc": "Kasa değişmez, {employee}'in morali biraz düşer, eski laptopla dört hafta verimi %10 düşer"
+      }
+     ],
+     "cevapsiz": "Cevap gelmedi, çalışan kendi laptopuyla devam etti; morali düştü, işi yavaşladı."
+    },
+    "en": {
+     "gonderen": "{employee}, Developer",
+     "konu": "A work laptop",
+     "metin": "Boss, I'm on my own laptop for now, but you're sending me a work one, right? Mine sounds like a plane taking off every time I turn it on.",
+     "secenekler": [
+      {
+       "id": "send_new",
+       "etiket": "Send a new laptop",
+       "kilit": "",
+       "sonuc": "Cash drops by about a week's spending, {employee}'s morale rises a little"
+      },
+      {
+       "id": "send_old",
+       "etiket": "Send your own old laptop",
+       "kilit": "",
+       "sonuc": "Cash unchanged, {employee}'s morale dips a little, and on the old laptop he works 10% slower for four weeks"
+      }
+     ],
+     "cevapsiz": "No answer came, so they kept working on their own laptop; morale dropped and work slowed."
+    }
+   },
+   "dosya": "data/events/cards/team/work_laptop.json",
+   "kareler": {
+    "A_tr": {
+     "yol": "img/team_work_laptop_A_tr.webp",
+     "w": 851,
+     "h": 563
+    },
+    "A_en": {
+     "yol": "img/team_work_laptop_A_en.webp",
+     "w": 851,
+     "h": 563
+    },
+    "B_tr": {
+     "yol": "img/team_work_laptop_B_tr.webp",
+     "w": 851,
+     "h": 563
+    },
+    "B_en": {
+     "yol": "img/team_work_laptop_B_en.webp",
+     "w": 851,
+     "h": 563
+    }
+   },
+   "baglar": {
+    "A": {
+     "yuvalar": [
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_0",
+       "ad": "Elif Demir",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": false
+    },
+    "B": {
+     "yuvalar": [
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_4",
+       "ad": "Kerem Hasan Karaosmanoğlu",
+       "igne": true
+      }
+     ],
+     "where": "met",
+     "long": true
+    }
+   }
+  },
+  {
+   "no": "#3",
+   "revize": "calisan.dugun",
+   "kart": "team.wedding_invite",
+   "durum": "bagli",
+   "kategori": "Çalışan",
+   "degisti": true,
+   "onay": "bekliyor",
+   "neden": [
+    "Erdem: davetiye cümlesi çıksın (ev adresini nereden biliyor), 'gelebilirsen sevinirim' diye bitsin, EN'de altın yerine hediye. Üçü de yapıldı; TR'de altın şıkları kaldı, EN'de pahalı hediye, mütevazı hediye, çiçek.",
+    "Üç şıkkın tutarı sabit dolar yerine çalışanın aylık maaşının yüzdesine bağlandı (%10, %3, %1,5)."
+   ],
+   "once": {
+    "tr": {
+     "gonderen": "Ece, Tasarımcı",
+     "konu": "Düğün",
+     "metin": "Patron, ayın sonunda evleniyorum. Düğünümde seni de görmeyi çok isterim, gelebilirsen çok sevinirim.",
+     "secenekler": [
+      {
+       "etiket": "Düğüne git, tam altın tak",
+       "sonuc": "Kasa −$400, Ece'nin morali çok yükselir"
+      },
+      {
+       "etiket": "Düğüne git, çeyrek altın tak",
+       "sonuc": "Kasa −$100, Ece'nin morali yükselir"
+      },
+      {
+       "etiket": "Gidemeyeceğini söyle, çiçek gönder",
+       "sonuc": "Kasa −$60, Ece'nin morali değişmez"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Ece, UX/UI Designer",
+     "konu": "Wedding",
+     "metin": "Boss, I'm getting married at the end of the month. I'd love to see you at the wedding, it would make me really happy if you could come.",
+     "secenekler": [
+      {
+       "etiket": "Go, and bring an expensive gift",
+       "sonuc": "Cash −$400, Ece's morale rises sharply"
+      },
+      {
+       "etiket": "Go, and bring a modest gift",
+       "sonuc": "Cash −$100, Ece's morale rises"
+      },
+      {
+       "etiket": "Say you can't make it, send flowers",
+       "sonuc": "Cash −$60, Ece's morale unchanged"
+      }
+     ]
+    }
+   },
+   "sonra": {
+    "tr": {
+     "gonderen": "{employee}, Tasarımcı",
+     "konu": "Düğün",
+     "metin": "Patron, ayın sonunda evleniyorum. Düğünümde seni de görmeyi çok isterim, gelebilirsen çok sevinirim.",
+     "secenekler": [
+      {
+       "id": "gold_full",
+       "etiket": "Düğüne git, tam altın tak",
+       "kilit": "",
+       "sonuc": "Kasa {employee}'nin aylık maaşının %10'u kadar azalır, {employee}'nin morali çok yükselir"
+      },
+      {
+       "id": "gold_quarter",
+       "etiket": "Düğüne git, çeyrek altın tak",
+       "kilit": "",
+       "sonuc": "Kasa {employee}'nin aylık maaşının %3'ü kadar azalır, {employee}'nin morali yükselir"
+      },
+      {
+       "id": "flowers",
+       "etiket": "Gidemeyeceğini söyle, çiçek gönder",
+       "kilit": "",
+       "sonuc": "Kasa {employee}'nin aylık maaşının %1,5'i kadar azalır, {employee}'nin morali değişmez"
+      }
+     ],
+     "cevapsiz": "Cevap gelmedi, davet karşılıksız kaldı ve çalışanın morali düştü."
+    },
+    "en": {
+     "gonderen": "{employee}, Designer",
+     "konu": "Wedding",
+     "metin": "Boss, I'm getting married at the end of the month. I'd love to see you at the wedding, it would make me really happy if you could come.",
+     "secenekler": [
+      {
+       "id": "gold_full",
+       "etiket": "Go, and bring an expensive gift",
+       "kilit": "",
+       "sonuc": "Cash drops by 10% of {employee}'s monthly salary, {employee}'s morale rises sharply"
+      },
+      {
+       "id": "gold_quarter",
+       "etiket": "Go, and bring a modest gift",
+       "kilit": "",
+       "sonuc": "Cash drops by 3% of {employee}'s monthly salary, {employee}'s morale rises"
+      },
+      {
+       "id": "flowers",
+       "etiket": "Say you can't make it, send flowers",
+       "kilit": "",
+       "sonuc": "Cash drops by 1.5% of {employee}'s monthly salary, {employee}'s morale unchanged"
+      }
+     ],
+     "cevapsiz": "No answer came, so the invitation went unanswered and morale dropped."
+    }
+   },
+   "dosya": "data/events/cards/team/wedding_invite.json",
+   "kareler": {
+    "A_tr": {
+     "yol": "img/team_wedding_invite_A_tr.webp",
+     "w": 851,
+     "h": 627
+    },
+    "A_en": {
+     "yol": "img/team_wedding_invite_A_en.webp",
+     "w": 851,
+     "h": 627
+    },
+    "B_tr": {
+     "yol": "img/team_wedding_invite_B_tr.webp",
+     "w": 851,
+     "h": 627
+    },
+    "B_en": {
+     "yol": "img/team_wedding_invite_B_en.webp",
+     "w": 851,
+     "h": 627
+    }
+   },
+   "baglar": {
+    "A": {
+     "yuvalar": [
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_3",
+       "ad": "Selin Kaya",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": false
+    },
+    "B": {
+     "yuvalar": [
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_1",
+       "ad": "Kerem Hasan Karaosmanoğlu",
+       "igne": true
+      }
+     ],
+     "where": "met",
+     "long": true
+    }
+   }
+  },
+  {
+   "no": "#5",
+   "revize": "calisan.yuksek_lisans",
+   "kart": "team.master_degree",
+   "durum": "bagli",
+   "kategori": "Çalışan",
+   "degisti": true,
+   "onay": "onaylı",
+   "neden": [
+    "Erdem: kısalt, okul yurt dışında ve yer adı yok, 'yerime gelecek kişiye anlatırım' çıksın, yarı zamanlı şık yok. Metin onun cümlesine indi, iki şık aynı kaldı.",
+    "Karar 15: 2. şıktaki terfi ve %15 maaş artışı HRActions.apply_promotion ve apply_raise kapılarıyla bağlanır, çipi olur; metin ve şıklar aynı. Karar 16: Elif yuvası. Dört hafta sonraki ayrılış kartı ek kayıt olarak yazıldı. Karar 16: şık etiketleri yuvalı."
+   ],
+   "once": {
+    "tr": {
+     "gonderen": "Elif, Test Mühendisi",
+     "konu": "Konuşmamız gerekiyor",
+     "metin": "Yüksek lisansa kabul aldım ve yurt dışına taşınmam gerekiyor. Burada çok şey öğrendim, her şey için teşekkürler.",
+     "secenekler": [
+      {
+       "etiket": "Tebrik et, son ayında işini devretsin",
+       "sonuc": "Elif dört hafta sonra ayrılır"
+      },
+      {
+       "etiket": "Okulu bir yıl ertelemesini rica et, terfi teklif et",
+       "sonuc": "Elif kalır, Orta seviyeye geçer, maaşı %15 artar"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Elif, QA Engineer",
+     "konu": "Can we talk?",
+     "metin": "I got into a master's program abroad, so I'll be moving. I've learned so much here. Thank you for everything.",
+     "secenekler": [
+      {
+       "etiket": "Congratulate Elif, plan the handover for the last month",
+       "sonuc": "Elif leaves in four weeks"
+      },
+      {
+       "etiket": "Ask Elif to defer a year, offer a promotion",
+       "sonuc": "Elif stays, moves up to Mid level, salary +15%"
+      }
+     ]
+    }
+   },
+   "sonra": {
+    "tr": {
+     "gonderen": "{employee}, Test Uzmanı",
+     "konu": "Konuşmamız gerekiyor",
+     "metin": "Yüksek lisansa kabul aldım ve yurt dışına taşınmam gerekiyor. Burada çok şey öğrendim, her şey için teşekkürler.",
+     "secenekler": [
+      {
+       "id": "congratulate",
+       "etiket": "Tebrik et, son ayında işini devretsin",
+       "kilit": "",
+       "sonuc": "{employee} dört hafta sonra ayrılır"
+      },
+      {
+       "id": "promote",
+       "etiket": "Okulu bir yıl ertelemesini rica et, terfi teklif et",
+       "kilit": "",
+       "sonuc": "{employee} kalır, Orta seviyeye geçer, maaşı %15 artar"
+      }
+     ],
+     "cevapsiz": "Cevap gelmedi, devir süreci başladı; çalışan dört hafta sonra ayrılacak."
+    },
+    "en": {
+     "gonderen": "{employee}, Tester",
+     "konu": "Can we talk?",
+     "metin": "I got into a master's program abroad, so I'll be moving. I've learned so much here. Thank you for everything.",
+     "secenekler": [
+      {
+       "id": "congratulate",
+       "etiket": "Congratulate {employee}, plan the handover for the last month",
+       "kilit": "",
+       "sonuc": "{employee} leaves in four weeks"
+      },
+      {
+       "id": "promote",
+       "etiket": "Ask {employee} to defer a year, offer a promotion",
+       "kilit": "",
+       "sonuc": "{employee} stays, moves up to Mid level, salary +15%"
+      }
+     ],
+     "cevapsiz": "No answer came, so the handover began and they will leave in four weeks."
+    }
+   },
+   "dosya": "data/events/cards/team/master_degree.json",
+   "kareler": {
+    "A_tr": {
+     "yol": "img/team_master_degree_A_tr.webp",
+     "w": 851,
+     "h": 563
+    },
+    "A_en": {
+     "yol": "img/team_master_degree_A_en.webp",
+     "w": 851,
+     "h": 563
+    },
+    "B_tr": {
+     "yol": "img/team_master_degree_B_tr.webp",
+     "w": 851,
+     "h": 563
+    },
+    "B_en": {
+     "yol": "img/team_master_degree_B_en.webp",
+     "w": 872,
+     "h": 579
+    }
+   },
+   "baglar": {
+    "A": {
+     "yuvalar": [
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_3",
+       "ad": "Selin Kaya",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": false
+    },
+    "B": {
+     "yuvalar": [
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_1",
+       "ad": "Kerem Hasan Karaosmanoğlu",
+       "igne": true
+      }
+     ],
+     "where": "met",
+     "long": true
+    }
+   }
+  },
+  {
+   "no": "#5 ek",
+   "revize": "calisan.yuksek_lisans.ayrilis",
+   "kart": "team.master_degree_farewell",
+   "durum": "bagli",
+   "yeni": true,
+   "kategori": "Çalışan",
+   "degisti": true,
+   "onay": "bekliyor",
+   "neden": [
+    "Yeni (#5 eki): dört hafta sonraki veda; tek şıklı sıcak not.",
+    "Yeni ek kart: #5'in dört hafta sonraki ayrılış kartı; kısa ve sıcak veda, tek şıklı not (açık beat). Düzeltme turu F10: etiket oyuncunun kendine talimatı + Elif'e hitabı karıştırmaz ('yolu açık olsun de')."
+   ],
+   "once": null,
+   "sonra": {
+    "tr": {
+     "gonderen": "{employee}, Test Uzmanı",
+     "konu": "Son haftam",
+     "metin": "Bu hafta son haftam. Devir notlarım ortak klasörde. Beni burada büyüttüğünüz için teşekkürler, iyi ki sizinle çalışmışım.",
+     "secenekler": [
+      {
+       "id": "thank",
+       "etiket": "Teşekkür et, yolu açık olsun de",
+       "kilit": "",
+       "sonuc": "{employee} haftanın sonunda ayrılır"
+      }
+     ],
+     "cevapsiz": "Cevap gelmedi, çalışan haftanın sonunda sessizce ayrıldı."
+    },
+    "en": {
+     "gonderen": "{employee}, Tester",
+     "konu": "My last week",
+     "metin": "This is my last week. My handover notes are in the shared folder. Thank you for letting me grow here, I'm glad I worked with you.",
+     "secenekler": [
+      {
+       "id": "thank",
+       "etiket": "Thank them, wish them well",
+       "kilit": "",
+       "sonuc": "{employee} leaves at the end of the week"
+      }
+     ],
+     "cevapsiz": "No answer came, and they left quietly at the end of the week."
+    }
+   },
+   "dosya": "data/events/cards/team/master_degree_farewell.json",
+   "kareler": {
+    "A_tr": {
+     "yol": "img/team_master_degree_farewell_A_tr.webp",
+     "w": 851,
+     "h": 547
+    },
+    "A_en": {
+     "yol": "img/team_master_degree_farewell_A_en.webp",
+     "w": 851,
+     "h": 547
+    },
+    "B_tr": {
+     "yol": "img/team_master_degree_farewell_B_tr.webp",
+     "w": 851,
+     "h": 547
+    },
+    "B_en": {
+     "yol": "img/team_master_degree_farewell_B_en.webp",
+     "w": 851,
+     "h": 547
+    }
+   },
+   "baglar": {
+    "A": {
+     "yuvalar": [
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_0",
+       "ad": "Elif Demir",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": false
+    },
+    "B": {
+     "yuvalar": [
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_1",
+       "ad": "Kerem Hasan Karaosmanoğlu",
+       "igne": true
+      }
+     ],
+     "where": "met",
+     "long": true
+    }
+   }
+  },
+  {
+   "no": "#6",
+   "revize": "calisan.kaba_musteri",
+   "kart": "team.rude_client",
+   "durum": "bagli",
+   "kategori": "Çalışan",
+   "degisti": true,
+   "onay": "bekliyor",
+   "neden": [
+    "Erdem: 'gayet iyi yazılmış'; gönderen müşteri temsilcisi olsun, tercihen kadın, hatayı geliştirme ekibi bulur, müdürü arama şıkkına düşük ihtimalli kumar. Gönderen Zeynep oldu, metin onun cümleleri, kumar %15 yenilememe.",
+    "Karar 6: kumar sonucu 'yenilemez' yerine 'fesih bildirir' oldu (TR ve EN); metin ve öbür şıklar Erdem'in onayladığı gibi. Düzeltme turu F3: karar 16 için ek almayan *_yuva metinleri eklendi (düz alanlar örnek olarak kaldı); değişen metinler 8. adım sayfasına girer. Karar 16: şık etiketleri yuvalı.",
+    "1. şıkka okunur bir kazanç eklendi: temsilcinin morali biraz yükselir."
+   ],
+   "once": {
+    "tr": {
+     "gonderen": "Zeynep, Müşteri Temsilcisi",
+     "konu": "Kuzey İnşaat'la telefon",
+     "metin": "Kuzey İnşaat'ın muhasebe müdürü yarım saat boyunca telefonda bana bağırdı, sonunda “sizin gibi çocuklarla iş yapmak zorunda kaldık” diye söylenip kapattı. Geliştirme ekibi hatayı buldu, akşama düzeltirler. Ama onunla bir daha ben konuşmak istemiyorum.",
+     "secenekler": [
+      {
+       "etiket": "Kuzey İnşaat'ı bundan sonra sen ara",
+       "sonuc": "Kuzey İnşaat'ın aramaları sana geçer, iki hafta verimin düşer"
+      },
+      {
+       "etiket": "Müdürü ara, ekibine böyle konuşamayacağını söyle",
+       "sonuc": "Zeynep'in morali yükselir, Kuzey İnşaat'ın memnuniyeti biraz düşer, %15 ihtimalle sözleşmesini yenilemez"
+      },
+      {
+       "etiket": "Zeynep'e “müşteri bu, idare et” de",
+       "sonuc": "Zeynep'in morali düşer"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Zeynep, Customer Success Manager",
+     "konu": "The call with Kuzey İnşaat",
+     "metin": "Kuzey İnşaat's finance manager yelled at me on the phone for half an hour, then muttered “so now we're stuck with kids like you” and hung up. The dev team found the bug and will fix it tonight. But I'm not talking to that manager again.",
+     "secenekler": [
+      {
+       "etiket": "From now on, you take Kuzey İnşaat's calls",
+       "sonuc": "Kuzey İnşaat's calls come to you, your productivity drops for two weeks"
+      },
+      {
+       "etiket": "Call the manager, say nobody talks to your team like that",
+       "sonuc": "Zeynep's morale rises, Kuzey İnşaat's satisfaction drops a little, 15% chance they don't renew"
+      },
+      {
+       "etiket": "Tell Zeynep “it's the customer, just deal with it”",
+       "sonuc": "Zeynep's morale drops"
+      }
+     ]
+    }
+   },
+   "sonra": {
+    "tr": {
+     "gonderen": "{employee}, Müşteri Temsilcisi",
+     "konu": "Telefon: {customer}",
+     "metin": "{customer} muhasebe müdürü yarım saat boyunca telefonda bana bağırdı, sonunda “sizin gibi çocuklarla iş yapmak zorunda kaldık” diye söylenip kapattı. Geliştirme ekibi hatayı buldu, akşama düzeltirler. Ama onunla bir daha ben konuşmak istemiyorum.",
+     "secenekler": [
+      {
+       "id": "take_over",
+       "etiket": "{customer} ile telefonda bundan sonra sen konuş",
+       "kilit": "",
+       "sonuc": "{customer}'ın aramaları sana geçer, iki hafta verimin düşer, {employee}'in morali biraz yükselir"
+      },
+      {
+       "id": "call_boss",
+       "etiket": "Müdürü ara, ekibine böyle konuşamayacağını söyle",
+       "kilit": "",
+       "sonuc": "{employee}'in morali yükselir, {customer}'ın memnuniyeti biraz düşer, %15 ihtimalle fesih bildirir"
+      },
+      {
+       "id": "tell_cope",
+       "etiket": "Ona “müşteri bu, idare et” de",
+       "kilit": "",
+       "sonuc": "{employee}'in morali düşer"
+      }
+     ],
+     "cevapsiz": "Cevap gelmedi, temsilci aramayı tek başına taşıdı ve morali düştü."
+    },
+    "en": {
+     "gonderen": "{employee}, Account Manager",
+     "konu": "The call with {customer}",
+     "metin": "The finance manager at {customer} yelled at me on the phone for half an hour, then muttered “so now we're stuck with kids like you” and hung up. The dev team found the bug and will fix it tonight. But I'm not talking to that manager again.",
+     "secenekler": [
+      {
+       "id": "take_over",
+       "etiket": "From now on, you take calls from {customer}",
+       "kilit": "",
+       "sonuc": "{customer}'s calls come to you, your productivity drops for two weeks, {employee}'s morale rises a little"
+      },
+      {
+       "id": "call_boss",
+       "etiket": "Call the manager, say nobody talks to your team like that",
+       "kilit": "",
+       "sonuc": "{employee}'s morale rises, {customer}'s satisfaction drops a little, 15% chance they give notice"
+      },
+      {
+       "id": "tell_cope",
+       "etiket": "Tell {employee} “it's the customer, just deal with it”",
+       "kilit": "",
+       "sonuc": "{employee}'s morale drops"
+      }
+     ],
+     "cevapsiz": "No answer came, so the rep carried the calls alone and morale dropped."
+    }
+   },
+   "dosya": "data/events/cards/team/rude_client.json",
+   "kareler": {
+    "A_tr": {
+     "yol": "img/team_rude_client_A_tr.webp",
+     "w": 877,
+     "h": 693
+    },
+    "A_en": {
+     "yol": "img/team_rude_client_A_en.webp",
+     "w": 851,
+     "h": 725
+    },
+    "B_tr": {
+     "yol": "img/team_rude_client_B_tr.webp",
+     "w": 985,
+     "h": 693
+    },
+    "B_en": {
+     "yol": "img/team_rude_client_B_en.webp",
+     "w": 936,
+     "h": 725
+    }
+   },
+   "baglar": {
+    "A": {
+     "yuvalar": [
+      {
+       "yuva": "customer",
+       "id": "co_palmiye",
+       "ad": "Palmiye Turizm",
+       "igne": false
+      },
+      {
+       "yuva": "employee",
+       "id": "char_cs_co_palmiye",
+       "ad": "Burcu Çetin",
+       "igne": false
+      },
+      {
+       "yuva": "founder",
+       "id": "char_founder",
+       "ad": "Kurucu",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": false
+    },
+    "B": {
+     "yuvalar": [
+      {
+       "yuva": "customer",
+       "id": "co_palmiye",
+       "ad": "Anadolu Endüstriyel Otomasyon",
+       "igne": false
+      },
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_1",
+       "ad": "Kerem Hasan Karaosmanoğlu",
+       "igne": true
+      },
+      {
+       "yuva": "founder",
+       "id": "char_founder",
+       "ad": "Kurucu",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": true
+    }
+   }
+  },
+  {
+   "no": "#7",
+   "revize": "ekip.ayni_izin.pm",
+   "kart": "team.same_leave_pm",
+   "durum": "bagli",
+   "kategori": "Ekip içi tartışma ve arabuluculuk",
+   "degisti": true,
+   "onay": "bekliyor",
+   "neden": [
+    "Erdem: iki kişi aynı rolden olsun; PM çiftinde kartları önden hazırlama, geliştirici çiftinde ikisini birden göndermek gerçekten pahalı, her varyantta insaflı patron şıkkı. Rol başına ayrı kayıt. PM varyantı: önden hazırlık şıkkı.",
+    "Karar 4: metin 'aynı haftalara' der ve ay adı yazmaz; 2. şık 'Kendi aralarında karar versinler' oldu (geç başlayanın izni kayar, ikisinin morali biraz düşer); 'İkisi de gitsin' sonucu yalnız iki izin ve moral yazar; yıl zarı ve çakışma koşulu kosul_notu'nda. Düzeltme turu F1: konu satırı ay adı yazmaz (Yaz izni / Summer leave). Düzeltme turu F3: karar 16 için ek almayan *_yuva metinleri eklendi (düz alanlar örnek olarak kaldı); değişen metinler 8. adım sayfasına girer.",
+    "1. şık hazırlığı öne alır (izinden önceki iki haftada ikisinin verimi %20 artar) ve gönderen önce izne çıkan kişidir."
+   ],
+   "once": {
+    "tr": {
+     "gonderen": "Selin, Ürün Yöneticisi",
+     "konu": "Ağustos izni",
+     "metin": "Baran'la ikimiz de ağustosun ilk iki haftasına izin istemişiz. İkimiz birden gidersek o iki hafta sprinti planlayacak kimse kalmıyor.",
+     "secenekler": [
+      {
+       "etiket": "Kartları önden hazırlasınlar, sonra ikisi de çıksın",
+       "sonuc": "İkisi de iki hafta izinde, ikisinin de morali yükselir; izinden önceki iki hafta ikisinin de verimi %30 düşer"
+      },
+      {
+       "etiket": "Selin gitsin, Baran ayın ikinci yarısında",
+       "sonuc": "Selin iki hafta izinde, Baran'ın morali düşer"
+      },
+      {
+       "etiket": "İkisi de gitsin, sürüm kaysın",
+       "sonuc": "İkisi de iki hafta izinde, ikisinin de morali yükselir, sürüm bir sprint kayar"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Selin, Product Manager",
+     "konu": "August leave",
+     "metin": "Baran and I both asked for the first two weeks of August off. If we both go, nobody's left to plan the sprint for those two weeks.",
+     "secenekler": [
+      {
+       "etiket": "Have them prep the cards ahead, then both can go",
+       "sonuc": "Both on leave for two weeks, morale rises for both; in the two weeks before, both work 30% slower"
+      },
+      {
+       "etiket": "Selin goes, Baran takes the second half of the month",
+       "sonuc": "Selin on leave for two weeks, Baran's morale drops"
+      },
+      {
+       "etiket": "Both go, the release slips",
+       "sonuc": "Both on leave for two weeks, morale rises for both, the release slips one sprint"
+      }
+     ]
+    }
+   },
+   "sonra": {
+    "tr": {
+     "gonderen": "{employee}, Ürün Yöneticisi",
+     "konu": "Yaz izni",
+     "metin": "{other} ile ikimizin yaz izni aynı haftalara denk gelmiş. İkimiz birden gidersek o iki hafta sprinti planlayacak kimse kalmıyor.",
+     "secenekler": [
+      {
+       "id": "prep_then_go",
+       "etiket": "Kartları önden hazırlasınlar, sonra ikisi de çıksın",
+       "kilit": "",
+       "sonuc": "İkisi de iki hafta izinde; izinden önceki iki hafta ikisinin de verimi %20 artar"
+      },
+      {
+       "id": "settle_it",
+       "etiket": "Kendi aralarında karar versinler",
+       "kilit": "",
+       "sonuc": "Geç başlayanın izni bu yıl örtüşmeyecek kadar kayar, ikisinin de morali biraz düşer"
+      },
+      {
+       "id": "both_go",
+       "etiket": "İkisi de gitsin, sürüm kaysın",
+       "kilit": "",
+       "sonuc": "İkisi de iki hafta izinde, ikisinin de morali yükselir"
+      }
+     ],
+     "cevapsiz": "Cevap gelmedi, izinler planlandığı gibi kaldı ve ikisinin de morali biraz düştü."
+    },
+    "en": {
+     "gonderen": "{employee}, Product Manager",
+     "konu": "Summer leave",
+     "metin": "{other} and I have our summer leave in the same weeks. If we're both out, nobody's left to plan the sprint for those two weeks.",
+     "secenekler": [
+      {
+       "id": "prep_then_go",
+       "etiket": "Have them prep the cards ahead, then both can go",
+       "kilit": "",
+       "sonuc": "Both are away for two weeks; in the two weeks before, both work 20% faster"
+      },
+      {
+       "id": "settle_it",
+       "etiket": "Let them sort it out between themselves",
+       "kilit": "",
+       "sonuc": "The later one's leave slides just enough not to overlap this year, morale dips a little for both"
+      },
+      {
+       "id": "both_go",
+       "etiket": "Both go, the release slips",
+       "kilit": "",
+       "sonuc": "Both on leave for two weeks, morale rises for both"
+      }
+     ],
+     "cevapsiz": "No answer came, so both leaves stayed as planned and morale dipped a little for both."
+    }
+   },
+   "dosya": "data/events/cards/team/same_leave_pm.json",
+   "kareler": {
+    "A_tr": {
+     "yol": "img/team_same_leave_pm_A_tr.webp",
+     "w": 851,
+     "h": 643
+    },
+    "A_en": {
+     "yol": "img/team_same_leave_pm_A_en.webp",
+     "w": 908,
+     "h": 659
+    },
+    "B_tr": {
+     "yol": "img/team_same_leave_pm_B_tr.webp",
+     "w": 851,
+     "h": 691
+    },
+    "B_en": {
+     "yol": "img/team_same_leave_pm_B_en.webp",
+     "w": 944,
+     "h": 659
+    }
+   },
+   "baglar": {
+    "A": {
+     "yuvalar": [
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_0",
+       "ad": "Elif Demir",
+       "igne": false
+      },
+      {
+       "yuva": "other",
+       "id": "char_emp_shot_leave_b",
+       "ad": "Kaan Işık",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": false
+    },
+    "B": {
+     "yuvalar": [
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_leave_b",
+       "ad": "Kerem Hasan Karaosmanoğlu",
+       "igne": true
+      },
+      {
+       "yuva": "other",
+       "id": "char_emp_shot_0",
+       "ad": "Zeynep Nur Büyükkaragöz",
+       "igne": true
+      }
+     ],
+     "where": "met",
+     "long": true
+    }
+   }
+  },
+  {
+   "no": "#7",
+   "revize": "ekip.ayni_izin.gelistirici",
+   "kart": "team.same_leave_dev",
+   "durum": "bagli",
+   "kategori": "Ekip içi tartışma ve arabuluculuk",
+   "degisti": true,
+   "onay": "bekliyor",
+   "neden": [
+    "Erdem: iki kişi aynı rolden olsun; PM çiftinde kartları önden hazırlama, geliştirici çiftinde ikisini birden göndermek gerçekten pahalı, her varyantta insaflı patron şıkkı. Rol başına ayrı kayıt. Geliştirici varyantı: ikisini göndermek geliştirmeyi durdurur, erteleme şıkkı söz yaklaşırken en iyisi.",
+    "Karar 4: metin 'aynı haftalara' der ve ay adı yazmaz; 2. şık 'Kendi aralarında karar versinler' oldu (geç başlayanın izni kayar, ikisinin morali biraz düşer); 'İkisi de gitsin' sonucu yalnız iki izin ve moral yazar; yıl zarı ve çakışma koşulu kosul_notu'nda. Geliştirici varyantındaki 'İzinleri şimdilik ertele' çıktı. Düzeltme turu F4: 'Dışarıdan geçici geliştirici tut' adayı çıktı (oyunda sözleşmeli çalışan mekaniği yok, karar 10 ve 'yeni mekanik icat etme'); yerine HR seam'i ve add_cash ile kurulan 'Birinin iznini kaydır, karşılığında prim ver' geldi. s2_bekliyor kalktı, tutar 2. adımda. F1: konu 'Yaz izni'. Düzeltme turu F3: karar 16 için ek almayan *_yuva metinleri eklendi (düz alanlar örnek olarak kaldı); değişen metinler 8. adım sayfasına girer.",
+    "3. şıkkın yer tutucusu dolduruldu: kayan kişinin bir haftalık maaşı; gönderen önce izne çıkan kişidir."
+   ],
+   "once": {
+    "tr": {
+     "gonderen": "Baran, Yazılım Mühendisi",
+     "konu": "Ağustos izni",
+     "metin": "Onur'la ikimiz de ağustosun ilk iki haftasına izin istemişiz. İkimiz birden gidersek o iki hafta kod yazan kimse kalmıyor.",
+     "secenekler": [
+      {
+       "etiket": "Baran gitsin, Onur ayın ikinci yarısında",
+       "sonuc": "Baran iki hafta izinde, Onur'un morali düşer"
+      },
+      {
+       "etiket": "İkisi de gitsin, sürüm kaysın",
+       "sonuc": "İkisi de iki hafta izinde, ikisinin de morali yükselir; geliştirme iki hafta durur"
+      },
+      {
+       "etiket": "İzinleri şimdilik ertele",
+       "sonuc": "İkisinin de morali düşer, sprint aksamaz"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Baran, Software Engineer",
+     "konu": "August leave",
+     "metin": "Onur and I both asked for the first two weeks of August off. If we both go, nobody's writing code for those two weeks.",
+     "secenekler": [
+      {
+       "etiket": "Baran goes, Onur takes the second half of the month",
+       "sonuc": "Baran on leave for two weeks, Onur's morale drops"
+      },
+      {
+       "etiket": "Both go, the release slips",
+       "sonuc": "Both on leave for two weeks, morale rises for both; development stops for two weeks"
+      },
+      {
+       "etiket": "Postpone both leaves for now",
+       "sonuc": "Morale drops for both, the sprint stays on track"
+      }
+     ]
+    }
+   },
+   "sonra": {
+    "tr": {
+     "gonderen": "{employee}, Yazılımcı",
+     "konu": "Yaz izni",
+     "metin": "{other} ile ikimizin yaz izni aynı haftalara denk gelmiş. İkimiz birden gidersek o iki hafta kod yazan kimse kalmıyor.",
+     "secenekler": [
+      {
+       "id": "settle_it",
+       "etiket": "Kendi aralarında karar versinler",
+       "kilit": "",
+       "sonuc": "Geç başlayanın izni bu yıl örtüşmeyecek kadar kayar, ikisinin de morali biraz düşer"
+      },
+      {
+       "id": "both_go",
+       "etiket": "İkisi de gitsin, sürüm kaysın",
+       "kilit": "",
+       "sonuc": "İkisi de iki hafta izinde, ikisinin de morali yükselir"
+      },
+      {
+       "id": "shift_with_bonus",
+       "etiket": "Birinin iznini kaydır, karşılığında prim ver",
+       "kilit": "",
+       "sonuc": "Geç başlayanın izni bu yıl örtüşmeyecek kadar kayar, Kasa onun bir haftalık maaşı kadar azalır"
+      }
+     ],
+     "cevapsiz": "Cevap gelmedi, izinler planlandığı gibi kaldı ve ikisinin de morali biraz düştü."
+    },
+    "en": {
+     "gonderen": "{employee}, Developer",
+     "konu": "Summer leave",
+     "metin": "{other} and I have our summer leave in the same weeks. If we're both out, nobody's writing code for those two weeks.",
+     "secenekler": [
+      {
+       "id": "settle_it",
+       "etiket": "Let them sort it out between themselves",
+       "kilit": "",
+       "sonuc": "The later one's leave slides just enough not to overlap this year, morale dips a little for both"
+      },
+      {
+       "id": "both_go",
+       "etiket": "Both go, the release slips",
+       "kilit": "",
+       "sonuc": "Both on leave for two weeks, morale rises for both"
+      },
+      {
+       "id": "shift_with_bonus",
+       "etiket": "Move one leave and pay a bonus for it",
+       "kilit": "",
+       "sonuc": "The later one's leave slides just enough not to overlap this year, Cash drops by a week of their salary"
+      }
+     ],
+     "cevapsiz": "No answer came, so both leaves stayed as planned and morale dipped a little for both."
+    }
+   },
+   "dosya": "data/events/cards/team/same_leave_dev.json",
+   "kareler": {
+    "A_tr": {
+     "yol": "img/team_same_leave_dev_A_tr.webp",
+     "w": 851,
+     "h": 627
+    },
+    "A_en": {
+     "yol": "img/team_same_leave_dev_A_en.webp",
+     "w": 851,
+     "h": 643
+    },
+    "B_tr": {
+     "yol": "img/team_same_leave_dev_B_tr.webp",
+     "w": 851,
+     "h": 643
+    },
+    "B_en": {
+     "yol": "img/team_same_leave_dev_B_en.webp",
+     "w": 851,
+     "h": 659
+    }
+   },
+   "baglar": {
+    "A": {
+     "yuvalar": [
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_2",
+       "ad": "Mert Yıldız",
+       "igne": false
+      },
+      {
+       "yuva": "other",
+       "id": "char_emp_shot_leave_b",
+       "ad": "Kaan Işık",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": false
+    },
+    "B": {
+     "yuvalar": [
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_leave_b",
+       "ad": "Kerem Hasan Karaosmanoğlu",
+       "igne": true
+      },
+      {
+       "yuva": "other",
+       "id": "char_emp_shot_2",
+       "ad": "Zeynep Nur Büyükkaragöz",
+       "igne": true
+      }
+     ],
+     "where": "met",
+     "long": true
+    }
+   }
+  },
+  {
+   "no": "#7",
+   "revize": "ekip.ayni_izin.testci",
+   "kart": "team.same_leave_tester",
+   "durum": "bagli",
+   "kategori": "Ekip içi tartışma ve arabuluculuk",
+   "degisti": true,
+   "onay": "bekliyor",
+   "neden": [
+    "Erdem: iki kişi aynı rolden olsun; PM çiftinde kartları önden hazırlama, geliştirici çiftinde ikisini birden göndermek gerçekten pahalı, her varyantta insaflı patron şıkkı. Rol başına ayrı kayıt. Testçi varyantı: testi geliştiricilere bırakma şıkkı (hata bedeli) ile sürümü kaydırma (zaman bedeli) ayrıldı.",
+    "Karar 4: metin 'aynı haftalara' der ve ay adı yazmaz; 2. şık 'Kendi aralarında karar versinler' oldu (geç başlayanın izni kayar, ikisinin morali biraz düşer); 'İkisi de gitsin' sonucu yalnız iki izin ve moral yazar; yıl zarı ve çakışma koşulu kosul_notu'nda. Düzeltme turu F1: konu satırı ay adı yazmaz (Yaz izni / Summer leave). Düzeltme turu F3: karar 16 için ek almayan *_yuva metinleri eklendi (düz alanlar örnek olarak kaldı); değişen metinler 8. adım sayfasına girer.",
+    "3. şık eski 'ikisi de gitsin, sürüm kaysın' yerine prim karşılığı izin kaydırma oldu ve gönderen önce izne çıkan kişidir."
+   ],
+   "once": {
+    "tr": {
+     "gonderen": "Elif, Test Mühendisi",
+     "konu": "Ağustos izni",
+     "metin": "Burcu'yla ikimiz de ağustosun ilk iki haftasına izin istemişiz. İkimiz birden gidersek o iki hafta biten kartları test edecek kimse kalmıyor.",
+     "secenekler": [
+      {
+       "etiket": "Elif gitsin, Burcu ayın ikinci yarısında",
+       "sonuc": "Elif iki hafta izinde, Burcu'nun morali düşer"
+      },
+      {
+       "etiket": "İkisi de gitsin, testi geliştiriciler yapsın",
+       "sonuc": "İkisi de iki hafta izinde, ikisinin de morali yükselir; o iki hafta testte daha az hata yakalanır"
+      },
+      {
+       "etiket": "İkisi de gitsin, sürüm kaysın",
+       "sonuc": "İkisi de iki hafta izinde, ikisinin de morali yükselir; test bekleyen kartlar sonraki sprinte kalır"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Elif, QA Engineer",
+     "konu": "August leave",
+     "metin": "Burcu and I both asked for the first two weeks of August off. If we both go, nobody's left to test finished cards for those two weeks.",
+     "secenekler": [
+      {
+       "etiket": "Elif goes, Burcu takes the second half of the month",
+       "sonuc": "Elif on leave for two weeks, Burcu's morale drops"
+      },
+      {
+       "etiket": "Both go, developers do the testing",
+       "sonuc": "Both on leave for two weeks, morale rises for both; fewer bugs get caught in those two weeks"
+      },
+      {
+       "etiket": "Both go, the release slips",
+       "sonuc": "Both on leave for two weeks, morale rises for both; cards waiting for testing roll to the next sprint"
+      }
+     ]
+    }
+   },
+   "sonra": {
+    "tr": {
+     "gonderen": "{employee}, Test Uzmanı",
+     "konu": "Yaz izni",
+     "metin": "{other} ile ikimizin yaz izni aynı haftalara denk gelmiş. İkimiz birden gidersek o iki hafta biten kartları test edecek kimse kalmıyor.",
+     "secenekler": [
+      {
+       "id": "settle_it",
+       "etiket": "Kendi aralarında karar versinler",
+       "kilit": "",
+       "sonuc": "Geç başlayanın izni bu yıl örtüşmeyecek kadar kayar, ikisinin de morali biraz düşer"
+      },
+      {
+       "id": "devs_test",
+       "etiket": "İkisi de gitsin, testi geliştiriciler yapsın",
+       "kilit": "",
+       "sonuc": "İkisi de iki hafta izinde, ikisinin de morali yükselir; o iki hafta testte daha az hata yakalanır"
+      },
+      {
+       "id": "shift_with_bonus",
+       "etiket": "Birinin iznini kaydır, karşılığında prim ver",
+       "kilit": "",
+       "sonuc": "Geç başlayanın izni bu yıl örtüşmeyecek kadar kayar, Kasa onun bir haftalık maaşı kadar azalır"
+      }
+     ],
+     "cevapsiz": "Cevap gelmedi, izinler planlandığı gibi kaldı ve ikisinin de morali biraz düştü."
+    },
+    "en": {
+     "gonderen": "{employee}, Tester",
+     "konu": "Summer leave",
+     "metin": "{other} and I have our summer leave in the same weeks. If we're both out, nobody's left to test finished cards for those two weeks.",
+     "secenekler": [
+      {
+       "id": "settle_it",
+       "etiket": "Let them sort it out between themselves",
+       "kilit": "",
+       "sonuc": "The later one's leave slides just enough not to overlap this year, morale dips a little for both"
+      },
+      {
+       "id": "devs_test",
+       "etiket": "Both go, developers do the testing",
+       "kilit": "",
+       "sonuc": "Both on leave for two weeks, morale rises for both; fewer bugs get caught in those two weeks"
+      },
+      {
+       "id": "shift_with_bonus",
+       "etiket": "Move one leave and pay a bonus for it",
+       "kilit": "",
+       "sonuc": "The later one's leave slides just enough not to overlap this year, Cash drops by a week of their salary"
+      }
+     ],
+     "cevapsiz": "No answer came, so both leaves stayed as planned and morale dipped a little for both."
+    }
+   },
+   "dosya": "data/events/cards/team/same_leave_tester.json",
+   "kareler": {
+    "A_tr": {
+     "yol": "img/team_same_leave_tester_A_tr.webp",
+     "w": 851,
+     "h": 643
+    },
+    "A_en": {
+     "yol": "img/team_same_leave_tester_A_en.webp",
+     "w": 851,
+     "h": 643
+    },
+    "B_tr": {
+     "yol": "img/team_same_leave_tester_B_tr.webp",
+     "w": 851,
+     "h": 643
+    },
+    "B_en": {
+     "yol": "img/team_same_leave_tester_B_en.webp",
+     "w": 851,
+     "h": 659
+    }
+   },
+   "baglar": {
+    "A": {
+     "yuvalar": [
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_3",
+       "ad": "Selin Kaya",
+       "igne": false
+      },
+      {
+       "yuva": "other",
+       "id": "char_emp_shot_leave_b",
+       "ad": "Kaan Işık",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": false
+    },
+    "B": {
+     "yuvalar": [
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_leave_b",
+       "ad": "Kerem Hasan Karaosmanoğlu",
+       "igne": true
+      },
+      {
+       "yuva": "other",
+       "id": "char_emp_shot_3",
+       "ad": "Zeynep Nur Büyükkaragöz",
+       "igne": true
+      }
+     ],
+     "where": "met",
+     "long": true
+    }
+   }
+  },
+  {
+   "no": "#8",
+   "revize": "ekip.kod_inceleme",
+   "kart": "product.sprint_dev_code_review",
+   "durum": "bagli",
+   "kategori": "Ekip içi tartışma ve arabuluculuk",
+   "degisti": true,
+   "onay": "bekliyor",
+   "neden": [
+    "Erdem: fikir ve kod incelemesi iyi, yazım dili ve şıklar beğenilmedi, takım lideri ya da kıdemli ile junior varken gelsin. Metin iki cümleye indi; şıklar üç somut hamle, her biri başka bir bedel (hata, kıdemlinin haftası, kartın süresi).",
+    "Erdem: olay iyi, şıklar kötü, yeniden. Karar 11: kart sprint kâğıdı oldu (konuşan o fazdaki junior geliştirici). Metin iki cümleye indi. Düzeltme turu F2: dört şıkkın dördü de rev1'den farklı hamleyle baştan kuruldu (eski etiketler kalmadı): hata riskli notlarda dur (hat + kıdemlinin morali), ikisini yarım gün aynı masaya oturt (kıdemlinin haftası, junior'ın morali), kartı olduğu gibi bırak ve notları sonraki sprinte aktar (takip kartı), junior hepsini kapatsın (kartın işi büyür, hat korunur, junior'ın morali). Her hamle başka bir özneye bedel yazar. Düzeltme turu F3: karar 16 için ek almayan *_yuva metinleri eklendi (düz alanlar örnek olarak kaldı); değişen metinler 8. adım sayfasına girer.",
+    "2. şık bir günlük ve iki kişilik bedelle yeniden yazıldı, 1. şıkta hata kart çıkınca düşer ve konuşan yuvası {employee} oldu."
+   ],
+   "once": {
+    "tr": {
+     "gonderen": "Onur, Junior Yazılım Mühendisi",
+     "konu": "Kod incelemesi",
+     "metin": "Kerem kodumu üçüncü kez geri çevirdi. Haklı olabilir ama kartım iki haftadır incelemede bekliyor, artık ne yazsam yanlış gibi geliyor.",
+     "secenekler": [
+      {
+       "etiket": "Kerem kartı bu hâliyle geçirsin",
+       "sonuc": "Kart çıkar, hattına bir hata eklenir, Kerem'in morali düşer"
+      },
+      {
+       "etiket": "Kerem bu hafta Onur'la yan yana çalışsın",
+       "sonuc": "Kerem'in verimi bir hafta %30 düşer, Onur'un morali yükselir"
+      },
+      {
+       "etiket": "Onur notları tek tek düzeltsin",
+       "sonuc": "Kart bir hafta daha sürer, Onur'un morali biraz düşer"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Onur, Junior Software Engineer",
+     "konu": "Code review",
+     "metin": "Kerem sent my code back for the third time. Maybe with good reason, but my card has been sitting in review for two weeks and now everything I write feels wrong.",
+     "secenekler": [
+      {
+       "etiket": "Have Kerem pass the card as it is",
+       "sonuc": "The card ships, its line gets a bug, Kerem's morale drops"
+      },
+      {
+       "etiket": "Kerem pairs with Onur this week",
+       "sonuc": "Kerem's productivity drops 30% for a week, Onur's morale rises"
+      },
+      {
+       "etiket": "Onur works through the notes one by one",
+       "sonuc": "The card takes another week, Onur's morale dips a little"
+      }
+     ]
+    }
+   },
+   "sonra": {
+    "tr": {
+     "gonderen": "{employee}, Junior Yazılımcı",
+     "konu": "Kod incelemesi",
+     "metin": "{lead} kodumu üçüncü kez geri çevirdi. Haklı olabilir ama kart bu yüzden sprinte yetişmeyecek, artık ne yazsam yanlış geliyor.",
+     "secenekler": [
+      {
+       "id": "blockers_only",
+       "etiket": "{lead} yalnız hataya yol açacak notlarda dursun, gerisini geçsin",
+       "kilit": "",
+       "sonuc": "Kartın kalan işi kısalır, kart çıkınca hattına bir hata düşer, {lead}'in morali biraz düşer"
+      },
+      {
+       "id": "pair_up",
+       "etiket": "{lead} ile {employee} bir gün aynı masaya otursun, notları birlikte kapatsınlar",
+       "kilit": "",
+       "sonuc": "{lead}'in ve {employee}'un bu hafta birer günü gider, {employee}'un morali yükselir"
+      },
+      {
+       "id": "follow_up",
+       "etiket": "Kart bu sprintte bu hâliyle kalsın, {employee} notları sonraki sprintte düzeltsin",
+       "kilit": "",
+       "sonuc": "Karttan pay çıkar, takip kartı sonraki sprinte girer, {employee}'un morali biraz yükselir"
+      },
+      {
+       "id": "close_all",
+       "etiket": "{employee} bu sefer notların hepsini kapatsın, kart sağlam çıksın",
+       "kilit": "",
+       "sonuc": "Kartın işi büyür, kartın hattı bir süre yeni hata almaz, {employee}'un morali düşer"
+      }
+     ],
+     "cevapsiz": "Cevap gelmedi, {employee} notları kendi başına kapattı; kartın işi büyüdü, morali düştü."
+    },
+    "en": {
+     "gonderen": "{employee}, Junior Developer",
+     "konu": "Code review",
+     "metin": "{lead} sent my code back for the third time. Maybe with good reason, but the card won't make the sprint now, and everything I write feels wrong.",
+     "secenekler": [
+      {
+       "id": "blockers_only",
+       "etiket": "{lead} only holds the card for notes that would cause bugs",
+       "kilit": "",
+       "sonuc": "The card's remaining work shrinks, its line gets a bug when the card ships, {lead}'s morale dips a little"
+      },
+      {
+       "id": "pair_up",
+       "etiket": "Sit {lead} and {employee} down together for a day to clear the notes",
+       "kilit": "",
+       "sonuc": "{lead} and {employee} each lose a day this week, {employee}'s morale rises"
+      },
+      {
+       "id": "follow_up",
+       "etiket": "Keep the card as it is this sprint, {employee} fixes the notes next sprint",
+       "kilit": "",
+       "sonuc": "Part of the card is cut, a follow-up card joins the next sprint, {employee}'s morale rises a little"
+      },
+      {
+       "id": "close_all",
+       "etiket": "{employee} closes every note this time, the card ships solid",
+       "kilit": "",
+       "sonuc": "The card grows, its line takes no new bugs for a while, {employee}'s morale drops"
+      }
+     ],
+     "cevapsiz": "No answer came, so {employee} closed the notes alone, which grew the card and cost morale."
+    }
+   },
+   "dosya": "data/events/cards/product/sprint_dev_code_review.json",
+   "kareler": {
+    "A_tr": {
+     "yol": "img/product_sprint_dev_code_review_A_tr.webp",
+     "w": 880,
+     "h": 787
+    },
+    "A_en": {
+     "yol": "img/product_sprint_dev_code_review_A_en.webp",
+     "w": 851,
+     "h": 787
+    },
+    "B_tr": {
+     "yol": "img/product_sprint_dev_code_review_B_tr.webp",
+     "w": 1105,
+     "h": 787
+    },
+    "B_en": {
+     "yol": "img/product_sprint_dev_code_review_B_en.webp",
+     "w": 1034,
+     "h": 787
+    }
+   },
+   "baglar": {
+    "A": {
+     "yuvalar": [
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_2",
+       "ad": "Mert Yıldız",
+       "igne": false
+      },
+      {
+       "yuva": "lead",
+       "id": "char_emp_shot_lead",
+       "ad": "Cansu Er",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": false
+    },
+    "B": {
+     "yuvalar": [
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_2",
+       "ad": "Kerem Hasan Karaosmanoğlu",
+       "igne": false
+      },
+      {
+       "yuva": "lead",
+       "id": "char_emp_shot_lead",
+       "ad": "Zeynep Nur Büyükkaragöz",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": true
+    }
+   }
+  },
+  {
+   "no": "#9",
+   "revize": "ekip.soz_verdi",
+   "kart": "team.promise_made",
+   "durum": "bagli",
+   "kategori": "Ekip içi tartışma ve arabuluculuk",
+   "degisti": true,
+   "onay": "bekliyor",
+   "neden": [
+    "Erdem: 'tebrik ederim'; gönderen PM olsun (kart planlamasını o yapar), geliştirici yuvası yıldıza göre otomatik, metin onun örneği tonunda. Gönderen Selin oldu, metin onun cümlesi; şıklar kaldı, yeni gönderene uyarlandı.",
+    "Erdem: 2. şık 'Müşteriyi ara, ek süre iste', 'Bilge'yle birlikte' ve 'bir sprint' çıksın. Karar 13: sözü kurucunun masası yaratır, Bilge metinden çıktı, 'verdiğimiz söz'; 3. şıktaki Bilge'nin morali bedeli de buna bağlı çıktı. Karar 15: 1. şık (kişiyi karta kilitle) assign_to ile bağlanır, metni aynı. Düzeltme turu F8: 1. şık sonucu 'söz tutulur' demez (assign_to yalnız kişiyi karta kilitler); çip yalnız uygulananı yazar. Düzeltme turu F3: karar 16 için ek almayan *_yuva metinleri eklendi (düz alanlar örnek olarak kaldı); değişen metinler 8. adım sayfasına girer. Karar 16: şık etiketleri yuvalı.",
+    "2. şıkka kilitli gerekçe yazıldı: söz yalnız bir kez uzar."
+   ],
+   "once": {
+    "tr": {
+     "gonderen": "Selin, Ürün Yöneticisi",
+     "konu": "Anadolu Market'e verilen söz",
+     "metin": "Bilge, Anadolu Market'i imzalatırken el terminaliyle stok sayımının ay sonunda hazır olacağını söylemiş. Bu işin yetişmesi için Kaan'ın ay sonuna kadar başka hiçbir şeye bakmaması lazım. Bilge'ye sorduk, “o söz olmasa imza gelmezdi” diyor. Nasıl ilerleyelim?",
+     "secenekler": [
+      {
+       "etiket": "Kaan ay sonuna kadar yalnız buna baksın",
+       "sonuc": "Kaan ay sonuna kadar başka karta bakamaz, söz tutulur, Kaan'ın morali düşer"
+      },
+      {
+       "etiket": "Bilge'yle birlikte ara, bir sprint ek süre iste",
+       "sonuc": "Anadolu Market'in memnuniyeti biraz düşer, söz bir sprint uzar"
+      },
+      {
+       "etiket": "Bu özelliğin şimdilik olmayacağını söyle",
+       "sonuc": "Anadolu Market'in memnuniyeti düşer, Bilge'nin morali düşer"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Selin, Product Manager",
+     "konu": "The promise to Anadolu Market",
+     "metin": "While closing Anadolu Market, Bilge told them handheld stock counting would be ready by the end of the month. To make that, Kaan can't look at anything else until then. We asked Bilge, and the answer was “without that promise, they'd never have signed.” How do we proceed?",
+     "secenekler": [
+      {
+       "etiket": "Kaan works on nothing else until month end",
+       "sonuc": "Kaan can't touch other cards until month end, the promise is kept, Kaan's morale drops"
+      },
+      {
+       "etiket": "Call them with Bilge, ask for one more sprint",
+       "sonuc": "Anadolu Market's satisfaction drops a little, the promise moves back one sprint"
+      },
+      {
+       "etiket": "Tell them the feature isn't coming for now",
+       "sonuc": "Anadolu Market's satisfaction drops, Bilge's morale drops"
+      }
+     ]
+    }
+   },
+   "sonra": {
+    "tr": {
+     "gonderen": "{employee}, Ürün Yöneticisi",
+     "konu": "Verdiğimiz söz: {customer}",
+     "metin": "{customer} için verdiğimiz sözü tutmak istiyorsak {seam:musteri.promise_card} ay sonunda hazır olmalı. Bunun için {dev} ay sonuna kadar başka hiçbir şeye bakmamalı. Nasıl ilerleyelim?",
+     "secenekler": [
+      {
+       "id": "focus",
+       "etiket": "{dev} ay sonuna kadar yalnız buna baksın",
+       "kilit": "",
+       "sonuc": "{dev} ay sonuna kadar yalnız bu karta bakar, {dev}'ın morali düşer"
+      },
+      {
+       "id": "ask_time",
+       "etiket": "Müşteriyi ara, ek süre iste",
+       "kilit": "Bu sözü bir kez uzattık.",
+       "sonuc": "{customer}'in memnuniyeti biraz düşer, söz uzar"
+      },
+      {
+       "id": "drop",
+       "etiket": "Bu özelliğin şimdilik olmayacağını söyle",
+       "kilit": "",
+       "sonuc": "{customer}'in memnuniyeti düşer, söz geri alınır"
+      }
+     ],
+     "cevapsiz": "Cevap gelmedi, söz olduğu gibi kaldı ve ürün yöneticisinin morali düştü."
+    },
+    "en": {
+     "gonderen": "{employee}, Product Manager",
+     "konu": "The promise we made to {customer}",
+     "metin": "We promised {customer} {seam:musteri.promise_card} by the end of the month. To make that, {dev} can't look at anything else until then. How do we proceed?",
+     "secenekler": [
+      {
+       "id": "focus",
+       "etiket": "{dev} works on nothing else until month end",
+       "kilit": "",
+       "sonuc": "{dev} works only on this card until month end, {dev}'s morale drops"
+      },
+      {
+       "id": "ask_time",
+       "etiket": "Call the customer, ask for more time",
+       "kilit": "We have already moved this promise once.",
+       "sonuc": "{customer}'s satisfaction drops a little, the promise is pushed back"
+      },
+      {
+       "id": "drop",
+       "etiket": "Tell them the feature isn't coming for now",
+       "kilit": "",
+       "sonuc": "{customer}'s satisfaction drops, the promise is withdrawn"
+      }
+     ],
+     "cevapsiz": "No answer came, so the promise stood as it was and the product manager's morale dropped."
+    }
+   },
+   "dosya": "data/events/cards/team/promise_made.json",
+   "kareler": {
+    "A_tr": {
+     "yol": "img/team_promise_made_A_tr.webp",
+     "w": 851,
+     "h": 643
+    },
+    "A_en": {
+     "yol": "img/team_promise_made_A_en.webp",
+     "w": 851,
+     "h": 659
+    },
+    "B_tr": {
+     "yol": "img/team_promise_made_B_tr.webp",
+     "w": 851,
+     "h": 677
+    },
+    "B_en": {
+     "yol": "img/team_promise_made_B_en.webp",
+     "w": 881,
+     "h": 696
+    }
+   },
+   "baglar": {
+    "A": {
+     "yuvalar": [
+      {
+       "yuva": "customer",
+       "id": "co_nordica",
+       "ad": "Nordica",
+       "igne": false
+      },
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_0",
+       "ad": "Elif Demir",
+       "igne": false
+      },
+      {
+       "yuva": "dev",
+       "id": "char_emp_shot_2",
+       "ad": "Mert Yıldız",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": false
+    },
+    "B": {
+     "yuvalar": [
+      {
+       "yuva": "customer",
+       "id": "co_nordica",
+       "ad": "Anadolu Endüstriyel Otomasyon",
+       "igne": false
+      },
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_1",
+       "ad": "Kerem Hasan Karaosmanoğlu",
+       "igne": true
+      },
+      {
+       "yuva": "dev",
+       "id": "char_emp_shot_2",
+       "ad": "Zeynep Nur Büyükkaragöz",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": true
+    }
+   }
+  },
+  {
+   "no": "#10",
+   "revize": "musteri.egitim",
+   "kart": "customer.training_request",
+   "durum": "bagli",
+   "kategori": "Müşteri talebi B2B",
+   "degisti": true,
+   "onay": "bekliyor",
+   "neden": [
+    "Erdem: kısalt, ilk iki şık kalsın, kılavuz şıkkı yeniden ele alınsın ve yardım merkezi eklensin. Metin onun cümlesine indi; kılavuz geçici çözüm oldu (ilk ayındaki bütün hesaplara yarar), yardım merkezi kalıcı çözüm olarak sprinte kart koyar.",
+    "Karar 16: gönderen satırındaki kişi adı (Sevim Aksoy) kalktı, muhatap unvanla yazıldı; metin ve şıklar aynı. Karar 16: şık etiketleri yuvalı.",
+    "2. şıkkın sabit tutarı hesabın yarım aylık ücretine bağlandı."
+   ],
+   "once": {
+    "tr": {
+     "gonderen": "Sevim Aksoy, Anadolu Yapı muhasebe şefi",
+     "konu": "Eğitim rica ediyoruz",
+     "metin": "Ekibimiz bugüne kadar her şeyi kâğıtta tuttu, bizim için yeni bir sistem. Önümüzdeki hafta biri gelip ürünü anlatabilir mi? Yoksa ilk ay kimsenin sisteme girmeyeceğini şimdiden söyleyebilirim.",
+     "secenekler": [
+      {
+       "etiket": "Deniz gelecek hafta bir gün gidip anlatsın",
+       "sonuc": "Deniz'in bir günü gider, Anadolu Yapı'nın memnuniyeti artar"
+      },
+      {
+       "etiket": "İki günlük eğitim teklif et, ücretini iste",
+       "sonuc": "Kasa +$600, Deniz'in iki günü gider, Anadolu Yapı'nın memnuniyeti biraz düşer"
+      },
+      {
+       "etiket": "Deniz ekran ekran anlatan bir onboarding dokümanı hazırlasın",
+       "sonuc": "Deniz'in iki günü gider, ilk ayındaki bütün hesapların memnuniyeti biraz artar"
+      },
+      {
+       "etiket": "Ürüne yardım merkezi ekle",
+       "sonuc": "Sonraki sprinte bir Onboarding kartı girer, Anadolu Yapı'nın memnuniyeti bu ay biraz düşer"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Sevim Aksoy, Head of Accounting, Anadolu Yapı",
+     "konu": "Could you train our team?",
+     "metin": "Our team has always kept everything on paper, so this is a whole new system for us. Could someone come over next week and walk us through it? Otherwise I can already tell you nobody will log in for the first month.",
+     "secenekler": [
+      {
+       "etiket": "Send Deniz over for a day next week",
+       "sonuc": "Deniz loses a day, Anadolu Yapı's satisfaction rises"
+      },
+      {
+       "etiket": "Offer a paid two-day training",
+       "sonuc": "Cash +$600, Deniz loses two days, Anadolu Yapı's satisfaction drops a little"
+      },
+      {
+       "etiket": "Have Deniz write a screen-by-screen onboarding guide",
+       "sonuc": "Deniz loses two days, every account in its first month is a little more satisfied"
+      },
+      {
+       "etiket": "Add a help center to the product",
+       "sonuc": "An Onboarding card joins the next sprint, Anadolu Yapı's satisfaction drops a little this month"
+      }
+     ]
+    }
+   },
+   "sonra": {
+    "tr": {
+     "gonderen": "{customer} muhasebe şefi",
+     "konu": "Eğitim rica ediyoruz",
+     "metin": "Ekibimiz bugüne kadar her şeyi kâğıtta tuttu, bizim için yeni bir sistem. Önümüzdeki hafta biri gelip ürünü anlatabilir mi? Yoksa ilk ay kimsenin sisteme girmeyeceğini şimdiden söyleyebilirim.",
+     "secenekler": [
+      {
+       "id": "visit",
+       "etiket": "{rep} gelecek hafta bir gün gidip anlatsın",
+       "kilit": "",
+       "sonuc": "{rep}'in bir günü gider, {customer}'nın memnuniyeti artar"
+      },
+      {
+       "id": "paid",
+       "etiket": "İki günlük eğitim teklif et, ücretini iste",
+       "kilit": "",
+       "sonuc": "Kasa hesabın yarım aylık ücreti kadar artar, {rep}'in iki günü gider, {customer}'nın memnuniyeti biraz düşer"
+      },
+      {
+       "id": "doc",
+       "etiket": "{rep} ekran ekran anlatan bir onboarding dokümanı hazırlasın",
+       "kilit": "",
+       "sonuc": "{rep}'in iki günü gider, ilk ayındaki bütün hesapların memnuniyeti biraz artar"
+      },
+      {
+       "id": "help_center",
+       "etiket": "Ürüne yardım merkezi ekle",
+       "kilit": "",
+       "sonuc": "Sonraki sprinte bir Onboarding kartı girer, {customer}'nın memnuniyeti bu ay biraz düşer"
+      }
+     ],
+     "cevapsiz": "{customer} ilk ayında sistemi kendi başına çözmeye çalıştı."
+    },
+    "en": {
+     "gonderen": "Head of Accounting, {customer}",
+     "konu": "Could you train our team?",
+     "metin": "Our team has always kept everything on paper, so this is a whole new system for us. Could someone come over next week and walk us through it? Otherwise I can already tell you nobody will log in for the first month.",
+     "secenekler": [
+      {
+       "id": "visit",
+       "etiket": "Send {rep} over for a day next week",
+       "kilit": "",
+       "sonuc": "{rep} loses a day, {customer}'s satisfaction rises"
+      },
+      {
+       "id": "paid",
+       "etiket": "Offer a paid two-day training",
+       "kilit": "",
+       "sonuc": "Cash rises by half the account's monthly fee, {rep} loses two days, {customer}'s satisfaction drops a little"
+      },
+      {
+       "id": "doc",
+       "etiket": "Have {rep} write a screen-by-screen onboarding guide",
+       "kilit": "",
+       "sonuc": "{rep} loses two days, every account in its first month is a little more satisfied"
+      },
+      {
+       "id": "help_center",
+       "etiket": "Add a help center to the product",
+       "kilit": "",
+       "sonuc": "An Onboarding card joins the next sprint, {customer}'s satisfaction drops a little this month"
+      }
+     ],
+     "cevapsiz": "{customer} spent its first month working the system out alone."
+    }
+   },
+   "dosya": "data/events/cards/customer/training_request.json",
+   "kareler": {
+    "A_tr": {
+     "yol": "img/customer_training_request_A_tr.webp",
+     "w": 852,
+     "h": 699
+    },
+    "A_en": {
+     "yol": "img/customer_training_request_A_en.webp",
+     "w": 851,
+     "h": 715
+    },
+    "B_tr": {
+     "yol": "img/customer_training_request_B_tr.webp",
+     "w": 939,
+     "h": 715
+    },
+    "B_en": {
+     "yol": "img/customer_training_request_B_en.webp",
+     "w": 898,
+     "h": 715
+    }
+   },
+   "baglar": {
+    "A": {
+     "yuvalar": [
+      {
+       "yuva": "customer",
+       "id": "co_palmiye",
+       "ad": "Palmiye Turizm",
+       "igne": false
+      },
+      {
+       "yuva": "rep",
+       "id": "char_cs_co_palmiye",
+       "ad": "Burcu Çetin",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": false
+    },
+    "B": {
+     "yuvalar": [
+      {
+       "yuva": "customer",
+       "id": "co_kuzey",
+       "ad": "Anadolu Endüstriyel Otomasyon",
+       "igne": true
+      },
+      {
+       "yuva": "rep",
+       "id": "char_emp_shot_4",
+       "ad": "Kerem Hasan Karaosmanoğlu",
+       "igne": true
+      }
+     ],
+     "where": "met",
+     "long": true
+    }
+   }
+  },
+  {
+   "no": "#11",
+   "revize": "musteri.kendi_hatasi",
+   "kart": "customer.own_data_error",
+   "durum": "bagli",
+   "kategori": "Müşteri talebi B2B",
+   "degisti": true,
+   "onay": "bekliyor",
+   "neden": [
+    "Erdem: ayrıntı (ayçiçek yağı) çıksın, kurucu müşteriye bizzat gitmez. Şıklar onun üç hamlesine döndü: temsilci kayıtlarla gider, sen telefonla anlatırsın, sayım ekranına uyarı ve önlem (Emre'nin bir haftası).",
+    "Düzeltme turu F3: karar 16 için ek almayan *_yuva metinleri eklendi (düz alanlar örnek olarak kaldı); değişen metinler 8. adım sayfasına girer. Karar 16: şık etiketleri yuvalı.",
+    "3. şıkkın etkisi hattın öbür hesaplarına da yayıldı ve 1. şıkka temsilci yokken kilit gerekçesi yazıldı."
+   ],
+   "once": {
+    "tr": {
+     "gonderen": "Emre, Yazılım Mühendisi",
+     "konu": "Ekin Gıda'nın stok şikâyeti",
+     "metin": "Ekin Gıda'nın depo müdürü sabah aradı, sistemimizin stokları yanlış saydığını söyleyip bağırdı. Kayıtlara baktım: depodaki arkadaş 40 koli ürünü 4 diye girmiş, sistem stokta 4 koli gösterdiği için iki şubeye eksik mal gönderilmiş. Müdür hâlâ hatanın bizde olduğunu düşünüyor.",
+     "secenekler": [
+      {
+       "etiket": "Deniz kayıtlarla müdüre gitsin",
+       "sonuc": "Deniz'in bir günü gider, Ekin Gıda'nın memnuniyeti artar"
+      },
+      {
+       "etiket": "Müdürü sen ara, kayıtları nazikçe anlat",
+       "sonuc": "Bu hafta verimin %10 düşer, Ekin Gıda'nın memnuniyeti biraz artar"
+      },
+      {
+       "etiket": "Sayım ekranına uyarı ekle, müdüre aldığımız önlemi anlat",
+       "sonuc": "Emre'nin bir haftası gider, Ekin Gıda'nın memnuniyeti artar"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Emre, Software Engineer",
+     "konu": "Ekin Gıda's stock complaint",
+     "metin": "Ekin Gıda's warehouse manager called this morning, shouting that our system miscounts stock. I checked the records: someone at their warehouse entered 40 cases as 4, so the system showed 4 in stock and two branches got short deliveries. The manager still thinks it's our fault.",
+     "secenekler": [
+      {
+       "etiket": "Send Deniz to the manager with the records",
+       "sonuc": "Deniz loses a day, Ekin Gıda's satisfaction rises"
+      },
+      {
+       "etiket": "Call the manager yourself and walk through the records",
+       "sonuc": "Your productivity drops 10% this week, Ekin Gıda's satisfaction rises a little"
+      },
+      {
+       "etiket": "Add a warning to the count screen, tell the manager what we changed",
+       "sonuc": "Emre loses a week, Ekin Gıda's satisfaction rises"
+      }
+     ]
+    }
+   },
+   "sonra": {
+    "tr": {
+     "gonderen": "{employee}, Yazılımcı",
+     "konu": "Stok şikâyeti: {customer}",
+     "metin": "{customer} depo müdürü sabah aradı, sistemimizin stokları yanlış saydığını söyleyip bağırdı. Kayıtlara baktım: depodaki arkadaş 40 koli ürünü 4 diye girmiş, sistem stokta 4 koli gösterdiği için iki şubeye eksik mal gönderilmiş. Müdür hâlâ hatanın bizde olduğunu düşünüyor.",
+     "secenekler": [
+      {
+       "id": "rep_visits",
+       "etiket": "Müşteri temsilcisi kayıtlarla müdüre gitsin",
+       "kilit": "Bu hesabın müşteri temsilcisi yok.",
+       "sonuc": "{rep}'in bir günü gider, {customer}'nın memnuniyeti artar"
+      },
+      {
+       "id": "founder_calls",
+       "etiket": "Müdürü sen ara, kayıtları nazikçe anlat",
+       "kilit": "",
+       "sonuc": "Bu hafta verimin %10 düşer, {customer}'nın memnuniyeti biraz artar"
+      },
+      {
+       "id": "warning_screen",
+       "etiket": "Sayım ekranına uyarı ekle, müdüre aldığımız önlemi anlat",
+       "kilit": "",
+       "sonuc": "{employee}'nin bir haftası gider, {customer}'nın memnuniyeti artar, Stok hattını kullanan öbür hesapların memnuniyeti biraz artar"
+      }
+     ],
+     "cevapsiz": "Müdüre cevap gitmedi, hatanın bizde olduğunu düşünmeye devam etti."
+    },
+    "en": {
+     "gonderen": "{employee}, Developer",
+     "konu": "Stock complaint: {customer}",
+     "metin": "The warehouse manager at {customer} called this morning, shouting that our system miscounts stock. I checked the records: someone at their warehouse entered 40 cases as 4, so the system showed 4 in stock and two branches got short deliveries. The manager still thinks it's our fault.",
+     "secenekler": [
+      {
+       "id": "rep_visits",
+       "etiket": "Send the account manager to the warehouse manager with the records",
+       "kilit": "This account has no account manager.",
+       "sonuc": "{rep} loses a day, {customer}'s satisfaction rises"
+      },
+      {
+       "id": "founder_calls",
+       "etiket": "Call the manager yourself and walk through the records",
+       "kilit": "",
+       "sonuc": "Your productivity drops 10% this week, {customer}'s satisfaction rises a little"
+      },
+      {
+       "id": "warning_screen",
+       "etiket": "Add a warning to the count screen, tell the manager what we changed",
+       "kilit": "",
+       "sonuc": "{employee} loses a week, {customer}'s satisfaction rises, and other accounts on the Stock line are a little more satisfied"
+      }
+     ],
+     "cevapsiz": "No answer reached the manager, who kept thinking the fault was ours."
+    }
+   },
+   "dosya": "data/events/cards/customer/own_data_error.json",
+   "kareler": {
+    "A_tr": {
+     "yol": "img/customer_own_data_error_A_tr.webp",
+     "w": 851,
+     "h": 730
+    },
+    "A_en": {
+     "yol": "img/customer_own_data_error_A_en.webp",
+     "w": 860,
+     "h": 730
+    },
+    "B_tr": {
+     "yol": "img/customer_own_data_error_B_tr.webp",
+     "w": 887,
+     "h": 730
+    },
+    "B_en": {
+     "yol": "img/customer_own_data_error_B_en.webp",
+     "w": 968,
+     "h": 709
+    }
+   },
+   "baglar": {
+    "A": {
+     "yuvalar": [
+      {
+       "yuva": "customer",
+       "id": "co_palmiye",
+       "ad": "Palmiye Turizm",
+       "igne": false
+      },
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_2",
+       "ad": "Mert Yıldız",
+       "igne": false
+      },
+      {
+       "yuva": "founder",
+       "id": "char_founder",
+       "ad": "Kurucu",
+       "igne": false
+      },
+      {
+       "yuva": "rep",
+       "id": "char_cs_co_palmiye",
+       "ad": "Burcu Çetin",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": false
+    },
+    "B": {
+     "yuvalar": [
+      {
+       "yuva": "customer",
+       "id": "co_palmiye",
+       "ad": "Anadolu Endüstriyel Otomasyon",
+       "igne": false
+      },
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_2",
+       "ad": "Kerem Hasan Karaosmanoğlu",
+       "igne": false
+      },
+      {
+       "yuva": "founder",
+       "id": "char_founder",
+       "ad": "Kurucu",
+       "igne": false
+      },
+      {
+       "yuva": "rep",
+       "id": "char_cs_co_palmiye",
+       "ad": "Zeynep Nur Büyükkaragöz",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": true
+    }
+   }
+  },
+  {
+   "no": "#12",
+   "revize": "musteri.muhasebeci",
+   "kart": "customer.finance_team",
+   "durum": "bagli",
+   "kategori": "Müşteri talebi B2B",
+   "degisti": true,
+   "onay": "bekliyor",
+   "neden": [
+    "Erdem: dışarıdan çalışılan muhasebeci fazla küçük esnaf, gönderen şirketin kendisi olsun ('Finans ekibimiz sizin sisteme girmek istemiyor'), 'tabloyu kendin hazırla' çok kötü. Gönderen operasyon müdürü oldu, şıklar baştan: dışa aktarma kartı, temsilcinin bir günü, şimdilik böyle.",
+    "Karar 16: gönderen satırındaki kişi adı (Hakan Er) kalktı, muhatap unvanla yazıldı; metin ve şıklar aynı. Karar 16: şık etiketleri yuvalı.",
+    "Koşul 'dışa aktarma' yerine Entegrasyonlar hattının ilk kademesine bağlandı."
+   ],
+   "once": {
+    "tr": {
+     "gonderen": "Hakan Er, Kardelen Mağazacılık operasyon müdürü",
+     "konu": "Finans ekibimiz",
+     "metin": "Finans ekibimiz sizin sisteme girmek istemiyor. Ay sonunda bütün satışları ve alışları kendi tablolarına aktarıyorlar, her ay iki günleri bununla geçiyor. Bunu kolaylaştırmanın bir yolu var mı?",
+     "secenekler": [
+      {
+       "etiket": "Tabloya aktarmayı sonraki sprinte al",
+       "sonuc": "Sonraki sprinte bir istek kartı girer, Kardelen'in memnuniyeti artar"
+      },
+      {
+       "etiket": "Deniz finans ekibine bir gün sistemi göstersin",
+       "sonuc": "Deniz'in bir günü gider, Kardelen'in memnuniyeti biraz artar"
+      },
+      {
+       "etiket": "Şimdilik böyle devam etmelerini rica et",
+       "sonuc": "Kardelen'in memnuniyeti düşer"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Hakan Er, Head of Operations, Kardelen Mağazacılık",
+     "konu": "Our finance team",
+     "metin": "Our finance team doesn't want to work in your system. At month end they copy every sale and purchase into their own spreadsheets, and it eats two days every month. Is there a way to make this easier?",
+     "secenekler": [
+      {
+       "etiket": "Put spreadsheet export in the next sprint",
+       "sonuc": "A request card joins the next sprint, Kardelen's satisfaction rises"
+      },
+      {
+       "etiket": "Deniz spends a day showing their finance team the system",
+       "sonuc": "Deniz loses a day, Kardelen's satisfaction rises a little"
+      },
+      {
+       "etiket": "Ask them to carry on like this for now",
+       "sonuc": "Kardelen's satisfaction drops"
+      }
+     ]
+    }
+   },
+   "sonra": {
+    "tr": {
+     "gonderen": "{customer} operasyon müdürü",
+     "konu": "Finans ekibimiz",
+     "metin": "Finans ekibimiz sizin sisteme girmek istemiyor. Ay sonunda bütün satışları ve alışları kendi tablolarına aktarıyorlar, her ay iki günleri bununla geçiyor. Bunu kolaylaştırmanın bir yolu var mı?",
+     "secenekler": [
+      {
+       "id": "queue_request",
+       "etiket": "Tabloya aktarmayı sonraki sprinte al",
+       "kilit": "EV_LOCK_REQUEST_CLOSED",
+       "sonuc": "Sonraki sprinte bir istek kartı girer, Kardelen'in memnuniyeti artar"
+      },
+      {
+       "id": "rep_shows",
+       "etiket": "{rep} finans ekibine bir gün sistemi göstersin",
+       "kilit": "",
+       "sonuc": "{rep}'in bir günü gider, Kardelen'in memnuniyeti biraz artar"
+      },
+      {
+       "id": "carry_on",
+       "etiket": "Şimdilik böyle devam etmelerini rica et",
+       "kilit": "",
+       "sonuc": "Kardelen'in memnuniyeti düşer"
+      }
+     ],
+     "cevapsiz": "Cevap gitmedi, {customer} finans ekibi tabloları elle doldurmaya devam etti."
+    },
+    "en": {
+     "gonderen": "Head of Operations, {customer}",
+     "konu": "Our finance team",
+     "metin": "Our finance team doesn't want to work in your system. At month end they copy every sale and purchase into their own spreadsheets, and it eats two days every month. Is there a way to make this easier?",
+     "secenekler": [
+      {
+       "id": "queue_request",
+       "etiket": "Put spreadsheet export in the next sprint",
+       "kilit": "EV_LOCK_REQUEST_CLOSED",
+       "sonuc": "A request card joins the next sprint, Kardelen's satisfaction rises"
+      },
+      {
+       "id": "rep_shows",
+       "etiket": "{rep} spends a day showing their finance team the system",
+       "kilit": "",
+       "sonuc": "{rep} loses a day, Kardelen's satisfaction rises a little"
+      },
+      {
+       "id": "carry_on",
+       "etiket": "Ask them to carry on like this for now",
+       "kilit": "",
+       "sonuc": "Kardelen's satisfaction drops"
+      }
+     ],
+     "cevapsiz": "No answer went back, and the finance team at {customer} kept filling in their spreadsheets by hand."
+    }
+   },
+   "dosya": "data/events/cards/customer/finance_team.json",
+   "kareler": {
+    "A_tr": {
+     "yol": "img/customer_finance_team_A_tr.webp",
+     "w": 851,
+     "h": 619
+    },
+    "A_en": {
+     "yol": "img/customer_finance_team_A_en.webp",
+     "w": 851,
+     "h": 619
+    },
+    "B_tr": {
+     "yol": "img/customer_finance_team_B_tr.webp",
+     "w": 967,
+     "h": 619
+    },
+    "B_en": {
+     "yol": "img/customer_finance_team_B_en.webp",
+     "w": 1047,
+     "h": 619
+    }
+   },
+   "baglar": {
+    "A": {
+     "yuvalar": [
+      {
+       "yuva": "customer",
+       "id": "co_palmiye",
+       "ad": "Palmiye Turizm",
+       "igne": false
+      },
+      {
+       "yuva": "rep",
+       "id": "char_cs_co_palmiye",
+       "ad": "Burcu Çetin",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": false
+    },
+    "B": {
+     "yuvalar": [
+      {
+       "yuva": "customer",
+       "id": "co_kuzey",
+       "ad": "Anadolu Endüstriyel Otomasyon",
+       "igne": true
+      },
+      {
+       "yuva": "rep",
+       "id": "char_emp_shot_4",
+       "ad": "Kerem Hasan Karaosmanoğlu",
+       "igne": true
+      }
+     ],
+     "where": "met",
+     "long": true
+    }
+   }
+  },
+  {
+   "no": "#15",
+   "revize": "urun.eski_tarayici",
+   "kart": "customer.old_browser",
+   "durum": "bagli",
+   "kategori": "Ürün",
+   "degisti": true,
+   "onay": "bekliyor",
+   "neden": [
+    "Erdem'in iki itirazı: ERP tarayıcı ürünü mü, madem çalışmıyordu satıştan önce konuşulmadı mı. Kurgu önerildi, silinmedi: şart imzadan önce, demodan sonra çıkar ve metin ürünün tarayıcıda açıldığını söyler (bulut ERP); şıklar baştan (kart, söz verip imza, adayı bırak).",
+    "Erdem: 1. şık çıksın. Karar 15: olay imzalatmaz, teklif verir; 'imzayı şimdi al' ifadesi çıktı, söz yalnız teklif koşulu; 'Aras Klinik'i bırak' yerine 'Aras Klinik'e yapamayacağımızı söyle'. Düzeltme turu F3: karar 16 için ek almayan *_yuva metinleri eklendi (düz alanlar örnek olarak kaldı); değişen metinler 8. adım sayfasına girer. Karar 16: şık etiketleri yuvalı.",
+    "Koşul 'eski tarayıcı' yerine Mobil ve Erişim hattının Duyarlı Arayüz kademesine bağlandı, söz bir sprintlik."
+   ],
+   "once": {
+    "tr": {
+     "gonderen": "Bilge, Satış Temsilcisi",
+     "konu": "Aras Klinik'in şartı",
+     "metin": "Aras Klinik demoyu çok beğendi ama bilgi işlem sorumlusu bir şart koydu. Klinikteki bütün bilgisayarlarda Fenstra'nın eski tarayıcısı var, hasta kayıt programları yalnız onda çalışıyor. Ürünümüz o tarayıcıda açılmazsa imza yok.",
+     "secenekler": [
+      {
+       "etiket": "Eski tarayıcı desteğini sonraki sprinte al",
+       "sonuc": "Sonraki sprinte bir kart girer, Aras Klinik kart çıkınca imzalar"
+      },
+      {
+       "etiket": "Desteğe söz ver, imzayı şimdi al",
+       "sonuc": "Aras Klinik bugün imzalar, hesaba bir sprintlik söz yazılır"
+      },
+      {
+       "etiket": "Aras Klinik'i bırak",
+       "sonuc": "Aday düşer"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Bilge, Sales Representative",
+     "konu": "Aras Klinik's condition",
+     "metin": "Aras Klinik loved the demo, but their IT lead set one condition. Every computer at the clinic runs Fenstra's old browser, because their patient records software only works there. If our product doesn't open in that browser, there's no deal.",
+     "secenekler": [
+      {
+       "etiket": "Put old browser support in the next sprint",
+       "sonuc": "A card joins the next sprint, Aras Klinik signs when it ships"
+      },
+      {
+       "etiket": "Promise the support, sign them now",
+       "sonuc": "Aras Klinik signs today, with a promise due in one sprint"
+      },
+      {
+       "etiket": "Let Aras Klinik go",
+       "sonuc": "The prospect is lost"
+      }
+     ]
+    }
+   },
+   "sonra": {
+    "tr": {
+     "gonderen": "{employee}, Satış Uzmanı",
+     "konu": "Şart: {prospect}",
+     "metin": "{prospect} demoyu çok beğendi ama bilgi işlem sorumlusu bir şart koydu. Klinikteki bütün bilgisayarlarda Fenstra'nın eski tarayıcısı var, hasta kayıt programları yalnız onda çalışıyor. Ürünümüz o tarayıcıda açılmazsa imza yok.",
+     "secenekler": [
+      {
+       "id": "promise_support",
+       "etiket": "Desteğe söz ver",
+       "kilit": "",
+       "sonuc": "{prospect}'e bir sprintlik söz teklif edilir. İmzalarsa söz hesaba yazılır, imzalamazsa teklif düşer"
+      },
+      {
+       "id": "decline",
+       "etiket": "Yapamayacağımızı söyle",
+       "kilit": "",
+       "sonuc": "Aday düşer"
+      }
+     ],
+     "cevapsiz": "Cevap gitmedi, {prospect} başka bir yazılıma yöneldi."
+    },
+    "en": {
+     "gonderen": "{employee}, Sales Rep",
+     "konu": "A condition from {prospect}",
+     "metin": "{prospect} loved the demo, but their IT lead set one condition. Every computer at the clinic runs Fenstra's old browser, because their patient records software only works there. If our product doesn't open in that browser, there's no deal.",
+     "secenekler": [
+      {
+       "id": "promise_support",
+       "etiket": "Promise the support",
+       "kilit": "",
+       "sonuc": "{prospect} is offered a promise due in one sprint. If they sign, the promise goes on the account; if not, the offer lapses"
+      },
+      {
+       "id": "decline",
+       "etiket": "Tell them we can't do it",
+       "kilit": "",
+       "sonuc": "The prospect is lost"
+      }
+     ],
+     "cevapsiz": "No answer went back, and {prospect} moved on to another product."
+    }
+   },
+   "dosya": "data/events/cards/customer/old_browser.json",
+   "kareler": {
+    "A_tr": {
+     "yol": "img/customer_old_browser_A_tr.webp",
+     "w": 851,
+     "h": 565
+    },
+    "A_en": {
+     "yol": "img/customer_old_browser_A_en.webp",
+     "w": 851,
+     "h": 565
+    },
+    "B_tr": {
+     "yol": "img/customer_old_browser_B_tr.webp",
+     "w": 851,
+     "h": 565
+    },
+    "B_en": {
+     "yol": "img/customer_old_browser_B_en.webp",
+     "w": 851,
+     "h": 605
+    }
+   },
+   "baglar": {
+    "A": {
+     "yuvalar": [
+      {
+       "yuva": "prospect",
+       "id": "lead_14_1",
+       "ad": "Efes Pazar",
+       "igne": false
+      },
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_4",
+       "ad": "Burak Şahin",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": false
+    },
+    "B": {
+     "yuvalar": [
+      {
+       "yuva": "prospect",
+       "id": "lead_14_1",
+       "ad": "Anadolu Endüstriyel Otomasyon",
+       "igne": false
+      },
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_4",
+       "ad": "Kerem Hasan Karaosmanoğlu",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": true
+    }
+   }
+  },
+  {
+   "no": "#18",
+   "revize": "rakip.kesinti",
+   "kart": "rival.outage",
+   "durum": "bagli",
+   "kategori": "Rakip",
+   "degisti": true,
+   "onay": "onaylı",
+   "neden": [
+    "Erdem: 'üçüne de demo' iyi; rakibin kurucusunu arayıp yardım ve tablo gönderme şıkları saçma (amme hizmeti), tek şık olabilir. O iki şık çıktı, olay tek şıklı.",
+    "Karar 16: şık etiketleri yuvalı.",
+    "Koşul sessiz kalan küçük bir rakibe bağlandı ve kartın kendisi haberdir."
+   ],
+   "once": {
+    "tr": {
+     "gonderen": "Kaan, Satış Temsilcisi",
+     "konu": "Sumpter çökmüş",
+     "metin": "Sumpter iki gündür açılmıyor ve telefonlarına da kimse çıkmıyor. Müşterilerinden üçü bu sabah bizi aradı, ay sonu yaklaşırken kayıtlarına ulaşamıyorlar.",
+     "secenekler": [
+      {
+       "etiket": "Kaan bu hafta üçüne de demo yapsın",
+       "sonuc": "Üç yeni aday, Kaan'ın bu haftası buna gider"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Kaan, Sales Representative",
+     "konu": "Sumpter is down",
+     "metin": "Sumpter has been down for two days and nobody's answering their phones. Three of their customers called us this morning; month end is coming and they can't get to their records.",
+     "secenekler": [
+      {
+       "etiket": "Have Kaan demo all three this week",
+       "sonuc": "Three new prospects, Kaan's week goes to this"
+      }
+     ]
+    }
+   },
+   "sonra": {
+    "tr": {
+     "gonderen": "{employee}, Satış Uzmanı",
+     "konu": "{rival} çökmüş",
+     "metin": "{rival} iki gündür açılmıyor ve telefonlarına da kimse çıkmıyor. Müşterilerinden üçü bu sabah bizi aradı, ay sonu yaklaşırken kayıtlarına ulaşamıyorlar.",
+     "secenekler": [
+      {
+       "id": "demo_three",
+       "etiket": "{employee} bu hafta üçüne de demo yapsın",
+       "kilit": "",
+       "sonuc": "Üç yeni aday, {employee}'ın bu haftası buna gider"
+      }
+     ],
+     "cevapsiz": "Cevap gitmedi, hafta geçti ve {rival} yeniden açıldı."
+    },
+    "en": {
+     "gonderen": "{employee}, Sales Rep",
+     "konu": "{rival} is down",
+     "metin": "{rival} has been down for two days and nobody's answering their phones. Three of their customers called us this morning; month end is coming and they can't get to their records.",
+     "secenekler": [
+      {
+       "id": "demo_three",
+       "etiket": "Have {employee} demo all three this week",
+       "kilit": "",
+       "sonuc": "Three new prospects, {employee}'s week goes to this"
+      }
+     ],
+     "cevapsiz": "No answer went back, and by the end of the week {rival} was back up."
+    }
+   },
+   "dosya": "data/events/cards/rival/outage.json",
+   "kareler": {
+    "A_tr": {
+     "yol": "img/rival_outage_A_tr.webp",
+     "w": 851,
+     "h": 547
+    },
+    "A_en": {
+     "yol": "img/rival_outage_A_en.webp",
+     "w": 851,
+     "h": 547
+    },
+    "B_tr": {
+     "yol": "img/rival_outage_B_tr.webp",
+     "w": 864,
+     "h": 547
+    },
+    "B_en": {
+     "yol": "img/rival_outage_B_en.webp",
+     "w": 859,
+     "h": 547
+    }
+   },
+   "baglar": {
+    "A": {
+     "yuvalar": [
+      {
+       "yuva": "rival",
+       "id": "rv_erp_6",
+       "ad": "Sumpter",
+       "igne": false
+      },
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_4",
+       "ad": "Burak Şahin",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": false
+    },
+    "B": {
+     "yuvalar": [
+      {
+       "yuva": "rival",
+       "id": "rv_erp_7",
+       "ad": "Hyperion Enterprise Suite",
+       "igne": true
+      },
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_4",
+       "ad": "Kerem Hasan Karaosmanoğlu",
+       "igne": true
+      }
+     ],
+     "where": "met",
+     "long": true
+    }
+   }
+  },
+  {
+   "no": "#19",
+   "revize": "rakip.ayni_ozellik",
+   "kart": "product.sprint_test_rival_batch",
+   "durum": "bagli",
+   "kategori": "Rakip",
+   "degisti": true,
+   "onay": "bekliyor",
+   "neden": [
+    "Erdem: hikâye zorlama, onun örnek tonunda doğallaşsın. Metin onun cümlesine döndü; bekleme şıkkı 'eksiklerini gör' kazancı olmadan duruyordu, planı bozmayan yol oldu (riski yok, bedeli Marka −1).",
+    "Erdem: erken çıkışın marka +1'den gerçek bir karşılığı olmalı. Karar 7: 1. şıkta Marka +1 yerine üç hesabın kalıcı memnuniyeti, testte hata çıkarsa aynı üçünde düşüş; 3. şık 'Testi kısalt, kart bu sprintin sürümüne girsin' (sürüm yalnız sprint kapanışında). Karar 11: sprint kâğıdı, konuşan PM. Düzeltme turu F3: karar 16 için ek almayan *_yuva metinleri eklendi (düz alanlar örnek olarak kaldı); değişen metinler 8. adım sayfasına girer.",
+    "Konuşan test aşamasındaki kişi oldu, konu ve metin her özellik kartında gelebilecek biçimde yuvalandı ve 1. şıkta 'kalıcı olarak' ifadesi kalktı."
+   ],
+   "once": {
+    "tr": {
+     "gonderen": "Selin, Ürün Yöneticisi",
+     "konu": "Ardenna'nın toplu faturası",
+     "metin": "Ardenna'nın bizim üzerinde çalıştığımız toplu fatura özelliğini geliştirdiğini duyduk. Bizde aynı kart hazır ama testine başlanmadı. Önce biz çıkarsak ilk duyulan isim biz oluruz.",
+     "secenekler": [
+      {
+       "etiket": "En yakın üç müşterimiz bu hafta erkenden denesin",
+       "sonuc": "Marka +1, olası hatayı yalnız bu üç hesap görür"
+      },
+      {
+       "etiket": "Planı bozma, kart sırası gelince çıksın",
+       "sonuc": "Ardenna önce duyurur, Marka −1"
+      },
+      {
+       "etiket": "Testi kısalt, bu hafta yayınla",
+       "sonuc": "Marka +3, Fatura hattına hata kaçabilir"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Selin, Product Manager",
+     "konu": "Ardenna's batch invoicing",
+     "metin": "We've heard Ardenna is building the same batch invoicing feature we're working on. Ours is built, but testing hasn't started. If we ship first, we're the name people hear first.",
+     "secenekler": [
+      {
+       "etiket": "Let our three closest customers try it early this week",
+       "sonuc": "Brand +1, any bug only reaches those three accounts"
+      },
+      {
+       "etiket": "Stick to the plan, ship it when its turn comes",
+       "sonuc": "Ardenna announces first, Brand −1"
+      },
+      {
+       "etiket": "Cut testing short, release this week",
+       "sonuc": "Brand +3, bugs may slip into the Invoicing line"
+      }
+     ]
+    }
+   },
+   "sonra": {
+    "tr": {
+     "gonderen": "{employee}, Test Uzmanı",
+     "konu": "Aynı özellik: {rival}",
+     "metin": "Rakiplerden {rival}, {seam:urun.decision_card} kartımızın aynısını geliştiriyormuş. Bizde kart hazır ama testine daha başlamadık. Önce biz çıkarsak ilk duyulan isim biz oluruz.",
+     "secenekler": [
+      {
+       "id": "early_trial",
+       "etiket": "En yakın üç müşterimiz bu hafta erkenden denesin",
+       "kilit": "",
+       "sonuc": "Üç hesabın memnuniyeti artar; kartın testi hata bulursa aynı üç hesabın memnuniyeti daha çok düşer"
+      },
+      {
+       "id": "hold_plan",
+       "etiket": "Planı bozma, kart sırası gelince çıksın",
+       "kilit": "",
+       "sonuc": "{rival} önce duyurur, Marka −1"
+      },
+      {
+       "id": "cut_test",
+       "etiket": "Testi kısalt, kart bu sprintin sürümüne girsin",
+       "kilit": "",
+       "sonuc": "Kartın testi kısalır, Marka +3, Fatura hattına hata kaçabilir"
+      }
+     ],
+     "cevapsiz": "Cevap gelmedi, plan aynen sürdü ve {rival} önce duyurdu."
+    },
+    "en": {
+     "gonderen": "{employee}, Tester",
+     "konu": "Same feature: {rival}",
+     "metin": "{rival} is building the same thing as our {seam:urun.decision_card} card. Ours is ready, but testing has not started yet. If we ship first, ours is the name people hear first.",
+     "secenekler": [
+      {
+       "id": "early_trial",
+       "etiket": "Let our three closest customers try it early this week",
+       "kilit": "",
+       "sonuc": "All three accounts grow more satisfied; if the card's testing finds a bug, the same three accounts' satisfaction drops further"
+      },
+      {
+       "id": "hold_plan",
+       "etiket": "Stick to the plan, ship it when its turn comes",
+       "kilit": "",
+       "sonuc": "{rival} announces first, Brand −1"
+      },
+      {
+       "id": "cut_test",
+       "etiket": "Cut testing short, put the card in this sprint's release",
+       "kilit": "",
+       "sonuc": "Testing is cut short, Brand +3, bugs may slip into the Invoicing line"
+      }
+     ],
+     "cevapsiz": "No answer came, so the plan stood and {rival} announced first."
+    }
+   },
+   "dosya": "data/events/cards/product/sprint_test_rival_batch.json",
+   "kareler": {
+    "A_tr": {
+     "yol": "img/product_sprint_test_rival_batch_A_tr.webp",
+     "w": 851,
+     "h": 675
+    },
+    "A_en": {
+     "yol": "img/product_sprint_test_rival_batch_A_en.webp",
+     "w": 851,
+     "h": 675
+    },
+    "B_tr": {
+     "yol": "img/product_sprint_test_rival_batch_B_tr.webp",
+     "w": 970,
+     "h": 675
+    },
+    "B_en": {
+     "yol": "img/product_sprint_test_rival_batch_B_en.webp",
+     "w": 997,
+     "h": 675
+    }
+   },
+   "baglar": {
+    "A": {
+     "yuvalar": [
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_2",
+       "ad": "Mert Yıldız",
+       "igne": false
+      },
+      {
+       "yuva": "rival",
+       "id": "rv_erp_5",
+       "ad": "Raketenhaus",
+       "igne": false
+      },
+      {
+       "yuva": "acct_1",
+       "id": "co_marmara",
+       "ad": "Marmara Lojistik",
+       "igne": false
+      },
+      {
+       "yuva": "acct_2",
+       "id": "co_ege_metal",
+       "ad": "Ege Metal",
+       "igne": false
+      },
+      {
+       "yuva": "acct_3",
+       "id": "co_kuzey",
+       "ad": "Kuzey İnşaat",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": false
+    },
+    "B": {
+     "yuvalar": [
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_1",
+       "ad": "Kerem Hasan Karaosmanoğlu",
+       "igne": true
+      },
+      {
+       "yuva": "rival",
+       "id": "rv_erp_5",
+       "ad": "Hyperion Enterprise Suite",
+       "igne": false
+      },
+      {
+       "yuva": "acct_1",
+       "id": "co_kuzey",
+       "ad": "Anadolu Endüstriyel Otomasyon",
+       "igne": true
+      },
+      {
+       "yuva": "acct_2",
+       "id": "co_ege_metal",
+       "ad": "Trakya Tarım Ürünleri ve Lojistik",
+       "igne": true
+      },
+      {
+       "yuva": "acct_3",
+       "id": "co_marmara",
+       "ad": "Karadeniz Denizcilik ve Liman İşletmeleri",
+       "igne": true
+      }
+     ],
+     "where": "met",
+     "long": true
+    }
+   }
+  },
+  {
+   "no": "#21",
+   "revize": "rakip.panel",
+   "kart": "rival.new_firm_warning",
+   "durum": "bagli",
+   "kategori": "Rakip",
+   "degisti": true,
+   "onay": "bekliyor",
+   "neden": [
+    "Erdem: girişimcilik panelinde büyük şirketin genel müdürü olmaz, bir şirket 'en çok şundan çekiniyoruz' demez. Yeniden kuruldu: büyük rakibin bizi fark ettiği, satışçısının adaya bizi kötülemesinden duyulur; tek satırlık haber yerine karar (referans müşteri ya da indirim).",
+    "Erdem: 2. şık 'ilk üç ay indirim' değil, ilk yıl indirimli fiyat. Karar 8 ve 15: 'İlk yıl indirimli fiyat ver'; olay imzalatmaz, teklif yazar, aday imzalarsa MRR 52 hafta %X eksik açılır (X 2. adımda), imzalamazsa teklif düşer. Düzeltme turu F12: EN sonuç satırında yer tutucu 'X%' (Türkçe '[2. adım]' kalıntısı yok). Düzeltme turu F3: karar 16 için ek almayan *_yuva metinleri eklendi (düz alanlar örnek olarak kaldı); değişen metinler 8. adım sayfasına girer. Karar 16: şık etiketleri yuvalı.",
+    "2. şıkkın indirimi %15 olarak dolduruldu."
+   ],
+   "once": {
+    "tr": {
+     "gonderen": "Bilge, Satış Temsilcisi",
+     "konu": "Pythia bizden söz etmiş",
+     "metin": "Bugün görüştüğüm aday, Pythia'nın satışçısının kendilerine bizim için “yeni bir firma, yarın olmayabilirler” dediğini anlattı. Aday hâlâ bizi istiyor ama içinin rahat etmesi lazım.",
+     "secenekler": [
+      {
+       "etiket": "Bilge adayı memnun bir müşterimizle görüştürsün",
+       "sonuc": "Bilge'nin iki günü gider, %20 ihtimalle aday yine de Pythia'yı seçer"
+      },
+      {
+       "etiket": "İlk üç ay için indirim teklif et",
+       "sonuc": "Aday imzalar, hesabın MRR'ı ilk üç ay %20 eksik"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Bilge, Sales Representative",
+     "konu": "Pythia brought us up",
+     "metin": "The prospect I met today said Pythia's sales rep warned them about us: “they're new, they may not be around tomorrow.” They still want us, but they need some reassurance.",
+     "secenekler": [
+      {
+       "etiket": "Have Bilge connect them with one of our happy customers",
+       "sonuc": "Bilge loses two days; 20% chance they still pick Pythia"
+      },
+      {
+       "etiket": "Offer a discount for the first three months",
+       "sonuc": "They sign, the account's MRR is 20% lower for three months"
+      }
+     ]
+    }
+   },
+   "sonra": {
+    "tr": {
+     "gonderen": "{employee}, Satış Uzmanı",
+     "konu": "{rival} bizden söz etmiş",
+     "metin": "Bugün görüştüğüm aday anlattı: {rival} satışçısı kendilerine bizim için “yeni bir firma, yarın olmayabilirler” demiş. Aday hâlâ bizi istiyor ama içinin rahat etmesi lazım.",
+     "secenekler": [
+      {
+       "id": "reference_call",
+       "etiket": "{employee} adayı memnun bir müşterimizle görüştürsün",
+       "kilit": "",
+       "sonuc": "{employee}'nin iki günü gider, %20 ihtimalle aday yine de {rival}'yı seçer"
+      },
+      {
+       "id": "first_year_discount",
+       "etiket": "İlk yıl indirimli fiyat ver",
+       "kilit": "",
+       "sonuc": "Aday imzalarsa hesap ilk yıl %15 indirimli açılır, imzalamazsa teklif düşer"
+      }
+     ],
+     "cevapsiz": "Cevap gitmedi, aday {rival} tarafına geçti."
+    },
+    "en": {
+     "gonderen": "{employee}, Sales Rep",
+     "konu": "{rival} brought us up",
+     "metin": "The prospect I met today said a sales rep from {rival} warned them about us: “they're new, they may not be around tomorrow.” They still want us, but they need some reassurance.",
+     "secenekler": [
+      {
+       "id": "reference_call",
+       "etiket": "Have {employee} connect them with one of our happy customers",
+       "kilit": "",
+       "sonuc": "{employee} loses two days; 20% chance they still pick {rival}"
+      },
+      {
+       "id": "first_year_discount",
+       "etiket": "Offer a discounted price for the first year",
+       "kilit": "",
+       "sonuc": "If they sign, the account opens at 15% off for the first year; if not, the offer lapses"
+      }
+     ],
+     "cevapsiz": "No answer went back, and the prospect went with {rival}."
+    }
+   },
+   "dosya": "data/events/cards/rival/new_firm_warning.json",
+   "kareler": {
+    "A_tr": {
+     "yol": "img/rival_new_firm_warning_A_tr.webp",
+     "w": 851,
+     "h": 579
+    },
+    "A_en": {
+     "yol": "img/rival_new_firm_warning_A_en.webp",
+     "w": 851,
+     "h": 579
+    },
+    "B_tr": {
+     "yol": "img/rival_new_firm_warning_B_tr.webp",
+     "w": 939,
+     "h": 611
+    },
+    "B_en": {
+     "yol": "img/rival_new_firm_warning_B_en.webp",
+     "w": 977,
+     "h": 611
+    }
+   },
+   "baglar": {
+    "A": {
+     "yuvalar": [
+      {
+       "yuva": "rival",
+       "id": "rv_erp_1",
+       "ad": "Pythia",
+       "igne": false
+      },
+      {
+       "yuva": "prospect",
+       "id": "lead_14_1",
+       "ad": "Efes Pazar",
+       "igne": false
+      },
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_4",
+       "ad": "Burak Şahin",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": false
+    },
+    "B": {
+     "yuvalar": [
+      {
+       "yuva": "rival",
+       "id": "rv_erp_2",
+       "ad": "Hyperion Enterprise Suite",
+       "igne": true
+      },
+      {
+       "yuva": "prospect",
+       "id": "lead_14_2",
+       "ad": "Anadolu Endüstriyel Otomasyon",
+       "igne": true
+      },
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_1",
+       "ad": "Kerem Hasan Karaosmanoğlu",
+       "igne": true
+      }
+     ],
+     "where": "met",
+     "long": true
+    }
+   }
+  },
+  {
+   "no": "#23",
+   "revize": "dunya.disk",
+   "kart": "world.server_price_hike",
+   "durum": "bagli",
+   "kategori": "Dünyadan haberler ve çeyrek bülteni",
+   "degisti": true,
+   "onay": "bekliyor",
+   "neden": [
+    "Erdem: kurumsal ve fazla ayrıntılı (sel anlatısı); bir çalışanın ağzından kısa bir cümle, şıklarda ucuz sağlayıcıya geçiş ve 3★ üstü müşteri varken geçememe. Sel anlatısı çıktı, karar üç şık oldu.",
+    "Karar 1: 'sağlayıcı' kademelerin üstünde fiyat çarpanı (×1,15 / ×0,90 / ×1,07); 2. şıkta kademe değişmez; yıllık sözleşme şıkkı kilit sürerken kademe ve taban kilitli, yalnız bu olayda ve koşuda bir kez ('hep yıllık imzalarım' demez, Erdem'in şartı); sonuç satırları ve kosul_notu buna göre. Düzeltme turu F6: 2. şık kilit gerekçesi kademeden bağımsız yazıldı; kilidin kalıp kalmayacağı yardımcı yönetmene açık (yy_onay_bekliyor).",
+    "2. şıkka kilit gerekçesi yazıldı: büyük müşterilerin sözleşmesi bugünkü sağlayıcıyı adıyla anıyor."
+   ],
+   "once": {
+    "tr": {
+     "gonderen": "Kerem, Kıdemli Yazılım Mühendisi",
+     "konu": "Sunucu zammı",
+     "metin": "Sunucu sağlayıcımız gelecek aydan itibaren fiyatlarına %15 zam yapıyor. Daha ucuz bir sağlayıcıya geçebiliriz ama taşıma bir sprintimi alır.",
+     "secenekler": [
+      {
+       "etiket": "Zammı kabul et, yerimizde kalalım",
+       "sonuc": "Sunucu faturası %15 artar"
+      },
+      {
+       "etiket": "Ucuz sağlayıcıya geç",
+       "sonuc": "Sunucu faturası bugünkünden %10 düşer, Kerem'in bir sprinti taşımaya gider"
+      },
+      {
+       "etiket": "Bir yıllık sözleşme imzala, zammı yarıya indir",
+       "sonuc": "Sunucu faturası %7 artar, bir yıl sağlayıcı değiştiremezsin"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Kerem, Senior Software Engineer",
+     "konu": "Server price increase",
+     "metin": "Our server provider is raising prices 15% from next month. We could move to a cheaper provider, but the migration would take one of my sprints.",
+     "secenekler": [
+      {
+       "etiket": "Accept it, we stay put",
+       "sonuc": "Server bill +15%"
+      },
+      {
+       "etiket": "Move to the cheaper provider",
+       "sonuc": "Server bill 10% below today's, Kerem's next sprint goes to the migration"
+      },
+      {
+       "etiket": "Sign a one-year contract to halve the increase",
+       "sonuc": "Server bill +7%, no switching providers for a year"
+      }
+     ]
+    }
+   },
+   "sonra": {
+    "tr": {
+     "gonderen": "{employee}, Kıdemli Yazılımcı",
+     "konu": "Sunucu zammı",
+     "metin": "Sunucu sağlayıcımız gelecek aydan itibaren fiyatlarına %15 zam yapıyor. Daha ucuz bir sağlayıcıya geçebiliriz ama taşıma bir sprintimi alır.",
+     "secenekler": [
+      {
+       "id": "accept",
+       "etiket": "Zammı kabul et, yerimizde kalalım",
+       "kilit": "",
+       "sonuc": "Sunucu faturası %15 artar"
+      },
+      {
+       "id": "switch",
+       "etiket": "Ucuz sağlayıcıya geç",
+       "kilit": "Büyük müşterilerimizin sözleşmesinde bugünkü sağlayıcımızın adı yazıyor.",
+       "sonuc": "Sunucu faturası bugünkünden %10 düşer, sunucu kademesi aynı kalır, {employee}'in bir sprinti taşımaya gider"
+      },
+      {
+       "id": "contract",
+       "etiket": "Bir yıllık sözleşme imzala, zammı yarıya indir",
+       "kilit": "",
+       "sonuc": "Sunucu faturası %7 artar; bir yıl boyunca sunucu kademesi değişmez ve kapasite bugünkünün altına inmez"
+      }
+     ],
+     "cevapsiz": "Cevap gelmedi, sağlayıcı zammı uyguladı: sunucu faturası %15 arttı."
+    },
+    "en": {
+     "gonderen": "{employee}, Senior Developer",
+     "konu": "Server price increase",
+     "metin": "Our server provider is raising prices 15% from next month. We could move to a cheaper provider, but the migration would take one of my sprints.",
+     "secenekler": [
+      {
+       "id": "accept",
+       "etiket": "Accept it, we stay put",
+       "kilit": "",
+       "sonuc": "Server bill +15%"
+      },
+      {
+       "id": "switch",
+       "etiket": "Move to the cheaper provider",
+       "kilit": "Our larger customers' contracts name our current provider.",
+       "sonuc": "Server bill 10% below today's, same server tier, {employee}'s next sprint goes to the migration"
+      },
+      {
+       "id": "contract",
+       "etiket": "Sign a one-year contract to halve the increase",
+       "kilit": "",
+       "sonuc": "Server bill +7%; for a year the server tier stays and capacity can't drop below today's"
+      }
+     ],
+     "cevapsiz": "No answer came, so the provider's increase took effect: the server bill is up 15%."
+    }
+   },
+   "dosya": "data/events/cards/world/server_price_hike.json",
+   "kareler": {
+    "A_tr": {
+     "yol": "img/world_server_price_hike_A_tr.webp",
+     "w": 874,
+     "h": 643
+    },
+    "A_en": {
+     "yol": "img/world_server_price_hike_A_en.webp",
+     "w": 859,
+     "h": 643
+    },
+    "B_tr": {
+     "yol": "img/world_server_price_hike_B_tr.webp",
+     "w": 874,
+     "h": 643
+    },
+    "B_en": {
+     "yol": "img/world_server_price_hike_B_en.webp",
+     "w": 859,
+     "h": 643
+    }
+   },
+   "baglar": {
+    "A": {
+     "yuvalar": [
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_2",
+       "ad": "Mert Yıldız",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": false
+    },
+    "B": {
+     "yuvalar": [
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_1",
+       "ad": "Kerem Hasan Karaosmanoğlu",
+       "igne": true
+      }
+     ],
+     "where": "skipped",
+     "long": true
+    }
+   }
+  },
+  {
+   "no": "#24",
+   "revize": "dunya.bulut",
+   "kart": "world.cloud_price_cut",
+   "durum": "bagli",
+   "kategori": "Dünyadan haberler ve çeyrek bülteni",
+   "degisti": false,
+   "onay": "onaylı",
+   "neden": [
+    "Erdem: 'yazım korkunç, işportacı mı'. Satıcı ağzı ve disk zammına dönen cümle çıktı; iki cümlelik sade duyuru.",
+    "Karar 1: kod_notu çarpanla hizalandı (×0,70); metin ve şık Erdem'in onayladığı gibi."
+   ],
+   "once": {
+    "tr": {
+     "gonderen": "Sunucu sağlayıcın",
+     "konu": "Yeni fiyatlar",
+     "metin": "Önümüzdeki aydan itibaren Standart ve Kurumsal paketlerin fiyatı %30 düşüyor. Sunucularınız için bir şey yapmanız gerekmiyor.",
+     "secenekler": [
+      {
+       "etiket": "Anladım",
+       "sonuc": "Standart ve Kurumsal sunucu %30 ucuzlar"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Your server provider",
+     "konu": "New prices",
+     "metin": "Starting next month, Standard and Enterprise plans are 30% cheaper. You don't need to do anything with your servers.",
+     "secenekler": [
+      {
+       "etiket": "Got it",
+       "sonuc": "Standard and Enterprise servers 30% cheaper"
+      }
+     ]
+    }
+   },
+   "sonra": {
+    "tr": {
+     "gonderen": "Sunucu sağlayıcın",
+     "konu": "Yeni fiyatlar",
+     "metin": "Önümüzdeki aydan itibaren Standart ve Kurumsal paketlerin fiyatı %30 düşüyor. Sunucularınız için bir şey yapmanız gerekmiyor.",
+     "secenekler": [
+      {
+       "id": "ack",
+       "etiket": "Anladım",
+       "kilit": "",
+       "sonuc": "Standart ve Kurumsal sunucu %30 ucuzlar"
+      }
+     ],
+     "cevapsiz": "Duyuru okunmadan kapandı, sunucu fiyatları aynı kaldı."
+    },
+    "en": {
+     "gonderen": "Your server provider",
+     "konu": "New prices",
+     "metin": "Starting next month, Standard and Enterprise plans are 30% cheaper. You don't need to do anything with your servers.",
+     "secenekler": [
+      {
+       "id": "ack",
+       "etiket": "Got it",
+       "kilit": "",
+       "sonuc": "Standard and Enterprise servers 30% cheaper"
+      }
+     ],
+     "cevapsiz": "The notice closed unread, so server prices stay as they were."
+    }
+   },
+   "dosya": "data/events/cards/world/cloud_price_cut.json",
+   "kareler": {
+    "A_tr": {
+     "yol": "img/world_cloud_price_cut_A_tr.webp",
+     "w": 851,
+     "h": 507
+    },
+    "A_en": {
+     "yol": "img/world_cloud_price_cut_A_en.webp",
+     "w": 851,
+     "h": 507
+    },
+    "B_tr": {
+     "yol": "img/world_cloud_price_cut_B_tr.webp",
+     "w": 851,
+     "h": 507
+    },
+    "B_en": {
+     "yol": "img/world_cloud_price_cut_B_en.webp",
+     "w": 851,
+     "h": 507
+    }
+   },
+   "baglar": {
+    "A": {
+     "yuvalar": [],
+     "where": "",
+     "long": false
+    },
+    "B": {
+     "yuvalar": [],
+     "where": "",
+     "long": true
+    }
+   }
+  },
+  {
+   "no": "#25",
+   "revize": "dunya.veri_nerede",
+   "kart": "world.data_location",
+   "durum": "bagli",
+   "kategori": "Dünyadan haberler ve çeyrek bülteni",
+   "degisti": true,
+   "onay": "bekliyor",
+   "neden": [
+    "Erdem: daha iyi yazım, şıklar derli toplu, kurucu bizzat gitmez. Metin tek soruya indi; şıklar üç ayrı bedel (kurucunun haftası, öbür hesaplarla bu hesap, söz borcu), 'git' telefona döndü.",
+    "Erdem: 3. şık yalan olsun, %20 ile 30 arası ihtimalle ortaya çıksın, hesap bırakabilsin. Karar 6 ve 9: 3. şık 'Verileriniz Türkiye'de ayrı bir sunucuya alınıyor' oldu, memnuniyet çok artar, %25 ihtimalle ortaya çıkar ve hesap fesih bildirir; 'dinleme haberleri' koşulu için en yakın durum 3. adımda seçilir. Karar 16: Pınar adı kalktı, muhatap unvanla; 1. şık etiketi buna uydu.",
+    "Koşul dinleme haberleri yerine hafta 76 ile 110 arasındaki tarih penceresine bağlandı."
+   ],
+   "once": {
+    "tr": {
+     "gonderen": "Pınar Çetin, Bosphorus Sağlık bilgi işlem müdürü",
+     "konu": "Verilerimiz nerede duruyor?",
+     "metin": "Dinleme haberlerinden sonra yönetimimiz tek bir soru sordu ve cevabı bu hafta istiyor: kayıtlarımız hangi ülkedeki sunucularda duruyor?",
+     "secenekler": [
+      {
+       "etiket": "Pınar'ı sen ara, sunucu düzenini anlat",
+       "sonuc": "Bu hafta verimin %10 düşer, Bosphorus Sağlık'ın memnuniyeti artar"
+      },
+      {
+       "etiket": "Bütün hesaplara aynı açıklamayı gönder",
+       "sonuc": "Öbür hesapların memnuniyeti biraz artar, Bosphorus Sağlık'ınki biraz düşer"
+      },
+      {
+       "etiket": "Verilerine ayrı bir sunucu sözü ver",
+       "sonuc": "Bosphorus Sağlık'ın memnuniyeti çok artar, bir söz borcun olur"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Pınar Çetin, IT Director, Bosphorus Sağlık",
+     "konu": "Where is our data?",
+     "metin": "After the surveillance stories in the papers, our board asked one question and wants the answer this week: which country are our records stored in?",
+     "secenekler": [
+      {
+       "etiket": "Call Pınar yourself and walk through the server setup",
+       "sonuc": "Your productivity drops 10% this week, Bosphorus Sağlık's satisfaction rises"
+      },
+      {
+       "etiket": "Send the same statement to every account",
+       "sonuc": "Every other account's satisfaction rises a little, Bosphorus Sağlık's drops a little"
+      },
+      {
+       "etiket": "Promise them a dedicated server for their data",
+       "sonuc": "Bosphorus Sağlık's satisfaction rises sharply, you owe them a promise"
+      }
+     ]
+    }
+   },
+   "sonra": {
+    "tr": {
+     "gonderen": "{customer} bilgi işlem müdürü",
+     "konu": "Verilerimiz nerede duruyor?",
+     "metin": "Dinleme haberlerinden sonra yönetimimiz tek bir soru sordu ve cevabı bu hafta istiyor: kayıtlarımız hangi ülkedeki sunucularda duruyor?",
+     "secenekler": [
+      {
+       "id": "founder_calls",
+       "etiket": "Bilgi işlem müdürünü sen ara, sunucu düzenini anlat",
+       "kilit": "",
+       "sonuc": "Bu hafta verimin %10 düşer, {customer}'ın memnuniyeti artar"
+      },
+      {
+       "id": "send_all",
+       "etiket": "Bütün hesaplara aynı açıklamayı gönder",
+       "kilit": "",
+       "sonuc": "Öbür hesapların memnuniyeti biraz artar, {customer}'ınki biraz düşer"
+      },
+      {
+       "id": "lie",
+       "etiket": "“Verileriniz Türkiye'de ayrı bir sunucuya alınıyor” de",
+       "kilit": "",
+       "sonuc": "{customer}'ın memnuniyeti çok artar; %25 ihtimalle birkaç hafta içinde gerçek ortaya çıkar ve hesap fesih bildirir"
+      }
+     ],
+     "cevapsiz": "Cevap gelmedi, soru yanıtsız kaldı ve hesabın memnuniyeti düştü."
+    },
+    "en": {
+     "gonderen": "IT Director, {customer}",
+     "konu": "Where is our data?",
+     "metin": "After the surveillance stories in the papers, our board asked one question and wants the answer this week: which country are our records stored in?",
+     "secenekler": [
+      {
+       "id": "founder_calls",
+       "etiket": "Call their IT director yourself and walk through the server setup",
+       "kilit": "",
+       "sonuc": "Your productivity drops 10% this week, {customer}'s satisfaction rises"
+      },
+      {
+       "id": "send_all",
+       "etiket": "Send the same statement to every account",
+       "kilit": "",
+       "sonuc": "Every other account's satisfaction rises a little, {customer}'s drops a little"
+      },
+      {
+       "id": "lie",
+       "etiket": "Tell them “your data is being moved to a separate server in Turkey”",
+       "kilit": "",
+       "sonuc": "{customer}'s satisfaction rises sharply; 25% chance the truth comes out within a few weeks and the account gives notice"
+      }
+     ],
+     "cevapsiz": "No answer went out, the question stayed unanswered and the account's satisfaction dropped."
+    }
+   },
+   "dosya": "data/events/cards/world/data_location.json",
+   "kareler": {
+    "A_tr": {
+     "yol": "img/world_data_location_A_tr.webp",
+     "w": 864,
+     "h": 667
+    },
+    "A_en": {
+     "yol": "img/world_data_location_A_en.webp",
+     "w": 879,
+     "h": 667
+    },
+    "B_tr": {
+     "yol": "img/world_data_location_B_tr.webp",
+     "w": 988,
+     "h": 667
+    },
+    "B_en": {
+     "yol": "img/world_data_location_B_en.webp",
+     "w": 1003,
+     "h": 667
+    }
+   },
+   "baglar": {
+    "A": {
+     "yuvalar": [
+      {
+       "yuva": "customer",
+       "id": "co_kuzey",
+       "ad": "Kuzey İnşaat",
+       "igne": false
+      },
+      {
+       "yuva": "founder",
+       "id": "char_founder",
+       "ad": "Kurucu",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": false
+    },
+    "B": {
+     "yuvalar": [
+      {
+       "yuva": "customer",
+       "id": "co_kuzey",
+       "ad": "Anadolu Endüstriyel Otomasyon",
+       "igne": true
+      },
+      {
+       "yuva": "founder",
+       "id": "char_founder",
+       "ad": "Kurucu",
+       "igne": false
+      }
+     ],
+     "where": "skipped",
+     "long": true
+    }
+   }
+  },
+  {
+   "no": "#25 ek",
+   "revize": "dunya.veri_nerede.ortaya",
+   "kart": "world.data_claim_exposed",
+   "durum": "bagli",
+   "yeni": true,
+   "kategori": "Müşteri talebi B2B",
+   "degisti": true,
+   "onay": "bekliyor",
+   "neden": [
+    "Yeni (karar 6): yalanın ortaya çıkışı. Hesap fesih bildirdi, bildirim dört hafta sonra sözleşmeyi bitirir; oyuncunun hamlesi itibarın ne kadar düşeceğini belirler.",
+    "Yeni ek kart: #25'in %25 ihtimalli ortaya çıkış kartı; karar, özür (kurucunun haftası) ya da sessiz kabul (daha büyük itibar kaybı). Düzeltme turu F9: ortaya çıkış cümlesi yalanın kendisiyle tutarlı (yalan: veriler taşınıyor; öğrenilen: hiç taşınmadı). Düzeltme turu F11: yeni_id world.data_claim_exposed (dunya.* → world/, karar 12)."
+   ],
+   "once": null,
+   "sonra": {
+    "tr": {
+     "gonderen": "{customer} bilgi işlem müdürü",
+     "konu": "Sözleşmeyi bitiriyoruz",
+     "metin": "Verilerimizin hiçbir zaman Türkiye'ye taşınmadığını öğrendik. Bize taşındığını söylemiştiniz. Sözleşmemizi dört hafta sonra bitiriyoruz.",
+     "secenekler": [
+      {
+       "id": "apologize",
+       "etiket": "Müdürü ara, özür dile",
+       "kilit": "",
+       "sonuc": "Bu hafta verimin %10 düşer, itibar biraz düşer; fesih bildirimi sürer"
+      },
+      {
+       "id": "accept",
+       "etiket": "Bildirimi sessizce kabul et",
+       "kilit": "",
+       "sonuc": "İtibar düşer; fesih bildirimi sürer"
+      }
+     ],
+     "cevapsiz": "Cevap gelmedi, fesih bildirimi yürürlüğe girdi ve itibar düştü."
+    },
+    "en": {
+     "gonderen": "IT Director, {customer}",
+     "konu": "We're ending the contract",
+     "metin": "We found out our data was never moved to Turkey. You told us it was. We're ending our contract in four weeks.",
+     "secenekler": [
+      {
+       "id": "apologize",
+       "etiket": "Call the director and apologize",
+       "kilit": "",
+       "sonuc": "Your productivity drops 10% this week, reputation dips a little; the notice stands"
+      },
+      {
+       "id": "accept",
+       "etiket": "Accept the notice quietly",
+       "kilit": "",
+       "sonuc": "Reputation drops; the notice stands"
+      }
+     ],
+     "cevapsiz": "No answer came, so the notice took effect and reputation dropped."
+    }
+   },
+   "dosya": "data/events/cards/world/data_claim_exposed.json",
+   "kareler": {
+    "A_tr": {
+     "yol": "img/world_data_claim_exposed_A_tr.webp",
+     "w": 851,
+     "h": 539
+    },
+    "A_en": {
+     "yol": "img/world_data_claim_exposed_A_en.webp",
+     "w": 851,
+     "h": 539
+    },
+    "B_tr": {
+     "yol": "img/world_data_claim_exposed_B_tr.webp",
+     "w": 851,
+     "h": 555
+    },
+    "B_en": {
+     "yol": "img/world_data_claim_exposed_B_en.webp",
+     "w": 851,
+     "h": 555
+    }
+   },
+   "baglar": {
+    "A": {
+     "yuvalar": [
+      {
+       "yuva": "customer",
+       "id": "co_ege",
+       "ad": "Ege Sigorta",
+       "igne": false
+      },
+      {
+       "yuva": "founder",
+       "id": "char_founder",
+       "ad": "Kurucu",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": false
+    },
+    "B": {
+     "yuvalar": [
+      {
+       "yuva": "customer",
+       "id": "co_kuzey",
+       "ad": "Anadolu Endüstriyel Otomasyon",
+       "igne": true
+      },
+      {
+       "yuva": "founder",
+       "id": "char_founder",
+       "ad": "Kurucu",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": true
+    }
+   }
+  },
+  {
+   "no": "#26",
+   "revize": "dunya.ceyrek_bulteni",
+   "kart": "world.quarterly_bulletin",
+   "durum": "bagli",
+   "kategori": "Dünyadan haberler ve çeyrek bülteni",
+   "degisti": true,
+   "onay": "bekliyor",
+   "neden": [
+    "Erdem: ton zayıf, bilgi dağınık (girişimler, ticaret odası, yatırım turları bir pakette). Bülten tek konuya indi: KOBİ anketi. Yatırım turları ve girişim sayıları ayrı sayıların konusu.",
+    "Erdem: 'Anladım'ın altındaki satır daha iyi yazılsın (örnek: 'Bu çeyrek satış görüşmelerinde kurulum desteğine ağırlık veririm'). Karar 5: tek şık oyuncunun ağzından, sonuç satırı etkiyi yazar; metin ve EN yeniden yazıldı."
+   ],
+   "once": {
+    "tr": {
+     "gonderen": "Girişim Bülteni",
+     "konu": "Çeyrek bülteni: işletmeler yazılımı nasıl seçiyor",
+     "metin": "Bir ticaret odasının altı yüz üyesiyle yaptığı ankete göre işletmeler yazılım seçerken en çok kurulumda yanlarında olunmasına bakıyor. Fiyat ancak üçüncü sırada geliyor.",
+     "secenekler": [
+      {
+       "etiket": "Anladım",
+       "sonuc": "Bu çeyrek satış görüşmelerinde kurulum desteği daha çok tutar"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Girişim Bülteni",
+     "konu": "Quarterly bulletin: how businesses pick software",
+     "metin": "In a chamber of commerce survey of six hundred members, businesses said what they look at most when choosing software is support during setup. Price came only third.",
+     "secenekler": [
+      {
+       "etiket": "Got it",
+       "sonuc": "This quarter, setup support counts for more in sales meetings"
+      }
+     ]
+    }
+   },
+   "sonra": {
+    "tr": {
+     "gonderen": "Girişim Bülteni",
+     "konu": "Çeyrek bülteni: işletmeler yazılımı nasıl seçiyor",
+     "metin": "Bir ticaret odası altı yüz üyesine yazılım seçerken neye baktıklarını sormuş. İlk sırada kurulumda yanlarında olunması var, fiyat üçüncü sırada.",
+     "secenekler": [
+      {
+       "id": "focus_onboarding",
+       "etiket": "Bu çeyrek satış görüşmelerinde kurulum desteğine ağırlık veririm",
+       "kilit": "",
+       "sonuc": "Bu çeyrek satış görüşmelerinde kurulum desteğinin ağırlığı artar"
+      }
+     ],
+     "cevapsiz": "Bülten cevapsız kaldı, bu çeyrek satış görüşmelerinde bir şey değişmedi."
+    },
+    "en": {
+     "gonderen": "Girişim Bülteni",
+     "konu": "Quarterly bulletin: how businesses pick software",
+     "metin": "A chamber of commerce asked its six hundred members what they look at when choosing software. Support during setup came first; price came third.",
+     "secenekler": [
+      {
+       "id": "focus_onboarding",
+       "etiket": "This quarter I'll lean on setup support in my sales meetings",
+       "kilit": "",
+       "sonuc": "This quarter, setup support carries more weight in sales meetings"
+      }
+     ],
+     "cevapsiz": "The bulletin went unanswered, so sales meetings this quarter stay as they were."
+    }
+   },
+   "dosya": "data/events/cards/world/quarterly_bulletin.json",
+   "kareler": {
+    "A_tr": {
+     "yol": "img/world_quarterly_bulletin_A_tr.webp",
+     "w": 1047,
+     "h": 487
+    },
+    "A_en": {
+     "yol": "img/world_quarterly_bulletin_A_en.webp",
+     "w": 976,
+     "h": 487
+    },
+    "B_tr": {
+     "yol": "img/world_quarterly_bulletin_B_tr.webp",
+     "w": 1047,
+     "h": 487
+    },
+    "B_en": {
+     "yol": "img/world_quarterly_bulletin_B_en.webp",
+     "w": 976,
+     "h": 487
+    }
+   },
+   "baglar": {
+    "A": {
+     "yuvalar": [],
+     "where": "",
+     "long": false
+    },
+    "B": {
+     "yuvalar": [],
+     "where": "",
+     "long": true
+    }
+   }
+  },
+  {
+   "no": "#30",
+   "revize": "odul.final",
+   "kart": "world.award_final",
+   "durum": "bagli",
+   "kategori": "Ödül ve basın",
+   "degisti": true,
+   "onay": "bekliyor",
+   "neden": [
+    "Erdem: fikir güzel, uygulama cheesy ('geçen yıl canlı demo yapan kazandı' ve sonrası), 'takılmazsa Kasa +$10.000' fazla düzgün, şıklar baştan. Metin yalnız davet ve soru; birincilik artık ihtimal, canlı demo açık hataya bağlı takılabilir, video şıkkı eklendi.",
+    "Karar 3: MVP dönemine alındı: an ve kosul_notu ilk sürüm çıkmış ve Bootstrap evresi, koşuda en çok bir kez, eşik düşer, ödül $10.000 bir aylık gider; metin ve şıklar aynı. Düzeltme turu F7: birincilik ihtimalleri kumar bandına (%10-30) alındı, sıra korundu: canlı demo %25, video %15, slayt %10 [WORKING]. Bu yüzden TR/EN onay bekliyor.",
+    "1. şık tek zara indi (birincilik, açık hatayla düşer, takılırsa Marka −2), 3. şıkka yarım günlük bedel yazıldı ve marka eşiği kalktı."
+   ],
+   "once": {
+    "tr": {
+     "gonderen": "Girişim Bülteni yarışma ekibi",
+     "konu": "Finaldesiniz",
+     "metin": "“Yılın Yeni Girişimi” yarışmasında son beşe kaldınız, tebrikler. Final gelecek hafta: her ekibe jüri önünde yedi dakika veriliyor, birinciye $10.000 ödül var. Sunumu nasıl yapacağınızı bu hafta teknik ekibimize bildirmeniz gerekiyor.",
+     "secenekler": [
+      {
+       "etiket": "Canlı demo yap",
+       "sonuc": "Marka +3, %20 ihtimalle birincilik (Kasa +$10.000); açık hatan varsa demo sahnede takılabilir (Marka −2)"
+      },
+      {
+       "etiket": "Önceden çekilmiş demo videosu göster",
+       "sonuc": "Mert'in iki günü gider, Marka +2, %10 ihtimalle birincilik"
+      },
+      {
+       "etiket": "Slaytla anlat",
+       "sonuc": "Marka +1, %5 ihtimalle birincilik"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Girişim Bülteni competition team",
+     "konu": "You're in the final",
+     "metin": "Congratulations, you're one of five finalists for “New Startup of the Year.” The final is next week: each team gets seven minutes in front of the jury, and the winner takes home $10,000. Please let our tech crew know this week how you'll present.",
+     "secenekler": [
+      {
+       "etiket": "Do a live demo",
+       "sonuc": "Brand +3, 20% chance to win (Cash +$10,000); with open bugs, the demo may freeze on stage (Brand −2)"
+      },
+      {
+       "etiket": "Show a pre-recorded demo video",
+       "sonuc": "Mert loses two days, Brand +2, 10% chance to win"
+      },
+      {
+       "etiket": "Present with slides",
+       "sonuc": "Brand +1, 5% chance to win"
+      }
+     ]
+    }
+   },
+   "sonra": {
+    "tr": {
+     "gonderen": "Girişim Bülteni yarışma ekibi",
+     "konu": "Finaldesiniz",
+     "metin": "“Yılın Yeni Girişimi” yarışmasında son beşe kaldınız, tebrikler. Final gelecek hafta: her ekibe jüri önünde yedi dakika veriliyor, birinciye 10 bin dolar ödül var. Sunumu nasıl yapacağınızı bu hafta teknik ekibimize bildirmeniz gerekiyor.",
+     "secenekler": [
+      {
+       "id": "live_demo",
+       "etiket": "Canlı demo yap",
+       "kilit": "",
+       "sonuc": "Bir günün provaya gider; %25 ihtimalle birincilik (Kasa +$10.000, Marka +3), yoksa Marka +1; açık hatan varsa ihtimal düşer ve demo sahnede takılır (Marka −2)"
+      },
+      {
+       "id": "video",
+       "etiket": "Önceden çekilmiş demo videosu göster",
+       "kilit": "",
+       "sonuc": "{employee}'in iki günü gider, Marka +2, %15 ihtimalle birincilik"
+      },
+      {
+       "id": "slides",
+       "etiket": "Slaytla anlat",
+       "kilit": "",
+       "sonuc": "Yarım günün slaytlara gider, Marka +1, %10 ihtimalle birincilik"
+      }
+     ],
+     "cevapsiz": "Cevap gelmedi, jüriye sunum bildirilmedi ve Marka düştü."
+    },
+    "en": {
+     "gonderen": "Girişim Bülteni competition team",
+     "konu": "You're in the final",
+     "metin": "Congratulations, you're one of five finalists for “New Startup of the Year.” The final is next week: each team gets seven minutes in front of the jury, and the winner takes home $10,000. Please let our tech crew know this week how you'll present.",
+     "secenekler": [
+      {
+       "id": "live_demo",
+       "etiket": "Do a live demo",
+       "kilit": "",
+       "sonuc": "You spend a day rehearsing; 25% chance to win (Cash +$10,000, Brand +3), otherwise Brand +1; with open bugs the odds drop and the demo freezes on stage (Brand −2)"
+      },
+      {
+       "id": "video",
+       "etiket": "Show a pre-recorded demo video",
+       "kilit": "",
+       "sonuc": "{employee} loses two days, Brand +2, 15% chance to win"
+      },
+      {
+       "id": "slides",
+       "etiket": "Present with slides",
+       "kilit": "",
+       "sonuc": "Half a day goes into the slides, Brand +1, 10% chance to win"
+      }
+     ],
+     "cevapsiz": "No answer came, so the jury never heard how you'd present and Brand dropped."
+    }
+   },
+   "dosya": "data/events/cards/world/award_final.json",
+   "kareler": {
+    "A_tr": {
+     "yol": "img/world_award_final_A_tr.webp",
+     "w": 851,
+     "h": 620
+    },
+    "A_en": {
+     "yol": "img/world_award_final_A_en.webp",
+     "w": 851,
+     "h": 620
+    },
+    "B_tr": {
+     "yol": "img/world_award_final_B_tr.webp",
+     "w": 851,
+     "h": 620
+    },
+    "B_en": {
+     "yol": "img/world_award_final_B_en.webp",
+     "w": 851,
+     "h": 620
+    }
+   },
+   "baglar": {
+    "A": {
+     "yuvalar": [
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_2",
+       "ad": "Mert Yıldız",
+       "igne": false
+      },
+      {
+       "yuva": "founder",
+       "id": "char_founder",
+       "ad": "Kurucu",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": false
+    },
+    "B": {
+     "yuvalar": [
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_1",
+       "ad": "Kerem Hasan Karaosmanoğlu",
+       "igne": true
+      },
+      {
+       "yuva": "founder",
+       "id": "char_founder",
+       "ad": "Kurucu",
+       "igne": false
+      }
+     ],
+     "where": "skipped",
+     "long": true
+    }
+   }
+  },
+  {
+   "no": "#31",
+   "revize": "kriz.acik",
+   "kart": "product.encryption_flaw",
+   "durum": "bagli",
+   "kategori": "Kriz",
+   "degisti": true,
+   "onay": "onaylı",
+   "neden": [
+    "Erdem: 'gayet güzel', şıklar beğenilmedi; yamala ve basına duyur, yamala ve kimseye söyleme (düşük ihtimalli risk), gerekirse üçüncü şık. Üçüncü şık yalnız kullanıcılara mail; sessizliğin bedeli Kerem'in morali değil %10 ihtimalli gecikmeli basın riski.",
+    "Erdem onaylı: metin ve şıklar aynı. Karar 9: kosul_notu'na 'dönemin şifreleme açığı' için en yakın durum 3. adımda seçilecek notu; 4 ile 8 hafta sonraki basın kartı ve B2B ikizi ek kayıt olarak yazıldı.",
+    "Koşul dönemin açığı yerine kartın kendisinin dünyanın haberi olmasına ve hafta 53 ve sonrasına bağlandı."
+   ],
+   "once": {
+    "tr": {
+     "gonderen": "Kerem, Kıdemli Yazılım Mühendisi",
+     "konu": "Acil: şifreleme açığı",
+     "metin": "Sunucuların çoğunun kullandığı şifreleme kütüphanesinde dün gece bir açık duyuruldu. Saldırgan sunucunun belleğinden şifreleri okuyabiliyor ve arkasında iz bırakmıyor. Bizim sunucular da etkileniyor. Yamayı bu akşam yapabilirim, asıl soru kullanıcılara ne diyeceğimiz.",
+     "secenekler": [
+      {
+       "etiket": "Yamala, basına duyur, herkesten şifresini değiştirmesini iste",
+       "sonuc": "İtibar +3, Kitle −%1"
+      },
+      {
+       "etiket": "Yamala, yalnız kullanıcılara mail at",
+       "sonuc": "İtibar +1, Kitle −%0,5"
+      },
+      {
+       "etiket": "Yamala, kimseye duyurma",
+       "sonuc": "Kitle değişmez; %10 ihtimalle haftalar sonra basında çıkar: İtibar −8, Kitle −%5"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Kerem, Senior Software Engineer",
+     "konu": "Urgent: encryption flaw",
+     "metin": "Last night a flaw was announced in the encryption library most servers use. An attacker can read passwords straight out of server memory without leaving a trace. Our servers are affected too. I can patch it tonight; the real question is what we tell users.",
+     "secenekler": [
+      {
+       "etiket": "Patch it, tell the press, ask everyone to change their password",
+       "sonuc": "Reputation +3, Audience −1%"
+      },
+      {
+       "etiket": "Patch it, email users only",
+       "sonuc": "Reputation +1, Audience −0.5%"
+      },
+      {
+       "etiket": "Patch it, tell no one",
+       "sonuc": "Audience unchanged; 10% chance it hits the press weeks later: Reputation −8, Audience −5%"
+      }
+     ]
+    }
+   },
+   "sonra": {
+    "tr": {
+     "gonderen": "{employee}, Kıdemli Yazılımcı",
+     "konu": "Acil: şifreleme açığı",
+     "metin": "Sunucuların çoğunun kullandığı şifreleme kütüphanesinde dün gece bir açık duyuruldu. Saldırgan sunucunun belleğinden şifreleri okuyabiliyor ve arkasında iz bırakmıyor. Bizim sunucular da etkileniyor. Yamayı bu akşam yapabilirim, asıl soru kullanıcılara ne diyeceğimiz.",
+     "secenekler": [
+      {
+       "id": "announce",
+       "etiket": "Yamala, basına duyur, herkesten şifresini değiştirmesini iste",
+       "kilit": "",
+       "sonuc": "İtibar +3, Kitle −%1"
+      },
+      {
+       "id": "mail_users",
+       "etiket": "Yamala, yalnız kullanıcılara mail at",
+       "kilit": "",
+       "sonuc": "İtibar +1, Kitle −%0,5"
+      },
+      {
+       "id": "stay_quiet",
+       "etiket": "Yamala, kimseye duyurma",
+       "kilit": "",
+       "sonuc": "Kitle değişmez; %10 ihtimalle haftalar sonra basında çıkar: İtibar −8, Kitle −%5"
+      }
+     ],
+     "cevapsiz": "Cevap gelmedi, yama gecikmeyle çıktı ve kimseye haber verilmedi."
+    },
+    "en": {
+     "gonderen": "{employee}, Senior Developer",
+     "konu": "Urgent: encryption flaw",
+     "metin": "Last night a flaw was announced in the encryption library most servers use. An attacker can read passwords straight out of server memory without leaving a trace. Our servers are affected too. I can patch it tonight; the real question is what we tell users.",
+     "secenekler": [
+      {
+       "id": "announce",
+       "etiket": "Patch it, tell the press, ask everyone to change their password",
+       "kilit": "",
+       "sonuc": "Reputation +3, Audience −1%"
+      },
+      {
+       "id": "mail_users",
+       "etiket": "Patch it, email users only",
+       "kilit": "",
+       "sonuc": "Reputation +1, Audience −0.5%"
+      },
+      {
+       "id": "stay_quiet",
+       "etiket": "Patch it, tell no one",
+       "kilit": "",
+       "sonuc": "Audience unchanged; 10% chance it hits the press weeks later: Reputation −8, Audience −5%"
+      }
+     ],
+     "cevapsiz": "No answer came, so the patch went out late and nobody was told."
+    }
+   },
+   "dosya": "data/events/cards/product/encryption_flaw.json",
+   "kareler": {
+    "A_tr": {
+     "yol": "img/product_encryption_flaw_A_tr.webp",
+     "w": 851,
+     "h": 650
+    },
+    "A_en": {
+     "yol": "img/product_encryption_flaw_A_en.webp",
+     "w": 851,
+     "h": 629
+    },
+    "B_tr": {
+     "yol": "img/product_encryption_flaw_B_tr.webp",
+     "w": 851,
+     "h": 650
+    },
+    "B_en": {
+     "yol": "img/product_encryption_flaw_B_en.webp",
+     "w": 851,
+     "h": 629
+    }
+   },
+   "baglar": {
+    "A": {
+     "yuvalar": [
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_2",
+       "ad": "Mert Yıldız",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": false
+    },
+    "B": {
+     "yuvalar": [
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_2",
+       "ad": "Kerem Hasan Karaosmanoğlu",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": true
+    }
+   }
+  },
+  {
+   "no": "#31 ek",
+   "revize": "kriz.acik.b2b",
+   "kart": "product.encryption_flaw_b2b",
+   "durum": "bagli",
+   "yeni": true,
+   "kategori": "Kriz",
+   "degisti": true,
+   "onay": "bekliyor",
+   "neden": [
+    "Yeni (#31'in B2B ikizi): aynı açık, Kitle yerine bütün hesapların memnuniyeti; şıklar #31'in üçünün B2B karşılığı.",
+    "Yeni ek kart: #31'in B2B ikizi. Basına duyur ve hesaplara bildir / yalnız hesaplara mail / kimseye duyurma (düşük ihtimalli gecikmeli risk).",
+    "Koşul B2C ikiziyle aynı pencereye (hafta 53 ve sonrası) bağlandı."
+   ],
+   "once": null,
+   "sonra": {
+    "tr": {
+     "gonderen": "{employee}, Kıdemli Yazılımcı",
+     "konu": "Acil: şifreleme açığı",
+     "metin": "Sunucuların çoğunun kullandığı şifreleme kütüphanesinde dün gece bir açık duyuruldu. Saldırgan sunucunun belleğinden şifreleri okuyabiliyor ve arkasında iz bırakmıyor. Bizim sunucular da etkileniyor. Yamayı bu akşam yapabilirim, asıl soru hesaplarımıza ne diyeceğimiz.",
+     "secenekler": [
+      {
+       "id": "announce",
+       "etiket": "Yamala, basına duyur, hesaplardan şifrelerini değiştirmelerini iste",
+       "kilit": "",
+       "sonuc": "İtibar +3, bütün hesapların memnuniyeti biraz düşer"
+      },
+      {
+       "id": "mail_accounts",
+       "etiket": "Yamala, yalnız hesaplara mail at",
+       "kilit": "",
+       "sonuc": "İtibar +1, bütün hesapların memnuniyeti çok az düşer"
+      },
+      {
+       "id": "stay_quiet",
+       "etiket": "Yamala, kimseye duyurma",
+       "kilit": "",
+       "sonuc": "Hesapların memnuniyeti değişmez; %10 ihtimalle haftalar sonra basında çıkar: İtibar −8, bütün hesapların memnuniyeti düşer"
+      }
+     ],
+     "cevapsiz": "Cevap gelmedi, yama gecikmeyle çıktı ve kimseye haber verilmedi."
+    },
+    "en": {
+     "gonderen": "{employee}, Senior Developer",
+     "konu": "Urgent: encryption flaw",
+     "metin": "Last night a flaw was announced in the encryption library most servers use. An attacker can read passwords straight out of server memory without leaving a trace. Our servers are affected too. I can patch it tonight; the real question is what we tell our accounts.",
+     "secenekler": [
+      {
+       "id": "announce",
+       "etiket": "Patch it, tell the press, ask every account to change their passwords",
+       "kilit": "",
+       "sonuc": "Reputation +3, every account's satisfaction dips a little"
+      },
+      {
+       "id": "mail_accounts",
+       "etiket": "Patch it, email accounts only",
+       "kilit": "",
+       "sonuc": "Reputation +1, every account's satisfaction dips very slightly"
+      },
+      {
+       "id": "stay_quiet",
+       "etiket": "Patch it, tell no one",
+       "kilit": "",
+       "sonuc": "Account satisfaction unchanged; 10% chance it hits the press weeks later: Reputation −8, every account's satisfaction drops"
+      }
+     ],
+     "cevapsiz": "No answer came, so the patch went out late and nobody was told."
+    }
+   },
+   "dosya": "data/events/cards/product/encryption_flaw_b2b.json",
+   "kareler": {
+    "A_tr": {
+     "yol": "img/product_encryption_flaw_b2b_A_tr.webp",
+     "w": 866,
+     "h": 682
+    },
+    "A_en": {
+     "yol": "img/product_encryption_flaw_b2b_A_en.webp",
+     "w": 890,
+     "h": 661
+    },
+    "B_tr": {
+     "yol": "img/product_encryption_flaw_b2b_B_tr.webp",
+     "w": 866,
+     "h": 682
+    },
+    "B_en": {
+     "yol": "img/product_encryption_flaw_b2b_B_en.webp",
+     "w": 890,
+     "h": 661
+    }
+   },
+   "baglar": {
+    "A": {
+     "yuvalar": [
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_2",
+       "ad": "Mert Yıldız",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": false
+    },
+    "B": {
+     "yuvalar": [
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_2",
+       "ad": "Kerem Hasan Karaosmanoğlu",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": true
+    }
+   }
+  },
+  {
+   "no": "#31 ek",
+   "revize": "kriz.acik.basin",
+   "kart": "product.encryption_flaw_press",
+   "durum": "bagli",
+   "yeni": true,
+   "kategori": "Ödül ve basın",
+   "degisti": true,
+   "onay": "bekliyor",
+   "neden": [
+    "Yeni (#31 ekleri): sessiz yamanın basında çıkması; #31'in onaylı '%10 ihtimalle İtibar −8, Kitle −%5' bedeli bu kartın en kötü sonucudur.",
+    "Yeni ek kart: #31'in gecikmeli basın kartı, B2C karşılığı; B2B karşılığı ayrı kayıt (plan Ç22). Tek şıklı açık beat ve onaylı bedeli uygular.",
+    "Basın kartı pazara göre ikiye ayrıldı; bu kayıt B2C'dir ve Erdem'in onayladığı bedeli (İtibar −8, Kitle −%5) aynen uygular."
+   ],
+   "once": null,
+   "sonra": {
+    "tr": {
+     "gonderen": "TeknoGündem",
+     "konu": "Yamayı duyurmayan şirketler",
+     "metin": "Şifreleme açığını kapattıktan sonra müşterilerine haber vermeyen şirketleri yazdık. Adınız listede. Yorumunuz var mı?",
+     "secenekler": [
+      {
+       "id": "no_comment",
+       "etiket": "Yorum yapmayalım",
+       "kilit": "",
+       "sonuc": "İtibar −8, Kitle −%5"
+      }
+     ],
+     "cevapsiz": "Cevap gelmedi, yorum yapılmadı ve haber yine de çıktı."
+    },
+    "en": {
+     "gonderen": "TeknoGündem",
+     "konu": "Companies that kept the patch quiet",
+     "metin": "We ran a story on companies that patched the encryption flaw without telling their customers. Yours is on the list. Any comment?",
+     "secenekler": [
+      {
+       "id": "no_comment",
+       "etiket": "No comment",
+       "kilit": "",
+       "sonuc": "Reputation −8, Audience −5%"
+      }
+     ],
+     "cevapsiz": "No answer went out, so the story ran without a comment."
+    }
+   },
+   "dosya": "data/events/cards/product/encryption_flaw_press.json",
+   "kareler": {
+    "A_tr": {
+     "yol": "img/product_encryption_flaw_press_A_tr.webp",
+     "w": 851,
+     "h": 487
+    },
+    "A_en": {
+     "yol": "img/product_encryption_flaw_press_A_en.webp",
+     "w": 851,
+     "h": 487
+    }
+   },
+   "baglar": {
+    "A": {
+     "yuvalar": [],
+     "where": "",
+     "long": false
+    },
+    "B": null
+   }
+  },
+  {
+   "no": "#31 ek",
+   "revize": "kriz.acik.basin.b2b",
+   "kart": "product.encryption_flaw_press_b2b",
+   "durum": "bagli",
+   "yeni": true,
+   "kategori": "Ödül ve basın",
+   "degisti": true,
+   "onay": "bekliyor",
+   "neden": [
+    "Yeni (#31 ekleri): sessiz yamanın basında çıkması; B2B karşılığı İtibar −8 ve bütün hesapların memnuniyetinin düşmesidir.",
+    "Yeni ek kart: #31'in B2B ikizi (kriz.acik.b2b) için gecikmeli basın kartı; B2C basın kartından ayrıldı (plan Ç22).",
+    "Basın kartı pazara göre ikiye ayrıldı; bu kayıt B2B'dir ve Kitle yerine bütün hesapların memnuniyetini düşürür."
+   ],
+   "once": null,
+   "sonra": {
+    "tr": {
+     "gonderen": "TeknoGündem",
+     "konu": "Yamayı duyurmayan şirketler",
+     "metin": "Şifreleme açığını kapattıktan sonra müşterilerine haber vermeyen şirketleri yazdık. Adınız listede. Yorumunuz var mı?",
+     "secenekler": [
+      {
+       "id": "no_comment",
+       "etiket": "Yorum yapmayalım",
+       "kilit": "",
+       "sonuc": "İtibar −8, bütün hesapların memnuniyeti düşer"
+      }
+     ],
+     "cevapsiz": "Cevap gelmedi, yorum yapılmadı ve haber yine de çıktı."
+    },
+    "en": {
+     "gonderen": "TeknoGündem",
+     "konu": "Companies that kept the patch quiet",
+     "metin": "We ran a story on companies that patched the encryption flaw without telling their customers. Yours is on the list. Any comment?",
+     "secenekler": [
+      {
+       "id": "no_comment",
+       "etiket": "No comment",
+       "kilit": "",
+       "sonuc": "Reputation −8, every account's satisfaction drops"
+      }
+     ],
+     "cevapsiz": "No answer went out, so the story ran without a comment."
+    }
+   },
+   "dosya": "data/events/cards/product/encryption_flaw_press_b2b.json",
+   "kareler": {
+    "A_tr": {
+     "yol": "img/product_encryption_flaw_press_b2b_A_tr.webp",
+     "w": 851,
+     "h": 487
+    },
+    "A_en": {
+     "yol": "img/product_encryption_flaw_press_b2b_A_en.webp",
+     "w": 851,
+     "h": 487
+    }
+   },
+   "baglar": {
+    "A": {
+     "yuvalar": [],
+     "where": "",
+     "long": false
+    },
+    "B": null
+   }
+  },
+  {
+   "no": "#32",
+   "revize": "kriz.ameliyat",
+   "kart": "product.sprint_pm_hospital",
+   "durum": "bagli",
+   "kategori": "Kriz",
+   "degisti": true,
+   "onay": "bekliyor",
+   "neden": [
+    "Erdem: eşin patrona yazması olmaz, Mert'in ekibinden biri ya da PM söylesin, çiçek gönderildi, iş yarıda, Mert iki hafta yok. Gönderen PM oldu, metin onun örneği; şıklar kart üstünden (beklet, başkası devralsın, Mert kısa arasın).",
+    "Erdem yorum yapmadı, onaylı sayıldı: metin ve şıklar aynı. Karar 11: sprint kâğıdı, konuşan PM. Karar 14: hastalık yokluğu izin değildir, 'tatil' denmez. Karar 15: devralma şıkkı kişiyi karta kilitleyen assign_to ile bağlanır. Düzeltme turu F3: karar 16 için ek almayan *_yuva metinleri eklendi (düz alanlar örnek olarak kaldı); değişen metinler 8. adım sayfasına girer. Karar 16: şık etiketleri yuvalı.",
+    "2. şık kartın işinin %20 büyümesini yazar ve devralacak yazılımcı yokken kilitli gerekçeyle görünür."
+   ],
+   "once": {
+    "tr": {
+     "gonderen": "Selin, Ürün Yöneticisi",
+     "konu": "Mert hastanede",
+     "metin": "Mert'in acil bir durumu oldu, hastanede ve iki hafta yok. Şirket olarak geçmiş olsun çiçeği gönderdik. Ama Beykoz Tekstil için geliştirdiği iş yarıda kaldı, ne yapalım?",
+     "secenekler": [
+      {
+       "etiket": "Kart Mert dönene kadar beklesin",
+       "sonuc": "Kart iki hafta ilerlemez, Mert dönünce kaldığı yerden sürer"
+      },
+      {
+       "etiket": "Kartı başka bir geliştirici devralsın",
+       "sonuc": "Kart sürer, kalan işi %20 artar, devralanın kendi kartı bekler"
+      },
+      {
+       "etiket": "Mert taburcu olunca on dakika arayıp kaldığı yeri anlatsın",
+       "sonuc": "Kart sürer, Mert'in morali düşer"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Selin, Product Manager",
+     "konu": "Mert is in hospital",
+     "metin": "Mert had an emergency and is in hospital, out for two weeks. We sent get-well flowers from the team. But the work Mert was building for Beykoz Tekstil is stuck halfway. What should we do?",
+     "secenekler": [
+      {
+       "etiket": "Let the card wait until Mert is back",
+       "sonuc": "The card stalls for two weeks, then picks up where it left off"
+      },
+      {
+       "etiket": "Have another developer take over the card",
+       "sonuc": "The card keeps moving, its remaining work grows 20%, the other developer's own card waits"
+      },
+      {
+       "etiket": "Ask Mert for a ten-minute call after discharge to explain where things stand",
+       "sonuc": "The card keeps moving, Mert's morale drops"
+      }
+     ]
+    }
+   },
+   "sonra": {
+    "tr": {
+     "gonderen": "{employee}, Ürün Yöneticisi",
+     "konu": "{dev} hastanede",
+     "metin": "{dev} acil bir durum yaşadı, hastanede ve iki hafta yok. Şirket olarak geçmiş olsun çiçeği gönderdik. Ama {customer} için geliştirdiği iş yarıda kaldı, ne yapalım?",
+     "secenekler": [
+      {
+       "id": "wait",
+       "etiket": "Kart {dev} dönene kadar beklesin",
+       "kilit": "",
+       "sonuc": "Kart iki hafta ilerlemez, {dev} dönünce kaldığı yerden sürer"
+      },
+      {
+       "id": "hand_over",
+       "etiket": "Kartı başka bir geliştirici devralsın",
+       "kilit": "Ekipte kartı devralacak başka bir yazılımcı yok.",
+       "sonuc": "Kart sürer, kartın işi %20 büyür, devralanın kendi kartı bekler"
+      },
+      {
+       "id": "call_brief",
+       "etiket": "{dev} taburcu olunca on dakika arayıp kaldığı yeri anlatsın",
+       "kilit": "",
+       "sonuc": "Kart sürer, {dev}'in morali düşer"
+      }
+     ],
+     "cevapsiz": "Cevap gelmedi, kart {dev} dönene kadar bekledi."
+    },
+    "en": {
+     "gonderen": "{employee}, Product Manager",
+     "konu": "{dev} is in hospital",
+     "metin": "{dev} had an emergency and is in hospital, out for two weeks. We sent get-well flowers from the team. But the work {dev} was building for {customer} is stuck halfway. What should we do?",
+     "secenekler": [
+      {
+       "id": "wait",
+       "etiket": "Let the card wait until {dev} is back",
+       "kilit": "",
+       "sonuc": "The card stalls for two weeks, then picks up where it left off"
+      },
+      {
+       "id": "hand_over",
+       "etiket": "Have another developer take over the card",
+       "kilit": "There is no other developer on the team to take the card.",
+       "sonuc": "The card keeps moving, its work grows 20%, the other developer's own card waits"
+      },
+      {
+       "id": "call_brief",
+       "etiket": "Ask {dev} for a ten-minute call after discharge to explain where things stand",
+       "kilit": "",
+       "sonuc": "The card keeps moving, {dev}'s morale drops"
+      }
+     ],
+     "cevapsiz": "No answer came, so the card waited until {dev} was back."
+    }
+   },
+   "dosya": "data/events/cards/product/sprint_pm_hospital.json",
+   "kareler": {
+    "A_tr": {
+     "yol": "img/product_sprint_pm_hospital_A_tr.webp",
+     "w": 851,
+     "h": 627
+    },
+    "A_en": {
+     "yol": "img/product_sprint_pm_hospital_A_en.webp",
+     "w": 852,
+     "h": 643
+    },
+    "B_tr": {
+     "yol": "img/product_sprint_pm_hospital_B_tr.webp",
+     "w": 851,
+     "h": 693
+    },
+    "B_en": {
+     "yol": "img/product_sprint_pm_hospital_B_en.webp",
+     "w": 972,
+     "h": 691
+    }
+   },
+   "baglar": {
+    "A": {
+     "yuvalar": [
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_0",
+       "ad": "Elif Demir",
+       "igne": false
+      },
+      {
+       "yuva": "customer",
+       "id": "co_marmara",
+       "ad": "Marmara Lojistik",
+       "igne": false
+      },
+      {
+       "yuva": "dev",
+       "id": "char_emp_shot_2",
+       "ad": "Mert Yıldız",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": false
+    },
+    "B": {
+     "yuvalar": [
+      {
+       "yuva": "employee",
+       "id": "char_emp_shot_1",
+       "ad": "Kerem Hasan Karaosmanoğlu",
+       "igne": true
+      },
+      {
+       "yuva": "customer",
+       "id": "co_ege_metal",
+       "ad": "Anadolu Endüstriyel Otomasyon",
+       "igne": true
+      },
+      {
+       "yuva": "dev",
+       "id": "char_emp_shot_4",
+       "ad": "Zeynep Nur Büyükkaragöz",
+       "igne": true
+      },
+      {
+       "yuva": "taker",
+       "id": "char_emp_shot_2",
+       "ad": "Mehmet Emin Yıldırımoğlu",
+       "igne": false
+      }
+     ],
+     "where": "met",
+     "long": true
+    }
+   }
+  },
+  {
+   "no": "#28",
+   "revize": "basin.kayit",
+   "kart": "world.app_of_the_week",
+   "durum": "park",
+   "kategori": "Ödül ve basın",
+   "degisti": true,
+   "onay": "onaylı",
+   "neden": [
+    "Erdem: kitlenin %50 büyümesi çok, %140 yükle 'sayfalar yarım dakikada açılıyor' tutarsız, belki oyuncunun sunucuyu otomatiğe alma kararını ilk kez verdiği an, 'Sunucu terliyor' başlığı kötü. Büyüme artık yükü %95'e taşıyacak kadar, karar otomatik ayar, elle artırma ve bekleme; başlık değişti, pazaryerine uyarlandı.",
+    "Park kaydı: kod notu seçicinin var, kapasiteyi yazan fiilin yok olduğunu yazar."
+   ],
+   "once": {
+    "tr": {
+     "gonderen": "Mert, Yazılım Mühendisi",
+     "konu": "Haftanın uygulaması",
+     "metin": "TeknoGündem bu sabah bizi haftanın uygulaması seçmiş. Sabahtan beri kayıt yağıyor, sunucunun yükü %95'e çıktı. Bu hafta böyle sürerse kapasite yetmeyecek.",
+     "secenekler": [
+      {
+       "etiket": "Kapasite yükle birlikte kendiliğinden büyüsün",
+       "sonuc": "Yük %80 civarında kalır, sunucu faturası yükle birlikte değişir"
+      },
+      {
+       "etiket": "Kapasiteyi şimdi %30 artır",
+       "sonuc": "Sunucu faturası %30 artar, yük %75'e iner"
+      },
+      {
+       "etiket": "Bekle, ilgi bir haftada söner",
+       "sonuc": "Fatura değişmez, bu hafta kesinti ihtimali artar"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Mert, Software Engineer",
+     "konu": "App of the week",
+     "metin": "TeknoGündem picked us as app of the week this morning. Sign-ups have been pouring in ever since, and server load is at 95%. If this keeps up all week, we'll run out of capacity.",
+     "secenekler": [
+      {
+       "etiket": "Let capacity scale with load automatically",
+       "sonuc": "Load stays around 80%, the server bill follows the load"
+      },
+      {
+       "etiket": "Add 30% capacity now",
+       "sonuc": "Server bill +30%, load drops to 75%"
+      },
+      {
+       "etiket": "Wait it out, the buzz fades in a week",
+       "sonuc": "Bill unchanged, outage risk is higher this week"
+      }
+     ]
+    }
+   },
+   "sonra": {
+    "tr": {
+     "gonderen": "Mert, Yazılımcı",
+     "konu": "Haftanın uygulaması",
+     "metin": "TeknoGündem bu sabah bizi haftanın uygulaması seçmiş. Sabahtan beri kayıt yağıyor, sunucunun yükü %95'e çıktı. Bu hafta böyle sürerse kapasite yetmeyecek.",
+     "secenekler": [
+      {
+       "etiket": "Kapasite yükle birlikte kendiliğinden büyüsün",
+       "sonuc": "Yük %80 civarında kalır, sunucu faturası yükle birlikte değişir"
+      },
+      {
+       "etiket": "Kapasiteyi şimdi %30 artır",
+       "sonuc": "Sunucu faturası %30 artar, yük %75'e iner"
+      },
+      {
+       "etiket": "Bekle, ilgi bir haftada söner",
+       "sonuc": "Fatura değişmez, bu hafta kesinti ihtimali artar"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Mert, Developer",
+     "konu": "App of the week",
+     "metin": "TeknoGündem picked us as app of the week this morning. Sign-ups have been pouring in ever since, and server load is at 95%. If this keeps up all week, we'll run out of capacity.",
+     "secenekler": [
+      {
+       "etiket": "Let capacity scale with load automatically",
+       "sonuc": "Load stays around 80%, the server bill follows the load"
+      },
+      {
+       "etiket": "Add 30% capacity now",
+       "sonuc": "Server bill +30%, load drops to 75%"
+      },
+      {
+       "etiket": "Wait it out, the buzz fades in a week",
+       "sonuc": "Bill unchanged, outage risk is higher this week"
+      }
+     ]
+    },
+    "taslak": {
+     "durum": "park",
+     "gerekce": "B2C pazaryeri Faz E'de kurulacak",
+     "kaynak_kayit": "basin.kayit",
+     "tr_en_onay_bekliyor": false,
+     "tr": {
+      "title": "Haftanın uygulaması",
+      "body": "TeknoGündem bu sabah bizi haftanın uygulaması seçmiş. Sabahtan beri kayıt yağıyor, sunucunun yükü %95'e çıktı. Bu hafta böyle sürerse kapasite yetmeyecek.",
+      "sender": "{employee}, Yazılımcı",
+      "options": {
+       "auto_scale": "Kapasite yükle birlikte kendiliğinden büyüsün",
+       "add_capacity": "Kapasiteyi şimdi %30 artır",
+       "wait": "Bekle, ilgi bir haftada söner"
+      }
+     },
+     "en": {
+      "title": "App of the week",
+      "body": "TeknoGündem picked us as app of the week this morning. Sign-ups have been pouring in ever since, and server load is at 95%. If this keeps up all week, we'll run out of capacity.",
+      "sender": "{employee}, Developer",
+      "options": {
+       "auto_scale": "Let capacity scale with load automatically",
+       "add_capacity": "Add 30% capacity now",
+       "wait": "Wait it out, the buzz fades in a week"
+      }
+     },
+     "secenek_sonuclari": {
+      "auto_scale": {
+       "tr": "Yük %80 civarında kalır, sunucu faturası yükle birlikte değişir",
+       "en": "Load stays around 80%, the server bill follows the load"
+      },
+      "add_capacity": {
+       "tr": "Sunucu faturası %30 artar, yük %75'e iner",
+       "en": "Server bill +30%, load drops to 75%"
+      },
+      "wait": {
+       "tr": "Fatura değişmez, bu hafta kesinti ihtimali artar",
+       "en": "Bill unchanged, outage risk is higher this week"
+      }
+     },
+     "secenek_sonuclari_notu": "Örnek özet satırları (örnek adlar taşır); oyundaki çip etkiden yazılır, bu satırlar kartın metni değildir.",
+     "kosul_notu": "B2C pazaryeri yayında, Otomatik ayar hiç açılmamışken (oyuncunun bu kararı ilk kez verdiği an), yük %80'in altındayken gelir ve gelişte kitleyi yükü %95'e taşıyacak kadar büyütür (en çok %20). Mert yuvası: Yazılım yıldızı en yüksek geliştirici.",
+     "kod_notu": "top_skill:engineering seçicisi (Y14) var; kapasiteyi olaydan yazan fiil yok, InfraSystem oyuncunundur [VOCAB?]. [COND?] B2C pazaryeri yayında, Otomatik ayar hiç açılmamışken, yük %80'in altında: pazaryeri kavramı Faz E. [VOCAB?] kapasiteyi olay kartından yazan fiil yok (InfraSystem oyuncununkidir).",
+     "yuvalar": [
+      {
+       "slot": "employee",
+       "tur": "employee",
+       "secici": "Yazılım yıldızı en yüksek geliştirici (top_skill:engineering, Y14)",
+       "kosul": "B2C pazaryeri yayında"
+      }
+     ]
+    }
+   },
+   "dosya": "data/events/cards/unwired/app_of_the_week.json",
+   "kareler": {},
+   "baglar": {}
+  },
+  {
+   "no": "#27",
+   "revize": "dunya.okur_anketi",
+   "kart": "world.reader_survey",
+   "durum": "park",
+   "kategori": "Dünyadan haberler ve çeyrek bülteni",
+   "degisti": true,
+   "onay": "onaylı",
+   "neden": [
+    "Erdem: yazım zayıf, getiri yalnız Marka +2, kitle getirmiyor. Not uygulaması anketi pazaryerine taşındı, metin iki cümle; iki şık da kitle getiriyor, indirim kodu daha çok ve paralı.",
+    "Karar 2: indirim kasadan değil o ayın gelirinden düşer; 2. şıktaki 'Kasa −$1.500' 'bu ayın geliri −$1.500' oldu, kod_notu'na yazıldı. Karar 16: editörün adı kalktı, TeknoGündem sabit basın adı olarak kaldı.",
+    "Park kaydı: kod notu 'ayın gelirinden düşer' fiilinin olmadığını yazar."
+   ],
+   "once": {
+    "tr": {
+     "gonderen": "Gökhan Yıldız, TeknoGündem editörü",
+     "konu": "Okur anketi",
+     "metin": "Yarın yayımlanacak okur anketimizde alışveriş siteleri arasında ilk kez listeye girdiniz, dokuzuncusunuz. Önceden haber vermek istedim, belki okurlarımıza bir şey hazırlamak istersiniz.",
+     "secenekler": [
+      {
+       "etiket": "Teşekkür et",
+       "sonuc": "Marka +2, Kitle +%2"
+      },
+      {
+       "etiket": "Okurlara ilk siparişte indirim kodu ver",
+       "sonuc": "Marka +2, Kitle +%6, Kasa −$1.500"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Gökhan Yıldız, Editor, TeknoGündem",
+     "konu": "Reader survey",
+     "metin": "Our reader survey comes out tomorrow, and you've made the list of shopping sites for the first time, at number nine. I wanted to give you a heads-up in case you'd like to offer our readers something.",
+     "secenekler": [
+      {
+       "etiket": "Thank them",
+       "sonuc": "Brand +2, Audience +2%"
+      },
+      {
+       "etiket": "Give readers a first-order discount code",
+       "sonuc": "Brand +2, Audience +6%, Cash −$1,500"
+      }
+     ]
+    }
+   },
+   "sonra": {
+    "tr": {
+     "gonderen": "TeknoGündem editörü",
+     "konu": "Okur anketi",
+     "metin": "Yarın yayımlanacak okur anketimizde alışveriş siteleri arasında ilk kez listeye girdiniz, dokuzuncusunuz. Önceden haber vermek istedim, belki okurlarımıza bir şey hazırlamak istersiniz.",
+     "secenekler": [
+      {
+       "etiket": "Teşekkür et",
+       "sonuc": "Marka +2, Kitle +%2"
+      },
+      {
+       "etiket": "Okurlara ilk siparişte indirim kodu ver",
+       "sonuc": "Marka +2, Kitle +%6, bu ayın geliri −$1.500"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Editor, TeknoGündem",
+     "konu": "Reader survey",
+     "metin": "Our reader survey comes out tomorrow, and you've made the list of shopping sites for the first time, at number nine. I wanted to give you a heads-up in case you'd like to offer our readers something.",
+     "secenekler": [
+      {
+       "etiket": "Thank them",
+       "sonuc": "Brand +2, Audience +2%"
+      },
+      {
+       "etiket": "Give readers a first-order discount code",
+       "sonuc": "Brand +2, Audience +6%, this month's revenue −$1,500"
+      }
+     ]
+    },
+    "taslak": {
+     "durum": "park",
+     "gerekce": "B2C pazaryeri Faz E'de kurulacak",
+     "kaynak_kayit": "dunya.okur_anketi",
+     "tr_en_onay_bekliyor": false,
+     "tr": {
+      "title": "Okur anketi",
+      "body": "Yarın yayımlanacak okur anketimizde alışveriş siteleri arasında ilk kez listeye girdiniz, dokuzuncusunuz. Önceden haber vermek istedim, belki okurlarımıza bir şey hazırlamak istersiniz.",
+      "sender": "TeknoGündem editörü",
+      "options": {
+       "thank": "Teşekkür et",
+       "discount_code": "Okurlara ilk siparişte indirim kodu ver"
+      }
+     },
+     "en": {
+      "title": "Reader survey",
+      "body": "Our reader survey comes out tomorrow, and you've made the list of shopping sites for the first time, at number nine. I wanted to give you a heads-up in case you'd like to offer our readers something.",
+      "sender": "Editor, TeknoGündem",
+      "options": {
+       "thank": "Thank them",
+       "discount_code": "Give readers a first-order discount code"
+      }
+     },
+     "secenek_sonuclari": {
+      "thank": {
+       "tr": "Marka +2, Kitle +%2",
+       "en": "Brand +2, Audience +2%"
+      },
+      "discount_code": {
+       "tr": "Marka +2, Kitle +%6, bu ayın geliri −$1.500",
+       "en": "Brand +2, Audience +6%, this month's revenue −$1,500"
+      }
+     },
+     "secenek_sonuclari_notu": "Örnek özet satırları (örnek adlar taşır); oyundaki çip etkiden yazılır, bu satırlar kartın metni değildir.",
+     "kosul_notu": "B2C pazaryeri yayında, yıl sonu; sıra oyuncunun payından gelir (örnekte dokuzuncu).",
+     "kod_notu": "Karar 2'nin 'ayın gelirinden düşer' fiili yok: FinanceSystem'de aylık gelir kalemine yazan olay fiili yok (apply_one_time_income aylık gelire yazmaz) [VOCAB?]. [COND?] B2C pazaryeri yayında, yıl sonu, oyuncunun alışveriş siteleri arasındaki sırası: pazaryeri ve sıra kavramı Faz E. [VOCAB?] okur indirimini ayın gelir kalemine yazan olay fiili yok.",
+     "yuvalar": []
+    }
+   },
+   "dosya": "data/events/cards/unwired/reader_survey.json",
+   "kareler": {},
+   "baglar": {}
+  },
+  {
+   "no": "#22",
+   "revize": "dunya.halka_arz",
+   "kart": "world.investor_interest",
+   "durum": "park",
+   "kategori": "Dünyadan haberler ve çeyrek bülteni",
+   "degisti": false,
+   "onay": "onaylı",
+   "neden": [
+    "Erdem: yatırımcının kendiliğinden kapımızı çalması doğal, metin daha az zorlama olsun, tüketici tarafı pazaryeri. Mektup üç kısa cümleye indi ve pazaryerini anıyor; şık Nexus'un ilgisini seed'e taşıyor.",
+    "Düzeltme turu F13: Nexus Ventures adı yuvaya çevrildi (karar 16).",
+    "Park kaydı: kod notu seçicinin artık var olduğunu, yatırımcı ailesinin hâlâ yok olduğunu yazar."
+   ],
+   "once": {
+    "tr": {
+     "gonderen": "Nexus Ventures ortağı",
+     "konu": "Pazaryeriniz",
+     "metin": "Pazaryerinizi kullanan bir arkadaşımdan duydum, ilgimi çekti. Facewall borsada değer kaybettiğinden beri ortaklarımız tüketici tarafında önce gelir görmek istiyor. Üç aylık gelir rakamınız olunca bir kahve içelim.",
+     "secenekler": [
+      {
+       "etiket": "Teşekkür et, rakamlar oluşunca yazacağını söyle",
+       "sonuc": "Nexus Ventures seed'e kadar seni hatırlar"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Partner, Nexus Ventures",
+     "konu": "Your marketplace",
+     "metin": "A friend of mine uses your marketplace, and it caught my eye. Since Facewall's slide on the stock market, our partners want to see revenue first on the consumer side. Once you have three months of revenue, let's grab a coffee.",
+     "secenekler": [
+      {
+       "etiket": "Thank them, say you'll write once the numbers are in",
+       "sonuc": "Nexus Ventures remembers you until seed"
+      }
+     ]
+    }
+   },
+   "sonra": {
+    "tr": {
+     "gonderen": "Nexus Ventures ortağı",
+     "konu": "Pazaryeriniz",
+     "metin": "Pazaryerinizi kullanan bir arkadaşımdan duydum, ilgimi çekti. Facewall borsada değer kaybettiğinden beri ortaklarımız tüketici tarafında önce gelir görmek istiyor. Üç aylık gelir rakamınız olunca bir kahve içelim.",
+     "secenekler": [
+      {
+       "etiket": "Teşekkür et, rakamlar oluşunca yazacağını söyle",
+       "sonuc": "Nexus Ventures seed'e kadar seni hatırlar"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Partner, Nexus Ventures",
+     "konu": "Your marketplace",
+     "metin": "A friend of mine uses your marketplace, and it caught my eye. Since Facewall's slide on the stock market, our partners want to see revenue first on the consumer side. Once you have three months of revenue, let's grab a coffee.",
+     "secenekler": [
+      {
+       "etiket": "Thank them, say you'll write once the numbers are in",
+       "sonuc": "Nexus Ventures remembers you until seed"
+      }
+     ]
+    },
+    "taslak": {
+     "durum": "park",
+     "gerekce": "B2C pazaryeri Faz E'de kurulacak",
+     "kaynak_kayit": "dunya.halka_arz",
+     "tr_en_onay_bekliyor": false,
+     "tr": {
+      "title": "Pazaryeriniz",
+      "body": "Pazaryerinizi kullanan bir arkadaşımdan duydum, ilgimi çekti. Facewall borsada değer kaybettiğinden beri ortaklarımız tüketici tarafında önce gelir görmek istiyor. Üç aylık gelir rakamınız olunca bir kahve içelim.",
+      "sender": "{investor} ortağı",
+      "options": {
+       "thank_and_wait": "Teşekkür et, rakamlar oluşunca yazacağını söyle"
+      }
+     },
+     "en": {
+      "title": "Your marketplace",
+      "body": "A friend of mine uses your marketplace, and it caught my eye. Since Facewall's slide on the stock market, our partners want to see revenue first on the consumer side. Once you have three months of revenue, let's grab a coffee.",
+      "sender": "Partner, {investor}",
+      "options": {
+       "thank_and_wait": "Thank them, say you'll write once the numbers are in"
+      }
+     },
+     "secenek_sonuclari": {
+      "thank_and_wait": {
+       "tr": "Nexus Ventures seed'e kadar seni hatırlar",
+       "en": "Nexus Ventures remembers you until seed"
+      }
+     },
+     "secenek_sonuclari_notu": "Örnek özet satırları (örnek adlar taşır); oyundaki çip etkiden yazılır, bu satırlar kartın metni değildir.",
+     "kosul_notu": "B2C pazaryeri yayında, gelir üç aydan kısa; Piyasa'da Facewall listelenip düştükten sonra; seed kapısı açılmadan.",
+     "kod_notu": "Tohumlu rastgele seçici (Y07) investor yuvasını da doldurur; investor_favor ailesi hâlâ yok [VOCAB?]. [COND?] B2C pazaryeri yayında, gelir üç aydan kısa, Piyasa'da Facewall listelenip düşmüş: pazaryeri kavramı Faz E. [VOCAB?] Nexus'un ilgisini seed'e taşıyan yatırımcı seam'i (investor_favor ailesi) yok.",
+     "yuvalar": [
+      {
+       "slot": "investor",
+       "tur": "investor",
+       "secici": "InvestorRegistry'den tohumlu rastgele (seed kapısı açılmamış fon); investor_registry.gd display_name",
+       "kosul": "seed kapısı açılmamış"
+      }
+     ]
+    }
+   },
+   "dosya": "data/events/cards/unwired/investor_interest.json",
+   "kareler": {},
+   "baglar": {}
+  },
+  {
+   "no": "P1",
+   "revize": "pazaryeri.yanlis_fiyat",
+   "kart": "customer.wrong_price_listing",
+   "durum": "park",
+   "kategori": "Ürün",
+   "degisti": true,
+   "onay": "bekliyor",
+   "neden": [
+    "Yeni, #16'nın ayarında; satıcı tarafı (Ürün Yükleme). Bedel kitle ve kart, kasa ya da mağaza.",
+    "Karar 16: gönderen satırındaki kişi adı (Hülya Kara) kalktı, muhatap unvanla; metin ve şıklar aynı. Park (Faz E). Düzeltme turu F3: karar 16 için ek almayan *_yuva metinleri eklendi (düz alanlar örnek olarak kaldı); değişen metinler 8. adım sayfasına girer.",
+    "Park kaydı: kod notu check dalı ve sonraki sprinte kartın artık var olduğunu yazar."
+   ],
+   "once": {
+    "tr": {
+     "gonderen": "Hülya Kara, Kilim Evi mağaza sahibi",
+     "konu": "Halılar",
+     "metin": "Dün akşam $125'lik bir halıyı yanlışlıkla $1,25 diye yüklemişim. Sabaha kadar kırk tane satılmış. Sistem bana bir kere bile sormadı, şimdi ne olacak?",
+     "secenekler": [
+      {
+       "etiket": "Siparişleri iptal et, yüklemeye fiyat uyarısı ekleyelim",
+       "sonuc": "Kitle −%1, sonraki sprinte bir Ürün Yükleme kartı girer"
+      },
+      {
+       "etiket": "Siparişler gitsin, farkı Kilim Evi'ne biz ödeyelim",
+       "sonuc": "Kasa −$4.950, Kitle +%1, Kilim Evi'nin memnuniyeti artar"
+      },
+      {
+       "etiket": "Siparişler geçerli, zarar mağazada kalsın",
+       "sonuc": "Kilim Evi'nin memnuniyeti çok düşer, %15 ihtimalle pazaryerinden ayrılır"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Hülya Kara, owner of Kilim Evi",
+     "konu": "The rugs",
+     "metin": "Last night I accidentally listed a $125 rug for $1.25. By morning, forty of them had sold. Your system didn't ask me even once. What happens now?",
+     "secenekler": [
+      {
+       "etiket": "Cancel the orders, and we'll add a price warning to uploads",
+       "sonuc": "Audience −1%, a Product Upload card joins the next sprint"
+      },
+      {
+       "etiket": "Let the orders ship, we pay Kilim Evi the difference",
+       "sonuc": "Cash −$4,950, Audience +1%, Kilim Evi's satisfaction rises"
+      },
+      {
+       "etiket": "The orders stand, the store takes the loss",
+       "sonuc": "Kilim Evi's satisfaction drops sharply, 15% chance it leaves the marketplace"
+      }
+     ]
+    }
+   },
+   "sonra": {
+    "tr": {
+     "gonderen": "Kilim Evi mağaza sahibi",
+     "konu": "Halılar",
+     "metin": "Dün akşam $125'lik bir halıyı yanlışlıkla $1,25 diye yüklemişim. Sabaha kadar kırk tane satılmış. Sistem bana bir kere bile sormadı, şimdi ne olacak?",
+     "secenekler": [
+      {
+       "etiket": "Siparişleri iptal et, yüklemeye fiyat uyarısı ekleyelim",
+       "sonuc": "Kitle −%1, sonraki sprinte bir Ürün Yükleme kartı girer"
+      },
+      {
+       "etiket": "Siparişler gitsin, farkı Kilim Evi'ne biz ödeyelim",
+       "sonuc": "Kasa −$4.950, Kitle +%1, Kilim Evi'nin memnuniyeti artar"
+      },
+      {
+       "etiket": "Siparişler geçerli, zarar mağazada kalsın",
+       "sonuc": "Kilim Evi'nin memnuniyeti çok düşer, %15 ihtimalle pazaryerinden ayrılır"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Owner of Kilim Evi",
+     "konu": "The rugs",
+     "metin": "Last night I accidentally listed a $125 rug for $1.25. By morning, forty of them had sold. Your system didn't ask me even once. What happens now?",
+     "secenekler": [
+      {
+       "etiket": "Cancel the orders, and we'll add a price warning to uploads",
+       "sonuc": "Audience −1%, a Product Upload card joins the next sprint"
+      },
+      {
+       "etiket": "Let the orders ship, we pay Kilim Evi the difference",
+       "sonuc": "Cash −$4,950, Audience +1%, Kilim Evi's satisfaction rises"
+      },
+      {
+       "etiket": "The orders stand, the store takes the loss",
+       "sonuc": "Kilim Evi's satisfaction drops sharply, 15% chance it leaves the marketplace"
+      }
+     ]
+    },
+    "taslak": {
+     "durum": "park",
+     "gerekce": "B2C pazaryeri Faz E'de kurulacak",
+     "kaynak_kayit": "pazaryeri.yanlis_fiyat",
+     "tr_en_onay_bekliyor": true,
+     "tr": {
+      "title": "Halılar",
+      "body": "Dün akşam $125'lik bir halıyı yanlışlıkla $1,25 diye yüklemişim. Sabaha kadar kırk tane satılmış. Sistem bana bir kere bile sormadı, şimdi ne olacak?",
+      "sender": "{customer} mağaza sahibi",
+      "options": {
+       "cancel_orders": "Siparişleri iptal et, yüklemeye fiyat uyarısı ekleyelim",
+       "cover_difference": "Siparişler gitsin, farkı mağazaya biz ödeyelim",
+       "store_takes_loss": "Siparişler geçerli, zarar mağazada kalsın"
+      }
+     },
+     "en": {
+      "title": "The rugs",
+      "body": "Last night I accidentally listed a $125 rug for $1.25. By morning, forty of them had sold. Your system didn't ask me even once. What happens now?",
+      "sender": "Owner of {customer}",
+      "options": {
+       "cancel_orders": "Cancel the orders, and we'll add a price warning to uploads",
+       "cover_difference": "Let the orders ship, we pay the store the difference",
+       "store_takes_loss": "The orders stand, the store takes the loss"
+      }
+     },
+     "secenek_sonuclari": {
+      "cancel_orders": {
+       "tr": "Kitle −%1, sonraki sprinte bir Ürün Yükleme kartı girer",
+       "en": "Audience −1%, a Product Upload card joins the next sprint"
+      },
+      "cover_difference": {
+       "tr": "Kasa −$4.950, Kitle +%1, Kilim Evi'nin memnuniyeti artar",
+       "en": "Cash −$4,950, Audience +1%, Kilim Evi's satisfaction rises"
+      },
+      "store_takes_loss": {
+       "tr": "Kilim Evi'nin memnuniyeti çok düşer, %15 ihtimalle pazaryerinden ayrılır",
+       "en": "Kilim Evi's satisfaction drops sharply, 15% chance it leaves the marketplace"
+      }
+     },
+     "secenek_sonuclari_notu": "Örnek özet satırları (örnek adlar taşır); oyundaki çip etkiden yazılır, bu satırlar kartın metni değildir.",
+     "kosul_notu": "Pazaryeri yayında, Ürün Yükleme hattında fiyat denetimi kademesi yokken. Mağaza yuvası: satış hacmi orta bir mağaza. Tutar mağazanın bir ürününün fiyatından ve kırk siparişten türer (örnekte 40 × $123,75 = $4.950).",
+     "kod_notu": "check dalı ve çipi (Y03, Y04) ile sonraki sprinte kart (queue_card, Y38) artık var; pazaryeri kavramları Faz E. [COND?] pazaryeri yayında, Ürün Yükleme hattında fiyat denetimi kademesi yokken: pazaryeri ve hat kademesi Faz E. [VOCAB?] mağaza memnuniyeti, mağazanın pazaryerinden ayrılması ve sipariş iptali Faz E'de kurulacak.",
+     "yuvalar": [
+      {
+       "slot": "customer",
+       "tur": "customer",
+       "secici": "pazaryeri mağazası, satış hacmi orta (tohumlu rastgele)",
+       "kosul": "muhatap unvanla: mağaza sahibi"
+      }
+     ]
+    }
+   },
+   "dosya": "data/events/cards/unwired/wrong_price_listing.json",
+   "kareler": {},
+   "baglar": {}
+  },
+  {
+   "no": "P2",
+   "revize": "pazaryeri.fare",
+   "kart": "product.search_mousetraps",
+   "durum": "park",
+   "kategori": "Ürün",
+   "degisti": true,
+   "onay": "onaylı",
+   "neden": [
+    "Yeni, #16'nın ayarında; alıcı tarafı (Keşif). Şaka iki dilde aynı (fare ve mouse).",
+    "Erdem: kategori seçimi şıkkı o özellik varken ya da yapılırken anlamsız; kosul_notu'na görünürlük koşulu yazıldı. Metin ve şıklar aynı. Park.",
+    "Park kaydı: kod notu sprint_fix_first'ün günlük kartta yasal olduğunu yazar."
+   ],
+   "once": {
+    "tr": {
+     "gonderen": "Deniz, Müşteri Temsilcisi",
+     "konu": "Arama",
+     "metin": "Destek kutusunda bu hafta otuz mail var, hepsi arama hakkında. En sevdiğim şu: “Bilgisayarım için fare aradım, iki sayfa fare kapanı çıktı. Birini aldım, iyi çalışıyor. Faremi hâlâ bulamadım.”",
+     "secenekler": [
+      {
+       "etiket": "Arama düzeltmesini sprintin başına al",
+       "sonuc": "Bir kart sonraki sprinte kayar, aramanın hatası kapanır"
+      },
+      {
+       "etiket": "Arama kutusuna kategori seçimi ekle",
+       "sonuc": "Mert'in üç günü gider, Kitle −%1 kadar"
+      },
+      {
+       "etiket": "Şimdilik kalsın, alıcı kategoriden gezer",
+       "sonuc": "Kitle −%2 kadar"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Deniz, Customer Success Manager",
+     "konu": "Search",
+     "metin": "Thirty emails in the support inbox this week, all about search. My favorite: “I searched for a mouse for my computer and got two pages of mousetraps. Bought one, works great. Still can't find my mouse.”",
+     "secenekler": [
+      {
+       "etiket": "Put the search fix at the top of the sprint",
+       "sonuc": "One card slips to the next sprint, the search bug is fixed"
+      },
+      {
+       "etiket": "Add a category picker to the search box",
+       "sonuc": "Mert loses three days, Audience −1% or so"
+      },
+      {
+       "etiket": "Leave it for now, buyers can browse categories",
+       "sonuc": "Audience −2% or so"
+      }
+     ]
+    }
+   },
+   "sonra": {
+    "tr": {
+     "gonderen": "Deniz, Müşteri Temsilcisi",
+     "konu": "Arama",
+     "metin": "Destek kutusunda bu hafta otuz mail var, hepsi arama hakkında. En sevdiğim şu: “Bilgisayarım için fare aradım, iki sayfa fare kapanı çıktı. Birini aldım, iyi çalışıyor. Faremi hâlâ bulamadım.”",
+     "secenekler": [
+      {
+       "etiket": "Arama düzeltmesini sprintin başına al",
+       "sonuc": "Bir kart sonraki sprinte kayar, aramanın hatası kapanır"
+      },
+      {
+       "etiket": "Arama kutusuna kategori seçimi ekle",
+       "sonuc": "Mert'in üç günü gider, Kitle −%1 kadar"
+      },
+      {
+       "etiket": "Şimdilik kalsın, alıcı kategoriden gezer",
+       "sonuc": "Kitle −%2 kadar"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Deniz, Account Manager",
+     "konu": "Search",
+     "metin": "Thirty emails in the support inbox this week, all about search. My favorite: “I searched for a mouse for my computer and got two pages of mousetraps. Bought one, works great. Still can't find my mouse.”",
+     "secenekler": [
+      {
+       "etiket": "Put the search fix at the top of the sprint",
+       "sonuc": "One card slips to the next sprint, the search bug is fixed"
+      },
+      {
+       "etiket": "Add a category picker to the search box",
+       "sonuc": "Mert loses three days, Audience −1% or so"
+      },
+      {
+       "etiket": "Leave it for now, buyers can browse categories",
+       "sonuc": "Audience −2% or so"
+      }
+     ]
+    },
+    "taslak": {
+     "durum": "park",
+     "gerekce": "B2C pazaryeri Faz E'de kurulacak",
+     "kaynak_kayit": "pazaryeri.fare",
+     "tr_en_onay_bekliyor": false,
+     "tr": {
+      "title": "Arama",
+      "body": "Destek kutusunda bu hafta otuz mail var, hepsi arama hakkında. En sevdiğim şu: “Bilgisayarım için fare aradım, iki sayfa fare kapanı çıktı. Birini aldım, iyi çalışıyor. Faremi hâlâ bulamadım.”",
+      "sender": "{employee}, Müşteri Temsilcisi",
+      "options": {
+       "fix_first": "Arama düzeltmesini sprintin başına al",
+       "category_picker": "Arama kutusuna kategori seçimi ekle",
+       "leave_it": "Şimdilik kalsın, alıcı kategoriden gezer"
+      }
+     },
+     "en": {
+      "title": "Search",
+      "body": "Thirty emails in the support inbox this week, all about search. My favorite: “I searched for a mouse for my computer and got two pages of mousetraps. Bought one, works great. Still can't find my mouse.”",
+      "sender": "{employee}, Account Manager",
+      "options": {
+       "fix_first": "Put the search fix at the top of the sprint",
+       "category_picker": "Add a category picker to the search box",
+       "leave_it": "Leave it for now, buyers can browse categories"
+      }
+     },
+     "secenek_sonuclari": {
+      "fix_first": {
+       "tr": "Bir kart sonraki sprinte kayar, aramanın hatası kapanır",
+       "en": "One card slips to the next sprint, the search bug is fixed"
+      },
+      "category_picker": {
+       "tr": "Mert'in üç günü gider, Kitle −%1 kadar",
+       "en": "Mert loses three days, Audience −1% or so"
+      },
+      "leave_it": {
+       "tr": "Kitle −%2 kadar",
+       "en": "Audience −2% or so"
+      }
+     },
+     "secenek_sonuclari_notu": "Örnek özet satırları (örnek adlar taşır); oyundaki çip etkiden yazılır, bu satırlar kartın metni değildir.",
+     "kosul_notu": "Pazaryeri yayında, Keşif hattında açık hata varken ya da arama kademesi yokken. Deniz yuvası: Müşteri Temsilcisi; yoksa olay gelmez. Mert yuvası: Keşif hattında çalışmış geliştirici. Kategori seçimi şıkkı (2. şık) o özellik varken ya da yapılırken görünmez (Erdem: anlamsız): Keşif hattında kategori seçimi kademesi açıkken ya da sprintte kartı varken şık gösterilmez.",
+     "kod_notu": "sprint_fix_first günlük kartta yasal (V3 yalnız sprint_card_* içindir; acil durum kartları kullanır): 'kod işi' notu bayat. [COND?] pazaryeri yayında, Keşif hattında açık hata varken ya da arama kademesi yokken: pazaryeri ve hat kademesi Faz E. [COND?] 2. şık, Keşif hattında kategori seçimi kademesi açıkken ya da sprintte kartı varken görünmez.",
+     "yuvalar": [
+      {
+       "slot": "employee",
+       "tur": "employee",
+       "secici": "müşteri temsilcisi",
+       "kosul": "yoksa olay gelmez"
+      },
+      {
+       "slot": "dev",
+       "tur": "employee",
+       "secici": "Keşif hattında çalışmış geliştirici (line_top)",
+       "kosul": ""
+      }
+     ]
+    }
+   },
+   "dosya": "data/events/cards/unwired/search_mousetraps.json",
+   "kareler": {},
+   "baglar": {}
+  },
+  {
+   "no": "P3",
+   "revize": "pazaryeri.rekor_ay",
+   "kart": "customer.gross_vs_net",
+   "durum": "park",
+   "kategori": "Ürün",
+   "degisti": true,
+   "onay": "bekliyor",
+   "neden": [
+    "Yeni, #16'nın ayarında; satıcı tarafı (Satıcı Paneli). Bedel kasa, kart ya da mağaza.",
+    "Erdem: beğenilmedi; mağaza sahibi brüt satışla komisyon düşülmüş hâli karıştırır; şıklar 'bizi ilgilendirmez', panel düzeltmesi, 'yapabileceğimiz bir şey yok' (moral bozulur). Baştan yazıldı: gönderen müşteri temsilcisi (morali bozulacak kişi), konu brüt ile hesaba yatan fark, üç şık Erdem'in üçü. Park.",
+    "Park kaydı: kod notu check dalı ve sprint_fix_first'ün hazır olduğunu yazar."
+   ],
+   "once": {
+    "tr": {
+     "gonderen": "Cem Tunç, Tunç Spor mağaza sahibi",
+     "konu": "Rekor ay",
+     "metin": "Paneliniz bu ay rekor satış gösterdi, ben de ekibime prim dağıttım. Bugün muhasebecim iadelerin de satış diye sayıldığını gösterdi. Bunu konuşmamız lazım.",
+     "secenekler": [
+      {
+       "etiket": "Tunç Spor'un bu ayki komisyonunu iade et",
+       "sonuc": "Kasa −$800, Tunç Spor'un memnuniyeti artar"
+      },
+      {
+       "etiket": "Panel düzeltmesini sprintin başına al",
+       "sonuc": "Bir kart sonraki sprinte kayar, bütün mağazaların memnuniyeti biraz artar"
+      },
+      {
+       "etiket": "Telefonla özür dile, düzelteceğimizi söyle",
+       "sonuc": "Tunç Spor'un memnuniyeti düşer, %15 ihtimalle başka pazaryerine geçer"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Cem Tunç, owner of Tunç Spor",
+     "konu": "Record month",
+     "metin": "Your dashboard showed a record month, so I paid my team bonuses. Today my accountant showed me that returns were counted as sales too. We need to talk.",
+     "secenekler": [
+      {
+       "etiket": "Refund Tunç Spor's commission for this month",
+       "sonuc": "Cash −$800, Tunç Spor's satisfaction rises"
+      },
+      {
+       "etiket": "Put the dashboard fix at the top of the sprint",
+       "sonuc": "One card slips to the next sprint, every store's satisfaction rises a little"
+      },
+      {
+       "etiket": "Call to apologize and say we'll fix it",
+       "sonuc": "Tunç Spor's satisfaction drops, 15% chance it moves to another marketplace"
+      }
+     ]
+    }
+   },
+   "sonra": {
+    "tr": {
+     "gonderen": "Deniz, Müşteri Temsilcisi",
+     "konu": "Panel ile hesap tutmuyor",
+     "metin": "Bir mağaza sahibi aradı. Panelde bu ay $42.000 satış görünüyor ama hesabına $37.800 yatmış. Farkın komisyon olduğunu söyledim, panelde komisyonun düşülmüş hâlini neden göstermediğimizi soruyor.",
+     "secenekler": [
+      {
+       "etiket": "Panelde brüt yazıyor, bizi ilgilendirmez",
+       "sonuc": "Mağazanın memnuniyeti çok düşer, %15 ihtimalle başka pazaryerine geçer"
+      },
+      {
+       "etiket": "Panelde komisyon düşülmüş tutarı da göster",
+       "sonuc": "Bir kart sonraki sprinte kayar, bütün mağazaların memnuniyeti biraz artar"
+      },
+      {
+       "etiket": "Şimdilik yapabileceğimiz bir şey olmadığını söyle",
+       "sonuc": "Mağazanın memnuniyeti biraz düşer, Deniz'in morali düşer"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Deniz, Account Manager",
+     "konu": "Dashboard and payout don't match",
+     "metin": "A store owner called. The dashboard shows $42,000 in sales this month, but only $37,800 landed in their account. I told them the difference is our commission; now they're asking why the dashboard doesn't show the amount after commission.",
+     "secenekler": [
+      {
+       "etiket": "The dashboard says gross, not our problem",
+       "sonuc": "The store's satisfaction drops sharply, 15% chance it moves to another marketplace"
+      },
+      {
+       "etiket": "Show the amount after commission on the dashboard too",
+       "sonuc": "One card slips to the next sprint, every store's satisfaction rises a little"
+      },
+      {
+       "etiket": "Say there's nothing we can do for now",
+       "sonuc": "The store's satisfaction dips a little, Deniz's morale drops"
+      }
+     ]
+    },
+    "taslak": {
+     "durum": "park",
+     "gerekce": "B2C pazaryeri Faz E'de kurulacak",
+     "kaynak_kayit": "pazaryeri.rekor_ay",
+     "tr_en_onay_bekliyor": true,
+     "tr": {
+      "title": "Panel ile hesap tutmuyor",
+      "body": "Bir mağaza sahibi aradı. Panelde bu ay $42.000 satış görünüyor ama hesabına $37.800 yatmış. Farkın komisyon olduğunu söyledim, panelde komisyonun düşülmüş hâlini neden göstermediğimizi soruyor.",
+      "sender": "{employee}, Müşteri Temsilcisi",
+      "options": {
+       "gross_not_ours": "Panelde brüt yazıyor, bizi ilgilendirmez",
+       "show_net": "Panelde komisyon düşülmüş tutarı da göster",
+       "nothing_to_do": "Şimdilik yapabileceğimiz bir şey olmadığını söyle"
+      }
+     },
+     "en": {
+      "title": "Dashboard and payout don't match",
+      "body": "A store owner called. The dashboard shows $42,000 in sales this month, but only $37,800 landed in their account. I told them the difference is our commission; now they're asking why the dashboard doesn't show the amount after commission.",
+      "sender": "{employee}, Account Manager",
+      "options": {
+       "gross_not_ours": "The dashboard says gross, not our problem",
+       "show_net": "Show the amount after commission on the dashboard too",
+       "nothing_to_do": "Say there's nothing we can do for now"
+      }
+     },
+     "secenek_sonuclari": {
+      "gross_not_ours": {
+       "tr": "Mağazanın memnuniyeti çok düşer, %15 ihtimalle başka pazaryerine geçer",
+       "en": "The store's satisfaction drops sharply, 15% chance it moves to another marketplace"
+      },
+      "show_net": {
+       "tr": "Bir kart sonraki sprinte kayar, bütün mağazaların memnuniyeti biraz artar",
+       "en": "One card slips to the next sprint, every store's satisfaction rises a little"
+      },
+      "nothing_to_do": {
+       "tr": "Mağazanın memnuniyeti biraz düşer, Deniz'in morali düşer",
+       "en": "The store's satisfaction dips a little, Deniz's morale drops"
+      }
+     },
+     "secenek_sonuclari_notu": "Örnek özet satırları (örnek adlar taşır); oyundaki çip etkiden yazılır, bu satırlar kartın metni değildir.",
+     "kosul_notu": "Pazaryeri yayında, ay kapanışının ertesi haftası, Satıcı Paneli hattında komisyon düşülmüş tutarı gösteren kademe yokken. Mağaza yuvası: satış hacmi yüksek bir mağaza. Tutarlar mağazanın o ayki brüt satışından ve komisyonundan türer (örnekteki $42.000 ve $37.800 ölçeklenir). Deniz yuvası: müşteri temsilcisi; yoksa olay gelmez.",
+     "kod_notu": "check dalı (Y03) ve sprint_fix_first hazır; mağaza memnuniyeti Faz E. [COND?] pazaryeri yayında, ay kapanışının ertesi haftası, Satıcı Paneli hattında komisyon düşülmüş tutarı gösteren kademe yokken: pazaryeri ve hat kademesi Faz E. [VOCAB?] mağaza memnuniyeti ve mağazanın ayrılması Faz E'de kurulacak.",
+     "yuvalar": [
+      {
+       "slot": "employee",
+       "tur": "employee",
+       "secici": "müşteri temsilcisi",
+       "kosul": "yoksa olay gelmez"
+      },
+      {
+       "slot": "customer",
+       "tur": "customer",
+       "secici": "pazaryeri mağazası, satış hacmi yüksek",
+       "kosul": ""
+      }
+     ]
+    }
+   },
+   "dosya": "data/events/cards/unwired/gross_vs_net.json",
+   "kareler": {},
+   "baglar": {}
+  },
+  {
+   "no": "P4",
+   "revize": "pazaryeri.cift_siparis",
+   "kart": null,
+   "durum": "sil",
+   "kategori": "",
+   "degisti": true,
+   "onay": "onaylı",
+   "neden": [
+    "Yeni, #16'nın ayarında; alıcı tarafı (Sepet ve Ödeme, Siparişlerim), mağaza da işin içinde. Bedel kart, kasa ya da kitle.",
+    "Erdem: silinir."
+   ],
+   "once": {
+    "tr": {
+     "gonderen": "Gül Şahin, alıcı",
+     "konu": "İki buzdolabı",
+     "metin": "Ödeme düğmesine iki kez bastım, kapıma iki buzdolabı geldi. Kargocular ikisini de dördüncü kata çıkardı. Birini geri göndermek istiyorum ama mağaza iade kargosunu benim ödememi istiyor.",
+     "secenekler": [
+      {
+       "etiket": "Çift ödeme düzeltmesini sprintin başına al",
+       "sonuc": "Bir kart sonraki sprinte kayar, çift sipariş biter"
+      },
+      {
+       "etiket": "Çift siparişlerin iade kargosunu biz ödeyelim",
+       "sonuc": "Kasa −$600, hata sürer"
+      },
+      {
+       "etiket": "İade kuralı mağazanın, karışmayalım",
+       "sonuc": "Kitle −%2 kadar, hata sürer"
+      }
+     ]
+    },
+    "en": {
+     "gonderen": "Gül Şahin, buyer",
+     "konu": "Two fridges",
+     "metin": "I clicked the pay button twice, and two fridges showed up at my door. The delivery guys carried both up to the fourth floor. I want to send one back, but the store wants me to pay for return shipping.",
+     "secenekler": [
+      {
+       "etiket": "Put the double-charge fix at the top of the sprint",
+       "sonuc": "One card slips to the next sprint, double orders stop"
+      },
+      {
+       "etiket": "We pay return shipping on double orders",
+       "sonuc": "Cash −$600, the bug stays"
+      },
+      {
+       "etiket": "Returns are the store's call, stay out of it",
+       "sonuc": "Audience −2% or so, the bug stays"
+      }
+     ]
+    }
+   },
+   "kareler": {},
+   "baglar": {}
+  }
+ ],
+ "park_gerekce": "B2C pazaryeri Faz E'de kurulacak (her park kartının _draft alanı)"
+}

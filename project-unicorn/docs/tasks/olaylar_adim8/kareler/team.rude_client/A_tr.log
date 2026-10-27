@@ -1,0 +1,16 @@
+Godot Engine v4.6.2.stable.official.71f334935 - https://godotengine.org
+D3D12 12_0 - Forward+ - Using Device #0: AMD - AMD Radeon RX 9070 XT
+
+BOOT|lang=tr|source=arg
+[MCP Runtime] Server listening on port 7777
+[MCP Runtime] Autoload ready, server starting on port 7777
+BUILD|version=0.1.0|scope=demo
+EVENTSHOT|team.rude_client|customer=co_palmiye (Palmiye Turizm)|employee=char_cs_co_palmiye (Burcu Çetin)|founder=char_founder (Kurucu)|where=met|week=14
+EVENTSHOTTEXT|team.rude_client|Telefon: Palmiye Turizm|Palmiye Turizm muhasebe müdürü yarım saat boyunca telefonda bana bağırdı, sonunda “sizin gibi çocuklarla iş yapmak zorunda kaldık” diye söylenip kapattı. Geliştirme ekibi hatayı buldu, akşama düzeltirler. Ama onunla bir daha ben konuşmak istemiyorum.
+EVENTSHOTOPTION|team.rude_client|Palmiye Turizm ile telefonda bundan sonra sen konuş
+EVENTSHOTOPTION|team.rude_client|Müdürü ara, ekibine böyle konuşamayacağını söyle
+EVENTSHOTOPTION|team.rude_client|Ona “müşteri bu, idare et” de
+EVENTSHOTCHIPS|team.rude_client|take_over|Hesap sende: Palmiye Turizm; Senin verimin -%15 · 2 hafta; Burcu +4
+EVENTSHOTCHIPS|team.rude_client|call_boss|Burcu +6; Palmiye Turizm: memnuniyet 72 → 68; %15 ihtimalle:; Fesih bildirimi: Palmiye Turizm, sözleşme 4 hafta sonra biter
+EVENTSHOTCHIPS|team.rude_client|tell_cope|Burcu -6
+[Shot] saved C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-Project-Unicorn/eeffbe9c-d5c1-4a8e-8ce4-9e4b60603345/scratchpad/appdata/c7c_win/Godot/app_userdata/Project Unicorn/event_shot_team.rude_client.png

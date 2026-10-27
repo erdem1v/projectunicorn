@@ -1,0 +1,4 @@
+- U8: ÇEYREK'in EN karesini (live:b2b_quarter --lang=en) ekle (co-director 2026-10-26).
+- U8: "yetişmez" satırı katlamanın altında kalan durumu tek kareyle göster (hap kırmızı; a4_six_meetings2) (yönetmen 2026-10-27).
+- U8 (U5 kararları): a4_cards_noteam ile a4_delegate_noteam yan yana tek kare (yönetmen 2 ve ek karar); a4_run_delegate_long EN (en geniş ad, şerit ≤730, orta 754).
+- U8: DEVREDEN satırları maketin .nxk'si gibi soluk taralı (U5'te kare kabulünde düzeltildi: doygun spill → %14 tarama, %55 kenar).

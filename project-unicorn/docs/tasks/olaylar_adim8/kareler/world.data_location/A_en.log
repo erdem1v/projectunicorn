@@ -1,0 +1,16 @@
+Godot Engine v4.6.2.stable.official.71f334935 - https://godotengine.org
+D3D12 12_0 - Forward+ - Using Device #0: AMD - AMD Radeon RX 9070 XT
+
+BOOT|lang=en|source=arg
+[MCP Runtime] Server listening on port 7777
+[MCP Runtime] Autoload ready, server starting on port 7777
+BUILD|version=0.1.0|scope=demo
+EVENTSHOT|world.data_location|customer=co_kuzey (Kuzey İnşaat)|founder=char_founder (Founder)|where=met|week=14
+EVENTSHOTTEXT|world.data_location|Where is our data?|After the surveillance stories in the papers, our board asked one question and wants the answer this week: which country are our records stored in?
+EVENTSHOTOPTION|world.data_location|Call their IT director yourself and walk through the server setup
+EVENTSHOTOPTION|world.data_location|Send the same statement to every account
+EVENTSHOTOPTION|world.data_location|Tell them “your data is being moved to a separate server in Turkey”
+EVENTSHOTCHIPS|world.data_location|founder_calls|Your pace -10% · 1 week; Kuzey İnşaat: satisfaction 72 → 80
+EVENTSHOTCHIPS|world.data_location|send_all|Other 2 accounts: satisfaction +4; Kuzey İnşaat: satisfaction 72 → 68
+EVENTSHOTCHIPS|world.data_location|lie|Kuzey İnşaat: satisfaction 72 → 82; 25% chance:; In 3 weeks:; Notice given: Kuzey İnşaat leaves in 4 weeks
+[Shot] saved C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-Project-Unicorn/eeffbe9c-d5c1-4a8e-8ce4-9e4b60603345/scratchpad/appdata/c7c_win/Godot/app_userdata/Project Unicorn/event_shot_world.data_location_en.png

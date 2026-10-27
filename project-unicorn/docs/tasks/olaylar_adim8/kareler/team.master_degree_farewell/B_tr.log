@@ -1,0 +1,12 @@
+Godot Engine v4.6.2.stable.official.71f334935 - https://godotengine.org
+D3D12 12_0 - Forward+ - Using Device #0: AMD - AMD Radeon RX 9070 XT
+
+BOOT|lang=tr|source=arg
+[MCP Runtime] Server listening on port 7777
+[MCP Runtime] Autoload ready, server starting on port 7777
+BUILD|version=0.1.0|scope=demo
+EVENTSHOT|team.master_degree_farewell|employee=char_emp_shot_1 (Kerem Hasan Karaosmanoğlu)|where=met|week=14
+EVENTSHOTTEXT|team.master_degree_farewell|Son haftam|Bu hafta son haftam. Devir notlarım ortak klasörde. Beni burada büyüttüğünüz için teşekkürler, iyi ki sizinle çalışmışım.
+EVENTSHOTOPTION|team.master_degree_farewell|Teşekkür et, yolu açık olsun de
+EVENTSHOTCHIPS|team.master_degree_farewell|thank|Kerem ayrılıyor
+[Shot] saved C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-Project-Unicorn/eeffbe9c-d5c1-4a8e-8ce4-9e4b60603345/scratchpad/appdata/c7b_g1/Godot/app_userdata/Project Unicorn/event_shot_team.master_degree_farewell_employee=char_emp_shot_1_long=1.png

@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UE kareleri</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+:root {
+  --bg: #f6f3ee; --panel: #ffffff; --ink: #1f1b16; --ink-2: #5a524a; --line: #ddd5ca; --accent: #b4561c; --warn-bg: #fbecd9;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #171411; --panel: #211d19; --ink: #efe9e1; --ink-2: #a89e92; --line: #3a332c; --accent: #f0a35e; --warn-bg: #3a2a18;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #171411; --panel: #211d19; --ink: #efe9e1; --ink-2: #a89e92; --line: #3a332c; --accent: #f0a35e; --warn-bg: #3a2a18;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1180px; margin: 0 auto; padding-block: 32px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { text-wrap: balance; }
+.table-wrap { overflow-x: auto; }
+figure, .pair > *, .quad > *, .duo > * { min-width: 0; }
+h1 { font-size: 30px; margin: 0 0 8px; }
+h2 { font-size: 22px; margin: 48px 0 8px; padding-top: 16px; border-top: 1px solid var(--line); }
+h3 { font-size: 16px; margin: 24px 0 8px; color: var(--ink-2); font-weight: 600; }
+p, li { max-width: 78ch; }
+.lead { color: var(--ink-2); }
+.note { background: var(--warn-bg); padding: 12px 16px; border-radius: 6px; max-width: 78ch; }
+table { border-collapse: collapse; margin: 12px 0; width: 100%; max-width: 900px; font-size: 15px; }
+th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--ink-2); font-weight: 600; }
+td.num { font-variant-numeric: tabular-nums; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 8px 0 20px; }
+.quad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 8px 0 20px; }
+.duo { display: grid; grid-template-columns: repeat(2, minmax(0, 340px)); gap: 10px; margin: 8px 0 20px; }
+figure { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 8px; }
+figure img { width: 100%; height: auto; display: block; border-radius: 3px; }
+figcaption { font-size: 14px; color: var(--ink-2); padding: 6px 2px 0; }
+figcaption b { color: var(--ink); }
+a { color: var(--accent); }
+@media (max-width: 760px) {
+  .pair, .quad, .duo { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<main>
+<h1>UE kareleri</h1>
+<p class="lead">Erdem'in U5'in <code>a4_two_pm</code> TR karesine yaptığı üç not için önce/sonra kareleri. Hiçbir şey commit'lenmedi: kareler U6'nın
+(<code>d1eb210</code>) bir kopyasında, değişiklikler bir ortam değişkeninin (<code>UE</code>) arkasında çekildi; "önce" kareleri aynı ağaçtan, değişken
+boşken. Pencere 1920×1080. Kırpmalara tıklayınca tam kare açılır. Seçimi Erdem yapar; yardımcı yönetmenin önerisi her bölümde yazılı.</p>
+
+<h2>1. Sol sütun daralsın, sprint kutusu genişlesin</h2>
+<p>İstek: eksendeki aşama kutuları (7 · 9 · 4 gibi) sıkışık okunuyor; sol sütun (müşteri talepleri ve modüller) daralsın, kazanılan genişlik
+zaman eksenine geçsin. Kart bilgi sütunu (312 px) ve sağ sütun (300 px) değişmedi.</p>
+<table>
+<tr><th></th><th>Önce</th><th>Sonra</th></tr>
+<tr><td>Sol sütun</td><td class="num">288 px</td><td class="num">280 px</td></tr>
+<tr><td>Sprint sütunu (orta)</td><td class="num">754 px</td><td class="num">762 px</td></tr>
+<tr><td>Zaman ekseni</td><td class="num">396 px</td><td class="num">404 px</td></tr>
+<tr><td>Eksende bir hafta</td><td class="num">152,3 px</td><td class="num">155,4 px (+3,1)</td></tr>
+</table>
+<p class="note"><b>Bulgu:</b> sol sütun 280 px'in altına inemiyor. Sınırı talep satırı koyuyor: en uzun müşteri adı ("Sultanahmet Gayrimenkul")
+ve yanındaki son tarih çipi. 268 px'in altında sözcük ortadan kırılıyor; 264 px'te "Entegrasyonlar düzeltmesi" üç satıra iniyor. Bu yüzden
+yalnız sol sütunu daraltmak eksende bir haftaya en çok 3–9 px kazandırıyor; aşağıdaki iki kare gözle neredeyse aynı. Eksende hissedilir bir
+genişlik ancak kart bilgi sütunundan (312 px) ya da sağ sütundan (300 px) alınabilir; bu kopyada sınanmadı.</p>
+<h3>a4_two_pm, uzun adlar: TR</h3>
+<div class="pair">
+<figure><a href="kareler/a4_two_pm_long_tr_base.png"><img src="kirpma/a4_two_pm_long_tr_pano_base.png" alt="Önce: sol sütun 288 px, TR"></a><figcaption><b>Önce</b> · sol 288 px, hafta 152 px</figcaption></figure>
+<figure><a href="kareler/a4_two_pm_long_tr_narrow.png"><img src="kirpma/a4_two_pm_long_tr_pano_narrow.png" alt="Sonra: sol sütun 280 px, TR"></a><figcaption><b>Sonra</b> · sol 280 px, hafta 155 px</figcaption></figure>
+</div>
+<h3>a4_two_pm, uzun adlar: EN</h3>
+<div class="pair">
+<figure><a href="kareler/a4_two_pm_long_en_base.png"><img src="kirpma/a4_two_pm_long_en_pano_base.png" alt="Önce, EN"></a><figcaption><b>Önce</b> · 288 px</figcaption></figure>
+<figure><a href="kareler/a4_two_pm_long_en_narrow.png"><img src="kirpma/a4_two_pm_long_en_pano_narrow.png" alt="Sonra, EN"></a><figcaption><b>Sonra</b> · 280 px</figcaption></figure>
+</div>
+<h3>a4_fifty (50 kişi, planlama PM'de), uzun adlar: TR</h3>
+<div class="pair">
+<figure><a href="kareler/a4_fifty_long_tr_base.png"><img src="kirpma/a4_fifty_long_tr_pano_base.png" alt="Önce, 50 kişi TR"></a><figcaption><b>Önce</b> · 288 px</figcaption></figure>
+<figure><a href="kareler/a4_fifty_long_tr_narrow.png"><img src="kirpma/a4_fifty_long_tr_pano_narrow.png" alt="Sonra, 50 kişi TR"></a><figcaption><b>Sonra</b> · 280 px</figcaption></figure>
+</div>
+<h3>a4_fifty, uzun adlar: EN</h3>
+<div class="pair">
+<figure><a href="kareler/a4_fifty_long_en_base.png"><img src="kirpma/a4_fifty_long_en_pano_base.png" alt="Önce, 50 kişi EN"></a><figcaption><b>Önce</b> · 288 px</figcaption></figure>
+<figure><a href="kareler/a4_fifty_long_en_narrow.png"><img src="kirpma/a4_fifty_long_en_pano_narrow.png" alt="Sonra, 50 kişi EN"></a><figcaption><b>Sonra</b> · 280 px</figcaption></figure>
+</div>
+<p>Ayrıca: uzun kart adları panoda iki satırdan sonra "…" ile kesiliyor ("Hesap & Oturum (Sultanahmet…"). Bu iki kipte de, U6'nın kendisinde
+de var. "Ad kesilmez" kuralına (N4) aykırı; U7'nin işine yazıldı.</p>
+
+<h2>2. Modül kısaltmaları yerine ikon</h2>
+<p>İkonlar oyunun kendi ikon setinden, kart tür ikonlarıyla aynı aileden (24 px, düz dolgulu). Yeni ikon çizilmedi, set dışından ikon alınmadı.
+Talep ve modül satırında aynı 24 px kutuda 16 px çizilir; üstüne gelince modülün adı yazar. Panoda modül adı zaten kelime olarak yazdığı için
+orada ikon yok.</p>
+<table>
+<tr><th>Modül</th><th>Bugün</th><th>İkon dosyası</th><th>Neden</th></tr>
+<tr><td>Çekirdek</td><td>ÇK</td><td><code>rail/product.svg</code></td><td>Küp: ürünün kendisi. Aynı ikon sol menüde "Ürün" sekmesinde de var.</td></tr>
+<tr><td>İlk Kullanım ve Erişim</td><td>İK</td><td><code>world/training.svg</code></td><td>Mezuniyet şapkası: ürünü öğrenmek. "Erişim" yarısının ikonu yok.</td></tr>
+<tr><td>Entegrasyonlar (B2B)</td><td>EN</td><td><code>dept/development.svg</code></td><td>Komut satırı: API. Yaklaşık; sette fiş ya da bağlantı ikonu yok.</td></tr>
+<tr><td>Güven &amp; Ölçek</td><td>GÜ</td><td><code>util/shield.svg</code></td><td>Kalkan: güvenlik ve dayanıklılık hatları.</td></tr>
+<tr><td>Büyüme (B2C)</td><td>BÜ</td><td><code>stake/cash_in.svg</code></td><td>Daire içinde yukarı ok. Yaklaşık; sette kitle ya da büyüme ikonu yok.</td></tr>
+<tr><td>Gelir (B2C)</td><td>GE</td><td><code>skill/sales.svg</code></td><td>Fiyat etiketi: Gelir'in tek yeteneği ücretli plan.</td></tr>
+</table>
+<div class="duo">
+<figure><a href="kareler/a4_status_tr_base.png"><img src="kirpma/status_sol_base.png" alt="Önce: harfler, ERP"></a><figcaption><b>Önce</b> · harfler (ERP)</figcaption></figure>
+<figure><a href="kareler/a4_status_tr_icons.png"><img src="kirpma/status_sol_icons.png" alt="Sonra: ikonlar, ERP"></a><figcaption><b>Sonra</b> · ikonlar (ERP)</figcaption></figure>
+<figure><a href="kareler/b2c_live_tr_base.png"><img src="kirpma/b2c_sol_base.png" alt="Önce: harfler, B2C"></a><figcaption><b>Önce</b> · harfler (B2C)</figcaption></figure>
+<figure><a href="kareler/b2c_live_tr_icons.png"><img src="kirpma/b2c_sol_icons.png" alt="Sonra: ikonlar, B2C"></a><figcaption><b>Sonra</b> · ikonlar (B2C)</figcaption></figure>
+</div>
+<figure><a href="kirpma/ikon_kagidi.png"><img src="kirpma/ikon_kagidi.png" alt="Altı modülün ikon aday kâğıdı"></a><figcaption><b>İkon kâğıdı</b> · altı modül, büyük boy ve oyundaki boy</figcaption></figure>
+
+<h2>3. "planda" ve "gelecek çeyrek": hiyerarşi (N2)</h2>
+<p>A4'te Erdem bu yazıların küçük durmasının kötü göründüğünü söylemişti; U5'te hâlâ küçük, küçük harfli ve soluktular.</p>
+<ul>
+<li><b>(a)</b> Durum metni satır adıyla aynı boyda ve cümle başı büyük: "Planda", "Bu çeyrek", "Gelecek çeyrek". Üç yeni metin anahtarı gerekir.</li>
+<li><b>(b)</b> Modül satırında "planda" yazısı kalkar, yerine yeşil bir tik durur (üstüne gelince "Bu sprintte kartı var"). Talebin son tarihi ad
+boyunda, büyük harfle başlayan bir çip olur. (a) ile tek farkı modül satırındaki tik.</li>
+</ul>
+<p><b>Yardımcı yönetmenin önerisi: (b).</b> Durum yazıyla değil biçimle okunur, açıklaması ipucundadır.</p>
+<div class="quad">
+<figure><a href="kareler/a4_status_tr_base.png"><img src="kirpma/status_sol_base.png" alt="Bugün"></a><figcaption><b>Bugün</b> · küçük, küçük harf</figcaption></figure>
+<figure><a href="kareler/a4_status_tr_a.png"><img src="kirpma/status_sol_a.png" alt="Seçenek a"></a><figcaption><b>(a)</b> · "Planda", ad boyunda</figcaption></figure>
+<figure><a href="kareler/a4_status_tr_b.png"><img src="kirpma/status_sol_b.png" alt="Seçenek b"></a><figcaption><b>(b)</b> · tik, tarih çipi ad boyunda</figcaption></figure>
+<figure><a href="kareler/a4_status_tr_icons.png"><img src="kirpma/status_sol_icons.png" alt="İkonlarla birlikte"></a><figcaption>Karşılaştırma için: 2'nin ikonları</figcaption></figure>
+</div>
+<p class="note">Not: kartı bu sprintin planında olan talep satırları (Pontus, Selçuk) iki seçenekte de soluk kalıyor, çünkü bütün satır yarı saydam
+çiziliyor (U2'nin "planlı talep" kuralı). Soluk görünmeleri isteniyorsa ayrıca karar gerekir.</p>
+
+<h2>Kaynak</h2>
+<ul>
+<li>Prototip görevi: <a href="prototip_gorevi.md">prototip_gorevi.md</a>; kodlayıcının ölçüm raporu: <a href="prototip_raporu.md">prototip_raporu.md</a>.</li>
+<li>Kopya bu makinede (scratchpad <code>wue</code>); dizüstünde U6 commit'i ve görev metninden yeniden kurulur.</li>
+<li>"Bekliyor: ürün yöneticisi ya da kurucu" ipucu (B2) bu turda değişmedi.</li>
+</ul>
+</main>
+</body>
+</html>

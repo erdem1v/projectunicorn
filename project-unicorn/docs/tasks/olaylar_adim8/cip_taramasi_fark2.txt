@@ -1,0 +1,2 @@
+sonra (incelemeden önce) ile sonra2 (commit 8fbb189 ile aynı kod, incelemenin sayılı birleşme düzeltmesi dahil): 191 kart, 399 EVENTSHOTCHIPS satırı, fark 0.
+Dosyalar: chips_once.txt, chips_sonra.txt, chips_sonra2.txt.

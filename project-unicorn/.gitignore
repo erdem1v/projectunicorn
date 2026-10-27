@@ -2,9 +2,6 @@
 .godot/
 /android/
 
-# Phase documents (PRDs, task writings, reports, working folders) stay local; they are not part of the repo.
-/docs/tasks/
-
 # Mockup workspace: design sources (HTML, CSS, generators, icons) are tracked; renders, reference screenshots,
 # logs and caches stay local.
 /docs/mockups/**/*.png

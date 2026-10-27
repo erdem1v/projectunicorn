@@ -1,0 +1,16 @@
+Godot Engine v4.6.2.stable.official.71f334935 - https://godotengine.org
+D3D12 12_0 - Forward+ - Using Device #0: AMD - AMD Radeon RX 9070 XT
+
+BOOT|lang=en|source=arg
+[MCP Runtime] Server listening on port 7777
+[MCP Runtime] Autoload ready, server starting on port 7777
+BUILD|version=0.1.0|scope=demo
+EVENTSHOT|world.server_price_hike|employee=char_emp_shot_2 (Mert Yıldız)|where=met|week=14
+EVENTSHOTTEXT|world.server_price_hike|Server price increase|Our server provider is raising prices 15% from next month. We could move to a cheaper provider, but the migration would take one of my sprints.
+EVENTSHOTOPTION|world.server_price_hike|Accept it, we stay put
+EVENTSHOTOPTION|world.server_price_hike|Move to the cheaper provider
+EVENTSHOTOPTION|world.server_price_hike|Sign a one-year contract to halve the increase
+EVENTSHOTCHIPS|world.server_price_hike|accept|Server price +15%, +$0 a month
+EVENTSHOTCHIPS|world.server_price_hike|switch|Server price -10%, +$0 a month; Mert pace -50% · 4 weeks
+EVENTSHOTCHIPS|world.server_price_hike|contract|Server price +7%, +$0 a month; Server contract for 52 weeks: tier fixed, capacity at least 0 seats
+[Shot] saved C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-Project-Unicorn/eeffbe9c-d5c1-4a8e-8ce4-9e4b60603345/scratchpad/appdata/c7b_g4/Godot/app_userdata/Project Unicorn/event_shot_world.server_price_hike_en.png

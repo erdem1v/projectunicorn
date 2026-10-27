@@ -1,0 +1,98 @@
+diff -ruN a/localization/strings.csv b/localization/strings.csv
+--- a/localization/strings.csv	2026-10-27 07:03:14.138020200 +0300
++++ b/localization/strings.csv	2026-10-27 07:03:14.182046800 +0300
+@@ -2742,6 +2742,7 @@
+ PRODUCT_MORE_BELOW_ONE,aşağıda {n} kart daha,{n} more card below
+ PRODUCT_CARRIED_SLOT,devreden,carried
+ PRODUCT_LATE,yetişmez,late
++PRODUCT_STAGE_PCT,{stage} {pct},{stage} {pct}
+ PRODUCT_TO_NEXT,Sonraki sprinte,To the next sprint
+ PRODUCT_REQUESTS,Müşteri talepleri,Customer requests
+ PRODUCT_MORE_REQUESTS,+{n} talep,+{n} requests
+diff -ruN a/scripts/tabs/product/board_row.gd b/scripts/tabs/product/board_row.gd
+--- a/scripts/tabs/product/board_row.gd	2026-10-27 07:03:14.134020800 +0300
++++ b/scripts/tabs/product/board_row.gd	2026-10-27 07:03:14.136020300 +0300
+@@ -12,6 +12,7 @@
+ 
+ const ARROW := "res://assets/icons/util/arrow_right.svg"
+ const CLOSE := "res://assets/icons/util/close.svg"
++const STAGE_NAMES := {"design": "PRODUCT_PHASE_DESIGN", "dev": "PRODUCT_PHASE_DEV", "test": "PRODUCT_PHASE_TEST", "product": "PRODUCT_STAGE_RESEARCH"}
+ 
+ ## Satırın verisi, bağlam ({mode "plan" | "active", now (sprint başından hafta), people {kimlik: kişi + parçaları}, candidate
+ ## (aday satırı: hayalet çubuklar, hep açık "+"), hot (aday satırı üstüne gelinmiş gibi açık)}).
+@@ -22,6 +23,9 @@
+ var _acts: Control
+ ## Koşan çubuklar {ground, label, faces, stage, workers}: saat ilerleyince hâli, yazısı ve yüzleri yeniden okunur.
+ var _live: Array = []
++## Koşan sprintte durum yuvası ve içindeki "{aşama} %{n}" yazısı.
++var _status_cell: Control
++var _pct: Label
+ 
+ 
+ func setup(row: Dictionary, ctx: Dictionary) -> void:
+@@ -151,7 +155,7 @@
+ 		text.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+ 		text.mouse_filter = Control.MOUSE_FILTER_PASS
+ 		line.add_child(text)
+-		if not slot.is_empty():
++		if not slot.is_empty() or _ctx.mode == "active":
+ 			line.add_child(_status(slot))
+ 	else:
+ 		var module := SprintUiShared.label(String(card.module), &"CaptionName")
+@@ -163,12 +167,16 @@
+ 	return line
+ 
+ 
+-## Durum yuvası, en az `D_W_CARD_SLOT` geniş: söz tarihi çipi, "devreden" ya da kırmızı "yetişmez"; yoksa boş.
++## Durum yuvası, en az `D_W_CARD_SLOT` geniş: söz tarihi çipi, "devreden" ya da kırmızı "yetişmez"; yoksa boş. Koşan sprintte sıra
++## "yetişmez", koşan aşamanın "{aşama} %{n}"i, söz çipi, "devreden" olur.
+ func _status(slot: Dictionary) -> Control:
+ 	var cell := SprintUiShared.box(UiTokens.SPACE_S)
+ 	cell.custom_minimum_size.x = UiTokens.D_W_CARD_SLOT
+ 	cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
+-	match String(slot.get("kind", "")):
++	var kind := String(slot.get("kind", ""))
++	if _ctx.mode == "active" and card.late:
++		kind = "late"
++	match kind:
+ 		"due":
+ 			var chip: PanelContainer = SprintUiShared.due_chip(String(slot.text), slot.soon)
+ 			chip.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+@@ -182,6 +190,11 @@
+ 			cell.mouse_filter = Control.MOUSE_FILTER_PASS
+ 		"late":
+ 			cell.add_child(SprintUiShared.label(tr("PRODUCT_LATE"), &"CaptionName", UiTokens.D_neg_ink()))
++	if _ctx.mode == "active":
++		_status_cell = cell
++		_pct = SprintUiShared.label("", &"CaptionName")
++		_pct.visible = false
++		cell.add_child(_pct)
+ 	return cell
+ 
+ 
+@@ -408,3 +421,25 @@
+ 				if w.from <= at and at < w.to:
+ 					working.append(w.id)
+ 		_faces(entry, working)
++	_show_stage_pct(at)
++
++
++## Koşan aşamanın yüzdesi (barın dolgusuyla aynı kaynak: önden yapılan ve `done_at`); kart yetişmiyorsa ya da koşan aşama yoksa
++## yuvanın öbür parçaları kalır, varsa onların yerini alır.
++func _show_stage_pct(at: float) -> void:
++	if _pct == null:
++		return
++	var text := ""
++	if not card.late:
++		for entry: Dictionary in _live:
++			var s: Dictionary = entry.stage
++			if at >= s.start - SprintSystem.EPS and at < s.end - SprintSystem.EPS:
++				var made: float = s.pre + SprintTimeline.done_at(s, at)
++				var pct: float = floorf(clampf(made / (s.pre + s.need), 0.0, 1.0) * 100.0)
++				text = tr("PRODUCT_STAGE_PCT").format({"stage": tr(STAGE_NAMES[s.stage]), "pct": Fmt.percent(pct, 0)})
++				break
++	_pct.text = text
++	_pct.visible = text != ""
++	for part: Control in _status_cell.get_children():
++		if part != _pct:
++			part.visible = text == ""

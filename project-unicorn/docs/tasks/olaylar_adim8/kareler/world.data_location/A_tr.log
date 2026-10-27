@@ -1,0 +1,16 @@
+Godot Engine v4.6.2.stable.official.71f334935 - https://godotengine.org
+D3D12 12_0 - Forward+ - Using Device #0: AMD - AMD Radeon RX 9070 XT
+
+BOOT|lang=tr|source=arg
+[MCP Runtime] Server listening on port 7777
+[MCP Runtime] Autoload ready, server starting on port 7777
+BUILD|version=0.1.0|scope=demo
+EVENTSHOT|world.data_location|customer=co_kuzey (Kuzey İnşaat)|founder=char_founder (Kurucu)|where=met|week=14
+EVENTSHOTTEXT|world.data_location|Verilerimiz nerede duruyor?|Dinleme haberlerinden sonra yönetimimiz tek bir soru sordu ve cevabı bu hafta istiyor: kayıtlarımız hangi ülkedeki sunucularda duruyor?
+EVENTSHOTOPTION|world.data_location|Bilgi işlem müdürünü sen ara, sunucu düzenini anlat
+EVENTSHOTOPTION|world.data_location|Bütün hesaplara aynı açıklamayı gönder
+EVENTSHOTOPTION|world.data_location|“Verileriniz Türkiye'de ayrı bir sunucuya alınıyor” de
+EVENTSHOTCHIPS|world.data_location|founder_calls|Senin verimin -%10 · 1 hafta; Kuzey İnşaat: memnuniyet 72 → 80
+EVENTSHOTCHIPS|world.data_location|send_all|Öbür 2 hesap: memnuniyet +4; Kuzey İnşaat: memnuniyet 72 → 68
+EVENTSHOTCHIPS|world.data_location|lie|Kuzey İnşaat: memnuniyet 72 → 82; %25 ihtimalle:; 3 hafta sonra:; Fesih bildirimi: Kuzey İnşaat, sözleşme 4 hafta sonra biter
+[Shot] saved C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-Project-Unicorn/eeffbe9c-d5c1-4a8e-8ce4-9e4b60603345/scratchpad/appdata/c7c_win/Godot/app_userdata/Project Unicorn/event_shot_world.data_location.png

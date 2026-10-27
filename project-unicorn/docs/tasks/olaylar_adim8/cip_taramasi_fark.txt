@@ -1,0 +1,62 @@
+ONCE: 399 sik satiri, SONRA: 399, ayni: 354
+
+== 1 birlesme (x n): 3
+rival.outage/demo_three: Yeni aday x3 -> Yeni aday ×3
+world.analyst_guide/brief: Yeni aday x2 -> Yeni aday ×2
+world.trade_fair/book: Yeni aday x2 -> Yeni aday ×2
+
+== 2 hedefi bos cip kayboldu: 1
+product.sprint_pm_hospital/hand_over: Çalışan 2 hafta yalnız bu kartta: Stok Sayacı (Marmara Lojistik)
+
+== 3 guven ve olay ciplerinin to sayisi (beklenen): 42
+customer.finance_team/carry_on: Palmiye Turizm: memnuniyet 72 → 58  ==>  Palmiye Turizm: memnuniyet 72 → 64
+customer.finance_team/queue_request: Palmiye Turizm: memnuniyet 72 → 58  ==>  Palmiye Turizm: memnuniyet 72 → 80
+customer.finance_team/rep_shows: Palmiye Turizm: memnuniyet 72 → 58  ==>  Palmiye Turizm: memnuniyet 72 → 76
+customer.incident_month_close/defer: Marmara Lojistik: memnuniyet 72 → 51  ==>  Marmara Lojistik: memnuniyet 72 → 66
+customer.incident_month_close/sprint_stop: Marmara Lojistik: memnuniyet 72 → 51  ==>  Marmara Lojistik: memnuniyet 72 → 69
+customer.own_data_error/founder_calls: Palmiye Turizm: memnuniyet 72 → 58  ==>  Palmiye Turizm: memnuniyet 72 → 76
+customer.own_data_error/rep_visits: Palmiye Turizm: memnuniyet 72 → 58  ==>  Palmiye Turizm: memnuniyet 72 → 80
+customer.own_data_error/warning_screen: Palmiye Turizm: memnuniyet 72 → 58  ==>  Palmiye Turizm: memnuniyet 72 → 80
+customer.training_request/doc: Palmiye Turizm: memnuniyet 72 → 53  ==>  Palmiye Turizm: memnuniyet 72 → 76
+customer.training_request/help_center: Palmiye Turizm: memnuniyet 72 → 51  ==>  Palmiye Turizm: memnuniyet 72 → 68
+customer.training_request/paid: Palmiye Turizm: memnuniyet 72 → 51  ==>  Palmiye Turizm: memnuniyet 72 → 68
+customer.training_request/visit: Palmiye Turizm: memnuniyet 72 → 57  ==>  Palmiye Turizm: memnuniyet 72 → 80
+fixture.b2_chips/hit: Ege Sigorta: memnuniyet 25 → 7  ==>  Ege Sigorta: memnuniyet 25 → 19
+fixture.b2_chips/wait: Ege Sigorta: memnuniyet 25 → 5  ==>  Ege Sigorta: memnuniyet 25 → 17
+product.encryption_flaw_b2b/announce: 3 hesap: memnuniyet -4 · Nordica 72 → 51  ==>  3 hesap: memnuniyet -4 · Nordica 72 → 68
+product.encryption_flaw_b2b/mail_accounts: 3 hesap: memnuniyet -2 · Nordica 72 → 51  ==>  3 hesap: memnuniyet -2 · Nordica 72 → 70
+product.encryption_flaw_b2b/stay_quiet: 3 hesap: memnuniyet -8 · Nordica 72 → 51  ==>  3 hesap: memnuniyet -8 · Nordica 72 → 64
+product.encryption_flaw_press_b2b/no_comment: 3 hesap: memnuniyet -8 · Nordica 72 → 51  ==>  3 hesap: memnuniyet -8 · Nordica 72 → 64
+product.incident_outage_b2b/morning: 3 gece vardiyalı hesap: memnuniyet -6 · Marmara Lojistik 72 → 51  ==>  3 gece vardiyalı hesap: memnuniyet -6 · Marmara Lojistik 72 → 66
+product.incident_outage_b2b/morning_credit: 3 gece vardiyalı hesap: memnuniyet -1 · Marmara Lojistik 72 → 51  ==>  3 gece vardiyalı hesap: memnuniyet -1 · Marmara Lojistik 72 → 71
+product.incident_regression/defer: 5 hesap: memnuniyet -6 · Marmara Lojistik 72 → 51  ==>  5 hesap: memnuniyet -6 · Marmara Lojistik 72 → 66
+product.promise_due/extend: Nordica: memnuniyet 72 → 51  ==>  Nordica: memnuniyet 72 → 66
+product.sprint_design_customer_colors/as_is: Marmara Lojistik: memnuniyet 72 → 51  ==>  Marmara Lojistik: memnuniyet 72 → 64
+product.sprint_design_empty_state/empty_b2b: Ege Metal: memnuniyet 72 → 51  ==>  Ege Metal: memnuniyet 72 → 64
+product.sprint_design_gloves/as_drawn: Marmara Lojistik: memnuniyet 72 → 51  ==>  Marmara Lojistik: memnuniyet 72 → 64
+product.sprint_dev_import_tool/by_hand: Ege Metal: memnuniyet 72 → 51  ==>  Ege Metal: memnuniyet 72 → 64
+product.sprint_dev_multi_currency/single: Marmara Lojistik: memnuniyet 72 → 51  ==>  Marmara Lojistik: memnuniyet 72 → 64
+product.sprint_pm_phone_too/desktop_b2b: Marmara Lojistik: memnuniyet 72 → 51  ==>  Marmara Lojistik: memnuniyet 72 → 66
+product.sprint_pm_renewal/let_wait: Marmara Lojistik: memnuniyet 72 → 51  ==>  Marmara Lojistik: memnuniyet 72 → 66
+product.sprint_pm_spec_unclear/small_b2b: Marmara Lojistik: memnuniyet 72 → 51  ==>  Marmara Lojistik: memnuniyet 72 → 64
+product.sprint_pm_two_accounts/first_way: Ege Metal: memnuniyet 72 → 51  ==>  Ege Metal: memnuniyet 72 → 64
+product.sprint_pm_two_accounts/second_way: Marmara Lojistik: memnuniyet 72 → 51  ==>  Marmara Lojistik: memnuniyet 72 → 64
+product.sprint_solo_watch/when_done: Marmara Lojistik: memnuniyet 72 → 51  ==>  Marmara Lojistik: memnuniyet 72 → 64
+product.sprint_test_rival_batch/early_trial: 3 hesap: memnuniyet +6 · Marmara Lojistik 72 → 51  ==>  3 hesap: memnuniyet +6 · Marmara Lojistik 72 → 78
+product.sprint_test_rival_batch/early_trial: 3 hesap: memnuniyet -8 · Marmara Lojistik 72 → 51  ==>  3 hesap: memnuniyet -8 · Marmara Lojistik 72 → 64
+product.sprint_test_slow_many/ship_b2b: Marmara Lojistik: memnuniyet 72 → 51  ==>  Marmara Lojistik: memnuniyet 72 → 64
+product.sprint_test_stock_transfer/transfer_off: Marmara Lojistik: memnuniyet 72 → 51  ==>  Marmara Lojistik: memnuniyet 72 → 64
+team.promise_made/ask_time: Nordica: memnuniyet 72 → 51  ==>  Nordica: memnuniyet 72 → 66
+team.rude_client/call_boss: Palmiye Turizm: memnuniyet 72 → 58  ==>  Palmiye Turizm: memnuniyet 72 → 68
+world.data_location/founder_calls: Kuzey İnşaat: memnuniyet 72 → 51  ==>  Kuzey İnşaat: memnuniyet 72 → 80
+world.data_location/lie: Kuzey İnşaat: memnuniyet 72 → 51  ==>  Kuzey İnşaat: memnuniyet 72 → 82
+world.data_location/send_all: Kuzey İnşaat: memnuniyet 72 → 51  ==>  Kuzey İnşaat: memnuniyet 72 → 68
+
+== 4 baska: 0
+
+NOTLAR
+- Grup 1 beklenen: üç kart (rival.outage demo_three x3, world.analyst_guide brief x2, world.trade_fair book x2), metin "Yeni aday" + " ×n".
+- Grup 2 beklenen: product.sprint_pm_hospital/hand_over: kartın isteğe bağlı `taker` yuvası bu dünyada bağlanmadı (EVENTSHOT satırında yok); assign_to çipi "Çalışan 2 hafta yalnız bu kartta: Stok Sayacı" diye yuvasız bir kişiyi yazıyordu. Başka kayıp yok: press_b2b'nin hesapsız hâli bu taramada yok (tarama kartı hesaplı şirket dünyasında çeker), o iddia smoke event_chip_live_targets ve `:bare=1` karesindedir.
+- Grup 3 beklenen: trust_delta ve IncidentSystem çiplerinin "to" sayısı artık kartın payı (from + kaydırdığı hedef farkı); 42 satır, hepsi yalnız ok sayılarında farklı, başka bir çip metni değişmedi.
+- fixture.thesis_open: "önce" ilk koşusunda satır basmadı (yük altında düşmüş koşu: log'da EVENTSHOTCHIPS yok), değişikliksiz ağaçta (base_copy) ve çalışma kopyasında yeniden koşuldu, ikisi de iki boş şık satırı basar; ilk koşu thesis_open_once_ilk_kosu.log.txt'de. Fark yok.
+- Baştan beri 174 SCRIPT ERROR save_png (başsız kare yazılamaz) önce 173, sonra 174: fark thesis_open'ın ilk koşusunun düşmesinden. Başka hata türü yok.

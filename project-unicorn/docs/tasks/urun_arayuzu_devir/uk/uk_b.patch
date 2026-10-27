@@ -1,0 +1,14 @@
+diff -ruN a/scripts/tabs/product/board_row.gd b/scripts/tabs/product/board_row.gd
+--- a/scripts/tabs/product/board_row.gd	2026-10-27 07:03:14.184048500 +0300
++++ b/scripts/tabs/product/board_row.gd	2026-10-27 07:03:14.186049000 +0300
+@@ -398,8 +398,8 @@
+ 		var total: float = s.pre + s.need
+ 		var made: float = s.pre + SprintTimeline.done_at(s, at)
+ 		var state: String = "done" if at >= s.end - SprintSystem.EPS else ("run" if at >= s.start - SprintSystem.EPS else "wait")
+-		entry.main = str(floori(made + SprintSystem.EPS))
+-		entry.sub = "/%d" % roundi(total)
++		entry.main = Fmt.percent(floorf(clampf(made / total, 0.0, 1.0) * 100.0), 0)
++		entry.sub = ""
+ 		(entry.ground as StagePaint).set_bar({"state": state, "fill": clampf(made / total, 0.0, 1.0) if state == "run" else 0.0})
+ 		(entry.label as StagePaint).set_bar({"state": state, "main": entry.main, "sub": entry.sub})
+ 		var working: Array = []

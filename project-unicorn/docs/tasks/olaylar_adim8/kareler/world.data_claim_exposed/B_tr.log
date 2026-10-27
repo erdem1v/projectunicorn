@@ -1,0 +1,18 @@
+Godot Engine v4.6.2.stable.official.71f334935 - https://godotengine.org
+D3D12 12_0 - Forward+ - Using Device #0: AMD - AMD Radeon RX 9070 XT
+
+BOOT|lang=tr|source=arg
+WARNING: [MCP Runtime] Port 7777 is unavailable (22), running without a server
+   at: push_warning (core/variant/variant_utility.cpp:1034)
+   GDScript backtrace (most recent call first):
+       [0] _start_server (res://addons/godot_mcp_runtime/mcp_runtime_autoload.gd:89)
+       [1] _ready (res://addons/godot_mcp_runtime/mcp_runtime_autoload.gd:32)
+[MCP Runtime] Autoload ready, server starting on port 7777
+BUILD|version=0.1.0|scope=demo
+EVENTSHOT|world.data_claim_exposed|customer=co_kuzey (Anadolu Endüstriyel Otomasyon)|founder=char_founder (Kurucu)|where=met|week=14
+EVENTSHOTTEXT|world.data_claim_exposed|Sözleşmeyi bitiriyoruz|Verilerimizin hiçbir zaman Türkiye'ye taşınmadığını öğrendik. Bize taşındığını söylemiştiniz. Sözleşmemizi dört hafta sonra bitiriyoruz.
+EVENTSHOTOPTION|world.data_claim_exposed|Müdürü ara, özür dile
+EVENTSHOTOPTION|world.data_claim_exposed|Bildirimi sessizce kabul et
+EVENTSHOTCHIPS|world.data_claim_exposed|apologize|Fesih bildirimi: Anadolu Endüstriyel Otomasyon, sözleşme 4 hafta sonra biter; Senin verimin -%10 · 1 hafta; İtibar -1
+EVENTSHOTCHIPS|world.data_claim_exposed|accept|Fesih bildirimi: Anadolu Endüstriyel Otomasyon, sözleşme 4 hafta sonra biter; İtibar -3
+[Shot] saved C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-Project-Unicorn/eeffbe9c-d5c1-4a8e-8ce4-9e4b60603345/scratchpad/appdata/c7b_g4/Godot/app_userdata/Project Unicorn/event_shot_world.data_claim_exposed_customer=co_kuzey_long=1.png

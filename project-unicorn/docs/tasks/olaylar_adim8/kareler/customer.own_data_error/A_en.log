@@ -1,0 +1,16 @@
+Godot Engine v4.6.2.stable.official.71f334935 - https://godotengine.org
+D3D12 12_0 - Forward+ - Using Device #0: AMD - AMD Radeon RX 9070 XT
+
+BOOT|lang=en|source=arg
+[MCP Runtime] Server listening on port 7777
+[MCP Runtime] Autoload ready, server starting on port 7777
+BUILD|version=0.1.0|scope=demo
+EVENTSHOT|customer.own_data_error|customer=co_palmiye (Palmiye Turizm)|employee=char_emp_shot_2 (Mert Yıldız)|founder=char_founder (Founder)|rep=char_cs_co_palmiye (Burcu Çetin)|where=met|week=14
+EVENTSHOTTEXT|customer.own_data_error|Stock complaint: Palmiye Turizm|The warehouse manager at Palmiye Turizm called this morning, shouting that our system miscounts stock. I checked the records: someone at their warehouse entered 40 cases as 4, so the system showed 4 in stock and two branches got short deliveries. The manager still thinks it's our fault.
+EVENTSHOTOPTION|customer.own_data_error|Send the account manager to the warehouse manager with the records
+EVENTSHOTOPTION|customer.own_data_error|Call the manager yourself and walk through the records
+EVENTSHOTOPTION|customer.own_data_error|Add a warning to the count screen, tell the manager what we changed
+EVENTSHOTCHIPS|customer.own_data_error|rep_visits|Burcu pace -20% · 1 week; Palmiye Turizm: satisfaction 72 → 80
+EVENTSHOTCHIPS|customer.own_data_error|founder_calls|Your pace -10% · 1 week; Palmiye Turizm: satisfaction 72 → 76
+EVENTSHOTCHIPS|customer.own_data_error|warning_screen|Mert pace -50% · 2 weeks; Palmiye Turizm: satisfaction 72 → 80; Other 3 accounts: satisfaction +4
+[Shot] saved C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-Project-Unicorn/eeffbe9c-d5c1-4a8e-8ce4-9e4b60603345/scratchpad/appdata/c7c_win/Godot/app_userdata/Project Unicorn/event_shot_customer.own_data_error_en.png

@@ -1,0 +1,252 @@
+addons\godot_mcp_runtime\mcp_runtime_autoload.gd:30:	# paused game; PROCESS_MODE_ALWAYS keeps _process running regardless of pause.
+art\office3d\plaza.json:1696: "keep": [],
+art\office3d\meet.json:1269: "keep": [
+art\office3d\meet.json:1270:  "keep_0",
+art\office3d\meet.json:1271:  "keep_1",
+art\office3d\meet.json:1272:  "keep_2",
+art\office3d\meet.json:1273:  "keep_3",
+art\office3d\meet.json:1274:  "keep_4",
+art\office3d\meet.json:1275:  "keep_5",
+art\office3d\meet.json:1276:  "keep_6",
+art\office3d\meet.json:1277:  "keep_7",
+art\office3d\meet.json:1278:  "keep_8",
+art\office3d\meet.json:1279:  "keep_9",
+art\office3d\meet.json:1280:  "keep_10",
+art\office3d\meet.json:1281:  "keep_11",
+art\office3d\meet.json:1282:  "keep_12",
+art\office3d\meet.json:1283:  "keep_13",
+art\office3d\meet.json:1284:  "keep_14",
+art\office3d\meet.json:1285:  "keep_15",
+art\office3d\meet.json:1286:  "keep_16",
+art\office3d\meet.json:1287:  "keep_17",
+art\office3d\meet.json:1288:  "keep_18",
+art\office3d\meet.json:1289:  "keep_19",
+art\office3d\meet.json:1295:  "keep_0",
+art\office3d\meet.json:1296:  "keep_1",
+art\office3d\meet.json:1297:  "keep_2",
+art\office3d\meet.json:1298:  "keep_3",
+art\office3d\meet.json:1299:  "keep_4",
+tools\people\portrait_baker.gd:106:		var keep := Vector3.ONE * GLASSES_BAR
+tools\people\portrait_baker.gd:107:		keep[box.get_longest_axis_index()] = 1.0
+tools\people\portrait_baker.gd:109:			verts[i + k] = box.get_center() + (verts[i + k] - box.get_center()) * keep
+scripts\util\fmt.gd:28:## English loanwords Turkish text keeps as written: in caps they keep the Latin I (SPRINT, not SPRİNT).
+scripts\util\fmt.gd:149:# money() and money_chip() deliberately keep different thresholds (the chip's ≥$10K
+scripts\util\fmt.gd:150:# no-decimal branch keeps it narrow). The sign is peeled off once and re-attached around the
+scripts\util\fmt.gd:191:## "$9,2B" · "$236M" · "$0,8M". Trillions keep their decimal; billions and millions drop it from ten up.
+art\office3d\loft.json:4922: "keep": [
+art\office3d\loft.json:4923:  "keep_0",
+art\office3d\loft.json:4924:  "keep_1",
+art\office3d\loft.json:4925:  "keep_2",
+art\office3d\loft.json:4926:  "keep_3",
+art\office3d\loft.json:4927:  "keep_4",
+art\office3d\loft.json:4928:  "keep_5",
+art\office3d\loft.json:4929:  "keep_6",
+art\office3d\loft.json:4930:  "keep_7",
+art\office3d\loft.json:4931:  "keep_8",
+art\office3d\loft.json:4932:  "keep_9",
+art\office3d\loft.json:4933:  "keep_10",
+art\office3d\ishani.json:1476: "keep": [],
+art\office3d\home.json:1071: "keep": [
+art\office3d\city.json:1186: "keep": [
+data\techtree\rnd_tree.json:35:[Omitted long matching line]
+tools\office3d\bake_nav.gd:3:# Bakes where the office people can walk: art/office3d/<id>_nav.tres from the office GLB, keeping
+tools\office3d\bake_nav.gd:120:## a point; a path keeps it once.
+tools\office3d\bake_nav.gd:210:	var keep := {comp[_nearest_polygon(nm, from)]: true}
+tools\office3d\bake_nav.gd:217:			if keep.has(ca) != keep.has(cb):
+tools\office3d\bake_nav.gd:218:				keep[ca] = true
+tools\office3d\bake_nav.gd:219:				keep[cb] = true
+tools\office3d\bake_nav.gd:223:		if keep.has(comp[p]):
+tools\lint_baseline.json:4:		"17.15|res://data/events/cards/customer/chargeback.json|O4: option 'keep' drops nothing on the subject the card is about",
+data\product\sprint.json:50:  "pm": {"horizon": 3, "goal_weight": 1.5, "low_skill_cards": 0.8, "low_skill_max": 3, "goal_squares": 10, "goal_mark": 5},
+docs\mockups\menajer\tools\menajer_studio.gd:34:	_camera.keep_aspect = Camera3D.KEEP_HEIGHT
+scripts\main\main.gd:4:#   1. Pause the clock (TimeManager auto-starts at 1x in its own _ready) so onboarding keeps
+scripts\main\main.gd:92:	# the signal keeps TimeManager.current_speed in sync; speed 0 pauses the tree.
+scripts\main\main.gd:106:		# The editor F5's --skip-onboarding goes straight to the shell; --menu on the command line keeps the menu.
+scripts\main\main.gd:515:## by three stars in turn, signed through the signing seam. A seat each at a small price keeps the book's MRR under
+scripts\main\main.gd:516:## the Series A bar, so no fund calls inside the five weeks, and a tolerance of 0 keeps every account out of Risk,
+scripts\main\main.gd:651:## The file name carries the language: TR keeps the bare name, EN gets `_en`, so both frames
+scripts\main\main.gd:1093:##   did not keep up) · support_go (its button pressed: Ürün opens on the worst line's area) · empty · long · team_read_only (Ekip
+scripts\main\main.gd:1440:## The reading pane alone on its own layer, at the inbox's width, reading a card in preview with the `names` it keeps.
+scripts\main\main.gd:1467:## `risk_stability` keeps the bugs at the complaint gate, so neither Risk account is there over outages: Ege, which
+scripts\main\main.gd:1678:## reads (90 keeps its right, 55 ends it); withdraw is that notice taken back by the move to Enterprise.
+scripts\main\main.gd:1697:## keep up with (23 reports in, 15 done); support_go presses the report's button.
+scripts\main\main.gd:2172:			# shot's freeze keeps the hour).
+scripts\main\main.gd:2695:			# The engine keeps its own flags off the command line it hands on; a shot has no sound.
+scripts\main\main.gd:2785:## the low preset, which keeps the plate alone. NEW GAME two frames on prints the node count --onboard-shot=1 prints
+scripts\main\main.gd:3700:# English (<stem>_rebuilt: the rebuilt picker keeps the picks); live:decision_paper presses the decision row's
+scripts\main\main.gd:3843:## HR shot roster (gate and rnd keep the founder alone at the default hours) and play through SprintSystem with
+scripts\main\main.gd:4456:## every table within six answers; the bound keeps a pick the panel refused from hanging the shot.
+scripts\main\main.gd:4592:## THE PAUSE PROBE. Speed 0 pauses the tree, and Godot keeps DRAWING a paused Control while
+scripts\main\main.gd:4830:## hold, so the night's batch they land in runs on. A decision on screen keeps the inbox's selection.
+scripts\main\main.gd:5020:# docked over the meeting room the trip ends in; the panel's input shield keeps the shell around
+scripts\main\main.gd:5240:	# The save keeps the queue and nothing pumps it before the next tick: a waiting card shows now,
+scripts\main\main.gd:5304:## ANA MENÜ: keep the run in a new manual slot, apart from its rolling autosaves, then return to the menu.
+scripts\main\main.gd:5306:	if _keep_run_for_main_menu() == "":
+scripts\main\main.gd:5316:func _keep_run_for_main_menu() -> String:
+scripts\data_models\customer.gd:122:## The composed name from its key and argument; a history row keeps the B2C name as that pair.
+scripts\data_models\rival.gd:8:# Three tiers structure the competitive field (the number bands, not a clamp, keep a
+scripts\ui\office\office_view.gd:9:# multiplies with it and the controls over the office keep their colour. The controls over the
+scripts\ui\office\office_view.gd:129:## WindowLayer keeps the view right of the rail (`left`, in the parent's space): the camera
+scripts\ui\office\office_view.gd:202:	# The container holds the image at its physical size and is scaled back down; the 3D camera keeps
+scripts\ui\office\office_view.gd:212:## scale, the window) refits and keeps the frame.
+scripts\ui\office\office_venue.gd:5:# time, and the coffee counter (a kettle at home) and the restrooms keep a line. A line's places run
+scripts\ui\office\office_person.gd:12:# people keep 1. At 0 the person holds still in whatever pose they are in, and carries on from it.
+scripts\ui\office\office_person.gd:598:	# speed; the state machine's one-shots and fades keep k, in step with the phases that time them.
+scripts\ui\office\office_person.gd:627:		# The stride keeps up with the root, to the loops' cap.
+scripts\ui\office\office_person.gd:992:## the pose's blend (`pose`), which keeps the hips on the mattress.
+scripts\ui\office\office_people.gd:6:# little after the start and gone a little before their end (the founder keeps the company
+scripts\ui\office\office_people.gd:56:var _office := ""        # the office whose desks _desk_of keeps
+scripts\ui\office\office_people.gd:224:	# On the founder's trip out and back to their place, the clock frozen, the office keeps one pace
+scripts\ui\office\office_people.gd:275:## the walk out keeps them seated for the night's cut. At home, a day too short for the walks to
+scripts\ui\office\office_people.gd:276:## and from bed keeps the founder at the desk the same way.
+scripts\ui\office\office_people.gd:544:## founder keeps the window. From the person and the week, so no two people and no two weeks keep
+scripts\ui\office\office_people.gd:594:## it is a ghost who walks out. The founder has desk 0; the staff keep their desks, a newcomer
+scripts\ui\office\office_notice_stack.gd:8:# while one lies over it, or while a call's card does; hidden, it still keeps up, and a step done on the goal list
+scripts\ui\office\office_materials.gd:10:## The design keeps these out of its ink pass (userData.noEdge); the flag rides in roughness.
+scripts\events\catalog\catalog.gd:296:## keeps arc steps out — a step drawn from the pool would burn its own one_shot latch and lock
+scripts\ui\office\office_map_card.gd:47:	# empty label keeps the pill at the right.
+scripts\ui\office\office_hud.gd:38:	# WinClose is the theme's glyph-in-a-40 px-key; the dark plate keeps it readable on the bright scene.
+scripts\ui\office\office_city.gd:261:## keeps it as the map's own fit.
+scripts\ui\office\office_camera.gd:21:## one (the meeting room, which floats over the city) keeps ZOOM_RANGE and free panning.
+scripts\ui\office\office_camera.gd:73:## The view changed size: fit, frame and a running ease keep their ratio to the box's fit, so the
+scripts\ui\office\office_camera.gd:74:## frame keeps its centre and its share of the box.
+scripts\ui\office\office_camera.gd:95:## over fit_zoom), so the office fills the view instead of the whole block. Empty = keep fit.
+scripts\ui\office\meeting_cast.gd:116:## `who` speaks (the seated talk), everyone else keeps their post; -1 hushes the table.
+scripts\events\gate\gate.gd:115:	# G6, G7. An admitted card keeps its declared class until G8 assigns the presentation class
+scripts\ui\menu_backdrop.gd:5:## fades in over it once its model has loaded off the main thread. The low graphics preset keeps the plate alone.
+scripts\debug\sprint_probe.gd:30:#   iz1   three developers of 4, 3 and 3 stars (founder=1 keeps the founder) and the first sprint's three Core K1 cards in
+scripts\debug\sprint_probe.gd:128:		# initialize_run alone would keep the previous seed's registries and event pipeline.
+scripts\debug\sprint_probe.gd:206:		# the unpublished gate's record keeps its gate.
+scripts\debug\sprint_probe.gd:274:## A decision paper was asked: the speaker is the person the engine bound it to (the decision record keeps them).
+scripts\debug\run_probe.gd:243:## The months of today's costs the cash must keep once a move's up-front rent is paid (by the cash arm), and the office a
+scripts\debug\run_probe.gd:297:static var _core_only: bool = false         # full_run*: the sprint keeps no feature or request card outside the core
+scripts\debug\run_probe.gd:588:## beside them. Once every MARKET_LOG_WEEKS weeks keeps the ledger short; the list changes slowly.
+scripts\debug\run_probe.gd:1522:## alone does not hire while the desk keeps the queue empty, and a rep away on leave or in
+scripts\debug\run_probe.gd:1667:	_keep_the_team()
+scripts\debug\run_probe.gd:1673:static func _keep_the_team() -> void:
+scripts\debug\run_probe.gd:1920:## hash keeps the low bits, so keys that differ only in a trailing push index land on nearly
+scripts\debug\run_probe.gd:2200:##             bar; cleared, every account sits over it. A founder who answers the demand AND cleans up keeps the account,
+scripts\autoload\time_manager.gd:13:# Speed 0 flips get_tree().paused: every PAUSABLE node stops while NewsTicker (ALWAYS) keeps
+scripts\autoload\time_manager.gd:57:# Clock holds: a surface that must keep the clock stopped until IT closes, whatever opens and
+scripts\autoload\time_manager.gd:116:	# A stopped clock keeps the night behind it: a surface that paused inside this frame's steps, or the
+scripts\autoload\time_manager.gd:305:## A save without a clock block keeps the run's clock and last speed; every load comes back paused.
+scripts\autoload\time_manager.gd:350:## Stop the clock and keep it stopped until release_clock(reason). A second hold for a held reason
+scripts\events\tools\engine_probe.gd:303:	_ok("and keeps the delay as RELATIVE weeks",
+scripts\events\tools\engine_probe.gd:353:	# Neutral verbs are available everywhere — the split restricts economy, not bookkeeping.
+scripts\events\tools\engine_probe.gd:433:	# modules' bumps keep true. The MIN_LOADABLE pin stays EXACT, because pre-v10 saves are dead
+scripts\events\tools\engine_probe.gd:449:	# G2 refuses them in a normal build — the same mechanism that keeps Early Access content
+scripts\debug\loc_residue.gd:212:		# than the files keeps the checker looking at the real strings in the same file.
+scripts\ui\meeting\sales_meeting_adapter.gd:217:## One move at the price table. A counter keeps the table open and burns a patience box; the
+scripts\ui\meeting\meeting_panel_option.gd:98:## This option was picked: it keeps the hover edge while its die rolls.
+scripts\ui\meeting\meeting_panel.gd:7:# its patience, and what they remember; the transcript under it keeps the whole sitting, its newest
+scripts\ui\meeting\meeting_panel.gd:333:## which wrapping labels inflate until they have their width, and would keep that height.
+scripts\ui\meeting\meeting_panel.gd:713:	# The folded "+N more factors" line has no category and no sign; an empty category keeps its text level with the others.
+scripts\autoload\game_state.gd:782:## or amount to show. The engine keeps no milestone ledger, so they derive from persistent traces;
+scripts\autoload\game_state.gd:812:	# cleared in place, never replaced, so a reference a system holds keeps pointing at the run
+scripts\autoload\game_state.gd:954:	# not carry keeps it (the whole forward-compat story).
+data\events\cards\_fixtures\paper_pm.json:60:      "body": "{customer} asked for this card. Do we keep it in the sprint?",
+scripts\autoload\save_manager.gd:8:# the registries, the event pipeline and the static systems keep their state across it. A load
+scripts\autoload\save_manager.gd:309:	# A save can carry a promise with an empty feature_id, which would keep has_open_promise
+scripts\autoload\save_manager.gd:446:## Captured on this thread, written by a worker. The run keeps changing while the worker reads and a
+scripts\autoload\save_manager.gd:458:## Back on the main thread. Hours played since the capture keep the run unsaved; a failed write waits
+scripts\autoload\save_manager.gd:521:	# Keys keep their order: a sorted save would hand the product's ledgers back in another order.
+scripts\autoload\save_manager.gd:683:	# One cash sample per tick: each week keeps its last day's.
+scripts\autoload\save_manager.gd:707:	# The summary period opens where the month did; the month ledger keeps only its own keys.
+scripts\autoload\save_manager.gd:721:	# The week opens at 08:00: an earlier start moves up and keeps its length.
+scripts\autoload\save_manager.gd:811:## run keeps the empty state the type picker starts from. Pure and cheap: list_slots reads every slot
+scripts\autoload\save_manager.gd:897:## not caught up with go one by one over the live lines in id order. A fix card keeps the count it showed as a number
+scripts\autoload\save_manager.gd:998:## v18 → v19: sprint points grow five times and a card keeps what each phase needs (`need`) instead of an effort, shares and the
+scripts\autoload\save_manager.gd:1002:## started over). The release records keep their cards in the new shape and count their velocity and carried points ×5
+scripts\autoload\event_bus.gd:112:# A product feature ship keeps a promise, a passed deadline breaks it.
+scripts\autoload\event_bus.gd:233:# Archived ticker line: the non-modal notification channel the "Biz" news source keeps. `source` is the attribution shown
+scripts\debug\endgame_smoke.gd:114:		"deal_prompt_defer_keeps_clock": fail = _case_deal_prompt_defer_keeps_clock()
+scripts\debug\endgame_smoke.gd:395:		"bootstrap_milestone_keeps_the_run": fail = _case_bootstrap_milestone_keeps_the_run()
+scripts\debug\endgame_smoke.gd:457:		"research_abandon_keeps_progress": fail = _case_research_abandon_keeps_progress()
+scripts\debug\endgame_smoke.gd:506:		"sprint_carry_keeps_progress":           fail = _case_sprint_carry_keeps_progress()
+scripts\debug\endgame_smoke.gd:722:	#   pace      → every other area — the floor that keeps a one-person team whole
+scripts\debug\endgame_smoke.gd:744:	# (only a weaker product erodes it). Bug count is left untouched so cases that pre-set it keep control.
+scripts\debug\endgame_smoke.gd:1027:	# Both bodies read from strings.csv BEFORE anything is built, plus the two guards that keep
+scripts\debug\endgame_smoke.gd:1352:	# case is named after. `cascade` already covers MRR 0; this one only earns its keep while
+scripts\debug\endgame_smoke.gd:1415:	# The inbox keeps the same payload: numbers and keys, rendered when it is read.
+scripts\debug\endgame_smoke.gd:1811:	GameState.set_mrr(0)  # no customers → bridge keeps it 0; cascade (not pivot) once sheet gone
+scripts\debug\endgame_smoke.gd:2088:static func _case_deal_prompt_defer_keeps_clock() -> String:
+scripts\debug\endgame_smoke.gd:2653:		return "the pending_sheet flag alone did not keep the road open"
+scripts\debug\endgame_smoke.gd:3028:## FALSIFICATION: drop VC_WHY_STRAIN's term from _conviction_seed; the seed room keeps its warmth.
+scripts\debug\endgame_smoke.gd:3184:			return "[%s] the intros pace row keeps the titles %s, want the key and '%s'" % [locale, str(kept), earning.title]
+scripts\debug\endgame_smoke.gd:3557:	# Risk and keeps paying (the countdown just keeps running — proven in _case_b2b_ignore_then_churn).
+scripts\debug\endgame_smoke.gd:3580:	# churn countdown keeps running and fires _churn on its own at zero, with a SINGLE
+scripts\debug\endgame_smoke.gd:3880:	# keeps its table over the cut.
+scripts\debug\endgame_smoke.gd:4921:## A dropped cheque row keeps the cheque list open, an expired or a declined one closes it. No daily
+scripts\debug\endgame_smoke.gd:4925:## cheque's history through `fire_count` and the dropped row fails; let a `chosen` row keep the list
+scripts\debug\endgame_smoke.gd:5011:## FALSIFICATION: drop the refund from EvEngine.pump → the dropped cheque keeps its latch and never comes back.
+scripts\debug\endgame_smoke.gd:5192:		return "the shipped feature did not keep the promise (status=%s)" % p.status
+scripts\debug\endgame_smoke.gd:5378:	# Control: a run that DID earn keeps the original line, so the gate is a gate.
+scripts\debug\endgame_smoke.gd:5515:## was minting empty-target promises from it. One of those keeps `has_open_for` true forever:
+scripts\debug\endgame_smoke.gd:5678:## product keeps a healing lever; engage the founder and it stops; disengage and it resumes.
+scripts\debug\endgame_smoke.gd:5719:	# what keeps a founder at a sales table from also manning the desk.
+scripts\debug\endgame_smoke.gd:5980:## Three rules, and the third is the one that keeps the first two honest:
+scripts\debug\endgame_smoke.gd:6073:	# The clock keeps running on a reserved lead (§7.2.1: "Rezerv süreyi durdurmaz").
+scripts\debug\endgame_smoke.gd:6164:## §11.4: an opened paper goes back on the desk unanswered. No history row; the paper keeps its
+scripts\debug\endgame_smoke.gd:6193:## A night's save keeps a paper's last warning queued beside the paper, and nothing pumps after a
+scripts\debug\endgame_smoke.gd:6227:## §7.1 `names`: a row keeps who it was about. The resignation removes the employee and the
+scripts\debug\endgame_smoke.gd:6229:## keeps its subject's name; the B2C userbase is kept as its key and argument.
+scripts\debug\endgame_smoke.gd:6350:## body stays the week's; a flag-picked variant keeps the variant the flag chose.
+scripts\debug\endgame_smoke.gd:7027:	# stated reason for keeping him off the Ekip page).
+scripts\debug\endgame_smoke.gd:7987:		return "Character grew a stored badge field again; §15.1 keeps badges derived"
+scripts\debug\endgame_smoke.gd:7996:	# already on screen. Absorbed from a throwaway dev probe so the project keeps ONE harness.
+scripts\debug\endgame_smoke.gd:8021:			return "product-side role '%s' lost its secondary area (§4.4 keeps it)" % role_id
+scripts\debug\endgame_smoke.gd:8180:	# Founder-as-lead is NEUTRAL at Liderlik 0 and only rises — the anchor that keeps a
+scripts\debug\endgame_smoke.gd:8711:	# Premium stretches the plan by 30 %; a seller on leave keeps the deal, which waits for them and
+scripts\debug\endgame_smoke.gd:8753:	# The desk is the junior's from here; Premium is set after its deal opened, so that deal keeps Standard.
+scripts\debug\endgame_smoke.gd:9018:	# A save keeps the week's mail: the second loss after the load is a line, not a second mail.
+scripts\debug\endgame_smoke.gd:9100:			return "the mix %s does not keep the 2 star share and sum to one" % [r.mix]
+scripts\debug\endgame_smoke.gd:9108:		return "wide open: a product meeting the 3 star table reads strength %.2f and keeps %.2f of the top band (mix %s), want all of it" % [
+scripts\debug\endgame_smoke.gd:9120:		return "at strength %.2f the top band keeps %.3f and the mix reads %s; want the line from the floor %.2f to all, the rest falling to 1 star" % [
+scripts\debug\endgame_smoke.gd:9122:	# An empty product keeps the floor.
+scripts\debug\endgame_smoke.gd:9128:		return "an empty product keeps %.3f of the top band, want the floor %.2f" % [empty.kept, floor_share]
+scripts\debug\endgame_smoke.gd:9465:	_seed_mvp_lines()   # the MVP fits a 1★ account exactly (U 70), so only the grudge keeps it under where it started
+scripts\debug\endgame_smoke.gd:9498:	# The CUSTOMER desk keeps the invariant whole: with nobody on Hesap sahipliği, a long run
+scripts\debug\endgame_smoke.gd:9502:	# The SALES desk cannot keep it, and §3 says so out loud: "Kapasite sıfırken taban
+scripts\debug\endgame_smoke.gd:9676:	# the roster holds every catalog rival + market actor, the formatter keeps the
+scripts\debug\endgame_smoke.gd:9787:		return "the stream's biz rows did not keep both shapes (a data line and a prose line): %s" % str(biz_rows)
+scripts\debug\endgame_smoke.gd:10832:## keeps passing while the thing it guards drifts. SceneState rather than
+scripts\debug\endgame_smoke.gd:10833:## instantiate() keeps this a pure read: no _ready(), no signal wiring, no Settings
+scripts\debug\endgame_smoke.gd:10991:	# A loanword stem keeps the Latin I in Turkish caps and its Turkish suffix takes İ; English
+scripts\debug\endgame_smoke.gd:11070:## (B2B_CONTACT_ + id, B2B_COMPLAINT_ + id, FEATURE_LABEL_ + feature_id …), which is what keeps
+scripts\debug\endgame_smoke.gd:12802:# This stub keeps the suite compiling; the two cases still need re-authoring by their author.
+scripts\debug\endgame_smoke.gd:12864:	# and keeps 12.
+scripts\debug\endgame_smoke.gd:13502:## run_ended, no ending_id, run_active untouched. The latch keeps the condition shut on the
+scripts\debug\endgame_smoke.gd:13508:static func _case_bootstrap_milestone_keeps_the_run() -> String:
+scripts\debug\endgame_smoke.gd:13863:##   4. ANA MENÜ keeps the run in a MANUAL slot — the rolling autosave would be overwritten by
+scripts\debug\endgame_smoke.gd:13907:		var slot: String = String(host.call("_keep_run_for_main_menu"))
+scripts\debug\endgame_smoke.gd:13909:			fail = "ANA MENÜ could not keep the save (%s)" % SaveManager.cannot_save_reason_key()
+scripts\debug\endgame_smoke.gd:14995:	step.call(hold)   # the period ends: a satisfied account keeps its right, one under the margin gives notice
+scripts\debug\endgame_smoke.gd:14998:		return "the satisfied account did not keep its right in one mail (%d mails, notice %d)" % [
+scripts\debug\endgame_smoke.gd:15695:		return "a reload keeps the hidden line: Onboarding holds %d lines at level %.2f, want 1 and 1" % [
+scripts\debug\endgame_smoke.gd:16315:	# this case owns is the event_engine BLOCK — it exists from v10 onward and keeps existing.
+scripts\debug\endgame_smoke.gd:16764:static func _case_research_abandon_keeps_progress() -> String:
+scripts\debug\endgame_smoke.gd:17164:	# The inbox keeps the note, and reading it in the Ar-Ge tab reads the message too.
+scripts\debug\endgame_smoke.gd:17344:	# A step ends it when it is live; a save keeps it meanwhile.
+scripts\debug\endgame_smoke.gd:17415:## let it keep the founder and the third does; let a Support-only hire into team() and the Support check fails;
+scripts\debug\endgame_smoke.gd:17627:## (10, 15 and 25 percent), a one-time cost that leaves the fees as they were; the accounts keep the hours they could
+scripts\debug\endgame_smoke.gd:17822:	CustomerRegistry.set_market_ref(risk.id, ProductQuality.market_ref_for(3, risk.industry))   # a picky account: the MVP fits it badly, so it keeps sinking through the nights
+scripts\debug\endgame_smoke.gd:18079:## FALSIFICATION: keep every escaped line in IncidentSystem._regression_line and the intake check fails; draw the stamp
+scripts\debug\endgame_smoke.gd:18987:## keeps 1 − HOURS_PER_DAY / WEEK_WORK_HOURS of the founder's output, so a meeting costs the week
+scripts\debug\endgame_smoke.gd:19036:	var keep: float = 1.0 - float(TimeModel.HOURS_PER_DAY) / float(TimeModel.WEEK_WORK_HOURS)
+scripts\debug\endgame_smoke.gd:19037:	if absf(met - plain * keep) > 0.0001:
+scripts\debug\endgame_smoke.gd:19038:		return "the meeting's hours kept %.3f of the founder's output, want %.3f" % [met / plain, keep]
+scripts\debug\endgame_smoke.gd:19921:	# The board row is on the sheet but locked: seed accept keeps no board term (an open
+scripts\debug\endgame_smoke.gd:19925:		return "the seed board row can be pushed, but signing keeps no board term"
+scripts\debug\endgame_smoke.gd:20090:	# would keep the buyout card off the screen and the assertion below would read as
+scripts\debug\endgame_smoke.gd:21287:static func _case_sprint_carry_keeps_progress() -> String:
+scripts\debug\endgame_smoke.gd:21632:		return "after a 5-star manager joined the cards belong to %s; want the 1-star manager to keep the card it had started and the newcomer to take the next one" % str(kept)
+scripts\debug\endgame_smoke.gd:22688:	# The running card keeps what it started with, and keeps standing when its line empties from outside.
+scripts\debug\endgame_smoke.gd:22738:	# count then; a running card keeps its base.
+scripts\debug\endgame_smoke.gd:24003:			return "%s keeps its promise row locked after the relock window" % id
+scripts\debug\endgame_smoke.gd:25764:	# A PM keeps planning toward the weakest area while nothing is picked; the pick itself stays empty.
+scripts\debug\endgame_smoke.gd:25829:# Real targets of the parody catalogue (PRD Ek A.8 keeps them in the document only): the company
+scripts\debug\endgame_smoke.gd:26046:	# $130K for 16 % is $0.8125M post-money; the field keeps it at a tenth of a million, and
+scripts\debug\endgame_smoke.gd:27394:static func _keep_word(customer_id: String, step: String) -> Promise:
+scripts\debug\endgame_smoke.gd:27427:## promise's and the request's name the step (in the live language, as the history row keeps the key), the outage's
+
+[Showing results with pagination = limit: 250]

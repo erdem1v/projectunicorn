@@ -1,0 +1,16 @@
+Godot Engine v4.6.2.stable.official.71f334935 - https://godotengine.org
+D3D12 12_0 - Forward+ - Using Device #0: AMD - AMD Radeon RX 9070 XT
+
+BOOT|lang=tr|source=arg
+[MCP Runtime] Server listening on port 7777
+[MCP Runtime] Autoload ready, server starting on port 7777
+BUILD|version=0.1.0|scope=demo
+EVENTSHOT|world.server_price_hike|employee=char_emp_shot_1 (Kerem Hasan Karaosmanoğlu)|where=skipped|week=14
+EVENTSHOTTEXT|world.server_price_hike|Sunucu zammı|Sunucu sağlayıcımız gelecek aydan itibaren fiyatlarına %15 zam yapıyor. Daha ucuz bir sağlayıcıya geçebiliriz ama taşıma bir sprintimi alır.
+EVENTSHOTOPTION|world.server_price_hike|Zammı kabul et, yerimizde kalalım
+EVENTSHOTOPTION|world.server_price_hike|Ucuz sağlayıcıya geç
+EVENTSHOTOPTION|world.server_price_hike|Bir yıllık sözleşme imzala, zammı yarıya indir
+EVENTSHOTCHIPS|world.server_price_hike|accept|Sunucu fiyatı +%15, ayda +$0
+EVENTSHOTCHIPS|world.server_price_hike|switch|Sunucu fiyatı -%10, ayda +$0; Kerem verimi -%50 · 4 hafta
+EVENTSHOTCHIPS|world.server_price_hike|contract|Sunucu fiyatı +%7, ayda +$0; Sunucu sözleşmesi 52 hafta: kademe sabit, kapasite en az 0 koltuk
+[Shot] saved C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-Project-Unicorn/eeffbe9c-d5c1-4a8e-8ce4-9e4b60603345/scratchpad/appdata/c7b_g4/Godot/app_userdata/Project Unicorn/event_shot_world.server_price_hike_employee=char_emp_shot_1_long=1.png

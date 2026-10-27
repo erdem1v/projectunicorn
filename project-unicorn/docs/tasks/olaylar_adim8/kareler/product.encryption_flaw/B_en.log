@@ -1,0 +1,21 @@
+Godot Engine v4.6.2.stable.official.71f334935 - https://godotengine.org
+D3D12 12_0 - Forward+ - Using Device #0: AMD - AMD Radeon RX 9070 XT
+
+BOOT|lang=en|source=arg
+WARNING: [MCP Runtime] Port 7777 is unavailable (22), running without a server
+   at: push_warning (core/variant/variant_utility.cpp:1034)
+   GDScript backtrace (most recent call first):
+       [0] _start_server (res://addons/godot_mcp_runtime/mcp_runtime_autoload.gd:89)
+       [1] _ready (res://addons/godot_mcp_runtime/mcp_runtime_autoload.gd:32)
+[MCP Runtime] Autoload ready, server starting on port 7777
+BUILD|version=0.1.0|scope=demo
+EVENTSHOT|product.encryption_flaw|employee=char_emp_shot_2 (Kerem Hasan Karaosmanoğlu)|where=met|week=14
+EVENTSHOTTEXT|product.encryption_flaw|Urgent: encryption flaw|Last night a flaw was announced in the encryption library most servers use. An attacker can read passwords straight out of server memory without leaving a trace. Our servers are affected too. I can patch it tonight; the real question is what we tell users.
+EVENTSHOTOPTION|product.encryption_flaw|Patch it, tell the press, ask everyone to change their password
+EVENTSHOTOPTION|product.encryption_flaw|Patch it, email users only
+EVENTSHOTOPTION|product.encryption_flaw|Patch it, tell no one
+EVENTSHOTCHIPS|product.encryption_flaw|announce|Reputation +3; Audience -1%
+EVENTSHOTCHIPS|product.encryption_flaw|mail_users|Reputation +1; Audience -0.5%
+EVENTSHOTCHIPS|product.encryption_flaw|stay_quiet|10% chance:; In 4 to 8 weeks:; Reputation -8; Audience -5%
+[Shot] saved C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-Project-Unicorn/eeffbe9c-d5c1-4a8e-8ce4-9e4b60603345/scratchpad/appdata/c7b_g3/Godot/app_userdata/Project Unicorn/event_shot_product.encryption_flaw_long=1_en.png
+exit=0

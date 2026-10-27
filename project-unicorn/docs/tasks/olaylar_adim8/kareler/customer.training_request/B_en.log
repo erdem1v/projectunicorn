@@ -1,0 +1,18 @@
+Godot Engine v4.6.2.stable.official.71f334935 - https://godotengine.org
+D3D12 12_0 - Forward+ - Using Device #0: AMD - AMD Radeon RX 9070 XT
+
+BOOT|lang=en|source=arg
+[MCP Runtime] Server listening on port 7777
+[MCP Runtime] Autoload ready, server starting on port 7777
+BUILD|version=0.1.0|scope=demo
+EVENTSHOT|customer.training_request|customer=co_kuzey (Anadolu Endüstriyel Otomasyon)|rep=char_emp_shot_4 (Kerem Hasan Karaosmanoğlu)|where=met|week=14
+EVENTSHOTTEXT|customer.training_request|Could you train our team?|Our team has always kept everything on paper, so this is a whole new system for us. Could someone come over next week and walk us through it? Otherwise I can already tell you nobody will log in for the first month.
+EVENTSHOTOPTION|customer.training_request|Send Kerem Hasan Karaosmanoğlu over for a day next week
+EVENTSHOTOPTION|customer.training_request|Offer a paid two-day training
+EVENTSHOTOPTION|customer.training_request|Have Kerem Hasan Karaosmanoğlu write a screen-by-screen onboarding guide
+EVENTSHOTOPTION|customer.training_request|Add a help center to the product
+EVENTSHOTCHIPS|customer.training_request|visit|Kerem pace -20% · 1 week; Anadolu Endüstriyel Otomasyon: satisfaction 72 → 80
+EVENTSHOTCHIPS|customer.training_request|paid|Cash +$500; Kerem pace -40% · 1 week; Anadolu Endüstriyel Otomasyon: satisfaction 72 → 68
+EVENTSHOTCHIPS|customer.training_request|doc|Kerem pace -40% · 1 week; New accounts' satisfaction +4
+EVENTSHOTCHIPS|customer.training_request|help_center|Next sprint gets a card: Responsive Interface; Anadolu Endüstriyel Otomasyon: satisfaction 72 → 68
+[Shot] saved C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-Project-Unicorn/eeffbe9c-d5c1-4a8e-8ce4-9e4b60603345/scratchpad/appdata/c7c_win/Godot/app_userdata/Project Unicorn/event_shot_customer.training_request_customer=co_kuzey_rep=char_emp_shot_4_long=1_en.png

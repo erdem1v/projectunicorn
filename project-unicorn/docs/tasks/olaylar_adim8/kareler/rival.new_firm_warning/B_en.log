@@ -1,0 +1,15 @@
+Godot Engine v4.6.2.stable.official.71f334935 - https://godotengine.org
+D3D12 12_0 - Forward+ - Using Device #0: AMD - AMD Radeon RX 9070 XT
+
+BOOT|lang=en|source=arg
+[MCP Runtime] Server listening on port 7777
+[MCP Runtime] Autoload ready, server starting on port 7777
+BUILD|version=0.1.0|scope=demo
+EVENTSHOT|rival.new_firm_warning|rival=rv_erp_2 (Hyperion Enterprise Suite)|prospect=lead_14_2 (Anadolu Endüstriyel Otomasyon)|employee=char_emp_shot_1 (Kerem Hasan Karaosmanoğlu)|where=met|week=14
+EVENTSHOTTEXT|rival.new_firm_warning|Hyperion Enterprise Suite brought us up|The prospect I met today said a sales rep from Hyperion Enterprise Suite warned them about us: “they're new, they may not be around tomorrow.” They still want us, but they need some reassurance.
+EVENTSHOTOPTION|rival.new_firm_warning|Have Kerem Hasan Karaosmanoğlu connect them with one of our happy customers
+EVENTSHOTOPTION|rival.new_firm_warning|Offer a discounted price for the first year
+EVENTSHOTCHIPS|rival.new_firm_warning|reference_call|Kerem pace -40% · 1 week; 20% chance:; Lead lost: Anadolu Endüstriyel Otomasyon
+EVENTSHOTCHIPS|rival.new_firm_warning|first_year_discount|Offer: if Anadolu Endüstriyel Otomasyon signs, MRR -15% for 52 weeks
+[Shot] saved C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-Project-Unicorn/eeffbe9c-d5c1-4a8e-8ce4-9e4b60603345/scratchpad/appdata/c7b_g3/Godot/app_userdata/Project Unicorn/event_shot_rival.new_firm_warning_rival=rv_erp_2_prospect=lead_14_2_employee=char_emp_shot_1_long=1_en.png
+exit=0

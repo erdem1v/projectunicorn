@@ -1,0 +1,559 @@
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -136,8 +136,8 @@
+   kapısını geçemeyen PM'in payı en yakın uygun PM'e kayar. Bir kartı tek PM hazırlar, hazırlayan (`prep_by`) kendisi ekipte
+   durdukça değişmez. Hazırlığın biten oranıyla orantılı olarak kart hazırlayan PM'in yıldızından fayda alır: her aşamada hız
+   (`prep_gain`, `SprintSystem._work`: 1★ %10, 5★ %25, arası doğrusal) ve hata yükünde azalma (`prep_cut`, H'nin (1 − PM hazırlığı)
+-  terimi: 1★ ×0,90, 5★ ×0,60). Sütun boşsa PM'in hazırlayacak kartı yoktur. Olayın düzeltmesinin moral bedelini hattın kartını
+-  hazırlayan PM de öder (`payers`).
++  terimi: 1★ ×0,90, 5★ ×0,60). Sonraki sütunu oyuncunun "→"u, onaylı PM planı ve liderin önerisi doldurur (devirde de); sütun
++  boşsa PM'in hazırlayacak kartı yoktur. Olayın düzeltmesinin moral bedelini hattın kartını hazırlayan PM de öder (`payers`).
+ - **Karar kâğıdı.** Sprint başına tek zar (`SprintSystem._request_decision`): sprint iki haftadır, zar ilk haftanın
+   sonunda, `data/product/sprint.json` `decision.sprint_chance` ihtimaliyle sprintin bir kartı için `decision.cards` havuzundan bir kâğıt
+   istenir, yoksa sprint kâğıtsızdır ([WORKING]: sprintlerin en az üçte biri). Havuz ağırlıklı sırayla denenir (görülmemiş kâğıt önde,
+--- a/GDDs/GUNCELLEMELER.md
++++ b/GDDs/GUNCELLEMELER.md
+@@ -228,6 +228,7 @@
+   - Not (Faz D · D8b, 2026-10-24): çeyrek hedefi PM'siz de seçilir ve lider önerisini sürer, planlamayı devret PM yokken açılmaz (PRD Faz D Karar 12; QCD D4; Erdem: "bu çeyrekte bunu, bunları yapmalıyım diye ... sonrasında sprintler otomatik buna göre yapılıyor olabilir" ve "Planlamayı devret bence PM olmadan da açılamamalı"). `SprintCatalog.quarter_goal()` oyuncunun seçimini söyler: bir alan, "Hatalar" (`GOAL_BUGS`, "bugs") ya da boş (hedef yok); seçim yokken boştur. PM'in planı bugünkü gibi en zayıf alana bakar, yedek `SprintCatalog.pm_goal()`'dadır (çeyrek hedefi, yoksa en zayıf alan) ve PM planı ile hedef şeridi onu okur. Lider önerisi çeyrek hedefini PM planının bugünkü okuyuşuyla okur: hedefin kartları sırada hedef ağırlığıyla (`pm.goal_weight` 1,5, değişmedi) öne çıkar; "Hatalar" hedefinin kartları düzeltme kartlarıdır. Hedefin liderin zorunlu listesindeki alan seçimini sürmesi (5. basamak) ve "Hatalar"ın düzeltmeyi yarı kapasiteye kadar öne alması D8a'dadır. `SprintSystem.set_delegate(true)` çeyreği planlayan PM yokken devri açmaz; PM ayrılınca `delegated()` kapanır, plan oyuncuyu bekler ve saat durur. Yeni oyuncu metni ve anahtar yok; ÇEYREK sekmesinin PM kilidi, hedef seçicisi ve devret düğmesinin kilidi arayüz görevinde. Kaynak: PRD Faz D Karar 12; adım tablosu D8b ve §0c satır 9; `../docs/tasks/PRD_URUN_SPRINT_ARAYUZU.md` §12.
+   - Not (Faz D · D8a, 2026-10-24): liderin önerisi altı basamakla kurulur ve düzeltme işi bir pay tavanına bağlanır (PRD Faz D Karar 12 ve 14). Öneri sprintin uygulanan yerleşimine sırayla kart ekler: (1) verilmiş sözlerin kartları, son tarihi yakın önde, ardından ücretli plan [WORKING]; (2) son tarihi bu ya da sonraki sprint olan en yakın talep (sprintte en çok bir talep); (3) bırakılan ve devreden kartlar; (4) öncelikli düzeltmeler; (5) çeyrek hedefinin en iyi kartı ("Hatalar" hedefinde düzeltme kartları), hedef yokken liderin alanının; (6) kalanlar etki ÷ iş sırasıyla. D8b'nin park notundaki hedef ağırlığı doldurmadan kalktı: hedef 5. basamakta, 6. basamak ağırlıksızdır; `pm.goal_weight` yalnız PM'in planında kalır. Her aday sprintin alım kuralından (`SprintSystem.intake`, "+" ile aynı) geçer; uymayan atlanır, öneri art arda en çok 12 aday atlar ve bir sonraki uymayanda durur (`data/product/sprint.json` `lead.skip`). Düzeltme pay tavanı (`SprintSystem.fix_share_takes`, `lead.fix_share` 0,5): önerinin kendiliğinden aldığı düzeltme işi, sprintteki düzeltme işiyle birlikte, kapasitenin yarısını aşmaz; sprintte düzeltme işi yoksa ilk düzeltme kartı yarıdan büyük olsa da girer; tavana takılan düzeltme alınmaz ve atlama sayılmaz; "+" bu tavana tabi değildir. Kalkanlar bugünkü yerinde kalır: 6. basamak yalnız önceki seçilenlerin hepsini bitirten kartları alır ve en çok bir devreden kartla durur, sprintte en çok bir talep (çekme ve kalkanın kalkması D2a'da). Bot sprintte yalnız öneriyi kullanır: söz kartı, ücretli plan ve "yapmaya devam" eklemeleri kalktı (ilk ikisi önerinin basamağıdır); düzeltme kolları ve K1 kolu öneriyi düzenlemeyi sürdürür ve probe başlatma satırı sonunda `actions=` ile sprint başına planlama eylemini basar. PM'in planı (`_suggest`) bugünkü kuralında kalır. Yeni oyuncu metni yok. Kaynak: PRD Faz D Karar 12 ve 14; adım tablosu D8a ve §0c satır 10; `../docs/tasks/PRD_URUN_SPRINT_ARAYUZU.md` §12.
+   - Not (Faz D · D8b ek, 2026-10-24): son PM şirketten ayrılınca (istifa ya da çıkarma) devir bayrağı silinir; sonraki PM devri kendiliğinden açmaz, oyuncu yeniden devreder (PRD Faz D Karar 12: "PM ayrılınca devir kalkar ve plan oyuncuyu bekler"; yardımcı yönetmenin okunuşu 2026-10-24). İzindeki ya da eğitimdeki PM şirkettedir: bayrak kalır, izin sürerken `delegated()` kapalıdır ve plan oyuncuyu bekler, PM dönünce devir geri gelir; iki PM'den biri ayrılınca bayrak kalır ve devir sürer. Yeni oyuncu metni ve anahtar yok, kayıt şeması aynı. Kaynak: PRD Faz D Karar 12; adım tablosu D8b.
++  - Not (Ürün arayüzü UD1, 2026-10-26): "Öneriyi uygula" bu sprintin yanında sonraki sprint sütununu da doldurur (`SprintCatalog.lead_suggestion` `{this, next}` döndürür; `SprintSystem.apply_lead` `this`'i sprinte, `next`'i sütuna koyar). `this` D8a'nın altı basamağıdır, değişmedi. `next` aynı sırayı baştan dolaşır: `this`'e giren kartlar ve sütunda zaten duran kartlar (oyuncunun "→"u, onaylı PM planı) atlanır; bu sprintte sığmadığı ya da tavana takıldığı için atlanan kart sütunda yeniden denenir. Sütun kendi atlama sayacını (`lead.skip`), kendi düzeltme payını (`fix_share_takes`; sütunda düzeltme yoksa ilk düzeltme kartı girer) ve 6. basamağın kalkanını (yalnız bitecek kartlar, en çok bir devreden) taşır; alım sınaması aynı `SprintSystem.intake`'tir. Yük tavanı: sütundaki kartların kalan puanı artı bu sprintin önerilen yerleşiminde sütuna devredecek iş (`SprintSystem.carried_points`, alım sınamasının oynatmasından) ekibin kapasitesini (`capacity_of`) aşmaz; sınır %100'dür, %125'lik tavan sütunda yoktur. Onaysız PM planı sütuna konmaz; onaylı plan `plan_next`'te sütuna zaten girer ve öneri onun üstüne ekler. Devirde de `_auto_start` `apply_lead`'i çağırır, yani sütun devirde de dolar ("liderin önerisiyle başlar"). Öneri satırı (`center.suggest`) öneri bu sprinte ya da sütuna kart ekleyecekse görünür; yalnız sütuna ekliyorsa sayı ve "efor daha sığar" yazılmaz, yalnız düğme durur. Yeni oyuncu metni ve anahtar yok, kayıt şeması aynı. Kaynak: Erdem 2026-10-26 Faz D kararı 2 = B; PRD_URUN_SPRINT_ARAYUZU 2026-10-26 eki UD1.
+ 
+ - **Bölüm yok: sprint turunun sahip kararları (dürüst plan, sürüm anı, oyuncunun onayı, B2C okuması)**
+   - Eski metin: GDD bu kararları içermez.
+--- a/docs/HARITA.md
++++ b/docs/HARITA.md
+@@ -149,7 +149,7 @@
+   - Karar kâğıdı (sprint ortası kâğıt; `SprintSystem._request_decision`, çağıran `_end_week` → `_staff_week(true)`): sprint başına tek zar. Fırsat ilk haftanın sonundadır; `GameState.product.decision_sprint` zarı atılan sprinti tutar (eski kayıtta `.get(…, -1)`), zar `EvDice.unit("paper", …)`, ihtimal `sprint.json` `decision.sprint_chance` (0,5 [WORKING, onay bekliyor]; sprintlerin en az üçte biri kâğıtsız kalır). Havuz `decision.cards`, ağırlıklı sırayla denenir (ağırlık `1 / (1 + decision.seen_weight [WORKING, 2] × EvLatches.fires)`), her kâğıt sprintin bitmemiş kartlarında sırayla; kartın koşulları bekleyen kartı okur, bu yüzden `GameState.product.decision` (`{card_id, event_id, speaker}`) istekten önce yazılır ve ret gelirse silinir. Kesinti sırası: söz olayı ya da acil durum gelen sprintte kâğıt gelmez (`_paper_blocked`: `late_promise()`, `product.interrupt` ve bugün saatini bekleyen `GameState.incident.pending`); kâğıt gelince `record_interrupt("paper")` yazılır ve `SprintSystem.paper_sprint()` doğruyken `IncidentSystem` yalnız servisin çöktüğü türü (`IncidentSystem.SERVICE_DOWN`: `outage`, `checkout`) yaşatır, öbür tür `GameState.incident.shifted`'e tüm hâliyle kalır ve kâğıtsız ilk sprintte gelir. **Kâğıt sözleşmesi** (B6a ve B6b'nin yazdığı kâğıtlar): kartın JSON'unda `speaker_role` (`product_manager | designer | developer | tester | founder`: konuşanın karakter rolü), `stage` (`any | design | dev | test`: kartın o anki fazı, `SprintSystem.role_of`) ve `pool_group` (`pm | designer | developer | tester | no_tester | solo | system`: havuzun sayım grubu, motor okumaz); konuşan `EventGate.request(kimlik, {"employee": id})` ile bağlanır, kurucuysa `{"founder": id}`: kartın scope'unda o türden slot şarttır (lint §17.7). PM kâğıdında konuşan `SprintCatalog.quarter_pm()`, konu sprintteki müşteri isteği kartıdır (`kind == "request"`) ve `customer` slotu isteğin hesabıdır; PM yoksa gelmez. Öbürlerinde konuşan `_speaker`: kartın o haftaki `assignees`'inden rolü `speaker_role` olan ve (`stage` `any` değilse) kart o fazdayken çalışan ilk kişidir; hafta ataması kâğıttan önce yapılır (konuşan istek anında yakalanır, kâğıt gelince kartın `assignees`'i boşaltılır), payı Destek'te kalan kişi atanmadığı için konuşmaz, tasarımcı kâğıdını kartta atanmış PM söylemez. `speaker_role` yoksa kâğıt konuşansızdır (yalnız fikstürler). Mandal: 52 hafta ve koşuda en çok 3, `latch_key: run`. Havuz `decision.cards`: B6a'nın PM, tasarımcı ve testçi kâğıtları ile B6b'nin yazılımcı (`sprint_dev_*`, 9), testçisiz (`sprint_untested_*` ve `sprint_founder_test_pile`, 3) ve tek kurucu (`sprint_solo_*`, 5) kâğıtları, bir de havuz sayımına girmeyen iki sistem kâğıdı: `product.sprint_late` (ekip; konuşan kartta çalışan bir çalışan) ve `product.sprint_late_solo` (kurucu tek, kendine not). Sistem kâğıdı yalnız kartı bekleyen biri varken gelir: karar kartı bir müşteri isteğidir (`urun.decision_kind`, hesap `select: request`), sözü yoktur (`urun.decision_promised`), sprintin son haftasında bu hızla yetişmez ve fazla mesaiyle yetişir (`urun.decision_card_late`, `urun.crunch_finishes`); 26 haftada bir, koşuda en çok 3 kez, `system: true`. `speaker_role` bir rol ya da rol listesidir (`_speaker` kartta çalışan, rolü listede olan ilk kişiyi alır). Kartın konusu hesap `customer` slotunun `select` kipidir (`SprintCatalog.paper_account`: `line_top`, `line_newest`, `line_slow`, `line_warehouse`, `request`), konuşandan başka çalışan `employee` slotunun `sprint_dev` kipidir; seçilemeyen zorunlu slot kâğıdı o kartta getirmez. Kâğıt fiilleri: `line_harden {line, weeks}` (hat `weeks` hafta, yoksa `paper.harden_weeks`, yeni hata almaz: `ProductState.harden_line` `mvp_line_harden` {hat: bitiş tiki} yazar, `line_blocked` okur; saatlik bildirim çekilişi ve kapanışın kaçan hatası (`_close`) o hattı atlar; oyuncunun seçtiği çıkış hatası düşer), `damage_product {line, bugs}` (hemen `ProductState.add_bugs`; hat kapalı olsa da düşer), `sprint_card_test {card: decision}`, `sprint_fix_first {front: true}` (kâğıtta düzeltme kartının başa girdiğini de yazar) ve `sprint_card_progress` + `amount_seam urun.decision_card_done` (yapılmış işi siler). Bedel seam'leri `urun.paper_*` ve `urun.decision_*` (`seams_product.gd`), sayıları `sprint.json` `paper` bloğunda [WORKING]. Fikstürler `data/events/cards/_fixtures/paper_{dev,design,pm,founder,plain,crunch}.json` (`paper_crunch`: geride kalan kart için konuşansız kâğıt, fazla mesaiyle); vakalar `paper_speaker_is_assignee`, `decision_one_per_sprint`, `decision_no_fourth_show`, `paper_interrupt_order`, `paper_empty_sprint_ratio`, `paper_line_harden`, `paper_card_effects`, `paper_seams`, `sprint_late_for_requests`; görsel `--product-shot=live:decision_paper` (konuşan fikstürü yazılımcı kâğıdıdır).
+   - Kâğıt içeriği: PM, tasarımcı ve testçi (`product.sprint_pm_*`, `sprint_design_*`, `sprint_test_*`; 25 kimlik: 21 W2 kâğıdı ve pazara özgü seçenekleri olan dördünün `_b2c` ikizi, çünkü motor seçeneği gizleyemez; renk kâğıtları tek kartta birleşti, `product.sprint_design_customer_colors`, iki gelişi `urun.colors_again`). Fiiller: `sprint_card_trim {share | amount, follow, bugs, line}` (`SprintSystem.trim_plan` ve `decision_trim`: `share` kartın `paper.trim_share` payını karttan alır, yapılmış işin ve `paper.min_points` puanın altına inmez; `amount` kartın hiç almadığı iştir; `follow` ikisini ve `paper.reopen_points`'i sonraki sprintin kartı yapar: `follow: true` özellik kartıdır, kademesi tutulmuş kartı silen `plan_next` onu silmez ve lisansı yeniden kesmez; `bugs` kart çıkınca `line` hattında açık hata olur (`leaks`, kapanışta `pending_faulty`; kaçan hata sayılmaz)), `sprint_card_outlook` (etkisiz; çip `finishes_with`ten kartın bu sprintte bitip bitmediğini okur, `amount` aynı seçeneğin öbür fiillerinin ekleyeceği puandır), `sprint_card_first` (kartı sprintin başına alır, `SprintSystem.first_bumps`: çip yalnız kayan kartı yazar), `b2b_month_discount` (`paper.renewal_discount`, `retention` etiketiyle tek seferlik gider, MRR değişmez), `trust_delta` `accounts: second` (aynı kademeyi isteyen öbür hesap) ve `until: {step_live}` (çip `EFFECT_TRUST_UNTIL_SHIPS`); paylaşılan hat ve kademe kart verisinde temel kimlikle yazılır (`SprintCatalog.in_product`). Slot seçicileri: `customer` `select: line_top | line_warehouse | line_newest | line_slow` (`SprintCatalog.paper_account`), `employee` `select: sprint_dev`. Seam'ler `urun.decision_{second_account, request_votes (B2C, C'ye kadar 0), step, phase, trim_finishes, phone_late, renewal_saved, test_half}`, `urun.{cut_test_finishes, responsive_shipped, design_late, paid_plan_open, colors_again, colors_first, colors_hand, colors_central}`, `urun.paper_{phone_points, ask_silent, first_screen_loss, coupon_loss, test_phones}`; `SprintBridges.next_renewal_day(hesap)` talep penceresinin ve `product.sprint_pm_renewal`'ın tek yenileme günü kaynağıdır. `expire_note` bir varyant kümesi olabilir (`EvEngine`'in süre dolumu). Bedel sabitleri `sprint.json` `paper` bloğunda [WORKING]. Vakalar `paper_card_trim`, `paper_outlook_reads_the_plan`, `next_renewal_day_one_place`, `paper_renewal_card_first`, `paper_colors_two_arrivals`, `paper_trust_until_ships`, `paper_account_selectors`, `paper_cards_render`, `paper_cards_are_asked`; görsel `--event-shot=<bir sprint kâğıdı>` kâğıdı canlı bir ürünün bir kartlı sprintinde kurar (`main._seed_paper_world`; kartı bir özellik kartı, B2B pm ve geç kalan sprint kâğıtlarında Marmara Lojistik'in talebi, kök neden kâğıdında hatalı hattın düzeltme kartıdır).
+   - `IncidentSystem` (`scripts/systems/incident_system.gd`, statik; acil durumlar): durum `GameState.incident` = `{last_day, pending: {kind, minute, line, began, load}, shifted (kâğıtlı sprintten sonraki sprinte bırakılmış pending), open: {kind, start, opened, line, load, tried, version, act, back}, drains: [{line, pct}], forced}` (tek yazıcı bu sınıf; yeni alan, kayıtta varsayılanla). Beş tür (`CARDS`; ağırlıkları sprint.json `incident.weights`): `outage` (gece 00:30–04:30; B2B ve B2C ayrı kart), `month_close` (B2B; takvim ayının son haftası, defterin üç hattından biri `month_close.line_bugs` açık hatada: damga 22:10–22:55, kart 23:00; kartın hesabı hattı kullanan en büyük hesaptır, gönderen o hesabın "Finans Müdürü"dür), `checkout` (B2C, ücretli plan açıkken ödeme alınamıyor; hattı `SprintCatalog.PAID_PLAN`; damga mesai başından 10–50 dk sonra, ödemenin hata deposunda kendi hattı olmadığı için cevap hatayı o hatta düşürür), `regression` (kapanışta testinden hata kaçan kartın hattı (`release.escaped`) kritik hatlardandır: B2B yedi, B2C dört ortak hat; zarsız, sürümün çıktığı tikin sabahı mesai başı + 10–50 dk) ve `storm` (B2C; kitle `storm.min_audience` ve dört ortak hattan birinde `storm.line_bugs` açık hata; damga 11:00–16:00); Veri Girişi ve B2B'de Mobil hatları olay doğurmaz. Zar 00:00'ın günlük diliminde yalnız karar verir (`daily_tick`): `p = min(base × (1 + min(costed(açık hata), 12) / 8), p_max) × kademe (InfraSystem.provider, sprint.json incident.tier)` (kademe tavandan sonra çarpılır: oranı her hata sayısında korunur); sunucunun doluluğu tavandan sonra yalnız kesintinin payını büyütür: `load_mult` (sprint.json `incident.load`: yük %90'a kadar 1, %100'e kadar 1,5, üstü ya da kapasitesiz canlı ürün 2,5) kesintinin türler arası ağırlığını çarpar (`_weights`), haftanın ihtimali `p × (W + (L − 1) w_kesinti) / W` olur ve kesintinin haftalık şansı tam L katına çıkar, öbür türlerinki değişmez; zar anındaki yük (`InfraSystem.load_percent`) kesintinin `pending.load`'ına ve `open.load`'a yazılır, kesinti kartının gövdesi `olay.outage_load` varyantıyla yük %90'ın üstündeyken yükü söyler; iki olay arası en az `min_gap` tik, v1.0'dan `launch_quiet` hafta sonra, B2B'de hesap varken, B2C'de `outage.min_audience` kitle varken; olursa tür dünyanın izin verdikleri (`_allows`) arasından ağırlıkla seçilir ve damga dakikası çekilir (`pending`; zar `EvDice.unit`); sürümden kritik bir hatta hata kaçan hafta zarsız `regression` gelir. Kart damgadan sonraki ilk tam saatin saatlik diliminde istenir (`hourly_tick`, `EventGate.hourly_tick`'ten önce): `EventGate.request(CARDS[tür][pazar], {employee, customer}, false, damga)`; gönderen (`_writer`) Yapım işindeki ilk yazılımcıdır, bozulmada testçi, fırtınada müşteri temsilcisi, ay sonunda kimse (hesabın kendisi yazar); `stamp` mailin gelmiş sayıldığı mutlak dakikadır (`EventGate.request`, `EvEngine._admit`). Reddedilirse olay başlamamış sayılır (`last_day` yazılmaz, tutuş yok); kabul edilirse `last_day` ve `SprintSystem.record_interrupt("incident")` (sprintin kesinti kaydı `GameState.product.interrupt = {sprint, kind}`) yazılır, kart kuyruğa girdiyse (`EventGate.instances_of > 0`) `TimeManager.hold_clock("incident")` konur: toplu gece adımı o saatte durur, `clock_batch_ended` kartı açar, cevaptan sonra gece kaldığı yerden sürer. Tutuş `event_resolved`'da ya da kart gösterilmeden düştüyse batch sonunda kalkar. `open` cevaptan sonra da durur (kartın metni, geçmiş satırı ve `olay.service_up` onu okur). `plan(act)` bir cevabın bedelini ve zamanını sayı olarak verir ve çip, geçmiş satırı ve `resolve(act)` aynı sözlüğü okur: `back` (düzeltmenin biteceği mutlak dakika: türün taban saati `fix.hours` ÷ (0,75 + 0,125 × en iyi mühendisin yıldızı), kurucu tek başına 1,5 kat yavaş, 10 dakikaya yuvarlanır; `now` ve `founder` açılıştan, `evening` mesai bitişinden, `morning*` mesai başından sayar; ertesi günün mesaisine kalan saat `tomorrow`, gece yarısını geçen gece düzeltmesi bu gecenindir), B2B `trust` (sabaha bırakılan kesintide: her hesap giremediği saatin 0,6 puanını öder, en çok 8; gece vardiyalı sektörler kesintinin başından, öbürleri 08:30'dan sayar; kredi %85'ini siler; satırlar `night | other | all` gruplarıdır; `defer` cevabında etkilenen hesaplara `defer.trust` (−6; ay sonunda yalnız hesaba) ve `per_sprint` (−3: `resolve` onu `B2BSalesSystem.add_trust_drain` ile `until line_cleared` yazar)) ve `credit` (yalnız `morning_credit`'te: kapalı kalma süresine göre %10 / %15 / %25 × hesapların aylık ücreti, `outage_credit` etiketiyle tek seferlik gider, MRR değişmez), B2C `audience` (kesintide saat başı %0,3, en çok %4; ödemede ödeyemeyen kişilerin `checkout.give_up` payı kitleden düşer; ücretsiz ay kesintide kaybın yarısıdır), `free` (denemeye çalışan kişi × ödeyen payı × fiyat, `refunds` etiketi) ve `drain` (`defer` cevabında hat temizlenene dek haftalık kitle payı: `GameState.incident.drains`'e yazılır, `daily_tick` önce onu öder ve hattında hata kalmayan satırı düşürür; hattı o hafta kapatan sprint ücret almaz). Cevaplar (`act`): `now`, `founder`, `evening`, `morning`, `morning_credit`, `morning_free_month`, `defer`, `defer_free_month`. `rolls` (debug anahtarı) false iken rastgele zar ve sürümün kendi acil durumu atlanır, `force_on(tür, tik)` ile zorlanan olay yine gelir (eşikler gevşer: bir hatalı hat yeter); shot tohumu (`main._seed_run_reproducible`) ve smoke koşturucusu onu kapatır, gerçek zarı isteyen vakalar açar. Sabitler `data/product/sprint.json` `incident` bloğundadır ve [WORKING]; kademe çarpanı `tier` (yerel 1,0 · bulut 0,5 · kurumsal 0,25) sahibin onayıyladır. Seam'ler `olay.*` (`seams_incident.gd`: `clock`, `night_accounts`, `accounts`, `affected_users`, `payers` (olayın hattında), `service_up`, `version`, `outage_load` (kesintinin zar anındaki yük yüzdesi), `affected_accounts`, `line_users`, `shares`, `variant` (kartın `by_seam` gövdesi: ay sonunda ve fırtınada hat, bozulmada kritik hat × hesap sayısı)). Kartlar `product.incident_outage_b2b` ve `_b2c`, `customer.incident_month_close`, `product.incident_checkout`, `product.incident_regression`, `product.incident_review_storm` (`system: true`, etiketler `critical` `urgent` `incident`, `tick: request`; kartın `sender_desk` alanı çalışan slotu boşken gönderenin "Sunucu uyarısı" olmasını, `sender_title` hesabın yazdığı mailde göndericinin unvanını söyler). Seçenekler `sprint_fix_first {line, bugs}` (hattın düzeltme kartı sprintin başına girer, `line: incident` açık olayın hattıdır; çip kayan kartın adını yazar), `morale_crew {crew: incident_crew}` ve `incident {act}` fiilleridir (Olay motoru bölümü). Vakalar `capacity_step_immediate`, `load_mult_steps`, `incident_gap_and_spread`, `incident_night_hold_resumes`, `incident_scale`, `incident_save_roundtrip`, `incident_month_close_window`, `incident_gates`, `incident_regression_fixture`, `incident_checkout_fix_card`, `incident_defer_ends_with_line`, `incident_sprint_stop_moves_the_card`.
+-  - `SprintCatalog`: alanlar `areas_for`, `area_ids`, `area_of_line`, `area_def`, `capabilities(alan, alt-tür := canlı ürün)` (alt-tür canlı üründen başka bir ürün içindir: kayıt göçü kaydın ürününü okur; sonuç alan × alt tür önbelleklidir (`ProductLines.memo`, hat kümesiyle birlikte düşer); her çağrı kopya döner), `tier`, `polish`, `area_level` (yarıma yuvarlanmış; `display_level` ekranın yuvarlamasıdır, kelime ve ekonomi `ProductQuality.level`'ın yuvarlanmamışını okur), `area_alert`, `area_sentence` (alanın kime yettiği: B2B'de `ProductQuality.serves` ile hangi yıldızdaki şirketlere yettiği ve Çekirdek dışı alana 1★ şirketin bakmadığı, B2C'de sayfanın referansına (kitlenin yıldızı, en az 2★) yetip yetmediği (yayından önce kitle olmadığı için cümle yok), Gelir'de sözcüğüne bağlı kendi dört satırı; ardından açık hata sayısı, sunucu aşımı, rakip çıkışı ve araştırmadan sonraki `sprint.json` `research_sentence_weeks` haftada kullanıcıların sözü), `recent_hits(hatlar)` (hatlara `rival_window_weeks` penceresinde düşen rakip çıkışları, çıkış kaydı başına; aday beklentisinin artışı ve alanın "Rakip" çipi aynı pencereyi okur), `max_tier`, `open_requests`; kartlar `candidates`, `card_by_id`, `new_card`, `card_name`, `step_name`, `customer_name`, `step_effort`, `fix_effort` (düzeltme kartının eforu: hattın açık hatası × `sprint.json` `fix_effort.per_bug` (2), alt sınır yok; aşama payı `need.fix` 0 / 0,7 / 0,3), `limit_k` (k, mutlak hata eşiklerinin ekiple oranlanan çarpanı ve tek hesap yeri: en büyüğü(1; canlı hat ÷ 9; √(son 8 haftanın haftalık teslimi ÷ 55)); haftalık teslim son `sprints_in(8)` sürüm kaydının `velocity.done` toplamının o kayıtların `velocity.weeks` toplamına bölümüdür; sayılar `sprint.json` `limit_k` bloğunda [WORKING]; okuyanlar `SupportSystem.neglect_threshold()` ve botun `DUE_BUGS`'ıdır, B2B hata terimi (`B2B_BUG_SAT_*`, `COMPLAINT_BUG_GATE`) ve ölçüm hedefleri ölçeklenmez), `card_need` (kartın aşama ihtiyacı: `sprint.json` `need` satırının oranlarıyla; düzeltme ve araştırma türünden, ücretli plan kendi satırından, öbürleri hattın iş profilinin kademe satırından (kayıt okunurken henüz açılmamış gizli hattın profili Ar-Ge tanımından); profilsiz ya da kademesiz kart `unprofiled` oranını alır), `is_priority` (hattın açık hatası `fix_effort.priority` eşiğinde: "Öncelikli" etiketi, "!" uyarısı, önerinin 4. basamağı, PM planının zorunlu listesi), `gate_reason` (kilit gerekçesi; Ücretli plan MVP'ye kadar kilitli), `card_effect` ve `forecast` (seviye parçaları sayıları yarıma yuvarlanmış, iki ucun kelimesini ham seviyeden `ProductQuality.word_for`'la taşır; düzeltme kartının etki satırı `bugs` parçasıdır, öngörü `bugs_closed`), etkilenenler `line_accounts` (B2B'de hattı kullanan aktif ya da deneme hesapları: sektörü hattın alanını kullanıyor, `ProductQuality.uses_area`), `line_share` (B2C'de hattın kitle payı), `line_impact` (B2B `{accounts, seats, top_id, top_seats}`, B2C `{users}`), `line_users` (etkilenen kullanıcı), `bugs_part` (kartın ve hat satırının hata parçası), `mvp_cards_left`, `mvp_candidates` (Çekirdek K1 adayları efor sırasıyla; MVP tahmini ve probe okur), `open_cards` (planlanabilir açık adaylar; `awaits_plan` okur); lider `lead_suggestion` (altı basamak, Karar 12; `_lead_steps` 1 ile 5. basamağı sırayla verir: verilmiş sözlerin kartları son tarihi yakın önde, ücretli plan, son tarihi bu ya da sonraki sprint olan en yakın talep kartı (sprintte en çok bir talep), bırakılan ve devreden kartlar (aday durumunda yapılmış işi olan kart), öncelikli düzeltmeler, çeyrek hedefinin en iyi kartı ("Hatalar" (`GOAL_BUGS`) hedefinde düzeltme kartları; hedef yokken liderin alanının); 6. basamak kalan adaylar etki ÷ iş sırasıyla, hedef ağırlığı olmadan, etkisiz araştırma girmez. Pay tavanını (`fix_share_takes`) aşan düzeltme kartı alınmaz, atlama sayılmaz; her aday `intake`'ten (sprintin uygulanan yerleşimi, "+" ile aynı kural) geçer, uymayan atlanır, öneri art arda en çok `lead.skip` (12) aday atlar ve bir sonraki uymayanda durur. 6. basamak yalnız önceki seçilenlerin hepsini bitirten kartları alır ve en çok bir devreden kartla durur. Onaylı PM planlarının kartları alınmaz. PM planı `_suggest` toplamla doldurur ve çeyrek hedefini ya da en zayıf alanı `pm.goal_weight` ile ağırlıklar; söz ve talep sırası iki kuralın ortak `_promised` ve `_requested`'idir), `lead_sentence`, `release_lead_sentence` (önerinin alan seçimini izler); liderin alan seçimi (`_weakest`; `pm_goal` ve PM planları aynı kuralı okur) seviyesi sıradaki yıldızın beklentisine en az ulaşmış alandır (`ProductQuality.next_star`, `next_ratio`), çeyrek şeridi (`ProductModel._goal`) aynı oranı onluk ölçekte çizer; çeyrek `quarter_pm`, `quarter_goal` (oyuncunun seçimi; seçim yokken boş), `pm_goal` (PM planının hedefi: seçim, yoksa en zayıf alan; hedef şeridi de onu okur), `pm_plans`, `still_open`; rakip `rival_table`, `rival_launch_in`, `rival_topic`, `rival_leader` (en çok çıkış yapmış rakip).
++  - `SprintCatalog`: alanlar `areas_for`, `area_ids`, `area_of_line`, `area_def`, `capabilities(alan, alt-tür := canlı ürün)` (alt-tür canlı üründen başka bir ürün içindir: kayıt göçü kaydın ürününü okur; sonuç alan × alt tür önbelleklidir (`ProductLines.memo`, hat kümesiyle birlikte düşer); her çağrı kopya döner), `tier`, `polish`, `area_level` (yarıma yuvarlanmış; `display_level` ekranın yuvarlamasıdır, kelime ve ekonomi `ProductQuality.level`'ın yuvarlanmamışını okur), `area_alert`, `area_sentence` (alanın kime yettiği: B2B'de `ProductQuality.serves` ile hangi yıldızdaki şirketlere yettiği ve Çekirdek dışı alana 1★ şirketin bakmadığı, B2C'de sayfanın referansına (kitlenin yıldızı, en az 2★) yetip yetmediği (yayından önce kitle olmadığı için cümle yok), Gelir'de sözcüğüne bağlı kendi dört satırı; ardından açık hata sayısı, sunucu aşımı, rakip çıkışı ve araştırmadan sonraki `sprint.json` `research_sentence_weeks` haftada kullanıcıların sözü), `recent_hits(hatlar)` (hatlara `rival_window_weeks` penceresinde düşen rakip çıkışları, çıkış kaydı başına; aday beklentisinin artışı ve alanın "Rakip" çipi aynı pencereyi okur), `max_tier`, `open_requests`; kartlar `candidates`, `card_by_id`, `new_card`, `card_name`, `step_name`, `customer_name`, `step_effort`, `fix_effort` (düzeltme kartının eforu: hattın açık hatası × `sprint.json` `fix_effort.per_bug` (2), alt sınır yok; aşama payı `need.fix` 0 / 0,7 / 0,3), `limit_k` (k, mutlak hata eşiklerinin ekiple oranlanan çarpanı ve tek hesap yeri: en büyüğü(1; canlı hat ÷ 9; √(son 8 haftanın haftalık teslimi ÷ 55)); haftalık teslim son `sprints_in(8)` sürüm kaydının `velocity.done` toplamının o kayıtların `velocity.weeks` toplamına bölümüdür; sayılar `sprint.json` `limit_k` bloğunda [WORKING]; okuyanlar `SupportSystem.neglect_threshold()` ve botun `DUE_BUGS`'ıdır, B2B hata terimi (`B2B_BUG_SAT_*`, `COMPLAINT_BUG_GATE`) ve ölçüm hedefleri ölçeklenmez), `card_need` (kartın aşama ihtiyacı: `sprint.json` `need` satırının oranlarıyla; düzeltme ve araştırma türünden, ücretli plan kendi satırından, öbürleri hattın iş profilinin kademe satırından (kayıt okunurken henüz açılmamış gizli hattın profili Ar-Ge tanımından); profilsiz ya da kademesiz kart `unprofiled` oranını alır), `is_priority` (hattın açık hatası `fix_effort.priority` eşiğinde: "Öncelikli" etiketi, "!" uyarısı, önerinin 4. basamağı, PM planının zorunlu listesi), `gate_reason` (kilit gerekçesi; Ücretli plan MVP'ye kadar kilitli), `card_effect` ve `forecast` (seviye parçaları sayıları yarıma yuvarlanmış, iki ucun kelimesini ham seviyeden `ProductQuality.word_for`'la taşır; düzeltme kartının etki satırı `bugs` parçasıdır, öngörü `bugs_closed`), etkilenenler `line_accounts` (B2B'de hattı kullanan aktif ya da deneme hesapları: sektörü hattın alanını kullanıyor, `ProductQuality.uses_area`), `line_share` (B2C'de hattın kitle payı), `line_impact` (B2B `{accounts, seats, top_id, top_seats}`, B2C `{users}`), `line_users` (etkilenen kullanıcı), `bugs_part` (kartın ve hat satırının hata parçası), `mvp_cards_left`, `mvp_candidates` (Çekirdek K1 adayları efor sırasıyla; MVP tahmini ve probe okur), `open_cards` (planlanabilir açık adaylar; `awaits_plan` okur); lider `lead_suggestion` (`{this, next}`: `this` altı basamak, Karar 12; `_lead_steps` 1 ile 5. basamağı sırayla verir: verilmiş sözlerin kartları son tarihi yakın önde, ücretli plan, son tarihi bu ya da sonraki sprint olan en yakın talep kartı (sprintte en çok bir talep), bırakılan ve devreden kartlar (aday durumunda yapılmış işi olan kart), öncelikli düzeltmeler, çeyrek hedefinin en iyi kartı ("Hatalar" (`GOAL_BUGS`) hedefinde düzeltme kartları; hedef yokken liderin alanının); 6. basamak kalan adaylar etki ÷ iş sırasıyla, hedef ağırlığı olmadan, etkisiz araştırma girmez. Pay tavanını (`fix_share_takes`) aşan düzeltme kartı alınmaz, atlama sayılmaz; her aday `intake`'ten (sprintin uygulanan yerleşimi, "+" ile aynı kural) geçer, uymayan atlanır, öneri art arda en çok `lead.skip` (12) aday atlar ve bir sonraki uymayanda durur. 6. basamak yalnız önceki seçilenlerin hepsini bitirten kartları alır ve en çok bir devreden kartla durur. Onaylı PM planlarının kartları alınmaz, onaysız plan sütuna girmez. `next` aynı sırayı `this`'siz dolaşır ve sütunun yükünü (kalan + `SprintSystem.carried_points`) kapasitenin %100'üyle sınırlar (`_lead_picks`); `apply_lead` ikisini de yerleştirir. PM planı `_suggest` toplamla doldurur ve çeyrek hedefini ya da en zayıf alanı `pm.goal_weight` ile ağırlıklar; söz ve talep sırası iki kuralın ortak `_promised` ve `_requested`'idir), `lead_sentence`, `release_lead_sentence` (önerinin alan seçimini izler); liderin alan seçimi (`_weakest`; `pm_goal` ve PM planları aynı kuralı okur) seviyesi sıradaki yıldızın beklentisine en az ulaşmış alandır (`ProductQuality.next_star`, `next_ratio`), çeyrek şeridi (`ProductModel._goal`) aynı oranı onluk ölçekte çizer; çeyrek `quarter_pm`, `quarter_goal` (oyuncunun seçimi; seçim yokken boş), `pm_goal` (PM planının hedefi: seçim, yoksa en zayıf alan; hedef şeridi de onu okur), `pm_plans`, `still_open`; rakip `rival_table`, `rival_launch_in`, `rival_topic`, `rival_leader` (en çok çıkış yapmış rakip).
+   - Sprint ekranının okuma yüzeyi (yalnız okur; motorun sonucu aynıdır): `SprintSystem.timeline(extra)` planlamada planı (sonuna `extra` aday kartlar) ya da koşan sprintin kalanını (bu haftanın ataması korunarak, sonra `_play_out`) tek oynatmayla `_work`ün günlüğüne yazdırır ve `SprintTimeline.build` günlüğü zaman eksenine döker: kart başına aşama kayıtları (`need`, `pre`, `done0`, `in_sprint`, `out`, `start`/`end`, `before` (koşan sprintte eksenden önce biten aşama), `waits`, kurucunun görüşme taraması `meet`, `pieces`; testten sonra Geliştirmeye dönen düzeltme işi, bulunmuş ve öngörülen, ayrı aşama, `fix: true`), kart başına `finishes`, `founder`, `late`, `h`/`h0` (oynatılmış kopyadan, `SprintBugs.expected`) ve `prep`, kişi başına parçalar, doluluk, hiçbir karta (önden işe de) harcanmayan puan ve kapasite satırı, sonraki sütunun önden işi (sprint sonundaki hazırlık kazancıyla) ve hazırlığı (`ahead`, hazırlık `{by, done}`); sayılar görünen efordur. `SprintSystem.prep_gains(weeks)` sonraki sütunun kartlarının sprint sonundaki hazırlık kazancıdır (kopyalarda yalnız PM'lerin haftaları oynanır). Planlamada `outcome`, aynı oynatmanın `plan_outcome` biçimidir (başka kipte null). Kartın eforu oynanmamış karttan okunur: testin bulduğu düzeltmeyi sayar, öngöreni saymaz (gösterim kuralı `product_model.gd` başlığında); `SprintTimeline.capacity_rows` kapasite satırı kuralıdır, satır başına sprint puanı `row_power`dır; ekip ve satır toplamları `SprintSystem.capacity_of`tan okunur. `SprintTimeline.done_at` bir aşamanın verilen ana dek yaptığı işi okur. `SprintSystem.away()` ekip dışı kişileri nedenleriyle sayar (`training`, `leave`, `research`, kurucu `meetings`), `set_founder_in_sprint(on)` kurucu anahtarını planlamada ve sürüm notunda yazar (`GameState.set_founder_in_sprint`), koşan kartın `progress_at_start`ı sprintin başındaki ilerlemedir, çeyreğin `quarter.start_day`ı başladığı gündür. `ProductModel.live()` bunları `founder`, `requests`, `modules`, `prep`, `quarter.q/year/pos/total`, `center.now_at/close_at/progress/crew/suggest/candidates/start_skips/team_empty/mvp` ve `next.load/carried` olarak açar (`next.load/carried` sürüm notunda sonraki sütunun devreden kartlarından, planlamayla aynı işlevlerle); eski alanların anlamı aynıdır, adı çakışan beş alan (`center.capacity`, `center.cards`, `center.delegate`, `next.cards`, `quarter.goal`) yeni biçimiyle çizim adımında gelir. Takip kartı (`follow`) `remove()` ile çıkmaz ve Kaldır düğmesi almaz. Vakalar `sprint_timeline_matches_play_out`, `sprint_away_lists_who_cannot_work`, `sprint_follow_card_cannot_be_removed`.
+   - `SprintBridges`: B2B talepleri `tick_requests` (talebin alanı hesabın sektörünün vurgu 1 alanıdır, `ProductQuality.emphasis(sektör)[0]`; yenileme penceresinin açıldığı gün, yani `next_renewal_day` eksi `request.before_renewal_weeks`, hesabın `market_ref`'ini de yeniden kopyalar), `on_release` (kademesi canlıya geçen açık talebi karşılanmış sayar; sunucuya dokunmaz); rakip `tick_rivals`, `press_line`; ekonomi `on_mvp`, `open_paid_plan` (Frank'in fiyat satırı açıksa onu da düşürür); sürüm notu cümleleri `actual_sentence` (kelimeler `ProductQuality.word`'dan; sürüm kaydının `changed_areas`'ı ham seviyeyi saklar, ekran yarıma yuvarlar), `resolve` (saklanan {key, args}'ı ekranın dilinde okur) ve `line_of` (aynı cümle, kimlik taşıyan her arg adının anahtarı olan iç içe satır; basın satırı `headline_added` ile bunu taşır).
+   - Sürüm anı, teşekkür ve yorum: sprint kapanışı sürüm çıkardıysa (`_close`, `version_shipped`'dan sonra) `SprintBridges.thank(sürüm kaydı)` o sürüme teşekkür edecek hesapların notunu ister ve kayda `thanks` yazar (`{customer, trigger, feature, variant}`; `trigger` `promise | request | incident`). Adaylar öncelik sırasıyla: bu sürümde çıkan kademenin tutulmuş sözü (`Promise.status == "kept"`, `partial` değil; ertelenmiş sözün gövdeleri ayrıdır), `requests[]` içinde bu sürümün kademesiyle `met` olmuş istek, önceki sürümden bu yana hızla kapanan acil durum (`IncidentSystem.quick_fix`: `GameState.incident.open.act` `QUICK_ACTS`'ten (`now`, `founder`, `evening`) ve olayı yaşayan hesap: kesintide gece vardiyalı en büyük hesap, vardiya yoksa ve düzeltme hesapların günü (08:30) başladıktan sonra bittiyse en büyük hesap; ay sonu ve bozulmada hattı kullanan en büyük hesap; `night` düzeltme hesapların günü başlamadan bittiyse). Her tetikleyicide büyük hesap önde; hesap sürümde en çok bir, sürüm en çok `sprint.json` `thanks.max` (3) not alır; söz ile istek aynı özellikse söz yazar. Not `customer.release_thanks` kartıdır (`info` sınıfı, tek düğmeli not: `EventGate.request(id, {customer})`, mandal `latch_key: entity`, gönderen `contact()`); gövdesi `by_seam: musteri.thanks_variant` ile seçilir (14 gövde, tetikleyicinin doğru söyleyebildikleri `_thanks_pool`, aynı tetikleyicide en son kullanılan dönmez), özellik adı `musteri.met_feature` ile gelir. O seam adın ANAHTARINI döner: `EvPresenter` anahtar dönen metin seam'ini satırda anahtar olarak dondurur ve çizerken ekranın diline çevirir (geçmiş satırının gövdesi böylece çizilir). `SprintBridges.thanks_of(hesap)` hesabın en son kaydını verir (iki seam okur). B2C güncellemesinin yorumları: `_fill_actual` (sürümden bir tik sonra) `SprintBridges.pick_reviews(kayıt)` ile 2–3 yorum seçer ve kayda `reviews = {ids, feature, at}` yazar (`ids` CSV anahtarları, `feature` adlı yorumların andığı kimlik hattı kademesi, `at` `MailClock.arrival`; v1.0 ve B2B'de `{}`); metinler `strings.csv` `PRODUCT_REVIEW_*`, grupları ve kaynak etiketleri `sprint.json` `reviews` bloğunda [WORKING] (`neg_line_bugs` 5, `named_share` 0,7, `repeat_weeks` 52). `SprintBridges.review_lines(kayıt)` sürüm notunun satırlarını ekranın dilinde verir, `at` gelene dek boştur (`product_model._release` `reviews`, `sprint_panel` "Sürüm sonrası öne çıkan yorumlar" bölümü). Görsel `--inbox-shot=thanks`, `--product-shot=edge:release_reviews`. Vakalar `release_thanks_*`, `release_reviews_pick`, `release_through_close`.
+--- a/docs/kod_haritasi/sistemler/02_urun_sprint.md
++++ b/docs/kod_haritasi/sistemler/02_urun_sprint.md
+@@ -43,7 +43,8 @@
+ - `SprintSystem.start()` `sprint_system.gd:127` (`_begin` :139): sprinti başlatır, lisansı keser, plan tutuşunu kaldırır · `product_tab.gd:282`
+ - `SprintSystem.plan_next()` `sprint_system.gd:172`: sürüm notundan sonraki sprinte geçer, çeyrek döner · `product_tab.gd:285`, `_auto_start`
+ - `SprintSystem.publish()` `sprint_system.gd:290`: MVP kapısında ürünü CANLI v1.0 yapar · `product_tab.gd:286`
+-- `SprintSystem.skip()/set_delegate()/apply_lead()` `sprint_system.gd:274`/`:282`/`:319`: boş geçir, PM'e devret, liderin planını uygula · `product_tab.gd`
++- `SprintSystem.skip()/set_delegate()/apply_lead()` `sprint_system.gd:284`/`:293`/`:337`: boş geçir, PM'e devret (devirde sprint liderin önerisiyle başlar), liderin önerisini uygula (bu sprint ve sonraki sütun) · `product_tab.gd`
++- `SprintSystem._auto_start()` `sprint_system.gd:1547`: oyuncuyu beklemeyen sprinti başlatır; `apply_lead` bu sprinti ve sonraki sütunu doldurur, kart yoksa boş sprint · `daily_tick`, `plan_next` (devirde)
+ - `SprintSystem.approve()/approve_all()/edit()/pick_goal()` `sprint_system.gd:521`/`:528`/`:537`/`:544`: çeyrek PM planı ve hedef alan · `product_tab.gd:289-292`
+ - `SprintSystem.fix_first()/put_first()` `sprint_system.gd:204`/`:217`: hattın düzeltme kartı sprintin başına · olay fiili `sprint_fix_first` `scripts/events/core/effects.gd:497`
+ - `SprintSystem.decision_effort/progress/carry/trim/first()` `sprint_system.gd:331`-`:446`: karar kâğıdının kart fiilleri · `effects.gd:476-514` (`sprint_card_*`)
+@@ -63,7 +64,8 @@
+ - `SprintSystem.plan_outcome()/mvp_eta()/team()/payers()` `sprint_system.gd:761`/`:791`/`:692`/`:714`: plan önizlemesi, MVP tahmini, ekip, bedel ödeyenler · ProductModel, effects.gd
+ - `SprintCatalog.cfg()` `scripts/systems/sprint_catalog.gd:29`: sprint.json okuması (yoksa yükler) · yaklaşık her sistem; `load_data()` :23 → `main.gd:4683`
+ - `SprintCatalog.candidates()` `sprint_catalog.gd:194`: alanın aday kartları (feat:/req:/plan:/fix:/res:) · ProductModel, `SprintSystem`
+-- `SprintCatalog.lead_suggestion()/pm_plans()` `sprint_catalog.gd:520`/`:658`: lider ve PM planı (`_suggest` :988); PM planı PM'in puanından bağımsız tam kart taşır · `apply_lead`, ÇEYREK görünümü
++- `SprintCatalog.lead_suggestion()/pm_plans()` `sprint_catalog.gd:526`/`:677`: lider `{this, next}` (bu sprint, sonraki sütun) ve PM planı (`_suggest` :1007); PM planı Ürün puanından bağımsız tam kart taşır · `apply_lead`, ÇEYREK
++- `SprintCatalog._lead_picks()` `sprint_catalog.gd:549`: iki sütunun ortak alım döngüsü; sütunda tavan `room` = kapasite − sütunun kalanı − `SprintSystem.carried_points` `sprint_system.gd:806` · `lead_suggestion`
+ - `SprintCatalog.gate_reason()` `sprint_catalog.gd:290`: kilitli kademenin gerekçesi (`LineGates.unmet_parts`) · `_begin`, `product_model.gd:574`
+ - `SprintBridges.tick_requests()` `scripts/systems/sprint_bridges.gd:22`: B2B talep doğurur/düşürür · `SprintSystem.daily_tick` :33
+ - `SprintBridges.on_mvp()/on_release()` `sprint_bridges.gd:124`/`:71`: MVP'de sunucu açar; sürümde talebi karşılar · `SprintSystem._go_public` (sprint_system.gd:1505)
+@@ -102,7 +104,7 @@
+ - `card_phase_changed`, `card_done`: yayan `sprint_system.gd:1080`, `:1084` · dinleyen yok
+ - `card_carried_over`: yayan `sprint_system.gd:390`,`:1494` · dinleyen yok
+ - `card_decision_requested`: yayan `sprint_system.gd:1224` · yalnız smoke/probe
+-- `sprint_auto_started`: yayan `sprint_system.gd:1385` · dinleyen yok
++- `sprint_auto_started`: yayan `sprint_system.gd:1564` · dinleyen yok
+ - `product_state_changed`: yayan `sprint_system.gd:1572` (`_changed`) · product_tab.gd:111, build_bar.gd:46
+ - `version_shipped`: yayan `sprint_system.gd:305`,`:1497` · left_tabs.gd:132, top_bar.gd:126; olay motoru `scripts/events/core/signals.gd:30`
+ - `build_phase_changed("shipped")`: yayan `sprint_system.gd:304`,`:1496` · promise_registry.gd:15, left_tabs.gd:125; olay tetiği (`funding.frank_v1`)
+@@ -165,6 +167,7 @@
+ - Ekip dışı ve takip kartı: `sprint_away_lists_who_cannot_work` (ekip özeti dahil), `sprint_follow_card_cannot_be_removed`
+ - Sprint: `sprint_two_days_close`, `sprint_capacity_from_team`, `sprint_ceiling_125_blocks_add`, `sprint_carry_keeps_progress`, `sprint_mvp_three_identity_k1`, `sprint_fix_card_clears_its_line`, `sprint_starts_only_with_consent`
+ - Sprint: `sprint_request_on_time_met`, `sprint_paid_plan_opens_paid_tier`, `sprint_departure_restaffs_card`, `sprint_never_stalls_in_plan`, `sprint_lead_offers_paid_plan_b2c`, `product_pm_plan_opens_as_next_sprint`
++- Lider: `sprint_lead_fills_next_column` (öneri sonraki sütunu da doldurur: tavan, sıra, onaysız PM planı, devir), `sprint_lead_fills_to_ceiling`
+ - Kâğıt/karar/söz: `sprint_decision_blocks_progress`, `decision_one_per_sprint`, `paper_interrupt_order`, `paper_card_trim`, `paper_line_harden`, `promise_due_fires_when_late`, `promise_extend_once`, `promise_cut_test_escape`
+ - Acil durum/sunucu: `incident_gap_and_spread`, `incident_night_hold_resumes`, `incident_scale`, `incident_save_roundtrip`, `incident_gates`, `infra_capacity_moves_both_ways`, `auto_capacity_grows_only`, `capacity_step_immediate`
+ - Hat/kalite: `product_lines_catalog_loads`, `line_k3_locked_without_research`, `product_fit_table`, `product_quality_sector_table`, `product_line_profiles`, `product_area_row`
+@@ -185,6 +188,7 @@
+ - Koşan sprintte eksen bu haftanın başındandır: önceki haftaların işi `done0`dır; eksenden önce biten aşama `before: true` ile gelir ve start = end = -1 olur, -1 tek başına "bu eksende aralığı yok" demektir
+ - Sonraki sütunun yükü her kipte aynı işlevlerden çıkar (`ProductModel._load`, `_carried`): planlamada ve koşarken devreden zaman ekseninin `out`u, sürüm notunda sonraki sütunun devreden kartlarının kalan ihtiyacı; planlı pay planlamada ve koşarken kartın sprint sonundaki kalan ihtiyacıdır (önden iş düşülmüş, `SprintSystem.prep_gains`in kazancıyla), sürüm notunda bugünkü; ekip satırları `SprintTimeline.row_power`dan (her satırın kişileri `SprintSystem.capacity_of`a)
+ - `remove()` kâğıdın takip kartını (`follow`) reddeder; `ProductModel._card` ona Kaldır düğmesi vermez
++- Liderin sütun tavanı ham puandır (`remaining`, `intake` gibi): bu sprintten devreden iş `carried_points`, zaman ekseninin `out`unun hazırlık kazancına bölünmemiş hâlidir (PM'siz ikisi eşit)
+ - Kirli ağaç: bu haritanın üretildiği sırada başka bir oturum sprint puan birimini ×5'e çekiyordu (sprint.json `effort` 15/25/40, `need` tablosu, `_migrate_18`, şema 19); HEAD'de yok. Satırlar kayabilir
+ - İki ayrı efor tablosu: hat JSON `effort` (bant 5-7/7-9/9-12, `ProductLines.effort_of`, yalnız yeni-kod terimi ve doğrulama) ile sprint.json `effort` k1 15·k2 25·k3 40 (`SprintCatalog.step_effort` :171, kart eforu). Karıştırma
+ - `SprintCatalog.cfg()` (:29) eksik anahtarda sert hata verir (`v[key]`); sprint.json bozuksa `JSON.parse_string` null döner. Yeni anahtar eklerken okuyan her çağrı yerini birlikte ekle
+--- a/scripts/debug/endgame_smoke.gd
++++ b/scripts/debug/endgame_smoke.gd
+@@ -548,6 +548,7 @@
+ 		"sprint_never_stalls_in_plan":           fail = _case_sprint_never_stalls_in_plan()
+ 		"sprint_lead_offers_paid_plan_b2c":      fail = _case_sprint_lead_offers_paid_plan_b2c()
+ 		"sprint_lead_fills_to_ceiling":          fail = _case_sprint_lead_fills_to_ceiling()
++		"sprint_lead_fills_next_column":         fail = _case_sprint_lead_fills_next_column()
+ 		"sprint_solo_mvp_by_week_six":           fail = _case_sprint_solo_mvp_by_week_six()
+ 		"promise_due_sprint_kept_when_shipped_next_sprint": fail = _case_promise_due_sprint_kept_when_shipped_next_sprint()
+ 		"promise_due_sprint_breaks_after_close": fail = _case_promise_due_sprint_breaks_after_close()
+@@ -18250,6 +18251,9 @@
+ 		return "a sprint that closed on the dirty line left the ledger at %s with %d cost(s), want -9 and the cost still standing" % [
+ 			top.trust_offset, GameState.trust_drains.size()]
+ 	SprintSystem.plan_next()
++	# The first sprint's lead plan also filled the next column, so this sprint starts full: the fix card needs the room.
++	for id in GameState.product.sprint.cards.duplicate():
++		SprintSystem.remove(id)
+ 	SprintSystem.add("fix:" + line)
+ 	SprintSystem.start()
+ 	while SprintSystem.mode() == "active":
+@@ -21117,7 +21121,7 @@
+ ## kullanamaz. Boş puana bakan eski sınama o kartı alırdı, kart sprintte hiç puan almazdı.
+ ## FALSİFİKASYON: SprintSystem.intake'te `got`'u `played.spare` yap (eski boş puan sınaması) → düzeltme kartı "+" iddiası FAIL;
+ ## SprintSystem.mvp_eta'da `intake(cards, queue[0], plain).takes`'i `cards.is_empty()` yap (sprint başına tek kart) → MVP tahmini
+-## kapanıştan ayrılır FAIL; SprintCatalog.lead_suggestion'da `fits = take.takes`'i `fits = not take.cards.is_empty()` yap (yalnız tavan) → öneri
++## kapanıştan ayrılır FAIL; SprintCatalog._lead_picks'te `fits = take.takes`'i `fits = not take.cards.is_empty()` yap (yalnız tavan) → öneri
+ ## düzeltme kartını koyar FAIL.
+ static func _case_sprint_intake_uses_applied_plan() -> String:
+ 	_seed_sprint("note_tool")
+@@ -21164,7 +21168,7 @@
+ 	if SprintSystem.can_add(fix.id):
+ 		return "+ takes the fix card, which starts at the developer's phase while the developer is full"
+ 	# Öneri: aynı sınamadan geçen kartları sırayla koyar; hiçbiri o ana kadarki yerleşime eklenince puansız kalmaz.
+-	var lead: Array = SprintCatalog.lead_suggestion()
++	var lead: Array = SprintCatalog.lead_suggestion().this
+ 	if lead.has(fix.id):
+ 		return "the lead suggests the fix card %s that the sprint gives no point" % [lead]
+ 	var placed: Array = SprintSystem.starting()
+@@ -23061,7 +23065,7 @@
+ 	if not SprintCatalog.candidates(SprintCatalog.area_of_line(req.line)).any(
+ 			func(c: Dictionary) -> bool: return c.id == req.card_id and c.kind == "request"):
+ 		return "the request card %s is not among the candidates" % req.card_id
+-	if not SprintCatalog.lead_suggestion().has(req.card_id):
++	if not SprintCatalog.lead_suggestion().this.has(req.card_id):
+ 		return "the lead's plan skips the open request"
+ 	if not SprintCatalog.forecast([req.card_id]).any(func(part: Dictionary) -> bool: return part.k == "request_on_time"):
+ 		return "the forecast does not show the request on time"
+@@ -23372,7 +23376,7 @@
+ 	SprintSystem.plan_next()
+ 	var card: Dictionary = SprintCatalog.candidates(SprintCatalog.area_of_line(ProductLines.step(step).line_id)).filter(
+ 		func(c: Dictionary) -> bool: return c.step == step)[0]
+-	var lead: Array = SprintCatalog.lead_suggestion()
++	var lead: Array = SprintCatalog.lead_suggestion().this
+ 	if lead.is_empty() or lead[0] != card.id:
+ 		return "sprint 2's lead plan is %s, want the promised %s first" % [lead, card.id]
+ 	if not SprintCatalog.card_effect(card).any(func(part: Dictionary) -> bool: return part.k == "promise"):
+@@ -23747,7 +23751,7 @@
+ ## FALSİFİKASYON: SprintCatalog._lead_steps'teki PAID_PLAN satırını sil → FAIL.
+ static func _case_sprint_lead_offers_paid_plan_b2c() -> String:
+ 	_seed_sprint_live("note_tool")
+-	var lead: Array = SprintCatalog.lead_suggestion()
++	var lead: Array = SprintCatalog.lead_suggestion().this
+ 	if lead.is_empty() or lead[0] != "plan:" + SprintCatalog.PAID_PLAN:
+ 		return "the solo founder's lead after MVP suggests %s, want the paid plan first" % str(lead)
+ 	return ""
+@@ -23758,7 +23762,7 @@
+ ## Sprintte düzeltme işi yoksa ilk düzeltme kartı yarıdan büyük olsa da girer. Ekip: iki geliştirici, bir tasarımcı, bir testçi
+ ## (kapasite 80); hatalar çekirdek hatlarında 12, 10 ve 4 (düzeltme kartları 24, 20 ve 8 puan, yarı 40).
+ ## FALSİFİKASYON: SprintSystem.fix_share_takes'in son satırını `return true` yap → ikinci düzeltme kartı girer FAIL; satırdaki
+-## `work <= EPS or`'u sil → 25 hatalı hattın 50 puanlık kartı girmez FAIL; SprintCatalog.lead_suggestion'da `skipped >` dalını
++## `work <= EPS or`'u sil → 25 hatalı hattın 50 puanlık kartı girmez FAIL; SprintCatalog._lead_picks'te `skipped >` dalını
+ ## sil → `lead.skip` 0 iken öneri durmaz FAIL; pay tavanına takılan düzeltmeyi uymayan aday say → `lead.skip` 0 iken öneri ikinci
+ ## düzeltmede durur FAIL; _lead_steps'ten bırakılan kart satırını ya da hedef alanın kartını sil → sıra iddiası FAIL; "Hatalar"
+ ## dalını sil → küçük düzeltme girmez FAIL.
+@@ -23787,7 +23791,7 @@
+ 	if GameState.product.cards[dropped].state != "candidate" or cap != 80.0:
+ 		return "fixture: the dropped card reads '%s' and the capacity %.1f, want a candidate and 80" % [
+ 			GameState.product.cards[dropped].state, cap]
+-	var lead: Array = SprintCatalog.lead_suggestion()
++	var lead: Array = SprintCatalog.lead_suggestion().this
+ 	# Sıra: ücretli plan, bırakılan kart, öncelikli düzeltme, sonra kalanlar; ikinci düzeltme pay tavanına takılır ve atlanır.
+ 	if lead.slice(0, 3) != [paid, dropped, fixes[0]] or lead.has(fixes[1]) or lead.size() <= 3:
+ 		return "the lead is %s, want the paid plan, the dropped card and the biggest priority fix first, the second fix out and cards after it" % [lead]
+@@ -23802,12 +23806,12 @@
+ 		placed = placed + [card]
+ 	# Hedef: "Hatalar" düzeltmeyi öne alır (öncelikli olmayan küçük düzeltme de girer, pay tavanını aşmadan); alan hedefi o alanın kartını.
+ 	SprintSystem.pick_goal(SprintCatalog.GOAL_BUGS)
+-	var bugs: Array = SprintCatalog.lead_suggestion()
++	var bugs: Array = SprintCatalog.lead_suggestion().this
+ 	if lead.has(fixes[2]) or not bugs.has(fixes[2]) or bugs.has(fixes[1]) or load.call(bugs, "fix") > cap * 0.5:
+ 		return "goal Bugs: the lead is %s (fix points %.1f), want the small fix %s in, the second fix out and the fixes within half the capacity" % [
+ 			bugs, load.call(bugs, "fix"), fixes[2]]
+ 	SprintSystem.pick_goal("trust")
+-	var trust: Array = SprintCatalog.lead_suggestion()
++	var trust: Array = SprintCatalog.lead_suggestion().this
+ 	var in_trust := func(ids: Array) -> bool:
+ 		return ids.any(func(id: String) -> bool: return SprintCatalog.card_by_id(id).area == "trust")
+ 	if not in_trust.call(trust) or in_trust.call(lead):
+@@ -23818,9 +23822,9 @@
+ 	var skip: int = int(SprintCatalog.cfg("lead.skip"))
+ 	var mult: float = float(SprintCatalog.cfg("cap_ceiling"))
+ 	SprintCatalog._data.cap_ceiling = 0.95
+-	var skipping: Array = SprintCatalog.lead_suggestion()
++	var skipping: Array = SprintCatalog.lead_suggestion().this
+ 	SprintCatalog._data.lead.skip = 0
+-	var stopped: Array = SprintCatalog.lead_suggestion()
++	var stopped: Array = SprintCatalog.lead_suggestion().this
+ 	SprintCatalog._data.lead.skip = skip
+ 	SprintCatalog._data.cap_ceiling = mult
+ 	if not skipping.has(fixes[2]) or stopped.has(fixes[2]) or stopped.size() <= 3 or skipping.slice(0, stopped.size()) != stopped:
+@@ -23830,13 +23834,88 @@
+ 	ProductState.clear_line_bugs(lines[1])
+ 	ProductState.clear_line_bugs(lines[2])
+ 	ProductState.add_bugs(lines[0], 13)
+-	var big: Array = SprintCatalog.lead_suggestion()
++	var big: Array = SprintCatalog.lead_suggestion().this
+ 	if not big.has(fixes[0]) or load.call(big, "fix") <= cap * 0.5:
+ 		return "a 25 bug line: the lead is %s with %.1f fix points, want the 50 point fix card in though it is over half the capacity" % [
+ 			big, load.call(big, "fix")]
+ 	return ""
+ 
+ 
++## "Öneriyi uygula" bu sprintin yanında sonraki sütunu da doldurur (`SprintCatalog.lead_suggestion` `{this, next}`): sütunda
++## oyuncunun "→" ile koyduğu kart önde kalır, önerinin kartları arkasına eklenir; hiçbir kart iki sütunda değildir ve sütunun
++## yükü (kartlarının kalanı artı bu sprintten devredecek iş) ekibin kapasitesini aşmaz (%100; %125 tavanı sütunda yoktur). Onaysız
++## PM planının kartı sütuna konmaz. Devirde de sprint ve sütun öneriyle dolar, sprint kapanıp yenisi kendiliğinden başlarken de.
++## Ekip: iki geliştirici, bir tasarımcı, bir testçi (kapasite 80).
++## FALSİFİKASYON: SprintSystem.apply_lead'de `next` döngüsünü sil → sütun boş kalır FAIL; SprintCatalog.lead_suggestion'da sütunun
++## `_lead_picks` çağrısına `room` yerine `INF` ver (%100 yerine tavansız) → sütunun yükü kapasiteyi aşar FAIL; aynı çağrıya
++## `this` yerine `[]` ver → `this`'in kartları sütuna da girer FAIL; apply_lead'e `pm_plans()[0].cards`ı `_place(…, false)` ile
++## ekle → onaysız PM planı sütuna girer FAIL; `_auto_start`ta `apply_lead()` yerine yalnız `lead_suggestion().this`i yerleştir →
++## devirde sütun boş kalır FAIL.
++static func _case_sprint_lead_fills_next_column() -> String:
++	_seed_sprint_live("note_tool")
++	GameState.set_founder_in_sprint(false)
++	var crew: Array = [HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_DESIGNER, HRConstants.ROLE_TESTER, HRConstants.ROLE_DEVELOPER]
++	for i in crew.size():
++		_sprint_hire("char_col_%d" % i, crew[i])
++	var p: Dictionary = GameState.product
++	var cap: float = SprintSystem.capacity()
++	var open: Array = SprintCatalog.open_cards([])
++	var pool: float = 0.0
++	for c in open:
++		pool += SprintSystem.remaining(c)
++	var kept: String = open[-1].id
++	SprintSystem.send_next(kept)
++	var lead: Dictionary = SprintCatalog.lead_suggestion()
++	if lead.this.is_empty() or lead.next.is_empty() or pool < cap * 2.0:
++		return "fixture: the lead is %s over %.1f points in a capacity of %.1f; want cards for both columns from a pool over twice the capacity" % [lead, pool, cap]
++	SprintSystem.apply_lead()
++	if p.sprint.cards != lead.this or p.next.cards != [kept] + lead.next:
++		return "apply_lead put %s in the sprint and %s next, want the lead's %s and the player's %s first, then %s" % [
++			p.sprint.cards, p.next.cards, lead.this, kept, lead.next]
++	var seen: Dictionary = {}
++	for id in p.sprint.cards + p.next.cards:
++		if seen.has(id):
++			return "card %s is placed twice (sprint %s, next %s)" % [id, p.sprint.cards, p.next.cards]
++		seen[id] = true
++	var out: float = 0.0
++	for card in SprintSystem.timeline().cards.values():
++		for stage in card.stages:
++			out += stage.out
++	var load: float = SprintSystem.points_left(p.next.cards) + out
++	if load > cap + SprintSystem.EPS:
++		return "the next column holds %.1f points and the sprint carries %.1f into it, over the capacity %.1f" % [
++			SprintSystem.points_left(p.next.cards), out, cap]
++	# Onaysız PM planı sütuna konmaz: PM'in o sprint için önerdiği kartlar öneriyle aynı havuzdandır, sütun yalnız liderin kartlarıdır.
++	for id in p.sprint.cards + p.next.cards:
++		SprintSystem.remove(id)
++	_sprint_hire("char_col_pm", HRConstants.ROLE_PRODUCT_MANAGER)
++	var plan: Dictionary = SprintCatalog.pm_plans()[0]
++	lead = SprintCatalog.lead_suggestion()
++	if plan.approved or plan.cards.is_empty() or lead.next.is_empty():
++		return "fixture: the PM's plan reads %s and the lead %s, want an unapproved plan with cards and a column to fill" % [plan, lead]
++	SprintSystem.apply_lead()
++	if p.sprint.cards != lead.this or p.next.cards != lead.next or not p.quarter.plans.is_empty():
++		return "with the PM's unapproved plan %s the sprint holds %s and the column %s (stored plans %s), want the lead's %s and %s alone" % [
++			plan.cards, p.sprint.cards, p.next.cards, p.quarter.plans, lead.this, lead.next]
++	# Devirde sprint ve sütun öneriyle dolar; sprint kapanınca yenisi kendiliğinden başlarken de.
++	for id in p.sprint.cards + p.next.cards:
++		SprintSystem.remove(id)
++	SprintSystem.set_delegate(true)
++	_sim_day()
++	var shared := func() -> Array:
++		return p.next.cards.filter(func(id: String) -> bool: return id in p.sprint.cards)
++	if SprintSystem.mode() != "active" or p.next.cards.is_empty() or not shared.call().is_empty():
++		return "planning delegated: %s with the sprint %s and the column %s, want sprint 1 running on the lead's plan and a column of its own" % [
++			SprintSystem.mode(), p.sprint.cards, p.next.cards]
++	while SprintSystem.mode() == "active":
++		_sim_day()
++	_sim_day()
++	if SprintSystem.mode() != "active" or SprintSystem.sprint_number() != 2 or p.next.cards.is_empty() or not shared.call().is_empty():
++		return "the delegated close: sprint %d %s with the sprint %s and the column %s, want sprint 2 running and a column of its own" % [
++			SprintSystem.sprint_number(), SprintSystem.mode(), p.sprint.cards, p.next.cards]
++	return ""
++
++
+ ## Tek kurucu dört rolün hepsinde tam hızdadır: liderin önerisiyle her sprint bir K1 biter ve MVP
+ ## üçüncü kapanışta, kapıda yayınlanınca türün seçildiği günden en geç altı tik sonra çıkar.
+ ## FALSİFİKASYON: sprint.json founder_roles'u ["product", "dev"] yap → FAIL.
+@@ -25669,7 +25748,7 @@
+ 	SprintSystem.send_next(id)
+ 	if id in GameState.product.sprint.cards or id in GameState.product.next.cards:
+ 		return "the paid plan was placed before MVP"
+-	if id in SprintCatalog.lead_suggestion():
++	if id in SprintCatalog.lead_suggestion().this:
+ 		return "the lead suggests the paid plan before MVP"
+ 	GameState.set_flag("mvp_shipped", true)
+ 	if SprintCatalog.gate_reason(SprintCatalog.PAID_PLAN) != "":
+@@ -25739,28 +25818,28 @@
+ 	var area_of := func(id: String) -> String: return SprintCatalog.card_by_id(id).area
+ 	if SprintCatalog.quarter_pm() != null or SprintCatalog.quarter_goal() != "":
+ 		return "with no PM and no pick the quarter goal reads '%s', want empty" % SprintCatalog.quarter_goal()
+-	var base: Array = SprintCatalog.lead_suggestion()
++	var base: Array = SprintCatalog.lead_suggestion().this
+ 	if fix_id in base or base.any(func(id: String) -> bool: return area_of.call(id) == "core"):
+ 		return "the lead with no goal suggests %s, want no Core card and no fix card (the capacity is full without them)" % [base]
+ 	SprintSystem.pick_goal("core")
+-	var core: Array = SprintCatalog.lead_suggestion()
++	var core: Array = SprintCatalog.lead_suggestion().this
+ 	if SprintCatalog.quarter_goal() != "core" or fix_id not in core:
+ 		return "no PM, goal Core: the goal reads '%s' and the lead suggests %s, want Core and its fix card in" % [
+ 			SprintCatalog.quarter_goal(), core]
+ 	SprintSystem.pick_goal("trust")
+-	var trust: Array = SprintCatalog.lead_suggestion()
++	var trust: Array = SprintCatalog.lead_suggestion().this
+ 	if fix_id in trust or not trust.any(func(id: String) -> bool: return area_of.call(id) == "trust"):
+ 		return "no PM, goal Trust: the lead suggests %s, want a Trust card and no fix card" % [trust]
+ 	SprintSystem.pick_goal(SprintCatalog.GOAL_BUGS)
+-	var bugs: Array = SprintCatalog.lead_suggestion()
++	var bugs: Array = SprintCatalog.lead_suggestion().this
+ 	if SprintCatalog.quarter_goal() != SprintCatalog.GOAL_BUGS or fix_id not in bugs \
+ 			or bugs.any(func(id: String) -> bool: return area_of.call(id) == "core" and id != fix_id):
+ 		return "no PM, goal Bugs: the goal reads '%s' and the lead suggests %s, want the fix card and no Core feature" % [
+ 			SprintCatalog.quarter_goal(), bugs]
+ 	SprintSystem.pick_goal("")
+-	if SprintCatalog.quarter_goal() != "" or SprintCatalog.lead_suggestion() != base:
++	if SprintCatalog.quarter_goal() != "" or SprintCatalog.lead_suggestion().this != base:
+ 		return "goal cleared: reads '%s' and the lead suggests %s, want empty and %s" % [
+-			SprintCatalog.quarter_goal(), SprintCatalog.lead_suggestion(), base]
++			SprintCatalog.quarter_goal(), SprintCatalog.lead_suggestion().this, base]
+ 	# A PM keeps planning toward the weakest area while nothing is picked; the pick itself stays empty.
+ 	_sprint_hire("char_goal_pm", HRConstants.ROLE_PRODUCT_MANAGER)
+ 	if SprintCatalog.quarter_goal() != "" or SprintCatalog.pm_goal() == "" or SprintCatalog.pm_plans().is_empty():
+--- a/scripts/systems/sprint_catalog.gd
++++ b/scripts/systems/sprint_catalog.gd
+@@ -15,6 +15,8 @@
+ const PAID_PLAN_NAME_KEY := "PRODUCT_CAP_PAID_PLAN"
+ ## Çeyrek hedefinin alan olmayan seçeneği ("Hatalar"): hedefin kartları düzeltme kartlarıdır.
+ const GOAL_BUGS := "bugs"
++## Liderin önerecek kartı yok: bu sprinte de sonraki sütuna da.
++const NO_LEAD := {"this": [], "next": []}
+ const SEP := " · "
+ const STAR := "★"
+ 
+@@ -509,31 +511,47 @@
+ 
+ # --- Lider ---------------------------------------------------------------------------
+ 
+-## Liderin önerisi: sprintin uygulanan yerleşimine altı basamak sırasıyla kart ekler: (1) verilmiş sözlerin kartları,
+-## son tarihi yakın önde, ardından ücretli plan; (2) son tarihi bu ya da sonraki sprint olan en yakın talep (sprintte en çok
+-## bir talep); (3) bırakılan ve devreden kartlar; (4) öncelikli düzeltmeler; (5) çeyrek hedefinin en iyi kartı ("Hatalar"
+-## hedefinde düzeltme kartları), hedef yoksa liderin alanının; (6) kalanlar etki ÷ iş sırasıyla. Düzeltme pay tavanını
+-## (`SprintSystem.fix_share_takes`) aşan düzeltme kartı alınmaz. Her aday sprintin alım kuralından (`SprintSystem.intake`, "+"
+-## ile aynı) geçer; uymayan atlanır, öneri art arda en çok `lead.skip` aday atlar ve bir sonraki uymayanda durur. Kalan yeri
+-## dolduran 6. basamak yalnız bitecek kartları alır, en çok bir devreden kartla durur. Onaylı PM planlarının kartları o
+-## sprintlere ayrılmıştır; lider onlara dokunmaz.
+-static func lead_suggestion() -> Array:
++## Liderin önerisi {this, next}: `this` bu sprintin, `next` sonraki sütunun kartları. `this` sprintin uygulanan yerleşimine altı
++## basamak sırasıyla kart ekler: (1) verilmiş sözlerin kartları, son tarihi yakın önde, ardından ücretli plan; (2) son tarihi bu
++## ya da sonraki sprint olan en yakın talep (sprintte en çok bir talep); (3) bırakılan ve devreden kartlar; (4) öncelikli
++## düzeltmeler; (5) çeyrek hedefinin en iyi kartı ("Hatalar" hedefinde düzeltme kartları), hedef yoksa liderin alanının;
++## (6) kalanlar etki ÷ iş sırasıyla. Düzeltme pay tavanını (`SprintSystem.fix_share_takes`) aşan düzeltme kartı alınmaz. Her aday
++## sprintin alım kuralından (`SprintSystem.intake`, "+" ile aynı) geçer; uymayan atlanır, öneri art arda en çok `lead.skip`
++## aday atlar ve bir sonraki uymayanda durur. Kalan yeri dolduran 6. basamak yalnız bitecek kartları alır, en çok bir devreden
++## kartla durur. `next` aynı sırayı baştan dolaşır: `this`'e giren kartlar atlanır, bu sprintte sığmadığı ya da tavana takıldığı
++## için atlanan kart yeniden denenir. Sütunun yerleşimi içinde duran kartlardır (oyuncunun "→"u ve onaylı PM planı önde); alım
++## sınaması, düzeltme payı, atlama sayacı ve 6. basamağın kalkanı sütun için ayrıca sayılır. Sütunun yükü, kartlarının kalanı
++## artı `this` oynatmasında sütuna devredecek iş, ekibin kapasitesini (%100, %125 tavanı sütunda yoktur) aşmaz. Onaylı PM
++## planlarının kartları o sprintlere ayrılmıştır, onaysız plan sütuna girmez; lider ikisine de dokunmaz.
++static func lead_suggestion() -> Dictionary:
+ 	var pool: Array = open_cards(_approved_ahead())
+ 	var people: Array = SprintSystem.team()
+ 	var capacity: float = SprintSystem.capacity_of(people)
+ 	if pool.is_empty() or capacity <= 0.0:
+-		return []
++		return NO_LEAD
+ 	var score: Dictionary = {}
+ 	for c in pool:
+ 		score[c.id] = _ratio(c)
+ 	pool.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+ 		return score[a.id] > score[b.id] if score[a.id] != score[b.id] else a.id < b.id)
+ 	var steps: Array = _lead_steps(pool, quarter_goal(), capacity)
+-	var placed: Array = SprintSystem.starting()
++	var order: Array = steps + pool.filter(func(c: Dictionary) -> bool: return score[c.id] > 0.0)
++	var this: Array = _lead_picks(order, steps.size(), SprintSystem.starting(), [], people, INF)
++	var column: Array = (_p().next.cards as Array).map(func(id: String) -> Dictionary: return _p().cards[id])
++	var room: float = capacity - SprintSystem.points_left(_p().next.cards) \
++		- SprintSystem.carried_points(SprintSystem.starting() + this, people)
++	var ids := func(cards: Array) -> Array: return cards.map(func(c: Dictionary) -> String: return c.id)
++	return {"this": ids.call(this), "next": ids.call(_lead_picks(order, steps.size(), column, this, people, room))}
++
++
++## `order` sırasıyla `placed` yerleşimine eklenecek kartlar (öneri iki sütunu da bununla kurar): `skip` o sütuna girmeyecek
++## kartlar, `room` eklenenlerin kalan puan toplamının üst sınırı. `steps` sıranın ilk kaç kartı 1 ile 5. basamaktır.
++static func _lead_picks(order: Array, steps: int, placed: Array, skip: Array, people: Array, room: float) -> Array:
+ 	var tried: Dictionary = {}
++	for c in skip:
++		tried[c.id] = true
+ 	var picks: Array = []
+ 	var skipped: int = 0
+-	var order: Array = steps + pool.filter(func(c: Dictionary) -> bool: return score[c.id] > 0.0)
+ 	for i in order.size():
+ 		var c: Dictionary = order[i]
+ 		if tried.has(c.id):
+@@ -541,20 +559,21 @@
+ 		tried[c.id] = true
+ 		if not SprintSystem.fix_share_takes(placed, c, people):
+ 			continue
+-		var take: Dictionary = SprintSystem.intake(placed, c, people)
++		var take: Dictionary = SprintSystem.intake(placed, c, people) if SprintSystem.remaining(c) <= room else {"takes": false}
+ 		var fits: bool = take.takes
+ 		var carries: bool = false
+-		if fits and i >= steps.size():
+-			fits = picks.all(func(id: String) -> bool: return take.cards[id].finishes)
++		if fits and i >= steps:
++			fits = picks.all(func(pick: Dictionary) -> bool: return take.cards[pick.id].finishes)
+ 			carries = not take.cards[c.id].finishes
+ 		if not fits:
+ 			skipped += 1
+ 			if skipped > int(cfg("lead.skip")):
+ 				break
+ 			continue
+-		picks.append(c.id)
++		picks.append(c)
+ 		skipped = 0
+ 		placed = placed + [c]
++		room -= SprintSystem.remaining(c)
+ 		if carries:
+ 			break
+ 	return picks
+--- a/scripts/systems/sprint_system.gd
++++ b/scripts/systems/sprint_system.gd
+@@ -288,7 +288,7 @@
+ 	_begin()
+ 
+ 
+-## Planlamayı PM'e devretme anahtarı: devirde sprint oyuncuyu beklemeden PM'in planıyla başlar. Çeyreği planlayan
++## Planlamayı PM'e devretme anahtarı: devirde sprint oyuncuyu beklemeden liderin önerisiyle başlar. Çeyreği planlayan
+ ## PM yokken açılmaz.
+ static func set_delegate(on: bool) -> void:
+ 	_p().delegate = on and SprintCatalog.quarter_pm() != null
+@@ -333,12 +333,15 @@
+ 		(p.next if p.mode == "release" else p.sprint).cards.append(c.id)
+ 
+ 
+-## Liderin önerisi bu sprintin boş yerlerini doldurur.
++## Liderin önerisi bu sprintin boş yerlerini doldurur ve sonraki sütundaki kartların sonuna kart ekler.
+ static func apply_lead() -> void:
+ 	if mode() != "plan":
+ 		return
+-	for id in SprintCatalog.lead_suggestion():
++	var lead: Dictionary = SprintCatalog.lead_suggestion()
++	for id in lead.this:
+ 		_place(SprintCatalog.card_by_id(id), true)
++	for id in lead.next:
++		_place(SprintCatalog.card_by_id(id), false)
+ 	_p().sprint.lead_applied = true
+ 	_changed()
+ 
+@@ -798,6 +801,13 @@
+ 	return {"takes": load <= EPS or got > EPS, "cards": played.cards}
+ 
+ 
++## `cards` bu sprintin haftalarında `people` ekibiyle oynanınca sonraki sprinte kalan puan: `intake` ile aynı oynatma, kapanışın
++## devredeceği iş.
++static func carried_points(cards: Array, people: Array) -> float:
++	return _replay(cards, sprint_weeks(), false, people).cards.reduce(
++		func(sum: float, c: Dictionary) -> float: return sum + remaining(c), 0.0)
++
++
+ ## Düzeltme pay tavanı: sistemin kendiliğinden aldığı düzeltme işi, uygulanan yerleşimin (`cards`) düzeltme işiyle birlikte,
+ ## ekibin kapasitesinin `lead.fix_share`'ini aşmaz; yerleşimde düzeltme işi yoksa ilk düzeltme kartı girer. "+" bu tavana
+ ## tabi değildir, oyuncu kendisi seçer. Düzeltme olmayan kart her zaman geçer.
+@@ -1530,9 +1540,9 @@
+ 	return _p().get("cards", {}).get(String(_p().get("decision", {}).get("card_id", "")), {})
+ 
+ 
+-## Oyuncuyu beklemeyen sprint kendiliğinden başlar: devirde PM'in planıyla, planlanacak kart yokken boş.
+-## Liderin önerisi, o boşsa sonraki sütunun kartları alınır; kapısı açık kart kalmazsa boş sprint başlar:
+-## sprint numarası ilerler, talep, söz ve araştırma sprint sayar. Ekip yoksa başlamaz. MVP kapısı oyuncuyu
++## Oyuncuyu beklemeyen sprint kendiliğinden başlar: devirde liderin önerisiyle (bu sprint ve sonraki sütun dolar), planlanacak
++## kart yokken boş. Öneri boşsa sonraki sütunun kartları alınır; kapısı açık kart kalmazsa boş sprint başlar: sprint numarası
++## ilerler, talep, söz ve araştırma sprint sayar. Ekip yoksa başlamaz. MVP kapısı oyuncuyu
+ ## bekler: ürün ne kendiliğinden yayınlanır ne bir sprint daha bekler.
+ static func _auto_start() -> void:
+ 	if _p().release.get("gate", false):
+--- a/scripts/tabs/product/product_model.gd
++++ b/scripts/tabs/product/product_model.gd
+@@ -102,7 +102,8 @@
+ #   quarter: + {q, year (ürün çeyreğinin başladığı takvim çeyreği), pos, total (çeyreğin kaçıncı sprinti, kaç sprintlik)},
+ #   center: + {now_at (koşan sprintin haftasında şimdiki an, sprint başından hafta), close_at (SprintTimeline), progress: {done,
+ #             total} (koşarken), crew (bir aşamada 9'dan çok kişi varsa {n, sprint, training, leave, research, pm, out}),
+-#             suggest: {amount, cards: [{name, done, effort}]} | null, candidates (boş planın ilk üç önerisi: kart satırı),
++#             suggest: {amount, cards: [{name, done, effort}]} | null (öneri bu sprinte de sütuna da kart eklemiyorsa; yalnız
++#             sütuna ekliyorsa {amount: 0.0, cards: []}: sayı çizilmez, yalnız düğme), candidates (boş planın ilk üç önerisi: kart satırı),
+ #             start_skips, team_empty, mvp (v1.0'dan önce `mvp_line`ın aynısı, canlıda null)},
+ #   next: + {load: [{stage, carried, planned, team}], carried: [{card, card_id, stage, effort}]} (devreden: planlamada ve koşarken
+ #         zaman ekseninin `out`u, sürüm notunda sonraki sütunun devreden kartlarının kalan ihtiyacı; ikisini de aynı işlevler
+@@ -164,7 +165,7 @@
+ 	var outcome: Dictionary = run.outcome if mode == "plan" and not run.is_empty() else {}
+ 	# Liderin önerisi: eski çizim cümlesini plan uygulanmamışken, yeni çizim satırını devir kapalıyken okur.
+ 	var delegated: bool = SprintSystem.delegated()
+-	var suggestion: Array = []
++	var suggestion: Dictionary = SprintCatalog.NO_LEAD
+ 	if mode == "plan" and n > 0 and not (p.sprint.get("lead_applied", false) and delegated):
+ 		suggestion = SprintCatalog.lead_suggestion()
+ 	var planned: Array = p.get("sprint", {}).get("cards", []).map(func(id: String) -> String: return p.cards[id].area)
+@@ -180,8 +181,8 @@
+ 		var module: Variant = _module(area, cards, a.id in planned, n)
+ 		if module != null:
+ 			modules.append(module)
+-	var center: Dictionary = _center(mode, release, outcome, suggestion)
+-	center.merge(_plan_view(mode, run, center, [] if delegated else suggestion, pool), true)
++	var center: Dictionary = _center(mode, release, outcome, suggestion.this)
++	center.merge(_plan_view(mode, run, center, SprintCatalog.NO_LEAD if delegated else suggestion, pool), true)
+ 	var next: Dictionary = _next(mode, outcome, run)
+ 	return {
+ 		"header": {
+@@ -397,7 +398,7 @@
+ 
+ # --- Bu sprint ------------------------------------------------------------------------
+ 
+-## `suggestion`: planlamada `SprintCatalog.lead_suggestion()` (planlama devredilmemişse ya da plan uygulanmamışsa okunur).
++## `suggestion`: planlamada `SprintCatalog.lead_suggestion().this` (planlama devredilmemişse ya da plan uygulanmamışsa okunur).
+ static func _center(mode: String, release: Dictionary, outcome: Dictionary, suggestion: Array) -> Dictionary:
+ 	var p: Dictionary = GameState.product
+ 	var sprint: Dictionary = p.get("sprint", {})
+@@ -534,12 +535,12 @@
+ 
+ 
+ ## Merkezin yeni alanları: `run` zaman ekseni (`SprintSystem.timeline`; sürüm notunda {}), `offered` devir kapalıyken liderin
+-## önerisi, `pool` aday kartlar (kimlikle).
+-static func _plan_view(mode: String, run: Dictionary, center: Dictionary, offered: Array, pool: Dictionary) -> Dictionary:
++## önerisi (`SprintCatalog.lead_suggestion`), `pool` aday kartlar (kimlikle).
++static func _plan_view(mode: String, run: Dictionary, center: Dictionary, offered: Dictionary, pool: Dictionary) -> Dictionary:
+ 	var total: float = center.capacity.total if center.capacity != null else 0.0
+ 	var now: float = _now_at(mode)
+ 	return {"now_at": now, "close_at": run.get("close_at", 0.0), "progress": _progress(run, now) if mode == "active" else null,
+-		"crew": _crew(run), "suggest": _suggest(offered, pool), "candidates": _candidates(offered, pool),
++		"crew": _crew(run), "suggest": _suggest(offered, pool), "candidates": _candidates(offered.this, pool),
+ 		"start_skips": mode == "plan" and total > 0.0 and SprintSystem.starting().is_empty(), "team_empty": total == 0.0,
+ 		"mvp": center.mvp_line}
+ 
+@@ -600,15 +601,16 @@
+ 	return counts if heads.values().max() > 9 else null
+ 
+ 
+-## Planı boş sprintte liderin önerisi (devir kapalıyken, plana en az bir kart ekleyecekse): {amount, cards: [{name, done,
+-## effort}]}. `done` her kartın plana eklenince bu sprintte yapacağı iş, `amount` onların toplamı; tek oynatma.
+-static func _suggest(offered: Array, pool: Dictionary) -> Variant:
+-	if offered.is_empty():
+-		return null
+-	var played: Dictionary = SprintSystem.timeline(offered.map(func(id: String) -> Dictionary: return pool[id]))
++## Liderin önerisi (devir kapalıyken, bu sprinte ya da sonraki sütuna kart ekleyecekse): {amount, cards: [{name, done, effort}]}.
++## `done` her kartın plana eklenince bu sprintte yapacağı iş, `amount` onların toplamı; tek oynatma. Yalnız sütuna ekliyorsa
++## {amount: 0.0, cards: []}: sayı ve "efor daha sığar" çizilmez, yalnız düğme.
++static func _suggest(offered: Dictionary, pool: Dictionary) -> Variant:
++	if offered.this.is_empty():
++		return null if offered.next.is_empty() else {"amount": 0.0, "cards": []}
++	var played: Dictionary = SprintSystem.timeline(offered.this.map(func(id: String) -> Dictionary: return pool[id]))
+ 	var cards: Array = []
+ 	var amount := 0.0
+-	for id in offered:
++	for id in offered.this:
+ 		var done := 0.0
+ 		for stage in played.cards[id].stages:
+ 			done += stage.in_sprint

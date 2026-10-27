@@ -1,0 +1,12 @@
+Godot Engine v4.6.2.stable.official.71f334935 - https://godotengine.org
+D3D12 12_0 - Forward+ - Using Device #0: AMD - AMD Radeon RX 9070 XT
+
+BOOT|lang=tr|source=arg
+[MCP Runtime] Server listening on port 7777
+[MCP Runtime] Autoload ready, server starting on port 7777
+BUILD|version=0.1.0|scope=demo
+EVENTSHOT|rival.outage|rival=rv_erp_7 (Hyperion Enterprise Suite)|employee=char_emp_shot_4 (Kerem Hasan Karaosmanoğlu)|where=met|week=14
+EVENTSHOTTEXT|rival.outage|Hyperion Enterprise Suite çökmüş|Hyperion Enterprise Suite iki gündür açılmıyor ve telefonlarına da kimse çıkmıyor. Müşterilerinden üçü bu sabah bizi aradı, ay sonu yaklaşırken kayıtlarına ulaşamıyorlar.
+EVENTSHOTOPTION|rival.outage|Kerem Hasan Karaosmanoğlu bu hafta üçüne de demo yapsın
+EVENTSHOTCHIPS|rival.outage|demo_three|Yeni aday ×3; Kerem verimi -%50 · 2 hafta
+[Shot] saved C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-Project-Unicorn/eeffbe9c-d5c1-4a8e-8ce4-9e4b60603345/scratchpad/appdata/c7c_win/Godot/app_userdata/Project Unicorn/event_shot_rival.outage_rival=rv_erp_7_employee=char_emp_shot_4_long=1.png

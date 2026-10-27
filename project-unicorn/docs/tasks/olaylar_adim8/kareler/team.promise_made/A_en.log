@@ -1,0 +1,16 @@
+Godot Engine v4.6.2.stable.official.71f334935 - https://godotengine.org
+D3D12 12_0 - Forward+ - Using Device #0: AMD - AMD Radeon RX 9070 XT
+
+BOOT|lang=en|source=arg
+[MCP Runtime] Server listening on port 7777
+[MCP Runtime] Autoload ready, server starting on port 7777
+BUILD|version=0.1.0|scope=demo
+EVENTSHOT|team.promise_made|customer=co_nordica (Nordica)|employee=char_emp_shot_0 (Elif Demir)|dev=char_emp_shot_2 (Mert Yıldız)|where=met|week=2
+EVENTSHOTTEXT|team.promise_made|The promise we made to Nordica|We promised Nordica Stock Count by the end of the month. To make that, Mert Yıldız can't look at anything else until then. How do we proceed?
+EVENTSHOTOPTION|team.promise_made|Mert Yıldız works on nothing else until month end
+EVENTSHOTOPTION|team.promise_made|Call the customer, ask for more time
+EVENTSHOTOPTION|team.promise_made|Tell them the feature isn't coming for now
+EVENTSHOTCHIPS|team.promise_made|focus|Mert works only on Stock Count for 4 weeks; Mert -6
+EVENTSHOTCHIPS|team.promise_made|ask_time|Nordica: satisfaction 72 → 66; The promise moves to the end of next sprint
+EVENTSHOTCHIPS|team.promise_made|drop|Nordica: satisfaction 72 → 31; Brand -3; No new promise to this account for 8 weeks
+[Shot] saved C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-Project-Unicorn/eeffbe9c-d5c1-4a8e-8ce4-9e4b60603345/scratchpad/appdata/c7c_win/Godot/app_userdata/Project Unicorn/event_shot_team.promise_made_en.png

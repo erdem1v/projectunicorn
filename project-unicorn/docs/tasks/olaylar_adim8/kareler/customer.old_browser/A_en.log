@@ -1,0 +1,14 @@
+Godot Engine v4.6.2.stable.official.71f334935 - https://godotengine.org
+D3D12 12_0 - Forward+ - Using Device #0: AMD - AMD Radeon RX 9070 XT
+
+BOOT|lang=en|source=arg
+[MCP Runtime] Server listening on port 7777
+[MCP Runtime] Autoload ready, server starting on port 7777
+BUILD|version=0.1.0|scope=demo
+EVENTSHOT|customer.old_browser|prospect=lead_14_1 (Efes Pazar)|employee=char_emp_shot_4 (Burak Şahin)|where=met|week=14
+EVENTSHOTTEXT|customer.old_browser|A condition from Efes Pazar|Efes Pazar loved the demo, but their IT lead set one condition. Every computer at the clinic runs Fenstra's old browser, because their patient records software only works there. If our product doesn't open in that browser, there's no deal.
+EVENTSHOTOPTION|customer.old_browser|Promise the support
+EVENTSHOTOPTION|customer.old_browser|Tell them we can't do it
+EVENTSHOTCHIPS|customer.old_browser|promise_support|Offer: if Efes Pazar signs, we promise Responsive Interface
+EVENTSHOTCHIPS|customer.old_browser|decline|Lead lost: Efes Pazar
+[Shot] saved C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-Project-Unicorn/eeffbe9c-d5c1-4a8e-8ce4-9e4b60603345/scratchpad/appdata/c7b_g2/Godot/app_userdata/Project Unicorn/event_shot_customer.old_browser_en.png

@@ -1,0 +1,15 @@
+Godot Engine v4.6.2.stable.official.71f334935 - https://godotengine.org
+D3D12 12_0 - Forward+ - Using Device #0: AMD - AMD Radeon RX 9070 XT
+
+BOOT|lang=en|source=arg
+[MCP Runtime] Server listening on port 7777
+[MCP Runtime] Autoload ready, server starting on port 7777
+BUILD|version=0.1.0|scope=demo
+EVENTSHOT|rival.new_firm_warning|rival=rv_erp_1 (Pythia)|prospect=lead_14_1 (Efes Pazar)|employee=char_emp_shot_4 (Burak Şahin)|where=met|week=14
+EVENTSHOTTEXT|rival.new_firm_warning|Pythia brought us up|The prospect I met today said a sales rep from Pythia warned them about us: “they're new, they may not be around tomorrow.” They still want us, but they need some reassurance.
+EVENTSHOTOPTION|rival.new_firm_warning|Have Burak Şahin connect them with one of our happy customers
+EVENTSHOTOPTION|rival.new_firm_warning|Offer a discounted price for the first year
+EVENTSHOTCHIPS|rival.new_firm_warning|reference_call|Burak pace -40% · 1 week; 20% chance:; Lead lost: Efes Pazar
+EVENTSHOTCHIPS|rival.new_firm_warning|first_year_discount|Offer: if Efes Pazar signs, MRR -15% for 52 weeks
+[Shot] saved C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-Project-Unicorn/eeffbe9c-d5c1-4a8e-8ce4-9e4b60603345/scratchpad/appdata/c7b_g3/Godot/app_userdata/Project Unicorn/event_shot_rival.new_firm_warning_en.png
+exit=0

@@ -1,0 +1,16 @@
+Godot Engine v4.6.2.stable.official.71f334935 - https://godotengine.org
+D3D12 12_0 - Forward+ - Using Device #0: AMD - AMD Radeon RX 9070 XT
+
+BOOT|lang=en|source=arg
+[MCP Runtime] Server listening on port 7777
+[MCP Runtime] Autoload ready, server starting on port 7777
+BUILD|version=0.1.0|scope=demo
+EVENTSHOT|team.same_leave_tester|employee=char_emp_shot_3 (Selin Kaya)|other=char_emp_shot_leave_b (Kaan Işık)|where=met|week=23
+EVENTSHOTTEXT|team.same_leave_tester|Summer leave|Kaan Işık and I have our summer leave in the same weeks. If we're both out, nobody's left to test finished cards for those two weeks.
+EVENTSHOTOPTION|team.same_leave_tester|Let them sort it out between themselves
+EVENTSHOTOPTION|team.same_leave_tester|Both go, developers do the testing
+EVENTSHOTOPTION|team.same_leave_tester|Move one leave and pay a bonus for it
+EVENTSHOTCHIPS|team.same_leave_tester|settle_it|Summer leave moves: Kaan, 1 week; Selin -4; Kaan -4
+EVENTSHOTCHIPS|team.same_leave_tester|devs_test|Summer leave: Selin and Kaan away the same two weeks, in 2 weeks; Selin +4; Kaan +4
+EVENTSHOTCHIPS|team.same_leave_tester|shift_with_bonus|Summer leave moves: Kaan, 1 week; Cash -$1.9K
+[Shot] saved C:/Users/erdem/AppData/Local/Temp/claude/C--Users-erdem-Desktop-Project-Unicorn/eeffbe9c-d5c1-4a8e-8ce4-9e4b60603345/scratchpad/appdata/c7b_g2/Godot/app_userdata/Project Unicorn/event_shot_team.same_leave_tester_en.png
