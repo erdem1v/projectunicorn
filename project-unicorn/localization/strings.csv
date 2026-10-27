@@ -2565,10 +2565,6 @@ PRODUCT_THIS_SPRINT,Bu sprint,This sprint
 PRODUCT_NEXT,Sonraki,Next
 PRODUCT_TEAM_NOBODY_JOBS,Yapım ekibinde ya da Test'te çalışabilecek kimse yok,Nobody on the Build team or Test can work
 PRODUCT_TEAM_IN_RND,Kurucu Ar-Ge'de: {node},The founder is in R&D: {node}
-PRODUCT_CARD_READY,Geliştirmeye hazır,Ready for development
-PRODUCT_CARD_READY_PCT,{pct} hazır,{pct} ready
-PRODUCT_CARRIED,devreden,carried
-PRODUCT_PRIORITY,Öncelikli,Priority
 PRODUCT_REMOVE,Çıkar,Remove
 PRODUCT_PERSON_ROLE,{name} · {role},{name} · {role}
 PRODUCT_FX_BUGS,{n} hata,{n} bugs
@@ -2580,24 +2576,14 @@ PRODUCT_USER_COUNT_ONE,{n} kullanıcı,{n} user
 PRODUCT_FX_TOP,en büyüğü {account} ({users}),largest: {account} ({users})
 PRODUCT_FX_BUGS_FIXED,{from} → {to} açık hata,{from} → {to} open bugs
 PRODUCT_FX_BUGS_FIXED_ONE,{from} → {to} açık hata,{from} → {to} open bug
-PRODUCT_FX_HOLDS,{level} kalır,stays {level}
-PRODUCT_FX_ALERT_CLEARS,kalkar,clears
-PRODUCT_FX_RESEARCH,beklentisi netleşir,expectations get clearer
-PRODUCT_FX_REQUEST,{customer} talebi,{customer} request
 PRODUCT_STATUS_CARDS,{n} kart,{n} cards
 PRODUCT_STATUS_CARDS_ONE,{n} kart,{n} card
 PRODUCT_STATUS_DONE,bitti,done
-PRODUCT_NEXT_RELEASE,Sonraki sürüm,Next release
-PRODUCT_IN_WEEKS,{n} hafta sonra,in {n} weeks
-PRODUCT_IN_WEEKS_ONE,{n} hafta sonra,in {n} week
 PRODUCT_MVP_RULE,{version} = {need} {area} kartı · {done}/{need} bitti · tahmin Sprint {sprint} sonu (Hafta {week}),{version} = {need} {area} cards · {done}/{need} done · forecast end of Sprint {sprint} (Week {week})
 PRODUCT_MVP_RULE_NO_ETA,{version} = {need} {area} kartı · {done}/{need} bitti,{version} = {need} {area} cards · {done}/{need} done
 PRODUCT_LEAD_TIP_SELF,Kendi notun,Your own note
 PRODUCT_LEAD_LINE,Lider,Lead
 PRODUCT_START_SPRINT,Sprinti başlat,Start sprint
-PRODUCT_SKIP_SPRINT,Bu sprinti boş geçir,Skip this sprint
-PRODUCT_SKIP_CONFIRM,Bu sprint kimse kart üstünde çalışmaz.,No one works on a card this sprint.
-PRODUCT_START_NEED_CARD,En az bir kart ekle,Add at least one card
 PRODUCT_PLAN_SPRINT,Sprint {n} planına geç,Plan sprint {n}
 PRODUCT_PHASE_DESIGN,Tasarım,Design
 PRODUCT_PHASE_DEV,Geliştirme,Development
@@ -2671,7 +2657,6 @@ PRODUCT_SERVER_TIER_LOCKED,Kurumsal sunucudasın; geri dönüş yok.,You are on 
 PRODUCT_SERVER_TIER_PREVIEW,{from} → {to} · ayda {old} → {new},{from} → {to} · {old} → {new} a month
 PRODUCT_SERVER_TIER_SWITCH,Geç,Switch
 PRODUCT_SERVER_LOCK_REASON,"Sunucu sözleşmen sürüyor, kademe {weeks} daha değişmez.",Your server contract is running; the tier stays fixed for another {weeks}.
-PRODUCT_NEXT_EMPTY,→ ile kart gönder,Send cards with →
 PRODUCT_FLAG_DEADLINE,{customer} · {request} · son tarih,{customer} · {request} · deadline
 PRODUCT_THIS_QUARTER,Bu çeyrek,This quarter
 PRODUCT_PM,PM,PM
@@ -2743,6 +2728,25 @@ PRODUCT_MORE_BELOW_ONE,aşağıda {n} kart daha,{n} more card below
 PRODUCT_CARRIED_SLOT,devreden,carried
 PRODUCT_LATE,yetişmez,late
 PRODUCT_TO_NEXT,Sonraki sprinte,To the next sprint
+PRODUCT_TO_THIS,Bu sprinte,To this sprint
+PRODUCT_MORE_BELOW_LATE,{n} kart yetişmez,{n} cards will not finish
+PRODUCT_MORE_BELOW_LATE_ONE,{n} kart yetişmez,{n} card will not finish
+PRODUCT_DELEGATE_PLAIN,Planlamayı devret,Delegate planning
+PRODUCT_DELEGATE_ON,{name} planlıyor,{name} is planning
+PRODUCT_DELEGATE_UNDO,Planlamayı geri al,Take planning back
+PRODUCT_DELEGATE_LOCKED,Planlamayı devretmek için ekipte bir ürün yöneticisi olmalı.,You need a product manager on the team to delegate planning.
+PRODUCT_AUTO_START,Kendiliğinden başlar,Starts on its own
+PRODUCT_PROGRESS,Sprint,Sprint
+PRODUCT_PREP,Hazırlık,Preparation
+PRODUCT_PM_CARDS,{n} kart hazırladı,prepared {n} cards
+PRODUCT_PM_CARDS_ONE,{n} kart hazırladı,prepared {n} card
+PRODUCT_PM_PREPARING,hazırlıkta,preparing
+PRODUCT_CARDS,Kartlar,Cards
+PRODUCT_MORE_CARDS,+{n} kart,+{n} cards
+PRODUCT_MORE_CARDS_ONE,+{n} kart,+{n} card
+PRODUCT_READY,hazır,ready
+PRODUCT_PREPARING,hazırlanıyor,preparing
+PRODUCT_NO_PM,PM yok,No PM
 PRODUCT_REQUESTS,Müşteri talepleri,Customer requests
 PRODUCT_MORE_REQUESTS,+{n} talep,+{n} requests
 PRODUCT_MORE_REQUESTS_ONE,+{n} talep,+{n} request
@@ -2841,13 +2845,10 @@ PRODUCT_GOAL_INTEGRATIONS,müşterilerin yarısı öbür araçlarını bağlası
 PRODUCT_GOAL_TRUST,kullanıcıların yarısı verisini emanet etsin,half of users trust it with their data
 PRODUCT_GOAL_REVENUE,düzenli kullanıcıların yarısı ödemeye razı olsun,half of regular users would pay
 PRODUCT_GOAL_PROGRESS,şu an {total} üzerinden {now},now {now} of {total}
-PRODUCT_FX_PROMISE,Söz: {customer},Promise: {customer}
-PRODUCT_PROMISED,söz verildi,promised
 PRODUCT_VERSION_KEY,Sürüm,Version
 PRODUCT_KPI_USERS,Kullanıcı,Users
 PRODUCT_KPI_PAYING,Ödeyen,Paying
 PRODUCT_RELEASE_HOLD,Sürüm notu açıkken oyun durur,Paused while the release note is open
-PRODUCT_PLAN_HOLD,Sprint başlayana kadar oyun durur,Paused until the sprint starts
 PRODUCT_ADD_CLOSED,{pct} üstünde kart eklenmez,Adding closes above {pct}
 PRODUCT_ADD_CLOSED_FULL,Bu sprintte boş efor kalmadı,No effort left to fill this sprint
 PRODUCT_GO_TEAM,Ekip'e git,Go to Team

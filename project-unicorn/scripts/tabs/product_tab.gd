@@ -153,6 +153,9 @@ func _rebuild() -> void:
 		if _source == null:
 			_ui.view = _last_view
 	m.ui = _ui
+	# "+" yalnız planlamada açıktır: imleç ondayken sprint başlarsa (devir, Boşluk) kalan hayalet kalkar.
+	if m.center.mode != "plan":
+		_ui.hover_card = ""
 	# Sürüm notu yalnız SPRINT görünümünde durur ve saat onun için tutulur: notta görünüm SPRINT'tir. Açık olmayan
 	# kâğıt da SPRINT'e düşer; v1.0'dan önce hatırlanan GENEL BAKIŞ (önceki koşudan kalan) unutulur, yoksa yayında
 	# kendiliğinden öne çıkardı.
@@ -305,8 +308,7 @@ func _act(kind: String, args: Dictionary) -> void:
 		"send_next": SprintSystem.send_next(args.card_id)
 		"remove": SprintSystem.remove(args.card_id)
 		"founder": SprintSystem.set_founder_in_sprint(args.on)
-		"start": SprintSystem.start()
-		"skip": SprintSystem.skip()
+		"start": SprintSystem.begin_planned()   # kartsız planda boş sprint
 		"delegate": SprintSystem.set_delegate(args.on)
 		"plan_next": SprintSystem.plan_next()
 		"publish": SprintSystem.publish()

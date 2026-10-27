@@ -1,57 +1,44 @@
 class_name SprintPanel
 extends HBoxContainer
 
-# Ürün sekmesinin orta (bu sprint) ve sağ (sonraki sprint) sütunları. Yalnız modeli çizer: izin ve
-# eşikler modelden gelir, her tık sekmeye `action` olarak çıkar. Orta sütunun başlığı (sprint başlığı ve
-# kapasite), panosunun başlığı ve alt şeridi sabit, arada panonun gövdesi kayar; sağ sütunda başlık ve alt sabit,
-# kart yığını kayar. Saat ilerleyince `set_now` panoyu ve kapasiteyi sayfa kurulmadan günceller.
+# Ürün sekmesinin orta (bu sprint) ve sağ (sonraki sprint) sütunları. Yalnız modeli çizer: izin ve eşikler modelden gelir, her tık
+# sekmeye `action` olarak çıkar. Orta sütunun başlığı (sprint başlığı ve kapasite), panosunun başlığı ve alt şeridi sabit, arada
+# panonun gövdesi kayar; sağ sütun (`SprintNext`) kendi içinde kayar. Saat ilerleyince `set_now` panoyu, kapasiteyi ve ilerlemeyi
+# sayfa kurulmadan günceller.
 
 signal action(kind: String, args: Dictionary)
 
-const CARD_SCENE := preload("res://scenes/tabs/product/SprintCard.tscn")
 const PAUSE := "res://assets/icons/util/pause.svg"
 const TEAM_GLYPH := "res://assets/icons/rail/hr.svg"
-const PLUS := "res://assets/icons/util/plus.svg"
 ## Devreden kartın ilerleme karesi 5 puandır: K3 sekiz kare tutar.
 const SQUARE_POINTS := 5.0
 
 
-## Başlık ve alt sabit, arada gövde: `scrolls` ise gövde (`stack`) kayar, yığın uzasa da düğmeler yerinde kalır; değilse gövde
-## kendi kaydırmasını taşıyan bir pano alır. `side` başlığın ve gövdenin yan payıdır. Alt şerit ilk istendiğinde kurulur.
+## Orta sütun: başlık ve alt sabit, arada gövde. Alt şerit ilk istendiğinde kurulur.
 class Column extends PanelContainer:
 	var head := SprintUiShared.column(UiTokens.SPACE_L)
 	var stack := SprintUiShared.column(UiTokens.SPACE_M)
-	var scroll: ScrollContainer
 	var _col := SprintUiShared.column(0)
 	var _foot: VBoxContainer
 
-	func _init(variation: StringName, ratio: float, scrolls := true, side := UiTokens.SPACE_XXL) -> void:
-		theme_type_variation = variation
+	func _init() -> void:
+		theme_type_variation = &"SprintColumn"
 		size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		size_flags_stretch_ratio = ratio
 		add_child(_col)
-		_col.add_child(SprintUiShared.pad(head, Vector4i(side, UiTokens.SPACE_XL, side, 0)))
+		_col.add_child(SprintUiShared.pad(head, Vector4i(UiTokens.SPACE_L, UiTokens.SPACE_XL, UiTokens.SPACE_L, 0)))
 		stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		stack.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		if not scrolls:
-			var body := SprintUiShared.pad(stack, Vector4i(side, UiTokens.SPACE_M, side, 0))
-			body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-			_col.add_child(body)
-			return
-		scroll = ScrollContainer.new()
-		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-		scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		var inner := SprintUiShared.pad(stack, Vector4i(side, UiTokens.SPACE_L, side, UiTokens.SPACE_L))
-		inner.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		inner.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		scroll.add_child(inner)
-		_col.add_child(scroll)
+		var body := SprintUiShared.pad(stack, Vector4i(UiTokens.SPACE_L, UiTokens.SPACE_M, UiTokens.SPACE_L, 0))
+		body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		_col.add_child(body)
 
 	func foot() -> VBoxContainer:
 		if _foot == null:
 			var band := PanelContainer.new()
 			band.theme_type_variation = &"SprintColumnFoot"
+			band.custom_minimum_size.y = UiTokens.D_H_FOOT
 			_foot = SprintUiShared.column(UiTokens.SPACE_XL)
+			_foot.alignment = BoxContainer.ALIGNMENT_CENTER
 			band.add_child(_foot)
 			_col.add_child(band)
 		return _foot
@@ -59,8 +46,11 @@ class Column extends PanelContainer:
 
 var _capacity: CapacityView
 var _board: SprintBoard
-var _next_column: Column
+var _foot: SprintFoot
+var _next: SprintNext
 var _running := false
+## Koşan sprintte kartların bilinen yükü: ilerleme yüzdesinin paydası.
+var _known: Array = []
 
 
 func _init() -> void:
@@ -69,20 +59,25 @@ func _init() -> void:
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 
-## Yeniden kurulumda panonun ve sonraki sütunun kaydırma yeri korunur.
+## Yeniden kurulumda panonun ve sağ sütunun kaydırma yeri korunur.
 func setup(model: Dictionary) -> void:
 	var board_at: int = _board.scroll.scroll_vertical if _board != null else 0
-	var next_at: int = _next_column.scroll.scroll_vertical if _next_column != null else 0
+	var next_at: int = _next.scroll_vertical if _next != null else 0
 	UiFactory.clear(self)
 	_capacity = null
 	_board = null
-	_next_column = null
+	_foot = null
+	_next = null
 	_running = false
+	_known = []
 	_center(model)
-	_next(model.next)
+	_next = SprintNext.new()
+	_next.action.connect(action.emit)
+	_next.setup(model)
+	add_child(_next)
 	if _board != null:
 		SprintUiShared.keep_scroll(_board.scroll, board_at)
-	SprintUiShared.keep_scroll(_next_column.scroll, next_at)
+	SprintUiShared.keep_scroll(_next, next_at)
 
 
 ## Üstüne gelinen adayın hayaleti kapasitede ve panoda: sayfa kurulmaz (kimlik boşsa hayalet kalkar).
@@ -98,16 +93,18 @@ func running() -> bool:
 	return _running
 
 
-## Saat ilerleyince (koşan sprintte) şimdiki an çizgisi, koşan çubuklar ve yüzleri ile kapasitenin "yapılan" dolgusu sayfa
-## kurulmadan, saklanan parçalardan güncellenir. Alt şeridin ilerlemesi de bu yoldan güncellenir.
+## Saat ilerleyince (koşan sprintte) şimdiki an çizgisi, koşan çubuklar ve yüzleri, kapasitenin "yapılan" dolgusu ve alt şeridin
+## ilerlemesi sayfa kurulmadan, saklanan parçalardan güncellenir.
 func set_now(at: float) -> void:
 	_board.set_now(at)
-	_capacity.set_done(ProductModel.stage_done(_board.stage_lists(), at))
+	var stages: Array = _board.stage_lists()
+	_capacity.set_done(ProductModel.stage_done(stages, at))
+	_foot.set_progress(ProductModel.progress_at(stages, _known, at))
 
 
 func _center(model: Dictionary) -> void:
 	var c: Dictionary = model.center
-	var col := Column.new(&"SprintColumn", UiTokens.D_SPRINT_COLUMNS.x, false, UiTokens.SPACE_L)
+	var col := Column.new()
 	add_child(col)
 	if c.mode == "release":
 		_release(col, c, model.next.sprint)
@@ -129,42 +126,12 @@ func _center(model: Dictionary) -> void:
 	_board.setup(model, _nobody(c) if c.team_empty and c.cards.is_empty() else null)
 	col.stack.add_child(_board)
 
-	match c.mode:
-		"plan":
-			var start := SprintUiShared.button(tr("PRODUCT_START_SPRINT"), &"PrimaryButtonDark", action.emit.bind("start", {}))
-			start.disabled = not c.can_start
-			if c.start_reason != "":
-				var why := _note(SprintUiShared.LOCK, c.start_reason, UiTokens.D_INK_3)
-				# Kartsız boş sütunun çıkış yolu gövdesindeki düğmedir.
-				if c.team_empty and not c.cards.is_empty():
-					why.add_child(_way_out(c, &"FloatLink"))
-				why.size_flags_horizontal = Control.SIZE_SHRINK_END
-				col.foot().add_child(why)
-			if c.plan_hold:
-				var hold := _note(PAUSE, tr("PRODUCT_PLAN_HOLD"), UiTokens.D_INK_3)
-				hold.size_flags_horizontal = Control.SIZE_SHRINK_END
-				col.foot().add_child(hold)
-			# Boş geçirmek oyuncunun açık onayıdır: ilk tık onay satırını açar, Onayla geçirir.
-			var confirm := SprintUiShared.box(UiTokens.SPACE_L)
-			confirm.visible = false
-			confirm.add_child(RnDUiShared.spacer())
-			confirm.add_child(_note("", tr("PRODUCT_SKIP_CONFIRM"), UiTokens.D_INK_3))
-			confirm.add_child(SprintUiShared.button(tr("UI_CONFIRM"), &"SecondaryButtonSmall",
-				action.emit.bind("skip", {})))
-			var skip := SprintUiShared.button(tr("PRODUCT_SKIP_SPRINT"), &"SecondaryButton", func() -> void:
-				confirm.visible = true)
-			col.foot().add_child(_foot_row([skip, start]))
-			col.foot().add_child(confirm)
-		"active":
-			var nv: Variant = c.next_version
-			if nv != null:
-				var version := SprintUiShared.box(UiTokens.SPACE_L)
-				version.add_child(SprintUiShared.label(Fmt.upper(tr("PRODUCT_NEXT_RELEASE")), &"KeyLabel"))
-				version.add_child(SprintUiShared.label(String(nv.label), &"FigureValue"))
-				if nv.weeks >= 0:
-					version.add_child(SprintUiShared.label(tr(Fmt.count_key("PRODUCT_IN_WEEKS", nv.weeks)).format(
-						{"n": nv.weeks}), &"MetaMuted"))
-				col.foot().add_child(version)
+	if _running:
+		_known = c.progress.known
+	_foot = SprintFoot.new()
+	_foot.action.connect(action.emit)
+	_foot.setup(c)
+	col.foot().add_child(_foot)
 
 
 ## Kimse çalışamıyorken sütunun gövdesi: ekip glifi, not ve çıkış yolu.
@@ -178,20 +145,10 @@ func _nobody(c: Dictionary) -> VBoxContainer:
 	var note := UiFactory.make_label(tr("HR_EMPTY_ROW"), &"NoteMuted")
 	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	empty.add_child(note)
-	var go := _way_out(c, &"SecondaryButton")
+	var go := SprintUiShared.way_out(c, &"SecondaryButton", action.emit)
 	go.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	empty.add_child(go)
 	return empty
-
-
-## Kimse çalışamıyorken çıkış yolu: kurucu araştırıyorsa Ar-Ge, kadro yoksa işe alım, varsa Ekip.
-func _way_out(c: Dictionary, variation: StringName) -> Button:
-	var way: Array = (["PRODUCT_GO_RND", "rnd", {"node": c.rnd_node.id}] if c.rnd_node != null
-		else ["PRODUCT_GO_TEAM", "team", {}] if c.staffed else ["HR_SEARCH_START", "hire", {}])
-	var go := SprintUiShared.button(tr(way[0]), variation, action.emit.bind(way[1], way[2]))
-	if way[1] == "hire":
-		go.icon = load(PLUS)
-	return go
 
 
 ## Sürüm notu: sprint kapanınca orta sütunun yerini alır; açıkken oyun durur.
@@ -288,46 +245,6 @@ func _release(col: Column, c: Dictionary, next_sprint: int) -> void:
 		SprintUiShared.button(tr("PROD_SHIP_PUBLISH"), &"PrimaryButtonDark", action.emit.bind("publish", {})),
 	] if r.gate else [SprintUiShared.button(tr("PRODUCT_PLAN_SPRINT").format({"n": next_sprint}), &"PrimaryButtonDark",
 		plan_next)]))
-
-
-func _next(next: Dictionary) -> void:
-	var col := Column.new(&"SprintColumnNext", UiTokens.D_SPRINT_COLUMNS.y)
-	_next_column = col
-	HRUiShared.D_dashed(col)
-	add_child(col)
-	col.head.add_child(_title_row(next.sprint, "PRODUCT_NEXT"))
-	if next.sprint < 0:
-		return
-	if not next.flags.is_empty():
-		var flags := HFlowContainer.new()
-		flags.add_theme_constant_override("h_separation", UiTokens.SPACE_S)
-		flags.add_theme_constant_override("v_separation", UiTokens.SPACE_S)
-		for flag in next.flags:
-			flags.add_child(SprintUiShared.flag(flag.text, flag.k == "deadline"))
-		col.head.add_child(flags)
-	for card in next.cards:
-		_add_card(col.stack, card, SprintCard.Look.NARROW)
-	if next.cards.is_empty():
-		col.tooltip_text = tr("PRODUCT_NEXT_EMPTY")
-
-
-## "SPRINT 8 ... SONRAKİ"; sprint yokken (canlı model) yalnız sağdaki etiket kalır.
-func _title_row(sprint: int, tag_key: String) -> HBoxContainer:
-	var row := SprintUiShared.box(UiTokens.SPACE_M)
-	row.custom_minimum_size.y = UiTokens.D_H_FX
-	if sprint >= 0:
-		row.add_child(SprintUiShared.label(Fmt.upper(tr("PRODUCT_SPRINT_TITLE").format({"n": sprint})), &"ColumnTitle"))
-	row.add_child(RnDUiShared.spacer())
-	row.add_child(SprintUiShared.label(Fmt.upper(tr(tag_key)), &"KeyLabel"))
-	return row
-
-
-func _add_card(box: VBoxContainer, card: Dictionary, look: SprintCard.Look) -> SprintCard:
-	var node: SprintCard = CARD_SCENE.instantiate()
-	box.add_child(node)
-	node.setup(card, look)
-	node.action.connect(action.emit)
-	return node
 
 
 ## Sürüm notunun satırı: tür glifi ve ad; sağ ucu çağıran doldurur.

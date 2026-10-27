@@ -2,16 +2,17 @@ extends RefCounted
 
 # Ürün sprint ekranının debug kaynağı (sekmenin set_source'u): beş mockup (c1..c5) ve uç
 # durumlar. Simülasyon yok: act() geçiş tablosunu sürer ve kartları listeler arasında taşır;
-# bu sprintin kartları yalnız kapasite bloğunun yükünü kurar, pano onları çizmez. model() her çağrıda
+# bu sprintin kartları yalnız kapasite bloğunun yükünü kurar, pano onları çizmez; sağ sütun yalnız Hazırlık'ı (PM'siz) ve aşama yükünü
+# çizer, sonraki sprintin kartları aşama payı ve hazırlayanı olmadan satırdır. model() her çağrıda
 # baştan kurulur, taşımalar günlükten yeniden oynanır; metin o anki dilde çözülür (özel adlar düz).
 
 ## Geçiş tablosu: eylem → [geçerli olduğu orta sütun kipi, varılan aşama].
 const STAGES := {"start": ["plan", "active"], "advance": ["active", "release"], "plan_next": ["release", "replan"]}
 ## Uç durumun ve aşamanın üstüne kurulduğu mockup; listede olmayan c1'dir.
 const BASES := {"active": "c2", "mvp": "c2", "release": "c3",
-	"no_release": "c3", "gate": "c3", "release_fix": "c3", "release_reviews": "c3", "b2b_no_requests": "c5",
-	"fix_long_name": "c5", "goal_menu": "c4", "approved": "c4"}
-## id → [ad TR, ad EN, kısa ad TR, kısa ad EN]; kısa ad etki satırında ve hedefte.
+	"no_release": "c3", "gate": "c3", "release_fix": "c3", "release_reviews": "c3",
+	"goal_menu": "c4", "approved": "c4"}
+## id → [ad TR, ad EN, kısa ad TR, kısa ad EN]; kısa ad hedefte.
 const AREAS := {
 	"core": ["Çekirdek", "Core", "Çekirdek", "Core"],
 	"onboarding": ["İlk Kullanım ve Erişim", "Onboarding & Access", "İlk kullanım", "Onboarding"],
@@ -20,8 +21,6 @@ const AREAS := {
 	"trust": ["Güven & Ölçek", "Trust & Scale", "Güven", "Trust"],
 	"revenue": ["Gelir", "Revenue", "Gelir", "Revenue"],
 }
-## Fikstür seviyesinin (0..3) kelimesi; fikstür beklentiyi her alanda aynı tutar.
-const WORDS := ["none", "weak", "enough", "strong"]
 ## c1'in bu sprinti; çeyreğin ilk sütunu ve sprinti boşaltan uç durumlar da bunu okur.
 const C1_SPRINT := ["kesinti", "kisa_kayit", "filtreli"]
 
@@ -36,23 +35,31 @@ func _init(fixture_id: String) -> void:
 func model() -> Dictionary:
 	var m: Dictionary = _build(_stage)
 	# The left column and the strip read these; the fixtures carry no modules or requests.
-	m.merge({"founder": {"on": true, "locked": "", "rnd_text": ""}, "requests": null, "modules": []})
+	m.merge({"founder": {"on": true, "locked": "", "rnd_text": ""}, "requests": null, "modules": [], "prep": {"pms": []}})
 	for entry in _log:
 		_apply(m, entry[0], entry[1])
 	_header_and_capacity(m)
 	return m
 
 
-## Sprint başlığı, kapasite bloğu ve pano yeni sözleşmeyi okur: kapasite fikstürün çubuğundan üç aşamaya eşit bölünür, kimse oturmaz,
-## panoda satır yoktur; çeyreğin saati ve hedefi (yoksa "hedef yok") sabittir.
+## Sprint başlığı, kapasite bloğu, alt şerit ve sağ sütun yeni sözleşmeyi okur: kapasite fikstürün çubuğundan üç aşamaya eşit bölünür,
+## kimse oturmaz, panoda satır yoktur, devir yoktur, sonraki sprintin kartları paysız satırdır; çeyreğin saati ve hedefi (yoksa "hedef
+## yok") sabittir.
 func _header_and_capacity(m: Dictionary) -> void:
 	var c: Dictionary = m.center
 	var bar: Dictionary = c.capacity
-	c.merge({"team_empty": bar.total == 0, "now_at": 0.0, "crew": null, "cards": [], "people": {}, "candidates": [],
-		"close_at": float(c.weeks),
-		"capacity": SprintSystem.STAGES.map(func(stage: String) -> Dictionary:
+	var stages: Array = SprintSystem.STAGES
+	c.merge({"team_empty": bar.total == 0, "now_at": 0.0, "crew": null, "people": {}, "candidates": [], "close_at": float(c.weeks),
+		"start_skips": c.mode == "plan" and bar.total > 0 and c.cards.is_empty(), "delegate": {"on": false, "pm": null},
+		"progress": {"done": bar.done, "total": bar.used, "known": []}, "cards": [],
+		"capacity": stages.map(func(stage: String) -> Dictionary:
 			return {"stage": stage, "work": bar.used / 3.0, "team": bar.total / 3.0, "done": 0.0, "out": maxf(0.0, bar.used - bar.total) / 3.0,
 				"out_inside": 0.0, "streak": 0, "hot": false, "shared": false, "stays": [], "people": [], "away": [], "cluster": null})}, true)
+	m.next = {"sprint": m.next.sprint, "carried": [], "load": stages.map(func(stage: String) -> Dictionary:
+		return {"stage": stage, "carried": 0.0, "planned": 0.0, "team": bar.total / 3.0}),
+		"cards": m.next.cards.map(func(card: Dictionary) -> Dictionary:
+			return {"id": card.id, "kind": card.kind, "name": card.name, "effort": card.effort, "parts": [], "prep": null,
+				"buttons": ["pull", "remove"] if c.mode == "plan" else ["remove"]})}
 	m.quarter.merge({"q": 1, "year": 2012, "pos": 1, "total": 6})
 	var goal: Variant = m.quarter.goal
 	m.quarter.goal = {"area_id": "", "area_name": "", "meter": null} if goal == null else {"area_id": goal.area_id,
@@ -125,13 +132,6 @@ func _build(id: String) -> Dictionary:
 			m.center.release.gate = true
 			m.center.release.press = {}
 			m.center.release.result = null
-		"b2b_no_requests":
-			m.next.flags = []
-		"fix_long_name":
-			# B2B düzeltme kartının hata satırı: en büyük hesabın adı satıra sığmayacak kadar uzun, sarar; sonraki sütundaki kartta.
-			var effect: Array = [_bugs(6, 3, 140, "Anadolu Lojistik ve Taşımacılık Sanayi A.Ş.", 100), _clear("trust")]
-			m.next.cards.push_front(_deck("kesinti", SprintCard.State.PLANLANAN,
-				{"id": "kesinti_sonraki", "effect": effect, "effort": 12}))
 		"release_fix":
 			# Düzeltme satırları kapanıştaki gerçek sayıyı yazar: planlanırken 5 olan hat kapanışta 9'du; öbürü, hatalı
 			# kapanan bir kartın hatası aynı hatta düştüğü için 1'e indi.
@@ -154,7 +154,6 @@ func _build(id: String) -> Dictionary:
 		"mvp":
 			m.versions = []
 			m.header.live_version = ""
-			m.center.next_version = null
 			m.center.mvp = _mvp_line()
 		"quarter_no_pm":
 			m.quarter.state = "locked_no_pm"
@@ -185,7 +184,6 @@ func _apply(m: Dictionary, kind: String, args: Dictionary) -> void:
 			# Düzenlenen PM sütunu SPRINT görünümünde sonraki sprint olarak açılır (görünümü sekme değiştirir).
 			var col: Dictionary = m.quarter.columns.filter(func(c: Dictionary) -> bool: return c.sprint == args.sprint)[0]
 			m.next.sprint = col.sprint
-			m.next.flags = col.flags
 			m.next.cards = col.cards
 		"pick_goal":
 			m.quarter.goal.area_id = args.area_id
@@ -202,7 +200,6 @@ func _place(m: Dictionary, id: String, where: String) -> void:
 	if where != "":
 		var target: Dictionary = m.center if where == "center" else m.next
 		card.state = SprintCard.State.SPRINT_PLAN if where == "center" else SprintCard.State.PLANLANAN
-		card.buttons = ProductModel.BUTTONS[card.state]
 		target.cards.append(card)
 	_resum(m.center)
 
@@ -212,15 +209,15 @@ func _clear_sprint(m: Dictionary) -> void:
 		_place(m, card_id, "")
 
 
-## Kapasite kartlardan toplanır; planlamada "+" ve başlat izinleri de buradan: "+" boş puan kaldıkça açık.
+## Kapasite kartlardan toplanır; planlamada "+" ve başlat izinleri de buradan: "+" boş puan kaldıkça açık, ekip varken başlat açık.
 func _resum(c: Dictionary) -> void:
 	c.capacity = _capacity(c.cards, c.capacity.total, c.capacity.done)
 	if c.mode != "plan":
 		return
 	var cap: Dictionary = c.capacity
 	c.spare = cap.used < cap.total
-	c.can_start = cap.total > 0 and not c.cards.is_empty()
-	c.start_reason = "" if c.can_start else tr("PRODUCT_TEAM_NOBODY_JOBS" if cap.total == 0 else "PRODUCT_START_NEED_CARD")
+	c.can_start = cap.total > 0
+	c.start_reason = "" if c.can_start else tr("PRODUCT_TEAM_NOBODY_JOBS")
 
 
 ## Kapasitenin yükü kartların toplamıdır; devreden kart kalan puanıyla sayılır.
@@ -255,10 +252,7 @@ func _c1() -> Dictionary:
 func _c2() -> Dictionary:
 	var m := _c1()
 	m.ui = _ui_state("", "")
-	m.center = _center("active", _active_cards(), {
-		"capacity": {"total": 60, "done": 10},
-		"next_version": {"label": _version("1.5"), "weeks": 1},
-	})
+	m.center = _center("active", _active_cards(), {"capacity": {"total": 60, "done": 10}})
 	return m
 
 
@@ -293,12 +287,10 @@ func _c5() -> Dictionary:
 		"quarter": {"state": "locked_no_pm", "goal": null, "columns": []},
 		"ui": _ui_state("trust", ""),
 		"areas": ["core", "onboarding", "integrations", "trust"].map(_area),
-		"center": _center("plan", [_deck("sso", plan), _deck("kesinti", plan, {"effect": _fix_b2b(), "effort": 12}),
-			_deck("excel", plan)], {
+		"center": _center("plan", [_deck("sso", plan), _deck("kesinti", plan, {"effort": 12}), _deck("excel", plan)], {
 			"suggest": {"amount": 12.0, "cards": [{"name": "SSO", "done": 12.0, "effort": 12.0}]},
 		}),
-		"next": {"sprint": 8, "cards": [_deck("efatura", SprintCard.State.PLANLANAN)], "flags": [{"k": "deadline",
-			"text": tr("PRODUCT_FLAG_DEADLINE").format({"customer": "Nordica", "request": "SSO"})}]},
+		"next": {"sprint": 8, "cards": [_deck("efatura", SprintCard.State.PLANLANAN)]},
 	}
 
 
@@ -306,7 +298,7 @@ func _notly_next(carried: bool) -> Dictionary:
 	var cards: Array = [_deck("ilk_tur", SprintCard.State.PLANLANAN), _deck("oto_yedek", SprintCard.State.PLANLANAN)]
 	if carried:
 		cards.push_front(_deck("filtreli", SprintCard.State.DEVREDEN, {"remaining": 10}))
-	return {"sprint": 8, "flags": [_rival_flag()], "cards": cards}
+	return {"sprint": 8, "cards": cards}
 
 
 func _quarter() -> Dictionary:
@@ -347,44 +339,29 @@ func _sprint_cards() -> Array:
 
 # --- Parçalar ---------------------------------------------------------------
 
-## id → [tür, alan, roller, efor, ad, etki].
+## id → [tür, efor, ad].
 func _deck_table() -> Dictionary:
 	return {
-		"kesinti": ["fix", "trust", ["dev"], 10, _p("Kesinti düzeltmesi", "Outage fix"), [_bugs(5, -1, 300), _clear("trust")]],
-		"esitleme": ["fix", "core", ["dev"], 10, _p("Eşitleme düzeltmesi", "Sync fix"), [_bugs(5, -1, 300)]],
-		"kisa_kayit": ["feature", "onboarding", ["design", "dev"], 15, _p("Kısa kayıt", "Short sign-up"),
-			[_level("onboarding", 1, 2)]],
-		"ilk_tur": ["feature", "onboarding", ["design", "dev"], 10, _p("İlk tur rehberi", "First-run guide"),
-			[_level("onboarding", 1, 2)]],
-		"mobil_giris": ["feature", "onboarding", ["dev", "test"], 20, _p("Mobil giriş", "Mobile login"),
-			[_level("onboarding", 1, 2)]],
-		"filtreli": ["polish", "core", ["dev"], 25, _p("Filtreli arama", "Filtered search"),
-			[{"k": "holds", "area": _short("core"), "word": "strong"}, _cap_fx(_p("Arama", "Search"), 2, 3)]],
-		"oto_yedek": ["feature", "trust", ["dev"], 15, _p("Otomatik yedekleme", "Automatic backups"),
-			[_level("trust", 1, 2)]],
-		"etiketler": ["feature", "core", ["design", "dev"], 20, _p("Etiketler", "Tags"),
-			[_cap_fx(_p("Etiketler", "Tags"), 0, 1)]],
-		"baglanti": ["feature", "growth", ["dev"], 20, _p("Bağlantıyla paylaşım", "Share by link"),
-			[_level("growth", 2, 3)]],
-		"ucretli": ["feature", "revenue", ["design", "dev"], 30, _p("Ücretli plan", "Paid plan"),
-			[_level("revenue", 0, 1)]],
-		"akilli_arama": ["feature", "core", ["dev"], 40, _p("Akıllı arama", "Smart search"),
-			[_cap_fx(_p("Arama", "Search"), 2, 3)]],
-		"sso": ["feature", "trust", ["dev", "test"], 25, "SSO (Nordica)",
-			[_level("trust", 1, 2), {"k": "request", "customer": "Nordica", "value": 12000}]],
-		"excel": ["feature", "integrations", ["dev"], 15, _p("Tablo dışa aktarma (Palmiye)", "Spreadsheet export (Palmiye)"),
-			[_level("integrations", 1, 2), {"k": "request", "customer": "Palmiye", "value": 4000}]],
-		"efatura": ["feature", "integrations", ["dev", "test"], 25, _p("e-Fatura entegrasyonu", "e-Invoice integration"),
-			[_level("integrations", 1, 2)]],
+		"kesinti": ["fix", 10, _p("Kesinti düzeltmesi", "Outage fix")],
+		"esitleme": ["fix", 10, _p("Eşitleme düzeltmesi", "Sync fix")],
+		"kisa_kayit": ["feature", 15, _p("Kısa kayıt", "Short sign-up")],
+		"ilk_tur": ["feature", 10, _p("İlk tur rehberi", "First-run guide")],
+		"mobil_giris": ["feature", 20, _p("Mobil giriş", "Mobile login")],
+		"filtreli": ["polish", 25, _p("Filtreli arama", "Filtered search")],
+		"oto_yedek": ["feature", 15, _p("Otomatik yedekleme", "Automatic backups")],
+		"etiketler": ["feature", 20, _p("Etiketler", "Tags")],
+		"baglanti": ["feature", 20, _p("Bağlantıyla paylaşım", "Share by link")],
+		"ucretli": ["feature", 30, _p("Ücretli plan", "Paid plan")],
+		"akilli_arama": ["feature", 40, _p("Akıllı arama", "Smart search")],
+		"sso": ["feature", 25, "SSO (Nordica)"],
+		"excel": ["feature", 15, _p("Tablo dışa aktarma (Palmiye)", "Spreadsheet export (Palmiye)")],
+		"efatura": ["feature", 25, _p("e-Fatura entegrasyonu", "e-Invoice integration")],
 	}
 
 
 func _deck(id: String, state: int, extra := {}) -> Dictionary:
 	var d: Array = _deck_table()[id]
-	var card := {"id": id, "name": d[4], "kind": d[0], "roles": d[2], "effort": d[3],
-		"state": state, "effect": d[5], "locked_node": "", "locked_rnd": "", "remaining": -1, "ready": -1.0, "buttons": ProductModel.BUTTONS.get(state, []),
-		"priority": d[5].any(func(part: Dictionary) -> bool:
-			return part.k == "bugs" and part.n >= int(SprintCatalog.cfg("fix_effort.priority")))}
+	var card := {"id": id, "name": d[2], "kind": d[0], "effort": d[1], "state": state, "remaining": -1}
 	card.merge(extra, true)
 	return card
 
@@ -408,7 +385,7 @@ func _area_of(m: Dictionary, id: String) -> Dictionary:
 func _center(mode: String, cards: Array, extra: Dictionary) -> Dictionary:
 	var c := {"mode": mode, "sprint": 7, "weeks": 2, "week": 1, "capacity": {"total": 60, "done": 0},
 		"staffed": true, "cards": cards,
-		"plan_hold": false, "next_version": null, "mvp": null, "spare": false, "ceiling_pct": 125, "can_start": false,
+		"mvp": null, "spare": false, "ceiling_pct": 125, "can_start": false,
 		"start_reason": "", "rnd_node": null, "suggest": null, "release": null}
 	c.merge(extra, true)
 	_resum(c)
@@ -461,28 +438,6 @@ func _ui_state(open_area: String, hover_card: String) -> Dictionary:
 
 func _rival_flag() -> Dictionary:
 	return {"k": "rival", "text": tr("PRODUCT_RIVAL_TOPIC").format({"topic": _p("mobil", "mobile")})}
-
-
-func _level(area: String, from: int, to: int) -> Dictionary:
-	return {"k": "level", "area": _short(area), "from": from, "to": to, "from_word": WORDS[from], "to_word": WORDS[to]}
-
-
-func _cap_fx(cap_name: String, from: int, to: int) -> Dictionary:
-	return {"k": "cap", "name": cap_name, "from": from, "to": to, "from_word": WORDS[from], "to_word": WORDS[to]}
-
-
-func _clear(area: String) -> Dictionary:
-	return {"k": "alert_clear", "area": _short(area)}
-
-
-## Düzeltme kartının hata satırı; B2C'de hesap sayısı -1 ve en büyük hesap "".
-func _bugs(n: int, accounts: int, users: int, top := "", top_users := 0) -> Dictionary:
-	return {"k": "bugs", "n": n, "accounts": accounts, "users": users, "top": top, "top_users": top_users}
-
-
-## c5'in B2B düzeltme kartı: altı hata, üç hesap, 140 kullanıcı, en büyüğü Nordica.
-func _fix_b2b() -> Array:
-	return [_bugs(6, 3, 140, "Nordica", 100), _clear("trust")]
 
 
 func _short(area: String) -> String:

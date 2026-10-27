@@ -5,13 +5,16 @@ extends VBoxContainer
 # ekseninin zeminini (hafta ayracı, sprint sonu çizgisi, sonraki sprintin çizgili zemini, erken kapanışın taralı alanı, koşarken
 # şimdiki an çizgisi) ve kart satırlarını taşır; kartsız planda tek hayalet satır ("+ Kart ekle"), kartsız planda önerinin ilk üç
 # adayı ve imleç sol sütunda bir adayın "+"ındayken o adayın hayaleti "EKLENEBİLİR" altında durur. Gövde taşarsa altta "aşağıda
-# {n} kart daha" hapı yapışık kalır. Yalnız modeli çizer; satır tıkları sekmeye `action` olarak çıkar. Saat ilerleyince `set_now`
+# {n} kart daha" hapı yapışık kalır; katlamanın altında yetişmeyen kart varsa hap tehlike renginde ve ipucu onların sayısını yazar.
+# Yalnız modeli çizer; satır tıkları sekmeye `action` olarak çıkar. Saat ilerleyince `set_now`
 # yalnız şimdiki an çizgisini ve koşan çubukları günceller.
 
 signal action(kind: String, args: Dictionary)
 
 ## Hapın hesabında satırın altı bu kadar piksel görünmüyorsa satır "aşağıda" sayılır.
 const MORE_SLACK := 10
+## Hapın üstündeki tekerlek adımı, ScrollContainer'ın kendi adımı gibi, sayfanın sekizde biridir.
+const WHEEL_STEPS := 8.0
 
 ## Gövdenin kaydırması: yeniden kurulumda yeri korunur (`SprintUiShared.keep_scroll`).
 var scroll: ScrollContainer
@@ -19,7 +22,9 @@ var _rows: Array = []
 var _now: StagePaint
 var _ghost_box: VBoxContainer
 var _more: Control
+var _pill: PanelContainer
 var _more_label: Label
+var _more_glyph: TextureRect
 var _has_candidates := false
 var _ctx: Dictionary
 
@@ -240,38 +245,60 @@ func _more_pill() -> Control:
 	var fade := StagePaint.part(&"fade", "", {}, Rect2())
 	fade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	holder.add_child(fade)
-	var pill := PanelContainer.new()
-	pill.theme_type_variation = &"MoreHintPill"
-	pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_pill = PanelContainer.new()
+	_pill.theme_type_variation = &"MoreHintPill"
+	_pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_pill.gui_input.connect(_on_pill_input)
 	var row := SprintUiShared.box(UiTokens.SPACE_S)
-	row.add_child(UiFactory.make_glyph(SprintUiShared.CHEVRON_DOWN, UiTokens.D_ICON_TAG, UiTokens.D_INK_2))
+	_more_glyph = UiFactory.make_glyph(SprintUiShared.CHEVRON_DOWN, UiTokens.D_ICON_TAG, UiTokens.D_INK_2)
+	row.add_child(_more_glyph)
 	_more_label = SprintUiShared.label("", &"MoreHint")
 	row.add_child(_more_label)
-	pill.add_child(row)
-	pill.anchor_left = 0.5
-	pill.anchor_right = 0.5
-	pill.anchor_top = 1.0
-	pill.anchor_bottom = 1.0
-	pill.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	pill.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	pill.offset_bottom = -UiTokens.SPACE_S
-	holder.add_child(pill)
+	_pill.add_child(row)
+	_pill.anchor_left = 0.5
+	_pill.anchor_right = 0.5
+	_pill.anchor_top = 1.0
+	_pill.anchor_bottom = 1.0
+	_pill.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_pill.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_pill.offset_bottom = -UiTokens.SPACE_S
+	holder.add_child(_pill)
 	holder.visible = false
 	return holder
 
 
-## Satırın altı görünür yüksekliğin `MORE_SLACK` piksel dışındaysa kart "aşağıda" sayılır; kaydırınca güncellenir.
+## Satırın altı görünür yüksekliğin `MORE_SLACK` piksel dışındaysa kart "aşağıda" sayılır; kaydırınca güncellenir. Aşağıdakilerden
+## yetişmeyen varsa hap tehlike renginde ve ipucu onların sayısını yazar.
 func _update_more() -> void:
 	if _more == null or scroll == null:
 		return
-	var seen: float = scroll.scroll_vertical + scroll.size.y - MORE_SLACK
+	var seen: float = scroll.scroll_vertical + scroll.size.y + MORE_SLACK
 	var hidden := 0
+	var late := 0
 	for row: BoardRow in _rows:
 		if not row.is_candidate() and row.position.y + row.size.y > seen:
 			hidden += 1
+			late += int(row.card.late)
 	_more.visible = hidden > 0
 	if hidden > 0:
 		_more_label.text = tr(Fmt.count_key("PRODUCT_MORE_BELOW", hidden)).format({"n": hidden})
+		_pill.theme_type_variation = UiTokens.D_variation(&"MoreHintPillLate" if late > 0 else &"MoreHintPill")
+		_pill.tooltip_text = tr(Fmt.count_key("PRODUCT_MORE_BELOW_LATE", late)).format({"n": late}) if late > 0 else ""
+		# İpucu varken hap imleci tutar; tıklama altındaki satıra hap kadar alanda ulaşmaz, tekerlek panoyu kaydırır.
+		_pill.mouse_filter = Control.MOUSE_FILTER_STOP if late > 0 else Control.MOUSE_FILTER_IGNORE
+		var ink: Color = UiTokens.D_neg_ink() if late > 0 else UiTokens.D_INK_2
+		_more_label.add_theme_color_override("font_color", ink)
+		_more_glyph.modulate = ink
+
+
+## İpucunu taşıyan hapın üstünde tekerlek panonun kaydırmasıdır (hap kaydırma alanının kardeşidir, olay ona kendiliğinden gitmez).
+func _on_pill_input(event: InputEvent) -> void:
+	var wheel := event as InputEventMouseButton
+	if wheel == null or not wheel.pressed or wheel.button_index not in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
+		return
+	var bar := scroll.get_v_scroll_bar()
+	bar.value += bar.page / WHEEL_STEPS * wheel.factor * (1.0 if wheel.button_index == MOUSE_BUTTON_WHEEL_DOWN else -1.0)
+	_pill.accept_event()
 
 
 # --- Saat ve kaydırma -----------------------------------------------------------------------

@@ -42,7 +42,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 43
+const THEME_STAMP := 44
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -728,7 +728,17 @@ const D_W_STAGE_STRIP := 168          # a candidate's stage strip
 const D_H_STAGE_STRIP := 6
 const D_W_PICKER := 640               # the type picker's column
 const D_H_SECTION := 28              # a section's caps label and its rule
-const D_SPRINT_COLUMNS := Vector2(746, 308)   # this sprint's column against the next one's, as shares of the room between the left column and the edge
+const D_W_NEXT := 300                 # the right column: the preparation and the next sprint's box
+const D_H_FOOT := 68                  # the centre column's foot
+const D_W_START := 204                # the start button, and the box that stands in for it under delegated planning, at their least
+const D_W_PROGRESS := 300             # the running sprint's progress box at its least
+const D_W_PROGRESS_BAR := 120         # its bar at its least
+const D_W_PROGRESS_BAR_TIGHT := 90    # its bar at its least beside a delegated planner's name (the box then takes only what it holds)
+const D_H_LOAD_BAR := 4               # a stage's load in the next sprint's box
+const D_W_LOAD_NUM := 64              # its figure's column, right aligned
+const D_H_NEXT_STRIP := 8             # a next card's stage strip
+const D_CARRY_HATCH_ALPHA := 0.14     # a carried row's stripes: faint, so its name reads over them
+const D_CARRY_EDGE_ALPHA := 0.55      # a carried row's edge
 # --- the sprint screen's board: a card per row, its stages on a time axis ---
 const D_W_CARD_INFO := 312            # a card row's info column
 const D_W_TIMELINE := 396             # its time axis

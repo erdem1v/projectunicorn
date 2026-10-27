@@ -66,23 +66,23 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
 - `WorkHoursSystem.sitting_open(hours)` `:57`: kurucunun dört oturumunun giriş kapısı · `vc_pitch_system.gd`, `sales_ledger.gd`, `sales_tab.gd`, `hunt_tab.gd`
 - `WorkHoursSystem.overtime_pay_accrued_today()` `:333`: Finans çeker (itme yok) · `finance_system.gd`; `company_window()` `work_hours_system.gd:112` · `mail_clock.gd`, `incident_system.gd`
 - `LookSystem.for_person()` `look_system.gd:123`, `founder(portrait_id)` `:116` · `character_registry.gd:530-536`, `hr_search_system.gd:296`, `counterpart_system.gd:101`, onboarding
-- `FounderConstants.validate_alloc/validate_traits` `founder_constants.gd:137/152` · `game_state.gd:966,991`, `origin_traits_step.gd`, `main.gd:5352`
+- `FounderConstants.validate_alloc/validate_traits` `founder_constants.gd:137/152` · `game_state.gd:966,991`, `origin_traits_step.gd`, `main.gd:5363`
 - `FounderConstants.to_ruler(points)` `founder_constants.gd:33`: onboarding birimi → 0-10 cetvel (×2) · `game_state.gd:987` (`_build_founder` `:960`)
 - `FounderConstants.starting_cash(origin, difficulty)` `founder_constants.gd:187` · `first_week_doc.gd`; `portrait_path()` `founder_constants.gd:192` · `ui_factory.gd:113`, `inbox.gd:467`, `personal_tab.gd:87`, onboarding
 - İzin alanı yazıcıları: `CharacterRegistry.set_away(id, kind, until_day)` `character_registry.gd:613` (hastalık), `set_leave_override(id, week, year)` `:623` (kaydırılmış yaz izni haftası)
 - Eğitim durumu yazıcıları: `CharacterRegistry.begin_training` `character_registry.gd:142`, `tick_training` `:158`, `add_experience` `:122`, `training_fee_for` `:134`
 
 ## Sinyaller
-- `hr_day_processed`: yayan `hr_system.gd:51` (günün sonu) · dinleyen `sprint_system.gd:1304`, `hr_dossier.gd:54`
-- `assignment_changed(id)`: yayan `character_registry.gd:244,285,294,311` ve `work_hours_system.gd:270-317` (her mesai yazıcısı) · `sprint_system.gd:1306`, `research_bar.gd:58`, `office_people.gd:85`
+- `hr_day_processed`: yayan `hr_system.gd:51` (günün sonu) · dinleyen `sprint_system.gd:1315`, `hr_dossier.gd:54`
+- `assignment_changed(id)`: yayan `character_registry.gd:244,285,294,311` ve `work_hours_system.gd:270-317` (her mesai yazıcısı) · `sprint_system.gd:1317`, `research_bar.gd:58`, `office_people.gd:85`
 - `headline_added(source, line)`: yayan `hr_system.gd:100`, `hr_morale_system.gd:41,264`, `hr_search_system.gd:302` · `time_manager.gd:85`, `news_ticker.gd:72`
 - `employee_promoted(id, level)`: yayan `hr_actions.gd:154` · dinleyen yok
 - `leave_requested(id)`: yayan `hr_morale_system.gd:65` (yaz izni başlarken; izin yine de otomatik başlar) · dinleyen yok
 - `employee_training_changed(id, weeks_left)`: yayan `character_registry.gd:153,164,180` · `build_bar.gd:45`, `research_bar.gd:59`
-- `training_started(id, area)`: yayan `character_registry.gd:154` · `sprint_system.gd:1308`; `training_completed` `character_registry.gd:182` · dinleyen yok
+- `training_started(id, area)`: yayan `character_registry.gd:154` · `sprint_system.gd:1319`; `training_completed` `character_registry.gd:182` · dinleyen yok
 - `employee_experience_changed` ve `experience_bar_full`: yayan `character_registry.gd:129-130,181` · bar_full yalnız smoke dinler
-- `employee_hired(id)` `character_registry.gd:462` · `sprint_system.gd:1307`; `character_added` `character_registry.gd:460` · `left_tabs.gd:108`, `office_people.gd:83`
-- `character_removed` `character_registry.gd:560` · `sprint_system.gd:1305`, `hr_dossier.gd:55`, `left_tabs.gd:109`, `office_people.gd:84`; `employee_departed` `character_registry.gd:561` · dinleyen yok
+- `employee_hired(id)` `character_registry.gd:462` · `sprint_system.gd:1318`; `character_added` `character_registry.gd:460` · `left_tabs.gd:108`, `office_people.gd:83`
+- `character_removed` `character_registry.gd:560` · `sprint_system.gd:1316`, `hr_dossier.gd:55`, `left_tabs.gd:109`, `office_people.gd:84`; `employee_departed` `character_registry.gd:561` · dinleyen yok
 - `morale_changed` `character_registry.gd:624` · `left_tabs.gd:107`; `morale_band_changed` `character_registry.gd:627` · yalnız smoke; `productivity_changed` `:585,596` · dinleyen yok
 - Tanımlı ama yayanı yok: `raise_requested`, `employee_eligible_for_promotion` (`event_bus.gd:76,73`; GDD'de adı geçtiği için silinmez)
 

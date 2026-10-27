@@ -3744,8 +3744,7 @@ func _run_ending_shot(key: String) -> void:
 # "?", so the frame is Olaylar on the sprint paper; live:gate saves the MVP gate, presses its
 # Yayınla and saves the v1.0 note (<stem>_publish); live:b2c_goal saves the planning with the lead's plan offered, applies
 # it with no quarter goal (<stem>_lead), then takes the lead's cards back out, picks the goal Trust and applies the lead's
-# plan again (<stem>_trust); live:plan saves the plan, presses Bu sprinti boş
-# geçir (<stem>_skip, its confirm row open) and then Sprinti başlat (<stem>_start); live:rnd saves the planning with the
+# plan again (<stem>_trust); live:plan saves the plan and presses Sprinti başlat (<stem>_start); live:rnd saves the planning with the
 # founder in R&D, presses Ar-Ge'ye git and saves R&D with the founder's node selected (<stem>_go). live:overview_pre is
 # the Sprint-1 plan with the pointer on the locked GENEL BAKIŞ tab (<stem>_tip); live:server_* is GENEL BAKIŞ on the
 # live ERP (see _seed_server), the plain frame and, for the states that have a tip to read, <stem>_tip with the pointer
@@ -3800,7 +3799,7 @@ func _run_product_shot(id: String) -> void:
 			print(_productshot_line("a4_run_w2"))
 		var then: Dictionary = {"live:gate": [[press.call("PROD_SHIP_PUBLISH"), "_publish"]],
 			"live:a4_run_w2": [[two_hours_on, "_02"]],
-			"live:plan": [[press.call("PRODUCT_SKIP_SPRINT"), "_skip"], [press.call("PRODUCT_START_SPRINT"), "_start"]],
+			"live:plan": [[press.call("PRODUCT_START_SPRINT"), "_start"]],
 			"live:rnd": [[press.call("PRODUCT_GO_RND"), "_go"]],
 			"live:pick_relang": [[to_en, "_rebuilt"]],
 			"live:b2c_goal": [[lead, "_lead"], [toward_trust, "_trust"]]}
@@ -4021,7 +4020,8 @@ func _seed_product_live(scenario: String) -> void:
 ## first name; `queue` open cards sent to the next column (the PMs prepare them, the designers work ahead); `fill` the plan ("lead",
 ## "over" every card "+" takes, "long" the longest English names, "none" or that many cards); `load` the plan's cards sized to
 ## that share of the capacity (`card_need`, the one fixture size); `run` the sprint started and the clock moved to that sprint
-## week; `delegate` the planning handed to the PM; `paper` a decision paper asked in the first week (off in every other world).
+## week; `delegate` the planning handed to the PM; `paper` a decision paper asked in the first week (off in every other world); `away`
+## every employee but the PMs on leave once the plan is made (a plan with cards nobody can work); `pm` the PMs' name.
 const _A4_ROLES := {"p": HRConstants.ROLE_PRODUCT_MANAGER, "d": HRConstants.ROLE_DESIGNER, "v": HRConstants.ROLE_DEVELOPER,
 	"t": HRConstants.ROLE_TESTER}
 const _A4_FIRST := ["Ece", "Mert", "Zeynep", "Deniz", "Burak", "Ayşe", "Kaan", "Gizem", "Onur", "Defne"]   # LOC-DATA debug seed / names
@@ -4059,6 +4059,11 @@ const _A4_WORLDS := {
 	"a4_six_meetings2": {"crew": _A4_SIX + "5", "before": [_A4_PREP], "bugs": 1, "fill": "over", "load": 1.15, "queue": 1,
 		"sit": ["sales", "sales"]},
 	"a4_run_table": {"crew": _A4_ELEVEN, "sit": ["table"], "fill": "over", "load": 1.25, "run": 0.7},
+	"a4_run_delegate": {"crew": _A4_SIX + "5", "before": [_A4_PREP], "fill": "over", "load": 1.15, "queue": 2, "run": 1.9, "delegate": true},
+	"a4_cards_noteam": {"crew": "d3 v3 t3 p5", "off": true, "fill": 3, "away": true},
+	"a4_delegate_noteam": {"crew": "d3 v3 t3 p5", "off": true, "fill": 3, "away": true, "delegate": true},
+	"a4_run_delegate_long": {"crew": _A4_SIX + "5", "before": [_A4_PREP], "fill": "over", "load": 1.15, "queue": 2, "run": 1.9, "delegate": true,
+		"pm": "Jordan Bennett"},   # LOC-DATA debug seed / names: the pools' widest name
 }
 
 
@@ -4087,6 +4092,11 @@ func _seed_product_a4(kind: String) -> void:
 	if not sittings.is_empty():
 		_a4_week()
 	_a4_plan(world)
+	for c: Character in CharacterRegistry.get_employees():
+		if c.role != HRConstants.ROLE_PRODUCT_MANAGER and world.get("away", false):
+			CharacterRegistry.set_status(c.id, HRConstants.STATUS_ON_LEAVE)
+		elif c.role == HRConstants.ROLE_PRODUCT_MANAGER and world.has("pm"):
+			c.character_name = world.pm
 	if world.get("delegate", false):
 		SprintSystem.set_delegate(true)
 	if world.get("paper", false):

@@ -5,13 +5,13 @@ extends PanelContainer
 # metni), durum yuvası (söz tarihi, devreden ya da yetişmez) ve PM ya da soru yuvası. Sağda zaman ekseni: aşama çubukları (önden
 # bitmiş aşamanın tik kutusu çubuğun başında), beklemeler, PM'in gölgesi ve kurucunun görüşme günleri, sprint dışına kalan pay
 # turuncu taramalı. Satır modelin kartını ve zaman ekseni kaydını çizer; hesap yapmaz. Koşan sprintte saat ilerleyince `set_now`
-# çubukların hâlini, dolgusunu ve çalışanların yüzlerini saklanan parçalardan yeniden okur. Her öğe kendi Control'üdür: çubuk,
+# çubukların hâlini, dolgusunu ve çalışanların yüzlerini saklanan parçalardan yeniden okur. Art arda önden biten aşamalar tek tik
+# kutusudur (son bitenin renginde; bitmiş aşamaların listesi kartın `stages`ında kalır). Her öğe kendi Control'üdür: çubuk,
 # bekleme, gölge, tarama ve tik kutusu `StagePaint`, çip ve yuvalar kendi Label ya da Panel'i; ipucu o öğeye bağlanır.
 
 signal action(kind: String, args: Dictionary)
 
 const ARROW := "res://assets/icons/util/arrow_right.svg"
-const CLOSE := "res://assets/icons/util/close.svg"
 
 ## Satırın verisi, bağlam ({mode "plan" | "active", now (sprint başından hafta), people {kimlik: kişi + parçaları}, candidate
 ## (aday satırı: hayalet çubuklar, hep açık "+"), hot (aday satırı üstüne gelinmiş gibi açık)}).
@@ -129,7 +129,7 @@ func _first_line() -> HBoxContainer:
 	effort.mouse_filter = Control.MOUSE_FILTER_PASS
 	line.add_child(effort)
 	if _ctx.candidate:
-		var add := SprintUiShared.key_button("add", false)
+		var add := SprintUiShared.add_key()
 		add.custom_minimum_size = Vector2.ONE * UiTokens.D_H_KEY_CAND
 		add.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 		add.tooltip_text = tr("PRODUCT_ADD_TO_PLAN")
@@ -216,26 +216,11 @@ func _person() -> Control:
 
 ## Planlamada üstüne gelince görünen "→" ve "×": satırın bilgi sütununun sağ üstünde, efor sayısının üstünde.
 func _keys(kinds: Array) -> Control:
-	var acts := PanelContainer.new()
-	acts.theme_type_variation = &"RowActs"
-	var row := SprintUiShared.box(UiTokens.SPACE_XXS)
-	acts.add_child(row)
-	var looks := {"send_next": [ARROW, "PRODUCT_TO_NEXT"], "remove": [CLOSE, "PRODUCT_REMOVE"]}
-	for kind: String in kinds:
-		var key := Button.new()
-		key.theme_type_variation = &"RowKey"
-		key.icon = load(looks[kind][0])
-		key.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		key.custom_minimum_size = Vector2.ONE * UiTokens.D_H_KEY_SM
-		key.focus_mode = Control.FOCUS_NONE   # boşluk tuşu hız tuşudur; odak onu yutmasın
-		key.tooltip_text = tr(looks[kind][1])
-		key.pressed.connect(action.emit.bind(kind, {"card_id": String(card.id)}))
-		row.add_child(key)
+	var acts := SprintUiShared.row_keys(kinds, String(card.id), action.emit)
 	# Panelin sağ kenarı bilgi sütununun sağ kenarından `SPACE_M + SPACE_XXS` içeride, üstü satırın üstünden `SPACE_XS` aşağıda.
 	var keys_w: float = kinds.size() * UiTokens.D_H_KEY_SM + (kinds.size() + 1) * UiTokens.SPACE_XXS
 	acts.offset_left = UiTokens.D_W_CARD_INFO - UiTokens.SPACE_M - UiTokens.SPACE_XXS - keys_w
 	acts.offset_top = UiTokens.SPACE_XS
-	acts.visible = false
 	return acts
 
 
@@ -246,8 +231,9 @@ func _x(week: float) -> float:
 
 
 ## Kartın aşamaları eksende: bekleme noktalı çizgisi, çubuk, sprint dışına kalan pay ve PM'in gölgesi. Eksenden önce ya da önden
-## bitmiş aşama çizilmez: tik kutusu olarak sonraki çubuğun başına takılır (arkasında çubuk yoksa tek başına). Sprint dışına kalan
-## paylar arka arkaya durur: sonraki aşamanın payı öncekinin bittiği yerden başlar, eksenin sonunda kesilir.
+## bitmiş aşama çizilmez: art arda bitenler tek tik kutusudur, son bitenin renginde, sonraki çubuğun başına takılır (arkasında çubuk
+## yoksa tek başına). Sprint dışına kalan paylar arka arkaya durur: sonraki aşamanın payı öncekinin bittiği yerden başlar, eksenin
+## sonunda kesilir.
 func _lane(h: int) -> Control:
 	var lane := Control.new()
 	lane.position = Vector2(UiTokens.D_W_CARD_INFO, 0.0)
@@ -257,11 +243,11 @@ func _lane(h: int) -> Control:
 	var shadows: Array = []
 	var waits: Array = []
 	var bars: Array = []
-	var ticks: Array = []
+	var tick := ""
 	var out_end := 0.0
 	for s: Dictionary in card.stages:
 		if s.before or (s.need <= SprintSystem.EPS and s.pre > SprintSystem.EPS):
-			ticks.append(s.stage)
+			tick = s.stage
 			continue
 		for wait: Dictionary in s.waits:
 			var from: float = _x(wait.from)
@@ -271,8 +257,8 @@ func _lane(h: int) -> Control:
 					Rect2(from, top + (UiTokens.D_H_STAGE_BAR - UiTokens.D_H_WAIT) / 2.0, width, UiTokens.D_H_WAIT)))
 		if s.start >= 0.0:
 			var left: float = _x(s.start)
-			bars.append(_bar(s, Rect2(left, top, maxf(_x(s.end) - left, UiTokens.D_W_STAGE_BAR_LEAST), UiTokens.D_H_STAGE_BAR), "in", ticks))
-			ticks = []
+			bars.append(_bar(s, Rect2(left, top, maxf(_x(s.end) - left, UiTokens.D_W_STAGE_BAR_LEAST), UiTokens.D_H_STAGE_BAR), "in", tick))
+			tick = ""
 			var shade: StagePaint = _shadow(s, top)
 			if shade != null:
 				shadows.append(shade)
@@ -280,11 +266,11 @@ func _lane(h: int) -> Control:
 			var out_left: float = maxf(_x(s.out_from), out_end)
 			var out_right: float = minf(out_left + _x(s.out_to) - _x(s.out_from), UiTokens.D_W_TIMELINE)
 			if out_right - out_left >= 1.0:
-				bars.append(_bar(s, Rect2(out_left, top, out_right - out_left, UiTokens.D_H_STAGE_BAR), "out", ticks))
-				ticks = []
+				bars.append(_bar(s, Rect2(out_left, top, out_right - out_left, UiTokens.D_H_STAGE_BAR), "out", tick))
+				tick = ""
 				out_end = out_right
-	for i in ticks.size():
-		bars.append(StagePaint.part(&"tick", ticks[i], {}, Rect2(i * UiTokens.D_W_TICK_BOX, top, UiTokens.D_W_TICK_BOX, UiTokens.D_H_STAGE_BAR)))
+	if tick != "":
+		bars.append(StagePaint.part(&"tick", tick, {}, Rect2(0.0, top, UiTokens.D_W_TICK_BOX, UiTokens.D_H_STAGE_BAR)))
 	for part: Control in shadows + waits + bars:
 		lane.add_child(part)
 	if _ctx.mode == "active":
@@ -292,9 +278,9 @@ func _lane(h: int) -> Control:
 	return lane
 
 
-## Bir aşamanın çubuğu: zemini, önden bitmiş aşamaların tik kutuları, görüşme taramaları, ikon ve sayı, çalışanların yüzleri.
-## `piece` "in" sprintin içindeki çubuk, "out" sprint dışına kalan pay.
-func _bar(s: Dictionary, rect: Rect2, piece: String, ticks: Array) -> StagePaint:
+## Bir aşamanın çubuğu: zemini, önden bitmiş aşamaların tik kutusu (`tick` son bitenin aşaması, yoksa ""), görüşme taramaları, ikon ve
+## sayı, çalışanların yüzleri. `piece` "in" sprintin içindeki çubuk, "out" sprint dışına kalan pay.
+func _bar(s: Dictionary, rect: Rect2, piece: String, tick: String) -> StagePaint:
 	var running: bool = _ctx.mode == "active"
 	var candidate: bool = _ctx.candidate
 	var out: bool = piece == "out"
@@ -312,15 +298,15 @@ func _bar(s: Dictionary, rect: Rect2, piece: String, ticks: Array) -> StagePaint
 	bar.clip_contents = true
 	if candidate:
 		bar.modulate.a = UiTokens.D_GHOST_ALPHA
-	for i in ticks.size():
-		bar.add_child(StagePaint.part(&"tick", ticks[i], {}, Rect2(i * UiTokens.D_W_TICK_BOX, 0.0, UiTokens.D_W_TICK_BOX, rect.size.y)))
+	if tick != "":
+		bar.add_child(StagePaint.part(&"tick", tick, {}, Rect2(0.0, 0.0, UiTokens.D_W_TICK_BOX, rect.size.y)))
 	if not out and not candidate:
 		for m: Dictionary in s.meet:
 			var from: float = maxf(_x(m.from), rect.position.x)
 			var to: float = minf(_x(m.to), rect.end.x)
 			if to - from >= 1.0:
 				bar.add_child(StagePaint.part(&"meet", s.stage, m, Rect2(from - rect.position.x, 0.0, to - from, rect.size.y)))
-	var left: float = ticks.size() * UiTokens.D_W_TICK_BOX + (UiTokens.SPACE_S if not ticks.is_empty() else UiTokens.D_STAGE_BAR_PAD.x)
+	var left: float = UiTokens.D_W_TICK_BOX + UiTokens.SPACE_S if tick != "" else float(UiTokens.D_STAGE_BAR_PAD.x)
 	var label: StagePaint = StagePaint.part(&"label", s.stage, {"state": state, "late": card.late, "main": main, "sub": sub, "left": left,
 		"room": 0.0, "icon": _icon(s.stage)}, Rect2(Vector2.ZERO, rect.size))
 	bar.add_child(label)

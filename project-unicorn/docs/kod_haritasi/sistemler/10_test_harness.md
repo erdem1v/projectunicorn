@@ -57,7 +57,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - `Main._seed_run_reproducible()` `scripts/main/main.gd:626`: tohum 424242, `IncidentSystem.rolls=false`; çekimlerin önce/sonra çiftini kıyaslanır yapar
 - `Main._finish_shot()` `scripts/main/main.gd:665`: kareyi `user://<ad>[_en][_cb].png` yazar (`:659`) ya da `--theme-audit` ise `AUDIT_BEGIN/END` basar (`_audit_walk` `:3007`)
 - `Main._run_why_fire()` `scripts/main/main.gd:288`: `EvWhy.report(kart)`; `_run_event_plausibility()` `:295` `PLAUSIBILITY.run(spec)`
-- `Main._skip_to_shell()` `scripts/main/main.gd:5334`: menü ve onboarding'siz kabuk; `--skip-onboarding` (`:107`) ve debug F12 (`:5095`) çağırır
+- `Main._skip_to_shell()` `scripts/main/main.gd:5345`: menü ve onboarding'siz kabuk; `--skip-onboarding` (`:107`) ve debug F12 (`:5106`) çağırır
 - `GameShell._debug_fkey()` `scripts/main/game_shell.gd:138`: debug build'de Shift+F4/F5/F6 (F4 onboarding'i yeniden tetikler)
 - `GameShell.debug_product_apply/act` `scripts/main/game_shell.gd:175-186`: `PRODUCT_FIXTURES` (`:18`) yükleyip Ürün sekmesine `set_source` verir · `main.gd:3763,3787`
 - `SaveManager._is_harness_arg()` `scripts/autoload/save_manager.gd:497`: `smoke`, `-shot`, `audit`, `probe`, `run-log`, `plausibility` alt dizili `--` bayrağı harness sayar
@@ -67,7 +67,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 
 ## Sinyaller
 
-- `debug_onboarding_retrigger_requested`: yayan `scripts/main/game_shell.gd:144` (Shift+F4) · dinleyen `scripts/main/main.gd:103` -> `_on_debug_onboarding_retrigger` (`:5136`)
+- `debug_onboarding_retrigger_requested`: yayan `scripts/main/game_shell.gd:144` (Shift+F4) · dinleyen `scripts/main/main.gd:103` -> `_on_debug_onboarding_retrigger` (`:5147`)
 - `phase_gate_reached`, `run_ended`: smoke `run_case` her vakada kendi dinleyicisini bağlar (`endgame_smoke.gd:74-75`), `_gate_signals` ve `_endings` dizilerine biriktirir
 - `phase_gate_reached`: `scripts/debug/run_probe.gd:490` da dinler (kapı geçişini defterine yazar)
 - `night_skipped`, `hour_changed`, `day_advanced`: tempo, tick ve crowd probe'ları ölçüm için dinler (`main.gd:478`, `tick_probe.gd`, `office_crowd_probe.gd`)
@@ -110,7 +110,8 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
   ↳ `month_history_*`; Kayıt: `save_*`, `menu_state_machine`, `autosave_writes_off_thread`, `legacy_v12_save_opens_live_table`, `sales_save_roundtrip_rev6`, `sales_check_replays_after_load`, `seed_sheet_round_trips`,
   ↳ `loc_save_sector_migration`; Platform: `loc_*`, `locale_switch`, `ui_scale_ladder_fits_settings`, `borderless_note_key_exists`. 09 Tema, menü, kabuk, onboarding: `build_percent_single_source`, `star_ruler_contract`,
   ↳ `rail_tabs_match_scene_order`, `onboarding_pages_contract`, `topbar_speed_cluster_three_rungs`, `milestone_paper_waits_for_card`, `event_gate_holds_clock`, `clock_resumes_only_by_player`, `rnd_rail_open_with_locked_tree`,
-  ↳ `all_scripts_load`. 06 Ofis: `office_*`, `desk_cap_blocks_hire`, `look_registry_unique_and_saved`; 02 Ürün: `sprint_*`, `paper_*`, `product_*`, `floor_ladder_areas`, `line_*`, `infra_*`, `capacity_step_immediate`, `load_mult_steps`,
+  ↳ `all_scripts_load`. 06 Ofis: `office_*`, `desk_cap_blocks_hire`, `look_registry_unique_and_saved`; 02 Ürün: `sprint_*`, `plan_*`, `paper_*`, `product_*`, `floor_ladder_areas`, `line_*`, `infra_*`,
+  ↳ `capacity_step_immediate`, `load_mult_steps`,
   ↳ `auto_capacity_grows_only`, `destek_*`, `incident_*`, `release_*`, `next_renewal_day_one_place`, `open_bugs_*`, `bug_cost_*`, `quarter_goal_without_pm`, `delegate_needs_pm`, `fit_*`, `split_bars_name_their_cause` (Ar-Ge ile ortak);
   ↳ 02 Ar-Ge: `research_*`, `rnd_*`, `card_math_matches_gdd_example`, `paused_job_resumes_on_direct_return`, `line_k3_locked_without_research`; `coupling_*` Ürün ile Ekip ortak, `productivity_mod_paces_the_sprint` Ürün,
   ↳ Ekip ve olay motoru ortak; 04 Ekip: `hr_*`, `founder_*`, `work_hours_*`, `alloc_guard`, `trait_formula`, `single_trait_contract`, `job_assignment_and_idle`, `overload_costs_output`, `leadership_is_trainable`,
@@ -180,7 +181,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - Throwing case geçer görünür: GDScript'te try/catch yok, çalışma hatası gövdeyi keser ve `""` döner; bu yüzden hata yakalama kabuktadır (`smoke_run.sh:4-9`). Smoke'u `SMOKE PASS` satırına bakarak değil `smoke_run.sh` ile koşun.
 - `--endgame-smoke` süreci MCP editör yolunda canlı bırakır (log okunsun diye); CLI'da `get_tree().quit()` çağrılır (`main.gd:205-212`). Harness bayrakları yalnız debug build'de çalışır.
 - `SaveManager._is_harness_arg` alt dizi eşleşmesidir: bayrak adı `smoke/-shot/audit/probe/run-log/plausibility` içeriyorsa otomatik kayıt, ekran ayarı ve `runs_finished` sayacı kapanır
-  (`main.gd:5229`, `display_settings.gd:88`).
+  (`main.gd:5240`, `display_settings.gd:88`).
   `--display-check` bilerek hiçbirini içermez, gerçek pencereyi sürmesi gerekir.
 - Kayıt yazan harness'ler: `--tick-probe` (`auto_*` yuvaları, kayıt varsa reddeder), `--modal-shot=save*|load*` (`_saves_refused` `main.gd:2671`), `--menu-shot` (`user://shot_menu/`),
   `--display-check` (`settings.json`). Hepsini ayrı `APPDATA` ile koşun.

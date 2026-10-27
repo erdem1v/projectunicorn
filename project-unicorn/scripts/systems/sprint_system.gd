@@ -157,6 +157,17 @@ static func start() -> bool:
 	return true
 
 
+## Alt şeridin "Sprinti başlat"ı: başlayacak kart varsa sprint başlar (`start`), yoksa boş sprint başlar (`skip`; planın kapısı
+## sonradan kapanmış kartları sonraki sprinte geçer). Ekip yokken bir şey yapmaz. Sprint başladıysa true.
+static func begin_planned() -> bool:
+	if mode() != "plan" or capacity() <= 0:
+		return false
+	if starting().is_empty():
+		skip()
+		return true
+	return start()
+
+
 ## Başlatmanın kendisi: kapısı sonradan kapanmış kart sonraki sütuna geçer, kalanlar kilitlenir (`base` ve
 ## `progress_at_start`: sprintin başındaki iş), lisans bedeli bir kez alınır, ilk haftanın ataması yapılır. Kartsız
 ## başlayan sprint (boş geçirme, planlanacak kart yokken otomatik başlangıç) boş sprinttir; damgası ilk çizimden
@@ -335,7 +346,7 @@ static func _next_column(carried: Array) -> Array:
 	return lead + next_cards.filter(func(id: String) -> bool: return id not in lead)
 
 
-## "Bu sprinti boş geçir", oyuncunun onayıyla: planın kartları sonraki sprinte geçer, sprint kartsız başlar.
+## Boş sprint: planın kartları sonraki sprinte geçer, sprint kartsız başlar (kartsız planda `begin_planned`).
 static func skip() -> void:
 	if mode() != "plan":
 		return
@@ -392,8 +403,8 @@ static func finish_beta_cards() -> void:
 
 ## Liderin önerisi bu sprintin boş yerlerini doldurur ve sonraki sütundaki kartların sonuna kart ekler. Öneri büyük ekipte
 ## idempotent değildir (devreden kalkanı çağrı başına sayılır): uygulandıktan sonra ikinci uygulama bir şey yapmaz; bayrağı
-## planın değişmesi (`_place`, `remove`), Kurucu sprintte anahtarı ve çeyreğin hedefi indirir, devir indirmez. Ekip yokken
-## (kapasite 0) kart yerleşmez ve bayrak yazılmaz: kapasite dönünce öneri yine uygulanır.
+## planın değişmesi (`_place`, `remove`), Kurucu sprintte anahtarı, çeyreğin hedefi ve ekibin değişmesi (`_crew_changed`) indirir,
+## devir indirmez. Ekip yokken (kapasite 0) kart yerleşmez ve bayrak yazılmaz: kapasite dönünce öneri yine uygulanır.
 static func apply_lead() -> void:
 	if mode() != "plan" or _p().sprint.get("lead_applied", false) or capacity() <= 0:
 		return
@@ -403,6 +414,7 @@ static func apply_lead() -> void:
 	for id in lead.next:
 		_place(SprintCatalog.card_by_id(id), false)
 	_p().sprint.lead_applied = true
+	_p().sprint.lead_crew = _crew_mark()
 	_changed()
 
 
@@ -1573,6 +1585,7 @@ static func _on_team_changed() -> void:
 		_p().delegate = false
 	if mode() == "active":
 		_restaff()
+	_crew_changed()
 	_changed()
 
 
@@ -1580,7 +1593,26 @@ static func _on_team_changed() -> void:
 ## gününde yenilenir.
 static func _on_assignment_changed(_id: String) -> void:
 	if is_typed() and mode() != "active":
+		_crew_changed()
 		_changed()
+
+
+## Ekip her HR gününde ve her iş değişiminde okunur; liderin önerisi yalnız ekibin kişi sayısı ya da sprint kapasitesi
+## değişince yeniden okunur (moral ve eğitim gibi sık değişimler önerinin kartlarını oynatmaz): uygulanmış önerinin bayrağı düşer.
+static func _crew_changed() -> void:
+	var sprint: Dictionary = _p().sprint
+	if sprint.get("lead_applied", false) and not _same_crew(sprint.get("lead_crew", []), _crew_mark()):
+		sprint.lead_applied = false
+
+
+## Uygulanan önerinin ekibi: oturan kişi sayısı ve sprint kapasitesi.
+static func _crew_mark() -> Array:
+	return [team().size(), capacity()]
+
+
+## İki ekip işareti aynı mı: kayıttan dönen işaretin sayıları kayan noktalı ve kısalmıştır, tür ve son haneler sayılmaz.
+static func _same_crew(saved: Array, now: Array) -> bool:
+	return saved.size() == 2 and int(saved[0]) == int(now[0]) and absf(float(saved[1]) - float(now[1])) < EPS
 
 
 ## Devirde oyuncu saati sürdürünce sprint başlar: hafta planda ya da sürüm notunda geçmez.
@@ -1836,21 +1868,34 @@ static func _changed() -> void:
 	EventBus.product_state_changed.emit()
 
 
-## Saat sprint planını bekler (awaits_plan): tutuş alınır ya da bırakılır, hız değişmez. Toplu adımın
-## içinde (gece, toplantı) adımın sonuna ertelenir: gece kapanışında alınan tutuş toplu adımı 08:00'den
-## önce keserdi. Kabuk kurulurken de çağrılır (yükleme tutuşları siler, TimeManager.reset); ekip ve hız
-## dinleyicileri burada bağlanır, yüklenen oyunda ilk tikten önce de.
+## Saat sprint planını bekler (awaits_plan) ve şirketin mesai başlangıcı geldiyse tutuş alınır, yoksa bırakılır; hız değişmez.
+## Gece kapanan sprintin planı mesai başlangıcında görünür: 08:00 ile o saat arasında (ofis boş) saat akar ve tutuşu `_on_hour`
+## alır. Toplu adımın içinde (gece, toplantı) adımın sonuna ertelenir: gece kapanışında alınan tutuş toplu adımı 08:00'den
+## önce keserdi. Kabuk kurulurken de çağrılır (yükleme tutuşları siler, TimeManager.reset); ekip, hız ve saat dinleyicileri
+## burada bağlanır, yüklenen oyunda ilk tikten önce de.
 static func sync_plan_hold() -> void:
 	_watch_team()
 	_watch_speed()
+	_watch_hour()
 	if TimeManager.is_batching():
 		if not EventBus.clock_batch_ended.is_connected(sync_plan_hold):
 			EventBus.clock_batch_ended.connect(sync_plan_hold, CONNECT_ONE_SHOT)
 		return
-	if awaits_plan():
+	if awaits_plan() and GameState.current_hour >= WorkHoursSystem.start_hour():
 		TimeManager.hold_clock(HOLD_PLAN)
 	else:
 		TimeManager.release_clock(HOLD_PLAN)
+
+
+static func _watch_hour() -> void:
+	if not EventBus.hour_changed.is_connected(_on_hour):
+		EventBus.hour_changed.connect(_on_hour)
+
+
+## Saat şirketin mesai başlangıcına gelince bekleyen plan saati tutar.
+static func _on_hour(hour: int) -> void:
+	if hour == WorkHoursSystem.start_hour():
+		sync_plan_hold()
 
 
 ## Tür seçilmeden de okunur (lider önerisi used()'i sorar); o zaman boştur.

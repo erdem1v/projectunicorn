@@ -2,8 +2,7 @@ class_name SprintUiShared
 extends RefCounted
 
 # Sprint ekranı bileşenlerinin ortak parçaları, koyu dilde. Hepsi statik: metin TranslationServer'dan
-# okunur, çünkü statik fonksiyonda tr() çalışmaz. Anlamın rengi (Güçlü, Zayıf, kalkan uyarı, aşım,
-# son tarih) D_ yardımcılarından gelir; alanlar renk taşımaz, adları, kareleri ve kelimeleriyle okunur.
+# okunur, çünkü statik fonksiyonda tr() çalışmaz.
 
 const SEP := " · "
 const KIND_ICON := "res://assets/icons/product/kind_%s.svg"
@@ -20,22 +19,17 @@ const CHEVRON_DOWN := "res://assets/icons/util/chevron_down.svg"
 const HOURGLASS := "res://assets/icons/util/hourglass.svg"
 const BUILDING := "res://assets/icons/util/building.svg"
 const LOCK := "res://assets/icons/util/lock.svg"
-const LEVEL_KEYS := {
-	"strong": "PRODUCT_LEVEL_STRONG", "enough": "PRODUCT_LEVEL_ENOUGH",
-	"weak": "PRODUCT_LEVEL_WEAK", "none": "PRODUCT_LEVEL_NONE",
-}
 const RESULT_KEYS := {"expected": "PRODUCT_RESULT_EXPECTED", "actual": "PRODUCT_RESULT_ACTUAL"}
 ## Kaydırma yeri yerleşim oturana dek bu kadar kare yeniden yazılır.
 const SCROLL_SETTLE_FRAMES := 3
-## Kartın glif tuşları; listede olmayan tür (remove) kelimeyle yazılır.
-const KEY_GLYPHS := {"add": PLUS, "send_next": ARROW,
-	"pull": "res://assets/icons/util/chevron_up.svg"}
+## Planlamada kartın tuşları: glifi ve ipucunun anahtarı.
+const ROW_KEYS := {"send_next": [ARROW, "PRODUCT_TO_NEXT"], "pull": ["res://assets/icons/util/chevron_up.svg", "PRODUCT_TO_THIS"],
+	"remove": ["res://assets/icons/util/close.svg", "PRODUCT_REMOVE"]}
 ## Hat satırının değişim oku: artış yukarı, azalış aşağı üçgen.
 const TREND_ICONS := {1: "res://assets/icons/util/tri_up.svg", -1: "res://assets/icons/util/tri_down.svg"}
 
 
-## `count` seviye karesi: dolu kare kelimenin renginde, yarım seviye (cila) kareyi yarıya kadar
-## doldurur, boş kare çizgidir.
+## `count` kare: soldan `level` kadarı `color`da dolu (kesirli seviye kareyi kısmen doldurur), gerisi çizgidir.
 class Squares extends Control:
 	var level: float
 	var color: Color
@@ -118,15 +112,6 @@ static func points_key(key: String, shown: String) -> String:
 	return Fmt.count_key(key, 1 if shown == "1" else 0)
 
 
-## Seviye kelimesinin ve dolu karenin rengi.
-static func word_color(word: String) -> Color:
-	match word:
-		"strong": return UiTokens.D_pos()
-		"enough": return UiTokens.D_INK_3
-		"weak": return UiTokens.D_warn()
-	return UiTokens.D_INK_4
-
-
 static func label(text: String, variation: StringName, color: Variant = null) -> Label:
 	var l := UiFactory.make_label(text, variation, color)
 	l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -199,6 +184,47 @@ static func avatar(person: Dictionary, px: int, grey := false) -> Panel:
 		else RnDUiShared.t("PRODUCT_PERSON_ROLE").format({"name": person.name, "role": person.role_text})
 	face.mouse_filter = Control.MOUSE_FILTER_PASS
 	return face
+
+
+## Yüzün yanında yıldız çipinin taştığı yeri de tutan hücre (`px` yüzün çapı).
+static func face_slot(person: Dictionary, px: int) -> Control:
+	var slot := Control.new()
+	slot.custom_minimum_size = Vector2(px + UiTokens.D_W_FACE_SLOT - UiTokens.D_AVATAR_ROW_SM, px)
+	slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	slot.add_child(face(person, px))
+	return slot
+
+
+## Kimse çalışamıyorken çıkış yolu: kurucu araştırıyorsa Ar-Ge, kadro yoksa işe alım, varsa Ekip. `act` eylemin yayıcısıdır
+## (`action.emit`).
+static func way_out(c: Dictionary, variation: StringName, act: Callable) -> Button:
+	var way: Array = (["PRODUCT_GO_RND", "rnd", {"node": c.rnd_node.id}] if c.rnd_node != null
+		else ["PRODUCT_GO_TEAM", "team", {}] if c.staffed else ["HR_SEARCH_START", "hire", {}])
+	var go := button(RnDUiShared.t(way[0]), variation, act.bind(way[1], way[2]))
+	if way[1] == "hire":
+		go.icon = load(PLUS)
+	return go
+
+
+## Planlamada üstüne gelince görünen kart tuşları ("→", "↑", "×"): glifli, kenarsız, üstüne gelinince yükselen zeminli; basılınca
+## `act` eylemin adıyla ve {card_id} ile çağrılır. Başta görünmez.
+static func row_keys(kinds: Array, card_id: String, act: Callable) -> PanelContainer:
+	var acts := PanelContainer.new()
+	acts.theme_type_variation = &"RowActs"
+	var row := box(UiTokens.SPACE_XXS)
+	acts.add_child(row)
+	for kind: String in kinds:
+		var key := Button.new()
+		key.theme_type_variation = &"RowKey"
+		key.icon = load(ROW_KEYS[kind][0])
+		key.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		key.custom_minimum_size = Vector2.ONE * UiTokens.D_H_KEY_SM
+		key.focus_mode = Control.FOCUS_NONE   # boşluk tuşu hız tuşudur; odak onu yutmasın
+		key.tooltip_text = RnDUiShared.t(ROW_KEYS[kind][1])
+		key.pressed.connect(act.bind(kind, {"card_id": card_id}))
+		row.add_child(key)
+	acts.visible = false
+	return acts
 
 
 ## Kişinin yıldızı: "3★", yarım yıldızda "3,5★".
@@ -308,23 +334,19 @@ static func due_chip(text: String, soon := false, glyph := HOURGLASS) -> PanelCo
 	return chip
 
 
-## Kartın tuşunun tema görünümü: parlak ya da sönük (sprint kartında fare kartın üstünde değilken).
-static func key_variation(kind: String, lit: bool) -> StringName:
-	return StringName(("IconKey" if KEY_GLYPHS.has(kind) else "CardKeyText") + ("" if lit else "Idle"))
+## Adayın "+" tuşunun tema görünümü: parlak, ya da değeri henüz bilinmiyorsa sönük.
+static func add_look(lit: bool) -> StringName:
+	return &"IconKey" if lit else &"IconKeyIdle"
 
 
-## Kartın tuşu (+, →, ↑, çıkar), parlak; "+" kapalıyken de görünür.
-static func key_button(kind: String, disabled: bool) -> Button:
+## Adayın "+" tuşu; kapalıyken de görünür.
+static func add_key() -> Button:
 	var b := Button.new()
-	b.theme_type_variation = key_variation(kind, true)
-	if KEY_GLYPHS.has(kind):
-		b.icon = load(KEY_GLYPHS[kind])
-		b.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		b.custom_minimum_size = Vector2.ONE * UiTokens.D_H_KEY_SM
-	else:
-		b.text = RnDUiShared.t("PRODUCT_REMOVE")
+	b.theme_type_variation = add_look(true)
+	b.icon = load(PLUS)
+	b.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	b.custom_minimum_size = Vector2.ONE * UiTokens.D_H_KEY_SM
 	b.focus_mode = Control.FOCUS_NONE   # boşluk tuşu hız tuşudur; odak onu yutmasın
-	b.disabled = disabled
 	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	return b
 
@@ -379,23 +401,6 @@ static func button(text: String, variation: StringName, on_press: Callable) -> B
 	return b
 
 
-## Kartın etki satırı: parçalar arasında boşluk, ayraç yok; seviye geçişi karelerle. Düzeltme kartının hata satırı
-## kendi satırında sarar: en büyük hesabın adı uzun olabilir, akıştaki etiket sarılmaz.
-static func effect_line(parts: Array) -> VBoxContainer:
-	var col := column(UiTokens.SPACE_XS)
-	for part in parts.filter(func(p: Dictionary) -> bool: return p.k == "bugs"):
-		col.add_child(prose(bugs_text(part), &"MetaMuted"))
-	var rest: Array = parts.filter(func(p: Dictionary) -> bool: return p.k != "bugs")
-	if not rest.is_empty():
-		var flow := HFlowContainer.new()
-		flow.add_theme_constant_override("h_separation", UiTokens.SPACE_L)
-		flow.add_theme_constant_override("v_separation", UiTokens.SPACE_XS)
-		for part in rest:
-			flow.add_child(_part(part))
-		col.add_child(flow)
-	return col
-
-
 ## Düzeltme kartının hata satırı: "6 hata · 3 hesap · 140 kullanıcı · en büyüğü Demir Holding (100 kullanıcı)"; `with_top`
 ## yanlışsa en büyük hesap yazılmaz. B2C'de hesap sayısı (-1) ve en büyük hesap yoktur.
 static func bugs_text(part: Dictionary, with_top := true) -> String:
@@ -443,33 +448,3 @@ static func open_product_area(tree: SceneTree, area_id: String) -> void:
 ## Sayılan anahtarın metni: `n` 1 ise tekili, binlik ayraçlı.
 static func count(key: String, n: int) -> String:
 	return RnDUiShared.t(Fmt.count_key(key, n)).format({"n": Fmt.group(n)})
-
-
-static func _part(part: Dictionary) -> HBoxContainer:
-	var row := box(UiTokens.SPACE_S)
-	var say: StringName = &"MetaMuted"
-	match String(part.k):
-		"level", "cap":
-			row.add_child(label(String(part.area if part.k == "level" else part.name), &"KeyText"))
-			for end in [["from", "from_word"], [], ["to", "to_word"]]:
-				if end.is_empty():
-					row.add_child(UiFactory.make_glyph(ARROW, UiTokens.D_ICON_MARK, UiTokens.D_INK_4))
-				else:
-					row.add_child(squares(float(part[end[0]]), UiTokens.D_SQUARE_SM, word_color(String(part[end[1]]))))
-		"holds":
-			row.add_child(label(String(part.area), &"KeyText"))
-			row.add_child(label(RnDUiShared.t("PRODUCT_FX_HOLDS").format(
-				{"level": RnDUiShared.t(LEVEL_KEYS[part.word])}), say))
-		"alert_clear":
-			row.add_child(label(String(part.area), &"KeyText"))
-			row.add_child(UiFactory.make_glyph(WARN, UiTokens.D_ICON_PART, UiTokens.D_warn()))
-			row.add_child(label(RnDUiShared.t("PRODUCT_FX_ALERT_CLEARS"), say))
-		"request":
-			row.add_child(label(RnDUiShared.t("PRODUCT_FX_REQUEST").format({"customer": part.customer}) + SEP
-				+ RnDUiShared.t("PRODUCT_PER_YEAR").format({"amount": Fmt.money_exact(int(part.value))}), say))
-		"research":
-			row.tooltip_text = String(part.area) + " " + RnDUiShared.t("PRODUCT_FX_RESEARCH")
-			row.add_child(label(String(part.area), &"KeyText"))
-		"promise":
-			row.add_child(label(RnDUiShared.t("PRODUCT_FX_PROMISE").format({"customer": part.customer}), say))
-	return row

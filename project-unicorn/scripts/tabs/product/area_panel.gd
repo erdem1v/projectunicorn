@@ -259,7 +259,7 @@ func _strip(parts: Array) -> HBoxContainer:
 
 ## Adayın "+"ı. Değeri bilinmiyorsa (`addable` null) nötr ve basılmaz durur, kuyruğa girer; değer gelince `_set_add` açar ya da kapatır.
 func _add_key(c: Dictionary) -> Button:
-	var key := SprintUiShared.key_button("add", false)
+	var key := SprintUiShared.add_key()
 	key.custom_minimum_size = Vector2.ONE * UiTokens.D_H_KEY_CAND
 	key.pressed.connect(action.emit.bind("add", {"card_id": String(c.id)}))
 	key.mouse_entered.connect(_on_add_hover.bind(key, String(c.id), true))
@@ -274,7 +274,7 @@ func _add_key(c: Dictionary) -> Button:
 
 ## null: değer bilinmiyor, nötr ve basılmaz, ipucu yok. true: açık. false: kapalı; planlamada nedeni ipucunda.
 func _set_add(key: Button, ok: Variant) -> void:
-	key.theme_type_variation = SprintUiShared.key_variation("add", ok != null)
+	key.theme_type_variation = SprintUiShared.add_look(ok != null)
 	key.mouse_filter = Control.MOUSE_FILTER_IGNORE if ok == null else Control.MOUSE_FILTER_STOP
 	key.disabled = ok == false
 	key.tooltip_text = "" if ok == null else tr("PRODUCT_ADD_TO_PLAN") if ok else _closed_tip()

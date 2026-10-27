@@ -563,6 +563,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sprint_lead_fills_to_ceiling":          fail = _case_sprint_lead_fills_to_ceiling()
 		"sprint_lead_fills_next_column":         fail = _case_sprint_lead_fills_next_column()
 		"sprint_lead_row_until_plan_changes":   fail = _case_sprint_lead_row_until_plan_changes()
+		"plan_opens_at_work_start":              fail = _case_plan_opens_at_work_start()
 		"sprint_solo_mvp_by_week_six":           fail = _case_sprint_solo_mvp_by_week_six()
 		"promise_due_sprint_kept_when_shipped_next_sprint": fail = _case_promise_due_sprint_kept_when_shipped_next_sprint()
 		"promise_due_sprint_breaks_after_close": fail = _case_promise_due_sprint_breaks_after_close()
@@ -21527,6 +21528,12 @@ static func _seed_sprint(subtype: String = "note_tool") -> void:
 	SprintSystem.choose_type(subtype, "Notly")
 
 
+## Saat şirketin mesai başlangıcında: plan saati tutuşu o saatten sonra alır.
+static func _at_work_start() -> void:
+	GameState.set_current_hour(WorkHoursSystem.start_hour())
+	TimeManager.sync_to_current_hour()
+
+
 ## Hata modelinin tavan katsayısı c (sprint.json `bugs.c`, test sabiti).
 static func _bugs_c(value: float) -> void:
 	SprintCatalog._data.bugs.c = value
@@ -21706,6 +21713,7 @@ static func _case_sprint_capacity_from_team() -> String:
 ## "nobody" FAIL; SprintSystem.plan_outcome'a eksik puanlı bir ekip ver → "plan said" FAIL.
 static func _case_sprint_team_follows_job_matrix() -> String:
 	_seed_sprint()
+	_at_work_start()
 	var weeks: int = int(SprintCatalog.cfg("sprint_weeks"))
 	var point: float = float(SprintCatalog.cfg("person_points_week"))
 	var founder_pts: float = point * float(SprintCatalog.cfg("founder_mult"))
@@ -24066,12 +24074,13 @@ static func _case_worst_bug_line_breaks_ties_by_users() -> String:
 ## Sprint oyuncunun onayı olmadan başlamaz. Planlanacak kart varken plan saati tutar, gün geçse de sprint
 ## başlamaz; kurucu Ar-Ge'ye oturunca kimse çalışamaz, tutuş kalkar; işe alınan geliştiriciyle geri gelir,
 ## geliştirici eğitime gidince yine kalkar, kurucu dönünce geri gelir. "Sprinti başlat"
-## tutuşu kaldırır, saati akıtmaz. "Bu sprinti boş geçir" planın kartlarını sonraki sprinte geçirip sprinti
-## kartsız başlatır. Devirde PM sprinti sürüm notunda Space'te ve plan_next'te bir kez başlatır; sprintin
+## tutuşu kaldırır, saati akıtmaz. Kartsız planda (kartlar sonraki sütunda) "Sprinti başlat"ın seam'i (`begin_planned`) sprinti
+## kartsız başlatır, kartlar sonraki sütunda kalır. Devirde PM sprinti sürüm notunda Space'te ve plan_next'te bir kez başlatır; sprintin
 ## ilk çizimi (BuildBar) auto_started'ı okur, o yüzden damga başlatmanın sinyallerinden önce yazılır. Gece
-## kapanan sprintin tutuşu gece toplu adımını kesmez, 08:00'de alınır; yüklemede kabuğun çağırdığı
+## kapanan sprintin tutuşu gece toplu adımını kesmez, şirketin mesai başlangıcında alınır; yüklemede kabuğun çağırdığı
 ## sync_plan_hold tutuşu geri alır ve motorun ekip ve hız dinleyicilerini bağlar, Space saati akıtmaz.
-## FALSİFİKASYON: SprintSystem.sync_plan_hold'da toplu adım ertelemesini sil → gece 00:00'da durur.
+## FALSİFİKASYON: SprintSystem.sync_plan_hold'da toplu adım ertelemesini sil → mesai başlangıcından geçen toplu adım orada durur;
+## `begin_planned`i hep `start()` çağırır yap → kartsız plan başlamaz FAIL.
 static func _case_sprint_starts_only_with_consent() -> String:
 	var slot: String = "smoke_consent_%d" % OS.get_process_id()
 	var done := func(why: String) -> String:
@@ -24079,6 +24088,7 @@ static func _case_sprint_starts_only_with_consent() -> String:
 		return why
 	var held := func() -> bool: return TimeManager.holds().has(SprintSystem.HOLD_PLAN)
 	_seed_sprint()
+	_at_work_start()
 	_sim_day()
 	if SprintSystem.mode() != "plan" or not held.call():
 		return "a day in planning with no PM: %s, holds %s; want the plan waiting and the clock held" % [
@@ -24104,13 +24114,15 @@ static func _case_sprint_starts_only_with_consent() -> String:
 	SprintSystem.plan_next()
 	SprintSystem.apply_lead()
 	var planned: Array = GameState.product.sprint.cards.duplicate()
-	SprintSystem.skip()
+	for id: String in planned:
+		SprintSystem.send_next(id)
+	var began: bool = SprintSystem.begin_planned()
 	var p: Dictionary = GameState.product
-	if planned.is_empty() or SprintSystem.mode() != "active" or not (p.sprint.cards as Array).is_empty() \
+	if planned.is_empty() or not began or SprintSystem.mode() != "active" or not (p.sprint.cards as Array).is_empty() \
 			or int(p.empty_sprint) != SprintSystem.sprint_number() or held.call() \
 			or planned.any(func(id: String) -> bool: return id not in p.next.cards):
-		return "skipping %s: %s with %s, empty_sprint %d, next %s; want an empty sprint 2 running, the plan next" % [
-			planned, SprintSystem.mode(), p.sprint.cards, int(p.empty_sprint), p.next.cards]
+		return "Sprinti başlat on a plan with no card (%s next): began %s, %s with %s, empty_sprint %d, next %s; want an empty sprint 2 running, the cards next" % [
+			planned, began, SprintSystem.mode(), p.sprint.cards, int(p.empty_sprint), p.next.cards]
 	_sprint_hire("char_consent_pm", HRConstants.ROLE_PRODUCT_MANAGER)
 	SprintSystem.set_delegate(true)
 	_sim_day()
@@ -24136,9 +24148,13 @@ static func _case_sprint_starts_only_with_consent() -> String:
 	GameState.set_current_hour(23)
 	TimeManager.sync_to_current_hour()
 	TimeManager.skip_night()
-	if SprintSystem.mode() != "release" or GameState.current_hour != TimeModel.WEEK_START_HOUR or not held.call():
-		return "sprint 4 closed in the night batch: %s at %02d:00, holds %s; want its note at %02d:00, the clock held" % [
+	if SprintSystem.mode() != "release" or GameState.current_hour != TimeModel.WEEK_START_HOUR or held.call():
+		return "sprint 4 closed in the night batch: %s at %02d:00, holds %s; want its note at %02d:00 with the clock running until the work window opens" % [
 			SprintSystem.mode(), GameState.current_hour, TimeManager.holds(), TimeModel.WEEK_START_HOUR]
+	TimeManager.advance_hours(WorkHoursSystem.start_hour() - TimeModel.WEEK_START_HOUR)
+	if not held.call():
+		return "sprint 4's note at %02d:00 left the clock free, holds %s; want the hold taken when the work window opens" % [
+			GameState.current_hour, TimeManager.holds()]
 	_drain_all_modals()   # a card on screen refuses the save (can_save)
 	if not SaveManager.save_to_slot(slot):
 		return done.call("save_to_slot failed (%s)" % SaveManager.cannot_save_reason_key())
@@ -25214,20 +25230,24 @@ static func _case_sprint_lead_fills_next_column() -> String:
 ## "Öneriyi uygula" büyük ekipte idempotent değildir (6. basamağın devreden kalkanı çağrı başına sayılır): uygulandıktan sonra ikinci
 ## uygulama yerleşimi ve yükü değiştirmez ve öneri satırı (`center.suggest`) gizlidir. Devri açıp kapamak bayrağı indirmez; planı
 ## değiştiren her seam (kartı çıkar, sprintten sonraki sütuna gönder, adayı sonraki sütuna koy, bu sprinte ekle), Kurucu sprintte
-## anahtarı ve çeyreğin hedefi indirir; çıkar, sprintten gönder, anahtar ve hedef satırı geri getirir. Ekip: ERP'de sekiz kişi (iki
-## tasarımcı, dört geliştirici, iki testçi), kurucu kapalı: ilk uygulama dokuz kartı koyar ve sonuncusunda (devreden) durur, yük
-## 165/160; bayrağı olmayan ikinci uygulama bir kart daha koyardı. On iki kişide ilk uygulama açık kartların hepsini koyar (yük
-## 165/240), ikinci uygulama bir şey eklemez ve bayrağı sınamaz.
+## anahtarı ve çeyreğin hedefi indirir; çıkar, sprintten gönder, anahtar ve hedef satırı geri getirir. Ekip değişimi de indirir: bir
+## işe alım kişi sayısını ve kapasiteyi değiştirir, satır geri gelir; değişimsiz bir HR günü, kayıttan dönmüş sprintte de (JSON sayıları
+## kayan noktalı ve kısaltılmış döndürür), indirmez. Ekip: ERP'de dokuz kişi (bir PM,
+## iki tasarımcı, dört geliştirici, iki testçi), kurucu kapalı. On iki kişide ilk uygulama açık kartların hepsini koyar, ikinci uygulama
+## bir şey eklemez ve bayrağı sınamaz.
 ## FALSİFİKASYON: SprintSystem.apply_lead'in `lead_applied` koşulunu sil → ikinci uygulama yerleşimi değiştirir FAIL; `_place`taki
 ## `lead_applied = false` satırını sil → "→" ve "+" sonrası bayrak düşmez FAIL; `remove`daki satırı sil → çıkarma sonrası satır
 ## dönmez FAIL; `set_founder_in_sprint`teki ya da `pick_goal`daki satırı sil → anahtar ya da hedef sonrası bayrak düşmez FAIL;
-## `set_delegate`e `lead_applied = false` ekle → devir bayrağı indirir FAIL.
+## `set_delegate`e `lead_applied = false` ekle → devir bayrağı indirir FAIL; `_crew_changed`taki `lead_applied = false` satırını sil →
+## işe alım sonrası satır dönmez FAIL; `_crew_mark`ı sabit bir dizi yap → işe alım sonrası satır dönmez FAIL; `_crew_changed`ı koşulsuz
+## indirir yap → değişimsiz HR günü bayrağı indirir FAIL; `_same_crew`i `saved != now` yap → kayıttan dönen işaretle HR günü bayrağı indirir FAIL.
 static func _case_sprint_lead_row_until_plan_changes() -> String:
 	_seed_sprint_live("erp")
 	GameState.set_founder_in_sprint(false)
 	var roles: Array = [HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_DESIGNER, HRConstants.ROLE_TESTER, HRConstants.ROLE_DEVELOPER]
 	for i in 8:
 		_sprint_hire("char_row_%d" % i, roles[i % 4])
+	_sprint_hire("char_row_pm", HRConstants.ROLE_PRODUCT_MANAGER)
 	var p: Dictionary = GameState.product
 	var shown := func() -> bool: return ProductModel.live().center.suggest != null
 	var spoken := func() -> bool: return bool(p.sprint.lead_applied)
@@ -25242,7 +25262,20 @@ static func _case_sprint_lead_row_until_plan_changes() -> String:
 	if p.sprint.cards != placed[0] or p.next.cards != placed[1] or not is_equal_approx(SprintSystem.used(), placed[2]):
 		return "a second apply_lead moved the plan: load %.1f against %.1f, sprint %s against %s, column %s against %s" % [
 			SprintSystem.used(), placed[2], p.sprint.cards, placed[0], p.next.cards, placed[1]]
-	_sprint_hire("char_row_pm", HRConstants.ROLE_PRODUCT_MANAGER)
+	EventBus.hr_day_processed.emit()
+	if not spoken.call() or shown.call():
+		return "an HR day with nobody coming or going left the flag %s and the row %s, want the flag up and no row" % [spoken.call(), shown.call()]
+	# Kayıt sprinti JSON'la yazar ve okur (SaveManager): sayılar kayan noktalı ve kısalmış döner.
+	p.sprint = JSON.parse_string(JSON.stringify(p.sprint))
+	EventBus.hr_day_processed.emit()
+	if not spoken.call() or shown.call():
+		return "after a save and load an HR day with nobody coming or going left the flag %s and the row %s, want the flag up and no row" % [
+			spoken.call(), shown.call()]
+	_sprint_hire("char_row_late", HRConstants.ROLE_DEVELOPER)
+	if spoken.call() or not shown.call():
+		return "a hire left the flag %s and the row %s, want the flag down and the row back" % [spoken.call(), shown.call()]
+	p.sprint.lead_applied = true
+	p.sprint.lead_crew = SprintSystem._crew_mark()
 	SprintSystem.set_delegate(true)
 	var delegated: bool = SprintSystem.delegated()
 	SprintSystem.set_delegate(false)
@@ -25271,6 +25304,49 @@ static func _case_sprint_lead_row_until_plan_changes() -> String:
 		if seam[2] and not shown.call():
 			return "after %s the lead row reads hidden, want it back" % seam[0]
 		p.sprint.lead_applied = true
+	return ""
+
+
+## Gece kapanan sprintin planı şirketin mesai başlangıcında görünür: gece toplu adımı 08:00'de bitince saat tutulmaz, 08:00 ile
+## mesai başlangıcı arasında akar (ofis boş) ve tutuş saat o saate gelince alınır. Mesai 10:00'da başlıyorsa 08:00 ve 09:00'da saat
+## serbesttir ve 10:00'da tutulur (adım adım ve toplu adımda); mesai 08:00'de başlıyorsa gece biter bitmez 08:00'de tutulur.
+## FALSİFİKASYON: SprintSystem.sync_plan_hold'daki `WorkHoursSystem.start_hour()` şartını `TimeModel.WEEK_START_HOUR` yap → 10:00
+## mesaisinde tutuş 08:00'de gelir FAIL.
+static func _case_plan_opens_at_work_start() -> String:
+	var held := func() -> bool: return TimeManager.holds().has(SprintSystem.HOLD_PLAN)
+	var night := func() -> void:
+		SprintSystem.apply_lead()
+		SprintSystem.start()
+		_sim_day()
+		GameState.set_current_hour(23)
+		TimeManager.sync_to_current_hour()
+		TimeManager.skip_night()
+	_seed_sprint()
+	WorkHoursSystem.set_company_start_hour(10)
+	night.call()
+	if SprintSystem.mode() != "release" or not SprintSystem.awaits_plan() or GameState.current_hour != TimeModel.WEEK_START_HOUR or held.call():
+		return "work starts at 10:00, the sprint closed in the night: %s waiting %s at %02d:00, holds %s; want the note waiting at 08:00 with the clock free" % [
+			SprintSystem.mode(), SprintSystem.awaits_plan(), GameState.current_hour, TimeManager.holds()]
+	TimeManager._step_hour(0.0)
+	if GameState.current_hour != 9 or held.call():
+		return "work starts at 10:00: at %02d:00 holds %s; want the clock free" % [GameState.current_hour, TimeManager.holds()]
+	TimeManager._step_hour(0.0)
+	if GameState.current_hour != 10 or not held.call():
+		return "work starts at 10:00: at %02d:00 holds %s; want the plan holding the clock" % [GameState.current_hour, TimeManager.holds()]
+	# Mesai 08:00'e çekilince bir sonraki gece biter bitmez tutulur; mesai 10:00'a dönünce toplu adım 10:00'da tutar.
+	WorkHoursSystem.set_company_start_hour(TimeModel.WEEK_START_HOUR)
+	SprintSystem.plan_next()
+	night.call()
+	if SprintSystem.mode() != "release" or GameState.current_hour != TimeModel.WEEK_START_HOUR or not held.call():
+		return "work starts at 08:00, the sprint closed in the night: %s at %02d:00, holds %s; want the note holding the clock at 08:00" % [
+			SprintSystem.mode(), GameState.current_hour, TimeManager.holds()]
+	WorkHoursSystem.set_company_start_hour(10)
+	if held.call():
+		return "work moved to 10:00 at %02d:00: holds %s; want the plan's hold gone until then" % [GameState.current_hour, TimeManager.holds()]
+	TimeManager.advance_hours(2)
+	if GameState.current_hour != 10 or not held.call():
+		return "work starts at 10:00, two hours from 08:00 in one batch: %02d:00 holds %s; want 10:00 with the plan holding the clock" % [
+			GameState.current_hour, TimeManager.holds()]
 	return ""
 
 
@@ -27220,6 +27296,7 @@ static func _case_quarter_goal_without_pm() -> String:
 ## PM iddiası FAIL.
 static func _case_delegate_needs_pm() -> String:
 	_seed_sprint()
+	_at_work_start()
 	_sprint_hire("char_deleg_dev", HRConstants.ROLE_DEVELOPER)
 	var held := func() -> bool: return TimeManager.holds().has(SprintSystem.HOLD_PLAN)
 	SprintSystem.set_delegate(true)

@@ -680,6 +680,9 @@ func _menajer(master: Theme) -> Theme:
 		[&"Eyebrow", wide_sb_caps, T.D_FS_12, T.D_INK_4],
 		[&"MonoMark", wide_b, T.D_FS_12, T.D_INK_2],
 		[&"SprintTitle", wide_b, T.D_FS_26, T.D_INK_1],
+		[&"NextTitle", wide_b, T.D_FS_16, T.D_INK_1],
+		[&"ProgressFigure", wide_b, T.D_FS_20, T.D_INK_1],
+		[&"LoadNum", num, T.D_FS_12, T.D_INK_2],
 		[&"MvpVersion", wide_b, T.D_FS_15, T.D_INK_1],
 		[&"HeadMeta", sans_sb, T.D_FS_13, T.D_INK_3],
 		[&"CrewTotal", sans_b, T.D_FS_16, T.D_INK_1],
@@ -990,13 +993,11 @@ func _menajer(master: Theme) -> Theme:
 	th.set_stylebox("fill", &"ProgressPaused", _flat(T.D_LINE_3, T.D_RADIUS_1, Vector4.ZERO))
 
 	# ---- Ürün: the sprint screen ----
-	# A sprint card is a small document, raised on its column; a card planned for the next sprint has no
-	# edge of its own (its host draws it dashed).
+	# The quarter's mini card is a small document, raised on its column; one planned for a later sprint has no
+	# edge of its own (its host draws it dashed). SprintCardPlanned is the save list's new slot, drawn the same way.
 	var card_pad := Vector4(T.SPACE_XL, T.SPACE_L, T.SPACE_XL, T.SPACE_L)
 	var mini_pad: Vector4 = Vector4.ONE * T.SPACE_M
 	for row in [
-		[&"SprintCard", T.D_SURFACE_4, T.D_LINE_2, card_pad],
-		[&"SprintCardHover", T.D_SURFACE_4, T.D_LINE_HOVER, card_pad],
 		[&"SprintCardPlanned", T.D_SURFACE_3, clear, card_pad],
 		[&"SprintCardMini", T.D_SURFACE_4, T.D_LINE_2, mini_pad],
 		[&"SprintCardMiniPlanned", T.D_SURFACE_3, clear, mini_pad],
@@ -1012,8 +1013,22 @@ func _menajer(master: Theme) -> Theme:
 		[&"SprintColumnCurrent", _flat(T.D_SURFACE_2, T.D_RADIUS_3, Vector4.ZERO, T.D_LINE_3)],
 		[&"SprintColumnNext", _flat(clear, T.D_RADIUS_3, Vector4.ZERO)],
 		[&"SprintColumnHead", column_head],
-		[&"SprintColumnFoot", _flat(clear, 0, Vector4(T.SPACE_XXL, T.SPACE_XL, T.SPACE_XXL, T.SPACE_XL), T.D_LINE_1,
+		[&"SprintColumnFoot", _flat(clear, 0, Vector4(T.SPACE_L, T.SPACE_L, T.SPACE_L, T.SPACE_L), T.D_LINE_1,
 			Vector4i(0, T.BORDER_HAIRLINE, 0, 0))],
+		# The foot: the delegate button (its edge brightens under the pointer, dim and still while locked) and the box that shows the
+		# sprint's progress or stands in for the start button.
+		[&"DelegateBox", _flat(clear, T.D_RADIUS_2, Vector4(T.SPACE_XL, 0, T.SPACE_XL, 0), T.D_LINE_2)],
+		[&"DelegateBoxHover", _flat(clear, T.D_RADIUS_2, Vector4(T.SPACE_XL, 0, T.SPACE_XL, 0), T.D_LINE_HOVER)],
+		[&"DelegateBoxLocked", _flat(clear, T.D_RADIUS_2, Vector4(T.SPACE_XL, 0, T.SPACE_XL, 0), T.D_LINE_1)],
+		[&"ProgressBox", _flat(T.D_SURFACE_4, T.D_RADIUS_2, Vector4(T.SPACE_XL, 0, T.SPACE_XL, 0), T.D_LINE_2)],
+		# The right column: a PM's row (a hairline under it, tighter when there are several), the next sprint's box (its host draws
+		# the dashed edge), a next card (a hairline over it), and a carried share (its host hatches it) or the fold of the rest.
+		[&"PrepRow", _flat(clear, 0, Vector4(0, 0, 0, T.SPACE_L), T.D_LINE_1, bottom)],
+		[&"PrepRowTight", _flat(clear, 0, Vector4(0, 0, 0, T.SPACE_M), T.D_LINE_1, bottom)],
+		[&"NextBox", _flat(clear, T.D_RADIUS_2, Vector4(T.SPACE_XL, T.SPACE_L, T.SPACE_XL, T.SPACE_XL))],
+		[&"NextCard", _flat(clear, 0, Vector4(0, T.SPACE_M, 0, T.SPACE_XXS), T.D_LINE_1, Vector4i(0, T.BORDER_HAIRLINE, 0, 0))],
+		[&"CarriedRow", _flat(clear, T.D_RADIUS_1, Vector4(T.SPACE_M, T.SPACE_XS, T.SPACE_M, T.SPACE_XS))],
+		[&"CarriedRest", _flat(clear, T.D_RADIUS_1, Vector4(T.SPACE_M, T.SPACE_XS, T.SPACE_M, T.SPACE_XS), T.D_LINE_2)],
 		# A flag in sentence case (a rival's launch, an area).
 		[&"FlagChip", _flat(clear, T.D_RADIUS_2, flag_pad, T.D_LINE_3)],
 		# A segmented pick's box.
@@ -1044,9 +1059,9 @@ func _menajer(master: Theme) -> Theme:
 	# The header's quarter notches and week bars, the goal pick, and the capacity block: its frame, a person's ring.
 	for row in [
 		[&"QuarterNotch", clear, T.D_LINE_3], [&"QuarterNotchPast", T.D_LINE_3, clear], [&"QuarterNotchNow", T.D_INK_1, clear],
-		[&"FaceRing", clear, T.D_INK_1],
+		[&"FaceRing", clear, T.D_INK_1], [&"FaceGhost", clear, T.D_LINE_2],
 	]:
-		var round_face: bool = row[0] == &"FaceRing"
+		var round_face: bool = row[0] in [&"FaceRing", &"FaceGhost"]
 		_panel(th, row[0], "Panel", _flat(row[1], T.RADIUS_PILL if round_face else T.D_RADIUS_1, Vector4.ZERO, row[2],
 			Vector4i.ONE * (T.BORDER_FOCUS if round_face else T.BORDER_HAIRLINE)))
 	th.set_type_variation(&"WeekBar", &"ProgressBar")
@@ -1075,6 +1090,9 @@ func _menajer(master: Theme) -> Theme:
 			_fit(num, T.D_FS_12, T.D_H_TAG, T.SPACE_XS, T.SPACE_XS), T.D_warn(), Vector4i.ONE * T.BORDER_FOCUS))
 		_panel(th, "CapRowHot" + twin, "PanelContainer", _flat(warn.bg, T.D_RADIUS_1, Vector4.ZERO))
 		_panel(th, "SprintRowLate" + twin, "PanelContainer", _flat(T.D_neg_bg(), 0, Vector4.ZERO, T.D_ROW_RULE, Vector4i(0, 0, 0, T.BORDER_HAIRLINE)))
+		# The cards-below pill when one of them will not finish: the danger edge.
+		_panel(th, "MoreHintPillLate" + twin, "PanelContainer", _flat(T.D_SURFACE_4, T.RADIUS_PILL,
+			Vector4(T.SPACE_L, T.SPACE_XXS, T.SPACE_L, T.SPACE_XXS), T.D_neg()))
 	T.set_colorblind(false)
 	# The request list's fold: "+3 requests" with its chevron after the words.
 	_dbtn(th, &"MoreLink", {"normal": [clear, clear, T.D_INK_3], "hover": [clear, T.D_LINE_HOVER, T.D_INK_1],
@@ -1088,28 +1106,22 @@ func _menajer(master: Theme) -> Theme:
 		_lbl(th, row[0], sans_b, T.D_FS_13, T.D_INK_2)
 		th.set_stylebox("normal", row[0], _flat(row[1], T.D_RADIUS_2, pts, T.D_LINE_1))
 	for row in [
-		[&"ColumnTitle", cond_sb_caps, T.D_FS_18, T.D_INK_1],
 		[&"FigureValue", sans_sb, T.D_FS_22, T.D_INK_1],
 		[&"ReleaseValue", sans_b, T.D_FS_36, T.D_INK_1],
 		[&"MetaText", sans_reg, T.D_FS_14, T.D_INK_2],
 	]:
 		_lbl(th, row[0], row[1], row[2], row[3])
-	# A card's glyph keys (+, →, ↑): secondary keys the size their host gives them.
+	# A candidate's "+" key: a secondary key the size its host gives it.
 	_dbtn(th, &"IconKey", secondary, sans_reg, T.D_FS_15, Vector4.ZERO)
 	th.set_constant("icon_max_width", &"IconKey", T.D_ICON_ROW)
 	# A board row's keys (to the next sprint, remove): glyphs without an edge, raised under the pointer.
 	_dbtn(th, &"RowKey", {"normal": [clear, clear, T.D_INK_3], "hover": [T.D_SURFACE_5, clear, T.D_INK_1],
 		"pressed": [T.D_SURFACE_5, clear, T.D_INK_1], "disabled": [clear, clear, T.D_INK_OFF]}, sans_reg, T.D_FS_15, Vector4.ZERO)
 	th.set_constant("icon_max_width", &"RowKey", T.D_ICON_ROW)
-	# The card's word key (Çıkar) at the glyph keys' height.
-	_dbtn(th, &"CardKeyText", ghost, cond_sb, T.D_FS_16, _fit(cond_sb, T.D_FS_16, T.D_H_KEY_SM, T.SPACE_S, T.SPACE_S))
-	# A sprint card's keys rest dim and take the two looks above while the pointer is on the card; a key
-	# under the pointer keeps the base look's hover.
+	# A candidate's "+" rests dim while its value is not yet known; a key under the pointer keeps the base look's hover.
 	th.set_type_variation(&"IconKeyIdle", &"IconKey")
 	th.set_stylebox("normal", &"IconKeyIdle", _flat(clear, T.D_RADIUS_2, Vector4.ZERO, T.D_LINE_1))
 	th.set_color("icon_normal_color", &"IconKeyIdle", T.D_INK_4)
-	th.set_type_variation(&"CardKeyTextIdle", &"CardKeyText")
-	th.set_color("font_color", &"CardKeyTextIdle", T.D_INK_4)
 	# The two-way switch's segments: the one that is on is filled and underlined in ink.
 	var seg_pad := _fit(sans_reg, T.D_FS_14, T.D_H_BTN_SM - 2 * T.BORDER_HAIRLINE, T.SPACE_L, T.SPACE_L)
 	var on := [T.D_SURFACE_5, T.D_INK_1, T.D_INK_1]

@@ -21,7 +21,10 @@ extends Control
 #   wait    Aşamanın hazır olduğu andan başladığı ana noktalı çizgi.
 #   shadow  PM'in kısalttığı payın çubuğun altındaki gölgesi.
 #   meet    Kurucunun görüşme günlerinin çubuk içindeki taraması.
-#   tick    Önden bitmiş aşamanın tik kutusu (çubuğa takılamadığında tek başına).
+#   tick    Önden bitmiş aşamaların tek tik kutusu, son bitenin renginde (çubuğa takılamadığında tek başına).
+#   load    Sağ sütunda bir aşamanın yükü: `spec` {carried, planned, team} efor; devreden kısım taralı, planlı kısım aşamanın
+#           rengiyle dolu, ikisi de ekibin gücüne oranlı (ekip 0 ise sayılar 1'e göre okunur).
+#   seg     Sağ sütunda bir kartın bir aşama payı: `spec` {fill} 0..1; önden yapılan kısım aşamanın renginde dolu.
 #   risk    Kartın hata riski: `spec` {now, raw} 0..1; `raw` hazırlanmamış hâlinin taralı payı.
 #   ask     Kartta bekleyen sorunun "?" işareti: halkalı yuvarlak zemin ve ortasında soru işareti; `spec` {}.
 #   fade    Panonun altında "aşağıda {n} kart daha" hapının arkasında sütunun zeminine solan geçiş.
@@ -116,7 +119,7 @@ func _draw() -> void:
 			draw_colored_polygon(PackedVector2Array([Vector2.ZERO, Vector2(size.x, 0.0), Vector2(mid, UiTokens.D_NOW_HEAD.y)]),
 				UiTokens.D_ACCENT)
 		&"early":
-			_hatch(Rect2(Vector2.ZERO, size), Color.TRANSPARENT, UiTokens.D_EARLY_STRIPE, UiTokens.D_EARLY_PERIOD)
+			hatch(self, Rect2(Vector2.ZERO, size), Color.TRANSPARENT, UiTokens.D_EARLY_STRIPE, UiTokens.D_EARLY_PERIOD)
 			draw_dashed_line(Vector2(UiTokens.BORDER_FOCUS / 2.0, 0.0), Vector2(UiTokens.BORDER_FOCUS / 2.0, size.y),
 				UiTokens.D_INK_3, UiTokens.BORDER_FOCUS, UiTokens.SPACE_XS)
 		&"bar":
@@ -130,10 +133,14 @@ func _draw() -> void:
 			draw_rect(Rect2(0.0, size.y - UiTokens.BORDER_HAIRLINE, size.x, UiTokens.BORDER_HAIRLINE),
 				Color(UiTokens.D_stage(stage), UiTokens.D_SHADOW_FOOT_ALPHA))
 		&"meet":
-			_hatch(Rect2(Vector2.ZERO, size), UiTokens.D_MEET_DARK, UiTokens.D_MEET_LIGHT, UiTokens.D_MEET_PERIOD)
+			hatch(self, Rect2(Vector2.ZERO, size), UiTokens.D_MEET_DARK, UiTokens.D_MEET_LIGHT, UiTokens.D_MEET_PERIOD)
 			draw_rect(Rect2(Vector2.ZERO, size).grow(-UiTokens.BORDER_HAIRLINE / 2.0), UiTokens.D_MEET_EDGE, false, UiTokens.BORDER_HAIRLINE)
 		&"tick":
 			_draw_tick(Rect2(Vector2.ZERO, size), stage)
+		&"load":
+			_draw_load()
+		&"seg":
+			_draw_seg()
 		&"risk":
 			_draw_risk()
 		&"ask":
@@ -157,11 +164,11 @@ func _draw_groove() -> void:
 	draw_rect(fill, UiTokens.D_stage_fill(stage))
 	draw_rect(Rect2(0, inset, minf(spec.done * per, edge), fill.size.y), UiTokens.D_stage(stage))
 	if spec.inner > 0.0:
-		_spill(Rect2(fill.end.x - spec.inner * per, inset, spec.inner * per, fill.size.y))
+		spill(self, Rect2(fill.end.x - spec.inner * per, inset, spec.inner * per, fill.size.y))
 	if spec.outer > 0.0:
-		var spill := Rect2(edge, 0, spec.outer * per, h)
-		_spill(spill)
-		draw_rect(spill.grow(-UiTokens.BORDER_FOCUS / 2.0), UiTokens.D_warn(), false, UiTokens.BORDER_FOCUS)
+		var over := Rect2(edge, 0, spec.outer * per, h)
+		spill(self, over)
+		draw_rect(over.grow(-UiTokens.BORDER_FOCUS / 2.0), UiTokens.D_warn(), false, UiTokens.BORDER_FOCUS)
 	if spec.ghost > 0.0:
 		var ghost := Rect2(work, inset, spec.ghost * per, fill.size.y)
 		draw_rect(ghost, UiTokens.D_stage_ghost(stage))
@@ -177,21 +184,21 @@ func _draw_groove() -> void:
 
 
 ## Sprint dışına kalan payın taramalı alanı: turuncu zemin ve çapraz turuncu şeritler.
-func _spill(area: Rect2) -> void:
-	_hatch(area, UiTokens.D_hatch_base(), UiTokens.D_warn(), UiTokens.D_HATCH)
+static func spill(canvas: CanvasItem, area: Rect2) -> void:
+	hatch(canvas, area, UiTokens.D_hatch_base(), UiTokens.D_warn(), UiTokens.D_HATCH)
 
 
-## `area` içinde, `base` zeminin üstüne `period` (x: aralık, y: kalınlık) çapraz şeritler.
-func _hatch(area: Rect2, base: Color, stripe: Color, period: Vector2) -> void:
+## `canvas`ta `area` içinde, `base` zeminin üstüne `period` (x: aralık, y: kalınlık) çapraz şeritler.
+static func hatch(canvas: CanvasItem, area: Rect2, base: Color, stripe: Color, period: Vector2) -> void:
 	if base.a > 0.0:
-		draw_rect(area, base)
+		canvas.draw_rect(area, base)
 	var rise: float = area.size.y
 	var x: float = area.position.x - rise
 	while x < area.end.x:
 		var from_t: float = clampf((area.position.x - x) / rise, 0.0, 1.0)
 		var to_t: float = clampf((area.end.x - x) / rise, 0.0, 1.0)
 		if to_t > from_t:
-			draw_line(Vector2(x + from_t * rise, area.end.y - from_t * rise), Vector2(x + to_t * rise, area.end.y - to_t * rise),
+			canvas.draw_line(Vector2(x + from_t * rise, area.end.y - from_t * rise), Vector2(x + to_t * rise, area.end.y - to_t * rise),
 				stripe, period.y)
 		x += period.x
 
@@ -251,6 +258,26 @@ func _draw_ask() -> void:
 		HORIZONTAL_ALIGNMENT_LEFT, -1, px, UiTokens.D_SURFACE_1)
 
 
+## Aşamanın yükü: çerçeveli iz, soldan devreden kısmın taraması, ardından planlı kısmın dolgusu.
+func _draw_load() -> void:
+	var box := Rect2(Vector2.ZERO, size)
+	draw_rect(box, UiTokens.D_SURFACE_4)
+	var per: float = size.x / maxf(spec.team, 1.0)
+	var carried: float = minf(spec.carried * per, size.x)
+	if carried > 0.0:
+		spill(self, Rect2(0.0, 0.0, carried, size.y))
+	draw_rect(Rect2(carried, 0.0, minf(spec.planned * per, size.x - carried), size.y), UiTokens.D_stage_fill(stage))
+	draw_rect(box.grow(-UiTokens.BORDER_HAIRLINE / 2.0), UiTokens.D_LINE_1, false, UiTokens.BORDER_HAIRLINE)
+
+
+## Kartın aşama payı: aşamanın soluk zemini ve kenarı, önden yapılan kısım aşamanın renginde dolu.
+func _draw_seg() -> void:
+	var box := Rect2(Vector2.ZERO, size)
+	draw_rect(box, UiTokens.D_stage_ghost(stage))
+	draw_rect(Rect2(0.0, 0.0, size.x * spec.fill, size.y), UiTokens.D_stage(stage))
+	draw_rect(box.grow(-UiTokens.BORDER_HAIRLINE / 2.0), UiTokens.D_stage_edge(stage), false, UiTokens.BORDER_HAIRLINE)
+
+
 func _draw_tick(box: Rect2, stage_id: String) -> void:
 	draw_rect(box, UiTokens.D_stage(stage_id))
 	var glyph: float = UiTokens.D_ICON_TAG
@@ -275,7 +302,7 @@ func _draw_bar() -> void:
 		"wait":
 			edge = UiTokens.D_neg() if late else UiTokens.D_stage_bar_edge(stage, "wait")
 		"out":
-			_spill(box)
+			spill(self, box)
 			edge = UiTokens.D_neg() if late else UiTokens.D_warn()
 		"ghost":
 			var dash: float = UiTokens.D_HATCH.y
