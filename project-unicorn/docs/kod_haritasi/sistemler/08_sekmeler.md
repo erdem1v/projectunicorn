@@ -204,16 +204,18 @@ Smoke (tek vaka: `bash tools/smoke_run.sh <vaka>`; tam süit yalnız push önces
   ↳ `beat` (`founder.savings_note` `EventGate.request` ile not olur: önce ofisin not yığını `inbox_shot_beat_stack`, sonra geçmiş satırı),
   ↳ `thanks` (bir sürümün iki teşekkür notu: tutulan söz ve karşılanan istek, `SprintBridges.thank` ile; en yenisi açık). Mesajlar: `intro`, `intro_go` (tanışmanın düğmesi Ürün'ü açar; `GATEFLOW tab= picking= speed=` satırı), `summary`,
   ↳ `rnd_note`, `rnd_note_demand`, `rnd_discovery`, `weekly_sales`; liste `empty`, `long`; `--palette=cb` renk körü paletini yalnız o koşu için açar (PNG `_cb` alır); `clause_sign`, `clause_reserve`, `clause_notice`, `clause_withdraw`:
-  ↳ Kurumsal sunucu maddesinin dört postası (Standart sunucuda 3★ hesap gerçek imza yoluyla açılır, `main._stage_clause` `:1701`; `reserve` ve `notice` maddenin süresinin dolduğu tikte hesabın memnuniyeti 90 ya da 55 iken,
+  ↳ Kurumsal sunucu maddesinin dört postası (Standart sunucuda 3★ hesap gerçek imza yoluyla açılır, `main._stage_clause` `:2147`; `reserve` ve `notice` maddenin süresinin dolduğu tikte hesabın memnuniyeti 90 ya da 55 iken,
   ↳ `withdraw` o bildirimin Kurumsal'a geçişle geri alınması); `clause_locked` imza mailini bir karar beklerken okur: "Kurumsal sunucuya geç" düğmesi kapalı, yanında "Önce bekleyen kararı cevapla." yazar;
-  ↳ her `clause_*` karesi `CLAUSE|active=|button=|disabled=` satırı basar (`_clause_switch_button` `:1717`);
-  ↳ `rep_lost` satış temsilcisinin kaybettiği anlaşmanın maili (gerçek `SalesRepSystem._close` ile kurulur, `main._stage_desk_losses` `:1667`: ERP MVP'de, Entegrasyonlar ve İlk kullanım boş, zarı kaybettiren kimlikler aranır),
+  ↳ `clause_server_lock` aynı imza mailini sunucu sözleşmesi sürerken okur (`InfraSystem.lock(10)`): düğme kapalı, solunda "Sunucu sözleşmen sürüyor, kademe 10 hafta daha değişmez." (`SHOTLINE|clause_server_lock|`);
+  ↳ `exit_notice` bir kartın `account_notice` fiilinin (sebep `rude_call`, postalı) yazdığı fesih postasını okuma bölmesinde çeker (`main._stage_exit_notice` `:2166`; `SHOTLINE|exit_notice|` konu ve gövdeyi basar);
+  ↳ her `clause_*` karesi `CLAUSE|active=|button=|disabled=` satırı basar (`_clause_switch_button` `:2174`);
+  ↳ `rep_lost` satış temsilcisinin kaybettiği anlaşmanın maili (gerçek `SalesRepSystem._close` ile kurulur, `main._stage_desk_losses` `:2113`: ERP MVP'de, Entegrasyonlar ve İlk kullanım boş, zarı kaybettiren kimlikler aranır),
   ↳ `weekly_lost` aynı haftanın özeti (iki kapanış ve maille anlatılmayan iki kayıp satırı), `weekly_lost_only` yalnız kayıplı hafta (tablosuz özet); `support_week` müşteri temsilcisinin haftalık destek raporu,
-  ↳ gerçek haftalık tikle (bir düzeltme hattı boşaltır, bir hat Öncelikli eşiğe varır, en kötü hat değişir; `main._stage_support` `:1726`), `support_behind` aynı hafta temsilci yetişemedi (23 gelen, 15 doğrulanan),
-  ↳ `support_go` raporun düğmesine basılır: Ürün SPRINT'te en kötü hattın alanı açık; `night` 23:00'te tema tohumunun şirketiyle gece atlamasını koşturur (`main._night_emergency` `:1309`): acil durum o gece zorlanır,
+  ↳ gerçek haftalık tikle (bir düzeltme hattı boşaltır, bir hat Öncelikli eşiğe varır, en kötü hat değişir; `main._stage_support` `:2183`), `support_behind` aynı hafta temsilci yetişemedi (23 gelen, 15 doğrulanan),
+  ↳ `support_go` raporun düğmesine basılır: Ürün SPRINT'te en kötü hattın alanı açık; `night` 23:00'te tema tohumunun şirketiyle gece atlamasını koşturur (`main._night_emergency` `:1731`): acil durum o gece zorlanır,
   ↳ mesai dışında bir müşterinin son uyarısı da bekler; acil durumun saatinde yalnız acil durum kartı gelen kutusundadır, öteki kart mesai başına kadar görünmez (`NIGHT|clock=|active=|waiting=|shown=|holds=` satırı);
   ↳ `morning` gece 00:00'dan sonra gelen kutusunu gerçek saatlik yolla çeker (`inbox_shot_morning_0000` devrin hemen sonrası, `_0930` mesai başından yarım saat sonra, `inbox_shot_morning` dört saat sonra;
-  ↳ `MORNING|` satırı her karede listenin damgalı öğelerini yazar); `flow` kapıyı kabuğun kendi girdisiyle oynar (`main._gate_flow` `:1361`) ve kare başına `GATEFLOW` satırı ile `inbox_flow_NN.png` basar;
+  ↳ `MORNING|` satırı her karede listenin damgalı öğelerini yazar); `flow` kapıyı kabuğun kendi girdisiyle oynar (`main._gate_flow` `:1783`) ve kare başına `GATEFLOW` satırı ile `inbox_flow_NN.png` basar;
   ↳ tıklamalar düğmenin gerçek yerine atılır, pencerenin altında kalan düğme önce görünür alana kaydırılır (1,25 ölçekte de)
 - Kontrast ve kit: `--theme-audit=<sekme>`, `--theme-contrast-audit`, `--probe-shot=kit` (`scripts/debug/kit_probe.gd`, Ekip satır ızgarasını örnekler). Ürün fikstürü: `scripts/debug/product_fixtures.gd`.
 - Metin kapıları: `"$GODOT" --headless --path . -s res://scripts/debug/loc_residue.gd` ve `bash tools/smoke_run.sh loc_csv_integrity`. Godot yolu `$GODOT` (CLAUDE.md §12); komutlar `project-unicorn/`'dan.

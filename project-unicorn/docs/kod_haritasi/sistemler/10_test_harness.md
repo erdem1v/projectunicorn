@@ -167,8 +167,11 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
   ↳ `planms=1` ekran için iki satır basar: `screen` (ilk kare, "+" ertelenmiş) ve `screen_total` (ilk kare ve ertelenen bütün `can_add`'ler); sonra her ertelenen değeri `can_add(id)` ile karşılaştırır, uyuşmazlıkta 1.
 - Ölçüm: `--tempo-probe=<hız>[:shell]` (`TEMPO`), `--tick-probe=<hız>[:<pencere>][:accounts=][:team=]` (`TICK`, ayrı `APPDATA` ister), `--render-probe[=<sekme>:...]`, `--office-crowd-probe=<ofis>:<kişi>:<hız>`.
 - Çekim ailesi (pencereli, `valued` tablosu `main.gd:242-276`): `--tab-shot`, `--modal-shot`, `--onboard-shot`, `--office-shot=<ofis>:<saat>[:ek]`, `--event-shot`, `--ending-shot`,
-  `--vc-shot`, `--sales-shot`, `--negotiation-shot`, `--meeting-shot`,
-  `--invite-shot`, `--product-shot`, `--hr-shot`, `--finance-shot`, `--personal-shot`, `--rnd-shot`, `--b2b-shot`, `--inbox-shot`, `--menu-shot`, `--travel-shot`, `--clock-shot`, `--day-shot`, `--probe-shot[=menajer|kit]`.
+  `--vc-shot`, `--sales-shot` (`offer`: aday teklifi ve süreli indirim), `--negotiation-shot`, `--meeting-shot` (`focus`: "Bu çeyreğin vurgusu" ipucu),
+  `--invite-shot`, `--product-shot`, `--hr-shot`, `--finance-shot`, `--personal-shot`, `--rnd-shot`, `--b2b-shot`, `--inbox-shot` (`exit_notice`, `clause_server_lock`), `--menu-shot`, `--travel-shot`, `--clock-shot`, `--day-shot`, `--probe-shot[=menajer|kit]`.
+  ↳ `--event-shot=<kart>[:<slot>=<id>...][:long=1]` kartın slotlarını bağlar (yuvasız kart kendi dünyasını kurar: temsilcili hesap, işlenen aday, yaz izni çifti, hat hesapları; `:long=1` uzun adlar) ve kareden önce `EVENTSHOT|`,
+  ↳ `EVENTSHOTTEXT|`, `EVENTSHOTOPTION|`, `EVENTSHOTCHIPS|` satırlarını basar; başsız koşu kareyi yazamaz (`save_png` hatası beklenir) ama bağlama, metin ve çipler okunur (ayrıntı 07_olay_motoru.md). Başsız çekim satırları: `SHOTLINE|<etiket>|<metin>`
+  ↳ (sayfada o metni taşıyan etiketler; `none` yoksa), `CLAUSE|`, `MEETINGSHOT|`.
 - Çıplak bayraklar (`bare` tablosu `main.gd:225-236`): `--event-probe`, `--event-lint`, `--event-vocab`, `--render-probe`, `--sales-shot`, `--probe-shot`, `--display-check`, `--backdrop-probe`, `--theme-contrast-audit`.
 - Motor araçları: `--event-lint[=baseline]`, `--why-fire=<kart>`, `--event-harness=random:seeds=N:weeks=M|guided`, `--event-plausibility=<spec>`;
   makullük kapısı `bash tools/plausibility_run.sh` (`SEEDS`, `WEEKS`, `JOBS`, `LONG_SEEDS` ortam değişkenleri).

@@ -167,7 +167,7 @@
       "title": "Stok şikâyeti: {customer}",
       "body": "{customer} depo müdürü sabah aradı, sistemimizin stokları yanlış saydığını söyleyip bağırdı. Kayıtlara baktım: depodaki arkadaş 40 koli ürünü 4 diye girmiş, sistem stokta 4 koli gösterdiği için iki şubeye eksik mal gönderilmiş. Müdür hâlâ hatanın bizde olduğunu düşünüyor.",
       "options": {
-        "rep_visits": "{rep} kayıtlarla müdüre gitsin",
+        "rep_visits": "Müşteri temsilcisi kayıtlarla müdüre gitsin",
         "founder_calls": "Müdürü sen ara, kayıtları nazikçe anlat",
         "warning_screen": "Sayım ekranına uyarı ekle, müdüre aldığımız önlemi anlat"
       },
@@ -180,7 +180,7 @@
       "title": "Stock complaint: {customer}",
       "body": "The warehouse manager at {customer} called this morning, shouting that our system miscounts stock. I checked the records: someone at their warehouse entered 40 cases as 4, so the system showed 4 in stock and two branches got short deliveries. The manager still thinks it's our fault.",
       "options": {
-        "rep_visits": "Send {rep} to the manager with the records",
+        "rep_visits": "Send the account manager to the warehouse manager with the records",
         "founder_calls": "Call the manager yourself and walk through the records",
         "warning_screen": "Add a warning to the count screen, tell the manager what we changed"
       },

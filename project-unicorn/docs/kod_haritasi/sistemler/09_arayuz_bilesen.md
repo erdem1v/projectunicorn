@@ -191,13 +191,15 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
   ↳ haftalar kaydedilmemişken (`confirm3_gate` karar beklerken), `return_confirm` aynısı Ana menüye dön onayı, `f5_gate` karar beklerken F5; `--office-shot=<ofis>:<saat>:toast` (06_ofis.md), `--shot-size=`, `--skip-onboarding`. Ölçüm:
   ↳ `--render-probe[=<sekme>[:<kişi>[:<hız>]]]` (`--shot-size=` ile) kabuğu tek pencere boyutunda kurar, kare maliyetini ve doku ve video belleğini basar; `<kişi>` kadroyu o sayıya doldurur,
   ↳ `<hız>` saati o hızda en az üç oyun saati koşturur, `rebuild_view` taşıyan sayfanın tam yeniden kuruluş karesini `REBUILD_MS` basar
-- Görsel (Görüşme paneli): `--meeting-shot=<probe|locked|won|lost|handoff|economy|frank|emph_trust|emph_integrations|emph_onboarding|weak_core|die|returning>` (satış): `probe` ilk soru,
+- Görsel (Görüşme paneli): `--meeting-shot=<probe|locked|won|lost|handoff|economy|frank|emph_trust|emph_integrations|emph_onboarding|weak_core|die|focus|returning>` (satış): `probe` ilk soru,
   ↳ `locked` kilitli cevabı olan soruya ve kilit satırına kadar, `won` müşterinin kesimine kadar oynanır (Devam teklife), `lost` kayba (sonuç kartı), `handoff` Devam'dan Perde 2'ye;
   ↳ `economy` Ekonomik sunucuda kapasitesini aşan ürünle 3★ masa, kesime kadar oynanır ve Perde 2'ye geçer: yük sorusu yok, onay şeridinin uyarı satırı sunucu maddesini söyler,
   ↳ `MEETINGSHOT|economy|load=|asked=` yükü ve sorulan aileleri basar; `frank` Satış'ı ve Karizma'sı sıfır kurucunun karşısına Frank'in tanıştırdığı 2★ adayı oturtur,
   ↳ ilk soruda iğnenin hover satırlarının seam'lerini `MEETINGSHOT|frank|mods=…` basar; `emph_*` sektörü sabit 2★ masa vurgu sorusunu üç biçimiyle sorar (alanı Güven için kurulu: güçlü cevap açık; ikisi için boş: kilit satırı);
   ↳ `weak_core` Çekirdek'i en zayıf alan olan 3★ masa (sorunun üstünde itiraz, güçlü cevabın altında kilit satırı); `returning` Entegrasyonlar yüzünden kaybedilmiş 2★ masa geri geldi (başlıktaki hafıza satırı);
   ↳ `die` aynı masa bir cevap sonra, teklife geç seçeneğinin zarı üstünde: ipucu satırı alanı ve sözcüğünü söyler, dört satırdan sonrası "+N etken daha", kalanlar İkna'nın ipucunda;
+  ↳ `focus` `die`'ın masası, Güven en üst kademede ve Güven üstüne bir kart vurgusu (`SalesMeetingSystem.set_pitch_focus`) çalışırken: "Bu çeyreğin vurgusu" satırı yalnız zarın ipucunda yaşadığından kare ipucu açıkken çekilir;
+  ↳ `MEETINGSHOT|focus|<satır>` ipucunun o satırını (listede değilse "(not among the hover's lines)"), `MEETINGSHOT|focus_lines|` ipucunun bütün satırlarını basar;
   ↳ ipucunun her satırı büyük harfle başlar (VC'nin beceri çipi `HRUiShared.skill_label`, "+ Karizma"), katlanan satır boş kategori etiketiyle öbür etkenlerin metin satırında durur; kare hover'ı göstermez;
   ↳ `won` ve `handoff` ile `--negotiation-shot=<open|countered|insult|last|confirm>` ürünü her hattı K2 yapar, masa kazanılsın diye; VC:
   ↳ `--meeting-shot=<open|sorgu|sheet|callback|ret|seed|long>` (`open:tip` ve `sorgu:tip` zar taşıyan ilk seçeneğin ipucunu açar): `open` Odayı Oku, HAFIZA satırı ve çekilme düğmesi, `sorgu` üçüncü vuruş,

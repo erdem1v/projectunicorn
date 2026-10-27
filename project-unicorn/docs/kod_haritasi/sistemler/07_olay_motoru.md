@@ -69,8 +69,8 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
   ↳ motorun adını anacağı not listesi (`_unannounced`, kaydedilmez) kaydın geçmiş satırlarından yeniden kurulur (`EvHistory.notes_awaiting_arrival()` `history.gd:174`: okunmamış ve geliş saati şimdiden sonra not),
   ↳ yoksa yüklemede unutulan not yeniden doğrulamasız ve `event_triggered`'siz gelen kutusuna düşerdi
 - Bayrak yönlendirmesi `scripts/main/main.gd:226-251`: `--event-probe`, `--event-lint[=baseline]`, `--event-vocab`, `--why-fire=` (`_run_why_fire`), `--event-harness=`, `--event-plausibility=`,
-  ↳ `--event-shot=` (`_run_event_shot` `main.gd:764`)
-- Sunum yolu: `EvPresenter.build_view` `present/presenter.gd:40` -> `EventBus.modal_requested` -> `main.gd:4734` (`hold_clock("event")`, Olaylar kutusu açılır) -> `mail_pane.gd` -> `EventGate.resolve`
+  ↳ `--event-shot=` (`_run_event_shot` `main.gd:792`)
+- Sunum yolu: `EvPresenter.build_view` `present/presenter.gd:40` -> `EventBus.modal_requested` -> `main.gd:5290` (`hold_clock("event")`, Olaylar kutusu açılır) -> `mail_pane.gd` -> `EventGate.resolve`
 
 ## Sinyaller
 - `event_triggered(event_id)` `scripts/autoload/event_bus.gd:118`: yayan `core/engine.gd:565` (not geldi), `engine.gd:606` (kart gösterildi) · dinleyen: `top_bar.gd:113`, `left_tabs.gd:111`, `research_bar.gd:60`,
@@ -122,21 +122,32 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - Smoke devamı: `event_check_with_effects` (şıkta etki ve zar birlikte, zar çipi, yükle-tekrar aynı dal), `event_after_test` (testi bekleyen etki: hata bulunursa iner ve `<sonuç>_tested` satırı yazılır, bulunmazsa düşer, izleme kayıttan geçer), `event_year_roll` (yıl zarı, tohumlu `random` ve rakip seçicileri, `{rival}` adı),
   ↳ `card_body_tokens_resolve` `endgame_smoke.gd:490`, `loc_event_en_coverage` `:318`, `event_chip_coverage` `:335`, `quiet_cards_fill_empty_floor` `:542`, `event_no_double_resolution_after_load` `:355`,
   ↳ `event_thesis_day10_to_day90` `:333`, `harness_sniffer_matches_run_log` `:368`
-- Oynanan koşu: `--run-log=<preset>:<hafta>:sim` `PROBE FIRE/PICK/TALLY/WEEK` basar (`run_probe.gd:30-99`); `tools/run_gate.sh` üç koşu; görsel: `--event-shot=<kart id>[:<slot>=<varlık id>]` (`main.gd:764`, pencereli)
+- Oynanan koşu: `--run-log=<preset>:<hafta>:sim` `PROBE FIRE/PICK/TALLY/WEEK` basar (`run_probe.gd:30-99`); `tools/run_gate.sh` üç koşu; görsel: `--event-shot=<kart id>[:<slot>=<varlık id>][:long=1]` (`main.gd:792`, pencereli)
 - Probe kayıt türleri: `FIRE`, `PICK`, `TALLY_BEGIN` / `TALLY` / `TALLY_END`, `WEEK`, `ERROR` (drain koruması, kilitsiz seçeneği olmayan kart)
 - Görsel: `--event-shot=<kart id>[:<slot>=<varlık id>...]`: her çift bir slotu seçicisiz o varlığa bağlar (ör. `investor=anchor`); bağlanamayan çift ve hiçbir dünyada bağlanmayan zorunlu slot kareyi düşürür, çiftler PNG adına girer;
   ↳ çekilen kartın seam sayıları kartın tuttuğu adlarla okunur (`EvPresenter.freeze_seams`).
-  ↳ Slotlarını çıplak tohum bağlayamayan kart ve her `rival.` kartı tema tohumunun şirketinde çekilir (`main._seed_company_world`: 14. hafta, kurulu ERP, `--hr-shot` kadrosu, üç hesap; kadronun kimliği `char_emp_shot_<n>`:
-  ↳ `team.burnout:employee=char_emp_shot_1`); `open_request` ve `escalated` seçicileri Müşteri İlişkileri temsilcili bir hesap, `seed_lead` imzalı bir tohum turu, `customer.release_thanks` bir sürümün teşekkürü,
-  ↳ `product.support_overflow` sıcak bir destek yığını ekler; bir slotun `where`'ini bu şirket karşılamıyorsa slot seçicinin seçtiğini `where`'siz bağlar;
+  ↳ `long=1` slot değildir (`runway` gibi spec'ten düşer): slotlar bağlandıktan sonra, kareden önce bağlanan her çalışan, hesap, aday ve rakibe, kartın slot sırasıyla, uzun bir özel ad verir
+  ↳ (`main._lengthen_shot_names` `:930`, `SHOT_LONG_*` `:912`: "Kerem Hasan Karaosmanoğlu", "Zeynep Nur Büyükkaragöz"; hesap ve aday "Anadolu Endüstriyel Otomasyon"; rakip "Hyperion Enterprise Suite";
+  ↳ iki dilde aynı; kurucunun ve yatırımcının adı kalır); PNG adı spec'i taşır. Her çekim `EVENTSHOT|<kart>|<slot>=<id> (<ad>)...|where=met|skipped|week=<hafta>` satırı basar (`_event_shot_lines` `:878`; yuvasız kartta `where` yazmaz),
+  ↳ ardından `EVENTSHOTTEXT|` (başlık ve gövde), her şık için `EVENTSHOTOPTION|` (kilitliyse `[LOCKED: gerekçe]`) ve `EVENTSHOTCHIPS|` (şıkkın etki çipleri, ardından zarın şansı ve dallarının çipleri, okuma bölmesinin `_paint_option` sırasıyla): başsız çekim PNG'yi yazamasa da (`save_png` hatası beklenir)
+  ↳ bağlanan varlık, metin ve çipler okunur; `where=skipped` slotun `where`'inin karşılanamadığını söyler (seçicinin ya da iğnenin seçtiği `where`'siz bağlandı).
+  ↳ Slotlarını çıplak tohum bağlayamayan kart, her `rival.` kartı ve yuvası olmayan `guards.market: b2b` kartı (çipleri hesap sayar) tema tohumunun şirketinde çekilir (`main._seed_company_world` `:1364`: 14. hafta, kurulu ERP
+  ↳ ve sprint durumu, `--hr-shot` kadrosu, üç hesap; kadronun kimliği `char_emp_shot_<n>`: `team.burnout:employee=char_emp_shot_1`); `open_request` ve `escalated` seçicileri Müşteri İlişkileri temsilcili bir hesap, `seed_lead` imzalı
+  ↳ bir tohum turu, `customer.release_thanks` bir sürümün teşekkürü, `product.support_overflow` sıcak bir destek yığını ekler. Seçiciye bağlı dört kurulum, kartın slotlarının `where`'inden okunur (`main._shot_wants` `:955`: sektör, ölçek,
+  ↳ kıdem, derlenmiş kıdem tabanı, hata, rol, düzey): `account_rep` Palmiye Turizm'i temsilcisiyle kurar ve müşteri slotunun `where`'ine göre şekillendirir (`_stage_rep_account` `:1078`; taze hesap onboarding penceresindedir),
+  ↳ `rep_lead` / `lead_rep` kadronun satış temsilcisini Satış işine alıp tohumun ilk adayını gerçek `SalesRepSystem._start_processing` ile işletir (`_stage_rep_lead` `:1088`), `leave_pair` / `leave_partner` tarihi Haziran'ın ilk haftasına
+  ↳ alır ve slotun rolünde iki çalışanı (kadronun sahibi ve yeni bir iş arkadaşı) yaz izni 2. ve 3. haftada, ikisi çalışıyor ve bu yıl izin almamış kurar (`_stage_leave_pair` `:1100`), kâğıt dünyası `line_top` slotları kadar hesabı hat için
+  ↳ tamamlar (`_stage_line_accounts` `:1125`). `where`'ini hiçbir varlığı karşılamayan her öbür çalışan, hesap ve rakip slotu için `_stage_unmet_wheres` (`:1148`) en yakın varlığı `where`'e göre şekillendirir (iğnelenen ya da dünyanın verdiği varlık kimliğini,
+  ↳ yani rol ve sektörünü korur; yalnız kıdem, düzey, ölçek, durum alır; payroll'un erişemediği kıdem tabanı tema şirketinde ve çıplak tohumda haftayı bir kez, kurulumdan önce tabanın bir fazlasına ilerletir: `_shot_floor_day` `:993`; kendi dünyası olan kartta tarih kalır ve slot `where=skipped` düşer); state seçicileri (`SHOT_STATE_SELECTORS` `:1136`) kendi kurulumunu kullanır;
+  ↳ `musteri.promise_late` okuyan kart sözün gecikmiş olduğu sprint dünyasında (`_seed_promise_world`) çekilir. Yine de karşılanamayan `where` slotu `where`'siz bağlar (`where=skipped`);
   ↳ `founder.savings_note` ve `founder.side_contract` birikimi biten kurucuda çekilir (`main._seed_savings_ground`: 5. hafta, kasa $5.000, günlük gider 50; `--inbox-shot=beat` aynı zemini kullanır);
   ↳ `funding.monthly_update` imzalı tohum turlu şirketin kasası aylık akışının 8,5 haftasına indirilmiş hâlinde (gövde '8 hafta' yazar), `:runway=profit` ile aynı şirket giderini karşılarken (gövde runway'den söz etmez).
-  ↳ Acil durum kartları (`main.gd` `INCIDENT_SHOTS` `:838`) kendi dünyalarını kurar: `product.incident_outage_b2b` ve `_b2c` gece 03:00'te, kesinti 02:10'da başlamış (B2B'de gece vardiyalı iki hesapla, B2C'de kitle ve ücretli planla),
+  ↳ Acil durum kartları (`main.gd` `INCIDENT_SHOTS` `:1230`) kendi dünyalarını kurar: `product.incident_outage_b2b` ve `_b2c` gece 03:00'te, kesinti 02:10'da başlamış (B2B'de gece vardiyalı iki hesapla, B2C'de kitle ve ücretli planla),
   ↳ gönderen için `:employee=char_emp_shot_2`, `:load=<yüzde>` kesintinin zarının atıldığı sunucu yükü (kart %90 üstünde yük cümlesini söyler).
   ↳ Öbür dördü (`customer.incident_month_close` 23:00, `product.incident_checkout`, `product.incident_regression`, `product.incident_review_storm` gündüz) dolu bir sprintin koştuğu canlı üründe kurulur,
   ↳ düzeltme kartı sprintten bir kartı kaydırır (`fix_effort.per_bug` bu çekim için büyütülür), çip adını yazar; bozulma B2B'de, `:market=b2c` ile B2C'de çekilir; `product.promise_due` sprintin son haftasının başında kurulur:
-  ↳ Nordica'ya bu sprint için verilmiş söz, testteki tek kart, `customer=co_nordica`; `product.b2c_floor_signal` ve `product.b2c_floor_churn` (`main._seed_floor_world` `:935`) 20.000 kitleli bir not uygulamasında çekilir,
-  ↳ Güven & Ölçek'in iki hattından biri kurulu, öbür alanlar kurulu: merdiven Güven'de uyarı tutar ve gövde alanın adını yazar; `funding.sheet_expiry` (`main._seed_expiring_sheet` `:957`, `--b2b-shot=deal`'ın dünyası da) Series A'da,
+  ↳ Nordica'ya bu sprint için verilmiş söz, testteki tek kart, `customer=co_nordica`; `product.b2c_floor_signal` ve `product.b2c_floor_churn` (`main._seed_floor_world` `:1327`) 20.000 kitleli bir not uygulamasında çekilir,
+  ↳ Güven & Ölçek'in iki hattından biri kurulu, öbür alanlar kurulu: merdiven Güven'de uyarı tutar ve gövde alanın adını yazar; `funding.sheet_expiry` (`main._seed_expiring_sheet` `:1349`, `--b2b-shot=deal`'ın dünyası da) Series A'da,
   ↳ uyarının girdiği ilk haftada (iki hafta kalmış) bir teklifle çekilir ve gövde 14 gün yazar (`investor=` teklifin fonunu seçer, verilmezse anchor);
   ↳ `funding.sheet_decision` aynı teklifin süresinin dolduğu günde çekilir (`--vc-shot=k10`'un dünyası); `founder.unseen_build` türü seçilmiş, hiç yayınlanmamış ürünün ikinci sprintinde çekilir;
   ↳ kâğıt kartlarının hepsi (`pool_group` taşıyan sprint kâğıtları: pm, tasarımcı, geliştirici, testçi, testçisiz, sistem, kurucu) `_seed_paper_world`'de kurulur; `--b2b-shot=<tür>` kartı okuma bölmesinde önizler,

@@ -686,6 +686,23 @@ func _shot_fail(msg: String) -> void:
 	get_tree().quit(1)
 
 
+## SHOTLINE|<tag>|<text> for every label (and rich label) under `root` whose text carries one of `needles`: the lines a frame
+## would show, for a headless shot, which has no frame to read them from. `none` when there is not one.
+func _print_shot_lines(root: Node, tag: String, needles: Array) -> void:
+	var found := 0
+	for node in root.find_children("*", "Control", true, false):
+		var text: String = ""
+		if node is Label:
+			text = (node as Label).text
+		elif node is RichTextLabel:
+			text = (node as RichTextLabel).text
+		if text != "" and needles.any(func(needle: String) -> bool: return needle != "" and text.contains(needle)):
+			print("SHOTLINE|%s|%s" % [tag, text.replace("\n", " / ")])
+			found += 1
+	if found == 0:
+		print("SHOTLINE|%s|none" % tag)
+
+
 ## --b2b-shot=<retention|retention_capped|escalation|expansion|deal|angel|chips>: one
 ## factory-built card in the inbox's reading pane. `chips` is the fixture whose options carry the trust hit,
 ## the standing per-sprint cost and the crew list, over the HR roster.
@@ -765,9 +782,13 @@ func _run_b2b_shot(kind: String) -> void:
 ## the unseen build's card stands in the second sprint of a product nobody has launched; the savings note and the side
 ## work paper stand in a founder whose savings run down, and the investor's monthly update in a company whose cash drains
 ## (`runway=profit` shoots it in the company that earns its costs, where the note says nothing of a runway). A card whose
-## slots the bare seed cannot bind (and every rival card, which names the product type's rival) stands in the theme seed's company
+## slots the bare seed cannot bind (and every rival card, which names the product type's rival, and a card with no slot
+## that is a B2B card, whose chips count accounts) stands in the theme seed's company
 ## (_seed_company_world; an id of --hr-shot's roster, `char_emp_shot_<n>`, is in it); a slot whose `where` that
-## company does not meet binds the selector's pick without it.
+## company does not meet binds the selector's pick without it. The company stages what a selector needs, shaped by the
+## slot's own `where` (_seed_company_world, _stage_unmet_wheres; 07_olay_motoru.md lists them). `long=1` (not a slot, like
+## `runway`) gives every bound employee, account, lead and rival a long proper noun before the frame. The EVENTSHOT* lines
+## (_event_shot_lines) name what each slot bound, `where=skipped` when a `where` was not met, the text and each option's chips.
 func _run_event_shot(spec: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
@@ -784,9 +805,14 @@ func _run_event_shot(spec: String) -> void:
 		given[pair.get_slice("=", 0)] = pair.get_slice("=", 1)
 	var profit: bool = given.get("runway", "") == "profit"
 	given.erase("runway")
+	var long_names: bool = given.get("long", "") == "1"
+	given.erase("long")
 	var card: Dictionary = EvCatalog.card(event_id)
 	var scope: Dictionary = card.get("scope", {})
 	var selects: Array = scope.values().map(func(slot: Dictionary) -> String: return String(slot.get("select", "")))
+	# The day a seniority floor of the card's slots needs; only the theme seed's company and the bare seed move to it (a
+	# world of its own keeps its date, and its slot stays unmet).
+	var floor_day: int = _shot_floor_day(scope)
 	if INCIDENT_SHOTS.has(event_id):
 		var emergency: Array = INCIDENT_SHOTS[event_id]
 		var b2b: bool = emergency[1] and given.get("market", "") != "b2c"
@@ -794,8 +820,11 @@ func _run_event_shot(spec: String) -> void:
 		given.erase("market")
 		given.erase("load")
 		given.merge(_seed_incident_world(emergency[0], b2b, load_pct), false)
-	elif event_id == "product.promise_due":
-		given.merge(_seed_promise_world(), false)
+	elif event_id == "product.promise_due" or _scope_reads(scope, "musteri.promise_late"):
+		var promised: Dictionary = _seed_promise_world()
+		if event_id != "product.promise_due":
+			promised.erase("employee")   # the sender of the due card is the crew's; this card's slots pick their own people
+		given.merge(promised, false)
 	elif "expiring_sheet" in selects or "decision_sheet" in selects:
 		_seed_expiring_sheet(String(given.get("investor", "anchor")), PitchConstants.WARNING_WEEKS if "expiring_sheet" in selects else 0)
 	elif event_id in ["product.b2c_floor_signal", "product.b2c_floor_churn"]:
@@ -813,15 +842,21 @@ func _run_event_shot(spec: String) -> void:
 	elif event_id == "founder.unseen_build":
 		SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
 		GameState.product.sprint.number = 2
-	elif event_id.begins_with("rival.") or not bool(EvScope.resolve(scope, given, event_id).get("ok", false)):
-		_seed_company_world(event_id, selects)
+	elif event_id.begins_with("rival.") or (scope.is_empty() and String(card.get("guards", {}).get("market", "")) == "b2b") \
+			or not bool(EvScope.resolve(scope, given, event_id).get("ok", false)):
+		_seed_company_world(event_id, selects, scope, floor_day)
+	else:
+		GameState.day = maxi(GameState.day, floor_day)
+	_stage_unmet_wheres(scope, given)
 	var ctx: Dictionary = EventGate.bind_scope(event_id, given)
+	var without_where := false   # the world or a given slot did not meet a `where`: the slots bound without it
 	if ctx.is_empty() and not scope.is_empty():
 		var open: Dictionary = scope.duplicate(true)
 		for slot in open:
 			open[slot].erase("where")
 		var bound: Dictionary = EvScope.resolve(open, given, event_id)
 		ctx = bound.context if bound.ok else {}
+		without_where = not ctx.is_empty()
 	for slot in given:
 		if String(ctx.get(slot, {}).get("id", "")) != given[slot]:
 			_shot_fail("[EventShot] %s: slot '%s' did not bind '%s'" % [event_id, slot, given[slot]])
@@ -830,9 +865,365 @@ func _run_event_shot(spec: String) -> void:
 		if bool(scope[slot].get("required", true)) and not ctx.has(slot):
 			_shot_fail("[EventShot] %s: no world binds its slot '%s'" % [event_id, slot])
 			return
+	if long_names:
+		_lengthen_shot_names(scope, ctx)
+	print(_event_shot_lines(card, ctx, without_where))
 	_shot_pane(event_id, ctx, EvPresenter.freeze_seams(card, ctx))
 	await get_tree().process_frame
 	await _finish_shot("event_shot_%s" % spec.replace(":", "_"), 0.35)
+
+
+## What `--event-shot` prints for the slots it bound: EVENTSHOT|<card>|<slot>=<entity id> (<name>)..., and one EVENTSHOTCHIPS line
+## per option with the chips of its effects and its dice against that context (a headless shot has no frame to read them from).
+func _event_shot_lines(card: Dictionary, ctx: Dictionary, without_where: bool) -> String:
+	var slot_names: Dictionary = EvPresenter.freeze_names(ctx)
+	var names: Dictionary = EvPresenter.freeze_seams(card, ctx)   # what the pane is given, so the text reads as it reads it
+	var bound: Array[String] = []
+	for slot in ctx:
+		bound.append("%s=%s (%s)" % [slot, ctx[slot].id, EvPresenter.name_text(slot_names.get(slot, ""))])
+	if not (card.get("scope", {}) as Dictionary).is_empty():
+		bound.append("where=%s" % ("skipped" if without_where else "met"))
+	bound.append("week=%d" % GameState.day)   # the week the world stands in (a seniority floor can move it)
+	var lines: Array[String] = ["EVENTSHOT|%s|%s" % [card.id, "|".join(bound)]]
+	var view: GameEvent = EventGate.render(card.id, ctx, names)
+	lines.append("EVENTSHOTTEXT|%s|%s|%s" % [card.id, view.title, view.body_text.replace("\n", " / ")])
+	for choice: EventChoice in view.choices:
+		var lock: Dictionary = choice.unlock_condition
+		var reason: String = "" if EventGate.condition_met(lock, ctx) else EventGate.condition_reason(lock, ctx)
+		lines.append("EVENTSHOTOPTION|%s|%s%s" % [card.id, choice.label, "" if reason == "" else "  [LOCKED: %s]" % reason])
+	# The chips as the reading pane paints them (mail_pane._paint_option): the effects', then the dice's with their odds.
+	var options: Array = card.get("options", [])
+	for i in view.choices.size():
+		var choice: EventChoice = view.choices[i]
+		var parts: Array = []
+		for m: Dictionary in choice.modifiers:
+			parts.append_array(EvChips.describe(m, ctx, {}, false))
+		parts.append_array(EvChips.describe_check(choice.check, ctx, {}))
+		var chips: Array[String] = []
+		for part: Dictionary in parts:
+			chips.append(EvChips.text(part))
+		lines.append("EVENTSHOTCHIPS|%s|%s|%s" % [card.id, String(options[i].get("id", i)), "; ".join(chips)])
+	return "\n".join(lines)
+
+
+## `--event-shot=...:long=1`: proper nouns that do not fit a line, in the order the card declares its slots, so the first
+## and the second person of a card read as two different long names. One text in both languages (a proper noun does not
+## localize). Founders and investors keep theirs: the player's name and a fund's are not the card's to stretch.
+const SHOT_LONG_PEOPLE := [
+	"Kerem Hasan Karaosmanoğlu",   # LOC-DATA debug seed / id
+	"Zeynep Nur Büyükkaragöz",   # LOC-DATA debug seed / id
+	"Mehmet Emin Yıldırımoğlu",   # LOC-DATA debug seed / id
+	"Ayşe Gül Çakırgöz Demirbaş",   # LOC-DATA debug seed / id
+]
+const SHOT_LONG_FIRMS := [
+	"Anadolu Endüstriyel Otomasyon",   # LOC-DATA debug seed / id
+	"Trakya Tarım Ürünleri ve Lojistik",   # LOC-DATA debug seed / id
+	"Karadeniz Denizcilik ve Liman İşletmeleri",   # LOC-DATA debug seed / id
+	"İç Anadolu Gıda Dağıtım Hizmetleri",   # LOC-DATA debug seed / id
+]
+const SHOT_LONG_RIVALS := [
+	"Hyperion Enterprise Suite",   # LOC-DATA debug seed / id
+	"Meridian Operations Cloud Platform",   # LOC-DATA debug seed / id
+]
+
+
+func _lengthen_shot_names(scope: Dictionary, ctx: Dictionary) -> void:
+	var people: int = 0
+	var firms: int = 0
+	var rivals: int = 0
+	for slot in scope:
+		if not ctx.has(slot):
+			continue
+		var id: String = String(ctx[slot].id)
+		match String(ctx[slot].type):
+			EvScope.TYPE_EMPLOYEE:
+				CharacterRegistry.get_character(id).character_name = SHOT_LONG_PEOPLE[people % SHOT_LONG_PEOPLE.size()]
+				people += 1
+			EvScope.TYPE_CUSTOMER:
+				CustomerRegistry.get_customer(id).company_name = SHOT_LONG_FIRMS[firms % SHOT_LONG_FIRMS.size()]
+				firms += 1
+			EvScope.TYPE_PROSPECT:
+				ProspectRegistry.get_prospect(id).company_name = SHOT_LONG_FIRMS[firms % SHOT_LONG_FIRMS.size()]
+				firms += 1
+			EvScope.TYPE_RIVAL:
+				RivalRegistry.get_rival(id).product_name = SHOT_LONG_RIVALS[rivals % SHOT_LONG_RIVALS.size()]
+				rivals += 1
+
+
+## What a slot's `where` asks of each seam, merged over the `all` leaves of its tree (an `any` reads its first branch; the
+## plausibility compiler writes the seniority floor into the same tree): {seam: {eq, any, lo, hi}}, a bound a leaf does not give absent.
+func _shot_wants(where: Dictionary, wants := {}) -> Dictionary:
+	if where.has("entity_seam"):
+		var seam: String = String(where.entity_seam)
+		var row: Dictionary = wants.get(seam, {})
+		var value: Variant = where.get("value")
+		var op: String = String(where.get("op", "=="))
+		if op == "==":
+			row["eq"] = value
+		elif op == "in":
+			row["any"] = value
+		elif typeof(value) in [TYPE_INT, TYPE_FLOAT]:
+			var n: int = int(value)
+			match op:
+				">=": row["lo"] = maxi(int(row.get("lo", n)), n)
+				">": row["lo"] = maxi(int(row.get("lo", n + 1)), n + 1)
+				"<=": row["hi"] = mini(int(row.get("hi", n)), n)
+				"<": row["hi"] = mini(int(row.get("hi", n - 1)), n - 1)
+		wants[seam] = row
+	for child in where.get("all", []):
+		_shot_wants(child, wants)
+	var either: Array = where.get("any", [])
+	if not either.is_empty():
+		_shot_wants(either[0], wants)
+	return wants
+
+
+## The value a fixture gives a seam so the slot's `where` holds: the equality, else the floor, else the ceiling, else `fallback`.
+func _shot_want(wants: Dictionary, seam: String, fallback: Variant) -> Variant:
+	var row: Dictionary = wants.get(seam, {})
+	for key in ["eq", "lo", "hi"]:
+		if row.has(key):
+			return row[key]
+	return fallback
+
+
+## The first day on which the card's employee slots can all meet their seniority floor (`hr.tenure_weeks`, the compiled
+## plausibility floor among them): one past the longest floor, a hire on day 1 being the earliest. 0 when no slot has one.
+## State selectors are left out, as `_stage_unmet_wheres` leaves them.
+func _shot_floor_day(scope: Dictionary) -> int:
+	var day: int = 0
+	for slot in scope:
+		var spec: Dictionary = scope[slot]
+		if String(spec.get("type", "")) != EvScope.TYPE_EMPLOYEE or String(spec.get("select", "")) in SHOT_STATE_SELECTORS:
+			continue
+		var lo: Variant = _shot_wants(spec.get("where", {})).get("hr.tenure_weeks", {}).get("lo")
+		if lo != null:
+			day = maxi(day, 1 + TimeModel.ticks(int(lo)))
+	return day
+
+
+## The slot of a scope whose selector is `select` ({} when none): where a selector's fixture reads what its card asks of it.
+func _shot_slot(scope: Dictionary, select: String) -> Dictionary:
+	for slot in scope:
+		if String(scope[slot].get("select", "")) == select:
+			return scope[slot]
+	return {}
+
+
+## The whole number a fixture gives a seam so the slot's `where` holds: the equality, else `current` kept inside the floor and
+## the ceiling (a value that already holds stays, so a veteran of the roster is not made a newcomer by a floor of four weeks).
+func _shot_clamp(wants: Dictionary, seam: String, current: int) -> int:
+	var row: Dictionary = wants.get(seam, {})
+	if row.has("eq"):
+		return int(row.eq)
+	return clampi(current, int(row.get("lo", -999999)), int(row.get("hi", 999999)))
+
+
+## An account made to meet its slot's `where`, as far as a seed can: sector, scale, seniority, the open bugs on the lines
+## its sector uses and a product whose Onboarding is under what it expects.
+func _shape_shot_account(c: Customer, wants: Dictionary, keep_sector := false) -> void:
+	var sectors: Array = wants.get("musteri.sector", {}).get("any", [])
+	if not keep_sector and not sectors.is_empty() and not sectors.has(c.industry):
+		c.industry = String(sectors[0])
+	if not keep_sector:
+		c.industry = String(_shot_want(wants, "musteri.sector", c.industry))
+	c.scale = _shot_clamp(wants, "musteri.scale", c.scale)
+	c.acquired_on_day = GameState.day - _shot_clamp(wants, "musteri.tenure_weeks", GameState.day - c.acquired_on_day)
+	# A signing opens the account's onboarding window (SalesSystem.add_b2b_customer), and a fresh account is still in it;
+	# one shaped out of it is past it (as B2BSalesSystem._recover reads the window). Risk and the other phases stay.
+	c.onboarding_until = c.acquired_on_day + TimeModel.ticks(B2BConstants.ONBOARDING_WEEKS)
+	if c.lifecycle_phase in ["onboarding", "active"]:
+		CustomerRegistry.set_lifecycle_phase(c.id, "onboarding" if GameState.day < c.onboarding_until else "active")
+	if _shot_want(wants, "musteri.onboarding_short", false) == true:
+		_shot_area("onboarding", 0)
+		# Only some sectors expect an onboarding of the product at this scale; one that does is the account's, unless the
+		# `where` names its sector.
+		var expects: float = float(ProductQuality.market_ref_for(c.scale, c.industry).get("onboarding", 0.0))
+		if not keep_sector and not wants.has("musteri.sector") and expects <= 0.0:
+			for sector: String in B2BConstants.SECTORS:
+				if float(ProductQuality.market_ref_for(c.scale, sector).get("onboarding", 0.0)) > 0.0:
+					c.industry = sector
+					break
+	var bugs: int = int(wants.get("musteri.bugs", {}).get("lo", 0))
+	var areas: Array = ProductQuality.used_areas(c.industry)
+	if bugs > B2BSalesSystem.account_bugs(c) and not areas.is_empty():
+		ProductState.add_bugs(SprintCatalog.capabilities(String(areas[0]))[0], bugs)
+
+
+## A colleague on the payroll for as long as the slot's `where` asks (the compiled seniority floor), no shorter.
+func _shape_shot_employee(c: Character, wants: Dictionary) -> void:
+	if wants.has("hr.tenure_weeks"):
+		c.hire_day = maxi(1, GameState.day - _shot_clamp(wants, "hr.tenure_weeks", HRSystem.tenure_weeks(c)))
+
+
+## An employee who joins the roster of `_seed_hr_roster` for a card's second person.
+func _shot_employee(id: String, ename: String, role: String, tenure_weeks: int) -> Character:
+	var emp := Character.new()
+	emp.id = id
+	emp.character_name = ename
+	emp.role = role
+	emp.category = "employee"
+	emp.monthly_salary = 8000
+	emp.morale = 64
+	emp.role_stats = HRConstants.seed_skills(role, 6, 3)
+	emp.traits = ["picks_it_up_fast"]
+	emp.status = HRConstants.STATUS_ACTIVE
+	CharacterRegistry.add(emp)
+	emp.hire_day = maxi(1, GameState.day - tenure_weeks)   # add() stamps today
+	return emp
+
+
+## An `account_rep` slot's fixture: Palmiye Turizm under a Müşteri İlişkileri rep (the one `open_request` and `escalated`
+## stage), shaped by the card's customer slot, its rep by the rep's own slot (a seniority floor the compiled `where` writes).
+func _stage_rep_account(scope: Dictionary) -> void:
+	if CustomerRegistry.get_customer("co_palmiye") == null:
+		_shot_customer("co_palmiye", "Palmiye Turizm", "retail", "active", 1200, 15, 20, true)   # LOC-DATA debug seed / id
+	var account: Customer = CustomerRegistry.get_customer("co_palmiye")
+	_shape_shot_account(account, _shot_wants(scope.get("customer", {}).get("where", {})))
+	_shape_shot_employee(CharacterRegistry.get_character(account.assigned_to), _shot_wants(_shot_slot(scope, "account_rep").get("where", {})))
+
+
+## A `rep_lead` / `lead_rep` slot's fixture: the roster's sales rep takes the Satış job and opens the deal on the theme
+## seed's first lead (given the sector the lead slot asks for), through the real start, so the lead reads as worked by them.
+func _stage_rep_lead(scope: Dictionary) -> void:
+	var rep: Character = CharacterRegistry.get_character("char_emp_shot_4")   # LOC-DATA debug seed / id
+	var lead: Prospect = ProspectRegistry.get_all()[0]
+	lead.industry = String(_shot_want(_shot_wants(_shot_slot(scope, "rep_lead").get("where", {})), "aday.sector", lead.industry))
+	_shape_shot_employee(rep, _shot_wants(_shot_slot(scope, "lead_rep").get("where", {})))
+	CharacterRegistry.assign_job(rep.id, HRConstants.JOB_SALES)
+	SalesRepSystem._start_processing(rep, lead)
+
+
+## A `leave_pair` / `leave_partner` slot's fixture: it is the first June week (the leave window opens there, so a leave's
+## `hr.leave_weeks_left` is its assigned week) and two colleagues of the role the slot asks for, both at work and not yet
+## on leave, start theirs in weeks 2 and 3, the roster's holder of the role first and a new colleague behind them.
+func _stage_leave_pair(scope: Dictionary) -> void:
+	var slot: Dictionary = _shot_slot(scope, "leave_pair")
+	var wants: Dictionary = _shot_wants(slot.get("where", {}))
+	var role: String = String(_shot_want(wants, "hr.role", HRConstants.ROLE_DEVELOPER))
+	var june: int = 1
+	while int(GameState.get_date_dict(june).month) != HRConstants.LEAVE_WINDOW_START_MONTH:
+		june += 1
+	GameState.day = june
+	var colleagues: Array[Character] = CharacterRegistry.get_employees().filter(
+		func(c: Character) -> bool: return c.role == role)
+	var first: Character = colleagues[0] if not colleagues.is_empty() \
+		else _shot_employee("char_emp_shot_leave_a", "Ece Tan", role, 8)   # LOC-DATA debug seed / id
+	var second: Character = _shot_employee("char_emp_shot_leave_b", "Kaan Işık", role, 8)   # LOC-DATA debug seed / id
+	var other_wants: Dictionary = _shot_wants(_shot_slot(scope, "leave_partner").get("where", {}))
+	for row in [[first, 2, wants], [second, 3, other_wants]]:
+		var emp: Character = row[0]
+		CharacterRegistry.set_status(emp.id, HRConstants.STATUS_ACTIVE)   # the roster's developer is back from the leave it sent him on
+		emp.leave_taken_year = 0
+		emp.leave_week = row[1]
+		emp.leave_week_override = -1
+		emp.leave_override_year = 0
+		_shape_shot_employee(emp, row[2])
+
+
+## The accounts that use `line_id`, brought to `count` from a spare few (a paper that names several accounts of its line).
+func _stage_line_accounts(line_id: String, count: int) -> void:
+	for spare in [["co_kuzey", "Kuzey İnşaat", "construction"], ["co_nordica", "Nordica", "logistics"],   # LOC-DATA debug seed / id
+			["co_ege", "Ege Sigorta", "insurance"], ["co_palmiye", "Palmiye Turizm", "retail"]]:   # LOC-DATA debug seed / id
+		if SprintCatalog.line_accounts(line_id).size() >= count:
+			break
+		if CustomerRegistry.get_customer(spare[0]) == null:
+			_shot_customer(spare[0], spare[1], spare[2], "active", 1300, 20, 18, false)
+	SalesSystem.reflect_mrr()
+
+
+## The selectors that fill their slot from state a fixture of its own stages (or the requester gives): `_stage_unmet_wheres` leaves them.
+const SHOT_STATE_SELECTORS := ["account_rep", "rep_lead", "lead_rep", "leave_pair", "leave_partner", "line_top", "line_warehouse",
+	"line_newest", "line_slow", "request", "sprint_dev", "decision_dev", "quarter_pm", "open_request", "escalated", "support_lead",
+	"expiring_sheet", "decision_sheet", "seed_lead", "sprint_rival"]
+
+
+## A slot whose `where` no entity of the world meets gets one: an employee of the role it asks for (one the card's other slots have
+## not taken, else a new colleague), an account, or a rival, shaped to the rest of the `where` (seniority, level, sector, scale,
+## status), so the card is shot on someone it is about instead of on the selector's pick without the `where`. A slot the world
+## gives its entity (a paper's speaker) shapes that entity, and so does a slot the spec pins, but only in what is not
+## who they are (seniority, level, scale; never an employee's role or an account's sector). A state selector has its own
+## fixture, and what no shaping reaches stays unmet: the slot binds without its `where`, which the EVENTSHOT line says. The
+## date does not move here: a seniority floor the payroll cannot reach is met only where `_shot_floor_day` moved the week first.
+func _stage_unmet_wheres(scope: Dictionary, given: Dictionary) -> void:
+	var taken: Array = given.values()
+	for slot in scope:
+		var spec: Dictionary = scope[slot]
+		var where: Dictionary = spec.get("where", {})
+		var type_id: String = String(spec.get("type", ""))
+		if where.is_empty() or String(spec.get("select", "")) in SHOT_STATE_SELECTORS:
+			continue
+		var wants: Dictionary = _shot_wants(where)
+		var pool: Array = []
+		if given.has(slot):
+			pool = [_shot_entity(type_id, String(given[slot]))]
+		else:
+			match type_id:
+				EvScope.TYPE_EMPLOYEE: pool = CharacterRegistry.get_employees()
+				EvScope.TYPE_CUSTOMER: pool = CustomerRegistry.get_active()
+				EvScope.TYPE_RIVAL: pool = RivalRegistry.get_by_type(ProductState.subtype())
+			pool = pool.filter(func(e: Resource) -> bool: return not taken.has(e.id))
+			if type_id == EvScope.TYPE_RIVAL and String(spec.get("select", "")).begins_with("market_rival:"):
+				pool = pool.filter(func(r: Rival) -> bool: return r.tier == String(spec.select).trim_prefix("market_rival:"))
+		pool = pool.filter(func(e: Resource) -> bool: return e != null)
+		var meets := func(e: Resource) -> bool:
+			return EvCondition.eval(where, {slot: {"type": type_id, "id": e.id}})
+		var met: Array = pool.filter(meets)
+		if not met.is_empty():
+			taken.append(met[0].id)
+			continue
+		var shaped: Resource = null
+		match type_id:
+			EvScope.TYPE_EMPLOYEE:
+				var role: String = String(wants.get("hr.role", {}).get("eq", ""))
+				var fit: Array = pool.filter(func(c: Character) -> bool: return role == "" or c.role == role)
+				# A ceiling on seniority is met by the newest hire, a floor by the longest on the payroll.
+				fit.sort_custom(func(a: Character, b: Character) -> bool:
+					return a.hire_day > b.hire_day if wants.get("hr.tenure_weeks", {}).has("hi") else a.hire_day < b.hire_day)
+				if fit.is_empty() and not given.has(slot):
+					var new_role: String = role if role != "" else HRConstants.ROLE_DEVELOPER
+					fit = [_shot_employee("char_emp_shot_%s" % slot, "Cansu Er", new_role, 8)]   # LOC-DATA debug seed / id
+				if not fit.is_empty():
+					shaped = fit[0]
+					_shape_shot_employee(shaped, wants)
+					shaped.level = _shot_clamp(wants, "hr.level", shaped.level)
+			EvScope.TYPE_CUSTOMER:
+				if not pool.is_empty():
+					shaped = pool[0]
+					_shape_shot_account(shaped, wants, given.has(slot))   # a pinned or a world's account keeps its sector
+			EvScope.TYPE_RIVAL:
+				if not pool.is_empty():
+					shaped = pool[0]
+					(shaped as Rival).status = String(_shot_want(wants, "rival.status", (shaped as Rival).status))
+		if shaped != null and meets.call(shaped):
+			taken.append(shaped.id)
+
+
+## The verbs that read or write the sprint's state, which the theme seed (a typed product with no sprint) does not hold.
+const SHOT_SPRINT_VERBS := ["queue_request", "queue_card", "pin_card", "after_test"]
+
+
+## Whether an option of the card carries one of `verbs`.
+func _card_has_verb(event_id: String, verbs: Array) -> bool:
+	for option: Dictionary in EvCatalog.card(event_id).get("options", []):
+		for effect: Dictionary in option.get("effects", []):
+			if String(effect.get("verb", "")) in verbs:
+				return true
+	return false
+
+
+## Whether a slot's `where` reads `seam` (a card about accounts whose promise is late is shot in the promise world).
+func _scope_reads(scope: Dictionary, seam: String) -> bool:
+	return scope.values().any(func(slot: Dictionary) -> bool: return _shot_wants(slot.get("where", {})).has(seam))
+
+
+## The entity of `type_id` with `id`, null when there is none.
+func _shot_entity(type_id: String, id: String) -> Resource:
+	match type_id:
+		EvScope.TYPE_EMPLOYEE: return CharacterRegistry.get_character(id)
+		EvScope.TYPE_CUSTOMER: return CustomerRegistry.get_customer(id)
+		EvScope.TYPE_RIVAL: return RivalRegistry.get_rival(id)
+	return null
 
 
 ## The emergency cards --event-shot stands in a company: card id -> [kind, B2B].
@@ -965,13 +1356,24 @@ func _seed_expiring_sheet(vc_id: String, weeks_left := PitchConstants.WARNING_WE
 ## theme seed's book (week 14, a shipped ERP, the HR shot roster, three accounts), and for the cards that read more an
 ## account under a Müşteri İlişkileri rep with an open request (`open_request` slot) or an escalated one (`escalated`), a
 ## signed seed round with Anchor Capital (`seed_lead` slot), a release whose thanks the account kept (the thank-you
-## note) or the pile of unanswered reports that makes the support desk hot. `selects` are the card's slot selectors.
-func _seed_company_world(event_id: String, selects: Array) -> void:
+## note) or the pile of unanswered reports that makes the support desk hot. `selects` are the card's slot selectors and `scope`
+## its slots, whose `where` shapes what an `account_rep`, `rep_lead` / `lead_rep` or `leave_pair` selector is given: an account
+## under a rep, a lead a sales rep works, two colleagues whose summer leaves are a week apart (the date moves to June, so it
+## goes last). `floor_day` is the day a slot's seniority floor needs (`_shot_floor_day`): the week moves there once, before
+## anything is dated against it.
+func _seed_company_world(event_id: String, selects: Array, scope := {}, floor_day := 0) -> void:
 	_seed_theme_book()
+	GameState.day = maxi(GameState.day, floor_day)
+	if _card_has_verb(event_id, SHOT_SPRINT_VERBS):
+		SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id; the sprint state a card that queues a request or a card reads
 	if "open_request" in selects or "escalated" in selects:
 		_shot_customer("co_palmiye", "Palmiye Turizm", "retail", "active", 1200, 15, 20, true)   # LOC-DATA debug seed / id
 		CustomerRegistry.set_support_request("co_palmiye", GameState.day - 1)
 		CustomerRegistry.get_customer("co_palmiye").cs_escalated = "escalated" in selects
+	if "account_rep" in selects:
+		_stage_rep_account(scope)
+	if "rep_lead" in selects or "lead_rep" in selects:
+		_stage_rep_lead(scope)
 	if "seed_lead" in selects:
 		SeedRoundSystem.accept("anchor", {"raise": 130000, "dilution_pct": 16})
 	if event_id == SprintBridges.THANKS_CARD:
@@ -980,6 +1382,8 @@ func _seed_company_world(event_id: String, selects: Array) -> void:
 	if event_id == "product.support_overflow":
 		GameState.set_flag(ProductState.REPORTS_INCOMING, SupportSystem.WARMTH_HOT_AT + 1)
 	SalesSystem.reflect_mrr()
+	if "leave_pair" in selects:
+		_stage_leave_pair(scope)
 
 
 ## A release that kept Ege Sigorta's word and met Nordica's request: two thank-you notes, through the real bridge.
@@ -1055,6 +1459,10 @@ func _seed_paper_world(event_id: String) -> Dictionary:
 		SalesSystem.add_b2c_audience(12400)
 		SalesSystem.open_b2c_paid_tier(8)
 	var line: String = SprintCatalog.capabilities("core")[3]
+	if b2b:
+		var asked: int = (paper.scope as Dictionary).values().filter(
+			func(slot: Dictionary) -> bool: return String(slot.get("select", "")) == "line_top").size()
+		_stage_line_accounts(line, asked)   # a paper naming three accounts of its line needs three on the book
 	var given := {}
 	var id: String = "feat:%s_k1" % line
 	if b2b and (paper.pool_group == "pm" or paper.scope.get("customer", {}).get("select", "") == "request"):
@@ -1094,6 +1502,9 @@ func _seed_paper_world(event_id: String) -> Dictionary:
 ##   Standard servers, the newest open: its signing, the day its period ends over a satisfied account and over one it does not
 ##   satisfy, and that notice taken back by the move to Enterprise; a CLAUSE line names the decision on screen and whether the
 ##   mail's switch button is there and locked) · clause_locked (the signing mail read while a decision waits) ·
+##   clause_server_lock (the signing mail read under a server contract that has ten weeks to run: the switch to Enterprise closed, its
+##   reason to its left; a SHOTLINE|clause_server_lock line carries the reason) · exit_notice (the notice mail a card's `account_notice`
+##   with the reason rude_call sends, in the reading pane; a SHOTLINE|exit_notice line carries its subject and body) ·
 ##   rep_lost (the sales rep's mail of a desk deal lost over an area, through the real close) · weekly_lost
 ##   (the same week's summary: two closes and the two lost deals the rep did not mail) · weekly_lost_only (a week of the
 ##   lost deals alone: no table) · support_week (the weekly support report of a Müşteri İlişkileri rep, through the real weekly
@@ -1141,6 +1552,8 @@ func _run_inbox_shot(state: String) -> void:
 		_stage_desk_losses(state != "weekly_lost_only")
 	if state.begins_with("clause_"):
 		_stage_clause(state)
+	if state == "exit_notice":
+		_stage_exit_notice()
 	if state.begins_with("support_"):
 		_stage_support(state)
 	await _mount_shot_shell()
@@ -1262,7 +1675,7 @@ func _run_inbox_shot(state: String) -> void:
 			var id: String = MessageSystem.post("sales_week", "SALES_WEEKLY_TITLE",
 				{"rows": rows, "accounts": CustomerRegistry.account_count()})
 			INBOX.show("m:" + id)
-		"clause_sign", "clause_reserve", "clause_notice", "clause_withdraw", "clause_locked":
+		"clause_sign", "clause_reserve", "clause_notice", "clause_withdraw", "clause_locked", "clause_server_lock":
 			if state == "clause_locked":
 				_shot_card("funding.frank_cheque", {}, 11)
 			INBOX.show("m:" + String(GameState.messages.filter(func(m: Dictionary) -> bool: return m.kind == "clause")[-1].id))
@@ -1270,6 +1683,14 @@ func _run_inbox_shot(state: String) -> void:
 			var move: Button = _clause_switch_button()
 			print("CLAUSE|active=%s|button=%s|disabled=%s" % [EventGate.active_id(), move != null,
 				move != null and move.disabled])
+			if state == "clause_server_lock":
+				_print_shot_lines(get_tree().get_first_node_in_group(INBOX.GROUP), "clause_server_lock",
+					[tr("PRODUCT_SERVER_LOCK_REASON").get_slice("{", 0)])
+		"exit_notice":
+			INBOX.show("m:" + String(GameState.messages.filter(func(m: Dictionary) -> bool: return m.kind == "exit_notice")[-1].id))
+			await get_tree().process_frame
+			_print_shot_lines(get_tree().get_first_node_in_group(INBOX.GROUP), "exit_notice",
+				[tr("SALES_EXIT_RUDE_CALL_SUBJECT"), tr("SALES_EXIT_RUDE_CALL_BODY").get_slice("{", 0)])
 		"rep_lost", "weekly_lost", "weekly_lost_only":
 			var kind: String = "sales_loss" if state == "rep_lost" else "sales_week"
 			INBOX.show("m:" + String(GameState.messages.filter(func(m: Dictionary) -> bool: return m.kind == kind)[-1].id))
@@ -1474,7 +1895,8 @@ func _shot_pane(card_id: String, ctx: Dictionary, names := {}) -> void:
 
 
 ## --sales-shot=<pipeline|desk|picker|inbox|edge|edge_end|stretched|empty|b2c|b2c_live|b2b_pre|untyped|morning|evening|
-## norep|discounted|frank|risk_stability|deals|returning|clause>. `desk` puts a rep mid-processing on the desk; `picker` opens the steward
+## norep|discounted|frank|risk_stability|deals|returning|clause|offer>. `desk` puts a rep mid-processing on the desk;
+## `picker` opens the steward
 ## picker on the first account, `inbox` presses its İlgilen (Olaylar opens on the account's mail); `edge` draws the
 ## rarer lines (a reserved lead, one given to a rep, a whale's condition, tables above the founder's league, the
 ## week's meetings spent, an open promise by sprint, the log) with three calm accounts, Aras in its onboarding floor's
@@ -1494,6 +1916,11 @@ func _shot_pane(card_id: String, ctx: Dictionary, names := {}) -> void:
 ## under its buttons), the 1★ lead's Core is enough for a 1★ table (open).
 ## `deals` shows the founder's two table deals (the 3★ lead's two weeks into its plan, the 1★ lead's agreed this week)
 ## and a 3★ rep's desk deal on the 2★ lead, whose plan ends on a half week.
+## `offer` puts a card's offer on the three leads (the 1★'s discount, the 2★'s word on a step, the 3★'s both: the
+## `prospect_offer` verb, whose terms a signature turns into the account's) and a timed discount on Nordica
+## (`B2BSalesSystem.apply_timed_discount`, 26 weeks of 10%): the offer lines of the lead cards and the "discounted until"
+## part of the account's meta line. A SHOTLINE|offer line prints each label of the page that carries one of them (a
+## headless shot has no frame to read).
 func _run_sales_shot(kind: String) -> void:
 	_begin_shot()
 	if kind == "b2c_live":
@@ -1599,6 +2026,19 @@ func _run_sales_shot(kind: String) -> void:
 		# Nordica signed its 20 seats at $100; the discount takes MRR down while the stamp stays.
 		CustomerRegistry.get_customer("co_nordica").seat_price = 100
 		B2BSalesSystem.apply_discount("co_nordica", -roundi(2000 * B2BConstants.RETAIN_DISCOUNT_PCT))
+	if kind == "offer":
+		var offered: Array = ProspectRegistry.get_all()
+		offered.sort_custom(func(x: Prospect, y: Prospect) -> bool: return x.star < y.star)
+		var word: String = "%s_k1" % SprintCatalog.capabilities("core")[3]
+		var terms: Array = [[0.15, 26, ""], [0.0, 0, word], [0.10, 52, word]]
+		if offered.size() < terms.size():
+			_shot_fail("[SalesShot] offer: %d leads, the shot offers terms to %d" % [offered.size(), terms.size()])
+			return
+		for i in terms.size():
+			# The card's own verb (`prospect_offer`), so the step reads through SprintCatalog.in_product as a card's does.
+			EventGate.debug_apply_effects([{"verb": "prospect_offer", "entity_id": offered[i].id, "discount_pct": terms[i][0],
+				"discount_weeks": terms[i][1], "promise_step": terms[i][2], "promise_weeks": 0}])
+		B2BSalesSystem.apply_timed_discount(CustomerRegistry.get_customer("co_nordica"), 0.10, 26)
 	# Monthly strip figures: gained 1 / lost 2 / net -1.
 	GameState.run_customers_signed = 5
 	GameState.run_customers_lost = 2
@@ -1633,6 +2073,11 @@ func _run_sales_shot(kind: String) -> void:
 		elif not _press_button_labelled(page, tr("SALES_STEWARD_CHANGE" if kind == "picker" else "SALES_ACTION_RETAIN")):
 			_shot_fail("[SalesShot] %s: the first account's button is missing" % kind)
 			return
+	if kind == "offer":
+		await get_tree().create_timer(0.3).timeout
+		_print_shot_lines(get_tree().get_first_node_in_group(&"window_layer").get_current_page_body(), "offer",
+			[tr("SALES_OFFER_DISCOUNT").get_slice("{", 0), tr("SALES_OFFER_PROMISE").get_slice("{", 0),
+			tr("SALES_TIMED_DISCOUNT").get_slice("{", 1).get_slice("}", 1)])
 	await _finish_shot("sales_shot_%s" % kind, 0.6)
 
 
@@ -1705,13 +2150,24 @@ func _stage_clause(state: String) -> void:
 	var prospect: Prospect = SalesFaucetSystem.spawn_prospect("enterprise", "event")
 	var account: Customer = SalesSystem.add_b2b_customer(prospect, 60, 35, 70)
 	ProspectRegistry.remove(prospect.id)
-	if state in ["clause_sign", "clause_locked"]:
+	if state == "clause_server_lock":
+		InfraSystem.lock(10)   # a server contract is running: the signing mail's switch to Enterprise reads its reason
+	if state in ["clause_sign", "clause_locked", "clause_server_lock"]:
 		return
 	GameState.day = account.clause_due_day
 	CustomerRegistry.set_satisfaction(account.id, 90 if state == "clause_reserve" else 55)
 	B2BSalesSystem._tick_clause(account)
 	if state == "clause_withdraw":
 		InfraSystem.set_provider(InfraSystem.PROVIDER_ENTERPRISE)
+
+
+## --inbox-shot=exit_notice: the notice team.rude_client's gamble can end in, given the way its effect gives it (`account_notice`,
+## reason rude_call, with the mail): Kuzey İnşaat ends its contract in a few weeks and says why in the Olaylar inbox.
+func _stage_exit_notice() -> void:
+	B2BSalesSystem.give_notice(CustomerRegistry.get_customer("co_kuzey"), "rude_call", true)
+	for waiting: Dictionary in GameState.mail_outbox:
+		waiting["at"] = MailClock.now()   # the mail's arrival hour may be after the shot's
+	MessageSystem.release()
 
 
 ## The reading pane's last action button, as the clause mail draws it: the switch to Enterprise; null when the mail has none.
@@ -4455,7 +4911,7 @@ const MEETING_SHOT_EMPHASIS := {
 func _meeting_shot_lead(kind: String, plays_out: bool) -> Prospect:
 	if kind == "frank":
 		return SalesFaucetSystem.spawn_prospect("mid", "frank_intro")
-	if not (kind in ["weak_core", "die", "returning"] or MEETING_SHOT_EMPHASIS.has(kind)):
+	if not (kind in ["weak_core", "die", "focus", "returning"] or MEETING_SHOT_EMPHASIS.has(kind)):
 		return SalesFaucetSystem.spawn(3 if plays_out else 2, "faucet")
 	for row_id in ["probe_provider_trust", "probe_switching_risk"]:
 		SalesProbes.remember(row_id)
@@ -4567,7 +5023,12 @@ const MEETING_SHOT_VC := {
 ## on Economy servers over their capacity, played to the cut and into Perde 2: no question about the load,
 ## the confirm strip's warning line naming the server clause, MEETINGSHOT|economy| naming the load and the families asked; frank = Frank's
 ## introduction across a founder with neither Satış nor Karizma, the first question, and the needle's hover lines
-## printed as MEETINGSHOT|frank|mods=<their seams> (a frame cannot show a hover).
+## printed as MEETINGSHOT|frank|mods=<their seams> (a frame cannot show a hover); focus = `die`'s weak-Core 3★ table
+## under a running pitch focus on Trust, which is built to its top (`SalesMeetingSystem.set_pitch_focus`, what a card's
+## `pitch_focus` writes), the first answer taken and the skip option's die hovered, as in `die`: the "Bu çeyreğin
+## vurgusu" line lives only in the die's factors, so the frame is taken with that tooltip open; MEETINGSHOT|focus| prints
+## the focus line's text when the hover lists it and MEETINGSHOT|focus_lines| all the hover's lines (the hover folds its
+## tail into one "+N more factors").
 ## Sales, the product read at the table (the sector fixed, the sitting's first question the emphasis one): emph_trust,
 ## emph_integrations and emph_onboarding = a 2★ table asking its sector's question in each of its three forms, the area
 ## built for the first (the strength answer open) and empty for the others (its lock line); weak_core = a 3★ table whose
@@ -4622,16 +5083,27 @@ func _run_meeting_shot(shot: String) -> void:
 			founder.role_stats[FounderConstants.SKILL_CHARISMA] = 0
 		var plays_out: bool = kind in ["won", "lost", "handoff", "economy"]
 		var p: Prospect = _meeting_shot_lead(kind, plays_out)
+		if kind == "focus":
+			# The weak-Core table of `die`, with Trust built to its top (the table expects it of the product, so the focus applies).
+			for line_id in SprintCatalog.capabilities("trust"):
+				ProductState.set_line_tier(line_id, SprintCatalog.max_tier(line_id))
+			SalesMeetingSystem.set_pitch_focus("trust", GameState.day + TimeModel.ticks(4))
 		await _mount_shot_shell()
 		await _shot_sales_sitting(p)
-		if kind == "die":
+		if kind == "die" or kind == "focus":
 			# The die sits on the skip option, which opens with the second question; a frame cannot hover, so the panel is told to.
 			await _shot_pick(_open_answer(false))
 			var skip: Array = _meeting_panel._cards.filter(func(card) -> bool: return card.id == SalesMeetingAdapter.SKIP)
 			if skip.is_empty():
-				_shot_fail("[MeetingShot] die: the table ended before the skip option opened")
+				_shot_fail("[MeetingShot] %s: the table ended before the skip option opened" % kind)
 				return
 			_meeting_panel._on_hover(true, skip[0])
+		if kind == "focus":
+			var lines: Array = SalesMeetingSystem.modifier_lines()
+			var focus_line: Array = lines.filter(func(m: Dictionary) -> bool: return m.seam == "sales.pitch_focus")
+			print("MEETINGSHOT|focus|%s" % (focus_line[0].label if not focus_line.is_empty() else "(not among the hover's lines)"))
+			print("MEETINGSHOT|focus_lines|%s" % " ; ".join(PackedStringArray(lines.map(
+				func(m: Dictionary) -> String: return ("%s %s" % [m.sign, m.label]).strip_edges()))))
 		if kind == "frank":
 			print("MEETINGSHOT|frank|mods=%s" % ",".join(PackedStringArray(SalesMeetingSystem.modifier_lines().map(
 				func(m: Dictionary) -> String: return m.seam))))

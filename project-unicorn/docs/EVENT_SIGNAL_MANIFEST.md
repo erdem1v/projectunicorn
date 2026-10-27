@@ -56,7 +56,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `brand_changed` | `new_value: int` | game_state | 1 | 1 | top_bar |
 | `reputation_changed` | `new_value: int` | game_state | 1 | 1 | top_bar |
 | `day_advanced` | `new_day: int` | game_state | 1 | 3 | product_tab · research_bar · top_bar |
-| `hour_changed` | `hour: int` | game_state | 1 | 3 | sales_tab · news_ticker · top_bar |
+| `hour_changed` | `hour: int` | game_state | 1 | 5 | sprint_system · product_tab · sales_tab · news_ticker · top_bar |
 | `phase_changed` | `new_phase: int` | game_state | 2 | 1 | top_bar |
 | `runway_recalculated` | `months: float` | game_state | 1 | 2 | left_tabs · top_bar |
 | `equity_changed` | `investor_pct: int` | game_state | 2 | 0 | — |
