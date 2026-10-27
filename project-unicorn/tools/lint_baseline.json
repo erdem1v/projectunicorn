@@ -6,8 +6,11 @@
 		"17.15|res://data/events/cards/customer/new_owner_group.json|O4: option 'pitch' drops nothing on the subject the card is about",
 		"17.15|res://data/events/cards/funding/portfolio_vendor.json|O5: option 'own_ads' spends marketing, which the demo never opens",
 		"17.15|res://data/events/cards/rival/shutdown_notice.json|O5: option 'more_marketing' spends marketing, which the demo never opens",
+		"17.15|res://data/events/cards/team/wedding_invite.json|O4: option 'flowers' drops nothing on the subject the card is about",
 		"17.15|res://data/events/cards/team/wiped_table.json|T3: slot 'employee' picks the newest hire with a floor of 4 weeks",
+		"17.15|res://data/events/cards/world/cloud_price_cut.json|O2: option 'ack' costs nothing; a free exit is not a choice",
+		"17.15|res://data/events/cards/world/quarterly_bulletin.json|O2: option 'focus_onboarding' costs nothing; a free exit is not a choice",
 		"17.2|res://data/events/arcs/fixture_subject.json|arc 'arc_fixture_subject' is never started by any card"
 	],
-	"generated_day": "2026-10-11"
+	"generated_day": "2026-10-27"
 }

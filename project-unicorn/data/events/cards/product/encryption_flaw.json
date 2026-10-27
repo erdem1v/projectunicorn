@@ -1,0 +1,151 @@
+{
+  "id": "product.encryption_flaw",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "daily",
+  "class": "interrupt",
+  "sender": "employee",
+  "tags": [
+    "urgent"
+  ],
+  "schema": 3,
+  "family": "product_security",
+  "family_subject": {
+    "once": true
+  },
+  "delay_weeks": [
+    0,
+    4
+  ],
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      1,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 53,
+    "subject_tenure_weeks": 4
+  },
+  "guards": {
+    "market": "b2c",
+    "product_live": true
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true,
+      "select": "top_skill:engineering",
+      "subject": false,
+      "where": {
+        "entity_seam": "hr.role",
+        "scope": "employee",
+        "op": "==",
+        "value": "developer"
+      }
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "latch_key": "run",
+  "condition": {
+    "all": [
+      {
+        "seam": "sales.is_b2b",
+        "op": "==",
+        "value": false
+      },
+      {
+        "seam": "time.week",
+        "op": ">=",
+        "value": 53
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "announce",
+      "outcome_id": "announce",
+      "effects": [
+        {
+          "verb": "add_reputation",
+          "amount": 3
+        },
+        {
+          "verb": "audience_delta",
+          "pct": -0.01
+        }
+      ]
+    },
+    {
+      "id": "mail_users",
+      "outcome_id": "mail_users",
+      "effects": [
+        {
+          "verb": "add_reputation",
+          "amount": 1
+        },
+        {
+          "verb": "audience_delta",
+          "pct": -0.005
+        }
+      ]
+    },
+    {
+      "id": "stay_quiet",
+      "outcome_id": "stay_quiet",
+      "check": {
+        "odds_seam": "olay.odds_10",
+        "on_pass": [
+          {
+            "verb": "schedule_event",
+            "event_id": "product.encryption_flaw_press",
+            "delay_weeks": [
+              4,
+              8
+            ]
+          }
+        ],
+        "on_fail": []
+      }
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Acil: şifreleme açığı",
+      "body": "Sunucuların çoğunun kullandığı şifreleme kütüphanesinde dün gece bir açık duyuruldu. Saldırgan sunucunun belleğinden şifreleri okuyabiliyor ve arkasında iz bırakmıyor. Bizim sunucular da etkileniyor. Yamayı bu akşam yapabilirim, asıl soru kullanıcılara ne diyeceğimiz.",
+      "options": {
+        "announce": "Yamala, basına duyur, herkesten şifresini değiştirmesini iste",
+        "mail_users": "Yamala, yalnız kullanıcılara mail at",
+        "stay_quiet": "Yamala, kimseye duyurma"
+      },
+      "expire_note": "Cevap gelmedi, yama gecikmeyle çıktı ve kimseye haber verilmedi."
+    },
+    "en": {
+      "title": "Urgent: encryption flaw",
+      "body": "Last night a flaw was announced in the encryption library most servers use. An attacker can read passwords straight out of server memory without leaving a trace. Our servers are affected too. I can patch it tonight; the real question is what we tell users.",
+      "options": {
+        "announce": "Patch it, tell the press, ask everyone to change their password",
+        "mail_users": "Patch it, email users only",
+        "stay_quiet": "Patch it, tell no one"
+      },
+      "expire_note": "No answer came, so the patch went out late and nobody was told."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "add_reputation",
+        "amount": -2
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

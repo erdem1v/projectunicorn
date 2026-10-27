@@ -1,0 +1,63 @@
+{
+  "id": "product.search_mousetraps",
+  "version_scope": "draft",
+  "category": "product",
+  "schema": 3,
+  "_draft": {
+    "durum": "park",
+    "gerekce": "B2C pazaryeri Faz E'de kurulacak",
+    "kaynak_kayit": "pazaryeri.fare",
+    "tr_en_onay_bekliyor": false,
+    "tr": {
+      "title": "Arama",
+      "body": "Destek kutusunda bu hafta otuz mail var, hepsi arama hakkında. En sevdiğim şu: “Bilgisayarım için fare aradım, iki sayfa fare kapanı çıktı. Birini aldım, iyi çalışıyor. Faremi hâlâ bulamadım.”",
+      "sender": "{employee}, Müşteri Temsilcisi",
+      "options": {
+        "fix_first": "Arama düzeltmesini sprintin başına al",
+        "category_picker": "Arama kutusuna kategori seçimi ekle",
+        "leave_it": "Şimdilik kalsın, alıcı kategoriden gezer"
+      }
+    },
+    "en": {
+      "title": "Search",
+      "body": "Thirty emails in the support inbox this week, all about search. My favorite: “I searched for a mouse for my computer and got two pages of mousetraps. Bought one, works great. Still can't find my mouse.”",
+      "sender": "{employee}, Account Manager",
+      "options": {
+        "fix_first": "Put the search fix at the top of the sprint",
+        "category_picker": "Add a category picker to the search box",
+        "leave_it": "Leave it for now, buyers can browse categories"
+      }
+    },
+    "secenek_sonuclari": {
+      "fix_first": {
+        "tr": "Bir kart sonraki sprinte kayar, aramanın hatası kapanır",
+        "en": "One card slips to the next sprint, the search bug is fixed"
+      },
+      "category_picker": {
+        "tr": "Mert'in üç günü gider, Kitle −%1 kadar",
+        "en": "Mert loses three days, Audience −1% or so"
+      },
+      "leave_it": {
+        "tr": "Kitle −%2 kadar",
+        "en": "Audience −2% or so"
+      }
+    },
+    "secenek_sonuclari_notu": "Örnek özet satırları (örnek adlar taşır); oyundaki çip etkiden yazılır, bu satırlar kartın metni değildir.",
+    "kosul_notu": "Pazaryeri yayında, Keşif hattında açık hata varken ya da arama kademesi yokken. Deniz yuvası: Müşteri Temsilcisi; yoksa olay gelmez. Mert yuvası: Keşif hattında çalışmış geliştirici. Kategori seçimi şıkkı (2. şık) o özellik varken ya da yapılırken görünmez (Erdem: anlamsız): Keşif hattında kategori seçimi kademesi açıkken ya da sprintte kartı varken şık gösterilmez.",
+    "kod_notu": "sprint_fix_first günlük kartta yasal (V3 yalnız sprint_card_* içindir; acil durum kartları kullanır): 'kod işi' notu bayat. [COND?] pazaryeri yayında, Keşif hattında açık hata varken ya da arama kademesi yokken: pazaryeri ve hat kademesi Faz E. [COND?] 2. şık, Keşif hattında kategori seçimi kademesi açıkken ya da sprintte kartı varken görünmez.",
+    "yuvalar": [
+      {
+        "slot": "employee",
+        "tur": "employee",
+        "secici": "müşteri temsilcisi",
+        "kosul": "yoksa olay gelmez"
+      },
+      {
+        "slot": "dev",
+        "tur": "employee",
+        "secici": "Keşif hattında çalışmış geliştirici (line_top)",
+        "kosul": ""
+      }
+    ]
+  }
+}

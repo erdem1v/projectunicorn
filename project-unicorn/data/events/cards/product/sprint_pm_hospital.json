@@ -1,0 +1,186 @@
+{
+  "id": "product.sprint_pm_hospital",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_pm",
+  "family_subject": {
+    "cooldown_weeks": 52
+  },
+  "speaker_role": "product_manager",
+  "stage": "any",
+  "pool_group": "pm",
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      3,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0,
+    "subject_tenure_weeks": 0,
+    "fresh_reason": "the people are the ones on the card on the desk"
+  },
+  "guards": {
+    "market": "b2b",
+    "product_live": true
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    },
+    "customer": {
+      "type": "customer",
+      "required": true
+    },
+    "dev": {
+      "type": "employee",
+      "required": true,
+      "select": "decision_dev"
+    },
+    "taker": {
+      "type": "employee",
+      "required": false,
+      "select": "random",
+      "where": {
+        "entity_seam": "hr.role",
+        "scope": "taker",
+        "op": "==",
+        "value": "developer"
+      }
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "latch_key": "run",
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_phase",
+        "op": "==",
+        "value": 1
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "wait",
+      "outcome_id": "wait",
+      "effects": [
+        {
+          "verb": "sick_leave",
+          "scope": "dev",
+          "weeks": 2
+        },
+        {
+          "verb": "sprint_card_carry"
+        }
+      ]
+    },
+    {
+      "id": "hand_over",
+      "outcome_id": "hand_over",
+      "requires": {
+        "entity_exists": "taker"
+      },
+      "effects": [
+        {
+          "verb": "sick_leave",
+          "scope": "dev",
+          "weeks": 2
+        },
+        {
+          "verb": "assign_to",
+          "card": "decision",
+          "scope": "taker",
+          "weeks": 2
+        },
+        {
+          "verb": "sprint_card_effort",
+          "amount_seam": "urun.decision_card_effort",
+          "amount_mult": 0.2
+        }
+      ]
+    },
+    {
+      "id": "call_brief",
+      "outcome_id": "call_brief",
+      "effects": [
+        {
+          "verb": "sick_leave",
+          "scope": "dev",
+          "weeks": 2
+        },
+        {
+          "verb": "change_morale",
+          "scope": "dev",
+          "amount": -6
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "{dev} hastanede",
+      "body": "{dev} acil bir durum yaşadı, hastanede ve iki hafta yok. Şirket olarak geçmiş olsun çiçeği gönderdik. Ama {customer} için geliştirdiği iş yarıda kaldı, ne yapalım?",
+      "options": {
+        "wait": "Kart {dev} dönene kadar beklesin",
+        "hand_over": "Kartı başka bir geliştirici devralsın",
+        "call_brief": "{dev} taburcu olunca on dakika arayıp kaldığı yeri anlatsın"
+      },
+      "locked_reasons": {
+        "hand_over": "Ekipte kartı devralacak başka bir yazılımcı yok."
+      },
+      "expire_note": "Cevap gelmedi, kart {dev} dönene kadar bekledi."
+    },
+    "en": {
+      "title": "{dev} is in hospital",
+      "body": "{dev} had an emergency and is in hospital, out for two weeks. We sent get-well flowers from the team. But the work {dev} was building for {customer} is stuck halfway. What should we do?",
+      "options": {
+        "wait": "Let the card wait until {dev} is back",
+        "hand_over": "Have another developer take over the card",
+        "call_brief": "Ask {dev} for a ten-minute call after discharge to explain where things stand"
+      },
+      "locked_reasons": {
+        "hand_over": "There is no other developer on the team to take the card."
+      },
+      "expire_note": "No answer came, so the card waited until {dev} was back."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "sick_leave",
+        "scope": "dev",
+        "weeks": 2
+      },
+      {
+        "verb": "sprint_card_carry"
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

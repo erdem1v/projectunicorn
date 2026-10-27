@@ -1,0 +1,204 @@
+{
+  "id": "customer.own_data_error",
+  "version_scope": "demo",
+  "category": "customer",
+  "tick": "daily",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "customer_data",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "delay_weeks": [
+    0,
+    1
+  ],
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      1,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0,
+    "subject_tenure_by_slot": {
+      "customer": 1,
+      "employee": 4,
+      "rep": 0
+    },
+    "fresh_reason": "temsilci hesabın kendi temsilcisidir"
+  },
+  "guards": {
+    "market": "b2b",
+    "product_live": true
+  },
+  "latch": {
+    "cooldown_weeks": 26
+  },
+  "latch_key": "entity",
+  "scope": {
+    "customer": {
+      "type": "customer",
+      "required": true,
+      "select": "random",
+      "where": {
+        "all": [
+          {
+            "entity_seam": "musteri.sector",
+            "scope": "customer",
+            "op": "==",
+            "value": "retail"
+          },
+          {
+            "entity_seam": "musteri.tenure_weeks",
+            "scope": "customer",
+            "op": "<=",
+            "value": 4
+          }
+        ]
+      }
+    },
+    "employee": {
+      "type": "employee",
+      "required": true,
+      "select": "random",
+      "where": {
+        "entity_seam": "hr.role",
+        "scope": "employee",
+        "op": "==",
+        "value": "developer"
+      }
+    },
+    "founder": {
+      "type": "founder",
+      "required": true
+    },
+    "rep": {
+      "type": "employee",
+      "required": false,
+      "select": "account_rep"
+    }
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "sales.is_b2b",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.line_tier.line_erp_stock",
+        "op": ">=",
+        "value": 1
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "rep_visits",
+      "outcome_id": "rep_visits",
+      "requires": {
+        "entity_exists": "rep"
+      },
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "rep",
+          "pct": -20,
+          "weeks": 1
+        },
+        {
+          "verb": "trust_delta",
+          "scope": "customer",
+          "amount": 8
+        }
+      ]
+    },
+    {
+      "id": "founder_calls",
+      "outcome_id": "founder_calls",
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "founder",
+          "pct": -10,
+          "weeks": 1
+        },
+        {
+          "verb": "trust_delta",
+          "scope": "customer",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "id": "warning_screen",
+      "outcome_id": "warning_screen",
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "employee",
+          "pct": -50,
+          "weeks": 2
+        },
+        {
+          "verb": "trust_delta",
+          "scope": "customer",
+          "amount": 8
+        },
+        {
+          "verb": "trust_delta",
+          "accounts": "others",
+          "line": "line_erp_stock",
+          "amount": 4
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Stok şikâyeti: {customer}",
+      "body": "{customer} depo müdürü sabah aradı, sistemimizin stokları yanlış saydığını söyleyip bağırdı. Kayıtlara baktım: depodaki arkadaş 40 koli ürünü 4 diye girmiş, sistem stokta 4 koli gösterdiği için iki şubeye eksik mal gönderilmiş. Müdür hâlâ hatanın bizde olduğunu düşünüyor.",
+      "options": {
+        "rep_visits": "{rep} kayıtlarla müdüre gitsin",
+        "founder_calls": "Müdürü sen ara, kayıtları nazikçe anlat",
+        "warning_screen": "Sayım ekranına uyarı ekle, müdüre aldığımız önlemi anlat"
+      },
+      "locked_reasons": {
+        "rep_visits": "Bu hesabın müşteri temsilcisi yok."
+      },
+      "expire_note": "Müdüre cevap gitmedi, hatanın bizde olduğunu düşünmeye devam etti."
+    },
+    "en": {
+      "title": "Stock complaint: {customer}",
+      "body": "The warehouse manager at {customer} called this morning, shouting that our system miscounts stock. I checked the records: someone at their warehouse entered 40 cases as 4, so the system showed 4 in stock and two branches got short deliveries. The manager still thinks it's our fault.",
+      "options": {
+        "rep_visits": "Send {rep} to the manager with the records",
+        "founder_calls": "Call the manager yourself and walk through the records",
+        "warning_screen": "Add a warning to the count screen, tell the manager what we changed"
+      },
+      "locked_reasons": {
+        "rep_visits": "This account has no account manager."
+      },
+      "expire_note": "No answer reached the manager, who kept thinking the fault was ours."
+    }
+  },
+  "expires_weeks": 2,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "trust_delta",
+        "scope": "customer",
+        "amount": -6
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

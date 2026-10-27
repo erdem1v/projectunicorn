@@ -1,0 +1,183 @@
+{
+  "id": "team.same_leave_tester",
+  "version_scope": "demo",
+  "category": "team",
+  "tick": "daily",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "team_summer_leave",
+  "family_subject": {
+    "cooldown_weeks": 52
+  },
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "narrow window: two to four weeks before the leave",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      2,
+      null
+    ],
+    "product": "any",
+    "modules": [],
+    "min_week": 0,
+    "subject_tenure_weeks": 4
+  },
+  "guards": {},
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true,
+      "select": "leave_pair",
+      "where": {
+        "all": [
+          {
+            "entity_seam": "hr.role",
+            "scope": "employee",
+            "op": "==",
+            "value": "tester"
+          },
+          {
+            "entity_seam": "hr.leave_weeks_left",
+            "scope": "employee",
+            "op": ">=",
+            "value": 2
+          },
+          {
+            "entity_seam": "hr.leave_weeks_left",
+            "scope": "employee",
+            "op": "<=",
+            "value": 4
+          }
+        ]
+      }
+    },
+    "other": {
+      "type": "employee",
+      "required": true,
+      "select": "leave_partner"
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 52
+  },
+  "latch_key": "run",
+  "condition": {
+    "all": [
+      {
+        "year_roll": 0.5
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "settle_it",
+      "outcome_id": "settle_it",
+      "effects": [
+        {
+          "verb": "summer_leave",
+          "scope": "employee",
+          "other": "other",
+          "apart": true
+        },
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": -4
+        },
+        {
+          "verb": "change_morale",
+          "scope": "other",
+          "amount": -4
+        }
+      ]
+    },
+    {
+      "id": "devs_test",
+      "outcome_id": "devs_test",
+      "effects": [
+        {
+          "verb": "summer_leave",
+          "scope": "employee",
+          "other": "other",
+          "apart": false
+        },
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": 4
+        },
+        {
+          "verb": "change_morale",
+          "scope": "other",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "id": "shift_with_bonus",
+      "outcome_id": "shift_with_bonus",
+      "effects": [
+        {
+          "verb": "summer_leave",
+          "scope": "employee",
+          "other": "other",
+          "apart": true
+        },
+        {
+          "verb": "add_cash",
+          "amount_seam": "hr.salary",
+          "amount_slot": "other",
+          "amount_mult": -0.233,
+          "label": "retention"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Yaz izni",
+      "body": "{other} ile ikimizin yaz izni aynı haftalara denk gelmiş. İkimiz birden gidersek o iki hafta biten kartları test edecek kimse kalmıyor.",
+      "options": {
+        "settle_it": "Kendi aralarında karar versinler",
+        "devs_test": "İkisi de gitsin, testi geliştiriciler yapsın",
+        "shift_with_bonus": "Birinin iznini kaydır, karşılığında prim ver"
+      },
+      "expire_note": "Cevap gelmedi, izinler planlandığı gibi kaldı ve ikisinin de morali biraz düştü."
+    },
+    "en": {
+      "title": "Summer leave",
+      "body": "{other} and I have our summer leave in the same weeks. If we're both out, nobody's left to test finished cards for those two weeks.",
+      "options": {
+        "settle_it": "Let them sort it out between themselves",
+        "devs_test": "Both go, developers do the testing",
+        "shift_with_bonus": "Move one leave and pay a bonus for it"
+      },
+      "expire_note": "No answer came, so both leaves stayed as planned and morale dipped a little for both."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "change_morale",
+        "scope": "employee",
+        "amount": -3
+      },
+      {
+        "verb": "change_morale",
+        "scope": "other",
+        "amount": -3
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

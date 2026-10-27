@@ -205,7 +205,8 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 		"sick_leave":
 			return [_part(_t("EFFECT_SICK_LEAVE").format({"name": _first_name(_employee(item, ctx, is_delta), ctx, names, _t("EFFECT_AN_EMPLOYEE")),
 				"weeks": Fmt.weeks(int(item.get("weeks", 1)))}), "", "cost")]
-		# The level it lands on and the salary it lands at: the dossier's preview, or what the row recorded.
+		# The level it lands on and the salary it lands at: the dossier's preview, or what the row recorded (lint hands the
+		# card's raw effect as a row, which records neither).
 		"promote":
 			var promoted: String = _employee(item, ctx, is_delta)
 			var terms: Dictionary = item if is_delta \
@@ -213,7 +214,7 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 			if not bool(terms.get("ok", true)):
 				return [_part(String(terms.reason), "", "neutral")]
 			return [_part(_t("EFFECT_PROMOTION").format({"name": _first_name(promoted, ctx, names, _t("EFFECT_AN_EMPLOYEE")),
-				"level": HRConstants.level_label(int(terms.level)), "v": Fmt.money_chip(int(terms.salary))}), "", "cost")]
+				"level": HRConstants.level_label(int(terms.get("level", 0))), "v": Fmt.money_chip(int(terms.get("salary", 0)))}), "", "cost")]
 		"work_hours":
 			return [_part(_t("EFFECT_WORK_HOURS").format({"n": int(item.get("hours", HRConstants.WORK_HOURS_DEFAULT)),
 				"name": _first_name(_employee(item, ctx, is_delta), ctx, names, _t("EFFECT_AN_EMPLOYEE"))}), "", "neutral")]

@@ -12,9 +12,9 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **293** |
+| Seams (read) | **312** |
 | Effect verbs (write) | **87** |
-| Cards in the catalogue | 146 |
+| Cards in the catalogue | 174 |
 | Arcs | 3 |
 
 ## a · Effect verbs
@@ -302,6 +302,25 @@ slot of that type (§17.12).
 | `musteri.at_risk_count` | global | int | Sales | accounts currently in Risk |
 | `musteri.broke_promise` | entity | bool | Sales | a promise to this account broke inside the relock window and nothing earlier locks the promise row |
 | `musteri.bugs` | entity | int | Sales | open bugs on the lines this account uses |
+| `musteri.can_request.line_erp_cashflow` | entity | bool | Sales | a request for the line_erp_cashflow line's next tier can be opened for the account |
+| `musteri.can_request.line_erp_intake` | entity | bool | Sales | a request for the line_erp_intake line's next tier can be opened for the account |
+| `musteri.can_request.line_erp_invoicing` | entity | bool | Sales | a request for the line_erp_invoicing line's next tier can be opened for the account |
+| `musteri.can_request.line_erp_ledger` | entity | bool | Sales | a request for the line_erp_ledger line's next tier can be opened for the account |
+| `musteri.can_request.line_erp_stock` | entity | bool | Sales | a request for the line_erp_stock line's next tier can be opened for the account |
+| `musteri.can_request.line_note_tool_capture` | entity | bool | Sales | a request for the line_note_tool_capture line's next tier can be opened for the account |
+| `musteri.can_request.line_note_tool_editor` | entity | bool | Sales | a request for the line_note_tool_editor line's next tier can be opened for the account |
+| `musteri.can_request.line_note_tool_linking` | entity | bool | Sales | a request for the line_note_tool_linking line's next tier can be opened for the account |
+| `musteri.can_request.line_note_tool_search` | entity | bool | Sales | a request for the line_note_tool_search line's next tier can be opened for the account |
+| `musteri.can_request.line_note_tool_sync` | entity | bool | Sales | a request for the line_note_tool_sync line's next tier can be opened for the account |
+| `musteri.can_request.line_shared_durability` | entity | bool | Sales | a request for the line_shared_durability line's next tier can be opened for the account |
+| `musteri.can_request.line_shared_integrations` | entity | bool | Sales | a request for the line_shared_integrations line's next tier can be opened for the account |
+| `musteri.can_request.line_shared_mobile` | entity | bool | Sales | a request for the line_shared_mobile line's next tier can be opened for the account |
+| `musteri.can_request.line_shared_security` | entity | bool | Sales | a request for the line_shared_security line's next tier can be opened for the account |
+| `musteri.can_request.line_video_clip_captions` | entity | bool | Sales | a request for the line_video_clip_captions line's next tier can be opened for the account |
+| `musteri.can_request.line_video_clip_clipping` | entity | bool | Sales | a request for the line_video_clip_clipping line's next tier can be opened for the account |
+| `musteri.can_request.line_video_clip_framing` | entity | bool | Sales | a request for the line_video_clip_framing line's next tier can be opened for the account |
+| `musteri.can_request.line_video_clip_pipeline` | entity | bool | Sales | a request for the line_video_clip_pipeline line's next tier can be opened for the account |
+| `musteri.can_request.line_video_clip_timeline` | entity | bool | Sales | a request for the line_video_clip_timeline line's next tier can be opened for the account |
 | `musteri.churn_countdown` | entity | int | Sales | WRAPPER; -1 when not counting, else weeks to churn |
 | `musteri.company_name` | entity | string | Sales | for {customer} in prose |
 | `musteri.complaint_voice` | entity | string | Sales | the per-sector complaint line |
@@ -627,15 +646,20 @@ the catalogue already uses, and the gap each pays:
 
 | family | gap (weeks) | cards |
 |---|---|---|
+| `award` | 6 | 1 |
+| `customer_abuse` | 6 | 1 |
+| `customer_data` | 6 | 1 |
 | `customer_escalation` | 6 | 1 |
 | `customer_feedback` | 6 | 1 |
 | `customer_growth` | 6 | 1 |
 | `customer_money_dispute` | 6 | 2 |
+| `customer_onboarding` | 6 | 2 |
 | `customer_ownership` | 6 | 2 |
 | `customer_requests` | 6 | 3 |
 | `customer_risk` | 2 | 1 |
-| `customer_security` | 6 | 1 |
+| `customer_security` | 6 | 3 |
 | `employee_asks_money` | 12 | 2 |
+| `employee_life` | 6 | 2 |
 | `employee_mistake` | 6 | 1 |
 | `founder_money` | 6 | 2 |
 | `founder_network` | 4 | 2 |
@@ -645,34 +669,41 @@ the catalogue already uses, and the gap each pays:
 | `funding_paperwork` | 6 | 3 |
 | `hr_departure` | 6 | 1 |
 | `incident` | 6 | 6 |
+| `infra_cost` | 6 | 2 |
 | `investor_favor` | 6 | 2 |
 | `investor_pressure` | 6 | 1 |
 | `leak_story` | 6 | 2 |
 | `phase_gate` | 6 | 2 |
 | `product_floor` | 4 | 2 |
 | `product_progress` | 6 | 1 |
-| `product_security` | 6 | 1 |
+| `product_security` | 6 | 5 |
 | `product_support` | 6 | 1 |
 | `promise` | 6 | 1 |
 | `release_thanks` | 6 | 1 |
-| `rival_exit` | 6 | 1 |
+| `rival_exit` | 6 | 2 |
 | `rival_funding` | 6 | 1 |
 | `rival_imitation` | 6 | 2 |
-| `rival_poaching` | 6 | 2 |
+| `rival_poaching` | 6 | 3 |
 | `run_end` | 6 | 5 |
 | `sales_negotiation` | 6 | 1 |
+| `sales_terms` | 6 | 1 |
 | `seed_round` | 6 | 4 |
 | `series_a_table` | 6 | 3 |
 | `sprint_design` | 6 | 8 |
-| `sprint_dev` | 6 | 9 |
+| `sprint_dev` | 6 | 10 |
 | `sprint_late` | 6 | 2 |
-| `sprint_pm` | 6 | 8 |
+| `sprint_pm` | 6 | 9 |
 | `sprint_solo` | 6 | 5 |
-| `sprint_test` | 6 | 9 |
+| `sprint_test` | 6 | 10 |
 | `sprint_untested` | 6 | 3 |
+| `study_farewell` | 6 | 1 |
+| `team_gear` | 6 | 1 |
 | `team_overload` | 6 | 2 |
+| `team_promise` | 6 | 1 |
 | `team_ritual` | 6 | 1 |
 | `team_security` | 6 | 1 |
+| `team_summer_leave` | 52 | 3 |
+| `world_bulletin` | 6 | 1 |
 | `world_offer_b2b` | 8 | 2 |
 | `world_offer_b2c` | 8 | 3 |
 

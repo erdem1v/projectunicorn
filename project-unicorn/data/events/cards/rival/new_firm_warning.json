@@ -1,0 +1,148 @@
+{
+  "id": "rival.new_firm_warning",
+  "version_scope": "demo",
+  "category": "rival",
+  "tick": "daily",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "rival_poaching",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "delay_weeks": [
+    0,
+    1
+  ],
+  "plausibility": {
+    "phase_band": [
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      1,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0,
+    "subject_tenure_by_slot": {
+      "prospect": 0,
+      "employee": 4
+    },
+    "fresh_reason": "aday temsilcinin elindeki güncel adaydır"
+  },
+  "guards": {
+    "market": "b2b",
+    "product_live": true
+  },
+  "latch": {
+    "cooldown_weeks": 26
+  },
+  "latch_key": "entity",
+  "scope": {
+    "rival": {
+      "type": "rival",
+      "required": true,
+      "select": "market_rival:established"
+    },
+    "prospect": {
+      "type": "prospect",
+      "required": true,
+      "select": "rep_lead"
+    },
+    "employee": {
+      "type": "employee",
+      "required": true,
+      "select": "lead_rep"
+    }
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "sales.is_b2b",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "rival.player_share_pct",
+        "op": ">=",
+        "value": 1.0
+      },
+      {
+        "seam": "finance.growth_streak_months",
+        "op": ">=",
+        "value": 1
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "reference_call",
+      "outcome_id": "reference_call",
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "employee",
+          "pct": -40,
+          "weeks": 1
+        }
+      ],
+      "check": {
+        "odds_seam": "olay.odds_20",
+        "on_pass": [
+          {
+            "verb": "drop_prospect",
+            "scope": "prospect"
+          }
+        ],
+        "on_fail": []
+      }
+    },
+    {
+      "id": "first_year_discount",
+      "outcome_id": "first_year_discount",
+      "effects": [
+        {
+          "verb": "prospect_offer",
+          "scope": "prospect",
+          "discount_pct": 0.15,
+          "discount_weeks": 52
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "{rival} bizden söz etmiş",
+      "body": "Bugün görüştüğüm aday anlattı: {rival} satışçısı kendilerine bizim için “yeni bir firma, yarın olmayabilirler” demiş. Aday hâlâ bizi istiyor ama içinin rahat etmesi lazım.",
+      "options": {
+        "reference_call": "{employee} adayı memnun bir müşterimizle görüştürsün",
+        "first_year_discount": "İlk yıl indirimli fiyat ver"
+      },
+      "modifier_lines": {},
+      "expire_note": "Cevap gitmedi, aday {rival} tarafına geçti."
+    },
+    "en": {
+      "title": "{rival} brought us up",
+      "body": "The prospect I met today said a sales rep from {rival} warned them about us: “they're new, they may not be around tomorrow.” They still want us, but they need some reassurance.",
+      "options": {
+        "reference_call": "Have {employee} connect them with one of our happy customers",
+        "first_year_discount": "Offer a discounted price for the first year"
+      },
+      "modifier_lines": {},
+      "expire_note": "No answer went back, and the prospect went with {rival}."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "drop_prospect",
+        "scope": "prospect"
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

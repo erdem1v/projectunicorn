@@ -1,0 +1,185 @@
+{
+  "id": "product.sprint_test_rival_batch",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_test",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "speaker_role": [
+    "tester",
+    "developer"
+  ],
+  "stage": "test",
+  "pool_group": "tester",
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      1,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0,
+    "subject_tenure_weeks": 0,
+    "fresh_reason": "the accounts are the users of the card's line, not picked by how long they have been here"
+  },
+  "guards": {
+    "market": "b2b",
+    "product_live": true
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    },
+    "rival": {
+      "type": "rival",
+      "required": true,
+      "select": "sprint_rival"
+    },
+    "acct_1": {
+      "type": "customer",
+      "required": true,
+      "select": "line_top"
+    },
+    "acct_2": {
+      "type": "customer",
+      "required": true,
+      "select": "line_top"
+    },
+    "acct_3": {
+      "type": "customer",
+      "required": true,
+      "select": "line_top"
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 1
+  },
+  "latch_key": "run",
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_kind",
+        "op": "==",
+        "value": "feature"
+      },
+      {
+        "seam": "urun.decision_test_untouched",
+        "op": "==",
+        "value": true
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "early_trial",
+      "outcome_id": "early_trial",
+      "effects": [
+        {
+          "verb": "trust_delta",
+          "accounts": "slots",
+          "slots": [
+            "acct_1",
+            "acct_2",
+            "acct_3"
+          ],
+          "amount": 6
+        },
+        {
+          "verb": "after_test",
+          "card": "decision",
+          "effects": [
+            {
+              "verb": "trust_delta",
+              "accounts": "slots",
+              "slots": [
+                "acct_1",
+                "acct_2",
+                "acct_3"
+              ],
+              "amount": -8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hold_plan",
+      "outcome_id": "hold_plan",
+      "effects": [
+        {
+          "verb": "add_brand",
+          "amount": -1
+        }
+      ]
+    },
+    {
+      "id": "cut_test",
+      "outcome_id": "cut_test",
+      "effects": [
+        {
+          "verb": "sprint_card_test",
+          "card": "decision"
+        },
+        {
+          "verb": "add_brand",
+          "amount": 3
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Aynı özellik: {rival}",
+      "body": "Rakiplerden {rival}, {seam:urun.decision_card} kartımızın aynısını geliştiriyormuş. Bizde kart hazır ama testine daha başlamadık. Önce biz çıkarsak ilk duyulan isim biz oluruz.",
+      "options": {
+        "early_trial": "En yakın üç müşterimiz bu hafta erkenden denesin",
+        "hold_plan": "Planı bozma, kart sırası gelince çıksın",
+        "cut_test": "Testi kısalt, kart bu sprintin sürümüne girsin"
+      },
+      "expire_note": "Cevap gelmedi, plan aynen sürdü ve {rival} önce duyurdu."
+    },
+    "en": {
+      "title": "Same feature: {rival}",
+      "body": "{rival} is building the same thing as our {seam:urun.decision_card} card. Ours is ready, but testing has not started yet. If we ship first, ours is the name people hear first.",
+      "options": {
+        "early_trial": "Let our three closest customers try it early this week",
+        "hold_plan": "Stick to the plan, ship it when its turn comes",
+        "cut_test": "Cut testing short, put the card in this sprint's release"
+      },
+      "expire_note": "No answer came, so the plan stood and {rival} announced first."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "add_brand",
+        "amount": -1
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

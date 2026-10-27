@@ -1,0 +1,188 @@
+{
+  "id": "team.same_leave_pm",
+  "version_scope": "demo",
+  "category": "team",
+  "tick": "daily",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "team_summer_leave",
+  "family_subject": {
+    "cooldown_weeks": 52
+  },
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "narrow window: two to four weeks before the leave",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      2,
+      null
+    ],
+    "product": "any",
+    "modules": [],
+    "min_week": 0,
+    "subject_tenure_weeks": 4
+  },
+  "guards": {},
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true,
+      "select": "leave_pair",
+      "where": {
+        "all": [
+          {
+            "entity_seam": "hr.role",
+            "scope": "employee",
+            "op": "==",
+            "value": "product_manager"
+          },
+          {
+            "entity_seam": "hr.leave_weeks_left",
+            "scope": "employee",
+            "op": ">=",
+            "value": 2
+          },
+          {
+            "entity_seam": "hr.leave_weeks_left",
+            "scope": "employee",
+            "op": "<=",
+            "value": 4
+          }
+        ]
+      }
+    },
+    "other": {
+      "type": "employee",
+      "required": true,
+      "select": "leave_partner"
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 52
+  },
+  "latch_key": "run",
+  "condition": {
+    "all": [
+      {
+        "year_roll": 0.5
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "prep_then_go",
+      "outcome_id": "prep_then_go",
+      "effects": [
+        {
+          "verb": "summer_leave",
+          "scope": "employee",
+          "other": "other",
+          "apart": false
+        },
+        {
+          "verb": "productivity_mod",
+          "scope": "employee",
+          "pct": 20,
+          "weeks": 2
+        },
+        {
+          "verb": "productivity_mod",
+          "scope": "other",
+          "pct": 20,
+          "weeks": 2
+        }
+      ]
+    },
+    {
+      "id": "settle_it",
+      "outcome_id": "settle_it",
+      "effects": [
+        {
+          "verb": "summer_leave",
+          "scope": "employee",
+          "other": "other",
+          "apart": true
+        },
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": -4
+        },
+        {
+          "verb": "change_morale",
+          "scope": "other",
+          "amount": -4
+        }
+      ]
+    },
+    {
+      "id": "both_go",
+      "outcome_id": "both_go",
+      "effects": [
+        {
+          "verb": "summer_leave",
+          "scope": "employee",
+          "other": "other",
+          "apart": false
+        },
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": 4
+        },
+        {
+          "verb": "change_morale",
+          "scope": "other",
+          "amount": 4
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Yaz izni",
+      "body": "{other} ile ikimizin yaz izni aynı haftalara denk gelmiş. İkimiz birden gidersek o iki hafta sprinti planlayacak kimse kalmıyor.",
+      "options": {
+        "prep_then_go": "Kartları önden hazırlasınlar, sonra ikisi de çıksın",
+        "settle_it": "Kendi aralarında karar versinler",
+        "both_go": "İkisi de gitsin, sürüm kaysın"
+      },
+      "expire_note": "Cevap gelmedi, izinler planlandığı gibi kaldı ve ikisinin de morali biraz düştü."
+    },
+    "en": {
+      "title": "Summer leave",
+      "body": "{other} and I have our summer leave in the same weeks. If we're both out, nobody's left to plan the sprint for those two weeks.",
+      "options": {
+        "prep_then_go": "Have them prep the cards ahead, then both can go",
+        "settle_it": "Let them sort it out between themselves",
+        "both_go": "Both go, the release slips"
+      },
+      "expire_note": "No answer came, so both leaves stayed as planned and morale dipped a little for both."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "change_morale",
+        "scope": "employee",
+        "amount": -3
+      },
+      {
+        "verb": "change_morale",
+        "scope": "other",
+        "amount": -3
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

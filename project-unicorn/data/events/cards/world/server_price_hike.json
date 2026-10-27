@@ -1,0 +1,153 @@
+{
+  "id": "world.server_price_hike",
+  "version_scope": "demo",
+  "category": "world",
+  "tick": "daily",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "infra_cost",
+  "family_subject": {
+    "once": true
+  },
+  "delay_weeks": [
+    1,
+    6
+  ],
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      1,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0,
+    "subject_tenure_weeks": 4
+  },
+  "guards": {
+    "product_live": true
+  },
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true,
+      "select": "top_skill:engineering",
+      "subject": false,
+      "where": {
+        "entity_seam": "hr.role",
+        "scope": "employee",
+        "op": "==",
+        "value": "developer"
+      }
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "latch_key": "run",
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.weeks_since_launch",
+        "op": ">=",
+        "value": 8
+      },
+      {
+        "seam": "urun.weeks_since_launch",
+        "op": "<=",
+        "value": 52
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "accept",
+      "outcome_id": "accept",
+      "effects": [
+        {
+          "verb": "server_price",
+          "mult": 1.15
+        }
+      ]
+    },
+    {
+      "id": "switch",
+      "outcome_id": "switch",
+      "requires": {
+        "seam": "sales.big_accounts",
+        "op": "==",
+        "value": 0
+      },
+      "effects": [
+        {
+          "verb": "server_price",
+          "mult": 0.9
+        },
+        {
+          "verb": "productivity_mod",
+          "scope": "employee",
+          "pct": -50,
+          "weeks": 4
+        }
+      ]
+    },
+    {
+      "id": "contract",
+      "outcome_id": "contract",
+      "effects": [
+        {
+          "verb": "server_price",
+          "mult": 1.07
+        },
+        {
+          "verb": "server_lock",
+          "weeks": 52
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Sunucu zammı",
+      "body": "Sunucu sağlayıcımız gelecek aydan itibaren fiyatlarına %15 zam yapıyor. Daha ucuz bir sağlayıcıya geçebiliriz ama taşıma bir sprintimi alır.",
+      "options": {
+        "accept": "Zammı kabul et, yerimizde kalalım",
+        "switch": "Ucuz sağlayıcıya geç",
+        "contract": "Bir yıllık sözleşme imzala, zammı yarıya indir"
+      },
+      "locked_reasons": {
+        "switch": "Büyük müşterilerimizin sözleşmesinde bugünkü sağlayıcımızın adı yazıyor."
+      },
+      "expire_note": "Cevap gelmedi, sağlayıcı zammı uyguladı: sunucu faturası %15 arttı."
+    },
+    "en": {
+      "title": "Server price increase",
+      "body": "Our server provider is raising prices 15% from next month. We could move to a cheaper provider, but the migration would take one of my sprints.",
+      "options": {
+        "accept": "Accept it, we stay put",
+        "switch": "Move to the cheaper provider",
+        "contract": "Sign a one-year contract to halve the increase"
+      },
+      "locked_reasons": {
+        "switch": "Our larger customers' contracts name our current provider."
+      },
+      "expire_note": "No answer came, so the provider's increase took effect: the server bill is up 15%."
+    }
+  },
+  "expires_weeks": 4,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "server_price",
+        "mult": 1.15
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

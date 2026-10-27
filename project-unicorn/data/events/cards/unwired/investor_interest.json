@@ -1,0 +1,45 @@
+{
+  "id": "world.investor_interest",
+  "version_scope": "draft",
+  "category": "world",
+  "schema": 3,
+  "_draft": {
+    "durum": "park",
+    "gerekce": "B2C pazaryeri Faz E'de kurulacak",
+    "kaynak_kayit": "dunya.halka_arz",
+    "tr_en_onay_bekliyor": false,
+    "tr": {
+      "title": "Pazaryeriniz",
+      "body": "Pazaryerinizi kullanan bir arkadaşımdan duydum, ilgimi çekti. Facewall borsada değer kaybettiğinden beri ortaklarımız tüketici tarafında önce gelir görmek istiyor. Üç aylık gelir rakamınız olunca bir kahve içelim.",
+      "sender": "{investor} ortağı",
+      "options": {
+        "thank_and_wait": "Teşekkür et, rakamlar oluşunca yazacağını söyle"
+      }
+    },
+    "en": {
+      "title": "Your marketplace",
+      "body": "A friend of mine uses your marketplace, and it caught my eye. Since Facewall's slide on the stock market, our partners want to see revenue first on the consumer side. Once you have three months of revenue, let's grab a coffee.",
+      "sender": "Partner, {investor}",
+      "options": {
+        "thank_and_wait": "Thank them, say you'll write once the numbers are in"
+      }
+    },
+    "secenek_sonuclari": {
+      "thank_and_wait": {
+        "tr": "Nexus Ventures seed'e kadar seni hatırlar",
+        "en": "Nexus Ventures remembers you until seed"
+      }
+    },
+    "secenek_sonuclari_notu": "Örnek özet satırları (örnek adlar taşır); oyundaki çip etkiden yazılır, bu satırlar kartın metni değildir.",
+    "kosul_notu": "B2C pazaryeri yayında, gelir üç aydan kısa; Piyasa'da Facewall listelenip düştükten sonra; seed kapısı açılmadan.",
+    "kod_notu": "Tohumlu rastgele seçici (Y07) investor yuvasını da doldurur; investor_favor ailesi hâlâ yok [VOCAB?]. [COND?] B2C pazaryeri yayında, gelir üç aydan kısa, Piyasa'da Facewall listelenip düşmüş: pazaryeri kavramı Faz E. [VOCAB?] Nexus'un ilgisini seed'e taşıyan yatırımcı seam'i (investor_favor ailesi) yok.",
+    "yuvalar": [
+      {
+        "slot": "investor",
+        "tur": "investor",
+        "secici": "InvestorRegistry'den tohumlu rastgele (seed kapısı açılmamış fon); investor_registry.gd display_name",
+        "kosul": "seed kapısı açılmamış"
+      }
+    ]
+  }
+}

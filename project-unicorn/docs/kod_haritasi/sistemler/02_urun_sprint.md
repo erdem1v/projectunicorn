@@ -329,6 +329,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - Oynatma tek yoldur: `plan_outcome`, `timeline`, `intake` ve `first_bumps` `_replay`i okur
 - `_assign` kartın `pinned` alanını ({person, until}) okur: gün < until ve kart bitmemişse kişi yalnız o karta gider, onda ilk gelir, çalışamıyorsa kart o hafta kimsesiz; yazarı Olaylar'ın `pin_card`'ı, `_play_out` haftanın gününü verir.
   ↳ Kişi başına tek kilit vardır: `pin_card` kişinin başka karttaki kilidini kaldırır; sprintte olmayan ya da biten karta kilit yazmaz ("" döner). Alan kart sözlüğünde durur, kayıt sürümü artmaz
+  ↳ Kilit kartla gider: sprintten çıkan kartın `pinned`ı silinir: `remove` `:125`, `decision_carry` `:470` ve kartı bu sprintten sonrakine gönderen `_place` `:1913` (`send_next` onun üstünden); smoke `sprint_pin_leaves_with_card`
   ↳ İleriki sprintleri sınayan `intake` (MVP tahmini, liderin sütunu) kilidi bugünün günüyle okur: sonraki bir sprintte biten kilidi o sprintin tahmini sürüyor sayar
 - `_work`/`_play_out`/`_finish_sprint`in `log` parametresi yalnız `timeline` içindir; kapalıyken sonuçlar bayt eşit kalır (`--sprint-probe` `^SPRINTPROBE`)
 - Zaman ekseni: testten sonra Geliştirmeye dönen düzeltme işi ayrı aşamadır (`fix: true`, sonda): testin bulduğu da, oynatmanın öngördüğü de oradadır (kartın gerçek bitişi); sayılar görünen efordur (kalan ihtiyaç ÷ hazırlık kazancı)

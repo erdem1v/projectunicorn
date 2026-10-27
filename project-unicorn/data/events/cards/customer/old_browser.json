@@ -1,0 +1,130 @@
+{
+  "id": "customer.old_browser",
+  "version_scope": "demo",
+  "category": "customer",
+  "tick": "daily",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "sales_terms",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "delay_weeks": [
+    0,
+    1
+  ],
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      1,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0,
+    "subject_tenure_by_slot": {
+      "prospect": 0,
+      "employee": 0
+    },
+    "fresh_reason": "konuşan adayı işleyen temsilcidir"
+  },
+  "guards": {
+    "market": "b2b",
+    "product_live": true
+  },
+  "latch": {
+    "cooldown_weeks": 26
+  },
+  "latch_key": "entity",
+  "scope": {
+    "prospect": {
+      "type": "prospect",
+      "required": true,
+      "select": "rep_lead",
+      "where": {
+        "entity_seam": "aday.sector",
+        "scope": "prospect",
+        "op": "==",
+        "value": "health"
+      }
+    },
+    "employee": {
+      "type": "employee",
+      "required": true,
+      "select": "lead_rep"
+    }
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "sales.is_b2b",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.responsive_shipped",
+        "op": "==",
+        "value": false
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "promise_support",
+      "outcome_id": "promise_support",
+      "effects": [
+        {
+          "verb": "prospect_offer",
+          "scope": "prospect",
+          "promise_step": "line_shared_mobile_k1"
+        }
+      ]
+    },
+    {
+      "id": "decline",
+      "outcome_id": "decline",
+      "effects": [
+        {
+          "verb": "drop_prospect",
+          "scope": "prospect"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Şart: {prospect}",
+      "body": "{prospect} demoyu çok beğendi ama bilgi işlem sorumlusu bir şart koydu. Klinikteki bütün bilgisayarlarda Fenstra'nın eski tarayıcısı var, hasta kayıt programları yalnız onda çalışıyor. Ürünümüz o tarayıcıda açılmazsa imza yok.",
+      "options": {
+        "promise_support": "Desteğe söz ver",
+        "decline": "Yapamayacağımızı söyle"
+      },
+      "expire_note": "Cevap gitmedi, {prospect} başka bir yazılıma yöneldi."
+    },
+    "en": {
+      "title": "A condition from {prospect}",
+      "body": "{prospect} loved the demo, but their IT lead set one condition. Every computer at the clinic runs Fenstra's old browser, because their patient records software only works there. If our product doesn't open in that browser, there's no deal.",
+      "options": {
+        "promise_support": "Promise the support",
+        "decline": "Tell them we can't do it"
+      },
+      "expire_note": "No answer went back, and {prospect} moved on to another product."
+    }
+  },
+  "expires_weeks": 2,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "drop_prospect",
+        "scope": "prospect"
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

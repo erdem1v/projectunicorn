@@ -1,0 +1,118 @@
+{
+  "id": "team.master_degree",
+  "version_scope": "demo",
+  "category": "team",
+  "tick": "daily",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "employee_life",
+  "family_subject": {
+    "once": true
+  },
+  "delay_weeks": [
+    0,
+    2
+  ],
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      1,
+      null
+    ],
+    "product": "any",
+    "modules": [],
+    "min_week": 0,
+    "subject_tenure_weeks": 26
+  },
+  "guards": {},
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true,
+      "select": "random",
+      "where": {
+        "entity_seam": "hr.level",
+        "scope": "employee",
+        "op": "==",
+        "value": 0
+      }
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 52
+  },
+  "latch_key": "entity",
+  "condition": {
+    "all": [
+      {
+        "seam": "time.month",
+        "op": "in",
+        "value": [
+          5,
+          6
+        ]
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "congratulate",
+      "outcome_id": "congratulate",
+      "effects": [
+        {
+          "verb": "schedule_event",
+          "event_id": "team.master_degree_farewell",
+          "delay_weeks": 4
+        }
+      ]
+    },
+    {
+      "id": "promote",
+      "outcome_id": "promote",
+      "effects": [
+        {
+          "verb": "promote",
+          "scope": "employee",
+          "pct": 15
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Konuşmamız gerekiyor",
+      "body": "Yüksek lisansa kabul aldım ve yurt dışına taşınmam gerekiyor. Burada çok şey öğrendim, her şey için teşekkürler.",
+      "options": {
+        "congratulate": "Tebrik et, son ayında işini devretsin",
+        "promote": "Okulu bir yıl ertelemesini rica et, terfi teklif et"
+      },
+      "expire_note": "Cevap gelmedi, devir süreci başladı; çalışan dört hafta sonra ayrılacak."
+    },
+    "en": {
+      "title": "Can we talk?",
+      "body": "I got into a master's program abroad, so I'll be moving. I've learned so much here. Thank you for everything.",
+      "options": {
+        "congratulate": "Congratulate {employee}, plan the handover for the last month",
+        "promote": "Ask {employee} to defer a year, offer a promotion"
+      },
+      "expire_note": "No answer came, so the handover began and they will leave in four weeks."
+    }
+  },
+  "expires_weeks": 2,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "schedule_event",
+        "event_id": "team.master_degree_farewell",
+        "delay_weeks": 4
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

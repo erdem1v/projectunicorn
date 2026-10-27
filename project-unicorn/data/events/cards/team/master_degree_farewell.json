@@ -1,0 +1,89 @@
+{
+  "id": "team.master_degree_farewell",
+  "version_scope": "demo",
+  "category": "team",
+  "tick": "scheduled",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "study_farewell",
+  "family_subject": {
+    "once": true
+  },
+  "follows": "team.master_degree",
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "chain",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      1,
+      null
+    ],
+    "product": "any",
+    "modules": [],
+    "min_week": 0,
+    "subject_tenure_weeks": 0,
+    "fresh_reason": "chain: the subject is the parent card's employee"
+  },
+  "guards": {},
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "latch_key": "entity",
+  "options": [
+    {
+      "id": "thank",
+      "outcome_id": "thank",
+      "effects": [
+        {
+          "verb": "employee_leaves",
+          "scope": "employee",
+          "reason": "study"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Son haftam",
+      "body": "Bu hafta son haftam. Devir notlarım ortak klasörde. Beni burada büyüttüğünüz için teşekkürler, iyi ki sizinle çalışmışım.",
+      "options": {
+        "thank": "Teşekkür et, yolu açık olsun de"
+      },
+      "expire_note": "Cevap gelmedi, çalışan haftanın sonunda sessizce ayrıldı."
+    },
+    "en": {
+      "title": "My last week",
+      "body": "This is my last week. My handover notes are in the shared folder. Thank you for letting me grow here, I'm glad I worked with you.",
+      "options": {
+        "thank": "Thank them, wish them well"
+      },
+      "expire_note": "No answer came, and they left quietly at the end of the week."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "employee_leaves",
+        "scope": "employee",
+        "reason": "study"
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

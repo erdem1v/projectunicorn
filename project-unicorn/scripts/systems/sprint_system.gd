@@ -108,7 +108,7 @@ static func send_next(card_id: String) -> void:
 
 
 ## Kart adaylara döner; ilerlemesi, ödenmiş lisansı ya da bekleyen kararı varsa saklanır ve yeniden
-## alındığında kaldığı yerden, bedeli yeniden kesilmeden sürer. Koşan sprintte kartın kişileri
+## alındığında kaldığı yerden, bedeli yeniden kesilmeden sürer; kilidi (`pin_card`) saklanmaz. Koşan sprintte kartın kişileri
 ## haftanın kalanında kimsesiz kartlara geçer. Kâğıdın takip kartı (`follow`) çıkmaz: kâğıdın bedeli onda durur ve aday
 ## listesinde yeri yoktur.
 static func remove(card_id: String) -> void:
@@ -122,6 +122,7 @@ static func remove(card_id: String) -> void:
 	if _worked(card) > EPS or card.get("paid", false) or card.decision:
 		card.state = "candidate"
 		card.assignees = []
+		card.erase("pinned")
 	else:
 		p.cards.erase(card_id)
 	if mode() == "active":
@@ -452,7 +453,7 @@ static func line_in_first_version(line: String) -> bool:
 		return int(r.number) <= 1 and r.shipped.any(func(c: Dictionary) -> bool: return c.line == line))
 
 
-## Bekleyen kararın kartı ilerlemesiyle sonraki sprinte devreder; sprint kapandıysa zaten oradadır.
+## Bekleyen kararın kartı ilerlemesiyle sonraki sprinte devreder, kilidi (`pin_card`) düşer; sprint kapandıysa zaten oradadır.
 ## Koşan sprintte boştakiler haftanın kalanında kimsesiz kartlara geçer.
 static func decision_carry() -> String:
 	var c: Dictionary = decision_card()
@@ -466,6 +467,7 @@ static func decision_carry() -> String:
 		p.sprint.carried_out = p.sprint.get("carried_out", []) + [c.id]
 		c.state = "carried"
 		c.assignees = []
+		c.erase("pinned")
 		EventBus.card_carried_over.emit(c.id)
 		if mode() == "active":
 			_restaff()
@@ -1902,10 +1904,13 @@ static func _carried_out() -> Array:
 		return cards.has(id) and cards[id].state == "carried").map(func(id: String) -> Dictionary: return cards[id])
 
 
-## Kartı bu sprinte ya da sonrakine koyar; adaysa saklanan kart olur, devreden damgası kalır.
+## Kartı bu sprinte ya da sonrakine koyar; adaysa saklanan kart olur, devreden damgası kalır. Sprintten çıkan kartın kilidi
+## (`pin_card`) düşer.
 static func _place(c: Dictionary, this_sprint: bool) -> void:
 	var p: Dictionary = _p()
 	p.sprint.lead_applied = false
+	if not this_sprint and c.id in p.sprint.cards:
+		c.erase("pinned")
 	p.sprint.cards.erase(c.id)
 	p.next.cards.erase(c.id)
 	(p.sprint.cards if this_sprint else p.next.cards).append(c.id)

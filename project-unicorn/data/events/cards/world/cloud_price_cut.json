@@ -1,0 +1,102 @@
+{
+  "id": "world.cloud_price_cut",
+  "version_scope": "demo",
+  "category": "world",
+  "tick": "daily",
+  "class": "paper",
+  "sender": "employee",
+  "sender_desk": "MAIL_SENDER_SERVER_PROVIDER",
+  "tags": [],
+  "schema": 3,
+  "family": "infra_cost",
+  "follows": "world.server_price_hike",
+  "delay_weeks": [
+    1,
+    8
+  ],
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "guards": {
+    "product_live": true
+  },
+  "scope": {},
+  "latch": {
+    "one_shot": true
+  },
+  "latch_key": "run",
+  "condition": {
+    "all": [
+      {
+        "history": "fired",
+        "event": "world.server_price_hike"
+      },
+      {
+        "history": "weeks_since",
+        "event": "world.server_price_hike",
+        "op": ">=",
+        "value": 26
+      },
+      {
+        "none": [
+          {
+            "history": "chose",
+            "event": "world.server_price_hike",
+            "option": "switch"
+          }
+        ]
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "ack",
+      "outcome_id": "ack",
+      "effects": [
+        {
+          "verb": "server_price",
+          "mult": 0.7,
+          "tiers": [
+            "cloud",
+            "enterprise"
+          ]
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Yeni fiyatlar",
+      "body": "Önümüzdeki aydan itibaren Standart ve Kurumsal paketlerin fiyatı %30 düşüyor. Sunucularınız için bir şey yapmanız gerekmiyor.",
+      "options": {
+        "ack": "Anladım"
+      },
+      "expire_note": "Duyuru okunmadan kapandı, sunucu fiyatları aynı kaldı."
+    },
+    "en": {
+      "title": "New prices",
+      "body": "Starting next month, Standard and Enterprise plans are 30% cheaper. You don't need to do anything with your servers.",
+      "options": {
+        "ack": "Got it"
+      },
+      "expire_note": "The notice closed unread, so server prices stay as they were."
+    }
+  },
+  "expires_weeks": 4,
+  "on_expire": {
+    "penalties": []
+  },
+  "expire_note": "expire_note"
+}

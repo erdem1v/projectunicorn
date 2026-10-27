@@ -218,6 +218,10 @@ static func _install_papers() -> void:
 		EvSeams.register("urun.line_tier." + line_id, G, TYPE_INT,   # LOC-DATA seam namespace, not copy
 			func() -> int: return ProductState.line_tier(SprintCatalog.in_product(line_id)),
 			"Product", "the tier the %s line has reached; 0 before it is built" % line_id)
+		# The rule `queue_card` opens an account's request by, so a card offers that only where it lands.
+		EvSeams.register("musteri.can_request." + line_id, EvSeams.Kind.ENTITY, TYPE_BOOL,   # LOC-DATA seam namespace, not copy
+			func(id: String) -> bool: return not SprintBridges.request_step(id, line_id).is_empty(),
+			"Sales", "a request for the %s line's next tier can be opened for the account" % line_id)
 	EvSeams.register("urun.weeks_to_month_end", G, TYPE_INT,
 		func() -> int:
 			var weeks: int = 1

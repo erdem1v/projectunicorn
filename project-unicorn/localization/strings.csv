@@ -3033,7 +3033,9 @@ MAIL_STAMP_AT,{stamp} H{week},{stamp} W{week}
 MAIL_SENDER_ACCOUNTS,Muhasebe,Accounts
 MAIL_SENDER_SUPPORT,Destek,Support
 MAIL_SENDER_SERVER_ALERT,Sunucu uyarısı,Server alert
+MAIL_SENDER_SERVER_PROVIDER,Sunucu sağlayıcın,Your server provider
 MAIL_SENDER_FINANCE_MANAGER,Finans Müdürü,Finance Manager
+MAIL_SENDER_IT_DIRECTOR,Bilgi İşlem Müdürü,IT Director
 MAIL_SELF_NOTE,Kendine not,Note to self
 MAIL_RPT_CLOSED,Geçen hafta kapananlar:,Closed last week:
 MAIL_RPT_BOOKS,Defterdeki hesap: {n},Accounts on the books: {n}
@@ -3395,3 +3397,4 @@ EV_RIVAL_SHUTDOWN_NOTICE_BUY_DATA,Verileri kurucusundan satın al,Pay the founde
 EV_RIVAL_SHUTDOWN_NOTICE_MORE_MARKETING,Pazarlama harcamasını iki ay artır,Raise marketing spend for two months
 EV_RIVAL_SHUTDOWN_NOTICE_COMPARISON_POST,Karşılaştırma yazısını kendin yaz,Write a comparison post yourself
 EV_RIVAL_SHUTDOWN_NOTICE_EXPIRED,Alternatif listelerinin hepsinde başka adlar vardı.,Every list of alternatives named other apps.
+EV_LOCK_REQUEST_CLOSED,Tabloya aktarma bu hesap için şimdi sıraya girmez.,Spreadsheet export can't be queued for this account right now.

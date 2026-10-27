@@ -1,0 +1,57 @@
+{
+  "id": "world.app_of_the_week",
+  "version_scope": "draft",
+  "category": "world",
+  "schema": 3,
+  "_draft": {
+    "durum": "park",
+    "gerekce": "B2C pazaryeri Faz E'de kurulacak",
+    "kaynak_kayit": "basin.kayit",
+    "tr_en_onay_bekliyor": false,
+    "tr": {
+      "title": "Haftanın uygulaması",
+      "body": "TeknoGündem bu sabah bizi haftanın uygulaması seçmiş. Sabahtan beri kayıt yağıyor, sunucunun yükü %95'e çıktı. Bu hafta böyle sürerse kapasite yetmeyecek.",
+      "sender": "{employee}, Yazılımcı",
+      "options": {
+        "auto_scale": "Kapasite yükle birlikte kendiliğinden büyüsün",
+        "add_capacity": "Kapasiteyi şimdi %30 artır",
+        "wait": "Bekle, ilgi bir haftada söner"
+      }
+    },
+    "en": {
+      "title": "App of the week",
+      "body": "TeknoGündem picked us as app of the week this morning. Sign-ups have been pouring in ever since, and server load is at 95%. If this keeps up all week, we'll run out of capacity.",
+      "sender": "{employee}, Developer",
+      "options": {
+        "auto_scale": "Let capacity scale with load automatically",
+        "add_capacity": "Add 30% capacity now",
+        "wait": "Wait it out, the buzz fades in a week"
+      }
+    },
+    "secenek_sonuclari": {
+      "auto_scale": {
+        "tr": "Yük %80 civarında kalır, sunucu faturası yükle birlikte değişir",
+        "en": "Load stays around 80%, the server bill follows the load"
+      },
+      "add_capacity": {
+        "tr": "Sunucu faturası %30 artar, yük %75'e iner",
+        "en": "Server bill +30%, load drops to 75%"
+      },
+      "wait": {
+        "tr": "Fatura değişmez, bu hafta kesinti ihtimali artar",
+        "en": "Bill unchanged, outage risk is higher this week"
+      }
+    },
+    "secenek_sonuclari_notu": "Örnek özet satırları (örnek adlar taşır); oyundaki çip etkiden yazılır, bu satırlar kartın metni değildir.",
+    "kosul_notu": "B2C pazaryeri yayında, Otomatik ayar hiç açılmamışken (oyuncunun bu kararı ilk kez verdiği an), yük %80'in altındayken gelir ve gelişte kitleyi yükü %95'e taşıyacak kadar büyütür (en çok %20). Mert yuvası: Yazılım yıldızı en yüksek geliştirici.",
+    "kod_notu": "top_skill:engineering seçicisi (Y14) var; kapasiteyi olaydan yazan fiil yok, InfraSystem oyuncunundur [VOCAB?]. [COND?] B2C pazaryeri yayında, Otomatik ayar hiç açılmamışken, yük %80'in altında: pazaryeri kavramı Faz E. [VOCAB?] kapasiteyi olay kartından yazan fiil yok (InfraSystem oyuncununkidir).",
+    "yuvalar": [
+      {
+        "slot": "employee",
+        "tur": "employee",
+        "secici": "Yazılım yıldızı en yüksek geliştirici (top_skill:engineering, Y14)",
+        "kosul": "B2C pazaryeri yayında"
+      }
+    ]
+  }
+}

@@ -1,0 +1,174 @@
+{
+  "id": "world.data_location",
+  "version_scope": "demo",
+  "category": "world",
+  "tick": "daily",
+  "class": "paper",
+  "sender": "contact",
+  "sender_title": "MAIL_SENDER_IT_DIRECTOR",
+  "tags": [],
+  "schema": 3,
+  "family": "customer_security",
+  "delay_weeks": [
+    0,
+    2
+  ],
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 76,
+    "subject_tenure_weeks": 4
+  },
+  "guards": {
+    "market": "b2b",
+    "product_live": true
+  },
+  "scope": {
+    "customer": {
+      "type": "customer",
+      "required": true,
+      "select": "random",
+      "where": {
+        "entity_seam": "musteri.sector",
+        "scope": "customer",
+        "op": "in",
+        "value": [
+          "health",
+          "finance"
+        ]
+      }
+    },
+    "founder": {
+      "type": "founder",
+      "required": true
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "latch_key": "run",
+  "condition": {
+    "all": [
+      {
+        "seam": "time.week",
+        "op": ">=",
+        "value": 76
+      },
+      {
+        "seam": "time.week",
+        "op": "<=",
+        "value": 110
+      },
+      {
+        "seam": "sales.is_b2b",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "sales.account_count",
+        "op": ">=",
+        "value": 2
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "founder_calls",
+      "outcome_id": "founder_calls",
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "founder",
+          "pct": -10,
+          "weeks": 1
+        },
+        {
+          "verb": "trust_delta",
+          "scope": "customer",
+          "amount": 8
+        }
+      ]
+    },
+    {
+      "id": "send_all",
+      "outcome_id": "send_all",
+      "effects": [
+        {
+          "verb": "trust_delta",
+          "accounts": "others",
+          "amount": 4
+        },
+        {
+          "verb": "trust_delta",
+          "scope": "customer",
+          "amount": -4
+        }
+      ]
+    },
+    {
+      "id": "lie",
+      "outcome_id": "lie",
+      "effects": [
+        {
+          "verb": "trust_delta",
+          "scope": "customer",
+          "amount": 10
+        }
+      ],
+      "check": {
+        "odds_seam": "olay.odds_25",
+        "on_pass": [
+          {
+            "verb": "schedule_event",
+            "event_id": "world.data_claim_exposed",
+            "delay_weeks": 3
+          }
+        ],
+        "on_fail": []
+      }
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Verilerimiz nerede duruyor?",
+      "body": "Dinleme haberlerinden sonra yönetimimiz tek bir soru sordu ve cevabı bu hafta istiyor: kayıtlarımız hangi ülkedeki sunucularda duruyor?",
+      "options": {
+        "founder_calls": "Bilgi işlem müdürünü sen ara, sunucu düzenini anlat",
+        "send_all": "Bütün hesaplara aynı açıklamayı gönder",
+        "lie": "“Verileriniz Türkiye'de ayrı bir sunucuya alınıyor” de"
+      },
+      "expire_note": "Cevap gelmedi, soru yanıtsız kaldı ve hesabın memnuniyeti düştü."
+    },
+    "en": {
+      "title": "Where is our data?",
+      "body": "After the surveillance stories in the papers, our board asked one question and wants the answer this week: which country are our records stored in?",
+      "options": {
+        "founder_calls": "Call their IT director yourself and walk through the server setup",
+        "send_all": "Send the same statement to every account",
+        "lie": "Tell them “your data is being moved to a separate server in Turkey”"
+      },
+      "expire_note": "No answer went out, the question stayed unanswered and the account's satisfaction dropped."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "trust_delta",
+        "scope": "customer",
+        "amount": -8
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

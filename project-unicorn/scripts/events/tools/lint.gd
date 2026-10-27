@@ -507,6 +507,7 @@ const SUBJECT_VERBS := {
 	"b2b_retain_delay": "customer", "b2b_retain_ignore": "customer", "b2b_expand": "customer",
 	"b2b_expand_decline": "customer", "account_notice": "customer", "take_account": "customer",
 	"prospect_offer": "prospect", "drop_prospect": "prospect",
+	"promise_extend": "customer", "promise_break": "customer",
 }
 
 ## O5: a verb that spends a module the build may not have opened.
@@ -691,7 +692,7 @@ static func _lint_v3_options(id: String, card: Dictionary, where: String) -> voi
 		# A sprint paper names its speaker and the account it is about; its subject is the sprint card, which its
 		# options land on, so the slots are not asked to be hit.
 		if not system and not card.has("speaker_role") and not subject_slots.is_empty() \
-				and _touched_slots(effects, subject_slots).is_empty():
+				and _touched_slots(effects, subject_slots, id).is_empty():
 			_v3(id, "O4", where, "option '%s' drops nothing on the subject the card is about" % opt_id)
 
 
@@ -809,11 +810,19 @@ static func _lint_speaker(where: String, card: Dictionary) -> void:
 
 ## Which of the card's slots these effects land on. An effect names its slot in `scope`; one that
 ## does not falls to the first slot of its verb's type, the way EvEffects resolves it.
-static func _touched_slots(effects: Array, slots: Dictionary) -> Array:
+static func _touched_slots(effects: Array, slots: Dictionary, card_id: String) -> Array:
 	var out: Array = []
 	for e in effects:
 		var effect: Dictionary = e
-		var type_id: String = String(SUBJECT_VERBS.get(String(effect.get("verb", "")), ""))
+		var verb: String = String(effect.get("verb", ""))
+		var type_id: String = String(SUBJECT_VERBS.get(verb, ""))
+		# A card this one schedules and that follows it runs on the same slots by name: what it does there lands here.
+		var follow: Dictionary = EvCatalog.card(String(effect.get("event_id", ""))) if verb == "schedule_event" else {}
+		if String(follow.get("follows", "")) == card_id:
+			for slot in _touched_slots(_card_effects(follow), slots, String(follow.id)):
+				if not out.has(slot):
+					out.append(slot)
+			continue
 		# A trust_delta over named slots lands on each of them.
 		if String(effect.get("accounts", "")) == "slots":
 			for slot in effect.get("slots", []):

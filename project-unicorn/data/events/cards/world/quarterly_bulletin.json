@@ -1,0 +1,90 @@
+{
+  "id": "world.quarterly_bulletin",
+  "version_scope": "demo",
+  "category": "world",
+  "tick": "daily",
+  "class": "paper",
+  "sender": "press",
+  "tags": [],
+  "schema": 3,
+  "family": "world_bulletin",
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "narrow window: the first week of a quarter",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "guards": {
+    "market": "b2b",
+    "product_live": true
+  },
+  "scope": {},
+  "latch": {
+    "one_shot": true
+  },
+  "latch_key": "run",
+  "condition": {
+    "all": [
+      {
+        "seam": "time.quarter_start",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "sales.is_b2b",
+        "op": "==",
+        "value": true
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "focus_onboarding",
+      "outcome_id": "focus_onboarding",
+      "effects": [
+        {
+          "verb": "pitch_focus",
+          "area": "onboarding",
+          "weeks": 13
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Çeyrek bülteni: işletmeler yazılımı nasıl seçiyor",
+      "body": "Bir ticaret odası altı yüz üyesine yazılım seçerken neye baktıklarını sormuş. İlk sırada kurulumda yanlarında olunması var, fiyat üçüncü sırada.",
+      "options": {
+        "focus_onboarding": "Bu çeyrek satış görüşmelerinde kurulum desteğine ağırlık veririm"
+      },
+      "expire_note": "Bülten cevapsız kaldı, bu çeyrek satış görüşmelerinde bir şey değişmedi."
+    },
+    "en": {
+      "title": "Quarterly bulletin: how businesses pick software",
+      "body": "A chamber of commerce asked its six hundred members what they look at when choosing software. Support during setup came first; price came third.",
+      "options": {
+        "focus_onboarding": "This quarter I'll lean on setup support in my sales meetings"
+      },
+      "expire_note": "The bulletin went unanswered, so sales meetings this quarter stay as they were."
+    }
+  },
+  "expires_weeks": 2,
+  "on_expire": {
+    "penalties": []
+  },
+  "expire_note": "expire_note"
+}

@@ -1,0 +1,89 @@
+{
+  "id": "product.encryption_flaw_press_b2b",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "scheduled",
+  "class": "paper",
+  "sender": "press",
+  "tags": [],
+  "schema": 3,
+  "family": "product_security",
+  "follows": "product.encryption_flaw_b2b",
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "chain",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_solo",
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      0,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "guards": {
+    "market": "b2b"
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "latch_key": "run",
+  "options": [
+    {
+      "id": "no_comment",
+      "outcome_id": "no_comment",
+      "effects": [
+        {
+          "verb": "add_reputation",
+          "amount": -8
+        },
+        {
+          "verb": "trust_delta",
+          "accounts": "all",
+          "amount": -8
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Yamayı duyurmayan şirketler",
+      "body": "Şifreleme açığını kapattıktan sonra müşterilerine haber vermeyen şirketleri yazdık. Adınız listede. Yorumunuz var mı?",
+      "options": {
+        "no_comment": "Yorum yapmayalım"
+      },
+      "expire_note": "Cevap gelmedi, yorum yapılmadı ve haber yine de çıktı."
+    },
+    "en": {
+      "title": "Companies that kept the patch quiet",
+      "body": "We ran a story on companies that patched the encryption flaw without telling their customers. Yours is on the list. Any comment?",
+      "options": {
+        "no_comment": "No comment"
+      },
+      "expire_note": "No answer went out, so the story ran without a comment."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "add_reputation",
+        "amount": -8
+      },
+      {
+        "verb": "trust_delta",
+        "accounts": "all",
+        "amount": -8
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

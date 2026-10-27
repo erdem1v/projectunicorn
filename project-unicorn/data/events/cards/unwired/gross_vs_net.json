@@ -1,0 +1,63 @@
+{
+  "id": "customer.gross_vs_net",
+  "version_scope": "draft",
+  "category": "customer",
+  "schema": 3,
+  "_draft": {
+    "durum": "park",
+    "gerekce": "B2C pazaryeri Faz E'de kurulacak",
+    "kaynak_kayit": "pazaryeri.rekor_ay",
+    "tr_en_onay_bekliyor": true,
+    "tr": {
+      "title": "Panel ile hesap tutmuyor",
+      "body": "Bir mağaza sahibi aradı. Panelde bu ay $42.000 satış görünüyor ama hesabına $37.800 yatmış. Farkın komisyon olduğunu söyledim, panelde komisyonun düşülmüş hâlini neden göstermediğimizi soruyor.",
+      "sender": "{employee}, Müşteri Temsilcisi",
+      "options": {
+        "gross_not_ours": "Panelde brüt yazıyor, bizi ilgilendirmez",
+        "show_net": "Panelde komisyon düşülmüş tutarı da göster",
+        "nothing_to_do": "Şimdilik yapabileceğimiz bir şey olmadığını söyle"
+      }
+    },
+    "en": {
+      "title": "Dashboard and payout don't match",
+      "body": "A store owner called. The dashboard shows $42,000 in sales this month, but only $37,800 landed in their account. I told them the difference is our commission; now they're asking why the dashboard doesn't show the amount after commission.",
+      "sender": "{employee}, Account Manager",
+      "options": {
+        "gross_not_ours": "The dashboard says gross, not our problem",
+        "show_net": "Show the amount after commission on the dashboard too",
+        "nothing_to_do": "Say there's nothing we can do for now"
+      }
+    },
+    "secenek_sonuclari": {
+      "gross_not_ours": {
+        "tr": "Mağazanın memnuniyeti çok düşer, %15 ihtimalle başka pazaryerine geçer",
+        "en": "The store's satisfaction drops sharply, 15% chance it moves to another marketplace"
+      },
+      "show_net": {
+        "tr": "Bir kart sonraki sprinte kayar, bütün mağazaların memnuniyeti biraz artar",
+        "en": "One card slips to the next sprint, every store's satisfaction rises a little"
+      },
+      "nothing_to_do": {
+        "tr": "Mağazanın memnuniyeti biraz düşer, Deniz'in morali düşer",
+        "en": "The store's satisfaction dips a little, Deniz's morale drops"
+      }
+    },
+    "secenek_sonuclari_notu": "Örnek özet satırları (örnek adlar taşır); oyundaki çip etkiden yazılır, bu satırlar kartın metni değildir.",
+    "kosul_notu": "Pazaryeri yayında, ay kapanışının ertesi haftası, Satıcı Paneli hattında komisyon düşülmüş tutarı gösteren kademe yokken. Mağaza yuvası: satış hacmi yüksek bir mağaza. Tutarlar mağazanın o ayki brüt satışından ve komisyonundan türer (örnekteki $42.000 ve $37.800 ölçeklenir). Deniz yuvası: müşteri temsilcisi; yoksa olay gelmez.",
+    "kod_notu": "check dalı (Y03) ve sprint_fix_first hazır; mağaza memnuniyeti Faz E. [COND?] pazaryeri yayında, ay kapanışının ertesi haftası, Satıcı Paneli hattında komisyon düşülmüş tutarı gösteren kademe yokken: pazaryeri ve hat kademesi Faz E. [VOCAB?] mağaza memnuniyeti ve mağazanın ayrılması Faz E'de kurulacak.",
+    "yuvalar": [
+      {
+        "slot": "employee",
+        "tur": "employee",
+        "secici": "müşteri temsilcisi",
+        "kosul": "yoksa olay gelmez"
+      },
+      {
+        "slot": "customer",
+        "tur": "customer",
+        "secici": "pazaryeri mağazası, satış hacmi yüksek",
+        "kosul": ""
+      }
+    ]
+  }
+}

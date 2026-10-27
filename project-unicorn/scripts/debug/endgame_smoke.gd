@@ -557,6 +557,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sprint_legacy_beta_cards_ship":         fail = _case_sprint_legacy_beta_cards_ship()
 		"sprint_departure_restaffs_card":        fail = _case_sprint_departure_restaffs_card()
 		"sprint_pin_holds_person":               fail = _case_sprint_pin_holds_person()
+		"sprint_pin_leaves_with_card":           fail = _case_sprint_pin_leaves_with_card()
 		"sprint_never_stalls_in_plan":           fail = _case_sprint_never_stalls_in_plan()
 		"sprint_lead_offers_paid_plan_b2c":      fail = _case_sprint_lead_offers_paid_plan_b2c()
 		"sprint_lead_fills_to_ceiling":          fail = _case_sprint_lead_fills_to_ceiling()
@@ -24553,6 +24554,58 @@ static func _case_sprint_pin_holds_person() -> String:
 	return ""
 
 
+## Kilit kartla gider: "Çıkar", "→" ve kararla devretme kartın kilidini siler; geri alınan kart kilitsiz döner, kilitli kartı
+## sonraki sütuna giden kişi sprint başlayınca sprintin kartına atanır.
+## FALSİFİKASYON: SprintSystem.remove'daki `card.erase("pinned")`ı sil → "taken out" FAIL; `_place`taki sprintten çıkan kartın
+## kilidini silen dalı sil → "sent on" FAIL; decision_carry'dekini sil → "carried" FAIL.
+static func _case_sprint_pin_leaves_with_card() -> String:
+	_seed_sprint()
+	var lock: Character = _sprint_hire("char_pin_go", HRConstants.ROLE_DEVELOPER)
+	for id in ["char_pin_mate_a", "char_pin_mate_b"]:
+		_sprint_hire(id, HRConstants.ROLE_DEVELOPER)
+	GameState.set_founder_in_sprint(false)
+	var k1s: Array = SprintCatalog.candidates("core").filter(
+		func(c: Dictionary) -> bool: return c.kind == "feature" and int(c.target_tier) == 1)
+	var cards: Dictionary = GameState.product.cards
+	for card in k1s.slice(0, 2):
+		SprintSystem.add(card.id)
+		if not cards.has(card.id):
+			return "fixture: the sprint did not take %s" % card.id
+		cards[card.id].need = [0.0, 40.0, 0.0]
+	var stay: Dictionary = cards[k1s[0].id]
+	var moved: Dictionary = cards[k1s[1].id]
+	# 1 · "Çıkar": işlenmiş kart aday olarak saklanır, kilidi saklanmaz; geri alınınca kilitsiz döner.
+	if SprintSystem.pin_card(moved.id, lock.id, GameState.day + 14) != moved.id:
+		return "fixture: pin_card did not pin the planned card"
+	moved.progress[1] = 5.0
+	SprintSystem.remove(moved.id)
+	SprintSystem.add(moved.id)
+	if moved.id not in GameState.product.sprint.cards:
+		return "fixture: the sprint did not take %s back" % moved.id
+	if moved.has("pinned"):
+		return "taken out: the card came back with %s, want it without the lock" % [moved.pinned]
+	# 2 · "→": kilitli kart sonraki sütuna gider, kilit onunla gitmez; sprint başlayınca kişi sprintin kartında çalışır. Tasarımı
+	# olan kart sonraki sütunda önden hazırlananlar arasındadır (`ready_share`): kilit onda kalsaydı kişi boşta beklerdi.
+	moved.need = [8.0, 40.0, 0.0]
+	if SprintSystem.pin_card(moved.id, lock.id, GameState.day + 14) != moved.id:
+		return "fixture: pin_card did not pin the card again"
+	SprintSystem.send_next(moved.id)
+	if moved.id not in GameState.product.next.cards or not SprintSystem.start():
+		return "fixture: the card did not move on or the sprint did not start"
+	if moved.has("pinned") or lock.id not in stay.assignees:
+		return "sent on: the card ahead reads %s and the sprint's card is staffed %s, want no lock and %s on it" % [
+			moved.get("pinned"), stay.assignees, lock.id]
+	# 3 · Kararla devretme (olay fiili `sprint_card_carry`): devreden kartın kilidi düşer.
+	if SprintSystem.pin_card(stay.id, lock.id, GameState.day + 14) != stay.id:
+		return "fixture: pin_card did not pin the running card"
+	GameState.product.decision = {"card_id": stay.id}
+	if SprintSystem.decision_carry() != stay.id:
+		return "fixture: the decision did not carry %s" % stay.id
+	if stay.has("pinned"):
+		return "carried: the card carried to the next sprint still reads %s, want the lock gone" % [stay.pinned]
+	return ""
+
+
 ## Planlama donmaz: önerecek kart kalmayınca sprint boş başlar ve numara ilerler; araştırma bir
 ## kapanış sonra yeniden açılır, sprint oyuncuyu bekler ve liderin planı onu alır.
 ## FALSİFİKASYON: SprintSystem._auto_start'ta _begin() yerine start() çağır → FAIL.
@@ -25624,12 +25677,13 @@ static func _case_paper_card_effects() -> String:
 			or card.has("send"):
 		return "after the cut the card reads cut %s and %s test points of %s, want half of each and no send" % [
 			card.cut, card.need[SprintSystem.TEST_PHASE], test_need]
-	# On dokuz kâğıdın hepsi gösterilir: başlık, gövde ve etiketler çözülür (açık süslü parantez kalmaz), her etkinin çipi vardır.
+	# Yirmi kâğıdın hepsi gösterilir: başlık, gövde ve etiketler çözülür (açık süslü parantez kalmaz), her etkinin çipi vardır.
 	var account: Customer = _incident_account("co_render", "Render Co", "retail", 40, 1800)
 	var slots: Dictionary = {
 		"employee": {"type": "employee", "id": _sprint_hire("char_render_dev", HRConstants.ROLE_DEVELOPER).id, "bound_day": GameState.day},
 		"founder": {"type": "founder", "id": CharacterRegistry.get_founder().id, "bound_day": GameState.day},
 		"customer": {"type": "customer", "id": account.id, "bound_day": GameState.day}}
+	slots["lead"] = {"type": "employee", "id": _sprint_hire("char_render_lead", HRConstants.ROLE_DEVELOPER).id, "bound_day": GameState.day}
 	var seen := 0
 	for path in DirAccess.get_files_at("res://data/events/cards/product"):
 		var paper: Dictionary = EvCatalog.card("product." + String(path).trim_suffix(".json"))
@@ -25651,8 +25705,8 @@ static func _case_paper_card_effects() -> String:
 		for text in words:
 			if String(text) == "" or String(text).contains("{") or String(text).contains("}"):
 				return "%s reads '%s'" % [paper.id, text]
-	if seen != 19:
-		return "%d of the 19 developer, no tester, solo and system papers were rendered" % seen
+	if seen != 20:
+		return "%d of the 20 developer, no tester, solo and system papers were rendered" % seen
 	return ""
 
 
@@ -26460,7 +26514,7 @@ static func _case_paper_account_selectors() -> String:
 	return ""
 
 
-## B6a · Yirmi beş kâğıdın hepsi gösterilir: başlık, gövde ve etiketler çözülür (açık süslü parantez kalmaz), seçeneklerin
+## B6a · Yirmi yedi kâğıdın hepsi gösterilir: başlık, gövde ve etiketler çözülür (açık süslü parantez kalmaz), seçeneklerin
 ## çipleri hesaplanır; yeni seam'ler kâğıt yokken de okunur.
 ## FALSİFİKASYON: bir kartın metnindeki `{dev}`i `{worker}` yap → çözülmemiş parantez FAIL; bir fiilin çip kolunu sil →
 ## çipsiz seçenek FAIL.
@@ -26477,7 +26531,9 @@ static func _case_paper_cards_render() -> String:
 	var ctx: Dictionary = {
 		"employee": {"type": "employee", "id": "char_inc_test", "bound_day": GameState.day},
 		"dev": {"type": "employee", "id": "char_inc_dev", "bound_day": GameState.day},
-		"customer": {"type": "customer", "id": "co_marmara", "bound_day": GameState.day}}
+		"customer": {"type": "customer", "id": "co_marmara", "bound_day": GameState.day},
+		"taker": {"type": "employee", "id": _sprint_hire("char_b6a_taker", HRConstants.ROLE_DEVELOPER).id, "bound_day": GameState.day},
+		"rival": {"type": "rival", "id": RivalRegistry.get_by_type("erp")[0].id, "bound_day": GameState.day}}
 	var seen := 0
 	for path in DirAccess.get_files_at("res://data/events/cards/product"):
 		var card: Dictionary = EvCatalog.card("product." + String(path).trim_suffix(".json"))
@@ -26498,8 +26554,8 @@ static func _case_paper_cards_render() -> String:
 		for text in words:
 			if String(text) == "" or String(text).contains("{") or String(text).contains("}"):
 				return "%s reads '%s'" % [card.id, text]
-	if seen != 25:
-		return "%d of the 25 papers were rendered" % seen
+	if seen != 27:
+		return "%d of the 27 papers were rendered" % seen
 	return ""
 
 

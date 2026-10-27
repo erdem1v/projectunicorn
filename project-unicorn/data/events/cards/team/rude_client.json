@@ -1,0 +1,179 @@
+{
+  "id": "team.rude_client",
+  "version_scope": "demo",
+  "category": "team",
+  "tick": "daily",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "customer_abuse",
+  "family_subject": {
+    "once": true
+  },
+  "delay_weeks": [
+    0,
+    1
+  ],
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      1,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0,
+    "subject_tenure_by_slot": {
+      "customer": 4,
+      "employee": 4
+    }
+  },
+  "guards": {
+    "market": "b2b",
+    "product_live": true
+  },
+  "scope": {
+    "customer": {
+      "type": "customer",
+      "required": true,
+      "select": "random",
+      "where": {
+        "all": [
+          {
+            "entity_seam": "musteri.bugs",
+            "scope": "customer",
+            "op": ">=",
+            "value": 1
+          },
+          {
+            "entity_seam": "musteri.is_assigned",
+            "scope": "customer",
+            "op": "==",
+            "value": true
+          }
+        ]
+      }
+    },
+    "employee": {
+      "type": "employee",
+      "required": true,
+      "select": "account_rep"
+    },
+    "founder": {
+      "type": "founder",
+      "required": true
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 26
+  },
+  "latch_key": "entity",
+  "condition": {
+    "all": [
+      {
+        "seam": "sales.is_b2b",
+        "op": "==",
+        "value": true
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "take_over",
+      "outcome_id": "take_over",
+      "effects": [
+        {
+          "verb": "take_account",
+          "scope": "customer"
+        },
+        {
+          "verb": "productivity_mod",
+          "scope": "founder",
+          "pct": -15,
+          "weeks": 2
+        },
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "id": "call_boss",
+      "outcome_id": "call_boss",
+      "effects": [
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": 6
+        },
+        {
+          "verb": "trust_delta",
+          "scope": "customer",
+          "amount": -4
+        }
+      ],
+      "check": {
+        "odds_seam": "olay.odds_15",
+        "on_pass": [
+          {
+            "verb": "account_notice",
+            "scope": "customer",
+            "reason": "rude_call"
+          }
+        ],
+        "on_fail": []
+      }
+    },
+    {
+      "id": "tell_cope",
+      "outcome_id": "tell_cope",
+      "effects": [
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": -6
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Telefon: {customer}",
+      "body": "{customer} muhasebe müdürü yarım saat boyunca telefonda bana bağırdı, sonunda “sizin gibi çocuklarla iş yapmak zorunda kaldık” diye söylenip kapattı. Geliştirme ekibi hatayı buldu, akşama düzeltirler. Ama onunla bir daha ben konuşmak istemiyorum.",
+      "options": {
+        "take_over": "{customer} ile telefonda bundan sonra sen konuş",
+        "call_boss": "Müdürü ara, ekibine böyle konuşamayacağını söyle",
+        "tell_cope": "Ona “müşteri bu, idare et” de"
+      },
+      "expire_note": "Cevap gelmedi, temsilci aramayı tek başına taşıdı ve morali düştü."
+    },
+    "en": {
+      "title": "The call with {customer}",
+      "body": "The finance manager at {customer} yelled at me on the phone for half an hour, then muttered “so now we're stuck with kids like you” and hung up. The dev team found the bug and will fix it tonight. But I'm not talking to that manager again.",
+      "options": {
+        "take_over": "From now on, you take calls from {customer}",
+        "call_boss": "Call the manager, say nobody talks to your team like that",
+        "tell_cope": "Tell {employee} “it's the customer, just deal with it”"
+      },
+      "expire_note": "No answer came, so the rep carried the calls alone and morale dropped."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "change_morale",
+        "scope": "employee",
+        "amount": -8
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

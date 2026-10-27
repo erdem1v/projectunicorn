@@ -1,0 +1,129 @@
+{
+  "id": "team.wedding_invite",
+  "version_scope": "demo",
+  "category": "team",
+  "tick": "daily",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "employee_life",
+  "family_subject": {
+    "once": true
+  },
+  "delay_weeks": [
+    1,
+    6
+  ],
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      1,
+      null
+    ],
+    "product": "any",
+    "modules": [],
+    "min_week": 26,
+    "subject_tenure_weeks": 26
+  },
+  "guards": {},
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true,
+      "select": "random"
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 26
+  },
+  "latch_key": "entity",
+  "options": [
+    {
+      "id": "gold_full",
+      "outcome_id": "gold_full",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount_seam": "hr.salary",
+          "amount_slot": "employee",
+          "amount_mult": -0.1,
+          "label": "gift"
+        },
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": 10
+        }
+      ]
+    },
+    {
+      "id": "gold_quarter",
+      "outcome_id": "gold_quarter",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount_seam": "hr.salary",
+          "amount_slot": "employee",
+          "amount_mult": -0.03,
+          "label": "gift"
+        },
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": 5
+        }
+      ]
+    },
+    {
+      "id": "flowers",
+      "outcome_id": "flowers",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount_seam": "hr.salary",
+          "amount_slot": "employee",
+          "amount_mult": -0.015,
+          "label": "gift"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Düğün",
+      "body": "Patron, ayın sonunda evleniyorum. Düğünümde seni de görmeyi çok isterim, gelebilirsen çok sevinirim.",
+      "options": {
+        "gold_full": "Düğüne git, tam altın tak",
+        "gold_quarter": "Düğüne git, çeyrek altın tak",
+        "flowers": "Gidemeyeceğini söyle, çiçek gönder"
+      },
+      "expire_note": "Cevap gelmedi, davet karşılıksız kaldı ve çalışanın morali düştü."
+    },
+    "en": {
+      "title": "Wedding",
+      "body": "Boss, I'm getting married at the end of the month. I'd love to see you at the wedding, it would make me really happy if you could come.",
+      "options": {
+        "gold_full": "Go, and bring an expensive gift",
+        "gold_quarter": "Go, and bring a modest gift",
+        "flowers": "Say you can't make it, send flowers"
+      },
+      "expire_note": "No answer came, so the invitation went unanswered and morale dropped."
+    }
+  },
+  "expires_weeks": 2,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "change_morale",
+        "scope": "employee",
+        "amount": -6
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

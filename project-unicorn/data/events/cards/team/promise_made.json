@@ -1,0 +1,189 @@
+{
+  "id": "team.promise_made",
+  "version_scope": "demo",
+  "category": "team",
+  "tick": "daily",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "team_promise",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "narrow window: while the promise's sprint runs, before its last week",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      2,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0,
+    "subject_tenure_by_slot": {
+      "customer": 0,
+      "employee": 0,
+      "dev": 0
+    },
+    "fresh_reason": "the promise running late does not depend on how long the account or the people have been here"
+  },
+  "guards": {
+    "market": "b2b",
+    "product_live": true
+  },
+  "scope": {
+    "customer": {
+      "type": "customer",
+      "required": true,
+      "select": "random",
+      "where": {
+        "all": [
+          {
+            "entity_seam": "musteri.has_open_promise",
+            "scope": "customer",
+            "op": "==",
+            "value": true
+          },
+          {
+            "entity_seam": "musteri.promise_late",
+            "scope": "customer",
+            "op": "==",
+            "value": true
+          }
+        ]
+      }
+    },
+    "employee": {
+      "type": "employee",
+      "required": true,
+      "select": "quarter_pm"
+    },
+    "dev": {
+      "type": "employee",
+      "required": true,
+      "select": "top_skill:engineering",
+      "where": {
+        "entity_seam": "hr.role",
+        "scope": "dev",
+        "op": "==",
+        "value": "developer"
+      }
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 26
+  },
+  "latch_key": "entity",
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.sprint_last_week",
+        "op": "==",
+        "value": false
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "focus",
+      "outcome_id": "focus",
+      "effects": [
+        {
+          "verb": "assign_to",
+          "card": "promise",
+          "scope": "dev",
+          "weeks_seam": "urun.weeks_to_month_end"
+        },
+        {
+          "verb": "change_morale",
+          "scope": "dev",
+          "amount": -6
+        }
+      ]
+    },
+    {
+      "id": "ask_time",
+      "outcome_id": "ask_time",
+      "requires": {
+        "entity_seam": "musteri.promise_extended",
+        "scope": "customer",
+        "op": "==",
+        "value": false
+      },
+      "effects": [
+        {
+          "verb": "trust_delta",
+          "scope": "customer",
+          "amount": -6
+        },
+        {
+          "verb": "promise_extend",
+          "scope": "customer"
+        }
+      ]
+    },
+    {
+      "id": "drop",
+      "outcome_id": "drop",
+      "effects": [
+        {
+          "verb": "promise_break",
+          "scope": "customer"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Verdiğimiz söz: {customer}",
+      "body": "{customer} için verdiğimiz sözü tutmak istiyorsak {seam:musteri.promise_card} ay sonunda hazır olmalı. Bunun için {dev} ay sonuna kadar başka hiçbir şeye bakmamalı. Nasıl ilerleyelim?",
+      "options": {
+        "focus": "{dev} ay sonuna kadar yalnız buna baksın",
+        "ask_time": "Müşteriyi ara, ek süre iste",
+        "drop": "Bu özelliğin şimdilik olmayacağını söyle"
+      },
+      "locked_reasons": {
+        "ask_time": "Bu sözü bir kez uzattık."
+      },
+      "expire_note": "Cevap gelmedi, söz olduğu gibi kaldı ve ürün yöneticisinin morali düştü."
+    },
+    "en": {
+      "title": "The promise we made to {customer}",
+      "body": "We promised {customer} {seam:musteri.promise_card} by the end of the month. To make that, {dev} can't look at anything else until then. How do we proceed?",
+      "options": {
+        "focus": "{dev} works on nothing else until month end",
+        "ask_time": "Call the customer, ask for more time",
+        "drop": "Tell them the feature isn't coming for now"
+      },
+      "locked_reasons": {
+        "ask_time": "We have already moved this promise once."
+      },
+      "expire_note": "No answer came, so the promise stood as it was and the product manager's morale dropped."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "change_morale",
+        "scope": "employee",
+        "amount": -4
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

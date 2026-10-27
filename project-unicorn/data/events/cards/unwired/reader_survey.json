@@ -1,0 +1,44 @@
+{
+  "id": "world.reader_survey",
+  "version_scope": "draft",
+  "category": "world",
+  "schema": 3,
+  "_draft": {
+    "durum": "park",
+    "gerekce": "B2C pazaryeri Faz E'de kurulacak",
+    "kaynak_kayit": "dunya.okur_anketi",
+    "tr_en_onay_bekliyor": false,
+    "tr": {
+      "title": "Okur anketi",
+      "body": "Yarın yayımlanacak okur anketimizde alışveriş siteleri arasında ilk kez listeye girdiniz, dokuzuncusunuz. Önceden haber vermek istedim, belki okurlarımıza bir şey hazırlamak istersiniz.",
+      "sender": "TeknoGündem editörü",
+      "options": {
+        "thank": "Teşekkür et",
+        "discount_code": "Okurlara ilk siparişte indirim kodu ver"
+      }
+    },
+    "en": {
+      "title": "Reader survey",
+      "body": "Our reader survey comes out tomorrow, and you've made the list of shopping sites for the first time, at number nine. I wanted to give you a heads-up in case you'd like to offer our readers something.",
+      "sender": "Editor, TeknoGündem",
+      "options": {
+        "thank": "Thank them",
+        "discount_code": "Give readers a first-order discount code"
+      }
+    },
+    "secenek_sonuclari": {
+      "thank": {
+        "tr": "Marka +2, Kitle +%2",
+        "en": "Brand +2, Audience +2%"
+      },
+      "discount_code": {
+        "tr": "Marka +2, Kitle +%6, bu ayın geliri −$1.500",
+        "en": "Brand +2, Audience +6%, this month's revenue −$1,500"
+      }
+    },
+    "secenek_sonuclari_notu": "Örnek özet satırları (örnek adlar taşır); oyundaki çip etkiden yazılır, bu satırlar kartın metni değildir.",
+    "kosul_notu": "B2C pazaryeri yayında, yıl sonu; sıra oyuncunun payından gelir (örnekte dokuzuncu).",
+    "kod_notu": "Karar 2'nin 'ayın gelirinden düşer' fiili yok: FinanceSystem'de aylık gelir kalemine yazan olay fiili yok (apply_one_time_income aylık gelire yazmaz) [VOCAB?]. [COND?] B2C pazaryeri yayında, yıl sonu, oyuncunun alışveriş siteleri arasındaki sırası: pazaryeri ve sıra kavramı Faz E. [VOCAB?] okur indirimini ayın gelir kalemine yazan olay fiili yok.",
+    "yuvalar": []
+  }
+}

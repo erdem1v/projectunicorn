@@ -1,0 +1,214 @@
+{
+  "id": "product.sprint_dev_code_review",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "sprint_dev",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "speaker_role": "developer",
+  "stage": "dev",
+  "pool_group": "developer",
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "request",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      2,
+      null
+    ],
+    "product": "any",
+    "modules": [],
+    "min_week": 0,
+    "subject_tenure_weeks": 0,
+    "fresh_reason": "the speaker and the senior are the people on the card on the desk"
+  },
+  "guards": {},
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true,
+      "where": {
+        "entity_seam": "hr.level",
+        "scope": "employee",
+        "op": "==",
+        "value": 0
+      }
+    },
+    "lead": {
+      "type": "employee",
+      "required": true,
+      "select": "most_senior",
+      "where": {
+        "all": [
+          {
+            "entity_seam": "hr.role",
+            "scope": "lead",
+            "op": "==",
+            "value": "developer"
+          },
+          {
+            "entity_seam": "hr.level",
+            "scope": "lead",
+            "op": "==",
+            "value": 2
+          }
+        ]
+      }
+    }
+  },
+  "latch": {
+    "cooldown_weeks": 52,
+    "max_fires": 3
+  },
+  "latch_key": "run",
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.sprint_running",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "urun.decision_phase",
+        "op": "==",
+        "value": 1
+      },
+      {
+        "seam": "urun.decision_card_late",
+        "op": "==",
+        "value": true
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "blockers_only",
+      "outcome_id": "blockers_only",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": -5
+        },
+        {
+          "verb": "sprint_card_trim",
+          "bugs": 1
+        },
+        {
+          "verb": "change_morale",
+          "scope": "lead",
+          "amount": -4
+        }
+      ]
+    },
+    {
+      "id": "pair_up",
+      "outcome_id": "pair_up",
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "lead",
+          "pct": -20,
+          "weeks": 1
+        },
+        {
+          "verb": "productivity_mod",
+          "scope": "employee",
+          "pct": -20,
+          "weeks": 1
+        },
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": 6
+        }
+      ]
+    },
+    {
+      "id": "follow_up",
+      "outcome_id": "follow_up",
+      "effects": [
+        {
+          "verb": "sprint_card_trim",
+          "amount": 5,
+          "follow": true
+        },
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "id": "close_all",
+      "outcome_id": "close_all",
+      "effects": [
+        {
+          "verb": "sprint_card_effort",
+          "amount": 10
+        },
+        {
+          "verb": "line_harden",
+          "line": "decision"
+        },
+        {
+          "verb": "change_morale",
+          "scope": "employee",
+          "amount": -6
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Kod incelemesi",
+      "body": "{lead} kodumu üçüncü kez geri çevirdi. Haklı olabilir ama kart bu yüzden sprinte yetişmeyecek, artık ne yazsam yanlış geliyor.",
+      "options": {
+        "blockers_only": "{lead} yalnız hataya yol açacak notlarda dursun, gerisini geçsin",
+        "pair_up": "{lead} ile {employee} bir gün aynı masaya otursun, notları birlikte kapatsınlar",
+        "follow_up": "Kart bu sprintte bu hâliyle kalsın, {employee} notları sonraki sprintte düzeltsin",
+        "close_all": "{employee} bu sefer notların hepsini kapatsın, kart sağlam çıksın"
+      },
+      "expire_note": "Cevap gelmedi, {employee} notları kendi başına kapattı; kartın işi büyüdü, morali düştü."
+    },
+    "en": {
+      "title": "Code review",
+      "body": "{lead} sent my code back for the third time. Maybe with good reason, but the card won't make the sprint now, and everything I write feels wrong.",
+      "options": {
+        "blockers_only": "{lead} only holds the card for notes that would cause bugs",
+        "pair_up": "Sit {lead} and {employee} down together for a day to clear the notes",
+        "follow_up": "Keep the card as it is this sprint, {employee} fixes the notes next sprint",
+        "close_all": "{employee} closes every note this time, the card ships solid"
+      },
+      "expire_note": "No answer came, so {employee} closed the notes alone, which grew the card and cost morale."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "sprint_card_effort",
+        "amount": 5
+      },
+      {
+        "verb": "morale_crew",
+        "crew": "speaker",
+        "amount": -4
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

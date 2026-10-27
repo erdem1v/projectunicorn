@@ -1,0 +1,133 @@
+{
+  "id": "rival.outage",
+  "version_scope": "demo",
+  "category": "rival",
+  "tick": "daily",
+  "class": "paper",
+  "sender": "employee",
+  "tags": [],
+  "schema": 3,
+  "family": "rival_exit",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "delay_weeks": [
+    1,
+    6
+  ],
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      1,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0,
+    "subject_tenure_by_slot": {
+      "employee": 4
+    }
+  },
+  "guards": {
+    "market": "b2b",
+    "product_live": true
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "latch_key": "entity",
+  "scope": {
+    "rival": {
+      "type": "rival",
+      "required": true,
+      "select": "market_rival:startup",
+      "where": {
+        "entity_seam": "rival.status",
+        "scope": "rival",
+        "op": "==",
+        "value": "QUIET"
+      }
+    },
+    "employee": {
+      "type": "employee",
+      "required": true,
+      "select": "random",
+      "where": {
+        "entity_seam": "hr.role",
+        "scope": "employee",
+        "op": "==",
+        "value": "sales_rep"
+      }
+    }
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "sales.is_b2b",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "sales.account_count",
+        "op": ">=",
+        "value": 1
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "demo_three",
+      "outcome_id": "demo_three",
+      "effects": [
+        {
+          "verb": "add_prospect",
+          "archetype": "small",
+          "source": "rival_outage"
+        },
+        {
+          "verb": "add_prospect",
+          "archetype": "small",
+          "source": "rival_outage"
+        },
+        {
+          "verb": "add_prospect",
+          "archetype": "mid",
+          "source": "rival_outage"
+        },
+        {
+          "verb": "productivity_mod",
+          "scope": "employee",
+          "pct": -50,
+          "weeks": 2
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "{rival} çökmüş",
+      "body": "{rival} iki gündür açılmıyor ve telefonlarına da kimse çıkmıyor. Müşterilerinden üçü bu sabah bizi aradı, ay sonu yaklaşırken kayıtlarına ulaşamıyorlar.",
+      "options": {
+        "demo_three": "{employee} bu hafta üçüne de demo yapsın"
+      },
+      "expire_note": "Cevap gitmedi, hafta geçti ve {rival} yeniden açıldı."
+    },
+    "en": {
+      "title": "{rival} is down",
+      "body": "{rival} has been down for two days and nobody's answering their phones. Three of their customers called us this morning; month end is coming and they can't get to their records.",
+      "options": {
+        "demo_three": "Have {employee} demo all three this week"
+      },
+      "expire_note": "No answer went back, and by the end of the week {rival} was back up."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": {
+    "penalties": []
+  },
+  "expire_note": "expire_note"
+}

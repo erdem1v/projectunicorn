@@ -46,7 +46,7 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - `scripts/data_models/event.gd` (21) `GameEvent`, `event_choice.gd` (11) `EventChoice`: kartın çizilebilir görünümü, kaydedilmez; `scripts/systems/module_locks.gd` (35): `ModuleLocks` (delays ve seams_world okur)
 - `data/events/cards/<kategori>/*.json`: 146 yüklenen kart (customer 17, founder 7, funding 25, product 57, rival 6, team 9, world 8, `_fixtures` 17 üst düzey); `unwired/` 3 kart yüklenmez
 - `data/events/arcs/*.json`: 3 ark (`fixture_subject`, `fixture_thesis`, `soft_cap_stretch`); `cards/_fixtures/README.md` motor test içeriğini anlatır
-- `tools/lint_baseline.json` (kabul edilmiş bulgular, 7 kayıt), `tools/lint_v3_frozen.json` (v3 öncesi hikâye kartları), `tools/plausibility_run.sh`, `tools/gen_signal_manifest.py` (-> `docs/EVENT_SIGNAL_MANIFEST.md`)
+- `tools/lint_baseline.json` (kabul edilmiş bulgular, 10 kayıt), `tools/lint_v3_frozen.json` (v3 öncesi hikâye kartları), `tools/plausibility_run.sh`, `tools/gen_signal_manifest.py` (-> `docs/EVENT_SIGNAL_MANIFEST.md`)
 - Tüketiciler (başka sistem sayfasında): `scripts/tabs/events/mail_pane.gd` (885, okuma bölmesi), `scripts/ui/components/inbox.gd` (570), `scripts/tabs/events_tab.gd` (369), `scripts/systems/mail_clock.gd` (121)
 
 ## Giriş noktaları
@@ -161,6 +161,8 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - `schedule_event.delay_weeks` sayı ya da `[lo, hi]`; aralığın haftası `EvDice.unit("schedule", gün, zamanlayan kart, hedef kart)`'tan çekilir.
   ↳ Çip hedef kartın her yolda (bütün şıklarda ve süre dolumunda) birebir aynı indirdiği etkileri bekleme başlığıyla yazar
   ↳ (`EvChips.landing`); ortak etki yoksa ya da hepsi sessizse çipsizdir. Lint dalda ve `on_expire`da zamanlananı da "referanslı" sayar (`_card_effects`)
+- Takip kartı ebeveyniyle aynı `family`de `family_subject` taşırsa hiç gelmez: ebeveyn özneyi damgalamıştır, katman 2b `-1` verir ve `_propose` zamanlanmış girdiyi
+  ↳ sessizce düşürür (`engine.gd:436-442`; `follows` yalnız 1b'den muaftır). Takip kartı kendi ailesini taşır (`team.master_degree_farewell`: `study_farewell`)
 - `amount_slot`: `amount_seam` bir ENTITY seam ise tutar o yuvanın varlığı için okunur (`EvEffects.amount(e, ctx)`); çip, geçmiş satırı ve bot aynı `ctx` ile okur (bot `EventGate.active_context()`). Lint seam'in türünü yuvanın türüyle eşler
 - Seçiciler `EvScope.SELECTORS` listesindedir; lint 17.12 listede olmayan `select`i reddeder (`:` ile biten ad önektir, `market_rival:giant`). `random` ve rakip seçicileri tohumludur: `EvScope.resolve(yuvalar, verilen, kart_id)` gün,
   ↳ kart ve yuvanın hash'iyle
@@ -197,8 +199,10 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
   ↳ kartlar `SprintBridges.promise_cards`tan), `musteri.promise_extended`, `musteri.promise_card` (kademenin ad ANAHTARI: geçmiş satırı donar, ekran çevirir), `musteri.has_notice`, `sales.big_accounts`,
   ↳ `time.quarter_start`. Seçiciler `rep_lead` (bir çalışanın işlediği aday) ve `lead_rep` (bağlı adayı işleyen çalışan; kurucunun masasındaki aday kimseyi adlandırmaz). Sprint seçicileri `decision_dev` (bekleyen karar kartının atananlarından ilk geliştirici; kâğıt kart doluyken istenir)
   ↳ ve `quarter_pm` (`SprintCatalog.quarter_pm`); kimse yoksa yuva bağlanmaz. Seam `urun.line_tier.<hat>` (GLOBAL INT; her hat için kayıtlı, paylaşılan hat temel kimliğiyle, `ProductState.line_tier`)
+  ↳ ve `musteri.can_request.<hat>` (ENTITY BOOL, `seams_product.gd:222`; `queue_card`ın o hesap için o hatta talep açabildiği an: `SprintBridges.request_step` boş değil; `customer.finance_team`ın talep şıkkının kilidi)
 - Kart nakdinin etiketleri `ONE_TIME_LABELS`ta; `equipment`, `gift` ve `award` (pozitif `add_cash`) bu yüzden ekranda sözcük olarak çıkar
 - Yuva `"subject": false` (yalnız lint): çalışan yuvası gönderen ya da anılan kişidir, kartın öznesi değildir; O4 o yuvayı özne saymaz
+  ↳ O4 (`_touched_slots` `lint.gd:813`), şıkkın zamanladığı ve `follows` ile bu karta bağlı takip kartının aynı adlı yuvalarda yaptığını da şıkkın sayar (özyineli); `promise_extend` ve `promise_break` müşteri fiilidir
 
 - Fiil sözlüğü ile `_apply` ayrışık: `start_training`, `add_customer`, `convert_audience`, `open_paid_tier`, `change_salary`, `fire_employee` listelerde var ama `_apply` kolu YOK;
   ↳ çağrı `not implemented` döner (`effects.gd:663-665`)

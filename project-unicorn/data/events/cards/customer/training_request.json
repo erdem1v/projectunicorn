@@ -1,0 +1,199 @@
+{
+  "id": "customer.training_request",
+  "version_scope": "demo",
+  "category": "customer",
+  "tick": "daily",
+  "class": "paper",
+  "sender": "contact",
+  "tags": [],
+  "schema": 3,
+  "family": "customer_onboarding",
+  "family_subject": {
+    "cooldown_weeks": 26
+  },
+  "delay_weeks": [
+    0,
+    0
+  ],
+  "delay_reason": "imzanın ertesi haftası: dar pencere",
+  "plausibility": {
+    "phase_band": [
+      "bootstrap_team",
+      "traction",
+      "series_a"
+    ],
+    "headcount": [
+      1,
+      null
+    ],
+    "product": "live",
+    "modules": [],
+    "min_week": 0,
+    "subject_tenure_by_slot": {
+      "customer": 0,
+      "rep": 0
+    },
+    "fresh_reason": "yeni hesabın ilk haftası; temsilci hesabın kendi temsilcisi"
+  },
+  "guards": {
+    "market": "b2b",
+    "product_live": true
+  },
+  "latch": {
+    "cooldown_weeks": 8
+  },
+  "latch_key": "entity",
+  "scope": {
+    "customer": {
+      "type": "customer",
+      "required": true,
+      "select": "random",
+      "where": {
+        "all": [
+          {
+            "entity_seam": "musteri.scale",
+            "scope": "customer",
+            "op": "==",
+            "value": 2
+          },
+          {
+            "entity_seam": "musteri.tenure_weeks",
+            "scope": "customer",
+            "op": "<=",
+            "value": 1
+          },
+          {
+            "entity_seam": "musteri.onboarding_short",
+            "scope": "customer",
+            "op": "==",
+            "value": true
+          }
+        ]
+      }
+    },
+    "rep": {
+      "type": "employee",
+      "required": true,
+      "select": "account_rep"
+    }
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "sales.is_b2b",
+        "op": "==",
+        "value": true
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "visit",
+      "outcome_id": "visit",
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "rep",
+          "pct": -20,
+          "weeks": 1
+        },
+        {
+          "verb": "trust_delta",
+          "scope": "customer",
+          "amount": 8
+        }
+      ]
+    },
+    {
+      "id": "paid",
+      "outcome_id": "paid",
+      "effects": [
+        {
+          "verb": "add_cash",
+          "amount_seam": "musteri.mrr",
+          "amount_slot": "customer",
+          "amount_mult": 0.5,
+          "label": "training"
+        },
+        {
+          "verb": "productivity_mod",
+          "scope": "rep",
+          "pct": -40,
+          "weeks": 1
+        },
+        {
+          "verb": "trust_delta",
+          "scope": "customer",
+          "amount": -4
+        }
+      ]
+    },
+    {
+      "id": "doc",
+      "outcome_id": "doc",
+      "effects": [
+        {
+          "verb": "productivity_mod",
+          "scope": "rep",
+          "pct": -40,
+          "weeks": 1
+        },
+        {
+          "verb": "trust_delta",
+          "accounts": "onboarding",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "id": "help_center",
+      "outcome_id": "help_center",
+      "effects": [
+        {
+          "verb": "queue_card",
+          "area": "onboarding"
+        },
+        {
+          "verb": "trust_delta",
+          "scope": "customer",
+          "amount": -4
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Eğitim rica ediyoruz",
+      "body": "Ekibimiz bugüne kadar her şeyi kâğıtta tuttu, bizim için yeni bir sistem. Önümüzdeki hafta biri gelip ürünü anlatabilir mi? Yoksa ilk ay kimsenin sisteme girmeyeceğini şimdiden söyleyebilirim.",
+      "options": {
+        "visit": "{rep} gelecek hafta bir gün gidip anlatsın",
+        "paid": "İki günlük eğitim teklif et, ücretini iste",
+        "doc": "{rep} ekran ekran anlatan bir onboarding dokümanı hazırlasın",
+        "help_center": "Ürüne yardım merkezi ekle"
+      },
+      "expire_note": "{customer} ilk ayında sistemi kendi başına çözmeye çalıştı."
+    },
+    "en": {
+      "title": "Could you train our team?",
+      "body": "Our team has always kept everything on paper, so this is a whole new system for us. Could someone come over next week and walk us through it? Otherwise I can already tell you nobody will log in for the first month.",
+      "options": {
+        "visit": "Send {rep} over for a day next week",
+        "paid": "Offer a paid two-day training",
+        "doc": "Have {rep} write a screen-by-screen onboarding guide",
+        "help_center": "Add a help center to the product"
+      },
+      "expire_note": "{customer} spent its first month working the system out alone."
+    }
+  },
+  "expires_weeks": 2,
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "trust_delta",
+        "scope": "customer",
+        "amount": -6
+      }
+    ]
+  },
+  "expire_note": "expire_note"
+}

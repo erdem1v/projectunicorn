@@ -1,0 +1,57 @@
+{
+  "id": "customer.wrong_price_listing",
+  "version_scope": "draft",
+  "category": "customer",
+  "schema": 3,
+  "_draft": {
+    "durum": "park",
+    "gerekce": "B2C pazaryeri Faz E'de kurulacak",
+    "kaynak_kayit": "pazaryeri.yanlis_fiyat",
+    "tr_en_onay_bekliyor": true,
+    "tr": {
+      "title": "Halılar",
+      "body": "Dün akşam $125'lik bir halıyı yanlışlıkla $1,25 diye yüklemişim. Sabaha kadar kırk tane satılmış. Sistem bana bir kere bile sormadı, şimdi ne olacak?",
+      "sender": "{customer} mağaza sahibi",
+      "options": {
+        "cancel_orders": "Siparişleri iptal et, yüklemeye fiyat uyarısı ekleyelim",
+        "cover_difference": "Siparişler gitsin, farkı mağazaya biz ödeyelim",
+        "store_takes_loss": "Siparişler geçerli, zarar mağazada kalsın"
+      }
+    },
+    "en": {
+      "title": "The rugs",
+      "body": "Last night I accidentally listed a $125 rug for $1.25. By morning, forty of them had sold. Your system didn't ask me even once. What happens now?",
+      "sender": "Owner of {customer}",
+      "options": {
+        "cancel_orders": "Cancel the orders, and we'll add a price warning to uploads",
+        "cover_difference": "Let the orders ship, we pay the store the difference",
+        "store_takes_loss": "The orders stand, the store takes the loss"
+      }
+    },
+    "secenek_sonuclari": {
+      "cancel_orders": {
+        "tr": "Kitle −%1, sonraki sprinte bir Ürün Yükleme kartı girer",
+        "en": "Audience −1%, a Product Upload card joins the next sprint"
+      },
+      "cover_difference": {
+        "tr": "Kasa −$4.950, Kitle +%1, Kilim Evi'nin memnuniyeti artar",
+        "en": "Cash −$4,950, Audience +1%, Kilim Evi's satisfaction rises"
+      },
+      "store_takes_loss": {
+        "tr": "Kilim Evi'nin memnuniyeti çok düşer, %15 ihtimalle pazaryerinden ayrılır",
+        "en": "Kilim Evi's satisfaction drops sharply, 15% chance it leaves the marketplace"
+      }
+    },
+    "secenek_sonuclari_notu": "Örnek özet satırları (örnek adlar taşır); oyundaki çip etkiden yazılır, bu satırlar kartın metni değildir.",
+    "kosul_notu": "Pazaryeri yayında, Ürün Yükleme hattında fiyat denetimi kademesi yokken. Mağaza yuvası: satış hacmi orta bir mağaza. Tutar mağazanın bir ürününün fiyatından ve kırk siparişten türer (örnekte 40 × $123,75 = $4.950).",
+    "kod_notu": "check dalı ve çipi (Y03, Y04) ile sonraki sprinte kart (queue_card, Y38) artık var; pazaryeri kavramları Faz E. [COND?] pazaryeri yayında, Ürün Yükleme hattında fiyat denetimi kademesi yokken: pazaryeri ve hat kademesi Faz E. [VOCAB?] mağaza memnuniyeti, mağazanın pazaryerinden ayrılması ve sipariş iptali Faz E'de kurulacak.",
+    "yuvalar": [
+      {
+        "slot": "customer",
+        "tur": "customer",
+        "secici": "pazaryeri mağazası, satış hacmi orta (tohumlu rastgele)",
+        "kosul": "muhatap unvanla: mağaza sahibi"
+      }
+    ]
+  }
+}
