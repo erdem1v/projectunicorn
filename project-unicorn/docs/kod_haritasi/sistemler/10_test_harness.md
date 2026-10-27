@@ -85,7 +85,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - `RunProbe.PRESETS` `scripts/debug/run_probe.gd:188`: preset adı -> alan sözlüğü (`subtype`, `policy`, `vc`, `staff_cap`, `fix`, `desk`, `core_only`, `server`, `cash`, `accounts`, `staff`); 49 anahtar
 - `RunProbe.SMALL_CREW` `run_probe.gd:249`, `GROWTH_ROLES` `:1506`, `seed_crew()` `:2350`: ekip tohumlama; `seed_crew` oturtulamayan büyüklükte `false` döner (kimse işe alınmaz), çağıran bildirir: `--sprint-probe` `SPRINTPROBE ERROR`,
   ↳ `--tick-probe` `TICK ERROR`; ikisi de `team=` ile kullanır
-- Smoke paylaşılan kayıt yuvaları `manual_9001` / `manual_9002` (`SAVE_SLOT_A`, `SAVE_SLOT_B` `endgame_smoke.gd:10174`); onları kullanan vakalar paralel koşturulmaz (aşağıda Testler)
+- Smoke paylaşılan kayıt yuvaları `manual_9001` / `manual_9002` (`SAVE_SLOT_A`, `SAVE_SLOT_B` `endgame_smoke.gd:10177`); onları kullanan vakalar paralel koşturulmaz (aşağıda Testler)
 - `tools/lint_baseline.json` `tools/lint_v3_frozen.json`: kabul edilen lint bulguları; `--event-lint=baseline` yeniden yazar
 - Çekim PNG'leri `%APPDATA%\Godot\app_userdata\Project Unicorn\` (`user://`); EN `_en`, renk körü `_cb` soneki (`main.gd:654`)
 - `docs/EVENT_SIGNAL_MANIFEST.md`, `docs/content/events_draft/_vocabulary.md`: araçların ürettiği belgeler (`gen_signal_manifest.py`, `--event-vocab`)
@@ -95,7 +95,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - Harness çıktıları (`SMOKE`, `PROBE`, `TICK`, `TEMPO`, `CROWD`, `PAN`, `SPRINTPROBE` vb.) çevrilmez; `scripts/debug/` ve `scenes/debug/` `loc_residue` SKIP listesindedir (`loc_residue.gd:30-33`)
 - `main.gd` `scripts/` altında olduğu için Türkçe literal taşıyan fikstür satırları `# LOC-DATA <gerekçe>` işaretini ister (main.gd'de 91 işaret var)
 - `product_fixtures.gd` gerçek anahtarları `tr()` ile çözer (`PRODUCT_RESULT_*`, `PRODUCT_REVIEW_*`); metin o anki dilde, özel adlar düz kalır
-- `loc_residue.gd` ve `loc_csv_integrity` vakası (`endgame_smoke.gd:316`, gövde `:10859`) `strings.csv` anahtarlarını okur; `glyph_audit.gd` CSV'nin iki dilini okur
+- `loc_residue.gd` ve `loc_csv_integrity` vakası (`endgame_smoke.gd:316`, gövde `:10862`) `strings.csv` anahtarlarını okur; `glyph_audit.gd` CSV'nin iki dilini okur
 - `--lang=tr|en` bayrağını `Localization` okur (`scripts/autoload/localization.gd:20-53`); çekim dosya adına `_en` ekler
 
 ## Testler
@@ -122,14 +122,14 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
   ↳ `sheet_expiry_no_rejection`, `vc_weakest_area`, `hunt_offer_lifecycle`, `pivot_closes_hunt`, `frank_approach_lines_once`; Dünya: `market_*`, `rival_composite_table`, `news_feed_weights_and_no_repeat`, `news_piyasa_reason_lines`;
   ↳ Sonlar: `bankruptcy*`, `soft_cap_*`, `profit_*`, `ending_*`, `bootstrap_*`, `milestone_*`, `buyout_*`, `faced_flag_*`, `shutter_*`, `brand_collapse`, `cascade`, `pivot_accept`, `pivot_decline`; 05 Mesajlar ve teslim saati:
   ↳ `messages_*`, `inbox_no_night_stamp`, `mail_pending_survives_save`; 07 Olay motoru ve içerik: `event_*`, `ambient_*`, `harness_sniffer_matches_run_log`, `source_tag_speaker_wins`, `card_body_tokens_resolve`, `loc_event_en_coverage`,
-  ↳ `event_chip_coverage`, `quiet_cards_fill_empty_floor`
+  ↳ `event_chip_coverage`, `event_chip_live_targets` (canlı kartta hedefi boş çip çizilmez, boş kitapta uygulama hatasız), `event_chip_merge_same` (aynı çipler ×n, sayılı çip toplamla), `event_trust_chip_share` (güven çipi kartın payını okur), `quiet_cards_fill_empty_floor`
 - Paylaşılan kayıt yuvasına (`manual_9001`, `manual_9002`) yazan vakalar paralel koşturulmaz (koşturucu zorlamaz: `--all` sırayla koşar, elle paralel koşuda koruma yoktur): `account_ownership_round_trip`, `b2b_exit_notice`,
   ↳ `b2b_timed_discount`, `event_trust_delta_lasting`, `incident_save_roundtrip`, `look_registry_unique_and_saved`, `mail_pending_survives_save`, `market_save_roundtrip`, `meeting_cast_seeded_and_saved`,
   ↳ `messages_save_round_trip`, `month_history_save_typing`, `sales_offer_signing`, `sales_rep_close_die`, `sales_rep_loss_mail`, `save_backup_fallback`, `save_continuity_seeded`, `save_double_load_no_residue`,
   ↳ `save_roundtrip_fingerprint`, `save_v10_product_state`, `valuation_old_save_derives_seed`. Kendi yuvası olanlar yuvaları paylaşmaz: `legacy_v12_save_opens_live_table` (işlem kimlikli yuva),
   ↳ `sales_save_roundtrip_rev6` (`smoke_sales_v11`); `menu_state_machine` kayıt dizinini geçici bir dizine çevirir (`SaveManager._use_dir`);
   ↳ `milestone_paper_waits_for_card` gerçek kayıt dizinine bir `manual_<n>` yazıp siler (`_keep_run_for_main_menu`)
-- `all_scripts_load` (`endgame_smoke.gd:324,12310`) `scripts/` ve `scenes/` altındaki her `.gd`yi ayrık GDScript kopyasıyla derler; `addons/` kapsam dışı. `ResourceLoader.load` ve `reload()` motoru düşürür, kullanmayın.
+- `all_scripts_load` (`endgame_smoke.gd:324,12313`) `scripts/` ve `scenes/` altındaki her `.gd`yi ayrık GDScript kopyasıyla derler; `addons/` kapsam dışı. `ResourceLoader.load` ve `reload()` motoru düşürür, kullanmayın.
 - Oynanan koşu kapısı: `bash tools/run_gate.sh` (3 preset x 730 hafta, `RUN_TIMEOUT` 900). Tek koşu: `"$GODOT" --headless --path . --run-log=full_run:730:sim[:seed][:window=11-13][:build=ea|full]`.
 - Probe kayıt türleri (`run_probe.gd` başlık yorumu çıktı sözleşmesidir): `BEGIN`, `STATE`, `SIGNAL`, `GATE`, `LEAD` (gelen her B2B aday: arketip, sektör, yıldız, evre, geldiği günkü uyumu `u=` ve eksik alanı `loss=`),
   ↳ `SIGN` (sonunda sektör, arketip, tolerans, evre ve imza anında pazarın her alanının yuvarlanmamış seviyesi `areas=`; lead'siz fikstür hesabında arketip `-`);
@@ -169,7 +169,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - Çekim ailesi (pencereli, `valued` tablosu `main.gd:242-276`): `--tab-shot`, `--modal-shot`, `--onboard-shot`, `--office-shot=<ofis>:<saat>[:ek]`, `--event-shot`, `--ending-shot`,
   `--vc-shot`, `--sales-shot` (`offer`: aday teklifi ve süreli indirim), `--negotiation-shot`, `--meeting-shot` (`focus`: "Bu çeyreğin vurgusu" ipucu),
   `--invite-shot`, `--product-shot`, `--hr-shot`, `--finance-shot`, `--personal-shot`, `--rnd-shot`, `--b2b-shot`, `--inbox-shot` (`exit_notice`, `clause_server_lock`), `--menu-shot`, `--travel-shot`, `--clock-shot`, `--day-shot`, `--probe-shot[=menajer|kit]`.
-  ↳ `--event-shot=<kart>[:<slot>=<id>...][:long=1]` kartın slotlarını bağlar (yuvasız kart kendi dünyasını kurar: temsilcili hesap, işlenen aday, yaz izni çifti, hat hesapları; `:long=1` uzun adlar) ve kareden önce `EVENTSHOT|`,
+  ↳ `--event-shot=<kart>[:<slot>=<id>...][:long=1][:bare=1]` kartın slotlarını bağlar (yuvasız kart kendi dünyasını kurar: temsilcili hesap, işlenen aday, yaz izni çifti, hat hesapları; `:long=1` uzun adlar; `:bare=1` çıplak tohum dünyası, hesapsız) ve kareden önce `EVENTSHOT|`,
   ↳ `EVENTSHOTTEXT|`, `EVENTSHOTOPTION|`, `EVENTSHOTCHIPS|` satırlarını basar; başsız koşu kareyi yazamaz (`save_png` hatası beklenir) ama bağlama, metin ve çipler okunur (ayrıntı 07_olay_motoru.md). Başsız çekim satırları: `SHOTLINE|<etiket>|<metin>`
   ↳ (sayfada o metni taşıyan etiketler; `none` yoksa), `CLAUSE|`, `MEETINGSHOT|`.
 - Çıplak bayraklar (`bare` tablosu `main.gd:225-236`): `--event-probe`, `--event-lint`, `--event-vocab`, `--render-probe`, `--sales-shot`, `--probe-shot`, `--display-check`, `--backdrop-probe`, `--theme-contrast-audit`.
@@ -200,7 +200,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 
 ## Bir değişiklik yaparken
 
-- Yeni smoke vakası: `endgame_smoke.gd` `match case_name` tablosuna kol ekle (`:78-587`), `_case_<ad>() -> String` yaz (boş = geçti); `smoke_run.sh` listeyi tablodan okur, ayrıca kayıt gerekmez. Yeni vakayı önce bozup düştüğünü gösterin.
+- Yeni smoke vakası: `endgame_smoke.gd` `match case_name` tablosuna kol ekle (`:78-590`), `_case_<ad>() -> String` yaz (boş = geçti); `smoke_run.sh` listeyi tablodan okur, ayrıca kayıt gerekmez. Yeni vakayı önce bozup düştüğünü gösterin.
 - Kuralı bilerek bozan vaka eklersen kola `# EXPECT-ERROR <ileti parçası>` yaz; parça basılmazsa vaka "stale marker" ile düşer.
 - Yeni harness bayrağı: `main.gd` `bare` ya da `valued` tablosuna ekle (`:225-276`), `_run_*` koşucusunu yaz, adı `_is_harness_arg` alt dizilerinden birini içersin
   (yoksa otomatik kayıt açık kalır); CLAUDE.md §12 ve bu sayfanın Testler bölümünü güncelle.

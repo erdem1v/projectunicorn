@@ -38,16 +38,16 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
 - `HRSystem.attention_count()` `hr_system.gd:524`: sol ray Ekip rozeti · `left_tabs.gd`, `seams_hr.gd`; `HRSystem.reset()` `hr_system.gd:497` ← `game_state.gd:940`, `save_manager.gd:350`
 - `HRSystem.to_dict()/from_dict()` `hr_system.gd:507/511`: kayıt kapısı (yalnız moral alt yükü) · `save_manager.gd:383/401`
 - `HRSystem.founder_in_meeting` `hr_system.gd:23`: statik bayrak, kaydedilmez · toplantı sahneleri (satış, VC, seed, term sheet masası) yazar
-- `HRMoraleSystem.apply_delta(emp, delta)` `hr_morale_system.gd:186`: TEK moral girişi (huy ve Liderlik ölçeklemesi burada) · `effects.gd:360-374`, `hr_actions.gd`, `vc_pitch_system.gd:548`
+- `HRMoraleSystem.apply_delta(emp, delta)` `hr_morale_system.gd:186`: TEK moral girişi (huy ve Liderlik ölçeklemesi burada) · `effects.gd:363-377`, `hr_actions.gd`, `vc_pitch_system.gd:548`
 - `HRMoraleSystem.scaled_delta()` `hr_morale_system.gd:199`: aynı hesap, yazmadan; önizlemeler okur · `hr_actions.gd:58,119,188`
 - `HRMoraleSystem.send_on_leave(emp, weeks, manual)` `hr_morale_system.gd:252`: izne tek kapı · `HRActions.apply_leave`, yaz penceresi `:66`
 - `HRMoraleSystem.send_on_sick_leave(emp, weeks)` `hr_morale_system.gd:339`: hastalık yokluğu (çalışmayana false, kol `refused` yazar); status `on_leave`, `Character.leave_kind = "sick"`, dönüş `away_until_day`;
-  ↳ `leave_taken_year` ve `leave_until_day` yazılmaz, gidişte haber ve dönüşte moral yok (dönüş `tick_leave_returns` `:31`, haber `HR_NEWS_BACK_TO_WORK`) · `effects.gd:418` (verb `sick_leave`)
+  ↳ `leave_taken_year` ve `leave_until_day` yazılmaz, gidişte haber ve dönüşte moral yok (dönüş `tick_leave_returns` `:31`, haber `HR_NEWS_BACK_TO_WORK`) · `effects.gd:421` (verb `sick_leave`)
 - `HRMoraleSystem.summer_week(emp, year)` `:249` bu yılın yaz izni haftası (kayma varsa o, yoksa `leave_week`) · `tick_leave_departures` `:51`; `leave_weeks_left(emp)` `:254` (başlamasına kalan hafta,
   ↳ alınmış ya da geçmişse -1) · seam `hr.leave_weeks_left`; `leave_partner(emp)` `:264` (aynı rol, çalışan, o yıl izni yok, haftalar en çok 1 farklı) · seçiciler `leave_pair`/`leave_partner`
 - `HRMoraleSystem.plan_summer_leave(a, b, apart)` `:282` yazmadan planlar (`apart` geç başlayanı iki hafta arkaya alır, arkası pencereye sığmazsa kaydırmaz; `together` ikisini erken başlayanın haftasına alır),
-  ↳ `apply_summer_leave(plan)` `:305` iki haftayı da bu yıla yazar (`CharacterRegistry.set_leave_override`) · `effects.gd:411` (verb `summer_leave`) ve çipi
-- `HRMoraleSystem.confirm_departure(id)` `hr_morale_system.gd:270`: istifanın kadrodan çıktığı TEK yer · `effects.gd:417` (verb `employee_leaves`)
+  ↳ `apply_summer_leave(plan)` `:305` iki haftayı da bu yıla yazar (`CharacterRegistry.set_leave_override`) · `effects.gd:414` (verb `summer_leave`) ve çipi
+- `HRMoraleSystem.confirm_departure(id)` `hr_morale_system.gd:270`: istifanın kadrodan çıktığı TEK yer · `effects.gd:420` (verb `employee_leaves`)
 - `HRMoraleSystem.forget_employee(id)` `hr_morale_system.gd:297`: ayrılanın latch temizliği · `confirm_departure`, `HRActions.fire`
 - `HRMoraleSystem.tick_burnout()` `hr_morale_system.gd:86`: `EventGate.request("team.burnout")` · `HRSystem.daily_tick`
 - `HRMoraleSystem._maybe_resign()` `hr_morale_system.gd:330`: `EventGate.request("team.resignation")`; `_pending` bu kişi için roll'u durdurur
@@ -57,7 +57,7 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
   ↳ `can_start` (`:61`) ve `preview_search` (`:204`) aynı kapıyı okur; evde sınır yoktur
 - `HRSearchSystem.preview_search()/preview_hire()` `hr_search_system.gd:200/221`: Atlas'ın basacağı rakamlar (burn, runway, mesai, uyarılar)
 - `HRCandidateGenerator.generate(role, level, seed, lang)` `hr_candidate_generator.gd:64`: yalnız `HRSearchSystem._deliver_files` (`hr_search_system.gd:290`)
-- `HRActions.apply_raise/apply_promotion/apply_leave/fire` `hr_actions.gd:74/136/206/251`: `hr_ledger.gd:384-433` (satır menüsü, dosya) ve `effects.gd:403` (send_on_leave), `effects.gd:427` (verb `promote` = `apply_promotion`;
+- `HRActions.apply_raise/apply_promotion/apply_leave/fire` `hr_actions.gd:74/136/206/251`: `hr_ledger.gd:384-433` (satır menüsü, dosya) ve `effects.gd:406` (send_on_leave), `effects.gd:430` (verb `promote` = `apply_promotion`;
   ↳ zam ayrı fiil değildir, terfi zammı ve morali getirir)
 - `HRActions.preview_*` `hr_actions.gd:48,111,193,222`: onay penceresinin satırları; `{ok, reason, rows}` aynı omurga
 - `WorkHoursSystem.hours_for(c)` `work_hours_system.gd:63`: zincirin canlı girişi; zincir yalnız `_resolve` `:34`'te yürür
@@ -168,7 +168,7 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
 - Hastalık yeni bir status değildir: `on_leave` + `leave_kind`. `SprintSystem.away`, `get_active_employees`, mesai ve verim okuyucuları bu yüzden değişmez; yokluğun bittiği günü `_return_day` söyler (`weeks_until_return`,
   ↳ `tick_leave_returns` ve HR sekmesi onu okur). Hasta kişinin yaz izni haftası denk gelirse o yılın yaz izni atlanır (telafi yok, eğitimdeki gibi)
 - Yaz izni haftasını yalnız `summer_week` okur; `leave_week`i doğrudan okuyan yeni kod olay kaymasını görmez
-- Yorum bayatlığı: `hr_morale_system.gd:268` "hr_departure modifier" der, gerçek fiil `employee_leaves` (`effects.gd:413`); `game_state.gd:280` yorumu `band` yazar, anahtar artık `level`
+- Yorum bayatlığı: `hr_morale_system.gd:268` "hr_departure modifier" der, gerçek fiil `employee_leaves` (`effects.gd:416`); `game_state.gd:280` yorumu `band` yazar, anahtar artık `level`
 - Üretim kodunda çağıranı olmayan (yalnız smoke): `HRSystem.output_mult_for_area`, `HRSystem.leadership_output_mult`, `HRConstants.climate_*`, `coordination_for_*`
 - Hiçbir yerde okunmayan: `HRConstants.LEAVE_MAX_DEFERRALS`, `LEAVE_DEFER_WEEKS`, `MORALE_LEAVE_DEFER`, `Character.leave_deferrals` (yalnız kayıt göçü yazar). Silmeden önce GDD'ye bak (CLAUDE.md §2)
 - `MIX_*` sabitleri `hr_candidate_generator.gd:30-33` ile `sales_constants.gd:271-274`'te ikizdir (KALITE.md); birini değiştirirsen aday dosyaları baytça değişir
@@ -177,7 +177,7 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
 
 ## Bir değişiklik yaparken
 - Yeni HR sayısı: `HRConstants`'a koy ([WORKING] etiketli ayar sabiti), tasarım sabiti değişikliği "onay bekliyor" altında raporlanır (CLAUDE.md §3); `hr_constants_contract` vakasını koş
-- Moral kaynağı ekle: ham delta ver, `HRMoraleSystem.apply_delta` çağır; önizleme gerekiyorsa `scaled_delta`; olay kartıysa fiil `change_morale`/`morale_all`/`morale_crew` (`effects.gd:354-375`) zaten geçer
+- Moral kaynağı ekle: ham delta ver, `HRMoraleSystem.apply_delta` çağır; önizleme gerekiyorsa `scaled_delta`; olay kartıysa fiil `change_morale`/`morale_all`/`morale_crew` (`effects.gd:357-378`) zaten geçer
 - Yeni kişi alanı: `Character`'a `@export` ekle (SaveCodec bulur), anlamlı varsayılan ver, göç gerekiyorsa `save_manager.gd:1241-1274` desenine bak; `SCHEMA_VERSION` ve `reset` yolunu kontrol et
 - İzin olmayan yeni yokluk türü: yeni status yerine `Character.leave_kind` + `away_until_day` ve `tick_leave_returns`ta kendi dalı (hastalık örneği)
 - Yeni durum (`STATUS_*`): `HRConstants.STATUS_*`, `HRSystem.is_busy`, `_on_duty`, `effective_skill`, `HRMoraleSystem.tick_drift`, `WorkHoursSystem.in_office` ve `D_state_cell` (`hr_ui_shared.gd`) beraber ele alınır

@@ -165,7 +165,7 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 - Kurallar: CLAUDE.md §5 (önce İngilizce, tire yok, `static func` içinde `tr()` yok) ve `docs/design/localization_glossary.md`; strings.csv tek tırnak konvansiyonu yok, bayt-aralığı ile düzenlenir (hafıza: strings-csv-surgery)
 
 ## Testler
-- Smoke (`bash tools/smoke_run.sh <vaka>`, kaynak `scripts/debug/endgame_smoke.gd` eşleme tablosu): `rail_tabs_match_scene_order` `:411`, `topbar_speed_cluster_three_rungs` `:403`, `menu_state_machine` `:303` (ana menü)
+- Smoke (`bash tools/smoke_run.sh <vaka>`, kaynak `scripts/debug/endgame_smoke.gd` eşleme tablosu): `rail_tabs_match_scene_order` `:414`, `topbar_speed_cluster_three_rungs` `:406`, `menu_state_machine` `:303` (ana menü)
   ↳ `menu_has_one_path` `:200` ana menüyü değil Ekip satır menüsünü sınar (08_sekmeler.md)
 - Smoke (devam): `onboarding_pages_contract` `:182`, `ui_scale_ladder_fits_settings` `:314`, `loc_language_switch` `:366`, `loc_csv_integrity` `:316`, `ending_paper_modes_on_screen` `:396`, `star_ruler_contract` `:418`
 - Smoke (devam): `work_hours_three_scopes` `:426`, `work_hours_draft_commits` `:427`, `hr_training_locks` `:188`, `inbox_no_night_stamp` `:362`, `build_percent_single_source`, `rnd_rail_open_with_locked_tree` `:461`, `all_scripts_load`

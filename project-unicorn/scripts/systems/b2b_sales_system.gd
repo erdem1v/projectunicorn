@@ -94,6 +94,18 @@ static func satisfaction_next_tick(c: Customer, trust: float) -> int:
 	return c.satisfaction + _drift(c, _target_on(c, day, _forgiven_trust(trust)), day, c.satisfaction)
 
 
+## The satisfaction a trust hit of `delta` leaves the account at, by the card's own share alone: where it stands now,
+## moved by what the hit does to its TARGET (the target with the ledger at `trust_offset + delta` against the target with
+## the ledger as it is, both on the same day), kept in 0..100. A target already at 0 or 100 (or a
+## ledger already at its limit) takes less than `delta`, and the figure says so. The drift toward the target and the
+## ledger's own forgiveness are not the card's and stay out, so the chip's "{v}", its arrow and this figure read the same.
+static func satisfaction_with_trust(c: Customer, delta: int) -> int:
+	var day: int = GameState.day + 1
+	var shift: int = _target_on(c, day, B2BConstants.clamp_trust(c.trust_offset + delta)) \
+		- _target_on(c, day, c.trust_offset)
+	return clampi(c.satisfaction + shift, 0, 100)
+
+
 ## The satisfaction the player reads one tick after a promise to this account breaks (on_promise_resolved "broken"):
 ## the drop lands at once, the trust ledger takes its hit and the bar rises, then the drift walks back toward the
 ## target (the onboarding floor stands on the raised bar).

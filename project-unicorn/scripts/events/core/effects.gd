@@ -96,6 +96,9 @@ const DECISION := "decision"
 ## A `line` argument with this value names the line the open emergency hit.
 const INCIDENT := "incident"
 
+## The `trust_delta` account selectors that name a group of the book rather than an account: an empty one is no error.
+const GROUP_ACCOUNTS := ["all", "others", "onboarding"]
+
 ## What a consumer churn event costs when the "customer" is the whole userbase.
 const B2C_CHURN_PCT := 0.15
 
@@ -469,6 +472,10 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 		"trust_delta":
 			var plan: Dictionary = trust_plan(e, ctx)
 			if plan.accounts.is_empty():
+				# A group nobody is in (no account yet, or all gone while the card waited) is nothing to write, not a
+				# missed target; a named account or a list the card derived that is gone is.
+				if GROUP_ACCOUNTS.has(String(e.get("accounts", "slot"))):
+					return {}
 				return _no_target(verb, String(e.get("accounts", "slot")))
 			var ids: Array = plan.accounts.map(func(row: Dictionary) -> String: return row.id)
 			for id in ids:
@@ -833,13 +840,14 @@ static func summer_leave_plan(e: Dictionary, ctx: Dictionary) -> Dictionary:
 
 
 ## What a `trust_delta` writes and what the player reads for it, worked out the way the arm applies it:
-## per account, largest first, the satisfaction now and the one a tick after its ledger takes `amount`.
+## per account, largest first, the satisfaction now and the card's own share of it (B2BSalesSystem.satisfaction_with_trust:
+## what its ledger taking `amount` does to the account's target, the drift and other effects left out).
 static func trust_plan(e: Dictionary, ctx: Dictionary) -> Dictionary:
 	var delta: int = amount(e, ctx)
 	var rows: Array = []
 	for c in trust_accounts(e, ctx):
 		rows.append({"id": c.id, "name": c.display_name(), "from": c.satisfaction, "to":
-			B2BSalesSystem.satisfaction_next_tick(c, B2BConstants.clamp_trust(c.trust_offset + delta))})
+			B2BSalesSystem.satisfaction_with_trust(c, delta)})
 	return {"amount": delta, "per_sprint": int(e.get("per_sprint", 0)), "accounts": rows,
 		"until": _until(e) if e.has("until") else {},
 		"group": {"others": "other", "onboarding": "new"}.get(String(e.get("accounts", "slot")), "all")}

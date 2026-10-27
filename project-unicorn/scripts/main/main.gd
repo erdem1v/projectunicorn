@@ -787,7 +787,8 @@ func _run_b2b_shot(kind: String) -> void:
 ## (_seed_company_world; an id of --hr-shot's roster, `char_emp_shot_<n>`, is in it); a slot whose `where` that
 ## company does not meet binds the selector's pick without it. The company stages what a selector needs, shaped by the
 ## slot's own `where` (_seed_company_world, _stage_unmet_wheres; 07_olay_motoru.md lists them). `long=1` (not a slot, like
-## `runway`) gives every bound employee, account, lead and rival a long proper noun before the frame. The EVENTSHOT* lines
+## `runway`) gives every bound employee, account, lead and rival a long proper noun before the frame; `bare=1` (not a slot
+## either) keeps the bare seed's world, no company staged, where a card with no slot has no accounts to count. The EVENTSHOT* lines
 ## (_event_shot_lines) name what each slot bound, `where=skipped` when a `where` was not met, the text and each option's chips.
 func _run_event_shot(spec: String) -> void:
 	_begin_shot()
@@ -807,6 +808,8 @@ func _run_event_shot(spec: String) -> void:
 	given.erase("runway")
 	var long_names: bool = given.get("long", "") == "1"
 	given.erase("long")
+	var bare: bool = given.get("bare", "") == "1"   # the bare seed's world, no company staged (no accounts)
+	given.erase("bare")
 	var card: Dictionary = EvCatalog.card(event_id)
 	var scope: Dictionary = card.get("scope", {})
 	var selects: Array = scope.values().map(func(slot: Dictionary) -> String: return String(slot.get("select", "")))
@@ -842,8 +845,8 @@ func _run_event_shot(spec: String) -> void:
 	elif event_id == "founder.unseen_build":
 		SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
 		GameState.product.sprint.number = 2
-	elif event_id.begins_with("rival.") or (scope.is_empty() and String(card.get("guards", {}).get("market", "")) == "b2b") \
-			or not bool(EvScope.resolve(scope, given, event_id).get("ok", false)):
+	elif not bare and (event_id.begins_with("rival.") or (scope.is_empty() and String(card.get("guards", {}).get("market", "")) == "b2b") \
+			or not bool(EvScope.resolve(scope, given, event_id).get("ok", false))):
 		_seed_company_world(event_id, selects, scope, floor_day)
 	else:
 		GameState.day = maxi(GameState.day, floor_day)
@@ -895,10 +898,7 @@ func _event_shot_lines(card: Dictionary, ctx: Dictionary, without_where: bool) -
 	var options: Array = card.get("options", [])
 	for i in view.choices.size():
 		var choice: EventChoice = view.choices[i]
-		var parts: Array = []
-		for m: Dictionary in choice.modifiers:
-			parts.append_array(EvChips.describe(m, ctx, {}, false))
-		parts.append_array(EvChips.describe_check(choice.check, ctx, {}))
+		var parts: Array = EvChips.option_parts(choice.modifiers, choice.check, ctx)
 		var chips: Array[String] = []
 		for part: Dictionary in parts:
 			chips.append(EvChips.text(part))

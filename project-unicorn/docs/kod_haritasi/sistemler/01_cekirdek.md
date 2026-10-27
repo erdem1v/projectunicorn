@@ -127,7 +127,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - Anahtar ailesi dökümü: `DIZIN.md` "Metin anahtarı aileleri"; CSV'ye elle dokunma kuralı için `strings-csv-surgery` hafıza notu (bayt-aralığı ekleme)
 
 ## Testler
-- Koşturucu: `bash tools/smoke_run.sh <vaka>` (tüm süit `--all`, yalnız push öncesi); bayrak `--endgame-smoke=<vaka>` `--` ayracından ÖNCE; vaka tablosu `scripts/debug/endgame_smoke.gd:78-587` (`match case_name`)
+- Koşturucu: `bash tools/smoke_run.sh <vaka>` (tüm süit `--all`, yalnız push öncesi); bayrak `--endgame-smoke=<vaka>` `--` ayracından ÖNCE; vaka tablosu `scripts/debug/endgame_smoke.gd:78-590` (`match case_name`)
 - Zaman: `speed_preserve` `:94`, `speed_ladder` `:220`, `speed_day_invariant` `:221`, `speed_save_clamps_to_ladder` `:402`, `clock_resumes_only_by_player` `:400`, `milestone_clock_hold` `:397`, `event_gate_holds_clock` `:399`
 - Zaman devamı: `incident_night_hold_resumes` `:340`, `smoke_seed_pinned` `:404`, `sales_meeting_time_skip_founder_share` `:158`, `month_history_*` `:376,381`, `run_ledger`, `growth_streak_semantics`
 - Kayıt: `save_roundtrip_fingerprint` `:298`, `save_continuity_seeded` `:299`, `save_double_load_no_residue` `:300`, `save_backup_fallback` `:301`, `autosave_writes_off_thread` `:302`, `menu_state_machine`
@@ -164,7 +164,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 
 ## Dikkat
 - Göç adı ve koşulu aynı N'dir (`_migrate_N` `version < N`, `save_manager.gd:194-207`); yeni göçte `SCHEMA_VERSION`, koşul, adı ve belgeyi birlikte yaz
-- `_migrate_sector_ids` `:1095`, `_migrate_character_areas` `:1108`, `_migrate_assignments_to_areas` `:1168`, `_migrate_to_rev11` `:1208` zincirde YOK (`MIN_LOADABLE_VERSION` 10); yalnız `endgame_smoke.gd:11984-12218` çağırır
+- `_migrate_sector_ids` `:1095`, `_migrate_character_areas` `:1108`, `_migrate_assignments_to_areas` `:1168`, `_migrate_to_rev11` `:1208` zincirde YOK (`MIN_LOADABLE_VERSION` 10); yalnız `endgame_smoke.gd:11987-12221` çağırır
 - Göç her yuva listelemesinde koşar (`list_slots` her dosyayı `_read_file`dan geçirir): saf, ucuz, canlı durumdan bağımsız olmalı; `_migrate_18` bu yüzden kaydın kendi ürün alt türünü okur
 - `_migrate_15` kartı v18 biçiminde yazar (`_V14_EFFORT`, `_V14_SHARES` `save_manager.gd:821-822`); ×5 ve `need` dönüşümünü yalnız `_migrate_19` yapar. `list_slots` ve `read_slot` her yuvada tam zinciri tekrar koşar
 - `SaveCodec.game_state_fields()` `save_codec.gd:192` `GameState`in HER script `var`ını kaydeder; kaydedilmemesi gereken geçici alan eklenemez. Yeni alan makul varsayılan taşımalı (varsayılan = göç)

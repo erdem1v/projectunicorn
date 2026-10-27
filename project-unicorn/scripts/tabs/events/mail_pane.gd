@@ -343,10 +343,7 @@ func _paint_option(k: int) -> void:
 	var holder: VBoxContainer = _options[k].box
 	var idx: int = _options[k].idx
 	var c: EventChoice = (_item.event as GameEvent).choices[idx]
-	var parts: Array = []
-	for m in c.modifiers:
-		parts.append_array(EvChips.describe(m, _item.ctx, {}, false))
-	parts.append_array(EvChips.describe_check(c.check, _item.ctx, {}))
+	var parts: Array = EvChips.option_parts(c.modifiers, c.check, _item.ctx)
 	UiFactory.clear(holder)
 	var inert: bool = _mode != "live"
 	if _single() or k == _armed:
@@ -357,7 +354,16 @@ func _paint_option(k: int) -> void:
 		var col := VBoxContainer.new()
 		col.alignment = BoxContainer.ALIGNMENT_CENTER
 		col.add_theme_constant_override("separation", UiTokens.SPACE_L)
-		box.add_child(col)
+		if _single():
+			# The stake box has no air above and below its content (the armed box has its own): chips that wrap onto
+			# several lines in the narrow column beside the button bring their own, as the option bar's do.
+			var inset := MarginContainer.new()
+			for side in ["top", "bottom"]:
+				inset.add_theme_constant_override("margin_" + side, UiTokens.SPACE_M)
+			box.add_child(inset)
+			inset.add_child(col)
+		else:
+			box.add_child(col)
 		if not _single():
 			var head := HBoxContainer.new()
 			head.add_child(_wrapped(c.label, &"OptionLabel"))
@@ -580,7 +586,7 @@ func _answered() -> void:
 	var parts: Array = []
 	for d in row_data.deltas:
 		parts.append_array(EvChips.describe(d, row_data.entities, row_data.get("names", {}), true))
-	col.add_child(_chips(parts))
+	col.add_child(_chips(EvChips.merge_same(parts)))
 	row.add_child(stamp(String(_item.stamp), int(GameState.get_date_dict(int(_item.day)).week)))
 
 

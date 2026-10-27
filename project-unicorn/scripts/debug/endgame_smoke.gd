@@ -345,6 +345,9 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"event_chip_coverage":       fail = _case_event_chip_coverage()
 		"event_amount_seam":              fail = _case_event_amount_seam()
 		"event_trust_delta_lasting":      fail = _case_event_trust_delta_lasting()
+		"event_chip_live_targets":        fail = _case_event_chip_live_targets()
+		"event_chip_merge_same":          fail = _case_event_chip_merge_same()
+		"event_trust_chip_share":         fail = _case_event_trust_chip_share()
 		"event_morale_payers":            fail = _case_event_morale_payers()
 		"incident_gap_and_spread":        fail = _case_incident_gap_and_spread()
 		"incident_night_hold_resumes":    fail = _case_incident_night_hold_resumes()
@@ -18081,13 +18084,159 @@ static func _case_event_amount_seam() -> String:
 	return ""
 
 
-## B2 · A trust hit LASTS and its chip names the number the player will read: the hit goes on the trust ledger,
-## the ledger forgives 2.8 a tick and satisfaction walks toward its target at most 21 a tick, so the chip's "to"
-## is the value one tick on. A standing cost (`per_sprint`) is charged at every sprint close until its line is
-## clear or its step is live, and not on the close that clears it.
-## FALSIFICATION: take the forgiveness out of EvEffects.trust_plan (to = from + the hit) or write the hit with
-## set_satisfaction instead of the ledger and the first loop fails; drop the charge from SprintSystem._close and
-## the sprint check fails; test the line before the close clears it and the last check fails.
+## EFFECT-VISIBILITY, live: a card painted in its own world draws no chip for an effect that lands on no one there. The
+## press card's one option costs Reputation and every account's trust; with no account in the book (nobody has signed yet,
+## or they all left while the card waited) the arm writes the Reputation alone, raises no error, and the pane and the shot
+## lines read the same (EvChips.option_parts). A slot the card names and the world did not bind (the rep of a card that
+## takes a rep when there is one) draws nothing either, while a slot every world binds (the founder) keeps its chip. The
+## context-free read (`describe`, which lint and the coverage case use) still draws every verb's chip.
+## FALSIFICATION: take the `live` test out of EvChips.describe or the group test out of EvChips._aims_at_no_one and the
+## empty-book check fails; take the slot test out and the rep check fails; make the "accounts" arm of EvEffects.trust_delta
+## answer `_no_target` for an empty group again and the apply check fails on the engine error the runner gates on.
+static func _case_event_chip_live_targets() -> String:
+	GameState.set_flag("mvp_market_type", "b2b")
+	_seed_b2b_lines("erp")
+	GameState.set_reputation(50)
+	var press: Dictionary = EvCatalog.card("product.encryption_flaw_press_b2b")
+	var effects: Array = (press.options[0] as Dictionary).effects
+	if not CustomerRegistry.get_by_market("b2b").is_empty():
+		return "fixture: the book is not empty"
+	var applied: Array = EvEffects.run_played(effects, {}, "product.encryption_flaw_press_b2b")
+	if GameState.reputation != 42 or applied.size() != 1 or applied[0].verb != "add_reputation":
+		return "an empty book: Reputation %d and the log %s, want 42 and the Reputation alone" % [GameState.reputation, str(applied)]
+	var live: Array = EvChips.option_parts(effects, {}, {})
+	if live.size() != 1 or not EvChips.text(live[0]).contains("-8"):
+		return "an empty book drew %s, want the Reputation chip alone" % str(live.map(func(p: Dictionary) -> String: return EvChips.text(p)))
+	if EvChips.describe(effects[1], {}, {}, false).size() != 1:
+		return "the context-free read of the trust hit stopped drawing its chip"
+	var acct: Customer = _add_customer("co_press", "Press Co")
+	CustomerRegistry.set_satisfaction(acct.id, 60)
+	live = EvChips.option_parts(effects, {}, {})
+	if live.size() != 2 or not EvChips.text(live[1]).contains("Press Co"):
+		return "one account drew %s, want the Reputation chip and its trust chip" % str(live.map(func(p: Dictionary) -> String: return EvChips.text(p)))
+	applied = EvEffects.run_played(effects, {}, "product.encryption_flaw_press_b2b")
+	if applied.size() != 2 or not is_equal_approx(acct.trust_offset, -8.0):
+		return "one account: the log %s and its ledger %f, want both effects and -8" % [str(applied), acct.trust_offset]
+	# The optional rep slot: no rep, no rep chip; the founder's slot is always bound.
+	var own: Dictionary = EvCatalog.card("customer.own_data_error")
+	var dev: Character = _make_employee("char_own_dev", "Deniz Ak", HRConstants.ROLE_DEVELOPER)
+	var rep: Character = _make_employee("char_own_rep", "Burcu Er", HRConstants.ROLE_CUSTOMER_REP)
+	var ctx: Dictionary = {"customer": {"type": "customer", "id": acct.id}, "employee": {"type": "employee", "id": dev.id},
+		"founder": {"type": "founder", "id": CharacterRegistry.get_founder().id}}
+	var options: Dictionary = {}
+	for o in own.options:
+		options[String(o.id)] = o.effects
+	var plain: Array = EvChips.option_parts(options.rep_visits, {}, ctx)
+	if plain.size() != 1:
+		return "no rep bound: the rep's option drew %d chips, want the trust chip alone" % plain.size()
+	ctx["rep"] = {"type": "employee", "id": rep.id}
+	var staffed: Array = EvChips.option_parts(options.rep_visits, {}, ctx)
+	if staffed.size() != 2 or not staffed.any(func(p: Dictionary) -> bool: return EvChips.text(p).contains("Burcu")):
+		return "a rep bound: the option drew %s, want her pace chip and the trust chip" % str(staffed.map(func(p: Dictionary) -> String: return EvChips.text(p)))
+	ctx.erase("rep")
+	if EvChips.option_parts(options.founder_calls, {}, ctx).size() != 2:
+		return "the founder's slot is bound in every world: the founder's option must keep both chips"
+	return ""
+
+
+## EFFECT-VISIBILITY, folded: one option's chips that read the same word for word are one chip with a count, a figure
+## with its count beside the figure; chips that read differently keep their order, polarity and glyph; a history row folds
+## the same way the card did. (The scan found three cards with a repeated chip in one option: rival.outage's demo, the
+## analyst's brief, the trade fair's booking.)
+## FALSIFICATION: make EvChips.merge_same return its parts unchanged and the first check fails; fold on the label alone
+## (ignore the value) and the figure check fails; fold a counted chip with "×n" (drop its `count` branch) and the counted
+## check fails; fold across the dice's odds heads in describe_check and the even-odds
+## check fails; leave the fold out of mail_pane._answered and the history row shows three chips (not asserted here: the
+## row check reads the same helper).
+static func _case_event_chip_merge_same() -> String:
+	var prospects: Array = [{"verb": "add_prospect", "archetype": "small"}, {"verb": "add_prospect", "archetype": "small"},
+		{"verb": "add_prospect", "archetype": "small"}]
+	var mixed: Array = prospects + [{"verb": "add_cash", "amount": 500}, {"verb": "add_brand", "amount": 2},
+		{"verb": "add_cash", "amount": 500}, {"verb": "add_cash", "amount": 600}]
+	var parts: Array = EvChips.option_parts(mixed, {}, {})
+	var texts: Array = parts.map(func(p: Dictionary) -> String: return EvChips.text(p))
+	var one: String = TranslationServer.translate("EFFECT_NEW_PROSPECT")
+	if texts.size() != 4 or texts[0] != "%s ×3" % one:
+		return "three prospects and a mix read %s, want the prospect once with ×3 first and four chips" % str(texts)
+	var plain: Array = EvChips.describe(mixed[3], {}, {}, false)
+	if parts[1].label != plain[0].label or not String(parts[1].value).ends_with(" ×2") or parts[1].polarity != plain[0].polarity \
+			or parts[1].glyph != plain[0].glyph:
+		return "the repeated figure reads %s, want its figure with ×2 and the same polarity and glyph" % str(parts[1])
+	if texts[2] != EvChips.text(EvChips.describe(mixed[4], {}, {}, false)[0]) \
+			or texts[3] != EvChips.text(EvChips.describe(mixed[6], {}, {}, false)[0]):
+		return "chips that read differently changed: %s" % str(texts)
+	# A history row folds as the card does.
+	var row_parts: Array = []
+	for effect in mixed:
+		row_parts.append_array(EvChips.describe(effect, {}, {}, true))
+	var row_texts: Array = EvChips.merge_same(row_parts).map(func(p: Dictionary) -> String: return EvChips.text(p))
+	if row_texts != texts:
+		return "the history row reads %s, the card %s" % [str(row_texts), str(texts)]
+	# A chip that counts something reads the summed count through its counted key, not "×2": one bug twice is two bugs
+	# ("bug" turns "bugs"), one lost point twice is two lost points.
+	for pair in [[{"verb": "damage_product", "bugs": 1}, {"verb": "damage_product", "bugs": 2}],
+			[{"verb": "sprint_card_progress", "amount": -1}, {"verb": "sprint_card_progress", "amount": -2}]]:
+		var twice: Array = EvChips.option_parts([pair[0], pair[0]], {}, {}).map(func(p: Dictionary) -> String: return EvChips.text(p))
+		var summed: String = EvChips.text(EvChips.describe(pair[1], {}, {}, false)[0])
+		if twice != [summed]:
+			return "%s twice reads %s, want the counted sum %s" % [pair[0].verb, str(twice), summed]
+	# Even odds head two branches with the same words: the heads stay two.
+	EvSeams.mock("fixture.even", 0.5)
+	var even: Array = EvChips.describe_check({"odds_seam": "fixture.even",
+		"on_pass": [{"verb": "add_brand", "amount": 1}], "on_fail": [{"verb": "add_brand", "amount": -1}]}, {}, {})
+	EvSeams.clear_mocks()
+	if even.size() != 4 or EvChips.text(even[0]) != EvChips.text(even[2]):
+		return "even odds read %s, want two heads and two chips" % str(even.map(func(p: Dictionary) -> String: return EvChips.text(p)))
+	return ""
+
+
+## EFFECT-VISIBILITY, the trust chip: its sentence reads the card's own share, not the next tick. An account standing
+## above its target reads "from → from + hit" for a hit of +8 and of -4 whatever the drift will do to it, the arrow and the
+## polarity agree (a group's sentence also names the hit as "{v}"), a hit the ledger cannot take (already at its limit) reads no move, and an emergency's trust row
+## names the same figure (IncidentSystem._trust_row).
+## FALSIFICATION: make B2BSalesSystem.satisfaction_with_trust read satisfaction_next_tick (the old reading, where the drift
+## to a target far below the account walks the number down whichever card it is) and the +8 check fails.
+static func _case_event_trust_chip_share() -> String:
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b(1000)
+	var c: Customer = CustomerRegistry.get_customer("co_lead_smoke")
+	_past_onboarding(c)
+	c.onboarding_until = GameState.day
+	var ctx: Dictionary = _ctx_customer(c)
+	CustomerRegistry.set_trust_offset(c.id, 0.0)
+	var health: int = B2BSalesSystem.satisfaction_target(c)
+	CustomerRegistry.set_trust_offset(c.id, clampf(50.0 - health, -15.0, 2.0))
+	var target: int = B2BSalesSystem.satisfaction_target(c)
+	if target < 10 or target > 85:
+		return "fixture: the target %d leaves no room for a hit of +8 and one of -4" % target
+	CustomerRegistry.set_satisfaction(c.id, target + 5)
+	var from: int = c.satisfaction
+	for step in [[8, "gain"], [-4, "cost"]]:
+		var hit: Dictionary = {"verb": "trust_delta", "amount": step[0], "scope": "customer"}
+		for part in [EvChips.describe(hit, ctx, {}, false)[0], EvChips.option_parts([hit], {}, ctx)[0]]:
+			if not EvChips.text(part).contains("%d → %d" % [from, from + step[0]]) or part.polarity != step[1]:
+				return "a hit of %d on an account at %d (target %d) reads '%s', want %d → %d" % [
+					step[0], from, target, EvChips.text(part), from, from + step[0]]
+	var row: Dictionary = IncidentSystem._trust_row("all", [c], -5)
+	if int(row.from) != from or int(row.to) != from - 5:
+		return "an emergency's trust row reads %d → %d, want %d → %d" % [row.from, row.to, from, from - 5]
+	# The ledger already at its limit takes nothing more: the chip says the account does not move.
+	CustomerRegistry.set_trust_offset(c.id, B2BConstants.TRUST_OFFSET_MAX)
+	var capped: String = EvChips.text(EvChips.describe({"verb": "trust_delta", "amount": 8, "scope": "customer"}, ctx, {}, false)[0])
+	if not capped.contains("%d → %d" % [from, from]):
+		return "a hit on a ledger at its limit reads '%s', want %d → %d" % [capped, from, from]
+	return ""
+
+
+## B2 · A trust hit LASTS and its chip names the card's own share: the hit goes on the trust ledger and moves the
+## account's target by exactly the hit, so the chip's "to" is "from" plus the hit (B2BSalesSystem.satisfaction_with_trust),
+## kept in 0..100 and with the drift and the ledger's forgiveness (2.8 a tick) left out; the player still reads the dip a
+## tick later (the ledger forgives, satisfaction walks toward its target at most 21 a tick). A standing cost
+## (`per_sprint`) is charged at every sprint close until its line is clear or its step is live, and not on the close that
+## clears it.
+## FALSIFICATION: make EvEffects.trust_plan's "to" the next tick's reading (B2BSalesSystem.satisfaction_next_tick) or write
+## the hit with set_satisfaction instead of the ledger and the first loop fails; drop the charge from SprintSystem._close
+## and the sprint check fails; test the line before the close clears it and the last check fails.
 static func _case_event_trust_delta_lasting() -> String:
 	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
 	_seed_b2b(1000)
@@ -18108,17 +18257,15 @@ static func _case_event_trust_delta_lasting() -> String:
 		var to: int = int(row.accounts[0].to)
 		if shown != kept or int(row.accounts[0].from) != from:
 			return "%d: the card showed '%s', its history row reads '%s' (from %d)" % [delta, shown, kept, from]
-		if not shown.contains("%d → %d" % [from, to]):
-			return "%d: the chip '%s' does not name %d → %d" % [delta, shown, from, to]
+		if to != clampi(from + delta, 0, 100) or not shown.contains("%d → %d" % [from, to]):
+			return "%d: the chip '%s' does not name the card's own share %d → %d" % [delta, shown, from, clampi(from + delta, 0, 100)]
 		GameState.advance_day()
 		B2BSalesSystem.daily_tick()
-		if c.satisfaction != to:
-			return "%d: the chip promised %d, the player reads %d a tick later" % [delta, to, c.satisfaction]
 		var held: float = move_toward(float(delta), 0.0, TimeModel.per_tick(B2BConstants.TRUST_OFFSET_DECAY_PER_DAY))
 		if not is_equal_approx(c.trust_offset, held):
 			return "%d: the ledger holds %f a tick later, want %f" % [delta, c.trust_offset, held]
-		if from - to < int(dip[1]) or from - to > int(dip[2]):
-			return "%d: the player sees %d → %d, want a dip of %d to %d" % [delta, from, to, dip[1], dip[2]]
+		if from - c.satisfaction < int(dip[1]) or from - c.satisfaction > int(dip[2]):
+			return "%d: the player sees %d → %d a tick later, want a dip of %d to %d" % [delta, from, c.satisfaction, dip[1], dip[2]]
 	return _trust_standing_cost()
 
 
@@ -18461,7 +18608,7 @@ static func _case_incident_scale(payload: Dictionary) -> String:
 			CustomerRegistry.set_trust_offset(c.id, 0.0)
 	WorkHoursSystem.set_company_start_hour(9)
 	# The accounts: 9.5 h down, 02:10 to 11:40. The night shift pays 5.7 -> 6, the rest the 3.2 h since 08:30 -> 2; a credit
-	# forgives 85%: 1 and none. What the chip says is what the player reads a tick on.
+	# forgives 85%: 1 and none. The chip says the hit's own share of the night shift's satisfaction.
 	IncidentSystem.stage("outage", 130)
 	var top: Customer = night[0]
 	CustomerRegistry.set_satisfaction(top.id, B2BSalesSystem.satisfaction_target(top))
@@ -18481,10 +18628,9 @@ static func _case_incident_scale(payload: Dictionary) -> String:
 	var promised: int = int(landed.trust[0].to)
 	if int(landed.trust[0].from) != from or not line.contains("%d → %d" % [from, promised]):
 		return "the night shift chip '%s' does not read %d → %d" % [line, from, promised]
-	GameState.advance_day()
-	B2BSalesSystem.daily_tick()
-	if top.satisfaction != promised:
-		return "the chip promised %d, the player reads %d a tick later" % [promised, top.satisfaction]
+	if promised != clampi(from + int(landed.trust[0].delta), 0, 100):
+		return "the night shift chip reads %d → %d, want the hit's own share %d → %d" % [
+			from, promised, from, clampi(from + int(landed.trust[0].delta), 0, 100)]
 	for c in night + rest:
 		CustomerRegistry.set_trust_offset(c.id, 0.0)
 	var credited: Dictionary = IncidentSystem.plan("morning_credit")
@@ -24982,10 +25128,10 @@ static func _case_promise_extend_once() -> String:
 		return "a word that already moved moved again, to sprint %d" % promise.due_sprint
 	if not EvSeams.read("urun.promise_extended"):
 		return "the extension lock reads open on a word that moved"
+	if int(plan.accounts[0].to) != clampi(int(plan.accounts[0].from) - 6, 0, 100):
+		return "the chip said satisfaction %d → %d, want the hit's own share (-6)" % [plan.accounts[0].from, plan.accounts[0].to]
 	GameState.advance_day()
 	B2BSalesSystem.daily_tick()
-	if account.satisfaction != int(plan.accounts[0].to):
-		return "the chip said satisfaction %d a tick on, the player reads %d" % [plan.accounts[0].to, account.satisfaction]
 	_sim_day()
 	if promise.status != "open":
 		return "the moved word broke at the close of its old sprint (%s)" % promise.status

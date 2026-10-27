@@ -590,13 +590,13 @@ static func _hit_accounts() -> Array:
 	return users
 
 
-## One group of accounts that took `delta` on their ledgers: its largest account's name and satisfaction now and a
-## tick on.
+## One group of accounts that took `delta` on their ledgers: its largest account's name and satisfaction now and with
+## the hit's own share (B2BSalesSystem.satisfaction_with_trust).
 static func _trust_row(group: String, book: Array, delta: int) -> Dictionary:
 	var top: Customer = book[0]
 	return {"group": group, "n": book.size(), "delta": delta, "ids": book.map(func(c: Customer) -> String: return c.id),
 		"name": top.display_name(), "from": top.satisfaction,
-		"to": B2BSalesSystem.satisfaction_next_tick(top, B2BConstants.clamp_trust(top.trust_offset + delta))}
+		"to": B2BSalesSystem.satisfaction_with_trust(top, delta)}
 
 
 ## The accounts' share of an outage's morning fix: each pays the hours it could not work, the night shift from the moment

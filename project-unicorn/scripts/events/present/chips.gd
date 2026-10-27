@@ -9,7 +9,8 @@ extends RefCounted
 # A part reads "label value"; `value` is the figure, "" when the part is a sentence. `polarity` is
 # gain, cost, danger or neutral. Red is danger only (a departure, a lost customer, a closed road,
 # the run's end); money spent, a discount and equity are costs, drawn in ink with the cost glyph
-# (equity with the slice).
+# (equity with the slice). A sentence that counts something additive also keeps its count as
+# `count` (_counted), so merge_same can read two of it as the summed count.
 #
 # Static, so text goes through TranslationServer: tr() compiles in a static func and dies at
 # runtime.
@@ -66,10 +67,14 @@ const CATEGORY_TAGS := {"customer": "EVENT_TAG_CUSTOMER", "team": "EVENT_TAG_TEA
 ## The parts of one effect. `is_delta` false: `item` is a card effect and every figure is computed
 ## the way EvEffects will apply it against `ctx`, the card's frozen scope. `is_delta` true: `item`
 ## is a history delta and its figures are the recorded ones; `ctx` is the row's entities. `names`
-## are the row's frozen names, for a person who has since left.
-static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_delta: bool) -> Array:
+## are the row's frozen names, for a person who has since left. `live` (a card painted in its own
+## world, never the linter's or a coverage check's empty context): an effect whose target this
+## world does not resolve draws nothing, as the arm that would apply it lands on no one.
+static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_delta: bool, live := false) -> Array:
 	var verb: String = String(item.get("verb", ""))
 	if item.has("refused"):
+		return []
+	if live and not is_delta and _aims_at_no_one(verb, item, ctx):
 		return []
 	if FIXED_CHIPS.has(verb):
 		return [_part(_t(FIXED_CHIPS[verb][0]), "", FIXED_CHIPS[verb][1])]
@@ -108,7 +113,7 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 			return [_card_points(item, effort, _signed(-effort))]
 		"sprint_card_progress":
 			if d < 0:
-				return [_part(_t(Fmt.count_key("EFFECT_WORK_LOST", -d)).format({"n": -d}), "", "danger")]
+				return [_counted("EFFECT_WORK_LOST", -d, {}, "danger")]
 			return [_card_points(item, -d, _signed(d))]
 		# The option's lock says the card ships this sprint: the promise is kept. The price is the test cut in half, or
 		# for the promise's overtime (`promise`) the crew's morale, its own effect; the chip names no hours. A paper's
@@ -146,7 +151,7 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 		"after_test":
 			var held: Array = [_part(_t("EFFECT_AFTER_TEST"), "", "danger")]
 			for effect in item.get("effects", []):
-				held.append_array(describe(effect, ctx, names, false))
+				held.append_array(describe(effect, ctx, names, false, live))
 			return held
 		"sprint_hours":
 			if bool(item.get("promise", false)):
@@ -162,8 +167,7 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 			return [_part(_t("EFFECT_LINE_HARDEN").format({"line": _line_name(item), "weeks": weeks}), "", "gain")]
 		"damage_product":
 			var bugs: int = int(item.get("bugs", 1))
-			return [_part(_t(Fmt.count_key("EFFECT_NEW_BUGS", bugs)).format(
-				{"line": _line_name(item), "n": bugs}), "", "cost")]
+			return [_counted("EFFECT_NEW_BUGS", bugs, {"line": _line_name(item)}, "cost")]
 		"change_morale":
 			var who: String = _first_name(_employee(item, ctx, is_delta), ctx, names, _t("EFFECT_MORALE"))
 			return [_figure("EFFECT_AXIS", _num(d), _signed(d), {"axis": who})]
@@ -315,7 +319,7 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 			var landed: Array = []
 			var scheduled: Dictionary = item.get("context", ctx)
 			for effect in landing(String(item.get("event_id", ""))):
-				landed.append_array(describe(effect, scheduled, names, false))
+				landed.append_array(describe(effect, scheduled, names, false, live))
 			if landed.is_empty():
 				return []
 			var span: Array = EvEffects.delay_bounds(item)
@@ -335,7 +339,7 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 
 ## The parts of an option's dice: each branch that does anything, headed by its own odds. The branch that
 ## carries a cost or a danger is the risky one and reads as danger, whichever side of the dice it sits on.
-static func describe_check(check: Dictionary, ctx: Dictionary, names: Dictionary) -> Array:
+static func describe_check(check: Dictionary, ctx: Dictionary, names: Dictionary, live := false) -> Array:
 	var parts: Array = []
 	if check.is_empty():
 		return parts
@@ -343,13 +347,77 @@ static func describe_check(check: Dictionary, ctx: Dictionary, names: Dictionary
 	for branch in [["on_pass", pass_pct], ["on_fail", 100 - pass_pct]]:
 		var chips: Array = []
 		for effect in check.get(branch[0], []):
-			chips.append_array(describe(effect, ctx, names, false))
+			chips.append_array(describe(effect, ctx, names, false, live))
+		chips = merge_same(chips)
 		if chips.is_empty():
 			continue
 		var risky: bool = chips.any(func(p: Dictionary) -> bool: return p.polarity in ["cost", "danger"])
 		parts.append(_part(_t("EFFECT_CHANCE").format({"pct": branch[1]}), "", "danger" if risky else "gain"))
 		parts.append_array(chips)
 	return parts
+
+
+## What the reading pane and the shot lines draw for one open option: its effects' chips in the card's own world
+## (`describe` live, what aims at no one left out) and then its dice's, the effects' identical parts folded
+## (`merge_same`). The one place both read it from, so the pane and the shot lines cannot drift.
+static func option_parts(modifiers: Array, check: Dictionary, ctx: Dictionary) -> Array:
+	var parts: Array = []
+	for m: Dictionary in modifiers:
+		parts.append_array(describe(m, ctx, {}, false, true))
+	parts = merge_same(parts)
+	parts.append_array(describe_check(check, ctx, {}, true))
+	return parts
+
+
+## The parts of one option with the ones that read the same word for word folded into the first: "A new prospect" three
+## times is one "A new prospect ×3" (the ×n beside the figure when the part has one). A part that keeps its count
+## (_counted) reads the summed count through its counted key instead: "1 new open bug" twice is "2 new open bugs". Only
+## identical text folds; the rest keep their order, polarity and glyph.
+static func merge_same(parts: Array) -> Array:
+	var first: Dictionary = {}   # text -> index in `out`
+	var counts: Array[int] = []
+	var out: Array = []
+	for p: Dictionary in parts:
+		var key: String = text(p)
+		if first.has(key):
+			counts[first[key]] += 1
+			continue
+		first[key] = out.size()
+		out.append(p)
+		counts.append(1)
+	for i in out.size():
+		if counts[i] > 1:
+			var folded: Dictionary = (out[i] as Dictionary).duplicate()
+			if folded.has("count"):
+				var c: Dictionary = (folded.count as Dictionary).merged({"n": int(folded.count.n) * counts[i]}, true)
+				folded["label"] = _count_text(c)
+				folded["count"] = c
+			else:
+				var field: String = "value" if String(folded.value) != "" else "label"
+				folded[field] = "%s ×%d" % [folded[field], counts[i]]
+			out[i] = folded
+	return out
+
+
+## Does this card effect, read against `ctx`, land on no one in the world the card is painted in? A slot it names
+## (`scope`, `other`, `amount_slot`) the world did not bind, or an account group, crew or promise list that resolves
+## to nobody (the arm lands on no one there, EvEffects._apply). Only a live card asks: the effect keeps its chip in the
+## context-free reads (lint, coverage), which expect every verb to draw one.
+static func _aims_at_no_one(verb: String, item: Dictionary, ctx: Dictionary) -> bool:
+	match verb:
+		"trust_delta": return EvEffects.trust_accounts(item, ctx).is_empty()
+		"promise_break": return EvEffects.promise_accounts(EvEffects.promises_of(item, ctx)).is_empty()
+		"morale_crew": return EvEffects.crew_of(item, ctx).is_empty()
+	if item.has("entity_id"):
+		return false
+	for field in ["scope", "other", "amount_slot"]:
+		var slot: String = String(item.get(field, ""))
+		# The running sprint's team is no slot.
+		if slot == "" or (verb == "productivity_mod" and slot == "team"):
+			continue
+		if not ctx.has(slot):
+			return true
+	return false
 
 
 ## The effects a scheduled card lands on every path: the ones each of its options carries, and its expiry too.
@@ -414,9 +482,9 @@ static func _figure(key: String, value: String, polarity: String, args: Dictiona
 	return _part(_t(key).format(words).strip_edges(), value, polarity)
 
 
-## A trust hit: the largest account's satisfaction now and a tick on (the figure the player will read,
-## EvEffects.trust_plan), and the standing per-sprint cost. A card effect read as a delta (the linter)
-## has no accounts yet, only its figures.
+## A trust hit: the largest account's satisfaction now and with the card's own share (what the hit does to its
+## target, B2BSalesSystem.satisfaction_with_trust via EvEffects.trust_plan), and the standing per-sprint cost. A card
+## effect read as a delta (the linter) has no accounts yet, only its figures.
 static func _trust_parts(plan: Dictionary) -> Array:
 	var parts: Array = []
 	var delta: int = int(plan.get("amount", 0))
@@ -436,8 +504,8 @@ static func _trust_parts(plan: Dictionary) -> Array:
 	return parts
 
 
-## A group of `n` accounts that took `delta` together, by its largest account's name and satisfaction now and a tick
-## on; a group of one reads as that account.
+## A group of `n` accounts that took `delta` together, by its largest account's name and satisfaction now and with
+## the hit's own share (`from` and `to`); a group of one reads as that account.
 static func _trust_part(group: String, n: int, delta: int, top: Dictionary) -> Dictionary:
 	var key: String = TRUST_GROUP_KEYS[group] if n > 1 else "EFFECT_TRUST_ACCOUNT"
 	return _part(_t(key).format({"n": n, "v": _num(delta), "customer": top.get("name", ""),
@@ -466,11 +534,10 @@ static func _trim_parts(plan: Dictionary) -> Array:
 		parts.append(_card_points(plan, -cut, "gain"))
 	var work: int = int(plan.get("work", 0))
 	if work > 0:
-		parts.append(_part(_t(Fmt.count_key("EFFECT_NEXT_SPRINT_WORK", work)).format({"n": work}), "", "cost"))
+		parts.append(_counted("EFFECT_NEXT_SPRINT_WORK", work, {}, "cost"))
 	var bugs: int = int(plan.get("bugs", 0))
 	if bugs > 0:
-		parts.append(_part(_t(Fmt.count_key("EFFECT_SHIP_BUGS", bugs)).format({"line": _line_name(plan), "n": bugs}),
-			"", "cost"))
+		parts.append(_counted("EFFECT_SHIP_BUGS", bugs, {"line": _line_name(plan)}, "cost"))
 	return parts
 
 
@@ -548,8 +615,23 @@ static func _first_name(id: String, ctx: Dictionary, names: Dictionary, fallback
 
 ## "Batch Invoicing +10 points": a card and the points it gains or sheds.
 static func _card_points(item: Dictionary, points: int, polarity: String) -> Dictionary:
-	return _part(_t(Fmt.count_key("EFFECT_CARD_POINTS", absi(points))).format(
-		{"card": _card_name(item), "v": _num(points)}), "", polarity)
+	return _counted("EFFECT_CARD_POINTS", absi(points), {"card": _card_name(item)}, polarity, signi(points))
+
+
+## A sentence that counts something additive (`key` and its _ONE twin, Fmt.count_key): the part keeps `count` so
+## merge_same can read the same sentence twice as the summed count. `sign` signs the count where the sentence carries
+## it as the figure {v} ("+10 points"); `args` fills the sentence's other slots.
+static func _counted(key: String, n: int, args: Dictionary, polarity: String, sign := 1) -> Dictionary:
+	var count: Dictionary = {"key": key, "n": n, "args": args, "sign": sign}
+	var part: Dictionary = _part(_count_text(count), "", polarity)
+	part["count"] = count
+	return part
+
+
+static func _count_text(count: Dictionary) -> String:
+	var n: int = int(count.n)
+	var words: Dictionary = (count.args as Dictionary).merged({"n": n, "v": _num(int(count.sign) * n)}, true)
+	return _t(Fmt.count_key(String(count.key), n)).format(words)
 
 
 ## The card a sprint effect lands on: the identity the row kept (`of`), else the pending decision's card.
