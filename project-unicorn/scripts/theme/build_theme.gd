@@ -689,6 +689,10 @@ func _menajer(master: Theme) -> Theme:
 		[&"CapTeam", num, T.D_FS_15, T.D_INK_4],
 		[&"AwayLabel", sans_sb, T.D_FS_12, T.D_INK_4],
 		[&"ClusterStars", num, T.D_FS_12, T.D_INK_1],
+		[&"CardEffort", num, T.D_FS_15, T.D_INK_2],
+		[&"StageNum", num, T.D_FS_14, T.D_INK_1],
+		[&"AxisLabel", wide_sb_caps, T.D_FS_12, T.D_INK_3],
+		[&"MoreHint", sans_sb, T.D_FS_12, T.D_INK_2],
 		[&"FloatKey", cond_sb_caps, T.D_FS_14, T.D_INK_2],
 		[&"NavReason", cond_sb_caps, T.D_FS_12, T.D_INK_4],
 		[&"PartValue", sans_b, T.D_FS_36, T.D_INK_2],
@@ -1026,6 +1030,15 @@ func _menajer(master: Theme) -> Theme:
 		[&"ModuleCandidate", _flat(T.D_SURFACE_2, T.D_RADIUS_2, Vector4.ONE * T.SPACE_M, T.D_LINE_1)],
 		[&"DueChip", _flat(clear, T.D_RADIUS_2, _fit(sans_sb, T.D_FS_13, T.D_H_TAG, T.SPACE_S, T.SPACE_S), T.D_LINE_2)],
 		[&"DueChipSoon", _flat(clear, T.D_RADIUS_2, _fit(sans_sb, T.D_FS_13, T.D_H_TAG, T.SPACE_S, T.SPACE_S), T.D_INK_3)],
+		# The board: a card's row (its foot a hairline, raised under the pointer), the keys that show on it, the pill of the
+		# cards below the fold, and the empty sprint's one open row.
+		[&"SprintRow", _flat(clear, 0, Vector4.ZERO, T.D_ROW_RULE, Vector4i(0, 0, 0, T.BORDER_HAIRLINE))],
+		[&"SprintRowHover", _flat(T.D_SURFACE_4, 0, Vector4.ZERO, T.D_ROW_RULE, Vector4i(0, 0, 0, T.BORDER_HAIRLINE))],
+		[&"SprintRowCand", _flat(clear, 0, Vector4.ZERO)],   # a candidate's foot is a dashed line the row draws
+		[&"SprintRowCandHover", _flat(T.D_SURFACE_4, 0, Vector4.ZERO)],
+		[&"RowActs", _flat(T.D_SURFACE_4, T.D_RADIUS_2, Vector4(T.SPACE_XXS, 0, T.SPACE_XXS, 0))],
+		[&"MoreHintPill", _flat(T.D_SURFACE_4, T.RADIUS_PILL, Vector4(T.SPACE_L, T.SPACE_XXS, T.SPACE_L, T.SPACE_XXS), T.D_LINE_2)],
+		[&"GhostRow", _flat(clear, T.D_RADIUS_2, Vector4(T.SPACE_L, T.SPACE_XXS, T.SPACE_L, T.SPACE_XXS))],
 	]:
 		_panel(th, row[0], "PanelContainer", row[1])
 	# The header's quarter notches and week bars, the goal pick, and the capacity block: its frame, a person's ring.
@@ -1061,6 +1074,7 @@ func _menajer(master: Theme) -> Theme:
 		_panel(th, "CapStreak" + twin, "PanelContainer", _flat(clear, T.RADIUS_PILL,
 			_fit(num, T.D_FS_12, T.D_H_TAG, T.SPACE_XS, T.SPACE_XS), T.D_warn(), Vector4i.ONE * T.BORDER_FOCUS))
 		_panel(th, "CapRowHot" + twin, "PanelContainer", _flat(warn.bg, T.D_RADIUS_1, Vector4.ZERO))
+		_panel(th, "SprintRowLate" + twin, "PanelContainer", _flat(T.D_neg_bg(), 0, Vector4.ZERO, T.D_ROW_RULE, Vector4i(0, 0, 0, T.BORDER_HAIRLINE)))
 	T.set_colorblind(false)
 	# The request list's fold: "+3 requests" with its chevron after the words.
 	_dbtn(th, &"MoreLink", {"normal": [clear, clear, T.D_INK_3], "hover": [clear, T.D_LINE_HOVER, T.D_INK_1],
@@ -1083,6 +1097,10 @@ func _menajer(master: Theme) -> Theme:
 	# A card's glyph keys (+, →, ↑): secondary keys the size their host gives them.
 	_dbtn(th, &"IconKey", secondary, sans_reg, T.D_FS_15, Vector4.ZERO)
 	th.set_constant("icon_max_width", &"IconKey", T.D_ICON_ROW)
+	# A board row's keys (to the next sprint, remove): glyphs without an edge, raised under the pointer.
+	_dbtn(th, &"RowKey", {"normal": [clear, clear, T.D_INK_3], "hover": [T.D_SURFACE_5, clear, T.D_INK_1],
+		"pressed": [T.D_SURFACE_5, clear, T.D_INK_1], "disabled": [clear, clear, T.D_INK_OFF]}, sans_reg, T.D_FS_15, Vector4.ZERO)
+	th.set_constant("icon_max_width", &"RowKey", T.D_ICON_ROW)
 	# The card's word key (Çıkar) at the glyph keys' height.
 	_dbtn(th, &"CardKeyText", ghost, cond_sb, T.D_FS_16, _fit(cond_sb, T.D_FS_16, T.D_H_KEY_SM, T.SPACE_S, T.SPACE_S))
 	# A sprint card's keys rest dim and take the two looks above while the pointer is on the card; a key

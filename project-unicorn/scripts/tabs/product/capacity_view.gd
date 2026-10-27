@@ -22,8 +22,19 @@ class TipBox extends HBoxContainer:
 		return build.call() if build.is_valid() else null
 
 
+## Satırın sabit genişlikli hücresi: en az `least` geniş, içeriği daha genişse genişler (oluk kısalır, yazı küçülmez); boyu satırın
+## boyunu aşmaz, büyük sayı satırı uzatmaz.
+class Cell extends Control:
+	var least := 0
+
+	func _get_minimum_size() -> Vector2:
+		return Vector2(maxf(least, (get_child(0) as Control).get_combined_minimum_size().x), UiTokens.D_H_CAP_LINE)
+
+
 var _rows: Array = []
 var _grooves: Array = []
+## Her satırın ipucunu taşıyan düğümler [etiket, sayı, rozet]: sprint sürerken "yapıldı" güncellenince yenilenir.
+var _tips: Array = []
 
 
 func _init() -> void:
@@ -35,20 +46,38 @@ func setup(model: Dictionary) -> void:
 	var c: Dictionary = model.center
 	_rows = c.capacity
 	_grooves.clear()
+	_tips.clear()
 	var col := SprintUiShared.column(0)
 	add_child(col)
 	col.add_child(_head(c.suggest))
 	var list := SprintUiShared.column(0)
 	var rows := MarginContainer.new()
 	rows.add_child(list)
+	# Etiket sütunu üç satırda aynı genişliktedir, oluklar aynı yerden başlar: en az D_W_CAP_LABEL, dilin en uzun aşama adı sığmazsa onun kadar.
+	var label_w: float = UiTokens.D_W_CAP_LABEL
 	for row: Dictionary in _rows:
-		list.add_child(_row(row, c.mode == "active"))
+		label_w = maxf(label_w, ceilf(UiTokens.D_ICON_ROW + UiTokens.SPACE_M + StagePaint.text_width(tr(STAGE_KEYS[row.stage]), &"CapStage")))
+	for row: Dictionary in _rows:
+		list.add_child(_row(row, c.mode == "active", label_w))
 	if _rows[0].shared:
 		var mid: float = UiTokens.SPACE_XS + UiTokens.D_H_CAP_LINE / 2.0
-		rows.add_child(StagePaint.bracket({"x": UiTokens.SPACE_XS + UiTokens.D_W_CAP_LABEL + UiTokens.SPACE_L - UiTokens.BORDER_ACCENT,
+		rows.add_child(StagePaint.bracket({"x": UiTokens.SPACE_XS + label_w + UiTokens.SPACE_L - UiTokens.BORDER_ACCENT,
 			"top": mid, "bottom": mid + 2.0 * UiTokens.D_H_CAP_ROW}))
 	col.add_child(rows)
 	set_ghost(ProductModel.ghost_effort(model.ui.hover_card) if model.ui.hover_card != "" else {})
+
+
+## Koşan sprintte saat ilerleyince her aşamanın bu haftanın şimdiye dek yaptığı işi {aşama: efor}: oluğun koyu önü ve ipucundaki
+## "yapıldı" yenilenir; sayfa kurulmaz.
+func set_done(done: Dictionary) -> void:
+	for i in _rows.size():
+		var row: Dictionary = _rows[i]
+		row.done = done.get(row.stage, 0.0)
+		_grooves[i].spec.done = row.done
+		_grooves[i].queue_redraw()
+		if _tips[i][0].tooltip_text != "":
+			for node: Control in _tips[i]:
+				node.tooltip_text = _tip(row, true)
 
 
 ## Üstüne gelinen adayın hayaleti {aşama: efor} (boşsa kalkar): oluklar tek ölçeği paylaşır, hayalet sığmazsa ölçek büyür.
@@ -85,8 +114,9 @@ func _head(suggest: Variant) -> HBoxContainer:
 	return head
 
 
-## Bir aşamanın satırı: aşama etiketi, oluk, sayı ve rozet üstte; altta aşamanın yüzleri. En çok taşan aşama süreklilikteyse zemini sıcak.
-func _row(row: Dictionary, running: bool) -> PanelContainer:
+## Bir aşamanın satırı: `label_w` genişliğinde aşama etiketi, oluk, sayı ve rozet üstte; altta aşamanın yüzleri. En çok taşan aşama
+## süreklilikteyse zemini sıcak.
+func _row(row: Dictionary, running: bool, label_w: float) -> PanelContainer:
 	var empty: bool = row.work < SprintSystem.EPS and row.team < SprintSystem.EPS
 	var spills: bool = roundi(row.out) > 0
 	var tip: String = "" if empty else _tip(row, running)
@@ -100,7 +130,7 @@ func _row(row: Dictionary, running: bool) -> PanelContainer:
 	line.custom_minimum_size.y = UiTokens.D_H_CAP_LINE
 	body.add_child(line)
 	var name_cell := _tipped(tip, rich)
-	name_cell.custom_minimum_size.x = UiTokens.D_W_CAP_LABEL
+	name_cell.custom_minimum_size.x = label_w
 	name_cell.add_child(UiFactory.make_glyph(SprintUiShared.ROLE_ICONS[row.stage], UiTokens.D_ICON_ROW, UiTokens.D_stage(row.stage)))
 	name_cell.add_child(SprintUiShared.label(tr(STAGE_KEYS[row.stage]), &"CapStage", UiTokens.D_INK_OFF if empty else null))
 	line.add_child(name_cell)
@@ -112,9 +142,11 @@ func _row(row: Dictionary, running: bool) -> PanelContainer:
 	line.add_child(groove)
 	var figure := _figure(row, tip)
 	figure.visible = not empty
+	var badge := _badge(row, spills, empty, tip, rich)
+	_tips.append([name_cell, figure, badge])
 	line.add_child(_cell(figure, UiTokens.D_W_CAP_NUMBER, true))
-	line.add_child(_cell(_badge(row, spills, empty, tip, rich), UiTokens.D_W_CAP_BADGE, false))
-	body.add_child(SprintUiShared.pad(_people(row), Vector4i(UiTokens.D_W_CAP_LABEL + UiTokens.SPACE_L, 0, 0, 0)))
+	line.add_child(_cell(badge, UiTokens.D_W_CAP_BADGE, false))
+	body.add_child(SprintUiShared.pad(_people(row), Vector4i(int(label_w) + UiTokens.SPACE_L, 0, 0, 0)))
 	return cell
 
 
@@ -128,11 +160,12 @@ func _tipped(tip: String, rich: Callable) -> TipBox:
 	return box
 
 
-## Satırın sabit genişlikli hücresi: içerik hücrenin dikeyinde ortalanır ve boyunu hücreye dayatmaz (büyük sayı satırı uzatmaz).
+## Satırın hücresi: içerik hücrenin dikeyinde ortalanır ve boyunu hücreye dayatmaz; hücre en az `width` geniştir, içerik genişleyince o da.
 func _cell(content: Control, width: int, from_right: bool) -> Control:
-	var cell := Control.new()
-	cell.custom_minimum_size = Vector2(width, UiTokens.D_H_CAP_LINE)
+	var cell := Cell.new()
+	cell.least = width
 	cell.add_child(content)
+	content.minimum_size_changed.connect(cell.update_minimum_size)
 	content.anchor_left = 1.0 if from_right else 0.0
 	content.anchor_right = content.anchor_left
 	content.anchor_top = 0.5

@@ -42,7 +42,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 42
+const THEME_STAMP := 43
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -729,13 +729,52 @@ const D_H_STAGE_STRIP := 6
 const D_W_PICKER := 640               # the type picker's column
 const D_H_SECTION := 28              # a section's caps label and its rule
 const D_SPRINT_COLUMNS := Vector2(746, 308)   # this sprint's column against the next one's, as shares of the room between the left column and the edge
+# --- the sprint screen's board: a card per row, its stages on a time axis ---
+const D_W_CARD_INFO := 312            # a card row's info column
+const D_W_TIMELINE := 396             # its time axis
+const D_TIMELINE_WEEKS := 2.6         # the axis' span: the sprint's two weeks and the next sprint's first 0.6
+const D_H_BOARD_HEAD := 30            # the board's fixed head: the card count and the axis' weeks
+const D_H_CARD_ROW := 56
+const D_H_CARD_ROW_TWO := 74          # a row whose name takes two lines
+const D_CARD_NAME_SHORT := 22         # a name of up to this many characters keeps its row one line
+const D_H_STAGE_BAR := 30             # a stage's bar, centred in its row
+const D_W_STAGE_BAR_LEAST := 6        # the least a bar draws, however short its stage
+const D_STAGE_BAR_PAD := Vector2i(7, 4)   # a bar's content from its left and right edge
+const D_W_TICK_BOX := 20              # a stage done ahead, ticked on the start of the next stage's bar
+const D_NOW_HEAD := Vector2i(10, 6)   # the now line's head
+const D_W_CARD_SLOT := 104            # a card row's module name and its status, at their least
+const D_PAD_CARD_ROW := 7             # a card row's info column from its top edge
+const D_H_CARD_LINE := 20             # a card row's first line; the two lines of a long name take D_H_CARD_LINE_TWO
+const D_H_CARD_LINE_TWO := 38
+const D_W_CARD_EFFORT := 30           # a card row's effort figure, at its least
+const D_PAD_CARD_ICON := 3            # the kind icon's drop onto the name's first line
+const D_H_WAIT := 18                  # a wait's dotted line and its end cap, centred on the bar
+const D_SHADOW_INSET := 2             # the preparation's shadow starts and ends this far inside its stage's span
+const D_RISK_BAR := Vector2i(28, 6)   # a card's bug risk
+const D_ASK_DISC := 14                # the "?" on the face of whoever asks about a card
+const D_H_BOARD_SECTION := 28         # a section's row on the board
+const D_H_BOARD_FADE := 40            # the fade under the pill of the cards below
+const D_ROW_ALPHA := 0.62             # a candidate's row at rest
+const D_GHOST_ALPHA := 0.75           # a candidate's bars
+const D_STAGE_BAR_MIX := {"plan": 0.24, "run": 0.12, "done_share": 0.55, "done": 0.7, "late": 0.22}   # a bar's ground: its band's share over the surface
+const D_STAGE_BAR_EDGE := {"plan": 0.6, "wait": 0.45, "ghost": 0.6}   # a bar's edge: its band's alpha
+const D_RISK_RAW := Color(D_INK_3, 0.45)   # the bug risk's stripes: the share the preparation took off
+const D_SHADOW_ALPHA := 0.3           # the preparation's shadow under a bar, and its foot line's
+const D_SHADOW_FOOT_ALPHA := 0.45
+const D_H_SHADOW := 6
+const D_SPILL_LINE := Color(D_LINE_1, 0.45)   # the next sprint's ground: lines every D_SPILL_STEP
+const D_SPILL_STEP := 8
+const D_EARLY_STRIPE := Color(D_INK_3, 0.13)   # an early close's slack: stripes of this width across a period
+const D_EARLY_PERIOD := Vector2(8.0, 2.0)
+const D_MEET_LIGHT := Color(D_INK_2, 0.55)     # a founder's meeting on a bar: light and dark stripes across a period, and its edge
+const D_MEET_DARK := Color(D_SURFACE_0, 0.55)
+const D_MEET_EDGE := Color(D_INK_2, 0.6)
+const D_MEET_PERIOD := Vector2(5.0, 2.0)
 const D_SQUARE := 10                  # a level square
 const D_SQUARE_SM := 8                # a level square in an effect line, a carry's progress square
 const D_H_BAR := 8                    # the capacity bar
 const D_BAR_TICK := Vector2i(2, 16)   # the capacity line across the bar
 const D_GOAL_TICK := Vector2i(2, 18)  # the target line across the goal meter
-const D_PHASE_DOT := 8                # a phase step's dot
-const D_PHASE_LINK := 16              # the line between two phase steps
 const D_W_PTS := 24                   # a card's points box, at its least
 const D_H_KEY_SM := 28                # a card's glyph keys (+, →, ↑)
 const D_H_ROW_RELEASE := 36           # a release note's card row
@@ -907,6 +946,13 @@ static func D_stage_ghost(stage: String) -> Color:
 
 static func D_hatch_base() -> Color:
 	return Color(D_warn(), D_HATCH_BASE_ALPHA)
+
+## A stage bar's ground (`kind` a key of D_STAGE_BAR_MIX) and edge (a key of D_STAGE_BAR_EDGE), in the stage's band.
+static func D_stage_bar(stage: String, kind: String) -> Color:
+	return D_SURFACE_3.lerp(D_stage(stage), D_STAGE_BAR_MIX[kind])
+
+static func D_stage_bar_edge(stage: String, kind: String) -> Color:
+	return Color(D_stage(stage), D_STAGE_BAR_EDGE[kind])
 
 ## The danger strip's fill, border and text, and the text on a solid danger badge.
 static func D_neg_bg() -> Color:

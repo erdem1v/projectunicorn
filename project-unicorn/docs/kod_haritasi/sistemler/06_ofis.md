@@ -51,7 +51,7 @@ Varlıklar:
 - `art/office3d/` (6 yer: home, ishani, plaza, loft, city, meet): her biri `<id>.glb` + `<id>.json`; `<id>_nav.tres` city hariç 5 yerde; 78 içe aktarıcı dokusu `<id>_<n>.png`
 - `assets/art/office/`: harita kartı küçük resimleri `thumb_<id>.jpg` (4) ve kafa üstü ikonlar `icons/*.svg` (9, Lucide)
 - Üçüncü taraf: kafa üstü ikonlardaki glifler ve taşı düğmesinin dünyası (`assets/icons/util/globe.svg`),
-  ↳ Ürün sol sütununun bina ve kum saati glifleri (`assets/icons/util/building.svg`, `hourglass.svg`) Lucide'dir (ISC, `assets/art/office/icons/LICENSE-lucide.txt`)
+  ↳ Ürün sol sütununun bina ve kum saati glifleri ile panonun bayrağı (`assets/icons/util/building.svg`, `hourglass.svg`, `flag.svg`) Lucide'dir (ISC, `assets/art/office/icons/LICENSE-lucide.txt`)
 - Üçüncü taraf: ofis kişileri Quaternius Ultimate Modular Men/Women ve Universal Animation Library 1 ve 2 ile Mesh2Motion kliplerindendir (CC0; lisans metinleri `assets/art/people/LICENSES/`,
   ↳ kaynak ve rig hattı `assets/art/people/README.md` ve `tools/people/README.md`). Frank'in ve kurucuların portreleri (`assets/art/portraits/`) bu gövdelerden `tools/people/bake_portraits.gd` ile pişirilir;
   ↳ dosya başına görünüş imzası ve sha256 `assets/art/portraits/README.md`'dedir

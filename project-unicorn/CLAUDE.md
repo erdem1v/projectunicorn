@@ -362,7 +362,7 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   motoruyla kurulan koşuda
   (`pick`, `pick_named`, `pick_relang`, `plan`, `active`, `decision_paper`, `b2c_mvp`, `b2c_live`, `b2c_goal`, `b2b_mvp`, `b2b_mature`, `b2b_quarter`, `b2b_requests`,
   `gate`, `delegate`, `delegate_rehire`, `rnd`, `solo15`, `solo15_tip`, `solo12_active`, `overview_pre`, `server_80`, `server_94`,
-  `server_104`, `server_growth`, `server_auto`, `server_tier`, `server_final`, `server_clause`, `server_b2c`;
+  `server_104`, `server_growth`, `server_auto`, `server_tier`, `server_final`, `server_clause`, `server_lock`, `server_b2c`;
   kurulumları ve ikinci, üçüncü kareleri `sistemler/02_urun_sprint.md`'de). Satış'ın B2C sayfası `--sales-shot=b2c_live` (`live:b2c_live`'ın dünyası, `SHOT|b2c` satırı), MVP öncesi
   B2B boş hâli `--sales-shot=b2b_pre`, kayıptan dönen lead'lerin kapısı `--sales-shot=returning`.
   Kişilerin bir günü gerçek saatle: `--office-crowd-probe=<ofis>:<kişi>:<hız>` (sıçrama,

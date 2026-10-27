@@ -7,10 +7,11 @@ extends RefCounted
 #
 # PRD terimi → sözleşme adı:
 #   Alan → area {id, name, goal_text} (çeyrek hedefinin menüsü) · Modül → module (sol sütun)
-#   Kart → card {id, kind, effort, roles, phases, state, assignees, effect}
+#   Kart → card {id, kind, effort, roles, state, effect} (sonraki sütun, ÇEYREK ve sürüm notu); bu sprintin kartı pano satırıdır
+#   (`center.cards`, aşağıda)
 #   Sprint → center {sprint, capacity, cards} · Sürüm → center.release {version, shipped, carried, velocity, press}
 #   tür yeni/cila/düzeltme/araştırma → kind feature|polish|fix|research
-#   kart durumları → SprintCard.State · fazlar → phases [design, dev, test], her biri done|active|waiting
+#   kart durumları → SprintCard.State
 #   roller → roles: design|dev|test|product (en çok üç ikon)
 #
 # model = {
@@ -29,7 +30,7 @@ extends RefCounted
 #   next: {sprint: int or -1, flags: [{k: "rival"|"deadline", text}], cards: [card]},
 # }
 # center = {mode: "plan"|"active"|"release", sprint (-1 = sprint yok), weeks (sprintin süresi), week (active),
-#           staffed (kadroda çalışan var), cards: [card], forecast: [part], status: {done, running (işçili), queued, decisions},
+#           staffed (kadroda çalışan var), cards: [row],
 #           plan_hold (planlama oyuncuyu bekliyor, saat duruyor),
 #           next_version: {label, weeks: int or -1} or null (MVP öncesi),
 #           mvp: {version, area, need, done (bu sprintte biten dahil), sprint (-1 = tahmin yok), week}
@@ -54,22 +55,14 @@ extends RefCounted
 # column = {sprint, kind: "current"|"proposed"|"empty", capacity: {used, total, done, state: "ok"|"over"|"blocked",
 #           segments: [{pts}]} or null (puanlar kesirli), pm, flags: [...], cards: [card], approved}
 # card = {id, name, kind, roles: [...], effort, state: SprintCard.State, effect: [part],
-#         phases: [] or [3 states] (karar bekleyen ve sıradaki kartta üçü waiting),
-#         phase_pts: {done, total} (sıradaki fazın puanları, kesirli) or null, assignees: [person],
-#         queued (aktifte işçisi ve kararı olmayan, bitmemiş kart: "Sırada"),
-#         decision: {event_id, item (gelen kutusundaki kâğıt), sender (Inbox'un göndericisi), subject, weeks_left,
-#                    last} or null (kart "İş durdu · karar bekliyor"),
-#         effort_split: [{name, weeks}],
 #         locked_node: "" or String, locked_rnd: "" or String (kilidin açılmamış Ar-Ge düğümü; kart oraya götürür),
 #         remaining: -1 or float (kesirli), priority (öncelikli düzeltme),
-#         spills (planda puan alır ama bitmez), no_start: -1 or int (planda puan almaz, kaydığı sprint),
-#         planned_done (kesirli, planda sprint sonunda biten puan),
 #         ready: -1 or 0..1 (sonraki sütunda önden hazırlanan kartın hazır payı; planda sprint sonundaki),
 #         buttons: ["add"|"send_next"|"pull"|"remove"]}   # var olan düğmeler
 # part = {k: "level", area, from, to, from_word, to_word} | {k: "holds", area, word} | {k: "alert_clear", area}
-#      | {k: "cap", name, from, to, from_word, to_word} | {k: "bugs_closed", n}
+#      | {k: "cap", name, from, to, from_word, to_word}
 #      | {k: "bugs", n, accounts (B2C'de -1), users, top ("" ise yok), top_users}   # düzeltme kartının hata satırı
-#      | {k: "request", customer, value} | {k: "research", area} | {k: "request_on_time", customer}
+#      | {k: "request", customer, value} | {k: "research", area}
 #      | {k: "promise", customer}   # kademeye verilmiş açık söz; kart onu etiketle de taşır
 #   level ve cap parçalarında from/to seviyedir (0..3); from_word/to_word o seviyenin beklentiye göre
 #   kelimesidir (ProductQuality.word_for), kelime ve renk ondan.
@@ -95,15 +88,18 @@ extends RefCounted
 #             koşan sprintte kalan haftaların),
 #             suggest: {amount, cards: [{name, done, effort}]} | null (öneri bu sprinte de sütuna da kart eklemiyorsa; yalnız
 #             sütuna ekliyorsa {amount: 0.0, cards: []}: sayı çizilmez, yalnız düğme), candidates (boş planın ilk üç önerisi: kart satırı),
-#             start_skips, team_empty},
+#             people ({kimlik: person + pieces}: panonun çubuklarında yüzü çizilenler; planlamada yalnız kurucu, koşarken aşamalarda
+#             çalışan herkes ve parçaları, `SprintTimeline` kişi parçası biçiminde), start_skips, team_empty},
 #   next: + {load: [{stage, carried, planned, team}], carried: [{card, card_id, stage, effort}]} (devreden: planlamada ve koşarken
 #         zaman ekseninin `out`u, sürüm notunda sonraki sütunun devreden kartlarının kalan ihtiyacı; ikisini de aynı işlevler
 #         hesaplar, kartın aynı aşamadaki payları tek satırdır; planlı: planlamada ve koşarken sonraki sütunun kartlarının sprint
 #         sonundaki kalan ihtiyacı ve hazırlık kazancı, sürüm notunda bugünkü).
 # person = {id, name, role_text, look, stars, founder}.
-# Kart satırı = {id, kind, name, effort, raw_effort, module, fix_text, slot: {kind: "due" (+ text, soon) | "carried" | "late"}
+# Kart satırı (pano) = {id, kind, name, effort, raw_effort, module, fix_text, slot: {kind: "due" (+ text, soon) | "carried" | "late"}
 #   ya da {}, pm, ask, risk, risk_raw (0..1: beklenen hatanın tavana oranı, hazırlanmamış hâli), late, founder, buttons,
-#   stages (SprintTimeline aşamaları)}.
+#   stages (SprintTimeline aşamaları)}. Planlamada düğmeler "→" ve "×", koşarken yok; kapısı sonradan kapanıp başlamayacak kart
+#   zaman ekseninde yoktur: `stages` boş, yalnız "×". `effort` kartın sprintteki yüküdür (`SprintSystem.card_load` ÷ hazırlık kazancı),
+#   `raw_effort` bölünmemiş hâli: sprintin başındaki kalan ihtiyaç; koşarken yalnız testin bulduğu düzeltme işi onu büyütür.
 # Düzeltme işi: `effort`, `raw_effort` ve `suggest.cards[].effort` kartın kendi kalan ihtiyacıdır: testin BULDUĞU düzeltmeyi sayar
 #   (test hata bulunca kartın eforu büyür), oynatmanın yalnız ÖNGÖRDÜĞÜ düzeltmeyi saymaz. `stages`taki dördüncü girdi (`fix: true`)
 #   öngörüleni de taşır, çünkü kartın gerçek bitişi odur; aşama satırlarının dolgusu ve taşması da onu sayar. Gösterim kuralı:
@@ -119,9 +115,9 @@ const TIER_KEYS := {InfraSystem.PROVIDER_LOCAL: "PRODUCT_SERVER_TIER_ECONOMY", I
 const CLUSTER_OVER := 9
 ## Kartın bulunduğu yerdeki düğmeleri.
 const BUTTONS := {
-	SprintCard.State.KILITLI: ["add", "send_next"],
+	SprintCard.State.KILITLI: ["add"],
 	SprintCard.State.SPRINT_PLAN: ["send_next", "remove"],
-	SprintCard.State.SPRINT_AKTIF: ["remove"],
+	SprintCard.State.SPRINT_AKTIF: [],
 	SprintCard.State.PLANLANAN: ["pull", "remove"],
 	SprintCard.State.DEVREDEN: ["pull", "remove"],
 }
@@ -234,6 +230,13 @@ static func ghost(card_id: String) -> Dictionary:
 	if not _ghosts.has(card_id):
 		_ghosts[card_id] = SprintSystem.timeline([SprintCatalog.card_by_id(card_id)])
 	return _ghosts[card_id]
+
+
+## Hayaletin pano satırı: adayın düşeceği yerde (planın sonunda, planla birlikte oynatılmış); motorun tanımadığı kimlik (debug
+## fikstürünün kartı) satır vermez.
+static func ghost_row(card_id: String) -> Dictionary:
+	var c: Dictionary = SprintCatalog.card_by_id(card_id)
+	return {} if c.is_empty() else _row(c, ghost(card_id).cards[card_id], ["add"])
 
 
 ## Hat satırı: metni hata parçasından (`SprintCatalog.bugs_part`) ve geçen haftaya göre değişimden kurulur (Destek raporunun tablosu).
@@ -364,42 +367,13 @@ static func _center(mode: String, release: Dictionary, outcome: Dictionary) -> D
 	var sprint: Dictionary = p.get("sprint", {})
 	var n: int = SprintSystem.sprint_number()
 	var total: float = SprintSystem.capacity()
-	var team: Array = SprintSystem.team()
 	var lead: Character = _lead()
 	var sprint_cards: Array = sprint.get("cards", [])
-	var decision: Variant = _decision()
 	var eta: Dictionary = SprintSystem.mvp_eta() if n > 0 else {}
 	var need: int = int(SprintCatalog.cfg("mvp_lines"))
 	# Sürüm koşulunda bu sprintte biten Çekirdek K1 de bitmiş sayılır.
 	var finished: int = p.get("cards", {}).values().filter(func(c: Dictionary) -> bool:
 		return c.area == "core" and int(c.target_tier) == 1 and c.state == "done").size()
-	var cards: Array = []
-	var status := {"done": 0, "running": 0, "queued": 0, "decisions": 0}
-	for id in sprint_cards:
-		var c: Dictionary = p.cards[id]
-		var card: Dictionary
-		match [mode, c.state]:
-			["plan", _]:
-				var o: Dictionary = outcome.cards[id]
-				card = _planned(c, SprintCard.State.SPRINT_PLAN, {"remaining": _remaining(c), "effort_split": o.split,
-					"spills": not o.finishes and o.done > SprintSystem.EPS, "no_start": n + 1 if o.done <= SprintSystem.EPS else -1,
-					"planned_done": SprintSystem.total(c) - SprintSystem.remaining(c) + o.done})
-			[_, "done"]:
-				card = _card(c, SprintCard.State.BITTI, {"phases": _phases(c), "assignees": _people(c.assignees, team)})
-				status.done += 1
-			_:
-				# Karar bekleyen ve işçisi olmayan kart ilerlemez: fazları bekler, sayaçta kendi parçasındadır.
-				var at: int = SprintSystem.phase(c)
-				var people: Array = _people(c.assignees, team)
-				var part: String = "decisions" if c.decision \
-					else ("queued" if people.is_empty() and at < SprintSystem.PHASE_DONE else "running")
-				status[part] += 1
-				card = _card(c, SprintCard.State.SPRINT_AKTIF, {"assignees": people, "queued": part == "queued",
-					"phases": _phases(c) if part == "running" else ["waiting", "waiting", "waiting"],
-					"phase_pts": {"done": float(c.progress[at]), "total": float(c.need[at])}
-						if at < SprintSystem.PHASE_DONE else null,
-					"decision": decision if c.decision else null})
-		cards.append(card)
 	# Araştıran kurucu sprint ekibinden düşer: Ürün bunu düğümün adıyla söyler ve Ar-Ge'ye götürür.
 	var rnd: Variant = null
 	if CharacterRegistry.get_founder().assigned_job_ids.has(HRConstants.JOB_RESEARCH):
@@ -412,10 +386,6 @@ static func _center(mode: String, release: Dictionary, outcome: Dictionary) -> D
 	return {
 		"mode": mode, "sprint": n if n > 0 else -1, "weeks": SprintSystem.sprint_weeks(), "week": SprintSystem.week(),
 		"staffed": not CharacterRegistry.get_employees().is_empty(),
-		"cards": cards,
-		"forecast": SprintCatalog.forecast(sprint_cards.filter(func(id: String) -> bool: return outcome.cards[id].finishes))
-			if mode == "plan" else [],
-		"status": status,
 		"plan_hold": mode == "plan" and SprintSystem.awaits_plan(),
 		# MVP öncesi v1.0'ın tarihini sürüm koşulu verir; bu sprintin sonu onu vaat etmez.
 		"next_version": {"label": SprintSystem.version_label(ProductState.version() + 1),
@@ -473,15 +443,44 @@ static func _result(r: Dictionary) -> Variant:
 ## liderin önerisi (öneri satırı görünmeyecekse `NO_LEAD`), `pool` aday kartlar (kimlikle).
 static func _plan_view(mode: String, run: Dictionary, offered: Dictionary, pool: Dictionary) -> Dictionary:
 	var total: float = SprintSystem.capacity()
-	var now: float = _now_at(mode)
-	return {"now_at": now, "close_at": run.get("close_at", 0.0), "progress": _progress(run, now) if mode == "active" else null,
+	var now: float = now_at(mode)
+	var cards: Array = _cards(mode, run)
+	return {"cards": cards, "people": _faces(mode, cards, run), "now_at": now, "close_at": run.get("close_at", 0.0),
+		"progress": _progress(run, now) if mode == "active" else null,
 		"capacity": _capacity(mode, run, now), "crew": _crew(run), "suggest": _suggest(offered, pool),
 		"candidates": _candidates(offered.this, pool),
 		"start_skips": mode == "plan" and total > 0.0 and SprintSystem.starting().is_empty(), "team_empty": total == 0.0}
 
 
+## Sprintin kart satırları (pano), planın sırasıyla: planlamada "→" ve "×", koşarken düğmesiz. Kapısı sonradan kapanıp
+## başlamayacak kart zaman ekseninde yoktur: satırı boş `stages` ve yalnız "×" taşır. Sürüm notunda satır yoktur.
+static func _cards(mode: String, run: Dictionary) -> Array:
+	if run.is_empty():
+		return []
+	var p: Dictionary = GameState.product
+	return p.sprint.cards.map(func(id: String) -> Dictionary:
+		var t: Dictionary = run.cards.get(id, {})
+		return _row(p.cards[id], t, [] if mode == "active" else BUTTONS[SprintCard.State.SPRINT_PLAN] if not t.is_empty() else ["remove"]))
+
+
+## Panonun çubuklarında yüzü çizilen kişiler {kimlik: person + pieces}: planlamada çalıştığı kartta çubuğun ucunda kurucu, koşarken
+## aşamalarında çalışan herkes (`pieces` onların şimdi neredeki parçasıdır).
+static func _faces(mode: String, rows: Array, run: Dictionary) -> Dictionary:
+	var areas: Dictionary = SprintCatalog.cfg("role_areas")
+	var founder: String = CharacterRegistry.get_founder().id
+	var out: Dictionary = {}
+	for row: Dictionary in rows:
+		for s: Dictionary in row.stages:
+			for id: String in s.people:
+				if not out.has(id) and (mode == "active" or id == founder):
+					var seat: Dictionary = run.people[id]
+					out[id] = _face(CharacterRegistry.get_character(id), areas[seat.row] if seat.row != "" else HRConstants.AREA_PRODUCT).merged(
+						{"pieces": seat.pieces if mode == "active" else []})
+	return out
+
+
 ## Koşan sprintte şimdiki an: sprint başından hafta. Haftanın içindeki yer mesainin geçen payıdır (mesai öncesi 0, gece 1).
-static func _now_at(mode: String) -> float:
+static func now_at(mode: String) -> float:
 	if mode != "active":
 		return 0.0
 	var start: int = WorkHoursSystem.start_hour()
@@ -558,13 +557,12 @@ static func _capacity(mode: String, run: Dictionary, now: float) -> Variant:
 			row.work += s.need - s.done0
 			row.team += s.in_sprint - s.done0
 			row.out += s.out
-			if mode == "active":
-				row.done += SprintTimeline.done_at(s, now) - s.done0
 			if s.out > SprintSystem.EPS:
 				row.stays[id] = row.stays.get(id, 0.0) + s.out
 	for id in run.people:
 		if run.people[id].row != "":
 			rows[SprintSystem.STAGES.find(run.people[id].row)].team += run.people[id].unspent
+	var made: Dictionary = stage_done(run.cards.values().map(func(card: Dictionary) -> Array: return card.stages), now) if mode == "active" else {}
 	var before: Dictionary = GameState.product.releases.back().get("overflow", {}) if not GameState.product.releases.is_empty() else {}
 	var worst: Dictionary = rows.reduce(func(a: Dictionary, b: Dictionary) -> Dictionary: return b if b.out > a.out else a, rows[0])
 	var solo: bool = _solo(seats)
@@ -577,11 +575,23 @@ static func _capacity(mode: String, run: Dictionary, now: float) -> Variant:
 		row["stays"] = row.stays.keys().map(func(id: String) -> Dictionary:
 			return {"card": SprintCatalog.card_name(GameState.product.cards[id]), "effort": row.stays[id]})
 		row.stays.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.effort > b.effort)
+		row["done"] = made.get(row.stage, 0.0)
 		var seat: Dictionary = seats[row.stage]
 		row["people"] = seat.people
 		row["away"] = seat.away
 		row["cluster"] = _cluster(seat)
 	return rows
+
+
+## Aşama başına bu haftanın `at` anına dek yaptığı iş {aşama: efor}: `stages` kartların aşama listeleridir, eksenin başından önce
+## yapılan iş (`done0`) sayılmaz. Saatlik güncelleme saklanan parçalardan bunu okur.
+static func stage_done(stages: Array, at: float) -> Dictionary:
+	var done := {"design": 0.0, "dev": 0.0, "test": 0.0}
+	for card: Array in stages:
+		for s: Dictionary in card:
+			if done.has(s.stage):
+				done[s.stage] += SprintTimeline.done_at(s, at) - s.done0
+	return done
 
 
 ## Aşama başına oturanlar {people, away}: sprint ekibinden çalışanlar (`run.people`; satırı zaman ekseninin kapasite satırı) ve
@@ -693,32 +703,36 @@ static func _candidates(offered: Array, pool: Dictionary) -> Array:
 		return _row(pool[id], SprintSystem.timeline([pool[id]]).cards[id], ["add"]))
 
 
-## Kart satırı: `c` oynanmamış kart, `t` zaman ekseninin o karttaki kaydı. Efor kartın kalan ihtiyacıdır (`_effort`), risk
-## beklenen hatanın tavana (`SprintBugs.ceiling`) oranı ve hazırlanmamış hâli.
+## Kart satırı: `c` kart, `t` zaman ekseninin o karttaki kaydı (başlamayacak kartta {}). Efor kartın sprintteki yüküdür (`_effort`),
+## risk beklenen hatanın tavana (`SprintBugs.ceiling`) oranı ve hazırlanmamış hâli. Hata metni hesap sayısı ve kullanıcıyla biter:
+## en büyük hesabın adı satıra sığmaz.
 static func _row(c: Dictionary, t: Dictionary, buttons: Array) -> Dictionary:
 	var ref: float = SprintBugs.ceiling()
-	var preparer: Character = CharacterRegistry.get_character(t.prep.by)
+	var preparer: Character = CharacterRegistry.get_character(String(t.get("prep", {}).get("by", "")))
 	var due: int = SprintCatalog.due_sprint(c)
+	var late: bool = t.get("late", false)
 	var slot: Dictionary = {}
 	if due >= 0:
 		slot = _due(due).merged({"kind": "due"})
 	elif c.state == "carried":
 		slot = {"kind": "carried"}
-	elif t.late:
+	elif late:
 		slot = {"kind": "late"}
 	return {"id": c.id, "kind": _kind(c), "name": SprintCatalog.card_name(c), "effort": roundi(_effort(c)),
-		"raw_effort": roundi(SprintSystem.remaining(c)),
+		"raw_effort": roundi(SprintSystem.card_load(c)),
 		"module": SprintCatalog.area_short(c.area),
-		"fix_text": SprintUiShared.bugs_text(SprintCatalog.bugs_part(c.line, c.bugs)) if c.kind == "fix" else "",
+		"fix_text": SprintUiShared.bugs_text(SprintCatalog.bugs_part(c.line, c.bugs), false) if c.kind == "fix" else "",
 		"slot": slot, "pm": null if preparer == null else _face(preparer, HRConstants.AREA_PRODUCT), "ask": _ask(c),
-		"risk": minf(1.0, t.h / ref) if ref > 0.0 else 0.0, "risk_raw": minf(1.0, t.h0 / ref) if ref > 0.0 else 0.0,
-		"late": t.late, "founder": t.founder, "buttons": buttons, "stages": t.stages}
+		"risk": minf(1.0, t.get("h", 0.0) / ref) if ref > 0.0 else 0.0, "risk_raw": minf(1.0, t.get("h0", 0.0) / ref) if ref > 0.0 else 0.0,
+		"late": late, "founder": t.get("founder", false),
+		"buttons": buttons.filter(func(b: String) -> bool: return b != "remove" or not c.get("follow", false)),
+		"stages": t.get("stages", [])}
 
 
-## Kartın eforu: kalan ihtiyaç ÷ hazırlık kazancı. Oynanmamış karttan okunur: testin bulduğu düzeltme işi kartta olduğu için
-## sayılır, oynatmanın öngördüğü iş sayılmaz.
+## Kartın eforu: sprintteki yükü ÷ hazırlık kazancı. Yük sprintin başındaki kalan ihtiyaçtır; koşarken yalnız testin bulduğu
+## düzeltme işi onu büyütür, oynatmanın öngördüğü iş sayılmaz.
 static func _effort(c: Dictionary) -> float:
-	return SprintSystem.remaining(c) / (1.0 + float(c.get("prep_gain", 0.0)))
+	return SprintSystem.card_load(c) / (1.0 + float(c.get("prep_gain", 0.0)))
 
 
 ## Kartın aşama başına kalan ihtiyacı [tasarım, geliştirme, test] (`_effort`un parçaları); hazırlık kazancı `gains`ta varsa
@@ -860,7 +874,7 @@ static func _quarter(center: Dictionary, next: Dictionary) -> Dictionary:
 		return clock.merged({"state": "open", "goal": null, "columns": []})
 	var total: float = SprintSystem.capacity()
 	var columns: Array = [{"sprint": center.sprint, "kind": "current", "capacity": _sprint_bar(), "pm": false,
-		"flags": _flags(center.sprint), "cards": center.cards, "approved": false}]
+		"flags": _flags(center.sprint), "cards": _current_cards(center.mode), "approved": false}]
 	for plan in SprintCatalog.pm_plans():
 		var cards: Array = (next.cards if plan.number == next.sprint else []) + plan.cards.map(
 			func(id: String) -> Dictionary: return _card(SprintCatalog.card_by_id(id), SprintCard.State.PLANLANAN))
@@ -913,6 +927,16 @@ static func _goal() -> Dictionary:
 		"total": total, "progress_text": _t("PRODUCT_GOAL_PROGRESS").format({"now": now, "total": total})}}
 
 
+## ÇEYREK'in bu sprint sütununun mini kartları: planlamada kalan puanıyla, kapısı kapanmış kart kilitli; koşarken bitmiş kart bitti.
+static func _current_cards(mode: String) -> Array:
+	var p: Dictionary = GameState.product
+	return p.get("sprint", {}).get("cards", []).map(func(id: String) -> Dictionary:
+		var c: Dictionary = p.cards[id]
+		if mode == "plan":
+			return _planned(c, SprintCard.State.SPRINT_PLAN, {"remaining": _remaining(c)})
+		return _card(c, SprintCard.State.BITTI if c.state == "done" else SprintCard.State.SPRINT_AKTIF))
+
+
 ## ÇEYREK'in bu sprint sütununun çubuğu: sprintin kartlarının yükü ve ekibin puanı.
 static func _sprint_bar() -> Dictionary:
 	var cards: Dictionary = GameState.product.cards
@@ -940,7 +964,10 @@ static func _server() -> Dictionary:
 	var unit_price: int = InfraSystem.unit_price(provider)
 	var step: int = InfraSystem.capacity_step()
 	var more: int = units + step
-	var fewer: int = maxi(units - step, 0)
+	var floor_units: int = InfraSystem.capacity_floor()
+	var fewer: int = maxi(units - step, floor_units)
+	var lock: String = InfraSystem.lock_reason()
+	var lock_tip: String = _t(lock).format({"weeks": Fmt.weeks(InfraSystem.lock_weeks_left())}) if lock != "" else ""
 	var load_text: String = ""
 	if capacity > 0:
 		load_text = _t("PRODUCT_SERVER_LOAD_OVER_" + kind).format({"load": percent, "short": Fmt.group(served - capacity)}) \
@@ -955,14 +982,14 @@ static func _server() -> Dictionary:
 		decrease += "\n" + _t("PRODUCT_SERVER_TIP_DECREASE_SHORT").format({"load": InfraSystem.load_percent(fewer)})
 	var waiting: int = B2BSalesSystem.clause_waiting()
 	return {
-		"tiers": InfraSystem.PROVIDER_IDS.map(func(id: String) -> Dictionary: return _tier(id, kind, provider, units, bill)),
+		"tiers": InfraSystem.PROVIDER_IDS.map(func(id: String) -> Dictionary: return _tier(id, kind, provider, units, bill, lock_tip)),
 		"active": InfraSystem.PROVIDER_IDS.find(provider),
 		"capacity": _t("PRODUCT_SERVER_CAPACITY_" + kind).format({"n": Fmt.group(capacity), "bill": Fmt.money_exact(bill)}),
 		"percent": percent if capacity > 0 else 0, "state": InfraSystem.capacity_state(), "load": load_text,
 		"note": _server_note(kind, capacity, percent),
 		"clause": _t(Fmt.count_key("SALES_CLAUSE_WAITING", waiting)).format({"n": waiting}) if waiting > 0 else "",
-		"decrease": {"text": _t("PRODUCT_SERVER_BTN_DECREASE").format({"n": Fmt.group(step * unit)}), "tip": decrease,
-			"off": units <= InfraSystem.CAPACITY_MIN},
+		"decrease": {"text": _t("PRODUCT_SERVER_BTN_DECREASE").format({"n": Fmt.group(step * unit)}),
+			"tip": lock_tip if lock_tip != "" and units <= floor_units else decrease, "off": units <= floor_units},
 		"increase": {"text": _t("PRODUCT_SERVER_BTN_INCREASE").format({"n": Fmt.group(step * unit)}),
 			"tip": _t("PRODUCT_SERVER_TIP_INCREASE_" + kind).format({"n": Fmt.group(step * unit), "old_cost": Fmt.money_exact(bill),
 				"new_cost": Fmt.money_exact(more * unit_price), "old_load": percent, "new_load": InfraSystem.load_percent(more)})},
@@ -994,11 +1021,13 @@ static func _server_note(kind: String, capacity: int, percent: int) -> Variant:
 
 
 ## Bir kademe: adı, ipucu (fiyat, kesinti çarpanı, bedeller ve sözleşme şartı) ve seçilince açılan geçiş önizlemesi.
-## Kurumsal'dayken alttakiler kilitlidir ve ipucu gerekçedir.
-static func _tier(id: String, kind: String, active: String, units: int, bill: int) -> Dictionary:
+## Kurumsal'dayken alttakiler kilitlidir ve ipucu gerekçedir; sunucu sözleşmesi sürerken (`lock_tip` gerekçesi) etkin kademe
+## dışındakiler de.
+static func _tier(id: String, kind: String, active: String, units: int, bill: int, lock_tip: String) -> Dictionary:
 	var name: String = _t(TIER_KEYS[id])
 	var enterprise: bool = id == InfraSystem.PROVIDER_ENTERPRISE
 	var off: bool = active == InfraSystem.PROVIDER_ENTERPRISE and not enterprise
+	var held: bool = lock_tip != "" and id != active
 	var parts: PackedStringArray = [_t("PRODUCT_SERVER_TIER_TIP_PRICE_" + kind).format(
 		{"price": Fmt.money_exact(InfraSystem.unit_price(id)), "unit": Fmt.group(InfraSystem.unit_size())}),
 		_t("PRODUCT_SERVER_TIER_TIP_OUTAGE").format({"mult": Fmt.number(IncidentSystem.tier_mult(id), 2)})]
@@ -1006,8 +1035,9 @@ static func _tier(id: String, kind: String, active: String, units: int, bill: in
 		parts.append(_t("PRODUCT_SERVER_TIER_TIP_REPORTS").format({"pct": roundi((InfraSystem.LOCAL_INFLOW_MULT - 1.0) * 100.0)}))
 	parts.append(_t("PRODUCT_SERVER_TIER_TIP_CLAUSE_" + ("YES" if enterprise else "NO")))
 	var final_note: String = _t("PRODUCT_SERVER_TIER_TIP_FINAL") if enterprise else ""
-	return {"id": id, "name": name, "off": off, "final": final_note,
-		"tip": _t("PRODUCT_SERVER_TIER_LOCKED") if off else "\n".join([name, SprintUiShared.SEP.join(parts), final_note]).strip_edges(),
+	return {"id": id, "name": name, "off": off or held, "final": final_note,
+		"tip": _t("PRODUCT_SERVER_TIER_LOCKED") if off else lock_tip if held
+			else "\n".join([name, SprintUiShared.SEP.join(parts), final_note]).strip_edges(),
 		"preview": _t("PRODUCT_SERVER_TIER_PREVIEW").format({"from": _t(TIER_KEYS.get(active, "")), "to": name,
 			"old": Fmt.money_exact(bill), "new": Fmt.money_exact(units * InfraSystem.unit_price(id))})}
 
@@ -1017,9 +1047,7 @@ static func _tier(id: String, kind: String, active: String, units: int, bill: in
 static func _card(c: Dictionary, state: SprintCard.State, extra := {}) -> Dictionary:
 	var card := {"id": c.id, "name": SprintCatalog.card_name(c), "kind": _kind(c), "roles": c.roles,
 		"effort": roundi(SprintSystem.total(c)), "state": state, "effect": SprintCatalog.card_effect(c),
-		"phases": [], "phase_pts": null, "assignees": [], "queued": false, "decision": null,
-		"effort_split": [], "locked_node": "", "locked_rnd": "",
-		"remaining": -1, "spills": false, "no_start": -1, "planned_done": 0.0, "ready": -1.0,
+		"locked_node": "", "locked_rnd": "", "remaining": -1, "ready": -1.0,
 		"priority": SprintCatalog.is_priority(c), "buttons": BUTTONS.get(state, [])}
 	card.merge(extra, true)
 	if c.get("follow", false):
@@ -1057,10 +1085,13 @@ static func _remaining(c: Dictionary) -> float:
 	return left if left < SprintSystem.total(c) - SprintSystem.EPS else -1.0
 
 
-## Faz noktası: sıradaki fazdan öncekiler bitti, o sürüyor, sonrakiler bekliyor.
-static func _phases(c: Dictionary) -> Array:
-	var at: int = SprintSystem.phase(c)
-	return range(3).map(func(i: int) -> String: return "done" if i < at else ("active" if i == at else "waiting"))
+## Sayfanın saat içinde değişebilen ve sinyalsiz okuduğu hâli: masada görünen kâğıtlar ve ekrandaki karar (kartın "?" yuvası), çalışanların
+## durumu ve işleri, kurucunun işleri (kim sprintte çalışabilir). Sekme her saatin `desk_changed`ında bunu son kurulumunkiyle karşılaştırır.
+static func desk_stamp() -> Array:
+	var team: Array = [CharacterRegistry.get_founder().assigned_job_ids.duplicate()]
+	for c in CharacterRegistry.get_employees():
+		team.append([c.id, c.status, c.assigned_job_ids.duplicate()])
+	return [EventGate.active_id(), EvPapers.visible(-1), team]
 
 
 ## Bekleyen sprint kararı: kâğıdı gelen kutusundadır (açıldıysa ekrandaki karardır); satır kâğıdın
@@ -1087,13 +1118,6 @@ static func _lead() -> Character:
 			best = v
 			lead = c
 	return lead
-
-
-## Haftanın atananları; ekipten hafta ortasında düşen (ayrılan, izne giden) kartta çizilmez.
-static func _people(ids: Array, team: Array) -> Array:
-	var here: Array = team.map(func(t: Dictionary) -> String: return t.id)
-	return ids.filter(func(id: String) -> bool: return id in here).map(
-		func(id: String) -> Dictionary: return _person(CharacterRegistry.get_character(id)))
 
 
 static func _person(c: Character) -> Dictionary:

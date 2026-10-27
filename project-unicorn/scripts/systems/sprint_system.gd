@@ -392,9 +392,10 @@ static func finish_beta_cards() -> void:
 
 ## Liderin önerisi bu sprintin boş yerlerini doldurur ve sonraki sütundaki kartların sonuna kart ekler. Öneri büyük ekipte
 ## idempotent değildir (devreden kalkanı çağrı başına sayılır): uygulandıktan sonra ikinci uygulama bir şey yapmaz; bayrağı
-## planın değişmesi (`_place`, `remove`), Kurucu sprintte anahtarı ve çeyreğin hedefi indirir, devir indirmez.
+## planın değişmesi (`_place`, `remove`), Kurucu sprintte anahtarı ve çeyreğin hedefi indirir, devir indirmez. Ekip yokken
+## (kapasite 0) kart yerleşmez ve bayrak yazılmaz: kapasite dönünce öneri yine uygulanır.
 static func apply_lead() -> void:
-	if mode() != "plan" or _p().sprint.get("lead_applied", false):
+	if mode() != "plan" or _p().sprint.get("lead_applied", false) or capacity() <= 0:
 		return
 	var lead: Dictionary = SprintCatalog.lead_suggestion()
 	for id in lead.this:

@@ -14,17 +14,21 @@ const ARROW := "res://assets/icons/util/arrow_right.svg"
 const WARN := "res://assets/icons/util/warn.svg"
 const CHECK := "res://assets/icons/util/check.svg"
 const CLOCK := "res://assets/icons/util/clock.svg"
+const FLAG := "res://assets/icons/util/flag.svg"
+const PLUS := "res://assets/icons/util/plus.svg"
+const CHEVRON_DOWN := "res://assets/icons/util/chevron_down.svg"
 const HOURGLASS := "res://assets/icons/util/hourglass.svg"
 const BUILDING := "res://assets/icons/util/building.svg"
 const LOCK := "res://assets/icons/util/lock.svg"
-const GAIN := "res://assets/icons/stake/cash_in.svg"
 const LEVEL_KEYS := {
 	"strong": "PRODUCT_LEVEL_STRONG", "enough": "PRODUCT_LEVEL_ENOUGH",
 	"weak": "PRODUCT_LEVEL_WEAK", "none": "PRODUCT_LEVEL_NONE",
 }
 const RESULT_KEYS := {"expected": "PRODUCT_RESULT_EXPECTED", "actual": "PRODUCT_RESULT_ACTUAL"}
+## Kaydırma yeri yerleşim oturana dek bu kadar kare yeniden yazılır.
+const SCROLL_SETTLE_FRAMES := 3
 ## Kartın glif tuşları; listede olmayan tür (remove) kelimeyle yazılır.
-const KEY_GLYPHS := {"add": "res://assets/icons/util/plus.svg", "send_next": ARROW,
+const KEY_GLYPHS := {"add": PLUS, "send_next": ARROW,
 	"pull": "res://assets/icons/util/chevron_up.svg"}
 ## Hat satırının değişim oku: artış yukarı, azalış aşağı üçgen.
 const TREND_ICONS := {1: "res://assets/icons/util/tri_up.svg", -1: "res://assets/icons/util/tri_down.svg"}
@@ -92,22 +96,6 @@ static func squares(level: float, px: int, color: Color, count := 3) -> Control:
 	s.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	s.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return s
-
-
-## Faz noktası: bekleyen faz halkadır, öbürü `ink` renginde dolu daire.
-static func phase_dot(waiting: bool, ink: Color) -> Control:
-	var dot := Control.new()
-	dot.custom_minimum_size = Vector2.ONE * UiTokens.D_PHASE_DOT
-	dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	dot.draw.connect(func() -> void:
-		var r: float = UiTokens.D_PHASE_DOT / 2.0
-		if waiting:
-			dot.draw_arc(Vector2.ONE * r, r - UiTokens.BORDER_HAIRLINE / 2.0, 0.0, TAU, 24, UiTokens.D_LINE_3,
-				UiTokens.BORDER_HAIRLINE, true)
-		else:
-			dot.draw_circle(Vector2.ONE * r, r, ink))
-	return dot
 
 
 ## Kapasite çubuğu ve "kullanılan/toplam"; aşımda sayı da uyarı renginde.
@@ -218,9 +206,9 @@ static func stars_text(stars: float) -> String:
 	return Fmt.number(stars, 0 if is_equal_approx(stars, roundf(stars)) else 1) + "★"
 
 
-## Kişinin yüzü ve işaretleri: kurucunun halkası, sağ altta yıldız çipi; sprinte seçilemeyen (`away`) soluk gri durur, yıldız taşımaz.
-## Çip yüzün sağ kenarına biner (`D_STAR_CHIP`), yüzün yanında `D_W_FACE_SLOT`ta yer tutulur.
-static func face(person: Dictionary, px: int, away := false) -> Panel:
+## Kişinin yüzü ve işaretleri: kurucunun halkası, sağ altta yıldız çipi (`chip` yanlışsa çip yok); sprinte seçilemeyen (`away`) soluk
+## gri durur, yıldız taşımaz. Çip yüzün sağ kenarına biner (`D_STAR_CHIP`), yüzün yanında `D_W_FACE_SLOT`ta yer tutulur.
+static func face(person: Dictionary, px: int, away := false, chip := true) -> Panel:
 	var disc: Panel = avatar(person, px, away)
 	disc.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	if person.founder:
@@ -235,20 +223,20 @@ static func face(person: Dictionary, px: int, away := false) -> Panel:
 		disc.add_child(ring)
 	if away:
 		disc.modulate.a = UiTokens.D_AWAY_ALPHA
-	else:
-		var chip := label(stars_text(person.stars), &"StarChip")
-		chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		chip.anchor_left = 1.0
-		chip.anchor_right = 1.0
-		chip.anchor_top = 1.0
-		chip.anchor_bottom = 1.0
-		chip.grow_horizontal = Control.GROW_DIRECTION_END
-		chip.grow_vertical = Control.GROW_DIRECTION_BEGIN
-		chip.offset_left = -UiTokens.D_STAR_CHIP.x
-		chip.offset_right = -UiTokens.D_STAR_CHIP.x
-		chip.offset_top = UiTokens.D_STAR_CHIP.y
-		chip.offset_bottom = UiTokens.D_STAR_CHIP.y
-		disc.add_child(chip)
+	elif chip:
+		var stars := label(stars_text(person.stars), &"StarChip")
+		stars.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		stars.anchor_left = 1.0
+		stars.anchor_right = 1.0
+		stars.anchor_top = 1.0
+		stars.anchor_bottom = 1.0
+		stars.grow_horizontal = Control.GROW_DIRECTION_END
+		stars.grow_vertical = Control.GROW_DIRECTION_BEGIN
+		stars.offset_left = -UiTokens.D_STAR_CHIP.x
+		stars.offset_right = -UiTokens.D_STAR_CHIP.x
+		stars.offset_top = UiTokens.D_STAR_CHIP.y
+		stars.offset_bottom = UiTokens.D_STAR_CHIP.y
+		disc.add_child(stars)
 	return disc
 
 
@@ -359,6 +347,27 @@ static func switch(row: Control, text: String, on: bool, toggled: Callable, tip 
 	row.add_child(toggle)
 
 
+## Yeniden kurulan kaydırma alanı eski yerine döner: yerleşmemiş içerik değeri sıfıra kırpardı, bu yüzden çubuğun üst sınırı
+## değer kadar açılır ve içerik yerleşince gerçek sınırı alır. Sarılan yazı bir sonraki karede oturur ve yerleşimin geçici sayfa
+## boyu değeri kırpabilir: değer yerleşim oturana dek her karede yeniden yazılır.
+static func keep_scroll(scroll: ScrollContainer, value: int) -> void:
+	if value <= 0:
+		return
+	var bar: VScrollBar = scroll.get_v_scroll_bar()
+	bar.max_value = maxf(bar.max_value, value + bar.page + 1.0)
+	scroll.scroll_vertical = value
+	_settle_scroll(scroll, value)
+
+
+static func _settle_scroll(scroll: ScrollContainer, value: int) -> void:
+	var tree: SceneTree = scroll.get_tree()
+	for _frame in SCROLL_SETTLE_FRAMES:
+		await tree.process_frame
+		if not is_instance_valid(scroll):
+			return
+		scroll.scroll_vertical = value
+
+
 ## Sütun ve şerit düğmesi: metni ve görünümü, basılınca `on_press`.
 static func button(text: String, variation: StringName, on_press: Callable) -> Button:
 	var b := Button.new()
@@ -382,17 +391,17 @@ static func effect_line(parts: Array) -> VBoxContainer:
 		flow.add_theme_constant_override("h_separation", UiTokens.SPACE_L)
 		flow.add_theme_constant_override("v_separation", UiTokens.SPACE_XS)
 		for part in rest:
-			flow.add_child(_part(part, false))
+			flow.add_child(_part(part))
 		col.add_child(flow)
 	return col
 
 
-## Düzeltme kartının hata satırı: "6 hata · 3 hesap · 140 kullanıcı · en büyüğü Demir Holding (100 kullanıcı)";
-## B2C'de hesap sayısı (-1) ve en büyük hesap yoktur.
-static func bugs_text(part: Dictionary) -> String:
+## Düzeltme kartının hata satırı: "6 hata · 3 hesap · 140 kullanıcı · en büyüğü Demir Holding (100 kullanıcı)"; `with_top`
+## yanlışsa en büyük hesap yazılmaz. B2C'de hesap sayısı (-1) ve en büyük hesap yoktur.
+static func bugs_text(part: Dictionary, with_top := true) -> String:
 	var bits: PackedStringArray = [count("PRODUCT_FX_BUGS", int(part.n))]
 	bits.append_array(impact_bits(part))
-	if part.top != "":
+	if with_top and part.top != "":
 		bits.append(RnDUiShared.t("PRODUCT_FX_TOP").format(
 			{"account": part.top, "users": count("PRODUCT_USER_COUNT", int(part.top_users))}))
 	return SEP.join(bits)
@@ -431,39 +440,20 @@ static func open_product_area(tree: SceneTree, area_id: String) -> void:
 	tree.get_first_node_in_group(&"window_layer").get_current_page_body().open_area(area_id)
 
 
-## SPRINT SONUNDA öngörüsü: her parça kazanç glifiyle kendi kutusunda, seviye kelimeyle okunur.
-static func forecast(parts: Array) -> HFlowContainer:
-	var flow := HFlowContainer.new()
-	flow.add_theme_constant_override("h_separation", UiTokens.SPACE_S)
-	flow.add_theme_constant_override("v_separation", UiTokens.SPACE_S)
-	for part in parts:
-		var chip := PanelContainer.new()
-		chip.theme_type_variation = &"FxChip"
-		var row := _part(part, true)
-		row.add_child(UiFactory.make_glyph(GAIN, UiTokens.D_ICON_PART, UiTokens.D_pos()))
-		row.move_child(row.get_child(-1), 0)
-		chip.add_child(row)
-		flow.add_child(chip)
-	return flow
-
-
 ## Sayılan anahtarın metni: `n` 1 ise tekili, binlik ayraçlı.
 static func count(key: String, n: int) -> String:
 	return RnDUiShared.t(Fmt.count_key(key, n)).format({"n": Fmt.group(n)})
 
 
-static func _part(part: Dictionary, forecast_mode: bool) -> HBoxContainer:
+static func _part(part: Dictionary) -> HBoxContainer:
 	var row := box(UiTokens.SPACE_S)
-	var say: StringName = &"KeyText" if forecast_mode else &"MetaMuted"
+	var say: StringName = &"MetaMuted"
 	match String(part.k):
 		"level", "cap":
 			row.add_child(label(String(part.area if part.k == "level" else part.name), &"KeyText"))
 			for end in [["from", "from_word"], [], ["to", "to_word"]]:
 				if end.is_empty():
 					row.add_child(UiFactory.make_glyph(ARROW, UiTokens.D_ICON_MARK, UiTokens.D_INK_4))
-				elif forecast_mode and part.k == "level":
-					var word: String = part[end[1]]
-					row.add_child(label(RnDUiShared.t(LEVEL_KEYS[word]), &"KeyText", word_color(word)))
 				else:
 					row.add_child(squares(float(part[end[0]]), UiTokens.D_SQUARE_SM, word_color(String(part[end[1]]))))
 		"holds":
@@ -474,21 +464,12 @@ static func _part(part: Dictionary, forecast_mode: bool) -> HBoxContainer:
 			row.add_child(label(String(part.area), &"KeyText"))
 			row.add_child(UiFactory.make_glyph(WARN, UiTokens.D_ICON_PART, UiTokens.D_warn()))
 			row.add_child(label(RnDUiShared.t("PRODUCT_FX_ALERT_CLEARS"), say))
-		"bugs_closed":
-			row.add_child(label(count("PRODUCT_FX_BUGS_CLOSED", int(part.n)), say))
 		"request":
 			row.add_child(label(RnDUiShared.t("PRODUCT_FX_REQUEST").format({"customer": part.customer}) + SEP
 				+ RnDUiShared.t("PRODUCT_PER_YEAR").format({"amount": Fmt.money_exact(int(part.value))}), say))
 		"research":
 			row.tooltip_text = String(part.area) + " " + RnDUiShared.t("PRODUCT_FX_RESEARCH")
 			row.add_child(label(String(part.area), &"KeyText"))
-		"request_on_time":
-			row.add_child(label(String(part.customer), &"KeyText"))
-			row.add_child(label(RnDUiShared.t("PRODUCT_FX_ON_TIME"), say))
 		"promise":
-			if forecast_mode:
-				row.add_child(label(String(part.customer), &"KeyText"))
-				row.add_child(label(RnDUiShared.t("PRODUCT_FX_PROMISE_KEPT"), say))
-			else:
-				row.add_child(label(RnDUiShared.t("PRODUCT_FX_PROMISE").format({"customer": part.customer}), say))
+			row.add_child(label(RnDUiShared.t("PRODUCT_FX_PROMISE").format({"customer": part.customer}), say))
 	return row

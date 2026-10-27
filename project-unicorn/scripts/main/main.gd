@@ -3733,16 +3733,15 @@ func _run_ending_shot(key: String) -> void:
 	get_tree().quit()
 
 
-# --product-shot=<c1..c5|cards|flow|edge:<name>|live:<scenario>>: the Product tab. The first four
+# --product-shot=<c1..c5|flow|edge:<name>|live:<scenario>>: the Product tab. The first four
 # are fed by the debug fixture source (scripts/debug/product_fixtures.gd, edge names live there)
 # through the shell's debug relays, the same path an MCP session takes; flow starts from c1 and
-# saves one frame after each of start, advance and plan_next; cards saves a second frame with the sprint
-# column scrolled to its locked card (<stem>_locked); edge:goal_menu opens the quarter goal's
+# saves one frame after each of start, advance and plan_next; edge:goal_menu opens the quarter goal's
 # menu with a click on its strip. live draws
 # ProductModel.live() over a run seeded through SprintSystem (_seed_product_live); live:pick_named is
 # the type picker with B2C, a type and a name picked, live:pick_relang saves it and switches this run to
-# English (<stem>_rebuilt: the rebuilt picker keeps the picks); live:decision_paper presses the decision row's
-# Karara git, so the frame is Olaylar on the sprint paper; live:gate saves the MVP gate, presses its
+# English (<stem>_rebuilt: the rebuilt picker keeps the picks); live:decision_paper presses the asking card's
+# "?", so the frame is Olaylar on the sprint paper; live:gate saves the MVP gate, presses its
 # Yayınla and saves the v1.0 note (<stem>_publish); live:b2c_goal saves the planning with the lead's plan offered, applies
 # it with no quarter goal (<stem>_lead), then takes the lead's cards back out, picks the goal Trust and applies the lead's
 # plan again (<stem>_trust); live:plan saves the plan, presses Bu sprinti boş
@@ -3770,19 +3769,15 @@ func _run_product_shot(id: String) -> void:
 			picker._save_draft()
 		if id.begins_with("live:decision_paper"):
 			await get_tree().process_frame
-			for go: Button in _shell.find_children("*", "Button", true, false):
-				if go.text == tr("PRODUCT_GO_DECISION"):
-					go.pressed.emit()
+			for row: BoardRow in _shell.find_children("*", "BoardRow", true, false):
+				if row.card.ask != null:
+					row.action.emit("decide", {"card_id": row.card.id, "item": row.card.ask.item})
 					break
 			if id != "live:decision_paper":   # a real paper: its answer is open, so its options and their chips are in the frame
 				await get_tree().create_timer(0.4).timeout
 				_press_button_labelled(_shell, tr("MAIL_RESPOND"))
 		if id.begins_with("live:a4_") and not await _product_a4_ready(id.trim_prefix("live:")):
 			return
-		if id == "live:solo15":
-			await get_tree().process_frame
-			(_shell.find_children("*", "SprintCard", true, false).filter(func(card: SprintCard) -> bool:
-				return card.state == SprintCard.State.SPRINT_PLAN).back() as SprintCard).show_effort()
 		# A frame before each action, the last one after them (stem + the action's suffix). English for this
 		# run only: Localization.set_language would also store it as the player's language.
 		var press := func(key: String) -> Callable: return _press_button_labelled.bind(_shell, tr(key))
@@ -3799,7 +3794,12 @@ func _run_product_shot(id: String) -> void:
 					SprintSystem.remove(card_id)
 			SprintSystem.pick_goal("trust")
 			SprintSystem.apply_lead()
+		# live:a4_run_w2: a second frame two game hours on (_02): the now line moves with the clock.
+		var two_hours_on := func() -> void:
+			TimeManager.advance_hours(2)
+			print(_productshot_line("a4_run_w2"))
 		var then: Dictionary = {"live:gate": [[press.call("PROD_SHIP_PUBLISH"), "_publish"]],
+			"live:a4_run_w2": [[two_hours_on, "_02"]],
 			"live:plan": [[press.call("PRODUCT_SKIP_SPRINT"), "_skip"], [press.call("PRODUCT_START_SPRINT"), "_start"]],
 			"live:rnd": [[press.call("PRODUCT_GO_RND"), "_go"]],
 			"live:pick_relang": [[to_en, "_rebuilt"]],
@@ -3826,19 +3826,6 @@ func _run_product_shot(id: String) -> void:
 		click.button_index = MOUSE_BUTTON_LEFT
 		click.pressed = true
 		(_shell.find_children("*", "QuarterView", true, false)[0] as QuarterView).get_child(0).gui_input.emit(click)
-	if id == "cards":
-		# The gallery runs past the sprint column: a second frame, hover dropped, scrolled to the locked card
-		# (its R&D link).
-		await get_tree().process_frame
-		await get_tree().create_timer(0.4).timeout
-		_save_shot(stem)
-		get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()._set_ui("", "hover_card")
-		await get_tree().create_timer(0.2).timeout
-		var panel: Node = _shell.find_children("*", "SprintPanel", true, false)[0]
-		var locked: SprintCard = panel.find_children("*", "SprintCard", true, false).filter(func(card: SprintCard) -> bool:
-			return card.state == SprintCard.State.KILITLI)[0]
-		(panel.find_children("*", "ScrollContainer", true, false)[0] as ScrollContainer).scroll_vertical = int(locked.position.y)
-		stem += "_locked"
 	if id != "flow":
 		await _finish_shot(stem)
 		return
@@ -3863,7 +3850,7 @@ func _product_overview_shot(scenario: String, stem: String) -> void:
 	var aim: Dictionary = {"overview_pre": Fmt.upper(tr("PRODUCT_OV_TAB_OVERVIEW")),
 		"server_80": tr("PRODUCT_SERVER_BTN_INCREASE").split("{n}")[0], "server_94": tr("PRODUCT_SERVER_BTN_DECREASE").split("{n}")[0],
 		"server_104": tr("PRODUCT_SERVER_BTN_DECREASE").split("{n}")[0], "server_tier": tr("PRODUCT_SERVER_TIER_STANDARD"),
-		"server_final": tr("PRODUCT_SERVER_TIER_ECONOMY")}
+		"server_final": tr("PRODUCT_SERVER_TIER_ECONOMY"), "server_lock": tr("PRODUCT_SERVER_BTN_DECREASE").split("{n}")[0]}
 	if not aim.has(scenario):
 		await _finish_shot(stem)
 		return
@@ -3880,9 +3867,9 @@ func _product_overview_shot(scenario: String, stem: String) -> void:
 
 ## live:<pick|pick_named|pick_relang|plan|active|decision_paper|b2c_mvp|b2c_live|b2c_goal|b2b_mvp|b2b_mature|b2b_quarter|
 ## b2b_requests|gate|rnd|delegate|delegate_rehire|solo15|solo15_tip|solo12_active|overview_pre|server_80|server_94|server_104|server_growth|
-## server_auto|server_tier|server_final|server_clause|server_b2c>. The pick ones leave the product untyped (the type picker). The solo ones
+## server_auto|server_tier|server_final|server_clause|server_lock|server_b2c>. The pick ones leave the product untyped (the type picker). The solo ones
 ## leave the founder alone from 09:00: solo15 and solo15_tip stop in Sprint 1 planning at 15 hours, solo15 with
-## the lead's plan applied (its hover on the carried card), solo15_tip with the plan only offered; solo12_active
+## the lead's plan applied, solo15_tip with the plan only offered; solo12_active
 ## starts the lead's plan at 12 hours, two cards over capacity (30/28). The rest choose a type, staff it with the
 ## HR shot roster (gate and rnd keep the founder alone at the default hours) and play through SprintSystem with
 ## only its own daily step ticking, so no card mounts: plan stops in Sprint 1 planning with the lead's plan and
@@ -4026,7 +4013,7 @@ func _seed_product_live(scenario: String) -> void:
 
 
 ## live:a4_<frame>: the frames of the Ürün > Sprint screen as worlds the engine plays; each prints
-## `PRODUCTSHOT|kind=|cards=|people=|row_gaps=` once its tab is mounted. A world (_A4_WORLDS) is a company (`crew`: a token per
+## `PRODUCTSHOT|kind=|cards=|people=|row_gaps=|now=` once its tab is mounted. A world (_A4_WORLDS) is a company (`crew`: a token per
 ## employee, the role letter p d v t for product manager, designer, developer, tester and its stars, then `:training`, `:leave`,
 ## `:research` or `:support` for one the sprint cannot seat), the sprints played before the frame (`before`, each a plan) and the
 ## frame's moment. `pre` stays before v1.0; `accounts` customers are signed (their requests are the frame's); `off` is the
@@ -4236,9 +4223,9 @@ func _a4_week() -> void:
 	GameState.start_work_week()
 
 
-## live:a4_* once the tab is mounted: a4_six_hover's hover ghost with its module open in the left column (a4_requests opens its
-## first request's module), every face drawn (a frame with empty faces is not saved, the run fails), then the line the frames'
-## gates read (`row_gaps` counts the gaps of every card row of the timeline).
+## live:a4_* once the tab is mounted: a4_six_hover's hover ghost with its module open in the left column and the board scrolled to
+## the ghost under the plan (a4_requests opens its first request's module), every face drawn (a frame with empty faces is not
+## saved, the run fails), then the line the frames' gates read (`row_gaps` counts the gaps of every card row of the timeline).
 func _product_a4_ready(kind: String) -> bool:
 	await get_tree().process_frame
 	var page: Control = get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()
@@ -4255,18 +4242,30 @@ func _product_a4_ready(kind: String) -> bool:
 	if PersonBust.drawing():
 		_shot_fail("live:%s: faces still drawing after %d frames, frame not saved" % [kind, _A4_FACE_FRAMES])
 		return false
+	if kind == "a4_six_hover":
+		for board: SprintBoard in page.find_children("*", "SprintBoard", true, false):
+			board.scroll.scroll_vertical = 1000000   # clamps to the end: the ghost sits below the board's fold
+		await get_tree().process_frame
+	print(_productshot_line(kind))
+	return true
+
+
+## The line the live:a4_* frames' gates read: the world's counts, the timeline's row gaps and the moment of the running
+## sprint, in weeks from its start (`now`).
+func _productshot_line(kind: String) -> String:
 	var gaps := 0
 	for card: Dictionary in SprintSystem.timeline().cards.values():
 		gaps += SprintTimeline.row_gaps(card.stages).size()
-	print("PRODUCTSHOT|kind=%s|cards=%d|people=%d|row_gaps=%d" % [kind, SprintSystem.sprint_card_count(), SprintSystem.team().size(), gaps])
-	return true
+	return "PRODUCTSHOT|kind=%s|cards=%d|people=%d|row_gaps=%d|now=%.3f" % [kind, SprintSystem.sprint_card_count(),
+		SprintSystem.team().size(), gaps, ProductModel.now_at(SprintSystem.mode())]
 
 
 ## The Sunucu block's states on the live ERP, one account on 20 units (1.000 seats) of the Standard tier: 800 seats (`server_80`),
 ## 940 (`server_94`), 1.040 (`server_104`); `server_growth` 720 with a served history rising 80 a week toward the line;
 ## `server_auto` the same with Auto adjust on and its last increase; `server_tier` Standard with the Enterprise preview open;
 ## `server_final` the company on Enterprise; `server_clause` the account a 3★ one whose contract holds the server clause (the
-## block's "waiting for Enterprise servers" row); `server_b2c` the note app, 12.400 users on 13 units (13.000 users, 96%).
+## block's "waiting for Enterprise servers" row); `server_lock` 720 seats under a 10-week server contract (the tiers and Decrease
+## held, the pointer on Decrease); `server_b2c` the note app, 12.400 users on 13 units (13.000 users, 96%).
 func _seed_server(scenario: String) -> void:
 	if scenario == "server_b2c":
 		SalesSystem.add_b2c_audience(12400)
@@ -4276,6 +4275,8 @@ func _seed_server(scenario: String) -> void:
 		ProspectRegistry.remove(prospect.id)
 	InfraSystem.set_provider(InfraSystem.PROVIDER_ENTERPRISE if scenario == "server_final" else InfraSystem.PROVIDER_CLOUD)
 	InfraSystem.set_capacity(13 if scenario == "server_b2c" else 20)
+	if scenario == "server_lock":
+		InfraSystem.lock(10)
 	if scenario in ["server_growth", "server_auto"]:
 		ProductState.set_infra_served_weeks([480, 560, 640, 720])
 	if scenario == "server_auto":

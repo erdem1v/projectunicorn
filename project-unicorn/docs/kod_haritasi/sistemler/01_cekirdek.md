@@ -50,7 +50,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - `TimeManager._step_hour` `time_manager.gd:144`: bir oyun saati; 00:00'da `advance_day` ve günlük tik · `_drain_boundaries` `:127`, `_run_batch` `:193`
 - `TimeManager.advance_hours(n, meeting)` `time_manager.gd:173` · `scripts/main/main.gd:1311,1315,1319,2166`, `scripts/systems/sales_meeting_system.gd:119`, `term_sheet_table_system.gd:574`
 - `TimeManager.skip_night()` `time_manager.gd:183`: gecenin saatlerini tek toplu adımda koşar · `_advance_real` içinden; `scripts/main/main.gd:1300` (gece probe'u)
-- `TimeManager.hold_clock/release_clock` `time_manager.gd:350,359` · `main.gd:2160,4733,5257` (milestone_paper, event), `incident_system.gd:311`, `sprint_system.gd:1587`, `scripts/tabs/product_tab.gd:319`
+- `TimeManager.hold_clock/release_clock` `time_manager.gd:350,359` · `main.gd:2160,4733,5257` (milestone_paper, event), `incident_system.gd:311`, `sprint_system.gd:1587`, `scripts/tabs/product_tab.gd:345,347`
 - `TimeManager.freeze_clock/thaw_clock` `time_manager.gd:250,256` · yolculuk için `main.gd:4946,4970` (`tree_runs` true), çekimlerde `main.gd:2053,2132`
 - `TimeManager.register_night_gate/unregister_night_gate` `time_manager.gd:264,269` · `scripts/ui/office/office_people.gd:100,104` (ofis boşalma yüklemi)
 - `TimeManager._dispatch_daily_tick` `time_manager.gd:385` ve `_dispatch_hourly_tick` `:439`: sistem sırası burada; yeni sistem tiki buraya takılır. Günlük sıra: `SummarySystem.begin_day` (yuva 0),
@@ -77,7 +77,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - `speed_changed(new_speed)`: yayan `time_manager.gd:321,337` (TimeManager'in kendi sinyali) · dinleyen `scripts/ui/components/top_bar.gd:120`, `sprint_system.gd:1329`, `office_notice_stack.gd:47`
 - `hold_changed()`: yayan `time_manager.gd:355,361` · dinleyen `top_bar.gd:122`, `scripts/ui/office/office_notice_stack.gd:48`
 - `EventBus.speed_change_requested(speed)` `event_bus.gd:21`: isteği `main.gd`, `game_shell.gd:121`, `save_manager.gd:370` yayar · dinleyen `time_manager.gd:81`
-- `EventBus.day_advanced(new_day)` `event_bus.gd:12`: yayan `game_state.gd:367` · `top_bar.gd:106`, `product_tab.gd:113`, `research_bar.gd:53`
+- `EventBus.day_advanced(new_day)` `event_bus.gd:12`: yayan `game_state.gd:367` · `top_bar.gd:106`, `product_tab.gd:116`, `research_bar.gd:53`
 - `EventBus.hour_changed(hour)` `event_bus.gd:13`: yayan `game_state.gd:371` · `top_bar.gd:107`, `news_ticker.gd:74`, `sales_tab.gd:82`
 - `EventBus.day_tick_completed(day)` `event_bus.gd:286`: yayan `time_manager.gd:432` (günlük dağıtımın sonu) · `save_manager.gd:61` autosave sınırı, `office_city.gd:102`, `plausibility.gd:159`
 - `EventBus.night_skipped()` `event_bus.gd:23`: yayan `time_manager.gd:190` · `main.gd:478,2285`, `office_view.gd:64`, `office_people.gd:86`

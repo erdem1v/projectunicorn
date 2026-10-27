@@ -2561,23 +2561,15 @@ PRODUCT_TIP_PROMISE,söz: {when},promised: {when}
 PRODUCT_TIP_CARD_MODULE,{card} ({module}),{card} ({module})
 PRODUCT_TAG_SPRINT,Sprint {n},Sprint {n}
 PRODUCT_SPRINT_TITLE,Sprint {n},Sprint {n}
-PRODUCT_WEEKS,{n} hafta,{n} weeks
-PRODUCT_WEEKS_ONE,{n} hafta,{n} week
 PRODUCT_THIS_SPRINT,Bu sprint,This sprint
 PRODUCT_NEXT,Sonraki,Next
 PRODUCT_TEAM_NOBODY_JOBS,Yapım ekibinde ya da Test'te çalışabilecek kimse yok,Nobody on the Build team or Test can work
 PRODUCT_TEAM_IN_RND,Kurucu Ar-Ge'de: {node},The founder is in R&D: {node}
-PRODUCT_CARD_SPILLS_PTS,devreder · {done}/{total},carries over · {done}/{total}
-PRODUCT_CARD_NO_START,Bu sprint başlamaz → Sprint {n},Won't start this sprint → Sprint {n}
 PRODUCT_CARD_READY,Geliştirmeye hazır,Ready for development
 PRODUCT_CARD_READY_PCT,{pct} hazır,{pct} ready
 PRODUCT_CARRIED,devreden,carried
 PRODUCT_PRIORITY,Öncelikli,Priority
-PRODUCT_QUEUED,Sırada,Queued
 PRODUCT_REMOVE,Çıkar,Remove
-PRODUCT_EFFORT_POINTS,{n} puan,{n} points
-PRODUCT_EFFORT_POINTS_ONE,{n} puan,{n} point
-PRODUCT_EFFORT_PERSON,{name} {weeks},{name} {weeks}
 PRODUCT_PERSON_ROLE,{name} · {role},{name} · {role}
 PRODUCT_FX_BUGS,{n} hata,{n} bugs
 PRODUCT_FX_BUGS_ONE,{n} hata,{n} bug
@@ -2586,25 +2578,15 @@ PRODUCT_ACCOUNT_COUNT_ONE,{n} hesap,{n} account
 PRODUCT_USER_COUNT,{n} kullanıcı,{n} users
 PRODUCT_USER_COUNT_ONE,{n} kullanıcı,{n} user
 PRODUCT_FX_TOP,en büyüğü {account} ({users}),largest: {account} ({users})
-PRODUCT_FX_BUGS_CLOSED,{n} hata kapanır,{n} bugs close
-PRODUCT_FX_BUGS_CLOSED_ONE,{n} hata kapanır,{n} bug closes
 PRODUCT_FX_BUGS_FIXED,{from} → {to} açık hata,{from} → {to} open bugs
 PRODUCT_FX_BUGS_FIXED_ONE,{from} → {to} açık hata,{from} → {to} open bug
 PRODUCT_FX_HOLDS,{level} kalır,stays {level}
 PRODUCT_FX_ALERT_CLEARS,kalkar,clears
 PRODUCT_FX_RESEARCH,beklentisi netleşir,expectations get clearer
 PRODUCT_FX_REQUEST,{customer} talebi,{customer} request
-PRODUCT_FX_ON_TIME,talebi zamanında,request on time
-PRODUCT_AT_SPRINT_END,Sprint sonunda,At sprint end
-PRODUCT_STATUS,Durum,Status
 PRODUCT_STATUS_CARDS,{n} kart,{n} cards
 PRODUCT_STATUS_CARDS_ONE,{n} kart,{n} card
 PRODUCT_STATUS_DONE,bitti,done
-PRODUCT_STATUS_RUNNING,sürüyor,in progress
-PRODUCT_STATUS_QUEUED,sırada,queued
-PRODUCT_STATUS_DECISIONS,{n} karar,{n} decisions
-PRODUCT_STATUS_DECISIONS_ONE,{n} karar,{n} decision
-PRODUCT_STATUS_WAITING,bekliyor,waiting
 PRODUCT_NEXT_RELEASE,Sonraki sürüm,Next release
 PRODUCT_IN_WEEKS,{n} hafta sonra,in {n} weeks
 PRODUCT_IN_WEEKS_ONE,{n} hafta sonra,in {n} week
@@ -2753,6 +2735,14 @@ PRODUCT_PERSON_TIP,{name} {stars} · efor {effort} · doluluk {busy},{name} {sta
 PRODUCT_CLUSTER_TIP,{stars} · {n} kişi,{stars} · {n} people
 PRODUCT_CLUSTER_TIP_ONE,{stars} · {n} kişi,{stars} · {n} person
 PRODUCT_TIMES,×{n},×{n}
+PRODUCT_EARLY_END,Sprint erken biter,Sprint ends early
+PRODUCT_AVAILABLE,Eklenebilir,Available
+PRODUCT_ADD_CARD,Kart ekle,Add a card
+PRODUCT_MORE_BELOW,aşağıda {n} kart daha,{n} more cards below
+PRODUCT_MORE_BELOW_ONE,aşağıda {n} kart daha,{n} more card below
+PRODUCT_CARRIED_SLOT,devreden,carried
+PRODUCT_LATE,yetişmez,late
+PRODUCT_TO_NEXT,Sonraki sprinte,To the next sprint
 PRODUCT_REQUESTS,Müşteri talepleri,Customer requests
 PRODUCT_MORE_REQUESTS,+{n} talep,+{n} requests
 PRODUCT_MORE_REQUESTS_ONE,+{n} talep,+{n} request
@@ -2852,14 +2842,10 @@ PRODUCT_GOAL_TRUST,kullanıcıların yarısı verisini emanet etsin,half of user
 PRODUCT_GOAL_REVENUE,düzenli kullanıcıların yarısı ödemeye razı olsun,half of regular users would pay
 PRODUCT_GOAL_PROGRESS,şu an {total} üzerinden {now},now {now} of {total}
 PRODUCT_FX_PROMISE,Söz: {customer},Promise: {customer}
-PRODUCT_FX_PROMISE_KEPT,sözü tutulur,promise kept
 PRODUCT_PROMISED,söz verildi,promised
 PRODUCT_VERSION_KEY,Sürüm,Version
 PRODUCT_KPI_USERS,Kullanıcı,Users
 PRODUCT_KPI_PAYING,Ödeyen,Paying
-PRODUCT_DECISION_IN_INBOX,Olaylar'da bekliyor,Waiting in Events
-PRODUCT_DECISION_HALTED,İş durdu · karar bekliyor,Work stopped · decision waiting
-PRODUCT_GO_DECISION,Karara git,Go to the decision
 PRODUCT_RELEASE_HOLD,Sürüm notu açıkken oyun durur,Paused while the release note is open
 PRODUCT_PLAN_HOLD,Sprint başlayana kadar oyun durur,Paused until the sprint starts
 PRODUCT_ADD_CLOSED,{pct} üstünde kart eklenmez,Adding closes above {pct}

@@ -9,7 +9,8 @@ Kaynak: Olaylar penceresi (gelen kutusu) GDD ch12; sekmelerin sistem tarafı GDD
 ## Dosyalar
 
 Sekme kökleri (scripts/tabs/):
-- `scripts/tabs/product_tab.gd` (329): Ürün penceresi kabuğu: başlık KPI'ları, GENEL BAKIŞ/SPRINT/ÇEYREK şeridi (Kurucu sprintte ve Geçmiş anahtarları), yerel `_ui` durumu, eylem yönlendirme (`_act`).
+- `scripts/tabs/product_tab.gd` (347): Ürün penceresi kabuğu: başlık KPI'ları, GENEL BAKIŞ/SPRINT/ÇEYREK şeridi (Kurucu sprintte ve Geçmiş anahtarları), yerel `_ui` durumu, eylem yönlendirme (`_act`);
+  yeniden kurulumda sol sütunun kaydırması korunur (`SprintUiShared.keep_scroll`); `hour_changed` koşan sprintte yalnız `SprintPanel.set_now`u çağırır (`_on_hour`).
 - `scripts/tabs/sales_tab.gd` (834): Satış: fiyat duruşu, boru hattı (lead belgesi), satış masası, son hareketler, müşteri portföyü, canlı B2C kitle sayfası.
 - `scripts/tabs/hr_tab.gd` (542): Ekip: Kadro/Görevler görünümleri, Atlas ve Mesai panel açıcıları, satır menüsü, yapı anahtarıyla yerinde boyama.
 - `scripts/tabs/finance_tab.gd` (144): Finans kabuğu: nakit/net/runway KPI'ları, ÖZET|YATIRIM şeridi, Yatırım kilidi (`_yatirim_locked`).
@@ -29,15 +30,22 @@ Alt klasörler:
 - `scripts/tabs/hr/hr_dossier.gd` (232): Ekip dosyası: kişinin ayrıntı penceresi (`DETAILS["hr_dossier"]`), kişi ayrılınca kendini kapatır.
 - `scripts/tabs/hr/hr_popover.gd` (113): `HRPopover`: çapaya bağlı tek açılır panel (satır menüsü, zam kutusu, sorumlu seçici).
 - `scripts/tabs/hr/hr_ui_shared.gd` (506): `HRUiShared`: koyu tablo kiti (`D_*`), rozetler, moral, deneyim, durum hücresi, `mount_panel_modal`; tabloların dışında da kullanılır.
-- `scripts/tabs/product/product_model.gd` (1115): `ProductModel`: sprint ekranının görünüm sözleşmesi; `live()` GameState/SprintSystem'den Dictionary kurar.
+- `scripts/tabs/product/product_model.gd` (1142): `ProductModel`: sprint ekranının görünüm sözleşmesi; `live()` GameState/SprintSystem'den Dictionary kurar.
   Başlık yorumu yeni ekranın alanlarını da tanımlar: `founder`, `requests`, `modules`, `prep`, çeyreğin saati, merkez ve sonraki sütun eklemeleri, kart satırı; düzeltme işinin efora girişi ve gösterim kuralı.
   Sol sütunun "+" değerleri ve hayalet hesabı `live()`dan ayrıdır: `addable`, `resolve_addable`, `ghost` (kart kimliğiyle sayfanın bir sonraki kurulumuna kadar saklanır).
-- `scripts/tabs/product/sprint_panel.gd` (380): `SprintPanel`: orta (bu sprint) ve sağ (sonraki sprint) sütunlar; başlık (`SprintHead` + `CapacityView`) ve alt sabit, kart yığını kayar.
+- `scripts/tabs/product/sprint_panel.gd` (388): `SprintPanel`: orta (bu sprint) ve sağ (sonraki sprint) sütunlar; orta sütunda başlık (`SprintHead` + `CapacityView`), pano (`SprintBoard`) ve alt sabit; sağ sütunda kart yığını kayar.
+  Yeniden kurulumda pano ve sağ sütunun kaydırması korunur; `running()` ve `set_now(at)` saat hattıdır (pano ve Kapasite'nin "yapılan" dolgusu).
+- `scripts/tabs/product/sprint_board.gd` (297): `SprintBoard`: panonun sabit başlığı ("{n} KART", erken kapanış bayrağı, hafta etiketleri), kayan gövdesi (ızgara, kart satırları, "EKLENEBİLİR",
+  hayalet satır, şimdiki an çizgisi), "aşağıda {n} kart daha" hapı.
+- `scripts/tabs/product/board_row.gd` (411): `BoardRow`: panonun bir kart satırı: bilgi sütunu (ad, R1, efor, modül, durum yuvası, PM ya da "?" yuvası, "→" ve "×"),
+  zaman ekseni (çubuk, bekleme, gölge, tarama, tik kutusu, sprint dışı pay, yüzler); `set_now`.
 - `scripts/tabs/product/sprint_head.gd` (120): `SprintHead`: SPRINT N, çeyrek çentikleri, MVP ve hafta rozetleri, ekip rozeti, çeyrek hedef seçicisi (`pick_goal`); rozetler akar, kesilmez.
-- `scripts/tabs/product/capacity_view.gd` (293): `CapacityView`: KAPASİTE başlığı ve öneri satırı (`apply_lead`), üç aşama satırı (oluk, dolgu, Efor, rozet, yüzler, kümeler), taşma ipucu; `set_ghost`.
-- `scripts/tabs/product/stage_paint.gd` (113): `StagePaint`: sprint ekranının tek küçük çizim sınıfı (`groove`, `busy`, `bracket`); eleman başına çizim sınıfı yoktur.
-- `scripts/tabs/product/sprint_card.gd` (365): `SprintCard`: tek kart (`State`, `Look` kipleri); yalnız sözlüğünü çizer, düğme olaylarını `action` ile yayar.
-- `scripts/tabs/product/sprint_ui_shared.gd` (494): `SprintUiShared`: ortak statik parçalar (label, box, pad, avatar, `face`, `open_goal_menu`, ÇEYREK çubuğu, `switch`, `due_chip`); Ürün dışında 10+ dosya kullanır.
+- `scripts/tabs/product/capacity_view.gd` (326): `CapacityView`: KAPASİTE başlığı ve öneri satırı (`apply_lead`), üç aşama satırı (oluk, dolgu, Efor, rozet, yüzler, kümeler), taşma ipucu;
+  `set_ghost`, `set_done`; etiket sütunu üç satırda aynı genişliktedir (en az `D_W_CAP_LABEL`, dilin en uzun aşama adı), sayı sütunu içeriğiyle genişler (`Cell`).
+- `scripts/tabs/product/stage_paint.gd` (326): `StagePaint`: sprint ekranının tek çizim sınıfı (Kapasite: `groove`, `busy`, `bracket`; pano: `grid`, `now`, `early`, `bar`, `label`, `wait`, `shadow`, `meet`, `tick`,
+  `risk`, `ask`, `fade`); eleman başına çizim sınıfı yoktur.
+- `scripts/tabs/product/sprint_card.gd` (171): `SprintCard`: sonraki sütunun (`Look.NARROW`) ve ÇEYREK'in (`Look.MINI`) kartı (`State`); yalnız sözlüğünü çizer, düğme olaylarını `action` ile yayar. Bu sprintin kartı `BoardRow`dur.
+- `scripts/tabs/product/sprint_ui_shared.gd` (475): `SprintUiShared`: ortak statik parçalar (label, box, pad, avatar, `face`, `open_goal_menu`, ÇEYREK çubuğu, `switch`, `due_chip`, `keep_scroll`); Ürün dışında 10+ dosya kullanır.
 - `scripts/tabs/product/area_panel.gd` (311): `AreaPanel`: sol sütun (SPRINT ve ÇEYREK): Geçmiş, MÜŞTERİ TALEPLERİ, MODÜLLER ve açık modülün adayları; "+" değerleri sonraki karelerde gelir.
 - `scripts/tabs/product/quarter_view.gd` (179): `QuarterView`: ÇEYREK görünümü: hedef şeridi (menü SprintHead ile ortak), sol sütun (`AreaPanel`), altı sprint sütunu, onay düğmeleri.
 - `scripts/tabs/product/overview_view.gd` (96): GENEL BAKIŞ kâğıdı (şimdilik yalnız Sunucu bloğu; Azalt düğmesi kapasite 0 birimdeyken `server.decrease.off` ile kapalı); class_name yok.
@@ -62,26 +70,26 @@ Sekme sözleşmesi (sayfanın taşıdığı, çerçevenin çağırdığı):
 - `on_escape()` `window_layer.gd:115`: Esc önce açık seçeneği indirir · yalnız events_tab:89 (mail_pane.gd:80'e iletir).
 - `on_panel_over(on)` `window_layer.gd:181`: PanelLayer paneli açılınca amber eylemi bırakır · hr_tab:191.
 - `populate(payload)` `window_layer.gd:107`: ayrıntı penceresi (`DETAILS` `window_layer.gd:24`) · hr_dossier:62.
-- `ProductTab.set_source(src)` `scripts/tabs/product_tab.gd:121`: debug fikstür kaynağı · game_shell.gd:176, main.gd:2235 (null = canlı model).
+- `ProductTab.set_source(src)` `scripts/tabs/product_tab.gd:125`: debug fikstür kaynağı · game_shell.gd:176, main.gd:2235 (null = canlı model).
 
 Ürün:
-- `ProductTab._ready()` `scripts/tabs/product_tab.gd:49`: sekme açılınca görünümleri kurar, 5 EventBus sinyaline bağlar (:111-115) · WindowLayer.
-- `ProductTab._rebuild()` `product_tab.gd:141`: her değişimde modelden baştan kurar; `_queue_rebuild` (:310) call_deferred ile tekler · sinyaller ve `_on_action`.
-- `ProductModel.live()` `scripts/tabs/product/product_model.gd:130`: GameState.product + SprintSystem/ProductState'ten model · product_tab.gd:145, sprint_probe.gd:295.
+- `ProductTab._ready()` `scripts/tabs/product_tab.gd:52`: sekme açılınca görünümleri kurar, 6 EventBus sinyaline bağlar (:114-119) · WindowLayer.
+- `ProductTab._rebuild()` `product_tab.gd:145`: her değişimde modelden baştan kurar; `_queue_rebuild` (:336) call_deferred ile tekler · sinyaller ve `_on_action`.
+- `ProductModel.live()` `scripts/tabs/product/product_model.gd:130`: GameState.product + SprintSystem/ProductState'ten model · product_tab.gd:149, sprint_probe.gd:295.
   Planlamada ve koşarken tek oynatma (`SprintSystem.timeline`) merkezin `close_at`, `progress`, `crew`, `suggest`, `candidates` ve sonraki sütunun `load`, `carried` alanlarını besler.
   Sol sütunu `requests` (B2B'de, B2C'de `null`) ve `modules` besler; adayların `addable`ı `null` gelir ve `live()` önbelleği (`_addable`, `_ghosts`) atar.
 - `ProductModel.resolve_addable(ids)` `product_model.gd:218`: bilinmeyen "+" değerlerini sırayla hesaplar (`SprintSystem.can_add`; en az bir kart, `ADDABLE_FRAME_MS` 8 dolunca durur)
   ↳ çağıran `AreaPanel._process` ve `sprint_probe.gd` `_resolve_all`.
-- `ProductTab._on_action(kind, args)` `product_tab.gd:261`: kart/panel eylemlerini `_act` (:277) ile SprintSystem/InfraSystem'e verir · tüm alt panellerin `action` sinyali.
-- `ProductTab.open_area(area_id)` `product_tab.gd:254`: DESTEK kartı ve talep satırı modülü açık açar; görünümü `_set_ui` ile SPRINT yapar (son açık sayfa hatırlanır, "edit" eylemi de)
+- `ProductTab._on_action(kind, args)` `product_tab.gd:286`: kart/panel eylemlerini `_act` (:302) ile SprintSystem/InfraSystem'e verir · tüm alt panellerin `action` sinyali.
+- `ProductTab.open_area(area_id)` `product_tab.gd:273`: DESTEK kartı ve talep satırı modülü açık açar; görünümü `_set_ui` ile SPRINT yapar (son açık sayfa hatırlanır, "edit" eylemi de)
   ↳ çağıran `SprintUiShared.open_product_area` ve `AreaPanel.request_picked`.
-- `ProductTab._on_candidate_hover(card_id)` `product_tab.gd:262`: imleç adayın açık "+"ında: `ui.hover_card` kartın kimliği olur ve hayaletin hesabı (`ProductModel.ghost`) kurulur, ayrılınca boşalır; sayfa kurulmaz · `AreaPanel.hovered`.
-- `ProductTab._hold_clock(on)` `product_tab.gd:317`: sürüm notu açıkken saati tutar (`HOLD_RELEASE_NOTE` :16) · `_rebuild`, `on_page_closing`.
+- `ProductTab._on_candidate_hover(card_id)` `product_tab.gd:281`: imleç adayın açık "+"ında: `ui.hover_card` kartın kimliği olur ve hayaletin hesabı (`ProductModel.ghost`) kurulur, ayrılınca boşalır; sayfa kurulmaz · `AreaPanel.hovered`.
+- `ProductTab._hold_clock(on)` `product_tab.gd:343`: sürüm notu açıkken saati tutar (`HOLD_RELEASE_NOTE` :18) · `_rebuild`, `on_page_closing`.
 
 Ekip:
 - `HRTab._ready()` `scripts/tabs/hr_tab.gd:67`: `_build`, 15 sinyal (:73), grup `HRLedger.VIEWS_GROUP` · WindowLayer.
 - `HRTab._refresh()` `hr_tab.gd:197`: KPI'ları yazar; `_compute_structure_key` (:218) değişmediyse yerinde boyar, değiştiyse `_rebuild` (:242) · `_on_state_changed`.
-- `HRTab.open_atlas()` `hr_tab.gd:390`: Atlas panelini açar · product_tab.gd:305, hr_tab.gd (Atlas şeridi, boş grup, Görevler).
+- `HRTab.open_atlas()` `hr_tab.gd:390`: Atlas panelini açar · product_tab.gd:331, hr_tab.gd (Atlas şeridi, boş grup, Görevler).
 - `HRTab.hold_person(id, on)` `hr_tab.gd:520`: dosyası/diyaloğu açık kişinin satırını seçili tutar · hr_dossier.gd:59,66, hr_action_modal.gd:66,147, training_modal.gd:31,42.
 - `HRLedger.run_action(host, emp, action)` `scripts/tabs/hr/hr_ledger.gd:356`: zam, terfi, izin, çıkarma, eğitim, dosya · satır menüsü ve dosya (`action_list` :270).
 - `HRPopover.mount(anchor, dark)` `scripts/tabs/hr/hr_popover.gd:99`: tek açılır panel · hr_tab `_open_actions` hr_tab.gd:489, sales_tab.gd:675.
@@ -95,7 +103,7 @@ Satış, Finans, Yatırım:
 - `HuntTab._sit_button` `hunt_tab.gd:520`: "Masaya otur" `term_table_requested` yayar (:521) · main.gd:4702 bağlar.
 
 Ar-Ge, Olaylar, Piyasa, Kişisel:
-- `RnDTab.select_node(id)` `scripts/tabs/rnd_tab.gd:114`: düğümü seçer · `rnd_node_requested` (:80; product_tab.gd:302, research_bar), `_ready` (:60) gizli seçimi tüketir.
+- `RnDTab.select_node(id)` `scripts/tabs/rnd_tab.gd:114`: düğümü seçer · `rnd_node_requested` (:80; product_tab.gd:328, research_bar), `_ready` (:60) gizli seçimi tüketir.
 - `RnDTab._refresh()` `rnd_tab.gd:190`: `_compute_structure_key` (:209) değişince `RnDTreeView.rebuild`, yoksa `repaint` · `_on_state_changed` (call_deferred).
 - `RnDTreeView.select(id, open_assign)` `scripts/tabs/rnd/rnd_tree_view.gd:334`: karo seçimi, `selection_changed` yayar (:339) · karo tıkı, rnd_tab.
 - `EventsTab.select(item_id)` `scripts/tabs/events_tab.gd:77`: öğeyi okuma bölmesinde açar · `Inbox.show` (inbox.gd:31) `call_group(&"inbox", &"select")` ile.
@@ -114,19 +122,20 @@ Sekmelerin tanımladığı sinyaller (DIZIN.md "Sinyaller" bölümü):
 - `fit_changed`: yayan finance_tab:10, hr_tab:22, personal_tab:23, product_tab:12, rnd_tab:28, sales_tab:17, hr_dossier:12 · dinleyen `window_layer.gd:169` (`_place`).
 - `close_requested`: yayan `scripts/tabs/hr/hr_dossier.gd:83,132` · dinleyen `window_frame.gd:62`.
 - `state_changed`: yayan Atlas/Eğitim/Mesai panelleri (hr_atlas_modal.gd:439,465,483; training_modal.gd:174; work_hours_modal.gd:491) · dinleyen `hr_ui_shared.gd:85`.
-- `action(kind, args)`: yayan area_panel:10, overview_view:7, quarter_view:8, sprint_card:15, sprint_panel:8 · dinleyen product_tab.gd:70,77,80, quarter_view.gd:60, sprint_panel.gd:362.
-- `ui_changed(key, value)` (açık modül, talep listesinin açıklığı): yayan `area_panel.gd:11`, `quarter_view.gd:9` · dinleyen `product_tab.gd:72,81` (`_set_ui`).
-- `request_picked(area_id)` ve `hovered(card_id)`: yayan `area_panel.gd:13,15` · dinleyen `product_tab.gd:73` (`open_area`) ve `:74` (`_on_candidate_hover`).
-- `chosen(subtype, name)`: yayan `type_picker.gd:65` · dinleyen `product_tab.gd:101`.
+- `action(kind, args)`: yayan area_panel:10, overview_view:7, quarter_view:8, sprint_card:15, sprint_panel:8 · dinleyen product_tab.gd:73,79,82,88, quarter_view.gd:60, sprint_panel.gd:362.
+- `ui_changed(key, value)` (açık modül, talep listesinin açıklığı): yayan `area_panel.gd:11`, `quarter_view.gd:9` · dinleyen `product_tab.gd:74,83` (`_set_ui`).
+- `request_picked(area_id)` ve `hovered(card_id)`: yayan `area_panel.gd:13,15` · dinleyen `product_tab.gd:75` (`open_area`) ve `:76` (`_on_candidate_hover`).
+- `chosen(subtype, name)`: yayan `type_picker.gd:65` · dinleyen `product_tab.gd:104`.
 - `started` / `closed`: yayan `rnd_assign_panel.gd:230,232` / `:203` · dinleyen `rnd_detail_panel.gd:76,77`. `selection_changed(node_id)`: yayan `rnd_tree_view.gd:339` · dinleyen `rnd_tab.gd:144`.
 
 Sekmelerin yaydığı EventBus sinyalleri:
-- `tab_changed`: product_tab.gd:298-304, sales_tab.gd:295, mail_pane.gd:824,830, hr_atlas_modal.gd:168, sprint_ui_shared.gd:334, rnd_ui_shared.gd:149 · dinleyen window_layer.gd:62.
-- `pitch_requested` sales_tab.gd:412 (dinleyen main.gd:4696) · `term_table_requested` hunt_tab.gd:521 (main.gd:4702) · `rnd_node_requested` product_tab.gd:302 (rnd_tab.gd:80).
+- `tab_changed`: product_tab.gd:324-330, sales_tab.gd:295, mail_pane.gd:824,830, hr_atlas_modal.gd:168, sprint_ui_shared.gd:334, rnd_ui_shared.gd:149 · dinleyen window_layer.gd:62.
+- `pitch_requested` sales_tab.gd:412 (dinleyen main.gd:4696) · `term_table_requested` hunt_tab.gd:521 (main.gd:4702) · `rnd_node_requested` product_tab.gd:328 (rnd_tab.gd:80).
 - `finance_subpage_requested` mail_pane.gd:826 (dinleyen finance_tab.gd:58) · `confirm_requested` hunt_tab.gd:234,479, hr_tab.gd:337, hr_ledger.gd:376-425, hr_atlas_modal.gd:453,472 (main.gd:90).
 
 Sekmelerin dinlediği EventBus sinyalleri (hepsi `_exit_tree`'de ya da düğümle birlikte kopar):
-- Ürün `product_tab.gd:111-115`: product_state_changed, build_progress_changed, day_advanced, desk_changed, infra_changed.
+- Ürün `product_tab.gd:114-118`: product_state_changed, build_progress_changed, day_advanced, infra_changed `_queue_rebuild`; desk_changed (her mesai saati gelir) `_on_desk`: yalnız `ProductModel.desk_stamp` değiştiyse kurar;
+  ↳ `hour_changed` (:119) sayfayı kurmaz, `_on_hour` koşan sprintte şimdiki anı günceller.
 - Finans `finance_tab.gd:49-58`: cash/mrr/burn_changed, shutter_changed, runway_recalculated, phase_changed, seed_door_opened, finance_subpage_requested. Özet `finance_ozet_view.gd:60`: ek equity/month_ended/sheet_*/rival_*.
 - Yatırım `hunt_tab.gd:45-61`: sheet_*, callback_ready, meeting_day, day_advanced (:47), pitch_finished, seed_*, phase_changed, event_*, TimeManager.hold_changed, mentor_advisory_changed, hour_changed, assignment_changed.
 - Ekip `hr_tab.gd:73-85`: character_added/removed, morale_changed, hr_day_processed, customer_assigned, employee_*, productivity_changed, event_*, palette_changed. Dosya `hr_dossier.gd:54-55`: hr_day_processed, character_removed.
@@ -170,7 +179,7 @@ Anahtarlar `localization/strings.csv`'de (sütunlar keys,tr,en); sekmeler `tr("A
 
 Smoke (tek vaka: `bash tools/smoke_run.sh <vaka>`; tam süit yalnız push öncesi, CLAUDE.md §10, §12). Arayüz doğrulaması esas olarak görsel kabuldür.
 - Ekip: `hr_active_filters`, `hr_overload_badge`, `gorevler_has_no_founder`, `menu_has_one_path` (HRLedger/HRPopover sabitlerini ve silinen `W_MENU`, `_place_notch`, `_draw_notch` adlarını sınar, endgame_smoke.gd:14323).
-- Ürün: `product_bug_rows_read_the_store`, `fit_star_context`, `capacity_step_immediate`, `sprint_fix_card_clears_its_line`, `sprint_fix_preview_matches_close`,
+- Ürün: `product_bug_rows_read_the_store`, `fit_star_context`, `capacity_step_immediate`, `sprint_fix_card_clears_its_line`, `sprint_fix_close_matches_note`,
   `line_impact_names_the_accounts`, `paper_card_trim`, `sprint_follow_card_cannot_be_removed`, `sprint_timeline_matches_play_out` (hepsi ProductModel/SprintUiShared okur),
   `sprint_lead_row_until_plan_changes` (öneri satırı, `lead_applied` bayrağı ve onu düşüren her seam).
 - Ar-Ge: `rnd_rail_open_with_locked_tree`, `split_bars_name_their_cause` (RnDUiShared). Yatırım: `hunt_offer_lifecycle` (endgame_smoke.gd:2095). Olaylar: `mail_pending_survives_save` (:6542).
@@ -234,8 +243,9 @@ Smoke (tek vaka: `bash tools/smoke_run.sh <vaka>`; tam süit yalnız push önces
 - Yeni sekme ya da pencere boyu: `UiTokens.TABS` (ui_tokens.gd:294), `WindowLayer.TAB_SCENES` (window_layer.gd:13) ve `SPECS` (:38), `scenes/tabs/<Ad>Tab.tscn`, `TAB_<AD>` anahtarı, `left_tabs.gd`, smoke `rail_tabs_match_scene_order`.
 - Sol sütuna alan: `ProductModel._module_card`/`_requests` (sözleşme başlığı) + `AreaPanel` + `build_theme.gd` varyasyonu + `PRODUCT_*` anahtarı; "+" değeri `ProductModel.resolve_addable`'dan gelir.
 - Kapasite bölümü: sayılar `ProductModel._capacity` (E1/E2 kuralı başlıkta), çizim `CapacityView` + `StagePaint`, ölçüler `UiTokens.D_*CAP*`, varyasyonlar `build_theme.gd` (`Cap*`).
-- Sprint kartı alanı ya da düğmesi: `ProductModel` (sözleşme, `BUTTONS` product_model.gd:126; `follow` kartı Kaldır almaz, `_card`) + `SprintCard.setup`
-  + `scripts/debug/product_fixtures.gd` (fikstür aynı alanı taşımalı) + `ProductTab._act` + ilgili `PRODUCT_*` anahtarları.
+- Pano satırı alanı ya da düğmesi (bu sprintin kartı): `ProductModel._row` (kart satırı biçimi başlıkta; `follow` kartı Kaldır almaz) + `BoardRow` + `ProductTab._act` + ilgili `PRODUCT_*` anahtarları; sonraki sütun ve ÇEYREK kartı:
+  `ProductModel` (`BUTTONS` product_model.gd:126, `_card`) + `SprintCard.setup` + `scripts/debug/product_fixtures.gd` (fikstür aynı alanı taşımalı; bu sprintin kartları fikstürde yalnız kapasitenin yükünü kurar, pano çizilmez).
+- Saatle akan pano: `ProductModel.now_at` ve `stage_done` + `SprintBoard.set_now` + `BoardRow.set_now` + `CapacityView.set_done`; hepsi `SprintPanel.set_now`un altındadır, sayfayı kurmaz, yeniden hesap yapmaz (parçalar satırda saklıdır).
 - Satır menüsü eylemi (Ekip): `HRLedger._action_specs`/`run_action` (hr_ledger.gd:283,356), `hr_dossier.gd` (aynı kapı), `HRActions` sistemi ve smoke `menu_has_one_path`.
 - Kadro sütunu: `HRLedger.COLUMNS`/`COLUMNS_COMPACT`/`TABLE_W` (hr_ledger.gd:8-16), `HRAssignments.W`, `scripts/debug/kit_probe.gd` `W`, Ekip pencere eni `SPECS["hr"]`.
 - Yeni bir sistem sinyali sayfayı etkiliyorsa: ilgili sekmenin `_signals` listesine (tablo yukarıda) ekle, `_exit_tree`'de kopar, karar kapısı etkisi varsa `event_*` üçlüsünü de dinle.

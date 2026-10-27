@@ -377,37 +377,6 @@ static func card_effect(card: Dictionary) -> Array:
 	return out
 
 
-## SPRINT SONUNDA: kartların hepsi bitmiş varsayılır; yalnız değişen alanlar, zamanında talepler,
-## tutulan sözler, kalkan "!" ve kapanan hata sayısı. Kapısı kapanmış kart başlatmada sonraki sütuna geçeceği için sayılmaz.
-static func forecast(card_ids: Array) -> Array:
-	var cards: Array = card_ids.map(card_by_id).filter(func(c: Dictionary) -> bool: return gate_reason(c.step) == "")
-	var tiers: Dictionary = {}
-	var cleared: Array = []
-	var closed: int = 0
-	for c in cards:
-		if c.kind == "fix":
-			cleared.append(c.line)
-			closed += c.bugs
-		elif c.kind != "research":
-			tiers[c.line] = maxi(int(tiers.get(c.line, tier(c.line))), int(c.target_tier))
-	var out: Array = []
-	for area_id in area_ids():
-		var level: Dictionary = _level_part(area_id, tiers)
-		if level.to != level.from:
-			out.append(level)
-	for c in cards:
-		var request: Dictionary = _request_of(c)
-		if not request.is_empty() and _on_time(request):
-			out.append({"k": "request_on_time", "customer": customer_name(request)})
-		out.append_array(_promise_parts(c.step))
-	for area_id in area_ids():
-		if area_alert(area_id) and not area_alert(area_id, cleared):
-			out.append({"k": "alert_clear", "area": area_short(area_id)})
-	if closed > 0:
-		out.append({"k": "bugs_closed", "n": closed})
-	return out
-
-
 # --- Etkilenenler -----------------------------------------------------------------------
 
 ## B2B'de hattı kullanan hesaplar: aktif ya da deneme hesabı, sektörü hattın alanını kullanıyorsa
@@ -869,11 +838,6 @@ static func _request_of(card: Dictionary) -> Dictionary:
 static func open_requests() -> Array:
 	return (_p().get("requests", []) as Array).filter(func(r: Dictionary) -> bool:
 		return r.status == "open" and CustomerRegistry.get_customer(String(r.customer_id)) != null)
-
-
-## Bu sprintte biten talep son tarihine yetişir mi.
-static func _on_time(request: Dictionary) -> bool:
-	return SprintSystem.sprint_number() <= int(request.due_sprint)
 
 
 ## Kademeye verilmiş açık sözler, son tarihi yakın olan önde.

@@ -123,10 +123,18 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
   Krem zincirler düz Noto dosyasıyla biter, metriği dokunulmaz; `build_theme.gd` `_bare` ve `_line_h()` koyu kutunun payını yedeksiz hesaplar. `glyph_audit` her zinciri sınar.
 - Sprint başlığı ve Kapasite ölçüleri: `D_H_SPRINT_HEAD`, `D_H_CAP_HEAD`, `D_H_CAP_ROW` 56, `D_H_CAP_TRACK`, `D_CAP_FILL_INSET`, `D_W_CAP_{TIP,LABEL,NUMBER,BADGE}`,
   `D_W_FACE_SLOT`, `D_STAR_CHIP`, `D_AWAY_ALPHA`, `D_NOTCH_QUARTER`, `D_WEEK_BAR`, `D_BUSY_BAR`, `D_HATCH`, `D_CREW_OVERLAP`, `D_SPRINT_COLUMNS` (746:308); renkler `D_stage_edge/fill/ghost`, `D_hatch_base`.
+- Pano (kart satırı ve zaman ekseni) ölçüleri: `D_W_CARD_INFO` 312, `D_W_TIMELINE` 396, `D_TIMELINE_WEEKS` 2.6 (sprintin iki haftası ve sonrakinin ilk 0,6'sı), `D_H_BOARD_HEAD`, `D_H_CARD_ROW` 56 ve `_TWO` 74,
+  `D_CARD_NAME_SHORT` 22, `D_H_STAGE_BAR` 30, `D_STAGE_BAR_PAD`, `D_W_TICK_BOX`, `D_NOW_HEAD`, `D_W_CARD_SLOT`, `D_RISK_BAR`, `D_ASK_DISC`, `D_H_BOARD_SECTION`, `D_H_BOARD_FADE`, `D_ROW_ALPHA`, `D_GHOST_ALPHA`;
+  ↳ çubuk ve izler: `D_STAGE_BAR_MIX` (zemin payları), `D_STAGE_BAR_EDGE` (kenar alfası), `D_SHADOW_ALPHA`, `D_SHADOW_FOOT_ALPHA`, `D_H_SHADOW`, `D_SPILL_LINE`, `D_SPILL_STEP`, `D_EARLY_STRIPE`, `D_EARLY_PERIOD`, `D_MEET_LIGHT/DARK/EDGE`,
+  `D_MEET_PERIOD`; renkler `D_stage_bar(aşama, tür)` ve `D_stage_bar_edge(aşama, tür)`.
 - Bu bloğun varyasyonları yalnız koyu temadadır: `SprintTitle`, `MvpVersion`, `HeadMeta`, `CrewTotal`, `GoalPick(+Set)`, `QuarterNotch(+Past, +Now)`, `WeekBar`, `FaceRing`,
-  `StarChip`, `ClusterStars`, `AwayLabel`, `CapBlock`, `CapRow(+Hot)`, `CapStage`, `CapUnit`, `CapFigure`, `CapTeam`, `CapBadgeOver(+Ink)`, `CapStreak(+Ink)`.
-- `StagePaint` (`scripts/tabs/product/stage_paint.gd`): StyleBox'ın çizemediği izler (şeritli taşma, kesikli çizgi, üç satırın ayracı) için tek Control;
-  `kind` StringName (`groove`, `busy`, `bracket`), ölçü ve renk token'dan, yerleşim sahibinde.
+  `StarChip`, `ClusterStars`, `AwayLabel`, `CapBlock`, `CapRow(+Hot)`, `CapStage`, `CapUnit`, `CapFigure`, `CapTeam`, `CapBadgeOver(+Ink)`, `CapStreak(+Ink)`; panonun: `CardEffort`, `StageNum`, `AxisLabel`, `MoreHint`,
+  `SprintRow(+Hover, +Cand, +CandHover, +Late(+Cb))`, `RowActs`, `RowKey`, `MoreHintPill`, `GhostRow`.
+- `StagePaint` (`scripts/tabs/product/stage_paint.gd`): StyleBox'ın çizemediği izler (şeritli taşma, kesikli çizgi, üç satırın ayracı, çubuklar) için tek Control; `kind` StringName, ölçü ve renk token'dan, yerleşim sahibinde.
+  Kapasite: `groove`, `busy`, `bracket`. Pano: `grid` (hafta ayracı, sprint sonu çizgisi, sonraki sprintin çizgili zemini), `now` (şimdiki an çizgisi ve üçgeni), `early` (erken kapanışın taralı alanı), `bar` (aşamanın çubuğu:
+  plan, koşan, biten, bekleyen, sprint dışı, hayalet; sol başta dolgu), `label` (çubuğun ikonu ve sayısı: sığmazsa önce ikon sonra sayı düşer), `wait` (bekleme noktalı çizgisi), `shadow` (PM'in gölgesi), `meet` (görüşme taraması),
+  `tick` (önden bitmiş aşamanın tik kutusu), `risk` (hata göstergesi), `ask` ("?" işareti), `fade` (alttaki hapın arkasında solma). `StagePaint.part(kind, aşama, spec, rect)` panonun öğesini kurar;
+  `set_bar(spec)` saat ilerleyince çubuğun hâlini, dolgusunu ve yazısını değiştirir. Çizimi `spec` sürer; ipucu için `tooltip_text` öğeye yazılır (`grid`, `now`, `label`, `fade` fareyi görmezden gelir).
 - Sol sütunun varyasyonları yalnız koyu temadadır (master taşımaz, `theme_check` ikisinde geçer): `RequestRow` (+`Hover`, `Planned`), `ModuleRow` (+`Hover`, `Open`), `ModuleCandidate`, `DueChip`, `DueChipSoon`, `MoreLink`
   ↳ `MonoBox` HR ve posta ile ortaktır.
 - Tema yolu: `UiTokens.MENAJER_THEME` `ui_tokens.gd:450`; proje teması `project.godot` `theme/custom` = `master_theme.tres`; Menajer teması taşınan her alt ağacın köküne ve her CanvasLayer köküne elle atanır

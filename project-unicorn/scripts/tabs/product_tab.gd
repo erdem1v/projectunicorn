@@ -6,7 +6,9 @@ extends Control
 # Her değişiklikte kaynağın modelinden baştan kurulur; kaynak yoksa canlı model ve eylemler sistemlere gider, ürün
 # türü seçilmemişse şerit yoktur ve ortada tür seçici durur. Açık modül, talep listesinin açıklığı, geçmiş ve görünüm
 # sekmenin yerel durumudur: modelin `ui`'sinden tohumlanır, tek sahibi `_ui`'dir; Destek kartı alanı `open_area` ile açar.
-# Son açık kâğıt pencere kapanıp açılınca (ve dil değişince) hatırlanır, kayda yazılmaz.
+# Son açık kâğıt pencere kapanıp açılınca (ve dil değişince) hatırlanır, kayda yazılmaz. Sol sütunun, panonun ve sağ sütunun
+# kaydırması yeniden kurulumda korunur; koşan sprintte `hour_changed` sayfayı kurmaz, yalnız şimdiki anı günceller. Masa her mesai
+# saatinde `desk_changed` yayar: sayfa yalnız okuduğu masa ya da ekip hâli (`ProductModel.desk_stamp`) değiştiyse kurulur.
 
 ## ÇEYREK'te pencere içeriği kadar uzar (WindowLayer fit_height okur).
 signal fit_changed
@@ -26,6 +28,7 @@ var _source: Object = null
 var _ui: Dictionary = {}
 var _closing := false   # pencere kapanıyor: ertelenmiş kurulum ölmekte olan sayfada saati yeniden tutmasın
 var _rebuild_queued := false
+var _desk_stamp: Array = []   # son kurulumun okuduğu masa ve ekip hâli
 var _reveal_open := false   # Destek kartı alanı açtı: kurulunca alanın başı sütunun başına gelsin
 var _kpis: HBoxContainer
 var _ctl: PanelContainer
@@ -111,8 +114,9 @@ func _ready() -> void:
 	EventBus.product_state_changed.connect(_queue_rebuild)
 	EventBus.build_progress_changed.connect(_queue_rebuild)
 	EventBus.day_advanced.connect(_queue_rebuild.unbind(1))
-	EventBus.desk_changed.connect(_queue_rebuild)
+	EventBus.desk_changed.connect(_on_desk)
 	EventBus.infra_changed.connect(_queue_rebuild)
+	EventBus.hour_changed.connect(_on_hour.unbind(1))
 	_rebuild()
 
 
@@ -143,6 +147,7 @@ func _rebuild() -> void:
 	if _closing:
 		return
 	var m: Dictionary = _source.model() if _source != null else ProductModel.live()
+	_desk_stamp = ProductModel.desk_stamp()
 	if _ui.is_empty():
 		_ui = m.ui.duplicate()
 		if _source == null:
@@ -172,7 +177,9 @@ func _rebuild() -> void:
 	elif _overview_view.get_parent().visible:
 		_overview.setup(m)
 	elif _sprint_view.get_parent().visible:
+		var areas_at: int = 0 if _reveal_open else _areas_scroll.scroll_vertical   # açılan modülü göstermek kaydırmayı kendi sürer
 		_areas.setup(m)
+		SprintUiShared.keep_scroll(_areas_scroll, areas_at)
 		_sprint.setup(m)
 		if _reveal_open:
 			_reveal_open = false
@@ -185,6 +192,18 @@ func _rebuild() -> void:
 
 func _refit() -> void:
 	fit_changed.emit()
+
+
+## Masa değişti (kâğıt geldi, cevaplandı, açıldı ya da saat geçti): sayfa yalnız okuduğu hâl değiştiyse kurulur.
+func _on_desk() -> void:
+	if ProductModel.desk_stamp() != _desk_stamp:
+		_queue_rebuild()
+
+
+## Koşan sprintte her oyun saati: pano ve kapasite şimdiki ana göre yeniden okunur, sayfa kurulmaz.
+func _on_hour() -> void:
+	if _sprint_view.get_parent().visible and _sprint.running():
+		_sprint.set_now(ProductModel.now_at("active"))
 
 
 ## Üstteki talepler sütunu uzatabilir: açılan modül yerleştikten sonra, sütunun alt yarısında başlıyorsa sütunun başına gelir.

@@ -527,7 +527,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sprint_escaped_bug_on_card_line":       fail = _case_sprint_escaped_bug_on_card_line()
 		"sprint_escaped_pre_launch_lands_at_v1": fail = _case_sprint_escaped_pre_launch_lands_at_v1()
 		"sprint_fix_card_clears_its_line":       fail = _case_sprint_fix_card_clears_its_line()
-		"sprint_fix_preview_matches_close":      fail = _case_sprint_fix_preview_matches_close()
+		"sprint_fix_close_matches_note":         fail = _case_sprint_fix_close_matches_note()
 		"sprint_fix_card_refreshes_until_it_runs": fail = _case_sprint_fix_card_refreshes_until_it_runs()
 		"sprint_fix_first_puts_the_card_on_top": fail = _case_sprint_fix_first_puts_the_card_on_top()
 		"sprint_fix_first_leads_the_carried":    fail = _case_sprint_fix_first_leads_the_carried()
@@ -23602,16 +23602,14 @@ static func _case_sprint_fix_card_clears_its_line() -> String:
 	return ""
 
 
-## Düzeltme kartının önizlemesi kapanışla eşleşir. SPRINT SONUNDA "N hata kapanır" der; sprintte o hatta yeni hata
-## düşmezse kapanış tam N hatayı siler, düşerse hattın o anki sayısını siler ve sürüm notu gerçek sayıyı yazar (satırda
-## "N → 0", sonuç cümlesinde "N hata kapandı"). Kart etki satırında hata sayısını ve B2C'de kullanıcıyı (kitle × hattın
-## payı) söyler; 4 hata 8 puan, 5 hata 10 puan ve öncelikli.
-## FALSİFİKASYON: SprintCatalog.forecast'te `closed += c.bugs`'ı `closed += 1` yap → önizleme iddiası FAIL;
-## SprintSystem._close'ta `clear_line_bugs` yerine `c.bugs`'ı koru (hattı silme) → hat temizlenmedi iddiası FAIL;
+## Düzeltme kartının kapanışı hattı siler ve sürüm notu gerçek sayıyı yazar. Sprintte o hatta yeni hata düşmezse kapanış
+## tam N hatayı siler, düşerse hattın o anki sayısını siler (satırda "N → 0", sonuç cümlesinde "N hata kapandı"). Kart etki
+## satırında hata sayısını ve B2C'de kullanıcıyı (kitle × hattın payı) söyler; 4 hata 8 puan, 5 hata 10 puan ve öncelikli.
+## FALSİFİKASYON: SprintSystem._close'ta `clear_line_bugs` yerine `c.bugs`'ı koru (hattı silme) → hat temizlenmedi iddiası FAIL;
 ## ProductModel._shipped'ta `"to": int(c.bugs_after)`'ı `"to": int(c.bugs)` yap → satır iddiası FAIL;
 ## SprintCatalog.fix_effort'ta `bugs * ...`ı `maxi(bugs, 5) * ...` yap → 4 hata 10 puan olur ve efor iddiası FAIL;
 ## SprintCatalog.line_share'te `maxi(1, total)`'u `total * 2` yap → payların toplamı 1 olmaz ve pay iddiası FAIL.
-static func _case_sprint_fix_preview_matches_close() -> String:
+static func _case_sprint_fix_close_matches_note() -> String:
 	_seed_sprint_live("note_tool")
 	_sprint_hire("char_fix_prev_dev", HRConstants.ROLE_DEVELOPER)
 	GameState.set_flag("b2c_audience", 2700.0)
@@ -23637,12 +23635,8 @@ static func _case_sprint_fix_preview_matches_close() -> String:
 			"top_users": 0}:
 		return "the live lines share %.3f of the audience, a line with no tier %.3f; the 4-bug card reads %s, want %d users and no accounts" % [
 			share_sum, SprintCatalog.line_share(lines[4]), SprintCatalog.card_effect(fixes[small]), users]
-	var forecast := func() -> Array:
-		return ProductModel.live().center.forecast.filter(func(p: Dictionary) -> bool: return p.k == "bugs_closed")
-	# No new bug on the line: the close removes the 4 the preview named.
+	# No new bug on the line: the close removes the 4 the card named.
 	SprintSystem.add(fixes[small].id)
-	if forecast.call() != [{"k": "bugs_closed", "n": 4}]:
-		return "the sprint-end preview reads %s, want 4 bugs closing" % [forecast.call()]
 	if not SprintSystem.start():
 		return "fixture: the sprint did not start"
 	while SprintSystem.mode() == "active":
@@ -23661,8 +23655,6 @@ static func _case_sprint_fix_preview_matches_close() -> String:
 	# Two more bugs land on the line while the sprint runs: the close removes the 7 the line holds then.
 	SprintSystem.plan_next()
 	SprintSystem.add(fixes[big].id)
-	if forecast.call() != [{"k": "bugs_closed", "n": 5}]:
-		return "the second sprint-end preview reads %s, want 5 bugs closing" % [forecast.call()]
 	if not SprintSystem.start():
 		return "fixture: the second sprint did not start"
 	ProductState.add_bugs(big, 2)
@@ -24189,8 +24181,8 @@ static func _seed_open_request() -> Customer:
 
 
 ## B2B talebi: hesap imzadan bir sprint sonra sektörünün vurgu 1 alanından bir kademe ister.
-## Talep kartı adaylarda, liderin önerisinde ve öngörüde "zamanında" olarak görünür; son tarihten
-## önce çıkan sürüm talebi karşılar ve aynı kademeye verilmiş sözü o sürümün "shipped"iyle tutar.
+## Talep kartı adaylarda ve liderin önerisinde görünür; son tarihten önce çıkan sürüm talebi karşılar ve aynı kademeye
+## verilmiş sözü o sürümün "shipped"iyle tutar.
 static func _case_sprint_request_on_time_met() -> String:
 	var account: Customer = _seed_open_request()
 	if account == null:
@@ -24210,8 +24202,6 @@ static func _case_sprint_request_on_time_met() -> String:
 		return "the request card %s is not among the candidates" % req.card_id
 	if not SprintCatalog.lead_suggestion().this.has(req.card_id):
 		return "the lead's plan skips the open request"
-	if not SprintCatalog.forecast([req.card_id]).any(func(part: Dictionary) -> bool: return part.k == "request_on_time"):
-		return "the forecast does not show the request on time"
 	var promise: Promise = PromiseRegistry.create(account.id, req.step, 10)
 	if not _play_sprint([req.card_id]):
 		return "fixture: sprint 2 did not start"

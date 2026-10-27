@@ -2,40 +2,46 @@ class_name SprintPanel
 extends HBoxContainer
 
 # Ürün sekmesinin orta (bu sprint) ve sağ (sonraki sprint) sütunları. Yalnız modeli çizer: izin ve
-# eşikler modelden gelir, her tık sekmeye `action` olarak çıkar. Sütunun başlığı (sprint başlığı ve
-# kapasite) ve alt şeridi sabit, arada kart yığını kayar.
+# eşikler modelden gelir, her tık sekmeye `action` olarak çıkar. Orta sütunun başlığı (sprint başlığı ve
+# kapasite), panosunun başlığı ve alt şeridi sabit, arada panonun gövdesi kayar; sağ sütunda başlık ve alt sabit,
+# kart yığını kayar. Saat ilerleyince `set_now` panoyu ve kapasiteyi sayfa kurulmadan günceller.
 
 signal action(kind: String, args: Dictionary)
 
 const CARD_SCENE := preload("res://scenes/tabs/product/SprintCard.tscn")
 const PAUSE := "res://assets/icons/util/pause.svg"
-const INBOX_GLYPH := "res://assets/icons/util/inbox.svg"
 const TEAM_GLYPH := "res://assets/icons/rail/hr.svg"
 const PLUS := "res://assets/icons/util/plus.svg"
 ## Devreden kartın ilerleme karesi 5 puandır: K3 sekiz kare tutar.
 const SQUARE_POINTS := 5.0
 
 
-## Başlık ve alt sabit, arada kart yığını kayar: yığın uzasa da düğmeler yerinde kalır. Alt şerit ilk
-## istendiğinde kurulur.
+## Başlık ve alt sabit, arada gövde: `scrolls` ise gövde (`stack`) kayar, yığın uzasa da düğmeler yerinde kalır; değilse gövde
+## kendi kaydırmasını taşıyan bir pano alır. `side` başlığın ve gövdenin yan payıdır. Alt şerit ilk istendiğinde kurulur.
 class Column extends PanelContainer:
 	var head := SprintUiShared.column(UiTokens.SPACE_L)
 	var stack := SprintUiShared.column(UiTokens.SPACE_M)
+	var scroll: ScrollContainer
 	var _col := SprintUiShared.column(0)
 	var _foot: VBoxContainer
 
-	func _init(variation: StringName, ratio: float) -> void:
+	func _init(variation: StringName, ratio: float, scrolls := true, side := UiTokens.SPACE_XXL) -> void:
 		theme_type_variation = variation
 		size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		size_flags_stretch_ratio = ratio
 		add_child(_col)
-		_col.add_child(SprintUiShared.pad(head, Vector4i(UiTokens.SPACE_XXL, UiTokens.SPACE_XL, UiTokens.SPACE_XXL, 0)))
-		var scroll := ScrollContainer.new()
-		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-		scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		_col.add_child(SprintUiShared.pad(head, Vector4i(side, UiTokens.SPACE_XL, side, 0)))
 		stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		stack.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		var inner := SprintUiShared.pad(stack, Vector4i(UiTokens.SPACE_XXL, UiTokens.SPACE_L, UiTokens.SPACE_XXL, UiTokens.SPACE_L))
+		if not scrolls:
+			var body := SprintUiShared.pad(stack, Vector4i(side, UiTokens.SPACE_M, side, 0))
+			body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+			_col.add_child(body)
+			return
+		scroll = ScrollContainer.new()
+		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		var inner := SprintUiShared.pad(stack, Vector4i(side, UiTokens.SPACE_L, side, UiTokens.SPACE_L))
 		inner.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		inner.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		scroll.add_child(inner)
@@ -52,6 +58,9 @@ class Column extends PanelContainer:
 
 
 var _capacity: CapacityView
+var _board: SprintBoard
+var _next_column: Column
+var _running := false
 
 
 func _init() -> void:
@@ -60,22 +69,45 @@ func _init() -> void:
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 
+## Yeniden kurulumda panonun ve sonraki sütunun kaydırma yeri korunur.
 func setup(model: Dictionary) -> void:
+	var board_at: int = _board.scroll.scroll_vertical if _board != null else 0
+	var next_at: int = _next_column.scroll.scroll_vertical if _next_column != null else 0
 	UiFactory.clear(self)
 	_capacity = null
+	_board = null
+	_next_column = null
+	_running = false
 	_center(model)
 	_next(model.next)
+	if _board != null:
+		SprintUiShared.keep_scroll(_board.scroll, board_at)
+	SprintUiShared.keep_scroll(_next_column.scroll, next_at)
 
 
-## Üstüne gelinen adayın hayaleti kapasitede: sayfa kurulmaz (kimlik boşsa hayalet kalkar).
+## Üstüne gelinen adayın hayaleti kapasitede ve panoda: sayfa kurulmaz (kimlik boşsa hayalet kalkar).
 func set_ghost(card_id: String) -> void:
 	if _capacity != null:
 		_capacity.set_ghost(ProductModel.ghost_effort(card_id) if card_id != "" else {})
+	if _board != null:
+		_board.set_ghost(card_id)
+
+
+## Koşan sprint var mı: saat ilerleyince `set_now` ancak o zaman bir şey günceller.
+func running() -> bool:
+	return _running
+
+
+## Saat ilerleyince (koşan sprintte) şimdiki an çizgisi, koşan çubuklar ve yüzleri ile kapasitenin "yapılan" dolgusu sayfa
+## kurulmadan, saklanan parçalardan güncellenir. Alt şeridin ilerlemesi de bu yoldan güncellenir.
+func set_now(at: float) -> void:
+	_board.set_now(at)
+	_capacity.set_done(ProductModel.stage_done(_board.stage_lists(), at))
 
 
 func _center(model: Dictionary) -> void:
 	var c: Dictionary = model.center
-	var col := Column.new(&"SprintColumn", UiTokens.D_SPRINT_COLUMNS.x)
+	var col := Column.new(&"SprintColumn", UiTokens.D_SPRINT_COLUMNS.x, false, UiTokens.SPACE_L)
 	add_child(col)
 	if c.mode == "release":
 		_release(col, c, model.next.sprint)
@@ -91,18 +123,14 @@ func _center(model: Dictionary) -> void:
 	_capacity.setup(model)
 	col.head.add_child(_capacity)
 
-	if c.team_empty and c.cards.is_empty():
-		col.stack.add_child(_nobody(c))
-	for card in c.cards:
-		var node := _add_card(col.stack, card, SprintCard.Look.WIDE)
-		if card.id == model.ui.hover_card:
-			node.show_effort()
+	_running = c.mode == "active"
+	_board = SprintBoard.new()
+	_board.action.connect(action.emit)
+	_board.setup(model, _nobody(c) if c.team_empty and c.cards.is_empty() else null)
+	col.stack.add_child(_board)
 
 	match c.mode:
 		"plan":
-			if not c.forecast.is_empty():
-				col.stack.add_child(SprintUiShared.section("PRODUCT_AT_SPRINT_END"))
-				col.stack.add_child(SprintUiShared.forecast(c.forecast))
 			var start := SprintUiShared.button(tr("PRODUCT_START_SPRINT"), &"PrimaryButtonDark", action.emit.bind("start", {}))
 			start.disabled = not c.can_start
 			if c.start_reason != "":
@@ -128,8 +156,6 @@ func _center(model: Dictionary) -> void:
 			col.foot().add_child(_foot_row([skip, start]))
 			col.foot().add_child(confirm)
 		"active":
-			col.stack.add_child(SprintUiShared.section("PRODUCT_STATUS"))
-			col.stack.add_child(_status(c.status))
 			var nv: Variant = c.next_version
 			if nv != null:
 				var version := SprintUiShared.box(UiTokens.SPACE_L)
@@ -166,25 +192,6 @@ func _way_out(c: Dictionary, variation: StringName) -> Button:
 	if way[1] == "hire":
 		go.icon = load(PLUS)
 	return go
-
-
-## DURUM: "1 kart bitti · 2 sürüyor · 1 sırada · 1 karar bekliyor"; sürüyor işçili kartlardır.
-func _status(s: Dictionary) -> HBoxContainer:
-	var row := SprintUiShared.box(UiTokens.SPACE_M)
-	for item in [
-		[UiFactory.make_glyph(SprintUiShared.CHECK, UiTokens.D_ICON_ROW, UiTokens.D_pos()),
-			tr(Fmt.count_key("PRODUCT_STATUS_CARDS", s.done)).format({"n": s.done}), "PRODUCT_STATUS_DONE"],
-		[SprintUiShared.phase_dot(false, UiTokens.D_INK_1), str(s.running), "PRODUCT_STATUS_RUNNING"],
-		[SprintUiShared.phase_dot(true, UiTokens.D_INK_1), str(s.queued), "PRODUCT_STATUS_QUEUED"],
-		[UiFactory.make_glyph(INBOX_GLYPH, UiTokens.D_ICON_ROW, UiTokens.D_INK_3),
-			tr(Fmt.count_key("PRODUCT_STATUS_DECISIONS", s.decisions)).format({"n": s.decisions}), "PRODUCT_STATUS_WAITING"],
-	]:
-		if row.get_child_count() > 0:
-			row.add_child(SprintUiShared.label(SprintUiShared.SEP.strip_edges(), &"MetaMuted", UiTokens.D_INK_4))
-		row.add_child(item[0])
-		row.add_child(SprintUiShared.label(item[1], &"TipTitle"))
-		row.add_child(SprintUiShared.label(tr(item[2]), &"MetaMuted"))
-	return row
 
 
 ## Sürüm notu: sprint kapanınca orta sütunun yerini alır; açıkken oyun durur.
@@ -285,6 +292,7 @@ func _release(col: Column, c: Dictionary, next_sprint: int) -> void:
 
 func _next(next: Dictionary) -> void:
 	var col := Column.new(&"SprintColumnNext", UiTokens.D_SPRINT_COLUMNS.y)
+	_next_column = col
 	HRUiShared.D_dashed(col)
 	add_child(col)
 	col.head.add_child(_title_row(next.sprint, "PRODUCT_NEXT"))
