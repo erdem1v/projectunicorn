@@ -29,14 +29,17 @@ Alt klasörler:
 - `scripts/tabs/hr/hr_dossier.gd` (232): Ekip dosyası: kişinin ayrıntı penceresi (`DETAILS["hr_dossier"]`), kişi ayrılınca kendini kapatır.
 - `scripts/tabs/hr/hr_popover.gd` (113): `HRPopover`: çapaya bağlı tek açılır panel (satır menüsü, zam kutusu, sorumlu seçici).
 - `scripts/tabs/hr/hr_ui_shared.gd` (506): `HRUiShared`: koyu tablo kiti (`D_*`), rozetler, moral, deneyim, durum hücresi, `mount_panel_modal`; tabloların dışında da kullanılır.
-- `scripts/tabs/product/product_model.gd` (999): `ProductModel`: sprint ekranının görünüm sözleşmesi; `live()` GameState/SprintSystem'den Dictionary kurar.
+- `scripts/tabs/product/product_model.gd` (1115): `ProductModel`: sprint ekranının görünüm sözleşmesi; `live()` GameState/SprintSystem'den Dictionary kurar.
   Başlık yorumu yeni ekranın alanlarını da tanımlar: `founder`, `requests`, `modules`, `prep`, çeyreğin saati, merkez ve sonraki sütun eklemeleri, kart satırı; düzeltme işinin efora girişi ve gösterim kuralı.
   Sol sütunun "+" değerleri ve hayalet hesabı `live()`dan ayrıdır: `addable`, `resolve_addable`, `ghost` (kart kimliğiyle sayfanın bir sonraki kurulumuna kadar saklanır).
-- `scripts/tabs/product/sprint_panel.gd` (423): `SprintPanel`: orta (bu sprint) ve sağ (sonraki sprint) sütunlar; başlık/alt sabit, kart yığını kayar.
+- `scripts/tabs/product/sprint_panel.gd` (380): `SprintPanel`: orta (bu sprint) ve sağ (sonraki sprint) sütunlar; başlık (`SprintHead` + `CapacityView`) ve alt sabit, kart yığını kayar.
+- `scripts/tabs/product/sprint_head.gd` (120): `SprintHead`: SPRINT N, çeyrek çentikleri, MVP ve hafta rozetleri, ekip rozeti, çeyrek hedef seçicisi (`pick_goal`); rozetler akar, kesilmez.
+- `scripts/tabs/product/capacity_view.gd` (293): `CapacityView`: KAPASİTE başlığı ve öneri satırı (`apply_lead`), üç aşama satırı (oluk, dolgu, Efor, rozet, yüzler, kümeler), taşma ipucu; `set_ghost`.
+- `scripts/tabs/product/stage_paint.gd` (113): `StagePaint`: sprint ekranının tek küçük çizim sınıfı (`groove`, `busy`, `bracket`); eleman başına çizim sınıfı yoktur.
 - `scripts/tabs/product/sprint_card.gd` (365): `SprintCard`: tek kart (`State`, `Look` kipleri); yalnız sözlüğünü çizer, düğme olaylarını `action` ile yayar.
-- `scripts/tabs/product/sprint_ui_shared.gd` (418): `SprintUiShared`: ortak statik parçalar (label, box, pad, avatar, kapasite çubuğu, `switch`, söz çipi `due_chip`); Ürün dışında 10+ dosya kullanır.
+- `scripts/tabs/product/sprint_ui_shared.gd` (494): `SprintUiShared`: ortak statik parçalar (label, box, pad, avatar, `face`, `open_goal_menu`, ÇEYREK çubuğu, `switch`, `due_chip`); Ürün dışında 10+ dosya kullanır.
 - `scripts/tabs/product/area_panel.gd` (311): `AreaPanel`: sol sütun (SPRINT ve ÇEYREK): Geçmiş, MÜŞTERİ TALEPLERİ, MODÜLLER ve açık modülün adayları; "+" değerleri sonraki karelerde gelir.
-- `scripts/tabs/product/quarter_view.gd` (211): `QuarterView`: ÇEYREK görünümü: hedef şeridi, sol sütun (`AreaPanel`), altı sprint sütunu, onay düğmeleri.
+- `scripts/tabs/product/quarter_view.gd` (179): `QuarterView`: ÇEYREK görünümü: hedef şeridi (menü SprintHead ile ortak), sol sütun (`AreaPanel`), altı sprint sütunu, onay düğmeleri.
 - `scripts/tabs/product/overview_view.gd` (96): GENEL BAKIŞ kâğıdı (şimdilik yalnız Sunucu bloğu; Azalt düğmesi kapasite 0 birimdeyken `server.decrease.off` ile kapalı); class_name yok.
 - `scripts/tabs/product/type_picker.gd` (116): `TypePicker`: MVP öncesi tek ekranlık tür ve ad seçici (iki pazar sütunu, kart pazarı da seçer); taslak `SprintSystem`'e yazılır, onay `chosen` olur.
 - `scripts/tabs/rnd/rnd_tree_view.gd` (433): `RnDTreeView`: aile sütunları (3 satır kafes), karolar, seçili düğümün kartı alanı.
@@ -152,7 +155,7 @@ Sekmelerin dinlediği EventBus sinyalleri (hepsi `_exit_tree`'de ya da düğüml
 Anahtarlar `localization/strings.csv`'de (sütunlar keys,tr,en); sekmeler `tr("ANAHTAR")` ile okur, statik dosyalar `TranslationServer.translate` ile. Aile önekleri ve okuyan dosyalar:
 - `TAB_*` (TAB_PRODUCT, TAB_SALES, TAB_HR, TAB_FINANCE, TAB_PIYASA, TAB_PERSONAL, TAB_RND, TAB_EVENTS): her sekmenin `_init` içindeki `frame_options.title`.
 - `PRODUCT_*` / `PROD_*` (PRODUCT_VIEW, PRODUCT_OV, PRODUCT_CARD, PRODUCT_SERVER, PRODUCT_FX, PROD_PATH/NAME/TYPE):
-  product_tab, product_model, sprint_panel, sprint_card, sprint_ui_shared, area_panel, quarter_view, type_picker, overview_view.
+  product_tab, product_model, sprint_panel, sprint_head, capacity_view, sprint_card, sprint_ui_shared, area_panel, quarter_view, type_picker, overview_view.
 - `SALES_*`: sales_tab (STEWARD, LOG, STRIP, STANCE, ROUTE, CHIP, B2C, PROMISE, BAND, ACTION), mail_pane (SALES_PER/ACTION/WEEKLY/STEWARD/CLAUSE), hr_assignments (SALES_LOCKED).
 - `HR_*` (HR_COL, HR_CARD, HR_ROW, HR_ATLAS 26 kullanım, HR_HOURS, HR_TAB, HR_KPI, HR_STATE, HR_BADGE, HR_ASSIGN, HR_LEGEND, HR_DOSSIER): hr_tab, hr_ledger, hr_assignments, hr_atlas_modal, hr_dossier, hr_ui_shared, personal_tab, events_tab.
 - `FIN_*` (FIN_GOAL, FIN_PROFIT, FIN_MARKET, FIN_CAPTABLE, FIN_RANGE, FIN_MENTOR, FIN_SUBTAB, FIN_CASH, FIN_MONTHLY, FIN_RUNWAY): finance_tab, finance_ozet_view, mail_pane; `ANGEL_CAP_*` ve `SEED_CAP_*` özette.
@@ -168,7 +171,8 @@ Anahtarlar `localization/strings.csv`'de (sütunlar keys,tr,en); sekmeler `tr("A
 Smoke (tek vaka: `bash tools/smoke_run.sh <vaka>`; tam süit yalnız push öncesi, CLAUDE.md §10, §12). Arayüz doğrulaması esas olarak görsel kabuldür.
 - Ekip: `hr_active_filters`, `hr_overload_badge`, `gorevler_has_no_founder`, `menu_has_one_path` (HRLedger/HRPopover sabitlerini ve silinen `W_MENU`, `_place_notch`, `_draw_notch` adlarını sınar, endgame_smoke.gd:14323).
 - Ürün: `product_bug_rows_read_the_store`, `fit_star_context`, `capacity_step_immediate`, `sprint_fix_card_clears_its_line`, `sprint_fix_preview_matches_close`,
-  `line_impact_names_the_accounts`, `paper_card_trim`, `sprint_follow_card_cannot_be_removed`, `sprint_timeline_matches_play_out` (hepsi ProductModel/SprintUiShared okur).
+  `line_impact_names_the_accounts`, `paper_card_trim`, `sprint_follow_card_cannot_be_removed`, `sprint_timeline_matches_play_out` (hepsi ProductModel/SprintUiShared okur),
+  `sprint_lead_row_until_plan_changes` (öneri satırı, `lead_applied` bayrağı ve onu düşüren her seam).
 - Ar-Ge: `rnd_rail_open_with_locked_tree`, `split_bars_name_their_cause` (RnDUiShared). Yatırım: `hunt_offer_lifecycle` (endgame_smoke.gd:2095). Olaylar: `mail_pending_survives_save` (:6542).
 - Kabuk: `rail_tabs_match_scene_order` (endgame_smoke.gd:4451), `clock_resumes_only_by_player` (:13700; product_tab ve hunt_tab'ı örnekler), `all_scripts_load`, `loc_product_derived_keys`.
 - Görsel (pencereli, PNG `%APPDATA%\Godot\app_userdata\Project Unicorn\`): `--tab-shot=<product|sales|hr|finance|piyasa[:durum]|personal|marketing|rnd|events>` `main.gd:2338`; `--lang=tr|en`, `--palette=cb`, `--shot-size=GxY`.
@@ -229,6 +233,7 @@ Smoke (tek vaka: `bash tools/smoke_run.sh <vaka>`; tam süit yalnız push önces
 
 - Yeni sekme ya da pencere boyu: `UiTokens.TABS` (ui_tokens.gd:294), `WindowLayer.TAB_SCENES` (window_layer.gd:13) ve `SPECS` (:38), `scenes/tabs/<Ad>Tab.tscn`, `TAB_<AD>` anahtarı, `left_tabs.gd`, smoke `rail_tabs_match_scene_order`.
 - Sol sütuna alan: `ProductModel._module_card`/`_requests` (sözleşme başlığı) + `AreaPanel` + `build_theme.gd` varyasyonu + `PRODUCT_*` anahtarı; "+" değeri `ProductModel.resolve_addable`'dan gelir.
+- Kapasite bölümü: sayılar `ProductModel._capacity` (E1/E2 kuralı başlıkta), çizim `CapacityView` + `StagePaint`, ölçüler `UiTokens.D_*CAP*`, varyasyonlar `build_theme.gd` (`Cap*`).
 - Sprint kartı alanı ya da düğmesi: `ProductModel` (sözleşme, `BUTTONS` product_model.gd:126; `follow` kartı Kaldır almaz, `_card`) + `SprintCard.setup`
   + `scripts/debug/product_fixtures.gd` (fikstür aynı alanı taşımalı) + `ProductTab._act` + ilgili `PRODUCT_*` anahtarları.
 - Satır menüsü eylemi (Ekip): `HRLedger._action_specs`/`run_action` (hr_ledger.gd:283,356), `hr_dossier.gd` (aynı kapı), `HRActions` sistemi ve smoke `menu_has_one_path`.

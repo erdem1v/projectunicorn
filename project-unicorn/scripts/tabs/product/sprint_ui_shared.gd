@@ -204,13 +204,89 @@ static func section(key: String) -> HBoxContainer:
 	return row
 
 
-## Bir kişinin yüzü; üstüne gelince adı ve rolü.
-static func avatar(person: Dictionary, px: int) -> Panel:
-	var face := UiFactory.make_person_avatar(String(person.name), person.get("look", {}), px)
+## Bir kişinin yüzü (`grey`: sprinte seçilemeyen); üstüne gelince adı ve rolü.
+static func avatar(person: Dictionary, px: int, grey := false) -> Panel:
+	var face := UiFactory.make_person_avatar(String(person.name), person.get("look", {}), px, grey)
 	face.tooltip_text = String(person.name) if String(person.get("role_text", "")) == "" \
 		else RnDUiShared.t("PRODUCT_PERSON_ROLE").format({"name": person.name, "role": person.role_text})
 	face.mouse_filter = Control.MOUSE_FILTER_PASS
 	return face
+
+
+## Kişinin yıldızı: "3★", yarım yıldızda "3,5★".
+static func stars_text(stars: float) -> String:
+	return Fmt.number(stars, 0 if is_equal_approx(stars, roundf(stars)) else 1) + "★"
+
+
+## Kişinin yüzü ve işaretleri: kurucunun halkası, sağ altta yıldız çipi; sprinte seçilemeyen (`away`) soluk gri durur, yıldız taşımaz.
+## Çip yüzün sağ kenarına biner (`D_STAR_CHIP`), yüzün yanında `D_W_FACE_SLOT`ta yer tutulur.
+static func face(person: Dictionary, px: int, away := false) -> Panel:
+	var disc: Panel = avatar(person, px, away)
+	disc.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	if person.founder:
+		var ring := Panel.new()
+		ring.theme_type_variation = &"FaceRing"
+		ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		ring.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		ring.offset_left = -UiTokens.BORDER_FOCUS
+		ring.offset_top = -UiTokens.BORDER_FOCUS
+		ring.offset_right = UiTokens.BORDER_FOCUS
+		ring.offset_bottom = UiTokens.BORDER_FOCUS
+		disc.add_child(ring)
+	if away:
+		disc.modulate.a = UiTokens.D_AWAY_ALPHA
+	else:
+		var chip := label(stars_text(person.stars), &"StarChip")
+		chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		chip.anchor_left = 1.0
+		chip.anchor_right = 1.0
+		chip.anchor_top = 1.0
+		chip.anchor_bottom = 1.0
+		chip.grow_horizontal = Control.GROW_DIRECTION_END
+		chip.grow_vertical = Control.GROW_DIRECTION_BEGIN
+		chip.offset_left = -UiTokens.D_STAR_CHIP.x
+		chip.offset_right = -UiTokens.D_STAR_CHIP.x
+		chip.offset_top = UiTokens.D_STAR_CHIP.y
+		chip.offset_bottom = UiTokens.D_STAR_CHIP.y
+		disc.add_child(chip)
+	return disc
+
+
+## Çeyrek hedefinin menüsü, SPRINT başlığının seçicisi ile ÇEYREK şeridinin ortak işlevi: "Hedef yok", her alan adıyla ve hedef
+## cümlesiyle, "Hatalar"; tik seçili olanda. Seçim `on_pick(kimlik)` ile ertelenir: sekme eylemde yeniden kurar, menü kendi
+## sinyali akarken ağaçtan sökülmez.
+static func open_goal_menu(anchor: Control, areas: Array, picked: String, on_pick: Callable) -> void:
+	var menu := HRPopover.mount(anchor, true)
+	menu.body().custom_minimum_size.x = UiTokens.D_W_GOAL_MENU
+	menu.body().add_theme_constant_override("separation", 0)
+	var choices: Array = [["", RnDUiShared.t("PRODUCT_GOAL_NONE_ITEM"), ""]]
+	for a in areas:
+		choices.append([a.id, a.name, Fmt.cap_first(a.goal_text)])
+	choices.append([SprintCatalog.GOAL_BUGS, RnDUiShared.t("PRODUCT_QUARTER_BUGS"), ""])
+	for choice in choices:
+		var item := Button.new()
+		item.theme_type_variation = &"MenuItem"
+		item.focus_mode = Control.FOCUS_NONE
+		var row := box(UiTokens.SPACE_M)
+		var check := UiFactory.make_glyph(CHECK, UiTokens.D_ICON_ROW, UiTokens.D_INK_1)
+		check.modulate.a = 1.0 if choice[0] == picked else 0.0
+		check.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		row.add_child(pad(check, Vector4i(0, UiTokens.SPACE_XXS, 0, 0)))
+		var words := column(UiTokens.SPACE_XXS)
+		words.add_child(UiFactory.make_label(String(choice[1]), &"DataMedium", UiTokens.D_INK_1))
+		if choice[2] != "":
+			words.add_child(UiFactory.make_label(String(choice[2]), &"Caption"))
+		row.add_child(words)
+		var inset := pad(row, Vector4i(UiTokens.SPACE_M, UiTokens.SPACE_S, UiTokens.SPACE_M, UiTokens.SPACE_S))
+		inset.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		inset.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		item.add_child(inset)
+		item.pressed.connect(func() -> void:
+			menu.close()
+			on_pick.call_deferred(choice[0]))
+		menu.body().add_child(item)
+		item.custom_minimum_size.y = inset.get_combined_minimum_size().y
+	menu.open_at(anchor, true)
 
 
 ## Cümle düzeninde bayrak: rakip çıkışı nötr, bu ya da sonraki sprintte biten son tarih uyarı renginde.

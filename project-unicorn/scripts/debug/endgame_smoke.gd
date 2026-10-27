@@ -560,6 +560,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sprint_lead_offers_paid_plan_b2c":      fail = _case_sprint_lead_offers_paid_plan_b2c()
 		"sprint_lead_fills_to_ceiling":          fail = _case_sprint_lead_fills_to_ceiling()
 		"sprint_lead_fills_next_column":         fail = _case_sprint_lead_fills_next_column()
+		"sprint_lead_row_until_plan_changes":   fail = _case_sprint_lead_row_until_plan_changes()
 		"sprint_solo_mvp_by_week_six":           fail = _case_sprint_solo_mvp_by_week_six()
 		"promise_due_sprint_kept_when_shipped_next_sprint": fail = _case_promise_due_sprint_kept_when_shipped_next_sprint()
 		"promise_due_sprint_breaks_after_close": fail = _case_promise_due_sprint_breaks_after_close()
@@ -16337,17 +16338,19 @@ static func _case_fit_star_context() -> String:
 					area, star, ProductQuality.expectation(area, {"star": star}), highest]
 
 	# Sıradaki yıldız: MVP'den sonra lider ve PM'in hedefi 2★'ın baktığı boş bir alana bakar. Çekirdek MVP'nin altına inince
-	# sıradaki yıldız 1'dir ve 1★'ın bakmadığı alan 2★'ın değeriyle tartılır: sıfıra bölme olmaz, şerit 0 kare der.
+	# sıradaki yıldız 1'dir ve 1★'ın bakmadığı alan 2★'ın değeriyle tartılır: sıfıra bölme olmaz, hedef seçilince şerit 0 kare der.
 	if SprintCatalog.pm_goal() not in ["onboarding", "integrations", "trust"]:
 		return "right after the MVP the PM's goal reads '%s', want an empty area the next star looks at" % SprintCatalog.pm_goal()
 	var wobble: String = SprintCatalog.capabilities("core")[0]
 	ProductState.set_line_tier(wobble, 0)
 	for line_id in SprintCatalog.capabilities("trust"):
 		ProductState.set_line_tier(line_id, 1)
+	SprintSystem.pick_goal(SprintCatalog.pm_goal())
 	var strip: Dictionary = ProductModel._goal()
+	SprintSystem.pick_goal("")
 	if ProductQuality.next_star() != 1 or not is_equal_approx(ProductQuality.next_ratio("trust"), 1.0) \
 			or not is_equal_approx(ProductQuality.next_ratio("core"), 0.4 / 0.6) \
-			or strip.area_id not in ["onboarding", "integrations"] or strip.now != 0:
+			or strip.area_id not in ["onboarding", "integrations"] or strip.meter.now != 0:
 		return "below the MVP the next star reads %d, Trust %.2f and Core %.2f of it, the strip %s; want 1, 1, 0.67 and an empty area at 0" % [
 			ProductQuality.next_star(), ProductQuality.next_ratio("trust"), ProductQuality.next_ratio("core"), strip]
 	ProductState.set_line_tier(wobble, 1)
@@ -25084,6 +25087,69 @@ static func _case_sprint_lead_fills_next_column() -> String:
 	if SprintSystem.mode() != "active" or SprintSystem.sprint_number() != 2 or p.next.cards.is_empty():
 		return "the delegated close: sprint %d %s with the sprint %s and the column %s, want sprint 2 running and a column of its own" % [
 			SprintSystem.sprint_number(), SprintSystem.mode(), p.sprint.cards, p.next.cards]
+	return ""
+
+
+## "Öneriyi uygula" büyük ekipte idempotent değildir (6. basamağın devreden kalkanı çağrı başına sayılır): uygulandıktan sonra ikinci
+## uygulama yerleşimi ve yükü değiştirmez ve öneri satırı (`center.suggest`) gizlidir. Devri açıp kapamak bayrağı indirmez; planı
+## değiştiren her seam (kartı çıkar, sprintten sonraki sütuna gönder, adayı sonraki sütuna koy, bu sprinte ekle), Kurucu sprintte
+## anahtarı ve çeyreğin hedefi indirir; çıkar, sprintten gönder, anahtar ve hedef satırı geri getirir. Ekip: ERP'de sekiz kişi (iki
+## tasarımcı, dört geliştirici, iki testçi), kurucu kapalı: ilk uygulama dokuz kartı koyar ve sonuncusunda (devreden) durur, yük
+## 165/160; bayrağı olmayan ikinci uygulama bir kart daha koyardı. On iki kişide ilk uygulama açık kartların hepsini koyar (yük
+## 165/240), ikinci uygulama bir şey eklemez ve bayrağı sınamaz.
+## FALSİFİKASYON: SprintSystem.apply_lead'in `lead_applied` koşulunu sil → ikinci uygulama yerleşimi değiştirir FAIL; `_place`taki
+## `lead_applied = false` satırını sil → "→" ve "+" sonrası bayrak düşmez FAIL; `remove`daki satırı sil → çıkarma sonrası satır
+## dönmez FAIL; `set_founder_in_sprint`teki ya da `pick_goal`daki satırı sil → anahtar ya da hedef sonrası bayrak düşmez FAIL;
+## `set_delegate`e `lead_applied = false` ekle → devir bayrağı indirir FAIL.
+static func _case_sprint_lead_row_until_plan_changes() -> String:
+	_seed_sprint_live("erp")
+	GameState.set_founder_in_sprint(false)
+	var roles: Array = [HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_DESIGNER, HRConstants.ROLE_TESTER, HRConstants.ROLE_DEVELOPER]
+	for i in 8:
+		_sprint_hire("char_row_%d" % i, roles[i % 4])
+	var p: Dictionary = GameState.product
+	var shown := func() -> bool: return ProductModel.live().center.suggest != null
+	var spoken := func() -> bool: return bool(p.sprint.lead_applied)
+	if not shown.call() or spoken.call():
+		return "fixture: before any apply the lead row reads shown %s, applied %s, want a row and no flag" % [shown.call(), spoken.call()]
+	SprintSystem.apply_lead()
+	var placed: Array = [p.sprint.cards.duplicate(), p.next.cards.duplicate(), SprintSystem.used()]
+	if placed[0].is_empty() or not spoken.call() or shown.call():
+		return "after apply_lead the sprint holds %s, the flag reads %s and the row %s, want cards, the flag up and no row" % [
+			placed[0], spoken.call(), shown.call()]
+	SprintSystem.apply_lead()
+	if p.sprint.cards != placed[0] or p.next.cards != placed[1] or not is_equal_approx(SprintSystem.used(), placed[2]):
+		return "a second apply_lead moved the plan: load %.1f against %.1f, sprint %s against %s, column %s against %s" % [
+			SprintSystem.used(), placed[2], p.sprint.cards, placed[0], p.next.cards, placed[1]]
+	_sprint_hire("char_row_pm", HRConstants.ROLE_PRODUCT_MANAGER)
+	SprintSystem.set_delegate(true)
+	var delegated: bool = SprintSystem.delegated()
+	SprintSystem.set_delegate(false)
+	if not delegated or not spoken.call() or shown.call():
+		return "delegation on (%s) and off left the flag %s and the row %s, want the flag up and no row" % [
+			delegated, spoken.call(), shown.call()]
+	# Her seam bayrağı düşürür; ardından bayrak elle kalkar ki sıradaki seam uygulanmış planla başlasın (yeniden uygulama havuzu
+	# tüketir, sonraki seam'in önerecek kartı kalmaz). Planda yer açıp bayrağı kaldıran "bu sprinte ekle" kolu, çıkarılan kartı geri koyar.
+	var rejoin := func() -> void:
+		var id: String = p.sprint.cards[0]
+		SprintSystem.remove(id)
+		p.sprint.lead_applied = true
+		SprintSystem.add(id)
+	var seams: Array = [
+		["the quarter goal", func() -> void: SprintSystem.pick_goal(SprintCatalog.pm_goal()), true],
+		["the founder key", func() -> void: SprintSystem.set_founder_in_sprint(true), true],
+		["remove", func() -> void: SprintSystem.remove(p.sprint.cards[0]), true],
+		["send_next from the sprint", func() -> void: SprintSystem.send_next(p.sprint.cards[0]), true],
+		["send_next from the candidates", func() -> void: SprintSystem.send_next(SprintCatalog.open_cards([])[0].id), false],
+		["add into a plan with room", rejoin, false],
+	]
+	for seam: Array in seams:
+		seam[1].call()
+		if spoken.call():
+			return "%s left the flag up: the lead row would stay hidden for a changed plan" % seam[0]
+		if seam[2] and not shown.call():
+			return "after %s the lead row reads hidden, want it back" % seam[0]
+		p.sprint.lead_applied = true
 	return ""
 
 

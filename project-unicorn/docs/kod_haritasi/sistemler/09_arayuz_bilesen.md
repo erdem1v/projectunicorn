@@ -14,9 +14,10 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
   ↳ `SegmentBar`; kurallar `FounderConstants`'ta (04_ekip.md).
 
 ## Dosyalar
-- `scripts/theme/ui_tokens.gd` (989): `UiTokens`; tüm renkler, SIZE_* merdiveni, krem palet, koyu dil `D_*`, `TABS`, `THEME_STAMP`, renk körü anahtarı ve `D_` yardımcıları
-- `scripts/theme/ui_factory.gd` (533): `UiFactory`; statik Control üreticileri (label, pill, badge, kart, avatar, `D_tag`, `D_kpi`, `D_seg_tabs`, `D_said`, `D_stars`) hep tema varyasyonu adlarıyla
-- `scripts/theme/build_theme.gd` (1549): `-s` betiği; UiTokens'tan `themes/master_theme.tres` (krem) ve `themes/menajer_theme.tres` (koyu) üretir, FontVariation sarmalarını kurar (koyu yüzler Archivo'nun değişken yüzü, yedek Plex)
+- `scripts/theme/ui_tokens.gd` (1022): `UiTokens`; tüm renkler, SIZE_* merdiveni, krem palet, koyu dil `D_*`, `TABS`, `THEME_STAMP`, renk körü anahtarı ve `D_` yardımcıları
+- `scripts/theme/ui_factory.gd` (543): `UiFactory`; statik Control üreticileri (label, pill, badge, kart, avatar, `D_tag`, `D_kpi`, `D_seg_tabs`, `D_said`, `D_stars`) hep tema varyasyonu adlarıyla
+- `scripts/theme/build_theme.gd` (1620): `-s` betiği; UiTokens'tan `themes/master_theme.tres` (krem) ve `themes/menajer_theme.tres` (koyu) üretir,
+  FontVariation sarmalarını kurar (koyu yüzler Archivo'nun değişken yüzü; yedek Plex, sonra Noto Sans Symbols 2)
 - `scripts/theme/theme_check.gd` (270): tema denetçisi (eksik öğe, içerik payı, WCAG kontrastı) ve koyu temanın `contrast_audit` kapısı
 - `scripts/ui/components/top_bar.gd` (458): üst bar; iki satırlık metrik ızgarası, gün/saat/hafta çubuğu, hız tuşları, Sıradaki ve karar kapısı yuvası
 - `scripts/ui/components/left_tabs.gd` (326): sol ray; `UiTokens.TABS` ile sahne düğmeleri, kilit, rozet sayaçları, simge kipi
@@ -116,7 +117,16 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 - Tema sürümü: `UiTokens.THEME_STAMP := 40` `ui_tokens.gd:44`; .tres'in gömülü `UiTokensStamp.stamp` sabiti ile `main.gd:99-100` karşılaştırılır (debug uyarısı)
 - Ürün sol sütunu: ölçüler `D_W_LEFT` 288, `D_BOX_MONO` 24, `D_H_KEY_CAND` 24, `D_W_STAGE_STRIP` 168, `D_H_STAGE_STRIP` 6, `D_PLANNED_ALPHA` (planlı talep), `D_TAKEN_ALPHA` (planlı ya da damgalı aday);
   ↳ aşama bantları `D_ST_DESIGN/DEV/TEST` ve `UiTokens.D_stage(aşama)`.
-- Yüzler: `d_wide_b` (Archivo 800, genişlik 118: modül işareti `MonoMark`) ve `d_wide_sb_caps` (650, genişlik 110, harf aralığı 1: göz başlığı `Eyebrow`); `d_num` (650/108) okuyanı gelene dek kurulmadı.
+- Yüzler: `d_wide_b` (Archivo 800, genişlik 118: modül işareti `MonoMark`) ve `d_wide_sb_caps` (650, genişlik 110, harf aralığı 1: göz başlığı `Eyebrow`); `d_num` (650/108, tablo rakamları: Kapasite'nin `CapFigure` sayısı).
+- Sembol yedeği: koyu zincirler Archivo, Plex, `symbols_flat` (Noto Sans Symbols 2'nin kendi RID'li yüzü: ★ ☆ ✓ ▾ ⌛ ✕).
+  Satır yüksekliği yedeğin metriğinden de gelir: `UiFactory.flatten_symbol_face()` (`main.gd` `_ready`) yüzün ascent/descent'ini 9 ile 52 px arasında sıfırlar.
+  Krem zincirler düz Noto dosyasıyla biter, metriği dokunulmaz; `build_theme.gd` `_bare` ve `_line_h()` koyu kutunun payını yedeksiz hesaplar. `glyph_audit` her zinciri sınar.
+- Sprint başlığı ve Kapasite ölçüleri: `D_H_SPRINT_HEAD`, `D_H_CAP_HEAD`, `D_H_CAP_ROW` 56, `D_H_CAP_TRACK`, `D_CAP_FILL_INSET`, `D_W_CAP_{TIP,LABEL,NUMBER,BADGE}`,
+  `D_W_FACE_SLOT`, `D_STAR_CHIP`, `D_AWAY_ALPHA`, `D_NOTCH_QUARTER`, `D_WEEK_BAR`, `D_BUSY_BAR`, `D_HATCH`, `D_CREW_OVERLAP`, `D_SPRINT_COLUMNS` (746:308); renkler `D_stage_edge/fill/ghost`, `D_hatch_base`.
+- Bu bloğun varyasyonları yalnız koyu temadadır: `SprintTitle`, `MvpVersion`, `HeadMeta`, `CrewTotal`, `GoalPick(+Set)`, `QuarterNotch(+Past, +Now)`, `WeekBar`, `FaceRing`,
+  `StarChip`, `ClusterStars`, `AwayLabel`, `CapBlock`, `CapRow(+Hot)`, `CapStage`, `CapUnit`, `CapFigure`, `CapTeam`, `CapBadgeOver(+Ink)`, `CapStreak(+Ink)`.
+- `StagePaint` (`scripts/tabs/product/stage_paint.gd`): StyleBox'ın çizemediği izler (şeritli taşma, kesikli çizgi, üç satırın ayracı) için tek Control;
+  `kind` StringName (`groove`, `busy`, `bracket`), ölçü ve renk token'dan, yerleşim sahibinde.
 - Sol sütunun varyasyonları yalnız koyu temadadır (master taşımaz, `theme_check` ikisinde geçer): `RequestRow` (+`Hover`, `Planned`), `ModuleRow` (+`Hover`, `Open`), `ModuleCandidate`, `DueChip`, `DueChipSoon`, `MoreLink`
   ↳ `MonoBox` HR ve posta ile ortaktır.
 - Tema yolu: `UiTokens.MENAJER_THEME` `ui_tokens.gd:450`; proje teması `project.godot` `theme/custom` = `master_theme.tres`; Menajer teması taşınan her alt ağacın köküne ve her CanvasLayer köküne elle atanır

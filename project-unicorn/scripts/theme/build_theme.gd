@@ -10,7 +10,9 @@ extends SceneTree
 #   JetBrains Mono, every face falling back to Noto Sans Symbols 2.
 # - themes/menajer_theme.tres (the dark language), set on the roots of migrated screens: Archivo's
 #   variable weight and width axes (a glyph it lacks falls back to the Plex face of its weight) and
-#   Source Serif 4; no text face falls back to Noto, whose height would set every Label's line.
+#   Source Serif 4, both ending in Noto Sans Symbols 2. Noto's lines are taller than theirs and a Label
+#   takes its height from the tallest face of its chain, so the dark chains end in a face of their own
+#   (symbols_flat) whose metrics `UiFactory.flatten_symbol_face` zeroes at boot.
 #
 # Every size here is a UiTokens scale step: a variation picks a step, it never invents a number.
 # ============================================================================
@@ -18,6 +20,11 @@ extends SceneTree
 # Loaded in _initialize, not preloaded: ui_tokens.gd names the GameState autoload, which a
 # `-s` script's own compile pass cannot resolve yet.
 var T
+## The symbol face every cream chain ends with, and the dark chains' own face of it.
+var _symbols: FontFile
+var _dark_symbols: FontVariation
+## A dark face's chain without the symbol face: its line, as the flattened symbol face leaves it at runtime.
+var _bare := {}
 
 const FONT_SERIF_REG := "res://assets/fonts/serif/SourceSerif4-Regular.ttf"
 const FONT_SERIF_SB := "res://assets/fonts/serif/SourceSerif4-Semibold.ttf"
@@ -41,20 +48,21 @@ func _initialize() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(VAR_DIR))
 
 	var symbols: FontFile = load(FONT_SYMBOLS)
+	_symbols = symbols
 	if symbols == null:
 		push_error("[build_theme] symbol fallback failed to load — run --import first")
 		quit(1)
 		return
 
 	# FontVariation wrappers (base font + symbol fallback; the label faces add tracking)
-	var serif_reg := _mkfont(FONT_SERIF_REG, symbols, "serif_reg")
-	var serif_sb := _mkfont(FONT_SERIF_SB, symbols, "serif_sb")
-	var serif_it := _mkfont(FONT_SERIF_IT, symbols, "serif_it")
-	var sans_reg := _mkfont(FONT_SANS_REG, symbols, "sans_reg")
-	var sans_sb := _mkfont(FONT_SANS_SB, symbols, "sans_sb")
-	var mono_reg := _mkfont(FONT_MONO_REG, symbols, "mono_reg")
-	var mono_label := _mkfont(FONT_MONO_REG, symbols, "mono_label", 1)
-	var mono_sb := _mkfont(FONT_MONO_SB, symbols, "mono_sb", 1)
+	var serif_reg := _mkfont(FONT_SERIF_REG, [symbols], "serif_reg")
+	var serif_sb := _mkfont(FONT_SERIF_SB, [symbols], "serif_sb")
+	var serif_it := _mkfont(FONT_SERIF_IT, [symbols], "serif_it")
+	var sans_reg := _mkfont(FONT_SANS_REG, [symbols], "sans_reg")
+	var sans_sb := _mkfont(FONT_SANS_SB, [symbols], "sans_sb")
+	var mono_reg := _mkfont(FONT_MONO_REG, [symbols], "mono_reg")
+	var mono_label := _mkfont(FONT_MONO_REG, [symbols], "mono_label", 1)
+	var mono_sb := _mkfont(FONT_MONO_SB, [symbols], "mono_sb", 1)
 
 	var th := Theme.new()
 	th.set_default_font(sans_reg)
@@ -411,6 +419,12 @@ const INK_OF := {"normal": "font_color", "hover": "font_hover_color", "pressed":
 ## menajer_theme.tres, or null with the reasons pushed as errors: a master type, base or item it
 ## lacks, a box that leaves its content margins to the border, a master colour without a dark token.
 func _menajer(master: Theme) -> Theme:
+	# A variation only so that it has a face (a rid) of its own; the embolden is too small to draw.
+	var flat := FontVariation.new()
+	flat.base_font = _symbols
+	flat.variation_embolden = 0.001
+	_save(flat, T.SYMBOL_FACE)
+	_dark_symbols = load(T.SYMBOL_FACE)
 	var plex_reg: FontFile = load(FONT_SANS_REG)
 	var plex_sb: FontFile = load(FONT_SANS_SB)
 	var plex_b: FontFile = load(FONT_SANS_B)
@@ -426,11 +440,13 @@ func _menajer(master: Theme) -> Theme:
 	# The sprint screen's wide faces: a module's mark and its eyebrow captions.
 	var wide_b := _archivo("d_wide_b", 800, 118, plex_b)
 	var wide_sb_caps := _archivo("d_wide_sb_caps", 650, 110, plex_sb, 1)
+	# Figures: the capacity block's efforts, the star chips and the spill badges.
+	var num := _archivo("d_num", 650, 108, plex_sb)
 	var sansc := _archivo("d_sansc_reg", 500, 87, plex_reg)
 	var sansc_caps := _archivo("d_sansc_caps", 650, 87, plex_reg, 1)
-	var serif_reg := _mkfont(FONT_SERIF_REG, null, "d_serif_reg")
-	var serif_sb := _mkfont(FONT_SERIF_SB, null, "d_serif_sb")
-	var serif_it := _mkfont(FONT_SERIF_IT, null, "d_serif_it")
+	var serif_reg := _dark_font(FONT_SERIF_REG, [], "d_serif_reg")
+	var serif_sb := _dark_font(FONT_SERIF_SB, [], "d_serif_sb")
+	var serif_it := _dark_font(FONT_SERIF_IT, [], "d_serif_it")
 
 	var th := Theme.new()
 	# Mono's jobs move to the regular sans and its caps labels to the condensed semibold caps.
@@ -623,7 +639,7 @@ func _menajer(master: Theme) -> Theme:
 	for row in [["font_color", T.D_INK_2], ["font_hover_color", T.D_INK_1], ["font_disabled_color", T.D_INK_OFF],
 			["font_accelerator_color", T.D_INK_4], ["font_separator_color", T.D_INK_3]]:
 		th.set_color(row[0], &"PopupMenu", row[1])
-	th.set_constant("v_separation", &"PopupMenu", int(T.D_H_MENU_ITEM - sans_reg.get_height(T.D_FS_15)))
+	th.set_constant("v_separation", &"PopupMenu", int(T.D_H_MENU_ITEM - _line_h(sans_reg, T.D_FS_15)))
 	for key in ["h_separation", "item_start_padding", "item_end_padding"]:
 		th.set_constant(key, &"PopupMenu", T.SPACE_M)
 	# A dropdown's list checks the value in force; the other items keep the check's room.
@@ -663,6 +679,16 @@ func _menajer(master: Theme) -> Theme:
 		[&"KeySmall", cond_sb_caps, T.D_FS_12, T.D_INK_3],
 		[&"Eyebrow", wide_sb_caps, T.D_FS_12, T.D_INK_4],
 		[&"MonoMark", wide_b, T.D_FS_12, T.D_INK_2],
+		[&"SprintTitle", wide_b, T.D_FS_26, T.D_INK_1],
+		[&"MvpVersion", wide_b, T.D_FS_15, T.D_INK_1],
+		[&"HeadMeta", sans_sb, T.D_FS_13, T.D_INK_3],
+		[&"CrewTotal", sans_b, T.D_FS_16, T.D_INK_1],
+		[&"CapStage", sans_sb, T.D_FS_14, T.D_INK_2],
+		[&"CapUnit", sans_sb, T.D_FS_13, T.D_INK_3],
+		[&"CapFigure", num, T.D_FS_22, T.D_INK_1],
+		[&"CapTeam", num, T.D_FS_15, T.D_INK_4],
+		[&"AwayLabel", sans_sb, T.D_FS_12, T.D_INK_4],
+		[&"ClusterStars", num, T.D_FS_12, T.D_INK_1],
 		[&"FloatKey", cond_sb_caps, T.D_FS_14, T.D_INK_2],
 		[&"NavReason", cond_sb_caps, T.D_FS_12, T.D_INK_4],
 		[&"PartValue", sans_b, T.D_FS_36, T.D_INK_2],
@@ -727,6 +753,8 @@ func _menajer(master: Theme) -> Theme:
 			_fit(cond_b_caps, T.D_FS_14, T.D_H_STAMP, T.SPACE_M, T.SPACE_M), T.D_STAMP, thick)],
 		[&"FxPart", sans_reg, T.D_FS_14, T.D_INK_2, _flat(T.D_SURFACE_2, T.D_RADIUS_2,
 			_fit(sans_reg, T.D_FS_14, T.D_H_FX, T.SPACE_M, T.SPACE_M), T.D_LINE_1)],
+		[&"StarChip", num, T.D_FS_12, T.D_INK_1, _flat(T.D_SURFACE_2, T.D_RADIUS_1,
+			Vector4(T.SPACE_XS, 0, T.SPACE_XS, 0), T.D_LINE_2)],
 	]:
 		_lbl(th, row[0], row[1], row[2], row[3])
 		th.set_stylebox("normal", row[0], row[4])
@@ -1000,6 +1028,40 @@ func _menajer(master: Theme) -> Theme:
 		[&"DueChipSoon", _flat(clear, T.D_RADIUS_2, _fit(sans_sb, T.D_FS_13, T.D_H_TAG, T.SPACE_S, T.SPACE_S), T.D_INK_3)],
 	]:
 		_panel(th, row[0], "PanelContainer", row[1])
+	# The header's quarter notches and week bars, the goal pick, and the capacity block: its frame, a person's ring.
+	for row in [
+		[&"QuarterNotch", clear, T.D_LINE_3], [&"QuarterNotchPast", T.D_LINE_3, clear], [&"QuarterNotchNow", T.D_INK_1, clear],
+		[&"FaceRing", clear, T.D_INK_1],
+	]:
+		var round_face: bool = row[0] == &"FaceRing"
+		_panel(th, row[0], "Panel", _flat(row[1], T.RADIUS_PILL if round_face else T.D_RADIUS_1, Vector4.ZERO, row[2],
+			Vector4i.ONE * (T.BORDER_FOCUS if round_face else T.BORDER_HAIRLINE)))
+	th.set_type_variation(&"WeekBar", &"ProgressBar")
+	th.set_stylebox("background", &"WeekBar", _flat(T.D_SURFACE_5, T.D_RADIUS_1, Vector4.ZERO))
+	th.set_stylebox("fill", &"WeekBar", _flat(T.D_INK_2, T.D_RADIUS_1, Vector4.ZERO))
+	# The goal pick: "no goal" in a quieter ink than a picked goal.
+	for row in [[&"GoalPick", T.D_INK_3], [&"GoalPickSet", T.D_INK_2]]:
+		_dbtn(th, row[0], {"normal": [clear, T.D_LINE_2, row[1]], "hover": [clear, T.D_LINE_HOVER, T.D_INK_1],
+			"pressed": [T.D_SURFACE_2, T.D_LINE_HOVER, T.D_INK_1], "disabled": [clear, T.D_LINE_1, T.D_INK_OFF]},
+			sans_sb, T.D_FS_13, _fit(sans_sb, T.D_FS_13, T.D_H_BTN_SM, T.SPACE_L, T.SPACE_L))
+		th.set_constant("icon_max_width", row[0], T.D_ICON_MARK)
+		th.set_constant("h_separation", row[0], T.SPACE_S)
+	_panel(th, &"CapBlock", "PanelContainer", _flat(clear, 0, Vector4(0, T.SPACE_M, 0, T.SPACE_XS), T.D_LINE_1,
+		Vector4i(0, T.BORDER_HAIRLINE, 0, T.BORDER_HAIRLINE)))
+	_panel(th, &"CapRow", "PanelContainer", _flat(clear, 0, Vector4.ZERO))
+	# The spill's badge, the streak's ring and the row the streak warms, in the palette in use.
+	var badge_pad := _fit(num, T.D_FS_14, T.D_H_TAG, T.SPACE_S, T.SPACE_S)
+	for cb in [false, true]:
+		T.set_colorblind(cb)
+		var twin := "Cb" if cb else ""
+		var warn: Dictionary = T.D_badge_palette(&"accent")
+		_lbl(th, "CapBadgeOverInk" + twin, num, T.D_FS_14, warn.fg)
+		_panel(th, "CapBadgeOver" + twin, "PanelContainer", _flat(warn.bg, T.D_RADIUS_2, badge_pad, warn.line))
+		_lbl(th, "CapStreakInk" + twin, num, T.D_FS_12, warn.fg)
+		_panel(th, "CapStreak" + twin, "PanelContainer", _flat(clear, T.RADIUS_PILL,
+			_fit(num, T.D_FS_12, T.D_H_TAG, T.SPACE_XS, T.SPACE_XS), T.D_warn(), Vector4i.ONE * T.BORDER_FOCUS))
+		_panel(th, "CapRowHot" + twin, "PanelContainer", _flat(warn.bg, T.D_RADIUS_1, Vector4.ZERO))
+	T.set_colorblind(false)
 	# The request list's fold: "+3 requests" with its chevron after the words.
 	_dbtn(th, &"MoreLink", {"normal": [clear, clear, T.D_INK_3], "hover": [clear, T.D_LINE_HOVER, T.D_INK_1],
 		"pressed": [T.D_SURFACE_2, T.D_LINE_HOVER, T.D_INK_1], "disabled": [clear, clear, T.D_INK_OFF]},
@@ -1315,9 +1377,14 @@ func _flat(bg: Color, radius: int, pad: Vector4, border := Color.TRANSPARENT, wi
 
 ## Content margins that centre one line of the face in a box exactly h tall.
 func _fit(face: Font, size: int, h: int, left: int, right: int) -> Vector4:
-	var spare := h - face.get_height(size)
+	var spare := h - _line_h(face, size)
 	var top := floorf(spare / 2.0)
 	return Vector4(left, top, right, spare - top)
+
+
+## The height of a line of `face` as a label sets it.
+func _line_h(face: Font, size: int) -> float:
+	return (_bare.get(face, face) as Font).get_height(size)
 
 
 func _pad_of(sb: StyleBox) -> Vector4:
@@ -1367,30 +1434,41 @@ func _dbtn(th: Theme, name: StringName, look: Dictionary, face: Font, size: int,
 
 # --- helpers ----------------------------------------------------------------
 
-## A face with its fallback (none for a chain of one) and whole-pixel tracking; axes are a variable font's
-## variation coordinates.
-func _mkfont(ttf_path: String, fallback: Font, vname: String, spacing: int = 0, features: Dictionary = {},
-		axes: Dictionary = {}) -> FontVariation:
+## A face with its fallback chain and whole-pixel tracking; axes are a variable font's variation coordinates.
+func _variation(ttf_path: String, fallbacks: Array, spacing: int, features: Dictionary, axes: Dictionary) -> FontVariation:
 	var base: FontFile = load(ttf_path)
 	if base == null:
 		push_error("[build_theme] font load failed: %s" % ttf_path)
 		quit(1)
 	var fv := FontVariation.new()
 	fv.base_font = base
-	fv.fallbacks = [fallback] if fallback != null else []
+	fv.fallbacks = fallbacks
 	fv.spacing_glyph = spacing
 	fv.opentype_features = features
 	fv.variation_opentype = axes
+	return fv
+
+
+func _mkfont(ttf_path: String, fallbacks: Array, vname: String, spacing: int = 0, features: Dictionary = {},
+		axes: Dictionary = {}) -> FontVariation:
 	var path := VAR_DIR + vname + ".tres"
-	_save(fv, path)
+	_save(_variation(ttf_path, fallbacks, spacing, features, axes), path)
 	return load(path)
 
 
-## An Archivo instance at a weight and width, figures equal width. The keys are INT OpenType tags: a String
-## key is accepted and silently renders the default instance.
+## A dark face: `fallbacks` (the Plex face of its weight, none for a chain of one), then the symbol face.
+func _dark_font(ttf_path: String, fallbacks: Array, vname: String, spacing: int = 0, features: Dictionary = {},
+		axes: Dictionary = {}) -> FontVariation:
+	var face := _mkfont(ttf_path, fallbacks + [_dark_symbols], vname, spacing, features, axes)
+	_bare[face] = _variation(ttf_path, fallbacks, spacing, features, axes)
+	return face
+
+
+## An Archivo instance at a weight and width, figures equal width; a glyph it lacks falls to `fallback`, then to the
+## symbol face. The keys are INT OpenType tags: a String key is accepted and silently renders the default instance.
 func _archivo(vname: String, wght: int, wdth: int, fallback: Font, spacing: int = 0) -> FontVariation:
 	var ts := TextServerManager.get_primary_interface()
-	return _mkfont(FONT_ARCHIVO, fallback, vname, spacing, {ts.name_to_tag("tnum"): 1},
+	return _dark_font(FONT_ARCHIVO, [fallback], vname, spacing, {ts.name_to_tag("tnum"): 1},
 		{ts.name_to_tag("wght"): wght, ts.name_to_tag("wdth"): wdth})
 
 

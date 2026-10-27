@@ -1,9 +1,9 @@
 class_name QuarterView
 extends VBoxContainer
 
-# ÇEYREK görünümü: üstte hedef şeridi, altta SPRINT'in sol sütunu (modüller ve talepler) ve altı sprint sütunu (bu sprint,
-# PM'in önerdikleri, boşlar); sütunlar en uzununun içeriği kadar uzar, onay düğmeleri kartların hemen altında.
-# Yalnız modeli çizer; onay ve hedef seçimi eylem olarak, açık modül yerel durum olarak çıkar.
+# ÇEYREK görünümü: üstte hedef şeridi (hedefi olmayan çeyrek de "hedef yok" der), altta SPRINT'in sol sütunu (modüller ve talepler)
+# ve altı sprint sütunu (bu sprint, PM'in önerdikleri, boşlar); sütunlar en uzununun içeriği kadar uzar, onay düğmeleri kartların
+# hemen altında. Yalnız modeli çizer; onay ve hedef seçimi eylem olarak, açık modül yerel durum olarak çıkar.
 
 signal action(kind: String, args: Dictionary)   # approve {sprint} · approve_all · edit {sprint} · pick_goal {area_id}
 signal ui_changed(key: String, value: Variant)   # sol sütunun yerel durumu (açık modül, talep listesinin açıklığı)
@@ -40,7 +40,6 @@ class GoalMeter extends Control:
 		draw_rect(Rect2(line_x, 0.0, UiTokens.D_GOAL_TICK.x, size.y), UiTokens.D_INK_1)
 
 
-## Hedef seçilmemişse şerit yok.
 func setup(model: Dictionary) -> void:
 	UiFactory.clear(self)
 	add_theme_constant_override("separation", UiTokens.SPACE_XL)
@@ -81,7 +80,8 @@ func content_height() -> float:
 	return strip + maxf(areas.get_combined_minimum_size().y, body.get_child(1).get_combined_minimum_size().y)
 
 
-## BU ÇEYREK · alan · hedef cümlesi ... on kare ölçer · ilerleme · ok. Tık hedef menüsünü açar.
+## BU ÇEYREK · alan · hedef cümlesi ... on kare ölçer · ilerleme · ok; "Hatalar" ve "Hedef yok" yalnız adıyla durur. Tık hedef
+## menüsünü açar (SPRINT başlığının seçicisiyle ortak).
 func _goal_strip(goal: Dictionary, areas: Array) -> PanelContainer:
 	var strip := PanelContainer.new()
 	strip.theme_type_variation = &"OptionBar"
@@ -91,54 +91,22 @@ func _goal_strip(goal: Dictionary, areas: Array) -> PanelContainer:
 	strip.mouse_exited.connect(func() -> void: strip.theme_type_variation = &"OptionBar")
 	strip.gui_input.connect(func(ev: InputEvent) -> void:
 		if UiFactory.is_left_click(ev):
-			_open_goal_menu(strip, areas, String(goal.area_id)))
+			SprintUiShared.open_goal_menu(strip, areas, String(goal.area_id), func(id: String) -> void:
+				action.emit("pick_goal", {"area_id": id})))
 	var row := SprintUiShared.box(UiTokens.SPACE_L)
 	strip.add_child(row)
 	row.add_child(SprintUiShared.label(Fmt.upper(tr("PRODUCT_THIS_QUARTER")), &"KeyLabel"))
-	row.add_child(SprintUiShared.label(String(goal.area_name), &"DataStrong"))
-	var sentence := SprintUiShared.label(String(goal.text), &"DataText")
-	sentence.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	sentence.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	row.add_child(sentence)
-	row.add_child(GoalMeter.new(goal))
-	row.add_child(SprintUiShared.label(String(goal.progress_text), &"MetaMuted"))
+	row.add_child(SprintUiShared.label(String(goal.area_name) if goal.area_id != "" else tr("PRODUCT_GOAL_NONE_ITEM"), &"DataStrong"))
+	if goal.meter == null:
+		row.add_child(RnDUiShared.spacer())
+	else:
+		row.add_child(SprintUiShared.prose(String(goal.meter.text), &"DataText"))
+		row.add_child(GoalMeter.new(goal.meter))
+		row.add_child(SprintUiShared.label(String(goal.meter.progress_text), &"MetaMuted"))
 	row.add_child(UiFactory.make_glyph(CHEVRON, UiTokens.D_ICON_ROW, UiTokens.D_INK_3))
 	for part: Control in row.get_children():
 		part.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return strip
-
-
-## Hedef menüsü şeridin sağ kenarına, okun altına açılır: her alan adıyla ve kendi hedef cümlesiyle;
-## tik adın satırında durur. Düğme çocuğunu ölçmez: satırın boyu içeriğinden ve payından okunur.
-func _open_goal_menu(anchor: Control, areas: Array, picked: String) -> void:
-	var menu := HRPopover.mount(anchor, true)
-	menu.body().custom_minimum_size.x = UiTokens.D_W_GOAL_MENU
-	menu.body().add_theme_constant_override("separation", 0)
-	for a in areas:
-		var item := Button.new()
-		item.theme_type_variation = &"MenuItem"
-		item.focus_mode = Control.FOCUS_NONE
-		var row := SprintUiShared.box(UiTokens.SPACE_M)
-		var check := UiFactory.make_glyph(SprintUiShared.CHECK, UiTokens.D_ICON_ROW, UiTokens.D_INK_1)
-		check.modulate.a = 1.0 if a.id == picked else 0.0
-		check.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-		row.add_child(SprintUiShared.pad(check, Vector4i(0, UiTokens.SPACE_XXS, 0, 0)))
-		var words := SprintUiShared.column(UiTokens.SPACE_XXS)
-		words.add_child(UiFactory.make_label(String(a.name), &"DataMedium", UiTokens.D_INK_1))
-		# Menüde tek başına duran cümle büyük harfle başlar; şeritte satır içinde CSV'deki gibi küçük.
-		words.add_child(UiFactory.make_label(Fmt.cap_first(a.goal_text), &"Caption"))
-		row.add_child(words)
-		var inset := SprintUiShared.pad(row, Vector4i(UiTokens.SPACE_M, UiTokens.SPACE_S, UiTokens.SPACE_M, UiTokens.SPACE_S))
-		inset.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		inset.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		item.add_child(inset)
-		# Ertelenmiş: sekme eylemde yeniden kurar; menü kendi sinyali akarken ağaçtan sökülmez.
-		item.pressed.connect(func() -> void:
-			menu.close()
-			action.emit.call_deferred("pick_goal", {"area_id": a.id}))
-		menu.body().add_child(item)
-		item.custom_minimum_size.y = inset.get_combined_minimum_size().y
-	menu.open_at(anchor, true)
 
 
 ## Düzenle SPRINT görünümünün sonraki sütununu açar; orada yalnız sonraki sprint durur.

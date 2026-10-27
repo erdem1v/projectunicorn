@@ -81,6 +81,7 @@ const _ERP_SHIPPED_LINES := [
 
 
 func _ready() -> void:
+	UiFactory.flatten_symbol_face()
 	get_tree().set_auto_accept_quit(false)
 	get_window().min_size = Vector2i(1280, 720)
 	print("BUILD|version=%s|scope=%s" % [ProjectSettings.get_setting("application/config/version"), EndingsSystem.build_scope()])

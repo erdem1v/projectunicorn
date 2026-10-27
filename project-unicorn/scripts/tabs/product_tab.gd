@@ -257,12 +257,11 @@ func open_area(area_id: String) -> void:
 	_set_ui(area_id, "open_area")
 
 
-## İmleç bir adayın "+"ında: sayfa kurulmaz, kartın kimliği `ui.hover_card` olur ve hayaletin hesabı kurulur (sayfanın bir sonraki
-## kurulumuna kadar saklanır); ayrılınca boşalır.
+## İmleç bir adayın "+"ında: sayfa kurulmaz, kartın kimliği `ui.hover_card` olur, hayaletin hesabı kurulur (sayfanın bir sonraki
+## kurulumuna kadar saklanır) ve kapasitede çizilir; ayrılınca boşalır.
 func _on_candidate_hover(card_id: String) -> void:
 	_ui.hover_card = card_id
-	if card_id != "":
-		ProductModel.ghost(card_id)
+	_sprint.set_ghost(card_id)
 
 
 func _on_action(kind: String, args: Dictionary) -> void:

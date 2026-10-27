@@ -598,24 +598,6 @@ static func _lead_steps(ranked: Array, goal: String, capacity: float) -> Array:
 	return out
 
 
-## "{kart1} ve {kart2} bu sprintte bitmeli."; öneride zamanında yetişecek talep varsa son tarihi en
-## yakın olanı anar.
-static func lead_sentence(ids: Array) -> String:
-	var cards: Array = ids.map(card_by_id)
-	var requests: Array = cards.map(_request_of).filter(func(r: Dictionary) -> bool:
-		return not r.is_empty() and _on_time(r))
-	if not requests.is_empty():
-		requests.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a.due_sprint) < int(b.due_sprint))
-		return _t("PRODUCT_LEAD_REQUEST").format({"request": step_name(requests[0].step),
-			"customer": customer_name(requests[0])})
-	match cards.size():
-		0:
-			return ""
-		1:
-			return _t("PRODUCT_LEAD_ONE").format({"card": card_name(cards[0])})
-	return _t("PRODUCT_LEAD_TWO").format({"first": card_name(cards[0]), "second": card_name(cards[1])})
-
-
 ## Sürüm notundaki lider cümlesi: devreden kartı anar, yoksa liderin sıradaki alanını; seçilecek kart
 ## kalmadıysa boştur.
 static func release_lead_sentence(release: Dictionary) -> String:

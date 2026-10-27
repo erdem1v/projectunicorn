@@ -101,6 +101,16 @@ static func make_card(content: Control = null, tight: bool = false, attention: b
 	return card
 
 
+## The dark faces take only glyphs from their symbol face: its own lines (taller than Archivo's and Plex's) would set the height of
+## every label, so its metrics are zeroed once per process at every size from the cream ladder's smallest to the paper's masthead.
+static func flatten_symbol_face() -> void:
+	var text_server := TextServerManager.get_primary_interface()
+	var face: RID = (load(UiTokens.SYMBOL_FACE) as Font).get_rids()[0]
+	for size in range(UiTokens.SIZE_MICRO, UiTokens.D_PAPER_FS_MASTHEAD + 1):
+		text_server.font_set_ascent(face, size, 0.0)
+		text_server.font_set_descent(face, size, 0.0)
+
+
 ## A person's disc: the bust of their look (PersonBust), or their initials without one. `grey` is the
 ## face of someone away.
 static func make_person_avatar(person_name: String, look: Dictionary, diameter: int, grey := false) -> Panel:

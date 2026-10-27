@@ -1,8 +1,9 @@
 extends SceneTree
 ## Every character the game can draw, checked against each face of the dark language and each of its
 ## chains. The characters come from strings.csv (both languages), the string literals of scripts and
-## scenes outside scripts/debug and scenes/debug, and the strings in data/*.json. A face that lacks
-## one falls through its chain, then to a system font.
+## scenes outside scripts/debug, scenes/debug and scripts/events/tools (which write documents, no
+## screen), and the strings in data/*.json. A face that lacks one falls through its chain (Plex, then
+## Noto Sans Symbols 2), then to a system font.
 ##   "$GODOT" --headless --path . -s res://scripts/debug/glyph_audit.gd
 ## Prints GLYPH|MISS|<face or chain>|U+XXXX|<char>|<uses>|<first use> per missing character.
 
@@ -27,7 +28,8 @@ func _initialize() -> void:
 			_add(row[col], "csv:" + row[0])
 	for root in ["res://scripts", "res://scenes"]:
 		_walk(root, func(path: String) -> void:
-			if path.get_extension() in ["gd", "tscn"] and not path.begins_with(root + "/debug/"):
+			var skipped: bool = path.begins_with(root + "/debug/") or path.begins_with("res://scripts/events/tools/")
+			if path.get_extension() in ["gd", "tscn"] and not skipped:
 				var text := FileAccess.get_file_as_string(path)
 				for lit in _literals(text):
 					_add(lit[1].c_unescape(), "%s:%d" % [path.trim_prefix("res://"), lit[0]]))

@@ -17,7 +17,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - `scripts/debug/product_fixtures.gd` (554): Ürün sekmesinin debug kaynağı (mockup c1..c5, kart galerisi, uç durumlar); `--product-shot` besler
 - `scripts/debug/kit_probe.gd` (298): `--probe-shot=kit`; koyu kit bileşenlerini durumlarıyla bir pencere gövdesinde dizer
 - `scripts/debug/loc_residue.gd` (265): `-s` betiği; Türkçe literal, CSV'de olmayan sahne metni, statikte `tr()` arar, vuruşta sıfır dışı çıkar
-- `scripts/debug/glyph_audit.gd` (113): `-s` betiği; oyunun çizebileceği her karakteri yüz ve zincirlere sorar, eksiği `GLYPH|MISS` basar
+- `scripts/debug/glyph_audit.gd` (109): `-s` betiği; oyunun çizebileceği her karakteri (`scripts/debug` ve `scripts/events/tools` dışı) yüz ve zincirlere sorar, eksiği `GLYPH|MISS` basar
 - `scripts/debug/write_licenses.gd` (58): `-s` betiği; `export_build.sh`in çağırdığı, exe yanına `LICENSES/` yazar
 - `scripts/events/tools/` (7 dosya, olay sistemi haritasında ayrıntılı): `EvProbe`, `EvLint`, `EvWhy`, `EvHarness`, `EvVocabGen`, `plausibility.gd`, `plausibility_main.gd`
 - `tools/smoke_run.sh` (80): bir vakayı ya da `--all`ı koşar; motor hatası basan vakayı düşürür, `# EXPECT-ERROR` bağışını okur

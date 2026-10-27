@@ -2563,15 +2563,10 @@ PRODUCT_TAG_SPRINT,Sprint {n},Sprint {n}
 PRODUCT_SPRINT_TITLE,Sprint {n},Sprint {n}
 PRODUCT_WEEKS,{n} hafta,{n} weeks
 PRODUCT_WEEKS_ONE,{n} hafta,{n} week
-PRODUCT_WEEK_OF,Hafta {w}/{t},Week {w}/{t}
 PRODUCT_THIS_SPRINT,Bu sprint,This sprint
 PRODUCT_NEXT,Sonraki,Next
 PRODUCT_TEAM_NOBODY_JOBS,Yapım ekibinde ya da Test'te çalışabilecek kimse yok,Nobody on the Build team or Test can work
 PRODUCT_TEAM_IN_RND,Kurucu Ar-Ge'de: {node},The founder is in R&D: {node}
-PRODUCT_ROLE_MISSING,Ekipte {role} yok · kartlar hatalı çıkabilir,No {role} on the team · cards may ship buggy
-PRODUCT_IDLE,{n} kişi boşta · iş bekliyor,{n} idle · waiting for work
-PRODUCT_IDLE_ONE,{n} kişi boşta · iş bekliyor,{n} idle · waiting for work
-PRODUCT_IDLE_PLAN,sonraki sprinti planla,plan the next sprint
 PRODUCT_CARD_SPILLS_PTS,devreder · {done}/{total},carries over · {done}/{total}
 PRODUCT_CARD_NO_START,Bu sprint başlamaz → Sprint {n},Won't start this sprint → Sprint {n}
 PRODUCT_CARD_READY,Geliştirmeye hazır,Ready for development
@@ -2584,7 +2579,6 @@ PRODUCT_EFFORT_POINTS,{n} puan,{n} points
 PRODUCT_EFFORT_POINTS_ONE,{n} puan,{n} point
 PRODUCT_EFFORT_PERSON,{name} {weeks},{name} {weeks}
 PRODUCT_PERSON_ROLE,{name} · {role},{name} · {role}
-PRODUCT_PERSON_SHARE,{name} · {role} · sprintte {share},{name} · {role} · {share} on the sprint
 PRODUCT_FX_BUGS,{n} hata,{n} bugs
 PRODUCT_FX_BUGS_ONE,{n} hata,{n} bug
 PRODUCT_ACCOUNT_COUNT,{n} hesap,{n} accounts
@@ -2616,7 +2610,6 @@ PRODUCT_IN_WEEKS,{n} hafta sonra,in {n} weeks
 PRODUCT_IN_WEEKS_ONE,{n} hafta sonra,in {n} week
 PRODUCT_MVP_RULE,{version} = {need} {area} kartı · {done}/{need} bitti · tahmin Sprint {sprint} sonu (Hafta {week}),{version} = {need} {area} cards · {done}/{need} done · forecast end of Sprint {sprint} (Week {week})
 PRODUCT_MVP_RULE_NO_ETA,{version} = {need} {area} kartı · {done}/{need} bitti,{version} = {need} {area} cards · {done}/{need} done
-PRODUCT_LEAD_TIP,Liderin önerisi,Lead's pick
 PRODUCT_LEAD_TIP_SELF,Kendi notun,Your own note
 PRODUCT_LEAD_LINE,Lider,Lead
 PRODUCT_START_SPRINT,Sprinti başlat,Start sprint
@@ -2726,6 +2719,40 @@ PRODUCT_FOUNDER_IN_SPRINT,Kurucu sprintte,Founder in sprint
 PRODUCT_FOUNDER_ON_TIP,Açık: kurucu sprint kartlarında çalışır,On: the founder works on sprint cards
 PRODUCT_FOUNDER_OFF_TIP,Kapalı: kurucu sprint kartı almaz,Off: the founder takes no sprint card
 PRODUCT_FOUNDER_LOCKED_TIP,Sonraki planlamada değişir,Changes at the next planning
+PRODUCT_QUARTER_ORD,{q}. çeyrek,Q{q}
+PRODUCT_QUARTER_TIP,{year} · {q}. çeyrek · çeyreğin {pos}. sprinti · çeyrek sonuna {left} sprint,{year} · Q{q} · sprint {pos} of the quarter · {left} sprints to its end
+PRODUCT_QUARTER_TIP_ONE,{year} · {q}. çeyrek · çeyreğin {pos}. sprinti · çeyrek sonuna {left} sprint,{year} · Q{q} · sprint {pos} of the quarter · {left} sprint to its end
+PRODUCT_MVP_BADGE_CARDS,{done}/{need} kart,{done}/{need} cards
+PRODUCT_MVP_BADGE_ETA,≈ Sprint {n},≈ Sprint {n}
+PRODUCT_WEEK_ORD,{w}. hafta,Week {w}
+PRODUCT_QUARTER_GOAL,Bu çeyrek: {goal},This quarter: {goal}
+PRODUCT_QUARTER_BUGS,Hatalar,Bugs
+PRODUCT_QUARTER_NONE,Bu çeyrek: hedef yok,This quarter: no goal
+PRODUCT_GOAL_NONE_ITEM,Hedef yok,No goal
+PRODUCT_GOAL_CHANGE_TIP,Çeyrek hedefini değiştir,Change the quarter goal
+PRODUCT_CREW_TIP,Ekip: {n} kişi · sprintte {sprint} · eğitimde {training} · izinde {leave} · araştırmada {research} · PM {pm} · sprint dışı {out},Team: {n} people · in sprint {sprint} · training {training} · on leave {leave} · researching {research} · PM {pm} · outside the sprint {out}
+PRODUCT_CAPACITY,Kapasite,Capacity
+PRODUCT_EFFORT,Efor,Effort
+PRODUCT_CAP_TIP,{stage} · efor {work} · ekip {team},{stage} · effort {work} · team {team}
+PRODUCT_CAP_TIP_DONE,yapıldı {n},done {n}
+PRODUCT_CAP_FITS,Sığıyor,Fits
+PRODUCT_CAP_SPILL,{n} efor sonraki sprinte kalır,{n} effort waits for the next sprint
+PRODUCT_CAP_WAITING,{n} efor önceki aşamayı beklerken,{n} of it while waiting on the previous stage
+PRODUCT_STAYS_DESIGN,Tasarımda kalır,Stays in design
+PRODUCT_STAYS_DEV,Geliştirmede kalır,Stays in development
+PRODUCT_STAYS_TEST,Testte kalır,Stays in testing
+PRODUCT_STAGE_OUT,sonraki sprinte kalır,waits for the next sprint
+PRODUCT_NECK_STREAK,Bu sorun {n} sprinttir sürüyor.,This has been going on for {n} sprints.
+PRODUCT_SUGGEST,{n} efor daha sığar,Room for {n} more effort
+PRODUCT_SUGGEST_APPLY,Öneriyi uygula,Apply the suggestion
+PRODUCT_AWAY_TRAINING,eğitimde,training
+PRODUCT_AWAY_RESEARCH,araştırmada,researching
+PRODUCT_AWAY_MEETINGS,görüşmede,in meetings
+PRODUCT_AWAY_LEAVE,izinde,on leave
+PRODUCT_PERSON_TIP,{name} {stars} · efor {effort} · doluluk {busy},{name} {stars} · effort {effort} · {busy} busy
+PRODUCT_CLUSTER_TIP,{stars} · {n} kişi,{stars} · {n} people
+PRODUCT_CLUSTER_TIP_ONE,{stars} · {n} kişi,{stars} · {n} person
+PRODUCT_TIMES,×{n},×{n}
 PRODUCT_REQUESTS,Müşteri talepleri,Customer requests
 PRODUCT_MORE_REQUESTS,+{n} talep,+{n} requests
 PRODUCT_MORE_REQUESTS_ONE,+{n} talep,+{n} request
@@ -2806,14 +2833,9 @@ PRODUCT_RESULT_BUGS_ACTUAL_ONE,{n} hata kapandı,{n} bug closed
 PRODUCT_RESULT_NONE_EXPECTED,Görünür bir değişiklik beklenmiyor,No visible change expected
 PRODUCT_RESULT_NONE_ACTUAL,Görünür bir değişiklik olmadı,Nothing visible changed
 PRODUCT_RESULT_MVP_EXPECTED,Ürün yayında · ilk kullanıcılar bu hafta gelir,The product is live · first users arrive this week
-PRODUCT_LEAD_TWO,{first} ve {second} bu sprintte bitmeli.,{first} and {second} should land this sprint.
-PRODUCT_LEAD_ONE,{card} bu sprintte bitmeli.,{card} should land this sprint.
-PRODUCT_LEAD_REQUEST,{request} gecikirse {customer} yenilemez.,"If {request} slips, {customer} won't renew."
 PRODUCT_LEAD_CARRIED,{card} bir sprint daha ister.,{card} needs one more sprint.
 PRODUCT_LEAD_WEAKEST,{area} sırada.,{area} is next.
 PRODUCT_AUTO_STARTED,Sprint otomatik başladı,Sprint started automatically
-PRODUCT_EMPTY_SPRINT,Boş sprint · kimse kart üstünde çalışmıyor,Empty sprint · no one is working on a card
-PRODUCT_PM_STARTED,Sprint {name} tarafından başlatıldı,{name} started the sprint
 EFFECT_SPRINT_CARRY,Sonraki sprinte devreder,Carries over to the next sprint
 EFFECT_SPRINT_HOURS,Bu sprint ekibin çalışma saati ×{v},Team work hours ×{v} this sprint
 EFFECT_TEST_CUT,{card}: test işi yarıya iner,{card}: testing cut in half
@@ -2838,11 +2860,8 @@ PRODUCT_KPI_PAYING,Ödeyen,Paying
 PRODUCT_DECISION_IN_INBOX,Olaylar'da bekliyor,Waiting in Events
 PRODUCT_DECISION_HALTED,İş durdu · karar bekliyor,Work stopped · decision waiting
 PRODUCT_GO_DECISION,Karara git,Go to the decision
-PRODUCT_LEAD_APPLY,Uygula,Apply
 PRODUCT_RELEASE_HOLD,Sürüm notu açıkken oyun durur,Paused while the release note is open
 PRODUCT_PLAN_HOLD,Sprint başlayana kadar oyun durur,Paused until the sprint starts
-PRODUCT_OVER_CAPACITY,Kapasite aşıldı · {n} kart devreder,Over capacity · {n} cards carry over
-PRODUCT_OVER_CAPACITY_ONE,Kapasite aşıldı · {n} kart devreder,Over capacity · {n} card carries over
 PRODUCT_ADD_CLOSED,{pct} üstünde kart eklenmez,Adding closes above {pct}
 PRODUCT_ADD_CLOSED_FULL,Bu sprintte boş efor kalmadı,No effort left to fill this sprint
 PRODUCT_GO_TEAM,Ekip'e git,Go to Team

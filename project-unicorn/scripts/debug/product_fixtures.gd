@@ -9,7 +9,7 @@ const INBOX := preload("res://scripts/ui/components/inbox.gd")
 ## Geçiş tablosu: eylem → [geçerli olduğu orta sütun kipi, varılan aşama].
 const STAGES := {"start": ["plan", "active"], "advance": ["active", "release"], "plan_next": ["release", "replan"]}
 ## Uç durumun ve aşamanın üstüne kurulduğu mockup; listede olmayan c1'dir.
-const BASES := {"active": "c2", "decision": "c2", "mvp": "c2", "pm_started": "c2", "release": "c3",
+const BASES := {"active": "c2", "decision": "c2", "mvp": "c2", "release": "c3",
 	"no_release": "c3", "gate": "c3", "release_fix": "c3", "release_reviews": "c3", "b2b_no_requests": "c5",
 	"fix_long_name": "c5", "goal_menu": "c4", "approved": "c4"}
 ## id → [ad TR, ad EN, kısa ad TR, kısa ad EN]; kısa ad etki satırında ve hedefte.
@@ -42,7 +42,24 @@ func model() -> Dictionary:
 	m.merge({"founder": {"on": true, "locked": "", "rnd_text": ""}, "requests": null, "modules": []})
 	for entry in _log:
 		_apply(m, entry[0], entry[1])
+	_header_and_capacity(m)
 	return m
+
+
+## Sprint başlığı ve kapasite bloğu yeni sözleşmeyi okur: kapasite fikstürün çubuğundan üç aşamaya eşit bölünür, kimse oturmaz;
+## çeyreğin saati ve hedefi (yoksa "hedef yok") sabittir.
+func _header_and_capacity(m: Dictionary) -> void:
+	var c: Dictionary = m.center
+	var bar: Dictionary = c.capacity
+	c.merge({"team_empty": bar.total == 0, "now_at": 0.0, "crew": null,
+		"capacity": SprintSystem.STAGES.map(func(stage: String) -> Dictionary:
+			return {"stage": stage, "work": bar.used / 3.0, "team": bar.total / 3.0, "done": 0.0, "out": maxf(0.0, bar.used - bar.total) / 3.0,
+				"out_inside": 0.0, "streak": 0, "hot": false, "shared": false, "stays": [], "people": [], "away": [], "cluster": null})}, true)
+	m.quarter.merge({"q": 1, "year": 2012, "pos": 1, "total": 6})
+	var goal: Variant = m.quarter.goal
+	m.quarter.goal = {"area_id": "", "area_name": "", "meter": null} if goal == null else {"area_id": goal.area_id,
+		"area_name": goal.area_name, "meter": {"text": goal.text, "now": goal.now, "target": goal.target, "total": goal.total,
+			"progress_text": goal.progress_text}}
 
 
 func act(kind: String, args: Dictionary) -> void:
@@ -97,23 +114,11 @@ func _build(id: String) -> Dictionary:
 			m.quarter = _quarter()
 		"cap_zero":
 			m.center.capacity.total = 0
-			m.center.team = []
 			m.center.staffed = false
-			m.center.warning_text = ""
 			_clear_sprint(m)
-			m.center.lead_tip = null
-		"team_split":
-			# Deniz Yapım ve Destek tutar: sprintte yarım payla; Kaan yalnız Destek'te, ekipte yok.
-			var team: Array = _team()
-			m.center.team = [team[0], team[1].merged({"share": 0.5}, true), team[2]]
-			m.center.capacity.total = 50
-			_resum(m.center)
 		"team_none":
 			# Kadro var ama Yapım ya da Test işinde kimse yok: kartlar planda, sprint başlamaz.
-			m.center.team = []
 			m.center.capacity.total = 0
-			m.center.warning_text = ""
-			m.center.lead_tip = null
 			m.center.forecast = []
 			_resum(m.center)
 		"over_100":
@@ -137,7 +142,7 @@ func _build(id: String) -> Dictionary:
 			# iki kart kaldı.
 			m.versions = []
 			m.header.live_version = ""
-			m.center.mvp_line = _mvp_line()
+			m.center.mvp = _mvp_line()
 			m.center.release.version = ""
 			m.center.release.shipped = []
 			m.center.release.velocity.done = 0
@@ -147,7 +152,7 @@ func _build(id: String) -> Dictionary:
 			# MVP kapısı: Çekirdek'in üç kartı bitti, ürün oyuncunun Yayınla'sını bekliyor; sürüm ve basın yok.
 			m.versions = []
 			m.header.live_version = ""
-			m.center.mvp_line = _mvp_line().merged({"done": 3}, true)
+			m.center.mvp = _mvp_line().merged({"done": 3}, true)
 			m.center.release.version = ""
 			m.center.release.gate = true
 			m.center.release.press = {}
@@ -182,13 +187,11 @@ func _build(id: String) -> Dictionary:
 		"history":
 			m.ui.history_open = true
 			m.ui.open_area = ""
-		"pm_started":
-			m.center.pm_started = "Deniz"
 		"mvp":
 			m.versions = []
 			m.header.live_version = ""
 			m.center.next_version = null
-			m.center.mvp_line = _mvp_line()
+			m.center.mvp = _mvp_line()
 		"quarter_no_pm":
 			m.quarter.state = "locked_no_pm"
 	return m
@@ -200,7 +203,7 @@ func _apply(m: Dictionary, kind: String, args: Dictionary) -> void:
 		"send_next": _place(m, args.card_id, "next")
 		"remove": _place(m, args.card_id, "")
 		"apply_lead":
-			m.center.lead_tip = null   # fikstür yuvaları doldurmaz; öneri kullanıldı diye düşer
+			m.center.suggest = null   # fikstür yuvaları doldurmaz; öneri kullanıldı diye satır gizlenir
 		"publish":
 			# Kapıdaki not v1.0'ın sürüm notu olur: ürün canlı, Ar-Ge açık.
 			var r: Dictionary = m.center.release
@@ -209,7 +212,7 @@ func _apply(m: Dictionary, kind: String, args: Dictionary) -> void:
 			r.version = _version("1.0")
 			r.result = {"kind": "expected", "text": tr("PRODUCT_RESULT_MVP_EXPECTED")}
 			m.header.live_version = "1.0"
-			m.center.mvp_line = null
+			m.center.mvp = null
 		"approve", "approve_all":
 			for col in m.quarter.columns:
 				if col.kind == "proposed" and (kind == "approve_all" or col.sprint == args.sprint):
@@ -253,7 +256,6 @@ func _resum(c: Dictionary) -> void:
 		return
 	var cap: Dictionary = c.capacity
 	c.spare = cap.used < cap.total
-	c.can_add = c.spare
 	c.can_start = cap.total > 0 and not c.cards.is_empty()
 	c.start_reason = "" if c.can_start else tr("PRODUCT_TEAM_NOBODY_JOBS" if cap.total == 0 else "PRODUCT_START_NEED_CARD")
 
@@ -286,7 +288,8 @@ func _c1() -> Dictionary:
 		"areas": ["core", "onboarding", "growth", "trust", "revenue"].map(_area),
 		"center": _center("plan", _sprint_cards(), {
 			"forecast": [_level("onboarding", 1, 2), _clear("trust"), {"k": "bugs_closed", "n": 5}],
-			"lead_tip": _lead(_p("Kesinti ve kayıt bu sprintte bitmeli.", "The outage fix and sign-up must land this sprint.")),
+			"suggest": {"amount": 20.0, "cards": [{"name": _p("Kesinti düzeltmesi", "Outage fix"), "done": 10.0, "effort": 10.0},
+				{"name": _p("Kısa kayıt", "Short sign-up"), "done": 10.0, "effort": 15.0}]},
 		}),
 		"next": _notly_next(false),
 	}
@@ -338,7 +341,7 @@ func _c5() -> Dictionary:
 			_deck("excel", plan)], {
 			"forecast": [_level("trust", 1, 2), {"k": "request_on_time", "customer": "Nordica"},
 				{"k": "request_on_time", "customer": "Palmiye"}, _clear("trust"), {"k": "bugs_closed", "n": 6}],
-			"lead_tip": _lead(_p("SSO gecikirse Nordica yenilemez.", "If SSO slips, Nordica won't renew.")),
+			"suggest": {"amount": 12.0, "cards": [{"name": "SSO", "done": 12.0, "effort": 12.0}]},
 		}),
 		"next": {"sprint": 8, "cards": [_deck("efatura", SprintCard.State.PLANLANAN)], "flags": [{"k": "deadline",
 			"text": tr("PRODUCT_FLAG_DEADLINE").format({"customer": "Nordica", "request": "SSO"})}]},
@@ -462,11 +465,9 @@ func _area_of(m: Dictionary, id: String) -> Dictionary:
 
 func _center(mode: String, cards: Array, extra: Dictionary) -> Dictionary:
 	var c := {"mode": mode, "sprint": 7, "weeks": 2, "week": 1, "capacity": {"total": 60, "done": 0},
-		"team": _team(), "staffed": true, "warning_text": tr("PRODUCT_ROLE_MISSING").format({"role": _p("Test", "QA")}),
-		"idle_text": "", "cards": cards, "forecast": [], "status": {"done": 0, "running": 0, "queued": 0, "decisions": 0},
-		"empty": false, "pm_started": "", "plan_hold": false,
-		"next_version": null, "mvp_line": null, "can_add": false, "spare": false, "ceiling_pct": 125, "can_start": false,
-		"start_reason": "", "rnd_node": null, "lead_tip": null, "release": null}
+		"staffed": true, "cards": cards, "forecast": [], "status": {"done": 0, "running": 0, "queued": 0, "decisions": 0},
+		"plan_hold": false, "next_version": null, "mvp": null, "spare": false, "ceiling_pct": 125, "can_start": false,
+		"start_reason": "", "rnd_node": null, "suggest": null, "release": null}
 	c.merge(extra, true)
 	_resum(c)
 	return c

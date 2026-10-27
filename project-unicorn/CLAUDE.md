@@ -222,8 +222,10 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   ya da içerik payı açık kutuda üretimi düşürür. Koyu yüzey yalnız `D_*` token'larını ve `D_` helper'larını okur
   (renk körü ikizleri helper'dadır, merdiven `D_FS_12` … `D_FS_40`). Koyu yüzler Archivo'nun değişken yüzüdür
   (ağırlık ve genişlik ekseni, rakamlar tablo) + Source Serif 4; Archivo'da olmayan glif aynı ağırlıktaki IBM Plex
-  Sans'a düşer. JetBrains Mono ve Plex'in metin yüzü yalnız krem ailede kalır, koyu yüzlerin yedek zincirinde Noto
-  Sans Symbols 2 yoktur. Gazete iki temada da kremdir. Kontrast kapısı `--theme-contrast-audit`.
+  Sans'a, onda da yoksa Noto Sans Symbols 2'ye düşer (★ ☆ ✓ ▾ ⌛ ✕ vardır, ˅ yoktur). Noto zincirin sonunda kendi
+  yüzüdür (`symbols_flat`) ve metriği açılışta sıfırlanır (`UiFactory.flatten_symbol_face`, `main.gd` `_ready`): yalnız
+  glif verir, satır yüksekliğini oynatmaz. JetBrains Mono ve Plex'in metin yüzü yalnız krem ailede kalır. Gazete iki
+  temada da kremdir. Kontrast kapısı `--theme-contrast-audit`.
 - Krem dil: mono yazı, hairline çizgi, amber vurgu; hover dolgu değil kenardır (`ACCENT_DEEP`, kartta `BORDER_HOVER`).
   Gövde krem kâğıttır (sayfa `#F6F1E6`, kart ve pencere `#FBF7EE`, `INK` `#2B2722`); sinematik koyu register
   (`DIALOGUE_*`) `CREAM*` ve `*_CHROME` okur. Tek ada gazetedir (`PaperPanel`, kendi `PAPER_*` merdiveni). 3B
@@ -386,7 +388,8 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   Koyu temanın kapısı `"$GODOT" --headless --path . --theme-contrast-audit`: her metin rengi çizildiği her zeminde,
   iki palette; gövde 4,5, büyük metin ve metin dışı işaret 3, devre dışı metin 1,6 ile 4,5 arası; düşen çiftte 1 ile
   çıkar. Glif denetimi `"$GODOT" --headless --path . -s res://scripts/debug/glyph_audit.gd`: CSV'nin, kod
-  literallerinin ve `data/` metninin her karakterini koyu yüzlere ve zincirlerine sorar. `--probe-shot=menajer`
+  literallerinin (belge yazan `scripts/events/tools` hariç) ve `data/` metninin her karakterini koyu yüzlere ve
+  zincirlerine sorar. `--probe-shot=menajer`
   ThemeProbe'u koyu temanın altında, koyu temanın yeni varyasyonlarıyla çeker. Piyasa penceresi:
   `--tab-shot=piyasa[:<seed_oncesi|seed_sonrasi|series_a|ipo|filtre|sektor>]` (oyuncu karosunun hâlleri, halka arz
   haftası, Sektörüm filtresi, sektör rakibinin kartı) ve `--theme-audit=piyasa`.

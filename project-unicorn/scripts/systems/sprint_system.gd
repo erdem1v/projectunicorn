@@ -118,6 +118,7 @@ static func remove(card_id: String) -> void:
 		return
 	p.sprint.cards.erase(card_id)
 	p.next.cards.erase(card_id)
+	p.sprint.lead_applied = false
 	if _worked(card) > EPS or card.get("paid", false) or card.decision:
 		card.state = "candidate"
 		card.assignees = []
@@ -332,10 +333,12 @@ static func set_delegate(on: bool) -> void:
 	_changed()
 
 
-## Kurucu sprint kartı alır mı: planlamanın kararıdır, planlamada ve sürüm notunda değişir, koşan sprintte değişmez.
+## Kurucu sprint kartı alır mı: planlamanın kararıdır, planlamada ve sürüm notunda değişir, koşan sprintte değişmez. Ekip
+## değiştiği için liderin önerisi yeniden okunur.
 static func set_founder_in_sprint(on: bool) -> void:
 	if mode() != "active":
 		GameState.set_founder_in_sprint(on)
+		_p().sprint.lead_applied = false
 		_changed()
 
 
@@ -370,9 +373,11 @@ static func finish_beta_cards() -> void:
 		(p.next if p.mode == "release" else p.sprint).cards.append(c.id)
 
 
-## Liderin önerisi bu sprintin boş yerlerini doldurur ve sonraki sütundaki kartların sonuna kart ekler.
+## Liderin önerisi bu sprintin boş yerlerini doldurur ve sonraki sütundaki kartların sonuna kart ekler. Öneri büyük ekipte
+## idempotent değildir (devreden kalkanı çağrı başına sayılır): uygulandıktan sonra ikinci uygulama bir şey yapmaz; bayrağı
+## planın değişmesi (`_place`, `remove`), Kurucu sprintte anahtarı ve çeyreğin hedefi indirir, devir indirmez.
 static func apply_lead() -> void:
-	if mode() != "plan":
+	if mode() != "plan" or _p().sprint.get("lead_applied", false):
 		return
 	var lead: Dictionary = SprintCatalog.lead_suggestion()
 	for id in lead.this:
@@ -599,9 +604,11 @@ static func edit(sprint: int) -> void:
 	_changed()
 
 
-## Çeyreğin hedefi: bir alan, `SprintCatalog.GOAL_BUGS` ya da "" (hedef yok). PM'siz de seçilir.
+## Çeyreğin hedefi: bir alan, `SprintCatalog.GOAL_BUGS` ya da "" (hedef yok). PM'siz de seçilir. Liderin önerisi hedefe bakar:
+## yeniden okunur.
 static func pick_goal(area_id: String) -> void:
 	_p().quarter.goal_area = area_id
+	_p().sprint.lead_applied = false
 	_changed()
 
 
@@ -1882,6 +1889,7 @@ static func _carried_out() -> Array:
 ## Kartı bu sprinte ya da sonrakine koyar; adaysa saklanan kart olur, devreden damgası kalır.
 static func _place(c: Dictionary, this_sprint: bool) -> void:
 	var p: Dictionary = _p()
+	p.sprint.lead_applied = false
 	p.sprint.cards.erase(c.id)
 	p.next.cards.erase(c.id)
 	(p.sprint.cards if this_sprint else p.next.cards).append(c.id)

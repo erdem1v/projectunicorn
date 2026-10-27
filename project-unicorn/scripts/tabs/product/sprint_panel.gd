@@ -2,13 +2,12 @@ class_name SprintPanel
 extends HBoxContainer
 
 # Ürün sekmesinin orta (bu sprint) ve sağ (sonraki sprint) sütunları. Yalnız modeli çizer: izin ve
-# eşikler modelden gelir, her tık sekmeye `action` olarak çıkar. Sütunun başlığı ve alt şeridi sabit,
-# arada kart yığını kayar.
+# eşikler modelden gelir, her tık sekmeye `action` olarak çıkar. Sütunun başlığı (sprint başlığı ve
+# kapasite) ve alt şeridi sabit, arada kart yığını kayar.
 
 signal action(kind: String, args: Dictionary)
 
 const CARD_SCENE := preload("res://scenes/tabs/product/SprintCard.tscn")
-const PLAY := "res://assets/icons/util/play.svg"
 const PAUSE := "res://assets/icons/util/pause.svg"
 const INBOX_GLYPH := "res://assets/icons/util/inbox.svg"
 const TEAM_GLYPH := "res://assets/icons/rail/hr.svg"
@@ -52,6 +51,9 @@ class Column extends PanelContainer:
 		return _foot
 
 
+var _capacity: CapacityView
+
+
 func _init() -> void:
 	add_theme_constant_override("separation", UiTokens.SPACE_XL)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -60,8 +62,15 @@ func _init() -> void:
 
 func setup(model: Dictionary) -> void:
 	UiFactory.clear(self)
+	_capacity = null
 	_center(model)
 	_next(model.next)
+
+
+## Üstüne gelinen adayın hayaleti kapasitede: sayfa kurulmaz (kimlik boşsa hayalet kalkar).
+func set_ghost(card_id: String) -> void:
+	if _capacity != null:
+		_capacity.set_ghost(ProductModel.ghost_effort(card_id) if card_id != "" else {})
 
 
 func _center(model: Dictionary) -> void:
@@ -71,48 +80,18 @@ func _center(model: Dictionary) -> void:
 	if c.mode == "release":
 		_release(col, c, model.next.sprint)
 		return
-	var meta: Control = null
-	if c.mode == "active":
-		meta = SprintUiShared.label(SprintUiShared.SEP.strip_edges() + " " + tr("PRODUCT_WEEK_OF").format(
-			{"w": c.week, "t": c.weeks}), &"MetaMuted")
-	col.head.add_child(_title_row(c.sprint, meta, "PRODUCT_THIS_SPRINT"))
 	if c.sprint < 0:
 		return
-	if c.empty:
-		col.head.add_child(_note(PLAY, tr("PRODUCT_EMPTY_SPRINT"), UiTokens.D_INK_3))
-	elif c.pm_started != "":
-		col.head.add_child(_note(PLAY, tr("PRODUCT_PM_STARTED").format({"name": c.pm_started}), UiTokens.D_INK_3))
-	var cap: Dictionary = c.capacity
-	col.head.add_child(SprintUiShared.capacity_row(cap, &"ValueTextStrong"))
-	if c.mvp_line != null:
-		col.head.add_child(_mvp_rule(c.mvp_line))
-	if not c.team.is_empty():
-		var team := SprintUiShared.box(UiTokens.SPACE_S)
-		for p in c.team:
-			team.add_child(_member(p))
-		team.add_child(RnDUiShared.spacer())
-		if c.warning_text != "":
-			team.add_child(_note(SprintUiShared.BUG, c.warning_text, UiTokens.D_warn()))
-		if c.idle_text != "":
-			team.add_child(_note(PAUSE, c.idle_text, UiTokens.D_INK_3))
-		col.head.add_child(team)
-	elif c.mode == "active" and c.rnd_node != null:
-		# Ekip satırı yokken araştıran kurucu başlıkta yazar; planlamada aynı satır başlatmanın gerekçesidir.
-		col.head.add_child(_note(RnDUiShared.ICON, c.rnd_node.text, UiTokens.D_INK_3))
-	# Aşım ve kapalı "+" plan uyarısıdır (koşan sprintin kartları kilitli). Sığan ama boş puanı kalmayan
-	# sprintte de "+" kapanır; not nedenini orada da söyler.
-	if c.mode == "plan" and (cap.state == "over" or (cap.state == "ok" and not c.can_add)):
-		var over := SprintUiShared.box(UiTokens.SPACE_XL)
-		if cap.state == "over":
-			var n: int = c.cards.filter(func(card: Dictionary) -> bool: return card.spills or int(card.no_start) >= 0).size()
-			over.add_child(_note(SprintUiShared.WARN, tr(Fmt.count_key("PRODUCT_OVER_CAPACITY", n)).format({"n": n}),
-				UiTokens.D_warn()))
-		if not c.can_add:
-			over.add_child(_note("", tr("PRODUCT_ADD_CLOSED").format({"pct": Fmt.percent(c.ceiling_pct, 0)}) if c.spare
-				else tr("PRODUCT_ADD_CLOSED_FULL"), UiTokens.D_INK_3))
-		col.head.add_child(over)
+	var head := SprintHead.new()
+	head.action.connect(action.emit)
+	head.setup(model)
+	col.head.add_child(head)
+	_capacity = CapacityView.new()
+	_capacity.action.connect(action.emit)
+	_capacity.setup(model)
+	col.head.add_child(_capacity)
 
-	if c.team.is_empty() and c.cards.is_empty():
+	if c.team_empty and c.cards.is_empty():
 		col.stack.add_child(_nobody(c))
 	for card in c.cards:
 		var node := _add_card(col.stack, card, SprintCard.Look.WIDE)
@@ -124,16 +103,12 @@ func _center(model: Dictionary) -> void:
 			if not c.forecast.is_empty():
 				col.stack.add_child(SprintUiShared.section("PRODUCT_AT_SPRINT_END"))
 				col.stack.add_child(SprintUiShared.forecast(c.forecast))
-			if c.lead_tip != null:
-				var apply := SprintUiShared.button(tr("PRODUCT_LEAD_APPLY"), &"SecondaryButtonSmall",
-					action.emit.bind("apply_lead", {}))
-				col.foot().add_child(_lead_row(c.lead_tip, "PRODUCT_LEAD_TIP", apply))
 			var start := SprintUiShared.button(tr("PRODUCT_START_SPRINT"), &"PrimaryButtonDark", action.emit.bind("start", {}))
 			start.disabled = not c.can_start
 			if c.start_reason != "":
 				var why := _note(SprintUiShared.LOCK, c.start_reason, UiTokens.D_INK_3)
 				# Kartsız boş sütunun çıkış yolu gövdesindeki düğmedir.
-				if c.team.is_empty() and not c.cards.is_empty():
+				if c.team_empty and not c.cards.is_empty():
 					why.add_child(_way_out(c, &"FloatLink"))
 				why.size_flags_horizontal = Control.SIZE_SHRINK_END
 				col.foot().add_child(why)
@@ -193,19 +168,6 @@ func _way_out(c: Dictionary, variation: StringName) -> Button:
 	return go
 
 
-## Ekip yüzü; sprint payı tam değilse yanında payı yazar, üstüne gelince söyler.
-func _member(p: Dictionary) -> Control:
-	var face := SprintUiShared.avatar(p, UiTokens.D_AVATAR_ROW)
-	if p.share >= 1.0:
-		return face
-	var share := Fmt.percent(p.share * 100.0, 0)
-	face.tooltip_text = tr("PRODUCT_PERSON_SHARE").format({"name": p.name, "role": p.role_text, "share": share})
-	var row := SprintUiShared.box(UiTokens.SPACE_XS)
-	row.add_child(face)
-	row.add_child(SprintUiShared.label(share, &"MetaMuted"))
-	return row
-
-
 ## DURUM: "1 kart bitti · 2 sürüyor · 1 sırada · 1 karar bekliyor"; sürüyor işçili kartlardır.
 func _status(s: Dictionary) -> HBoxContainer:
 	var row := SprintUiShared.box(UiTokens.SPACE_M)
@@ -237,13 +199,13 @@ func _release(col: Column, c: Dictionary, next_sprint: int) -> void:
 	# MVP'ye varan kapanış kapıdır: v1.0 hazır, yayın oyuncunun. Öncesindeki kapanış sürüm çıkarmaz:
 	# başlığın altında sürüm koşulu, notta v1.0'a kalan kart.
 	if r.gate:
-		col.stack.add_child(SprintUiShared.label(tr("PRODUCT_GATE_TITLE").format(c.mvp_line), &"ReleaseValue"))
-		col.stack.add_child(SprintUiShared.prose(tr("PRODUCT_GATE_BODY").format(c.mvp_line), &"DataText"))
-	elif c.mvp_line != null:
-		col.head.add_child(_mvp_rule(c.mvp_line))
-		var left: int = c.mvp_line.need - c.mvp_line.done
+		col.stack.add_child(SprintUiShared.label(tr("PRODUCT_GATE_TITLE").format(c.mvp), &"ReleaseValue"))
+		col.stack.add_child(SprintUiShared.prose(tr("PRODUCT_GATE_BODY").format(c.mvp), &"DataText"))
+	elif c.mvp != null:
+		col.head.add_child(_mvp_rule(c.mvp))
+		var left: int = c.mvp.need - c.mvp.done
 		col.stack.add_child(SprintUiShared.label(tr(Fmt.count_key("PRODUCT_MVP_LEFT", left)).format(
-			{"n": left, "version": c.mvp_line.version}), &"DataText"))
+			{"n": left, "version": c.mvp.version}), &"DataText"))
 	elif r.version == "":
 		col.stack.add_child(SprintUiShared.label(tr("PRODUCT_NO_RELEASE"), &"DataText"))
 	else:
@@ -308,7 +270,7 @@ func _release(col: Column, c: Dictionary, next_sprint: int) -> void:
 		var rnd := _note(RnDUiShared.ICON, tr("PRODUCT_RELEASE_RND_OPEN"), UiTokens.D_INK_2)
 		rnd.add_child(SprintUiShared.button(tr("PRODUCT_GO_RND"), &"FloatLink", action.emit.bind("rnd", {"node": ""})))
 		col.stack.add_child(rnd)
-	col.stack.add_child(_lead_row(r.lead, "PRODUCT_LEAD_LINE", null))
+	col.stack.add_child(_lead_row(r.lead))
 
 	var hold := _note(PAUSE, tr("PRODUCT_RELEASE_HOLD"), UiTokens.D_INK_3)
 	hold.size_flags_horizontal = Control.SIZE_SHRINK_END
@@ -325,7 +287,7 @@ func _next(next: Dictionary) -> void:
 	var col := Column.new(&"SprintColumnNext", UiTokens.D_SPRINT_COLUMNS.y)
 	HRUiShared.D_dashed(col)
 	add_child(col)
-	col.head.add_child(_title_row(next.sprint, null, "PRODUCT_NEXT"))
+	col.head.add_child(_title_row(next.sprint, "PRODUCT_NEXT"))
 	if next.sprint < 0:
 		return
 	if not next.flags.is_empty():
@@ -341,15 +303,12 @@ func _next(next: Dictionary) -> void:
 		col.tooltip_text = tr("PRODUCT_NEXT_EMPTY")
 
 
-## "SPRINT 7 · Hafta 1/2 ... BU SPRINT"; `meta` başlığın ardındaki parçadır (koşan sprintin haftası). Sprint
-## yokken (canlı model) yalnız sağdaki etiket kalır.
-func _title_row(sprint: int, meta: Control, tag_key: String) -> HBoxContainer:
+## "SPRINT 8 ... SONRAKİ"; sprint yokken (canlı model) yalnız sağdaki etiket kalır.
+func _title_row(sprint: int, tag_key: String) -> HBoxContainer:
 	var row := SprintUiShared.box(UiTokens.SPACE_M)
 	row.custom_minimum_size.y = UiTokens.D_H_FX
 	if sprint >= 0:
 		row.add_child(SprintUiShared.label(Fmt.upper(tr("PRODUCT_SPRINT_TITLE").format({"n": sprint})), &"ColumnTitle"))
-		if meta != null:
-			row.add_child(meta)
 	row.add_child(RnDUiShared.spacer())
 	row.add_child(SprintUiShared.label(Fmt.upper(tr(tag_key)), &"KeyLabel"))
 	return row
@@ -378,22 +337,20 @@ func _release_row(box: VBoxContainer, kind: String, card_name: String) -> HBoxCo
 	return row
 
 
-## Liderin önerisi (planlama) ve sürüm notundaki lider cümlesi: yüz, anahtar ve ad, cümle; planlamada
-## öneriyi uygulayan düğme. Lider kurucunun kendisiyse not onundur: "Kendi notun", ad yazılmaz.
-func _lead_row(lead: Dictionary, key: String, apply: Button) -> HBoxContainer:
+## Sürüm notundaki lider cümlesi: yüz, anahtar ve ad, cümle. Lider kurucunun kendisiyse not onundur: "Kendi notun", ad
+## yazılmaz.
+func _lead_row(lead: Dictionary) -> HBoxContainer:
 	var row := SprintUiShared.box(UiTokens.SPACE_L)
 	row.add_child(SprintUiShared.avatar(lead, UiTokens.D_AVATAR_ROW))
 	var words := SprintUiShared.column(UiTokens.SPACE_XXS)
 	words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var caption := SprintUiShared.box(UiTokens.SPACE_S)
-	caption.add_child(SprintUiShared.label(Fmt.upper(tr("PRODUCT_LEAD_TIP_SELF" if lead["self"] else key)), &"KeyLabel"))
+	caption.add_child(SprintUiShared.label(Fmt.upper(tr("PRODUCT_LEAD_TIP_SELF" if lead["self"] else "PRODUCT_LEAD_LINE")), &"KeyLabel"))
 	if not lead["self"]:
 		caption.add_child(SprintUiShared.label(String(lead.name), &"KeyText"))
 	words.add_child(caption)
 	words.add_child(SprintUiShared.prose(String(lead.text), &"DataText"))
 	row.add_child(words)
-	if apply != null:
-		row.add_child(apply)
 	return row
 
 

@@ -2,9 +2,10 @@
 
 [ext_resource type="FontFile" path="res://assets/fonts/archivo/Archivo[wdth,wght].ttf" id="Archivo[wdth,wght]_51021"]
 [ext_resource type="FontFile" path="res://assets/fonts/sans/IBMPlexSans-Bold.ttf" id="IBMPlexSans-Bold_403a1"]
+[ext_resource type="FontVariation" path="res://assets/fonts/variations/symbols_flat.tres" id="symbols_flat_7d440"]
 
 [resource]
-fallbacks = Array[Font]([ExtResource("IBMPlexSans-Bold_403a1")])
+fallbacks = Array[Font]([ExtResource("IBMPlexSans-Bold_403a1"), ExtResource("symbols_flat_7d440")])
 base_font = ExtResource("Archivo[wdth,wght]_51021")
 variation_opentype = {
 2003072104: 100,

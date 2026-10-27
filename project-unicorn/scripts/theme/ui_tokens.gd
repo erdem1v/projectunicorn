@@ -19,14 +19,15 @@ extends RefCounted
 # colour (the register axis: body / chrome / cinematic / newsprint).
 # Scenes and scripts own layout only.
 #
-# CONTEXT RULE — the body is cream paper inside a dark chrome frame. INK is text
-# on the cream body, CREAM is text on the dark frame. The frame (TopBar,
-# NewsTicker) reads CREAM* and the *_CHROME twins;
-# the body reads INK*, the plain tokens and positive() / negative(). The dark
-# cinematic register (DIALOGUE_*) reads the frame's side as well: CREAM*,
-# ACCENT_CHROME, INK_*_CHROME, CARD_BORDER_CHROME, BORDER_HOVER_CHROME, the
-# VEIL_*_CHROME whites. The newspaper keeps its own PAPER_*
-# ladder.
+# CONTEXT RULE — the project theme is cream paper: INK is text on it, and the body
+# reads INK*, the plain tokens and positive() / negative(). The frame (TopBar,
+# NewsTicker) and every migrated screen read the D_ tokens through
+# menajer_theme.tres. CREAM* and the *_CHROME twins are the dark cinematic
+# register's side (DIALOGUE_*: dialogue, onboarding, the ending, the city map
+# card), kept at the values the cream-era frame showed, and the cream theme's own
+# chrome variations read them: CREAM*, ACCENT_CHROME, INK_*_CHROME,
+# CARD_BORDER_CHROME, BORDER_HOVER_CHROME, the VEIL_*_CHROME whites. The newspaper
+# keeps its own PAPER_* ladder.
 #
 # FONT IMPORT STANDARD: all faces share antialiasing=1 (grayscale), hinting=1
 # (light), subpixel_positioning=4 (auto), msdf off, mipmaps off, oversampling=0.
@@ -41,7 +42,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 41
+const THEME_STAMP := 42
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -50,7 +51,7 @@ const THEME_STAMP := 41
 # meaning.
 # ============================================================================
 
-# --- SURFACE · chrome (topbar · ticker) ---
+# --- SURFACE · chrome (the cream theme's topbar and ticker; the dark theme recolours them from D_ tokens) ---
 const BG_TOPBAR := Color(0.027, 0.035, 0.043, 1)   # #07090B · chrome ground
 const BG_NEWS := Color(0.027, 0.035, 0.043, 1)     # #07090B · ticker (same ground as chrome)
 const BG_AVATAR := Color(0.106, 0.137, 0.169, 1)   # #1B232B · avatar disc
@@ -130,9 +131,9 @@ const BORDER_DISABLED := Color(0.851, 0.816, 0.749, 1)   # #D9D0BF · disabled c
 const DIVIDER_LIGHT := Color(0.890, 0.855, 0.788, 1)     # #E3DAC9 · in-card hairline
 const SEPARATOR := Color(0.106, 0.137, 0.169, 1)         # #1B232B · chrome hairline
 
-# --- CHROME · the frame's own values ---
-# Twins pinned to what the frame shows, so a body reskin never moves the frame. The
-# dark cinematic register reads them as well: its stages keep the frame's palette.
+# --- CHROME · the cream-era frame's values ---
+# Twins pinned to what the frame showed, so a body reskin never moves them. The dark
+# cinematic register reads them: its stages keep that palette.
 const ACCENT_CHROME := Color(1.0, 0.627, 0.157, 1)          # #FFA028 · accent of the dark registers (onboarding, dialogue, emblem)
 const ACCENT_HOVER_CHROME := Color(1.0, 0.698, 0.353, 1)    # #FFB25A · CommitButtonDark hover  # WORKING
 const ACCENT_PRESSED_CHROME := Color(0.878, 0.541, 0.110, 1)  # #E08A1C · CommitButtonDark pressed # WORKING
@@ -442,6 +443,9 @@ static func build_percent(progress: float) -> int:
 # through the D_ helpers at the end of this block.
 # ============================================================================
 const MENAJER_THEME := "res://themes/menajer_theme.tres"
+## The last face of every dark chain: Noto Sans Symbols 2 as a face of its own, whose line metrics `UiFactory.flatten_symbol_face`
+## zeroes at boot (the cream chains read the plain file and keep theirs).
+const SYMBOL_FACE := "res://assets/fonts/variations/symbols_flat.tres"
 
 # --- surfaces: warm charcoal ---
 const D_SURFACE_0 := Color("#100E0B")   # ground: ticker, tooltip, page
@@ -695,13 +699,36 @@ const D_ICON_TAG := 12       # a tag's leading glyph
 const D_ICON_EMPTY := 32     # an empty state's glyph
 # --- the sprint screen (Ürün) ---
 const D_W_LEFT := 288                 # the left column, customer requests and modules, its scrollbar lane included
+const D_H_SPRINT_HEAD := 52           # the sprint header's row: title, badges, goal pick
+const D_H_CAP_HEAD := 30              # the capacity block's head: its caps label and the suggestion
+const D_H_CAP_ROW := 56               # a stage's row of the capacity block
+const D_H_CAP_LINE := 20              # its top line: name, groove, figure, badge
+const D_CAP_HEADROOM := 1.03          # the room past the longest groove or fill on the grooves' shared scale
+const D_W_CAP_TIP := 288              # the spilling stage's tooltip
+const D_H_CAP_TRACK := 16             # a stage's groove
+const D_CAP_FILL_INSET := 3           # a groove's fill from its outline, above and below
+const D_W_CAP_LABEL := 108            # a capacity row's stage column
+const D_W_CAP_NUMBER := 124           # its effort figure's column, right aligned
+const D_W_CAP_BADGE := 72             # its fit mark, or the spill badge and the streak ring
+const D_W_FACE_SLOT := 46             # a 24 px face and the room its star chip takes past it, in a stage's row of people
+const D_STAR_CHIP := Vector2i(2, 3)   # a star chip's overlap on the face's right edge, and its drop below the face
+const D_AWAY_ALPHA := 0.38            # the face of someone who cannot join the sprint
+const D_NOTCH_QUARTER := 10           # a sprint of the quarter in the header
+const D_WEEK_BAR := Vector2i(22, 6)   # a week of the running sprint in the header
+const D_CREW_OVERLAP := 10            # the header's crew badge: how far each face slides under the one before
+const D_BUSY_BAR := Vector2i(24, 3)   # a person's load under their face
+const D_HATCH := Vector2(8.5, 3.0)    # the spill's stripes: their period along the row and their width
+const D_STAGE_FILL_MIX := 0.62        # a groove's fill: the stage's band over the ground
+const D_STAGE_EDGE_ALPHA := 0.7       # a groove's edge
+const D_STAGE_GHOST_ALPHA := 0.18     # a candidate's ghost
+const D_HATCH_BASE_ALPHA := 0.25      # the ground between the spill's stripes
 const D_BOX_MONO := 24                # a module's two-letter mark box
 const D_H_KEY_CAND := 24              # the "+" key of a module's candidate
 const D_W_STAGE_STRIP := 168          # a candidate's stage strip
 const D_H_STAGE_STRIP := 6
 const D_W_PICKER := 640               # the type picker's column
 const D_H_SECTION := 28              # a section's caps label and its rule
-const D_SPRINT_COLUMNS := Vector2(590, 322)   # this sprint's column against the next one's
+const D_SPRINT_COLUMNS := Vector2(746, 308)   # this sprint's column against the next one's, as shares of the room between the left column and the edge
 const D_SQUARE := 10                  # a level square
 const D_SQUARE_SM := 8                # a level square in an effect line, a carry's progress square
 const D_H_BAR := 8                    # the capacity bar
@@ -867,6 +894,19 @@ static func D_stage(stage: String) -> Color:
 		"dev": return D_ST_DEV
 		"test": return D_ST_TEST
 	return D_INK_3
+
+## A stage's groove edge, its fill, a candidate's ghost, and the ground between the spill's stripes.
+static func D_stage_edge(stage: String) -> Color:
+	return Color(D_stage(stage), D_STAGE_EDGE_ALPHA)
+
+static func D_stage_fill(stage: String) -> Color:
+	return D_SURFACE_3.lerp(D_stage(stage), D_STAGE_FILL_MIX)
+
+static func D_stage_ghost(stage: String) -> Color:
+	return Color(D_stage(stage), D_STAGE_GHOST_ALPHA)
+
+static func D_hatch_base() -> Color:
+	return Color(D_warn(), D_HATCH_BASE_ALPHA)
 
 ## The danger strip's fill, border and text, and the text on a solid danger badge.
 static func D_neg_bg() -> Color:
