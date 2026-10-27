@@ -5,7 +5,7 @@ Dizin sürümü: git f3113fa4 (DIZIN.md başlığı, 2026-10-22; yollar ve satı
 Ne yapar: Olay motoru autoload değildir; statik `EventGate` cephesi ve `Ev*` sınıfları JSON kartları (`data/events/cards`, `arcs`) yükler, her kartı tek kapıdan (G1-G8) geçirir, kuyruğa ya da masaya koyar.
 Oyuncu seçince etkileri (`EvEffects`) uygular, geçmişe yazar. Sistemler kartı kimliğiyle ister, kuramaz; durum yalnız `scripts/events/seams/` adlı okumalarından gelir. Motor md: `GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`.
 Kaynak: Olay motoru için GDD Olay Motoru rev 2 (.md); olay içeriği (`data/events`) için GDD ch11.
-Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalog`; `core/` `EvEngine`, `EvQueue`, `EvHistory`, `EvFlags`, `EvLatches`, `EvSchedule`, `EvDelays`, `EvArcs`, `EvEffects`, `EvCondition`, `EvDice`, `EvBudgets`,
+Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalog`; `core/` `EvEngine`, `EvQueue`, `EvHistory`, `EvFlags`, `EvLatches`, `EvSchedule`, `EvWatch`, `EvDelays`, `EvArcs`, `EvEffects`, `EvCondition`, `EvDice`, `EvBudgets`,
   ↳ `EvSignals`, `EvSave`, `EvTuning`; `gate/` `EvGate`, `EvScope`; `present/` `EvPresenter`, `EvPapers`, `EvTempo`, `EvTicker`, `EvChips`; `seams/` `EvSeams` ve `EvSeams*`; model `GameEvent`, `EventChoice`. Sahipler (içerik):
   ↳ yükleyici `EvCatalog`; `cards/` altında özyinelemeli yürür.
 
@@ -13,21 +13,22 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - `scripts/events/event_gate.gd` (227): `EventGate`, motorun tek dış cephesi (statik); her çağrıyı `EvEngine/EvQueue/EvPapers/EvPresenter`'a iletir
 - `scripts/events/catalog/catalog.gd` (309): `EvCatalog`, kart ve ark JSON'larını yükler, varsayılanları doldurur, şema v3 `plausibility` bloğunu koşul yapraklarına derler
 - `scripts/events/core/engine.gd` (794): `EvEngine`, günlük/saatlik tik sırası (a-l adımları), `_admit`, `pump`, `resolve`, `request`, `force_fire`, `open_paper`, `set_aside`
-- `scripts/events/core/effects.gd` (820): `EvEffects`, fiil sözlüğü (NEUTRAL/ECONOMIC/TERMINAL) ve `_apply`; I2/I3/I6 kuralları köken başına (`_permitted`)
+- `scripts/events/core/effects.gd` (1056): `EvEffects`, fiil sözlüğü (NEUTRAL/ECONOMIC/TERMINAL) ve `_apply`; I2/I3/I6 kuralları köken başına (`_permitted`)
 - `scripts/events/core/condition.gd` (377): `EvCondition`, koşul ağacı (`all/any/none/not` + seam, flag, history, arc, entity yaprakları); `eval`, `explain`
 - `scripts/events/core/queue.gd` (252): `EvQueue`, kabul edilmiş ama gösterilmemiş kartlar ve etkin kart; öncelik `PRIORITY`, görünürlük süzgeci `_shown`
 - `scripts/events/core/history.gd` (200): `EvHistory`, çözüm satırları (chosen/expired/dropped), yalnız kimlik saklar; geriye bakan sorgular
 - `scripts/events/core/latches.gd` (143): `EvLatches`, one_shot / max_fires / cooldown_weeks mandalları, anahtar `run` ya da `entity`
 - `scripts/events/core/flags.gd` (131): `EvFlags`, motorun kendi bayrak, süreli bayrak ve damga deposu (`GameState.flags`'tan ayrı)
 - `scripts/events/core/schedule.gd` (161): `EvSchedule`, ertelenmiş sonuçlar (saf veri, Callable yok); `delayed` girdileri
+- `scripts/events/core/watch.gd` (56): `EvWatch`, `after_test`in bekleyen girdileri (saf veri); kartın testi bitince `EventBus.card_phase_changed` ile iner, `EvSave` bloğunda `watch`
 - `scripts/events/core/arcs.gd` (230): `EvArcs`, canlı arklar (promise/character/world/assignment), konu, adım, politika reassign/close/fade
 - `scripts/events/core/delays.gd` (140): `EvDelays`, sinyal kartının gecikme penceresi ve modül açılış gözlemi
-- `scripts/events/core/signals.gd` (106): `EvSignals`, `EventBus` sinyallerinin izinli listesi (`BINDINGS`), kartları dinlenen sinyale bağlar
+- `scripts/events/core/signals.gd` (109): `EvSignals`, `EventBus` sinyallerinin izinli listesi (`BINDINGS`), kartları dinlenen sinyale bağlar; `EvWatch.on_phase`i de bağlar (tetik değil)
 - `scripts/events/core/tuning.gd` (169): `EvTuning`, tek ayar yüzeyi (aralıklar, kotalar, bütçeler, `SHIPPED_SCOPES`)
 - `scripts/events/core/dice.gd` (65): `EvDice`, FNV-1a ile belirlenimci zar (`unit`, `check`); `core/budgets.gd` (53): `EvBudgets`, adlı bütçeler
-- `scripts/events/core/save.gd` (103): `EvSave`, motorun `event_engine` kayıt bloğunu tüm depolardan toplar ve geri yükler
+- `scripts/events/core/save.gd` (108): `EvSave`, motorun `event_engine` kayıt bloğunu tüm depolardan toplar ve geri yükler
 - `scripts/events/gate/gate.gd` (288): `EvGate`, tek kabul kapısı `propose` (G1-G8), `revalidate`, `Verdict`, başlangıç bağışıklığı
-- `scripts/events/gate/scope.gd` (329): `EvScope`, adlı kapsam slotları (employee/founder/customer/prospect/rival/investor) ve seçiciler
+- `scripts/events/gate/scope.gd` (408): `EvScope`, adlı kapsam slotları (employee/founder/customer/prospect/rival/investor) ve seçiciler
 - `scripts/events/present/presenter.gd` (306): `EvPresenter`, kart sözlüğünden `GameEvent` görünümü, metin çözme, ad ve seam dondurma, masa satırları
 - `scripts/events/present/chips.gd` (437): `EvChips`, etki ve delta çiplerinin tek kurucusu (`describe`), kaynak rozeti `source_tag`
 - `scripts/events/present/papers.gd` (206): `EvPapers`, masa (süreli kâğıtlar); süre dolumu, son uyarı, `desk_changed`
@@ -90,7 +91,7 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 
 ## Durum ve veri
 - Motor durumu GameState'te değil, `Ev*` sınıflarının statik değişkenlerindedir; tek kayıt bloğu `EvSave.BLOCK_KEY = "event_engine"`, `BLOCK_VERSION = 1` (`save.gd:16-17`); `SaveManager._capture_systems` `save_manager.gd:382`
-- Blok anahtarları (`save.gd:20-36`): `flags/timed_flags/stamps` (EvFlags), `rows` (EvHistory), `latches`, `schedule`, `arcs`, `queue/active_event_id/active_context`, `papers`, `budgets`, `held` (EvTicker), `tempo_*`,
+- Blok anahtarları (`save.gd:20-36`): `flags/timed_flags/stamps` (EvFlags), `rows` (EvHistory), `latches`, `schedule`, `watch`, `arcs`, `queue/active_event_id/active_context`, `papers`, `budgets`, `held` (EvTicker), `tempo_*`,
   ↳ `delays/modules_open/last_unlocked_module`, `run_seed`
 - Katalog kayda girmez; kartlar her açılışta diskten okunur (`save.gd:6-7` yorumu); kayıtta yalnız kimlik ve skaler tutulur (`EvSave.verify_no_resources` `save.gd:81`)
 - Komşu GameState alanları: `messages` `game_state.gd:318`, `mail_outbox` `:320`, `desk_arrivals` `:322`, `mentor_line_at` `:314`, `run_seed` `:24`, `run_active` `:132` (motor `run_active` false iken tik atmaz)
@@ -100,9 +101,9 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - Kapsam: `version_scope` değerleri `demo` (130 dosya), `ea`, `draft`, `retired`, `fixture`; G2 `EvTuning.SHIPPED_SCOPES` `tuning.gd:169` içinde mi diye bakar, değeri `EndingsSystem.shipped_scopes()` (`endings_system.gd:366,408`) verir
 - Ayar sabitleri `scripts/events/core/tuning.gd`: `MIN_GAP_WEEKS_DEFAULT` 4 (`:14`), `FAMILY_GAP_WEEKS` (`:33`), `CATEGORY_QUOTA_WEEK` (`:61`), `MAX_INTERRUPTS_PER_DAY` 2 (`:80`), `START_IMMUNITY_WEEKS` 3, `DISARM_WEEKS` 4, `BUDGETS`
 - Kapı sabitleri: `EvGate.DEFAULT_ALLOWED_HOURS` [8, 20] (`gate.gd:39`), `EvQueue.PRIORITY` (`queue.gd:23`), `EvLatches.DEFAULT_COOLDOWN_WEEKS` 4 (`latches.gd:21`), `EvCatalog.EXCLUDED_DIRS/EXCLUDED_PREFIXES` (`catalog.gd:17,19`)
-- Fiil sözlüğü `core/effects.gd`: `NEUTRAL_VERBS` (`:32`, 57), `ECONOMIC_VERBS` (`:75`, 27), `TERMINAL_VERBS` (`:86`, 1) = 85 fiil; `_apply` kolu 78 fiile var (aşağıda Dikkat)
+- Fiil sözlüğü `core/effects.gd`: `NEUTRAL_VERBS` (`:32`, 59), `ECONOMIC_VERBS` (`:77`, 27), `TERMINAL_VERBS` (`:88`, 1) = 87 fiil; `_apply` kolu 81 fiile var (aşağıda Dikkat)
 - Lint taban dosyaları: `tools/lint_baseline.json` (parmak izi listesi `accepted`), `tools/lint_v3_frozen.json` (`cards`: O2, O4, O5, T2, T3 bu kartlarda uyarı); `EvLint.BASELINE_PATH/FROZEN_PATH` `lint.gd:36-37`
-- Sözlük çıktısı `docs/content/events_draft/_vocabulary.md` (751 satır; 256 seam, 75 fiil, 146 kart, 3 ark; KEEP bloğu 743-751 elle); fikstür kartları `version_scope: "fixture"` taşır
+- Sözlük çıktısı `docs/content/events_draft/_vocabulary.md` (844 satır; 293 seam, 87 fiil, 146 kart, 3 ark; elle yazılan blok 836-844); fikstür kartları `version_scope: "fixture"` taşır
 
 ## Metin anahtarları
 - Kart metni `text.tr` / `text.en` bloklarında düz metin ya da anahtardır (`EvPresenter.is_key` `presenter.gd:232`: `^[A-Z][A-Z0-9_]{2,}$`); `product/sprint_*` kartları satır içi TR/EN taşır, öbürleri `strings.csv` anahtarı
@@ -118,7 +119,7 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - Neden gelmedi: `--why-fire=<kart id>` (`why.gd`); otomatik oynatma: `--event-harness=random:seeds=N:weeks=M` ya da `guided[:seeds=N:weeks=M]` (`harness.gd:84`); sözlük: `--event-vocab` (dosya yazar)
 - Makullük defteri: `--event-plausibility=<spec>` kabuk içinden ya da `tools/plausibility_run.sh` (koşu başına süreç ve kullanıcı dizini; `PLAUS FIRE/FAIL/RATE/SUMMARY`); spec `seeds=<N|A-B>:weeks=<N>:variant=<plain|early|both>:preset=`
 - Smoke (`tools/smoke_run.sh <vaka>`, vakalar `scripts/debug/endgame_smoke.gd`): `event_*` 33 vaka (ör. `event_i1_single_gate` `:325`, `event_critical_drop_refunds_latch` `:294`, `event_lint_v3_rules` `:580`, `event_delay_window` `:584`)
-- Smoke devamı: `event_check_with_effects` (şıkta etki ve zar birlikte, zar çipi, yükle-tekrar aynı dal), `event_year_roll` (yıl zarı, tohumlu `random` ve rakip seçicileri, `{rival}` adı),
+- Smoke devamı: `event_check_with_effects` (şıkta etki ve zar birlikte, zar çipi, yükle-tekrar aynı dal), `event_after_test` (testi bekleyen etki: hata bulunursa iner ve `<sonuç>_tested` satırı yazılır, bulunmazsa düşer, izleme kayıttan geçer), `event_year_roll` (yıl zarı, tohumlu `random` ve rakip seçicileri, `{rival}` adı),
   ↳ `card_body_tokens_resolve` `endgame_smoke.gd:490`, `loc_event_en_coverage` `:318`, `event_chip_coverage` `:335`, `quiet_cards_fill_empty_floor` `:542`, `event_no_double_resolution_after_load` `:355`,
   ↳ `event_thesis_day10_to_day90` `:333`, `harness_sniffer_matches_run_log` `:368`
 - Oynanan koşu: `--run-log=<preset>:<hafta>:sim` `PROBE FIRE/PICK/TALLY/WEEK` basar (`run_probe.gd:30-99`); `tools/run_gate.sh` üç koşu; görsel: `--event-shot=<kart id>[:<slot>=<varlık id>]` (`main.gd:764`, pencereli)
@@ -183,17 +184,25 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
   ↳ `tiers` yalnız `["cloud", "enterprise"]` ve `mult` < 1, çünkü çip o ikiliyi ve ucuzlamayı yazar), `server_lock {weeks}` (`InfraSystem.lock`: `weeks` hafta kademe sabit,
   ↳ kapasite bugünkü birimin altına inmez; NÖTR, çip bedel; satır imzadaki kapasiteyi koşucu pazarının koltuğu ya da kullanıcısı olarak tutar). Sözleşme kuralı
   ↳ `InfraSystem.set_provider` / `set_capacity`dedir, olay yalnız imzalar
+- Sprint fiilleri: `assign_to {card: "decision" | "promise", scope, weeks | weeks_seam}` (`SprintSystem.pin_card`: kişi `weeks` hafta yalnız o karta gider, kişi başına tek kilit; `decision` bekleyen kararın kartı,
+  ↳ `promise` `customer` yuvasının en eski açık sözünün kademesini yapan ilk sprint kartı (`SprintBridges.promise_cards`); `weeks_seam` GLOBAL INT seam; çip ve satır `EvEffects.pin_plan`ın
+  ↳ `{employee, weeks, card, of}` planıdır, kart bulunamazsa çip çizilmez ve satır reddedilir, bu yüzden fiil `SILENT_VERBS`te), `queue_card {area | line, scope?}` (sonraki sprinte kart: `scope`suz
+  ↳ alanın ya da hattın adaylarından kimsenin planlamadığı ve kapısı açık ilk `feat:` kartı `SprintSystem.send_next`le; `scope`lu hesabın o hat için yeni talebi `SprintBridges.open_request`le açılıp kartı gider, hesabın
+  ↳ ya da kademenin açık talebi varsa reddedilir; çip `EvEffects.queue_plan`dan, `CONSEQUENCE_VERBS`te ve `SILENT_VERBS`te), `after_test {card: "decision", effects}` (bekleyen kararın kartının testi bitince ve
+  ↳ en az bir hata bulduysa `effects` `run_check_branch` köküyle iner ve geçmişe izlemeyi kuran seçimin satırının yanına (deltasında aynı kartın `after_test`i olan son seçim, kâğıt arada yeniden cevaplanmış olabilir) `<sonuç>_tested` satırı yazılır; izleme `EvWatch`ta durur ve her durumda silinir; lint: yalnız tick:request kartında,
+  ↳ iç etkiler EKONOMİK ve TERMİNAL olamaz, çip başlığı `EFFECT_AFTER_TEST` iç çiplerin başındadır). Üçü de `WRITER_VERBS`te; `assign_to` `SUBJECT_VERBS`te (employee)
 - `trust_delta accounts`: `slots` (+ `slots: [yuva...]`), `others` (kartın müşteri yuvaları dışındaki bütün B2B hesaplar; `line` verilirse o hattı kullananlar), `all`, `onboarding` (`day < onboarding_until`);
   ↳ çip grubu plan satırının `group` alanı (`all` / `other` / `new`)
 - Aday ve hesap seam'leri: `aday.sector` (ad alanı `aday` → `prospect` yuvası), `musteri.sector`, `musteri.bugs`, `musteri.onboarding_short`, `musteri.promise_late` (en eski açık sözün kademesi koşan sprintte ve hiçbir kartı yetişmiyor;
-  ↳ kart kademesinden bulunur, hesabın istediği kademe `req:<istek>` kartıdır), `musteri.promise_extended`, `musteri.promise_card` (kademenin ad ANAHTARI: geçmiş satırı donar, ekran çevirir), `musteri.has_notice`, `sales.big_accounts`,
-  ↳ `time.quarter_start`. Seçiciler `rep_lead` (bir çalışanın işlediği aday) ve `lead_rep` (bağlı adayı işleyen çalışan; kurucunun masasındaki aday kimseyi adlandırmaz)
+  ↳ kartlar `SprintBridges.promise_cards`tan), `musteri.promise_extended`, `musteri.promise_card` (kademenin ad ANAHTARI: geçmiş satırı donar, ekran çevirir), `musteri.has_notice`, `sales.big_accounts`,
+  ↳ `time.quarter_start`. Seçiciler `rep_lead` (bir çalışanın işlediği aday) ve `lead_rep` (bağlı adayı işleyen çalışan; kurucunun masasındaki aday kimseyi adlandırmaz). Sprint seçicileri `decision_dev` (bekleyen karar kartının atananlarından ilk geliştirici; kâğıt kart doluyken istenir)
+  ↳ ve `quarter_pm` (`SprintCatalog.quarter_pm`); kimse yoksa yuva bağlanmaz. Seam `urun.line_tier.<hat>` (GLOBAL INT; her hat için kayıtlı, paylaşılan hat temel kimliğiyle, `ProductState.line_tier`)
 - Kart nakdinin etiketleri `ONE_TIME_LABELS`ta; `equipment`, `gift` ve `award` (pozitif `add_cash`) bu yüzden ekranda sözcük olarak çıkar
 - Yuva `"subject": false` (yalnız lint): çalışan yuvası gönderen ya da anılan kişidir, kartın öznesi değildir; O4 o yuvayı özne saymaz
 
-- Fiil sözlüğü ile `_apply` ayrışık: `assign_to`, `start_training`, `add_customer`, `convert_audience`, `open_paid_tier`, `change_salary`, `fire_employee` listelerde var ama `_apply` kolu YOK;
+- Fiil sözlüğü ile `_apply` ayrışık: `start_training`, `add_customer`, `convert_audience`, `open_paid_tier`, `change_salary`, `fire_employee` listelerde var ama `_apply` kolu YOK;
   ↳ çağrı `not implemented` döner (`effects.gd:663-665`)
-- Bu yedi fiil `_vocabulary.md`'de de görünür; `add_customer` yalnız `_fixtures/lint_v3/_bad_v1.json`'da geçer, gerçek kartta kullanımı yok; yeni fiil yazarken sözlükte olması uygulandığını GÖSTERMEZ
+- Bu altı fiil `_vocabulary.md`'de de görünür; `add_customer` yalnız `_fixtures/lint_v3/_bad_v1.json`'da geçer, gerçek kartta kullanımı yok; yeni fiil yazarken sözlükte olması uygulandığını GÖSTERMEZ
 - I2/I3: ekonomik fiil yalnız oyuncunun oynadığı seçenekten (`run_played`); `on_expire` yalnız negatif, ambient hiçbiri; `trigger_ending` telegraph ister (`effects.gd:165-208`). Reddedilen fiil `push_error` basar ve smoke'u düşürür
 - Ekonomik etkinin kazanç mı maliyet mi olduğu yazarın işaretinden okunur: `EvEffects.is_authored_gain(effect)` `effects.gd:772` (seam'li tutarda `amount_mult`'un işareti, düz tutarda `amount` ya da `delta`; ikisi de yoksa maliyet);
   ↳ lint 17.3 ve süre dolumunun denetimi aynı yardımcıyı sorar, böylece sıfıra yuvarlanan seam değeri maliyeti kazanca çevirmez

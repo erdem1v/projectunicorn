@@ -21,7 +21,6 @@ extends RefCounted
 ## açıldığı gün hesap pazar referansını yeniden kopyalar (`Customer.market_ref`).
 static func tick_requests() -> void:
 	var last_closed: int = SprintSystem.last_closed()
-	var plannable: int = SprintSystem.plannable_sprint()
 	var accounts: Array[Customer] = CustomerRegistry.get_by_market("b2b")
 	var account_ids: Array = accounts.map(func(c: Customer) -> String: return c.id)
 	var requests: Array = _p().requests
@@ -48,12 +47,48 @@ static func tick_requests() -> void:
 				steps.append(step)
 		if steps.is_empty():
 			continue
-		var pick: Dictionary = steps[absi(hash("%s|%d" % [c.id, window])) % steps.size()]
-		var id: String = "%s.%d" % [c.id, window]
-		requests.append({"id": id, "customer_id": c.id, "line": pick.line_id, "step": pick.id,
-			"created_sprint": plannable,
-			"due_sprint": plannable + SprintSystem.sprints_in(int(SprintCatalog.cfg("request.deadline_weeks"))),
-			"value": c.mrr * 12, "status": "open", "card_id": "req:" + id, "day": GameState.day})
+		_append_request(c, steps[absi(hash("%s|%d" % [c.id, window])) % steps.size()], "%s.%d" % [c.id, window])
+
+
+## Hesabın `line` hattında talep edebileceği sonraki kademe; hesap yoksa, hat bittiyse, kademenin kartı sprintte ya da saklıysa,
+## kapısı kapalıysa ya da hesabın (ya da kademenin) açık talebi varsa {}. Tek açık talep kuralı `tick_requests`'in kuralıdır.
+static func request_step(customer_id: String, line: String) -> Dictionary:
+	var own: String = SprintCatalog.in_product(line)
+	var step: Dictionary = ProductLines.step_at(own, ProductState.line_tier(own) + 1)
+	if step.is_empty() or CustomerRegistry.get_customer(customer_id) == null or SprintCatalog.gate_reason(step.id) != "" \
+			or _p().cards.has("feat:" + step.id) \
+			or SprintCatalog.open_requests().any(func(r: Dictionary) -> bool: return r.customer_id == customer_id or r.step == step.id):
+		return {}
+	return step
+
+
+## `request_step`in kademesi için hesabın talebini açar; talep kartının kimliği, açılamadıysa "".
+static func open_request(customer_id: String, line: String) -> String:
+	var step: Dictionary = request_step(customer_id, line)
+	if step.is_empty():
+		return ""
+	var id: String = "%s.%d" % [customer_id, GameState.day]
+	_append_request(CustomerRegistry.get_customer(customer_id), step, id)
+	return "req:" + id
+
+
+## Hesabın `step` için açık talebi: son tarih planlanabilir sprintten `deadline_weeks` sonraki sprint, değeri yıllık MRR.
+static func _append_request(c: Customer, step: Dictionary, id: String) -> void:
+	var plannable: int = SprintSystem.plannable_sprint()
+	_p().requests.append({"id": id, "customer_id": c.id, "line": step.line_id, "step": step.id,
+		"created_sprint": plannable,
+		"due_sprint": plannable + SprintSystem.sprints_in(int(SprintCatalog.cfg("request.deadline_weeks"))),
+		"value": c.mrr * 12, "status": "open", "card_id": "req:" + id, "day": GameState.day})
+
+
+## Koşan sprintte hesabın en eski açık sözünün kademesini yapan kartlar. Kimlikten değil kademeden: hesabın istediği kademe
+## talep kartı (`req:<id>`) olarak koşar.
+static func promise_cards(customer_id: String) -> Array:
+	var open: Array = PromiseRegistry.get_open_for(customer_id)
+	if open.is_empty():
+		return []
+	return (_p().get("sprint", {}).get("cards", []) as Array).filter(
+		func(card: String) -> bool: return SprintCatalog.card_by_id(card).get("step", "") == open[0].feature_id)
 
 
 ## Hesabın yenileme penceresinin gösterdiği yenileme günü: sözleşme imza gününden `request.contract_weeks` haftada bir

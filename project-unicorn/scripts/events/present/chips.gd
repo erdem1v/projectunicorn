@@ -23,6 +23,8 @@ const SILENT_VERBS := [
 	"mentor_advisory", "unlock_content", "spend_budget",
 	# The chip names the card it bumps; a sprint with room for the fix has nothing to say.
 	"sprint_fix_first", "sprint_card_first",
+	# The chip names the card it holds a person to or queues; with no such card there is nothing to say.
+	"assign_to", "queue_card",
 ]
 
 ## Verbs whose part is a fixed sentence: [CSV key, polarity].
@@ -129,6 +131,23 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 			var shoved: Dictionary = item.get("bumps", {}) if is_delta else SprintSystem.decision_first_bumps()
 			return [] if shoved.is_empty() \
 				else [_part(_t("EFFECT_SPRINT_BUMP").format({"card": SprintCatalog.card_name(shoved)}), "", "cost")]
+		# The person is held to one card for weeks.
+		"assign_to":
+			var pin: Dictionary = item if is_delta else EvEffects.pin_plan(item, ctx)
+			var pinned: String = _card_name(pin)
+			return [] if pinned == "" else [_part(_t("EFFECT_PIN").format({"card": pinned, "weeks": Fmt.weeks(int(pin.get("weeks", 1))),
+				"name": _first_name(String(pin.get("employee", "")), ctx, names, _t("EFFECT_AN_EMPLOYEE"))}), "", "cost")]
+		# The next sprint takes the card.
+		"queue_card":
+			var queued: Dictionary = item if is_delta else EvEffects.queue_plan(item, ctx)
+			var next_card: String = _card_name(queued) if queued.has("of") else ""
+			return [] if next_card == "" else [_part(_t("EFFECT_QUEUE_CARD").format({"card": next_card}), "", "cost")]
+		# The effects that wait for the card's test, each under the one header that says when they land.
+		"after_test":
+			var held: Array = [_part(_t("EFFECT_AFTER_TEST"), "", "danger")]
+			for effect in item.get("effects", []):
+				held.append_array(describe(effect, ctx, names, false))
+			return held
 		"sprint_hours":
 			if bool(item.get("promise", false)):
 				return [_part(_t("EFFECT_PROMISE_KEPT"), "", "gain")]

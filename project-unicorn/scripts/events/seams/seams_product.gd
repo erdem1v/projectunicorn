@@ -208,6 +208,16 @@ static func _install_papers() -> void:
 			var fix: String = "fix:" + SprintCatalog.in_product("line_shared_security")
 			return fix in GameState.product.get("sprint", {}).get("cards", []),
 		"Product", "the Security and Access fix card is in the running sprint")
+	# One seam per line, a shared line by the base id cards write, so a card can ask how far a line has come.
+	var lines: Array = []
+	for subtype in ProductLines.subtypes():
+		for line_id: String in ProductLines.line_ids(subtype):
+			if line_id.get_slice("@", 0) not in lines:
+				lines.append(line_id.get_slice("@", 0))
+	for line_id: String in lines:
+		EvSeams.register("urun.line_tier." + line_id, G, TYPE_INT,   # LOC-DATA seam namespace, not copy
+			func() -> int: return ProductState.line_tier(SprintCatalog.in_product(line_id)),
+			"Product", "the tier the %s line has reached; 0 before it is built" % line_id)
 	EvSeams.register("urun.weeks_to_month_end", G, TYPE_INT,
 		func() -> int:
 			var weeks: int = 1

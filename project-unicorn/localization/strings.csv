@@ -3252,6 +3252,9 @@ EFFECT_SERVER_PRICE,"Sunucu fiyatı {pct}, ayda {v}","Server price {pct}, {v} a 
 EFFECT_SERVER_PRICE_TIERS,Standart ve Kurumsal sunucu {pct} ucuz,Standard and Enterprise servers {pct} cheaper
 EFFECT_SERVER_LOCK_SEATS,"Sunucu sözleşmesi {weeks}: kademe sabit, kapasite en az {n} koltuk","Server contract for {weeks}: tier fixed, capacity at least {n} seats"
 EFFECT_SERVER_LOCK_USERS,"Sunucu sözleşmesi {weeks}: kademe sabit, kapasite en az {n} kullanıcı","Server contract for {weeks}: tier fixed, capacity at least {n} users"
+EFFECT_PIN,{name} {weeks} yalnız bu kartta: {card},{name} works only on {card} for {weeks}
+EFFECT_QUEUE_CARD,Sonraki sprinte kart: {card},Next sprint gets a card: {card}
+EFFECT_AFTER_TEST,Kartın testi hata bulursa:,If the card's test finds bugs:
 VC_WHY_STRAIN,Aranızda hâlâ bir kırgınlık var.,There is still some friction between you.
 FIN_ONETIME_LEGAL,Hukuk masrafı,Legal fees
 FIN_ONETIME_PAY_CUT,Maaş indirimi,Pay cut

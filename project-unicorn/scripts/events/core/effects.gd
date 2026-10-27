@@ -44,6 +44,8 @@ const NEUTRAL_VERBS := [
 	# sprint — the card a sprint decision is about, and the sprint's work hours
 	"sprint_card_effort", "sprint_card_progress", "sprint_card_carry", "sprint_card_test", "sprint_hours",
 	"sprint_fix_first", "sprint_card_trim", "sprint_card_outlook", "sprint_card_first",
+	# a card for the next sprint, and the effects a card's test holds back until it is done
+	"queue_card", "after_test",
 	# customers — satisfaction is a relationship, not a payment; whose desk an account sits on is not either
 	"satisfaction_delta", "trust_delta", "promise_create", "promise_extend", "take_account",
 	# the sales meeting's emphasis
@@ -572,6 +574,30 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 		"sprint_card_first":
 			var first_bumped: Dictionary = SprintSystem.decision_first_bumps()
 			return _on_card(verb, SprintSystem.decision_first(), 0).merged({"bumps": first_bumped})
+		# The person works only on the card for `weeks` (SprintSystem.pin_card); the row keeps the plan the chip showed.
+		"assign_to":
+			var pin: Dictionary = pin_plan(e, ctx)
+			if SprintSystem.pin_card(pin.card, pin.employee, GameState.day + TimeModel.ticks(pin.weeks)) == "":
+				return _no_target(verb, pin.card)
+			return pin.merged({"verb": verb})
+		# The next sprint takes a card: the area's or line's first free feature, or with a `scope` the account's new request
+		# (SprintBridges.open_request). The row keeps the card's identity (what the chip said).
+		"queue_card":
+			var queued: Dictionary = queue_plan(e, ctx)
+			var queued_id: String = String(queued.get("id", ""))
+			if queued_id == "" and not queued.is_empty():
+				queued_id = SprintBridges.open_request(queued.of.customer_id, queued.of.line)
+			if queued_id == "":
+				return _no_target(verb, "")
+			SprintSystem.send_next(queued_id)
+			return {"verb": verb, "card": queued_id, "of": queued.of}
+		# The pending decision's card is watched: once its test is done and found a bug, `effects` land (EvWatch).
+		"after_test":
+			var tested: String = SprintSystem.decision_card().get("id", "")
+			if tested == "":
+				return _no_target(verb, tested)
+			EvWatch.add(tested, e.get("effects", []), ctx, card_id)
+			return {"verb": verb, "card": tested, "effects": e.get("effects", [])}
 		# The line's code is rewritten: `weeks` (else sprint.json `paper.harden_weeks`) with no new bug on it.
 		"line_harden":
 			var hardened: String = line_of(e)
@@ -843,6 +869,39 @@ static func server_price_plan(e: Dictionary) -> Dictionary:
 	var hit: bool = tiers.is_empty() or tiers.has(InfraSystem.provider())
 	return {"before": InfraSystem.monthly_bill(),
 		"after": InfraSystem.monthly_bill("", float(e.get("mult", 1.0)) if hit else 1.0)}
+
+
+## What an `assign_to` pins and what the player reads for it: the slot's person, the weeks (`weeks`, else the `weeks_seam`), and the
+## card, the pending decision's or with `card` "promise" the one the customer slot's oldest open word waits on in the running
+## sprint ("" with none), as {employee, weeks, card, of}.
+static func pin_plan(e: Dictionary, ctx: Dictionary) -> Dictionary:
+	var card_id: String = ""
+	if String(e.get("card", "")) == DECISION:
+		card_id = SprintSystem.decision_card().get("id", "")
+	else:
+		var waiting: Array = SprintBridges.promise_cards(entity_of({}, ctx, EvScope.TYPE_CUSTOMER))
+		card_id = "" if waiting.is_empty() else waiting[0]
+	return {"employee": entity_of(e, ctx, EvScope.TYPE_EMPLOYEE), "card": card_id,
+		"weeks": int(EvSeams.read(String(e["weeks_seam"]))) if e.has("weeks_seam") else int(e.get("weeks", 1)),
+		"of": SprintSystem.card_ref(SprintCatalog.card_by_id(card_id)) if card_id != "" else {}}
+
+
+## What a `queue_card` puts in the next sprint and what the player reads for it: with a `scope` the customer slot's new request on
+## `line` (SprintBridges.request_step), else the first feature card of the `area`'s (the `line`'s area) candidates that no column
+## holds and whose gate is open; {} with none. {id: "" for a request not opened yet, of}.
+static func queue_plan(e: Dictionary, ctx: Dictionary) -> Dictionary:
+	var line: String = line_of(e)
+	if e.has("scope"):
+		var account: String = entity_of(e, ctx, EvScope.TYPE_CUSTOMER)
+		var step: Dictionary = SprintBridges.request_step(account, line)
+		return {} if step.is_empty() else {"id": "", "of": {"kind": "request", "line": step.line_id, "step": step.id,
+			"customer_id": account}}
+	var area: String = String(e.get("area", SprintCatalog.area_of_line(line)))
+	for c in ([] if area == "" else SprintCatalog.candidates(area)):
+		if c.id.begins_with("feat:") and c.state == "candidate" and SprintCatalog.gate_reason(c.step) == "" \
+				and (line == "" or c.line == line):
+			return {"id": c.id, "of": SprintSystem.card_ref(c)}
+	return {}
 
 
 ## The B2B accounts a `trust_delta` lands on, largest first: the slot's, or the users of the pending

@@ -52,6 +52,9 @@ static func install() -> void:
 	# shown when the batch ends (EvEngine.pump).
 	if not EventBus.clock_batch_ended.is_connected(EvEngine.pump):
 		EventBus.clock_batch_ended.connect(EvEngine.pump)
+	# Not a trigger either: a sprint card's test ends what an `after_test` effect waits on (EvWatch).
+	if not EventBus.card_phase_changed.is_connected(EvWatch.on_phase):
+		EventBus.card_phase_changed.connect(EvWatch.on_phase)
 	for entry in _connected:
 		if EventBus.is_connected(entry["signal"], entry["handler"]):
 			EventBus.disconnect(entry["signal"], entry["handler"])

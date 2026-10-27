@@ -98,12 +98,7 @@ static func install() -> void:
 		"Sales", "the product's Onboarding is under what this account expects of it")
 	EvSeams.register("musteri.promise_late", E, TYPE_BOOL,
 		func(id: String) -> bool:
-			var open: Array = PromiseRegistry.get_open_for(id)
-			if open.is_empty():
-				return false
-			# By step, not by id: a step the account asked for runs as its request card (`req:<id>`).
-			var cards: Array = (GameState.product.get("sprint", {}).get("cards", []) as Array).filter(
-				func(card: String) -> bool: return SprintCatalog.card_by_id(card).get("step", "") == open[0].feature_id)
+			var cards: Array = SprintBridges.promise_cards(id)
 			return not cards.is_empty() and cards.all(SprintSystem.card_late),
 		"Sales", "the step of the account's oldest open promise is in the running sprint and none of its cards will finish in it")
 	EvSeams.register("musteri.promise_extended", E, TYPE_BOOL,

@@ -338,6 +338,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"event_i7_modifier_needs_seam":   fail = _case_event_i7_modifier_needs_seam()
 		"event_dice_is_stable":           fail = _case_event_dice_is_stable()
 		"event_check_with_effects":       fail = _case_event_check_with_effects()
+		"event_after_test":               fail = _case_event_after_test()
 		"event_year_roll":                fail = _case_event_year_roll()
 		"event_thesis_day10_to_day90":    fail = _case_event_thesis_day10_to_day90()
 		"event_thesis_through_presenter": fail = _case_event_thesis_through_presenter()
@@ -19528,6 +19529,70 @@ static func _case_event_check_with_effects() -> String:
 	return ""
 
 
+## `after_test`: bir şıkkın etkileri karar kartının testi bitince iner ve yalnız test hata bulduysa. İner ve seçimin satırının
+## yanına `<sonuç>_tested` satırı yazılır; bulmazsa düşer. İzleme iki kolda da silinir ve kayıttan geçer: kayıt seçimle test
+## arasında alınıp yüklenince etki yine iner. Kâğıt test bitmeden yeniden gelip başka şıkla cevaplanırsa satır izlemeyi kuran
+## seçimin şıkkını taşır.
+## FALSİFİKASYON: EvWatch.on_phase'de `found` denetimini sil → hatasız test kolu FAIL; `_entries.erase`i sil → izlemenin silinmesi
+## iddiası FAIL; EvSave.to_dict'ten EvWatch'ı çıkar → kayıt kolu FAIL; EvSignals.install'daki bağlantıyı sil → hatalı test kolu FAIL;
+## `_tested` satırını yazan EvHistory.record'u sil → geçmiş iddiası FAIL; satırı EvHistory.last_option/last_outcome'dan oku →
+## araya cevap giren kol FAIL.
+static func _case_event_after_test() -> String:
+	const ID := "fixture.after_test"
+	const FLAG := "after_test_landed"
+	_plain_card(ID, {"tick": "request", "scope": {"employee": {"type": "employee"}}, "options": [
+		{"id": "trial", "outcome_id": "trial", "effects": [{"verb": "after_test", "card": "decision",
+			"effects": [{"verb": "set_flag", "name": FLAG}]}]},
+		{"id": "skip", "outcome_id": "skip", "effects": []}]})
+	for arm in [[100.0, true, false, false], [0.0, false, false, false], [100.0, true, true, false], [100.0, true, false, true]]:
+		var finds: bool = arm[1]
+		SaveManager.reset_all_owners()
+		GameState.initialize_run({"seed": 424242})
+		_seed_sprint()
+		_bugs_c(arm[0])
+		var dev: Character = _bug_hire("char_at_dev", HRConstants.ROLE_DEVELOPER, 6, 4)
+		_bug_hire("char_at_test", HRConstants.ROLE_TESTER, 4, 6)
+		GameState.set_founder_in_sprint(false)
+		var card_id: String = "feat:%s_k1" % SprintCatalog.capabilities("core")[0]
+		SprintSystem.add(card_id)
+		if not SprintSystem.start():
+			return "fixture: the sprint did not start"
+		# The card waits on its decision with only the test left; the paper's option watches it.
+		var card: Dictionary = GameState.product.cards[card_id]
+		card.need = [0.0, 3.0, 3.0]
+		card.progress = [0.0, 3.0, 0.0]
+		card.decision = true
+		GameState.product.decision = {"card_id": card_id, "event_id": ID, "speaker": ""}
+		if not EvEngine.force_fire(ID, {"employee": dev.id}):
+			return "fixture: the card would not fire"
+		EvEngine.resolve(ID, "trial")
+		if arm[3]:
+			if not EvEngine.force_fire(ID, {"employee": dev.id}):
+				return "fixture: the card would not fire again"
+			EvEngine.resolve(ID, "skip")
+		SprintSystem._clear_decision()
+		if EvWatch.size() != 1 or EvFlags.has(FLAG):
+			return "choosing the option left %d watches and the flag %s, want one watch and no flag" % [EvWatch.size(), EvFlags.has(FLAG)]
+		if arm[2]:
+			var block: Dictionary = JSON.parse_string(JSON.stringify(EvSave.to_dict()))
+			EvEngine.reset()
+			EvSave.from_dict(block)
+			if EvWatch.size() != 1:
+				return "the save kept %d watches, want 1" % EvWatch.size()
+		_sim_day()
+		if not bool(card.get("tested", false)) or (int(card.get("found", 0)) >= 1) != finds:
+			return "fixture: the test ended with tested %s and %s bugs found, want %s" % [card.get("tested"), card.get("found", 0), finds]
+		var rows: Array = EvHistory.rows().filter(func(r: Dictionary) -> bool: return r.event_id == ID)
+		var want_rows: int = (2 if finds else 1) + (1 if arm[3] else 0)
+		if EvFlags.has(FLAG) != finds or EvWatch.size() != 0 or rows.size() != want_rows:
+			return "bugs found %s: the flag is %s, %d watches and %d history rows of the card, want %s, none and %d" % [
+				finds, EvFlags.has(FLAG), EvWatch.size(), rows.size(), finds, want_rows]
+		if finds and (rows[-1].outcome_id != "trial_tested" or rows[-1].option_id != "trial" or rows[-1].deltas.size() != 1
+				or rows[-1].deltas[0].verb != "set_flag" or rows[-1].entities.employee.id != dev.id):
+			return "the test row reads %s, want the option's own row of outcome trial_tested with the flag in its deltas" % [rows[-1]]
+	return ""
+
+
 ## §5 · A coin per year and a draw that remembers. `year_roll` holds in some calendar years and not in others, the same
 ## way on every look within a year, and the catalogue gives each card its own coin; a `random` slot binds the same
 ## entity on the same day, seed and card, other entities under other seeds; the rival selectors choose among the
@@ -24405,7 +24470,8 @@ static func _case_sprint_departure_restaffs_card() -> String:
 ## sıralamadan sonra başa alan bloğu (`if k > 0:` ve gövdesi) sil → "first on its card" FAIL; `_play_out`ta `from_day + _w` yerine `GameState.day` ver →
 ## "plan said" FAIL; `_finish_sprint`te `GameState.day + 1`'in `+ 1`'ini sil → "running plan" FAIL; `c.id in waits` denetimini sil →
 ## "idle card" FAIL; `day < pin.get("until", 0)`'ı `day <=` yap → "plan said" FAIL; `phase(c) < PHASE_DONE` denetimini sil →
-## "finished card" FAIL.
+## "finished card" FAIL; `SprintSystem.pin_card`ta öbür karttaki kilidi silen döngüyü sil → "pinned again" FAIL; `_staff_week(false)`i sil →
+## "pinned on a running sprint" FAIL; `phase(...) == PHASE_DONE` denetimini sil → son iddia FAIL.
 static func _case_sprint_pin_holds_person() -> String:
 	_seed_sprint()
 	var des: Character = _sprint_hire("char_pin_des", HRConstants.ROLE_DESIGNER)
@@ -24422,7 +24488,8 @@ static func _case_sprint_pin_holds_person() -> String:
 	# 1 · Kilit sprint ortasında biter: ilk hafta kişi kendi kartında, ikinci hafta serbest; plan bunu önceden görür.
 	var big: Dictionary = open.call(k1s[0], [0.0, 70.0, 0.0])
 	var held: Dictionary = open.call(k1s[1], [0.0, 40.0, 0.0])
-	held.pinned = {"person": lock.id, "until": GameState.day + 1}
+	if SprintSystem.pin_card(held.id, lock.id, GameState.day + 1) != held.id:
+		return "fixture: pin_card did not pin the planned card"
 	var plan: Dictionary = SprintSystem.plan_outcome().cards
 	if not plan[big.id].finishes or plan[held.id].finishes or absf(plan[held.id].done - 10.0) > SprintSystem.EPS:
 		return "plan said: %s, want the free card done and the locked one at 10 points (its lock runs out in week two)" % [plan]
@@ -24448,7 +24515,8 @@ static func _case_sprint_pin_holds_person() -> String:
 	var filler: Dictionary = GameState.product.cards[held.id]
 	filler.need[1] = float(filler.progress[1]) + 35.0
 	var pinned: Dictionary = open.call(k1s[2], [8.0, 20.0, 0.0])
-	pinned.pinned = {"person": lock.id, "until": GameState.day + 10}
+	if SprintSystem.pin_card(pinned.id, lock.id, GameState.day + 10) != pinned.id:
+		return "fixture: pin_card did not pin the second sprint's card"
 	if GameState.product.sprint.cards != [filler.id, pinned.id] or not SprintSystem.start():
 		return "fixture: the second sprint holds %s and did not start" % [GameState.product.sprint.cards]
 	if lock.id in filler.assignees or filler.assignees != rest:
@@ -24472,6 +24540,16 @@ static func _case_sprint_pin_holds_person() -> String:
 			or filler.assignees.is_empty():
 		return "idle card: the pinned developer is out and the cards read %s and %s, want the pinned card empty and the other staffed" % [
 			pinned.assignees, filler.assignees]
+	# 5 · pin_card on the running sprint staffs the week at once; a person holds one lock, so the second pin lifts the first; a
+	# finished card or one outside the sprint takes none.
+	if SprintSystem.pin_card(pinned.id, rest[0], GameState.day + 10) != pinned.id or rest[0] not in pinned.assignees \
+			or rest[0] in filler.assignees:
+		return "pinned on a running sprint: the cards read %s and %s, want %s on the pinned card at once" % [pinned.assignees, filler.assignees, rest[0]]
+	if SprintSystem.pin_card(filler.id, rest[0], GameState.day + 10) != filler.id or pinned.has("pinned"):
+		return "pinned again: the first card still reads %s, want the lock lifted" % [pinned.get("pinned")]
+	pinned.progress = pinned.need.duplicate()
+	if SprintSystem.pin_card(pinned.id, rest[1], GameState.day + 10) != "" or SprintSystem.pin_card("feat:not_a_card", rest[1], GameState.day + 10) != "":
+		return "pin_card pinned a finished card or one outside the sprint"
 	return ""
 
 

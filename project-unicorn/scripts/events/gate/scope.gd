@@ -35,7 +35,7 @@ const ASKED := "asked"
 ## parameter (`market_rival:giant`). `random` is seeded: the same day, card and slot pick the same entity.
 const SELECTORS := {
 	TYPE_EMPLOYEE: ["lowest_morale", "newest_hire", "most_senior", "top_skill:", "account_rep", "support_lead", "sprint_dev",
-		"leave_pair", "leave_partner", "lead_rep", "random"],
+		"decision_dev", "quarter_pm", "leave_pair", "leave_partner", "lead_rep", "random"],
 	TYPE_CUSTOMER: ["at_risk", "escalated", "expansion_ready", "open_request", "largest", "smallest", "line_top",
 		"line_warehouse", "line_newest", "line_slow", "request", "random"],
 	TYPE_PROSPECT: ["rep_lead", "random"],
@@ -297,6 +297,17 @@ static func _select_employee(mode: String, used: Dictionary, bound: Dictionary) 
 				if pool.has(dev) and dev.role == HRConstants.ROLE_DEVELOPER:
 					return id
 			return ""
+		"decision_dev":
+			# A developer on the pending decision's own card, first in its assignment order. The paper is asked for before the
+			# card is cleared of people (a decision card gets none in the next assignment), so its assignees are still read.
+			for id in SprintSystem.decision_card().get("assignees", []):
+				var dev: Character = CharacterRegistry.get_character(id)
+				if pool.has(dev) and dev.role == HRConstants.ROLE_DEVELOPER:
+					return id
+			return ""
+		"quarter_pm":
+			var pm: Character = SprintCatalog.quarter_pm()
+			return pm.id if pm != null and pool.has(pm) else ""
 	return _first_by(pool, func(c): return c.id)
 
 

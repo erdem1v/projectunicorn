@@ -259,6 +259,10 @@ static func _lint_effects(where: String, effects: Array, context: String, card: 
 				if economic:
 					_add(SEVERITY_ERROR, "17.3", where,
 						"I2: '%s' needs a played decision, not an ambient context" % verb)
+			"after_test":
+				if economic or terminal:
+					_add(SEVERITY_ERROR, "17.3", where,
+						"I2: an after_test effect '%s' needs a played decision of its own" % verb)
 
 		# §17.3's third clause: a quiet-pool card may carry no economic weight at all. The
 		# floor exists to fill dead air, and dead air that pays is not dead air.
@@ -321,6 +325,7 @@ static func _lint_effects(where: String, effects: Array, context: String, card: 
 			_lint_trust_delta(where, effect, card)
 		_lint_sales_effect(where, effect, card)
 		_lint_server_effect(where, effect)
+		_lint_sprint_effect(where, effect, card)
 		if verb == "morale_crew" and String(effect.get("crew", "")) not in MORALE_CREWS:
 			_add(SEVERITY_ERROR, "17.1", where, "morale_crew crew '%s' is not one of %s"
 				% [effect.get("crew", ""), str(MORALE_CREWS)])
@@ -371,6 +376,47 @@ static func _lint_server_effect(where: String, effect: Dictionary) -> void:
 			_add(SEVERITY_ERROR, "17.1", where, "server_price tiers is [\"cloud\", \"enterprise\"] with a mult under 1: the chip names those two and a cut")
 	if verb == "server_lock" and int(effect.get("weeks", 0)) < 1:
 		_add(SEVERITY_ERROR, "17.1", where, "server_lock needs weeks of 1 or more")
+
+
+## The sprint verbs' arguments. A person is held to the pending decision's card or the one a customer slot's promise waits on, for
+## weeks (or a global integer seam of them); a decision's verbs belong to a tick:request card. A queued card comes from an area or a
+## line, and from a line when a customer slot asks for it. A watched test holds effects back, walked as an expiry's are.
+static func _lint_sprint_effect(where: String, effect: Dictionary, card: Dictionary) -> void:
+	var verb: String = String(effect.get("verb", ""))
+	var slots: Dictionary = card["scope"]
+	var line: String = String(effect.get("line", ""))
+	match verb:
+		"assign_to":
+			var held: String = String(effect.get("card", ""))
+			var seam: String = String(effect.get("weeks_seam", ""))
+			if held not in [EvEffects.DECISION, "promise"]:
+				_add(SEVERITY_ERROR, "17.1", where, "assign_to card '%s' is 'decision' or 'promise'" % held)
+			elif held == "promise" and _slots_of_type(slots, EvScope.TYPE_CUSTOMER).is_empty():
+				_add(SEVERITY_ERROR, "17.1", where, "assign_to promise needs a customer slot: the account whose word the card waits on")
+			elif held == EvEffects.DECISION and String(card.get("tick", "")) != "request":
+				_add(SEVERITY_ERROR, "17.1", where, "assign_to decision belongs to a tick:request sprint decision")
+			if String(slots.get(String(effect.get("scope", "")), {}).get("type", "")) != EvScope.TYPE_EMPLOYEE:
+				_add(SEVERITY_ERROR, "17.1", where, "assign_to scope '%s' is not an employee slot of the card" % effect.get("scope", ""))
+			if int(effect.get("weeks", 0)) < 1 and not (EvSeams.has(seam) and EvSeams.kind_of(seam) == EvSeams.Kind.GLOBAL
+					and EvSeams.type_of(seam) == TYPE_INT):
+				_add(SEVERITY_ERROR, "17.1", where, "assign_to needs weeks of 1 or more or a weeks_seam that is a global integer seam")
+		"queue_card":
+			var area: String = String(effect.get("area", ""))
+			if area == "" and line == "":
+				_add(SEVERITY_ERROR, "17.1", where, "queue_card names no area or line to take the card from")
+			if area != "" and not (SprintCatalog.cfg("areas") as Array).any(func(a: Dictionary) -> bool: return a.id == area):
+				_add(SEVERITY_ERROR, "17.1", where, "queue_card area '%s' is none of sprint.json's areas" % area)
+			if line != "" and ProductLines.line(line).is_empty() and not ProductLines.subtypes().any(
+					func(sub: String) -> bool: return not ProductLines.line("%s@%s" % [line, sub]).is_empty()):
+				_add(SEVERITY_ERROR, "17.1", where, "queue_card line '%s' is a line of no product" % line)
+			if effect.has("scope") and (line == "" or String(slots.get(String(effect["scope"]), {}).get("type", "")) != EvScope.TYPE_CUSTOMER):
+				_add(SEVERITY_ERROR, "17.1", where, "queue_card scope '%s' is not a customer slot of the card, or the request names no line" % effect["scope"])
+		"after_test":
+			if String(effect.get("card", "")) != EvEffects.DECISION or String(card.get("tick", "")) != "request":
+				_add(SEVERITY_ERROR, "17.1", where, "after_test watches the card of a tick:request sprint decision (card 'decision')")
+			if (effect.get("effects", []) as Array).is_empty():
+				_add(SEVERITY_ERROR, "17.1", where, "after_test needs the effects that land")
+			_lint_effects(where, effect.get("effects", []), "after_test", card)
 
 
 ## A `trust_delta` names whose ledger it writes, and a standing cost names its end.
@@ -428,6 +474,7 @@ const WRITER_VERBS := [
 	"damage_product", "line_harden", "sprint_card_test", "sprint_fix_first",
 	"sprint_card_trim", "sprint_card_outlook", "sprint_card_first", "b2b_month_discount",
 	"account_notice", "prospect_offer", "drop_prospect", "take_account", "pitch_focus", "server_price", "server_lock",
+	"assign_to", "queue_card", "after_test",
 ]
 
 ## V2: reserved for a system card. Each moves the run itself — a phase, a table, an arc, an
@@ -448,13 +495,13 @@ const SCOPED_VERBS := ["promise_extend", "promise_break"]
 ## edit cannot move the rule.
 const CONSEQUENCE_VERBS := ["sprint_card_carry", "b2b_retain_delay", "b2b_retain_ignore",
 	"b2b_expand_decline", "promise_create", "sprint_card_trim", "sprint_card_outlook", "sprint_card_first",
-	"sprint_fix_first", "summer_leave", "prospect_offer", "server_lock"]
+	"sprint_fix_first", "summer_leave", "prospect_offer", "server_lock", "queue_card", "after_test"]
 
 ## O4: the verbs that land on a subject, and the slot type each lands on.
 const SUBJECT_VERBS := {
 	"change_morale": "employee", "morale_crew": "employee", "productivity_mod": "employee", "employee_leaves": "employee",
 	"send_on_leave": "employee", "summer_leave": "employee", "sick_leave": "employee", "promote": "employee",
-	"work_hours": "employee",
+	"work_hours": "employee", "assign_to": "employee",
 	"satisfaction_delta": "customer", "trust_delta": "customer", "customer_mrr_delta": "customer", "seats": "customer",
 	"churn_customer": "customer", "promise_create": "customer", "b2b_retain_discount": "customer",
 	"b2b_retain_delay": "customer", "b2b_retain_ignore": "customer", "b2b_expand": "customer",
@@ -690,12 +737,15 @@ static func _engine_knows(verb: String) -> bool:
 		or EvEffects.TERMINAL_VERBS.has(verb)
 
 
-## Everything one option can run: the played list and both dice branches.
+## Everything one option can run: the played list, both dice branches and what a watched test holds back.
 static func _option_effects(opt: Dictionary) -> Array:
 	var out: Array = (opt.get("effects", []) as Array).duplicate()
 	var check: Dictionary = opt.get("check", {})
 	out.append_array(check.get("on_pass", []))
 	out.append_array(check.get("on_fail", []))
+	for e in out.duplicate():
+		if e is Dictionary and e.get("verb", "") == "after_test":
+			out.append_array(e.get("effects", []))
 	return out
 
 

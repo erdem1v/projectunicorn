@@ -19,7 +19,7 @@ signal with no emit point" a lint error, so the manifest is the lint rule's inpu
 |---|---|
 | Signals declared | **145** |
 | Declared with **no production emitter** | **2** |
-| Emitted with **no production listener** | **67** |
+| Emitted with **no production listener** | **66** |
 
 The second number is the §15.2 violation set. The third is **not** a defect: the Ekip,
 Ürün, Ar-Ge and Satış modules publish their read-surface signals ahead of any consumer,
@@ -173,7 +173,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 |---|---|---|---|---|---|
 | `sprint_planned` | `number: int` | sprint_system | 2 | 1 | top_bar |
 | `sprint_started` | `number: int` | sprint_system | 1 | 2 | top_bar · office_people |
-| `card_phase_changed` | `card_id: String, phase: int` | sprint_system | 1 | 0 | — |
+| `card_phase_changed` | `card_id: String, phase: int` | sprint_system | 1 | 1 | signals |
 | `card_done` | `card_id: String` | sprint_system | 1 | 0 | — |
 | `card_carried_over` | `card_id: String` | sprint_system | 2 | 0 | — |
 | `sprint_closed` | `number: int` | sprint_system | 1 | 1 | game_shell |

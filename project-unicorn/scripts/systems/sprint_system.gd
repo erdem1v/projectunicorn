@@ -129,6 +129,22 @@ static func remove(card_id: String) -> void:
 	_changed()
 
 
+## Kişiyi sprintin kartına `until_day` gününe dek kilitler (`_assign`): kişi başına tek kilit vardır, öbür karttaki kilidi kalkar;
+## koşan sprintte hafta baştan atanır. Kart sprintte değilse ya da bittiyse "", yoksa kartın kimliği.
+static func pin_card(card_id: String, person_id: String, until_day: int) -> String:
+	var p: Dictionary = _p()
+	if card_id not in p.get("sprint", {}).get("cards", []) or phase(p.cards[card_id]) == PHASE_DONE:
+		return ""
+	for c in p.cards.values():
+		if c.get("pinned", {}).get("person", "") == person_id:
+			c.erase("pinned")
+	p.cards[card_id]["pinned"] = {"person": person_id, "until": until_day}
+	if mode() == "active":
+		_staff_week(false)
+	_changed()
+	return card_id
+
+
 ## Sprinti başlatır; planın tutuşu kalkar, saati oyuncu sürdürür. Düzeltme kartları kilitlemeden önce
 ## hata deposundan okunur.
 static func start() -> bool:

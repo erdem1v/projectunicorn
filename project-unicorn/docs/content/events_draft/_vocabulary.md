@@ -12,8 +12,8 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **274** |
-| Effect verbs (write) | **85** |
+| Seams (read) | **293** |
+| Effect verbs (write) | **87** |
 | Cards in the catalogue | 146 |
 | Arcs | 3 |
 
@@ -64,6 +64,8 @@ so a verb absent from a group is unreachable from it rather than merely discoura
 - `sprint_card_trim`
 - `sprint_card_outlook`
 - `sprint_card_first`
+- `queue_card`
+- `after_test`
 - `satisfaction_delta`
 - `trust_delta`
 - `promise_create`
@@ -460,6 +462,25 @@ slot of that type (§17.12).
 | `urun.floor_state` | global | string | Product | '' | warning | crossed: the state of the worst area; '' in B2B and while no area is below the warning ratio |
 | `urun.interest` | global | float | Product | 0-100, refreshed on publish, decays by a half-life counted in weeks |
 | `urun.is_live` | global | bool | Product | something has shipped |
+| `urun.line_tier.line_erp_cashflow` | global | int | Product | the tier the line_erp_cashflow line has reached; 0 before it is built |
+| `urun.line_tier.line_erp_intake` | global | int | Product | the tier the line_erp_intake line has reached; 0 before it is built |
+| `urun.line_tier.line_erp_invoicing` | global | int | Product | the tier the line_erp_invoicing line has reached; 0 before it is built |
+| `urun.line_tier.line_erp_ledger` | global | int | Product | the tier the line_erp_ledger line has reached; 0 before it is built |
+| `urun.line_tier.line_erp_stock` | global | int | Product | the tier the line_erp_stock line has reached; 0 before it is built |
+| `urun.line_tier.line_note_tool_capture` | global | int | Product | the tier the line_note_tool_capture line has reached; 0 before it is built |
+| `urun.line_tier.line_note_tool_editor` | global | int | Product | the tier the line_note_tool_editor line has reached; 0 before it is built |
+| `urun.line_tier.line_note_tool_linking` | global | int | Product | the tier the line_note_tool_linking line has reached; 0 before it is built |
+| `urun.line_tier.line_note_tool_search` | global | int | Product | the tier the line_note_tool_search line has reached; 0 before it is built |
+| `urun.line_tier.line_note_tool_sync` | global | int | Product | the tier the line_note_tool_sync line has reached; 0 before it is built |
+| `urun.line_tier.line_shared_durability` | global | int | Product | the tier the line_shared_durability line has reached; 0 before it is built |
+| `urun.line_tier.line_shared_integrations` | global | int | Product | the tier the line_shared_integrations line has reached; 0 before it is built |
+| `urun.line_tier.line_shared_mobile` | global | int | Product | the tier the line_shared_mobile line has reached; 0 before it is built |
+| `urun.line_tier.line_shared_security` | global | int | Product | the tier the line_shared_security line has reached; 0 before it is built |
+| `urun.line_tier.line_video_clip_captions` | global | int | Product | the tier the line_video_clip_captions line has reached; 0 before it is built |
+| `urun.line_tier.line_video_clip_clipping` | global | int | Product | the tier the line_video_clip_clipping line has reached; 0 before it is built |
+| `urun.line_tier.line_video_clip_framing` | global | int | Product | the tier the line_video_clip_framing line has reached; 0 before it is built |
+| `urun.line_tier.line_video_clip_pipeline` | global | int | Product | the tier the line_video_clip_pipeline line has reached; 0 before it is built |
+| `urun.line_tier.line_video_clip_timeline` | global | int | Product | the tier the line_video_clip_timeline line has reached; 0 before it is built |
 | `urun.lines_open` | global | int | Product | 0-9 feature lines opened |
 | `urun.market_type` | global | string | Product | b2b | b2c; empty until the product type is chosen |
 | `urun.open_bugs` | global | int | Product | open bugs across every line |
@@ -681,7 +702,7 @@ player's market. A slot with no `select` takes the first free entity by id.
 
 | slot type | selectors |
 |---|---|
-| `employee` | `lowest_morale`, `newest_hire`, `most_senior`, `top_skill:`, `account_rep`, `support_lead`, `sprint_dev`, `leave_pair`, `leave_partner`, `lead_rep`, `random` |
+| `employee` | `lowest_morale`, `newest_hire`, `most_senior`, `top_skill:`, `account_rep`, `support_lead`, `sprint_dev`, `decision_dev`, `quarter_pm`, `leave_pair`, `leave_partner`, `lead_rep`, `random` |
 | `customer` | `at_risk`, `escalated`, `expansion_ready`, `open_request`, `largest`, `smallest`, `line_top`, `line_warehouse`, `line_newest`, `line_slow`, `request`, `random` |
 | `prospect` | `rep_lead`, `random` |
 | `rival` | `sprint_rival`, `market_rival:`, `random` |
@@ -703,7 +724,7 @@ AUTHORITY, which is the linter's §17.14: a verb is writable only when it has a
 working arm in `EvEffects._apply` AND a chip in `EvChips`, so what an option promises
 is what the player is shown and what lands.
 
-### Writer verbs (51) — any card, inside the two rules below
+### Writer verbs (54) — any card, inside the two rules below
 
 - `add_cash`
 - `add_brand`
@@ -756,6 +777,9 @@ is what the player is shown and what lands.
 - `pitch_focus`
 - `server_price`
 - `server_lock`
+- `assign_to`
+- `queue_card`
+- `after_test`
 
 Two rules narrow the list. A `sprint_card_*` verb belongs to a `tick: request` sprint
 decision and to no other card (§17.14, V3). A module verb spends a page the build may
@@ -791,14 +815,13 @@ reaching for one would be deciding the run instead of colouring it.
 - `promise_extend`
 - `promise_break`
 
-### Not writable (13) — no working arm or no chip
+### Not writable (12) — no working arm or no chip
 
 The executor dispatches these, so they are not unknown names; they are names a card
 may not say. A draft that wants one writes `[VOCAB?]` and §21's DELTA workflow.
 
 - `clear_flag`
 - `set_timed_flag`
-- `assign_to`
 - `start_training`
 - `ticker_push`
 - `notify`
