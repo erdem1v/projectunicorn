@@ -13,6 +13,7 @@ const PLAY := "res://assets/icons/util/play.svg"
 
 var _bar: ProgressBar
 var _figure: Label
+var _progress_box: PanelContainer
 
 
 func _init() -> void:
@@ -43,11 +44,12 @@ func setup(c: Dictionary) -> void:
 		add_child(_progress(c.progress))
 
 
-## Koşan sprintin yüzdesi: çubuk dolar, sayı yenilenir.
+## Koşan sprintin yüzdesi: çubuk dolar, sayı ve ipucundaki efor yenilenir.
 func set_progress(progress: Dictionary) -> void:
 	var share: float = progress.done / progress.total if progress.total > SprintSystem.EPS else 0.0
 	_bar.value = share
 	_figure.text = Fmt.percent(roundf(share * 100.0), 0)
+	_progress_box.tooltip_text = tr("PRODUCT_PROGRESS_TIP").format({"done": roundi(progress.done), "total": roundi(progress.total)})
 
 
 ## Planlamayı devret: PM varken yüzü ve adıyla basılır (sprint sürerken de), PM yokken kilit ikonuyla soluk ve basılmaz.
@@ -131,6 +133,8 @@ func _progress(progress: Dictionary, tight := false) -> PanelContainer:
 	_figure = SprintUiShared.label("", &"ProgressFigure")
 	row.add_child(_figure)
 	row.add_child(SprintUiShared.label(tr("PRODUCT_STATUS_DONE"), &"HeadMeta"))
+	HRUiShared.set_mouse_ignore(row)
+	_progress_box = box
 	set_progress(progress)
 	return box
 

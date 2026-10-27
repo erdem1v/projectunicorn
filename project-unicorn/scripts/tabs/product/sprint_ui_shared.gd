@@ -8,6 +8,11 @@ const SEP := " · "
 const KIND_ICON := "res://assets/icons/product/kind_%s.svg"
 const ROLE_ICONS := {"design": "res://assets/icons/skill/design.svg", "dev": "res://assets/icons/skill/engineering.svg",
 	"test": "res://assets/icons/skill/qa.svg", "product": "res://assets/icons/skill/product.svg"}
+## Aşamanın adının anahtarı; "product" araştırma kartının çubuğudur.
+const STAGE_KEYS := {"design": "PRODUCT_PHASE_DESIGN", "dev": "PRODUCT_PHASE_DEV", "test": "PRODUCT_PHASE_TEST",
+	"product": "PRODUCT_STAGE_RESEARCH"}
+## Kurucunun görüşmelerinin adı (`TimeModel.MEETING_DAYS` ile aynı anahtarlar).
+const MEETING_KEYS := {"sales": "PRODUCT_MEETING_SALES", "vc": "PRODUCT_MEETING_VC", "table": "PRODUCT_MEETING_TABLE"}
 const BUG := "res://assets/icons/product/bug.svg"
 const ARROW := "res://assets/icons/util/arrow_right.svg"
 const WARN := "res://assets/icons/util/warn.svg"
@@ -125,6 +130,45 @@ static func prose(text: String, variation: StringName, color: Variant = null) ->
 	return l
 
 
+## Zengin ipucunun kökü: `D_W_TIP` geniş bir sütun, menajer temalı (açılır pencere sahnenin temasını kalıtmaz).
+static func tip_column() -> VBoxContainer:
+	var tip := TipColumn.new()
+	tip.add_theme_constant_override("separation", UiTokens.SPACE_L)
+	tip.theme = load(UiTokens.MENAJER_THEME)
+	tip.custom_minimum_size.x = UiTokens.D_W_TIP
+	return tip
+
+
+## Zengin ipucunun kök sütunu. Godot ipucu penceresini içerik kurulurken ölçer; satır kıran yazılar o an genişliklerini bilmediği için
+## boy pencerenin boyuna uzar. Yerleşim oturdukça pencere içeriğin boyuna iner ve Godot'nun kuralıyla imlecin altına ya da üstüne konur.
+class TipColumn extends VBoxContainer:
+	func _ready() -> void:
+		minimum_size_changed.connect(_fit, CONNECT_DEFERRED)
+		_fit.call_deferred()
+
+	func _fit() -> void:
+		var win := get_window()
+		if not win is Popup or win.get_parent() == null:
+			return
+		var host := win.get_parent().get_viewport()
+		var want := Vector2i(win.get_contents_minimum_size().ceil())
+		if want.y >= win.size.y:
+			return
+		var offset: Vector2 = ProjectSettings.get_setting("display/mouse_cursor/tooltip_position_offset", Vector2(10, 10))
+		var mouse := host.get_mouse_position()
+		# Godot ipucunu sahibinin (pencerenin ebeveyni) üstündeki imleçte açar; imleç sahibin dışında okunuyorsa (çekim, olayı
+		# işletim sisteminin imlecini oynatmadan iter) sahibin ortası alınır.
+		var owner_rect := (win.get_parent() as Control).get_global_rect() if win.get_parent() is Control else Rect2(mouse, Vector2.ZERO)
+		if not owner_rect.has_point(mouse):
+			mouse = owner_rect.get_center()
+		var room := host.get_visible_rect()
+		var top := mouse.y + offset.y
+		if top + want.y > room.end.y:
+			top = maxf(room.position.y, mouse.y - want.y - offset.y)
+		win.size = Vector2i(win.size.x, want.y)
+		win.position = Vector2i(win.position.x, roundi(top))
+
+
 static func box(separation: int) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", separation)
@@ -230,6 +274,73 @@ static func row_keys(kinds: Array, card_id: String, act: Callable) -> PanelConta
 ## Kişinin yıldızı: "3★", yarım yıldızda "3,5★".
 static func stars_text(stars: float) -> String:
 	return Fmt.number(stars, 0 if is_equal_approx(stars, roundf(stars)) else 1) + "★"
+
+
+## Aşamanın adı.
+static func stage_name(stage: String) -> String:
+	return RnDUiShared.t(STAGE_KEYS[stage])
+
+
+## Aşamanın ikonu: araştırma kartının çubuğu Ar-Ge'nin ikonunu taşır.
+static func stage_icon(stage: String) -> String:
+	return RnDUiShared.ICON if stage == "product" else ROLE_ICONS[stage]
+
+
+## İpucunda kişi: "{ad} {yıldız}"; `name` kişinin tam adıdır, aynı adlı iki kişi böyle ayrılır.
+static func named_stars(person: Dictionary) -> String:
+	return "%s %s" % [person.name, stars_text(person.stars)]
+
+
+## Aşama eksenden önce bitti: koşan sprintte önceki haftada ya da önceki sprintte önden (sonraki aşamanın başında tik kutusudur).
+static func stage_done(stage: Dictionary) -> bool:
+	return stage.before or (stage.need <= SprintSystem.EPS and stage.pre > SprintSystem.EPS)
+
+
+## Eksenden önce biten aşamanın ipucu parçası: sprint başladığında işi kalmamışsa önceki sprintte önden bitti, yoksa bu sprintte
+## (koşan sprintin önceki haftasında) bitti.
+static func done_text(stage: Dictionary) -> String:
+	return RnDUiShared.t("PRODUCT_AHEAD_DONE" if stage.need <= SprintSystem.EPS and stage.pre > SprintSystem.EPS else "PRODUCT_STAGE_DONE_NOW")
+
+
+## İpucu parçası "efor {n}".
+static func effort_tip(n: Variant) -> String:
+	return RnDUiShared.t("PRODUCT_EFFORT_TIP").format({"n": n})
+
+
+## "{PM} {yıldız} hazırladı: efor {önce} yerine {şimdi}" (PM'in kartı hazırlarken kısalttığı efor).
+static func prepared_tip(pm: Dictionary, before: int, now: int) -> String:
+	return RnDUiShared.t("PRODUCT_PM_PREPARED").format({"name": pm.name, "stars": stars_text(pm.stars), "before": before, "now": now})
+
+
+## Kurucunun görüşme kalemleri, kalem başına bir satır: "{görüşme} · {n} gün" (hafta yazılmaz, bir tik hafta olduğu için gün yalnız
+## görüşmenin süresidir).
+static func meet_lines(kinds: Array) -> PackedStringArray:
+	var out := PackedStringArray()
+	for kind: String in kinds:
+		out.append(_meet_line(kind, TimeModel.MEETING_DAYS[kind]))
+	return out
+
+
+## `stages`in taramalarının kalemleri: kurucunun haftasının görüşmeleri o hafta çalıştığı her aşamanın taramasında yazılıdır, bir hafta
+## bir kez okunur. `total` doğruysa aynı türden kalemler tek satırdır, günleri toplanır ("Satış görüşmesi · 4 gün").
+static func meet_lines_of(stages: Array, total := false) -> PackedStringArray:
+	var kinds: Array = []
+	var seen: Dictionary = {}
+	for s: Dictionary in stages:
+		for m: Dictionary in s.meet:
+			if not seen.has(m.week):
+				seen[m.week] = true
+				kinds.append_array(m.kinds)
+	if not total:
+		return meet_lines(kinds)
+	var days: Dictionary = {}
+	for kind: String in kinds:
+		days[kind] = days.get(kind, 0.0) + TimeModel.MEETING_DAYS[kind]
+	return PackedStringArray(days.keys().map(func(kind: String) -> String: return _meet_line(kind, days[kind])))
+
+
+static func _meet_line(kind: String, days: float) -> String:
+	return SEP.join([RnDUiShared.t(MEETING_KEYS[kind]), count("PRODUCT_DAYS", roundi(days))])
 
 
 ## Kişinin yüzü ve işaretleri: kurucunun halkası, sağ altta yıldız çipi (`chip` yanlışsa çip yok); sprinte seçilemeyen (`away`) soluk

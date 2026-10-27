@@ -7,17 +7,43 @@ extends PanelContainer
 # turuncu taramalı. Satır modelin kartını ve zaman ekseni kaydını çizer; hesap yapmaz. Koşan sprintte saat ilerleyince `set_now`
 # çubukların hâlini, dolgusunu ve çalışanların yüzlerini saklanan parçalardan yeniden okur. Art arda önden biten aşamalar tek tik
 # kutusudur (son bitenin renginde; bitmiş aşamaların listesi kartın `stages`ında kalır). Her öğe kendi Control'üdür: çubuk,
-# bekleme, gölge, tarama ve tik kutusu `StagePaint`, çip ve yuvalar kendi Label ya da Panel'i; ipucu o öğeye bağlanır.
+# bekleme, gölge, tarama ve tik kutusu `StagePaint`, çip ve yuvalar kendi Label ya da Panel'i; ipucu o öğeye bağlanır. Zengin kart
+# ipucu (`CardTip`) yalnız kartın adında açılır; çubuğun ipucu düz yazıdır ve açılırken okunur (koşan sprintte saat ilerler).
+# Başlamayacak kartın (kapısı kapanmış) ipucu satırın kendisindedir, adın üstünde de o okunur: kapının gerekçesi ve kartın sonraki
+# sütuna geçeceği.
 
 signal action(kind: String, args: Dictionary)
 
 const ARROW := "res://assets/icons/util/arrow_right.svg"
+const RISK_KEYS := ["PRODUCT_RISK_LOW", "PRODUCT_RISK_MEDIUM", "PRODUCT_RISK_HIGH"]
+const WAIT_KEYS := {"design": "PRODUCT_WAIT_DESIGN", "dev": "PRODUCT_WAIT_DEV", "test": "PRODUCT_WAIT_TEST",
+	"product": "PRODUCT_WAIT_PRODUCT"}
+
+
+## Kartın adı: eksende yeri olan kartta üstüne gelince zengin kart ipucu. Fareyi geçirir: satırın üstüne gelmesi, "→" ve "×",
+## tekerlek satırındır; başlamayacak kartın düz ipucu da satırdan okunur.
+class CardName extends Label:
+	var _card: Dictionary
+	var _team_pm: bool
+
+	func _init(card: Dictionary, team_pm: bool) -> void:
+		_card = card
+		_team_pm = team_pm
+		text = String(card.name)
+		tooltip_text = "" if card.stages.is_empty() else text
+		mouse_filter = Control.MOUSE_FILTER_PASS
+
+	func _make_custom_tooltip(_for_text: String) -> Object:
+		return CardTip.panel(_card, _team_pm)
+
 
 ## Satırın verisi, bağlam ({mode "plan" | "active", now (sprint başından hafta), people {kimlik: kişi + parçaları}, candidate
-## (aday satırı: hayalet çubuklar, hep açık "+"), hot (aday satırı üstüne gelinmiş gibi açık)}).
+## (aday satırı: hayalet çubuklar, hep açık "+"), hot (aday satırı üstüne gelinmiş gibi açık), team_pm (ekipte PM var)}).
 var card: Dictionary
 var _ctx: Dictionary
 var _two := false
+## Koşan sprintte şimdiki an (sprint başından hafta); çubuğun ipucu açılınca okunur.
+var _now := 0.0
 var _mark: ColorRect
 var _acts: Control
 ## Koşan çubuklar {ground, label, faces, stage, workers}: saat ilerleyince hâli, yazısı ve yüzleri yeniden okunur.
@@ -27,10 +53,12 @@ var _live: Array = []
 func setup(row: Dictionary, ctx: Dictionary) -> void:
 	card = row
 	_ctx = ctx
+	_now = ctx.now
 	_two = String(row.name).length() > UiTokens.D_CARD_NAME_SHORT
 	var h: int = UiTokens.D_H_CARD_ROW_TWO if _two else UiTokens.D_H_CARD_ROW
 	custom_minimum_size = Vector2(UiTokens.D_W_CARD_INFO + UiTokens.D_W_TIMELINE, h)
 	mouse_filter = Control.MOUSE_FILTER_PASS
+	tooltip_text = _gated_tip()
 	var cell := Control.new()
 	cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(cell)
@@ -53,6 +81,11 @@ func _draw() -> void:
 	if _ctx.candidate:
 		draw_dashed_line(Vector2(0.0, size.y - 0.5), Vector2(size.x, size.y - 0.5), UiTokens.D_ROW_RULE, UiTokens.BORDER_HAIRLINE,
 			UiTokens.SPACE_XS)
+
+
+## Başlamayacak kartın ipucu: kapının gerekçesi ve kartın sprint başlayınca sonraki sütuna geçeceği.
+func _gated_tip() -> String:
+	return "" if card.gate == "" else "\n".join([card.gate, tr("PRODUCT_GATE_MOVES")])
 
 
 ## Satırın üstüne gelme: zemin açılır, solda çizgi; planlamada "→" ve "×" görünür; aday satırı tam görünür.
@@ -108,17 +141,21 @@ func _first_line() -> HBoxContainer:
 	var kind := UiFactory.make_glyph(SprintUiShared.KIND_ICON % card.kind, UiTokens.D_ICON_ROW, UiTokens.D_INK_3)
 	kind.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	line.add_child(SprintUiShared.pad(kind, Vector4i(0, UiTokens.D_PAD_CARD_ICON, 0, 0)))
-	var title := SprintUiShared.prose(String(card.name), &"DataStrong", ink)
+	var title := CardName.new(card, _ctx.team_pm)
+	title.theme_type_variation = &"DataStrong"
+	if ink != null:
+		title.add_theme_color_override("font_color", ink)
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART if _two else TextServer.AUTOWRAP_OFF
 	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	title.max_lines_visible = 2 if _two else 1
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	title.mouse_filter = Control.MOUSE_FILTER_PASS
 	line.add_child(title)
 	var risk := SprintUiShared.box(UiTokens.SPACE_XS)
 	risk.custom_minimum_size.y = UiTokens.D_H_CARD_LINE
 	risk.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	risk.mouse_filter = Control.MOUSE_FILTER_PASS
+	risk.tooltip_text = _risk_tip()
 	risk.add_child(UiFactory.make_glyph(SprintUiShared.BUG, UiTokens.D_ICON_TAG, UiTokens.D_INK_4))
 	risk.add_child(StagePaint.risk(card.risk, card.risk_raw))
 	line.add_child(risk)
@@ -127,6 +164,7 @@ func _first_line() -> HBoxContainer:
 	effort.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	effort.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	effort.mouse_filter = Control.MOUSE_FILTER_PASS
+	effort.tooltip_text = SprintUiShared.effort_tip(card.effort)
 	line.add_child(effort)
 	if _ctx.candidate:
 		var add := SprintUiShared.add_key()
@@ -150,6 +188,7 @@ func _second_line() -> HBoxContainer:
 		text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		text.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		text.mouse_filter = Control.MOUSE_FILTER_PASS
+		text.tooltip_text = card.fix_full
 		line.add_child(text)
 		if not slot.is_empty():
 			line.add_child(_status(slot))
@@ -157,6 +196,7 @@ func _second_line() -> HBoxContainer:
 		var module := SprintUiShared.label(String(card.module), &"CaptionName")
 		module.custom_minimum_size.x = UiTokens.D_W_CARD_SLOT
 		module.mouse_filter = Control.MOUSE_FILTER_PASS
+		module.tooltip_text = card.module_name
 		line.add_child(module)
 		line.add_child(_status(slot))
 	line.add_child(_person())
@@ -173,6 +213,7 @@ func _status(slot: Dictionary) -> Control:
 			var chip: PanelContainer = SprintUiShared.due_chip(String(slot.text), slot.soon)
 			chip.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 			chip.mouse_filter = Control.MOUSE_FILTER_PASS
+			chip.tooltip_text = SprintUiShared.SEP.join([slot.customer, slot.text])
 			cell.add_child(chip)
 		"carried":
 			var back := UiFactory.make_glyph(ARROW, UiTokens.D_ICON_TAG, UiTokens.D_INK_4)
@@ -180,8 +221,11 @@ func _status(slot: Dictionary) -> Control:
 			cell.add_child(back)
 			cell.add_child(SprintUiShared.label(tr("PRODUCT_CARRIED_SLOT"), &"Caption"))
 			cell.mouse_filter = Control.MOUSE_FILTER_PASS
+			cell.tooltip_text = tr("PRODUCT_CARRIED_TIP")
 		"late":
 			cell.add_child(SprintUiShared.label(tr("PRODUCT_LATE"), &"CaptionName", UiTokens.D_neg_ink()))
+			cell.mouse_filter = Control.MOUSE_FILTER_PASS
+			cell.tooltip_text = _late_tip()
 	return cell
 
 
@@ -197,8 +241,10 @@ func _person() -> Control:
 		face = SprintUiShared.avatar(who, UiTokens.D_AVATAR_ROW_SM)
 	elif ask != null:
 		face = UiFactory.make_avatar("?", UiTokens.D_AVATAR_ROW_SM)
+	var tip: String = _person_tip()
 	if face != null:
 		face.mouse_filter = Control.MOUSE_FILTER_PASS   # tık satıra ve yuvaya geçer
+		face.tooltip_text = tip
 		slot.add_child(face)
 	if ask == null:
 		return slot
@@ -208,10 +254,45 @@ func _person() -> Control:
 	for part: Control in [slot, face, disc]:
 		part.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	slot.mouse_filter = Control.MOUSE_FILTER_PASS
+	slot.tooltip_text = tip
 	slot.gui_input.connect(func(ev: InputEvent) -> void:
 		if UiFactory.is_left_click(ev):
 			action.emit("decide", {"card_id": String(card.id), "item": String(ask.item)}))
 	return slot
+
+
+## PM yuvasının ipucu: hazırlayan PM'in kısalttığı efor; soru varsa önde soranın adı (soran kartın PM'iyse PM'in ipucu da).
+func _person_tip() -> String:
+	var prepared: String = "" if card.pm == null else SprintUiShared.prepared_tip(card.pm, card.raw_effort, card.effort)
+	if card.ask == null:
+		return prepared
+	var parts: PackedStringArray = [tr("PRODUCT_ASK_TIP").format({"name": card.ask.name})]
+	if card.pm != null and card.ask.person != null and card.ask.person.id == card.pm.id:
+		parts.append(prepared)
+	return SprintUiShared.SEP.join(parts)
+
+
+## "Yetişmez" yuvasının ipucu: sprint sonuna yetişmediği ve kurucunun görüşmeleri (türü başına bir satır, günleri toplanmış).
+func _late_tip() -> String:
+	var lines: PackedStringArray = [tr("PRODUCT_LATE_TIP")]
+	lines.append_array(SprintUiShared.meet_lines_of(card.stages, true))
+	return "\n".join(lines)
+
+
+## Hata göstergesinin ipucu: düzey; PM hazırladıysa düzey değiştiyse "{önce} yerine {şimdi}", değişmediyse yalnız hazırladığı.
+func _risk_tip() -> String:
+	var now: String = _risk_word(card.risk)
+	var parts: PackedStringArray = [tr("PRODUCT_RISK_TIP").format({"level": now})]
+	if card.pm != null:
+		var before: String = _risk_word(card.risk_raw)
+		parts.append(tr("PRODUCT_RISK_PREPARED" if before != now else "PRODUCT_PREPARED_BY").format(
+			{"name": card.pm.name, "before": before, "now": now}))
+	return SprintUiShared.SEP.join(parts)
+
+
+## Hata riskinin düzey sözcüğü: göstergenin üçte birlik dilimleri.
+func _risk_word(risk: float) -> String:
+	return tr(RISK_KEYS[mini(int(risk * RISK_KEYS.size()), RISK_KEYS.size() - 1)])
 
 
 ## Planlamada üstüne gelince görünen "→" ve "×": satırın bilgi sütununun sağ üstünde, efor sayısının üstünde.
@@ -243,22 +324,24 @@ func _lane(h: int) -> Control:
 	var shadows: Array = []
 	var waits: Array = []
 	var bars: Array = []
-	var tick := ""
+	var ticks: Array = []
 	var out_end := 0.0
 	for s: Dictionary in card.stages:
-		if s.before or (s.need <= SprintSystem.EPS and s.pre > SprintSystem.EPS):
-			tick = s.stage
+		if SprintUiShared.stage_done(s):
+			ticks.append(s)
 			continue
 		for wait: Dictionary in s.waits:
 			var from: float = _x(wait.from)
 			var width: float = _x(minf(wait.to, UiTokens.D_TIMELINE_WEEKS)) - from
 			if width >= 1.0:
-				waits.append(StagePaint.part(&"wait", s.stage, {"from": wait.from, "to": wait.to, "person": wait.person, "role": wait.role},
-					Rect2(from, top + (UiTokens.D_H_STAGE_BAR - UiTokens.D_H_WAIT) / 2.0, width, UiTokens.D_H_WAIT)))
+				var gap: StagePaint = StagePaint.part(&"wait", s.stage, {"from": wait.from, "to": wait.to, "person": wait.person, "role": wait.role},
+					Rect2(from, top + (UiTokens.D_H_STAGE_BAR - UiTokens.D_H_WAIT) / 2.0, width, UiTokens.D_H_WAIT))
+				gap.tooltip_text = _wait_tip(wait)
+				waits.append(gap)
 		if s.start >= 0.0:
 			var left: float = _x(s.start)
-			bars.append(_bar(s, Rect2(left, top, maxf(_x(s.end) - left, UiTokens.D_W_STAGE_BAR_LEAST), UiTokens.D_H_STAGE_BAR), "in", tick))
-			tick = ""
+			bars.append(_bar(s, Rect2(left, top, maxf(_x(s.end) - left, UiTokens.D_W_STAGE_BAR_LEAST), UiTokens.D_H_STAGE_BAR), "in", ticks))
+			ticks = []
 			var shade: StagePaint = _shadow(s, top)
 			if shade != null:
 				shadows.append(shade)
@@ -266,11 +349,11 @@ func _lane(h: int) -> Control:
 			var out_left: float = maxf(_x(s.out_from), out_end)
 			var out_right: float = minf(out_left + _x(s.out_to) - _x(s.out_from), UiTokens.D_W_TIMELINE)
 			if out_right - out_left >= 1.0:
-				bars.append(_bar(s, Rect2(out_left, top, out_right - out_left, UiTokens.D_H_STAGE_BAR), "out", tick))
-				tick = ""
+				bars.append(_bar(s, Rect2(out_left, top, out_right - out_left, UiTokens.D_H_STAGE_BAR), "out", ticks))
+				ticks = []
 				out_end = out_right
-	if tick != "":
-		bars.append(StagePaint.part(&"tick", tick, {}, Rect2(0.0, top, UiTokens.D_W_TICK_BOX, UiTokens.D_H_STAGE_BAR)))
+	if not ticks.is_empty():
+		bars.append(_tick(ticks, Rect2(0.0, top, UiTokens.D_W_TICK_BOX, UiTokens.D_H_STAGE_BAR)))
 	for part: Control in shadows + waits + bars:
 		lane.add_child(part)
 	if _ctx.mode == "active":
@@ -278,9 +361,17 @@ func _lane(h: int) -> Control:
 	return lane
 
 
-## Bir aşamanın çubuğu: zemini, önden bitmiş aşamaların tik kutusu (`tick` son bitenin aşaması, yoksa ""), görüşme taramaları, ikon ve
-## sayı, çalışanların yüzleri. `piece` "in" sprintin içindeki çubuk, "out" sprint dışına kalan pay.
-func _bar(s: Dictionary, rect: Rect2, piece: String, tick: String) -> StagePaint:
+## Art arda biten aşamaların tek tik kutusu, son bitenin renginde; ipucu hangi aşamaların bittiğini satır satır yazar.
+func _tick(ticks: Array, rect: Rect2) -> StagePaint:
+	var box: StagePaint = StagePaint.part(&"tick", ticks.back().stage, {}, rect)
+	box.tooltip_text = "\n".join(ticks.map(func(s: Dictionary) -> String:
+		return SprintUiShared.SEP.join([SprintUiShared.stage_name(s.stage), SprintUiShared.done_text(s)])))
+	return box
+
+
+## Bir aşamanın çubuğu: zemini, bitmiş aşamaların tik kutusu (`ticks`, art arda bitenler), görüşme taramaları, ikon ve sayı,
+## çalışanların yüzleri. `piece` "in" sprintin içindeki çubuk, "out" sprint dışına kalan pay.
+func _bar(s: Dictionary, rect: Rect2, piece: String, ticks: Array) -> StagePaint:
 	var running: bool = _ctx.mode == "active"
 	var candidate: bool = _ctx.candidate
 	var out: bool = piece == "out"
@@ -298,22 +389,25 @@ func _bar(s: Dictionary, rect: Rect2, piece: String, tick: String) -> StagePaint
 	bar.clip_contents = true
 	if candidate:
 		bar.modulate.a = UiTokens.D_GHOST_ALPHA
-	if tick != "":
-		bar.add_child(StagePaint.part(&"tick", tick, {}, Rect2(0.0, 0.0, UiTokens.D_W_TICK_BOX, rect.size.y)))
+	if not ticks.is_empty():
+		bar.add_child(_tick(ticks, Rect2(0.0, 0.0, UiTokens.D_W_TICK_BOX, rect.size.y)))
 	if not out and not candidate:
 		for m: Dictionary in s.meet:
 			var from: float = maxf(_x(m.from), rect.position.x)
 			var to: float = minf(_x(m.to), rect.end.x)
 			if to - from >= 1.0:
-				bar.add_child(StagePaint.part(&"meet", s.stage, m, Rect2(from - rect.position.x, 0.0, to - from, rect.size.y)))
-	var left: float = UiTokens.D_W_TICK_BOX + UiTokens.SPACE_S if tick != "" else float(UiTokens.D_STAGE_BAR_PAD.x)
+				var scan: StagePaint = StagePaint.part(&"meet", s.stage, m, Rect2(from - rect.position.x, 0.0, to - from, rect.size.y))
+				scan.tooltip_text = "\n".join(SprintUiShared.meet_lines(m.kinds))
+				bar.add_child(scan)
+	var left: float = UiTokens.D_W_TICK_BOX + UiTokens.SPACE_S if not ticks.is_empty() else float(UiTokens.D_STAGE_BAR_PAD.x)
 	var label: StagePaint = StagePaint.part(&"label", s.stage, {"state": state, "late": card.late, "main": main, "sub": sub, "left": left,
-		"room": 0.0, "icon": _icon(s.stage)}, Rect2(Vector2.ZERO, rect.size))
+		"room": 0.0, "icon": SprintUiShared.stage_icon(s.stage)}, Rect2(Vector2.ZERO, rect.size))
 	bar.add_child(label)
 	var faces := SprintUiShared.box(-UiTokens.SPACE_S)
 	faces.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bar.add_child(faces)
 	var entry := {"ground": bar, "label": label, "faces": faces, "stage": s, "out": out, "left": left, "main": main, "sub": sub, "work": main}
+	bar.tip = _bar_tip.bind(entry)
 	if running and not out:
 		entry["workers"] = _workers(s)
 		_live.append(entry)
@@ -322,8 +416,51 @@ func _bar(s: Dictionary, rect: Rect2, piece: String, tick: String) -> StagePaint
 	return bar
 
 
-func _icon(stage: String) -> String:
-	return RnDUiShared.ICON if stage == "product" else SprintUiShared.ROLE_ICONS[stage]
+## Çubuğun ipucu, açılırken okunur: "{aşama} · efor {n}" ve durum parçaları: önden yapılan pay, hazırlanmasaydı efor, sprint dışına
+## kalan pay, çalışanlar (koşarken o an çalışanlar); sprintin içindeki çubukta kurucunun görüşme kalemleri ayrı satırlarda.
+func _bar_tip(entry: Dictionary) -> String:
+	var s: Dictionary = entry.stage
+	var out: bool = entry.out
+	var total: float = s.pre + s.need
+	var effort: String = str(roundi(s.out if out else total))
+	var working: Array = []
+	if _ctx.mode == "active" and not out:
+		working = entry.workers.filter(func(w: Dictionary) -> bool: return w.from <= _now and _now < w.to).map(
+			func(w: Dictionary) -> String: return w.id)
+		if s.start - SprintSystem.EPS <= _now and _now < s.end - SprintSystem.EPS:
+			effort = "%d/%d" % [floori(s.pre + SprintTimeline.done_at(s, _now) + SprintSystem.EPS), roundi(total)]
+	var parts: PackedStringArray = [SprintUiShared.stage_name(s.stage), SprintUiShared.effort_tip(effort)]
+	if not out and s.pre > SprintSystem.EPS:
+		parts.append(tr("PRODUCT_STAGE_READY").format({"pct": Fmt.percent(s.pre / total * 100.0, 0)}))
+	if card.pm != null and s.need_raw > s.need + SprintSystem.EPS:
+		parts.append(tr("PRODUCT_STAGE_RAW").format({"n": roundi(s.need_raw)}))
+	if out:
+		parts.append(tr("PRODUCT_STAGE_OUT"))
+	if not working.is_empty():
+		parts.append(tr("PRODUCT_STAGE_NOW").format({"names": ", ".join(_names(working))}))
+	elif not s.people.is_empty():
+		parts.append(", ".join(_names(s.people)))
+	var lines: PackedStringArray = [SprintUiShared.SEP.join(parts)]
+	if not out:
+		lines.append_array(SprintUiShared.meet_lines_of([s]))
+	return "\n".join(lines)
+
+
+## Kişilerin tam adları (aynı adlı iki kişi böyle ayrılır).
+func _names(ids: Array) -> Array:
+	return ids.map(func(id: String) -> String: return CharacterRegistry.get_character(id).character_name)
+
+
+## Beklemenin ipucu: kimi beklediği ve o kişi o an hangi kartın hangi aşamasındaysa ("Bekliyor: Ayşe Kaya (Fatura · Geliştirme)");
+## aşamada kimse yoksa rolün çoğulu (araştırmada ürün yöneticisi ya da kurucu).
+func _wait_tip(wait: Dictionary) -> String:
+	if wait.person == "":
+		return tr(WAIT_KEYS[wait.role])
+	var who: String = CharacterRegistry.get_character(wait.person).character_name
+	if not wait.busy.is_empty():
+		who += " (" + SprintUiShared.SEP.join([SprintCatalog.card_name(SprintCatalog.card_by_id(wait.busy.card)),
+			SprintUiShared.stage_name(wait.busy.stage)]) + ")"
+	return tr("PRODUCT_WAIT_FOR").format({"name": who})
 
 
 ## PM'in kısalttığı payın gölgesi: çubuğun altında, çubuğun başından hazırlanmasaydı biteceği yere uzanan şerit. Hazırlanmamış
@@ -337,8 +474,11 @@ func _shadow(s: Dictionary, top: float) -> StagePaint:
 	var to: float = minf(_x(float(last.to) + (s.need_raw - s.need) / pace), UiTokens.D_W_TIMELINE)
 	if to - from < 1.0:
 		return null
-	return StagePaint.part(&"shadow", s.stage, {}, Rect2(from + UiTokens.D_SHADOW_INSET, top + UiTokens.D_H_STAGE_BAR - UiTokens.BORDER_HAIRLINE,
-		to - from - UiTokens.D_SHADOW_INSET, UiTokens.D_H_SHADOW))
+	var shade: StagePaint = StagePaint.part(&"shadow", s.stage, {}, Rect2(from + UiTokens.D_SHADOW_INSET,
+		top + UiTokens.D_H_STAGE_BAR - UiTokens.BORDER_HAIRLINE, to - from - UiTokens.D_SHADOW_INSET, UiTokens.D_H_SHADOW))
+	shade.tooltip_text = tr("PRODUCT_STAGE_SHADOW").format({"stage": SprintUiShared.stage_name(s.stage), "before": roundi(s.need_raw),
+		"now": roundi(s.need)})
+	return shade
 
 
 ## Planlamada kurucunun çalıştığı çubuğun ucunda yüzü; çubuk sığmıyorsa çizilmez.
@@ -380,6 +520,7 @@ func _workers(s: Dictionary) -> Array:
 ## çalışanların yüzleri saklanan parçalardan okunur. Süren çubuk "{yapılan}/{toplam}" yazar (yapılan tamsayıya aşağı yuvarlanır: biten
 ## çubuk dışında tam görünmez), başlamamış çubuk planlamadaki gibi aşamanın bu eksendeki işini.
 func set_now(at: float) -> void:
+	_now = at
 	for entry: Dictionary in _live:
 		var s: Dictionary = entry.stage
 		var total: float = s.pre + s.need

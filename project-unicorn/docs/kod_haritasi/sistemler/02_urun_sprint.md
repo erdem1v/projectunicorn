@@ -98,7 +98,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
   ↳ kart satırının bekleme ya da çubukla kapanmayan boşlukları (smoke Z3 ve `live:a4_*` `row_gaps`); ekibin kapasite satırı kuralı ve satır başına sprint puanı (sürüm notunda da) · `SprintSystem.timeline`, `ProductModel._progress`, `_next`
 - `SprintSystem.capacity()/capacity_of()` `sprint_system.gd:651`/`:656`: ekibin ya da verilen `team` satırlarının sprint boyunca puanı; ekip ve satır toplamları yalnız buradan okunur (`SprintTimeline.capacity_rows`/`row_power`,
   ↳ smoke `sprint_timeline_matches_play_out`) · `SprintCatalog.lead_suggestion`, `ProductModel._center`
-- `SprintCatalog.row_of()/due_sprint()` `sprint_catalog.gd:120`/`:317`: çalışanın kapasite satırı; kartın söz ya da talep son tarihi · `SprintTimeline`, `ProductModel._row`
+- `SprintCatalog.row_of()/due()` `sprint_catalog.gd:122`/`:320`: çalışanın kapasite satırı; kartın söz ya da talep son tarihi, müşterisi ve değeri · `SprintTimeline`, `ProductModel._row`
 - `SprintSystem.plan_outcome()/mvp_eta()/team()/payers()` `sprint_system.gd:772`/`:802`/`:703`/`:725`: plan önizlemesi, MVP tahmini, ekip, bedel ödeyenler · ProductModel, effects.gd
 - `SprintCatalog.cfg()` `scripts/systems/sprint_catalog.gd:29`: sprint.json okuması (yoksa yükler) · yaklaşık her sistem; `load_data()` :23 → `main.gd:4694`
 - `SprintCatalog.candidates()` `sprint_catalog.gd:194`: alanın aday kartları (feat:/req:/plan:/fix:/res:) · ProductModel, `SprintSystem`
@@ -318,17 +318,19 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
   ↳ `server_final` Kurumsal'dayken alt kademeler kilitli (imleç Ekonomik'te), `server_clause` tek hesap 3★ ve sözleşmesinde sunucu maddesi açık (bloğun altında "Kurumsal sunucu bekleyen 1 hesap" etiketi),
   ↳ `server_lock` 10 haftalık sunucu sözleşmesi sürüyor (kademeler ve Azalt kapalı, ipucu sözleşmenin gerekçesi; imleç Azalt'ta), `server_b2c` not uygulaması,
   ↳ 12.400 kullanıcı 13 birimde (%96)
-- `live:a4_*` sprint ekranının kare dünyalarıdır (27 tür; `_seed_product_a4` `main.gd:4070`, tablo `_A4_WORLDS` `:4036`): kurucu tek başına ERP'yi v1.0'a oynar, kadro sonra işe alınır, hesaplar imzalanır, önceki sprintler oynanır;
+- `live:a4_*` sprint ekranının kare dünyalarıdır (32 tür; `_seed_product_a4` `main.gd:4143`, tablo `_A4_WORLDS` `:4102`): kurucu tek başına ERP'yi v1.0'a oynar, kadro sonra işe alınır, hesaplar imzalanır, önceki sprintler oynanır;
   ↳ her tür kurulunca `PRODUCTSHOT|kind=|cards=|people=|row_gaps=|now=` basar; `row_gaps` zaman ekseninin bütün kart satırlarındaki boşluk sayısıdır (`SprintTimeline.row_gaps`, smoke'un Z3'üyle aynı işlev),
   ↳ `now` koşan sprintte şimdiki an (sprint başından hafta, değilse 0);
   ↳ plan kartları `SprintCatalog.card_need` ile ekibin kapasitesinin bir katına büyütülür (`load`: altı kişide 1,15, on bir kişide 1,25, on iki geliştiricide 1,3, on dört kartta 1,6),
   ↳ çünkü katalogun açık kartları (yaklaşık 195 efor) on bir kişiyi kendiliğinden taşırmaz; `a4_solo` v1.0 öncesi Sprint 1, yalnız kurucu, haftasında bir görüşme (1 gün tarama); `a4_devs3` üç geliştirici (3, 4, 2★),
   ↳ kurucu anahtarı kapalı; `a4_six_hover` kurucu, tasarımcı, iki geliştirici, testçi ve 5★ PM, taşmayan 5 kartlık plan, hedef yok, imleç bir adayın "+"ında; `a4_six_pm5` ve `a4_six_pm2` aynı altı kişi, PM 5★ ve 2★;
   ↳ (önceki sprintte PM iki kartı hazırladı, tasarımcı önden çalıştı, plan kapasitenin %115'i, bir düzeltme kartı); `a4_eleven` 11 kişi (kurucu, 2 tasarımcı, 6 geliştirici, 2 testçi), kurucuya term sheet masası, plan %125: test sığmaz;
-  ↳ `a4_eleven_streak` aynı ekip, iki taşan sprint oynanmış, üçüncüsü de taşar; `a4_two_pm` 11 kişi, iki PM (5★ ve 2★) kartları paylaşıp hazırladı, kurucuya satış görüşmesi;
+  ↳ `a4_eleven_streak` aynı ekip, iki taşan sprint oynanmış, üçüncüsü de taşar (ikinci kare `<kök>_tip`: imleç taşan Test satırının etiketinde, taşma paneli);
+  ↳ `a4_two_pm` 11 kişi, iki PM (5★ ve 2★) kartları paylaşıp hazırladı, kurucuya satış görüşmesi;
   ↳ `a4_fifty` 50 çalışan (3 PM, 5 eğitimde, 1 izinde, 1 araştırmada, 6 yalnız Destek'te), kurucu anahtarı kapalı, planlama PM'e devredilmiş; `a4_run_w2` `a4_six_pm5`'in ekibi, düzeltme kartsız planı başlamış, 2. haftanın açılışı,
   ↳ bir kartta karar kâğıdı; ikinci kare `<kök>_02` iki oyun saati sonra (şimdiki an 1,00 → 1,25; `PRODUCTSHOT` ikinci kez basılır, ikisi `now=` taşır);
-  ↳ `a4_eleven_tip` 11 kişi, aynı adlı (soyadları farklı) iki geliştirici, en uzun İngilizce adlı altı kart (dördü talep kartı), imleç konmaz (kare 14 `--lang=en` ile); `a4_twelve_dev` 12 geliştirici,
+  ↳ `a4_eleven_tip` 11 kişi, aynı adlı (soyadları farklı) iki geliştirici, en uzun İngilizce adlı altı kart (dördü talep kartı), ikinci kare `<kök>_tip` (imleç ilk söz çipli satırda: zengin kart ipucu;
+  ↳ kare 14 `--lang=en` ile); `a4_twelve_dev` 12 geliştirici,
   ↳ 2 tasarımcı, 2 testçi, kurucu kapalı, plan %130: üç aşama taşar; `a4_fourteen` 11 kişi, dört düzeltme kartı, 14 kartlık plan (%160); `a4_requests` beş kişi, kurucu kapalı,
   ↳ dört hesabın dört açık talebi (motor bir hat için bir talep verir, bu ERP'de en çok dört); `a4_empty` altı kişi, bir geliştirici eğitimde, boş plan; `a4_run_end` aynı ekibin düzeltme kartsız sprinti 2.
   ↳ haftanın sonunda (sonraki sütunda iki kart), tasarımcı sonraki sütunun kartında önden; `a4_next_prefilled` onun sonraki planlaması: devreden test, önden yapılmış tasarım, plan erken biter; `a4_early` altı kişi, iki kartlık plan,
@@ -336,7 +338,9 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
   ↳ `a4_six_founder_off` `a4_six_pm5`'in planı, kurucu anahtarı kapalı; `a4_six_meetings2` aynı plan, kurucunun haftasında iki satış görüşmesi; `a4_run_table` `a4_eleven`'ın sprinti 1. haftanın ortasında, masa 2 gün tarar;
   ↳ `a4_run_delegate` `a4_run_end`'in sprinti, planlama PM'e devredilmiş (şeritte "{PM} planlıyor" ve ilerleme); `a4_cards_noteam` tasarımcı, geliştirici, testçi ve 5★ PM,
   ↳ kurucu kapalı, üç kartlık plan, plandan sonra PM dışında herkes izinde (`away`; şeritte "Ekip'e git"); `a4_delegate_noteam` aynısı, planlama devredilmiş;
-  ↳ `a4_run_delegate_long` `a4_run_delegate`, PM'in adı havuzların en geniş adı (`pm`: "Jordan Bennett"; şeridin en dar hâli)
+  ↳ `a4_run_delegate_long` `a4_run_delegate`, PM'in adı havuzların en geniş adı (`pm`: "Jordan Bennett"; şeridin en dar hâli); `tip` alanı türe ikinci bir kare ekler:
+  ↳ düz kare, sonra imleç ipucunun sahibine konur ve `<kök>_tip` kaydedilir (`_product_tip_shot`, sahibi `_tip_target`; yoksa `SHOT|tip_missing|<tür>` ve yalnız düz kare)
+  ↳ `tip`li türler: `a4_eleven_tip` "card", `a4_eleven_streak` "cap", `a4_run_w2_bar` "bar", `a4_fix_tip` "fix" (`a4_eleven`), `a4_meet_tip` "founder" (`a4_six_meetings2`), `a4_next_tip` "next" (`a4_run_end`), `a4_pm_tip` "plain"
 - `--event-shot=<bir sprint kâğıdı>` kâğıdı canlı bir ürünün bir kartlı sprintinde kurar (`main._seed_paper_world` `:1036`; kartı bir özellik kartı, B2B pm ve geç kalan sprint kâğıtlarında Marmara Lojistik'in talebi,
   ↳ kök neden kâğıdında hatalı hattın düzeltme kartıdır)
 - Probe kayıt türleri (Ürün): `SPRINT` (her kapanış: sprint, etiket, çıkanlar, devredenler, hız), `SHIP` (sürüm çıkaran kapanış: kapanıştan sonra açık hata, `escaped=` testten kaçan hata sayısı),
@@ -375,6 +379,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - Sonraki sütunun yükü her kipte aynı işlevlerden çıkar (`ProductModel._load`, `_carried`): planlamada ve koşarken devreden zaman ekseninin `out`u, sürüm notunda sonraki sütunun devreden kartlarının kalan ihtiyacı;
   ↳ planlı pay planlamada ve koşarken kartın sprint sonundaki kalan ihtiyacıdır (önden iş düşülmüş, `SprintSystem.prep_gains`in kazancıyla), sürüm notunda bugünkü;
   ↳ ekip satırları `SprintTimeline.row_power`dan (her satırın kişileri `SprintSystem.capacity_of`a)
+- Kart ipucuları açılırken kurulur (`CardTip`, yüzler `ProductModel.stage_face`; çubuğun `_bar_tip`i); `live()` ilk kareye ipucu hesabı yüklemez, satırda yalnız düz alanlar (`module_name`, `fix_full`, `finishes`, `gate`) durur.
 - `remove()` kâğıdın takip kartını (`follow`) reddeder; `ProductModel._row` ve `_next_card` ona Kaldır düğmesi vermez
 - Sol sütun `live()`ın `requests` ve `modules` alanlarını okur; `areas` yalnız çeyrek hedef menüsünün listesidir (`{id, name, goal_text}`), `customers` ve hat başına hata listesi yoktur (`bug_row_of` Destek raporunundur)
 - Adayın `addable`ı `live()`da `null`dır: `ProductModel.resolve_addable` her karede en az bir `can_add` (8 ms) ister, `ghost` imleç "+"a gelince `timeline([aday])` kurar; ikisinin önbelleği her `live()`da atılır

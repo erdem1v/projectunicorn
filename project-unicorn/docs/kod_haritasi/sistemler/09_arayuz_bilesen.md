@@ -121,7 +121,7 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 - Sembol yedeği: koyu zincirler Archivo, Plex, `symbols_flat` (Noto Sans Symbols 2'nin kendi RID'li yüzü: ★ ☆ ✓ ▾ ⌛ ✕).
   Satır yüksekliği yedeğin metriğinden de gelir: `UiFactory.flatten_symbol_face()` (`main.gd` `_ready`) yüzün ascent/descent'ini 9 ile 52 px arasında sıfırlar.
   Krem zincirler düz Noto dosyasıyla biter, metriği dokunulmaz; `build_theme.gd` `_bare` ve `_line_h()` koyu kutunun payını yedeksiz hesaplar. `glyph_audit` her zinciri sınar.
-- Sprint başlığı ve Kapasite ölçüleri: `D_H_SPRINT_HEAD`, `D_H_CAP_HEAD`, `D_H_CAP_ROW` 56, `D_H_CAP_TRACK`, `D_CAP_FILL_INSET`, `D_W_CAP_{TIP,LABEL,NUMBER,BADGE}`,
+- Sprint başlığı ve Kapasite ölçüleri: `D_H_SPRINT_HEAD`, `D_H_CAP_HEAD`, `D_H_CAP_ROW` 56, `D_H_CAP_TRACK`, `D_CAP_FILL_INSET`, `D_W_CAP_{LABEL,NUMBER,BADGE}`, `D_W_TIP` 288 (zengin ipucu), `D_NEED_BOX`,
   `D_W_FACE_SLOT`, `D_STAR_CHIP`, `D_AWAY_ALPHA`, `D_NOTCH_QUARTER`, `D_WEEK_BAR`, `D_BUSY_BAR`, `D_HATCH`, `D_CREW_OVERLAP`; renkler `D_stage_edge/fill/ghost`, `D_hatch_base`.
   ↳ Sağ sütun ve alt şerit: `D_W_NEXT` 300 (sağ sütun, her dilde bu genişlik), `D_H_FOOT` 68, `D_W_START` 204, `D_W_PROGRESS` 300 ve `D_W_PROGRESS_BAR` 120 (en azları), `D_H_LOAD_BAR` 4, `D_W_LOAD_NUM` 64, `D_H_NEXT_STRIP` 8.
   ↳ Devirli koşuda ilerleme çubuğu `D_W_PROGRESS_BAR_TIGHT` 90'a iner, kutu içeriği kadardır (PM'in adı kesilmez).
@@ -140,7 +140,10 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
   `tick` (önden biten aşamaların tek tik kutusu, son bitenin renginde; kutudaki işaret ve renk `BoardRow` sürer), `risk` (hata göstergesi), `ask` ("?" işareti), `fade` (alttaki hapın arkasında solma).
   Sağ sütun: `load` (bir aşamanın yük çubuğu, ekipten taşarsa uyarı rengi), `seg` (sonraki sprintin kartının bir aşama payı, önden yapılan kısmı aşamanın renginde dolu; tek tik kutusu kuralı yalnız panoda).
   `StagePaint.spill` ve `hatch` taramanın statik çizimidir (`SprintNext.CarryRow` da kullanır). `StagePaint.part(kind, aşama, spec, rect)` panonun öğesini kurar;
-  `set_bar(spec)` saat ilerleyince çubuğun hâlini, dolgusunu ve yazısını değiştirir. Çizimi `spec` sürer; ipucu için `tooltip_text` öğeye yazılır (`grid`, `now`, `label`, `fade` fareyi görmezden gelir).
+  `set_bar(spec)` saat ilerleyince çubuğun hâlini, dolgusunu ve yazısını değiştirir. Çizimi `spec` sürer; ipucu için `tooltip_text` öğeye yazılır (`grid`, `now`, `label`, `fade` fareyi görmezden gelir); `tip` ipucunu açılırken kurar.
+- Zengin ipucu (`_make_custom_tooltip`): `CardTip.panel` (kart; yalnız adı, `BoardRow.CardName`), `CapacityView._over_tip` (taşan aşama; `TipBox`); kök `SprintUiShared.tip_column` (menajer temalı, `D_W_TIP`),
+  ↳ yeni varyasyon yok: `TipTitle`, `MetaMuted`, `ValueTextStrong`, `Caption(+Strong, Primary)`; aşama efor kutusu `StagePaint` çubuğu ve etiketidir (`D_NEED_BOX`).
+  ↳ kök `SprintUiShared.TipColumn`: Godot pencereyi satır kıran yazılar genişliğini bilmeden ölçer; asgari boy değiştikçe pencere içeriğin boyuna iner, imlecin altına konur.
 - Sol sütunun varyasyonları yalnız koyu temadadır (master taşımaz, `theme_check` ikisinde geçer): `RequestRow` (+`Hover`, `Planned`), `ModuleRow` (+`Hover`, `Open`), `ModuleCandidate`, `DueChip`, `DueChipSoon`, `MoreLink`
   ↳ `MonoBox` HR ve posta ile ortaktır.
 - Tema yolu: `UiTokens.MENAJER_THEME` `ui_tokens.gd:450`; proje teması `project.godot` `theme/custom` = `master_theme.tres`; Menajer teması taşınan her alt ağacın köküne ve her CanvasLayer köküne elle atanır

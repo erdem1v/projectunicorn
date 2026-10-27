@@ -2757,6 +2757,43 @@ PRODUCT_IN_PLAN_TIP,Bu sprintte kartı var,Has a card in this sprint
 PRODUCT_CAND_IN_PLAN_TIP,Bu sprintin planında,In this sprint's plan
 PRODUCT_STAMP,S{n},S{n}
 PRODUCT_ADD_TO_PLAN,Plana ekle,Add to plan
+PRODUCT_EFFORT_TIP,efor {n},effort {n}
+PRODUCT_EARLY_END_TIP,Bütün kartlar {w}. haftada biter,All cards done in week {w}
+PRODUCT_RISK_TIP,Hata riski {level},Bug risk {level}
+PRODUCT_RISK_LOW,düşük,low
+PRODUCT_RISK_MEDIUM,orta,medium
+PRODUCT_RISK_HIGH,yüksek,high
+PRODUCT_RISK_PREPARED,{name} hazırladı: {before} yerine {now},{name} prepared it: {now} instead of {before}
+PRODUCT_PREPARED_BY,{name} hazırladı,{name} prepared it
+PRODUCT_PM_PREPARED,{name} {stars} hazırladı: efor {before} yerine {now},{name} {stars} prepared it: effort {now} instead of {before}
+PRODUCT_ASK_TIP,{name} bu kartla ilgili soruyor · aç,{name} has a question about this card · open
+PRODUCT_CARRIED_TIP,Önceki sprintten devreden iş,Carried over from the previous sprint
+PRODUCT_LATE_TIP,Sprint sonuna yetişmez,Not done by the sprint end
+PRODUCT_ON_TIME,Sprint sonuna yetişir,Done by the sprint end
+PRODUCT_GATE_MOVES,Sprint başlayınca sonraki sütuna geçer,Moves to the next column when the sprint starts
+PRODUCT_STAGE_READY,{pct} hazır: önceki sprintte önden yapıldı,{pct} ready: done ahead in the previous sprint
+PRODUCT_STAGE_RAW,hazırlanmasaydı efor {n},effort {n} without the preparation
+PRODUCT_STAGE_SHADOW,"{stage}: hazırlanmasaydı efor {before}, şimdi {now}","{stage}: effort {before} without the preparation, now {now}"
+PRODUCT_STAGE_NOW,şu an: {names},now: {names}
+PRODUCT_AHEAD_DONE,önceki sprintte önden bitti,done ahead in the previous sprint
+PRODUCT_STAGE_DONE_NOW,bu sprintte bitti,done this sprint
+PRODUCT_WAIT_FOR,Bekliyor: {name},Waiting for {name}
+PRODUCT_WAIT_DESIGN,Bekliyor: tasarımcılar,Waiting for the designers
+PRODUCT_WAIT_DEV,Bekliyor: geliştiriciler,Waiting for the developers
+PRODUCT_WAIT_TEST,Bekliyor: testçiler,Waiting for the testers
+PRODUCT_WAIT_PRODUCT,Bekliyor: ürün yöneticisi ya da kurucu,Waiting for a product manager or the founder
+PRODUCT_MEETING_SALES,Satış görüşmesi,Sales meeting
+PRODUCT_MEETING_VC,Yatırımcı görüşmesi,Investor meeting
+PRODUCT_MEETING_TABLE,Term sheet masası,Term sheet table
+PRODUCT_DAYS,{n} gün,{n} days
+PRODUCT_DAYS_ONE,{n} gün,{n} day
+PRODUCT_NO_PM_TIP,Ekipte ürün yöneticisi yok,No product manager on the team
+PRODUCT_FOUNDER_CARD,kurucunun kartı,the founder's card
+PRODUCT_PROGRESS_TIP,Efor {done}/{total},Effort {done}/{total}
+PRODUCT_NEXT_LOAD_TIP,{stage} · devreden {carried} · planlı {planned} · ekip {team},{stage} · carried {carried} · planned {planned} · team {team}
+PRODUCT_PREPARING_TIP,{name} hazırlıyor,{name} is preparing it
+PRODUCT_STARTS_AHEAD,önden başlar,starts ahead
+PRODUCT_DONE_AHEAD,önden bitti,done ahead
 PRODUCT_STAGE_RESEARCH,Araştırma,Research
 PRODUCT_STAR_NONE,Henüz hiçbir şirkete yetmez.,Not enough for any company yet.
 PRODUCT_STAR_SKIPPED,1★ şirketler bu alana bakmaz. 2★ şirketler bir başlangıç ister.,1★ companies do not look at this area. 2★ companies want a start.

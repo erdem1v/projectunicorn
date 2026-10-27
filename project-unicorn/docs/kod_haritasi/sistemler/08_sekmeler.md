@@ -31,32 +31,41 @@ Alt klasörler:
 - `scripts/tabs/hr/hr_dossier.gd` (232): Ekip dosyası: kişinin ayrıntı penceresi (`DETAILS["hr_dossier"]`), kişi ayrılınca kendini kapatır.
 - `scripts/tabs/hr/hr_popover.gd` (113): `HRPopover`: çapaya bağlı tek açılır panel (satır menüsü, zam kutusu, sorumlu seçici).
 - `scripts/tabs/hr/hr_ui_shared.gd` (506): `HRUiShared`: koyu tablo kiti (`D_*`), rozetler, moral, deneyim, durum hücresi, `mount_panel_modal`; tabloların dışında da kullanılır.
-- `scripts/tabs/product/product_model.gd` (1142): `ProductModel`: sprint ekranının görünüm sözleşmesi; `live()` GameState/SprintSystem'den Dictionary kurar.
+- `scripts/tabs/product/product_model.gd` (1150): `ProductModel`: sprint ekranının görünüm sözleşmesi; `live()` GameState/SprintSystem'den Dictionary kurar.
   Başlık yorumu yeni ekranın alanlarını da tanımlar: `founder`, `requests`, `modules`, `prep`, çeyreğin saati, merkez ve sonraki sütun eklemeleri, kart satırı; düzeltme işinin efora girişi ve gösterim kuralı.
   Sol sütunun "+" değerleri ve hayalet hesabı `live()`dan ayrıdır: `addable`, `resolve_addable`, `ghost` (kart kimliğiyle sayfanın bir sonraki kurulumuna kadar saklanır).
+  ↳ Kart satırı ipucunun verisini taşır (`module_name`, `fix_full`, `finishes`, `gate`, söz yuvasında müşteri, değer, söz mü); sonraki kart `raw_effort` ve `ahead` (önden işi başlıyor); `stage_face(id, aşama)` ipucunun kişileridir.
 - `scripts/tabs/product/sprint_panel.gd` (305): `SprintPanel`: orta (bu sprint) ve sağ (sonraki sprint, `SprintNext`) sütunlar; orta sütunda başlık (`SprintHead` + `CapacityView`), pano (`SprintBoard`) ve
   ↳ alt şerit (`SprintFoot`), sürüm notunda bugünkü `_release`; sağ sütun 300 px sabit, orta sütun kalanı alır. Yeniden kurulumda pano ve sağ sütunun kaydırması korunur;
   ↳ `running()` ve `set_now(at)` saat hattıdır (pano, Kapasite'nin "yapılan" dolgusu ve alt şeridin ilerlemesi).
-- `scripts/tabs/product/sprint_foot.gd` (144): `SprintFoot`: alt şerit (68 px): solda "Planlamayı devret" (PM'in yüzüyle, PM yokken kilitli), sağda "Sprinti başlat" (ekip yokken kapalı, kartsız planda yanında "0 kart"; basınca
+- `scripts/tabs/product/sprint_foot.gd` (148): `SprintFoot`: alt şerit (68 px): solda "Planlamayı devret" (PM'in yüzüyle, PM yokken kilitli), sağda "Sprinti başlat" (ekip yokken kapalı, kartsız planda yanında "0 kart"; basınca
   ↳ `SprintSystem.begin_planned`) ya da sprint sürerken ilerleme (`set_progress`). Devirde iki kipte de solda PM'in yüzü, "{PM} planlıyor" ve "Planlamayı geri al";
   ↳ sağda planlamada "Kendiliğinden başlar" (kartlı planda ekip yokken onun yerine çıkış yolu), sprint sürerken ilerleme
-  ↳ (çubuğu `D_W_PROGRESS_BAR_TIGHT`e kadar kısalır, ad kesilmez).
-- `scripts/tabs/product/sprint_next.gd` (298): `SprintNext`: sağ sütun: HAZIRLIK (PM satırları ya da "PM yok"), sonraki sprint kutusu (kesikli): aşama yükü (`StagePaint` `load`), DEVREDEN (en çok 4 satır ve "+{n} kart"), KARTLAR
+  ↳ (çubuğu `D_W_PROGRESS_BAR_TIGHT`e kadar kısalır, ad kesilmez); kutunun ipucu "Efor {biten}/{toplam}" `set_progress`ta sayfa kurulmadan yenilenir.
+- `scripts/tabs/product/sprint_next.gd` (336): `SprintNext`: sağ sütun: HAZIRLIK (PM satırları ya da "PM yok"), sonraki sprint kutusu (kesikli): aşama yükü (`StagePaint` `load`), DEVREDEN (en çok 4 satır ve "+{n} kart"), KARTLAR
   ↳ (tür ikonu, ad, efor, aşama şeridi `seg`, önden çalışanların yüzleri, hazırlayan PM; üstüne gelince "↑" ve "×"); her aşama kendi payıdır, önden biten pay kendi renginde dolar; yüzler `FaceCell`te (sığmayanlar "+{n}");
   ↳ ne hazırlamış ne hazırlıkta PM soluk "0 kart hazırladı"; kart ve devreden yoksa yalnız başlık ve aşama yükü.
-- `scripts/tabs/product/sprint_board.gd` (324): `SprintBoard`: panonun sabit başlığı ("{n} KART", erken kapanış bayrağı, hafta etiketleri), kayan gövdesi (ızgara, kart satırları, "EKLENEBİLİR",
-  hayalet satır, şimdiki an çizgisi), "aşağıda {n} kart daha" hapı (katlamanın altında yetişmeyen kart varsa tehlike renginde ve ipucu "{n} kart yetişmez", yalnız o zaman imleci tutar ve tekerleği panoya iletir; sona kaydırınca gizlenir).
-- `scripts/tabs/product/board_row.gd` (397): `BoardRow`: panonun bir kart satırı: bilgi sütunu (ad, R1, efor, modül, durum yuvası, PM ya da "?" yuvası, "→" ve "×"),
+  ↳ İpuçları: PM satırı (ad, yıldız, hazırladığı kartlar), "PM yok", aşama yükü, devreden satırı ve "+{n} kart"ın kalanları, kartın adı, aşama payı ve yüzleri (`_part_tip`), hazırlayan PM.
+- `scripts/tabs/product/sprint_board.gd` (332): `SprintBoard`: panonun sabit başlığı ("{n} KART", erken kapanış bayrağı, hafta etiketleri), kayan gövdesi (ızgara, kart satırları, "EKLENEBİLİR",
+  hayalet satır, şimdiki an çizgisi), "aşağıda {n} kart daha" hapı (katlamanın altında yetişmeyen kart varsa tehlike renginde ve ipucu "{n} kart yetişmez", yalnız o zaman imleci tutar ve tekerleği panoya iletir; sona kaydırınca gizlenir);
+  ↳ erken kapanışın bayrağı, yazısı ve taralı alanı "Bütün kartlar {w}. haftada biter" ipucunu taşır (alan yalnız satırların altında kalan boşlukta imleci alır).
+- `scripts/tabs/product/board_row.gd` (538): `BoardRow`: panonun bir kart satırı: bilgi sütunu (ad, R1, efor, modül, durum yuvası, PM ya da "?" yuvası, "→" ve "×"),
   zaman ekseni (çubuk, bekleme, gölge, tarama, tik kutusu (art arda önden biten aşamalar tek kutu, son bitenin renginde), sprint dışı pay, yüzler); `set_now`.
+  ↳ İpuçları: zengin kart ipucu yalnız adda (`CardName`, `CardTip`); çubuğun düz ipucu açılırken okunur (`_bar_tip`, `StagePaint.tip`); bekleme, gölge, tarama, tik kutusu, risk, efor, modül, yuvalar düz ipucu taşır;
+  ↳ kapısı kapanmış kartta (`gate`) satırın düz ipucu (adın üstünde de): kapı gerekçesi ve sonraki sütuna geçeceği.
+- `scripts/tabs/product/card_tip.gd` (131): `CardTip`: zengin kart ipucu paneli (`panel(kart, ekipte PM var mı)`): başlık, aşama efor kutuları, kim çalışıyor ve görüşmeler (tür başına toplam gün), yetişir mi, künye.
 - `scripts/tabs/product/sprint_head.gd` (120): `SprintHead`: SPRINT N, çeyrek çentikleri, MVP ve hafta rozetleri, ekip rozeti, çeyrek hedef seçicisi (`pick_goal`); rozetler akar, kesilmez.
-- `scripts/tabs/product/capacity_view.gd` (326): `CapacityView`: KAPASİTE başlığı ve öneri satırı (`apply_lead`), üç aşama satırı (oluk, dolgu, Efor, rozet, yüzler, kümeler), taşma ipucu;
+- `scripts/tabs/product/capacity_view.gd` (333): `CapacityView`: KAPASİTE başlığı ve öneri satırı (`apply_lead`), üç aşama satırı (oluk, dolgu, Efor, rozet, yüzler, kümeler), taşma ipucu paneli (`D_W_TIP`);
+  ↳ rozetin düz ipucu "Sığıyor" ya da "{n} efor sonraki sprinte kalır";
   `set_ghost`, `set_done`; etiket sütunu üç satırda aynı genişliktedir (en az `D_W_CAP_LABEL`, dilin en uzun aşama adı), sayı sütunu içeriğiyle genişler (`Cell`).
-- `scripts/tabs/product/stage_paint.gd` (353): `StagePaint`: sprint ekranının tek çizim sınıfı (Kapasite: `groove`, `busy`, `bracket`; pano: `grid`, `now`, `early`, `bar`, `label`, `wait`, `shadow`, `meet`, `tick`,
+- `scripts/tabs/product/stage_paint.gd` (359): `StagePaint`: sprint ekranının tek çizim sınıfı (Kapasite: `groove`, `busy`, `bracket`; pano: `grid`, `now`, `early`, `bar`, `label`, `wait`, `shadow`, `meet`, `tick`,
   `risk`, `ask`, `fade`; sağ sütun: `load`, `seg`); eleman başına çizim sınıfı yoktur. `StagePaint.spill` ve `hatch` taramanın statik çizimidir (`SprintNext.CarryRow` da kullanır).
+  ↳ `tip` (Callable) verilirse ipucu açılırken `tooltip_text`in yerine ondan okunur (`_get_tooltip`; koşan sprintte bayatlamaz).
 - `scripts/tabs/product/sprint_card.gd` (34): `SprintCard`: ÇEYREK'in mini kartı (`State`); yalnız sözlüğünü çizer. Bu sprintin kartı `BoardRow`, sonraki sprintin kartı `SprintNext`in satırıdır.
-- `scripts/tabs/product/sprint_ui_shared.gd` (450): `SprintUiShared`: ortak statik parçalar (label, box, pad, avatar, `face`, `face_slot`, `open_goal_menu`, ÇEYREK çubuğu, `switch`, `due_chip`,
-  ↳ `row_keys`, `way_out`, `add_key`, `keep_scroll`); Ürün dışında 10+ dosya kullanır.
-- `scripts/tabs/product/area_panel.gd` (311): `AreaPanel`: sol sütun (SPRINT ve ÇEYREK): Geçmiş, MÜŞTERİ TALEPLERİ, MODÜLLER ve açık modülün adayları; "+" değerleri sonraki karelerde gelir.
+- `scripts/tabs/product/sprint_ui_shared.gd` (530): `SprintUiShared`: ortak statik parçalar (label, box, pad, avatar, `face`, `face_slot`, `open_goal_menu`, ÇEYREK çubuğu, `switch`, `due_chip`,
+  ↳ `row_keys`, `way_out`, `add_key`, `keep_scroll`); Ürün dışında 10+ dosya kullanır. İpucu parçaları: `STAGE_KEYS`, `stage_name`, `stage_icon`, `stage_done`, `done_text`, `named_stars`, `effort_tip`,
+  ↳ `prepared_tip`, `meet_lines`, `meet_lines_of` (`total`: türü başına günler toplanır), `tip_column` (zengin ipucunun kökü).
+- `scripts/tabs/product/area_panel.gd` (312): `AreaPanel`: sol sütun (SPRINT ve ÇEYREK): Geçmiş, MÜŞTERİ TALEPLERİ, MODÜLLER ve açık modülün adayları; "+" değerleri sonraki karelerde gelir.
 - `scripts/tabs/product/quarter_view.gd` (179): `QuarterView`: ÇEYREK görünümü: hedef şeridi (menü SprintHead ile ortak), sol sütun (`AreaPanel`), altı sprint sütunu, onay düğmeleri.
 - `scripts/tabs/product/overview_view.gd` (96): GENEL BAKIŞ kâğıdı (şimdilik yalnız Sunucu bloğu; Azalt düğmesi kapasite 0 birimdeyken `server.decrease.off` ile kapalı); class_name yok.
 - `scripts/tabs/product/type_picker.gd` (116): `TypePicker`: MVP öncesi tek ekranlık tür ve ad seçici (iki pazar sütunu, kart pazarı da seçer); taslak `SprintSystem`'e yazılır, onay `chosen` olur.

@@ -27,6 +27,8 @@ var _more_label: Label
 var _more_glyph: TextureRect
 var _has_candidates := false
 var _ctx: Dictionary
+## Erken kapanışın ipucu (bütün kartların bittiği hafta); sprint erken bitmiyorsa boş.
+var _early_tip := ""
 
 
 ## `nobody` doluysa (kimse çalışamıyor) gövdenin ortasında satırların yerine durur.
@@ -38,7 +40,8 @@ func setup(model: Dictionary, nobody: Control) -> void:
 	_more = null
 	var c: Dictionary = model.center
 	var running: bool = c.mode == "active"
-	_ctx = {"mode": c.mode, "now": c.now_at, "people": c.people, "candidate": false, "hot": false}
+	_ctx = {"mode": c.mode, "now": c.now_at, "people": c.people, "candidate": false, "hot": false, "team_pm": not model.prep.pms.is_empty()}
+	_early_tip = tr("PRODUCT_EARLY_END_TIP").format({"w": int(c.close_at)}) if c.close_at < float(c.weeks) - SprintSystem.EPS else ""
 	add_theme_constant_override("separation", 0)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -75,11 +78,13 @@ func _head(c: Dictionary) -> Control:
 		head.draw_rect(Rect2(0.0, head.size.y - UiTokens.BORDER_HAIRLINE, head.size.x, UiTokens.BORDER_HAIRLINE), UiTokens.D_LINE_2))
 	var left := SprintUiShared.box(UiTokens.SPACE_L)
 	left.add_child(SprintUiShared.label(Fmt.upper(tr(Fmt.count_key("PRODUCT_STATUS_CARDS", c.cards.size())).format({"n": c.cards.size()})), &"Eyebrow"))
-	var early: bool = c.close_at < float(c.weeks) - SprintSystem.EPS
+	var early: bool = _early_tip != ""
 	if early:
 		var end := SprintUiShared.box(UiTokens.SPACE_XS)
 		end.add_child(UiFactory.make_glyph(SprintUiShared.FLAG, UiTokens.D_ICON_TAG, UiTokens.D_INK_2))
 		end.add_child(SprintUiShared.label(Fmt.upper(tr("PRODUCT_EARLY_END")), &"Eyebrow", UiTokens.D_INK_2))
+		end.mouse_filter = Control.MOUSE_FILTER_PASS
+		end.tooltip_text = _early_tip
 		left.add_child(end)
 	_at_foot(head, left, 0.0)
 	var per: float = UiTokens.D_W_TIMELINE / UiTokens.D_TIMELINE_WEEKS
@@ -90,6 +95,8 @@ func _head(c: Dictionary) -> Control:
 		UiTokens.D_W_CARD_INFO + roundf(per * c.weeks) + UiTokens.SPACE_M)
 	if early:
 		var flag := UiFactory.make_glyph(SprintUiShared.FLAG, UiTokens.D_ICON_TAG, UiTokens.D_INK_2)
+		flag.mouse_filter = Control.MOUSE_FILTER_PASS
+		flag.tooltip_text = _early_tip
 		_at_foot(head, flag, UiTokens.D_W_CARD_INFO + roundf(per * c.close_at) - UiTokens.SPACE_S)
 	return head
 
@@ -118,11 +125,12 @@ func _body(c: Dictionary, hover_card: String, running: bool) -> Control:
 	var per: float = UiTokens.D_W_TIMELINE / UiTokens.D_TIMELINE_WEEKS
 	var under: Array = [StagePaint.part(&"grid", "", {"px": per, "weeks": c.weeks}, Rect2())]
 	under[0].set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	if c.close_at < float(c.weeks) - SprintSystem.EPS:
+	if _early_tip != "":
 		var early: StagePaint = StagePaint.part(&"early", "", {"from": c.close_at, "to": c.weeks}, Rect2())
 		early.anchor_bottom = 1.0
 		early.offset_left = roundf(per * c.close_at)
 		early.offset_right = roundf(per * c.weeks)
+		early.tooltip_text = _early_tip
 		under.append(early)
 	layers.add_child(_lane_layer(under))
 	var rows := SprintUiShared.column(0)

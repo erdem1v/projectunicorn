@@ -58,8 +58,8 @@ func _header_and_capacity(m: Dictionary) -> void:
 	m.next = {"sprint": m.next.sprint, "carried": [], "load": stages.map(func(stage: String) -> Dictionary:
 		return {"stage": stage, "carried": 0.0, "planned": 0.0, "team": bar.total / 3.0}),
 		"cards": m.next.cards.map(func(card: Dictionary) -> Dictionary:
-			return {"id": card.id, "kind": card.kind, "name": card.name, "effort": card.effort, "parts": [], "prep": null,
-				"buttons": ["pull", "remove"] if c.mode == "plan" else ["remove"]})}
+			return {"id": card.id, "kind": card.kind, "name": card.name, "effort": card.effort, "raw_effort": card.effort, "ahead": false,
+				"parts": [], "prep": null, "buttons": ["pull", "remove"] if c.mode == "plan" else ["remove"]})}
 	m.quarter.merge({"q": 1, "year": 2012, "pos": 1, "total": 6})
 	var goal: Variant = m.quarter.goal
 	m.quarter.goal = {"area_id": "", "area_name": "", "meter": null} if goal == null else {"area_id": goal.area_id,

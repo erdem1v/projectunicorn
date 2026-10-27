@@ -36,6 +36,8 @@ static var _icons: Dictionary = {}
 var kind: StringName
 var stage := ""
 var spec: Dictionary = {}
+## Verilmişse ipucu açılırken `tooltip_text`in yerine bundan okunur (koşan sprintte saatle değişen ipucu kurulurken yazılmaz).
+var tip: Callable
 
 
 static func groove(stage_id: String, groove_spec: Dictionary) -> StagePaint:
@@ -93,6 +95,10 @@ static func part(part_kind: StringName, stage_id: String, part_spec: Dictionary,
 static func text_width(text: String, variation := &"StageNum") -> float:
 	var theme: Theme = load(UiTokens.MENAJER_THEME)
 	return theme.get_font(&"font", variation).get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, theme.get_font_size(&"font_size", variation)).x
+
+
+func _get_tooltip(_at_position: Vector2) -> String:
+	return tip.call() if tip.is_valid() else tooltip_text
 
 
 ## Çubuğun durumunu, yazısını ve dolgusunu değiştirir (saat ilerleyince); yeniden çizer.

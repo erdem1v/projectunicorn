@@ -90,6 +90,10 @@ func _pm_row(pm: Dictionary, tight: bool) -> PanelContainer:
 	var line := SprintUiShared.box(UiTokens.SPACE_L)
 	row.add_child(line)
 	line.add_child(SprintUiShared.face_slot(pm.person, UiTokens.D_AVATAR_ROW))
+	var tip: PackedStringArray = [SprintUiShared.named_stars(pm.person)]
+	if not pm.cards.is_empty():
+		tip.append(", ".join(pm.cards))
+	row.tooltip_text = SprintUiShared.SEP.join(tip)
 	var words := SprintUiShared.column(UiTokens.SPACE_XXS)
 	words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	words.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -99,6 +103,7 @@ func _pm_row(pm: Dictionary, tight: bool) -> PanelContainer:
 	var n: int = pm.cards.size()
 	var state: String = tr("PRODUCT_PM_PREPARING") if n == 0 and pm.preparing else tr(Fmt.count_key("PRODUCT_PM_CARDS", n)).format({"n": n})
 	words.add_child(SprintUiShared.prose(Fmt.cap_first(state), &"CaptionFaint" if n == 0 and not pm.preparing else &"Caption"))
+	HRUiShared.set_mouse_ignore(line)
 	return row
 
 
@@ -114,6 +119,8 @@ func _no_pm() -> PanelContainer:
 	disc.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	line.add_child(disc)
 	line.add_child(SprintUiShared.label(tr("PRODUCT_NO_PM"), &"DataStrong", UiTokens.D_INK_OFF))
+	HRUiShared.set_mouse_ignore(line)
+	row.tooltip_text = tr("PRODUCT_NO_PM_TIP")
 	return row
 
 
@@ -152,6 +159,8 @@ func _section(key: String) -> Label:
 ## Bir aşamanın yükü: ikon, çubuk ve "{devreden + planlı}/{ekip}" (aşarsa uyarı renginde).
 func _load_row(row: Dictionary) -> HBoxContainer:
 	var line := SprintUiShared.box(UiTokens.SPACE_S)
+	line.tooltip_text = tr("PRODUCT_NEXT_LOAD_TIP").format({"stage": SprintUiShared.stage_name(row.stage), "carried": roundi(row.carried),
+		"planned": roundi(row.planned), "team": roundi(row.team)})
 	line.add_child(UiFactory.make_glyph(SprintUiShared.ROLE_ICONS[row.stage], UiTokens.D_ICON_TAG, UiTokens.D_stage(row.stage)))
 	var bar := StagePaint.part(&"load", row.stage, {"carried": row.carried, "planned": row.planned, "team": row.team}, Rect2())
 	bar.custom_minimum_size.y = UiTokens.D_H_LOAD_BAR
@@ -175,11 +184,7 @@ func _carried(col: VBoxContainer, rows: Array) -> void:
 	for row: Dictionary in shown:
 		col.add_child(_carry_row(row))
 	if shown.size() < rows.size():
-		var rest: Array = rows.slice(CARRIED_ROWS)
-		var effort := 0.0
-		for row: Dictionary in rest:
-			effort += row.effort
-		col.add_child(_more_row(rest.size(), effort))
+		col.add_child(_more_row(rows.slice(CARRIED_ROWS)))
 
 
 func _carry_row(row: Dictionary) -> CarryRow:
@@ -190,12 +195,20 @@ func _carry_row(row: Dictionary) -> CarryRow:
 	content.add_child(_icon(SprintUiShared.ROLE_ICONS[row.stage], UiTokens.D_stage(row.stage)))
 	content.add_child(_name(String(row.card), &"CaptionPrimary"))
 	content.add_child(_figure(str(roundi(row.effort)), &"CaptionStrong", UiTokens.D_INK_1))
+	line.tooltip_text = SprintUiShared.SEP.join([row.card, SprintUiShared.stage_name(row.stage), SprintUiShared.effort_tip(roundi(row.effort))])
 	return line
 
 
-func _more_row(n: int, effort: float) -> PanelContainer:
+## Beşten çok devredende sığmayanların toplu satırı; ipucu her kalanı "{kart} · {aşama} {efor}" diye sıralar.
+func _more_row(rest: Array) -> PanelContainer:
+	var n: int = rest.size()
+	var effort := 0.0
+	for row: Dictionary in rest:
+		effort += row.effort
 	var line := PanelContainer.new()
 	line.theme_type_variation = &"CarriedRest"
+	line.tooltip_text = "\n".join(rest.map(func(row: Dictionary) -> String:
+		return SprintUiShared.SEP.join([row.card, SprintUiShared.stage_name(row.stage) + " " + str(roundi(row.effort))])))
 	var content := SprintUiShared.box(UiTokens.SPACE_M)
 	line.add_child(content)
 	content.add_child(_icon(SprintUiShared.PLUS, UiTokens.D_INK_3))
@@ -236,6 +249,10 @@ func _card(card: Dictionary) -> PanelContainer:
 	row.theme_type_variation = &"NextCard"
 	var col := SprintUiShared.column(UiTokens.SPACE_S)
 	row.add_child(col)
+	var tip: PackedStringArray = [card.name, SprintUiShared.effort_tip(card.effort)]
+	if card.ahead:
+		tip.append(tr("PRODUCT_STARTS_AHEAD"))
+	row.tooltip_text = SprintUiShared.SEP.join(tip)
 	var top := SprintUiShared.box(UiTokens.SPACE_M)
 	col.add_child(top)
 	top.add_child(_icon(SprintUiShared.KIND_ICON % card.kind, UiTokens.D_INK_3))
@@ -247,14 +264,27 @@ func _card(card: Dictionary) -> PanelContainer:
 		seg.custom_minimum_size.y = UiTokens.D_H_NEXT_STRIP
 		seg.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		seg.size_flags_stretch_ratio = part.effort
+		seg.tooltip_text = _part_tip(part)
 		strip.add_child(seg)
 	col.add_child(strip)
 	if card.parts.any(func(part: Dictionary) -> bool: return not part.people.is_empty()):
 		col.add_child(_faces(card.parts))
 	if card.prep != null:
-		col.add_child(_prep(card.prep))
+		col.add_child(_prep(card))
 	row.add_child(_keys(row, card))
 	return row
+
+
+## Aşama payının ipucu: "{aşama} · efor {n}", önden yapılan kısım (bittiyse "önden bitti", yoksa yüzdesi) ve önden çalışanların adları.
+func _part_tip(part: Dictionary) -> String:
+	var tip: PackedStringArray = [SprintUiShared.stage_name(part.stage), SprintUiShared.effort_tip(roundi(part.effort))]
+	if part.done >= part.effort - SprintSystem.EPS:
+		tip.append(tr("PRODUCT_DONE_AHEAD"))
+	elif part.done > SprintSystem.EPS:
+		tip.append(Fmt.percent(part.done / part.effort * 100.0, 0))
+	if not part.people.is_empty():
+		tip.append(", ".join(part.people.map(func(person: Dictionary) -> String: return person.name)))
+	return SprintUiShared.SEP.join(tip)
 
 
 ## Önden çalışanların yüzleri kendi aşama payının altında: pay başına bir hücre (`FaceCell`), şeritle aynı oranda.
@@ -263,20 +293,28 @@ func _faces(parts: Array) -> HBoxContainer:
 	row.custom_minimum_size.y = UiTokens.D_AVATAR_ROW_SM
 	for part: Dictionary in parts:
 		var cell := FaceCell.new(part.people)
+		HRUiShared.set_mouse_ignore(cell)
+		cell.mouse_filter = Control.MOUSE_FILTER_PASS
+		cell.tooltip_text = _part_tip(part)
 		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		cell.size_flags_stretch_ratio = part.effort
 		row.add_child(cell)
 	return row
 
 
-## Hazırlayan PM: yüzü ve kum saati "hazırlanıyor" ya da tik "hazır".
-func _prep(prep: Dictionary) -> HBoxContainer:
+## Hazırlayan PM: yüzü ve kum saati "hazırlanıyor" ya da tik "hazır"; ipucu hazırsa kısalttığı efor, değilse hazırlıyor olduğu.
+func _prep(card: Dictionary) -> HBoxContainer:
+	var prep: Dictionary = card.prep
 	var line := SprintUiShared.box(UiTokens.SPACE_M)
 	line.custom_minimum_size.y = UiTokens.D_AVATAR_ROW_SM
 	line.add_child(SprintUiShared.avatar(prep.pm, UiTokens.D_AVATAR_ROW_SM))
 	var ready: bool = prep.done >= 1.0 - SprintSystem.EPS
 	line.add_child(UiFactory.make_glyph(SprintUiShared.CHECK if ready else SprintUiShared.HOURGLASS, UiTokens.D_ICON_TAG, UiTokens.D_INK_3))
 	line.add_child(SprintUiShared.label(Fmt.cap_first(tr("PRODUCT_READY" if ready else "PRODUCT_PREPARING")), &"Caption"))
+	HRUiShared.set_mouse_ignore(line)
+	line.mouse_filter = Control.MOUSE_FILTER_PASS
+	line.tooltip_text = (SprintUiShared.prepared_tip(prep.pm, card.raw_effort, card.effort) if ready
+		else tr("PRODUCT_PREPARING_TIP").format({"name": prep.pm.name}))
 	return line
 
 

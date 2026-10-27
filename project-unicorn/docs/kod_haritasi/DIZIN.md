@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git 07364a5 · 2026-10-27 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 8fbb189 · 2026-10-27 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -26,7 +26,7 @@ Bölümler: Autoload'lar · Dosyalar · Sinyaller · Sahneler · Veri dosyaları
 - AudioManager · scripts/autoload/audio_manager.gd
 - MCPRuntime · addons/godot_mcp_runtime/mcp_runtime_autoload.gd · uid://bvdfxyfwqs84q
 
-## Dosyalar (257 .gd)
+## Dosyalar (258 .gd)
 
 Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar dahil). Autoload dosyalarında class_name yerine [AutoloadAdı].
 
@@ -122,9 +122,9 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/events/tools/vocab_gen.gd · 376 · EvVocabGen · RefCounted · 0 sinyal · 5 func
 - scripts/events/tools/why.gd · 268 · EvWhy · RefCounted · 0 sinyal · 8 func
 
-### scripts/main/ (2 dosya, 6206 satır)
+### scripts/main/ (2 dosya, 6279 satır)
 - scripts/main/game_shell.gd · 240 · - · Control · 0 sinyal · 13 func
-- scripts/main/main.gd · 5966 · - · Node · 0 sinyal · 217 func
+- scripts/main/main.gd · 6039 · - · Node · 0 sinyal · 219 func
 
 ### scripts/menu/ (5 dosya, 294 satır)
 - scripts/menu/continue_card.gd · 19 · - · Button · 0 sinyal · 1 func
@@ -154,7 +154,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/onboarding/steps/origin_traits_step.gd · 332 · - · OnboardingStep · 0 sinyal · 18 func
 - scripts/onboarding/steps/step_base.gd · 118 · OnboardingStep · Control · 1 sinyal · 10 func
 
-### scripts/systems/ (72 dosya, 24676 satır)
+### scripts/systems/ (72 dosya, 24682 satır)
 - scripts/systems/angel_round_system.gd · 52 · AngelRoundSystem · RefCounted · 0 sinyal · 1 func
 - scripts/systems/b2b_constants.gd · 291 · B2BConstants · RefCounted · 0 sinyal · 9 func
 - scripts/systems/b2b_sales_system.gd · 711 · B2BSalesSystem · RefCounted · 0 sinyal · 47 func
@@ -217,7 +217,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/systems/skill_check.gd · 104 · SkillCheck · RefCounted · 0 sinyal · 8 func
 - scripts/systems/sprint_bridges.gd · 378 · SprintBridges · RefCounted · 0 sinyal · 24 func
 - scripts/systems/sprint_bugs.gd · 176 · SprintBugs · RefCounted · 0 sinyal · 16 func
-- scripts/systems/sprint_catalog.gd · 984 · SprintCatalog · RefCounted · 0 sinyal · 88 func
+- scripts/systems/sprint_catalog.gd · 990 · SprintCatalog · RefCounted · 0 sinyal · 88 func
 - scripts/systems/sprint_prep.gd · 134 · SprintPrep · RefCounted · 0 sinyal · 9 func
 - scripts/systems/sprint_system.gd · 2068 · SprintSystem · RefCounted · 0 sinyal · 171 func
 - scripts/systems/sprint_timeline.gd · 326 · SprintTimeline · RefCounted · 0 sinyal · 15 func
@@ -254,21 +254,22 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/tabs/hr/hr_popover.gd · 113 · HRPopover · Control · 0 sinyal · 8 func
 - scripts/tabs/hr/hr_ui_shared.gd · 506 · HRUiShared · RefCounted · 0 sinyal · 32 func
 
-### scripts/tabs/product/ (15 dosya, 4586 satır)
-- scripts/tabs/product/area_panel.gd · 314 · AreaPanel · MarginContainer · 4 sinyal · 18 func
-- scripts/tabs/product/board_row.gd · 397 · BoardRow · PanelContainer · 1 sinyal · 21 func
-- scripts/tabs/product/capacity_view.gd · 326 · CapacityView · PanelContainer · 1 sinyal · 20 func
+### scripts/tabs/product/ (16 dosya, 5047 satır)
+- scripts/tabs/product/area_panel.gd · 312 · AreaPanel · MarginContainer · 4 sinyal · 18 func
+- scripts/tabs/product/board_row.gd · 538 · BoardRow · PanelContainer · 1 sinyal · 31 func
+- scripts/tabs/product/capacity_view.gd · 333 · CapacityView · PanelContainer · 1 sinyal · 21 func
+- scripts/tabs/product/card_tip.gd · 131 · CardTip · RefCounted · 0 sinyal · 9 func
 - scripts/tabs/product/overview_view.gd · 96 · - · HBoxContainer · 1 sinyal · 6 func
-- scripts/tabs/product/product_model.gd · 1133 · ProductModel · RefCounted · 0 sinyal · 65 func
+- scripts/tabs/product/product_model.gd · 1150 · ProductModel · RefCounted · 0 sinyal · 66 func
 - scripts/tabs/product/quarter_view.gd · 179 · QuarterView · VBoxContainer · 2 sinyal · 7 func
-- scripts/tabs/product/sprint_board.gd · 324 · SprintBoard · VBoxContainer · 1 sinyal · 15 func
+- scripts/tabs/product/sprint_board.gd · 332 · SprintBoard · VBoxContainer · 1 sinyal · 15 func
 - scripts/tabs/product/sprint_card.gd · 34 · SprintCard · PanelContainer · 0 sinyal · 1 func
-- scripts/tabs/product/sprint_foot.gd · 144 · SprintFoot · HBoxContainer · 1 sinyal · 10 func
+- scripts/tabs/product/sprint_foot.gd · 148 · SprintFoot · HBoxContainer · 1 sinyal · 10 func
 - scripts/tabs/product/sprint_head.gd · 117 · SprintHead · HBoxContainer · 1 sinyal · 7 func
-- scripts/tabs/product/sprint_next.gd · 298 · SprintNext · ScrollContainer · 1 sinyal · 19 func
+- scripts/tabs/product/sprint_next.gd · 336 · SprintNext · ScrollContainer · 1 sinyal · 20 func
 - scripts/tabs/product/sprint_panel.gd · 305 · SprintPanel · HBoxContainer · 1 sinyal · 15 func
-- scripts/tabs/product/sprint_ui_shared.gd · 450 · SprintUiShared · RefCounted · 0 sinyal · 35 func
-- scripts/tabs/product/stage_paint.gd · 353 · StagePaint · Control · 0 sinyal · 22 func
+- scripts/tabs/product/sprint_ui_shared.gd · 561 · SprintUiShared · RefCounted · 0 sinyal · 48 func
+- scripts/tabs/product/stage_paint.gd · 359 · StagePaint · Control · 0 sinyal · 23 func
 - scripts/tabs/product/type_picker.gd · 116 · TypePicker · VBoxContainer · 1 sinyal · 4 func
 
 ### scripts/tabs/rnd/ (5 dosya, 1316 satır)
@@ -278,11 +279,11 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/tabs/rnd/rnd_tree_view.gd · 433 · RnDTreeView · Control · 1 sinyal · 25 func
 - scripts/tabs/rnd/rnd_ui_shared.gd · 290 · RnDUiShared · RefCounted · 0 sinyal · 22 func
 
-### scripts/theme/ (4 dosya, 3545 satır)
+### scripts/theme/ (4 dosya, 3546 satır)
 - scripts/theme/build_theme.gd · 1652 · - · SceneTree · 0 sinyal · 31 func
 - scripts/theme/theme_check.gd · 271 · - · SceneTree · 0 sinyal · 11 func
 - scripts/theme/ui_factory.gd · 543 · UiFactory · RefCounted · 0 sinyal · 39 func
-- scripts/theme/ui_tokens.gd · 1079 · UiTokens · RefCounted · 0 sinyal · 45 func
+- scripts/theme/ui_tokens.gd · 1080 · UiTokens · RefCounted · 0 sinyal · 45 func
 
 ### scripts/ui/ (1 dosya, 138 satır)
 - scripts/ui/menu_backdrop.gd · 138 · - · Control · 1 sinyal · 6 func
@@ -387,15 +388,15 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
   ↳ clock_batch_ended connect: scripts/events/core/signals.gd:54, scripts/systems/incident_system.gd:314, scripts/systems/sprint_system.gd:1882, scripts/tabs/rnd_tab.gd:81, scripts/ui/components/research_bar.gd:64 +1
 - tab_changed(tab_id: String) · scripts/autoload/event_bus.gd:29
   ↳ tab_changed emit: scripts/main/game_shell.gd:47,174, scripts/main/main.gd:401,583,1588,1591 +54
-  ↳ tab_changed connect: scripts/main/main.gd:5262, scripts/ui/components/left_tabs.gd:105, scripts/ui/components/research_bar.gd:63, scripts/ui/components/window_layer.gd:62
-- finance_subpage_requested(page_id: String) · scripts/autoload/event_bus.gd:32 · emit: scripts/main/main.gd:4862,5344, scripts/tabs/events/mail_pane.gd:839 · connect: scripts/tabs/finance_tab.gd:58
-- goto_tab_requested(tab_id: String, subpage: String) · scripts/autoload/event_bus.gd:34 · emit: scripts/events/core/effects.gd:629 · connect: scripts/main/main.gd:5261
+  ↳ tab_changed connect: scripts/main/main.gd:5335, scripts/ui/components/left_tabs.gd:105, scripts/ui/components/research_bar.gd:63, scripts/ui/components/window_layer.gd:62
+- finance_subpage_requested(page_id: String) · scripts/autoload/event_bus.gd:32 · emit: scripts/main/main.gd:4935,5417, scripts/tabs/events/mail_pane.gd:839 · connect: scripts/tabs/finance_tab.gd:58
+- goto_tab_requested(tab_id: String, subpage: String) · scripts/autoload/event_bus.gd:34 · emit: scripts/events/core/effects.gd:629 · connect: scripts/main/main.gd:5334
 - settings_requested() · scripts/autoload/event_bus.gd:38 · emit: scripts/main/main.gd:3058, scripts/menu/main_menu.gd:56, scripts/modals/system_menu_modal.gd:39, scripts/ui/components/left_tabs.gd:95 · connect: scripts/main/main.gd:89
 - confirm_requested(config: Dictionary) · scripts/autoload/event_bus.gd:41
-  ↳ confirm_requested emit: scripts/main/main.gd:3075,5729, scripts/modals/save_load_modal.gd:212, scripts/modals/settings_modal.gd:269, scripts/modals/system_menu_modal.gd:78, scripts/modals/term_sheet_table_scene.gd:388 +10
+  ↳ confirm_requested emit: scripts/main/main.gd:3075,5802, scripts/modals/save_load_modal.gd:212, scripts/modals/settings_modal.gd:269, scripts/modals/system_menu_modal.gd:78, scripts/modals/term_sheet_table_scene.gd:388 +10
   ↳ confirm_requested connect: scripts/main/main.gd:91
 - language_changed(locale: String) · scripts/autoload/event_bus.gd:43
-  ↳ language_changed emit: scripts/autoload/localization.gd:88, scripts/main/main.gd:4241
+  ↳ language_changed emit: scripts/autoload/localization.gd:88, scripts/main/main.gd:4245
   ↳ language_changed connect: scripts/autoload/character_registry.gd:16, scripts/modals/system_menu_modal.gd:29, scripts/ui/components/build_bar.gd:40, scripts/ui/components/left_tabs.gd:129, scripts/ui/components/news_ticker.gd:79 +8
 - palette_changed(colorblind: bool) · scripts/autoload/event_bus.gd:47
   ↳ palette_changed emit: scripts/modals/settings_modal.gd:251,282
@@ -463,11 +464,11 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
   ↳ event_triggered connect: scripts/events/tools/harness.gd:103, scripts/events/tools/plausibility.gd:158, scripts/tabs/finance/finance_ozet_view.gd:82, scripts/tabs/hr_tab.gd:81, scripts/tabs/hunt_tab.gd:53 +14
 - event_resolved(event_id: String, choice_index: int) · scripts/autoload/event_bus.gd:119
   ↳ event_resolved emit: scripts/events/core/engine.gd:631,672
-  ↳ event_resolved connect: scripts/autoload/save_manager.gd:63, scripts/main/game_shell.gd:29, scripts/main/main.gd:5259, scripts/systems/incident_system.gd:313, scripts/systems/sprint_system.gd:1547 +13
-- modal_requested(event: GameEvent) · scripts/autoload/event_bus.gd:120 · emit: scripts/events/core/engine.gd:607 · connect: scripts/events/tools/harness.gd:99, scripts/main/main.gd:5258, scripts/debug/endgame_smoke.gd:6334,19943
+  ↳ event_resolved connect: scripts/autoload/save_manager.gd:63, scripts/main/game_shell.gd:29, scripts/main/main.gd:5332, scripts/systems/incident_system.gd:313, scripts/systems/sprint_system.gd:1547 +13
+- modal_requested(event: GameEvent) · scripts/autoload/event_bus.gd:120 · emit: scripts/events/core/engine.gd:607 · connect: scripts/events/tools/harness.gd:99, scripts/main/main.gd:5331, scripts/debug/endgame_smoke.gd:6334,19943
 - event_set_aside(event_id: String) · scripts/autoload/event_bus.gd:122
   ↳ event_set_aside emit: scripts/events/core/engine.gd:802
-  ↳ event_set_aside connect: scripts/autoload/save_manager.gd:66, scripts/main/main.gd:5260, scripts/tabs/finance/finance_ozet_view.gd:84, scripts/tabs/hr_tab.gd:81, scripts/tabs/hunt_tab.gd:53, scripts/tabs/personal_tab.gd:54 +9
+  ↳ event_set_aside connect: scripts/autoload/save_manager.gd:66, scripts/main/main.gd:5333, scripts/tabs/finance/finance_ozet_view.gd:84, scripts/tabs/hr_tab.gd:81, scripts/tabs/hunt_tab.gd:53, scripts/tabs/personal_tab.gd:54 +9
 - desk_changed() · scripts/autoload/event_bus.gd:125
   ↳ desk_changed emit: scripts/events/present/papers.gd:44,49,60,98, scripts/systems/mail_clock.gd:72,108
   ↳ desk_changed connect: scripts/tabs/product_tab.gd:117, scripts/ui/components/inbox.gd:158, scripts/ui/components/left_tabs.gd:114, scripts/ui/components/top_bar.gd:116
@@ -516,7 +517,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
   ↳ research_resumed connect: scripts/tabs/rnd_tab.gd:71, scripts/ui/components/build_hud_panel.gd:50, scripts/ui/components/left_tabs.gd:121, scripts/ui/components/research_bar.gd:52
 - node_revealed(node_id: String) · scripts/autoload/event_bus.gd:176 · emit: scripts/systems/rnd_system.gd:481 · connect: scripts/tabs/rnd_tab.gd:72
 - hidden_line_unlocked(line_id: String) · scripts/autoload/event_bus.gd:177 · emit: scripts/systems/rnd_system.gd:502 · connect: scripts/tabs/rnd_tab.gd:72
-- product_note_issued(day: int) · scripts/autoload/event_bus.gd:179 · emit: scripts/systems/message_system.gd:60 · connect: scripts/main/main.gd:5267, scripts/ui/components/left_tabs.gd:122
+- product_note_issued(day: int) · scripts/autoload/event_bus.gd:179 · emit: scripts/systems/message_system.gd:60 · connect: scripts/main/main.gd:5340, scripts/ui/components/left_tabs.gd:122
 - research_progress_changed() · scripts/autoload/event_bus.gd:184 · emit: scripts/autoload/time_manager.gd:402 · connect: scripts/tabs/rnd_tab.gd:73, scripts/ui/components/build_hud_panel.gd:53, scripts/ui/components/research_bar.gd:48
 - product_note_read() · scripts/autoload/event_bus.gd:185 · emit: scripts/systems/rnd_system.gd:659 · connect: scripts/ui/components/left_tabs.gd:123
 - rnd_node_requested(node_id: String, open_assign: bool) · scripts/autoload/event_bus.gd:189
@@ -526,7 +527,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - rival_advanced() · scripts/autoload/event_bus.gd:195 · emit: scripts/autoload/rival_registry.gd:86 · connect: scripts/tabs/finance/finance_ozet_view.gd:78
 - prospect_added(prospect_id: String) · scripts/autoload/event_bus.gd:198 · emit: scripts/autoload/prospect_registry.gd:49 · connect: scripts/tabs/sales_tab.gd:66
 - prospect_removed(prospect_id: String) · scripts/autoload/event_bus.gd:199 · emit: scripts/autoload/prospect_registry.gd:86 · connect: scripts/tabs/sales_tab.gd:66
-- pitch_requested(prospect_id: String) · scripts/autoload/event_bus.gd:201 · emit: scripts/tabs/sales_tab.gd:420 · connect: scripts/main/main.gd:5263
+- pitch_requested(prospect_id: String) · scripts/autoload/event_bus.gd:201 · emit: scripts/tabs/sales_tab.gd:420 · connect: scripts/main/main.gd:5336
 - pitch_finished() · scripts/autoload/event_bus.gd:203 · emit: scripts/systems/sales_meeting_system.gd:120, scripts/systems/vc_pitch_system.gd:125,387 · connect: scripts/tabs/hunt_tab.gd:48, scripts/tabs/sales_tab.gd:76
 - prospect_arrived(prospect_id: String) · scripts/autoload/event_bus.gd:208 · emit: scripts/systems/sales_faucet_system.gd:243 · connect: scripts/tabs/sales_tab.gd:67, scripts/debug/run_probe.gd:498
 - lead_expired(prospect_id: String) · scripts/autoload/event_bus.gd:209 · emit: scripts/systems/sales_faucet_system.gd:71 · connect: scripts/tabs/sales_tab.gd:67
@@ -562,16 +563,16 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
   ↳ phase_gate_reached connect: scripts/events/core/signals.gd:36, scripts/tabs/finance/finance_ozet_view.gd:69, scripts/debug/endgame_smoke.gd:74, scripts/debug/run_probe.gd:490
 - run_ended(ending_id: String, ending_data: Dictionary) · scripts/autoload/event_bus.gd:245
   ↳ run_ended emit: scripts/systems/endings_system.gd:475
-  ↳ run_ended connect: scripts/main/main.gd:5264, scripts/debug/endgame_smoke.gd:75,1890, scripts/debug/run_probe.gd:1200
+  ↳ run_ended connect: scripts/main/main.gd:5337, scripts/debug/endgame_smoke.gd:75,1890, scripts/debug/run_probe.gd:1200
 - milestone_reached(milestone_id: String, ending_data: Dictionary) · scripts/autoload/event_bus.gd:248
   ↳ milestone_reached emit: scripts/systems/endings_system.gd:441
-  ↳ milestone_reached connect: scripts/main/main.gd:5265, scripts/debug/endgame_smoke.gd:13779, scripts/debug/run_probe.gd:501
+  ↳ milestone_reached connect: scripts/main/main.gd:5338, scripts/debug/endgame_smoke.gd:13779, scripts/debug/run_probe.gd:501
 - shutter_changed(weeks_left: int) · scripts/autoload/event_bus.gd:250 · emit: scripts/autoload/game_state.gd:430 · connect: scripts/tabs/finance/finance_ozet_view.gd:80, scripts/tabs/finance_tab.gd:51, scripts/ui/components/top_bar.gd:109
 - month_ended(month_close: Dictionary) · scripts/autoload/event_bus.gd:253
   ↳ month_ended emit: scripts/systems/summary_system.gd:126
   ↳ month_ended connect: scripts/autoload/save_manager.gd:62, scripts/tabs/finance/finance_ozet_view.gd:68, scripts/ui/components/top_bar.gd:112, scripts/debug/endgame_smoke.gd:1410, scripts/debug/run_probe.gd:489
-- summary_ready(data: Dictionary) · scripts/autoload/event_bus.gd:256 · emit: scripts/systems/message_system.gd:58 · connect: scripts/main/main.gd:5266, scripts/debug/endgame_smoke.gd:1409,1531
-- meeting_scene_requested(view_state: Dictionary) · scripts/autoload/event_bus.gd:261 · emit: scripts/systems/vc_pitch_system.gd:104 · connect: scripts/main/main.gd:2554,5058,5268
+- summary_ready(data: Dictionary) · scripts/autoload/event_bus.gd:256 · emit: scripts/systems/message_system.gd:58 · connect: scripts/main/main.gd:5339, scripts/debug/endgame_smoke.gd:1409,1531
+- meeting_scene_requested(view_state: Dictionary) · scripts/autoload/event_bus.gd:261 · emit: scripts/systems/vc_pitch_system.gd:104 · connect: scripts/main/main.gd:2554,5131,5341
 - sheet_granted(vc_id: String) · scripts/autoload/event_bus.gd:264
   ↳ sheet_granted emit: scripts/systems/vc_pitch_system.gd:417,872
   ↳ sheet_granted connect: scripts/events/core/signals.gd:33, scripts/tabs/finance/finance_ozet_view.gd:75, scripts/tabs/hunt_tab.gd:46, scripts/ui/components/inbox.gd:160
@@ -581,7 +582,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - callback_ready(vc_id: String) · scripts/autoload/event_bus.gd:266 · emit: scripts/systems/vc_pitch_system.gd:889 · connect: scripts/tabs/hunt_tab.gd:46
 - meeting_day(vc_id: String) · scripts/autoload/event_bus.gd:267 · emit: scripts/systems/vc_pitch_system.gd:903 · connect: scripts/events/core/signals.gd:35, scripts/tabs/hunt_tab.gd:47
 - offer_countdown_changed(weeks_left: int) · scripts/autoload/event_bus.gd:268 · emit: scripts/systems/vc_pitch_system.gd:914 · connect: scripts/ui/components/top_bar.gd:117
-- term_table_requested(vc_id: String, stage: String) · scripts/autoload/event_bus.gd:269 · emit: scripts/events/core/effects.gd:661,680, scripts/main/game_shell.gd:163, scripts/tabs/hunt_tab.gd:521 · connect: scripts/main/main.gd:5269
+- term_table_requested(vc_id: String, stage: String) · scripts/autoload/event_bus.gd:269 · emit: scripts/events/core/effects.gd:661,680, scripts/main/game_shell.gd:163, scripts/tabs/hunt_tab.gd:521 · connect: scripts/main/main.gd:5342
 - sheet_walked(vc_id: String) · scripts/autoload/event_bus.gd:270
   ↳ sheet_walked emit: scripts/systems/vc_pitch_system.gd:628
   ↳ sheet_walked connect: scripts/tabs/finance/finance_ozet_view.gd:77, scripts/tabs/hunt_tab.gd:48, scripts/ui/components/inbox.gd:161, scripts/debug/endgame_smoke.gd:1918
@@ -593,11 +594,11 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - day_tick_completed(day: int) · scripts/autoload/event_bus.gd:286
   ↳ day_tick_completed emit: scripts/autoload/time_manager.gd:434
   ↳ day_tick_completed connect: scripts/autoload/save_manager.gd:61, scripts/events/tools/plausibility.gd:159, scripts/tabs/sales_tab.gd:76, scripts/ui/components/inbox.gd:160, scripts/ui/office/office_city.gd:102 +4
-- game_loaded(slot_id: String) · scripts/autoload/event_bus.gd:289 · emit: scripts/main/main.gd:5775 · connect: scripts/ui/components/left_tabs.gd:126
-- system_menu_requested() · scripts/autoload/event_bus.gd:291 · emit: scripts/main/game_shell.gd:106, scripts/main/main.gd:2430,3061,3083 · connect: scripts/main/main.gd:5270
+- game_loaded(slot_id: String) · scripts/autoload/event_bus.gd:289 · emit: scripts/main/main.gd:5848 · connect: scripts/ui/components/left_tabs.gd:126
+- system_menu_requested() · scripts/autoload/event_bus.gd:291 · emit: scripts/main/game_shell.gd:106, scripts/main/main.gd:2430,3061,3083 · connect: scripts/main/main.gd:5343
 - save_load_requested(mode: String) · scripts/autoload/event_bus.gd:293 · emit: scripts/main/main.gd:3063,3067, scripts/menu/main_menu.gd:55, scripts/modals/system_menu_modal.gd:37,38 · connect: scripts/main/main.gd:90
-- quicksave_requested() · scripts/autoload/event_bus.gd:296 · emit: scripts/main/game_shell.gd:65, scripts/main/main.gd:2406,2411,3088 · connect: scripts/main/main.gd:5271
-- quickload_requested() · scripts/autoload/event_bus.gd:297 · emit: scripts/main/game_shell.gd:67, scripts/main/main.gd:2403,2431,2436,2442 · connect: scripts/main/main.gd:5272
+- quicksave_requested() · scripts/autoload/event_bus.gd:296 · emit: scripts/main/game_shell.gd:65, scripts/main/main.gd:2406,2411,3088 · connect: scripts/main/main.gd:5344
+- quickload_requested() · scripts/autoload/event_bus.gd:297 · emit: scripts/main/game_shell.gd:67, scripts/main/main.gd:2403,2431,2436,2442 · connect: scripts/main/main.gd:5345
 - debug_onboarding_retrigger_requested() · scripts/autoload/event_bus.gd:301 · emit: scripts/main/game_shell.gd:144 · connect: scripts/main/main.gd:104
 
 ### scripts/autoload/time_manager.gd
@@ -609,7 +610,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 ### scripts/menu/credits.gd
 - dismissed() · scripts/menu/credits.gd:6 · (ad 7 yerde tanımlı)
   ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:79, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
-  ↳ dismissed connect: scripts/main/main.gd:5614,5639,5658,5692, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
+  ↳ dismissed connect: scripts/main/main.gd:5687,5712,5731,5765, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
 
 ### scripts/menu/godot_card.gd
 - finished() · scripts/menu/godot_card.gd:6 · emit: scripts/menu/godot_card.gd:35 · connect: scripts/main/main.gd:119, scripts/ui/components/radial_dial.gd:53
@@ -618,52 +619,52 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - back() · scripts/menu/licenses.gd:7 · emit: scripts/menu/licenses.gd:28 · connect: scripts/menu/credits.gd:44
 - dismissed() · scripts/menu/licenses.gd:8 · (ad 7 yerde tanımlı)
   ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:79, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
-  ↳ dismissed connect: scripts/main/main.gd:5614,5639,5658,5692, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
+  ↳ dismissed connect: scripts/main/main.gd:5687,5712,5731,5765, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
 
 ### scripts/menu/main_menu.gd
 - new_game_requested() · scripts/menu/main_menu.gd:7 · emit: scripts/main/main.gd:3322, scripts/menu/main_menu.gd:54 · connect: scripts/main/main.gd:131
-- load_requested(slot_id: String) · scripts/menu/main_menu.gd:8 · emit: scripts/menu/main_menu.gd:53, scripts/modals/save_load_modal.gd:237,239 · connect: scripts/main/main.gd:134,5694 · (ad 2 yerde tanımlı)
+- load_requested(slot_id: String) · scripts/menu/main_menu.gd:8 · emit: scripts/menu/main_menu.gd:53, scripts/modals/save_load_modal.gd:237,239 · connect: scripts/main/main.gd:134,5767 · (ad 2 yerde tanımlı)
 
 ### scripts/modals/confirm_modal.gd
-- confirmed() · scripts/modals/confirm_modal.gd:11 · emit: scripts/modals/hr_action_modal.gd:224 · connect: scripts/main/main.gd:5634, scripts/onboarding/onboarding_flow.gd:177 · (ad 2 yerde tanımlı)
-- alt_selected() · scripts/modals/confirm_modal.gd:12 · emit: - · connect: scripts/main/main.gd:5638
+- confirmed() · scripts/modals/confirm_modal.gd:11 · emit: scripts/modals/hr_action_modal.gd:224 · connect: scripts/main/main.gd:5707, scripts/onboarding/onboarding_flow.gd:177 · (ad 2 yerde tanımlı)
+- alt_selected() · scripts/modals/confirm_modal.gd:12 · emit: - · connect: scripts/main/main.gd:5711
 - dismissed() · scripts/modals/confirm_modal.gd:13 · (ad 7 yerde tanımlı)
   ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:79, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
-  ↳ dismissed connect: scripts/main/main.gd:5614,5639,5658,5692, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
+  ↳ dismissed connect: scripts/main/main.gd:5687,5712,5731,5765, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
 
 ### scripts/modals/ending_scene.gd
-- continue_requested() · scripts/modals/ending_scene.gd:40 · emit: scripts/modals/ending_scene.gd:445 · connect: scripts/main/main.gd:5826
-- main_menu_requested() · scripts/modals/ending_scene.gd:41 · emit: scripts/modals/ending_scene.gd:462, scripts/modals/system_menu_modal.gd:63 · connect: scripts/main/main.gd:5659,5827 · (ad 2 yerde tanımlı)
+- continue_requested() · scripts/modals/ending_scene.gd:40 · emit: scripts/modals/ending_scene.gd:445 · connect: scripts/main/main.gd:5899
+- main_menu_requested() · scripts/modals/ending_scene.gd:41 · emit: scripts/modals/ending_scene.gd:462, scripts/modals/system_menu_modal.gd:63 · connect: scripts/main/main.gd:5732,5900 · (ad 2 yerde tanımlı)
 
 ### scripts/modals/hr_action_modal.gd
-- confirmed() · scripts/modals/hr_action_modal.gd:15 · emit: scripts/modals/hr_action_modal.gd:224 · connect: scripts/main/main.gd:5634, scripts/onboarding/onboarding_flow.gd:177 · (ad 2 yerde tanımlı)
+- confirmed() · scripts/modals/hr_action_modal.gd:15 · emit: scripts/modals/hr_action_modal.gd:224 · connect: scripts/main/main.gd:5707, scripts/onboarding/onboarding_flow.gd:177 · (ad 2 yerde tanımlı)
 - dismissed() · scripts/modals/hr_action_modal.gd:16 · (ad 7 yerde tanımlı)
   ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:79, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
-  ↳ dismissed connect: scripts/main/main.gd:5614,5639,5658,5692, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
+  ↳ dismissed connect: scripts/main/main.gd:5687,5712,5731,5765, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
 
 ### scripts/modals/save_load_modal.gd
 - dismissed() · scripts/modals/save_load_modal.gd:14 · (ad 7 yerde tanımlı)
   ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:79, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
-  ↳ dismissed connect: scripts/main/main.gd:5614,5639,5658,5692, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
-- save_requested(slot_id: String) · scripts/modals/save_load_modal.gd:15 · emit: scripts/modals/save_load_modal.gd:229 · connect: scripts/main/main.gd:5693
-- load_requested(slot_id: String) · scripts/modals/save_load_modal.gd:16 · emit: scripts/menu/main_menu.gd:53, scripts/modals/save_load_modal.gd:237,239 · connect: scripts/main/main.gd:134,5694 · (ad 2 yerde tanımlı)
+  ↳ dismissed connect: scripts/main/main.gd:5687,5712,5731,5765, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
+- save_requested(slot_id: String) · scripts/modals/save_load_modal.gd:15 · emit: scripts/modals/save_load_modal.gd:229 · connect: scripts/main/main.gd:5766
+- load_requested(slot_id: String) · scripts/modals/save_load_modal.gd:16 · emit: scripts/menu/main_menu.gd:53, scripts/modals/save_load_modal.gd:237,239 · connect: scripts/main/main.gd:134,5767 · (ad 2 yerde tanımlı)
 
 ### scripts/modals/settings_modal.gd
 - dismissed() · scripts/modals/settings_modal.gd:16 · (ad 7 yerde tanımlı)
   ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:79, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
-  ↳ dismissed connect: scripts/main/main.gd:5614,5639,5658,5692, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
+  ↳ dismissed connect: scripts/main/main.gd:5687,5712,5731,5765, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
 
 ### scripts/modals/system_menu_modal.gd
 - dismissed() · scripts/modals/system_menu_modal.gd:18 · (ad 7 yerde tanımlı)
   ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:79, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
-  ↳ dismissed connect: scripts/main/main.gd:5614,5639,5658,5692, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
-- main_menu_requested() · scripts/modals/system_menu_modal.gd:19 · emit: scripts/modals/ending_scene.gd:462, scripts/modals/system_menu_modal.gd:63 · connect: scripts/main/main.gd:5659,5827 · (ad 2 yerde tanımlı)
-- exit_save_requested() · scripts/modals/system_menu_modal.gd:20 · emit: scripts/modals/system_menu_modal.gd:93 · connect: scripts/main/main.gd:5660
+  ↳ dismissed connect: scripts/main/main.gd:5687,5712,5731,5765, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
+- main_menu_requested() · scripts/modals/system_menu_modal.gd:19 · emit: scripts/modals/ending_scene.gd:462, scripts/modals/system_menu_modal.gd:63 · connect: scripts/main/main.gd:5732,5900 · (ad 2 yerde tanımlı)
+- exit_save_requested() · scripts/modals/system_menu_modal.gd:20 · emit: scripts/modals/system_menu_modal.gd:93 · connect: scripts/main/main.gd:5733
 
 ### scripts/modals/term_sheet_table_scene.gd
 - closed() · scripts/modals/term_sheet_table_scene.gd:17 · (ad 3 yerde tanımlı)
   ↳ closed emit: scripts/main/main.gd:2590, scripts/modals/term_sheet_table_scene.gd:401,409,422, scripts/tabs/rnd/rnd_assign_panel.gd:203, scripts/ui/meeting/meeting_panel.gd:359
-  ↳ closed connect: scripts/main/main.gd:5587,5874, scripts/tabs/rnd/rnd_detail_panel.gd:77
+  ↳ closed connect: scripts/main/main.gd:5660,5947, scripts/tabs/rnd/rnd_detail_panel.gd:77
 
 ### scripts/onboarding/first_week_doc.gd
 - picked(field: String, value: Variant) · scripts/onboarding/first_week_doc.gd:7 · (ad 2 yerde tanımlı)
@@ -676,7 +677,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 
 ### scripts/onboarding/steps/step_base.gd
 - changed() · scripts/onboarding/steps/step_base.gd:15 · (ad 2 yerde tanımlı)
-  ↳ changed emit: scripts/main/main.gd:3387,5000, scripts/onboarding/steps/character_step.gd:32,53,111, scripts/onboarding/steps/company_step.gd:35 +8
+  ↳ changed emit: scripts/main/main.gd:3387,5073, scripts/onboarding/steps/character_step.gd:32,53,111, scripts/onboarding/steps/company_step.gd:35 +8
   ↳ changed connect: scripts/onboarding/onboarding_flow.gd:101, scripts/ui/meeting/meeting_panel.gd:274,511
 
 ### scripts/tabs/finance_tab.gd
@@ -705,63 +706,63 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 
 ### scripts/tabs/product/area_panel.gd
 - action(kind: String, args: Dictionary) · scripts/tabs/product/area_panel.gd:10 · (ad 10 yerde tanımlı)
-  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:264, scripts/tabs/product/board_row.gd:136,213,219, scripts/tabs/product/capacity_view.gd:111 +27
-  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:173, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
+  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:262, scripts/tabs/product/board_row.gd:174,260,300, scripts/tabs/product/capacity_view.gd:111 +27
+  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:181, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
 - ui_changed(key: String, value: Variant) · scripts/tabs/product/area_panel.gd:11 · (ad 2 yerde tanımlı)
-  ↳ ui_changed emit: scripts/tabs/product/area_panel.gd:126,199, scripts/tabs/product/quarter_view.gd:57,58
+  ↳ ui_changed emit: scripts/tabs/product/area_panel.gd:124,197, scripts/tabs/product/quarter_view.gd:57,58
   ↳ ui_changed connect: scripts/tabs/product/quarter_view.gd:57, scripts/tabs/product_tab.gd:74,83
-- request_picked(area_id: String) · scripts/tabs/product/area_panel.gd:13 · emit: scripts/tabs/product/area_panel.gd:161 · connect: scripts/tabs/product/quarter_view.gd:58, scripts/tabs/product_tab.gd:75
+- request_picked(area_id: String) · scripts/tabs/product/area_panel.gd:13 · emit: scripts/tabs/product/area_panel.gd:159 · connect: scripts/tabs/product/quarter_view.gd:58, scripts/tabs/product_tab.gd:75
 - hovered(card_id: String) · scripts/tabs/product/area_panel.gd:15 · (ad 2 yerde tanımlı)
-  ↳ hovered emit: scripts/tabs/product/area_panel.gd:294,297, scripts/ui/meeting/meeting_panel_option.gd:125
+  ↳ hovered emit: scripts/tabs/product/area_panel.gd:292,295, scripts/ui/meeting/meeting_panel_option.gd:125
   ↳ hovered connect: scripts/tabs/product_tab.gd:76, scripts/ui/meeting/meeting_panel.gd:679
 
 ### scripts/tabs/product/board_row.gd
-- action(kind: String, args: Dictionary) · scripts/tabs/product/board_row.gd:12 · (ad 10 yerde tanımlı)
-  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:264, scripts/tabs/product/board_row.gd:136,213,219, scripts/tabs/product/capacity_view.gd:111 +27
-  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:173, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
+- action(kind: String, args: Dictionary) · scripts/tabs/product/board_row.gd:15 · (ad 10 yerde tanımlı)
+  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:262, scripts/tabs/product/board_row.gd:174,260,300, scripts/tabs/product/capacity_view.gd:111 +27
+  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:181, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
 
 ### scripts/tabs/product/capacity_view.gd
 - action(kind: String, args: Dictionary) · scripts/tabs/product/capacity_view.gd:9 · (ad 10 yerde tanımlı)
-  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:264, scripts/tabs/product/board_row.gd:136,213,219, scripts/tabs/product/capacity_view.gd:111 +27
-  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:173, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
+  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:262, scripts/tabs/product/board_row.gd:174,260,300, scripts/tabs/product/capacity_view.gd:111 +27
+  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:181, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
 
 ### scripts/tabs/product/overview_view.gd
 - action(kind: String, args: Dictionary) · scripts/tabs/product/overview_view.gd:7 · (ad 10 yerde tanımlı)
-  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:264, scripts/tabs/product/board_row.gd:136,213,219, scripts/tabs/product/capacity_view.gd:111 +27
-  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:173, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
+  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:262, scripts/tabs/product/board_row.gd:174,260,300, scripts/tabs/product/capacity_view.gd:111 +27
+  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:181, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
 
 ### scripts/tabs/product/quarter_view.gd
 - action(kind: String, args: Dictionary) · scripts/tabs/product/quarter_view.gd:8 · (ad 10 yerde tanımlı)
-  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:264, scripts/tabs/product/board_row.gd:136,213,219, scripts/tabs/product/capacity_view.gd:111 +27
-  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:173, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
+  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:262, scripts/tabs/product/board_row.gd:174,260,300, scripts/tabs/product/capacity_view.gd:111 +27
+  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:181, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
 - ui_changed(key: String, value: Variant) · scripts/tabs/product/quarter_view.gd:9 · (ad 2 yerde tanımlı)
-  ↳ ui_changed emit: scripts/tabs/product/area_panel.gd:126,199, scripts/tabs/product/quarter_view.gd:57,58
+  ↳ ui_changed emit: scripts/tabs/product/area_panel.gd:124,197, scripts/tabs/product/quarter_view.gd:57,58
   ↳ ui_changed connect: scripts/tabs/product/quarter_view.gd:57, scripts/tabs/product_tab.gd:74,83
 
 ### scripts/tabs/product/sprint_board.gd
 - action(kind: String, args: Dictionary) · scripts/tabs/product/sprint_board.gd:12 · (ad 10 yerde tanımlı)
-  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:264, scripts/tabs/product/board_row.gd:136,213,219, scripts/tabs/product/capacity_view.gd:111 +27
-  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:173, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
+  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:262, scripts/tabs/product/board_row.gd:174,260,300, scripts/tabs/product/capacity_view.gd:111 +27
+  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:181, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
 
 ### scripts/tabs/product/sprint_foot.gd
 - action(kind: String, args: Dictionary) · scripts/tabs/product/sprint_foot.gd:10 · (ad 10 yerde tanımlı)
-  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:264, scripts/tabs/product/board_row.gd:136,213,219, scripts/tabs/product/capacity_view.gd:111 +27
-  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:173, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
+  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:262, scripts/tabs/product/board_row.gd:174,260,300, scripts/tabs/product/capacity_view.gd:111 +27
+  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:181, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
 
 ### scripts/tabs/product/sprint_head.gd
 - action(kind: String, args: Dictionary) · scripts/tabs/product/sprint_head.gd:8 · (ad 10 yerde tanımlı)
-  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:264, scripts/tabs/product/board_row.gd:136,213,219, scripts/tabs/product/capacity_view.gd:111 +27
-  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:173, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
+  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:262, scripts/tabs/product/board_row.gd:174,260,300, scripts/tabs/product/capacity_view.gd:111 +27
+  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:181, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
 
 ### scripts/tabs/product/sprint_next.gd
 - action(kind: String, args: Dictionary) · scripts/tabs/product/sprint_next.gd:10 · (ad 10 yerde tanımlı)
-  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:264, scripts/tabs/product/board_row.gd:136,213,219, scripts/tabs/product/capacity_view.gd:111 +27
-  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:173, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
+  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:262, scripts/tabs/product/board_row.gd:174,260,300, scripts/tabs/product/capacity_view.gd:111 +27
+  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:181, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
 
 ### scripts/tabs/product/sprint_panel.gd
 - action(kind: String, args: Dictionary) · scripts/tabs/product/sprint_panel.gd:9 · (ad 10 yerde tanımlı)
-  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:264, scripts/tabs/product/board_row.gd:136,213,219, scripts/tabs/product/capacity_view.gd:111 +27
-  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:173, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
+  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:262, scripts/tabs/product/board_row.gd:174,260,300, scripts/tabs/product/capacity_view.gd:111 +27
+  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:181, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
 
 ### scripts/tabs/product/type_picker.gd
 - chosen(subtype: String, name: String) · scripts/tabs/product/type_picker.gd:10 · emit: scripts/tabs/product/type_picker.gd:65 · connect: scripts/tabs/product_tab.gd:104, scripts/debug/endgame_smoke.gd:14462
@@ -775,7 +776,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - started() · scripts/tabs/rnd/rnd_assign_panel.gd:18 · emit: scripts/tabs/rnd/rnd_assign_panel.gd:230,232 · connect: scripts/tabs/rnd/rnd_detail_panel.gd:76
 - closed() · scripts/tabs/rnd/rnd_assign_panel.gd:20 · (ad 3 yerde tanımlı)
   ↳ closed emit: scripts/main/main.gd:2590, scripts/modals/term_sheet_table_scene.gd:401,409,422, scripts/tabs/rnd/rnd_assign_panel.gd:203, scripts/ui/meeting/meeting_panel.gd:359
-  ↳ closed connect: scripts/main/main.gd:5587,5874, scripts/tabs/rnd/rnd_detail_panel.gd:77
+  ↳ closed connect: scripts/main/main.gd:5660,5947, scripts/tabs/rnd/rnd_detail_panel.gd:77
 
 ### scripts/tabs/rnd/rnd_tree_view.gd
 - selection_changed(node_id: String) · scripts/tabs/rnd/rnd_tree_view.gd:35 · emit: scripts/tabs/rnd/rnd_tree_view.gd:339 · connect: scripts/tabs/rnd_tab.gd:144
@@ -799,19 +800,19 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 ### scripts/ui/meeting/meeting_panel.gd
 - closed() · scripts/ui/meeting/meeting_panel.gd:19 · (ad 3 yerde tanımlı)
   ↳ closed emit: scripts/main/main.gd:2590, scripts/modals/term_sheet_table_scene.gd:401,409,422, scripts/tabs/rnd/rnd_assign_panel.gd:203, scripts/ui/meeting/meeting_panel.gd:359
-  ↳ closed connect: scripts/main/main.gd:5587,5874, scripts/tabs/rnd/rnd_detail_panel.gd:77
+  ↳ closed connect: scripts/main/main.gd:5660,5947, scripts/tabs/rnd/rnd_detail_panel.gd:77
 
 ### scripts/ui/meeting/meeting_panel_option.gd
 - clicked() · scripts/ui/meeting/meeting_panel_option.gd:9 · (ad 2 yerde tanımlı)
   ↳ clicked emit: scripts/ui/meeting/meeting_panel_option.gd:87, scripts/ui/office/office_camera.gd:138
   ↳ clicked connect: scripts/ui/meeting/meeting_panel.gd:678, scripts/ui/office/office_view.gd:62
 - hovered(on: bool) · scripts/ui/meeting/meeting_panel_option.gd:10 · (ad 2 yerde tanımlı)
-  ↳ hovered emit: scripts/tabs/product/area_panel.gd:294,297, scripts/ui/meeting/meeting_panel_option.gd:125
+  ↳ hovered emit: scripts/tabs/product/area_panel.gd:292,295, scripts/ui/meeting/meeting_panel_option.gd:125
   ↳ hovered connect: scripts/tabs/product_tab.gd:76, scripts/ui/meeting/meeting_panel.gd:679
 
 ### scripts/ui/meeting/meeting_ruler.gd
 - changed(value: int) · scripts/ui/meeting/meeting_ruler.gd:13 · (ad 2 yerde tanımlı)
-  ↳ changed emit: scripts/main/main.gd:3387,5000, scripts/onboarding/steps/character_step.gd:32,53,111, scripts/onboarding/steps/company_step.gd:35 +8
+  ↳ changed emit: scripts/main/main.gd:3387,5073, scripts/onboarding/steps/character_step.gd:32,53,111, scripts/onboarding/steps/company_step.gd:35 +8
   ↳ changed connect: scripts/onboarding/onboarding_flow.gd:101, scripts/ui/meeting/meeting_panel.gd:274,511
 - picked(value: int) · scripts/ui/meeting/meeting_ruler.gd:28 · (ad 2 yerde tanımlı)
   ↳ picked emit: scripts/onboarding/first_week_doc.gd:134,176, scripts/ui/meeting/meeting_ruler.gd:48
@@ -825,8 +826,8 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - founder_out() · scripts/ui/office/meeting_cast.gd:15 · emit: scripts/ui/office/meeting_cast.gd:155 · connect: scripts/ui/office/office_travel.gd:98
 
 ### scripts/ui/office/meeting_invite.gd
-- accepted() · scripts/ui/office/meeting_invite.gd:14 · emit: scripts/ui/office/meeting_invite.gd:191 · connect: scripts/main/main.gd:5464
-- postponed() · scripts/ui/office/meeting_invite.gd:15 · emit: scripts/ui/office/meeting_invite.gd:198 · connect: scripts/main/main.gd:5465
+- accepted() · scripts/ui/office/meeting_invite.gd:14 · emit: scripts/ui/office/meeting_invite.gd:191 · connect: scripts/main/main.gd:5537
+- postponed() · scripts/ui/office/meeting_invite.gd:15 · emit: scripts/ui/office/meeting_invite.gd:198 · connect: scripts/main/main.gd:5538
 
 ### scripts/ui/office/office_camera.gd
 - clicked(screen_pos: Vector2) · scripts/ui/office/office_camera.gd:8 · (ad 2 yerde tanımlı)
@@ -1107,7 +1108,7 @@ Biçim: yol · boyut · üst düzey anahtarlar (en çok 10)
 - data/product/sprint.json · 9.3 KB · {sprint_weeks, quarter_weeks, mvp_lines, effort, fix_effort, limit_k, need, roles, role_areas, person_points_week, +27}
 - data/techtree/rnd_tree.json · 6.3 KB · {_doc, _stars, _cross, _areas, k_arge, report_period_weeks, nodes, _hidden_doc, _hidden_k3_doc, hidden_lines}
 
-## Metin anahtarı aileleri (850 aile, 3238 anahtar)
+## Metin anahtarı aileleri (860 aile, 3275 anahtar)
 
 Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak geçiren .gd/.json (en çok 5). '-' = dinamik kurulmuş olabilir ya da kullanılmıyor.
 - ANGEL_CAP_* · 1 · scripts/tabs/finance/finance_ozet_view.gd
@@ -1574,9 +1575,11 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - PIYASA_WHY_* · 7 · scripts/systems/news_feed_system.gd
 - PRODUCT_ACCOUNT_* · 2 · scripts/tabs/product/sprint_ui_shared.gd, scripts/debug/endgame_smoke.gd
 - PRODUCT_ADD_* · 4 · scripts/tabs/product/area_panel.gd, scripts/tabs/product/board_row.gd, scripts/tabs/product/sprint_board.gd
+- PRODUCT_AHEAD_* · 1 · scripts/tabs/product/sprint_ui_shared.gd
 - PRODUCT_APPROVE_* · 2 · scripts/tabs/product/quarter_view.gd
 - PRODUCT_APPROVED_* · 1 · scripts/tabs/product/quarter_view.gd
 - PRODUCT_AREA_* · 24 · data/product/sprint.json, scripts/events/seams/seams_product.gd, scripts/systems/sprint_catalog.gd, scripts/tabs/product/product_model.gd, scripts/debug/endgame_smoke.gd
+- PRODUCT_ASK_* · 1 · scripts/tabs/product/board_row.gd
 - PRODUCT_AUDIENCE_* · 2 · scripts/systems/sprint_catalog.gd, scripts/debug/endgame_smoke.gd
 - PRODUCT_AUTO_* · 2 · scripts/tabs/product/sprint_foot.gd, scripts/ui/components/build_bar.gd
 - PRODUCT_AVAILABLE_* · 1 · scripts/tabs/product/sprint_board.gd
@@ -1587,47 +1590,52 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - PRODUCT_CAP_* · 6 · scripts/systems/sprint_catalog.gd, scripts/tabs/product/capacity_view.gd, scripts/debug/endgame_smoke.gd
 - PRODUCT_CAPACITY_* · 1 · scripts/tabs/product/capacity_view.gd
 - PRODUCT_CARDS_* · 1 · scripts/tabs/product/sprint_next.gd
-- PRODUCT_CARRIED_* · 2 · scripts/tabs/product/board_row.gd, scripts/tabs/product/sprint_next.gd, scripts/tabs/product/sprint_panel.gd
+- PRODUCT_CARRIED_* · 3 · scripts/tabs/product/board_row.gd, scripts/tabs/product/sprint_next.gd, scripts/tabs/product/sprint_panel.gd
 - PRODUCT_CLUSTER_* · 2 · scripts/tabs/product/capacity_view.gd
 - PRODUCT_CREW_* · 1 · scripts/tabs/product/sprint_head.gd
+- PRODUCT_DAYS_* · 2 · scripts/tabs/product/sprint_ui_shared.gd
 - PRODUCT_DELEGATE_* · 5 · scripts/tabs/product/sprint_foot.gd
+- PRODUCT_DONE_* · 1 · scripts/tabs/product/sprint_next.gd
 - PRODUCT_DUE_* · 3 · scripts/tabs/product/product_model.gd
-- PRODUCT_EARLY_* · 1 · scripts/tabs/product/sprint_board.gd
+- PRODUCT_EARLY_* · 2 · scripts/tabs/product/sprint_board.gd
 - PRODUCT_EDIT_* · 1 · scripts/tabs/product/quarter_view.gd
-- PRODUCT_EFFORT_* · 1 · scripts/tabs/product/capacity_view.gd
+- PRODUCT_EFFORT_* · 2 · scripts/tabs/product/capacity_view.gd, scripts/tabs/product/card_tip.gd, scripts/tabs/product/sprint_ui_shared.gd
 - PRODUCT_FALLBACK_* · 1 · scripts/systems/sales_system.gd
 - PRODUCT_FIX_* · 1 · scripts/systems/sprint_catalog.gd, scripts/debug/endgame_smoke.gd
 - PRODUCT_FLAG_* · 1 · scripts/tabs/product/product_model.gd
-- PRODUCT_FOUNDER_* · 4 · scripts/tabs/product_tab.gd
+- PRODUCT_FOUNDER_* · 5 · scripts/tabs/product/card_tip.gd, scripts/tabs/product_tab.gd
 - PRODUCT_FX_* · 5 · scripts/tabs/product/area_panel.gd, scripts/tabs/product/product_model.gd, scripts/tabs/product/sprint_ui_shared.gd, scripts/debug/endgame_smoke.gd, scripts/debug/product_fixtures.gd
-- PRODUCT_GATE_* · 3 · scripts/tabs/product/sprint_panel.gd
+- PRODUCT_GATE_* · 4 · scripts/tabs/product/board_row.gd, scripts/tabs/product/sprint_panel.gd
 - PRODUCT_GO_* · 2 · scripts/main/main.gd, scripts/tabs/product/sprint_panel.gd, scripts/tabs/product/sprint_ui_shared.gd
 - PRODUCT_GOAL_* · 9 · scripts/tabs/product/product_model.gd, scripts/tabs/product/quarter_view.gd, scripts/tabs/product/sprint_head.gd, scripts/tabs/product/sprint_ui_shared.gd, scripts/debug/product_fixtures.gd
 - PRODUCT_HISTORY_* · 4 · scripts/tabs/product/area_panel.gd, scripts/tabs/product_tab.gd
 - PRODUCT_IN_* · 2 · scripts/tabs/product/area_panel.gd
 - PRODUCT_KPI_* · 2 · scripts/tabs/product_tab.gd, scripts/tabs/sales_tab.gd
-- PRODUCT_LATE_* · 1 · scripts/tabs/product/board_row.gd
+- PRODUCT_LATE_* · 2 · scripts/tabs/product/board_row.gd, scripts/tabs/product/card_tip.gd
 - PRODUCT_LEAD_* · 4 · scripts/systems/sprint_catalog.gd, scripts/tabs/product/sprint_panel.gd
 - PRODUCT_LEVEL_* · 4 · scripts/systems/sales_meeting_system.gd, scripts/systems/sprint_bridges.gd, scripts/debug/endgame_smoke.gd
 - PRODUCT_LIVE_* · 1 · scripts/events/catalog/catalog.gd, scripts/events/tools/lint.gd, scripts/events/tools/vocab_gen.gd, scripts/tabs/product/sprint_panel.gd
 - PRODUCT_LOCK_* · 1 · scripts/systems/sprint_catalog.gd
+- PRODUCT_MEETING_* · 3 · scripts/tabs/product/sprint_ui_shared.gd
 - PRODUCT_MODULES_* · 1 · scripts/tabs/product/area_panel.gd, scripts/tabs/product/sprint_board.gd
 - PRODUCT_MORE_* · 8 · scripts/tabs/product/area_panel.gd, scripts/tabs/product/sprint_board.gd, scripts/tabs/product/sprint_next.gd
 - PRODUCT_MVP_* · 7 · scripts/tabs/product/sprint_head.gd, scripts/tabs/product/sprint_panel.gd, scripts/tabs/product_tab.gd
 - PRODUCT_NECK_* · 1 · scripts/tabs/product/capacity_view.gd
 - PRODUCT_NEWS_* · 2 · scripts/systems/sprint_bridges.gd
-- PRODUCT_NEXT_* · 1 · scripts/tabs/product/sprint_next.gd
-- PRODUCT_NO_* · 2 · scripts/tabs/product/sprint_next.gd, scripts/tabs/product/sprint_panel.gd
+- PRODUCT_NEXT_* · 2 · scripts/tabs/product/sprint_next.gd
+- PRODUCT_NO_* · 3 · scripts/tabs/product/card_tip.gd, scripts/tabs/product/sprint_next.gd, scripts/tabs/product/sprint_panel.gd
+- PRODUCT_ON_* · 1 · scripts/tabs/product/card_tip.gd
 - PRODUCT_OV_* · 2 · scripts/main/main.gd, scripts/tabs/product_tab.gd
-- PRODUCT_PER_* · 1 · scripts/tabs/product/product_model.gd
+- PRODUCT_PER_* · 1 · scripts/tabs/product/card_tip.gd, scripts/tabs/product/product_model.gd
 - PRODUCT_PERSON_* · 2 · scripts/tabs/product/capacity_view.gd, scripts/tabs/product/sprint_ui_shared.gd
-- PRODUCT_PHASE_* · 3 · scripts/tabs/product/area_panel.gd, scripts/tabs/product/capacity_view.gd
+- PRODUCT_PHASE_* · 3 · scripts/tabs/product/sprint_ui_shared.gd
 - PRODUCT_PLAN_* · 1 · scripts/tabs/product/sprint_panel.gd
-- PRODUCT_PM_* · 4 · scripts/tabs/product/quarter_view.gd, scripts/tabs/product/sprint_next.gd
+- PRODUCT_PM_* · 5 · scripts/tabs/product/quarter_view.gd, scripts/tabs/product/sprint_next.gd, scripts/tabs/product/sprint_ui_shared.gd
 - PRODUCT_PREP_* · 1 · scripts/tabs/product/sprint_next.gd
-- PRODUCT_PREPARING_* · 1 · scripts/tabs/product/sprint_next.gd
+- PRODUCT_PREPARED_* · 1 · scripts/tabs/product/board_row.gd, scripts/tabs/product/card_tip.gd
+- PRODUCT_PREPARING_* · 2 · scripts/tabs/product/sprint_next.gd
 - PRODUCT_PRESS_* · 5 · scripts/systems/sprint_bridges.gd, scripts/tabs/product/sprint_panel.gd
-- PRODUCT_PROGRESS_* · 1 · scripts/tabs/product/sprint_foot.gd
+- PRODUCT_PROGRESS_* · 2 · scripts/tabs/product/sprint_foot.gd
 - PRODUCT_QUARTER_* · 7 · scripts/tabs/product/product_model.gd, scripts/tabs/product/sprint_head.gd, scripts/tabs/product/sprint_ui_shared.gd, scripts/tabs/product_tab.gd
 - PRODUCT_READY_* · 1 · scripts/tabs/product/sprint_next.gd
 - PRODUCT_RELEASE_* · 5 · scripts/systems/sprint_bridges.gd, scripts/tabs/product/sprint_panel.gd
@@ -1638,14 +1646,16 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - PRODUCT_RESULT_* · 12 · scripts/systems/sprint_bridges.gd, scripts/systems/sprint_system.gd, scripts/tabs/product/sprint_panel.gd, scripts/tabs/product/sprint_ui_shared.gd, scripts/debug/endgame_smoke.gd +1
 - PRODUCT_REVIEW_* · 29 · data/product/sprint.json, scripts/systems/sprint_bridges.gd, scripts/debug/endgame_smoke.gd, scripts/debug/product_fixtures.gd
 - PRODUCT_REVIEWS_* · 1 · scripts/tabs/product/sprint_panel.gd
+- PRODUCT_RISK_* · 5 · scripts/tabs/product/board_row.gd
 - PRODUCT_RIVAL_* · 1 · scripts/tabs/product/product_model.gd, scripts/debug/product_fixtures.gd
 - PRODUCT_SERVER_* · 37 · scripts/main/main.gd, scripts/systems/infra_system.gd, scripts/tabs/product/overview_view.gd, scripts/tabs/product/product_model.gd
 - PRODUCT_SHIPPED_* · 1 · scripts/tabs/product/sprint_panel.gd
 - PRODUCT_SPRINT_* · 2 · scripts/tabs/product/quarter_view.gd, scripts/tabs/product/sprint_board.gd, scripts/tabs/product/sprint_head.gd, scripts/tabs/product/sprint_next.gd, scripts/tabs/product/sprint_panel.gd
-- PRODUCT_STAGE_* · 2 · scripts/tabs/product/area_panel.gd, scripts/tabs/product/capacity_view.gd
+- PRODUCT_STAGE_* · 7 · scripts/tabs/product/board_row.gd, scripts/tabs/product/capacity_view.gd, scripts/tabs/product/sprint_ui_shared.gd
 - PRODUCT_STAMP_* · 1 · scripts/tabs/product/area_panel.gd
 - PRODUCT_STAR_* · 4 · scripts/systems/sprint_catalog.gd, scripts/debug/endgame_smoke.gd
 - PRODUCT_START_* · 1 · scripts/main/main.gd, scripts/tabs/product/sprint_foot.gd
+- PRODUCT_STARTS_* · 1 · scripts/tabs/product/sprint_next.gd
 - PRODUCT_STATUS_* · 3 · scripts/tabs/product/sprint_board.gd, scripts/tabs/product/sprint_foot.gd
 - PRODUCT_STAYS_* · 3 · scripts/tabs/product/capacity_view.gd
 - PRODUCT_SUGGEST_* · 2 · scripts/tabs/product/capacity_view.gd
@@ -1653,12 +1663,13 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - PRODUCT_TEAM_* · 2 · scripts/tabs/product/product_model.gd, scripts/debug/product_fixtures.gd
 - PRODUCT_THIS_* · 2 · scripts/tabs/product/quarter_view.gd
 - PRODUCT_TIMES_* · 1 · scripts/tabs/product/capacity_view.gd
-- PRODUCT_TIP_* · 2 · scripts/tabs/product/product_model.gd
+- PRODUCT_TIP_* · 2 · scripts/tabs/product/card_tip.gd, scripts/tabs/product/product_model.gd
 - PRODUCT_TO_* · 2 · scripts/tabs/product/sprint_ui_shared.gd
 - PRODUCT_USER_* · 2 · scripts/tabs/product/product_model.gd, scripts/tabs/product/sprint_ui_shared.gd, scripts/debug/endgame_smoke.gd
 - PRODUCT_VELOCITY_* · 3 · scripts/tabs/product/sprint_panel.gd
 - PRODUCT_VERSION_* · 1 · scripts/tabs/product_tab.gd
 - PRODUCT_VIEW_* · 2 · scripts/tabs/product_tab.gd
+- PRODUCT_WAIT_* · 5 · scripts/tabs/product/board_row.gd
 - PRODUCT_WEEK_* · 1 · scripts/tabs/product/sprint_board.gd, scripts/tabs/product/sprint_head.gd
 - PROD_CONFIRM_* · 1 · scripts/tabs/product/type_picker.gd, scripts/debug/endgame_smoke.gd
 - PROD_DESIGN_* · 1 · data/events/cards/unwired/design_round_intro.json

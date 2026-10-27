@@ -42,7 +42,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 44
+const THEME_STAMP := 45
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -704,7 +704,8 @@ const D_H_CAP_HEAD := 30              # the capacity block's head: its caps labe
 const D_H_CAP_ROW := 56               # a stage's row of the capacity block
 const D_H_CAP_LINE := 20              # its top line: name, groove, figure, badge
 const D_CAP_HEADROOM := 1.03          # the room past the longest groove or fill on the grooves' shared scale
-const D_W_CAP_TIP := 288              # the spilling stage's tooltip
+const D_W_TIP := 288                  # a rich tooltip's width: the spilling stage's and a card's
+const D_NEED_BOX := Vector2i(56, 28)  # a stage's effort box at the head of a card's tooltip
 const D_H_CAP_TRACK := 16             # a stage's groove
 const D_CAP_FILL_INSET := 3           # a groove's fill from its outline, above and below
 const D_W_CAP_LABEL := 108            # a capacity row's stage column

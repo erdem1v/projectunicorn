@@ -4233,6 +4233,10 @@ func _run_product_shot(id: String) -> void:
 				_press_button_labelled(_shell, tr("MAIL_RESPOND"))
 		if id.begins_with("live:a4_") and not await _product_a4_ready(id.trim_prefix("live:")):
 			return
+		var tip: String = String(_A4_WORLDS.get(id.trim_prefix("live:"), {}).get("tip", ""))
+		if tip != "":
+			await _product_tip_shot(tip, id.trim_prefix("live:"), stem)
+			return
 		# A frame before each action, the last one after them (stem + the action's suffix). English for this
 		# run only: Localization.set_language would also store it as the player's language.
 		var press := func(key: String) -> Callable: return _press_button_labelled.bind(_shell, tr(key))
@@ -4318,6 +4322,65 @@ func _product_overview_shot(scenario: String, stem: String) -> void:
 			get_viewport().push_input(move)
 			break
 	await _finish_shot(stem + "_tip", 1.2)
+
+
+## live:a4_* world with a `tip` (_A4_WORLDS): the plain frame, then the pointer rests on the control the tip belongs to (`_tip_target`,
+## scrolled into view) and the tip's frame (<stem>_tip) is saved once its delay has passed. A world without that control prints
+## `SHOT|tip_missing|<kind>` and ends with the plain frame.
+func _product_tip_shot(tip: String, kind: String, stem: String) -> void:
+	var page: Control = get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()
+	var target: Control = _tip_target(page, tip)
+	if target == null:
+		print("SHOT|tip_missing|%s" % kind)
+		await _finish_shot(stem)
+		return
+	await get_tree().create_timer(0.5).timeout
+	_save_shot(stem)
+	var scroll: Node = target.get_parent()
+	while scroll != null and not scroll is ScrollContainer:
+		scroll = scroll.get_parent()
+	if scroll != null:
+		(scroll as ScrollContainer).ensure_control_visible(target)
+		await get_tree().process_frame
+	var move := InputEventMouseMotion.new()
+	move.position = target.get_global_rect().get_center()
+	move.global_position = move.position
+	get_viewport().push_input(move)
+	await _finish_shot(stem + "_tip", 1.2)
+
+
+## The control a tip frame points at, or null: "card" the name of the first board row with a due date (else of the first row), "fix"
+## of the first fix card, "founder" of the founder's first card, "plain" of the first card no PM prepared; "bar" the first running
+## bar (board order); "next" the first strip part of the next column's cards with work done ahead; "cap" the name cell of the stage
+## that has spilled for two sprints.
+func _tip_target(page: Control, tip: String) -> Control:
+	if tip == "cap":
+		var cap: CapacityView = page.find_children("*", "CapacityView", true, false)[0]
+		for i in cap._rows.size():
+			if cap._rows[i].streak >= 2:
+				return cap._tips[i][0]
+		return null
+	if tip == "next":
+		var done: Array = page.find_children("*", "SprintNext", true, false)[0].find_children("*", "StagePaint", true, false).filter(
+			func(part: StagePaint) -> bool: return part.kind == &"seg" and part.spec.fill > 0.0)
+		return null if done.is_empty() else done[0]
+	var rows: Array = page.find_children("*", "BoardRow", true, false).filter(func(row: BoardRow) -> bool: return not row.is_candidate())
+	if tip == "bar":
+		for row: BoardRow in rows:
+			for entry: Dictionary in row._live:
+				if entry.ground.spec.state == "run":
+					return entry.ground
+		return null
+	var picks: Dictionary = {"card": func(c: Dictionary) -> bool: return c.slot.get("kind", "") == "due",
+		"fix": func(c: Dictionary) -> bool: return c.kind == "fix", "founder": func(c: Dictionary) -> bool: return c.founder,
+		"plain": func(c: Dictionary) -> bool: return c.pm == null and not c.stages.is_empty()}
+	var picked: Array = rows.filter(func(row: BoardRow) -> bool: return picks[tip].call(row.card))
+	if tip == "card" and picked.is_empty():
+		picked = rows
+	if picked.is_empty():
+		return null
+	var row: BoardRow = picked[0]
+	return row.find_children("*", "Label", true, false).filter(func(l: Label) -> bool: return l.text == String(row.card.name))[0]
 
 
 ## live:<pick|pick_named|pick_relang|plan|active|decision_paper|b2c_mvp|b2c_live|b2c_goal|b2b_mvp|b2b_mature|b2b_quarter|
@@ -4477,7 +4540,10 @@ func _seed_product_live(scenario: String) -> void:
 ## "over" every card "+" takes, "long" the longest English names, "none" or that many cards); `load` the plan's cards sized to
 ## that share of the capacity (`card_need`, the one fixture size); `run` the sprint started and the clock moved to that sprint
 ## week; `delegate` the planning handed to the PM; `paper` a decision paper asked in the first week (off in every other world); `away`
-## every employee but the PMs on leave once the plan is made (a plan with cards nobody can work); `pm` the PMs' name.
+## every employee but the PMs on leave once the plan is made (a plan with cards nobody can work); `pm` the PMs' name; `tip` the pointer's
+## rest for a second frame with the tip open ("card", "fix", "founder" or "plain" a card's name, "bar" a running bar, "next" a next
+## column card's strip part, "cap" the stage that keeps spilling; `_tip_target`). The *_tip worlds and a4_run_w2_bar copy a frame's
+## world for its tip.
 const _A4_ROLES := {"p": HRConstants.ROLE_PRODUCT_MANAGER, "d": HRConstants.ROLE_DESIGNER, "v": HRConstants.ROLE_DEVELOPER,
 	"t": HRConstants.ROLE_TESTER}
 const _A4_FIRST := ["Ece", "Mert", "Zeynep", "Deniz", "Burak", "Ayşe", "Kaan", "Gizem", "Onur", "Defne"]   # LOC-DATA debug seed / names
@@ -4497,11 +4563,11 @@ const _A4_WORLDS := {
 	"a4_six_pm2": {"crew": _A4_SIX + "2", "before": [_A4_PREP], "bugs": 1, "fill": "over", "load": 1.15, "queue": 1},
 	"a4_eleven": {"crew": _A4_ELEVEN, "sit": ["table"], "bugs": 1, "fill": "over", "load": 1.25},
 	"a4_eleven_streak": {"crew": _A4_ELEVEN, "sit": ["table"], "bugs": 1, "fill": "over", "load": 1.25,
-		"before": [{"fill": "over", "load": 1.25}, {"fill": "over", "load": 1.25}]},
+		"before": [{"fill": "over", "load": 1.25}, {"fill": "over", "load": 1.25}], "tip": "cap"},
 	"a4_two_pm": {"crew": "d3 v4 v4 v3 v2 v2 t3 t1 p5 p2", "sit": ["sales"], "before": [{"queue": 4, "fill": 4}], "fill": "over", "load": 1.25},
 	"a4_fifty": {"crew": _A4_FIFTY, "off": true, "delegate": true, "before": [{"queue": 6, "fill": 4}]},
 	"a4_run_w2": {"crew": _A4_SIX + "5", "before": [_A4_PREP], "fill": "over", "load": 1.15, "queue": 1, "run": 1.0, "paper": true},
-	"a4_eleven_tip": {"crew": _A4_ELEVEN, "twin": [2, 6], "accounts": 4, "fill": "long"},
+	"a4_eleven_tip": {"crew": _A4_ELEVEN, "twin": [2, 6], "accounts": 4, "fill": "long", "tip": "card"},
 	"a4_twelve_dev": {"crew": "d3 d3 v4 v4 v4 v3 v3 v3 v3 v2 v2 v2 v2 v2 t3 t1", "off": true, "fill": "over", "load": 1.3},
 	"a4_fourteen": {"crew": _A4_ELEVEN, "bugs": 4, "fill": 14, "load": 1.6},
 	"a4_requests": {"crew": "d3 v3 v2 v4 t3", "off": true, "accounts": 4},
@@ -4520,6 +4586,13 @@ const _A4_WORLDS := {
 	"a4_delegate_noteam": {"crew": "d3 v3 t3 p5", "off": true, "fill": 3, "away": true, "delegate": true},
 	"a4_run_delegate_long": {"crew": _A4_SIX + "5", "before": [_A4_PREP], "fill": "over", "load": 1.15, "queue": 2, "run": 1.9, "delegate": true,
 		"pm": "Jordan Bennett"},   # LOC-DATA debug seed / names: the pools' widest name
+	"a4_run_w2_bar": {"crew": _A4_SIX + "5", "before": [_A4_PREP], "fill": "over", "load": 1.15, "queue": 1, "run": 1.0, "paper": true,
+		"tip": "bar"},
+	"a4_fix_tip": {"crew": _A4_ELEVEN, "sit": ["table"], "bugs": 1, "fill": "over", "load": 1.25, "tip": "fix"},
+	"a4_meet_tip": {"crew": _A4_SIX + "5", "before": [_A4_PREP], "bugs": 1, "fill": "over", "load": 1.15, "queue": 1,
+		"sit": ["sales", "sales"], "tip": "founder"},
+	"a4_next_tip": {"crew": _A4_SIX + "5", "before": [_A4_PREP], "fill": "over", "load": 1.15, "queue": 2, "run": 1.9, "tip": "next"},
+	"a4_pm_tip": {"crew": _A4_SIX + "5", "before": [_A4_PREP], "bugs": 1, "fill": "over", "load": 1.15, "queue": 1, "tip": "plain"},
 }
 
 

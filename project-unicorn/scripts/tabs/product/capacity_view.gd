@@ -8,7 +8,6 @@ extends PanelContainer
 
 signal action(kind: String, args: Dictionary)
 
-const STAGE_KEYS := {"design": "PRODUCT_PHASE_DESIGN", "dev": "PRODUCT_PHASE_DEV", "test": "PRODUCT_PHASE_TEST"}
 const STAYS_KEYS := {"design": "PRODUCT_STAYS_DESIGN", "dev": "PRODUCT_STAYS_DEV", "test": "PRODUCT_STAYS_TEST"}
 const AWAY_KEYS := {"training": "PRODUCT_AWAY_TRAINING", "leave": "PRODUCT_AWAY_LEAVE", "research": "PRODUCT_AWAY_RESEARCH",
 	"meetings": "PRODUCT_AWAY_MEETINGS"}
@@ -33,7 +32,7 @@ class Cell extends Control:
 
 var _rows: Array = []
 var _grooves: Array = []
-## Her satırın ipucunu taşıyan düğümler [etiket, sayı, rozet]: sprint sürerken "yapıldı" güncellenince yenilenir.
+## Her satırın "yapıldı" taşıyan ipucunun düğümleri [etiket, sayı]: sprint sürerken yenilenir.
 var _tips: Array = []
 
 
@@ -56,7 +55,8 @@ func setup(model: Dictionary) -> void:
 	# Etiket sütunu üç satırda aynı genişliktedir, oluklar aynı yerden başlar: en az D_W_CAP_LABEL, dilin en uzun aşama adı sığmazsa onun kadar.
 	var label_w: float = UiTokens.D_W_CAP_LABEL
 	for row: Dictionary in _rows:
-		label_w = maxf(label_w, ceilf(UiTokens.D_ICON_ROW + UiTokens.SPACE_M + StagePaint.text_width(tr(STAGE_KEYS[row.stage]), &"CapStage")))
+		label_w = maxf(label_w, ceilf(UiTokens.D_ICON_ROW + UiTokens.SPACE_M
+			+ StagePaint.text_width(SprintUiShared.stage_name(row.stage), &"CapStage")))
 	for row: Dictionary in _rows:
 		list.add_child(_row(row, c.mode == "active", label_w))
 	if _rows[0].shared:
@@ -132,7 +132,7 @@ func _row(row: Dictionary, running: bool, label_w: float) -> PanelContainer:
 	var name_cell := _tipped(tip, rich)
 	name_cell.custom_minimum_size.x = label_w
 	name_cell.add_child(UiFactory.make_glyph(SprintUiShared.ROLE_ICONS[row.stage], UiTokens.D_ICON_ROW, UiTokens.D_stage(row.stage)))
-	name_cell.add_child(SprintUiShared.label(tr(STAGE_KEYS[row.stage]), &"CapStage", UiTokens.D_INK_OFF if empty else null))
+	name_cell.add_child(SprintUiShared.label(SprintUiShared.stage_name(row.stage), &"CapStage", UiTokens.D_INK_OFF if empty else null))
 	line.add_child(name_cell)
 	var groove := StagePaint.groove(row.stage, {"work": row.work, "groove": row.team, "done": row.done,
 		"outer": maxf(0.0, row.out - row.out_inside), "inner": row.out_inside, "ghost": 0.0, "scale": 1.0, "shared": row.shared,
@@ -142,8 +142,8 @@ func _row(row: Dictionary, running: bool, label_w: float) -> PanelContainer:
 	line.add_child(groove)
 	var figure := _figure(row, tip)
 	figure.visible = not empty
-	var badge := _badge(row, spills, empty, tip, rich)
-	_tips.append([name_cell, figure, badge])
+	var badge := _badge(row, spills, empty, rich)
+	_tips.append([name_cell, figure])
 	line.add_child(_cell(figure, UiTokens.D_W_CAP_NUMBER, true))
 	line.add_child(_cell(badge, UiTokens.D_W_CAP_BADGE, false))
 	body.add_child(SprintUiShared.pad(_people(row), Vector4i(int(label_w) + UiTokens.SPACE_L, 0, 0, 0)))
@@ -187,7 +187,9 @@ func _figure(row: Dictionary, tip: String) -> HBoxContainer:
 
 
 ## Sığıyorsa tik, taşıyorsa "+{n}"; aynı aşama art arda iki ve daha çok sprint taşıyorsa yanında "{n}." halkası (kendi ipucuyla).
-func _badge(row: Dictionary, spills: bool, empty: bool, tip: String, rich: Callable) -> TipBox:
+## İpucu "Sığıyor" ya da "{n} efor sonraki sprinte kalır"; taşan aşamada `rich` paneli onun yerine açılır.
+func _badge(row: Dictionary, spills: bool, empty: bool, rich: Callable) -> TipBox:
+	var tip: String = "" if empty else (tr("PRODUCT_CAP_SPILL").format({"n": roundi(row.out)}) if spills else tr("PRODUCT_CAP_FITS"))
 	var badge := _tipped(tip, rich)
 	if spills:
 		var over := PanelContainer.new()
@@ -226,7 +228,9 @@ func _people(row: Dictionary) -> HFlowContainer:
 			flow.add_child(_away(gone))
 		return flow
 	for person: Dictionary in crowd.founders:
-		flow.add_child(SprintUiShared.face(person, UiTokens.D_AVATAR_ROW_SM))
+		var face := SprintUiShared.face(person, UiTokens.D_AVATAR_ROW_SM)
+		face.tooltip_text = _person_tip(row.people.filter(func(p: Dictionary) -> bool: return p.person.id == person.id)[0])
+		flow.add_child(face)
 	for group: Dictionary in crowd.stars:
 		flow.add_child(_cluster(group.person, SprintUiShared.stars_text(group.stars), group.n, false))
 	for group: Dictionary in crowd.away:
@@ -240,13 +244,18 @@ func _person(p: Dictionary, stage: String) -> VBoxContainer:
 	var slot := SprintUiShared.column(UiTokens.SPACE_XXS)
 	slot.custom_minimum_size.x = UiTokens.D_W_FACE_SLOT
 	var face := SprintUiShared.face(p.person, UiTokens.D_AVATAR_ROW_SM)
-	face.tooltip_text = tr("PRODUCT_PERSON_TIP").format({"name": p.person.name, "stars": SprintUiShared.stars_text(p.person.stars),
-		"effort": roundi(p.effort), "busy": Fmt.percent(p.busy * 100.0, 0)})
+	face.tooltip_text = _person_tip(p)
 	slot.add_child(face)
 	var bar := StagePaint.busy(stage, p.busy, p.cut)
 	bar.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	slot.add_child(bar)
 	return slot
+
+
+## Kişinin ipucu: adı, yıldızı, sprintteki gücü ve doluluğu.
+func _person_tip(p: Dictionary) -> String:
+	return tr("PRODUCT_PERSON_TIP").format({"name": p.person.name, "stars": SprintUiShared.stars_text(p.person.stars),
+		"effort": roundi(p.effort), "busy": Fmt.percent(p.busy * 100.0, 0)})
 
 
 ## Sprinte seçilemeyen kişi: soluk gri yüz ve yanında nedeni; ipucu adı, yıldızı ve nedeni.
@@ -255,7 +264,7 @@ func _away(gone: Dictionary) -> Control:
 	var item := SprintUiShared.box(UiTokens.SPACE_M)
 	item.add_child(SprintUiShared.face(gone.person, UiTokens.D_AVATAR_ROW_SM, true))
 	item.add_child(SprintUiShared.label(reason, &"AwayLabel"))
-	return _hover(item, String(gone.person.name) + " " + SprintUiShared.stars_text(gone.person.stars) + SprintUiShared.SEP + reason)
+	return _hover(item, SprintUiShared.named_stars(gone.person) + SprintUiShared.SEP + reason)
 
 
 ## Küme: bir temsilci yüz, ağırlığı (yıldız ya da neden) ve sayısı; ipucu "{ağırlık} · {n} kişi".
@@ -280,7 +289,7 @@ func _hover(item: Control, tip: String) -> MarginContainer:
 
 ## Aşamanın ipucu: ad, iş ve ekip; koşarken yapılan; sığıyor ya da sonraki sprinte kalan; bekleme yüzünden kalan kısım.
 func _tip(row: Dictionary, running: bool) -> String:
-	var parts := PackedStringArray([tr("PRODUCT_CAP_TIP").format({"stage": tr(STAGE_KEYS[row.stage]), "work": roundi(row.work),
+	var parts := PackedStringArray([tr("PRODUCT_CAP_TIP").format({"stage": SprintUiShared.stage_name(row.stage), "work": roundi(row.work),
 		"team": roundi(row.team)})])
 	if running:
 		parts.append(tr("PRODUCT_CAP_TIP_DONE").format({"n": roundi(row.done)}))
@@ -293,12 +302,10 @@ func _tip(row: Dictionary, running: bool) -> String:
 ## Taşan aşamanın paneli: başlık ("{aşama}" ve "Efor {iş} / {ekip}"), "+{n} sonraki sprinte kalır", "{AŞAMA}DA KALIR" altında kart
 ## satırları ve süreklilik.
 func _over_tip(row: Dictionary) -> Control:
-	var tip := SprintUiShared.column(UiTokens.SPACE_L)
-	tip.theme = load(UiTokens.MENAJER_THEME)
-	tip.custom_minimum_size.x = UiTokens.D_W_CAP_TIP
+	var tip := SprintUiShared.tip_column()
 	var head := SprintUiShared.box(UiTokens.SPACE_M)
 	head.add_child(UiFactory.make_glyph(SprintUiShared.ROLE_ICONS[row.stage], UiTokens.D_ICON_ROW, UiTokens.D_stage(row.stage)))
-	var stage := SprintUiShared.label(tr(STAGE_KEYS[row.stage]), &"TipTitle")
+	var stage := SprintUiShared.label(SprintUiShared.stage_name(row.stage), &"TipTitle")
 	stage.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(stage)
 	head.add_child(SprintUiShared.label("%s %d / %d" % [tr("PRODUCT_EFFORT"), roundi(row.work), roundi(row.team)], &"MetaMuted"))

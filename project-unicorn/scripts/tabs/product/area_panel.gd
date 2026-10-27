@@ -18,8 +18,6 @@ const CHEVRONS := ["res://assets/icons/util/chevron_right.svg", "res://assets/ic
 const CHEVRON_UP := "res://assets/icons/util/chevron_up.svg"
 ## Talep listesi kapalıyken görünen satır sayısı.
 const REQUESTS_SHOWN := 3
-const STAGE_KEYS := {"design": "PRODUCT_PHASE_DESIGN", "dev": "PRODUCT_PHASE_DEV", "test": "PRODUCT_PHASE_TEST",
-	"product": "PRODUCT_STAGE_RESEARCH"}
 
 var _model: Dictionary
 var _col := SprintUiShared.column(0)
@@ -252,7 +250,7 @@ func _strip(parts: Array) -> HBoxContainer:
 		seg.custom_minimum_size.y = UiTokens.D_H_STAGE_STRIP
 		seg.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		seg.size_flags_stretch_ratio = part.effort
-		seg.tooltip_text = tr(STAGE_KEYS[part.stage]) + " " + str(roundi(part.effort))
+		seg.tooltip_text = SprintUiShared.stage_name(part.stage) + " " + str(roundi(part.effort))
 		strip.add_child(seg)
 	return strip
 

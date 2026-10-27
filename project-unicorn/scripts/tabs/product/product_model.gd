@@ -82,14 +82,17 @@ extends RefCounted
 #         zaman ekseninin `out`u, sürüm notunda sonraki sütunun devreden kartlarının kalan ihtiyacı; ikisini de aynı işlevler
 #         hesaplar, kartın aynı aşamadaki payları tek satırdır; planlı: planlamada ve koşarken sonraki sütunun kartlarının sprint
 #         sonundaki kalan ihtiyacı ve hazırlık kazancı, sürüm notunda bugünkü),
-#         cards: [{id, kind, name, effort (aşama paylarının toplamı), parts: [{stage, effort (sprint sonundaki kalan ihtiyaç), done
-#         (bu sprintte önden yapılan), people: [person] (önden çalışanlar)}], prep: {pm: person, done: 0..1} or null (hazırlayan PM
-#         yok), buttons}] (sürüm notunda devreden kartlar `carried`ta yer alır, burada değil; planlamada "↑" ve "×", öbür kiplerde "×").
+#         cards: [{id, kind, name, effort (aşama paylarının toplamı), raw_effort (hazırlıksız hâli), parts: [{stage, effort (sprint
+#         sonundaki kalan ihtiyaç), done (bu sprintte önden yapılan), people: [person] (önden çalışanlar)}], ahead (önden işi bu
+#         sprintte başlıyor), prep: {pm: person, done: 0..1} or null (hazırlayan PM yok), buttons}] (sürüm notunda devreden kartlar
+#         `carried`ta yer alır, burada değil; planlamada "↑" ve "×", öbür kiplerde "×").
 # person = {id, name, role_text, look, stars, founder}.
-# Kart satırı (pano) = {id, kind, name, effort, raw_effort, module, fix_text, slot: {kind: "due" (+ text, soon) | "carried" | "late"}
-#   ya da {}, pm, ask, risk, risk_raw (0..1: beklenen hatanın tavana oranı, hazırlanmamış hâli), late, founder, buttons,
-#   stages (SprintTimeline aşamaları)}. Planlamada düğmeler "→" ve "×", koşarken yok; kapısı sonradan kapanıp başlamayacak kart
-#   zaman ekseninde yoktur: `stages` boş, yalnız "×". `effort` kartın sprintteki yüküdür (`SprintSystem.card_load` ÷ hazırlık kazancı),
+# Kart satırı (pano) = {id, kind, name, effort, raw_effort, module (kısa ad), module_name, fix_text (düzeltme kartında hata sayısı ve
+#   etkilenenler), fix_full (en büyük hesapla), slot: {kind: "due" (+ text, soon, customer, value, promise: söz mü talep mi) | "carried" |
+#   "late"} ya da {}, pm, ask, risk, risk_raw (0..1: beklenen hatanın tavana oranı, hazırlanmamış hâli), late, finishes (sprint sonuna
+#   yetişir), founder, gate (başlamayacak kartın kapı gerekçesi, yoksa ""), buttons, stages (SprintTimeline aşamaları)}. Planlamada
+#   düğmeler "→" ve "×", koşarken yok; kapısı sonradan kapanıp başlamayacak kart zaman ekseninde yoktur: `stages` boş, `gate` dolu,
+#   yalnız "×". `effort` kartın sprintteki yüküdür (`SprintSystem.card_load` ÷ hazırlık kazancı),
 #   `raw_effort` bölünmemiş hâli: sprintin başındaki kalan ihtiyaç; koşarken yalnız testin bulduğu düzeltme işi onu büyütür.
 # Düzeltme işi: `effort`, `raw_effort` ve `suggest.cards[].effort` kartın kendi kalan ihtiyacıdır: testin BULDUĞU düzeltmeyi sayar
 #   (test hata bulunca kartın eforu büyür), oynatmanın yalnız ÖNGÖRDÜĞÜ düzeltmeyi saymaz. `stages`taki dördüncü girdi (`fix: true`)
@@ -698,22 +701,25 @@ static func _candidates(offered: Array, pool: Dictionary) -> Array:
 static func _row(c: Dictionary, t: Dictionary, buttons: Array) -> Dictionary:
 	var ref: float = SprintBugs.ceiling()
 	var preparer: Character = CharacterRegistry.get_character(String(t.get("prep", {}).get("by", "")))
-	var due: int = SprintCatalog.due_sprint(c)
+	var due: Dictionary = SprintCatalog.due(c)
 	var late: bool = t.get("late", false)
 	var slot: Dictionary = {}
-	if due >= 0:
-		slot = _due(due).merged({"kind": "due"})
+	if due.sprint >= 0:
+		slot = _due(due.sprint).merged({"kind": "due", "customer": due.customer, "value": due.value, "promise": due.promise})
 	elif c.state == "carried":
 		slot = {"kind": "carried"}
 	elif late:
 		slot = {"kind": "late"}
+	var fix: bool = c.kind == "fix"
+	var bugs: Dictionary = SprintCatalog.bugs_part(c.line, c.bugs) if fix else {}
 	return {"id": c.id, "kind": _kind(c), "name": SprintCatalog.card_name(c), "effort": roundi(_effort(c)),
 		"raw_effort": roundi(SprintSystem.card_load(c)),
-		"module": SprintCatalog.area_short(c.area),
-		"fix_text": SprintUiShared.bugs_text(SprintCatalog.bugs_part(c.line, c.bugs), false) if c.kind == "fix" else "",
+		"module": SprintCatalog.area_short(c.area), "module_name": SprintCatalog.area_name(c.area),
+		"fix_text": SprintUiShared.bugs_text(bugs, false) if fix else "", "fix_full": SprintUiShared.bugs_text(bugs) if fix else "",
 		"slot": slot, "pm": null if preparer == null else _face(preparer, HRConstants.AREA_PRODUCT), "ask": _ask(c),
 		"risk": minf(1.0, t.get("h", 0.0) / ref) if ref > 0.0 else 0.0, "risk_raw": minf(1.0, t.get("h0", 0.0) / ref) if ref > 0.0 else 0.0,
-		"late": late, "founder": t.get("founder", false),
+		"late": late, "finishes": t.get("finishes", false), "founder": t.get("founder", false),
+		"gate": SprintCatalog.gate_reason(c.step) if t.is_empty() else "",
 		"buttons": buttons.filter(func(b: String) -> bool: return b != "remove" or not c.get("follow", false)),
 		"stages": t.get("stages", [])}
 
@@ -731,13 +737,15 @@ static func _parts(c: Dictionary, gains: Dictionary = {}) -> Array:
 	return [0, 1, 2].map(func(i: int) -> float: return maxf(0.0, float(c.need[i]) - float(c.progress[i])) / k)
 
 
-## Kartın bekleyen sorusu {person (soran), item (gelen kutusundaki kâğıt)}; karar yoksa null.
+## Kartın bekleyen sorusu {person (soran; sistem kâğıdında null), name (soranın adı, yoksa kâğıdın göndericisi), item (gelen kutusundaki
+## kâğıt)}; karar yoksa null.
 static func _ask(c: Dictionary) -> Variant:
 	var paper: Variant = _decision() if c.decision else null
 	if paper == null:
 		return null
 	var speaker: Character = CharacterRegistry.get_character(String(GameState.product.decision.speaker))
-	return {"person": null if speaker == null else _face(speaker, HRConstants.role_key_area(speaker.role)), "item": paper.item}
+	return {"person": null if speaker == null else _face(speaker, HRConstants.role_key_area(speaker.role)),
+		"name": paper.sender.name if speaker == null else speaker.character_name, "item": paper.item}
 
 
 # --- Sonraki sprint -----------------------------------------------------------------
@@ -771,19 +779,23 @@ static func _next(mode: String, run: Dictionary) -> Dictionary:
 ## Sağ sütunun kartı: aşama payları (kalan ihtiyaç ÷ sprint sonundaki hazırlık kazancı `gains`), her payın bu sprintte önden yapılan
 ## işi ve çalışanları (`seat`, zaman ekseninin `ahead` kaydı), hazırlayan PM ve düğmeler; kapısı sonradan kapanan kart yalnız çıkar.
 static func _next_card(c: Dictionary, mode: String, gains: Dictionary, seat: Dictionary) -> Dictionary:
-	var areas: Dictionary = SprintCatalog.cfg("role_areas")
 	var parts: Array = []
 	var effort := 0.0
+	var starts := false
 	for share: Dictionary in _shares([c.id], gains):
 		var ahead: Dictionary = seat.get(share.stage, {})
 		parts.append({"stage": share.stage, "effort": share.effort, "done": minf(share.effort, float(ahead.get("done", 0.0))),
-			"people": ahead.get("people", []).map(func(id: String) -> Dictionary:
-				return _face(CharacterRegistry.get_character(id), areas[share.stage]))})
+			"people": ahead.get("people", []).map(func(id: String) -> Dictionary: return stage_face(id, share.stage))})
 		effort += share.effort
+		starts = starts or ahead.has("start")
 	var prep: Dictionary = seat.get("prep", {"by": c.get("prep_by", ""), "done": float(c.get("prep_done", 0.0))})
 	var pm: Character = CharacterRegistry.get_character(String(prep.by))
 	var keys: Array = NEXT_KEYS if mode == "plan" and SprintCatalog.gate_reason(c.step) == "" else ["remove"]
-	return {"id": c.id, "kind": _kind(c), "name": SprintCatalog.card_name(c), "effort": roundi(effort), "parts": parts,
+	var raw := 0.0
+	for share: Dictionary in _shares([c.id], {c.id: 0.0}):
+		raw += share.effort
+	return {"id": c.id, "kind": _kind(c), "name": SprintCatalog.card_name(c), "effort": roundi(effort), "raw_effort": roundi(raw),
+		"parts": parts, "ahead": starts,
 		"prep": null if pm == null else {"pm": _face(pm, HRConstants.AREA_PRODUCT), "done": float(prep.done)},
 		"buttons": keys.filter(func(key: String) -> bool: return key != "remove" or not c.get("follow", false))}
 
@@ -1119,6 +1131,11 @@ static func _person(c: Character) -> Dictionary:
 static func _face(c: Character, area: String) -> Dictionary:
 	return _person(c).merged({"id": c.id, "stars": HRConstants.stars_for(HRSystem.skill(c, area)),
 		"founder": c.category == "founder"})
+
+
+## Kişinin `stage` aşamasındaki yüzü (yıldızı o aşamanın alanındandır).
+static func stage_face(id: String, stage: String) -> Dictionary:
+	return _face(CharacterRegistry.get_character(id), SprintCatalog.cfg("role_areas")[stage])
 
 
 # --- Yardımcılar -------------------------------------------------------------------------
