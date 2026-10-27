@@ -156,9 +156,11 @@ func _message() -> void:
 			_mail(_kicker(kind), _item.subject, INBOX.clause_body(a))
 			var account: Customer = CustomerRegistry.get_customer(String(a.id))
 			if account != null and account.clause_due_day >= 0:
-				_actions("", [[tr("SALES_CLAUSE_BTN_SWITCH").format({"old": Fmt.money_exact(InfraSystem.monthly_bill()),
+				var locked: String = InfraSystem.lock_reason()
+				_actions(tr(locked).format({"weeks": Fmt.weeks(InfraSystem.lock_weeks_left())}),
+					[[tr("SALES_CLAUSE_BTN_SWITCH").format({"old": Fmt.money_exact(InfraSystem.monthly_bill()),
 					"new": Fmt.money_exact(InfraSystem.monthly_bill(InfraSystem.PROVIDER_ENTERPRISE))}),
-					_move_to_enterprise, true]], EventGate.active_id() != "")
+					_move_to_enterprise, true]], locked != "" or EventGate.active_id() != "")
 		"exit_notice":
 			_mail(_kicker(kind), _item.subject, INBOX.exit_body(a))
 		"rnd_note", "rnd_discovery":
@@ -800,11 +802,12 @@ func _attend(event_id: String) -> void:
 
 # --- Shared --------------------------------------------------------------------------------------
 
-## The one action row: a note on the left, the buttons on the right, the primary last.
+## The one action row: a note on the left, the buttons on the right, the primary last. Blocked buttons are off; the note
+## names why, else it says a card waits for its answer.
 func _actions(note: String, buttons: Array, blocked := false) -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", UiTokens.SPACE_L)
-	var left := UiFactory.make_label(tr("GATE_ANSWER_FIRST") if blocked else note, &"MetaMuted")
+	var left := UiFactory.make_label(tr("GATE_ANSWER_FIRST") if blocked and note == "" else note, &"MetaMuted")
 	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(left)

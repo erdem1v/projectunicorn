@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git 6aa4584 · 2026-10-27 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 3cc582c · 2026-10-27 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -238,8 +238,8 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/tabs/rnd_tab.gd · 273 · - · Control · 1 sinyal · 14 func
 - scripts/tabs/sales_tab.gd · 850 · - · Control · 1 sinyal · 40 func
 
-### scripts/tabs/events/ (1 dosya, 889 satır)
-- scripts/tabs/events/mail_pane.gd · 889 · - · ScrollContainer · 0 sinyal · 46 func
+### scripts/tabs/events/ (1 dosya, 892 satır)
+- scripts/tabs/events/mail_pane.gd · 892 · - · ScrollContainer · 0 sinyal · 46 func
 
 ### scripts/tabs/finance/ (1 dosya, 590 satır)
 - scripts/tabs/finance/finance_ozet_view.gd · 590 · FinanceOzetView · Control · 0 sinyal · 25 func
@@ -380,7 +380,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - tab_changed(tab_id: String) · scripts/autoload/event_bus.gd:29
   ↳ tab_changed emit: scripts/main/game_shell.gd:47,174, scripts/main/main.gd:400,582,1174,1177 +54
   ↳ tab_changed connect: scripts/main/main.gd:4778, scripts/ui/components/left_tabs.gd:105, scripts/ui/components/research_bar.gd:63, scripts/ui/components/window_layer.gd:62
-- finance_subpage_requested(page_id: String) · scripts/autoload/event_bus.gd:32 · emit: scripts/main/main.gd:4394,4860, scripts/tabs/events/mail_pane.gd:830 · connect: scripts/tabs/finance_tab.gd:58
+- finance_subpage_requested(page_id: String) · scripts/autoload/event_bus.gd:32 · emit: scripts/main/main.gd:4394,4860, scripts/tabs/events/mail_pane.gd:833 · connect: scripts/tabs/finance_tab.gd:58
 - goto_tab_requested(tab_id: String, subpage: String) · scripts/autoload/event_bus.gd:34 · emit: scripts/events/core/effects.gd:596 · connect: scripts/main/main.gd:4777
 - settings_requested() · scripts/autoload/event_bus.gd:38 · emit: scripts/main/main.gd:2601, scripts/menu/main_menu.gd:56, scripts/modals/system_menu_modal.gd:39, scripts/ui/components/left_tabs.gd:95 · connect: scripts/main/main.gd:88
 - confirm_requested(config: Dictionary) · scripts/autoload/event_bus.gd:41
