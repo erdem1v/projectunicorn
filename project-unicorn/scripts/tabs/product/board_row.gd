@@ -2,15 +2,18 @@ class_name BoardRow
 extends PanelContainer
 
 # Panonun bir kart satırı. Solda bilgi sütunu: tür ikonu, ad, hata riski ve efor; altında modülün kısa adı (düzeltme kartında hata
-# metni), durum yuvası (söz tarihi, devreden ya da yetişmez) ve PM ya da soru yuvası. Sağda zaman ekseni: aşama çubukları (önden
-# bitmiş aşamanın tik kutusu çubuğun başında), beklemeler, PM'in gölgesi ve kurucunun görüşme günleri, sprint dışına kalan pay
-# turuncu taramalı. Satır modelin kartını ve zaman ekseni kaydını çizer; hesap yapmaz. Koşan sprintte saat ilerleyince `set_now`
-# çubukların hâlini, dolgusunu ve çalışanların yüzlerini saklanan parçalardan yeniden okur. Art arda önden biten aşamalar tek tik
-# kutusudur (son bitenin renginde; bitmiş aşamaların listesi kartın `stages`ında kalır). Her öğe kendi Control'üdür: çubuk,
-# bekleme, gölge, tarama ve tik kutusu `StagePaint`, çip ve yuvalar kendi Label ya da Panel'i; ipucu o öğeye bağlanır. Zengin kart
-# ipucu (`CardTip`) yalnız kartın adında açılır; çubuğun ipucu düz yazıdır ve açılırken okunur (koşan sprintte saat ilerler).
-# Başlamayacak kartın (kapısı kapanmış) ipucu satırın kendisindedir, adın üstünde de o okunur: kapının gerekçesi ve kartın sonraki
-# sütuna geçeceği.
+# metni), durum yuvası ve PM ya da soru yuvası. Durum yuvası planlamada söz tarihi, "devreden" ya da "yetişmez"i gösterir; koşan
+# sprintte tek şeyi, sırayla: "yetişmez", koşan aşamanın "{aşama} %{n}"i, söz tarihi, "devreden"; hiçbiri yoksa yer ayırmaz. Sağda
+# zaman ekseni: aşama çubukları (önden bitmiş aşamanın tik kutusu çubuğun başında), beklemeler, PM'in gölgesi ve kurucunun görüşme
+# günleri, sprint dışına kalan pay turuncu taramalı. Satır modelin kartını ve zaman ekseni kaydını çizer; hesap yapmaz. Koşan
+# sprintte saat ilerleyince `set_now` çubukların hâlini, dolgusunu, çalışanların yüzlerini ve durum yuvasını saklanan parçalardan
+# yeniden okur. Art arda önden biten aşamalar tek tik kutusudur (son bitenin renginde; bitmiş aşamaların listesi kartın
+# `stages`ında kalır). Her öğe kendi Control'üdür: çubuk, bekleme, gölge, tarama ve tik kutusu `StagePaint`, çip ve yuvalar kendi
+# Label ya da Panel'i; ipucu o öğeye bağlanır. Zengin kart ipucu (`CardTip`) yalnız kartın adında açılır; çubuğun ipucu düz yazıdır
+# ve açılırken okunur (koşan sprintte saat ilerler). Başlamayacak kartın (kapısı kapanmış) ipucu satırın kendisindedir, adın
+# üstünde de o okunur: kapının gerekçesi ve kartın sonraki sütuna geçeceği.
+# Satır taban yükseklikte (`D_H_CARD_ROW`, ad iki satırsa `D_H_CARD_ROW_TWO`) durur; düzeltme kartının hata metni sığmazsa kelime
+# sınırında sarar ve satırı büyütür, zaman ekseni satırda dikey ortalı kalır.
 
 signal action(kind: String, args: Dictionary)
 
@@ -42,12 +45,21 @@ class CardName extends Label:
 var card: Dictionary
 var _ctx: Dictionary
 var _two := false
+## Taban yükseklik ve sarılan yazılar {Label: [tabandaki satır sayısı, satırının taban yüksekliği]}; `_fit` satırı ve yazının
+## satırını tabandan çok satıra sarılan yazı kadar büyütür.
+var _h := 0
+var _wraps := {}
 ## Koşan sprintte şimdiki an (sprint başından hafta); çubuğun ipucu açılınca okunur.
 var _now := 0.0
 var _mark: ColorRect
 var _acts: Control
 ## Koşan çubuklar {ground, label, faces, stage, workers}: saat ilerleyince hâli, yazısı ve yüzleri yeniden okunur.
 var _live: Array = []
+## Durum yuvası; içeriğini `_fill_status` kurar.
+var _status_cell: HBoxContainer
+## Koşan aşamanın "{aşama} %{n}"i, koşan aşama yoksa "". Yetişmeyen kartta tutulmaz: yuva "yetişmez"de kalır ve saat başı yeniden
+## kurulup ipucunu kapatmaz.
+var _stage_pct := ""
 
 
 func setup(row: Dictionary, ctx: Dictionary) -> void:
@@ -55,22 +67,22 @@ func setup(row: Dictionary, ctx: Dictionary) -> void:
 	_ctx = ctx
 	_now = ctx.now
 	_two = String(row.name).length() > UiTokens.D_CARD_NAME_SHORT
-	var h: int = UiTokens.D_H_CARD_ROW_TWO if _two else UiTokens.D_H_CARD_ROW
-	custom_minimum_size = Vector2(UiTokens.D_W_CARD_INFO + UiTokens.D_W_TIMELINE, h)
+	_h = UiTokens.D_H_CARD_ROW_TWO if _two else UiTokens.D_H_CARD_ROW
+	custom_minimum_size = Vector2(UiTokens.D_W_CARD_INFO + UiTokens.D_W_TIMELINE, _h)
 	mouse_filter = Control.MOUSE_FILTER_PASS
 	tooltip_text = _gated_tip()
-	var cell := Control.new()
-	cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(cell)
 	_mark = ColorRect.new()
-	_mark.size = Vector2(UiTokens.BORDER_ACCENT, h)
+	_mark.custom_minimum_size.x = UiTokens.BORDER_ACCENT
+	_mark.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	cell.add_child(_mark)
-	cell.add_child(_info(h))
-	cell.add_child(_lane(h))
+	add_child(_mark)
+	var body := SprintUiShared.box(0)
+	body.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	body.add_child(_info())
+	body.add_child(_lane(_h))
+	add_child(body)
 	if ctx.mode == "plan" and not ctx.candidate and not row.buttons.is_empty():
-		_acts = _keys(row.buttons)
-		cell.add_child(_acts)
+		add_child(_keys(row.buttons))
 	mouse_entered.connect(_hover.bind(true))
 	mouse_exited.connect(_exited)
 	_hover(ctx.hot)
@@ -118,18 +130,32 @@ func _exited() -> void:
 
 # --- Bilgi sütunu ---------------------------------------------------------------------------
 
-func _info(h: int) -> Control:
-	var margin := MarginContainer.new()
-	margin.size = Vector2(UiTokens.D_W_CARD_INFO, h)
-	margin.add_theme_constant_override("margin_top", UiTokens.D_PAD_CARD_ROW)
-	margin.add_theme_constant_override("margin_right", UiTokens.SPACE_L)
-	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+func _info() -> Control:
+	var info := Control.new()
+	info.custom_minimum_size.x = UiTokens.D_W_CARD_INFO
+	info.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var col := SprintUiShared.column(UiTokens.SPACE_XS)
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	margin.add_child(col)
+	info.add_child(col)
+	col.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	col.offset_top = UiTokens.D_PAD_CARD_ROW
+	col.offset_right = -UiTokens.SPACE_L
 	col.add_child(_first_line())
 	col.add_child(_second_line())
-	return margin
+	return info
+
+
+## Satırın yüksekliği taban `_h` artı sarılan her yazının tabandan fazla satırlarının yüksekliğidir (satır yüksekliği + line_spacing);
+## yazının satırı da o kadar büyür. Bilgi sütunu satırın en az yüksekliğini belirlemez: taban satırda kutular (aday "+"ı) tabanın
+## 3 px altına taşar, içerikten alınsa o satırlar büyürdü.
+func _fit() -> void:
+	var extra := 0
+	for label: Label in _wraps:
+		var grow: int = maxi(label.get_line_count() - _wraps[label][0], 0) * (label.get_line_height()
+			+ label.get_theme_constant(&"line_spacing"))
+		(label.get_parent() as Control).custom_minimum_size.y = _wraps[label][1] + grow
+		extra += grow
+	custom_minimum_size.y = _h + extra
 
 
 ## Tür ikonu, ad (22 karakterden uzunsa iki satır, yine taşarsa üç nokta), hata riski, efor ve aday satırında "+".
@@ -176,7 +202,7 @@ func _first_line() -> HBoxContainer:
 	return line
 
 
-## Modülün kısa adı (düzeltme kartında hata metni), durum yuvası ve PM yuvası.
+## Modülün kısa adı (düzeltme kartında sarılan hata metni), durum yuvası ve PM yuvası.
 func _second_line() -> HBoxContainer:
 	var line := SprintUiShared.box(UiTokens.SPACE_M)
 	line.custom_minimum_size.y = UiTokens.D_AVATAR_ROW_SM
@@ -186,34 +212,53 @@ func _second_line() -> HBoxContainer:
 	if card.kind == "fix":
 		var text := SprintUiShared.label(String(card.fix_text), &"Caption")
 		text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		text.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_wraps[text] = [1, UiTokens.D_AVATAR_ROW_SM]
+		text.minimum_size_changed.connect(_fit)
 		text.mouse_filter = Control.MOUSE_FILTER_PASS
 		text.tooltip_text = card.fix_full
 		line.add_child(text)
-		if not slot.is_empty():
-			line.add_child(_status(slot))
+		if not slot.is_empty() or _ctx.mode == "active":
+			line.add_child(_status())
 	else:
 		var module := SprintUiShared.label(String(card.module), &"CaptionName")
 		module.custom_minimum_size.x = UiTokens.D_W_CARD_SLOT
 		module.mouse_filter = Control.MOUSE_FILTER_PASS
 		module.tooltip_text = card.module_name
 		line.add_child(module)
-		line.add_child(_status(slot))
+		line.add_child(_status())
 	line.add_child(_person())
 	return line
 
 
-## Durum yuvası, en az `D_W_CARD_SLOT` geniş: söz tarihi çipi, "devreden" ya da kırmızı "yetişmez"; yoksa boş.
-func _status(slot: Dictionary) -> Control:
-	var cell := SprintUiShared.box(UiTokens.SPACE_S)
-	cell.custom_minimum_size.x = UiTokens.D_W_CARD_SLOT
+## Durum yuvası. Planlamada en az `D_W_CARD_SLOT` geniş: söz tarihi çipi, "devreden" ya da kırmızı "yetişmez"; yoksa boş. Koşan
+## sprintte tek şey, sırayla: kırmızı "yetişmez", koşan aşamanın "{aşama} %{n}"i, söz tarihi çipi, "devreden"; hiçbiri yoksa
+## gizlenir. Yazı kesilmez: sığmayan yazıda yuva genişler.
+func _status() -> Control:
+	_status_cell = SprintUiShared.box(UiTokens.SPACE_S)
+	_status_cell.custom_minimum_size.x = UiTokens.D_W_CARD_SLOT
+	_fill_status()
+	return _status_cell
+
+
+func _fill_status() -> void:
+	var active: bool = _ctx.mode == "active"
+	var shown := String(card.slot.get("kind", ""))
+	if active and card.late:
+		shown = "late"
+	elif _stage_pct != "":
+		shown = "stage"
+	var cell := _status_cell
+	UiFactory.clear(cell)
 	cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	match String(slot.get("kind", "")):
+	cell.tooltip_text = ""
+	cell.visible = not active or shown != ""
+	match shown:
 		"due":
-			var chip: PanelContainer = SprintUiShared.due_chip(String(slot.text), slot.soon)
+			var chip: PanelContainer = SprintUiShared.due_chip(String(card.slot.text), card.slot.soon)
 			chip.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 			chip.mouse_filter = Control.MOUSE_FILTER_PASS
-			chip.tooltip_text = SprintUiShared.SEP.join([slot.customer, slot.text])
+			chip.tooltip_text = SprintUiShared.SEP.join([card.slot.customer, card.slot.text])
 			cell.add_child(chip)
 		"carried":
 			var back := UiFactory.make_glyph(ARROW, UiTokens.D_ICON_TAG, UiTokens.D_INK_4)
@@ -226,13 +271,15 @@ func _status(slot: Dictionary) -> Control:
 			cell.add_child(SprintUiShared.label(tr("PRODUCT_LATE"), &"CaptionName", UiTokens.D_neg_ink()))
 			cell.mouse_filter = Control.MOUSE_FILTER_PASS
 			cell.tooltip_text = _late_tip()
-	return cell
+		"stage":
+			cell.add_child(SprintUiShared.label(_stage_pct, &"CaptionName"))
 
 
 ## PM yuvası: karta bekleyen bir soru varsa soranın yüzü ve sağ üstte "?", yoksa kartı hazırlayan PM'in yüzü.
 func _person() -> Control:
 	var slot := Control.new()
 	slot.custom_minimum_size = Vector2.ONE * UiTokens.D_AVATAR_ROW_SM
+	slot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var ask: Variant = card.ask
 	var who: Variant = card.pm if ask == null else ask.person
@@ -297,12 +344,15 @@ func _risk_word(risk: float) -> String:
 
 ## Planlamada üstüne gelince görünen "→" ve "×": satırın bilgi sütununun sağ üstünde, efor sayısının üstünde.
 func _keys(kinds: Array) -> Control:
-	var acts := SprintUiShared.row_keys(kinds, String(card.id), action.emit)
+	_acts = SprintUiShared.row_keys(kinds, String(card.id), action.emit)
+	_acts.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_acts.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	# Panelin sağ kenarı bilgi sütununun sağ kenarından `SPACE_M + SPACE_XXS` içeride, üstü satırın üstünden `SPACE_XS` aşağıda.
-	var keys_w: float = kinds.size() * UiTokens.D_H_KEY_SM + (kinds.size() + 1) * UiTokens.SPACE_XXS
-	acts.offset_left = UiTokens.D_W_CARD_INFO - UiTokens.SPACE_M - UiTokens.SPACE_XXS - keys_w
-	acts.offset_top = UiTokens.SPACE_XS
-	return acts
+	var keys_w: int = kinds.size() * UiTokens.D_H_KEY_SM + (kinds.size() + 1) * UiTokens.SPACE_XXS
+	var holder := SprintUiShared.pad(_acts, Vector4i(UiTokens.D_W_CARD_INFO - UiTokens.SPACE_M - UiTokens.SPACE_XXS - keys_w,
+		UiTokens.SPACE_XS, 0, 0))
+	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return holder
 
 
 # --- Zaman ekseni ---------------------------------------------------------------------------
@@ -317,8 +367,8 @@ func _x(week: float) -> float:
 ## sonunda kesilir.
 func _lane(h: int) -> Control:
 	var lane := Control.new()
-	lane.position = Vector2(UiTokens.D_W_CARD_INFO, 0.0)
-	lane.size = Vector2(UiTokens.D_W_TIMELINE, h)
+	lane.custom_minimum_size = Vector2(UiTokens.D_W_TIMELINE, h)
+	lane.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	lane.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var top: float = (h - UiTokens.D_H_STAGE_BAR) / 2.0
 	var shadows: Array = []
@@ -518,21 +568,29 @@ func _workers(s: Dictionary) -> Array:
 
 ## Koşan sprintte şimdiki an `at` (sprint başından hafta): her çubuğun hâli (biten, sürüyor, bekliyor), dolgusu, yazısı ve o an
 ## çalışanların yüzleri saklanan parçalardan okunur. Süren çubuk "{yapılan}/{toplam}" yazar (yapılan tamsayıya aşağı yuvarlanır: biten
-## çubuk dışında tam görünmez), başlamamış çubuk planlamadaki gibi aşamanın bu eksendeki işini.
+## çubuk dışında tam görünmez), başlamamış çubuk planlamadaki gibi aşamanın bu eksendeki işini. Süren çubuğun dolgusunun yüzdesi
+## (aşağı yuvarlanır) durum yuvasında "{aşama} %{n}" olur.
 func set_now(at: float) -> void:
 	_now = at
+	var stage_pct := ""
 	for entry: Dictionary in _live:
 		var s: Dictionary = entry.stage
 		var total: float = s.pre + s.need
 		var made: float = s.pre + SprintTimeline.done_at(s, at)
+		var fill: float = clampf(made / total, 0.0, 1.0)
 		var state: String = "done" if at >= s.end - SprintSystem.EPS else ("run" if at >= s.start - SprintSystem.EPS else "wait")
 		entry.main = entry.work if state == "wait" else str(floori(made + SprintSystem.EPS))
 		entry.sub = "" if state == "wait" else "/%d" % roundi(total)
-		(entry.ground as StagePaint).set_bar({"state": state, "fill": clampf(made / total, 0.0, 1.0) if state == "run" else 0.0})
+		(entry.ground as StagePaint).set_bar({"state": state, "fill": fill if state == "run" else 0.0})
 		(entry.label as StagePaint).set_bar({"state": state, "main": entry.main, "sub": entry.sub})
 		var working: Array = []
 		if state == "run":
+			stage_pct = tr("PRODUCT_STAGE_PCT").format({"stage": SprintUiShared.stage_name(s.stage),
+				"pct": Fmt.percent(floorf(fill * 100.0 + SprintSystem.EPS), 0)})
 			for w: Dictionary in entry.workers:
 				if w.from <= at and at < w.to:
 					working.append(w.id)
 		_faces(entry, working)
+	if not card.late and stage_pct != _stage_pct:
+		_stage_pct = stage_pct
+		_fill_status()

@@ -46,11 +46,13 @@ Alt klasörler:
   ↳ (tür ikonu, ad, efor, aşama şeridi `seg`, önden çalışanların yüzleri, hazırlayan PM; üstüne gelince "↑" ve "×"); her aşama kendi payıdır, önden biten pay kendi renginde dolar; yüzler `FaceCell`te (sığmayanlar "+{n}");
   ↳ ne hazırlamış ne hazırlıkta PM soluk "0 kart hazırladı"; kart ve devreden yoksa yalnız başlık ve aşama yükü.
   ↳ İpuçları: PM satırı (ad, yıldız, hazırladığı kartlar), "PM yok", aşama yükü, devreden satırı ve "+{n} kart"ın kalanları, kartın adı, aşama payı ve yüzleri (`_part_tip`), hazırlayan PM.
-- `scripts/tabs/product/sprint_board.gd` (332): `SprintBoard`: panonun sabit başlığı ("{n} KART", erken kapanış bayrağı, hafta etiketleri), kayan gövdesi (ızgara, kart satırları, "EKLENEBİLİR",
+- `scripts/tabs/product/sprint_board.gd` (333): `SprintBoard`: panonun sabit başlığı ("{n} KART", erken kapanış bayrağı, hafta etiketleri), kayan gövdesi (ızgara, kart satırları, "EKLENEBİLİR",
   hayalet satır, şimdiki an çizgisi), "aşağıda {n} kart daha" hapı (katlamanın altında yetişmeyen kart varsa tehlike renginde ve ipucu "{n} kart yetişmez", yalnız o zaman imleci tutar ve tekerleği panoya iletir; sona kaydırınca gizlenir);
   ↳ erken kapanışın bayrağı, yazısı ve taralı alanı "Bütün kartlar {w}. haftada biter" ipucunu taşır (alan yalnız satırların altında kalan boşlukta imleci alır).
-- `scripts/tabs/product/board_row.gd` (538): `BoardRow`: panonun bir kart satırı: bilgi sütunu (ad, R1, efor, modül, durum yuvası, PM ya da "?" yuvası, "→" ve "×"),
-  zaman ekseni (çubuk, bekleme, gölge, tarama, tik kutusu (art arda önden biten aşamalar tek kutu, son bitenin renginde), sprint dışı pay, yüzler); `set_now`.
+- `scripts/tabs/product/board_row.gd` (596): `BoardRow`: panonun bir kart satırı: bilgi sütunu (ad, R1, efor, modül, durum yuvası (koşan sprintte tek şey:
+  "yetişmez", koşan aşamanın "{aşama} %{n}"i, söz tarihi, "devreden"; `set_now` günceller), PM ya da "?" yuvası, "→" ve "×"),
+  zaman ekseni (çubuk, bekleme, gölge, tarama, tik kutusu (art arda önden biten aşamalar tek kutu, son bitenin renginde), sprint dışı pay, yüzler); `set_now`;
+  düzeltme kartının hata metni sarar ve satırı büyütür (`_fit`), zaman ekseni satırda dikey ortalı.
   ↳ İpuçları: zengin kart ipucu yalnız adda (`CardName`, `CardTip`); çubuğun düz ipucu açılırken okunur (`_bar_tip`, `StagePaint.tip`); bekleme, gölge, tarama, tik kutusu, risk, efor, modül, yuvalar düz ipucu taşır;
   ↳ kapısı kapanmış kartta (`gate`) satırın düz ipucu (adın üstünde de): kapı gerekçesi ve sonraki sütuna geçeceği.
 - `scripts/tabs/product/card_tip.gd` (131): `CardTip`: zengin kart ipucu paneli (`panel(kart, ekipte PM var mı)`): başlık, aşama efor kutuları, kim çalışıyor ve görüşmeler (tür başına toplam gün), yetişir mi, künye.

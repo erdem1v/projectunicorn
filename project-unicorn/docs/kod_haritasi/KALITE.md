@@ -1,6 +1,6 @@
 # Kod haritası · KALITE
 
-Üretildi: git b67083f8 · 2026-10-28 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git 87e06d68 · 2026-10-28 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 254 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
@@ -126,7 +126,7 @@ Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: 
 - WIDTH · 6 dosya · scripts/modals/hr_action_modal.gd:18, scripts/modals/training_modal.gd:19, scripts/modals/work_hours_modal.gd:22, scripts/ui/components/left_tabs.gd:28, scripts/ui/office/office_map_card.gd:11 +1
 - CLOCK · 5 dosya · scripts/tabs/events/mail_pane.gd:24, scripts/tabs/hunt_tab.gd:11, scripts/tabs/product/sprint_ui_shared.gd:20, scripts/tabs/rnd/rnd_detail_panel.gd:20, scripts/tabs/sales_tab.gd:30
 - ChequeRead · 5 dosya · scripts/tabs/finance/finance_ozet_view.gd:34, scripts/tabs/personal_tab.gd:13, scripts/ui/components/top_bar.gd:19, scripts/ui/office/office_notice_stack.gd:12, scripts/debug/endgame_smoke.gd:34
-- ARROW · 4 dosya · scripts/modals/hr_action_modal.gd:19, scripts/tabs/product/board_row.gd:17, scripts/tabs/product/sprint_ui_shared.gd:17, scripts/tabs/sales_tab.gd:33
+- ARROW · 4 dosya · scripts/modals/hr_action_modal.gd:19, scripts/tabs/product/board_row.gd:20, scripts/tabs/product/sprint_ui_shared.gd:17, scripts/tabs/sales_tab.gd:33
 - CHECK · 4 dosya · scripts/tabs/product/sprint_ui_shared.gd:19, scripts/tabs/product/stage_paint.gd:32, scripts/tabs/rnd/rnd_tree_view.gd:47, scripts/ui/office/office_notice_stack.gd:13
 - CHEVRON · 4 dosya · scripts/tabs/product/quarter_view.gd:13, scripts/tabs/product/sprint_head.gd:10, scripts/tabs/rnd/rnd_assign_panel.gd:22, scripts/tabs/rnd/rnd_tree_view.gd:46
 - GraphicsSettingsLib · 4 dosya · scripts/autoload/settings.gd:17, scripts/modals/settings_modal.gd:19, scripts/ui/menu_backdrop.gd:12, scripts/ui/office/office_view.gd:13

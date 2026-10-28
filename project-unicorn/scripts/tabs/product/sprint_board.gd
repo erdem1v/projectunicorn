@@ -136,6 +136,7 @@ func _body(c: Dictionary, hover_card: String, running: bool) -> Control:
 	var rows := SprintUiShared.column(0)
 	rows.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	rows.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rows.sort_children.connect(_update_more)   # sarılan yazı satırı büyütür, altındakiler kayar
 	layers.add_child(rows)
 	for card: Dictionary in c.cards:
 		_rows.append(_row(card, _ctx))

@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git b67083f8 · 2026-10-28 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 87e06d68 · 2026-10-28 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -254,15 +254,15 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/tabs/hr/hr_popover.gd · 113 · HRPopover · Control · 0 sinyal · 8 func
 - scripts/tabs/hr/hr_ui_shared.gd · 506 · HRUiShared · RefCounted · 0 sinyal · 32 func
 
-### scripts/tabs/product/ (16 dosya, 5047 satır)
+### scripts/tabs/product/ (16 dosya, 5106 satır)
 - scripts/tabs/product/area_panel.gd · 312 · AreaPanel · MarginContainer · 4 sinyal · 18 func
-- scripts/tabs/product/board_row.gd · 538 · BoardRow · PanelContainer · 1 sinyal · 31 func
+- scripts/tabs/product/board_row.gd · 596 · BoardRow · PanelContainer · 1 sinyal · 33 func
 - scripts/tabs/product/capacity_view.gd · 333 · CapacityView · PanelContainer · 1 sinyal · 21 func
 - scripts/tabs/product/card_tip.gd · 131 · CardTip · RefCounted · 0 sinyal · 9 func
 - scripts/tabs/product/overview_view.gd · 96 · - · HBoxContainer · 1 sinyal · 6 func
 - scripts/tabs/product/product_model.gd · 1150 · ProductModel · RefCounted · 0 sinyal · 66 func
 - scripts/tabs/product/quarter_view.gd · 179 · QuarterView · VBoxContainer · 2 sinyal · 7 func
-- scripts/tabs/product/sprint_board.gd · 332 · SprintBoard · VBoxContainer · 1 sinyal · 15 func
+- scripts/tabs/product/sprint_board.gd · 333 · SprintBoard · VBoxContainer · 1 sinyal · 15 func
 - scripts/tabs/product/sprint_card.gd · 34 · SprintCard · PanelContainer · 0 sinyal · 1 func
 - scripts/tabs/product/sprint_foot.gd · 148 · SprintFoot · HBoxContainer · 1 sinyal · 10 func
 - scripts/tabs/product/sprint_head.gd · 117 · SprintHead · HBoxContainer · 1 sinyal · 7 func
@@ -706,8 +706,8 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 
 ### scripts/tabs/product/area_panel.gd
 - action(kind: String, args: Dictionary) · scripts/tabs/product/area_panel.gd:10 · (ad 10 yerde tanımlı)
-  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:262, scripts/tabs/product/board_row.gd:174,260,300, scripts/tabs/product/capacity_view.gd:111 +27
-  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:181, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
+  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:262, scripts/tabs/product/board_row.gd:200,307,347, scripts/tabs/product/capacity_view.gd:111 +27
+  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:182, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
 - ui_changed(key: String, value: Variant) · scripts/tabs/product/area_panel.gd:11 · (ad 2 yerde tanımlı)
   ↳ ui_changed emit: scripts/tabs/product/area_panel.gd:124,197, scripts/tabs/product/quarter_view.gd:57,58
   ↳ ui_changed connect: scripts/tabs/product/quarter_view.gd:57, scripts/tabs/product_tab.gd:74,83
@@ -717,52 +717,52 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
   ↳ hovered connect: scripts/tabs/product_tab.gd:76, scripts/ui/meeting/meeting_panel.gd:679
 
 ### scripts/tabs/product/board_row.gd
-- action(kind: String, args: Dictionary) · scripts/tabs/product/board_row.gd:15 · (ad 10 yerde tanımlı)
-  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:262, scripts/tabs/product/board_row.gd:174,260,300, scripts/tabs/product/capacity_view.gd:111 +27
-  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:181, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
+- action(kind: String, args: Dictionary) · scripts/tabs/product/board_row.gd:18 · (ad 10 yerde tanımlı)
+  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:262, scripts/tabs/product/board_row.gd:200,307,347, scripts/tabs/product/capacity_view.gd:111 +27
+  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:182, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
 
 ### scripts/tabs/product/capacity_view.gd
 - action(kind: String, args: Dictionary) · scripts/tabs/product/capacity_view.gd:9 · (ad 10 yerde tanımlı)
-  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:262, scripts/tabs/product/board_row.gd:174,260,300, scripts/tabs/product/capacity_view.gd:111 +27
-  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:181, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
+  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:262, scripts/tabs/product/board_row.gd:200,307,347, scripts/tabs/product/capacity_view.gd:111 +27
+  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:182, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
 
 ### scripts/tabs/product/overview_view.gd
 - action(kind: String, args: Dictionary) · scripts/tabs/product/overview_view.gd:7 · (ad 10 yerde tanımlı)
-  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:262, scripts/tabs/product/board_row.gd:174,260,300, scripts/tabs/product/capacity_view.gd:111 +27
-  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:181, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
+  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:262, scripts/tabs/product/board_row.gd:200,307,347, scripts/tabs/product/capacity_view.gd:111 +27
+  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:182, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
 
 ### scripts/tabs/product/quarter_view.gd
 - action(kind: String, args: Dictionary) · scripts/tabs/product/quarter_view.gd:8 · (ad 10 yerde tanımlı)
-  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:262, scripts/tabs/product/board_row.gd:174,260,300, scripts/tabs/product/capacity_view.gd:111 +27
-  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:181, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
+  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:262, scripts/tabs/product/board_row.gd:200,307,347, scripts/tabs/product/capacity_view.gd:111 +27
+  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:182, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
 - ui_changed(key: String, value: Variant) · scripts/tabs/product/quarter_view.gd:9 · (ad 2 yerde tanımlı)
   ↳ ui_changed emit: scripts/tabs/product/area_panel.gd:124,197, scripts/tabs/product/quarter_view.gd:57,58
   ↳ ui_changed connect: scripts/tabs/product/quarter_view.gd:57, scripts/tabs/product_tab.gd:74,83
 
 ### scripts/tabs/product/sprint_board.gd
 - action(kind: String, args: Dictionary) · scripts/tabs/product/sprint_board.gd:12 · (ad 10 yerde tanımlı)
-  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:262, scripts/tabs/product/board_row.gd:174,260,300, scripts/tabs/product/capacity_view.gd:111 +27
-  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:181, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
+  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:262, scripts/tabs/product/board_row.gd:200,307,347, scripts/tabs/product/capacity_view.gd:111 +27
+  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:182, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
 
 ### scripts/tabs/product/sprint_foot.gd
 - action(kind: String, args: Dictionary) · scripts/tabs/product/sprint_foot.gd:10 · (ad 10 yerde tanımlı)
-  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:262, scripts/tabs/product/board_row.gd:174,260,300, scripts/tabs/product/capacity_view.gd:111 +27
-  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:181, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
+  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:262, scripts/tabs/product/board_row.gd:200,307,347, scripts/tabs/product/capacity_view.gd:111 +27
+  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:182, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
 
 ### scripts/tabs/product/sprint_head.gd
 - action(kind: String, args: Dictionary) · scripts/tabs/product/sprint_head.gd:8 · (ad 10 yerde tanımlı)
-  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:262, scripts/tabs/product/board_row.gd:174,260,300, scripts/tabs/product/capacity_view.gd:111 +27
-  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:181, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
+  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:262, scripts/tabs/product/board_row.gd:200,307,347, scripts/tabs/product/capacity_view.gd:111 +27
+  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:182, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
 
 ### scripts/tabs/product/sprint_next.gd
 - action(kind: String, args: Dictionary) · scripts/tabs/product/sprint_next.gd:10 · (ad 10 yerde tanımlı)
-  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:262, scripts/tabs/product/board_row.gd:174,260,300, scripts/tabs/product/capacity_view.gd:111 +27
-  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:181, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
+  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:262, scripts/tabs/product/board_row.gd:200,307,347, scripts/tabs/product/capacity_view.gd:111 +27
+  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:182, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
 
 ### scripts/tabs/product/sprint_panel.gd
 - action(kind: String, args: Dictionary) · scripts/tabs/product/sprint_panel.gd:9 · (ad 10 yerde tanımlı)
-  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:262, scripts/tabs/product/board_row.gd:174,260,300, scripts/tabs/product/capacity_view.gd:111 +27
-  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:181, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
+  ↳ action emit: scripts/main/main.gd:4229, scripts/tabs/product/area_panel.gd:262, scripts/tabs/product/board_row.gd:200,307,347, scripts/tabs/product/capacity_view.gd:111 +27
+  ↳ action connect: scripts/tabs/product/quarter_view.gd:56, scripts/tabs/product/sprint_board.gd:182, scripts/tabs/product/sprint_panel.gd:75,115,119,125 +5
 
 ### scripts/tabs/product/type_picker.gd
 - chosen(subtype: String, name: String) · scripts/tabs/product/type_picker.gd:10 · emit: scripts/tabs/product/type_picker.gd:65 · connect: scripts/tabs/product_tab.gd:104, scripts/debug/endgame_smoke.gd:14462
@@ -1108,7 +1108,7 @@ Biçim: yol · boyut · üst düzey anahtarlar (en çok 10)
 - data/product/sprint.json · 9.3 KB · {sprint_weeks, quarter_weeks, mvp_lines, effort, fix_effort, limit_k, need, roles, role_areas, person_points_week, +27}
 - data/techtree/rnd_tree.json · 6.3 KB · {_doc, _stars, _cross, _areas, k_arge, report_period_weeks, nodes, _hidden_doc, _hidden_k3_doc, hidden_lines}
 
-## Metin anahtarı aileleri (860 aile, 3275 anahtar)
+## Metin anahtarı aileleri (860 aile, 3276 anahtar)
 
 Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak geçiren .gd/.json (en çok 5). '-' = dinamik kurulmuş olabilir ya da kullanılmıyor.
 - ANGEL_CAP_* · 1 · scripts/tabs/finance/finance_ozet_view.gd
@@ -1651,7 +1651,7 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - PRODUCT_SERVER_* · 37 · scripts/main/main.gd, scripts/systems/infra_system.gd, scripts/tabs/product/overview_view.gd, scripts/tabs/product/product_model.gd
 - PRODUCT_SHIPPED_* · 1 · scripts/tabs/product/sprint_panel.gd
 - PRODUCT_SPRINT_* · 2 · scripts/tabs/product/quarter_view.gd, scripts/tabs/product/sprint_board.gd, scripts/tabs/product/sprint_head.gd, scripts/tabs/product/sprint_next.gd, scripts/tabs/product/sprint_panel.gd
-- PRODUCT_STAGE_* · 7 · scripts/tabs/product/board_row.gd, scripts/tabs/product/capacity_view.gd, scripts/tabs/product/sprint_ui_shared.gd
+- PRODUCT_STAGE_* · 8 · scripts/tabs/product/board_row.gd, scripts/tabs/product/capacity_view.gd, scripts/tabs/product/sprint_ui_shared.gd
 - PRODUCT_STAMP_* · 1 · scripts/tabs/product/area_panel.gd
 - PRODUCT_STAR_* · 4 · scripts/systems/sprint_catalog.gd, scripts/debug/endgame_smoke.gd
 - PRODUCT_START_* · 1 · scripts/main/main.gd, scripts/tabs/product/sprint_foot.gd

@@ -2727,6 +2727,7 @@ PRODUCT_MORE_BELOW,aşağıda {n} kart daha,{n} more cards below
 PRODUCT_MORE_BELOW_ONE,aşağıda {n} kart daha,{n} more card below
 PRODUCT_CARRIED_SLOT,devreden,carried
 PRODUCT_LATE,yetişmez,late
+PRODUCT_STAGE_PCT,{stage} {pct},{stage} {pct}
 PRODUCT_TO_NEXT,Sonraki sprinte,To the next sprint
 PRODUCT_TO_THIS,Bu sprinte,To this sprint
 PRODUCT_MORE_BELOW_LATE,{n} kart yetişmez,{n} cards will not finish
