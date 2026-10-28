@@ -1569,3 +1569,87 @@ Sıra: UD2 → UD1 → U2 → U3 → U4 → U5 → U6 → U7 → U8.
 **N4. Taşma (U2–U8).**
 - Oyunda hiçbir metin taşmaz ya da kesilmez; maketteki taşmalar örnek değildir.
 - U8'in görsel sayfasında her kare için "taşma yok" satırı bulunur.
+
+## Erdem'in 2026-10-28 kararları (UE kareleri, UK, UM)
+
+Kaynak: Erdem'in 2026-10-28 cevabı, yardımcı yönetmen işledi. Kareler https://claude.ai/artifact/XHVbFN9e5qy49eKLJyfKrw
+(`docs/tasks/urun_ue/`). Bu bölüm PRD'nin geri kalanıyla ve yukarıdaki "yardımcı yönetmenin kararı" notlarıyla çelişirse
+bu bölüm geçerlidir.
+
+**E1. Sprint kutularına yer: Ürün penceresi genişler** (Erdem: "a ile deneyelim").
+- Okuma: yardımcı yönetmenin 2026-10-28 soru listesinde 2. soru "(a) Ürün penceresi genişlesin" idi ve önerilmişti.
+  Erdem'in cevabı sırayla 1, ikonlar, "a ile deneyelim", yeşil tik, "5. a" diye gidiyor. UE sayfasının 3. bölümünde de
+  (a) ve (b) var; yardımcı yönetmen okumayı Erdem'e teyit ettiriyor. **D3, `co-director`'ün "D3 başla" mesajını bekler.**
+- Genişlik kuralı: 1920 × 1080'de, rayın varsayılan kipinde pencere alanının genişliği (alan eksi iki `EDGE`). Değer
+  `SPECS["product"]`'a sabit olarak yazılır, `_fit` değişmez. Sayı rapora yazılır.
+- Bugün `scripts/ui/components/window_layer.gd:39` `SPECS["product"]` = 1424 × 928. Pencere genişler; kazanılan genişliğin
+  tamamı zaman eksenine gider. Sol sütun (288), kart bilgi sütunu (312) ve sağ sütun (300) yerinde kalır. `piyasa`
+  penceresi değişmez.
+- Üst sınır pencere alanıdır (alan eksi iki `EDGE`); pencere 1920 × 1080'de alanı aşmaz, `_fit` küçük ekranda bugünkü gibi
+  daraltır.
+- UE prototipinin sol sütun daraltması (`left_w`) uygulanmaz: yalnız 8 px kazandırıyordu ve uzun müşteri adını kırıyordu.
+- Kanıt, önce ve sonra: `a4_two_pm` ve `a4_eleven` TR, `a4_eleven` EN, 1920 × 1080 ve `--shot-scale=1.25`. Eksende bir
+  haftanın piksel genişliği rapora yazılır (bugün 152 px). Commit'ten sonra kareler Erdem'e gider; beğenmezse geri alınır.
+
+**E2. Kısıtlama ve kesme yok** (Erdem: "abuk subuk kısıtlama vs veya '…' kabul edilemez").
+- N4'ün sıkı okuması: Ürün penceresinde hiçbir metin "…" ile kesilmez. Yer yok diye hiçbir öğe gizlenmez ya da
+  kısaltılmaz. Sığmayan metin sarar ve satır büyür.
+- Bugün bilinen kesmeler U7'de kalkar:
+  - panoda kart adı iki satırdan sonra "…";
+  - ÇEYREK sekmesinde EN kart adları (`urun_arayuzu_devir/yapilacak/u7_todo.txt`).
+- U7, Ürün penceresinin kodunda bir tarama yapar: `…`, `text_overrun_behavior`, `clip_text`, `max_lines`,
+  `visible_characters` ve sabit genişlikte kesen her yer. Her bulgu ya kalkar ya da gerekçesiyle rapora yazılır.
+- Bir şeyi toplayıp sayıyla gösteren biçimler kesme değil, tasarım seçimidir: sonraki sprint kutusunda "+{n} kart",
+  yüz dizisinde "+{n}". Bunlar tek tek kareyle Erdem'e gider ve o karar verene kadar yerinde kalır.
+
+**E3. Görsel doğrulama MCP ile.** Görünür her adım commit'ten önce oyunun kendi karesiyle (TR ve EN) ve Godot MCP'yle
+(`gopeak`) canlı koşuda doğrulanır (CLAUDE.md §11, ORTAK_CALISMA §9). Raporda her karenin altında "taşma yok, kesilme yok"
+satırı bulunur.
+
+**E4. Modül ikonları.**
+- Onaylı: Çekirdek küp (`rail/product.svg`), Güven kalkan (`util/shield.svg`).
+- Reddedildi; yerlerine yeni aday gelir:
+  - İlk Kullanım şapka (`world/training.svg`);
+  - Entegrasyonlar komut satırı (`dept/development.svg`);
+  - Büyüme yukarı ok (`stake/cash_in.svg`);
+  - Gelir etiket (`skill/sales.svg`).
+- Adaylar OLAYLAR oturumunda hazırlanır: modül başına 3 aday, oyunun içinde gerçek boyutta kare. Yardımcı yönetmen
+  önerisiyle Erdem'e götürür. Seçilenleri URUN_ARAYUZU bağlar.
+- İkonlar gelince iki harfli işaretler (ÇK, İK, EN, GÜ, BÜ, GE) sol sütundan kalkar. UM'nin 3. sorusu (İE/EG) yalnız
+  `PRODUCT_AREA_*_MONO` başka bir ekranda da okunuyorsa açık kalır. URUN_ARAYUZU bunu grep'le bulur ve rapora yazar.
+
+**E5. Plana alınmış müşteri isteğinin durumu.**
+- Erdem: "yeşil tik kötü; yeşil tik tamamlandıysa görünmeli. Plandaysa in progress gibi bir şey olabilir."
+- Yeşil tik yalnız karşılanmış istek içindir: kartı sürümle çıkmış istek.
+- Plana alınmış istek (bu sprintte ya da sonraki sütunda) bir "sürüyor" biçimiyle okunur. İki biçim ekranda yan yana
+  kareyle Erdem'e gider:
+  - **(1) ikon:** ad boyunda bir ilerleme işareti (halka ya da kum saati, Noto'da ⌛ var), vurgu renginde;
+  - **(2) kartın kendi durumu:** sprintteki kartın aşaması ve yüzdesi, UK'nin biçimiyle ("Test %40"). Kart sonraki
+    sütundaysa "Sonraki sprint" yazar.
+- İki biçimde de:
+  - satır soluk çizilmez, ad tam parlaktır;
+  - "Gelecek çeyrek" çipi ad boyunda ve büyük harfle başlar (N2).
+- Bugün karşılanan istek sol sütundan düşer (`product_model.gd:287`, yalnız `open` istekler listelenir). Yeşil tikli
+  satır için üç şey D1'in kareleriyle ve önerisiyle Erdem'e gider:
+  - satır ne kadar kalır (örneğin çeyreğin sonuna dek);
+  - nerede sıralanır;
+  - "+{n} talep" katlamasına sayılır mı.
+- Bugünkü `planned` bayrağı yalnız bu sprinti kapsar (`product_model.gd:299`); E5 sonraki sütunu da kapsar.
+- Erdem seçmeden kodlanmaz.
+
+**E6. UK: (a).**
+- Yüzde, kartın durum yuvasında durur. Koşan sprintte yuvanın sırası: "yetişmez" → "{aşama} %{n}" → söz tarihi çipi →
+  "devreden" (§UK 3a). Boş yuva yer ayırmaz.
+- Yüzde görününce söz tarihi çipi o satırdan kalkar. Kartta tek durum yuvası var; tarih sol sütunda ve ipucunda kalır.
+  Erdem (a)'yı 2026-10-28'de bu bedel söylenerek seçti.
+- `urun_arayuzu_devir/uk/uk_a.patch` yalnız yol gösterir ve U6'nın üstüne yeniden çıkarılır. Patch koşan sprintte boş
+  yuvaya da `D_W_CARD_SLOT` genişliği ayırıyor; bu düzeltilir.
+- `PRODUCT_STAGE_PCT` "TR/EN onay bekliyor" listesine girer.
+
+**E7. UM: "Kendi Kendine Servis" → "Yardım Merkezi".**
+- Erdem sayfada yazdı: "yine oldukça kötü, bunu help center / yardım merkezi yapalım".
+- `PROD_LINE_HIDDEN_SELF_SERVE`: TR "Yardım Merkezi", EN "Help Center".
+- Hattı açan Ar-Ge düğümü `PROD_RND_NODE_SELF_SERVICE` zaten bu adı taşır. Düğüm hattı açtığı için aynı ad doğaldır.
+- Adın geçtiği cümle yeni adla yazılır ve "TR/EN onay bekliyor" diye işaretlenir:
+  `PROD_RND_NODE_TEST_AUTOMATION_UNLOCK` ("Kendi Kendine Servis adında yeni bir özellik hattı").
+- UM'nin üç sorusu ve öbür satırlar Erdem'de. Cevaplar gelince ayrı bir CSV commit'i yapılır.

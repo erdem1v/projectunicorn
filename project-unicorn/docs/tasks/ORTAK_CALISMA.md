@@ -199,3 +199,87 @@ Kilit klasörleri burada (PowerShell'de aynı yol ters bölüyle):
 - `docs/tasks/` git'te izlenmez (`f21b961`). Paralel dönemde TEMIZLIK bu klasörden arşive yeni taşıma yapmaz.
 - Görev, PRD, rapor ve oturum çıktıları (ör. OLAYLAR'ın `revize2.json`'u) oturumun kendi scratchpad'inde ya da
   `docs/tasks/`'ta durur, kod ağacına konmaz.
+
+## 9. Dizüstü (2026-10-28): iki oturum, Mac
+
+Bu bölüm 1–8'in Windows'a bağlı satırlarının yerine geçer; çelişirse bu bölüm geçerlidir. Oturumlar: **URUN_ARAYUZU**
+(`GOREV_DIZUSTU_URUN_2026-10-28.md`) ve **OLAYLAR** (`GOREV_DIZUSTU_OLAYLAR_IKON_2026-10-28.md`). TEMIZLIK yok.
+Yardımcı yönetmenin adresi `co-director`.
+
+**Oturum yeri ve hafıza.** Oturum `/Users/tugbauysal/Desktop/project steam/Project Unicorn` klasöründe başlar. Hafıza
+dosyaları `/Users/tugbauysal/.claude/projects/-Users-tugbauysal-Desktop-project-steam-Project-Unicorn/memory/`'dedir.
+`project steam/` klasöründe başlayan bir oturum başka, eski bir hafıza yükler; oradaki `gopeak-runtime-verification-quirks`
+notu paylaşılan ağacı gösterir ve uygulanmaz. `godot-mcp-runtime-verification`'ın Windows ve PowerShell adımları da
+burada geçmez, yalnız MCP tuzakları geçerlidir.
+
+**Makine.** Apple M1, **8 GB** bellek, 8 çekirdek, 2560×1600 ekran; masaüstünün dörtte biri.
+- Ortak değişkenler ve Godot koşucusu `docs/tasks/dizustu/mac_env.sh`'dedir. Yardımcı yönetmen denedi: kilit, bellek,
+  HOME yalıtımı, xargs işçileri.
+  - Kullanım: önce `S` (kendi scratchpad'in) ve `ETIKET` ayrı satırda atanır, sonra dosya `.` ile okunur.
+  - `gd <ad> <ağaç> <args>` her koşuyu kendi `HOME`'uyla başlatır; Windows'taki APPDATA yalıtımının karşılığı budur.
+    Sessiz kilidi başkasındaysa 99, bellek azsa 98, makinede 2 Godot varsa 97 döner. `gdw` aynısını bekleyerek yapar.
+    Betiklerde ve xargs işçilerinde `gdw` kullanılır. Bash'te işlevler alt kabuklara geçer.
+  - `udir <ad>` o koşunun `user://` klasörünü verir; PNG'ler oradan alınır.
+- **Makinede aynı anda en çok 2 Godot süreci**, iki oturum ve MCP'nin oyunu dahil. Boş bellek 1.500 MB'ın altındaysa yeni
+  süreç başlamaz. Bundan çıkan: öbür oturum Godot koşturuyorsa smoke `P=1`, yalnızsan `P=2`, `CASE_TIMEOUT=300`. Tam
+  süit yalnız push öncesi ve tek oturumda koşar.
+- Godot 4.6.3: `/Users/tugbauysal/Downloads/Godot.app/Contents/MacOS/Godot`. `timeout` coreutils'ten gelir; `mac_env.sh`
+  PATH'e koyar.
+- Erdem'in gerçek `HOME`'u (`~/Library/Application Support/Godot/app_userdata/Project Unicorn/`) onun kayıtlarıdır.
+  Hiçbir koşu oraya yazmaz.
+
+**Masaüstü betiklerinin Mac'e çevrilmesi.** `docs/tasks/urun_arayuzu_devir/bin/`'in tamamı kendi scratchpad'ine kopyalanır.
+Betikler birbirini çağırır: `merge.sh`, `land.sh` ve `commit.sh` `export.sh`, `regen.sh`, `gate_copy.sh`, `theme_regen.sh`
+ve `smoke.sh`'yi çağırır. Kopyada yapılacaklar:
+- `env.sh` → yalnız `S`, `ETIKET` ve `. mac_env.sh`; Windows yolları gider.
+- Godot'yu doğrudan başlatan her satır `gdw <ad> <ağaç> …` olur: `a4.sh`, `shots.sh`, `z6.sh`, `runlog.sh`, `smoke.sh`,
+  `quiet_planms*.sh`. `APPDATA=`, `cygpath` ve `$ad/Godot/app_userdata` yolları `udir`'le değişir.
+- Makinedeki tek bash 3.2'dir: `mapfile` yerine `while read` döngüsü.
+- `theme_regen.sh`'deki GNU `sed -i` yerine `perl -pi -e`.
+- `python` → `python3`.
+- `tasklist` → `pgrep -fl Godot`.
+- `powershell` bellek satırı → `free_mb`.
+- `land.sh`'nin `P=10`'u ve `z6.sh`'nin `-P 7`'si → yukarıdaki P kuralı.
+- Kilit sahibi denetimi `^URUN_ARAYUZU` → `^$ETIKET`.
+- Olaylar'ın Windows araçları (`merge_onto.py`, `commit_private.py`) taşınmadı. OLAYLAR da bu kopyayı kullanır.
+
+**Kilitler.** `K="/Users/tugbauysal/Desktop/project steam/.kilit"` (`mac_env.sh`, `lock_take` / `lock_drop`). Tablo ve sıra
+§4'teki gibidir. Bayat kilitte `tasklist` yerine `ps -p <pid>`.
+
+**Görsel doğrulama (Erdem, 2026-10-28: "agent'lar yaptıkları işi MCP aracılığıyla görsel olarak doğrulamalı").**
+Oyuncunun gördüğü her değişiklik commit'ten önce iki yoldan doğrulanır:
+1. Oyunun kendi kareleri (`--product-shot=live:*`, `--event-shot` …), TR ve EN.
+2. Godot MCP ile canlı koşu. Dizüstünde MCP kullanıcı düzeyindeki **`gopeak`**'tir. Repodaki `.mcp.json`'ın `godot`
+   sunucusu Windows yolları taşır, burada açılmaz; ona dokunma.
+
+**MCP tarifi.** Yardımcı yönetmen 2026-10-28'de denedi: gopeak, `gd` ile başlatılan oyuna bağlandı ve ekran görüntüsü
+aldı.
+1. `ekran` kilidini al. `port7777` boş olmalı: oyunun MCP sunucusu (`addons/godot_mcp_runtime`) 127.0.0.1:7777'yi ilk
+   açan Godot sürecine aittir. Headless bir koşu portu tutuyorsa bitmesini bekle.
+2. Oyunu **kendi kopyandan**, kendi HOME'unla, pencereli başlat. Arka planda:
+   `gd mcp <kopya>/project-unicorn --path . --lang=tr <dünya bayrağı>`
+   Logda `[MCP Runtime] Server listening on port 7777` satırını bekle.
+3. Dünya bayrakları (`--product-shot=live:*` …) kareden sonra `_finish_shot`'ta (`main.gd:672`) oyunu kapatır. Canlı bakış
+   için kopyada bu `quit()`'i geçici olarak kapat. Bu değişiklik commit'e girmez.
+4. gopeak araçlarını kullan: `runtime-status` (projectPath = kopyanın `project-unicorn` yolu), `capture-viewport`,
+   `inspect-runtime-tree`, `call-runtime-method`.
+   - `inject-mouse-click` çalışmaz; arayüzü gerçek işleyici yöntemleriyle sür.
+   - Tamsayı alan yönteme dize gider; küçük bir yardımcıyla çevir.
+5. Bitince oyunu kapat (`kill <pid>`; `pkill`'in deseni komut satırında yol olmadığı için eşleşmez) ve `ekran` kilidini
+   bırak.
+
+Kurallar:
+- gopeak'in `editor-launch` ve `editor-run`'ı kullanılmaz. Oyuna HOME veremezler ve editör de ayrı bir Godot süreci olur.
+- Paylaşılan ağaçta hiçbir Godot koşmaz.
+- Pencereli koşular Erdem'in ekranında açılır. Uzun bir kare turundan önce `co-director`'e tek satır yaz.
+
+**Commit.** §3'ün özel index ve CAS yöntemi aynen geçerlidir; araçlar yukarıdaki kopyadır. Git kimliği depoda ayarlı:
+`erdem1v`. Push yalnız Erdem "push et" deyince ve yardımcı yönetmen yapar.
+
+**Belgeler (Erdem, 2026-10-27).** `docs/tasks/` artık git'te izlenir.
+- Oturum kendi görev yazısını, raporunu ve çıktı klasörünü kendi commit'ine yol listesiyle koyar.
+- Kod ağacına (`scripts/`, `data/` …) rapor konmaz.
+- §3'teki "bilinen kirli dosyalar" listesi bugün boştur.
+
+**Sahiplik.** §2'nin tablosu geçerlidir. Tek istisna: OLAYLAR ikon adaylarını Ürün'ün çizim kodunda yalnız kendi
+kopyasında dener ve commit etmez. Seçilen ikonları URUN_ARAYUZU bağlar.
