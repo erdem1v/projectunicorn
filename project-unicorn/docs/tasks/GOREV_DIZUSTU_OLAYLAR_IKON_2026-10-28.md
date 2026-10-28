@@ -60,7 +60,23 @@ Bu turun iki işi var.
   `team.promise_made` kareleri yeniden çekilir. Sayfa devir notunun "Sayfada bir şey değişecekse" tarifiyle (`python3`)
   yeniden kurulur ve aynı bağlantıya yayınlanır.
 
-Toplam yaklaşık 9 saat. Sıra O0 → O1a → O1b → O1c → O2: ikon kâğıdı erken gitsin ki Erdem seçerken 7c sürsün.
+**O3. Çalışmayan iki etki bağlanır (Erdem, 2026-10-28; O2'den sonra, 2,5 sa).**
+- Erdem'in sözü: "eğitime gönder butonuna bastığımızda oyuncunun kendisi eğitime gönder dediğinde çıkan akışla aynı yere
+  bağlanabilir. İşten çıkar için de aynı şekilde geçerli."
+- **`start_training`** oyuncunun eğitime gönderme yolunu çağırır: `HRSystem.send_to_training(id, area_key)`. Bedel, süre ve
+  kurallar oyuncununkiyle aynıdır; eğitimdeki kişi o hafta sprint havuzunda seçilemez. Kişi zaten izinde ya da eğitimdeyse
+  etki hiçbir şey yapmaz ve çip çıkmaz (7b'nin hedefi boş çip kuralı).
+- **`fire_employee`** oyuncunun işten çıkarma yolunu çağırır: `HRActions.fire(emp)`. Bedeller oyuncununkiyle aynıdır.
+  Ekonomik fiildir (`EvEffects.ECONOMIC_VERBS`), yalnız oynanmış kararda çalışır.
+- **Çip:** `EvChips.describe` okunur bir etiket yazar, iç kod yazmaz. Yeni metin önce İngilizce yazılır ve "TR/EN onay
+  bekliyor" diye işaretlenir.
+- **Kart yok.** Bugün hiçbir kart bu iki fiili kullanmıyor. Kanıt `_fixtures/` altında birer fikstür kartla yazılan smoke
+  vakasıdır; vaka mutasyonla düşmeli. `event_chip_coverage` ve lint geçer.
+- **`add_customer`, `convert_audience`, `open_paid_tier`'a dokunma.** Erdem'e soruldu: ilki 26 Ekim'deki "olay imzalatmaz,
+  teklif verir" kararıyla çelişiyor, öbür ikisini hiçbir kart kullanmıyor.
+- Commit `Olaylar 8:`. Fikstür kartlar oyuna girmez (`_fixtures/`).
+
+Toplam yaklaşık 11,5 saat. Sıra O0 → O1a → O1b → O1c → O2 → O3: ikon kâğıdı erken gitsin ki Erdem seçerken 7c sürsün.
 
 ## Yapma
 
