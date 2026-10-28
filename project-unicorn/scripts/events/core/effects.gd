@@ -953,13 +953,14 @@ static func trust_accounts(e: Dictionary, ctx: Dictionary) -> Array:
 
 
 ## What a `promise_break` lands on and what the player reads for it: the accounts whose words are still open, largest
-## first, each with its satisfaction now and a tick after the break, and the brand the broken words cost.
+## first, each with its satisfaction now and with the break's own share of it (B2BSalesSystem.satisfaction_with_trust: the
+## drop, and what the ledger's hit and the raised bar do to the account's target), and the brand the broken words cost.
 static func break_plan(e: Dictionary = {}, ctx: Dictionary = {}) -> Dictionary:
 	var words: Array = promises_of(e, ctx)
 	var rows: Array = []
 	for c in promise_accounts(words):
-		rows.append({"id": c.id, "name": c.display_name(), "from": c.satisfaction,
-			"to": B2BSalesSystem.satisfaction_after_break(c)})
+		rows.append({"id": c.id, "name": c.display_name(), "from": c.satisfaction, "to": B2BSalesSystem.satisfaction_with_trust(
+			c, B2BConstants.PROMISE_BROKEN_OFFSET, B2BConstants.PROMISE_BROKEN_SAT, B2BSalesSystem.tolerance_after_break(c))})
 	return {"accounts": rows, "brand": words.size() * B2BConstants.PROMISE_BROKEN_BRAND}
 
 

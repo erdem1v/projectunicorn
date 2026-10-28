@@ -25098,7 +25098,7 @@ static func _sent_card_ships_with_its_known_bugs() -> String:
 
 
 ## "Arayıp bir sprint ek süre iste": söz bir sprint ileri alınır, bir kez; hesabın güven izine -6 yazılır ve çipteki
-## memnuniyet, oyuncunun bir tik sonra okuduğu değerdir. Söz o sprintin kapanışında kırılmaz, ertesi sprintte çıkınca
+## memnuniyet kartın kendi payıdır (-6). Söz o sprintin kapanışında kırılmaz, ertesi sprintte çıkınca
 ## tam ödülle tutulur. Ertelenmiş söz ikinci kez ertelenemez.
 ## FALSİFİKASYON: PromiseRegistry.extend'de `due_sprint += 1`i sil → söz kapanışta kırılır FAIL; `p.extended = true`yu sil →
 ## ikinci erteleme FAIL; kartın trust_delta tutarını 0 yap → iz iddiası FAIL.
@@ -25141,28 +25141,34 @@ static func _case_promise_extend_once() -> String:
 
 
 ## "Söz kaçsın": söz bugünkü yoldan kırılır, aynı zincirle (memnuniyet -20, güven izi -12, marka -3, tarih ve 8 hafta
-## yeni söz yok); çipteki memnuniyet oyuncunun bir tik sonra okuduğu değerdir. Sprint kapanışında kırılan söz için kâğıt
-## süresi dolunca yeniden kırılmaz ve hata vermez. Onboarding tabanındaki hesapta söz bozulunca eşik yükselir ve zemin
-## (eşik + pay) onunla yükselir; çip bu yeni zemini de okur.
-## FALSİFİKASYON: satisfaction_after_break'te anlık düşüşü (`sat`) sil → çip iddiası FAIL; promise_break'te break_promise
-## çağrısını sil → söz durumu FAIL; `broken.accounts.is_empty()` dönüşünü sil → süre dolumu iddiası FAIL;
-## satisfaction_after_break'in `_target_on`a verdiği yeni eşiği sil → onboarding çip iddiası FAIL.
+## yeni söz yok). Çipteki memnuniyet kırığın kendi payıdır: anlık düşüş artı defterin darbesinin ve yükselen eşiğin hesabın
+## hedefini kaydırdığı kadar; sürüklenme, defterin affı ve onboarding zemininin çekişi karışmaz. Zeminin dışındaki hesapta pay
+## düşüş ile darbenin toplamıdır; oyuncu bir tik sonra düşüşü hâlâ okur. Sprint kapanışında kırılan söz için kâğıt süresi
+## dolunca yeniden kırılmaz ve hata vermez. Onboarding zeminindeki hesapta (zemin = eşik + `ONBOARDING_GRACE_MARGIN`) eşik
+## yükselir ve zemin onunla yükselir: pay, kırığın eşiği ne kadar yükselttiği kadar küçülür.
+## FALSİFİKASYON: break_plan'da düşüşü (`PROMISE_BROKEN_SAT`) satisfaction_with_trust'a vermeyi bırak → ilk çip iddiası FAIL;
+## çipi bir tik sonraki okumaya döndür → ilk çip iddiası FAIL; promise_break'te break_promise çağrısını sil → söz durumu FAIL;
+## `broken.accounts.is_empty()` dönüşünü sil → süre dolumu iddiası FAIL; break_plan'ın verdiği yeni eşiği sil → onboarding çip
+## iddiası FAIL.
 static func _case_promise_break_chain() -> String:
 	var w: Dictionary = _promise_world(1.1)
 	if w.is_empty():
 		return "fixture: the promise world's sprint did not start"
+	var promise: Promise = w.promise
+	var account: Customer = w.account
+	_past_onboarding(account)
 	_sim_day()
 	if EventGate.active_id() != PROMISE_DUE:
 		return "fixture: no promise card came"
-	var promise: Promise = w.promise
-	var account: Customer = w.account
 	var sat: int = account.satisfaction
 	var brand: int = GameState.brand
+	var share: int = sat + B2BConstants.PROMISE_BROKEN_SAT + int(B2BConstants.PROMISE_BROKEN_OFFSET)
 	var plan: Dictionary = EvEffects.break_plan()
 	var shown: Array = _promise_options().slip.chips
-	if plan.accounts.size() != 1 or int(plan.accounts[0].from) != sat or shown.size() != 3 \
-			or not shown[0].contains(str(plan.accounts[0].to)) or not shown[2].contains(str(B2BConstants.PROMISE_RELOCK_WEEKS)):
-		return "the slip option reads %s for a plan of %s" % [str(shown), str(plan)]
+	if plan.accounts.size() != 1 or int(plan.accounts[0].from) != sat or int(plan.accounts[0].to) != share \
+			or shown.size() != 3 or not shown[0].contains("%d → %d" % [sat, share]) \
+			or not shown[2].contains(str(B2BConstants.PROMISE_RELOCK_WEEKS)):
+		return "the slip option reads %s for a plan of %s, want the break's own share %d → %d" % [str(shown), str(plan), sat, share]
 	var broken: Array = []
 	var cb := func(id: String) -> void: broken.append(id)
 	EventBus.promise_broken.connect(cb)
@@ -25181,8 +25187,8 @@ static func _case_promise_break_chain() -> String:
 		return "the paper's expiry broke a word the sprint had already broken"
 	GameState.advance_day()
 	B2BSalesSystem.daily_tick()
-	if account.satisfaction != int(plan.accounts[0].to):
-		return "the chip said satisfaction %d a tick on, the player reads %d" % [plan.accounts[0].to, account.satisfaction]
+	if account.satisfaction >= sat:
+		return "a tick on the player reads %d → %d, want the dip" % [sat, account.satisfaction]
 	w = _promise_world(1.1)
 	if w.is_empty():
 		return "fixture: the onboarding promise world's sprint did not start"
@@ -25198,15 +25204,15 @@ static func _case_promise_break_chain() -> String:
 	if fit >= bar + B2BConstants.ONBOARDING_GRACE_MARGIN or GameState.day + 1 >= B2BSalesSystem.onboarding_floor_until(account):
 		return "fixture: the fit %d is not under the floor %d, or the floor lifts (day %d of %d) before the tick the chip reads" % [
 			fit, bar + B2BConstants.ONBOARDING_GRACE_MARGIN, GameState.day, B2BSalesSystem.onboarding_floor_until(account)]
+	sat = account.satisfaction
 	plan = EvEffects.break_plan()
 	EventGate.resolve(PROMISE_DUE, "slip")
 	if account.tolerance <= bar:
 		return "fixture: the break left the bar at %d (was %d)" % [account.tolerance, bar]
-	GameState.advance_day()
-	B2BSalesSystem.daily_tick()
-	if account.satisfaction != int(plan.accounts[0].to):
-		return "inside the onboarding floor the chip said satisfaction %d a tick on, the player reads %d (bar %d, was %d)" % [
-			plan.accounts[0].to, account.satisfaction, account.tolerance, bar]
+	share = sat + B2BConstants.PROMISE_BROKEN_SAT + int(B2BConstants.PROMISE_BROKEN_OFFSET) + account.tolerance - bar
+	if int(plan.accounts[0].to) != share:
+		return "inside the onboarding floor the chip reads %d → %d, want the break's own share %d (bar %d, was %d)" % [
+			sat, plan.accounts[0].to, share, account.tolerance, bar]
 	return ""
 
 

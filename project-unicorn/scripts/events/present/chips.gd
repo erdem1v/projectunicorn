@@ -512,8 +512,8 @@ static func _trust_part(group: String, n: int, delta: int, top: Dictionary) -> D
 		"from": int(top.get("from", 0)), "to": int(top.get("to", 0))}), "", _signed(delta))
 
 
-## A broken word (EvEffects.break_plan): the largest account's satisfaction now and a tick on, the brand it costs and
-## the weeks that account cannot be promised anything. An effect that carries no figures reads the constants.
+## A broken word (EvEffects.break_plan): the largest account's satisfaction now and with the break's own share, the brand
+## it costs and the weeks that account cannot be promised anything. An effect that carries no figures reads the constants.
 static func _break_parts(plan: Dictionary) -> Array:
 	var parts: Array = []
 	var accounts: Array = plan.get("accounts", [])

@@ -95,30 +95,21 @@ static func satisfaction_next_tick(c: Customer, trust: float) -> int:
 
 
 ## The satisfaction a trust hit of `delta` leaves the account at, by the card's own share alone: where it stands now,
-## moved by what the hit does to its TARGET (the target with the ledger at `trust_offset + delta` against the target with
-## the ledger as it is, both on the same day), kept in 0..100. A target already at 0 or 100 (or a
-## ledger already at its limit) takes less than `delta`, and the figure says so. The drift toward the target and the
-## ledger's own forgiveness are not the card's and stay out, so the chip's "{v}", its arrow and this figure read the same.
-static func satisfaction_with_trust(c: Customer, delta: int) -> int:
+## moved at once by `drop`, then by what the hit does to its TARGET (the target with the ledger at
+## `trust_offset + delta`, on the account's `bar` when the hit raises it, against the target as it is, both on the same
+## day), kept in 0..100. A target already at 0 or 100 (or a ledger already at its limit) takes less than `delta`, and the
+## figure says so. The drift toward the target, the ledger's own forgiveness and the onboarding floor's pull are not the
+## card's and stay out, so the chip's "{v}", its arrow and this figure read the same.
+static func satisfaction_with_trust(c: Customer, delta: float, drop: int = 0, bar: int = -1) -> int:
 	var day: int = GameState.day + 1
-	var shift: int = _target_on(c, day, B2BConstants.clamp_trust(c.trust_offset + delta)) \
+	var shift: int = _target_on(c, day, B2BConstants.clamp_trust(c.trust_offset + delta), bar) \
 		- _target_on(c, day, c.trust_offset)
-	return clampi(c.satisfaction + shift, 0, 100)
-
-
-## The satisfaction the player reads one tick after a promise to this account breaks (on_promise_resolved "broken"):
-## the drop lands at once, the trust ledger takes its hit and the bar rises, then the drift walks back toward the
-## target (the onboarding floor stands on the raised bar).
-static func satisfaction_after_break(c: Customer) -> int:
-	var day: int = GameState.day + 1
-	var sat: int = clampi(c.satisfaction + B2BConstants.PROMISE_BROKEN_SAT, 0, 100)
-	var trust: float = B2BConstants.clamp_trust(c.trust_offset + B2BConstants.PROMISE_BROKEN_OFFSET)
-	return sat + _drift(c, _target_on(c, day, _forgiven_trust(trust), _tolerance_after_break(c)), day, sat)
+	return clampi(c.satisfaction + drop + shift, 0, 100)
 
 
 ## The bar a broken word leaves the account at: pickier, but never more than PROMISE_TOLERANCE_CEILING over where
 ## it was seeded.
-static func _tolerance_after_break(c: Customer) -> int:
+static func tolerance_after_break(c: Customer) -> int:
 	return mini(c.tolerance + B2BConstants.PROMISE_BROKEN_TOLERANCE,
 		B2BConstants.seed_tolerance(c.scale, c.industry) + B2BConstants.PROMISE_TOLERANCE_CEILING)
 
@@ -604,7 +595,7 @@ static func on_promise_resolved(p: Promise) -> void:
 			# brand takes a hit, and a future "Söz ver" is less credible with them.
 			if c != null:
 				CustomerRegistry.set_satisfaction(c.id, c.satisfaction + B2BConstants.PROMISE_BROKEN_SAT)
-				CustomerRegistry.set_tolerance(c.id, _tolerance_after_break(c))
+				CustomerRegistry.set_tolerance(c.id, tolerance_after_break(c))
 				# THE DURABLE HALF. Without this the -20 above is walked back by SAT_DRIFT_STEP
 				# within one tick and a broken word leaves no trace at all.
 				CustomerRegistry.set_trust_offset(c.id, c.trust_offset + B2BConstants.PROMISE_BROKEN_OFFSET)
