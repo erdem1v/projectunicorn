@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1920">
+<title>Hedefler birleşik</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..600;1,8..60,400..600&display=swap">
+<style>
+/* the game's own Archivo file first (assets/fonts/archivo), Google's Archivo when the browser blocks file fonts */
+@font-face { font-family: "ArchivoGame"; src: url("fonts/archivo.ttf") format("truetype"); font-weight: 100 900; font-stretch: 62% 125%; }
+
+:root {
+  /* UiTokens D_* */
+  --s0: #100E0B; --s1: #15120F; --s2: #1A1714; --s3: #1E1B18; --s4: #27231F; --s5: #2E2924;
+  --line-1: #3A342D; --line-2: #4A4239; --line-3: #6A5F52; --line-hover: #958C7E;
+  --ink-1: #FFFFFF; --ink-2: #E9E4DA; --ink-3: #B3AA9E; --ink-4: #9A9184; --ink-off: #6B6358;
+  --accent: #F2B53A; --pos: #4FD27A;
+  --bar-track: #3A342D; --bar-fill: #B3AA9E;
+  --portrait-lit: #574B3F; --portrait-edge: #2A2520;
+  --shadow-float: 0 6px 20px 0 rgba(0, 0, 0, 0.42);
+  --shadow-tip: 0 4px 12px 0 rgba(0, 0, 0, 0.45);
+  --f: "ArchivoGame", "Archivo", sans-serif;
+  --serif: "Source Serif 4", serif;
+}
+html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: var(--s0); }
+body { position: relative; font-family: var(--f); font-feature-settings: "tnum" 1; color: var(--ink-2); -webkit-font-smoothing: antialiased; }
+.abs { position: absolute; }
+svg.ic { display: block; flex: none; }
+
+/* Archivo instances from build_theme.gd: cond_sb_caps 650/62 +1, cond_b 800/62, sans_reg 500/100, sans_sb 650/100, num 650/108 */
+.cond-caps { font-weight: 650; font-variation-settings: "wght" 650, "wdth" 62; letter-spacing: 1px; text-transform: uppercase; }
+.cond-b { font-weight: 800; font-variation-settings: "wght" 800, "wdth" 62; letter-spacing: 1px; text-transform: uppercase; }
+.sans { font-weight: 500; font-variation-settings: "wght" 500, "wdth" 100; }
+.sans-sb { font-weight: 650; font-variation-settings: "wght" 650, "wdth" 100; }
+.num { font-weight: 650; font-variation-settings: "wght" 650, "wdth" 108; }
+
+/* ---------------------------------------------------------------- rail row (LeftTabs: 184 wide, 48 tall, icon at 20, name at 56) */
+.rr { position: absolute; left: 0; width: 183px; height: 48px; display: flex; align-items: center; gap: 12px; box-sizing: border-box;
+  padding: 0 16px 0 20px; color: var(--ink-3); background: var(--s1); }
+.rr .rr-ic { width: 24px; height: 24px; color: var(--ink-4); }
+.rr .rr-n { flex: 1; font-size: 16px; line-height: 22px; color: var(--ink-3); white-space: nowrap; }
+.rr.is-hover::before { content: ""; position: absolute; inset: 2px 6px; border: 1px solid var(--line-hover); border-radius: 4px; }
+.rr.is-active { background: var(--s4); border-radius: 0 4px 4px 0; }
+.rr.is-active::after { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; background: var(--ink-1); border-radius: 0 2px 2px 0; }
+.rr.is-active .rr-n { color: var(--ink-1); }
+.rr.is-active .rr-ic { color: var(--ink-2); }
+/* two-line row, laid out like PAZARLAMA / ERKEN ERİŞİM'DE: label on the top line, the 5-step bar where the sub-label sits.
+   Everything stays inside x 56..167 (BADGE_RIGHT 16 from the 183 px rail). */
+.rr.two { display: block; padding: 0; }
+.rr.two .rr-ic { position: absolute; left: 20px; top: 12px; }
+.rr.two .lab { position: absolute; left: 56px; top: 7px; font-size: 16px; line-height: 16px; color: var(--ink-3); white-space: nowrap; }
+.rr.two .cnt { position: absolute; right: 16px; top: 7px; font-size: 16px; line-height: 16px; color: var(--ink-3); white-space: nowrap; }
+.segs { position: absolute; left: 56px; right: 16px; top: 32px; height: 4px; display: flex; gap: 3px; }
+.segs i { position: relative; flex: 1; border-radius: 1px; background: var(--line-2); overflow: hidden; }
+.segs i b { position: absolute; left: 0; top: 0; bottom: 0; background: var(--ink-3); }
+.rr.is-active .lab { color: var(--ink-1); }
+.rr.is-active .cnt { color: var(--ink-2); }
+.rr.is-active .segs i b { background: var(--ink-2); }
+
+/* ---------------------------------------------------------------- tooltip (TooltipPanel, one line) */
+.tip { position: absolute; display: flex; align-items: baseline; padding: 12px; background: var(--s0);
+  border: 1px solid var(--line-2); border-radius: 4px; box-shadow: var(--shadow-tip); white-space: nowrap; font-size: 15px; line-height: 21px; }
+.tip-t { color: var(--ink-1); }
+.tip-b { color: var(--ink-3); }
+
+/* ---------------------------------------------------------------- the goals drawer, docked to the rail (A's place and width, B's order) */
+.gp { position: absolute; left: 184px; bottom: 52px; width: 392px; background: var(--s3); border: 1px solid var(--line-2); border-left: 0;
+  border-radius: 0 6px 6px 0; box-shadow: var(--shadow-float), 24px 0 48px -12px rgba(10, 8, 6, 0.5); overflow: hidden; }
+.gp-hd { height: 56px; display: flex; align-items: center; gap: 12px; padding: 0 8px 0 20px; background: var(--s4); border-bottom: 1px solid var(--line-1); }
+.gp-hd .t { flex: 1; font-size: 22px; line-height: 30px; color: var(--ink-1); }
+.gp-hd .ic-t { width: 20px; height: 20px; color: var(--ink-2); }
+.x-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: 1px solid transparent; border-radius: 4px; color: var(--ink-3); }
+
+/* list head: who set the goals and how far along */
+.who { display: flex; align-items: center; gap: 12px; padding: 16px 20px; }
+.av { width: 40px; height: 40px; border-radius: 50%; flex: none; box-shadow: 0 0 0 1px var(--line-3); background: radial-gradient(circle at 50% 40%, var(--portrait-lit), var(--portrait-edge)); overflow: hidden; }
+.av img { width: 40px; height: 40px; display: block; }
+.who .name { flex: 1; font-size: 18px; line-height: 24px; color: var(--ink-1); white-space: nowrap; }
+.who .count { font-size: 16px; line-height: 22px; color: var(--ink-2); }
+.sep { height: 1px; margin: 0 20px; background: var(--line-1); }
+
+/* the current step, on top and large */
+.hero { display: flex; flex-direction: column; gap: 12px; padding: 16px 20px; }
+.h-row { display: flex; align-items: center; gap: 12px; }
+.h-title { flex: 1; font-size: 22px; line-height: 30px; color: var(--ink-1); white-space: nowrap; }
+.btn { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; box-sizing: border-box; flex: none;
+  border: 1px solid var(--line-2); border-radius: 4px; color: var(--ink-2); white-space: nowrap;
+  font-weight: 650; font-variation-settings: "wght" 650, "wdth" 62; font-size: 16px; line-height: 22px; }
+.btn svg { width: 16px; height: 16px; color: var(--ink-3); }
+.h-bar { display: flex; align-items: center; gap: 12px; }
+.bar { position: relative; flex: 1; height: 8px; border-radius: 2px; background: var(--bar-track); overflow: hidden; }
+.bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; background: var(--ink-2); }
+.fig { font-size: 15px; line-height: 21px; color: var(--ink-3); white-space: nowrap; }
+.fig b { font-weight: 650; font-variation-settings: "wght" 650, "wdth" 100; color: var(--ink-1); }
+
+/* the ladder: one thin line through the step marks (x 27, the centre of the 16 px marks at 20..36) */
+.ladder { position: relative; padding: 4px 20px 16px; }
+.ladder::before { content: ""; position: absolute; left: 27px; top: 20px; bottom: 32px; width: 1px; background: var(--line-2); }
+.ls { position: relative; height: 32px; display: flex; align-items: center; gap: 12px; font-size: 15px; line-height: 21px; color: var(--ink-3); white-space: nowrap; }
+.mk { position: relative; z-index: 1; width: 16px; height: 16px; flex: none; box-sizing: border-box; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; background: var(--s3); }
+/* pos-tag-bg / pos-tag-line flattened onto surface-3 so the line does not show through */
+.ls.done .mk { background: #243124; border: 1px solid #3A7F4E; color: var(--pos); }
+.ls.done .mk svg { width: 12px; height: 12px; }
+.ls.now { color: var(--ink-1); }
+.ls.now .mk { border: 2px solid var(--ink-2); }
+
+/* the next list: dimmed and locked */
+.next { position: relative; padding: 12px 20px 14px; background: var(--s2); border-top: 1px solid var(--line-1); }
+.next::before { content: ""; position: absolute; left: 27px; top: 54px; height: 28px; width: 1px; background: var(--line-1); }
+.n-hd { height: 28px; display: flex; align-items: center; gap: 12px; }
+.n-hd svg { width: 16px; height: 16px; color: var(--ink-4); }
+.n-hd .t { flex: 1; font-size: 16px; line-height: 22px; color: var(--ink-4); }
+.n-hd .c { font-size: 15px; line-height: 21px; color: var(--ink-4); }
+.next .ls { height: 28px; color: var(--ink-4); }
+.next .ls .mk { background: var(--s2); border: 1px solid var(--line-3); }
+
+/* states, switched by the URL hash: #closed, #hover, #open */
+.only-open, .only-hover { display: none; }
+body.s-open .only-open { display: block; }
+body.s-hover .only-hover { display: flex; }
+</style>
+</head>
+<body class="s-closed">
+
+<!-- a real 1920x1080 shell frame (top bar, rail, ticker from base_1_0900.png; the home office render), built by bg.html -->
+<img class="abs" src="bg.png" alt="" style="left:0; top:0; width:1920px; height:1080px">
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-milestone" viewBox="0 0 24 24">
+      <path fill="currentColor" fill-opacity="0.4" fill-rule="evenodd" d="M3.21 20.27 L3.09 20.48 L3.02 20.7 L3.03 20.94 L3.07 21.09 L3.19 21.3 L3.37 21.46 L3.58 21.56 L3.82 21.6 L20.22 21.6 L20.38 21.58 L20.53 21.54 L20.67 21.46 L20.79 21.36 L20.89 21.24 L20.96 21.1 L21.01 20.95 L21.02 20.79 L21.01 20.63 L20.96 20.48 L20.88 20.35 L20.78 20.23 L16.52 16.11 L16.4 16.01 L16.26 15.94 L16.11 15.89 L15.95 15.88 L15.72 15.92 L15.51 16.03 L13.2 18 L11.23 16.8 L11.02 17.23 L10.79 17.54 L10.54 17.79 L10.14 18.07 L9.79 18.23 L9.32 18.36 L8.97 18.4 L8.48 18.36 L8.24 18.31 L7.88 18.18 L7.45 17.94 L7.26 17.79 L7.01 17.54 L6.86 17.35 L6.67 17.02 Z"/>
+      <path fill="currentColor" fill-rule="evenodd" d="M11.14 2.8 L10.97 2.85 L10.78 2.98 L10.65 3.17 L10.6 3.4 L10.6 9.4 L10.63 9.57 L10.67 9.68 L10.82 9.86 L11.03 9.97 L11.2 10 L19.03 10 L19.15 9.99 L19.31 9.93 L19.5 9.77 L19.59 9.62 L19.62 9.44 L19.61 9.27 L19.55 9.1 L17.6 6.4 L19.55 3.7 L19.62 3.48 L19.62 3.3 L19.53 3.07 L19.41 2.94 L19.26 2.85 L19.03 2.8 Z M9.99 3.39 L9.95 3.18 L9.87 2.98 L9.68 2.72 L9.51 2.59 L9.32 2.48 L9.11 2.42 L8.9 2.4 L8.69 2.42 L8.48 2.48 L8.29 2.59 L8.12 2.72 L7.99 2.89 L7.88 3.08 L7.81 3.39 L7.81 16.01 L7.88 16.32 L7.99 16.51 L8.12 16.68 L8.38 16.87 L8.58 16.95 L8.79 16.99 L9.01 16.99 L9.22 16.95 L9.42 16.87 L9.6 16.75 L9.75 16.6 L9.87 16.42 L9.95 16.22 L9.99 16.01 Z"/>
+    </symbol>
+    <symbol id="i-check" viewBox="0 0 24 24">
+      <path fill="currentColor" fill-rule="evenodd" d="M8.7 18.54 L8.9 18.7 L9.13 18.81 L9.38 18.88 L9.64 18.9 L9.89 18.87 L10.14 18.78 L10.36 18.65 L10.55 18.48 L20.64 7.59 L20.82 7.25 L20.88 7 L20.9 6.75 L20.86 6.5 L20.78 6.26 L20.65 6.04 L20.48 5.85 L20.17 5.63 L19.93 5.54 L19.68 5.5 L19.42 5.51 L19.18 5.57 L18.94 5.68 L18.74 5.83 L9.55 15.74 L5.3 11.66 L5.1 11.51 L4.75 11.35 L4.5 11.3 L4.25 11.31 L3.88 11.41 L3.66 11.53 L3.46 11.7 L3.24 12.01 L3.15 12.25 L3.1 12.5 L3.13 12.88 L3.21 13.12 L3.33 13.34 L3.5 13.54 Z"/>
+    </symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24">
+      <path fill="currentColor" fill-rule="evenodd" d="M17.7 8.2 L17.66 7.54 L17.59 7.08 L17.44 6.5 L17.18 5.82 L16.9 5.29 L16.65 4.91 L16.19 4.34 L15.86 4.01 L15.4 3.63 L14.91 3.3 L14.26 2.97 L13.7 2.76 L13.25 2.64 L12.53 2.53 L12.07 2.5 L11.47 2.53 L10.75 2.64 L10.3 2.76 L9.74 2.97 L9.09 3.3 L8.6 3.63 L8.24 3.92 L7.81 4.34 L7.35 4.91 L7.03 5.41 L6.77 5.94 L6.6 6.37 L6.44 6.95 L6.34 7.54 L6.3 8.13 L6.3 10.02 L5.96 10.09 L5.56 10.26 L5.38 10.37 L5.04 10.64 L4.77 10.98 L4.66 11.16 L4.57 11.36 L4.44 11.77 L4.4 12.2 L4.41 19.62 L4.44 19.83 L4.57 20.24 L4.77 20.62 L5.04 20.96 L5.38 21.23 L5.76 21.43 L6.17 21.56 L6.6 21.6 L17.62 21.59 L17.83 21.56 L18.24 21.43 L18.62 21.23 L18.96 20.96 L19.23 20.62 L19.43 20.24 L19.56 19.83 L19.59 19.62 L19.59 11.98 L19.56 11.77 L19.43 11.36 L19.23 10.98 L18.96 10.64 L18.62 10.37 L18.44 10.26 L18.04 10.09 L17.7 10.02 Z M9.05 7.24 L9.17 6.94 L9.32 6.65 L9.49 6.38 L9.7 6.13 L9.93 5.9 L10.18 5.69 L10.45 5.52 L10.74 5.37 L11.04 5.25 L11.36 5.17 L11.68 5.12 L12 5.1 L12.32 5.12 L12.64 5.17 L12.96 5.25 L13.26 5.37 L13.55 5.52 L13.82 5.69 L14.07 5.9 L14.3 6.13 L14.51 6.38 L14.68 6.65 L14.83 6.94 L14.95 7.24 L15.03 7.56 L15.08 7.88 L15.1 8.23 L15.1 10 L8.9 10 L8.9 8.23 L8.92 7.88 L8.97 7.56 Z"/>
+    </symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24">
+      <path fill="currentColor" fill-rule="evenodd" d="M13.96 12 L8.28 17.68 L8.12 17.88 L8 18.1 L7.92 18.35 L7.9 18.6 L7.92 18.85 L8 19.1 L8.12 19.32 L8.28 19.52 L8.48 19.68 L8.82 19.84 L9.2 19.9 L9.45 19.88 L9.7 19.8 L10.02 19.6 L16.72 12.92 L16.88 12.72 L17 12.5 L17.08 12.25 L17.1 12 L17.08 11.75 L17 11.5 L16.88 11.28 L16.72 11.08 L10.02 4.4 L9.7 4.2 L9.33 4.11 L8.95 4.12 L8.7 4.2 L8.48 4.32 L8.28 4.48 L8.12 4.68 L8 4.9 L7.92 5.15 L7.9 5.4 L7.92 5.65 L8 5.9 L8.12 6.12 L8.28 6.32 Z"/>
+    </symbol>
+    <symbol id="i-close" viewBox="0 0 24 24">
+      <path fill="currentColor" fill-rule="evenodd" d="M17.18 19 L17.5 19.2 L17.75 19.28 L18 19.3 L18.25 19.28 L18.5 19.2 L18.82 19 L19 18.82 L19.15 18.61 L19.28 18.25 L19.3 18 L19.28 17.75 L19.15 17.39 L18.92 17.08 L13.84 12 L19 6.82 L19.2 6.5 L19.28 6.25 L19.3 6 L19.28 5.75 L19.2 5.5 L19 5.18 L18.82 5 L18.61 4.85 L18.38 4.76 L18.13 4.71 L17.87 4.71 L17.62 4.76 L17.28 4.92 L17.08 5.08 L12 10.16 L6.82 5 L6.5 4.8 L6.25 4.72 L6 4.7 L5.75 4.72 L5.5 4.8 L5.18 5 L5 5.18 L4.85 5.39 L4.72 5.75 L4.7 6 L4.72 6.25 L4.8 6.5 L4.92 6.72 L5.08 6.92 L10.16 12 L5 17.18 L4.8 17.5 L4.72 17.75 L4.7 18 L4.72 18.25 L4.8 18.5 L5 18.82 L5.18 19 L5.39 19.15 L5.75 19.28 L6 19.3 L6.25 19.28 L6.5 19.2 L6.72 19.08 L6.92 18.92 L12 13.84 Z"/>
+    </symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24">
+      <path fill="currentColor" fill-rule="evenodd" d="M3.6 10.7 L3.35 10.72 L3.1 10.8 L2.78 11 L2.6 11.18 L2.45 11.39 L2.36 11.62 L2.31 11.87 L2.31 12.13 L2.36 12.38 L2.45 12.61 L2.6 12.82 L2.78 13 L2.99 13.15 L3.35 13.28 L3.6 13.3 L16.66 13.3 L12.68 17.28 L12.45 17.59 L12.36 17.82 L12.3 18.2 L12.36 18.58 L12.45 18.81 L12.6 19.02 L12.88 19.28 L13.1 19.4 L13.47 19.49 L13.73 19.49 L13.98 19.44 L14.21 19.35 L14.52 19.12 L20.72 12.92 L20.88 12.72 L21 12.5 L21.09 12.13 L21.09 11.87 L21.04 11.62 L20.88 11.28 L20.72 11.08 L14.52 4.88 L14.21 4.65 L13.98 4.56 L13.73 4.51 L13.35 4.52 L13.1 4.6 L12.78 4.8 L12.52 5.08 L12.36 5.42 L12.3 5.8 L12.36 6.18 L12.45 6.41 L12.68 6.72 L16.66 10.7 Z"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- HEDEFLER: the rail's bottom group, right above AYARLAR (980..1028); two lines like PAZARLAMA -->
+<div class="rr two" id="goalRow" style="top:932px">
+  <svg class="ic rr-ic"><use href="#i-milestone"/></svg>
+  <span class="lab cond-caps">Hedefler</span>
+  <span class="cnt cond-caps">4/5</span>
+  <!-- 4 steps done, the 5th at $1,2K of $2,5K -->
+  <span class="segs"><i><b style="width:100%"></b></i><i><b style="width:100%"></b></i><i><b style="width:100%"></b></i><i><b style="width:100%"></b></i><i><b style="width:48%"></b></i></span>
+</div>
+
+<!-- hover: one line, the goal that used to sit in SIRADAKİ -->
+<div class="tip only-hover" style="left:192px; top:933px">
+  <span class="tip-t sans-sb">Frank'in çeki · 4/5</span><span class="tip-b sans">&nbsp;· Sıradaki: Aylık gelir $2,5K</span>
+</div>
+
+<!-- open: the drawer -->
+<div class="gp only-open">
+  <div class="gp-hd">
+    <svg class="ic ic-t"><use href="#i-milestone"/></svg>
+    <span class="t cond-b">Hedefler</span>
+    <div class="x-btn"><svg class="ic" width="20" height="20"><use href="#i-close"/></svg></div>
+  </div>
+
+  <div class="who">
+    <!-- Frank's line lives in the portrait's tooltip -->
+    <div class="av" title="“Yolun yarısı. Kapıya bakma daha. Churn'e bak.”"><img src="src/frank_40.png" alt=""></div>
+    <span class="name sans-sb">Frank'in çeki</span>
+    <span class="count num">4/5</span>
+  </div>
+  <div class="sep"></div>
+
+  <div class="hero">
+    <div class="h-row">
+      <span class="h-title sans-sb">Aylık gelir $2,5K</span>
+      <span class="btn">Satış'a git <svg class="ic"><use href="#i-arrow"/></svg></span>
+    </div>
+    <div class="h-bar">
+      <div class="bar"><i style="width:48%"></i></div>
+      <span class="fig sans"><b>$1,2K</b> / $2,5K</span>
+    </div>
+  </div>
+
+  <div class="ladder">
+    <div class="ls done"><span class="mk"><svg class="ic"><use href="#i-check"/></svg></span><span class="sans">Ürün tipini seç</span></div>
+    <div class="ls done"><span class="mk"><svg class="ic"><use href="#i-check"/></svg></span><span class="sans">İlk sprinti başlat</span></div>
+    <div class="ls done"><span class="mk"><svg class="ic"><use href="#i-check"/></svg></span><span class="sans">v1.0'ı yayınla</span></div>
+    <div class="ls done"><span class="mk"><svg class="ic"><use href="#i-check"/></svg></span><span class="sans">İlk ödeyen müşteri</span></div>
+    <div class="ls now"><span class="mk"></span><span class="sans">Aylık gelir $2,5K</span></div>
+  </div>
+
+  <div class="next">
+    <div class="n-hd">
+      <svg class="ic"><use href="#i-lock"/></svg>
+      <span class="t sans-sb">Seed turu</span>
+      <span class="c num">0/2</span>
+    </div>
+    <div class="ls"><span class="mk"></span><span class="sans">Traction'a geç</span></div>
+    <div class="ls"><span class="mk"></span><span class="sans">Aylık gelir $20K</span></div>
+  </div>
+</div>
+
+<script>
+  const state = (location.hash || "#closed").slice(1);
+  document.body.className = "s-" + state;
+  const row = document.getElementById("goalRow");
+  if (state === "open") row.classList.add("is-active");
+  if (state === "hover") row.classList.add("is-hover");
+</script>
+</body>
+</html>
