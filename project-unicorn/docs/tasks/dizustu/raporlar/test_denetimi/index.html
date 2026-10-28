@@ -1,0 +1,499 @@
+<title>Test Sistemi Denetimi</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: tek okuma şeridi; üstte cevap ve kararlar, sonra raporun bölümleri, en altta kaynak sicili. Menajer Masası dili. */
+:root{
+  --bg:#f3efe7; --surface:#fbf8f2; --ink:#26221c; --muted:#6d6457; --line:#d9d0c1;
+  --accent:#b8761c; --good:#3d7a4a; --warn:#a8741a; --bad:#a3402f; --info:#3f6f8f;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#1c1915; --surface:#25211c; --ink:#ece5d8; --muted:#a59a89; --line:#3b352d;
+  --accent:#e0a03e; --good:#7cbf87; --warn:#e3b456; --bad:#e07a66; --info:#7fb2d4; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1c1915; --surface:#25211c; --ink:#ece5d8; --muted:#a59a89; --line:#3b352d;
+  --accent:#e0a03e; --good:#7cbf87; --warn:#e3b456; --bad:#e07a66; --info:#7fb2d4; color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 var(--f-body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 64px}
+main{max-width:920px;margin:0 auto;display:flex;flex-direction:column;gap:44px;min-width:0}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;line-height:1.1;text-wrap:balance;margin:0}
+h1{font-size:46px} h2{font-size:30px} h3{font-size:24px}
+p{margin:0;max-width:72ch}
+ul,ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+section{display:flex;flex-direction:column;gap:14px;min-width:0}
+a{color:var(--accent)}
+code{font:400 .88em/1.4 var(--f-mono);overflow-wrap:anywhere}
+.eyebrow{font:500 12px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.lead{font-size:18px;max-width:66ch}
+.note{font-size:13px;color:var(--muted)}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px 18px;min-width:0}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 12px/1.3 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td.n{font:600 15px/1.3 var(--f-mono);font-variant-numeric:tabular-nums;text-align:right}
+td code{overflow-wrap:normal}
+.t-sm{min-width:520px} .t-md{min-width:680px} .t-lg{min-width:880px} .t-xl{min-width:1080px}
+.chip{display:inline-block;font:500 11px/1 var(--f-mono);letter-spacing:.04em;padding:4px 7px;border-radius:3px;border:1px solid currentColor;white-space:nowrap}
+.c-ok{color:var(--good)} .c-part{color:var(--warn)} .c-no{color:var(--bad)} .c-run{color:var(--info)} .c-you{color:var(--accent)}
+.src{font:400 12px/1.4 var(--f-mono);color:var(--muted)}
+a.src{text-decoration:none;white-space:nowrap}
+a.src:hover{color:var(--accent)}
+.lbl{font:500 11px/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.order{counter-reset:o;list-style:none;padding:0;gap:10px}
+.order>li{counter-increment:o;display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;align-items:start}
+.order>li::before{content:counter(o);font:600 22px/1 var(--f-display);color:var(--accent);text-align:right}
+.order>li span.sub{font-size:14px;color:var(--muted);display:block}
+.run{border-left:3px solid var(--info)}
+.flag{border-left:3px solid var(--bad)}
+/* sayfaya özgü */
+.mk{font:500 11px/1.2 var(--f-mono);letter-spacing:.02em;padding:1px 5px;border-radius:3px;border:1px solid currentColor;white-space:nowrap}
+.mk-g{color:var(--accent)} .mk-v{color:var(--info)} .mk-d{color:var(--bad)}
+.top{display:flex;flex-direction:column;gap:12px}
+.decide{border:1px solid var(--accent);border-left:4px solid var(--accent);display:flex;flex-direction:column;gap:16px}
+.decide .order{gap:22px}
+.dec{display:flex;flex-direction:column;gap:8px;min-width:0}
+.dec h3{font-size:23px}
+.opts{list-style:none;padding:0;gap:4px;font-size:14px}
+.opts li{padding-left:2px}
+.opts b{font-family:var(--f-mono);font-weight:500;color:var(--muted)}
+.rec,.why{font-size:14px}
+.rec{font-weight:600}
+.rec .lbl,.why .lbl{display:inline-block;margin-right:8px;color:var(--accent)}
+.why .lbl{color:var(--muted)}
+.keys{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.keys>div{display:flex;flex-direction:column;gap:8px;min-width:0}
+.keys ul{list-style:none;padding:0;font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stat{display:flex;flex-direction:column;gap:6px}
+.stat b{font:600 38px/1 var(--f-display);font-variant-numeric:tabular-nums}
+.stat span{font-size:13px;color:var(--muted);line-height:1.35}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.cards>.box{display:flex;flex-direction:column;gap:8px}
+.cards h3{font-size:21px}
+.cards p{font-size:14px}
+pre{margin:0;overflow-x:auto;font:400 13px/1.55 var(--f-mono);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:10px 12px;white-space:pre}
+tr.hl td{background:color-mix(in srgb,var(--accent) 9%,transparent)}
+tr.hl td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+.stack{display:flex;flex-direction:column;gap:10px}
+.pm{display:flex;flex-direction:column;gap:8px}
+.pm h3{font-size:21px}
+.pm dl{margin:0;display:grid;grid-template-columns:minmax(0,1fr);gap:6px;font-size:14px}
+.pm dt{font:500 11px/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.pm dd{margin:0}
+details.box{padding:0}
+details summary{cursor:pointer;padding:16px 18px;font:600 22px/1.1 var(--f-display);list-style-position:inside}
+details summary .note{font:400 13px/1.4 var(--f-body);margin-left:8px}
+details[open] summary{border-bottom:1px solid var(--line)}
+details .inner{padding:16px 18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+td.url{overflow-wrap:anywhere;min-width:220px;font:400 12px/1.4 var(--f-mono)}
+@media (max-width:640px){h1{font-size:36px} h2{font-size:26px} .lead{font-size:16px} .dec h3{font-size:21px}}
+</style>
+
+<main>
+
+<header class="top">
+  <span class="eyebrow">Project Unicorn · 28 Ekim 2026 · Test sistemi</span>
+  <h1>Test sistemi denetimi</h1>
+  <p class="lead">Diğer modelin eleştirisi kısmen doğru <span class="mk mk-g">[GÖRÜŞ]</span>. Asıl sorun testlerin "eski" olması değil, yanlış şeyi ölçmeleri. Son 10 haftada oyuncuya görünen 19 hata bulundu; testler bunların hiçbirini yakalamadı. Testler ekranı hiç sınamıyor, gerçek oyunda olmayan temiz bir dünyada koşuyor ve paket tam koşulamayacak kadar yavaş. Önerim test sayısını artırmak değil, test türünü değiştirmek. Küçük bir pilotla başla; pilot değerini kanıtlarsa devam.</p>
+  <p class="note">Ölçümler <code>f06bed6f</code> üzerinde yapıldı. Bugünkü HEAD <code>219a534f</code>; smoke dosyası değişmedi, hâlâ 29.471 satır ve 513 vaka. Godot çalıştırılmadı, repoya dokunulmadı.</p>
+</header>
+
+<section id="kararlar">
+  <span class="eyebrow">Senin kararların</span>
+  <h2>Verilecek 5 karar</h2>
+  <div class="box decide">
+    <p class="note">Adım 0: bu sayfayı oku, kararları ver (~20 dk). Silme ve kural değişikliği senin onayın olmadan yapılmaz (CLAUDE.md §3).</p>
+    <ol class="order">
+      <li><div class="dec">
+        <h3>Yön: önce pilotla başlayalım mı?</h3>
+        <ul class="opts">
+          <li><b>Evet:</b> önerilen yapıya küçük bir pilotla başlanır.</li>
+          <li><b>Hayır:</b> bugünkü test düzeni sürer.</li>
+        </ul>
+        <p class="rec"><span class="lbl">Önerim</span>Evet, önce pilot.</p>
+        <p class="why"><span class="lbl">Neden</span>Pilot bir oturum (3–4 saat): olay fiili bağlantı denetimi ve 3 oyuncu yolu testi (zam menüsü #3, satış sayfası saat kilidi #15, sprint "sığıyor" = puan #17). Her test, ilgili düzeltme geçici olarak geri alınınca kırmızıya dönmeli. Böylece yeni yöntemin bugünkü 513 vakanın kaçırdığını yakaladığı ucuza kanıtlanır. Sonuç tek sayfa gelir; devam mı dur mu, sen seçersin (10 dk).</p>
+      </div></li>
+      <li><div class="dec">
+        <h3>Eski kayıt göçleri</h3>
+        <ul class="opts">
+          <li><b>(a)</b> Demo öncesi eski kayıt desteği bırakılır. 21 vaka ve ölü kod gider. Masaüstündeki eski playtest kayıtların açılmaz.</li>
+          <li><b>(b)</b> Göçler kalır. Vakalar, gerçek kayıt dosyasını gerçek yükleyiciden açan tek bir vakaya iner.</li>
+        </ul>
+        <p class="rec"><span class="lbl">Önerim</span>(a).</p>
+        <p class="why"><span class="lbl">Neden</span>Oyun henüz oyuncuya çıkmadı; bu bir çıkarım, kontrol et. Dizüstündeki yeni kayıtların etkilenmez. 21 vaka: 5 ölü göç vakası (~283 satır) ve 16 eski kayıt vakası (~1.380 satır). Ölü üretim kodu ~235 satır.</p>
+      </div></li>
+      <li><div class="dec">
+        <h3>Tam paket ne zaman koşsun?</h3>
+        <ul class="opts">
+          <li><b>(a)</b> Her "push et" dediğinde arka planda, ~12 dk.</li>
+          <li><b>(b)</b> Haftada bir ve her playtest'ten önce.</li>
+        </ul>
+        <p class="rec"><span class="lbl">Önerim</span>(b).</p>
+        <p class="why"><span class="lbl">Neden</span>Push'un hızlı kalsın. 2026-10-06 kararın da bu: push öncesi tam smoke yok. Bugün tam paket sırayla ≥51 dk sürüyor; 4 paralel işle ~12 dk'ya iner <span class="mk mk-v">(varsayım)</span>, paralelde yavaşlama olursa 15–20 dk. Değişikliğe göre seçim bazen gereken testi atlar <a class="src" href="#src-35">[S35]</a>, bu yüzden tam paket düzenli koşmaya devam etmeli.</p>
+      </div></li>
+      <li><div class="dec">
+        <h3>Commit'ten önce hızlı kontrol kendiliğinden koşsun mu?</h3>
+        <ul class="opts">
+          <li><b>Evet:</b> her commit'ten önce <code>test.sh hizli</code> kendiliğinden koşar. <code>.githooks/pre-commit</code> bugün kapalı; açmak senin kararın.</li>
+          <li><b>Hayır:</b> ajan kontrolü kendisi koşar.</li>
+        </ul>
+        <p class="rec"><span class="lbl">Önerim</span>Pilot hızlı katmanın 2 dakikanın altında kaldığını kanıtlarsa evet.</p>
+        <p class="why"><span class="lbl">Neden</span>Ajan CLAUDE.md'deki bir talimata "çoğu zaman" uyar, her zaman değil <a class="src" href="#src-32">[S32]</a>. Kendiliğinden koşan kontrol bunu garanti eder. 2 dakika hedefi bir varsayım; pilot ölçer.</p>
+      </div></li>
+      <li><div class="dec">
+        <h3>Hazır test çatısı (gdUnit4)</h3>
+        <ul class="opts">
+          <li><b>Şimdilik yok:</b> bugünkü koşucu geliştirilir. Pilotta oyuncu yolu testi yazmak zor ya da kırılgan çıkarsa gdUnit4 tek bir vakayla denenir.</li>
+          <li><b>Şimdi geç:</b> 513 vaka gdUnit4'e taşınır.</li>
+        </ul>
+        <p class="rec"><span class="lbl">Önerim</span>Evet, bu sırayla: önce yok, pilot zorlanırsa tek vakayla deneme.</p>
+        <p class="why"><span class="lbl">Neden</span>19 kaçağın hiçbiri araç yüzünden kaçmadı. 513 vakayı taşımak büyük ve riskli bir iş, oyuncuya değer üretmez. Çatı <code>addons/</code> içine girer ve Godot sürümüne sıkı bağlı: gdUnit4 v6.2.x Godot 4.5–4.7.1'i hedefliyor <a class="src" href="#src-1">[S1]</a>, proje 4.6.3'te.</p>
+      </div></li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Okumadan önce</span>
+  <div class="box keys">
+    <div><span class="lbl">İşaretler</span><ul>
+      <li><span class="mk mk-g">[GÖRÜŞ]</span> benim yargım.</li>
+      <li><span class="mk mk-v">(varsayım)</span> ölçülmemiş tahmin.</li>
+      <li><span class="mk mk-d">[DEĞERLENDİREMEM]</span> kanıtı yok.</li>
+      <li><span class="src">[S#]</span> kaynak; sicil sayfanın en altında.</li>
+    </ul></div>
+    <div><span class="lbl">Terimler</span><ul>
+      <li><b>Vaka:</b> tek bir test.</li>
+      <li><b>Fikstür:</b> testin kendi kurduğu hazır oyun durumu.</li>
+      <li><b>Kapı:</b> commit ya da push öncesi geçmesi gereken kontrol.</li>
+      <li><b>Değişmez:</b> oyunda hiçbir koşulda bozulmaması gereken kural.</li>
+      <li><b>Shell:</b> oyunun ekranı, yani düğmeler, sayfalar ve pop-up'lar.</li>
+    </ul></div>
+  </div>
+</section>
+
+<section id="sonuc">
+  <span class="eyebrow">1 · Sonuç</span>
+  <h2>19 hata, testler hiçbirini görmedi</h2>
+  <div class="stats">
+    <div class="box stat"><b>19</b><span>oyuncuya görünen hata, son 10 hafta</span></div>
+    <div class="box stat"><b class="c-no">0</b><span>testlerin yakaladığı</span></div>
+    <div class="box stat"><b>513</b><span>vaka, 29.471 satır</span></div>
+    <div class="box stat"><b>≥51 dk</b><span>tam paket, sırayla</span></div>
+  </div>
+  <p>19 hatanın 10'unu oynayan biri, 5'ini kod okuyan biri buldu. Testler hiçbirini yakalamadı. Üç neden var.</p>
+  <div class="cards">
+    <div class="box flag">
+      <span class="lbl">Neden 1 · 19 hatanın 8'i</span>
+      <h3>Ekran hiç sınanmıyor</h3>
+      <p>Testler oyunu ekransız koşuyor. Düğme, pop-up ve ekrandaki sayı hiçbir kapıda yok.</p>
+      <p class="note">8 hatanın 4'ü doğrudan arayüz. Öbür 4'ünde test oyuncunun izlediği yolu değil, başka bir iç fonksiyonu sınıyordu.</p>
+    </div>
+    <div class="box flag">
+      <span class="lbl">Neden 2 · 19 hatanın 8'i</span>
+      <h3>Testler temiz bir dünyada koşuyor</h3>
+      <p>Bu dünya gerçek oyunda yok: mail anında gelir, zar kapalıdır, fikstürde churn yoktur. Uzun koşu kapısı yalnız "oyun çökmeden bir sona vardı mı" diye bakıyor.</p>
+      <p class="note">8 hatanın 5'i fikstür, 3'ü uzun koşu ya da olay dizisi eksikliği.</p>
+    </div>
+    <div class="box flag">
+      <span class="lbl">Neden 3</span>
+      <h3>Paket büyük ve yavaş, tam koşulmuyor</h3>
+      <p>513 vaka, 29.471 satır, sırayla en az 51 dakika.</p>
+      <p class="note">31 vakalık örneklemde vakaların %45'i formül sayısını ya da iç yapıyı sabitliyor. 2 vaka hatanın kendisini şart koşuyordu.</p>
+    </div>
+  </div>
+  <p class="box run"><b>Öneri:</b> Test sayısını artırmak değil, test türünü değiştirmek. Küçük bir pilotla başla: olay kartı fiil denetimi ve 3 "oyuncu yolu" testi. Pilot değerini kanıtlarsa devam.</p>
+</section>
+
+<section id="bugun">
+  <span class="eyebrow">2 · Bugünkü sistem</span>
+  <h2>Bugün ne ölçülüyor, ne kaçıyor</h2>
+  <div class="box scroll">
+    <table class="t-lg">
+      <thead><tr><th>Katman</th><th>Ne ölçüyor</th><th>Süre</th><th>Token maliyeti</th><th>Neyi kaçırıyor</th></tr></thead>
+      <tbody>
+        <tr><td><code>--event-lint</code></td><td>Olay kartlarının şekli; fiil listede var mı</td><td><span class="mk mk-d">[DEĞERLENDİREMEM]</span></td><td>Bulgu başına 2 satır</td><td>Fiilin oyunda bir karşılığı var mı. Bugün 6 fiilin karşılığı yok (aşağıda).</td></tr>
+        <tr><td><code>loc_residue</code> + <code>loc_csv_integrity</code></td><td>Metin anahtarları; TR ve EN aynı <code>{yer tutucu}</code>ları taşıyor mu</td><td><span class="mk mk-d">[DEĞERLENDİREMEM]</span></td><td>Az</td><td>Yer tutucunun gerçekten dolup dolmadığı. Kart gövdesinde <code>{days}</code> oyuncuya basıldı (#19).</td></tr>
+        <tr><td>Smoke (<code>endgame_smoke.gd</code>, 513 vaka)</td><td>Sistem kuralları, formüller, kayıt göçleri. Ekran kurulmuyor.</td><td>Vaka ~6 sn (Mac). Tam paket sırayla ≥51 dk. Eski Windows ölçümü vaka başı ~30 sn.</td><td>Geçen vaka 1 satır, <code>--all</code> ~5k token. Ama dosya 1,67 MB; okunamıyor, her iş grep ile gezinme istiyor.</td><td>Ekran; zaman içindeki sonuç; gerçek oyun durumu (anında mail, zar kapalı).</td></tr>
+        <tr><td><code>run_gate.sh</code> (3 uzun bot koşusu)</td><td>Çökmeden bir sona varıyor mu</td><td>~80 sn</td><td>4 satır. Ham defter 155.819 satıra çıkabiliyor.</td><td>Hangi son geldiği, churn, gelir. B2B hesapların hepsinin 4 haftada gitmesi bu yüzden kaçtı (#12).</td></tr>
+        <tr><td><code>plausibility_run.sh</code> (44 koşu)</td><td>Ekrana gelen olay kartları şemanın kurallarına uyuyor mu</td><td>~30 sn (4 paralel iş)</td><td>Birkaç yüz ile 1.000+ satır (~520 FIRE satırı)</td><td>Ekran; kart seçildikten sonra oyuncunun gördüğü sonuç <span class="mk mk-g">[GÖRÜŞ]</span>.</td></tr>
+        <tr><td><code>--event-probe</code></td><td>Motorun 160 iddiası, tek açılışta</td><td>Kısa</td><td>~175 satır; her PASS'i basıyor</td><td>"week 2 G4" satırı sürekli kırmızı ve normal sayılıyor.</td></tr>
+        <tr><td><code>--sprint-probe</code></td><td>Sprint planı ile kapanış uyuşuyor mu</td><td>Kısa</td><td>Az</td><td>Uyuşmazlıklar (17/20, 29/33) kabul edilerek geçiyor.</td></tr>
+        <tr><td>Çekimler (22 <code>*-shot</code> bayrağı)</td><td>PNG üretir</td><td>Ekranlı, sırayla</td><td>Görüntü okumak pahalı <span class="mk mk-v">(varsayım)</span></td><td>Hiçbir geçti/kaldı kapısına bağlı değil. Kendi dünyasını kurmayan çekim yanlış kareyi onayladı (#11).</td></tr>
+        <tr><td>Görsel kabul (Godot MCP)</td><td>Göz ile ekran</td><td>Dakikalar</td><td>Ekran görüntüleri pahalı <span class="mk mk-v">(varsayım)</span></td><td>Yalnız bakılan ekran. Fikstür yanlışsa yanlış dünyayı onaylar.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <h3>Oyuncunun gözüyle üç örnek</h3>
+  <div class="cards">
+    <div class="box"><span class="lbl">#3</span><h3>Zam</h3><p>Test "bu kişiye zam verilebilir mi?" diye sordu ve doğru cevabı aldı. Menü ise başka bir fonksiyona soruyordu. O fonksiyon bekleme süresini bilmiyordu. Sen menüde "Zam"ı açık gördün, onay sessizce başarısız oldu.</p></div>
+    <div class="box"><span class="lbl">#2</span><h3>"PH:" satırları</h3><p>54 satış satırı oyuncuya "PH:" önekiyle göründü. İlgili test, satırın "PH:" ile başlamasını şart koşuyordu. Yani test hatayı koruyordu.</p></div>
+    <div class="box"><span class="lbl">#5</span><h3>Masa</h3><p>Test "masa doluyken arama başlatılamaz" kuralını sınadı. Arama sürerken dolu ofise taşınınca 13 masaya 14 kişi alındı. İşe alma anı hiç sınanmamıştı.</p></div>
+  </div>
+</section>
+
+<section id="yapi">
+  <span class="eyebrow">3 · Önerilen yapı</span>
+  <h2>Altı katman, her birinin tek sorusu</h2>
+  <div class="box scroll">
+    <table class="t-lg">
+      <thead><tr><th>Katman</th><th>Soru</th><th>Örnek (oyuncunun gözüyle)</th><th>Ne zaman</th><th>Süre <span class="mk mk-v">(varsayım)</span></th></tr></thead>
+      <tbody>
+        <tr><td><b>K0 Veri ve bağlantı</b></td><td>Kartlar, metinler, kataloglar hem doğru şekilde mi, hem oyunda bir karşılığa bağlı mı?</td><td>"Eğitime gönder" seçeneği olan kart, bu fiilin oyunda karşılığı yoksa oyuna giremez. Kart metninde <code>{days}</code> kalamaz. Oyuncu metninde "PH:" olamaz.</td><td>Her commit</td><td>&lt;30 sn, tek açılış</td></tr>
+        <tr><td><b>K1 Mantık</b></td><td>Bir sistem kuralı doğru mu? Açık yoldan sorulur.</td><td>"Masa doluyken işe alım reddedilir": aramanın başında da, işe alma anında da.</td><td>Her commit (dokunulan sistem); push'ta tümü</td><td>Vaka ~6 sn, paralel</td></tr>
+        <tr><td><b>K2 Oyuncu yolu</b></td><td>Ekran kurulur, düğmeye basılır, pop-up açılır, ekrandaki sayı okunur.</td><td>Bekleme süresinde "Zam" satırı kapalı görünür. Sprint ekranının "sığıyor" dediği kart puan alır. Olay kartındaki "Eğitime gönder", senin kendi "Eğitime gönder" düğmenin açtığı pop-up'ı açar.</td><td>Her commit (ilgili ekran); push'ta tümü</td><td>Vaka ~6–10 sn</td></tr>
+        <tr><td><b>K3 Uzun koşu değişmezleri</b></td><td>3–4 bot koşusu boyunca her hafta "asla" kuralları tutuyor mu? Koşulardan biri gerçek koşulda: mail gerçek saatle, zar açık.</td><td>Gazetedeki B2B müşteri sayısı aktif hesap sayısına eşit. Her kepenk bölümünde uyarı gelir. Hesap gidince "Söz ver" yeniden açılır. Kartta ve üst barda runway aynıdır.</td><td>Push öncesi; playtest öncesi</td><td>~2–3 dk</td></tr>
+        <tr><td><b>K4 Tekrar oynatma</b></td><td>Playtest'te bulunan hata, aynı tohum ve aynı kararlarla tekrar kurulabiliyor mu?</td><td>Kurucu gece ile sprint arasında "Yapımda görev alıyor" yazdıysa, o an tekrar kurulur ve vaka olur.</td><td>Hata bulundukça</td><td>Değişir</td></tr>
+        <tr><td><b>K5 Görsel kabul</b></td><td>Göz ile: metin taşıyor mu, doğru dil mi, logda hata var mı?</td><td>Bugünkü §11 kuralı aynen kalır.</td><td>Ekrana dokunan her task</td><td>Dakikalar</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Katman kuralları</h3>
+  <ul>
+    <li><b>K0.</b> Lint yalnız "fiil listede mi" diye bakmaz; "fiilin uygulayıcısı var mı" diye de bakar. Bugün uygulayıcısı olmayan 6 fiil var: <code>add_customer</code>, <code>change_salary</code>, <code>convert_audience</code>, <code>fire_employee</code>, <code>open_paid_tier</code>, <code>start_training</code>. Olay kartlarında çalışmayan etkiler sorununun teknik karşılığı bu. Bu fiilleri bağlamak ayrı bir iş. K0 ise bağlanmamış fiili taşıyan kartın oyuna girmesini engeller. Böylece CLAUDE.md §5'teki <code>[VOCAB?]</code> kuralı uygulanmış olur.</li>
+    <li><b>K1.</b> Vaka açık yoldan sorar. Özel bir iç fonksiyonu yalnız gerekçe yazarak çağırır. Fikstür gerçek oyunda olabilecek bir durumdur. Formül sayısını değil, kuralın yönünü sınar. Örnek: "0,5 katsayısı" değil, "aşırı yük çıktıyı düşürür". Gereken sayı koddaki ayar sabitinden okunur.</li>
+    <li><b>K2.</b> Piksel karşılaştırması yok. Düğüm ağacı okunur: metin, görünürlük, düğmenin bağlı olduğu yer. Sabit süre beklenmez; koşul sağlanana kadar beklenir (Riot'un dersi <a class="src" href="#src-22">[S22]</a>). Yeni K2 vakası bir hafta "karantinada" koşar, sonra kapıya girer.</li>
+    <li><b>K3.</b> Yalnız "asla" kuralları tasarım onayı gerektirmez. Eşikli kural tasarım sabitidir, örneğin "imzalanan hesapların ortalama ömrü en az X hafta". CLAUDE.md §3 gereği önce onay listesine gider. Plausibility kapısı bu katmanda aynen kalır.</li>
+    <li><b>K4.</b> Factorio'nun dersi <a class="src" href="#src-6">[S6–S9]</a>: playtest'te bulunan hata, tohum ve karar kaydı olarak regresyon testine döner. "Altın özet" (her haftanın KPI özetini saklayıp farkı göstermek) en sona kalır. Kalibrasyon sık değişirken bu tür kayıtlar gürültü üretir ve fark okunmadan onaylanır <a class="src" href="#src-10">[S10–S13]</a>. Oyunda bir karar kaydı olup olmadığını bilmiyorum <span class="mk mk-d">[DEĞERLENDİREMEM]</span>.</li>
+  </ul>
+
+  <h3>19 kaçak hata hangi katmana düşerdi</h3>
+  <p class="note"><span class="mk mk-g">[GÖRÜŞ]</span> Pilot bunların bir kısmını gerçekten kanıtlar.</p>
+  <div class="box scroll">
+    <table class="t-sm">
+      <thead><tr><th>Katman</th><th>Kaçak hatalar</th></tr></thead>
+      <tbody>
+        <tr><td>K0 Veri ve bağlantı</td><td>#19 (kolsuz fiil, <code>{days}</code>), #2 ("PH:")</td></tr>
+        <tr><td>K2 Oyuncu yolu</td><td>#3 (zam menüsü), #5 (13 masaya 14 kişi), #6 (memnuniyet çipi bir tikte siliniyor), #15 (satış sayfası kilidi), #16 (Frank'in portresi), #17 (sprint "sığıyor"), #18 (kurucu durum satırı)</td></tr>
+        <tr><td>K3 Uzun koşu + gerçek koşul</td><td>#7 (gazete müşteri sayısı), #8 (Frank'in çeki, gece notu), #10 (bot emekli ürün kuruyor), #11 (runway 9999), #12 (hesaplar 4 haftada gidiyor), #13 (kepenk uyarısı), #14 ("Söz ver" kilidi)</td></tr>
+        <tr><td>Gerçek kayıt dosyasıyla yükleme</td><td>#4 (göçler hiçbir şey yapmıyordu)</td></tr>
+        <tr><td>Rastgele kart sırası denemesi</td><td>#9 (düzeltme kartı sırası)</td></tr>
+        <tr><td>Kural: test hatayı şart koşamaz</td><td>#1 (Ar-Ge notu), #2</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Araç: bugünkü koşucuyu geliştir, framework'e şimdilik geçme <span class="mk mk-g">[GÖRÜŞ]</span></h3>
+  <ul>
+    <li>19 kaçağın hiçbiri araç yüzünden kaçmadı. Sorun neyin ölçüldüğü ve hangi dünyada ölçüldüğü. GUT da gdUnit4 de bunu kendiliğinden çözmez.</li>
+    <li>513 vakayı yeni bir araca taşımak büyük ve riskli bir iş. Oyuncuya hiçbir değer üretmez.</li>
+    <li>Framework <code>addons/</code> içine girer. CLAUDE.md §3 bu klasörü üçüncü taraf kod sayıyor. Sürümü de Godot sürümüne sıkı bağlı: gdUnit4 v6.2.x Godot 4.5–4.7.1'i hedefliyor <a class="src" href="#src-1">[S1]</a>, proje 4.6.3'te. Her Godot yükseltmesinde eşleşme gerekir.</li>
+    <li>K2 için gereken şey Godot'nun kendi araçlarıyla yazılabilir: shell'i kurmak, düğmenin sinyalini tetiklemek, koşul beklemek ve düğümün metnini okumak.</li>
+    <li><b>Karar noktası:</b> Pilotta K2 vakası yazmak zor ya da kırılgan çıkarsa gdUnit4'ün Scene Runner'ı tek bir vakayla denenir. Scene Runner fare ve klavye taklidi ile sinyal beklemeyi hazır veriyor <a class="src" href="#src-1">[S1]</a><a class="src" href="#src-2">[S2]</a>. gdUnit4'ün bu projede gopeak eklentileriyle birlikte sorunsuz çalıştığını bilmiyorum <span class="mk mk-d">[DEĞERLENDİREMEM]</span>.</li>
+    <li>JUnit raporu şu an değer katmıyor, çünkü CI yok.</li>
+  </ul>
+</section>
+
+<section id="smoke">
+  <span class="eyebrow">4 · Smoke dosyası için plan</span>
+  <h2>Ne silinir, ne birleşir, ne kalır</h2>
+  <p class="note">Somut plan <code>endgame_smoke.gd</code> için.</p>
+  <div class="box scroll">
+    <table class="t-xl">
+      <thead><tr><th>Grup</th><th>Vaka</th><th>Satır</th><th>Ne yapılır</th><th>Neden</th><th>Onay</th></tr></thead>
+      <tbody>
+        <tr><td>Ölü göç vakaları: <code>save_migration_v3_to_v4</code>, <code>v4_to_v5</code>, <code>v6_to_v7</code>, <code>v6_to_v7_drops</code>, <code>loc_save_sector_migration</code></td><td class="n">5</td><td class="n">~283</td><td>Silinir. <code>save_manager.gd:1063-1297</code>'deki ~235 satır ölü kod da gider.</td><td>Yükleyici 10'dan eski kaydı reddediyor (<code>save_manager.gd:23</code>). Bu koda hiçbir yoldan varılmıyor. Dosya, kodu yalnız bu vakalar için tuttuğunu kendisi söylüyor.</td><td><span class="chip c-you">Sen</span></td></tr>
+        <tr><td>Kalan eski kayıt göç ailesi (<code>save_v10…v19_*</code>, <code>legacy_v12_*</code>, <code>save_drops_retired_*</code> vb.)</td><td class="n">16</td><td class="n">~1.380</td><td>Karar 2'ye göre: ya silinir, ya gerçek kayıt dosyasıyla tek vakaya iner.</td><td>Vakalar elle şekillendirilmiş kayıtla iç fonksiyonu çağırıyor. #4 tam bu yüzden kaçtı.</td><td><span class="chip c-you">Sen</span></td></tr>
+        <tr><td>Veri ve lint vakaları: <code>all_scripts_load</code>, <code>loc_csv_integrity</code>, <code>market_catalog_lint</code>, <code>event_lint_v3_rules</code>, <code>event_plausibility_compiles</code>, <code>product_lines_catalog_loads</code>, <code>rnd_tree_loads_and_validates</code></td><td class="n">7</td><td class="n">~280 <span class="mk mk-v">(varsayım)</span></td><td>K0'a taşınır, hepsi tek açılışta koşar.</td><td>Her biri ayrı Godot açılışı (~6 sn) ödüyor. Taşımada denetim kaybolmaz.</td><td>Not ile</td></tr>
+        <tr><td>Birleşme: <code>loc_b2b/b4/b5/sales/product_derived_keys</code></td><td class="n">5 → 1</td><td></td><td>Tek bir veri güdümlü vaka olur.</td><td>Beşi de aynı kalıbı sınıyor.</td><td>Not ile</td></tr>
+        <tr><td>Birleşme: <code>locale_switch</code> + <code>loc_language_switch</code>; <code>bankruptcy</code> + <code>terminal_kills_gate</code>; <code>promise_relock_after_break</code> + <code>promise_row_locked_after_break</code></td><td class="n">6 → 3</td><td></td><td>Her çift bir vakaya iner.</td><td>Aynı kuralı sınıyorlar.</td><td>Not ile</td></tr>
+        <tr><td>Birleşme: <code>walk_not_a_rejection</code> + <code>table_walk_not_a_rejection</code></td><td class="n">2 → 1</td><td></td><td>Oyuncunun yolu olan <code>table_walk_*</code> kalır.</td><td>İlki iç fonksiyonu sınıyor.</td><td>Not ile</td></tr>
+        <tr><td>Kaynak metni okuyan 7 vaka (ör. <code>topbar_speed_cluster_three_rungs</code>)</td><td class="n">7</td><td></td><td>K2'ye çevrilir. "3 tuşuna bas, hız 3 mü bak."</td><td>Bugün kaynak kodda bir metin arıyor, tuşa basınca ne olduğuna bakmıyor.</td><td>Ajan</td></tr>
+        <tr><td>16 <code># EXPECT-ERROR</code> bağışı</td><td class="n">16</td><td></td><td>Tek tek gözden geçirilir. "Kural bozulunca hata basmalı" mı, yoksa susturulmuş bir hata mı?</td><td>Susturulmuş hata yalancı yeşil üretir.</td><td>Ajan, rapor sana</td></tr>
+        <tr><td>F sınıfı (formül sabitleme)</td><td>Örneklemde %19; tahmini 47–186 vaka</td><td></td><td>Dokunuldukça kuralın yönüne çevrilir. Toplu dönüşüm yapılmaz.</td><td>Kalibrasyonda kırılıyorlar, oyuncu akışını kanıtlamıyorlar.</td><td>Kural</td></tr>
+        <tr><td>İ sınıfı (iç yapı)</td><td>Örneklemde %26; 105 vaka özel üyelere 412 kez erişiyor</td><td></td><td>Dokunuldukça açık yola taşınır. Kayıt gidiş-dönüş ve olay motoru çekirdeği olduğu gibi kalır.</td><td>İç yapı değişince boşuna kırılıyorlar.</td><td>Kural</td></tr>
+        <tr><td>O ve K sınıfı (oyuncu kuralı)</td><td>Örneklemde %55</td><td></td><td><b>Kalır.</b></td><td>Paketin değerli kısmı.</td><td>yok</td></tr>
+        <tr><td>Adlar ve düzen</td><td>Tümü</td><td></td><td>Dosya sistem başına dosyalara bölünür (<code>tests/sales_*.gd</code> gibi). Tarih bölümleri ("Hotfix Turu 1", "Bug cleanup") kalkar. <code>hotfix_*</code> sistem önekine geçer; <code>destek_</code>/<code>support_</code>, <code>bug_</code>/<code>bugs_</code>, <code>gate_*</code> birleşir.</td><td>Değişikliğe göre test seçimi tek kurala iner. Ajan 1,67 MB'lık dosyada gezinmez.</td><td>Ajan</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="box run"><b>İlk turun kazancı <span class="mk mk-v">(varsayım)</span>:</b> Yaklaşık 36–40 vaka smoke'tan çıkar ya da taşınır. Bu, ~2.000–2.500 satır test ve ~235 satır ölü üretim kodu eder. Bu turun asıl kazancı vaka sayısı değil; paketin hızı ve neyi ölçtüğü.</p>
+
+  <h3>Yeni kurallar (§10 için öneri)</h3>
+  <ul>
+    <li>Yeni vaka oyuncunun gördüğü sonucu sınar. Fikstür gerçek oyunda olabilecek bir durumdur.</li>
+    <li><b>Bir vaka bilinen bir hatayı şart koşamaz.</b> Özellik henüz yoksa vaka "bekliyor: &lt;özellik&gt;" diye işaretlenir. Özellik gelince ya da tarih dolunca koşucu vakayı kırmızıya çevirir. #1 ve #2 bu kuralla önlenirdi.</li>
+    <li>Normalleşmiş kırmızı yoktur. Kırmızı ya düzeltilir ya da gerekçeli ve tarihli kabul listesine yazılır. Süresi dolan kabul yeniden kırmızı olur. Lint'in taban dosyası buna örnek.</li>
+    <li><code>endgame_smoke.gd</code>'ye yeni vaka eklenmez; vakalar sistem dosyalarına yazılır.</li>
+    <li>Kod review (§9) iki soru ekler: "Bu vaka oyuncunun gördüğünü mü sınıyor?" ve "Bu fikstür oyunda olabilir mi?"</li>
+  </ul>
+</section>
+
+<section id="verim">
+  <span class="eyebrow">5 · Ajan verimi</span>
+  <h2>Token nereye gidiyor</h2>
+  <p>Smoke'un kendi çıktısı küçük: vaka başına 1 satır. Asıl yük şu kalemlerde.</p>
+  <div class="box scroll">
+    <table class="t-lg">
+      <thead><tr><th>Kaynak</th><th>Bugün</th><th>Öneri</th><th>Tahmini kazanç <span class="mk mk-v">(varsayım)</span></th></tr></thead>
+      <tbody>
+        <tr><td>CLAUDE.md, her oturumda yükleniyor</td><td>48,9 KB. Test ve kapı bölümleri 17,6 KB; §12 tek başına 16,6 KB, çoğu çekim bayrağı başvurusu.</td><td>§10–§12 yaklaşık 3 KB'lık kısa kurallara iner. Bayrak başvurusu <code>10_test_harness.md</code>'ye taşınır ve yalnız gerektiğinde okunur.</td><td>Oturum başına ve CLAUDE.md'yi yükleyen her alt ajanda ~14 KB, kabaca 4–6k token. Türkçe metinde 1 token ≈ 2,5–3,5 karakter varsayıldı.</td></tr>
+        <tr><td>Plausibility kapısı</td><td>Birkaç yüz ile 1.000+ satır</td><td>Geçerse 1 satır. Kalırsa ilk FAIL ve özet.</td><td>Koşu başına ~10–25k token (satır başı ~20–25 token varsayıldı)</td></tr>
+        <tr><td><code>--event-probe</code></td><td>~175 satır, her PASS basılıyor</td><td>Geçerse 1 satır</td><td>Koşu başına ~3–4k token</td></tr>
+        <tr><td>Smoke <code>--all</code></td><td>513 satır, ~5k token</td><td>Geçerse 1 satır</td><td>~5k token</td></tr>
+        <tr><td>Ham <code>--run-log</code></td><td>155.819 satıra kadar</td><td>Ajan hiçbir zaman ham defteri okumaz; özet aracı okur.</td><td>Bir okumada bağlamın taşmasını önler</td></tr>
+        <tr><td>1,67 MB'lık smoke dosyası</td><td>Grep ile gezinme</td><td>Sistem başına dosya</td><td><span class="mk mk-d">[DEĞERLENDİREMEM]</span> Ölçmedim. Beklenen etki: daha az yanlış yer ve daha az tekrar arama.</td></tr>
+        <tr><td>Geç bulunan hatalar</td><td>19 kaçak; her biri ayrı bir onarım turu (<code>PRD_ONARIM_0/1</code>)</td><td>Hatalar commit anında yakalanır.</td><td>Muhtemelen en büyük kalem <span class="mk mk-g">[GÖRÜŞ]</span>. Rakam veremem <span class="mk mk-d">[DEĞERLENDİREMEM]</span>.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Çıktı biçimi</h3>
+  <p>Tek giriş noktası: <code>tools/test.sh hizli | tam | gece</code>. Geçerse tek satır yazar:</p>
+  <pre>✓ hizli · 38 vaka · 0 hata · 1 dk 42 sn</pre>
+  <p>Kalırsa yalnız ilk hatayı yazar (en fazla ~30 satır); tam log bir dosyaya gider:</p>
+  <pre>✗ hizli · 38 vaka · 1 hata · 1 dk 40 sn
+hr_raise_row_closed_in_cooldown   tests/hr_cases.gd:212
+  beklenen: "Zam" satırı kapalı · görülen: açık
+tam log: &lt;dosya yolu&gt;</pre>
+  <p>Çıkış kodu anlamlıdır: 0 yeşil, 1 kırmızı, 2 araç sorunu. Kırpma kararını model değil araç verir; <code>| head</code> gibi kırpmalar tekrar koşuya yol açıyor <a class="src" href="#src-33">[S33]</a>.</p>
+
+  <h3>Değişikliğe göre seçim</h3>
+  <ul>
+    <li><b>Bugün:</b> Hangi vakaların koşulacağını ajan, elle tutulan bir önek haritasından tahmin ediyor.</li>
+    <li><b>Öneri:</b> Tek bir tablo, dosya yolunu sisteme ve sistemi test dosyasına bağlar. Örneğin <code>scripts/sales/…</code> değişirse <code>tests/sales_*.gd</code> koşar.</li>
+    <li><b>Her zaman koşanlar:</b> K0 ve ~15 vakalık bir çekirdek set: kayıt gidiş-dönüş, iflas, olay motoru temeli.</li>
+    <li><b>Tam paket şart:</b> Seçim bazen gereken testi atlar <a class="src" href="#src-35">[S35]</a>. Bu yüzden tam paket push'ta ya da düzenli olarak koşmaya devam eder.</li>
+  </ul>
+
+  <h3>Hız</h3>
+  <ul>
+    <li><b>Bugün:</b> Tam paket sırayla ≥51 dk sürüyor.</li>
+    <li><b>Paralel koşu:</b> Her işe ayrı kullanıcı dizini verilir; <code>plausibility_run.sh</code> bunu zaten yapıyor. 4 paralel işle ~470 vaka × 6 sn / 4 ≈ <b>12 dk</b> <span class="mk mk-v">(varsayım)</span>; paralelde yavaşlama olursa 15–20 dk.</li>
+    <li><b>Tek süreçte toplu koşu:</b> Daha büyük bir kazanç mümkün. Bugün her vaka ayrı süreç açıyor, çünkü GDScript bir vakanın hatasını aynı süreç içinde yakalayamıyordu (<code>smoke_run.sh:4-8</code>). Bu Mac'teki Godot 4.6.3 ikilisinde hata yakalayan Logger arayüzü (<code>OS.add_logger</code>) var; ikilide adını gördüm. Bununla vakalar tek açılışta koşabilir. Vakalar arası durum sızıntısı ölçülmeden önerilmez <span class="mk mk-d">[DEĞERLENDİREMEM]</span>. Başarılı olursa tam paket birkaç dakikaya iner.</li>
+    <li><b>Hızlı katman:</b> K0, dokunulan sistemin dosyası ve çekirdek set. Hedef 2 dakikanın altı <span class="mk mk-v">(varsayım)</span>.</li>
+  </ul>
+
+  <h3>Zorunlu kılma</h3>
+  <p>Ajan CLAUDE.md'deki bir talimata "çoğu zaman" uyar, her zaman değil <a class="src" href="#src-32">[S32]</a>. Commit'ten önce <code>test.sh hizli</code>'yi kendiliğinden koşturan bir kontrol (hook) bunu garanti eder. <code>.githooks/pre-commit</code> bugün kapalı; açmak senin kararın (karar 4).</p>
+</section>
+
+<section id="gecis">
+  <span class="eyebrow">6 · Geçiş planı</span>
+  <h2>Adım adım, önce pilot</h2>
+  <div class="box scroll">
+    <table class="t-xl">
+      <thead><tr><th>Adım</th><th>Ne</th><th>Kim</th><th>Model</th><th>Düşünme</th><th>Süre <span class="mk mk-v">(varsayım)</span></th><th>Neden</th></tr></thead>
+      <tbody>
+        <tr><td class="n">0</td><td>Bu raporu oku, 5 kararı ver.</td><td><span class="chip c-you">Sen</span></td><td>yok</td><td>yok</td><td>20 dk</td><td>§3: silme ve kural değişikliği onaysız yapılmaz.</td></tr>
+        <tr class="hl"><td class="n">1</td><td><b>Pilot.</b> (a) K0 bağlantı denetimi: her olay fiilinin uygulayıcısı var mı, her <code>{yer tutucu}</code> doluyor mu, oyuncu metninde "PH:" var mı. (b) 3 K2 vakası: zam menüsü (#3), satış sayfası saat kilidi (#15), sprint "sığıyor" = puan (#17). (c) <code>test.sh hizli</code> ve tek satır çıktı. <b>Kanıt:</b> Her K2 vakası, ilgili düzeltme geçici olarak geri alınınca kırmızıya döner. K0 bugünkü 6 kolsuz fiili bulur.</td><td>Ajan, ayrıca review ajanı</td><td>Opus</td><td>yüksek</td><td>1 oturum (3–4 saat)</td><td>Yeni yöntemin bugünkü 513 vakanın kaçırdığını yakaladığını ucuza kanıtlar.</td></tr>
+        <tr><td class="n">2</td><td>Pilot sonucu: tek sayfa. Hangi kaçak yakalandı, süre, çıktı satırı. Devam ya da dur.</td><td><span class="chip c-you">Sen</span></td><td>yok</td><td>yok</td><td>10 dk</td><td>Değer kanıtlanmadan büyük işe girilmez.</td></tr>
+        <tr><td class="n">3</td><td>Smoke'u 4 paralel işe böl. Probe ve plausibility geçerse 1 satır bassın. <code>test.sh hizli/tam/gece</code> tek giriş olsun.</td><td>Ajan</td><td>Sonnet</td><td>orta</td><td>1 oturum</td><td>Harness değişikliği §3'e göre serbest. Tam paket 51 dk'dan ~12 dk'ya iner.</td></tr>
+        <tr><td class="n">4</td><td>CLAUDE.md §10–§12'yi kısa kurallara indir. Bayrak başvurusunu <code>10_test_harness.md</code>'ye taşı. Eskimiş sayıları düzelt (475 → 513 vaka vb.).</td><td>Ajan taslak, <span class="chip c-you">sen onay</span></td><td>Sonnet</td><td>düşük</td><td>30 dk</td><td>Her oturumda ~14 KB daha az bağlam.</td></tr>
+        <tr><td class="n">5</td><td>Silme ve birleştirme tasarım notu (§4 tablosu). Her silinen vaka için "bunu artık ne koruyor" sütunu. Onaydan sonra uygulama.</td><td>Ajan not, <span class="chip c-you">sen onay</span>, ajan uygulama</td><td>Opus not, Sonnet uygulama</td><td>orta</td><td>1 oturum</td><td>§3: test emekliye ayırmak onaydan sonra.</td></tr>
+        <tr><td class="n">6</td><td><code>endgame_smoke.gd</code>'yi sistem başına dosyalara böl. Önekleri düzelt. Yol → sistem tablosunu kur.</td><td>Ajan</td><td>Sonnet</td><td>düşük</td><td>1 oturum</td><td>Seçim kural olur, ajan dev dosyada gezinmez.</td></tr>
+        <tr><td class="n">7</td><td>K3: <code>run_gate.sh</code> "asla" kurallarını her hafta iddia etsin. Bir koşu gerçek koşulda olsun (mail gerçek saatle, zar açık). Eşikli kurallar ayrı onay listesine gitsin.</td><td>Ajan; eşikler için <span class="chip c-you">sen</span></td><td>Opus</td><td>yüksek</td><td>1–2 oturum</td><td>19 kaçağın 7'si bu katmana düşüyor.</td></tr>
+        <tr><td class="n">8</td><td>K2'yi 20–30 vakaya çıkar: 19 kaçağın kalanı. Olay kartı fiilleri bağlandıkça her biri için "kart = senin düğmen" vakası.</td><td>Ajan</td><td>Opus</td><td>orta</td><td>2 oturum, işlere yayılı</td><td>Ekran bağlantısı bugün hiçbir kapıda yok.</td></tr>
+        <tr><td class="n">9</td><td>Tek süreçte toplu koşu denemesi. Ölçülecek: süre ve vakalar arası sızıntı.</td><td>Ajan</td><td>Opus</td><td>yüksek</td><td>1 oturum</td><td>Başarılı olursa tam paket birkaç dakikaya iner.</td></tr>
+        <tr><td class="n">10</td><td>Sonra: K4 tekrar oynatma. Altın özet en sona.</td><td>Ajan</td><td>Opus</td><td>yüksek</td><td>Değerlendirilir</td><td>Kalibrasyon sık değişirken altın özet gürültü üretir.</td></tr>
+        <tr><td>Sürekli</td><td>F ve İ vakaları dokunuldukça dönüşür. Test hatayı şart koşamaz. Normalleşmiş kırmızı yok.</td><td>Her ajan, review</td><td>yok</td><td>yok</td><td>yok</td><td>Toplu dönüşüm yerine iş içinde iyileşme.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">Senin vereceğin 5 karar sayfanın başında: <a href="#kararlar">Verilecek 5 karar</a>.</p>
+</section>
+
+<section id="premortem">
+  <span class="eyebrow">7 · Pre-mortem</span>
+  <h2>Bu geçiş başarısız olursa</h2>
+  <div class="stack">
+    <div class="box flag pm">
+      <h3>Yarım kalır, iki sistem yan yana yaşar</h3>
+      <dl>
+        <dt>Ne olur</dt><dd>Eski smoke ile yeni <code>test.sh</code> çelişir. Ajanlar hangisini koşacağını şaşırır.</dd>
+        <dt>Erken uyarı</dt><dd>İki hafta sonra yeni vakalar hâlâ <code>endgame_smoke.gd</code>'ye ekleniyor.</dd>
+        <dt>Önlem</dt><dd>Adım 3'ten itibaren tek giriş <code>test.sh</code>; eski komutlar onun içinden çağrılır. Eski dosyaya ekleme yasağı CLAUDE.md'ye yazılır.</dd>
+      </dl>
+    </div>
+    <div class="box flag pm">
+      <h3>K2 vakaları kırılgan çıkar, ajanlar onları susturur</h3>
+      <dl>
+        <dt>Ne olur</dt><dd>Ekrandaki bir düğümün adı değişince vaka kırılır. Bekleme süresi tutmaz. Ajan vakayı geçici olarak kapatır.</dd>
+        <dt>Erken uyarı</dt><dd>Aynı vaka bir haftada 2+ kez "düzeltildi". Bekleyen ya da bağışlanan vaka sayısı artıyor.</dd>
+        <dt>Önlem</dt><dd>Düğüm adı yerine sabit bir test kimliği kullanılır. Sabit bekleme yok, koşul beklenir. Yeni vaka bir hafta karantinada koşar. Normalleşmiş kırmızıya sıfır tolerans.</dd>
+      </dl>
+    </div>
+    <div class="box flag pm">
+      <h3>Değişmezler ve altın özet tasarım sabitine dönüşüp onay sürecini tıkar</h3>
+      <dl>
+        <dt>Ne olur</dt><dd>Her kalibrasyonda eşik ya da kayıt güncellenir, fark okunmadan onaylanır <a class="src" href="#src-11">[S11–S14]</a>.</dd>
+        <dt>Erken uyarı</dt><dd>Bir ayda 3+ "eşik güncellendi" commit'i.</dd>
+        <dt>Önlem</dt><dd>K3'te yalnız "asla" kuralları serbesttir. Eşikli kurallar <code>[WORKING]</code> sabitinden okunur ve onay listesine gider. Altın özet ancak <code>UPDATE_GOLDEN=1</code> ve bir gerekçe satırıyla güncellenir; en sona kalır.</dd>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<section id="kaynaklar">
+  <span class="eyebrow">8 · Kaynaklar</span>
+  <details class="box" id="kaynak-detay">
+    <summary>Kaynak sicili <span class="note">37 kaynak, açmak için tıkla</span></summary>
+    <div class="inner">
+      <p class="note">"Açıldı: evet" yalnız içeriği gerçekten okunan sayfalar için yazıldı. Rare'in konuşma özeti (glasp.co) 403 verdi, aşılmadı. Sea of Thieves konuşmasının ayrıntılarını doğrulayamadım. Meta'nın test seçimi sistemi için birincil kaynak bulunamadı.</p>
+      <div class="scroll">
+        <table class="t-md">
+          <thead><tr><th>S#</th><th>Kaynak</th><th>Yayıncı</th><th>Tarih</th><th>Güven</th><th>Açıldı</th></tr></thead>
+          <tbody>
+            <tr id="src-1"><td>S1</td><td class="url"><a href="https://github.com/godot-gdunit-labs/gdUnit4">https://github.com/godot-gdunit-labs/gdUnit4</a></td><td>godot-gdunit-labs</td><td>erişim 2026-10-28</td><td>Yüksek</td><td>evet</td></tr>
+            <tr id="src-2"><td>S2</td><td class="url"><a href="https://store.godotengine.org/asset/mikeschulze/gdunit4/">https://store.godotengine.org/asset/mikeschulze/gdunit4/</a></td><td>Godot Asset Store</td><td>?</td><td>Orta</td><td>hayır</td></tr>
+            <tr id="src-3"><td>S3</td><td class="url"><a href="https://godotengine.org/asset-library/asset/1709">https://godotengine.org/asset-library/asset/1709</a></td><td>Godot Asset Library (GUT)</td><td>?</td><td>Orta</td><td>hayır</td></tr>
+            <tr id="src-4"><td>S4</td><td class="url"><a href="https://tessl.io/registry/testland/godot-gut-tests/1.4.17/files/references/cli.md">https://tessl.io/registry/testland/godot-gut-tests/1.4.17/files/references/cli.md</a></td><td>tessl</td><td>?</td><td>Düşük</td><td>hayır</td></tr>
+            <tr id="src-5"><td>S5</td><td class="url"><a href="https://gut.readthedocs.io/en/v9.7.1/search.html">https://gut.readthedocs.io/en/v9.7.1/search.html</a></td><td>GUT docs</td><td>v9.7.1</td><td>Orta</td><td>hayır</td></tr>
+            <tr id="src-6"><td>S6</td><td class="url"><a href="https://factorio.com/blog/post/fff-47">https://factorio.com/blog/post/fff-47</a></td><td>Wube Software</td><td>2014</td><td>Orta</td><td>hayır</td></tr>
+            <tr id="src-7"><td>S7</td><td class="url"><a href="https://factorio.com/blog/post/fff-60">https://factorio.com/blog/post/fff-60</a></td><td>Wube Software</td><td>2014</td><td>Orta</td><td>hayır</td></tr>
+            <tr id="src-8"><td>S8</td><td class="url"><a href="https://cf-www.factorio.com/blog/post/fff-62">https://cf-www.factorio.com/blog/post/fff-62</a></td><td>Wube Software</td><td>2014</td><td>Orta</td><td>hayır</td></tr>
+            <tr id="src-9"><td>S9</td><td class="url"><a href="https://direct.factorio.com/blog/post/fff-415">https://direct.factorio.com/blog/post/fff-415</a></td><td>Wube Software</td><td>2024</td><td>Orta</td><td>hayır</td></tr>
+            <tr id="src-10"><td>S10</td><td class="url"><a href="https://sitepen.com/blog/snapshot-testing-benefits-and-drawbacks">https://sitepen.com/blog/snapshot-testing-benefits-and-drawbacks</a></td><td>SitePen</td><td>?</td><td>Orta</td><td>hayır</td></tr>
+            <tr id="src-11"><td>S11</td><td class="url"><a href="https://qaskills.sh/blog/snapshot-testing-governance-guide">https://qaskills.sh/blog/snapshot-testing-governance-guide</a></td><td>qaskills</td><td>?</td><td>Düşük</td><td>hayır</td></tr>
+            <tr id="src-12"><td>S12</td><td class="url"><a href="https://testwithpinpoint.com/blog/snapshot-testing-guide">https://testwithpinpoint.com/blog/snapshot-testing-guide</a></td><td>Pinpoint</td><td>?</td><td>Düşük</td><td>hayır</td></tr>
+            <tr id="src-13"><td>S13</td><td class="url"><a href="https://notes.lesleylai.info/Concepts/approval-testing">https://notes.lesleylai.info/Concepts/approval-testing</a></td><td>Lesley Lai</td><td>?</td><td>Düşük</td><td>hayır</td></tr>
+            <tr id="src-14"><td>S14</td><td class="url"><a href="https://discourse.thecodewhisperer.com/t/how-not-to-write-golden-master-tests/338">https://discourse.thecodewhisperer.com/t/how-not-to-write-golden-master-tests/338</a></td><td>J.B. Rainsberger</td><td>?</td><td>Orta</td><td>hayır</td></tr>
+            <tr id="src-15"><td>S15</td><td class="url"><a href="https://github.com/eth-brownie/brownie/blob/v1.16.0/docs/tests-hypothesis-stateful.rst">https://github.com/eth-brownie/brownie/blob/v1.16.0/docs/tests-hypothesis-stateful.rst</a></td><td>Brownie docs</td><td>v1.16.0</td><td>Orta</td><td>hayır</td></tr>
+            <tr id="src-16"><td>S16</td><td class="url"><a href="https://codesync.global/media/stateful-property-based-testing/">https://codesync.global/media/stateful-property-based-testing/</a></td><td>Code Sync</td><td>?</td><td>Orta</td><td>hayır</td></tr>
+            <tr id="src-17"><td>S17</td><td class="url"><a href="https://www.offerzen.com/blog/ensuring-that-my-super-fast-simulation-was-simulating-the-right-thing-property-based-testing">https://www.offerzen.com/blog/ensuring-that-my-super-fast-simulation-was-simulating-the-right-thing-property-based-testing</a></td><td>OfferZen</td><td>?</td><td>Orta</td><td>hayır</td></tr>
+            <tr id="src-18"><td>S18</td><td class="url"><a href="https://www.zealynx.io/glossary/invariant-testing">https://www.zealynx.io/glossary/invariant-testing</a></td><td>Zealynx</td><td>?</td><td>Düşük</td><td>hayır</td></tr>
+            <tr id="src-19"><td>S19</td><td class="url"><a href="https://80.lv/articles/gdc-using-ai-controlled-players-to-test-the-division/">https://80.lv/articles/gdc-using-ai-controlled-players-to-test-the-division/</a></td><td>80.lv</td><td>2019</td><td>Orta</td><td>hayır</td></tr>
+            <tr id="src-20"><td>S20</td><td class="url"><a href="https://www.gdconf.com/news/come-gdc-inside-look-ai-built-playtest-battlefield-v-0">https://www.gdconf.com/news/come-gdc-inside-look-ai-built-playtest-battlefield-v-0</a></td><td>GDC</td><td>2019</td><td>Orta</td><td>hayır</td></tr>
+            <tr id="src-21"><td>S21</td><td class="url"><a href="https://www.gdcvault.com/play/1034678/AI-Summit-Building-ML-Bots">https://www.gdcvault.com/play/1034678/AI-Summit-Building-ML-Bots</a></td><td>GDC Vault (Ubisoft La Forge)</td><td>2024</td><td>Orta</td><td>hayır</td></tr>
+            <tr id="src-22"><td>S22</td><td class="url"><a href="https://www.riotgames.com/en/news/automated-testing-league-legends">https://www.riotgames.com/en/news/automated-testing-league-legends</a></td><td>Riot Games</td><td>2016-02-26</td><td>Yüksek</td><td>evet</td></tr>
+            <tr id="src-23"><td>S23</td><td class="url"><a href="https://gdconf.com/news/sea-thieves-devs-share-automated-testing-tips-gdc-2019">https://gdconf.com/news/sea-thieves-devs-share-automated-testing-tips-gdc-2019</a></td><td>GDC</td><td>2019</td><td>Yüksek (içerik sığ)</td><td>evet</td></tr>
+            <tr id="src-24"><td>S24</td><td class="url"><a href="https://gdcvault.com/play/1026366/Automated-Testing-of-Gameplay-Features">https://gdcvault.com/play/1026366/Automated-Testing-of-Gameplay-Features</a></td><td>GDC Vault (Rare)</td><td>2019</td><td>Yüksek (varlık)</td><td>hayır</td></tr>
+            <tr id="src-25"><td>S25</td><td class="url"><a href="https://www.unrealengine.com/events/unreal-fest-europe-2019/automated-testing-at-scale-in-sea-of-thieves">https://www.unrealengine.com/events/unreal-fest-europe-2019/automated-testing-at-scale-in-sea-of-thieves</a></td><td>Epic / Unreal Fest</td><td>2019</td><td>Orta</td><td>hayır</td></tr>
+            <tr id="src-26"><td>S26</td><td class="url"><a href="https://modl.ai/?p=3381">https://modl.ai/?p=3381</a></td><td>modl.ai (satıcı)</td><td>?</td><td>Düşük</td><td>hayır</td></tr>
+            <tr id="src-27"><td>S27</td><td class="url"><a href="https://www.martinfowler.com/bliki/TestPyramid.html">https://www.martinfowler.com/bliki/TestPyramid.html</a></td><td>Martin Fowler</td><td>2012</td><td>Yüksek</td><td>hayır</td></tr>
+            <tr id="src-28"><td>S28</td><td class="url"><a href="https://www.abratabia.com/game-testing/visual-testing.php">https://www.abratabia.com/game-testing/visual-testing.php</a></td><td>Abratabia</td><td>?</td><td>Düşük</td><td>hayır</td></tr>
+            <tr id="src-29"><td>S29</td><td class="url"><a href="https://arxiv.org/pdf/2208.02335v1">https://arxiv.org/pdf/2208.02335v1</a></td><td>arXiv</td><td>2022</td><td>Orta</td><td>hayır</td></tr>
+            <tr id="src-30"><td>S30</td><td class="url"><a href="https://gitnation.com/contents/visual-regression-under-the-hood">https://gitnation.com/contents/visual-regression-under-the-hood</a></td><td>GitNation</td><td>?</td><td>Orta</td><td>hayır</td></tr>
+            <tr id="src-31"><td>S31</td><td class="url"><a href="https://bugnet.io/blog/how-to-use-visual-snapshot-testing-for-game-ui-regressions">https://bugnet.io/blog/how-to-use-visual-snapshot-testing-for-game-ui-regressions</a></td><td>Bugnet</td><td>?</td><td>Düşük</td><td>hayır</td></tr>
+            <tr id="src-32"><td>S32</td><td class="url"><a href="https://code.claude.com/docs/en/best-practices">https://code.claude.com/docs/en/best-practices</a></td><td>Anthropic</td><td>erişim 2026-10-28</td><td>Yüksek</td><td>evet</td></tr>
+            <tr id="src-33"><td>S33</td><td class="url"><a href="https://www.humanlayer.dev/blog/context-efficient-backpressure">https://www.humanlayer.dev/blog/context-efficient-backpressure</a></td><td>HumanLayer</td><td>2025-12-09</td><td>Yüksek (görüş yazısı)</td><td>evet</td></tr>
+            <tr id="src-34"><td>S34</td><td class="url"><a href="https://huang.isis.vanderbilt.edu/cs8395-f23/paper/google-testing-icse-seip-17.pdf">https://huang.isis.vanderbilt.edu/cs8395-f23/paper/google-testing-icse-seip-17.pdf</a></td><td>Google / ICSE-SEIP</td><td>2017</td><td>Orta</td><td>hayır</td></tr>
+            <tr id="src-35"><td>S35</td><td class="url"><a href="https://docs.datadoghq.com/tests/test_impact_analysis/">https://docs.datadoghq.com/tests/test_impact_analysis/</a></td><td>Datadog</td><td>?</td><td>Orta</td><td>hayır</td></tr>
+            <tr id="src-36"><td>S36</td><td class="url"><a href="https://www.datacamp.com/tutorial/how-to-reduce-token-usage-in-ai-coding-agents">https://www.datacamp.com/tutorial/how-to-reduce-token-usage-in-ai-coding-agents</a></td><td>DataCamp</td><td>?</td><td>Düşük</td><td>hayır</td></tr>
+            <tr id="src-37"><td>S37</td><td class="url"><a href="https://blog.openreplay.com/cut-token-usage-ai-coding-agents/">https://blog.openreplay.com/cut-token-usage-ai-coding-agents/</a></td><td>OpenReplay</td><td>?</td><td>Düşük</td><td>hayır</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">Ham fetch çıktısı: <code>/Users/tugbauysal/.claude/projects/-Users-tugbauysal-Desktop-project-steam/6d15b35f-66f1-4e87-b274-dc8c31d2f7b4/tool-results/toolu_01Qj9bUt1i2ckf7FqPRSDQAu.txt</code></p>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<script>
+document.addEventListener('click',function(e){
+  var a=e.target.closest&&e.target.closest('a[href^="#src-"]');
+  if(!a)return;
+  var d=document.getElementById('kaynak-detay');
+  if(d)d.open=true;
+});
+</script>

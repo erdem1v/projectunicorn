@@ -1,0 +1,536 @@
+<title>Olay Sıklığı Araştırması</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: tek okuma şeridi; üstte cevap ve senin kararların, ortada rapor, en altta katlı kaynak sicili. Menajer Masası dili: sıcak kömür, açık mürekkep, amber. */
+:root{
+  --bg:#f3efe7; --surface:#fbf8f2; --ink:#26221c; --muted:#6d6457; --line:#d9d0c1;
+  --accent:#b8761c; --good:#3d7a4a; --warn:#a8741a; --bad:#a3402f; --info:#3f6f8f;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#1c1915; --surface:#25211c; --ink:#ece5d8; --muted:#a59a89; --line:#3b352d;
+  --accent:#e0a03e; --good:#7cbf87; --warn:#e3b456; --bad:#e07a66; --info:#7fb2d4; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1c1915; --surface:#25211c; --ink:#ece5d8; --muted:#a59a89; --line:#3b352d;
+  --accent:#e0a03e; --good:#7cbf87; --warn:#e3b456; --bad:#e07a66; --info:#7fb2d4; color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 var(--f-body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 64px}
+main{max-width:920px;margin:0 auto;display:flex;flex-direction:column;gap:44px;min-width:0}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;line-height:1.1;text-wrap:balance;margin:0}
+h1{font-size:46px} h2{font-size:30px} h3{font-size:24px}
+p{margin:0;max-width:72ch}
+ul,ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+section{display:flex;flex-direction:column;gap:14px;min-width:0}
+a{color:var(--accent)}
+code{font-family:var(--f-mono);font-size:.86em;overflow-wrap:anywhere}
+.eyebrow{font:500 12px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.lead{font-size:18px;max-width:66ch}
+.note{font-size:13px;color:var(--muted)}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px 18px;min-width:0}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 12px/1.3 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td.n{font:600 15px/1.3 var(--f-mono);font-variant-numeric:tabular-nums;text-align:right}
+.chip{display:inline-block;font:500 11px/1 var(--f-mono);letter-spacing:.04em;padding:4px 7px;border-radius:3px;border:1px solid currentColor;white-space:nowrap}
+.c-ok{color:var(--good)} .c-part{color:var(--warn)} .c-no{color:var(--bad)} .c-run{color:var(--info)}
+.src{font:400 12px/1.4 var(--f-mono);color:var(--muted)}
+.lbl{font:500 11px/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.order{counter-reset:o;list-style:none;padding:0;gap:10px}
+.order > li{counter-increment:o;display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;align-items:start}
+.order > li::before{content:counter(o);font:600 22px/1 var(--f-display);color:var(--accent);text-align:right}
+.order > li > div > span{font-size:14px;color:var(--muted);display:block}
+.run{border-left:3px solid var(--info)}
+.flag{border-left:3px solid var(--bad)}
+
+/* Bu sayfanın ekleri */
+.tag{display:inline-block;font:500 11px/1.2 var(--f-mono);letter-spacing:.04em;padding:2px 5px;border-radius:3px;border:1px solid currentColor;white-space:nowrap;vertical-align:1px}
+.t-g{color:var(--info)} .t-d{color:var(--warn)}
+.vs{font-style:italic;color:var(--muted)}
+.decide{border:1px solid var(--accent);border-left:4px solid var(--accent);padding:20px 18px}
+.decide .order{gap:26px}
+.decide .order > li::before{font-size:34px}
+.decide .order > li > div{display:flex;flex-direction:column;gap:10px;min-width:0}
+.decide .order > li > div > b{font:600 22px/1.15 var(--f-display)}
+.opts{list-style:none;padding:0;gap:6px}
+.opts li{display:grid;grid-template-columns:52px minmax(0,1fr);gap:8px;font-size:14px}
+.opts .k{font:600 12px/1.6 var(--f-mono);color:var(--accent)}
+.rec{font-weight:600;border-top:1px solid var(--line);padding-top:10px}
+.rec .lbl,.why .lbl{display:inline-block;margin-right:6px;color:var(--accent)}
+.why{font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.stat b{font:600 30px/1 var(--f-display);font-variant-numeric:tabular-nums}
+.stat span{font-size:13px;color:var(--muted)}
+.fam{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:12px}
+.fam .box{display:flex;flex-direction:column;gap:10px}
+.fam ul,.plain ul{font-size:14px}
+.fam h3,.plain h3{font-size:21px}
+.optgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:12px}
+.optgrid .box{display:flex;flex-direction:column;gap:10px}
+.optgrid h3{font-size:21px}
+.kv{list-style:none;padding:0;gap:8px;font-size:14px}
+.kv .lbl{display:block;margin-bottom:3px}
+.mine{border:1px solid var(--accent)}
+blockquote{margin:0;padding:10px 14px;border-left:3px solid var(--line);background:var(--surface);font-size:14px;max-width:72ch}
+blockquote.new{border-left-color:var(--good)}
+details{border-top:1px solid var(--line);padding-top:14px}
+summary{cursor:pointer;font:600 26px/1.2 var(--f-display)}
+details > div{display:flex;flex-direction:column;gap:16px;margin-top:16px}
+.wide table{min-width:640px}
+.reg table{min-width:820px;font-size:13px}
+.reg.int table{min-width:640px}
+.reg td.n{font-size:13px;white-space:nowrap}
+.reg td.url{word-break:break-all;min-width:220px}
+.sub{display:flex;flex-direction:column;gap:8px}
+.sub h3{font-size:20px}
+@media (max-width:640px){h1{font-size:36px} h2{font-size:26px} .lead{font-size:16px} .decide{padding:16px 14px} .decide .order > li{grid-template-columns:24px minmax(0,1fr)} .decide .order > li::before{font-size:28px}}
+</style>
+
+<main>
+
+<header style="display:flex;flex-direction:column;gap:14px">
+  <span class="eyebrow">Project Unicorn · 28 Ekim 2026 · Araştırma raporu</span>
+  <h1>Olay sıklığı: kural mı, motorun çıktısı mı?</h1>
+  <p class="lead">Kâğıdın ne sıklıkla geleceğini sabit bir kuralla yazmanı önermiyorum. Sıklık motorun mekanizmasından çıksın ve ölçülsün. İncelenen 20'den fazla oyunun hiçbiri "turların %X'i" diye kural koymuyor <span class="src">[S1–S4, S18–S20, S33, S43, S47]</span>. Hepsi katman kuruyor, sonra çıkan sıklığı ölçüp elle düzeltiyor <span class="src">[S20, S22, S50]</span>. Bizim motorda bu katmanların çoğu zaten var <span class="src">[S64–S68]</span>. Bugünkü cümle ("sprintlerin en az üçte biri kâğıtsız") hiçbir şeyi sınamıyor: kâğıtsız sprint bugün %90 civarında, yani cümle hep tutuyor <span class="src">[S70, S71]</span>. "%7–10" da bir hedef değil, bugünkü ölçümün sonucu. Asıl dikkat iki şeye gitmeli. Ekip sprintini 1 haftada bitirirse o sprintte kâğıt zarı hiç atılmıyor. Gelen kâğıtların çoğu da tek kişiden, yazılımcıdan geliyor <span class="src">[S66, S70, S71]</span>. <span class="tag t-g">[GÖRÜŞ]</span></p>
+  <p class="note">Kâğıt: sprint sırasında ekrana gelen karar kâğıdı; onu o kartta çalışan biri getirir. Zar: sprintte kâğıt gelsin mi diye motorun attığı zar. İşaretler: <span class="src">[S#]</span> kaynak (sicil en altta; S1–S63 dış kaynaklar, S64–S74 bizim kod ve belgelerimiz). <span class="vs">(varsayım)</span> kaynağı olmayan ya da hesapla çıkan bilgi. <span class="tag t-g">[GÖRÜŞ]</span> benim yargım. <span class="tag t-d">[DEĞERLENDİREMEM]</span> kanıtın yetmediği yer.</p>
+</header>
+
+<section>
+  <span class="eyebrow">Senin kararların</span>
+  <h2>Üç karar</h2>
+  <div class="box decide">
+    <ol class="order">
+      <li><div>
+        <b>CLAUDE.md'deki kâğıt sıklığı cümlesi</b>
+        <p>Bugün cümle "sprintlerin en az üçte biri kâğıtsız" diyor. Kâğıtsız sprint zaten %90 civarında olduğu için bu cümle hiçbir şeyi sınamıyor <span class="src">[S70, S71]</span>.</p>
+        <ul class="opts">
+          <li><span class="k">A</span><span>"%7–10" kural olsun.</span></li>
+          <li><span class="k">B</span><span>İlke yazılsın, sayı tarihli ölçüm olarak dursun.</span></li>
+          <li><span class="k">C</span><span>B'ye ek olarak mekanizma onarılsın.</span></li>
+        </ul>
+        <p class="rec"><span class="lbl">Önerim</span>B, şimdi.</p>
+        <p class="why"><span class="lbl">Neden</span>İncelenen 20'den fazla oyunun hiçbiri "turların %X'i" diye kural koymuyor <span class="src">[S1–S4, S18–S20, S33, S43, S47]</span>. Sayı kural olunca ajanlar onu tutturmak için zarla oynar. A'da da B'de de oyuncu bugünkünden farklı bir şey görmez.</p>
+      </div></li>
+      <li><div>
+        <b>Hiç gelmeyen 18 kâğıt</b>
+        <p>Son ölçümde 44 kâğıdın 18'i hiç gelmedi. 8 tasarımcı kâğıdının hiçbiri gelmiyor. Gelenlerin %71'i yazılımcıdan (139'un 99'u, hesap) <span class="src">[S70, S71]</span>. Bu kâğıtların neden gelmediğini bulan bir içerik onarımı iş listesine girsin mi?</p>
+        <ul class="opts">
+          <li><span class="k">Evet</span><span>Şimdi iş listesine girsin (aşağıda C3).</span></li>
+          <li><span class="k">Hayır</span><span>C1 ve C2 ile birlikte playtest'ten sonra bakılsın.</span></li>
+        </ul>
+        <p class="rec"><span class="lbl">Önerim</span>Evet, şimdi.</p>
+        <p class="why"><span class="lbl">Neden</span>Tekrar hissinin asıl kaynağı bu. Koşuda yaklaşık 6 kâğıt ve 26 etkin kâğıtla oyuncu bütün kâğıtları 4–5 koşuda görür (hesap). Stellaris oyuncusunun "3–4 oynanışta hepsini gördüm" şikâyetinin aynısı <span class="src">[S12]</span>. İş sıklıktan bağımsız.</p>
+      </div></li>
+      <li><div>
+        <b>1 haftada biten sprint ve kâğıtlar arası uzun sessizlik</b>
+        <p>Ekip sprintin kartlarını 1 haftada bitirirse sprint orada kapanır ve kâğıt zarı hiç atılmaz. Faz B'de sprintlerin yaklaşık %63'ü böyle kapandı (hesap, 956 / 1.506) <span class="src">[S70]</span>. Kâğıtlar arasında uzun bir sessizlik olursa onu kapatan bir kural da yok <span class="src">[S71]</span>. Bunlara playtest'ten sonra mı karar verelim?</p>
+        <ul class="opts">
+          <li><span class="k">C1</span><span>Zar her sprintte atılsın: sprint başında ya da 1 haftada kapanan sprintte kapanıştan önce. Sonra zarın ihtimali bugünkü sıklığı koruyacak kadar düşürülsün.</span></li>
+          <li><span class="k">C2</span><span>Sessizliğe sınır: N sprint üst üste kâğıtsız geçerse sıradaki uygun sprintte kâğıt gelsin <span class="src">[S19]</span>, ya da kâğıt gelmedikçe şansı artsın, gelince sıfırlansın <span class="src">[S43, S44]</span>.</span></li>
+          <li><span class="k">Zaman</span><span>Şimdi ya da playtest'ten sonra.</span></li>
+        </ul>
+        <p class="rec"><span class="lbl">Önerim</span>Evet, playtest'ten sonra. Playtest'te iki şeye bak: kâğıtlar arası sessizlik uzun geliyor mu, kâğıtlar hep aynı kişiden mi geliyor?</p>
+        <p class="why"><span class="lbl">Neden</span>Koşuda 6 kâğıdın az olup olmadığına ölçüm cevap veremez, his cevap verir <span class="tag t-d">[DEĞERLENDİREMEM]</span>. İşin boyutunu da bilmiyorum. Zarın zamanını değiştirmek kayıt uyumunu ve zarı sınayan smoke vakalarını etkiler <span class="vs">(varsayım)</span>.</p>
+      </div></li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Bugün sayılarla</span>
+  <h2>Oyuncu bugün ne görüyor</h2>
+  <div class="stats">
+    <div class="stat"><b>%90</b><span>civarı sprint kâğıtsız geçiyor <span class="src">[S70, S71]</span></span></div>
+    <div class="stat"><b>5–7</b><span>koşu başına medyan kâğıt <span class="src">[S71]</span></span></div>
+    <div class="stat"><b>18 / 44</b><span>kâğıt hiç gelmedi; 8 tasarımcı kâğıdının hiçbiri <span class="src">[S71]</span></span></div>
+    <div class="stat"><b>99 / 139</b><span>kâğıdı yazılımcı getirdi, yaklaşık %71 (hesap) <span class="src">[S70]</span></span></div>
+    <div class="stat"><b>~%63</b><span>sprint 1 haftada kapandı, zar görmedi (hesap) <span class="src">[S70]</span></span></div>
+    <div class="stat"><b>~6,5 dk</b><span>1×'te iki kâğıt arası, 4×'te ~1,6 dk (hesap) <span class="src">[S69]</span></span></div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Endüstri</span>
+  <h2>Olay motorları sıklığı nasıl kuruyor</h2>
+  <p>Altı mekanizma ailesi var. Oyunlar bunları üst üste koyuyor. Sıklık tek bir sayıdan değil, katmanların toplamından çıkıyor. Paradox bile EU4'teki "ortalama şu kadar sürede bir" (MTTH) yönteminden vazgeçti, çünkü yazılan sayı gerçek sıklığı anlatmıyordu <span class="src">[S1, S3]</span>.</p>
+  <div class="fam">
+    <div class="box">
+      <h3>Yuva: olay ne zaman sorulur</h3>
+      <p class="note">Kaba sıklığı yuvanın kendisi belirler.</p>
+      <ul>
+        <li><b>Crusader Kings III:</b> Olaylar kendiliğinden gelmez. Nabızlar her 3 ayda, her yıl, 3 yılda ve 5 yılda bir sorar <span class="src">[S2]</span>. Geliştiriciye göre bütün olaylar "on_action" kancalarıyla ateşlenir <span class="src">[S6]</span>. Nabızlar takılmayı önlemek için zamana yayılır, herkes için aynı anda koşmaz <span class="src">[S15]</span>.</li>
+        <li><b>Game Dev Tycoon:</b> Rastgele olay "36 + 48 × rastgele" haftada bir gelir: 36–84 hafta, ortalama yaklaşık 60 hafta <span class="src">[S33]</span>. Bizim 2 haftalık sprintimizle 18–42 sprintte bir demek (hesap, <span class="src">[S33]</span>).</li>
+        <li><b>FTL:</b> Her atlama bir olaydır. Sektör başına 19–24 işaret var <span class="src">[S56]</span>. Olay tiplerine sektör başına alt ve üst sayı verilir, motor bu aralıktan çeker <span class="src">[S55]</span>.</li>
+        <li><b>Slay the Spire:</b> Olay yalnız "?" düğümlerinde çıkar. Düğümlerin yaklaşık %22'si "?" düğümüdür <span class="src">[S45]</span>.</li>
+        <li><b>Darkest Dungeon:</b> Takım her seferden dönünce bir kasaba olayı çekilir. Wiki bunu "bir olay kartı destesi gibi" diye anlatır <span class="src">[S24]</span>.</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>Zar ve "olay yok" ağırlığı</h3>
+      <p class="note">Yuvaya bir zar eklenir. Çoğu oyunda "hiçbir şey olmasın" da çekilişte bir seçenektir.</p>
+      <ul>
+        <li><b>Crusader Kings III:</b> Önce yüzde kapısı (<code>chance_to_happen</code>, örnekte 25), sonra "olay yok" şansı, sonra ağırlıklı çekiliş. "100 = 0" satırı açıkça "olay yok" yuvasıdır <span class="src">[S2]</span>. Forumdaki örnekte katmanlar çarpılınca olay şansı %6,25'e iniyor <span class="src">[S15]</span>.</li>
+        <li><b>Victoria 3:</b> Ağırlıklı listede "0" satırı "olay yok" demek. 10/5/5 ağırlıkta hiçbir şeyin olmama şansı %50 <span class="src">[S14]</span>.</li>
+        <li><b>RimWorld, Randy:</b> Günde 60 kontrol. Olaylar arası ortalama 1,35 gün. Büyük tehdidin ağırlığı toplam 9,22'nin 1,4'ü <span class="src">[S19]</span>.</li>
+        <li><b>Darkest Dungeon:</b> "Her zaman bir kasaba olayı olmaz" <span class="src">[S24]</span>.</li>
+        <li><b>Uyarı örneği, EU4 MTTH:</b> Olay her ay belli bir ihtimalle gelir, garanti yok. Wiki'ye göre 3 aylık MTTH gerçekte ortalama 6–7 ayda bir ateşliyor <span class="src">[S1]</span>. Eski bir forum rehberi "MTTH o süre içinde ateşler" yanılgısını düzeltiyor <span class="src">[S17]</span>. Stellaris wiki'si MTTH'nin artık kullanılmadığını yazıyor; yerine rastgele gecikme geldi: 200 gün + 0–100 gün <span class="src">[S3]</span>.</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>Uygunluk: olay kime, hangi durumda</h3>
+      <p class="note">Hangi olayın uygun olduğunu oyunun durumu seçer. Sıklığı en çok değiştiren katman budur.</p>
+      <ul>
+        <li><b>Slay the Spire:</b> Olaylar koşula bağlı. Cleric için en az 35 altın, Knowing Skull için en az 13 HP, Moai Head için HP en çok %50, N'loth için en az 2 relic <span class="src">[S44]</span>.</li>
+        <li><b>Fallen London:</b> Kartları oyuncunun "quality" değerleri ve konumu açar. Troubled Waters 7'ye gelince yeni kartlar desteye girer <span class="src">[S47]</span>. Emily Short storylet modelini aynı anlatıyor: önkoşul, içeriğin ne zaman oynanacağını belirler <span class="src">[S49]</span>.</li>
+        <li><b>Out of the Park Baseball:</b> Hikâyeler çok geniş ya da çok dar koşullara bağlanır, birbirine zincirlenir. Oyuncunun tek ayarı hikâyeleri açıp kapatmak <span class="src">[S34]</span>.</li>
+        <li><b>Victoria 3:</b> Rastgele olaylar yasa çıkarma, devrim saati ve aktif günlük girdisine bağlandı <span class="src">[S8]</span>. 1.3'te 40 yeni olay geldi, çoğu bağlama bağlı <span class="src">[S10]</span>. Olayların çok azı açılır pencere olarak gelir <span class="src">[S9]</span>.</li>
+        <li><b>Reigns:</b> "Each card has a certain probability to be drawn the next turn. That probability is evolving with the game state." <span class="src">[S51]</span></li>
+        <li><b>Stellaris, Situations:</b> Uzun krizlerde ayda bir ilerleyen bir sayaç var. Açık durumunda sayaç %25'te başlar, %75'te uyarı olayı, %100'de iflas gelir. Olay zarla değil eşikle gelir <span class="src">[S5]</span>.</li>
+        <li><b>Left 4 Dead:</b> Durum sıklığı değiştirir, zorluğu değil: "Amplitude (difficulty) is not changed, frequency (pacing) is." <span class="src">[S22]</span></li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>Tekrar frenleri: aynı olay ne zaman döner</h3>
+      <ul>
+        <li><b>Crusader Kings III:</b> Olay başına bekleme, örnekte 5 yıl <span class="src">[S2]</span>.</li>
+        <li><b>Victoria 3:</b> Olay başına bekleme, örnekte 3 yıl <span class="src">[S4]</span>.</li>
+        <li><b>Game Dev Tycoon:</b> <code>maxTriggers</code> olayın kaç kez gelebileceğini sınırlar, örnekte 1 <span class="src">[S33]</span>.</li>
+        <li><b>EU4:</b> <code>fire_only_once</code> olayı bütün oyunda bir kez ateşler. Wiki'de ayrı bir bekleme alanı yok <span class="src">[S1]</span>.</li>
+        <li><b>Slay the Spire:</b> Act olayları koşuda bir kez, shrine'lar Act başına bir kez gelir <span class="src">[S44]</span>.</li>
+        <li><b>Left 4 Dead:</b> Boss olayları deste gibidir: Tank, Witch ve "Hiçbiri" karıştırılır. Aynı boss art arda gelmez <span class="src">[S22]</span>.</li>
+        <li><b>Fallen London:</b> Elde aynı karttan iki tane olmaz. "High Urgency" kartlar her zaman önce çekilir <span class="src">[S47]</span>.</li>
+        <li><b>Darkest Dungeon:</b> Bazı olaylar belli haftaya bağlı ve bir kerelik: 3. hafta, 5. hafta, 7–10. hafta arası <span class="src">[S24]</span>.</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>Aralık korkulukları: asgari ve azami boşluk</h3>
+      <p class="note">Hem "art arda çok gelmesin" hem "çok uzun sessizlik olmasın" sorusunu çözer.</p>
+      <ul>
+        <li><b>RimWorld, Cassandra:</b> 4,6 gün açık, 6 gün kapalı. İlk açık evre 11. günde başlar. Her açık evrede 1 ya da 2 büyük tehdit gelir, aralarında en az 1,9 gün olur. Sonuç: yılda yaklaşık 8,5 büyük tehdit (RimWorld yılı 60 gün) <span class="src">[S18]</span>.</li>
+        <li><b>RimWorld, Randy (azami aralık):</b> 13 gün büyük tehdit gelmezse sıradaki olay büyük tehdit olur <span class="src">[S19]</span>.</li>
+        <li><b>Left 4 Dead:</b> Tepeden sonra 3–5 saniye tam baskı sürer. Sonra 30–45 saniye dinlenme gelir, bu sırada yeni düşman yok. Normal zorlukta düşman dalgası 90–180 saniye arasında rastgele gelir <span class="src">[S22]</span>.</li>
+        <li><b>Slay the Spire (rampa):</b> "?" odasında gelmeyen türün şansı her seferinde artar, gelince tabana döner <span class="src">[S43, S44]</span>. Kesin yüzdeleri doğrulayamadım <span class="vs">(varsayım)</span>.</li>
+        <li><b>The Banner Saga 2 (kota):</b> 9. bölümde 5 olaydan 3'ü, 10. bölümde 9 olaydan 4'ü gelir <span class="src">[S57]</span>.</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>Ölçüp düzeltme ve oyuncu düğmesi</h3>
+      <p class="note">Oyunlar çıkan sıklığı ölçüyor ve sayıyı vaat ettikleri deneyime göre elle düzeltiyor.</p>
+      <ul>
+        <li><b>RimWorld sürüm notları:</b> Phoebe'nin yoğunluğu 0.14.1238'de düşürüldü, çünkü Cassandra'yla aynıydı ve "daha çok nefes" vaadiyle çelişiyordu. Randy 0.14.1241'de Cassandra'nın yaklaşık 1,5 katından onunla aynı seviyeye çekildi <span class="src">[S20]</span>.</li>
+        <li><b>Emily Short:</b> King of Chicago için binlerce rastgele oynanış koşup hiç tetiklenmeyen ve fazla kullanılan dizileri bulmayı anlatıyor <span class="src">[S50]</span>.</li>
+        <li><b>Valve:</b> "Survivor Intensity estimation is crude, yet the resulting pacing works." <span class="src">[S22]</span></li>
+        <li><b>Oyuncu düğmesi:</b> Darkest Dungeon'da kasaba olayı sıklığı ayarlanabiliyor <span class="src">[S24, S25]</span>. RimWorld'de tehdit ölçeği %10 ile %220 arası <span class="src">[S20]</span>. This War of Mine'da senaryo düzenleyicisi çatışma süresini, kışı ve suç seviyesini ayarlatıyor <span class="src">[S29, S30]</span>.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Oyuncular</span>
+  <h2>Oyuncular neyi övüyor, neye kızıyor</h2>
+  <div class="box run plain">
+    <h3>Övülenler</h3>
+    <ul>
+      <li><b>Ritim ve nefes.</b> Valve'ın gerekçesi: "Constant, unchanging combat is fatiguing", "long periods of inactivity are boring" <span class="src">[S22]</span>. İncelemeler L4D'nin tekrar oynanabilirliğini övdü <span class="src">[S23]</span>. Oyuncular Cassandra'nın düzenli ritmini seviyor, kapalı evreye göre plan yapıyor <span class="src">[S18, S20]</span>. Randy'yi seçenler sürprizi ve uzun sessizlikleri seviyor <span class="src">[S19]</span>.</li>
+      <li><b>Olayın mekaniğe bağlı olması.</b> Stellaris ekibi eski açılır pencere zincirlerinin takip edilmesinin zor olduğunu kabul etti ve onları sayaçla değiştirdi <span class="src">[S5]</span>. Victoria 3 ekibi olayları mekaniklere bağlayarak düzeltti <span class="src">[S8]</span>.</li>
+      <li><b>Çeşitlilik hedefi.</b> Stellaris ekibinin hedefi: aynı imparatorlukla on kez oyna, on farklı hikâye yaşa <span class="src">[S13]</span>.</li>
+      <li><b>Kontrol.</b> Darkest Dungeon'daki sıklık ayarı, oyuncuların olay yoğunluğunu kendileri seçmek istediğini gösteriyor <span class="src">[S24, S25]</span>.</li>
+      <li><b>Görülmemiş içerik önce.</b> Hades'in "aynı replik sonsuz tekrar" sorununu çözdüğü övülüyor. Kaynak zayıf, yalnız arama özeti var <span class="src">[S61, S62]</span>.</li>
+    </ul>
+  </div>
+  <h3>Başarısız örnekler</h3>
+  <div class="fam">
+    <div class="box flag">
+      <h3>a) Spam: koşulu doğru kalan olay durmadan gelir</h3>
+      <ul>
+        <li>Stellaris: "every game I always end up swamped by events even at normal speed". Aynı gezegende "order restored" penceresi tekrar tekrar çıkıyor <span class="src">[S12]</span>.</li>
+        <li>EU4 modları defalarca "event spam" düzeltmesi yayımladı <span class="src">[S16]</span>.</li>
+        <li>Football Manager 2019: günde yaklaşık 80 gelen kutusu mesajı, %95'i ilgisiz. SI geliştiricisi motoru değil abonelik ayarını gösterdi <span class="src">[S35]</span>. 2011'de her "devam"da 50'den fazla transfer haberi geliyordu <span class="src">[S36]</span>.</li>
+      </ul>
+    </div>
+    <div class="box flag">
+      <h3>b) Küçük havuz ve sık ritim: aynı olay yine gelir</h3>
+      <ul>
+        <li>Crusader Kings III: yeni bir oyuncu "same handful of events over and over again" diyor <span class="src">[S7]</span>. Oyunculara göre 20–30 olaylık bir havuz bazen yılda birden çok kez dönüyor <span class="src">[S7, S63]</span>.</li>
+        <li>Stellaris: "you'll have seen all of them within three, four playthroughs" <span class="src">[S12]</span>.</li>
+        <li>Reigns: "cards get WAY too repetitive towards the end" <span class="src">[S52]</span>. İncelemeler de aynı şeyi söylüyor <span class="src">[S53, S54]</span>.</li>
+        <li>Sims 4: resmi bilinen sorunlar listesinde "Wants are very repetitive" yazıyor (2023-07-14) <span class="src">[S37]</span>. Havuz yalnız temel oyun ve bir paketle sınırlı <span class="src">[S38]</span>.</li>
+        <li>Football Manager 2017 basın toplantısı: haftadan haftaya 10'dan az soru dönüyor. Oyuncular toplantıyı yardımcı antrenöre devrediyor <span class="src">[S59, S60]</span>.</li>
+      </ul>
+    </div>
+    <div class="box flag">
+      <h3>c) Mekanikten kopuk olay: seçim anlamsızlaşır</h3>
+      <ul>
+        <li>Victoria 3 geliştiricileri kendi olayları için şunu yazdı: "don't offer compelling choices, are too repetitive, or supersede rather than work alongside the game's mechanics" <span class="src">[S8]</span>.</li>
+        <li>Big Ambitions: olaylar "repetitive and uninteresting" ve "don't change the narrative" diye eleştiriliyor <span class="src">[S40, S41]</span>.</li>
+      </ul>
+    </div>
+    <div class="box flag">
+      <h3>d) Sabit senaryo: her koşu aynı</h3>
+      <ul>
+        <li>Frostpunk, The Last Autumn incelemesi: "every major event is scripted to happen at a certain time and there is nothing you can do to change that" <span class="src">[S27]</span>. Steam'de ana oyun için "pre-recorded script" deniyor <span class="src">[S28]</span>.</li>
+      </ul>
+    </div>
+    <div class="box flag">
+      <h3>e) Korkuluksuz rastgelelik: haksızlık hissi</h3>
+      <ul>
+        <li>Randy "could send multiple 1.5x size raids back-to-back" <span class="src">[S19]</span>. Oyuncular aynı gün iki baskından yakınıyor <span class="src">[S31, S32]</span>.</li>
+      </ul>
+    </div>
+    <div class="box flag">
+      <h3>f) Opak olasılık: yazılan sayı yanlış okunur</h3>
+      <ul>
+        <li>Fallen London'da 1 Standard ve 1 Frequent kart varken Frequent kart 2 değil 3 kat sık geliyor <span class="src">[S47]</span>. Oyuncular desteyi "temizlemek" için rehber yazıyor <span class="src">[S48]</span>.</li>
+        <li>EU4'te MTTH süresi "o süre içinde kesin gelir" diye yanlış okunuyor <span class="src">[S17]</span>.</li>
+      </ul>
+    </div>
+    <div class="box flag">
+      <h3>g) Fazla seyrek ya da hiç gelmeyen olay</h3>
+      <ul>
+        <li>Crusader Kings III'te bir oyuncu, erken dönemde sık gelen bir olayın 1079'dan sonra hiç gelmediğini yazıyor <span class="src">[S7]</span>.</li>
+        <li>Slay the Spire'da "?" odası kalmayan katlarda iki relic işe yaramaz kaldı. Geliştirici yamayla onları ödül havuzundan çıkardı <span class="src">[S46]</span>. Ders: yuvası olmayan yerde olay beklenmez.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Bizim motor</span>
+  <h2>Bizim motorla karşılaştırma</h2>
+  <div class="box plain">
+    <h3>Bugün bizde ne var</h3>
+    <ul>
+      <li><b>Kâğıt yuvası.</b> Sprint 2 hafta sürer. Zar ilk haftanın sonunda atılır, ihtimali 0,5 (<code>decision.sprint_chance</code>) <span class="src">[S64, S65]</span>. Ekip haftanın işinden sonra kartları bitirmişse sprint kapanır. Bitirmemişse ikinci haftanın ataması yapılır ve kâğıt o sırada istenir <span class="src">[S66]</span>. Yani 1 haftada kapanan sprint kâğıt zarını hiç görmez <span class="src">[S66, S70]</span>.</li>
+      <li><b>Seçim.</b> Havuzda 47 kâğıt var <span class="src">[S65]</span>. Sıra <code>u ^ (1 + 2 × görülme)</code> anahtarıyla kurulur: daha önce görülmemiş kâğıt öne geçer <span class="src">[S66, S69]</span>. Motor sırayla ilk uygun kâğıdı ve konuşacak kişiyi arar <span class="src">[S66]</span>.</li>
+      <li><b>Uygunluk.</b> Kâğıdın kendi koşulu tutmalı. Konuşan rol de o aşamada kartta çalışıyor olmalı <span class="src">[S64, S66]</span>.</li>
+      <li><b>Mandal.</b> 47 kâğıdın 43'ü 52 hafta bekler ve koşuda en çok 3 kez gelir. 2'si 26 hafta bekler ve en çok 3 kez gelir. 1'i tek seferlik, 1'i 52 hafta bekler ve tek seferlik <span class="src">[S73]</span>.</li>
+      <li><b>Kesinti sırası.</b> Söz olayı ya da acil durum gelen sprintte kâğıt gelmez. Kâğıt gelen sprintte yalnız servisin çöktüğü acil durum yaşanır, öbürü sonraki sprinte kalır <span class="src">[S64, S66]</span>.</li>
+      <li><b>Aile frenleri.</b> Havuz kartlarında iki fren var: aynı aileden başka kart (varsayılan 6 hafta) ve aynı aile aynı kişi <span class="src">[S67, S69]</span>. Kâğıtlar ise motora "istek" yoluyla gelir (<code>Origin.REQUEST</code>). Motor aile frenini yalnız havuz, sessiz taban, sinyal ve zamanlama için sorar, istek için sormaz <span class="src">[S68]</span>. 47 kâğıdın 41'i aile alanı (<code>family_subject</code>) taşır: 40'ı 26 hafta, 1'i 52 hafta. Bu alan kâğıtta fren olarak çalışmaz, yalnız kayıt tutulur <span class="src">[S68, S73]</span>.</li>
+      <li><b>Havuzun öbür katmanları (kâğıt dışı olaylar).</b> Faza göre "olay yok" ağırlığı 1,5 / 1,0 / 0,6. Aynı kart 4 hafta, aynı çalışan 2 hafta, aynı müşteri 4 hafta dönmez. Haftalık kategori kotası var. Haftada en çok 2 kesinti olur. 1 sessiz haftadan sonra sessiz havuz devreye girer. İlk 3 haftada havuz konuşmaz <span class="src">[S67, S69]</span>.</li>
+      <li><b>Acil durum zarı duruma bağlı.</b> Taban ihtimal 0,1, tavan 0,3. Açık hata ve sunucu kademesiyle değişir. İki acil durum arasında en az 4 hafta var <span class="src">[S64, S65]</span>.</li>
+      <li><b>Ölçüm hedefi.</b> §13.7 çapası normal hızda 2–3 dakikada bir karar yüzeyi ve 3 dakikada en çok 3 kesinti ister. Kod bunu açıkça "ayar değeri değil, ölçüm hedefi" diye yazıyor <span class="src">[S67, S69]</span>. §13.8'e göre tempo sayılarının hiçbiri ölçülmedi <span class="src">[S69]</span>.</li>
+    </ul>
+  </div>
+  <div class="box run plain">
+    <h3>Ölçülen kâğıt sıklığı</h3>
+    <ul>
+      <li><b>D son ölçümü</b> (2026-10-27, <code>baa63da</code>, 88 koşu × 104 hafta). v1.0 sonrası kâğıt gelen sprint B2B'de %7,7–8,9, B2C'de %6,6–10,3. Koşu başına medyan 5–7 kâğıt. Koşu başına 69–80 sprint kapanıyor. 44 kâğıdın 18'i hiç gelmedi, 8 tasarımcı kâğıdının hiçbiri gelmedi <span class="src">[S71]</span>.</li>
+      <li><b>Faz B ölçümü</b> (yaklaşık 2026-10-17). 1.506 sprintte 147 kâğıt geldi (%9,8). 956 sprint 1 tikte (1 haftada) kapandı ve kâğıt görmedi. 2 tikte kapanan sprintlerde oran %27,7. Konuşana göre: yazılımcı 99, kurucu 34, testçi 5, PM 1, tasarımcı 0 <span class="src">[S70]</span>.</li>
+      <li><b>Oyuncunun saatiyle.</b> 1×'te bir hafta 22,5 saniye <span class="src">[S69]</span>. 104 hafta yaklaşık 39 dakika eder. Koşuda 6 kâğıt, 1×'te yaklaşık 6,5 dakikada bir, 4×'te yaklaşık 1,6 dakikada bir demek (hesap; modal duraklamaları hariç, <span class="vs">varsayım</span>).</li>
+    </ul>
+  </div>
+
+  <h3>Hangisi zaten endüstri kalıbı</h3>
+  <div class="box scroll wide">
+    <table>
+      <thead><tr><th>Kalıp</th><th>Endüstri örneği</th><th>Bizde</th><th>Durum</th></tr></thead>
+      <tbody>
+        <tr><td>Yuva / nabız</td><td>CK3 nabızları <span class="src">[S2]</span>, GDT 36–84 hafta <span class="src">[S33]</span>, StS "?" düğümü <span class="src">[S43]</span></td><td>Sprint başına tek zar <span class="src">[S64]</span></td><td><span class="chip c-ok">Var</span> 1 haftalık sprintte yuva açılmıyor</td></tr>
+        <tr><td>Zar + "olay yok"</td><td>CK3 "100 = 0" <span class="src">[S2]</span>, V3 "0" satırı <span class="src">[S14]</span></td><td><code>sprint_chance</code> 0,5; havuzda "olay yok" ağırlığı <span class="src">[S65, S67]</span></td><td><span class="chip c-ok">Var</span></td></tr>
+        <tr><td>Duruma bağlı uygunluk</td><td>StS kapıları <span class="src">[S44]</span>, FL quality <span class="src">[S47]</span>, V3 mekanik bağı <span class="src">[S8]</span></td><td>Kâğıt koşulu + konuşan kişi <span class="src">[S66]</span></td><td><span class="chip c-ok">Var</span> Endüstrinin iyi örneğine yakın</td></tr>
+        <tr><td>Görülmemişi öne alma</td><td>Hades öncelik <span class="src">[S61]</span>, StS koşu başına bir kez <span class="src">[S44]</span></td><td><code>seen_weight</code> 2 <span class="src">[S65]</span></td><td><span class="chip c-ok">Var</span></td></tr>
+        <tr><td>Olay başına bekleme ve sınır</td><td>CK3 5 yıl <span class="src">[S2]</span>, V3 3 yıl <span class="src">[S4]</span>, GDT <code>maxTriggers</code> <span class="src">[S33]</span></td><td>52 hafta, koşuda en çok 3 <span class="src">[S73]</span></td><td><span class="chip c-ok">Var</span></td></tr>
+        <tr><td>Asgari aralık / tek kesinti</td><td>Cassandra 1,9 gün <span class="src">[S18]</span>, L4D dinlenme <span class="src">[S22]</span></td><td>Sprintte tek kesinti, acil durumda 4 hafta <span class="src">[S64, S65]</span></td><td><span class="chip c-ok">Var</span></td></tr>
+        <tr><td>Aynı türün art arda gelmemesi</td><td>L4D boss destesi <span class="src">[S22]</span></td><td>Havuzda aile frenleri; kâğıtta yok <span class="src">[S68]</span></td><td><span class="chip c-part">Kısmi</span></td></tr>
+        <tr><td>Azami aralık (pity)</td><td>Randy 13 gün <span class="src">[S19]</span>, StS rampası <span class="src">[S43]</span></td><td>Havuzda sessiz taban var; kâğıtta yok <span class="src">[S67]</span></td><td><span class="chip c-no">Eksik</span></td></tr>
+        <tr><td>Sıklığın duruma bağlanması</td><td>L4D yoğunluk <span class="src">[S22]</span>, Stellaris sayacı <span class="src">[S5]</span></td><td>Acil durum zarında var; kâğıt zarı düz <span class="src">[S65]</span></td><td><span class="chip c-no">Kâğıtta yok</span></td></tr>
+        <tr><td>Ölç ve düzelt</td><td>RimWorld <span class="src">[S20]</span>, Emily Short <span class="src">[S50]</span></td><td>Harness + §13.7 çapası + D son ölçümü <span class="src">[S67, S71]</span></td><td><span class="chip c-ok">Var</span></td></tr>
+        <tr><td>Oyuncuya sıklık düğmesi</td><td>DD <span class="src">[S24]</span>, RimWorld <span class="src">[S20]</span>, TWoM <span class="src">[S29]</span></td><td>Yok</td><td><span class="chip c-run">Bilinçli seçim olabilir</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><span class="tag t-g">[GÖRÜŞ]</span> Kural yazmaya gerek yok, çünkü sıklığı üreten katmanlar bizde zaten var. Amerika'yı yeniden keşfetmiyoruz. Motorun iskeleti endüstrinin kalıbıyla aynı.</p>
+
+  <div class="box flag plain">
+    <h3>Eksik olanlar</h3>
+    <ul>
+      <li><b>Yuva kaybı.</b> 1 haftada kapanan sprint zar görmüyor. Faz B'de sprintlerin yaklaşık %63'ü böyle kapandı (hesap, 956 / 1.506) <span class="src">[S70]</span>. Yazılan 0,5 ile görülen yaklaşık %8 arasındaki fark büyük. Bu, EU4'teki "3 aylık MTTH gerçekte 6–7 ayda bir" sorununun bizdeki hali <span class="src">[S1]</span>. <span class="tag t-g">[GÖRÜŞ]</span> Bunu kimse seçmedi. Zarın ilk haftanın sonunda atılmasının yan etkisi.</li>
+      <li><b>Azami aralık yok.</b> Kâğıtlar arasında uzun bir sessizlik olursa onu kapatan bir kural yok. D son raporunda "kâğıtlar arası en uzun boşluk" sütunu da yok <span class="src">[S71]</span>. Randy'nin 13 gün kuralı ya da StS rampası gibi bir korkuluk bizde yok <span class="src">[S19, S43]</span>.</li>
+      <li><b>Etkin havuz dar.</b> 44 kâğıdın 26'sı geliyor <span class="src">[S71]</span>. Konuşan çoğunlukla yazılımcı: 139 kâğıdın 99'u (hesap, yaklaşık %71) <span class="src">[S70]</span>. Koşuda yaklaşık 6 kâğıt ve 26 etkin kâğıtla oyuncu bütün kâğıtları 4–5 koşuda görür (hesap). Bu, Stellaris oyuncusunun "3–4 oynanışta hepsini gördüm" şikâyetinin aynısı <span class="src">[S12]</span>. <span class="tag t-g">[GÖRÜŞ]</span> Tekrar riski sıklıktan değil, bu darlıktan geliyor. GDD §13.1 de aynı şeyi söylüyor: sorun sayı değil, benzerlik <span class="src">[S69]</span>.</li>
+      <li><b>Kâğıt sıklığı duruma bağlı değil.</b> Kâğıt zarı düz 0,5. Acil durum zarı ise hataya ve yüke bağlı <span class="src">[S65]</span>. <span class="tag t-g">[GÖRÜŞ]</span> Bu bir eksik olmayabilir, çünkü kâğıdın uygunluğu zaten duruma bağlı. Ama "riskli sprint, daha çok kâğıt" gibi bir bağ yok.</li>
+      <li><b>Aile freni kâğıtta çalışmıyor</b> (yukarıda, "Aile frenleri"). <span class="tag t-g">[GÖRÜŞ]</span> Koşuda 6 kâğıtla risk küçük. Kâğıt sayısı artarsa aynı aileden art arda kâğıt gelebilir. Yazılımcı kâğıtları zaten çoğunlukta.</li>
+      <li><b>Oyuncuya düğme yok.</b> <span class="tag t-g">[GÖRÜŞ]</span> Şimdilik gerekmez. Playtest'te sıklık tartışması çıkarsa ucuz bir çözüm olarak akılda kalsın.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Seçenekler</span>
+  <h2>Seçenekler ve önerim</h2>
+  <div class="optgrid">
+    <div class="box">
+      <h3>A. "%7–10"u kural olarak yaz</h3>
+      <ul class="kv">
+        <li><span class="lbl">Oyuncu ne hisseder</span>Bugünkünden fark yok.</li>
+        <li><span class="lbl">Bedel</span>Bir cümle. Ama sayı hedefe dönüşür. İçerik eklenince ya da sprint süresi değişince "kural bozuldu" alarmı çalar ve ajanlar sayıyı tutturmak için zarla oynar. Endüstride böyle bir kural örneği bulamadım <span class="src">[S1–S4, S18, S33]</span>. EU4'ün dersi de aynı yönde: yazılan sayı gerçeği anlatmayınca herkes onu yanlış okur <span class="src">[S1, S17]</span>.</li>
+        <li><span class="lbl">Geri dönüş</span>Kolay.</li>
+      </ul>
+    </div>
+    <div class="box mine">
+      <h3>B. İlkeyi yaz, sayıyı tarihli ölçüm olarak bırak</h3>
+      <span class="chip c-ok" style="align-self:flex-start">önerim, şimdi</span>
+      <ul class="kv">
+        <li><span class="lbl">Ne değişir</span>Cümle mekanizmayı anlatır. Sayı "ölçülen" etiketiyle, tarih ve commit'le yazılır. Ölçüm aracı (harness) her ölçümde iki sayı raporlar: kâğıt gelen sprint oranı ve koşu başına kâğıt <span class="src">[S71]</span>. Bunları ölçüm betikleri zaten çıkarıyor. Bunlara iki sütun eklenir: kâğıtlar arası en uzun boşluk ve konuşana göre dağılım.</li>
+        <li><span class="lbl">Oyuncu ne hisseder</span>Bugünkünden fark yok.</li>
+        <li><span class="lbl">Bedel</span>CLAUDE.md'de bir cümle, GDD §27.33 ve GÜNCELLEMELER'de aynı cümle <span class="src">[S69, S74]</span>, ölçüm betiğine iki sütun (varsayım: küçük iş).</li>
+        <li><span class="lbl">Geri dönüş</span>Kolay.</li>
+        <li><span class="lbl">Neden</span>RimWorld, Valve ve Emily Short'un yaptığı bu <span class="src">[S20, S22, S50]</span>. Bizim §13.7 çapası da zaten böyle yazılmış: ölçüm hedefi, ayar değeri değil <span class="src">[S67]</span>.</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>C. B'ye ek olarak mekanizmayı onar</h3>
+      <span class="chip c-run" style="align-self:flex-start">playtest'ten sonra karar</span>
+      <ul class="kv">
+        <li><span class="lbl">C1, yuva</span>Zarı her sprint görsün: sprint başında ya da 1 haftada kapanan sprintte kapanıştan önce. Sonra <code>sprint_chance</code>'i bugünkü sıklığı koruyacak kadar düşür. Yazılan sayı gerçeğe yaklaşır.</li>
+        <li><span class="lbl">C2, azami aralık</span>"N sprint üst üste kâğıtsız geçerse sıradaki uygun sprintte kâğıt istenir" (Randy'nin 13 gün kuralı gibi <span class="src">[S19]</span>) ya da StS rampası (gelmedikçe şans artar, gelince sıfırlanır <span class="src">[S43, S44]</span>).</li>
+        <li><span class="lbl">C3, içerik</span>Hiç gelmeyen 18 kâğıdın, özellikle 8 tasarımcı kâğıdının, neden gelmediğini bul <span class="src">[S71]</span>. Bu sıklık değil, içerik onarımı.</li>
+        <li><span class="lbl">Oyuncu ne hisseder</span>Kâğıtlar daha düzenli gelir. Uzun sessizlikler kısalır. Kâğıtlar daha çok kişiden gelir. Risk: sayı iyi ayarlanmazsa "her sprint aynı ekran" hissi, FM basın toplantısı gibi <span class="src">[S59]</span>, ya da spam <span class="src">[S12]</span>.</li>
+        <li><span class="lbl">Bedel</span>Kod, içerik ve D son ölçümü gibi 88 koşuluk yeni bir ölçüm. <span class="tag t-d">[DEĞERLENDİREMEM]</span> Kesin iş boyutunu bilmiyorum. Zarın zamanını değiştirmek kayıt uyumunu ve zarı sınayan smoke vakalarını etkiler <span class="vs">(varsayım)</span>.</li>
+        <li><span class="lbl">Geri dönüş</span>Orta. Sayılar tek dosyada durur ama zar zamanı kodda değişir.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="box mine">
+    <p><span class="lbl" style="color:var(--accent)">Önerim</span></p>
+    <p style="margin-top:8px"><span class="tag t-g">[GÖRÜŞ]</span> B'yi şimdi onayla. C3'ü hemen iş listesine al, çünkü sıklıktan bağımsız ve tekrar hissinin asıl kaynağı o. C1 ve C2'yi playtest'ten sonra seç. Playtest'te iki şeye bak: kâğıtlar arasındaki sessizlik sana uzun geliyor mu, ve kâğıtlar hep aynı kişiden mi geliyor? Koşuda 6 kâğıdın az olup olmadığına ölçüm cevap veremez, his cevap verir <span class="tag t-d">[DEĞERLENDİREMEM]</span>.</p>
+  </div>
+
+  <div class="sub">
+    <h3>CLAUDE.md §6 için önerilen yeni yazım</h3>
+    <p>Cevap: <b>ilke.</b> Sayı kural olarak değil, ölçüm olarak durur.</p>
+    <span class="lbl">Bugünkü parça</span>
+    <blockquote>…<code>decision.cards</code> havuzundan bir kâğıt istenir, yoksa sprint kâğıtsızdır ([WORKING]: sprintlerin en az üçte biri).</blockquote>
+    <span class="lbl">Önerilen parça</span>
+    <blockquote class="new">…<code>decision.cards</code> havuzundan bir kâğıt istenir, yoksa sprint kâğıtsızdır. Kâğıdın sıklığı bir kural değildir: zarın, kâğıtların koşullarının, mandalların ve kesinti sırasının çıktısıdır; ölçülür, elle hedeflenmez. Sıklık değişecekse zar, koşul ya da mandal değişir. Tam ölçüm raporu kâğıt gelen sprint oranını ve koşu başına kâğıdı yazar (son ölçüm 2026-10-27, <code>baa63da</code>, 88 koşu: v1.0 sonrası %6,6–10,3, koşu başına medyan 5–7). 1 haftada kapanan sprint zar görmez.</blockquote>
+    <p class="note">Aynı değişiklik GDD §27.33'teki ve GÜNCELLEMELER'deki "en az üçte biri kâğıtsız kalır" cümlesine de gider <span class="src">[S69, S74]</span>.</p>
+  </div>
+</section>
+
+<details>
+  <summary>Kaynak sicili · 74 kaynak</summary>
+  <div>
+    <p class="note">Güven: Yüksek, Orta, Düşük. "Açıldı": sayfa okundu. "Özet": yalnız arama özeti görüldü.</p>
+
+    <div class="sub">
+      <h3>Dış kaynaklar (S1–S63)</h3>
+      <div class="box scroll reg">
+        <table>
+          <thead><tr><th>S#</th><th>URL</th><th>Yayıncı</th><th>Tarih</th><th>Güven</th><th>Açıldı mı</th></tr></thead>
+          <tbody>
+            <tr id="s1"><td class="n">S1</td><td class="url"><a href="https://eu4.paradoxwikis.com/Event_modding" rel="noopener">https://eu4.paradoxwikis.com/Event_modding</a></td><td>EU4 resmi wiki (Paradox Wikis)</td><td>tarihsiz</td><td>Yüksek</td><td>Açıldı</td></tr>
+            <tr id="s2"><td class="n">S2</td><td class="url"><a href="https://ck3.paradoxwikis.com/Event_modding" rel="noopener">https://ck3.paradoxwikis.com/Event_modding</a></td><td>CK3 resmi wiki</td><td>tarihsiz</td><td>Yüksek</td><td>Açıldı</td></tr>
+            <tr id="s3"><td class="n">S3</td><td class="url"><a href="https://stellaris.paradoxwikis.com/Event_modding" rel="noopener">https://stellaris.paradoxwikis.com/Event_modding</a></td><td>Stellaris resmi wiki</td><td>v3.6 (2022)</td><td>Yüksek</td><td>Açıldı</td></tr>
+            <tr id="s4"><td class="n">S4</td><td class="url"><a href="https://vic3.paradoxwikis.com/Event_modding" rel="noopener">https://vic3.paradoxwikis.com/Event_modding</a></td><td>Victoria 3 resmi wiki ("potentially outdated")</td><td>1.11</td><td>Orta</td><td>Açıldı</td></tr>
+            <tr id="s5"><td class="n">S5</td><td class="url"><a href="https://devtrackers.gg/stellaris/p/5115b474-stellaris-dev-diary-245-we-have-a-situation" rel="noopener">https://devtrackers.gg/stellaris/p/5115b474-stellaris-dev-diary-245-we-have-a-situation</a></td><td>Paradox, Stellaris DD #245 (ayna)</td><td>2022</td><td>Yüksek</td><td>Açıldı</td></tr>
+            <tr id="s6"><td class="n">S6</td><td class="url"><a href="https://forum.paradoxplaza.com/forum/developer-diary/crusader-kings-3-dev-diary-30-event-scripting.1397140/" rel="noopener">https://forum.paradoxplaza.com/forum/developer-diary/crusader-kings-3-dev-diary-30-event-scripting.1397140/</a></td><td>Paradox, CK3 DD #30</td><td>2020</td><td>Orta</td><td>Özet (tarayıcı doğrulaması)</td></tr>
+            <tr id="s7"><td class="n">S7</td><td class="url"><a href="https://steamcommunity.com/app/1158310/discussions/0/3838801919839423509" rel="noopener">https://steamcommunity.com/app/1158310/discussions/0/3838801919839423509</a></td><td>Steam, CK3 oyuncu tartışması</td><td>2023</td><td>Düşük</td><td>Özet (yaş kapısı)</td></tr>
+            <tr id="s8"><td class="n">S8</td><td class="url"><a href="https://admin-forum.paradoxplaza.com/forum/developer-diary/victoria-3-dev-diary-88-voice-of-the-people-narrative-content-improvements.1588003" rel="noopener">https://admin-forum.paradoxplaza.com/forum/developer-diary/victoria-3-dev-diary-88-voice-of-the-people-narrative-content-improvements.1588003</a></td><td>Paradox, V3 DD #88</td><td>2023</td><td>Orta</td><td>Özet</td></tr>
+            <tr id="s9"><td class="n">S9</td><td class="url"><a href="https://admin-forum.paradoxplaza.com/forum/developer-diary/victoria-3-dev-diary-31-journal-entries.1508059" rel="noopener">https://admin-forum.paradoxplaza.com/forum/developer-diary/victoria-3-dev-diary-31-journal-entries.1508059</a></td><td>Paradox, V3 DD #31</td><td>2022</td><td>Orta</td><td>Özet</td></tr>
+            <tr id="s10"><td class="n">S10</td><td class="url"><a href="https://admin-forum.paradoxplaza.com/forum/developer-diary/victoria-3-dev-diary-80-law-enactment-and-revolution-clock-in-1-3.1577105/page-6" rel="noopener">https://admin-forum.paradoxplaza.com/forum/developer-diary/victoria-3-dev-diary-80-law-enactment-and-revolution-clock-in-1-3.1577105/page-6</a></td><td>Paradox, V3 DD #80</td><td>2023</td><td>Orta</td><td>Özet</td></tr>
+            <tr id="s11"><td class="n">S11</td><td class="url"><a href="https://steamcommunity.com/workshop/filedetails/discussion/2889925770/604165686037630450" rel="noopener">https://steamcommunity.com/workshop/filedetails/discussion/2889925770/604165686037630450</a></td><td>Steam Workshop, V3 mod tartışması</td><td>tarihsiz</td><td>Düşük</td><td>Özet (raporda kullanılmadı)</td></tr>
+            <tr id="s12"><td class="n">S12</td><td class="url"><a href="https://steamcommunity.com/app/281990/discussions/0/1739964947814544772" rel="noopener">https://steamcommunity.com/app/281990/discussions/0/1739964947814544772</a></td><td>Steam, Stellaris başlıkları</td><td>tarihsiz</td><td>Düşük</td><td>Özet</td></tr>
+            <tr id="s13"><td class="n">S13</td><td class="url"><a href="https://admin-forum.paradoxplaza.com/forum/developer-diary/stellaris-dev-diary-361-the-vision.1712933/page-31" rel="noopener">https://admin-forum.paradoxplaza.com/forum/developer-diary/stellaris-dev-diary-361-the-vision.1712933/page-31</a></td><td>Paradox, Stellaris DD #361</td><td>2024</td><td>Orta</td><td>Özet</td></tr>
+            <tr id="s14"><td class="n">S14</td><td class="url"><a href="https://admin-forum.paradoxplaza.com/forum/threads/modding-event-frequency.1558563" rel="noopener">https://admin-forum.paradoxplaza.com/forum/threads/modding-event-frequency.1558563</a></td><td>Paradox forum, V3 ağırlık örneği</td><td>tarihsiz</td><td>Düşük</td><td>Özet</td></tr>
+            <tr id="s15"><td class="n">S15</td><td class="url"><a href="https://forum.paradoxplaza.com/forum/threads/modding-quick-questions-and-answers.1414681/page-62" rel="noopener">https://forum.paradoxplaza.com/forum/threads/modding-quick-questions-and-answers.1414681/page-62</a></td><td>Paradox forum, CK3 modding S&amp;C</td><td>tarihsiz</td><td>Orta</td><td>Özet</td></tr>
+            <tr id="s16"><td class="n">S16</td><td class="url"><a href="https://steamcommunity.com/sharedfiles/filedetails/changelog/2185445645?p=2" rel="noopener">https://steamcommunity.com/sharedfiles/filedetails/changelog/2185445645?p=2</a></td><td>Steam Workshop, EU4 mod değişiklik notları</td><td>tarihsiz</td><td>Düşük</td><td>Özet</td></tr>
+            <tr id="s17"><td class="n">S17</td><td class="url"><a href="https://forum.paradoxplaza.com/forum/threads/event-scripting-tricks-and-traps-explained.140230/post-2766024" rel="noopener">https://forum.paradoxplaza.com/forum/threads/event-scripting-tricks-and-traps-explained.140230/post-2766024</a></td><td>Paradox forum, eski rehber</td><td>eski</td><td>Orta</td><td>Özet</td></tr>
+            <tr id="s18"><td class="n">S18</td><td class="url"><a href="https://rimworldwiki.com/wiki/Cassandra" rel="noopener">https://rimworldwiki.com/wiki/Cassandra</a></td><td>RimWorld wiki (oyunun XML'ini alıntılar)</td><td>rev. 2026-10-01</td><td>Orta-Yüksek*</td><td>Açıldı</td></tr>
+            <tr id="s19"><td class="n">S19</td><td class="url"><a href="https://rimworldwiki.com/wiki/Randy_Random" rel="noopener">https://rimworldwiki.com/wiki/Randy_Random</a></td><td>RimWorld wiki ("Unverified" etiketli)</td><td>tarihsiz</td><td>Orta</td><td>Açıldı</td></tr>
+            <tr id="s20"><td class="n">S20</td><td class="url"><a href="https://rimworldwiki.com/wiki/AI_Storytellers" rel="noopener">https://rimworldwiki.com/wiki/AI_Storytellers</a></td><td>RimWorld wiki</td><td>tarihsiz</td><td>Orta</td><td>Açıldı</td></tr>
+            <tr id="s21"><td class="n">S21</td><td class="url"><a href="https://rimworldwiki.com/wiki/Phoebe_Chillax" rel="noopener">https://rimworldwiki.com/wiki/Phoebe_Chillax</a></td><td>RimWorld wiki</td><td>tarihsiz</td><td>Orta</td><td>Özet</td></tr>
+            <tr id="s22"><td class="n">S22</td><td class="url"><a href="https://cdn.fastly.steamstatic.com/apps/valve/2009/ai_systems_of_l4d_mike_booth.pdf" rel="noopener">https://cdn.fastly.steamstatic.com/apps/valve/2009/ai_systems_of_l4d_mike_booth.pdf</a></td><td>Valve, Michael Booth, AIIDE</td><td>2009</td><td>Yüksek</td><td>Açıldı (PDF metni çıkarıldı)</td></tr>
+            <tr id="s23"><td class="n">S23</td><td class="url"><a href="https://en.wikipedia.org/wiki/Left_4_Dead" rel="noopener">https://en.wikipedia.org/wiki/Left_4_Dead</a></td><td>Wikipedia (inceleme özeti)</td><td>tarihsiz</td><td>Orta</td><td>Açıldı</td></tr>
+            <tr id="s24"><td class="n">S24</td><td class="url"><a href="https://darkestdungeon.wiki.gg/wiki/Town_Events" rel="noopener">https://darkestdungeon.wiki.gg/wiki/Town_Events</a></td><td>Darkest Dungeon wiki</td><td>tarihsiz</td><td>Orta</td><td>Açıldı</td></tr>
+            <tr id="s25"><td class="n">S25</td><td class="url"><a href="https://www.siliconera.com/not-even-hamlet-safe-everything-burns-update-darkest-dungeon/" rel="noopener">https://www.siliconera.com/not-even-hamlet-safe-everything-burns-update-darkest-dungeon/</a></td><td>Siliconera</td><td>2016</td><td>Orta</td><td>Özet</td></tr>
+            <tr id="s26"><td class="n">S26</td><td class="url"><a href="https://frostpunk.fandom.com/wiki/Events" rel="noopener">https://frostpunk.fandom.com/wiki/Events</a></td><td>Frostpunk fandom wiki</td><td>tarihsiz</td><td>Düşük</td><td>Engellendi (402; raporda kullanılmadı)</td></tr>
+            <tr id="s27"><td class="n">S27</td><td class="url"><a href="https://primagames.com/featured/frostpunk-the-last-autumn-review-the-fall-is-here" rel="noopener">https://primagames.com/featured/frostpunk-the-last-autumn-review-the-fall-is-here</a></td><td>Prima Games incelemesi</td><td>tarihsiz</td><td>Orta</td><td>Özet</td></tr>
+            <tr id="s28"><td class="n">S28</td><td class="url"><a href="https://steamcommunity.com/app/323190/discussions/0/1744480967009061229" rel="noopener">https://steamcommunity.com/app/323190/discussions/0/1744480967009061229</a></td><td>Steam, Frostpunk</td><td>tarihsiz</td><td>Düşük</td><td>Özet</td></tr>
+            <tr id="s29"><td class="n">S29</td><td class="url"><a href="https://techraptor.net/content/insert-yourself-into-the-war-in-this-war-of-mines-v1-3" rel="noopener">https://techraptor.net/content/insert-yourself-into-the-war-in-this-war-of-mines-v1-3</a></td><td>TechRaptor</td><td>2015-04</td><td>Orta</td><td>Özet</td></tr>
+            <tr id="s30"><td class="n">S30</td><td class="url"><a href="https://gamingnexus.com/News/35410/This-War-of-Mine-update-adds-new-locations2c-new-music2c-a-scenario-editor-and-the-long-awaited-character-creator" rel="noopener">https://gamingnexus.com/News/35410/This-War-of-Mine-update-adds-new-locations2c-new-music2c-a-scenario-editor-and-the-long-awaited-character-creator</a></td><td>Gaming Nexus</td><td>2015-04</td><td>Orta</td><td>Özet</td></tr>
+            <tr id="s31"><td class="n">S31</td><td class="url"><a href="https://steamcommunity.com/app/294100/discussions/0/3160957541882594447" rel="noopener">https://steamcommunity.com/app/294100/discussions/0/3160957541882594447</a></td><td>Steam, RimWorld</td><td>tarihsiz</td><td>Düşük</td><td>Özet</td></tr>
+            <tr id="s32"><td class="n">S32</td><td class="url"><a href="https://steamcommunity.com/app/294100/discussions/0/1751276319488753100" rel="noopener">https://steamcommunity.com/app/294100/discussions/0/1751276319488753100</a></td><td>Steam, RimWorld</td><td>tarihsiz</td><td>Düşük</td><td>Özet</td></tr>
+            <tr id="s33"><td class="n">S33</td><td class="url"><a href="https://github.com/greenheartgames/gdt-modAPI/wiki/GDT.addEvent%28%29" rel="noopener">https://github.com/greenheartgames/gdt-modAPI/wiki/GDT.addEvent%28%29</a></td><td>Greenheart Games, resmi mod API wiki</td><td>2013–2014</td><td>Yüksek</td><td>Açıldı</td></tr>
+            <tr id="s34"><td class="n">S34</td><td class="url"><a href="https://www.ootpdevelopments.com/newsletters/nl0094/" rel="noopener">https://www.ootpdevelopments.com/newsletters/nl0094/</a></td><td>OOTP Developments, resmi bülten</td><td>2012</td><td>Yüksek</td><td>Açıldı</td></tr>
+            <tr id="s35"><td class="n">S35</td><td class="url"><a href="https://steamcommunity.com/app/872790/discussions/0/3647273545685361167" rel="noopener">https://steamcommunity.com/app/872790/discussions/0/3647273545685361167</a></td><td>Steam, FM2019 (SI geliştirici cevabı)</td><td>2019-08</td><td>Orta</td><td>Açıldı</td></tr>
+            <tr id="s36"><td class="n">S36</td><td class="url"><a href="https://www.fmscout.com/q-2780-Too-much-transfer-news.html" rel="noopener">https://www.fmscout.com/q-2780-Too-much-transfer-news.html</a> ve <a href="https://www.fmscout.com/q-5914-Agent-offers.html" rel="noopener">https://www.fmscout.com/q-5914-Agent-offers.html</a></td><td>FM Scout hayran forumu</td><td>2011 ve FM2012</td><td>Düşük</td><td>Özet</td></tr>
+            <tr id="s37"><td class="n">S37</td><td class="url"><a href="https://simscommunity.info/2023/07/14/the-sims-4-laundry-list-july-14-2023/" rel="noopener">https://simscommunity.info/2023/07/14/the-sims-4-laundry-list-july-14-2023/</a></td><td>SimsCommunity (resmi listeyi aktarır)</td><td>2023-07-14</td><td>Orta</td><td>Açıldı</td></tr>
+            <tr id="s38"><td class="n">S38</td><td class="url"><a href="https://simscommunity.info/2022/07/28/wants-and-fears-in-the-sims-4-are-very-limited/" rel="noopener">https://simscommunity.info/2022/07/28/wants-and-fears-in-the-sims-4-are-very-limited/</a></td><td>SimsCommunity</td><td>2022-07-28</td><td>Orta</td><td>Açıldı</td></tr>
+            <tr id="s39"><td class="n">S39</td><td class="url"><a href="https://www.magicgameworld.com/?p=23552" rel="noopener">https://www.magicgameworld.com/?p=23552</a></td><td>Magic Game World, Two Point Hospital rehberi</td><td>tarihsiz</td><td>Düşük</td><td>Açıldı (raporda kullanılmadı)</td></tr>
+            <tr id="s40"><td class="n">S40</td><td class="url"><a href="https://backloggd.com/u/snackerfork/reviews/" rel="noopener">https://backloggd.com/u/snackerfork/reviews/</a></td><td>Backloggd, Big Ambitions incelemesi</td><td>tarihsiz</td><td>Düşük</td><td>Engellendi (bot kontrolü)</td></tr>
+            <tr id="s41"><td class="n">S41</td><td class="url"><a href="https://vaporlens.app/app/1331550/big_ambitions/stats/details" rel="noopener">https://vaporlens.app/app/1331550/big_ambitions/stats/details</a></td><td>Vaporlens, Big Ambitions özeti</td><td>tarihsiz</td><td>Düşük</td><td>Özet</td></tr>
+            <tr id="s42"><td class="n">S42</td><td class="url"><a href="https://catalogue.smods.ru/archives/346476" rel="noopener">https://catalogue.smods.ru/archives/346476</a></td><td>Software Inc. "Random Events" modu (ayna)</td><td>beta 1.7</td><td>Düşük</td><td>Özet (raporda kullanılmadı)</td></tr>
+            <tr id="s43"><td class="n">S43</td><td class="url"><a href="https://slaythespire.wiki.gg/wiki/Map_Locations" rel="noopener">https://slaythespire.wiki.gg/wiki/Map_Locations</a></td><td>Slay the Spire wiki</td><td>tarihsiz</td><td>Orta</td><td>Açıldı</td></tr>
+            <tr id="s44"><td class="n">S44</td><td class="url"><a href="https://slaythespire.wiki.gg/wiki/Events" rel="noopener">https://slaythespire.wiki.gg/wiki/Events</a></td><td>Slay the Spire wiki ("ToUpdate")</td><td>tarihsiz</td><td>Orta</td><td>Açıldı</td></tr>
+            <tr id="s45"><td class="n">S45</td><td class="url"><a href="https://slaythespire.wiki.gg/wiki/Map_Generation" rel="noopener">https://slaythespire.wiki.gg/wiki/Map_Generation</a></td><td>Slay the Spire wiki</td><td>tarihsiz</td><td>Orta</td><td>Özet</td></tr>
+            <tr id="s46"><td class="n">S46</td><td class="url"><a href="https://steamcommunity.com/app/646570/discussions/0/1617220671495467374" rel="noopener">https://steamcommunity.com/app/646570/discussions/0/1617220671495467374</a></td><td>Steam, Slay the Spire</td><td>tarihsiz</td><td>Düşük</td><td>Özet</td></tr>
+            <tr id="s47"><td class="n">S47</td><td class="url"><a href="https://fallenlondon.wiki/wiki/Card_Frequency" rel="noopener">https://fallenlondon.wiki/wiki/Card_Frequency</a></td><td>Fallen London wiki</td><td>tarihsiz</td><td>Orta</td><td>Açıldı</td></tr>
+            <tr id="s48"><td class="n">S48</td><td class="url"><a href="https://fallenlondon.wiki/wiki/User:Asarta/Deck_Optimisation_(Guide)" rel="noopener">https://fallenlondon.wiki/wiki/User:Asarta/Deck_Optimisation_(Guide)</a></td><td>Fallen London wiki kullanıcı rehberi</td><td>tarihsiz</td><td>Düşük</td><td>Özet</td></tr>
+            <tr id="s49"><td class="n">S49</td><td class="url"><a href="https://emshort.blog/2019/11/29/storylets-you-want-them/" rel="noopener">https://emshort.blog/2019/11/29/storylets-you-want-them/</a></td><td>Emily Short blogu</td><td>2019-11-29</td><td>Yüksek</td><td>Açıldı</td></tr>
+            <tr id="s50"><td class="n">S50</td><td class="url"><a href="https://emshort.blog/2016/04/12/beyond-branching-quality-based-and-salience-based-narrative-structures/" rel="noopener">https://emshort.blog/2016/04/12/beyond-branching-quality-based-and-salience-based-narrative-structures/</a></td><td>Emily Short blogu</td><td>2016-04-12</td><td>Yüksek</td><td>Açıldı</td></tr>
+            <tr id="s51"><td class="n">S51</td><td class="url"><a href="https://gamingtrend.com/feature/interviews/one-night-with-the-king-reigns-developer-interviewed-on-games-success" rel="noopener">https://gamingtrend.com/feature/interviews/one-night-with-the-king-reigns-developer-interviewed-on-games-success</a></td><td>GamingTrend, François Alliot röportajı</td><td>2016</td><td>Yüksek</td><td>Açıldı</td></tr>
+            <tr id="s52"><td class="n">S52</td><td class="url"><a href="https://steamcommunity.com/app/474750/discussions/0/355043117519621881" rel="noopener">https://steamcommunity.com/app/474750/discussions/0/355043117519621881</a></td><td>Steam, Reigns</td><td>tarihsiz</td><td>Düşük</td><td>Özet</td></tr>
+            <tr id="s53"><td class="n">S53</td><td class="url"><a href="https://opencritic.com/game/3110/reigns/reviews" rel="noopener">https://opencritic.com/game/3110/reigns/reviews</a></td><td>OpenCritic</td><td>tarihsiz</td><td>Orta</td><td>Özet</td></tr>
+            <tr id="s54"><td class="n">S54</td><td class="url"><a href="https://techraptor.net/content/reigns-review-addicted-death" rel="noopener">https://techraptor.net/content/reigns-review-addicted-death</a></td><td>TechRaptor incelemesi</td><td>tarihsiz</td><td>Orta</td><td>Özet</td></tr>
+            <tr id="s55"><td class="n">S55</td><td class="url"><a href="https://subsetgames.com/forum/viewtopic.php?p=18337" rel="noopener">https://subsetgames.com/forum/viewtopic.php?p=18337</a></td><td>Subset Games resmi forumu (modder bulgusu)</td><td>tarihsiz</td><td>Orta</td><td>Özet</td></tr>
+            <tr id="s56"><td class="n">S56</td><td class="url"><a href="https://ftl.fandom.com/wiki/Sectors" rel="noopener">https://ftl.fandom.com/wiki/Sectors</a></td><td>FTL fandom wiki</td><td>tarihsiz</td><td>Orta</td><td>Özet (402)</td></tr>
+            <tr id="s57"><td class="n">S57</td><td class="url"><a href="https://i2.trueachievements.com/game/The-Banner-Saga-2/walkthrough/7" rel="noopener">https://i2.trueachievements.com/game/The-Banner-Saga-2/walkthrough/7</a></td><td>TrueAchievements hayran rehberi</td><td>tarihsiz</td><td>Orta</td><td>Özet</td></tr>
+            <tr id="s58"><td class="n">S58</td><td class="url"><a href="https://steamcommunity.com/app/718670/discussions/0/1728701877499867609" rel="noopener">https://steamcommunity.com/app/718670/discussions/0/1728701877499867609</a></td><td>Steam, Cultist Simulator</td><td>tarihsiz</td><td>Düşük</td><td>Özet (raporda kullanılmadı)</td></tr>
+            <tr id="s59"><td class="n">S59</td><td class="url"><a href="https://steamcommunity.com/app/482730/discussions/0/135512931347683702" rel="noopener">https://steamcommunity.com/app/482730/discussions/0/135512931347683702</a></td><td>Steam, FM2017</td><td>2017-03-29</td><td>Orta</td><td>Açıldı</td></tr>
+            <tr id="s60"><td class="n">S60</td><td class="url"><a href="https://whatculture.com/gaming/football-manager-2013-9-improvements-we-want-to-see" rel="noopener">https://whatculture.com/gaming/football-manager-2013-9-improvements-we-want-to-see</a></td><td>WhatCulture</td><td>2013</td><td>Düşük</td><td>Özet</td></tr>
+            <tr id="s61"><td class="n">S61</td><td class="url"><a href="https://steamcommunity.com/app/1145360/discussions/0/2987539784417139179" rel="noopener">https://steamcommunity.com/app/1145360/discussions/0/2987539784417139179</a></td><td>Steam, Hades (hayran yorumu)</td><td>tarihsiz</td><td>Düşük</td><td>Özet</td></tr>
+            <tr id="s62"><td class="n">S62</td><td class="url"><a href="https://gdcvault.com/play/1026975/Breathing-Life-into-Greek-Myth" rel="noopener">https://gdcvault.com/play/1026975/Breathing-Life-into-Greek-Myth</a></td><td>GDC Vault, Kasavin ve Korb</td><td>2021</td><td>Orta</td><td>Özet (üyelere kapalı)</td></tr>
+            <tr id="s63"><td class="n">S63</td><td class="url"><a href="https://vaporlens.app/app/2311920/crusader_kings_iii_tours_tournaments.md" rel="noopener">https://vaporlens.app/app/2311920/crusader_kings_iii_tours_tournaments.md</a></td><td>Vaporlens, CK3 Tours &amp; Tournaments</td><td>tarihsiz</td><td>Düşük</td><td>Özet</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">* İki araştırmacı S18'e farklı güven verdi: biri Yüksek (oyunun XML değerlerini alıntılıyor), biri Orta (topluluk wiki'si). Sayılar iki okumada da aynı.</p>
+    </div>
+
+    <div class="sub">
+      <h3>Bizim kod ve belgelerimiz (S64–S74)</h3>
+      <p class="note">Hepsi <code>/Users/tugbauysal/Desktop/project steam/Project Unicorn/project-unicorn/</code> altında, 2026-10-28 çalışma kopyasından okundu. Güven: Yüksek (doğrudan okundu).</p>
+      <div class="box scroll reg int">
+        <table>
+          <thead><tr><th>S#</th><th>Yol</th><th>Ne için</th></tr></thead>
+          <tbody>
+            <tr id="s64"><td class="n">S64</td><td><code>CLAUDE.md</code> §6, "Acil durum", "Söz olayı", "Karar kâğıdı" paragrafları (satır 103–150)</td><td>Kâğıt zarı, kesinti sırası, bugünkü cümle</td></tr>
+            <tr id="s65"><td class="n">S65</td><td><code>data/product/sprint.json</code>, <code>decision</code> ve <code>incident</code> blokları</td><td><code>sprint_chance</code> 0,5, <code>seen_weight</code> 2, 47 kâğıt; acil durum sayıları</td></tr>
+            <tr id="s66"><td class="n">S66</td><td><code>scripts/systems/sprint_system.gd</code> (kapanış 1323–1328, <code>_staff_week</code> 1331–1335, <code>_request_decision</code> 1459–1496, <code>_paper_blocked</code> 1515–1518)</td><td>Zarın ne zaman atıldığı, seçim, engeller</td></tr>
+            <tr id="s67"><td class="n">S67</td><td><code>scripts/events/core/tuning.gd</code> (<code>EvTuning</code>)</td><td>Fren sayıları, "olay yok" ağırlığı, §13.7 ölçüm hedefi</td></tr>
+            <tr id="s68"><td class="n">S68</td><td><code>scripts/events/core/engine.gd</code> 313–341, <code>scripts/events/present/tempo.gd</code> 120–205, <code>scripts/events/gate/gate.gd</code> 195–200, <code>scripts/events/tools/plausibility.gd</code> 45–48</td><td>Aile freninin yalnız havuz, taban, sinyal ve zamanlamada sorulduğu</td></tr>
+            <tr id="s69"><td class="n">S69</td><td><code>GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md</code> §11.5, §13 (Tempo), §27.33</td><td>Fren katmanları, 22,5 sn/hafta, "ölçülmedi" notu, GDD'deki aynı cümle</td></tr>
+            <tr id="s70"><td class="n">S70</td><td><code>docs/tasks/faz_ab/RAPOR_B.md</code>, madde 4</td><td>Faz B kâğıt ölçümü (1.506 sprint, %9,8, 956 tek tik, konuşan dağılımı)</td></tr>
+            <tr id="s71"><td class="n">S71</td><td><code>docs/tasks/faz_cde/d_taslak/olcum/D_SON_OLCUM.md</code>, K4 ve K4b (2026-10-27, <code>baa63da</code>)</td><td>Son kâğıt ölçümü, hiç gelmeyen kâğıtlar</td></tr>
+            <tr id="s72"><td class="n">S72</td><td><code>docs/tasks/DEVIR_DIZUSTU_2026-10-27.md</code>, madde 6</td><td>"%7–10" önerisinin kaynağı</td></tr>
+            <tr id="s73"><td class="n">S73</td><td><code>data/events/cards/product/sprint_*.json</code> (47 kâğıt)</td><td>Mandal ve aile alanlarının sayımı</td></tr>
+            <tr id="s74"><td class="n">S74</td><td><code>GDDs/GUNCELLEMELER.md</code>, satır 376</td><td>Aynı "en az üçte biri kâğıtsız" cümlesi</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="sub">
+      <h3>Açılamayan sayfalar</h3>
+      <p class="note">EU4 wiki On_actions (404), CK3 DD #30 (tarayıcı doğrulaması), CK3 Steam başlığı (yaş kapısı), Frostpunk ve This War of Mine fandom (402), Subset forumu bir başlık (403), FTL fandom (402), Unwinnable (403), Backloggd (bot kontrolü). Hiçbirinin aşılması denenmedi. Bunlardan gelen bilgi yalnız arama özetine dayanır ve tabloda "Özet" diye işaretli.</p>
+    </div>
+
+    <div class="sub">
+      <h3>Doğrulanmamış bilgi</h3>
+      <ul class="note">
+        <li>Slay the Spire "?" odasının kesin yüzdeleri (canavar %10, dükkân %3, hazine %2 ve artışları) araştırmacının hafızasından geldi, wiki'de doğrulanamadı. Raporda yalnız "rampa var" bilgisi kullanıldı.</li>
+        <li>Phoebe'nin 8 gün açık, 8 gün kapalı döngüsü yalnız arama özetinden geliyor <span class="src">[S21]</span>. Raporda kullanılmadı.</li>
+        <li>EU4'ün MTTH'yi 20 günde bir yokladığı bilgisi doğrulanamadı. Raporda kullanılmadı.</li>
+      </ul>
+    </div>
+  </div>
+</details>
+
+</main>
