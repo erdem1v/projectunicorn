@@ -163,8 +163,9 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
 - Kurucu beceri birimi: onboarding dağıtımı 0-3 (6 puan), cetvel 0-10; `to_ruler` yazma anında çarpar, başka yerde ×2 yapma. `get_founder_skill` cetvel değeridir
 - Görünüş: `LookSystem.signature` imzası `GameState.issued_looks`'ta tutulur; aday dosyası görünüşünü `_deliver_files`'ta kaydeder, işe alınca `add()` aynı imzayı yeniden kaydeder (set gibi, çift yazmaz)
 - Frank'in saçı + sakallı kafa yalnız Frank'indir (`is_franks`); eski kayıtta Frank görünüşlü biri varsa `fill_missing_looks` yeniden çeker. `FRANK_LOOK` değişirse portre PNG'leri ve README tablosu yenilenir
-- Olay fiilleri `change_salary`, `fire_employee`, `assign_to`, `start_training` `effects.gd:40,75` listelerinde var ama `_apply` match'inde kolu YOK (kart bu fiillerle ne yazarsa yazsın uygulama yolu yok); `summer_leave`,
-  ↳ `sick_leave` ve `promote` kollu
+- Olay fiili `change_salary` `effects.gd` listesinde var ama `_apply` match'inde kolu YOK (kart ne yazarsa yazsın uygulama yolu yok); `summer_leave`, `sick_leave`, `promote`, `assign_to`,
+  ↳ `start_training` ve `fire_employee` kollu. Son ikisi oyuncunun yolunu çağırır (`HRSystem.send_to_training`, `HRActions.fire`): bedel ve kurallar dosyanınkiyle aynı, oyuncunun yapamayacağı kişiye etki
+  ↳ yazılmaz ve canlı kart ona çip çizmez (`EvEffects.training_plan`, `EvChips._aims_at_no_one`); eğitim kişinin rolünün anahtar alanınadır; smoke `event_start_training_player_path`, `event_fire_employee_player_path`
 - Hastalık yeni bir status değildir: `on_leave` + `leave_kind`. `SprintSystem.away`, `get_active_employees`, mesai ve verim okuyucuları bu yüzden değişmez; yokluğun bittiği günü `_return_day` söyler (`weeks_until_return`,
   ↳ `tick_leave_returns` ve HR sekmesi onu okur). Hasta kişinin yaz izni haftası denk gelirse o yılın yaz izni atlanır (telafi yok, eğitimdeki gibi)
 - Yaz izni haftasını yalnız `summer_week` okur; `leave_week`i doğrudan okuyan yeni kod olay kaymasını görmez

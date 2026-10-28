@@ -43,24 +43,22 @@ Sahipler: autoload `CustomerRegistry`, `ProspectRegistry`, `PromiseRegistry`; mo
 - `SalesSystem.hourly_tick()` `scripts/systems/sales_system.gd:151`: B2C'de saatlik kitle/MRR, B2B'de 12:00 süpürmesi `sign_due` · `time_manager.gd:443`
 - `B2BSalesSystem.daily_tick()` `scripts/systems/b2b_sales_system.gd:20`: sıra yüklü; söz vadesi, devir, hesap süpürmesi, müşteri masası, şelale, satış masası, lead ömrü · `SalesSystem.daily_tick` (yalnız B2B ürün)
 - `B2BSalesSystem._tick_customer()` `scripts/systems/b2b_sales_system.gd:48`: bir hesabın günü (madde, güven affı, memnuniyet, risk ya da sağlıklı)
-- `B2BSalesSystem.satisfaction_target()` `scripts/systems/b2b_sales_system.gd:166`: ürün uyumu eksi hata bedeli artı güven izi · `_tick_satisfaction`, Satış sekmesi, olay çipleri
-- `B2BSalesSystem.accept_promise()` `scripts/systems/b2b_sales_system.gd:435`: olay efekti `promise_create` · `scripts/events/core/effects.gd:452`
-- `B2BSalesSystem.apply_discount()` `scripts/systems/b2b_sales_system.gd:469`: olay efekti `b2b_retain_discount` · `scripts/events/core/effects.gd:635`
-- `B2BSalesSystem.expand()` `scripts/systems/b2b_sales_system.gd:496`: olay efekti `b2b_expand` · `scripts/events/core/effects.gd:656`
-- `B2BSalesSystem.on_promise_resolved()` `scripts/systems/b2b_sales_system.gd:560`: söz çözülünce memnuniyet, tolerans, güven, marka yazar · `scripts/autoload/promise_registry.gd:187`
-- `B2BSalesSystem.tolerance_after_break()` `b2b_sales_system.gd:112` ve `promise_relocked()` `:450`:
+- `B2BSalesSystem.satisfaction_target()` `scripts/systems/b2b_sales_system.gd:159`: ürün uyumu eksi hata bedeli artı güven izi · `_tick_satisfaction`, Satış sekmesi, olay çipleri
+- `B2BSalesSystem.accept_promise()` `scripts/systems/b2b_sales_system.gd:428`: olay efekti `promise_create` · `scripts/events/core/effects.gd:452`
+- `B2BSalesSystem.apply_discount()` `scripts/systems/b2b_sales_system.gd:462`: olay efekti `b2b_retain_discount` · `scripts/events/core/effects.gd:635`
+- `B2BSalesSystem.expand()` `scripts/systems/b2b_sales_system.gd:489`: olay efekti `b2b_expand` · `scripts/events/core/effects.gd:656`
+- `B2BSalesSystem.on_promise_resolved()` `scripts/systems/b2b_sales_system.gd:553`: söz çözülünce memnuniyet, tolerans, güven, marka yazar · `scripts/autoload/promise_registry.gd:187`
+- `B2BSalesSystem.tolerance_after_break()` `b2b_sales_system.gd:105` ve `promise_relocked()` `:443`:
   ↳ kırık sözün hesabı bıraktığı eşik (`PROMISE_TOLERANCE_CEILING` tavanıyla; `on_promise_resolved` yazar, `EvEffects.break_plan` çipte okur)
   ↳ · kırık sözden sonra `PROMISE_RELOCK_WEEKS` boyunca yeni söz yok (`Customer.promise_broken_day`)
-- `B2BSalesSystem.satisfaction_with_trust()` `b2b_sales_system.gd:103`: bir güven darbesinin hesabı bıraktığı memnuniyet, yalnız kartın payıyla
+- `B2BSalesSystem.satisfaction_with_trust()` `b2b_sales_system.gd:96`: bir güven darbesinin hesabı bıraktığı memnuniyet, yalnız kartın payıyla
   ↳ (anlık düşüş `drop` artı hedefin `trust_offset + delta` ve verilen eşikle hedefin şimdiki defterle farkı, aynı gün, 0-100; sürüklenme, defterin affı ve onboarding zemininin çekişi karışmaz)
   ↳ · `trust_delta`: `EvEffects.trust_plan`, `IncidentSystem._trust_row`; `promise_break`: `EvEffects.break_plan` (düşüş `PROMISE_BROKEN_SAT`, darbe `PROMISE_BROKEN_OFFSET`, eşik `tolerance_after_break`); smoke `event_trust_chip_share`, `promise_break_chain`
-- `B2BSalesSystem.satisfaction_next_tick()` `b2b_sales_system.gd:92`:
-  ↳ bir tik sonra oyuncunun okuyacağı memnuniyet (güven defteri önce bir tikin çürümesi kadar affedilir `_forgiven_trust`, sonra `_drift` en çok bir tikin adımı kadar yürür; `_tick_satisfaction` aynı `_drift`'i kullanır) · olay çipleri
-- `B2BSalesSystem.charge_trust_drains()` `scripts/systems/b2b_sales_system.gd:227`: her sprint kapanışı · `scripts/systems/sprint_system.gd:1510` (`add_trust_drain` `b2b_sales_system.gd:221`, `effects.gd:442`)
-- `B2BSalesSystem.refresh_pains_after_ship()` `scripts/systems/b2b_sales_system.gd:697`: yayın sonrası hesap yeni dilek seçer · `scripts/autoload/promise_registry.gd:161`
-- `B2BSalesSystem.meet_clauses()` `scripts/systems/b2b_sales_system.gd:360`: Kurumsal sunucuya geçiş maddeleri karşılar · `InfraSystem.set_provider`
-- `B2BSalesSystem.give_notice()` `scripts/systems/b2b_sales_system.gd:401`: olay efekti `account_notice`; bildirim günü gelince `_tick_customer` hesabı kayıp sayar · `scripts/events/core/effects.gd`
-- `B2BSalesSystem.apply_timed_discount()` `scripts/systems/b2b_sales_system.gd:415` (bitişi `_tick_customer`) ve `apply_offer()` `:425`: adaya yazılmış teklif imzada hesaba geçer · `SalesSystem.add_b2b_customer`
+- `B2BSalesSystem.charge_trust_drains()` `scripts/systems/b2b_sales_system.gd:220`: her sprint kapanışı · `scripts/systems/sprint_system.gd:1510` (`add_trust_drain` `b2b_sales_system.gd:214`, `effects.gd:442`)
+- `B2BSalesSystem.refresh_pains_after_ship()` `scripts/systems/b2b_sales_system.gd:690`: yayın sonrası hesap yeni dilek seçer · `scripts/autoload/promise_registry.gd:161`
+- `B2BSalesSystem.meet_clauses()` `scripts/systems/b2b_sales_system.gd:353`: Kurumsal sunucuya geçiş maddeleri karşılar · `InfraSystem.set_provider`
+- `B2BSalesSystem.give_notice()` `scripts/systems/b2b_sales_system.gd:394`: olay efekti `account_notice`; bildirim günü gelince `_tick_customer` hesabı kayıp sayar · `scripts/events/core/effects.gd`
+- `B2BSalesSystem.apply_timed_discount()` `scripts/systems/b2b_sales_system.gd:408` (bitişi `_tick_customer`) ve `apply_offer()` `:418`: adaya yazılmış teklif imzada hesaba geçer · `SalesSystem.add_b2b_customer`
 - `SalesSystem.add_b2b_customer()` `scripts/systems/sales_system.gd:343`: tek B2B imza yolu · `SalesFinalizer.sign_deal` `sales_finalizer.gd:84` ve `SalesRepSystem._close` `sales_rep_system.gd:258`
 - `SalesSystem.reflect_mrr()` `scripts/systems/sales_system.gd:166`: toplam MRR'ı `GameState.set_mrr`'a yansıtan tek yer · MRR değiştiren her çağıran
 - `SalesFaucetSystem.daily_tick()` `scripts/systems/sales_faucet_system.gd:37`: kilit süpürmesi, balina koşulu, lead girişi · `B2BSalesSystem.daily_tick` `b2b_sales_system.gd:43`

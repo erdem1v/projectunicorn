@@ -247,6 +247,25 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 		"convert_audience":
 			var conv: String = Fmt.percent(int(round(float(item.get("pct", 0.0)) * 100.0)), 0)
 			return [_part(_t("EFFECT_CONVERT_AUDIENCE").format({"pct": conv}), "", "gain")]
+		# Who goes, to which area and for how long, and the fee: the training dialog's terms (EvEffects.training_plan).
+		"start_training":
+			var trainee: String = _employee(item, ctx, is_delta)
+			var course: Dictionary = item if is_delta else EvEffects.training_plan(item, ctx)
+			if course.has("refused"):
+				return [_part(String(course.refused), "", "neutral")]
+			return [_part(_t("EFFECT_TRAINING").format({"name": _first_name(trainee, ctx, names, _t("EFFECT_AN_EMPLOYEE")),
+					"area": HRConstants.area_label(String(course.get("area", ""))), "weeks": Fmt.weeks(HRConstants.TRAINING_WEEKS)}),
+					"", "cost"),
+				_figure("EFFECT_CASH", _money(-int(course.get("fee", 0))), "cost")]
+		# The dismissal dialog's terms: the person goes, the severance is paid, the team's morale drops.
+		"fire_employee":
+			var fired: String = _employee(item, ctx, is_delta)
+			var terms: Dictionary = item if is_delta else HRActions.preview_fire(CharacterRegistry.get_character(fired))
+			if not bool(terms.get("ok", true)):
+				return [_part(String(terms.reason), "", "neutral")]
+			return [_part(_t("EFFECT_FIRED").format({"name": _first_name(fired, ctx, names, _t("EFFECT_AN_EMPLOYEE"))}), "", "danger"),
+				_part(HRConstants.cost_label_severance(), _money(-int(terms.get("severance", 0))), "cost"),
+				_figure("EFFECT_TEAM", _num(-HRConstants.MORALE_FIRE_TEAM), "cost")]
 		"employee_leaves":
 			var leaver: String = _first_name(_employee(item, ctx, is_delta), ctx, names, _t("EFFECT_AN_EMPLOYEE"))
 			return [_part(_t("EFFECT_DEPARTURE").format({"who": leaver}), "", "danger")]
@@ -400,14 +419,17 @@ static func merge_same(parts: Array) -> Array:
 
 
 ## Does this card effect, read against `ctx`, land on no one in the world the card is painted in? A slot it names
-## (`scope`, `other`, `amount_slot`) the world did not bind, or an account group, crew or promise list that resolves
-## to nobody (the arm lands on no one there, EvEffects._apply). Only a live card asks: the effect keeps its chip in the
+## (`scope`, `other`, `amount_slot`) the world did not bind, an account group, crew or promise list that resolves
+## to nobody, or a person the dossier would refuse the training or the dismissal (the arm lands on no one there,
+## EvEffects._apply). Only a live card asks: the effect keeps its chip in the
 ## context-free reads (lint, coverage), which expect every verb to draw one.
 static func _aims_at_no_one(verb: String, item: Dictionary, ctx: Dictionary) -> bool:
 	match verb:
 		"trust_delta": return EvEffects.trust_accounts(item, ctx).is_empty()
 		"promise_break": return EvEffects.promise_accounts(EvEffects.promises_of(item, ctx)).is_empty()
 		"morale_crew": return EvEffects.crew_of(item, ctx).is_empty()
+		"start_training": return EvEffects.training_plan(item, ctx).has("refused")
+		"fire_employee": return not HRActions.can_fire(CharacterRegistry.get_character(EvEffects.entity_of(item, ctx, EvScope.TYPE_EMPLOYEE)))
 	if item.has("entity_id"):
 		return false
 	for field in ["scope", "other", "amount_slot"]:

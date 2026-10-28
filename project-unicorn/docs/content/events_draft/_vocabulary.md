@@ -14,7 +14,7 @@ Counts are what the engine actually has, at generation time:
 |---|---|
 | Seams (read) | **312** |
 | Effect verbs (write) | **87** |
-| Cards in the catalogue | 174 |
+| Cards in the catalogue | 176 |
 | Arcs | 3 |
 
 ## a · Effect verbs
@@ -50,7 +50,6 @@ so a verb absent from a group is unreachable from it rather than merely discoura
 - `send_on_leave`
 - `summer_leave`
 - `sick_leave`
-- `start_training`
 - `productivity_mod`
 - `work_hours`
 - `damage_product`
@@ -111,6 +110,7 @@ Barred from ambient origins entirely; on expiry, allowed only in the negative.
 - `fire_employee`
 - `employee_leaves`
 - `promote`
+- `start_training`
 - `add_prospect`
 - `angel_accept`
 - `b2b_expand`
@@ -755,7 +755,7 @@ AUTHORITY, which is the linter's §17.14: a verb is writable only when it has a
 working arm in `EvEffects._apply` AND a chip in `EvChips`, so what an option promises
 is what the player is shown and what lands.
 
-### Writer verbs (54) — any card, inside the two rules below
+### Writer verbs (56) — any card, inside the two rules below
 
 - `add_cash`
 - `add_brand`
@@ -811,6 +811,8 @@ is what the player is shown and what lands.
 - `assign_to`
 - `queue_card`
 - `after_test`
+- `start_training`
+- `fire_employee`
 
 Two rules narrow the list. A `sprint_card_*` verb belongs to a `tick: request` sprint
 decision and to no other card (§17.14, V3). A module verb spends a page the build may
@@ -846,14 +848,13 @@ reaching for one would be deciding the run instead of colouring it.
 - `promise_extend`
 - `promise_break`
 
-### Not writable (12) — no working arm or no chip
+### Not writable (10) — no working arm or no chip
 
 The executor dispatches these, so they are not unknown names; they are names a card
 may not say. A draft that wants one writes `[VOCAB?]` and §21's DELTA workflow.
 
 - `clear_flag`
 - `set_timed_flag`
-- `start_training`
 - `ticker_push`
 - `notify`
 - `open_negotiation`
@@ -862,7 +863,6 @@ may not say. A draft that wants one writes `[VOCAB?]` and §21's DELTA workflow.
 - `convert_audience`
 - `open_paid_tier`
 - `change_salary`
-- `fire_employee`
 
 <!-- HAND-WRITTEN — REGENERATION SKIPS THIS BLOCK -->
 ## g · Hand-written notes

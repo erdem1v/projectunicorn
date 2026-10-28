@@ -426,3 +426,30 @@ yardımcı yönetmene gider. Yayından önce:
    `event_trust_chip_share`) → `SMOKE PASS`.
 
 Sayfada bir şey değişecekse: kareleri tamamla (eksik varsa `$GODOT --path . --event-shot=<spec> --lang=tr` ve `--lang=en`; log'daki `[Shot] saved <yol>` PNG'si `kareler/<kart>/{A,B}_{tr,en}.png`'ye, log'u yanına), ardından `python docs/tasks/olaylar_adim8/page/build_data.py docs/tasks/olaylar_adim8/kareler`, `python docs/tasks/olaylar_adim8/page/build_extra.py`, `python docs/tasks/olaylar_adim8/page/build_page.py` (Pillow gerekir); doğrula, yayınla, bağlantıyı yardımcı yönetmene ver.
+
+## Dizüstü turu (2026-10-28)
+
+Görev: `GOREV_DIZUSTU_OLAYLAR_IKON_2026-10-28.md` (O0–O3), Mac, oturum OLAYLAR.
+
+- **O0 ✅** Kurulum: `urun_arayuzu_devir/bin/` scratchpad'e kopyalanıp Mac'e çevrildi (ORTAK §9); kopyada `--import`, ısınma,
+  `LINT PASS 0/0, 10 baselined, 174 card(s), 3 arc(s)`, dört smoke PASS, MCP `runtime-status` connected.
+- **O1 ✅** Modül ikonu aday kâğıdı: https://claude.ai/artifact/EjbzWnnw7aR3uPGaFSiN2t (özel). Kaynakları
+  `docs/tasks/dizustu/raporlar/ikon_adaylari/`: sayfa, kareler, 12 aday SVG (`svg/<modül>_<küme>.svg`), Lucide'yi setin
+  dolgulu stiline çeviren betik (`tools/fill2.py`), doğrulanmış kaynak sicili (`kaynaklar.json`, 49 kaynak, kâğıtta 31'i).
+  Erdem seçer, URUN_ARAYUZU bağlar; prototip kodu (UEI bayrağı) repoya girmedi.
+- **O2 ✅** Olaylar 7c `87e06d68`: `promise_break` çipi kartın kendi payını okur (çekim dünyasında 72 → 41, önce 72 → 31).
+  Erdem'in Olaylar sayfası aynı bağlantıda sürüm 2 (#9'un dört karesi, 7c notu).
+- **O3 ✅** Olaylar 8 (bu notla aynı commit): `start_training` ve `fire_employee` oyuncunun yolunu çağırır
+  (`HRSystem.send_to_training`, `HRActions.fire`); fikstür kartları `_fixtures/start_training.json`, `fire_employee.json`;
+  smoke `event_start_training_player_path`, `event_fire_employee_player_path`. İkisi de ekonomik fiil ve
+  `EvEffects.NOT_ONLY_COST`ta: ortam kökeni ve süre dolumu uygulamaz (eğitim para harcar; listede `fire_employee`'nin yanına
+  inceleme üzerine girdi, I2). Aynı commit'te `B2BSalesSystem.satisfaction_next_tick` silindi (yardımcı yönetmen).
+
+Açık kalanlar:
+- Erdem: ikon seçimi (dört modül); TR/EN onayı `EFFECT_TRAINING`, `EFFECT_FIRED`; ACIK 14'ün kalanı (`add_customer`,
+  `convert_audience`, `open_paid_tier`, `change_salary`); #7'nin iki şıkkı, #32 (değişmedi).
+- `start_training` oyuncunun kuralıyla çalışır: kişinin deneyim barı dolu değilse kart onu eğitime göndermez ve çip çizmez.
+  Bir kart bu fiili kullanacaksa yuvanın seçicisi barı dolu kişiyi seçmeli (bugün böyle bir seçici yok).
+- Mac'te kare: pencere tam ekran açıldığı için kopyaya `override.cfg` (`[display]`, `window/size/mode=0`) gerekir, yoksa PNG
+  2880×1800 iner. Hızlı açılışta `--event-shot` portreyi çizilmeden kaydedebiliyor; çekim kopyasında `_run_event_shot`
+  `PersonBust.drawing()` bitene kadar bekletildi (A4 karelerinin beklemesi). Harness düzeltmesi olarak commit'lenmedi, öneri.

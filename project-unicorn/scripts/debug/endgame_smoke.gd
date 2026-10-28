@@ -348,6 +348,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"event_chip_live_targets":        fail = _case_event_chip_live_targets()
 		"event_chip_merge_same":          fail = _case_event_chip_merge_same()
 		"event_trust_chip_share":         fail = _case_event_trust_chip_share()
+		"event_start_training_player_path": fail = _in_fixture_scope(_case_event_start_training_player_path)
+		"event_fire_employee_player_path": fail = _in_fixture_scope(_case_event_fire_employee_player_path)  # EXPECT-ERROR I2: on_expire may apply a negative delta
 		"event_morale_payers":            fail = _case_event_morale_payers()
 		"incident_gap_and_spread":        fail = _case_incident_gap_and_spread()
 		"incident_night_hold_resumes":    fail = _case_incident_night_hold_resumes()
@@ -3345,11 +3347,9 @@ static func _case_b2b_onboarding_grace_floor() -> String:
 
 ## Hesabın memnuniyet hedefinin ürün terimi hesabın ürüne uyumudur (`account_fit`) ve hesap imzada adayın uyumuyla açılır, tabanlar
 ## kalır: MVP'de 1★ aday 70'tir ve o sayıyla açılır, 3★ aday tolerans tabanının altında kalır ve tabanla açılır. Masanın imzası ile
-## satışçının kapanışı aynı tohumu okur. Ürün büyüyünce hedef hesabın uyumuna kayar ve ön izleme (`satisfaction_next_tick`) sonraki
-## tikin yazdığıdır.
+## satışçının kapanışı aynı tohumu okur. Ürün büyüyünce hedef hesabın uyumuna kayar ve bir tik memnuniyeti hedefe doğru yürütür.
 ## FALSİFİKASYON: `_target_on`ta uyum terimini 100 yap → hedef iddiası FAIL; `signing_satisfaction_seed`i 50 döndür → tohum iddiası
-## FAIL; `SalesRepSystem._close`ta tohumu 50 yap → satışçı iddiası FAIL; `_tick_satisfaction`ta hedefe 1 ekle → ön izleme iddiası
-## FAIL.
+## FAIL; `SalesRepSystem._close`ta tohumu 50 yap → satışçı iddiası FAIL; `_tick_satisfaction`ı boşalt → tik iddiası FAIL.
 static func _case_b2b_account_reads_fit() -> String:
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
@@ -3419,15 +3419,10 @@ static func _case_b2b_account_reads_fit() -> String:
 		if B2BSalesSystem.satisfaction_target(accounts[i]) <= before[i]:
 			return "%s: a bigger product left the target at %d (was %d)" % [
 				accounts[i].id, B2BSalesSystem.satisfaction_target(accounts[i]), before[i]]
-	# A tick writes what the preview read; the target pulls the 1★ account up and the 3★ one, which opened on its floor, down.
-	var want: Array = accounts.map(func(account: Customer) -> int:
-		return B2BSalesSystem.satisfaction_next_tick(account, account.trust_offset))
+	# A tick pulls the 1★ account up toward its target and the 3★ one, which opened on its floor, down.
 	GameState.advance_day()
 	for account in accounts:
 		B2BSalesSystem._tick_satisfaction(account)
-	for i in accounts.size():
-		if accounts[i].satisfaction != want[i]:
-			return "%s reads %d after the tick, the preview said %d" % [accounts[i].id, accounts[i].satisfaction, want[i]]
 	if accounts[0].satisfaction <= 70 or accounts[1].satisfaction >= floor_big:
 		return "the tick moved the 1★ account to %d and the 3★ one to %d, want up from 70 and down from %d" % [
 			accounts[0].satisfaction, accounts[1].satisfaction, floor_big]
@@ -17995,9 +17990,14 @@ static func _case_event_chip_coverage() -> String:
 	# The people verbs of a pair's leave, a sickness and a promotion render a chip even with nobody bound.
 	for bare in [{"verb": "summer_leave", "scope": "employee", "other": "other", "apart": true},
 			{"verb": "summer_leave", "scope": "employee", "other": "other", "apart": false},
-			{"verb": "sick_leave", "scope": "dev", "weeks": 2}, {"verb": "promote", "scope": "employee", "pct": 15}]:
+			{"verb": "sick_leave", "scope": "dev", "weeks": 2}, {"verb": "promote", "scope": "employee", "pct": 15},
+			{"verb": "start_training", "scope": "employee"}, {"verb": "fire_employee", "scope": "employee"}]:
 		if EvChips.describe(bare, {}, {}, false).size() != 1:
 			return "%s with nobody bound draws %s, want one chip" % [bare.verb, str(EvChips.describe(bare, {}, {}, false))]
+	# Lint reads a raw card effect as a row: the dossier's two actions draw their chips without figures, and do not throw.
+	for raw in [{"verb": "start_training", "scope": "employee"}, {"verb": "fire_employee", "scope": "employee"}]:
+		if EvChips.describe(raw, {}, {}, true).is_empty():
+			return "%s read as a row draws nothing" % raw.verb
 	# A promotion reads the level and the salary it lands on, the same on the card and on the row; the top level refuses.
 	var junior: Character = _make_employee("char_promo", "Selin Kara", HRConstants.ROLE_DEVELOPER, SEED_PACE, 4000, 60)
 	junior.level = HRConstants.LEVEL_JUNIOR
@@ -18190,12 +18190,117 @@ static func _case_event_chip_merge_same() -> String:
 	return ""
 
 
+## Fikstür kartı vakası: `SHIPPED_SCOPES` genişletmesi tek yerde açılır ve kapanır, katalog iki kapsamla da yeniden okunur.
+static func _in_fixture_scope(body: Callable) -> String:
+	var shipped: Array = EvTuning.SHIPPED_SCOPES.duplicate()
+	EvTuning.SHIPPED_SCOPES.append("fixture")
+	EvCatalog.reload()
+	var fail: String = body.call()
+	EvTuning.SHIPPED_SCOPES.assign(shipped)
+	EvCatalog.reload()
+	return fail
+
+
+## `start_training` oyuncunun yolundan geçer (HRSystem.send_to_training): ücret, süre, eğitim penceresinin açıldığı alan
+## (rolün anahtar alanı) ve durum oyuncununkiyle aynıdır; kişi o haftalarda sprintin ekibinden düşer. Çip kişiyi, alanı ve
+## ücreti yazar, geçmiş satırı aynı çipi okur. Oyuncunun gönderemeyeceği kişiye (izinde) etki hiçbir şey yapmaz ve kart ona çip
+## çizmez.
+## FALSİFİKASYON: koldaki send_to_training çağrısını sil → durum iddiası FAIL; training_plan'da can_train'i atla → izindeki
+## kişinin kartına çip çizilir (send_to_training onu yine reddeder), izin iddiası FAIL; EvChips._aims_at_no_one'daki kolu sil →
+## izindeki kişiye reddin gerekçesi çizilir, çip iddiası FAIL; ücreti çipte iki kat yaz → ücret iddiası FAIL.
+static func _case_event_start_training_player_path() -> String:
+	const CARD := "fixture.start_training"
+	_seed_sprint_live("erp")
+	GameState.set_cash(100000)
+	var dev: Character = _sprint_hire("char_train_dev", HRConstants.ROLE_DEVELOPER)
+	var away: Character = _sprint_hire("char_train_away", HRConstants.ROLE_DESIGNER)
+	for person in [dev, away]:
+		CharacterRegistry.add_experience(person.id, person.experience_threshold)
+	CharacterRegistry.set_status(away.id, HRConstants.STATUS_ON_LEAVE)
+	var effects: Array = (EvCatalog.card(CARD).options[0] as Dictionary).effects
+	var on := func(id: String) -> Dictionary: return {"employee": {"type": "employee", "id": id}}
+	var texts := func(parts: Array) -> Array: return parts.map(func(p: Dictionary) -> String: return EvChips.text(p))
+	var cash: int = GameState.cash
+	if not EvChips.option_parts(effects, {}, on.call(away.id)).is_empty():
+		return "a person on leave drew %s, want no chip" % str(texts.call(EvChips.option_parts(effects, {}, on.call(away.id))))
+	if not EvEffects.run_played(effects, on.call(away.id), CARD).all(func(r: Dictionary) -> bool: return r.has("refused")) \
+			or away.status != HRConstants.STATUS_ON_LEAVE or GameState.cash != cash:
+		return "the card sent a person on leave to training: status %s, cash %d → %d" % [away.status, cash, GameState.cash]
+	var area: String = HRConstants.role_key_area(dev.role)
+	var fee: int = CharacterRegistry.training_fee_for(dev.id, area)
+	if not SprintSystem.team().any(func(m: Dictionary) -> bool: return m.id == dev.id):
+		return "fixture: the developer is not on the sprint's team"
+	var shown: Array = texts.call(EvChips.option_parts(effects, {}, on.call(dev.id)))
+	if shown.size() != 2 or not shown[0].contains(dev.character_name) or not shown[0].contains(HRConstants.area_label(area)) \
+			or not shown[1].contains(Fmt.money_chip(fee)):
+		return "the card reads %s, want the person, the area %s and the fee" % [str(shown), HRConstants.area_label(area)]
+	if not EventGate.request(CARD, {"employee": dev.id}) or not _drain_to(CARD):
+		return "the card did not show"
+	EventGate.resolve(CARD, "send")
+	if dev.status != HRConstants.STATUS_TRAINING or dev.training_area != area \
+			or dev.training_weeks_left != TimeModel.ticks(HRConstants.TRAINING_WEEKS) or GameState.cash != cash - fee:
+		return "after the card: status %s, area %s, %d ticks left, cash %d → %d; want training in %s for %d ticks at %d" % [
+			dev.status, dev.training_area, dev.training_weeks_left, cash, GameState.cash, area,
+			TimeModel.ticks(HRConstants.TRAINING_WEEKS), fee]
+	if SprintSystem.team().any(func(m: Dictionary) -> bool: return m.id == dev.id):
+		return "a person in training is still on the sprint's team"
+	var row: Dictionary = EvHistory.rows()[-1]
+	var kept: Array = texts.call(EvChips.describe(row["deltas"][0], row["entities"], row["names"], true))
+	if kept != shown:
+		return "the card showed %s, its history row reads %s" % [str(shown), str(kept)]
+	return ""
+
+
+## `fire_employee` oyuncunun yolundan geçer (HRActions.fire): kişi gider, kıdem tazminatı dosyanın ön izlemesindeki tutardır
+## ve kalan ekibin morali oyuncunun işten çıkarmasındaki kadar düşer. Çip kişiyi, tazminatı ve ekibin moralini yazar; geçmiş
+## satırı kişi gittikten sonra da aynı çipi okur. Ekonomik fiildir: süre dolumunda çalışmaz. Oyuncunun çıkaramayacağı kişiye
+## (zaten gitmiş) etki hiçbir şey yapmaz, ikinci tazminat alınmaz ve kart ona çip çizmez.
+## FALSİFİKASYON: `fire_employee`'yi EvEffects.NOT_ONLY_COST'tan çıkar → süre dolumu kişiyi çıkarır, FAIL; koldaki HRActions.fire
+## çağrısını sil → kişi kalır, FAIL; koldaki preview_fire denetimini atla → gitmiş kişi için kayıt yazılır, ikinci deneme FAIL;
+## EvChips._aims_at_no_one'daki kolu sil → gitmiş kişiye çip çizilir, FAIL; tazminatı çipte iki kat yaz → tutar iddiası FAIL.
+static func _case_event_fire_employee_player_path() -> String:
+	const CARD := "fixture.fire_employee"
+	GameState.set_cash(100000)
+	var fired: Character = _make_employee("char_fire_dev", "Deniz Ak", HRConstants.ROLE_DEVELOPER, SEED_PACE, 6000, 60)
+	var stays: Character = _make_employee("char_fire_test", "Selin Kaya", HRConstants.ROLE_TESTER, SEED_PACE, 5000, 60)
+	var effects: Array = (EvCatalog.card(CARD).options[0] as Dictionary).effects
+	var on: Dictionary = {"employee": {"type": "employee", "id": fired.id}}
+	var texts := func(parts: Array) -> Array: return parts.map(func(p: Dictionary) -> String: return EvChips.text(p))
+	if not EvEffects.run_expire(effects, on, CARD).all(func(r: Dictionary) -> bool: return r.has("refused")) \
+			or CharacterRegistry.get_character(fired.id) == null:
+		return "an expiry let the person go"
+	var severance: int = HRActions.preview_fire(fired).severance
+	var cash: int = GameState.cash
+	var morale: int = stays.morale
+	var shown: Array = texts.call(EvChips.option_parts(effects, {}, on))
+	if shown.size() != 3 or not shown[0].contains("Deniz") or not shown[1].contains(Fmt.money_chip(severance)) \
+			or not shown[2].contains(str(-HRConstants.MORALE_FIRE_TEAM)):
+		return "the card reads %s, want the person, the severance and the team" % str(shown)
+	if not EventGate.request(CARD, {"employee": fired.id}) or not _drain_to(CARD):
+		return "the card did not show"
+	EventGate.resolve(CARD, "fire")
+	if CharacterRegistry.get_character(fired.id) != null or GameState.cash != cash - severance \
+			or stays.morale != morale - HRConstants.MORALE_FIRE_TEAM:
+		return "after the card: still on the roster %s, cash %d → %d (severance %d), the team's morale %d → %d" % [
+			CharacterRegistry.get_character(fired.id) != null, cash, GameState.cash, severance, morale, stays.morale]
+	var row: Dictionary = EvHistory.rows()[-1]
+	var kept: Array = texts.call(EvChips.describe(row["deltas"][0], row["entities"], row["names"], true))
+	if kept != shown:
+		return "the card showed %s, its history row reads %s" % [str(shown), str(kept)]
+	cash = GameState.cash
+	if not EvChips.option_parts(effects, {}, on).is_empty() \
+			or not EvEffects.run_played(effects, on, CARD).all(func(r: Dictionary) -> bool: return r.has("refused")) \
+			or GameState.cash != cash:
+		return "someone already gone: chips %s, cash %d → %d" % [str(texts.call(EvChips.option_parts(effects, {}, on))), cash, GameState.cash]
+	return ""
+
+
 ## EFFECT-VISIBILITY, the trust chip: its sentence reads the card's own share, not the next tick. An account standing
 ## above its target reads "from → from + hit" for a hit of +8 and of -4 whatever the drift will do to it, the arrow and the
 ## polarity agree (a group's sentence also names the hit as "{v}"), a hit the ledger cannot take (already at its limit) reads no move, and an emergency's trust row
 ## names the same figure (IncidentSystem._trust_row).
-## FALSIFICATION: make B2BSalesSystem.satisfaction_with_trust read satisfaction_next_tick (the old reading, where the drift
-## to a target far below the account walks the number down whichever card it is) and the +8 check fails.
+## FALSIFICATION: make B2BSalesSystem.satisfaction_with_trust add one tick's drift (the old reading, where the drift to a
+## target far below the account walks the number down whichever card it is) and the +8 check fails.
 static func _case_event_trust_chip_share() -> String:
 	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
 	_seed_b2b(1000)
@@ -18234,7 +18339,7 @@ static func _case_event_trust_chip_share() -> String:
 ## tick later (the ledger forgives, satisfaction walks toward its target at most 21 a tick). A standing cost
 ## (`per_sprint`) is charged at every sprint close until its line is clear or its step is live, and not on the close that
 ## clears it.
-## FALSIFICATION: make EvEffects.trust_plan's "to" the next tick's reading (B2BSalesSystem.satisfaction_next_tick) or write
+## FALSIFICATION: make EvEffects.trust_plan's "to" the next tick's reading (the drift added to the share) or write
 ## the hit with set_satisfaction instead of the ledger and the first loop fails; drop the charge from SprintSystem._close
 ## and the sprint check fails; test the line before the close clears it and the last check fails.
 static func _case_event_trust_delta_lasting() -> String:

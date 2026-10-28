@@ -87,13 +87,6 @@ static func _tick_satisfaction(c: Customer) -> void:
 		CustomerRegistry.set_satisfaction(c.id, c.satisfaction + delta)
 
 
-## The satisfaction the player reads one tick from now if the trust ledger then holds `trust`: the
-## ledger forgives first, then the drift walks toward the target as far as one tick lets it.
-static func satisfaction_next_tick(c: Customer, trust: float) -> int:
-	var day: int = GameState.day + 1
-	return c.satisfaction + _drift(c, _target_on(c, day, _forgiven_trust(trust)), day, c.satisfaction)
-
-
 ## The satisfaction a trust hit of `delta` leaves the account at, by the card's own share alone: where it stands now,
 ## moved at once by `drop`, then by what the hit does to its TARGET (the target with the ledger at
 ## `trust_offset + delta`, on the account's `bar` when the hit raises it, against the target as it is, both on the same

@@ -3268,6 +3268,8 @@ EFFECT_LATER_RANGE,{lo} ile {hi} hafta sonra:,In {lo} to {hi} weeks:
 EFFECT_LEAVE_SHIFT,"Yaz izni kayar: {name}, {weeks}","Summer leave moves: {name}, {weeks}"
 EFFECT_LEAVE_TOGETHER,"Yaz izni: {a} ile {b} aynı iki hafta, {weeks} sonra","Summer leave: {a} and {b} away the same two weeks, in {weeks}"
 EFFECT_SICK_LEAVE,{name} {weeks} yok,{name} is away for {weeks}
+EFFECT_TRAINING,{name} eğitimde · {area} · {weeks},{name} in training · {area} · {weeks}
+EFFECT_FIRED,{name} işten çıkarılır,{name} is let go
 EFFECT_PROMOTION,"{name} {level} olur, maaşı ayda {v}","{name} becomes {level}, salary {v} a month"
 EFFECT_ACCOUNT_NOTICE,"Fesih bildirimi: {company}, sözleşme {weeks} sonra biter",Notice given: {company} leaves in {weeks}
 EFFECT_ACCOUNT_TO_FOUNDER,Hesap sende: {company},Account now yours: {company}

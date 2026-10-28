@@ -246,9 +246,9 @@ static func _lint_effects(where: String, effects: Array, context: String, card: 
 				if economic and EvEffects.is_authored_gain(effect):
 					_add(SEVERITY_ERROR, "17.3", where,
 						"I2: on_expire applies a POSITIVE '%s' — an expiry is a cost" % verb)
-				if verb == "marketing_push":
+				if EvEffects.NOT_ONLY_COST.has(verb):
 					_add(SEVERITY_ERROR, "17.3", where,
-						"I2: on_expire buys a marketing push — an expiry is a cost, not a purchase")
+						"I2: on_expire applies '%s', which is never only a cost — an expiry is a cost" % verb)
 				if terminal:
 					_add(SEVERITY_ERROR, "17.4", where, "I3: an expiry may not end the run")
 			"check":
@@ -474,7 +474,7 @@ const WRITER_VERBS := [
 	"damage_product", "line_harden", "sprint_card_test", "sprint_fix_first",
 	"sprint_card_trim", "sprint_card_outlook", "sprint_card_first", "b2b_month_discount",
 	"account_notice", "prospect_offer", "drop_prospect", "take_account", "pitch_focus", "server_price", "server_lock",
-	"assign_to", "queue_card", "after_test",
+	"assign_to", "queue_card", "after_test", "start_training", "fire_employee",
 ]
 
 ## V2: reserved for a system card. Each moves the run itself — a phase, a table, an arc, an
@@ -501,7 +501,7 @@ const CONSEQUENCE_VERBS := ["sprint_card_carry", "b2b_retain_delay", "b2b_retain
 const SUBJECT_VERBS := {
 	"change_morale": "employee", "morale_crew": "employee", "productivity_mod": "employee", "employee_leaves": "employee",
 	"send_on_leave": "employee", "summer_leave": "employee", "sick_leave": "employee", "promote": "employee",
-	"work_hours": "employee", "assign_to": "employee",
+	"work_hours": "employee", "assign_to": "employee", "start_training": "employee", "fire_employee": "employee",
 	"satisfaction_delta": "customer", "trust_delta": "customer", "customer_mrr_delta": "customer", "seats": "customer",
 	"churn_customer": "customer", "promise_create": "customer", "b2b_retain_discount": "customer",
 	"b2b_retain_delay": "customer", "b2b_retain_ignore": "customer", "b2b_expand": "customer",

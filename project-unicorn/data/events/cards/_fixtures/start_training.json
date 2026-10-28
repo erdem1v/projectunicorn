@@ -1,0 +1,45 @@
+{
+  "id": "fixture.start_training",
+  "version_scope": "fixture",
+  "schema": 3,
+  "category": "team",
+  "tick": "request",
+  "class": "info",
+  "tags": [],
+  "family": "fixture_start_training",
+  "delay_weeks": [0, 0],
+  "delay_reason": "a fixture is asked for by its own smoke case, not by the pool",
+  "plausibility": {
+    "phase_band": ["bootstrap_solo", "bootstrap_team", "traction", "series_a"],
+    "headcount": [0, null],
+    "product": "any",
+    "modules": [],
+    "min_week": 0
+  },
+  "latch": { "cooldown_weeks": 0 },
+  "scope": {
+    "employee": { "type": "employee", "required": true }
+  },
+  "options": [
+    {
+      "id": "send",
+      "outcome_id": "send",
+      "effects": [
+        { "verb": "start_training", "scope": "employee" }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Eğitim",
+      "body": "Yalnız fiilin oyuncunun yolunu çağırdığını sınar.",
+      "options": { "send": "Eğitime gönder" }
+    },
+    "en": {
+      "title": "Training",
+      "body": "This card only tests that the verb takes the player's path.",
+      "options": { "send": "Send to training" }
+    }
+  },
+  "_note": "The subject of `event_start_training_player_path`: the option sends the slot's person to training the way the dossier does."
+}

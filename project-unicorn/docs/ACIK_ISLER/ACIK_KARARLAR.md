@@ -227,6 +227,9 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     §8.1'den düşer, §27'ye "MRR türetilir, yazılmaz" notu girer. `notify` ya `line_key` alır ya da kalkar. C) Olduğu
     gibi kalır: liste §27'ye yazılır, lint uygulanmayan fiile uyarı verir.
   - Kaynak: Olay motoru GDD §8.1, §8.3, §11.1 (info sınıfı), §27; CLAUDE.md §5 EFFECT-VISIBILITY RULE.
+  - Kısmen kapandı (Erdem, 2026-10-28): `start_training` ve `fire_employee` oyuncunun akışına bağlandı (Olaylar 8;
+    `HRSystem.send_to_training`, `HRActions.fire`; çipli, lint V1'de yazılabilir). `assign_to` Olaylar 5'te bağlanmıştı.
+    `add_customer`, `convert_audience`, `open_paid_tier`, `change_salary` açık.
 
 - **15 · Bütçe bitince seçenek kilitlenmiyor (`spend_budget`, §8.5).**
   - Ne oluyor: GDD §8.5, bütçe bitince o etkiyi taşıyan seçeneğin kilitlenip gerekçesini göstermesini istiyor. §20 E8

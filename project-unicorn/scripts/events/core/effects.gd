@@ -38,7 +38,7 @@ const NEUTRAL_VERBS := [
 	"start_arc", "advance_arc", "set_arc_var", "abort_arc", "end_arc",
 	# people — morale, pace, hours and assignment are not economy; salary is, and lives below
 	"change_morale", "morale_all", "morale_crew", "assign_to", "send_on_leave", "summer_leave", "sick_leave",
-	"start_training", "productivity_mod", "work_hours",
+	"productivity_mod", "work_hours",
 	# product — a line's bugs: one that lands now, and the rewrite that keeps new ones off it
 	"damage_product", "line_harden",
 	# sprint — the card a sprint decision is about, and the sprint's work hours
@@ -78,10 +78,14 @@ const ECONOMIC_VERBS := [
 	"add_cash", "add_mrr", "add_brand", "add_reputation",
 	"add_customer", "churn_customer", "customer_mrr_delta", "seats",
 	"audience_delta", "convert_audience", "open_paid_tier",
-	"change_salary", "fire_employee", "employee_leaves", "promote",
+	"change_salary", "fire_employee", "employee_leaves", "promote", "start_training",
 	"add_prospect", "angel_accept", "b2b_expand", "b2b_retain_discount", "b2b_month_discount", "marketing_push", "incident",
 	"promise_break", "account_notice", "prospect_offer", "drop_prospect", "server_price",
 ]
+
+## Economic verbs that are never only a cost, so no expiry applies them: a marketing push spends money to buy growth, a
+## training to buy a skill, a dismissal pays a severance to stop a salary.
+const NOT_ONLY_COST := ["marketing_push", "start_training", "fire_employee"]
 
 ## Ends the run. Played decisions only — never a dice branch (I6), never an expiry, never an
 ## ambient tick.
@@ -219,8 +223,7 @@ static func _permitted(verb: String, effect: Dictionary, origin: Origin, ctx: Di
 ## figure by the sign of its `amount_mult`, which is how lint judges it too, because the figure the
 ## seam yields can round down to nothing and a cost that reads zero is still a cost.
 static func _is_negative(effect: Dictionary, ctx: Dictionary) -> bool:
-	# A marketing push spends money to buy growth: never only a cost, so never an expiry's.
-	if String(effect.get("verb", "")) == "marketing_push":
+	if NOT_ONLY_COST.has(String(effect.get("verb", ""))):
 		return false
 	if String(effect.get("verb", "")) == "server_price" or effect.has("amount_seam"):
 		return not is_authored_gain(effect)
@@ -452,6 +455,21 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 			var hours: int = int(e.get("hours", HRConstants.WORK_HOURS_DEFAULT))
 			WorkHoursSystem.set_person_hours(hid, hours)
 			return {"verb": verb, "employee": hid, "hours": hours}
+		# The player's training (HRSystem.send_to_training): the same fee, weeks and rules.
+		"start_training":
+			var course: Dictionary = training_plan(e, ctx).merged({"verb": verb})
+			if not course.has("refused"):
+				HRSystem.send_to_training(course.employee, course.area)
+			return course
+		# The player's dismissal (HRActions.fire): the same severance and the same blow to the team's morale.
+		"fire_employee":
+			var fid: String = entity_of(e, ctx, EvScope.TYPE_EMPLOYEE)
+			var gone: Character = CharacterRegistry.get_character(fid)
+			var terms: Dictionary = HRActions.preview_fire(gone)
+			if not terms.ok:
+				return {"verb": verb, "refused": terms.reason}
+			HRActions.fire(gone)
+			return {"verb": verb, "employee": fid, "severance": terms.severance}
 		"employee_leaves":
 			var lid: String = entity_of(e, ctx, EvScope.TYPE_EMPLOYEE)
 			if CharacterRegistry.get_character(lid) == null:
@@ -962,6 +980,18 @@ static func break_plan(e: Dictionary = {}, ctx: Dictionary = {}) -> Dictionary:
 		rows.append({"id": c.id, "name": c.display_name(), "from": c.satisfaction, "to": B2BSalesSystem.satisfaction_with_trust(
 			c, B2BConstants.PROMISE_BROKEN_OFFSET, B2BConstants.PROMISE_BROKEN_SAT, B2BSalesSystem.tolerance_after_break(c))})
 	return {"accounts": rows, "brand": words.size() * B2BConstants.PROMISE_BROKEN_BRAND}
+
+
+## What a `start_training` sends the slot's person to: the key area of their own role, the area the player's training
+## dialog opens on, at its fee; {"refused": the dialog's reason} when the player could not send them either (away, already
+## training, the bar not full, the area at its cap, a role with no key area).
+static func training_plan(e: Dictionary, ctx: Dictionary) -> Dictionary:
+	var id: String = entity_of(e, ctx, EvScope.TYPE_EMPLOYEE)
+	var person: Character = CharacterRegistry.get_character(id)
+	var area: String = HRConstants.role_key_area(person.role) if person != null else ""
+	if area == "" or not CharacterRegistry.can_train(id, area):
+		return {"refused": CharacterRegistry.training_block_reason(id, area)}
+	return {"employee": id, "area": area, "fee": CharacterRegistry.training_fee_for(id, area)}
 
 
 ## The open words a `promise_extend` or `promise_break` lands on: those of the slot's account when the effect names a `scope`

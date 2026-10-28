@@ -86,7 +86,7 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
   ↳ yayan `effects.gd:543` · dinleyen `main.gd:4705`
 - Motorun DİNLEDİĞİ sinyaller `EvSignals.BINDINGS` `core/signals.gd:22` (17 ad, izin listesi): customer_added/_health_changed/_churned/_expanded, employee_hired/_departed, promise_broken, version_shipped, build_phase_changed
 - BINDINGS devamı: sheet_expired, sheet_granted, seed_sheet_granted, meeting_day (investor slotu), phase_gate_reached, axis_floor_warning, axis_floor_crossed, module_unlocked;
-  ↳ listede olmayan sinyal kartı tetikleyemez (`EvLint._lint_signals` `lint.gd:979` EventBus'ta var mı diye bakar)
+  ↳ listede olmayan sinyal kartı tetikleyemez (`EvLint._lint_signals` `lint.gd:1136` EventBus'ta var mı diye bakar)
 - Yayanlar: `customer_registry.gd:102,186`, `b2b_sales_system.gd:320,461`, `character_registry.gd:462,561`, `promise_registry.gd:183`, `sprint_system.gd:315,316,1507,1508`, `vc_pitch_system.gd:405,417,644,872,903`,
   ↳ `phase_gate_system.gd:85`, `product_read.gd:165,167`
 - `clock_batch_ended()` `event_bus.gd:25`: yayan `time_manager.gd:203` · `EvSignals.install` `EvEngine.pump`'a bağlar (`signals.gd:54`); tam liste `docs/EVENT_SIGNAL_MANIFEST.md` (`tools/gen_signal_manifest.py` üretir)
@@ -189,6 +189,8 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
   ↳ çipi planı `EvEffects.summer_leave_plan`dan okur, geçmiş satırı planın kendisidir), `sick_leave {scope, weeks}` (yaz iznini yemeyen yokluk), `promote {scope, pct}` (`HRActions.apply_promotion`, EKONOMİK listede;
   ↳ dosyanın reddettiği terfide kart çipi reddin nedenini yazar). `top_skill:` alanı lint 17.12'de `HRConstants.EMPLOYEE_SKILL_KEYS`e karşı denetlenir. Üçü de `WRITER_VERBS` ve `SUBJECT_VERBS`te;
   ↳ `summer_leave` `CONSEQUENCE_VERBS`te ve lint `other`ın bir çalışan yuvası olmasını ister
+- Dosyanın iki eylemi: `start_training {scope}` (`HRSystem.send_to_training`, kişinin rolünün anahtar alanına; plan `EvEffects.training_plan`) ve `fire_employee {scope}` (`HRActions.fire`). İkisi de
+  ↳ EKONOMİK ve `EvEffects.NOT_ONLY_COST`ta: ortam kökeni ve süre dolumu onları uygulamaz. Oyuncunun yapamayacağı kişiye ikisi de `refused` satırı yazar ve canlı kart çip çizmez; ikisi de `WRITER_VERBS` ve `SUBJECT_VERBS`te
 - Satış ve hesap fiilleri: `account_notice {scope, reason, mail}` (`B2BSalesSystem.give_notice`; sebebi postalı bildirim `B2BConstants.EXIT_NOTICE_MAILS`ta olmalı, `mail: false` kartın kendisi bildirimse),
   ↳ `prospect_offer {scope, discount_pct, discount_weeks, promise_step, promise_weeks}` (`ProspectRegistry.set_offer`, yeni teklif eskisinin yerine geçer; lint: `discount_pct` > 0 ile `discount_weeks` >= 1 birlikte;
   ↳ `promise_step` kart verisinde temel kimlikle yazılır, fiil `SprintCatalog.in_product` ile ürünün kimliğine çevirir), `drop_prospect {scope}` (`SalesFinalizer.lose`, sebep `event`), `take_account {scope}` (`assign_customer("", true)`),
@@ -219,13 +221,13 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - Yuva `"subject": false` (yalnız lint): çalışan yuvası gönderen ya da anılan kişidir, kartın öznesi değildir; O4 o yuvayı özne saymaz
   ↳ O4 (`_touched_slots` `lint.gd:813`), şıkkın zamanladığı ve `follows` ile bu karta bağlı takip kartının aynı adlı yuvalarda yaptığını da şıkkın sayar (özyineli); `promise_extend` ve `promise_break` müşteri fiilidir
 
-- Fiil sözlüğü ile `_apply` ayrışık: `start_training`, `add_customer`, `convert_audience`, `open_paid_tier`, `change_salary`, `fire_employee` listelerde var ama `_apply` kolu YOK;
-  ↳ çağrı `not implemented` döner (`effects.gd:670-672`)
-- Bu altı fiil `_vocabulary.md`'de de görünür; `add_customer` yalnız `_fixtures/lint_v3/_bad_v1.json`'da geçer, gerçek kartta kullanımı yok; yeni fiil yazarken sözlükte olması uygulandığını GÖSTERMEZ
+- Fiil sözlüğü ile `_apply` ayrışık: `add_customer`, `convert_audience`, `open_paid_tier`, `change_salary` listelerde var ama `_apply` kolu YOK;
+  ↳ çağrı `not implemented` döner (`effects.gd:813-814`)
+- Bu dört fiil `_vocabulary.md`'de de görünür; `add_customer` yalnız `_fixtures/lint_v3/_bad_v1.json`'da geçer, gerçek kartta kullanımı yok; yeni fiil yazarken sözlükte olması uygulandığını GÖSTERMEZ
 - I2/I3: ekonomik fiil yalnız oyuncunun oynadığı seçenekten (`run_played`); `on_expire` yalnız negatif, ambient hiçbiri; `trigger_ending` telegraph ister (`effects.gd:168-211`). Reddedilen fiil `push_error` basar ve smoke'u düşürür
 - Ekonomik etkinin kazanç mı maliyet mi olduğu yazarın işaretinden okunur: `EvEffects.is_authored_gain(effect)` `effects.gd:779` (seam'li tutarda `amount_mult`'un işareti, düz tutarda `amount` ya da `delta`; ikisi de yoksa maliyet);
   ↳ lint 17.3 ve süre dolumunun denetimi aynı yardımcıyı sorar, böylece sıfıra yuvarlanan seam değeri maliyeti kazanca çevirmez
-- Lint süre dolumunun haber bandı satırını da (`expire_note`: kartın metin bloğundaki bir ad ya da satırın kendisi) marka yasağı ve saat denetiminden geçirir (`EvLint._lint_text` `lint.gd:775`)
+- Lint süre dolumunun haber bandı satırını da (`expire_note`: kartın metin bloğundaki bir ad ya da satırın kendisi) marka yasağı ve saat denetiminden geçirir (`EvLint._lint_text` `lint.gd:849`)
 - Kayıt: etkin kartın `from_desk` ve `at` değeri kayda yazılmaz (`queue.gd:230-235`); yüklemeden sonra masadan açılmış kart kesinti gibi davranır (`set_aside` false döner). Bkz. `event_no_double_resolution_after_load`
 - Kaldırılan kart kayıtta yetim kalır: `SaveManager._REMOVED_CARD` (`save_manager.gd:906`, süzme `:958-967`) `product.bug_pile` için kuyruk, takvim, satır ve masayı temizler;
   ↳ kart silince benzer göç gerekir. `SCHEMA_VERSION` 19 (`save_manager.gd:16`)

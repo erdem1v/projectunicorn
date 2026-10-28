@@ -1,0 +1,45 @@
+{
+  "id": "fixture.fire_employee",
+  "version_scope": "fixture",
+  "schema": 3,
+  "category": "team",
+  "tick": "request",
+  "class": "info",
+  "tags": [],
+  "family": "fixture_fire_employee",
+  "delay_weeks": [0, 0],
+  "delay_reason": "a fixture is asked for by its own smoke case, not by the pool",
+  "plausibility": {
+    "phase_band": ["bootstrap_solo", "bootstrap_team", "traction", "series_a"],
+    "headcount": [0, null],
+    "product": "any",
+    "modules": [],
+    "min_week": 0
+  },
+  "latch": { "cooldown_weeks": 0 },
+  "scope": {
+    "employee": { "type": "employee", "required": true }
+  },
+  "options": [
+    {
+      "id": "fire",
+      "outcome_id": "fire",
+      "effects": [
+        { "verb": "fire_employee", "scope": "employee" }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "İşten çıkarma",
+      "body": "Yalnız fiilin oyuncunun yolunu çağırdığını sınar.",
+      "options": { "fire": "İşten çıkar" }
+    },
+    "en": {
+      "title": "Dismissal",
+      "body": "This card only tests that the verb takes the player's path.",
+      "options": { "fire": "Let them go" }
+    }
+  },
+  "_note": "The subject of `event_fire_employee_player_path`: the option lets the slot's person go the way the dossier does."
+}
