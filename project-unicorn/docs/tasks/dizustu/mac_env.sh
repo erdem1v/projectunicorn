@@ -8,14 +8,18 @@ R="/Users/tugbauysal/Desktop/project steam/Project Unicorn"
 K="/Users/tugbauysal/Desktop/project steam/.kilit"
 GODOT=/Users/tugbauysal/Downloads/Godot.app/Contents/MacOS/Godot
 export PATH="/opt/homebrew/opt/coreutils/libexec/gnubin:$PATH"   # smoke_run.sh GNU timeout ister
-GODOT_MAX=2      # makinede aynı anda en çok bu kadar Godot süreci (iki oturum + MCP editörü dahil)
-FREE_MIN_MB=1500
+GODOT_MAX=2      # bellek baskısı normalken makinede aynı anda en çok bu kadar Godot süreci (MCP'nin oyunu dahil)
+FREE_MIN_MB=1000 # macOS'ta boş + etkin olmayan sayfalar; baskı düzeyiyle birlikte okunur
 
 free_mb() {
   vm_stat | awk '/page size of/ {ps=$8} /Pages (free|inactive|speculative)/ {gsub("\\.","",$NF); p+=$NF} END {print int(p*ps/1048576)}'
 }
-mem_ok() { local f; f=$(free_mb); [ "${f:-0}" -ge "$FREE_MIN_MB" ] || { echo "STOP free=${f}MB < ${FREE_MIN_MB}"; return 1; }; }
-godots() { pgrep -f "$GODOT" | wc -l | tr -d ' '; }
+# macOS bellek baskısı: 1 normal, 2 uyarı, 4 kritik. Kritikte yeni Godot yok; uyarıda makinede tek Godot.
+pressure() { sysctl -n kern.memorystatus_vm_pressure_level 2>/dev/null || echo 1; }
+mem_ok() { local f; f=$(free_mb); [ "${f:-0}" -ge "$FREE_MIN_MB" ] && [ "$(pressure)" -lt 4 ] || { echo "STOP free=${f}MB pressure=$(pressure)"; return 1; }; }
+godot_cap() { [ "$(pressure)" -ge 2 ] && echo 1 || echo "$GODOT_MAX"; }
+# Süreç adıyla sayılır: komut satırında Godot yolu geçen kabuklar sayılmaz.
+godots() { pgrep -x Godot | wc -l | tr -d ' '; }
 lock_take() { mkdir -p "$K" && mkdir "$K/$1" 2>/dev/null && echo "$ETIKET $2 $(date +%FT%T) pid=$$" > "$K/$1/sahip"; }
 lock_drop() { rm "$K/$1/sahip" && rmdir "$K/$1"; }
 # Bir koşunun user:// klasörü: udir <ad>
@@ -26,7 +30,7 @@ gd() {
   local ad="$1" tree="$2"; shift 2
   if [ -d "$K/sessiz" ] && ! grep -q "^$ETIKET" "$K/sessiz/sahip" 2>/dev/null; then echo "WAIT sessiz: $(cat "$K/sessiz/sahip" 2>/dev/null)"; return 99; fi
   mem_ok || return 98
-  [ "$(godots)" -lt "$GODOT_MAX" ] || { echo "WAIT godot=$(godots)"; return 97; }
+  [ "$(godots)" -lt "$(godot_cap)" ] || { echo "WAIT godot=$(godots) cap=$(godot_cap)"; return 97; }
   mkdir -p "$S/home_$ad"
   ( cd "$tree" && HOME="$S/home_$ad" "$GODOT" "$@" )
 }
@@ -40,4 +44,5 @@ gdw() {
 port7777() { lsof -nP -iTCP:7777 -sTCP:LISTEN 2>/dev/null | awk 'NR>1 {print $1, $2}'; }
 export S ETIKET R K GODOT GODOT_MAX FREE_MIN_MB
 # Bash'te işlevler alt kabuklara (xargs işçileri) geçer; zsh'te (Claude'un Bash aracı) geçmez, orada yalnız bu kabukta.
-[ -n "$BASH_VERSION" ] && export -f free_mb mem_ok godots lock_take lock_drop udir gd gdw port7777
+# if, && değil: zsh'te koşul yanlış olunca dosyayı okuyan `.` 1 dönmesin.
+if [ -n "$BASH_VERSION" ]; then export -f free_mb pressure mem_ok godot_cap godots lock_take lock_drop udir gd gdw port7777; fi

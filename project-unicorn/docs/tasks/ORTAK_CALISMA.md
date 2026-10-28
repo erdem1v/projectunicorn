@@ -220,9 +220,13 @@ burada geçmez, yalnız MCP tuzakları geçerlidir.
     Sessiz kilidi başkasındaysa 99, bellek azsa 98, makinede 2 Godot varsa 97 döner. `gdw` aynısını bekleyerek yapar.
     Betiklerde ve xargs işçilerinde `gdw` kullanılır. Bash'te işlevler alt kabuklara geçer.
   - `udir <ad>` o koşunun `user://` klasörünü verir; PNG'ler oradan alınır.
-- **Makinede aynı anda en çok 2 Godot süreci**, iki oturum ve MCP'nin oyunu dahil. Boş bellek 1.500 MB'ın altındaysa yeni
-  süreç başlamaz. Bundan çıkan: öbür oturum Godot koşturuyorsa smoke `P=1`, yalnızsan `P=2`, `CASE_TIMEOUT=300`. Tam
-  süit yalnız push öncesi ve tek oturumda koşar.
+- **Godot sınırı bellek baskısına bağlıdır** (`kern.memorystatus_vm_pressure_level`, 2026-10-28 güncellemesi):
+  - normalde (1) makinede aynı anda en çok 2 Godot süreci, iki oturum ve MCP'nin oyunu dahil;
+  - uyarıda (2) en çok 1;
+  - kritikte (4) yeni süreç yok.
+  Her durumda boş bellek (boş + etkin olmayan sayfalar) 1.000 MB'ın altındaysa yeni süreç başlamaz. Godot süreç adıyla
+  sayılır (`pgrep -x Godot`). Smoke `P=1`; makine normaldeyse ve öbür oturum Godot koşturmuyorsa `P=2`;
+  `CASE_TIMEOUT=300`. Tam süit yalnız push öncesi ve tek oturumda koşar.
 - Godot 4.6.3: `/Users/tugbauysal/Downloads/Godot.app/Contents/MacOS/Godot`. `timeout` coreutils'ten gelir; `mac_env.sh`
   PATH'e koyar.
 - Erdem'in gerçek `HOME`'u (`~/Library/Application Support/Godot/app_userdata/Project Unicorn/`) onun kayıtlarıdır.
