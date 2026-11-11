@@ -408,7 +408,7 @@ _capacity	func	scripts/tabs/product/product_model.gd:547	ProductModel
 _capacity	var	scripts/tabs/product/sprint_panel.gd:58	SprintPanel
 _capacity	var	scripts/ui/meeting/meeting_ruler.gd:21	MeetingRuler
 _caps_tokens	func	scripts/debug/endgame_smoke.gd:17942	EndgameSmoke
-_caption	func	scripts/tabs/hr/hr_ui_shared.gd:403	HRUiShared
+_caption	func	scripts/tabs/hr/hr_ui_shared.gd:399	HRUiShared
 _capture_systems	func	scripts/autoload/save_manager.gd:377	SaveManager
 _card	func	scripts/onboarding/steps/step_base.gd:85	OnboardingStep
 _card	func	scripts/systems/sprint_timeline.gd:174	SprintTimeline
@@ -2712,7 +2712,7 @@ _paint_pending	func	scripts/tabs/hunt_tab.gd:491	hunt_tab.gd
 _paint_pipeline	func	scripts/tabs/sales_tab.gd:301	sales_tab.gd
 _paint_portfolio	func	scripts/tabs/sales_tab.gd:526	sales_tab.gd
 _paint_roster	func	scripts/tabs/hunt_tab.gd:246	hunt_tab.gd
-_paint_row	func	scripts/tabs/hr/hr_ui_shared.gd:178	HRUiShared
+_paint_row	func	scripts/tabs/hr/hr_ui_shared.gd:174	HRUiShared
 _paint_row	func	scripts/ui/components/left_tabs.gd:310	left_tabs.gd
 _paint_seat	func	scripts/ui/meeting/meeting_panel.gd:562	MeetingPanel
 _paint_seed	func	scripts/tabs/hunt_tab.gd:152	hunt_tab.gd
@@ -4599,7 +4599,7 @@ AWAY	const	scripts/ui/office/office_layout.gd:10	OfficeLayout
 away	func	scripts/systems/sprint_system.gd:818	SprintSystem
 AWAY_KEYS	const	scripts/tabs/product/capacity_view.gd:12	CapacityView
 away_star_holder	func	scripts/systems/rnd_system.gd:393	RnDSystem
-away_state	func	scripts/tabs/hr/hr_ui_shared.gd:335	HRUiShared
+away_state	func	scripts/tabs/hr/hr_ui_shared.gd:331	HRUiShared
 away_until_day	var	scripts/data_models/character.gd:96	Character
 axis_floor_crossed	signal	scripts/autoload/event_bus.gd:153	EventBus
 axis_floor_warning	signal	scripts/autoload/event_bus.gd:152	EventBus
@@ -5290,7 +5290,7 @@ D_AVATAR_ROW_SM	const	scripts/theme/ui_tokens.gd:678	UiTokens
 D_AVATAR_SPEAKER	const	scripts/theme/ui_tokens.gd:877	UiTokens
 D_AWAY_ALPHA	const	scripts/theme/ui_tokens.gd:716	UiTokens
 D_badge_palette	func	scripts/theme/ui_tokens.gd:1037	UiTokens
-D_bar	func	scripts/tabs/hr/hr_ui_shared.gd:268	HRUiShared
+D_bar	func	scripts/tabs/hr/hr_ui_shared.gd:264	HRUiShared
 D_BAR_EMPH	const	scripts/theme/ui_tokens.gd:568	UiTokens
 D_BAR_FILL	const	scripts/theme/ui_tokens.gd:567	UiTokens
 D_BAR_TICK	const	scripts/theme/ui_tokens.gd:787	UiTokens
@@ -5333,7 +5333,7 @@ D_CUT	const	scripts/theme/ui_tokens.gd:585	UiTokens
 D_CUT_SM	const	scripts/theme/ui_tokens.gd:586	UiTokens
 D_DASH_CURRENT	const	scripts/theme/ui_tokens.gd:814	UiTokens
 D_DASH_TARGET	const	scripts/theme/ui_tokens.gd:815	UiTokens
-D_dashed	func	scripts/tabs/hr/hr_ui_shared.gd:443	HRUiShared
+D_dashed	func	scripts/tabs/hr/hr_ui_shared.gd:439	HRUiShared
 D_delta_color	func	scripts/theme/ui_tokens.gd:1029	UiTokens
 D_DIAL	const	scripts/theme/ui_tokens.gd:901	UiTokens
 D_DIAL_ARC	const	scripts/theme/ui_tokens.gd:902	UiTokens
@@ -5349,7 +5349,7 @@ D_EMB_SAGE	const	scripts/theme/ui_tokens.gd:595	UiTokens
 D_EMB_STEEL	const	scripts/theme/ui_tokens.gd:597	UiTokens
 D_EMB_TEAL	const	scripts/theme/ui_tokens.gd:596	UiTokens
 D_empty	func	scripts/theme/ui_factory.gd:292	UiFactory
-D_empty_row	func	scripts/tabs/hr/hr_ui_shared.gd:495	HRUiShared
+D_empty_row	func	scripts/tabs/hr/hr_ui_shared.gd:491	HRUiShared
 D_FINANCE_COLUMNS	const	scripts/theme/ui_tokens.gd:806	UiTokens
 D_FLOW_FADE	const	scripts/theme/ui_tokens.gd:884	UiTokens
 D_FOCUS	const	scripts/theme/ui_tokens.gd:571	UiTokens
@@ -5369,7 +5369,7 @@ D_GHOST_ALPHA	const	scripts/theme/ui_tokens.gd:769	UiTokens
 D_glyph_tag	func	scripts/theme/ui_factory.gd:257	UiFactory
 D_GOAL_TICK	const	scripts/theme/ui_tokens.gd:788	UiTokens
 D_GONE_ALPHA	const	scripts/theme/ui_tokens.gd:544	UiTokens
-D_group	func	scripts/tabs/hr/hr_ui_shared.gd:118	HRUiShared
+D_group	func	scripts/tabs/hr/hr_ui_shared.gd:114	HRUiShared
 D_H_BADGE	const	scripts/theme/ui_tokens.gd:652	UiTokens
 D_H_BADGE_ICON	const	scripts/theme/ui_tokens.gd:653	UiTokens
 D_H_BAR	const	scripts/theme/ui_tokens.gd:786	UiTokens
@@ -5460,7 +5460,7 @@ D_HALO	const	scripts/theme/ui_tokens.gd:574	UiTokens
 D_HATCH	const	scripts/theme/ui_tokens.gd:721	UiTokens
 D_hatch_base	func	scripts/theme/ui_tokens.gd:958	UiTokens
 D_HATCH_BASE_ALPHA	const	scripts/theme/ui_tokens.gd:725	UiTokens
-D_head	func	scripts/tabs/hr/hr_ui_shared.gd:107	HRUiShared
+D_head	func	scripts/tabs/hr/hr_ui_shared.gd:103	HRUiShared
 D_health_color	func	scripts/theme/ui_tokens.gd:1051	UiTokens
 D_ICON_BUTTON	const	scripts/theme/ui_tokens.gd:691	UiTokens
 D_ICON_BUTTON_SM	const	scripts/theme/ui_tokens.gd:694	UiTokens
@@ -5503,7 +5503,7 @@ D_LOAD_BAR	const	scripts/theme/ui_tokens.gd:804	UiTokens
 D_load_bar	func	scripts/theme/ui_factory.gd:502	UiFactory
 D_locked_tab	func	scripts/theme/ui_factory.gd:390	UiFactory
 D_MARK	const	scripts/theme/ui_tokens.gd:633	UiTokens
-D_mark	func	scripts/tabs/hr/hr_ui_shared.gd:161	HRUiShared
+D_mark	func	scripts/tabs/hr/hr_ui_shared.gd:157	HRUiShared
 D_MARKET_ANCHOR	const	scripts/theme/ui_tokens.gd:842	UiTokens
 D_MARKET_BAR	const	scripts/theme/ui_tokens.gd:837	UiTokens
 D_MARKET_BAR_H	const	scripts/theme/ui_tokens.gd:838	UiTokens
@@ -5515,12 +5515,12 @@ D_MEET_EDGE	const	scripts/theme/ui_tokens.gd:782	UiTokens
 D_MEET_LIGHT	const	scripts/theme/ui_tokens.gd:780	UiTokens
 D_MEET_PERIOD	const	scripts/theme/ui_tokens.gd:783	UiTokens
 D_MILESTONE_DOT	const	scripts/theme/ui_tokens.gd:852	UiTokens
-D_mono	func	scripts/tabs/hr/hr_ui_shared.gd:424	HRUiShared
-D_mono_box	func	scripts/tabs/hr/hr_ui_shared.gd:432	HRUiShared
-D_morale	func	scripts/tabs/hr/hr_ui_shared.gd:233	HRUiShared
+D_mono	func	scripts/tabs/hr/hr_ui_shared.gd:420	HRUiShared
+D_mono_box	func	scripts/tabs/hr/hr_ui_shared.gd:428	HRUiShared
+D_morale	func	scripts/tabs/hr/hr_ui_shared.gd:229	HRUiShared
 D_MORALE_BAR	const	scripts/theme/ui_tokens.gd:682	UiTokens
 D_MORALE_BAR_SM	const	scripts/theme/ui_tokens.gd:683	UiTokens
-D_morale_ink	func	scripts/tabs/hr/hr_ui_shared.gd:286	HRUiShared
+D_morale_ink	func	scripts/tabs/hr/hr_ui_shared.gd:282	HRUiShared
 D_NEED_BOX	const	scripts/theme/ui_tokens.gd:708	UiTokens
 D_NEG	const	scripts/theme/ui_tokens.gd:488	UiTokens
 D_neg	func	scripts/theme/ui_tokens.gd:931	UiTokens
@@ -5587,13 +5587,13 @@ D_RADIUS_1	const	scripts/theme/ui_tokens.gd:629	UiTokens
 D_RADIUS_2	const	scripts/theme/ui_tokens.gd:630	UiTokens
 D_RADIUS_3	const	scripts/theme/ui_tokens.gd:631	UiTokens
 D_RADIUS_4	const	scripts/theme/ui_tokens.gd:632	UiTokens
-D_rank	func	scripts/tabs/hr/hr_ui_shared.gd:184	HRUiShared
+D_rank	func	scripts/tabs/hr/hr_ui_shared.gd:180	HRUiShared
 D_relationship_palette	func	scripts/theme/ui_tokens.gd:1060	UiTokens
-D_repaint_morale	func	scripts/tabs/hr/hr_ui_shared.gd:256	HRUiShared
+D_repaint_morale	func	scripts/tabs/hr/hr_ui_shared.gd:252	HRUiShared
 D_RISK_BAR	const	scripts/theme/ui_tokens.gd:764	UiTokens
 D_risk_ink	func	scripts/theme/ui_tokens.gd:1071	UiTokens
 D_RISK_RAW	const	scripts/theme/ui_tokens.gd:772	UiTokens
-D_risk_strip	func	scripts/tabs/hr/hr_ui_shared.gd:462	HRUiShared
+D_risk_strip	func	scripts/tabs/hr/hr_ui_shared.gd:458	HRUiShared
 D_RND_ASSIGN_COLUMNS	const	scripts/theme/ui_tokens.gd:873	UiTokens
 D_RND_COL_GAP	const	scripts/theme/ui_tokens.gd:855	UiTokens
 D_RND_CORRIDOR	const	scripts/theme/ui_tokens.gd:857	UiTokens
@@ -5606,7 +5606,7 @@ D_RND_LINE	const	scripts/theme/ui_tokens.gd:861	UiTokens
 D_RND_ROW_GAP	const	scripts/theme/ui_tokens.gd:856	UiTokens
 D_RND_TILE_H	const	scripts/theme/ui_tokens.gd:854	UiTokens
 D_ROLE_BAND	const	scripts/theme/ui_tokens.gd:527	UiTokens
-D_row	func	scripts/tabs/hr/hr_ui_shared.gd:146	HRUiShared
+D_row	func	scripts/tabs/hr/hr_ui_shared.gd:142	HRUiShared
 D_ROW_ALPHA	const	scripts/theme/ui_tokens.gd:768	UiTokens
 D_ROW_RULE	const	scripts/theme/ui_tokens.gd:463	UiTokens
 D_RULER_ANCHOR	const	scripts/theme/ui_tokens.gd:887	UiTokens
@@ -5619,7 +5619,7 @@ D_SAT_BAR	const	scripts/theme/ui_tokens.gd:800	UiTokens
 D_SCRIM	const	scripts/theme/ui_tokens.gd:573	UiTokens
 D_seg_pick	func	scripts/theme/ui_factory.gd:475	UiFactory
 D_seg_tabs	func	scripts/theme/ui_factory.gd:339	UiFactory
-D_select_row	func	scripts/tabs/hr/hr_ui_shared.gd:172	HRUiShared
+D_select_row	func	scripts/tabs/hr/hr_ui_shared.gd:168	HRUiShared
 D_SELECTED_MARK	const	scripts/theme/ui_tokens.gd:572	UiTokens
 D_SHADOW_ALPHA	const	scripts/theme/ui_tokens.gd:773	UiTokens
 D_SHADOW_FLOAT	const	scripts/theme/ui_tokens.gd:575	UiTokens
@@ -5637,9 +5637,9 @@ D_SKILL_4	const	scripts/theme/ui_tokens.gd:523	UiTokens
 D_SKILL_4_CB	const	scripts/theme/ui_tokens.gd:525	UiTokens
 D_SKILL_5	const	scripts/theme/ui_tokens.gd:524	UiTokens
 D_SKILL_5_CB	const	scripts/theme/ui_tokens.gd:526	UiTokens
-D_skill_cell	func	scripts/tabs/hr/hr_ui_shared.gd:215	HRUiShared
-D_skill_figure	func	scripts/tabs/hr/hr_ui_shared.gd:193	HRUiShared
-D_SKILL_LOOKS	const	scripts/tabs/hr/hr_ui_shared.gd:102	HRUiShared
+D_skill_cell	func	scripts/tabs/hr/hr_ui_shared.gd:211	HRUiShared
+D_skill_figure	func	scripts/tabs/hr/hr_ui_shared.gd:189	HRUiShared
+D_SKILL_LOOKS	const	scripts/tabs/hr/hr_ui_shared.gd:98	HRUiShared
 D_SKILL_MARK	const	scripts/theme/ui_tokens.gd:686	UiTokens
 D_SKILLS	const	scripts/theme/ui_tokens.gd:907	UiTokens
 D_SKILLS_CB	const	scripts/theme/ui_tokens.gd:908	UiTokens
@@ -5667,7 +5667,7 @@ D_STAMP	const	scripts/theme/ui_tokens.gd:584	UiTokens
 D_stamp	func	scripts/theme/ui_factory.gd:278	UiFactory
 D_STAR_CHIP	const	scripts/theme/ui_tokens.gd:715	UiTokens
 D_stars	func	scripts/theme/ui_factory.gd:409	UiFactory
-D_state_cell	func	scripts/tabs/hr/hr_ui_shared.gd:347	HRUiShared
+D_state_cell	func	scripts/tabs/hr/hr_ui_shared.gd:343	HRUiShared
 D_SURFACE_0	const	scripts/theme/ui_tokens.gd:451	UiTokens
 D_SURFACE_1	const	scripts/theme/ui_tokens.gd:452	UiTokens
 D_SURFACE_2	const	scripts/theme/ui_tokens.gd:453	UiTokens
@@ -5695,8 +5695,8 @@ D_TOPIC_TEAM	const	scripts/theme/ui_tokens.gd:532	UiTokens
 D_TOPIC_TEAM_CB	const	scripts/theme/ui_tokens.gd:539	UiTokens
 D_TOPICS	const	scripts/theme/ui_tokens.gd:910	UiTokens
 D_TRAIT_BOX	const	scripts/theme/ui_tokens.gd:676	UiTokens
-D_trait_cell	func	scripts/tabs/hr/hr_ui_shared.gd:311	HRUiShared
-D_TRAIT_DIR	const	scripts/tabs/hr/hr_ui_shared.gd:101	HRUiShared
+D_trait_cell	func	scripts/tabs/hr/hr_ui_shared.gd:307	HRUiShared
+D_TRAIT_DIR	const	scripts/tabs/hr/hr_ui_shared.gd:97	HRUiShared
 D_variation	func	scripts/theme/ui_tokens.gd:1079	UiTokens
 D_W_CALL	const	scripts/theme/ui_tokens.gd:895	UiTokens
 D_W_CAP_BADGE	const	scripts/theme/ui_tokens.gd:713	UiTokens
@@ -5748,8 +5748,8 @@ D_WARN_TAG_BG_CB	const	scripts/theme/ui_tokens.gd:515	UiTokens
 D_WARN_TAG_LINE	const	scripts/theme/ui_tokens.gd:500	UiTokens
 D_WARN_TAG_LINE_CB	const	scripts/theme/ui_tokens.gd:516	UiTokens
 D_WEEK_BAR	const	scripts/theme/ui_tokens.gd:718	UiTokens
-D_who	func	scripts/tabs/hr/hr_ui_shared.gd:410	HRUiShared
-D_xp	func	scripts/tabs/hr/hr_ui_shared.gd:295	HRUiShared
+D_who	func	scripts/tabs/hr/hr_ui_shared.gd:406	HRUiShared
+D_xp	func	scripts/tabs/hr/hr_ui_shared.gd:291	HRUiShared
 D_XP_BAR	const	scripts/theme/ui_tokens.gd:684	UiTokens
 D_XP_BAR_WIDE	const	scripts/theme/ui_tokens.gd:850	UiTokens
 daily_bill	func	scripts/systems/infra_system.gd:264	InfraSystem
@@ -7347,7 +7347,6 @@ localized_name	func	scripts/data_models/customer.gd:134	Customer
 LOCK	const	scripts/tabs/product/sprint_ui_shared.gd:26	SprintUiShared
 lock	func	scripts/systems/infra_system.gd:236	InfraSystem
 LOCK_AT_ICONS	const	scripts/ui/components/left_tabs.gd:45	left_tabs.gd
-lock_glyph	func	scripts/tabs/hr/hr_ui_shared.gd:71	HRUiShared
 LOCK_ICON	const	scripts/modals/ending_scene.gd:36	EndingScene
 LOCK_ICON	const	scripts/theme/ui_factory.gd:10	UiFactory
 LOCK_ICON	const	scripts/ui/components/goals_panel.gd:15	goals_panel.gd
@@ -7674,7 +7673,7 @@ MORE_SLACK	const	scripts/tabs/product/sprint_board.gd:18	SprintBoard
 MORNING_ACTS	const	scripts/systems/incident_system.gd:54	IncidentSystem
 MORNING_MIN	const	scripts/debug/office_crowd_probe.gd:19	OfficeCrowdProbe
 mount	func	scripts/tabs/hr/hr_popover.gd:99	HRPopover
-mount_panel_modal	func	scripts/tabs/hr/hr_ui_shared.gd:78	HRUiShared
+mount_panel_modal	func	scripts/tabs/hr/hr_ui_shared.gd:74	HRUiShared
 MOVE_GLYPH	const	scripts/ui/office/office_hud.gd:16	office_hud.gd
 MOVE_MONTHS	const	scripts/debug/run_probe.gd:245	RunProbe
 move_pressed	signal	scripts/ui/office/office_hud.gd:10	office_hud.gd
@@ -9125,7 +9124,7 @@ set_map_open	func	scripts/ui/office/office_notice_stack.gd:57	office_notice_stac
 set_market_ref	func	scripts/autoload/customer_registry.gd:229	CustomerRegistry
 set_master_volume	func	scripts/autoload/audio_manager.gd:110	AudioManager
 set_morale	func	scripts/autoload/character_registry.gd:626	CharacterRegistry
-set_mouse_ignore	func	scripts/tabs/hr/hr_ui_shared.gd:90	HRUiShared
+set_mouse_ignore	func	scripts/tabs/hr/hr_ui_shared.gd:86	HRUiShared
 set_mrr	func	scripts/autoload/customer_registry.gd:131	CustomerRegistry
 set_mrr	func	scripts/autoload/game_state.gd:363	GameState
 set_music_enabled	func	scripts/autoload/audio_manager.gd:90	AudioManager

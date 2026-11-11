@@ -1,6 +1,6 @@
 # Kod haritası · KALITE
 
-Üretildi: git 19db58b5 · 2026-11-11 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git f2aa06cf · 2026-11-11 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 256 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
@@ -75,7 +75,7 @@ Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları
 - scripts/debug/endgame_smoke.gd:1410 · _case_month_summary · 116 satır
 - scripts/debug/endgame_smoke.gd:17048 · _case_save_v10_product_state · 116 satır
 
-## Ölü kod adayları (19)
+## Ölü kod adayları (18)
 
 Tanım satırı dışında scripts/, scenes/, data/ içinde adı hiç geçmeyen func (yorumlar sayılmaz, dizeler sayılır). Godot geri çağrıları hariç.
 UYARI: call("a"+b) gibi kurulmuş adlar, sinyal adıyla bağlama, harness bayrakları ve tools/*.sh çağrıları yüzünden yanlış pozitif olabilir; silmeden önce grep ile doğrula.
@@ -92,7 +92,6 @@ UYARI: call("a"+b) gibi kurulmuş adlar, sinyal adıyla bağlama, harness bayrak
 - scripts/systems/sales_ledger.gd:244 · deal_count
 - scripts/systems/sales_ledger.gd:252 · last_signed_star
 - scripts/systems/sales_system.gd:501 · estimate_price_change
-- scripts/tabs/hr/hr_ui_shared.gd:71 · lock_glyph
 - scripts/theme/ui_factory.gd:41 · make_badge
 - scripts/theme/ui_factory.gd:76 · make_stat
 - scripts/theme/ui_tokens.gd:385 · format_money

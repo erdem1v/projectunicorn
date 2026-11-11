@@ -68,10 +68,6 @@ static func hairline(color: Color = UiTokens.DIVIDER_LIGHT) -> Panel:
 	return line
 
 
-static func lock_glyph(px: int, color: Color) -> TextureRect:
-	return UiFactory.make_glyph("res://assets/icons/lock.svg", px, color)
-
-
 ## Personel modalları PanelLayer'a monte olur, ModalLayer'a değil: ModalLayer boşluk ve 1-4 hız
 ## tuşlarını yutuyor ve dimmer'ı TopBar'ı kaplıyor; saat bir kadro kararının üstünde akarken
 ## oyuncunun onu durduracak yolu kalmazdı. Gerçek bir modal (layer 10) hâlâ üstünü örter.
