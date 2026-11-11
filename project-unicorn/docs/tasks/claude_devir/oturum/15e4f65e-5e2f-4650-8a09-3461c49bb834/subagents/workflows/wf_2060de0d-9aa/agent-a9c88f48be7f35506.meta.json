@@ -1,0 +1,1 @@
+{"agentType":"workflow-subagent","isBuiltIn":true,"description":"D2 UK(a) code","workflowPhase":"D2 code","spawnDepth":1,"requestShape":"foreground","requestNonInteractive":false,"model":"sonnet"}

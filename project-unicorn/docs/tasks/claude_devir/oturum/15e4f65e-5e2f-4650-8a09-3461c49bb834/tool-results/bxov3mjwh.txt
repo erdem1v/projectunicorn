@@ -1,0 +1,294 @@
+### UK: kart başına aşama ve yüzde
+
+1. Oyuncu koşan sprintte her kartın şimdi hangi aşamada olduğunu ve o aşamanın yüzde kaçının bittiğini görür
+   (ör. "Test %40").
+2. Önden yapılmış işi olan kart planlamada A4'teki gibi önden işi gösterir. Erdem'in "tasarım bitmiş görünüyor" sorusunun
+   cevabı budur: tasarım önceki sprintte önden bitti.
+3. **İki seçenek**, U4'ün satırı çizildikten sonra oyunun kendi arayüzünde, `live:a4_run_w2` dünyasında, TR karelerle:
+   - **(a)** Yüzde kartın durum yuvasında. Koşan sprintte yuvanın sırası: "yetişmez" → "{aşama} %{n}" → söz tarihi çipi →
+     "devreden". Planlamada sıra bugünkü gibi kalır.
+   - **(b)** Yüzde, koşan aşamanın çubuğundaki "{yapılan}/{toplam}"ın yerine geçer. "{yapılan}/{toplam}" ipucunda
+     (§11.2 B1) kalır.
+4. Kareler yardımcı yönetmene gider, Erdem seçer.
+5. Yüzdenin kaynağı modelin ilerlemesidir (Z5, E1 birimi); yeni hesap yazılmaz.
+  sürüme çıkar ve düzeltilmemiş bulunan hata kartın hattında açık hata olur; öbür ikisinde kart kalan düzeltmesiyle devreder. Çip yüzde
+  yazmaz, sonucu yazar. Mesainin moral bedeli ve ek sürenin izi kartın (`promise_due.json`) seçeneklerinde [WORKING].
+- **Hata modeli.** Kartın hatası test bittiği an belirlenir (`SprintBugs`, sayılar `data/product/sprint.json` `bugs` bloğunda
+  [WORKING]): beklenen hata H = c × kartın puanı × R × tür × (1 − PM hazırlığı) × Σ iş payı × m(Δ) × TİTİZ, R kartın Geliştirme
+  aşamasındaki Yazılım kapısı (kilitsiz kart 1★), Δ = kişinin Yazılım yıldızı − R, m(Δ) = 0,20 × 0,5^(Δ ÷ 2). Kartın tohumundan
+  Poisson(H) çekilir (`RngStreams` ilerlemez, plan ile kapanış aynı sayıyı görür); testin yakaladığı pay 0,57 × √Y(Test), kendi
+  geliştirdiğini test eden ×0,6. Bulunan her hata kartın Geliştirme satırına düzeltme işi ekler (5,3 ya da 1,3 puan), kart
+  düzeltmesi de bitince biter, bitmeyen kart kalan işiyle devreder. Kaçan hata kart sürüme çıkınca kartın kendi hattında açık hata
+  olur (v1.0'dan önce `pending_faulty`'de bekler, yeniden yazılmış hatta yazılmaz) ve sürüm kaydına `escaped` yazılır; "sürüm
+  sonrası bozulma" acil durumu onu okur.
+- **PM hazırlığı.** PM sprint puanı üretmez (`SprintSystem.team()`'de `points` 0: kapasiteye girmez, hiçbir karta atanmaz);
+  haftasını sonraki sütunda bir sprintte hiç koşmamış özellik ve istek kartlarını hazırlamaya verir (`SprintPrep`, sayılar
+  `data/product/sprint.json` `prep` bloğunda [WORKING]). Hazırlık işi kartın puanının %20'sidir; PM'in hızı
+  P(s) = 15 + 10 × √((s − 2) ÷ 8) puan/hafta (s Ürün puanı: 1★ 15, 3★ 22, 5★ 25) çarpı çalışma saati, verim, huy ve sprint
+  payıdır. Kural A: kartlar karmaşıklığa (puan × Yazılım kapısı R) göre büyükten küçüğe dizilir, PM'ler yıldızdan aza; her PM'e
+  sprintin sonuna dek kalan hazırlık kapasitesiyle orantılı ardışık bir dilim düşer (en karmaşık dilim en iyi PM'e) ve kartın Ürün
+  kapısını geçemeyen PM'in payı en yakın uygun PM'e kayar. Bir kartı tek PM hazırlar, hazırlayan (`prep_by`) kendisi ekipte
+  durdukça değişmez. Hazırlığın biten oranıyla orantılı olarak kart hazırlayan PM'in yıldızından fayda alır: her aşamada hız
+  (`prep_gain`, `SprintSystem._work`: 1★ %10, 5★ %25, arası doğrusal) ve hata yükünde azalma (`prep_cut`, H'nin (1 − PM hazırlığı)
+  terimi: 1★ ×0,90, 5★ ×0,60). Sonraki sütunu oyuncunun "→"u, onaylı PM planı ve liderin önerisi doldurur (devirde de); sütun
+  boşsa PM'in hazırlayacak kartı yoktur. Olayın düzeltmesinin moral bedelini hattın kartını hazırlayan PM de öder (`payers`).
+- **Karar kâğıdı.** Sprint başına tek zar (`SprintSystem._request_decision`): sprint iki haftadır, zar ilk haftanın
+  sonunda, `data/product/sprint.json` `decision.sprint_chance` ihtimaliyle sprintin bir kartı için `decision.cards` havuzundan bir kâğıt
+  istenir, yoksa sprint kâğıtsızdır ([WORKING]: sprintlerin en az üçte biri). Havuz ağırlıklı sırayla denenir (görülmemiş kâğıt önde,
+  `decision.seen_weight`) ve her kâğıt 52 haftada bir, koşuda en çok 3 kez gelir (`latch`, `latch_key: run`). Kâğıt beklerken kartı ilerlemez ve ona kimse atanmaz; cevap gelince haftanın ataması baştan yapılır ve ekip karta döner (`_clear_decision`). Kesinti sırası: söz olayı
+  ya da acil durum gelen sprintte kâğıt gelmez; kâğıt gelen sprintte `IncidentSystem` yalnız servisin çöktüğü acil durumu (kesinti,
+  ödeme; `IncidentSystem.SERVICE_DOWN`) yaşatır, öbür acil durum kaybolmaz, sonraki sprinte kalır (`record_interrupt("paper")`,
+  `GameState.incident.shifted`). Konuşan kâğıdın kartında o fazda çalışan kişidir: kartın JSON'unda `speaker_role`, `stage`, `pool_group` yazılır, konuşan `EventGate.request(id, {"employee": id})`
+  ile (kurucu `{"founder": id}`) kartın `assignees`'inden, rolü ve fazı uyan ilk kişiden bağlanır; PM kâğıdını çeyreğin PM'i söyler
+  ve konusu sprintteki müşteri isteği kartıdır; payı Destek'te kalan kişi konuşmaz (ayrıntı `docs/kod_haritasi/sistemler/02_urun_sprint.md`). Kâğıdın bedeli seçeneğin kendisidir ve çipte sayıyla yazılır: kartın puanı, yapılmış işin silinmesi, hemen düşen hata (`damage_product`) ve hattın yeniden yazımı (`line_harden`: hatta 26 hafta yeni hata düşmez). PM, tasarımcı ve testçi kâğıtları bedeli ayrıca kartın işini sonraki sprinte bırakarak (`sprint_card_trim`: karttan pay çıkar, takip kartı sonraki sprinte girer), kartı bilinen hatayla çıkararak (hata kart çıkınca kendi hattında açık hata olur), hesabın memnuniyetine (`trust_delta`, kart çıkana kadar sürebilir) ya da kitleye yazar; renk kâğıdı tek karttır, iki gelişi vardır. Sistem kâğıdı `product.sprint_late` (kurucu tekken `sprint_late_solo`) yalnız kartı bekleyen biri varken gelir.
+- **Sürüm anı.** Sprint kapanışı sürüm çıkardığında (`SprintBridges.thank`, sürüm kaydına `thanks`) sözü tutulan, isteği
+  karşılanan ve acil durumu hızla kapanan B2B hesapları teşekkür notu yazar (`customer.release_thanks`, tek düğmeli not
+  kartı): hesap sürümde en çok bir, sürüm en çok üç not alır, öncelik söz, istek, acil durum sırasıdır. B2C güncellemesinin
+  notu bir tik sonra 2–3 öne çıkan yorum taşır (`SprintBridges.pick_reviews`, sürüm kaydında `reviews`, mesai içinde
+  `at`). Sayılar `data/product/sprint.json` `thanks` ve `reviews` bloklarında [WORKING].
+- **Destek raporu.** Müşteri İlişkileri'nin en yüksek puanlı temsilcisi (`CustomerRepSystem.ranked_reps()[0]`) haftalık tikte, haftada en
+  çok bir, gelen kutusuna rapor yazar (`SupportSystem.weekly_report`, mesaj türü `support_week`, saati durdurmaz); temsilci yoksa ya da
+  haftada yeni bir şey yoksa gelmez. "Yeni" bir hattın Öncelikli eşiğe varması, boşalması ya da düzeltmeyle azalması, en kötü hattın
+  değişmesi (önceki en kötü hat o hafta azaldıysa ya da yeni en kötü hat onu `REPORT_WORST_LEAD` [WORKING] açık hatadan az
+  geçtiyse değil) ve temsilcinin yetişememesidir (cevapsız bildirim haftanın gelenlerinin beşte biri ya da fazlası,
+  `REPORT_BEHIND_ONE_IN` [WORKING]); okunmamış eski rapor yenisi gelince düşer. Düğme en kötü hattın alanını Ürün SPRINT'te açar.
+- **Ofis.** Şirket Ev'de başlar (1 masa, kirasız); İş hanı 13 masa ve ayda $4.000, Plaza 38 ve $8.000, Loft 70 ve $18.000
+  (`OfficeConstants.CATALOG`, kurucu bir masa tutar). Taşınmanın tek şartı paradır: kasa iki aylık kirayı karşılar
+  (`OfficeSystem.can_move_to`); bu peşin kira karar anında bir kez düşer (`FinanceSystem.apply_one_time_cost`, kimlik
+  `office_upfront`), taşınma bir hafta sürer ve bulunulan ofisin kirası varış haftasından her tik `office` kalemine yazılır
+  (`OfficeSystem.daily_tick`, finanstan önce). Masa tavanı yalnız ofiste vardır: kadro (kurucu dahil) masaya varınca arama
+  başlamaz (`HRSearchSystem.can_start`) ve masadaki dosyalar işe alınmaz (`HRSearchSystem.hire` null döner: arama sürerken
+  dolu ofise taşınan şirket); evde sınır yoktur ve masadan büyük ekiple taşınmak serbesttir, herkes gelir. Ofisin ödülü marka sıçramasıdır: bir kademeye koşuda ilk varış markayı bir kez yükseltir (`OfficeConstants.CATALOG` `brand`: İş hanı 3, Plaza 6, Loft 10; `OfficeSystem.brand_jump`, varılan kademeler `offices_reached` bayrağında), aşağı taşınınca marka geri alınmaz.
+- Ay kapanışı sessizdir: günlük dağıtımın 0. yuvasında ay defteri kapanır ve `EventBus.month_ended` yayılır; haber
+  şeridine 10. yuvada tek satır düşer; modal açılmaz. Dönem özeti oyuncunun seçtiği sıklıkta
+  gelen kutusuna mesaj olarak gelir (`summary_frequency`: haftalık, aylık, çeyreklik ya da yıllık; varsayılan
+  çeyreklik; `SummarySystem`, `EventBus.summary_ready`).
+- **WRITE-THROUGH LAW.** Hiçbir olay, modal ya da UI başka bir alanın durumunu doğrudan yazmaz; değişiklik durumun
+  sahibinin seam'inden geçer ve UI'nin dinlediği yerde seam sinyal yayar. Seam yoksa kurulur, alan "bir kereliğine"
+  yazılmaz. Seam'ler: müşteri → `CustomerRegistry.set_mrr / set_seats / set_satisfaction / add / remove` (yayar; kalıcı memnuniyet izi `set_trust_offset` ve hesabın pazar referansı `set_market_ref`, sinyalsiz);
+  toplam MRR yalnız `SalesSystem.reflect_mrr()`; kasa, burn, marka, itibar → `GameState.set_*`; faz →
+  `GameState.advance_phase()` (`set_phase` yalnız kayıt ve debug içindir); karakter → `CharacterRegistry.*`; ürün →
+  `SprintSystem.*` (`GameState.product`'ın yazarı; köprüsü `SprintBridges` yalnız `requests`,
+  `rival_hits`'i ve verilen sürüm kaydının `thanks`'ini yazar) ve `ProductState.*` (açık hata deposunun tek yazarları `add_bugs` ve `clear_line_bugs`); tek seferlik gider → `FinanceSystem.apply_one_time_cost`; gecenin acil durumu → `IncidentSystem` (`GameState.incident`'ın yazarı). `GameState.flags` sistem durumudur: içerik ona sahibin adlı fiiliyle yazar (tek
+  kapı `set_game_flag` beyaz listesi); motorun kendi hafızası `EvFlags`'tadır.
+- Olay motoru autoload değil; tek girişi statik `EventGate.request(event_id: String, context: Dictionary = {})`.
+  Sistem kartın adını verir, kartı kurmaz. Kartlar `data/events/cards/<kategori>/` altında JSON'dur ve
+  `version_scope` ile `EvTuning.SHIPPED_SCOPES`'a göre süzülür (`_fixtures/` yalnız test içindir); arklar
+  `data/events/arcs/`'ta. İçerik durumu yalnız `scripts/events/seams/`'ten okur. Invariant'lar: motor GDD §0.3.
+  Kart ekrana gelince `main` saati tutar (`TimeManager.hold_clock("event")`) ve Olaylar gelen kutusunu kartın
+  üstünde açar; cevaba kadar başka her pencere yalnız okunur, tek yüklem `EventGate.active_id() != ""` (motor md
+  §11.3). Karar olmayan anlar `MessageSystem` mesajıdır.
+- Gelir: B2B hesabı kurucunun oynadığı satış toplantısı ve pazarlıkla ya da atanmış temsilcinin işlediği lead'le
+  kazanılır; temsilcinin planı dolunca müşterinin baktığı bir alan ürünün beklentisinin altındaysa kapanış ürün uyumuna
+  bağlı bir zarla kaybedilebilir (`ProductQuality.close_chance`) ve kayıp haftada en çok bir mailla gelir, kalanı haftalık
+  özetin satırıdır. Hesap imzada adayın ürüne uyumuyla açılır (tabanlar kalır) ve memnuniyeti hesabın kendi uyumuna kayar
+  (`ProductQuality.account_fit`; hesabın kullandığı hatlardaki açık hata düşer, güven defteri eklenir). 3★ ve üstü hesap
+  Kurumsal olmayan sunucuda imzalarsa sözleşmesine sunucu maddesi yazılır: 8 hafta içinde Kurumsal'a geçilmezse müşteri hakkını
+  kullanır; süre dolduğu tikte ve her ay başında memnuniyeti eşiğin 20 puandan az üstündeyse fesih bildirir (4 hafta sonra
+  sözleşme biter, hesap kayıp sayılır), değilse hakkını saklı tutar. Yalnız Kurumsal sunucuya geçiş maddeyi karşılar ve bildirimi
+  geri aldırır, güvenlik sertifikası karşılamaz; Kurumsal'dan inilmez (`B2BSalesSystem`, `InfraSystem.set_provider`). B2C'de kitle her
+  oyun saatinde iki yönlü değişir; MRR ödeyen kullanıcı × fiyat olarak saatlik türetilir.
+  Kitlenin büyüme ve erime terimi, B2C memnuniyetinin hedefi ve fiyat önerisi ürünün kitleye uyumunu okur
+  (`ProductQuality`, kitle bağlamı; `SalesSystem.b2c_quality`): kitle büyüdükçe beklenti yükselir. Ürün sayfasının sözcüğü ve
+  cümlesi B2C'de kitlenin yıldızı ile 2★'ın büyüğünü okur (küçük kitlede de 2★ satırı); ekonomi sayfanın referansını okumaz.
+- Kayıt: JSON; `SaveManager.SCHEMA_VERSION` 19, `MIN_LOADABLE_VERSION` 10. `SaveCodec` GameState değişkenlerini ve
+  modellerin `@export` alanlarını kendisi bulur; eski kayıtta varsayılan göç yerine geçtiği için yeni alan anlamlı
+  varsayılan taşır. Tarih kayıtta saklanmaz, `GameState.day`'den türer; yıl tutan tek alan `Character.leave_taken_year`'dır ve
+  2026 takvimiyle yazılmış değeri `SaveCodec.restore_registries` her yüklemede geri alır (`OLD_CALENDAR_YEAR_SHIFT`).
+  Statik durum tutan sistem `SaveManager.reset_all_owners`'a girer. RNG tohumludur (`RngStreams`). Her koşunun kimliği vardır (`GameState.run_id`, metada): yuvalar koşu başınadır (`quick_<run>`, `auto_<run>_<n>`, `manual_<n>`) ve bir koşunun oto kaydı ötekininkini ezmez. Menü koşunun olmadığı yerdir: ana menüye dönüş süreç içi `SaveManager.end_run()` ile koşuyu bitirir ve kabuğu söker.
+
+## 7. UI ve tema — UI/STYLE LAW
+1. **Sözlük `UiTokens`'ındır.** Her renk palet tablosunda adlıdır; her boyut merdivendendir (`SIZE_MICRO 9 · META 10
+   · SMALL 11 · DATA 12 · BODY 13 · LEAD 15 · TITLE 16 · DISPLAY 22`; editorial `SIZE_ED_* 24 · 26 · 32 · 44 · 52`).
+   Ham `Color(...)` ya da ham boyut yazılmaz; duruma bağlı stil helper'dan okunur (`badge_palette`, `D_delta_color`, …).
+2. **`themes/master_theme.tres` ve `themes/menajer_theme.tres` üretilmiştir.** Üretici `"$GODOT" --headless --path .
+   -s res://scripts/theme/build_theme.gd` (temiz checkout önce `--import`). Token ya da `build_theme.gd` değişikliği
+   aynı commit'te `UiTokens.THEME_STAMP`'i artırır ve iki temayı yeniden üretir; debug açılışı iki temadan biri
+   bayat damga taşıyorsa uyarır.
+3. **Token'ı tema öğesine çeviren tek dosya `build_theme.gd`'dir.** Skala boyutun, varyasyon yüz ve rengin sahibidir.
+4. **Sahne ve script yalnız yerleşimin sahibidir** (anchor, separation, margin, min-size); boyut, renk, stylebox
+   taşımaz, `theme_type_variation`'a uzanır ya da yenisini ekler. Mevcut literal, çevresi değişince taşınır.
+- **Geçiş: iki tema.** Arayüz koyu Menajer Masası diline ekran ekran taşınıyor (sıcak kömür yüzey, açık mürekkep;
+  Erdem 2026-10-02). Taşıma bitene kadar proje teması krem `master_theme.tres`'tir; krem token değerleri, `SIZE_*`
+  merdiveni, helper gövdeleri ve taban tipleri değişmez. `menajer_theme.tres` taşınan her alt ağacın köküne elle
+  atanır; CanvasLayer ve açılır pencere kalıtımı kestiği için her katman kökü ayrıca. Master'ın her varyasyonunu master
+  ölçüleriyle koyu renkte taşır, taban tiplerini ve yeni varyasyonları yeni dille kurar; doğrulayıcı eksik varyasyonda
+  ya da içerik payı açık kutuda üretimi düşürür. Koyu yüzey yalnız `D_*` token'larını ve `D_` helper'larını okur
+  (renk körü ikizleri helper'dadır, merdiven `D_FS_12` … `D_FS_40`). Koyu yüzler Archivo'nun değişken yüzüdür
+  (ağırlık ve genişlik ekseni, rakamlar tablo) + Source Serif 4; Archivo'da olmayan glif aynı ağırlıktaki IBM Plex
+  Sans'a, onda da yoksa Noto Sans Symbols 2'ye düşer (★ ☆ ✓ ▾ ⌛ ✕ vardır, ˅ yoktur). Noto zincirin sonunda kendi
+  yüzüdür (`symbols_flat`) ve metriği açılışta sıfırlanır (`UiFactory.flatten_symbol_face`, `main.gd` `_ready`): yalnız
+  glif verir, satır yüksekliğini oynatmaz. JetBrains Mono ve Plex'in metin yüzü yalnız krem ailede kalır. Gazete iki
+  temada da kremdir. Kontrast kapısı `--theme-contrast-audit`.
+- Krem dil: mono yazı, hairline çizgi, amber vurgu; hover dolgu değil kenardır (`ACCENT_DEEP`, kartta `BORDER_HOVER`).
+  Gövde krem kâğıttır (sayfa `#F6F1E6`, kart ve pencere `#FBF7EE`, `INK` `#2B2722`); sinematik koyu register
+  (`DIALOGUE_*`) `CREAM*` ve `*_CHROME` okur. Tek ada gazetedir (`PaperPanel`, kendi `PAPER_*` merdiveni). 3B
+  ofisin renkleri UI token'ı değil sahne verisidir: `OfficeConstants`, `scripts/ui/office/`, `scenes/office/shaders/`.
+- **Chrome kuralı.** Çerçeve (TopBar, NewsTicker) koyu temayı okur: iki sahnenin kökünde `menajer_theme.tres`
+  atanmıştır ve çerçevenin yazı ile düğme varyasyonları (`HeroValue`, `ClockLabel`, `SpeedKey`, `TickerToggle` …)
+  o temada tanımlıdır.
+
+## 8. Kod yazımı
+Kod tabanı şiştiği için her iş pahalılaştı; yeni kod aynı hataları tekrarlamaz.
+- Kısa ve doğrudan yaz. Tek yerde kullanılan sarmalayıcı ya da yardımcı, tek gerçeklemeli "genel" yapı, okunurluk
+  kazandırmayan ara değişken yazılmaz. Uzun if/elif zinciri yerine `match` ya da sözlük.
+- Aynı işi yapan ikinci fonksiyon yazılmaz: önce var olan evi ara (`Fmt`, `UiFactory`, `HRUiShared`, `UiTokens`,
+  `ProductState.open_bugs`, `SalesConstants.mix` …). Kopyala-yapıştır blok yok.
+- İmkânsız durum için savunma kontrolü yazılmaz; null ve sınır kontrolü yalnız gerçekten gelebilen değer içindir.
+- Yerini alan kod eskisini aynı commit'te siler. Ölü fonksiyon, sabit, alan, sinyal, CSV anahtarı, asset, smoke vakası
+  bırakılmaz; yoruma alınmış kod ve debug `print` commit'lenmez.
+- Yorum yalnız bugünkü NEDENİ söyler. Tarihçe ("eskiden", "emekli", tarihler), görev ve karar etiketleri, satır
+  numarası, ağaçta olmayan belgeye atıf, kodu tekrar eden yorum yazılmaz; tarihçe git'tedir. JSON `_` notları da öyle.
+- İş bittiğinde rapor, plan ya da ölçüm dosyası repoya konmaz.
+
+## 9. Kod review
+Her commit'ten önce diff, ayrı bir agent tarafından kıdemli bir mühendis gözüyle incelenir; yalnız diff okunur. Soru:
+bu kod en kısa ve en açık doğru hâlinde mi?
+- İki satırda yazılabilecek şey on satırda mı yazılmış?
+- Kod haritasındaki (`docs/kod_haritasi/SEMBOLLER.tsv`) mevcut bir yardımcı yeniden mi yazılmış?
+- İleride lazım olur diye eklenmiş soyutlama, parametre ya da dal var mı?
+- Olamayacak durumlar için savunma, tarihçe anlatan ya da kodu tekrar eden yorum var mı?
+
+Bulgular düzeltilir, sonra commit. Neden: şişen kod bir sonraki task'ın keşfini yavaşlatır ve pahalılaştırır.
+
+## 10. Test
+Mevcut smoke ve probe paketi eski ve gereğinden büyük; yalın bir paketle değiştirilecek (ayrı bir task). O zamana kadar:
+- Her commit'te yalnız dokunulan sistemin ilgili vakalarını koş; tam paketi yalnız push öncesi.
+- Yeni smoke vakası yalnız çekirdek mantık için (ekonomi, kayıt, olay motoru) ve ancak gerçekten gerekiyorsa. Arayüz
+  doğrulaması smoke'la değil, görsel kabulle yapılır.
+
+## 11. Görsel kabul
+Oyuncunun gördüğü bir şeyi ekleyen ya da değiştiren her task, commit'ten önce oyunda görsel olarak doğrulanır (Godot
+MCP). UI'a dokunmayan mantık değişiklikleri hariç.
+- Task'taki kabul senaryosunu oyna; yoksa değiştirdiğin ekran için kısa bir senaryo yaz ve rapora koy.
+- Ekrana fikstürle gel, oyunu baştan oynama.
+- Kontrol: öğe yerinde mi, metin taşıyor ya da kesiliyor mu, doğru dilde mi, logda hata var mı. Rapora ekran
+  görüntüleriyle koy.
+- En fazla 2 düzeltme turu; sonra sorunu ekran görüntüsüyle raporla, commit etme.
+
+## 12. Kapılar ve araçlar
+`export GODOT=/c/Users/erdem/Desktop/Godot_v4.6.2-stable_win64_console.exe`; komutlar `project-unicorn/`'dan. CI yok.
+- **Sıra:** `"$GODOT" --headless --path . --event-lint` (kabul edilen bulgu gerekçesiyle `tools/lint_baseline.json`'a;
+  onu `--event-lint=baseline` yazar, doğrulamada koşulmaz)
+  → `"$GODOT" --headless --path . -s res://scripts/debug/loc_residue.gd` → `bash tools/smoke_run.sh loc_csv_integrity`
+  → hedefli smoke (`smoke_run.sh <vaka>`, önekler `docs/kod_haritasi/sistemler/10_test_harness.md`'de); tam smoke (`--all`) yalnız push öncesi.
+- Motor: `--event-probe`, `--why-fire=<kart id>`, `--event-harness=random:seeds=N:weeks=M | guided[:seeds=N:weeks=M]`,
+  `--event-vocab` (`_vocabulary.md`'yi üretir, KEEP bloğu kalır); `python tools/gen_signal_manifest.py`.
+- Makullük defteri: `--event-plausibility=<spec>` (kabuğun içinden) ya da
+  `-s res://scripts/events/tools/plausibility_main.gd -- --event-plausibility-probe=<spec>`; spec
+  `seeds=<N|A-B>:weeks=<N>:variant=<plain|early|both>:preset=<RunProbe preset>`. Ekrana gelen her kartı şema v3'ün
+  kurallarına (koruma, makullük, bilinen saçmalık, aile aralığı, `critical` kapsamı) sınar ve `PLAUS FIRE` / `PLAUS FAIL` /
+  `PLAUS RATE` / `PLAUS SUMMARY` basar; kapısı `bash tools/plausibility_run.sh` (40 koşu × 16 hafta + `PLAUS LONG` 4 × 60
+  hafta, koşu başına ayrı süreç ve kullanıcı dizini; `fails=0` ister).
+- Probe: `--run-log=<preset>:<hafta>:sim[:<seed>][:window=<başlangıç saati>-<saat>][:build=ea|full]` (`window=11-13` şirketin mesaisini 11:00 –
+  24:00 kurar; `build=` yalnız `sim`'de, EA'da bootstrap zaferi koşuyu bitirmez, `PROBE MILESTONE` basar), preset'ler `RunProbe.PRESETS`'te (ölçek fikstürleri
+  `full_run_staff25/50` (B2B merdiveni kurucuyla 25 ve 50 kişiye uzar) ve `b2b_book20/330` (canlı ERP, 20 ve 330 hesap, 6 ve 50 kişi,
+  moral sabit); düzeltme kolları
+  `full_run_fix_{none,worst,due,off}` ve `full_run_b2c_fix_*`, preset anahtarı `fix`; her sprint başında `PROBE FIX`,
+  her hafta `PROBE BUGS` basar; bot acil durum kartını fiile göre cevaplar, `fix_none` erteler, öbürleri sprinti durdurur ve
+  durdurduğu anda `PROBE STOP` basar; `*_free` kolları sprinti hiç durdurmaz; `*_desk` kollarında (anahtar `desk`)
+  masada temsilci varken kurucu yalnız temsilcilerin yıldız bandının üstündeki adaylarla görüşür; `full_run_quality_core[_desk]`
+  (anahtar `core_only`) sprintte Çekirdek dışı özellik ve talep kartı bırakmaz, düzeltme ve araştırma kartları kalır;
+  `full_run_vc_product` ve `full_run_b2c_vc_product` seed'de ve Series A'da önce ürün fonuyla (Meridian) oturur; lead'li her
+  B2B imzada `PROBE FIT`, satışçının kaybettiği her adayda `PROBE REPLOSS`, kurucunun görüşme ve pazarlıkta kaybettiği her adayda
+  `PROBE MLOSS`, her hafta `PROBE UFLUX` basılır;
+  `full_run_server_{lean,wide,auto}` ve `full_run_b2c_server_*` kollarında (anahtar `server`) kurucu sunucuyu her
+  haftanın açılışında Artır ve Azalt ile yönetir ya da Otomatik ayarla'yı açar, her hafta `PROBE SERVER` basılır); `full_run*`
+  botu sunucu maddesi açık hesapların MRR'ı Kurumsal'ın ek faturasını geçince Kurumsal'a geçer, `PROBE END`'in `clause_ended=`
+  alanı maddenin bitirdiği sözleşmeleri sayar; `full_run_cash_{spend,hoard}` ve `full_run_b2c_cash_*` kollarında (anahtar
+  `cash`) ilk çalışan kasa iki aylık gidere (`spend`) ya da 6,7 aylık gidere (`hoard`, hiç taşınmaz) varınca alınır, öbür kollar
+  altı ayda alır ve `full_run*` botu seed'den sonra kasa peşin kira ile bugünkü giderin altı ayını (`spend` iki ayını) karşılayınca bir
+  üst ofise taşınır; her karar `PROBE DECISION` satırıdır (masa dolu ofiste bekleyen işe alım bir kez `hire desks_full`)
+  ve `PROBE END` `first_hire_week=`, `first_hire_runway=`, `move_weeks=` basar); her koşunun `PROBE END`'i destek raporunun
+  sıklığını da basar: `support_reports=` (rapor gelen hafta / canlı üründe temsilcisi olan hafta), `support_news=` (her haber
+  türü kaç raporda).
+  Karar değil defter basar;
+  `^PROBE` satırları aynı seed, aynı binary ve `--lang=tr` ile bayt-deterministiktir. Oynanan üç koşunun kapısı
+  `bash tools/run_gate.sh` (`full_run`, `full_run_b2c`, `full_run_vc_cautious`; `WEEKS` varsayılan 730): her koşu bir
+  sonla bitmeli ve sıfır `ERROR` satırı taşımalıdır.
+- Sprint planı: `--sprint-probe=hours=<h>:cards=<1|2>:ticks=<t>[:<alan>=<değer>…]` (isteğe bağlı alanlar `start`,
+  `seeds`, `seed`, `events`, `rate`, `lead`, `gate`, `team` (1 ile 6, 12, 25, 50), `fill`, `market`, `incident`, `promise`, `tstar`,
+  `pmstar`, `plus`, `founder`, `fixture`, `build`, `planms`, `meetings`, `queue`; anlamları `sistemler/02_urun_sprint.md`'de ve `sistemler/10_test_harness.md`'de) headless
+  koşar: kurucunun (`team=` ile ekibin) koşusunda ekranın sprint planını (`plan_outcome`) kapanışla karşılaştırır,
+  `SPRINTPROBE` satırları basar (`PRED`, `CLOSE`, `SKIP`, `MVP`, `LOAD`, `SUMMARY`, `LOADSUM`, `PAPER`, `PAPERSUM`; `PRED` ve `CLOSE` kartın
+  testinin hatasını `bugs=<n>/<F>/<K>/<düzeltme işi>` taşır ve karşılaştırılır; MVP tahmini `mvp_eta` `PRED`'in son alanıdır, karşılaştırılmaz) ve adsız uyuşmazlıkta 1 ile çıkar; bilinmeyen alan ya da oturtulamayan `team` `SPRINTPROBE ERROR` basıp 1 ile çıkar, `LOADSUM`un `team=`i oturan sprint ekibinin büyüklüğüdür. `planms=1` tik oynamaz, plan ekranının motor
+  çağrılarının ortanca ve en çok süresini `PLANMS` satırlarında basar.
+- Tempo: `--tempo-probe=<hız>[:shell]` gerçek saatle koşar, her haftayı 08:00'den 08:00'e ölçer ve
+  `TimeModel.seconds_per_tick` hedefinden sapmayı basar. Çıplak hâli headless'tır ve yalnız saati ölçer; `:shell`
+  pencerelidir, kabuğu ve ofisi kurar, gece çıkış kapısının maliyetini de ölçer. Kare maliyeti:
+  `--tick-probe=<hız>[:<pencere>][:accounts=<n>][:team=<n>]` headless'tır, kabuğu tempo dünyasıyla (`accounts=<n>` ile n B2B hesaplı
+  ERP dünyasıyla, `TICK WORLD` satırı; `team=<n>` o kadar kişiyi sprinte oturtur) kurar ve beş haftayı gerçek saatle koşar; saat adımı, gece, sonraki kare ve ilk
+  saat karelerinin süresini, TopBar'ın gece başına yenilemesini ve otomatik kaydın karesini `TICK` satırlarında basar.
+  `auto_*` yazar: ayrı `APPDATA` ile koşulur (`TICK START udir=`); kayıt taşıyan kullanıcı dizininde çalışmaz. Üst barın saat hâlleri:
+  `--clock-shot=<running|paused|held|released|gate|incident|focus_out|focus_out_off>` (`CLOCKSHOT` satırı: birincil pencere,
+  sprint kipi, tutuşlar, hız; odak kollarında önce ve sonraki hız; dar bar `paused` ve `--shot-scale=1.25`).
+- Smoke ve probe demo yapısına sabitlidir; `--run-log` (yalnız `sim`) ve `--sprint-probe` `build=ea|full` ile o yapının kartlarını
+  ve sonlarını koşar. EA akışı editörde Main Run Args'a `--build=ea` yazılarak oynanır.
+- Görsel kontrol (pencereli): `--<yüzey>-shot=<tür>` ailesi (tab, modal, onboard, office, event, ending, vc, sales,
+  negotiation, meeting, invite, product, hr, finance, personal, rnd, b2b, inbox), `--probe-shot[=menajer]`,
+  `--theme-audit=<sekme | modal:<tür> | onboard:<adım>>`, `--shot-size=GxY`, `--lang=tr|en` (kayıtlı dili ezer),
+  `--palette=cb` (renk körü paleti, yalnız o koşu). PNG'ler `%APPDATA%\Godot\app_userdata\Project Unicorn\`'a iner;
+  EN `_en`, renk körü `_cb` alır. Gelen kutusu: `--inbox-shot=<durum>` (durumlar `sistemler/08_sekmeler.md`'de); `flow` karar kapısını
+  kabuğun kendi girdisiyle oynar (karar gelir, saat tutulur, Ekip yalnız okunur, hız tuşu reddedilir, Esc Olaylar'a
+  döner, aynı karar için sonraki Esc sistem menüsünü açar, Ekip'in üstündeki dosyanın şeridi karara döner, karar
+  verilir, saat durmuş kalır, Boşluk saati sürdürür) ve kare başına `GATEFLOW` satırı basar.
+  Ofis: `--office-shot=<home|ishani|plaza|loft|city|meet>:<saat>[:<ek>]`, ek `full|card|<sekme>|hr_dossier|crowd40|
+  founders|nav|crown|cast|cheque|untyped|v1|card_ishani|card_home|card_over|card_here|card_tick|card_moving|desk_shut` (`crowd40` kırk kişilik kadro,
+  `LOOKS` satırı ve dört yakın kare;
+  `founders` portre ile bust yan yana; `nav` fırınlanmış zemin; `meet` toplantı odası, `cast` bakış, duruş ve jest
+  dizisi; `cheque` çek listesinin ilk haftası (`_01` tür seçili, `_02` ilk sprint başlamış), `untyped` aynı hafta
+  tür seçilmeden, `v1` v1.0 yayınlanınca (`_01`) ve Ar-Ge açılınca (`_02`); `card_ishani` ve `card_home` yalnız
+  `city`'de, şirket Ev'de iken İş hanı'nın ve Ev'in kartı açık; `card_over` aynı Ev'de on dört çalışanla İş hanı'nın kartı,
+  `card_here` şirket İş hanı'nda kendi kartı; `card_tick` yalnız `city`'de, Plaza'nın kartı bir günlük
+  tikten geçer (`_before` karesi, `OFFICECARD` satırı); `card_moving` yalnız `city`'de, Ev'den İş hanı'na taşınma sürerken İş hanı'nın
+  kartı (`_ishani`) ve Plaza'nın kartı; `desk_shut` canlı B2C, iki hatta yedi açık hata: DESTEK
+  kartının tek satırı (`_01`), kartın tıklanışı ve en çok hatalı hattın alanı açık Ürün penceresi (`_02`);
+  `city:<saat>:crown` kulenin tacı). `--office-shot`'a `--pan=<adım;…>` eklenirse koşu yalnız 3B görüntüyü kamera
+  ofsetlerinde kaydeder ve `PAN|` satırı basar (gölge kutusu ve ilk kareye fark; adım `dx,dy[,zm]`,
+  `sweep:<baş>:<son>:<adım>:<x|y>:<zm>`, `fit[:zm]` ya da `drag:<dx>:<dy>[:olay]`); `--pan-set=<küme>|<küme>` yalıtım
+  düğmeleri (ilk küme taban, `SETDIFF|`), `--pan-gpu=<A>/<B>[;…]` alt görüntünün GPU ve CPU süresi (`GPU|`, `MEM|`);
+  değerlerdeki `;` ve `|` tırnaklanır, düğme listesi `scripts/debug/office_pan_probe.gd` başındadır.
+  Görüşme paneli: `--meeting-shot=<tür>` (satış `probe|locked|won|lost|handoff|economy|frank|emph_trust|emph_integrations|emph_onboarding|weak_core|die|returning`,
+  VC `open|sorgu|sheet|callback|ret|seed|long`; `open:tip` ve `sorgu:tip` zar ipucunu açar), `--negotiation-shot=<open|countered|insult|last|confirm>`; en dar dok
+  `--shot-scale=1.25`; davet `--invite-shot=<ring|card|vc|postpone|postpone_vc|held|lapse|lapse_vc>`; term sheet masası
+  kabuğun içinde `--vc-shot=<masa türü>:shell`. Ürün sekmesi: `--product-shot=<c1..c5|cards|flow|edge:<ad>>` debug
+  fikstürüyle (`scripts/debug/product_fixtures.gd`; `edge:` adları `sistemler/02_urun_sprint.md`'de), `--product-shot=live:<tür>` sprint
+  motoruyla kurulan koşuda
+  (`pick`, `pick_named`, `pick_relang`, `plan`, `active`, `decision_paper`, `b2c_mvp`, `b2c_live`, `b2c_goal`, `b2b_mvp`, `b2b_mature`, `b2b_quarter`, `b2b_requests`,
+  `gate`, `delegate`, `delegate_rehire`, `rnd`, `solo15`, `solo15_tip`, `solo12_active`, `overview_pre`, `server_80`, `server_94`,
+  `server_104`, `server_growth`, `server_auto`, `server_tier`, `server_final`, `server_clause`, `server_lock`, `server_b2c`;
+  kurulumları ve ikinci, üçüncü kareleri `sistemler/02_urun_sprint.md`'de). Satış'ın B2C sayfası `--sales-shot=b2c_live` (`live:b2c_live`'ın dünyası, `SHOT|b2c` satırı), MVP öncesi
+  B2B boş hâli `--sales-shot=b2b_pre`, kayıptan dönen lead'lerin kapısı `--sales-shot=returning`.
+  Kişilerin bir günü gerçek saatle: `--office-crowd-probe=<ofis>:<kişi>:<hız>` (sıçrama,
+  duraklatmada kıpırtı, takılma, çakışma, kapı ve kesme, kuyruk, toplantı, gece kapısı; `CROWD` satırları ve
+  `crowd_<ofis>_<kişi>_<hız>_NN.png`). Kurucunun toplantı yolculuğu: `--travel-shot=<home|ishani|plaza|loft>[:vc|:night]`
+  (10:00'da satış toplantısına, `:vc` ile Series A görüşmesine davet, gidiş, panel ve dönüş; `:night` toplantıyı
+  kurucunun mesai bitişine indirir; `travel_shot_<ofis>[_vc|_night]_NN.png` dizisi ve kurucu masasına oturunca
+  `TRAVEL|settled` satırı). Bir hafta gerçek
+  saatle: `--day-shot=<ofis>:<hız>` (08:00'den çıkış ve gece atlamasıyla ertesi 08:00'e,
+  `day_shot_<ofis>_<hız>_NN.png` ve kare başına `DAYSHOT` satırı).
+  Ana menü: `--menu-shot=<empty|continue|first_frame|godot_card|load|settings|credits|licenses|plate|live|
+  return_confirm[:gate]|all>` açılışı oyuncunun gördüğü gibi kurar ve kare başına `MENU|state=|focus=|continue=|groups=|
+  paused=|joy_ui=` satırı basar (`continue` ve `load` fikstür kayıtlarının üstünde, `live` canlı sahne gelince,
+  `return_confirm` kabuğun üstündeki dönüş onayı; `all` `bake_plate` dışındaki her türü kendi pencereli sürecinde
+  koşar, `MENU|all|kind=|exit=` basar, biri düşerse 1 ile çıkar). `--menu-shot=bake_plate:<ofis>:<HHMM>` arka planın
+  canlı sahnesini plaka olarak yazar (`backdrop_<ofis>_<HHMM>.png`, `assets/art/menu/`'ye kopyalanır). Arka plan
+  ölçümü `--backdrop-probe[=<ofis>:<HHMM>]` (varsayılan menünün akşam şehri):
+  `BACKDROP|plate_frame=|live_ms=|fade_ms=|gpu_ms_p50=|gpu_ms_p95=|boot_to_menu_ms=`, plakayla canlı karenin farkı
+  `BACKDROP|plate_vs_live=` (≤ 6) ve YENİ OYUN'dan sonra `BACKDROP|new_game|nodes=|backdrop=|tex_pct=`; düşük ön
+  ayarda yalnız plaka durur, ölçümler `n/a`.
+- Tema denetçisi: `"$GODOT" --headless --path . -s res://scripts/theme/theme_check.gd [--theme=<yol>]` master'a göre
+  eksik ya da boş öğede, master dışı temada içerik payı açık kutuda 1 ile çıkar, metin ve zemin kontrastını basar.
+  Koyu temanın kapısı `"$GODOT" --headless --path . --theme-contrast-audit`: her metin rengi çizildiği her zeminde,
+  iki palette; gövde 4,5, büyük metin ve metin dışı işaret 3, devre dışı metin 1,6 ile 4,5 arası; düşen çiftte 1 ile
+  çıkar. Glif denetimi `"$GODOT" --headless --path . -s res://scripts/debug/glyph_audit.gd`: CSV'nin, kod
+  literallerinin (belge yazan `scripts/events/tools` hariç) ve `data/` metninin her karakterini koyu yüzlere ve
+  zincirlerine sorar. `--probe-shot=menajer`
+  ThemeProbe'u koyu temanın altında, koyu temanın yeni varyasyonlarıyla çeker. Piyasa penceresi:
+  `--tab-shot=piyasa[:<seed_oncesi|seed_sonrasi|series_a|ipo|filtre|sektor>]` (oyuncu karosunun hâlleri, halka arz
+  haftası, Sektörüm filtresi, sektör rakibinin kartı) ve `--theme-audit=piyasa`.
+- **Ekran kartı.** Ekranlı Godot koşuları (shot, tema denetimi, görsel kabul) paralel değil sırayla koşar; ekran
+  gerektirmeyen her koşu `--headless`.
+- Git kökündeki `.githooks/pre-commit` lint ve `loc_residue`'yu koşar; etkin değildir, etkinleştirmek sahibin kararıdır.
+
+**Tuzaklar**

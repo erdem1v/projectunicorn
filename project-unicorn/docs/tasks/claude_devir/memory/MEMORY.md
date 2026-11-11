@@ -8,6 +8,7 @@ Proje klasörü 2026-10-16'da "project steam" → "Project Unicorn" oldu (eski h
 - [Alt ajan token kuralı](feedback-subagent-token-budget.md) — model zorluğa göre; commit başına ≤1 inceleme, ≤1 düzeltme, ölçüm turu yok
 - [Adım tablosu ve model rolleri](feedback-step-table-model-roles.md) — faz önce adım tablosu + onay; Opus plan incelemesi; Sonnet kod, Haiku mekanik
 - [Görünür kararlar Erdem'in](feedback-codirector-visible-rulings.md) — **2026-10-27: oyuncunun gördüğü seçim kare + önerimle Erdem'e; oyundaki adıyla anlat ("kullanıcıyla görüş" ≠ Ar-Ge)**
+- [Kesme yok, MCP ile doğrula](feedback-no-truncation-mcp-validation.md) — **2026-10-28: '…' ve keyfî sınır yok, metin sarar; ajan işini Godot MCP ile görsel doğrular**
 - [PRD ne diyorsa onu yap](feedback-prd-says-do-it.md) — PRD eylemi yazıyorsa yeniden sorma; yalnız sessiz/çelişkili yerde sor
 - [Yalnız tam tanımlı iş koda](feedback-only-fully-specified-work.md) — netleşmeyen park + listelenir; sentez PRD değildir
 - [Sözleri kurala çevirme](feedback-remarks-are-situational.md) — her sözü evrensel kural yapma, duruma göre karar
@@ -33,6 +34,7 @@ Proje klasörü 2026-10-16'da "project steam" → "Project Unicorn" oldu (eski h
 - [Platform önceliği](project-platform-priority.md) — ilk sürüm Windows + Mac; Linux/Deck sonra
 
 ## Canlı durum
+- [Co-director durumu 2026-10-28](codirector-state-2026-10-28.md) — **güncel, dizüstü**: iki oturumun görevi, denenmiş MCP tarifi, Erdem'de bekleyenler
 - [Co-director durumu 2026-10-26](codirector-state-2026-10-26.md) — **güncel**: c7 Ürün arayüzü (U6, UE kare turu), d5 Olaylar (7b → adım 8); Erdem'de UK, UM, CLAUDE.md, yeni hedef gösterimi
 - [Ürün arayüzü devam 2026-10-26](urun-arayuzu-devam-2026-10-26.md) — c7: UD2, UD1, I01, U2…U5 commit'li
 - [Temizlik task 2026-10-26](temizlik-task-2026-10-26.md) — BİTTİ: 1–33, HARITA emekli → kod haritası; Erdem'de 5 karar

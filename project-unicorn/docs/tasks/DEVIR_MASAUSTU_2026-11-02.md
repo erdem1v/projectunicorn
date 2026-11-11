@@ -9,6 +9,11 @@ Dizüstü turu (28 Ekim – 2 Kasım, Mac) bitti. Erdem Windows masaüstüne dö
    `powershell -ExecutionPolicy Bypass -File "project-unicorn\docs\tasks\claude_devir\kur_windows.ps1"`.
    Masaüstündeki 27 Ekim hafızası, dizüstünde büyüyen hâliyle değişir.
 3. Bu sohbete devam: repo klasöründe `claude --resume 6d15b35f-66f1-4e87-b274-dc8c31d2f7b4`.
+   Betik iki çalışan oturumu da geri yükler (kayıtlar 2026-11-11'de 2 Kasım hâliyle repoya girdi):
+   - URUN_ARAYUZU: `claude --resume 15e4f65e-5e2f-4650-8a09-3461c49bb834`. D3 → D5 → D4a → D4b burada yeniden kurulur;
+     tarif `GOREV_URUN_ARAYUZU_DEVAM.md` "Masaüstüne dönüş". Kodu yazan alt ajanların kayıtları da klasöründedir.
+   - OLAYLAR: `claude --resume dd6f551f-9a19-44bf-832b-23c38bb6b809`. Yalnız ana kayıt taşındı; alt ajan kayıtları ve uzun
+     çıktılar (480 MB, bir dosyası GitHub'ın 100 MB sınırını aşıyor) Mac'te kaldı.
 4. Dizüstüne özgü olanlar Windows'ta geçerli değildir; masaüstünde yine ORTAK_CALISMA §1–8 geçer (32 GB, APPDATA):
    - `docs/tasks/dizustu/mac_env.sh`;
    - ORTAK_CALISMA §9;
@@ -57,6 +62,9 @@ Sohbette sorulan iki soru:
   - D4b: kesmelerin kalanı; durumu URUN'un notunda;
   - D6: ikonlar ve E5, Erdem seçince;
   - D8: PLANMS ve RAPOR_URUN_ARAYUZU.
+- Olaylar: harness commit'i (`--event-shot` portreyi bekler, `main.gd`) hazırdı ama commit'lenemedi; kopyası /tmp temizliğinde
+  gitti, düzenleme yalnız OLAYLAR kaydında (2026-10-28 17:32–18:01). `GOREV_OLAY_UYGULAMA.md` "Dizüstü turu" notu da
+  tamamlanmadı (commit'ler, playtest hataları, açık kararlar).
 - Olaylar: playtest hataları için düzeltme görevi (onayla). Hatalar:
   - çeyrek bülteninin ikinci haftada düşmesi;
   - "Zor modda açılır" sözü;

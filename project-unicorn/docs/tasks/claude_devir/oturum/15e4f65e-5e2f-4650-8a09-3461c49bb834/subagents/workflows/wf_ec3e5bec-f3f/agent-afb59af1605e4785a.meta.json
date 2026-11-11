@@ -1,0 +1,1 @@
+{"agentType":"workflow-subagent","isBuiltIn":true,"description":"D4b fix","workflowPhase":"Fix","spawnDepth":1,"requestShape":"foreground","requestNonInteractive":false,"model":"sonnet"}

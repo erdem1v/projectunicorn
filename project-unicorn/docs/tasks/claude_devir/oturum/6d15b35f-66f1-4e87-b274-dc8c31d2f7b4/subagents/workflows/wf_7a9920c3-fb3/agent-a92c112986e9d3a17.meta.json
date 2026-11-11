@@ -1,0 +1,1 @@
+{"agentType":"workflow-subagent","isBuiltIn":true,"description":"audit:escaped-bugs","workflowPhase":"Audit","spawnDepth":1,"requestShape":"foreground","requestNonInteractive":false}

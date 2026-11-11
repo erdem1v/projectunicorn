@@ -1,0 +1,1 @@
+{"agentType":"workflow-subagent","isBuiltIn":true,"description":"sweep:u7","workflowPhase":"Sweep","spawnDepth":1,"requestShape":"foreground","requestNonInteractive":false,"model":"opus"}

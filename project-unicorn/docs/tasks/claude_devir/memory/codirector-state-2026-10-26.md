@@ -184,3 +184,32 @@ Supersedes [[codirector-state-2026-10-23]] for live state. Related: [[urun-arayu
   - The ignored mockup renders were force-added (`git add -f`) so the mockup HTML keeps its images. The ignore rules for
     new renders stay.
   - The four-zip package sent earlier is obsolete.
+
+- **2026-10-28, laptop (Mac, user account `tugbauysal`).**
+  - Clone at `~/Desktop/project steam/Project Unicorn/`, `main` = origin = `6db5579`, clean. The Dizüstüne geçiş commit
+    put docs/tasks, mockups, memory and this transcript in the repo; `kur_mac.sh` has been run.
+  - Memory lives in `~/.claude/projects/-Users-tugbauysal-Desktop-project-steam-Project-Unicorn/memory/`. A session
+    started from `project steam/` loads a different, old Mac memory, so Claude should be started inside
+    `Project Unicorn/`.
+  - Godot is `~/Downloads/Godot.app/Contents/MacOS/Godot` (4.6.3). The coreutils gnubin directory is needed for `timeout`.
+  - The clone has no git identity yet. Set the local `erdem1v <erdemsalman1@gmail.com>` before the first commit.
+  - The repo was still public on 10-28.
+  - The handoff scripts in `urun_arayuzu_devir/bin/env.sh` and the olaylar tools have Windows paths, so the first step of
+    any new session is adapting them.
+  - Erdem asked for status and questions; I brought the full list (UE, N2, icons, UK, UM, the three open Olaylar points,
+    goal display, ACIK 14 rest, CLAUDE.md, project.godot, history rewrite, Sales/CS R&D, TR/EN round, priorities).
+    No work has started yet.
+- **2026-10-28 Erdem's answers.**
+  - Start the work.
+  - UE width: (a), widen the Ürün window.
+  - Icons: only Çekirdek (cube) and Güven (shield) are OK; İlk Kullanım, Entegrasyonlar, Büyüme and Gelir are rejected.
+  - A green tick only for done items; a planned item gets an "in progress" style.
+  - UK: (a).
+  - UM comment: Kendi Kendine Servis becomes Yardım Merkezi / Help Center.
+  - He will answer the other questions later: UM's 3 questions, the 3 Olaylar points, goal display, ACIK 14 rest,
+    CLAUDE.md, project.godot, history rewrite, Sales R&D, the TR/EN round, priorities.
+  - Written as PRD E1–E7 (end of PRD_URUN_SPRINT_ARAYUZU) and ORTAK_CALISMA §9 (Mac).
+  - Tasks: GOREV_DIZUSTU_URUN_2026-10-28 (D0–D8, ~23 h) and GOREV_DIZUSTU_OLAYLAR_IKON_2026-10-28 (O0–O2, ~8 h).
+  - Shared helper `docs/tasks/dizustu/mac_env.sh`: HOME isolation, at most 2 Godot processes, free memory of 1500 MB or
+    more, locks under `project steam/.kilit`.
+  - Git identity is set in the clone. The UM thread got a reply.
