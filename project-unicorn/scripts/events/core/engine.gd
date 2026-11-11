@@ -43,7 +43,7 @@ const DEFERRABLE_ORIGINS := [EvGate.Origin.SIGNAL, EvGate.Origin.SCHEDULE,
 static var _signal_buffer: Array = []
 ## Total ticks the floor was reached and found nothing; the harness reports it.
 static var _floor_empty_total: int = 0
-## Consecutive ticks the floor found nothing. §13.6: a run of these is a content hole.
+## Floor triggers in a row that found nothing, with no interrupt or paper admitted between them. §13.6: a run of these is a content hole.
 static var _floor_empty_streak: int = 0
 ## Consecutive ticks with no interrupt and no paper.
 static var _quiet_ticks: int = 0
@@ -520,9 +520,10 @@ static func _admit(event_id: String, verdict: EvGate.Verdict, arc_id: String, im
 	EvDelays.disarm(key)
 	# A forced instance dropped unanswered left its mark; this one arrived on its own.
 	_forced.erase(key)
-	# A note never interrupts, so it takes nothing from the tick's interrupt budget.
+	# A note never interrupts, so it takes nothing from the tick's interrupt budget, and it does not break a silence.
 	if not note:
 		_today_admissions.append({"event_id": event_id, "context": verdict.context})
+		_floor_empty_streak = 0
 	return true
 
 

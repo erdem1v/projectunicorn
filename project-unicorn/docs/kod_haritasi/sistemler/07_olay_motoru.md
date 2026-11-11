@@ -163,6 +163,7 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - Tik sırası tasarımdır (`engine.gd:1-34`): süre dolumu, ark geçersizlendirme, takvim, ark adımı, modül gözlemi, sinyal boşaltma, süpürme, havuz, taban, sınıf ataması, pump;
   ↳ sinyaller slot sırasında TAMPONLANIR (`engine.gd:276`), `day_advanced`'e bağlanma
 - Sınıf ataması (G8 tempo) `propose` içinde değil adım (k)'dedir: gün sonunda önem sırasıyla demote eder (`engine.gd:413`); G3 ve G8 gösterimde yeniden koşmaz, G5/G6/G7 koşar (§4.4)
+- Tabanın boş bulma sayacı (`_floor_empty_streak`) bir kesinti ya da kâğıt kabul edilince (`_admit`) ve taban bir kart bulunca sıfırlanır; uyarı yalnız araya kart girmeden arka arkaya boş bulunan tetiklerde basılır, not kartı sessizliği bozmaz
 - Mandal kabul anında harcanır (`engine.gd:517`); `pump` G7'de düşen `critical` + `one_shot` kartın mandalını iade eder (`engine.gd:592`), G5/G6 düşüşü ve `open_paper` düşüşü iade etmez
 - Not kartı (`EvPresenter.is_note` `presenter.gd:132`): tek seçenekli, etkisiz, critical olmayan, paper olmayan kart modal açmaz; `_admit` onu doğrudan geçmişe yazar (`engine.gd:484-507`), `pump` `event_triggered` ile duyurur
 - Katalog `_` ile başlayan dosyaları ve `unwired/`, `drafts/` dizinlerini HİÇ yüklemez (`catalog.gd:17-19,61-63`); `lint_v3/_bad_*.json` yalnız `event_lint_v3_rules` vakasınca doğrudan okunur. `_fixtures/` dizini yüklenir,
