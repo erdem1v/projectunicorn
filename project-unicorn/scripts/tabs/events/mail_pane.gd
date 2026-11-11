@@ -775,7 +775,7 @@ func _record() -> void:
 		_col.add_child(UiFactory.make_label(String(_item.line), &"DataText"))
 		var am: Character = CharacterRegistry.get_character(c.assigned_to)
 		_col.add_child(UiFactory.make_label(tr("SALES_STEWARD").format(
-			{"name": am.character_name if am != null else tr("REC_AM_NONE")}), &"DataText"))
+			{"name": tr("HR_ROLE_FOUNDER") if c.assigned_to == "" else (am.character_name if am != null else tr("REC_AM_NONE"))}), &"DataText"))
 	elif _item.has("employee"):
 		_col.add_child(_facts([[tr("HR_COL_MORALE"), str(int(_item.morale))]]))
 		_col.add_child(UiFactory.make_label(String(_item.line), &"DataText"))

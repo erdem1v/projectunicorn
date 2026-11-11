@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git 6019db33 · 2026-11-11 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 7f2ab987 · 2026-11-11 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -227,7 +227,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/systems/vc_pitch_system.gd · 1327 · VCPitchSystem · RefCounted · 0 sinyal · 91 func
 - scripts/systems/work_hours_system.gd · 342 · WorkHoursSystem · RefCounted · 0 sinyal · 38 func
 
-### scripts/tabs/ (9 dosya, 4021 satır)
+### scripts/tabs/ (9 dosya, 4019 satır)
 - scripts/tabs/events_tab.gd · 369 · - · Control · 0 sinyal · 23 func
 - scripts/tabs/finance_tab.gd · 144 · - · Control · 1 sinyal · 9 func
 - scripts/tabs/hr_tab.gd · 542 · - · Control · 1 sinyal · 32 func
@@ -236,7 +236,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/tabs/piyasa_tab.gd · 689 · - · Control · 0 sinyal · 34 func
 - scripts/tabs/product_tab.gd · 344 · - · Control · 1 sinyal · 19 func
 - scripts/tabs/rnd_tab.gd · 273 · - · Control · 1 sinyal · 14 func
-- scripts/tabs/sales_tab.gd · 850 · - · Control · 1 sinyal · 40 func
+- scripts/tabs/sales_tab.gd · 848 · - · Control · 1 sinyal · 40 func
 
 ### scripts/tabs/events/ (1 dosya, 898 satır)
 - scripts/tabs/events/mail_pane.gd · 898 · - · ScrollContainer · 0 sinyal · 46 func
@@ -1341,7 +1341,7 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - HR_PROMOTION_* · 1 · scripts/systems/hr_actions.gd
 - HR_RAISE_* · 1 · scripts/systems/hr_actions.gd
 - HR_RESIGN_* · 4 · scripts/systems/hr_constants.gd
-- HR_ROLE_* · 20 · scripts/autoload/character_registry.gd, scripts/autoload/game_state.gd, scripts/onboarding/first_week_doc.gd, scripts/onboarding/onboarding_flow.gd, scripts/systems/hr_constants.gd +3
+- HR_ROLE_* · 20 · scripts/autoload/character_registry.gd, scripts/autoload/game_state.gd, scripts/onboarding/first_week_doc.gd, scripts/onboarding/onboarding_flow.gd, scripts/systems/hr_constants.gd +5
 - HR_ROW_* · 10 · scripts/events/present/chips.gd, scripts/systems/hr_actions.gd, scripts/tabs/hr/hr_ledger.gd, scripts/tabs/hr_tab.gd
 - HR_SEARCH_* · 5 · scripts/main/main.gd, scripts/tabs/hr/hr_assignments.gd, scripts/tabs/hr_tab.gd, scripts/tabs/product/sprint_ui_shared.gd, scripts/debug/kit_probe.gd
 - HR_SEARCHING_* · 2 · scripts/tabs/hr_tab.gd

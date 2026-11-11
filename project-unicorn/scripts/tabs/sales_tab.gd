@@ -658,12 +658,10 @@ func _satisfaction_row(c: Customer) -> HBoxContainer:
 func _account_foot(c: Customer, off: bool) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", UiTokens.SPACE_M)
-	var who: String = tr("REC_AM_NONE")
-	if c.assigned_to != "":
-		var cs: Character = CharacterRegistry.get_character(c.assigned_to)
-		if cs != null:
-			who = cs.character_name
-	row.add_child(_slotted("SALES_STEWARD", "name", who))
+	# "" is the founder's desk; an id with no one behind it is a rep who left, the account held by nobody (Ekip §11.3).
+	var cs: Character = CharacterRegistry.get_character(c.assigned_to)
+	row.add_child(_slotted("SALES_STEWARD", "name", tr("HR_ROLE_FOUNDER") if c.assigned_to == ""
+		else (cs.character_name if cs != null else tr("REC_AM_NONE"))))
 	var change := _button(tr("SALES_STEWARD_CHANGE"), off)
 	change.toggle_mode = true
 	change.pressed.connect(_open_steward_picker.bind(c, change))

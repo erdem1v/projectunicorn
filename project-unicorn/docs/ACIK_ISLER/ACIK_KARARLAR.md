@@ -407,6 +407,8 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     kurucuya döner (`assigned_to = ""`) ve yalnız kurucu etiketi gerekir; Ekip §11.3'ün "otomatik kurucuya devir
     varsayılan değildir" hükmüyle çelişir.
   - Kaynak: Ekip GDD §11.3.
+  - Kısmen karara bağlandı (Erdem, 2026-11-11, playtest H04): kurucunun masasındaki hesap iki yerde de "Kurucu" okur
+    (`HR_ROLE_FOUNDER`). Temsilcisi ayrılmış hesap "atanmadı" (`REC_AM_NONE`) okumaya devam eder; bu yarı açık.
 
 - **38 · Müşteri masası Destek işindeki temsilciyi de sayıyor.**
   - Ne oluyor: Masa (`CustomerRepSystem.ranked_reps`) ve iki girişi (`reconcile_assignments`, `daily_tick`) unvanı

@@ -371,7 +371,7 @@ _busy	var	scripts/ui/office/person_bust.gd:33	PersonBust
 _busy_label	var	scripts/ui/components/build_bar.gd:23	build_bar.gd
 _button	func	scripts/modals/ending_scene.gd:417	EndingScene
 _button	func	scripts/tabs/hunt_tab.gd:541	hunt_tab.gd
-_button	func	scripts/tabs/sales_tab.gd:841	sales_tab.gd
+_button	func	scripts/tabs/sales_tab.gd:839	sales_tab.gd
 _button	var	scripts/ui/office/office_hud.gd:21	office_hud.gd
 _by_card	func	scripts/systems/sprint_timeline.gd:118	SprintTimeline
 _by_event	var	scripts/events/core/history.gd:23	EvHistory
@@ -410,7 +410,7 @@ _card	var	scripts/tabs/piyasa_tab.gd:43	piyasa_tab.gd
 _card	var	scripts/tabs/product/board_row.gd:30	BoardRow.CardName
 _card	func	scripts/tabs/product/product_model.gd:1066	ProductModel
 _card	func	scripts/tabs/product/sprint_next.gd:251	SprintNext
-_card	func	scripts/tabs/sales_tab.gd:785	sales_tab.gd
+_card	func	scripts/tabs/sales_tab.gd:783	sales_tab.gd
 _card	var	scripts/ui/components/goals_panel.gd:22	goals_panel.gd
 _card	func	scripts/ui/meeting/sales_meeting_adapter.gd:319	SalesMeetingAdapter
 _card	var	scripts/ui/office/meeting_invite.gd:30	MeetingInvite
@@ -1216,7 +1216,7 @@ _dbg_onb_random_x20	func	scripts/main/main.gd:6011	main.gd
 _dbtn	func	scripts/theme/build_theme.gd:1453	build_theme.gd
 _deal	var	scripts/ui/meeting/meeting_ruler.gd:20	MeetingRuler
 _deal	func	scripts/ui/meeting/sales_meeting_adapter.gd:305	SalesMeetingAdapter
-_deal_line	func	scripts/tabs/sales_tab.gd:810	sales_tab.gd
+_deal_line	func	scripts/tabs/sales_tab.gd:808	sales_tab.gd
 _debug_endgame_key	func	scripts/main/game_shell.gd:171	game_shell.gd
 _debug_fkey	func	scripts/main/game_shell.gd:134	game_shell.gd
 _debug_open_term_table	func	scripts/main/game_shell.gd:153	game_shell.gd
@@ -1665,7 +1665,7 @@ _glow_mats	var	scripts/ui/office/office_lighting.gd:81	OfficeLighting
 _glow_quad	func	scripts/ui/office/office_lighting.gd:313	OfficeLighting
 _glow_root	var	scripts/ui/office/office_lighting.gd:70	OfficeLighting
 _glyph	var	scripts/ui/components/toast.gd:20	toast.gd
-_glyph_line	func	scripts/tabs/sales_tab.gd:818	sales_tab.gd
+_glyph_line	func	scripts/tabs/sales_tab.gd:816	sales_tab.gd
 _glyph_text	func	scripts/tabs/rnd/rnd_detail_panel.gd:163	RnDDetailPanel
 _go	func	scripts/tabs/events/mail_pane.gd:836	mail_pane.gd
 _go_product	func	scripts/tabs/sales_tab.gd:293	sales_tab.gd
@@ -1881,7 +1881,7 @@ _input	func	scripts/ui/meeting/meeting_panel.gd:785	MeetingPanel
 _input	func	scripts/ui/office/office_travel.gd:168	office_travel.gd
 _inputs	func	scripts/debug/sprint_probe.gd:477	sprint_probe.gd
 _inset	func	scripts/modals/hr_action_modal.gd:151	hr_action_modal.gd
-_inset	func	scripts/tabs/sales_tab.gd:775	sales_tab.gd
+_inset	func	scripts/tabs/sales_tab.gd:773	sales_tab.gd
 _install_build	func	scripts/events/seams/seams_world.gd:152	EvSeamsWorld
 _install_company	func	scripts/events/seams/seams_hr.gd:136	EvSeamsHR
 _install_founder	func	scripts/events/seams/seams_hr.gd:179	EvSeamsHR
@@ -1979,7 +1979,7 @@ _land_faulty	func	scripts/systems/sprint_system.gd:1828	SprintSystem
 _landed	var	scripts/ui/components/radial_dial.gd:16	RadialDial
 _landing	func	scripts/ui/components/radial_dial.gd:56	RadialDial
 _lane	func	scripts/tabs/product/board_row.gd:368	BoardRow
-_lane	func	scripts/tabs/sales_tab.gd:756	sales_tab.gd
+_lane	func	scripts/tabs/sales_tab.gd:754	sales_tab.gd
 _lane	var	scripts/ui/office/office_person.gd:222	OfficePerson
 _lane_layer	func	scripts/tabs/product/sprint_board.gd:182	SprintBoard
 _lanes	var	scripts/ui/office/office_person.gd:181	OfficePerson
@@ -2072,7 +2072,7 @@ _lift_cover	func	scripts/menu/main_menu.gd:75	main_menu.gd
 _lift_open	var	scripts/ui/office/office_people.gd:65	OfficePeople
 _line	func	scripts/tabs/rnd/rnd_tree_view.gd:387	RnDTreeView
 _line	var	scripts/tabs/rnd_tab.gd:42	rnd_tab.gd
-_line	func	scripts/tabs/sales_tab.gd:802	sales_tab.gd
+_line	func	scripts/tabs/sales_tab.gd:800	sales_tab.gd
 _line	var	scripts/ui/office/meeting_invite.gd:34	MeetingInvite
 _line_h	func	scripts/theme/build_theme.gd:1419	build_theme.gd
 _line_is_data	func	scripts/debug/endgame_smoke.gd:10104	EndgameSmoke
@@ -2347,7 +2347,7 @@ _name_label	var	scripts/ui/components/build_bar.gd:22	build_bar.gd
 _name_label	var	scripts/ui/components/research_bar.gd:34	research_bar.gd
 _name_list	func	scripts/events/present/chips.gd:597	EvChips
 _name_of	func	scripts/events/present/presenter.gd:151	EvPresenter
-_name_row	func	scripts/tabs/sales_tab.gd:793	sales_tab.gd
+_name_row	func	scripts/tabs/sales_tab.gd:791	sales_tab.gd
 _named	func	scripts/events/core/effects.gd:1059	EvEffects
 _names	func	scripts/modals/work_hours_modal.gd:269	work_hours_modal.gd
 _names	func	scripts/tabs/product/board_row.gd:500	BoardRow
@@ -2614,7 +2614,7 @@ _open_raise	func	scripts/tabs/hr/hr_ledger.gd:373	HRLedger
 _open_requests	func	scripts/systems/customer_rep_system.gd:212	CustomerRepSystem
 _open_row	var	scripts/tabs/product/area_panel.gd:24	AreaPanel
 _open_sales_meeting	func	scripts/main/main.gd:5669	main.gd
-_open_steward_picker	func	scripts/tabs/sales_tab.gd:690	sales_tab.gd
+_open_steward_picker	func	scripts/tabs/sales_tab.gd:688	sales_tab.gd
 _open_table	func	scripts/ui/meeting/sales_meeting_adapter.gd:197	SalesMeetingAdapter
 _open_weeks	var	scripts/debug/run_probe.gd:331	RunProbe
 _opened	func	scripts/tabs/events/mail_pane.gd:724	mail_pane.gd
@@ -3707,7 +3707,7 @@ _slot_x	var	scripts/ui/components/top_bar.gd:86	top_bar.gd
 _slots	func	scripts/events/tools/plausibility.gd:236	plausibility.gd
 _slots	var	scripts/tabs/rnd/rnd_tree_view.gd:49	RnDTreeView
 _slots_of_type	func	scripts/events/tools/lint.gd:783	EvLint
-_slotted	func	scripts/tabs/sales_tab.gd:828	sales_tab.gd
+_slotted	func	scripts/tabs/sales_tab.gd:826	sales_tab.gd
 _smooth	func	scripts/ui/office/office_body.gd:150	OfficeBody
 _snooze	var	scripts/tabs/finance/finance_ozet_view.gd:51	FinanceOzetView
 _solo	func	scripts/tabs/product/product_model.gd:628	ProductModel
@@ -3850,7 +3850,7 @@ _step_walk	func	scripts/ui/office/office_person.gd:478	OfficePerson
 _stepper	func	scripts/modals/work_hours_modal.gd:296	work_hours_modal.gd
 _steps	func	scripts/debug/office_pan_probe.gd:194	office_pan_probe.gd
 _steps	var	scripts/systems/product_lines.gd:46	ProductLines
-_steward_option	func	scripts/tabs/sales_tab.gd:713	sales_tab.gd
+_steward_option	func	scripts/tabs/sales_tab.gd:711	sales_tab.gd
 _stop_day	var	scripts/debug/run_probe.gd:282	RunProbe
 _stop_waiting	func	scripts/ui/office/office_person.gd:950	OfficePerson
 _stopped	var	scripts/debug/run_probe.gd:283	RunProbe
