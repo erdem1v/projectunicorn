@@ -3,8 +3,8 @@ extends HBoxContainer
 
 # Ürün sekmesinin orta (bu sprint) ve sağ (sonraki sprint) sütunları. Yalnız modeli çizer: izin ve eşikler modelden gelir, her tık
 # sekmeye `action` olarak çıkar. Orta sütunun başlığı (sprint başlığı ve kapasite), panosunun başlığı ve alt şeridi sabit, arada
-# panonun gövdesi kayar; sağ sütun (`SprintNext`) kendi içinde kayar. Saat ilerleyince `set_now` panoyu, kapasiteyi ve ilerlemeyi
-# sayfa kurulmadan günceller.
+# panonun gövdesi kayar; sürüm notunda aradaki gövde (satırlar, sonuçlar, yorumlar) uzunsa kayar, kırpılmaz. Sağ sütun (`SprintNext`)
+# kendi içinde kayar. Saat ilerleyince `set_now` panoyu, kapasiteyi ve ilerlemeyi sayfa kurulmadan günceller.
 
 signal action(kind: String, args: Dictionary)
 ## Panonun ölçtüğü eksen genişliği kurulandan başka (`SprintBoard.axis_wanted`).
@@ -16,14 +16,15 @@ const TEAM_GLYPH := "res://assets/icons/rail/hr.svg"
 const SQUARE_POINTS := 5.0
 
 
-## Orta sütun: başlık ve alt sabit, arada gövde. Alt şerit ilk istendiğinde kurulur.
+## Orta sütun: başlık ve alt sabit, arada gövde. `scrolls` ise gövde uzunsa kayar (sürüm notu). Alt şerit ilk istendiğinde kurulur.
 class Column extends PanelContainer:
 	var head := SprintUiShared.column(UiTokens.SPACE_L)
 	var stack := SprintUiShared.column(UiTokens.SPACE_M)
+	var scroll: ScrollContainer
 	var _col := SprintUiShared.column(0)
 	var _foot: VBoxContainer
 
-	func _init() -> void:
+	func _init(scrolls := false) -> void:
 		theme_type_variation = &"SprintColumn"
 		size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		add_child(_col)
@@ -32,7 +33,15 @@ class Column extends PanelContainer:
 		stack.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		var body := SprintUiShared.pad(stack, Vector4i(UiTokens.SPACE_L, UiTokens.SPACE_M, UiTokens.SPACE_L, 0))
 		body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		_col.add_child(body)
+		if scrolls:
+			body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			scroll = ScrollContainer.new()
+			scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+			scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+			scroll.add_child(body)
+			_col.add_child(scroll)
+		else:
+			_col.add_child(body)
 
 	func foot() -> VBoxContainer:
 		if _foot == null:
@@ -48,6 +57,8 @@ class Column extends PanelContainer:
 
 var _capacity: CapacityView
 var _board: SprintBoard
+## Sürüm notunun gövdesinin kaydırması.
+var _note_scroll: ScrollContainer
 var _foot: SprintFoot
 var _next: SprintNext
 var _running := false
@@ -61,13 +72,15 @@ func _init() -> void:
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 
-## Yeniden kurulumda panonun ve sağ sütunun kaydırma yeri korunur.
+## Yeniden kurulumda panonun, sürüm notunun ve sağ sütunun kaydırma yeri korunur.
 func setup(model: Dictionary) -> void:
 	var board_at: int = _board.scroll.scroll_vertical if _board != null else 0
+	var note_at: int = _note_scroll.scroll_vertical if _note_scroll != null else 0
 	var next_at: int = _next.scroll_vertical if _next != null else 0
 	UiFactory.clear(self)
 	_capacity = null
 	_board = null
+	_note_scroll = null
 	_foot = null
 	_next = null
 	_running = false
@@ -79,6 +92,8 @@ func setup(model: Dictionary) -> void:
 	add_child(_next)
 	if _board != null:
 		SprintUiShared.keep_scroll(_board.scroll, board_at)
+	if _note_scroll != null:
+		SprintUiShared.keep_scroll(_note_scroll, note_at)
 	SprintUiShared.keep_scroll(_next, next_at)
 
 
@@ -106,9 +121,10 @@ func set_now(at: float) -> void:
 
 func _center(model: Dictionary) -> void:
 	var c: Dictionary = model.center
-	var col := Column.new()
+	var col := Column.new(c.mode == "release")
 	add_child(col)
 	if c.mode == "release":
+		_note_scroll = col.scroll
 		_release(col, c, model.next.sprint)
 		return
 	if c.sprint < 0:

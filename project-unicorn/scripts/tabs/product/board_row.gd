@@ -12,8 +12,9 @@ extends PanelContainer
 # Label ya da Panel'i; ipucu o öğeye bağlanır. Zengin kart ipucu (`CardTip`) yalnız kartın adında açılır; çubuğun ipucu düz yazıdır
 # ve açılırken okunur (koşan sprintte saat ilerler). Başlamayacak kartın (kapısı kapanmış) ipucu satırın kendisindedir, adın
 # üstünde de o okunur: kapının gerekçesi ve kartın sonraki sütuna geçeceği.
-# Satır taban yükseklikte (`D_H_CARD_ROW`, ad iki satırsa `D_H_CARD_ROW_TWO`) durur; düzeltme kartının hata metni sığmazsa kelime
-# sınırında sarar ve satırı büyütür, zaman ekseni satırda dikey ortalı kalır.
+# Satır taban yükseklikte (`D_H_CARD_ROW`, ad iki satırsa `D_H_CARD_ROW_TWO`) durur; ad ve düzeltme kartının hata metni kesilmeden
+# kelime sınırında sarar, taban satırdan fazla satır satırı büyütür ve zaman ekseni satırda dikey ortalı kalır. Modülün adı tasarımı
+# gereği kısa ad (`area_short`); tam adı ipucundadır.
 
 signal action(kind: String, args: Dictionary)
 
@@ -158,11 +159,12 @@ func _fit() -> void:
 	custom_minimum_size.y = _h + extra
 
 
-## Tür ikonu, ad (22 karakterden uzunsa iki satır, yine taşarsa üç nokta), hata riski, efor ve aday satırında "+".
+## Tür ikonu, ad (22 karakterden uzunsa tabanda iki satır; sığmayan ad daha çok satıra sarar), hata riski, efor ve aday satırında "+".
 func _first_line() -> HBoxContainer:
 	var ink: Variant = UiTokens.D_neg_ink() if card.late else null
 	var line := SprintUiShared.box(UiTokens.SPACE_M)
-	line.custom_minimum_size.y = UiTokens.D_H_CARD_LINE_TWO if _two else UiTokens.D_H_CARD_LINE
+	var base: int = UiTokens.D_H_CARD_LINE_TWO if _two else UiTokens.D_H_CARD_LINE
+	line.custom_minimum_size.y = base
 	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var kind := UiFactory.make_glyph(SprintUiShared.KIND_ICON % card.kind, UiTokens.D_ICON_ROW, UiTokens.D_INK_3)
 	kind.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
@@ -171,11 +173,11 @@ func _first_line() -> HBoxContainer:
 	title.theme_type_variation = &"DataStrong"
 	if ink != null:
 		title.add_theme_color_override("font_color", ink)
-	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART if _two else TextServer.AUTOWRAP_OFF
-	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	title.max_lines_visible = 2 if _two else 1
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	_wraps[title] = [2 if _two else 1, base]
+	title.minimum_size_changed.connect(_fit)
 	line.add_child(title)
 	var risk := SprintUiShared.box(UiTokens.SPACE_XS)
 	risk.custom_minimum_size.y = UiTokens.D_H_CARD_LINE
@@ -215,8 +217,6 @@ func _second_line() -> HBoxContainer:
 		text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		_wraps[text] = [1, UiTokens.D_AVATAR_ROW_SM]
 		text.minimum_size_changed.connect(_fit)
-		text.mouse_filter = Control.MOUSE_FILTER_PASS
-		text.tooltip_text = card.fix_full
 		line.add_child(text)
 		if not slot.is_empty() or _ctx.mode == "active":
 			line.add_child(_status())

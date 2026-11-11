@@ -3,7 +3,8 @@ extends VBoxContainer
 
 # ÇEYREK görünümü: üstte hedef şeridi (hedefi olmayan çeyrek de "hedef yok" der), altta SPRINT'in sol sütunu (modüller ve talepler)
 # ve altı sprint sütunu (bu sprint, PM'in önerdikleri, boşlar); sütunlar en uzununun içeriği kadar uzar, onay düğmeleri kartların
-# hemen altında. Yalnız modeli çizer; onay ve hedef seçimi eylem olarak, açık modül yerel durum olarak çıkar.
+# hemen altında. Pencere içeriği kadar uzar, içerik pencerenin en çok boyunu aşarsa sol sütun ve sütunlar kendi içinde kayar. Yalnız
+# modeli çizer; onay ve hedef seçimi eylem olarak, açık modül yerel durum olarak çıkar.
 
 signal action(kind: String, args: Dictionary)   # approve {sprint} · approve_all · edit {sprint} · pick_goal {area_id}
 signal ui_changed(key: String, value: Variant)   # sol sütunun yerel durumu (açık modül, talep listesinin açıklığı)
@@ -11,6 +12,10 @@ signal ui_changed(key: String, value: Variant)   # sol sütunun yerel durumu (a�
 const SPRINT_CARD := preload("res://scenes/tabs/product/SprintCard.tscn")
 const LOOKS := {"current": &"SprintColumnCurrent", "proposed": &"SprintColumn", "empty": &"SprintColumnNext"}
 const CHEVRON := "res://assets/icons/util/chevron_down.svg"
+
+## Sol sütunun (AreaPanel) ve altı sprint sütunuyla "Hepsini onayla"nın kaydırmaları: yeniden kurulumda yerleri korunur.
+var _left: ScrollContainer
+var _right: ScrollContainer
 
 
 ## Hedefin on karesi: `now` kadarı dolu, `target` karesinin önünde hedef çizgisi. Doluluk yargısız,
@@ -41,6 +46,8 @@ class GoalMeter extends Control:
 
 
 func setup(model: Dictionary) -> void:
+	var left_at: int = _left.scroll_vertical if _left != null else 0
+	var right_at: int = _right.scroll_vertical if _right != null else 0
 	UiFactory.clear(self)
 	add_theme_constant_override("separation", UiTokens.SPACE_XL)
 	if model.quarter.goal != null:
@@ -49,20 +56,24 @@ func setup(model: Dictionary) -> void:
 	var body := SprintUiShared.box(UiTokens.SPACE_XL)
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	add_child(body)
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.custom_minimum_size.x = UiTokens.D_W_LEFT
+	_left = ScrollContainer.new()
+	_left.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_left.custom_minimum_size.x = UiTokens.D_W_LEFT
 	var areas := AreaPanel.new()
 	areas.action.connect(action.emit)
 	areas.ui_changed.connect(ui_changed.emit)
 	areas.request_picked.connect(func(area_id: String) -> void: ui_changed.emit("open_area", area_id))
-	scroll.add_child(areas)
-	body.add_child(scroll)
+	_left.add_child(areas)
+	body.add_child(_left)
 	areas.setup(model)
 
 	var right := SprintUiShared.column(UiTokens.SPACE_XL)
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	body.add_child(right)
+	_right = ScrollContainer.new()
+	_right.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_right.add_child(right)
+	body.add_child(_right)
 	var columns := SprintUiShared.box(UiTokens.SPACE_M)
 	right.add_child(columns)
 	for col in model.quarter.columns:
@@ -70,6 +81,8 @@ func setup(model: Dictionary) -> void:
 	var approve_all := SprintUiShared.button(tr("PRODUCT_APPROVE_ALL"), &"PrimaryButtonDark", action.emit.bind("approve_all", {}))
 	approve_all.size_flags_horizontal = Control.SIZE_SHRINK_END
 	right.add_child(approve_all)
+	SprintUiShared.keep_scroll(_left, left_at)
+	SprintUiShared.keep_scroll(_right, right_at)
 
 
 ## The window fits the quarter's content: the goal strip, then the taller of the areas and the columns.
@@ -77,7 +90,7 @@ func content_height() -> float:
 	var strip: float = get_child(0).get_combined_minimum_size().y + UiTokens.SPACE_XL if get_child_count() > 1 else 0.0
 	var body: HBoxContainer = get_child(-1)
 	var areas: AreaPanel = body.get_child(0).get_child(0)
-	return strip + maxf(areas.get_combined_minimum_size().y, body.get_child(1).get_combined_minimum_size().y)
+	return strip + maxf(areas.get_combined_minimum_size().y, body.get_child(1).get_child(0).get_combined_minimum_size().y)
 
 
 ## BU ÇEYREK · alan · hedef cümlesi ... on kare ölçer · ilerleme · ok; "Hatalar" ve "Hedef yok" yalnız adıyla durur. Tık hedef

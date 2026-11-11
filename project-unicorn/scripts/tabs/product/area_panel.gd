@@ -208,7 +208,7 @@ func _module_row(m: Dictionary) -> PanelContainer:
 	return row
 
 
-## Aday kart: ad, düzeltme kartında hata sayısı, efor ve "+" (planda tik, başka sprintte damga); altında aşama payları.
+## Aday kart: ad, efor ve "+" (planda tik, başka sprintte damga); altında düzeltme kartının hata metni (sarar) ve aşama payları.
 func _candidate(c: Dictionary) -> PanelContainer:
 	var card := PanelContainer.new()
 	card.theme_type_variation = &"ModuleCandidate"
@@ -216,11 +216,6 @@ func _candidate(c: Dictionary) -> PanelContainer:
 	card.add_child(col)
 	var top := SprintUiShared.box(UiTokens.SPACE_M)
 	top.add_child(_name(String(c.name), &"CaptionName", UiTokens.D_INK_2))
-	if int(c.bugs) > 0:
-		var bugs := SprintUiShared.label(SprintUiShared.count("PRODUCT_FX_BUGS", int(c.bugs)), &"CaptionName", UiTokens.D_INK_3)
-		bugs.mouse_filter = Control.MOUSE_FILTER_PASS
-		bugs.tooltip_text = c.fix_text
-		top.add_child(bugs)
 	top.add_child(SprintUiShared.label(str(c.effort), &"CaptionName", UiTokens.D_INK_1))
 	if c.planned:
 		var tick := UiFactory.make_glyph(SprintUiShared.CHECK, UiTokens.D_ICON_ROW, UiTokens.D_ST_TEST)
@@ -229,10 +224,12 @@ func _candidate(c: Dictionary) -> PanelContainer:
 		tick.tooltip_text = tr("PRODUCT_CAND_IN_PLAN_TIP")
 		top.add_child(tick)
 	elif int(c.stamp) >= 0:
-		top.add_child(SprintUiShared.due_chip(tr("PRODUCT_STAMP").format({"n": int(c.stamp)}), false, ""))
+		top.add_child(SprintUiShared.due_chip(tr("PRODUCT_TAG_SPRINT").format({"n": int(c.stamp)}), false, ""))
 	else:
 		top.add_child(_add_key(c))
 	col.add_child(top)
+	if int(c.bugs) > 0:
+		col.add_child(SprintUiShared.prose(String(c.fix_text), &"Caption"))
 	col.add_child(_strip(c.parts))
 	if c.planned or int(c.stamp) >= 0:
 		card.modulate = Color(Color.WHITE, UiTokens.D_TAKEN_ALPHA)

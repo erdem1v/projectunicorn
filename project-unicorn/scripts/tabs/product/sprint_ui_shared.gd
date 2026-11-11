@@ -414,17 +414,19 @@ static func open_goal_menu(anchor: Control, areas: Array, picked: String, on_pic
 	menu.open_at(anchor, true)
 
 
-## Cümle düzeninde bayrak: rakip çıkışı nötr, bu ya da sonraki sprintte biten son tarih uyarı renginde.
+## Cümle düzeninde bayrak: rakip çıkışı nötr, bu ya da sonraki sprintte biten son tarih uyarı renginde. Sütunun genişliğini alır;
+## uzun yazı kesilmez, sarar ve çip uzar (saat ilk satırın hizasında).
 static func flag(text: String, warn := false) -> PanelContainer:
 	var chip := PanelContainer.new()
 	chip.theme_type_variation = UiTokens.D_variation(&"FlagChipWarn") if warn else &"FlagChip"
-	chip.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	chip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var row := box(UiTokens.SPACE_S)
 	if warn:
-		row.add_child(UiFactory.make_glyph(CLOCK, UiTokens.D_ICON_PART, UiTokens.D_warn()))
-	row.add_child(label(text, &"CaptionStrong", UiTokens.D_warn() if warn else null))
+		var clock := UiFactory.make_glyph(CLOCK, UiTokens.D_ICON_PART, UiTokens.D_warn())
+		clock.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		row.add_child(clock)
+	row.add_child(prose(text, &"CaptionStrong", UiTokens.D_warn() if warn else null))
 	chip.add_child(row)
 	return chip
 
@@ -512,12 +514,12 @@ static func button(text: String, variation: StringName, on_press: Callable) -> B
 	return b
 
 
-## Düzeltme kartının hata satırı: "6 hata · 3 hesap · 140 kullanıcı · en büyüğü Demir Holding (100 kullanıcı)"; `with_top`
-## yanlışsa en büyük hesap yazılmaz. B2C'de hesap sayısı (-1) ve en büyük hesap yoktur.
-static func bugs_text(part: Dictionary, with_top := true) -> String:
+## Düzeltme kartının hata satırı: "6 hata · 3 hesap · 140 kullanıcı · en büyüğü Demir Holding (100 kullanıcı)". B2C'de hesap sayısı
+## (-1) ve en büyük hesap yoktur.
+static func bugs_text(part: Dictionary) -> String:
 	var bits: PackedStringArray = [count("PRODUCT_FX_BUGS", int(part.n))]
 	bits.append_array(impact_bits(part))
-	if with_top and part.top != "":
+	if part.top != "":
 		bits.append(RnDUiShared.t("PRODUCT_FX_TOP").format(
 			{"account": part.top, "users": count("PRODUCT_USER_COUNT", int(part.top_users))}))
 	return SEP.join(bits)

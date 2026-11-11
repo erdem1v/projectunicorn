@@ -2756,7 +2756,6 @@ PRODUCT_MODULES,Modüller,Modules
 PRODUCT_IN_PLAN,planda,planned
 PRODUCT_IN_PLAN_TIP,Bu sprintte kartı var,Has a card in this sprint
 PRODUCT_CAND_IN_PLAN_TIP,Bu sprintin planında,In this sprint's plan
-PRODUCT_STAMP,S{n},S{n}
 PRODUCT_ADD_TO_PLAN,Plana ekle,Add to plan
 PRODUCT_EFFORT_TIP,efor {n},effort {n}
 PRODUCT_EARLY_END_TIP,Bütün kartlar {w}. haftada biter,All cards done in week {w}

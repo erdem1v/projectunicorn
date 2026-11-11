@@ -22,13 +22,12 @@ class CarryRow extends PanelContainer:
 
 
 ## Bir aşama payının altında önden çalışanların yüzleri, üst üste binerek; hücreye sığmayanların yerini son sığan yüzün ardında
-## "+{n}" alır (o da sığmazsa yalnız ilk yüz), hücre kırpılır: dar payda iki üç kişi olabilir.
+## "+{n}" alır: dar payda iki üç kişi olabilir. Hücre en az bir yüz ve "+{n}" kadar geniştir, hiçbiri kırpılmaz.
 class FaceCell extends Control:
 	var _faces: Array[Control] = []
 	var _more: Label
 
 	func _init(people: Array) -> void:
-		clip_contents = true
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 		for person: Dictionary in people:
 			var face: Control = SprintUiShared.face(person, UiTokens.D_AVATAR_ROW_SM, false, false)
@@ -38,6 +37,14 @@ class FaceCell extends Control:
 		_more = SprintUiShared.label("", &"Caption")
 		add_child(_more)
 		resized.connect(_fit)
+
+	func _ready() -> void:
+		if _faces.is_empty():
+			return
+		custom_minimum_size.x = UiTokens.D_AVATAR_ROW_SM
+		if _faces.size() > 1:
+			_more.text = "+%d" % (_faces.size() - 1)
+			custom_minimum_size.x += UiTokens.SPACE_XXS + _more.get_combined_minimum_size().x
 
 	func _fit() -> void:
 		var step: float = UiTokens.D_AVATAR_ROW_SM - UiTokens.SPACE_S
@@ -53,8 +60,7 @@ class FaceCell extends Control:
 		for i in _faces.size():
 			_faces[i].visible = i < shown
 			_faces[i].position = Vector2(i * step, 0.0)
-		# Tek yüzün yanına "+{n}" de sığmıyorsa yalnız yüz kalır (kalanlar ipucunda).
-		_more.visible = shown < _faces.size() and room.call(shown, _faces.size() - shown) <= size.x
+		_more.visible = shown < _faces.size()
 		if _more.visible:
 			_more.text = "+%d" % (_faces.size() - shown)
 			_more.size = _more.get_combined_minimum_size()
@@ -217,16 +223,14 @@ func _more_row(rest: Array) -> PanelContainer:
 	return line
 
 
-## Kart adı: iki satıra iner, yine taşarsa üç nokta.
+## Kart adı: kesilmez, sığmayınca satırlara sarar ve satır büyür.
 func _name(text: String, variation: StringName) -> Label:
 	var name_label := SprintUiShared.prose(text, variation)
-	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	name_label.max_lines_visible = 2
 	name_label.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	return name_label
 
 
-## Satırın başındaki ikon: ad iki satıra inebildiği için üste yaslı, ilk satırın hizasında.
+## Satırın başındaki ikon: ad birkaç satıra inebildiği için üste yaslı, ilk satırın hizasında.
 func _icon(path: String, ink: Color) -> MarginContainer:
 	var glyph := UiFactory.make_glyph(path, UiTokens.D_ICON_TAG, ink)
 	glyph.size_flags_vertical = Control.SIZE_SHRINK_BEGIN

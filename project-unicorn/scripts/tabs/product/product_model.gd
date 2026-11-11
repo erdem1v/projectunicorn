@@ -87,8 +87,8 @@ extends RefCounted
 #         sprintte başlıyor), prep: {pm: person, done: 0..1} or null (hazırlayan PM yok), buttons}] (sürüm notunda devreden kartlar
 #         `carried`ta yer alır, burada değil; planlamada "↑" ve "×", öbür kiplerde "×").
 # person = {id, name, role_text, look, stars, founder}.
-# Kart satırı (pano) = {id, kind, name, effort, raw_effort, module (kısa ad), module_name, fix_text (düzeltme kartında hata sayısı ve
-#   etkilenenler), fix_full (en büyük hesapla), slot: {kind: "due" (+ text, soon, customer, value, promise: söz mü talep mi) | "carried" |
+# Kart satırı (pano) = {id, kind, name, effort, raw_effort, module (kısa ad; satır onu yazar), module_name (tam ad, ipucunda), fix_text
+#   (düzeltme kartında hata sayısı, etkilenenler ve en büyük hesap), slot: {kind: "due" (+ text, soon, customer, value, promise: söz mü talep mi) | "carried" |
 #   "late"} ya da {}, pm, ask, risk, risk_raw (0..1: beklenen hatanın tavana oranı, hazırlanmamış hâli), late, finishes (sprint sonuna
 #   yetişir), founder, gate (başlamayacak kartın kapı gerekçesi, yoksa ""), buttons, stages (SprintTimeline aşamaları)}. Planlamada
 #   düğmeler "→" ve "×", koşarken yok; kapısı sonradan kapanıp başlamayacak kart zaman ekseninde yoktur: `stages` boş, `gate` dolu,
@@ -696,8 +696,7 @@ static func _candidates(offered: Array, pool: Dictionary) -> Array:
 
 
 ## Kart satırı: `c` kart, `t` zaman ekseninin o karttaki kaydı (başlamayacak kartta {}). Efor kartın sprintteki yüküdür (`_effort`),
-## risk beklenen hatanın tavana (`SprintBugs.ceiling`) oranı ve hazırlanmamış hâli. Hata metni hesap sayısı ve kullanıcıyla biter:
-## en büyük hesabın adı satıra sığmaz.
+## risk beklenen hatanın tavana (`SprintBugs.ceiling`) oranı ve hazırlanmamış hâli.
 static func _row(c: Dictionary, t: Dictionary, buttons: Array) -> Dictionary:
 	var ref: float = SprintBugs.ceiling()
 	var preparer: Character = CharacterRegistry.get_character(String(t.get("prep", {}).get("by", "")))
@@ -715,7 +714,7 @@ static func _row(c: Dictionary, t: Dictionary, buttons: Array) -> Dictionary:
 	return {"id": c.id, "kind": _kind(c), "name": SprintCatalog.card_name(c), "effort": roundi(_effort(c)),
 		"raw_effort": roundi(SprintSystem.card_load(c)),
 		"module": SprintCatalog.area_short(c.area), "module_name": SprintCatalog.area_name(c.area),
-		"fix_text": SprintUiShared.bugs_text(bugs, false) if fix else "", "fix_full": SprintUiShared.bugs_text(bugs) if fix else "",
+		"fix_text": SprintUiShared.bugs_text(bugs) if fix else "",
 		"slot": slot, "pm": null if preparer == null else _face(preparer, HRConstants.AREA_PRODUCT), "ask": _ask(c),
 		"risk": minf(1.0, t.get("h", 0.0) / ref) if ref > 0.0 else 0.0, "risk_raw": minf(1.0, t.get("h0", 0.0) / ref) if ref > 0.0 else 0.0,
 		"late": late, "finishes": t.get("finishes", false), "founder": t.get("founder", false),

@@ -131,6 +131,12 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
   `D_CARD_NAME_SHORT` 22, `D_H_STAGE_BAR` 30, `D_STAGE_BAR_PAD`, `D_W_TICK_BOX`, `D_NOW_HEAD`, `D_W_CARD_SLOT`, `D_RISK_BAR`, `D_ASK_DISC`, `D_H_BOARD_SECTION`, `D_H_BOARD_FADE`, `D_ROW_ALPHA`, `D_GHOST_ALPHA`;
   ↳ çubuk ve izler: `D_STAGE_BAR_MIX` (zemin payları), `D_STAGE_BAR_EDGE` (kenar alfası), `D_SHADOW_ALPHA`, `D_SHADOW_FOOT_ALPHA`, `D_H_SHADOW`, `D_SPILL_LINE`, `D_SPILL_STEP`, `D_EARLY_STRIPE`, `D_EARLY_PERIOD`, `D_MEET_LIGHT/DARK/EDGE`,
   `D_MEET_PERIOD`; renkler `D_stage_bar(aşama, tür)` ve `D_stage_bar_edge(aşama, tür)`.
+- Ürün penceresinde kesme yok: hiçbir metin üç noktayla (`text_overrun_behavior`, `max_lines_visible`) kesilmez, hiçbir öğe yer yok diye gizlenmez ya da kırpılmaz (`clip_contents`); sığmayan yazı sarar ve satır, kart ya da çip büyür.
+  ↳ Pano satırı: ad ve düzeltme kartının hata metni sarar, `BoardRow._fit` tabandan fazla satırı satıra ekler (`D_CARD_NAME_SHORT` yalnız taban yüksekliği seçer).
+  ↳ ÇEYREK mini kartında ad kendi satırındadır (`SprintCard`), bayrak çipi sarar (`SprintUiShared.flag`).
+  ↳ İçerik pencereyi aşınca kayar: ÇEYREK'in altı sütunu ve "Hepsini onayla" (`QuarterView._right`), sürüm notunun gövdesi (`SprintPanel.Column`; başlık ve alt şerit sabit).
+  ↳ Tasarım seçimi olarak kalanlar: yüz dizisinin "+{n}"i ve "+{n} kart" toplamı, modülün kısa adı (`area_short`; tam adı ipucunda),
+  ↳ dar çubukta düşen ikon ve sayı (`StagePaint` `label`), çubuğa sığmayan yüzler ve eksenin sonunda düşen sprint dışı pay.
 - Bu bloğun varyasyonları yalnız koyu temadadır: `SprintTitle`, `MvpVersion`, `HeadMeta`, `CrewTotal`, `GoalPick(+Set)`, `QuarterNotch(+Past, +Now)`, `WeekBar`, `FaceRing`,
   `StarChip`, `ClusterStars`, `AwayLabel`, `CapBlock`, `CapRow(+Hot)`, `CapStage`, `CapUnit`, `CapFigure`, `CapTeam`, `CapBadgeOver(+Ink)`, `CapStreak(+Ink)`; panonun: `CardEffort`, `StageNum`, `AxisLabel`, `MoreHint`,
   `SprintRow(+Hover, +Cand, +CandHover, +Late(+Cb))`, `RowActs`, `RowKey`, `MoreHintPill(+Late(+Cb))`, `GhostRow`;
