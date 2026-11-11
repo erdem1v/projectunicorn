@@ -43,7 +43,7 @@ func setup(model: Dictionary, nobody: Control) -> void:
 	_more = null
 	var c: Dictionary = model.center
 	var running: bool = c.mode == "active"
-	_ctx = {"mode": c.mode, "now": c.now_at, "people": c.people, "candidate": false, "hot": false, "team_pm": not model.prep.pms.is_empty(),
+	_ctx = {"mode": c.mode, "now": c.now_at, "people": c.people, "candidate": false, "hot": false, "ghost": false, "team_pm": not model.prep.pms.is_empty(),
 		"axis": model.axis}
 	_early_tip = tr("PRODUCT_EARLY_END_TIP").format({"w": int(c.close_at)}) if c.close_at < float(c.weeks) - SprintSystem.EPS else ""
 	add_theme_constant_override("separation", 0)
@@ -254,7 +254,7 @@ func set_ghost(card_id: String) -> void:
 		return
 	if not _has_candidates:
 		_ghost_box.add_child(_section())
-	_ghost_box.add_child(_row(ghost, _ctx.merged({"candidate": true, "hot": true}, true)))
+	_ghost_box.add_child(_row(ghost, _ctx.merged({"candidate": true, "hot": true, "ghost": true}, true)))
 	_update_more.call_deferred()
 
 

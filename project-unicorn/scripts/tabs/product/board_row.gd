@@ -42,7 +42,8 @@ class CardName extends Label:
 
 
 ## Satırın verisi, bağlam ({mode "plan" | "active", now (sprint başından hafta), people {kimlik: kişi + parçaları}, candidate
-## (aday satırı: hayalet çubuklar, hep açık "+"), hot (aday satırı üstüne gelinmiş gibi açık), team_pm (ekipte PM var)}).
+## (aday satırı: hayalet çubuklar, hep açık "+"), hot (aday satırı üstüne gelinmiş gibi açık), ghost (sol "+"nın önizleme satırı: "+"sız,
+## imleç ona varamadan kalkar), team_pm (ekipte PM var)}).
 var card: Dictionary
 var _ctx: Dictionary
 var _two := false
@@ -194,7 +195,9 @@ func _first_line() -> HBoxContainer:
 	effort.mouse_filter = Control.MOUSE_FILTER_PASS
 	effort.tooltip_text = SprintUiShared.effort_tip(card.effort)
 	line.add_child(effort)
-	if _ctx.candidate:
+	if _ctx.ghost:
+		line.add_child(RnDUiShared.spacer(UiTokens.D_H_KEY_CAND))
+	elif _ctx.candidate:
 		var add := SprintUiShared.add_key()
 		add.custom_minimum_size = Vector2.ONE * UiTokens.D_H_KEY_CAND
 		add.size_flags_vertical = Control.SIZE_SHRINK_BEGIN

@@ -4,8 +4,8 @@ extends MarginContainer
 # Ürün ekranının sol sütunu (SPRINT ve ÇEYREK): Geçmiş açıksa sürüm listesi; B2B'de MÜŞTERİ TALEPLERİ (ilk üçü görünür, fazlası
 # "+N talep" ile açılır); MODÜLLER (aynı anda tek açık modül, açık modülün adayları). Panel modeli çizer; durum sekmenindir: açık
 # modül ve talep listesinin açıklığı `ui_changed` olarak çıkar, sekme yazıp paneli yeniden kurar. Adayın "+"ının değeri kurulumda
-# hesaplanmaz: değeri bilinmeyen "+" nötr durur ve basılmaz, değerler sonraki karelerde ekrandaki sırayla gelir
-# (`ProductModel.resolve_addable`).
+# hesaplanmaz: değeri bilinmeyen "+" nötr görünür, değerler sonraki karelerde ekrandaki sırayla gelir
+# (`ProductModel.resolve_addable`); imleç ya da tık sırayı beklemez, o "+"nın değeri o an hesaplanır.
 
 signal action(kind: String, args: Dictionary)
 signal ui_changed(key: String, value: Variant)
@@ -70,6 +70,11 @@ func open_offset() -> int:
 ## Her karede değeri bilinmeyen "+"lardan en az birinin değeri istenir (süre dolana dek); gelen değer tuşu açık ya da kapalı yapar.
 func _process(_delta: float) -> void:
 	ProductModel.resolve_addable(_unknown.keys())
+	_apply_known()
+
+
+## Değeri öğrenilmiş "+"ları açar ya da kapatır.
+func _apply_known() -> void:
 	for id: String in _unknown.keys():
 		var ok: Variant = ProductModel.addable(id)
 		if ok != null:
@@ -270,11 +275,11 @@ func _strip(parts: Array) -> HBoxContainer:
 	return strip
 
 
-## Adayın "+"ı. Değeri bilinmiyorsa (`addable` null) nötr ve basılmaz durur, kuyruğa girer; değer gelince `_set_add` açar ya da kapatır.
+## Adayın "+"ı. Değeri bilinmiyorsa (`addable` null) nötr durur, kuyruğa girer; değer gelince `_set_add` açar ya da kapatır.
 func _add_key(c: Dictionary) -> Button:
 	var key := SprintUiShared.add_key()
 	key.custom_minimum_size = Vector2.ONE * UiTokens.D_H_KEY_CAND
-	key.pressed.connect(action.emit.bind("add", {"card_id": String(c.id)}))
+	key.pressed.connect(_on_add_pressed.bind(key, String(c.id)))
 	key.mouse_entered.connect(_on_add_hover.bind(key, String(c.id), true))
 	key.mouse_exited.connect(_on_add_hover.bind(key, String(c.id), false))
 	if c.addable == null:
@@ -285,10 +290,9 @@ func _add_key(c: Dictionary) -> Button:
 	return key
 
 
-## null: değer bilinmiyor, nötr ve basılmaz, ipucu yok. true: açık. false: kapalı; planlamada nedeni ipucunda.
+## null: değer bilinmiyor, nötr, ipucu yok. true: açık. false: kapalı ve basılmaz; planlamada nedeni ipucunda.
 func _set_add(key: Button, ok: Variant) -> void:
 	key.theme_type_variation = SprintUiShared.add_look(ok != null)
-	key.mouse_filter = Control.MOUSE_FILTER_IGNORE if ok == null else Control.MOUSE_FILTER_STOP
 	key.disabled = ok == false
 	key.tooltip_text = "" if ok == null else tr("PRODUCT_ADD_TO_PLAN") if ok else _closed_tip()
 
@@ -301,7 +305,23 @@ func _closed_tip() -> String:
 	return tr("PRODUCT_ADD_CLOSED").format({"pct": Fmt.percent(c.ceiling_pct, 0)}) if c.spare else tr("PRODUCT_ADD_CLOSED_FULL")
 
 
+## Kuyruktaki adayın değeri sırası beklenmeden hesaplanır: "+"ya gelen imleç ve tık, kuyrukta olsa da doğru karşılık bulur.
+func _learn(card_id: String) -> void:
+	if _unknown.has(card_id):
+		ProductModel.resolve_addable([card_id])
+		_apply_known()
+
+
+## Kart sığmıyorsa basış değeri kapatır ve eklemez; nedeni ipucundadır.
+func _on_add_pressed(key: Button, card_id: String) -> void:
+	_learn(card_id)
+	if not key.disabled:
+		action.emit("add", {"card_id": card_id})
+
+
 func _on_add_hover(key: Button, card_id: String, on: bool) -> void:
+	if on:
+		_learn(card_id)
 	if on and not key.disabled:
 		_hover_id = card_id
 		hovered.emit(card_id)
