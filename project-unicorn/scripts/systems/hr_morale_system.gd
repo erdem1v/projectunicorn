@@ -245,9 +245,14 @@ static func weeks_until_return(emp: Character) -> int:
 	return maxi(_return_day(emp) - GameState.day, 0)
 
 
-## Bu yıl için yaz izni haftası: bir olay kartı kaydırdıysa o, değilse işe girişte atanan.
+## Bu yıl için yaz izni haftası: bir olay kartı kaydırdıysa o, değilse işe girişte atanan. Haftası işe girişinden
+## LEAVE_NEWCOMER_WEEKS dolmadan gelen yeni gelenin bu yıl izni yoktur: -1.
 static func summer_week(emp: Character, year: int) -> int:
-	return emp.leave_week_override if emp.leave_override_year == year else emp.leave_week
+	var week: int = emp.leave_week_override if emp.leave_override_year == year else emp.leave_week
+	var left: int = _weeks_until(week, year)
+	if left >= 0 and GameState.day + left - emp.hire_day < TimeModel.ticks(HRConstants.LEAVE_NEWCOMER_WEEKS):
+		return -1
+	return week
 
 
 ## Bu yılın yaz izninin başlamasına kalan hafta; izin alınmışsa, pencere geçtiyse ya da hafta atanmadıysa -1.
@@ -256,7 +261,7 @@ static func leave_weeks_left(emp: Character) -> int:
 	var week: int = summer_week(emp, int(date.year))
 	if emp.leave_taken_year == int(date.year) or week < 0:
 		return -1
-	return _weeks_until(week, date)
+	return _weeks_until(week, int(date.year))
 
 
 ## Yaz izni bloğu bununkiyle örtüşen, aynı roldeki iş arkadaşı: çalışıyor, bu yılın iznini almamış ve başlangıcı en çok bir
@@ -264,12 +269,15 @@ static func leave_weeks_left(emp: Character) -> int:
 static func leave_partner(emp: Character) -> String:
 	var year: int = int(GameState.get_date_dict().year)
 	var week: int = summer_week(emp, year)
+	if week < 0:
+		return ""
 	var best: String = ""
 	var gap: int = HRConstants.LEAVE_WEEKS
 	for other in CharacterRegistry.employees_by_hire():
-		var apart: int = absi(summer_week(other, year) - week)
+		var other_week: int = summer_week(other, year)
+		var apart: int = absi(other_week - week)
 		if other.id != emp.id and other.role == emp.role and other.status == HRConstants.STATUS_ACTIVE \
-				and other.leave_taken_year != year and apart < gap:
+				and other.leave_taken_year != year and other_week >= 0 and apart < gap:
 			best = other.id
 			gap = apart
 	return best
@@ -301,7 +309,7 @@ static func plan_summer_leave(a: Character, b: Character, apart: bool) -> Dictio
 			moved_id = a.id
 			a_week += shift
 	return {"a_id": a.id, "b_id": b.id, "apart": apart, "moved_id": moved_id, "shift": shift, "a_week": a_week, "b_week": b_week,
-		"weeks_away": _weeks_until(mini(a_week, b_week), date)}
+		"weeks_away": _weeks_until(mini(a_week, b_week), year)}
 
 
 ## `summer_leave`: planın iki haftasını da bu yıla sabitler; kayan yoksa yazılan yerinde durandır.
@@ -412,12 +420,12 @@ static func _return_day(emp: Character) -> int:
 	return emp.away_until_day if emp.leave_kind == HRConstants.LEAVE_KIND_SICK else emp.leave_until_day
 
 
-## Yaz penceresinin `week` indeksli haftasının başlayacağı tike kalan hafta (`date` bugünün tarihi); geçtiyse -1.
-static func _weeks_until(week: int, date: Dictionary) -> int:
+## `year` yılının yaz penceresinde `week` indeksli haftanın başlayacağı tike bugünden kalan hafta; geçtiyse -1.
+static func _weeks_until(week: int, year: int) -> int:
 	var window_start: int = Time.get_unix_time_from_datetime_dict(
-		{"year": int(date.year), "month": HRConstants.LEAVE_WINDOW_START_MONTH, "day": 1})
+		{"year": year, "month": HRConstants.LEAVE_WINDOW_START_MONTH, "day": 1})
 	var week_start: int = window_start + week * 7 * 86400
-	var left: int = ceili(float(week_start - Time.get_unix_time_from_datetime_dict(date)) / (7.0 * 86400.0))
+	var left: int = ceili(float(week_start - Time.get_unix_time_from_datetime_dict(GameState.get_date_dict())) / (7.0 * 86400.0))
 	return left if left >= 0 else -1
 
 

@@ -196,6 +196,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"hr_recovery_channels":     fail = _case_hr_recovery_channels()
 		"hr_raise_and_leave":    fail = _case_hr_raise_and_leave()
 		"hr_leave_shift":        fail = _case_hr_leave_shift()
+		"hr_newcomer_summer_leave": fail = _case_hr_newcomer_summer_leave()
 		"hr_sick_leave":         fail = _case_hr_sick_leave()
 		"hr_burnout_streak":        fail = _case_hr_burnout_streak()
 		# --- İK modulü kapanışı (2026-08-22) ---
@@ -7052,6 +7053,12 @@ static func _park_leave(employees: Array) -> void:
 		e.leave_taken_year = 0
 
 
+## Yaz iznini sınayan vakaların kişileri yeni gelen değildir (HRConstants.LEAVE_NEWCOMER_WEEKS).
+static func _veteran(employees: Array) -> void:
+	for e in employees:
+		e.hire_day -= TimeModel.ticks(HRConstants.LEAVE_NEWCOMER_WEEKS)
+
+
 static func _case_hr_axis_key_lock() -> String:
 	# §4/§3: employee and founder SHARE the six areas and differ only
 	# in the tail — employee + Liderlik, founder + Liderlik + Karizma. That makes the key lock
@@ -7630,6 +7637,7 @@ static func _case_hr_leave_cycle() -> String:
 		_sim_day()
 	e.leave_week = 0
 	e.leave_taken_year = 0
+	_veteran([e])
 	var cap0: float = SprintSystem.capacity()
 	_sim_day()
 	if e.status != HRConstants.STATUS_ON_LEAVE:
@@ -7866,6 +7874,7 @@ static func _case_hr_leave_shift() -> String:
 	early.leave_week = 3
 	late.leave_week = 4
 	tester.leave_week = 4
+	_veteran([early, late, tester])
 	GameState.day = june
 
 	# Partner: aynı rol, bir haftalık fark; başka rolün kişisi partner olmaz.
@@ -7947,6 +7956,7 @@ static func _case_hr_leave_shift() -> String:
 	var pair_b: Character = _make_employee("lv_pair_b", "Ece İki", HRConstants.ROLE_DESIGNER, SEED_PACE, 0, 60)
 	pair_a.leave_week = 9
 	pair_b.leave_week = 10
+	_veteran([pair_a, pair_b])
 	var both: Dictionary = {"verb": "summer_leave", "scope": "employee", "other": "other", "apart": false}
 	var pair_ctx: Dictionary = {"employee": {"type": "employee", "id": pair_a.id}, "other": {"type": "employee", "id": pair_b.id}}
 	var together_chip: Array = EvChips.describe(both, pair_ctx, {}, false).map(func(p: Dictionary) -> String: return EvChips.text(p))
@@ -7967,6 +7977,7 @@ static func _case_hr_leave_shift() -> String:
 	var edge_b: Character = _make_employee("lv_edge_b", "Fuat Son", HRConstants.ROLE_PRODUCT_MANAGER, SEED_PACE, 0, 60)
 	edge_a.leave_week = 11
 	edge_b.leave_week = 11
+	_veteran([edge_a, edge_b])
 	var edge: Dictionary = HRMoraleSystem.plan_summer_leave(edge_a, edge_b, true)
 	if edge.moved_id != "" or edge.shift != 0 or edge.a_week != 11 or edge.b_week != 11:
 		return "a pair in week 11 with today in week 9 planned %s, want nobody moved" % str(edge)
@@ -7998,6 +8009,42 @@ static func _case_hr_leave_shift() -> String:
 			or HRMoraleSystem.summer_week(loaded, year + 1) != 4:
 		return "the shift did not survive a save (assigned %d, override %d for %d)" % [
 			loaded.leave_week, loaded.leave_week_override, loaded.leave_override_year]
+	return ""
+
+
+## Yeni gelen işe girişinden LEAVE_NEWCOMER_WEEKS hafta yaz iznine çıkmaz: haftası o süre dolmadan gelenin bu yıl haftası yoktur,
+## sayaç ve izin eşi onu görmez, ertesi yıl kendi haftasında gider; süreyi tam dolduran iş arkadaşı aynı hafta gider.
+## FALSİFİKASYON: summer_week'te yeni gelen dalını sil → "this year's summer week" FAIL; summer_week _weeks_until'e `year` yerine
+## bugünün yılını versin → "next year" FAIL; leave_partner'da `other_week >= 0`ı sil → "leave partner" FAIL; dalda hire_day yerine 0
+## oku → "past the newcomer weeks" FAIL; dalda `<` yerine `<=` → "past the newcomer weeks" FAIL.
+static func _case_hr_newcomer_summer_leave() -> String:
+	GameState.set_cash(500000)
+	_park_leave(CharacterRegistry.get_employees())
+	var june: int = 1
+	while int(GameState.get_date_dict(june).month) != HRConstants.LEAVE_WINDOW_START_MONTH:
+		june += 1
+	var year: int = int(GameState.get_date_dict(june).year)
+	GameState.day = june - 1
+	var fresh: Character = _make_employee("nc_fresh", "Gül Yeni", HRConstants.ROLE_DEVELOPER, SEED_PACE, 0, 60)
+	var old: Character = _make_employee("nc_old", "Hakan Eski", HRConstants.ROLE_DEVELOPER, SEED_PACE, 0, 60)
+	old.hire_day = june - TimeModel.ticks(HRConstants.LEAVE_NEWCOMER_WEEKS)
+	fresh.hire_day = old.hire_day + 1
+	fresh.leave_week = 0
+	old.leave_week = 0
+	if HRMoraleSystem.summer_week(fresh, year) != -1 or HRMoraleSystem.leave_weeks_left(fresh) != -1:
+		return "a newcomer holds this year's summer week %d (%d weeks left)" % [
+			HRMoraleSystem.summer_week(fresh, year), HRMoraleSystem.leave_weeks_left(fresh)]
+	if HRMoraleSystem.leave_partner(old) != "":
+		return "the newcomer was found as a leave partner"
+	if HRMoraleSystem.leave_weeks_left(old) != 1:
+		return "the colleague past the newcomer weeks reads %d weeks left, want 1" % HRMoraleSystem.leave_weeks_left(old)
+	if HRMoraleSystem.summer_week(fresh, year + 1) != 0:
+		return "next year the newcomer has no summer week"
+	_sim_day()
+	if old.status != HRConstants.STATUS_ON_LEAVE:
+		return "the colleague past the newcomer weeks did not leave in his week (read '%s')" % old.status
+	if fresh.status != HRConstants.STATUS_ACTIVE:
+		return "the newcomer went on summer leave in her first weeks"
 	return ""
 
 

@@ -197,12 +197,9 @@ static func preview_leave(emp: Character, weeks: int) -> Dictionary:
 	if reason != "":
 		return _refusal(reason)
 	var gain: int = leave_gain(emp, weeks)
-	var date: Dictionary = GameState.get_date_dict()
-	var summer_ahead: bool = emp.leave_taken_year != int(date.year) \
-		and int(date.month) <= HRConstants.LEAVE_WINDOW_END_MONTH
 	return {"ok": true, "reason": "", "gain": gain, "rows": [
 		_delta(TranslationServer.translate("HR_ROW_MORALE_RETURN"), str(emp.morale), str(emp.morale + gain),
-			TranslationServer.translate("HR_ROW_SUMMER_NOTE") if summer_ahead else "")]}
+			TranslationServer.translate("HR_ROW_SUMMER_NOTE") if HRMoraleSystem.leave_weeks_left(emp) >= 0 else "")]}
 
 
 static func apply_leave(emp: Character, weeks: int) -> bool:

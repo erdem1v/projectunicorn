@@ -43,9 +43,9 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
 - `HRMoraleSystem.send_on_leave(emp, weeks, manual)` `hr_morale_system.gd:252`: izne tek kapı · `HRActions.apply_leave`, yaz penceresi `:66`
 - `HRMoraleSystem.send_on_sick_leave(emp, weeks)` `hr_morale_system.gd:339`: hastalık yokluğu (çalışmayana false, kol `refused` yazar); status `on_leave`, `Character.leave_kind = "sick"`, dönüş `away_until_day`;
   ↳ `leave_taken_year` ve `leave_until_day` yazılmaz, gidişte haber ve dönüşte moral yok (dönüş `tick_leave_returns` `:31`, haber `HR_NEWS_BACK_TO_WORK`) · `effects.gd:421` (verb `sick_leave`)
-- `HRMoraleSystem.summer_week(emp, year)` `:249` bu yılın yaz izni haftası (kayma varsa o, yoksa `leave_week`) · `tick_leave_departures` `:51`; `leave_weeks_left(emp)` `:254` (başlamasına kalan hafta,
-  ↳ alınmış ya da geçmişse -1) · seam `hr.leave_weeks_left`; `leave_partner(emp)` `:264` (aynı rol, çalışan, o yıl izni yok, haftalar en çok 1 farklı) · seçiciler `leave_pair`/`leave_partner`
-- `HRMoraleSystem.plan_summer_leave(a, b, apart)` `:282` yazmadan planlar (`apart` geç başlayanı iki hafta arkaya alır, arkası pencereye sığmazsa kaydırmaz; `together` ikisini erken başlayanın haftasına alır),
+- `HRMoraleSystem.summer_week(emp, year)` `:250` bu yılın yaz izni haftası (kayma varsa o, yoksa `leave_week`; haftası işe girişinden `LEAVE_NEWCOMER_WEEKS` dolmadan gelen yeni gelende -1) · `tick_leave_departures` `:51`; `leave_weeks_left(emp)` `:259` (başlamasına kalan hafta,
+  ↳ alınmış ya da geçmişse -1) · seam `hr.leave_weeks_left`; `leave_partner(emp)` `:269` (aynı rol, çalışan, o yıl izni yok, haftalar en çok 1 farklı) · seçiciler `leave_pair`/`leave_partner`
+- `HRMoraleSystem.plan_summer_leave(a, b, apart)` `:291` yazmadan planlar (`apart` geç başlayanı iki hafta arkaya alır, arkası pencereye sığmazsa kaydırmaz; `together` ikisini erken başlayanın haftasına alır),
   ↳ `apply_summer_leave(plan)` `:305` iki haftayı da bu yıla yazar (`CharacterRegistry.set_leave_override`) · `effects.gd:414` (verb `summer_leave`) ve çipi
 - `HRMoraleSystem.confirm_departure(id)` `hr_morale_system.gd:270`: istifanın kadrodan çıktığı TEK yer · `effects.gd:420` (verb `employee_leaves`)
 - `HRMoraleSystem.forget_employee(id)` `hr_morale_system.gd:297`: ayrılanın latch temizliği · `confirm_departure`, `HRActions.fire`
@@ -103,7 +103,7 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
 - `HRConstants` ana sabitler: roller `:304-312`, `ROLE_GROUP` `:326`, işler `:99-142` (`JOBS`, `MAX_JOBS_PER_PERSON`), `FOCUS_MULT_*` `:145`, `SECONDARY_AREA_MULT` `:236`
 - Devamı: `TRAITS` `:419`, `ROLE_TRAIT_BAN` `:486`, `SALARY_BANDS_BY_LEVEL` `:586`, `ARCHETYPES` `:614`, `ARCHETYPE_SHAPE` `:619`, `SEARCH_COMMISSION_PCT` `:712`, `CANDIDATE_COUNT` `:715`
 - Devamı: mesai `WORK_HOURS_*` `:720-728`, `DECAY_*`/`YIELD_FLOOR` `:767-769`, `OVERTIME_WAGE_MULT` `:756`, `BURNOUT_WEEKS` `:759`, moral `:840-910`, eşik `MORALE_FLIGHT_RISK` `:901`
-- Devamı: deneyim ve eğitim `:937-962`, istifa `:1048-1051`, yaz izni `:1073-1087`, `LEAVE_COOLDOWN_WEEKS` `:1078`, tazminat `:1114-1125`, zam ve terfi `:1130-1135`, isim havuzları `:1140-1159`
+- Devamı: deneyim ve eğitim `:937-962`, istifa `:1048-1051`, yaz izni `:1073-1089`, `LEAVE_COOLDOWN_WEEKS` `:1076`, `LEAVE_NEWCOMER_WEEKS` 26 `:1084`, tazminat `:1114-1125`, zam ve terfi `:1130-1135`, isim havuzları `:1140-1159`
 - `FounderConstants`: `SKILLS` `:11`, `POINT_POOL` 6 `:19`, `ONBOARDING_CAP` 3 `:20`, `RULER_SCALE` 2 `:30`, `TRAITS` `:44`, `ORIGINS` `:64`, `PORTRAIT_IDS` (11) `:88`
 - `LookSystem`: `FRANK_LOOK` `:22`, `FOUNDER_LOOKS` (11, PORTRAIT_IDS sırası) `:27`, `MIN_APART` 2 ve `TRIES` 64 `:17-18`; portre PNG'leri `assets/art/portraits/` (tools/people/bake_portraits.gd üretir)
 
@@ -119,7 +119,7 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
 ## Testler
 - Hedefli smoke: `bash tools/smoke_run.sh <vaka>` (`CASE_TIMEOUT=300` xargs -P 2 altında). Vakalar `scripts/debug/endgame_smoke.gd` match tablosunda
 - Aday ve arama: `hr_candidate_invariants`, `hr_archetype_trio`, `hr_search_cycle`, `hr_search_cancel_dismiss`, `hr_axis_key_lock`, `hires_land_in_own_column`, `desk_cap_blocks_hire`
-- Moral ve izin: `hr_morale_drift_shape`, `hr_recovery_channels`, `hr_leave_cycle`, `hr_leave_shift` (olay kartının yaz izni kaydırması), `hr_sick_leave` (hastalık yokluğu), `hr_raise_and_leave`, `hr_burnout_streak`, `hr_resignation_path`,
+- Moral ve izin: `hr_morale_drift_shape`, `hr_recovery_channels`, `hr_leave_cycle`, `hr_leave_shift` (olay kartının yaz izni kaydırması), `hr_newcomer_summer_leave` (yeni gelen ilk 26 hafta yaz iznine çıkmaz), `hr_sick_leave` (hastalık yokluğu), `hr_raise_and_leave`, `hr_burnout_streak`, `hr_resignation_path`,
   ↳ `leave_does_not_pause_build`, `save_old_calendar_leave_year`
 - Eylemler: `hr_fire_path`, `promotion_and_raise_gate`, `hr_frank_guard`, `money_never_double_minus`; okuma yüzeyi: `hr_read_catalogue`, `hr_active_filters`, `hr_overload_badge`, `hr_constants_contract`
 - Eğitim ve deneyim: `hr_training_locks`, `hr_training_eligibility_edge`, `hr_training_blocks_and_charges_once`, `hr_training_completion`, `hr_expertise_cap_respected`, `hr_experience_accrues`, `founder_trains_and_learns`

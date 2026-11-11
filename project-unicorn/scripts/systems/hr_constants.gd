@@ -1080,6 +1080,8 @@ const LEAVE_WINDOW_END_MONTH := 8       # Ağustos
 ## on üç ardışık işe alım on üç farklı haftaya düşer ve bütün ekip aynı hafta izinde olmaz.
 const LEAVE_WEEK_COUNT := 13
 const LEAVE_WEEK_STRIDE := 5
+## Yeni gelen işe girişinden bu kadar hafta yaz iznine çıkmaz; hastalık ve olay izni bu kurala girmez.
+const LEAVE_NEWCOMER_WEEKS := 26
 ## §11.4 erteleme: −5 moral, talep 4 hafta sonra döner, en fazla iki kez.
 const LEAVE_MAX_DEFERRALS := 2
 const LEAVE_DEFER_WEEKS := 4

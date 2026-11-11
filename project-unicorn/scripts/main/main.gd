@@ -1095,14 +1095,15 @@ func _stage_rep_lead(scope: Dictionary) -> void:
 	SalesRepSystem._start_processing(rep, lead)
 
 
-## A `leave_pair` / `leave_partner` slot's fixture: it is the first June week (the leave window opens there, so a leave's
-## `hr.leave_weeks_left` is its assigned week) and two colleagues of the role the slot asks for, both at work and not yet
-## on leave, start theirs in weeks 2 and 3, the roster's holder of the role first and a new colleague behind them.
+## A `leave_pair` / `leave_partner` slot's fixture: it is the second year's first June week (the leave window opens there, so a
+## leave's `hr.leave_weeks_left` is its assigned week; the first year's June comes before anyone is past the newcomer weeks) and
+## two colleagues of the role the slot asks for, both at work, hired LEAVE_NEWCOMER_WEEKS ago and not yet on leave, start theirs
+## in weeks 2 and 3, the roster's holder of the role first and a new colleague behind them.
 func _stage_leave_pair(scope: Dictionary) -> void:
 	var slot: Dictionary = _shot_slot(scope, "leave_pair")
 	var wants: Dictionary = _shot_wants(slot.get("where", {}))
 	var role: String = String(_shot_want(wants, "hr.role", HRConstants.ROLE_DEVELOPER))
-	var june: int = 1
+	var june: int = TimeModel.ticks(TimeModel.WEEKS_PER_YEAR)
 	while int(GameState.get_date_dict(june).month) != HRConstants.LEAVE_WINDOW_START_MONTH:
 		june += 1
 	GameState.day = june
@@ -1119,6 +1120,7 @@ func _stage_leave_pair(scope: Dictionary) -> void:
 		emp.leave_week = row[1]
 		emp.leave_week_override = -1
 		emp.leave_override_year = 0
+		emp.hire_day = GameState.day - TimeModel.ticks(HRConstants.LEAVE_NEWCOMER_WEEKS)
 		_shape_shot_employee(emp, row[2])
 
 
