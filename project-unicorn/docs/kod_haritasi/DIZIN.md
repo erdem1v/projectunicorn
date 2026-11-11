@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git 79a757ab · 2026-11-11 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 486e37a2 · 2026-11-11 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -153,7 +153,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/onboarding/steps/origin_traits_step.gd · 332 · - · OnboardingStep · 0 sinyal · 18 func
 - scripts/onboarding/steps/step_base.gd · 118 · OnboardingStep · Control · 1 sinyal · 10 func
 
-### scripts/systems/ (72 dosya, 24633 satır)
+### scripts/systems/ (72 dosya, 24630 satır)
 - scripts/systems/angel_round_system.gd · 52 · AngelRoundSystem · RefCounted · 0 sinyal · 1 func
 - scripts/systems/b2b_constants.gd · 291 · B2BConstants · RefCounted · 0 sinyal · 9 func
 - scripts/systems/b2b_sales_system.gd · 695 · B2BSalesSystem · RefCounted · 0 sinyal · 45 func
@@ -170,7 +170,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/systems/hr_actions.gd · 331 · HRActions · RefCounted · 0 sinyal · 28 func
 - scripts/systems/hr_candidate_generator.gd · 276 · HRCandidateGenerator · RefCounted · 0 sinyal · 14 func
 - scripts/systems/hr_constants.gd · 1164 · HRConstants · RefCounted · 0 sinyal · 90 func
-- scripts/systems/hr_morale_system.gd · 457 · HRMoraleSystem · RefCounted · 0 sinyal · 33 func
+- scripts/systems/hr_morale_system.gd · 454 · HRMoraleSystem · RefCounted · 0 sinyal · 33 func
 - scripts/systems/hr_search_system.gd · 307 · HRSearchSystem · RefCounted · 0 sinyal · 15 func
 - scripts/systems/hr_system.gd · 554 · HRSystem · RefCounted · 0 sinyal · 49 func
 - scripts/systems/incident_system.gd · 660 · IncidentSystem · RefCounted · 0 sinyal · 51 func
@@ -553,7 +553,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
   ↳ mentor_advisory_changed emit: scripts/events/core/effects.gd:725, scripts/main/main.gd:2268, scripts/systems/sprint_bridges.gd:169, scripts/systems/vc_pitch_system.gd:890, scripts/debug/endgame_smoke.gd:6601,24573
   ↳ mentor_advisory_changed connect: scripts/autoload/game_state.gd:351, scripts/tabs/hunt_tab.gd:59, scripts/ui/components/goals_panel.gd:64, scripts/ui/office/office_notice_stack.gd:43
 - headline_added(source: String, line: Dictionary) · scripts/autoload/event_bus.gd:236
-  ↳ headline_added emit: scripts/events/core/effects.gd:652, scripts/events/present/ticker.gd:25, scripts/systems/hr_morale_system.gd:40,47,344, scripts/systems/hr_search_system.gd:306 +4
+  ↳ headline_added emit: scripts/events/core/effects.gd:652, scripts/events/present/ticker.gd:25, scripts/systems/hr_morale_system.gd:40,47,341, scripts/systems/hr_search_system.gd:306 +4
   ↳ headline_added connect: scripts/autoload/time_manager.gd:85, scripts/tabs/hr_tab.gd:75, scripts/ui/components/news_ticker.gd:72, scripts/debug/endgame_smoke.gd:8061,20829
 - ticker_live_line(source: String, line: Dictionary) · scripts/autoload/event_bus.gd:239
   ↳ ticker_live_line emit: scripts/systems/news_feed_system.gd:405, scripts/systems/sprint_bridges.gd:124, scripts/systems/summary_system.gd:88,92, scripts/ui/office/office_travel.gd:123

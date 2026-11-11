@@ -979,7 +979,7 @@ _changed	func	scripts/systems/sprint_system.gd:1866	SprintSystem
 _changed_by	func	scripts/debug/sprint_probe.gd:490	sprint_probe.gd
 _character_id	var	scripts/modals/training_modal.gd:23	training_modal.gd
 _characters	var	scripts/autoload/character_registry.gd:12	CharacterRegistry
-_charge_departure	func	scripts/systems/hr_morale_system.gd:377	HRMoraleSystem
+_charge_departure	func	scripts/systems/hr_morale_system.gd:374	HRMoraleSystem
 _chart	var	scripts/tabs/piyasa_tab.gd:44	piyasa_tab.gd
 _chart_data	var	scripts/tabs/piyasa_tab.gd:45	piyasa_tab.gd
 _chart_series	func	scripts/tabs/piyasa_tab.gd:563	piyasa_tab.gd
@@ -2223,7 +2223,7 @@ _master_slider	var	scripts/modals/settings_modal.gd:88	settings_modal.gd
 _matches_one	func	scripts/systems/sales_probes.gd:295	SalesProbes
 _mats	var	scripts/ui/office/office_lighting.gd:74	OfficeLighting
 _maybe_price_break	func	scripts/systems/sales_rep_system.gd:226	SalesRepSystem
-_maybe_resign	func	scripts/systems/hr_morale_system.gd:434	HRMoraleSystem
+_maybe_resign	func	scripts/systems/hr_morale_system.gd:431	HRMoraleSystem
 _mb_acc	var	scripts/debug/run_probe.gd:334	RunProbe
 _mb_add_tick	func	scripts/debug/run_probe.gd:601	RunProbe
 _mb_ticks	var	scripts/debug/run_probe.gd:335	RunProbe
@@ -3258,7 +3258,7 @@ _retranslate	func	scripts/modals/settings_modal.gd:374	settings_modal.gd
 _retranslate	func	scripts/modals/system_menu_modal.gd:46	system_menu_modal.gd
 _retranslate	func	scripts/ui/office/meeting_invite.gd:167	MeetingInvite
 _retry_blocked_autosave	func	scripts/autoload/save_manager.gd:424	SaveManager
-_return_day	func	scripts/systems/hr_morale_system.gd:419	HRMoraleSystem
+_return_day	func	scripts/systems/hr_morale_system.gd:416	HRMoraleSystem
 _return_to_menu	func	scripts/main/main.gd:146	main.gd
 _return_to_office	func	scripts/main/main.gd:5636	main.gd
 _returning	var	scripts/ui/office/office_people.gd:74	OfficePeople
@@ -3301,7 +3301,7 @@ _role	func	scripts/systems/sprint_system.gd:2007	SprintSystem
 _role	var	scripts/ui/meeting/meeting_panel.gd:73	MeetingPanel
 _role_card	func	scripts/tabs/hr/hr_atlas_modal.gd:245	hr_atlas_modal.gd
 _role_line	func	scripts/tabs/rnd/rnd_assign_panel.gd:180	RnDAssignPanel
-_roll	func	scripts/systems/hr_morale_system.gd:450	HRMoraleSystem
+_roll	func	scripts/systems/hr_morale_system.gd:447	HRMoraleSystem
 _roll_star	func	scripts/systems/sales_faucet_system.gd:169	SalesFaucetSystem
 _rolling_over	var	scripts/autoload/time_manager.gd:73	TimeManager
 _rolls	func	scripts/systems/hr_candidate_generator.gd:240	HRCandidateGenerator
@@ -4203,7 +4203,7 @@ _week_stamp	func	scripts/autoload/save_manager.gd:778	SaveManager
 _week_x	func	scripts/ui/components/top_bar.gd:412	top_bar.gd
 _weeks	var	scripts/events/tools/plausibility.gd:80	plausibility.gd
 _weeks_left	func	scripts/tabs/sales_tab.gd:384	sales_tab.gd
-_weeks_until	func	scripts/systems/hr_morale_system.gd:424	HRMoraleSystem
+_weeks_until	func	scripts/systems/hr_morale_system.gd:421	HRMoraleSystem
 _weighted_pick	func	scripts/events/core/engine.gd:351	EvEngine
 _weights	func	scripts/systems/incident_system.gd:90	IncidentSystem
 _well	func	scripts/modals/save_load_modal.gd:176	save_load_modal.gd
@@ -4439,7 +4439,7 @@ apply_promotion	func	scripts/systems/hr_actions.gd:138	HRActions
 apply_raise	func	scripts/systems/hr_actions.gd:74	HRActions
 apply_resolution	func	scripts/systems/display_settings.gd:218	DisplaySettings
 apply_state	func	scripts/systems/work_hours_system.gd:251	WorkHoursSystem
-apply_summer_leave	func	scripts/systems/hr_morale_system.gd:316	HRMoraleSystem
+apply_summer_leave	func	scripts/systems/hr_morale_system.gd:313	HRMoraleSystem
 apply_timed_discount	func	scripts/systems/b2b_sales_system.gd:408	B2BSalesSystem
 apply_ui_scale	func	scripts/systems/display_settings.gd:343	DisplaySettings
 apply_view	func	scripts/systems/graphics_settings.gd:144	graphics_settings.gd
@@ -5092,7 +5092,7 @@ condition_reason	func	scripts/events/event_gate.gd:122	EventGate
 conditions	func	scripts/systems/sales_archetypes.gd:153	SalesArchetypes
 CONFERENCE_TENURE_WEEKS	const	scripts/events/tools/plausibility.gd:58	plausibility.gd
 configure	func	scripts/ui/components/logo_emblem.gd:48	LogoEmblem
-confirm_departure	func	scripts/systems/hr_morale_system.gd:360	HRMoraleSystem
+confirm_departure	func	scripts/systems/hr_morale_system.gd:357	HRMoraleSystem
 CONFIRM_MODAL	const	scripts/main/main.gd:23	main.gd
 CONFIRM_MODAL	const	scripts/onboarding/onboarding_flow.gd:21	onboarding_flow.gd
 confirm_requested	signal	scripts/autoload/event_bus.gd:41	EventBus
@@ -6375,7 +6375,7 @@ FORCE	const	scripts/events/gate/gate.gd:35	EvGate.Origin
 force_fire	func	scripts/events/core/engine.gd:749	EvEngine
 force_fire	func	scripts/events/event_gate.gd:40	EventGate
 force_on	func	scripts/systems/incident_system.gd:228	IncidentSystem
-forget_employee	func	scripts/systems/hr_morale_system.gd:387	HRMoraleSystem
+forget_employee	func	scripts/systems/hr_morale_system.gd:384	HRMoraleSystem
 format_money	func	scripts/theme/ui_tokens.gd:385	UiTokens
 format_share	func	scripts/autoload/rival_registry.gd:163	RivalRegistry
 FOUNDER	const	scripts/events/tools/plausibility.gd:67	plausibility.gd
@@ -6469,7 +6469,7 @@ from_dict	func	scripts/events/present/papers.gd:196	EvPapers
 from_dict	func	scripts/events/present/tempo.gd:313	EvTempo
 from_dict	func	scripts/events/present/ticker.gd:59	EvTicker
 from_dict	func	scripts/systems/finance_system.gd:97	FinanceSystem
-from_dict	func	scripts/systems/hr_morale_system.gd:406	HRMoraleSystem
+from_dict	func	scripts/systems/hr_morale_system.gd:403	HRMoraleSystem
 from_dict	func	scripts/systems/hr_system.gd:511	HRSystem
 from_dict	func	scripts/systems/product_system.gd:25	ProductSystem
 from_dict	func	scripts/systems/rnd_system.gd:787	RnDSystem
@@ -6707,7 +6707,7 @@ has_flag	func	scripts/autoload/game_state.gd:519	GameState
 has_line	func	scripts/ui/office/office_venue.gd:52	OfficeVenue
 has_open_for	func	scripts/autoload/promise_registry.gd:44	PromiseRegistry
 has_pending	func	scripts/events/event_gate.gd:82	EventGate
-has_pending_departure	func	scripts/systems/hr_morale_system.gd:323	HRMoraleSystem
+has_pending_departure	func	scripts/systems/hr_morale_system.gd:320	HRMoraleSystem
 has_retired_skill_key	func	scripts/systems/hr_constants.gd:76	HRConstants
 has_slot	func	scripts/autoload/save_manager.gd:107	SaveManager
 has_stamp	func	scripts/events/core/flags.gd:83	EvFlags
@@ -8570,7 +8570,7 @@ reset	func	scripts/events/present/tempo.gd:299	EvTempo
 reset	func	scripts/events/present/ticker.gd:51	EvTicker
 reset	func	scripts/events/seams/seams.gd:160	EvSeams
 reset	func	scripts/systems/finance_system.gd:83	FinanceSystem
-reset	func	scripts/systems/hr_morale_system.gd:396	HRMoraleSystem
+reset	func	scripts/systems/hr_morale_system.gd:393	HRMoraleSystem
 reset	func	scripts/systems/hr_system.gd:497	HRSystem
 reset	func	scripts/systems/negotiation_system.gd:59	NegotiationSystem
 reset	func	scripts/systems/product_read.gd:136	ProductRead
@@ -9012,8 +9012,8 @@ SELECTORS	const	scripts/events/gate/scope.gd:36	EvScope
 send	func	scripts/systems/sprint_system.gd:1166	SprintSystem
 send_founder_out	func	scripts/ui/office/office_people.gd:125	OfficePeople
 send_next	func	scripts/systems/sprint_system.gd:103	SprintSystem
-send_on_leave	func	scripts/systems/hr_morale_system.gd:332	HRMoraleSystem
-send_on_sick_leave	func	scripts/systems/hr_morale_system.gd:350	HRMoraleSystem
+send_on_leave	func	scripts/systems/hr_morale_system.gd:329	HRMoraleSystem
+send_on_sick_leave	func	scripts/systems/hr_morale_system.gd:347	HRMoraleSystem
 send_to_training	func	scripts/systems/hr_system.gd:107	HRSystem
 SENDERS	const	scripts/events/present/presenter.gd:20	EvPresenter
 sent	func	scripts/systems/sprint_bugs.gd:123	SprintBugs
@@ -9762,7 +9762,7 @@ to_dict	func	scripts/events/present/papers.gd:190	EvPapers
 to_dict	func	scripts/events/present/tempo.gd:305	EvTempo
 to_dict	func	scripts/events/present/ticker.gd:55	EvTicker
 to_dict	func	scripts/systems/finance_system.gd:91	FinanceSystem
-to_dict	func	scripts/systems/hr_morale_system.gd:400	HRMoraleSystem
+to_dict	func	scripts/systems/hr_morale_system.gd:397	HRMoraleSystem
 to_dict	func	scripts/systems/hr_system.gd:507	HRSystem
 to_dict	func	scripts/systems/product_system.gd:20	ProductSystem
 to_dict	func	scripts/systems/rnd_system.gd:759	RnDSystem

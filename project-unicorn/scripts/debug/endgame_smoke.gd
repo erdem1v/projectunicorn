@@ -7855,13 +7855,13 @@ static func _case_hr_raise_and_leave() -> String:
 
 
 ## Aynı roldeki iki kişinin yaz izni blokları örtüşünce bir olay kartı geç başlayanı bu yıl için kaydırır (`apart`) ya da ikisini
-## erken başlayanın haftasına alır (`together`). Kayma yalnız bu yılın haftasıdır: kişi kaydığı haftada izne çıkar, ertesi yıl atanan
+## yerinde, çakışır bırakır (`apart` olmadan). Kayma yalnız bu yılın haftasıdır: kişi kaydığı haftada izne çıkar, ertesi yıl atanan
 ## haftaya döner, kayıt gidiş-dönüşte alanları korur; arkası pencereye sığmayan çift kaymaz ve kart onu bağlamaz. Partner aynı roldeki,
 ## çalışan, o yıl izin almamış kişidir, önce çıkan da çalışıyor olmalıdır; çip kartta ve geçmiş satırında aynı metindir. `top_skill:`
 ## seçicisi ve lint'in yanlış yazılan alanı da burada sınanır.
 ## FALSİFİKASYON: HRMoraleSystem.tick_leave_departures'ta summer_week(emp, year) yerine emp.leave_week oku → "kaydırılan kişi" FAIL;
 ## summer_week'ten `leave_override_year == year` koşulunu sil → "ertesi yıl" FAIL; plan_summer_leave'de `apart` dalını sil → plan FAIL;
-## `together`ı yerinde bırak → "together" FAIL; leave_pair'den pencere ya da ACTIVE koşulunu sil → "pencere"/"eğitimdeki" FAIL.
+## `apart` olmayan kolu erken haftaya çek → "left in place" FAIL; leave_pair'den pencere ya da ACTIVE koşulunu sil → "pencere"/"eğitimdeki" FAIL.
 static func _case_hr_leave_shift() -> String:
 	GameState.set_cash(500000)
 	var june: int = 1
@@ -7916,8 +7916,8 @@ static func _case_hr_leave_shift() -> String:
 
 	# apart: geç başlayan erken başlayanın iki hafta arkasına, yalnız bu yıl.
 	var plan: Dictionary = HRMoraleSystem.plan_summer_leave(early, late, true)
-	if plan.moved_id != late.id or plan.shift != 1 or plan.a_week != 3 or plan.b_week != 5 or plan.weeks_away != 3:
-		return "the plan moves %s by %s to weeks %s and %s, %s weeks away; want Bora by 1 to 3 and 5, 3 away" % [
+	if plan.moved_id != late.id or plan.shift != 1 or plan.a_week != 3 or plan.b_week != 5 or plan.weeks_away != 5:
+		return "the plan moves %s by %s to weeks %s and %s, %s weeks away; want Bora by 1 to 3 and 5, 5 away" % [
 			plan.moved_id, plan.shift, plan.a_week, plan.b_week, plan.weeks_away]
 	if late.leave_week_override != -1:
 		return "planning wrote the shift"
@@ -7952,7 +7952,7 @@ static func _case_hr_leave_shift() -> String:
 	if tester.status != HRConstants.STATUS_ON_LEAVE:
 		return "the tester did not take his own week 4 (read '%s')" % tester.status
 
-	# together: ikisi de erken başlayanın haftasında, yılın haftası sabit.
+	# apart olmadan: ikisi de kendi haftasında kalır, yılın haftası sabit; çip çakışmayı ve başına kalan haftayı yazar.
 	var pair_a: Character = _make_employee("lv_pair_a", "Deniz Bir", HRConstants.ROLE_DESIGNER, SEED_PACE, 0, 60)
 	var pair_b: Character = _make_employee("lv_pair_b", "Ece İki", HRConstants.ROLE_DESIGNER, SEED_PACE, 0, 60)
 	pair_a.leave_week = 9
@@ -7962,15 +7962,15 @@ static func _case_hr_leave_shift() -> String:
 	var pair_ctx: Dictionary = {"employee": {"type": "employee", "id": pair_a.id}, "other": {"type": "employee", "id": pair_b.id}}
 	var together_chip: Array = EvChips.describe(both, pair_ctx, {}, false).map(func(p: Dictionary) -> String: return EvChips.text(p))
 	var kept: Dictionary = EvEffects.run_played([both], pair_ctx)[0]
-	if str(kept.moved_id) != "" or kept.shift != 0:
-		return "a pair that stays together moved: %s" % str(kept)
-	if HRMoraleSystem.summer_week(pair_a, year) != 9 or HRMoraleSystem.summer_week(pair_b, year) != 9 \
+	if str(kept.moved_id) != "" or kept.shift != 0 or kept.weeks_away != 5:
+		return "a pair left in place moved, or does not date its overlap 5 weeks away: %s" % str(kept)
+	if HRMoraleSystem.summer_week(pair_a, year) != 9 or HRMoraleSystem.summer_week(pair_b, year) != 10 \
 			or pair_a.leave_override_year != year or pair_b.leave_override_year != year:
-		return "together put the pair in weeks %d and %d, want both in 9 for this year" % [
+		return "the pair left in place reads weeks %d and %d, want 9 and 10 for this year" % [
 			HRMoraleSystem.summer_week(pair_a, year), HRMoraleSystem.summer_week(pair_b, year)]
 	if together_chip.size() != 1 or not String(together_chip[0]).contains("Deniz") or not String(together_chip[0]).contains("Ece") \
 			or together_chip != EvChips.describe(kept, pair_ctx, {}, true).map(func(p: Dictionary) -> String: return EvChips.text(p)):
-		return "the together chip reads %s" % str(together_chip)
+		return "the overlap chip reads %s" % str(together_chip)
 
 	# Pencere sonu: 11. haftadaki iki kişinin arkası pencereye sığmaz. Kayma olmaz (öne almak bugünü geçerdi) ve kart çifti bağlamaz.
 	GameState.day = june + TimeModel.ticks(9)

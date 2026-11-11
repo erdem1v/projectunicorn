@@ -194,14 +194,14 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 			return [_part(_t("EFFECT_LEAVE").format({"name": _first_name(lid, ctx, names, _t("EFFECT_AN_EMPLOYEE")),
 					"weeks": Fmt.weeks(away_weeks)}), "", "cost"),
 				_figure("HR_ROW_MORALE_RETURN", _num(gain), "gain")]
-		# Two colleagues' summer leaves: who moves and how far, or both away the same weeks and when that starts.
+		# Two colleagues' summer leaves: who moves and how far, or both left where they are, overlapping, and when the first starts.
 		"summer_leave":
 			var leave: Dictionary = item if is_delta else EvEffects.summer_leave_plan(item, ctx)
 			var someone: String = _t("EFFECT_AN_EMPLOYEE")
 			if bool(item.get("apart", false)):
 				return [_part(_t("EFFECT_LEAVE_SHIFT").format({"name": _first_name(String(leave.get("moved_id", "")), ctx, names, someone),
 					"weeks": Fmt.weeks(int(leave.get("shift", 0)))}), "", "cost")]
-			return [_part(_t("EFFECT_LEAVE_TOGETHER").format({"a": _first_name(String(leave.get("a_id", "")), ctx, names, someone),
+			return [_part(_t("EFFECT_LEAVE_OVERLAP").format({"a": _first_name(String(leave.get("a_id", "")), ctx, names, someone),
 				"b": _first_name(String(leave.get("b_id", "")), ctx, names, someone),
 				"weeks": Fmt.weeks(int(leave.get("weeks_away", 0)))}), "", "cost")]
 		# Out for weeks, and nothing like the player's leave: no morale comes back.

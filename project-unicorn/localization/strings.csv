@@ -3246,7 +3246,7 @@ EFFECT_LATER,{n} hafta sonra:,In {n} weeks:
 EFFECT_LATER_ONE,{n} hafta sonra:,In {n} week:
 EFFECT_LATER_RANGE,{lo} ile {hi} hafta sonra:,In {lo} to {hi} weeks:
 EFFECT_LEAVE_SHIFT,"Yaz izni kayar: {name}, {weeks}","Summer leave moves: {name}, {weeks}"
-EFFECT_LEAVE_TOGETHER,"Yaz izni: {a} ile {b} aynı iki hafta, {weeks} sonra","Summer leave: {a} and {b} away the same two weeks, in {weeks}"
+EFFECT_LEAVE_OVERLAP,"Yaz izinleri çakışır: {a} ile {b}, {weeks} sonra","Summer leaves overlap: {a} and {b}, in {weeks}"
 EFFECT_SICK_LEAVE,{name} {weeks} yok,{name} is away for {weeks}
 EFFECT_TRAINING,{name} eğitimde · {area} · {weeks},{name} in training · {area} · {weeks}
 EFFECT_FIRED,{name} işten çıkarılır,{name} is let go

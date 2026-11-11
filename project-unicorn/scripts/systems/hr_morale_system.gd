@@ -285,9 +285,9 @@ static func leave_partner(emp: Character) -> String:
 
 ## `summer_leave` fiilinin bir çifte bu yıl yaptığı: `apart` geç başlayanı (eşitlikte `b`) erken başlayanın iki hafta arkasına
 ## alır; blokları zaten ayrı olana ve arkası pencereye sığmayana dokunmaz. Öne alınan izin geçmiş bir haftaya düşebilirdi, bu yüzden
-## kayan hep geç başlayandır. `together` ikisini de erken başlayanın haftasına alır: iki izin aynı iki haftadır.
+## kayan hep geç başlayandır. `apart` olmadan iki izin yerinde kalır ve çakışır.
 ## {a_id, b_id, apart, moved_id: kayan ("" yoksa), a_week, b_week: sonraki haftalar, shift: kaç hafta kaydığı, weeks_away:
-## ikisinden önce gidenin başlamasına kalan hafta}.
+## sonra gidenin başlamasına kalan hafta, izinler çakışıyorsa ikisinin birden yok olduğu ilk hafta}.
 static func plan_summer_leave(a: Character, b: Character, apart: bool) -> Dictionary:
 	var date: Dictionary = GameState.get_date_dict()
 	var year: int = int(date.year)
@@ -297,10 +297,7 @@ static func plan_summer_leave(a: Character, b: Character, apart: bool) -> Dictio
 	var shift: int = 0
 	var early_week: int = mini(a_week, b_week)
 	var late_week: int = maxi(a_week, b_week)
-	if not apart:
-		a_week = early_week
-		b_week = early_week
-	elif late_week - early_week < HRConstants.LEAVE_WEEKS and early_week + HRConstants.LEAVE_WEEKS < HRConstants.LEAVE_WEEK_COUNT:
+	if apart and late_week - early_week < HRConstants.LEAVE_WEEKS and early_week + HRConstants.LEAVE_WEEKS < HRConstants.LEAVE_WEEK_COUNT:
 		shift = early_week + HRConstants.LEAVE_WEEKS - late_week
 		if a_week <= b_week:
 			moved_id = b.id
@@ -309,7 +306,7 @@ static func plan_summer_leave(a: Character, b: Character, apart: bool) -> Dictio
 			moved_id = a.id
 			a_week += shift
 	return {"a_id": a.id, "b_id": b.id, "apart": apart, "moved_id": moved_id, "shift": shift, "a_week": a_week, "b_week": b_week,
-		"weeks_away": _weeks_until(mini(a_week, b_week), year)}
+		"weeks_away": _weeks_until(maxi(a_week, b_week), year)}
 
 
 ## `summer_leave`: planın iki haftasını da bu yıla sabitler; kayan yoksa yazılan yerinde durandır.

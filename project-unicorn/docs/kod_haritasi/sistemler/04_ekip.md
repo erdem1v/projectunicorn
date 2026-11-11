@@ -45,8 +45,8 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
   ↳ `leave_taken_year` ve `leave_until_day` yazılmaz, gidişte haber ve dönüşte moral yok (dönüş `tick_leave_returns` `:31`, haber `HR_NEWS_BACK_TO_WORK`) · `effects.gd:421` (verb `sick_leave`)
 - `HRMoraleSystem.summer_week(emp, year)` `:250` bu yılın yaz izni haftası (kayma varsa o, yoksa `leave_week`; haftası işe girişinden `LEAVE_NEWCOMER_WEEKS` dolmadan gelen yeni gelende -1) · `tick_leave_departures` `:51`; `leave_weeks_left(emp)` `:259` (başlamasına kalan hafta,
   ↳ alınmış ya da geçmişse -1) · seam `hr.leave_weeks_left`; `leave_partner(emp)` `:269` (aynı rol, çalışan, o yıl izni yok, haftalar en çok 1 farklı) · seçiciler `leave_pair`/`leave_partner`
-- `HRMoraleSystem.plan_summer_leave(a, b, apart)` `:291` yazmadan planlar (`apart` geç başlayanı iki hafta arkaya alır, arkası pencereye sığmazsa kaydırmaz; `together` ikisini erken başlayanın haftasına alır),
-  ↳ `apply_summer_leave(plan)` `:305` iki haftayı da bu yıla yazar (`CharacterRegistry.set_leave_override`) · `effects.gd:414` (verb `summer_leave`) ve çipi
+- `HRMoraleSystem.plan_summer_leave(a, b, apart)` `:291` yazmadan planlar (`apart` geç başlayanı iki hafta arkaya alır, arkası pencereye sığmazsa kaydırmaz; `apart` olmadan ikisi yerinde kalır ve çakışır, `weeks_away` çakışmanın başına kalan hafta),
+  ↳ `apply_summer_leave(plan)` `:313` iki haftayı da bu yıla yazar (`CharacterRegistry.set_leave_override`) · `effects.gd:426` (verb `summer_leave`) ve çipi
 - `HRMoraleSystem.confirm_departure(id)` `hr_morale_system.gd:270`: istifanın kadrodan çıktığı TEK yer · `effects.gd:420` (verb `employee_leaves`)
 - `HRMoraleSystem.forget_employee(id)` `hr_morale_system.gd:297`: ayrılanın latch temizliği · `confirm_departure`, `HRActions.fire`
 - `HRMoraleSystem.tick_burnout()` `hr_morale_system.gd:86`: `EventGate.request("team.burnout")` · `HRSystem.daily_tick`

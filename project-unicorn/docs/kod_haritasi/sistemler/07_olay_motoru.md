@@ -188,7 +188,7 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - `year_roll` yaprağı: `{"year_roll": 0.5}` takvim yılı başına bir zardır, anahtarı yükleme sırasında kartın kimliğine damgalanır (`EvCatalog._coerce_conditions`); `key` yazılırsa kartlar aynı zarı paylaşır
 - Kişi seçicileri: `top_skill:<alan>` (havuzda `role_stats[alan]` en büyük, eşitlikte id), `leave_pair` (yaz izni başka birininkiyle örtüşen, partnerinden geç başlamayan,
   ↳ partnerinin izni arkasına sığacak kadar erken başlayan en kıdemli çalışan) ve `leave_partner` (yuvası `employee` olan kartın o kişisinin partneri; `HRMoraleSystem.leave_partner`). Seam `hr.role` (rol kimliği), `hr.leave_weeks_left`
-- İnsan fiilleri: `summer_leave {scope, other, apart}` (iki yuvanın bu yılki yaz izni haftası: `apart` geç başlayanı iki hafta arkaya alır, değilse ikisi erken başlayanın haftasına sabitlenir;
+- İnsan fiilleri: `summer_leave {scope, other, apart}` (iki yuvanın bu yılki yaz izni haftası: `apart` geç başlayanı iki hafta arkaya alır, değilse ikisi kendi haftasında kalır ve çakışır;
   ↳ çipi planı `EvEffects.summer_leave_plan`dan okur, geçmiş satırı planın kendisidir), `sick_leave {scope, weeks}` (yaz iznini yemeyen yokluk), `promote {scope, pct}` (`HRActions.apply_promotion`, EKONOMİK listede;
   ↳ dosyanın reddettiği terfide kart çipi reddin nedenini yazar). `top_skill:` alanı lint 17.12'de `HRConstants.EMPLOYEE_SKILL_KEYS`e karşı denetlenir. Üçü de `WRITER_VERBS` ve `SUBJECT_VERBS`te;
   ↳ `summer_leave` `CONSEQUENCE_VERBS`te ve lint `other`ın bir çalışan yuvası olmasını ister
