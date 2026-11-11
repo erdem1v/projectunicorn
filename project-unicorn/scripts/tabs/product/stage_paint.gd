@@ -17,7 +17,9 @@ extends Control
 #   bar     Bir aşamanın çubuğunun zemini ve kenarı: `spec` {state plan | run | done | wait | out | ghost, late, fill (0..1)}.
 #           Tik kutuları, tarama ve `label` onun çocuğudur, üstüne bu sırayla çizilir.
 #   label   Çubuğun içeriği: `spec` {state, late, icon (ikon yolu), main, sub, left (içeriğin başladığı yer), room (sağda yüzlere
-#           ayrılan genişlik)}. Sığmayan yerde önce ikon sonra sayı düşer; biten aşamada sayının yerini tik tutar.
+#           ayrılan genişlik), free (çubuğun sağında sonraki çubuğa, bekleme çizgisine ya da eksenin sonuna kadar boş yer)}. Sığmayan
+#           yerde önce ikon düşer; sayı da sığmazsa `free` yetiyorsa çubuğun sağına yazılır, yetmiyorsa düşer; biten aşamada sayının
+#           yerini tik tutar.
 #   wait    Aşamanın hazır olduğu andan başladığı ana noktalı çizgi.
 #   shadow  PM'in kısalttığı payın çubuğun altındaki gölgesi.
 #   meet    Kurucunun görüşme günlerinin çubuk içindeki taraması.
@@ -320,7 +322,8 @@ func _draw_bar() -> void:
 		draw_rect(box.grow(-width / 2.0), edge, false, width)
 
 
-## Çubuğun ikonu ve sayısı: ikon ve sayı sığarsa ikisi, yalnız sayı sığarsa sayı (yüz ya da tik yoksa ortada), yoksa hiçbiri.
+## Çubuğun ikonu ve sayısı: ikon ve sayı sığarsa ikisi, yalnız sayı sığarsa sayı (yüz ya da tik yoksa ortada), sayı da sığmazsa ve
+## çubuğun sağında `free` yetiyorsa sayı ya da tik çubuğun hemen sağında, yoksa hiçbiri.
 func _draw_label() -> void:
 	var state: String = spec.state
 	var late: bool = spec.late
@@ -342,7 +345,10 @@ func _draw_label() -> void:
 	elif left == UiTokens.D_STAGE_BAR_PAD.x and spec.room <= 0.0 and body_w + 2.0 * UiTokens.SPACE_XS <= size.x:
 		at = (size.x - body_w) / 2.0
 	elif left + body_w > right:
-		return
+		if 2.0 * UiTokens.SPACE_XS + body_w > spec.free:
+			return
+		at = size.x + UiTokens.SPACE_XS
+		ink = UiTokens.D_INK_1  # çubuğun dışı koyu zemin: biten aşamanın tiki de açık mürekkeple
 	if done:
 		draw_texture_rect(CHECK, Rect2(at, (size.y - glyph) / 2.0, glyph, glyph), false, ink)
 		return

@@ -49,7 +49,7 @@ static func _box(stage: String, text: String, done: bool) -> StagePaint:
 	var box: StagePaint = StagePaint.part(&"bar", stage, {"state": state, "late": false, "fill": 0.0}, rect)
 	box.custom_minimum_size = rect.size
 	box.add_child(StagePaint.part(&"label", stage, {"state": state, "late": false, "main": text, "sub": "",
-		"left": UiTokens.D_STAGE_BAR_PAD.x, "room": 0.0, "icon": SprintUiShared.stage_icon(stage)}, rect))
+		"left": UiTokens.D_STAGE_BAR_PAD.x, "room": 0.0, "free": 0.0, "icon": SprintUiShared.stage_icon(stage)}, rect))
 	return box
 
 

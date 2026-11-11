@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git f487ca40 · 2026-11-11 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 68a06889 · 2026-11-11 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -253,9 +253,9 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/tabs/hr/hr_popover.gd · 113 · HRPopover · Control · 0 sinyal · 8 func
 - scripts/tabs/hr/hr_ui_shared.gd · 510 · HRUiShared · RefCounted · 0 sinyal · 33 func
 
-### scripts/tabs/product/ (16 dosya, 5167 satır)
+### scripts/tabs/product/ (16 dosya, 5181 satır)
 - scripts/tabs/product/area_panel.gd · 327 · AreaPanel · MarginContainer · 4 sinyal · 19 func
-- scripts/tabs/product/board_row.gd · 596 · BoardRow · PanelContainer · 1 sinyal · 33 func
+- scripts/tabs/product/board_row.gd · 604 · BoardRow · PanelContainer · 1 sinyal · 33 func
 - scripts/tabs/product/capacity_view.gd · 333 · CapacityView · PanelContainer · 1 sinyal · 21 func
 - scripts/tabs/product/card_tip.gd · 131 · CardTip · RefCounted · 0 sinyal · 9 func
 - scripts/tabs/product/overview_view.gd · 96 · - · HBoxContainer · 1 sinyal · 6 func
@@ -268,7 +268,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/tabs/product/sprint_next.gd · 340 · SprintNext · ScrollContainer · 1 sinyal · 21 func
 - scripts/tabs/product/sprint_panel.gd · 324 · SprintPanel · HBoxContainer · 2 sinyal · 15 func
 - scripts/tabs/product/sprint_ui_shared.gd · 563 · SprintUiShared · RefCounted · 0 sinyal · 48 func
-- scripts/tabs/product/stage_paint.gd · 359 · StagePaint · Control · 0 sinyal · 23 func
+- scripts/tabs/product/stage_paint.gd · 365 · StagePaint · Control · 0 sinyal · 23 func
 - scripts/tabs/product/type_picker.gd · 116 · TypePicker · VBoxContainer · 1 sinyal · 4 func
 
 ### scripts/tabs/rnd/ (5 dosya, 1316 satır)

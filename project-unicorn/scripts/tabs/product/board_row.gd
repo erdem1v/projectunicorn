@@ -402,6 +402,13 @@ func _lane(h: int) -> Control:
 				bars.append(_bar(s, Rect2(out_left, top, out_right - out_left, UiTokens.D_H_STAGE_BAR), "out", ticks))
 				ticks = []
 				out_end = out_right
+	for bar: StagePaint in bars:
+		var end: float = bar.get_rect().end.x
+		var gap: float = _ctx.axis - end
+		for other: Control in bars + waits:
+			if other.position.x > bar.position.x:
+				gap = minf(gap, other.position.x - end)
+		(bar.get_node("label") as StagePaint).set_bar({"free": gap})
 	if not ticks.is_empty():
 		bars.append(_tick(ticks, Rect2(0.0, top, UiTokens.D_W_TICK_BOX, UiTokens.D_H_STAGE_BAR)))
 	for part: Control in shadows + waits + bars:
@@ -436,7 +443,7 @@ func _bar(s: Dictionary, rect: Rect2, piece: String, ticks: Array) -> StagePaint
 		fill = s.pre / total
 	var bar: StagePaint = StagePaint.part(&"bar", s.stage, {"state": state, "late": card.late, "fill": fill,
 		"from": s.out_from if out else s.start, "to": s.out_to if out else s.end, "piece": piece}, rect)
-	bar.clip_contents = true
+	bar.clip_contents = not ticks.is_empty() and rect.size.x < UiTokens.D_W_TICK_BOX
 	if candidate:
 		bar.modulate.a = UiTokens.D_GHOST_ALPHA
 	if not ticks.is_empty():
@@ -452,6 +459,7 @@ func _bar(s: Dictionary, rect: Rect2, piece: String, ticks: Array) -> StagePaint
 	var left: float = UiTokens.D_W_TICK_BOX + UiTokens.SPACE_S if not ticks.is_empty() else float(UiTokens.D_STAGE_BAR_PAD.x)
 	var label: StagePaint = StagePaint.part(&"label", s.stage, {"state": state, "late": card.late, "main": main, "sub": sub, "left": left,
 		"room": 0.0, "icon": SprintUiShared.stage_icon(s.stage)}, Rect2(Vector2.ZERO, rect.size))
+	label.name = &"label"
 	bar.add_child(label)
 	var faces := SprintUiShared.box(-UiTokens.SPACE_S)
 	faces.mouse_filter = Control.MOUSE_FILTER_IGNORE

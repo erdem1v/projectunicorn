@@ -138,7 +138,7 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
   ↳ ÇEYREK mini kartında ad kendi satırındadır (`SprintCard`), bayrak çipi sarar (`SprintUiShared.flag`).
   ↳ İçerik pencereyi aşınca kayar: ÇEYREK'in altı sütunu ve "Hepsini onayla" (`QuarterView._right`), sürüm notunun gövdesi (`SprintPanel.Column`; başlık ve alt şerit sabit).
   ↳ Tasarım seçimi olarak kalanlar: yüz dizisinin "+{n}"i ve "+{n} kart" toplamı, modülün kısa adı (`area_short`; tam adı ipucunda),
-  ↳ dar çubukta düşen ikon ve sayı (`StagePaint` `label`), çubuğa sığmayan yüzler ve eksenin sonunda düşen sprint dışı pay.
+  ↳ dar çubukta düşen ikon (sayı çubuğun sağındaki boşluğa yetiyorsa orada yazılır, yoksa o da düşer; `StagePaint` `label`), çubuğa sığmayan yüzler ve eksenin sonunda düşen sprint dışı pay.
 - Bu bloğun varyasyonları yalnız koyu temadadır: `SprintTitle`, `MvpVersion`, `HeadMeta`, `CrewTotal`, `GoalPick(+Set)`, `QuarterNotch(+Past, +Now)`, `WeekBar`, `FaceRing`,
   `StarChip`, `ClusterStars`, `AwayLabel`, `CapBlock`, `CapRow(+Hot)`, `CapStage`, `CapUnit`, `CapFigure`, `CapTeam`, `CapBadgeOver(+Ink)`, `CapStreak(+Ink)`; panonun: `CardEffort`, `StageNum`, `AxisLabel`, `MoreHint`,
   `SprintRow(+Hover, +Cand, +CandHover, +Late(+Cb))`, `RowActs`, `RowKey`, `MoreHintPill(+Late(+Cb))`, `GhostRow`;
