@@ -24,6 +24,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - `tools/smoke_run.sh` (80): bir vakayı ya da `--all`ı koşar; motor hatası basan vakayı düşürür, `# EXPECT-ERROR` bağışını okur
 - `tools/run_gate.sh` (51): oynanan üç koşu (`full_run`, `full_run_b2c`, `full_run_vc_cautious`) bir sonla ve sıfır hata satırıyla bitmeli
 - `tools/gate_common.sh` (21): iki kapının ortak Godot bulucusu (`GODOT`), `ERR_TOKENS`, `engine_errors()`
+- `tools/test.sh hizli` (67): K0 ve her K2 vakası, her biri ayrı süreç ve kullanıcı diziniyle aynı anda; yeşilse tek satır, kırmızıysa ilk hata ve log dizini; motor hatası basan koşu düşer; çıkış 0/1/2
 - `tools/plausibility_run.sh` (110): makullük defteri kapısı; koşu başına ayrı süreç ve ayrı `APPDATA`/`HOME`, 40 koşu + `PLAUS LONG`
 - `tools/export_build.sh` (13): bir export preset'ini dışa aktarır, sonra `write_licenses.gd`i koşar
 - `tools/gen_signal_manifest.py` (226): `event_bus.gd` sinyallerinden ve emit/connect satırlarından `docs/EVENT_SIGNAL_MANIFEST.md` üretir
