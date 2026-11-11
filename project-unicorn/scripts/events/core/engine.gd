@@ -41,6 +41,9 @@ const DEFERRABLE_ORIGINS := [EvGate.Origin.SIGNAL, EvGate.Origin.SCHEDULE,
 
 ## Signals proposed during the systems' own slots, drained at step (g).
 static var _signal_buffer: Array = []
+## The clock hold a paper due at the night's rollover takes until it is answered (_due_paper).
+const DUE_HOLD := "paper"
+
 ## Total ticks the floor was reached and found nothing; the harness reports it.
 static var _floor_empty_total: int = 0
 ## Floor triggers in a row that found nothing, with no interrupt or paper admitted between them. §13.6: a run of these is a content hole.
@@ -95,47 +98,35 @@ static func hourly_tick(_hour: int) -> void:
 	_step_tick_proposals(EvGate.Origin.TICK_HOURLY, "hourly")
 	_step_pool("hourly")
 	_step_assign_classes()
+	# The night's batch stops at the hour a due paper is found, as at an emergency's; pump opens the paper.
+	if _due_paper() != "":
+		TimeManager.hold_clock(DUE_HOLD)
 	pump()
+
+
+## The night is about to run its hours (TimeManager.skip_night): a due paper holds it before the first step, which for a workday
+## ending at 24:00 is the rollover itself.
+static func before_night() -> void:
+	if _due_paper() != "":
+		TimeManager.hold_clock(DUE_HOLD)
+		pump()
 
 
 # --- (a) Paper expiry ------------------------------------------------------
 
 static func _step_paper_expiry() -> void:
-	# §20 B11: the last warning comes first and the expiry the tick after. If the warning
-	# cannot fire the expiry still happens — the consequence is not conditional on the courtesy.
+	# §20 B11: the last warning comes first and the expiry the tick after.
 	_step_last_warnings()
 
+	# A paper still standing at its last evening was opened and answered then (_due_paper), so one that reaches its tick was
+	# never in front of the player for a reason that held: its subject left or its state lapsed. It drops, and nothing it
+	# would have cost lands, since the player never saw that cost. History names the refusing step.
 	for paper in EvPapers.take_expired():
 		var event_id: String = String(paper["event_id"])
 		var context: Dictionary = paper["context"]
-		var arc_id: String = String(paper["arc_id"])
-		var card: Dictionary = EvCatalog.card(event_id)
-		var penalties: Array = card.get("on_expire", {}).get("penalties", [])
-
-		# §12.4: on_expire runs, history says `expired`, expire_note reaches the ticker. The
-		# note names a line of the card's text block (§3.2); a name the block lacks is the line.
-		# Names and seam values are taken before the penalties, which may remove the subject; the
-		# paper's own names cover a subject who left while it waited, and that subject's seams
-		# would read a fallback, so its body is not drawn again.
-		var names: Dictionary = EvPresenter.freeze_names(context)
-		names.merge(paper.get("names", {}))
-		if EvScope.still_valid(context):
-			names.merge(EvPresenter.freeze_seams(card, context))
-		var deltas: Array = EvEffects.run_expire(penalties, context, event_id)
-		EvHistory.record(event_id, EvHistory.RESOLUTION_EXPIRED, "", "expired", context, deltas, arc_id, false,
-			names, false, MailClock.arrival("expired|" + EvLatches.key_of(event_id, context)))
-		var note: String = String(card.get("expire_note", ""))
-		if note != "":
-			# A note that reads differently by a seam (a variant set) is resolved now; a key or prose goes out as it is.
-			var line: Variant = EvPresenter.text_block(card).get(note, note)
-			EvTicker.push(EvPresenter.resolve_text(line, context, names) if line is Dictionary else String(line),
-				EvTicker.PRIORITY_PLAYER, context)
-
-		# An expiring arc step must move its arc through an arc verb in on_expire (lint enforces
-		# it); without one, an unanswered payoff stalls its arc for the rest of the run (§10.10).
-		if arc_id != "" and not _touches_arc(penalties):
-			push_error("[EvEngine] arc step '%s' expired without an arc verb in on_expire — arc '%s' may now be stalled"
-				% [event_id, arc_id])
+		var verdict: EvGate.Verdict = EvGate.revalidate(event_id, context)
+		EvHistory.record(event_id, EvHistory.RESOLUTION_DROPPED, "", "unseen" if verdict.admitted else verdict.step, context, [],
+			String(paper["arc_id"]))
 
 
 static func _step_last_warnings() -> void:
@@ -144,7 +135,7 @@ static func _step_last_warnings() -> void:
 			continue                      # already in front of the player
 		var event_id: String = EvPapers.event_id_of(key)
 		var context: Dictionary = EvPapers.context_of(key)
-		# A paper whose subject died overnight gets no last warning; it still expires.
+		# A paper whose subject died overnight gets no last warning; it drops at its expiry.
 		if not EvGate.revalidate(event_id, context).admitted:
 			continue
 		EvQueue.admit(event_id, context, "interrupt", EvPapers.arc_of(key), MailClock.now(), true)
@@ -569,6 +560,11 @@ static func pump() -> bool:
 	_unannounced = waiting
 	if EvQueue.active_id() != "":
 		return false
+	var due: String = _due_paper()
+	if due != "":
+		_show_paper(due, false)
+		return true
+	TimeManager.release_clock(DUE_HOLD)
 
 	while true:
 		var next: Dictionary = EvQueue.next()
@@ -780,14 +776,32 @@ static func open_paper(key: String) -> bool:
 		EvQueue.take(key)
 		EvHistory.record(event_id, EvHistory.RESOLUTION_DROPPED, "", verdict.step, context, [])
 		return false
-	EvPapers.mark_opened(key)
-	# The paper's last warning may wait in the queue beside it (a night's save keeps both). It is
-	# this instance, picked up now: left queued it would come straight back after the paper is
-	# answered or put aside.
-	EvQueue.take(key)
-	EvQueue.set_active(event_id, context, true, EvPapers.at_of(key))
-	_announce(event_id, context)
+	_show_paper(key, true)
 	return true
+
+
+## A decision never expires unseen: once the workday of a paper's last week has ended, before the night's rollover could expire
+## it, the first one still standing (this key, "" for none) opens as an interrupt. It cannot go back on the desk, and the clock
+## stays held (DUE_HOLD) until no such paper is left. After midnight the night belongs to the new week, whose papers have it
+## all ahead. A paper whose subject left or whose state lapsed is not opened; it drops at its expiry at no cost.
+static func _due_paper() -> String:
+	if not TimeManager.is_night() or GameState.current_hour < TimeModel.WEEK_START_HOUR:
+		return ""
+	for key in EvPapers.visible(-1):
+		if EvPapers.weeks_left(key) <= 1 and EvGate.revalidate(EvPapers.event_id_of(key), EvPapers.context_of(key)).admitted:
+			return key
+	return ""
+
+
+## The paper becomes the shown card. Its last warning may wait in the queue beside it (a night's save keeps both): it is this
+## instance, picked up now, or it would come straight back after the paper is answered or put aside.
+static func _show_paper(key: String, from_desk: bool) -> void:
+	var event_id: String = EvPapers.event_id_of(key)
+	var context: Dictionary = EvPapers.context_of(key)
+	EvPapers.mark_opened(key)
+	EvQueue.take(key)
+	EvQueue.set_active(event_id, context, from_desk, EvPapers.at_of(key))
+	_announce(event_id, context)
 
 
 ## §11.4: "kapatıldığında masaya döner". The paper the player opened goes back to the desk

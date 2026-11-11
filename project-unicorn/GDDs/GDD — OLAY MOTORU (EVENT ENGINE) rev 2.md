@@ -3148,3 +3148,15 @@ etiketleri, kilit gerekçeleri, süre notları ve her gövde varyantı (`text.<d
 - `year_roll` yaprağı (takvim yılı başına zar), `random` ve rakip seçicileri (`EvScope.resolve`'a kart kimliği), lint 17.12 (seçici adı), `amount_slot`, `schedule_event.delay_weeks` aralığı ve çipi, ondalık yüzde çipi. Kod haritası: `sistemler/07_olay_motoru.md` "Dikkat".
 
 *Neden.* Olaylar görevi (2026-10-26) kararları 1 ile 16: bir şıkın kesin bir parçası ve kumarı olabilir; kartlara sayı yazılmaz; rastgele seçici tohumludur.
+
+### §27.49 · Olaylar O-1 ve O-3: kabul edilmiş kart anını taşır, kâğıt görülmeden dolmaz
+
+*Belge ne diyordu.* §4.4: gösterimde kartın G5/G6/G7'si yeniden koşar, koşul ağacı bütünüyle yeniden okunur. §12.4: tik `expires_on`'a varınca kâğıdın `on_expire`'ı çalışır, history `expired` der, `expire_note` ticker'a düşer; son uyarı yalnız ömrü bir haftadan uzun kâğıda, son haftasının başında gelir. Bir haftalık kâğıt uyarısız dolar.
+
+*Ne yapıldı.*
+- Yeniden okuma (§4.4) saat yapraklarını geçer sayar (`EvCondition.without_clock`, `EvGate.revalidate`): takvimin ve bir kez damgalanan hafta sayaçlarının seam'leri (`EvCondition.CLOCK_SEAMS`), yılın zarı, bir bayraktan ya da karttan beri geçen hafta yalnız zamanın kapattığı yönde. Özne (G5), korumalar (G6) ve durumu adlandıran yapraklar okunmaya devam eder. Çeyreğin ilk haftasında gelen kâğıt ikinci haftasında da açılır.
+- Kâğıt görülmeden dolmaz (§12.4'ten sapma): masadaki kâğıt son haftasının mesaisi bitince, gece yarısından ve devirden önce, `class: interrupt` gibi açılır (`EvEngine._due_paper`, `pump`); masaya geri konmaz ve motor saati tutar (`EvEngine.DUE_HOLD`): gecenin toplu adımı o saatte durur, cevap gelince sürer. Gece adımı başlamadan önce de sorulur (`TimeManager.skip_night` → `EventGate.before_night`; 24:00'te biten mesaide gecenin ilk adımı devrin kendisidir). Gece yarısından sonrası yeni haftanındır: son haftasına giren kâğıt o gece açılmaz. Ömrü uzun kâğıdın son haftası başındaki son uyarısı aynen kalır.
+- Süre dolumuna varan her kâğıt bedelsiz düşer: history `dropped`, adım yeniden doğrulamayı reddeden adım (öznesi gitmiş, durumu değişmiş) ya da `unseen`; `on_expire` çalışmaz, `expire_note` yazılmaz. Oyuncuya "konusu kalmadı" notunun düşüp düşmeyeceği açık kararda. `on_expire` ve `expire_note` alanları içerikte kalır, lint üçlüyü istemeye devam eder (§17.7); kaldırılmaları ayrı bir karardır.
+- Bir ark adımı kâğıdı böyle düşerse ark fiilleri koşmaz ve ark park kalabilir (bugün ark adımı kâğıt yok; özne gidince ark aynı tikte geçersizlenir).
+
+*Neden.* Erdem'in 2026-11-11 kararları: H01 (çeyrek bülteni ikinci haftasında düşüyordu), H07 ("bu tarz eventlere yanıt zorunlu olmalı; oyuncu yanıt vermeden ne süre akar ne oyun akar"); adil ekonomi (oyuncunun görmediği bedel inmez). Smoke `event_paper_keeps_its_moment`, `event_paper_opens_before_expiry`.

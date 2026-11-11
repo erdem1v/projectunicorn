@@ -353,6 +353,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"event_start_training_player_path": fail = _in_fixture_scope(_case_event_start_training_player_path)
 		"event_fire_employee_player_path": fail = _in_fixture_scope(_case_event_fire_employee_player_path)  # EXPECT-ERROR I2: on_expire may apply a negative delta
 		"event_paper_keeps_its_moment": fail = _in_fixture_scope(_case_event_paper_keeps_its_moment)
+		"event_paper_opens_before_expiry": fail = _in_fixture_scope(_case_event_paper_opens_before_expiry)
 		"event_add_customer_signs": fail = _in_fixture_scope(_case_event_add_customer_signs)  # EXPECT-ERROR I2: on_expire may apply a negative delta
 		"event_morale_payers":            fail = _case_event_morale_payers()
 		"incident_gap_and_spread":        fail = _case_incident_gap_and_spread()
@@ -697,6 +698,22 @@ static func _sim_day() -> void:
 # sonda bir kez gösterir, yani toplu adımda kabul edilen kart 00:00'da yeniden doğrulanır.
 static func _sim_day_full() -> void:
 	TimeManager.advance_hours(TimeModel.HOURS_PER_DAY - GameState.current_hour)
+	while _answer_due_paper():
+		TimeManager.advance_hours(TimeModel.HOURS_PER_DAY - GameState.current_hour)
+
+
+## Günü ilerleten yardımcılar oyuncu gibi gece açılıp saati tutan kâğıdı (EvEngine.DUE_HOLD) kilitsiz ilk şıkla cevaplar ki gün
+## sürsün; kâğıdın kendisini sınayan vaka saati doğrudan sürer. Cevaplanan kâğıt yoksa false.
+static func _answer_due_paper() -> bool:
+	if not TimeManager.holds().has(EvEngine.DUE_HOLD) or EventGate.active_id() == "" or EventGate.active_from_desk():
+		return false
+	var id: String = EventGate.active_id()
+	var choices: Array = EventGate.render(id).choices
+	for i in choices.size():
+		if EventGate.condition_met(choices[i].unlock_condition):
+			EventGate.resolve(id, i)
+			return true
+	return false
 
 
 # Bir sonraki tikin 08:00'ine, oyunun oynadığı gibi: günün kalanı, devir ve günlük tik, sonra gece
@@ -705,6 +722,8 @@ static func _sim_day_full() -> void:
 static func _sim_to_morning() -> void:
 	_sim_day_full()
 	TimeManager.skip_night()
+	while _answer_due_paper():
+		TimeManager.skip_night()
 
 
 ## Kurucunun `tech`i 2026-08-21'de DÖRDE bölündü (Ürün · Tasarım · Yazılım · Test), çünkü
@@ -18360,6 +18379,54 @@ static func _case_event_add_customer_signs() -> String:
 	var kept: Array = texts.call(EvChips.describe(row["deltas"][0], row["entities"], row.get("names", {}), true))
 	if kept != shown:
 		return "the card showed %s, its history row reads %s" % [str(shown), str(kept)]
+	return ""
+
+
+## Kâğıt görülmeden dolmaz: bir haftalık kâğıt son haftasının mesaisi bitince kesinti gibi açılır (masaya geri konmaz) ve motorun
+## tuttuğu saat (`EvEngine.DUE_HOLD`) cevaba kadar geceyi durdurur; cevaplanınca tutuş kalkar, gece sürer. İki haftalık kâğıt o akşam
+## açılmaz ve son haftası gece yarısı başlayınca da geceyi tutmaz: gece sabaha kadar koşar, kâğıt masada durur (sabah son uyarısıyla
+## gelir). Öznesi giden kâğıt akşam açılmaz ve süre dolumunda bedelsiz düşer (G5).
+## FALSİFİKASYON: hourly_tick'teki tutuşu sil → gece kâğıdın önünden geçer, FAIL; pump'taki _due_paper dalını sil → akşam kâğıt
+## açılmaz, FAIL; dalda kâğıdı masadan açılmış say (from_desk) → kâğıt masaya geri konur, FAIL; _due_paper'ın saat koşulunu sil →
+## iki haftalık kâğıt gece yarısından sonra açılır, FAIL; süre dolumunda on_expire'ı koş → öznesi gidenin bedeli iner, FAIL.
+static func _case_event_paper_opens_before_expiry() -> String:
+	const CARD := "fixture.due_paper"
+	const LONG := "fixture.due_paper_long"
+	var stays: Character = _make_employee("char_due_stays", "Deniz Ak", HRConstants.ROLE_DEVELOPER)
+	var leaves: Character = _make_employee("char_due_leaves", "Selin Kaya", HRConstants.ROLE_TESTER)
+	_at_work_start()
+	for person in [stays, leaves]:
+		if not EventGate.request(CARD, {"employee": person.id}):
+			return "the due paper was refused"
+	if not EventGate.request(LONG, {"employee": stays.id}):
+		return "the two-week paper was refused"
+	var day: int = GameState.day
+	var brand: int = GameState.brand
+	CharacterRegistry.remove(leaves.id)
+	TimeManager.advance_hours(TimeModel.HOURS_PER_DAY - GameState.current_hour)
+	if EventGate.active_id() != CARD or EventGate.active_context().get("employee", {}).get("id", "") != stays.id:
+		return "at the workday's end the shown card is '%s', want the due paper of the one who stayed" % EventGate.active_id()
+	if EventGate.active_from_desk() or EventGate.set_aside():
+		return "the due paper went back on the desk"
+	if not TimeManager.holds().has(EvEngine.DUE_HOLD):
+		return "the open due paper does not hold the clock (holds %s)" % str(TimeManager.holds())
+	TimeManager.skip_night()
+	if GameState.day != day:
+		return "the night ran past the open paper (week %d → %d)" % [day, GameState.day]
+	EventGate.resolve(CARD, "thank")
+	if TimeManager.is_clock_held():
+		return "the clock stayed held after the paper was answered (holds %s)" % str(TimeManager.holds())
+	TimeManager.skip_night()
+	if GameState.day == day or GameState.current_hour != TimeModel.WEEK_START_HOUR:
+		return "after the night: week %d, %d:00 (shown '%s'); want the next week's morning" % [
+			GameState.day, GameState.current_hour, EventGate.active_id()]
+	if EvPapers.keys_of(LONG).size() != 1:
+		return "the two-week paper did not stay on the desk into its last week"
+	var gone: Array = EvHistory.rows().filter(func(r: Dictionary) -> bool: return r.event_id == CARD \
+		and r.entities.get("employee", {}).get("id", "") == leaves.id)
+	if gone.size() != 1 or gone[0].resolution != EvHistory.RESOLUTION_DROPPED or gone[0].outcome_id != "G5" or GameState.brand != brand:
+		return "the paper of the one who left ended %s, brand %d → %d; want dropped at G5 at no cost" % [
+			str(gone.map(func(r: Dictionary) -> String: return "%s at %s" % [r.resolution, r.outcome_id])), brand, GameState.brand]
 	return ""
 
 

@@ -186,6 +186,8 @@ func skip_night() -> void:
 	var steps: int = posmod(TimeModel.WEEK_START_HOUR - GameState.current_hour, TimeModel.HOURS_PER_DAY)
 	if steps == 0:
 		return
+	# A paper due at the rollover holds the night before its first step (EvEngine.before_night).
+	EventGate.before_night()
 	_run_batch(steps, 0.0, false)
 	if GameState.current_hour == TimeModel.WEEK_START_HOUR:
 		_end_night()

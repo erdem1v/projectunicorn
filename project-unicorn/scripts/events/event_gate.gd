@@ -176,6 +176,10 @@ static func hourly_tick(hour: int) -> void:
 	EvEngine.hourly_tick(hour)
 
 
+static func before_night() -> void:
+	EvEngine.before_night()
+
+
 # --- Test seams ------------------------------------------------------------
 #
 # Named so a test says what it wants instead of reaching into engine internals.

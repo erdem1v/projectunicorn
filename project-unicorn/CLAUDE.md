@@ -183,7 +183,9 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   `data/events/arcs/`'ta. İçerik durumu yalnız `scripts/events/seams/`'ten okur. Invariant'lar: motor GDD §0.3.
   Kart ekrana gelince `main` saati tutar (`TimeManager.hold_clock("event")`) ve Olaylar gelen kutusunu kartın
   üstünde açar; cevaba kadar başka her pencere yalnız okunur, tek yüklem `EventGate.active_id() != ""` (motor md
-  §11.3). Karar olmayan anlar `MessageSystem` mesajıdır.
+  §11.3). Kâğıt görülmeden dolmaz: son haftasının mesaisi bitince kesinti gibi açılır, masaya geri konmaz ve motor saati
+  cevaba kadar tutar (`EvEngine.DUE_HOLD`); süre dolumuna varan kâğıt (öznesi gitmiş, durumu değişmiş) bedelsiz düşer, `on_expire`
+  çalışmaz (motor md §27.49). Karar olmayan anlar `MessageSystem` mesajıdır.
 - Gelir: B2B hesabı kurucunun oynadığı satış toplantısı ve pazarlıkla ya da atanmış temsilcinin işlediği lead'le
   kazanılır; temsilcinin planı dolunca müşterinin baktığı bir alan ürünün beklentisinin altındaysa kapanış ürün uyumuna
   bağlı bir zarla kaybedilebilir (`ProductQuality.close_chance`) ve kayıp haftada en çok bir mailla gelir, kalanı haftalık

@@ -5,8 +5,9 @@ extends RefCounted
 # "Süresi olmayan şey kağıt değildir" (§12.1) — which is why the model needs no capacity cap:
 # papers leave on their own.
 #
-# EXPIRY IS NEVER SILENT (§12.4): on_expire runs, history records `expired`, and expire_note goes
-# to the ticker with player-outcome priority. Lint enforces the trio (§17.7).
+# A PAPER NEVER EXPIRES UNSEEN: once its last week's workday ends it opens and must be answered (EvEngine._due_paper). One
+# still on the desk at its tick was never shown for a reason that held (its subject left, its state lapsed): it drops at no
+# cost, history `dropped` (engine GDD §27.49). Lint still asks for the on_expire trio (§17.7).
 #
 # The office's notice stack shows the first few papers and a "+N" badge past them. Which come
 # first is decided here: ordered() sorts by weeks left, so a paper in its last week leads the

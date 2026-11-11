@@ -1686,8 +1686,8 @@ static func _auto_start() -> void:
 ## Sprint kapanışı: bu sprintte biten kartlar çıkar, etkileri uygulanır; bitmeyenler ilerlemesiyle sonraki
 ## sprinte devreder. Kimlik yeteneklerinden üçü K1'e varınca kapanış sürüm kapısında durur, ürünü CANLI v1.0 yapan publish'tir;
 ## canlıda çıkan kart her sürümde +0.1.
-## Hâlâ bekleyen karar açık kalır: kâğıdı aynı dağıtımın olay yuvasında süresi dolup on_expire
-## ile çözülür ve ertesi okumada kart serbest kalır; beklerken ilerlemediği için devretmiştir.
+## Karar kapanışa kadar verilmiş olur: bir haftalık kâğıt mesai bitince açılır ve cevaplanmadan gece geçmez
+## (EvEngine._due_paper); öznesi gitmiş kâğıt bedelsiz düşer ve kart ertesi okumada serbest kalır.
 ## Düzeltme kartı hattının bütün açık hatasını düşer; testten kaçan hata kartının hattına düşer, ürün canlı olana dek
 ## bekler. Söz olayında gönderilen kart (`send`) testi bittiyse düzeltmesi bitmeden çıkar, düzeltilmemiş hata da hattına
 ## düşer. Düzeltmesi bitmemiş öbür kart sessizce bırakılır: kalan işiyle sonraki sprinte devreder; devredenler sonraki

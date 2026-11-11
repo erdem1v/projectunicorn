@@ -1,0 +1,51 @@
+{
+  "id": "fixture.due_paper_long",
+  "version_scope": "fixture",
+  "schema": 3,
+  "category": "team",
+  "tick": "request",
+  "class": "paper",
+  "tags": [],
+  "family": "fixture_due_paper",
+  "delay_weeks": [0, 0],
+  "delay_reason": "a fixture is asked for by its own smoke case, not by the pool",
+  "plausibility": {
+    "phase_band": ["bootstrap_solo", "bootstrap_team", "traction", "series_a"],
+    "headcount": [0, null],
+    "product": "any",
+    "modules": [],
+    "min_week": 0
+  },
+  "latch": { "cooldown_weeks": 0 },
+  "latch_key": "entity",
+  "scope": {
+    "employee": { "type": "employee", "required": true }
+  },
+  "options": [
+    {
+      "id": "thank",
+      "outcome_id": "thank",
+      "effects": [
+        { "verb": "change_morale", "scope": "employee", "amount": 1 }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "İki hafta",
+      "body": "Yalnız iki haftalık kâğıdın son haftasını baştan yaşadığını sınar.",
+      "options": { "thank": "Teşekkür et" },
+      "expire_note": "Cevap gelmedi."
+    },
+    "en": {
+      "title": "Two weeks",
+      "body": "This card only tests that a two-week paper gets all of its last week.",
+      "options": { "thank": "Say thanks" },
+      "expire_note": "No answer came."
+    }
+  },
+  "expires_weeks": 2,
+  "on_expire": { "penalties": [] },
+  "expire_note": "expire_note",
+  "_note": "The second subject of `event_paper_opens_before_expiry`: its last week starts at the night's rollover, and the night after midnight must not open it."
+}
