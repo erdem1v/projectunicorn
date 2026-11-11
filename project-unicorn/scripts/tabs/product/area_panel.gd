@@ -224,6 +224,8 @@ func _module_row(m: Dictionary) -> PanelContainer:
 		var cards := SprintUiShared.column(UiTokens.SPACE_S)
 		for c in m.candidates:
 			cards.add_child(_candidate(c))
+		if m.waiting != null:
+			cards.add_child(_waiting_card(m.waiting))
 		col.add_child(cards)
 	else:
 		head.mouse_entered.connect(func() -> void: row.theme_type_variation = &"ModuleRowHover")
@@ -256,6 +258,26 @@ func _candidate(c: Dictionary) -> PanelContainer:
 	col.add_child(_strip(c.parts))
 	if c.planned or int(c.stamp) >= 0:
 		card.modulate = Color(Color.WHITE, UiTokens.D_TAKEN_ALPHA)
+	return card
+
+
+## Modülün araştırma bekleyen sıradaki kartı: efor ve şerit yok, "+" yerinde Ar-Ge'nin ikonu, ad soluk; ipucu araştırılacak düğümü
+## söyler, tık Ar-Ge'yi o düğümde açar.
+func _waiting_card(w: Dictionary) -> PanelContainer:
+	var card := PanelContainer.new()
+	card.theme_type_variation = &"ModuleCandidate"
+	var top := SprintUiShared.box(UiTokens.SPACE_M)
+	top.add_child(_name(String(w.name), &"CaptionName", UiTokens.D_INK_3))
+	var mark := UiFactory.make_glyph(RnDUiShared.ICON, UiTokens.D_ICON_ROW, UiTokens.D_INK_3)
+	mark.custom_minimum_size.x = UiTokens.D_H_KEY_CAND
+	top.add_child(mark)
+	card.add_child(top)
+	HRUiShared.set_mouse_ignore(top)
+	card.tooltip_text = String(w.reason)
+	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	card.gui_input.connect(func(ev: InputEvent) -> void:
+		if UiFactory.is_left_click(ev):
+			action.emit("rnd", {"node": String(w.node)}))
 	return card
 
 

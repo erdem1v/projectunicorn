@@ -224,7 +224,8 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `PRODUCT_SERVER_*` (37 anahtar): sunucu/kapasite arayüzü: `overview_view.gd`, `product_model.gd`, `main.gd`
 - `PRODUCT_REVIEW_*` (29): B2C yorum havuzu; `data/product/sprint.json` `reviews` bloğu ve `sprint_bridges.gd`
 - `PROD_LINE_*` (20) ve `PROD_STEP_*` (150): hat ve kademe adı; anahtar `ProductLines.line_name_key` (:290) ve `product_lines.gd:177`; `PROD_TYPE_*` tür adı (`product_catalog.gd`)
-- `PROD_LOCK_*` (kilit gerekçesi, `sprint_catalog.gd`), `PROD_SHIP_*`/`PROD_VERSION_*` (sürüm başlığı, `sprint_system.gd`), `PROD_RND_NODE_*` (düğüm adı, `ResearchSeam.node_name`)
+- `PROD_LOCK_*` (kilit gerekçesi, `sprint_catalog.gd`; `PROD_LOCK_RESEARCH` kart ipucunda ve sol sütunun bekleyen kartında aynı okunur),
+  ↳ `PROD_SHIP_*`/`PROD_VERSION_*` (sürüm başlığı, `sprint_system.gd`), `PROD_RND_NODE_*` (düğüm adı, `ResearchSeam.node_name`)
 - `RND_*`: Ar-Ge penceresi (`scripts/tabs/rnd/*.gd`, `rnd_tab.gd`, `research_bar.gd`); `RND_NOTE_*` (29) aylık not ve `RND_DISCOVERY_*` keşif notu: `rnd_system.gd`, `inbox.gd`, `mail_pane.gd`
 - `BUILD_BUSY_*`/`BUILD_PHASE_*`: Ar-Ge duraklama cümlesi (`rnd_system.gd`) ve DESTEK kartı (`build_bar.gd`); `CLOCK_HOLD_SPRINT_PLAN`, `CLOCK_HOLD_RELEASE_NOTE`: `time_manager.gd:32`
 - Acil durum ve kâğıt metni kart JSON'undadır: `data/events/cards/product/{incident_*,sprint_*,promise_due}.json`, `customer/{incident_month_close,release_thanks}.json`; gönderen `MAIL_SENDER_*`
@@ -317,7 +318,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
   ↳ `server_final` Kurumsal'dayken alt kademeler kilitli (imleç Ekonomik'te), `server_clause` tek hesap 3★ ve sözleşmesinde sunucu maddesi açık (bloğun altında "Kurumsal sunucu bekleyen 1 hesap" etiketi),
   ↳ `server_lock` 10 haftalık sunucu sözleşmesi sürüyor (kademeler ve Azalt kapalı, ipucu sözleşmenin gerekçesi; imleç Azalt'ta), `server_b2c` not uygulaması,
   ↳ 12.400 kullanıcı 13 birimde (%96)
-- `live:a4_*` sprint ekranının kare dünyalarıdır (32 tür; `_seed_product_a4` `main.gd:4613`, tablo `_A4_WORLDS` `:4572`): kurucu tek başına ERP'yi v1.0'a oynar, kadro sonra işe alınır, hesaplar imzalanır, önceki sprintler oynanır;
+- `live:a4_*` sprint ekranının kare dünyalarıdır (35 tür; `_seed_product_a4` `main.gd:4635`, tablo `_A4_WORLDS` `:4590`): kurucu tek başına ERP'yi v1.0'a oynar, kadro sonra işe alınır, hesaplar imzalanır, önceki sprintler oynanır;
   ↳ her tür kurulunca `PRODUCTSHOT|kind=|cards=|people=|row_gaps=|now=` basar; `row_gaps` zaman ekseninin bütün kart satırlarındaki boşluk sayısıdır (`SprintTimeline.row_gaps`, smoke'un Z3'üyle aynı işlev),
   ↳ `now` koşan sprintte şimdiki an (sprint başından hafta, değilse 0);
   ↳ plan kartları `SprintCatalog.card_need` ile ekibin kapasitesinin bir katına büyütülür (`load`: altı kişide 1,15, on bir kişide 1,25, on iki geliştiricide 1,3, on dört kartta 1,6),
@@ -339,8 +340,12 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
   ↳ kurucu kapalı, üç kartlık plan, plandan sonra PM dışında herkes izinde (`away`; şeritte "Ekip'e git"); `a4_delegate_noteam` aynısı, planlama devredilmiş;
   ↳ `a4_run_delegate_long` `a4_run_delegate`, PM'in adı havuzların en geniş adı (`pm`: "Jordan Bennett"; şeridin en dar hâli); `tip` alanı türe ikinci bir kare ekler:
   ↳ düz kare, sonra imleç ipucunun sahibine konur ve `<kök>_tip` kaydedilir (`_product_tip_shot`, sahibi `_tip_target`; yoksa `SHOT|tip_missing|<tür>` ve yalnız düz kare)
-  ↳ `tip`li türler: `a4_eleven_tip` "card", `a4_eleven_streak` "cap", `a4_run_w2_bar` "bar", `a4_fix_tip` "fix" (`a4_eleven`), `a4_meet_tip` "founder" (`a4_six_meetings2`), `a4_next_tip` "next" (`a4_run_end`), `a4_pm_tip` "plain"
-- `--event-shot=<bir sprint kâğıdı>` kâğıdı canlı bir ürünün bir kartlı sprintinde kurar (`main._seed_paper_world` `:1036`; kartı bir özellik kartı, B2B pm ve geç kalan sprint kâğıtlarında Marmara Lojistik'in talebi,
+  ↳ `tip`li türler: `a4_eleven_tip` "card", `a4_eleven_streak` "cap", `a4_run_w2_bar` "bar", `a4_fix_tip` "fix" (`a4_eleven`), `a4_meet_tip` "founder" (`a4_six_meetings2`), `a4_next_tip` "next" (`a4_run_end`), `a4_pm_tip` "plain",
+  ↳ `a4_waiting_tip` "waiting" (`a4_waiting`)
+  ↳ `a4_waiting` iki tasarımcı (4★, 3★), dört geliştirici (5, 4, 3, 3★), iki testçi (3★) ve 5★ PM; önceki üç sprintte ilkinde dört modülün kartları alınmış (stok hattının K2'si hariç: `skip`),
+  ↳ sonraki ikisinde yalnız Çekirdek ve Onboarding'inkiler (`areas`); planda üç Güven kartı, sol sütunda Çekirdek açık (`open`): "+"lı adayın altında araştırma bekleyen sıradaki kart görünür;
+  ↳ `a4_waiting_tip` onun ikinci karesi (imleç o kartta, ipucu "{düğüm} araştırılmalı"); `a4_waiting_all` aynı dünya, Onboarding açık (adaylarının hepsi kilitli modül)
+- `--event-shot=<bir sprint kâğıdı>` kâğıdı canlı bir ürünün bir kartlı sprintinde kurar (`main._seed_paper_world` `:1444`; kartı bir özellik kartı, B2B pm ve geç kalan sprint kâğıtlarında Marmara Lojistik'in talebi,
   ↳ kök neden kâğıdında hatalı hattın düzeltme kartıdır)
 - Probe kayıt türleri (Ürün): `SPRINT` (her kapanış: sprint, etiket, çıkanlar, devredenler, hız), `SHIP` (sürüm çıkaran kapanış: kapanıştan sonra açık hata, `escaped=` testten kaçan hata sayısı),
   ↳ `FIX` (her sprint başı: düzeltme kartlarının kalan puanı, kapasite, pay, hata sprinti mi), `BUGS` (haftalık: gelen yeni hata, açık hata, kapanıştan hemen önceki açık hata);

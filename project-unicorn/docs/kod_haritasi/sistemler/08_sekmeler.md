@@ -32,7 +32,7 @@ Alt klasörler:
 - `scripts/tabs/hr/hr_dossier.gd` (232): Ekip dosyası: kişinin ayrıntı penceresi (`DETAILS["hr_dossier"]`), kişi ayrılınca kendini kapatır.
 - `scripts/tabs/hr/hr_popover.gd` (113): `HRPopover`: çapaya bağlı tek açılır panel (satır menüsü, zam kutusu, sorumlu seçici).
 - `scripts/tabs/hr/hr_ui_shared.gd` (511): `HRUiShared`: koyu tablo kiti (`D_*`), rozetler, moral, deneyim, durum hücresi, `mount_panel_modal`; tabloların dışında da kullanılır.
-- `scripts/tabs/product/product_model.gd` (1144): `ProductModel`: sprint ekranının görünüm sözleşmesi; `live()` GameState/SprintSystem'den Dictionary kurar.
+- `scripts/tabs/product/product_model.gd` (1158): `ProductModel`: sprint ekranının görünüm sözleşmesi; `live()` GameState/SprintSystem'den Dictionary kurar.
   Başlık yorumu yeni ekranın alanlarını da tanımlar: `founder`, `requests`, `modules`, `prep`, çeyreğin saati, merkez ve sonraki sütun eklemeleri, kart satırı; düzeltme işinin efora girişi ve gösterim kuralı.
   Sol sütunun "+" değerleri ve hayalet hesabı `live()`dan ayrıdır: `addable`, `resolve_addable`, `ghost` (kart kimliğiyle sayfanın bir sonraki kurulumuna kadar saklanır).
   ↳ Kart satırı ipucunun verisini taşır (`module_name`, `finishes`, `gate`, söz yuvasında müşteri, değer, söz mü);
@@ -75,8 +75,9 @@ Alt klasörler:
 - `scripts/tabs/product/sprint_ui_shared.gd` (563): `SprintUiShared`: ortak statik parçalar (label, box, pad, avatar, `face`, `face_slot`, `open_goal_menu`, ÇEYREK çubuğu, `switch`, `due_chip`, `flag` (sütun genişliğinde sarar),
   ↳ `row_keys`, `way_out`, `add_key`, `keep_scroll`); Ürün dışında 10+ dosya kullanır. İpucu parçaları: `STAGE_KEYS`, `stage_name`, `stage_icon`, `stage_done`, `done_text`, `named_stars`, `effort_tip`,
   ↳ `prepared_tip`, `meet_lines`, `meet_lines_of` (`total`: türü başına günler toplanır), `tip_column` (zengin ipucunun kökü).
-- `scripts/tabs/product/area_panel.gd` (347): `AreaPanel`: sol sütun (SPRINT ve ÇEYREK): Geçmiş, MÜŞTERİ TALEPLERİ, MODÜLLER ve açık modülün adayları (düzeltme adayı tam hata metnini sarar yazar,
-  ↳ başka sprintin adayı "Sprint {n}" damgası taşır); "+" değerleri sonraki karelerde gelir; imleç ya da tık sırayı beklemez, o "+"nın değeri o an hesaplanır (`_learn`).
+- `scripts/tabs/product/area_panel.gd` (369): `AreaPanel`: sol sütun (SPRINT ve ÇEYREK): Geçmiş, MÜŞTERİ TALEPLERİ, MODÜLLER ve açık modülün adayları (düzeltme adayı tam hata metnini sarar yazar,
+  ↳ başka sprintin adayı "Sprint {n}" damgası taşır); adayların sonunda araştırma bekleyen sıradaki kart (`_waiting_card`: Ar-Ge ikonlu soluk satır, efor ve şerit yok, tık Ar-Ge'yi o düğümde açar);
+  ↳ "+" değerleri sonraki karelerde gelir; imleç ya da tık sırayı beklemez, o "+"nın değeri o an hesaplanır (`_learn`).
   ↳ Modül başlığı ve talep satırı modülün ikonunu `MonoBox` kutusunda taşır (`AREA_ICONS` kimlikten yola, `_area_mark` → `HRUiShared.D_mono_box`; talep satırında ipucu modülün adı).
 - `scripts/tabs/product/quarter_view.gd` (192): `QuarterView`: ÇEYREK görünümü: hedef şeridi (menü SprintHead ile ortak), sol sütun (`AreaPanel`), altı sprint sütunu, onay düğmeleri;
   ↳ sütunlar ve "Hepsini onayla" içerik pencereyi aşınca dikey kayar (`_right`, yeniden kurulumda yeri korunur), `content_height` içeriğin kendi boyunu okur.

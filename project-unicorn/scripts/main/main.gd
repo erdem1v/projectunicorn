@@ -4384,8 +4384,14 @@ func _product_tip_shot(tip: String, kind: String, stem: String) -> void:
 ## The control a tip frame points at, or null: "card" the name of the first board row with a due date (else of the first row), "fix"
 ## of the first fix card, "founder" of the founder's first card, "plain" of the first card no PM prepared; "bar" the first running
 ## bar (board order); "next" the first strip part of the next column's cards with work done ahead; "cap" the name cell of the stage
-## that has spilled for two sprints.
+## that has spilled for two sprints; "waiting" the left-column card that waits for research.
 func _tip_target(page: Control, tip: String) -> Control:
+	if tip == "waiting":
+		var reasons: Array = ProductModel.live().modules.filter(func(m: Dictionary) -> bool: return m.waiting != null).map(
+			func(m: Dictionary) -> String: return m.waiting.reason)
+		var found: Array = page.find_children("*", "PanelContainer", true, false).filter(
+			func(n: PanelContainer) -> bool: return n.tooltip_text in reasons)
+		return null if found.is_empty() else found[0]
 	if tip == "cap":
 		var cap: CapacityView = page.find_children("*", "CapacityView", true, false)[0]
 		for i in cap._rows.size():
@@ -4574,8 +4580,9 @@ func _seed_product_live(scenario: String) -> void:
 ## week; `delegate` the planning handed to the PM; `paper` a decision paper asked in the first week (off in every other world); `away`
 ## every employee but the PMs on leave once the plan is made (a plan with cards nobody can work); `pm` the PMs' name; `tip` the pointer's
 ## rest for a second frame with the tip open ("card", "fix", "founder" or "plain" a card's name, "bar" a running bar, "next" a next
-## column card's strip part, "cap" the stage that keeps spilling; `_tip_target`). The *_tip worlds and a4_run_w2_bar copy a frame's
-## world for its tip.
+## column card's strip part, "cap" the stage that keeps spilling, "waiting" the card of the open module that waits for research;
+## `_tip_target`). The *_tip worlds and a4_run_w2_bar copy a frame's world for its tip. `areas` keeps the plan to those modules' cards,
+## `skip` leaves cards out of it, `open` opens that module in the left column.
 const _A4_ROLES := {"p": HRConstants.ROLE_PRODUCT_MANAGER, "d": HRConstants.ROLE_DESIGNER, "v": HRConstants.ROLE_DEVELOPER,
 	"t": HRConstants.ROLE_TESTER}
 const _A4_FIRST := ["Ece", "Mert", "Zeynep", "Deniz", "Burak", "Ayşe", "Kaan", "Gizem", "Onur", "Defne"]   # LOC-DATA debug seed / names
@@ -4586,6 +4593,10 @@ const _A4_FIFTY := "p5 p4 p2 d4 d3 d3 d3 d2 d2 d3:training d4:research " \
 	+ "v5 v5 v4 v4 v4 v4 v4 v4 v3 v3 v3 v3 v3 v3 v2 v2 v2 v2 v2 v3:training v2:training v2:training v3:leave " \
 	+ "v3:support v3:support v2:support v2:support t4 t4 t3 t3 t3 t3 t2 t2 t2 t2:training t3:support t2:support"
 const _A4_PREP := {"fill": "over", "queue": 2}
+## Three sprints played before the a4_waiting frames: the later two leave Integrations and Trust unbuilt, so their cards wait; the
+## stock line's K2 stays open (`skip`) so Core shows a candidate above its card that waits for research.
+const _A4_WAITING_LATER := {"fill": "over", "areas": ["core", "onboarding"], "skip": ["feat:line_erp_stock_k2"]}
+const _A4_WAITING := [{"fill": "over", "skip": ["feat:line_erp_stock_k2"]}, _A4_WAITING_LATER, _A4_WAITING_LATER]
 const _A4_WORLDS := {
 	"a4_solo": {"pre": true, "sit": ["vc"]},
 	"a4_devs3": {"crew": "v3 v4 v2", "off": true},
@@ -4623,6 +4634,10 @@ const _A4_WORLDS := {
 	"a4_meet_tip": {"crew": _A4_SIX + "5", "before": [_A4_PREP], "bugs": 1, "fill": "over", "load": 1.15, "queue": 1,
 		"sit": ["sales", "sales"], "tip": "founder"},
 	"a4_next_tip": {"crew": _A4_SIX + "5", "before": [_A4_PREP], "fill": "over", "load": 1.15, "queue": 2, "run": 1.9, "tip": "next"},
+	"a4_waiting": {"crew": "d4 d3 v5 v4 v3 v3 t3 t3 p5", "before": _A4_WAITING, "fill": 3, "areas": ["trust"], "open": "core"},
+	"a4_waiting_tip": {"crew": "d4 d3 v5 v4 v3 v3 t3 t3 p5", "before": _A4_WAITING, "fill": 3, "areas": ["trust"], "open": "core",
+		"tip": "waiting"},
+	"a4_waiting_all": {"crew": "d4 d3 v5 v4 v3 v3 t3 t3 p5", "before": _A4_WAITING, "fill": 3, "areas": ["trust"], "open": "onboarding"},
 	"a4_pm_tip": {"crew": _A4_SIX + "5", "before": [_A4_PREP], "bugs": 1, "fill": "over", "load": 1.15, "queue": 1, "tip": "plain"},
 }
 
@@ -4743,7 +4758,7 @@ func _a4_seat(staff: Array) -> void:
 				CharacterRegistry.unassign_job(row[0], job)
 
 
-## The plan of the sprint in planning: `queue`, `fill` and `load` of `spec`.
+## The plan of the sprint in planning: `queue`, `fill` and `load` of `spec`; `fill` takes only the cards of `areas` and none of `skip`.
 func _a4_plan(spec: Dictionary) -> void:
 	var built: Array = SprintCatalog.open_cards([]).filter(func(c: Dictionary) -> bool: return c.kind in ["feature", "request"])
 	for c: Dictionary in built.slice(0, int(spec.get("queue", 0))):
@@ -4753,6 +4768,7 @@ func _a4_plan(spec: Dictionary) -> void:
 		SprintSystem.apply_lead()
 	elif fill != "none":
 		var open: Array = SprintCatalog.open_cards([])
+		open = open.filter(func(c: Dictionary) -> bool: return c.area in spec.get("areas", [c.area]) and c.id not in spec.get("skip", []))
 		if fill == "long":
 			var lang: String = TranslationServer.get_locale()
 			TranslationServer.set_locale("en")
@@ -4819,6 +4835,8 @@ func _product_a4_ready(kind: String) -> bool:
 		page._set_ui(open[0].id, "hover_card")
 	elif kind == "a4_requests":
 		page._set_ui(ProductModel.live().requests[0].module_id, "open_area")
+	elif _A4_WORLDS[kind].has("open"):
+		page._set_ui(_A4_WORLDS[kind].open, "open_area")
 	if not await _faces_drawn("live:" + kind):
 		return false
 	if kind == "a4_six_hover":

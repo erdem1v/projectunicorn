@@ -62,7 +62,8 @@ extends RefCounted
 #   modules: [{id, name, planned (bu sprintte kartı var), candidates: [{id, name, effort, parts: [{stage, effort}] (sıfırdan
 #             büyük aşama payları, eforu kesirli), planned (bu sprintin planında), stamp (başka sprintte: sprint numarası, yoksa
 #             -1), addable (null: "+"nın değeri henüz istenmedi, `resolve_addable` ister; false: adaylıktan çıkmış kartın "+"ı yok),
-#             bugs, fix_text}]}] (kilitli aday ve adaylarının hepsi kilitli modül yok),
+#             bugs, fix_text}], waiting: null | {name, node, reason} (modülün araştırma bekleyen sıradaki kartı: tek eksik kapısı araştırma;
+#             başka kapısı da eksik kart yok)}] (kilitli aday listelenmez; adaylarının hepsi kilitli ve bekleyeni olmayan modül listelenmez),
 #   prep: {pms: [{person, stars, cards (bu sprintin kartlarından hazırladıklarının adı), preparing (sonraki sütunda hazırladığı var)}]},
 #   quarter: + {q, year (ürün çeyreğinin başladığı takvim çeyreği), pos, total (çeyreğin kaçıncı sprinti, kaç sprintlik)},
 #   center: + {now_at (koşan sprintin haftasında şimdiki an, sprint başından hafta), close_at (SprintTimeline), progress: {done,
@@ -240,16 +241,29 @@ static func bug_row_of(line_name: String, part: Dictionary, delta: int) -> Dicti
 	return {"text": SprintUiShared.SEP.join(bits), "tip": "\n".join(tip), "delta": delta}
 
 
-## Yeni sol sütunun modülü: kilitli aday listelenmez, adaylarının hepsi kilitli olan modül de (kilitler Ar-Ge'de görünür). `cards`
-## alanın ham adayları, `planned` modülün bu sprintin planında kartı olması, `sprint` bu sprintin numarası, `tags` bu ve sonraki
-## sprintin kartlarının sprint numarası.
+## Yeni sol sütunun modülü: kilitli aday listelenmez; araştırma bekleyen sıradaki kart `waiting`te durur. Adaylarının hepsi kilitli ve
+## bekleyeni olmayan modül listelenmez. `cards` alanın ham adayları, `planned` modülün bu sprintin planında kartı olması, `sprint` bu sprintin numarası, `tags`
+## bu ve sonraki sprintin kartlarının sprint numarası.
 static func _module(area_id: String, cards: Array, planned: bool, sprint: int, tags: Dictionary) -> Variant:
 	var listed: Array = cards.filter(func(c: Dictionary) -> bool:
 		return c.state != "candidate" or SprintCatalog.gate_reason(c.step) == "")
-	if listed.is_empty() and not cards.is_empty():
+	var waiting: Variant = _waiting(cards)
+	if listed.is_empty() and not cards.is_empty() and waiting == null:
 		return null
 	return {"id": area_id, "name": SprintCatalog.area_name(area_id), "planned": planned,
-		"candidates": listed.map(func(c: Dictionary) -> Dictionary: return _module_card(c, int(tags.get(c.id, -1)), sprint))}
+		"candidates": listed.map(func(c: Dictionary) -> Dictionary: return _module_card(c, int(tags.get(c.id, -1)), sprint)),
+		"waiting": waiting}
+
+
+## Modülün araştırma bekleyen sıradaki adayı: tek eksik kapısı araştırma olan ilk aday (modülün sırasıyla), yoksa null.
+static func _waiting(cards: Array) -> Variant:
+	for c: Dictionary in cards:
+		if c.state != "candidate":
+			continue
+		var unmet: Array = LineGates.unmet_parts(c.step)
+		if unmet.size() == 1 and unmet[0].kind == LineGates.KIND_RESEARCH:
+			return {"name": SprintCatalog.card_name(c), "node": unmet[0].node, "reason": SprintCatalog.gate_reason(c.step)}
+	return null
 
 
 ## Modülün adayı: sıfırdan büyük aşama paylarının eforu (kalan ihtiyaç ÷ hazırlık kazancı, aşama kartın türünün rolünden), bu
