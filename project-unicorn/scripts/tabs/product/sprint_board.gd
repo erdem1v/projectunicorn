@@ -6,10 +6,13 @@ extends VBoxContainer
 # şimdiki an çizgisi) ve kart satırlarını taşır; kartsız planda tek hayalet satır ("+ Kart ekle"), kartsız planda önerinin ilk üç
 # adayı ve imleç sol sütunda bir adayın "+"ındayken o adayın hayaleti "EKLENEBİLİR" altında durur. Gövde taşarsa altta "aşağıda
 # {n} kart daha" hapı yapışık kalır; katlamanın altında yetişmeyen kart varsa hap tehlike renginde ve ipucu onların sayısını yazar.
-# Yalnız modeli çizer; satır tıkları sekmeye `action` olarak çıkar. Saat ilerleyince `set_now`
-# yalnız şimdiki an çizgisini ve koşan çubukları günceller.
+# Eksenin genişliği (`model.axis`) panonun kaydırma çubuğu payı ve bilgi sütunu çıkınca kalan genişliktir, en az `D_W_TIMELINE`; pano
+# ölçtüğü genişlik kurulandan ayrılınca `axis_wanted` ile sayfanın yeniden kurulmasını ister. Yalnız modeli çizer; satır tıkları
+# sekmeye `action` olarak çıkar. Saat ilerleyince `set_now` yalnız şimdiki an çizgisini ve koşan çubukları günceller.
 
 signal action(kind: String, args: Dictionary)
+## Panonun ölçtüğü eksen genişliği kurulandan başka.
+signal axis_wanted(width: float)
 
 ## Hapın hesabında satırın altı bu kadar piksel görünmüyorsa satır "aşağıda" sayılır.
 const MORE_SLACK := 10
@@ -40,7 +43,8 @@ func setup(model: Dictionary, nobody: Control) -> void:
 	_more = null
 	var c: Dictionary = model.center
 	var running: bool = c.mode == "active"
-	_ctx = {"mode": c.mode, "now": c.now_at, "people": c.people, "candidate": false, "hot": false, "team_pm": not model.prep.pms.is_empty()}
+	_ctx = {"mode": c.mode, "now": c.now_at, "people": c.people, "candidate": false, "hot": false, "team_pm": not model.prep.pms.is_empty(),
+		"axis": model.axis}
 	_early_tip = tr("PRODUCT_EARLY_END_TIP").format({"w": int(c.close_at)}) if c.close_at < float(c.weeks) - SprintSystem.EPS else ""
 	add_theme_constant_override("separation", 0)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -49,6 +53,7 @@ func setup(model: Dictionary, nobody: Control) -> void:
 	var holder := Control.new()
 	holder.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	holder.resized.connect(_measure_axis.bind(holder))
 	add_child(holder)
 	scroll = ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -65,6 +70,17 @@ func setup(model: Dictionary, nobody: Control) -> void:
 	scroll.get_v_scroll_bar().value_changed.connect(func(_v: float) -> void: _update_more())
 	scroll.resized.connect(_update_more)
 	_update_more.call_deferred()
+
+
+# --- Eksen ----------------------------------------------------------------------------------
+
+## Kaydırma çubuğunun yeri görünsün görünmesin düşülür. Başlık panoyu en az `D_W_TIMELINE` eksenine kadar genişletir, kurulu eksen
+## genişletmez: ölçüm kendi sonucuna bağlanmaz.
+func _measure_axis(holder: Control) -> void:
+	var room: float = holder.size.x - scroll.get_v_scroll_bar().get_combined_minimum_size().x - UiTokens.D_W_CARD_INFO
+	var want: float = maxf(UiTokens.D_W_TIMELINE, floorf(room))
+	if want != _ctx.axis:
+		axis_wanted.emit(want)
 
 
 # --- Başlık ---------------------------------------------------------------------------------
@@ -87,7 +103,7 @@ func _head(c: Dictionary) -> Control:
 		end.tooltip_text = _early_tip
 		left.add_child(end)
 	_at_foot(head, left, 0.0)
-	var per: float = UiTokens.D_W_TIMELINE / UiTokens.D_TIMELINE_WEEKS
+	var per: float = _ctx.axis / UiTokens.D_TIMELINE_WEEKS
 	for week in int(c.weeks):
 		_at_foot(head, SprintUiShared.label(Fmt.upper(tr("PRODUCT_WEEK_ORD").format({"w": week + 1})), &"AxisLabel"),
 			UiTokens.D_W_CARD_INFO + roundf(per * week) + UiTokens.SPACE_M)
@@ -118,11 +134,11 @@ func _at_foot(head: Control, part: Control, x: float) -> void:
 ## başlar ve gövdenin boyunu doldurur.
 func _body(c: Dictionary, hover_card: String, running: bool) -> Control:
 	var layers := MarginContainer.new()
-	layers.custom_minimum_size.x = UiTokens.D_W_CARD_INFO + UiTokens.D_W_TIMELINE
+	layers.custom_minimum_size.x = UiTokens.D_W_CARD_INFO + _ctx.axis
 	layers.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	layers.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	layers.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var per: float = UiTokens.D_W_TIMELINE / UiTokens.D_TIMELINE_WEEKS
+	var per: float = _ctx.axis / UiTokens.D_TIMELINE_WEEKS
 	var under: Array = [StagePaint.part(&"grid", "", {"px": per, "weeks": c.weeks}, Rect2())]
 	under[0].set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	if _early_tip != "":
@@ -313,7 +329,7 @@ func _on_pill_input(event: InputEvent) -> void:
 # --- Saat ve kaydırma -----------------------------------------------------------------------
 
 func _place_now(at: float) -> void:
-	var x: float = roundf(at * UiTokens.D_W_TIMELINE / UiTokens.D_TIMELINE_WEEKS)
+	var x: float = roundf(at * _ctx.axis / UiTokens.D_TIMELINE_WEEKS)
 	_now.offset_left = x - UiTokens.D_NOW_HEAD.x / 2.0
 	_now.offset_right = x + UiTokens.D_NOW_HEAD.x / 2.0
 

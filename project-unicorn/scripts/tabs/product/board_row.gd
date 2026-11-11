@@ -68,7 +68,7 @@ func setup(row: Dictionary, ctx: Dictionary) -> void:
 	_now = ctx.now
 	_two = String(row.name).length() > UiTokens.D_CARD_NAME_SHORT
 	_h = UiTokens.D_H_CARD_ROW_TWO if _two else UiTokens.D_H_CARD_ROW
-	custom_minimum_size = Vector2(UiTokens.D_W_CARD_INFO + UiTokens.D_W_TIMELINE, _h)
+	custom_minimum_size = Vector2(UiTokens.D_W_CARD_INFO + ctx.axis, _h)
 	mouse_filter = Control.MOUSE_FILTER_PASS
 	tooltip_text = _gated_tip()
 	_mark = ColorRect.new()
@@ -358,7 +358,7 @@ func _keys(kinds: Array) -> Control:
 # --- Zaman ekseni ---------------------------------------------------------------------------
 
 func _x(week: float) -> float:
-	return roundf(week * UiTokens.D_W_TIMELINE / UiTokens.D_TIMELINE_WEEKS)
+	return roundf(week * _ctx.axis / UiTokens.D_TIMELINE_WEEKS)
 
 
 ## Kartın aşamaları eksende: bekleme noktalı çizgisi, çubuk, sprint dışına kalan pay ve PM'in gölgesi. Eksenden önce ya da önden
@@ -367,7 +367,7 @@ func _x(week: float) -> float:
 ## sonunda kesilir.
 func _lane(h: int) -> Control:
 	var lane := Control.new()
-	lane.custom_minimum_size = Vector2(UiTokens.D_W_TIMELINE, h)
+	lane.custom_minimum_size = Vector2(_ctx.axis, h)
 	lane.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	lane.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var top: float = (h - UiTokens.D_H_STAGE_BAR) / 2.0
@@ -397,7 +397,7 @@ func _lane(h: int) -> Control:
 				shadows.append(shade)
 		if s.out_from >= 0.0:
 			var out_left: float = maxf(_x(s.out_from), out_end)
-			var out_right: float = minf(out_left + _x(s.out_to) - _x(s.out_from), UiTokens.D_W_TIMELINE)
+			var out_right: float = minf(out_left + _x(s.out_to) - _x(s.out_from), _ctx.axis)
 			if out_right - out_left >= 1.0:
 				bars.append(_bar(s, Rect2(out_left, top, out_right - out_left, UiTokens.D_H_STAGE_BAR), "out", ticks))
 				ticks = []
@@ -521,7 +521,7 @@ func _shadow(s: Dictionary, top: float) -> StagePaint:
 	var last: Dictionary = s.pieces[-1]
 	var pace: float = float(last.work) / maxf(last.to - last.from, SprintSystem.EPS)
 	var from: float = _x(s.pieces[0].from)
-	var to: float = minf(_x(float(last.to) + (s.need_raw - s.need) / pace), UiTokens.D_W_TIMELINE)
+	var to: float = minf(_x(float(last.to) + (s.need_raw - s.need) / pace), _ctx.axis)
 	if to - from < 1.0:
 		return null
 	var shade: StagePaint = StagePaint.part(&"shadow", s.stage, {}, Rect2(from + UiTokens.D_SHADOW_INSET,

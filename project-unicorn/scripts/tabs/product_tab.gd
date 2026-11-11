@@ -8,7 +8,8 @@ extends Control
 # sekmenin yerel durumudur: modelin `ui`'sinden tohumlanır, tek sahibi `_ui`'dir; Destek kartı alanı `open_area` ile açar.
 # Son açık kâğıt pencere kapanıp açılınca (ve dil değişince) hatırlanır, kayda yazılmaz. Sol sütunun, panonun ve sağ sütunun
 # kaydırması yeniden kurulumda korunur; koşan sprintte `hour_changed` sayfayı kurmaz, yalnız şimdiki anı günceller. Masa her mesai
-# saatinde `desk_changed` yayar: sayfa yalnız okuduğu masa ya da ekip hâli (`ProductModel.desk_stamp`) değiştiyse kurulur.
+# saatinde `desk_changed` yayar: sayfa yalnız okuduğu masa ya da ekip hâli (`ProductModel.desk_stamp`) değiştiyse kurulur. Zaman ekseninin
+# genişliğini (`_axis`) pano ölçer; pencere ya da ray değişince ölçüm kurulandan ayrılırsa sayfa o genişlikle yeniden kurulur.
 
 ## ÇEYREK'te pencere içeriği kadar uzar (WindowLayer fit_height okur).
 signal fit_changed
@@ -29,6 +30,8 @@ var _ui: Dictionary = {}
 var _closing := false   # pencere kapanıyor: ertelenmiş kurulum ölmekte olan sayfada saati yeniden tutmasın
 var _rebuild_queued := false
 var _desk_stamp: Array = []   # son kurulumun okuduğu masa ve ekip hâli
+## Panonun son ölçtüğü zaman ekseni; süreçte tutulur: pencere yeniden açılınca (kapat-aç, dil, palet) sayfa bir kez kurulur.
+static var _axis: float = UiTokens.D_W_TIMELINE
 var _reveal_open := false   # Destek kartı alanı açtı: kurulunca alanın başı sütunun başına gelsin
 var _kpis: HBoxContainer
 var _ctl: PanelContainer
@@ -77,6 +80,7 @@ func _ready() -> void:
 	scroll.add_child(_areas)
 	_sprint = SprintPanel.new()
 	_sprint.action.connect(_on_action)
+	_sprint.axis_wanted.connect(_on_axis)
 	_sprint_view.add_child(_sprint)
 	_quarter = QuarterView.new()
 	_quarter.action.connect(_on_action)
@@ -153,6 +157,7 @@ func _rebuild() -> void:
 		if _source == null:
 			_ui.view = _last_view
 	m.ui = _ui
+	m.axis = _axis
 	# "+" yalnız planlamada açıktır: imleç ondayken sprint başlarsa (devir, Boşluk) kalan hayalet kalkar.
 	if m.center.mode != "plan":
 		_ui.hover_card = ""
@@ -201,6 +206,11 @@ func _refit() -> void:
 func _on_desk() -> void:
 	if ProductModel.desk_stamp() != _desk_stamp:
 		_queue_rebuild()
+
+
+func _on_axis(width: float) -> void:
+	_axis = width
+	_queue_rebuild()
 
 
 ## Koşan sprintte her oyun saati: pano ve kapasite şimdiki ana göre yeniden okunur, sayfa kurulmaz.

@@ -7,6 +7,8 @@ extends HBoxContainer
 # sayfa kurulmadan günceller.
 
 signal action(kind: String, args: Dictionary)
+## Panonun ölçtüğü eksen genişliği kurulandan başka (`SprintBoard.axis_wanted`).
+signal axis_wanted(width: float)
 
 const PAUSE := "res://assets/icons/util/pause.svg"
 const TEAM_GLYPH := "res://assets/icons/rail/hr.svg"
@@ -123,6 +125,7 @@ func _center(model: Dictionary) -> void:
 	_running = c.mode == "active"
 	_board = SprintBoard.new()
 	_board.action.connect(action.emit)
+	_board.axis_wanted.connect(axis_wanted.emit)
 	_board.setup(model, _nobody(c) if c.team_empty and c.cards.is_empty() else null)
 	col.stack.add_child(_board)
 
