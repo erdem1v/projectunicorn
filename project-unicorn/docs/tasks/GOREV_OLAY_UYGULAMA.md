@@ -444,12 +444,25 @@ Görev: `GOREV_DIZUSTU_OLAYLAR_IKON_2026-10-28.md` (O0–O3), Mac, oturum OLAYLA
   smoke `event_start_training_player_path`, `event_fire_employee_player_path`. İkisi de ekonomik fiil ve
   `EvEffects.NOT_ONLY_COST`ta: ortam kökeni ve süre dolumu uygulamaz (eğitim para harcar; listede `fire_employee`'nin yanına
   inceleme üzerine girdi, I2). Aynı commit'te `B2BSalesSystem.satisfaction_next_tick` silindi (yardımcı yönetmen).
+- **Harness ✅** `abcc46c3` (yeniden kurmada yardımcı yönetmen, bu oturumun kaydından): `--event-shot` portre çizilene kadar
+  bekler (`_faces_drawn`, A4 karelerinin beklemesiyle ortak). Mac'te kare için kopyaya `override.cfg` (`[display]`,
+  `window/size/mode=0`) gerekir, yoksa PNG 2880×1800 iner; repoya girmez.
+- **Playtest ✅** Yardımcı yönetmenin isteğiyle (Erdem: "paralelde bir playtest yapar mısın, gelen eventleri yanıtlayarak")
+  build `b2639465`, B2B ERP, kurucu tek, pencereli ve Godot MCP ile oyuncu gibi 30 hafta (66 dakika). Rapor ve kareler
+  `docs/tasks/dizustu/raporlar/playtest_2026-10-28/` (RAPOR.md, notlar.md, kod doğrulaması dogrulama.json; H30 kaydı Mac'in
+  `/tmp` temizliğinde kayboldu), sayfa https://claude.ai/artifact/QjpxDNSNgfDt3KzT3VBGE8. Kod değişmedi. Hata olarak
+  raporlananlar: çeyrek bülteni ikinci haftasında açılırken düşüyor (H01); "Zor modda açılır" kilidini açan kod yok (H02);
+  satış paneli hafta başı gece "Mesai bitiyor" diyor (H03); müşteri kartı ile temsilci seçicisi kurucunun hesabını farklı
+  adlandırıyor (H04); SIRADAKİ yuvasında ve Ekip'in Görev sütununda "…" kesmesi (H05). Bir haftalık sprint kâğıdı görülmeden
+  doldu (H07), sessiz havuz uyarısı tırmanarak 11 kez basıldı. Erdem 2026-11-11'de hepsini düzeltmeye verdi:
+  `GOREV_OLAYLAR_2026-11-11.md` (H01, H02, H07, sayaç), `GOREV_DUZELTME_2026-11-11.md` (H03, H04, H05'in Görev sütunu, H08),
+  `GOREV_ARAYUZ_2026-11-11.md` (H05'in SIRADAKİ yuvası), `GOREV_URUN_2026-11-11.md` (H06, H09).
 
-Açık kalanlar:
-- Erdem: ikon seçimi (dört modül); TR/EN onayı `EFFECT_TRAINING`, `EFFECT_FIRED`; ACIK 14'ün kalanı (`add_customer`,
-  `convert_audience`, `open_paid_tier`, `change_salary`); #7'nin iki şıkkı, #32 (değişmedi).
+Oturum: OLAYLAR, `dd6f551f-9a19-44bf-832b-23c38bb6b809` (kaydı `docs/tasks/claude_devir/oturum/`'da; masaüstünde `--resume` ile sürer).
+
+Açık kalanlar (2026-11-11 hâli):
+- Erdem: ikon seçimi (Lucide'ye geçiş kararıyla DUZELTME'de); TR/EN onayı `EFFECT_TRAINING`, `EFFECT_FIRED`; ACIK 14'ün kalanı
+  `change_salary` (`add_customer` bağlandı, `convert_audience` ve `open_paid_tier` silindi: GOREV_OLAYLAR_2026-11-11 O-5);
+  #7'nin "kendi aralarında" şıkkı Erdem'e yeniden soruldu; #32 kabul.
 - `start_training` oyuncunun kuralıyla çalışır: kişinin deneyim barı dolu değilse kart onu eğitime göndermez ve çip çizmez.
   Bir kart bu fiili kullanacaksa yuvanın seçicisi barı dolu kişiyi seçmeli (bugün böyle bir seçici yok).
-- Mac'te kare: pencere tam ekran açıldığı için kopyaya `override.cfg` (`[display]`, `window/size/mode=0`) gerekir, yoksa PNG
-  2880×1800 iner. Hızlı açılışta `--event-shot` portreyi çizilmeden kaydedebiliyor; çekim kopyasında `_run_event_shot`
-  `PersonBust.drawing()` bitene kadar bekletildi (A4 karelerinin beklemesi). Harness düzeltmesi olarak commit'lenmedi, öneri.
