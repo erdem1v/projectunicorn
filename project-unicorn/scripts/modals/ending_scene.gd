@@ -359,7 +359,7 @@ func _build_rail() -> PanelContainer:
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	col.add_child(spacer)
 
-	# Bottom action row: TEKRAR DENE · ZOR MOD (every ending, visible-locked) · GAZETEYİ PAYLAŞ.
+	# Bottom action row: TEKRAR DENE · ZOR MOD (every ending, the notice that Zor is open) · GAZETEYİ PAYLAŞ.
 	var actions := HBoxContainer.new()
 	actions.add_theme_constant_override("separation", 8)
 	col.add_child(actions)
@@ -399,18 +399,12 @@ func _build_coming_soon(col: VBoxContainer) -> void:
 	col.add_child(wishlist)
 
 
+## Zor opens once a run is finished (FounderConstants.HARD_OPENS_AFTER_RUNS) and this screen is where one finishes: a notice,
+## not a door, since the difficulty is picked at the next run's start.
 func _add_hard_mode(actions: HBoxContainer) -> void:
 	var hard := _button(&"DialogueGhost", "ENDING_HARD_MODE")
-	hard.disabled = true                       # visible-LOCKED telegraph, no mechanic
-	hard.tooltip_text = tr("ENDING_SOON_TOOLTIP")
-	# Kilit ikonu Button.icon değil: kaynak SVG 24px ve beyaz stroke'lu, expand_icon onu
-	# butonun tamamına yayar. Tier kartlarının reçetesi (12px TextureRect + CREAM_DIM)
-	# butonun YANINDA durur: ölçü ve renk kontrolü bizde.
-	var hard_row := HBoxContainer.new()
-	hard_row.add_theme_constant_override("separation", 5)
-	hard_row.add_child(HRUiShared.lock_glyph(12, UiTokens.CREAM_DIM))
-	hard_row.add_child(hard)
-	actions.add_child(hard_row)
+	hard.disabled = true
+	actions.add_child(hard)
 
 
 ## A rail button: themed by its variation, never takes focus, labelled from its key.

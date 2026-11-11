@@ -1,5 +1,5 @@
 {
-  "_port_note": "The decline lock reads `funding.hard_mode`, a SEAM over GameState, not a `flag` leaf: a flag leaf asks the engine's own FlagStore, and `hard_mode_unlocked` lives in GameState, so the row would stay locked even after hard mode ships.",
+  "_port_note": "The decline lock reads `funding.hard_mode`, a SEAM over GameState, not a `flag` leaf: a flag leaf asks the engine's own FlagStore, and `hard_mode_unlocked` lives in GameState, so the row would stay locked on Zor.",
   "id": "funding.frank_cheque",
   "version_scope": "demo",
   "category": "funding",

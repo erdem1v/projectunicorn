@@ -151,7 +151,7 @@ GameState alanları (`autoload/game_state.gd`):
 
 Sabitler:
 - Finans: `BURN_IDS` `finance_system.gd:27`, `ONE_TIME_LABELS` `:31`, `MARKETING_*` `:63-68`, `RUNWAY_ALERT_MONTHS` `[3, 1]` `:73`, `RUNWAY_ALERT_REARM_MONTHS` `:74`.
-- Çek: `AngelRoundSystem.MRR_THRESHOLD` 2500, `CASH_AMOUNT` 25_000, `EQUITY_PCT` 4 (`angel_round_system.gd:27-29`), bayrak `angel_seed_accepted_day` `:31`.
+- Çek: `AngelRoundSystem.MRR_THRESHOLD` 2500, `CASH_AMOUNT` 25_000, `EQUITY_PCT` 4 (`angel_round_system.gd:27-29`), bayrak `angel_seed_accepted_day` `:31`. Reddet satırı `hard_mode_unlocked` bayrağını okur (`HARD_MODE_FLAG` `:32`); bayrağı Zor koşunun kurulumu yazar, kayıt uygulandıktan sonra (`GameState.initialize_run`).
 - Kapılar: `PhaseGateSystem.GATES` `phase_gate_system.gd:38` (1→2: ürün yayında, ilk müşteri, MRR>0; 2→3: `finance.mrr >= SalesSystem.TRACTION_MRR_TARGET`), `APPROACH_PCTS` `:31`, `GROWTH_MIN_PCT` `:25`.
 - Görüşme: `PitchConstants` `pitch_constants.gd` (`ILIK_MIN` 40, `WON_MIN` 70 `:10-11`, `CONV_*` `:18-32`, `MEETING_LEAD_WEEKS` `:71`, `SHEET_VALIDITY_WEEKS` 3 `:93`, `MAX_SHEETS` 2 `:94`, `CALLBACK_*` `:110-115`,
   `ARR_MULTIPLE` `:165`, `SERIES_A_DIL_*` `:171-174`, `REJECT_*_COST` `:179-180`).
@@ -185,7 +185,7 @@ Sabitler:
 Tek koşturucu `bash tools/smoke_run.sh <vaka>`; vaka listesi `scripts/debug/endgame_smoke.gd` `match case_name:` tablosudur (dosya ~25.950 satır). `export GODOT=...` gerekir; `--all` yalnız push öncesi.
 - Finans: `month_summary`, `month_history_close_and_cap`, `burn_refresh_same_tick`, `burn_lines_visible`, `runway_net_status`, `runway_weeks_seam`, `runway_days_and_negative_cash`, `gross_runway_months`,
   `add_cash_writes_ledger`, `marketing_push_burns_and_ends`, `run_ledger`.
-- Çek ve turlar: `cheque_read_steps`, `angel_fires_at_crossing`, `angel_never_pre_ship`, `angel_not_below_threshold`, `angel_accept_is_atomic`, `angel_locked_choice_inert`, `angel_one_shot_falsified`,
+- Çek ve turlar: `cheque_read_steps`, `angel_fires_at_crossing`, `angel_never_pre_ship`, `angel_not_below_threshold`, `angel_accept_is_atomic`, `angel_locked_choice_inert`, `angel_decline_opens_on_hard`, `angel_one_shot_falsified`,
   `angel_survives_series_a`, `angel_hire_nudge`, `seed_*`, `valuation_*`.
 - Kapılar ve görüşme: `gate1_b2b`, `gate1_b2c`, `gate2`, `gate_decline_reminder`, `gate_scope_and_halves`, `traction_gate_one_option`, `series_a_gate_mrr_only`, `series_a_signal_states`, `series_a_sheet_derives_from_arr`,
   `frank_approach_lines_once`.

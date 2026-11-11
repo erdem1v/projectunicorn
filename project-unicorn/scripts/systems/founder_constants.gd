@@ -55,7 +55,8 @@ const TRAITS := [
 # Self-Made opening cash; the origin catalog and GameState's defaults both read it.
 const STARTING_CASH := 10000
 
-# Difficulty only scales the origin's opening cash. Hard opens once the profile has finished this many runs.
+# Difficulty scales the origin's opening cash, and Zor opens Frank's decline (GameState.initialize_run). Hard opens once the profile
+# has finished this many runs.
 const DIFFICULTY_CASH_MULT := {"easy": 1.5, "normal": 1.0, "hard": 0.6}   # [WORKING]
 const HARD_OPENS_AFTER_RUNS := 1   # [WORKING]
 

@@ -730,7 +730,7 @@ static func view_state() -> Dictionary:
 		# LOCKED-VISIBLE, not hidden: the row stays on screen and says why, which is the
 		# grammar every other locked door in this game uses.
 		"walk_lock": {
-			"locked": is_seed() and not bool(GameState.get_flag(AngelRoundSystem.HARD_MODE_FLAG, false)),
+			"locked": is_seed(),
 			"reason_key": "SEED_WALK_LOCK",
 		},
 		# The seed table's derived readout. "" at Series A, where the valuation is a lever.

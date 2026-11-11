@@ -101,7 +101,7 @@ ONB_DOC_OFFICE,Ofis,Office
 ONB_DOC_TEAM,Ekip,Team
 ONB_TEAM_SOLO,Yalnız sen,Just you
 ONB_DIFFICULTY,Zorluk,Difficulty
-ONB_DIFFICULTY_NOTE,Başlangıç kasasını belirler,Sets your starting cash
+ONB_DIFFICULTY_NOTE,Başlangıç kasasını belirler. Zor'da Frank'i geri çevirebilirsin.,Sets your starting cash. On Hard you can also turn Frank down.
 ONB_DIFF_EASY,Kolay,Easy
 ONB_DIFF_NORMAL,Normal,Normal
 ONB_DIFF_HARD,Zor,Hard
@@ -151,8 +151,7 @@ ENDING_WISHLIST,WISHLIST'E EKLE,ADD TO WISHLIST
 ENDING_RUN_META,BU OYUN: {weeks} HAFTA · NORMAL MOD,THIS RUN: {weeks} WEEKS · NORMAL MODE
 ENDING_RUN_META_ONE,BU OYUN: {weeks} HAFTA · NORMAL MOD,THIS RUN: {weeks} WEEK · NORMAL MODE
 ENDING_RETRY,TEKRAR DENE,TRY AGAIN
-ENDING_HARD_MODE,ZOR MOD · YAKINDA,HARD MODE · SOON
-ENDING_SOON_TOOLTIP,Yakında,Coming soon
+ENDING_HARD_MODE,ZOR MOD · AÇILDI,HARD MODE · UNLOCKED
 ENDING_SHARE,GAZETEYİ PAYLAŞ,SHARE THE PAPER
 ENDING_SAVED_TOAST,Gazete kaydedildi,Paper saved
 ENDING_OPEN_FOLDER,Klasörü aç,Open folder
@@ -2325,7 +2324,7 @@ SEED_EXPECT_STALLED,Durgun. Üç aylık ortalama {avg}; beklenen {need}.,"Stalle
 SEED_EXPECT_UNKNOWN,Ortalama için yeterli kapanmış ay yok.,Not enough closed months to read an average yet.
 SEED_LEVER_RAISE,Yatırım,Investment
 SEED_IMPLIED_POST,İma edilen değerleme {post},Implied valuation {post}
-SEED_WALK_LOCK,Turu geri çevirmek zor modda açılır.,Turning the round down unlocks in hard mode.
+SEED_WALK_LOCK,Seed turu geri çevrilemez.,The seed round can't be turned down.
 SEED_FRANK_OPENING,"""Teklif duruyor, kaçmıyor. Ama pazarlık ettiğin her şeyin bir bedeli var: sabırları.""","""The offer is not going anywhere. But everything you negotiate for costs the same thing: their patience."""
 SEED_FRANK_NEXT_MOVE,"""Bir hamlen daha var.""","""You have another move."""
 SEED_FRANK_LAST_MOVE,"""Son sabırları. Dikkat.""","""That is the last of their patience."""

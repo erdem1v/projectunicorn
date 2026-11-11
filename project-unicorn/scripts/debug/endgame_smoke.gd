@@ -294,6 +294,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"angel_not_below_threshold":          fail = _case_angel_not_below_threshold()
 		"angel_accept_is_atomic":             fail = _case_angel_accept_is_atomic()
 		"angel_locked_choice_inert":          fail = _case_angel_locked_choice_inert()
+		"angel_decline_opens_on_hard":        fail = _case_angel_decline_opens_on_hard()
 		"angel_one_shot_falsified":           fail = _case_angel_one_shot_falsified()
 		"angel_survives_series_a":            fail = _case_angel_survives_series_a()
 		"angel_hire_nudge":                   fail = _case_angel_hire_nudge()
@@ -4780,8 +4781,8 @@ static func _case_angel_accept_is_atomic() -> String:
 
 
 static func _case_angel_locked_choice_inert() -> String:
-	# REDDET · ZOR MOD is visible and unusable, and the lock is honest: not a fake
-	# threshold that could accidentally come true, but a flag with no writer in the engine.
+	# REDDET · ZOR MOD is visible and unusable on Normal, and the lock is honest: not a fake
+	# threshold that could accidentally come true, but a flag only a Zor run sets.
 	var ev: GameEvent = EventGate.render(ANGEL_ID)
 	if ev.choices.size() != 2:
 		return "the seed scene has %d choices, wanted 2" % ev.choices.size()
@@ -4800,6 +4801,23 @@ static func _case_angel_locked_choice_inert() -> String:
 	GameState.set_flag(AngelRoundSystem.HARD_MODE_FLAG, false)
 	if EventGate.condition_met(refuse.unlock_condition):
 		return "flag_equals matched a false value — the gate is flag_set, not flag_equals"
+	return ""
+
+
+## Zor koşu Frank'in çekindeki Reddet'i açar: bayrağı koşunun kurulumu yazar (GameState.initialize_run), Normal koşuda satır
+## kilitli kalır; bayraktan önce yazılmış Zor kaydı yüklenince de açılır.
+## FALSİFİKASYON: initialize_run'daki Zor dalını sil → Zor koşuda satır kilitli, FAIL; dalı kaydın uygulanmasından önceye al →
+## eski Zor kaydında satır kilitli, FAIL.
+static func _case_angel_decline_opens_on_hard() -> String:
+	var open := func() -> bool: return EventGate.condition_met(EventGate.render(ANGEL_ID).choices[1].unlock_condition)
+	if open.call():
+		return "a Normal run opens the decline row"
+	GameState.initialize_run({"seed": 424242, "difficulty": "hard"})
+	if not open.call():
+		return "a Zor run keeps the decline row locked"
+	GameState.initialize_run({"seed": 424242, "restore": {"game_state": {"difficulty": "hard", "flags": {}}}})
+	if not open.call():
+		return "a Zor save written before the flag keeps the decline row locked"
 	return ""
 
 
@@ -21008,8 +21026,7 @@ static func _case_seed_sheet_never_in_active_sheets() -> String:
 
 
 static func _case_seed_table_walk_is_locked() -> String:
-	# ZOR MOD, the Frank-cheque pattern: visible, disabled, and its reason names the real
-	# shortfall. Falsified the same way the angel row is — by setting the flag.
+	# Visible, disabled and saying why: the seed rung has no walk-out on any difficulty (walk() refuses at seed).
 	_seed_seed_world()
 	_sim_day_full()
 	if not _play_seed_meeting("anchor", ["b1_read", "b2_vizyon", "b3_durust", "b4_ack"]):
@@ -21029,13 +21046,6 @@ static func _case_seed_table_walk_is_locked() -> String:
 		return "walk() destroyed the seed offer"
 	if GameState.vc_rejections != rejections0:
 		return "walk() at a seed table moved the cascade counter"
-	# FALSIFY: the lock must be a live read of one named flag, not a constant.
-	GameState.set_flag(AngelRoundSystem.HARD_MODE_FLAG, true)
-	var open_vs: Dictionary = TermSheetTableSystem.view_state()
-	var still_locked: bool = bool((open_vs.get("walk_lock", {}) as Dictionary).get("locked", false))
-	GameState.set_flag(AngelRoundSystem.HARD_MODE_FLAG, false)
-	if still_locked:
-		return "the lock stayed shut with hard_mode_unlocked set — it is not a real condition"
 	return ""
 
 

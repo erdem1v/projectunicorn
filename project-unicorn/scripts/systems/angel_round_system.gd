@@ -5,9 +5,9 @@ extends RefCounted
 #
 # Frank is an angel, not a fund. His cheque arrives once, after a played MVP and real
 # revenue, with no term-sheet ceremony: one warm-dry Frank scene, one decision. Taking it
-# costs 4% of the company. Refusing it is the hard path, and the hard path is not built
-# yet — so that choice ships VISIBLE AND LOCKED rather than hidden, which is the game's
-# standing grammar for a door the player can see but not open.
+# costs 4% of the company. Refusing it is the hard path: open on Zor (HARD_MODE_FLAG), and on
+# the other difficulties VISIBLE AND LOCKED rather than hidden, which is the game's standing
+# grammar for a door the player can see but not open.
 #
 # THE SCENE IS CONTENT; THIS FILE IS THE ARITHMETIC. `funding.frank_cheque` carries the
 # trigger, the one_shot latch and the decline lock (`requires` on the funding.hard_mode seam),

@@ -19,7 +19,7 @@ var founder_name: String = ""         # Player's name; "" means the founder Char
 # The founder was left unnamed and is called by the role, in the language on screen (CharacterRegistry renames them).
 var founder_name_default: bool = false
 var founder_portrait: String = ""     # Portrait id (e.g. "founder_03"); art via FounderConstants.portrait_path()
-var difficulty: String = "normal"     # FounderConstants.DIFFICULTY_CASH_MULT key: the opening cash only
+var difficulty: String = "normal"     # FounderConstants.DIFFICULTY_CASH_MULT key: the opening cash; "hard" also opens Frank's decline
 # THE RNG SEED, 0 = unseeded. Not the funding round (run_seed_amount / run_seed_equity_pct).
 var run_seed: int = 0
 # The language the run began in ("tr" | "en"): everyone new is named from its pool (candidates,
@@ -113,7 +113,7 @@ const FLAG_TYPES := {
 	"acquisition_offer_rejected": TYPE_BOOL,
 	# --- angel round (Frank's seed) + the locked hard path ---
 	"angel_seed_accepted_day": TYPE_INT,
-	# RESERVED, no writer: the guaranteed-false gate behind "REDDET · ZOR MOD".
+	# The run is on Zor (initialize_run): opens Frank's decline row.
 	"hard_mode_unlocked": TYPE_BOOL,
 	# --- office ladder: the tiers whose first arrival has lifted the brand ---
 	"offices_reached": TYPE_ARRAY,
@@ -962,6 +962,9 @@ func initialize_run(payload: Dictionary) -> void:
 		# A save written before the Seed kept its post-money carries the two numbers it comes from.
 		if seed_post_money_m == 0.0 and run_seed_amount > 0 and run_seed_equity_pct > 0:
 			seed_post_money_m = post_money_m(run_seed_amount, run_seed_equity_pct)
+	# After the restore, so a Zor save written before the flag existed takes it too.
+	if difficulty == "hard":
+		set_flag(AngelRoundSystem.HARD_MODE_FLAG, true)
 	# A save from before the emblem kept only a style; a run set up without a logo takes its name's first.
 	if logo.is_empty():
 		logo = LogoEmblem.from_legacy(String(restore_block.get("logo_style", "")), company_name)

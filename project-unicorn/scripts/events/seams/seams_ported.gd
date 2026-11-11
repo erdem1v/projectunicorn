@@ -104,7 +104,7 @@ static func install() -> void:
 	# --- funding. --------------------------------------------------------
 	EvSeams.register("funding.hard_mode", G, TYPE_BOOL,
 		func() -> bool: return bool(GameState.get_flag("hard_mode_unlocked", false)),
-		"Funding", "RESERVED — no writer exists; the honest lock on Frank's decline row")
+		"Funding", "true on Zor; the lock on Frank's decline row")
 	EvSeams.register("funding.angel_threshold_met", G, TYPE_BOOL,
 		func() -> bool: return GameState.mrr >= AngelRoundSystem.MRR_THRESHOLD,
 		"Funding", "MRR has crossed the bar Frank's cheque waits on")
