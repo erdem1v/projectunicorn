@@ -1,0 +1,444 @@
+### #816 2026-10-28T16:45:35.609Z agent-aecefc9467d56f6a4 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; printf '[display]\nwindow/size/mode=0\n' > $S/h1/project-unicorn/override.cfg
+cat > $S/d3_shots.txt <<'EOF'
+--product-shot=live:a4_two_pm tr
+--product-shot=live:a4_eleven tr
+--product-shot=live:a4_eleven en
+--product-shot=live:a4_run_w2 tr
+--product-shot=live:a4_two_pm tr 1.25
+--product-shot=live:a4_eleven tr 1.25
+--product-shot=live:a4_eleven en 1.25
+EOF
+cd $S; (ETIKET=URUN_ARAYUZU_AJAN nohup bash $S/bin/shots.sh $S/h1/project-unicorn d3_before $S/d3_shots.txt > $S/d3_before.out 2>&1 &) ; sleep 2; cat $S/d3_before.out; cd $S/w3/project-unicorn; git -C . log --oneline -3 2>/dev/null | head; git -C $S/h1/project-unicorn status --short 2>/dev/null | head -3
+
+### #817 2026-10-28T16:46:07.700Z agent-aecefc9467d56f6a4 Bash
+cd /private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad/w3/project-unicorn; python3 - <<'EOF'
+import re
+def sub(path, pairs):
+    s = open(path, encoding='utf-8').read()
+    for old, new, *cnt in pairs:
+        n = s.count(old)
+        want = cnt[0] if cnt else 1
+        assert n == want, (path, old, n)
+        s = s.replace(old, new)
+    open(path, 'w', encoding='utf-8').write(s)
+
+# window_layer
+sub('scripts/ui/components/window_layer.gd', [
+ ('"product": Vector2(1424, 928)', '"product": Vector2(1688, 928)'),
+ ('Finans 1344 BuildHUD\'un solunda biter; Ürün\n## 1424 ona biner ve BuildHUD gizlenir; Piyasa da 1424, dar alanda liste ve kart kendi içinde kayar.',
+  'Finans 1344 BuildHUD\'un solunda biter; Ürün\n## 1920\'de pencere alanının tamamıdır (1920 − ray 184 − 2 × EDGE) ve BuildHUD gizlenir, zaman ekseni kalan genişliği alır;\n## Piyasa 1424, dar alanda liste ve kart kendi içinde kayar.'),
+])
+EOF
+sed -n 28,42p scripts/ui/components/window_layer.gd
+
+### #818 2026-10-28T16:46:22.774Z agent-aecefc9467d56f6a4 Bash
+cd /private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad/w3/project-unicorn; python3 - <<'EOF'
+def sub(path, pairs):
+    s = open(path, encoding='utf-8').read()
+    for old, new, *cnt in pairs:
+        n = s.count(old)
+        want = cnt[0] if cnt else 1
+        assert n == want, (path, old, n)
+        s = s.replace(old, new)
+    open(path, 'w', encoding='utf-8').write(s)
+
+sub('scripts/tabs/product/sprint_board.gd', [
+ ('# Yalnız modeli çizer; satır tıkları sekmeye `action` olarak çıkar. Saat ilerleyince `set_now`\n# yalnız şimdiki an çizgisini ve koşan çubukları günceller.\n\nsignal action(kind: String, args: Dictionary)\n',
+  '# Eksenin genişliği (`model.axis`) panonun kaydırma çubuğu payı ve bilgi sütunu çıkınca kalan genişliktir, en az `D_W_TIMELINE`; pano\n# ölçtüğü genişlik kurulandan ayrılınca `axis_wanted` ile sayfanın yeniden kurulmasını ister. Yalnız modeli çizer; satır tıkları\n# sekmeye `action` olarak çıkar. Saat ilerleyince `set_now` yalnız şimdiki an çizgisini ve koşan çubukları günceller.\n\nsignal action(kind: String, args: Dictionary)\n## Panonun ölçtüğü eksen genişliği kurulandan başka.\nsignal axis_wanted(width: float)\n'),
+ ('_ctx = {"mode": c.mode, "now": c.now_at, "people": c.people, "candidate": false, "hot": false, "team_pm": not model.prep.pms.is_empty()}',
+  '_ctx = {"mode": c.mode, "now": c.now_at, "people": c.people, "candidate": false, "hot": false, "team_pm": not model.prep.pms.is_empty(),\n\t\t"axis": model.axis}'),
+ ('\tholder.size_flags_horizontal = Control.SIZE_EXPAND_FILL\n\tadd_child(holder)\n',
+  '\tholder.size_flags_horizontal = Control.SIZE_EXPAND_FILL\n\tholder.resized.connect(_measure_axis.bind(holder))\n\tadd_child(holder)\n'),
+ ('# --- Başlık ---', '''# --- Eksen ----------------------------------------------------------------------------------
+
+## Eksen, gövdenin genişliğinden bilgi sütunu ve kaydırma çubuğunun yeri çıkınca kalandır (çubuk görünsün görünmesin aynı). Başlığın en
+## azı sabittir: ölçüm, kurulu eksenin içeriğe verdiği genişliğe bağlanmaz.
+func _measure_axis(holder: Control) -> void:
+	var want: float = maxf(UiTokens.D_W_TIMELINE, floorf(holder.size.x - scroll.get_v_scroll_bar().get_combined_minimum_size().x) - UiTokens.D_W_CARD_INFO)
+	if want != _ctx.axis:
+		axis_wanted.emit(want)
+
+
+# --- Başlık ---'''),
+ ('\tvar per: float = UiTokens.D_W_TIMELINE / UiTokens.D_TIMELINE_WEEKS\n\tfor week in int(c.weeks):', '\tvar per: float = _ctx.axis / UiTokens.D_TIMELINE_WEEKS\n\tfor week in int(c.weeks):'),
+ ('\tlayers.custom_minimum_size.x = UiTokens.D_W_CARD_INFO + UiTokens.D_W_TIMELINE\n', '\tlayers.custom_minimum_size.x = UiTokens.D_W_CARD_INFO + _ctx.axis\n'),
+ ('\tvar per: float = UiTokens.D_W_TIMELINE / UiTokens.D_TIMELINE_WEEKS\n\tvar under: Array', '\tvar per: float = _ctx.axis / UiTokens.D_TIMELINE_WEEKS\n\tvar under: Array'),
+ ('\tvar x: float = roundf(at * UiTokens.D_W_TIMELINE / UiTokens.D_TIMELINE_WEEKS)', '\tvar x: float = roundf(at * _ctx.axis / UiTokens.D_TIMELINE_WEEKS)'),
+])
+sub('scripts/tabs/product/board_row.gd', [
+ ('custom_minimum_size = Vector2(UiTokens.D_W_CARD_INFO + UiTokens.D_W_TIMELINE, _h)', 'custom_minimum_size = Vector2(UiTokens.D_W_CARD_INFO + ctx.axis, _h)'),
+ ('return roundf(week * UiTokens.D_W_TIMELINE / UiTokens.D_TIMELINE_WEEKS)', 'return roundf(week * _ctx.axis / UiTokens.D_TIMELINE_WEEKS)'),
+ ('lane.custom_minimum_size = Vector2(UiTokens.D_W_TIMELINE, h)', 'lane.custom_minimum_size = Vector2(_ctx.axis, h)'),
+ ('_x(s.out_to) - _x(s.out_from), UiTokens.D_W_TIMELINE)', '_x(s.out_to) - _x(s.out_from), _ctx.axis)'),
+ ('/ pace), UiTokens.D_W_TIMELINE)', '/ pace), _ctx.axis)'),
+])
+EOF
+git diff --stat 2>/dev/null | tail -3; grep -n "ctx\b" scripts/tabs/product/board_row.gd | head -5
+
+### #823 2026-10-28T16:47:15.450Z agent-aecefc9467d56f6a4 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; mkdir -p $S/d3_bak/h1 $S/d3_bak/w3
+for t in h1 w3; do cp $S/$t/project-unicorn/scripts/main/main.gd $S/d3_bak/$t/main.gd; cp $S/$t/project-unicorn/scripts/tabs/product/stage_paint.gd $S/d3_bak/$t/stage_paint.gd; done
+cat > $S/d3_instr.py <<'EOF'
+import sys
+root = sys.argv[1]
+p = root + '/scripts/tabs/product/stage_paint.gd'
+s = open(p, encoding='utf-8').read()
+a = '''	var at: float = left
+	if left + glyph + UiTokens.SPACE_S + body_w <= right:
+		draw_texture_rect('''
+assert s.count(a) == 1
+s = s.replace(a, '''	var at: float = left
+	if left + glyph + UiTokens.SPACE_S + body_w <= right:
+		dbg[get_instance_id()] = 0
+		draw_texture_rect(''')
+b = '''	elif left == UiTokens.D_STAGE_BAR_PAD.x and spec.room <= 0.0 and body_w + 2.0 * UiTokens.SPACE_XS <= size.x:
+		at = (size.x - body_w) / 2.0
+	elif left + body_w > right:
+		return
+'''
+assert s.count(b) == 1
+s = s.replace(b, '''	elif left == UiTokens.D_STAGE_BAR_PAD.x and spec.room <= 0.0 and body_w + 2.0 * UiTokens.SPACE_XS <= size.x:
+		dbg[get_instance_id()] = 1
+		at = (size.x - body_w) / 2.0
+	elif left + body_w > right:
+		dbg[get_instance_id()] = 2
+		return
+	else:
+		dbg[get_instance_id()] = 1
+''')
+s = s.replace('func _draw_label() -> void:', 'static var dbg := {}\n\n\nfunc _draw_label() -> void:', 1)
+open(p, 'w', encoding='utf-8').write(s)
+
+p = root + '/scripts/main/main.gd'
+s = open(p, encoding='utf-8').read()
+c = '''	print(_productshot_line(kind))
+	return true
+'''
+assert s.count(c) == 1
+s = s.replace(c, '''	print(_productshot_line(kind))
+	_dbg_measure(page)
+	return true
+
+
+func _dbg_measure(page: Control) -> void:
+	var frame: Control = page.get_parent()
+	while frame != null and not (frame.get_parent() is Control and frame.get_parent().is_in_group(&"window_layer")):
+		frame = frame.get_parent()
+	var rows: Array = page.find_children("*", "BoardRow", true, false)
+	var lane_w := -1.0
+	var lane_c := 0
+	var out := {"real": [0, 0, 0, 0], "cand": [0, 0, 0, 0]}
+	for row: BoardRow in rows:
+		var lane: Control = row.get_child(1).get_child(1)
+		if lane_w < 0.0 and not row.is_candidate():
+			lane_w = lane.size.x
+		var key: String = "cand" if row.is_candidate() else "real"
+		for part: StagePaint in row.find_children("*", "StagePaint", true, false):
+			if part.kind == &"label":
+				var v: int = StagePaint.dbg.get(part.get_instance_id(), -1)
+				out[key][3] += 1
+				if v == 2:
+					out[key][2] += 1
+				elif v == 1:
+					out[key][1] += 1
+				elif v == 0:
+					out[key][0] += 1
+	var holder: Control = null
+	for board: SprintBoard in page.find_children("*", "SprintBoard", true, false):
+		holder = board.get_child(1)
+	print("DBGW|window=%s|page=%s|holder=%s|lane=%s|week_px=%.2f|labels_real[full,numonly,dropped,total]=%s|labels_cand=%s|rows=%d" % [
+		frame.size if frame != null else "?", page.size, holder.size if holder != null else "?", lane_w, lane_w / 2.6, out.real, out.cand, rows.size()])
+''')
+open(p, 'w', encoding='utf-8').write(s)
+EOF
+for t in h1 w3; do python3 $S/d3_instr.py $S/$t/project-unicorn && echo ok $t; done
+
+### #835 2026-10-28T16:56:45.037Z agent-aecefc9467d56f6a4 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; cd $S; python3 - <<'EOF'
+S='/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad'
+for t in ('h1','w3'):
+    p=f'{S}/{t}/project-unicorn/scripts/main/main.gd'
+    s=open(p,encoding='utf-8').read()
+    old='\t\tvar lane: Control = row.get_child(1).get_child(1)\n'
+    assert s.count(old)==1
+    s=s.replace(old,'\t\tif row.get_child_count() < 2 or row.get_child(1).get_child_count() < 2:\n\t\t\tprint("DBGROW|children=%d|cand=%s|visible=%s|in_tree=%s|freed=%s" % [row.get_child_count(), row.is_candidate(), row.visible, row.is_inside_tree(), row.is_queued_for_deletion()])\n\t\t\tcontinue\n\t\tvar lane: Control = row.get_child(1).get_child(1)\n')
+    open(p,'w',encoding='utf-8').write(s)
+EOF
+echo "--product-shot=live:a4_two_pm tr" > $S/d3_one.txt
+export ETIKET=URUN_ARAYUZU_AJAN; bash $S/bin/shots.sh $S/h1/project-unicorn d3_dbg $S/d3_one.txt 2>&1 | cut -c1-160; grep -a "DBGROW\|DBGW\|SCRIPT ERROR" $S/shots_d3_dbg/*.log | head
+
+### #838 2026-10-28T16:57:21.117Z agent-aecefc9467d56f6a4 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; mkdir -p $S/w3b; rm -rf $S/w3b/project-unicorn; cp -R $S/w3/project-unicorn $S/w3b/project-unicorn; cd $S/w3b/project-unicorn; python3 - <<'EOF'
+def sub(path, pairs):
+    s = open(path, encoding='utf-8').read()
+    for old, new in pairs:
+        assert s.count(old) == 1, (path, old)
+        s = s.replace(old, new)
+    open(path, 'w', encoding='utf-8').write(s)
+sub('scripts/ui/components/window_layer.gd', [('"product": Vector2(1688, 928)', '"product": Vector2(1424, 928)')])
+sub('scripts/tabs/product/sprint_board.gd', [
+ ('\n\t\t"axis": model.axis}', '}'),
+ ('\tholder.resized.connect(_measure_axis.bind(holder))\n', ''),
+ ('_ctx.axis', 'UiTokens.D_W_TIMELINE'),
+]) if False else None
+EOF
+python3 - <<'EOF'
+import re
+def rw(path, f):
+    s = open(path, encoding='utf-8').read(); s = f(s); open(path, 'w', encoding='utf-8').write(s)
+rw('scripts/tabs/product/sprint_board.gd', lambda s: s.replace('_ctx = {"mode": c.mode, "now": c.now_at, "people": c.people, "candidate": false, "hot": false, "team_pm": not model.prep.pms.is_empty(),\n\t\t"axis": model.axis}', '_ctx = {"mode": c.mode, "now": c.now_at, "people": c.people, "candidate": false, "hot": false, "team_pm": not model.prep.pms.is_empty()}').replace('\tholder.resized.connect(_measure_axis.bind(holder))\n', '').replace('_ctx.axis', 'UiTokens.D_W_TIMELINE').replace('signal axis_wanted(width: float)', 'signal axis_wanted_unused(width: float)'))
+rw('scripts/tabs/product/board_row.gd', lambda s: s.replace('ctx.axis', 'UiTokens.D_W_TIMELINE').replace('_ctx.axis', 'UiTokens.D_W_TIMELINE'))
+rw('scripts/tabs/product_tab.gd', lambda s: s.replace('\tm.axis = _axis\n', ''))
+EOF
+grep -n "axis\|D_W_TIMELINE" scripts/tabs/product/sprint_board.gd scripts/tabs/product/board_row.gd | head -30; grep -n "model.axis\|ctx.axis" scripts/tabs/product/*.gd
+
+### #961 2026-10-28T17:10:56.022Z agent-aecefc9467d56f6a4 Bash
+cd /private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad/w3/project-unicorn; python3 - <<'EOF'
+def sub(path, pairs):
+    s = open(path, encoding='utf-8').read()
+    for old, new in pairs:
+        assert s.count(old) == 1, (path, old)
+        s = s.replace(old, new)
+    open(path, 'w', encoding='utf-8').write(s)
+sub('docs/kod_haritasi/sistemler/08_sekmeler.md', [
+ ('`scripts/tabs/product_tab.gd` (349)', '`scripts/tabs/product_tab.gd` (358)'),
+ ('`scripts/tabs/product/sprint_panel.gd` (305)', '`scripts/tabs/product/sprint_panel.gd` (308)'),
+ ('`scripts/tabs/product/sprint_board.gd` (333): `SprintBoard`: panonun sabit başlığı ("{n} KART", erken kapanış bayrağı, hafta etiketleri), kayan gövdesi',
+  '`scripts/tabs/product/sprint_board.gd` (349): `SprintBoard`: panonun sabit başlığı ("{n} KART", erken kapanış bayrağı, hafta etiketleri), zaman ekseninin genişliği (`model.axis`: gövde eksi bilgi sütunu ve kaydırma çubuğu, en az `D_W_TIMELINE`; ölçüm kurulandan ayrılınca `axis_wanted`, sekme sayfayı o genişlikle yeniden kurar), kayan gövdesi'),
+ ('(Ürün/Piyasa 1424×928, Ekip 1352×928,', '(Ürün 1688×928: 1920\'de pencere alanının tamamı, Piyasa 1424×928, Ekip 1352×928,'),
+])
+sub('docs/kod_haritasi/sistemler/09_arayuz_bilesen.md', [
+ ('`D_W_TIMELINE` 396, `D_TIMELINE_WEEKS` 2.6', '`D_W_TIMELINE` 396 (eksenin en azı; eksen orta sütunun kalan genişliğidir), `D_TIMELINE_WEEKS` 2.6'),
+])
+sub('scripts/theme/ui_tokens.gd', [
+ ('const D_W_TIMELINE := 396             # its time axis\n', 'const D_W_TIMELINE := 396             # its time axis at its least: the axis takes the centre column\'s width past the info column\n'),
+])
+EOF
+grep -n "D_W_TIMELINE" scripts/theme/ui_tokens.gd
+
+### #962 2026-10-28T17:11:02.779Z agent-aecefc9467d56f6a4 Bash
+cd /private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad/w3/project-unicorn; python3 - <<'EOF'
+p='scripts/tabs/product/sprint_board.gd'
+s=open(p,encoding='utf-8').read()
+old='''## Eksen, gövdenin genişliğinden bilgi sütunu ve kaydırma çubuğunun yeri çıkınca kalandır (çubuk görünsün görünmesin aynı). Başlığın en
+## azı sabittir: ölçüm, kurulu eksenin içeriğe verdiği genişliğe bağlanmaz.
+'''
+new='''## Eksen, gövdenin genişliğinden bilgi sütunu ve kaydırma çubuğunun yeri çıkınca kalandır (çubuk görünsün görünmesin aynı). Başlık
+## panoyu en az `D_W_TIMELINE` eksenine kadar genişletir, kurulu eksen genişletmez: ölçüm kendi sonucuna bağlanmaz.
+'''
+assert s.count(old)==1
+open(p,'w',encoding='utf-8').write(s.replace(old,new))
+EOF
+sed -n 1,20p scripts/tabs/product/sprint_board.gd; sed -n 70,84p scripts/tabs/product/sprint_board.gd
+
+### #965 2026-10-28T17:11:22.017Z agent-aecefc9467d56f6a4 Bash
+cd /private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad/w3/project-unicorn; S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; python3 - <<'EOF'
+p='scripts/tabs/product_tab.gd'
+s=open(p,encoding='utf-8').read()
+old='# Son açık kâğıt pencere kapanıp açılınca (ve dil değişince) hatırlanır, kayda yazılmaz.'
+assert s.count(old)==1
+# comment sentence: append before the "Masa her mesai" sentence
+old2='Masa her mesai\n# saatinde `desk_changed` yayar: sayfa yalnız okuduğu masa ya da ekip hâli (`ProductModel.desk_stamp`) değiştiyse kurulur.'
+assert s.count(old2)==1, 'old2'
+s=s.replace(old2, old2+' Zaman ekseninin\n# genişliğini (`_axis`) pano ölçer; pencere ya da ray değişince ölçüm kurulandan ayrılırsa sayfa o genişlikle yeniden kurulur.')
+open(p,'w',encoding='utf-8').write(s)
+EOF
+sed -n 1,14p scripts/tabs/product_tab.gd; cp scripts/tabs/product_tab.gd $S/d3_bak/w3/product_tab.gd; cp scripts/main/main.gd $S/d3_bak/w3/main_clean.gd
+
+### #993 2026-10-28T17:18:57.297Z agent-aecefc9467d56f6a4 Bash
+cd /private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad/w3/project-unicorn; python3 - <<'EOF'
+p='scripts/tabs/product_tab.gd'
+s=open(p,encoding='utf-8').read()
+old='func _rebuild() -> void:\n\t_rebuild_queued = false\n'
+assert s.count(old)==1
+s=s.replace(old, old+'\tprint("REBUILD|axis=%s|size=%s" % [_axis, size])\n')
+open(p,'w',encoding='utf-8').write(s)
+p='scripts/main/main.gd'
+s=open(p,encoding='utf-8').read()
+c='''	print(_productshot_line(kind))
+	return true
+'''
+assert s.count(c)==1
+s=s.replace(c,'''	print(_productshot_line(kind))
+	await _dbg_resize(page)
+	return true
+
+
+func _dbg_resize(page: Control) -> void:
+	var layer: Control = get_tree().get_first_node_in_group(&"window_layer")
+	for w in [1424.0, 1688.0, 1424.0, 1688.0]:
+		layer._current_page.size = Vector2(w, 928.0)
+		print("RESIZE|to=%d" % int(w))
+		for _f in 15:
+			await get_tree().process_frame
+		var row: BoardRow = page.find_children("*", "BoardRow", true, false)[0]
+		print("SETTLED|w=%d|lane=%s" % [int(w), row.get_child(1).get_child(1).size.x])
+	for _f in 90:
+		await get_tree().process_frame
+	print("QUIET")
+''')
+open(p,'w',encoding='utf-8').write(s)
+EOF
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; echo "--product-shot=live:a4_eleven en" > $S/d3_one.txt; export ETIKET=URUN_ARAYUZU_AJAN; bash $S/bin/shots.sh $S/w3/project-unicorn d3_resize $S/d3_one.txt 2>&1 | cut -c1-170; grep -a "REBUILD\|RESIZE\|SETTLED\|QUIET\|SCRIPT ERROR" $S/shots_d3_resize/*.log
+
+### #997 2026-10-28T17:22:48.787Z agent-aecefc9467d56f6a4 Bash
+cd /private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad/w3/project-unicorn; python3 - <<'EOF'
+p='scripts/main/main.gd'
+s=open(p,encoding='utf-8').read()
+old='''	for w in [1424.0, 1688.0, 1424.0, 1688.0]:
+		layer._current_page.size = Vector2(w, 928.0)
+		print("RESIZE|to=%d" % int(w))'''
+new='''	var full: float = layer.size.x
+	for w in [1424.0, 1688.0, 1424.0, 1688.0]:
+		layer.size.x = full - (1688.0 - w)
+		print("RESIZE|to=%d|layer=%s|frame=%s" % [int(w), layer.size.x, layer._current_page.size])'''
+assert s.count(old)==1
+s=s.replace(old,new)
+s=s.replace('print("SETTLED|w=%d|lane=%s" % [int(w), row.get_child(1).get_child(1).size.x])','print("SETTLED|w=%d|frame=%s|lane=%s" % [int(w), layer._current_page.size, row.get_child(1).get_child(1).size.x])')
+open(p,'w',encoding='utf-8').write(s)
+EOF
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; rm -rf $S/shots_d3_resize; export ETIKET=URUN_ARAYUZU_AJAN; bash $S/bin/shots.sh $S/w3/project-unicorn d3_resize $S/d3_one.txt 2>&1 | cut -c1-170; grep -a "REBUILD\|RESIZE\|SETTLED\|QUIET\|SCRIPT ERROR" $S/shots_d3_resize/*.log
+
+### #1010 2026-10-28T17:25:34.624Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; cd $S; cp base3/project-unicorn/scripts/theme/ui_tokens.gd w3/project-unicorn/scripts/theme/ui_tokens.gd; grep -v "ui_tokens.gd" d3_changed.txt > d3c && mv d3c d3_changed.txt; : > d3.diff; for f in $(cat d3_changed.txt); do diff -u base3/project-unicorn/$f w3/project-unicorn/$f --label a/$f --label b/$f >> d3.diff; done; wc -l d3.diff d3_changed.txt; python3 -c "
+L=open('$S/w3/project-unicorn/docs/kod_haritasi/sistemler/09_arayuz_bilesen.md',encoding='utf-8').read().split('\n'); print([(i+1,len(l)) for i,l in enumerate(L) if len(l)>240])
+L=open('$S/w3/project-unicorn/docs/kod_haritasi/sistemler/08_sekmeler.md',encoding='utf-8').read().split('\n'); print([(i+1,len(l)) for i,l in enumerate(L) if len(l)>240])"
+
+### #1067 2026-10-28T17:35:59.142Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+W=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad/w3/project-unicorn; W="$W" python3 - <<'EOF'
+import os
+W=os.environ['W']
+def rep(path, old, new):
+    p=W+'/'+path; t=open(p,encoding='utf-8').read()
+    assert t.count(old)==1, (path, old[:60]); open(p,'w',encoding='utf-8').write(t.replace(old,new))
+rep('scripts/ui/components/window_layer.gd',
+ "## Piyasa 1424, dar alanda liste ve kart kendi içinde kayar.\n## `fit_height()` taşıyan sayfanın penceresi (Ekip, dosya)\n",
+ "## Piyasa 1424, dar alanda liste ve kart kendi içinde kayar. `fit_height()` taşıyan sayfanın penceresi (Ekip, dosya)\n")
+rep('scripts/tabs/product_tab.gd',
+ "var _axis: float = UiTokens.D_W_TIMELINE   # panonun zaman ekseni; pano ölçüp ayrılırsa bildirir (`_on_axis`)\n",
+ "## Panonun son ölçtüğü zaman ekseni; süreçte tutulur: pencere yeniden açılınca (kapat-aç, dil, palet) sayfa bir kez kurulur.\nstatic var _axis: float = UiTokens.D_W_TIMELINE\n")
+rep('scripts/tabs/product_tab.gd',
+ "## Pano zaman ekseninin genişliğini ölçtü (pencere ya da ray değişti): sayfa o genişlikle yeniden kurulur.\nfunc _on_axis",
+ "func _on_axis")
+rep('scripts/tabs/product/sprint_board.gd',
+ "## Eksen, gövdenin genişliğinden bilgi sütunu ve kaydırma çubuğunun yeri çıkınca kalandır (çubuk görünsün görünmesin aynı). Başlık\n## panoyu en az `D_W_TIMELINE` eksenine kadar genişletir, kurulu eksen genişletmez: ölçüm kendi sonucuna bağlanmaz.\n",
+ "## Kaydırma çubuğunun yeri görünsün görünmesin düşülür. Başlık panoyu en az `D_W_TIMELINE` eksenine kadar genişletir, kurulu eksen\n## genişletmez: ölçüm kendi sonucuna bağlanmaz.\n")
+print('ok')
+EOF
+grep -n "window_layer.gd:3[89]\|SPECS" $W/docs/kod_haritasi/sistemler/08_sekmeler.md | head -3; grep -n "^const SPECS" $W/scripts/ui/components/window_layer.gd; for f in scripts/tabs/product_tab.gd scripts/tabs/product/sprint_board.gd scripts/tabs/product/sprint_panel.gd scripts/tabs/product/board_row.gd scripts/ui/components/window_layer.gd; do echo "$f $(wc -l < $W/$f)"; done; grep -n "product_tab.gd\` (\|sprint_board.gd\` (\|sprint_panel.gd\` (\|board_row.gd\` (" $W/docs/kod_haritasi/sistemler/08_sekmeler.md | cut -c1-70; grep -n "## Dikkat" -A3 $W/docs/kod_haritasi/sistemler/08_sekmeler.md | head -5
+
+### #1068 2026-10-28T17:36:07.006Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w3/project-unicorn; perl -pi -e 's/^- `scripts\/tabs\/product_tab.gd` \(358\)/- `scripts\/tabs\/product_tab.gd` (359)/' $W/docs/kod_haritasi/sistemler/08_sekmeler.md; python3 - <<EOF
+for t in ['base3','w3']:
+    for f in ['08_sekmeler.md','09_arayuz_bilesen.md']:
+        L=open('$S/'+t+'/project-unicorn/docs/kod_haritasi/sistemler/'+f,encoding='utf-8').read().split('\n')
+        print(t,f,[(i+1,len(l)) for i,l in enumerate(L) if len(l)>240])
+L=open('$S/w3/project-unicorn/docs/kod_haritasi/sistemler/08_sekmeler.md',encoding='utf-8').read().split('\n')
+print(L[48]); print(L[174])
+L=open('$S/w3/project-unicorn/docs/kod_haritasi/sistemler/09_arayuz_bilesen.md',encoding='utf-8').read().split('\n')
+print(L[128])
+EOF
+
+### #1069 2026-10-28T17:36:19.632Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; S="$S" python3 - <<'EOF'
+import os
+S=os.environ['S']
+p=S+'/w3/project-unicorn/docs/kod_haritasi/sistemler/08_sekmeler.md'
+L=open(p,encoding='utf-8').read().split('\n')
+a=L[48]; cut=a.index(' zaman ekseninin genişliği')
+L[48]=a[:cut]
+L.insert(49,'  zaman ekseninin genişliği (`model.axis`: gövde eksi bilgi sütunu ve kaydırma çubuğu, en az `D_W_TIMELINE`; ölçüm kurulandan ayrılınca'+'\n  `axis_wanted`, sekme sayfayı o genişlikle yeniden kurar),'+a[a.index(' kayan gövdesi'):])
+t='\n'.join(L)
+t=t.replace("- Düzen sabitleri: `WindowLayer.SPECS` `window_layer.gd:38` (Ürün 1688×928: 1920'de pencere alanının tamamı, Piyasa 1424×928,","- Düzen sabitleri: `WindowLayer.SPECS` `window_layer.gd:38` (Ürün 1688×928: 1920'de pencere alanının tamamı; Piyasa 1424×928,",1)
+L=t.split('\n')
+i=[k for k,l in enumerate(L) if l.startswith('- Düzen sabitleri: `WindowLayer.SPECS`')][0]
+a=L[i]; cut=a.index(' Ekip 1352')
+L[i]=a[:cut]; L.insert(i+1,' '+a[cut:])
+# Dikkat entry
+j=L.index('## Dikkat')
+L.insert(j+2,'- Ürün panosunun zaman ekseni `model.axis`tır (`ProductTab._axis`, süreçte tutulur): pano gövdeyi ölçüp ayrılınca `axis_wanted`,\n  sayfa yeniden kurulur (ilk açılışta aynı karede iki kurulum). Eksene bağlı yeni öğe `_ctx.axis` okur; `D_W_TIMELINE` yalnız en az\n  değer ve başlığın asgari enidir: başlık ya da gövde ekseni okursa eksen pencereyle küçülmez.')
+open(p,'w',encoding='utf-8').write('\n'.join(L))
+p2=S+'/w3/project-unicorn/docs/kod_haritasi/sistemler/09_arayuz_bilesen.md'
+L=open(p2,encoding='utf-8').read().split('\n')
+a=L[128]; cut=a.index(' `D_TIMELINE_WEEKS`')
+L[128]=a[:cut]; L.insert(129,' '+a[cut:])
+open(p2,'w',encoding='utf-8').write('\n'.join(L))
+for f in [p,p2]:
+    L=open(f,encoding='utf-8').read().split('\n'); print([(i+1,len(l)) for i,l in enumerate(L) if len(l)>240])
+EOF
+W=$S/w3/project-unicorn; sed -n 49,52p $W/docs/kod_haritasi/sistemler/08_sekmeler.md | cut -c1-160; grep -n "Düzen sabitleri" -A1 $W/docs/kod_haritasi/sistemler/08_sekmeler.md | cut -c1-120; sed -n 129,131p $W/docs/kod_haritasi/sistemler/09_arayuz_bilesen.md | cut -c1-120; grep -n "## Dikkat" -A6 $W/docs/kod_haritasi/sistemler/08_sekmeler.md | cut -c1-140
+
+### #1071 2026-10-28T17:36:42.805Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; cat >> $S/notes.md <<'EOF'
+
+## D3 (UE1, w3 kopyası)
+- SPECS["product"] 1424×928 → 1688×928 (1920 − ray 184 − 2×EDGE 24; kareden doğrulandı: pencere x 208–1896, sağda 24).
+- Eksen orta sütunun kalanı (en az D_W_TIMELINE 396): 1920'de pano gövdesi 730→994, eksen 396→674, hafta 152,31→259,23 px; 1,25'te pencere 1424, eksen 410, hafta 157,69.
+- Düşen çubuk (ikon ve sayı ikisi de yok), 1920: a4_two_pm 3→2 (30 çubuk), a4_eleven 6→4 (38), a4_run_w2 4→1 (8). Yalnız ikon düşen: two_pm 12→3, eleven 10→6. 1,25'te eleven 6→4, two_pm 3.
+- Kapasite olukları orta sütunla uzar (Geliştirme ~1050→~1305 px), eksene bağlı değiller.
+- İnceleme (Opus): 7 bulgu; 6 uygulandı (static _axis: ilk açılıştan sonra tek kurulum; window_layer yorumunda satır sayısı korundu, SPECS 38'de; yorum sadeleştirme; 08 Dikkat maddesi; satır sayısı), 1 reddedildi (ui_tokens.gd D_W_TIMELINE yorumu: ORTAK §3 dosyadaki her değişikliğe THEME_STAMP artışı ve tema üretimi bağlıyor; anlam 09 sayfasında ve pano başlığında).
+- Açılışta iki kurulum aynı karede (CallQueue aynı flush'ta), oyuncu dar ekseni görmüyor (inceleme).
+EOF
+cat /private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/tasks/bud60bkdg.output
+
+### #1132 2026-10-28T18:16:23.362Z agent-a618f2618f2326c24 Bash
+cd /private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad/ && cat > e2_base_shots.txt <<'EOF'
+--product-shot=live:a4_eleven_tip tr
+--product-shot=live:a4_eleven_tip en
+--product-shot=live:b2b_quarter en
+--product-shot=live:b2b_quarter tr
+--product-shot=live:a4_run_w2 en
+--product-shot=live:a4_fourteen tr
+--product-shot=live:a4_next_prefilled en
+--product-shot=live:gate tr
+EOF
+rm -rf shots_e2_before; (ETIKET=URUN_ARAYUZU_AJAN nohup bash bin/shots.sh "$PWD/w3/project-unicorn" e2_before "$PWD/e2_base_shots.txt" > e2_before.log 2>&1 &) ; sleep 2; cat e2_before.log; grep -rn "a4_two_pm" w4b/project-unicorn/scripts --include=*.gd | head
+
+### #1470 2026-10-28T19:34:00.871Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; cat >> $S/notes.md <<'EOF'
+
+## D4b (E2 kesmeleri, w4b; taban w4b_base = D3 + D4a'nın ilk hâli)
+- Kalkan: pano kart adı "…"/max_lines (sarar, _wraps/_fit ile büyür); düzeltme kartı tam metin (en büyük hesap dahil; fix_full ve bugs_text with_top silindi);
+  sonraki kutuda ad kesmesi, FaceCell "+{n}" gizlemesi ve clip_contents; ÇEYREK mini kart (ad kendi satırında, max_lines yok); ÇEYREK sağ tarafı ve sürüm
+  notu orta sütunu dikey kayar; bayrak çipi sarar; aday düzeltme kartı tam metin; "S{n}" → "Sprint {n}" (PRODUCT_TAG_SPRINT; PRODUCT_STAMP silindi).
+- Kalan (karar): modül kısa adı; dar çubukta ikon/sayı/yüz düşmesi; eksen sonundaki sprint dışı pay; "+{n}" biçimleri; grafik kırpmaları.
+- Düz ipucu (TooltipLabel) sarmıyor, ekranda içeri itiliyor; gerçek en uzun EN çubuk ipucu 778 px (popup 826); ~1900 px (~300 karakter) üstünde kesilir.
+- Kareler shots_e2_before (w3), shots_e2_after (w4b), shots_e2_long (w4b_long: a4_two_pm_long, a4_release_long, a4_cand, ipuçları), shots_e2_q125.
+- ÇEYREK mini kart biçimi değişti (glif+puan üstte, ad altta, +8..24 px): D7'de kare.
+- TR/EN onay bekliyor (yeni metin değil, ekranda yeni yerde): aday damgası "Sprint {n}"; pano düzeltme satırında PRODUCT_FX_TOP; aday düzeltme kartında tam metin.
+- İnceleme (Opus): 8 bulgu; 6 uygulanıyor (FaceCell boş hücre, ÇEYREK sol kaydırma, 2 yorum, 08 atıfları); reddedilen 2: _two'nun kaldırılması (üç token +
+  tema damgası; >22 karakterli tek satırlık adların satırı kısalır, E2 dışı görünür değişiklik), üretilmiş kod haritası (commit anında).
+EOF
+echo ok
+
+### #1499 2026-10-28T19:39:25.689Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; F=$S/wfinal/project-unicorn; perl -pi -e 's/(`scripts\/tabs\/product\/product_model.gd` \()1148(\))/${1}1149$2/' $F/docs/kod_haritasi/sistemler/08_sekmeler.md; grep -c "product_model.gd\` (1149)" $F/docs/kod_haritasi/sistemler/08_sekmeler.md; cd $S; mkdir -p premerge; for f in scripts/tabs/product_tab.gd docs/kod_haritasi/sistemler/08_sekmeler.md; do n=premerge/$(basename $f); cp w3/project-unicorn/$f $n; git merge-file $n base3/project-unicorn/$f w4/project-unicorn/$f; echo "D4a-on-D3 rc=$? $f"; done
+
+### #1501 2026-10-28T19:40:04.819Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; cd $S; cmp premerge/product_tab.gd w4b/project-unicorn/scripts/tabs/product_tab.gd && echo "premerge product_tab == w4b product_tab"; rm -rf w4a_land b4a; mkdir -p w4a_land/project-unicorn b4a/project-unicorn; for f in $(cat d4a_changed.txt); do mkdir -p $(dirname w4a_land/project-unicorn/$f) $(dirname b4a/project-unicorn/$f); cp w4/project-unicorn/$f w4a_land/project-unicorn/$f; [ -e base3/project-unicorn/$f ] && cp base3/project-unicorn/$f b4a/project-unicorn/$f; done; for f in $(cat d4a_deleted.txt); do mkdir -p $(dirname b4a/project-unicorn/$f); cp base3/project-unicorn/$f b4a/project-unicorn/$f; done; cp w3/project-unicorn/docs/kod_haritasi/sistemler/08_sekmeler.md b4a/project-unicorn/docs/kod_haritasi/sistemler/08_sekmeler.md; cp premerge/product_tab.gd w4a_land/project-unicorn/scripts/tabs/product_tab.gd; cp w3/project-unicorn/scripts/tabs/product_tab.gd b4a/project-unicorn/scripts/tabs/product_tab.gd; python3 - <<'EOF'
+import re
+S='/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad'
+p=S+'/premerge/08_sekmeler.md'; t=open(p,encoding='utf-8').read()
+t=re.sub(r'^<<<<<<< [^\n]*\n(.*?)^=======\n.*?^>>>>>>> [^\n]*\n', r'\1', t, flags=re.S|re.M)
+rep=[('`scripts/tabs/product_tab.gd` (359)','`scripts/tabs/product_tab.gd` (344)'),
+('`ProductTab._ready()` `scripts/tabs/product_tab.gd:51`','`ProductTab._ready()` `scripts/tabs/product_tab.gd:54`'),('sinyaline bağlar (:113-118)','sinyaline bağlar (:117-122)'),
+('`ProductTab._rebuild()` `product_tab.gd:135`','`ProductTab._rebuild()` `product_tab.gd:139`'),('`_queue_rebuild` (:323)','`_queue_rebuild` (:333)'),
+('product_tab.gd:139, sprint_probe.gd:295','product_tab.gd:143, sprint_probe.gd:295'),('`product_tab.gd:278`: kart/panel eylemlerini `_act` (:290)','`product_tab.gd:288`: kart/panel eylemlerini `_act` (:300)'),
+('`ProductTab.open_area(area_id)` `product_tab.gd:265`','`ProductTab.open_area(area_id)` `product_tab.gd:275`'),('`ProductTab._on_candidate_hover(card_id)` `product_tab.gd:273`','`ProductTab._on_candidate_hover(card_id)` `product_tab.gd:283`'),
+('`ProductTab._hold_clock(on)` `product_tab.gd:330`: sürüm notu açıkken saati tutar (`HOLD_RELEASE_NOTE` :18)','`ProductTab._hold_clock(on)` `product_tab.gd:340`: sürüm notu açıkken saati tutar (`HOLD_RELEASE_NOTE` :19)')]
+for a,b in rep:
+    n=t.count(a); print(n, a[:50]); t=t.replace(a,b)
+open(S+'/w4a_land/project-unicorn/docs/kod_haritasi/sistemler/08_sekmeler.md','w',encoding='utf-8').write(t)
+p=S+'/w4a_land/project-unicorn/docs/kod_haritasi/sistemler/02_urun_sprint.md'; t=open(p,encoding='utf-8').read()
+rep2=[('`ProductTab._act` `product_tab.gd:290`','`ProductTab._act` `product_tab.gd:300`'),('`ProductTab._act` `product_tab.gd:296`','`ProductTab._act` `product_tab.gd:306`'),
+('`product_tab.gd:298`, `_auto_start`','`product_tab.gd:308`, `_auto_start`'),('ürünü CANLI v1.0 yapar · `product_tab.gd:299`','ürünü CANLI v1.0 yapar · `product_tab.gd:309`'),
+('hedef alan · `product_tab.gd:302-305`','hedef alan · `product_tab.gd:312-315`'),('otomatik ayar · `product_tab.gd:306-310`','otomatik ayar · `product_tab.gd:316-320`'),
+('`scripts/tabs/product_tab.gd` (334)','`scripts/tabs/product_tab.gd` (344)')]
+for a,b in rep2:
+    n=t.count(a); print(n, a[:50]); t=t.replace(a,b)
+open(p,'w',encoding='utf-8').write(t)
+EOF
+
+### #1610 2026-11-01T23:55:54.905Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; for d in base3 w3 w4 w4a_land b4a w4b w4b_base w5 wfinal u8_page u8 u8_tools evidence mcpw; do printf '%-10s files=%s\n' $d "$(find $S/$d -type f 2>/dev/null | wc -l)"; done; ls -la $S/w3 $S/wfinal 2>&1 | head -30

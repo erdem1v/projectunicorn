@@ -1,0 +1,9 @@
+Ürün arayüzü UE1: Ürün penceresi 1920'de pencere alanının tamamına genişler, kazanılan yer zaman eksenine gider
+
+Oyuncu ne görür: 1920 × 1080'de Ürün penceresi 1424 yerine 1688 px geniştir: rayın (184) sağında, iki kenarda EDGE (24) boşlukla pencere alanının tamamı. Sol sütun (288), kart bilgi sütunu (312) ve sağ sütun (300) yerinde kalır; kazanılan 264 px'in tamamı panonun zaman eksenine gider: eksen 396'dan 674 px'e, bir hafta 152'den 259 px'e çıkar. Dar kaldığı için içindeki ikon ve sayının ikisini de düşüren çubuk a4_eleven'da 6'dan 4'e, a4_two_pm'de 3'ten 2'ye iner. Kapasite olukları orta sütunla birlikte uzar. Küçük ekranda (ör. --shot-scale=1.25, alan 1424) pencere bugünkü gibi daralır ve eksen ~410 px'e iner; hiçbir şey taşmaz. Piyasa penceresi değişmez.
+
+Teknik: SPECS["product"] = 1688 × 928 (sabit; _fit değişmez). Eksen orta sütunun kalanıdır, en az D_W_TIMELINE: pano gövdesini ölçer (`SprintBoard._measure_axis`), ölçüm kurulandan ayrılınca `axis_wanted` ile sayfa o genişlikle yeniden kurulur; eksen `ProductTab._axis`'te süreçte tutulur, ilk açılıştan sonra pencere tek kurulumla açılır. Satırın ekseni ve ölçeği, hafta etiketleri, ızgara, şimdiki an çizgisi, aday ve hayalet satırları aynı `axis`'i okur.
+
+Dayanak: Erdem'in 2026-10-28 kararı E1 (PRD_URUN_SPRINT_ARAYUZU "E1. Sprint kutularına yer"), yardımcı yönetmenin "D3 başla" teyidi. Kareler yardımcı yönetmene gider; Erdem beğenmezse geri alınır.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

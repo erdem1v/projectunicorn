@@ -1,0 +1,269 @@
+--- a/scripts/ui/components/window_layer.gd
++++ b/scripts/ui/components/window_layer.gd
+@@ -30,13 +30,14 @@
+ ## 1920×1080 tabanında pencere boyları; pencere alanı daha darsa pencere ona sığacak kadar
+ ## küçülür. Sahnesi olmayan sekme yer tutucunun (marketing) boyunu alır. Ekip 1352: kadronun EN
+ ## sütunları; 1920'de BuildHUD'un 16 px solunda biter. Finans 1344 BuildHUD'un solunda biter; Ürün
+-## 1424 ona biner ve BuildHUD gizlenir; Piyasa da 1424, dar alanda liste ve kart kendi içinde kayar.
++## 1920'de pencere alanının tamamıdır (1920 − ray 184 − 2 × EDGE) ve BuildHUD gizlenir, zaman ekseni kalan genişliği alır;
++## Piyasa 1424, dar alanda liste ve kart kendi içinde kayar.
+ ## `fit_height()` taşıyan sayfanın penceresi (Ekip, dosya)
+ ## içeriği kadar uzar, boyu en çok buradaki kadardır. Kişisel 680'in altına inmez
+ ## (`UiTokens.D_H_PERSONAL_BODY`); salt okunur şerit ve uzun hâller onu alan içinde uzatır. Ar-Ge
+ ## ağaçla kısa, seçili düğümün kartıyla uzun açılır.
+ const SPECS := {
+-	"finance": Vector2(1344, 720), "hr": Vector2(1352, 928), "product": Vector2(1424, 928), "piyasa": Vector2(1424, 928),
++	"finance": Vector2(1344, 720), "hr": Vector2(1352, 928), "product": Vector2(1688, 928), "piyasa": Vector2(1424, 928),
+ 	"sales": Vector2(1280, 760), "rnd": Vector2(1280, 928), "personal": Vector2(1000, 928),
+ 	"events": Vector2(1240, 900), "marketing": Vector2(900, 640), "hr_dossier": Vector2(320, 928),
+ }
+--- a/scripts/tabs/product/sprint_board.gd
++++ b/scripts/tabs/product/sprint_board.gd
+@@ -6,10 +6,13 @@
+ # şimdiki an çizgisi) ve kart satırlarını taşır; kartsız planda tek hayalet satır ("+ Kart ekle"), kartsız planda önerinin ilk üç
+ # adayı ve imleç sol sütunda bir adayın "+"ındayken o adayın hayaleti "EKLENEBİLİR" altında durur. Gövde taşarsa altta "aşağıda
+ # {n} kart daha" hapı yapışık kalır; katlamanın altında yetişmeyen kart varsa hap tehlike renginde ve ipucu onların sayısını yazar.
+-# Yalnız modeli çizer; satır tıkları sekmeye `action` olarak çıkar. Saat ilerleyince `set_now`
+-# yalnız şimdiki an çizgisini ve koşan çubukları günceller.
++# Eksenin genişliği (`model.axis`) panonun kaydırma çubuğu payı ve bilgi sütunu çıkınca kalan genişliktir, en az `D_W_TIMELINE`; pano
++# ölçtüğü genişlik kurulandan ayrılınca `axis_wanted` ile sayfanın yeniden kurulmasını ister. Yalnız modeli çizer; satır tıkları
++# sekmeye `action` olarak çıkar. Saat ilerleyince `set_now` yalnız şimdiki an çizgisini ve koşan çubukları günceller.
+ 
+ signal action(kind: String, args: Dictionary)
++## Panonun ölçtüğü eksen genişliği kurulandan başka.
++signal axis_wanted(width: float)
+ 
+ ## Hapın hesabında satırın altı bu kadar piksel görünmüyorsa satır "aşağıda" sayılır.
+ const MORE_SLACK := 10
+@@ -40,7 +43,8 @@
+ 	_more = null
+ 	var c: Dictionary = model.center
+ 	var running: bool = c.mode == "active"
+-	_ctx = {"mode": c.mode, "now": c.now_at, "people": c.people, "candidate": false, "hot": false, "team_pm": not model.prep.pms.is_empty()}
++	_ctx = {"mode": c.mode, "now": c.now_at, "people": c.people, "candidate": false, "hot": false, "team_pm": not model.prep.pms.is_empty(),
++		"axis": model.axis}
+ 	_early_tip = tr("PRODUCT_EARLY_END_TIP").format({"w": int(c.close_at)}) if c.close_at < float(c.weeks) - SprintSystem.EPS else ""
+ 	add_theme_constant_override("separation", 0)
+ 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
+@@ -49,6 +53,7 @@
+ 	var holder := Control.new()
+ 	holder.size_flags_vertical = Control.SIZE_EXPAND_FILL
+ 	holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	holder.resized.connect(_measure_axis.bind(holder))
+ 	add_child(holder)
+ 	scroll = ScrollContainer.new()
+ 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+@@ -65,6 +70,17 @@
+ 	scroll.get_v_scroll_bar().value_changed.connect(func(_v: float) -> void: _update_more())
+ 	scroll.resized.connect(_update_more)
+ 	_update_more.call_deferred()
++
++
++# --- Eksen ----------------------------------------------------------------------------------
++
++## Eksen, gövdenin genişliğinden bilgi sütunu ve kaydırma çubuğunun yeri çıkınca kalandır (çubuk görünsün görünmesin aynı). Başlık
++## panoyu en az `D_W_TIMELINE` eksenine kadar genişletir, kurulu eksen genişletmez: ölçüm kendi sonucuna bağlanmaz.
++func _measure_axis(holder: Control) -> void:
++	var room: float = holder.size.x - scroll.get_v_scroll_bar().get_combined_minimum_size().x - UiTokens.D_W_CARD_INFO
++	var want: float = maxf(UiTokens.D_W_TIMELINE, floorf(room))
++	if want != _ctx.axis:
++		axis_wanted.emit(want)
+ 
+ 
+ # --- Başlık ---------------------------------------------------------------------------------
+@@ -87,7 +103,7 @@
+ 		end.tooltip_text = _early_tip
+ 		left.add_child(end)
+ 	_at_foot(head, left, 0.0)
+-	var per: float = UiTokens.D_W_TIMELINE / UiTokens.D_TIMELINE_WEEKS
++	var per: float = _ctx.axis / UiTokens.D_TIMELINE_WEEKS
+ 	for week in int(c.weeks):
+ 		_at_foot(head, SprintUiShared.label(Fmt.upper(tr("PRODUCT_WEEK_ORD").format({"w": week + 1})), &"AxisLabel"),
+ 			UiTokens.D_W_CARD_INFO + roundf(per * week) + UiTokens.SPACE_M)
+@@ -118,11 +134,11 @@
+ ## başlar ve gövdenin boyunu doldurur.
+ func _body(c: Dictionary, hover_card: String, running: bool) -> Control:
+ 	var layers := MarginContainer.new()
+-	layers.custom_minimum_size.x = UiTokens.D_W_CARD_INFO + UiTokens.D_W_TIMELINE
++	layers.custom_minimum_size.x = UiTokens.D_W_CARD_INFO + _ctx.axis
+ 	layers.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+ 	layers.size_flags_vertical = Control.SIZE_EXPAND_FILL
+ 	layers.mouse_filter = Control.MOUSE_FILTER_IGNORE
+-	var per: float = UiTokens.D_W_TIMELINE / UiTokens.D_TIMELINE_WEEKS
++	var per: float = _ctx.axis / UiTokens.D_TIMELINE_WEEKS
+ 	var under: Array = [StagePaint.part(&"grid", "", {"px": per, "weeks": c.weeks}, Rect2())]
+ 	under[0].set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+ 	if _early_tip != "":
+@@ -313,7 +329,7 @@
+ # --- Saat ve kaydırma -----------------------------------------------------------------------
+ 
+ func _place_now(at: float) -> void:
+-	var x: float = roundf(at * UiTokens.D_W_TIMELINE / UiTokens.D_TIMELINE_WEEKS)
++	var x: float = roundf(at * _ctx.axis / UiTokens.D_TIMELINE_WEEKS)
+ 	_now.offset_left = x - UiTokens.D_NOW_HEAD.x / 2.0
+ 	_now.offset_right = x + UiTokens.D_NOW_HEAD.x / 2.0
+ 
+--- a/scripts/tabs/product/board_row.gd
++++ b/scripts/tabs/product/board_row.gd
+@@ -68,7 +68,7 @@
+ 	_now = ctx.now
+ 	_two = String(row.name).length() > UiTokens.D_CARD_NAME_SHORT
+ 	_h = UiTokens.D_H_CARD_ROW_TWO if _two else UiTokens.D_H_CARD_ROW
+-	custom_minimum_size = Vector2(UiTokens.D_W_CARD_INFO + UiTokens.D_W_TIMELINE, _h)
++	custom_minimum_size = Vector2(UiTokens.D_W_CARD_INFO + ctx.axis, _h)
+ 	mouse_filter = Control.MOUSE_FILTER_PASS
+ 	tooltip_text = _gated_tip()
+ 	_mark = ColorRect.new()
+@@ -358,7 +358,7 @@
+ # --- Zaman ekseni ---------------------------------------------------------------------------
+ 
+ func _x(week: float) -> float:
+-	return roundf(week * UiTokens.D_W_TIMELINE / UiTokens.D_TIMELINE_WEEKS)
++	return roundf(week * _ctx.axis / UiTokens.D_TIMELINE_WEEKS)
+ 
+ 
+ ## Kartın aşamaları eksende: bekleme noktalı çizgisi, çubuk, sprint dışına kalan pay ve PM'in gölgesi. Eksenden önce ya da önden
+@@ -367,7 +367,7 @@
+ ## sonunda kesilir.
+ func _lane(h: int) -> Control:
+ 	var lane := Control.new()
+-	lane.custom_minimum_size = Vector2(UiTokens.D_W_TIMELINE, h)
++	lane.custom_minimum_size = Vector2(_ctx.axis, h)
+ 	lane.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+ 	lane.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ 	var top: float = (h - UiTokens.D_H_STAGE_BAR) / 2.0
+@@ -397,7 +397,7 @@
+ 				shadows.append(shade)
+ 		if s.out_from >= 0.0:
+ 			var out_left: float = maxf(_x(s.out_from), out_end)
+-			var out_right: float = minf(out_left + _x(s.out_to) - _x(s.out_from), UiTokens.D_W_TIMELINE)
++			var out_right: float = minf(out_left + _x(s.out_to) - _x(s.out_from), _ctx.axis)
+ 			if out_right - out_left >= 1.0:
+ 				bars.append(_bar(s, Rect2(out_left, top, out_right - out_left, UiTokens.D_H_STAGE_BAR), "out", ticks))
+ 				ticks = []
+@@ -521,7 +521,7 @@
+ 	var last: Dictionary = s.pieces[-1]
+ 	var pace: float = float(last.work) / maxf(last.to - last.from, SprintSystem.EPS)
+ 	var from: float = _x(s.pieces[0].from)
+-	var to: float = minf(_x(float(last.to) + (s.need_raw - s.need) / pace), UiTokens.D_W_TIMELINE)
++	var to: float = minf(_x(float(last.to) + (s.need_raw - s.need) / pace), _ctx.axis)
+ 	if to - from < 1.0:
+ 		return null
+ 	var shade: StagePaint = StagePaint.part(&"shadow", s.stage, {}, Rect2(from + UiTokens.D_SHADOW_INSET,
+--- a/scripts/tabs/product/sprint_panel.gd
++++ b/scripts/tabs/product/sprint_panel.gd
+@@ -7,6 +7,8 @@
+ # sayfa kurulmadan günceller.
+ 
+ signal action(kind: String, args: Dictionary)
++## Panonun ölçtüğü eksen genişliği kurulandan başka (`SprintBoard.axis_wanted`).
++signal axis_wanted(width: float)
+ 
+ const PAUSE := "res://assets/icons/util/pause.svg"
+ const TEAM_GLYPH := "res://assets/icons/rail/hr.svg"
+@@ -123,6 +125,7 @@
+ 	_running = c.mode == "active"
+ 	_board = SprintBoard.new()
+ 	_board.action.connect(action.emit)
++	_board.axis_wanted.connect(axis_wanted.emit)
+ 	_board.setup(model, _nobody(c) if c.team_empty and c.cards.is_empty() else null)
+ 	col.stack.add_child(_board)
+ 
+--- a/scripts/tabs/product_tab.gd
++++ b/scripts/tabs/product_tab.gd
+@@ -8,7 +8,8 @@
+ # sekmenin yerel durumudur: modelin `ui`'sinden tohumlanır, tek sahibi `_ui`'dir; Destek kartı alanı `open_area` ile açar.
+ # Son açık kâğıt pencere kapanıp açılınca (ve dil değişince) hatırlanır, kayda yazılmaz. Sol sütunun, panonun ve sağ sütunun
+ # kaydırması yeniden kurulumda korunur; koşan sprintte `hour_changed` sayfayı kurmaz, yalnız şimdiki anı günceller. Masa her mesai
+-# saatinde `desk_changed` yayar: sayfa yalnız okuduğu masa ya da ekip hâli (`ProductModel.desk_stamp`) değiştiyse kurulur.
++# saatinde `desk_changed` yayar: sayfa yalnız okuduğu masa ya da ekip hâli (`ProductModel.desk_stamp`) değiştiyse kurulur. Zaman ekseninin
++# genişliğini (`_axis`) pano ölçer; pencere ya da ray değişince ölçüm kurulandan ayrılırsa sayfa o genişlikle yeniden kurulur.
+ 
+ ## ÇEYREK'te pencere içeriği kadar uzar (WindowLayer fit_height okur).
+ signal fit_changed
+@@ -29,6 +30,7 @@
+ var _closing := false   # pencere kapanıyor: ertelenmiş kurulum ölmekte olan sayfada saati yeniden tutmasın
+ var _rebuild_queued := false
+ var _desk_stamp: Array = []   # son kurulumun okuduğu masa ve ekip hâli
++var _axis: float = UiTokens.D_W_TIMELINE   # panonun zaman ekseni; pano ölçüp ayrılırsa bildirir (`_on_axis`)
+ var _reveal_open := false   # Destek kartı alanı açtı: kurulunca alanın başı sütunun başına gelsin
+ var _kpis: HBoxContainer
+ var _ctl: PanelContainer
+@@ -77,6 +79,7 @@
+ 	scroll.add_child(_areas)
+ 	_sprint = SprintPanel.new()
+ 	_sprint.action.connect(_on_action)
++	_sprint.axis_wanted.connect(_on_axis)
+ 	_sprint_view.add_child(_sprint)
+ 	_quarter = QuarterView.new()
+ 	_quarter.action.connect(_on_action)
+@@ -153,6 +156,7 @@
+ 		if _source == null:
+ 			_ui.view = _last_view
+ 	m.ui = _ui
++	m.axis = _axis
+ 	# "+" yalnız planlamada açıktır: imleç ondayken sprint başlarsa (devir, Boşluk) kalan hayalet kalkar.
+ 	if m.center.mode != "plan":
+ 		_ui.hover_card = ""
+@@ -203,6 +207,12 @@
+ 		_queue_rebuild()
+ 
+ 
++## Pano zaman ekseninin genişliğini ölçtü (pencere ya da ray değişti): sayfa o genişlikle yeniden kurulur.
++func _on_axis(width: float) -> void:
++	_axis = width
++	_queue_rebuild()
++
++
+ ## Koşan sprintte her oyun saati: pano ve kapasite şimdiki ana göre yeniden okunur, sayfa kurulmaz.
+ func _on_hour() -> void:
+ 	if _sprint_view.get_parent().visible and _sprint.running():
+--- a/docs/kod_haritasi/sistemler/08_sekmeler.md
++++ b/docs/kod_haritasi/sistemler/08_sekmeler.md
+@@ -9,7 +9,7 @@
+ ## Dosyalar
+ 
+ Sekme kökleri (scripts/tabs/):
+-- `scripts/tabs/product_tab.gd` (349): Ürün penceresi kabuğu: başlık KPI'ları, GENEL BAKIŞ/SPRINT/ÇEYREK şeridi (Kurucu sprintte ve Geçmiş anahtarları), yerel `_ui` durumu, eylem yönlendirme (`_act`);
++- `scripts/tabs/product_tab.gd` (358): Ürün penceresi kabuğu: başlık KPI'ları, GENEL BAKIŞ/SPRINT/ÇEYREK şeridi (Kurucu sprintte ve Geçmiş anahtarları), yerel `_ui` durumu, eylem yönlendirme (`_act`);
+   yeniden kurulumda sol sütunun kaydırması korunur (`SprintUiShared.keep_scroll`); `hour_changed` koşan sprintte yalnız `SprintPanel.set_now`u çağırır (`_on_hour`).
+ - `scripts/tabs/sales_tab.gd` (834): Satış: fiyat duruşu, boru hattı (lead belgesi), satış masası, son hareketler, müşteri portföyü, canlı B2C kitle sayfası.
+ - `scripts/tabs/hr_tab.gd` (542): Ekip: Kadro/Görevler görünümleri, Atlas ve Mesai panel açıcıları, satır menüsü, yapı anahtarıyla yerinde boyama.
+@@ -35,7 +35,7 @@
+   Başlık yorumu yeni ekranın alanlarını da tanımlar: `founder`, `requests`, `modules`, `prep`, çeyreğin saati, merkez ve sonraki sütun eklemeleri, kart satırı; düzeltme işinin efora girişi ve gösterim kuralı.
+   Sol sütunun "+" değerleri ve hayalet hesabı `live()`dan ayrıdır: `addable`, `resolve_addable`, `ghost` (kart kimliğiyle sayfanın bir sonraki kurulumuna kadar saklanır).
+   ↳ Kart satırı ipucunun verisini taşır (`module_name`, `fix_full`, `finishes`, `gate`, söz yuvasında müşteri, değer, söz mü); sonraki kart `raw_effort` ve `ahead` (önden işi başlıyor); `stage_face(id, aşama)` ipucunun kişileridir.
+-- `scripts/tabs/product/sprint_panel.gd` (305): `SprintPanel`: orta (bu sprint) ve sağ (sonraki sprint, `SprintNext`) sütunlar; orta sütunda başlık (`SprintHead` + `CapacityView`), pano (`SprintBoard`) ve
++- `scripts/tabs/product/sprint_panel.gd` (308): `SprintPanel`: orta (bu sprint) ve sağ (sonraki sprint, `SprintNext`) sütunlar; orta sütunda başlık (`SprintHead` + `CapacityView`), pano (`SprintBoard`) ve
+   ↳ alt şerit (`SprintFoot`), sürüm notunda bugünkü `_release`; sağ sütun 300 px sabit, orta sütun kalanı alır. Yeniden kurulumda pano ve sağ sütunun kaydırması korunur;
+   ↳ `running()` ve `set_now(at)` saat hattıdır (pano, Kapasite'nin "yapılan" dolgusu ve alt şeridin ilerlemesi).
+ - `scripts/tabs/product/sprint_foot.gd` (148): `SprintFoot`: alt şerit (68 px): solda "Planlamayı devret" (PM'in yüzüyle, PM yokken kilitli), sağda "Sprinti başlat" (ekip yokken kapalı, kartsız planda yanında "0 kart"; basınca
+@@ -46,7 +46,7 @@
+   ↳ (tür ikonu, ad, efor, aşama şeridi `seg`, önden çalışanların yüzleri, hazırlayan PM; üstüne gelince "↑" ve "×"); her aşama kendi payıdır, önden biten pay kendi renginde dolar; yüzler `FaceCell`te (sığmayanlar "+{n}");
+   ↳ ne hazırlamış ne hazırlıkta PM soluk "0 kart hazırladı"; kart ve devreden yoksa yalnız başlık ve aşama yükü.
+   ↳ İpuçları: PM satırı (ad, yıldız, hazırladığı kartlar), "PM yok", aşama yükü, devreden satırı ve "+{n} kart"ın kalanları, kartın adı, aşama payı ve yüzleri (`_part_tip`), hazırlayan PM.
+-- `scripts/tabs/product/sprint_board.gd` (333): `SprintBoard`: panonun sabit başlığı ("{n} KART", erken kapanış bayrağı, hafta etiketleri), kayan gövdesi (ızgara, kart satırları, "EKLENEBİLİR",
++- `scripts/tabs/product/sprint_board.gd` (349): `SprintBoard`: panonun sabit başlığı ("{n} KART", erken kapanış bayrağı, hafta etiketleri), zaman ekseninin genişliği (`model.axis`: gövde eksi bilgi sütunu ve kaydırma çubuğu, en az `D_W_TIMELINE`; ölçüm kurulandan ayrılınca `axis_wanted`, sekme sayfayı o genişlikle yeniden kurar), kayan gövdesi (ızgara, kart satırları, "EKLENEBİLİR",
+   hayalet satır, şimdiki an çizgisi), "aşağıda {n} kart daha" hapı (katlamanın altında yetişmeyen kart varsa tehlike renginde ve ipucu "{n} kart yetişmez", yalnız o zaman imleci tutar ve tekerleği panoya iletir; sona kaydırınca gizlenir);
+   ↳ erken kapanışın bayrağı, yazısı ve taralı alanı "Bütün kartlar {w}. haftada biter" ipucunu taşır (alan yalnız satırların altında kalan boşlukta imleci alır).
+ - `scripts/tabs/product/board_row.gd` (596): `BoardRow`: panonun bir kart satırı: bilgi sütunu (ad, R1, efor, modül, durum yuvası (koşan sprintte tek şey:
+@@ -172,7 +172,7 @@
+ - Yerel durum sayfaya aittir ve dil/palet değişiminde kaybolur (WindowLayer yıkıp kurar, `window_layer.gd:66-67,156`): hr_tab `_view`/`_collapsed`, piyasa `_filter`/`_selected`, finance `_current`.
+ - İstisnalar: `ProductTab._last_view` (static, `product_tab.gd:22`, kayda yazılmaz) ve `GameState.flags["rnd_selected"]` (`rnd_tab.gd:64-65,99`, `_ready`'de tüketilip silinir).
+ - Diğer bayraklar: `finance_runway_warn_snooze_until_day` (`finance_ozet_view.gd:21,479,499`, ertele 2 hafta); `b2c_paid_tier_open`, `b2c_price`, `b2c_audience_history` yalnız okunur (`sales_tab.gd:261-275`).
+-- Düzen sabitleri: `WindowLayer.SPECS` `window_layer.gd:38` (Ürün/Piyasa 1424×928, Ekip 1352×928, Finans 1344×720, Satış 1280×760, Ar-Ge 1280×928, Kişisel 1000×928, Olaylar 1240×900, dosya 320×928).
++- Düzen sabitleri: `WindowLayer.SPECS` `window_layer.gd:38` (Ürün 1688×928: 1920'de pencere alanının tamamı, Piyasa 1424×928, Ekip 1352×928, Finans 1344×720, Satış 1280×760, Ar-Ge 1280×928, Kişisel 1000×928, Olaylar 1240×900, dosya 320×928).
+ - Tablo sabitleri: `HRLedger.COMPACT_FROM = 12` (`hr_ledger.gd:16`), `TABLE_W` 1302 (:8), `COLUMNS` (:10) ve `COLUMNS_COMPACT` (:13); `HRAssignments.W` ve `W_JOBS` (`hr_assignments.gd:16-17`).
+ - Boyut belirteçleri `scripts/theme/ui_tokens.gd`: `TABS` :294, `D_H_WIN_CTL` :659, `D_W_LEFT` :702, `D_W_PICKER` :707, `D_W_INVESTORS` :744, `D_H_HUNT_HEAD` :746, `D_H_PERSONAL_BODY` :766, `D_H_RND_HISTORY` :780, `D_AVATAR_*` :672-797.
+ - Sayfa sabitleri: Olaylar `LIST_W` 400/`ROW_H` 96 (`events_tab.gd:12-16`); Satış `SAT_MID` 50/`HISTORY_WEEKS` 26/`LOG_ROWS` 5 (`sales_tab.gd:20-29`); Piyasa `NEW_WEEKS` 4/`SHARE_FLOOR` 0,1 (`piyasa_tab.gd:15-19`).
+--- a/docs/kod_haritasi/sistemler/09_arayuz_bilesen.md
++++ b/docs/kod_haritasi/sistemler/09_arayuz_bilesen.md
+@@ -126,7 +126,7 @@
+   ↳ Sağ sütun ve alt şerit: `D_W_NEXT` 300 (sağ sütun, her dilde bu genişlik), `D_H_FOOT` 68, `D_W_START` 204, `D_W_PROGRESS` 300 ve `D_W_PROGRESS_BAR` 120 (en azları), `D_H_LOAD_BAR` 4, `D_W_LOAD_NUM` 64, `D_H_NEXT_STRIP` 8.
+   ↳ Devirli koşuda ilerleme çubuğu `D_W_PROGRESS_BAR_TIGHT` 90'a iner, kutu içeriği kadardır (PM'in adı kesilmez).
+   ↳ Orta sütun artık kalanı alır (`D_SPRINT_COLUMNS` silindi).
+-- Pano (kart satırı ve zaman ekseni) ölçüleri: `D_W_CARD_INFO` 312, `D_W_TIMELINE` 396, `D_TIMELINE_WEEKS` 2.6 (sprintin iki haftası ve sonrakinin ilk 0,6'sı), `D_H_BOARD_HEAD`, `D_H_CARD_ROW` 56 ve `_TWO` 74,
++- Pano (kart satırı ve zaman ekseni) ölçüleri: `D_W_CARD_INFO` 312, `D_W_TIMELINE` 396 (eksenin en azı; eksen orta sütunun kalan genişliğidir), `D_TIMELINE_WEEKS` 2.6 (sprintin iki haftası ve sonrakinin ilk 0,6'sı), `D_H_BOARD_HEAD`, `D_H_CARD_ROW` 56 ve `_TWO` 74,
+   `D_CARD_NAME_SHORT` 22, `D_H_STAGE_BAR` 30, `D_STAGE_BAR_PAD`, `D_W_TICK_BOX`, `D_NOW_HEAD`, `D_W_CARD_SLOT`, `D_RISK_BAR`, `D_ASK_DISC`, `D_H_BOARD_SECTION`, `D_H_BOARD_FADE`, `D_ROW_ALPHA`, `D_GHOST_ALPHA`;
+   ↳ çubuk ve izler: `D_STAGE_BAR_MIX` (zemin payları), `D_STAGE_BAR_EDGE` (kenar alfası), `D_SHADOW_ALPHA`, `D_SHADOW_FOOT_ALPHA`, `D_H_SHADOW`, `D_SPILL_LINE`, `D_SPILL_STEP`, `D_EARLY_STRIPE`, `D_EARLY_PERIOD`, `D_MEET_LIGHT/DARK/EDGE`,
+   `D_MEET_PERIOD`; renkler `D_stage_bar(aşama, tür)` ve `D_stage_bar_edge(aşama, tür)`.

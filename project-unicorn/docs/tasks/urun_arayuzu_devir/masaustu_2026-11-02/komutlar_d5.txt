@@ -1,0 +1,94 @@
+### #840 2026-10-28T16:57:42.842Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; cd $S; bash bin/export.sh w4 eebf909 --godot $S/work/project-unicorn >/dev/null && printf '[display]\nwindow/size/mode=0\n' > w4/project-unicorn/override.cfg && bash bin/export.sh w5 eebf909 --godot $S/work/project-unicorn >/dev/null && printf '[display]\nwindow/size/mode=0\n' > w5/project-unicorn/override.cfg && ls -d w4/project-unicorn/.godot w5/project-unicorn/.godot
+
+### #848 2026-10-28T16:58:31.812Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; F=$S/w5/project-unicorn/localization/strings.csv F="$F" python3 - <<'EOF'
+import os, csv, io
+p=os.environ['F']; b=open(p,'rb').read()
+edits=[(b"PROD_RND_NODE_TEST_AUTOMATION_UNLOCK,Kendi Kendine Servis adında yeni bir özellik hattı. ".replace(b'',b'') ,
+        "PROD_RND_NODE_TEST_AUTOMATION_UNLOCK,Yardım Merkezi adında yeni bir özellik hattı. ".encode()),
+       (b",A new feature line called Self Service. And Beta keeps", b",A new feature line called Help Center. And Beta keeps"),
+       ("\nPROD_LINE_HIDDEN_SELF_SERVE,Kendi Kendine Servis,Self Service\n".encode(), "\nPROD_LINE_HIDDEN_SELF_SERVE,Yardım Merkezi,Help Center\n".encode())]
+edits[0]=( "PROD_RND_NODE_TEST_AUTOMATION_UNLOCK,Kendi Kendine Servis adında yeni bir özellik hattı. ".encode(), edits[0][1])
+before=dict((r[0],(r[1],r[2])) for r in csv.reader(io.StringIO(b.decode())) if r)
+for old,new in edits:
+    assert b.count(old)==1, old
+    i=b.index(old); b=b[:i]+new+b[i+len(old):]
+open(p,'wb').write(b)
+after=dict((r[0],(r[1],r[2])) for r in csv.reader(io.StringIO(b.decode())) if r)
+changed=[k for k in after if after[k]!=before.get(k)]
+print('changed', changed, 'keys', len(before), len(after))
+for k in changed: print(k, after[k])
+assert not b.startswith(b'\xef\xbb\xbf') and b'\r' not in b
+EOF
+cd $S; diff base3/project-unicorn/localization/strings.csv w5/project-unicorn/localization/strings.csv
+
+### #852 2026-10-28T16:58:39.548Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; F=$S/w5/project-unicorn/localization/strings.csv F="$F" python3 - <<'EOF'
+import os, csv, io
+p=os.environ['F']; b=open(p,'rb').read()
+E=lambda s: s.encode('utf-8')
+edits=[(E("\nPROD_RND_NODE_TEST_AUTOMATION_UNLOCK,Kendi Kendine Servis adında yeni bir özellik hattı. "),
+        E("\nPROD_RND_NODE_TEST_AUTOMATION_UNLOCK,Yardım Merkezi adında yeni bir özellik hattı. ")),
+       (E(",A new feature line called Self Service. And Beta keeps"), E(",A new feature line called Help Center. And Beta keeps")),
+       (E("\nPROD_LINE_HIDDEN_SELF_SERVE,Kendi Kendine Servis,Self Service\n"), E("\nPROD_LINE_HIDDEN_SELF_SERVE,Yardım Merkezi,Help Center\n"))]
+before={r[0]:tuple(r[1:]) for r in csv.reader(io.StringIO(b.decode())) if r}
+for old,new in edits:
+    assert b.count(old)==1, old
+    i=b.index(old); b=b[:i]+new+b[i+len(old):]
+open(p,'wb').write(b)
+after={r[0]:tuple(r[1:]) for r in csv.reader(io.StringIO(b.decode())) if r}
+changed=[k for k in after if after[k]!=before.get(k)]
+print('changed', changed, 'keys', len(before), len(after), 'removed', set(before)-set(after))
+for k in changed: print(k, after[k])
+assert not b.startswith(b'\xef\xbb\xbf') and b'\r' not in b
+EOF
+cd $S; diff base3/project-unicorn/localization/strings.csv w5/project-unicorn/localization/strings.csv
+
+### #868 2026-10-28T16:59:34.192Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+H=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad/w5/project-unicorn; cd $H; F=localization/strings.csv python3 - <<'EOF'
+import csv,os,re
+rows=[r for r in csv.reader(open(os.environ['F'],encoding='utf-8')) if r]
+for r in rows:
+    if re.search(r'\{(capability|line|line_name)\}', r[1]):
+        tr=r[1].replace('{capability}','Yardım Merkezi').replace('{line}','Yardım Merkezi').replace('{line_name}','Yardım Merkezi')
+        en=r[2].replace('{capability}','Help Center').replace('{line}','Help Center').replace('{line_name}','Help Center')
+        print(r[0],'|',tr[:110],'|',en[:90])
+EOF
+
+### #955 2026-10-28T17:10:30.638Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; python3 - <<'EOF'
+p='/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad/bin/mcp_copy.sh'
+t=open(p).read()
+add='''
+
+func mcp_open_mail(needle: String) -> String:
+	for m in GameState.messages:
+		if JSON.stringify(m).contains(needle):
+			INBOX.show("m:" + String(m.id))
+			return String(m.id)
+	return "none"
+'''
+t=t.replace("\tTimeManager.advance_hours(1)\nGD\n", "\tTimeManager.advance_hours(1)"+add+"GD\n")
+open(p,'w').write(t)
+EOF
+tail -14 $S/bin/mcp_copy.sh; bash $S/bin/mcp_copy.sh $S/w5/project-unicorn; tail -8 $S/mcpw/project-unicorn/scripts/main/main.gd
+
+### #990 2026-10-28T17:18:38.134Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; cp /Users/tugbauysal/.claude/projects/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/tool-results/mcp-gopeak-blob-1793207901595-v9kll1.png $S/evidence/d5_mcp/en_discovery_mail.png; bash $S/bin/mcp_stop.sh d5en; cat >> $S/notes.md <<'EOF'
+
+## D5 (UM1, w5 kopyası)
+- CSV: yalnız PROD_LINE_HIDDEN_SELF_SERVE ve PROD_RND_NODE_TEST_AUTOMATION_UNLOCK (3277 anahtar korunur, BOM/CR yok).
+- Adı yer tutucuyla alan 26 anahtar ({capability}/{line}/{line_name}) yeni adla TR/EN okundu, ek uyumu bozulmadı (liste yukarıda; BUILD_SUPPORT_TIP, RND_NOTE_DEMAND_B2B_0..3, RND_NOTE_DEMAND_B2C_0..3, RND_HIDDEN_LINE_OPENED, NEG_DEAL_IF_ACCEPT, PRODUCT_FIX_CARD, PRODUCT_NEWS_RIVAL_LAUNCH_0/1, PRODUCT_PRESS_CORE_0/1, SUPPORT_RPT_NEW_PRIORITY/CLEARED/WORST, SUPPORT_RPT_SHIPPED, SUPPORT_RPT_BTN_FIX, EFFECT_SHIP_BUGS(_ONE), EFFECT_NEW_BUGS(_ONE), EFFECT_LINE_HARDEN). Adı okuyan kod: ProductLines.line_name_key (product_lines.gd:290), mail_pane.gd:741.
+- Kapılar: glyph_audit 0 (missing=0), loc_residue 0, loc_csv_integrity + all_scripts_load 2/2.
+- --rnd-shot=discovery TR/EN maili açmıyor (yalnız ofis ve bildirim yığını); cümle MCP'de keşif mailini açarak doğrulandı (evidence/d5_mcp/). Mail cümle hattın adını içerdiği için ayrı "yeni hat" satırı eklemiyor (önceki davranışla aynı); altında "Açtığı devam yuvası adlandı: Yardım Merkezi" (düğümün adı).
+- EN MCP karesinde portre boş (Mac'te PersonBust; OLAYLAR inceliyor).
+- MCP: 7777'yi açılış anında başka başsız Godot kapınca oyun sunucusuz açılıyor; mcp_start.sh yeniden deniyor.
+EOF
+cd $S; cp bin/land.sh bin/land_run_d5.sh; echo ready
+
+### #1494 2026-10-28T19:38:01.163Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; cd $S; rm -rf wfinal; mkdir -p wfinal && rsync -a w4b/project-unicorn/ wfinal/project-unicorn/; F=$S/wfinal/project-unicorn; for f in $(cat d4a_changed.txt); do if [ -e w4b_base/project-unicorn/$f ]; then git merge-file $F/$f w4b_base/project-unicorn/$f w4/project-unicorn/$f; echo "rc=$? $f"; else cp w4/project-unicorn/$f $F/$f; echo "new $f"; fi; done; git merge-file $F/localization/strings.csv base3/project-unicorn/localization/strings.csv w5/project-unicorn/localization/strings.csv; echo "rc=$? strings.csv (D5)"; grep -l "<<<<<<<" -r $F/scripts $F/docs/kod_haritasi $F/localization $F/CLAUDE.md $F/data/product 2>/dev/null
+
+### #1610 2026-11-01T23:55:54.905Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; for d in base3 w3 w4 w4a_land b4a w4b w4b_base w5 wfinal u8_page u8 u8_tools evidence mcpw; do printf '%-10s files=%s\n' $d "$(find $S/$d -type f 2>/dev/null | wc -l)"; done; ls -la $S/w3 $S/wfinal 2>&1 | head -30

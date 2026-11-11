@@ -1,0 +1,720 @@
+--- a/docs/kod_haritasi/sistemler/02_urun_sprint.md
++++ b/docs/kod_haritasi/sistemler/02_urun_sprint.md
+@@ -36,7 +36,7 @@
+ - `data/product/rivals.json` (86): alt-tür başına 3 rakip ve çıkış takvimi
+ - `data/product/lines/{erp,note_tool,video_clip,shared}.json` (169, 158, 160, 128): alt-tür hatları ve 4 paylaşılan platform hattı
+ - `data/techtree/rnd_tree.json` (57): düğüm başına efor, nakit, alan, yıldız, ebeveyn, çapraz koşul, etki; 4 gizli hat
+-- Yakın, kapsam dışı (yalnız yol): `scripts/tabs/product_tab.gd` (347), `scripts/tabs/product/*.gd` (13 dosya, en büyüğü `product_model.gd` 1142), `scripts/tabs/rnd_tab.gd` (273), `scripts/tabs/rnd/*.gd` (5 dosya)
++- Yakın, kapsam dışı (yalnız yol): `scripts/tabs/product_tab.gd` (344), `scripts/tabs/product/*.gd` (16 dosya, en büyüğü `product_model.gd` 1149), `scripts/tabs/rnd_tab.gd` (273), `scripts/tabs/rnd/*.gd` (5 dosya)
+ - Yakın: `scripts/ui/components/{research_bar,research_bar_model,build_bar,build_bar_model,build_hud_panel}.gd`, `scripts/events/seams/{seams_product,seams_incident}.gd`, `scripts/systems/support_system.gd` (424)
+ - Yakın: `scripts/debug/sprint_probe.gd` (425, `--sprint-probe`); çalışma günlüğü tohumları `scripts/main/main.gd` `_seed_product_live` (4386)
+ 
+@@ -45,14 +45,14 @@
+ - `TimeManager._dispatch_daily_tick()` `scripts/autoload/time_manager.gd:383`: sıra Product(391) → Sprint(394) → Support(395) → Infra(396) → ProductRead.emit_edges(397) → RnD(399) → … → IncidentSystem(419)
+ - `TimeManager._dispatch_hourly_tick()` `time_manager.gd:437`: `InfraSystem.auto_adjust()`(445) sonra `IncidentSystem.hourly_tick()`(449); `SupportSystem.hourly_tick` hata düşürür
+ - `SprintSystem.daily_tick()` `scripts/systems/sprint_system.gd:27`: her günlük tik = bir oyun haftası; moda göre `_end_week` (active), `_auto_start` (plan/release) · TimeManager
+-- `SprintSystem.choose_type()` `sprint_system.gd:51`: tür/pazar/ad yazar, Sprint 1'i planlamada açar · `scripts/tabs/product_tab.gd:105`, `main.gd:504`
++- `SprintSystem.choose_type()` `sprint_system.gd:51`: tür/pazar/ad yazar, Sprint 1'i planlamada açar · `scripts/tabs/product_tab.gd:107`, `main.gd:504`
+ - `SprintSystem.new_state()` `sprint_system.gd:74`: `GameState.product` ilk durumu · `choose_type`, `scripts/autoload/save_manager.gd:888` (v14→v15 göçü)
+-- `SprintSystem.add()/send_next()/remove()` `sprint_system.gd:95`/`:103`/`:114`: "+", "→", kartı adaya döndür · `ProductTab._act` `product_tab.gd:305`
++- `SprintSystem.add()/send_next()/remove()` `sprint_system.gd:95`/`:103`/`:114`: "+", "→", kartı adaya döndür · `ProductTab._act` `product_tab.gd:300`
+ - `SprintSystem.pin_card()` `sprint_system.gd:135`: kişiyi sprintin kartına `until_day` gününe dek kilitler (`c.pinned`), koşan sprintte haftayı yeniden atar · `effects.gd:585` (`assign_to`)
+ - `SprintSystem.start()` `sprint_system.gd:134` (`_begin` :158): sprinti başlatır, lisansı keser, plan tutuşunu kaldırır · `begin_planned`, probe'lar
+-- `SprintSystem.begin_planned()` `sprint_system.gd:145`: alt şeridin "Sprinti başlat"ı (KR26): başlayacak kart varsa `start`, yoksa `skip` (boş sprint); ekip yokken bir şey yapmaz · `ProductTab._act` `product_tab.gd:311`
+-- `SprintSystem.plan_next()` `sprint_system.gd:209`: sürüm notundan sonraki sprinte geçer, çeyrek döner · `product_tab.gd:313`, `_auto_start`
+-- `SprintSystem.publish()` `sprint_system.gd:376`: MVP kapısında ürünü CANLI v1.0 yapar · `product_tab.gd:314`
++- `SprintSystem.begin_planned()` `sprint_system.gd:145`: alt şeridin "Sprinti başlat"ı (KR26): başlayacak kart varsa `start`, yoksa `skip` (boş sprint); ekip yokken bir şey yapmaz · `ProductTab._act` `product_tab.gd:306`
++- `SprintSystem.plan_next()` `sprint_system.gd:209`: sürüm notundan sonraki sprinte geçer, çeyrek döner · `product_tab.gd:308`, `_auto_start`
++- `SprintSystem.publish()` `sprint_system.gd:376`: MVP kapısında ürünü CANLI v1.0 yapar · `product_tab.gd:309`
+ - `SprintSystem.skip()/set_delegate()/apply_lead()` `sprint_system.gd:333`/`:342`/`:391`: boş sprint (`begin_planned` kartsız planda çağırır: planın kartları sonraki sprinte geçer, sprint kartsız başlar),
+   ↳ PM'e devret (devirde sprint liderin önerisiyle başlar), liderin önerisini uygula (bu sprint ve sonraki sütun; kapasite 0 iken bir şey yapmaz, bayrak yazılmaz) · `product_tab.gd`
+ - `sprint.lead_applied` (`apply_lead` kaldırır; plan değişikliği `remove` `:114` ve `_place` `:1936`, Kurucu sprintte anahtarı `set_founder_in_sprint` `:349`
+@@ -61,7 +61,7 @@
+   ↳ `capacity()`, `apply_lead`in yazdığı `lead_crew`dan (`_crew_mark`) farklıysa düşer: moral ve izin gibi sık değişimler kapasiteyi oynatmadıkça satırı geri getirmez
+   ↳ Karşılaştırma `_same_crew` `sprint_system.gd:1596`: kişi sayısı tam sayı, kapasite `EPS` içinde (kayıttan dönen işaret JSON'dan kayan noktalı ve kısalmış gelir)
+ - `SprintSystem._auto_start()` `sprint_system.gd:1558`: oyuncuyu beklemeyen sprinti başlatır; `apply_lead` bu sprinti ve sonraki sütunu doldurur, kart yoksa boş sprint · `daily_tick`, `plan_next` (devirde)
+-- `SprintSystem.approve()/approve_all()/edit()/pick_goal()` `sprint_system.gd:532`/`:539`/`:548`/`:555`: çeyrek PM planı ve hedef alan · `product_tab.gd:317-320`
++- `SprintSystem.approve()/approve_all()/edit()/pick_goal()` `sprint_system.gd:532`/`:539`/`:548`/`:555`: çeyrek PM planı ve hedef alan · `product_tab.gd:312-315`
+ - `SprintSystem.fix_first()/put_first()` `sprint_system.gd:224`/`:239`: hattın düzeltme kartı sprintin başına · olay fiili `sprint_fix_first` `scripts/events/core/effects.gd:504`. Sprintteyse başa taşınır,
+   ↳ sonraki sütundaysa ya da adaysa sprinte alınır; sürüm notundayken ve koşan sprintin son gecesi (mesai bittikten sonra) sonraki sprintin başına girer;
+   ↳ kapanış devredenleri sonraki sütunun başına dizdiği için kartın kimliği `product.next.first` listesine yazılır (son çağrılan önde) ve `_close` onu devredenlerin önüne koyar (`_next_column` `:315`).
+@@ -126,7 +126,7 @@
+ - `LineGates.evaluate()/is_unlocked()/unmet_parts()` `scripts/systems/line_gates.gd:65`/`:88`/`:95`: kademe kapısı · `product_read.gd:79`, `sprint_catalog.gd:296`, `b2b_sales_system.gd:609`
+ - `ModuleLocks.is_open()/ids()` `scripts/systems/module_locks.gd:21`/`:17`: sekme açık mı · `left_tabs.gd:258`, `events/core/delays.gd:108`, `seams_world.gd:148`
+ - `InfraSystem.daily_tick()` `scripts/systems/infra_system.gd:244`: faturayı "servers" burn kalemine yazar, hizmet edilen geçmişini tutar · `time_manager.gd:396`
+-- `InfraSystem.set_provider()/adjust_capacity()/auto_adjust()` `infra_system.gd:178`/`:204`/`:214`: oyuncu kararları ve otomatik ayar · `product_tab.gd:321-325`, `time_manager.gd:445`
++- `InfraSystem.set_provider()/adjust_capacity()/auto_adjust()` `infra_system.gd:178`/`:204`/`:214`: oyuncu kararları ve otomatik ayar · `product_tab.gd:316-320`, `time_manager.gd:445`
+ - `InfraSystem.is_economy()` `infra_system.gd:83`: seçili sağlayıcı Ekonomik mi; satış masasının `provider_not_economy` olgusunun, kayıp engelinin ve `report_inflow_multiplier`'ın tek okuması · `sales_probes.gd`,
+   ↳ `sales_meeting_system.gd`, `sales_ledger.gd`
+ - `InfraSystem.scale_price()/lock()/lock_reason()/lock_weeks_left()/capacity_floor()` `infra_system.gd:225`/`:236`/`:242`/`:246`/`:251`: olay fiilleri `server_price` / `server_lock` ve onların kuralı · `effects.gd:752-760`, `mail_pane.gd:159`, `run_probe.gd` (`_run_the_servers`, `_answer_the_clause`)
+@@ -151,13 +151,13 @@
+ - `card_carried_over`: yayan `sprint_system.gd:401`,`:1505` · dinleyen yok
+ - `card_decision_requested`: yayan `sprint_system.gd:1235` · yalnız smoke/probe
+ - `sprint_auto_started`: yayan `sprint_system.gd:1659` · dinleyen yok
+-- `product_state_changed`: yayan `sprint_system.gd:1850` (`_changed`) · product_tab.gd:114, build_bar.gd:46
++- `product_state_changed`: yayan `sprint_system.gd:1850` (`_changed`) · product_tab.gd:117, build_bar.gd:46
+ - `version_shipped`: yayan `sprint_system.gd:316`,`:1508` · left_tabs.gd:132, top_bar.gd:126; olay motoru `scripts/events/core/signals.gd:30`
+ - `build_phase_changed("shipped")`: yayan `sprint_system.gd:315`,`:1507` · promise_registry.gd:15, left_tabs.gd:125; olay tetiği (`funding.frank_v1`)
+ - `line_upgraded`, `line_completed`, `delighter_shipped`: yayan `sprint_system.gd:1442`, `:1444`, `:1445` · dinleyen yok
+-- `build_progress_changed`: yayan `product_state.gd:203`,`:213` · product_tab.gd:115, build_bar.gd:44, build_hud_panel.gd:52
++- `build_progress_changed`: yayan `product_state.gd:203`,`:213` · product_tab.gd:118, build_bar.gd:44, build_hud_panel.gd:52
+ - `line_bugs_cleared`: yayan `product_state.gd:214` · yalnız smoke/run_probe
+-- `infra_changed`: yayan `product_state.gd:303`,`:311`,`:322`,`:353`,`:367` · product_tab.gd:118
++- `infra_changed`: yayan `product_state.gd:303`,`:311`,`:322`,`:353`,`:367` · product_tab.gd:121
+ - `bug_confirmed`, `unconfirmed_threshold_crossed`: yayan `product_read.gd:155`, `:158` · yalnız smoke
+ - `axis_floor_warning`, `axis_floor_crossed`: yayan `product_read.gd:165`, `:167` · olay motoru (`signals.gd:37-38`; `b2c_floor_signal`, `b2c_floor_churn`)
+ - `research_started`: yayan `rnd_system.gd:279` · left_tabs.gd:118, research_bar.gd:49
+@@ -215,7 +215,7 @@
+ 
+ ## Metin anahtarları
+ 
+-- `PRODUCT_*` (80 aile, 278 anahtar): Ürün sayfası, sprint kartı, sürüm notu, sunucu bloğu; okuyanlar `scripts/tabs/product/*.gd`, `product_tab.gd`, `sprint_catalog.gd`, `sprint_bridges.gd`, `sprint_system.gd`
++- `PRODUCT_*` (79 aile, 277 anahtar): Ürün sayfası, sprint kartı, sürüm notu, sunucu bloğu; okuyanlar `scripts/tabs/product/*.gd`, `product_tab.gd`, `sprint_catalog.gd`, `sprint_bridges.gd`, `sprint_system.gd`
+ - `PRODUCT_SERVER_*` (37 anahtar): sunucu/kapasite arayüzü: `overview_view.gd`, `product_model.gd`, `main.gd`
+ - `PRODUCT_REVIEW_*` (29): B2C yorum havuzu; `data/product/sprint.json` `reviews` bloğu ve `sprint_bridges.gd`
+ - `PROD_LINE_*` (20) ve `PROD_STEP_*` (150): hat ve kademe adı; anahtar `ProductLines.line_name_key` (:290) ve `product_lines.gd:177`; `PROD_TYPE_*` tür adı (`product_catalog.gd`)
+@@ -374,7 +374,7 @@
+ - Sonraki sütunun yükü her kipte aynı işlevlerden çıkar (`ProductModel._load`, `_carried`): planlamada ve koşarken devreden zaman ekseninin `out`u, sürüm notunda sonraki sütunun devreden kartlarının kalan ihtiyacı;
+   ↳ planlı pay planlamada ve koşarken kartın sprint sonundaki kalan ihtiyacıdır (önden iş düşülmüş, `SprintSystem.prep_gains`in kazancıyla), sürüm notunda bugünkü;
+   ↳ ekip satırları `SprintTimeline.row_power`dan (her satırın kişileri `SprintSystem.capacity_of`a)
+-- Kart ipucuları açılırken kurulur (`CardTip`, yüzler `ProductModel.stage_face`; çubuğun `_bar_tip`i); `live()` ilk kareye ipucu hesabı yüklemez, satırda yalnız düz alanlar (`module_name`, `fix_full`, `finishes`, `gate`) durur.
++- Kart ipucuları açılırken kurulur (`CardTip`, yüzler `ProductModel.stage_face`; çubuğun `_bar_tip`i); `live()` ilk kareye ipucu hesabı yüklemez, satırda yalnız düz alanlar (`module_name`, `finishes`, `gate`) durur.
+ - `remove()` kâğıdın takip kartını (`follow`) reddeder; `ProductModel._row` ve `_next_card` ona Kaldır düğmesi vermez
+ - Sol sütun `live()`ın `requests` ve `modules` alanlarını okur; `areas` yalnız çeyrek hedef menüsünün listesidir (`{id, name, goal_text}`), `customers` ve hat başına hata listesi yoktur (`bug_row_of` Destek raporunundur)
+ - Adayın `addable`ı `live()`da `null`dır: `ProductModel.resolve_addable` her karede en az bir `can_add` (8 ms) ister, `ghost` imleç "+"a gelince `timeline([aday])` kurar; ikisinin önbelleği her `live()`da atılır
+@@ -388,7 +388,7 @@
+   ↳ tikinde kendiliğinden biter. Kilidin gerekçesi `PRODUCT_SERVER_LOCK_REASON`dır, `{weeks}`i çağıran `Fmt.weeks(lock_weeks_left())` ile doldurur; sözleşmeyi imzalatan kart canlı üründedir (MVP'deki
+   ↳ `set_provider` kilitten önce olur)
+ - Sunucu kapasitesini yalnız oyuncu ve Otomatik ayar değiştirir; `SprintBridges.on_release` ona dokunmaz (`sprint_bridges.gd:71`); dolu sunucunun tek bedeli kesinti ihtimalidir (`IncidentSystem.load_mult` incident_system.gd:75)
+-- Saat tutuşları: `sprint_plan` (`sprint_system.gd:22`), `incident` (`incident_system.gd:48`), `product_release_note` (`product_tab.gd:18`); toplu adımda `clock_batch_ended`'e ertelenir; harness zarı kapatmazsa saat takılır
++- Saat tutuşları: `sprint_plan` (`sprint_system.gd:22`), `incident` (`incident_system.gd:48`), `product_release_note` (`product_tab.gd:19`); toplu adımda `clock_batch_ended`'e ertelenir; harness zarı kapatmazsa saat takılır
+ - Kesinti sırası: söz olayı veya acil durum gelen sprintte kâğıt gelmez; kâğıtlı sprintte yalnız `SERVICE_DOWN` (outage, checkout) gelir, öbürü `incident.shifted`'e kalır (`sprint_system.gd:1258`)
+ - Reddedilen acil durum başlamamış sayılır: `last_day` yazılmaz, tutuş yok (`incident_system.gd:254`); zar yalnız karar verir, kart bir sonraki tam saatte istenir
+ - Ar-Ge ile Ürün kapıları farklı soru sorar: `LineGates` ham `HRSystem.skill` (izindeki de sayılır), `RnDSystem.area_has_star` etkin çıktı (:387); tek fonksiyona birleştirme
+--- a/docs/kod_haritasi/sistemler/08_sekmeler.md
++++ b/docs/kod_haritasi/sistemler/08_sekmeler.md
+@@ -9,8 +9,9 @@
+ ## Dosyalar
+ 
+ Sekme kökleri (scripts/tabs/):
+-- `scripts/tabs/product_tab.gd` (359): Ürün penceresi kabuğu: başlık KPI'ları, GENEL BAKIŞ/SPRINT/ÇEYREK şeridi (Kurucu sprintte ve Geçmiş anahtarları), yerel `_ui` durumu, eylem yönlendirme (`_act`);
+-  yeniden kurulumda sol sütunun kaydırması korunur (`SprintUiShared.keep_scroll`); `hour_changed` koşan sprintte yalnız `SprintPanel.set_now`u çağırır (`_on_hour`).
++- `scripts/tabs/product_tab.gd` (344): Ürün penceresi kabuğu: başlık KPI'ları, GENEL BAKIŞ/SPRINT/ÇEYREK şeridi (Kurucu sprintte ve Geçmiş anahtarları), yerel `_ui` durumu, eylem yönlendirme (`_act`);
++  yeniden kurulumda sol sütunun kaydırması korunur (`SprintUiShared.keep_scroll`); `hour_changed` koşan sprintte yalnız `SprintPanel.set_now`u çağırır (`_on_hour`);
++  ↳ pano zaman ekseninin genişliğini ölçer (`_axis`, `_on_axis`): pencere ya da ray değişince sayfa o genişlikle yeniden kurulur; ÇEYREK'te pencere içeriği kadar uzar (`fit_height`).
+ - `scripts/tabs/sales_tab.gd` (834): Satış: fiyat duruşu, boru hattı (lead belgesi), satış masası, son hareketler, müşteri portföyü, canlı B2C kitle sayfası.
+ - `scripts/tabs/hr_tab.gd` (542): Ekip: Kadro/Görevler görünümleri, Atlas ve Mesai panel açıcıları, satır menüsü, yapı anahtarıyla yerinde boyama.
+ - `scripts/tabs/finance_tab.gd` (144): Finans kabuğu: nakit/net/runway KPI'ları, ÖZET|YATIRIM şeridi, Yatırım kilidi (`_yatirim_locked`).
+@@ -31,19 +32,22 @@
+ - `scripts/tabs/hr/hr_dossier.gd` (232): Ekip dosyası: kişinin ayrıntı penceresi (`DETAILS["hr_dossier"]`), kişi ayrılınca kendini kapatır.
+ - `scripts/tabs/hr/hr_popover.gd` (113): `HRPopover`: çapaya bağlı tek açılır panel (satır menüsü, zam kutusu, sorumlu seçici).
+ - `scripts/tabs/hr/hr_ui_shared.gd` (506): `HRUiShared`: koyu tablo kiti (`D_*`), rozetler, moral, deneyim, durum hücresi, `mount_panel_modal`; tabloların dışında da kullanılır.
+-- `scripts/tabs/product/product_model.gd` (1150): `ProductModel`: sprint ekranının görünüm sözleşmesi; `live()` GameState/SprintSystem'den Dictionary kurar.
++- `scripts/tabs/product/product_model.gd` (1149): `ProductModel`: sprint ekranının görünüm sözleşmesi; `live()` GameState/SprintSystem'den Dictionary kurar.
+   Başlık yorumu yeni ekranın alanlarını da tanımlar: `founder`, `requests`, `modules`, `prep`, çeyreğin saati, merkez ve sonraki sütun eklemeleri, kart satırı; düzeltme işinin efora girişi ve gösterim kuralı.
+   Sol sütunun "+" değerleri ve hayalet hesabı `live()`dan ayrıdır: `addable`, `resolve_addable`, `ghost` (kart kimliğiyle sayfanın bir sonraki kurulumuna kadar saklanır).
+-  ↳ Kart satırı ipucunun verisini taşır (`module_name`, `fix_full`, `finishes`, `gate`, söz yuvasında müşteri, değer, söz mü); sonraki kart `raw_effort` ve `ahead` (önden işi başlıyor); `stage_face(id, aşama)` ipucunun kişileridir.
+-- `scripts/tabs/product/sprint_panel.gd` (308): `SprintPanel`: orta (bu sprint) ve sağ (sonraki sprint, `SprintNext`) sütunlar; orta sütunda başlık (`SprintHead` + `CapacityView`), pano (`SprintBoard`) ve
+-  ↳ alt şerit (`SprintFoot`), sürüm notunda bugünkü `_release`; sağ sütun 300 px sabit, orta sütun kalanı alır. Yeniden kurulumda pano ve sağ sütunun kaydırması korunur;
++  ↳ Kart satırı ipucunun verisini taşır (`module_name`, `finishes`, `gate`, söz yuvasında müşteri, değer, söz mü);
++  ↳ düzeltme kartının `fix_text`i en büyük hesabı da yazar; sonraki kart `raw_effort` ve `ahead` (önden işi başlıyor); `stage_face(id, aşama)` ipucunun kişileridir.
++- `scripts/tabs/product/sprint_panel.gd` (324): `SprintPanel`: orta (bu sprint) ve sağ (sonraki sprint, `SprintNext`) sütunlar; orta sütunda başlık (`SprintHead` + `CapacityView`), pano (`SprintBoard`) ve
++  ↳ alt şerit (`SprintFoot`), sürüm notunda bugünkü `_release` (gövdesi `Column(scrolls)`te uzunsa kayar, başlık ve alt şerit sabit); sağ sütun 300 px sabit, orta sütun kalanı alır.
++  ↳ Yeniden kurulumda pano, sürüm notunun gövdesi ve sağ sütunun kaydırması korunur;
+   ↳ `running()` ve `set_now(at)` saat hattıdır (pano, Kapasite'nin "yapılan" dolgusu ve alt şeridin ilerlemesi).
+ - `scripts/tabs/product/sprint_foot.gd` (148): `SprintFoot`: alt şerit (68 px): solda "Planlamayı devret" (PM'in yüzüyle, PM yokken kilitli), sağda "Sprinti başlat" (ekip yokken kapalı, kartsız planda yanında "0 kart"; basınca
+   ↳ `SprintSystem.begin_planned`) ya da sprint sürerken ilerleme (`set_progress`). Devirde iki kipte de solda PM'in yüzü, "{PM} planlıyor" ve "Planlamayı geri al";
+   ↳ sağda planlamada "Kendiliğinden başlar" (kartlı planda ekip yokken onun yerine çıkış yolu), sprint sürerken ilerleme
+   ↳ (çubuğu `D_W_PROGRESS_BAR_TIGHT`e kadar kısalır, ad kesilmez); kutunun ipucu "Efor {biten}/{toplam}" `set_progress`ta sayfa kurulmadan yenilenir.
+-- `scripts/tabs/product/sprint_next.gd` (336): `SprintNext`: sağ sütun: HAZIRLIK (PM satırları ya da "PM yok"), sonraki sprint kutusu (kesikli): aşama yükü (`StagePaint` `load`), DEVREDEN (en çok 4 satır ve "+{n} kart"), KARTLAR
+-  ↳ (tür ikonu, ad, efor, aşama şeridi `seg`, önden çalışanların yüzleri, hazırlayan PM; üstüne gelince "↑" ve "×"); her aşama kendi payıdır, önden biten pay kendi renginde dolar; yüzler `FaceCell`te (sığmayanlar "+{n}");
++- `scripts/tabs/product/sprint_next.gd` (338): `SprintNext`: sağ sütun: HAZIRLIK (PM satırları ya da "PM yok"), sonraki sprint kutusu (kesikli): aşama yükü (`StagePaint` `load`), DEVREDEN (en çok 4 satır ve "+{n} kart"), KARTLAR
++  ↳ (tür ikonu, ad, efor, aşama şeridi `seg`, önden çalışanların yüzleri, hazırlayan PM; üstüne gelince "↑" ve "×"); her aşama kendi payıdır, önden biten pay kendi renginde dolar;
++  ↳ yüzler `FaceCell`te (sığmayanlar "+{n}", hücre en az bir yüz ve "+{n}" kadar geniştir); kart adı kesilmez, sarar ve satır büyür;
+   ↳ ne hazırlamış ne hazırlıkta PM soluk "0 kart hazırladı"; kart ve devreden yoksa yalnız başlık ve aşama yükü.
+   ↳ İpuçları: PM satırı (ad, yıldız, hazırladığı kartlar), "PM yok", aşama yükü, devreden satırı ve "+{n} kart"ın kalanları, kartın adı, aşama payı ve yüzleri (`_part_tip`), hazırlayan PM.
+ - `scripts/tabs/product/sprint_board.gd` (349): `SprintBoard`: panonun sabit başlığı ("{n} KART", erken kapanış bayrağı, hafta etiketleri),
+@@ -54,7 +58,7 @@
+ - `scripts/tabs/product/board_row.gd` (596): `BoardRow`: panonun bir kart satırı: bilgi sütunu (ad, R1, efor, modül, durum yuvası (koşan sprintte tek şey:
+   "yetişmez", koşan aşamanın "{aşama} %{n}"i, söz tarihi, "devreden"; `set_now` günceller), PM ya da "?" yuvası, "→" ve "×"),
+   zaman ekseni (çubuk, bekleme, gölge, tarama, tik kutusu (art arda önden biten aşamalar tek kutu, son bitenin renginde), sprint dışı pay, yüzler); `set_now`;
+-  düzeltme kartının hata metni sarar ve satırı büyütür (`_fit`), zaman ekseni satırda dikey ortalı.
++  kart adı (taban iki satır, 22 karakterden uzun adda) ve düzeltme kartının hata metni (en büyük hesapla) kesilmeden sarar, tabandan fazla satır satırı büyütür (`_wraps`, `_fit`), zaman ekseni satırda dikey ortalı.
+   ↳ İpuçları: zengin kart ipucu yalnız adda (`CardName`, `CardTip`); çubuğun düz ipucu açılırken okunur (`_bar_tip`, `StagePaint.tip`); bekleme, gölge, tarama, tik kutusu, risk, efor, modül, yuvalar düz ipucu taşır;
+   ↳ kapısı kapanmış kartta (`gate`) satırın düz ipucu (adın üstünde de): kapı gerekçesi ve sonraki sütuna geçeceği.
+ - `scripts/tabs/product/card_tip.gd` (131): `CardTip`: zengin kart ipucu paneli (`panel(kart, ekipte PM var mı)`): başlık, aşama efor kutuları, kim çalışıyor ve görüşmeler (tür başına toplam gün), yetişir mi, künye.
+@@ -65,12 +69,15 @@
+ - `scripts/tabs/product/stage_paint.gd` (359): `StagePaint`: sprint ekranının tek çizim sınıfı (Kapasite: `groove`, `busy`, `bracket`; pano: `grid`, `now`, `early`, `bar`, `label`, `wait`, `shadow`, `meet`, `tick`,
+   `risk`, `ask`, `fade`; sağ sütun: `load`, `seg`); eleman başına çizim sınıfı yoktur. `StagePaint.spill` ve `hatch` taramanın statik çizimidir (`SprintNext.CarryRow` da kullanır).
+   ↳ `tip` (Callable) verilirse ipucu açılırken `tooltip_text`in yerine ondan okunur (`_get_tooltip`; koşan sprintte bayatlamaz).
+-- `scripts/tabs/product/sprint_card.gd` (34): `SprintCard`: ÇEYREK'in mini kartı (`State`); yalnız sözlüğünü çizer. Bu sprintin kartı `BoardRow`, sonraki sprintin kartı `SprintNext`in satırıdır.
+-- `scripts/tabs/product/sprint_ui_shared.gd` (530): `SprintUiShared`: ortak statik parçalar (label, box, pad, avatar, `face`, `face_slot`, `open_goal_menu`, ÇEYREK çubuğu, `switch`, `due_chip`,
++- `scripts/tabs/product/sprint_card.gd` (32): `SprintCard`: ÇEYREK'in mini kartı (`State`): üstte tür ikonu ve puan, altında kendi satırında ad (kesilmez, kelime bölünmez, kart uzar);
++  ↳ yalnız sözlüğünü çizer. Bu sprintin kartı `BoardRow`, sonraki sprintin kartı `SprintNext`in satırıdır.
++- `scripts/tabs/product/sprint_ui_shared.gd` (563): `SprintUiShared`: ortak statik parçalar (label, box, pad, avatar, `face`, `face_slot`, `open_goal_menu`, ÇEYREK çubuğu, `switch`, `due_chip`, `flag` (sütun genişliğinde sarar),
+   ↳ `row_keys`, `way_out`, `add_key`, `keep_scroll`); Ürün dışında 10+ dosya kullanır. İpucu parçaları: `STAGE_KEYS`, `stage_name`, `stage_icon`, `stage_done`, `done_text`, `named_stars`, `effort_tip`,
+   ↳ `prepared_tip`, `meet_lines`, `meet_lines_of` (`total`: türü başına günler toplanır), `tip_column` (zengin ipucunun kökü).
+-- `scripts/tabs/product/area_panel.gd` (312): `AreaPanel`: sol sütun (SPRINT ve ÇEYREK): Geçmiş, MÜŞTERİ TALEPLERİ, MODÜLLER ve açık modülün adayları; "+" değerleri sonraki karelerde gelir.
+-- `scripts/tabs/product/quarter_view.gd` (179): `QuarterView`: ÇEYREK görünümü: hedef şeridi (menü SprintHead ile ortak), sol sütun (`AreaPanel`), altı sprint sütunu, onay düğmeleri.
++- `scripts/tabs/product/area_panel.gd` (309): `AreaPanel`: sol sütun (SPRINT ve ÇEYREK): Geçmiş, MÜŞTERİ TALEPLERİ, MODÜLLER ve açık modülün adayları (düzeltme adayı tam hata metnini sarar yazar,
++  ↳ başka sprintin adayı "Sprint {n}" damgası taşır); "+" değerleri sonraki karelerde gelir.
++- `scripts/tabs/product/quarter_view.gd` (189): `QuarterView`: ÇEYREK görünümü: hedef şeridi (menü SprintHead ile ortak), sol sütun (`AreaPanel`), altı sprint sütunu, onay düğmeleri;
++  ↳ sütunlar ve "Hepsini onayla" içerik pencereyi aşınca dikey kayar (`_right`, yeniden kurulumda yeri korunur), `content_height` içeriğin kendi boyunu okur.
+ - `scripts/tabs/product/overview_view.gd` (96): GENEL BAKIŞ kâğıdı (şimdilik yalnız Sunucu bloğu; Azalt düğmesi kapasite 0 birimdeyken `server.decrease.off` ile kapalı); class_name yok.
+ - `scripts/tabs/product/type_picker.gd` (116): `TypePicker`: MVP öncesi tek ekranlık tür ve ad seçici (iki pazar sütunu, kart pazarı da seçer); taslak `SprintSystem`'e yazılır, onay `chosen` olur.
+ - `scripts/tabs/rnd/rnd_tree_view.gd` (433): `RnDTreeView`: aile sütunları (3 satır kafes), karolar, seçili düğümün kartı alanı.
+@@ -88,31 +95,31 @@
+ Sekme sözleşmesi (sayfanın taşıdığı, çerçevenin çağırdığı):
+ - `WindowLayer.open_primary(tab_id)` `scripts/ui/components/window_layer.gd:75`: `tab_changed` gelince sekme sahnesini kurar, eskiye `on_page_closing` yayar · `window_layer.gd:62` bağlar, çok yerden emit edilir.
+ - `frame_options` (title, kpi, pad) `scripts/ui/components/window_frame.gd:34`: çerçeve sayfa ağaca girmeden okur · tüm sekmeler `_init`'te kurar.
+-- `fit_height()` + `fit_changed` `window_layer.gd:168,222-225`: pencere içerik kadar uzar · finance_tab:72, hr_tab:185, personal_tab:66, product_tab:135, rnd_tab:103, sales_tab:168, hr_dossier:75.
++- `fit_height()` + `fit_changed` `window_layer.gd:168,222-225`: pencere içerik kadar uzar · finance_tab:72, hr_tab:185, personal_tab:66, product_tab:133, rnd_tab:103, sales_tab:168, hr_dossier:75.
+ - `on_page_closing()` `window_layer.gd:80`: propagate_call ile sayfaya ve torunlarına · product_tab:129, rnd_tab:97, events_tab:95.
+ - `on_escape()` `window_layer.gd:115`: Esc önce açık seçeneği indirir · yalnız events_tab:89 (mail_pane.gd:80'e iletir).
+ - `on_panel_over(on)` `window_layer.gd:181`: PanelLayer paneli açılınca amber eylemi bırakır · hr_tab:191.
+ - `populate(payload)` `window_layer.gd:107`: ayrıntı penceresi (`DETAILS` `window_layer.gd:24`) · hr_dossier:62.
+ 
+ Ürün:
+-- `ProductTab._ready()` `scripts/tabs/product_tab.gd:52`: sekme açılınca görünümleri kurar, 6 EventBus sinyaline bağlar (:114-119) · WindowLayer.
+-- `ProductTab._rebuild()` `product_tab.gd:145`: her değişimde modelden baştan kurar; `_queue_rebuild` (:343) call_deferred ile tekler · sinyaller ve `_on_action`.
+-- `ProductModel.live()` `scripts/tabs/product/product_model.gd:130`: GameState.product + SprintSystem/ProductState'ten model · product_tab.gd:149, sprint_probe.gd:295.
++- `ProductTab._ready()` `scripts/tabs/product_tab.gd:54`: sekme açılınca görünümleri kurar, 6 EventBus sinyaline bağlar (:117-122) · WindowLayer.
++- `ProductTab._rebuild()` `product_tab.gd:139`: her değişimde modelden baştan kurar; `_queue_rebuild` (:333) call_deferred ile tekler · sinyaller ve `_on_action`.
++- `ProductModel.live()` `scripts/tabs/product/product_model.gd:130`: GameState.product + SprintSystem/ProductState'ten model · product_tab.gd:143, sprint_probe.gd:295.
+   Planlamada ve koşarken tek oynatma (`SprintSystem.timeline`) merkezin `close_at`, `progress`, `crew`, `suggest`, `candidates` ve sonraki sütunun `load`, `carried` alanlarını besler.
+   Sol sütunu `requests` (B2B'de, B2C'de `null`) ve `modules` besler; adayların `addable`ı `null` gelir ve `live()` önbelleği (`_addable`, `_ghosts`) atar.
+ - `ProductModel.resolve_addable(ids)` `product_model.gd:218`: bilinmeyen "+" değerlerini sırayla hesaplar (`SprintSystem.can_add`; en az bir kart, `ADDABLE_FRAME_MS` 8 dolunca durur)
+   ↳ çağıran `AreaPanel._process` ve `sprint_probe.gd` `_resolve_all`.
+-- `ProductTab._on_action(kind, args)` `product_tab.gd:289`: kart/panel eylemlerini `_act` (:305) ile SprintSystem/InfraSystem'e verir · tüm alt panellerin `action` sinyali.
+-- `ProductTab.open_area(area_id)` `product_tab.gd:276`: DESTEK kartı ve talep satırı modülü açık açar; görünümü `_set_ui` ile SPRINT yapar (son açık sayfa hatırlanır, "edit" eylemi de)
++- `ProductTab._on_action(kind, args)` `product_tab.gd:288`: kart/panel eylemlerini `_act` (:300) ile SprintSystem/InfraSystem'e verir · tüm alt panellerin `action` sinyali.
++- `ProductTab.open_area(area_id)` `product_tab.gd:275`: DESTEK kartı ve talep satırı modülü açık açar; görünümü `_set_ui` ile SPRINT yapar (son açık sayfa hatırlanır, "edit" eylemi de)
+   ↳ çağıran `SprintUiShared.open_product_area` ve `AreaPanel.request_picked`.
+-- `ProductTab._on_candidate_hover(card_id)` `product_tab.gd:284`: imleç adayın açık "+"ında: `ui.hover_card` kartın kimliği olur ve hayaletin hesabı (`ProductModel.ghost`) kurulur, ayrılınca boşalır; sayfa kurulmaz · `AreaPanel.hovered`.
++- `ProductTab._on_candidate_hover(card_id)` `product_tab.gd:283`: imleç adayın açık "+"ında: `ui.hover_card` kartın kimliği olur ve hayaletin hesabı (`ProductModel.ghost`) kurulur, ayrılınca boşalır; sayfa kurulmaz · `AreaPanel.hovered`.
+   ↳ `_rebuild` kip planlama değilken `hover_card`ı boşaltır: "+" yalnız planlamada açıktır, imleç ondayken sprint başlarsa (devir, Boşluk) kalan hayalet koşan sprintte `timeline([aday])`ı bozmaz.
+-- `ProductTab._hold_clock(on)` `product_tab.gd:345`: sürüm notu açıkken saati tutar (`HOLD_RELEASE_NOTE` :18) · `_rebuild`, `on_page_closing`.
++- `ProductTab._hold_clock(on)` `product_tab.gd:340`: sürüm notu açıkken saati tutar (`HOLD_RELEASE_NOTE` :19) · `_rebuild`, `on_page_closing`.
+ 
+ Ekip:
+ - `HRTab._ready()` `scripts/tabs/hr_tab.gd:67`: `_build`, 15 sinyal (:73), grup `HRLedger.VIEWS_GROUP` · WindowLayer.
+ - `HRTab._refresh()` `hr_tab.gd:197`: KPI'ları yazar; `_compute_structure_key` (:218) değişmediyse yerinde boyar, değiştiyse `_rebuild` (:242) · `_on_state_changed`.
+-- `HRTab.open_atlas()` `hr_tab.gd:390`: Atlas panelini açar · product_tab.gd:326, hr_tab.gd (Atlas şeridi, boş grup, Görevler).
++- `HRTab.open_atlas()` `hr_tab.gd:390`: Atlas panelini açar · product_tab.gd:328, hr_tab.gd (Atlas şeridi, boş grup, Görevler).
+ - `HRTab.hold_person(id, on)` `hr_tab.gd:520`: dosyası/diyaloğu açık kişinin satırını seçili tutar · hr_dossier.gd:59,66, hr_action_modal.gd:66,147, training_modal.gd:31,42.
+ - `HRLedger.run_action(host, emp, action)` `scripts/tabs/hr/hr_ledger.gd:356`: zam, terfi, izin, çıkarma, eğitim, dosya · satır menüsü ve dosya (`action_list` :270).
+ - `HRPopover.mount(anchor, dark)` `scripts/tabs/hr/hr_popover.gd:99`: tek açılır panel · hr_tab `_open_actions` hr_tab.gd:489, sales_tab.gd:675.
+@@ -126,7 +133,7 @@
+ - `HuntTab._sit_button` `hunt_tab.gd:520`: "Masaya otur" `term_table_requested` yayar (:521) · main.gd:4713 bağlar.
+ 
+ Ar-Ge, Olaylar, Piyasa, Kişisel:
+-- `RnDTab.select_node(id)` `scripts/tabs/rnd_tab.gd:114`: düğümü seçer · `rnd_node_requested` (:80; product_tab.gd:323, research_bar), `_ready` (:60) gizli seçimi tüketir.
++- `RnDTab.select_node(id)` `scripts/tabs/rnd_tab.gd:114`: düğümü seçer · `rnd_node_requested` (:80; product_tab.gd:325, research_bar), `_ready` (:60) gizli seçimi tüketir.
+ - `RnDTab._refresh()` `rnd_tab.gd:190`: `_compute_structure_key` (:209) değişince `RnDTreeView.rebuild`, yoksa `repaint` · `_on_state_changed` (call_deferred).
+ - `RnDTreeView.select(id, open_assign)` `scripts/tabs/rnd/rnd_tree_view.gd:334`: karo seçimi, `selection_changed` yayar (:339) · karo tıkı, rnd_tab.
+ - `EventsTab.select(item_id)` `scripts/tabs/events_tab.gd:77`: öğeyi okuma bölmesinde açar · `Inbox.show` (inbox.gd:31) `call_group(&"inbox", &"select")` ile.
+@@ -142,22 +149,22 @@
+ ## Sinyaller
+ 
+ Sekmelerin tanımladığı sinyaller (DIZIN.md "Sinyaller" bölümü):
+-- `fit_changed`: yayan finance_tab:10, hr_tab:22, personal_tab:23, product_tab:12, rnd_tab:28, sales_tab:17, hr_dossier:12 · dinleyen `window_layer.gd:169` (`_place`).
++- `fit_changed`: yayan finance_tab:10, hr_tab:22, personal_tab:23, product_tab:15, rnd_tab:28, sales_tab:17, hr_dossier:12 · dinleyen `window_layer.gd:169` (`_place`).
+ - `close_requested`: yayan `scripts/tabs/hr/hr_dossier.gd:83,132` · dinleyen `window_frame.gd:62`.
+ - `state_changed`: yayan Atlas/Eğitim/Mesai panelleri (hr_atlas_modal.gd:439,465,483; training_modal.gd:174; work_hours_modal.gd:491) · dinleyen `hr_ui_shared.gd:85`.
+-- `action(kind, args)`: yayan area_panel:10, overview_view:7, quarter_view:8, sprint_foot, sprint_next, sprint_panel:8 · dinleyen product_tab.gd:73,79,82,88, quarter_view.gd:60, sprint_panel.gd.
+-- `ui_changed(key, value)` (açık modül, talep listesinin açıklığı): yayan `area_panel.gd:11`, `quarter_view.gd:9` · dinleyen `product_tab.gd:74,83` (`_set_ui`).
+-- `request_picked(area_id)` ve `hovered(card_id)`: yayan `area_panel.gd:13,15` · dinleyen `product_tab.gd:75` (`open_area`) ve `:76` (`_on_candidate_hover`).
+-- `chosen(subtype, name)`: yayan `type_picker.gd:65` · dinleyen `product_tab.gd:104`.
++- `action(kind, args)`: yayan area_panel:10, overview_view:7, quarter_view:8, sprint_foot, sprint_next, sprint_panel:8 · dinleyen product_tab.gd:75,81,85,91, quarter_view.gd:60, sprint_panel.gd.
++- `ui_changed(key, value)` (açık modül, talep listesinin açıklığı): yayan `area_panel.gd:11`, `quarter_view.gd:9` · dinleyen `product_tab.gd:76,86` (`_set_ui`).
++- `request_picked(area_id)` ve `hovered(card_id)`: yayan `area_panel.gd:13,15` · dinleyen `product_tab.gd:77` (`open_area`) ve `:78` (`_on_candidate_hover`).
++- `chosen(subtype, name)`: yayan `type_picker.gd:65` · dinleyen `product_tab.gd:107`.
+ - `started` / `closed`: yayan `rnd_assign_panel.gd:230,232` / `:203` · dinleyen `rnd_detail_panel.gd:76,77`. `selection_changed(node_id)`: yayan `rnd_tree_view.gd:339` · dinleyen `rnd_tab.gd:144`.
+ 
+ Sekmelerin yaydığı EventBus sinyalleri:
+-- `tab_changed`: product_tab.gd:319-330, sales_tab.gd:295, mail_pane.gd:830,836, hr_atlas_modal.gd:168, sprint_ui_shared.gd:334, rnd_ui_shared.gd:149 · dinleyen window_layer.gd:62.
++- `tab_changed`: product_tab.gd:321-327, sales_tab.gd:295, mail_pane.gd:830,836, hr_atlas_modal.gd:168, sprint_ui_shared.gd:334, rnd_ui_shared.gd:149 · dinleyen window_layer.gd:62.
+ - `pitch_requested` sales_tab.gd:412 (dinleyen main.gd:4707) · `term_table_requested` hunt_tab.gd:521 (main.gd:4713) · `rnd_node_requested` product_tab.gd:323 (rnd_tab.gd:80).
+ - `finance_subpage_requested` mail_pane.gd:832 (dinleyen finance_tab.gd:58) · `confirm_requested` hunt_tab.gd:234,479, hr_tab.gd:337, hr_ledger.gd:376-425, hr_atlas_modal.gd:453,472 (main.gd:90).
+ 
+ Sekmelerin dinlediği EventBus sinyalleri (hepsi `_exit_tree`'de ya da düğümle birlikte kopar):
+-- Ürün `product_tab.gd:114-118`: product_state_changed, build_progress_changed, day_advanced, infra_changed `_queue_rebuild`; desk_changed (her mesai saati gelir) `_on_desk`: yalnız `ProductModel.desk_stamp` değiştiyse kurar;
++- Ürün `product_tab.gd:117-121`: product_state_changed, build_progress_changed, day_advanced, infra_changed `_queue_rebuild`; desk_changed (her mesai saati gelir) `_on_desk`: yalnız `ProductModel.desk_stamp` değiştiyse kurar;
+   ↳ `hour_changed` (:119) sayfayı kurmaz, `_on_hour` koşan sprintte şimdiki anı günceller.
+ - Finans `finance_tab.gd:49-58`: cash/mrr/burn_changed, shutter_changed, runway_recalculated, phase_changed, seed_door_opened, finance_subpage_requested. Özet `finance_ozet_view.gd:60`: ek equity/month_ended/sheet_*/rival_*.
+ - Yatırım `hunt_tab.gd:45-61`: sheet_*, callback_ready, meeting_day, day_advanced (:47), pitch_finished, seed_*, phase_changed, event_*, TimeManager.hold_changed, mentor_advisory_changed, hour_changed, assignment_changed.
+@@ -171,7 +178,7 @@
+ 
+ - Sekmeler kayıt şeması tanımlamaz (`scripts/tabs` içinde SaveManager yok); okudukları durum sistemlerde: `GameState.product` (`product_model.gd:139`), `ProductState`, `SprintSystem`, `HRSystem`, `CharacterRegistry`.
+ - Yerel durum sayfaya aittir ve dil/palet değişiminde kaybolur (WindowLayer yıkıp kurar, `window_layer.gd:66-67,156`): hr_tab `_view`/`_collapsed`, piyasa `_filter`/`_selected`, finance `_current`.
+-- İstisnalar: `ProductTab._last_view` (static, `product_tab.gd:22`, kayda yazılmaz) ve `GameState.flags["rnd_selected"]` (`rnd_tab.gd:64-65,99`, `_ready`'de tüketilip silinir).
++- İstisnalar: `ProductTab._last_view` (static, `product_tab.gd:25`, kayda yazılmaz) ve `GameState.flags["rnd_selected"]` (`rnd_tab.gd:64-65,99`, `_ready`'de tüketilip silinir).
+ - Diğer bayraklar: `finance_runway_warn_snooze_until_day` (`finance_ozet_view.gd:21,479,499`, ertele 2 hafta); `b2c_paid_tier_open`, `b2c_price`, `b2c_audience_history` yalnız okunur (`sales_tab.gd:261-275`).
+ - Düzen sabitleri: `WindowLayer.SPECS` `window_layer.gd:38` (Ürün 1688×928: 1920'de pencere alanının tamamı; Piyasa 1424×928,
+   Ekip 1352×928, Finans 1344×720, Satış 1280×760, Ar-Ge 1280×928, Kişisel 1000×928, Olaylar 1240×900, dosya 320×928).
+@@ -246,11 +253,11 @@
+ - Ürün ve Piyasa `day_advanced`'e bağlıdır ama yeniden kurmayı ertelerler (`call_deferred`, `process_frame` ONE_SHOT). 
+   Yatırım sayfası ise `day_advanced`'e doğrudan bağlıdır (hunt_tab.gd:47); kalan-hafta sayaçları bir tik geriden okunabilir (doğrulanmadı).
+ - Dil ve palet değişince WindowLayer sayfayı yıkıp yeniden kurar (`window_layer.gd:66-67`); sekmeden ayrıca bağlanma, yoksa çift kurulum olur (rnd_tab.gd:20-21). Yerel durum kaybolur; korunacaksa bayrak ya da static gerekir.
+-- Ürün sekmesi `fit_height()` ÇEYREK dışında `INF` döner (product_tab.gd:135-139). Sayfa boyunu `SPECS` ve `fit_height` birlikte belirler; yeni sayfada ikisine de bak.
++- Ürün sekmesi `fit_height()` ÇEYREK dışında `INF` döner (product_tab.gd:133-136). Sayfa boyunu `SPECS` ve `fit_height` birlikte belirler; yeni sayfada ikisine de bak.
+ - Ürün sol sütunu `AreaPanel` SPRINT'te (`product_tab.gd`) ve ÇEYREK'te (`quarter_view.gd`) aynı panel; açık modül `ui.open_area`, talep listesinin açıklığı `ui.requests_open` (yerel, kayda girmez).
+ - Adayın "+"ı kurulumda hesaplanmaz: `live()` `addable: null` verir, bilinmeyen "+" nötr ve basılmaz durur, değerler `ProductModel.resolve_addable` ile kare kare gelir (kare 8 ms)
+   ↳ yeni bir "+" okuyucusu değeri `ProductModel.addable`'dan okur.
+-- `ProductModel.bug_row_of` Destek raporunun hat satırıdır (`mail_pane.gd`); sol sütunda hata satırı yoktur, düzeltme adayı hata sayısını (`bugs`) ve metnini (`fix_text`) taşır.
++- `ProductModel.bug_row_of` Destek raporunun hat satırıdır (`mail_pane.gd`); sol sütunda hata satırı yoktur, düzeltme adayı hata sayısını (`bugs`) ve tam metnini (`fix_text`, adayın altında sarar) taşır.
+ - Statik fonksiyonlarda `tr()` çalışmaz; SprintUiShared, RnDUiShared, MailPane statikleri `TranslationServer.translate` kullanır. Çözülmeyen anahtar kendine döner ve ham token olarak görünür.
+ - `HBoxContainer` bir çocuğun asgari boyutunu kırpmaz; sabit sütun için hücreyi düz `Control` + `clip_contents` yap
+   (hafıza: ekip-rev11-closing-round; kanon `work_hours_modal._pin`). `HRLedger` sütun hücreleri `_span` ile genişlik alır (hr_ledger.gd:66).
+@@ -259,7 +266,7 @@
+ - `mail_pane.gd` `class_name` taşımaz (yolla preload edilir): bu sayfadaki `MailPane.` yazımı betiğin kısa adıdır;
+   ↳ DESTEK raporunun tablosu `mail_pane.gd` içindeki `_support_report` işlevidir (`:698`; hat satırı `ProductModel.bug_row_of`, `SprintUiShared.bug_line`)
+ - Kişisel penceresinde huylar `personal_tab.gd`'de (`:123-133`) yalnız glif kutusu ve adla çizilir (`FounderConstants.trait_by_id(...).name_key`); YAKINDA etiketi yoktur
+-- Sekmeler arası çapraz çağrı kırılgan: `product_tab._act("hire")` (product_tab.gd:304-305) ve `SprintUiShared.open_product_area` (sprint_ui_shared.gd:334-335) `tab_changed` senkron kurduğu varsayımıyla sayfa gövdesine metot çağırır.
++- Sekmeler arası çapraz çağrı kırılgan: `product_tab._act("hire")` (product_tab.gd:326-328) ve `SprintUiShared.open_product_area` (sprint_ui_shared.gd:334-335) `tab_changed` senkron kurduğu varsayımıyla sayfa gövdesine metot çağırır.
+ - `GameState.flags["rnd_selected"]` kayıtlı `flags` içinde durur (rnd_tab.gd:99); pencere kapanıp oyun kaydedilirse bayat seçim kayda sızabilir (`_ready` onu bir sonraki açılışta siler).
+ - `SprintUiShared` ve `HRUiShared` sekme dışında da çağrılır (modals, ui/meeting, ui/office, ui/components: sırasıyla 11 ve 14 dosya); imza değişikliği bu dosyaları kırar. `FinanceOzetView` `cash_curve.gd` ve Kişisel'den çağrılır.
+ - Karar sonrası `_act` + `_refresh` (hunt_tab.gd:536) sinyali olmayan eylemler için elle yeniden çizer; yeni Yatırım eylemi sinyal yaymıyorsa aynı deseni kullan.
+--- a/docs/kod_haritasi/sistemler/09_arayuz_bilesen.md
++++ b/docs/kod_haritasi/sistemler/09_arayuz_bilesen.md
+@@ -131,6 +131,12 @@
+   `D_CARD_NAME_SHORT` 22, `D_H_STAGE_BAR` 30, `D_STAGE_BAR_PAD`, `D_W_TICK_BOX`, `D_NOW_HEAD`, `D_W_CARD_SLOT`, `D_RISK_BAR`, `D_ASK_DISC`, `D_H_BOARD_SECTION`, `D_H_BOARD_FADE`, `D_ROW_ALPHA`, `D_GHOST_ALPHA`;
+   ↳ çubuk ve izler: `D_STAGE_BAR_MIX` (zemin payları), `D_STAGE_BAR_EDGE` (kenar alfası), `D_SHADOW_ALPHA`, `D_SHADOW_FOOT_ALPHA`, `D_H_SHADOW`, `D_SPILL_LINE`, `D_SPILL_STEP`, `D_EARLY_STRIPE`, `D_EARLY_PERIOD`, `D_MEET_LIGHT/DARK/EDGE`,
+   `D_MEET_PERIOD`; renkler `D_stage_bar(aşama, tür)` ve `D_stage_bar_edge(aşama, tür)`.
++- Ürün penceresinde kesme yok: hiçbir metin üç noktayla (`text_overrun_behavior`, `max_lines_visible`) kesilmez, hiçbir öğe yer yok diye gizlenmez ya da kırpılmaz (`clip_contents`); sığmayan yazı sarar ve satır, kart ya da çip büyür.
++  ↳ Pano satırı: ad ve düzeltme kartının hata metni sarar, `BoardRow._fit` tabandan fazla satırı satıra ekler (`D_CARD_NAME_SHORT` yalnız taban yüksekliği seçer).
++  ↳ ÇEYREK mini kartında ad kendi satırındadır (`SprintCard`), bayrak çipi sarar (`SprintUiShared.flag`).
++  ↳ İçerik pencereyi aşınca kayar: ÇEYREK'in altı sütunu ve "Hepsini onayla" (`QuarterView._right`), sürüm notunun gövdesi (`SprintPanel.Column`; başlık ve alt şerit sabit).
++  ↳ Tasarım seçimi olarak kalanlar: yüz dizisinin "+{n}"i ve "+{n} kart" toplamı, modülün kısa adı (`area_short`; tam adı ipucunda),
++  ↳ dar çubukta düşen ikon ve sayı (`StagePaint` `label`), çubuğa sığmayan yüzler ve eksenin sonunda düşen sprint dışı pay.
+ - Bu bloğun varyasyonları yalnız koyu temadadır: `SprintTitle`, `MvpVersion`, `HeadMeta`, `CrewTotal`, `GoalPick(+Set)`, `QuarterNotch(+Past, +Now)`, `WeekBar`, `FaceRing`,
+   `StarChip`, `ClusterStars`, `AwayLabel`, `CapBlock`, `CapRow(+Hot)`, `CapStage`, `CapUnit`, `CapFigure`, `CapTeam`, `CapBadgeOver(+Ink)`, `CapStreak(+Ink)`; panonun: `CardEffort`, `StageNum`, `AxisLabel`, `MoreHint`,
+   `SprintRow(+Hover, +Cand, +CandHover, +Late(+Cb))`, `RowActs`, `RowKey`, `MoreHintPill(+Late(+Cb))`, `GhostRow`;
+--- a/localization/strings.csv
++++ b/localization/strings.csv
+@@ -2756,7 +2756,6 @@
+ PRODUCT_IN_PLAN,planda,planned
+ PRODUCT_IN_PLAN_TIP,Bu sprintte kartı var,Has a card in this sprint
+ PRODUCT_CAND_IN_PLAN_TIP,Bu sprintin planında,In this sprint's plan
+-PRODUCT_STAMP,S{n},S{n}
+ PRODUCT_ADD_TO_PLAN,Plana ekle,Add to plan
+ PRODUCT_EFFORT_TIP,efor {n},effort {n}
+ PRODUCT_EARLY_END_TIP,Bütün kartlar {w}. haftada biter,All cards done in week {w}
+--- a/scripts/tabs/product/area_panel.gd
++++ b/scripts/tabs/product/area_panel.gd
+@@ -208,7 +208,7 @@
+ 	return row
+ 
+ 
+-## Aday kart: ad, düzeltme kartında hata sayısı, efor ve "+" (planda tik, başka sprintte damga); altında aşama payları.
++## Aday kart: ad, efor ve "+" (planda tik, başka sprintte damga); altında düzeltme kartının hata metni (sarar) ve aşama payları.
+ func _candidate(c: Dictionary) -> PanelContainer:
+ 	var card := PanelContainer.new()
+ 	card.theme_type_variation = &"ModuleCandidate"
+@@ -216,11 +216,6 @@
+ 	card.add_child(col)
+ 	var top := SprintUiShared.box(UiTokens.SPACE_M)
+ 	top.add_child(_name(String(c.name), &"CaptionName", UiTokens.D_INK_2))
+-	if int(c.bugs) > 0:
+-		var bugs := SprintUiShared.label(SprintUiShared.count("PRODUCT_FX_BUGS", int(c.bugs)), &"CaptionName", UiTokens.D_INK_3)
+-		bugs.mouse_filter = Control.MOUSE_FILTER_PASS
+-		bugs.tooltip_text = c.fix_text
+-		top.add_child(bugs)
+ 	top.add_child(SprintUiShared.label(str(c.effort), &"CaptionName", UiTokens.D_INK_1))
+ 	if c.planned:
+ 		var tick := UiFactory.make_glyph(SprintUiShared.CHECK, UiTokens.D_ICON_ROW, UiTokens.D_ST_TEST)
+@@ -229,10 +224,12 @@
+ 		tick.tooltip_text = tr("PRODUCT_CAND_IN_PLAN_TIP")
+ 		top.add_child(tick)
+ 	elif int(c.stamp) >= 0:
+-		top.add_child(SprintUiShared.due_chip(tr("PRODUCT_STAMP").format({"n": int(c.stamp)}), false, ""))
++		top.add_child(SprintUiShared.due_chip(tr("PRODUCT_TAG_SPRINT").format({"n": int(c.stamp)}), false, ""))
+ 	else:
+ 		top.add_child(_add_key(c))
+ 	col.add_child(top)
++	if int(c.bugs) > 0:
++		col.add_child(SprintUiShared.prose(String(c.fix_text), &"Caption"))
+ 	col.add_child(_strip(c.parts))
+ 	if c.planned or int(c.stamp) >= 0:
+ 		card.modulate = Color(Color.WHITE, UiTokens.D_TAKEN_ALPHA)
+--- a/scripts/tabs/product/board_row.gd
++++ b/scripts/tabs/product/board_row.gd
+@@ -12,8 +12,9 @@
+ # Label ya da Panel'i; ipucu o öğeye bağlanır. Zengin kart ipucu (`CardTip`) yalnız kartın adında açılır; çubuğun ipucu düz yazıdır
+ # ve açılırken okunur (koşan sprintte saat ilerler). Başlamayacak kartın (kapısı kapanmış) ipucu satırın kendisindedir, adın
+ # üstünde de o okunur: kapının gerekçesi ve kartın sonraki sütuna geçeceği.
+-# Satır taban yükseklikte (`D_H_CARD_ROW`, ad iki satırsa `D_H_CARD_ROW_TWO`) durur; düzeltme kartının hata metni sığmazsa kelime
+-# sınırında sarar ve satırı büyütür, zaman ekseni satırda dikey ortalı kalır.
++# Satır taban yükseklikte (`D_H_CARD_ROW`, ad iki satırsa `D_H_CARD_ROW_TWO`) durur; ad ve düzeltme kartının hata metni kesilmeden
++# kelime sınırında sarar, taban satırdan fazla satır satırı büyütür ve zaman ekseni satırda dikey ortalı kalır. Modülün adı tasarımı
++# gereği kısa ad (`area_short`); tam adı ipucundadır.
+ 
+ signal action(kind: String, args: Dictionary)
+ 
+@@ -158,11 +159,12 @@
+ 	custom_minimum_size.y = _h + extra
+ 
+ 
+-## Tür ikonu, ad (22 karakterden uzunsa iki satır, yine taşarsa üç nokta), hata riski, efor ve aday satırında "+".
++## Tür ikonu, ad (22 karakterden uzunsa tabanda iki satır; sığmayan ad daha çok satıra sarar), hata riski, efor ve aday satırında "+".
+ func _first_line() -> HBoxContainer:
+ 	var ink: Variant = UiTokens.D_neg_ink() if card.late else null
+ 	var line := SprintUiShared.box(UiTokens.SPACE_M)
+-	line.custom_minimum_size.y = UiTokens.D_H_CARD_LINE_TWO if _two else UiTokens.D_H_CARD_LINE
++	var base: int = UiTokens.D_H_CARD_LINE_TWO if _two else UiTokens.D_H_CARD_LINE
++	line.custom_minimum_size.y = base
+ 	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ 	var kind := UiFactory.make_glyph(SprintUiShared.KIND_ICON % card.kind, UiTokens.D_ICON_ROW, UiTokens.D_INK_3)
+ 	kind.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+@@ -171,11 +173,11 @@
+ 	title.theme_type_variation = &"DataStrong"
+ 	if ink != null:
+ 		title.add_theme_color_override("font_color", ink)
+-	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART if _two else TextServer.AUTOWRAP_OFF
+-	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+-	title.max_lines_visible = 2 if _two else 1
++	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+ 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+ 	title.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
++	_wraps[title] = [2 if _two else 1, base]
++	title.minimum_size_changed.connect(_fit)
+ 	line.add_child(title)
+ 	var risk := SprintUiShared.box(UiTokens.SPACE_XS)
+ 	risk.custom_minimum_size.y = UiTokens.D_H_CARD_LINE
+@@ -215,8 +217,6 @@
+ 		text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+ 		_wraps[text] = [1, UiTokens.D_AVATAR_ROW_SM]
+ 		text.minimum_size_changed.connect(_fit)
+-		text.mouse_filter = Control.MOUSE_FILTER_PASS
+-		text.tooltip_text = card.fix_full
+ 		line.add_child(text)
+ 		if not slot.is_empty() or _ctx.mode == "active":
+ 			line.add_child(_status())
+--- a/scripts/tabs/product/product_model.gd
++++ b/scripts/tabs/product/product_model.gd
+@@ -87,8 +87,8 @@
+ #         sprintte başlıyor), prep: {pm: person, done: 0..1} or null (hazırlayan PM yok), buttons}] (sürüm notunda devreden kartlar
+ #         `carried`ta yer alır, burada değil; planlamada "↑" ve "×", öbür kiplerde "×").
+ # person = {id, name, role_text, look, stars, founder}.
+-# Kart satırı (pano) = {id, kind, name, effort, raw_effort, module (kısa ad), module_name, fix_text (düzeltme kartında hata sayısı ve
+-#   etkilenenler), fix_full (en büyük hesapla), slot: {kind: "due" (+ text, soon, customer, value, promise: söz mü talep mi) | "carried" |
++# Kart satırı (pano) = {id, kind, name, effort, raw_effort, module (kısa ad; satır onu yazar), module_name (tam ad, ipucunda), fix_text
++#   (düzeltme kartında hata sayısı, etkilenenler ve en büyük hesap), slot: {kind: "due" (+ text, soon, customer, value, promise: söz mü talep mi) | "carried" |
+ #   "late"} ya da {}, pm, ask, risk, risk_raw (0..1: beklenen hatanın tavana oranı, hazırlanmamış hâli), late, finishes (sprint sonuna
+ #   yetişir), founder, gate (başlamayacak kartın kapı gerekçesi, yoksa ""), buttons, stages (SprintTimeline aşamaları)}. Planlamada
+ #   düğmeler "→" ve "×", koşarken yok; kapısı sonradan kapanıp başlamayacak kart zaman ekseninde yoktur: `stages` boş, `gate` dolu,
+@@ -695,8 +695,8 @@
+ 
+ 
+ ## Kart satırı: `c` kart, `t` zaman ekseninin o karttaki kaydı (başlamayacak kartta {}). Efor kartın sprintteki yüküdür (`_effort`),
+-## risk beklenen hatanın tavana (`SprintBugs.ceiling`) oranı ve hazırlanmamış hâli. Hata metni hesap sayısı ve kullanıcıyla biter:
+-## en büyük hesabın adı satıra sığmaz.
++## risk beklenen hatanın tavana (`SprintBugs.ceiling`) oranı ve hazırlanmamış hâli. Düzeltme kartının hata metni en büyük hesabı da
++## yazar; satır onu sarar.
+ static func _row(c: Dictionary, t: Dictionary, buttons: Array) -> Dictionary:
+ 	var ref: float = SprintBugs.ceiling()
+ 	var preparer: Character = CharacterRegistry.get_character(String(t.get("prep", {}).get("by", "")))
+@@ -714,7 +714,7 @@
+ 	return {"id": c.id, "kind": _kind(c), "name": SprintCatalog.card_name(c), "effort": roundi(_effort(c)),
+ 		"raw_effort": roundi(SprintSystem.card_load(c)),
+ 		"module": SprintCatalog.area_short(c.area), "module_name": SprintCatalog.area_name(c.area),
+-		"fix_text": SprintUiShared.bugs_text(bugs, false) if fix else "", "fix_full": SprintUiShared.bugs_text(bugs) if fix else "",
++		"fix_text": SprintUiShared.bugs_text(bugs) if fix else "",
+ 		"slot": slot, "pm": null if preparer == null else _face(preparer, HRConstants.AREA_PRODUCT), "ask": _ask(c),
+ 		"risk": minf(1.0, t.get("h", 0.0) / ref) if ref > 0.0 else 0.0, "risk_raw": minf(1.0, t.get("h0", 0.0) / ref) if ref > 0.0 else 0.0,
+ 		"late": late, "finishes": t.get("finishes", false), "founder": t.get("founder", false),
+--- a/scripts/tabs/product/quarter_view.gd
++++ b/scripts/tabs/product/quarter_view.gd
+@@ -3,7 +3,8 @@
+ 
+ # ÇEYREK görünümü: üstte hedef şeridi (hedefi olmayan çeyrek de "hedef yok" der), altta SPRINT'in sol sütunu (modüller ve talepler)
+ # ve altı sprint sütunu (bu sprint, PM'in önerdikleri, boşlar); sütunlar en uzununun içeriği kadar uzar, onay düğmeleri kartların
+-# hemen altında. Yalnız modeli çizer; onay ve hedef seçimi eylem olarak, açık modül yerel durum olarak çıkar.
++# hemen altında. Pencere içeriği kadar uzar, içerik pencerenin en çok boyunu aşarsa sol sütun ve sütunlar kendi içinde kayar. Yalnız
++# modeli çizer; onay ve hedef seçimi eylem olarak, açık modül yerel durum olarak çıkar.
+ 
+ signal action(kind: String, args: Dictionary)   # approve {sprint} · approve_all · edit {sprint} · pick_goal {area_id}
+ signal ui_changed(key: String, value: Variant)   # sol sütunun yerel durumu (açık modül, talep listesinin açıklığı)
+@@ -12,7 +13,10 @@
+ const LOOKS := {"current": &"SprintColumnCurrent", "proposed": &"SprintColumn", "empty": &"SprintColumnNext"}
+ const CHEVRON := "res://assets/icons/util/chevron_down.svg"
+ 
++## Altı sprint sütununun ve "Hepsini onayla"nın kaydırması: yeniden kurulumda yeri korunur.
++var _right: ScrollContainer
+ 
++
+ ## Hedefin on karesi: `now` kadarı dolu, `target` karesinin önünde hedef çizgisi. Doluluk yargısız,
+ ## nötr mürekkepte.
+ class GoalMeter extends Control:
+@@ -41,6 +45,7 @@
+ 
+ 
+ func setup(model: Dictionary) -> void:
++	var right_at: int = _right.scroll_vertical if _right != null else 0
+ 	UiFactory.clear(self)
+ 	add_theme_constant_override("separation", UiTokens.SPACE_XL)
+ 	if model.quarter.goal != null:
+@@ -62,7 +67,11 @@
+ 
+ 	var right := SprintUiShared.column(UiTokens.SPACE_XL)
+ 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+-	body.add_child(right)
++	_right = ScrollContainer.new()
++	_right.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
++	_right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	_right.add_child(right)
++	body.add_child(_right)
+ 	var columns := SprintUiShared.box(UiTokens.SPACE_M)
+ 	right.add_child(columns)
+ 	for col in model.quarter.columns:
+@@ -70,6 +79,7 @@
+ 	var approve_all := SprintUiShared.button(tr("PRODUCT_APPROVE_ALL"), &"PrimaryButtonDark", action.emit.bind("approve_all", {}))
+ 	approve_all.size_flags_horizontal = Control.SIZE_SHRINK_END
+ 	right.add_child(approve_all)
++	SprintUiShared.keep_scroll(_right, right_at)
+ 
+ 
+ ## The window fits the quarter's content: the goal strip, then the taller of the areas and the columns.
+@@ -77,7 +87,7 @@
+ 	var strip: float = get_child(0).get_combined_minimum_size().y + UiTokens.SPACE_XL if get_child_count() > 1 else 0.0
+ 	var body: HBoxContainer = get_child(-1)
+ 	var areas: AreaPanel = body.get_child(0).get_child(0)
+-	return strip + maxf(areas.get_combined_minimum_size().y, body.get_child(1).get_combined_minimum_size().y)
++	return strip + maxf(areas.get_combined_minimum_size().y, body.get_child(1).get_child(0).get_combined_minimum_size().y)
+ 
+ 
+ ## BU ÇEYREK · alan · hedef cümlesi ... on kare ölçer · ilerleme · ok; "Hatalar" ve "Hedef yok" yalnız adıyla durur. Tık hedef
+--- a/scripts/tabs/product/sprint_card.gd
++++ b/scripts/tabs/product/sprint_card.gd
+@@ -1,8 +1,9 @@
+ class_name SprintCard
+ extends PanelContainer
+ 
+-# ÇEYREK'in sütunlarındaki mini kart: tür ikonu, ad ve efor (devreden kart kalan eforuyla). Sonraki sprinte ya da sonrakilere planlanmış
+-# kart kesikli kenarlıdır; kapısı sonradan kapanmış kart soluk, biten kart ikincil mürekkepte. Kart yalnız sözlüğünü çizer.
++# ÇEYREK'in sütunlarındaki mini kart: üstte tür ikonu ve efor (devreden kart kalan eforuyla), altında ad. Ad kendi satırındadır,
++# kesilmez, kelime ortasından bölünmez ve uzunsa satırlara sarıp kartı uzatır. Sonraki sprinte ya da sonrakilere planlanmış kart
++# kesikli kenarlıdır; kapısı sonradan kapanmış kart soluk, biten kart ikincil mürekkepte. Kart yalnız sözlüğünü çizer.
+ 
+ enum State { SPRINT_PLAN, SPRINT_AKTIF, BITTI, DEVREDEN, PLANLANAN, KILITLI }
+ 
+@@ -18,17 +19,14 @@
+ 	var points: float = card.remaining if card.remaining >= 0 else card.effort
+ 	var glyph_ink: Color = UiTokens.D_INK_OFF if state == State.KILITLI else UiTokens.D_INK_3
+ 	var name_ink: Color = glyph_ink if state in [State.KILITLI, State.BITTI] else UiTokens.D_INK_1
++	var col := SprintUiShared.column(UiTokens.SPACE_XS)
++	add_child(col)
+ 	var top := SprintUiShared.box(UiTokens.SPACE_S)
+-	add_child(top)
++	col.add_child(top)
+ 	top.add_child(UiFactory.make_glyph(SprintUiShared.KIND_ICON % card.kind, UiTokens.D_ICON_PART, glyph_ink))
+-	var title := UiFactory.make_label(String(card.name), &"CaptionStrong", name_ink)
+-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+-	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+-	title.max_lines_visible = 2
+-	top.add_child(title)
++	top.add_child(RnDUiShared.spacer())
+ 	var pts := UiFactory.make_label(SprintUiShared.points(points), &"PtsBox")
+ 	pts.custom_minimum_size.x = UiTokens.D_W_PTS
+ 	pts.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+ 	top.add_child(pts)
+-	for part: Control in top.get_children():
+-		part.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
++	col.add_child(SprintUiShared.prose(String(card.name), &"CaptionStrong", name_ink))
+--- a/scripts/tabs/product/sprint_next.gd
++++ b/scripts/tabs/product/sprint_next.gd
+@@ -22,13 +22,12 @@
+ 
+ 
+ ## Bir aşama payının altında önden çalışanların yüzleri, üst üste binerek; hücreye sığmayanların yerini son sığan yüzün ardında
+-## "+{n}" alır (o da sığmazsa yalnız ilk yüz), hücre kırpılır: dar payda iki üç kişi olabilir.
++## "+{n}" alır: dar payda iki üç kişi olabilir. Hücre en az bir yüz ve "+{n}" kadar geniştir, hiçbiri kırpılmaz.
+ class FaceCell extends Control:
+ 	var _faces: Array[Control] = []
+ 	var _more: Label
+ 
+ 	func _init(people: Array) -> void:
+-		clip_contents = true
+ 		mouse_filter = Control.MOUSE_FILTER_IGNORE
+ 		for person: Dictionary in people:
+ 			var face: Control = SprintUiShared.face(person, UiTokens.D_AVATAR_ROW_SM, false, false)
+@@ -38,6 +37,12 @@
+ 		_more = SprintUiShared.label("", &"Caption")
+ 		add_child(_more)
+ 		resized.connect(_fit)
++
++	func _ready() -> void:
++		custom_minimum_size.x = UiTokens.D_AVATAR_ROW_SM
++		if _faces.size() > 1:
++			_more.text = "+%d" % (_faces.size() - 1)
++			custom_minimum_size.x += UiTokens.SPACE_XXS + _more.get_combined_minimum_size().x
+ 
+ 	func _fit() -> void:
+ 		var step: float = UiTokens.D_AVATAR_ROW_SM - UiTokens.SPACE_S
+@@ -53,8 +58,7 @@
+ 		for i in _faces.size():
+ 			_faces[i].visible = i < shown
+ 			_faces[i].position = Vector2(i * step, 0.0)
+-		# Tek yüzün yanına "+{n}" de sığmıyorsa yalnız yüz kalır (kalanlar ipucunda).
+-		_more.visible = shown < _faces.size() and room.call(shown, _faces.size() - shown) <= size.x
++		_more.visible = shown < _faces.size()
+ 		if _more.visible:
+ 			_more.text = "+%d" % (_faces.size() - shown)
+ 			_more.size = _more.get_combined_minimum_size()
+@@ -217,16 +221,14 @@
+ 	return line
+ 
+ 
+-## Kart adı: iki satıra iner, yine taşarsa üç nokta.
++## Kart adı: kesilmez, sığmayınca satırlara sarar ve satır büyür.
+ func _name(text: String, variation: StringName) -> Label:
+ 	var name_label := SprintUiShared.prose(text, variation)
+-	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+-	name_label.max_lines_visible = 2
+ 	name_label.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+ 	return name_label
+ 
+ 
+-## Satırın başındaki ikon: ad iki satıra inebildiği için üste yaslı, ilk satırın hizasında.
++## Satırın başındaki ikon: ad birkaç satıra inebildiği için üste yaslı, ilk satırın hizasında.
+ func _icon(path: String, ink: Color) -> MarginContainer:
+ 	var glyph := UiFactory.make_glyph(path, UiTokens.D_ICON_TAG, ink)
+ 	glyph.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+--- a/scripts/tabs/product/sprint_panel.gd
++++ b/scripts/tabs/product/sprint_panel.gd
+@@ -3,8 +3,8 @@
+ 
+ # Ürün sekmesinin orta (bu sprint) ve sağ (sonraki sprint) sütunları. Yalnız modeli çizer: izin ve eşikler modelden gelir, her tık
+ # sekmeye `action` olarak çıkar. Orta sütunun başlığı (sprint başlığı ve kapasite), panosunun başlığı ve alt şeridi sabit, arada
+-# panonun gövdesi kayar; sağ sütun (`SprintNext`) kendi içinde kayar. Saat ilerleyince `set_now` panoyu, kapasiteyi ve ilerlemeyi
+-# sayfa kurulmadan günceller.
++# panonun gövdesi kayar; sürüm notunda aradaki gövde (satırlar, sonuçlar, yorumlar) uzunsa kayar, kırpılmaz. Sağ sütun (`SprintNext`)
++# kendi içinde kayar. Saat ilerleyince `set_now` panoyu, kapasiteyi ve ilerlemeyi sayfa kurulmadan günceller.
+ 
+ signal action(kind: String, args: Dictionary)
+ ## Panonun ölçtüğü eksen genişliği kurulandan başka (`SprintBoard.axis_wanted`).
+@@ -16,14 +16,15 @@
+ const SQUARE_POINTS := 5.0
+ 
+ 
+-## Orta sütun: başlık ve alt sabit, arada gövde. Alt şerit ilk istendiğinde kurulur.
++## Orta sütun: başlık ve alt sabit, arada gövde. `scrolls` ise gövde uzunsa kayar (sürüm notu). Alt şerit ilk istendiğinde kurulur.
+ class Column extends PanelContainer:
+ 	var head := SprintUiShared.column(UiTokens.SPACE_L)
+ 	var stack := SprintUiShared.column(UiTokens.SPACE_M)
++	var scroll: ScrollContainer
+ 	var _col := SprintUiShared.column(0)
+ 	var _foot: VBoxContainer
+ 
+-	func _init() -> void:
++	func _init(scrolls := false) -> void:
+ 		theme_type_variation = &"SprintColumn"
+ 		size_flags_horizontal = Control.SIZE_EXPAND_FILL
+ 		add_child(_col)
+@@ -32,7 +33,15 @@
+ 		stack.size_flags_vertical = Control.SIZE_EXPAND_FILL
+ 		var body := SprintUiShared.pad(stack, Vector4i(UiTokens.SPACE_L, UiTokens.SPACE_M, UiTokens.SPACE_L, 0))
+ 		body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+-		_col.add_child(body)
++		if scrolls:
++			body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++			scroll = ScrollContainer.new()
++			scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
++			scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
++			scroll.add_child(body)
++			_col.add_child(scroll)
++		else:
++			_col.add_child(body)
+ 
+ 	func foot() -> VBoxContainer:
+ 		if _foot == null:
+@@ -48,6 +57,8 @@
+ 
+ var _capacity: CapacityView
+ var _board: SprintBoard
++## Sürüm notunun gövdesinin kaydırması.
++var _note_scroll: ScrollContainer
+ var _foot: SprintFoot
+ var _next: SprintNext
+ var _running := false
+@@ -61,13 +72,15 @@
+ 	size_flags_vertical = Control.SIZE_EXPAND_FILL
+ 
+ 
+-## Yeniden kurulumda panonun ve sağ sütunun kaydırma yeri korunur.
++## Yeniden kurulumda panonun, sürüm notunun ve sağ sütunun kaydırma yeri korunur.
+ func setup(model: Dictionary) -> void:
+ 	var board_at: int = _board.scroll.scroll_vertical if _board != null else 0
++	var note_at: int = _note_scroll.scroll_vertical if _note_scroll != null else 0
+ 	var next_at: int = _next.scroll_vertical if _next != null else 0
+ 	UiFactory.clear(self)
+ 	_capacity = null
+ 	_board = null
++	_note_scroll = null
+ 	_foot = null
+ 	_next = null
+ 	_running = false
+@@ -79,6 +92,8 @@
+ 	add_child(_next)
+ 	if _board != null:
+ 		SprintUiShared.keep_scroll(_board.scroll, board_at)
++	if _note_scroll != null:
++		SprintUiShared.keep_scroll(_note_scroll, note_at)
+ 	SprintUiShared.keep_scroll(_next, next_at)
+ 
+ 
+@@ -106,9 +121,10 @@
+ 
+ func _center(model: Dictionary) -> void:
+ 	var c: Dictionary = model.center
+-	var col := Column.new()
++	var col := Column.new(c.mode == "release")
+ 	add_child(col)
+ 	if c.mode == "release":
++		_note_scroll = col.scroll
+ 		_release(col, c, model.next.sprint)
+ 		return
+ 	if c.sprint < 0:
+--- a/scripts/tabs/product/sprint_ui_shared.gd
++++ b/scripts/tabs/product/sprint_ui_shared.gd
+@@ -414,17 +414,19 @@
+ 	menu.open_at(anchor, true)
+ 
+ 
+-## Cümle düzeninde bayrak: rakip çıkışı nötr, bu ya da sonraki sprintte biten son tarih uyarı renginde.
++## Cümle düzeninde bayrak: rakip çıkışı nötr, bu ya da sonraki sprintte biten son tarih uyarı renginde. Sütunun genişliğini alır;
++## uzun yazı kesilmez, sarar ve çip uzar (saat ilk satırın hizasında).
+ static func flag(text: String, warn := false) -> PanelContainer:
+ 	var chip := PanelContainer.new()
+ 	chip.theme_type_variation = UiTokens.D_variation(&"FlagChipWarn") if warn else &"FlagChip"
+-	chip.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+ 	chip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+ 	chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ 	var row := box(UiTokens.SPACE_S)
+ 	if warn:
+-		row.add_child(UiFactory.make_glyph(CLOCK, UiTokens.D_ICON_PART, UiTokens.D_warn()))
+-	row.add_child(label(text, &"CaptionStrong", UiTokens.D_warn() if warn else null))
++		var clock := UiFactory.make_glyph(CLOCK, UiTokens.D_ICON_PART, UiTokens.D_warn())
++		clock.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
++		row.add_child(clock)
++	row.add_child(prose(text, &"CaptionStrong", UiTokens.D_warn() if warn else null))
+ 	chip.add_child(row)
+ 	return chip
+ 
+@@ -512,12 +514,12 @@
+ 	return b
+ 
+ 
+-## Düzeltme kartının hata satırı: "6 hata · 3 hesap · 140 kullanıcı · en büyüğü Demir Holding (100 kullanıcı)"; `with_top`
+-## yanlışsa en büyük hesap yazılmaz. B2C'de hesap sayısı (-1) ve en büyük hesap yoktur.
+-static func bugs_text(part: Dictionary, with_top := true) -> String:
++## Düzeltme kartının hata satırı: "6 hata · 3 hesap · 140 kullanıcı · en büyüğü Demir Holding (100 kullanıcı)". B2C'de hesap sayısı
++## (-1) ve en büyük hesap yoktur.
++static func bugs_text(part: Dictionary) -> String:
+ 	var bits: PackedStringArray = [count("PRODUCT_FX_BUGS", int(part.n))]
+ 	bits.append_array(impact_bits(part))
+-	if with_top and part.top != "":
++	if part.top != "":
+ 		bits.append(RnDUiShared.t("PRODUCT_FX_TOP").format(
+ 			{"account": part.top, "users": count("PRODUCT_USER_COUNT", int(part.top_users))}))
+ 	return SEP.join(bits)

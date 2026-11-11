@@ -1,0 +1,237 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>İlk 30 Hafta Playtesti</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Erdem'in UE ve ikon kâğıtlarıyla aynı dil: kâğıt zemin, mürekkep, turuncu vurgu; oyun kareleri koyu adalar. */
+:root {
+  --bg: #f6f3ee; --panel: #ffffff; --ink: #1f1b16; --ink-2: #5a524a; --line: #ddd5ca; --accent: #b4561c; --warn-bg: #fbecd9;
+  --bug: #a8321f; --bug-bg: #f8e1dc; --design: #5a524a; --design-bg: #ece6dd; --data: #2f6b7d; --data-bg: #dcecf0;
+  --f-body: system-ui, -apple-system, "Segoe UI", sans-serif; --f-mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #171411; --panel: #211d19; --ink: #efe9e1; --ink-2: #a89e92; --line: #3a332c; --accent: #f0a35e; --warn-bg: #3a2a18;
+    --bug: #f08a74; --bug-bg: #3d1f19; --design: #c9bfb3; --design-bg: #2c2722; --data: #8cc6d6; --data-bg: #182a30; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #171411; --panel: #211d19; --ink: #efe9e1; --ink-2: #a89e92; --line: #3a332c; --accent: #f0a35e; --warn-bg: #3a2a18;
+  --bug: #f08a74; --bug-bg: #3d1f19; --design: #c9bfb3; --design-bg: #2c2722; --data: #8cc6d6; --data-bg: #182a30; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 var(--f-body); }
+main { max-width: 1120px; margin: 0 auto; padding-block: 32px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2 { text-wrap: balance; }
+h1 { font-size: 30px; margin: 0 0 8px; }
+h2 { font-size: 22px; margin: 44px 0 10px; padding-top: 16px; border-top: 1px solid var(--line); }
+p, li { max-width: 80ch; }
+.lead { color: var(--ink-2); }
+a { color: var(--accent); }
+code { font-family: var(--f-mono); font-size: 0.86em; overflow-wrap: anywhere; }
+.stats { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 16px 0 4px; padding: 12px 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+.stats div { display: grid; }
+.stats b { font-size: 19px; font-variant-numeric: tabular-nums; }
+.stats span { font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-2); }
+.finds { list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; counter-reset: f; }
+.find { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 300px); gap: 14px; counter-increment: f; max-width: none; }
+.find.nopic { grid-template-columns: minmax(0, 1fr); }
+.find h3 { margin: 0 0 6px; font-size: 17px; line-height: 1.35; }
+.find h3::before { content: counter(f) ". "; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.find p { margin: 0 0 6px; }
+.find .ev { font-size: 13px; color: var(--ink-2); }
+.find figure { margin: 0; }
+.find img { width: 100%; height: auto; display: block; border-radius: 5px; border: 1px solid var(--line); }
+.find figcaption { font-size: 12px; color: var(--ink-2); padding-top: 4px; }
+.tag { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 1px 8px; border-radius: 999px; margin-right: 6px; vertical-align: 2px; }
+.tag.bug { color: var(--bug); background: var(--bug-bg); }
+.tag.design { color: var(--design); background: var(--design-bg); }
+.tag.data { color: var(--data); background: var(--data-bg); }
+.op { color: var(--accent); font-size: 13px; font-weight: 600; }
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; margin: 8px 0; }
+th, td { text-align: left; padding: 6px 9px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--ink-2); font-weight: 600; font-size: 13px; }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.weeks { display: flex; flex-wrap: wrap; gap: 4px; margin: 10px 0 4px; }
+.wk { width: 30px; height: 30px; display: grid; place-items: center; font-size: 12px; font-variant-numeric: tabular-nums; border-radius: 4px; background: var(--design-bg); color: var(--ink-2); }
+.wk.choice { background: var(--accent); color: var(--panel); font-weight: 700; }
+.wk.single { background: var(--warn-bg); color: var(--ink); }
+.wk.lost { background: var(--bug-bg); color: var(--bug); font-weight: 700; }
+.legend { font-size: 13px; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 5px; }
+ul.plain { padding-left: 20px; }
+ul.plain li { margin-bottom: 6px; }
+.gallery { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.gallery figure { margin: 0; }
+.gallery img { width: 100%; height: auto; display: block; border-radius: 5px; border: 1px solid var(--line); }
+.gallery figcaption { font-size: 12px; color: var(--ink-2); padding-top: 3px; }
+.note { background: var(--warn-bg); padding: 10px 14px; border-radius: 6px; font-size: 14px; }
+@media (max-width: 760px) {
+  .find { grid-template-columns: minmax(0, 1fr); }
+  .gallery { grid-template-columns: minmax(0, 1fr); }
+}
+</style>
+<main>
+  <h1>İlk 30 hafta playtesti</h1>
+  <p class="lead">B2B, ERP, kurucu tek başına. Yeni bir koşu menüden açıldı ve oyuncu gibi oynandı: sprint planı, işe alım, satış
+  görüşmeleri, gelen her kâğıda düşünülerek cevap. Build <code>b2639465</code>, dizüstü, Godot MCP ile. 30. haftaya 66 dakikada
+  varıldı. Aşağıdaki bulgular ayrıca kodda doğrulandı: <span class="tag bug">hata</span> kodun ya da ekrandaki metnin kendi
+  söylediğini yapmadığı yer, <span class="tag design">tasarım</span> kodun bilerek yaptığı ama oyuncunun takıldığı yer.
+  <span class="op">[GÖRÜŞ]</span> oynayanın izlenimi.</p>
+
+  <div class="stats">
+    <div><b>H30</b><span>Temmuz 2012</span></div>
+    <div><b>$26.199</b><span>kasa</span></div>
+    <div><b>$5.173</b><span>MRR</span></div>
+    <div><b>13 ay</b><span>runway</span></div>
+    <div><b>4</b><span>müşteri, 0 kayıp</span></div>
+    <div><b>3</b><span>kişi (kurucu dahil)</span></div>
+    <div><b>v1.9</b><span>10 sürüm</span></div>
+    <div><b>0</b><span>ERROR satırı</span></div>
+  </div>
+
+  <h2>Erdem'in bilmesi gerekenler</h2>
+  <ol class="finds">
+    <li class="find">
+      <div>
+        <h3><span class="tag bug">hata</span>Çeyrek bülteni cevaplanamadı</h3>
+        <p>H14'te geldi. H15'te "Bu hafta son" yazan ve Cevapla'sı açık kâğıda basınca "Bu kâğıdın konusu kalmadı" çıktı, kâğıt
+        silindi ve koşu boyunca bir daha gelmez. Kartın koşulu yalnız çeyreğin ilk haftasında doğru, ömrü 2 hafta; açarken koşul
+        yeniden okunuyor.</p>
+        <p class="ev"><code>quarterly_bulletin.json:43-45, :85</code> · <code>engine.gd:766-780</code> · <code>mail_pane.gd:540-542</code></p>
+      </div>
+      <figure><img src="kareler/11_h15_kagidin_konusu_kalmadi_BUG.webp" alt="Olaylar kutusu, altta 'Bu kâğıdın konusu kalmadı' bildirimi" width="1920" height="1200" loading="lazy"><figcaption>H15: bildirim altta, bülten listede yok.</figcaption></figure>
+    </li>
+    <li class="find">
+      <div>
+        <h3><span class="tag design">tasarım</span>H19–H25 sprintleri neredeyse boş koştu</h3>
+        <p>Hız 11/36, 9/36, 10/38. Hatların sonraki kademeleri kapanınca sprint listesinde yalnız görüşme ve düzeltme kalıyor; yeni
+        kart Ar-Ge'den açılıyor ama plan ekranı Ar-Ge'yi göstermiyor (KR7: kilitler sprint ekranında görünmez). Ar-Ge'nin "1"
+        rozeti H7'den H25'e durdu; maaşı ödenen geliştirici yedi hafta çoğunlukla boştu.</p>
+        <p class="ev"><code>product_model.gd:243</code> · <span class="op">[GÖRÜŞ]</span> Oyunun en uzun "beklemek" hissi buradan geldi.</p>
+      </div>
+      <figure><img src="kareler/16_h21_sprint12_kapasite_bos.webp" alt="Sprint 12 planı, kapasitenin çoğu boş" width="960" height="600" loading="lazy"><figcaption>H21: Sprint 12, kapasite boş.</figcaption></figure>
+    </li>
+    <li class="find nopic">
+      <div>
+        <h3><span class="tag data">veri</span>Kâğıtlar arası sessizlik ve kimden geldikleri</h3>
+        <p>İlk 5 hafta karar yok; gerçek seçimli kâğıtlar arasındaki en uzun ara H22→H29 (7 hafta). Sessiz havuz uyarısı 11 kez
+        geldi, art arda boş dönüş 13'e çıktı ve sayaç hiç sıfırlanmadı. İlk 12 haftanın 8 kartının 8'i Kurucu ya da Frank'ten;
+        müşteri ve çalışan sesi H16'dan sonra başlıyor. Ayrıntı aşağıda.</p>
+        <p class="ev"><code>engine.gd:397-404</code> (sessiz havuz, §13.6)</p>
+      </div>
+    </li>
+    <li class="find nopic">
+      <div>
+        <h3><span class="tag design">tasarım</span>Arda'nın sprint kâğıdı görülmeden doldu</h3>
+        <p><code>product.sprint_dev_backfill</code> H29 09:00'da masaya geldi, sprintin kapandığı H30 00:00'da süresi doldu ve
+        bedeli (1 hata) indi. Oyuncu kâğıdı görmedi; yalnız haber bandında "Cevap gelmedi, eski kayıtlar boş kaldı" geçti. Bütün
+        sprint kâğıtları bir haftalık ve bir haftalık kâğıda son uyarı yok.</p>
+        <p class="ev"><code>sprint_dev_backfill.json:121-128</code> · <code>papers.gd:85-86</code></p>
+      </div>
+    </li>
+    <li class="find">
+      <div>
+        <h3><span class="tag bug">hata</span>"Zor modda açılır" sözü tutmuyor</h3>
+        <p>Frank'in teklifinde "Reddet" kilitli ve "Zor modda açılır" diyor. Kilidin okuduğu bayrağı yazan kod yok; onboarding'deki
+        Zor yalnız başlangıç kasasını değiştiriyor, Zor seçilse de Reddet açılmaz. Frank'in üç "Karar" kartının üçü de tek seçilebilir şıklı (tasarım).</p>
+        <p class="ev"><code>seams_ported.gd:105-107</code> · <code>game_state.gd:116-117</code></p>
+      </div>
+      <figure><img src="kareler/21_h25_frankin_teklifi_reddet_kilitli.webp" alt="Frank'in teklifi, Reddet şıkkı kilitli" width="1920" height="1200" loading="lazy"><figcaption>H25: Frank'in teklifi.</figcaption></figure>
+    </li>
+    <li class="find nopic">
+      <div>
+        <h3><span class="tag bug">hata</span>Satış ekranında iki tutarsızlık</h3>
+        <p>Haftanın başında 00:00–07:59 arası satış paneli "Mesai bitiyor. Bu hafta yeni bir masaya oturulmaz." diyor ve görüşmeyi
+        kapatıyor; gece ile mesai sonu aynı anahtara düşüyor. Müşteri kartı "Müşteri temsilcisi: atanmadı" yazarken atama listesi
+        "Kurucu … zaten sorumlu" diyor; ikisi aynı durumu farklı adlandırıyor.</p>
+        <p class="ev"><code>sales_ledger.gd:327-328</code> · <code>work_hours_system.gd:57-59</code> · <code>sales_tab.gd:661-666</code></p>
+      </div>
+    </li>
+    <li class="find">
+      <div>
+        <h3><span class="tag bug">hata</span>"…" ile kesilen metin</h3>
+        <p>Üst barın SIRADAKİ yuvası "Çeyrek bülteni: i… · bu hafta son" (sabit 208 px yuva); Ekip &gt; Kadro'nun Görev sütunu
+        "Defterix Fatura v1.9 üzer…". 28 Ekim kuralına ("hiçbir metin … ile kesilmez") aykırı.</p>
+        <p class="ev"><code>top_bar.gd</code> <code>_fit_next</code> · <code>hr_ledger._text</code> (<code>clip_text</code>, <code>OVERRUN_TRIM_ELLIPSIS</code>)</p>
+      </div>
+      <figure><img src="kareler/10_h15_ceyrek_bulteni_kagit.webp" alt="Çeyrek bülteni kâğıdı, üst barda kesik SIRADAKİ satırı" width="1920" height="1200" loading="lazy"><figcaption>H15: SIRADAKİ satırı kesik.</figcaption></figure>
+    </li>
+    <li class="find nopic">
+      <div>
+        <h3><span class="tag design">tasarım</span>Yeni işe alınan hemen izne çıkıyor</h3>
+        <p>Arda H18'de alındı, H23'te; Selin H27'de alındı, H28'de iki haftalık yaz iznine çıktı. Kart yok, yalnız haber bandı.
+        İzin haftası işe alım sırasından türüyor, yeni gelene muafiyet yok.</p>
+        <p class="ev"><code>hr_constants.gd:1089-1090</code> · <code>character_registry.gd:445-447</code></p>
+      </div>
+    </li>
+  </ol>
+  <p><span class="op">[GÖRÜŞ]</span> En iyi okunan kâğıtlar H30'un iki müşteri kâğıdıydı ("Sahibi değişti", "Muhasebecileri"): üç
+  şıkkın üçü gerçek ödünleşim, Türkçeleri doğal, çipler oyunda birebir indi.</p>
+
+  <h2>Kâğıtlar hafta hafta</h2>
+  <div class="weeks" aria-label="1'den 30'a hafta şeridi">
+    <div class="wk">1</div><div class="wk">2</div><div class="wk">3</div><div class="wk">4</div><div class="wk">5</div>
+    <div class="wk choice">6</div><div class="wk">7</div><div class="wk single">8</div><div class="wk">9</div><div class="wk">10</div>
+    <div class="wk single">11</div><div class="wk choice">12</div><div class="wk">13</div><div class="wk lost">14</div><div class="wk">15</div>
+    <div class="wk choice">16</div><div class="wk">17</div><div class="wk choice">18</div><div class="wk">19</div><div class="wk choice">20</div>
+    <div class="wk">21</div><div class="wk choice">22</div><div class="wk">23</div><div class="wk">24</div><div class="wk single">25</div>
+    <div class="wk">26</div><div class="wk">27</div><div class="wk">28</div><div class="wk choice">29</div><div class="wk choice">30</div>
+  </div>
+  <p class="legend"><span><i style="background: var(--accent)"></i>seçimli kâğıt geldi</span><span><i style="background: var(--warn-bg)"></i>tek şıklı "Karar"</span><span><i style="background: var(--bug-bg)"></i>gelen kâğıt cevaplanamadı (H14 bülten; H29'da gelen sprint kâğıdı da görülmedi)</span></p>
+  <p>Gönderenler (14 karar kartı): Kurucu 3 (H6, 12, 20) · Frank 3 (H8, 11, 25) · Sektör Telgrafı 1 (H14) · Zeynep Güneş 2
+  (H16, 22) · Bilge Polat 2 (H18, 29) · Arda Güneş 2 (H22, 29) · Destek 1 (H30). H22'de iki kâğıt aynı hafta geldi.</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th>H</th><th>Kart</th><th>Gönderen</th><th>Seçim</th><th>Neden (oyuncu)</th></tr></thead>
+    <tbody>
+      <tr><td class="num">7</td><td><code>founder.domain_name</code></td><td>Kurucu</td><td>Uzun adresle devam et</td><td>Kasa $10K, gelir 0; kısa adres $900'a değmez</td></tr>
+      <tr><td class="num">8</td><td><code>customer.frank_intro</code></td><td>Frank</td><td>Satışa git (tek şık)</td><td></td></tr>
+      <tr><td class="num">11</td><td><code>funding.gate_traction</code></td><td>Frank</td><td>Traction'a geç (tek şık)</td><td></td></tr>
+      <tr><td class="num">12</td><td><code>product.sprint_solo_server_bill</code></td><td>Kurucu</td><td>Kodu düzelt</td><td>Tek başına kapasite nakitten değerli</td></tr>
+      <tr><td class="num">15</td><td><code>world.quarterly_bulletin</code></td><td>Sektör Telgrafı</td><td><b>düştü</b></td><td>Madde 1</td></tr>
+      <tr><td class="num">16</td><td><code>product.incident_regression</code></td><td>Zeynep Güneş</td><td>Kendin düzelt</td><td>Sızıntı yeni müşteride; "sprinti durdur"un bedeli yazmıyor</td></tr>
+      <tr><td class="num">18</td><td><code>customer.expansion</code></td><td>Bilge Polat</td><td>Koltukları ekle</td><td>Bedelsiz gelir</td></tr>
+      <tr><td class="num">21</td><td><code>rival.copycat</code></td><td>Kurucu</td><td>Onların ilk müşterilerini ara</td><td>$3K ihtarname runway'i ~2 ay kısaltır</td></tr>
+      <tr><td class="num">22</td><td><code>customer.expansion</code></td><td>Zeynep Güneş</td><td>Koltukları ekle</td><td>Aynı kâğıt, aynı cevap</td></tr>
+      <tr><td class="num">22</td><td><code>product.incident_regression</code></td><td>Arda Güneş</td><td>Sprinti durdur, şimdi düzelt</td><td>Sprint neredeyse boş, durmanın kaybı küçük</td></tr>
+      <tr><td class="num">25</td><td><code>funding.frank_cheque</code></td><td>Frank</td><td>Kabul (Reddet kilitli)</td><td>Madde 5</td></tr>
+      <tr><td class="num">30</td><td><code>product.sprint_dev_backfill</code></td><td>Arda Güneş</td><td><b>süresi doldu, görülmedi</b></td><td>Madde 4</td></tr>
+      <tr><td class="num">30</td><td><code>customer.new_owner</code></td><td>Bilge Polat</td><td>Avukat parasını fiyata yansıt</td><td>$2,5K tek sefer, +$400/ay ile ~6 ayda döner</td></tr>
+      <tr><td class="num">30</td><td><code>customer.chargeback</code></td><td>Destek</td><td>Bırak, para onda kalsın</td><td>$1,8K tek sefer; öbür şıklar daha pahalı ya da churn riski</td></tr>
+    </tbody>
+  </table></div>
+  <p class="legend">Hafta, kaydın olay geçmişindeki gündür (cevaplandığı hafta). Notlar ve teşekkür kartları tabloda yok.</p>
+
+  <h2>Takılınan başka yerler</h2>
+  <ul class="plain">
+    <li><span class="tag design">tasarım</span>"İmzalarsanız … sonraki sprintimize yazarım" sonraki sprint boşken "Bir sonraki sprintte buna yer yok" ile kilitliydi: istenen kademenin tam eforu (15/25/40) tek kurucunun boş puanını aşıyor. <code>sales_meeting_system.gd:391-394</code></li>
+    <li><span class="tag design">tasarım</span>"Ürün kolay öğreniliyor" H13 ve H16'da açık, H22 ve H24'te kapalıydı: kilit ürüne değil masadaki adaya bağlı. <code>sales_probes.gd:63-64</code></li>
+    <li><span class="tag design">tasarım</span>Teklifteki "Kapasite 79/50" sunucu doluluğu; aşımda ton ya da uyarı yok. <code>negotiation_system.gd:263-267</code></li>
+    <li><span class="tag design">tasarım</span>Sığmayan kartın "+"ı kapalı, nedeni yalnız ipucunda; ekranda "2 efor daha sığar" yazarken 25'lik kart eklenemiyor. <code>area_panel.gd:274-286</code></li>
+    <li><span class="tag design">tasarım</span>H12'de cevapsız kâğıdın kartı iki "DEVREDEN" satırı ve Test "5/0" olarak göründü: kâğıt beklerken karta kimse atanmıyor. <code>sprint_system.gd:1361</code></li>
+    <li><span class="tag design">tasarım</span>"Sprinti durdur"un bedel çipi yok: sprintte yer varken kayan kart olmuyor, çip yalnız kayan kart varsa çıkıyor. <code>chips.gd:25-26</code></li>
+    <li><span class="tag design">tasarım</span>Kâğıt açıkken "Cevap bekliyor" serif görünüyor: yedek font değil, varyasyonu serif tanımlı. <code>office_hud.gd:51</code></li>
+    <li><span class="tag design">tasarım</span>Q1 raporu "Kasa $10K → $11K (+$672)": uçlar bine yuvarlanıyor, fark tam yazılıyor. <span class="op">[GÖRÜŞ]</span> Okurken çelişkili duruyor.</li>
+    <li>"Sprinti başlat", "Cevapla" ve sol menü bazen ilk tıklamaya tepki vermedi; kodda çift giriş isteyen yol yok, MCP'nin tıklamasından olabilir (belirsiz).</li>
+    <li>Faz adları "BOOTSTRAP", "TRACTION" ve Frank'in unvanı "Operating Partner" İngilizce. Ham anahtar görülmedi.</li>
+  </ul>
+
+  <h2>Kareler</h2>
+  <div class="gallery">
+    <figure><img src="kareler/03_h1_ilk_sprint_plani.webp" alt="İlk sprint planı" width="1920" height="1200" loading="lazy"><figcaption>H1: ilk sprint planı</figcaption></figure>
+    <figure><img src="kareler/06_h8_satis_gorusmesi_bakircay.webp" alt="Bakırçay ile satış görüşmesi" width="1920" height="1200" loading="lazy"><figcaption>H8: ilk satış görüşmesi</figcaption></figure>
+    <figure><img src="kareler/09_h12_sprint_devreden_onizleme.webp" alt="Cevapsız kâğıt beklerken sprint planı" width="1920" height="1200" loading="lazy"><figcaption>H12: DEVREDEN satırları</figcaption></figure>
+    <figure><img src="kareler/13_h16_safir_zar_ipucu.webp" alt="Safir görüşmesi, zar ipucu" width="1920" height="1200" loading="lazy"><figcaption>H16: görüşmede zar ipucu</figcaption></figure>
+    <figure><img src="kareler/17_h22_v17_bir_sey_bozuldu_arda.webp" alt="v1.7 sonrası bozulma kâğıdı" width="1920" height="1200" loading="lazy"><figcaption>H22: "Sprinti durdur" çipsiz</figcaption></figure>
+    <figure><img src="kareler/19_h24_sprintte_yer_yok_ama_sprint_bos.webp" alt="Satış görüşmesinde kilitli iki cevap" width="1920" height="1200" loading="lazy"><figcaption>H24: kilitli iki cevap</figcaption></figure>
+    <figure><img src="kareler/20_h25_arge_agaci_veri_modeli.webp" alt="Ar-Ge ağacı" width="1920" height="1200" loading="lazy"><figcaption>H25: Ar-Ge bulundu</figcaption></figure>
+    <figure><img src="kareler/23_h30_sahibi_degisti_kagit.webp" alt="Sahibi değişti kâğıdı" width="1920" height="1200" loading="lazy"><figcaption>H30: "Sahibi değişti"</figcaption></figure>
+    <figure><img src="kareler/24_h30_muhasebecileri_kagit.webp" alt="Muhasebecileri kâğıdı" width="1920" height="1200" loading="lazy"><figcaption>H30: "Muhasebecileri"</figcaption></figure>
+  </div>
+
+  <p class="note">Tam notlar (her kartın şıkları, çipleri ve Türkçe notu), kod doğrulaması ve H30 kaydı repoda:
+  <code>docs/tasks/dizustu/raporlar/playtest_2026-10-28/</code> (<code>RAPOR.md</code>, <code>notlar.md</code>, <code>dogrulama.json</code>; H30 kaydı kayboldu). Kareler 1920×1200, oyunun bu ekrandaki pencereli varsayılanı.</p>
+</main>
+
+</body></html>

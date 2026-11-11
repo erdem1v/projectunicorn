@@ -1,0 +1,18 @@
+Ürün arayüzü U7: Ürün penceresinde metin kesilmez, sarar ve satır büyür (E2)
+
+Oyuncu ne görür:
+- Panoda kart adı artık iki satırdan sonra "…" ile kesilmez: kelime sınırında sarar, satır adın boyunca büyür (zaman ekseni satırda ortalı, alttakiler kayar).
+- Düzeltme kartının satırı tam hata metnini yazar, en büyük hesap dahil ("5 hata · 2 hesap · 24 kullanıcı · en büyüğü Orion Fabrika (12 kullanıcı)"), sarar; sol sütundaki aday düzeltme kartı da "{n} hata" yerine aynı tam metni yazar.
+- Sol sütunda ileri bir sprinte planlı adayın damgası "S3" değil "Sprint 3".
+- Sonraki sprint kutusunda (DEVREDEN, KARTLAR) uzun kart adı kesilmez; önden çalışanların yüz hücresi ilk yüzü kırpmaz ve sığmayanların "+{n}"ini her zaman gösterir.
+- ÇEYREK sekmesinde mini kartın adı kendi satırında, kelime sınırında sarar ve kart uzar (EN'de "Spreadshe / et Import", "Basic Bookkeepin" bitti); sütunlar ve "Hepsini onayla" içerik pencereden uzunsa dikey kayar; bayrak çipi sütun genişliğinde sarar; yeniden kurulumda iki kaydırma da yerinde kalır.
+- Sürüm notunda orta sütun içerik uzunsa dikey kayar; başlık ve alt şerit sabit kalır.
+Bilerek dokunulmayanlar (yardımcı yönetmenin 2026-10-28 kararları): modülün kısa adı (UM'de tasarlanmış ad); dar aşama çubuğunda düşen ikon/sayı ve yüzler ile eksen sonundaki sprint dışı pay (Erdem'e kareyle); "+{n}" biçimleri (Erdem'e kareyle).
+
+Teknik: kart adı BoardRow'un _wraps/_fit mekanizmasına girer; ProductModel satırın fix_text'i bugs_text'in tam hâlidir (fix_full ve bugs_text'in with_top parametresi silindi); FaceCell yalnız yüzlü hücrede en az bir yüz (ve "+{n}") genişliğindedir; PRODUCT_STAMP silindi (aday damgası PRODUCT_TAG_SPRINT okur). Düz ipuçları sarmaz ama ekranda içeri itilir; ölçülen en uzun gerçek ipucu 778 px, kesilmiyor.
+
+Dayanak: Erdem'in 2026-10-28 kararı E2 (PRD_URUN_SPRINT_ARAYUZU), PRD §13 U7, yardımcı yönetmenin D4 kararları (2026-10-28).
+
+TR/EN onay bekliyor (anahtarlar değişmedi, ekranda yeni yerde okunuyor): PRODUCT_TAG_SPRINT (aday damgası), PRODUCT_FX_TOP (pano ve aday düzeltme satırında).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

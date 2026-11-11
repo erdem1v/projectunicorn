@@ -1,0 +1,11 @@
+Ürün arayüzü UM1: gizli özellik hattının adı "Yardım Merkezi" / "Help Center"
+
+Oyuncu ne görür: Test Otomasyonu araştırması bitince açılan gizli hat artık "Kendi Kendine Servis" değil "Yardım Merkezi" (EN "Help Center") adını taşır; hattı açan Ar-Ge düğümü zaten bu adı taşıyordu. Keşif notunun cümlesi de yeni adla yazıldı: "Yardım Merkezi adında yeni bir özellik hattı." (EN "A new feature line called Help Center."). Ad, hattın düzeltme kartında ("Yardım Merkezi düzeltmesi"), hata ve destek raporu satırlarında, Ar-Ge notlarında, rakip ve basın haberlerinde aynı anahtardan okunur; yer tutucuyla adı alan 26 anahtarın TR ve EN cümlesi yeni adla ek uyumu bozulmadan okunuyor.
+
+Yalnız iki CSV değeri değişti (bayt aralığıyla; anahtar değişmedi): PROD_LINE_HIDDEN_SELF_SERVE, PROD_RND_NODE_TEST_AUTOMATION_UNLOCK. UM'nin öbür satırları ve üç sorusu Erdem'de.
+
+Dayanak: PRD_URUN_SPRINT_ARAYUZU "UM: modül ve hat adları" ve Erdem'in 2026-10-28 kararı E7.
+
+TR/EN onay bekliyor: PROD_LINE_HIDDEN_SELF_SERVE, PROD_RND_NODE_TEST_AUTOMATION_UNLOCK.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

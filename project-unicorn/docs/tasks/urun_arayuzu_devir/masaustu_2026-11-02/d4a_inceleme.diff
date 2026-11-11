@@ -1,0 +1,989 @@
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -195,8 +195,8 @@
+   geri aldırır, güvenlik sertifikası karşılamaz; Kurumsal'dan inilmez (`B2BSalesSystem`, `InfraSystem.set_provider`). B2C'de kitle her
+   oyun saatinde iki yönlü değişir; MRR ödeyen kullanıcı × fiyat olarak saatlik türetilir.
+   Kitlenin büyüme ve erime terimi, B2C memnuniyetinin hedefi ve fiyat önerisi ürünün kitleye uyumunu okur
+-  (`ProductQuality`, kitle bağlamı; `SalesSystem.b2c_quality`): kitle büyüdükçe beklenti yükselir. Ürün sayfasının sözcüğü ve
+-  cümlesi B2C'de kitlenin yıldızı ile 2★'ın büyüğünü okur (küçük kitlede de 2★ satırı); ekonomi sayfanın referansını okumaz.
++  (`ProductQuality`, kitle bağlamı; `SalesSystem.b2c_quality`): kitle büyüdükçe beklenti yükselir. Ürün sayfasının sözcüğü
++  B2C'de kitlenin yıldızı ile 2★'ın büyüğünü okur (küçük kitlede de 2★ satırı); ekonomi sayfanın referansını okumaz.
+ - Kayıt: JSON; `SaveManager.SCHEMA_VERSION` 19, `MIN_LOADABLE_VERSION` 10. `SaveCodec` GameState değişkenlerini ve
+   modellerin `@export` alanlarını kendisi bulur; eski kayıtta varsayılan göç yerine geçtiği için yeni alan anlamlı
+   varsayılan taşır. Tarih kayıtta saklanmaz, `GameState.day`'den türer; yıl tutan tek alan `Character.leave_taken_year`'dır ve
+@@ -357,13 +357,13 @@
+   Görüşme paneli: `--meeting-shot=<tür>` (satış `probe|locked|won|lost|handoff|economy|frank|emph_trust|emph_integrations|emph_onboarding|weak_core|die|returning`,
+   VC `open|sorgu|sheet|callback|ret|seed|long`; `open:tip` ve `sorgu:tip` zar ipucunu açar), `--negotiation-shot=<open|countered|insult|last|confirm>`; en dar dok
+   `--shot-scale=1.25`; davet `--invite-shot=<ring|card|vc|postpone|postpone_vc|held|lapse|lapse_vc>`; term sheet masası
+-  kabuğun içinde `--vc-shot=<masa türü>:shell`. Ürün sekmesi: `--product-shot=<c1..c5|cards|flow|edge:<ad>>` debug
+-  fikstürüyle (`scripts/debug/product_fixtures.gd`; `edge:` adları `sistemler/02_urun_sprint.md`'de), `--product-shot=live:<tür>` sprint
+-  motoruyla kurulan koşuda
+-  (`pick`, `pick_named`, `pick_relang`, `plan`, `active`, `decision_paper`, `b2c_mvp`, `b2c_live`, `b2c_goal`, `b2b_mvp`, `b2b_mature`, `b2b_quarter`, `b2b_requests`,
+-  `gate`, `delegate`, `delegate_rehire`, `rnd`, `solo15`, `solo15_tip`, `solo12_active`, `overview_pre`, `server_80`, `server_94`,
+-  `server_104`, `server_growth`, `server_auto`, `server_tier`, `server_final`, `server_clause`, `server_lock`, `server_b2c`;
+-  kurulumları ve ikinci, üçüncü kareleri `sistemler/02_urun_sprint.md`'de). Satış'ın B2C sayfası `--sales-shot=b2c_live` (`live:b2c_live`'ın dünyası, `SHOT|b2c` satırı), MVP öncesi
++  kabuğun içinde `--vc-shot=<masa türü>:shell`. Ürün sekmesi: `--product-shot=live:<tür>`, sprint
++  motoruyla kurulan koşuda çeker (`live:` olmayan tür hata basıp 1 ile çıkar): `pick`, `pick_named`, `pick_relang`, `plan`, `active`, `decision_paper`,
++  `b2c_mvp`, `b2c_live`, `b2c_goal`, `b2b_mvp`, `b2b_mature`, `b2b_quarter`, `b2b_requests`, `gate`, `delegate`, `delegate_rehire`, `rnd`, `solo15`,
++  `solo15_tip`, `solo12_active`, `overview_pre`, `server_80`, `server_94`, `server_104`, `server_growth`, `server_auto`, `server_tier`, `server_final`,
++  `server_clause`, `server_lock`, `server_b2c` ve Sprint ekranının kare dünyaları `a4_*` (`a4_solo`, `a4_six_hover`, `a4_eleven`, `a4_fifty`, `a4_run_w2` …;
++  her biri `PRODUCTSHOT` satırı basar; tür listesi, kurulumları ve ikinci, üçüncü kareleri `sistemler/02_urun_sprint.md`'de).
++  Satış'ın B2C sayfası `--sales-shot=b2c_live` (`live:b2c_live`'ın dünyası, `SHOT|b2c` satırı), MVP öncesi
+   B2B boş hâli `--sales-shot=b2b_pre`, kayıptan dönen lead'lerin kapısı `--sales-shot=returning`.
+   Kişilerin bir günü gerçek saatle: `--office-crowd-probe=<ofis>:<kişi>:<hız>` (sıçrama,
+   duraklatmada kıpırtı, takılma, çakışma, kapı ve kesme, kuyruk, toplantı, gece kapısı; `CROWD` satırları ve
+--- a/data/product/sprint.json
++++ b/data/product/sprint.json
+@@ -42,7 +42,6 @@
+   "rival_bump": 0.5,
+   "rival_bump_max": 1.0,
+   "rival_window_weeks": 6,
+-  "research_sentence_weeks": 2,
+   "polish_step": 0.5,
+   "polish_max": 1.0,
+   "research_users": 5,
+--- a/docs/kod_haritasi/sistemler/02_urun_sprint.md
++++ b/docs/kod_haritasi/sistemler/02_urun_sprint.md
+@@ -38,7 +38,7 @@
+ - `data/techtree/rnd_tree.json` (57): düğüm başına efor, nakit, alan, yıldız, ebeveyn, çapraz koşul, etki; 4 gizli hat
+ - Yakın, kapsam dışı (yalnız yol): `scripts/tabs/product_tab.gd` (347), `scripts/tabs/product/*.gd` (13 dosya, en büyüğü `product_model.gd` 1142), `scripts/tabs/rnd_tab.gd` (273), `scripts/tabs/rnd/*.gd` (5 dosya)
+ - Yakın: `scripts/ui/components/{research_bar,research_bar_model,build_bar,build_bar_model,build_hud_panel}.gd`, `scripts/events/seams/{seams_product,seams_incident}.gd`, `scripts/systems/support_system.gd` (424)
+-- Yakın: `scripts/debug/product_fixtures.gd` (699, `--product-shot` fikstürü), `scripts/debug/sprint_probe.gd` (425, `--sprint-probe`); çalışma günlüğü tohumları `scripts/main/main.gd` `_seed_product_live` (3839)
++- Yakın: `scripts/debug/sprint_probe.gd` (425, `--sprint-probe`); çalışma günlüğü tohumları `scripts/main/main.gd` `_seed_product_live` (4386)
+ 
+ ## Giriş noktaları
+ 
+@@ -261,10 +261,10 @@
+   ↳ `BUTTONS`, `_locked_rnd`; `SprintPanel`ın `Column` kaydırması, `_next`, `_way_out`, "Bu sprinti boş geçir" ve onay satırı, `UiTokens.D_SPRINT_COLUMNS`, `CardKeyText(+Idle)`, `SprintCard(+Hover)` varyasyonları
+   ↳ (`SprintCardPlanned` kalır: kayıt listesinin yeni yuvası okur);
+   ↳ anahtarlar `PRODUCT_SKIP_SPRINT`, `_SKIP_CONFIRM`, `_START_NEED_CARD`, `_PLAN_HOLD`, `_NEXT_RELEASE`, `_IN_WEEKS(_ONE)`, `_NEXT_EMPTY`, `_CARRIED`, `_PRIORITY`, `_PROMISED`, `_CARD_READY(_PCT)`,
+-  ↳ `PRODUCT_FX_HOLDS`, `_FX_ALERT_CLEARS`, `_FX_REQUEST`, `_FX_RESEARCH`, `_FX_PROMISE`; fikstürün `fix_long_name` ve `b2b_no_requests` edge'leri. `SprintCatalog.card_effect` smoke okuduğu için kalır.
++  ↳ `PRODUCT_FX_HOLDS`, `_FX_ALERT_CLEARS`, `_FX_REQUEST`, `_FX_RESEARCH`, `_FX_PROMISE`. `SprintCatalog.card_effect` smoke okuduğu için kalır.
+ - Kâğıt/karar/söz: `sprint_decision_blocks_progress`, `decision_one_per_sprint`, `paper_interrupt_order`, `paper_card_trim`, `paper_line_harden`, `promise_due_fires_when_late`, `promise_extend_once`, `promise_cut_test_escape`
+ - Acil durum/sunucu: `incident_gap_and_spread`, `incident_night_hold_resumes`, `incident_scale`, `incident_save_roundtrip`, `incident_gates`, `infra_capacity_moves_both_ways`, `auto_capacity_grows_only`, `capacity_step_immediate`, `infra_price_lock`
+-- Hat/kalite: `product_lines_catalog_loads`, `line_k3_locked_without_research`, `product_fit_table`, `product_quality_sector_table`, `product_line_profiles`, `product_area_row`
++- Hat/kalite: `product_lines_catalog_loads`, `line_k3_locked_without_research`, `product_fit_table`, `product_quality_sector_table`, `product_line_profiles`, `product_area_word`
+ - Ar-Ge: `research_node_map_binds`, `rnd_tree_loads_and_validates`, `research_freezes_and_resumes`, `research_abandon_keeps_progress`, `rnd_note_author_and_lines`
+ - Kayıt: `sprint_save_roundtrip`, `save_v14_build_becomes_sprint_plan`, `save_v19_running_sprint_continues`, `save_v10_product_state`, `save_retired_product_flags`
+ - Harness: `--sprint-probe=hours=<h>:cards=<1|2>:ticks=<t>[:market=…][:incident=<tür>@<tik>][:promise=1][:team=<n>]` (`main.gd:258`, `sprint_probe.gd:3`) basar `SPRINTPROBE` satırları
+@@ -292,15 +292,10 @@
+   ↳ olayla değişen girdide `cause=<olay kimliği>`, `cause=team`, yalnız kurucunun payı değiştiyse `cause=founder_meeting`, başlatma düzeltme kartının boyutunu hata deposundan yeniden okuyup planı değiştirdiyse `cause=bugs`;
+   ↳ kapısı kapanıp başlatmada sonraki sütuna geçen kart için başlatılır başlatılmaz tek `CLOSE` basılır ("puan almaz" doğrulanır). Kapanıştaki `CLOSE` satırları sonuçtan önce `out=<tasarım>/<geliştirme>/<test>|streak=<…>` taşır:
+   ↳ sürüm kaydının `overflow`'u, sprintin bilgisi olduğu için sprintin her kartının satırında aynıdır, karşılaştırılmaz; `mvp_eta` yalnız `PRED`'in son alanında basılır, gerçek MVP tiki `MVP` satırındadır; adsız uyuşmazlıkta çıkış 1
+-- Harness: `--product-shot=<c1..c5|flow|edge:<ad>|live:<tür>>` (`main.gd:257`), `--rnd-shot=<tür>` (:264), `--inbox-shot=rnd_note` (:252), `--event-shot=<sprint kâğıdı>`
+-- `--product-shot=<c1..c5|flow|edge:<ad>>` debug fikstürüyle (`scripts/debug/product_fixtures.gd`; kaynak sol sütuna `modules` ve `requests` vermez: sol sütun kareleri `live:a4_*` türlerindendir); `flow` başlat,
+-  ↳ ilerlet ve sonraki plan karelerini sırayla çeker; bu sprintin kartları fikstürde yalnız Kapasite'nin yükünü kurar, pano çizilmez (U7'de fikstür emekli olur); `edge:` adları: `quarter_no_pm`, `history`, `history_empty`,
+-  ↳ `goal_menu` (hedef menüsü açık), `approved` (çeyrekte onaylanmış sütun), `cap_zero`,
+-  ↳ `team_none` (kadro var ama sprint ekibi boş: kartlar planda, başlatma kapalı, gerekçenin yanında Ekip'e git); `over_100`, `over_125`, `empty_start`, `no_release` (MVP öncesi sürüm notu),
+-  ↳ `gate` (MVP kapısı; fikstürün `publish`'i v1.0 notuna çevirir), `mvp`,
+-  ↳ `release_fix` (sürüm notunda "Kesinti düzeltmesi · 9 → 0 açık hata" ve "6 → 1");
+-  ↳ `release_reviews` (B2C güncellemesinin sürüm notunda "Sürüm sonrası öne çıkan yorumlar": adlı yeni özellik, düzeltme ve güncellemeyi suçlayan olumsuz yorum, kaynaklarıyla).
+-- `--product-shot=live:<tür>` sprint motoruyla kurulan koşuda (`main.gd` `_seed_product_live` `:3902`): `pick`, `pick_named`, `pick_relang`, `plan`, `active`, `decision_paper`, `b2c_mvp`, `b2c_live`, `b2c_goal`, `b2b_mvp`, `b2b_mature`,
++- Harness: `--product-shot=live:<tür>` (`main.gd:258`), `--rnd-shot=<tür>` (:265), `--inbox-shot=rnd_note` (:253), `--event-shot=<sprint kâğıdı>`
++- Ürün karelerinin hepsi `live:<tür>` dünyalarındandır (`live:` olmayan tür hata basıp 1 ile çıkar); sol sütun kareleri `live:a4_*` türlerindendir.
++  ↳ Kare dünyası olmayan durumlar: sürüm notunda düzeltme ve yorum satırları, MVP öncesi boş sürüm notu, sürümsüz Geçmiş, ekipsiz boş plan, ÇEYREK'te onaylı sütun ve açık hedef menüsü.
++- `--product-shot=live:<tür>` sprint motoruyla kurulan koşuda (`main.gd` `_seed_product_live` `:4386`): `pick`, `pick_named`, `pick_relang`, `plan`, `active`, `decision_paper`, `b2c_mvp`, `b2c_live`, `b2c_goal`, `b2b_mvp`, `b2b_mature`,
+   ↳ `b2b_quarter`, `b2b_requests`, `gate`, `delegate`, `delegate_rehire`, `rnd`, `solo15`, `solo15_tip`, `solo12_active`, `overview_pre`, `server_*`, `a4_*`; `pick*` ürünü türsüz bırakır (tür seçici); `pick_named` B2C, tür ve adla;
+   ↳ `pick_relang` aynısı, sonra koşu İngilizceye geçer ve yeniden kurulan seçici seçimi korur (`<kök>_rebuilt`). Tek kurucunun dünyaları (09:00'dan yalnız kurucu):
+   ↳ `solo15` ve `solo15_tip` 15 saatte Sprint 1 planı (`solo15` liderin planı uygulanmış; `solo15_tip` yalnız önerilmiş), `solo12_active` 12 saatte liderin iki kartı koşarken (30/28, biri Sırada).
+@@ -310,15 +305,15 @@
+   ↳ `gate` MVP kapısı ve Yayınla sonrası v1.0 notu (`<kök>_publish`); `rnd` kurucu Ar-Ge'deyken planlama ve Ar-Ge'ye git sonrası düğümü seçili Ar-Ge (`<kök>_go`); `b2c_mvp` yayınlanan CANLI v1.0 sürüm notu; `b2c_live` aynısı,
+   ↳ dört hafta oynanır (kitle saat saat akar, her sprint kendiliğinden başlar), Geçmiş açık, `SHOT|b2c users=<n> paying=<n>` ekrandaki sayılara eşit; `b2c_goal` yayından sonraki planlama: lider önerisi sunulmuş,
+   ↳ öneri hedefsiz uygulanmış (`<kök>_lead`), liderin kartları geri alınıp hedef Güven seçilince yeniden uygulanmış (`<kök>_trust`); `delegate` devirle PM'in başlattığı Sprint 2; `delegate_rehire` o PM yayından sonra ayrılmış,
+-  ↳ yerine yeni PM gelmiş: devret anahtarı kapalı, Sprint 2'nin planlaması oyuncuyu bekler; `b2b_mvp` ERP'nin v1.0 notu (Çekirdek Zayıf okunur, cümlesi 1★ şirketlere yettiğini söyler);
+-  ↳ `b2b_mature` bütün hatları ikinci kademeye çıkarıp sonraki planlamayı açar (her alan 3★ cümlesini okur); `b2b_quarter` `delegate`'in ERP'deki hâli,
++  ↳ yerine yeni PM gelmiş: devret anahtarı kapalı, Sprint 2'nin planlaması oyuncuyu bekler; `b2b_mvp` ERP'nin v1.0 notu (Çekirdek Zayıf okunur);
++  ↳ `b2b_mature` bütün hatları ikinci kademeye çıkarıp sonraki planlamayı açar (her hat ikinci kademede); `b2b_quarter` `delegate`'in ERP'deki hâli,
+   ↳ ÇEYREK açık (MVP'den hemen sonra PM'in hedef şeridi: sıradaki yıldızın beklentisine oran, boş alanlarda 0 kare); `b2b_requests` iki hesap imzalanır, bir sprint daha oynanır, sonraki planlama talep kartlarını taşır;
+   ↳ `overview_pre` v1.0 öncesi planlama, imleç kilitli GENEL BAKIŞ sekmesinde (`<kök>_tip`); `server_*` v1.0'dan sonra ERP'nin GENEL BAKIŞ'ı (`_seed_server`: tek hesap, 20 birim, Standart): `server_80`, `server_94`, `server_104` yük %80,
+   ↳ %94, %104 (imleç Artır ya da Azalt'ta, `<kök>_tip`), `server_growth` büyüme satırı, `server_auto` anahtar açık ve son otomatik büyüme, `server_tier` Kurumsal önizlemesi açık (imleç Standart'ta),
+   ↳ `server_final` Kurumsal'dayken alt kademeler kilitli (imleç Ekonomik'te), `server_clause` tek hesap 3★ ve sözleşmesinde sunucu maddesi açık (bloğun altında "Kurumsal sunucu bekleyen 1 hesap" etiketi),
+   ↳ `server_lock` 10 haftalık sunucu sözleşmesi sürüyor (kademeler ve Azalt kapalı, ipucu sözleşmenin gerekçesi; imleç Azalt'ta), `server_b2c` not uygulaması,
+   ↳ 12.400 kullanıcı 13 birimde (%96)
+-- `live:a4_*` sprint ekranının kare dünyalarıdır (32 tür; `_seed_product_a4` `main.gd:4143`, tablo `_A4_WORLDS` `:4102`): kurucu tek başına ERP'yi v1.0'a oynar, kadro sonra işe alınır, hesaplar imzalanır, önceki sprintler oynanır;
++- `live:a4_*` sprint ekranının kare dünyalarıdır (32 tür; `_seed_product_a4` `main.gd:4577`, tablo `_A4_WORLDS` `:4536`): kurucu tek başına ERP'yi v1.0'a oynar, kadro sonra işe alınır, hesaplar imzalanır, önceki sprintler oynanır;
+   ↳ her tür kurulunca `PRODUCTSHOT|kind=|cards=|people=|row_gaps=|now=` basar; `row_gaps` zaman ekseninin bütün kart satırlarındaki boşluk sayısıdır (`SprintTimeline.row_gaps`, smoke'un Z3'üyle aynı işlev),
+   ↳ `now` koşan sprintte şimdiki an (sprint başından hafta, değilse 0);
+   ↳ plan kartları `SprintCatalog.card_need` ile ekibin kapasitesinin bir katına büyütülür (`load`: altı kişide 1,15, on bir kişide 1,25, on iki geliştiricide 1,3, on dört kartta 1,6),
+@@ -360,7 +355,7 @@
+   ↳ `discovery_design` (Tasarım Sistemi kimse yokken tamamlanır, kurucunun kendi keşfi not yığınından açılır) ve `first_note` (koşunun ilk aylık notu motordan gelir ve kutuda kendiliğinden açılır);
+   ↳ `--inbox-shot=rnd_note|rnd_note_demand|rnd_discovery`
+ - Harness: `bash tools/run_gate.sh` presetleri `full_run_fix_{none,worst,due,off}` ve `full_run_b2c_fix_*` (`PROBE FIX/BUGS/STOP` satırları); `--why-fire=<kart>`, `--event-lint`
+-- Fikstürler: `scripts/debug/product_fixtures.gd`, `data/events/cards/_fixtures/paper_{dev,design,pm,founder,plain,crunch}.json`; smoke acil durum zarını kapatır (`endgame_smoke.gd:71`)
++- Fikstürler: `data/events/cards/_fixtures/paper_{dev,design,pm,founder,plain,crunch}.json`; smoke acil durum zarını kapatır (`endgame_smoke.gd:71`)
+ 
+ ## Dikkat
+ 
+@@ -383,7 +378,6 @@
+ - `remove()` kâğıdın takip kartını (`follow`) reddeder; `ProductModel._row` ve `_next_card` ona Kaldır düğmesi vermez
+ - Sol sütun `live()`ın `requests` ve `modules` alanlarını okur; `areas` yalnız çeyrek hedef menüsünün listesidir (`{id, name, goal_text}`), `customers` ve hat başına hata listesi yoktur (`bug_row_of` Destek raporunundur)
+ - Adayın `addable`ı `live()`da `null`dır: `ProductModel.resolve_addable` her karede en az bir `can_add` (8 ms) ister, `ghost` imleç "+"a gelince `timeline([aday])` kurar; ikisinin önbelleği her `live()`da atılır
+-- `area_sentence` ve türevleri (`_standing`, `_recent_hit`) ekranda okunmaz: tek okuyucusu `ProductQuality.area_row` (Genel Bakış'ın ürün durumu satırı için hazır, bağlı değil)
+ - İki ayrı efor tablosu: hat JSON `effort` (bant 5-7/7-9/9-12, `ProductLines.effort_of`, yalnız yeni-kod terimi ve doğrulama) ile sprint.json `effort` k1 15·k2 25·k3 40 (`SprintCatalog.step_effort` :171, kart eforu). Karıştırma
+ - `SprintCatalog.cfg()` (:29) eksik anahtarda sert hata verir (`v[key]`); sprint.json bozuksa `JSON.parse_string` null döner. Yeni anahtar eklerken okuyan her çağrı yerini birlikte ekle
+ - Tik sırası bir sözleşmedir (`time_manager.gd:383-432`): Ar-Ge bir tik gecikmeli okur (`rnd_system.gd:94-100`); IncidentSystem EventGate'ten sonra koşar; sırayı değiştirme
+@@ -409,7 +403,7 @@
+ 
+ ## Bir değişiklik yaparken
+ 
+-- sprint.json sayısını/bloğunu değiştirirsen: okuyan `cfg("…")` çağrılarına, `sprint_probe.gd`, `product_fixtures.gd`, CLAUDE.md "[WORKING]" bölümüne ve bu sayfanın Durum ve veri bölümündeki hata modeli,
++- sprint.json sayısını/bloğunu değiştirirsen: okuyan `cfg("…")` çağrılarına, `sprint_probe.gd`, CLAUDE.md "[WORKING]" bölümüne ve bu sayfanın Durum ve veri bölümündeki hata modeli,
+   ↳ PM hazırlığı ve probe satırlarına bak; puan birimi değişirse `SaveManager` göçü şart
+ - `GameState.product`'a alan eklersen: `new_state` (`sprint_system.gd:74`) + eski kayıt için varsayılan/göç (`save_manager.gd`) + `save_v19_running_sprint_continues`, `sprint_save_roundtrip` vakaları
+ - Yeni hat/kademe/alt-tür: `data/product/lines/*.json` + `PROD_LINE_*`/`PROD_STEP_*` (strings.csv) + `ProductCatalog.TYPE_SCREEN` + `rivals.json` + `ProductQuality.TABLE`; `loc_product_line_keys_resolve` koş
+--- a/docs/kod_haritasi/sistemler/08_sekmeler.md
++++ b/docs/kod_haritasi/sistemler/08_sekmeler.md
+@@ -91,7 +91,6 @@
+ - `on_escape()` `window_layer.gd:115`: Esc önce açık seçeneği indirir · yalnız events_tab:89 (mail_pane.gd:80'e iletir).
+ - `on_panel_over(on)` `window_layer.gd:181`: PanelLayer paneli açılınca amber eylemi bırakır · hr_tab:191.
+ - `populate(payload)` `window_layer.gd:107`: ayrıntı penceresi (`DETAILS` `window_layer.gd:24`) · hr_dossier:62.
+-- `ProductTab.set_source(src)` `scripts/tabs/product_tab.gd:125`: debug fikstür kaynağı · game_shell.gd:176, main.gd:2235 (null = canlı model).
+ 
+ Ürün:
+ - `ProductTab._ready()` `scripts/tabs/product_tab.gd:52`: sekme açılınca görünümleri kurar, 6 EventBus sinyaline bağlar (:114-119) · WindowLayer.
+@@ -207,7 +206,7 @@
+ - Ar-Ge: `rnd_rail_open_with_locked_tree`, `split_bars_name_their_cause` (RnDUiShared). Yatırım: `hunt_offer_lifecycle` (endgame_smoke.gd:2098). Olaylar: `mail_pending_survives_save` (:6542).
+ - Kabuk: `rail_tabs_match_scene_order` (endgame_smoke.gd:4454), `clock_resumes_only_by_player` (:13700; product_tab ve hunt_tab'ı örnekler), `all_scripts_load`, `loc_product_derived_keys`.
+ - Görsel (pencereli, PNG `%APPDATA%\Godot\app_userdata\Project Unicorn\`): `--tab-shot=<product|sales|hr|finance|piyasa[:durum]|personal|marketing|rnd|events>` `main.gd:2338`; `--lang=tr|en`, `--palette=cb`, `--shot-size=GxY`.
+-- Sekmeye özel: `--product-shot=<c1..c5|cards|flow|edge:<ad>|live:<tür>>` (:3704), `--hr-shot=` (:3301), `--finance-shot=` (:3173), `--personal-shot=` (:2378),
++- Sekmeye özel: `--product-shot=live:<tür>` (:4203), `--hr-shot=` (:3301), `--finance-shot=` (:3173), `--personal-shot=` (:2378),
+   `--rnd-shot=` (:2416), `--inbox-shot=` (:1107), `--sales-shot=` (:1474), `--vc-shot=hunt*` (:3999); hepsi `scripts/main/main.gd`.
+ - Görsel (Olaylar): `--inbox-shot=<durum>` Olaylar'ı tema tohumunun şirketinde (14. hafta, İş hanı) gerçek kapıdan çeker; kart ve kapı `offer`, `queue`, `customer` (bir seçenek hazır), `locked`,
+   ↳ `held_key` (hız tuşu reddi: çerçevenin yanıp sönmesi ve toast), `resignation`, `frank_moment`, `dying` (Olaylar açıkken aynı karede Ürün açılır ve kart gelir; `GATEFLOW window= active= pane=` satırı).
+@@ -229,7 +228,7 @@
+   ↳ `morning` gece 00:00'dan sonra gelen kutusunu gerçek saatlik yolla çeker (`inbox_shot_morning_0000` devrin hemen sonrası, `_0930` mesai başından yarım saat sonra, `inbox_shot_morning` dört saat sonra;
+   ↳ `MORNING|` satırı her karede listenin damgalı öğelerini yazar); `flow` kapıyı kabuğun kendi girdisiyle oynar (`main._gate_flow` `:1783`) ve kare başına `GATEFLOW` satırı ile `inbox_flow_NN.png` basar;
+   ↳ tıklamalar düğmenin gerçek yerine atılır, pencerenin altında kalan düğme önce görünür alana kaydırılır (1,25 ölçekte de)
+-- Kontrast ve kit: `--theme-audit=<sekme>`, `--theme-contrast-audit`, `--probe-shot=kit` (`scripts/debug/kit_probe.gd`, Ekip satır ızgarasını örnekler). Ürün fikstürü: `scripts/debug/product_fixtures.gd`.
++- Kontrast ve kit: `--theme-audit=<sekme>`, `--theme-contrast-audit`, `--probe-shot=kit` (`scripts/debug/kit_probe.gd`, Ekip satır ızgarasını örnekler).
+ - Metin kapıları: `"$GODOT" --headless --path . -s res://scripts/debug/loc_residue.gd` ve `bash tools/smoke_run.sh loc_csv_integrity`. Godot yolu `$GODOT` (CLAUDE.md §12); komutlar `project-unicorn/`'dan.
+ 
+ ## Dikkat
+@@ -246,7 +245,6 @@
+ - Adayın "+"ı kurulumda hesaplanmaz: `live()` `addable: null` verir, bilinmeyen "+" nötr ve basılmaz durur, değerler `ProductModel.resolve_addable` ile kare kare gelir (kare 8 ms)
+   ↳ yeni bir "+" okuyucusu değeri `ProductModel.addable`'dan okur.
+ - `ProductModel.bug_row_of` Destek raporunun hat satırıdır (`mail_pane.gd`); sol sütunda hata satırı yoktur, düzeltme adayı hata sayısını (`bugs`) ve metnini (`fix_text`) taşır.
+-- Fikstür kaynağı (`product_fixtures.gd`) sol sütuna `modules` ve `requests` vermez (`model()`ın başındaki üç alanlık kalıp); sol sütun kareleri `live:a4_*` türlerindendir.
+ - Statik fonksiyonlarda `tr()` çalışmaz; SprintUiShared, RnDUiShared, MailPane statikleri `TranslationServer.translate` kullanır. Çözülmeyen anahtar kendine döner ve ham token olarak görünür.
+ - `HBoxContainer` bir çocuğun asgari boyutunu kırpmaz; sabit sütun için hücreyi düz `Control` + `clip_contents` yap
+   (hafıza: ekip-rev11-closing-round; kanon `work_hours_modal._pin`). `HRLedger` sütun hücreleri `_span` ile genişlik alır (hr_ledger.gd:66).
+@@ -268,8 +266,7 @@
+ - Sol sütuna alan: `ProductModel._module_card`/`_requests` (sözleşme başlığı) + `AreaPanel` + `build_theme.gd` varyasyonu + `PRODUCT_*` anahtarı; "+" değeri `ProductModel.resolve_addable`'dan gelir.
+ - Kapasite bölümü: sayılar `ProductModel._capacity` (E1/E2 kuralı başlıkta), çizim `CapacityView` + `StagePaint`, ölçüler `UiTokens.D_*CAP*`, varyasyonlar `build_theme.gd` (`Cap*`).
+ - Pano satırı alanı ya da düğmesi (bu sprintin kartı): `ProductModel._row` (kart satırı biçimi başlıkta; `follow` kartı Kaldır almaz) + `BoardRow` + `ProductTab._act` + ilgili `PRODUCT_*` anahtarları; sonraki sprintin kartı (sağ sütun):
+-  `ProductModel._next_card` + `SprintNext._card` + `PLAN_KEYS` ve `NEXT_KEYS`; ÇEYREK kartı: `ProductModel._card`, `_planned` + `SprintCard.setup`; hepsinde
+-  ↳ `scripts/debug/product_fixtures.gd` (fikstür aynı alanı taşımalı; bu sprintin kartları fikstürde yalnız kapasitenin yükünü kurar, pano çizilmez, sonraki sprintin kartları paysızdır).
++  `ProductModel._next_card` + `SprintNext._card` + `PLAN_KEYS` ve `NEXT_KEYS`; ÇEYREK kartı: `ProductModel._card`, `_planned` + `SprintCard.setup`.
+ - Alt şerit: `ProductModel._center` (`delegate`, `can_start`, `start_skips`, `progress`) + `SprintFoot` + `ProductTab._act` (`start`: `SprintSystem.begin_planned`, kart yoksa boş sprint) + `SprintSystem.set_delegate`;
+   ↳ ilerleme saat hattında `ProductModel.progress_at`.
+ - Saatle akan pano: `ProductModel.now_at` ve `stage_done` + `SprintBoard.set_now` + `BoardRow.set_now` + `CapacityView.set_done`; hepsi `SprintPanel.set_now`un altındadır, sayfayı kurmaz, yeniden hesap yapmaz (parçalar satırda saklıdır).
+--- a/docs/kod_haritasi/sistemler/10_test_harness.md
++++ b/docs/kod_haritasi/sistemler/10_test_harness.md
+@@ -14,7 +14,6 @@
+ - `scripts/debug/tick_probe.gd` (133): `--tick-probe`; gerçek saatte kare maliyeti (gece, saat adımı, otomatik kayıt) `TICK` satırları
+ - `scripts/debug/office_crowd_probe.gd` (326): `OfficeCrowdProbe`; ofis kalabalığı sağlığı (`CROWD` satırları) ve ofis çekimlerinin yardımcıları
+ - `scripts/debug/office_pan_probe.gd` (398): `--pan*`; ofisin 3B görüntüsünü kamera ofsetlerinde kaydeder ve ölçer (`PAN*` satırları)
+-- `scripts/debug/product_fixtures.gd` (554): Ürün sekmesinin debug kaynağı (mockup c1..c5, kart galerisi, uç durumlar); `--product-shot` besler
+ - `scripts/debug/kit_probe.gd` (298): `--probe-shot=kit`; koyu kit bileşenlerini durumlarıyla bir pencere gövdesinde dizer
+ - `scripts/debug/loc_residue.gd` (265): `-s` betiği; Türkçe literal, CSV'de olmayan sahne metni, statikte `tr()` arar, vuruşta sıfır dışı çıkar
+ - `scripts/debug/glyph_audit.gd` (109): `-s` betiği; oyunun çizebileceği her karakteri (`scripts/debug` ve `scripts/events/tools` dışı) yüz ve zincirlere sorar, eksiği `GLYPH|MISS` basar
+@@ -59,7 +58,6 @@
+ - `Main._run_why_fire()` `scripts/main/main.gd:288`: `EvWhy.report(kart)`; `_run_event_plausibility()` `:295` `PLAUSIBILITY.run(spec)`
+ - `Main._skip_to_shell()` `scripts/main/main.gd:5345`: menü ve onboarding'siz kabuk; `--skip-onboarding` (`:107`) ve debug F12 (`:5106`) çağırır
+ - `GameShell._debug_fkey()` `scripts/main/game_shell.gd:138`: debug build'de Shift+F4/F5/F6 (F4 onboarding'i yeniden tetikler)
+-- `GameShell.debug_product_apply/act` `scripts/main/game_shell.gd:175-186`: `PRODUCT_FIXTURES` (`:18`) yükleyip Ürün sekmesine `set_source` verir · `main.gd:3763,3787`
+ - `SaveManager._is_harness_arg()` `scripts/autoload/save_manager.gd:497`: `smoke`, `-shot`, `audit`, `probe`, `run-log`, `plausibility` alt dizili `--` bayrağı harness sayar
+ - `tools/smoke_run.sh run_one()` `tools/smoke_run.sh:38`: `godot --headless --endgame-smoke=<vaka>`; `list_cases()` (`:27`) vaka listesini `match` tablosundan awk ile çeker
+ - `tools/run_gate.sh` `tools/run_gate.sh:22-48`: her preset için `--run-log=<preset>:730:sim`; `PROBE END` sayısı, `ending=` ve hata satırı denetler
+@@ -94,7 +92,6 @@
+ 
+ - Harness çıktıları (`SMOKE`, `PROBE`, `TICK`, `TEMPO`, `CROWD`, `PAN`, `SPRINTPROBE` vb.) çevrilmez; `scripts/debug/` ve `scenes/debug/` `loc_residue` SKIP listesindedir (`loc_residue.gd:30-33`)
+ - `main.gd` `scripts/` altında olduğu için Türkçe literal taşıyan fikstür satırları `# LOC-DATA <gerekçe>` işaretini ister (main.gd'de 91 işaret var)
+-- `product_fixtures.gd` gerçek anahtarları `tr()` ile çözer (`PRODUCT_RESULT_*`, `PRODUCT_REVIEW_*`); metin o anki dilde, özel adlar düz kalır
+ - `loc_residue.gd` ve `loc_csv_integrity` vakası (`endgame_smoke.gd:316`, gövde `:10862`) `strings.csv` anahtarlarını okur; `glyph_audit.gd` CSV'nin iki dilini okur
+ - `--lang=tr|en` bayrağını `Localization` okur (`scripts/autoload/localization.gd:20-53`); çekim dosya adına `_en` ekler
+ 
+--- a/localization/strings.csv
++++ b/localization/strings.csv
+@@ -2796,28 +2796,10 @@
+ PRODUCT_STARTS_AHEAD,önden başlar,starts ahead
+ PRODUCT_DONE_AHEAD,önden bitti,done ahead
+ PRODUCT_STAGE_RESEARCH,Araştırma,Research
+-PRODUCT_STAR_NONE,Henüz hiçbir şirkete yetmez.,Not enough for any company yet.
+-PRODUCT_STAR_SKIPPED,1★ şirketler bu alana bakmaz. 2★ şirketler bir başlangıç ister.,1★ companies do not look at this area. 2★ companies want a start.
+-PRODUCT_STAR_SERVES,Bu hâliyle {star}★ şirketlere yeter. {next}★ şirketler daha fazlasını ister.,As it stands it is enough for {star}★ companies. {next}★ companies want more.
+-PRODUCT_STAR_TOP,Bu hâliyle 3★ şirketlere de yeter.,As it stands it is enough even for 3★ companies.
+-PRODUCT_AUDIENCE_ENOUGH,Bugünkü kitlene yeter.,Enough for your current audience.
+-PRODUCT_AUDIENCE_OUTGROWN,Kitlen büyüdükçe kullanıcılar bu alanda daha fazlasını ister.,"As your audience grows, users want more here."
+-PRODUCT_AREA_REVENUE_NONE,Ücretli plan henüz yok,No paid plan yet
+-PRODUCT_AREA_REVENUE_WEAK,"Ücretli plan var, ödeyen az","There is a paid plan, few pay"
+-PRODUCT_AREA_REVENUE_ENOUGH,Ücretli plan açık,The paid plan is open
+-PRODUCT_AREA_REVENUE_STRONG,Ödeyen kullanıcılar artıyor,Paying users keep growing
+-PRODUCT_AREA_RIVAL,{rival} bu alanda yeni bir şey çıkardı,{rival} shipped something new here
+-PRODUCT_AREA_OVER_CAPACITY,Sunucular yükü kaldırmıyor,The servers can't keep up with the load
+ PRODUCT_CAP_PAID_PLAN,Ücretli plan,Paid plan
+ PRODUCT_FIX_CARD,{capability} düzeltmesi,{capability} fix
+ PRODUCT_RESEARCH_CARD,{n} kullanıcıyla görüş,Talk to {n} users
+ PRODUCT_REQUEST_CARD,{step} ({customer}),{step} ({customer})
+-PRODUCT_RESEARCH_VOICE_CORE,Görüştüğümüz kullanıcılar temel işin daha hızlı olmasını istiyor,The users we talked to want the basic job to go faster
+-PRODUCT_RESEARCH_VOICE_ONBOARDING,Görüştüğümüz kullanıcılar ilk günü karışık buluyor,The users we talked to find the first day confusing
+-PRODUCT_RESEARCH_VOICE_GROWTH,Görüştüğümüz kullanıcılar ürünü bir arkadaşına göstermek istiyor,The users we talked to want to show the product to a friend
+-PRODUCT_RESEARCH_VOICE_INTEGRATIONS,Görüştüğümüz müşteriler veriyi elle taşımaktan yorulmuş,The customers we talked to are tired of moving data by hand
+-PRODUCT_RESEARCH_VOICE_TRUST,Görüştüğümüz kullanıcılar verilerinin güvende olduğunu bilmek istiyor,The users we talked to want to know their data is safe
+-PRODUCT_RESEARCH_VOICE_REVENUE,Görüştüğümüz kullanıcılar neye para ödeyeceğini bilmek istiyor,The users we talked to want to know what they would pay for
+ PRODUCT_NEWS_RIVAL_LAUNCH_0,{rival} yeni özelliğini duyurdu: {capability},{rival} announced a new feature: {capability}
+ PRODUCT_NEWS_RIVAL_LAUNCH_1,{rival} kullanıcılarına yeni bir araç sundu: {capability},{rival} rolled out a new tool for its users: {capability}
+ PRODUCT_PRESS_CORE_0,{product} yeni sürümünü çıkardı: {capability},{product} released a new version: {capability}
+--- a/scripts/debug/endgame_smoke.gd
++++ b/scripts/debug/endgame_smoke.gd
+@@ -458,7 +458,7 @@
+ 		"fit_account_ref":                fail = _case_fit_account_ref()
+ 		"fit_scale":                      fail = _case_fit_scale()
+ 		"save_v17_market_ref":            fail = _case_save_v17_market_ref()
+-		"product_area_row":               fail = _case_product_area_row()
++		"product_area_word":              fail = _case_product_area_word()
+ 		"save_retired_product_flags":     fail = _case_save_retired_product_flags()
+ 		"rival_composite_table":          fail = _case_rival_composite_table()
+ 		# --- rev 6.1 · Ar-Ge bağı ve kart aritmetiği (2026-08-25).
+@@ -16103,60 +16103,47 @@
+ 	return ""
+ 
+ 
+-## Genel Bakış'ın ürün durumu satırı ürün sayfasının referansını okur (B2B'de 2★, B2C'de kitlenin yıldızı ile 2★'ın büyüğü): `word` ve `tone` seviyenin
+-## referansa göre kelimesinden, `sentence` alanın cümlesinden gelir; `squares` seviyenin referans beklentisine oranının onluk
+-## ölçeğidir (beşinci kare referans, en çok 10), soluk kare (`faint_from`) oran RATIO_CAP'e varınca başlar; referansın bir şey
+-## beklemediği alanda ölçek yoktur: kare 0.
++## Alanın sözcüğü ürün sayfasının referansını okur (B2B'de 2★, B2C'de kitlenin yıldızı ile 2★'ın büyüğü): seviye 0 Yok, referansın
++## altı Zayıf, referans ile referans + 1 arası Yeterli, ondan sonrası Güçlü; küçük kitlede de 2★ satırı okunur.
+ ##
+-## FALSİFİKASYON: `area_row`da `mark` yerine 4 yaz → kare iddiası FAIL; `faint_from`u `RATIO_CAP * mark - 1` yap → soluk eşik iddiası
+-## FAIL; `WORD_TONES`ta "weak"i "neutral" yap → ton iddiası FAIL; `expect > 0.0` süzgecini sil → B2B'de Gelir'de sıfıra bölmeyle FAIL;
+-## `_value`de `maxf(star, PAGE_STAR)` yerine `star` oku → küçük kitle iddiası FAIL.
+-static func _case_product_area_row() -> String:
++## FALSİFİKASYON: `ProductQuality.word_for`da `expect + 1.0`'ı `expect + 1.5` yap → Güçlü sınırı iddiası FAIL; `lvl < expect`'i
++## `lvl <= expect` yap → Yeterli sınırı iddiası FAIL; `lvl <= 0.0` dalını sil → Yok iddiası FAIL; `_value`de `maxf(star, PAGE_STAR)`
++## yerine `star` oku → küçük kitle iddiası FAIL.
++static func _case_product_area_word() -> String:
+ 	GameState.set_flag("mvp_shipped", true)
+ 	GameState.set_flag("mvp_market_type", "b2b")
+ 	_seed_b2b_lines("erp", 0)
+-	# [alan, hatların kademeleri, kare, kelime, ton, soluk]: ürün sayfasının referansında Çekirdek 1,25, Entegrasyonlar 1, İlk kullanım 1,
+-	# Güven 1; Çekirdek'in beş hattı var, Güven'in iki.
++	# [alan, hatların kademeleri, kelime]: ürün sayfasının referansında Çekirdek 1,25, Entegrasyonlar 1, İlk kullanım 1, Güven 1;
++	# Çekirdek'in beş hattı var, Güven'in iki.
+ 	var rows := [
+-		["core", [1, 1, 1, 0, 0], 2, "weak", "warn", false],       # MVP: 0,6 / 1,25
+-		["core", [1, 1, 1, 1, 1], 4, "weak", "warn", false],       # 1 / 1,25
+-		["core", [2, 1, 1, 1, 1], 5, "weak", "warn", false],       # 1,2 / 1,25: referansın hemen altı
+-		["core", [2, 2, 1, 1, 1], 6, "enough", "neutral", false],  # 1,4 / 1,25: referans aşıldı
+-		["core", [2, 2, 2, 2, 1], 7, "enough", "neutral", false],  # 1,8 / 1,25
+-		["core", [2, 2, 2, 2, 2], 8, "enough", "neutral", true],   # 2 / 1,25: oran kesiği, soluk karelerin başı
+-		["core", [3, 3, 3, 3, 3], 10, "strong", "pos", true],      # onluk ölçeğin sonu
+-		["core", [0, 0, 0, 0, 0], 0, "none", "warn", false],
+-		["integrations", [2], 10, "strong", "pos", true],
+-		["onboarding", [1], 5, "enough", "neutral", false],
+-		["trust", [1, 0], 3, "weak", "warn", false],                # 0,5 / 1
+-		["trust", [1, 1], 5, "enough", "neutral", false],
+-		["trust", [0, 0], 0, "none", "warn", false],
++		["core", [1, 1, 1, 0, 0], "weak"],        # MVP: 0,6 / 1,25
++		["core", [1, 1, 1, 1, 1], "weak"],        # 1 / 1,25
++		["core", [2, 1, 1, 1, 1], "weak"],        # 1,2 / 1,25: referansın hemen altı
++		["core", [2, 2, 1, 1, 1], "enough"],      # 1,4 / 1,25: referans aşıldı
++		["core", [2, 2, 2, 2, 1], "enough"],      # 1,8 / 1,25
++		["core", [2, 2, 2, 2, 2], "enough"],      # 2 / 1,25
++		["core", [3, 3, 3, 3, 3], "strong"],      # referans + 1'in üstü
++		["core", [0, 0, 0, 0, 0], "none"],
++		["integrations", [2], "strong"],          # 2 / 1: referans + 1'e tam varır
++		["onboarding", [1], "enough"],            # 1 / 1: referansta
++		["trust", [1, 0], "weak"],                # 0,5 / 1
++		["trust", [1, 1], "enough"],
++		["trust", [0, 0], "none"],
+ 	]
+ 	for row in rows:
+ 		var lines: Array = SprintCatalog.capabilities(row[0])
+ 		for i in lines.size():
+ 			ProductState.set_line_tier(lines[i], int(row[1][i]))
+-		var got: Dictionary = ProductQuality.area_row(row[0])
+-		if got.area != row[0] or got.squares != row[2] or got.word != row[3] or got.tone != row[4] \
+-				or (got.squares >= got.faint_from) != row[5]:
+-			return "%s at tiers %s reads %s; want %d squares, '%s', '%s', faint %s" % [row[0], row[1], got, row[2], row[3], row[4], row[5]]
+-		if got.faint_from != 8 or got.sentence == "" or got.sentence != SprintCatalog.area_sentence(row[0]):
+-			return "%s reads faint_from %d and sentence '%s'; want 8 and the area's sentence" % [row[0], got.faint_from, got.sentence]
+-	# Referansın bir şey beklemediği alan (B2B'de Gelir) ölçeksiz kalır: kare 0, kelimesi sayfanınkidir.
+-	var quiet: Dictionary = ProductQuality.area_row("revenue")
+-	if ProductQuality.expectation("revenue") != 0.0 or quiet.squares != 0 or quiet.word != ProductQuality.word("revenue"):
+-		return "an area the page asks nothing of reads %s; want no squares and the page's word '%s'" % [quiet, ProductQuality.word("revenue")]
+-	# Küçük kitleli B2C ürünün sayfası da 2★ satırını okur: İlk kullanım 1 ister (yeter), MVP Çekirdek'i 1,25'in altında kalır.
++		var got: String = ProductQuality.word(row[0])
++		if got != row[2]:
++			return "%s at tiers %s reads '%s'; want '%s'" % [row[0], row[1], got, row[2]]
++	# Küçük kitleli B2C ürünün sayfası da 2★ satırını okur: İlk kullanım 1 ister (yeter).
+ 	_seed_b2c()
+ 	_set_area_tiers({"onboarding": 1})
+ 	if ProductQuality.expectation("onboarding") != 1.0:
+ 		return "fixture: the page asks %.2f of Onboarding in a 200 user audience, want 1" % ProductQuality.expectation("onboarding")
+-	var onboarding: Dictionary = ProductQuality.area_row("onboarding")
+-	if onboarding.squares != 5 or onboarding.word != "enough":
+-		return "Onboarding at its reference in a small audience reads %s, want 5 squares and 'enough'" % onboarding
+-	var asked: Dictionary = ProductQuality.area_row("core")
+-	if asked.squares != 2 or asked.word != "weak":
+-		return "the MVP of a small audience reads %s on Core, want 2 squares and 'weak'" % asked
++	if ProductQuality.word("onboarding") != "enough":
++		return "Onboarding at its reference in a small audience reads '%s', want 'enough'" % ProductQuality.word("onboarding")
+ 	return ""
+ 
+ 
+@@ -16293,7 +16280,7 @@
+ 
+ 
+ ## Yıldız bağlamı: beklenti müşterinin yıldızına bağlıdır, evreye değil. MVP'den hemen sonra ürün sayfası Çekirdek'i Zayıf
+-## okur ama cümle 1★'a yettiğini söyler; evre geçişi hiçbir adayın ve hesabın U'sunu oynatmaz; MVP 1★ adayda 70, aynı MVP 2★
++## okur; evre geçişi hiçbir adayın ve hesabın U'sunu oynatmaz; MVP 1★ adayda 70, aynı MVP 2★
+ ## adayda 70'in altındadır, aynı ürün 1★, 2★, 3★ adayda azalan U verir; Ar-Ge'nin gizli hattı İlk kullanım'a bir boş hat katınca
+ ## beklenti aynı kalır, alanın seviyesi yarıya iner ve onu bekleyen adayın U'su düşer; B2C'de kitle iki yıldız satırı arasında
+ ## geçerken U sürekli kalır, ürün sayfasının referansı ise kitle 2★'ın altındayken de 2★ satırını okur.
+@@ -16313,26 +16300,20 @@
+ 		p.industry = sector
+ 		p.star = star
+ 		return p
+-	var said := func(key: String, args: Dictionary) -> String:
+-		return TranslationServer.translate(key).format(args)
+ 
+-	# MVP'den hemen sonra: Çekirdek 0,6. Sayfa 2★ şirketin referansını okur, cümle MVP'nin 1★'a yettiğini söyler.
++	# MVP'den hemen sonra: Çekirdek 0,6. Sayfa 2★ şirketin referansını okur.
+ 	if ProductQuality.expectation("core", {"star": 1}) != 0.6 or ProductQuality.expectation("core") != 1.25 \
+ 			or ProductQuality.expectation("trust") != 1.0 or ProductQuality.expectation("integrations") != 1.0 \
+ 			or ProductQuality.expectation("revenue") != 0.0:
+ 		return "the page reference reads core %.2f at 1 star and %.2f on the page, trust %.2f, integrations %.2f; want 0.6, 1.25, 1 and 1" % [
+ 			ProductQuality.expectation("core", {"star": 1}), ProductQuality.expectation("core"),
+ 			ProductQuality.expectation("trust"), ProductQuality.expectation("integrations")]
+-	if ProductQuality.word("core") != "weak" or ProductQuality.serves("core") != 1 \
+-			or SprintCatalog.area_sentence("core") != said.call("PRODUCT_STAR_SERVES", {"star": 1, "next": 2}):
+-		return "right after the MVP Core reads '%s', serves %d, says '%s'; want Weak, 1 and the 1 star sentence" % [
+-			ProductQuality.word("core"), ProductQuality.serves("core"), SprintCatalog.area_sentence("core")]
++	if ProductQuality.word("core") != "weak":
++		return "right after the MVP Core reads '%s', want Weak" % ProductQuality.word("core")
+ 	if ProductQuality.next_star() != 2:
+ 		return "right after the MVP the next star reads %d, want 2" % ProductQuality.next_star()
+-	if SprintCatalog.area_sentence("integrations") != said.call("PRODUCT_STAR_SKIPPED", {}) \
+-			or ProductQuality.word("integrations") != "none":
+-		return "an empty Integrations reads '%s' and says '%s'; want None and the line that 1 star companies do not look at it" % [
+-			ProductQuality.word("integrations"), SprintCatalog.area_sentence("integrations")]
++	if ProductQuality.word("integrations") != "none":
++		return "an empty Integrations reads '%s', want None" % ProductQuality.word("integrations")
+ 	# Sayfanın referansı on üç sektörün en yükseğidir: her yıldızda her alan için.
+ 	for star in [1, 2, 3]:
+ 		for area in SprintCatalog.area_ids():
+@@ -16369,12 +16350,12 @@
+ 		return "the MVP reads U %d (loss '%s') for a 1 star and %d (loss '%s') for a 2 star; want 70 and nothing lacking, then under 70 with a lacking area" % [
+ 			mvp_1.value, mvp_1.loss_area, mvp_2.value, mvp_2.loss_area]
+ 
+-	# Evre geçişi hiçbir adayın ve hesabın U'sunu, sayfanın kelimesini ve cümlesini oynatmaz.
++	# Evre geçişi hiçbir adayın ve hesabın U'sunu ve sayfanın kelimesini oynatmaz.
+ 	var account: Customer = _sign_fixture(asked.call(3, "health"), 6000, 70)
+ 	var guest: Prospect = asked.call(2, "construction")
+ 	var snapshot := func() -> Array:
+ 		return [ProductQuality.prospect_fit(guest), ProductQuality.account_fit(account), ProductQuality.word("core"),
+-			SprintCatalog.area_sentence("core"), ProductQuality.next_star(), ProductQuality.expectation("core")]
++			ProductQuality.next_star(), ProductQuality.expectation("core")]
+ 	var before: Array = snapshot.call()
+ 	for phase in [2, 3]:
+ 		GameState.phase_gate_ready = true
+@@ -16458,32 +16439,22 @@
+ 		if absi(u - last) > 1:
+ 			return "the audience crossed %d users and U jumped from %d to %d in one 2 percent step" % [roundi(n), last, u]
+ 		last = u
+-	# Kelime ve cümle sayfanın referansını okur: küçük kitlede de MVP 2★ satırına yetmez; Çekirdek 2★ satırına (1,25) varınca 500'de
++	# Kelime sayfanın referansını okur: küçük kitlede de MVP 2★ satırına yetmez; Çekirdek 2★ satırına (1,25) varınca 500'de
+ 	# yeter (1,2 yetmez, 1,4 yeter), kitle 3★ satırına (2) inince yetmez.
+ 	audience.call(500.0)
+-	if ProductQuality.word("core") != "weak" or SprintCatalog.area_sentence("core") != said.call("PRODUCT_AUDIENCE_OUTGROWN", {}):
+-		return "500 users read the MVP Core '%s' saying '%s'; want Weak and users want more, the page asks the 2 star row of a small audience too" % [
+-			ProductQuality.word("core"), SprintCatalog.area_sentence("core")]
++	if ProductQuality.word("core") != "weak":
++		return "500 users read the MVP Core '%s'; want Weak, the page asks the 2 star row of a small audience too" % ProductQuality.word("core")
+ 	var core_lines: Array = SprintCatalog.capabilities("core")
+ 	for i in core_lines.size():
+ 		ProductState.set_line_tier(core_lines[i], 2 if i < 1 else 1)
+-	if ProductQuality.word("core") != "weak" or SprintCatalog.area_sentence("core") != said.call("PRODUCT_AUDIENCE_OUTGROWN", {}):
+-		return "500 users read Core at 1.2 '%s' saying '%s'; want Weak, just under the 2 star row" % [
+-			ProductQuality.word("core"), SprintCatalog.area_sentence("core")]
+-	ProductState.set_line_tier(core_lines[1], 2)
+-	if ProductQuality.word("core") != "enough" or SprintCatalog.area_sentence("core") != said.call("PRODUCT_AUDIENCE_ENOUGH", {}):
+-		return "500 users read Core at 1.4 '%s' saying '%s'; want Enough and the audience is served" % [
+-			ProductQuality.word("core"), SprintCatalog.area_sentence("core")]
++	if ProductQuality.word("core") != "weak":
++		return "500 users read Core at 1.2 '%s'; want Weak, just under the 2 star row" % ProductQuality.word("core")
++	ProductState.set_line_tier(core_lines[1], 2)
++	if ProductQuality.word("core") != "enough":
++		return "500 users read Core at 1.4 '%s'; want Enough" % ProductQuality.word("core")
+ 	audience.call(80000.0)
+-	if ProductQuality.word("core") != "weak" or SprintCatalog.area_sentence("core") != said.call("PRODUCT_AUDIENCE_OUTGROWN", {}):
+-		return "80,000 users read Core at 1.4 '%s' saying '%s'; want Weak and the audience has outgrown it" % [
+-			ProductQuality.word("core"), SprintCatalog.area_sentence("core")]
+-	# Yayından önce kitle yoktur: alan kitleye yetip yetmediğini söylemez.
+-	GameState.set_flag("mvp_shipped", false)
+-	audience.call(0.0)
+-	if SprintCatalog.area_sentence("core") != "" or SprintCatalog.area_sentence("growth") != "":
+-		return "before the launch Core says '%s' and Growth '%s'; want no audience sentence" % [
+-			SprintCatalog.area_sentence("core"), SprintCatalog.area_sentence("growth")]
++	if ProductQuality.word("core") != "weak":
++		return "80,000 users read Core at 1.4 '%s'; want Weak, the audience has outgrown it" % ProductQuality.word("core")
+ 	return ""
+ 
+ 
+@@ -24130,14 +24101,11 @@
+ ## Hata sayısı: modülün düzeltme adayı yalnız hatası olan hat için vardır, kartın hata sayısı hattın açık hatasıdır ve metni
+ ## (`fix_text`) hata, hesap ve kullanıcı sayısını ve B2B'de en büyük hesabı söyler; Destek raporunun hat satırı (`bug_row_of`) hattın
+ ## adını, açık hatayı, hesap ve kullanıcı sayısını söyler (B2C'de hesapsız), ipucu geçen haftanın sayısını ve B2B'de en büyük hesabı;
+-## `delta` son haftalık tikin görüntüsüne göre değişimdir (okun yönü). Alan cümlesi aynı toplamı söyler ve araştırmadan sonraki iki
+-## haftada kullanıcıların sözünü sonuna ekler, sonra düşürür.
++## `delta` son haftalık tikin görüntüsüne göre değişimdir (okun yönü).
+ ## FALSİFİKASYON: ProductModel._module_card'da `bugs`i `0` yap → sayı iddiası FAIL, `fix_text`i `""` yap → metin iddiası FAIL; kilitsiz
+ ## adaylar süzgecini hatasız hatları da alacak biçimde gevşet (SprintCatalog.candidates'ta `bugs.has(line_id)`yi sil) → hatasız hat
+ ## iddiası FAIL; ProductState.open_bugs_delta yerine `0` ver → ok iddiası FAIL; bug_row_of'ta en büyük hesabın ipucu satırını sil →
+-## ipucu iddiası FAIL; SprintCatalog.area_sentence'ta araştırma penceresinin `<=`'sini `<` yap ya da bir sprint uzat (`+ 1`) →
+-## pencere iddiası FAIL, araştırma cümlesini hiç ekleme → söz iddiası FAIL, hata sayısı cümlesini düşür → toplam iddiası FAIL;
+-## SprintUiShared.impact_bits'te `int(part.accounts) >= 0` denetimini `true` yap → B2C satırı iddiası FAIL.
++## ipucu iddiası FAIL; SprintUiShared.impact_bits'te `int(part.accounts) >= 0` denetimini `true` yap → B2C satırı iddiası FAIL.
+ static func _case_product_bug_rows_read_the_store() -> String:
+ 	_seed_sprint_live("erp")
+ 	_seed_line_accounts()
+@@ -24183,17 +24151,6 @@
+ 	if b2c.text != SprintUiShared.SEP.join(["Sync", SprintUiShared.count("PRODUCT_BUG_COUNT", 5),
+ 			SprintUiShared.count("PRODUCT_USER_COUNT", 300)]) or b2c.tip.contains("\n"):
+ 		return "a B2C row reads %s, want its users only and no account line in the tip" % [b2c]
+-	var said: String = SprintCatalog.area_sentence("core")
+-	if not said.contains(SprintUiShared.count("PRODUCT_BUG_COUNT", 12)):
+-		return "the core sentence reads '%s', want the 12 open bugs of its three lines" % said
+-	# The users' words stay for the sprint after the research (a sprint is two weeks, so two weeks) and go after it.
+-	var voice: String = TranslationServer.translate("PRODUCT_RESEARCH_VOICE_CORE")
+-	GameState.product.research_done["core"] = SprintSystem.sprint_number() - 1
+-	if not SprintCatalog.area_sentence("core").ends_with(voice):
+-		return "a sprint after the research the sentence reads '%s', want the users' words at its end" % SprintCatalog.area_sentence("core")
+-	GameState.product.research_done["core"] = SprintSystem.sprint_number() - 2
+-	if SprintCatalog.area_sentence("core").contains(voice):
+-		return "two sprints after the research the sentence still reads '%s'" % SprintCatalog.area_sentence("core")
+ 	return ""
+ 
+ 
+--- a/scripts/main/game_shell.gd
++++ b/scripts/main/game_shell.gd
+@@ -13,10 +13,6 @@
+ var _held_toast_ms := -HELD_TOAST_MS
+ ## Esc has brought the waiting decision back once; the next Esc with no window opens the system menu.
+ var _esc_reopened := false
+-# Ürün sekmesinin fikstür röleleri. Fikstür betiği yalnız debug_product_apply'da yüklenir; oyun ona
+-# dokunmaz.
+-const PRODUCT_FIXTURES := "res://scripts/debug/product_fixtures.gd"
+-var _product_source: Object = null
+ 
+ @onready var _windows: Node = $CenterViewport   # WindowLayer: Esc en üstteki pencereyi kapatır
+ @onready var _ticker: Control = $NewsTicker
+@@ -40,10 +36,10 @@
+ 	$LeftTabs.set_bottom_clearance(0.0 if open else band)
+ 
+ 
+-## Sprint kapanınca sürüm notu Ürün sekmesinde açılır; sekme zaten açıksa kendini yeniden çizer.
++## Sprint kapanınca sürüm notu Ürün sekmesinde açılır; sekme zaten açıksa (`open_area` yalnız onun sayfasındadır) kendini yeniden çizer.
+ func _on_sprint_closed(_number: int) -> void:
+ 	var page: Control = _windows.get_current_page_body()
+-	if page == null or not page.has_method(&"set_source"):
++	if page == null or not page.has_method(&"open_area"):
+ 		EventBus.tab_changed.emit("product")
+ 
+ 
+@@ -169,23 +165,6 @@
+ 		VCPitchSystem.begin_meeting(vc_id)
+ 
+ 
+-func debug_product_apply(fixture_id: String) -> void:
+-	if OS.is_debug_build():
+-		EventBus.tab_changed.emit("product")
+-		_product_source = (load(PRODUCT_FIXTURES) as GDScript).new(fixture_id)
+-		_windows.get_current_page_body().set_source(_product_source)
+-
+-
+-## Fikstürün geçiş tablosunu bir adım sürer; set_source sekmeyi yeni modelden yeniden kurar.
+-## Pencere kapandıysa ya da başka sekme açıksa sayfa yoktur ya da sprint ekranı değildir.
+-func debug_product_act(kind: String) -> void:
+-	var page: Control = _windows.get_current_page_body()
+-	if not OS.is_debug_build() or _product_source == null or page == null or not page.has_method(&"set_source"):
+-		return
+-	_product_source.act(kind, {})
+-	page.set_source(_product_source)
+-
+-
+ # Class B durumları ön şartı kurar, bitişi BİR SONRAKİ günlük tik (slot 8/9) ateşler —
+ # gerçek tarama yolu sınanır. F3 bilerek Class A anlık yoldur. F5/F9 Ctrl ile gelir
+ # (çıplak hali hızlı kayıt/yükleme).
+--- a/scripts/main/main.gd
++++ b/scripts/main/main.gd
+@@ -2725,7 +2725,6 @@
+ 			SprintSystem.plan_next()
+ 			SprintSystem.apply_lead()
+ 			SprintSystem.start()
+-			layer.get_current_page_body().set_source(null)
+ 			await frame.call("released")
+ 		"focus_out", "focus_out_off":
+ 			Settings._data[TimeManager.SETTING_PAUSE_UNFOCUSED] = kind == "focus_out"
+@@ -4189,16 +4188,11 @@
+ 	get_tree().quit()
+ 
+ 
+-# --product-shot=<c1..c5|flow|edge:<name>|live:<scenario>>: the Product tab. The first four
+-# are fed by the debug fixture source (scripts/debug/product_fixtures.gd, edge names live there)
+-# through the shell's debug relays, the same path an MCP session takes; flow starts from c1 and
+-# saves one frame after each of start, advance and plan_next; edge:goal_menu opens the quarter goal's
+-# menu with a click on its strip. live draws
+-# ProductModel.live() over a run seeded through SprintSystem (_seed_product_live); live:pick_named is
+-# the type picker with B2C, a type and a name picked, live:pick_relang saves it and switches this run to
+-# English (<stem>_rebuilt: the rebuilt picker keeps the picks); live:decision_paper presses the asking card's
+-# "?", so the frame is Olaylar on the sprint paper; live:gate saves the MVP gate, presses its
+-# Yayınla and saves the v1.0 note (<stem>_publish); live:b2c_goal saves the planning with the lead's plan offered, applies
++# --product-shot=live:<scenario>: the Product tab drawn from ProductModel.live() over a run seeded through SprintSystem
++# (_seed_product_live); any other kind fails the shot. live:pick_named is the type picker with B2C, a type and a name picked,
++# live:pick_relang saves it and switches this run to English (<stem>_rebuilt: the rebuilt picker keeps the picks);
++# live:decision_paper presses the asking card's "?", so the frame is Olaylar on the sprint paper; live:gate saves the MVP gate,
++# presses its Yayınla and saves the v1.0 note (<stem>_publish); live:b2c_goal saves the planning with the lead's plan offered, applies
+ # it with no quarter goal (<stem>_lead), then takes the lead's cards back out, picks the goal Trust and applies the lead's
+ # plan again (<stem>_trust); live:plan saves the plan and presses Sprinti başlat (<stem>_start); live:rnd saves the planning with the
+ # founder in R&D, presses Ar-Ge'ye git and saves R&D with the founder's node selected (<stem>_go). live:overview_pre is
+@@ -4207,93 +4201,77 @@
+ # on the control it belongs to. live:a4_<frame> are the Ürün > Sprint frame worlds (_seed_product_a4), each printing
+ # its PRODUCTSHOT line.
+ func _run_product_shot(id: String) -> void:
++	if not id.begins_with("live:"):
++		_shot_fail("[ProductShot] unknown kind '%s', want live:<scenario>" % id)
++		return
+ 	_begin_shot()
+ 	_seed_run_reproducible()
+ 	var stem: String = "product_shot_" + id.replace(":", "_")
+-	if id.begins_with("live:"):
+-		_seed_product_live(id.trim_prefix("live:"))
+-		await _mount_shot_shell()
+-		EventBus.tab_changed.emit("product")
+-		if id == "live:overview_pre" or id.begins_with("live:server"):
+-			await _product_overview_shot(id.trim_prefix("live:"), stem)
+-			return
+-		if id in ["live:pick_named", "live:pick_relang"]:
+-			var picker: TypePicker = _shell.find_children("*", "TypePicker", true, false)[0]
+-			picker._pick_type("note_tool")
+-			picker._name = "Notly"   # LOC-DATA debug seed / name
+-			picker._save_draft()
+-		if id.begins_with("live:decision_paper"):
+-			await get_tree().process_frame
+-			for row: BoardRow in _shell.find_children("*", "BoardRow", true, false):
+-				if row.card.ask != null:
+-					row.action.emit("decide", {"card_id": row.card.id, "item": row.card.ask.item})
+-					break
+-			if id != "live:decision_paper":   # a real paper: its answer is open, so its options and their chips are in the frame
+-				await get_tree().create_timer(0.4).timeout
+-				_press_button_labelled(_shell, tr("MAIL_RESPOND"))
+-		if id.begins_with("live:a4_") and not await _product_a4_ready(id.trim_prefix("live:")):
+-			return
+-		var tip: String = String(_A4_WORLDS.get(id.trim_prefix("live:"), {}).get("tip", ""))
+-		if tip != "":
+-			await _product_tip_shot(tip, id.trim_prefix("live:"), stem)
+-			return
+-		# A frame before each action, the last one after them (stem + the action's suffix). English for this
+-		# run only: Localization.set_language would also store it as the player's language.
+-		var press := func(key: String) -> Callable: return _press_button_labelled.bind(_shell, tr(key))
+-		var to_en := func() -> void:
+-			TranslationServer.set_locale("en")
+-			EventBus.language_changed.emit("en")
+-		var kept: Array = []   # live:b2c_goal: the sprint's cards before the lead's plan
+-		var lead := func() -> void:
+-			kept.assign(GameState.product.sprint.cards)
+-			SprintSystem.apply_lead()
+-		var toward_trust := func() -> void:
+-			for card_id in GameState.product.sprint.cards.duplicate():
+-				if card_id not in kept:
+-					SprintSystem.remove(card_id)
+-			SprintSystem.pick_goal("trust")
+-			SprintSystem.apply_lead()
+-		# live:a4_run_w2: a second frame two game hours on (_02): the now line moves with the clock.
+-		var two_hours_on := func() -> void:
+-			TimeManager.advance_hours(2)
+-			print(_productshot_line("a4_run_w2"))
+-		var then: Dictionary = {"live:gate": [[press.call("PROD_SHIP_PUBLISH"), "_publish"]],
+-			"live:a4_run_w2": [[two_hours_on, "_02"]],
+-			"live:plan": [[press.call("PRODUCT_START_SPRINT"), "_start"]],
+-			"live:rnd": [[press.call("PRODUCT_GO_RND"), "_go"]],
+-			"live:pick_relang": [[to_en, "_rebuilt"]],
+-			"live:b2c_goal": [[lead, "_lead"], [toward_trust, "_trust"]]}
+-		var base := stem
+-		for step: Array in then.get(id, []):
+-			await get_tree().process_frame
++	_seed_product_live(id.trim_prefix("live:"))
++	await _mount_shot_shell()
++	EventBus.tab_changed.emit("product")
++	if id == "live:overview_pre" or id.begins_with("live:server"):
++		await _product_overview_shot(id.trim_prefix("live:"), stem)
++		return
++	if id in ["live:pick_named", "live:pick_relang"]:
++		var picker: TypePicker = _shell.find_children("*", "TypePicker", true, false)[0]
++		picker._pick_type("note_tool")
++		picker._name = "Notly"   # LOC-DATA debug seed / name
++		picker._save_draft()
++	if id.begins_with("live:decision_paper"):
++		await get_tree().process_frame
++		for row: BoardRow in _shell.find_children("*", "BoardRow", true, false):
++			if row.card.ask != null:
++				row.action.emit("decide", {"card_id": row.card.id, "item": row.card.ask.item})
++				break
++		if id != "live:decision_paper":   # a real paper: its answer is open, so its options and their chips are in the frame
+ 			await get_tree().create_timer(0.4).timeout
+-			_save_shot(stem)
+-			step[0].call()
+-			stem = base + step[1]
+-		if id == "live:b2c_live":
+-			# Geçmiş açık: v1.0'ın satırı ilk haftanın kullanıcılarını okur.
+-			get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()._set_ui(true, "history_open")
+-		if id == "live:b2b_quarter":
+-			get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()._set_ui("quarter", "view")
+-		await _finish_shot(stem)
++			_press_button_labelled(_shell, tr("MAIL_RESPOND"))
++	if id.begins_with("live:a4_") and not await _product_a4_ready(id.trim_prefix("live:")):
+ 		return
+-	await _mount_shot_shell()
+-	_shell.debug_product_apply("c1" if id == "flow" else id.trim_prefix("edge:"))
+-	if id == "edge:goal_menu":
+-		await get_tree().process_frame
+-		var click := InputEventMouseButton.new()
+-		click.button_index = MOUSE_BUTTON_LEFT
+-		click.pressed = true
+-		(_shell.find_children("*", "QuarterView", true, false)[0] as QuarterView).get_child(0).gui_input.emit(click)
+-	if id != "flow":
+-		await _finish_shot(stem)
++	var tip: String = String(_A4_WORLDS.get(id.trim_prefix("live:"), {}).get("tip", ""))
++	if tip != "":
++		await _product_tip_shot(tip, id.trim_prefix("live:"), stem)
+ 		return
+-	for kind in ["start", "advance", "plan_next"]:
+-		_shell.debug_product_act(kind)
++	# A frame before each action, the last one after them (stem + the action's suffix). English for this
++	# run only: Localization.set_language would also store it as the player's language.
++	var press := func(key: String) -> Callable: return _press_button_labelled.bind(_shell, tr(key))
++	var to_en := func() -> void:
++		TranslationServer.set_locale("en")
++		EventBus.language_changed.emit("en")
++	var kept: Array = []   # live:b2c_goal: the sprint's cards before the lead's plan
++	var lead := func() -> void:
++		kept.assign(GameState.product.sprint.cards)
++		SprintSystem.apply_lead()
++	var toward_trust := func() -> void:
++		for card_id in GameState.product.sprint.cards.duplicate():
++			if card_id not in kept:
++				SprintSystem.remove(card_id)
++		SprintSystem.pick_goal("trust")
++		SprintSystem.apply_lead()
++	# live:a4_run_w2: a second frame two game hours on (_02): the now line moves with the clock.
++	var two_hours_on := func() -> void:
++		TimeManager.advance_hours(2)
++		print(_productshot_line("a4_run_w2"))
++	var then: Dictionary = {"live:gate": [[press.call("PROD_SHIP_PUBLISH"), "_publish"]],
++		"live:a4_run_w2": [[two_hours_on, "_02"]],
++		"live:plan": [[press.call("PRODUCT_START_SPRINT"), "_start"]],
++		"live:rnd": [[press.call("PRODUCT_GO_RND"), "_go"]],
++		"live:pick_relang": [[to_en, "_rebuilt"]],
++		"live:b2c_goal": [[lead, "_lead"], [toward_trust, "_trust"]]}
++	var base := stem
++	for step: Array in then.get(id, []):
+ 		await get_tree().process_frame
+ 		await get_tree().create_timer(0.4).timeout
+-		_save_shot("%s_%s" % [stem, kind])
+-	get_tree().quit()
++		_save_shot(stem)
++		step[0].call()
++		stem = base + step[1]
++	if id == "live:b2c_live":
++		# Geçmiş açık: v1.0'ın satırı ilk haftanın kullanıcılarını okur.
++		get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()._set_ui(true, "history_open")
++	if id == "live:b2b_quarter":
++		get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()._set_ui("quarter", "view")
++	await _finish_shot(stem)
+ 
+ 
+ ## GENEL BAKIŞ of a live:overview_pre or live:server_* shot, and the tip of the control the state is about: the pointer rests
+--- a/scripts/systems/product_quality.gd
++++ b/scripts/systems/product_quality.gd
+@@ -28,8 +28,6 @@
+ ## Satışçı kapanışının eğrisi [WORKING] onay bekliyor, E1'de kalibre: adayın U'su → ihtimal, noktalar arası doğrusal, uçlarda
+ ## düz. Baktığı hiçbir alanı eksik olmayan aday bu eğriye girmez, kesin kapanır.
+ const CLOSE_CURVE := [[40.0, 0.30], [55.0, 0.60], [70.0, 0.85], [80.0, 0.95]]
+-## Alan sözcüğünün tonu (`area_row`): Güçlü iyi, Yeterli nötr, Zayıf ve Yok uyarı; `UiFactory.D_tag`'in anlam adlarıdır.
+-const WORD_TONES := {"strong": "pos", "enough": "neutral", "weak": "warn", "none": "warn"}
+ 
+ # Yıldız beklenti tablosu: seviye 1 alanın her hattının ilk sürümüdür. Hat sayısına bağlı tek hücre hesaplanır: Çekirdek
+ # 1★'ta MVP'dir (`mvp_lines` ÷ Çekirdek hat sayısı). Tabloda olmayan hücre 0'dır: o yıldız o alana bakmaz. MVP hücresi
+@@ -148,16 +146,6 @@
+ 	return word(area, ctx) in ["enough", "strong"]
+ 
+ 
+-## B2B: alanın, yıldızın ürün sayfası referansını karşıladığı en büyük yıldız (0-3), ham seviyeyle. 0 yalnız Çekirdek'te
+-## olur; öbür alanlara 1★ bakmaz, onlar en az 1'dir.
+-static func serves(area: String) -> int:
+-	var lvl: float = level(area)
+-	var star: int = 0
+-	while star < STAR_MAX and lvl >= expectation(area, {"star": star + 1}):
+-		star += 1
+-	return star
+-
+-
+ ## Ürünün henüz karşılamadığı en küçük yıldız (herhangi bir alanın ham seviyesi o yıldızın referansının altındaysa);
+ ## hepsi karşılanmışsa 3. Lider, PM önerisi ve çeyrek şeridi bunu okur.
+ static func next_star() -> int:
+@@ -185,20 +173,6 @@
+ 		if lvl < expect:
+ 			ratios[area] = _ratio(lvl, expect)
+ 	return lowest(ratios.keys(), ratios)
+-
+-
+-## Genel Bakış'ın ürün durumu satırı: alanın ürün sayfasındaki hâli, `word` ve `serves` ile aynı referans. `word`: sözcüğün kimliği;
+-## `tone`: onun tonu; `sentence`: alanın cümlesi; `squares`: seviyenin referans beklentisine oranı onluk ölçekte (beşinci kare
+-## referanstır, en çok 10); `faint_from`: ilk soluk karenin numarası, oran RATIO_CAP'e varınca başlar, çünkü fazlası uyuma
+-## eklenmez. Referansın alandan bir şey beklemediği yerde (B2B'de Gelir) ölçek yoktur: kare 0.
+-static func area_row(area: String) -> Dictionary:
+-	var lvl: float = level(area)
+-	var expect: float = expectation(area)
+-	var mark: int = int(SprintCatalog.cfg("pm.goal_mark"))
+-	var word_id: String = word_for(lvl, expect)
+-	return {"area": area, "word": word_id, "tone": WORD_TONES[word_id], "sentence": SprintCatalog.area_sentence(area),
+-		"squares": mini(roundi(lvl / expect * mark), int(SprintCatalog.cfg("pm.goal_squares"))) if expect > 0.0 else 0,
+-		"faint_from": roundi(RATIO_CAP * mark)}
+ 
+ 
+ ## {alan: beklenti} (beklentisi 0 olan alan yok): yıldızın ve sektörün satırı, rakipsiz. Hesap bunu imzada ve her yenileme
+--- a/scripts/systems/sprint_catalog.gd
++++ b/scripts/systems/sprint_catalog.gd
+@@ -147,30 +147,6 @@
+ 		return true
+ 	return capabilities(area_id).any(func(line_id: String) -> bool:
+ 		return line_id not in cleared and is_priority_count(ProductState.line_bugs(line_id)))
+-
+-
+-## Kapalı satırın cümlesi: alanın kime yettiği, açık hata, sunucu aşımı, rakip çıkışı ve araştırmadan sonraki
+-## `research_sentence_weeks` haftada kullanıcıların söylediği.
+-static func area_sentence(area_id: String) -> String:
+-	var parts: PackedStringArray = []
+-	var standing: String = _standing(area_id)
+-	if standing != "":
+-		parts.append(standing)
+-	var n: int = 0
+-	for line_id in capabilities(area_id):
+-		n += ProductState.line_bugs(line_id)
+-	if n > 0:
+-		parts.append(_t(Fmt.count_key("PRODUCT_BUG_COUNT", n)).format({"n": Fmt.group(n)}))
+-	if _over_capacity(area_id):
+-		parts.append(_t("PRODUCT_AREA_OVER_CAPACITY"))
+-	var hit: Dictionary = _recent_hit(area_id)
+-	if not hit.is_empty():
+-		parts.append(_t("PRODUCT_AREA_RIVAL").format({"rival": rival_name(int(hit.rival))}))
+-	var researched: Variant = _p().get("research_done", {}).get(area_id)
+-	if researched != null and SprintSystem.sprint_number() - int(researched) \
+-			<= SprintSystem.sprints_in(int(cfg("research_sentence_weeks"))):
+-		parts.append(_t("PRODUCT_RESEARCH_VOICE_" + area_id.to_upper()))
+-	return SEP.join(parts)
+ 
+ 
+ # --- Kartlar ---------------------------------------------------------------------
+@@ -763,27 +739,6 @@
+ 	var expect: float = ProductQuality.expectation(area_id)
+ 	return {"k": "level", "area": area_short(area_id), "from": display_level(from), "to": display_level(to),
+ 		"from_word": ProductQuality.word_for(from, expect), "to_word": ProductQuality.word_for(to, expect)}
+-
+-
+-## Alanın kime yettiği. B2B'de hangi yıldızdaki şirketlere yettiği (Çekirdek dışı alana 1★ şirket bakmaz); B2C'de sayfanın
+-## referansına (kitlenin yıldızı, en az 2★) yetip yetmediği, yayından önce kitle olmadığı için hiçbir şey; Gelir kaliteye
+-## girmez, cümlesi sözcüğüne bağlı kendi dört satırıdır.
+-static func _standing(area_id: String) -> String:
+-	if area_id == "revenue":
+-		return _t("PRODUCT_AREA_REVENUE_" + ProductQuality.word(area_id).to_upper())
+-	if ProductState.market_type() == "b2c":
+-		if not ProductState.is_live():
+-			return ""
+-		var enough: bool = ProductQuality.level(area_id) >= ProductQuality.expectation(area_id)
+-		return _t("PRODUCT_AUDIENCE_ENOUGH" if enough else "PRODUCT_AUDIENCE_OUTGROWN")
+-	var star: int = ProductQuality.serves(area_id)
+-	if star == 0:
+-		return _t("PRODUCT_STAR_NONE")
+-	if star == 1 and area_id != "core":
+-		return _t("PRODUCT_STAR_SKIPPED")
+-	if star == ProductQuality.STAR_MAX:
+-		return _t("PRODUCT_STAR_TOP")
+-	return _t("PRODUCT_STAR_SERVES").format({"star": star, "next": star + 1})
+ 
+ 
+ ## Güven & Ölçek sunucu aşımını da uyarı sayar.
+@@ -816,22 +771,13 @@
+ 
+ 
+ ## Verilen hatlara son `rival_window_weeks` haftanın sprintlerinde düşen rakip çıkışları, çıkış kaydı başına. Aday
+-## beklentisinin artışı ve alanın cümlesi aynı pencereyi okur.
++## beklentisinin artışı aynı pencereyi okur.
+ static func recent_hits(lines: Array) -> Array:
+ 	var window: int = SprintSystem.sprints_in(int(cfg("rival_window_weeks")))
+ 	return (_p().get("rival_hits", []) as Array).filter(func(h: Dictionary) -> bool:
+ 		return String(h.line) in lines and SprintSystem.sprint_number() - int(h.sprint) < window)
+ 
+ 
+-## Alanın son rakip çıkışı, yoksa {}.
+-static func _recent_hit(area_id: String) -> Dictionary:
+-	var latest: Dictionary = {}
+-	for h in recent_hits(capabilities(area_id)):
+-		if int(h.sprint) >= int(latest.get("sprint", -1)):
+-			latest = h
+-	return latest
+-
+-
+ ## Kartın karşıladığı açık talep: talep kartının kendisi ya da aynı kademeyi yapan özellik kartı.
+ static func _request_of(card: Dictionary) -> Dictionary:
+ 	for r in open_requests():
+--- a/scripts/systems/sprint_system.gd
++++ b/scripts/systems/sprint_system.gd
+@@ -699,7 +699,7 @@
+ 	return int(SprintCatalog.cfg("sprint_weeks"))
+ 
+ 
+-## Haftayla sayılan süre kaç sprint eder: talep ve söz son tarihi, çeyrek, rakip penceresi ve araştırma cümlesi
++## Haftayla sayılan süre kaç sprint eder: talep ve söz son tarihi, çeyrek ve rakip penceresi
+ ## hafta sayar ve sprint sırasıyla okunur.
+ static func sprints_in(weeks: int) -> int:
+ 	return int(float(weeks) / sprint_weeks())
+--- a/scripts/tabs/product/product_model.gd
++++ b/scripts/tabs/product/product_model.gd
+@@ -2,7 +2,7 @@
+ extends RefCounted
+ 
+ # Ürün sekmesinin sprint ekranının görünüm sözleşmesi. Sekme yalnız bu Dictionary'yi çizer.
+-# Üreten (canlı adaptör ya da debug fikstürü) içerik alanlarını çözülmüş metin olarak verir;
++# Üreten (`live`) içerik alanlarını çözülmüş metin olarak verir;
+ # eşik ve izinler bool gelir. Bileşenler kendi dilbilgisini PRODUCT_* anahtarlarından kurar.
+ #
+ # PRD terimi → sözleşme adı:
+@@ -23,7 +23,7 @@
+ #             null (yalnız alan hedefinde)} or null (sprint yok), columns: [column]},
+ #   ui: {view: "overview"|"sprint"|"quarter", open_area: area id or "", history_open, hover_card: card id or "" (imleç bir adayın
+ #         "+"ında), server_preview: kademe id or "" (açık geçiş önizlemesi), requests_open (talep listesinin fazlası açık)},
+-#   overview: {server: server} or null (v1.0'dan önce: GENEL BAKIŞ kilitli; fikstürde de yok),
++#   overview: {server: server} or null (v1.0'dan önce: GENEL BAKIŞ kilitli),
+ #   areas: [{id, name, goal_text}],
+ #   center: center,
+ #   next: {sprint: int or -1, cards: [next card], load, carried},
+@@ -112,7 +112,7 @@
+ const NEXT_KEYS := ["pull", "remove"]
+ 
+ 
+-## Kaynak verilmediğinde sekmenin okuduğu model: ürün durumundan (GameState.product) ve sprint
++## Sekmenin okuduğu model: ürün durumundan (GameState.product) ve sprint
+ ## sistemlerinden kurulur. Tür seçilmeden alan ve kart yoktur; sekme o zaman tür seçiciyi açar.
+ static func live() -> Dictionary:
+ 	_addable.clear()
+@@ -221,8 +221,7 @@
+ 	return _ghosts[card_id]
+ 
+ 
+-## Hayaletin pano satırı: adayın düşeceği yerde (planın sonunda, planla birlikte oynatılmış); motorun tanımadığı kimlik (debug
+-## fikstürünün kartı) satır vermez.
++## Hayaletin pano satırı: adayın düşeceği yerde (planın sonunda, planla birlikte oynatılmış); motorun tanımadığı kimlik satır vermez.
+ static func ghost_row(card_id: String) -> Dictionary:
+ 	var c: Dictionary = SprintCatalog.card_by_id(card_id)
+ 	return {} if c.is_empty() else _row(c, ghost(card_id).cards[card_id], ["add"])
+@@ -657,7 +656,7 @@
+ 
+ 
+ ## Adayın bu aşamalarda sprinte ekleyeceği efor {aşama: efor} (hayalet): planın o kartla oynatmasında kartın aşama ihtiyacı.
+-## Motorun tanımadığı kimlik (debug fikstürünün kartı) hayalet vermez.
++## Motorun tanımadığı kimlik hayalet vermez.
+ static func ghost_effort(card_id: String) -> Dictionary:
+ 	var out: Dictionary = {}
+ 	if SprintCatalog.card_by_id(card_id).is_empty():
+@@ -964,7 +963,7 @@
+ 		GameState.product.sprint.cards.map(func(id: String) -> Dictionary: return {"pts": SprintSystem.card_load(cards[id])}))
+ 
+ 
+-## Alanın çeyrek hedefi olarak cümlesi (şerit ve hedef menüsü); fikstür de buradan okur.
++## Alanın çeyrek hedefi olarak cümlesi (şerit ve hedef menüsü).
+ static func goal_text(area_id: String) -> String:
+ 	return _t("PRODUCT_GOAL_" + area_id.to_upper())
+ 
+--- a/scripts/tabs/product_tab.gd
++++ b/scripts/tabs/product_tab.gd
+@@ -3,8 +3,8 @@
+ # Ürün penceresi. Ortak koyu başlıkta Ürün ve iki ölçü (tür ile ürün adı, sürüm); altında denetim şeridi
+ # (GENEL BAKIŞ | SPRINT | ÇEYREK; Genel Bakış v1.0'a, ÇEYREK PM'e kadar gerekçesiyle kilitli; Kurucu sprintte ve Geçmiş
+ # anahtarları), gövdede GENEL BAKIŞ (sunucu), SPRINT görünümü (modüller · bu sprint · sonraki) ya da ÇEYREK görünümü.
+-# Her değişiklikte kaynağın modelinden baştan kurulur; kaynak yoksa canlı model ve eylemler sistemlere gider, ürün
+-# türü seçilmemişse şerit yoktur ve ortada tür seçici durur. Açık modül, talep listesinin açıklığı, geçmiş ve görünüm
++# Her değişiklikte canlı modelden baştan kurulur ve eylemler sistemlere gider; ürün türü seçilmemişse şerit yoktur ve
++# ortada tür seçici durur. Açık modül, talep listesinin açıklığı, geçmiş ve görünüm
+ # sekmenin yerel durumudur: modelin `ui`'sinden tohumlanır, tek sahibi `_ui`'dir; Destek kartı alanı `open_area` ile açar.
+ # Son açık kâğıt pencere kapanıp açılınca (ve dil değişince) hatırlanır, kayda yazılmaz. Sol sütunun, panonun ve sağ sütunun
+ # kaydırması yeniden kurulumda korunur; koşan sprintte `hour_changed` sayfayı kurmaz, yalnız şimdiki anı günceller. Masa her mesai
+@@ -24,7 +24,6 @@
+ static var _last_view := "sprint"
+ 
+ var frame_options: Dictionary
+-var _source: Object = null
+ var _ui: Dictionary = {}
+ var _closing := false   # pencere kapanıyor: ertelenmiş kurulum ölmekte olan sayfada saati yeniden tutmasın
+ var _rebuild_queued := false
+@@ -120,15 +119,6 @@
+ 	_rebuild()
+ 
+ 
+-## src: model() -> Dictionary ve act(kind, args). Aynı kaynakla yeniden çağrılınca da yerel
+-## durum yeni modelden tohumlanır.
+-func set_source(src: Object) -> void:
+-	_source = src
+-	_ui = {}
+-	if is_node_ready():
+-		_rebuild()
+-
+-
+ ## Kapanan sayfa sürüm notunun tutuşunu bırakır; saati oyuncu başlatır.
+ func on_page_closing() -> void:
+ 	_closing = true
+@@ -146,12 +136,11 @@
+ 	_rebuild_queued = false
+ 	if _closing:
+ 		return
+-	var m: Dictionary = _source.model() if _source != null else ProductModel.live()
++	var m: Dictionary = ProductModel.live()
+ 	_desk_stamp = ProductModel.desk_stamp()
+ 	if _ui.is_empty():
+ 		_ui = m.ui.duplicate()
+-		if _source == null:
+-			_ui.view = _last_view
++		_ui.view = _last_view
+ 	m.ui = _ui
+ 	# "+" yalnız planlamada açıktır: imleç ondayken sprint başlarsa (devir, Boşluk) kalan hayalet kalkar.
+ 	if m.center.mode != "plan":
+@@ -166,7 +155,7 @@
+ 		_last_view = view
+ 	if m.center.mode == "release" or (view == "quarter" and m.quarter.state != "open"):
+ 		view = "sprint"
+-	var picking: bool = _source == null and not SprintSystem.is_typed()
++	var picking: bool = not SprintSystem.is_typed()
+ 	_build_head(m.header)
+ 	_build_ctl(m, view)
+ 	_ctl.visible = not picking
+@@ -293,15 +282,11 @@
+ 		return
+ 	if kind == "edit":
+ 		_set_ui("sprint", "view")
+-	if _source != null:
+-		_source.act(kind, args)
+-	else:
+-		_act(kind, args)
++	_act(kind, args)
+ 	_queue_rebuild()
+ 
+ 
+-## Kaynak yokken eylem sprint motoruna gider; fikstürün eylem tablosuyla aynı türler. Karar kartta
+-## cevaplanmaz: Olaylar kâğıdı seçili açılır.
++## Eylem sprint motoruna gider. Karar kartta cevaplanmaz: Olaylar kâğıdı seçili açılır.
+ func _act(kind: String, args: Dictionary) -> void:
+ 	match kind:
+ 		"add", "pull": SprintSystem.add(args.card_id)

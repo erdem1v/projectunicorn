@@ -1,0 +1,150 @@
+### #38  15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+F=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad/wfinal/project-unicorn; for f in docs/kod_haritasi/sistemler/02_urun_sprint.md docs/kod_haritasi/sistemler/08_sekmeler.md; do F="$F/$f" python3 - <<'EOF'
+import os,re
+p=os.environ['F']; t=open(p,encoding='utf-8').read()
+t2=re.sub(r'^<<<<<<< [^\n]*\n(.*?)^=======\n.*?^>>>>>>> [^\n]*\n', r'\1', t, flags=re.S|re.M)
+open(p,'w',encoding='utf-8').write(t2); print(p.split('/')[-1], t.count('<<<<<<<'), t2.count('<<<<<<<'))
+EOF
+done; cd $F; wc -l scripts/tabs/product_tab.gd scripts/tabs/product/product_model.gd scripts/tabs/product/sprint_panel.gd | head -3; grep -n "^func _ready\|^func _rebuild\|^func _queue_rebuild\|^func _on_action\|^func _act\|^func open_area\|^func _on_candidate_hover\|^func _hold_clock\|HOLD_RELEASE_NOTE :=\|^const HOLD_RELEASE_NOTE" scripts/tabs/product_tab.gd; grep -n "^static func live" scripts/tabs/product/product_model.gd; grep -n "\"begin_planned\"\|\"plan_next\"\|\"publish\"\|\"approve\"\|\"pick_goal\"\|\"set_provider\"\|\"auto_adjust\"\|\"add\":\|\"add\"\|EventBus\.[a-z_]*\.connect" scripts/tabs/product_tab.gd | head -24
+
+### #39  15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+F=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad/wfinal/project-unicorn; cd $F; perl -pi -e 's/`ProductModel.live\(\)` `scripts\/tabs\/product\/product_model.gd:130`/`ProductModel.live()` `scripts\/tabs\/product\/product_model.gd:117`/' docs/kod_haritasi/sistemler/08_sekmeler.md; python3 - <<'EOF'
+import re,os,glob
+for doc in glob.glob('docs/kod_haritasi/sistemler/0[2789]_*.md')+glob.glob('docs/kod_haritasi/sistemler/10_*.md'):
+    t=open(doc,encoding='utf-8').read()
+    for m in re.finditer(r'`(scripts/[\w/]+\.gd)` \((\d+)\)', t):
+        f,n=m.group(1),int(m.group(2))
+        if os.path.exists(f):
+            real=sum(1 for _ in open(f,encoding='utf-8'))
+            if real!=n: print(doc.split('/')[-1], f, 'doc',n,'real',real)
+EOF
+grep -c "_axis\|axis_wanted" scripts/tabs/product/sprint_board.gd scripts/tabs/product/board_row.gd scripts/tabs/product/sprint_panel.gd scripts/ui/components/window_layer.gd; grep -n '"product": Vector2' scripts/ui/components/window_layer.gd
+
+### #1494 2026-10-28T19:38:01.163Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; cd $S; rm -rf wfinal; mkdir -p wfinal && rsync -a w4b/project-unicorn/ wfinal/project-unicorn/; F=$S/wfinal/project-unicorn; for f in $(cat d4a_changed.txt); do if [ -e w4b_base/project-unicorn/$f ]; then git merge-file $F/$f w4b_base/project-unicorn/$f w4/project-unicorn/$f; echo "rc=$? $f"; else cp w4/project-unicorn/$f $F/$f; echo "new $f"; fi; done; git merge-file $F/localization/strings.csv base3/project-unicorn/localization/strings.csv w5/project-unicorn/localization/strings.csv; echo "rc=$? strings.csv (D5)"; grep -l "<<<<<<<" -r $F/scripts $F/docs/kod_haritasi $F/localization $F/CLAUDE.md $F/data/product 2>/dev/null
+
+### #1496 2026-10-28T19:38:20.553Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+F=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad/wfinal/project-unicorn; for f in docs/kod_haritasi/sistemler/02_urun_sprint.md docs/kod_haritasi/sistemler/08_sekmeler.md; do F="$F/$f" python3 - <<'EOF'
+import os,re
+p=os.environ['F']; t=open(p,encoding='utf-8').read()
+t2=re.sub(r'^<<<<<<< [^\n]*\n(.*?)^=======\n.*?^>>>>>>> [^\n]*\n', r'\1', t, flags=re.S|re.M)
+open(p,'w',encoding='utf-8').write(t2); print(p.split('/')[-1], t.count('<<<<<<<'), t2.count('<<<<<<<'))
+EOF
+done; cd $F; wc -l scripts/tabs/product_tab.gd scripts/tabs/product/product_model.gd scripts/tabs/product/sprint_panel.gd | head -3; grep -n "^func _ready\|^func _rebuild\|^func _queue_rebuild\|^func _on_action\|^func _act\|^func open_area\|^func _on_candidate_hover\|^func _hold_clock\|HOLD_RELEASE_NOTE :=\|^const HOLD_RELEASE_NOTE" scripts/tabs/product_tab.gd; grep -n "^static func live" scripts/tabs/product/product_model.gd; grep -n "\"begin_planned\"\|\"plan_next\"\|\"publish\"\|\"approve\"\|\"pick_goal\"\|\"set_provider\"\|\"auto_adjust\"\|\"add\":\|\"add\"\|EventBus\.[a-z_]*\.connect" scripts/tabs/product_tab.gd | head -24
+
+### #1498 2026-10-28T19:38:59.423Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+F=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad/wfinal/project-unicorn; cd $F; perl -pi -e 's/`ProductModel.live\(\)` `scripts\/tabs\/product\/product_model.gd:130`/`ProductModel.live()` `scripts\/tabs\/product\/product_model.gd:117`/' docs/kod_haritasi/sistemler/08_sekmeler.md; python3 - <<'EOF'
+import re,os,glob
+for doc in glob.glob('docs/kod_haritasi/sistemler/0[2789]_*.md')+glob.glob('docs/kod_haritasi/sistemler/10_*.md'):
+    t=open(doc,encoding='utf-8').read()
+    for m in re.finditer(r'`(scripts/[\w/]+\.gd)` \((\d+)\)', t):
+        f,n=m.group(1),int(m.group(2))
+        if os.path.exists(f):
+            real=sum(1 for _ in open(f,encoding='utf-8'))
+            if real!=n: print(doc.split('/')[-1], f, 'doc',n,'real',real)
+EOF
+grep -c "_axis\|axis_wanted" scripts/tabs/product/sprint_board.gd scripts/tabs/product/board_row.gd scripts/tabs/product/sprint_panel.gd scripts/ui/components/window_layer.gd; grep -n '"product": Vector2' scripts/ui/components/window_layer.gd
+
+### #1499 2026-10-28T19:39:25.689Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; F=$S/wfinal/project-unicorn; perl -pi -e 's/(`scripts\/tabs\/product\/product_model.gd` \()1148(\))/${1}1149$2/' $F/docs/kod_haritasi/sistemler/08_sekmeler.md; grep -c "product_model.gd\` (1149)" $F/docs/kod_haritasi/sistemler/08_sekmeler.md; cd $S; mkdir -p premerge; for f in scripts/tabs/product_tab.gd docs/kod_haritasi/sistemler/08_sekmeler.md; do n=premerge/$(basename $f); cp w3/project-unicorn/$f $n; git merge-file $n base3/project-unicorn/$f w4/project-unicorn/$f; echo "D4a-on-D3 rc=$? $f"; done
+
+### #1502 2026-10-28T19:40:54.861Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; cat > $S/u8_list.txt <<'EOF'
+s01 --product-shot=live:a4_solo tr
+s02 --product-shot=live:a4_devs3 tr
+s03 --product-shot=live:a4_six_hover tr
+s04 --product-shot=live:a4_six_pm5 tr
+s05 --product-shot=live:a4_six_pm2 tr
+s06 --product-shot=live:a4_eleven tr
+s07 --product-shot=live:a4_eleven_streak tr
+s08 --product-shot=live:a4_two_pm tr
+s09 --product-shot=live:a4_fifty tr
+s10 --product-shot=live:a4_run_w2 tr
+s11 --product-shot=live:a4_eleven_tip tr
+s12 --product-shot=live:a4_twelve_dev tr
+s13 --product-shot=live:a4_fourteen tr
+s14en --product-shot=live:a4_eleven_tip en
+s15 --product-shot=live:a4_requests tr
+s16 --product-shot=live:a4_empty tr
+s17 --product-shot=live:a4_run_end tr
+s18 --product-shot=live:a4_next_prefilled tr
+s19 --product-shot=live:a4_early tr
+s20 --product-shot=live:a4_first_sprint tr
+s21 --product-shot=live:a4_first_next tr
+s22 --product-shot=live:a4_six_founder_off tr
+s23 --product-shot=live:a4_six_meetings2 tr
+s24 --product-shot=live:a4_run_table tr
+s06en --product-shot=live:a4_eleven en
+s10en --product-shot=live:a4_run_w2 en
+s16en --product-shot=live:a4_empty en
+s04cb --product-shot=live:a4_six_pm5 tr --palette=cb
+s12cb --product-shot=live:a4_twelve_dev tr --palette=cb
+s06x125 --product-shot=live:a4_eleven tr --shot-scale=1.25
+s11x125 --product-shot=live:a4_eleven_tip tr --shot-scale=1.25
+x_gate --product-shot=live:gate tr
+x_noteam --product-shot=live:a4_cards_noteam tr
+x_noteam_delegate --product-shot=live:a4_delegate_noteam tr
+x_pick --product-shot=live:pick tr
+x_paper --product-shot=live:decision_paper tr
+q_tr --product-shot=live:b2b_quarter tr
+q_en --product-shot=live:b2b_quarter en
+x_delegate_long_en --product-shot=live:a4_run_delegate_long en
+t_bar --product-shot=live:a4_run_w2_bar tr
+t_fix --product-shot=live:a4_fix_tip tr
+t_meet --product-shot=live:a4_meet_tip tr
+t_next --product-shot=live:a4_next_tip tr
+t_pm --product-shot=live:a4_pm_tip tr
+EOF
+wc -l < $S/u8_list.txt; F=$S/wfinal/project-unicorn; bash -c ". $S/bin/env.sh; gdw warm_wf $F --headless --path . --quit > $S/wfinal_warm.log 2>&1; echo warm rc=\$? err=\$(grep -ac 'SCRIPT ERROR\|Parse Error' $S/wfinal_warm.log)"
+
+### #1579 2026-10-28T19:52:27.574Z agent-a208d6f87c7f58c83 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; mkdir -p $S/u8/crops; D=$S/shots_u8; P=$S/shots_u8proto; C=$S/u8/crops
+python3 - <<EOF
+import json
+D="$D"; P="$P"; C="$C"
+a=lambda n:D+"/"+n
+crops=[
+ # + n formlari
+ dict(src=a("s09__product_shot_live_a4_fifty.png"),x=540,y=250,w=520,h=50,out=C+"/plus_header_faces_a4_fifty.png"),
+ dict(src=a("s13__product_shot_live_a4_fourteen.png"),x=1580,y=545,w=285,h=82,out=C+"/plus_devreden_kart_a4_fourteen.png"),
+ dict(src=a("s06__product_shot_live_a4_eleven.png"),x=1580,y=545,w=285,h=92,out=C+"/plus_devreden_kart_a4_eleven.png"),
+ dict(src=a("s15__product_shot_live_a4_requests.png"),x=225,y=455,w=290,h=40,out=C+"/plus_talep_a4_requests.png"),
+ dict(src=a("s09__product_shot_live_a4_fifty.png"),x=665,y=345,w=620,h=170,out=C+"/times_cluster_a4_fifty.png"),
+ dict(src=a("s12__product_shot_live_a4_twelve_dev.png"),x=665,y=428,w=270,h=32,out=C+"/times_cluster_a4_twelve_dev.png"),
+ # sonraki sprint kutusu yuz dizisi (bulunamadi kaniti)
+ dict(src=a("s17__product_shot_live_a4_run_end.png"),x=1572,y=520,w=300,h=210,out=C+"/next_faces_a4_run_end.png"),
+ dict(src=a("s09__product_shot_live_a4_fifty.png"),x=1572,y=440,w=300,h=200,out=C+"/next_faces_a4_fifty.png"),
+ # hover satiri kalintisi
+ dict(src=a("s11__product_shot_live_a4_eleven_tip_tip.png"),x=545,y=563,w=330,h=50,out=C+"/hover_row_fragment_a4_eleven_tip.png"),
+]
+# dar cubuk: (a) bugun, (b) prototip
+rows_e=[("1",1050,703,110),("2",1050,759,110),("3",1300,815,120),("4",1300,871,120)]
+rows_t=[("1",1050,685,110),("2",1100,806,100)]
+for tag,base,pre in (("a",D,"s"),("b",P,"p_")):
+    pe=base+("/s06__product_shot_live_a4_eleven.png" if tag=="a" else "/p_eleven__product_shot_live_a4_eleven.png")
+    pt=base+("/s08__product_shot_live_a4_two_pm.png" if tag=="a" else "/p_two_pm__product_shot_live_a4_two_pm.png")
+    crops.append(dict(src=pe,x=850,y=695,w=560,h=215,out=C+"/narrow_%s_eleven_rows.png"%tag))
+    crops.append(dict(src=pt,x=850,y=678,w=420,h=175,out=C+"/narrow_%s_two_pm_rows.png"%tag))
+    for n,x,y,w in rows_e:
+        crops.append(dict(src=pe,x=x,y=y,w=w,h=34,out=C+"/narrow_%s_eleven_%s.png"%(tag,n)))
+    for n,x,y,w in rows_t:
+        crops.append(dict(src=pt,x=x,y=y,w=w,h=34,out=C+"/narrow_%s_two_pm_%s.png"%(tag,n)))
+json.dump(crops,open("$S/u8_tools/crops.json","w"),indent=1)
+print(len(crops))
+EOF
+cd $S; bash -c 'export ETIKET=URUN_ARAYUZU_AJAN; . "'$S'/bin/env.sh"; gdw u8crop "'$S'/wfinal/project-unicorn" --headless --path . -s "'$S'/u8_tools/crop.gd" -- "'$S'/u8_tools/crops.json" > "'$S'/u8/crop.log" 2>&1'; grep -a "CROP" $S/u8/crop.log | wc -l; grep -a CROPFAIL $S/u8/crop.log; ls $C
+
+### #1602 2026-10-28T19:58:55.508Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; cat >> $S/notes.md <<'EOF'
+
+## D7 (U8 sayfası)
+- https://claude.ai/artifact/Wqm2PqBZQXcuGjJzyotNvz (sürüm 1). Kaynak u8_page/index.html (+98 JPEG, img/), üretici u8_tools/build_page.py.
+- 56 kare (shots_u8, wfinal = D3+D4a(düz.)+D4b+D5 birleşimi), 25 kırpma (u8/crops), maket f01..f24 (u8/maket).
+- Denetim: 54 kare "taşma yok, kesilme yok"; x_paper (Olaylar penceresi) boş portre + mail önizlemesi "…" (Ürün dışı); ipucu karelerinde "→ ×" risk/eforu örter (U4 kararı).
+- Kapı: node --check satır içi JS OK; başsız Chrome 375/414/1280 px yatay taşma yok; JS hatası yok.
+- Dar çubuk 1920 (E1 sonrası): a4_eleven 4, a4_two_pm 2 (E1 öncesi 6 ve 3); (b) prototipi wproto_b (stage_paint + bar.clip_contents=false).
+EOF
+echo ok
+
+### #1610 2026-11-01T23:55:54.905Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; for d in base3 w3 w4 w4a_land b4a w4b w4b_base w5 wfinal u8_page u8 u8_tools evidence mcpw; do printf '%-10s files=%s\n' $d "$(find $S/$d -type f 2>/dev/null | wc -l)"; done; ls -la $S/w3 $S/wfinal 2>&1 | head -30

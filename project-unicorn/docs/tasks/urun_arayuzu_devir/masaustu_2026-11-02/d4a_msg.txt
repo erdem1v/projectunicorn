@@ -1,0 +1,9 @@
+Ürün arayüzü U7: statik Ürün fikstürü emekli, okuyucusu kalmayan alan cümlesi kodu ve 18 anahtar silindi
+
+Oyuncunun gördüğü değişmez. Ürün sekmesinin bütün kareleri artık motorla kurulan `--product-shot=live:<tür>` dünyalarındandır: debug fikstürü (`scripts/debug/product_fixtures.gd`), `ProductTab.set_source`, GameShell'in fikstür kaynağı ve F tuşu kolları (`debug_product_apply/act`) ve `--product-shot`'ın fikstür türleri (c1..c5, cards, flow, edge:*) silindi; `live:` olmayan tür hata basıp 1 ile çıkar. Sprint kapanışında GameShell Ürün sayfasını `open_area` ile tanır (açık Ürün sayfası sökülmez); saat karesinin "released" kolu sayfayı kendisi kurar. Fikstür türlerinin live: karşılıkları sistem sayfasında; karşılığı olmayan yedi durum (sürüm notunda düzeltme ve yorumlar, kartsız kapanış, boş geçmiş, ekipsiz boş plan, onaylı PM planı, açık hedef menüsü) ISLER.md'nin görsel kabul yüzeyleri listesine yazıldı.
+
+Okuyucusu yalnız smoke olan kod silindi: ProductQuality.area_row, WORD_TONES, serves; SprintCatalog.area_sentence, _standing, _recent_hit, _over_capacity (area_alert'e katıldı); sprint.json research_sentence_weeks; 18 CSV anahtarı (PRODUCT_AREA_RIVAL, PRODUCT_AREA_OVER_CAPACITY, PRODUCT_AREA_REVENUE_NONE/WEAK/ENOUGH/STRONG, PRODUCT_AUDIENCE_*, PRODUCT_STAR_*, PRODUCT_RESEARCH_VOICE_*). Smoke product_area_row → product_area_word (ProductQuality.word'ün 13 kademesi); fit_star_context ve product_bug_rows_read_the_store'dan silinen koda değen assert'ler çıktı. card_effect kalır (02 sistem sayfasındaki karar). Silinen her ad için grep 0. CLAUDE.md §12'nin Ürün kare paragrafı yalnız live: türlerini anlatır.
+
+Dayanak: PRD_URUN_SPRINT_ARAYUZU §13 U7, §11.3, §14 A29.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

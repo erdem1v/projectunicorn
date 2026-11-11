@@ -1,0 +1,1580 @@
+### #840 2026-10-28T16:57:42.842Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; cd $S; bash bin/export.sh w4 eebf909 --godot $S/work/project-unicorn >/dev/null && printf '[display]\nwindow/size/mode=0\n' > w4/project-unicorn/override.cfg && bash bin/export.sh w5 eebf909 --godot $S/work/project-unicorn >/dev/null && printf '[display]\nwindow/size/mode=0\n' > w5/project-unicorn/override.cfg && ls -d w4/project-unicorn/.godot w5/project-unicorn/.godot
+
+### #854 2026-10-28T16:58:54.595Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; du -sh scripts data localization docs tools scenes CLAUDE.md themes 2>/dev/null; mkdir -p $S/u7_base; rsync -a --exclude=.godot --exclude=assets --exclude=GDDs --exclude=art --exclude=addons ./ $S/u7_base/ ; du -sh $S/u7_base
+
+### #892 2026-10-28T17:03:42.455Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; head -c 300 localization/strings.csv; echo; python3 - <<'EOF'
+import csv,io,re
+data=open('localization/strings.csv',encoding='utf-8',newline='').read()
+rows=list(csv.reader(io.StringIO(data)))
+print(len(rows), rows[0])
+keys=[r[0] for r in rows[1:] if r]
+pat=re.compile(r'^(PRODUCT_AREA_|PRODUCT_AUDIENCE_|PRODUCT_STAR_|PRODUCT_RESEARCH_VOICE_)')
+for k in keys:
+    if pat.match(k): print(k)
+EOF
+
+### #907 2026-10-28T17:05:59.541Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; python3 - <<'EOF'
+import re
+p='scripts/main/game_shell.gd'
+s=open(p,encoding='utf-8').read()
+a='''# Ürün sekmesinin fikstür röleleri. Fikstür betiği yalnız debug_product_apply'da yüklenir; oyun ona
+# dokunmaz.
+const PRODUCT_FIXTURES := "res://scripts/debug/product_fixtures.gd"
+var _product_source: Object = null
+'''
+assert a in s
+s=s.replace(a,'')
+b='''	if page == null or not page.has_method(&"set_source"):
+		EventBus.tab_changed.emit("product")'''
+assert b in s
+s=s.replace(b,'''	if page == null or not page.has_method(&"open_area"):
+		EventBus.tab_changed.emit("product")''')
+c='''func debug_product_apply(fixture_id: String) -> void:
+	if OS.is_debug_build():
+		EventBus.tab_changed.emit("product")
+		_product_source = (load(PRODUCT_FIXTURES) as GDScript).new(fixture_id)
+		_windows.get_current_page_body().set_source(_product_source)
+
+
+## Fikstürün geçiş tablosunu bir adım sürer; set_source sekmeyi yeni modelden yeniden kurar.
+## Pencere kapandıysa ya da başka sekme açıksa sayfa yoktur ya da sprint ekranı değildir.
+func debug_product_act(kind: String) -> void:
+	var page: Control = _windows.get_current_page_body()
+	if not OS.is_debug_build() or _product_source == null or page == null or not page.has_method(&"set_source"):
+		return
+	_product_source.act(kind, {})
+	page.set_source(_product_source)
+
+
+'''
+assert c in s
+s=s.replace(c,'')
+open(p,'w',encoding='utf-8').write(s)
+EOF
+diff $S/u7_base/scripts/main/game_shell.gd scripts/main/game_shell.gd; sed -n 10,22p scripts/main/game_shell.gd; sed -n 155,170p scripts/main/game_shell.gd
+
+### #908 2026-10-28T17:06:13.509Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; python3 - <<'EOF'
+p='scripts/main/game_shell.gd'
+s=open(p,encoding='utf-8').read()
+a='## Sprint kapanınca sürüm notu Ürün sekmesinde açılır; sekme zaten açıksa kendini yeniden çizer.\n'
+assert a in s
+s=s.replace(a,'## Sprint kapanınca sürüm notu Ürün sekmesinde açılır; sekme zaten açıksa (`open_area` yalnız onun sayfasındadır) kendini yeniden çizer.\n')
+open(p,'w',encoding='utf-8').write(s)
+
+p='scripts/tabs/product_tab.gd'
+s=open(p,encoding='utf-8').read()
+def rep(a,b):
+    global s
+    assert s.count(a)==1,(a,s.count(a))
+    s=s.replace(a,b)
+rep('''# Her değişiklikte kaynağın modelinden baştan kurulur; kaynak yoksa canlı model ve eylemler sistemlere gider, ürün
+# türü seçilmemişse şerit yoktur ve ortada tür seçici durur. Açık modül,''','''# Her değişiklikte canlı modelden baştan kurulur ve eylemler sistemlere gider; ürün
+# türü seçilmemişse şerit yoktur ve ortada tür seçici durur. Açık modül,''')
+rep('var _source: Object = null\n','')
+rep('''## src: model() -> Dictionary ve act(kind, args). Aynı kaynakla yeniden çağrılınca da yerel
+## durum yeni modelden tohumlanır.
+func set_source(src: Object) -> void:
+	_source = src
+	_ui = {}
+	if is_node_ready():
+		_rebuild()
+
+
+''','')
+rep('	var m: Dictionary = _source.model() if _source != null else ProductModel.live()\n','	var m: Dictionary = ProductModel.live()\n')
+rep('''	if _ui.is_empty():
+		_ui = m.ui.duplicate()
+		if _source == null:
+			_ui.view = _last_view
+''','''	if _ui.is_empty():
+		_ui = m.ui.duplicate()
+		_ui.view = _last_view
+''')
+rep('	var picking: bool = _source == null and not SprintSystem.is_typed()\n','	var picking: bool = not SprintSystem.is_typed()\n')
+rep('''	if _source != null:
+		_source.act(kind, args)
+	else:
+		_act(kind, args)
+	_queue_rebuild()''','''	_act(kind, args)
+	_queue_rebuild()''')
+rep('''## Kaynak yokken eylem sprint motoruna gider; fikstürün eylem tablosuyla aynı türler. Karar kartta
+## cevaplanmaz''','''## Eylem sprint motoruna gider. Karar kartta
+## cevaplanmaz''')
+open(p,'w',encoding='utf-8').write(s)
+EOF
+diff $S/u7_base/scripts/tabs/product_tab.gd scripts/tabs/product_tab.gd; sed -n 296,302p scripts/tabs/product_tab.gd
+
+### #910 2026-10-28T17:06:25.220Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; python3 - <<'EOF'
+p='scripts/tabs/product_tab.gd'
+s=open(p,encoding='utf-8').read()
+a='''# Her değişiklikte canlı modelden baştan kurulur ve eylemler sistemlere gider; ürün
+# türü seçilmemişse şerit yoktur ve ortada tür seçici durur. Açık modül, talep listesinin açıklığı, geçmiş ve görünüm
+'''
+b='''# Her değişiklikte canlı modelden baştan kurulur ve eylemler sistemlere gider; ürün türü seçilmemişse şerit yoktur ve
+# ortada tür seçici durur. Açık modül, talep listesinin açıklığı, geçmiş ve görünüm
+'''
+assert a in s; s=s.replace(a,b)
+a='''## Eylem sprint motoruna gider. Karar kartta
+## cevaplanmaz: Olaylar kâğıdı seçili açılır.
+'''
+b='''## Eylem sprint motoruna gider. Karar kartta cevaplanmaz: Olaylar kâğıdı seçili açılır.
+'''
+assert a in s; s=s.replace(a,b)
+open(p,'w',encoding='utf-8').write(s)
+EOF
+sed -n 1,12p scripts/tabs/product_tab.gd | cut -c1-80
+
+### #911 2026-10-28T17:06:45.788Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; python3 - <<'EOF'
+p='scripts/main/main.gd'
+s=open(p,encoding='utf-8').read()
+# 1) clock shot released
+a='''			SprintSystem.start()
+			layer.get_current_page_body().set_source(null)
+			await frame.call("released")'''
+assert s.count(a)==1
+s=s.replace(a,'''			SprintSystem.start()
+			await frame.call("released")''')
+# 2) product shot
+start=s.index('# --product-shot=<c1..c5|flow|edge:<name>|live:<scenario>>')
+end=s.index('## GENEL BAKIŞ of a live:overview_pre or live:server_*')
+old=s[start:end]
+lines=old.split('\n')
+# find header comment end (func line)
+fi=next(i for i,l in enumerate(lines) if l.startswith('func _run_product_shot'))
+header=lines[:fi]
+body=lines[fi:]
+print('\n'.join(header))
+open('/tmp/_hdr.txt','w').write('\n'.join(header))
+# locate live block
+bi=next(i for i,l in enumerate(body) if l=='\tif id.begins_with("live:"):')
+ri=next(i for i,l in enumerate(body) if l=='\tawait _mount_shot_shell()')
+print(bi,ri)
+print('\n'.join(body[bi-3:bi+4]))
+print('....')
+print('\n'.join(body[ri-4:ri+1]))
+EOF
+
+### #912 2026-10-28T17:07:02.469Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; python3 - <<'EOF'
+p='scripts/main/main.gd'
+s=open(p,encoding='utf-8').read()
+a='''			SprintSystem.start()
+			layer.get_current_page_body().set_source(null)
+			await frame.call("released")'''
+assert s.count(a)==1
+s=s.replace(a,'''			SprintSystem.start()
+			await frame.call("released")''')
+start=s.index('# --product-shot=<c1..c5|flow|edge:<name>|live:<scenario>>')
+end=s.index('## GENEL BAKIŞ of a live:overview_pre or live:server_*')
+old=s[start:end]
+lines=old.split('\n')
+fi=next(i for i,l in enumerate(lines) if l.startswith('func _run_product_shot'))
+header=lines[:fi]
+body=lines[fi:]
+bi=next(i for i,l in enumerate(body) if l=='\tif id.begins_with("live:"):')
+ri=next(i for i,l in enumerate(body) if l=='\tawait _mount_shot_shell()')
+live=body[bi+1:ri]     # indented live block
+assert live[-1]=='\t\treturn' and live[-2]=='\t\tawait _finish_shot(stem)', live[-3:]
+live=live[:-1]
+ded=[]
+for l in live:
+    if l.startswith('\t'):
+        ded.append(l[1:])
+    else:
+        assert l=='' ,repr(l)
+        ded.append(l)
+new_header='''# --product-shot=live:<scenario>: the Product tab drawn from ProductModel.live() over a run seeded through SprintSystem
+# (_seed_product_live); any other kind fails the shot. live:pick_named is
+# the type picker with B2C, a type and a name picked, live:pick_relang saves it and switches this run to
+# English (<stem>_rebuilt: the rebuilt picker keeps the picks); live:decision_paper presses the asking card's
+# "?", so the frame is Olaylar on the sprint paper; live:gate saves the MVP gate, presses its
+# Yayınla and saves the v1.0 note (<stem>_publish); live:b2c_goal saves the planning with the lead's plan offered, applies
+# it with no quarter goal (<stem>_lead), then takes the lead's cards back out, picks the goal Trust and applies the lead's
+# plan again (<stem>_trust); live:plan saves the plan and presses Sprinti başlat (<stem>_start); live:rnd saves the planning with the
+# founder in R&D, presses Ar-Ge'ye git and saves R&D with the founder's node selected (<stem>_go). live:overview_pre is
+# the Sprint-1 plan with the pointer on the locked GENEL BAKIŞ tab (<stem>_tip); live:server_* is GENEL BAKIŞ on the
+# live ERP (see _seed_server), the plain frame and, for the states that have a tip to read, <stem>_tip with the pointer
+# on the control it belongs to. live:a4_<frame> are the Ürün > Sprint frame worlds (_seed_product_a4), each printing
+# its PRODUCTSHOT line.'''.split('\n')
+new=new_header+['func _run_product_shot(id: String) -> void:',
+ '\tif not id.begins_with("live:"):',
+ '\t\t_shot_fail("[ProductShot] unknown kind \'%s\', want live:<scenario>" % id)',
+ '\t\treturn']
+# body lines before the live block: _begin_shot, _seed_run_reproducible, stem
+pre=body[1:bi]
+new+=pre+ded
+# ensure ends with blank lines before next doc comment (old text ended with '\n\n\n' pattern)
+tail=old[old.index('\tawait _mount_shot_shell()\n\t_shell.debug_product_apply'):]
+# tail ends with the function end and two blank lines; keep trailing blank lines
+trail='\n\n\n'
+newtext='\n'.join(new).rstrip('\n')+trail
+s=s[:start]+newtext+s[end:]
+open(p,'w',encoding='utf-8').write(s)
+EOF
+diff -w $S/u7_base/scripts/main/main.gd scripts/main/main.gd | head -120
+
+### #913 2026-10-28T17:07:08.642Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; python3 - <<'EOF'
+p='scripts/main/main.gd'
+s=open(p,encoding='utf-8').read()
+a='''# (_seed_product_live); any other kind fails the shot. live:pick_named is
+# the type picker with B2C, a type and a name picked, live:pick_relang saves it and switches this run to
+# English'''
+b='''# (_seed_product_live); any other kind fails the shot. live:pick_named is the type picker with B2C, a type and a name picked,
+# live:pick_relang saves it and switches this run to
+# English'''
+assert a in s
+s=s.replace(a,b)
+open(p,'w',encoding='utf-8').write(s)
+EOF
+sed -n 4188,4222p scripts/main/main.gd | cut -c1-150; sed -n 4268,4282p scripts/main/main.gd
+
+### #914 2026-10-28T17:07:15.906Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; python3 - <<'EOF'
+p='scripts/main/main.gd'
+s=open(p,encoding='utf-8').read()
+a='''# live:pick_relang saves it and switches this run to
+# English (<stem>_rebuilt: the rebuilt picker keeps the picks); live:decision_paper presses the asking card's
+# "?", so the frame is Olaylar on the sprint paper; live:gate saves the MVP gate, presses its
+# Yayınla and saves the v1.0 note (<stem>_publish); live:b2c_goal'''
+b='''# live:pick_relang saves it and switches this run to English (<stem>_rebuilt: the rebuilt picker keeps the picks);
+# live:decision_paper presses the asking card's "?", so the frame is Olaylar on the sprint paper; live:gate saves the MVP gate,
+# presses its Yayınla and saves the v1.0 note (<stem>_publish); live:b2c_goal'''
+assert a in s
+s=s.replace(a,b)
+open(p,'w',encoding='utf-8').write(s)
+EOF
+sed -n 4191,4204p scripts/main/main.gd | cut -c1-140; rm -f /tmp/_hdr.txt; git -C . status 2>&1 | head -1; rm scripts/debug/product_fixtures.gd scripts/debug/product_fixtures.gd.uid; ls scripts/debug | head -30
+
+### #916 2026-10-28T17:07:29.423Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; grep -n "static func live" -B4 scripts/tabs/product/product_model.gd | head; python3 - <<'EOF'
+p='scripts/tabs/product/product_model.gd'
+s=open(p,encoding='utf-8').read()
+def rep(a,b):
+    global s
+    assert s.count(a)==1,(a,s.count(a))
+    s=s.replace(a,b)
+rep("# Üreten (canlı adaptör ya da debug fikstürü) içerik alanlarını çözülmüş metin olarak verir;\n# eşik ve izinler bool gelir.",
+    "# Üreten (`live`) içerik alanlarını çözülmüş metin olarak verir;\n# eşik ve izinler bool gelir.")
+rep("(v1.0'dan önce: GENEL BAKIŞ kilitli; fikstürde de yok),","(v1.0'dan önce: GENEL BAKIŞ kilitli),")
+rep("""## Hayaletin pano satırı: adayın düşeceği yerde (planın sonunda, planla birlikte oynatılmış); motorun tanımadığı kimlik (debug
+## fikstürünün kartı) satır vermez.""","""## Hayaletin pano satırı: adayın düşeceği yerde (planın sonunda, planla birlikte oynatılmış); motorun tanımadığı kimlik satır vermez.""")
+rep("""## Motorun tanımadığı kimlik (debug fikstürünün kartı) hayalet vermez.""","""## Motorun tanımadığı kimlik hayalet vermez.""")
+rep("## Alanın çeyrek hedefi olarak cümlesi (şerit ve hedef menüsü); fikstür de buradan okur.","## Alanın çeyrek hedefi olarak cümlesi (şerit ve hedef menüsü).")
+open(p,'w',encoding='utf-8').write(s)
+EOF
+diff $S/u7_base/scripts/tabs/product/product_model.gd scripts/tabs/product/product_model.gd; grep -n "goal_text" scripts/tabs/product/*.gd | cut -c1-160
+
+### #917 2026-10-28T17:07:35.395Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; python3 - <<'EOF'
+p='scripts/tabs/product/product_model.gd'
+s=open(p,encoding='utf-8').read()
+a="## Kaynak verilmediğinde sekmenin okuduğu model: ürün durumundan (GameState.product) ve sprint\n## sistemlerinden kurulur."
+assert a in s
+s=s.replace(a,"## Sekmenin okuduğu model: ürün durumundan (GameState.product) ve sprint\n## sistemlerinden kurulur.")
+open(p,'w',encoding='utf-8').write(s)
+EOF
+sed -n 113,118p scripts/tabs/product/product_model.gd; grep -rn "Kaynak verilm\|kaynak\b" scripts/tabs/product/*.gd scripts/tabs/product_tab.gd | head
+
+### #920 2026-10-28T17:07:58.931Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; python3 - <<'EOF'
+p='scripts/systems/product_quality.gd'
+s=open(p,encoding='utf-8').read()
+def cut(a):
+    global s
+    assert s.count(a)==1,(a[:60],s.count(a))
+    s=s.replace(a,'')
+cut('''## Alan sözcüğünün tonu (`area_row`): Güçlü iyi, Yeterli nötr, Zayıf ve Yok uyarı; `UiFactory.D_tag`'in anlam adlarıdır.
+const WORD_TONES := {"strong": "pos", "enough": "neutral", "weak": "warn", "none": "warn"}
+''')
+cut('''## B2B: alanın, yıldızın ürün sayfası referansını karşıladığı en büyük yıldız (0-3), ham seviyeyle. 0 yalnız Çekirdek'te
+## olur; öbür alanlara 1★ bakmaz, onlar en az 1'dir.
+static func serves(area: String) -> int:
+	var lvl: float = level(area)
+	var star: int = 0
+	while star < STAR_MAX and lvl >= expectation(area, {"star": star + 1}):
+		star += 1
+	return star
+
+
+''')
+cut('''## Genel Bakış'ın ürün durumu satırı: alanın ürün sayfasındaki hâli, `word` ve `serves` ile aynı referans. `word`: sözcüğün kimliği;
+## `tone`: onun tonu; `sentence`: alanın cümlesi; `squares`: seviyenin referans beklentisine oranı onluk ölçekte (beşinci kare
+## referanstır, en çok 10); `faint_from`: ilk soluk karenin numarası, oran RATIO_CAP'e varınca başlar, çünkü fazlası uyuma
+## eklenmez. Referansın alandan bir şey beklemediği yerde (B2B'de Gelir) ölçek yoktur: kare 0.
+static func area_row(area: String) -> Dictionary:
+	var lvl: float = level(area)
+	var expect: float = expectation(area)
+	var mark: int = int(SprintCatalog.cfg("pm.goal_mark"))
+	var word_id: String = word_for(lvl, expect)
+	return {"area": area, "word": word_id, "tone": WORD_TONES[word_id], "sentence": SprintCatalog.area_sentence(area),
+		"squares": mini(roundi(lvl / expect * mark), int(SprintCatalog.cfg("pm.goal_squares"))) if expect > 0.0 else 0,
+		"faint_from": roundi(RATIO_CAP * mark)}
+
+
+''')
+open(p,'w',encoding='utf-8').write(s)
+EOF
+diff $S/u7_base/scripts/systems/product_quality.gd scripts/systems/product_quality.gd | head -60; sed -n 146,160p scripts/systems/product_quality.gd
+
+### #923 2026-10-28T17:08:25.864Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; python3 - <<'EOF'
+p='scripts/systems/sprint_system.gd'
+s=open(p,encoding='utf-8').read()
+a="## Haftayla sayılan süre kaç sprint eder: talep ve söz son tarihi, çeyrek, rakip penceresi ve araştırma cümlesi\n## hafta sayar ve sprint sırasıyla okunur."
+assert s.count(a)==1
+s=s.replace(a,"## Haftayla sayılan süre kaç sprint eder: talep ve söz son tarihi, çeyrek ve rakip penceresi\n## hafta sayar ve sprint sırasıyla okunur.")
+open(p,'w',encoding='utf-8').write(s)
+
+p='scripts/systems/sprint_catalog.gd'
+s=open(p,encoding='utf-8').read()
+def cut(a,b=''):
+    global s
+    assert s.count(a)==1,(a[:60],s.count(a))
+    s=s.replace(a,b)
+cut('''## Kapalı satırın cümlesi: alanın kime yettiği, açık hata, sunucu aşımı, rakip çıkışı ve araştırmadan sonraki
+## `research_sentence_weeks` haftada kullanıcıların söylediği.
+static func area_sentence(area_id: String) -> String:
+	var parts: PackedStringArray = []
+	var standing: String = _standing(area_id)
+	if standing != "":
+		parts.append(standing)
+	var n: int = 0
+	for line_id in capabilities(area_id):
+		n += ProductState.line_bugs(line_id)
+	if n > 0:
+		parts.append(_t(Fmt.count_key("PRODUCT_BUG_COUNT", n)).format({"n": Fmt.group(n)}))
+	if _over_capacity(area_id):
+		parts.append(_t("PRODUCT_AREA_OVER_CAPACITY"))
+	var hit: Dictionary = _recent_hit(area_id)
+	if not hit.is_empty():
+		parts.append(_t("PRODUCT_AREA_RIVAL").format({"rival": rival_name(int(hit.rival))}))
+	var researched: Variant = _p().get("research_done", {}).get(area_id)
+	if researched != null and SprintSystem.sprint_number() - int(researched) \\
+			<= SprintSystem.sprints_in(int(cfg("research_sentence_weeks"))):
+		parts.append(_t("PRODUCT_RESEARCH_VOICE_" + area_id.to_upper()))
+	return SEP.join(parts)
+
+
+''')
+cut('''## Alanın kime yettiği. B2B'de hangi yıldızdaki şirketlere yettiği (Çekirdek dışı alana 1★ şirket bakmaz); B2C'de sayfanın
+## referansına (kitlenin yıldızı, en az 2★) yetip yetmediği, yayından önce kitle olmadığı için hiçbir şey; Gelir kaliteye
+## girmez, cümlesi sözcüğüne bağlı kendi dört satırıdır.
+static func _standing(area_id: String) -> String:
+	if area_id == "revenue":
+		return _t("PRODUCT_AREA_REVENUE_" + ProductQuality.word(area_id).to_upper())
+	if ProductState.market_type() == "b2c":
+		if not ProductState.is_live():
+			return ""
+		var enough: bool = ProductQuality.level(area_id) >= ProductQuality.expectation(area_id)
+		return _t("PRODUCT_AUDIENCE_ENOUGH" if enough else "PRODUCT_AUDIENCE_OUTGROWN")
+	var star: int = ProductQuality.serves(area_id)
+	if star == 0:
+		return _t("PRODUCT_STAR_NONE")
+	if star == 1 and area_id != "core":
+		return _t("PRODUCT_STAR_SKIPPED")
+	if star == ProductQuality.STAR_MAX:
+		return _t("PRODUCT_STAR_TOP")
+	return _t("PRODUCT_STAR_SERVES").format({"star": star, "next": star + 1})
+
+
+''')
+cut('''## Alanın son rakip çıkışı, yoksa {}.
+static func _recent_hit(area_id: String) -> Dictionary:
+	var latest: Dictionary = {}
+	for h in recent_hits(capabilities(area_id)):
+		if int(h.sprint) >= int(latest.get("sprint", -1)):
+			latest = h
+	return latest
+
+
+''')
+cut("## beklentisinin artışı ve alanın cümlesi aynı pencereyi okur.","## beklentisinin artışı aynı pencereyi okur.")
+open(p,'w',encoding='utf-8').write(s)
+EOF
+diff $S/u7_base/scripts/systems/sprint_catalog.gd scripts/systems/sprint_catalog.gd | grep -v "^<" ; sed -n 770,790p scripts/systems/sprint_catalog.gd | head -5; grep -n "Verilen hatlara son" -B1 -A3 scripts/systems/sprint_catalog.gd
+
+### #924 2026-10-28T17:08:32.390Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; python3 - <<'EOF'
+p='data/product/sprint.json'
+s=open(p,encoding='utf-8',newline='').read()
+a='  "research_sentence_weeks": 2,\n'
+assert s.count(a)==1
+s=s.replace(a,'')
+open(p,'w',encoding='utf-8',newline='').write(s)
+import json; json.load(open(p,encoding='utf-8'))
+EOF
+diff $S/u7_base/data/product/sprint.json data/product/sprint.json; file data/product/sprint.json; grep -n "\bSEP\b" scripts/systems/sprint_catalog.gd | head -5
+
+### #925 2026-10-28T17:08:39.641Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; file localization/strings.csv; head -c 2000 localization/strings.csv | od -c | head -3; python3 - <<'EOF'
+data=open('localization/strings.csv','rb').read()
+print(data.count(b'\r\n'), data.count(b'\n'), data[-3:], data[:3])
+EOF
+
+### #927 2026-10-28T17:08:49.276Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; cat > $S/csv_cut.py <<'EOF'
+import sys, csv, io
+path, keys_file = sys.argv[1], sys.argv[2]
+want = [l.strip() for l in open(keys_file, encoding='utf-8') if l.strip()]
+data = open(path, 'rb').read()
+# quote-aware record scan: a record ends at a newline outside double quotes
+recs = []   # (start, end_exclusive_including_newline)
+i = 0; n = len(data); start = 0; inq = False
+while i < n:
+    c = data[i]
+    if c == 0x22:
+        inq = not inq
+    elif c == 0x0A and not inq:
+        recs.append((start, i + 1)); start = i + 1
+    i += 1
+if start < n:
+    recs.append((start, n))
+assert not inq
+def key_of(b):
+    # first field: up to first comma (keys are plain; assert not quoted)
+    k = b.split(b',', 1)[0]
+    assert not k.startswith(b'"'), k
+    return k.decode('utf-8')
+found = {}
+for s, e in recs:
+    k = key_of(data[s:e])
+    if k in want:
+        assert k not in found, ('duplicate', k)
+        found[k] = (s, e)
+missing = [k for k in want if k not in found]
+print('found', len(found), 'missing', missing)
+assert not missing
+for k in want:
+    s, e = found[k]
+    print(k, s, e, repr(data[s:e][:100]))
+if '--apply' in sys.argv:
+    out = bytearray()
+    prev = 0
+    for s, e in sorted(found.values()):
+        out += data[prev:s]; prev = e
+    out += data[prev:]
+    open(path, 'wb').write(bytes(out))
+    # verify through csv module: remaining rows == original rows minus deleted
+    orig = list(csv.reader(io.StringIO(data.decode('utf-8'), newline='')))
+    new = list(csv.reader(io.StringIO(bytes(out).decode('utf-8'), newline='')))
+    exp = [r for r in orig if not (r and r[0] in want)]
+    assert new == exp, 'row mismatch'
+    print('applied; rows', len(orig), '->', len(new))
+EOF
+cat > $S/u7_keys.txt <<'EOF'
+PRODUCT_AREA_RIVAL
+PRODUCT_AREA_OVER_CAPACITY
+PRODUCT_AREA_REVENUE_NONE
+PRODUCT_AREA_REVENUE_WEAK
+PRODUCT_AREA_REVENUE_ENOUGH
+PRODUCT_AREA_REVENUE_STRONG
+PRODUCT_AUDIENCE_ENOUGH
+PRODUCT_AUDIENCE_OUTGROWN
+PRODUCT_STAR_NONE
+PRODUCT_STAR_SKIPPED
+PRODUCT_STAR_SERVES
+PRODUCT_STAR_TOP
+PRODUCT_RESEARCH_VOICE_CORE
+PRODUCT_RESEARCH_VOICE_ONBOARDING
+PRODUCT_RESEARCH_VOICE_GROWTH
+PRODUCT_RESEARCH_VOICE_INTEGRATIONS
+PRODUCT_RESEARCH_VOICE_TRUST
+PRODUCT_RESEARCH_VOICE_REVENUE
+EOF
+python3 $S/csv_cut.py localization/strings.csv $S/u7_keys.txt
+
+### #929 2026-10-28T17:08:55.227Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; python3 $S/csv_cut.py localization/strings.csv $S/u7_keys.txt --apply | tail -2; cmp <(git --version >/dev/null 2>&1; cat $S/u7_base/localization/strings.csv) localization/strings.csv | head -2; diff $S/u7_base/localization/strings.csv localization/strings.csv | grep -c '^<'; diff $S/u7_base/localization/strings.csv localization/strings.csv | grep -c '^>'; ls -la localization
+
+### #932 2026-10-28T17:09:16.558Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; cat > $S/orphans.py <<'EOF'
+import os, re, sys, collections
+def files(root, exts, skip=()):
+    for d, ds, fs in os.walk(root):
+        ds[:] = [x for x in ds if x not in ('.godot','addons','assets','art','docs','GDDs','.git') and not any(os.path.join(d,x).endswith(s) for s in skip)]
+        for f in fs:
+            if f.endswith(exts): yield os.path.join(d, f)
+def strip_comments(t):
+    out=[]
+    for l in t.split('\n'):
+        ls=l.lstrip()
+        if ls.startswith('#'): out.append(''); continue
+        # drop trailing comment (naive: ignore # inside quotes)
+        q=None; cut=None
+        for i,ch in enumerate(l):
+            if q:
+                if ch==q and l[i-1]!='\\': q=None
+            elif ch in '"\'': q=ch
+            elif ch=='#': cut=i; break
+        out.append(l if cut is None else l[:cut])
+    return '\n'.join(out)
+def analyse(root):
+    gd = list(files(root+'/scripts', ('.gd',))) + list(files(root+'/scenes', ('.gd',)))
+    other = list(files(root+'/scenes', ('.tscn',))) + list(files(root+'/data', ('.json',))) + list(files(root+'/tools', ('.gd','.sh','.py','.json'))) + list(files(root+'/themes', ('.tres',)))
+    texts={}
+    for f in gd+other:
+        try: texts[f]=strip_comments(open(f,encoding='utf-8',errors='replace').read()) if f.endswith('.gd') else open(f,encoding='utf-8',errors='replace').read()
+        except Exception as e: pass
+    decl=re.compile(r'^\s*(?:static\s+)?(?:func|const|var|signal)\s+([A-Za-z_]\w*)', re.M)
+    decls=collections.defaultdict(list)
+    for f in gd:
+        for m in decl.finditer(texts[f]):
+            decls[m.group(1)].append(f)
+    # word counts per name
+    allwords=collections.Counter()
+    smokew=collections.Counter()
+    for f,t in texts.items():
+        c=collections.Counter(re.findall(r'[A-Za-z_]\w*', t))
+        if f.endswith('endgame_smoke.gd'): smokew.update(c)
+        else: allwords.update(c)
+    res={}
+    for n,fs in decls.items():
+        nd=len(fs)
+        nonsmoke=allwords[n]-sum(1 for f in fs if not f.endswith('endgame_smoke.gd'))
+        res[n]=(nonsmoke, smokew[n]-sum(1 for f in fs if f.endswith('endgame_smoke.gd')), fs)
+    return res
+a=analyse(sys.argv[1]); b=analyse(sys.argv[2])
+print('names newly without any non-smoke reader (base had a reader, now none):')
+for n,(ns,sm,fs) in sorted(b.items()):
+    if ns<=0 and n in a and a[n][0]>0:
+        print(' ',n,'| now nonsmoke',ns,'smoke',sm,'| base nonsmoke',a[n][0],'|',[os.path.relpath(f,sys.argv[2]) for f in fs][:2])
+print('names that existed in base, vanished now:')
+print(' ', sorted(set(a)-set(b)))
+EOF
+cd $S; python3 orphans.py $S/u7_base $S/w4/project-unicorn 2>&1 | head -60
+
+### #939 2026-10-28T17:09:47.871Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; cat > $S/keyorph.py <<'EOF'
+import os, re, sys, csv, io
+def walk(root, exts):
+    for sub in ('scripts','scenes','data','tools','themes'):
+        for d, ds, fs in os.walk(os.path.join(root,sub)):
+            for f in fs:
+                if f.endswith(exts): yield os.path.join(d,f)
+def refs(root):
+    text=''
+    for f in walk(root, ('.gd','.tscn','.json','.tres','.sh','.py','.md')):
+        try: text+=open(f,encoding='utf-8',errors='replace').read()+'\n'
+        except: pass
+    return text
+def keys(root):
+    rows=list(csv.reader(io.StringIO(open(root+'/localization/strings.csv',encoding='utf-8',newline='').read())))
+    return [r[0] for r in rows[1:] if r]
+def analyse(root):
+    t=refs(root)
+    toks=set(re.findall(r'[A-Z][A-Z0-9_]{3,}', t))
+    ks=keys(root)
+    exact={k for k in ks if k in toks}
+    return ks, exact, t
+bk,be,bt=analyse(sys.argv[1]); nk,ne,nt=analyse(sys.argv[2])
+lost=[k for k in nk if k in be and k not in ne]
+print('keys exact-referenced in base but not now:', len(lost))
+# dynamic cover: prefix literals "ABC_" and suffix literals "_ABC" in new text
+pre=set(re.findall(r'["\']([A-Z][A-Z0-9_]*_)["\']', nt))
+suf=set(re.findall(r'["\'](_[A-Z][A-Z0-9_]*)["\']', nt))
+for k in lost:
+    cover=[p for p in pre if k.startswith(p)]
+    scover=[s for s in suf if k.endswith(s)]
+    print(' ',k,'| prefixes',cover[:3],'| suffixes',scover[:3])
+EOF
+cd $S; python3 keyorph.py $S/u7_base $S/w4/project-unicorn
+
+### #945 2026-10-28T17:09:58.404Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; cat > $S/keyorph2.py <<'EOF'
+import os, re, sys, csv, io
+def texts(root):
+    out={}
+    for sub in ('scripts','scenes','data','tools','themes'):
+        for d, ds, fs in os.walk(os.path.join(root,sub)):
+            for f in fs:
+                if f.endswith(('.gd','.tscn','.json','.tres','.sh','.py')):
+                    try: out[os.path.join(d,f)]=open(os.path.join(d,f),encoding='utf-8',errors='replace').read()
+                    except: pass
+    return out
+def keys(root):
+    rows=list(csv.reader(io.StringIO(open(root+'/localization/strings.csv',encoding='utf-8',newline='').read())))
+    return [r[0] for r in rows[1:] if r]
+def nonsmoke_tokens(root):
+    toks=set()
+    for f,t in texts(root).items():
+        if f.endswith('endgame_smoke.gd'): continue
+        # drop comments in gd
+        if f.endswith('.gd'):
+            t='\n'.join(l for l in t.split('\n') if not l.lstrip().startswith('#'))
+        toks|=set(re.findall(r'[A-Z][A-Z0-9_]{3,}', t))
+    return toks
+base_t=nonsmoke_tokens(sys.argv[1]); new_t=nonsmoke_tokens(sys.argv[2])
+nk=keys(sys.argv[2])
+pre=set(); suf=set()
+for f,t in texts(sys.argv[2]).items():
+    if f.endswith('endgame_smoke.gd'): continue
+    pre|=set(re.findall(r'["\']([A-Z][A-Z0-9_]*_)["\']', t)); suf|=set(re.findall(r'["\'](_[A-Z][A-Z0-9_]*)["\']', t))
+for k in nk:
+    if k in base_t and k not in new_t:
+        print('lost non-smoke exact ref:',k,[p for p in pre if k.startswith(p)][:2],[s for s in suf if k.endswith(s)][:2])
+EOF
+cd $S; python3 keyorph2.py $S/u7_base $S/w4/project-unicorn
+
+### #960 2026-10-28T17:10:48.558Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; python3 - <<'EOF'
+p='scripts/debug/endgame_smoke.gd'
+s=open(p,encoding='utf-8',newline='').read()
+assert '\r' not in s
+def rep(a,b,cnt=1):
+    global s
+    assert s.count(a)==cnt,(a[:80],s.count(a))
+    s=s.replace(a,b)
+
+# --- dispatch
+rep('		"product_area_row":               fail = _case_product_area_row()\n','		"product_area_word":              fail = _case_product_area_word()\n')
+
+# --- product_area_row -> product_area_word
+start=s.index("## Genel Bakış'ın ürün durumu satırı ürün sayfasının referansını okur")
+end=s.index("## İş profili: her hattın profili var")
+new='''## Alanın sözcüğü ürün sayfasının referansını okur (B2B'de 2★, B2C'de kitlenin yıldızı ile 2★'ın büyüğü): seviye 0 Yok, referansın
+## altı Zayıf, referans ile referans + 1 arası Yeterli, ondan sonrası Güçlü; küçük kitlede de 2★ satırı okunur.
+##
+## FALSİFİKASYON: `ProductQuality.word_for`da `expect + 1.0`'ı `expect + 1.5` yap → Güçlü sınırı iddiası FAIL; `lvl < expect`'i
+## `lvl <= expect` yap → Yeterli sınırı iddiası FAIL; `lvl <= 0.0` dalını sil → Yok iddiası FAIL; `_value`de `maxf(star, PAGE_STAR)`
+## yerine `star` oku → küçük kitle iddiası FAIL.
+static func _case_product_area_word() -> String:
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	_seed_b2b_lines("erp", 0)
+	# [alan, hatların kademeleri, kelime]: ürün sayfasının referansında Çekirdek 1,25, Entegrasyonlar 1, İlk kullanım 1, Güven 1;
+	# Çekirdek'in beş hattı var, Güven'in iki.
+	var rows := [
+		["core", [1, 1, 1, 0, 0], "weak"],        # MVP: 0,6 / 1,25
+		["core", [1, 1, 1, 1, 1], "weak"],        # 1 / 1,25
+		["core", [2, 1, 1, 1, 1], "weak"],        # 1,2 / 1,25: referansın hemen altı
+		["core", [2, 2, 1, 1, 1], "enough"],      # 1,4 / 1,25: referans aşıldı
+		["core", [2, 2, 2, 2, 1], "enough"],      # 1,8 / 1,25
+		["core", [2, 2, 2, 2, 2], "enough"],      # 2 / 1,25
+		["core", [3, 3, 3, 3, 3], "strong"],      # referans + 1'in üstü
+		["core", [0, 0, 0, 0, 0], "none"],
+		["integrations", [2], "strong"],          # 2 / 1: referans + 1'e tam varır
+		["onboarding", [1], "enough"],            # 1 / 1: referansta
+		["trust", [1, 0], "weak"],                # 0,5 / 1
+		["trust", [1, 1], "enough"],
+		["trust", [0, 0], "none"],
+	]
+	for row in rows:
+		var lines: Array = SprintCatalog.capabilities(row[0])
+		for i in lines.size():
+			ProductState.set_line_tier(lines[i], int(row[1][i]))
+		var got: String = ProductQuality.word(row[0])
+		if got != row[2]:
+			return "%s at tiers %s reads '%s'; want '%s'" % [row[0], row[1], got, row[2]]
+	# Küçük kitleli B2C ürünün sayfası da 2★ satırını okur: İlk kullanım 1 ister (yeter).
+	_seed_b2c()
+	_set_area_tiers({"onboarding": 1})
+	if ProductQuality.expectation("onboarding") != 1.0:
+		return "fixture: the page asks %.2f of Onboarding in a 200 user audience, want 1" % ProductQuality.expectation("onboarding")
+	if ProductQuality.word("onboarding") != "enough":
+		return "Onboarding at its reference in a small audience reads '%s', want 'enough'" % ProductQuality.word("onboarding")
+	return ""
+
+
+'''
+s=s[:start]+new+s[end:]
+
+# --- fit_star_context
+rep("okur ama cümle 1★'a yettiğini söyler; evre geçişi","okur; evre geçişi")
+rep("""# MVP'den hemen sonra: Çekirdek 0,6. Sayfa 2★ şirketin referansını okur, cümle MVP'nin 1★'a yettiğini söyler.""","""# MVP'den hemen sonra: Çekirdek 0,6. Sayfa 2★ şirketin referansını okur.""") if "# MVP'den hemen sonra: Çekirdek 0,6. Sayfa 2★ şirketin referansını okur, cümle" in s else None
+open(p,'w',encoding='utf-8',newline='').write(s)
+EOF
+grep -n "cümle MVP'nin\|ürün sayfası Çekirdek'i Zayıf" scripts/debug/endgame_smoke.gd
+
+### #963 2026-10-28T17:11:07.245Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; python3 - <<'EOF'
+p='scripts/debug/endgame_smoke.gd'
+s=open(p,encoding='utf-8',newline='').read()
+def rep(a,b,cnt=1):
+    global s
+    assert s.count(a)==cnt,(a[:80],s.count(a))
+    s=s.replace(a,b)
+rep("""	var said := func(key: String, args: Dictionary) -> String:
+		return TranslationServer.translate(key).format(args)
+
+	# MVP'den hemen sonra: Çekirdek 0,6. Sayfa 2★ şirketin referansını okur, cümle MVP'nin 1★'a yettiğini söyler.""","""
+	# MVP'den hemen sonra: Çekirdek 0,6. Sayfa 2★ şirketin referansını okur.""")
+rep("""	if ProductQuality.word("core") != "weak" or ProductQuality.serves("core") != 1 \\
+			or SprintCatalog.area_sentence("core") != said.call("PRODUCT_STAR_SERVES", {"star": 1, "next": 2}):
+		return "right after the MVP Core reads '%s', serves %d, says '%s'; want Weak, 1 and the 1 star sentence" % [
+			ProductQuality.word("core"), ProductQuality.serves("core"), SprintCatalog.area_sentence("core")]
+""","""	if ProductQuality.word("core") != "weak":
+		return "right after the MVP Core reads '%s', want Weak" % ProductQuality.word("core")
+""")
+rep("""	if SprintCatalog.area_sentence("integrations") != said.call("PRODUCT_STAR_SKIPPED", {}) \\
+			or ProductQuality.word("integrations") != "none":
+		return "an empty Integrations reads '%s' and says '%s'; want None and the line that 1 star companies do not look at it" % [
+			ProductQuality.word("integrations"), SprintCatalog.area_sentence("integrations")]
+""","""	if ProductQuality.word("integrations") != "none":
+		return "an empty Integrations reads '%s', want None" % ProductQuality.word("integrations")
+""")
+rep("""	# Evre geçişi hiçbir adayın ve hesabın U'sunu, sayfanın kelimesini ve cümlesini oynatmaz.""","""	# Evre geçişi hiçbir adayın ve hesabın U'sunu ve sayfanın kelimesini oynatmaz.""")
+rep("""		return [ProductQuality.prospect_fit(guest), ProductQuality.account_fit(account), ProductQuality.word("core"),
+			SprintCatalog.area_sentence("core"), ProductQuality.next_star(), ProductQuality.expectation("core")]""","""		return [ProductQuality.prospect_fit(guest), ProductQuality.account_fit(account), ProductQuality.word("core"),
+			ProductQuality.next_star(), ProductQuality.expectation("core")]""")
+rep("""	# Kelime ve cümle sayfanın referansını okur: küçük kitlede de MVP 2★ satırına yetmez; Çekirdek 2★ satırına (1,25) varınca 500'de
+	# yeter (1,2 yetmez, 1,4 yeter), kitle 3★ satırına (2) inince yetmez.
+	audience.call(500.0)
+	if ProductQuality.word("core") != "weak" or SprintCatalog.area_sentence("core") != said.call("PRODUCT_AUDIENCE_OUTGROWN", {}):
+		return "500 users read the MVP Core '%s' saying '%s'; want Weak and users want more, the page asks the 2 star row of a small audience too" % [
+			ProductQuality.word("core"), SprintCatalog.area_sentence("core")]
+""","""	# Kelime sayfanın referansını okur: küçük kitlede de MVP 2★ satırına yetmez; Çekirdek 2★ satırına (1,25) varınca 500'de
+	# yeter (1,2 yetmez, 1,4 yeter), kitle 3★ satırına (2) inince yetmez.
+	audience.call(500.0)
+	if ProductQuality.word("core") != "weak":
+		return "500 users read the MVP Core '%s'; want Weak, the page asks the 2 star row of a small audience too" % ProductQuality.word("core")
+""")
+rep("""	if ProductQuality.word("core") != "weak" or SprintCatalog.area_sentence("core") != said.call("PRODUCT_AUDIENCE_OUTGROWN", {}):
+		return "500 users read Core at 1.2 '%s' saying '%s'; want Weak, just under the 2 star row" % [
+			ProductQuality.word("core"), SprintCatalog.area_sentence("core")]
+""","""	if ProductQuality.word("core") != "weak":
+		return "500 users read Core at 1.2 '%s'; want Weak, just under the 2 star row" % ProductQuality.word("core")
+""")
+rep("""	if ProductQuality.word("core") != "enough" or SprintCatalog.area_sentence("core") != said.call("PRODUCT_AUDIENCE_ENOUGH", {}):
+		return "500 users read Core at 1.4 '%s' saying '%s'; want Enough and the audience is served" % [
+			ProductQuality.word("core"), SprintCatalog.area_sentence("core")]
+""","""	if ProductQuality.word("core") != "enough":
+		return "500 users read Core at 1.4 '%s'; want Enough" % ProductQuality.word("core")
+""")
+rep("""	if ProductQuality.word("core") != "weak" or SprintCatalog.area_sentence("core") != said.call("PRODUCT_AUDIENCE_OUTGROWN", {}):
+		return "80,000 users read Core at 1.4 '%s' saying '%s'; want Weak and the audience has outgrown it" % [
+			ProductQuality.word("core"), SprintCatalog.area_sentence("core")]
+	# Yayından önce kitle yoktur: alan kitleye yetip yetmediğini söylemez.
+	GameState.set_flag("mvp_shipped", false)
+	audience.call(0.0)
+	if SprintCatalog.area_sentence("core") != "" or SprintCatalog.area_sentence("growth") != "":
+		return "before the launch Core says '%s' and Growth '%s'; want no audience sentence" % [
+			SprintCatalog.area_sentence("core"), SprintCatalog.area_sentence("growth")]
+	return \"\"""","""	if ProductQuality.word("core") != "weak":
+		return "80,000 users read Core at 1.4 '%s'; want Weak, the audience has outgrown it" % ProductQuality.word("core")
+	return \"\"""")
+
+# product_bug_rows_read_the_store
+rep("""`delta` son haftalık tikin görüntüsüne göre değişimdir (okun yönü). Alan cümlesi aynı toplamı söyler ve araştırmadan sonraki iki
+## haftada kullanıcıların sözünü sonuna ekler, sonra düşürür.
+""","""`delta` son haftalık tikin görüntüsüne göre değişimdir (okun yönü).
+""")
+rep("""ipucu iddiası FAIL; SprintCatalog.area_sentence'ta araştırma penceresinin `<=`'sini `<` yap ya da bir sprint uzat (`+ 1`) →
+## pencere iddiası FAIL, araştırma cümlesini hiç ekleme → söz iddiası FAIL, hata sayısı cümlesini düşür → toplam iddiası FAIL;
+## SprintUiShared.impact_bits""","""ipucu iddiası FAIL;
+## SprintUiShared.impact_bits""")
+rep("""	var said: String = SprintCatalog.area_sentence("core")
+	if not said.contains(SprintUiShared.count("PRODUCT_BUG_COUNT", 12)):
+		return "the core sentence reads '%s', want the 12 open bugs of its three lines" % said
+	# The users' words stay for the sprint after the research (a sprint is two weeks, so two weeks) and go after it.
+	var voice: String = TranslationServer.translate("PRODUCT_RESEARCH_VOICE_CORE")
+	GameState.product.research_done["core"] = SprintSystem.sprint_number() - 1
+	if not SprintCatalog.area_sentence("core").ends_with(voice):
+		return "a sprint after the research the sentence reads '%s', want the users' words at its end" % SprintCatalog.area_sentence("core")
+	GameState.product.research_done["core"] = SprintSystem.sprint_number() - 2
+	if SprintCatalog.area_sentence("core").contains(voice):
+		return "two sprints after the research the sentence still reads '%s'" % SprintCatalog.area_sentence("core")
+	return \"\"""","""	return \"\"""")
+open(p,'w',encoding='utf-8',newline='').write(s)
+EOF
+grep -n "area_sentence\|serves(\|PRODUCT_STAR\|PRODUCT_AUDIENCE\|RESEARCH_VOICE\|said\.call\|area_row\|WORD_TONES" scripts/debug/endgame_smoke.gd | head; sed -n 16282,16296p scripts/debug/endgame_smoke.gd | cut -c1-200
+
+### #967 2026-10-28T17:11:43.935Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; python3 - <<'EOF'
+p='scripts/debug/endgame_smoke.gd'
+s=open(p,encoding='utf-8',newline='').read()
+def rep(a,b,cnt=1):
+    global s
+    assert s.count(a)==cnt,(a[:80],s.count(a))
+    s=s.replace(a,b)
+rep("""	var said := func(key: String, args: Dictionary) -> String:
+		return TranslationServer.translate(key).format(args)
+
+	# MVP'den hemen sonra: Çekirdek 0,6. Sayfa 2★ şirketin referansını okur, cümle MVP'nin 1★'a yettiğini söyler.""","""
+	# MVP'den hemen sonra: Çekirdek 0,6. Sayfa 2★ şirketin referansını okur.""")
+rep("""	if ProductQuality.word("core") != "weak" or ProductQuality.serves("core") != 1 \\
+			or SprintCatalog.area_sentence("core") != said.call("PRODUCT_STAR_SERVES", {"star": 1, "next": 2}):
+		return "right after the MVP Core reads '%s', serves %d, says '%s'; want Weak, 1 and the 1 star sentence" % [
+			ProductQuality.word("core"), ProductQuality.serves("core"), SprintCatalog.area_sentence("core")]
+""","""	if ProductQuality.word("core") != "weak":
+		return "right after the MVP Core reads '%s', want Weak" % ProductQuality.word("core")
+""")
+rep("""	if SprintCatalog.area_sentence("integrations") != said.call("PRODUCT_STAR_SKIPPED", {}) \\
+			or ProductQuality.word("integrations") != "none":
+		return "an empty Integrations reads '%s' and says '%s'; want None and the line that 1 star companies do not look at it" % [
+			ProductQuality.word("integrations"), SprintCatalog.area_sentence("integrations")]
+""","""	if ProductQuality.word("integrations") != "none":
+		return "an empty Integrations reads '%s', want None" % ProductQuality.word("integrations")
+""")
+rep("""	# Evre geçişi hiçbir adayın ve hesabın U'sunu, sayfanın kelimesini ve cümlesini oynatmaz.""","""	# Evre geçişi hiçbir adayın ve hesabın U'sunu ve sayfanın kelimesini oynatmaz.""")
+rep("""		return [ProductQuality.prospect_fit(guest), ProductQuality.account_fit(account), ProductQuality.word("core"),
+			SprintCatalog.area_sentence("core"), ProductQuality.next_star(), ProductQuality.expectation("core")]""","""		return [ProductQuality.prospect_fit(guest), ProductQuality.account_fit(account), ProductQuality.word("core"),
+			ProductQuality.next_star(), ProductQuality.expectation("core")]""")
+rep("""	# Kelime ve cümle sayfanın referansını okur: küçük kitlede de MVP 2★ satırına yetmez; Çekirdek 2★ satırına (1,25) varınca 500'de
+	# yeter (1,2 yetmez, 1,4 yeter), kitle 3★ satırına (2) inince yetmez.
+	audience.call(500.0)
+	if ProductQuality.word("core") != "weak" or SprintCatalog.area_sentence("core") != said.call("PRODUCT_AUDIENCE_OUTGROWN", {}):
+		return "500 users read the MVP Core '%s' saying '%s'; want Weak and users want more, the page asks the 2 star row of a small audience too" % [
+			ProductQuality.word("core"), SprintCatalog.area_sentence("core")]
+""","""	# Kelime sayfanın referansını okur: küçük kitlede de MVP 2★ satırına yetmez; Çekirdek 2★ satırına (1,25) varınca 500'de
+	# yeter (1,2 yetmez, 1,4 yeter), kitle 3★ satırına (2) inince yetmez.
+	audience.call(500.0)
+	if ProductQuality.word("core") != "weak":
+		return "500 users read the MVP Core '%s'; want Weak, the page asks the 2 star row of a small audience too" % ProductQuality.word("core")
+""")
+rep("""	if ProductQuality.word("core") != "weak" or SprintCatalog.area_sentence("core") != said.call("PRODUCT_AUDIENCE_OUTGROWN", {}):
+		return "500 users read Core at 1.2 '%s' saying '%s'; want Weak, just under the 2 star row" % [
+			ProductQuality.word("core"), SprintCatalog.area_sentence("core")]
+""","""	if ProductQuality.word("core") != "weak":
+		return "500 users read Core at 1.2 '%s'; want Weak, just under the 2 star row" % ProductQuality.word("core")
+""")
+rep("""	if ProductQuality.word("core") != "enough" or SprintCatalog.area_sentence("core") != said.call("PRODUCT_AUDIENCE_ENOUGH", {}):
+		return "500 users read Core at 1.4 '%s' saying '%s'; want Enough and the audience is served" % [
+			ProductQuality.word("core"), SprintCatalog.area_sentence("core")]
+""","""	if ProductQuality.word("core") != "enough":
+		return "500 users read Core at 1.4 '%s'; want Enough" % ProductQuality.word("core")
+""")
+rep("""	if ProductQuality.word("core") != "weak" or SprintCatalog.area_sentence("core") != said.call("PRODUCT_AUDIENCE_OUTGROWN", {}):
+		return "80,000 users read Core at 1.4 '%s' saying '%s'; want Weak and the audience has outgrown it" % [
+			ProductQuality.word("core"), SprintCatalog.area_sentence("core")]
+	# Yayından önce kitle yoktur: alan kitleye yetip yetmediğini söylemez.
+	GameState.set_flag("mvp_shipped", false)
+	audience.call(0.0)
+	if SprintCatalog.area_sentence("core") != "" or SprintCatalog.area_sentence("growth") != "":
+		return "before the launch Core says '%s' and Growth '%s'; want no audience sentence" % [
+			SprintCatalog.area_sentence("core"), SprintCatalog.area_sentence("growth")]
+	return \"\"""","""	if ProductQuality.word("core") != "weak":
+		return "80,000 users read Core at 1.4 '%s'; want Weak, the audience has outgrown it" % ProductQuality.word("core")
+	return \"\"""")
+rep("""`delta` son haftalık tikin görüntüsüne göre değişimdir (okun yönü). Alan cümlesi aynı toplamı söyler ve araştırmadan sonraki iki
+## haftada kullanıcıların sözünü sonuna ekler, sonra düşürür.
+""","""`delta` son haftalık tikin görüntüsüne göre değişimdir (okun yönü).
+""")
+rep("""ipucu iddiası FAIL; SprintCatalog.area_sentence'ta araştırma penceresinin `<=`'sini `<` yap ya da bir sprint uzat (`+ 1`) →
+## pencere iddiası FAIL, araştırma cümlesini hiç ekleme → söz iddiası FAIL, hata sayısı cümlesini düşür → toplam iddiası FAIL;
+## SprintUiShared.impact_bits""","""ipucu iddiası FAIL;
+## SprintUiShared.impact_bits""")
+rep("""	var said: String = SprintCatalog.area_sentence("core")
+	if not said.contains(SprintUiShared.count("PRODUCT_BUG_COUNT", 12)):
+		return "the core sentence reads '%s', want the 12 open bugs of its three lines" % said
+	# The users' words stay for the sprint after the research (a sprint is two weeks, so two weeks) and go after it.
+	var voice: String = TranslationServer.translate("PRODUCT_RESEARCH_VOICE_CORE")
+	GameState.product.research_done["core"] = SprintSystem.sprint_number() - 1
+	if not SprintCatalog.area_sentence("core").ends_with(voice):
+		return "a sprint after the research the sentence reads '%s', want the users' words at its end" % SprintCatalog.area_sentence("core")
+	GameState.product.research_done["core"] = SprintSystem.sprint_number() - 2
+	if SprintCatalog.area_sentence("core").contains(voice):
+		return "two sprints after the research the sentence still reads '%s'" % SprintCatalog.area_sentence("core")
+	return \"\"""","""	return \"\"""")
+open(p,'w',encoding='utf-8',newline='').write(s)
+EOF
+grep -n "area_sentence\|serves(\|PRODUCT_STAR\|PRODUCT_AUDIENCE\|RESEARCH_VOICE\|area_row\|WORD_TONES" scripts/debug/endgame_smoke.gd | head; diff $S/u7_base/scripts/debug/endgame_smoke.gd scripts/debug/endgame_smoke.gd | head -250
+
+### #968 2026-10-28T17:12:08.528Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; python3 - <<'EOF'
+p='scripts/debug/endgame_smoke.gd'
+s=open(p,encoding='utf-8',newline='').read()
+def rep(a,b,cnt=1):
+    global s
+    assert s.count(a)==cnt,(a[:80],s.count(a))
+    s=s.replace(a,b)
+rep("""	var said := func(key: String, args: Dictionary) -> String:
+		return TranslationServer.translate(key).format(args)
+
+	# MVP'den hemen sonra: Çekirdek 0,6. Sayfa 2★ şirketin referansını okur.""","""
+	# MVP'den hemen sonra: Çekirdek 0,6. Sayfa 2★ şirketin referansını okur.""")
+rep("""	if ProductQuality.word("core") != "weak" or ProductQuality.serves("core") != 1 \\
+			or SprintCatalog.area_sentence("core") != said.call("PRODUCT_STAR_SERVES", {"star": 1, "next": 2}):
+		return "right after the MVP Core reads '%s', serves %d, says '%s'; want Weak, 1 and the 1 star sentence" % [
+			ProductQuality.word("core"), ProductQuality.serves("core"), SprintCatalog.area_sentence("core")]
+""","""	if ProductQuality.word("core") != "weak":
+		return "right after the MVP Core reads '%s', want Weak" % ProductQuality.word("core")
+""")
+rep("""	if SprintCatalog.area_sentence("integrations") != said.call("PRODUCT_STAR_SKIPPED", {}) \\
+			or ProductQuality.word("integrations") != "none":
+		return "an empty Integrations reads '%s' and says '%s'; want None and the line that 1 star companies do not look at it" % [
+			ProductQuality.word("integrations"), SprintCatalog.area_sentence("integrations")]
+""","""	if ProductQuality.word("integrations") != "none":
+		return "an empty Integrations reads '%s', want None" % ProductQuality.word("integrations")
+""")
+rep("""	# Evre geçişi hiçbir adayın ve hesabın U'sunu, sayfanın kelimesini ve cümlesini oynatmaz.""","""	# Evre geçişi hiçbir adayın ve hesabın U'sunu ve sayfanın kelimesini oynatmaz.""")
+rep("""		return [ProductQuality.prospect_fit(guest), ProductQuality.account_fit(account), ProductQuality.word("core"),
+			SprintCatalog.area_sentence("core"), ProductQuality.next_star(), ProductQuality.expectation("core")]""","""		return [ProductQuality.prospect_fit(guest), ProductQuality.account_fit(account), ProductQuality.word("core"),
+			ProductQuality.next_star(), ProductQuality.expectation("core")]""")
+rep("""	# Kelime ve cümle sayfanın referansını okur: küçük kitlede de MVP 2★ satırına yetmez; Çekirdek 2★ satırına (1,25) varınca 500'de
+	# yeter (1,2 yetmez, 1,4 yeter), kitle 3★ satırına (2) inince yetmez.
+	audience.call(500.0)
+	if ProductQuality.word("core") != "weak" or SprintCatalog.area_sentence("core") != said.call("PRODUCT_AUDIENCE_OUTGROWN", {}):
+		return "500 users read the MVP Core '%s' saying '%s'; want Weak and users want more, the page asks the 2 star row of a small audience too" % [
+			ProductQuality.word("core"), SprintCatalog.area_sentence("core")]
+""","""	# Kelime sayfanın referansını okur: küçük kitlede de MVP 2★ satırına yetmez; Çekirdek 2★ satırına (1,25) varınca 500'de
+	# yeter (1,2 yetmez, 1,4 yeter), kitle 3★ satırına (2) inince yetmez.
+	audience.call(500.0)
+	if ProductQuality.word("core") != "weak":
+		return "500 users read the MVP Core '%s'; want Weak, the page asks the 2 star row of a small audience too" % ProductQuality.word("core")
+""")
+rep("""	if ProductQuality.word("core") != "weak" or SprintCatalog.area_sentence("core") != said.call("PRODUCT_AUDIENCE_OUTGROWN", {}):
+		return "500 users read Core at 1.2 '%s' saying '%s'; want Weak, just under the 2 star row" % [
+			ProductQuality.word("core"), SprintCatalog.area_sentence("core")]
+""","""	if ProductQuality.word("core") != "weak":
+		return "500 users read Core at 1.2 '%s'; want Weak, just under the 2 star row" % ProductQuality.word("core")
+""")
+rep("""	if ProductQuality.word("core") != "enough" or SprintCatalog.area_sentence("core") != said.call("PRODUCT_AUDIENCE_ENOUGH", {}):
+		return "500 users read Core at 1.4 '%s' saying '%s'; want Enough and the audience is served" % [
+			ProductQuality.word("core"), SprintCatalog.area_sentence("core")]
+""","""	if ProductQuality.word("core") != "enough":
+		return "500 users read Core at 1.4 '%s'; want Enough" % ProductQuality.word("core")
+""")
+rep("""	if ProductQuality.word("core") != "weak" or SprintCatalog.area_sentence("core") != said.call("PRODUCT_AUDIENCE_OUTGROWN", {}):
+		return "80,000 users read Core at 1.4 '%s' saying '%s'; want Weak and the audience has outgrown it" % [
+			ProductQuality.word("core"), SprintCatalog.area_sentence("core")]
+	# Yayından önce kitle yoktur: alan kitleye yetip yetmediğini söylemez.
+	GameState.set_flag("mvp_shipped", false)
+	audience.call(0.0)
+	if SprintCatalog.area_sentence("core") != "" or SprintCatalog.area_sentence("growth") != "":
+		return "before the launch Core says '%s' and Growth '%s'; want no audience sentence" % [
+			SprintCatalog.area_sentence("core"), SprintCatalog.area_sentence("growth")]
+	return \"\"""","""	if ProductQuality.word("core") != "weak":
+		return "80,000 users read Core at 1.4 '%s'; want Weak, the audience has outgrown it" % ProductQuality.word("core")
+	return \"\"""")
+rep("""`delta` son haftalık tikin görüntüsüne göre değişimdir (okun yönü). Alan cümlesi aynı toplamı söyler ve araştırmadan sonraki iki
+## haftada kullanıcıların sözünü sonuna ekler, sonra düşürür.
+""","""`delta` son haftalık tikin görüntüsüne göre değişimdir (okun yönü).
+""")
+rep("""ipucu iddiası FAIL; SprintCatalog.area_sentence'ta araştırma penceresinin `<=`'sini `<` yap ya da bir sprint uzat (`+ 1`) →
+## pencere iddiası FAIL, araştırma cümlesini hiç ekleme → söz iddiası FAIL, hata sayısı cümlesini düşür → toplam iddiası FAIL;
+## SprintUiShared.impact_bits""","""ipucu iddiası FAIL;
+## SprintUiShared.impact_bits""")
+rep("""	var said: String = SprintCatalog.area_sentence("core")
+	if not said.contains(SprintUiShared.count("PRODUCT_BUG_COUNT", 12)):
+		return "the core sentence reads '%s', want the 12 open bugs of its three lines" % said
+	# The users' words stay for the sprint after the research (a sprint is two weeks, so two weeks) and go after it.
+	var voice: String = TranslationServer.translate("PRODUCT_RESEARCH_VOICE_CORE")
+	GameState.product.research_done["core"] = SprintSystem.sprint_number() - 1
+	if not SprintCatalog.area_sentence("core").ends_with(voice):
+		return "a sprint after the research the sentence reads '%s', want the users' words at its end" % SprintCatalog.area_sentence("core")
+	GameState.product.research_done["core"] = SprintSystem.sprint_number() - 2
+	if SprintCatalog.area_sentence("core").contains(voice):
+		return "two sprints after the research the sentence still reads '%s'" % SprintCatalog.area_sentence("core")
+	return \"\"""","""	return \"\"""")
+open(p,'w',encoding='utf-8',newline='').write(s)
+EOF
+grep -n "area_sentence\|\.serves(\|PRODUCT_STAR\|PRODUCT_AUDIENCE\|RESEARCH_VOICE\|area_row\|WORD_TONES\|research_sentence" scripts/debug/endgame_smoke.gd | head; diff $S/u7_base/scripts/debug/endgame_smoke.gd scripts/debug/endgame_smoke.gd | sed -n 60,200p
+
+### #969 2026-10-28T17:12:15.080Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; python3 - <<'EOF'
+p='scripts/debug/endgame_smoke.gd'
+s=open(p,encoding='utf-8',newline='').read()
+a="""iddiası FAIL; ProductState.open_bugs_delta yerine `0` ver → ok iddiası FAIL; bug_row_of'ta en büyük hesabın ipucu satırını sil →
+## ipucu iddiası FAIL;
+## SprintUiShared.impact_bits'te"""
+assert s.count(a)==1
+s=s.replace(a,"""iddiası FAIL; ProductState.open_bugs_delta yerine `0` ver → ok iddiası FAIL; bug_row_of'ta en büyük hesabın ipucu satırını sil →
+## ipucu iddiası FAIL; SprintUiShared.impact_bits'te""")
+open(p,'w',encoding='utf-8',newline='').write(s)
+EOF
+sed -n 24098,24112p scripts/debug/endgame_smoke.gd | cut -c1-200
+
+### #999 2026-10-28T17:23:15.934Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; grep -n "maxf(star, PAGE_STAR)\|PAGE_STAR" scripts/systems/product_quality.gd | head; cp scripts/systems/product_quality.gd $S/u7_pq.bak
+mut() { # name, python replace old, new
+  cp $S/u7_pq.bak scripts/systems/product_quality.gd
+  python3 - "$2" "$3" <<'EOF'
+import sys
+p='scripts/systems/product_quality.gd'
+s=open(p,encoding='utf-8').read()
+a,b=sys.argv[1],sys.argv[2]
+assert s.count(a)==1,(a,s.count(a))
+open(p,'w',encoding='utf-8').write(s.replace(a,b))
+EOF
+  ETIKET=URUN_ARAYUZU_AJAN P=1 bash $S/bin/smoke.sh "$W" u7m_$1 product_area_word 2>&1 | tail -2
+  grep -a "FAIL\|reads" $S/smoke_u7m_$1/product_area_word.log | head -3
+}
+mut m1 'return "enough" if lvl < expect + 1.0 else "strong"' 'return "enough" if lvl < expect + 1.5 else "strong"'
+mut m2 '	if lvl < expect:
+		return "weak"' '	if lvl <= expect:
+		return "weak"'
+mut m3 '	if lvl <= 0.0:
+		return "none"
+	if lvl < expect:' '	if lvl < expect:'
+cp $S/u7_pq.bak scripts/systems/product_quality.gd; cmp $S/u7_pq.bak scripts/systems/product_quality.gd && echo restored
+
+### #1002 2026-10-28T17:23:58.174Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; sed -n 300,314p scripts/systems/product_quality.gd; python3 - <<'EOF'
+p='scripts/systems/product_quality.gd'
+s=open(p,encoding='utf-8').read()
+a='else maxf(star, PAGE_STAR)) - 1.0'
+assert s.count(a)==1
+open(p,'w',encoding='utf-8').write(s.replace(a,'else star) - 1.0'))
+EOF
+ETIKET=URUN_ARAYUZU_AJAN P=1 bash $S/bin/smoke.sh "$W" u7m_m4 product_area_word 2>&1 | tail -2; ETIKET=URUN_ARAYUZU_AJAN P=1 bash $S/bin/smoke.sh "$W" u7m_m4b fit_star_context 2>&1 | tail -2; cp $S/u7_pq.bak scripts/systems/product_quality.gd; cmp $S/u7_pq.bak scripts/systems/product_quality.gd && echo restored
+
+### #1009 2026-10-28T17:25:27.469Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; python3 - <<'EOF'
+p='scripts/debug/endgame_smoke.gd'
+s=open(p,encoding='utf-8',newline='').read()
+a='		"product_area_word":              fail = _case_product_area_word()\n'
+assert s.count(a)==1
+s=s.replace(a,a+'		"u7_probe":                       fail = _case_u7_probe()\n')
+a='## İş profili: her hattın profili var'
+assert s.count(a)==1
+case='''static func _case_u7_probe() -> String:
+	_seed_sprint_live("note_tool")
+	var shell: Node = load("res://scenes/main/GameShell.tscn").instantiate()
+	EventBus.add_child(shell)
+	EventBus.tab_changed.emit("product")
+	var cv: Node = shell.find_child("CenterViewport", true, false)
+	var page: Node = cv.get_current_page_body()
+	if page == null or not page.has_method(&"open_area") or page.has_method(&"set_source"):
+		shell.queue_free()
+		return "product page not recognised"
+	page.set_meta("probe", 1)
+	EventBus.sprint_closed.emit(1)
+	var again: Node = cv.get_current_page_body()
+	if again == null or not again.has_meta("probe"):
+		shell.queue_free()
+		return "an open product page was torn down by sprint_closed"
+	EventBus.tab_changed.emit("rnd")
+	var rnd: Node = cv.get_current_page_body()
+	if rnd == null or rnd.has_method(&"open_area"):
+		shell.queue_free()
+		return "rnd page missing or looks like the product page"
+	EventBus.sprint_closed.emit(2)
+	var now: Node = cv.get_current_page_body()
+	var ok: bool = now != null and now.has_method(&"open_area")
+	shell.queue_free()
+	return "" if ok else "sprint_closed did not open Ürün from another tab"
+
+
+'''
+s=s.replace(a,case+a)
+open(p,'w',encoding='utf-8',newline='').write(s)
+EOF
+ETIKET=URUN_ARAYUZU_AJAN P=1 bash $S/bin/smoke.sh "$W" u7p u7_probe 2>&1 | tail -3; cp $S/u7_smoke.good scripts/debug/endgame_smoke.gd; cmp $S/u7_smoke.good scripts/debug/endgame_smoke.gd && echo smoke-restored; grep -c u7_probe scripts/debug/endgame_smoke.gd
+
+### #1013 2026-10-28T17:25:51.857Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; python3 - <<'EOF'
+import re
+s=open('scripts/main/main.gd',encoding='utf-8').read()
+i=s.index('const _A4_WORLDS := {')
+j=s.index('\n}\n',i)
+blk=s[i:j]
+names=re.findall(r'^\t"(a4_\w+)":',blk,re.M)
+print(len(names)); print(' '.join(names))
+EOF
+grep -n "_A4_WORLDS\|_seed_product_a4\|_seed_product_live" docs/kod_haritasi/sistemler/*.md CLAUDE.md | cut -c1-140; grep -n "const _A4_WORLDS\|func _seed_product_a4\|func _seed_product_live\|^func _run_product_shot\|\"--product-shot=\"" scripts/main/main.gd
+
+### #1020 2026-10-28T17:26:15.332Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; python3 - <<'EOF'
+p='CLAUDE.md'
+s=open(p,encoding='utf-8',newline='').read()
+a="""Ürün sayfasının sözcüğü ve
+  cümlesi B2C'de kitlenin yıldızı ile 2★'ın büyüğünü okur (küçük kitlede de 2★ satırı); ekonomi sayfanın referansını okumaz."""
+assert s.count(a)==1
+s=s.replace(a,"""Ürün sayfasının sözcüğü
+  B2C'de kitlenin yıldızı ile 2★'ın büyüğünü okur (küçük kitlede de 2★ satırı); ekonomi sayfanın referansını okumaz.""")
+a="""Ürün sekmesi: `--product-shot=<c1..c5|cards|flow|edge:<ad>>` debug
+  fikstürüyle (`scripts/debug/product_fixtures.gd`; `edge:` adları `sistemler/02_urun_sprint.md`'de), `--product-shot=live:<tür>` sprint
+  motoruyla kurulan koşuda
+  (`pick`, `pick_named`, `pick_relang`, `plan`, `active`, `decision_paper`, `b2c_mvp`, `b2c_live`, `b2c_goal`, `b2b_mvp`, `b2b_mature`, `b2b_quarter`, `b2b_requests`,
+  `gate`, `delegate`, `delegate_rehire`, `rnd`, `solo15`, `solo15_tip`, `solo12_active`, `overview_pre`, `server_80`, `server_94`,
+  `server_104`, `server_growth`, `server_auto`, `server_tier`, `server_final`, `server_clause`, `server_lock`, `server_b2c`;
+  kurulumları ve ikinci, üçüncü kareleri `sistemler/02_urun_sprint.md`'de). Satış'ın"""
+assert s.count(a)==1
+b="""Ürün sekmesi: `--product-shot=live:<tür>`, sprint
+  motoruyla kurulan koşuda çeker (`live:` olmayan tür hata basıp 1 ile çıkar): `pick`, `pick_named`, `pick_relang`, `plan`, `active`, `decision_paper`,
+  `b2c_mvp`, `b2c_live`, `b2c_goal`, `b2b_mvp`, `b2b_mature`, `b2b_quarter`, `b2b_requests`, `gate`, `delegate`, `delegate_rehire`, `rnd`, `solo15`,
+  `solo15_tip`, `solo12_active`, `overview_pre`, `server_80`, `server_94`, `server_104`, `server_growth`, `server_auto`, `server_tier`, `server_final`,
+  `server_clause`, `server_lock`, `server_b2c` ve Sprint ekranının kare dünyaları `a4_*` (`a4_solo`, `a4_six_hover`, `a4_eleven`, `a4_fifty`, `a4_run_w2` …;
+  her biri `PRODUCTSHOT` satırı basar; tür listesi, kurulumları ve ikinci, üçüncü kareleri `sistemler/02_urun_sprint.md`'de). Satış'ın"""
+s=s.replace(a,b)
+open(p,'w',encoding='utf-8',newline='').write(s)
+EOF
+diff $S/u7_base/CLAUDE.md CLAUDE.md; awk 'NR>=358&&NR<=366&&length($0)>240{print NR": "length($0)}' CLAUDE.md
+
+### #1021 2026-10-28T17:26:22.762Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; python3 - <<'EOF'
+p='CLAUDE.md'
+s=open(p,encoding='utf-8',newline='').read()
+a="""  `server_clause`, `server_lock`, `server_b2c` ve Sprint ekranının kare dünyaları `a4_*` (`a4_solo`, `a4_six_hover`, `a4_eleven`, `a4_fifty`, `a4_run_w2` …;
+  her biri `PRODUCTSHOT` satırı basar; tür listesi, kurulumları ve ikinci, üçüncü kareleri `sistemler/02_urun_sprint.md`'de). Satış'ın B2C sayfası `--sales-shot=b2c_live` (`live:b2c_live`'ın dünyası, `SHOT|b2c` satırı), MVP öncesi
+"""
+assert s.count(a)==1
+b="""  `server_clause`, `server_lock`, `server_b2c` ve Sprint ekranının kare dünyaları `a4_*` (`a4_solo`, `a4_six_hover`, `a4_eleven`, `a4_fifty`, `a4_run_w2` …;
+  her biri `PRODUCTSHOT` satırı basar; tür listesi, kurulumları ve ikinci, üçüncü kareleri `sistemler/02_urun_sprint.md`'de).
+  Satış'ın B2C sayfası `--sales-shot=b2c_live` (`live:b2c_live`'ın dünyası, `SHOT|b2c` satırı), MVP öncesi
+"""
+s=s.replace(a,b)
+open(p,'w',encoding='utf-8',newline='').write(s)
+EOF
+sed -n 359,368p CLAUDE.md; awk 'NR>=355&&NR<=370&&length($0)>240{print NR": "length($0)}' CLAUDE.md
+
+### #1028 2026-10-28T17:27:31.512Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; python3 - <<'EOF'
+p='docs/kod_haritasi/sistemler/02_urun_sprint.md'
+s=open(p,encoding='utf-8',newline='').read()
+L=s.split('\n')
+def idx(prefix, start=0):
+    r=[i for i,l in enumerate(L) if l.startswith(prefix) and i>=start]
+    assert len(r)==1,(prefix,len(r)); return r[0]
+# 41
+i=idx("- Yakın: `scripts/debug/product_fixtures.gd` (699")
+old=L[i]
+assert "`scripts/debug/sprint_probe.gd` (425, `--sprint-probe`)" in old and old.endswith("`_seed_product_live` (3839)")
+L[i]=old.replace("`scripts/debug/product_fixtures.gd` (699, `--product-shot` fikstürü), ","").replace("`_seed_product_live` (3839)","`_seed_product_live` (4386)")
+# 264
+i=idx("  ↳ `PRODUCT_FX_HOLDS`, `_FX_ALERT_CLEARS`")
+old=L[i]
+assert "; fikstürün `fix_long_name` ve `b2b_no_requests` edge'leri. `SprintCatalog.card_effect` smoke okuduğu için kalır." in old, old
+L[i]=old.replace("; fikstürün `fix_long_name` ve `b2b_no_requests` edge'leri. `SprintCatalog.card_effect`",". `SprintCatalog.card_effect`")
+new_del=["- Silinenler (statik fikstür ve alan cümlesi): `scripts/debug/product_fixtures.gd`, `ProductTab.set_source`, `GameShell.debug_product_apply/act`; `ProductQuality.area_row`, `serves`, `WORD_TONES`;",
+ "  ↳ `SprintCatalog.area_sentence`, `_standing`, `_recent_hit`; anahtarlar `PRODUCT_AREA_RIVAL`, `_AREA_OVER_CAPACITY`, `_AREA_REVENUE_{NONE,WEAK,ENOUGH,STRONG}`, `PRODUCT_AUDIENCE_*`, `PRODUCT_STAR_*`, `PRODUCT_RESEARCH_VOICE_*`; sprint.json `research_sentence_weeks`."]
+L[i+1:i+1]=new_del
+# 267 smoke name
+i=idx("- Hat/kalite: `product_lines_catalog_loads`")
+assert L[i].endswith("`product_line_profiles`, `product_area_row`")
+L[i]=L[i].replace("`product_area_row`","`product_area_word`")
+# harness
+i=idx("- Harness: `--product-shot=<c1..c5|flow|edge:<ad>|live:<tür>>`")
+old=L[i]
+assert "(`main.gd:257`), `--rnd-shot=<tür>` (:264), `--inbox-shot=rnd_note` (:252)" in old
+L[i]=old.replace("`--product-shot=<c1..c5|flow|edge:<ad>|live:<tür>>` (`main.gd:257`), `--rnd-shot=<tür>` (:264), `--inbox-shot=rnd_note` (:252)","`--product-shot=live:<tür>` (`main.gd:258`), `--rnd-shot=<tür>` (:265), `--inbox-shot=rnd_note` (:253)")
+a=idx("- `--product-shot=<c1..c5|flow|edge:<ad>>` debug fikstürüyle")
+b=idx("- `--product-shot=live:<tür>` sprint motoruyla kurulan koşuda")
+assert b-a==7,(a,b)
+newp=["- Ürün karelerinin hepsi `live:<tür>` dünyalarındandır (`live:` olmayan tür hata basıp 1 ile çıkar); sol sütun kareleri `live:a4_*` türlerindendir.",
+ "  ↳ Kare dünyası olmayan durumlar: sürüm notunda düzeltme ve yorum satırları, MVP öncesi boş sürüm notu, sürümsüz Geçmiş, ekipsiz boş plan, ÇEYREK'te onaylı sütun ve açık hedef menüsü."]
+L[a:b]=newp
+i=idx("- `--product-shot=live:<tür>` sprint motoruyla kurulan koşuda")
+assert "`_seed_product_live` `:3902`" in L[i]
+L[i]=L[i].replace("`_seed_product_live` `:3902`","`_seed_product_live` `:4386`")
+# cümle mentions
+i=[k for k,l in enumerate(L) if "`b2b_mvp` ERP'nin v1.0 notu (Çekirdek Zayıf okunur, cümlesi 1★ şirketlere yettiğini söyler);" in l]
+assert len(i)==1
+L[i[0]]=L[i[0]].replace("(Çekirdek Zayıf okunur, cümlesi 1★ şirketlere yettiğini söyler);","(Çekirdek Zayıf okunur);")
+i=[k for k,l in enumerate(L) if "(her alan 3★ cümlesini okur)" in l]
+assert len(i)==1
+L[i[0]]=L[i[0]].replace("(her alan 3★ cümlesini okur)","(her hat ikinci kademede)")
+i=idx("- `live:a4_*` sprint ekranının kare dünyalarıdır")
+assert "`_seed_product_a4` `main.gd:4143`, tablo `_A4_WORLDS` `:4102`" in L[i]
+L[i]=L[i].replace("`_seed_product_a4` `main.gd:4143`, tablo `_A4_WORLDS` `:4102`","`_seed_product_a4` `main.gd:4577`, tablo `_A4_WORLDS` `:4536`")
+# 363
+i=idx("- Fikstürler: `scripts/debug/product_fixtures.gd`, `data/events/cards/_fixtures/")
+L[i]=L[i].replace("- Fikstürler: `scripts/debug/product_fixtures.gd`, `data/events/cards/_fixtures/","- Fikstürler: `data/events/cards/_fixtures/")
+# 386 remove
+i=idx("- `area_sentence` ve türevleri (`_standing`, `_recent_hit`) ekranda okunmaz")
+del L[i]
+# 412
+i=idx("- sprint.json sayısını/bloğunu değiştirirsen")
+assert "`sprint_probe.gd`, `product_fixtures.gd`, CLAUDE.md" in L[i]
+L[i]=L[i].replace("`sprint_probe.gd`, `product_fixtures.gd`, CLAUDE.md","`sprint_probe.gd`, CLAUDE.md")
+open(p,'w',encoding='utf-8',newline='').write('\n'.join(L))
+EOF
+diff $S/u7_base/docs/kod_haritasi/sistemler/02_urun_sprint.md docs/kod_haritasi/sistemler/02_urun_sprint.md | cut -c1-260; awk 'length($0)>240{print FILENAME": "NR": "length($0)}' docs/kod_haritasi/sistemler/02_urun_sprint.md | head
+
+### #1029 2026-10-28T17:27:41.072Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; cat > $S/doclen.py <<'EOF'
+import sys,difflib
+for f in sys.argv[2:]:
+    a=open(sys.argv[1]+'/'+f,encoding='utf-8').read().split('\n')
+    b=open(f,encoding='utf-8').read().split('\n')
+    for l in set(b)-set(a):
+        if len(l)>240: print('TOO LONG',f,len(l),l[:80])
+    print(f,'max changed-line chars:',max([len(l) for l in set(b)-set(a)] or [0]), '| total >240 now:',sum(1 for l in b if len(l)>240),'base:',sum(1 for l in a if len(l)>240))
+EOF
+python3 $S/doclen.py $S/u7_base docs/kod_haritasi/sistemler/02_urun_sprint.md CLAUDE.md
+
+### #1030 2026-10-28T17:27:47.930Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; python3 - <<'EOF'
+p='docs/kod_haritasi/sistemler/02_urun_sprint.md'
+s=open(p,encoding='utf-8',newline='').read()
+a="  ↳ `SprintCatalog.area_sentence`, `_standing`, `_recent_hit`; anahtarlar `PRODUCT_AREA_RIVAL`, `_AREA_OVER_CAPACITY`, `_AREA_REVENUE_{NONE,WEAK,ENOUGH,STRONG}`, `PRODUCT_AUDIENCE_*`, `PRODUCT_STAR_*`, `PRODUCT_RESEARCH_VOICE_*`; sprint.json `research_sentence_weeks`."
+assert s.count(a)==1
+b="""  ↳ `SprintCatalog.area_sentence`, `_standing`, `_recent_hit`; anahtarlar `PRODUCT_AREA_RIVAL`, `PRODUCT_AREA_OVER_CAPACITY`, `PRODUCT_AREA_REVENUE_{NONE,WEAK,ENOUGH,STRONG}`,
+  ↳ `PRODUCT_AUDIENCE_*`, `PRODUCT_STAR_*`, `PRODUCT_RESEARCH_VOICE_*`; sprint.json `research_sentence_weeks`."""
+s=s.replace(a,b)
+open(p,'w',encoding='utf-8',newline='').write(s)
+EOF
+python3 $S/doclen.py $S/u7_base docs/kod_haritasi/sistemler/02_urun_sprint.md
+
+### #1035 2026-10-28T17:28:10.726Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; python3 - <<'EOF'
+p='docs/kod_haritasi/sistemler/08_sekmeler.md'
+s=open(p,encoding='utf-8',newline='').read()
+def rep(a,b):
+    global s
+    assert s.count(a)==1,(a[:70],s.count(a))
+    s=s.replace(a,b)
+rep("- `ProductTab.set_source(src)` `scripts/tabs/product_tab.gd:125`: debug fikstür kaynağı · game_shell.gd:176, main.gd:2235 (null = canlı model).\n","")
+rep("`--product-shot=<c1..c5|cards|flow|edge:<ad>|live:<tür>>` (:3704)","`--product-shot=live:<tür>` (:4203)")
+rep(" Ürün fikstürü: `scripts/debug/product_fixtures.gd`.\n",
+    "\n")
+rep("- Fikstür kaynağı (`product_fixtures.gd`) sol sütuna `modules` ve `requests` vermez (`model()`ın başındaki üç alanlık kalıp); sol sütun kareleri `live:a4_*` türlerindendir.\n","")
+rep("`ProductModel._card`, `_planned` + `SprintCard.setup`; hepsinde\n  ↳ `scripts/debug/product_fixtures.gd` (fikstür aynı alanı taşımalı; bu sprintin kartları fikstürde yalnız kapasitenin yükünü kurar, pano çizilmez, sonraki sprintin kartları paysızdır).\n",
+    "`ProductModel._card`, `_planned` + `SprintCard.setup`.\n")
+open(p,'w',encoding='utf-8',newline='').write(s)
+EOF
+diff $S/u7_base/docs/kod_haritasi/sistemler/08_sekmeler.md docs/kod_haritasi/sistemler/08_sekmeler.md | cut -c1-230; python3 $S/doclen.py $S/u7_base docs/kod_haritasi/sistemler/08_sekmeler.md; grep -n "product_tab\|set_source" docs/kod_haritasi/sistemler/08_sekmeler.md | head
+
+### #1045 2026-10-28T17:31:50.813Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; python3 - <<'EOF'
+p='docs/kod_haritasi/sistemler/10_test_harness.md'
+s=open(p,encoding='utf-8',newline='').read()
+L=s.split('\n')
+def drop(prefix):
+    global L
+    r=[i for i,l in enumerate(L) if l.startswith(prefix)]
+    assert len(r)==1,(prefix,len(r)); del L[r[0]]
+drop("- `scripts/debug/product_fixtures.gd` (554)")
+drop("- `GameShell.debug_product_apply/act`")
+drop("- `product_fixtures.gd` gerçek anahtarları")
+open(p,'w',encoding='utf-8',newline='').write('\n'.join(L))
+EOF
+diff $S/u7_base/docs/kod_haritasi/sistemler/10_test_harness.md docs/kod_haritasi/sistemler/10_test_harness.md | cut -c1-150; sed -n 171p docs/kod_haritasi/sistemler/10_test_harness.md | cut -c1-400; sed -n 168,172p docs/kod_haritasi/sistemler/10_test_harness.md | cut -c1-120
+
+### #1047 2026-10-28T17:32:20.348Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; python3 - <<'EOF'
+p='docs/kod_haritasi/sistemler/02_urun_sprint.md'
+s=open(p,encoding='utf-8',newline='').read()
+L=s.split('\n')
+i=[k for k,l in enumerate(L) if l.startswith("- Silinenler (statik fikstür ve alan cümlesi)")]
+assert len(i)==1
+i=i[0]
+assert L[i+1].startswith("  ↳ `SprintCatalog.area_sentence`") and L[i+2].startswith("  ↳ `PRODUCT_AUDIENCE_*`")
+del L[i:i+3]
+open(p,'w',encoding='utf-8',newline='').write('\n'.join(L))
+EOF
+diff $S/u7_base/docs/kod_haritasi/sistemler/02_urun_sprint.md docs/kod_haritasi/sistemler/02_urun_sprint.md | cut -c1-120 | head -40
+grep -rInE "product_fixtures|ProductFixtures|PRODUCT_FIXTURES|_product_source|debug_product_(apply|act)|set_source|\barea_row\b|WORD_TONES|\barea_sentence\b|\b_recent_hit\b|ProductQuality\.serves|func serves\(|research_sentence_weeks|PRODUCT_AREA_RIVAL|PRODUCT_AREA_OVER_CAPACITY|PRODUCT_AREA_REVENUE_(NONE|WEAK|ENOUGH|STRONG)|PRODUCT_AUDIENCE_|PRODUCT_STAR_|PRODUCT_RESEARCH_VOICE|product_area_row" scripts scenes tools data localization docs/kod_haritasi/sistemler docs/kod_haritasi/README.md docs/ACIK_ISLER docs/design CLAUDE.md project.godot 2>/dev/null | wc -l; grep -rIn "_standing" scripts | cut -c1-120
+
+### #1062 2026-10-28T17:35:21.743Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; cd $W; python3 - <<'EOF'
+import csv,io,re,os
+rows=list(csv.reader(io.StringIO(open('localization/strings.csv',encoding='utf-8',newline='').read())))
+keys={r[0] for r in rows[1:] if r}
+lst="""PRODUCT_WEEK_OF PRODUCT_IDLE PRODUCT_IDLE_ONE PRODUCT_IDLE_PLAN PRODUCT_ROLE_MISSING PRODUCT_SKIP_SPRINT PRODUCT_SKIP_CONFIRM PRODUCT_START_NEED_CARD PRODUCT_PLAN_HOLD PRODUCT_OVER_CAPACITY PRODUCT_OVER_CAPACITY_ONE PRODUCT_STATUS PRODUCT_STATUS_RUNNING PRODUCT_STATUS_QUEUED PRODUCT_STATUS_DECISIONS PRODUCT_STATUS_DECISIONS_ONE PRODUCT_STATUS_WAITING PRODUCT_AT_SPRINT_END PRODUCT_NEXT_RELEASE PRODUCT_IN_WEEKS PRODUCT_IN_WEEKS_ONE PRODUCT_LEAD_TIP PRODUCT_LEAD_APPLY PRODUCT_LEAD_ONE PRODUCT_LEAD_TWO PRODUCT_LEAD_REQUEST PRODUCT_EMPTY_SPRINT PRODUCT_PM_STARTED PRODUCT_NEXT_EMPTY PRODUCT_AREAS PRODUCT_PERSON_SHARE PRODUCT_AREA_NOTHING_LEFT PRODUCT_AREA_RIVAL PRODUCT_AREA_OVER_CAPACITY""".split()
+for a in ["CORE","ONBOARDING","GROWTH","INTEGRATIONS","TRUST"]:
+    for w in ["NONE","WEAK","ENOUGH","STRONG"]: lst.append(f"PRODUCT_AREA_{a}_{w}")
+present=[k for k in lst if k in keys]
+print('still in CSV:',present)
+print('count in list:',len(lst))
+EOF
+grep -n "Look\.\|WIDE\|NARROW\|LOW\b" scripts/tabs/product/sprint_card.gd | head -3; grep -rn "SprintCard\b" scripts --include='*.gd' | grep -v "^scripts/debug/endgame_smoke" | cut -c1-120 | head; for n in lead_sentence forecast phase_dot _bug_rows "func bug_row\b" BUTTONS PRODUCT_SKIP_SPRINT; do echo "== $n: $(grep -rIwE "$n" scripts --include='*.gd' | grep -v endgame_smoke | wc -l)"; done
+
+### #1097 2026-10-28T17:48:32.722Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; cat > $S/u7_mac_env.sh <<'EOF'
+# Local verbatim copy of docs/tasks/dizustu/mac_env.sh as read at the start of the task (the shared file stopped answering reads).
+: "${S:?S (scratchpad) yok}" "${ETIKET:?ETIKET yok}"
+R="/Users/tugbauysal/Desktop/project steam/Project Unicorn"
+K="/Users/tugbauysal/Desktop/project steam/.kilit"
+GODOT=/Users/tugbauysal/Downloads/Godot.app/Contents/MacOS/Godot
+export PATH="/opt/homebrew/opt/coreutils/libexec/gnubin:$PATH"
+GODOT_MAX=2
+FREE_MIN_MB=1000
+free_mb() {
+  vm_stat | awk '/page size of/ {ps=$8} /Pages (free|inactive|speculative)/ {gsub("\\.","",$NF); p+=$NF} END {print int(p*ps/1048576)}'
+}
+pressure() { sysctl -n kern.memorystatus_vm_pressure_level 2>/dev/null || echo 1; }
+mem_ok() { local f; f=$(free_mb); [ "${f:-0}" -ge "$FREE_MIN_MB" ] && [ "$(pressure)" -lt 4 ] || { echo "STOP free=${f}MB pressure=$(pressure)"; return 1; }; }
+godot_cap() { [ "$(pressure)" -ge 2 ] && echo 1 || echo "$GODOT_MAX"; }
+godots() { pgrep -x Godot | wc -l | tr -d ' '; }
+gd() {
+  local ad="$1" tree="$2"; shift 2
+  if [ -d "$K/sessiz" ] && ! grep -q "^$ETIKET" "$K/sessiz/sahip" 2>/dev/null; then echo "WAIT sessiz: $(cat "$K/sessiz/sahip" 2>/dev/null)"; return 99; fi
+  mem_ok || return 98
+  [ "$(godots)" -lt "$(godot_cap)" ] || { echo "WAIT godot=$(godots) cap=$(godot_cap)"; return 97; }
+  mkdir -p "$S/home_$ad"
+  ( cd "$tree" && HOME="$S/home_$ad" "$GODOT" "$@" )
+}
+gdw() {
+  local rc
+  while :; do gd "$@"; rc=$?; case $rc in 97|98|99) sleep 20 ;; *) return $rc ;; esac; done
+}
+export S ETIKET R K GODOT GODOT_MAX FREE_MIN_MB
+export PYTHONDONTWRITEBYTECODE=1
+export -f free_mb pressure mem_ok godot_cap godots gd gdw
+EOF
+W=$S/w4/project-unicorn
+cd $W
+for kind in c1 edge:goal_menu live:a4_solo; do
+  log=$S/u7_logs/ps_$(echo $kind | tr ':' '_').log
+  ( export S ETIKET=URUN_ARAYUZU_AJAN; . $S/u7_mac_env.sh; timeout 120 bash -c 'gdw u7_ps "$0" --headless --path . --product-shot='"$kind" "$W" > "$log" 2>&1; echo "$kind rc=$?" )
+  grep -a "PRODUCTSHOT\|unknown kind\|SCRIPT ERROR" "$log" | head -3
+done
+
+### #1098 2026-10-28T17:49:00.196Z agent-a993de58db3628fdf Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad
+cat > $S/u7_ps.sh <<'EOF'
+#!/usr/bin/env bash
+# usage: u7_ps.sh <kind>
+export S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad ETIKET=URUN_ARAYUZU_AJAN
+. "$S/u7_mac_env.sh"
+W="$S/w4/project-unicorn"
+log="$S/u7_logs/ps_$(echo "$1" | tr ':' '_').log"
+timeout 120 bash -c 'gdw u7_ps "$0" --headless --path . --product-shot='"$1" "$W" > "$log" 2>&1
+echo "$1 rc=$?"
+grep -a "PRODUCTSHOT\|unknown kind\|SCRIPT ERROR" "$log" | head -3
+EOF
+for k in c1 edge:goal_menu live:a4_solo; do bash $S/u7_ps.sh $k; done
+
+### #1110 2026-10-28T17:51:24.500Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; cd $S; diff -rq base3/project-unicorn w4/project-unicorn -x .godot -x "*.import" -x override.cfg 2>/dev/null | sed -e "s|^Files base3/project-unicorn/\(.*\) and .* differ$|M \1|" -e "s|^Only in base3/project-unicorn/\(.*\): \(.*\)$|D \1/\2|" -e "s|^Only in w4/project-unicorn/\(.*\): \(.*\)$|A \1/\2|" | grep -v " docs/tasks/" | tee d4a_files.txt
+
+### #1295 2026-10-28T19:09:33.286Z agent-a884ac19ee4296e6b Bash
+cd /private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; python3 -I -c "
+import csv,sys
+def load(p):
+    with open(p,newline='',encoding='utf-8') as f: return list(csv.reader(f))
+a=load('base3/project-unicorn/localization/strings.csv'); b=load('w4/project-unicorn/localization/strings.csv')
+print(len(a),len(b))
+ka=[r[0] for r in a]; kb=[r[0] for r in b]
+gone=[k for k in ka if k not in set(kb)]; print(len(gone),gone)
+print([k for k in kb if k not in set(ka)])
+print(set(len(r) for r in b))
+ra={r[0]:r for r in a}; print(all(ra[r[0]]==r for r in b))
+"
+
+### #1347 2026-10-28T19:16:34.927Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; cat >> $S/notes.md <<'EOF'
+
+## D4a (U7 temizlik, w4)
+- Ajan: product_fixtures.gd(.uid) silindi; set_source, PRODUCT_FIXTURES, _product_source, debug_product_apply/act; area_row, WORD_TONES, serves;
+  area_sentence, _standing, _recent_hit; 18 CSV anahtarı (PRODUCT_AREA_RIVAL, _OVER_CAPACITY, _REVENUE_{NONE,WEAK,ENOUGH,STRONG}, PRODUCT_AUDIENCE_*,
+  PRODUCT_STAR_*, PRODUCT_RESEARCH_VOICE_*); sprint.json research_sentence_weeks. Her ad için grep 0 (komut: grep -rIE "<ad>" scripts scenes tools data
+  localization docs/kod_haritasi/sistemler docs/kod_haritasi/README.md docs/ACIK_ISLER docs/design CLAUDE.md project.godot). card_effect kaldı.
+- Kırılanlar: game_shell._on_sprint_closed → has_method(&"open_area"); main.gd clock-shot released kolundaki set_source(null) silindi.
+- Kapsam kaybı (live: karşılığı yok): release_fix, release_reviews, no_release, history_empty, cap_zero, approved, goal_menu → ISLER.md.
+  Karşılıklar: history→b2c_live, over_100→a4_six_pm5/pm2, over_125→a4_eleven/a4_twelve_dev, empty_start→a4_empty, quarter_no_pm→a4_solo/devs3/requests,
+  team_none→a4_cards_noteam, c1..c5→plan/active/b2c_mvp/b2b_quarter/overview_pre, flow→plan/b2c_mvp/b2b_mvp/b2c_goal, gate→live:gate.
+- Smoke 23/23; loc_residue 0.
+- İnceleme (Opus): 10 bulgu; 7 uygulandı (tek düzeltme turu), 3 reddedildi: ACIK_KARARLAR (37) (açık maddeye dokunulmaz), localization_glossary:85
+  (bağlayıcı sözlük; silinen PRODUCT_STAR_* örneği, sahibine not), üretilmiş kod haritası (commit anında üretilir).
+EOF
+echo ok
+
+### #1348 2026-10-28T19:16:35.376Z agent-ac79a2122ea16beaa Bash
+W=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad/w4/project-unicorn; cd "$W"
+python3 - <<'EOF'
+p='scripts/systems/sprint_catalog.gd'
+s=open(p).read()
+s=s.replace('''	if _over_capacity(area_id):
+		return true
+	return capabilities''','''	if area_def(area_id).get("infra_alert", false) and InfraSystem.is_over_capacity():
+		return true
+	return capabilities''',1)
+s=s.replace('''## Güven & Ölçek sunucu aşımını da uyarı sayar.
+static func _over_capacity(area_id: String) -> bool:
+	return area_def(area_id).get("infra_alert", false) and InfraSystem.is_over_capacity()
+
+
+''','',1)
+open(p,'w').write(s)
+EOF
+grep -rn "_over_capacity" scripts tools scenes --include=*.gd --include=*.tscn | grep -v "is_over_capacity"; grep -n "is_over_capacity\|infra_alert" scripts/systems/sprint_catalog.gd
+grep -n "product_area_word\|fit_star_context\|_seed_b2c" scripts/debug/endgame_smoke.gd | head -30
+
+### #1351 2026-10-28T19:16:43.758Z agent-ac79a2122ea16beaa Bash
+W=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad/w4/project-unicorn; cd "$W"
+python3 - <<'EOF'
+p='scripts/debug/endgame_smoke.gd'
+s=open(p).read()
+a=s.index("	# Küçük kitleli B2C ürünün sayfası da 2★ satırını okur")
+b=s.index('	return ""\n',a)
+s=s[:a]+s[b:]
+s=s.replace("altı Zayıf, referans ile referans + 1 arası Yeterli, ondan sonrası Güçlü; küçük kitlede de 2★ satırı okunur.","altı Zayıf, referans ile referans + 1 arası Yeterli, ondan sonrası Güçlü.",1)
+s=s.replace("""`lvl <= 0.0` dalını sil → Yok iddiası FAIL; `_value`de `maxf(star, PAGE_STAR)`
+## yerine `star` oku → küçük kitle iddiası FAIL.""","""`lvl <= 0.0` dalını sil → Yok iddiası FAIL.""",1)
+open(p,'w').write(s)
+EOF
+sed -n 16108,16118p scripts/debug/endgame_smoke.gd; sed -n 16136,16146p scripts/debug/endgame_smoke.gd
+grep -n "fit_star_context\|small\|küçük kit" scripts/debug/endgame_smoke.gd | sed -n 1,5p
+grep -n "ghost_row\|ghost_effort" scripts/tabs/product/product_model.gd
+
+### #1353 2026-10-28T19:16:50.595Z agent-ac79a2122ea16beaa Bash
+W=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad/w4/project-unicorn; cd "$W"
+python3 - <<'EOF'
+p='scripts/tabs/product/product_model.gd'
+s=open(p).read()
+s=s.replace("planla birlikte oynatılmış); motorun tanımadığı kimlik satır vermez.","planla birlikte oynatılmış).\n## İmleçteki aday yeniden kurulumda havuzdan düşmüş olabilir (süresi dolan talep, kapanan hata): satır vermez.",1)
+s=s.replace("## Motorun tanımadığı kimlik hayalet vermez.","## İmleçteki aday yeniden kurulumda havuzdan düşmüş olabilir (süresi dolan talep, kapanan hata): hayalet vermez.",1)
+open(p,'w').write(s)
+EOF
+sed -n 222,228p scripts/tabs/product/product_model.gd
+D=docs/kod_haritasi/sistemler/02_urun_sprint.md; wc -l $D; sed -n 290,312p $D; sed -n 60,80p docs/ACIK_ISLER/ISLER.md
+
+### #1355 2026-10-28T19:17:06.536Z agent-ac79a2122ea16beaa Bash
+W=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad/w4/project-unicorn; cd "$W"
+python3 - <<'EOF'
+p='docs/kod_haritasi/sistemler/02_urun_sprint.md'
+L=open(p).read().split('\n')
+assert L[295].startswith("- Ürün karelerinin hepsi") and L[296].lstrip().startswith("↳ Kare dünyası")
+assert L[297].startswith("- `--product-shot=live:<tür>` sprint motoruyla")
+L[297]=L[297].replace("- `--product-shot=live:<tür>` sprint motoruyla kurulan koşuda (`main.gd` `_seed_product_live` `:4386`)","- `--product-shot=live:<tür>` (`live:` olmayan tür hata basıp 1 ile çıkar) sprint motoruyla kurulan koşuda (`main.gd` `_seed_product_live` `:4386`)",1)
+del L[295:297]
+s='\n'.join(L).replace(" (her hat ikinci kademede);",";",1)
+open(p,'w').write(s)
+p='docs/ACIK_ISLER/ISLER.md'
+s=open(p).read()
+old="    fikstür dünyasında bu kilitler doğmuyor.\n"
+assert s.count(old)==1
+s=s.replace(old,old+"  - Ürün karelerinin dünyası olmayan durumlar: sürüm notunda düzeltme ve yorum satırları, MVP öncesi boş sürüm notu,\n    sürümsüz Geçmiş, ekipsiz boş plan, ÇEYREK'te onaylı sütun ve açık hedef menüsü.\n",1)
+open(p,'w').write(s)
+EOF
+grep -n "her hat ikinci\|live:a4_\|Kare dünyası" docs/kod_haritasi/sistemler/02_urun_sprint.md; grep -n "b2b_mature\|live:<tür>\` (" docs/kod_haritasi/sistemler/02_urun_sprint.md | cut -c1-200
+awk 'length>240{print FILENAME": "FNR": "length}' docs/kod_haritasi/sistemler/02_urun_sprint.md docs/ACIK_ISLER/ISLER.md
+sed -n 78,86p docs/ACIK_ISLER/ISLER.md
+
+### #1356 2026-10-28T19:17:12.249Z agent-ac79a2122ea16beaa Bash
+W=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad/w4/project-unicorn; cd "$W"
+python3 - <<'EOF'
+for p in ['docs/kod_haritasi/sistemler/02_urun_sprint.md','docs/ACIK_ISLER/ISLER.md']:
+    for i,l in enumerate(open(p).read().split('\n'),1):
+        if len(l)>240: print(p,i,len(l))
+EOF
+R=docs/kod_haritasi/sistemler
+wc -l scripts/tabs/product_tab.gd scripts/game_shell.gd scripts/ui/game_shell.gd 2>&1 | head; find . -name product_tab.gd -o -name game_shell.gd | grep -v "^./docs"
+grep -n "product_tab\|game_shell\|_debug_fkey" $R/08_sekmeler.md $R/10_test_harness.md $R/02_urun_sprint.md | cut -c1-260
+
+### #1382 2026-10-28T19:18:40.591Z agent-ac79a2122ea16beaa Bash
+W=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad/w4/project-unicorn; cd "$W"
+python3 - <<'EOF'
+import re,glob
+for f in glob.glob('docs/kod_haritasi/**/*.md',recursive=True):
+    for i,l in enumerate(open(f),1):
+        for m in re.finditer(r'(sprint_catalog|product_model|endgame_smoke)(\.gd)?`?:(\d+)',l):
+            n=int(m.group(3)); k=m.group(1)
+            if (k=='sprint_catalog' and n>=740) or (k=='product_model' and n>=222) or (k=='endgame_smoke' and n>=16100):
+                print(f,i,m.group(0))
+EOF
+
+### #1383 2026-10-28T19:18:51.392Z agent-ac79a2122ea16beaa Bash
+W=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad/w4/project-unicorn; cd "$W"
+python3 - <<'EOF'
+D='docs/kod_haritasi/sistemler/'
+def sub(path, pairs):
+    s=open(D+path).read()
+    for a,b in pairs:
+        assert s.count(a)==1,(path,a,s.count(a))
+        s=s.replace(a,b)
+    open(D+path,'w').write(s)
+sub('02_urun_sprint.md',[
+ ("`scripts/tabs/product_tab.gd` (347), `scripts/tabs/product/*.gd` (13 dosya, en büyüğü `product_model.gd` 1142)","`scripts/tabs/product_tab.gd` (334), `scripts/tabs/product/*.gd` (16 dosya, en büyüğü `product_model.gd` 1150)"),
+ ("`scripts/systems/sprint_catalog.gd` (929)","`scripts/systems/sprint_catalog.gd` (931)"),
+ ("`ProductTab._act` `product_tab.gd:305`","`ProductTab._act` `product_tab.gd:290`"),
+ ("`ProductTab._act` `product_tab.gd:311`","`ProductTab._act` `product_tab.gd:296`"),
+ ("· `product_tab.gd:313`, `_auto_start`","· `product_tab.gd:298`, `_auto_start`"),
+ ("CANLI v1.0 yapar · `product_tab.gd:314`","CANLI v1.0 yapar · `product_tab.gd:299`"),
+ ("`product_tab.gd:317-320`","`product_tab.gd:302-305`"),
+ ("`product_tab.gd:321-325`, `time_manager.gd:445`","`product_tab.gd:306-310`, `time_manager.gd:445`"),
+ ("`scripts/main/game_shell.gd:28`, `_changed`","`scripts/main/game_shell.gd:24`, `_changed`"),
+ ("`sprint_system.gd:1511` · `scripts/main/game_shell.gd:27`","`sprint_system.gd:1511` · `scripts/main/game_shell.gd:23`"),
+])
+sub('08_sekmeler.md',[
+ ("`scripts/tabs/product_tab.gd` (349)","`scripts/tabs/product_tab.gd` (334)"),
+ ("`scripts/tabs/product_tab.gd:52`: sekme açılınca görünümleri kurar, 6 EventBus sinyaline bağlar (:114-119)","`scripts/tabs/product_tab.gd:51`: sekme açılınca görünümleri kurar, 6 EventBus sinyaline bağlar (:113-118)"),
+ ("`product_tab.gd:145`: her değişimde modelden baştan kurar; `_queue_rebuild` (:343)","`product_tab.gd:135`: her değişimde modelden baştan kurar; `_queue_rebuild` (:323)"),
+ ("`scripts/tabs/product/product_model.gd:130`: GameState.product + SprintSystem/ProductState'ten model · product_tab.gd:149,","`scripts/tabs/product/product_model.gd:117`: GameState.product + SprintSystem/ProductState'ten model · product_tab.gd:139,"),
+ ("`product_model.gd:218`: bilinmeyen","`product_model.gd:204`: bilinmeyen"),
+ ("`product_tab.gd:289`: kart/panel eylemlerini `_act` (:305)","`product_tab.gd:278`: kart/panel eylemlerini `_act` (:290)"),
+ ("`ProductTab.open_area(area_id)` `product_tab.gd:276`","`ProductTab.open_area(area_id)` `product_tab.gd:265`"),
+ ("`ProductTab._on_candidate_hover(card_id)` `product_tab.gd:284`","`ProductTab._on_candidate_hover(card_id)` `product_tab.gd:273`"),
+ ("`ProductTab._hold_clock(on)` `product_tab.gd:345`","`ProductTab._hold_clock(on)` `product_tab.gd:330`"),
+])
+sub('10_test_harness.md',[
+ ("`scripts/main/game_shell.gd:138`: debug build'de Shift+F4","`scripts/main/game_shell.gd:134`: debug build'de Shift+F4"),
+ ("`scripts/main/game_shell.gd:144` (Shift+F4)","`scripts/main/game_shell.gd:140` (Shift+F4)"),
+])
+EOF
+grep -n "func ghost\b\|func ghost(" scripts/tabs/product/product_model.gd
+sed -n 108p docs/kod_haritasi/sistemler/08_sekmeler.md | cut -c1-80; grep -n "_hold_clock\|_on_hour\|_on_desk" scripts/tabs/product_tab.gd | head -3
+
+### #1388 2026-10-28T19:19:15.615Z agent-ac79a2122ea16beaa Bash
+W=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad/w4/project-unicorn; cd "$W"
+python3 - <<'EOF'
+import re
+L=open('scripts/debug/endgame_smoke.gd').read().split('\n')
+cur=None; hits={}
+for i,l in enumerate(L,1):
+    m=re.match(r'static func (_case_\w+)',l)
+    if m: cur=m.group(1)
+    if cur and re.search(r'alerts_cleared|alert|clears_alert|fix_card|over_capacity|OVER_CAPACITY',l) : hits.setdefault(cur,0); hits[cur]+=1
+disp={}
+for l in L[:900]:
+    m=re.match(r'\s*"(\w+)":\s+fail = (_case_\w+)\(',l)
+    if m: disp[m.group(2)]=m.group(1)
+print(sorted((disp.get(k,'?'),v) for k,v in hits.items()))
+EOF
+
+### #1406 2026-10-28T19:21:40.392Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; P=$S/w4/project-unicorn/docs/kod_haritasi/sistemler/02_urun_sprint.md P="$P" python3 - <<'EOF'
+import os
+p=os.environ['P']; L=open(p,encoding='utf-8').read().split('\n')
+i=295; a=L[i]; print(len(a)); print(a)
+EOF
+
+### #1407 2026-10-28T19:21:45.900Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; P=$S/w4/project-unicorn/docs/kod_haritasi/sistemler/02_urun_sprint.md P="$P" python3 - <<'EOF'
+import os
+p=os.environ['P']; L=open(p,encoding='utf-8').read().split('\n')
+a=L[295]; cut=a.index(': `pick`')
+L[295]=a[:cut+1]; L.insert(296,'  '+a[cut+2:])
+open(p,'w',encoding='utf-8').write('\n'.join(L))
+print([(i+1,len(l)) for i,l in enumerate(L) if len(l)>240 and i in range(290,300)]); print(L[295]); print(L[296])
+EOF
+echo docs/ACIK_ISLER/ISLER.md >> $S/d4a_changed.txt; sort -u $S/d4a_changed.txt -o $S/d4a_changed.txt; cat $S/d4a_changed.txt
+
+### #1408 2026-10-28T19:22:05.595Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; W=$S/w4/project-unicorn; { awk '/^\tmatch case_name:/{on=1;next} on&&/^\t\t_:/{exit} on' $W/scripts/debug/endgame_smoke.gd | grep -oE '^\s*"[a-z0-9_]+":' | tr -d '\t ":' | grep -E '^(sprint_|product_)'; printf '%s\n' loc_csv_integrity all_scripts_load loc_product_derived_keys fit_star_context fit_account_ref fit_scale save_v17_market_ref rival_composite_table worst_bug_line_breaks_ties_by_users clock_resumes_only_by_player topbar_speed_cluster_three_rungs rnd_rail_open_with_locked_tree line_impact_names_the_accounts promise_due_sprint_kept_when_shipped_next_sprint save_v15_tickets_become_open_bugs incident_checkout_fix_card incident_night_hold_resumes incident_scale infra_capacity_moves_both_ways month_summary; } | sort -u > $S/d4a_cases.txt; wc -l < $S/d4a_cases.txt; awk '/^\tmatch case_name:/{on=1;next} on&&/^\t\t_:/{exit} on' $W/scripts/debug/endgame_smoke.gd | grep -oE '^\s*"[a-z0-9_]+":' | tr -d '\t ":' > /tmp/allc_$$; comm -23 $S/d4a_cases.txt <(sort /tmp/allc_$$); rm /tmp/allc_$$
+cat > $S/d4a_msg.txt <<'EOF'
+Ürün arayüzü U7: statik Ürün fikstürü emekli, okuyucusu kalmayan alan cümlesi kodu ve 18 anahtar silindi
+
+Oyuncunun gördüğü değişmez. Ürün sekmesinin bütün kareleri artık motorla kurulan `--product-shot=live:<tür>` dünyalarındandır: debug fikstürü (`scripts/debug/product_fixtures.gd`), `ProductTab.set_source`, GameShell'in fikstür kaynağı ve F tuşu kolları (`debug_product_apply/act`) ve `--product-shot`'ın fikstür türleri (c1..c5, cards, flow, edge:*) silindi; `live:` olmayan tür hata basıp 1 ile çıkar. Sprint kapanışında GameShell Ürün sayfasını `open_area` ile tanır (açık Ürün sayfası sökülmez); saat karesinin "released" kolu sayfayı kendisi kurar. Fikstür türlerinin live: karşılıkları sistem sayfasında; karşılığı olmayan yedi durum (sürüm notunda düzeltme ve yorumlar, kartsız kapanış, boş geçmiş, ekipsiz boş plan, onaylı PM planı, açık hedef menüsü) ISLER.md'nin görsel kabul yüzeyleri listesine yazıldı.
+
+Okuyucusu yalnız smoke olan kod silindi: ProductQuality.area_row, WORD_TONES, serves; SprintCatalog.area_sentence, _standing, _recent_hit, _over_capacity (area_alert'e katıldı); sprint.json research_sentence_weeks; 18 CSV anahtarı (PRODUCT_AREA_RIVAL, PRODUCT_AREA_OVER_CAPACITY, PRODUCT_AREA_REVENUE_NONE/WEAK/ENOUGH/STRONG, PRODUCT_AUDIENCE_*, PRODUCT_STAR_*, PRODUCT_RESEARCH_VOICE_*). Smoke product_area_row → product_area_word (ProductQuality.word'ün 13 kademesi); fit_star_context ve product_bug_rows_read_the_store'dan silinen koda değen assert'ler çıktı. card_effect kalır (02 sistem sayfasındaki karar). Silinen her ad için grep 0. CLAUDE.md §12'nin Ürün kare paragrafı yalnız live: türlerini anlatır.
+
+Dayanak: PRD_URUN_SPRINT_ARAYUZU §13 U7, §11.3, §14 A29.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+echo ok
+
+### #1494 2026-10-28T19:38:01.163Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; cd $S; rm -rf wfinal; mkdir -p wfinal && rsync -a w4b/project-unicorn/ wfinal/project-unicorn/; F=$S/wfinal/project-unicorn; for f in $(cat d4a_changed.txt); do if [ -e w4b_base/project-unicorn/$f ]; then git merge-file $F/$f w4b_base/project-unicorn/$f w4/project-unicorn/$f; echo "rc=$? $f"; else cp w4/project-unicorn/$f $F/$f; echo "new $f"; fi; done; git merge-file $F/localization/strings.csv base3/project-unicorn/localization/strings.csv w5/project-unicorn/localization/strings.csv; echo "rc=$? strings.csv (D5)"; grep -l "<<<<<<<" -r $F/scripts $F/docs/kod_haritasi $F/localization $F/CLAUDE.md $F/data/product 2>/dev/null
+
+### #1499 2026-10-28T19:39:25.689Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; F=$S/wfinal/project-unicorn; perl -pi -e 's/(`scripts\/tabs\/product\/product_model.gd` \()1148(\))/${1}1149$2/' $F/docs/kod_haritasi/sistemler/08_sekmeler.md; grep -c "product_model.gd\` (1149)" $F/docs/kod_haritasi/sistemler/08_sekmeler.md; cd $S; mkdir -p premerge; for f in scripts/tabs/product_tab.gd docs/kod_haritasi/sistemler/08_sekmeler.md; do n=premerge/$(basename $f); cp w3/project-unicorn/$f $n; git merge-file $n base3/project-unicorn/$f w4/project-unicorn/$f; echo "D4a-on-D3 rc=$? $f"; done
+
+### #1501 2026-10-28T19:40:04.819Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; cd $S; cmp premerge/product_tab.gd w4b/project-unicorn/scripts/tabs/product_tab.gd && echo "premerge product_tab == w4b product_tab"; rm -rf w4a_land b4a; mkdir -p w4a_land/project-unicorn b4a/project-unicorn; for f in $(cat d4a_changed.txt); do mkdir -p $(dirname w4a_land/project-unicorn/$f) $(dirname b4a/project-unicorn/$f); cp w4/project-unicorn/$f w4a_land/project-unicorn/$f; [ -e base3/project-unicorn/$f ] && cp base3/project-unicorn/$f b4a/project-unicorn/$f; done; for f in $(cat d4a_deleted.txt); do mkdir -p $(dirname b4a/project-unicorn/$f); cp base3/project-unicorn/$f b4a/project-unicorn/$f; done; cp w3/project-unicorn/docs/kod_haritasi/sistemler/08_sekmeler.md b4a/project-unicorn/docs/kod_haritasi/sistemler/08_sekmeler.md; cp premerge/product_tab.gd w4a_land/project-unicorn/scripts/tabs/product_tab.gd; cp w3/project-unicorn/scripts/tabs/product_tab.gd b4a/project-unicorn/scripts/tabs/product_tab.gd; python3 - <<'EOF'
+import re
+S='/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad'
+p=S+'/premerge/08_sekmeler.md'; t=open(p,encoding='utf-8').read()
+t=re.sub(r'^<<<<<<< [^\n]*\n(.*?)^=======\n.*?^>>>>>>> [^\n]*\n', r'\1', t, flags=re.S|re.M)
+rep=[('`scripts/tabs/product_tab.gd` (359)','`scripts/tabs/product_tab.gd` (344)'),
+('`ProductTab._ready()` `scripts/tabs/product_tab.gd:51`','`ProductTab._ready()` `scripts/tabs/product_tab.gd:54`'),('sinyaline bağlar (:113-118)','sinyaline bağlar (:117-122)'),
+('`ProductTab._rebuild()` `product_tab.gd:135`','`ProductTab._rebuild()` `product_tab.gd:139`'),('`_queue_rebuild` (:323)','`_queue_rebuild` (:333)'),
+('product_tab.gd:139, sprint_probe.gd:295','product_tab.gd:143, sprint_probe.gd:295'),('`product_tab.gd:278`: kart/panel eylemlerini `_act` (:290)','`product_tab.gd:288`: kart/panel eylemlerini `_act` (:300)'),
+('`ProductTab.open_area(area_id)` `product_tab.gd:265`','`ProductTab.open_area(area_id)` `product_tab.gd:275`'),('`ProductTab._on_candidate_hover(card_id)` `product_tab.gd:273`','`ProductTab._on_candidate_hover(card_id)` `product_tab.gd:283`'),
+('`ProductTab._hold_clock(on)` `product_tab.gd:330`: sürüm notu açıkken saati tutar (`HOLD_RELEASE_NOTE` :18)','`ProductTab._hold_clock(on)` `product_tab.gd:340`: sürüm notu açıkken saati tutar (`HOLD_RELEASE_NOTE` :19)')]
+for a,b in rep:
+    n=t.count(a); print(n, a[:50]); t=t.replace(a,b)
+open(S+'/w4a_land/project-unicorn/docs/kod_haritasi/sistemler/08_sekmeler.md','w',encoding='utf-8').write(t)
+p=S+'/w4a_land/project-unicorn/docs/kod_haritasi/sistemler/02_urun_sprint.md'; t=open(p,encoding='utf-8').read()
+rep2=[('`ProductTab._act` `product_tab.gd:290`','`ProductTab._act` `product_tab.gd:300`'),('`ProductTab._act` `product_tab.gd:296`','`ProductTab._act` `product_tab.gd:306`'),
+('`product_tab.gd:298`, `_auto_start`','`product_tab.gd:308`, `_auto_start`'),('ürünü CANLI v1.0 yapar · `product_tab.gd:299`','ürünü CANLI v1.0 yapar · `product_tab.gd:309`'),
+('hedef alan · `product_tab.gd:302-305`','hedef alan · `product_tab.gd:312-315`'),('otomatik ayar · `product_tab.gd:306-310`','otomatik ayar · `product_tab.gd:316-320`'),
+('`scripts/tabs/product_tab.gd` (334)','`scripts/tabs/product_tab.gd` (344)')]
+for a,b in rep2:
+    n=t.count(a); print(n, a[:50]); t=t.replace(a,b)
+open(p,'w',encoding='utf-8').write(t)
+EOF
+
+### #1610 2026-11-01T23:55:54.905Z 15e4f65e-5e2f-4650-8a09-3461c49bb834 Bash
+S=/private/tmp/claude-501/-Users-tugbauysal-Desktop-project-steam/15e4f65e-5e2f-4650-8a09-3461c49bb834/scratchpad; for d in base3 w3 w4 w4a_land b4a w4b w4b_base w5 wfinal u8_page u8 u8_tools evidence mcpw; do printf '%-10s files=%s\n' $d "$(find $S/$d -type f 2>/dev/null | wc -l)"; done; ls -la $S/w3 $S/wfinal 2>&1 | head -30
