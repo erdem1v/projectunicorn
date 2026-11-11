@@ -1971,7 +1971,7 @@ PROD_RND_NODE_BUG_TRACKER_UNLOCK,Ürünü ayakta tutan hattın son kademesi. Mas
 PROD_RND_NODE_CICD_DESC,Her değişiklik makinede kendi kendine kurulup sınanır. Kırık iş gece boyunca beklemez.,Every change builds and tests itself on a machine. Broken work no longer waits out the night.
 PROD_RND_NODE_CICD_UNLOCK,Yazılan her değişiklik artık makinede kendi kendine sınanıyor; geliştirmeden daha az hata çıkıyor.,"Every change written is tested by the machine on its own now, and less comes out of development broken."
 PROD_RND_NODE_TEST_AUTOMATION_DESC,Sınamalar insan eli olmadan tekrar tekrar koşar. Aynı hata ikinci kez geçip gitmez.,The tests run again and again without a hand on them. The same bug does not slip past twice.
-PROD_RND_NODE_TEST_AUTOMATION_UNLOCK,Kendi Kendine Servis adında yeni bir özellik hattı. Ayrıca Beta'da hata bulma temposu günler geçtikçe eskisi kadar düşmüyor.,A new feature line called Self Service. And Beta keeps finding bugs later into the run than it used to.
+PROD_RND_NODE_TEST_AUTOMATION_UNLOCK,Yardım Merkezi adında yeni bir özellik hattı. Ayrıca Beta'da hata bulma temposu günler geçtikçe eskisi kadar düşmüyor.,A new feature line called Help Center. And Beta keeps finding bugs later into the run than it used to.
 PROD_RND_NODE_SELF_SERVICE_DESC,Sık sorulanın cevabı ürünün içinde durur. Kullanıcı beklemeden çıkışı bulur.,The answer to the common question sits inside the product. The user finds the way out without waiting.
 PROD_RND_NODE_SELF_SERVICE_UNLOCK,Kullanıcı cevabı ürünün içinde buluyor; destek masasına daha az iş düşüyor.,"Users find the answer inside the product, and less work reaches the support desk."
 PROD_RND_NODE_DESIGN_SYSTEM_DESC,Arayüzün parçaları bir kez tanımlanır. Her yeni ekran hazır parçalardan kurulur.,The pieces of the interface are defined once. Every new screen is built from parts that already exist.
@@ -1996,7 +1996,7 @@ PROD_RND_NODE_CICD_DISCOVERY,Cuma akşamı gönderilen değişiklik pazartesiye 
 PROD_RND_NODE_TEST_AUTOMATION_DISCOVERY,Aynı hatayı üçüncü kez elle bulduk ve kimse gülmedi. Sınamalar o geceden beri kendi kendine koşuyor.,We found the same bug by hand for the third time and nobody laughed. Since that night the tests have been running on their own.
 PROD_RND_NODE_USER_RESEARCH_DISCOVERY,Ürün toplantısında herkes kullanıcının ne istediğini biliyordu ve üçü ayrı şey söyledi. Sonra biri gerçekten arayıp sordu. Odada uzun bir sessizlik oldu.,"In the product meeting everyone knew what the user wanted, and three of them said different things. Then somebody actually called and asked. The room went quiet for a while."
 PROD_RND_NODE_ONBOARDING_FLOW_DISCOVERY,Yeni gelenler ilk ekranda takılıp bir daha dönmüyordu. Bir hafta boyunca ilk beş dakikayı baştan yazdık. Ücretsiz deneyen artık daha sık ödemeye geçiyor.,New arrivals got stuck on the first screen and never came back. For a week we rewrote the first five minutes. More of the people who try it free stay and pay now.
-PROD_LINE_HIDDEN_SELF_SERVE,Kendi Kendine Servis,Self Service
+PROD_LINE_HIDDEN_SELF_SERVE,Yardım Merkezi,Help Center
 PROD_STEP_HIDDEN_SELF_SERVE_K1,Sık Sorulanlar,Common Questions
 PROD_STEP_HIDDEN_SELF_SERVE_K2,Bilgi Bankası,Knowledge Base
 PROD_STEP_HIDDEN_SELF_SERVE_K3,Yerinde Çözüm,Resolved in Place
