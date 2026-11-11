@@ -72,9 +72,12 @@ def _():
 
 @glyph("rail/sales")
 def _():
-    f = soften(P((2.6, 3.4), (21.4, 3.4), (14.2, 12.4), (14.2, 16.6), (9.8, 16.6), (9.8, 12.4)), 0.9)
-    f = ko(f, [(0, 8.0), (24, 8.0)], cap="flat")
-    return S(U(f, C(12, 20.2, 1.8)))
+    # a contact card with a person and two lines (a lead, an account), a second card behind in tone
+    tone = R(6.2, 3.4, 14.2, 8.4, 1.6)
+    card = R(3.6, 8.0, 16.8, 14.0, 1.8)
+    head, bust = person(9.2, 12.4, 2.2, 7.6, 19.4)
+    card = cut(card, head, bust, R(13.2, 12.0, 5.2, 1.8, 0.9), R(13.2, 15.6, 3.6, 1.8, 0.9))
+    return S(card, gap(tone, card, g=1.6))
 
 
 @glyph("rail/hr")
@@ -85,17 +88,12 @@ def _():
     return S(U(fh, fb), back)
 
 
-def dollar_coin():
-    s_ = LineString(arc_pts(12, 9.5, 2.7, -35, -270) + arc_pts(12, 14.9, 2.7, -90, 145)[1:])
-    s_ = s_.buffer(KO / 2, quad_segs=Q, cap_style="round", join_style="round")
-    bars = U(L((12, 4.2), (12, 5.6), w=KO), L((12, 18.8), (12, 20.2), w=KO))
-    return cut(C(12, 12.2, 9.8), s_, bars)
-
-
 @glyph("rail/finance")
 def _():
-    # a coin with the dollar knocked out: the game's money. A coin stack read as "database", two banknotes as a camera.
-    return S(dollar_coin())
+    # a wallet: solid body, the clasp pocket cut through the right edge with a solid stud, a bill in tone behind
+    tone = R(5.2, 2.4, 13.6, 7.0, 1.4)
+    body = cut(R(2.2, 6.8, 19.6, 15.2, 2.4), R(14.4, 11.6, 9.0, 5.4, 2.7))
+    return S(U(body, C(17.6, 14.3, 1.2)), gap(tone, body, g=1.6))
 
 
 @glyph("rail/personal")
@@ -148,10 +146,13 @@ def _():
 # ================================================================ SKILLS (Ekip column heads = sprint card roles)
 @glyph("skill/product")
 def _():
-    post = R(10.8, 2.2, 2.4, 19.4, 1.2)
-    b1 = soften(P((5.0, 4.0), (17.6, 4.0), (20.8, 7.2), (17.6, 10.4), (5.0, 10.4)), 0.8)
-    b2 = soften(P((6.4, 12.6), (19.0, 12.6), (19.0, 18.6), (6.4, 18.6), (3.4, 15.6)), 0.8)
-    return S(U(b1, post), gap(b2, post))
+    # a clipboard (the spec, the backlog): paper with the notch, two check boxes cut out with their lines, a solid clip
+    board = notch(R(3.8, 4.2, 16.4, 17.4, 2.0), 20.2, 4.2)
+    for y in (11.4, 16.6):
+        board = cut(board, R(7.0, y - 1.2, 2.4, 2.4, 0.5))
+    board = ko(board, [(12.0, 11.4), (16.8, 11.4)], [(12.0, 16.6), (16.8, 16.6)], w=2.2)
+    clip = R(8.0, 2.2, 8.0, 4.2, 1.4)
+    return S(U(gap(board, clip), clip))
 
 
 @glyph("skill/design")
@@ -216,11 +217,10 @@ def _():
 
 @glyph("dept/sales")
 def _():
+    # a plain case: solid body and a handle
     body = R(2.4, 7.6, 19.2, 13.0, 2.0)
-    body = ko(body, [(0, 13.0), (24, 13.0)], cap="flat")
-    clasp = R(10.0, 11.2, 4.0, 3.6, 0.8)
     handle = L((8.8, 7.6), (8.8, 4.2), (15.2, 4.2), (15.2, 7.6), w=2.2)
-    return S(U(body, clasp, handle))
+    return S(U(body, handle))
 
 
 @glyph("dept/customer_success")
@@ -255,12 +255,12 @@ def _():
 
 @glyph("trait/takes_them_under")
 def _():
-    # an umbrella over a small figure: "takes them under". (A wing did not read at 16 px.)
-    can = C(12, 11.6, 9.8).intersection(box(0, 0, 24, 11.6))
-    for x in (4.65, 9.55, 14.45, 19.35):
-        can = can.difference(C(x, 11.6, 2.45))
-    h, b = person(12, 14.8, 2.4, 9.4, 21.6, neck=1.4)
-    return S(soften(can, 0.4), U(h, b))
+    # an open hand offering a heart (in tone)
+    cuff = R(2.4, 14.8, 4.2, 6.8, 1.2)
+    palm = ko(R(8.2, 15.8, 13.4, 5.2, 2.6), [(16.4, 18.4), (23, 18.4)], w=1.4, cap="flat")
+    thumb = L((9.8, 16.4), (12.2, 12.8), w=2.6)
+    heart = soften(U(C(13.0, 5.2, 3.2), C(18.4, 5.2, 3.2), P((9.5, 7.0), (21.9, 7.0), (15.7, 13.2))), 0.6)
+    return S(U(gap(U(palm, thumb), cuff), cuff), heart)
 
 
 @glyph("trait/double_checker")
@@ -270,10 +270,12 @@ def _():
 
 @glyph("trait/cant_say_no")
 def _():
-    b = bubble(4.4, 2.2, 15.2, 9.4, [(7.0, 11.0), (6.0, 13.6), (11.4, 11.0)])
-    b = ko(b, [(8.2, 6.8), (10.6, 9.0), (15.4, 4.4)])
-    papers = U(R(5.2, 15.6, 15.6, 2.4, 1.0), R(3.2, 19.6, 15.6, 2.4, 1.0))
-    return S(b, papers)
+    # a thumbs up: sleeve, palm, thumb and three finger pills
+    cuff = R(2.8, 10.4, 4.2, 11.2, 1.2)
+    base = R(9.0, 9.4, 6.0, 11.8, 1.4)
+    thumb = soften(P((9.0, 10.4), (11.6, 2.4), (14.6, 2.4), (14.6, 10.4)), 0.9)
+    fingers = U(R(12.0, 8.6, 9.2, 3.2, 1.6), R(12.0, 12.8, 9.2, 3.2, 1.6), R(12.0, 17.0, 8.4, 3.6, 1.8))
+    return S(U(cuff, gap(U(base, thumb, fingers), cuff)))
 
 
 @glyph("trait/bag_packed")
@@ -295,8 +297,11 @@ def _():
 
 @glyph("trait/unspecified")
 def _():
-    d = soften(P((12, 2.4), (21.6, 12), (12, 21.6), (2.4, 12)), 1.4)
-    return S(cut(d, C(12, 12, 2.6)))
+    # a question mark cut out of a disc
+    d = C(12, 12, 9.4)
+    hook = A(12, 9.4, 3.2, 180, 410, w=2.4)
+    stem = L((14.4, 11.6), (12, 13.8), (12, 14.4), w=2.4)
+    return S(cut(d, hook, stem, C(12, 17.6, 1.35)))
 
 
 # ================================================================ PRODUCT (sprint card kinds, voices, bug count)
@@ -341,6 +346,51 @@ def _():
     return S(U(head, body, legs, ant))
 
 
+def _fit(gl, x0, y0, x1, y1):
+    """Scale a glyph uniformly to fit the box (x0, y0, x1, y1) and centre it there."""
+    bx0, by0, bx1, by1 = U(gl["s"], gl["t"]).bounds
+    f = min((x1 - x0) / (bx1 - bx0), (y1 - y0) / (by1 - by0))
+    o = ((bx0 + bx1) / 2.0, (by0 + by1) / 2.0)
+    return {k: None if g is None else mv(sc(g, f, o), (x0 + x1) / 2.0 - o[0], (y0 + y1) / 2.0 - o[1]) for k, g in gl.items()}
+
+
+@glyph("product/area_onboarding")
+def _():
+    # an open door: the frame in tone, the open leaf solid with a knob cut out
+    frame = R(1.4, 1.0, 21.2, 22.0, 1.8)
+    door = soften(P((5.6, 4.6), (16.2, 1.6), (16.2, 22.4), (5.6, 19.4)), 0.8)
+    door = cut(door, C(12.6, 12.6, 1.2))
+    return _fit(S(door, gap(frame, door, g=1.6)), 0.9, 0.9, 23.1, 23.1)
+
+
+@glyph("product/area_integrations")
+def _():
+    # a puzzle piece: two knobs out, two sockets in
+    body = R(2.4, 7.8, 14.6, 14.6, 1.6)
+    body = U(body, C(9.7, 6.0, 3.0), C(19.0, 15.1, 3.0))
+    body = cut(body, C(2.4, 15.1, 2.6), C(9.7, 22.4, 2.6))
+    return _fit(S(soften(body, 0.5)), 0.9, 0.9, 23.1, 23.1)
+
+
+@glyph("product/area_growth")
+def _():
+    # a sprout: stem and two leaves, the ground in tone
+    stem = L((12, 21.6), (12, 11.2), w=2.4)
+    l1 = soften(leaf(11.4, 12.4, 3.8, 5.0, 7.6), 0.4)
+    l2 = soften(leaf(12.6, 10.4, 20.6, 3.0, 8.4), 0.4)
+    ground = R(3.6, 20.6, 16.8, 2.0, 1.0)
+    return _fit(S(U(stem, l1, l2), ground), 2.9, 1.9, 21.1, 22.1)
+
+
+@glyph("product/area_revenue")
+def _():
+    # a payment card: solid card, the stripe and two number slots cut out
+    card = R(0.9, 3.9, 22.2, 16.2, 2.6)
+    card = ko(card, [(0, 9.4), (24, 9.4)], cap="flat", w=3.0)
+    card = cut(card, R(4.0, 14.2, 6.0, 2.2, 1.0), R(12.0, 14.2, 3.0, 2.2, 1.0))
+    return _fit(S(card), 0.9, 3.9, 23.1, 20.1)
+
+
 # ================================================================ STAKE (the decision cost glyphs; SPEC rule 5)
 @glyph("stake/cash_in")
 def _():
@@ -375,6 +425,45 @@ def _():
     body = cut(body, U(C(12, 14.6, 1.8), R(11.2, 14.6, 1.6, 3.8, 0.8)))
     shackle = U(A(12, 8.2, 4.4, 180, 360), L((7.6, 8.2), (7.6, 10.2)), L((16.4, 8.2), (16.4, 10.2)))
     return S(U(body, shackle))
+
+
+@glyph("lock")
+def _():
+    # the root lock.svg: the same drawing as util/lock
+    return G["util/lock"]()
+
+
+@glyph("util/building")
+def _():
+    # an office tower: two columns of three windows and a door, a lower annex in tone
+    tower = R(4.8, 2.4, 11.6, 19.2, 1.4)
+    wins = [R(x, y, 2.6, 2.6, 0.4) for x in (7.2, 11.6) for y in (5.2, 9.4, 13.6)]
+    tower = cut(tower, *wins, R(9.2, 17.6, 3.6, 4.2))
+    return S(tower, R(18.0, 9.0, 4.0, 12.6, 1.2))
+
+
+@glyph("util/flag")
+def _():
+    # a pole and a swallow-tail pennant
+    pole = R(3.8, 2.4, 2.4, 19.2, 1.2)
+    banner = soften(P((6.2, 3.6), (20.6, 3.6), (17.2, 8.6), (20.6, 13.6), (6.2, 13.6)), 0.8)
+    return S(U(pole, banner))
+
+
+@glyph("util/globe")
+def _():
+    # a disc with a meridian and the equator cut out
+    d = cut(C(12, 12, 9.8), E(12, 12, 4.8, 9.8).difference(E(12, 12, 2.8, 9.8)))
+    return S(ko(d, [(0, 12), (24, 12)], cap="flat", w=1.8))
+
+
+@glyph("util/hourglass")
+def _():
+    # caps, the upper bulb solid and the sand below in tone
+    caps = U(R(4.8, 2.4, 14.4, 2.2, 1.1), R(4.8, 19.4, 14.4, 2.2, 1.1))
+    up = soften(P((6.6, 6.2), (17.4, 6.2), (12.9, 11.6), (11.1, 11.6)), 0.6)
+    lo = soften(P((11.1, 12.4), (12.9, 12.4), (17.4, 17.8), (6.6, 17.8)), 0.6)
+    return S(U(caps, up), lo)
 
 
 @glyph("util/clock")
@@ -634,9 +723,10 @@ def _():
 # ================================================================ WORLD (game concepts with no glyph before)
 @glyph("world/person_left")
 def _():
-    h, b = person(8.8, 7.4, 3.8, 13.6, 21.4)
-    arrow = U(L((14.6, 13.6), (21.2, 13.6), w=2.4), L((18.2, 10.6), (21.2, 13.6), (18.2, 16.6), w=2.4))
-    return S(arrow, gap(U(h, b), arrow))
+    # a person with a minus
+    h, b = person(10.0, 7.4, 4.0, 14.0, 21.0)
+    minus = R(15.6, 15.4, 6.8, 2.6, 1.3)
+    return S(U(h, gap(b, minus, g=1.6), minus))
 
 
 @glyph("world/seat")
@@ -685,11 +775,12 @@ def _():
 
 @glyph("world/runway")
 def _():
-    strip = soften(P((8.6, 2.4), (15.4, 2.4), (21.6, 21.6), (2.4, 21.6)), 0.6)
-    strip = ko(strip, [(12, 4.8), (12, 6.8)], w=1.6)
-    strip = ko(strip, [(12, 9.6), (12, 12.4)], w=2.0)
-    strip = ko(strip, [(12, 15.4), (12, 19.4)], w=2.4)
-    return S(strip)
+    # a fuel pump: solid body, window cut out, hose and nozzle, base plate
+    body = cut(R(3.8, 2.4, 10.2, 16.6, 2.0), R(5.8, 4.8, 6.2, 5.0, 0.8))
+    base = R(2.6, 19.6, 13.4, 2.0, 1.0)
+    hose = L((14.0, 8.6), (17.6, 8.6), (17.6, 15.6), w=2.2)
+    nozzle = R(16.4, 14.6, 2.4, 4.4, 1.0)
+    return S(mv(U(body, base, hose, nozzle), 1.8, 0))
 
 
 @glyph("world/crown")
@@ -709,10 +800,10 @@ def _():
 
 @glyph("world/raise")
 def _():
-    # the Finans coin and an arrow up: a raise is money that goes up for good
-    arrow = U(L((19.6, 12.6), (19.6, 3.2), w=2.4), L((16.4, 6.4), (19.6, 3.2), (22.8, 6.4), w=2.4))
-    coin = mv(sc(dollar_coin(), 0.74, (12, 12.2)), -3.4, 2.6)
-    return S(U(gap(coin, arrow, g=1.6), arrow))
+    # a rising trend line with an arrow head
+    line = L((3.4, 19.4), (9.2, 12.8), (13.0, 16.6), (19.8, 6.0))
+    head = L((13.8, 6.0), (19.8, 6.0), (19.8, 12.0))
+    return S(U(line, head))
 
 
 @glyph("world/map")
