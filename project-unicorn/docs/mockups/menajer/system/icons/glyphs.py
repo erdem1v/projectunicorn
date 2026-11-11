@@ -435,10 +435,10 @@ def _():
 
 @glyph("util/building")
 def _():
-    # an office tower: two columns of three windows and a door, a lower annex in tone
+    # an office tower: two rows of two large windows and a door, a lower annex in tone
     tower = R(4.8, 2.4, 11.6, 19.2, 1.4)
-    wins = [R(x, y, 2.6, 2.6, 0.4) for x in (7.2, 11.6) for y in (5.2, 9.4, 13.6)]
-    tower = cut(tower, *wins, R(9.2, 17.6, 3.6, 4.2))
+    wins = [R(x, y, 3.4, 3.8, 0.5) for x in (6.6, 11.4) for y in (5.0, 10.4)]
+    tower = cut(tower, *wins, R(9.2, 16.8, 3.6, 4.8))
     return S(tower, R(18.0, 9.0, 4.0, 12.6, 1.2))
 
 
@@ -883,10 +883,12 @@ def _():
 
 @glyph("office/coffee")
 def _():
-    cup = U(R(3.8, 8.6, 12.4, 5.0, 0), R(3.8, 8.6, 12.4, 12.4, 4.8)).intersection(box(0, 8.6, 24, 24))
-    handle = ring(16.6, 13.0, 2.6, w=2.4).intersection(box(16.2, 0, 24, 24))
-    steam = U(L((7.8, 2.8), (7.8, 5.6), w=2.2), L((12.2, 2.8), (12.2, 5.6), w=2.2))
-    return S(U(cup, handle), steam)
+    # a mug as an outline with an open inside, the handle set apart, two curling steam strokes
+    outer = U(R(3.2, 8.6, 13.2, 6.0), R(3.2, 8.6, 13.2, 12.6, 4.8)).intersection(box(0, 8.6, 24, 24))
+    cup = cut(outer, R(6.0, 11.2, 7.6, 7.2, 2.4))
+    handle = gap(ring(16.4, 14.2, 2.9, w=2.2).intersection(box(16.4, 0, 24, 24)), outer, g=1.4)
+    steam = U(L((8.4, 2.4), (6.8, 4.2), (8.4, 6.0), w=2.2), L((13.0, 2.4), (11.4, 4.2), (13.0, 6.0), w=2.2))
+    return S(U(cup, handle, steam))
 
 
 @glyph("office/food")
