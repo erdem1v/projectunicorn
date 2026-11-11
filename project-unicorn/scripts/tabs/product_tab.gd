@@ -3,8 +3,8 @@ extends Control
 # Ürün penceresi. Ortak koyu başlıkta Ürün ve iki ölçü (tür ile ürün adı, sürüm); altında denetim şeridi
 # (GENEL BAKIŞ | SPRINT | ÇEYREK; Genel Bakış v1.0'a, ÇEYREK PM'e kadar gerekçesiyle kilitli; Kurucu sprintte ve Geçmiş
 # anahtarları), gövdede GENEL BAKIŞ (sunucu), SPRINT görünümü (modüller · bu sprint · sonraki) ya da ÇEYREK görünümü.
-# Her değişiklikte kaynağın modelinden baştan kurulur; kaynak yoksa canlı model ve eylemler sistemlere gider, ürün
-# türü seçilmemişse şerit yoktur ve ortada tür seçici durur. Açık modül, talep listesinin açıklığı, geçmiş ve görünüm
+# Her değişiklikte canlı modelden baştan kurulur ve eylemler sistemlere gider; ürün türü seçilmemişse şerit yoktur ve
+# ortada tür seçici durur. Açık modül, talep listesinin açıklığı, geçmiş ve görünüm
 # sekmenin yerel durumudur: modelin `ui`'sinden tohumlanır, tek sahibi `_ui`'dir; Destek kartı alanı `open_area` ile açar.
 # Son açık kâğıt pencere kapanıp açılınca (ve dil değişince) hatırlanır, kayda yazılmaz. Sol sütunun, panonun ve sağ sütunun
 # kaydırması yeniden kurulumda korunur; koşan sprintte `hour_changed` sayfayı kurmaz, yalnız şimdiki anı günceller. Masa her mesai
@@ -25,7 +25,6 @@ const BODY_PAD := Vector4i(UiTokens.SPACE_3XL, UiTokens.SPACE_XL, UiTokens.SPACE
 static var _last_view := "sprint"
 
 var frame_options: Dictionary
-var _source: Object = null
 var _ui: Dictionary = {}
 var _closing := false   # pencere kapanıyor: ertelenmiş kurulum ölmekte olan sayfada saati yeniden tutmasın
 var _rebuild_queued := false
@@ -124,15 +123,6 @@ func _ready() -> void:
 	_rebuild()
 
 
-## src: model() -> Dictionary ve act(kind, args). Aynı kaynakla yeniden çağrılınca da yerel
-## durum yeni modelden tohumlanır.
-func set_source(src: Object) -> void:
-	_source = src
-	_ui = {}
-	if is_node_ready():
-		_rebuild()
-
-
 ## Kapanan sayfa sürüm notunun tutuşunu bırakır; saati oyuncu başlatır.
 func on_page_closing() -> void:
 	_closing = true
@@ -150,12 +140,11 @@ func _rebuild() -> void:
 	_rebuild_queued = false
 	if _closing:
 		return
-	var m: Dictionary = _source.model() if _source != null else ProductModel.live()
+	var m: Dictionary = ProductModel.live()
 	_desk_stamp = ProductModel.desk_stamp()
 	if _ui.is_empty():
 		_ui = m.ui.duplicate()
-		if _source == null:
-			_ui.view = _last_view
+		_ui.view = _last_view
 	m.ui = _ui
 	m.axis = _axis
 	# "+" yalnız planlamada açıktır: imleç ondayken sprint başlarsa (devir, Boşluk) kalan hayalet kalkar.
@@ -171,7 +160,7 @@ func _rebuild() -> void:
 		_last_view = view
 	if m.center.mode == "release" or (view == "quarter" and m.quarter.state != "open"):
 		view = "sprint"
-	var picking: bool = _source == null and not SprintSystem.is_typed()
+	var picking: bool = not SprintSystem.is_typed()
 	_build_head(m.header)
 	_build_ctl(m, view)
 	_ctl.visible = not picking
@@ -303,15 +292,11 @@ func _on_action(kind: String, args: Dictionary) -> void:
 		return
 	if kind == "edit":
 		_set_ui("sprint", "view")
-	if _source != null:
-		_source.act(kind, args)
-	else:
-		_act(kind, args)
+	_act(kind, args)
 	_queue_rebuild()
 
 
-## Kaynak yokken eylem sprint motoruna gider; fikstürün eylem tablosuyla aynı türler. Karar kartta
-## cevaplanmaz: Olaylar kâğıdı seçili açılır.
+## Eylem sprint motoruna gider. Karar kartta cevaplanmaz: Olaylar kâğıdı seçili açılır.
 func _act(kind: String, args: Dictionary) -> void:
 	match kind:
 		"add", "pull": SprintSystem.add(args.card_id)

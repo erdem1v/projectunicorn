@@ -13,10 +13,6 @@ var _vc_debug_idx: int = 0   # Shift+F5: cycles the VC roster
 var _held_toast_ms := -HELD_TOAST_MS
 ## Esc has brought the waiting decision back once; the next Esc with no window opens the system menu.
 var _esc_reopened := false
-# Ürün sekmesinin fikstür röleleri. Fikstür betiği yalnız debug_product_apply'da yüklenir; oyun ona
-# dokunmaz.
-const PRODUCT_FIXTURES := "res://scripts/debug/product_fixtures.gd"
-var _product_source: Object = null
 
 @onready var _windows: Node = $CenterViewport   # WindowLayer: Esc en üstteki pencereyi kapatır
 @onready var _ticker: Control = $NewsTicker
@@ -40,10 +36,10 @@ func _lay_ticker(open: bool) -> void:
 	$LeftTabs.set_bottom_clearance(0.0 if open else band)
 
 
-## Sprint kapanınca sürüm notu Ürün sekmesinde açılır; sekme zaten açıksa kendini yeniden çizer.
+## Sprint kapanınca sürüm notu Ürün sekmesinde açılır; sekme zaten açıksa (`open_area` yalnız onun sayfasındadır) kendini yeniden çizer.
 func _on_sprint_closed(_number: int) -> void:
 	var page: Control = _windows.get_current_page_body()
-	if page == null or not page.has_method(&"set_source"):
+	if page == null or not page.has_method(&"open_area"):
 		EventBus.tab_changed.emit("product")
 
 
@@ -167,23 +163,6 @@ func _debug_open_term_table() -> void:
 func debug_force_vc_meeting(vc_id: String = "anchor") -> void:
 	if OS.is_debug_build():
 		VCPitchSystem.begin_meeting(vc_id)
-
-
-func debug_product_apply(fixture_id: String) -> void:
-	if OS.is_debug_build():
-		EventBus.tab_changed.emit("product")
-		_product_source = (load(PRODUCT_FIXTURES) as GDScript).new(fixture_id)
-		_windows.get_current_page_body().set_source(_product_source)
-
-
-## Fikstürün geçiş tablosunu bir adım sürer; set_source sekmeyi yeni modelden yeniden kurar.
-## Pencere kapandıysa ya da başka sekme açıksa sayfa yoktur ya da sprint ekranı değildir.
-func debug_product_act(kind: String) -> void:
-	var page: Control = _windows.get_current_page_body()
-	if not OS.is_debug_build() or _product_source == null or page == null or not page.has_method(&"set_source"):
-		return
-	_product_source.act(kind, {})
-	page.set_source(_product_source)
 
 
 # Class B durumları ön şartı kurar, bitişi BİR SONRAKİ günlük tik (slot 8/9) ateşler —

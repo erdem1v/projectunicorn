@@ -699,7 +699,7 @@ static func sprint_weeks() -> int:
 	return int(SprintCatalog.cfg("sprint_weeks"))
 
 
-## Haftayla sayılan süre kaç sprint eder: talep ve söz son tarihi, çeyrek, rakip penceresi ve araştırma cümlesi
+## Haftayla sayılan süre kaç sprint eder: talep ve söz son tarihi, çeyrek ve rakip penceresi
 ## hafta sayar ve sprint sırasıyla okunur.
 static func sprints_in(weeks: int) -> int:
 	return int(float(weeks) / sprint_weeks())

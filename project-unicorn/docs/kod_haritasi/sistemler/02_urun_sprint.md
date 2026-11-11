@@ -16,7 +16,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `scripts/systems/sprint_bugs.gd` (176): `SprintBugs` (RefCounted), kartın hata modeli: beklenen hata yükü, testin yakalama oranı, testi biten kartın tohumlu zarı, sürüme bırakılan hata;
   ↳ sayılar `data/product/sprint.json` `bugs` bloğunda [WORKING]
 - `scripts/systems/sprint_prep.gd` (134): `SprintPrep`, PM'in sonraki sütunu önden hazırlaması: hazırlık işi, PM hızı, kart sahipliği (kural A), hız ve hata kazancı; sayılar `sprint.json` `prep` bloğunda [WORKING]
-- `scripts/systems/sprint_catalog.gd` (929): salt okur katalog: alanlar, aday kartlar, kilit gerekçesi, etki/öngörü satırları, lider ve PM planı, rakipler, `cfg("a.b")` ile sprint.json
+- `scripts/systems/sprint_catalog.gd` (931): salt okur katalog: alanlar, aday kartlar, kilit gerekçesi, etki/öngörü satırları, lider ve PM planı, rakipler, `cfg("a.b")` ile sprint.json
 - `scripts/systems/sprint_timeline.gd` (326): sprint ekranının zaman ekseni: motorun oynatma günlüğünden aşama yerleşimi, bekleme, kurucunun görüşme taraması, kişi parçaları, kapasite satırı kuralı; yalnız okur
 - `scripts/systems/sprint_bridges.gd` (369): B2B talepleri (günlük doğan ve olayın açtığı), rakip çıkışları, basın satırı, MVP/ücretli plan ekonomisi, sürüm notu cümleleri, teşekkür notu ve B2C yorumları
 - `scripts/systems/product_state.gd` (341): `mvp_*` bayraklarının evi: kimlik, hat kademeleri, açık hata deposu, sürüm yaşı/ilgi, sunucu sağlayıcı ve kapasite yazma yolu
@@ -36,9 +36,9 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `data/product/rivals.json` (86): alt-tür başına 3 rakip ve çıkış takvimi
 - `data/product/lines/{erp,note_tool,video_clip,shared}.json` (169, 158, 160, 128): alt-tür hatları ve 4 paylaşılan platform hattı
 - `data/techtree/rnd_tree.json` (57): düğüm başına efor, nakit, alan, yıldız, ebeveyn, çapraz koşul, etki; 4 gizli hat
-- Yakın, kapsam dışı (yalnız yol): `scripts/tabs/product_tab.gd` (347), `scripts/tabs/product/*.gd` (13 dosya, en büyüğü `product_model.gd` 1142), `scripts/tabs/rnd_tab.gd` (273), `scripts/tabs/rnd/*.gd` (5 dosya)
+- Yakın, kapsam dışı (yalnız yol): `scripts/tabs/product_tab.gd` (344), `scripts/tabs/product/*.gd` (16 dosya, en büyüğü `product_model.gd` 1150), `scripts/tabs/rnd_tab.gd` (273), `scripts/tabs/rnd/*.gd` (5 dosya)
 - Yakın: `scripts/ui/components/{research_bar,research_bar_model,build_bar,build_bar_model,build_hud_panel}.gd`, `scripts/events/seams/{seams_product,seams_incident}.gd`, `scripts/systems/support_system.gd` (424)
-- Yakın: `scripts/debug/product_fixtures.gd` (699, `--product-shot` fikstürü), `scripts/debug/sprint_probe.gd` (425, `--sprint-probe`); çalışma günlüğü tohumları `scripts/main/main.gd` `_seed_product_live` (3839)
+- Yakın: `scripts/debug/sprint_probe.gd` (425, `--sprint-probe`); çalışma günlüğü tohumları `scripts/main/main.gd` `_seed_product_live` (4386)
 
 ## Giriş noktaları
 
@@ -47,12 +47,12 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `SprintSystem.daily_tick()` `scripts/systems/sprint_system.gd:27`: her günlük tik = bir oyun haftası; moda göre `_end_week` (active), `_auto_start` (plan/release) · TimeManager
 - `SprintSystem.choose_type()` `sprint_system.gd:51`: tür/pazar/ad yazar, Sprint 1'i planlamada açar · `scripts/tabs/product_tab.gd:105`, `main.gd:504`
 - `SprintSystem.new_state()` `sprint_system.gd:74`: `GameState.product` ilk durumu · `choose_type`, `scripts/autoload/save_manager.gd:888` (v14→v15 göçü)
-- `SprintSystem.add()/send_next()/remove()` `sprint_system.gd:95`/`:103`/`:114`: "+", "→", kartı adaya döndür · `ProductTab._act` `product_tab.gd:305`
+- `SprintSystem.add()/send_next()/remove()` `sprint_system.gd:95`/`:103`/`:114`: "+", "→", kartı adaya döndür · `ProductTab._act` `product_tab.gd:300`
 - `SprintSystem.pin_card()` `sprint_system.gd:135`: kişiyi sprintin kartına `until_day` gününe dek kilitler (`c.pinned`), koşan sprintte haftayı yeniden atar · `effects.gd:585` (`assign_to`)
 - `SprintSystem.start()` `sprint_system.gd:134` (`_begin` :158): sprinti başlatır, lisansı keser, plan tutuşunu kaldırır · `begin_planned`, probe'lar
-- `SprintSystem.begin_planned()` `sprint_system.gd:145`: alt şeridin "Sprinti başlat"ı (KR26): başlayacak kart varsa `start`, yoksa `skip` (boş sprint); ekip yokken bir şey yapmaz · `ProductTab._act` `product_tab.gd:311`
-- `SprintSystem.plan_next()` `sprint_system.gd:209`: sürüm notundan sonraki sprinte geçer, çeyrek döner · `product_tab.gd:313`, `_auto_start`
-- `SprintSystem.publish()` `sprint_system.gd:376`: MVP kapısında ürünü CANLI v1.0 yapar · `product_tab.gd:314`
+- `SprintSystem.begin_planned()` `sprint_system.gd:145`: alt şeridin "Sprinti başlat"ı (KR26): başlayacak kart varsa `start`, yoksa `skip` (boş sprint); ekip yokken bir şey yapmaz · `ProductTab._act` `product_tab.gd:306`
+- `SprintSystem.plan_next()` `sprint_system.gd:209`: sürüm notundan sonraki sprinte geçer, çeyrek döner · `product_tab.gd:308`, `_auto_start`
+- `SprintSystem.publish()` `sprint_system.gd:376`: MVP kapısında ürünü CANLI v1.0 yapar · `product_tab.gd:309`
 - `SprintSystem.skip()/set_delegate()/apply_lead()` `sprint_system.gd:333`/`:342`/`:391`: boş sprint (`begin_planned` kartsız planda çağırır: planın kartları sonraki sprinte geçer, sprint kartsız başlar),
   ↳ PM'e devret (devirde sprint liderin önerisiyle başlar), liderin önerisini uygula (bu sprint ve sonraki sütun; kapasite 0 iken bir şey yapmaz, bayrak yazılmaz) · `product_tab.gd`
 - `sprint.lead_applied` (`apply_lead` kaldırır; plan değişikliği `remove` `:114` ve `_place` `:1936`, Kurucu sprintte anahtarı `set_founder_in_sprint` `:349`
@@ -61,7 +61,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
   ↳ `capacity()`, `apply_lead`in yazdığı `lead_crew`dan (`_crew_mark`) farklıysa düşer: moral ve izin gibi sık değişimler kapasiteyi oynatmadıkça satırı geri getirmez
   ↳ Karşılaştırma `_same_crew` `sprint_system.gd:1596`: kişi sayısı tam sayı, kapasite `EPS` içinde (kayıttan dönen işaret JSON'dan kayan noktalı ve kısalmış gelir)
 - `SprintSystem._auto_start()` `sprint_system.gd:1558`: oyuncuyu beklemeyen sprinti başlatır; `apply_lead` bu sprinti ve sonraki sütunu doldurur, kart yoksa boş sprint · `daily_tick`, `plan_next` (devirde)
-- `SprintSystem.approve()/approve_all()/edit()/pick_goal()` `sprint_system.gd:532`/`:539`/`:548`/`:555`: çeyrek PM planı ve hedef alan · `product_tab.gd:317-320`
+- `SprintSystem.approve()/approve_all()/edit()/pick_goal()` `sprint_system.gd:532`/`:539`/`:548`/`:555`: çeyrek PM planı ve hedef alan · `product_tab.gd:312-315`
 - `SprintSystem.fix_first()/put_first()` `sprint_system.gd:224`/`:239`: hattın düzeltme kartı sprintin başına · olay fiili `sprint_fix_first` `scripts/events/core/effects.gd:504`. Sprintteyse başa taşınır,
   ↳ sonraki sütundaysa ya da adaysa sprinte alınır; sürüm notundayken ve koşan sprintin son gecesi (mesai bittikten sonra) sonraki sprintin başına girer;
   ↳ kapanış devredenleri sonraki sütunun başına dizdiği için kartın kimliği `product.next.first` listesine yazılır (son çağrılan önde) ve `_close` onu devredenlerin önüne koyar (`_next_column` `:315`).
@@ -87,7 +87,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `SprintSystem._ask_promise()` `sprint_system.gd:976`: son haftada yetişmeyen söz için `product.promise_due` · `_begin`, `_end_week`
 - `SprintSystem._close()` `sprint_system.gd:1406`: kartları çıkarır, hata/kademe/sürüm kaydı yazar, `sprint_closed` yayar · `_end_week`
 - `SprintSystem.sync_plan_hold()` `sprint_system.gd:1858`: plan beklerken ve saat şirketin mesai başlangıcına (`WorkHoursSystem.start_hour()`) gelmişken `TimeManager.hold_clock("sprint_plan")` ·
-  ↳ `scripts/main/game_shell.gd:28`, `_changed`; gece kapanan sprintin planı 08:00'de saati tutmaz, 08:00 ile mesai başlangıcı arasında saat akar ve `_on_hour` (`hour_changed`) o saatte tutuşu alır;
+  ↳ `scripts/main/game_shell.gd:24`, `_changed`; gece kapanan sprintin planı 08:00'de saati tutmaz, 08:00 ile mesai başlangıcı arasında saat akar ve `_on_hour` (`hour_changed`) o saatte tutuşu alır;
   ↳ toplu adımda `clock_batch_ended`e ertelenir
 - `SprintSystem.record_interrupt()` `sprint_system.gd:563`: sprintin kesinti kaydı (incident|promise|paper) · `IncidentSystem._ask` `incident_system.gd:272`
 - `SprintSystem.timeline(extra)` `sprint_system.gd:847`: planlamada plan (artı `extra` aday) ya da koşan sprintin kalanı tek oynatmayla `SprintTimeline.build`e girer; planlamada `outcome` = `plan_outcome` biçimi · `ProductModel.live`
@@ -126,7 +126,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `LineGates.evaluate()/is_unlocked()/unmet_parts()` `scripts/systems/line_gates.gd:65`/`:88`/`:95`: kademe kapısı · `product_read.gd:79`, `sprint_catalog.gd:296`, `b2b_sales_system.gd:609`
 - `ModuleLocks.is_open()/ids()` `scripts/systems/module_locks.gd:21`/`:17`: sekme açık mı · `left_tabs.gd:258`, `events/core/delays.gd:108`, `seams_world.gd:148`
 - `InfraSystem.daily_tick()` `scripts/systems/infra_system.gd:244`: faturayı "servers" burn kalemine yazar, hizmet edilen geçmişini tutar · `time_manager.gd:396`
-- `InfraSystem.set_provider()/adjust_capacity()/auto_adjust()` `infra_system.gd:178`/`:204`/`:214`: oyuncu kararları ve otomatik ayar · `product_tab.gd:321-325`, `time_manager.gd:445`
+- `InfraSystem.set_provider()/adjust_capacity()/auto_adjust()` `infra_system.gd:178`/`:204`/`:214`: oyuncu kararları ve otomatik ayar · `product_tab.gd:316-320`, `time_manager.gd:445`
 - `InfraSystem.is_economy()` `infra_system.gd:83`: seçili sağlayıcı Ekonomik mi; satış masasının `provider_not_economy` olgusunun, kayıp engelinin ve `report_inflow_multiplier`'ın tek okuması · `sales_probes.gd`,
   ↳ `sales_meeting_system.gd`, `sales_ledger.gd`
 - `InfraSystem.scale_price()/lock()/lock_reason()/lock_weeks_left()/capacity_floor()` `infra_system.gd:225`/`:236`/`:242`/`:246`/`:251`: olay fiilleri `server_price` / `server_lock` ve onların kuralı · `effects.gd:752-760`, `mail_pane.gd:159`, `run_probe.gd` (`_run_the_servers`, `_answer_the_clause`)
@@ -146,7 +146,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 
 - `sprint_planned`: yayan `sprint_system.gd:62`,`:205` · top_bar.gd:124
 - `sprint_started`: yayan `sprint_system.gd:175` · top_bar.gd:125, office_people.gd:93
-- `sprint_closed`: yayan `sprint_system.gd:1511` · `scripts/main/game_shell.gd:27`
+- `sprint_closed`: yayan `sprint_system.gd:1511` · `scripts/main/game_shell.gd:23`
 - `card_phase_changed`, `card_done`: yayan `sprint_system.gd:1091`, `:1095` · dinleyen yok
 - `card_carried_over`: yayan `sprint_system.gd:401`,`:1505` · dinleyen yok
 - `card_decision_requested`: yayan `sprint_system.gd:1235` · yalnız smoke/probe
@@ -261,10 +261,10 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
   ↳ `BUTTONS`, `_locked_rnd`; `SprintPanel`ın `Column` kaydırması, `_next`, `_way_out`, "Bu sprinti boş geçir" ve onay satırı, `UiTokens.D_SPRINT_COLUMNS`, `CardKeyText(+Idle)`, `SprintCard(+Hover)` varyasyonları
   ↳ (`SprintCardPlanned` kalır: kayıt listesinin yeni yuvası okur);
   ↳ anahtarlar `PRODUCT_SKIP_SPRINT`, `_SKIP_CONFIRM`, `_START_NEED_CARD`, `_PLAN_HOLD`, `_NEXT_RELEASE`, `_IN_WEEKS(_ONE)`, `_NEXT_EMPTY`, `_CARRIED`, `_PRIORITY`, `_PROMISED`, `_CARD_READY(_PCT)`,
-  ↳ `PRODUCT_FX_HOLDS`, `_FX_ALERT_CLEARS`, `_FX_REQUEST`, `_FX_RESEARCH`, `_FX_PROMISE`; fikstürün `fix_long_name` ve `b2b_no_requests` edge'leri. `SprintCatalog.card_effect` smoke okuduğu için kalır.
+  ↳ `PRODUCT_FX_HOLDS`, `_FX_ALERT_CLEARS`, `_FX_REQUEST`, `_FX_RESEARCH`, `_FX_PROMISE`. `SprintCatalog.card_effect` smoke okuduğu için kalır.
 - Kâğıt/karar/söz: `sprint_decision_blocks_progress`, `decision_one_per_sprint`, `paper_interrupt_order`, `paper_card_trim`, `paper_line_harden`, `promise_due_fires_when_late`, `promise_extend_once`, `promise_cut_test_escape`
 - Acil durum/sunucu: `incident_gap_and_spread`, `incident_night_hold_resumes`, `incident_scale`, `incident_save_roundtrip`, `incident_gates`, `infra_capacity_moves_both_ways`, `auto_capacity_grows_only`, `capacity_step_immediate`, `infra_price_lock`
-- Hat/kalite: `product_lines_catalog_loads`, `line_k3_locked_without_research`, `product_fit_table`, `product_quality_sector_table`, `product_line_profiles`, `product_area_row`
+- Hat/kalite: `product_lines_catalog_loads`, `line_k3_locked_without_research`, `product_fit_table`, `product_quality_sector_table`, `product_line_profiles`, `product_area_word`
 - Ar-Ge: `research_node_map_binds`, `rnd_tree_loads_and_validates`, `research_freezes_and_resumes`, `research_abandon_keeps_progress`, `rnd_note_author_and_lines`
 - Kayıt: `sprint_save_roundtrip`, `save_v14_build_becomes_sprint_plan`, `save_v19_running_sprint_continues`, `save_v10_product_state`, `save_retired_product_flags`
 - Harness: `--sprint-probe=hours=<h>:cards=<1|2>:ticks=<t>[:market=…][:incident=<tür>@<tik>][:promise=1][:team=<n>]` (`main.gd:258`, `sprint_probe.gd:3`) basar `SPRINTPROBE` satırları
@@ -292,15 +292,9 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
   ↳ olayla değişen girdide `cause=<olay kimliği>`, `cause=team`, yalnız kurucunun payı değiştiyse `cause=founder_meeting`, başlatma düzeltme kartının boyutunu hata deposundan yeniden okuyup planı değiştirdiyse `cause=bugs`;
   ↳ kapısı kapanıp başlatmada sonraki sütuna geçen kart için başlatılır başlatılmaz tek `CLOSE` basılır ("puan almaz" doğrulanır). Kapanıştaki `CLOSE` satırları sonuçtan önce `out=<tasarım>/<geliştirme>/<test>|streak=<…>` taşır:
   ↳ sürüm kaydının `overflow`'u, sprintin bilgisi olduğu için sprintin her kartının satırında aynıdır, karşılaştırılmaz; `mvp_eta` yalnız `PRED`'in son alanında basılır, gerçek MVP tiki `MVP` satırındadır; adsız uyuşmazlıkta çıkış 1
-- Harness: `--product-shot=<c1..c5|flow|edge:<ad>|live:<tür>>` (`main.gd:257`), `--rnd-shot=<tür>` (:264), `--inbox-shot=rnd_note` (:252), `--event-shot=<sprint kâğıdı>`
-- `--product-shot=<c1..c5|flow|edge:<ad>>` debug fikstürüyle (`scripts/debug/product_fixtures.gd`; kaynak sol sütuna `modules` ve `requests` vermez: sol sütun kareleri `live:a4_*` türlerindendir); `flow` başlat,
-  ↳ ilerlet ve sonraki plan karelerini sırayla çeker; bu sprintin kartları fikstürde yalnız Kapasite'nin yükünü kurar, pano çizilmez (U7'de fikstür emekli olur); `edge:` adları: `quarter_no_pm`, `history`, `history_empty`,
-  ↳ `goal_menu` (hedef menüsü açık), `approved` (çeyrekte onaylanmış sütun), `cap_zero`,
-  ↳ `team_none` (kadro var ama sprint ekibi boş: kartlar planda, başlatma kapalı, gerekçenin yanında Ekip'e git); `over_100`, `over_125`, `empty_start`, `no_release` (MVP öncesi sürüm notu),
-  ↳ `gate` (MVP kapısı; fikstürün `publish`'i v1.0 notuna çevirir), `mvp`,
-  ↳ `release_fix` (sürüm notunda "Kesinti düzeltmesi · 9 → 0 açık hata" ve "6 → 1");
-  ↳ `release_reviews` (B2C güncellemesinin sürüm notunda "Sürüm sonrası öne çıkan yorumlar": adlı yeni özellik, düzeltme ve güncellemeyi suçlayan olumsuz yorum, kaynaklarıyla).
-- `--product-shot=live:<tür>` sprint motoruyla kurulan koşuda (`main.gd` `_seed_product_live` `:3902`): `pick`, `pick_named`, `pick_relang`, `plan`, `active`, `decision_paper`, `b2c_mvp`, `b2c_live`, `b2c_goal`, `b2b_mvp`, `b2b_mature`,
+- Harness: `--product-shot=live:<tür>` (`main.gd:258`), `--rnd-shot=<tür>` (:265), `--inbox-shot=rnd_note` (:253), `--event-shot=<sprint kâğıdı>`
+- `--product-shot=live:<tür>` (`live:` olmayan tür hata basıp 1 ile çıkar) sprint motoruyla kurulan koşuda (`main.gd` `_seed_product_live` `:4386`):
+  `pick`, `pick_named`, `pick_relang`, `plan`, `active`, `decision_paper`, `b2c_mvp`, `b2c_live`, `b2c_goal`, `b2b_mvp`, `b2b_mature`,
   ↳ `b2b_quarter`, `b2b_requests`, `gate`, `delegate`, `delegate_rehire`, `rnd`, `solo15`, `solo15_tip`, `solo12_active`, `overview_pre`, `server_*`, `a4_*`; `pick*` ürünü türsüz bırakır (tür seçici); `pick_named` B2C, tür ve adla;
   ↳ `pick_relang` aynısı, sonra koşu İngilizceye geçer ve yeniden kurulan seçici seçimi korur (`<kök>_rebuilt`). Tek kurucunun dünyaları (09:00'dan yalnız kurucu):
   ↳ `solo15` ve `solo15_tip` 15 saatte Sprint 1 planı (`solo15` liderin planı uygulanmış; `solo15_tip` yalnız önerilmiş), `solo12_active` 12 saatte liderin iki kartı koşarken (30/28, biri Sırada).
@@ -310,15 +304,15 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
   ↳ `gate` MVP kapısı ve Yayınla sonrası v1.0 notu (`<kök>_publish`); `rnd` kurucu Ar-Ge'deyken planlama ve Ar-Ge'ye git sonrası düğümü seçili Ar-Ge (`<kök>_go`); `b2c_mvp` yayınlanan CANLI v1.0 sürüm notu; `b2c_live` aynısı,
   ↳ dört hafta oynanır (kitle saat saat akar, her sprint kendiliğinden başlar), Geçmiş açık, `SHOT|b2c users=<n> paying=<n>` ekrandaki sayılara eşit; `b2c_goal` yayından sonraki planlama: lider önerisi sunulmuş,
   ↳ öneri hedefsiz uygulanmış (`<kök>_lead`), liderin kartları geri alınıp hedef Güven seçilince yeniden uygulanmış (`<kök>_trust`); `delegate` devirle PM'in başlattığı Sprint 2; `delegate_rehire` o PM yayından sonra ayrılmış,
-  ↳ yerine yeni PM gelmiş: devret anahtarı kapalı, Sprint 2'nin planlaması oyuncuyu bekler; `b2b_mvp` ERP'nin v1.0 notu (Çekirdek Zayıf okunur, cümlesi 1★ şirketlere yettiğini söyler);
-  ↳ `b2b_mature` bütün hatları ikinci kademeye çıkarıp sonraki planlamayı açar (her alan 3★ cümlesini okur); `b2b_quarter` `delegate`'in ERP'deki hâli,
+  ↳ yerine yeni PM gelmiş: devret anahtarı kapalı, Sprint 2'nin planlaması oyuncuyu bekler; `b2b_mvp` ERP'nin v1.0 notu (Çekirdek Zayıf okunur);
+  ↳ `b2b_mature` bütün hatları ikinci kademeye çıkarıp sonraki planlamayı açar; `b2b_quarter` `delegate`'in ERP'deki hâli,
   ↳ ÇEYREK açık (MVP'den hemen sonra PM'in hedef şeridi: sıradaki yıldızın beklentisine oran, boş alanlarda 0 kare); `b2b_requests` iki hesap imzalanır, bir sprint daha oynanır, sonraki planlama talep kartlarını taşır;
   ↳ `overview_pre` v1.0 öncesi planlama, imleç kilitli GENEL BAKIŞ sekmesinde (`<kök>_tip`); `server_*` v1.0'dan sonra ERP'nin GENEL BAKIŞ'ı (`_seed_server`: tek hesap, 20 birim, Standart): `server_80`, `server_94`, `server_104` yük %80,
   ↳ %94, %104 (imleç Artır ya da Azalt'ta, `<kök>_tip`), `server_growth` büyüme satırı, `server_auto` anahtar açık ve son otomatik büyüme, `server_tier` Kurumsal önizlemesi açık (imleç Standart'ta),
   ↳ `server_final` Kurumsal'dayken alt kademeler kilitli (imleç Ekonomik'te), `server_clause` tek hesap 3★ ve sözleşmesinde sunucu maddesi açık (bloğun altında "Kurumsal sunucu bekleyen 1 hesap" etiketi),
   ↳ `server_lock` 10 haftalık sunucu sözleşmesi sürüyor (kademeler ve Azalt kapalı, ipucu sözleşmenin gerekçesi; imleç Azalt'ta), `server_b2c` not uygulaması,
   ↳ 12.400 kullanıcı 13 birimde (%96)
-- `live:a4_*` sprint ekranının kare dünyalarıdır (32 tür; `_seed_product_a4` `main.gd:4143`, tablo `_A4_WORLDS` `:4102`): kurucu tek başına ERP'yi v1.0'a oynar, kadro sonra işe alınır, hesaplar imzalanır, önceki sprintler oynanır;
+- `live:a4_*` sprint ekranının kare dünyalarıdır (32 tür; `_seed_product_a4` `main.gd:4577`, tablo `_A4_WORLDS` `:4536`): kurucu tek başına ERP'yi v1.0'a oynar, kadro sonra işe alınır, hesaplar imzalanır, önceki sprintler oynanır;
   ↳ her tür kurulunca `PRODUCTSHOT|kind=|cards=|people=|row_gaps=|now=` basar; `row_gaps` zaman ekseninin bütün kart satırlarındaki boşluk sayısıdır (`SprintTimeline.row_gaps`, smoke'un Z3'üyle aynı işlev),
   ↳ `now` koşan sprintte şimdiki an (sprint başından hafta, değilse 0);
   ↳ plan kartları `SprintCatalog.card_need` ile ekibin kapasitesinin bir katına büyütülür (`load`: altı kişide 1,15, on bir kişide 1,25, on iki geliştiricide 1,3, on dört kartta 1,6),
@@ -360,7 +354,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
   ↳ `discovery_design` (Tasarım Sistemi kimse yokken tamamlanır, kurucunun kendi keşfi not yığınından açılır) ve `first_note` (koşunun ilk aylık notu motordan gelir ve kutuda kendiliğinden açılır);
   ↳ `--inbox-shot=rnd_note|rnd_note_demand|rnd_discovery`
 - Harness: `bash tools/run_gate.sh` presetleri `full_run_fix_{none,worst,due,off}` ve `full_run_b2c_fix_*` (`PROBE FIX/BUGS/STOP` satırları); `--why-fire=<kart>`, `--event-lint`
-- Fikstürler: `scripts/debug/product_fixtures.gd`, `data/events/cards/_fixtures/paper_{dev,design,pm,founder,plain,crunch}.json`; smoke acil durum zarını kapatır (`endgame_smoke.gd:71`)
+- Fikstürler: `data/events/cards/_fixtures/paper_{dev,design,pm,founder,plain,crunch}.json`; smoke acil durum zarını kapatır (`endgame_smoke.gd:71`)
 
 ## Dikkat
 
@@ -383,7 +377,6 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `remove()` kâğıdın takip kartını (`follow`) reddeder; `ProductModel._row` ve `_next_card` ona Kaldır düğmesi vermez
 - Sol sütun `live()`ın `requests` ve `modules` alanlarını okur; `areas` yalnız çeyrek hedef menüsünün listesidir (`{id, name, goal_text}`), `customers` ve hat başına hata listesi yoktur (`bug_row_of` Destek raporunundur)
 - Adayın `addable`ı `live()`da `null`dır: `ProductModel.resolve_addable` her karede en az bir `can_add` (8 ms) ister, `ghost` imleç "+"a gelince `timeline([aday])` kurar; ikisinin önbelleği her `live()`da atılır
-- `area_sentence` ve türevleri (`_standing`, `_recent_hit`) ekranda okunmaz: tek okuyucusu `ProductQuality.area_row` (Genel Bakış'ın ürün durumu satırı için hazır, bağlı değil)
 - İki ayrı efor tablosu: hat JSON `effort` (bant 5-7/7-9/9-12, `ProductLines.effort_of`, yalnız yeni-kod terimi ve doğrulama) ile sprint.json `effort` k1 15·k2 25·k3 40 (`SprintCatalog.step_effort` :171, kart eforu). Karıştırma
 - `SprintCatalog.cfg()` (:29) eksik anahtarda sert hata verir (`v[key]`); sprint.json bozuksa `JSON.parse_string` null döner. Yeni anahtar eklerken okuyan her çağrı yerini birlikte ekle
 - Tik sırası bir sözleşmedir (`time_manager.gd:383-432`): Ar-Ge bir tik gecikmeli okur (`rnd_system.gd:94-100`); IncidentSystem EventGate'ten sonra koşar; sırayı değiştirme
@@ -409,7 +402,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 
 ## Bir değişiklik yaparken
 
-- sprint.json sayısını/bloğunu değiştirirsen: okuyan `cfg("…")` çağrılarına, `sprint_probe.gd`, `product_fixtures.gd`, CLAUDE.md "[WORKING]" bölümüne ve bu sayfanın Durum ve veri bölümündeki hata modeli,
+- sprint.json sayısını/bloğunu değiştirirsen: okuyan `cfg("…")` çağrılarına, `sprint_probe.gd`, CLAUDE.md "[WORKING]" bölümüne ve bu sayfanın Durum ve veri bölümündeki hata modeli,
   ↳ PM hazırlığı ve probe satırlarına bak; puan birimi değişirse `SaveManager` göçü şart
 - `GameState.product`'a alan eklersen: `new_state` (`sprint_system.gd:74`) + eski kayıt için varsayılan/göç (`save_manager.gd`) + `save_v19_running_sprint_continues`, `sprint_save_roundtrip` vakaları
 - Yeni hat/kademe/alt-tür: `data/product/lines/*.json` + `PROD_LINE_*`/`PROD_STEP_*` (strings.csv) + `ProductCatalog.TYPE_SCREEN` + `rivals.json` + `ProductQuality.TABLE`; `loc_product_line_keys_resolve` koş

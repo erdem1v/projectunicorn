@@ -143,34 +143,10 @@ static func area_level(area_id: String) -> float:
 ## "!": yeteneklerinden birinde öncelik eşiği kadar açık hata, ya da (Güven & Ölçek) sunucu aşımı;
 ## `cleared` hatlarının hataları kapanmış sayılır.
 static func area_alert(area_id: String, cleared: Array = []) -> bool:
-	if _over_capacity(area_id):
+	if area_def(area_id).get("infra_alert", false) and InfraSystem.is_over_capacity():
 		return true
 	return capabilities(area_id).any(func(line_id: String) -> bool:
 		return line_id not in cleared and is_priority_count(ProductState.line_bugs(line_id)))
-
-
-## Kapalı satırın cümlesi: alanın kime yettiği, açık hata, sunucu aşımı, rakip çıkışı ve araştırmadan sonraki
-## `research_sentence_weeks` haftada kullanıcıların söylediği.
-static func area_sentence(area_id: String) -> String:
-	var parts: PackedStringArray = []
-	var standing: String = _standing(area_id)
-	if standing != "":
-		parts.append(standing)
-	var n: int = 0
-	for line_id in capabilities(area_id):
-		n += ProductState.line_bugs(line_id)
-	if n > 0:
-		parts.append(_t(Fmt.count_key("PRODUCT_BUG_COUNT", n)).format({"n": Fmt.group(n)}))
-	if _over_capacity(area_id):
-		parts.append(_t("PRODUCT_AREA_OVER_CAPACITY"))
-	var hit: Dictionary = _recent_hit(area_id)
-	if not hit.is_empty():
-		parts.append(_t("PRODUCT_AREA_RIVAL").format({"rival": rival_name(int(hit.rival))}))
-	var researched: Variant = _p().get("research_done", {}).get(area_id)
-	if researched != null and SprintSystem.sprint_number() - int(researched) \
-			<= SprintSystem.sprints_in(int(cfg("research_sentence_weeks"))):
-		parts.append(_t("PRODUCT_RESEARCH_VOICE_" + area_id.to_upper()))
-	return SEP.join(parts)
 
 
 # --- Kartlar ---------------------------------------------------------------------
@@ -765,32 +741,6 @@ static func _level_part(area_id: String, tiers: Dictionary) -> Dictionary:
 		"from_word": ProductQuality.word_for(from, expect), "to_word": ProductQuality.word_for(to, expect)}
 
 
-## Alanın kime yettiği. B2B'de hangi yıldızdaki şirketlere yettiği (Çekirdek dışı alana 1★ şirket bakmaz); B2C'de sayfanın
-## referansına (kitlenin yıldızı, en az 2★) yetip yetmediği, yayından önce kitle olmadığı için hiçbir şey; Gelir kaliteye
-## girmez, cümlesi sözcüğüne bağlı kendi dört satırıdır.
-static func _standing(area_id: String) -> String:
-	if area_id == "revenue":
-		return _t("PRODUCT_AREA_REVENUE_" + ProductQuality.word(area_id).to_upper())
-	if ProductState.market_type() == "b2c":
-		if not ProductState.is_live():
-			return ""
-		var enough: bool = ProductQuality.level(area_id) >= ProductQuality.expectation(area_id)
-		return _t("PRODUCT_AUDIENCE_ENOUGH" if enough else "PRODUCT_AUDIENCE_OUTGROWN")
-	var star: int = ProductQuality.serves(area_id)
-	if star == 0:
-		return _t("PRODUCT_STAR_NONE")
-	if star == 1 and area_id != "core":
-		return _t("PRODUCT_STAR_SKIPPED")
-	if star == ProductQuality.STAR_MAX:
-		return _t("PRODUCT_STAR_TOP")
-	return _t("PRODUCT_STAR_SERVES").format({"star": star, "next": star + 1})
-
-
-## Güven & Ölçek sunucu aşımını da uyarı sayar.
-static func _over_capacity(area_id: String) -> bool:
-	return area_def(area_id).get("infra_alert", false) and InfraSystem.is_over_capacity()
-
-
 static func _users_of(impact: Dictionary) -> int:
 	return int(impact.get("users", impact.get("seats", 0)))
 
@@ -816,20 +766,11 @@ static func _closes_rival_gap(card: Dictionary) -> bool:
 
 
 ## Verilen hatlara son `rival_window_weeks` haftanın sprintlerinde düşen rakip çıkışları, çıkış kaydı başına. Aday
-## beklentisinin artışı ve alanın cümlesi aynı pencereyi okur.
+## beklentisinin artışı aynı pencereyi okur.
 static func recent_hits(lines: Array) -> Array:
 	var window: int = SprintSystem.sprints_in(int(cfg("rival_window_weeks")))
 	return (_p().get("rival_hits", []) as Array).filter(func(h: Dictionary) -> bool:
 		return String(h.line) in lines and SprintSystem.sprint_number() - int(h.sprint) < window)
-
-
-## Alanın son rakip çıkışı, yoksa {}.
-static func _recent_hit(area_id: String) -> Dictionary:
-	var latest: Dictionary = {}
-	for h in recent_hits(capabilities(area_id)):
-		if int(h.sprint) >= int(latest.get("sprint", -1)):
-			latest = h
-	return latest
 
 
 ## Kartın karşıladığı açık talep: talep kartının kendisi ya da aynı kademeyi yapan özellik kartı.

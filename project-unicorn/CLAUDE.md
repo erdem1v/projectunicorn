@@ -195,8 +195,8 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   geri aldırır, güvenlik sertifikası karşılamaz; Kurumsal'dan inilmez (`B2BSalesSystem`, `InfraSystem.set_provider`). B2C'de kitle her
   oyun saatinde iki yönlü değişir; MRR ödeyen kullanıcı × fiyat olarak saatlik türetilir.
   Kitlenin büyüme ve erime terimi, B2C memnuniyetinin hedefi ve fiyat önerisi ürünün kitleye uyumunu okur
-  (`ProductQuality`, kitle bağlamı; `SalesSystem.b2c_quality`): kitle büyüdükçe beklenti yükselir. Ürün sayfasının sözcüğü ve
-  cümlesi B2C'de kitlenin yıldızı ile 2★'ın büyüğünü okur (küçük kitlede de 2★ satırı); ekonomi sayfanın referansını okumaz.
+  (`ProductQuality`, kitle bağlamı; `SalesSystem.b2c_quality`): kitle büyüdükçe beklenti yükselir. Ürün sayfasının sözcüğü
+  B2C'de kitlenin yıldızı ile 2★'ın büyüğünü okur (küçük kitlede de 2★ satırı); ekonomi sayfanın referansını okumaz.
 - Kayıt: JSON; `SaveManager.SCHEMA_VERSION` 19, `MIN_LOADABLE_VERSION` 10. `SaveCodec` GameState değişkenlerini ve
   modellerin `@export` alanlarını kendisi bulur; eski kayıtta varsayılan göç yerine geçtiği için yeni alan anlamlı
   varsayılan taşır. Tarih kayıtta saklanmaz, `GameState.day`'den türer; yıl tutan tek alan `Character.leave_taken_year`'dır ve
@@ -357,13 +357,13 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   Görüşme paneli: `--meeting-shot=<tür>` (satış `probe|locked|won|lost|handoff|economy|frank|emph_trust|emph_integrations|emph_onboarding|weak_core|die|returning`,
   VC `open|sorgu|sheet|callback|ret|seed|long`; `open:tip` ve `sorgu:tip` zar ipucunu açar), `--negotiation-shot=<open|countered|insult|last|confirm>`; en dar dok
   `--shot-scale=1.25`; davet `--invite-shot=<ring|card|vc|postpone|postpone_vc|held|lapse|lapse_vc>`; term sheet masası
-  kabuğun içinde `--vc-shot=<masa türü>:shell`. Ürün sekmesi: `--product-shot=<c1..c5|cards|flow|edge:<ad>>` debug
-  fikstürüyle (`scripts/debug/product_fixtures.gd`; `edge:` adları `sistemler/02_urun_sprint.md`'de), `--product-shot=live:<tür>` sprint
-  motoruyla kurulan koşuda
-  (`pick`, `pick_named`, `pick_relang`, `plan`, `active`, `decision_paper`, `b2c_mvp`, `b2c_live`, `b2c_goal`, `b2b_mvp`, `b2b_mature`, `b2b_quarter`, `b2b_requests`,
-  `gate`, `delegate`, `delegate_rehire`, `rnd`, `solo15`, `solo15_tip`, `solo12_active`, `overview_pre`, `server_80`, `server_94`,
-  `server_104`, `server_growth`, `server_auto`, `server_tier`, `server_final`, `server_clause`, `server_lock`, `server_b2c`;
-  kurulumları ve ikinci, üçüncü kareleri `sistemler/02_urun_sprint.md`'de). Satış'ın B2C sayfası `--sales-shot=b2c_live` (`live:b2c_live`'ın dünyası, `SHOT|b2c` satırı), MVP öncesi
+  kabuğun içinde `--vc-shot=<masa türü>:shell`. Ürün sekmesi: `--product-shot=live:<tür>`, sprint
+  motoruyla kurulan koşuda çeker (`live:` olmayan tür hata basıp 1 ile çıkar): `pick`, `pick_named`, `pick_relang`, `plan`, `active`, `decision_paper`,
+  `b2c_mvp`, `b2c_live`, `b2c_goal`, `b2b_mvp`, `b2b_mature`, `b2b_quarter`, `b2b_requests`, `gate`, `delegate`, `delegate_rehire`, `rnd`, `solo15`,
+  `solo15_tip`, `solo12_active`, `overview_pre`, `server_80`, `server_94`, `server_104`, `server_growth`, `server_auto`, `server_tier`, `server_final`,
+  `server_clause`, `server_lock`, `server_b2c` ve Sprint ekranının kare dünyaları `a4_*` (`a4_solo`, `a4_six_hover`, `a4_eleven`, `a4_fifty`, `a4_run_w2` …;
+  her biri `PRODUCTSHOT` satırı basar; tür listesi, kurulumları ve ikinci, üçüncü kareleri `sistemler/02_urun_sprint.md`'de).
+  Satış'ın B2C sayfası `--sales-shot=b2c_live` (`live:b2c_live`'ın dünyası, `SHOT|b2c` satırı), MVP öncesi
   B2B boş hâli `--sales-shot=b2b_pre`, kayıptan dönen lead'lerin kapısı `--sales-shot=returning`.
   Kişilerin bir günü gerçek saatle: `--office-crowd-probe=<ofis>:<kişi>:<hız>` (sıçrama,
   duraklatmada kıpırtı, takılma, çakışma, kapı ve kesme, kuyruk, toplantı, gece kapısı; `CROWD` satırları ve

@@ -460,7 +460,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"fit_account_ref":                fail = _case_fit_account_ref()
 		"fit_scale":                      fail = _case_fit_scale()
 		"save_v17_market_ref":            fail = _case_save_v17_market_ref()
-		"product_area_row":               fail = _case_product_area_row()
+		"product_area_word":              fail = _case_product_area_word()
 		"save_retired_product_flags":     fail = _case_save_retired_product_flags()
 		"rival_composite_table":          fail = _case_rival_composite_table()
 		# --- rev 6.1 · Ar-Ge bağı ve kart aritmetiği (2026-08-25).
@@ -16098,60 +16098,39 @@ static func _case_product_quality_sector_table() -> String:
 	return ""
 
 
-## Genel Bakış'ın ürün durumu satırı ürün sayfasının referansını okur (B2B'de 2★, B2C'de kitlenin yıldızı ile 2★'ın büyüğü): `word` ve `tone` seviyenin
-## referansa göre kelimesinden, `sentence` alanın cümlesinden gelir; `squares` seviyenin referans beklentisine oranının onluk
-## ölçeğidir (beşinci kare referans, en çok 10), soluk kare (`faint_from`) oran RATIO_CAP'e varınca başlar; referansın bir şey
-## beklemediği alanda ölçek yoktur: kare 0.
+## Alanın sözcüğü ürün sayfasının referansını okur (B2B'de 2★, B2C'de kitlenin yıldızı ile 2★'ın büyüğü): seviye 0 Yok, referansın
+## altı Zayıf, referans ile referans + 1 arası Yeterli, ondan sonrası Güçlü.
 ##
-## FALSİFİKASYON: `area_row`da `mark` yerine 4 yaz → kare iddiası FAIL; `faint_from`u `RATIO_CAP * mark - 1` yap → soluk eşik iddiası
-## FAIL; `WORD_TONES`ta "weak"i "neutral" yap → ton iddiası FAIL; `expect > 0.0` süzgecini sil → B2B'de Gelir'de sıfıra bölmeyle FAIL;
-## `_value`de `maxf(star, PAGE_STAR)` yerine `star` oku → küçük kitle iddiası FAIL.
-static func _case_product_area_row() -> String:
+## FALSİFİKASYON: `ProductQuality.word_for`da `expect + 1.0`'ı `expect + 1.5` yap → Güçlü sınırı iddiası FAIL; `lvl < expect`'i
+## `lvl <= expect` yap → Yeterli sınırı iddiası FAIL; `lvl <= 0.0` dalını sil → Yok iddiası FAIL.
+static func _case_product_area_word() -> String:
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
 	_seed_b2b_lines("erp", 0)
-	# [alan, hatların kademeleri, kare, kelime, ton, soluk]: ürün sayfasının referansında Çekirdek 1,25, Entegrasyonlar 1, İlk kullanım 1,
-	# Güven 1; Çekirdek'in beş hattı var, Güven'in iki.
+	# [alan, hatların kademeleri, kelime]: ürün sayfasının referansında Çekirdek 1,25, Entegrasyonlar 1, İlk kullanım 1, Güven 1;
+	# Çekirdek'in beş hattı var, Güven'in iki.
 	var rows := [
-		["core", [1, 1, 1, 0, 0], 2, "weak", "warn", false],       # MVP: 0,6 / 1,25
-		["core", [1, 1, 1, 1, 1], 4, "weak", "warn", false],       # 1 / 1,25
-		["core", [2, 1, 1, 1, 1], 5, "weak", "warn", false],       # 1,2 / 1,25: referansın hemen altı
-		["core", [2, 2, 1, 1, 1], 6, "enough", "neutral", false],  # 1,4 / 1,25: referans aşıldı
-		["core", [2, 2, 2, 2, 1], 7, "enough", "neutral", false],  # 1,8 / 1,25
-		["core", [2, 2, 2, 2, 2], 8, "enough", "neutral", true],   # 2 / 1,25: oran kesiği, soluk karelerin başı
-		["core", [3, 3, 3, 3, 3], 10, "strong", "pos", true],      # onluk ölçeğin sonu
-		["core", [0, 0, 0, 0, 0], 0, "none", "warn", false],
-		["integrations", [2], 10, "strong", "pos", true],
-		["onboarding", [1], 5, "enough", "neutral", false],
-		["trust", [1, 0], 3, "weak", "warn", false],                # 0,5 / 1
-		["trust", [1, 1], 5, "enough", "neutral", false],
-		["trust", [0, 0], 0, "none", "warn", false],
+		["core", [1, 1, 1, 0, 0], "weak"],        # MVP: 0,6 / 1,25
+		["core", [1, 1, 1, 1, 1], "weak"],        # 1 / 1,25
+		["core", [2, 1, 1, 1, 1], "weak"],        # 1,2 / 1,25: referansın hemen altı
+		["core", [2, 2, 1, 1, 1], "enough"],      # 1,4 / 1,25: referans aşıldı
+		["core", [2, 2, 2, 2, 1], "enough"],      # 1,8 / 1,25
+		["core", [2, 2, 2, 2, 2], "enough"],      # 2 / 1,25
+		["core", [3, 3, 3, 3, 3], "strong"],      # referans + 1'in üstü
+		["core", [0, 0, 0, 0, 0], "none"],
+		["integrations", [2], "strong"],          # 2 / 1: referans + 1'e tam varır
+		["onboarding", [1], "enough"],            # 1 / 1: referansta
+		["trust", [1, 0], "weak"],                # 0,5 / 1
+		["trust", [1, 1], "enough"],
+		["trust", [0, 0], "none"],
 	]
 	for row in rows:
 		var lines: Array = SprintCatalog.capabilities(row[0])
 		for i in lines.size():
 			ProductState.set_line_tier(lines[i], int(row[1][i]))
-		var got: Dictionary = ProductQuality.area_row(row[0])
-		if got.area != row[0] or got.squares != row[2] or got.word != row[3] or got.tone != row[4] \
-				or (got.squares >= got.faint_from) != row[5]:
-			return "%s at tiers %s reads %s; want %d squares, '%s', '%s', faint %s" % [row[0], row[1], got, row[2], row[3], row[4], row[5]]
-		if got.faint_from != 8 or got.sentence == "" or got.sentence != SprintCatalog.area_sentence(row[0]):
-			return "%s reads faint_from %d and sentence '%s'; want 8 and the area's sentence" % [row[0], got.faint_from, got.sentence]
-	# Referansın bir şey beklemediği alan (B2B'de Gelir) ölçeksiz kalır: kare 0, kelimesi sayfanınkidir.
-	var quiet: Dictionary = ProductQuality.area_row("revenue")
-	if ProductQuality.expectation("revenue") != 0.0 or quiet.squares != 0 or quiet.word != ProductQuality.word("revenue"):
-		return "an area the page asks nothing of reads %s; want no squares and the page's word '%s'" % [quiet, ProductQuality.word("revenue")]
-	# Küçük kitleli B2C ürünün sayfası da 2★ satırını okur: İlk kullanım 1 ister (yeter), MVP Çekirdek'i 1,25'in altında kalır.
-	_seed_b2c()
-	_set_area_tiers({"onboarding": 1})
-	if ProductQuality.expectation("onboarding") != 1.0:
-		return "fixture: the page asks %.2f of Onboarding in a 200 user audience, want 1" % ProductQuality.expectation("onboarding")
-	var onboarding: Dictionary = ProductQuality.area_row("onboarding")
-	if onboarding.squares != 5 or onboarding.word != "enough":
-		return "Onboarding at its reference in a small audience reads %s, want 5 squares and 'enough'" % onboarding
-	var asked: Dictionary = ProductQuality.area_row("core")
-	if asked.squares != 2 or asked.word != "weak":
-		return "the MVP of a small audience reads %s on Core, want 2 squares and 'weak'" % asked
+		var got: String = ProductQuality.word(row[0])
+		if got != row[2]:
+			return "%s at tiers %s reads '%s'; want '%s'" % [row[0], row[1], got, row[2]]
 	return ""
 
 
@@ -16288,7 +16267,7 @@ static func _case_rnd_design_discount_reads_profile() -> String:
 
 
 ## Yıldız bağlamı: beklenti müşterinin yıldızına bağlıdır, evreye değil. MVP'den hemen sonra ürün sayfası Çekirdek'i Zayıf
-## okur ama cümle 1★'a yettiğini söyler; evre geçişi hiçbir adayın ve hesabın U'sunu oynatmaz; MVP 1★ adayda 70, aynı MVP 2★
+## okur; evre geçişi hiçbir adayın ve hesabın U'sunu oynatmaz; MVP 1★ adayda 70, aynı MVP 2★
 ## adayda 70'in altındadır, aynı ürün 1★, 2★, 3★ adayda azalan U verir; Ar-Ge'nin gizli hattı İlk kullanım'a bir boş hat katınca
 ## beklenti aynı kalır, alanın seviyesi yarıya iner ve onu bekleyen adayın U'su düşer; B2C'de kitle iki yıldız satırı arasında
 ## geçerken U sürekli kalır, ürün sayfasının referansı ise kitle 2★'ın altındayken de 2★ satırını okur.
@@ -16308,26 +16287,20 @@ static func _case_fit_star_context() -> String:
 		p.industry = sector
 		p.star = star
 		return p
-	var said := func(key: String, args: Dictionary) -> String:
-		return TranslationServer.translate(key).format(args)
 
-	# MVP'den hemen sonra: Çekirdek 0,6. Sayfa 2★ şirketin referansını okur, cümle MVP'nin 1★'a yettiğini söyler.
+	# MVP'den hemen sonra: Çekirdek 0,6. Sayfa 2★ şirketin referansını okur.
 	if ProductQuality.expectation("core", {"star": 1}) != 0.6 or ProductQuality.expectation("core") != 1.25 \
 			or ProductQuality.expectation("trust") != 1.0 or ProductQuality.expectation("integrations") != 1.0 \
 			or ProductQuality.expectation("revenue") != 0.0:
 		return "the page reference reads core %.2f at 1 star and %.2f on the page, trust %.2f, integrations %.2f; want 0.6, 1.25, 1 and 1" % [
 			ProductQuality.expectation("core", {"star": 1}), ProductQuality.expectation("core"),
 			ProductQuality.expectation("trust"), ProductQuality.expectation("integrations")]
-	if ProductQuality.word("core") != "weak" or ProductQuality.serves("core") != 1 \
-			or SprintCatalog.area_sentence("core") != said.call("PRODUCT_STAR_SERVES", {"star": 1, "next": 2}):
-		return "right after the MVP Core reads '%s', serves %d, says '%s'; want Weak, 1 and the 1 star sentence" % [
-			ProductQuality.word("core"), ProductQuality.serves("core"), SprintCatalog.area_sentence("core")]
+	if ProductQuality.word("core") != "weak":
+		return "right after the MVP Core reads '%s', want Weak" % ProductQuality.word("core")
 	if ProductQuality.next_star() != 2:
 		return "right after the MVP the next star reads %d, want 2" % ProductQuality.next_star()
-	if SprintCatalog.area_sentence("integrations") != said.call("PRODUCT_STAR_SKIPPED", {}) \
-			or ProductQuality.word("integrations") != "none":
-		return "an empty Integrations reads '%s' and says '%s'; want None and the line that 1 star companies do not look at it" % [
-			ProductQuality.word("integrations"), SprintCatalog.area_sentence("integrations")]
+	if ProductQuality.word("integrations") != "none":
+		return "an empty Integrations reads '%s', want None" % ProductQuality.word("integrations")
 	# Sayfanın referansı on üç sektörün en yükseğidir: her yıldızda her alan için.
 	for star in [1, 2, 3]:
 		for area in SprintCatalog.area_ids():
@@ -16364,12 +16337,12 @@ static func _case_fit_star_context() -> String:
 		return "the MVP reads U %d (loss '%s') for a 1 star and %d (loss '%s') for a 2 star; want 70 and nothing lacking, then under 70 with a lacking area" % [
 			mvp_1.value, mvp_1.loss_area, mvp_2.value, mvp_2.loss_area]
 
-	# Evre geçişi hiçbir adayın ve hesabın U'sunu, sayfanın kelimesini ve cümlesini oynatmaz.
+	# Evre geçişi hiçbir adayın ve hesabın U'sunu ve sayfanın kelimesini oynatmaz.
 	var account: Customer = _sign_fixture(asked.call(3, "health"), 6000, 70)
 	var guest: Prospect = asked.call(2, "construction")
 	var snapshot := func() -> Array:
 		return [ProductQuality.prospect_fit(guest), ProductQuality.account_fit(account), ProductQuality.word("core"),
-			SprintCatalog.area_sentence("core"), ProductQuality.next_star(), ProductQuality.expectation("core")]
+			ProductQuality.next_star(), ProductQuality.expectation("core")]
 	var before: Array = snapshot.call()
 	for phase in [2, 3]:
 		GameState.phase_gate_ready = true
@@ -16453,32 +16426,22 @@ static func _case_fit_star_context() -> String:
 		if absi(u - last) > 1:
 			return "the audience crossed %d users and U jumped from %d to %d in one 2 percent step" % [roundi(n), last, u]
 		last = u
-	# Kelime ve cümle sayfanın referansını okur: küçük kitlede de MVP 2★ satırına yetmez; Çekirdek 2★ satırına (1,25) varınca 500'de
+	# Kelime sayfanın referansını okur: küçük kitlede de MVP 2★ satırına yetmez; Çekirdek 2★ satırına (1,25) varınca 500'de
 	# yeter (1,2 yetmez, 1,4 yeter), kitle 3★ satırına (2) inince yetmez.
 	audience.call(500.0)
-	if ProductQuality.word("core") != "weak" or SprintCatalog.area_sentence("core") != said.call("PRODUCT_AUDIENCE_OUTGROWN", {}):
-		return "500 users read the MVP Core '%s' saying '%s'; want Weak and users want more, the page asks the 2 star row of a small audience too" % [
-			ProductQuality.word("core"), SprintCatalog.area_sentence("core")]
+	if ProductQuality.word("core") != "weak":
+		return "500 users read the MVP Core '%s'; want Weak, the page asks the 2 star row of a small audience too" % ProductQuality.word("core")
 	var core_lines: Array = SprintCatalog.capabilities("core")
 	for i in core_lines.size():
 		ProductState.set_line_tier(core_lines[i], 2 if i < 1 else 1)
-	if ProductQuality.word("core") != "weak" or SprintCatalog.area_sentence("core") != said.call("PRODUCT_AUDIENCE_OUTGROWN", {}):
-		return "500 users read Core at 1.2 '%s' saying '%s'; want Weak, just under the 2 star row" % [
-			ProductQuality.word("core"), SprintCatalog.area_sentence("core")]
+	if ProductQuality.word("core") != "weak":
+		return "500 users read Core at 1.2 '%s'; want Weak, just under the 2 star row" % ProductQuality.word("core")
 	ProductState.set_line_tier(core_lines[1], 2)
-	if ProductQuality.word("core") != "enough" or SprintCatalog.area_sentence("core") != said.call("PRODUCT_AUDIENCE_ENOUGH", {}):
-		return "500 users read Core at 1.4 '%s' saying '%s'; want Enough and the audience is served" % [
-			ProductQuality.word("core"), SprintCatalog.area_sentence("core")]
+	if ProductQuality.word("core") != "enough":
+		return "500 users read Core at 1.4 '%s'; want Enough" % ProductQuality.word("core")
 	audience.call(80000.0)
-	if ProductQuality.word("core") != "weak" or SprintCatalog.area_sentence("core") != said.call("PRODUCT_AUDIENCE_OUTGROWN", {}):
-		return "80,000 users read Core at 1.4 '%s' saying '%s'; want Weak and the audience has outgrown it" % [
-			ProductQuality.word("core"), SprintCatalog.area_sentence("core")]
-	# Yayından önce kitle yoktur: alan kitleye yetip yetmediğini söylemez.
-	GameState.set_flag("mvp_shipped", false)
-	audience.call(0.0)
-	if SprintCatalog.area_sentence("core") != "" or SprintCatalog.area_sentence("growth") != "":
-		return "before the launch Core says '%s' and Growth '%s'; want no audience sentence" % [
-			SprintCatalog.area_sentence("core"), SprintCatalog.area_sentence("growth")]
+	if ProductQuality.word("core") != "weak":
+		return "80,000 users read Core at 1.4 '%s'; want Weak, the audience has outgrown it" % ProductQuality.word("core")
 	return ""
 
 
@@ -24235,14 +24198,11 @@ static func _seed_line_accounts() -> void:
 ## Hata sayısı: modülün düzeltme adayı yalnız hatası olan hat için vardır, kartın hata sayısı hattın açık hatasıdır ve metni
 ## (`fix_text`) hata, hesap ve kullanıcı sayısını ve B2B'de en büyük hesabı söyler; Destek raporunun hat satırı (`bug_row_of`) hattın
 ## adını, açık hatayı, hesap ve kullanıcı sayısını söyler (B2C'de hesapsız), ipucu geçen haftanın sayısını ve B2B'de en büyük hesabı;
-## `delta` son haftalık tikin görüntüsüne göre değişimdir (okun yönü). Alan cümlesi aynı toplamı söyler ve araştırmadan sonraki iki
-## haftada kullanıcıların sözünü sonuna ekler, sonra düşürür.
+## `delta` son haftalık tikin görüntüsüne göre değişimdir (okun yönü).
 ## FALSİFİKASYON: ProductModel._module_card'da `bugs`i `0` yap → sayı iddiası FAIL, `fix_text`i `""` yap → metin iddiası FAIL; kilitsiz
 ## adaylar süzgecini hatasız hatları da alacak biçimde gevşet (SprintCatalog.candidates'ta `bugs.has(line_id)`yi sil) → hatasız hat
 ## iddiası FAIL; ProductState.open_bugs_delta yerine `0` ver → ok iddiası FAIL; bug_row_of'ta en büyük hesabın ipucu satırını sil →
-## ipucu iddiası FAIL; SprintCatalog.area_sentence'ta araştırma penceresinin `<=`'sini `<` yap ya da bir sprint uzat (`+ 1`) →
-## pencere iddiası FAIL, araştırma cümlesini hiç ekleme → söz iddiası FAIL, hata sayısı cümlesini düşür → toplam iddiası FAIL;
-## SprintUiShared.impact_bits'te `int(part.accounts) >= 0` denetimini `true` yap → B2C satırı iddiası FAIL.
+## ipucu iddiası FAIL; SprintUiShared.impact_bits'te `int(part.accounts) >= 0` denetimini `true` yap → B2C satırı iddiası FAIL.
 static func _case_product_bug_rows_read_the_store() -> String:
 	_seed_sprint_live("erp")
 	_seed_line_accounts()
@@ -24288,17 +24248,6 @@ static func _case_product_bug_rows_read_the_store() -> String:
 	if b2c.text != SprintUiShared.SEP.join(["Sync", SprintUiShared.count("PRODUCT_BUG_COUNT", 5),
 			SprintUiShared.count("PRODUCT_USER_COUNT", 300)]) or b2c.tip.contains("\n"):
 		return "a B2C row reads %s, want its users only and no account line in the tip" % [b2c]
-	var said: String = SprintCatalog.area_sentence("core")
-	if not said.contains(SprintUiShared.count("PRODUCT_BUG_COUNT", 12)):
-		return "the core sentence reads '%s', want the 12 open bugs of its three lines" % said
-	# The users' words stay for the sprint after the research (a sprint is two weeks, so two weeks) and go after it.
-	var voice: String = TranslationServer.translate("PRODUCT_RESEARCH_VOICE_CORE")
-	GameState.product.research_done["core"] = SprintSystem.sprint_number() - 1
-	if not SprintCatalog.area_sentence("core").ends_with(voice):
-		return "a sprint after the research the sentence reads '%s', want the users' words at its end" % SprintCatalog.area_sentence("core")
-	GameState.product.research_done["core"] = SprintSystem.sprint_number() - 2
-	if SprintCatalog.area_sentence("core").contains(voice):
-		return "two sprints after the research the sentence still reads '%s'" % SprintCatalog.area_sentence("core")
 	return ""
 
 

@@ -2796,28 +2796,10 @@ PRODUCT_PREPARING_TIP,{name} hazırlıyor,{name} is preparing it
 PRODUCT_STARTS_AHEAD,önden başlar,starts ahead
 PRODUCT_DONE_AHEAD,önden bitti,done ahead
 PRODUCT_STAGE_RESEARCH,Araştırma,Research
-PRODUCT_STAR_NONE,Henüz hiçbir şirkete yetmez.,Not enough for any company yet.
-PRODUCT_STAR_SKIPPED,1★ şirketler bu alana bakmaz. 2★ şirketler bir başlangıç ister.,1★ companies do not look at this area. 2★ companies want a start.
-PRODUCT_STAR_SERVES,Bu hâliyle {star}★ şirketlere yeter. {next}★ şirketler daha fazlasını ister.,As it stands it is enough for {star}★ companies. {next}★ companies want more.
-PRODUCT_STAR_TOP,Bu hâliyle 3★ şirketlere de yeter.,As it stands it is enough even for 3★ companies.
-PRODUCT_AUDIENCE_ENOUGH,Bugünkü kitlene yeter.,Enough for your current audience.
-PRODUCT_AUDIENCE_OUTGROWN,Kitlen büyüdükçe kullanıcılar bu alanda daha fazlasını ister.,"As your audience grows, users want more here."
-PRODUCT_AREA_REVENUE_NONE,Ücretli plan henüz yok,No paid plan yet
-PRODUCT_AREA_REVENUE_WEAK,"Ücretli plan var, ödeyen az","There is a paid plan, few pay"
-PRODUCT_AREA_REVENUE_ENOUGH,Ücretli plan açık,The paid plan is open
-PRODUCT_AREA_REVENUE_STRONG,Ödeyen kullanıcılar artıyor,Paying users keep growing
-PRODUCT_AREA_RIVAL,{rival} bu alanda yeni bir şey çıkardı,{rival} shipped something new here
-PRODUCT_AREA_OVER_CAPACITY,Sunucular yükü kaldırmıyor,The servers can't keep up with the load
 PRODUCT_CAP_PAID_PLAN,Ücretli plan,Paid plan
 PRODUCT_FIX_CARD,{capability} düzeltmesi,{capability} fix
 PRODUCT_RESEARCH_CARD,{n} kullanıcıyla görüş,Talk to {n} users
 PRODUCT_REQUEST_CARD,{step} ({customer}),{step} ({customer})
-PRODUCT_RESEARCH_VOICE_CORE,Görüştüğümüz kullanıcılar temel işin daha hızlı olmasını istiyor,The users we talked to want the basic job to go faster
-PRODUCT_RESEARCH_VOICE_ONBOARDING,Görüştüğümüz kullanıcılar ilk günü karışık buluyor,The users we talked to find the first day confusing
-PRODUCT_RESEARCH_VOICE_GROWTH,Görüştüğümüz kullanıcılar ürünü bir arkadaşına göstermek istiyor,The users we talked to want to show the product to a friend
-PRODUCT_RESEARCH_VOICE_INTEGRATIONS,Görüştüğümüz müşteriler veriyi elle taşımaktan yorulmuş,The customers we talked to are tired of moving data by hand
-PRODUCT_RESEARCH_VOICE_TRUST,Görüştüğümüz kullanıcılar verilerinin güvende olduğunu bilmek istiyor,The users we talked to want to know their data is safe
-PRODUCT_RESEARCH_VOICE_REVENUE,Görüştüğümüz kullanıcılar neye para ödeyeceğini bilmek istiyor,The users we talked to want to know what they would pay for
 PRODUCT_NEWS_RIVAL_LAUNCH_0,{rival} yeni özelliğini duyurdu: {capability},{rival} announced a new feature: {capability}
 PRODUCT_NEWS_RIVAL_LAUNCH_1,{rival} kullanıcılarına yeni bir araç sundu: {capability},{rival} rolled out a new tool for its users: {capability}
 PRODUCT_PRESS_CORE_0,{product} yeni sürümünü çıkardı: {capability},{product} released a new version: {capability}

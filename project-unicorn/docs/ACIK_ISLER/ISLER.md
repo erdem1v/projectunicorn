@@ -78,6 +78,8 @@ Açık işlerin tek yeri bu klasördür.
   - Satış toplantısında "yer yok" gerekçesiyle kilitli söz cevabı.
   - Koşan sprintte sprint karar kartları ve B2B söz satırının iki kilidi (kırık söz, yer yok); `--event-shot`'un
     fikstür dünyasında bu kilitler doğmuyor.
+  - Ürün karelerinin dünyası olmayan durumlar: sürüm notunda düzeltme ve yorum satırları, MVP öncesi boş sürüm notu,
+    sürümsüz Geçmiş, ekipsiz boş plan, ÇEYREK'te onaylı sütun ve açık hedef menüsü.
 - **Ürün rev 7 denetiminin plan dışı bulguları.** Kalibrasyon turu bunlara dokunmadı:
   - C-05: Penceresinde yapılabilir adım olmayan B2B talebi, adım açılınca aynı pencerenin sonraki bir tikinde doğuyor
     (ACIK_KARARLAR 96 (28) ve PRD'nin zamanlamasıyla çelişir).

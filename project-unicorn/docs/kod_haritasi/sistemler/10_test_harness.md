@@ -14,7 +14,6 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - `scripts/debug/tick_probe.gd` (133): `--tick-probe`; gerçek saatte kare maliyeti (gece, saat adımı, otomatik kayıt) `TICK` satırları
 - `scripts/debug/office_crowd_probe.gd` (326): `OfficeCrowdProbe`; ofis kalabalığı sağlığı (`CROWD` satırları) ve ofis çekimlerinin yardımcıları
 - `scripts/debug/office_pan_probe.gd` (398): `--pan*`; ofisin 3B görüntüsünü kamera ofsetlerinde kaydeder ve ölçer (`PAN*` satırları)
-- `scripts/debug/product_fixtures.gd` (554): Ürün sekmesinin debug kaynağı (mockup c1..c5, kart galerisi, uç durumlar); `--product-shot` besler
 - `scripts/debug/kit_probe.gd` (298): `--probe-shot=kit`; koyu kit bileşenlerini durumlarıyla bir pencere gövdesinde dizer
 - `scripts/debug/loc_residue.gd` (265): `-s` betiği; Türkçe literal, CSV'de olmayan sahne metni, statikte `tr()` arar, vuruşta sıfır dışı çıkar
 - `scripts/debug/glyph_audit.gd` (109): `-s` betiği; oyunun çizebileceği her karakteri (`scripts/debug` ve `scripts/events/tools` dışı) yüz ve zincirlere sorar, eksiği `GLYPH|MISS` basar
@@ -58,8 +57,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - `Main._finish_shot()` `scripts/main/main.gd:665`: kareyi `user://<ad>[_en][_cb].png` yazar (`:659`) ya da `--theme-audit` ise `AUDIT_BEGIN/END` basar (`_audit_walk` `:3007`)
 - `Main._run_why_fire()` `scripts/main/main.gd:288`: `EvWhy.report(kart)`; `_run_event_plausibility()` `:295` `PLAUSIBILITY.run(spec)`
 - `Main._skip_to_shell()` `scripts/main/main.gd:5345`: menü ve onboarding'siz kabuk; `--skip-onboarding` (`:107`) ve debug F12 (`:5106`) çağırır
-- `GameShell._debug_fkey()` `scripts/main/game_shell.gd:138`: debug build'de Shift+F4/F5/F6 (F4 onboarding'i yeniden tetikler)
-- `GameShell.debug_product_apply/act` `scripts/main/game_shell.gd:175-186`: `PRODUCT_FIXTURES` (`:18`) yükleyip Ürün sekmesine `set_source` verir · `main.gd:3763,3787`
+- `GameShell._debug_fkey()` `scripts/main/game_shell.gd:134`: debug build'de Shift+F4/F5/F6 (F4 onboarding'i yeniden tetikler)
 - `SaveManager._is_harness_arg()` `scripts/autoload/save_manager.gd:497`: `smoke`, `-shot`, `audit`, `probe`, `run-log`, `plausibility` alt dizili `--` bayrağı harness sayar
 - `tools/smoke_run.sh run_one()` `tools/smoke_run.sh:38`: `godot --headless --endgame-smoke=<vaka>`; `list_cases()` (`:27`) vaka listesini `match` tablosundan awk ile çeker
 - `tools/run_gate.sh` `tools/run_gate.sh:22-48`: her preset için `--run-log=<preset>:730:sim`; `PROBE END` sayısı, `ending=` ve hata satırı denetler
@@ -67,7 +65,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 
 ## Sinyaller
 
-- `debug_onboarding_retrigger_requested`: yayan `scripts/main/game_shell.gd:144` (Shift+F4) · dinleyen `scripts/main/main.gd:103` -> `_on_debug_onboarding_retrigger` (`:5147`)
+- `debug_onboarding_retrigger_requested`: yayan `scripts/main/game_shell.gd:140` (Shift+F4) · dinleyen `scripts/main/main.gd:103` -> `_on_debug_onboarding_retrigger` (`:5147`)
 - `phase_gate_reached`, `run_ended`: smoke `run_case` her vakada kendi dinleyicisini bağlar (`endgame_smoke.gd:74-75`), `_gate_signals` ve `_endings` dizilerine biriktirir
 - `phase_gate_reached`: `scripts/debug/run_probe.gd:490` da dinler (kapı geçişini defterine yazar)
 - `night_skipped`, `hour_changed`, `day_advanced`: tempo, tick ve crowd probe'ları ölçüm için dinler (`main.gd:478`, `tick_probe.gd`, `office_crowd_probe.gd`)
@@ -94,7 +92,6 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 
 - Harness çıktıları (`SMOKE`, `PROBE`, `TICK`, `TEMPO`, `CROWD`, `PAN`, `SPRINTPROBE` vb.) çevrilmez; `scripts/debug/` ve `scenes/debug/` `loc_residue` SKIP listesindedir (`loc_residue.gd:30-33`)
 - `main.gd` `scripts/` altında olduğu için Türkçe literal taşıyan fikstür satırları `# LOC-DATA <gerekçe>` işaretini ister (main.gd'de 91 işaret var)
-- `product_fixtures.gd` gerçek anahtarları `tr()` ile çözer (`PRODUCT_RESULT_*`, `PRODUCT_REVIEW_*`); metin o anki dilde, özel adlar düz kalır
 - `loc_residue.gd` ve `loc_csv_integrity` vakası (`endgame_smoke.gd:316`, gövde `:10862`) `strings.csv` anahtarlarını okur; `glyph_audit.gd` CSV'nin iki dilini okur
 - `--lang=tr|en` bayrağını `Localization` okur (`scripts/autoload/localization.gd:20-53`); çekim dosya adına `_en` ekler
 

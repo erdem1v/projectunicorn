@@ -2725,7 +2725,6 @@ func _run_clock_shot(kind: String) -> void:
 			SprintSystem.plan_next()
 			SprintSystem.apply_lead()
 			SprintSystem.start()
-			layer.get_current_page_body().set_source(null)
 			await frame.call("released")
 		"focus_out", "focus_out_off":
 			Settings._data[TimeManager.SETTING_PAUSE_UNFOCUSED] = kind == "focus_out"
@@ -4189,16 +4188,11 @@ func _run_ending_shot(key: String) -> void:
 	get_tree().quit()
 
 
-# --product-shot=<c1..c5|flow|edge:<name>|live:<scenario>>: the Product tab. The first four
-# are fed by the debug fixture source (scripts/debug/product_fixtures.gd, edge names live there)
-# through the shell's debug relays, the same path an MCP session takes; flow starts from c1 and
-# saves one frame after each of start, advance and plan_next; edge:goal_menu opens the quarter goal's
-# menu with a click on its strip. live draws
-# ProductModel.live() over a run seeded through SprintSystem (_seed_product_live); live:pick_named is
-# the type picker with B2C, a type and a name picked, live:pick_relang saves it and switches this run to
-# English (<stem>_rebuilt: the rebuilt picker keeps the picks); live:decision_paper presses the asking card's
-# "?", so the frame is Olaylar on the sprint paper; live:gate saves the MVP gate, presses its
-# Yayınla and saves the v1.0 note (<stem>_publish); live:b2c_goal saves the planning with the lead's plan offered, applies
+# --product-shot=live:<scenario>: the Product tab drawn from ProductModel.live() over a run seeded through SprintSystem
+# (_seed_product_live); any other kind fails the shot. live:pick_named is the type picker with B2C, a type and a name picked,
+# live:pick_relang saves it and switches this run to English (<stem>_rebuilt: the rebuilt picker keeps the picks);
+# live:decision_paper presses the asking card's "?", so the frame is Olaylar on the sprint paper; live:gate saves the MVP gate,
+# presses its Yayınla and saves the v1.0 note (<stem>_publish); live:b2c_goal saves the planning with the lead's plan offered, applies
 # it with no quarter goal (<stem>_lead), then takes the lead's cards back out, picks the goal Trust and applies the lead's
 # plan again (<stem>_trust); live:plan saves the plan and presses Sprinti başlat (<stem>_start); live:rnd saves the planning with the
 # founder in R&D, presses Ar-Ge'ye git and saves R&D with the founder's node selected (<stem>_go). live:overview_pre is
@@ -4207,93 +4201,77 @@ func _run_ending_shot(key: String) -> void:
 # on the control it belongs to. live:a4_<frame> are the Ürün > Sprint frame worlds (_seed_product_a4), each printing
 # its PRODUCTSHOT line.
 func _run_product_shot(id: String) -> void:
+	if not id.begins_with("live:"):
+		_shot_fail("[ProductShot] unknown kind '%s', want live:<scenario>" % id)
+		return
 	_begin_shot()
 	_seed_run_reproducible()
 	var stem: String = "product_shot_" + id.replace(":", "_")
-	if id.begins_with("live:"):
-		_seed_product_live(id.trim_prefix("live:"))
-		await _mount_shot_shell()
-		EventBus.tab_changed.emit("product")
-		if id == "live:overview_pre" or id.begins_with("live:server"):
-			await _product_overview_shot(id.trim_prefix("live:"), stem)
-			return
-		if id in ["live:pick_named", "live:pick_relang"]:
-			var picker: TypePicker = _shell.find_children("*", "TypePicker", true, false)[0]
-			picker._pick_type("note_tool")
-			picker._name = "Notly"   # LOC-DATA debug seed / name
-			picker._save_draft()
-		if id.begins_with("live:decision_paper"):
-			await get_tree().process_frame
-			for row: BoardRow in _shell.find_children("*", "BoardRow", true, false):
-				if row.card.ask != null:
-					row.action.emit("decide", {"card_id": row.card.id, "item": row.card.ask.item})
-					break
-			if id != "live:decision_paper":   # a real paper: its answer is open, so its options and their chips are in the frame
-				await get_tree().create_timer(0.4).timeout
-				_press_button_labelled(_shell, tr("MAIL_RESPOND"))
-		if id.begins_with("live:a4_") and not await _product_a4_ready(id.trim_prefix("live:")):
-			return
-		var tip: String = String(_A4_WORLDS.get(id.trim_prefix("live:"), {}).get("tip", ""))
-		if tip != "":
-			await _product_tip_shot(tip, id.trim_prefix("live:"), stem)
-			return
-		# A frame before each action, the last one after them (stem + the action's suffix). English for this
-		# run only: Localization.set_language would also store it as the player's language.
-		var press := func(key: String) -> Callable: return _press_button_labelled.bind(_shell, tr(key))
-		var to_en := func() -> void:
-			TranslationServer.set_locale("en")
-			EventBus.language_changed.emit("en")
-		var kept: Array = []   # live:b2c_goal: the sprint's cards before the lead's plan
-		var lead := func() -> void:
-			kept.assign(GameState.product.sprint.cards)
-			SprintSystem.apply_lead()
-		var toward_trust := func() -> void:
-			for card_id in GameState.product.sprint.cards.duplicate():
-				if card_id not in kept:
-					SprintSystem.remove(card_id)
-			SprintSystem.pick_goal("trust")
-			SprintSystem.apply_lead()
-		# live:a4_run_w2: a second frame two game hours on (_02): the now line moves with the clock.
-		var two_hours_on := func() -> void:
-			TimeManager.advance_hours(2)
-			print(_productshot_line("a4_run_w2"))
-		var then: Dictionary = {"live:gate": [[press.call("PROD_SHIP_PUBLISH"), "_publish"]],
-			"live:a4_run_w2": [[two_hours_on, "_02"]],
-			"live:plan": [[press.call("PRODUCT_START_SPRINT"), "_start"]],
-			"live:rnd": [[press.call("PRODUCT_GO_RND"), "_go"]],
-			"live:pick_relang": [[to_en, "_rebuilt"]],
-			"live:b2c_goal": [[lead, "_lead"], [toward_trust, "_trust"]]}
-		var base := stem
-		for step: Array in then.get(id, []):
-			await get_tree().process_frame
-			await get_tree().create_timer(0.4).timeout
-			_save_shot(stem)
-			step[0].call()
-			stem = base + step[1]
-		if id == "live:b2c_live":
-			# Geçmiş açık: v1.0'ın satırı ilk haftanın kullanıcılarını okur.
-			get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()._set_ui(true, "history_open")
-		if id == "live:b2b_quarter":
-			get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()._set_ui("quarter", "view")
-		await _finish_shot(stem)
-		return
+	_seed_product_live(id.trim_prefix("live:"))
 	await _mount_shot_shell()
-	_shell.debug_product_apply("c1" if id == "flow" else id.trim_prefix("edge:"))
-	if id == "edge:goal_menu":
-		await get_tree().process_frame
-		var click := InputEventMouseButton.new()
-		click.button_index = MOUSE_BUTTON_LEFT
-		click.pressed = true
-		(_shell.find_children("*", "QuarterView", true, false)[0] as QuarterView).get_child(0).gui_input.emit(click)
-	if id != "flow":
-		await _finish_shot(stem)
+	EventBus.tab_changed.emit("product")
+	if id == "live:overview_pre" or id.begins_with("live:server"):
+		await _product_overview_shot(id.trim_prefix("live:"), stem)
 		return
-	for kind in ["start", "advance", "plan_next"]:
-		_shell.debug_product_act(kind)
+	if id in ["live:pick_named", "live:pick_relang"]:
+		var picker: TypePicker = _shell.find_children("*", "TypePicker", true, false)[0]
+		picker._pick_type("note_tool")
+		picker._name = "Notly"   # LOC-DATA debug seed / name
+		picker._save_draft()
+	if id.begins_with("live:decision_paper"):
+		await get_tree().process_frame
+		for row: BoardRow in _shell.find_children("*", "BoardRow", true, false):
+			if row.card.ask != null:
+				row.action.emit("decide", {"card_id": row.card.id, "item": row.card.ask.item})
+				break
+		if id != "live:decision_paper":   # a real paper: its answer is open, so its options and their chips are in the frame
+			await get_tree().create_timer(0.4).timeout
+			_press_button_labelled(_shell, tr("MAIL_RESPOND"))
+	if id.begins_with("live:a4_") and not await _product_a4_ready(id.trim_prefix("live:")):
+		return
+	var tip: String = String(_A4_WORLDS.get(id.trim_prefix("live:"), {}).get("tip", ""))
+	if tip != "":
+		await _product_tip_shot(tip, id.trim_prefix("live:"), stem)
+		return
+	# A frame before each action, the last one after them (stem + the action's suffix). English for this
+	# run only: Localization.set_language would also store it as the player's language.
+	var press := func(key: String) -> Callable: return _press_button_labelled.bind(_shell, tr(key))
+	var to_en := func() -> void:
+		TranslationServer.set_locale("en")
+		EventBus.language_changed.emit("en")
+	var kept: Array = []   # live:b2c_goal: the sprint's cards before the lead's plan
+	var lead := func() -> void:
+		kept.assign(GameState.product.sprint.cards)
+		SprintSystem.apply_lead()
+	var toward_trust := func() -> void:
+		for card_id in GameState.product.sprint.cards.duplicate():
+			if card_id not in kept:
+				SprintSystem.remove(card_id)
+		SprintSystem.pick_goal("trust")
+		SprintSystem.apply_lead()
+	# live:a4_run_w2: a second frame two game hours on (_02): the now line moves with the clock.
+	var two_hours_on := func() -> void:
+		TimeManager.advance_hours(2)
+		print(_productshot_line("a4_run_w2"))
+	var then: Dictionary = {"live:gate": [[press.call("PROD_SHIP_PUBLISH"), "_publish"]],
+		"live:a4_run_w2": [[two_hours_on, "_02"]],
+		"live:plan": [[press.call("PRODUCT_START_SPRINT"), "_start"]],
+		"live:rnd": [[press.call("PRODUCT_GO_RND"), "_go"]],
+		"live:pick_relang": [[to_en, "_rebuilt"]],
+		"live:b2c_goal": [[lead, "_lead"], [toward_trust, "_trust"]]}
+	var base := stem
+	for step: Array in then.get(id, []):
 		await get_tree().process_frame
 		await get_tree().create_timer(0.4).timeout
-		_save_shot("%s_%s" % [stem, kind])
-	get_tree().quit()
+		_save_shot(stem)
+		step[0].call()
+		stem = base + step[1]
+	if id == "live:b2c_live":
+		# Geçmiş açık: v1.0'ın satırı ilk haftanın kullanıcılarını okur.
+		get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()._set_ui(true, "history_open")
+	if id == "live:b2b_quarter":
+		get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()._set_ui("quarter", "view")
+	await _finish_shot(stem)
 
 
 ## GENEL BAKIŞ of a live:overview_pre or live:server_* shot, and the tip of the control the state is about: the pointer rests

@@ -2,7 +2,7 @@ class_name ProductModel
 extends RefCounted
 
 # Ürün sekmesinin sprint ekranının görünüm sözleşmesi. Sekme yalnız bu Dictionary'yi çizer.
-# Üreten (canlı adaptör ya da debug fikstürü) içerik alanlarını çözülmüş metin olarak verir;
+# Üreten (`live`) içerik alanlarını çözülmüş metin olarak verir;
 # eşik ve izinler bool gelir. Bileşenler kendi dilbilgisini PRODUCT_* anahtarlarından kurar.
 #
 # PRD terimi → sözleşme adı:
@@ -23,7 +23,7 @@ extends RefCounted
 #             null (yalnız alan hedefinde)} or null (sprint yok), columns: [column]},
 #   ui: {view: "overview"|"sprint"|"quarter", open_area: area id or "", history_open, hover_card: card id or "" (imleç bir adayın
 #         "+"ında), server_preview: kademe id or "" (açık geçiş önizlemesi), requests_open (talep listesinin fazlası açık)},
-#   overview: {server: server} or null (v1.0'dan önce: GENEL BAKIŞ kilitli; fikstürde de yok),
+#   overview: {server: server} or null (v1.0'dan önce: GENEL BAKIŞ kilitli),
 #   areas: [{id, name, goal_text}],
 #   center: center,
 #   next: {sprint: int or -1, cards: [next card], load, carried},
@@ -112,7 +112,7 @@ const PLAN_KEYS := ["send_next", "remove"]
 const NEXT_KEYS := ["pull", "remove"]
 
 
-## Kaynak verilmediğinde sekmenin okuduğu model: ürün durumundan (GameState.product) ve sprint
+## Sekmenin okuduğu model: ürün durumundan (GameState.product) ve sprint
 ## sistemlerinden kurulur. Tür seçilmeden alan ve kart yoktur; sekme o zaman tür seçiciyi açar.
 static func live() -> Dictionary:
 	_addable.clear()
@@ -221,8 +221,8 @@ static func ghost(card_id: String) -> Dictionary:
 	return _ghosts[card_id]
 
 
-## Hayaletin pano satırı: adayın düşeceği yerde (planın sonunda, planla birlikte oynatılmış); motorun tanımadığı kimlik (debug
-## fikstürünün kartı) satır vermez.
+## Hayaletin pano satırı: adayın düşeceği yerde (planın sonunda, planla birlikte oynatılmış).
+## İmleçteki aday yeniden kurulumda havuzdan düşmüş olabilir (süresi dolan talep, kapanan hata): satır vermez.
 static func ghost_row(card_id: String) -> Dictionary:
 	var c: Dictionary = SprintCatalog.card_by_id(card_id)
 	return {} if c.is_empty() else _row(c, ghost(card_id).cards[card_id], ["add"])
@@ -657,7 +657,7 @@ static func _cluster(seat: Dictionary) -> Variant:
 
 
 ## Adayın bu aşamalarda sprinte ekleyeceği efor {aşama: efor} (hayalet): planın o kartla oynatmasında kartın aşama ihtiyacı.
-## Motorun tanımadığı kimlik (debug fikstürünün kartı) hayalet vermez.
+## İmleçteki aday yeniden kurulumda havuzdan düşmüş olabilir (süresi dolan talep, kapanan hata): hayalet vermez.
 static func ghost_effort(card_id: String) -> Dictionary:
 	var out: Dictionary = {}
 	if SprintCatalog.card_by_id(card_id).is_empty():
@@ -964,7 +964,7 @@ static func _sprint_bar() -> Dictionary:
 		GameState.product.sprint.cards.map(func(id: String) -> Dictionary: return {"pts": SprintSystem.card_load(cards[id])}))
 
 
-## Alanın çeyrek hedefi olarak cümlesi (şerit ve hedef menüsü); fikstür de buradan okur.
+## Alanın çeyrek hedefi olarak cümlesi (şerit ve hedef menüsü).
 static func goal_text(area_id: String) -> String:
 	return _t("PRODUCT_GOAL_" + area_id.to_upper())
 
