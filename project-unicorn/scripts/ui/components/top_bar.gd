@@ -7,16 +7,15 @@ extends Panel
 # tuşları (rayın simge kipiyle aynı eşik). Hafta çubuğu en çok MAX_WEEK_BAR uzar; daha geniş barda
 # Sıradaki yuvası ve saat bloğu gün bloğunun hemen ardından gelir, artan genişlik sağda boş kalır.
 # Sıradaki yuvası hep ayrılmıştır: teklif süresi, son haftasındaki sprint kararı ya da kâğıt, çalan görüşme,
-# hedef listesinin sıradaki adımı, yoksa mesai bitimi. Bir karar beklerken yuva kapıdır: amber nokta ve "Cevap
-# bekliyor", altında göndericisi ya da bekleyen kararların sayısı; yuva ve saat bloğu amber çerçevede, hız tuşları
-# kapalı, tıklanınca karara dönülür.
+# yoksa mesai bitimi; hedef listesi rayın Hedefler satırındadır. Bir karar beklerken yuva kapıdır: amber nokta ve
+# "Cevap bekliyor", altında göndericisi ya da bekleyen kararların sayısı; yuva ve saat bloğu amber çerçevede, hız
+# tuşları kapalı, tıklanınca karara dönülür.
 # Kurucu görüşmeye giderken, masadayken ve dönerken saat tutulur: yuva bunu söyler ("Şimdi", "Görüşmede"), hız
 # tuşları kapalıdır ve amber yoktur. Görüşmenin saati hafta çubuğunda elmastır. Bunların dışında saatin altındaki
 # satır saatin neden durduğunu söyler: tutanın adı (tuşlar kapalı) ya da duraklı hâl (II yanıp söner). Ayırıcılar
 # ve hafta çubuğu _draw'da.
 
 const INBOX := preload("res://scripts/ui/components/inbox.gd")
-const ChequeRead := preload("res://scripts/systems/cheque_read.gd")
 
 ## [tam, sıkışık]: marka bloğunun genişliği; anahtar (A, C, E, G) ve değer (B, D, F, H) sütunlarının
 ## sol kenarı; iki metrik grubunu ayıran kısa çizgi; gün bloğunun başı ve iç payı; yuva ve saat
@@ -120,11 +119,6 @@ func _ready() -> void:
 	TimeManager.speed_changed.connect(_apply_speed_visual)
 	TimeManager.speed_changed.connect(_refresh_state.unbind(1))
 	TimeManager.hold_changed.connect(_queue_refresh)
-	# Hedef listesinin adımları bunlarla ilerler: ilk dakikada saat duraklıdır, hour_changed gelmez.
-	EventBus.sprint_planned.connect(_queue_refresh)
-	EventBus.sprint_started.connect(_queue_refresh)
-	EventBus.version_shipped.connect(_queue_refresh)
-	EventBus.customer_added.connect(_queue_refresh)
 	for i in speed_btns.size():
 		speed_btns[i].pressed.connect(EventBus.speed_change_requested.emit.bind(i))
 	resized.connect(_refresh)
@@ -241,8 +235,8 @@ func _refresh_metrics(reading: Dictionary) -> void:
 
 ## Gün bloğu (tarih + hafta çubuğu ve uç saatleri) ve Sıradaki yuvası: teklif süresi uyarı rengindedir,
 ## son haftasında kırmızı; teklif yoksa son haftasındaki sprint kararı kâğıdı, o da yoksa son haftasındaki başka bir
-## kâğıt (ikisi de uyarı renginde), o da yoksa çalan görüşme, o da yoksa hedef listesinin sıradaki adımı, o da yoksa
-## mesainin bitimine kalan saat. Saat görüşme için tutulurken yuva görüşmenindir.
+## kâğıt (ikisi de uyarı renginde), o da yoksa çalan görüşme, o da yoksa mesainin bitimine kalan saat. Saat görüşme
+## için tutulurken yuva görüşmenindir.
 func _refresh_day() -> void:
 	var d: Dictionary = GameState.get_date_dict()
 	$Date.text = tr("TOPBAR_DATE_COMPACT").format({"week": int(d.week), "mon": Fmt.month_abbr(int(d.month))}) \
@@ -262,7 +256,6 @@ func _refresh_day() -> void:
 		"company": _meeting.get("place", "")})
 	# Kâğıtlar en aciliyle başlar; son haftasında weeks_left 1'dir, ömrü tek hafta olan kâğıtta da.
 	var urgent: Array = EventGate.desk_papers(1)
-	var step: Dictionary = ChequeRead.summary().get("next", {})
 	if _held():
 		$NextKey.text = Fmt.upper(tr("TOPBAR_IN_MEETING" if phase == "sitting" else "TOPBAR_NOW"))
 		line = tr("TOPBAR_TRIP_HOME") if phase == "home" else meeting
@@ -280,18 +273,13 @@ func _refresh_day() -> void:
 		ink = UiTokens.D_warn()
 	elif phase == "call":
 		line = meeting
-	elif not step.is_empty():
-		line = tr(step.text_key)
-		if step.has("target"):
-			var bar: PackedStringArray = line.split("{bar}")
-			line = _fit_next(bar[0], Fmt.money_chip(step.target) + bar[1])
 	_paint($NextLine, line, ink)
 	_put($NextKey, _slot_x + _g.pad, NEXT_KEY_LINE)
 	_put($NextLine, _slot_x + _g.pad, NEXT_LINE, _g.slot - 2 * _g.pad)
 	_refresh_gate()
 
 
-## Sıradaki satırının sözü sondadır (kâğıdın "bu hafta son"u, adımın çıtası): `tail` bütün kalır, satır
+## Sıradaki satırının sözü sondadır (kâğıdın "bu hafta son"u): `tail` bütün kalır, satır
 ## yuvaya sığmazsa `head` sondan kısalıp "…" alır.
 func _fit_next(head: String, tail: String) -> String:
 	var font: Font = $NextLine.get_theme_font("font")

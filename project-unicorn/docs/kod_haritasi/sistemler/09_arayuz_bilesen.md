@@ -19,8 +19,9 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 - `scripts/theme/build_theme.gd` (1620): `-s` betiği; UiTokens'tan `themes/master_theme.tres` (krem) ve `themes/menajer_theme.tres` (koyu) üretir,
   FontVariation sarmalarını kurar (koyu yüzler Archivo'nun değişken yüzü; yedek Plex, sonra Noto Sans Symbols 2)
 - `scripts/theme/theme_check.gd` (270): tema denetçisi (eksik öğe, içerik payı, WCAG kontrastı) ve koyu temanın `contrast_audit` kapısı
-- `scripts/ui/components/top_bar.gd` (458): üst bar; iki satırlık metrik ızgarası, gün/saat/hafta çubuğu, hız tuşları, Sıradaki ve karar kapısı yuvası
-- `scripts/ui/components/left_tabs.gd` (326): sol ray; `UiTokens.TABS` ile sahne düğmeleri, kilit, rozet sayaçları, simge kipi
+- `scripts/ui/components/top_bar.gd` (442): üst bar; iki satırlık metrik ızgarası, gün/saat/hafta çubuğu, hız tuşları, Sıradaki ve karar kapısı yuvası
+- `scripts/ui/components/left_tabs.gd` (469): sol ray; `UiTokens.TABS` ile sahne düğmeleri, kilit, rozet sayaçları, simge kipi, Ayarlar'ın üstünde Hedefler satırı
+- `scripts/ui/components/goals_panel.gd` (194): Hedefler paneli; rayın yanında, PanelLayer'da, yalnız açıkken (sınıf adı yok)
 - `scripts/ui/components/window_layer.gd` (247): `CenterViewport`un betiği; bir birincil ve bir ayrıntı pencereyi ofisin üstünde sabit yuvalarda açar
 - `scripts/ui/components/window_frame.gd` (119): pencere kabuğu (`WindowPanel`, kapatma glifi, ortak başlık bandı, karar beklerken salt okunur şerit)
 - `scripts/ui/components/gate_strip.gd` (53): karar beklerken pencerenin üstündeki "geri dön" şeridi
@@ -55,31 +56,32 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 ## Giriş noktaları
 - `Main._mount_godot_card()` `scripts/main/main.gd:114`: açılışta bir kez, boot splash ile menü arasında · `_ready` (main.gd) sonunda; kart `finished` verince `_mount_menu()` `main.gd:126`
 - `Main._mount_menu()` `main.gd:126`: menüyü kurar, `SaveManager.end_run()` der · açılıştan, `_return_to_menu()` `main.gd:145` ve reddedilen yüklemeden
-- `Main._mount_flow()` `main.gd:151`: Yeni oyun'da `OnboardingFlow` kurar, `completed` → `_swap_to_shell_and_modal` `main.gd:4664` · `main_menu.gd` `new_game_requested`
-- `Main._modal_layer()` `main.gd:4720`: modalların takıldığı katman (`GameShell/ModalLayer` ya da menünün kendi ModalLayer'ı) · bütün modal yolları
-- `Main._on_settings_requested()` `main.gd:5055`: hızı 0 yapar, `SettingsModal` takar; kurucu yolculuktayken toast söyler · `EventBus.settings_requested` (bağlantı `main.gd:88`)
-- `Main._on_confirm_requested(config)` `main.gd:5075`: `config.modal == "hr_action"` ise `HRActionModal`, yoksa `ConfirmModal`; sonra `populate(config)` · `EventBus.confirm_requested` (`main.gd:90`)
-- `Main._on_system_menu_requested()` `main.gd:5103`: ESC menüsü · `EventBus.system_menu_requested` (`main.gd:4714`; yayan `game_shell.gd:106`); X ve Alt+F4 `_notification` `main.gd:5123`
-- `Main._on_save_load_requested(mode)` `main.gd:5138`: `SaveLoadModal` takar, add_child sonrası `populate(mode)` · `EventBus.save_load_requested` (`main.gd:89`)
-- `Main._on_run_ended()` `main.gd:5247` ve `_on_milestone_reached()` `main.gd:5268`: `EndingScene` takar, `populate(data)` · `EventBus.run_ended` ve `milestone_reached`
-- `Main._on_term_table_requested()` `main.gd:5310`: `TermSheetTableScene` takar; `closed` → `_close_term_table()` `main.gd:5334` · `EventBus.term_table_requested`
-- `Main._open_meeting(adapter, side, place)` `main.gd:5036`: yolculuktan sonra `MeetingPanel` takar, `open(adapter, cast)`; `_close_meeting` `main.gd:5047` · `_open_sales_meeting` `:4780`, `_on_meeting_scene_requested` `:4770`
+- `Main._mount_flow()` `main.gd:151`: Yeni oyun'da `OnboardingFlow` kurar, `completed` → `_swap_to_shell_and_modal` `main.gd:4700` · `main_menu.gd` `new_game_requested`
+- `Main._modal_layer()` `main.gd:4756`: modalların takıldığı katman (`GameShell/ModalLayer` ya da menünün kendi ModalLayer'ı) · bütün modal yolları
+- `Main._on_settings_requested()` `main.gd:5091`: hızı 0 yapar, `SettingsModal` takar; kurucu yolculuktayken toast söyler · `EventBus.settings_requested` (bağlantı `main.gd:88`)
+- `Main._on_confirm_requested(config)` `main.gd:5111`: `config.modal == "hr_action"` ise `HRActionModal`, yoksa `ConfirmModal`; sonra `populate(config)` · `EventBus.confirm_requested` (`main.gd:90`)
+- `Main._on_system_menu_requested()` `main.gd:5139`: ESC menüsü · `EventBus.system_menu_requested` (`main.gd:4750`; yayan `game_shell.gd:106`); X ve Alt+F4 `_notification` `main.gd:5159`
+- `Main._on_save_load_requested(mode)` `main.gd:5174`: `SaveLoadModal` takar, add_child sonrası `populate(mode)` · `EventBus.save_load_requested` (`main.gd:89`)
+- `Main._on_run_ended()` `main.gd:5283` ve `_on_milestone_reached()` `main.gd:5304`: `EndingScene` takar, `populate(data)` · `EventBus.run_ended` ve `milestone_reached`
+- `Main._on_term_table_requested()` `main.gd:5346`: `TermSheetTableScene` takar; `closed` → `_close_term_table()` `main.gd:5370` · `EventBus.term_table_requested`
+- `Main._open_meeting(adapter, side, place)` `main.gd:5072`: yolculuktan sonra `MeetingPanel` takar, `open(adapter, cast)`; `_close_meeting` `main.gd:5083` · `_open_sales_meeting` `:4816`, `_on_meeting_scene_requested` `:4806`
 - `HRUiShared.mount_panel_modal()` `scripts/tabs/hr/hr_ui_shared.gd:78`: Eğitim ve Çalışma Saatleri modallarını `PanelLayer`a takar, `populate(args)` · `hr_ledger.gd:368`, `personal_tab.gd:96`, `hr_tab.gd:386`
 - `WindowLayer.open_primary(tab_id)` `window_layer.gd:75`: sekme penceresini kurar, öncekini `on_page_closing` ile bırakır · `EventBus.tab_changed` (bağlantı `window_layer.gd:62`)
 - `WindowLayer.open_detail(kind, payload)` `window_layer.gd:100`: ayrıntı penceresi (`DETAILS`: `hr_dossier`) · grup `window_layer` üzerinden ofis ve sayfalar
 - `WindowLayer.close_top()` `window_layer.gd:114`: Esc'in kapattığı en üst pencere · `GameShell._input` `game_shell.gd:100`
 - `WindowLayer.set_veiled()` `window_layer.gd:130` ve `set_under()` `:177` ve `panel_rect()` `:186`: görüşme yolculuğunda pencereleri gizler, PanelLayer paneli altındaki pencereyi kısar · `main.gd` yolculuğu, HR panelleri
 - `WindowFrame._init(body, on_close, guarded)` `window_frame.gd:33`: sayfanın `frame_options` sözlüğünü okur (variation, pad, owns_close, theme, title, kpi) · `window_layer.gd:93,103`
-- `TopBar._ready()` `top_bar.gd:98` ve `_queue_refresh()` `:154` → `_refresh()` `:171`: metrik, gün, kapı ve saat bloklarını boyar · EventBus sinyalleri ve TimeManager (aşağıda)
-- `TopBar.show_meeting(phase, place)` `top_bar.gd:162` ve `blink_held()` `:348`: yolculuk/masa/ev satırı ve tutuş yanıp sönmesi · `main.gd` (grup `top_bar`) ve `game_shell.gd`
-- `LeftTabs._ready()` `left_tabs.gd:62`, `_paint()` `:138`, `_is_locked()` `:258`, `set_bottom_clearance()` `:271`: ray satırı durumları ve rozetleri · `game_shell.gd` düzeni, EventBus sinyalleri
+- `TopBar._ready()` `top_bar.gd:97` ve `_queue_refresh()` `:148` → `_refresh()` `:165`: metrik, gün, kapı ve saat bloklarını boyar · EventBus sinyalleri ve TimeManager (aşağıda)
+- `TopBar.show_meeting(phase, place)` `top_bar.gd:156` ve `blink_held()` `:336`: yolculuk/masa/ev satırı ve tutuş yanıp sönmesi · `main.gd` (grup `top_bar`) ve `game_shell.gd`
+- `LeftTabs._ready()` `left_tabs.gd:84`, `_paint()` `:172`, `_is_locked()` `:401`, `set_bottom_clearance()` `:414`: ray satırı durumları ve rozetleri · `game_shell.gd` düzeni, EventBus sinyalleri
+- `LeftTabs._paint_goals()` `left_tabs.gd:236` ve `_toggle_goals()` `:297`: Hedefler satırı (bölmeli çubuk, ipucu) ve paneli açıp kapatma · `ChequeRead`; panel `GoalsPanel.paint()` `goals_panel.gd:85`, kapanınca satır `tree_exited` ile döner
 - `Toast.show_toast(head, sub, glyph, tone)` `toast.gd:75` ve `set_action()` `:58`: toast gösterir · `get_tree().call_group(&"toast", &"show_toast", ...)`: main.gd, game_shell.gd:130, ending_scene, mail_pane, office_hud
-- `Inbox.show(item_id)` `inbox.gd:31`, `items()` `:42`, `desk()` `:76`, `counts()` `:167`, `mark_read()` `:191`: gelen kutusu · TopBar `top_bar.gd:133`, WindowFrame, `events_tab.gd`, `mail_pane.gd`, ofis bildirim yığını
+- `Inbox.show(item_id)` `inbox.gd:31`, `items()` `:42`, `desk()` `:76`, `counts()` `:167`, `mark_read()` `:191`: gelen kutusu · TopBar `top_bar.gd:127`, WindowFrame, `events_tab.gd`, `mail_pane.gd`, ofis bildirim yığını
 - `NewsTicker.set_open(value)` `news_ticker.gd:97`: şeridi açar/kapar, `Settings.ticker_open` yazar · aç/kapa hücresi ve Ayarlar (`settings_modal.gd:281`)
 - `BuildHUDPanel.set_map_open()` `build_hud_panel.gd:59` ve `set_window_cover()` `:65`: grup `office_overlays`; kartlar `fingerprint()` boşsa yığın gizli · `office_view.gd`, `window_layer.gd:237`
-- `MeetingPanel.open(adapter, cast)` `meeting_panel.gd:125`, `pick(id)` `:146`, `proceed()` `:169`, sinyal `closed` `:19`: panel oynatır, seçimi adaptöre iletir · `main.gd:5036`
-- `SalesMeetingAdapter._init(prospect_id)` `sales_meeting_adapter.gd:51`, `start` `:56`, `pick` `:81`, `select` `:102`, `proceed` `:109`, `end_sitting` `:117` · `MeetingPanel` ve `main.gd:5023`
-- `VcMeetingAdapter._init(view_state)` `vc_meeting_adapter.gd:40`, `start` `:49`, `pick` `:61`, `proceed` `:91`, `withdraw` `:98`, `end_sitting` `:103` · `MeetingPanel` ve `main.gd:5013`
+- `MeetingPanel.open(adapter, cast)` `meeting_panel.gd:125`, `pick(id)` `:146`, `proceed()` `:169`, sinyal `closed` `:19`: panel oynatır, seçimi adaptöre iletir · `main.gd:5072`
+- `SalesMeetingAdapter._init(prospect_id)` `sales_meeting_adapter.gd:51`, `start` `:56`, `pick` `:81`, `select` `:102`, `proceed` `:109`, `end_sitting` `:117` · `MeetingPanel` ve `main.gd:5059`
+- `VcMeetingAdapter._init(view_state)` `vc_meeting_adapter.gd:40`, `start` `:49`, `pick` `:61`, `proceed` `:91`, `withdraw` `:98`, `end_sitting` `:103` · `MeetingPanel` ve `main.gd:5049`
 - `OnboardingFlow._commit()` `onboarding_flow.gd:192`: perdeyi çizer, sahneyi durdurur, `GameState.initialize_run(draft)` `game_state.gd:769`, `completed` · `_on_next()` `onboarding_flow.gd:155` son adımda
 - `OnboardingStep` sözleşmesi `step_base.gd`: `prefill` `:23`, `invalid_reason` `:28`, `is_valid` `:32`, `collect_payload` `:36`, `roll` `:40` · yalnız `onboarding_flow.gd:92` (`_mount_step`) çağırır
 - `MenuBackdrop.start(office_id, minute, figure)` `menu_backdrop.gd:40`, `stop()` `:65`, `set_figure()` `:75` · `main_menu.gd` (MenuBackdrop sahnede), `onboarding_flow.gd:70`, `main.gd:138`
@@ -90,22 +92,22 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 - `ThemeCheck.contrast_audit(th, T)` `theme_check.gd:156`: koyu temanın kontrast kapısı · `main.gd:235` (`--theme-contrast-audit`); `missing()` `theme_check.gd:44`, `unset_margins()` `:71`, `contrast()` `:83`
 
 ## Sinyaller
-- `dismissed`: modallar yayar (tanım `confirm_modal.gd:13`, `hr_action_modal.gd:16`, `save_load_modal.gd:14`, `settings_modal.gd:16`, `system_menu_modal.gd:18`, `credits.gd:6`, `licenses.gd:8`) · `main.gd:5058,5083,5102,5136` ve menü
-- `confirmed` / `alt_selected`: `confirm_modal.gd:11,12`, `hr_action_modal.gd:15` · `main.gd:5078,5082` (`config.on_confirm`, `on_alt`), `onboarding_flow.gd:177` (iptal onayı)
-- `save_requested(slot_id)` / `load_requested(slot_id)`: `save_load_modal.gd:15,16`; `main_menu.gd:8` yayar · `main.gd:5137,5138` ve `main.gd:133` (`_load_slot` `:4961`)
-- `main_menu_requested` / `exit_save_requested`: `system_menu_modal.gd:19,20` (yayın `:63`, `:93`); `ending_scene.gd:41` · `main.gd:5103,5104,5271`
-- `continue_requested`: `ending_scene.gd:40` (yayın `:445`) · `main.gd:5279` (`_on_milestone_continue`)
-- `closed`: `meeting_panel.gd:19`, `term_sheet_table_scene.gd:17` · `main.gd:5040` (`_close_meeting`), `main.gd:5327` (`_close_term_table`)
+- `dismissed`: modallar yayar (tanım `confirm_modal.gd:13`, `hr_action_modal.gd:16`, `save_load_modal.gd:14`, `settings_modal.gd:16`, `system_menu_modal.gd:18`, `credits.gd:6`, `licenses.gd:8`) · `main.gd:5094,5083,5102,5136` ve menü
+- `confirmed` / `alt_selected`: `confirm_modal.gd:11,12`, `hr_action_modal.gd:15` · `main.gd:5114,5082` (`config.on_confirm`, `on_alt`), `onboarding_flow.gd:177` (iptal onayı)
+- `save_requested(slot_id)` / `load_requested(slot_id)`: `save_load_modal.gd:15,16`; `main_menu.gd:8` yayar · `main.gd:5173,5138` ve `main.gd:133` (`_load_slot` `:4997`)
+- `main_menu_requested` / `exit_save_requested`: `system_menu_modal.gd:19,20` (yayın `:63`, `:93`); `ending_scene.gd:41` · `main.gd:5139,5104,5271`
+- `continue_requested`: `ending_scene.gd:40` (yayın `:445`) · `main.gd:5315` (`_on_milestone_continue`)
+- `closed`: `meeting_panel.gd:19`, `term_sheet_table_scene.gd:17` · `main.gd:5076` (`_close_meeting`), `main.gd:5363` (`_close_term_table`)
 - `new_game_requested`: `main_menu.gd:7` (yayın `:54`) · `main.gd:130` · `finished`: `godot_card.gd:6` (yayın `:35`) · `main.gd:118` · `back`: `licenses.gd:7` · `credits.gd:44`
-- `completed` / `cancelled`: `onboarding_flow.gd:11,12` (yayın `:203`, `:172,177`) · `main.gd:154,155` · `live_ready`: `menu_backdrop.gd:9` (yayın `:138`) · `main.gd:2868`, `onboarding_flow.gd:70`
+- `completed` / `cancelled`: `onboarding_flow.gd:11,12` (yayın `:203`, `:172,177`) · `main.gd:154,155` · `live_ready`: `menu_backdrop.gd:9` (yayın `:138`) · `main.gd:2904`, `onboarding_flow.gd:70`
 - `changed`: `step_base.gd:15` · `onboarding_flow.gd:_mount_step` · `picked(field, value)`: `first_week_doc.gd:7` · `onboarding_flow.gd:_ready` (taslağı yazar, `_refresh`)
 - `open_changed(open)`: `news_ticker.gd:53` (yayın `:108`) · `game_shell.gd:30` (`_lay_ticker`) · `spin_finished`: `radial_dial.gd:9` (yayın `:70`) · `term_sheet_table_scene.gd:72`
 - `clicked` / `hovered(on)`: `meeting_panel_option.gd:9,10` · `meeting_panel.gd:678,679` · `changed(value)`: `meeting_ruler.gd:13` · `meeting_panel.gd:511`
-- EventBus'tan dinlenenler: `tab_changed` (`window_layer.gd:62`, `left_tabs.gd:105`, `research_bar.gd:63`), `language_changed` (`window_layer.gd:67`, `top_bar.gd:110`, `left_tabs.gd:129`, `news_ticker.gd:79`, `system_menu_modal.gd:29`)
-- EventBus'tan dinlenenler (devam): `palette_changed` (`window_layer.gd:66`, `top_bar.gd:111`, `left_tabs.gd:130`, `news_ticker.gd:81`)
-- `event_triggered`/`event_resolved`/`event_set_aside`/`desk_changed` dinleyenler: `top_bar.gd:113-116`, `left_tabs.gd` (Olaylar rozeti), `window_frame.gd:56-58` (salt okunur şerit)
-- TopBar saat: `TimeManager.speed_changed` ve `hold_changed` (`top_bar.gd:120-122`); hız tuşları `EventBus.speed_change_requested` yayar (`top_bar.gd:129`)
-- UI'nin yaydığı EventBus sinyalleri: `tab_changed` (`left_tabs.gd` `_on_tab_button` `:235`, `window_frame.gd` kapatma), `settings_requested` (`left_tabs.gd:95`, `main_menu.gd:56`, `system_menu_modal.gd:39`)
+- EventBus'tan dinlenenler: `tab_changed` (`window_layer.gd:62`, `left_tabs.gd:128`, `research_bar.gd:63`), `language_changed` (`window_layer.gd:67`, `top_bar.gd:109`, `left_tabs.gd:163`, `news_ticker.gd:79`, `system_menu_modal.gd:29`)
+- EventBus'tan dinlenenler (devam): `palette_changed` (`window_layer.gd:66`, `top_bar.gd:110`, `left_tabs.gd:164`, `news_ticker.gd:81`)
+- `event_triggered`/`event_resolved`/`event_set_aside`/`desk_changed` dinleyenler: `top_bar.gd:112-115`, `left_tabs.gd` (Olaylar rozeti), `window_frame.gd:56-58` (salt okunur şerit)
+- TopBar saat: `TimeManager.speed_changed` ve `hold_changed` (`top_bar.gd:119-121`); hız tuşları `EventBus.speed_change_requested` yayar (`top_bar.gd:123`)
+- UI'nin yaydığı EventBus sinyalleri: `tab_changed` (`left_tabs.gd` `_on_tab_button` `:235`, `window_frame.gd` kapatma), `settings_requested` (`left_tabs.gd:118`, `main_menu.gd:56`, `system_menu_modal.gd:39`)
 - UI'nin yaydığı (devam): `confirm_requested` (`settings_modal.gd:269`, `save_load_modal.gd:212`, `system_menu_modal.gd:78`, `term_sheet_table_scene.gd:388`), `save_load_requested`, `palette_changed` (`settings_modal.gd:251,282`)
 
 ## Durum ve veri
@@ -113,7 +115,7 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 - Onboarding `draft` sözlüğü `onboarding_flow.gd:36`: founder_name, portrait_id, origin_id, trait_ids, skill_alloc, company_name, logo, logo_reroll, difficulty, frank_guided; tek doğru kaynak, `initialize_run`a kadar GameState'e yazılmaz
 - `GameState`ten okunanlar: `company_name`, `get_date_dict`, `day`, `phase`, `messages`, `desk_arrivals`, `founder_portrait`, `logo` (ContinueCard `row.meta.logo`), `vc_states`, `active_sheets` (en çok `top_bar.gd`, `inbox.gd`)
 - Kalıcı kullanıcı ayarları `user://settings.json` (`Settings.DEFAULTS` `settings.gd:24`): `window_mode`, `ui_scale`, `colorblind_palette`, `ticker_open`, `master_volume`, `music_*`, `sfx_volume`, `pause_unfocused`, `language`
-- `runs_finished` profil sayacı `Settings` anahtarı, `main.gd:5250`'da artar; Onboarding Zor kipi açılışını buradan okur (`first_week_doc.gd:15`)
+- `runs_finished` profil sayacı `Settings` anahtarı, `main.gd:5286`'da artar; Onboarding Zor kipi açılışını buradan okur (`first_week_doc.gd:15`)
 - Tema sürümü: `UiTokens.THEME_STAMP := 40` `ui_tokens.gd:44`; .tres'in gömülü `UiTokensStamp.stamp` sabiti ile `main.gd:99-100` karşılaştırılır (debug uyarısı)
 - Ürün sol sütunu: ölçüler `D_W_LEFT` 288, `D_BOX_MONO` 24, `D_H_KEY_CAND` 24, `D_W_STAGE_STRIP` 168, `D_H_STAGE_STRIP` 6, `D_PLANNED_ALPHA` (planlı talep), `D_TAKEN_ALPHA` (planlı ya da damgalı aday);
   ↳ aşama bantları `D_ST_DESIGN/DEV/TEST` ve `UiTokens.D_stage(aşama)`.
@@ -155,7 +157,7 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
   ↳ `MonoBox` HR ve posta ile ortaktır.
 - Tema yolu: `UiTokens.MENAJER_THEME` `ui_tokens.gd:450`; proje teması `project.godot` `theme/custom` = `master_theme.tres`; Menajer teması taşınan her alt ağacın köküne ve her CanvasLayer köküne elle atanır
 - Boyut merdiveni: `SIZE_MICRO 9 … SIZE_DISPLAY 22` `ui_tokens.gd:196-203`, editorial `SIZE_ED_*` `:208-212`, koyu `D_FS_12 … D_FS_40` `:603-614`; term sheet sütunu `D_STAGE` `:817`
-- `UiTokens.TABS` `ui_tokens.gd:294`: id sırası = `LeftTabs.tscn` düğme sırası; `lock: "ea"` bu yapıda kilitli sekme; sekme başlığı anahtarı `TAB_` + ID büyük harf (`left_tabs.gd:145`, `window_layer.gd:246`)
+- `UiTokens.TABS` `ui_tokens.gd:294`: id sırası = `LeftTabs.tscn` düğme sırası; `lock: "ea"` bu yapıda kilitli sekme; sekme başlığı anahtarı `TAB_` + ID büyük harf (`left_tabs.gd:179`, `window_layer.gd:246`)
 - Pencere boyları `WindowLayer.SPECS` `window_layer.gd:38` (1920×1080 tabanı), `EDGE 24` `:43`; sekme sahneleri `TAB_SCENES` `:13`; ekran eşiği `DisplaySettings.COMPACT_SHELL_BELOW 1680` `display_settings.gd:72`
 - Kabuk ölçüleri: TopBar 64 px (`TopBar.tscn` custom_minimum_size), NewsTicker 40 px (`NewsTicker.tscn`), katmanlar PanelLayer 9, ModalLayer 10, ToastLayer 11 (`GameShell.tscn`)
 - Önemli sabitler: `Toast` IN 0,2 / HOLD 2,4 / OUT 0,2 sn (`toast.gd:11-13`); `MeetingPanel.DOCK_SHARE 0.34` `meeting_panel.gd:31`; `MainMenu.MENU_OFFICE "city"`, `MENU_MINUTE 1170` `main_menu.gd:13,14`; `GODOT_CARD_S 1.5` `godot_card.gd:8`
@@ -222,14 +224,14 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
   ↳ cetvelde 4); kurulumun düğüm sayısını `ONB|nodes=|tex_mib=` basar, sahne gelince `ONB|stage=live|figure=`; `--theme-audit=onboard:<1|2|3>`, `--inbox-shot=intro`;
   ↳ `project.godot` `main_args`'taki `--skip-onboarding` doğrudan kabuğa geçer; probe onboarding'i atlar (kayıt türü yok)
 - Ortak bayraklar: `--lang=tr|en`, `--shot-size=GxY`, `--shot-scale=1.25`, `--palette=cb` (`main.gd:597`). Kayıt yazan `--modal-shot=save*|load*` ve `--menu-shot` ayrı `APPDATA` ile koşar (CLAUDE.md §12)
-- Debug seam'leri (argsız, MCP): `_dbg_menu_digest()` `main.gd:5383`, `_dbg_close_request()` `:5117`, `_dbg_finish_run()` `:5135`, `_dbg_onb_random_x20()` `:5122`; `kit_probe.gd` `--probe-shot=kit` koyu kitin durumlarını çizer
+- Debug seam'leri (argsız, MCP): `_dbg_menu_digest()` `main.gd:5419`, `_dbg_close_request()` `:5153`, `_dbg_finish_run()` `:5171`, `_dbg_onb_random_x20()` `:5158`; `kit_probe.gd` `--probe-shot=kit` koyu kitin durumlarını çizer
 - CLAUDE.md §10: arayüz doğrulaması smoke'la değil görsel kabulle yapılır; yeni UI smoke vakası yazılmaz
 
 ## Dikkat
 - Yeni `class_name` paylaşılan checkout'ta başka oturumların headless koşusunu düşürür: bu sistemde `window_frame`, `gate_strip`, `inbox`, `toast`, `bar_kit`, `build_bar_model` yol ile `preload` edilir (dosya başlıklarında yazılı)
 - `static func` içinde `tr()` derlenir ama çalışırken ölür (CLAUDE.md §5, `loc_residue`); `Inbox`, `InvestorAppetiteUi`, `UiTokens` `TranslationServer.translate` kullanır
-- Modal yaşam döngüsü: `add_child` SONRA `populate()` (`@onready` ancak o zaman dolu; `main.gd:5085,5140,5251,5273`), kök `process_mode = 3` (ALWAYS, duraklamada da tıklanır), ESC `_unhandled_input` ile kapatır
-- Modal tekilliği `main.gd` alanlarında (`_confirm_modal`, `_settings_modal`, `_system_menu`, `_save_load_modal`): açıkken ikinci istek sessizce düşer; karar beklerken yalnız modalın kendi sorusu geçer (`main.gd:5079`)
+- Modal yaşam döngüsü: `add_child` SONRA `populate()` (`@onready` ancak o zaman dolu; `main.gd:5121,5140,5251,5273`), kök `process_mode = 3` (ALWAYS, duraklamada da tıklanır), ESC `_unhandled_input` ile kapatır
+- Modal tekilliği `main.gd` alanlarında (`_confirm_modal`, `_settings_modal`, `_system_menu`, `_save_load_modal`): açıkken ikinci istek sessizce düşer; karar beklerken yalnız modalın kendi sorusu geçer (`main.gd:5115`)
 - Dil/palet değişiminde: pencereler `WindowLayer._rebuild` ile boşaltılıp yeniden kurulur (`window_layer.gd:156`); modaller (system_menu hariç) canlıyken yeniden çevrilmez; kendi `_retranslate` sahibi `settings_modal.gd:374`
 - Tema üretilmiştir: token ya da `build_theme.gd` değişince `THEME_STAMP` artar ve iki .tres yeniden üretilir (CLAUDE.md §7); ham `Color(...)`/boyut yazılmaz; sahne ve script yalnız yerleşimin sahibidir
 - Menajer teması CanvasLayer ve açılır pencere kalıtımını keser: her katman kökü kendi `theme`ini taşır
@@ -237,11 +239,11 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
   ↳ Krem temadaki koyu yüzeyler gövdeyle değişen her rengi `*_CHROME` ikizinden okur (`ACCENT_CHROME`, `INK_*_CHROME`, `VEIL_*_CHROME`)
 - `BuildBar`/`ResearchBar` teması `BuildHUDPanel` kökünden çözülür (kendi tscn'lerinde yok); EndingScene krem kalır (`EndingScene.tscn`da menajer yok)
 - Hafıza: Godot tema motoru tuzakları (ata tema önceliği, `has_font`, `set_theme(String)` yasağı) `godot-theme-engine-facts.md`; HBox asgari-boyut tuzağı ve `CACHE_MODE_IGNORE` motoru düşürür: `ekip-rev11-closing-round.md`
-- TopBar sütunları TR ve EN'in en geniş değerinden ölçülüdür ve her yazı taban çizgisine konur (`GRID` `top_bar.gd:24`, `_put()` `:401`); yeni metin kalıbı en geniş değeri aşarsa hafta çubuğu kayar. Yenileme `_queue_refresh` ile birleşir
+- TopBar sütunları TR ve EN'in en geniş değerinden ölçülüdür ve her yazı taban çizgisine konur (`GRID` `top_bar.gd:23`, `_put()` `:389`); yeni metin kalıbı en geniş değeri aşarsa hafta çubuğu kayar. Yenileme `_queue_refresh` ile birleşir
   ↳ `_refresh` ızgarayı `GRID[int(_compact)]`'ten kopyalar; RUNWAY hücresi gizliyken (`UiTokens.D_runway_reading().text == ""`) çizgi, ikinci metrik grubu ve gün bloğu onun bıraktığı boşluğu kapatır; `_refresh_brand`, `_refresh_metrics`,
   ↳ `_refresh_day`, `_refresh_gate` ve `_refresh_time` yürürlükteki ızgarayı `_g` alanından okur
-- Hız tuşlarının adları (`PauseBtn`, `Speed1Btn`..`Speed3Btn`) sahnede ve `top_bar.gd:72` `speed_btns` dizisinde sabit; `topbar_speed_cluster_three_rungs` onları okur
-- Ray: `LeftTabs.tscn` düğme sırası `UiTokens.TABS` ile aynı olmalı (`rail_tabs_match_scene_order`); kilit gerekçe satırı yalnız `lock` taşıyan satırlarda `_ready`de eklenir (`left_tabs.gd:76-92`)
+- Hız tuşlarının adları (`PauseBtn`, `Speed1Btn`..`Speed3Btn`) sahnede ve `top_bar.gd:71` `speed_btns` dizisinde sabit; `topbar_speed_cluster_three_rungs` onları okur
+- Ray: `LeftTabs.tscn` düğme sırası `UiTokens.TABS` ile aynı olmalı (`rail_tabs_match_scene_order`); kilit gerekçe satırı yalnız `lock` taşıyan satırlarda `_ready`de eklenir (`left_tabs.gd:99-115`)
 - Karar beklerken (`EventGate.active_id() != ""`) Olaylar dışı her pencere salt okunur: `WindowFrame` sayfa gövdesine tıklamayı keser (`window_frame.gd:106`), `GateStrip` geri yolu verir; pencere ModalLayer'a ASLA konmaz (Space/1-4'ü yutar)
 - Portre: kişi büstü `PersonBust` tek stüdyolu ofscreen SubViewport'tur, kare başına tek portre çizer; başsız modda `null` döner ve avatar baş harflere düşer (`person_bust.gd:38-39`, `ui_factory.gd:123`)
 - Büst önbelleği (look imzası, piksel boyutu) anahtarlıdır (`person_bust.gd:41`): aynı kişi iki boyutta iki ayrı iş kuyruğa girer, doku çizilene kadar boştur

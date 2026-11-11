@@ -57,14 +57,14 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - `EventGate.request` çağıranlar devamı: `sprint_system.gd:987,1102,1232`, `sprint_bridges.gd:199`, `endings_system.gd:121` (SHUTTER_CARD), `main.gd:1161`, `mail_pane.gd:800` (immediate=true, oyuncunun isteği)
 - `EventGate.daily_tick()` `event_gate.gd:171` -> `EvEngine.daily_tick` `engine.gd:68` · `TimeManager` günlük dağıtım, Finans ve Faz kapısından sonra, `IncidentSystem`'den önce (`scripts/autoload/time_manager.gd:417`)
 - `EventGate.hourly_tick(hour)` `event_gate.gd:175` -> `EvEngine.hourly_tick` `engine.gd:90` · `TimeManager._dispatch_hourly_tick`, `MailClock.hourly_tick`'ten sonra (`time_manager.gd:451`)
-- `EvEngine.pump()` `engine.gd:554`: kuyruktaki en önemli kartı §4.4 yeniden doğrulamasından (`EvGate.revalidate`) geçirip gösterir · tik sonu, `resolve`, `clock_batch_ended` (`signals.gd:54`), `main.gd:5231` (yükleme sonrası)
+- `EvEngine.pump()` `engine.gd:554`: kuyruktaki en önemli kartı §4.4 yeniden doğrulamasından (`EvGate.revalidate`) geçirip gösterir · tik sonu, `resolve`, `clock_batch_ended` (`signals.gd:54`), `main.gd:5267` (yükleme sonrası)
 - `EventGate.resolve(id, option)` `event_gate.gd:26` -> `EvEngine.resolve` `engine.gd:613`: seçenek id ya da indeksi; etkiler, geçmiş satırı, ark ilerletme · çağıran: `mail_pane.gd:498`, bot ve smoke
 - `EventGate.open_paper(key)` `event_gate.gd:145` -> `engine.gd:759`, `EventGate.set_aside()` `event_gate.gd:151` -> `engine.gd:785`: masadaki kâğıdı aç ve cevapsız geri koy · `mail_pane.gd:535,548`
 - `EventGate.force_fire(id, ctx)` `event_gate.gd:40` -> `engine.gd:738`: yalnız debug build; G3, G4, G8'i atlar, satırı `forced: true` yazar · smoke ve `main.gd:1200,1419`
 - `EventGate.flush()` `event_gate.gd:136`: bekleyen sahneleri öldürür · `endings_system.gd:481`; `EventGate.reset()` `event_gate.gd:167` · `save_manager.gd:344` (yeni oyun)
 - `EvGate.propose(id, origin, given)` `gate/gate.gd:71`, `EvGate.revalidate` `gate.gd:122`: G1-G8 kapısı · yalnız `EvEngine._propose` (`engine.gd:433`), `EvWhy.report`, `EventGate.condition_*` çağırır
 - `EvEngine.on_signal` `engine.gd:276`: sinyal tamponu, adım (g)'de boşalır · `EvSignals._relay` (`signals.gd:99`); `EvSignals.install()` `signals.gd:50` her `EvCatalog.reload()`'da (`catalog.gd:47`) bağlanır
-- `EvCatalog.ensure_loaded()` `catalog.gd:32` / `reload()` `catalog.gd:37`: kartları ve arkları yükler, seam'leri kurar (`EvSeams.ensure_installed` `seams.gd:39`) · `main.gd:4693` (`_warm_catalogs`)
+- `EvCatalog.ensure_loaded()` `catalog.gd:32` / `reload()` `catalog.gd:37`: kartları ve arkları yükler, seam'leri kurar (`EvSeams.ensure_installed` `seams.gd:39`) · `main.gd:4729` (`_warm_catalogs`)
 - `EvSave.to_dict()` `save.gd:20` / `from_dict()` `save.gd:39` · `save_manager.gd:382,400`; `EvLint.run` `lint.gd:79`, `EvProbe.run` `engine_probe.gd:16`, `EvHarness.run` `harness.gd:84`, `EvWhy.report` `why.gd:28`,
   ↳ `EvVocabGen.run` `vocab_gen.gd:20`
   ↳ `from_dict` geçmişten ve saatten sonra `EvEngine.restore_unannounced()` `engine.gd:683` çağırır:
@@ -72,18 +72,18 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
   ↳ yoksa yüklemede unutulan not yeniden doğrulamasız ve `event_triggered`'siz gelen kutusuna düşerdi
 - Bayrak yönlendirmesi `scripts/main/main.gd:226-251`: `--event-probe`, `--event-lint[=baseline]`, `--event-vocab`, `--why-fire=` (`_run_why_fire`), `--event-harness=`, `--event-plausibility=`,
   ↳ `--event-shot=` (`_run_event_shot` `main.gd:793`)
-- Sunum yolu: `EvPresenter.build_view` `present/presenter.gd:40` -> `EventBus.modal_requested` -> `main.gd:5299` (`hold_clock("event")`, Olaylar kutusu açılır) -> `mail_pane.gd` -> `EventGate.resolve`
+- Sunum yolu: `EvPresenter.build_view` `present/presenter.gd:40` -> `EventBus.modal_requested` -> `main.gd:5335` (`hold_clock("event")`, Olaylar kutusu açılır) -> `mail_pane.gd` -> `EventGate.resolve`
 
 ## Sinyaller
-- `event_triggered(event_id)` `scripts/autoload/event_bus.gd:118`: yayan `core/engine.gd:565` (not geldi), `engine.gd:606` (kart gösterildi) · dinleyen: `top_bar.gd:113`, `left_tabs.gd:111`, `research_bar.gd:60`,
+- `event_triggered(event_id)` `scripts/autoload/event_bus.gd:118`: yayan `core/engine.gd:565` (not geldi), `engine.gd:606` (kart gösterildi) · dinleyen: `top_bar.gd:112`, `left_tabs.gd:134`, `research_bar.gd:60`,
   ↳ `window_frame.gd:56`, `office_hud.gd:58`
-- `event_resolved(event_id, choice_index)` `event_bus.gd:119`: yayan `engine.gd:631` (-1: varlık gitti), `engine.gd:672` · dinleyen: `main.gd:4703` (kapı kapanır), `save_manager.gd:63` (kirli işareti),
+- `event_resolved(event_id, choice_index)` `event_bus.gd:119`: yayan `engine.gd:631` (-1: varlık gitti), `engine.gd:672` · dinleyen: `main.gd:4739` (kapı kapanır), `save_manager.gd:63` (kirli işareti),
   ↳ `incident_system.gd:313`, `sprint_system.gd:1290`, `game_shell.gd:29`
-- `modal_requested(event: GameEvent)` `event_bus.gd:120`: yayan `engine.gd:607` · dinleyen `main.gd:4702` (`_on_event_modal_requested` `main.gd:4734`), `harness.gd:99`
-- `event_set_aside(event_id)` `event_bus.gd:122`: yayan `engine.gd:792` · dinleyen `main.gd:4704`, `save_manager.gd:66`, `top_bar.gd:114`, `left_tabs.gd:113`
-- `desk_changed()` `event_bus.gd:125`: yayan `present/papers.gd:44,49,60,98` ve `systems/mail_clock.gd:72,108` · dinleyen `top_bar.gd:116`, `left_tabs.gd:114`, `product_tab.gd:117` (`_on_desk`)
+- `modal_requested(event: GameEvent)` `event_bus.gd:120`: yayan `engine.gd:607` · dinleyen `main.gd:4738` (`_on_event_modal_requested` `main.gd:4770`), `harness.gd:99`
+- `event_set_aside(event_id)` `event_bus.gd:122`: yayan `engine.gd:792` · dinleyen `main.gd:4740`, `save_manager.gd:66`, `top_bar.gd:113`, `left_tabs.gd:136`
+- `desk_changed()` `event_bus.gd:125`: yayan `present/papers.gd:44,49,60,98` ve `systems/mail_clock.gd:72,108` · dinleyen `top_bar.gd:115`, `left_tabs.gd:137`, `product_tab.gd:117` (`_on_desk`)
 - `module_unlocked(module_id)` `event_bus.gd:135`: yayan yalnız `engine.gd:270` (`_step_module_watch`) · dinleyen kart tetikleri (`EvSignals.BINDINGS`); `goto_tab_requested(tab_id, subpage)` `event_bus.gd:34`:
-  ↳ yayan `effects.gd:543` · dinleyen `main.gd:4705`
+  ↳ yayan `effects.gd:543` · dinleyen `main.gd:4741`
 - Motorun DİNLEDİĞİ sinyaller `EvSignals.BINDINGS` `core/signals.gd:22` (17 ad, izin listesi): customer_added/_health_changed/_churned/_expanded, employee_hired/_departed, promise_broken, version_shipped, build_phase_changed
 - BINDINGS devamı: sheet_expired, sheet_granted, seed_sheet_granted, meeting_day (investor slotu), phase_gate_reached, axis_floor_warning, axis_floor_crossed, module_unlocked;
   ↳ listede olmayan sinyal kartı tetikleyemez (`EvLint._lint_signals` `lint.gd:1136` EventBus'ta var mı diye bakar)

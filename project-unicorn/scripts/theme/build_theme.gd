@@ -704,6 +704,7 @@ func _menajer(master: Theme) -> Theme:
 		[&"KpiValue", sans_sb, T.D_FS_26, T.D_INK_2],
 		[&"PartValueArmed", sans_b, T.D_FS_26, T.D_INK_2],
 		[&"ClockLabel", sans_sb, T.D_FS_22, T.D_INK_2],
+		[&"GoalTitle", sans_sb, T.D_FS_22, T.D_INK_1],   # the goals panel's step the list stands on
 		[&"ValueText", sans_reg, T.D_FS_18, T.D_INK_2],
 		[&"ValueTextStrong", sans_sb, T.D_FS_18, T.D_INK_1],
 		[&"BodyLabel", sans_reg, T.D_FS_16, T.D_INK_2],
@@ -1183,6 +1184,8 @@ func _menajer(master: Theme) -> Theme:
 	_panel(th, &"ChartTip", "Panel", _flat(T.D_SURFACE_4, T.D_RADIUS_2, Vector4.ZERO, T.D_LINE_2))
 	# An open ring: round the locked fund's lock, and a milestone not yet earned.
 	_panel(th, &"LockDisc", "Panel", _flat(clear, T.RADIUS_PILL, Vector4.ZERO, T.D_LINE_2))
+	# The goals ladder's step the list stands on: an ink ring.
+	_panel(th, &"StepNow", "Panel", _flat(clear, T.RADIUS_PILL, Vector4.ZERO, T.D_INK_2, thick))
 	for row in [
 		[&"CardTitle", cond_sb, T.D_FS_15, T.D_INK_2],   # a card's title in its own case: the phase a goal leads to
 		[&"MetaStrong", sans_sb, T.D_FS_14, T.D_INK_1],   # the one name a list stresses: the player's on the ladder

@@ -22,8 +22,16 @@ extends Panel
 #            gate dot instead
 #   rnd      RnDSystem.attention_count() (frozen research + unread report), and one for the tree v1.0
 #            opens until Ar-Ge is opened (this session only, never saved)
+#
+# Above Settings sits the goals row while a goal list is open (ChequeRead): the list's caps name, its count and a
+# segment per step, a revenue step filled to its figure. It opens the goals panel beside the rail and is active
+# while the panel is open; its tooltip is the list and its next step.
 
 const ModuleLocks := preload("res://scripts/systems/module_locks.gd")
+const ChequeRead := preload("res://scripts/systems/cheque_read.gd")
+const INBOX := preload("res://scripts/ui/components/inbox.gd")
+const GoalsPanel := preload("res://scripts/ui/components/goals_panel.gd")
+const GOALS_ICON := "res://assets/icons/world/milestone.svg"
 
 const WIDTH := 184.0
 const WIDTH_ICONS := 64.0
@@ -39,6 +47,16 @@ const LOCK_AT_ICONS := Vector2(38, 28)
 const BADGE_RING := 2
 const DANGER_TABS := ["sales", "finance"]
 const LOCK_ICON := preload("res://assets/icons/util/lock.svg")
+## The goals row. Labelled: the name and count share a band on the top line, the segments where a locked
+## row's reason sits. Icons: the icon higher, the segments under it.
+const GOALS_ICON_Y := 12.0
+const GOALS_ICON_Y_ICONS := 8.0
+const GOALS_NAME_H := 30.0
+const GOALS_SEG_Y := 32.0
+const GOALS_SEG_Y_ICONS := 38.0
+const GOALS_SEG_INSET_ICONS := 12.0
+const GOALS_SEG_H := 4.0
+const GOALS_SEG_GAP := 3.0
 
 @onready var tab_buttons: Array[Button] = [
 	$Margin/Col/ProductBtn,
@@ -57,10 +75,15 @@ const LOCK_ICON := preload("res://assets/icons/util/lock.svg")
 var current_tab_idx: int = -1  # -1 = hiçbir sekme açık değil, pencere yok
 var _hr_danger := false        # someone on the team may leave: Ekip's count is red
 var _rnd_new := false          # v1.0 shipped and Ar-Ge not opened since: one more on its count
+var _goals_btn := Button.new()
+var _goals_panel: Control = null
+var _goal_fill: Array[float] = []   # each step's segment, 0 to 1
+var _goals_queued := false
 
 
 func _ready() -> void:
-	for btn: Button in tab_buttons + [settings_btn]:
+	_build_goals_row()
+	for btn: Button in tab_buttons + [_goals_btn, settings_btn]:
 		var mark := Panel.new()
 		mark.name = "Mark"
 		mark.theme_type_variation = &"RailMark"
@@ -124,6 +147,17 @@ func _ready() -> void:
 	# v1 yayını Ar-Ge ağacını açar; kayıt yüklemesi her sayacı birden değiştirir.
 	EventBus.build_phase_changed.connect(_refresh_badges.unbind(1))
 	EventBus.game_loaded.connect(_refresh_badges.unbind(1))
+	# Hedef listesinin adımları bunlarla ilerler; haftanın tiki gerisini toplar.
+	EventBus.sprint_planned.connect(_queue_goals)
+	EventBus.sprint_started.connect(_queue_goals)
+	EventBus.version_shipped.connect(_queue_goals)
+	EventBus.customer_added.connect(_queue_goals)
+	EventBus.customer_removed.connect(_queue_goals)
+	EventBus.mrr_changed.connect(_queue_goals)
+	EventBus.phase_changed.connect(_queue_goals)
+	EventBus.event_resolved.connect(_queue_goals)
+	EventBus.day_advanced.connect(_queue_goals)
+	EventBus.game_loaded.connect(_queue_goals)
 	_refresh_badges()
 	get_viewport().size_changed.connect(_paint)
 	EventBus.language_changed.connect(_paint.unbind(1))
@@ -136,7 +170,7 @@ func _ready() -> void:
 ## Every row's look from its state and the rail's mode (labelled or icons, by logical width; the
 ## same threshold as the top bar's compact mode).
 func _paint() -> void:
-	var icons: bool = get_viewport_rect().size.x < DisplaySettings.COMPACT_SHELL_BELOW
+	var icons: bool = _icons()
 	custom_minimum_size.x = WIDTH_ICONS if icons else WIDTH
 	for i in tab_buttons.size():
 		var id: String = String(UiTokens.TABS[i].id)
@@ -162,6 +196,115 @@ func _paint() -> void:
 		name_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER if locked else Control.SIZE_FILL
 		name_label.custom_minimum_size.y = name_label.get_line_height() + reason.get_line_height() if locked else 0.0
 	_paint_row(settings_btn, "TAB_SETTINGS", "idle", icons)
+	_paint_goals(icons)
+
+
+func _icons() -> bool:
+	return get_viewport_rect().size.x < DisplaySettings.COMPACT_SHELL_BELOW
+
+
+func _build_goals_row() -> void:
+	_goals_btn.focus_mode = Control.FOCUS_NONE
+	_goals_btn.custom_minimum_size.y = settings_btn.custom_minimum_size.y
+	_goals_btn.pressed.connect(_toggle_goals)
+	var icon := UiFactory.make_glyph(GOALS_ICON, int(settings_btn.get_node("Stack/Icon").custom_minimum_size.x),
+		UiTokens.D_INK_4)
+	icon.name = "Icon"
+	var segs := Control.new()
+	segs.name = "Segs"
+	segs.draw.connect(_draw_goal_segs.bind(segs))
+	var parts: Array[Control] = [icon, segs]
+	for label_name: String in ["Name", "Count"]:
+		var label := UiFactory.make_label("", &"NavLabel")
+		label.name = label_name
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT if label_name == "Count" else HORIZONTAL_ALIGNMENT_LEFT
+		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		parts.append(label)
+	for part in parts:
+		part.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_goals_btn.add_child(part)
+	$Margin/Col.add_child(_goals_btn)
+	$Margin/Col.move_child(_goals_btn, settings_btn.get_index())
+
+
+func _queue_goals(_a = null, _b = null) -> void:
+	if not _goals_queued:
+		_goals_queued = true
+		_paint_goals.call_deferred(_icons())
+
+
+func _paint_goals(icons: bool) -> void:
+	_goals_queued = false
+	var goal: Dictionary = ChequeRead.summary()
+	_goals_btn.visible = not goal.is_empty()
+	if goal.is_empty():
+		if _goals_panel != null:
+			_goals_panel.queue_free()
+		return
+	var open: bool = _goals_panel != null
+	_goals_btn.theme_type_variation = &"RailRowActive" if open else &"RailRow"
+	_goals_btn.get_node("Mark").visible = open
+	_goals_btn.tooltip_text = INBOX.goal_head(goal) if goal.next.is_empty() \
+		else tr("GOAL_ROW_TIP").format({"head": INBOX.goal_head(goal), "next": INBOX.goal_next(goal)})
+	var icon: TextureRect = _goals_btn.get_node("Icon")
+	icon.modulate = UiTokens.D_INK_2 if open else UiTokens.D_INK_4
+	icon.position = Vector2((WIDTH_ICONS - icon.custom_minimum_size.x) / 2.0, GOALS_ICON_Y_ICONS) if icons \
+		else Vector2(STACK_LEFT, GOALS_ICON_Y)
+	var text_left: float = STACK_LEFT + icon.custom_minimum_size.x + UiTokens.SPACE_L
+	for part in [["Name", Fmt.upper(tr("GOALS_TITLE"))],
+			["Count", tr("FIN_GOAL_PROGRESS").format({"met": goal.done, "total": goal.total})]]:
+		var label: Label = _goals_btn.get_node(part[0])
+		label.visible = not icons
+		label.theme_type_variation = &"NavLabelActive" if open else &"NavLabel"
+		label.text = part[1]
+		_span(label, text_left, STACK_RIGHT, 0.0, GOALS_NAME_H)
+	var segs: Control = _goals_btn.get_node("Segs")
+	if icons:
+		_span(segs, GOALS_SEG_INSET_ICONS, GOALS_SEG_INSET_ICONS, GOALS_SEG_Y_ICONS, GOALS_SEG_Y_ICONS + GOALS_SEG_H)
+	else:
+		_span(segs, text_left, STACK_RIGHT, GOALS_SEG_Y, GOALS_SEG_Y + GOALS_SEG_H)
+	_goal_fill.clear()
+	for step: Dictionary in ChequeRead.steps():
+		_goal_fill.append(1.0 if step.done else (clampf(float(step.value) / float(step.target), 0.0, 1.0)
+			if step.has("target") else 0.0))
+	segs.queue_redraw()
+	if open:
+		_goals_panel.paint()
+
+
+## `part` spans the row from `left` to `right` short of its right edge, between `top` and `bottom`.
+func _span(part: Control, left: float, right: float, top: float, bottom: float) -> void:
+	part.anchor_left = 0.0
+	part.anchor_right = 1.0
+	part.offset_left = left
+	part.offset_right = -right
+	part.offset_top = top
+	part.offset_bottom = bottom
+
+
+func _draw_goal_segs(segs: Control) -> void:
+	var n: int = _goal_fill.size()
+	var w: float = (segs.size.x - (n - 1) * GOALS_SEG_GAP) / n
+	var ink: Color = UiTokens.D_INK_2 if _goals_panel != null else UiTokens.D_INK_3
+	for i in n:
+		var x: float = i * (w + GOALS_SEG_GAP)
+		segs.draw_rect(Rect2(x, 0, w, segs.size.y), UiTokens.D_LINE_2)
+		segs.draw_rect(Rect2(x, 0, w * _goal_fill[i], segs.size.y), ink)
+
+
+## The goals panel opens on the shell's panel layer and closes itself (its close, Esc, a tab opening); the
+## row follows it.
+func _toggle_goals() -> void:
+	if _goals_panel != null:
+		_goals_panel.queue_free()
+		return
+	_goals_panel = GoalsPanel.new(self, settings_btn)
+	_goals_panel.tree_exited.connect(func() -> void:
+		_goals_panel = null
+		if is_inside_tree():
+			_paint_goals(_icons()))
+	get_tree().get_root().find_child("PanelLayer", true, false).add_child(_goals_panel)
+	_paint_goals(_icons())
 
 
 func _paint_row(btn: Button, key: String, state: String, icons: bool) -> void:

@@ -100,7 +100,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
   ↳ smoke `sprint_timeline_matches_play_out`) · `SprintCatalog.lead_suggestion`, `ProductModel._center`
 - `SprintCatalog.row_of()/due()` `sprint_catalog.gd:122`/`:320`: çalışanın kapasite satırı; kartın söz ya da talep son tarihi, müşterisi ve değeri · `SprintTimeline`, `ProductModel._row`
 - `SprintSystem.plan_outcome()/mvp_eta()/team()/payers()` `sprint_system.gd:772`/`:802`/`:703`/`:725`: plan önizlemesi, MVP tahmini, ekip, bedel ödeyenler · ProductModel, effects.gd
-- `SprintCatalog.cfg()` `scripts/systems/sprint_catalog.gd:29`: sprint.json okuması (yoksa yükler) · yaklaşık her sistem; `load_data()` :23 → `main.gd:4694`
+- `SprintCatalog.cfg()` `scripts/systems/sprint_catalog.gd:29`: sprint.json okuması (yoksa yükler) · yaklaşık her sistem; `load_data()` :23 → `main.gd:4730`
 - `SprintCatalog.candidates()` `sprint_catalog.gd:194`: alanın aday kartları (feat:/req:/plan:/fix:/res:) · ProductModel, `SprintSystem`
 - `SprintCatalog.lead_suggestion()/pm_plans()` `sprint_catalog.gd:526`/`:677`: lider `{this, next}` (bu sprint, sonraki sütun) ve PM planı (`_suggest` :1007); PM planı Ürün puanından bağımsız tam kart taşır · `apply_lead`, ÇEYREK
 - `SprintCatalog._lead_picks()` `sprint_catalog.gd:549`: iki sütunun ortak alım döngüsü; sütunda tavan `room` = kapasite − sütunun kalanı − `SprintSystem.carried_points` `sprint_system.gd:817` · `lead_suggestion`
@@ -124,7 +124,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `ProductQuality.fit()/close_chance()/account_fit()` `scripts/systems/product_quality.gd:261`/`:233`/`:246`: uyum U ve kapanış ihtimali · `b2b_sales_system.gd:169`, `sales_system.gd:222`
 - `ProductQuality.lowest(alanlar, oranlar)` `product_quality.gd:389`: `alanlar` içinde oranı en düşük alan (eşitlikte öndeki, oranı olan alan yoksa "") · `weakest_area`, `fit_from_levels`, `ProductRead.worst_floor`
 - `LineGates.evaluate()/is_unlocked()/unmet_parts()` `scripts/systems/line_gates.gd:65`/`:88`/`:95`: kademe kapısı · `product_read.gd:79`, `sprint_catalog.gd:296`, `b2b_sales_system.gd:609`
-- `ModuleLocks.is_open()/ids()` `scripts/systems/module_locks.gd:21`/`:17`: sekme açık mı · `left_tabs.gd:258`, `events/core/delays.gd:108`, `seams_world.gd:148`
+- `ModuleLocks.is_open()/ids()` `scripts/systems/module_locks.gd:21`/`:17`: sekme açık mı · `left_tabs.gd:401`, `events/core/delays.gd:108`, `seams_world.gd:148`
 - `InfraSystem.daily_tick()` `scripts/systems/infra_system.gd:244`: faturayı "servers" burn kalemine yazar, hizmet edilen geçmişini tutar · `time_manager.gd:396`
 - `InfraSystem.set_provider()/adjust_capacity()/auto_adjust()` `infra_system.gd:178`/`:204`/`:214`: oyuncu kararları ve otomatik ayar · `product_tab.gd:316-320`, `time_manager.gd:445`
 - `InfraSystem.is_economy()` `infra_system.gd:83`: seçili sağlayıcı Ekonomik mi; satış masasının `provider_not_economy` olgusunun, kayıp engelinin ve `report_inflow_multiplier`'ın tek okuması · `sales_probes.gd`,
@@ -139,32 +139,32 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `RnDSystem.drop_assignee()` `rnd_system.gd:335`: kişi işten çekilince atamadan düşer · `character_registry.gd:253`, `:309`
 - `RnDSystem.node_completed()` `rnd_system.gd:677`: düğüm bitti mi · `ResearchSeam.completed` (`research_seam.gd:64`) · Ürün, Destek, Satış, Altyapı
 - `RnDSystem.to_dict()/from_dict()` `rnd_system.gd:759`/`:787`: kayıt; `from_dict` sonda `restore_hidden_lines` (:507) çağırır · `save_manager.gd:380`, `:398`
-- `RnDSystem.pending_note()/mark_note_read()` `rnd_system.gd:647`/`:652`: aylık ürün notu · `ui/components/inbox.gd:199`, `main.gd:2524`
+- `RnDSystem.pending_note()/mark_note_read()` `rnd_system.gd:647`/`:652`: aylık ürün notu · `ui/components/inbox.gd:199`, `main.gd:2560`
 - `ResearchTree.ensure_loaded()` `scripts/systems/research_tree.gd:68`: `rnd_tree.json` yükler ve doğrular · her erişimci; hata `load_errors()` :85
 
 ## Sinyaller
 
-- `sprint_planned`: yayan `sprint_system.gd:62`,`:205` · top_bar.gd:124
-- `sprint_started`: yayan `sprint_system.gd:175` · top_bar.gd:125, office_people.gd:93
+- `sprint_planned`: yayan `sprint_system.gd:62`,`:205` · left_tabs.gd:151
+- `sprint_started`: yayan `sprint_system.gd:175` · left_tabs.gd:152, office_people.gd:93
 - `sprint_closed`: yayan `sprint_system.gd:1511` · `scripts/main/game_shell.gd:23`
 - `card_phase_changed`, `card_done`: yayan `sprint_system.gd:1091`, `:1095` · dinleyen yok
 - `card_carried_over`: yayan `sprint_system.gd:401`,`:1505` · dinleyen yok
 - `card_decision_requested`: yayan `sprint_system.gd:1235` · yalnız smoke/probe
 - `sprint_auto_started`: yayan `sprint_system.gd:1659` · dinleyen yok
 - `product_state_changed`: yayan `sprint_system.gd:1850` (`_changed`) · product_tab.gd:117, build_bar.gd:46
-- `version_shipped`: yayan `sprint_system.gd:316`,`:1508` · left_tabs.gd:132, top_bar.gd:126; olay motoru `scripts/events/core/signals.gd:30`
-- `build_phase_changed("shipped")`: yayan `sprint_system.gd:315`,`:1507` · promise_registry.gd:15, left_tabs.gd:125; olay tetiği (`funding.frank_v1`)
+- `version_shipped`: yayan `sprint_system.gd:316`,`:1508` · left_tabs.gd:153,:166; olay motoru `scripts/events/core/signals.gd:30`
+- `build_phase_changed("shipped")`: yayan `sprint_system.gd:315`,`:1507` · promise_registry.gd:15, left_tabs.gd:148; olay tetiği (`funding.frank_v1`)
 - `line_upgraded`, `line_completed`, `delighter_shipped`: yayan `sprint_system.gd:1442`, `:1444`, `:1445` · dinleyen yok
 - `build_progress_changed`: yayan `product_state.gd:203`,`:213` · product_tab.gd:118, build_bar.gd:44, build_hud_panel.gd:52
 - `line_bugs_cleared`: yayan `product_state.gd:214` · yalnız smoke/run_probe
 - `infra_changed`: yayan `product_state.gd:303`,`:311`,`:322`,`:353`,`:367` · product_tab.gd:121
 - `bug_confirmed`, `unconfirmed_threshold_crossed`: yayan `product_read.gd:155`, `:158` · yalnız smoke
 - `axis_floor_warning`, `axis_floor_crossed`: yayan `product_read.gd:165`, `:167` · olay motoru (`signals.gd:37-38`; `b2c_floor_signal`, `b2c_floor_churn`)
-- `research_started`: yayan `rnd_system.gd:279` · left_tabs.gd:118, research_bar.gd:49
-- `research_completed`: yayan `rnd_system.gd:462` · left_tabs.gd:119, research_bar.gd:50
-- `research_frozen`, `research_resumed`: yayan `rnd_system.gd:145`, `:147` · left_tabs.gd:120-121, research_bar.gd:51-52
+- `research_started`: yayan `rnd_system.gd:279` · left_tabs.gd:141, research_bar.gd:49
+- `research_completed`: yayan `rnd_system.gd:462` · left_tabs.gd:142, research_bar.gd:50
+- `research_frozen`, `research_resumed`: yayan `rnd_system.gd:145`, `:147` · left_tabs.gd:143-144, research_bar.gd:51-52
 - `node_revealed`, `hidden_line_unlocked`: yayan `rnd_system.gd:481`, `:502` · dinleyen yok
-- `product_note_read`: yayan `rnd_system.gd:659` · left_tabs.gd:123; `product_note_issued` MessageSystem'den (`message_system.gd:60`) · main.gd:4711
+- `product_note_read`: yayan `rnd_system.gd:659` · left_tabs.gd:146; `product_note_issued` MessageSystem'den (`message_system.gd:60`) · main.gd:4747
 - `research_progress_changed`: yayan `time_manager.gd:400` · research_bar.gd:48, build_hud_panel.gd:53
 - `headline_added`, `ticker_live_line`, `mentor_advisory_changed`: yayan `sprint_bridges.gd:117`, `:89`, `:134` · haber bandı ve Frank satırı
 - `module_unlocked`: yayan `scripts/events/core/engine.gd:270` (`EvDelays.module_openings`, ModuleLocks'u okur) · olay motoru `signals.gd:41`
@@ -312,7 +312,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
   ↳ `server_final` Kurumsal'dayken alt kademeler kilitli (imleç Ekonomik'te), `server_clause` tek hesap 3★ ve sözleşmesinde sunucu maddesi açık (bloğun altında "Kurumsal sunucu bekleyen 1 hesap" etiketi),
   ↳ `server_lock` 10 haftalık sunucu sözleşmesi sürüyor (kademeler ve Azalt kapalı, ipucu sözleşmenin gerekçesi; imleç Azalt'ta), `server_b2c` not uygulaması,
   ↳ 12.400 kullanıcı 13 birimde (%96)
-- `live:a4_*` sprint ekranının kare dünyalarıdır (32 tür; `_seed_product_a4` `main.gd:4577`, tablo `_A4_WORLDS` `:4536`): kurucu tek başına ERP'yi v1.0'a oynar, kadro sonra işe alınır, hesaplar imzalanır, önceki sprintler oynanır;
+- `live:a4_*` sprint ekranının kare dünyalarıdır (32 tür; `_seed_product_a4` `main.gd:4613`, tablo `_A4_WORLDS` `:4572`): kurucu tek başına ERP'yi v1.0'a oynar, kadro sonra işe alınır, hesaplar imzalanır, önceki sprintler oynanır;
   ↳ her tür kurulunca `PRODUCTSHOT|kind=|cards=|people=|row_gaps=|now=` basar; `row_gaps` zaman ekseninin bütün kart satırlarındaki boşluk sayısıdır (`SprintTimeline.row_gaps`, smoke'un Z3'üyle aynı işlev),
   ↳ `now` koşan sprintte şimdiki an (sprint başından hafta, değilse 0);
   ↳ plan kartları `SprintCatalog.card_need` ile ekibin kapasitesinin bir katına büyütülür (`load`: altı kişide 1,15, on bir kişide 1,25, on iki geliştiricide 1,3, on dört kartta 1,6),

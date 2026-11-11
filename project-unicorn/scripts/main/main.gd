@@ -2234,6 +2234,10 @@ func _seed_goal(state: String) -> void:
 # untyped and cheque open on the goal lists' week 1 (_seed_goal), not the theme seed: untyped before a type is
 # picked; cheque the type picked (_01), then the first sprint started (_02). v1 is the founder alone on the MVP gate
 # (_seed_product_live's gate), v1.0 published (_01), then Ar-Ge opened (_02).
+# goals, goals_step and goals_seed open on the goal lists' week 1 too, Frank's advice delivered: goals is Frank's cheque
+# at 4/5 (shipped, one account at $1.2K of the revenue bar), goals_step at 1/5 (the next step has no figure), goals_seed
+# the seed list at 0/2; the rail's goals row (_01) and its tip (_01_tip), then its panel open (_02) and Frank's tip
+# (_02_tip).
 # card_ishani / card_home (city only) = the company still in the flat, İş hanı's / the flat's card
 # open; card_over (city only) = the same flat with fourteen on the roster, İş hanı's card telling a team of fifteen what
 # thirteen desks mean; card_here (city only) = the company in İş hanı, its own card (desks taken, rent); card_tick (city
@@ -2253,6 +2257,14 @@ func _run_office_shot(spec: String) -> void:
 	match extra:
 		"untyped": _seed_goal("untyped")
 		"cheque": _seed_goal("typed")
+		"goals", "goals_step", "goals_seed":
+			_seed_goal({"goals": "cheque", "goals_step": "typed", "goals_seed": "seed"}[extra])
+			if extra == "goals":
+				GameState.set_flag("mvp_shipped", true)
+				_shot_customer("co_goals", "Kaya Lojistik", "logistics", "healthy", 1200, 8, 2, false)   # LOC-DATA debug seed / name
+				SalesSystem.reflect_mrr()
+			EventBus.mentor_advisory_changed.emit("FRANK_ADVISORY_MEETING_SET", {})
+			GameState.mentor_line_at = -1   # delivered: the shot's hour may sit before its arrival
 		"v1":
 			_seed_run_reproducible()
 			_seed_product_live("gate")
@@ -2286,6 +2298,30 @@ func _run_office_shot(spec: String) -> void:
 			pass
 		"cheque":
 			await _shot_step("office_shot_%s_%02d_cheque" % [office_id, hour], func() -> void: SprintSystem.start())
+			return
+		"goals", "goals_step", "goals_seed":
+			# The pointer rests on the row (its tip, _01_tip); the row is pressed and the pointer leaves for the office
+			# (_02), then rests on Frank's face (_02_tip).
+			var stem := "office_shot_%s_%02d_%s" % [office_id, hour, extra]
+			var point := func(target: Control) -> void:
+				var move := InputEventMouseMotion.new()
+				move.position = target.get_global_rect().get_center()
+				move.global_position = move.position
+				get_viewport().push_input(move, true)
+			var row: Button = _shell.get_node("LeftTabs")._goals_btn
+			await get_tree().create_timer(1.2).timeout
+			_save_shot(stem + "_01")
+			point.call(row)
+			await get_tree().create_timer(1.2).timeout
+			_save_shot(stem + "_01_tip")
+			row.pressed.emit()
+			point.call(_shell.get_node("CenterViewport"))
+			await get_tree().create_timer(0.5).timeout
+			_save_shot(stem + "_02")
+			for face: TextureRect in _shell.get_node("PanelLayer").find_children("*", "TextureRect", true, false):
+				if face.tooltip_text != "":
+					point.call(face)
+			await _finish_shot(stem + "_02_tip", 1.2)
 			return
 		"v1":
 			# The gate's Yayınla once the shell is up: the rail hears v1.0 as in the game.
