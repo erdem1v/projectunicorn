@@ -1,4 +1,30 @@
-# Üç oturumun ortak çalışma kuralları
+# Oturumların ortak çalışma kuralları
+
+## 0. 2026-11-11 turu (bu bölüm aşağıdakilerin önüne geçer)
+
+Dört oturum aynı klasörde, aynı depoda, aynı makinede **aynı anda** koşar. Yardımcı yönetmen `co-director`'dır.
+
+| Etiket | Oturum adı | Görev yazısı |
+|---|---|---|
+| URUN_ARAYUZU | `project-unicorn-36` (15e4f65e) | `GOREV_URUN_2026-11-11.md` |
+| OLAYLAR | `project-unicorn-03` (dd6f551f) | `GOREV_OLAYLAR_2026-11-11.md` |
+| ARAYUZ | `project-unicorn-07` (9cc4cfec) | `GOREV_ARAYUZ_2026-11-11.md` |
+| DUZELTME | `project-unicorn-8e` (95564dcd) | `GOREV_DUZELTME_2026-11-11.md` |
+
+- **Monitör kuralı (Erdem):** oyun 1 numaralı monitörde (Godot ekran 0, birincil, 2560×1440) **asla** açılmaz. Her pencereli
+  Godot koşusu `--screen 1` (Erdem'in 2 numaralı monitörü, sağda) ya da `--screen 2` (3 numaralı, solda) alır. MCP ya da editör
+  başlatması bu bayrağı veremiyorsa kullanılmaz. Paylaşılan ağaçta yerel bir `override.cfg` pencereyi ekran 1'e sabitler;
+  git'e girmez, kopyalara gelmez, silinmez.
+- **Yeniden kurma sürerken:** yardımcı yönetmenin iş akışı Mac'te kaybolan D4a, D4b ve olay kareleri düzeltmesini doğrudan
+  paylaşılan ağaçta kuruyor ve `kapi` kilidini tutuyor. Bu sırada pencereli koşular `--screen 2` alır (yeniden kurma ekran 1'i
+  kullanıyor). Commit yok. Kendi kopyanda çalış. "YENIDEN-KURMA bitti" mesajıyla kilit kalkar.
+- §1–8 geçerlidir: kopya, özel index, karşılaştırmalı commit, kilitler, kendi APPDATA. §2'deki tabloya şunlar eklenir:
+  - ARAYUZ: `scripts/ui/components/top_bar.gd`, `left_tabs.gd`, `scripts/systems/cheque_read.gd`, hedef paneli ve Yardım
+    sekmesinin yeni dosyaları.
+  - DUZELTME: `scripts/systems/sales_ledger.gd`, `work_hours_system.gd`, `scripts/tabs/sales_tab.gd`,
+    `scripts/data_models/customer.gd`, `scripts/systems/hr_constants.gd`, `scripts/autoload/character_registry.gd`,
+    `scripts/tabs/hr/**`, `assets/icons/**` (yalnız `assets/icons/product/` modül ikonları URUN_ARAYUZU'nundur).
+- Yeni kişi `docs/tasks/faz_cde/...` kirli dosya listesini (§3 sonu) yok sayar; o dosyalar artık izleniyor ve temiz.
 
 2026-10-26 · Yazan: yardımcı yönetmen (oturum `co-director`) · Üç görev aynı klasörde, aynı git deposunda ve aynı makinede
 **aynı anda** koşar:
