@@ -18,6 +18,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - `scripts/debug/loc_residue.gd` (265): `-s` betiği; Türkçe literal, CSV'de olmayan sahne metni, statikte `tr()` arar, vuruşta sıfır dışı çıkar
 - `scripts/debug/glyph_audit.gd` (109): `-s` betiği; oyunun çizebileceği her karakteri (`scripts/debug` ve `scripts/events/tools` dışı) yüz ve zincirlere sorar, eksiği `GLYPH|MISS` basar
 - `scripts/debug/write_licenses.gd` (58): `-s` betiği; `export_build.sh`in çağırdığı, exe yanına `LICENSES/` yazar
+- `scripts/debug/k0_check.gd` (110): `K0Check`, `--k0-check`; tek açılışta gönderilen kartların bağlantısı: her fiilin `EvEffects._apply`'da gerçek kolu, kart gövdesinde dolmayan yer tutucu yok (`card_body_tokens_resolve` iki dilde), CSV'de ve kart metninde `PH:` yok; `K0 PASS|FAIL`, kolsuz sözlük fiilleri `K0 INFO`
 - `scripts/events/tools/` (7 dosya, olay sistemi haritasında ayrıntılı): `EvProbe`, `EvLint`, `EvWhy`, `EvHarness`, `EvVocabGen`, `plausibility.gd`, `plausibility_main.gd`
 - `tools/smoke_run.sh` (80): bir vakayı ya da `--all`ı koşar; motor hatası basan vakayı düşürür, `# EXPECT-ERROR` bağışını okur
 - `tools/run_gate.sh` (51): oynanan üç koşu (`full_run`, `full_run_b2c`, `full_run_vc_cautious`) bir sonla ve sıfır hata satırıyla bitmeli

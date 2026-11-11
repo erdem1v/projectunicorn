@@ -234,6 +234,7 @@ func _run_debug_harness() -> bool:
 		"--display-check": _run_display_check,
 		"--backdrop-probe": _run_backdrop_probe.bind(MAIN_MENU_SCRIPT.MENU_OFFICE, MAIN_MENU_SCRIPT.MENU_MINUTE),
 		"--theme-contrast-audit": func() -> void: _quit_with(load("res://scripts/theme/theme_check.gd").contrast_audit(load(UiTokens.MENAJER_THEME), UiTokens)),
+		"--k0-check": func() -> void: _quit_with(K0Check.run()),
 	}
 	for flag in bare:
 		if flag in cmdline:
