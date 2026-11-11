@@ -512,7 +512,6 @@ static func ending_title(ending_id: String) -> String:
 	return TranslationServer.translate("END_META_%s_TITLE" % ending_id.to_upper())
 
 
-## Frank's closing line for an ending. His approved bankruptcy line counts the shutter in days.
+## Frank's closing line for an ending. His bankruptcy line names the shutter's length in weeks.
 static func ending_frank_line(ending_id: String) -> String:
-	return TranslationServer.translate("END_META_%s_FRANK" % ending_id.to_upper()).format(
-		{"days": int(TimeModel.days(TimeModel.ticks(SHUTTER_WEEKS)))})
+	return TranslationServer.translate("END_META_%s_FRANK" % ending_id.to_upper()).format({"weeks": SHUTTER_WEEKS})

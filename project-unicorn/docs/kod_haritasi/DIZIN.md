@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git f2aa06cf · 2026-11-11 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 39dc97c6 · 2026-11-11 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -155,7 +155,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/onboarding/steps/origin_traits_step.gd · 332 · - · OnboardingStep · 0 sinyal · 18 func
 - scripts/onboarding/steps/step_base.gd · 118 · OnboardingStep · Control · 1 sinyal · 10 func
 
-### scripts/systems/ (72 dosya, 24636 satır)
+### scripts/systems/ (72 dosya, 24635 satır)
 - scripts/systems/angel_round_system.gd · 52 · AngelRoundSystem · RefCounted · 0 sinyal · 1 func
 - scripts/systems/b2b_constants.gd · 291 · B2BConstants · RefCounted · 0 sinyal · 9 func
 - scripts/systems/b2b_sales_system.gd · 695 · B2BSalesSystem · RefCounted · 0 sinyal · 45 func
@@ -165,7 +165,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/systems/customer_rep_system.gd · 380 · CustomerRepSystem · RefCounted · 0 sinyal · 19 func
 - scripts/systems/display_settings.gd · 350 · DisplaySettings · RefCounted · 0 sinyal · 27 func
 - scripts/systems/endings_copy.gd · 539 · EndingsCopy · RefCounted · 0 sinyal · 31 func
-- scripts/systems/endings_system.gd · 518 · EndingsSystem · RefCounted · 0 sinyal · 28 func
+- scripts/systems/endings_system.gd · 517 · EndingsSystem · RefCounted · 0 sinyal · 28 func
 - scripts/systems/finance_system.gd · 329 · FinanceSystem · RefCounted · 0 sinyal · 22 func
 - scripts/systems/founder_constants.gd · 197 · FounderConstants · RefCounted · 0 sinyal · 9 func
 - scripts/systems/graphics_settings.gd · 211 · - · RefCounted · 0 sinyal · 14 func
