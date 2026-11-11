@@ -872,7 +872,8 @@ func _run_event_shot(spec: String) -> void:
 		_lengthen_shot_names(scope, ctx)
 	print(_event_shot_lines(card, ctx, without_where))
 	_shot_pane(event_id, ctx, EvPresenter.freeze_seams(card, ctx))
-	await get_tree().process_frame
+	if not await _faces_drawn("[EventShot] " + spec):
+		return
 	await _finish_shot("event_shot_%s" % spec.replace(":", "_"), 0.35)
 
 
@@ -4532,7 +4533,6 @@ const _A4_FIFTY := "p5 p4 p2 d4 d3 d3 d3 d2 d2 d3:training d4:research " \
 	+ "v5 v5 v4 v4 v4 v4 v4 v4 v3 v3 v3 v3 v3 v3 v2 v2 v2 v2 v2 v3:training v2:training v2:training v3:leave " \
 	+ "v3:support v3:support v2:support v2:support t4 t4 t3 t3 t3 t3 t2 t2 t2 t2:training t3:support t2:support"
 const _A4_PREP := {"fill": "over", "queue": 2}
-const _A4_FACE_FRAMES := 1200   # PersonBust draws a portrait every few frames; fifty faces fit well within
 const _A4_WORLDS := {
 	"a4_solo": {"pre": true, "sit": ["vc"]},
 	"a4_devs3": {"crew": "v3 v4 v2", "off": true},
@@ -4740,6 +4740,20 @@ func _a4_week() -> void:
 	GameState.start_work_week()
 
 
+const _FACE_FRAMES := 1200   # PersonBust draws a portrait every few frames; fifty faces fit well within
+
+
+## Waits until every portrait handed out is drawn (PersonBust draws them a few frames apart, so a fast machine reaches the
+## save before the face); false, with the shot failed, when they are still drawing after _FACE_FRAMES frames.
+func _faces_drawn(what: String) -> bool:
+	for _f in _FACE_FRAMES:
+		await get_tree().process_frame
+		if not PersonBust.drawing():
+			return true
+	_shot_fail("%s: faces still drawing after %d frames, frame not saved" % [what, _FACE_FRAMES])
+	return false
+
+
 ## live:a4_* once the tab is mounted: a4_six_hover's hover ghost with its module open in the left column and the board scrolled to
 ## the ghost under the plan (a4_requests opens its first request's module), every face drawn (a frame with empty faces is not
 ## saved, the run fails), then the line the frames' gates read (`row_gaps` counts the gaps of every card row of the timeline).
@@ -4752,12 +4766,7 @@ func _product_a4_ready(kind: String) -> bool:
 		page._set_ui(open[0].id, "hover_card")
 	elif kind == "a4_requests":
 		page._set_ui(ProductModel.live().requests[0].module_id, "open_area")
-	for _f in _A4_FACE_FRAMES:
-		await get_tree().process_frame
-		if not PersonBust.drawing():
-			break
-	if PersonBust.drawing():
-		_shot_fail("live:%s: faces still drawing after %d frames, frame not saved" % [kind, _A4_FACE_FRAMES])
+	if not await _faces_drawn("live:" + kind):
 		return false
 	if kind == "a4_six_hover":
 		for board: SprintBoard in page.find_children("*", "SprintBoard", true, false):
