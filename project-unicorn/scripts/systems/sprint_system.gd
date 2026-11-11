@@ -83,7 +83,7 @@ static func new_state(day: int) -> Dictionary:
 		"next": {"number": 2, "cards": []},
 		"mode": "plan", "cards": {}, "release": {}, "releases": [], "polish": {},
 		"requests": [], "rival_hits": [],
-		"research_done": {}, "decision": {}, "decision_sprint": -1, "auto_started": -1,
+		"research_done": {}, "decision": {}, "decision_sprint": -1, "last_paper": 0, "auto_started": -1,
 		"quarter": {"goal_area": "", "start_sprint": 1, "start_day": day, "plans": []},
 		"worked": {"day": -1, "ids": []}, "pending_faulty": [], "delegate": false, "empty_sprint": -1,
 	}
@@ -196,7 +196,7 @@ static func _begin() -> void:
 		FinanceSystem.apply_one_time_cost(cost, "build_commit")
 	p.mode = "active"
 	SprintBridges.tick_rivals(int(sprint.number))
-	_staff_week(false)
+	_staff_week(_finished(_replay(_sprint_cards(), 1, false, team()).cards))
 	_ask_promise()
 	EventBus.sprint_started.emit(int(sprint.number))
 	_changed()
@@ -645,9 +645,11 @@ static func pick_goal(area_id: String) -> void:
 
 ## Bu sprint bir olayla kesildi (`kind`: "incident", "promise" ya da kâğıt için "paper"): kayıt sprinti ve türü tutar,
 ## son kesinti kalır; eski kayıtta alan yoktur. Sprintin kesinti sırası: söz ya da acil durum gelen sprintte kâğıt gelmez,
-## kâğıt gelen sprintte yalnız servis kesintisi gelebilir.
+## kâğıt gelen sprintte yalnız servis kesintisi gelebilir. Üç tür de sprinti kâğıtsız saydırmaz: oyuncu o sprintte bir karar
+## verdi (`last_paper`, `_request_decision`ın kâğıtsız sessizlik sınırı).
 static func record_interrupt(kind: String) -> void:
 	_p()["interrupt"] = {"sprint": sprint_number(), "kind": kind}
+	_p()["last_paper"] = sprint_number()
 
 
 # --- Okumalar --------------------------------------------------------------------------
@@ -1448,12 +1450,15 @@ static func _play_out(cards: Array, weeks: int, people: Array, ahead: Array = []
 	return {"split": split, "spare": spare}
 
 
-## Sprintin kâğıt fırsatında (ilk haftanın sonunda) sprint başına tek zar atılır: `sprint.json`
+## Sprintin kâğıt fırsatında (ilk haftanın sonunda; planı ilk haftada kapanacak sprintte başında, `_begin`, çünkü kapanış dalı
+## zar atmaz) sprint başına tek zar atılır: `sprint.json`
 ## `decision.sprint_chance`'ın [WORKING] altında kalırsa sprintin bir kartı için havuzdan bir kâğıt istenir, yoksa
 ## sprint kâğıtsızdır. Söz olayı ya da acil durum gelen sprintte kâğıt gelmez
 ## (`_paper_blocked`); aynı anda tek karar bekler. Havuz ağırlıklı sırayla denenir (`decision.seen_weight` [WORKING]: kâğıt kaç
 ## kez görüldüyse ağırlığı 1 / (1 + seen_weight × görülme)), her kâğıt sprintin bitmemiş kartlarında sırayla. Kâğıdın
 ## konuşanı varsa (`speaker_role`) o kartın konuşanı `_speaker`'dır ve kimsesi olmayan kart için kâğıt gelmez.
+## Art arda `decision.max_dry_sprints` sprint kâğıtsız kapandıysa (`last_paper`: kâğıdın ya da acil durum ve söz
+## kesintisinin geldiği son sprint) zar tutmuş sayılır.
 ## Kartın koşulları bekleyen kartı okur, bu yüzden karar istekten önce yazılır; motor reddederse silinir ve
 ## sıradaki çift denenir. Kâğıt istendiyse true.
 static func _request_decision() -> bool:
@@ -1462,7 +1467,8 @@ static func _request_decision() -> bool:
 	if not p.decision.is_empty() or int(p.get("decision_sprint", -1)) == number or _paper_blocked():
 		return false
 	p["decision_sprint"] = number
-	if EvDice.unit("paper", GameState.day, "sprint", "") >= float(SprintCatalog.cfg("decision.sprint_chance")):
+	var forced: bool = number - 1 - int(p.get("last_paper", number - 1)) >= int(SprintCatalog.cfg("decision.max_dry_sprints"))
+	if not forced and EvDice.unit("paper", GameState.day, "sprint", "") >= float(SprintCatalog.cfg("decision.sprint_chance")):
 		return false
 	var pool: Array = (SprintCatalog.cfg("decision.cards") as Array).duplicate()
 	var order: Dictionary = {}

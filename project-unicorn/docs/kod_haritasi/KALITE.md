@@ -1,14 +1,14 @@
 # Kod haritası · KALITE
 
-Üretildi: git ce4cb261 · 2026-11-11 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git 2ed453f6 · 2026-11-11 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 254 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
 
-- scripts/debug/endgame_smoke.gd · 29665 satır · 673 func
+- scripts/debug/endgame_smoke.gd · 29670 satır · 673 func
 - scripts/main/main.gd · 6072 satır · 220 func
 - scripts/debug/run_probe.gd · 2392 satır · 92 func
-- scripts/systems/sprint_system.gd · 2068 satır · 171 func
+- scripts/systems/sprint_system.gd · 2074 satır · 171 func
 - scripts/theme/build_theme.gd · 1654 satır · 31 func
 - scripts/events/tools/lint.gd · 1343 satır · 47 func
 - scripts/systems/vc_pitch_system.gd · 1327 satır · 91 func
@@ -40,7 +40,7 @@ Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları
 - scripts/events/tools/vocab_gen.gd:20 · run · 322 satır
 - scripts/theme/build_theme.gd:46 · _initialize · 320 satır
 - scripts/events/present/chips.gd:72 · describe · 288 satır
-- scripts/debug/endgame_smoke.gd:23275 · _case_sprint_timeline_matches_play_out · 266 satır
+- scripts/debug/endgame_smoke.gd:23279 · _case_sprint_timeline_matches_play_out · 266 satır
 - scripts/main/main.gd:3837 · _run_hr_shot · 263 satır
 - scripts/debug/endgame_smoke.gd:8320 · _case_hr_constants_contract · 220 satır
 - scripts/debug/endgame_smoke.gd:2223 · _case_save_v13_day_stamps_migrate · 209 satır
@@ -62,8 +62,8 @@ Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları
 - scripts/ui/office/office_map_card.gd:17 · _init · 134 satır
 - scripts/debug/endgame_smoke.gd:11910 · _case_effective_skill_formula · 132 satır
 - scripts/debug/endgame_smoke.gd:17808 · _case_rnd_note_author_and_lines · 129 satır
-- scripts/debug/endgame_smoke.gd:22202 · _case_sprint_founder_share_frozen · 128 satır
-- scripts/debug/endgame_smoke.gd:27386 · _case_save_v15_tickets_become_open_bugs · 128 satır
+- scripts/debug/endgame_smoke.gd:22206 · _case_sprint_founder_share_frozen · 128 satır
+- scripts/debug/endgame_smoke.gd:27391 · _case_save_v15_tickets_become_open_bugs · 128 satır
 - scripts/debug/endgame_smoke.gd:1018 · _case_gate_decline_reminder · 125 satır
 - scripts/debug/endgame_smoke.gd:20143 · _thesis_presenter_body · 124 satır
 - scripts/debug/endgame_smoke.gd:20376 · _case_sales_meeting_time_skip_founder_share · 124 satır

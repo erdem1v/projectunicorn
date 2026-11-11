@@ -77,19 +77,23 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
   ↳ · `SprintSystem._close` `:1685` (`leaving`), `plan_outcome` `:947` (`tally`); `known` yalnız `leaving`in içinde okunur
 - `SprintPrep.week()/need()/rate()/rate_for()` `scripts/systems/sprint_prep.gd:40`/`:34`/`:27`/`:18`: PM'lerin haftalık hazırlık işi, kartın hazırlık ihtiyacı, PM hızı P(s) · `SprintSystem.team` `sprint_system.gd:780` (`rate`),
   ↳ `_end_week`, `_play_out`, `prep_gains` (`week`)
-- `SprintSystem._request_decision()` `sprint_system.gd:1202`: sprint başına tek zar, karar kâğıdı isteği · `_staff_week(true)` ← `_end_week` (:1064)
+- `SprintSystem._request_decision()` `sprint_system.gd:1461`: sprint başına tek zar (`decision_sprint`), karar kâğıdı isteği · `_staff_week(true)` ← `_end_week` (:1300) ve planı 1. haftada kapanacak sprintte `_begin` (:175)
+  ↳ `_begin` bir haftalık kopya oynatmasının (`_replay`, `_finished`) sprinti bitirip bitirmediğine bakar: bitiriyorsa zar başında atılır, çünkü `_end_week`in `_close` dalı zar atmaz; 2. haftaya kalan sprint 1. haftanın sonunda atar
+  ↳ Kâğıtsız sessizlik: `last_paper` (kâğıt, acil durum ya da söz kesintisi gelince `record_interrupt` sprint numarasını yazar) ile geçen kâğıtsız sprint sayısı
+  ↳ `decision.max_dry_sprints`e (sprint.json) varınca zar tutmuş sayılır; havuz yine konuşan bulmak zorunda
 - Kâğıt sözleşmesi: kartın JSON'unda `speaker_role` (rol ya da rol listesi: `product_manager | designer | developer | tester | founder`), `stage` (`any | design | dev | test`),
-  ↳ `pool_group` (`pm | designer | developer | tester | no_tester | solo | system`; motor okumaz) · `SprintSystem._speaker` `:1465`. Konuşan `EventGate.request(kimlik, {"employee": id})` ile (kurucuysa `{"founder": id}`) bağlanır:
-  ↳ kartın scope'unda o türden slot şarttır (lint §17.7). PM kâğıdında konuşan `SprintCatalog.quarter_pm()` `sprint_catalog.gd:653`, konu sprintteki müşteri isteği kartıdır (`kind == "request"`), `customer` slotu isteğin hesabıdır;
+  ↳ `pool_group` (`pm | designer | developer | tester | no_tester | solo | system`; motor okumaz) · `SprintSystem._speaker` `:1507`. Konuşan `EventGate.request(kimlik, {"employee": id})` ile (kurucuysa `{"founder": id}`) bağlanır:
+  ↳ kartın scope'unda o türden slot şarttır (lint §17.7). PM kâğıdında konuşan `SprintCatalog.quarter_pm()` `sprint_catalog.gd:586`, konu sprintteki müşteri isteği kartıdır (`kind == "request"`), `customer` slotu isteğin hesabıdır;
   ↳ PM yoksa gelmez. Öbürlerinde `_speaker`: kartın o haftaki `assignees`'inden rolü `speaker_role` olan ve (`stage` `any` değilse) kart o fazdayken çalışan ilk kişi; hafta ataması kâğıttan önce yapılır (konuşan istek anında yakalanır),
   ↳ payı Destek'te kalan kişi atanmadığı için konuşmaz, tasarımcı kâğıdını kartta atanmış PM söylemez; `speaker_role` yoksa kâğıt konuşansızdır (yalnız fikstürler);
-  ↳ kâğıdın `customer` slotu `select` kipidir (`SprintCatalog.paper_account` `:469`: `line_top`, `line_newest`, `line_slow`, `line_warehouse`, `request`), `employee` slotu `sprint_dev`; seçilemeyen zorunlu slot kâğıdı o kartta getirmez
-- `SprintSystem._ask_promise()` `sprint_system.gd:976`: son haftada yetişmeyen söz için `product.promise_due` · `_begin`, `_end_week`
-- `SprintSystem._close()` `sprint_system.gd:1406`: kartları çıkarır, hata/kademe/sürüm kaydı yazar, `sprint_closed` yayar · `_end_week`
-- `SprintSystem.sync_plan_hold()` `sprint_system.gd:1858`: plan beklerken ve saat şirketin mesai başlangıcına (`WorkHoursSystem.start_hour()`) gelmişken `TimeManager.hold_clock("sprint_plan")` ·
+  ↳ kâğıdın `customer` slotu `select` kipidir (`SprintCatalog.paper_account` `:420`: `line_top`, `line_newest`, `line_slow`, `line_warehouse`, `request`), `employee` slotu `sprint_dev`; seçilemeyen zorunlu slot kâğıdı o kartta getirmez
+  ↳ `SprintCatalog.second_account` `sprint_catalog.gd:444` (seam `urun.decision_second_account`, `EvEffects` "second"): kartın hesabı dışında, sektörünün öncelikli alanı kartın hattını kapsayan en büyük B2B hesap, yoksa null
+- `SprintSystem._ask_promise()` `sprint_system.gd:1200`: son haftada yetişmeyen söz için `product.promise_due` · `_begin`, `_end_week`
+- `SprintSystem._close()` `sprint_system.gd:1695`: kartları çıkarır, hata/kademe/sürüm kaydı yazar, `sprint_closed` yayar · `_end_week`
+- `SprintSystem.sync_plan_hold()` `sprint_system.gd:1880`: plan beklerken ve saat şirketin mesai başlangıcına (`WorkHoursSystem.start_hour()`) gelmişken `TimeManager.hold_clock("sprint_plan")` ·
   ↳ `scripts/main/game_shell.gd:24`, `_changed`; gece kapanan sprintin planı 08:00'de saati tutmaz, 08:00 ile mesai başlangıcı arasında saat akar ve `_on_hour` (`hour_changed`) o saatte tutuşu alır;
   ↳ toplu adımda `clock_batch_ended`e ertelenir
-- `SprintSystem.record_interrupt()` `sprint_system.gd:563`: sprintin kesinti kaydı (incident|promise|paper) · `IncidentSystem._ask` `incident_system.gd:272`
+- `SprintSystem.record_interrupt()` `sprint_system.gd:649`: sprintin kesinti kaydı (incident|promise|paper) · `IncidentSystem._ask` `incident_system.gd:272`
 - `SprintSystem.timeline(extra)` `sprint_system.gd:847`: planlamada plan (artı `extra` aday) ya da koşan sprintin kalanı tek oynatmayla `SprintTimeline.build`e girer; planlamada `outcome` = `plan_outcome` biçimi · `ProductModel.live`
 - `SprintSystem.prep_gains(weeks)` `sprint_system.gd:867`: sonraki sütunun kartlarının `weeks` hafta sonraki hazırlık kazancı (kopyalarda yalnız PM'lerin haftaları) · `ProductModel._next`
 - `SprintSystem.away()` `sprint_system.gd:748`: ekip dışı kişiler [{id, reason}]: `training`, `leave`, `research`, kurucu `meetings` · `ProductModel._crew`
@@ -174,10 +178,11 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 ## Durum ve veri
 
 - `GameState.product` `scripts/autoload/game_state.gd:302`: sprint, next, mode(plan|active|release), cards, release, releases, requests, rival_hits, quarter, decision, delegate… (`new_state` sprint_system.gd:74-84)
-- `GameState.product` ek alanlar: `interrupt` {sprint, kind} (sprint_system.gd:564), `promise_due` {card, step, promises}, `type_draft`, `pending_faulty`, `empty_sprint`, `decision_sprint`
+- `GameState.product` ek alanlar: `interrupt` {sprint, kind} (sprint_system.gd:649), `promise_due` {card, step, promises}, `type_draft`, `pending_faulty`, `empty_sprint`, `decision_sprint`
+  ↳ `last_paper` (kâğıdın ya da acil durum ve söz kesintisinin geldiği son sprintin numarası; `new_state` 0): eski kayıtta yok, okuma `get` varsayılanı sprintin numarası - 1 (yüklemede zorlanmış zar olmaz), şema sürümü artmaz
 - Koşan kartta `progress_at_start`: sprintin başındaki `progress` (`_begin`, `put_first`; eski kayıtta `progress` okunur)
 - Çeyrekte `quarter.start_day`: çeyreğin başladığı gün (`new_state`, `plan_next`; eski kayıtta sprintin başından geri sayılır)
-- Kart `SprintCatalog.new_card` `sprint_catalog.gd:250`: id, kind(feature|request|fix|research), line, step, target_tier, area, need[3], progress[3], state, assignees, bugs, decision, cut
+- Kart `SprintCatalog.new_card` `sprint_catalog.gd:255`: id, kind(feature|request|fix|research), line, step, target_tier, area, need[3], progress[3], state, assignees, bugs, decision, cut
 - Kart kimlik önekleri `sprint_catalog.gd:194-222`: `feat:<kademe>`, `req:<talep>`, `plan:cap_paid_plan`, `fix:<hat>`, `res:<alan>`; kart `need`/`progress` sırası [Tasarım, Geliştirme, Test]
 - Sürüm kaydı `sprint_system.gd:1490-1484`: number, sprint, shipped, carried, velocity, expected, actual, press, gate, day, changed_areas, alerts_cleared, faulty (+ `thanks`, `reviews`)
 - `GameState.incident` `game_state.gd:329`: last_day, pending, shifted, open, drains, forced (şema başlığı `incident_system.gd:32-34`)

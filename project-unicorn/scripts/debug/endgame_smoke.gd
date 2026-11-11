@@ -21888,8 +21888,12 @@ static func _bugs_c(value: float) -> void:
 
 
 ## Sprint karar kâğıdı zarının ihtimali (test sabiti). Açan vaka önceki ihtimali kendi süresince tutar ve geri koyar.
+## İhtimal 0 kâğıdı kapatır: kâğıtsız sessizliğin üst sınırı (`decision.max_dry_sprints`) da kalkar.
 static func _paper_chance(chance: float) -> void:
-	(SprintCatalog.cfg("decision") as Dictionary).sprint_chance = chance
+	var decision: Dictionary = SprintCatalog.cfg("decision")
+	decision.sprint_chance = chance
+	if chance <= 0.0:
+		decision.max_dry_sprints = 1000000
 
 
 ## Kartı `points` puanlık yapar; aşamalara paylaşım kartın türünden ve hattının iş profilinden gelir.
@@ -25743,8 +25747,10 @@ static func _case_quiet_cards_fill_empty_floor() -> String:
 			return "the weighted pool offers the quiet card %s" % (c as Dictionary)["id"]
 	# The rhythm includes the sprint decision papers: their real chance, not _seed_sprint's zero.
 	var chance: float = float(SprintCatalog.cfg("decision.sprint_chance"))
+	var max_dry: int = int(SprintCatalog.cfg("decision.max_dry_sprints"))
 	_seed_sprint()
 	SprintCatalog._data.decision.sprint_chance = chance
+	SprintCatalog._data.decision.max_dry_sprints = max_dry
 	FinanceSystem.set_burn_category("marketing", 50)
 	var worst: int = 0
 	var weeks: int = 0
@@ -26283,8 +26289,7 @@ const PAPER_CRUNCH := "fixture.paper_crunch"
 ## Karar kâğıdı vakalarının sahnesi: havuzda yalnız `papers` (fikstür kâğıtları), kâğıt ihtimali 1, fikstür kapsamı açık.
 ## Eski değerleri verir; `_paper_pool_end` geri koyar. `_seed_sprint` ihtimali sıfırlar: sahne ondan sonra kurulur.
 static func _paper_pool(papers: Array) -> Array:
-	var saved: Array = [EvTuning.SHIPPED_SCOPES.duplicate(), SprintCatalog.cfg("decision.cards"),
-		float(SprintCatalog.cfg("decision.sprint_chance"))]
+	var saved: Array = [EvTuning.SHIPPED_SCOPES.duplicate(), (SprintCatalog.cfg("decision") as Dictionary).duplicate()]
 	EvTuning.SHIPPED_SCOPES.append("fixture")
 	SprintCatalog._data.decision.cards = papers
 	_paper_chance(1.0)
@@ -26293,8 +26298,7 @@ static func _paper_pool(papers: Array) -> Array:
 
 static func _paper_pool_end(saved: Array) -> void:
 	EvTuning.SHIPPED_SCOPES.assign(saved[0])
-	SprintCatalog._data.decision.cards = saved[1]
-	SprintCatalog._data.decision.sprint_chance = saved[2]
+	SprintCatalog._data.decision = saved[1]
 
 
 ## Kâğıt, kartta o aşamada çalışan kişinin ağzından gelir: konuşan istek anında kartın atananlarındadır, `role_of` o
@@ -26564,7 +26568,8 @@ static func _case_paper_empty_sprint_ratio() -> String:
 	SaveManager.reset_all_owners()
 	GameState.initialize_run({"seed": 424242})
 	_seed_sprint()
-	SprintCatalog._data.decision.sprint_chance = saved[2]
+	SprintCatalog._data.decision.sprint_chance = saved[1].sprint_chance
+	SprintCatalog._data.decision.max_dry_sprints = saved[1].max_dry_sprints
 	SprintSystem.add("feat:%s_k1" % SprintCatalog.capabilities("core")[0])
 	_size(GameState.product.cards["feat:%s_k1" % SprintCatalog.capabilities("core")[0]], 100000.0)
 	var sprints := 0

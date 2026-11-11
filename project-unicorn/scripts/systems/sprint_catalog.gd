@@ -439,11 +439,11 @@ static func paper_account(mode: String, used: Dictionary) -> String:
 	return "" if accounts.is_empty() else accounts[0].id
 
 
-## Karar kartı bir isteğin kartıysa o kademeyi isteyen öbür hesap (en büyüğü), yoksa null.
+## Karar kartının hesabı dışında, sektörünün öncelikli alanı kartın hattını kapsayan en büyük B2B hesap (isteği o hattı kapsayan
+## alandan gelen öbür müşteri), yoksa null. Talep her kademede tek hesaptan açık durur, bu yüzden öbür hesabın açık talebi aranmaz.
 static func second_account(card: Dictionary) -> Customer:
-	var asking: Array = open_requests().filter(func(r: Dictionary) -> bool:
-		return r.step == card.get("step", "") and r.customer_id != card.get("customer_id", ""))
-	var accounts: Array = asking.map(func(r: Dictionary) -> Customer: return CustomerRegistry.get_customer(r.customer_id))
+	var accounts: Array = CustomerRegistry.get_by_market("b2b").filter(func(c: Customer) -> bool:
+		return c.id != card.get("customer_id", "") and card.get("line", "") in capabilities(ProductQuality.emphasis(c.industry)[0]))
 	accounts.sort_custom(larger_account)
 	return null if accounts.is_empty() else accounts[0]
 
