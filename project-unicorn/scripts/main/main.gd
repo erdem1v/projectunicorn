@@ -4871,10 +4871,10 @@ func _seed_sales_world() -> void:
 	founder.role_stats[FounderConstants.SKILL_CHARISMA] = 4
 
 
-## --vc-shot=<hunt|hunt_closed|hunt_meeting|hunt_callback|hunt_seed|table|table_final|table_walk|table_other|seed_table|k10>:
+## --vc-shot=<hunt|hunt_closed|hunt_meeting|hunt_callback|hunt_seed|hunt_seed_early|table|table_final|table_walk|table_other|seed_table|k10>:
 ## the Series A surfaces — the Hunt page (two offers and one queued; every fund closed; a meeting booked beside
 ## one offer; the product fund's customer-loss callback under a reputation the neglected bugs took to the floor; Traction
-## with the seed door open), the term-sheet table in its states and the expired-offer
+## with the seed door open, at 00:00 before the workday in hunt_seed_early), the term-sheet table in its states and the expired-offer
 ## decision card. Pushes go through the real table system with the SkillCheck debug force. A table's kind
 ## with ":shell" mounts it in the shell's ModalLayer, as the game does, over the shell (vc_shot_<kind>_shell).
 func _run_vc_shot(spec: String) -> void:
@@ -4915,10 +4915,13 @@ func _run_vc_shot(spec: String) -> void:
 			VCPitchSystem._vc("meridian")["callback"] = VCPitchSystem._make_callback("meridian")
 			GameState.set_reputation(-10)
 			GameState.set_flag(ProductState.BUG_DROP_DAY, GameState.day)
-		"hunt_seed":
+		"hunt_seed", "hunt_seed_early":
 			GameState.set_phase(2)
 			GameState.mrr = 22000
 			GameState.seed_door_open_day = GameState.day
+			if kind == "hunt_seed_early":
+				GameState.set_current_hour(0)
+				TimeManager.sync_to_current_hour()
 		"table", "table_final", "table_walk":
 			var conv: int = 45 if kind == "table_walk" else (100 if kind == "table_final" else 83)
 			VCPitchSystem._vc("bosphorus")["sheet_conviction"] = conv

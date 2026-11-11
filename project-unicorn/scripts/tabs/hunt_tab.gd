@@ -173,7 +173,7 @@ func _paint_seed() -> void:
 		# that refuses it lives at the TABLE where it can be rendered locked with its
 		# reason. A second refusal path here would be an unlocked door beside a locked one.
 		card.add_child(_with_reason(_sit_button(sheet.vc_id, PitchConstants.STAGE_SEED),
-			"" if _table_open else tr("VC_BLOCK_LATE")))
+			"" if _table_open else tr(WorkHoursSystem.sitting_shut_key("VC_BLOCK_LATE"))))
 		return
 
 	if GameState.seed_pitch_used:
@@ -204,7 +204,7 @@ func _seed_block(vc_id: String) -> String:
 	if TimeManager.is_clock_held():
 		return TimeManager.hold_label()
 	var why: String = SeedRoundSystem.pitch_blocked_reason(vc_id)
-	return "VC_BLOCK_LATE" if why == "" and not _pitch_open else why
+	return WorkHoursSystem.sitting_shut_key("VC_BLOCK_LATE") if why == "" and not _pitch_open else why
 
 
 ## The growth expectation, in one line. The threshold IS rendered here, unlike
@@ -459,7 +459,7 @@ func _offer_doc(sheet: TermSheet) -> PanelContainer:
 		"res://assets/icons/stake/equity.svg"))
 	body.add_child(parts)
 	if not _table_open:
-		body.add_child(SprintUiShared.label(tr("VC_BLOCK_LATE"), &"Caption"))
+		body.add_child(SprintUiShared.label(tr(WorkHoursSystem.sitting_shut_key("VC_BLOCK_LATE")), &"Caption"))
 	return doc
 
 

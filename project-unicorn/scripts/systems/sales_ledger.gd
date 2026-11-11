@@ -325,7 +325,7 @@ static func meeting_block_reason(lead_id: String) -> String:
 	if not SalesFaucetSystem.market_open():
 		return "SALES_BLOCK_NO_B2B"
 	if not WorkHoursSystem.sitting_open(SalesConstants.MEETING_ENTRY_CUTOFF_HOURS):
-		return "SALES_BLOCK_TOO_LATE"
+		return WorkHoursSystem.sitting_shut_key("SALES_BLOCK_TOO_LATE")
 	if meetings_this_week() >= SalesConstants.MEETINGS_PER_WEEK:
 		return "SALES_BLOCK_WEEK_FULL"
 	var p: Prospect = ProspectRegistry.get_prospect(lead_id)

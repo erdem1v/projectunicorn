@@ -2189,6 +2189,7 @@ SALES_MOD_PITCH_FOCUS,Bu çeyreğin vurgusu,This quarter's emphasis
 SALES_BLOCK_NO_B2B,Canlı B2B ürün yok.,No live B2B product.
 SALES_BLOCK_WEEK_FULL,Bu haftaki toplantı hakların doldu. Yeni hafta başında yenilenir.,This week's meetings are spent. They come back when the new week starts.
 SALES_BLOCK_TOO_LATE,Mesai bitiyor. Bu hafta yeni bir masaya oturulmaz.,The workday is ending. No new table this week.
+SITTING_BLOCK_EARLY,Mesai daha başlamadı.,The workday hasn't started yet.
 SALES_BLOCK_NO_LEAD,Bu aday artık boru hattında değil.,That lead is no longer in the pipeline.
 SALES_BLOCK_IN_DEAL,Bu şirketle anlaşma sürüyor.,A deal with them is under way.
 SALES_BLOCK_REASON_UNCHANGED,Aynı sebep hâlâ ortada. Değişmeden aynı cevabı verirler.,"The same reason still stands. Unchanged, they answer the same way."

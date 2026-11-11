@@ -1,12 +1,12 @@
 # Kod haritası · KALITE
 
-Üretildi: git 19b103d6 · 2026-11-11 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git 6019db33 · 2026-11-11 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 254 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
 
 - scripts/debug/endgame_smoke.gd · 29565 satır · 669 func
-- scripts/main/main.gd · 6062 satır · 220 func
+- scripts/main/main.gd · 6065 satır · 220 func
 - scripts/debug/run_probe.gd · 2392 satır · 92 func
 - scripts/systems/sprint_system.gd · 2068 satır · 171 func
 - scripts/theme/build_theme.gd · 1655 satır · 31 func
@@ -81,9 +81,9 @@ Tanım satırı dışında scripts/, scenes/, data/ içinde adı hiç geçmeyen 
 UYARI: call("a"+b) gibi kurulmuş adlar, sinyal adıyla bağlama, harness bayrakları ve tools/*.sh çağrıları yüzünden yanlış pozitif olabilir; silmeden önce grep ile doğrula.
 - scripts/debug/office_crowd_probe.gd:48 · _log_error · debug
 - scripts/main/game_shell.gd:163 · debug_force_vc_meeting · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/main/main.gd:6003 · _dbg_close_request · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/main/main.gd:6008 · _dbg_onb_random_x20 · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/main/main.gd:6021 · _dbg_finish_run · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
+- scripts/main/main.gd:6006 · _dbg_close_request · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
+- scripts/main/main.gd:6011 · _dbg_onb_random_x20 · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
+- scripts/main/main.gd:6024 · _dbg_finish_run · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
 - scripts/systems/line_gates.gd:126 · speed_bonus_for
 - scripts/systems/product_catalog.gd:237 · type_sector_labels
 - scripts/systems/rnd_system.gd:707 · family_root_done

@@ -63,7 +63,7 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
 - `WorkHoursSystem.hours_for(c)` `work_hours_system.gd:63`: zincirin canlı girişi; zincir yalnız `_resolve` `:34`'te yürür
 - `WorkHoursSystem.apply_state(draft)` `work_hours_system.gd:246`: modal "Uygula" · `work_hours_modal.gd:490`
 - `WorkHoursSystem.workday_end()` `:126`, `end_hour_for(c)` `:105`, `start_hour()` `:100`: gece ve ofis ritmi · `time_manager.gd`, `top_bar.gd`, `office_people.gd`
-- `WorkHoursSystem.sitting_open(hours)` `:57`: kurucunun dört oturumunun giriş kapısı · `vc_pitch_system.gd`, `sales_ledger.gd`, `sales_tab.gd`, `hunt_tab.gd`
+- `WorkHoursSystem.sitting_open(hours)` `:57`: kurucunun dört oturumunun giriş kapısı · `vc_pitch_system.gd`, `sales_ledger.gd`, `sales_tab.gd`, `hunt_tab.gd`; kapalıyken gerekçesini `sitting_shut_key(late_key)` `:63` verir: haftanın mesai öncesi saatleri `SITTING_BLOCK_EARLY`, gerisi `late_key`
 - `WorkHoursSystem.overtime_pay_accrued_today()` `:333`: Finans çeker (itme yok) · `finance_system.gd`; `company_window()` `work_hours_system.gd:112` · `mail_clock.gd`, `incident_system.gd`
 - `LookSystem.for_person()` `look_system.gd:123`, `founder(portrait_id)` `:116` · `character_registry.gd:530-536`, `hr_search_system.gd:296`, `counterpart_system.gd:101`, onboarding
 - `FounderConstants.validate_alloc/validate_traits` `founder_constants.gd:137/152` · `game_state.gd:966,991`, `origin_traits_step.gd`, `main.gd:5408`

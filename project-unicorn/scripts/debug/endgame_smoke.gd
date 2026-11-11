@@ -20382,12 +20382,12 @@ static func _case_sales_meeting_time_skip_founder_share() -> String:
 		return "the late meeting did not land at 23:00 on its own tick (tick %d, %02d:00)" % [
 			GameState.day, GameState.current_hour]
 
-	# THE NIGHT is shut whatever the week's count.
+	# THE NIGHT is shut whatever the week's count, and its first hours are the new week's: before the workday.
 	GameState.sales_meetings_week.clear()
 	GameState.set_current_hour(TimeModel.WEEK_START_HOUR - 1)
 	TimeManager.sync_to_current_hour()
-	if SalesLedger.meeting_block_reason(fifth.id) != "SALES_BLOCK_TOO_LATE":
-		return "a night entry reads '%s', want too late" % SalesLedger.meeting_block_reason(fifth.id)
+	if SalesLedger.meeting_block_reason(fifth.id) != "SITTING_BLOCK_EARLY":
+		return "a night entry reads '%s', want not started" % SalesLedger.meeting_block_reason(fifth.id)
 	return ""
 
 
@@ -20667,7 +20667,7 @@ static func _case_loc_sales_derived_keys() -> String:
 	for stance in SalesConstants.STANCES:
 		wanted.append("SALES_STANCE_%s" % String(stance).to_upper())
 		wanted.append("SALES_STANCE_HINT_%s" % String(stance).to_upper())
-	for key in ["SALES_BLOCK_NO_B2B", "SALES_BLOCK_WEEK_FULL", "SALES_BLOCK_TOO_LATE",
+	for key in ["SALES_BLOCK_NO_B2B", "SALES_BLOCK_WEEK_FULL", "SALES_BLOCK_TOO_LATE", "SITTING_BLOCK_EARLY",
 			"SALES_BLOCK_NO_LEAD", "SALES_BLOCK_REASON_UNCHANGED", "SALES_BAND_ABOVE_REP",
 			"SALES_BAND_ABOVE_CAP", "SALES_WIN_CUT", "SALES_MEETING_OBJECTION", "SALES_INNER_VOICE_0",
 			"SALES_INNER_VOICE_1", "SALES_INNER_VOICE_2"]:

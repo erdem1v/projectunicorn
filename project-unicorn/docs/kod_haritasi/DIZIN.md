@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git 19b103d6 · 2026-11-11 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 6019db33 · 2026-11-11 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -121,9 +121,9 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/events/tools/vocab_gen.gd · 376 · EvVocabGen · RefCounted · 0 sinyal · 5 func
 - scripts/events/tools/why.gd · 268 · EvWhy · RefCounted · 0 sinyal · 8 func
 
-### scripts/main/ (2 dosya, 6281 satır)
+### scripts/main/ (2 dosya, 6284 satır)
 - scripts/main/game_shell.gd · 219 · - · Control · 0 sinyal · 11 func
-- scripts/main/main.gd · 6062 · - · Node · 0 sinyal · 220 func
+- scripts/main/main.gd · 6065 · - · Node · 0 sinyal · 220 func
 
 ### scripts/menu/ (5 dosya, 294 satır)
 - scripts/menu/continue_card.gd · 19 · - · Button · 0 sinyal · 1 func
@@ -153,7 +153,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/onboarding/steps/origin_traits_step.gd · 332 · - · OnboardingStep · 0 sinyal · 18 func
 - scripts/onboarding/steps/step_base.gd · 118 · OnboardingStep · Control · 1 sinyal · 10 func
 
-### scripts/systems/ (72 dosya, 24589 satır)
+### scripts/systems/ (72 dosya, 24594 satır)
 - scripts/systems/angel_round_system.gd · 52 · AngelRoundSystem · RefCounted · 0 sinyal · 1 func
 - scripts/systems/b2b_constants.gd · 291 · B2BConstants · RefCounted · 0 sinyal · 9 func
 - scripts/systems/b2b_sales_system.gd · 695 · B2BSalesSystem · RefCounted · 0 sinyal · 45 func
@@ -225,7 +225,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/systems/term_sheet_table_system.gd · 987 · TermSheetTableSystem · RefCounted · 0 sinyal · 57 func
 - scripts/systems/time_model.gd · 61 · TimeModel · RefCounted · 0 sinyal · 7 func
 - scripts/systems/vc_pitch_system.gd · 1327 · VCPitchSystem · RefCounted · 0 sinyal · 91 func
-- scripts/systems/work_hours_system.gd · 337 · WorkHoursSystem · RefCounted · 0 sinyal · 37 func
+- scripts/systems/work_hours_system.gd · 342 · WorkHoursSystem · RefCounted · 0 sinyal · 38 func
 
 ### scripts/tabs/ (9 dosya, 4021 satır)
 - scripts/tabs/events_tab.gd · 369 · - · Control · 0 sinyal · 23 func
@@ -388,12 +388,12 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
   ↳ clock_batch_ended connect: scripts/events/core/signals.gd:54, scripts/systems/incident_system.gd:314, scripts/systems/sprint_system.gd:1882, scripts/tabs/rnd_tab.gd:81, scripts/ui/components/research_bar.gd:64 +1
 - tab_changed(tab_id: String) · scripts/autoload/event_bus.gd:29
   ↳ tab_changed emit: scripts/main/game_shell.gd:43, scripts/main/main.gd:401,583,1589,1592,1603 +53
-  ↳ tab_changed connect: scripts/main/main.gd:5358, scripts/ui/components/goals_panel.gd:58, scripts/ui/components/left_tabs.gd:128, scripts/ui/components/research_bar.gd:63, scripts/ui/components/window_layer.gd:62
-- finance_subpage_requested(page_id: String) · scripts/autoload/event_bus.gd:32 · emit: scripts/main/main.gd:4958,5440, scripts/tabs/events/mail_pane.gd:839 · connect: scripts/tabs/finance_tab.gd:58
-- goto_tab_requested(tab_id: String, subpage: String) · scripts/autoload/event_bus.gd:34 · emit: scripts/events/core/effects.gd:647 · connect: scripts/main/main.gd:5357
+  ↳ tab_changed connect: scripts/main/main.gd:5361, scripts/ui/components/goals_panel.gd:58, scripts/ui/components/left_tabs.gd:128, scripts/ui/components/research_bar.gd:63, scripts/ui/components/window_layer.gd:62
+- finance_subpage_requested(page_id: String) · scripts/autoload/event_bus.gd:32 · emit: scripts/main/main.gd:4961,5443, scripts/tabs/events/mail_pane.gd:839 · connect: scripts/tabs/finance_tab.gd:58
+- goto_tab_requested(tab_id: String, subpage: String) · scripts/autoload/event_bus.gd:34 · emit: scripts/events/core/effects.gd:647 · connect: scripts/main/main.gd:5360
 - settings_requested() · scripts/autoload/event_bus.gd:38 · emit: scripts/main/main.gd:3094, scripts/menu/main_menu.gd:56, scripts/modals/system_menu_modal.gd:39, scripts/ui/components/left_tabs.gd:118 · connect: scripts/main/main.gd:89
 - confirm_requested(config: Dictionary) · scripts/autoload/event_bus.gd:41
-  ↳ confirm_requested emit: scripts/main/main.gd:3111,5825, scripts/modals/save_load_modal.gd:212, scripts/modals/settings_modal.gd:269, scripts/modals/system_menu_modal.gd:78, scripts/modals/term_sheet_table_scene.gd:388 +10
+  ↳ confirm_requested emit: scripts/main/main.gd:3111,5828, scripts/modals/save_load_modal.gd:212, scripts/modals/settings_modal.gd:269, scripts/modals/system_menu_modal.gd:78, scripts/modals/term_sheet_table_scene.gd:388 +10
   ↳ confirm_requested connect: scripts/main/main.gd:91
 - language_changed(locale: String) · scripts/autoload/event_bus.gd:43
   ↳ language_changed emit: scripts/autoload/localization.gd:88, scripts/main/main.gd:4278
@@ -428,7 +428,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - training_started(character_id: String, area_key: String) · scripts/autoload/event_bus.gd:83 · emit: scripts/autoload/character_registry.gd:154 · connect: scripts/systems/sprint_system.gd:1576
 - training_completed(character_id: String, area_key: String) · scripts/autoload/event_bus.gd:84 · emit: scripts/autoload/character_registry.gd:182 · connect: -
 - assignment_changed(character_id: String) · scripts/autoload/event_bus.gd:88
-  ↳ assignment_changed emit: scripts/autoload/character_registry.gd:244,285,294,311, scripts/systems/work_hours_system.gd:270,275 +5
+  ↳ assignment_changed emit: scripts/autoload/character_registry.gd:244,285,294,311, scripts/systems/work_hours_system.gd:275,280 +5
   ↳ assignment_changed connect: scripts/systems/sprint_system.gd:1574, scripts/tabs/hr/hr_dossier.gd:51, scripts/tabs/hunt_tab.gd:60, scripts/tabs/rnd_tab.gd:73, scripts/tabs/sales_tab.gd:77, scripts/ui/components/build_bar.gd:41 +2
 - hr_day_processed() · scripts/autoload/event_bus.gd:91
   ↳ hr_day_processed emit: scripts/main/main.gd:4029,4059, scripts/systems/hr_system.gd:51, scripts/debug/endgame_smoke.gd:24700,25505,25510 +2
@@ -464,11 +464,11 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
   ↳ event_triggered connect: scripts/events/tools/harness.gd:103, scripts/events/tools/plausibility.gd:158, scripts/tabs/finance/finance_ozet_view.gd:82, scripts/tabs/hr_tab.gd:81, scripts/tabs/hunt_tab.gd:53 +14
 - event_resolved(event_id: String, choice_index: int) · scripts/autoload/event_bus.gd:119
   ↳ event_resolved emit: scripts/events/core/engine.gd:632,673
-  ↳ event_resolved connect: scripts/autoload/save_manager.gd:63, scripts/main/game_shell.gd:25, scripts/main/main.gd:5355, scripts/systems/incident_system.gd:313, scripts/systems/sprint_system.gd:1547 +14
-- modal_requested(event: GameEvent) · scripts/autoload/event_bus.gd:120 · emit: scripts/events/core/engine.gd:608 · connect: scripts/events/tools/harness.gd:99, scripts/main/main.gd:5354, scripts/debug/endgame_smoke.gd:6330,20045
+  ↳ event_resolved connect: scripts/autoload/save_manager.gd:63, scripts/main/game_shell.gd:25, scripts/main/main.gd:5358, scripts/systems/incident_system.gd:313, scripts/systems/sprint_system.gd:1547 +14
+- modal_requested(event: GameEvent) · scripts/autoload/event_bus.gd:120 · emit: scripts/events/core/engine.gd:608 · connect: scripts/events/tools/harness.gd:99, scripts/main/main.gd:5357, scripts/debug/endgame_smoke.gd:6330,20045
 - event_set_aside(event_id: String) · scripts/autoload/event_bus.gd:122
   ↳ event_set_aside emit: scripts/events/core/engine.gd:803
-  ↳ event_set_aside connect: scripts/autoload/save_manager.gd:66, scripts/main/main.gd:5356, scripts/tabs/finance/finance_ozet_view.gd:84, scripts/tabs/hr_tab.gd:81, scripts/tabs/hunt_tab.gd:53, scripts/tabs/personal_tab.gd:54 +9
+  ↳ event_set_aside connect: scripts/autoload/save_manager.gd:66, scripts/main/main.gd:5359, scripts/tabs/finance/finance_ozet_view.gd:84, scripts/tabs/hr_tab.gd:81, scripts/tabs/hunt_tab.gd:53, scripts/tabs/personal_tab.gd:54 +9
 - desk_changed() · scripts/autoload/event_bus.gd:125
   ↳ desk_changed emit: scripts/events/present/papers.gd:44,49,60,98, scripts/systems/mail_clock.gd:72,108
   ↳ desk_changed connect: scripts/tabs/product_tab.gd:120, scripts/ui/components/inbox.gd:158, scripts/ui/components/left_tabs.gd:137, scripts/ui/components/top_bar.gd:115
@@ -517,7 +517,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
   ↳ research_resumed connect: scripts/tabs/rnd_tab.gd:71, scripts/ui/components/build_hud_panel.gd:50, scripts/ui/components/left_tabs.gd:144, scripts/ui/components/research_bar.gd:52
 - node_revealed(node_id: String) · scripts/autoload/event_bus.gd:176 · emit: scripts/systems/rnd_system.gd:481 · connect: scripts/tabs/rnd_tab.gd:72
 - hidden_line_unlocked(line_id: String) · scripts/autoload/event_bus.gd:177 · emit: scripts/systems/rnd_system.gd:502 · connect: scripts/tabs/rnd_tab.gd:72
-- product_note_issued(day: int) · scripts/autoload/event_bus.gd:179 · emit: scripts/systems/message_system.gd:60 · connect: scripts/main/main.gd:5363, scripts/ui/components/left_tabs.gd:145
+- product_note_issued(day: int) · scripts/autoload/event_bus.gd:179 · emit: scripts/systems/message_system.gd:60 · connect: scripts/main/main.gd:5366, scripts/ui/components/left_tabs.gd:145
 - research_progress_changed() · scripts/autoload/event_bus.gd:184 · emit: scripts/autoload/time_manager.gd:402 · connect: scripts/tabs/rnd_tab.gd:73, scripts/ui/components/build_hud_panel.gd:53, scripts/ui/components/research_bar.gd:48
 - product_note_read() · scripts/autoload/event_bus.gd:185 · emit: scripts/systems/rnd_system.gd:659 · connect: scripts/ui/components/left_tabs.gd:146
 - rnd_node_requested(node_id: String, open_assign: bool) · scripts/autoload/event_bus.gd:189
@@ -527,7 +527,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - rival_advanced() · scripts/autoload/event_bus.gd:195 · emit: scripts/autoload/rival_registry.gd:86 · connect: scripts/tabs/finance/finance_ozet_view.gd:78
 - prospect_added(prospect_id: String) · scripts/autoload/event_bus.gd:198 · emit: scripts/autoload/prospect_registry.gd:49 · connect: scripts/tabs/sales_tab.gd:66
 - prospect_removed(prospect_id: String) · scripts/autoload/event_bus.gd:199 · emit: scripts/autoload/prospect_registry.gd:86 · connect: scripts/tabs/sales_tab.gd:66
-- pitch_requested(prospect_id: String) · scripts/autoload/event_bus.gd:201 · emit: scripts/tabs/sales_tab.gd:420 · connect: scripts/main/main.gd:5359
+- pitch_requested(prospect_id: String) · scripts/autoload/event_bus.gd:201 · emit: scripts/tabs/sales_tab.gd:420 · connect: scripts/main/main.gd:5362
 - pitch_finished() · scripts/autoload/event_bus.gd:203 · emit: scripts/systems/sales_meeting_system.gd:120, scripts/systems/vc_pitch_system.gd:125,387 · connect: scripts/tabs/hunt_tab.gd:48, scripts/tabs/sales_tab.gd:76
 - prospect_arrived(prospect_id: String) · scripts/autoload/event_bus.gd:208 · emit: scripts/systems/sales_faucet_system.gd:243 · connect: scripts/tabs/sales_tab.gd:67, scripts/debug/run_probe.gd:498
 - lead_expired(prospect_id: String) · scripts/autoload/event_bus.gd:209 · emit: scripts/systems/sales_faucet_system.gd:71 · connect: scripts/tabs/sales_tab.gd:67
@@ -563,16 +563,16 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
   ↳ phase_gate_reached connect: scripts/events/core/signals.gd:36, scripts/tabs/finance/finance_ozet_view.gd:69, scripts/debug/endgame_smoke.gd:74, scripts/debug/run_probe.gd:490
 - run_ended(ending_id: String, ending_data: Dictionary) · scripts/autoload/event_bus.gd:245
   ↳ run_ended emit: scripts/systems/endings_system.gd:475
-  ↳ run_ended connect: scripts/main/main.gd:5360, scripts/debug/endgame_smoke.gd:75,1893, scripts/debug/run_probe.gd:1200
+  ↳ run_ended connect: scripts/main/main.gd:5363, scripts/debug/endgame_smoke.gd:75,1893, scripts/debug/run_probe.gd:1200
 - milestone_reached(milestone_id: String, ending_data: Dictionary) · scripts/autoload/event_bus.gd:248
   ↳ milestone_reached emit: scripts/systems/endings_system.gd:441
-  ↳ milestone_reached connect: scripts/main/main.gd:5361, scripts/debug/endgame_smoke.gd:13775, scripts/debug/run_probe.gd:501
+  ↳ milestone_reached connect: scripts/main/main.gd:5364, scripts/debug/endgame_smoke.gd:13775, scripts/debug/run_probe.gd:501
 - shutter_changed(weeks_left: int) · scripts/autoload/event_bus.gd:250 · emit: scripts/autoload/game_state.gd:430 · connect: scripts/tabs/finance/finance_ozet_view.gd:80, scripts/tabs/finance_tab.gd:51, scripts/ui/components/top_bar.gd:108
 - month_ended(month_close: Dictionary) · scripts/autoload/event_bus.gd:253
   ↳ month_ended emit: scripts/systems/summary_system.gd:126
   ↳ month_ended connect: scripts/autoload/save_manager.gd:62, scripts/tabs/finance/finance_ozet_view.gd:68, scripts/ui/components/top_bar.gd:111, scripts/debug/endgame_smoke.gd:1413, scripts/debug/run_probe.gd:489
-- summary_ready(data: Dictionary) · scripts/autoload/event_bus.gd:256 · emit: scripts/systems/message_system.gd:58 · connect: scripts/main/main.gd:5362, scripts/debug/endgame_smoke.gd:1412,1534
-- meeting_scene_requested(view_state: Dictionary) · scripts/autoload/event_bus.gd:261 · emit: scripts/systems/vc_pitch_system.gd:104 · connect: scripts/main/main.gd:2591,5154,5364
+- summary_ready(data: Dictionary) · scripts/autoload/event_bus.gd:256 · emit: scripts/systems/message_system.gd:58 · connect: scripts/main/main.gd:5365, scripts/debug/endgame_smoke.gd:1412,1534
+- meeting_scene_requested(view_state: Dictionary) · scripts/autoload/event_bus.gd:261 · emit: scripts/systems/vc_pitch_system.gd:104 · connect: scripts/main/main.gd:2591,5157,5367
 - sheet_granted(vc_id: String) · scripts/autoload/event_bus.gd:264
   ↳ sheet_granted emit: scripts/systems/vc_pitch_system.gd:417,872
   ↳ sheet_granted connect: scripts/events/core/signals.gd:33, scripts/tabs/finance/finance_ozet_view.gd:75, scripts/tabs/hunt_tab.gd:46, scripts/ui/components/inbox.gd:160
@@ -582,7 +582,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - callback_ready(vc_id: String) · scripts/autoload/event_bus.gd:266 · emit: scripts/systems/vc_pitch_system.gd:889 · connect: scripts/tabs/hunt_tab.gd:46
 - meeting_day(vc_id: String) · scripts/autoload/event_bus.gd:267 · emit: scripts/systems/vc_pitch_system.gd:903 · connect: scripts/events/core/signals.gd:35, scripts/tabs/hunt_tab.gd:47
 - offer_countdown_changed(weeks_left: int) · scripts/autoload/event_bus.gd:268 · emit: scripts/systems/vc_pitch_system.gd:914 · connect: scripts/ui/components/top_bar.gd:116
-- term_table_requested(vc_id: String, stage: String) · scripts/autoload/event_bus.gd:269 · emit: scripts/events/core/effects.gd:679,698, scripts/main/game_shell.gd:159, scripts/tabs/hunt_tab.gd:521 · connect: scripts/main/main.gd:5365
+- term_table_requested(vc_id: String, stage: String) · scripts/autoload/event_bus.gd:269 · emit: scripts/events/core/effects.gd:679,698, scripts/main/game_shell.gd:159, scripts/tabs/hunt_tab.gd:521 · connect: scripts/main/main.gd:5368
 - sheet_walked(vc_id: String) · scripts/autoload/event_bus.gd:270
   ↳ sheet_walked emit: scripts/systems/vc_pitch_system.gd:628
   ↳ sheet_walked connect: scripts/tabs/finance/finance_ozet_view.gd:77, scripts/tabs/hunt_tab.gd:48, scripts/ui/components/inbox.gd:161, scripts/debug/endgame_smoke.gd:1921
@@ -594,11 +594,11 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - day_tick_completed(day: int) · scripts/autoload/event_bus.gd:286
   ↳ day_tick_completed emit: scripts/autoload/time_manager.gd:434
   ↳ day_tick_completed connect: scripts/autoload/save_manager.gd:61, scripts/events/tools/plausibility.gd:159, scripts/tabs/sales_tab.gd:76, scripts/ui/components/inbox.gd:160, scripts/ui/office/office_city.gd:102 +4
-- game_loaded(slot_id: String) · scripts/autoload/event_bus.gd:289 · emit: scripts/main/main.gd:5871 · connect: scripts/ui/components/left_tabs.gd:149,160
-- system_menu_requested() · scripts/autoload/event_bus.gd:291 · emit: scripts/main/game_shell.gd:102, scripts/main/main.gd:2467,3097,3119 · connect: scripts/main/main.gd:5366
+- game_loaded(slot_id: String) · scripts/autoload/event_bus.gd:289 · emit: scripts/main/main.gd:5874 · connect: scripts/ui/components/left_tabs.gd:149,160
+- system_menu_requested() · scripts/autoload/event_bus.gd:291 · emit: scripts/main/game_shell.gd:102, scripts/main/main.gd:2467,3097,3119 · connect: scripts/main/main.gd:5369
 - save_load_requested(mode: String) · scripts/autoload/event_bus.gd:293 · emit: scripts/main/main.gd:3099,3103, scripts/menu/main_menu.gd:55, scripts/modals/system_menu_modal.gd:37,38 · connect: scripts/main/main.gd:90
-- quicksave_requested() · scripts/autoload/event_bus.gd:296 · emit: scripts/main/game_shell.gd:61, scripts/main/main.gd:2443,2448,3124 · connect: scripts/main/main.gd:5367
-- quickload_requested() · scripts/autoload/event_bus.gd:297 · emit: scripts/main/game_shell.gd:63, scripts/main/main.gd:2440,2468,2473,2479 · connect: scripts/main/main.gd:5368
+- quicksave_requested() · scripts/autoload/event_bus.gd:296 · emit: scripts/main/game_shell.gd:61, scripts/main/main.gd:2443,2448,3124 · connect: scripts/main/main.gd:5370
+- quickload_requested() · scripts/autoload/event_bus.gd:297 · emit: scripts/main/game_shell.gd:63, scripts/main/main.gd:2440,2468,2473,2479 · connect: scripts/main/main.gd:5371
 - debug_onboarding_retrigger_requested() · scripts/autoload/event_bus.gd:301 · emit: scripts/main/game_shell.gd:140 · connect: scripts/main/main.gd:104
 
 ### scripts/autoload/time_manager.gd
@@ -610,7 +610,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 ### scripts/menu/credits.gd
 - dismissed() · scripts/menu/credits.gd:6 · (ad 7 yerde tanımlı)
   ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:79, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
-  ↳ dismissed connect: scripts/main/main.gd:5710,5735,5754,5788, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
+  ↳ dismissed connect: scripts/main/main.gd:5713,5738,5757,5791, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
 
 ### scripts/menu/godot_card.gd
 - finished() · scripts/menu/godot_card.gd:6 · emit: scripts/menu/godot_card.gd:35 · connect: scripts/main/main.gd:119, scripts/ui/components/radial_dial.gd:53
@@ -619,52 +619,52 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - back() · scripts/menu/licenses.gd:7 · emit: scripts/menu/licenses.gd:28 · connect: scripts/menu/credits.gd:44
 - dismissed() · scripts/menu/licenses.gd:8 · (ad 7 yerde tanımlı)
   ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:79, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
-  ↳ dismissed connect: scripts/main/main.gd:5710,5735,5754,5788, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
+  ↳ dismissed connect: scripts/main/main.gd:5713,5738,5757,5791, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
 
 ### scripts/menu/main_menu.gd
 - new_game_requested() · scripts/menu/main_menu.gd:7 · emit: scripts/main/main.gd:3358, scripts/menu/main_menu.gd:54 · connect: scripts/main/main.gd:131
-- load_requested(slot_id: String) · scripts/menu/main_menu.gd:8 · emit: scripts/menu/main_menu.gd:53, scripts/modals/save_load_modal.gd:237,239 · connect: scripts/main/main.gd:134,5790 · (ad 2 yerde tanımlı)
+- load_requested(slot_id: String) · scripts/menu/main_menu.gd:8 · emit: scripts/menu/main_menu.gd:53, scripts/modals/save_load_modal.gd:237,239 · connect: scripts/main/main.gd:134,5793 · (ad 2 yerde tanımlı)
 
 ### scripts/modals/confirm_modal.gd
-- confirmed() · scripts/modals/confirm_modal.gd:11 · emit: scripts/modals/hr_action_modal.gd:224 · connect: scripts/main/main.gd:5730, scripts/onboarding/onboarding_flow.gd:177 · (ad 2 yerde tanımlı)
-- alt_selected() · scripts/modals/confirm_modal.gd:12 · emit: - · connect: scripts/main/main.gd:5734
+- confirmed() · scripts/modals/confirm_modal.gd:11 · emit: scripts/modals/hr_action_modal.gd:224 · connect: scripts/main/main.gd:5733, scripts/onboarding/onboarding_flow.gd:177 · (ad 2 yerde tanımlı)
+- alt_selected() · scripts/modals/confirm_modal.gd:12 · emit: - · connect: scripts/main/main.gd:5737
 - dismissed() · scripts/modals/confirm_modal.gd:13 · (ad 7 yerde tanımlı)
   ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:79, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
-  ↳ dismissed connect: scripts/main/main.gd:5710,5735,5754,5788, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
+  ↳ dismissed connect: scripts/main/main.gd:5713,5738,5757,5791, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
 
 ### scripts/modals/ending_scene.gd
-- continue_requested() · scripts/modals/ending_scene.gd:40 · emit: scripts/modals/ending_scene.gd:445 · connect: scripts/main/main.gd:5922
-- main_menu_requested() · scripts/modals/ending_scene.gd:41 · emit: scripts/modals/ending_scene.gd:462, scripts/modals/system_menu_modal.gd:63 · connect: scripts/main/main.gd:5755,5923 · (ad 2 yerde tanımlı)
+- continue_requested() · scripts/modals/ending_scene.gd:40 · emit: scripts/modals/ending_scene.gd:445 · connect: scripts/main/main.gd:5925
+- main_menu_requested() · scripts/modals/ending_scene.gd:41 · emit: scripts/modals/ending_scene.gd:462, scripts/modals/system_menu_modal.gd:63 · connect: scripts/main/main.gd:5758,5926 · (ad 2 yerde tanımlı)
 
 ### scripts/modals/hr_action_modal.gd
-- confirmed() · scripts/modals/hr_action_modal.gd:15 · emit: scripts/modals/hr_action_modal.gd:224 · connect: scripts/main/main.gd:5730, scripts/onboarding/onboarding_flow.gd:177 · (ad 2 yerde tanımlı)
+- confirmed() · scripts/modals/hr_action_modal.gd:15 · emit: scripts/modals/hr_action_modal.gd:224 · connect: scripts/main/main.gd:5733, scripts/onboarding/onboarding_flow.gd:177 · (ad 2 yerde tanımlı)
 - dismissed() · scripts/modals/hr_action_modal.gd:16 · (ad 7 yerde tanımlı)
   ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:79, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
-  ↳ dismissed connect: scripts/main/main.gd:5710,5735,5754,5788, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
+  ↳ dismissed connect: scripts/main/main.gd:5713,5738,5757,5791, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
 
 ### scripts/modals/save_load_modal.gd
 - dismissed() · scripts/modals/save_load_modal.gd:14 · (ad 7 yerde tanımlı)
   ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:79, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
-  ↳ dismissed connect: scripts/main/main.gd:5710,5735,5754,5788, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
-- save_requested(slot_id: String) · scripts/modals/save_load_modal.gd:15 · emit: scripts/modals/save_load_modal.gd:229 · connect: scripts/main/main.gd:5789
-- load_requested(slot_id: String) · scripts/modals/save_load_modal.gd:16 · emit: scripts/menu/main_menu.gd:53, scripts/modals/save_load_modal.gd:237,239 · connect: scripts/main/main.gd:134,5790 · (ad 2 yerde tanımlı)
+  ↳ dismissed connect: scripts/main/main.gd:5713,5738,5757,5791, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
+- save_requested(slot_id: String) · scripts/modals/save_load_modal.gd:15 · emit: scripts/modals/save_load_modal.gd:229 · connect: scripts/main/main.gd:5792
+- load_requested(slot_id: String) · scripts/modals/save_load_modal.gd:16 · emit: scripts/menu/main_menu.gd:53, scripts/modals/save_load_modal.gd:237,239 · connect: scripts/main/main.gd:134,5793 · (ad 2 yerde tanımlı)
 
 ### scripts/modals/settings_modal.gd
 - dismissed() · scripts/modals/settings_modal.gd:16 · (ad 7 yerde tanımlı)
   ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:79, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
-  ↳ dismissed connect: scripts/main/main.gd:5710,5735,5754,5788, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
+  ↳ dismissed connect: scripts/main/main.gd:5713,5738,5757,5791, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
 
 ### scripts/modals/system_menu_modal.gd
 - dismissed() · scripts/modals/system_menu_modal.gd:18 · (ad 7 yerde tanımlı)
   ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:79, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
-  ↳ dismissed connect: scripts/main/main.gd:5710,5735,5754,5788, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
-- main_menu_requested() · scripts/modals/system_menu_modal.gd:19 · emit: scripts/modals/ending_scene.gd:462, scripts/modals/system_menu_modal.gd:63 · connect: scripts/main/main.gd:5755,5923 · (ad 2 yerde tanımlı)
-- exit_save_requested() · scripts/modals/system_menu_modal.gd:20 · emit: scripts/modals/system_menu_modal.gd:93 · connect: scripts/main/main.gd:5756
+  ↳ dismissed connect: scripts/main/main.gd:5713,5738,5757,5791, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
+- main_menu_requested() · scripts/modals/system_menu_modal.gd:19 · emit: scripts/modals/ending_scene.gd:462, scripts/modals/system_menu_modal.gd:63 · connect: scripts/main/main.gd:5758,5926 · (ad 2 yerde tanımlı)
+- exit_save_requested() · scripts/modals/system_menu_modal.gd:20 · emit: scripts/modals/system_menu_modal.gd:93 · connect: scripts/main/main.gd:5759
 
 ### scripts/modals/term_sheet_table_scene.gd
 - closed() · scripts/modals/term_sheet_table_scene.gd:17 · (ad 3 yerde tanımlı)
   ↳ closed emit: scripts/main/main.gd:2627, scripts/modals/term_sheet_table_scene.gd:401,409,422, scripts/tabs/rnd/rnd_assign_panel.gd:203, scripts/ui/meeting/meeting_panel.gd:359
-  ↳ closed connect: scripts/main/main.gd:5683,5970, scripts/tabs/rnd/rnd_detail_panel.gd:77
+  ↳ closed connect: scripts/main/main.gd:5686,5973, scripts/tabs/rnd/rnd_detail_panel.gd:77
 
 ### scripts/onboarding/first_week_doc.gd
 - picked(field: String, value: Variant) · scripts/onboarding/first_week_doc.gd:7 · (ad 2 yerde tanımlı)
@@ -677,7 +677,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 
 ### scripts/onboarding/steps/step_base.gd
 - changed() · scripts/onboarding/steps/step_base.gd:15 · (ad 2 yerde tanımlı)
-  ↳ changed emit: scripts/main/main.gd:3423,5096, scripts/onboarding/steps/character_step.gd:32,53,111, scripts/onboarding/steps/company_step.gd:35 +8
+  ↳ changed emit: scripts/main/main.gd:3423,5099, scripts/onboarding/steps/character_step.gd:32,53,111, scripts/onboarding/steps/company_step.gd:35 +8
   ↳ changed connect: scripts/onboarding/onboarding_flow.gd:101, scripts/ui/meeting/meeting_panel.gd:274,511
 
 ### scripts/tabs/finance_tab.gd
@@ -782,7 +782,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - started() · scripts/tabs/rnd/rnd_assign_panel.gd:18 · emit: scripts/tabs/rnd/rnd_assign_panel.gd:230,232 · connect: scripts/tabs/rnd/rnd_detail_panel.gd:76
 - closed() · scripts/tabs/rnd/rnd_assign_panel.gd:20 · (ad 3 yerde tanımlı)
   ↳ closed emit: scripts/main/main.gd:2627, scripts/modals/term_sheet_table_scene.gd:401,409,422, scripts/tabs/rnd/rnd_assign_panel.gd:203, scripts/ui/meeting/meeting_panel.gd:359
-  ↳ closed connect: scripts/main/main.gd:5683,5970, scripts/tabs/rnd/rnd_detail_panel.gd:77
+  ↳ closed connect: scripts/main/main.gd:5686,5973, scripts/tabs/rnd/rnd_detail_panel.gd:77
 
 ### scripts/tabs/rnd/rnd_tree_view.gd
 - selection_changed(node_id: String) · scripts/tabs/rnd/rnd_tree_view.gd:35 · emit: scripts/tabs/rnd/rnd_tree_view.gd:339 · connect: scripts/tabs/rnd_tab.gd:144
@@ -806,7 +806,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 ### scripts/ui/meeting/meeting_panel.gd
 - closed() · scripts/ui/meeting/meeting_panel.gd:19 · (ad 3 yerde tanımlı)
   ↳ closed emit: scripts/main/main.gd:2627, scripts/modals/term_sheet_table_scene.gd:401,409,422, scripts/tabs/rnd/rnd_assign_panel.gd:203, scripts/ui/meeting/meeting_panel.gd:359
-  ↳ closed connect: scripts/main/main.gd:5683,5970, scripts/tabs/rnd/rnd_detail_panel.gd:77
+  ↳ closed connect: scripts/main/main.gd:5686,5973, scripts/tabs/rnd/rnd_detail_panel.gd:77
 
 ### scripts/ui/meeting/meeting_panel_option.gd
 - clicked() · scripts/ui/meeting/meeting_panel_option.gd:9 · (ad 2 yerde tanımlı)
@@ -818,7 +818,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 
 ### scripts/ui/meeting/meeting_ruler.gd
 - changed(value: int) · scripts/ui/meeting/meeting_ruler.gd:13 · (ad 2 yerde tanımlı)
-  ↳ changed emit: scripts/main/main.gd:3423,5096, scripts/onboarding/steps/character_step.gd:32,53,111, scripts/onboarding/steps/company_step.gd:35 +8
+  ↳ changed emit: scripts/main/main.gd:3423,5099, scripts/onboarding/steps/character_step.gd:32,53,111, scripts/onboarding/steps/company_step.gd:35 +8
   ↳ changed connect: scripts/onboarding/onboarding_flow.gd:101, scripts/ui/meeting/meeting_panel.gd:274,511
 - picked(value: int) · scripts/ui/meeting/meeting_ruler.gd:28 · (ad 2 yerde tanımlı)
   ↳ picked emit: scripts/onboarding/first_week_doc.gd:134,176, scripts/ui/meeting/meeting_ruler.gd:48
@@ -832,8 +832,8 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - founder_out() · scripts/ui/office/meeting_cast.gd:15 · emit: scripts/ui/office/meeting_cast.gd:155 · connect: scripts/ui/office/office_travel.gd:98
 
 ### scripts/ui/office/meeting_invite.gd
-- accepted() · scripts/ui/office/meeting_invite.gd:14 · emit: scripts/ui/office/meeting_invite.gd:191 · connect: scripts/main/main.gd:5560
-- postponed() · scripts/ui/office/meeting_invite.gd:15 · emit: scripts/ui/office/meeting_invite.gd:198 · connect: scripts/main/main.gd:5561
+- accepted() · scripts/ui/office/meeting_invite.gd:14 · emit: scripts/ui/office/meeting_invite.gd:191 · connect: scripts/main/main.gd:5563
+- postponed() · scripts/ui/office/meeting_invite.gd:15 · emit: scripts/ui/office/meeting_invite.gd:198 · connect: scripts/main/main.gd:5564
 
 ### scripts/ui/office/office_camera.gd
 - clicked(screen_pos: Vector2) · scripts/ui/office/office_camera.gd:8 · (ad 2 yerde tanımlı)
@@ -1117,7 +1117,7 @@ Biçim: yol · boyut · üst düzey anahtarlar (en çok 10)
 - data/product/sprint.json · 9.3 KB · {sprint_weeks, quarter_weeks, mvp_lines, effort, fix_effort, limit_k, need, roles, role_areas, person_points_week, +26}
 - data/techtree/rnd_tree.json · 6.3 KB · {_doc, _stars, _cross, _areas, k_arge, report_period_weeks, nodes, _hidden_doc, _hidden_k3_doc, hidden_lines}
 
-## Metin anahtarı aileleri (863 aile, 3265 anahtar)
+## Metin anahtarı aileleri (864 aile, 3266 anahtar)
 
 Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak geçiren .gd/.json (en çok 5). '-' = dinamik kurulmuş olabilir ya da kullanılmıyor.
 - ANGEL_CAP_* · 1 · scripts/tabs/finance/finance_ozet_view.gd
@@ -1879,6 +1879,7 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - SET_VSYNC_* · 1 · scripts/modals/settings_modal.gd
 - SET_WINDOW_* · 4 · scripts/modals/settings_modal.gd, scripts/systems/display_settings.gd
 - SHARE_FLOOR_* · 1 · scripts/autoload/rival_registry.gd, scripts/tabs/piyasa_tab.gd, scripts/debug/endgame_smoke.gd
+- SITTING_BLOCK_* · 1 · scripts/systems/work_hours_system.gd, scripts/debug/endgame_smoke.gd
 - SKILL_LABEL_* · 8 · scripts/systems/founder_constants.gd
 - SUMMARY_AUTO_* · 3 · scripts/systems/summary_system.gd
 - SUMMARY_EVENT_* · 3 · scripts/systems/summary_system.gd

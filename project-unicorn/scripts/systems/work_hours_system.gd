@@ -59,6 +59,11 @@ static func sitting_open(hours: int) -> bool:
 		<= mini(end_hour_for(CharacterRegistry.get_founder()), TimeModel.HOURS_PER_DAY - 1) - hours
 
 
+## A shut sitting's reason: the week's tick opens at 00:00, so its first hours come before the workday.
+static func sitting_shut_key(late_key: String) -> String:
+	return "SITTING_BLOCK_EARLY" if GameState.current_hour < start_hour() else late_key
+
+
 ## Kişinin BUGÜN devraldığı günlük saat — CANLI giriş.
 static func hours_for(c: Character) -> int:
 	# §2: kurucu şirket çalışma saatini devralır ve İSTİSNA ALAMAZ. Morali olmadığı için
