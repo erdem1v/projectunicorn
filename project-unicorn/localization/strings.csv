@@ -1901,9 +1901,9 @@ PROD_STEP_SHARED_MOBILE_K1_VIDEO_CLIP_DESC,Zaman çizelgesi dar ekranda da açı
 PROD_STEP_SHARED_MOBILE_K2_VIDEO_CLIP_DESC,"Çekim telefondan yüklenir, klip telefondan çıkar. Kayıt ile paylaşım arasında bilgisayar durmaz.",Footage goes up from the phone and the clip comes back out of it. No computer stands between the recording and the post.
 PROD_STEP_SHARED_MOBILE_K3_VIDEO_CLIP_DESC,Uçakta kesilen klip inişte kendi kendine yüklenir; sahada çekim ile yayın arasına mesafe girmez.,A clip cut on a plane uploads itself on landing. Out in the field nothing widens the gap between shooting and posting.
 PROD_LINE_ERP_CASHFLOW,Nakit Akışı,Cash Flow
-PROD_LINE_ERP_INTAKE,Veri Girişi,Data Entry
-PROD_LINE_ERP_LEDGER,Defter,Ledger
-PROD_LINE_ERP_STOCK,Stok,Stock
+PROD_LINE_ERP_INTAKE,Satın Alma,Purchasing
+PROD_LINE_ERP_LEDGER,Muhasebe,Accounting
+PROD_LINE_ERP_STOCK,Stok,Inventory
 PROD_LINE_ERP_INVOICING,Fatura,Invoicing
 PROD_STEP_ERP_CASHFLOW_K1,Kasa Hareketleri,Cash Movements
 PROD_STEP_ERP_CASHFLOW_K2,Nakit Akış Tablosu,Cash Flow Statement
