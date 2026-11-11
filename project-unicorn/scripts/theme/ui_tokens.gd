@@ -42,7 +42,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 46
+const THEME_STAMP := 47
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -723,7 +723,7 @@ const D_STAGE_FILL_MIX := 0.62        # a groove's fill: the stage's band over t
 const D_STAGE_EDGE_ALPHA := 0.7       # a groove's edge
 const D_STAGE_GHOST_ALPHA := 0.18     # a candidate's ghost
 const D_HATCH_BASE_ALPHA := 0.25      # the ground between the spill's stripes
-const D_BOX_MONO := 24                # a module's two-letter mark box
+const D_BOX_MONO := 24                # a module's icon box
 const D_H_KEY_CAND := 24              # the "+" key of a module's candidate
 const D_W_STAGE_STRIP := 168          # a candidate's stage strip
 const D_H_STAGE_STRIP := 6

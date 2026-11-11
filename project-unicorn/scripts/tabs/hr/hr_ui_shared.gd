@@ -421,16 +421,21 @@ static func D_who(c: Character, px: int, gap := UiTokens.SPACE_L) -> HBoxContain
 	return who
 
 
-## Harfi kutusunda: yüzü olmayan gönderen (ajans), bir modülün iki harfi (`variation` harflerin yüzü).
-static func D_mono(letter: String, px: int, variation := &"FloatTitle") -> PanelContainer:
+## Harfi kutusunda: yüzü olmayan gönderen (ajans).
+static func D_mono(letter: String, px: int) -> PanelContainer:
+	var label := UiFactory.make_label(letter, &"FloatTitle", UiTokens.D_INK_2)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	return D_mono_box(px, label)
+
+
+## Kare kutu (`MonoBox`), içinde tek çocuk: harf ya da Ürün'de modülün ikonu.
+static func D_mono_box(px: int, child: Control) -> PanelContainer:
 	var box := PanelContainer.new()
 	box.theme_type_variation = &"MonoBox"
 	box.custom_minimum_size = Vector2(px, px)
 	box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	var label := UiFactory.make_label(letter, variation, UiTokens.D_INK_2)
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	box.add_child(label)
+	box.add_child(child)
 	return box
 
 

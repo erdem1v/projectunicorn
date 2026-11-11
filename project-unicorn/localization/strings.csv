@@ -2682,12 +2682,6 @@ PRODUCT_AREA_TRUST,Güven & Ölçek,Trust & Scale
 PRODUCT_AREA_TRUST_SHORT,Güven,Trust
 PRODUCT_AREA_REVENUE,Gelir,Revenue
 PRODUCT_AREA_REVENUE_SHORT,Gelir,Revenue
-PRODUCT_AREA_CORE_MONO,ÇK,CO
-PRODUCT_AREA_ONBOARDING_MONO,İK,ON
-PRODUCT_AREA_GROWTH_MONO,BÜ,GR
-PRODUCT_AREA_INTEGRATIONS_MONO,EN,IN
-PRODUCT_AREA_TRUST_MONO,GÜ,TS
-PRODUCT_AREA_REVENUE_MONO,GE,RV
 PRODUCT_FOUNDER_IN_SPRINT,Kurucu sprintte,Founder in sprint
 PRODUCT_FOUNDER_ON_TIP,Açık: kurucu sprint kartlarında çalışır,On: the founder works on sprint cards
 PRODUCT_FOUNDER_OFF_TIP,Kapalı: kurucu sprint kartı almaz,Off: the founder takes no sprint card

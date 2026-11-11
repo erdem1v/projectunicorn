@@ -678,7 +678,6 @@ func _menajer(master: Theme) -> Theme:
 		[&"KeyLabelStrong", cond_sb_caps, T.D_FS_14, T.D_INK_1],
 		[&"KeySmall", cond_sb_caps, T.D_FS_12, T.D_INK_3],
 		[&"Eyebrow", wide_sb_caps, T.D_FS_12, T.D_INK_4],
-		[&"MonoMark", wide_b, T.D_FS_12, T.D_INK_2],
 		[&"SprintTitle", wide_b, T.D_FS_26, T.D_INK_1],
 		[&"NextTitle", wide_b, T.D_FS_16, T.D_INK_1],
 		[&"ProgressFigure", wide_b, T.D_FS_20, T.D_INK_1],

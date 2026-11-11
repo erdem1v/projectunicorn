@@ -116,10 +116,10 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 - `GameState`ten okunanlar: `company_name`, `get_date_dict`, `day`, `phase`, `messages`, `desk_arrivals`, `founder_portrait`, `logo` (ContinueCard `row.meta.logo`), `vc_states`, `active_sheets` (en çok `top_bar.gd`, `inbox.gd`)
 - Kalıcı kullanıcı ayarları `user://settings.json` (`Settings.DEFAULTS` `settings.gd:24`): `window_mode`, `ui_scale`, `colorblind_palette`, `ticker_open`, `master_volume`, `music_*`, `sfx_volume`, `pause_unfocused`, `language`
 - `runs_finished` profil sayacı `Settings` anahtarı, `main.gd:5286`'da artar; Onboarding Zor kipi açılışını buradan okur (`first_week_doc.gd:15`)
-- Tema sürümü: `UiTokens.THEME_STAMP := 40` `ui_tokens.gd:44`; .tres'in gömülü `UiTokensStamp.stamp` sabiti ile `main.gd:99-100` karşılaştırılır (debug uyarısı)
-- Ürün sol sütunu: ölçüler `D_W_LEFT` 288, `D_BOX_MONO` 24, `D_H_KEY_CAND` 24, `D_W_STAGE_STRIP` 168, `D_H_STAGE_STRIP` 6, `D_PLANNED_ALPHA` (planlı talep), `D_TAKEN_ALPHA` (planlı ya da damgalı aday);
+- Tema sürümü: `UiTokens.THEME_STAMP` `ui_tokens.gd:45`; .tres'in gömülü `UiTokensStamp.stamp` sabiti ile `main.gd:99-100` karşılaştırılır (debug uyarısı)
+- Ürün sol sütunu: ölçüler `D_W_LEFT` 288, `D_BOX_MONO` 24 (modül ikonunun kutusu), `D_H_KEY_CAND` 24, `D_W_STAGE_STRIP` 168, `D_H_STAGE_STRIP` 6, `D_PLANNED_ALPHA` (planlı talep), `D_TAKEN_ALPHA` (planlı ya da damgalı aday);
   ↳ aşama bantları `D_ST_DESIGN/DEV/TEST` ve `UiTokens.D_stage(aşama)`.
-- Yüzler: `d_wide_b` (Archivo 800, genişlik 118: modül işareti `MonoMark`) ve `d_wide_sb_caps` (650, genişlik 110, harf aralığı 1: göz başlığı `Eyebrow`); `d_num` (650/108, tablo rakamları: Kapasite'nin `CapFigure` sayısı).
+- Yüzler: `d_wide_b` (Archivo 800, genişlik 118: `SprintTitle`) ve `d_wide_sb_caps` (650, genişlik 110, harf aralığı 1: göz başlığı `Eyebrow`); `d_num` (650/108, tablo rakamları: Kapasite'nin `CapFigure` sayısı).
 - Sembol yedeği: koyu zincirler Archivo, Plex, `symbols_flat` (Noto Sans Symbols 2'nin kendi RID'li yüzü: ★ ☆ ✓ ▾ ⌛ ✕).
   Satır yüksekliği yedeğin metriğinden de gelir: `UiFactory.flatten_symbol_face()` (`main.gd` `_ready`) yüzün ascent/descent'ini 9 ile 52 px arasında sıfırlar.
   Krem zincirler düz Noto dosyasıyla biter, metriği dokunulmaz; `build_theme.gd` `_bare` ve `_line_h()` koyu kutunun payını yedeksiz hesaplar. `glyph_audit` her zinciri sınar.

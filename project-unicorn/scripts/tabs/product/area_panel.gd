@@ -16,6 +16,15 @@ signal hovered(card_id: String)
 
 const CHEVRONS := ["res://assets/icons/util/chevron_right.svg", "res://assets/icons/util/chevron_down.svg"]
 const CHEVRON_UP := "res://assets/icons/util/chevron_up.svg"
+## Modülün işareti: modül kimliği → ikon.
+const AREA_ICONS := {
+	"core": "res://assets/icons/rail/product.svg",
+	"trust": "res://assets/icons/util/shield.svg",
+	"onboarding": "res://assets/icons/product/area_onboarding.svg",
+	"integrations": "res://assets/icons/product/area_integrations.svg",
+	"growth": "res://assets/icons/product/area_growth.svg",
+	"revenue": "res://assets/icons/product/area_revenue.svg",
+}
 ## Talep listesi kapalıyken görünen satır sayısı.
 const REQUESTS_SHOWN := 3
 
@@ -128,7 +137,7 @@ func _add_requests(requests: Array) -> void:
 		list.add_child(fold)
 
 
-## Talep satırı: müşteri ve söz tarihi, altında modülün işareti ve kartın adı; tıklanınca modülü açılır. Kartı bu sprintin planındaki
+## Talep satırı: müşteri ve söz tarihi, altında modülün ikonu ve kartın adı; tıklanınca modülü açılır. Kartı bu sprintin planındaki
 ## talep zeminsiz ve soluktur, çipinde tik ve tarih durur.
 func _request_row(r: Dictionary) -> PanelContainer:
 	var planned: bool = r.planned
@@ -143,10 +152,14 @@ func _request_row(r: Dictionary) -> PanelContainer:
 	who.add_child(chip)
 	col.add_child(who)
 	var what := SprintUiShared.box(UiTokens.SPACE_M)
-	what.add_child(HRUiShared.D_mono(String(r.mono), UiTokens.D_BOX_MONO, &"MonoMark"))
+	var mark := _area_mark(String(r.module_id))
+	what.add_child(mark)
 	what.add_child(_name(String(r.card_name), &"CaptionPrimary", null))
 	col.add_child(what)
 	HRUiShared.set_mouse_ignore(col)
+	# İkon modülün adını ipucu taşır: imleci alır, tıkı satıra geçirir.
+	mark.tooltip_text = SprintCatalog.area_name(String(r.module_id))
+	mark.mouse_filter = Control.MOUSE_FILTER_PASS
 	if planned:
 		row.modulate = Color(Color.WHITE, UiTokens.D_PLANNED_ALPHA)
 		# Tik ve tarih kendi ipucunu taşır: imleci alır, tıkı satıra geçirir.
@@ -173,6 +186,11 @@ func _planned_chip(r: Dictionary) -> HBoxContainer:
 
 # --- Modüller ---------------------------------------------------------------------------
 
+## Modülün ikonu, kutusunda ortalı.
+func _area_mark(area_id: String) -> PanelContainer:
+	return HRUiShared.D_mono_box(UiTokens.D_BOX_MONO, UiFactory.make_glyph(AREA_ICONS[area_id], UiTokens.D_ICON_ROW, UiTokens.D_INK_2))
+
+
 ## Modül satırı: işaret, ad, "planda" (bu sprintte kartı varsa) ve şevron; açıksa altında adayları. Satırın başı tıklanınca açılır ya da
 ## kapanır.
 func _module_row(m: Dictionary) -> PanelContainer:
@@ -183,7 +201,7 @@ func _module_row(m: Dictionary) -> PanelContainer:
 	row.add_child(col)
 	var head := SprintUiShared.box(UiTokens.SPACE_M)
 	head.custom_minimum_size.y = UiTokens.D_BOX_MONO
-	head.add_child(HRUiShared.D_mono(String(m.mono), UiTokens.D_BOX_MONO, &"MonoMark"))
+	head.add_child(_area_mark(String(m.id)))
 	head.add_child(_name(String(m.name), &"TipTitle", UiTokens.D_INK_2))
 	if m.planned:
 		head.add_child(SprintUiShared.label(tr("PRODUCT_IN_PLAN"), &"CaptionName", UiTokens.D_INK_1))

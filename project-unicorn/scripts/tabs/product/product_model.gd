@@ -56,10 +56,10 @@ extends RefCounted
 #
 # Yeni ekranın okuma yüzeyi, yukarıdakilerin yanında (efor sayıları görünen eforudur: kalan ihtiyaç ÷ hazırlık kazancı):
 #   founder: {on (kurucu sprint kartı alır), locked: "" | "running" | "rnd", rnd_text},
-#   requests: null (B2C) | [{customer, card_id, card_name, module_id, mono (modülün iki harfi), value (yıllık), due_text (sözün, yoksa talebin son sprinti:
+#   requests: null (B2C) | [{customer, card_id, card_name, module_id, value (yıllık), due_text (sözün, yoksa talebin son sprinti:
 #             "bu çeyrek", "gelecek çeyrek" ya da "{q}. çeyrek"), soon (bu çeyrek), planned (kartı bu sprintin planında), tip}]
 #             (planlı olmayan önde, bu çeyrek önde, sonra son tarih),
-#   modules: [{id, name, mono, planned (bu sprintte kartı var), candidates: [{id, name, effort, parts: [{stage, effort}] (sıfırdan
+#   modules: [{id, name, planned (bu sprintte kartı var), candidates: [{id, name, effort, parts: [{stage, effort}] (sıfırdan
 #             büyük aşama payları, eforu kesirli), planned (bu sprintin planında), stamp (başka sprintte: sprint numarası, yoksa
 #             -1), addable (null: "+"nın değeri henüz istenmedi, `resolve_addable` ister; false: adaylıktan çıkmış kartın "+"ı yok),
 #             bugs, fix_text}]}] (kilitli aday ve adaylarının hepsi kilitli modül yok),
@@ -248,7 +248,7 @@ static func _module(area_id: String, cards: Array, planned: bool, sprint: int, t
 		return c.state != "candidate" or SprintCatalog.gate_reason(c.step) == "")
 	if listed.is_empty() and not cards.is_empty():
 		return null
-	return {"id": area_id, "name": SprintCatalog.area_name(area_id), "mono": _mono(area_id), "planned": planned,
+	return {"id": area_id, "name": SprintCatalog.area_name(area_id), "planned": planned,
 		"candidates": listed.map(func(c: Dictionary) -> Dictionary: return _module_card(c, int(tags.get(c.id, -1)), sprint))}
 
 
@@ -264,11 +264,6 @@ static func _module_card(c: Dictionary, tag: int, sprint: int) -> Dictionary:
 			func(i: int) -> Dictionary: return {"stage": roles[i], "effort": parts[i]}),
 		"planned": tag == sprint, "stamp": tag if tag != sprint else -1, "addable": null if c.state == "candidate" else false,
 		"bugs": c.bugs if fix else 0, "fix_text": SprintUiShared.bugs_text(SprintCatalog.bugs_part(c.line, c.bugs)) if fix else ""}
-
-
-## Modülün iki harfli işareti.
-static func _mono(area_id: String) -> String:
-	return _t("PRODUCT_AREA_" + area_id.to_upper() + "_MONO")
 
 
 ## Müşteri talepleri (B2B; B2C'de null): her açık talep bir satır. Son tarih sözün, yoksa talebin son sprintidir (`_due`).
@@ -300,7 +295,7 @@ static func _requests(tags: Dictionary) -> Variant:
 			parts.append(_t("PRODUCT_TIP_PROMISE").format({"when": when.text}))
 		var planned: bool = tags.get(card_id, -1) == SprintSystem.sprint_number()
 		keyed.append([[int(planned), int(not when.soon), due, keyed.size()], {"customer": customer, "card_id": card_id,
-			"card_name": card_name, "module_id": area_id, "mono": _mono(area_id), "value": int(r.value),
+			"card_name": card_name, "module_id": area_id, "value": int(r.value),
 			"due_text": when.text, "soon": when.soon,
 			"planned": planned, "tip": SprintUiShared.SEP.join(parts)}])
 	keyed.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
