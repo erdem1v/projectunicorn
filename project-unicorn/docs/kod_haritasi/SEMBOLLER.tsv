@@ -69,7 +69,7 @@ _add_requests	func	scripts/tabs/product/area_panel.gd:127	AreaPanel
 _add_review	func	scripts/systems/sprint_bridges.gd:351	SprintBridges
 _add_risk_b2b	func	scripts/debug/endgame_smoke.gd:3469	EndgameSmoke
 _add_row	func	scripts/modals/settings_modal.gd:407	settings_modal.gd
-_add_section	func	scripts/menu/licenses.gd:59	licenses.gd
+_add_section	func	scripts/menu/licenses.gd:57	licenses.gd
 _add_volume_row	func	scripts/modals/settings_modal.gd:422	settings_modal.gd
 _addable	var	scripts/tabs/product/product_model.gd:190	ProductModel
 _admit	func	scripts/events/core/engine.gd:478	EvEngine
@@ -202,7 +202,7 @@ _b2c	var	scripts/tabs/sales_tab.gd:47	sales_tab.gd
 _b2c_delta	func	scripts/debug/endgame_smoke.gd:13390	EndgameSmoke
 _b2c_wom	func	scripts/debug/endgame_smoke.gd:13398	EndgameSmoke
 _back	func	scripts/systems/incident_system.gd:543	IncidentSystem
-_back_btn	var	scripts/menu/licenses.gd:16	licenses.gd
+_back_btn	var	scripts/menu/licenses.gd:15	licenses.gd
 _back_to_decision	func	scripts/modals/save_load_modal.gd:248	save_load_modal.gd
 _backups	func	scripts/modals/save_load_modal.gd:98	save_load_modal.gd
 _badge	func	scripts/tabs/product/capacity_view.gd:191	CapacityView
@@ -1048,7 +1048,7 @@ _clock	var	scripts/ui/office/office_person.gd:239	OfficePerson
 _clock_min	var	scripts/ui/components/top_bar.gd:93	top_bar.gd
 _clock_re	var	scripts/events/tools/lint.gd:66	EvLint
 _close	func	scripts/menu/credits.gd:58	credits.gd
-_close	func	scripts/menu/licenses.gd:78	licenses.gd
+_close	func	scripts/menu/licenses.gd:76	licenses.gd
 _close	func	scripts/modals/confirm_modal.gd:61	confirm_modal.gd
 _close	func	scripts/modals/hr_action_modal.gd:235	hr_action_modal.gd
 _close	func	scripts/modals/save_load_modal.gd:260	save_load_modal.gd
@@ -1057,7 +1057,7 @@ _close	func	scripts/systems/negotiation_system.gd:217	NegotiationSystem
 _close	func	scripts/systems/sales_rep_system.gd:258	SalesRepSystem
 _close	func	scripts/systems/sprint_system.gd:1697	SprintSystem
 _close	func	scripts/tabs/events/mail_pane.gd:842	mail_pane.gd
-_close_btn	var	scripts/menu/licenses.gd:17	licenses.gd
+_close_btn	var	scripts/menu/licenses.gd:16	licenses.gd
 _close_btn	var	scripts/modals/save_load_modal.gd:34	save_load_modal.gd
 _close_btn	var	scripts/modals/settings_modal.gd:70	settings_modal.gd
 _close_detail	func	scripts/ui/components/window_layer.gd:146	window_layer.gd
@@ -1154,7 +1154,7 @@ _cooldown_of	func	scripts/events/core/latches.gd:82	EvLatches
 _copies	func	scripts/systems/sprint_system.gd:999	SprintSystem
 _copy	func	scripts/autoload/investor_registry.gd:143	InvestorRegistry
 _copy_dark	func	scripts/theme/build_theme.gd:1315	build_theme.gd
-_copyright	func	scripts/debug/write_licenses.gd:46	write_licenses.gd
+_copyright	func	scripts/debug/write_licenses.gd:42	write_licenses.gd
 _core_only	var	scripts/debug/run_probe.gd:297	RunProbe
 _corner_disc	func	scripts/tabs/hr/hr_atlas_modal.gd:229	hr_atlas_modal.gd
 _cost_block	func	scripts/modals/work_hours_modal.gd:406	work_hours_modal.gd
@@ -2942,7 +2942,7 @@ _probe_us	var	scripts/debug/office_crowd_probe.gd:41	OfficeCrowdProbe
 _probe_variations	func	scripts/main/main.gd:3480	main.gd
 _probes_for_star	func	scripts/systems/sales_meeting_system.gd:234	SalesMeetingSystem
 _process	func	scripts/autoload/time_manager.gd:96	TimeManager
-_process	func	scripts/debug/write_licenses.gd:17	write_licenses.gd
+_process	func	scripts/debug/write_licenses.gd:16	write_licenses.gd
 _process	func	scripts/events/tools/plausibility_main.gd:35	plausibility_main.gd
 _process	func	scripts/main/main.gd:5504	main.gd
 _process	func	scripts/menu/godot_card.gd:18	godot_card.gd
@@ -3067,7 +3067,7 @@ _ready	func	scripts/main/game_shell.gd:21	game_shell.gd
 _ready	func	scripts/main/main.gd:83	main.gd
 _ready	func	scripts/menu/credits.gd:15	credits.gd
 _ready	func	scripts/menu/godot_card.gd:14	godot_card.gd
-_ready	func	scripts/menu/licenses.gd:20	licenses.gd
+_ready	func	scripts/menu/licenses.gd:19	licenses.gd
 _ready	func	scripts/menu/main_menu.gd:33	main_menu.gd
 _ready	func	scripts/modals/confirm_modal.gd:28	confirm_modal.gd
 _ready	func	scripts/modals/ending_scene.gd:55	EndingScene
@@ -3467,7 +3467,7 @@ _section	func	scripts/tabs/hr/hr_dossier.gd:213	hr_dossier.gd
 _section	func	scripts/tabs/personal_tab.gd:258	personal_tab.gd
 _section	func	scripts/tabs/product/sprint_board.gd:226	SprintBoard
 _section	func	scripts/tabs/product/sprint_next.gd:161	SprintNext
-_sections	var	scripts/menu/licenses.gd:15	licenses.gd
+_sections	var	scripts/menu/licenses.gd:14	licenses.gd
 _sector	func	scripts/tabs/piyasa_tab.gd:673	piyasa_tab.gd
 _seed	var	scripts/debug/sprint_probe.gd:94	sprint_probe.gd
 _seed	var	scripts/ui/meeting/vc_meeting_adapter.gd:34	VcMeetingAdapter
@@ -4081,7 +4081,7 @@ _undo	func	scripts/tabs/product/sprint_foot.gd:86	SprintFoot
 _unfinished	func	scripts/systems/sprint_system.gd:1111	SprintSystem
 _unhandled_input	func	scripts/main/main.gd:6001	main.gd
 _unhandled_input	func	scripts/menu/credits.gd:52	credits.gd
-_unhandled_input	func	scripts/menu/licenses.gd:67	licenses.gd
+_unhandled_input	func	scripts/menu/licenses.gd:65	licenses.gd
 _unhandled_input	func	scripts/modals/confirm_modal.gd:55	confirm_modal.gd
 _unhandled_input	func	scripts/modals/hr_action_modal.gd:229	hr_action_modal.gd
 _unhandled_input	func	scripts/modals/save_load_modal.gd:254	save_load_modal.gd
@@ -4916,7 +4916,7 @@ CATEGORY_QUOTA_DEFAULT	const	scripts/events/core/tuning.gd:77	EvTuning
 CATEGORY_QUOTA_WEEK	const	scripts/events/core/tuning.gd:63	EvTuning
 CATEGORY_SENDERS	const	scripts/ui/components/inbox.gd:22	inbox.gd
 CATEGORY_TAGS	const	scripts/events/present/chips.gd:62	EvChips
-CC0_DIR	const	scripts/debug/write_licenses.gd:12	write_licenses.gd
+CC0_DIR	const	scripts/debug/write_licenses.gd:11	write_licenses.gd
 ceiling	func	scripts/systems/sprint_bugs.gd:52	SprintBugs
 CELL	const	scripts/onboarding/steps/character_step.gd:9	character_step.gd
 CELL	const	tools/office3d/bake_nav.gd:17	bake_nav.gd
@@ -6452,7 +6452,7 @@ FRANK_LOOK	const	scripts/systems/look_system.gd:22	LookSystem
 FRANK_SIZES	const	tools/people/portrait_baker.gd:16	portrait_baker.gd
 FREE_MONTH_ACTS	const	scripts/systems/incident_system.gd:56	IncidentSystem
 free_trait_ids	func	scripts/systems/hr_constants.gd:496	HRConstants
-freetype_year	func	scripts/menu/licenses.gd:52	licenses.gd
+freetype_year	func	scripts/menu/licenses.gd:50	licenses.gd
 freeze_arc	func	scripts/events/core/schedule.gd:61	EvSchedule
 freeze_clock	func	scripts/autoload/time_manager.gd:252	TimeManager
 freeze_founder_sprint_pay	func	scripts/autoload/game_state.gd:453	GameState
@@ -7391,8 +7391,6 @@ lost_body	func	scripts/ui/components/inbox.gd:349	inbox.gd
 lost_line	func	scripts/ui/components/inbox.gd:392	inbox.gd
 lost_week	func	scripts/systems/sales_ledger.gd:419	SalesLedger
 lowest	func	scripts/systems/product_quality.gd:363	ProductQuality
-LUCIDE	const	scripts/debug/write_licenses.gd:11	write_licenses.gd
-LUCIDE	const	scripts/menu/licenses.gd:13	licenses.gd
 LUKEWARM_MIN	const	scripts/ui/meeting/sales_meeting_adapter.gd:23	SalesMeetingAdapter
 lunch_day	var	scripts/ui/office/office_actor.gd:64	OfficeActor
 LUNCH_WINDOW	const	scripts/systems/office_constants.gd:96	OfficeConstants

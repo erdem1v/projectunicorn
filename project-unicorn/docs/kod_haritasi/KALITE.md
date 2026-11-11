@@ -1,6 +1,6 @@
 # Kod haritası · KALITE
 
-Üretildi: git ff7a73fa · 2026-11-11 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git 14bbbfab · 2026-11-11 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 255 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
@@ -120,7 +120,7 @@ emit'i ya da connect'i bulunamayan sinyal (ada göre). Dizi içi bağ, await ve 
 - scripts/autoload/event_bus.gd:224 · whale_condition_met · connect yok
 - scripts/modals/confirm_modal.gd:12 · alt_selected · emit yok
 
-## Birden çok dosyada tanımlı const (92 ad)
+## Birden çok dosyada tanımlı const (91 ad)
 
 Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: elle bakılmalı.
 - INBOX · 18 dosya · scripts/main/game_shell.gd:7, scripts/main/main.gd:20, scripts/modals/save_load_modal.gd:19, scripts/modals/system_menu_modal.gd:22, scripts/tabs/events/mail_pane.gd:19, scripts/tabs/events_tab.gd:8 +12
@@ -181,7 +181,6 @@ Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: 
 - LEAD · 2 dosya · scripts/ui/meeting/sales_meeting_adapter.gd:19, scripts/ui/meeting/vc_meeting_adapter.gd:16
 - LICENSES · 2 dosya · scripts/menu/credits.gd:8, scripts/modals/settings_modal.gd:20
 - LOCKUP_S · 2 dosya · scripts/menu/main_menu.gd:23, scripts/onboarding/onboarding_flow.gd:31
-- LUCIDE · 2 dosya · scripts/menu/licenses.gd:13, scripts/debug/write_licenses.gd:11
 - MAIN_MENU_SCRIPT · 2 dosya · scripts/main/main.gd:17, scripts/onboarding/onboarding_flow.gd:14
 - MARKET_B2B · 2 dosya · scripts/systems/infra_system.gd:33, scripts/systems/support_system.gd:87
 - MIX_INCREMENT · 2 dosya · scripts/systems/hr_candidate_generator.gd:32, scripts/systems/sales_constants.gd:274

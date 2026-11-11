@@ -8,7 +8,6 @@ const FONT_FAMILIES := {
 	"archivo": "Archivo", "sans": "IBMPlexSans", "serif": "SourceSerif4",
 	"mono": "JetBrainsMono", "fallback": "NotoSansSymbols2",
 }
-const LUCIDE := "res://assets/art/office/icons/LICENSE-lucide.txt"
 const CC0_DIR := "res://assets/art/people/LICENSES/"
 
 
@@ -22,7 +21,6 @@ func _process(_delta: float) -> bool:
 	var files := {
 		"GODOT_LICENSE.txt": Engine.get_license_text(),
 		"GODOT_COPYRIGHT.txt": _copyright(),
-		"LICENSE-lucide.txt": FileAccess.get_file_as_string(LUCIDE),
 	}
 	var notices := PackedStringArray([en.get_message(&"LIC_THIRD_PARTY"), "",
 		en.get_message(&"LIC_FREETYPE").format({"year": load("res://scripts/menu/licenses.gd").freetype_year()}), "",
@@ -31,8 +29,6 @@ func _process(_delta: float) -> bool:
 		var rel: String = "fonts/%s-OFL.txt" % FONT_FAMILIES[dir]
 		files[rel] = FileAccess.get_file_as_string("res://assets/fonts/%s/OFL.txt" % dir)
 		notices.append("%s (%s)" % [files[rel].get_slice("\n", 0).strip_edges(), rel])
-	notices.append_array(["", en.get_message(&"LIC_ICONS"),
-		"%s (LICENSE-lucide.txt)" % files["LICENSE-lucide.txt"].get_slice("\n", 2).strip_edges()])
 	files["THIRD_PARTY_NOTICES.txt"] = "\n".join(notices) + "\n"
 	for f in DirAccess.get_files_at(CC0_DIR):
 		files["CC0/" + f] = FileAccess.get_file_as_string(CC0_DIR + f)

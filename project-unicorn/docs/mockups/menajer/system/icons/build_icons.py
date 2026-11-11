@@ -35,8 +35,22 @@ HEAD_BREAK = {"disc": "#F1ECE2", "edge": "#2B2722", "glyph": "#1E1B18"}
 HEAD_RING_HUES = {"meeting": "#A58FDB", "coffee": "#D39A66", "food": "#7DBE72", "wc": "#72AEDD"}
 
 
-def head_svg(name, scheme="invert"):
-    """scheme: 'invert' (recommended: a break flips the disc), 'ring' (first pass: hue ring), 'dark' (no break cue)."""
+# the look of the shipped head files: a light disc, the ring and the glyph in one ink (dark unless listed)
+HEAD_TODAY_DISC = "#f6f3ee"
+HEAD_TODAY_INK = {"meeting": "#6d5aa0", "coffee": "#8a5a3c", "food": "#4f8a4f", "wc": "#3f7fb0"}
+
+
+def head_svg(name, scheme="today"):
+    """scheme: 'today' (light disc, ink ring and glyph), 'invert' (a break flips the disc), 'ring' (first pass: hue ring),
+    'dark' (no break cue)."""
+    if scheme == "today":
+        ink = HEAD_TODAY_INK.get(name, "#2f3440")
+        return ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">\n'
+                '<circle cx="64" cy="68" r="52" fill="#000000" fill-opacity="0.28"/>\n'
+                '<circle cx="64" cy="62" r="52" fill="%s"/>\n'
+                '<circle cx="64" cy="62" r="49" fill="none" stroke="%s" stroke-width="5"/>\n'
+                '<g transform="translate(35 33) scale(2.4167)">\n%s\n</g>\n</svg>\n'
+                % (HEAD_TODAY_DISC, ink, kit.paths(GL[HEAD[name]], ink)))
     st = HEAD_BREAK if (scheme == "invert" and name in BREAK) else HEAD_WORK
     ring = ""
     if scheme == "ring" and name in HEAD_RING_HUES:

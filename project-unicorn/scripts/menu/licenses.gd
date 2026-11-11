@@ -10,7 +10,6 @@ signal dismissed
 const HEIGHT := 920
 const SCREEN_GAP := 52   # the room the window leaves above and below on a short screen (864 → 760)
 const FONT_DIRS := ["archivo", "sans", "serif", "mono", "fallback"]
-const LUCIDE := "res://assets/art/office/icons/LICENSE-lucide.txt"
 
 @onready var _sections: VBoxContainer = %Sections
 @onready var _back_btn: Button = %BackBtn
@@ -45,7 +44,6 @@ func _ready() -> void:
 	_add_section("", tr("LIC_FREETYPE").format({"year": freetype_year()}))
 	_add_section("LIC_THIRD_PARTY", "\n\n".join(components))
 	_add_section("LIC_FONTS", "\n\n".join(fonts))
-	_add_section("LIC_ICONS", FileAccess.get_file_as_string(LUCIDE))
 
 
 ## The end of FreeType's copyright range ("1996-2025, David Turner, …").

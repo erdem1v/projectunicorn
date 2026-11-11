@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git ff7a73fa · 2026-11-11 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 14bbbfab · 2026-11-11 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -55,7 +55,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/data_models/rival.gd · 33 · Rival · Resource · 0 sinyal · 1 func
 - scripts/data_models/term_sheet.gd · 63 · TermSheet · Resource · 0 sinyal · 3 func
 
-### scripts/debug/ (11 dosya, 34275 satır)
+### scripts/debug/ (11 dosya, 34271 satır)
 - scripts/debug/endgame_smoke.gd · 29670 · EndgameSmoke · RefCounted · 0 sinyal · 673 func
 - scripts/debug/glyph_audit.gd · 109 · - · SceneTree · 0 sinyal · 6 func
 - scripts/debug/k0_check.gd · 110 · K0Check · RefCounted · 0 sinyal · 6 func
@@ -66,7 +66,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/debug/run_probe.gd · 2392 · RunProbe · RefCounted · 0 sinyal · 92 func
 - scripts/debug/sprint_probe.gd · 516 · - · RefCounted · 0 sinyal · 21 func
 - scripts/debug/tick_probe.gd · 133 · - · Node · 0 sinyal · 3 func
-- scripts/debug/write_licenses.gd · 58 · - · SceneTree · 0 sinyal · 2 func
+- scripts/debug/write_licenses.gd · 54 · - · SceneTree · 0 sinyal · 2 func
 
 ### scripts/events/ (1 dosya, 227 satır)
 - scripts/events/event_gate.gd · 227 · EventGate · RefCounted · 0 sinyal · 35 func
@@ -126,11 +126,11 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/main/game_shell.gd · 219 · - · Control · 0 sinyal · 11 func
 - scripts/main/main.gd · 6073 · - · Node · 0 sinyal · 220 func
 
-### scripts/menu/ (5 dosya, 294 satır)
+### scripts/menu/ (5 dosya, 292 satır)
 - scripts/menu/continue_card.gd · 19 · - · Button · 0 sinyal · 1 func
 - scripts/menu/credits.gd · 60 · - · Control · 1 sinyal · 5 func
 - scripts/menu/godot_card.gd · 35 · - · Control · 1 sinyal · 4 func
-- scripts/menu/licenses.gd · 80 · - · Control · 2 sinyal · 5 func
+- scripts/menu/licenses.gd · 78 · - · Control · 2 sinyal · 5 func
 - scripts/menu/main_menu.gd · 100 · - · Control · 2 sinyal · 5 func
 
 ### scripts/modals/ (9 dosya, 2810 satır)
@@ -610,16 +610,16 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 
 ### scripts/menu/credits.gd
 - dismissed() · scripts/menu/credits.gd:6 · (ad 7 yerde tanımlı)
-  ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:79, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
+  ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:77, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
   ↳ dismissed connect: scripts/main/main.gd:5721,5746,5765,5799, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
 
 ### scripts/menu/godot_card.gd
 - finished() · scripts/menu/godot_card.gd:6 · emit: scripts/menu/godot_card.gd:35 · connect: scripts/main/main.gd:119, scripts/ui/components/radial_dial.gd:53
 
 ### scripts/menu/licenses.gd
-- back() · scripts/menu/licenses.gd:7 · emit: scripts/menu/licenses.gd:28 · connect: scripts/menu/credits.gd:44
+- back() · scripts/menu/licenses.gd:7 · emit: scripts/menu/licenses.gd:27 · connect: scripts/menu/credits.gd:44
 - dismissed() · scripts/menu/licenses.gd:8 · (ad 7 yerde tanımlı)
-  ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:79, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
+  ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:77, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
   ↳ dismissed connect: scripts/main/main.gd:5721,5746,5765,5799, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
 
 ### scripts/menu/main_menu.gd
@@ -630,7 +630,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - confirmed() · scripts/modals/confirm_modal.gd:11 · emit: scripts/modals/hr_action_modal.gd:224 · connect: scripts/main/main.gd:5741, scripts/onboarding/onboarding_flow.gd:177 · (ad 2 yerde tanımlı)
 - alt_selected() · scripts/modals/confirm_modal.gd:12 · emit: - · connect: scripts/main/main.gd:5745
 - dismissed() · scripts/modals/confirm_modal.gd:13 · (ad 7 yerde tanımlı)
-  ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:79, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
+  ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:77, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
   ↳ dismissed connect: scripts/main/main.gd:5721,5746,5765,5799, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
 
 ### scripts/modals/ending_scene.gd
@@ -640,24 +640,24 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 ### scripts/modals/hr_action_modal.gd
 - confirmed() · scripts/modals/hr_action_modal.gd:15 · emit: scripts/modals/hr_action_modal.gd:224 · connect: scripts/main/main.gd:5741, scripts/onboarding/onboarding_flow.gd:177 · (ad 2 yerde tanımlı)
 - dismissed() · scripts/modals/hr_action_modal.gd:16 · (ad 7 yerde tanımlı)
-  ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:79, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
+  ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:77, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
   ↳ dismissed connect: scripts/main/main.gd:5721,5746,5765,5799, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
 
 ### scripts/modals/save_load_modal.gd
 - dismissed() · scripts/modals/save_load_modal.gd:14 · (ad 7 yerde tanımlı)
-  ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:79, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
+  ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:77, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
   ↳ dismissed connect: scripts/main/main.gd:5721,5746,5765,5799, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
 - save_requested(slot_id: String) · scripts/modals/save_load_modal.gd:15 · emit: scripts/modals/save_load_modal.gd:229 · connect: scripts/main/main.gd:5800
 - load_requested(slot_id: String) · scripts/modals/save_load_modal.gd:16 · emit: scripts/menu/main_menu.gd:53, scripts/modals/save_load_modal.gd:237,239 · connect: scripts/main/main.gd:134,5801 · (ad 2 yerde tanımlı)
 
 ### scripts/modals/settings_modal.gd
 - dismissed() · scripts/modals/settings_modal.gd:16 · (ad 7 yerde tanımlı)
-  ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:79, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
+  ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:77, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
   ↳ dismissed connect: scripts/main/main.gd:5721,5746,5765,5799, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
 
 ### scripts/modals/system_menu_modal.gd
 - dismissed() · scripts/modals/system_menu_modal.gd:18 · (ad 7 yerde tanımlı)
-  ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:79, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
+  ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:77, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
   ↳ dismissed connect: scripts/main/main.gd:5721,5746,5765,5799, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
 - main_menu_requested() · scripts/modals/system_menu_modal.gd:19 · emit: scripts/modals/ending_scene.gd:456, scripts/modals/system_menu_modal.gd:63 · connect: scripts/main/main.gd:5766,5934 · (ad 2 yerde tanımlı)
 - exit_save_requested() · scripts/modals/system_menu_modal.gd:20 · emit: scripts/modals/system_menu_modal.gd:93 · connect: scripts/main/main.gd:5767
@@ -1119,7 +1119,7 @@ Biçim: yol · boyut · üst düzey anahtarlar (en çok 10)
 - data/product/sprint.json · 9.3 KB · {sprint_weeks, quarter_weeks, mvp_lines, effort, fix_effort, limit_k, need, roles, role_areas, person_points_week, +26}
 - data/techtree/rnd_tree.json · 6.3 KB · {_doc, _stars, _cross, _areas, k_arge, report_period_weeks, nodes, _hidden_doc, _hidden_k3_doc, hidden_lines}
 
-## Metin anahtarı aileleri (861 aile, 3258 anahtar)
+## Metin anahtarı aileleri (860 aile, 3257 anahtar)
 
 Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak geçiren .gd/.json (en çok 5). '-' = dinamik kurulmuş olabilir ya da kullanılmıyor.
 - ANGEL_CAP_* · 1 · scripts/tabs/finance/finance_ozet_view.gd
@@ -1397,7 +1397,6 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - LIC_FONTS_* · 1 · scripts/menu/licenses.gd, scripts/debug/write_licenses.gd
 - LIC_FREETYPE_* · 1 · scripts/menu/licenses.gd, scripts/debug/write_licenses.gd
 - LIC_GODOT_* · 2 · scripts/menu/licenses.gd, scripts/debug/write_licenses.gd
-- LIC_ICONS_* · 1 · scripts/menu/licenses.gd, scripts/debug/write_licenses.gd
 - LIC_THIRD_* · 1 · scripts/menu/licenses.gd, scripts/debug/write_licenses.gd
 - LOCK_CHIP_* · 1 · scripts/tabs/events/mail_pane.gd
 - LOCK_FULL_* · 1 · scripts/modals/ending_scene.gd, scripts/onboarding/steps/origin_traits_step.gd

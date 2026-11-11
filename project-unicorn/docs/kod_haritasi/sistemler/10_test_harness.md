@@ -39,7 +39,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - `tools/export_build.sh "<preset>" <dizin>` exe'yi dışa aktarır ve `scripts/debug/write_licenses.gd` ile yanına `LICENSES/` ve `GODOT_COPYRIGHT.txt` (koşan motorun kendisinden) yazar; dışa aktarma şablonları makinede kurulu olmalıdır
 - Kök dosyalar: `project.godot` (ana sahne, `main_args`, autoload sırası, viewport, `boot_splash/*`, `config/icon` = `assets/brand/icon.svg`, `config/windows_native_icon`, `config/version`), `export_presets.cfg`, `.editorconfig`,
   ↳ `.gitattributes`, `.gitignore`; git kökündeki `.agents/`, `.claude/skills/` ve `skills-lock.json` projenin parçası değildir
-- Üçüncü taraf varlıklar (Lucide ikonları, Quaternius gövdeleri ve klipleri, Mesh2Motion) ile ofis dışa aktarım hattı 06_ofis.md'dedir
+- Üçüncü taraf varlıklar (Quaternius gövdeleri ve klipleri, Mesh2Motion) ile ofis dışa aktarım hattı 06_ofis.md'dedir
 
 ## Giriş noktaları
 
