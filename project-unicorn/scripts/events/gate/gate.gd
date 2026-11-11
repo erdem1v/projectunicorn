@@ -129,7 +129,8 @@ static func revalidate(event_id: String, context: Dictionary) -> Verdict:
 		return Verdict.refuse("G5", "entity gone from slot '%s'"
 			% EvScope.first_dead_slot(context), context)
 
-	return _world_check(card, context, "condition no longer met")
+	return _world_check(card.merged({"condition": EvCondition.without_clock(card.get("condition", {}))}, true), context,
+		"condition no longer met")
 
 
 ## G6 (guards) and G7 (the condition tree), shared by admission and display-time re-validation.

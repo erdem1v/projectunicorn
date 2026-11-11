@@ -350,6 +350,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"event_trust_chip_share":         fail = _case_event_trust_chip_share()
 		"event_start_training_player_path": fail = _in_fixture_scope(_case_event_start_training_player_path)
 		"event_fire_employee_player_path": fail = _in_fixture_scope(_case_event_fire_employee_player_path)  # EXPECT-ERROR I2: on_expire may apply a negative delta
+		"event_paper_keeps_its_moment": fail = _in_fixture_scope(_case_event_paper_keeps_its_moment)
 		"event_morale_payers":            fail = _case_event_morale_payers()
 		"incident_gap_and_spread":        fail = _case_incident_gap_and_spread()
 		"incident_night_hold_resumes":    fail = _case_incident_night_hold_resumes()
@@ -18221,6 +18222,39 @@ static func _case_event_start_training_player_path() -> String:
 ## FALSİFİKASYON: `fire_employee`'yi EvEffects.NOT_ONLY_COST'tan çıkar → süre dolumu kişiyi çıkarır, FAIL; koldaki HRActions.fire
 ## çağrısını sil → kişi kalır, FAIL; koldaki preview_fire denetimini atla → gitmiş kişi için kayıt yazılır, ikinci deneme FAIL;
 ## EvChips._aims_at_no_one'daki kolu sil → gitmiş kişiye çip çizilir, FAIL; tazminatı çipte iki kat yaz → tutar iddiası FAIL.
+## Kabul edilmiş kâğıt anını taşır: çeyreğin ilk haftasında gelen kâğıt (koşulu `time.quarter_start`, bir kez `all` bir kez `none`
+## altında) ertesi hafta da açılır; adlandırdığı durum değişen kâğıt (bayrak) G7'de, öznesi giden kâğıt (çalışan ayrıldı) G5'te
+## açılınca yine düşer.
+## FALSİFİKASYON: EvGate.revalidate'te without_clock'u kaldır ya da `none` altındaki kutbu çevir → ilk kâğıt G7 ile düşer, FAIL;
+## without_clock her yaprağı geçer saysın → bayraklı kâğıt açılır, FAIL; revalidate'teki G5 denetimini sil → ayrılanın kâğıdı açılır,
+## FAIL.
+static func _case_event_paper_keeps_its_moment() -> String:
+	const CARD := "fixture.clock_paper"
+	var stays: Character = _make_employee("char_clock_stays", "Deniz Ak", HRConstants.ROLE_DEVELOPER)
+	var shut: Character = _make_employee("char_clock_shut", "Ece Tan", HRConstants.ROLE_DESIGNER)
+	var leaves: Character = _make_employee("char_clock_leaves", "Selin Kaya", HRConstants.ROLE_TESTER)
+	var key := func(person: Character) -> String: return EvLatches.key_for(CARD, EvLatches.KEY_ENTITY, person.id)
+	var last := func() -> String: return "%s at %s" % [EvHistory.rows()[-1].resolution, EvHistory.rows()[-1].outcome_id]
+	if not bool(EvSeams.read("time.quarter_start")):
+		return "fixture: day %d is not a quarter's first week" % GameState.day
+	for person in [stays, shut, leaves]:
+		if not EventGate.request(CARD, {"employee": person.id}):
+			return "the paper was refused in a quarter's first week"
+	_sim_to_morning()
+	if bool(EvSeams.read("time.quarter_start")) or EvPapers.keys_of(CARD).size() != 3:
+		return "fixture: want the next week with three papers on the desk, have %d" % EvPapers.keys_of(CARD).size()
+	if not EventGate.open_paper(key.call(stays)):
+		return "a week after the quarter began its paper no longer opens: %s" % last.call()
+	EventGate.resolve(CARD, "thank")
+	EvFlags.set_flag("fixture_clock_paper_shut")
+	if EventGate.open_paper(key.call(shut)) or last.call() != "dropped at G7":
+		return "a paper whose state changed ended %s, want dropped at G7" % last.call()
+	CharacterRegistry.remove(leaves.id)
+	if EventGate.open_paper(key.call(leaves)) or last.call() != "dropped at G5":
+		return "the paper of a person who left ended %s, want dropped at G5" % last.call()
+	return ""
+
+
 static func _case_event_fire_employee_player_path() -> String:
 	const CARD := "fixture.fire_employee"
 	GameState.set_cash(100000)

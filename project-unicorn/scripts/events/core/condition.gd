@@ -85,6 +85,30 @@ static func seams_read(node: Dictionary) -> Array:
 	return out
 
 
+## Seams whose value turns with the calendar alone, or with weeks counted from a stamp made once.
+const CLOCK_SEAMS := ["time.week", "time.hour", "time.month", "time.quarter_start", "urun.weeks_to_month_end",
+	"urun.weeks_since_launch", "funding.seed_weeks_since_close", "funding.angel_weeks_since_accept"]
+
+
+## The tree with every clock leaf set to the verdict that lets it pass where it stands: true under all/any, false under
+## not/none. Clock leaves are a CLOCK_SEAMS seam, the year's coin, and a week count since a flag or a card in the one
+## direction time closes it (an upper bound that must hold, a lower bound that must fail): a re-stamp or a new firing
+## moves the count the other way, and that is state. A card admitted at its moment is still about that moment a week
+## later; its subject and the state it names are read again.
+static func without_clock(node: Dictionary, passing := true) -> Dictionary:
+	var kind: String = _kind_of(node)
+	match kind:
+		NOT:
+			return node.merged({NOT: without_clock(node[NOT] as Dictionary, not passing)}, true)
+		"leaf":
+			var counts: bool = node.has("weeks_since_flag") or String(node.get("history", "")) == "weeks_since"
+			var clock: bool = String(node.get("seam", "")) in CLOCK_SEAMS or node.has("year_roll") \
+				or counts and String(node.get("op", ">=")).begins_with("<") == passing
+			return ({} if passing else {ANY: []}) if clock else node
+	var under: bool = passing != (kind == NONE)
+	return node.merged({kind: (node[kind] as Array).map(func(c: Dictionary) -> Dictionary: return without_clock(c, under))}, true)
+
+
 static func _collect_leaves(node: Dictionary, out: Array) -> void:
 	if node.is_empty():
 		return

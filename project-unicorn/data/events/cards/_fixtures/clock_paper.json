@@ -1,0 +1,58 @@
+{
+  "id": "fixture.clock_paper",
+  "version_scope": "fixture",
+  "schema": 3,
+  "category": "team",
+  "tick": "request",
+  "class": "paper",
+  "tags": [],
+  "family": "fixture_clock_paper",
+  "delay_weeks": [0, 0],
+  "delay_reason": "a fixture is asked for by its own smoke case, not by the pool",
+  "plausibility": {
+    "phase_band": ["bootstrap_solo", "bootstrap_team", "traction", "series_a"],
+    "headcount": [0, null],
+    "product": "any",
+    "modules": [],
+    "min_week": 0
+  },
+  "latch": { "cooldown_weeks": 0 },
+  "latch_key": "entity",
+  "scope": {
+    "employee": { "type": "employee", "required": true }
+  },
+  "condition": {
+    "all": [
+      { "seam": "time.quarter_start", "op": "==", "value": true },
+      { "none": [{ "seam": "time.quarter_start", "op": "==", "value": false }] },
+      { "flag_unset": "fixture_clock_paper_shut" }
+    ]
+  },
+  "options": [
+    {
+      "id": "thank",
+      "outcome_id": "thank",
+      "effects": [
+        { "verb": "change_morale", "scope": "employee", "amount": 1 }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Çeyrek",
+      "body": "Yalnız kâğıdın anını taşıdığını sınar.",
+      "options": { "thank": "Teşekkür et" },
+      "expire_note": "Cevap gelmedi."
+    },
+    "en": {
+      "title": "Quarter",
+      "body": "This card only tests that a paper keeps its moment.",
+      "options": { "thank": "Say thanks" },
+      "expire_note": "No answer came."
+    }
+  },
+  "expires_weeks": 3,
+  "on_expire": { "penalties": [] },
+  "expire_note": "expire_note",
+  "_note": "The subject of `event_paper_keeps_its_moment`: admitted in a quarter's first week, opened in the next (three weeks, so its last warning is not yet due); the calendar is read under all and under none, the flag is the state it names."
+}
