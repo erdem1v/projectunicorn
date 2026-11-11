@@ -1,12 +1,12 @@
 # Kod haritası · KALITE
 
-Üretildi: git 9c3d7289 · 2026-11-11 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git f9cfdd7a · 2026-11-11 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 254 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
 
 - scripts/debug/endgame_smoke.gd · 29622 satır · 672 func
-- scripts/main/main.gd · 6067 satır · 220 func
+- scripts/main/main.gd · 6072 satır · 220 func
 - scripts/debug/run_probe.gd · 2392 satır · 92 func
 - scripts/systems/sprint_system.gd · 2068 satır · 171 func
 - scripts/theme/build_theme.gd · 1654 satır · 31 func
@@ -41,7 +41,7 @@ Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları
 - scripts/theme/build_theme.gd:46 · _initialize · 320 satır
 - scripts/events/present/chips.gd:73 · describe · 284 satır
 - scripts/debug/endgame_smoke.gd:23232 · _case_sprint_timeline_matches_play_out · 266 satır
-- scripts/main/main.gd:3836 · _run_hr_shot · 259 satır
+- scripts/main/main.gd:3837 · _run_hr_shot · 263 satır
 - scripts/debug/endgame_smoke.gd:8319 · _case_hr_constants_contract · 220 satır
 - scripts/debug/endgame_smoke.gd:2222 · _case_save_v13_day_stamps_migrate · 209 satır
 - scripts/main/main.gd:1529 · _run_inbox_shot · 199 satır
@@ -67,7 +67,7 @@ Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları
 - scripts/debug/endgame_smoke.gd:1017 · _case_gate_decline_reminder · 125 satır
 - scripts/debug/endgame_smoke.gd:20100 · _thesis_presenter_body · 124 satır
 - scripts/debug/endgame_smoke.gd:20333 · _case_sales_meeting_time_skip_founder_share · 124 satır
-- scripts/main/main.gd:4425 · _seed_product_live · 123 satır
+- scripts/main/main.gd:4430 · _seed_product_live · 123 satır
 - scripts/events/tools/why.gd:28 · report · 121 satır
 - scripts/events/seams/seams_product.gd:15 · _install_product · 120 satır
 - scripts/events/tools/engine_probe.gd:582 · _check_invalidation · 119 satır
@@ -81,9 +81,9 @@ Tanım satırı dışında scripts/, scenes/, data/ içinde adı hiç geçmeyen 
 UYARI: call("a"+b) gibi kurulmuş adlar, sinyal adıyla bağlama, harness bayrakları ve tools/*.sh çağrıları yüzünden yanlış pozitif olabilir; silmeden önce grep ile doğrula.
 - scripts/debug/office_crowd_probe.gd:48 · _log_error · debug
 - scripts/main/game_shell.gd:163 · debug_force_vc_meeting · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/main/main.gd:6008 · _dbg_close_request · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/main/main.gd:6013 · _dbg_onb_random_x20 · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/main/main.gd:6026 · _dbg_finish_run · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
+- scripts/main/main.gd:6013 · _dbg_close_request · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
+- scripts/main/main.gd:6018 · _dbg_onb_random_x20 · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
+- scripts/main/main.gd:6031 · _dbg_finish_run · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
 - scripts/systems/line_gates.gd:126 · speed_bonus_for
 - scripts/systems/product_catalog.gd:237 · type_sector_labels
 - scripts/systems/rnd_system.gd:707 · family_root_done

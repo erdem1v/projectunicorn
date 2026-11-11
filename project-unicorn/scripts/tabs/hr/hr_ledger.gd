@@ -179,11 +179,11 @@ static func _who(emp: Character, w: int, compact: bool, away: bool, on_action: C
 	return pad
 
 
+## Never cut: the row grows to fit.
 static func _text(text: String, variation: StringName) -> Label:
 	var label := UiFactory.make_label(text, variation)
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.clip_text = true
-	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	return label
 
 

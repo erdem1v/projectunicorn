@@ -321,8 +321,7 @@ static func D_trait_cell(trait_ids: Array, strong := false) -> HBoxContainer:
 	cell.add_child(box)
 	var label := UiFactory.make_label(HRConstants.trait_label(pick), &"DataStrong" if strong else &"CondCaption",
 		UiTokens.D_INK_2 if strong else null)
-	label.clip_text = true
-	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	cell.add_child(label)
 	for part: Control in cell.get_children():

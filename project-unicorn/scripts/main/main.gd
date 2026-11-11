@@ -3806,7 +3806,7 @@ func _press_button_labelled(root: Node, label: String) -> bool:
 
 # --hr-shot=<ekip|ekip-saat|atlas|atlas-secili|atlas-ofis|atlas-dolu|dosyalar|gider|saatler|saatler-gece|gorevler|gorevler-arge|
 # dosyalar-pm|dosyalar-tasarim|gorevler-bos|egitim|egitim-modal|egitim-secili|zam|menu|menu-kilit|cikar|cikar-eksi|bos|dosya|dosya-kilit|
-# dosya-kurucu|kalabalik|verim|saatler-sprint|urunsuz|dosyalar-tehlike|dosyalar-onay|dosyalar-mesai|izin|dosyalar-dolu>:
+# dosya-kurucu|kalabalik|verim|saatler-sprint|urunsuz|dosyalar-tehlike|dosyalar-onay|dosyalar-mesai|izin|dosyalar-dolu|ekip-uzun>:
 # a roster across all three departments (one on leave, one burning out, one fresh hire), driven to the
 # requested HR surface. kalabalik = forty on the roster (the compact Kadro), Geliştirme folded and the
 # list scrolled under its head; dosya = the first employee's file over Kadro; dosya-kurucu = the
@@ -3833,6 +3833,7 @@ func _press_button_labelled(root: Node, label: String) -> bool:
 # izin = the first employee's file over Kadro with its leave dialog open (hr_shot_izin_onay), then the dialog's own
 # button pressed: the file with her away and the leave row locked on its reason (hr_shot_izin), and a week on, back
 # from leave, the row locked on the wait for the next leave (hr_shot_izin_donus).
+# ekip-uzun = Kadro while a sprint runs on a long product name: Görev reads the release it builds and wraps.
 func _run_hr_shot(kind: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
@@ -3856,6 +3857,10 @@ func _run_hr_shot(kind: String) -> void:
 			pass
 		"saatler-sprint":   # LOC-DATA debug seed / id
 			SprintSystem.choose_type("note_tool", "Notly")   # LOC-DATA debug seed / id
+		"ekip-uzun":   # LOC-DATA debug seed / id
+			SprintSystem.choose_type("erp", "Defterix Fatura ve Ön Muhasebe")   # LOC-DATA debug seed / id
+			SprintSystem.apply_lead()
+			SprintSystem.start()
 		"urunsuz":   # LOC-DATA debug seed / id
 			# add() seats each on the role's first job (build, support); hired four weeks ago, so YENİ does not
 			# take Kadro's one Durum tag.
