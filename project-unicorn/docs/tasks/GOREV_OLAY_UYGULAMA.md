@@ -461,7 +461,8 @@ Görev: `GOREV_DIZUSTU_OLAYLAR_IKON_2026-10-28.md` (O0–O3), Mac, oturum OLAYLA
 Oturum: OLAYLAR, `dd6f551f-9a19-44bf-832b-23c38bb6b809` (kaydı `docs/tasks/claude_devir/oturum/`'da; masaüstünde `--resume` ile sürer).
 
 Açık kalanlar (2026-11-11 hâli):
-- Erdem: ikon seçimi (Lucide'ye geçiş kararıyla DUZELTME'de); TR/EN onayı `EFFECT_TRAINING`, `EFFECT_FIRED`; ACIK 14'ün kalanı
+- `EFFECT_TRAINING`, `EFFECT_FIRED` onaylı: K22 kapsamında ("playtest'te okuduğum metin onaylı sayılır").
+- Erdem: ikon seçimi (Lucide'ye geçiş kararıyla DUZELTME'de); ACIK 14'ün kalanı
   `change_salary` (`add_customer` bağlandı, `convert_audience` ve `open_paid_tier` silindi: GOREV_OLAYLAR_2026-11-11 O-5);
   #7'nin "kendi aralarında" şıkkı Erdem'e yeniden soruldu; #32 kabul.
 - `start_training` oyuncunun kuralıyla çalışır: kişinin deneyim barı dolu değilse kart onu eğitime göndermez ve çip çizmez.

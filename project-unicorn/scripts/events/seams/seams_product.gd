@@ -251,7 +251,7 @@ static func _install_paper_asks() -> void:
 		func() -> String:
 			var second: Customer = SprintCatalog.second_account(SprintSystem.decision_card())
 			return "" if second == null else second.display_name(),
-		"Product", "the other account that asked for the decision card's step; empty when only one did (open requests carry one account per step)")
+		"Product", "the largest other B2B account whose sector's first area covers the decision card's line (it would ask for this step); empty when none")
 	EvSeams.register("urun.decision_request_votes", G, TYPE_INT,
 		func() -> int: return 0,
 		"Product", "B2C: the people who asked for the decision card's step; 0 until the consumer request data exists")

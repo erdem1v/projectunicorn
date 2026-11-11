@@ -268,7 +268,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
   ↳ (`SprintCardPlanned` kalır: kayıt listesinin yeni yuvası okur);
   ↳ anahtarlar `PRODUCT_SKIP_SPRINT`, `_SKIP_CONFIRM`, `_START_NEED_CARD`, `_PLAN_HOLD`, `_NEXT_RELEASE`, `_IN_WEEKS(_ONE)`, `_NEXT_EMPTY`, `_CARRIED`, `_PRIORITY`, `_PROMISED`, `_CARD_READY(_PCT)`,
   ↳ `PRODUCT_FX_HOLDS`, `_FX_ALERT_CLEARS`, `_FX_REQUEST`, `_FX_RESEARCH`, `_FX_PROMISE`. `SprintCatalog.card_effect` smoke okuduğu için kalır.
-- Kâğıt/karar/söz: `sprint_decision_blocks_progress`, `decision_one_per_sprint`, `paper_interrupt_order`, `paper_card_trim`, `paper_line_harden`, `promise_due_fires_when_late`, `promise_extend_once`, `promise_cut_test_escape`
+- Kâğıt/karar/söz: `sprint_decision_blocks_progress`, `decision_one_per_sprint`, `paper_interrupt_order`, `paper_empty_sprint_ratio`, `paper_short_sprint_rolls_at_start`, `paper_card_trim`, `paper_line_harden`, `promise_due_fires_when_late`, `promise_extend_once`, `promise_cut_test_escape`
 - Acil durum/sunucu: `incident_gap_and_spread`, `incident_night_hold_resumes`, `incident_scale`, `incident_save_roundtrip`, `incident_gates`, `infra_capacity_moves_both_ways`, `auto_capacity_grows_only`, `capacity_step_immediate`, `infra_price_lock`
 - Hat/kalite: `product_lines_catalog_loads`, `line_k3_locked_without_research`, `product_fit_table`, `product_quality_sector_table`, `product_line_profiles`, `product_area_word`
 - Ar-Ge: `research_node_map_binds`, `rnd_tree_loads_and_validates`, `research_freezes_and_resumes`, `research_abandon_keeps_progress`, `rnd_note_author_and_lines`

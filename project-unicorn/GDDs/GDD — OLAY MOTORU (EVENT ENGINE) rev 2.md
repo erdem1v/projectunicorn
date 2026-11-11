@@ -2751,9 +2751,12 @@ fırtına 11:00 ile 16:00. Sürümü hatalı kritik hattı bozan hafta zarsız `
 slotundan gelir); §3.1: mandalın `one_shot`, `max_fires` ve `cooldown_weeks` alanları birbirinin alternatifidir.
 
 *Ne yapıldı.* Kâğıt sprint başına tek zarla gelir ve konuşanı kartta o fazda çalışan kişidir.
-- `SprintSystem._request_decision`: sprintin kâğıt fırsatında (ilk haftanın sonu) tek zar
+- `SprintSystem._request_decision`: sprintin kâğıt fırsatında (ilk haftanın sonu; planı ilk haftasında kapanacak sprintte sprint
+  başı, `_begin`, 2026-11-11 O-4) tek zar
   `EvDice.unit("paper", gün, "sprint")` atılır, ihtimal `sprint.json` `decision.sprint_chance` (0,5
-  [WORKING, onay bekliyor]; sprintlerin en az üçte biri kâğıtsız kalır). Zar atılan sprint `GameState.product.decision_sprint`'tedir
+  [WORKING, onay bekliyor]; sprintlerin en az üçte biri kâğıtsız kalır). Art arda `decision.max_dry_sprints` (2 [WORKING]) sprint
+  kâğıtsız geçtiyse (`product.last_paper`: kâğıdın, acil durumun ya da söz olayının geldiği son sprint) zar tutmuş sayılır; havuz yine
+  konuşan bulmak zorundadır (2026-11-11 O-4). Zar atılan sprint `GameState.product.decision_sprint`'tedir
   (eski kayıtta `.get(…, -1)`): aynı sprintte ikinci kâğıt istenmez. Havuz `decision.cards` ağırlıklı sırayla denenir (ağırlık
   `1 / (1 + decision.seen_weight × EvLatches.fires)`, `seen_weight` 2 [WORKING, onay bekliyor]; sıra `u ^ (1 + seen_weight × görülme)`
   anahtarıyla, yani yerine koymadan ağırlıklı çekim) ve her kâğıt sprintin bitmemiş kartlarında sırayla; kartın koşulları bekleyen
@@ -2776,8 +2779,8 @@ slotundan gelir); §3.1: mandalın `one_shot`, `max_fires` ve `cooldown_weeks` a
 - **Mandal.** `blocked_reason` `max_fires` ve `cooldown_weeks`'i birlikte uygular (koşuda en çok 3, 52 hafta); GDD §3.1'in "alternatifler"
   cümlesi kodda böyle değildir ve `latches.gd` yorumu düzeltildi. Kâğıtlarda `latch_key: run`.
 - Prob: `SPRINTPROBE PAPER|<tohum>|<sprint>|<kâğıt>|<konuşan>` ve `PAPERSUM` (kâğıtsız sprint oranı).
-- Vakalar `paper_speaker_is_assignee`, `decision_one_per_sprint`, `decision_no_fourth_show`, `paper_interrupt_order`, `paper_empty_sprint_ratio`;
-  fikstür kâğıtları `data/events/cards/_fixtures/paper_*.json`.
+- Vakalar `paper_speaker_is_assignee`, `decision_one_per_sprint`, `decision_no_fourth_show`, `paper_interrupt_order`, `paper_empty_sprint_ratio`,
+  `paper_short_sprint_rolls_at_start`; fikstür kâğıtları `data/events/cards/_fixtures/paper_*.json`.
 
 *Neden.* Faz B görevi (Karar 10 ile 13): sprint başına en çok bir kâğıt gelir, bazı sprintlerde hiç gelmez, konuşan o kartta o aşamada çalışan
 kişidir ve bir sprintte en çok bir kesinti olur.
@@ -2870,8 +2873,9 @@ yalnız bir pazara aitse onu gizleyen yol yoktur (§3.3: kilitli seçenek görü
 - Seam'ler `urun.decision_{second_account, request_votes, step, phase, trim_finishes, phone_late, renewal_saved, test_half}`,
   `urun.{cut_test_finishes, responsive_shipped, design_late, paid_plan_open, colors_*}`, `urun.paper_{phone_points, ask_silent,
   first_screen_loss, coupon_loss, test_phones}`; `urun.decision_request_votes` B2C istek verisi (C) gelene kadar 0 döner, o yüzden PM'in B2C kâğıtları
-  (`_b2c` ikizleri ve `pm_core_first`) bugün gelmez; `urun.decision_second_account` bugün hiç dolmaz (bir kademeyi tek hesap isteyebilir), `pm_two_accounts`
-  uykudadır. Sabitler `sprint.json` `paper` bloğunda [WORKING].
+  (`_b2c` ikizleri ve `pm_core_first`) bugün gelmez; `urun.decision_second_account` kartın hesabı dışında, sektörünün öncelikli alanı
+  kartın hattını kapsayan en büyük B2B hesabı okur (`SprintCatalog.second_account`; kademe başına tek açık talep olduğundan talebi olan ikinci hesap hiç olmazdı,
+  2026-11-11 onarımı). Sabitler `sprint.json` `paper` bloğunda [WORKING].
 - Vakalar `paper_card_trim`, `paper_outlook_reads_the_plan`, `next_renewal_day_one_place`, `paper_renewal_card_first`,
   `paper_colors_two_arrivals`, `paper_trust_until_ships`, `paper_account_selectors`, `paper_cards_render`; görsel `--event-shot=<kâğıt>` kâğıdı
   `main._seed_paper_world`te kurar.

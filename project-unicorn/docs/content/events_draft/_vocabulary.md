@@ -14,7 +14,7 @@ Counts are what the engine actually has, at generation time:
 |---|---|
 | Seams (read) | **312** |
 | Effect verbs (write) | **85** |
-| Cards in the catalogue | 178 |
+| Cards in the catalogue | 180 |
 | Arcs | 3 |
 
 ## a · Effect verbs
@@ -466,7 +466,7 @@ slot of that type (§17.12).
 | `urun.decision_request_votes` | global | int | Product | B2C: the people who asked for the decision card's step; 0 until the consumer request data exists |
 | `urun.decision_root_bugs` | global | int | Product | open bugs the decision card, a fix card, closes; 0 for any other card |
 | `urun.decision_root_cause` | global | bool | Product | the decision card is a fix card with enough bugs on one line to share a root |
-| `urun.decision_second_account` | global | string | Product | the other account that asked for the decision card's step; empty when only one did (open requests carry one account per step) |
+| `urun.decision_second_account` | global | string | Product | the largest other B2B account whose sector's first area covers the decision card's line (it would ask for this step); empty when none |
 | `urun.decision_step` | global | string | Product | id of the step the decision card takes its line to, a shared line's step by its base id; empty when none waits |
 | `urun.decision_test_half` | global | int | Product | half of the decision card's testing left, in points; the work a developer helping with the test does |
 | `urun.decision_test_untouched` | global | bool | Product | the decision card has reached testing and nobody has tested it yet |

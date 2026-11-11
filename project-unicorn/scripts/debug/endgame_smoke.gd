@@ -555,6 +555,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"decision_no_fourth_show":               fail = _case_decision_no_fourth_show()
 		"paper_interrupt_order":                 fail = _case_paper_interrupt_order()
 		"paper_empty_sprint_ratio":              fail = _case_paper_empty_sprint_ratio()
+		"paper_short_sprint_rolls_at_start":     fail = _case_paper_short_sprint_rolls_at_start()
 		"paper_card_trim":                       fail = _case_paper_card_trim()
 		"paper_outlook_reads_the_plan":          fail = _case_paper_outlook_reads_the_plan()
 		"next_renewal_day_one_place":            fail = _case_next_renewal_day_one_place()
@@ -26624,37 +26625,114 @@ static func _case_paper_interrupt_order() -> String:
 	return fail
 
 
-## Kâğıtsız sprintler: ihtimal sprint.json'daki iken sprintlerin en az üçte biri kâğıtsız
-## kalır, hiçbir sprint iki kâğıt almaz ve kâğıt gelir. Havuzdaki kâğıt her sprintte kabul edilir, boş sprintleri yalnız zar belirler.
-## FALSİFİKASYON: sprint.json `decision.sprint_chance`'ı 1 yap → kâğıtsız sprint kalmadı FAIL; 0 yap → hiç kâğıt gelmedi FAIL.
+## Kâğıtsız sprintler: ihtimal ve kâğıtsız sessizlik sınırı sprint.json'daki iken sprintlerin en az üçte biri kâğıtsız
+## kalır, hiçbir sprint iki kâğıt almaz, kâğıt gelir ve art arda kâğıtsız sprint `decision.max_dry_sprints`'i aşmaz (O-4, K19).
+## Zar hiç tutmazken kâğıdı yalnız sınır getirir: her `max_dry_sprints` kâğıtsız sprintten sonraki sprint kâğıtlıdır.
+## Havuzdaki kâğıt her sprintte kabul edilir, boş sprintleri yalnız zar ve sınır belirler.
+## FALSİFİKASYON: sprint.json `decision.sprint_chance`'ı 1 yap → kâğıtsız sprint kalmadı FAIL; 0 yap → sınırın kâğıtları
+## dışında kâğıt gelmedi FAIL; SprintSystem._request_decision'daki `forced`'ı hep false yap → zar kapalıyken kâğıt gelmedi
+## FAIL; `>=`'yi `>` yap → sınırın kâğıdı bir sprint geç geldi FAIL.
 static func _case_paper_empty_sprint_ratio() -> String:
 	var saved: Array = _paper_pool([PAPER_PLAIN])
+	var max_dry: int = int(saved[1].max_dry_sprints)
 	var papers: Dictionary = {}
 	EventBus.card_decision_requested.connect(func(_id: String) -> void:
 		papers[SprintSystem.sprint_number()] = int(papers.get(SprintSystem.sprint_number(), 0)) + 1)
+	# Zar `chance` iken `count` sprint, her biri çok büyük tek kartla tam boyunda; sprintlerin numaraları, biri başlamazsa [].
+	var play := func(chance: float, count: int) -> Array:
+		papers.clear()
+		SaveManager.reset_all_owners()
+		GameState.initialize_run({"seed": 424242})
+		_seed_sprint()
+		SprintCatalog._data.decision.sprint_chance = chance
+		SprintCatalog._data.decision.max_dry_sprints = max_dry
+		var card: String = "feat:%s_k1" % SprintCatalog.capabilities("core")[0]
+		SprintSystem.add(card)
+		_size(GameState.product.cards[card], 100000.0)
+		var numbers: Array = []
+		while numbers.size() < count:
+			if SprintSystem.mode() == "release":
+				SprintSystem.plan_next()
+			if not SprintSystem.start():
+				return []
+			numbers.append(SprintSystem.sprint_number())
+			while SprintSystem.mode() == "active":
+				_sim_day()
+		return numbers
+	var numbers: Array = play.call(float(saved[1].sprint_chance), 30)
+	if numbers.is_empty():
+		return "fixture: a sprint did not start"
+	var sprints: int = numbers.size()
+	var empty: int = sprints - papers.size()
+	if papers.values().any(func(n: int) -> bool: return n > 1) or papers.size() <= float(sprints) / (max_dry + 1) \
+			or float(empty) / sprints < 1.0 / 3.0:
+		return "%d of %d sprints had no paper (papers by sprint %s), want a third empty, never two, more than the cap alone brings" % [
+			empty, sprints, str(papers)]
+	var dry := 0
+	var longest := 0
+	for n: int in numbers:
+		dry = 0 if papers.has(n) else dry + 1
+		longest = maxi(longest, dry)
+	if longest > max_dry:
+		return "%d sprints in a row had no paper (papers by sprint %s), want at most decision.max_dry_sprints = %d" % [
+			longest, str(papers), max_dry]
+	print("PAPER_EMPTY sprints=%d empty=%d longest_dry=%d" % [sprints, empty, longest])
+	numbers = play.call(0.0, 3 * (max_dry + 1))
+	if numbers.is_empty():
+		return "fixture: a sprint did not start with the dice shut"
+	var want: Array = numbers.filter(func(n: int) -> bool: return n % (max_dry + 1) == 0)
+	var got: Array = papers.keys()
+	got.sort()
+	if got != want:
+		return "with the dice shut papers came in sprints %s, want %s: one after every %d dry sprints" % [str(got), str(want), max_dry]
+	_paper_pool_end(saved)
+	return ""
+
+
+## Planı ilk haftasında kapanacak sprintin kâğıt zarı sprint başında atılır (`SprintSystem._begin`, planın bir haftalık
+## kopya oynatması; O-4, K19), daha uzun sprintinki ilk haftanın sonunda. Kâğıt ihtimali 1, kâğıtsız sessizlik sınırı kapalı.
+## FALSİFİKASYON: `_begin`'deki `_staff_week(...)`'in argümanını false yap → kısa sprintin kâğıdı başında gelmedi FAIL; true
+## yap → uzun sprintin kâğıdı başında geldi FAIL.
+static func _case_paper_short_sprint_rolls_at_start() -> String:
+	var saved: Array = _paper_pool([PAPER_PLAIN])
+	var asked: Array = []
+	EventBus.card_decision_requested.connect(func(_id: String) -> void: asked.append(SprintSystem.sprint_number()))
 	SaveManager.reset_all_owners()
 	GameState.initialize_run({"seed": 424242})
 	_seed_sprint()
-	SprintCatalog._data.decision.sprint_chance = saved[1].sprint_chance
-	SprintCatalog._data.decision.max_dry_sprints = saved[1].max_dry_sprints
-	SprintSystem.add("feat:%s_k1" % SprintCatalog.capabilities("core")[0])
-	_size(GameState.product.cards["feat:%s_k1" % SprintCatalog.capabilities("core")[0]], 100000.0)
-	var sprints := 0
-	while sprints < 30:
-		if SprintSystem.mode() == "release":
-			SprintSystem.plan_next()
+	_paper_chance(1.0)
+	var run := func() -> String:
+		var short: String = "feat:%s_k1" % SprintCatalog.capabilities("core")[0]
+		SprintSystem.add(short)
+		GameState.product.cards[short].need = [0.1, 0.1, 0.1]
 		if not SprintSystem.start():
-			return "fixture: sprint %d did not start" % (sprints + 1)
-		while SprintSystem.mode() == "active":
+			return "fixture: the short sprint did not start"
+		if asked != [1]:
+			return "a sprint planned to close in its first week asked its paper in sprints %s at its start, want [1]" % str(asked)
+		# Bekleyen karar kartı durdurur: oyuncu gibi cevaplanır, sprint kapanır.
+		EventGate.open_paper(PAPER_PLAIN)
+		EventGate.resolve(PAPER_PLAIN, "go_on")
+		var guard := 0
+		while SprintSystem.mode() == "active" and guard < 4:
 			_sim_day()
-		sprints += 1
-	var empty: int = sprints - papers.size()
-	if papers.values().any(func(n: int) -> bool: return n > 1) or papers.is_empty() or float(empty) / sprints < 1.0 / 3.0:
-		return "%d of %d sprints had no paper (papers by sprint %s), want at least a third empty, some papers and never two" % [
-			empty, sprints, str(papers)]
-	print("PAPER_EMPTY sprints=%d empty=%d" % [sprints, empty])
+			guard += 1
+		if SprintSystem.mode() != "release":
+			return "fixture: the short sprint is still %s after %d weeks" % [SprintSystem.mode(), guard]
+		SprintSystem.plan_next()
+		var long: String = "feat:%s_k1" % SprintCatalog.capabilities("core")[1]
+		SprintSystem.add(long)
+		_size(GameState.product.cards[long], 100000.0)
+		if not SprintSystem.start():
+			return "fixture: the long sprint did not start"
+		if asked != [1]:
+			return "a sprint that runs past its first week asked its paper at its start (sprints %s), want it after week 1" % str(asked)
+		_sim_day()
+		if asked != [1, 2]:
+			return "after its first week the long sprint's paper was asked in sprints %s, want [1, 2]" % str(asked)
+		return ""
+	var fail: String = run.call()
 	_paper_pool_end(saved)
-	return ""
+	return fail
 
 
 ## B6a'nın kâğıt dünyası: yayındaki ERP (dört hesap, bir yazılımcı, bir testçi), bir tasarımcı, bir ürün yöneticisi, iki
