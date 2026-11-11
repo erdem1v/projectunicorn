@@ -276,6 +276,7 @@ func _run_debug_harness() -> bool:
 		"--clock-shot=": _run_clock_shot,
 		"--day-shot=": _run_day_shot,
 		"--office-crowd-probe=": _run_office_crowd_probe,
+		"--player-path=": _run_player_path,
 	}
 	for prefix in valued:
 		var value: String = _flag_value(prefix, cmdline)
@@ -290,6 +291,14 @@ func _run_debug_harness() -> bool:
 func _run_why_fire(card_id: String) -> void:
 	print(EvWhy.report(card_id))
 	get_tree().quit(0)
+
+
+## --player-path=<case>: a K2 case on the real shell (PlayerPaths); prints `K2 PASS|FAIL <case>` and exits 0 or 1.
+func _run_player_path(case_id: String) -> void:
+	_begin_shot()
+	var fail: String = await PlayerPaths.run(self, case_id)
+	print("K2 %s %s%s" % ["PASS" if fail == "" else "FAIL", case_id, "" if fail == "" else ": " + fail])
+	_quit_with(fail == "")
 
 
 ## --event-plausibility=<spec>: the plausibility ledger over RunProbe's played runs. It plays
