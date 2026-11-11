@@ -336,9 +336,9 @@ static func get_sales_log() -> Array:
 	return GameState.sales_log.duplicate()  # readonly snapshot (get_burn_breakdown contract)
 
 
-# --- B2B customer creation (SalesFinalizer when a table's deal signs, SalesRepSystem when a
-#     desk deal signs). The sole B2B signing path: the rep has no private way to mint a
-#     customer. ---
+# --- B2B customer creation (SalesFinalizer when a table's deal signs or an event signs a lead,
+#     SalesRepSystem when a desk deal signs). The sole B2B signing path: the rep has no private
+#     way to mint a customer. ---
 
 static func add_b2b_customer(prospect: Prospect, seats: int, seat_price: int,
 		satisfaction: int, source: String = "founder_pitch", discount: float = 0.0) -> Customer:

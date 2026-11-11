@@ -1,5 +1,5 @@
 {
-  "_port_note": "V1: add_customer has no working arm, so no author may write it.",
+  "_port_note": "V1: change_salary has no working arm, so no author may write it.",
   "id": "fixture.bad_v1",
   "schema": 3,
   "category": "team",
@@ -37,8 +37,8 @@
           "label": "incident"
         },
         {
-          "verb": "add_customer",
-          "mrr": 500
+          "verb": "change_salary",
+          "pct": 5
         }
       ]
     }

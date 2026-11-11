@@ -1469,8 +1469,7 @@ EFFECT_MORALE,Moral,Morale
 EFFECT_CHURN,Müşteri kaybı,A customer lost
 EFFECT_TERM_TABLE,Term sheet masası açılır,The term sheet table opens
 EFFECT_NEW_PROSPECT,Yeni aday,A new prospect
-EFFECT_CONVERT_AUDIENCE,Kitleden dönüşüm {pct},{pct} of the audience converts
-EFFECT_PAID_TIER,Ücretli katman açılır,The paid tier opens
+EFFECT_CUSTOMER_SIGNED,{company} imzalar · {seats} koltuk · MRR {v},{company} signs · {seats} seats · MRR {v}
 EFFECT_DEPARTURE,{who} ayrılıyor,{who} is leaving
 EFFECT_AN_EMPLOYEE,Çalışan,An employee
 EFFECT_PROMISE_CREATE,Müşteri kalır · söz borcu,The customer stays · a promise owed

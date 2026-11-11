@@ -1140,7 +1140,7 @@ static func _sorgu_metrics() -> Dictionary:
 	if _b2b_concentration():
 		return {"key": "concentration", "vc_line": _t("VC_Q_CONCENTRATION"), "mono": _t("VC_Q_CONCENTRATION_MONO")}
 	# NOT A PROXY — this one reads a real field. Customer.acquisition_source records who
-	# closed each account ("founder_pitch" vs "sales_rep:<id>"), which is exactly the
+	# closed each account ("founder_pitch" and "event" vs "sales_rep:<id>"), which is exactly the
 	# Series A question "how much of this revenue is repeatable sales, and how much is
 	# you". A founder who closed the whole book personally has a company that stops when
 	# they do, and this room says so.
@@ -1271,7 +1271,7 @@ static func _founder_closed_the_book() -> bool:
 		return false
 	var by_founder: int = 0
 	for c in actives:
-		if String((c as Customer).acquisition_source) == "founder_pitch":
+		if String((c as Customer).acquisition_source) in ["founder_pitch", "event"]:
 			by_founder += 1
 	return by_founder * 2 > actives.size()
 

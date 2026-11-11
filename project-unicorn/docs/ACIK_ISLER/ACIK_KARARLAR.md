@@ -229,7 +229,9 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   - Kaynak: Olay motoru GDD §8.1, §8.3, §11.1 (info sınıfı), §27; CLAUDE.md §5 EFFECT-VISIBILITY RULE.
   - Kısmen kapandı (Erdem, 2026-10-28): `start_training` ve `fire_employee` oyuncunun akışına bağlandı (Olaylar 8;
     `HRSystem.send_to_training`, `HRActions.fire`; çipli, lint V1'de yazılabilir). `assign_to` Olaylar 5'te bağlanmıştı.
-    `add_customer`, `convert_audience`, `open_paid_tier`, `change_salary` açık.
+    Erdem, 2026-11-11 (K20): `add_customer` bağlandı, olay adayı doğrudan imzalatır (`SalesFinalizer.sign_now`, süren masa anlaşmasının
+    ya da masada kapanışın koşullarıyla; çipli, lint V1'de yazılabilir); `convert_audience` ve `open_paid_tier` fiil listesinden, çiplerden
+    ve CSV'den silindi. `change_salary` açık.
 
 - **15 · Bütçe bitince seçenek kilitlenmiyor (`spend_budget`, §8.5).**
   - Ne oluyor: GDD §8.5, bütçe bitince o etkiyi taşıyan seçeneğin kilitlenip gerekçesini göstermesini istiyor. §20 E8

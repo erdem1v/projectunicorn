@@ -353,6 +353,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"event_start_training_player_path": fail = _in_fixture_scope(_case_event_start_training_player_path)
 		"event_fire_employee_player_path": fail = _in_fixture_scope(_case_event_fire_employee_player_path)  # EXPECT-ERROR I2: on_expire may apply a negative delta
 		"event_paper_keeps_its_moment": fail = _in_fixture_scope(_case_event_paper_keeps_its_moment)
+		"event_add_customer_signs": fail = _in_fixture_scope(_case_event_add_customer_signs)  # EXPECT-ERROR I2: on_expire may apply a negative delta
 		"event_morale_payers":            fail = _case_event_morale_payers()
 		"incident_gap_and_spread":        fail = _case_incident_gap_and_spread()
 		"incident_night_hold_resumes":    fail = _case_incident_night_hold_resumes()
@@ -18317,6 +18318,48 @@ static func _case_event_paper_keeps_its_moment() -> String:
 	CharacterRegistry.remove(leaves.id)
 	if EventGate.open_paper(key.call(leaves)) or last.call() != "dropped at G5":
 		return "the paper of a person who left ended %s, want dropped at G5" % last.call()
+	return ""
+
+
+## `add_customer` adayı oyuncunun imza yolundan imzalatır (SalesFinalizer.sign_now, SalesSystem.add_b2b_customer): hesap masada
+## kapanan anlaşmanın koşullarıyla (yıldız bandının koltuğu, kadranın fiyatı) ve adaya önceden yazılmış teklifin indirimiyle açılır,
+## aday boru hattından çıkar, toplam MRR onu katar. Çip şirketi, koltuğu ve açılış MRR'ını yazar; geçmiş satırı aday gittikten sonra
+## aynı çipi okur. Ekonomik fiildir ve yalnız bir kazançtır: süre dolumu imzalatmaz.
+## FALSİFİKASYON: koldaki sign_now çağrısını sil → hesap açılmaz, FAIL; sign_now'da _book'u atla → aday boru hattında kalır, FAIL;
+## event_terms'te teklifin indirimini atla → çip ile geçmiş satırı ayrışır, FAIL; `add_customer`'ı EvEffects.NOT_ONLY_COST'tan çıkar
+## → süre dolumu imzalatır, FAIL.
+static func _case_event_add_customer_signs() -> String:
+	const CARD := "fixture.add_customer"
+	_seed_sprint_live("erp")
+	var lead: Prospect = _add_prospect("evt_sign", 2, "")
+	ProspectRegistry.set_offer(lead.id, {"discount_pct": 0.2, "discount_weeks": 4, "promise_step": "", "promise_weeks": 0})
+	var effects: Array = (EvCatalog.card(CARD).options[0] as Dictionary).effects
+	var on: Dictionary = {"prospect": {"type": "prospect", "id": lead.id}}
+	var texts := func(parts: Array) -> Array: return parts.map(func(p: Dictionary) -> String: return EvChips.text(p))
+	if not EvEffects.run_expire(effects, on, CARD).all(func(r: Dictionary) -> bool: return r.has("refused")) \
+			or ProspectRegistry.get_prospect(lead.id) == null:
+		return "an expiry signed the lead"
+	var terms: Dictionary = SalesFinalizer.event_terms(lead)
+	var shown: Array = texts.call(EvChips.option_parts(effects, {}, on))
+	if shown.size() != 1 or not shown[0].contains(lead.company_name) or not shown[0].contains(str(terms.seats)) \
+			or not shown[0].contains(Fmt.money_chip(terms.mrr)):
+		return "the card reads %s, want the company, %d seats and MRR %s" % [str(shown), terms.seats, Fmt.money_chip(terms.mrr)]
+	var mrr: int = GameState.mrr
+	if not EventGate.request(CARD, {"prospect": lead.id}) or not _drain_to(CARD):
+		return "the card did not show"
+	EventGate.resolve(CARD, "sign")
+	var c: Customer = CustomerRegistry.get_customer("co_" + lead.id)
+	if c == null or c.seats != terms.seats or c.seat_price != terms.price or c.mrr != terms.mrr or c.acquisition_source != "event":
+		return "after the card: %s, want %d seats at %d signed by an event" % [
+			"no account" if c == null else "%d seats at %d from %s" % [c.seats, c.seat_price, c.acquisition_source], terms.seats, terms.price]
+	if ProspectRegistry.get_prospect(lead.id) != null:
+		return "the signed lead is still in the pipeline"
+	if GameState.mrr != mrr + c.mrr:
+		return "MRR %d → %d, want +%d" % [mrr, GameState.mrr, c.mrr]
+	var row: Dictionary = EvHistory.rows()[-1]
+	var kept: Array = texts.call(EvChips.describe(row["deltas"][0], row["entities"], row.get("names", {}), true))
+	if kept != shown:
+		return "the card showed %s, its history row reads %s" % [str(shown), str(kept)]
 	return ""
 
 

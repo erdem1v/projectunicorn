@@ -37,7 +37,6 @@ const FIXED_CHIPS := {
 	"decline_buyout": ["EFFECT_VC_ROAD_CLOSES", "danger"],
 	"churn_customer": ["EFFECT_CHURN", "danger"],
 	"add_prospect": ["EFFECT_NEW_PROSPECT", "gain"],
-	"open_paid_tier": ["EFFECT_PAID_TIER", "gain"],
 	"promise_create": ["EFFECT_PROMISE_CREATE", "cost"],
 	"promise_extend": ["EFFECT_PROMISE_MOVED", "neutral"],
 	"b2b_retain_delay": ["EFFECT_RETAIN_DELAY", "neutral"],
@@ -244,9 +243,6 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 				return [_figure("EFFECT_AUDIENCE_PCT", Fmt.signed_percent(tenths / 10.0, int(tenths % 10 != 0)),
 					_signed(tenths), {"pct": ""})]
 			return [_figure("EFFECT_AUDIENCE", _num(d), _signed(d))]
-		"convert_audience":
-			var conv: String = Fmt.percent(int(round(float(item.get("pct", 0.0)) * 100.0)), 0)
-			return [_part(_t("EFFECT_CONVERT_AUDIENCE").format({"pct": conv}), "", "gain")]
 		# Who goes, to which area and for how long, and the fee: the training dialog's terms (EvEffects.training_plan).
 		"start_training":
 			var trainee: String = _employee(item, ctx, is_delta)
@@ -300,6 +296,13 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 		"take_account":
 			return [_part(_t("EFFECT_ACCOUNT_TO_FOUNDER").format(
 				{"company": _company(item, ctx, is_delta, EvScope.TYPE_CUSTOMER)}), "", "cost")]
+		# The account the signature opens (SalesFinalizer.event_terms); a history row carries what landed, and a read with
+		# no lead bound (lint, chip coverage) has only the effect's own fields.
+		"add_customer":
+			var signee: Prospect = null if is_delta else ProspectRegistry.get_prospect(EvEffects.entity_of(item, ctx, EvScope.TYPE_PROSPECT))
+			var deal: Dictionary = item if signee == null else SalesFinalizer.event_terms(signee)
+			return [_figure("EFFECT_CUSTOMER_SIGNED", _money(int(deal.get("mrr", 0))), "gain",
+				{"company": _company(item, ctx, is_delta, EvScope.TYPE_PROSPECT), "seats": int(deal.get("seats", 0))})]
 		"drop_prospect":
 			return [_part(_t("EFFECT_PROSPECT_LOST").format(
 				{"prospect": _company(item, ctx, is_delta, EvScope.TYPE_PROSPECT)}), "", "danger")]

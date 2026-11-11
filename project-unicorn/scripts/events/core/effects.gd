@@ -77,15 +77,15 @@ const GAME_FLAG_WHITELIST := ["tech_debt_birikti", "critical_bug_unfixed"]
 const ECONOMIC_VERBS := [
 	"add_cash", "add_mrr", "add_brand", "add_reputation",
 	"add_customer", "churn_customer", "customer_mrr_delta", "seats",
-	"audience_delta", "convert_audience", "open_paid_tier",
+	"audience_delta",
 	"change_salary", "fire_employee", "employee_leaves", "promote", "start_training",
 	"add_prospect", "angel_accept", "b2b_expand", "b2b_retain_discount", "b2b_month_discount", "marketing_push", "incident",
 	"promise_break", "account_notice", "prospect_offer", "drop_prospect", "server_price",
 ]
 
 ## Economic verbs that are never only a cost, so no expiry applies them: a marketing push spends money to buy growth, a
-## training to buy a skill, a dismissal pays a severance to stop a salary.
-const NOT_ONLY_COST := ["marketing_push", "start_training", "fire_employee"]
+## training to buy a skill, a dismissal pays a severance to stop a salary, a signature only gains an account.
+const NOT_ONLY_COST := ["marketing_push", "start_training", "fire_employee", "add_customer"]
 
 ## Ends the run. Played decisions only — never a dice branch (I6), never an expiry, never an
 ## ambient tick.
@@ -776,6 +776,15 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 				"promise_step": SprintCatalog.in_product(String(e.get("promise_step", ""))), "promise_weeks": e.get("promise_weeks", 0)}
 			ProspectRegistry.set_offer(oid, terms)
 			return terms.merged({"verb": verb, "prospect": oid, "company": offered.company_name})
+		# The founder signs the lead outright: a running table deal on its agreed terms, else a desk close's (SalesFinalizer.sign_now).
+		"add_customer":
+			var aid: String = entity_of(e, ctx, EvScope.TYPE_PROSPECT)
+			var lead: Prospect = ProspectRegistry.get_prospect(aid)
+			if lead == null:
+				return _no_target(verb, aid)
+			var signed: Customer = SalesFinalizer.sign_now(lead)
+			return {"verb": verb, "prospect": aid, "customer": signed.id, "company": signed.company_name,
+				"seats": signed.seats, "mrr": signed.mrr}
 		# The lead walks the way a lead the desk lost walks (SalesFinalizer.lose): out of the pipeline, locked out for a while.
 		"drop_prospect":
 			var did: String = entity_of(e, ctx, EvScope.TYPE_PROSPECT)

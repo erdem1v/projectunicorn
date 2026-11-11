@@ -474,7 +474,7 @@ const WRITER_VERBS := [
 	"damage_product", "line_harden", "sprint_card_test", "sprint_fix_first",
 	"sprint_card_trim", "sprint_card_outlook", "sprint_card_first", "b2b_month_discount",
 	"account_notice", "prospect_offer", "drop_prospect", "take_account", "pitch_focus", "server_price", "server_lock",
-	"assign_to", "queue_card", "after_test", "start_training", "fire_employee",
+	"assign_to", "queue_card", "after_test", "start_training", "fire_employee", "add_customer",
 ]
 
 ## V2: reserved for a system card. Each moves the run itself — a phase, a table, an arc, an
@@ -506,7 +506,7 @@ const SUBJECT_VERBS := {
 	"churn_customer": "customer", "promise_create": "customer", "b2b_retain_discount": "customer",
 	"b2b_retain_delay": "customer", "b2b_retain_ignore": "customer", "b2b_expand": "customer",
 	"b2b_expand_decline": "customer", "account_notice": "customer", "take_account": "customer",
-	"prospect_offer": "prospect", "drop_prospect": "prospect",
+	"prospect_offer": "prospect", "drop_prospect": "prospect", "add_customer": "prospect",
 	"promise_extend": "customer", "promise_break": "customer",
 }
 

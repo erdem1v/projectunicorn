@@ -81,7 +81,7 @@ static func _open_deal(result: Dictionary, ctx: Dictionary, lead_id: String) -> 
 
 
 ## The table's deal signs at its agreed terms once its plan has run.
-static func sign_deal(lead: Prospect) -> void:
+static func sign_deal(lead: Prospect) -> Customer:
 	# DESIGN-PARKED: no signing discount is passed, so the account's `signing_discount` stays 0.
 	# Its only source is the §7.6 price-break card, which is not wired (docs/ACIK_ISLER/ACIK_KARARLAR.md,
 	# "`sales.price_break` bağlı değil"). Writing the distance under the stance anchor here would
@@ -99,8 +99,36 @@ static func sign_deal(lead: Prospect) -> void:
 		SalesLedger.set_open_pitch_promise(c.id)
 		EventBus.pitch_promise_made.emit(c.company_name, lead.deal_promise)
 
-	# `whale_condition_met` is NOT emitted here: its single publisher is the faucet's daily
-	# sweep, which already announced the door opening (§14: one publisher per signal).
+	_book(c, lead)
+	return c
+
+
+## The terms an event signs a lead on: a table deal's agreed seats and price, else a desk close's (SalesRepSystem.desk_terms).
+## `mrr` is what the account opens at, after the timed discount an earlier offer wrote on the lead (B2BSalesSystem.apply_offer).
+static func event_terms(lead: Prospect) -> Dictionary:
+	var terms: Dictionary = {"seats": lead.deal_seats, "price": lead.deal_price} if lead.is_table_deal() \
+		else SalesRepSystem.desk_terms(lead)
+	var mrr: int = terms.seats * terms.price
+	terms["mrr"] = mrr - roundi(mrr * lead.offer_discount_pct)
+	return terms
+
+
+## An event signs the lead now, the founder's decision: a running table deal on its agreed terms and word (sign_deal), else on a
+## desk close's.
+static func sign_now(lead: Prospect) -> Customer:
+	if lead.is_table_deal():
+		return sign_deal(lead)
+	var terms: Dictionary = SalesRepSystem.desk_terms(lead)
+	var c: Customer = SalesSystem.add_b2b_customer(lead, terms.seats, terms.price,
+		SalesSystem.signing_satisfaction_seed(lead), "event")
+	_book(c, lead)
+	return c
+
+
+## The founder's signature on the books: the lead leaves the pipeline, the close is logged and announced.
+## `whale_condition_met` is NOT emitted here: its single publisher is the faucet's daily sweep, which already announced the
+## door opening (§14: one publisher per signal).
+static func _book(c: Customer, lead: Prospect) -> void:
 	ProspectRegistry.remove(lead.id)
 	SalesLedger.record_close(c, "")
 	SalesSystem.record_sales_event("founder_close", "", c.company_name, c.mrr)

@@ -224,9 +224,10 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - Yuva `"subject": false` (yalnız lint): çalışan yuvası gönderen ya da anılan kişidir, kartın öznesi değildir; O4 o yuvayı özne saymaz
   ↳ O4 (`_touched_slots` `lint.gd:813`), şıkkın zamanladığı ve `follows` ile bu karta bağlı takip kartının aynı adlı yuvalarda yaptığını da şıkkın sayar (özyineli); `promise_extend` ve `promise_break` müşteri fiilidir
 
-- Fiil sözlüğü ile `_apply` ayrışık: `add_customer`, `convert_audience`, `open_paid_tier`, `change_salary` listelerde var ama `_apply` kolu YOK;
-  ↳ çağrı `not implemented` döner (`effects.gd:813-814`)
-- Bu dört fiil `_vocabulary.md`'de de görünür; `add_customer` yalnız `_fixtures/lint_v3/_bad_v1.json`'da geçer, gerçek kartta kullanımı yok; yeni fiil yazarken sözlükte olması uygulandığını GÖSTERMEZ
+- Fiil sözlüğü ile `_apply` ayrışık: `change_salary` listede var ama `_apply` kolu YOK;
+  ↳ çağrı `not implemented` döner (`effects.gd:823`)
+- Bu fiil `_vocabulary.md`'de de görünür ve yalnız `_fixtures/lint_v3/_bad_v1.json`'da (V1'in karşı örneği) geçer; yeni fiil yazarken sözlükte olması uygulandığını GÖSTERMEZ
+- `add_customer` (`effects.gd:780`) kartın aday yuvasını imzalatır: `SalesFinalizer.sign_now`, süren masa anlaşmasının ya da masada kapanışın koşulları (`event_terms`); yalnız kazançtır, `NOT_ONLY_COST`'ta; smoke `event_add_customer_signs`
 - I2/I3: ekonomik fiil yalnız oyuncunun oynadığı seçenekten (`run_played`); `on_expire` yalnız negatif, ambient hiçbiri; `trigger_ending` telegraph ister (`effects.gd:168-211`). Reddedilen fiil `push_error` basar ve smoke'u düşürür
 - Ekonomik etkinin kazanç mı maliyet mi olduğu yazarın işaretinden okunur: `EvEffects.is_authored_gain(effect)` `effects.gd:779` (seam'li tutarda `amount_mult`'un işareti, düz tutarda `amount` ya da `delta`; ikisi de yoksa maliyet);
   ↳ lint 17.3 ve süre dolumunun denetimi aynı yardımcıyı sorar, böylece sıfıra yuvarlanan seam değeri maliyeti kazanca çevirmez

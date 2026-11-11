@@ -1,0 +1,45 @@
+{
+  "id": "fixture.add_customer",
+  "version_scope": "fixture",
+  "schema": 3,
+  "category": "customer",
+  "tick": "request",
+  "class": "info",
+  "tags": [],
+  "family": "fixture_add_customer",
+  "delay_weeks": [0, 0],
+  "delay_reason": "a fixture is asked for by its own smoke case, not by the pool",
+  "plausibility": {
+    "phase_band": ["bootstrap_solo", "bootstrap_team", "traction", "series_a"],
+    "headcount": [0, null],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "latch": { "cooldown_weeks": 0 },
+  "scope": {
+    "prospect": { "type": "prospect", "required": true }
+  },
+  "options": [
+    {
+      "id": "sign",
+      "outcome_id": "sign",
+      "effects": [
+        { "verb": "add_customer", "scope": "prospect" }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "İmza",
+      "body": "Yalnız fiilin adayı imza yolundan imzalattığını sınar.",
+      "options": { "sign": "İmzala" }
+    },
+    "en": {
+      "title": "Signature",
+      "body": "This card only tests that the verb signs the lead through the signing path.",
+      "options": { "sign": "Sign" }
+    }
+  },
+  "_note": "The subject of `event_add_customer_signs`: the option signs the slot's lead on the terms a desk close takes."
+}

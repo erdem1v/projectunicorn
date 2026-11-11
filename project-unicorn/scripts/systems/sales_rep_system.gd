@@ -260,11 +260,8 @@ static func _close(rep: Character, lead: Prospect) -> void:
 	if lost != "":
 		_lose(rep, lead, lost)
 		return
-	# §7.5 — the rep closes at THE DIAL's price. Their star does not touch it: "Temsilci
-	# kadrandan kapatır; yıldızı fiyata dokunmaz."
-	var seat_price: int = SalesLedger.seat_price_anchor(lead.work_stance)
-	var seats: int = _seats_for(lead)
-	var c: Customer = SalesSystem.add_b2b_customer(lead, seats, seat_price,
+	var terms: Dictionary = desk_terms(lead)
+	var c: Customer = SalesSystem.add_b2b_customer(lead, terms.seats, terms.price,
 		SalesSystem.signing_satisfaction_seed(lead), "sales_rep:%s" % rep.id)
 	ProspectRegistry.remove(lead.id)
 	SalesLedger.record_close(c, rep.character_name)
@@ -272,6 +269,12 @@ static func _close(rep: Character, lead: Prospect) -> void:
 	EventBus.rep_deal_closed.emit(rep.id, c.id)
 	SalesLedger.announce_signing(c, lead.is_whale,
 		{"key": "SALES_TICKER_SIGNED", "args": {"rep": rep.character_name, "company": c.company_name}})
+
+
+## The terms a desk close takes: the star band's seats at THE DIAL's price. §7.5 — the rep's star does not touch it:
+## "Temsilci kadrandan kapatır; yıldızı fiyata dokunmaz."
+static func desk_terms(lead: Prospect) -> Dictionary:
+	return {"seats": _seats_for(lead), "price": SalesLedger.seat_price_anchor(lead.work_stance)}
 
 
 ## §5.3 — seats come from the star band, never from a negotiation. The placement inside the
