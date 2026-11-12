@@ -132,7 +132,20 @@ static func half_weeks(halfweeks: int) -> String:
 
 
 static func number(v: float, decimals: int = 1) -> String:
-	return String.num(v, decimals).replace(".", _t("NUM_DECIMAL_SEP"))
+	return _decimal(v, decimals).replace(".", _t("NUM_DECIMAL_SEP"))
+
+
+## `v` to `decimals` places, half away from zero in whole numbers (String.num goes through the platform's printf, which
+## rounds x.x5 one way on Windows, another on Mac); trailing zeros go as String.num drops them ("12.5", "3").
+static func _decimal(v: float, decimals: int) -> String:
+	var scale := 1
+	for _i in decimals:
+		scale *= 10
+	var n: int = roundi(absf(v) * scale)
+	var s := str(n / scale)
+	if n % scale != 0:
+		s += "." + str(n % scale).pad_zeros(decimals).rstrip("0")
+	return ("-" + s) if v < 0.0 and n != 0 else s
 
 
 ## Percent in the locale's shape: Turkish "%12,5", English "12.5%" (PCT_PATTERN).
@@ -218,21 +231,21 @@ static func money_exact(value: int) -> String:
 ## "$9,2B" · "$236M" · "$0,8M". Trillions keep their decimal; billions and millions drop it from ten up.
 static func money_market(m: float) -> String:
 	# The band is picked on the tenth the decimal bands print, so 999.95 reads "$1.0B", not "$1000M",
-	# and 9.94 stays "$9.9M".
-	var t: float = snappedf(m / 1_000_000.0, 0.1)
-	var b: float = snappedf(m / 1_000.0, 0.1)
-	var mm: float = snappedf(m, 0.1)
+	# and 9.94 stays "$9.9M". Tenths are rounded half up in whole numbers, as money's are.
+	var tt: int = roundi(m / 100_000.0)
+	var tb: int = roundi(m / 100.0)
+	var tm: int = roundi(m * 10.0)
 	var s: String
-	if t >= 1.0:
-		s = "$%.1fT" % t
-	elif b >= 10.0:
+	if tt >= 10:
+		s = "$%sT" % _tenths_text(tt)
+	elif tb >= 100:
 		s = "$%dB" % roundi(m / 1_000.0)
-	elif b >= 1.0:
-		s = "$%.1fB" % b
-	elif mm >= 10.0:
+	elif tb >= 10:
+		s = "$%sB" % _tenths_text(tb)
+	elif tm >= 100:
 		s = "$%dM" % roundi(m)
 	else:
-		s = "$%.1fM" % mm
+		s = "$%sM" % _tenths_text(tm)
 	return s.replace(".", _t("NUM_DECIMAL_SEP"))
 
 

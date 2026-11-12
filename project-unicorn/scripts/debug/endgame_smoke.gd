@@ -420,6 +420,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"ending_paper_modes_on_screen":    fail = _case_ending_paper_modes_on_screen()
 		"ending_figures_whole_unit":       fail = _case_ending_figures_whole_unit()
 		"fmt_money_rounds_half_up":        fail = _case_fmt_money_rounds_half_up()
+		"fmt_numbers_round_half_up":       fail = _case_fmt_numbers_round_half_up()
 		"milestone_clock_hold":            fail = _case_milestone_clock_hold()
 		"milestone_paper_waits_for_card":  fail = _case_milestone_paper_waits_for_card()
 		"event_gate_holds_clock":          fail = _case_event_gate_holds_clock()
@@ -14108,6 +14109,38 @@ static func _case_fmt_money_rounds_half_up() -> String:
 			if got != want:
 				TranslationServer.set_locale(loc0)
 				return "%s: %s(%d) = '%s', want '%s'" % [loc, c[0], v, got, want]
+	TranslationServer.set_locale(loc0)
+	return ""
+
+
+## number, percent, signed_percent and money_market round like money: half away from zero in whole numbers, the same on
+## every platform, trailing zeros dropped. `_` stands for the locale's decimal mark, `P` for the percent sign's side.
+static func _case_fmt_numbers_round_half_up() -> String:
+	var loc0: String = TranslationServer.get_locale()
+	var cases: Array = [
+		["pct", 62.5, 0, "P63"], ["pct", 12.25, 1, "P12_3"], ["pct", 0.125, 2, "P0_13"], ["pct", 50.0, 1, "P50"],
+		["spct", -2.5, 0, "-P3"], ["spct", 0.25, 1, "+P0_3"], ["num", 2.25, 1, "2_3"], ["num", 2.0, 1, "2"],
+		["num", -1.25, 1, "-1_3"], ["num", -0.04, 1, "0"], ["num", 1.95, 1, "2"], ["num", 3.005, 2, "3_01"],
+		["mkt", 2.25, 0, "$2_3M"], ["mkt", 9.95, 0, "$10M"], ["mkt", 999.95, 0, "$1_0B"], ["mkt", 1_250_000.0, 0, "$1_3T"],
+		["mkt", 0.85, 0, "$0_9M"], ["mkt", 9_250.0, 0, "$9_3B"],
+	]
+	for loc: String in ["tr", "en"]:
+		TranslationServer.set_locale(loc)
+		var sep: String = "," if loc == "tr" else "."
+		for c: Array in cases:
+			var v: float = c[1]
+			var got: String
+			match String(c[0]):
+				"pct": got = Fmt.percent(v, int(c[2]))
+				"spct": got = Fmt.signed_percent(v, int(c[2]))
+				"num": got = Fmt.number(v, int(c[2]))
+				_: got = Fmt.money_market(v)
+			var want: String = String(c[3]).replace("_", sep)
+			if want.contains("P"):
+				want = want.get_slice("P", 0) + TranslationServer.translate("PCT_PATTERN").format({"v": want.get_slice("P", 1)})
+			if got != want:
+				TranslationServer.set_locale(loc0)
+				return "%s: %s(%s, %d) = '%s', want '%s'" % [loc, c[0], str(v), int(c[2]), got, want]
 	TranslationServer.set_locale(loc0)
 	return ""
 

@@ -8,7 +8,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 ## Dosyalar
 
 - `scripts/main/main.gd` (6302): ana sahne; debug bayrak dağıtıcısı (`_run_debug_harness`), tüm `--*-shot` ve ölçüm koşucuları, fikstür tohumlayıcıları
-- `scripts/debug/endgame_smoke.gd` (30118): `EndgameSmoke`; 475 vakalı smoke süiti, tek süreç = tek vaka, `SMOKE PASS/FAIL` basar
+- `scripts/debug/endgame_smoke.gd` (30151): `EndgameSmoke`; 475 vakalı smoke süiti, tek süreç = tek vaka, `SMOKE PASS/FAIL` basar
 - `scripts/debug/run_probe.gd` (2442): `RunProbe`; botun oynadığı koşu defteri (`--run-log`), 54 preset, `PROBE ...` satırları
 - `scripts/debug/sprint_probe.gd` (425): `--sprint-probe`; Ürün ekranının sprint planını (`plan_outcome`) kapanışla karşılaştırır, uyuşmazlıkta 1
 - `scripts/debug/tick_probe.gd` (133): `--tick-probe`; gerçek saatte kare maliyeti (gece, saat adımı, otomatik kayıt) `TICK` satırları
@@ -87,7 +87,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - `RunProbe.PRESETS` `scripts/debug/run_probe.gd:197`: preset adı -> alan sözlüğü (`subtype`, `policy`, `vc`, `staff_cap`, `fix`, `desk`, `core_only`, `server`, `cash`, `accounts`, `staff`); 54 anahtar
 - `RunProbe.SMALL_CREW` `run_probe.gd:261`, `GROWTH_ROLES` `:1556`, `seed_crew()` `:2402`: ekip tohumlama; `seed_crew` oturtulamayan büyüklükte `false` döner (kimse işe alınmaz), çağıran bildirir: `--sprint-probe` `SPRINTPROBE ERROR`,
   ↳ `--tick-probe` `TICK ERROR`; ikisi de `team=` ile kullanır
-- Smoke paylaşılan kayıt yuvaları `manual_9001` / `manual_9002` (`SAVE_SLOT_A`, `SAVE_SLOT_B` `endgame_smoke.gd:10145`); onları kullanan vakalar paralel koşturulmaz (aşağıda Testler)
+- Smoke paylaşılan kayıt yuvaları `manual_9001` / `manual_9002` (`SAVE_SLOT_A`, `SAVE_SLOT_B` `endgame_smoke.gd:10146`); onları kullanan vakalar paralel koşturulmaz (aşağıda Testler)
 - `tools/lint_baseline.json` `tools/lint_v3_frozen.json`: kabul edilen lint bulguları; `--event-lint=baseline` yeniden yazar
 - Çekim PNG'leri `%APPDATA%\Godot\app_userdata\Project Unicorn\` (`user://`); EN `_en`, renk körü `_cb` soneki (`main.gd:654`)
 - `docs/EVENT_SIGNAL_MANIFEST.md`, `docs/content/events_draft/_vocabulary.md`: araçların ürettiği belgeler (`gen_signal_manifest.py`, `--event-vocab`)
@@ -96,7 +96,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 
 - Harness çıktıları (`SMOKE`, `PROBE`, `TICK`, `TEMPO`, `CROWD`, `PAN`, `SPRINTPROBE` vb.) çevrilmez; `scripts/debug/` ve `scenes/debug/` `loc_residue` SKIP listesindedir (`loc_residue.gd:30-33`)
 - `main.gd` `scripts/` altında olduğu için Türkçe literal taşıyan fikstür satırları `# LOC-DATA <gerekçe>` işaretini ister (main.gd'de 91 işaret var)
-- `loc_residue.gd` ve `loc_csv_integrity` vakası (`endgame_smoke.gd:315`, gövde `:10830`) `strings.csv` anahtarlarını okur; `glyph_audit.gd` CSV'nin iki dilini okur
+- `loc_residue.gd` ve `loc_csv_integrity` vakası (`endgame_smoke.gd:315`, gövde `:10831`) `strings.csv` anahtarlarını okur; `glyph_audit.gd` CSV'nin iki dilini okur
 - `--lang=tr|en` bayrağını `Localization` okur (`scripts/autoload/localization.gd:20-53`); çekim dosya adına `_en` ekler
 
 ## Testler
