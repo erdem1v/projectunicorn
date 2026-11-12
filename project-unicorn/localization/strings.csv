@@ -518,7 +518,7 @@ MONTH_11,Kasım,November
 MONTH_12,Aralık,December
 DATE_LINE,Hafta {week} · {mon} {year},Week {week} · {mon} {year}
 PCT_PATTERN,%{v},{v}%
-SHARE_FLOOR,"<%0,1",<0.1%
+SHARE_FLOOR,<%1,<1%
 NUM_GROUP_SEP,.,","
 NUM_DECIMAL_SEP,",",.
 TAB_PRODUCT,Ürün,Product

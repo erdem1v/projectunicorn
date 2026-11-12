@@ -161,13 +161,12 @@ func get_player_share_pct() -> float:
 
 
 func format_share(pct: float) -> String:
-	# Kıymığın görünmesi tasarımın kalbi: tek ondalık; eşiğin altı "henüz yok denecek
-	# kadar küçük" okunur, görünmez değil. Biçim yerelden gelir (Fmt): işaretin
-	# yeri ve ondalık ayracı dile göre değişir (%0,3 ↔ 0.3%), taban metni SHARE_FLOOR
-	# anahtarında. Buradaki KARAR yalnız eşiğin kendisi — 0,1'in altı ayrı bir cümledir.
-	if pct < 0.1:
+	# Kıymığın görünmesi tasarımın kalbi: pay tam sayıdır (envanter world-08) ve tam sayıya yuvarlanınca sıfır
+	# olacak pay "henüz yok denecek kadar küçük" okunur, görünmez değil. Biçim yerelden gelir (Fmt): işaretin yeri dile
+	# göre değişir (%3 ↔ 3%), taban metni SHARE_FLOOR anahtarında ("<%1" ↔ "<1%").
+	if pct < 0.5:
 		return TranslationServer.translate("SHARE_FLOOR")
-	return Fmt.percent(pct, 1)
+	return Fmt.percent(roundf(pct), 0)
 
 
 func _share_row(rid: String, display_name: String, tier: String,

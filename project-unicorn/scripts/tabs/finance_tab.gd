@@ -98,17 +98,15 @@ func _paint_kpis(_value = null) -> void:
 	_kpis.add_child(runway)
 
 
-## ÖZET | YATIRIM; kilitliyken Yatırım soluk, kilidiyle, gerekçesi yanında.
+## ÖZET | YATIRIM. Yatırım açılana kadar hiç görünmez, yaptıkça açılır (envanter world-01): tek sayfayla sekme satırı
+## da çizilmez.
 func _paint_tabs() -> void:
 	UiFactory.clear(_tabs)
-	var locked: bool = _yatirim_locked()
-	var open: Array = ["ozet"] if locked else PAGE_KEYS.keys()   # LOC-DATA sub-page id
-	var seg := UiFactory.D_seg_tabs(open.map(func(id: String) -> String: return tr(PAGE_KEYS[id])),
-		open.find(_current), func(i: int) -> void: _show_page(open[i]))
-	_tabs.add_child(seg)
-	if locked:
-		seg.add_child(UiFactory.D_locked_tab(tr(PAGE_KEYS.yatirim)))
-		_tabs.add_child(SprintUiShared.label(tr("FIN_SUBTAB_LOCKED"), &"Caption"))
+	if _yatirim_locked():
+		return
+	var open: Array = PAGE_KEYS.keys()   # LOC-DATA sub-page id
+	_tabs.add_child(UiFactory.D_seg_tabs(open.map(func(id: String) -> String: return tr(PAGE_KEYS[id])),
+		open.find(_current), func(i: int) -> void: _show_page(open[i])))
 
 
 func _show_page(id: String) -> void:

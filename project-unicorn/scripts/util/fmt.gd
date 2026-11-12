@@ -182,6 +182,15 @@ static func money_chip(value: int) -> String:
 	return _localize_signed(value, s)
 
 
+## Money in whole thousands under a million, for figures read side by side: "$999" · "$44K" · money()'s "$12,5M" from
+## a million up.
+static func money_round(amount: int) -> String:
+	var a: int = absi(amount)
+	if a >= 999_500:
+		return money(amount)
+	return _localize_signed(amount, ("$%dK" % roundi(a / 1_000.0)) if a >= 1_000 else "$%d" % a)
+
+
 ## Cash in full, thousands-grouped: "$12.340"/"$12,340". Cash is shown exactly because money
 ## management is precise.
 static func money_exact(value: int) -> String:

@@ -26,8 +26,8 @@ const PAD := UiTokens.D_CHART_PAD   # the plot's room over its top and under its
 const HEADROOM := 0.08   # the plot's room over its highest figure and under its lowest, a share of the span
 const MAX_LINES := 3     # the grid's lines across the cash span, $0 among them
 const MAX_MONTHS := 4    # the months named under the plot
-## A projection's name at its end: the key of its words.
-const END_NAME := {"current": "FIN_CURVE_COURSE", "target": "FIN_CURVE_TARGET"}
+## A projection's name at its end: the key of its words. The current course goes unnamed (inventory world-04).
+const END_NAME := {"target": "FIN_CURVE_TARGET"}
 
 var _d: Dictionary = {}
 var _axis: Vector3 = Vector3.ZERO   # the cash axis: low, high, step
@@ -172,15 +172,9 @@ func _draw() -> void:
 		_word(font, fs, Vector2(maxf(0.0, at.x - zero_w), at.y + UiTokens.SPACE_S + font.get_ascent(fs)), zero_word,
 			UiTokens.D_neg_ink())
 
-	# Today: its point, a rule from it to the floor and its week over it, on the side the projection does not head
-	# to (right while the cash melts, left while it climbs).
+	# Today: its point and a rule from it to the floor; no word over it (inventory world-03).
 	var dot: Vector2 = _px(today)
 	draw_line(Vector2(dot.x, dot.y + UiTokens.D_CHART_DOT), Vector2(dot.x, y1), UiTokens.D_LINE_2)
-	var today_word: String = tr("FIN_CURVE_TODAY").format({"n": int(GameState.get_date_dict(int(today.x)).week)})
-	var today_w: float = font.get_string_size(today_word, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
-	var left: float = dot.x - UiTokens.D_CHART_DOT if _shows.current else dot.x + UiTokens.D_CHART_DOT - today_w
-	_word(font, fs, Vector2(clampf(left, 0.0, size.x - today_w),
-		maxf(font.get_ascent(fs), dot.y - UiTokens.D_CHART_DOT - UiTokens.SPACE_M)), today_word, UiTokens.D_INK_2)
 	draw_circle(dot, UiTokens.D_CHART_DOT + UiTokens.D_CHART_HALO, UiTokens.D_SURFACE_2, true, -1.0, true)
 	draw_circle(dot, UiTokens.D_CHART_DOT, UiTokens.D_INK_1, true, -1.0, true)
 	if _hover >= 0:

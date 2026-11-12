@@ -44,7 +44,6 @@ var _tx: VBoxContainer
 var _cap_card: PanelContainer
 var _cap: VBoxContainer
 var _goal: VBoxContainer
-var _flow: VBoxContainer
 var _burn: VBoxContainer
 var _mentor_card: PanelContainer
 var _mentor_quote: Label            # rewritten per band (Frank v6, surface 20)
@@ -126,7 +125,6 @@ func _build() -> void:
 	# Each card's parts, head first, are painted into its column.
 	_tx = UiFactory.D_card(_cols[0])
 	_goal = UiFactory.D_card(_cols[1])
-	_flow = UiFactory.D_card(_cols[1])
 	_burn = UiFactory.D_card(_cols[1])
 	_build_mentor_card()
 	_league = UiFactory.D_card(_cols[2])
@@ -178,7 +176,6 @@ func refresh() -> void:
 	_refresh_curve()
 	_refresh_transactions()
 	_refresh_goal()
-	_refresh_flow()
 	_refresh_burn()
 	_refresh_mentor()
 	_refresh_league()
@@ -275,9 +272,9 @@ func _refresh_transactions() -> void:
 		row.custom_minimum_size.y = UiTokens.D_H_ROW_SM
 		var line := SprintUiShared.box(UiTokens.SPACE_L)
 		row.add_child(line)
+		# Ay ve yıl yeter; hafta kodu ("H7") yazmaz (envanter world-10).
 		var date: Dictionary = GameState.get_date_dict(int(t.day))
-		var when := SprintUiShared.label(tr("FIN_TX_DATE").format({"week": int(date.week),
-			"mon": Fmt.month_abbr(int(date.month)), "year": int(date.year)}), &"Caption")
+		var when := SprintUiShared.label("%s %d" % [Fmt.month_abbr(int(date.month)), int(date.year)], &"Caption")
 		when.custom_minimum_size.x = UiTokens.D_W_TX_DATE
 		line.add_child(when)
 		var what := SprintUiShared.label(FinanceSystem.one_time_label_display(String(t.label)), &"DataText")
@@ -323,17 +320,19 @@ func _refresh_goal() -> void:
 	if not goal.is_empty():
 		_goal.add_child(HRUiShared.D_bar(Vector2(0, UiTokens.D_H_PROGRESS), float(goal.done) / goal.total,
 			UiTokens.D_BAR_EMPH if goal.next.is_empty() else UiTokens.D_BAR_FILL))
-	if _goal.get_child_count() > 1:
-		_goal.add_child(HSeparator.new())
 	var sig: Dictionary = PhaseGateSystem.series_a_signal()
 	var state: String = String(sig.get("state", "closed"))
+	if _goal.get_child_count() > 1:
+		_goal.add_child(HSeparator.new())
 	var appetite := SprintUiShared.box(UiTokens.SPACE_M)
 	appetite.add_child(SprintUiShared.label(Fmt.upper(InvestorAppetiteUi.title_text()), &"KeyLabel"))
 	appetite.add_child(UiFactory.D_tag(InvestorAppetiteUi.state_text(state), APPETITE_TAGS.get(state, &"outline")))
 	appetite.tooltip_text = _series_a_tooltip()
 	appetite.mouse_filter = Control.MOUSE_FILTER_PASS
 	_goal.add_child(appetite)
-	_goal.add_child(SprintUiShared.prose(InvestorAppetiteUi.line(sig), &"Caption"))
+	# Kapalı iştahı KAPALI etiketi söyler; altındaki cümle onu tekrarlayıp sonraki aşamayı anardı (envanter world-02).
+	if state != "closed":
+		_goal.add_child(SprintUiShared.prose(InvestorAppetiteUi.line(sig), &"Caption"))
 
 
 func _series_a_tooltip() -> String:
@@ -350,38 +349,13 @@ func _series_a_tooltip() -> String:
 	return tr("FIN_REQ_OPENS").format({"reqs": " · ".join(reqs)})
 
 
-## Aylık akış, mevcut gidişle: get_monthly_flow() ay başından bugüne DEĞİL, bugünkü hızın 30 güne uzatılmışıdır
-## ve başlık bunu söyler. Gelir artıdır; gider ve kasa artıdayken eksi net bedeldir (mürekkep, bedel glifi),
-## tehlike yalnız kasa eksideyken.
-func _refresh_flow() -> void:
-	UiFactory.clear(_flow)
-	_flow.add_child(UiFactory.D_card_head(tr("FIN_MONTHLY_FLOW"), null,
-		UiFactory.make_label(tr("FIN_MONTHLY_FLOW_PACE"), &"Caption")))
-	var flow: Dictionary = FinanceSystem.get_monthly_flow()
-	var net: int = int(flow.net)
-	var income: int = int(flow.income)
-	var biggest: float = max(1, income, int(flow.expense), absi(net))
-	var grid := _share_grid(3)
-	_flow.add_child(grid)
-	for row in [["FIN_INCOME", income, UiTokens.D_pos() if income > 0 else null], ["FIN_EXPENSE", -int(flow.expense), null],
-			["FIN_NET", net, UiTokens.D_net_ink(net)]]:
-		var amount: int = row[1]
-		grid.add_child(SprintUiShared.label(tr(row[0]), &"MetaText"))
-		grid.add_child(_share(absi(amount) / biggest, UiTokens.D_BAR_FILL if row[2] == null else row[2]))
-		var shown: String = Fmt.money(amount) if amount <= 0 else "+" + Fmt.money(amount)
-		var value: Control = UiFactory.D_cost(shown, &"KeyText") if amount < 0 and row[2] == null \
-			else SprintUiShared.label(shown, &"KeyText", row[2])
-		value.size_flags_horizontal = Control.SIZE_SHRINK_END
-		grid.add_child(value)
-
-
 ## Gider dağılımı: aylık toplamı başlıkta; bir parça-bütün çubuğu, altında her kalemin çubuğu, aylık tutarı ve
 ## payı. En büyük kalem vurgulu.
 func _refresh_burn() -> void:
 	UiFactory.clear(_burn)
 	var rows: Array = FinanceSystem.get_burn_breakdown_pct()
 	_burn.add_child(UiFactory.D_card_head(tr("FIN_BURN_SECTION"), UiFactory.make_label(tr("FIN_PER_MONTH").format(
-		{"amount": Fmt.money(int(FinanceSystem.get_monthly_flow().expense))}), &"Caption")))
+		{"amount": Fmt.money_round(int(FinanceSystem.get_monthly_flow().expense))}), &"Caption")))
 	if rows.is_empty():
 		_burn.add_child(SprintUiShared.empty_line(tr("FIN_BURN_EMPTY"), "res://assets/icons/util/doc.svg", 0))
 		return
@@ -398,8 +372,8 @@ func _refresh_burn() -> void:
 			item.mouse_filter = Control.MOUSE_FILTER_PASS
 		grid.add_child(item)
 		grid.add_child(_share(float(r.pct) / 100.0, UiTokens.D_BAR_EMPH if r.pct == top else UiTokens.D_BAR_FILL))
-		# Kalemler günlük orandır; tutar üst barla aynı aylık hız.
-		for cell in [[Fmt.money(int(r.amount) * TimeModel.DAYS_PER_MONTH), &"MetaMuted"],
+		# Kalemler günlük orandır; tutar üst barla aynı aylık hız, tam bin (envanter world-09; payı world-06 gereği kalır).
+		for cell in [[Fmt.money_round(int(r.amount) * TimeModel.DAYS_PER_MONTH), &"MetaMuted"],
 				[Fmt.percent(int(r.pct), 0), &"KeyText"]]:
 			var figure := SprintUiShared.label(cell[0], cell[1])
 			figure.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -510,8 +484,8 @@ func _refresh_league() -> void:
 		return
 	UiFactory.clear(_league)
 	var player_pct: float = float(snap["player_pct"])
-	_league.add_child(UiFactory.D_card_head(tr("FIN_MARKET_TITLE"),
-		UiFactory.make_label(RivalRegistry.format_share(player_pct), &"DataStrong") if GameState.mrr > 0 else null))
+	# Oyuncunun payı merdivendeki kendi satırında; başlık onu tekrarlamaz (envanter world-08).
+	_league.add_child(UiFactory.D_card_head(tr("FIN_MARKET_TITLE")))
 	# Çıktı ama MRR yok: tablo yerine tek yönlendirme satırı.
 	if GameState.mrr <= 0:
 		_league.add_child(SprintUiShared.prose(tr("FIN_MARKET_EMPTY"), &"FrankQuote"))

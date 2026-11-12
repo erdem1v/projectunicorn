@@ -10069,22 +10069,25 @@ static func _case_market_share_tracks_mrr() -> String:
 	# sign and a comma decimal ("%0,3"); English trails it with a dot ("0.3%"). Under the
 	# floor each locale says its own sentence. The locale is captured and restored so the
 	# rest of the case runs in the environment it started in.
+	# Shares are whole (inventory world-08): one that would round to 0 reads the floor sentence.
 	var loc0: String = TranslationServer.get_locale()
 	TranslationServer.set_locale("tr")
-	var tr_above: String = RivalRegistry.format_share(p1)
+	var tr_above: String = RivalRegistry.format_share(12.4)
 	var tr_floor: String = RivalRegistry.format_share(0.02)
 	TranslationServer.set_locale("en")
-	var en_above: String = RivalRegistry.format_share(p1)
+	var en_above: String = RivalRegistry.format_share(12.4)
 	var en_floor: String = RivalRegistry.format_share(0.02)
 	TranslationServer.set_locale(loc0)
-	if not tr_above.begins_with("%") or not tr_above.contains(","):
-		return "tr share wants a leading %% and a comma decimal, got: %s" % tr_above
-	if tr_floor != "<%0,1":
-		return "tr sub-floor share is %s, want <%%0,1" % tr_floor
-	if not en_above.ends_with("%") or not en_above.contains("."):
-		return "en share wants a trailing %% and a dot decimal, got: %s" % en_above
-	if en_floor != "<0.1%":
-		return "en sub-floor share is %s, want <0.1%%" % en_floor
+	if tr_above != "%12":
+		return "tr share wants a leading %% and no decimal, got: %s" % tr_above
+	if tr_floor != "<%1":
+		return "tr sub-floor share is %s, want <%%1" % tr_floor
+	if en_above != "12%":
+		return "en share wants a trailing %% and no decimal, got: %s" % en_above
+	if en_floor != "<1%":
+		return "en sub-floor share is %s, want <1%%" % en_floor
+	if p1 <= 0.0:
+		return "the seed MRR left no share (got %f)" % p1
 	# MRR up → share strictly up (a second real customer record).
 	var p := Prospect.new()
 	p.id = "lead_smoke_growth"
