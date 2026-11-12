@@ -42,7 +42,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 51
+const THEME_STAMP := 52
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -708,7 +708,7 @@ const D_NEED_BOX := Vector2i(56, 28)  # a stage's effort box at the head of a ca
 const D_H_CAP_TRACK := 16             # a stage's groove
 const D_CAP_FILL_INSET := 3           # a groove's fill from its outline, above and below
 const D_W_CAP_LABEL := 108            # a capacity row's stage column
-const D_W_CAP_NUMBER := 124           # its effort figure's column, right aligned
+const D_W_CAP_NUMBER := 84            # its "work / team" figure's column, right aligned (fits "128 / 152")
 const D_W_CAP_BADGE := 72             # its fit mark, or the spill badge and the streak ring
 const D_W_FACE_SLOT := 46             # a 24 px face and the room its star chip takes past it, in a stage's row of people
 const D_STAR_CHIP := Vector2i(2, 3)   # a star chip's overlap on the face's right edge, and its drop below the face
