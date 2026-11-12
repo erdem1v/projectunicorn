@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git f1a69b6b · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 24b62b8b · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -229,10 +229,10 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/systems/vc_pitch_system.gd · 1327 · VCPitchSystem · RefCounted · 0 sinyal · 91 func
 - scripts/systems/work_hours_system.gd · 342 · WorkHoursSystem · RefCounted · 0 sinyal · 38 func
 
-### scripts/tabs/ (9 dosya, 4008 satır)
+### scripts/tabs/ (9 dosya, 4003 satır)
 - scripts/tabs/events_tab.gd · 369 · - · Control · 0 sinyal · 23 func
 - scripts/tabs/finance_tab.gd · 144 · - · Control · 1 sinyal · 9 func
-- scripts/tabs/hr_tab.gd · 542 · - · Control · 1 sinyal · 32 func
+- scripts/tabs/hr_tab.gd · 537 · - · Control · 1 sinyal · 32 func
 - scripts/tabs/hunt_tab.gd · 544 · - · Control · 0 sinyal · 27 func
 - scripts/tabs/personal_tab.gd · 266 · - · Control · 1 sinyal · 13 func
 - scripts/tabs/piyasa_tab.gd · 689 · - · Control · 0 sinyal · 34 func
@@ -246,11 +246,11 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 ### scripts/tabs/finance/ (1 dosya, 590 satır)
 - scripts/tabs/finance/finance_ozet_view.gd · 590 · FinanceOzetView · Control · 0 sinyal · 25 func
 
-### scripts/tabs/hr/ (7 dosya, 2114 satır)
+### scripts/tabs/hr/ (7 dosya, 2115 satır)
 - scripts/tabs/hr/hr_assignments.gd · 188 · HRAssignments · RefCounted · 0 sinyal · 8 func
 - scripts/tabs/hr/hr_atlas_modal.gd · 490 · - · "res://scripts/tabs/hr/hr_panel.gd" · 0 sinyal · 20 func
 - scripts/tabs/hr/hr_dossier.gd · 232 · - · VBoxContainer · 2 sinyal · 13 func
-- scripts/tabs/hr/hr_ledger.gd · 453 · HRLedger · RefCounted · 0 sinyal · 23 func
+- scripts/tabs/hr/hr_ledger.gd · 454 · HRLedger · RefCounted · 0 sinyal · 23 func
 - scripts/tabs/hr/hr_panel.gd · 132 · - · Control · 1 sinyal · 10 func
 - scripts/tabs/hr/hr_popover.gd · 113 · HRPopover · Control · 0 sinyal · 8 func
 - scripts/tabs/hr/hr_ui_shared.gd · 506 · HRUiShared · RefCounted · 0 sinyal · 32 func
@@ -1318,10 +1318,10 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - HR_COST_* · 3 · scripts/systems/finance_system.gd, scripts/systems/hr_constants.gd
 - HR_DOSSIER_* · 4 · scripts/tabs/hr/hr_dossier.gd, scripts/tabs/personal_tab.gd
 - HR_DURATION_* · 2 · scripts/util/fmt.gd, scripts/debug/endgame_smoke.gd
-- HR_EMPTY_* · 1 · scripts/tabs/hr/hr_assignments.gd, scripts/tabs/hr_tab.gd, scripts/tabs/product/sprint_panel.gd, scripts/debug/kit_probe.gd
+- HR_EMPTY_* · 1 · scripts/tabs/hr/hr_assignments.gd, scripts/tabs/product/sprint_panel.gd, scripts/debug/kit_probe.gd
 - HR_ERR_* · 7 · scripts/systems/hr_actions.gd, scripts/debug/endgame_smoke.gd
 - HR_EV_* · 2 · data/events/cards/team/resignation.json
-- HR_FILES_* · 1 · scripts/tabs/hr_tab.gd
+- HR_FILES_* · 1 · -
 - HR_FIRE_* · 2 · scripts/modals/hr_action_modal.gd, scripts/tabs/hr/hr_ledger.gd
 - HR_FOUNDER_* · 7 · scripts/systems/hr_system.gd, scripts/debug/endgame_smoke.gd
 - HR_GROUP_* · 4 · scripts/systems/hr_constants.gd, scripts/debug/kit_probe.gd

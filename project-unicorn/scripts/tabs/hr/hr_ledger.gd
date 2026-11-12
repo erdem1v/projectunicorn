@@ -130,7 +130,9 @@ static func row(emp: Character, compact: bool, selected: bool, on_action: Callab
 					task.add_theme_color_override("font_color", UiTokens.D_INK_4)
 				cells.add_child(_pad(task, w, INSET["task"], 0))
 			"xp":
-				cells.add_child(_pad(HRUiShared.D_xp(emp), w, INSET["xp"], 0))
+				# Deneyimi olmayan satırın hücresi boştur: "%0"lık boş çubuk her satırda tekrar ederdi (envanter sales-12).
+				cells.add_child(_pad(HRUiShared.D_xp(emp) if CharacterRegistry.experience_ratio(emp) > 0.0 else Control.new(),
+					w, INSET["xp"], 0))
 			"state":
 				cells.add_child(HRUiShared.D_state_cell(emp, false, w))
 			"trait":
@@ -233,7 +235,7 @@ static func task_text(emp: Character) -> String:
 
 ## §12.2 iş metni. Sprint koşarken Build çıkacak sürümün adıyla okunur ("Notly v1.5"):
 ## oyuncunun kafasındaki şey o sürümdür. `short` iki iş hâlinin kısa etiketidir: yalnız işin
-## adı, bir iddia değil. Uykudaki işin cümlesi "görev alıyor" yerine neyi beklediğini söyler.
+## adı, bir iddia değil. Uykudaki işin hücresi boştur: Durum hücresi BOŞTA der (envanter sales-12).
 static func _job_text(job_id: String, short: bool) -> String:
 	if job_id == HRConstants.JOB_BUILD:
 		if SprintSystem.mode() == "active":
@@ -244,9 +246,8 @@ static func _job_text(job_id: String, short: bool) -> String:
 			return tr_key("HR_TASK_ON_PRODUCT").format({"product": product, "version": label})
 	if short:
 		return HRConstants.job_label(job_id)
-	var waiting: String = HRSystem.job_waiting_key(job_id)
-	if waiting != "":
-		return tr_key(waiting)
+	if HRSystem.job_waiting_key(job_id) != "":
+		return ""
 	var key: String = "HR_TASK_ON_JOB_%s" % job_id.to_upper()
 	var sentence: String = tr_key(key)
 	# Cümlesi olmayan iş (Araştırma) adıyla okunur; ham anahtar ekrana düşmez.

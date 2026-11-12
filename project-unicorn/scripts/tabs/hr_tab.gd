@@ -265,11 +265,9 @@ func _rebuild() -> void:
 	fit_changed.emit()
 
 
-## Kaçma riski başına bir şerit (dosyayı açar), sonra Atlas'ın şeridi; aralarında ve tablodan önce boşluk.
+## Atlas'ın şeridi, tablodan önce boşlukla. Kaçma riski şerit olarak tekrarlanmaz: Kadro satırının kırmızı morali ve
+## AYRILABİLİR etiketi onu söyler (envanter sales-10).
 func _paint_strips() -> void:
-	for emp in CharacterRegistry.get_employees():
-		if HRConstants.is_flight_risk(emp.morale):
-			_strips.add_child(HRUiShared.D_risk_strip(emp, _on_card_action.bind(emp.id, HRLedger.ACTION_DOSSIER, null)))
 	var atlas: Control = _atlas_strip()
 	if atlas != null:
 		_strips.add_child(atlas)
@@ -299,11 +297,11 @@ func _atlas_strip() -> Control:
 	var agency: String = HRConstants.search_agency_name()
 	row.add_child(HRUiShared.D_mono(agency.left(1), UiTokens.D_AVATAR_ROW))
 	row.add_child(UiFactory.make_label(agency, &"DataStrong"))
-	var text: String
+	# Dosyalar hazırken şerit ajans ve düğmesidir: kaç dosya geldiğini rayın sayı rozeti söyler (envanter sales-11).
+	var text: String = ""
 	var action := Button.new()
 	action.focus_mode = Control.FOCUS_NONE
 	if state == HRConstants.SEARCH_FILES_READY:
-		text = tr("HR_FILES_ON_DESK").format({"n": HRSearchSystem.get_files().size()})
 		action.theme_type_variation = &"SecondaryButtonSmall"
 		action.text = tr("HR_OPEN_FILES")
 		action.pressed.connect(open_atlas)
@@ -394,7 +392,8 @@ func open_atlas() -> void:
 
 # --- Kadro grupları ---------------------------------------------------------
 
-## A roster group: its head (click folds it), then its people, or the empty row's way to hire.
+## A roster group: its head (click folds it), then its people. An empty group is its head alone, its count 0: hiring is
+## the bar's İşe alım başlat (inventory sales-13).
 func _add_group(group_id: String, compact: bool) -> void:
 	# get_employees(), get_active_employees() DEĞİL: defter izindeki ve eğitimdeki kişiyi de
 	# gösterir — maaşı ödeniyor, yalnız o günkü kapasiteye girmiyor.
@@ -405,11 +404,7 @@ func _add_group(group_id: String, compact: bool) -> void:
 	var folded: bool = _collapsed.has(group_id)
 	_list.add_child(HRUiShared.D_group(HRConstants.group_label(group_id),
 		"res://assets/icons/dept/%s.svg" % group_id, roster.size(), folded, _toggle_group.bind(group_id)))
-	if folded:
-		return
-	if roster.is_empty():
-		_list.add_child(HRUiShared.D_empty_row(tr("HR_EMPTY_ROW"), tr("HR_SEARCH_START"), open_atlas,
-			EventGate.active_id() != ""))
+	if folded or roster.is_empty():
 		return
 	# Dikkat isteyen satırlar üste. sort_custom kararlı DEĞİL ve çoğu ağırlık 0, o yüzden
 	# hire_day ve id ile kesin tiebreak: sıra her yeniden kurmada aynı kalır.
