@@ -171,7 +171,8 @@ static func money(amount: int) -> String:
 static func money_chip(value: int) -> String:
 	var a: int = absi(value)
 	var s: String
-	if a >= 1_000_000:
+	# From 999.500 the thousands round to 1000: the million band starts there, as in money_round.
+	if a >= 999_500:
 		s = "$%.1fM" % (a / 1_000_000.0)
 	elif a >= 10_000:
 		s = "$%.0fK" % (a / 1_000.0)

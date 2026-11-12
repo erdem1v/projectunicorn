@@ -11328,11 +11328,11 @@ static func _case_loc_format_locale_flip() -> String:
 	var d := {"week": 37, "month": 9, "year": 2012}
 	var want := {
 		"tr": {
-			"money_exact": "$1.234.567", "money": "$3,5K", "pct": "%12,5",
+			"money_exact": "$1.234.567", "money": "$3,5K", "chip_edge": "$1,0M", "pct": "%12,5",
 			"date": "Hafta 37 · Eylül 2012", "upper": "İYİ", "month": "Eylül",
 		},
 		"en": {
-			"money_exact": "$1,234,567", "money": "$3.5K", "pct": "12.5%",
+			"money_exact": "$1,234,567", "money": "$3.5K", "chip_edge": "$1.0M", "pct": "12.5%",
 			"date": "Week 37 · September 2012", "upper": "IYI", "month": "September",
 		},
 	}
@@ -11342,6 +11342,7 @@ static func _case_loc_format_locale_flip() -> String:
 		var got := {
 			"money_exact": Fmt.money_exact(1234567),
 			"money": Fmt.money(3500),
+			"chip_edge": Fmt.money_chip(999_700),   # the thousands round to 1000 here: the million band
 			"pct": Fmt.percent(12.5, 1),
 			"date": Fmt.date_line(d),
 			"upper": Fmt.upper("iyi"),
