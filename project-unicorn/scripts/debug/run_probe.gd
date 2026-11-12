@@ -124,6 +124,13 @@ extends RefCounted
 #   PROBE MONTH_BURN day=<d> n=<n> ticks=<n> <burn id>=<n>... one_time=<n>   (full_run*: beside each PROBE MONTH)
 #               The burn ids are FinanceSystem.BURN_IDS, in its order.
 #   PROBE SPRINT day=<d> n=<n> label=<v1.x|-> shipped=<card ids> carried=<n> velocity=<done>/<capacity>
+#   PROBE TIERS day=<d> n=<n> <line>=<tier>,...   (beside every PROBE SPRINT: the tier of every capability of the market)
+#   PROBE POOL  day=<d> open=<n> locked=<n> done=<n> started=<0|1> plan=<card ids|-> lines=<line>:<tier>:<o|l|d>[(<parts>)],...
+#                                           (every start attempt, --tick-probe's too: <tier> the capability's tier, its next
+#                                           step open (o), behind its gate (l, the unmet parts joined by +: a research node,
+#                                           p<area><stars> one person, t<area><stars> the team's total, the area cut to three
+#                                           letters; the paid plan before the MVP has none) or none left (d); plan = the
+#                                           plan's cards)
 #   PROBE SHIP  day=<d> version=<n> ...      (a public release: the MVP and every version after it; escaped = the
 #                                           bugs that escaped the release's testing, one per bug on its card's line)
 #   PROBE FIX   day=<d> sprint=<n> weeks=<n> fix_load=<f> capacity=<f> share=<f> cards=<fix card ids|-> bug_sprint=<b> k=<f>
@@ -161,8 +168,9 @@ extends RefCounted
 ##   policy    — the event answers (default "sensible", below);
 ##   vc        — the Series A policy, sim only (none: the run never sits at a Series A table); "product" signs
 ##               the opening terms like "cautious" and sits at the product fund first, at the seed and at Series A;
-##   staff_cap — the employees the B2B staffing ladder stops at (default: its thirteen STAFF_LADDER rungs; full_run_staff25
-##               and full_run_staff50 go on up the growth rungs to 24 and 49, 25 and 50 people with the founder);
+##   staff_cap — the employees the B2B staffing ladder stops at (default: its thirteen STAFF_LADDER rungs; full_run_staff1, 3, 6
+##               and 12 stop at 0, 2, 5 and 11, full_run_staff25 and full_run_staff50 go on up the growth rungs to 24 and 49:
+##               the number in the name is the people with the founder);
 ##   k1_only   — the founder never plans a K2 or K3 step;
 ##   fix       — the sprint's fix cards (default: whatever the lead plans): "none" takes no fix card, "worst" the
 ##               line with the most open bugs, "due" every line with DUE_BUGS × k or more (B2B: a line an active or
@@ -228,6 +236,10 @@ const PRESETS := {
 	"full_run_cash_hoard": {"subtype": "erp", "cash": "hoard"},
 	"full_run_b2c_cash_spend": {"subtype": "note_tool", "cash": "spend"},
 	"full_run_b2c_cash_hoard": {"subtype": "note_tool", "cash": "hoard"},
+	"full_run_staff1": {"subtype": "erp", "staff_cap": 0},
+	"full_run_staff3": {"subtype": "erp", "staff_cap": 2},
+	"full_run_staff6": {"subtype": "erp", "staff_cap": 5},
+	"full_run_staff12": {"subtype": "erp", "staff_cap": 11},
 	"full_run_staff25": {"subtype": "erp", "staff_cap": 24},
 	"full_run_staff50": {"subtype": "erp", "staff_cap": 49},
 	"b2b_book20": {"accounts": 20, "staff": 6},
@@ -558,6 +570,8 @@ static func _on_sprint_closed(number: int) -> void:
 		GameState.day, number, SprintSystem.version_label(int(r.number)) if int(r.number) > 0 else "-",
 		",".join(r.shipped.map(func(c: Dictionary) -> String: return c.id)), r.carried.size(),
 		int(r.velocity.done), int(r.velocity.total)])
+	print("PROBE TIERS day=%d n=%d %s" % [GameState.day, number, ",".join(_market_lines().map(
+		func(line_id: String) -> String: return "%s=%d" % [line_id, SprintCatalog.tier(line_id)]))])
 
 
 # ============================================================================
@@ -1329,7 +1343,7 @@ static func _plan_the_sprint() -> void:
 				_plan_actions += 1
 				break
 	_plan_actions += 1
-	if SprintSystem.start():
+	if _start_logged():
 		print("PROBE PLAY day=%d sprint %d start cards=%s used=%.2f capacity=%.2f actions=%d" % [GameState.day,
 			SprintSystem.sprint_number(), ",".join(GameState.product.sprint.cards), SprintSystem.used(),
 			SprintSystem.capacity(), _plan_actions])
@@ -1383,7 +1397,43 @@ static func _start_on_lead() -> void:
 	SprintSystem.publish()
 	SprintSystem.plan_next()
 	SprintSystem.apply_lead()
-	SprintSystem.start()
+	_start_logged()
+
+
+## SprintSystem.start(), and the PROBE POOL line of the attempt.
+static func _start_logged() -> bool:
+	var started: bool = SprintSystem.start()
+	print("PROBE POOL day=%d %s" % [GameState.day, _pool_ledger(started)])
+	return started
+
+
+## PROBE POOL's fields after day=: the counts, the plan's cards and every capability's next step with its unmet parts.
+static func _pool_ledger(started: bool) -> String:
+	var n: Dictionary = {"o": 0, "l": 0, "d": 0}
+	var rows: PackedStringArray = []
+	for line_id in _market_lines():
+		var tier: int = SprintCatalog.tier(line_id)
+		var state: String = "d"
+		var why: PackedStringArray = []
+		if tier < SprintCatalog.max_tier(line_id):
+			var step: String = line_id if line_id == SprintCatalog.PAID_PLAN else String(ProductLines.step_at(line_id, tier + 1).id)
+			state = "o" if SprintCatalog.gate_reason(step) == "" else "l"
+			for part in LineGates.unmet_parts(step):
+				why.append(String(part.node) if part.kind == LineGates.KIND_RESEARCH else "%s%s%d" % [
+					"p" if part.kind == LineGates.KIND_PERSON else "t", String(part.area).left(3), part.stars])
+		n[state] += 1
+		rows.append("%s:%d:%s%s" % [line_id, tier, state, "" if why.is_empty() else "(" + "+".join(why) + ")"])
+	var cards: Array = GameState.product.sprint.cards
+	return "open=%d locked=%d done=%d started=%d plan=%s lines=%s" % [n.o, n.l, n.d, int(started),
+		"-" if cards.is_empty() else ",".join(cards), ",".join(rows)]
+
+
+## Every capability of the market, area by area (PROBE TIERS, PROBE POOL).
+static func _market_lines() -> Array:
+	var out: Array = []
+	for area_id in SprintCatalog.area_ids():
+		out.append_array(SprintCatalog.capabilities(area_id))
+	return out
 
 
 ## The K1-only founder plans no step past K1: fixes, research and the paid plan stay open.

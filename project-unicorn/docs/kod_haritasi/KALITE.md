@@ -1,13 +1,13 @@
 # Kod haritası · KALITE
 
-Üretildi: git 7f4dcddf · 2026-11-12 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git 9857b939 · 2026-11-12 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 255 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
 
 - scripts/debug/endgame_smoke.gd · 30018 satır · 680 func
 - scripts/main/main.gd · 6301 satır · 224 func
-- scripts/debug/run_probe.gd · 2392 satır · 92 func
+- scripts/debug/run_probe.gd · 2442 satır · 95 func
 - scripts/systems/sprint_system.gd · 2074 satır · 171 func
 - scripts/theme/build_theme.gd · 1663 satır · 31 func
 - scripts/events/tools/lint.gd · 1353 satır · 47 func
@@ -72,7 +72,7 @@ Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları
 - scripts/events/tools/why.gd:28 · report · 121 satır
 - scripts/events/tools/engine_probe.gd:582 · _check_invalidation · 119 satır
 - scripts/events/tools/lint.gd:229 · _lint_effects · 118 satır
-- scripts/debug/run_probe.gd:351 · run · 117 satır
+- scripts/debug/run_probe.gd:363 · run · 117 satır
 - scripts/debug/endgame_smoke.gd:1434 · _case_month_summary · 116 satır
 
 ## Ölü kod adayları (21)

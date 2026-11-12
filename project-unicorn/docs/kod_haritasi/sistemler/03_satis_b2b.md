@@ -104,12 +104,12 @@ Emit satırları DIZIN'den ve kaynaktan; "dinleyen" DIZIN'in `connect` sütunudu
 - `customer_churned`: yayan `scripts/systems/b2b_sales_system.gd:320` (`_remove_lost`; olay yolundaki `churn_customer` bunu yaymaz, `effects.gd:273`) · `left_tabs.gd:118`, `sales_tab.gd:73`, olay motoru
 - `customer_expanded`: yayan `scripts/systems/b2b_sales_system.gd:461` · `sales_tab.gd:74`, olay motoru
 - `customer_assigned`: yayan `scripts/autoload/customer_registry.gd:321` · `hr_tab.gd:78`, `sales_tab.gd:74`
-- `promise_created`: yayan `scripts/autoload/promise_registry.gd:77` · yalnız probe (`run_probe.gd:482`)
+- `promise_created`: yayan `scripts/autoload/promise_registry.gd:77` · yalnız probe (`run_probe.gd:494`)
 - `promise_kept`: yayan `scripts/autoload/promise_registry.gd:185` (kısmi de buradan) · yalnız smoke ve probe
 - `promise_broken`: yayan `scripts/autoload/promise_registry.gd:183` · olay motoru (`signals.gd:29`), smoke
 - `prospect_added`: yayan `scripts/autoload/prospect_registry.gd:49` · `sales_tab.gd:66`
 - `prospect_removed`: yayan `scripts/autoload/prospect_registry.gd:73` · `sales_tab.gd:66`
-- `prospect_arrived`: yayan `scripts/systems/sales_faucet_system.gd:243` · `sales_tab.gd:67`, `run_probe.gd:498`
+- `prospect_arrived`: yayan `scripts/systems/sales_faucet_system.gd:243` · `sales_tab.gd:67`, `run_probe.gd:510`
 - `lead_expired`: yayan `scripts/systems/sales_faucet_system.gd:71` · `sales_tab.gd:67`
 - `lead_reserved` / `lead_routed` / `lead_unrouted`: yayan `scripts/systems/sales_ledger.gd:61` / `:63` / `:65` · `sales_tab.gd:68`
 - `whale_condition_met`: yayan `scripts/systems/sales_faucet_system.gd:96` (tek yayıcı; `sign_deal` yaymaz) · dinleyen yok
@@ -214,7 +214,7 @@ Hepsi `tools/smoke_run.sh <vaka>` ile (komutlar `project-unicorn/`'dan, `GODOT` 
   ↳ `returning` iki lead bir alan yüzünden kaybedilmiş geri geldi: 2★ lead'in Entegrasyonlar'ı hâlâ boş, kapısı kapalı ve gerekçesi düğmelerin altında,
   ↳ 1★ lead'in Çekirdek'i 1★ masaya yetiyor, kapısı açık. Ayrıca `--inbox-shot=sales_read_only` (karar beklerken Satış, 08_sekmeler.md), `--tab-shot=sales`
 - Ekran: `--meeting-shot=<kind>` (`main.gd:4586`), `--negotiation-shot=<open|countered|insult|last|confirm>` (`main.gd:4697`), `--b2b-shot=<retention|retention_capped|escalation|expansion|deal|angel|chips>` (`main.gd:682`), `--inbox-shot=`
-- Probe: `--run-log=<preset>:<hafta>:sim[:<seed>]` ile `b2b_solo`, `b2b_reps`, `b2b_risk`, `b2b_slip`, `b2b_book20`, `b2b_book330`, `full_run*` (`run_probe.gd:188-233`); preset aileleri `b2b_*`, `b2c*`, `full_run_b2c*`. Kayıt türleri:
+- Probe: `--run-log=<preset>:<hafta>:sim[:<seed>]` ile `b2b_solo`, `b2b_reps`, `b2b_risk`, `b2b_slip`, `b2b_book20`, `b2b_book330`, `full_run*` (`run_probe.gd:197-247`); preset aileleri `b2b_*`, `b2c*`, `full_run_b2c*`. Kayıt türleri:
   ↳ `STATE` (içinde `mrr=`, `cust=`, `promises=`, `aud=`, `sat=`), `SIGN` (her B2B imzası: gün, saat, kurucu ya da temsilci, yıldız, planın haftası, MRR),
   ↳ `B2C` (tüketici ürünü canlıyken haftalık: kitle, ödeyen, fiyat, dönüşüm, memnuniyet ve hedefi (Çekirdek ile Onboarding uyumu), açık hata, kitleden giden kullanıcı toplamı `lost=`, `q=` B2C kalite terimi, ilgi, doluluk, masa, gelen,
   ↳ akış ve doğrulama hızı), `CUST` (`target=` hesabın `B2BSalesSystem.satisfaction_target`'i, taban dahil; `bugs=` hesabın kullandığı hatlardaki açık hata), `SAT` (çıtasının üstündeki hesap sayısı;

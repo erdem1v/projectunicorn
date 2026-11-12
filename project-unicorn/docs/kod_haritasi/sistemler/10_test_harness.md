@@ -9,7 +9,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 
 - `scripts/main/main.gd` (6296): ana sahne; debug bayrak dağıtıcısı (`_run_debug_harness`), tüm `--*-shot` ve ölçüm koşucuları, fikstür tohumlayıcıları
 - `scripts/debug/endgame_smoke.gd` (30018): `EndgameSmoke`; 475 vakalı smoke süiti, tek süreç = tek vaka, `SMOKE PASS/FAIL` basar
-- `scripts/debug/run_probe.gd` (2420): `RunProbe`; botun oynadığı koşu defteri (`--run-log`), 49 preset, `PROBE ...` satırları
+- `scripts/debug/run_probe.gd` (2442): `RunProbe`; botun oynadığı koşu defteri (`--run-log`), 54 preset, `PROBE ...` satırları
 - `scripts/debug/sprint_probe.gd` (425): `--sprint-probe`; Ürün ekranının sprint planını (`plan_outcome`) kapanışla karşılaştırır, uyuşmazlıkta 1
 - `scripts/debug/tick_probe.gd` (133): `--tick-probe`; gerçek saatte kare maliyeti (gece, saat adımı, otomatik kayıt) `TICK` satırları
 - `scripts/debug/office_crowd_probe.gd` (326): `OfficeCrowdProbe`; ofis kalabalığı sağlığı (`CROWD` satırları) ve ofis çekimlerinin yardımcıları
@@ -51,7 +51,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - `Main._run_args()` `scripts/main/main.gd:175`: komut satırı + editörde `application/run/main_args` ayarı · smoke ve run-log bayrakları bunu da okur
 - `Main._flag_value()` `scripts/main/main.gd:183`: `--bayrak=değer` değerini döndürür · tüm koşucular; `--shot-size=`, `--shot-scale=`, `--palette=`, `--pan=` da buradan
 - `EndgameSmoke.run_case()` `scripts/debug/endgame_smoke.gd:51`: tohumu 424242'ye ve build kapsamını demoya sabitler, `match case_name` ile vakayı koşar · `main.gd:207`
-- `RunProbe.run()` `scripts/debug/run_probe.gd:351`: `<preset>:<hafta>:<mod>[:<tohum>][:replay=|window=|build=]` ayrıştırır, `sim` ise `_run_sim()` (`:1115`) · `main.gd:218`
+- `RunProbe.run()` `scripts/debug/run_probe.gd:363`: `<preset>:<hafta>:<mod>[:<tohum>][:replay=|window=|build=]` ayrıştırır, `sim` ise `_run_sim()` (`:1130`) · `main.gd:218`
 - `SprintProbe.run()` `scripts/debug/sprint_probe.gd:85`: `--sprint-probe` spec'ini koşar, `bool` döner · `main.gd:258` (`_quit_with`)
 - `Main._run_tick_probe()` `scripts/main/main.gd:548`: kayıt dolu kullanıcı dizininde `TICK ERROR` basıp çıkar; `TICK_PROBE.new().run()` (`tick_probe.gd:24`)
 - `Main._run_tempo_probe()` `scripts/main/main.gd:466`: haftayı 08:00'den 08:00'e gerçek saatle ölçer, `TEMPO_STOP_DAY` (`:458`, 3) tikinde durur
@@ -71,7 +71,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 
 - `debug_onboarding_retrigger_requested`: yayan `scripts/main/game_shell.gd:140` (Shift+F4) · dinleyen `scripts/main/main.gd:103` -> `_on_debug_onboarding_retrigger` (`:5270`)
 - `phase_gate_reached`, `run_ended`: smoke `run_case` her vakada kendi dinleyicisini bağlar (`endgame_smoke.gd:74-75`), `_gate_signals` ve `_endings` dizilerine biriktirir
-- `phase_gate_reached`: `scripts/debug/run_probe.gd:490` da dinler (kapı geçişini defterine yazar)
+- `phase_gate_reached`: `scripts/debug/run_probe.gd:502` da dinler (kapı geçişini defterine yazar)
 - `night_skipped`, `hour_changed`, `day_advanced`: tempo, tick ve crowd probe'ları ölçüm için dinler (`main.gd:478`, `tick_probe.gd`, `office_crowd_probe.gd`)
 - Smoke, 100'ü aşkın sinyali doğrudan `connect` eder (DIZIN.md Sinyaller bölümünde `connect: scripts/debug/endgame_smoke.gd:N` olarak görünür); yeni sinyal eklerken oraya bakın
 - Harness'e özel yeni sinyal yoktur; `EventBus.speed_change_requested.emit(idx)` ve `tab_changed.emit(tab)` çekimlerin ve probe'ların tek sürücü yoludur (`main.gd:93`, `:576`)
@@ -83,9 +83,9 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - `MailClock.instant` `scripts/systems/mail_clock.gd:23`: smoke'ta `true` (üretilen şey anında gelir); teslim saati vakaları kendileri `false` yapar
 - `SummarySystem.frequency_override` `scripts/systems/summary_system.gd:41`: smoke aylık özeti sabitler
 - `SaveManager._autosave_enabled` `scripts/autoload/save_manager.gd:44`: harness bayrağı varsa `_ready`de kapanır (`:67-69`); `--tick-probe` kendisi açar
-- `GameState.run_seed`: smoke ve çekimlerde 424242; `RunProbe` dördüncü spec parçasıyla tohumu değiştirir (`run_probe.gd:351+`)
-- `RunProbe.PRESETS` `scripts/debug/run_probe.gd:188`: preset adı -> alan sözlüğü (`subtype`, `policy`, `vc`, `staff_cap`, `fix`, `desk`, `core_only`, `server`, `cash`, `accounts`, `staff`); 49 anahtar
-- `RunProbe.SMALL_CREW` `run_probe.gd:249`, `GROWTH_ROLES` `:1506`, `seed_crew()` `:2350`: ekip tohumlama; `seed_crew` oturtulamayan büyüklükte `false` döner (kimse işe alınmaz), çağıran bildirir: `--sprint-probe` `SPRINTPROBE ERROR`,
+- `GameState.run_seed`: smoke ve çekimlerde 424242; `RunProbe` dördüncü spec parçasıyla tohumu değiştirir (`run_probe.gd:363+`)
+- `RunProbe.PRESETS` `scripts/debug/run_probe.gd:197`: preset adı -> alan sözlüğü (`subtype`, `policy`, `vc`, `staff_cap`, `fix`, `desk`, `core_only`, `server`, `cash`, `accounts`, `staff`); 54 anahtar
+- `RunProbe.SMALL_CREW` `run_probe.gd:261`, `GROWTH_ROLES` `:1556`, `seed_crew()` `:2402`: ekip tohumlama; `seed_crew` oturtulamayan büyüklükte `false` döner (kimse işe alınmaz), çağıran bildirir: `--sprint-probe` `SPRINTPROBE ERROR`,
   ↳ `--tick-probe` `TICK ERROR`; ikisi de `team=` ile kullanır
 - Smoke paylaşılan kayıt yuvaları `manual_9001` / `manual_9002` (`SAVE_SLOT_A`, `SAVE_SLOT_B` `endgame_smoke.gd:10143`); onları kullanan vakalar paralel koşturulmaz (aşağıda Testler)
 - `tools/lint_baseline.json` `tools/lint_v3_frozen.json`: kabul edilen lint bulguları; `--event-lint=baseline` yeniden yazar
@@ -139,6 +139,9 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
   ↳ `MLOSS` (kurucunun görüşme ve pazarlık kaybı, kayıp anında: sektör, yıldız, evre, hesap hafızasının nedeni `reason` ve hedefi `target`, aday kayıttan düşmeden okunan U, `capped`, `loss`);
   ↳ `UFLUX` (haftalık: önceki okumadan ya da imzadan beri hesap uyumu değişen hesap sayısı; sürüm çıktı mı, yenileme penceresi o hafta açılan değişenler, ikisi de olmayan `unexplained`; `END`'de `u_unexplained_weeks`),
   ↳ `VCQ` (her VC görüşmesinin 3. perde sorusunun anahtarı, ürün fonunun sorusunda en zayıf alan `dim=`), `AREAS`, `CUST`, `SAT`, `FIRE`, `PICK`, `DISCOUNT`, `CHURN`, `PROMISE`; `SPRINT`, `SHIP`, `FIX`, `BUGS`, `MARKET`, `MONTH`,
+  ↳ `TIERS` (her sprint kapanışında pazarın her yeteneğinin kademesi), `POOL` (her başlatma denemesinde, `--tick-probe`'unkinde de: her
+  ↳ yeteneğin kademesi ve sonraki adımı açık `o`, kilitli `l` (karşılanmayan parçaları `+` ile: Ar-Ge düğümü, `p<alan><yıldız>` kişi,
+  ↳ `t<alan><yıldız>` toplam, alan üç harfe kısalır) ya da bitmiş `d`; sayıları, planın kartları ve `started=`; kart tükenmesi bundan okunur),
   ↳ `MONTH_BURN`, `PLAY`, `FIXTURE` (b2b_* fikstürünün niyeti: her hesabın hedefi hata açıkken ve kapalıyken çıtasına karşı, `under_live`, `under_clear`, `slack`), `WEEK`, `B2C` (sonunda `u=` kitle bağlamındaki uyum ve `aud_star=`),
   ↳ `SERVER` (canlı ürün varken her hafta: birim, kademe, yük yüzdesi, aylık fatura, anahtar; `END`'de `server_clicks`, `auto_grows` ve kademe başına gece kesintisi `outage_eko`, `outage_std`, `outage_kur`); `TALLY*`,
   ↳ `END` (destek raporunun sıklığı dahil: `support_reports=`, `support_news=`), `HR`, `VC_*`, `ERROR`; probe hep 0 ile çıkar,
@@ -158,8 +161,9 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
   ↳ `b2b_slip` ERP'yi `B2B_PRODUCTS`'ın hat kademelerinde kurar ve sprint başlatmaz). Oynanan her koşu seed turunu kapısı açıldığı hafta alır (`_take_the_seed`);
   ↳ `sim` modunda gece atlaması acil durumda onun saatinde durur ve bot kartı cevaplar (`_run_sim`); gerçek saat modu acil durum zarı atmaz (`IncidentSystem.rolls`)
 - Ölçek ölçümü (ekip ve plan süresi): `--sprint-probe` anahtarlarının anlamı 02_urun_sprint.md'de; `--tick-probe` `team=<n>`;
-  ↳ `--run-log` `build=ea` (tohum parçasından sonra, yalnız `sim`; EA'da bootstrap zaferi kilometre taşıdır, koşu sürer, `PROBE MILESTONE` basar) ve preset'ler `full_run_staff25`,
-  ↳ `full_run_staff50` (B2B merdiveni `GROWTH_ROLES` ile kurucuyla 25 ve 50 kişiye uzar, `staff_cap` 24 ve 49); `b2b_book20`, `b2b_book330` canlı ERP, 20 ve 330 hesap (yıldızlar her elli hesapta botun imza karışımı), 6 ve 50 kişi,
+  ↳ `--run-log` `build=ea` (tohum parçasından sonra, yalnız `sim`; EA'da bootstrap zaferi kilometre taşıdır, koşu sürer, `PROBE MILESTONE` basar) ve preset'ler `full_run_staff1`, `3`, `6`, `12`
+  ↳ (merdiven kurucuyla 1, 3, 6, 12 kişide durur, `staff_cap` 0, 2, 5, 11), `full_run_staff25`, `full_run_staff50` (B2B merdiveni
+  ↳ `GROWTH_ROLES` ile kurucuyla 25 ve 50 kişiye uzar, `staff_cap` 24 ve 49); `b2b_book20`, `b2b_book330` canlı ERP, 20 ve 330 hesap (yıldızlar her elli hesapta botun imza karışımı), 6 ve 50 kişi,
   ↳ sprint motorunu lider planlar; çalışanların morali tohumdaki değerde sabit tutulur (yoksa bakımsız kadro bir haftada topluca istifa eder, bu yüzden moralden doğan duruşlar bu iki fikstürde sayılmaz)
 - Ölçüm ayrıntıları: `--tempo-probe`, `--tick-probe`, `--clock-shot` 01_cekirdek.md'de; `--display-check` 01_cekirdek.md'de (`settings.json`'a yazar, sonda geri yükler);
   ↳ `--render-probe[=<sekme>[:<kişi>[:<hız>]]]` ve `--backdrop-probe` alanları 09_arayuz_bilesen.md'de; `--office-crowd-probe` 06_ofis.md'de
@@ -191,7 +195,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
   `--display-check` (`settings.json`). Hepsini ayrı `APPDATA` ile koşun.
 - Smoke'un paylaşılan yuvaları `manual_9001/9002`: bu yuvaya yazan vakalar paralel koşulursa birbirini bozar; `--all` sırayla koşar, elle paralel koşuda koruma yoktur (vaka listesi yukarıda Testler)
 - `--import` sonrası sınıf önbelleği tuzağı: sıra import -> ısınma koşusu -> kapı. Bayat `.ctex` yeni sanatı gizler (hafıza: godot-import-cache-gotchas). `plausibility.gd` bu yüzden yoldan yüklenir, `--import` istemez.
-- `RunProbe` tek süreçte statik durum biriktirir (`run_probe.gd:302-330`); bir süreçte yalnız bir koşu. Makullük kapısı bu yüzden koşu başına ayrı süreç ve ayrı `APPDATA`/`HOME` açar.
+- `RunProbe` tek süreçte statik durum biriktirir (`run_probe.gd:292-353`); bir süreçte yalnız bir koşu. Makullük kapısı bu yüzden koşu başına ayrı süreç ve ayrı `APPDATA`/`HOME` açar.
 - `full_run*` botu kuralları ve politikaları PRESETS alanlarıdır; bot politikasını değiştirmek ölçülen ekonomiyi değiştirir. Eski ve yeni `PROBE` defterini karşılaştırırken tohum, build ve `--lang=tr` aynı olmalı.
 - Görsel çekim headless'ta no-op olur; `_begin_shot` pencere moduna geçer (varsayılan kenarlıksız mod boyut atamasını yutar). Çekim kare yazmadan önce `settle` (0.4 sn) bekler; `--shot-scale` 0.15 sn sonra uygulanır.
 - Tam smoke bellek baskısı altında yarıda kalabilir (Faz A raporu); arka plan kabuğu biçilirse Godot alt ağacı yetim kalır (hafıza: bg-shell-memory-reap). Erdem 2026-10-06: "push et" = doğrudan push, öncesinde tam smoke yok.
@@ -205,7 +209,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - Kuralı bilerek bozan vaka eklersen kola `# EXPECT-ERROR <ileti parçası>` yaz; parça basılmazsa vaka "stale marker" ile düşer.
 - Yeni harness bayrağı: `main.gd` `bare` ya da `valued` tablosuna ekle (`:225-276`), `_run_*` koşucusunu yaz, adı `_is_harness_arg` alt dizilerinden birini içersin
   (yoksa otomatik kayıt açık kalır); CLAUDE.md §12 ve bu sayfanın Testler bölümünü güncelle.
-- Yeni `PROBE` kaydı ya da preset: `run_probe.gd` başlık yorumundaki çıktı sözleşmesini (`:25-101`) ve `PRESETS`i (`:188`) güncelle; `run_gate.sh` `PRESETS` dizisi ve `PROBE END` ayrıştırması (`run_gate.sh:19,30`) bozulmasın.
+- Yeni `PROBE` kaydı ya da preset: `run_probe.gd` başlık yorumundaki çıktı sözleşmesini (`:27-163`) ve `PRESETS`i (`:197`) güncelle; `run_gate.sh` `PRESETS` dizisi ve `PROBE END` ayrıştırması (`run_gate.sh:19,30`) bozulmasın.
 - Motor hata belirteci değişirse (`ERR_TOKENS`) yalnız `tools/gate_common.sh:9` değişir; `smoke_run.sh`, `run_gate.sh` ve `plausibility_run.sh` aynı süzgeci kullanır.
 - Yeni `EventBus` sinyali ya da emit/connect: `python tools/gen_signal_manifest.py` ile `docs/EVENT_SIGNAL_MANIFEST.md`yi yenile; kod haritası için `python -I tools/kod_haritasi/uret.py`.
 - `RunProbe` ya da `OfficeCrowdProbe` yardımcısını (`seed_crew`, `seed_staff`) yeniden adlandırırsan `main.gd`, `sprint_probe.gd` çağrılarını da tara; smoke özel fonksiyonları doğrudan çağırır.
