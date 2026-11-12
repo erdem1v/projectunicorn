@@ -150,7 +150,7 @@
   "text": {
     "tr": {
       "title": "Yaz izni",
-      "body": "{other} ile ikimizin yaz izni aynı haftalara denk gelmiş. İkimiz birden gidersek o iki hafta sprinti planlayacak kimse kalmıyor.",
+      "body": "{other} ile ikimizin yaz izni çakışıyor. İkimiz birden yokken sprinti planlayacak kimse kalmıyor.",
       "options": {
         "prep_then_go": "Kartları önden hazırlasınlar, sonra ikisi de çıksın",
         "settle_it": "Kendi aralarında karar versinler",
@@ -160,7 +160,7 @@
     },
     "en": {
       "title": "Summer leave",
-      "body": "{other} and I have our summer leave in the same weeks. If we're both out, nobody's left to plan the sprint for those two weeks.",
+      "body": "{other} and I have overlapping summer leave. While we're both out, nobody's planning the sprint.",
       "options": {
         "prep_then_go": "Have them prep the cards ahead, then both can go",
         "settle_it": "Let them sort it out between themselves",

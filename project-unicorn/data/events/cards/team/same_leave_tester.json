@@ -145,7 +145,7 @@
   "text": {
     "tr": {
       "title": "Yaz izni",
-      "body": "{other} ile ikimizin yaz izni aynı haftalara denk gelmiş. İkimiz birden gidersek o iki hafta biten kartları test edecek kimse kalmıyor.",
+      "body": "{other} ile ikimizin yaz izni çakışıyor. İkimiz birden yokken biten kartları test edecek kimse kalmıyor.",
       "options": {
         "settle_it": "Kendi aralarında karar versinler",
         "devs_test": "İkisi de gitsin, testi geliştiriciler yapsın",
@@ -155,7 +155,7 @@
     },
     "en": {
       "title": "Summer leave",
-      "body": "{other} and I have our summer leave in the same weeks. If we're both out, nobody's left to test finished cards for those two weeks.",
+      "body": "{other} and I have overlapping summer leave. While we're both out, nobody's testing finished cards.",
       "options": {
         "settle_it": "Let them sort it out between themselves",
         "devs_test": "Both go, developers do the testing",

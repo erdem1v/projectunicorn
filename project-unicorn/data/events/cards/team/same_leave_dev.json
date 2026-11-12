@@ -145,7 +145,7 @@
   "text": {
     "tr": {
       "title": "Yaz izni",
-      "body": "{other} ile ikimizin yaz izni aynı haftalara denk gelmiş. İkimiz birden gidersek o iki hafta kod yazan kimse kalmıyor.",
+      "body": "{other} ile ikimizin yaz izni çakışıyor. İkimiz birden yokken kod yazan kimse kalmıyor.",
       "options": {
         "settle_it": "Kendi aralarında karar versinler",
         "both_go": "İkisi de gitsin, sürüm kaysın",
@@ -155,7 +155,7 @@
     },
     "en": {
       "title": "Summer leave",
-      "body": "{other} and I have our summer leave in the same weeks. If we're both out, nobody's writing code for those two weeks.",
+      "body": "{other} and I have overlapping summer leave. While we're both out, nobody's writing code.",
       "options": {
         "settle_it": "Let them sort it out between themselves",
         "both_go": "Both go, the release slips",
