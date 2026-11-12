@@ -23,16 +23,21 @@ func setup(model: Dictionary) -> void:
 	_server_card(right, model.overview.server, String(model.ui.get("server_preview", "")))
 
 
-## SUNUCU: kademe seçici (seçilince geçiş önizlemesi açılır), kapasite ve fatura, yük çubuğu ve satırı, tek satırlık not,
-## adım düğmeleri ve Otomatik ayarla anahtarı.
+## SUNUCU: kademe seçici (seçilince geçiş önizlemesi açılır), yük çubuğu ve ucunda yük yüzdesi (kapasite ve fatura, yük ve
+## boş pay ipucunda), tek satırlık not, adım düğmeleri ve Otomatik ayarla anahtarı.
 func _server_card(parent: Control, server: Dictionary, preview: String) -> void:
 	var card := UiFactory.D_card(parent)
 	card.add_child(UiFactory.D_card_head(tr("PRODUCT_SERVER_HEAD")))
 	card.add_child(_tiers(server, preview))
-	card.add_child(SprintUiShared.label(server.capacity, &"DataStrong"))
-	card.add_child(UiFactory.D_load_bar(server.percent))
-	if server.load != "":
-		card.add_child(SprintUiShared.label(server.load, &"KeyText"))
+	var load := SprintUiShared.box(UiTokens.SPACE_M)
+	var bar := UiFactory.D_load_bar(server.percent)
+	bar.tooltip_text = (server.capacity + "\n" + server.load).strip_edges()
+	bar.mouse_filter = Control.MOUSE_FILTER_PASS
+	load.add_child(bar)
+	# Uyarı notu yüzdeyi zaten yazar: o varken çubuğun ucunda yüzde yok.
+	if server.note == null or server.note.tone == "quiet":
+		load.add_child(SprintUiShared.label(Fmt.percent(server.percent, 0), &"KeyText"))
+	card.add_child(load)
 	if server.note != null:
 		card.add_child(_note(server.note))
 	card.add_child(_controls(server))

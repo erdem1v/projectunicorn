@@ -1157,7 +1157,7 @@ _content	var	scripts/ui/office/office_map_card.gd:14	office_map_card.gd
 _context	var	scripts/systems/negotiation_system.gd:38	NegotiationSystem
 _continue	var	scripts/ui/meeting/meeting_panel.gd:93	MeetingPanel
 _contract_flaws	func	scripts/debug/endgame_smoke.gd:23803	EndgameSmoke
-_controls	func	scripts/tabs/product/overview_view.gd:85	overview_view.gd
+_controls	func	scripts/tabs/product/overview_view.gd:90	overview_view.gd
 _convert	func	scripts/autoload/save_manager.gd:802	SaveManager
 _convert	func	scripts/ui/office/office_materials.gd:71	OfficeMaterials
 _conviction	var	scripts/systems/vc_pitch_system.gd:33	VCPitchSystem
@@ -2423,7 +2423,7 @@ _notch_w	var	scripts/ui/components/top_bar.gd:133	top_bar.gd
 _note	var	scripts/modals/hr_action_modal.gd:29	hr_action_modal.gd
 _note	func	scripts/modals/settings_modal.gd:455	settings_modal.gd
 _note	func	scripts/tabs/product/card_tip.gd:146	CardTip
-_note	func	scripts/tabs/product/overview_view.gd:73	overview_view.gd
+_note	func	scripts/tabs/product/overview_view.gd:78	overview_view.gd
 _note	func	scripts/tabs/product/sprint_panel.gd:318	SprintPanel
 _note	var	scripts/ui/office/meeting_invite.gd:42	MeetingInvite
 _note_arcs	func	scripts/events/tools/harness.gd:187	EvHarness
@@ -2945,7 +2945,7 @@ _prev_open	var	scripts/systems/product_read.gd:129	ProductRead
 _prev_pos	var	scripts/ui/office/office_person.gd:227	OfficePerson
 _prev_yaw	var	scripts/ui/office/office_person.gd:228	OfficePerson
 _preview	var	scripts/modals/hr_action_modal.gd:21	hr_action_modal.gd
-_preview	func	scripts/tabs/product/overview_view.gd:58	overview_view.gd
+_preview	func	scripts/tabs/product/overview_view.gd:63	overview_view.gd
 _price	var	scripts/ui/meeting/meeting_ruler.gd:18	MeetingRuler
 _price_label	var	scripts/ui/meeting/meeting_ruler.gd:17	MeetingRuler
 _primary_id	var	scripts/ui/components/window_layer.gd:49	window_layer.gd
@@ -4015,7 +4015,7 @@ _ticker	var	scripts/main/game_shell.gd:18	game_shell.gd
 _ticker_toggle	var	scripts/modals/settings_modal.gd:85	settings_modal.gd
 _ticks	var	scripts/debug/office_crowd_probe.gd:42	OfficeCrowdProbe
 _tier	func	scripts/tabs/product/product_model.gd:1104	ProductModel
-_tiers	func	scripts/tabs/product/overview_view.gd:43	overview_view.gd
+_tiers	func	scripts/tabs/product/overview_view.gd:48	overview_view.gd
 _tile	func	scripts/tabs/piyasa_tab.gd:166	piyasa_tab.gd
 _tile_foot	func	scripts/tabs/rnd/rnd_tree_view.gd:262	RnDTreeView
 _tile_w	var	scripts/tabs/rnd/rnd_tree_view.gd:59	RnDTreeView
