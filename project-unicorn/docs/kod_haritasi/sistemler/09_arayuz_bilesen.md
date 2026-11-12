@@ -46,7 +46,7 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 - `scripts/modals/term_sheet_table_scene.gd` (437): `TermSheetTableScene`; tam ekran term sheet masası, sistemin `view_state`ini boyar
 - `scripts/modals/training_modal.gd` (175) ve `work_hours_modal.gd` (492): HR paneli modalları; `scripts/tabs/hr/hr_panel.gd`i genişletir, PanelLayer'a `HRUiShared.mount_panel_modal` ile takılır
 - `scripts/onboarding/onboarding_flow.gd` (213): ilk kullanım akışı, `draft` sahibi · `first_week_doc.gd` (235): yandaki "ilk hafta" belgesi
-- `scripts/onboarding/steps/step_base.gd` (119): `OnboardingStep` sözleşmesi · `character_step.gd` (111) · `origin_traits_step.gd` (329) · `company_step.gd` (105)
+- `scripts/onboarding/steps/step_base.gd` (119): `OnboardingStep` sözleşmesi · `character_step.gd` (111) · `origin_traits_step.gd` (329) · `company_step.gd` (104)
 - Sahneler: `scenes/ui/components/` (TopBar, LeftTabs, NewsTicker, BuildBar, BuildHUDPanel, ResearchBar, `avatar_bust.gdshader`), `scenes/menu/` (5 tscn, `menu_grade.gdshader`)
 - Sahneler (devam): `scenes/modals/` (10 tscn; HRAtlasModal'ın betiği `scripts/tabs/hr/hr_atlas_modal.gd`), `scenes/onboarding/` (OnboardingFlow, 3 adım), `scenes/debug/ThemeProbe.tscn`
 - Veri: `themes/master_theme.tres`, `themes/menajer_theme.tres` (üretilmiş, elle düzenlenmez), `localization/strings.csv`, `data/credits.json`; debug: `scripts/debug/kit_probe.gd`, `glyph_audit.gd`

@@ -22,7 +22,7 @@ func _ready() -> void:
 	page.set_anchors_preset(Control.PRESET_FULL_RECT)
 	page.add_theme_constant_override("separation", UiTokens.SPACE_XL)
 	add_child(page)
-	page.add_child(_head("ONB_STEP_COMPANY", "ONB_STEP3_INTRO"))
+	page.add_child(_head("ONB_STEP_COMPANY", ""))   # no intro line (envanter meet-24)
 
 	page.add_child(UiFactory.make_label(Fmt.upper(tr("ONB_COMPANY_LABEL")), &"KeyLabel"))
 	_name_input = LineEdit.new()
@@ -39,7 +39,6 @@ func _ready() -> void:
 	var caption := VBoxContainer.new()
 	caption.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	caption.add_child(UiFactory.make_label(Fmt.upper(tr("ONB_LOGO_LABEL")), &"KeyLabel"))
-	caption.add_child(UiFactory.make_label(tr("ONB_LOGO_CAPTION"), &"Caption"))
 	logo_head.add_child(caption)
 	var reroll := Button.new()
 	reroll.theme_type_variation = &"SecondaryButtonSmall"

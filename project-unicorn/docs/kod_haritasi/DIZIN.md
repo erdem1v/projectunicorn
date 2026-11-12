@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git e45b7054 · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git c334faa5 · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -149,9 +149,9 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/onboarding/first_week_doc.gd · 228 · - · PanelContainer · 1 sinyal · 3 func
 - scripts/onboarding/onboarding_flow.gd · 213 · - · Control · 2 sinyal · 12 func
 
-### scripts/onboarding/steps/ (4 dosya, 655 satır)
+### scripts/onboarding/steps/ (4 dosya, 654 satır)
 - scripts/onboarding/steps/character_step.gd · 102 · - · OnboardingStep · 0 sinyal · 5 func
-- scripts/onboarding/steps/company_step.gd · 105 · - · OnboardingStep · 0 sinyal · 5 func
+- scripts/onboarding/steps/company_step.gd · 104 · - · OnboardingStep · 0 sinyal · 5 func
 - scripts/onboarding/steps/origin_traits_step.gd · 329 · - · OnboardingStep · 0 sinyal · 18 func
 - scripts/onboarding/steps/step_base.gd · 119 · OnboardingStep · Control · 1 sinyal · 10 func
 
@@ -1123,7 +1123,7 @@ Biçim: yol · boyut · üst düzey anahtarlar (en çok 10)
 - data/product/sprint.json · 9.3 KB · {sprint_weeks, quarter_weeks, mvp_lines, effort, fix_effort, limit_k, need, roles, role_areas, person_points_week, +26}
 - data/techtree/rnd_tree.json · 6.3 KB · {_doc, _stars, _cross, _areas, k_arge, report_period_weeks, nodes, _hidden_doc, _hidden_k3_doc, hidden_lines}
 
-## Metin anahtarı aileleri (843 aile, 3190 anahtar)
+## Metin anahtarı aileleri (842 aile, 3188 anahtar)
 
 Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak geçiren .gd/.json (en çok 5). '-' = dinamik kurulmuş olabilir ya da kullanılmıyor.
 - ANGEL_CAP_* · 1 · scripts/tabs/finance/finance_ozet_view.gd
@@ -1520,7 +1520,7 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - ONB_FIRST_* · 1 · scripts/onboarding/first_week_doc.gd
 - ONB_FOUNDER_* · 1 · scripts/onboarding/first_week_doc.gd
 - ONB_GUIDED_* · 2 · scripts/onboarding/first_week_doc.gd
-- ONB_LOGO_* · 3 · scripts/onboarding/steps/company_step.gd
+- ONB_LOGO_* · 2 · scripts/onboarding/steps/company_step.gd
 - ONB_NAME_* · 1 · scripts/onboarding/steps/character_step.gd
 - ONB_NEXT_* · 1 · scripts/onboarding/onboarding_flow.gd
 - ONB_ORIGIN_* · 12 · scripts/onboarding/steps/origin_traits_step.gd, scripts/systems/founder_constants.gd
@@ -1532,7 +1532,6 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - ONB_SKILLS_* · 2 · scripts/onboarding/steps/origin_traits_step.gd
 - ONB_START_* · 1 · scripts/onboarding/onboarding_flow.gd
 - ONB_STEP_* · 4 · scripts/onboarding/onboarding_flow.gd, scripts/onboarding/steps/character_step.gd, scripts/onboarding/steps/company_step.gd
-- ONB_STEP3_* · 1 · scripts/onboarding/steps/company_step.gd
 - ONB_TEAM_* · 1 · scripts/onboarding/first_week_doc.gd
 - ONB_TRAITS_* · 4 · scripts/onboarding/steps/origin_traits_step.gd
 - ONB_WEEK_* · 1 · scripts/onboarding/first_week_doc.gd, scripts/onboarding/onboarding_flow.gd

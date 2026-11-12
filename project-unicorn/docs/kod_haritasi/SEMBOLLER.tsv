@@ -3156,7 +3156,7 @@ _ref	func	scripts/systems/product_quality.gd:338	ProductQuality
 _refit	func	scripts/tabs/product_tab.gd:190	product_tab.gd
 _refresh	func	scripts/onboarding/onboarding_flow.gd:117	onboarding_flow.gd
 _refresh	func	scripts/onboarding/steps/character_step.gd:69	character_step.gd
-_refresh	func	scripts/onboarding/steps/company_step.gd:79	company_step.gd
+_refresh	func	scripts/onboarding/steps/company_step.gd:78	company_step.gd
 _refresh	func	scripts/onboarding/steps/origin_traits_step.gd:254	origin_traits_step.gd
 _refresh	func	scripts/tabs/events_tab.gd:140	events_tab.gd
 _refresh	func	scripts/tabs/hr_tab.gd:197	hr_tab.gd
@@ -5074,7 +5074,7 @@ coerce	func	scripts/events/seams/seams.gd:123	EvSeams
 coerce_like	func	scripts/systems/save_codec.gd:150	SaveCodec
 COLD_EXIT_FUNDS	const	scripts/systems/vc_pitch_system.gd:28	VCPitchSystem
 collect_payload	func	scripts/onboarding/steps/character_step.gd:87	character_step.gd
-collect_payload	func	scripts/onboarding/steps/company_step.gd:103	company_step.gd
+collect_payload	func	scripts/onboarding/steps/company_step.gd:102	company_step.gd
 collect_payload	func	scripts/onboarding/steps/origin_traits_step.gd:308	origin_traits_step.gd
 collect_payload	func	scripts/onboarding/steps/step_base.gd:36	OnboardingStep
 color	var	scripts/tabs/product/sprint_ui_shared.gd:39	SprintUiShared.Squares
@@ -6959,7 +6959,7 @@ INTEREST_MULT_MAX	const	scripts/systems/sales_constants.gd:25	SalesConstants
 INTEREST_MULT_MIN	const	scripts/systems/sales_constants.gd:24	SalesConstants
 interest_now	func	scripts/systems/support_system.gd:396	SupportSystem
 interrupts_by_week	var	scripts/events/tools/harness.gd:63	EvHarness.Result
-invalid_reason	func	scripts/onboarding/steps/company_step.gd:95	company_step.gd
+invalid_reason	func	scripts/onboarding/steps/company_step.gd:94	company_step.gd
 invalid_reason	func	scripts/onboarding/steps/origin_traits_step.gd:296	origin_traits_step.gd
 invalid_reason	func	scripts/onboarding/steps/step_base.gd:28	OnboardingStep
 investor	func	scripts/ui/components/inbox.gd:512	inbox.gd
@@ -8217,7 +8217,7 @@ postpone_call	func	scripts/systems/vc_pitch_system.gd:794	VCPitchSystem
 POSTPONE_GLYPH	const	scripts/ui/office/meeting_invite.gd:21	MeetingInvite
 postponed	signal	scripts/ui/office/meeting_invite.gd:15	MeetingInvite
 prefill	func	scripts/onboarding/steps/character_step.gd:78	character_step.gd
-prefill	func	scripts/onboarding/steps/company_step.gd:88	company_step.gd
+prefill	func	scripts/onboarding/steps/company_step.gd:87	company_step.gd
 prefill	func	scripts/onboarding/steps/origin_traits_step.gd:287	origin_traits_step.gd
 prefill	func	scripts/onboarding/steps/step_base.gd:23	OnboardingStep
 prep_gains	func	scripts/systems/sprint_system.gd:943	SprintSystem

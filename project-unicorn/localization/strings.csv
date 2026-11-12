@@ -81,7 +81,6 @@ ONB_WHY_POINTS,Dağıtılacak {n} puan kaldı,{n} points left to spend
 ONB_WHY_POINTS_ONE,Dağıtılacak {n} puan kaldı,{n} point left to spend
 ONB_WHY_COMPANY,Şirkete bir ad ver,Name the company
 ONB_WHY_LOGO,Bir logo seç,Pick a logo
-ONB_STEP3_INTRO,Kapıya asılacak isim. Bundan sonra herkes bu adı anacak.,The name on the door. From now on this is what they will call you.
 ONB_COMPANY_LABEL,ŞİRKET ADI,COMPANY NAME
 ONB_COMPANY_PLACEHOLDER,Örn. Synaptik,e.g. Synaptik
 ONB_FIRST_WEEK,İlk hafta,Week one
@@ -100,7 +99,6 @@ ONB_DIFF_HARD_LOCKED,"Zor, bir koşuyu bitirince açılır.",Hard opens once you
 ONB_GUIDED,Frank'le rehberli başla,Guided start with Frank
 ONB_GUIDED_NOTE,"İlk haftalarda Frank'in notları gelen kutuna düşer, öteki olaylar bekler.",In the first weeks Frank's notes reach your inbox and other events wait.
 ONB_LOGO_LABEL,Logo,Logo
-ONB_LOGO_CAPTION,Adın baş harflerinden üretildi. Birini seç ya da yeniden üret.,Made from your name's initials. Pick one or make a new set.
 ONB_LOGO_REROLL,Yeniden üret,Make new set
 SALES_PORTFOLIO_HEADER,Müşteri portföyü,Customer portfolio
 SALES_CUSTOMERS_COUNT,{n} müşteri,{n} customers
