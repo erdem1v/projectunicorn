@@ -1043,12 +1043,11 @@ func _menajer(master: Theme) -> Theme:
 		[&"FlagChip", _flat(clear, T.D_RADIUS_2, flag_pad, T.D_LINE_3)],
 		# A segmented pick's box.
 		[&"SegPickBox", _flat(clear, T.D_RADIUS_2, hairline, T.D_LINE_2)],
-		# The left column: a customer's request (flat once its card is in the plan), a module (its edge drawn
+		# The left column: a customer's request (its edge drawn under the pointer), a module (its edge drawn
 		# open or under the pointer), the module's candidate card (its edge drawn under the pointer when the card itself takes the
 		# click: the one waiting for research), and a due date's chip (the soon one in the lighter ink and edge, same size).
 		[&"RequestRow", _flat(T.D_SURFACE_3, T.D_RADIUS_2, Vector4.ONE * T.SPACE_M, T.D_LINE_1)],
 		[&"RequestRowHover", _flat(T.D_SURFACE_3, T.D_RADIUS_2, Vector4.ONE * T.SPACE_M, T.D_LINE_HOVER)],
-		[&"RequestRowPlanned", _flat(clear, T.D_RADIUS_2, Vector4(T.SPACE_M, T.SPACE_XS, T.SPACE_M, T.SPACE_XS))],
 		[&"ModuleRow", _flat(clear, T.D_RADIUS_2, Vector4.ONE * T.SPACE_M)],
 		[&"ModuleRowHover", _flat(clear, T.D_RADIUS_2, Vector4.ONE * T.SPACE_M, T.D_LINE_HOVER)],
 		[&"ModuleRowOpen", _flat(T.D_SURFACE_3, T.D_RADIUS_2, Vector4.ONE * T.SPACE_M, T.D_LINE_1)],

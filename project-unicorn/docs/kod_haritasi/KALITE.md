@@ -1,23 +1,23 @@
 # Kod haritası · KALITE
 
-Üretildi: git 7c176237 · 2026-11-12 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git 7e08095d · 2026-11-12 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 255 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
 
 - scripts/debug/endgame_smoke.gd · 29892 satır · 678 func
-- scripts/main/main.gd · 6156 satır · 221 func
+- scripts/main/main.gd · 6227 satır · 224 func
 - scripts/debug/run_probe.gd · 2392 satır · 92 func
 - scripts/systems/sprint_system.gd · 2074 satır · 171 func
-- scripts/theme/build_theme.gd · 1667 satır · 31 func
+- scripts/theme/build_theme.gd · 1666 satır · 31 func
 - scripts/events/tools/lint.gd · 1343 satır · 47 func
 - scripts/systems/vc_pitch_system.gd · 1327 satır · 91 func
 - scripts/autoload/save_manager.gd · 1297 satır · 61 func
+- scripts/tabs/product/product_model.gd · 1208 satır · 68 func
 - scripts/systems/hr_constants.gd · 1164 satır · 90 func
-- scripts/tabs/product/product_model.gd · 1158 satır · 66 func
 - scripts/ui/office/office_person.gd · 1128 satır · 51 func
 - scripts/events/core/effects.gd · 1102 satır · 33 func
-- scripts/theme/ui_tokens.gd · 1080 satır · 45 func
+- scripts/theme/ui_tokens.gd · 1079 satır · 45 func
 - scripts/autoload/game_state.gd · 1057 satır · 55 func
 - scripts/systems/term_sheet_table_system.gd · 983 satır · 57 func
 - scripts/systems/sprint_catalog.gd · 931 satır · 84 func
@@ -34,7 +34,7 @@ Kapsam: scripts/ altındaki 255 .gd (tools/ hariç). Kod temizliği ve kıdemli 
 ## 80 satırdan uzun fonksiyonlar (99 tane, en uzun 40)
 
 Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları arada sayılır).
-- scripts/theme/build_theme.gd:421 · _menajer · 905 satır
+- scripts/theme/build_theme.gd:421 · _menajer · 904 satır
 - scripts/debug/endgame_smoke.gd:51 · run_case · 590 satır
 - scripts/events/core/effects.gd:240 · _apply · 584 satır
 - scripts/events/tools/vocab_gen.gd:20 · run · 322 satır
@@ -82,9 +82,9 @@ UYARI: call("a"+b) gibi kurulmuş adlar, sinyal adıyla bağlama, harness bayrak
 - scripts/debug/office_crowd_probe.gd:48 · _log_error · debug
 - scripts/events/present/papers.gd:145 · arc_of
 - scripts/main/game_shell.gd:163 · debug_force_vc_meeting · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/main/main.gd:6097 · _dbg_close_request · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/main/main.gd:6102 · _dbg_onb_random_x20 · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/main/main.gd:6115 · _dbg_finish_run · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
+- scripts/main/main.gd:6168 · _dbg_close_request · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
+- scripts/main/main.gd:6173 · _dbg_onb_random_x20 · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
+- scripts/main/main.gd:6186 · _dbg_finish_run · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
 - scripts/systems/line_gates.gd:126 · speed_bonus_for
 - scripts/systems/product_catalog.gd:237 · type_sector_labels
 - scripts/systems/rnd_system.gd:707 · family_root_done
@@ -96,8 +96,8 @@ UYARI: call("a"+b) gibi kurulmuş adlar, sinyal adıyla bağlama, harness bayrak
 - scripts/theme/ui_factory.gd:41 · make_badge
 - scripts/theme/ui_factory.gd:76 · make_stat
 - scripts/theme/ui_tokens.gd:385 · format_money
-- scripts/theme/ui_tokens.gd:1051 · D_health_color
-- scripts/theme/ui_tokens.gd:1060 · D_relationship_palette
+- scripts/theme/ui_tokens.gd:1050 · D_health_color
+- scripts/theme/ui_tokens.gd:1059 · D_relationship_palette
 
 ## Yarım sinyaller (17)
 

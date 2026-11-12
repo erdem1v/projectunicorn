@@ -234,9 +234,10 @@ func _second_line() -> HBoxContainer:
 	return line
 
 
-## Durum yuvası. Planlamada en az `D_W_CARD_SLOT` geniş: söz tarihi çipi, "devreden" ya da kırmızı "yetişmez"; yoksa boş. Koşan
-## sprintte tek şey, sırayla: kırmızı "yetişmez", koşan aşamanın "{aşama} %{n}"i, söz tarihi çipi, "devreden"; hiçbiri yoksa
-## gizlenir. Yazı kesilmez: sığmayan yazıda yuva genişler.
+## Durum yuvası. Planlamada en az `D_W_CARD_SLOT` geniş (sütunlar hizalı kalsın): "devreden" ya da kırmızı "yetişmez"; yoksa boş.
+## Koşan sprintte tek şey, sırayla: kırmızı "yetişmez", koşan aşamanın "{aşama} %{n}"i, "devreden"; hiçbiri yoksa gizlenir. Söz ve
+## talep tarihi burada yazmaz: tek yeri sol sütundaki talep satırıdır (kartın ipucunda müşteri ve söz yine durur). Yazı kesilmez:
+## sığmayan yazıda yuva genişler.
 func _status() -> Control:
 	_status_cell = SprintUiShared.box(UiTokens.SPACE_S)
 	_status_cell.custom_minimum_size.x = UiTokens.D_W_CARD_SLOT
@@ -247,6 +248,8 @@ func _status() -> Control:
 func _fill_status() -> void:
 	var active: bool = _ctx.mode == "active"
 	var shown := String(card.slot.get("kind", ""))
+	if shown == "due":   # tarih burada yazılmaz; kartın kendi durumu varsa o yazılır
+		shown = "carried" if card.carried else ("late" if card.late else "")
 	if active and card.late:
 		shown = "late"
 	elif _stage_pct != "":
@@ -257,12 +260,6 @@ func _fill_status() -> void:
 	cell.tooltip_text = ""
 	cell.visible = not active or shown != ""
 	match shown:
-		"due":
-			var chip: PanelContainer = SprintUiShared.due_chip(String(card.slot.text), card.slot.soon)
-			chip.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-			chip.mouse_filter = Control.MOUSE_FILTER_PASS
-			chip.tooltip_text = SprintUiShared.SEP.join([card.slot.customer, card.slot.text])
-			cell.add_child(chip)
 		"carried":
 			var back := UiFactory.make_glyph(ARROW, UiTokens.D_ICON_TAG, UiTokens.D_INK_4)
 			(back as TextureRect).flip_h = true

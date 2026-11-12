@@ -32,10 +32,12 @@ Alt klasörler:
 - `scripts/tabs/hr/hr_dossier.gd` (232): Ekip dosyası: kişinin ayrıntı penceresi (`DETAILS["hr_dossier"]`), kişi ayrılınca kendini kapatır.
 - `scripts/tabs/hr/hr_popover.gd` (113): `HRPopover`: çapaya bağlı tek açılır panel (satır menüsü, zam kutusu, sorumlu seçici).
 - `scripts/tabs/hr/hr_ui_shared.gd` (511): `HRUiShared`: koyu tablo kiti (`D_*`), rozetler, moral, deneyim, durum hücresi, `mount_panel_modal`; tabloların dışında da kullanılır.
-- `scripts/tabs/product/product_model.gd` (1158): `ProductModel`: sprint ekranının görünüm sözleşmesi; `live()` GameState/SprintSystem'den Dictionary kurar.
+- `scripts/tabs/product/product_model.gd` (1205): `ProductModel`: sprint ekranının görünüm sözleşmesi; `live()` GameState/SprintSystem'den Dictionary kurar.
   Başlık yorumu yeni ekranın alanlarını da tanımlar: `founder`, `requests`, `modules`, `prep`, çeyreğin saati, merkez ve sonraki sütun eklemeleri, kart satırı; düzeltme işinin efora girişi ve gösterim kuralı.
   Sol sütunun "+" değerleri ve hayalet hesabı `live()`dan ayrıdır: `addable`, `resolve_addable`, `ghost` (kart kimliğiyle sayfanın bir sonraki kurulumuna kadar saklanır).
-  ↳ Kart satırı ipucunun verisini taşır (`module_name`, `finishes`, `gate`, söz yuvasında müşteri, değer, söz mü);
+  ↳ Kart satırı ipucunun verisini taşır (`module_name`, `finishes`, `gate`, söz yuvasında müşteri, değer, söz mü; `carried`);
+  ↳ talep satırı `status` taşır (`_request_status`: "plan" kartı en erken tutan sprint, "dev" koşan sprintte başlanmış kartın aşaması,
+  ↳ "met" bu ürün çeyreğinde çıkmış talep ve sürümün takvim çeyreği, `_met_in`; kayıt alanı eklenmez);
   ↳ düzeltme kartının `fix_text`i en büyük hesabı da yazar; sonraki kart `raw_effort` ve `ahead` (önden işi başlıyor); `stage_face(id, aşama)` ipucunun kişileridir.
 - `scripts/tabs/product/sprint_panel.gd` (324): `SprintPanel`: orta (bu sprint) ve sağ (sonraki sprint, `SprintNext`) sütunlar; orta sütunda başlık (`SprintHead` + `CapacityView`), pano (`SprintBoard`) ve
   ↳ alt şerit (`SprintFoot`), sürüm notunda bugünkü `_release` (gövdesi `Column(scrolls)`te uzunsa kayar, başlık ve alt şerit sabit); sağ sütun 300 px sabit, orta sütun kalanı alır.
@@ -55,8 +57,8 @@ Alt klasörler:
   `axis_wanted`, sekme sayfayı o genişlikle yeniden kurar), kayan gövdesi (ızgara, kart satırları, "EKLENEBİLİR",
   hayalet satır, şimdiki an çizgisi), "aşağıda {n} kart daha" hapı (katlamanın altında yetişmeyen kart varsa tehlike renginde ve ipucu "{n} kart yetişmez", yalnız o zaman imleci tutar ve tekerleği panoya iletir; sona kaydırınca gizlenir);
   ↳ erken kapanışın bayrağı, yazısı ve taralı alanı "Bütün kartlar {w}. haftada biter" ipucunu taşır (alan yalnız satırların altında kalan boşlukta imleci alır).
-- `scripts/tabs/product/board_row.gd` (607): `BoardRow`: panonun bir kart satırı: bilgi sütunu (ad, R1, efor, modül, durum yuvası (koşan sprintte tek şey:
-  "yetişmez", koşan aşamanın "{aşama} %{n}"i, söz tarihi, "devreden"; `set_now` günceller), PM ya da "?" yuvası, "→" ve "×"; aday satırında "+", imlecin hayalet satırında boş yer),
+- `scripts/tabs/product/board_row.gd` (604): `BoardRow`: panonun bir kart satırı: bilgi sütunu (ad, R1, efor, modül, durum yuvası (koşan sprintte tek şey:
+  "yetişmez", koşan aşamanın "{aşama} %{n}"i, "devreden"; son tarih yalnız sol sütunun talep satırında; `set_now` günceller), PM ya da "?" yuvası, "→" ve "×"; aday satırında "+", imlecin hayalet satırında boş yer),
   zaman ekseni (çubuk, bekleme, gölge, tarama, tik kutusu (art arda önden biten aşamalar tek kutu, son bitenin renginde), sprint dışı pay, yüzler); `set_now`;
   kart adı (taban iki satır, 22 karakterden uzun adda) ve düzeltme kartının hata metni (en büyük hesapla) kesilmeden sarar, tabandan fazla satır satırı büyütür (`_wraps`, `_fit`), zaman ekseni satırda dikey ortalı.
   ↳ İpuçları: zengin kart ipucu yalnız adda (`CardName`, `CardTip`); çubuğun düz ipucu açılırken okunur (`_bar_tip`, `StagePaint.tip`); bekleme, gölge, tarama, tik kutusu, risk, efor, modül, yuvalar düz ipucu taşır;
@@ -76,9 +78,11 @@ Alt klasörler:
   ↳ ÇEYREK çubuğu, `switch`, `due_chip` (yazının ilk harfi çipte büyür), `flag` (sütun genişliğinde sarar),
   ↳ `row_keys`, `way_out`, `add_key`, `keep_scroll`); Ürün dışında 10+ dosya kullanır. İpucu parçaları: `STAGE_KEYS`, `stage_name`, `stage_icon`, `stage_done`, `done_text`, `named_stars`, `effort_tip`,
   ↳ `prepared_tip`, `meet_lines`, `meet_lines_of` (`total`: türü başına günler toplanır), `tip_column` (zengin ipucunun kökü).
-- `scripts/tabs/product/area_panel.gd` (370): `AreaPanel`: sol sütun (SPRINT ve ÇEYREK): Geçmiş, MÜŞTERİ TALEPLERİ, MODÜLLER ve açık modülün adayları (düzeltme adayı tam hata metnini sarar yazar,
+- `scripts/tabs/product/area_panel.gd` (392): `AreaPanel`: sol sütun (SPRINT ve ÇEYREK): Geçmiş, MÜŞTERİ TALEPLERİ, MODÜLLER ve açık modülün adayları (düzeltme adayı tam hata metnini sarar yazar,
   ↳ başka sprintin adayı "Sprint {n}" damgası taşır); adayların sonunda araştırma bekleyen sıradaki kart (`_waiting_card`: Ar-Ge ikonlu soluk satır, efor ve şerit yok, üstüne gelince kenarı aydınlanır, tık Ar-Ge'yi o düğümde açar);
   ↳ "+" değerleri sonraki karelerde gelir; imleç ya da tık sırayı beklemez, o "+"nın değeri o an hesaplanır (`_learn`).
+  ↳ Talep satırı üç satır: müşteri ve son tarih çipi, modül ve kart, durum (`_status_line`: tik ve "Sprint {n}", aşamanın renginde halka
+  ↳ (`StageRing`) ve adı, tik ve "{q}. çeyrekte tamamlandı"); biten talepler katın dışında, sayıya girmez. Planlı modülün başlığında tik.
   ↳ Modül başlığı ve talep satırı modülün ikonunu `MonoBox` kutusunda taşır (`AREA_ICONS` kimlikten yola, `_area_mark` → `HRUiShared.D_mono_box`; talep satırında ipucu modülün adı).
 - `scripts/tabs/product/quarter_view.gd` (192): `QuarterView`: ÇEYREK görünümü: hedef şeridi (menü SprintHead ile ortak), sol sütun (`AreaPanel`), altı sprint sütunu, onay düğmeleri;
   ↳ sütunlar ve "Hepsini onayla" içerik pencereyi aşınca dikey kayar (`_right`, yeniden kurulumda yeri korunur), `content_height` içeriğin kendi boyunu okur.

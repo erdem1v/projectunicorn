@@ -4647,6 +4647,17 @@ const _A4_PREP := {"fill": "over", "queue": 2}
 ## stock line's K2 stays open (`skip`) so Core shows a candidate above its card that waits for research.
 const _A4_WAITING_LATER := {"fill": "over", "areas": ["core", "onboarding"], "skip": ["feat:line_erp_stock_k2"]}
 const _A4_WAITING := [{"fill": "over", "skip": ["feat:line_erp_stock_k2"]}, _A4_WAITING_LATER, _A4_WAITING_LATER]
+## The request list's frames (a4_req_*): a B2B ERP with a PM and the product quarter starting with the first planning
+## (`quarter_now`), three accounts signed there (their requests are due this quarter). Two sprints are played, each a plan: the first
+## ships the card of the first request (`asks`: indices into the requests open at that time, in the order they were asked) and its
+## customer asks again (`again`); the second ships one plain card (`plain`), signs three more accounts (`sign`) and has `ask_core`
+## of the accounts without a request ask for a Core line; those requests fall due next quarter. a4_req_plan then holds in its plan
+## the first open request's card (`asks`), in the next column the third's (`next_asks`) and in an approved PM quarter plan two sprints
+## ahead the fourth's (`plan_asks`: [open request index, sprints ahead]); the second and the last two stay unplanned. a4_req_run
+## plays a plan of four request cards (`shape` makes the third reach its dev stage in the first week) one week into the sprint:
+## the first card is done, the others in Test, Development and Design.
+const _A4_REQ_BEFORE := [{"fill": "none", "asks": [0], "load": 0.6, "again": true}, {"fill": "none", "plain": 1, "load": 0.5, "sign": 3, "ask_core": 3}]
+const _A4_REQ_CREW := "d3 v3 v2 v4 t3 p5"
 const _A4_WORLDS := {
 	"a4_solo": {"pre": true, "sit": ["vc"]},
 	"a4_devs3": {"crew": "v3 v4 v2", "off": true},
@@ -4663,6 +4674,10 @@ const _A4_WORLDS := {
 	"a4_twelve_dev": {"crew": "d3 d3 v4 v4 v4 v3 v3 v3 v3 v2 v2 v2 v2 v2 t3 t1", "off": true, "fill": "over", "load": 1.3},
 	"a4_fourteen": {"crew": _A4_ELEVEN, "bugs": 4, "fill": 14, "load": 1.6},
 	"a4_requests": {"crew": "d3 v3 v2 v4 t3", "off": true, "accounts": 4},
+	"a4_req_plan": {"crew": _A4_REQ_CREW, "off": true, "quarter_now": true, "accounts": 3, "before": _A4_REQ_BEFORE, "fill": "none", "asks": [0],
+		"next_asks": [2], "plan_asks": [[3, 2]]},
+	"a4_req_run": {"crew": _A4_REQ_CREW, "off": true, "quarter_now": true, "accounts": 3, "before": _A4_REQ_BEFORE, "fill": "none",
+		"asks": [0, 1, 2, 5], "next_asks": [3], "plan_asks": [[4, 2]], "load": 1.1, "shape": {2: [0.5, 1.0, 1.0]}, "run": 1.0},
 	"a4_empty": {"crew": "d3 v3 v2:training t3 p5", "fill": "none"},
 	"a4_run_end": {"crew": _A4_SIX + "5", "before": [_A4_PREP], "fill": "over", "load": 1.15, "queue": 2, "run": 1.9},
 	"a4_next_prefilled": {"crew": _A4_SIX + "5", "before": [_A4_PREP, {"fill": "over", "load": 1.15, "queue": 2}], "fill": "none"},
@@ -4702,11 +4717,19 @@ func _seed_product_a4(kind: String) -> void:
 		_a4_live()
 	_a4_seat(_a4_hire(String(world.get("crew", "")), world.get("twin", [])))
 	if live:
+		if world.get("quarter_now", false):
+			_a4_quarter_now()
 		_a4_sign(int(world.get("accounts", 2)))
 	for spec: Dictionary in world.get("before", []):
 		_a4_plan(spec)
 		_a4_play()
 		SprintSystem.plan_next()
+		if spec.get("again", false):
+			_a4_again()
+		if spec.has("sign"):
+			_a4_sign(int(spec.sign), true)
+		for _i in int(spec.get("ask_core", 0)):
+			_a4_ask_core()
 	if world.get("off", false):
 		SprintSystem.set_founder_in_sprint(false)
 	for line: String in SprintCatalog.capabilities("core").slice(0, int(world.get("bugs", 0))):
@@ -4777,22 +4800,50 @@ func _a4_live() -> void:
 
 
 ## Signs `accounts` customers in the planning that waits, two weeks for their first requests. A request asks one line of the
-## area its sector leads with, so a prospect is taken while its area has a line left.
-func _a4_sign(accounts: int) -> void:
+## area its sector leads with, so a prospect is taken while its area has a line left (`any_area`: whatever its area; a later
+## signing's requests go only to the lines left, the rest of its accounts ask through `_a4_ask_core`).
+func _a4_sign(accounts: int, any_area := false) -> void:
 	var asking: Dictionary = {}
+	for r: Dictionary in SprintCatalog.open_requests():   # the lines already asked for are not asked for twice
+		var taken: String = SprintCatalog.area_of_line(r.line)
+		asking[taken] = int(asking.get(taken, 0)) + 1
 	var signed := 0
 	var tries := 0
 	while signed < accounts and tries < 60:
 		tries += 1
 		var lead: Prospect = SalesFaucetSystem.spawn_prospect("mid", "event")
 		var area: String = ProductQuality.emphasis(lead.industry)[0]
-		if int(asking.get(area, 0)) < SprintCatalog.capabilities(area).size():
+		if any_area or int(asking.get(area, 0)) < SprintCatalog.capabilities(area).size():
 			asking[area] = int(asking.get(area, 0)) + 1
 			signed += 1
 			SalesSystem.add_b2b_customer(lead, 12, 50, 85)
 		ProspectRegistry.remove(lead.id)
 	for _w in 2:
 		_a4_week()
+
+
+## The product quarter begins with the planning that waits (a company whose MVP took its first sprints; its requests' deadlines count from here).
+func _a4_quarter_now() -> void:
+	var quarter: Dictionary = GameState.product.quarter
+	quarter.start_sprint = SprintSystem.sprint_number()
+	quarter.start_day = GameState.day
+
+
+## An account with no open request asks for a Core line: no sector leads with Core, so the signing's two weeks never ask for one.
+func _a4_ask_core() -> void:
+	for c: Customer in CustomerRegistry.get_by_market("b2b"):
+		if SprintCatalog.open_requests().any(func(r: Dictionary) -> bool: return r.customer_id == c.id):
+			continue
+		for line: String in SprintCatalog.capabilities("core"):
+			if SprintBridges.open_request(c.id, line) != "":
+				return
+
+
+## The customer of the request the last sprint met asks again, for the next tier of the same line.
+func _a4_again() -> void:
+	var met: Array = (GameState.product.requests as Array).filter(func(r: Dictionary) -> bool: return r.status == "met")
+	if not met.is_empty():
+		SprintBridges.open_request(met.back().customer_id, met.back().line)
 
 
 ## Training and leave through the registry's status seam, research through Ar-Ge's start, the support desk through the jobs.
@@ -4813,6 +4864,18 @@ func _a4_plan(spec: Dictionary) -> void:
 	var built: Array = SprintCatalog.open_cards([]).filter(func(c: Dictionary) -> bool: return c.kind in ["feature", "request"])
 	for c: Dictionary in built.slice(0, int(spec.get("queue", 0))):
 		SprintSystem.send_next(c.id)
+	var asked: Array = SprintCatalog.open_requests()   # the open requests as they stand now: `asks`, `next_asks`, `plan_asks` index it
+	for i: int in spec.get("asks", []):
+		SprintSystem.add(asked[i].card_id)
+	for i: int in spec.get("next_asks", []):
+		SprintSystem.send_next(asked[i].card_id)
+	var plans: Array = GameState.product.quarter.plans   # approved PM plans: the request's card waits in the quarter's plan
+	for row: Array in spec.get("plan_asks", []):
+		plans.append({"number": SprintSystem.sprint_number() + int(row[1]), "cards": [asked[row[0]].card_id], "approved": true})
+	if spec.has("plain"):
+		var plain: Array = SprintCatalog.open_cards([]).filter(func(c: Dictionary) -> bool: return c.kind == "feature")
+		for c: Dictionary in plain.slice(0, int(spec.plain)):
+			SprintSystem.add(c.id)
 	var fill: String = str(spec.get("fill", "lead"))
 	if fill == "lead":
 		SprintSystem.apply_lead()
@@ -4831,18 +4894,22 @@ func _a4_plan(spec: Dictionary) -> void:
 				break
 			SprintSystem.add(c.id)
 	if spec.has("load"):
-		_a4_size(spec.load)
+		_a4_size(spec.load, spec.get("shape", {}))
 
 
-## The plan's untouched feature and request cards grow together until the plan holds `load` times the team's capacity.
-func _a4_size(load: float) -> void:
+## The plan's untouched feature and request cards grow together until the plan holds `load` times the team's capacity; `shape`
+## {position among those untouched cards: [design, dev, test] factors} then scales one card's stage needs (a card that reaches its next stage sooner).
+func _a4_size(load: float, shape: Dictionary = {}) -> void:
 	var cards: Array = GameState.product.sprint.cards.map(func(id: String) -> Dictionary: return GameState.product.cards[id])
 	var fresh: Array = cards.filter(func(c: Dictionary) -> bool:
 		return c.kind in ["feature", "request"] and c.progress.all(func(done: float) -> bool: return done == 0.0))
 	var total: float = fresh.reduce(func(sum: float, c: Dictionary) -> float: return sum + SprintSystem.total(c), 0.0)
 	var grow: float = (load * SprintSystem.capacity() - SprintSystem.used() + total) / total
-	for c: Dictionary in fresh:
+	for i in fresh.size():
+		var c: Dictionary = fresh[i]
 		c.need = SprintCatalog.card_need(c.kind, c.line, c.target_tier, SprintSystem.total(c) * grow)
+		for j in shape.get(i, []).size():
+			c.need[j] = float(c.need[j]) * float(shape[i][j])
 
 
 ## Starts the planned sprint and plays it to its close, a tick a week.
@@ -4885,6 +4952,10 @@ func _product_a4_ready(kind: String) -> bool:
 		page._set_ui(open[0].id, "hover_card")
 	elif kind == "a4_requests":
 		page._set_ui(ProductModel.live().requests[0].module_id, "open_area")
+	elif kind.begins_with("a4_req_"):
+		page._set_ui(true, "requests_open")
+		for r: Dictionary in ProductModel.live().requests:
+			print("REQROW|%s|%s|%s|%s" % [r.customer, r.card_name, r.status.text, r.due_text])
 	elif _A4_WORLDS[kind].has("open"):
 		page._set_ui(_A4_WORLDS[kind].open, "open_area")
 	if not await _faces_drawn("live:" + kind):

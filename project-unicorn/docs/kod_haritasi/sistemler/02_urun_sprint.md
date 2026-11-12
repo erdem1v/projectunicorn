@@ -345,6 +345,9 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
   ↳ `a4_waiting` iki tasarımcı (4★, 3★), dört geliştirici (5, 4, 3, 3★), iki testçi (3★) ve 5★ PM; önceki üç sprintte ilkinde dört modülün kartları alınmış (stok hattının K2'si hariç: `skip`),
   ↳ sonraki ikisinde yalnız Çekirdek ve Onboarding'inkiler (`areas`); planda üç Güven kartı, sol sütunda Çekirdek açık (`open`): "+"lı adayın altında araştırma bekleyen sıradaki kart görünür;
   ↳ `a4_waiting_tip` onun ikinci karesi (imleç o kartta, ipucu "{düğüm} araştırılmalı"); `a4_waiting_all` aynı dünya, Onboarding açık (adaylarının hepsi kilitli modül)
+  ↳ `a4_req_plan` sol sütunun talep satırları, gerçek ad havuzuyla: planı olmayan (bu ve gelecek çeyrek), bu sprintte, sonraki sprintte, PM'in onaylı
+  ↳ çeyrek planında ve bu çeyrekte biten talep; `a4_req_run` aynı dünyanın koşan sprinti (Tasarım, Geliştirme, Test aşamasında kartlar); ikisi de
+  ↳ talep satırlarını `REQROW|müşteri|kart|durum|son tarih` diye yazar
 - `--event-shot=<bir sprint kâğıdı>` kâğıdı canlı bir ürünün bir kartlı sprintinde kurar (`main._seed_paper_world` `:1444`; kartı bir özellik kartı, B2B pm ve geç kalan sprint kâğıtlarında Marmara Lojistik'in talebi,
   ↳ kök neden kâğıdında hatalı hattın düzeltme kartıdır)
 - Probe kayıt türleri (Ürün): `SPRINT` (her kapanış: sprint, etiket, çıkanlar, devredenler, hız), `SHIP` (sürüm çıkaran kapanış: kapanıştan sonra açık hata, `escaped=` testten kaçan hata sayısı),

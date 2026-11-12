@@ -57,8 +57,10 @@ extends RefCounted
 # Yeni ekranın okuma yüzeyi, yukarıdakilerin yanında (efor sayıları görünen eforudur: kalan ihtiyaç ÷ hazırlık kazancı):
 #   founder: {on (kurucu sprint kartı alır), locked: "" | "running" | "rnd", rnd_text},
 #   requests: null (B2C) | [{customer, card_id, card_name, module_id, value (yıllık), due_text (sözün, yoksa talebin son sprinti:
-#             "bu çeyrek", "gelecek çeyrek" ya da "{q}. çeyrek"), soon (bu çeyrek), planned (kartı bu sprintin planında), tip}]
-#             (planlı olmayan önde, bu çeyrek önde, sonra son tarih),
+#             "bu çeyrek", "gelecek çeyrek" ya da "{q}. çeyrek"; karşılanmışta ""), soon (bu çeyrek; karşılanmışta false), status: {kind: "" (planda değil) | "plan" (kartı bir
+#             sprintin planında: `sprint` en erken olanın numarası) | "dev" (koşan sprintte aşamada: `stage`; yüzde yok) | "met" (kartı
+#             bir sürümle çıktı, bu ürün çeyreğinde: `q` sürümün takvim çeyreği), text (satırın yazısı; "" ise satır yok)}, tip}]
+#             (açıklar önde: planda olmayan önde, bu çeyrek önde, sonra son tarih; karşılananlar altta, en yeni önde),
 #   modules: [{id, name, planned (bu sprintte kartı var), candidates: [{id, name, effort, parts: [{stage, effort}] (sıfırdan
 #             büyük aşama payları, eforu kesirli), planned (bu sprintin planında), stamp (başka sprintte: sprint numarası, yoksa
 #             -1), addable (null: "+"nın değeri henüz istenmedi, `resolve_addable` ister; false: adaylıktan çıkmış kartın "+"ı yok),
@@ -89,8 +91,8 @@ extends RefCounted
 #         `carried`ta yer alır, burada değil; planlamada "↑" ve "×", öbür kiplerde "×").
 # person = {id, name, role_text, look, stars, founder}.
 # Kart satırı (pano) = {id, kind, name, effort, raw_effort, module (kısa ad; satır onu yazar), module_name (tam ad, ipucunda), fix_text
-#   (düzeltme kartında hata sayısı, etkilenenler ve en büyük hesap), slot: {kind: "due" (+ text, soon, customer, value, promise: söz mü talep mi) | "carried" |
-#   "late"} ya da {}, pm, ask, risk, risk_raw (0..1: beklenen hatanın tavana oranı, hazırlanmamış hâli), late, finishes (sprint sonuna
+#   (düzeltme kartında hata sayısı, etkilenenler ve en büyük hesap), slot: {kind: "due" (+ text, soon, customer, value, promise: söz mü talep mi; yalnız kartın ipucu okur, yuvada çip yok) | "carried" |
+#   "late"} ya da {}, carried (devreden kart), pm, ask, risk, risk_raw (0..1: beklenen hatanın tavana oranı, hazırlanmamış hâli), late, finishes (sprint sonuna
 #   yetişir), founder, gate (başlamayacak kartın kapı gerekçesi, yoksa ""), buttons, stages (SprintTimeline aşamaları)}. Planlamada
 #   düğmeler "→" ve "×", koşarken yok; kapısı sonradan kapanıp başlamayacak kart zaman ekseninde yoktur: `stages` boş, `gate` dolu,
 #   yalnız "×". `effort` kartın sprintteki yüküdür (`SprintSystem.card_load` ÷ hazırlık kazancı),
@@ -176,7 +178,7 @@ static func live() -> Dictionary:
 		"overview": {"server": _server()} if live_now else null,
 		"areas": areas,
 		"founder": _founder(mode, center.rnd_node),
-		"requests": _requests(tags),
+		"requests": _requests(tags, mode),
 		"modules": modules,
 		"prep": _prep(),
 		"center": center,
@@ -280,9 +282,10 @@ static func _module_card(c: Dictionary, tag: int, sprint: int) -> Dictionary:
 		"bugs": c.bugs if fix else 0, "fix_text": SprintUiShared.bugs_text(SprintCatalog.bugs_part(c.line, c.bugs)) if fix else ""}
 
 
-## Müşteri talepleri (B2B; B2C'de null): her açık talep bir satır. Son tarih sözün, yoksa talebin son sprintidir (`_due`).
-## Sıra: planı olmayan önde, bu çeyrek önde, sonra son tarih.
-static func _requests(tags: Dictionary) -> Variant:
+## Müşteri talepleri (B2B; B2C'de null): her açık talep bir satır, altında bu ürün çeyreğinde karşılananlar. Son tarih sözün, yoksa
+## talebin son sprintidir (`_due`). Her satırın `status`u (`_request_status`) kayıtlardan okunur, yeni alan saklanmaz. Sıra: açıklar önde
+## (planda olmayan önde, bu çeyrek önde, sonra son tarih), sonra karşılananlar, en yeni sürüm önde.
+static func _requests(tags: Dictionary, mode: String) -> Variant:
 	if ProductState.market_type() != "b2b":
 		return null
 	var stored: Dictionary = GameState.product.get("cards", {})
@@ -294,7 +297,8 @@ static func _requests(tags: Dictionary) -> Variant:
 	var keyed: Array = []
 	for r in GameState.product.get("requests", []):
 		var customer: String = SprintCatalog.customer_name(r)
-		if r.status != "open" or customer == "":
+		var met: Dictionary = _met_in(r) if r.status == "met" else {}
+		if customer == "" or not (r.status == "open" or not met.is_empty()):
 			continue
 		var card_id: String = "feat:" + r.step if stored.has("feat:" + r.step) else String(r.card_id)
 		var area_id: String = SprintCatalog.area_of_line(r.line)
@@ -305,15 +309,61 @@ static func _requests(tags: Dictionary) -> Variant:
 		var parts: PackedStringArray = [customer,
 			_t("PRODUCT_TIP_CARD_MODULE").format({"card": card_name, "module": SprintCatalog.area_name(area_id)}),
 			_t("PRODUCT_PER_YEAR").format({"amount": Fmt.money_exact(int(r.value))})]
-		if promise >= 0:
+		if promise >= 0 and r.status == "open":
 			parts.append(_t("PRODUCT_TIP_PROMISE").format({"when": when.text}))
-		var planned: bool = tags.get(card_id, -1) == SprintSystem.sprint_number()
-		keyed.append([[int(planned), int(not when.soon), due, keyed.size()], {"customer": customer, "card_id": card_id,
-			"card_name": card_name, "module_id": area_id, "value": int(r.value),
-			"due_text": when.text, "soon": when.soon,
-			"planned": planned, "tip": SprintUiShared.SEP.join(parts)}])
+		var status: Dictionary = _request_status(card_id, tags, mode, met)
+		var order: Array = [1, -int(met.day), 0, 0, 0, keyed.size()] if not met.is_empty() else [0, 0, int(status.kind != ""),
+			int(not when.soon), due, keyed.size()]
+		keyed.append([order, {"customer": customer, "card_id": card_id, "card_name": card_name, "module_id": area_id,
+			"value": int(r.value), "due_text": "" if not met.is_empty() else when.text, "soon": when.soon and met.is_empty(),
+			"status": status, "tip": SprintUiShared.SEP.join(parts)}])
 	keyed.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
 	return keyed.map(func(k: Array) -> Dictionary: return k[1])
+
+
+## Karşılanmış talebin sürümü: kademesini ilk yazan sürüm kaydı (yoksa talebin gününden sonraki ilk sürüm); sprintlerden önceki
+## kayıtlar (sprint < 0) atlanır. Sürüm bu ürün çeyreğinin ilk sprintinden (`quarter.start_sprint`) önce kapandıysa {}; yoksa {day, q}.
+static func _met_in(r: Dictionary) -> Dictionary:
+	var p: Dictionary = GameState.product
+	var found: Dictionary = {}
+	for release: Dictionary in p.get("releases", []):
+		if int(release.sprint) >= 0 and (release.shipped as Array).any(func(c: Dictionary) -> bool: return c.step == r.step):
+			found = release
+			break
+	if found.is_empty():
+		for release: Dictionary in p.get("releases", []):
+			if int(release.sprint) >= 0 and int(release.day) >= int(r.day):
+				found = release
+				break
+	if found.is_empty() or int(found.sprint) < int(p.quarter.start_sprint):
+		return {}
+	return {"day": int(found.day), "q": _calendar_quarter(GameState.get_date_dict(int(found.day)))}
+
+
+## Talebin kartının durumu ve satırın yazısı. Koşan sprintte kart sprintte, işine başlanmış ve bitmemişse ("dev") aşaması; henüz
+## başlanmamış ya da bitmiş ama sürümü çıkmamış kart planda sayılır. Planda: kartı en erken tutan sprintin numarası; bu sprint,
+## sonraki sütun (`tags`) ya da onaylı PM planı (`quarter.plans`): yalnız sonraki sütundan ilerideki plan ve kartı hâlâ açıksa
+## (`SprintCatalog.still_open`), yani motorun o sprinte koyacağı kart. Hiçbiri değilse durum yoktur.
+static func _request_status(card_id: String, tags: Dictionary, mode: String, met: Dictionary) -> Dictionary:
+	if not met.is_empty():
+		return {"kind": "met", "q": met.q, "text": _t("PRODUCT_REQUEST_DONE_Q").format({"q": met.q})}
+	var p: Dictionary = GameState.product
+	if mode == "active" and card_id in p.get("sprint", {}).get("cards", []) and p.cards.has(card_id):
+		var card: Dictionary = p.cards[card_id]
+		var phase: int = SprintSystem.phase(card)
+		var started: bool = (card.progress as Array).any(func(done: Variant) -> bool: return float(done) > 0.0)
+		if started and phase < SprintSystem.PHASE_DONE:
+			var stage: String = SprintSystem.STAGES[phase]
+			return {"kind": "dev", "stage": stage, "text": SprintUiShared.stage_name(stage)}
+	var sprint: int = int(tags.get(card_id, -1))
+	var next_number: int = int(p.get("next", {}).get("number", -1))
+	for plan: Dictionary in p.get("quarter", {}).get("plans", []):
+		if int(plan.number) > next_number and card_id in plan.cards and (sprint < 0 or int(plan.number) < sprint) \
+				and not SprintCatalog.still_open([card_id]).is_empty():
+			sprint = int(plan.number)
+	if sprint < 0:
+		return {"kind": "", "text": ""}
+	return {"kind": "plan", "sprint": sprint, "text": _t("PRODUCT_TAG_SPRINT").format({"n": sprint})}
 
 
 ## Son sprintin ürün çeyreğine göre tarihi {text, soon}: çeyreğin son sprintine dek "bu çeyrek", sonraki çeyreğin içinde "gelecek
@@ -726,7 +776,7 @@ static func _row(c: Dictionary, t: Dictionary, buttons: Array) -> Dictionary:
 		"fix_text": SprintUiShared.bugs_text(bugs) if fix else "",
 		"slot": slot, "pm": null if preparer == null else _face(preparer, HRConstants.AREA_PRODUCT), "ask": _ask(c),
 		"risk": minf(1.0, t.get("h", 0.0) / ref) if ref > 0.0 else 0.0, "risk_raw": minf(1.0, t.get("h0", 0.0) / ref) if ref > 0.0 else 0.0,
-		"late": late, "finishes": t.get("finishes", false), "founder": t.get("founder", false),
+		"carried": c.state == "carried", "late": late, "finishes": t.get("finishes", false), "founder": t.get("founder", false),
 		"gate": SprintCatalog.gate_reason(c.step) if t.is_empty() else "",
 		"buttons": buttons.filter(func(b: String) -> bool: return b != "remove" or not c.get("follow", false)),
 		"stages": t.get("stages", [])}

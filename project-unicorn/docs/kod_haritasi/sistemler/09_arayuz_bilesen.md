@@ -116,7 +116,7 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 - Kalıcı kullanıcı ayarları `user://settings.json` (`Settings.DEFAULTS` `settings.gd:24`): `window_mode`, `ui_scale`, `colorblind_palette`, `ticker_open`, `master_volume`, `music_*`, `sfx_volume`, `pause_unfocused`, `language`
 - `runs_finished` profil sayacı `Settings` anahtarı, `main.gd:5329`'da artar; Onboarding Zor kipi açılışını buradan okur (`first_week_doc.gd:15`)
 - Tema sürümü: `UiTokens.THEME_STAMP` `ui_tokens.gd:45`; .tres'in gömülü `UiTokensStamp.stamp` sabiti ile `main.gd:99-100` karşılaştırılır (debug uyarısı)
-- Ürün sol sütunu: ölçüler `D_W_LEFT` 288, `D_BOX_MONO` 24 (modül ikonunun kutusu), `D_H_KEY_CAND` 24, `D_W_STAGE_STRIP` 168, `D_H_STAGE_STRIP` 6, `D_PLANNED_ALPHA` (planlı talep), `D_TAKEN_ALPHA` (planlı ya da damgalı aday);
+- Ürün sol sütunu: ölçüler `D_W_LEFT` 288, `D_BOX_MONO` 24 (modül ikonunun kutusu), `D_H_KEY_CAND` 24, `D_W_STAGE_STRIP` 168, `D_H_STAGE_STRIP` 6, `D_TAKEN_ALPHA` (planlı ya da damgalı aday);
   ↳ aşama bantları `D_ST_DESIGN/DEV/TEST` ve `UiTokens.D_stage(aşama)`.
 - Yüzler: `d_wide_b` (Archivo 800, genişlik 118: `SprintTitle`) ve `d_wide_sb_caps` (650, genişlik 110, harf aralığı 1: göz başlığı `Eyebrow`); `d_num` (650/108, tablo rakamları: Kapasite'nin `CapFigure` sayısı).
 - Sembol yedeği: koyu zincirler Archivo, Plex, `symbols_flat` (Noto Sans Symbols 2'nin kendi RID'li yüzü: ★ ☆ ✓ ▾ ⌛ ✕).
@@ -152,7 +152,7 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 - Zengin ipucu (`_make_custom_tooltip`): `CardTip.panel` (kart; yalnız adı, `BoardRow.CardName`), `CapacityView._over_tip` (taşan aşama; `TipBox`); kök `SprintUiShared.tip_column` (menajer temalı, `D_W_TIP`),
   ↳ yeni varyasyon yok: `TipTitle`, `MetaMuted`, `ValueTextStrong`, `Caption(+Strong, Primary)`; aşama efor kutusu `StagePaint` çubuğu ve etiketidir (`D_NEED_BOX`).
   ↳ kök `SprintUiShared.TipColumn`: Godot pencereyi satır kıran yazılar genişliğini bilmeden ölçer; asgari boy değiştikçe pencere içeriğin boyuna iner, imlecin altına konur.
-- Sol sütunun varyasyonları yalnız koyu temadadır (master taşımaz, `theme_check` ikisinde geçer): `RequestRow` (+`Hover`, `Planned`), `ModuleRow` (+`Hover`, `Open`),
+- Sol sütunun varyasyonları yalnız koyu temadadır (master taşımaz, `theme_check` ikisinde geçer): `RequestRow` (+`Hover`), `ModuleRow` (+`Hover`, `Open`),
   ↳ `ModuleCandidate` (+`Hover`: tıkı kendisi alan araştırma bekleyen kart), `DueChip`, `DueChipSoon`, `MoreLink`
   ↳ `MonoBox` HR ve posta ile ortaktır.
 - Tema yolu: `UiTokens.MENAJER_THEME` `ui_tokens.gd:450`; proje teması `project.godot` `theme/custom` = `master_theme.tres`; Menajer teması taşınan her alt ağacın köküne ve her CanvasLayer köküne elle atanır

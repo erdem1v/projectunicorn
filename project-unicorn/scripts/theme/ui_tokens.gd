@@ -42,7 +42,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 49
+const THEME_STAMP := 50
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -480,7 +480,6 @@ const D_ACCENT_GLOW := Color(D_ACCENT, 0.24)   # the ring around a waiting-decis
 const D_ST_DESIGN := Color("#8E78BE")
 const D_ST_DEV := Color("#6A9CCB")
 const D_ST_TEST := Color("#A3D4B2")
-const D_PLANNED_ALPHA := 0.72   # a request whose card is already in this sprint's plan
 const D_TAKEN_ALPHA := 0.6      # a candidate already in this sprint's plan or in another sprint
 
 # --- meaning: gain, danger, attention, notice ---

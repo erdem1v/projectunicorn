@@ -125,50 +125,55 @@ func _add_history() -> void:
 # --- Müşteri talepleri ----------------------------------------------------------------
 
 func _add_requests(requests: Array) -> void:
-	_col.add_child(_eyebrow("PRODUCT_REQUESTS", requests.size()))
+	# Bu çeyrekte karşılananlar açıkların altında kalır: başlıktaki sayıya girmez, "+N talep" katlaması onları gizlemez.
+	var open: Array = requests.filter(func(r: Dictionary) -> bool: return r.status.kind != "met")
+	var met: Array = requests.filter(func(r: Dictionary) -> bool: return r.status.kind == "met")
+	# Yalnız karşılanmış talep kaldıysa başlık sayı taşımaz ("0" yazmaz).
+	_col.add_child(_eyebrow("PRODUCT_REQUESTS", open.size() if not open.is_empty() else -1))
 	var list := SprintUiShared.column(UiTokens.SPACE_XS)
 	_col.add_child(list)
 	var unfolded: bool = _model.ui.requests_open
-	for i in requests.size():
+	for i in open.size():
 		if unfolded or i < REQUESTS_SHOWN:
-			list.add_child(_request_row(requests[i]))
-	if requests.size() > REQUESTS_SHOWN:
-		var more := requests.size() - REQUESTS_SHOWN
+			list.add_child(_request_row(open[i]))
+	if open.size() > REQUESTS_SHOWN:
+		var more := open.size() - REQUESTS_SHOWN
 		var fold := SprintUiShared.button(tr(Fmt.count_key("PRODUCT_MORE_REQUESTS", more)).format({"n": more}), &"MoreLink",
 			ui_changed.emit.bind("requests_open", not unfolded))
 		fold.icon = load(CHEVRON_UP if unfolded else CHEVRONS[1])
 		fold.icon_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		fold.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		list.add_child(fold)
+	for r: Dictionary in met:
+		list.add_child(_request_row(r))
 
 
-## Talep satırı: müşteri ve söz tarihi, altında modülün ikonu ve kartın adı; tıklanınca modülü açılır. Kartı bu sprintin planındaki
-## talep zeminsiz ve soluktur, çipinde tik ve tarih durur.
+## Talep satırı, üç satır: müşteri ve söz tarihi (açık talepte; hepsinde, planda olsun olmasın), modülün ikonu ve kartın adı, altında
+## kartın durumu (`_status_line`; durumu yoksa satır yok). Tıklanınca modülü açılır. Hiçbir satır soluk değildir.
 func _request_row(r: Dictionary) -> PanelContainer:
-	var planned: bool = r.planned
 	var row := PanelContainer.new()
-	row.theme_type_variation = &"RequestRowPlanned" if planned else &"RequestRow"
+	row.theme_type_variation = &"RequestRow"
 	var col := SprintUiShared.column(UiTokens.SPACE_XS)
 	row.add_child(col)
 	var who := SprintUiShared.box(UiTokens.SPACE_M)
 	who.add_child(UiFactory.make_glyph(SprintUiShared.BUILDING, UiTokens.D_ICON_MARK, UiTokens.D_INK_3))
 	who.add_child(_name(String(r.customer), &"TipTitle", null))
-	var chip: Control = _planned_chip(r) if planned else SprintUiShared.due_chip(String(r.due_text), r.soon)
-	who.add_child(chip)
+	if String(r.due_text) != "":
+		who.add_child(SprintUiShared.due_chip(String(r.due_text), r.soon))
 	col.add_child(who)
 	var what := SprintUiShared.box(UiTokens.SPACE_M)
 	var mark := _area_mark(String(r.module_id))
 	what.add_child(mark)
 	what.add_child(_name(String(r.card_name), &"CaptionPrimary", null))
 	col.add_child(what)
+	var status: Control = _status_line(r.status)
+	if status != null:
+		# Durum, kartın adıyla aynı hizada başlar: işaret kutusunun genişliği ve aralığı kadar içeriden.
+		col.add_child(SprintUiShared.pad(status, Vector4i(UiTokens.D_BOX_MONO + UiTokens.SPACE_M, 0, 0, 0)))
 	HRUiShared.set_mouse_ignore(col)
 	# İkon modülün adını ipucu taşır: imleci alır, tıkı satıra geçirir.
 	mark.tooltip_text = SprintCatalog.area_name(String(r.module_id))
 	mark.mouse_filter = Control.MOUSE_FILTER_PASS
-	if planned:
-		row.modulate = Color(Color.WHITE, UiTokens.D_PLANNED_ALPHA)
-		# Tik ve tarih kendi ipucunu taşır: imleci alır, tıkı satıra geçirir.
-		chip.mouse_filter = Control.MOUSE_FILTER_PASS
 	row.tooltip_text = r.tip
 	row.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_hover(row, row.theme_type_variation, &"RequestRowHover")
@@ -178,15 +183,31 @@ func _request_row(r: Dictionary) -> PanelContainer:
 	return row
 
 
-## Kartı bu sprintin planında olan talebin çipi: tik ve tarih, çerçevesiz; söz çipiyle aynı boyda.
-func _planned_chip(r: Dictionary) -> HBoxContainer:
-	var chip := SprintUiShared.box(UiTokens.SPACE_XS)
-	chip.custom_minimum_size.y = UiTokens.D_H_TAG
-	chip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	chip.tooltip_text = tr("PRODUCT_REQUEST_PLANNED_TIP")
-	chip.add_child(UiFactory.make_glyph(SprintUiShared.CHECK, UiTokens.D_ICON_TAG, UiTokens.D_ST_TEST))
-	chip.add_child(SprintUiShared.label(Fmt.cap_first(String(r.due_text)), &"CaptionName", UiTokens.D_INK_3))
-	return chip
+## Talebin durum satırı: planda ya da karşılanmışta tik ("Sprint {n}", "{q}. çeyrekte tamamlandı"), koşan sprintte aşamanın renginde açık
+## halka ve aşamanın adı (yüzde yok); durumu yoksa null.
+func _status_line(status: Dictionary) -> HBoxContainer:
+	if status.kind == "":
+		return null
+	var line := SprintUiShared.box(UiTokens.SPACE_S)
+	var lead: Control = StageRing.new(UiTokens.D_stage(String(status.stage))) if status.kind == "dev" 		else UiFactory.make_glyph(SprintUiShared.CHECK, UiTokens.D_ICON_TAG, UiTokens.D_ST_TEST)
+	lead.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	line.add_child(lead)
+	line.add_child(_name(String(status.text), &"CaptionName", UiTokens.D_INK_2))
+	return line
+
+
+## Koşan sprintte kartın aşamasının işareti: aşamanın renginde, üstü açık halka; tik kadar yer tutar.
+class StageRing extends Control:
+	var _ink: Color
+
+	func _init(ink: Color) -> void:
+		_ink = ink
+		custom_minimum_size = Vector2.ONE * UiTokens.D_ICON_TAG
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		var radius: float = size.x / 2.0 - UiTokens.BORDER_FOCUS / 2.0
+		draw_arc(size / 2.0, radius, deg_to_rad(-45.0), deg_to_rad(225.0), 32, _ink, UiTokens.BORDER_FOCUS, true)
 
 
 # --- Modüller ---------------------------------------------------------------------------
@@ -196,7 +217,7 @@ func _area_mark(area_id: String) -> PanelContainer:
 	return HRUiShared.D_mono_box(UiTokens.D_BOX_MONO, UiFactory.make_glyph(AREA_ICONS[area_id], UiTokens.D_ICON_ROW, UiTokens.D_INK_2))
 
 
-## Modül satırı: işaret, ad, "planda" (bu sprintte kartı varsa) ve şevron; açıksa altında adayları. Satırın başı tıklanınca açılır ya da
+## Modül satırı: işaret, ad, tik (bu sprintte kartı varsa; ipucu `PRODUCT_IN_PLAN_TIP`) ve şevron; açıksa altında adayları. Satırın başı tıklanınca açılır ya da
 ## kapanır.
 func _module_row(m: Dictionary) -> PanelContainer:
 	var open: bool = m.id == String(_model.ui.open_area)
@@ -209,7 +230,9 @@ func _module_row(m: Dictionary) -> PanelContainer:
 	head.add_child(_area_mark(String(m.id)))
 	head.add_child(_name(String(m.name), &"TipTitle", UiTokens.D_INK_2))
 	if m.planned:
-		head.add_child(SprintUiShared.label(tr("PRODUCT_IN_PLAN"), &"CaptionName", UiTokens.D_INK_1))
+		var tick := UiFactory.make_glyph(SprintUiShared.CHECK, UiTokens.D_ICON_ROW, UiTokens.D_ST_TEST)
+		tick.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		head.add_child(tick)
 	head.add_child(UiFactory.make_glyph(CHEVRONS[int(open)], UiTokens.D_ICON_MARK, UiTokens.D_INK_4))
 	HRUiShared.set_mouse_ignore(head)
 	head.mouse_filter = Control.MOUSE_FILTER_STOP

@@ -2745,9 +2745,8 @@ PRODUCT_NO_PM,PM yok,No PM
 PRODUCT_REQUESTS,Müşteri talepleri,Customer requests
 PRODUCT_MORE_REQUESTS,+{n} talep,+{n} requests
 PRODUCT_MORE_REQUESTS_ONE,+{n} talep,+{n} request
-PRODUCT_REQUEST_PLANNED_TIP,Kartı bu sprintin planında,Its card is in this sprint's plan
+PRODUCT_REQUEST_DONE_Q,{q}. çeyrekte tamamlandı,Completed in Q{q}
 PRODUCT_MODULES,Modüller,Modules
-PRODUCT_IN_PLAN,planda,planned
 PRODUCT_IN_PLAN_TIP,Bu sprintte kartı var,Has a card in this sprint
 PRODUCT_CAND_IN_PLAN_TIP,Bu sprintin planında,In this sprint's plan
 PRODUCT_ADD_TO_PLAN,Plana ekle,Add to plan

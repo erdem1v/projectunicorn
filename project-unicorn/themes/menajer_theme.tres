@@ -4692,17 +4692,6 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_db877"]
-content_margin_left = 8.0
-content_margin_top = 4.0
-content_margin_right = 8.0
-content_margin_bottom = 4.0
-bg_color = Color(1, 1, 1, 0)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_274d1"]
 content_margin_left = 20.0
 content_margin_top = 16.0
@@ -8255,8 +8244,6 @@ RequestRow/base_type = &"PanelContainer"
 RequestRow/styles/panel = SubResource("StyleBoxFlat_e1a17_2")
 RequestRowHover/base_type = &"PanelContainer"
 RequestRowHover/styles/panel = SubResource("StyleBoxFlat_70ab9")
-RequestRowPlanned/base_type = &"PanelContainer"
-RequestRowPlanned/styles/panel = SubResource("StyleBoxFlat_db877")
 ResultDoc/base_type = &"PanelContainer"
 ResultDoc/styles/panel = SubResource("StyleBoxFlat_274d1")
 RichTextLabel/colors/default_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
@@ -8903,7 +8890,7 @@ TopicPill/fonts/font = ExtResource("d_cond_b_caps_3c3ce")
 TopicPill/styles/normal = SubResource("StyleBoxFlat_1b27f")
 TraitBox/base_type = &"PanelContainer"
 TraitBox/styles/panel = SubResource("StyleBoxFlat_e9fa3")
-UiTokensStamp/constants/stamp = 49
+UiTokensStamp/constants/stamp = 50
 VScrollBar/styles/grabber = SubResource("StyleBoxFlat_1c24c")
 VScrollBar/styles/grabber_highlight = SubResource("StyleBoxFlat_85a39")
 VScrollBar/styles/grabber_pressed = SubResource("StyleBoxFlat_85a39_2")
