@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git fe2effcf · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 97a5add8 · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -229,12 +229,12 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/systems/vc_pitch_system.gd · 1317 · VCPitchSystem · RefCounted · 0 sinyal · 91 func
 - scripts/systems/work_hours_system.gd · 342 · WorkHoursSystem · RefCounted · 0 sinyal · 38 func
 
-### scripts/tabs/ (9 dosya, 3983 satır)
+### scripts/tabs/ (9 dosya, 3984 satır)
 - scripts/tabs/events_tab.gd · 369 · - · Control · 0 sinyal · 23 func
 - scripts/tabs/finance_tab.gd · 142 · - · Control · 1 sinyal · 9 func
 - scripts/tabs/hr_tab.gd · 537 · - · Control · 1 sinyal · 32 func
 - scripts/tabs/hunt_tab.gd · 533 · - · Control · 0 sinyal · 27 func
-- scripts/tabs/personal_tab.gd · 266 · - · Control · 1 sinyal · 13 func
+- scripts/tabs/personal_tab.gd · 267 · - · Control · 1 sinyal · 13 func
 - scripts/tabs/piyasa_tab.gd · 682 · - · Control · 0 sinyal · 34 func
 - scripts/tabs/product_tab.gd · 344 · - · Control · 1 sinyal · 19 func
 - scripts/tabs/rnd_tab.gd · 273 · - · Control · 1 sinyal · 14 func

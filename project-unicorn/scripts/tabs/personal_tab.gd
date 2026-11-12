@@ -91,7 +91,10 @@ func _work(founder: Character) -> VBoxContainer:
 	col.add_child(_above(SprintUiShared.label(Fmt.upper(tr("PER_TASK_LABEL")), &"KeyLabel"), UiTokens.SPACE_XL))
 	col.add_child(SprintUiShared.prose(HRSystem.founder_task_label(), &"DataText"))
 	col.add_child(_above(SprintUiShared.label(Fmt.upper(tr("PER_EXPERIENCE")), &"KeyLabel"), UiTokens.SPACE_L))
-	col.add_child(_above(HRUiShared.D_xp(founder, UiTokens.D_XP_BAR_WIDE), UiTokens.SPACE_S))
+	# Deneyim çubuğudur; yanındaki yüzde onu tekrarlardı (envanter world-16).
+	var ratio: float = CharacterRegistry.experience_ratio(founder)
+	col.add_child(_above(HRUiShared.D_bar(UiTokens.D_XP_BAR_WIDE, ratio,
+		UiTokens.D_BAR_EMPH if ratio >= 1.0 else UiTokens.D_BAR_FILL), UiTokens.SPACE_S))
 	var train := SprintUiShared.button(tr("HR_TRAINING_PICK_TITLE"), &"SecondaryButton", func() -> void:
 		HRUiShared.mount_panel_modal(self, TRAINING_MODAL, _build, [founder.id]))
 	train.icon = load(TRAINING_ICON)
@@ -135,7 +138,7 @@ func _sheet(founder: Character) -> VBoxContainer:
 	return col
 
 
-## A skill: the area's glyph, its name, its meter and its figure in the ramp's ink.
+## A skill: the area's glyph, its name and its meter; no figure beside it, the meter's cells count (inventory world-16).
 func _skill_row(key: String, value: int) -> HBoxContainer:
 	var row := SprintUiShared.box(UiTokens.SPACE_M)
 	row.custom_minimum_size.y = UiTokens.D_H_SHEET_ROW
@@ -149,10 +152,6 @@ func _skill_row(key: String, value: int) -> HBoxContainer:
 	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	row.add_child(label)
 	row.add_child(_meter(value))
-	var figure := HRUiShared.D_skill_figure(value, &"")
-	figure.custom_minimum_size.x = UiTokens.D_W_SKILL_FIGURE
-	figure.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	row.add_child(figure)
 	return row
 
 
@@ -176,9 +175,12 @@ func _meter(value: int) -> Control:
 func _standing() -> VBoxContainer:
 	var col := SprintUiShared.column(0)
 	col.custom_minimum_size.x = UiTokens.D_W_STANDING
-	col.add_child(_section("PERSONAL_MILESTONES_TITLE"))
-	col.add_child(_above(_milestones(), UiTokens.SPACE_L))
-	col.add_child(_above(_section("PER_WHERE_AM_I"), UiTokens.SPACE_3XL))
+	# Yalnız ulaşılan dönüm noktaları: sıradakinin adı önceden yazmaz (envanter world-17); hiçbiri yoksa bölüm de yok.
+	var reached: Array = GameState.milestones().filter(func(m: Dictionary) -> bool: return m.earned)
+	if not reached.is_empty():
+		col.add_child(_section("PERSONAL_MILESTONES_TITLE"))
+		col.add_child(_above(_milestones(reached), UiTokens.SPACE_L))
+	col.add_child(_above(_section("PER_WHERE_AM_I"), UiTokens.SPACE_3XL if not reached.is_empty() else 0))
 	var ladder := SprintUiShared.column(0)
 	col.add_child(_above(ladder, UiTokens.SPACE_M))
 	for i in GameState.PHASE_KEYS.size():
@@ -215,11 +217,10 @@ func _standing() -> VBoxContainer:
 	return col
 
 
-## A ledger down the column: each milestone's disc on a line to the next; an earned one in ink with its glyph,
-## date or sum and its note, the rest an open ring.
-func _milestones() -> VBoxContainer:
+## A ledger down the column of the milestones `rows`: each one's disc on a line to the next, in ink with its glyph,
+## date or sum and its note (an unearned row, were one passed, an open ring).
+func _milestones(rows: Array) -> VBoxContainer:
 	var ledger := SprintUiShared.column(0)
-	var rows: Array = GameState.milestones()
 	for i in rows.size():
 		var earned: bool = rows[i].earned
 		var last: bool = i == rows.size() - 1

@@ -24,7 +24,7 @@ _A4_WAITING_LATER	const	scripts/main/main.gd:4661	main.gd
 _a4_week	func	scripts/main/main.gd:4936	main.gd
 _A4_WORLDS	const	scripts/main/main.gd:4674	main.gd
 _abandon_note	var	scripts/ui/components/research_bar.gd:39	research_bar.gd
-_above	func	scripts/tabs/personal_tab.gd:265	personal_tab.gd
+_above	func	scripts/tabs/personal_tab.gd:266	personal_tab.gd
 _above	var	scripts/tabs/piyasa_tab.gd:36	piyasa_tab.gd
 _absorb	func	scripts/systems/customer_rep_system.gd:264	CustomerRepSystem
 _absorbed	var	scripts/events/core/queue.gd:36	EvQueue
@@ -2285,7 +2285,7 @@ _met_request	func	scripts/debug/endgame_smoke.gd:29558	EndgameSmoke
 _meta	var	scripts/systems/market_catalog.gd:27	MarketCatalog
 _meta_line	func	scripts/modals/save_load_modal.gd:191	save_load_modal.gd
 _meta_line	func	scripts/tabs/sales_tab.gd:575	sales_tab.gd
-_meter	func	scripts/tabs/personal_tab.gd:160	personal_tab.gd
+_meter	func	scripts/tabs/personal_tab.gd:159	personal_tab.gd
 _migrate_11	func	scripts/autoload/save_manager.gd:630	SaveManager
 _migrate_13	func	scripts/autoload/save_manager.gd:656	SaveManager
 _migrate_14	func	scripts/autoload/save_manager.gd:664	SaveManager
@@ -2299,7 +2299,7 @@ _migrate_sector_ids	func	scripts/autoload/save_manager.gd:1103	SaveManager
 _migrate_to_rev11	func	scripts/autoload/save_manager.gd:1216	SaveManager
 _milestone_modal	var	scripts/main/main.gd:55	main.gd
 _milestone_paper	var	scripts/main/main.gd:67	main.gd
-_milestones	func	scripts/tabs/personal_tab.gd:220	personal_tab.gd
+_milestones	func	scripts/tabs/personal_tab.gd:222	personal_tab.gd
 _min_cash_pre_seed	var	scripts/debug/run_probe.gd:324	RunProbe
 _minute	var	scripts/ui/menu_backdrop.gd:26	menu_backdrop.gd
 _miss	func	scripts/systems/sprint_bugs.gd:155	SprintBugs
@@ -3489,7 +3489,7 @@ _seats_for	func	scripts/systems/sales_rep_system.gd:285	SalesRepSystem
 _second_line	func	scripts/tabs/product/board_row.gd:189	BoardRow
 _section	func	scripts/tabs/events/mail_pane.gd:721	mail_pane.gd
 _section	func	scripts/tabs/hr/hr_dossier.gd:213	hr_dossier.gd
-_section	func	scripts/tabs/personal_tab.gd:258	personal_tab.gd
+_section	func	scripts/tabs/personal_tab.gd:259	personal_tab.gd
 _section	func	scripts/tabs/product/sprint_board.gd:226	SprintBoard
 _section	func	scripts/tabs/product/sprint_next.gd:159	SprintNext
 _sections	var	scripts/menu/licenses.gd:14	licenses.gd
@@ -3637,7 +3637,7 @@ _share_at	func	scripts/autoload/rival_registry.gd:190	RivalRegistry
 _share_grid	func	scripts/tabs/finance/finance_ozet_view.gd:384	FinanceOzetView
 _share_row	func	scripts/autoload/rival_registry.gd:172	RivalRegistry
 _shares	func	scripts/tabs/product/product_model.gd:897	ProductModel
-_sheet	func	scripts/tabs/personal_tab.gd:110	personal_tab.gd
+_sheet	func	scripts/tabs/personal_tab.gd:113	personal_tab.gd
 _sheet_weeks_left	func	scripts/events/seams/seams_ported.gd:188	EvSeamsPorted
 _shell	var	scripts/main/main.gd:47	main.gd
 _shell_mounted	var	scripts/main/main.gd:49	main.gd
@@ -3727,7 +3727,7 @@ _skel	var	scripts/ui/office/office_person.gd:200	OfficePerson
 _skill_line	func	scripts/onboarding/steps/origin_traits_step.gd:242	origin_traits_step.gd
 _skill_row	func	scripts/modals/training_modal.gd:116	training_modal.gd
 _skill_row	func	scripts/onboarding/steps/origin_traits_step.gd:179	origin_traits_step.gd
-_skill_row	func	scripts/tabs/personal_tab.gd:139	personal_tab.gd
+_skill_row	func	scripts/tabs/personal_tab.gd:142	personal_tab.gd
 _skill_rows	var	scripts/onboarding/steps/origin_traits_step.gd:24	origin_traits_step.gd
 _skill_y	func	scripts/debug/endgame_smoke.gd:22219	EndgameSmoke
 _skills	func	scripts/tabs/hr/hr_dossier.gd:165	hr_dossier.gd
@@ -3831,7 +3831,7 @@ _stance	var	scripts/tabs/sales_tab.gd:42	sales_tab.gd
 _stand_figure	func	scripts/ui/menu_backdrop.gd:84	menu_backdrop.gd
 _stand_in_shell	func	scripts/debug/endgame_smoke.gd:14052	EndgameSmoke
 _stand_s	var	scripts/ui/office/office_person.gd:176	OfficePerson
-_standing	func	scripts/tabs/personal_tab.gd:176	personal_tab.gd
+_standing	func	scripts/tabs/personal_tab.gd:175	personal_tab.gd
 _star_holders	func	scripts/systems/rnd_system.gd:404	RnDSystem
 _star_value	func	scripts/systems/product_quality.gd:315	ProductQuality
 _stars	func	scripts/systems/incident_system.gd:578	IncidentSystem
