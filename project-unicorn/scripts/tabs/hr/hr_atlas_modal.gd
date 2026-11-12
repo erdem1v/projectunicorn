@@ -269,9 +269,12 @@ func _role_card(label: String, hint_text: String, lock_text: String, picked: boo
 	return card[0]
 
 
-func _first_warning(pv: Dictionary) -> String:
-	var warnings: Array = pv.get("warnings", []) as Array
-	return String(warnings[0]) if not warnings.is_empty() else ""
+## The first of `pv`'s warnings that is not one of `skip`, or "".
+func _first_warning(pv: Dictionary, skip: Array = []) -> String:
+	for w in pv.get("warnings", []) as Array:
+		if String(w) not in skip:
+			return String(w)
+	return ""
 
 
 # --- ADAY DOSYALARI (11b) ---------------------------------------------------
@@ -293,8 +296,9 @@ func _build_files_step() -> void:
 	var file: Dictionary = files[_selected_file]
 	var pv: Dictionary = HRSearchSystem.preview_hire(_selected_file)
 	var affordable: bool = bool(pv.get("affordable", false))
-	# Bir uyarı varsa seçim özetinin yerini o alır: gelir öncesi işe alım da burada söylenir.
-	var warning: String = _first_warning(pv)
+	# Bir uyarı varsa seçim özetinin yerini o alır. Gelir öncesi işe alımı dosyanın kırmızı RUNWAY satırı söyler,
+	# ayaktaki cümle onu tekrarlamaz (envanter sales-17).
+	var warning: String = _first_warning(pv, [tr("HR_WARN_NO_REVENUE")])
 	foot.add_child(UiFactory.make_label("%s · %s" % [String(file.get("name", "")),
 		String(pv.get("job_title", HRConstants.role_label(String(file.get("role", "")))))] if warning == ""
 		else warning, &"MetaMuted"))
@@ -316,12 +320,10 @@ func _file_card(index: int, file: Dictionary) -> PanelContainer:
 	var col: VBoxContainer = card[1]
 	col.add_theme_constant_override("separation", 0)
 
+	# The disc's row: the step's head already counts the files, so the card carries no "Dosya i/n" (inventory sales-14).
 	var kicker := HBoxContainer.new()
 	kicker.custom_minimum_size.y = UiTokens.D_CHECK_DISC
-	var file_n := UiFactory.make_label(Fmt.upper(tr("HR_ATLAS_FILE_N").format({"i": index + 1, "n": HRConstants.CANDIDATE_COUNT})),
-		&"KeySmall")
-	file_n.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	kicker.add_child(file_n)
+	kicker.add_child(RnDUiShared.spacer())
 	if picked:
 		kicker.add_child(_disc())
 	col.add_child(kicker)
@@ -363,14 +365,10 @@ func _file_card(index: int, file: Dictionary) -> PanelContainer:
 	col.add_child(skills)
 	col.add_child(HSeparator.new())
 
-	# Huy: adı ve etkisi.
+	# Huy: adı; etkisi huyun ipucunda (envanter sales-15).
 	var traits: Array = file.get("traits", []) as Array
 	if not traits.is_empty():
-		var trait_id: String = String(traits[0])
-		col.add_child(spaced(HRUiShared.D_trait_cell([trait_id], true), UiTokens.SPACE_L))
-		var effect := UiFactory.make_label(HRConstants.trait_effect_text(trait_id), &"Caption")
-		effect.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		col.add_child(spaced(effect, UiTokens.SPACE_XS))
+		col.add_child(spaced(HRUiShared.D_trait_cell([String(traits[0])], true), UiTokens.SPACE_L))
 
 	var stretch := Control.new()
 	stretch.custom_minimum_size.y = UiTokens.SPACE_XL
@@ -390,12 +388,12 @@ func _file_card(index: int, file: Dictionary) -> PanelContainer:
 	col.add_child(spaced(ask, UiTokens.SPACE_L))
 	# Maaşın aldığı: sprintte haftalık puan, devralacağı saatle. Satış ve müşteri rolleri sprint rolü tutmaz, ürün
 	# yöneticisi puan üretmez (haftasını sonraki sütunun kartlarını hazırlamaya verir): onların dosyasında satır yok.
-	# Fmt.number tam sayıya da ondalık yazar ("2,0"); tam puan "2".
+	# Puan tam sayıdır, 1'in altı "<1" (envanter sales-16).
 	if role_id != HRConstants.ROLE_PRODUCT_MANAGER and HRConstants.ROLE_GROUP[role_id] in [
 			HRConstants.GROUP_PRODUCT_DESIGN, HRConstants.GROUP_DEVELOPMENT]:
-		var pts: String = Fmt.number(SprintSystem.points_for(role_id, axes, int(pv["hours"])), 1)
+		var points: float = SprintSystem.points_for(role_id, axes, int(pv["hours"]))
 		col.add_child(_file_row("rail/product", UiFactory.make_label(tr("HR_ATLAS_WEEK_POINTS").format({
-			"pts": pts.trim_suffix(tr("NUM_DECIMAL_SEP") + "0")}), &"Caption"), []))
+			"pts": "<1" if points > 0.0 and points < 0.5 else str(roundi(points))}), &"Caption"), []))
 	# Komisyon bir bedeldir: bedel diskiyle, mürekkeple.
 	var commission := Fmt.money_exact(int(pv.get("commission", 0)))
 	col.add_child(_file_row("stake/cost", UiFactory.make_label(Fmt.upper(tr("HR_ATLAS_COMMISSION_LABEL")), &"KeyLabel"),

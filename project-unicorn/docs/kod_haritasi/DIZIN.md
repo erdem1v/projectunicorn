@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git 24b62b8b · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 7946ca8d · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -246,9 +246,9 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 ### scripts/tabs/finance/ (1 dosya, 590 satır)
 - scripts/tabs/finance/finance_ozet_view.gd · 590 · FinanceOzetView · Control · 0 sinyal · 25 func
 
-### scripts/tabs/hr/ (7 dosya, 2115 satır)
+### scripts/tabs/hr/ (7 dosya, 2113 satır)
 - scripts/tabs/hr/hr_assignments.gd · 188 · HRAssignments · RefCounted · 0 sinyal · 8 func
-- scripts/tabs/hr/hr_atlas_modal.gd · 490 · - · "res://scripts/tabs/hr/hr_panel.gd" · 0 sinyal · 20 func
+- scripts/tabs/hr/hr_atlas_modal.gd · 488 · - · "res://scripts/tabs/hr/hr_panel.gd" · 0 sinyal · 20 func
 - scripts/tabs/hr/hr_dossier.gd · 232 · - · VBoxContainer · 2 sinyal · 13 func
 - scripts/tabs/hr/hr_ledger.gd · 454 · HRLedger · RefCounted · 0 sinyal · 23 func
 - scripts/tabs/hr/hr_panel.gd · 132 · - · Control · 1 sinyal · 10 func
@@ -693,7 +693,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
   ↳ fit_changed connect: scripts/ui/components/window_layer.gd:169
 
 ### scripts/tabs/hr/hr_panel.gd
-- state_changed() · scripts/tabs/hr/hr_panel.gd:9 · emit: scripts/modals/training_modal.gd:174, scripts/modals/work_hours_modal.gd:491, scripts/tabs/hr/hr_atlas_modal.gd:445,471,489 · connect: scripts/tabs/hr/hr_ui_shared.gd:81
+- state_changed() · scripts/tabs/hr/hr_panel.gd:9 · emit: scripts/modals/training_modal.gd:174, scripts/modals/work_hours_modal.gd:491, scripts/tabs/hr/hr_atlas_modal.gd:443,469,487 · connect: scripts/tabs/hr/hr_ui_shared.gd:81
 
 ### scripts/tabs/hr_tab.gd
 - fit_changed() · scripts/tabs/hr_tab.gd:22 · (ad 7 yerde tanımlı)
@@ -1351,7 +1351,7 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - HR_TASK_* · 8 · scripts/systems/hr_system.gd, scripts/tabs/hr/hr_ledger.gd, scripts/debug/kit_probe.gd
 - HR_TRAINING_* · 10 · scripts/autoload/character_registry.gd, scripts/modals/training_modal.gd, scripts/tabs/hr/hr_ledger.gd, scripts/tabs/personal_tab.gd, scripts/debug/endgame_smoke.gd
 - HR_TRAIT_* · 16 · scripts/systems/hr_constants.gd
-- HR_WARN_* · 4 · scripts/systems/hr_search_system.gd
+- HR_WARN_* · 4 · scripts/systems/hr_search_system.gd, scripts/tabs/hr/hr_atlas_modal.gd
 - HUNT_BADGE_* · 8 · scripts/tabs/hunt_tab.gd, scripts/ui/meeting/vc_meeting_adapter.gd
 - HUNT_CANCEL_* · 1 · scripts/tabs/hunt_tab.gd
 - HUNT_CB_* · 4 · scripts/systems/vc_pitch_system.gd, scripts/debug/endgame_smoke.gd
@@ -1500,7 +1500,7 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - NUM_7_* · 1 · -
 - NUM_8_* · 1 · -
 - NUM_9_* · 1 · -
-- NUM_DECIMAL_* · 1 · scripts/modals/work_hours_modal.gd, scripts/tabs/hr/hr_atlas_modal.gd, scripts/tabs/product/sprint_ui_shared.gd, scripts/util/fmt.gd
+- NUM_DECIMAL_* · 1 · scripts/modals/work_hours_modal.gd, scripts/tabs/product/sprint_ui_shared.gd, scripts/util/fmt.gd
 - NUM_GROUP_* · 1 · scripts/util/fmt.gd
 - OFFICE_ACT_* · 15 · scripts/systems/hr_system.gd, scripts/ui/office/office_actor.gd
 - OFFICE_CARD_* · 10 · scripts/ui/office/office_map_card.gd

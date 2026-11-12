@@ -336,7 +336,7 @@ _build_deck	func	scripts/ui/meeting/meeting_panel.gd:294	MeetingPanel
 _build_display_section	func	scripts/modals/settings_modal.gd:122	settings_modal.gd
 _build_ending_data	func	scripts/systems/endings_system.gd:498	EndingsSystem
 _build_engraving	func	scripts/modals/ending_scene.gd:216	EndingScene
-_build_files_step	func	scripts/tabs/hr/hr_atlas_modal.gd:279	hr_atlas_modal.gd
+_build_files_step	func	scripts/tabs/hr/hr_atlas_modal.gd:282	hr_atlas_modal.gd
 _BUILD_FLAG_PREFIXES	const	scripts/autoload/save_manager.gd:817	SaveManager
 _build_foot	func	scripts/modals/term_sheet_table_scene.gd:263	TermSheetTableScene
 _build_founder	func	scripts/autoload/game_state.gd:1012	GameState
@@ -1303,8 +1303,8 @@ _displace_job	func	scripts/autoload/character_registry.gd:250	CharacterRegistry
 _display_body	var	scripts/modals/settings_modal.gd:71	settings_modal.gd
 _do_cancel_search	func	scripts/tabs/hr_tab.gd:344	hr_tab.gd
 _do_delete	func	scripts/modals/save_load_modal.gd:242	save_load_modal.gd
-_do_dismiss	func	scripts/tabs/hr/hr_atlas_modal.gd:487	hr_atlas_modal.gd
-_do_hire	func	scripts/tabs/hr/hr_atlas_modal.gd:469	hr_atlas_modal.gd
+_do_dismiss	func	scripts/tabs/hr/hr_atlas_modal.gd:485	hr_atlas_modal.gd
+_do_hire	func	scripts/tabs/hr/hr_atlas_modal.gd:467	hr_atlas_modal.gd
 _do_save	func	scripts/modals/save_load_modal.gd:228	save_load_modal.gd
 _do_sign	func	scripts/modals/term_sheet_table_scene.gd:394	TermSheetTableScene
 _do_walk	func	scripts/modals/term_sheet_table_scene.gd:415	TermSheetTableScene
@@ -1519,8 +1519,8 @@ _figure	func	scripts/tabs/product/sprint_next.gd:239	SprintNext
 _figure	var	scripts/ui/components/top_bar.gd:139	top_bar.gd
 _figure	var	scripts/ui/menu_backdrop.gd:29	menu_backdrop.gd
 _figure	func	tools/people/portrait_baker.gd:127	portrait_baker.gd
-_file_card	func	scripts/tabs/hr/hr_atlas_modal.gd:309	hr_atlas_modal.gd
-_file_row	func	scripts/tabs/hr/hr_atlas_modal.gd:429	hr_atlas_modal.gd
+_file_card	func	scripts/tabs/hr/hr_atlas_modal.gd:313	hr_atlas_modal.gd
+_file_row	func	scripts/tabs/hr/hr_atlas_modal.gd:427	hr_atlas_modal.gd
 _fill	func	scripts/modals/ending_scene.gd:116	EndingScene
 _fill_actual	func	scripts/systems/sprint_system.gd:1853	SprintSystem
 _filter	var	scripts/tabs/events_tab.gd:25	events_tab.gd
@@ -1551,7 +1551,7 @@ _first_line	func	scripts/tabs/product/board_row.gd:155	BoardRow
 _first_name	func	scripts/events/present/chips.gd:636	EvChips
 _first_revenue_day	var	scripts/debug/run_probe.gd:330	RunProbe
 _first_sign_day	var	scripts/debug/run_probe.gd:329	RunProbe
-_first_warning	func	scripts/tabs/hr/hr_atlas_modal.gd:272	hr_atlas_modal.gd
+_first_warning	func	scripts/tabs/hr/hr_atlas_modal.gd:273	hr_atlas_modal.gd
 _first_with_role	func	scripts/systems/incident_system.gd:292	IncidentSystem
 _fit	var	scripts/systems/sales_meeting_system.gd:43	SalesMeetingSystem
 _fit	func	scripts/tabs/product/board_row.gd:143	BoardRow
@@ -2505,7 +2505,7 @@ _on_day_tick_completed	func	scripts/autoload/save_manager.gd:411	SaveManager
 _on_day_tick_completed	func	scripts/debug/run_probe.gd:578	RunProbe
 _on_debug_onboarding_retrigger	func	scripts/main/main.gd:6216	main.gd
 _on_desk	func	scripts/tabs/product_tab.gd:195	product_tab.gd
-_on_dismiss_pressed	func	scripts/tabs/hr/hr_atlas_modal.gd:475	hr_atlas_modal.gd
+_on_dismiss_pressed	func	scripts/tabs/hr/hr_atlas_modal.gd:473	hr_atlas_modal.gd
 _on_duty	func	scripts/systems/hr_system.gd:279	HRSystem
 _on_equalise	func	scripts/modals/work_hours_modal.gd:483	work_hours_modal.gd
 _on_errand	func	scripts/ui/office/office_people.gd:433	OfficePeople
@@ -2521,7 +2521,7 @@ _on_gate_input	func	scripts/tabs/hunt_tab.gd:96	hunt_tab.gd
 _on_gate_reached	func	scripts/debug/run_probe.gd:570	RunProbe
 _on_goto_tab_requested	func	scripts/main/main.gd:5626	main.gd
 _on_ground	func	tools/people/portrait_baker.gd:154	portrait_baker.gd
-_on_hire_pressed	func	scripts/tabs/hr/hr_atlas_modal.gd:451	hr_atlas_modal.gd
+_on_hire_pressed	func	scripts/tabs/hr/hr_atlas_modal.gd:449	hr_atlas_modal.gd
 _on_hour	func	scripts/systems/sprint_system.gd:1902	SprintSystem
 _on_hour	func	scripts/tabs/product_tab.gd:206	product_tab.gd
 _on_hour_changed	func	scripts/tabs/sales_tab.gd:101	sales_tab.gd
@@ -2594,7 +2594,7 @@ _on_spin_finished	func	scripts/modals/term_sheet_table_scene.gd:374	TermSheetTab
 _on_sprint_closed	func	scripts/debug/run_probe.gd:555	RunProbe
 _on_sprint_closed	func	scripts/main/game_shell.gd:40	game_shell.gd
 _on_sprint_started	func	scripts/debug/run_probe.gd:535	RunProbe
-_on_start_pressed	func	scripts/tabs/hr/hr_atlas_modal.gd:443	hr_atlas_modal.gd
+_on_start_pressed	func	scripts/tabs/hr/hr_atlas_modal.gd:441	hr_atlas_modal.gd
 _on_state_changed	func	scripts/tabs/finance/finance_ozet_view.gd:99	FinanceOzetView
 _on_state_changed	func	scripts/tabs/hr_tab.gd:98	hr_tab.gd
 _on_state_changed	func	scripts/tabs/rnd_tab.gd:186	rnd_tab.gd
