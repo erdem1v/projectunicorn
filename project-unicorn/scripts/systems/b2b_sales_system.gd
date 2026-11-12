@@ -257,6 +257,27 @@ static func _tick_at_risk(c: Customer) -> void:
 	CustomerRegistry.set_churn_countdown(c.id, next_countdown)
 	if next_countdown <= 0:
 		_churn(c)
+	elif next_countdown == TimeModel.ticks(1):
+		_ask_retention(c)
+
+
+## The retention card, asked again in a Risk spell's last week when it went unanswered (_ask_retention).
+const RETENTION_CARD := "customer.retention"
+
+
+## An account does not leave from Risk unheard (Erdem, 2026-11-12, N03: "oyuncu bir şey kaçırmasın"). Entering Risk is
+## the retention card's own signal; if the card has not been answered about this account since the spell began (the
+## engine deferred it past the countdown, or it was refused or dropped), the spell's last week asks it, once: an answer
+## in the spell ("Oyala" among them) is never asked twice. Not while its paper is still on the desk or its card queued:
+## the desk's decisions open at the workday's end anyway.
+static func _ask_retention(c: Customer) -> void:
+	if not can_offer_retention(c) \
+			or EvHistory.chose_about_since(RETENTION_CARD, "customer", c.id, c.last_risk_exit_day + 1):
+		return
+	var key: String = EvLatches.key_of(RETENTION_CARD, {"customer": {"type": "customer", "id": c.id}})
+	if EvPapers.has(key) or EvQueue.holds(key):
+		return
+	EventGate.request(RETENTION_CARD, {"customer": c.id})
 
 
 # THE RETENTION PREDICATE: an active b2b account IN Risk with its countdown running, and no

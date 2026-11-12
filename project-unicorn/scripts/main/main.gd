@@ -2652,13 +2652,13 @@ func _run_travel_shot(spec: String) -> void:
 # --invite-shot=<ring|card|vc|postpone|postpone_vc|held|lapse|lapse_vc>: the call that opens an outside meeting,
 # at İş hanı with people at their desks, as the player meets it: ring = a prospect's call at 11:00 ringing over the
 # founder's head, its card shut; card = that card open; vc = a fund's call at 10:00, its card open from the
-# first ring and the clock stopped; postpone = the prospect's call put off, still ringing, the toast saying
+# first ring, the clock held (N03) and the cost chip under Ertele; postpone = the prospect's call put off, still ringing, the toast saying
 # so; postpone_vc = the fund's call put off, the ring gone and the toast saying the meeting moved on; held =
 # the prospect's card open under a clock hold, Kabul et refused, the ring and the card staying and the toast
 # saying why; lapse = the prospect's call left ringing until the founder's last entry hour has passed, then
 # the clock run as the player would and the call dropping with a toast; lapse_vc = the fund's call left
-# ringing until no sitting fits the founder's day, then the clock run and the call dropping without a toast,
-# its meeting moved on at a postponement's cost (each an INVITE line). The notice stack holds three rows (a
+# ringing and the clock asked past the founder's last sitting hour: the call holds the clock (N03), so the
+# hours do not pass, it keeps ringing and nothing is charged (each an INVITE line). The notice stack holds three rows (a
 # paper, an account at risk, someone who may leave), which an open card stands clear of or hides.
 # invite_shot_<kind>.png; a lapse saves invite_shot_<kind>_ring.png first.
 func _run_invite_shot(kind: String) -> void:
@@ -5577,7 +5577,8 @@ func _meeting_refused() -> bool:
 
 ## The fund whose meeting week has come calls while a sitting fits the founder's day, when nothing
 ## else holds the founder; a call whose moment has passed stops ringing, a prospect's with a toast saying
-## why, a fund's silently, its meeting moved on at a postponement's cost (VCPitchSystem.lapse_call).
+## why. A fund's call holds the clock until it is answered (N03), so its moment cannot pass under it; the
+## lapse (VCPitchSystem.lapse_call, a postponement's cost) is only the guard for a call cut off some other way.
 func _process(_delta: float) -> void:
 	var invite := _meeting_invite()
 	if invite == null:
@@ -5601,8 +5602,10 @@ func _process(_delta: float) -> void:
 
 
 ## The fund whose meeting week has come is on the phone, and it waits for an answer as the meeting
-## card did: the windows close, the call's card is open from the first ring and the clock stops
-## under it. It can be put off once (VCPitchSystem.postpone_call); the card says what that costs.
+## card did: the windows close, the call's card is open from the first ring and the clock is held
+## under it until Accept or Postpone (Erdem, 2026-11-12, N03: what asks for an answer stops the week), so
+## it cannot lapse unseen at the conviction cost. It can be put off once (VCPitchSystem.postpone_call); the
+## chip under Postpone says what that costs.
 func _ring_fund(vc_id: String) -> void:
 	EventBus.tab_changed.emit("")
 	var once: bool = VCPitchSystem.call_postponable()
@@ -5611,9 +5614,10 @@ func _ring_fund(vc_id: String) -> void:
 	_ring_call("vc", vc_id, fund, {"line": "MEETING_INVITE_VC", "open": true, "postpone": once,
 		"caller": lead, "vc_id": vc_id,
 		"args": {"fund": fund, "person": lead.name},
-		"note": "MEETING_POSTPONE_ONCE" if once else "MEETING_POSTPONED_ONCE",
-		"note_args": {"n": PitchConstants.MEETING_RESCHEDULE_PENALTY}, "toast": "MEETING_POSTPONED_VC"})
-	EventBus.speed_change_requested.emit(0)
+		"note": "MEETING_POSTPONE_ONCE" if once else "MEETING_POSTPONED_ONCE", "note_args": {},
+		"postpone_cost": "MEETING_POSTPONE_COST", "postpone_cost_args": {"n": PitchConstants.MEETING_RESCHEDULE_PENALTY},
+		"toast": "MEETING_POSTPONED_VC"})
+	TimeManager.hold_clock(MeetingInvite.CALL_HOLD)
 
 
 ## "Görüşmeye git" on a prospect: the windows close and the phone rings in the office, in place of
@@ -5654,6 +5658,7 @@ func _ring_call(kind: String, id: String, place: String, spec: Dictionary) -> vo
 func _end_call() -> void:
 	_meeting_invite().stop()
 	_call = {}
+	TimeManager.release_clock(MeetingInvite.CALL_HOLD)
 	get_tree().call_group(&"top_bar", &"show_meeting", "")
 
 
@@ -5662,6 +5667,7 @@ func _on_call_accepted() -> void:
 		return
 	var call := _call
 	_call = {}
+	TimeManager.release_clock(MeetingInvite.CALL_HOLD)
 	get_tree().call_group(&"top_bar", &"show_meeting", "")
 	if call.kind == "vc":
 		VCPitchSystem.begin_meeting(call.id)

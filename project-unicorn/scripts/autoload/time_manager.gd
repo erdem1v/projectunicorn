@@ -32,6 +32,8 @@ const SETTING_PAUSE_UNFOCUSED := "pause_unfocused"
 const HOLD_LABELS := {
 	"event": "GATE_ANSWER_FIRST",
 	"incident": "GATE_ANSWER_FIRST",
+	"paper": "GATE_ANSWER_FIRST",
+	"call": "GATE_ANSWER_FIRST",
 	"milestone_paper": "CLOCK_HOLD_MILESTONE",
 	"product_release_note": "CLOCK_HOLD_RELEASE_NOTE",
 	"sprint_plan": "CLOCK_HOLD_SPRINT_PLAN",

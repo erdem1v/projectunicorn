@@ -409,6 +409,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"risk_exit_stamps_day":            fail = _case_risk_exit_stamps_day()
 		"discount_row_locked_past_cap":    fail = _case_discount_row_locked_past_cap()
 		"retention_gate_shared":           fail = _case_retention_gate_shared()
+		"retention_asked_in_last_week":    fail = _case_retention_asked_in_last_week()
 		"manual_retention_respects_cap":   fail = _case_manual_retention_respects_cap()
 		"profit_condition_fires":          fail = _case_profit_condition_fires()
 		"ending_modes_by_build":           fail = _case_ending_modes_by_build()  # EXPECT-ERROR telegraph 'soft_cap_telegraphed' never did
@@ -494,6 +495,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"seed_bands_map_to_terms":               fail = _case_seed_bands_map_to_terms()
 		"seed_sheet_never_in_active_sheets":     fail = _case_seed_sheet_never_in_active_sheets()
 		"seed_table_has_no_walk":                fail = _case_seed_table_has_no_walk()  # EXPECT-ERROR walk() at a seed table
+		"seed_offer_later_returns":              fail = _case_seed_offer_later_returns()
 		"seed_sign_is_not_terminal":             fail = _case_seed_sign_is_not_terminal()
 		"seed_survives_series_a_sign":           fail = _case_seed_survives_series_a_sign()
 		"seed_expectation_grace_then_stall":     fail = _case_seed_expectation_grace_then_stall()
@@ -6242,7 +6244,7 @@ static func _case_event_no_double_resolution_after_load() -> String:
 	var a: Customer = _add_risk_b2b("twice", 800)
 	var ctx: Dictionary = _ctx_customer(a)
 	EvPapers.place(RETAIN_ID, ctx, 2)
-	EvQueue.admit(RETAIN_ID, ctx, "interrupt")   # the warning EvEngine._step_last_warnings queues
+	EvQueue.admit(RETAIN_ID, ctx, "interrupt")   # a last warning a save from before N03 may hold
 	var block: Dictionary = JSON.parse_string(JSON.stringify(EvSave.to_dict()))
 	EvSave.from_dict(block)
 	var key: String = String(EventGate.desk_papers(8)[0]["id"])
@@ -13709,6 +13711,30 @@ static func _case_discount_row_locked_past_cap() -> String:
 	return ""
 
 
+## Riskteki hesap cevapsız gitmez (N03, Erdem 2026-11-12: "oyuncu bir şey kaçırmasın"). Risk dönemi içinde `customer.retention`
+## cevaplanmamış hesap, son haftasına girdiği tikte kartı ister; dönem içinde cevaplanmış hesap (Oyala dahil) ikinci kez istemez.
+## FALSİFİKASYON: `_tick_at_risk`'teki `_ask_retention` çağrısını sil → son haftaya giren hesap sorulmaz, FAIL;
+## `chose_about_since` korumasını sil → dönemde cevaplanmış hesap yeniden sorulur, FAIL.
+static func _case_retention_asked_in_last_week() -> String:
+	_seed_b2b(500)
+	var heard: Customer = _add_risk_b2b("heard", 800)
+	EvHistory.record(RETAIN_ID, EvHistory.RESOLUTION_CHOSEN, "stall", "stall", _ctx_customer(heard), [])
+	CustomerRegistry.set_churn_countdown(heard.id, TimeModel.ticks(2))
+	B2BSalesSystem._tick_at_risk(heard)
+	var heard_key: String = EvLatches.key_of(RETAIN_ID, _ctx_customer(heard))
+	if heard.churn_countdown != TimeModel.ticks(1):
+		return "fixture: the answered account's countdown is %d, want its last week" % heard.churn_countdown
+	if EvQueue.holds(heard_key) or EvPapers.has(heard_key):
+		return "an account answered in this Risk spell was asked again in its last week"
+	var unheard: Customer = _add_risk_b2b("unheard", 800)
+	CustomerRegistry.set_churn_countdown(unheard.id, TimeModel.ticks(2))
+	B2BSalesSystem._tick_at_risk(unheard)
+	var key: String = EvLatches.key_of(RETAIN_ID, _ctx_customer(unheard))
+	if not (EvQueue.holds(key) or EvPapers.has(key)):
+		return "an account entering its last week of Risk unanswered was not asked (shown '%s')" % EventGate.active_id()
+	return ""
+
+
 static func _case_retention_gate_shared() -> String:
 	# ONE gate: healthy / countdown −1 / delegated+escalated → no card; live Risk → card.
 	var c: Customer = _seed_risk_account()
@@ -18328,7 +18354,9 @@ static func _case_event_paper_keeps_its_moment() -> String:
 	for person in [stays, shut, leaves]:
 		if not EventGate.request(CARD, {"employee": person.id}):
 			return "the paper was refused in a quarter's first week"
-	_sim_to_morning()
+	# The calendar moves on without the workday's end, which would open the three (N03): what is under test is the
+	# re-validation a paper meets when it is shown later than it came (a save from before N03 holds such papers).
+	_sim_day()
 	if bool(EvSeams.read("time.quarter_start")) or EvPapers.keys_of(CARD).size() != 3:
 		return "fixture: want the next week with three papers on the desk, have %d" % EvPapers.keys_of(CARD).size()
 	if not EventGate.open_paper(key.call(stays)):
@@ -18385,51 +18413,65 @@ static func _case_event_add_customer_signs() -> String:
 	return ""
 
 
-## Kâğıt görülmeden dolmaz: bir haftalık kâğıt son haftasının mesaisi bitince kesinti gibi açılır (masaya geri konmaz) ve motorun
-## tuttuğu saat (`EvEngine.DUE_HOLD`) cevaba kadar geceyi durdurur; cevaplanınca tutuş kalkar, gece sürer. İki haftalık kâğıt o akşam
-## açılmaz ve son haftası gece yarısı başlayınca da geceyi tutmaz: gece sabaha kadar koşar, kâğıt masada durur (sabah son uyarısıyla
-## gelir). Öznesi giden kâğıt akşam açılmaz ve süre dolumunda bedelsiz düşer (G5).
+## Cevap isteyen kâğıt haftasını geçmez (N03, Erdem 2026-11-12: "cevap verilmesi gerekenler gün bitmeden yanıtlanır, aksi halde
+## gün akamaz; yalnız bilgi mailleri bu kapsama girmez"). Mesai bitince masada duran her kâğıt, kaç haftalık olursa olsun, önce gelen
+## önce kesinti gibi açılır (masaya geri konmaz); motorun tuttuğu saat (`EvEngine.DUE_HOLD`) son kâğıt cevaplanana dek geceyi
+## durdurur, cevaplanınca kalkar ve gece sürer. Öznesi giden kâğıt akşam açılmaz ve süre dolumunda bedelsiz düşer (G5).
 ## FALSİFİKASYON: hourly_tick'teki tutuşu sil → gece kâğıdın önünden geçer, FAIL; pump'taki _due_paper dalını sil → akşam kâğıt
 ## açılmaz, FAIL; dalda kâğıdı masadan açılmış say (from_desk) → kâğıt masaya geri konur, FAIL; _due_paper'ın saat koşulunu sil →
-## iki haftalık kâğıt gece yarısından sonra açılır, FAIL; süre dolumunda on_expire'ı koş → öznesi gidenin bedeli iner, FAIL.
+## gece yarısından sonraki kâğıt yeni haftanın mesaisinden önce açılır, FAIL; _due_paper'a `weeks_left <= 1`
+## koşulunu geri koy → iki haftalık kâğıt o akşam açılmaz, FAIL; geliş sırasını sil (masanın aciliyet sırası) → bir haftalık kâğıt
+## önce açılır, FAIL; süre dolumunda on_expire'ı koş → öznesi gidenin bedeli iner, FAIL.
 static func _case_event_paper_opens_before_expiry() -> String:
 	const CARD := "fixture.due_paper"
 	const LONG := "fixture.due_paper_long"
 	var stays: Character = _make_employee("char_due_stays", "Deniz Ak", HRConstants.ROLE_DEVELOPER)
 	var leaves: Character = _make_employee("char_due_leaves", "Selin Kaya", HRConstants.ROLE_TESTER)
 	_at_work_start()
+	var now: int = MailClock.now()
 	for person in [stays, leaves]:
-		if not EventGate.request(CARD, {"employee": person.id}):
-			return "the due paper was refused"
-	if not EventGate.request(LONG, {"employee": stays.id}):
+		if not EventGate.request(CARD, {"employee": person.id}, false, now):
+			return "the one-week paper was refused"
+	# The two-week paper came half an hour earlier: the desk ranks it after the one-week ones (more weeks left), the
+	# workday's end opens it first.
+	if not EventGate.request(LONG, {"employee": stays.id}, false, now - 30):
 		return "the two-week paper was refused"
 	var day: int = GameState.day
 	var brand: int = GameState.brand
 	CharacterRegistry.remove(leaves.id)
 	TimeManager.advance_hours(TimeModel.HOURS_PER_DAY - GameState.current_hour)
-	if EventGate.active_id() != CARD or EventGate.active_context().get("employee", {}).get("id", "") != stays.id:
-		return "at the workday's end the shown card is '%s', want the due paper of the one who stayed" % EventGate.active_id()
+	if EventGate.active_id() != LONG:
+		return "at the workday's end the shown card is '%s', want the two-week paper, which came first" % EventGate.active_id()
 	if EventGate.active_from_desk() or EventGate.set_aside():
-		return "the due paper went back on the desk"
+		return "the paper went back on the desk"
 	if not TimeManager.holds().has(EvEngine.DUE_HOLD):
-		return "the open due paper does not hold the clock (holds %s)" % str(TimeManager.holds())
+		return "the open paper does not hold the clock (holds %s)" % str(TimeManager.holds())
 	TimeManager.skip_night()
 	if GameState.day != day:
 		return "the night ran past the open paper (week %d → %d)" % [day, GameState.day]
+	EventGate.resolve(LONG, "thank")
+	if EventGate.active_id() != CARD or EventGate.active_context().get("employee", {}).get("id", "") != stays.id:
+		return "after the first answer the shown card is '%s', want the one-week paper of the one who stayed" % EventGate.active_id()
+	if not TimeManager.holds().has(EvEngine.DUE_HOLD):
+		return "the second paper does not hold the clock (holds %s)" % str(TimeManager.holds())
 	EventGate.resolve(CARD, "thank")
-	if TimeManager.is_clock_held():
-		return "the clock stayed held after the paper was answered (holds %s)" % str(TimeManager.holds())
+	if TimeManager.is_clock_held() or EventGate.active_id() != "":
+		return "after the last paper the clock is held by %s and '%s' is shown" % [str(TimeManager.holds()), EventGate.active_id()]
 	TimeManager.skip_night()
 	if GameState.day == day or GameState.current_hour != TimeModel.WEEK_START_HOUR:
 		return "after the night: week %d, %d:00 (shown '%s'); want the next week's morning" % [
 			GameState.day, GameState.current_hour, EventGate.active_id()]
-	if EvPapers.keys_of(LONG).size() != 1:
-		return "the two-week paper did not stay on the desk into its last week"
 	var gone: Array = EvHistory.rows().filter(func(r: Dictionary) -> bool: return r.event_id == CARD \
 		and r.entities.get("employee", {}).get("id", "") == leaves.id)
 	if gone.size() != 1 or gone[0].resolution != EvHistory.RESOLUTION_DROPPED or gone[0].outcome_id != "G5" or GameState.brand != brand:
 		return "the paper of the one who left ended %s, brand %d → %d; want dropped at G5 at no cost" % [
 			str(gone.map(func(r: Dictionary) -> String: return "%s at %s" % [r.resolution, r.outcome_id])), brand, GameState.brand]
+	# After midnight the night is the new week's: a paper on the desk then waits for that week's workday to end.
+	EvPapers.place(CARD, {"employee": {"type": "employee", "id": stays.id}}, 1)
+	GameState.set_current_hour(2)
+	if EvEngine._due_paper() != "":
+		return "a paper opened at 02:00, before its week's workday"
+	GameState.set_current_hour(TimeModel.WEEK_START_HOUR)
 	return ""
 
 
@@ -19737,9 +19779,10 @@ static func _case_event_i4_demoted_never_dropped() -> String:
 		return "six interrupts in one day and nothing was demoted — the ceiling is %d" \
 			% EvTuning.MAX_INTERRUPTS_PER_DAY
 
-	# THE DEMOTED CARD'S CLOCK (§12.4). A two-week paper reads its last week as `expiring` and
-	# gets the last warning the tick before it expires; a one-week paper is in its last week
-	# from the start ("this week"), never reads `expiring` and expires with no warning.
+	# THE DEMOTED CARD'S CLOCK (§12.4). A two-week paper reads its last week as `expiring`; a
+	# one-week paper is in its last week from the start ("this week") and never reads `expiring`.
+	# Neither gets a last warning any more (N03: a decision is answered at its week's end, news
+	# does not interrupt).
 	var two_key: String = EvLatches.key_of("fixture.concurrent", {})
 	var one_key: String = EvLatches.key_of("fixture.hourly_ambient", {})
 	EvPapers.place("fixture.concurrent", {}, 2)
@@ -19751,11 +19794,11 @@ static func _case_event_i4_demoted_never_dropped() -> String:
 			return "a fresh %d-week paper reads %d week(s), expiring %s" % [
 				want_left, int(r["weeks_left"]), str(r["expiring"])]
 	GameState.day += 1
-	if not EvPapers.is_expiring(two_key) or not EvPapers.needing_last_warning().has(two_key):
+	if not EvPapers.is_expiring(two_key):
 		return "a two-week paper in its last week is not expiring"
 	EvEngine._step_paper_expiry()
-	if not EvQueue.holds(two_key):
-		return "the two-week paper got no last warning"
+	if EvQueue.holds(two_key) or not EvPapers.has(two_key):
+		return "the two-week paper drew a last warning or left the desk before its expiry"
 	if EvPapers.has(one_key) or EvQueue.holds(one_key):
 		return "the one-week paper outlived its week or drew a last warning"
 	return ""
@@ -21208,6 +21251,32 @@ static func _case_seed_table_has_no_walk() -> String:
 		return "walk() destroyed the seed offer"
 	if GameState.vc_rejections != rejections0:
 		return "walk() at a seed table moved the cascade counter"
+	return ""
+
+
+## Seed alınmak zorunda (Erdem, 2026-11-12, H11), kartın "Sonra"sı onu sonsuza dek erteleyemez: `funding.seed_offer` 4 haftada bir
+## döner, seed alınana kadar (yardımcı yönetmen, N03 B). "Sonra"dan üç hafta sonra kart kapalı, dördüncü hafta yine açık.
+## FALSİFİKASYON: kartın latch'ını `one_shot` yap → dördüncü hafta kart kapalı kalır, FAIL.
+static func _case_seed_offer_later_returns() -> String:
+	const CARD := "funding.seed_offer"
+	_seed_seed_world()
+	_sim_day_full()
+	if not _play_seed_meeting("anchor", ["b1_read", "b2_vizyon", "b3_durust", "b4_ack"]) or GameState.seed_sheet == null:
+		return "fixture: the seed meeting left no offer"
+	if not EventGate.request(CARD) or not _drain_to(CARD):
+		return "fixture: the seed offer card did not show"
+	EventGate.resolve(CARD, "later")
+	var latch: Dictionary = EvCatalog.card(CARD).get("latch", {})
+	var key: String = EvLatches.key_of(CARD, {})
+	var day: int = GameState.day
+	GameState.day = day + TimeModel.ticks(3)
+	if EvLatches.blocked_reason(latch, key) == "" or EvGate.propose(CARD, EvGate.Origin.TICK_DAILY, {}).admitted:
+		return "the seed offer card came back three weeks after Sonra, want four"
+	GameState.day = day + TimeModel.ticks(4)
+	var back: EvGate.Verdict = EvGate.propose(CARD, EvGate.Origin.TICK_DAILY, {})
+	if not back.admitted:
+		return "four weeks after Sonra the daily tick does not bring the seed offer back (%s: %s)" % [back.step, back.reason]
+	GameState.day = day
 	return ""
 
 

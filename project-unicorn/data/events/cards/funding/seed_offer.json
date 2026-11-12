@@ -28,7 +28,7 @@
     }
   },
   "latch": {
-    "one_shot": true
+    "cooldown_weeks": 4
   },
   "condition": {
     "all": [

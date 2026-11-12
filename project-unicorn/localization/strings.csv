@@ -1661,7 +1661,8 @@ MEETING_ACCEPT,Kabul et,Accept
 MEETING_POSTPONE,Ertele,Postpone
 MEETING_POSTPONED,Ertelendi,Postponed
 MEETING_POSTPONED_SALES,Telefon çalmaya devam ediyor.,The phone keeps ringing.
-MEETING_POSTPONE_ONCE,Toplantı yalnız bir kez ertelenebilir. Fonun bir sonraki toplantısında ikna −{n}.,The meeting can be put off only once. Conviction −{n} at this fund's next meeting.
+MEETING_POSTPONE_ONCE,Toplantı yalnız bir kez ertelenebilir.,The meeting can be put off only once.
+MEETING_POSTPONE_COST,Bu fonda ikna −{n},Conviction −{n} with this fund
 MEETING_POSTPONED_ONCE,Bu toplantı bir kez ertelendi; bir daha ertelenemez.,This meeting was put off once; it can't be put off again.
 MEETING_POSTPONED_VC,Toplantı gelecek haftaya ertelendi. Bir daha ertelenemez.,The meeting moved to next week. It can't be put off again.
 MEETING_BACK_ASK,Nasıl geçti?,How did it go?

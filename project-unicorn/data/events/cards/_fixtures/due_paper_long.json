@@ -47,5 +47,5 @@
   "expires_weeks": 2,
   "on_expire": { "penalties": [] },
   "expire_note": "expire_note",
-  "_note": "The second subject of `event_paper_opens_before_expiry`: its last week starts at the night's rollover, and the night after midnight must not open it."
+  "_note": "The second subject of `event_paper_opens_before_expiry`: a paper that lives two weeks still opens at its first workday's end (N03), and it came first."
 }

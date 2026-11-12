@@ -5,7 +5,7 @@ extends RefCounted
 # "Süresi olmayan şey kağıt değildir" (§12.1) — which is why the model needs no capacity cap:
 # papers leave on their own.
 #
-# A PAPER NEVER EXPIRES UNSEEN: once its last week's workday ends it opens and must be answered (EvEngine._due_paper). One
+# A PAPER NEVER EXPIRES UNSEEN: once its week's workday ends it opens and must be answered (EvEngine._due_paper). One
 # still on the desk at its tick was never shown for a reason that held (its subject left, its state lapsed): it drops at no
 # cost, history `dropped` (engine GDD §27.49). Lint still asks for the on_expire trio (§17.7).
 #
@@ -74,9 +74,8 @@ static func weeks_left(key: String) -> int:
 	return int((_papers[key] as Dictionary)["expires_on"]) - GameState.day
 
 
-## In its last EXPIRY_URGENT_WEEKS, when it lived longer than that: the desk highlights it, the
-## queue ranks it first and the last warning fires. A paper whose whole life fits inside says
-## "this week" from the start and gets neither.
+## In its last EXPIRY_URGENT_WEEKS, when it lived longer than that: the desk highlights it and the
+## queue ranks it first. A paper whose whole life fits inside says "this week" from the start.
 static func is_expiring(key: String) -> bool:
 	if not _papers.has(key):
 		return false
@@ -98,18 +97,6 @@ static func take_expired() -> Array:
 	if not expired.is_empty():
 		EventBus.desk_changed.emit()
 	return expired
-
-
-## Keys of the expiring papers one tick from expiry, for §12.4's last-warning interrupt. §20 B11:
-## the warning comes first and the expiry the tick after; if the warning cannot fire, the expiry
-## still does.
-static func needing_last_warning() -> Array:
-	var out: Array = []
-	for key in _papers:
-		if weeks_left(key) == 1 and is_expiring(key):
-			out.append(key)
-	out.sort()
-	return out
 
 
 # --- What the desk shows ---------------------------------------------------

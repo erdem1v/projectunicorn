@@ -181,7 +181,7 @@ Tüm anahtarlar `localization/strings.csv`'de. Türetilmiş anahtarlarda sabit m
 Hepsi `tools/smoke_run.sh <vaka>` ile (komutlar `project-unicorn/`'dan, `GODOT` ortam değişkeni şart; bkz. CLAUDE.md §12). Tam paket yalnız push öncesi; eşleşme tablosu `scripts/debug/endgame_smoke.gd` içindeki `match case_name`.
 - Yaşam döngüsü: `b2b_lifecycle_and_countdown`, `b2b_onboarding_grace_floor`, `risk_reentry_hysteresis`, `risk_exit_stamps_day`, `recover_preserves_onboarding`, `b2b_ignore_then_churn`, `b2b_expansion_no_refire`
 - Memnuniyet ve ürün uyumu: `b2b_account_reads_fit`, `account_uses_area_rule`, `fit_account_ref`, `bug_cost_b2b_account_lines`, `satisfaction_seam_emits`, `b2b_satisfaction_leaves_b2c_identical`
-- Elde tutma: `b2b_retention_routes_seams`, `retention_gate_shared`, `discount_cap_two_uses`, `manual_retention_respects_cap`
+- Elde tutma: `b2b_retention_routes_seams`, `retention_gate_shared`, `discount_cap_two_uses`, `manual_retention_respects_cap`, `retention_asked_in_last_week`
 - Söz: `b2b_promise_kept_on_ship`, `b2b_promise_broken_on_deadline`, `promise_relock_after_break`, `promise_extend_once`
 - Sunucu maddesi ve olay fiilleri: `enterprise_clause_timeline`, `b2b_exit_notice` (maddeden bağımsız bildirim), `b2b_timed_discount`, `sales_offer_signing` (aday teklifi, `drop_prospect`, `rep_lead` / `lead_rep`),
   ↳ `sales_promise_late_request_card` (`musteri.promise_late` istek kartını kademesinden bulur)
@@ -242,6 +242,7 @@ Hepsi `tools/smoke_run.sh <vaka>` ile (komutlar `project-unicorn/`'dan, `GODOT` 
 - `rep_discount_requested` yayılır ama fiyat kırma kartı (`SalesConstants.PRICE_BREAK_CARD_ID`) `EventGate.request` ile istenmez; `signing_discount` bu yüzden hep 0 (`sales_finalizer.gd:84` DESIGN-PARKED notu).
 - Fesih bildirimi iki ayrı yoldur: sunucu maddesininki (`clause_due_day` + `notice_end_day`, `meet_clauses` geri alır) ve olayınki (`exit_notice_*`, hiçbir şey geri almaz, maddesiz hesap da gider);
   ↳ `give_notice` ikisinden biri varsa reddeder, olay bildirimi süren hesapta madde yeni bildirim yazmaz (`_tick_customer`), `musteri.has_notice` ikisini de sayar. Süre bitince iki yol da `_remove_lost`a varır: marka cezası yoktur
+- Riskteki hesap cevapsız gitmez (N03): Risk dönemi içinde `customer.retention` cevaplanmadıysa sayacın son haftasına girilen tik kartı ister, bir kez (`_ask_retention`; dönem içindeki cevap `EvHistory.chose_about_since` ile `last_risk_exit_day`'den beri okunur)
 - Süreli indirimde MRR yüzde olarak değil çekilen TUTAR olarak saklanır; `expand` ve `apply_discount` MRR'a yazmaya devam eder,
   ↳ bitişte yalnız çekilen tutar geri eklenir (`CustomerRegistry.set_timed_discount` MRR'ı kesintinin değişimi kadar oynatır). İkinci bir süreli indirim ilkinin yerine geçer (tutar yeniden hesaplanır, eskisi hemen geri verilir)
 - Aday teklifi imzada okunur (`add_b2b_customer` sonu), iki imza yolu da oradan geçer; teklifin sözü `PromiseRegistry.create` ile açılır (`accept_promise` değil: o riskteki hesabı da toparlar),

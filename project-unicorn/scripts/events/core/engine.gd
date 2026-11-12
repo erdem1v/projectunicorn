@@ -41,7 +41,7 @@ const DEFERRABLE_ORIGINS := [EvGate.Origin.SIGNAL, EvGate.Origin.SCHEDULE,
 
 ## Signals proposed during the systems' own slots, drained at step (g).
 static var _signal_buffer: Array = []
-## The clock hold a paper due at the night's rollover takes until it is answered (_due_paper).
+## The clock hold the desk's decisions take at the workday's end until each is answered (_due_paper).
 const DUE_HOLD := "paper"
 
 ## Total ticks the floor was reached and found nothing; the harness reports it.
@@ -98,14 +98,14 @@ static func hourly_tick(_hour: int) -> void:
 	_step_tick_proposals(EvGate.Origin.TICK_HOURLY, "hourly")
 	_step_pool("hourly")
 	_step_assign_classes()
-	# The night's batch stops at the hour a due paper is found, as at an emergency's; pump opens the paper.
+	# The night's batch stops at the hour a paper falls due, as at an emergency's; pump opens the paper.
 	if _due_paper() != "":
 		TimeManager.hold_clock(DUE_HOLD)
 	pump()
 
 
-## The night is about to run its hours (TimeManager.skip_night): a due paper holds it before the first step, which for a workday
-## ending at 24:00 is the rollover itself.
+## The night is about to run its hours (TimeManager.skip_night): a paper still asking for an answer holds it before the first
+## step, which for a workday ending at 24:00 is the rollover itself.
 static func before_night() -> void:
 	if _due_paper() != "":
 		TimeManager.hold_clock(DUE_HOLD)
@@ -115,31 +115,16 @@ static func before_night() -> void:
 # --- (a) Paper expiry ------------------------------------------------------
 
 static func _step_paper_expiry() -> void:
-	# §20 B11: the last warning comes first and the expiry the tick after.
-	_step_last_warnings()
-
-	# A paper still standing at its last evening was opened and answered then (_due_paper), so one that reaches its tick was
-	# never in front of the player for a reason that held: its subject left or its state lapsed. It drops, and nothing it
-	# would have cost lands, since the player never saw that cost. History names the refusing step.
+	# Every paper on the desk is opened and answered at its week's end (_due_paper), so one that reaches its tick never stood
+	# in front of the player for a reason that held: its subject left or its state lapsed. It drops, and nothing it would have
+	# cost lands, since the player never saw that cost. History names the refusing step. No paper outlives its week, so no
+	# paper needs a last warning.
 	for paper in EvPapers.take_expired():
 		var event_id: String = String(paper["event_id"])
 		var context: Dictionary = paper["context"]
 		var verdict: EvGate.Verdict = EvGate.revalidate(event_id, context)
 		EvHistory.record(event_id, EvHistory.RESOLUTION_DROPPED, "", "unseen" if verdict.admitted else verdict.step, context, [],
 			String(paper["arc_id"]))
-
-
-static func _step_last_warnings() -> void:
-	for key in EvPapers.needing_last_warning():
-		if EvQueue.holds(key):
-			continue                      # already in front of the player
-		var event_id: String = EvPapers.event_id_of(key)
-		var context: Dictionary = EvPapers.context_of(key)
-		# A paper whose subject died overnight gets no last warning; it drops at its expiry.
-		if not EvGate.revalidate(event_id, context).admitted:
-			continue
-		EvQueue.admit(event_id, context, "interrupt", EvPapers.arc_of(key), MailClock.now(), true)
-		_today_admissions.append({"event_id": event_id, "context": context})
 
 
 static func _touches_arc(effects: Array) -> bool:
@@ -780,20 +765,26 @@ static func open_paper(key: String) -> bool:
 	return true
 
 
-## A decision never expires unseen: once the workday of a paper's last week has ended, before the night's rollover could expire
-## it, the first one still standing (this key, "" for none) opens as an interrupt. It cannot go back on the desk, and the clock
-## stays held (DUE_HOLD) until no such paper is left. After midnight the night belongs to the new week, whose papers have it
-## all ahead. A paper whose subject left or whose state lapsed is not opened; it drops at its expiry at no cost.
+## The week does not end on an unanswered decision (Erdem, 2026-11-12, N03: "cevap verilmesi gerekenler gün bitmeden
+## yanıtlanır, aksi halde gün akamaz; yalnız bilgi mailleri bu kapsama girmez"). Through the workday the clock runs and papers
+## wait on the desk; once it has ended, before the night's rollover, every paper still standing opens as an interrupt, one at a
+## time, the first to arrive first (this key, "" for none). It cannot go back on the desk, and the clock stays held (DUE_HOLD)
+## until none is left. A one-option paper opens too: its option still carries what the moment does (an arc's start, someone
+## leaving, a price cut), and news leaves the desk as mail, not by being let lapse. After midnight the night belongs to the new
+## week, whose papers have its workday ahead. A paper whose subject left or whose state lapsed is not opened; it drops at no cost.
 static func _due_paper() -> String:
 	if not TimeManager.is_night() or GameState.current_hour < TimeModel.WEEK_START_HOUR:
 		return ""
-	for key in EvPapers.visible(-1):
-		if EvPapers.weeks_left(key) <= 1 and EvGate.revalidate(EvPapers.event_id_of(key), EvPapers.context_of(key)).admitted:
+	var keys: Array = EvPapers.visible(-1)
+	keys.sort_custom(func(a: String, b: String) -> bool:
+		return [EvPapers.admitted_day_of(a), EvPapers.at_of(a), a] < [EvPapers.admitted_day_of(b), EvPapers.at_of(b), b])
+	for key in keys:
+		if EvGate.revalidate(EvPapers.event_id_of(key), EvPapers.context_of(key)).admitted:
 			return key
 	return ""
 
 
-## The paper becomes the shown card. Its last warning may wait in the queue beside it (a night's save keeps both): it is this
+## The paper becomes the shown card. A last warning from a save made before N03 may wait in the queue beside it: it is this
 ## instance, picked up now, or it would come straight back after the paper is answered or put aside.
 static func _show_paper(key: String, from_desk: bool) -> void:
 	var event_id: String = EvPapers.event_id_of(key)

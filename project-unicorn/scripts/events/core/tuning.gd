@@ -132,9 +132,8 @@ const EXPIRY_DEFAULT_WEEKS := 1
 const EXPIRY_MONEY_WEEKS := 4
 const EXPIRY_LOW_STAKES_WEEKS := 2
 
-## The last weeks of a paper that lived longer than this: the desk highlights them, the queue
-## ranks the paper as expiring and the last warning fires. A paper whose whole life fits inside
-## says "this week" from the start and gets no separate warning.
+## The last weeks of a paper that lived longer than this: the desk highlights them and the queue
+## ranks the paper as expiring. A paper whose whole life fits inside says "this week" from the start.
 const EXPIRY_URGENT_WEEKS := 1
 
 # --- §10.5 Arcs ------------------------------------------------------------

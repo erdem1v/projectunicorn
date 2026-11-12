@@ -14,9 +14,13 @@ extends Control
 signal accepted
 signal postponed
 
+## The clock hold a fund's call takes until it is answered (main.gd rings it; N03). Accept looks past it.
+const CALL_HOLD := "call"
 ## The card stands right of the ring, its head this far above the ring's centre, clear of the notice stack.
 const CARD_RISE := 88.0
 const POSTPONE_GLYPH := preload("res://assets/icons/util/calendar.svg")
+## The event chip's look, for the cost under Postpone.
+const PANE := preload("res://scripts/tabs/events/mail_pane.gd")
 ## The camera closes on the founder as the phone starts: aimed this high above their feet, this
 ## much closer than the office's fit, over this long.
 const FOCUS_RISE := 0.9
@@ -34,6 +38,7 @@ var _title: Label
 var _line: Label
 var _accept_button: Button
 var _postpone_button: Button
+var _postpone_cost: HBoxContainer   # the chip under Postpone: what putting the call off costs
 var _note: VBoxContainer
 var _note_text: Label
 ## The call as rung (ring()): its caller, its line, the note's and the toast line's keys and their
@@ -77,6 +82,9 @@ func _ready() -> void:
 	_postpone_button = SprintUiShared.button("", &"SecondaryButtonSmall", _postpone)
 	keys.add_child(_postpone_button)
 	col.add_child(SprintUiShared.pad(keys, Vector4i(0, UiTokens.SPACE_XS, 0, 0)))
+	_postpone_cost = SprintUiShared.box(0)
+	_postpone_cost.alignment = BoxContainer.ALIGNMENT_END
+	col.add_child(_postpone_cost)
 	_note = SprintUiShared.column(UiTokens.SPACE_L)
 	_note.add_child(HRUiShared.hairline(UiTokens.D_LINE_1))
 	_note_text = SprintUiShared.prose("", &"Caption")
@@ -90,9 +98,10 @@ func _ready() -> void:
 
 ## Rings for a call, `spec`: `caller` (the one calling, as CounterpartSystem draws them), `vc_id` (their fund
 ## on a fund's call, "" otherwise), `line` (the caller's line, a key formatted with `args`), `open` (the card is
-## open from the first ring), `postpone` (the call can be put off), `note` (a key under the buttons, formatted
-## with `note_args`; "" for none), `toast` (the key of the toast's line when it is put off) and `kind` ("vc", or
-## "sales" for a meeting the player asked for, which the kicker says).
+## open from the first ring), `postpone` (the call can be put off), `postpone_cost` (the key of the chip under
+## Postpone, formatted with `postpone_cost_args`; absent for none), `note` (a key under the buttons, formatted with `note_args`; "" for
+## none), `toast` (the key of the toast's line when it is put off) and `kind` ("vc", or "sales" for a meeting the
+## player asked for, which the kicker says).
 func ring(spec: Dictionary) -> void:
 	_spec = spec
 	UiFactory.clear(_who)
@@ -106,6 +115,7 @@ func ring(spec: Dictionary) -> void:
 	_who.add_child(words)
 	_retranslate()
 	_postpone_button.visible = spec.postpone
+	_postpone_cost.visible = spec.postpone and spec.has("postpone_cost")
 	_note.visible = spec.note != ""
 	_ring.visible = true
 	_card.visible = spec.open
@@ -174,6 +184,10 @@ func _retranslate() -> void:
 	_title.text = CounterpartSystem.title(_spec.caller, _spec.vc_id)
 	_line.text = tr(_spec.line).format(_spec.args)
 	_note_text.text = tr(_spec.note).format(_spec.note_args) if _spec.note != "" else ""
+	UiFactory.clear(_postpone_cost)
+	if _spec.has("postpone_cost"):
+		_postpone_cost.add_child(PANE.chip({"polarity": "cost", "glyph": "cost",
+			"label": tr(_spec.postpone_cost).format(_spec.postpone_cost_args), "value": ""}))
 
 
 ## The card opens at the hour of the click.
@@ -182,9 +196,10 @@ func _open_card() -> void:
 	_card.visible = true
 
 
-## A held clock does not take the call: the ring and the card stay, the shell's toast says why.
+## A clock held by anything but the call itself does not take the call: the ring and the card stay, the shell's
+## toast says why.
 func _accept() -> void:
-	if TimeManager.is_clock_held():
+	if EventGate.active_id() != "" or TimeManager.holds().any(func(reason: String) -> bool: return reason != CALL_HOLD):
 		get_tree().call_group(&"game_shell", &"say_held")
 		return
 	stop()

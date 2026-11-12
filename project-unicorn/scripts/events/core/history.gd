@@ -140,6 +140,13 @@ static func chose_about(event_id: String, slot: String, entity_id: String) -> bo
 	return false
 
 
+## Was this event answered with that entity in that slot on `day` or after? What asks a spell's question once (an account's
+## Risk spell, B2BSalesSystem._ask_retention).
+static func chose_about_since(event_id: String, slot: String, entity_id: String, day: int) -> bool:
+	return _rows_for(event_id).any(func(row: Dictionary) -> bool: return int(row["day"]) >= day \
+		and String(row["resolution"]) == RESOLUTION_CHOSEN and String(row["entities"].get(slot, {}).get("id", "")) == entity_id)
+
+
 ## Did any telegraph for this loss fire? I3's runtime half (§8.4): a telegraph is either a flag
 ## ("flag:" prefix, lint's spelling) or an event that resolved.
 ##

@@ -61,7 +61,7 @@ static func assign(admissions: Array) -> Array:
 		var final_class: String = declared
 
 		if EvPapers.has(key) and EvQueue.holds(key):
-			# §13.5: a paper's last warning, re-queued as an interrupt. It recognises no
+			# §13.5: a paper's last warning, re-queued as an interrupt (only a save from before N03 still holds one). It recognises no
 			# budget, and it is the same paper, so it is not recorded a second time either.
 			out.append({"event_id": event_id, "key": key, "class": "interrupt", "exempt": true})
 			continue
