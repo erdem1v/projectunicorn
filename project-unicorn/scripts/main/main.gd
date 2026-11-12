@@ -2474,8 +2474,8 @@ func _shot_toasts(view: Control) -> void:
 	var invite: MeetingInvite = view.invite
 	var caller: Dictionary = CounterpartSystem.lead(SHOT_FUND)
 	for kind in ["sales", "vc"]:
-		invite.ring({"kind": kind, "caller": caller, "vc_id": SHOT_FUND, "line": "MEETING_INVITE_SALES",
-			"args": {}, "open": false, "postpone": true, "note": "", "note_args": {},
+		invite.ring({"kind": kind, "caller": caller, "vc_id": SHOT_FUND, "line": "",
+			"open": false, "postpone": true, "note": "", "note_args": {},
 			"toast": "MEETING_POSTPONED_" + kind.to_upper()})
 		invite._postpone()
 		await _toast_frame("postponed_" + kind)
@@ -5748,9 +5748,8 @@ func _on_pitch_requested(prospect_id: String) -> void:
 	EventBus.tab_changed.emit("")
 	var p: Prospect = ProspectRegistry.get_prospect(prospect_id)
 	var buyer: Dictionary = CounterpartSystem.prospect_people(p)[0]
-	_ring_call("sales", prospect_id, p.company_name, {"line": "MEETING_INVITE_SALES", "open": false, "postpone": true,
+	_ring_call("sales", prospect_id, p.company_name, {"line": "", "open": false, "postpone": true,
 		"caller": buyer, "vc_id": "",
-		"args": {"company": p.company_name, "person": buyer.name},
 		"note": "", "note_args": {}, "toast": "MEETING_POSTPONED_SALES"})
 	if invite.can_ring():
 		EventBus.speed_change_requested.emit(0)
