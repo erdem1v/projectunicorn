@@ -2628,7 +2628,7 @@ PRODUCT_SERVER_TIER_SWITCH,Geç,Switch
 PRODUCT_SERVER_LOCK_REASON,"Sunucu sözleşmen sürüyor, kademe {weeks} daha değişmez.",Your server contract is running; the tier stays fixed for another {weeks}.
 PRODUCT_FLAG_DEADLINE,{customer} · {request} · son tarih,{customer} · {request} · deadline
 PRODUCT_THIS_QUARTER,Bu çeyrek,This quarter
-PRODUCT_PM,PM,PM
+PRODUCT_QUARTER_PM_TIP,PM'in önerisi,Your PM's proposal
 PRODUCT_APPROVE,Onayla,Approve
 PRODUCT_EDIT,Düzenle,Edit
 PRODUCT_APPROVE_ALL,Hepsini onayla,Approve all

@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git e72ea73f · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git fb4347cc · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -255,21 +255,21 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/tabs/hr/hr_popover.gd · 113 · HRPopover · Control · 0 sinyal · 8 func
 - scripts/tabs/hr/hr_ui_shared.gd · 506 · HRUiShared · RefCounted · 0 sinyal · 32 func
 
-### scripts/tabs/product/ (16 dosya, 5244 satır)
+### scripts/tabs/product/ (16 dosya, 5249 satır)
 - scripts/tabs/product/area_panel.gd · 393 · AreaPanel · MarginContainer · 4 sinyal · 25 func
 - scripts/tabs/product/board_row.gd · 551 · BoardRow · PanelContainer · 1 sinyal · 32 func
 - scripts/tabs/product/capacity_view.gd · 332 · CapacityView · PanelContainer · 1 sinyal · 21 func
 - scripts/tabs/product/card_tip.gd · 150 · CardTip · RefCounted · 0 sinyal · 11 func
 - scripts/tabs/product/overview_view.gd · 96 · - · HBoxContainer · 1 sinyal · 6 func
 - scripts/tabs/product/product_model.gd · 1208 · ProductModel · RefCounted · 0 sinyal · 68 func
-- scripts/tabs/product/quarter_view.gd · 192 · QuarterView · VBoxContainer · 2 sinyal · 7 func
+- scripts/tabs/product/quarter_view.gd · 195 · QuarterView · VBoxContainer · 2 sinyal · 7 func
 - scripts/tabs/product/sprint_board.gd · 349 · SprintBoard · VBoxContainer · 2 sinyal · 16 func
 - scripts/tabs/product/sprint_card.gd · 32 · SprintCard · PanelContainer · 0 sinyal · 1 func
 - scripts/tabs/product/sprint_foot.gd · 148 · SprintFoot · HBoxContainer · 1 sinyal · 10 func
 - scripts/tabs/product/sprint_head.gd · 106 · SprintHead · HBoxContainer · 1 sinyal · 6 func
 - scripts/tabs/product/sprint_next.gd · 344 · SprintNext · ScrollContainer · 1 sinyal · 21 func
 - scripts/tabs/product/sprint_panel.gd · 324 · SprintPanel · HBoxContainer · 2 sinyal · 15 func
-- scripts/tabs/product/sprint_ui_shared.gd · 563 · SprintUiShared · RefCounted · 0 sinyal · 48 func
+- scripts/tabs/product/sprint_ui_shared.gd · 565 · SprintUiShared · RefCounted · 0 sinyal · 48 func
 - scripts/tabs/product/stage_paint.gd · 340 · StagePaint · Control · 0 sinyal · 21 func
 - scripts/tabs/product/type_picker.gd · 116 · TypePicker · VBoxContainer · 1 sinyal · 4 func
 
@@ -1644,13 +1644,13 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - PRODUCT_PERSON_* · 2 · scripts/tabs/product/capacity_view.gd, scripts/tabs/product/sprint_ui_shared.gd
 - PRODUCT_PHASE_* · 3 · scripts/tabs/product/sprint_ui_shared.gd
 - PRODUCT_PLAN_* · 1 · scripts/tabs/product/sprint_panel.gd
-- PRODUCT_PM_* · 3 · scripts/tabs/product/quarter_view.gd, scripts/tabs/product/sprint_next.gd, scripts/tabs/product/sprint_ui_shared.gd
+- PRODUCT_PM_* · 2 · scripts/tabs/product/sprint_next.gd, scripts/tabs/product/sprint_ui_shared.gd
 - PRODUCT_PREP_* · 1 · scripts/tabs/product/sprint_next.gd
 - PRODUCT_PREPARED_* · 1 · scripts/tabs/product/card_tip.gd
 - PRODUCT_PREPARING_* · 2 · scripts/tabs/product/sprint_next.gd
 - PRODUCT_PRESS_* · 5 · scripts/systems/sprint_bridges.gd, scripts/tabs/product/sprint_panel.gd
 - PRODUCT_PROGRESS_* · 2 · scripts/tabs/product/sprint_foot.gd
-- PRODUCT_QUARTER_* · 7 · scripts/tabs/product/product_model.gd, scripts/tabs/product/sprint_head.gd, scripts/tabs/product/sprint_ui_shared.gd, scripts/tabs/product_tab.gd
+- PRODUCT_QUARTER_* · 8 · scripts/tabs/product/product_model.gd, scripts/tabs/product/quarter_view.gd, scripts/tabs/product/sprint_head.gd, scripts/tabs/product/sprint_ui_shared.gd, scripts/tabs/product_tab.gd
 - PRODUCT_READY_* · 1 · scripts/tabs/product/sprint_next.gd
 - PRODUCT_RELEASE_* · 5 · scripts/systems/sprint_bridges.gd, scripts/tabs/product/sprint_panel.gd
 - PRODUCT_REMOVE_* · 1 · scripts/tabs/product/sprint_ui_shared.gd

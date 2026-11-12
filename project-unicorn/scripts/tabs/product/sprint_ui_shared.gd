@@ -96,12 +96,14 @@ static func squares(level: float, px: int, color: Color, count := 3) -> Control:
 	return s
 
 
-## Kapasite çubuğu ve "kullanılan/toplam"; aşımda sayı da uyarı renginde.
+## Kapasite çubuğu ve tam sayıyla "kullanılan/toplam" ("62/57"; ondalık çubukta kalır); gösterilen kullanılan toplamı aşınca
+## sayı da uyarı renginde.
 static func capacity_row(cap: Dictionary, value_variation: StringName) -> HBoxContainer:
 	var row := box(UiTokens.SPACE_L)
 	row.add_child(CapacityBar.new(cap))
-	row.add_child(label("%s/%s" % [points(cap.used), points(cap.total)], value_variation,
-		UiTokens.D_warn() if cap.state == "over" else null))
+	var used: int = roundi(float(cap.used))
+	var total: int = roundi(float(cap.total))
+	row.add_child(label("%d/%d" % [used, total], value_variation, UiTokens.D_warn() if used > total else null))
 	return row
 
 

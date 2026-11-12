@@ -184,7 +184,10 @@ func _header(col: Dictionary) -> VBoxContainer:
 		title.add_child(SprintUiShared.label(Fmt.upper(tr("PRODUCT_THIS_SPRINT")), &"KeySmall"))
 	if col.pm:
 		title.add_child(RnDUiShared.spacer())
-		title.add_child(UiFactory.D_tag(tr("PRODUCT_PM"), &"neutral"))
+		var pm_mark := UiFactory.make_glyph(SprintUiShared.ROLE_ICONS.product, UiTokens.D_ICON_ROW, UiTokens.D_INK_3)
+		pm_mark.mouse_filter = Control.MOUSE_FILTER_PASS
+		pm_mark.tooltip_text = tr("PRODUCT_QUARTER_PM_TIP")
+		title.add_child(pm_mark)
 	if col.capacity != null:
 		head.add_child(SprintUiShared.capacity_row(col.capacity, &"DataStrong"))
 	for flag in col.flags:
