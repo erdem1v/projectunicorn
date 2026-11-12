@@ -110,8 +110,10 @@ sızamaz. Sıra:
    - temalar: `-s res://scripts/theme/build_theme.gd`, ardından `theme_check`.
    `build_theme.gd` ya da `ui_tokens.gd` değişen commit'te `THEME_STAMP` HEAD'deki değerin bir fazlası olur; kendi
    kopyandaki değer esas alınmaz.
-4. **Kapılar:** birleşik ağaçta `--headless --import` ve dokunulan sistemin smoke'u, kendi APPDATA'nla (§5). Kapı
-   içinde yalnız headless koşu yapılır. Görsel kabul ve ekranlı koşular kapıdan **önce** biter.
+4. **Kapılar:** birleşik ağaçta `--headless --import`, ısınma, `bin/hizli.sh <etiket> <HEAD>` (K0 + K2; yeşil kaydı
+   olmadan `commit.sh` commit etmez, çıkış 3) ve dokunulan sistemin smoke'u, kendi APPDATA'nla (§5). `hizli.sh`
+   KIRMIZI-HEAD basarsa yardımcı yönetmene yaz; HEAD'i kıranın düzeltmesi dışında commit yok. Kapı içinde yalnız
+   headless koşu yapılır. Görsel kabul ve ekranlı koşular kapıdan **önce** biter.
 5. **Özel index:**
    ```
    export GIT_INDEX_FILE=<scratchpad>/idx
@@ -162,7 +164,8 @@ Kilit klasörleri burada (PowerShell'de aynı yol ters bölüyle):
   mkdir -p "$K" && mkdir "$K/<kilit>" && echo "<ETIKET> <iş> $(date +%FT%T) pid=<pid>" > "$K/<kilit>/sahip"
   ```
   İkinci `mkdir` başarısızsa kilit başkasındadır.
-- **Bırakmak:** `rm "$K/<kilit>/sahip" && rmdir "$K/<kilit>"`.
+- **Bırakmak:** `rm "$K/<kilit>/sahip" && rmdir "$K/<kilit>"`. Yalnız kilidi kendin aldıysan ve sahip satırı seninse
+  bırakılır; betikte bırakma adımı koşulsuz olmaz (2026-11-12: koşulsuz bırakma başkasının `kapi`'sini sildi).
 - **Beklemek:** arka planda ya da Monitor'la `until mkdir "$K/<kilit>" 2>/dev/null; do sleep 30; done`. Ön planda `sleep`
   yok. Beklerken başka işe geçilir.
 - **Sıra:**

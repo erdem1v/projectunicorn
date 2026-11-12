@@ -12,7 +12,7 @@ while read -r flag lang scale; do
   name="$(echo "${flag#--}" | tr '=:' '__')_${lang}${scale:+_$scale}"
   extra=(--lang="$lang"); [ -n "$scale" ] && extra+=(--shot-scale="$scale")
   rm -f "$udir"/*.png
-  ( cd "$tree" && APPDATA="$(cygpath -w "$ad")" timeout 300 "$GODOT" --path . --audio-driver Dummy "$flag" "${extra[@]}" > "$out/$name.log" 2>&1 ); rc=$?
+  ( cd "$tree" && APPDATA="$(cygpath -w "$ad")" timeout 300 "$GODOT" --path . --screen "${SCREEN:-2}" --audio-driver Dummy "$flag" "${extra[@]}" > "$out/$name.log" 2>&1 ); rc=$?
   n=0; for f in "$udir"/*.png; do [ -e "$f" ] || continue; mv "$f" "$out/${name}__$(basename "$f")"; n=$((n+1)); done
   echo "SHOT|$name|rc=$rc|png=$n|script_err=$(grep -ac 'SCRIPT ERROR' "$out/$name.log")|err=$(grep -a '^ERROR' "$out/$name.log" | grep -vc 'resources still in use')|$(grep -a '^PRODUCTSHOT' "$out/$name.log" | tr -d '\r')" | tee -a "$out/results.txt"
 done < "$list"
