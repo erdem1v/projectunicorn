@@ -640,10 +640,10 @@ HR_COST_HIRING,İşe alım,Hiring
 HR_COST_SEVERANCE,Kıdem tazminatı,Severance
 HR_COST_TRAINING,Eğitim ücreti,Training fee
 HR_LABEL_HR,İK,HR
-WORLD_OUTLET_EKONOMI,Ekonomi Postası,Ekonomi Postası
-WORLD_OUTLET_TEKNOGUNDEM,TeknoGündem,TeknoGündem
-WORLD_OUTLET_GIRISIM,Girişim Bülteni,Girişim Bülteni
-WORLD_OUTLET_SEKTOR,Sektör Telgrafı,Sektör Telgrafı
+WORLD_OUTLET_EKONOMI,Ekonomi Postası,Economy Post
+WORLD_OUTLET_TEKNOGUNDEM,TeknoGündem,TechAgenda
+WORLD_OUTLET_GIRISIM,Girişim Bülteni,Startup Bulletin
+WORLD_OUTLET_SEKTOR,Sektör Telgrafı,Sector Wire
 UI_DISMISS,Vazgeç,Cancel
 UI_CONTINUE,DEVAM ET,CONTINUE
 SECTOR_CONSTRUCTION,İnşaat,Construction
@@ -1517,7 +1517,7 @@ NUM_9,dokuz,nine
 NUM_10,on,ten
 NUM_11,on bir,eleven
 NUM_12,on iki,twelve
-WORLD_OUTLET_EKONOMI_CAPS,EKONOMİ POSTASI,EKONOMİ POSTASI
+WORLD_OUTLET_EKONOMI_CAPS,EKONOMİ POSTASI,ECONOMY POST
 END_LEDGER_TITLE,RAKAMLARLA {company},{company} BY THE NUMBERS
 END_DATE_LINE,{date} · SAYI {issue},{date} · NO. {issue}
 END_MILLIONS,{n} milyon dolar,{n} million dollars

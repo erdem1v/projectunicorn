@@ -20,7 +20,7 @@
     },
     "en": {
       "title": "App of the week",
-      "body": "TeknoGündem picked us as app of the week this morning. Sign-ups have been pouring in ever since, and server load is at 95%. If this keeps up all week, we'll run out of capacity.",
+      "body": "TechAgenda picked us as app of the week this morning. Sign-ups have been pouring in ever since, and server load is at 95%. If this keeps up all week, we'll run out of capacity.",
       "sender": "{employee}, Developer",
       "options": {
         "auto_scale": "Let capacity scale with load automatically",
