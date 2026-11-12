@@ -13,6 +13,7 @@
 #   tools/smoke_run.sh <case_id>      run one case
 #   tools/smoke_run.sh --all          run every case in the match table
 #   GODOT=/path/to/godot tools/smoke_run.sh ...
+#   SMOKE_LOG_DIR=<dir> tools/smoke_run.sh ...   a failing case's whole log is kept there as <case_id>.log
 #
 # Exit: 0 all green · 1 one or more cases failed · 2 harness problem.
 
@@ -35,6 +36,10 @@ expected_error() {
     on&&$1==id&&/# EXPECT-ERROR /{sub(/.*# EXPECT-ERROR /,"");print;exit}' "$SMOKE" | tr -d '\r'
 }
 
+# A failing case's whole log, kept when SMOKE_LOG_DIR names a folder: a rare failure (a flake under load) is read from
+# it instead of being chased again.
+keep_log() { [ -n "${SMOKE_LOG_DIR:-}" ] && mkdir -p "$SMOKE_LOG_DIR" && cp "$2" "$SMOKE_LOG_DIR/$1.log"; }
+
 run_one() {
   local case_id="$1" log want
   log="$(mktemp)"
@@ -49,20 +54,19 @@ run_one() {
   if [ -n "$hits" ]; then
     echo "SMOKE FAIL $case_id: $(wc -l <<<"$hits") engine error line(s) — a throwing case is not a passing case"
     head -3 <<<"$hits" | sed 's/^/    /'
-    rm -f "$log"; return 1
+    keep_log "$case_id" "$log"; rm -f "$log"; return 1
   fi
   if [ "$ex" -eq 124 ]; then
-    echo "SMOKE FAIL $case_id: timed out after ${CASE_TIMEOUT}s"; rm -f "$log"; return 1
+    echo "SMOKE FAIL $case_id: timed out after ${CASE_TIMEOUT}s"; keep_log "$case_id" "$log"; rm -f "$log"; return 1
   fi
   if [ -z "$verdict" ]; then
-    echo "SMOKE FAIL $case_id: no verdict printed (exit $ex)"; rm -f "$log"; return 1
+    echo "SMOKE FAIL $case_id: no verdict printed (exit $ex)"; keep_log "$case_id" "$log"; rm -f "$log"; return 1
   fi
   if [ -n "$want" ] && ! grep -aqF -- "$want" "$log"; then
-    echo "SMOKE FAIL $case_id: EXPECT-ERROR '$want' never printed (stale marker)"; rm -f "$log"; return 1
+    echo "SMOKE FAIL $case_id: EXPECT-ERROR '$want' never printed (stale marker)"; keep_log "$case_id" "$log"; rm -f "$log"; return 1
   fi
   echo "$verdict"
-  rm -f "$log"
-  case "$verdict" in "SMOKE PASS"*) return 0 ;; *) return 1 ;; esac
+  case "$verdict" in "SMOKE PASS"*) rm -f "$log"; return 0 ;; *) keep_log "$case_id" "$log"; rm -f "$log"; return 1 ;; esac
 }
 
 if [ "${1:---all}" = "--all" ]; then

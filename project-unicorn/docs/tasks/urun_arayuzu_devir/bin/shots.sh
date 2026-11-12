@@ -8,7 +8,7 @@ trap 'lock_drop ekran' EXIT
 ad="$S/appdata_shots_$tag"; mkdir -p "$ad"; udir="$ad/Godot/app_userdata/Project Unicorn"
 while read -r flag lang scale; do
   [ -z "$flag" ] && continue
-  if [ -d "$K/sessiz" ] && ! grep -q '^URUN_ARAYUZU' "$K/sessiz/sahip" 2>/dev/null; then echo "STOP sessiz" | tee -a "$out/results.txt"; exit 99; fi
+  if [ -d "$K/sessiz" ] && ! grep -q "^$ETIKET" "$K/sessiz/sahip" 2>/dev/null; then echo "STOP sessiz" | tee -a "$out/results.txt"; exit 99; fi
   name="$(echo "${flag#--}" | tr '=:' '__')_${lang}${scale:+_$scale}"
   extra=(--lang="$lang"); [ -n "$scale" ] && extra+=(--shot-scale="$scale")
   rm -f "$udir"/*.png
