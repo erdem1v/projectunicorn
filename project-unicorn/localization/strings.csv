@@ -25,9 +25,6 @@ ONB_CANCEL_TITLE,Kurulum iptal edilsin mi?,Cancel setup?
 ONB_CANCEL_BODY,Seçimlerin kaydedilmez.,Your choices won't be saved.
 ONB_CANCEL_STAY,Kuruluma devam et,Continue setup
 ONB_NAME_LABEL,Adın,Your name
-ONB_STEP1_INTRO,"Bu, aynada göreceğin yüz. Arkadaki odada seni böyle görecekler.",The face in the mirror. This is how they will see you in the room behind.
-ONB_NAME_HINT,Boş bırakırsan 'Kurucu' kullanılır.,Leave it empty and you are 'Founder'.
-ONB_PORTRAIT_SOON,Yeni portre,New portrait
 ONB_RANDOM,Rastgele,Randomize
 ONB_RESET,Sıfırla,Reset
 ONB_ORIGIN_HEADER,KÖKEN,ORIGIN
@@ -94,8 +91,6 @@ ONB_COMPANY_PLACEHOLDER,Örn. Synaptik,e.g. Synaptik
 ONB_FIRST_WEEK,İlk hafta,Week one
 ONB_WEEK_ONE,Hafta 1 · {month} {year},Week 1 · {month} {year}
 ONB_FOUNDER_LINE,Kurucu · {name},Founder · {name}
-ONB_DOC_COMPANY_EMPTY,3. adımda: ad ve logo,Step 3: name and logo
-ONB_DOC_STEP2,"Köken, huylar ve yetenekler 2. adımda.","Origin, traits and skills come in step 2."
 ONB_DOC_BURN,Aylık gider,Monthly costs
 ONB_DOC_OFFICE,Ofis,Office
 ONB_DOC_TEAM,Ekip,Team
@@ -108,7 +103,6 @@ ONB_DIFF_HARD,Zor,Hard
 ONB_DIFF_HARD_LOCKED,"Zor, bir koşuyu bitirince açılır.",Hard opens once you finish a run.
 ONB_GUIDED,Frank'le rehberli başla,Guided start with Frank
 ONB_GUIDED_NOTE,"İlk haftalarda Frank'in notları gelen kutuna düşer, öteki olaylar bekler.",In the first weeks Frank's notes reach your inbox and other events wait.
-ONB_GUIDED_LOCKED,Rehber yazılıyor.,The guide is being written.
 ONB_LOGO_LABEL,Logo,Logo
 ONB_LOGO_CAPTION,Adın baş harflerinden üretildi. Birini seç ya da yeniden üret.,Made from your name's initials. Pick one or make a new set.
 ONB_LOGO_REROLL,Yeniden üret,Make new set

@@ -5,7 +5,6 @@ extends OnboardingStep
 # come.
 
 const GRID_COLUMNS := 8
-const GRID_CELLS := 16   # [WORKING]
 const CELL := [Vector2(152, 190), Vector2(119, 149)]   # [WORKING] a portrait's 4:5, eight across the paper
 const NAME_W := 360
 
@@ -20,7 +19,7 @@ func _ready() -> void:
 	page.set_anchors_preset(Control.PRESET_FULL_RECT)
 	page.add_theme_constant_override("separation", UiTokens.SPACE_XL)
 	add_child(page)
-	page.add_child(_head("ONB_STEP_CHARACTER", "ONB_STEP1_INTRO", true))
+	page.add_child(_head("ONB_STEP_CHARACTER", "", true))
 
 	var name_row := HBoxContainer.new()
 	name_row.add_theme_constant_override("separation", UiTokens.SPACE_L)
@@ -29,9 +28,10 @@ func _ready() -> void:
 	_name_input = LineEdit.new()
 	_name_input.custom_minimum_size.x = NAME_W
 	_name_input.max_length = 40
+	# An empty name is the role (envanter meet-18): the field shows it, faint, instead of a sentence beside it.
+	_name_input.placeholder_text = tr("HR_ROLE_FOUNDER")
 	_name_input.text_changed.connect(changed.emit.unbind(1))
 	name_row.add_child(_name_input)
-	name_row.add_child(UiFactory.make_label(tr("ONB_NAME_HINT"), &"Caption"))
 	page.add_child(name_row)
 
 	var cell: Vector2 = CELL[int(short)]
@@ -64,15 +64,6 @@ func _ready() -> void:
 		b.add_child(check)
 		grid.add_child(b)
 		_cells[portrait_id] = b
-	for _i in GRID_CELLS - FounderConstants.PORTRAIT_IDS.size():
-		var soon := Panel.new()
-		soon.custom_minimum_size = cell
-		OnboardingStep.dash(soon)
-		var word := UiFactory.make_label(Fmt.upper(tr("ONB_PORTRAIT_SOON")), &"KeySmall")
-		word.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, UiTokens.SPACE_3XL)
-		word.grow_horizontal = Control.GROW_DIRECTION_BOTH
-		soon.add_child(word)
-		grid.add_child(soon)
 
 
 func _refresh() -> void:

@@ -1,6 +1,6 @@
 # Kod haritası · KALITE
 
-Üretildi: git f980f850 · 2026-11-12 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git 2e60b430 · 2026-11-12 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 255 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
@@ -49,10 +49,10 @@ Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları
 - scripts/main/main.gd:2277 · _run_office_shot · 176 satır
 - scripts/events/seams/seams_ported.gd:8 · install · 175 satır
 - scripts/debug/endgame_smoke.gd:16494 · _case_fit_star_context · 165 satır
-- scripts/onboarding/first_week_doc.gd:20 · lay_out · 161 satır
 - scripts/events/seams/seams_sales.gd:26 · install · 160 satır
 - scripts/main/main.gd:1950 · _run_sales_shot · 158 satır
 - scripts/debug/endgame_smoke.gd:2468 · _case_legacy_v12_save_opens_live_table · 157 satır
+- scripts/onboarding/first_week_doc.gd:20 · lay_out · 154 satır
 - scripts/debug/endgame_smoke.gd:7927 · _case_hr_leave_shift · 149 satır
 - scripts/debug/endgame_smoke.gd:7179 · _case_hr_candidate_invariants · 145 satır
 - scripts/debug/endgame_smoke.gd:15789 · _case_sales_offer_signing · 144 satır
@@ -190,7 +190,7 @@ Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: 
 - MIX_MULTIPLIER · 2 dosya · scripts/systems/hr_candidate_generator.gd:31, scripts/systems/sales_constants.gd:270
 - MIX_SALT_STRIDE · 2 dosya · scripts/systems/hr_candidate_generator.gd:33, scripts/systems/sales_constants.gd:272
 - Model · 2 dosya · scripts/ui/components/build_bar.gd:13, scripts/ui/components/research_bar.gd:25
-- NAME_W · 2 dosya · scripts/onboarding/steps/character_step.gd:10, scripts/onboarding/steps/company_step.gd:7
+- NAME_W · 2 dosya · scripts/onboarding/steps/character_step.gd:9, scripts/onboarding/steps/company_step.gd:7
 - ONBOARDING_VOICE_TENURE_WEEKS · 2 dosya · scripts/events/tools/plausibility.gd:56, scripts/systems/b2b_constants.gd:275
 - OUT_PATH · 2 dosya · scripts/events/tools/vocab_gen.gd:15, scripts/theme/build_theme.gd:41
 - PAUSE · 2 dosya · scripts/tabs/product/sprint_panel.gd:13, scripts/tabs/rnd/rnd_ui_shared.gd:53

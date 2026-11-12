@@ -51,9 +51,10 @@ func _head(title_key: String, line_key: String, tools := false) -> HBoxContainer
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(title)
 	col.add_child(top)
-	var line := UiFactory.make_label(tr(line_key), &"Caption")
-	line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	col.add_child(line)
+	if line_key != "":
+		var line := UiFactory.make_label(tr(line_key), &"Caption")
+		line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		col.add_child(line)
 	row.add_child(col)
 	if tools:
 		# The narrow paper gives the line the head's whole width: the tools ride on the title's line.

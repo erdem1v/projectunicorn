@@ -414,7 +414,7 @@ _capacity	var	scripts/ui/meeting/meeting_ruler.gd:21	MeetingRuler
 _caps_tokens	func	scripts/debug/endgame_smoke.gd:18089	EndgameSmoke
 _caption	func	scripts/tabs/hr/hr_ui_shared.gd:399	HRUiShared
 _capture_systems	func	scripts/autoload/save_manager.gd:377	SaveManager
-_card	func	scripts/onboarding/steps/step_base.gd:85	OnboardingStep
+_card	func	scripts/onboarding/steps/step_base.gd:86	OnboardingStep
 _card	func	scripts/systems/sprint_timeline.gd:174	SprintTimeline
 _card	func	scripts/tabs/events/mail_pane.gd:108	mail_pane.gd
 _card	func	scripts/tabs/hr/hr_atlas_modal.gd:184	hr_atlas_modal.gd
@@ -985,7 +985,7 @@ _cell	func	scripts/modals/training_modal.gd:161	training_modal.gd
 _cell	func	scripts/tabs/hr/hr_assignments.gd:106	HRAssignments
 _cell	func	scripts/tabs/product/capacity_view.gd:164	CapacityView
 _cell	func	scripts/tabs/rnd/rnd_assign_panel.gd:172	RnDAssignPanel
-_cells	var	scripts/onboarding/steps/character_step.gd:13	character_step.gd
+_cells	var	scripts/onboarding/steps/character_step.gd:12	character_step.gd
 _center	func	scripts/tabs/product/product_model.gd:413	ProductModel
 _center	func	scripts/tabs/product/sprint_panel.gd:122	SprintPanel
 _cfg	func	scripts/systems/incident_system.gd:61	IncidentSystem
@@ -1724,7 +1724,7 @@ _gui_input	func	scripts/ui/components/radial_dial.gd:92	RadialDial
 _gui_input	func	scripts/ui/meeting/meeting_panel_option.gd:85	meeting_panel_option.gd
 _gui_input	func	scripts/ui/meeting/meeting_ruler.gd:39	MeetingRuler._Rail
 _gui_input	func	scripts/ui/office/office_travel.gd:163	office_travel.gd
-_guide_written	func	scripts/onboarding/first_week_doc.gd:231	first_week_doc.gd
+_guide_written	func	scripts/onboarding/first_week_doc.gd:225	first_week_doc.gd
 _gutter	func	scripts/tabs/hr_tab.gd:177	hr_tab.gd
 _h	var	scripts/tabs/product/board_row.gd:48	BoardRow
 _halve_test	func	scripts/systems/sprint_system.gd:1151	SprintSystem
@@ -2368,7 +2368,7 @@ _name	func	scripts/tabs/product/area_panel.gd:382	AreaPanel
 _name	func	scripts/tabs/product/sprint_next.gd:225	SprintNext
 _name	var	scripts/tabs/product/type_picker.gd:16	TypePicker
 _name	var	scripts/ui/meeting/meeting_panel.gd:72	MeetingPanel
-_name_input	var	scripts/onboarding/steps/character_step.gd:14	character_step.gd
+_name_input	var	scripts/onboarding/steps/character_step.gd:13	character_step.gd
 _name_input	var	scripts/onboarding/steps/company_step.gd:12	company_step.gd
 _name_label	var	scripts/ui/components/build_bar.gd:22	build_bar.gd
 _name_label	var	scripts/ui/components/research_bar.gd:34	research_bar.gd
@@ -2913,7 +2913,7 @@ _POLISH_HALF_STAMP	const	scripts/autoload/save_manager.gd:815	SaveManager
 _polygon_distance	func	tools/office3d/bake_nav.gd:244	bake_nav.gd
 _pools	var	scripts/systems/sales_name_pool.gd:61	SalesNamePool
 _portrait	var	scripts/ui/meeting/meeting_panel.gd:71	MeetingPanel
-_portrait_id	var	scripts/onboarding/steps/character_step.gd:12	character_step.gd
+_portrait_id	var	scripts/onboarding/steps/character_step.gd:11	character_step.gd
 _pose	func	scripts/debug/office_pan_probe.gd:146	office_pan_probe.gd
 _pose	func	scripts/ui/office/office_person.gd:596	OfficePerson
 _pose_dt	var	scripts/ui/office/office_person.gd:225	OfficePerson
@@ -3092,7 +3092,7 @@ _ready	func	scripts/modals/settings_modal.gd:104	settings_modal.gd
 _ready	func	scripts/modals/system_menu_modal.gd:25	system_menu_modal.gd
 _ready	func	scripts/modals/term_sheet_table_scene.gd:51	TermSheetTableScene
 _ready	func	scripts/onboarding/onboarding_flow.gd:58	onboarding_flow.gd
-_ready	func	scripts/onboarding/steps/character_step.gd:18	character_step.gd
+_ready	func	scripts/onboarding/steps/character_step.gd:17	character_step.gd
 _ready	func	scripts/onboarding/steps/company_step.gd:20	company_step.gd
 _ready	func	scripts/onboarding/steps/origin_traits_step.gd:29	origin_traits_step.gd
 _ready	func	scripts/tabs/events/mail_pane.gd:35	mail_pane.gd
@@ -3155,7 +3155,7 @@ _reentry	var	scripts/systems/vc_pitch_system.gd:37	VCPitchSystem
 _ref	func	scripts/systems/product_quality.gd:338	ProductQuality
 _refit	func	scripts/tabs/product_tab.gd:190	product_tab.gd
 _refresh	func	scripts/onboarding/onboarding_flow.gd:117	onboarding_flow.gd
-_refresh	func	scripts/onboarding/steps/character_step.gd:78	character_step.gd
+_refresh	func	scripts/onboarding/steps/character_step.gd:69	character_step.gd
 _refresh	func	scripts/onboarding/steps/company_step.gd:79	company_step.gd
 _refresh	func	scripts/onboarding/steps/origin_traits_step.gd:262	origin_traits_step.gd
 _refresh	func	scripts/tabs/events_tab.gd:140	events_tab.gd
@@ -3307,7 +3307,7 @@ _rival_tier	func	scripts/systems/sprint_catalog.gd:753	SprintCatalog
 _rivals	var	scripts/autoload/rival_registry.gd:17	RivalRegistry
 _rivals	var	scripts/systems/sprint_catalog.gd:24	SprintCatalog
 _rnd_new	var	scripts/ui/components/left_tabs.gd:60	left_tabs.gd
-_rng	var	scripts/onboarding/steps/character_step.gd:15	character_step.gd
+_rng	var	scripts/onboarding/steps/character_step.gd:14	character_step.gd
 _rng	var	scripts/onboarding/steps/origin_traits_step.gd:26	origin_traits_step.gd
 _rng	func	scripts/systems/skill_check.gd:22	SkillCheck
 _rng	var	scripts/ui/office/office_people.gd:82	OfficePeople
@@ -4048,7 +4048,7 @@ _toggle_group	func	scripts/tabs/hr_tab.gd:427	hr_tab.gd
 _toggle_trait	func	scripts/onboarding/steps/origin_traits_step.gd:142	origin_traits_step.gd
 _token_rows	func	scripts/theme/theme_check.gd:230	theme_check.gd
 _tone	func	scripts/theme/build_theme.gd:1363	build_theme.gd
-_tools	func	scripts/onboarding/steps/step_base.gd:64	OnboardingStep
+_tools	func	scripts/onboarding/steps/step_base.gd:65	OnboardingStep
 _tooltip	var	scripts/ui/office/office_view.gd:28	office_view.gd
 _tooltip_label	var	scripts/ui/office/office_view.gd:29	office_view.gd
 _top	var	scripts/debug/office_pan_probe.gd:41	office_pan_probe.gd
@@ -4940,7 +4940,7 @@ CATEGORY_SENDERS	const	scripts/ui/components/inbox.gd:22	inbox.gd
 CATEGORY_TAGS	const	scripts/events/present/chips.gd:62	EvChips
 CC0_DIR	const	scripts/debug/write_licenses.gd:11	write_licenses.gd
 ceiling	func	scripts/systems/sprint_bugs.gd:52	SprintBugs
-CELL	const	scripts/onboarding/steps/character_step.gd:9	character_step.gd
+CELL	const	scripts/onboarding/steps/character_step.gd:8	character_step.gd
 CELL	const	tools/office3d/bake_nav.gd:17	bake_nav.gd
 Cell	class	scripts/tabs/product/capacity_view.gd:26	CapacityView
 cfg	func	scripts/systems/sprint_catalog.gd:33	SprintCatalog
@@ -5073,7 +5073,7 @@ COEFFICIENT_EFFECTS	const	scripts/systems/research_tree.gd:49	ResearchTree
 coerce	func	scripts/events/seams/seams.gd:123	EvSeams
 coerce_like	func	scripts/systems/save_codec.gd:150	SaveCodec
 COLD_EXIT_FUNDS	const	scripts/systems/vc_pitch_system.gd:28	VCPitchSystem
-collect_payload	func	scripts/onboarding/steps/character_step.gd:96	character_step.gd
+collect_payload	func	scripts/onboarding/steps/character_step.gd:87	character_step.gd
 collect_payload	func	scripts/onboarding/steps/company_step.gd:103	company_step.gd
 collect_payload	func	scripts/onboarding/steps/origin_traits_step.gd:311	origin_traits_step.gd
 collect_payload	func	scripts/onboarding/steps/step_base.gd:36	OnboardingStep
@@ -5787,7 +5787,7 @@ DANGER_TABS	const	scripts/ui/components/left_tabs.gd:41	left_tabs.gd
 dangling	var	scripts/events/tools/harness.gd:53	EvHarness.Result
 DARK_ICONS	const	scripts/theme/build_theme.gd:414	build_theme.gd
 DARK_OF	const	scripts/theme/build_theme.gd:379	build_theme.gd
-dash	func	scripts/onboarding/steps/step_base.gd:113	OnboardingStep
+dash	func	scripts/onboarding/steps/step_base.gd:114	OnboardingStep
 DASH_CHARS	const	scripts/events/tools/lint.gd:55	EvLint
 DATA_PATH	const	scripts/menu/credits.gd:9	credits.gd
 DATA_PATH	const	scripts/systems/graphics_settings.gd:18	graphics_settings.gd
@@ -6652,7 +6652,6 @@ GraphicsSettingsLib	const	scripts/modals/settings_modal.gd:19	settings_modal.gd
 GraphicsSettingsLib	const	scripts/ui/menu_backdrop.gd:12	menu_backdrop.gd
 GraphicsSettingsLib	const	scripts/ui/office/office_view.gd:13	office_view.gd
 GRID	const	scripts/ui/components/top_bar.gd:58	top_bar.gd
-GRID_CELLS	const	scripts/onboarding/steps/character_step.gd:8	character_step.gd
 GRID_COLUMNS	const	scripts/onboarding/steps/character_step.gd:7	character_step.gd
 groove	func	scripts/tabs/product/stage_paint.gd:44	StagePaint
 gross_runway_months	func	scripts/systems/vc_pitch_system.gd:1190	VCPitchSystem
@@ -7690,7 +7689,7 @@ name_lang	var	scripts/autoload/game_state.gd:27	GameState
 NAME_LINE	const	scripts/ui/components/top_bar.gd:68	top_bar.gd
 NAME_RIGHT	const	scripts/ui/components/top_bar.gd:89	top_bar.gd
 name_text	func	scripts/events/present/presenter.gd:144	EvPresenter
-NAME_W	const	scripts/onboarding/steps/character_step.gd:10	character_step.gd
+NAME_W	const	scripts/onboarding/steps/character_step.gd:9	character_step.gd
 NAME_W	const	scripts/onboarding/steps/company_step.gd:7	company_step.gd
 NAME_X	const	scripts/ui/components/top_bar.gd:88	top_bar.gd
 named_employee	func	scripts/ui/components/inbox.gd:487	inbox.gd
@@ -8217,7 +8216,7 @@ POSTPONE	const	scripts/systems/office_constants.gd:88	OfficeConstants
 postpone_call	func	scripts/systems/vc_pitch_system.gd:794	VCPitchSystem
 POSTPONE_GLYPH	const	scripts/ui/office/meeting_invite.gd:21	MeetingInvite
 postponed	signal	scripts/ui/office/meeting_invite.gd:15	MeetingInvite
-prefill	func	scripts/onboarding/steps/character_step.gd:87	character_step.gd
+prefill	func	scripts/onboarding/steps/character_step.gd:78	character_step.gd
 prefill	func	scripts/onboarding/steps/company_step.gd:88	company_step.gd
 prefill	func	scripts/onboarding/steps/origin_traits_step.gd:290	origin_traits_step.gd
 prefill	func	scripts/onboarding/steps/step_base.gd:23	OnboardingStep
@@ -8762,7 +8761,7 @@ role_top_value	func	scripts/systems/hr_constants.gd:658	HRConstants
 ROLE_TRAIT_BAN	const	scripts/systems/hr_constants.gd:486	HRConstants
 ROLE_USER	const	scripts/systems/counterpart_system.gd:18	CounterpartSystem
 ROLE_W	const	scripts/menu/credits.gd:10	credits.gd
-roll	func	scripts/onboarding/steps/character_step.gd:102	character_step.gd
+roll	func	scripts/onboarding/steps/character_step.gd:93	character_step.gd
 roll	func	scripts/onboarding/steps/origin_traits_step.gd:316	origin_traits_step.gd
 roll	func	scripts/onboarding/steps/step_base.gd:40	OnboardingStep
 roll_against	func	scripts/systems/skill_check.gd:57	SkillCheck
@@ -9259,7 +9258,7 @@ show_company	func	scripts/tabs/piyasa_tab.gd:123	piyasa_tab.gd
 SHOW_CONDITION	const	scripts/systems/term_sheet_table_system.gd:119	TermSheetTableSystem
 SHOW_CONDITION_MIN	const	scripts/systems/term_sheet_table_system.gd:99	TermSheetTableSystem
 show_curtain	func	scripts/onboarding/onboarding_flow.gd:206	onboarding_flow.gd
-show_draft	func	scripts/onboarding/first_week_doc.gd:184	first_week_doc.gd
+show_draft	func	scripts/onboarding/first_week_doc.gd:177	first_week_doc.gd
 SHOW_GAP_COST	const	scripts/systems/term_sheet_table_system.gd:95	TermSheetTableSystem
 SHOW_HOLD	const	scripts/systems/term_sheet_table_system.gd:120	TermSheetTableSystem
 SHOW_HOLD_E_COST	const	scripts/systems/term_sheet_table_system.gd:102	TermSheetTableSystem
@@ -9275,7 +9274,7 @@ show_notice	func	scripts/modals/ending_scene.gd:463	EndingScene
 show_other_available	func	scripts/systems/term_sheet_table_system.gd:359	TermSheetTableSystem
 show_other_offer	func	scripts/systems/term_sheet_table_system.gd:370	TermSheetTableSystem
 SHOW_PATIENCE_WEIGHT	const	scripts/systems/term_sheet_table_system.gd:94	TermSheetTableSystem
-show_pick	func	scripts/onboarding/steps/step_base.gd:106	OnboardingStep
+show_pick	func	scripts/onboarding/steps/step_base.gd:107	OnboardingStep
 show_result_rest	func	scripts/ui/components/radial_dial.gd:36	RadialDial
 show_slot	func	scripts/menu/continue_card.gd:12	continue_card.gd
 show_toast	func	scripts/ui/components/toast.gd:75	toast.gd

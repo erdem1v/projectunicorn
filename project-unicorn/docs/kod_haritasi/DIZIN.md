@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git f980f850 · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 2e60b430 · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -145,15 +145,15 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/modals/training_modal.gd · 175 · - · "res://scripts/tabs/hr/hr_panel.gd" · 0 sinyal · 7 func
 - scripts/modals/work_hours_modal.gd · 492 · - · "res://scripts/tabs/hr/hr_panel.gd" · 0 sinyal · 28 func
 
-### scripts/onboarding/ (2 dosya, 447 satır)
-- scripts/onboarding/first_week_doc.gd · 234 · - · PanelContainer · 1 sinyal · 3 func
+### scripts/onboarding/ (2 dosya, 441 satır)
+- scripts/onboarding/first_week_doc.gd · 228 · - · PanelContainer · 1 sinyal · 3 func
 - scripts/onboarding/onboarding_flow.gd · 213 · - · Control · 2 sinyal · 12 func
 
-### scripts/onboarding/steps/ (4 dosya, 666 satır)
-- scripts/onboarding/steps/character_step.gd · 111 · - · OnboardingStep · 0 sinyal · 5 func
+### scripts/onboarding/steps/ (4 dosya, 658 satır)
+- scripts/onboarding/steps/character_step.gd · 102 · - · OnboardingStep · 0 sinyal · 5 func
 - scripts/onboarding/steps/company_step.gd · 105 · - · OnboardingStep · 0 sinyal · 5 func
 - scripts/onboarding/steps/origin_traits_step.gd · 332 · - · OnboardingStep · 0 sinyal · 18 func
-- scripts/onboarding/steps/step_base.gd · 118 · OnboardingStep · Control · 1 sinyal · 10 func
+- scripts/onboarding/steps/step_base.gd · 119 · OnboardingStep · Control · 1 sinyal · 10 func
 
 ### scripts/systems/ (72 dosya, 24604 satır)
 - scripts/systems/angel_round_system.gd · 52 · AngelRoundSystem · RefCounted · 0 sinyal · 1 func
@@ -669,7 +669,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 
 ### scripts/onboarding/first_week_doc.gd
 - picked(field: String, value: Variant) · scripts/onboarding/first_week_doc.gd:7 · (ad 2 yerde tanımlı)
-  ↳ picked emit: scripts/onboarding/first_week_doc.gd:134,176, scripts/ui/meeting/meeting_ruler.gd:48
+  ↳ picked emit: scripts/onboarding/first_week_doc.gd:132,169, scripts/ui/meeting/meeting_ruler.gd:48
   ↳ picked connect: scripts/onboarding/onboarding_flow.gd:60, scripts/ui/meeting/meeting_ruler.gd:85
 
 ### scripts/onboarding/onboarding_flow.gd
@@ -678,7 +678,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 
 ### scripts/onboarding/steps/step_base.gd
 - changed() · scripts/onboarding/steps/step_base.gd:15 · (ad 2 yerde tanımlı)
-  ↳ changed emit: scripts/main/main.gd:3498,5284, scripts/onboarding/steps/character_step.gd:32,53,111, scripts/onboarding/steps/company_step.gd:35 +8
+  ↳ changed emit: scripts/main/main.gd:3498,5284, scripts/onboarding/steps/character_step.gd:33,53,102, scripts/onboarding/steps/company_step.gd:35 +8
   ↳ changed connect: scripts/onboarding/onboarding_flow.gd:101, scripts/ui/meeting/meeting_panel.gd:268,506
 
 ### scripts/tabs/finance_tab.gd
@@ -819,10 +819,10 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 
 ### scripts/ui/meeting/meeting_ruler.gd
 - changed(value: int) · scripts/ui/meeting/meeting_ruler.gd:13 · (ad 2 yerde tanımlı)
-  ↳ changed emit: scripts/main/main.gd:3498,5284, scripts/onboarding/steps/character_step.gd:32,53,111, scripts/onboarding/steps/company_step.gd:35 +8
+  ↳ changed emit: scripts/main/main.gd:3498,5284, scripts/onboarding/steps/character_step.gd:33,53,102, scripts/onboarding/steps/company_step.gd:35 +8
   ↳ changed connect: scripts/onboarding/onboarding_flow.gd:101, scripts/ui/meeting/meeting_panel.gd:268,506
 - picked(value: int) · scripts/ui/meeting/meeting_ruler.gd:28 · (ad 2 yerde tanımlı)
-  ↳ picked emit: scripts/onboarding/first_week_doc.gd:134,176, scripts/ui/meeting/meeting_ruler.gd:48
+  ↳ picked emit: scripts/onboarding/first_week_doc.gd:132,169, scripts/ui/meeting/meeting_ruler.gd:48
   ↳ picked connect: scripts/onboarding/onboarding_flow.gd:60, scripts/ui/meeting/meeting_ruler.gd:85
 
 ### scripts/ui/menu_backdrop.gd
@@ -1123,7 +1123,7 @@ Biçim: yol · boyut · üst düzey anahtarlar (en çok 10)
 - data/product/sprint.json · 9.3 KB · {sprint_weeks, quarter_weeks, mvp_lines, effort, fix_effort, limit_k, need, roles, role_areas, person_points_week, +26}
 - data/techtree/rnd_tree.json · 6.3 KB · {_doc, _stars, _cross, _areas, k_arge, report_period_weeks, nodes, _hidden_doc, _hidden_k3_doc, hidden_lines}
 
-## Metin anahtarı aileleri (845 aile, 3200 anahtar)
+## Metin anahtarı aileleri (843 aile, 3194 anahtar)
 
 Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak geçiren .gd/.json (en çok 5). '-' = dinamik kurulmuş olabilir ya da kullanılmıyor.
 - ANGEL_CAP_* · 1 · scripts/tabs/finance/finance_ozet_view.gd
@@ -1341,7 +1341,7 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - HR_PROMOTION_* · 1 · scripts/systems/hr_actions.gd
 - HR_RAISE_* · 1 · scripts/systems/hr_actions.gd
 - HR_RESIGN_* · 4 · scripts/systems/hr_constants.gd
-- HR_ROLE_* · 20 · scripts/autoload/character_registry.gd, scripts/autoload/game_state.gd, scripts/onboarding/first_week_doc.gd, scripts/onboarding/onboarding_flow.gd, scripts/systems/hr_constants.gd +5
+- HR_ROLE_* · 20 · scripts/autoload/character_registry.gd, scripts/autoload/game_state.gd, scripts/onboarding/first_week_doc.gd, scripts/onboarding/onboarding_flow.gd, scripts/onboarding/steps/character_step.gd +6
 - HR_ROW_* · 10 · scripts/events/present/chips.gd, scripts/systems/hr_actions.gd, scripts/tabs/hr/hr_ledger.gd, scripts/tabs/hr_tab.gd
 - HR_SEARCH_* · 5 · scripts/main/main.gd, scripts/tabs/hr/hr_assignments.gd, scripts/tabs/hr_tab.gd, scripts/tabs/product/sprint_ui_shared.gd, scripts/debug/kit_probe.gd
 - HR_SEARCHING_* · 2 · scripts/tabs/hr_tab.gd
@@ -1515,17 +1515,16 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - ONB_COMPANY_* · 2 · scripts/onboarding/steps/company_step.gd
 - ONB_DIFF_* · 4 · scripts/onboarding/first_week_doc.gd
 - ONB_DIFFICULTY_* · 2 · scripts/onboarding/first_week_doc.gd
-- ONB_DOC_* · 5 · scripts/onboarding/first_week_doc.gd
+- ONB_DOC_* · 3 · scripts/onboarding/first_week_doc.gd
 - ONB_EFFECT_* · 7 · scripts/onboarding/steps/origin_traits_step.gd
 - ONB_FIRST_* · 1 · scripts/onboarding/first_week_doc.gd
 - ONB_FOUNDER_* · 1 · scripts/onboarding/first_week_doc.gd
-- ONB_GUIDED_* · 3 · scripts/onboarding/first_week_doc.gd
+- ONB_GUIDED_* · 2 · scripts/onboarding/first_week_doc.gd
 - ONB_LOGO_* · 3 · scripts/onboarding/steps/company_step.gd
-- ONB_NAME_* · 2 · scripts/onboarding/steps/character_step.gd
+- ONB_NAME_* · 1 · scripts/onboarding/steps/character_step.gd
 - ONB_NEXT_* · 1 · scripts/onboarding/onboarding_flow.gd
 - ONB_ORIGIN_* · 12 · scripts/onboarding/steps/origin_traits_step.gd, scripts/systems/founder_constants.gd
 - ONB_POINTS_* · 1 · scripts/onboarding/steps/origin_traits_step.gd
-- ONB_PORTRAIT_* · 1 · scripts/onboarding/steps/character_step.gd
 - ONB_PREPARING_* · 1 · -
 - ONB_RANDOM_* · 1 · scripts/onboarding/steps/step_base.gd
 - ONB_RESET_* · 1 · scripts/onboarding/steps/step_base.gd
@@ -1533,7 +1532,6 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - ONB_SKILLS_* · 2 · scripts/onboarding/steps/origin_traits_step.gd
 - ONB_START_* · 1 · scripts/onboarding/onboarding_flow.gd
 - ONB_STEP_* · 4 · scripts/onboarding/onboarding_flow.gd, scripts/onboarding/steps/character_step.gd, scripts/onboarding/steps/company_step.gd
-- ONB_STEP1_* · 1 · scripts/onboarding/steps/character_step.gd
 - ONB_STEP3_* · 1 · scripts/onboarding/steps/company_step.gd
 - ONB_TEAM_* · 1 · scripts/onboarding/first_week_doc.gd
 - ONB_TRAITS_* · 4 · scripts/onboarding/steps/origin_traits_step.gd

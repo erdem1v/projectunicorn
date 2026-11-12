@@ -70,9 +70,6 @@ func lay_out(short: bool) -> void:
 	who.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_v.founder = UiFactory.make_label("", &"NameTitle")
 	who.add_child(_v.founder)
-	_v.pending = UiFactory.make_label(tr("ONB_DOC_STEP2"), &"Caption")
-	_v.pending.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	who.add_child(_v.pending)
 	_v.origin = UiFactory.make_label("", &"DataText")
 	who.add_child(_v.origin)
 	_v.chips = HFlowContainer.new()
@@ -113,7 +110,6 @@ func lay_out(short: bool) -> void:
 	var diff_title := UiFactory.make_label(Fmt.upper(tr("ONB_DIFFICULTY")), &"KeyLabel")
 	diff_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	diff_head.add_child(diff_title)
-	diff_head.add_child(UiFactory.make_label(tr("ONB_DIFFICULTY_NOTE"), &"Caption"))
 	col.add_child(diff_head)
 	var cells := HBoxContainer.new()
 	cells.add_theme_constant_override("separation", UiTokens.SPACE_M)
@@ -128,19 +124,15 @@ func lay_out(short: bool) -> void:
 		cell.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		cell.icon_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		cell.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
+		cell.tooltip_text = tr("ONB_DIFFICULTY_NOTE")
 		if id == "hard" and not hard_open:
 			cell.disabled = true
 			cell.icon = load(UiFactory.LOCK_ICON)
+			cell.tooltip_text = tr("ONB_DIFF_HARD_LOCKED")
 		cell.pressed.connect(picked.emit.bind("difficulty", id))
 		cells.add_child(cell)
 		_v.cells[id] = cell
 	col.add_child(cells)
-	if not hard_open:
-		var why := HBoxContainer.new()
-		why.add_theme_constant_override("separation", UiTokens.SPACE_S)
-		why.add_child(UiFactory.make_glyph(UiFactory.LOCK_ICON, UiTokens.D_ICON_TAG, UiTokens.D_INK_3))
-		why.add_child(UiFactory.make_label(tr("ONB_DIFF_HARD_LOCKED"), &"Caption"))
-		col.add_child(why)
 	col.add_child(HSeparator.new())
 
 	var table := GridContainer.new()
@@ -167,15 +159,16 @@ func lay_out(short: bool) -> void:
 	var room := Control.new()
 	room.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	col.add_child(room)
+	# Guided start silences every card but the tutorial's, so the switch stands only once the guide's cards exist
+	# (envanter meet-16, N17): until then the sheet says nothing of it.
+	if not _guide_written():
+		return
 	col.add_child(HSeparator.new())
-	# Guided start silences every card but the tutorial's, so it opens only once the guide's cards exist.
-	var written := _guide_written()
 	_v.guided = CheckButton.new()
 	_v.guided.text = tr("ONB_GUIDED")
-	_v.guided.disabled = not written
 	_v.guided.toggled.connect(func(on: bool) -> void: picked.emit("frank_guided", on))
 	col.add_child(_v.guided)
-	_v.guided_note = UiFactory.make_label(tr("ONB_GUIDED_NOTE" if written else "ONB_GUIDED_LOCKED"), &"Caption")
+	_v.guided_note = UiFactory.make_label(tr("ONB_GUIDED_NOTE"), &"Caption")
 	_v.guided_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	col.add_child(_v.guided_note)
 
@@ -195,11 +188,11 @@ func show_draft(draft: Dictionary, step: int) -> void:
 		# An unnamed founder goes by the role, which the line opens with: the role once, not twice.
 		founder = tr("HR_ROLE_FOUNDER")
 		line = founder
-	_v.company_line.text = line if named else tr("ONB_DOC_COMPANY_EMPTY")
+	_v.company_line.text = line if named else ""
+	_v.company_line.visible = named
 
 	_v.face.texture = load(FounderConstants.portrait_path(draft.portrait_id))
 	_v.founder.text = founder
-	_v.pending.visible = step == 0
 	_v.origin.visible = step > 0
 	_v.chips.visible = step > 0
 	_v.origin.text = tr(FounderConstants.origin_by_id(draft.origin_id).name_key)
@@ -223,8 +216,9 @@ func show_draft(draft: Dictionary, step: int) -> void:
 	UiFactory.clear(_v.cash_tag)
 	_v.cash_tag.add_child(UiFactory.D_tag(tr("ONB_DIFF_" + draft.difficulty.to_upper()), &"outline"))
 	_v.burn.text = Fmt.money_chip(FinanceSystem.starting_daily_burn() * TimeModel.DAYS_PER_MONTH)
-	_v.guided.set_pressed_no_signal(draft.frank_guided)
-	_v.guided_note.visible = _v.guided.disabled or draft.frank_guided
+	if _v.has("guided"):
+		_v.guided.set_pressed_no_signal(draft.frank_guided)
+		_v.guided_note.visible = draft.frank_guided
 
 
 ## A card tagged for the tutorial ships in this build.
