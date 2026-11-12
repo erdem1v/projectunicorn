@@ -120,7 +120,7 @@ _apply_enabled	func	scripts/autoload/audio_manager.gd:162	AudioManager
 _apply_known	func	scripts/tabs/product/area_panel.gd:77	AreaPanel
 _apply_layout	func	scripts/menu/main_menu.gd:78	main_menu.gd
 _apply_layout	func	scripts/onboarding/onboarding_flow.gd:75	onboarding_flow.gd
-_apply_phase_lock	func	scripts/tabs/finance_tab.gd:127	finance_tab.gd
+_apply_phase_lock	func	scripts/tabs/finance_tab.gd:101	finance_tab.gd
 _apply_positions	func	scripts/tabs/rnd/rnd_tree_view.gd:166	RnDTreeView
 _apply_push	func	scripts/systems/term_sheet_table_system.gd:851	TermSheetTableSystem
 _apply_reset	func	scripts/modals/settings_modal.gd:279	settings_modal.gd
@@ -1196,6 +1196,7 @@ _crew_mark	func	scripts/systems/sprint_system.gd:1615	SprintSystem
 _crowded	var	scripts/debug/office_crowd_probe.gd:38	OfficeCrowdProbe
 _cs_at	func	scripts/ui/office/office_lighting.gd:286	OfficeLighting
 _csv_keys	var	scripts/debug/loc_residue.gd:57	loc_residue.gd
+_ctl	var	scripts/tabs/finance_tab.gd:17	finance_tab.gd
 _ctl	var	scripts/tabs/product_tab.gd:36	product_tab.gd
 _ctl	var	scripts/tabs/sales_tab.gd:41	sales_tab.gd
 _ctl_row	var	scripts/tabs/product_tab.gd:37	product_tab.gd
@@ -1466,7 +1467,7 @@ _exit_tree	func	scripts/autoload/save_manager.gd:73	SaveManager
 _exit_tree	func	scripts/modals/hr_action_modal.gd:146	hr_action_modal.gd
 _exit_tree	func	scripts/modals/training_modal.gd:40	training_modal.gd
 _exit_tree	func	scripts/tabs/finance/finance_ozet_view.gd:90	FinanceOzetView
-_exit_tree	func	scripts/tabs/finance_tab.gd:66	finance_tab.gd
+_exit_tree	func	scripts/tabs/finance_tab.gd:61	finance_tab.gd
 _exit_tree	func	scripts/tabs/hr/hr_dossier.gd:58	hr_dossier.gd
 _exit_tree	func	scripts/tabs/hr/hr_panel.gd:70	hr_panel.gd
 _exit_tree	func	scripts/tabs/hr_tab.gd:89	hr_tab.gd
@@ -1981,7 +1982,6 @@ _known	func	scripts/systems/rnd_system.gd:780	RnDSystem
 _known	var	scripts/tabs/product/sprint_panel.gd:66	SprintPanel
 _known_absurd	func	scripts/events/tools/plausibility.gd:332	plausibility.gd
 _kpi	func	scripts/modals/term_sheet_table_scene.gd:136	TermSheetTableScene
-_kpis	var	scripts/tabs/finance_tab.gd:16	finance_tab.gd
 _kpis	var	scripts/tabs/hr_tab.gd:37	hr_tab.gd
 _kpis	var	scripts/tabs/personal_tab.gd:27	personal_tab.gd
 _kpis	var	scripts/tabs/product_tab.gd:35	product_tab.gd
@@ -2677,7 +2677,7 @@ _out_told	var	scripts/ui/office/meeting_cast.gd:36	MeetingCast
 _outages	var	scripts/debug/run_probe.gd:319	RunProbe
 _outcome	var	scripts/systems/sales_meeting_system.gd:40	SalesMeetingSystem
 _outcome	func	scripts/systems/sprint_system.gd:964	SprintSystem
-_outer	var	scripts/tabs/finance_tab.gd:17	finance_tab.gd
+_outer	var	scripts/tabs/finance_tab.gd:16	finance_tab.gd
 _outer	var	scripts/tabs/hr_tab.gd:38	hr_tab.gd
 _outer	var	scripts/tabs/rnd_tab.gd:37	rnd_tab.gd
 _outer	var	scripts/tabs/sales_tab.gd:40	sales_tab.gd
@@ -2715,7 +2715,6 @@ _paint_desk	func	scripts/tabs/sales_tab.gd:425	sales_tab.gd
 _paint_empty	func	scripts/tabs/sales_tab.gd:231	sales_tab.gd
 _paint_hot	func	scripts/ui/components/build_bar.gd:151	build_bar.gd
 _paint_hours	func	scripts/tabs/hr_tab.gd:353	hr_tab.gd
-_paint_kpis	func	scripts/tabs/finance_tab.gd:79	finance_tab.gd
 _paint_kpis	func	scripts/tabs/sales_tab.gd:201	sales_tab.gd
 _paint_ladder	func	scripts/ui/components/top_bar.gd:344	top_bar.gd
 _paint_line	func	scripts/tabs/rnd_tab.gd:221	rnd_tab.gd
@@ -2735,7 +2734,7 @@ _paint_selection	func	scripts/tabs/hr_tab.gd:528	hr_tab.gd
 _paint_selection	func	scripts/tabs/rnd/rnd_tree_view.gd:333	RnDTreeView
 _paint_stance	func	scripts/tabs/sales_tab.gd:219	sales_tab.gd
 _paint_strips	func	scripts/tabs/hr_tab.gd:270	hr_tab.gd
-_paint_tabs	func	scripts/tabs/finance_tab.gd:103	finance_tab.gd
+_paint_tabs	func	scripts/tabs/finance_tab.gd:73	finance_tab.gd
 _paint_tabs	func	scripts/tabs/rnd_tab.gd:204	rnd_tab.gd
 _paint_tile	func	scripts/tabs/rnd/rnd_tree_view.gd:300	RnDTreeView
 _pair	func	scripts/theme/theme_check.gd:108	theme_check.gd
@@ -3103,7 +3102,7 @@ _ready	func	scripts/onboarding/steps/origin_traits_step.gd:30	origin_traits_step
 _ready	func	scripts/tabs/events/mail_pane.gd:35	mail_pane.gd
 _ready	func	scripts/tabs/events_tab.gd:34	events_tab.gd
 _ready	func	scripts/tabs/finance/finance_ozet_view.gd:57	FinanceOzetView
-_ready	func	scripts/tabs/finance_tab.gd:29	finance_tab.gd
+_ready	func	scripts/tabs/finance_tab.gd:28	finance_tab.gd
 _ready	func	scripts/tabs/hr/hr_dossier.gd:25	hr_dossier.gd
 _ready	func	scripts/tabs/hr/hr_panel.gd:22	hr_panel.gd
 _ready	func	scripts/tabs/hr/hr_popover.gd:25	HRPopover
@@ -3680,7 +3679,7 @@ _show_back	var	scripts/systems/term_sheet_table_system.gd:147	TermSheetTableSyst
 _show_card	func	scripts/ui/office/office_city.gd:371	OfficeCity
 _show_clock	func	scripts/ui/components/top_bar.gd:622	top_bar.gd
 _show_outcome	var	scripts/systems/term_sheet_table_system.gd:146	TermSheetTableSystem
-_show_page	func	scripts/tabs/finance_tab.gd:112	finance_tab.gd
+_show_page	func	scripts/tabs/finance_tab.gd:86	finance_tab.gd
 _show_paper	func	scripts/events/core/engine.gd:792	EvEngine
 _show_person	func	scripts/ui/meeting/meeting_panel.gd:534	MeetingPanel
 _show_row	func	scripts/ui/office/office_hud.gd:81	office_hud.gd
@@ -4290,7 +4289,7 @@ _x	func	scripts/ui/components/cash_curve.gd:106	CashCurve
 _x_of	func	scripts/ui/meeting/meeting_ruler.gd:35	MeetingRuler._Rail
 _xp	func	scripts/debug/kit_probe.gd:207	kit_probe.gd
 _y	func	scripts/ui/components/cash_curve.gd:111	CashCurve
-_yatirim_locked	func	scripts/tabs/finance_tab.gd:141	finance_tab.gd
+_yatirim_locked	func	scripts/tabs/finance_tab.gd:115	finance_tab.gd
 _year_ends	func	scripts/tabs/piyasa_tab.gd:474	piyasa_tab.gd
 _year_frac	func	scripts/systems/market_catalog.gd:163	MarketCatalog
 _years	var	scripts/systems/market_catalog.gd:30	MarketCatalog
@@ -6313,7 +6312,7 @@ fit_changed	signal	scripts/tabs/product_tab.gd:15	product_tab.gd
 fit_changed	signal	scripts/tabs/rnd_tab.gd:28	rnd_tab.gd
 fit_changed	signal	scripts/tabs/sales_tab.gd:17	sales_tab.gd
 fit_from_levels	func	scripts/systems/product_quality.gd:242	ProductQuality
-fit_height	func	scripts/tabs/finance_tab.gd:72	finance_tab.gd
+fit_height	func	scripts/tabs/finance_tab.gd:67	finance_tab.gd
 fit_height	func	scripts/tabs/hr/hr_dossier.gd:75	hr_dossier.gd
 fit_height	func	scripts/tabs/hr_tab.gd:185	hr_tab.gd
 fit_height	func	scripts/tabs/personal_tab.gd:66	personal_tab.gd

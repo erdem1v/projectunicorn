@@ -1286,8 +1286,6 @@ FIN_MENTOR_QUOTE,Runway {months} ayın altında. Ya gideri kıs ya geliri bul; i
 FIN_MENTOR_QUOTE_SHUTTER,Runway diye bir şey kalmadı. Sayaç işliyor; bugün ne kestiğin önemli.,There's no runway left to speak of. The counter is running. What matters is what you cut today.
 FIN_MENTOR_QUOTE_WRAPPED,"""{quote}""","""{quote}"""
 FIN_SNOOZE,Ertele,Snooze
-FIN_CASH,Nakit,Cash
-FIN_MONTHLY_NET,Aylık net,Monthly net
 FIN_RUNWAY,Runway,Runway
 FIN_RANGE_6M,6 ay,6 mo
 FIN_RANGE_12M,12 ay,12 mo

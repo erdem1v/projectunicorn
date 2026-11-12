@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git 51959ea6 · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git c00380e1 · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -229,9 +229,9 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/systems/vc_pitch_system.gd · 1317 · VCPitchSystem · RefCounted · 0 sinyal · 91 func
 - scripts/systems/work_hours_system.gd · 342 · WorkHoursSystem · RefCounted · 0 sinyal · 38 func
 
-### scripts/tabs/ (9 dosya, 3944 satır)
+### scripts/tabs/ (9 dosya, 3918 satır)
 - scripts/tabs/events_tab.gd · 346 · - · Control · 0 sinyal · 22 func
-- scripts/tabs/finance_tab.gd · 142 · - · Control · 1 sinyal · 9 func
+- scripts/tabs/finance_tab.gd · 116 · - · Control · 1 sinyal · 8 func
 - scripts/tabs/hr_tab.gd · 537 · - · Control · 1 sinyal · 32 func
 - scripts/tabs/hunt_tab.gd · 533 · - · Control · 0 sinyal · 27 func
 - scripts/tabs/personal_tab.gd · 267 · - · Control · 1 sinyal · 13 func
@@ -356,13 +356,11 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 ### scripts/autoload/event_bus.gd
 - cash_changed(new_value: int) · scripts/autoload/event_bus.gd:7
   ↳ cash_changed emit: scripts/autoload/game_state.gd:359
-  ↳ cash_changed connect: scripts/tabs/finance/finance_ozet_view.gd:60, scripts/tabs/finance_tab.gd:50, scripts/tabs/hr_tab.gd:75, scripts/ui/components/top_bar.gd:146, scripts/debug/endgame_smoke.gd:4749,21489
+  ↳ cash_changed connect: scripts/tabs/finance/finance_ozet_view.gd:60, scripts/tabs/hr_tab.gd:75, scripts/ui/components/top_bar.gd:146, scripts/debug/endgame_smoke.gd:4749,21489
 - mrr_changed(new_value: int) · scripts/autoload/event_bus.gd:8
   ↳ mrr_changed emit: scripts/autoload/game_state.gd:365
-  ↳ mrr_changed connect: scripts/tabs/finance/finance_ozet_view.gd:61, scripts/tabs/finance_tab.gd:50, scripts/tabs/hunt_tab.gd:47, scripts/tabs/sales_tab.gd:76, scripts/ui/components/top_bar.gd:147
-- burn_changed(new_value: int) · scripts/autoload/event_bus.gd:9
-  ↳ burn_changed emit: scripts/autoload/game_state.gd:370
-  ↳ burn_changed connect: scripts/tabs/finance/finance_ozet_view.gd:62, scripts/tabs/finance_tab.gd:51, scripts/tabs/hr_tab.gd:75, scripts/ui/components/top_bar.gd:148
+  ↳ mrr_changed connect: scripts/tabs/finance/finance_ozet_view.gd:61, scripts/tabs/hunt_tab.gd:47, scripts/tabs/sales_tab.gd:76, scripts/ui/components/top_bar.gd:147
+- burn_changed(new_value: int) · scripts/autoload/event_bus.gd:9 · emit: scripts/autoload/game_state.gd:370 · connect: scripts/tabs/finance/finance_ozet_view.gd:62, scripts/tabs/hr_tab.gd:75, scripts/ui/components/top_bar.gd:148
 - brand_changed(new_value: int) · scripts/autoload/event_bus.gd:10 · emit: scripts/autoload/game_state.gd:375 · connect: scripts/ui/components/top_bar.gd:150
 - reputation_changed(new_value: int) · scripts/autoload/event_bus.gd:11 · emit: scripts/autoload/game_state.gd:380 · connect: scripts/ui/components/top_bar.gd:151
 - day_advanced(new_day: int) · scripts/autoload/event_bus.gd:12
@@ -373,10 +371,8 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
   ↳ hour_changed connect: scripts/systems/sprint_system.gd:1898, scripts/tabs/hunt_tab.gd:60, scripts/tabs/product_tab.gd:122, scripts/tabs/sales_tab.gd:82, scripts/ui/components/news_ticker.gd:74, scripts/ui/components/top_bar.gd:153 +5
 - phase_changed(new_phase: int) · scripts/autoload/event_bus.gd:14
   ↳ phase_changed emit: scripts/autoload/game_state.gd:397,409
-  ↳ phase_changed connect: scripts/tabs/finance/finance_ozet_view.gd:69, scripts/tabs/finance_tab.gd:53, scripts/tabs/hunt_tab.gd:52, scripts/tabs/personal_tab.gd:51, scripts/ui/components/inbox.gd:159, scripts/ui/components/top_bar.gd:154
-- runway_recalculated(months: float) · scripts/autoload/event_bus.gd:15
-  ↳ runway_recalculated emit: scripts/autoload/game_state.gd:808
-  ↳ runway_recalculated connect: scripts/tabs/finance_tab.gd:52, scripts/tabs/hr_tab.gd:76, scripts/ui/components/left_tabs.gd:111, scripts/ui/components/top_bar.gd:149
+  ↳ phase_changed connect: scripts/tabs/finance/finance_ozet_view.gd:69, scripts/tabs/finance_tab.gd:49, scripts/tabs/hunt_tab.gd:52, scripts/tabs/personal_tab.gd:51, scripts/ui/components/inbox.gd:159, scripts/ui/components/top_bar.gd:154
+- runway_recalculated(months: float) · scripts/autoload/event_bus.gd:15 · emit: scripts/autoload/game_state.gd:808 · connect: scripts/tabs/hr_tab.gd:76, scripts/ui/components/left_tabs.gd:111, scripts/ui/components/top_bar.gd:149
 - equity_changed(investor_pct: int) · scripts/autoload/event_bus.gd:18
   ↳ equity_changed emit: scripts/autoload/game_state.gd:659,670
   ↳ equity_changed connect: scripts/tabs/finance/finance_ozet_view.gd:64, scripts/tabs/personal_tab.gd:51, scripts/tabs/piyasa_tab.gd:82, scripts/ui/office/office_hud.gd:55, scripts/debug/endgame_smoke.gd:4740
@@ -390,7 +386,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - tab_changed(tab_id: String) · scripts/autoload/event_bus.gd:29
   ↳ tab_changed emit: scripts/main/game_shell.gd:43, scripts/main/main.gd:411,593,1608,1611,1622 +54
   ↳ tab_changed connect: scripts/main/main.gd:5593, scripts/ui/components/left_tabs.gd:106, scripts/ui/components/research_bar.gd:61, scripts/ui/components/top_bar.gd:172, scripts/ui/components/window_layer.gd:62
-- finance_subpage_requested(page_id: String) · scripts/autoload/event_bus.gd:32 · emit: scripts/main/main.gd:5166,5675, scripts/tabs/events/mail_pane.gd:760 · connect: scripts/tabs/finance_tab.gd:58
+- finance_subpage_requested(page_id: String) · scripts/autoload/event_bus.gd:32 · emit: scripts/main/main.gd:5166,5675, scripts/tabs/events/mail_pane.gd:760 · connect: scripts/tabs/finance_tab.gd:54
 - goto_tab_requested(tab_id: String, subpage: String) · scripts/autoload/event_bus.gd:34 · emit: scripts/events/core/effects.gd:650 · connect: scripts/main/main.gd:5592
 - settings_requested() · scripts/autoload/event_bus.gd:38 · emit: scripts/main/main.gd:3170, scripts/menu/main_menu.gd:53, scripts/modals/system_menu_modal.gd:39, scripts/ui/components/left_tabs.gd:96 · connect: scripts/main/main.gd:89
 - confirm_requested(config: Dictionary) · scripts/autoload/event_bus.gd:41
@@ -568,7 +564,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - milestone_reached(milestone_id: String, ending_data: Dictionary) · scripts/autoload/event_bus.gd:248
   ↳ milestone_reached emit: scripts/systems/endings_system.gd:441
   ↳ milestone_reached connect: scripts/main/main.gd:5596, scripts/debug/endgame_smoke.gd:13945, scripts/debug/run_probe.gd:513
-- shutter_changed(weeks_left: int) · scripts/autoload/event_bus.gd:250 · emit: scripts/autoload/game_state.gd:429 · connect: scripts/tabs/finance/finance_ozet_view.gd:79, scripts/tabs/finance_tab.gd:51, scripts/ui/components/top_bar.gd:155
+- shutter_changed(weeks_left: int) · scripts/autoload/event_bus.gd:250 · emit: scripts/autoload/game_state.gd:429 · connect: scripts/tabs/finance/finance_ozet_view.gd:79, scripts/ui/components/top_bar.gd:155
 - month_ended(month_close: Dictionary) · scripts/autoload/event_bus.gd:253
   ↳ month_ended emit: scripts/systems/summary_system.gd:126
   ↳ month_ended connect: scripts/autoload/save_manager.gd:62, scripts/tabs/finance/finance_ozet_view.gd:67, scripts/ui/components/top_bar.gd:158, scripts/debug/endgame_smoke.gd:1442, scripts/debug/run_probe.gd:501
@@ -587,7 +583,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - sheet_walked(vc_id: String) · scripts/autoload/event_bus.gd:270
   ↳ sheet_walked emit: scripts/systems/vc_pitch_system.gd:628
   ↳ sheet_walked connect: scripts/tabs/finance/finance_ozet_view.gd:76, scripts/tabs/hunt_tab.gd:48, scripts/ui/components/inbox.gd:161, scripts/debug/endgame_smoke.gd:1950
-- seed_door_opened() · scripts/autoload/event_bus.gd:274 · emit: scripts/systems/seed_round_system.gd:75 · connect: scripts/tabs/finance_tab.gd:53, scripts/tabs/hunt_tab.gd:49
+- seed_door_opened() · scripts/autoload/event_bus.gd:274 · emit: scripts/systems/seed_round_system.gd:75 · connect: scripts/tabs/finance_tab.gd:49, scripts/tabs/hunt_tab.gd:49
 - seed_sheet_granted(vc_id: String) · scripts/autoload/event_bus.gd:275 · emit: scripts/systems/vc_pitch_system.gd:405 · connect: scripts/events/core/signals.gd:34, scripts/tabs/hunt_tab.gd:49
 - seed_round_closed(vc_id: String) · scripts/autoload/event_bus.gd:276 · emit: scripts/systems/seed_round_system.gd:183 · connect: scripts/tabs/hunt_tab.gd:49, scripts/ui/components/inbox.gd:163
 - office_move_started(office_id: String, arrival_day: int) · scripts/autoload/event_bus.gd:280 · emit: scripts/systems/office_system.gd:69 · connect: scripts/ui/office/office_hud.gd:61
@@ -683,13 +679,13 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 
 ### scripts/tabs/finance_tab.gd
 - fit_changed() · scripts/tabs/finance_tab.gd:10 · (ad 7 yerde tanımlı)
-  ↳ fit_changed emit: scripts/tabs/finance_tab.gd:48,123, scripts/tabs/hr/hr_dossier.gd:46, scripts/tabs/hr_tab.gd:265, scripts/tabs/personal_tab.gd:50, scripts/tabs/product_tab.gd:191 +4
+  ↳ fit_changed emit: scripts/tabs/finance_tab.gd:47,78,97, scripts/tabs/hr/hr_dossier.gd:46, scripts/tabs/hr_tab.gd:265, scripts/tabs/personal_tab.gd:50 +5
   ↳ fit_changed connect: scripts/ui/components/window_layer.gd:169
 
 ### scripts/tabs/hr/hr_dossier.gd
 - close_requested() · scripts/tabs/hr/hr_dossier.gd:11 · emit: scripts/tabs/hr/hr_dossier.gd:83,132 · connect: scripts/ui/components/window_frame.gd:62
 - fit_changed() · scripts/tabs/hr/hr_dossier.gd:12 · (ad 7 yerde tanımlı)
-  ↳ fit_changed emit: scripts/tabs/finance_tab.gd:48,123, scripts/tabs/hr/hr_dossier.gd:46, scripts/tabs/hr_tab.gd:265, scripts/tabs/personal_tab.gd:50, scripts/tabs/product_tab.gd:191 +4
+  ↳ fit_changed emit: scripts/tabs/finance_tab.gd:47,78,97, scripts/tabs/hr/hr_dossier.gd:46, scripts/tabs/hr_tab.gd:265, scripts/tabs/personal_tab.gd:50 +5
   ↳ fit_changed connect: scripts/ui/components/window_layer.gd:169
 
 ### scripts/tabs/hr/hr_panel.gd
@@ -697,12 +693,12 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 
 ### scripts/tabs/hr_tab.gd
 - fit_changed() · scripts/tabs/hr_tab.gd:22 · (ad 7 yerde tanımlı)
-  ↳ fit_changed emit: scripts/tabs/finance_tab.gd:48,123, scripts/tabs/hr/hr_dossier.gd:46, scripts/tabs/hr_tab.gd:265, scripts/tabs/personal_tab.gd:50, scripts/tabs/product_tab.gd:191 +4
+  ↳ fit_changed emit: scripts/tabs/finance_tab.gd:47,78,97, scripts/tabs/hr/hr_dossier.gd:46, scripts/tabs/hr_tab.gd:265, scripts/tabs/personal_tab.gd:50 +5
   ↳ fit_changed connect: scripts/ui/components/window_layer.gd:169
 
 ### scripts/tabs/personal_tab.gd
 - fit_changed() · scripts/tabs/personal_tab.gd:23 · (ad 7 yerde tanımlı)
-  ↳ fit_changed emit: scripts/tabs/finance_tab.gd:48,123, scripts/tabs/hr/hr_dossier.gd:46, scripts/tabs/hr_tab.gd:265, scripts/tabs/personal_tab.gd:50, scripts/tabs/product_tab.gd:191 +4
+  ↳ fit_changed emit: scripts/tabs/finance_tab.gd:47,78,97, scripts/tabs/hr/hr_dossier.gd:46, scripts/tabs/hr_tab.gd:265, scripts/tabs/personal_tab.gd:50 +5
   ↳ fit_changed connect: scripts/ui/components/window_layer.gd:169
 
 ### scripts/tabs/product/area_panel.gd
@@ -776,7 +772,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 
 ### scripts/tabs/product_tab.gd
 - fit_changed() · scripts/tabs/product_tab.gd:15 · (ad 7 yerde tanımlı)
-  ↳ fit_changed emit: scripts/tabs/finance_tab.gd:48,123, scripts/tabs/hr/hr_dossier.gd:46, scripts/tabs/hr_tab.gd:265, scripts/tabs/personal_tab.gd:50, scripts/tabs/product_tab.gd:191 +4
+  ↳ fit_changed emit: scripts/tabs/finance_tab.gd:47,78,97, scripts/tabs/hr/hr_dossier.gd:46, scripts/tabs/hr_tab.gd:265, scripts/tabs/personal_tab.gd:50 +5
   ↳ fit_changed connect: scripts/ui/components/window_layer.gd:169
 
 ### scripts/tabs/rnd/rnd_assign_panel.gd
@@ -790,12 +786,12 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 
 ### scripts/tabs/rnd_tab.gd
 - fit_changed() · scripts/tabs/rnd_tab.gd:28 · (ad 7 yerde tanımlı)
-  ↳ fit_changed emit: scripts/tabs/finance_tab.gd:48,123, scripts/tabs/hr/hr_dossier.gd:46, scripts/tabs/hr_tab.gd:265, scripts/tabs/personal_tab.gd:50, scripts/tabs/product_tab.gd:191 +4
+  ↳ fit_changed emit: scripts/tabs/finance_tab.gd:47,78,97, scripts/tabs/hr/hr_dossier.gd:46, scripts/tabs/hr_tab.gd:265, scripts/tabs/personal_tab.gd:50 +5
   ↳ fit_changed connect: scripts/ui/components/window_layer.gd:169
 
 ### scripts/tabs/sales_tab.gd
 - fit_changed() · scripts/tabs/sales_tab.gd:17 · (ad 7 yerde tanımlı)
-  ↳ fit_changed emit: scripts/tabs/finance_tab.gd:48,123, scripts/tabs/hr/hr_dossier.gd:46, scripts/tabs/hr_tab.gd:265, scripts/tabs/personal_tab.gd:50, scripts/tabs/product_tab.gd:191 +4
+  ↳ fit_changed emit: scripts/tabs/finance_tab.gd:47,78,97, scripts/tabs/hr/hr_dossier.gd:46, scripts/tabs/hr_tab.gd:265, scripts/tabs/personal_tab.gd:50 +5
   ↳ fit_changed connect: scripts/ui/components/window_layer.gd:169
 
 ### scripts/ui/components/news_ticker.gd
@@ -1123,7 +1119,7 @@ Biçim: yol · boyut · üst düzey anahtarlar (en çok 10)
 - data/product/sprint.json · 9.3 KB · {sprint_weeks, quarter_weeks, mvp_lines, effort, fix_effort, limit_k, need, roles, role_areas, person_points_week, +26}
 - data/techtree/rnd_tree.json · 6.3 KB · {_doc, _stars, _cross, _areas, k_arge, report_period_weeks, nodes, _hidden_doc, _hidden_k3_doc, hidden_lines}
 
-## Metin anahtarı aileleri (841 aile, 3187 anahtar)
+## Metin anahtarı aileleri (840 aile, 3185 anahtar)
 
 Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak geçiren .gd/.json (en çok 5). '-' = dinamik kurulmuş olabilir ya da kullanılmıyor.
 - ANGEL_CAP_* · 1 · scripts/tabs/finance/finance_ozet_view.gd
@@ -1264,7 +1260,6 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - FIN_BURN_* · 7 · scripts/main/main.gd, scripts/systems/finance_system.gd, scripts/tabs/finance/finance_ozet_view.gd, scripts/debug/endgame_smoke.gd
 - FIN_CAP_* · 7 · scripts/onboarding/first_week_doc.gd, scripts/tabs/events/mail_pane.gd, scripts/tabs/finance/finance_ozet_view.gd, scripts/ui/components/inbox.gd, scripts/ui/components/top_bar.gd
 - FIN_CAPTABLE_* · 4 · scripts/tabs/finance/finance_ozet_view.gd
-- FIN_CASH_* · 1 · scripts/tabs/finance_tab.gd
 - FIN_CURVE_* · 5 · scripts/ui/components/cash_curve.gd
 - FIN_EQUITY_* · 1 · scripts/systems/term_sheet_table_system.gd
 - FIN_EXPENSE_* · 1 · -
@@ -1272,7 +1267,7 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - FIN_INCOME_* · 1 · -
 - FIN_MARKET_* · 4 · scripts/tabs/finance/finance_ozet_view.gd
 - FIN_MENTOR_* · 4 · scripts/tabs/finance/finance_ozet_view.gd, scripts/ui/components/top_bar.gd, scripts/ui/office/office_notice_stack.gd
-- FIN_MONTHLY_* · 3 · scripts/tabs/finance_tab.gd
+- FIN_MONTHLY_* · 2 · -
 - FIN_NET_* · 1 · -
 - FIN_NO_* · 1 · scripts/tabs/finance/finance_ozet_view.gd
 - FIN_OFFICE_* · 1 · scripts/tabs/finance/finance_ozet_view.gd
@@ -1283,7 +1278,7 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - FIN_RANGE_* · 3 · scripts/tabs/finance/finance_ozet_view.gd
 - FIN_RECENT_* · 1 · scripts/tabs/finance/finance_ozet_view.gd
 - FIN_REQ_* · 2 · scripts/tabs/finance/finance_ozet_view.gd
-- FIN_RUNWAY_* · 1 · scripts/tabs/events/mail_pane.gd, scripts/tabs/finance_tab.gd
+- FIN_RUNWAY_* · 1 · scripts/tabs/events/mail_pane.gd
 - FIN_SNOOZE_* · 1 · scripts/tabs/finance/finance_ozet_view.gd
 - FIN_SUBTAB_* · 3 · scripts/tabs/finance_tab.gd, scripts/tabs/hunt_tab.gd
 - FIN_TX_* · 1 · -
@@ -1930,7 +1925,7 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - TOPBAR_NEXT_* · 4 · scripts/theme/ui_tokens.gd, scripts/ui/components/top_bar.gd
 - TOPBAR_PAUSE_* · 1 · -
 - TOPBAR_RESUME_* · 1 · scripts/ui/components/top_bar.gd
-- TOPBAR_SHUTTER_* · 3 · scripts/tabs/finance_tab.gd, scripts/theme/ui_tokens.gd, scripts/ui/components/top_bar.gd
+- TOPBAR_SHUTTER_* · 3 · scripts/theme/ui_tokens.gd, scripts/ui/components/top_bar.gd
 - TOPBAR_TRIP_* · 1 · scripts/ui/components/top_bar.gd
 - TOPBAR_UNIT_* · 1 · scripts/debug/endgame_smoke.gd
 - TRAIT_DISCIPLINED_* · 2 · scripts/systems/founder_constants.gd

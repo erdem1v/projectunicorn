@@ -1,7 +1,7 @@
 extends Control
 
-# Finans penceresi (GDD ch08, ch09). Ortak koyu başlıkta Finans ve üç ölçü: nakit, aylık net ve runway (kasa
-# eksiyken kepenk sayacı), üst barın renk kuralıyla (UiTokens.D_runway_reading, D_net_ink). Denetim şeridinde
+# Finans penceresi (GDD ch08, ch09). Ortak koyu başlıkta yalnız Finans: nakit, aylık net ve runway üst barda, pencere
+# açıkken de görünür (envanter shell-03: ikinci kez yazılmaz). Denetim şeridinde, Yatırım açılınca,
 # ÖZET | YATIRIM; Yatırım, Series A Hunt'a ya da seed kapısına kadar kilitli, gerekçesi yanında. Gövdede Özet
 # (FinanceOzetView) ya da Yatırım (hunt_tab.gd); pencere görünen sayfanın içeriği kadar uzar (fit_height).
 # PROCESS_MODE_ALWAYS (.tscn).
@@ -13,8 +13,8 @@ const HUNT_TAB := preload("res://scripts/tabs/hunt_tab.gd")
 const PAGE_KEYS := {"ozet": "FIN_SUBTAB_SUMMARY", "yatirim": "FIN_SUBTAB_INVESTMENT"}   # LOC-DATA sub-page ids
 
 var frame_options: Dictionary
-var _kpis: HBoxContainer
 var _outer: VBoxContainer
+var _ctl: PanelContainer   # the tab strip's row
 var _tabs: HBoxContainer
 var _pages: Dictionary = {}   # id -> page; its `content` is what the window fits
 var _current: String = "ozet"
@@ -22,20 +22,19 @@ var _signals: Array = []
 
 
 func _init() -> void:
-	_kpis = SprintUiShared.box(0)
-	frame_options = {"title": "TAB_FINANCE", "kpi": _kpis, "pad": Vector2i.ZERO}
+	frame_options = {"title": "TAB_FINANCE", "pad": Vector2i.ZERO}
 
 
 func _ready() -> void:
 	_outer = SprintUiShared.column(0)
 	_outer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(_outer)
-	var ctl := PanelContainer.new()
-	ctl.theme_type_variation = &"WinCtl"
-	ctl.custom_minimum_size.y = UiTokens.D_H_WIN_CTL
+	_ctl = PanelContainer.new()
+	_ctl.theme_type_variation = &"WinCtl"
+	_ctl.custom_minimum_size.y = UiTokens.D_H_WIN_CTL
 	_tabs = SprintUiShared.box(UiTokens.SPACE_L)
-	ctl.add_child(_tabs)
-	_outer.add_child(ctl)
+	_ctl.add_child(_tabs)
+	_outer.add_child(_ctl)
 	var host := Control.new()
 	var body := SprintUiShared.pad(host, Vector4i(UiTokens.SPACE_3XL, UiTokens.SPACE_XL, UiTokens.SPACE_3XL, UiTokens.SPACE_3XL))
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -47,9 +46,6 @@ func _ready() -> void:
 		host.add_child(page)
 		(page.content as Control).minimum_size_changed.connect(fit_changed.emit)
 	_signals = [
-		[EventBus.cash_changed, _paint_kpis], [EventBus.mrr_changed, _paint_kpis],
-		[EventBus.burn_changed, _paint_kpis], [EventBus.shutter_changed, _paint_kpis],
-		[EventBus.runway_recalculated, _paint_kpis],
 		[EventBus.phase_changed, _apply_phase_lock], [EventBus.seed_door_opened, _apply_phase_lock],
 		# Deep-link: masanın term sheet hatırlatıcısı (DeskPapers) ve kartların goto_tab etkisi
 		# tab_changed("finance") + bu sinyali ardışık emit eder; tab mount'u senkron olduğu için bu
@@ -59,7 +55,6 @@ func _ready() -> void:
 	]
 	for s in _signals:
 		(s[0] as Signal).connect(s[1])
-	_paint_kpis()
 	_show_page("ozet")
 
 
@@ -73,36 +68,15 @@ func fit_height() -> float:
 	return _outer.get_combined_minimum_size().y + (_pages[_current].content as Control).get_combined_minimum_size().y
 
 
-## Nakit; aylık net (artıysa olumlu, kasa artıdayken eksi bedeldir, tehlike yalnız kasa eksideyken); runway ya
-## da kepenk sayacı, net akış eksi değilken hiçbiri. Her değişiklikte baştan kurulur; bağlandığı sinyallerin
-## değeri okunmaz.
-func _paint_kpis(_value = null) -> void:
-	UiFactory.clear(_kpis)
-	var cash := UiFactory.D_kpi(tr("FIN_CASH"), Fmt.money_exact(GameState.cash))
-	if GameState.cash < 0:
-		UiFactory.D_kpi_value(cash).add_theme_color_override("font_color", UiTokens.D_neg())
-	_kpis.add_child(cash)
-	var net: int = int(FinanceSystem.get_monthly_flow().net)
-	var net_ink: Variant = UiTokens.D_net_ink(net)
-	var net_cell := UiFactory.D_kpi(tr("FIN_MONTHLY_NET"), ("+" if net > 0 else "") + Fmt.money(net),
-		net < 0 and net_ink == null)
-	if net_ink != null:
-		UiFactory.D_kpi_value(net_cell).add_theme_color_override("font_color", net_ink)
-	_kpis.add_child(net_cell)
-	var reading: Dictionary = UiTokens.D_runway_reading()
-	if reading.text == "":
-		return
-	var runway := UiFactory.D_kpi(tr("TOPBAR_SHUTTER" if reading.shutter else "FIN_RUNWAY"), reading.text)
-	if reading.ink != null:
-		UiFactory.D_kpi_value(runway).add_theme_color_override("font_color", reading.ink)
-	_kpis.add_child(runway)
-
-
 ## ÖZET | YATIRIM. Yatırım açılana kadar hiç görünmez, yaptıkça açılır (envanter world-01): tek sayfayla sekme satırı
-## da çizilmez.
+## da, boş şeridi de çizilmez (shell-03); açılınca pencere şeridin boyu kadar uzar.
 func _paint_tabs() -> void:
 	UiFactory.clear(_tabs)
-	if _yatirim_locked():
+	var shown: bool = not _yatirim_locked()
+	if _ctl.visible != shown:
+		_ctl.visible = shown
+		fit_changed.emit()
+	if not shown:
 		return
 	var open: Array = PAGE_KEYS.keys()   # LOC-DATA sub-page id
 	_tabs.add_child(UiFactory.D_seg_tabs(open.map(func(id: String) -> String: return tr(PAGE_KEYS[id])),
@@ -113,7 +87,7 @@ func _show_page(id: String) -> void:
 	if id == "yatirim" and _yatirim_locked():   # LOC-DATA sub-page id
 		# The lock predicate, not a literal `phase < 3`: the seed door card's goto_tab
 		# finance/yatirim must reach the page the door just unlocked.
-		return  # locked — the locked tab and its reason already tell the player why
+		return  # locked: the page does not exist for the player yet (world-01: no tab, no strip)
 	_current = id
 	for page_id in _pages:
 		(_pages[page_id] as Control).visible = page_id == id

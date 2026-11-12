@@ -14,7 +14,7 @@ Sekme kökleri (scripts/tabs/):
   ↳ pano zaman ekseninin genişliğini ölçer (`_axis`, `_on_axis`): pencere ya da ray değişince sayfa o genişlikle yeniden kurulur; ÇEYREK'te pencere içeriği kadar uzar (`fit_height`).
 - `scripts/tabs/sales_tab.gd` (834): Satış: fiyat duruşu, boru hattı (lead belgesi), satış masası, son hareketler, müşteri portföyü, canlı B2C kitle sayfası.
 - `scripts/tabs/hr_tab.gd` (542): Ekip: Kadro/Görevler görünümleri, Atlas ve Mesai panel açıcıları, satır menüsü, yapı anahtarıyla yerinde boyama.
-- `scripts/tabs/finance_tab.gd` (144): Finans kabuğu: nakit/net/runway KPI'ları, ÖZET|YATIRIM şeridi, Yatırım kilidi (`_yatirim_locked`).
+- `scripts/tabs/finance_tab.gd` (116): Finans kabuğu: başlıkta yalnız ad (nakit/net/runway üst barda, shell-03), Yatırım açılınca ÖZET|YATIRIM şeridi, Yatırım kilidi (`_yatirim_locked`).
 - `scripts/tabs/hunt_tab.gd` (533): Yatırım sayfası: Frank şeridi, seed turu kartı, yatırımcı listesi, teklifler, bekleyen toplantı (VC sistemlerinin ince arayüzü).
 - `scripts/tabs/rnd_tab.gd` (273): Ar-Ge kabuğu: AĞAÇ|GEÇMİŞ şeridi, koşan araştırma satırı, ağaç yapı anahtarı, seçili düğümü bayrakla saklama.
 - `scripts/tabs/events_tab.gd` (369): Olaylar (gelen kutusu): süzgeçli liste, gün ayraçları, klavye gezintisi; modeli `Inbox`'tadır, okuma bölmesi `mail_pane.gd`.
@@ -135,7 +135,7 @@ Ekip:
 
 Satış, Finans, Yatırım:
 - `SalesTab._refresh()` `scripts/tabs/sales_tab.gd:174`: KPI, duruş, boru hattı, masa, günlük, portföy (B2C'de `_paint_b2c` :259) baştan çizilir · `_on_state_changed`.
-- `FinanceTab._show_page(id)` `scripts/tabs/finance_tab.gd:114`: ÖZET/YATIRIM seçer, Yatırım kilitliyse döner · `finance_subpage_requested` (:58), şerit.
+- `FinanceTab._show_page(id)` `scripts/tabs/finance_tab.gd:88`: ÖZET/YATIRIM seçer, Yatırım kilitliyse döner · `finance_subpage_requested` (:54), şerit.
 - `FinanceOzetView.cap_table(parent)` `scripts/tabs/finance/finance_ozet_view.gd:451` (static): hisse tablosu · personal_tab.gd:207.
 - `HuntTab._refresh()` `scripts/tabs/hunt_tab.gd:102`: sayfayı baştan kurar; görünmezken `_on_changed` (:82) yalnız `_stale` işaretler · VC/seed sinyalleri.
 - `HuntTab._sit_button` `hunt_tab.gd:509`: "Masaya otur" `term_table_requested` yayar (:510) · main.gd:4821 bağlar.
@@ -169,12 +169,12 @@ Sekmelerin tanımladığı sinyaller (DIZIN.md "Sinyaller" bölümü):
 Sekmelerin yaydığı EventBus sinyalleri:
 - `tab_changed`: product_tab.gd:321-327, sales_tab.gd:295, mail_pane.gd:830,836, hr_atlas_modal.gd:168, sprint_ui_shared.gd:557, rnd_ui_shared.gd:149 · dinleyen window_layer.gd:62.
 - `pitch_requested` sales_tab.gd:412 (dinleyen main.gd:4815) · `term_table_requested` hunt_tab.gd:510 (main.gd:4821) · `rnd_node_requested` product_tab.gd:323 (rnd_tab.gd:80).
-- `finance_subpage_requested` mail_pane.gd:832 (dinleyen finance_tab.gd:58) · `confirm_requested` hunt_tab.gd:234,479, hr_tab.gd:337, hr_ledger.gd:376-425, hr_atlas_modal.gd:453,472 (main.gd:90).
+- `finance_subpage_requested` mail_pane.gd:832 (dinleyen finance_tab.gd:54) · `confirm_requested` hunt_tab.gd:234,479, hr_tab.gd:337, hr_ledger.gd:376-425, hr_atlas_modal.gd:453,472 (main.gd:90).
 
 Sekmelerin dinlediği EventBus sinyalleri (hepsi `_exit_tree`'de ya da düğümle birlikte kopar):
 - Ürün `product_tab.gd:117-121`: product_state_changed, build_progress_changed, day_advanced, infra_changed `_queue_rebuild`; desk_changed (her mesai saati gelir) `_on_desk`: yalnız `ProductModel.desk_stamp` değiştiyse kurar;
   ↳ `hour_changed` (:119) sayfayı kurmaz, `_on_hour` koşan sprintte şimdiki anı günceller.
-- Finans `finance_tab.gd:49-58`: cash/mrr/burn_changed, shutter_changed, runway_recalculated, phase_changed, seed_door_opened, finance_subpage_requested. Özet `finance_ozet_view.gd:60`: ek equity/month_ended/sheet_*/rival_*.
+- Finans `finance_tab.gd:48-54`: phase_changed, seed_door_opened, finance_subpage_requested. Özet `finance_ozet_view.gd:60`: ek equity/month_ended/sheet_*/rival_*.
 - Yatırım `hunt_tab.gd:45-61`: sheet_*, callback_ready, meeting_day, day_advanced (:47), pitch_finished, seed_*, phase_changed, event_*, TimeManager.hold_changed, mentor_advisory_changed, hour_changed, assignment_changed.
 - Ekip `hr_tab.gd:73-85`: character_added/removed, morale_changed, hr_day_processed, customer_assigned, employee_*, productivity_changed, event_*, palette_changed. Dosya `hr_dossier.gd:54-55`: hr_day_processed, character_removed.
 - Satış `sales_tab.gd:65-82`: prospect_*, lead_*, deal_*, customer_* (9 sinyal), price_stance_changed, mrr_changed, day_tick_completed, pitch_finished, assignment_changed, event_*, hour_changed.
@@ -206,7 +206,7 @@ Anahtarlar `localization/strings.csv`'de (sütunlar keys,tr,en); sekmeler `tr("A
   product_tab, product_model, sprint_panel, sprint_head, capacity_view, sprint_card, sprint_ui_shared, area_panel, quarter_view, type_picker, overview_view.
 - `SALES_*`: sales_tab (STEWARD, LOG, STRIP, STANCE, ROUTE, CHIP, B2C, PROMISE, BAND, ACTION), mail_pane (SALES_PER/ACTION/WEEKLY/STEWARD/CLAUSE), hr_assignments (SALES_LOCKED).
 - `HR_*` (HR_COL, HR_CARD, HR_ROW, HR_ATLAS 26 kullanım, HR_HOURS, HR_TAB, HR_KPI, HR_STATE, HR_BADGE, HR_ASSIGN, HR_LEGEND, HR_DOSSIER): hr_tab, hr_ledger, hr_assignments, hr_atlas_modal, hr_dossier, hr_ui_shared, personal_tab, events_tab.
-- `FIN_*` (FIN_GOAL, FIN_PROFIT, FIN_MARKET, FIN_CAPTABLE, FIN_RANGE, FIN_MENTOR, FIN_SUBTAB, FIN_CASH, FIN_MONTHLY, FIN_RUNWAY): finance_tab, finance_ozet_view, mail_pane; `ANGEL_CAP_*` ve `SEED_CAP_*` özette.
+- `FIN_*` (FIN_GOAL, FIN_PROFIT, FIN_MARKET, FIN_CAPTABLE, FIN_RANGE, FIN_MENTOR, FIN_SUBTAB, FIN_RUNWAY): finance_tab, finance_ozet_view, mail_pane; `ANGEL_CAP_*` ve `SEED_CAP_*` özette.
 - `HUNT_*` (BADGE, MEETING, WALK, SEC, EST, COUNTER, REQUEST...), `SEED_*` (PITCH, EXPECT, OFFER, DOOR, DONE, BAND), `VC_BLOCK_*`, `VC_EV_*`, `MENTOR_NAME`: yalnız hunt_tab (HUNT_BADGE/CONDITION ayrıca vc_meeting_adapter).
 - `RND_*` (LEGEND, VIEW, TREE, WEEKS, REQ, NEED, FAMILY, PLACE, ASSIGN, ABANDON, COMPLETED, NOTE, HISTORY, FROZEN...): rnd_tab, rnd_ui_shared, rnd_detail_panel, rnd_assign_panel, rnd_history, rnd_tree_view, mail_pane.
 - `INBOX_*`, `MAIL_*` (RPT, STAMP...), `DESK_PAPER_*`, `GATE_ANSWER_*`, `PAPER_GONE_*`, `SUPPORT_RPT_*`, `MONTH_ROW_*`: events_tab, mail_pane (INBOX_* ayrıca inbox.gd).

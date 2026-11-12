@@ -41,7 +41,7 @@ Kapsam içi (`scripts/`):
 Komşu (bu sistemin kapısını açar ya da okur, başka haritada ele alınır):
 - `systems/seed_round_system.gd` (225), `seed_constants.gd` (149), `term_sheet_table_system.gd` (987), `counterpart_system.gd` (101), `data_models/term_sheet.gd` (63).
 - `systems/summary_system.gd` (244): ay kapanışı ve dönem özeti; runway eşiği satırını şeride yazar.
-- Arayüz: `tabs/finance_tab.gd` (144), `tabs/finance/finance_ozet_view.gd` (590), `tabs/hunt_tab.gd` (544), `modals/ending_scene.gd` (557), `ui/components/news_ticker.gd` (237).
+- Arayüz: `tabs/finance_tab.gd` (116), `tabs/finance/finance_ozet_view.gd` (590), `tabs/hunt_tab.gd` (544), `modals/ending_scene.gd` (557), `ui/components/news_ticker.gd` (237).
 - Veri: `data/market/{companies,people}.json`, `data/product/rivals.json` (okuyan `systems/sprint_catalog.gd:12`), `data/events/cards/funding/*.json`.
 
 ## Giriş noktaları
@@ -117,7 +117,7 @@ Hepsi `EventBus`te (`autoload/event_bus.gd`); satır numarası tanım satırı.
 - `term_table_requested` `event_bus.gd:269`: yayan `events/core/effects.gd:575`, `:594`, `hunt_tab.gd:510`, `game_shell.gd:163` · `main.gd:4821`.
 - `mentor_advisory_changed` `event_bus.gd:231`: yayan `vc_pitch_system.gd:890` (geri arama açıldı) · `hunt_tab.gd:59`, `office_notice_stack.gd:45`, `game_state.gd:332`.
 - `run_ended` `event_bus.gd:245`: yayan `endings_system.gd:484` · `main.gd:4816` (`_on_run_ended` `:5114`); `milestone_reached` `event_bus.gd:248`: yayan `endings_system.gd:448` · `main.gd:4817`.
-- `shutter_changed` `event_bus.gd:250`: yayan `game_state.gd:411` (`set_shutter_weeks_left`) · `top_bar.gd:155`, `finance_ozet_view.gd:80`, `finance_tab.gd:51`.
+- `shutter_changed` `event_bus.gd:250`: yayan `game_state.gd:411` (`set_shutter_weeks_left`) · `top_bar.gd:155`, `finance_ozet_view.gd:80`, `finance_tab.gd:49`.
 - `equity_changed` `event_bus.gd:18`: yayan `game_state.gd:614`, `:625` (tur kayıtları) · `finance_ozet_view.gd:65`.
 - `cash_changed` `event_bus.gd:7`, `burn_changed` `:9`, `runway_recalculated` `:15`: `GameState.set_cash/set_daily_burn` (`game_state.gd:339`, `:350`) yayar · TopBar, Finans.
 - `month_ended` `event_bus.gd:253`: yayan `summary_system.gd:126` · `save_manager.gd:62`, `top_bar.gd:158`, `finance_ozet_view.gd:68`.
