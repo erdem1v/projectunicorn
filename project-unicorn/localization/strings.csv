@@ -3194,7 +3194,7 @@ EFFECT_ACCOUNT_TO_FOUNDER,Hesap sende: {company},Account now yours: {company}
 EFFECT_PROSPECT_LOST,Aday düşer: {prospect},Lead lost: {prospect}
 EFFECT_OFFER_DISCOUNT,Teklif: {prospect} imzalarsa {weeks} MRR {pct},"Offer: if {prospect} signs, MRR {pct} for {weeks}"
 EFFECT_OFFER_PROMISE,"Teklif: {prospect} imzalarsa söz verilir, {step}","Offer: if {prospect} signs, we promise {step}"
-EFFECT_PITCH_FOCUS,{weeks} satış görüşmelerinde öne çıkan: {area},Sales meetings lean on {area} for {weeks}
+EFFECT_PITCH_FOCUS,Çeyrek sonuna kadar: {area},Until quarter end: {area}
 EFFECT_SERVER_PRICE,"Sunucu fiyatı {pct}, ayda {v}","Server price {pct}, {v} a month"
 EFFECT_SERVER_PRICE_TIERS,Standart ve Kurumsal sunucu {pct} ucuz,Standard and Enterprise servers {pct} cheaper
 EFFECT_SERVER_LOCK_SEATS,"Sunucu sözleşmesi {weeks}: kademe sabit, kapasite en az {n} koltuk","Server contract for {weeks}: tier fixed, capacity at least {n} seats"

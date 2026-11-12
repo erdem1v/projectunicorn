@@ -3195,3 +3195,7 @@ etiketleri, kilit gerekçeleri, süre notları ve her gövde varyantı (`text.<d
 - `rival.outage` haber değil karardır: ikinci şıkkı "Demo yapmayalım" (aday gelmez, bedel yok). Lint O4 artık hiçbir şeye dokunmayan ve `status_quo_reason` taşıyan şıkkı öznesine dokunmadı diye düşürmez (O1 zaten nedenini ister).
 
 *Neden.* Eleştirmen panelinde altı eleştirmen "karar kılığında tek düğme" dedi; CLAUDE.md §6: "Karar olmayan anlar `MessageSystem` mesajıdır." Yardımcı yönetmenin 2026-11-12 kararı (etki mail gelince iner, çip uygulananı yazar). Smoke `event_news_lands_on_arrival`, `event_beat_is_note`; kare `--inbox-shot=news`.
+
+### §27.52 · Satış vurgusu çeyrek sonuna kadar sürer
+
+`pitch_focus` (çeyrek bülteni) 13 hafta değil, indiği takvim çeyreğinin sonuna kadar sürer ve çip "Çeyrek sonuna kadar: {alan}" yazar; bülten çeyreğin ilk haftasında gelmezse vurgu kısalır (yardımcı yönetmen 2026-11-12, envanter shell-17; smoke `event_pitch_focus_quarter_end`).

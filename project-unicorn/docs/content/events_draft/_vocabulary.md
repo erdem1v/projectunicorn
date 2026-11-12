@@ -14,7 +14,7 @@ Counts are what the engine actually has, at generation time:
 |---|---|
 | Seams (read) | **314** |
 | Effect verbs (write) | **86** |
-| Cards in the catalogue | 181 |
+| Cards in the catalogue | 182 |
 | Arcs | 3 |
 
 ## a · Effect verbs

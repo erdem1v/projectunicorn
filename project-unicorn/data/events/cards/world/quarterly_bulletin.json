@@ -59,8 +59,7 @@
       "effects": [
         {
           "verb": "pitch_focus",
-          "area": "onboarding",
-          "weeks": 13
+          "area": "onboarding"
         }
       ]
     }

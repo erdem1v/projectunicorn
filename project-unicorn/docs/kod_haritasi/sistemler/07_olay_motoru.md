@@ -199,7 +199,7 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - Satış ve hesap fiilleri: `account_notice {scope, reason, mail}` (`B2BSalesSystem.give_notice`; sebebi postalı bildirim `B2BConstants.EXIT_NOTICE_MAILS`ta olmalı, `mail: false` kartın kendisi bildirimse),
   ↳ `prospect_offer {scope, discount_pct, discount_weeks, promise_step, promise_weeks}` (`ProspectRegistry.set_offer`, yeni teklif eskisinin yerine geçer; lint: `discount_pct` > 0 ile `discount_weeks` >= 1 birlikte;
   ↳ `promise_step` kart verisinde temel kimlikle yazılır, fiil `SprintCatalog.in_product` ile ürünün kimliğine çevirir), `drop_prospect {scope}` (`SalesFinalizer.lose`, sebep `event`), `take_account {scope}` (`assign_customer("", true)`),
-  ↳ `pitch_focus {area, weeks}` (`SalesMeetingSystem.set_pitch_focus`; terim yalnız o alanı bekleyen ve ürünün karşıladığı masada, `sales.pitch_focus`). `account_notice`, `prospect_offer`,
+  ↳ `pitch_focus {area}` (indiği takvim çeyreğinin sonuna kadar, `SalesMeetingSystem.set_pitch_focus`; terim yalnız o alanı bekleyen ve ürünün karşıladığı masada, `sales.pitch_focus`). `account_notice`, `prospect_offer`,
   ↳ `drop_prospect` EKONOMİK listede (işaretsiz tutar = bedel, `on_expire`da yasal). `promise_extend` / `promise_break` `scope`lu yazılırsa o hesabın sözlerine iner (oldest-first;
   ↳ uzatmada en eskisine) ve SYSTEM kartı gerektirmez (lint V2 `SCOPED_VERBS`)
 - Altyapı fiilleri: `server_price {mult, tiers?}` (`InfraSystem.scale_price`; çarpan birim fiyata biner, `tiers` yoksa her kademeye, varsa yalnız adlı kademelere;

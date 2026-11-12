@@ -368,9 +368,8 @@ static func _lint_sales_effect(where: String, effect: Dictionary, card: Dictiona
 		if step != "" and ProductLines.step(step).is_empty() \
 				and not ProductLines.subtypes().any(func(sub: String) -> bool: return not ProductLines.step("%s@%s" % [step, sub]).is_empty()):
 			_add(SEVERITY_ERROR, "17.1", where, "prospect_offer promise_step '%s' is a step of no product" % step)
-	if verb == "pitch_focus" and (not ProductQuality.weights("b2b", "").has(String(effect.get("area", "")))
-			or int(effect.get("weeks", 0)) < 1):
-		_add(SEVERITY_ERROR, "17.1", where, "pitch_focus needs a ProductQuality area and weeks of 1 or more")
+	if verb == "pitch_focus" and not ProductQuality.weights("b2b", "").has(String(effect.get("area", ""))):
+		_add(SEVERITY_ERROR, "17.1", where, "pitch_focus needs a ProductQuality area")
 
 
 ## The server verbs' arguments: a price scales by a multiplier above 0, the tier form is the Standard and Enterprise pair

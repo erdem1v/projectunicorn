@@ -377,6 +377,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"event_history_chip_matches_live": fail = _case_event_history_chip_matches_live()
 		"event_beat_is_note":             fail = _case_event_beat_is_note()
 		"event_news_lands_on_arrival":    fail = _in_fixture_scope(_case_event_news_lands_on_arrival)
+		"event_pitch_focus_quarter_end":  fail = _case_event_pitch_focus_quarter_end()
 		"event_beat_freezes_seams":       fail = _case_event_beat_freezes_seams()
 		"messages_save_round_trip":       fail = _case_messages_save_round_trip()
 		"sales_weekly_report_is_a_message": fail = _case_sales_weekly_report_is_a_message()
@@ -6326,6 +6327,32 @@ static func _case_event_history_chip_matches_live() -> String:
 		var shown: String = EvChips.text(EvChips.describe(deltas[i], ctx, {}, true)[0])
 		if shown != live[i]:
 			return "%s: the card showed '%s', its history row reads '%s'" % [effects[i].verb, live[i], shown]
+	return ""
+
+
+## Satış görüşmesinin vurgusu (`pitch_focus`) indiği takvim çeyreğinin sonuna kadar sürer (yardımcı yönetmen, 2026-11-12, envanter
+## shell-17): çeyreğin ilk haftasında inen bütün çeyrek, beşinci haftasında inen kalanı kadar sürer, son haftasında hâlâ açıktır ve
+## sonraki çeyreğin ilk haftasında kapanır; Ekim'de inen yılın sonunda biter. Çip süreyi değil çeyreğin sonunu yazar.
+## FALSİFİKASYON: fiil vurguyu bugünden 13 hafta sonraya koysun → beşinci haftada inen sonraki çeyreğe taşar, FAIL.
+static func _case_event_pitch_focus_quarter_end() -> String:
+	var effect := {"verb": "pitch_focus", "area": "onboarding"}
+	for first_month in [4, 10]:
+		var opens: int = 1
+		while int(GameState.get_date_dict(opens).month) != first_month:
+			opens += 1
+		var closes: int = opens
+		while int(GameState.get_date_dict(closes).month) != (first_month + 3 - 1) % 12 + 1:
+			closes += 1
+		for start in [opens, opens + TimeModel.ticks(4)]:
+			GameState.day = start
+			EvEffects.run_played([effect], {}, "fixture.pitch_focus")
+			var until: int = int(GameState.get_flag("sales_pitch_focus", {}).get("until", -1))
+			if until != closes:
+				return "a focus landing in week %d of the quarter opening in month %d runs until tick %d, want the next quarter's first week %d" % [
+					start - opens + 1, first_month, until, closes]
+	var chip: String = EvChips.text(EvChips.describe(effect, {}, {}, false)[0])
+	if chip != TranslationServer.translate("EFFECT_PITCH_FOCUS").format({"area": SprintCatalog.area_short("onboarding")}):
+		return "the focus chip reads '%s'" % chip
 	return ""
 
 

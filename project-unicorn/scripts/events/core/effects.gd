@@ -794,11 +794,15 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 				return _no_target(verb, did)
 			SalesFinalizer.lose(did, dropped.company_name, SalesConstants.LOSS_EVENT, "", SalesConstants.RETURN_LOCK_WEEKS)
 			return {"verb": verb, "prospect": did, "company": dropped.company_name}
-		# For `weeks` the sales meetings lean on `area` (SalesMeetingSystem.set_pitch_focus).
+		# Until the next calendar quarter's first week the sales meetings lean on `area` (SalesMeetingSystem.set_pitch_focus).
 		"pitch_focus":
-			var focus_weeks: int = int(e.get("weeks", 1))
-			SalesMeetingSystem.set_pitch_focus(String(e.get("area", "")), GameState.day + TimeModel.ticks(focus_weeks))
-			return {"verb": verb, "area": e.get("area", ""), "weeks": focus_weeks}
+			var quarter := func(d: int) -> int: return floori((int(GameState.get_date_dict(d).month) - 1) / 3.0)
+			var now: int = quarter.call(GameState.day)
+			var until_day: int = GameState.day + 1
+			while quarter.call(until_day) == now:
+				until_day += 1
+			SalesMeetingSystem.set_pitch_focus(String(e.get("area", "")), until_day)
+			return {"verb": verb, "area": e.get("area", "")}
 
 		# --- the servers, each through InfraSystem ------------------------------
 		# The unit price scales by `mult` for good, on every tier or only on `tiers`; the row keeps the bill before and

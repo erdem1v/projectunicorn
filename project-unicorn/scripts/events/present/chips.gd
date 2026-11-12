@@ -319,8 +319,8 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 					"step": B2BConstants.feature_label(SprintCatalog.in_product(String(item.promise_step)))}), "", "cost"))
 			return terms
 		"pitch_focus":
-			return [_part(_t("EFFECT_PITCH_FOCUS").format({"weeks": Fmt.weeks(int(item.get("weeks", 1))),
-				"area": SprintCatalog.area_short(String(item.get("area", "")))}), "", "gain")]
+			return [_part(_t("EFFECT_PITCH_FOCUS").format({"area": SprintCatalog.area_short(String(item.get("area", "")))}), "",
+				"gain")]
 		# The unit price's change and what it does to the month's bill (the row keeps both); a cut on named tiers reads as the cut alone.
 		"server_price":
 			var price_pct: int = roundi((float(item.get("mult", 1.0)) - 1.0) * 100.0)
