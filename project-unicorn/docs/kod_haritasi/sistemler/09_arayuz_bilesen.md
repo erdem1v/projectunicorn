@@ -61,8 +61,8 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 - `Main._on_confirm_requested(config)` `main.gd:5154`: `config.modal == "hr_action"` ise `HRActionModal`, yoksa `ConfirmModal`; sonra `populate(config)` · `EventBus.confirm_requested` (`main.gd:90`)
 - `Main._on_system_menu_requested()` `main.gd:5182`: ESC menüsü · `EventBus.system_menu_requested` (`main.gd:4793`; yayan `game_shell.gd:106`); X ve Alt+F4 `_notification` `main.gd:5202`
 - `Main._on_save_load_requested(mode)` `main.gd:5217`: `SaveLoadModal` takar, add_child sonrası `populate(mode)` · `EventBus.save_load_requested` (`main.gd:89`)
-- `Main._on_run_ended()` `main.gd:5327` ve `_on_milestone_reached()` `main.gd:5348`: `EndingScene` takar, `populate(data)` · `EventBus.run_ended` ve `milestone_reached`
-- `Main._on_term_table_requested()` `main.gd:5401`: `TermSheetTableScene` takar; `closed` → `_close_term_table()` `main.gd:5425` · `EventBus.term_table_requested`
+- `Main._on_run_ended()` `main.gd:5328` ve `_on_milestone_reached()` `main.gd:5349`: `EndingScene` takar, `populate(data)` · `EventBus.run_ended` ve `milestone_reached`
+- `Main._on_term_table_requested()` `main.gd:5402`: `TermSheetTableScene` takar; `closed` → `_close_term_table()` `main.gd:5426` · `EventBus.term_table_requested`
 - `Main._open_meeting(adapter, side, place)` `main.gd:5115`: yolculuktan sonra `MeetingPanel` takar, `open(adapter, cast)`; `_close_meeting` `main.gd:5126` · `_open_sales_meeting` `:4859`, `_on_meeting_scene_requested` `:4849`
 - `HRUiShared.mount_panel_modal()` `scripts/tabs/hr/hr_ui_shared.gd:78`: Eğitim ve Çalışma Saatleri modallarını `PanelLayer`a takar, `populate(args)` · `hr_ledger.gd:368`, `personal_tab.gd:96`, `hr_tab.gd:386`
 - `WindowLayer.open_primary(tab_id)` `window_layer.gd:75`: sekme penceresini kurar, öncekini `on_page_closing` ile bırakır · `EventBus.tab_changed` (bağlantı `window_layer.gd:62`)
@@ -80,7 +80,7 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 - `BuildHUDPanel.set_map_open()` `build_hud_panel.gd:59` ve `set_window_cover()` `:65`: grup `office_overlays`; kartlar `fingerprint()` boşsa yığın gizli · `office_view.gd`, `window_layer.gd:237`
 - `MeetingPanel.open(adapter, cast)` `meeting_panel.gd:124`, `pick(id)` `:145`, `proceed()` `:168`, sinyal `closed` `:19`: panel oynatır, seçimi adaptöre iletir · `main.gd:5115`
 - `SalesMeetingAdapter._init(prospect_id)` `sales_meeting_adapter.gd:51`, `start` `:56`, `pick` `:81`, `select` `:102`, `proceed` `:109`, `end_sitting` `:117` · `MeetingPanel` ve `main.gd:5102`
-- `VcMeetingAdapter._init(view_state)` `vc_meeting_adapter.gd:40`, `start` `:49`, `pick` `:61`, `proceed` `:91`, `withdraw` `:98`, `end_sitting` `:103` · `MeetingPanel` ve `main.gd:5092`
+- `VcMeetingAdapter._init(view_state)` `vc_meeting_adapter.gd:41`, `start` `:50`, `pick` `:62`, `proceed` `:92`, `withdraw` `:99`, `end_sitting` `:104` · `MeetingPanel` ve `main.gd:5092`
 - `OnboardingFlow._commit()` `onboarding_flow.gd:192`: perdeyi çizer, sahneyi durdurur, `GameState.initialize_run(draft)` `game_state.gd:768`, `completed` · `_on_next()` `onboarding_flow.gd:155` son adımda
 - `OnboardingStep` sözleşmesi `step_base.gd`: `prefill` `:23`, `invalid_reason` `:28`, `is_valid` `:32`, `collect_payload` `:36`, `roll` `:40` · yalnız `onboarding_flow.gd:92` (`_mount_step`) çağırır
 - `MenuBackdrop.start(office_id, minute, figure)` `menu_backdrop.gd:40`, `stop()` `:65`, `set_figure()` `:75` · `main_menu.gd` (MenuBackdrop sahnede), `onboarding_flow.gd:70`, `main.gd:138`
@@ -95,8 +95,8 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 - `confirmed` / `alt_selected`: `confirm_modal.gd:11,12`, `hr_action_modal.gd:15` · `main.gd:5157,5082` (`config.on_confirm`, `on_alt`), `onboarding_flow.gd:177` (iptal onayı)
 - `save_requested(slot_id)` / `load_requested(slot_id)`: `save_load_modal.gd:15,16`; `main_menu.gd:8` yayar · `main.gd:5216,5138` ve `main.gd:133` (`_load_slot` `:5040`)
 - `main_menu_requested` / `exit_save_requested`: `system_menu_modal.gd:19,20` (yayın `:63`, `:93`); `ending_scene.gd:41` · `main.gd:5182,5104,5271`
-- `continue_requested`: `ending_scene.gd:40` (yayın `:445`) · `main.gd:5359` (`_on_milestone_continue`)
-- `closed`: `meeting_panel.gd:19`, `term_sheet_table_scene.gd:17` · `main.gd:5119` (`_close_meeting`), `main.gd:5418` (`_close_term_table`)
+- `continue_requested`: `ending_scene.gd:40` (yayın `:445`) · `main.gd:5360` (`_on_milestone_continue`)
+- `closed`: `meeting_panel.gd:19`, `term_sheet_table_scene.gd:17` · `main.gd:5119` (`_close_meeting`), `main.gd:5419` (`_close_term_table`)
 - `new_game_requested`: `main_menu.gd:7` (yayın `:54`) · `main.gd:130` · `finished`: `godot_card.gd:6` (yayın `:35`) · `main.gd:118` · `back`: `licenses.gd:7` · `credits.gd:44`
 - `completed` / `cancelled`: `onboarding_flow.gd:11,12` (yayın `:203`, `:172,177`) · `main.gd:154,155` · `live_ready`: `menu_backdrop.gd:9` (yayın `:138`) · `main.gd:2947`, `onboarding_flow.gd:70`
 - `changed`: `step_base.gd:15` · `onboarding_flow.gd:_mount_step` · `picked(field, value)`: `first_week_doc.gd:7` · `onboarding_flow.gd:_ready` (taslağı yazar, `_refresh`)
@@ -114,7 +114,7 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 - Onboarding `draft` sözlüğü `onboarding_flow.gd:36`: founder_name, portrait_id, origin_id, trait_ids, skill_alloc, company_name, logo, logo_reroll, difficulty, frank_guided; tek doğru kaynak, `initialize_run`a kadar GameState'e yazılmaz
 - `GameState`ten okunanlar: `company_name`, `get_date_dict`, `day`, `phase`, `messages`, `desk_arrivals`, `founder_portrait`, `logo` (ContinueCard `row.meta.logo`), `vc_states`, `active_sheets` (en çok `top_bar.gd`, `inbox.gd`)
 - Kalıcı kullanıcı ayarları `user://settings.json` (`Settings.DEFAULTS` `settings.gd:24`): `window_mode`, `ui_scale`, `colorblind_palette`, `ticker_open`, `master_volume`, `music_*`, `sfx_volume`, `pause_unfocused`, `language`
-- `runs_finished` profil sayacı `Settings` anahtarı, `main.gd:5330`'da artar; Onboarding Zor kipi açılışını buradan okur (`first_week_doc.gd:15`)
+- `runs_finished` profil sayacı `Settings` anahtarı, `main.gd:5331`'da artar; Onboarding Zor kipi açılışını buradan okur (`first_week_doc.gd:15`)
 - Tema sürümü: `UiTokens.THEME_STAMP` `ui_tokens.gd:45`; .tres'in gömülü `UiTokensStamp.stamp` sabiti ile `main.gd:99-100` karşılaştırılır (debug uyarısı)
 - Ürün sol sütunu: ölçüler `D_W_LEFT` 288, `D_BOX_MONO` 24 (modül ikonunun kutusu), `D_H_KEY_CAND` 24, `D_W_STAGE_STRIP` 168, `D_H_STAGE_STRIP` 6, `D_TAKEN_ALPHA` (planlı ya da damgalı aday);
   ↳ aşama bantları `D_ST_DESIGN/DEV/TEST` ve `UiTokens.D_stage(aşama)`.
@@ -224,7 +224,7 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
   ↳ cetvelde 4); kurulumun düğüm sayısını `ONB|nodes=|tex_mib=` basar, sahne gelince `ONB|stage=live|figure=`; `--theme-audit=onboard:<1|2|3>`, `--inbox-shot=intro`;
   ↳ `project.godot` `main_args`'taki `--skip-onboarding` doğrudan kabuğa geçer; probe onboarding'i atlar (kayıt türü yok)
 - Ortak bayraklar: `--lang=tr|en`, `--shot-size=GxY`, `--shot-scale=1.25`, `--palette=cb` (`main.gd:597`). Kayıt yazan `--modal-shot=save*|load*` ve `--menu-shot` ayrı `APPDATA` ile koşar (CLAUDE.md §12)
-- Debug seam'leri (argsız, MCP): `_dbg_menu_digest()` `main.gd:5474`, `_dbg_close_request()` `:5196`, `_dbg_finish_run()` `:5214`, `_dbg_onb_random_x20()` `:5201`; `kit_probe.gd` `--probe-shot=kit` koyu kitin durumlarını çizer
+- Debug seam'leri (argsız, MCP): `_dbg_menu_digest()` `main.gd:5475`, `_dbg_close_request()` `:5196`, `_dbg_finish_run()` `:5214`, `_dbg_onb_random_x20()` `:5201`; `kit_probe.gd` `--probe-shot=kit` koyu kitin durumlarını çizer
 - CLAUDE.md §10: arayüz doğrulaması smoke'la değil görsel kabulle yapılır; yeni UI smoke vakası yazılmaz
 
 ## Dikkat

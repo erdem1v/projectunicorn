@@ -10,8 +10,9 @@ extends RefCounted
 # fund's subject: the analyst for metrics and product, the partner for team and narrative and in
 # the seed room, which does not audit.
 #
-# Reading the room (beat 1) is silent: the investor cannot see it, so it is the founder's inner
-# line and nobody at the table reacts.
+# Reading the room (beat 1) is silent: the investor cannot see it, so the founder's move is a quiet
+# line and nobody at the table reacts. Why the room starts where it does (its top reasons) is the
+# TUTUM gauge's tip for the whole sitting; the band's word is the gauge's tag.
 
 const LEAD := 1
 const PARTNER := 2
@@ -34,7 +35,7 @@ var _vc_id: String
 var _seed: bool
 var _beat := 1
 var _asker: int              # the seat the interrogation comes from
-var _first_band: String      # TUTUM at the door, for the result's relationship row
+var _reasons: Array          # why the room starts where it does: the gauge's tip all sitting
 
 
 func _init(view_state: Dictionary) -> void:
@@ -43,7 +44,7 @@ func _init(view_state: Dictionary) -> void:
 	_seed = view_state.stage == PitchConstants.STAGE_SEED
 	var domain: String = InvestorRegistry.get_investor(_vc_id).get("domain", "")
 	_asker = ANALYST if not _seed and domain in ["metrics", "product"] else PARTNER
-	_first_band = _band(view_state)
+	_reasons = view_state.get("conviction_reasons", [])
 
 
 func start() -> Dictionary:
@@ -123,7 +124,7 @@ func _beat_step(vs: Dictionary) -> Dictionary:
 		"beat": vs.beat_label,
 		"speaker": _speaker(_beat),
 		"attitude": {"value": int(vs.conviction.value), "word_key": UiTokens.attitude_word_key(band),
-			"band": band, "hover": [],
+			"band": band, "hover": _reasons,
 			"edges": [UiTokens.ATTITUDE_WARY_MIN, PitchConstants.ILIK_MIN, PitchConstants.WON_MIN]},
 		"can_withdraw": vs.can_withdraw,
 		"options": [],
@@ -142,15 +143,13 @@ func _beat_step(vs: Dictionary) -> Dictionary:
 
 
 ## What the other side says in a view. A reaction to the story comes from the partner before the
-## question; the founder's inner voice follows, and on a rejection Frank's word on the way out.
+## question, and on a rejection Frank's word on the way out.
 func _lines(vs: Dictionary) -> Array:
 	var out := []
 	if vs.get("reaction_line", "") != "":
 		out.append({"kind": "counterpart", "seat": PARTNER, "text": vs.reaction_line})
 	if vs.active_line != "":
 		out.append({"kind": "counterpart", "seat": _speaker(_beat), "text": vs.active_line})
-	if vs.get("monologue_text", "") != "":
-		out.append({"kind": "quiet", "text": vs.monologue_text})
 	if vs.get("frank_line", "") != "":
 		out.append({"kind": "frank", "text": vs.frank_line})
 	return out
@@ -168,9 +167,11 @@ func _dice(chk: Dictionary) -> Dictionary:
 	return {"risk_key": UiTokens.risk_key(chk.chance), "chance": chk.chance, "factors": factors}
 
 
-## The card reads what the room wrote: the fund's status, and the line it closed on (a won or cold
-## room's beat-4 line was its last word, so the result view carries none). A queued sheet's
-## validity starts only when a slot frees, and a rejection costs morale only where someone works.
+## The card says only what nothing else on screen says (envanter meet-07): its title is the outcome, the
+## TUTUM tag is the relationship and the transcript holds the room's last line, so the row is the fact
+## the outcome brings: how long the sheet holds, what the rejection cost, the callback's condition; the
+## fund's status only where none of those applies. A queued sheet's validity starts only when a slot
+## frees, and a rejection costs morale only where someone works.
 func _result(vs: Dictionary) -> Dictionary:
 	var kind: String = vs.result_kind
 	var card := {"band": "positive", "title_key": "MEETING_RES_OFFER"}
@@ -193,8 +194,6 @@ func _result(vs: Dictionary) -> Dictionary:
 			"offered":
 				more = tr("MEETING_RES_VALID").format({"weeks": PitchConstants.SHEET_VALIDITY_WEEKS})
 		if more != "":
-			effect = tr("MEETING_RES_PAIR").format({"first": effect, "second": more})
-	card.merge({"effect": effect,
-		"relation": {"name": CounterpartSystem.lead(_vc_id).name, "from": _first_band, "to": _band(vs)},
-		"memory": vs.active_line if vs.active_line != "" else _view.active_line})
+			effect = more
+	card["effect"] = effect
 	return card

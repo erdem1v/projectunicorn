@@ -71,7 +71,7 @@ Fon merdiveni:
 - `PhaseGateSystem.series_a_signal()/series_a_approach()` `:135/:157`: kapalı, ısınıyor, açık okuması · `seams_world.gd:37`, `finance_ozet_view.gd:328`, `investor_appetite_ui.gd`.
 - `VCPitchSystem.request_meeting()` `vc_pitch_system.gd:772`: görüşme rezervasyonu · `main/main.gd:4356` (Av sekmesinin düğmesi).
 - `VCPitchSystem.begin_meeting()` `:59`: görüşmeyi açar, `meeting_scene_requested` yayar · `main.gd:4594`, `main.gd:5015`, seed için `seed_round_system.gd:109`.
-- `VCPitchSystem.advance()` `:107` ve `withdraw()` `:118`: vuruş çözümü · `ui/meeting/vc_meeting_adapter.gd:67`, `:99`; kapanışta `end_sitting()` `vc_pitch_system.gd:131` (adapter `vc_meeting_adapter.gd:104`) saati ilerletir.
+- `VCPitchSystem.advance()` `:107` ve `withdraw()` `:118`: vuruş çözümü · `ui/meeting/vc_meeting_adapter.gd:68`, `:100`; kapanışta `end_sitting()` `vc_pitch_system.gd:131` (adapter `vc_meeting_adapter.gd:105`) saati ilerletir.
 - `VCPitchSystem.call_waiting()/lapse_call()/postpone_call()` `:784/:801/:794`: fonun çağrısı · `main.gd:4935`, `:4693`, `:4781`.
 - `VCPitchSystem.sign_table()/walk_table()` `:554/:608`: masa sonuçları · `term_sheet_table_system.gd:562`, `:350`, `:602`; sign Series A'da `EndingsSystem.trigger_ending("series_a_close")` çağırır.
 - `VCPitchSystem.decline_expired_sheet()` `:637`: süresi dolan teklifi kapatır, ret sayılmaz · `events/core/effects.gd:581`.
@@ -170,7 +170,7 @@ Sabitler:
 - `CHEQUE_STEP_*`, `CHEQUE_TITLE`, `GOAL_STEP_*`, `SEED_SECTION_TITLE`: `cheque_read.gd`; `ANGEL_CHOICE_*`, `ANGEL_EVENT_*`, `ANGEL_NUDGE_*`: kartlar `frank_cheque.json`, `hire_nudge.json`;
   `ANGEL_MONTH_HIGHLIGHT`: `angel_round_system.gd:52`.
 - `GATE_*` (`GATE_OPENED` `phase_gate_system.gd:87`), `FRANK_DOOR_*`, `FRANK_APPROACH_*`, `FRANK_OFFICE_*`: `data/events/cards/funding/*.json`.
-- `VC_*` (`VC_B1..B4`, `VC_Q_*`, `VC_WHY_*`, `VC_FRANK_*`, `VC_REACT_*`, `VC_RES_*`, `VC_APPROACH_*`), `SEED_B*`, `SEED_Q_*`, `SEED_RES_*`: `vc_pitch_system.gd`; ön ek `_k()` ile seçilir (`vc_pitch_system.gd:1320`).
+- `VC_*` (`VC_B1..B4`, `VC_Q_*`, `VC_WHY_*`, `VC_FRANK_*`, `VC_REACT_*`, `VC_RES_*`, `VC_APPROACH_*`), `SEED_B*`, `SEED_Q_*`, `SEED_RES_*`: `vc_pitch_system.gd`; ön ek `_k()` ile seçilir (`vc_pitch_system.gd:1310`).
 - `HUNT_*`: `hunt_tab.gd` ve `vc_pitch_system.gd` (`HUNT_CB_*`, `HUNT_EST_*`); `INV_ROLE_*`, `INV_ARCH_*`, `INV_CHIP_*`: `investor_registry.gd`; `INV_APPETITE_*`: `investor_appetite_ui.gd`.
 - `TERM_*`, `SEED_*` masa metinleri: `term_sheet_table_system.gd`, `term_sheet_table_scene.gd`; `PITCH_DIFF_*`: `pitch_constants.gd:183`.
 - `END_*` (`END_SA_`, `END_ACQ_`, `END_BK_`, `END_BC_`, `END_VC_`, `END_BS_`, `END_RF_`, `END_STAT_`, `END_SPAN_`, `END_GENERIC_`): `endings_copy.gd`; `END_META_<ID>_TITLE/_FRANK`: `endings_system.gd:520-527`.
@@ -178,7 +178,7 @@ Sabitler:
 - `NEWS_RIVAL_UP_n/DOWN_n`, `NEWS_<SEKTOR_ID>` (`NEWS_S_*`, 48 anahtar, kodda dinamik kurulur), `PIYASA_LINE`, `PIYASA_NEWS_*`, `PIYASA_WHY_*`, `WORLD_OUTLET_*`: `news_feed_system.gd`.
 - `PIYASA_*` geri kalanı (`PIYASA_ABOUT_*` 56 anahtar, `PIYASA_SECTOR_*`, `PIYASA_KPI_*`, `PIYASA_FILTER_*`): `piyasa_tab.gd`; `SHARE_FLOOR`: `rival_registry.gd:167`, `piyasa_tab.gd`.
 - `MENTOR_INTRO_*` (`intro` mesajı) ve diğer mesaj anahtarları gönderenlerde; gelen kutusu kabuğu `INBOX_*`, `MAIL_*` (`mail_pane.gd`, `events_tab.gd`).
-- Kural: `static func` içinde `tr()` derlenir ama çalışırken ölür; bu dosyalar `TranslationServer.translate` kullanır (`vc_pitch_system.gd:1326`, `finance_system.gd:237`).
+- Kural: `static func` içinde `tr()` derlenir ama çalışırken ölür; bu dosyalar `TranslationServer.translate` kullanır (`vc_pitch_system.gd:1316`, `finance_system.gd:237`).
 
 ## Testler
 
@@ -237,7 +237,7 @@ Tek koşturucu `bash tools/smoke_run.sh <vaka>`; vaka listesi `scripts/debug/end
 - `export_presets.cfg` üç Windows preset'i taşır (Demo `custom_features` "", EA `"ea"`, Full `"full"`); `EndingsSystem.build_scope()` `endings_system.gd:382` build kapsamını export'ta bu özellik etiketinden (`ea`, `full`),
   ↳ debug build'de `--build=`'den okur, etiketsizse demo; smoke ve probe `build_scope_override` ile demoya sabitler
 - `soft_cap` 104 hafta (`SOFT_CAP_WEEK`); smoke adı `soft_cap_ends_run_at_730` eski gün sayımını taşır. Kilometre taşı alınmış koşuda tavan uygulanmaz (`endings_system.gd:240`).
-- `VCPitchSystem` görüşme durumu statik ve kayda girmez; `SaveManager.can_save` görüşme sürerken kaydı reddeder (`save_manager.gd:93`). `reset()` sıfırlar (`vc_pitch_system.gd:1301`).
+- `VCPitchSystem` görüşme durumu statik ve kayda girmez; `SaveManager.can_save` görüşme sürerken kaydı reddeder (`save_manager.gd:93`). `reset()` sıfırlar (`vc_pitch_system.gd:1291`).
 - `_vc(vc_id)` satır YARATIR; salt okunan yollar (`series_a_road_closed`, `is_last_answer_moment`, `meeting_blocked_reason`) `vc_states.get` kullanır, kart koşulu hiçbir şey yazmamalı.
 - Ret sayısı yalnız fonun çıkışında ve `_reject`te artar (`WALK_REASON_FUND`); oyuncunun kendi geri çekilişi (`"declined"`) ret değildir ve kaskada girmez (`vc_pitch_system.gd:608-632`).
 - Seed teklifi `seed_sheet`te yaşar, `active_sheets`e girmez; `run_pitches` ve `run_sheets_won` yalnız Series A'yı sayar (`vc_pitch_system.gd:381-405`).

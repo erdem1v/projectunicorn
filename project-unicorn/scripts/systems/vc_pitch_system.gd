@@ -279,7 +279,7 @@ static func strain(vc_id: String) -> int:
 
 
 ## The shared tail: the value (base + every reason's delta, clamped) and the top-3 reasons by
-## absolute delta that the Beat-1 monologue shows.
+## absolute delta, the TUTUM gauge's tip through the sitting.
 static func _finish_conviction(base: int, why: Array) -> Dictionary:
 	var v: int = base
 	for w in why:
@@ -973,7 +973,7 @@ static func _beat1_view_state(why: Array, memory_key: String) -> Dictionary:
 	vs["active_line"] = _t(_k("B1_LINE")).format(
 		{"investor": InvestorRegistry.get_investor(_vc_id).get("display_name", "")})
 	# Never empty: both conviction profiles always carry the MRR and brand reasons.
-	vs["monologue_text"] = _t(_k("B1_MONO_WHY")).format({"reasons": " · ".join(PackedStringArray(why))})
+	vs["conviction_reasons"] = why
 	vs["beat_label"] = _t("VC_BEAT1_LABEL")
 	vs["can_withdraw"] = true                       # only before the first check
 	vs["choices"] = [{"id": "b1_read", "text": _t("VC_B1_CHOICE"), "check": _check_view("VC_APPROACH_PERCEPTION", PitchConstants.BEAT1_SKILL, PitchConstants.BEAT1_DIFF)}]
@@ -984,9 +984,8 @@ static func _beat2_view_state() -> Dictionary:
 	var vs: Dictionary = _base_view_state()
 	# No reaction here: Beat 1 is the founder silently reading the room, a roll the investor
 	# cannot see and that moves no conviction. What it earned shows below instead (the marked
-	# angle, or the monologue).
+	# angle).
 	vs["active_line"] = _t(_k("B2_LINE"))
-	vs["monologue_text"] = _t(_k("B2_MONO")) if not _intel else ""
 	vs["beat_label"] = _t("VC_BEAT2_LABEL")
 	var favored: String = InvestorRegistry.favored_angle(_vc_id) if _intel else ""
 	var out: Array = []
@@ -1001,7 +1000,6 @@ static func _beat3_view_state(prev: Dictionary) -> Dictionary:
 	var vs: Dictionary = _base_view_state()
 	vs["reaction_line"] = _react_line(prev)
 	vs["active_line"] = String(_sorgu.get("vc_line", ""))
-	vs["monologue_text"] = String(_sorgu.get("mono", ""))
 	vs["beat_label"] = _t("VC_BEAT3_LABEL")
 	# The resolver's own _beat3_diff: a clean question is rolled at Kolay, and the
 	# odds shown are the odds rolled.
@@ -1024,7 +1022,6 @@ static func _beat4_view_state() -> Dictionary:
 	if _stage == PitchConstants.STAGE_SEED:
 		var band: String = SeedConstants.band_for(zone_val).to_upper()
 		vs["active_line"] = _t("SEED_B4_LINE_" + band)
-		vs["monologue_text"] = _t("SEED_B4_MONO_" + band)
 		vs["choices"] = [{"id": "b4_ack", "text": _t("SEED_B4_ACK")}]
 		return vs
 	if zone_val >= PitchConstants.WON_MIN:
@@ -1032,11 +1029,9 @@ static func _beat4_view_state() -> Dictionary:
 		vs["choices"] = [{"id": "b4_ack", "text": _t("VC_B4_WIN_CHOICE")}]
 	elif zone_val < PitchConstants.ILIK_MIN:
 		vs["active_line"] = _t("VC_B4_LOSS_LINE")
-		vs["monologue_text"] = _t("VC_B4_LOSS_MONO")
 		vs["choices"] = [{"id": "b4_leave", "text": _t("VC_B4_LOSS_CHOICE")}]
 	else:
 		vs["active_line"] = _t("VC_B4_WARM_LINE")
-		vs["monologue_text"] = _t("VC_B4_WARM_MONO")
 		var push_choice: Dictionary = {"id": "b4_zorla", "text": _t("VC_B4_PUSH"), "check": _check_view("VC_APPROACH_PUSH", PitchConstants.BEAT4_PUSH_SKILL, PitchConstants.MASAYI_ZORLA_DIFF), "caption": _t("VC_B4_PUSH_CAP"), "caption_danger": true}
 		if _reentry:
 			vs["choices"] = [push_choice, {"id": "b4_ret", "text": _t("VC_B4_QUIT"), "caption": _t("VC_B4_QUIT_CAP")}]
@@ -1113,64 +1108,60 @@ static func _pick_sorgu_seed() -> Dictionary:
 			# Distribution, not cohorts: at this size the only interesting question about
 			# revenue is how anybody found you at all.
 			if CustomerRegistry.get_active().size() <= 1 or GameState.run_customers_signed <= 1:
-				return {"key": "first_customers", "vc_line": _t("SEED_Q_FIRST_CUSTOMERS"),
-					"mono": _t("SEED_Q_FIRST_CUSTOMERS_MONO")}
+				return {"key": "first_customers", "vc_line": _t("SEED_Q_FIRST_CUSTOMERS")}
 		"team":
 			if CharacterRegistry.get_employees().is_empty() \
 				or CharacterRegistry.count_developers() == 0:
-				return {"key": "team_wins", "vc_line": _t("SEED_Q_TEAM_WINS"),
-					"mono": _t("SEED_Q_TEAM_WINS_MONO")}
+				return {"key": "team_wins", "vc_line": _t("SEED_Q_TEAM_WINS")}
 		"narrative":
 			if _rival_ahead() or GameState.reputation < 0:
-				return {"key": "insight", "vc_line": _t("SEED_Q_INSIGHT"),
-					"mono": _t("SEED_Q_INSIGHT_MONO")}
+				return {"key": "insight", "vc_line": _t("SEED_Q_INSIGHT")}
 		"product":
 			if ProductQuality.weakest_area() != "":
-				return {"key": "how_big", "vc_line": _t("SEED_Q_HOW_BIG"),
-					"mono": _t("SEED_Q_HOW_BIG_MONO")}
-	return {"key": "clean", "vc_line": _t("SEED_Q_CLEAN"), "mono": _t("SEED_Q_CLEAN_MONO")}
+				return {"key": "how_big", "vc_line": _t("SEED_Q_HOW_BIG")}
+	return {"key": "clean", "vc_line": _t("SEED_Q_CLEAN")}
 
 
 static func _sorgu_metrics() -> Dictionary:
 	# WORKING PROXY: no churn/concentration fields yet — inferred from run counters + MRR.
 	if GameState.run_customers_lost > 0:
-		return {"key": "churn", "vc_line": _t("VC_Q_CHURN"), "mono": _t("VC_Q_CHURN_MONO")}
+		return {"key": "churn", "vc_line": _t("VC_Q_CHURN")}
 	if GameState.mrr < PitchConstants.CONV_MRR_REFERENCE:
-		return {"key": "growth_flat", "vc_line": _t("VC_Q_GROWTH"), "mono": _t("VC_Q_GROWTH_MONO")}
+		return {"key": "growth_flat", "vc_line": _t("VC_Q_GROWTH")}
 	if _b2b_concentration():
-		return {"key": "concentration", "vc_line": _t("VC_Q_CONCENTRATION"), "mono": _t("VC_Q_CONCENTRATION_MONO")}
+		return {"key": "concentration", "vc_line": _t("VC_Q_CONCENTRATION")}
 	# NOT A PROXY — this one reads a real field. Customer.acquisition_source records who
 	# closed each account ("founder_pitch" and "event" vs "sales_rep:<id>"), which is exactly the
 	# Series A question "how much of this revenue is repeatable sales, and how much is
 	# you". A founder who closed the whole book personally has a company that stops when
 	# they do, and this room says so.
 	if _founder_closed_the_book():
-		return {"key": "repeatable", "vc_line": _t("VC_Q_REPEATABLE"), "mono": _t("VC_Q_REPEATABLE_MONO")}
+		return {"key": "repeatable", "vc_line": _t("VC_Q_REPEATABLE")}
 	return _clean_sorgu()
 
 
 static func _sorgu_team() -> Dictionary:
 	if GameState.unmanaged_major_scandal:
-		return {"key": "scandal", "vc_line": _t("VC_Q_SCANDAL"), "mono": _t("VC_Q_SCANDAL_MONO")}
+		return {"key": "scandal", "vc_line": _t("VC_Q_SCANDAL")}
 	# Solo before no-engineers: an empty team also has zero developers, so the narrower
 	# question has to be asked first or it can never come up.
 	if CharacterRegistry.get_employees().is_empty():
-		return {"key": "solo", "vc_line": _t("VC_Q_SOLO"), "mono": _t("VC_Q_SOLO_MONO")}
+		return {"key": "solo", "vc_line": _t("VC_Q_SOLO")}
 	# Headcount lens, not capacity: a company whose only developer is on holiday has
 	# not become an engineer-less company, so this reads the unfiltered count.
 	if CharacterRegistry.count_developers() == 0:
-		return {"key": "no_engineers", "vc_line": _t("VC_Q_NO_ENGINEERS"), "mono": _t("VC_Q_NO_ENGINEERS_MONO")}
+		return {"key": "no_engineers", "vc_line": _t("VC_Q_NO_ENGINEERS")}
 	return _clean_sorgu()
 
 
 static func _sorgu_narrative() -> Dictionary:
 	# WORKING PROXY: rival lead inferred from the registry's DOMINANT band.
 	if _rival_ahead():
-		return {"key": "rival", "vc_line": _t("VC_Q_RIVAL"), "mono": _t("VC_Q_RIVAL_MONO")}
+		return {"key": "rival", "vc_line": _t("VC_Q_RIVAL")}
 	if GameState.get_flag("acquisition_offer_rejected", false):   # LOC-DATA run flag id
-		return {"key": "refused_acq", "vc_line": _t("VC_Q_REFUSED_ACQ"), "mono": _t("VC_Q_REFUSED_ACQ_MONO")}
+		return {"key": "refused_acq", "vc_line": _t("VC_Q_REFUSED_ACQ")}
 	if GameState.reputation < 0:
-		return {"key": "reputation", "vc_line": _t("VC_Q_REPUTATION"), "mono": _t("VC_Q_REPUTATION_MONO")}
+		return {"key": "reputation", "vc_line": _t("VC_Q_REPUTATION")}
 	return _clean_sorgu()
 
 
@@ -1178,13 +1169,12 @@ static func _sorgu_product() -> Dictionary:
 	var weak: String = ProductQuality.weakest_area()
 	if weak != "":
 		return {"key": "weak_dim",
-			"vc_line": _t("VC_Q_WEAK_DIM").format({"area": SprintCatalog.area_short(weak)}),
-			"mono": _t("VC_Q_WEAK_DIM_MONO")}
+			"vc_line": _t("VC_Q_WEAK_DIM").format({"area": SprintCatalog.area_short(weak)})}
 	return _clean_sorgu()
 
 
 static func _clean_sorgu() -> Dictionary:
-	return {"key": "clean", "vc_line": _t("VC_Q_CLEAN"), "mono": _t("VC_Q_CLEAN_MONO")}
+	return {"key": "clean", "vc_line": _t("VC_Q_CLEAN")}
 
 
 # ============================================================================

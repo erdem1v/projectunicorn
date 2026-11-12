@@ -733,13 +733,13 @@ func _result_card(result: Dictionary) -> Control:
 	if result.get("stamp", "") != "":
 		head.add_child(UiFactory.D_stamp(Fmt.upper(tr(result.stamp))))
 	col.add_child(SprintUiShared.pad(head, Vector4i(0, 0, 0, UiTokens.SPACE_L)))
-	var relation: Dictionary = result.relation
-	var rows := {
-		"MEETING_RES_EFFECT": result.effect,
-		"MEETING_RES_RELATION": tr("MEETING_RES_RELATION_LINE").format({"name": relation.name,
-			"from": tr(UiTokens.attitude_word_key(relation.from)), "to": tr(UiTokens.attitude_word_key(relation.to))}),
-		"MEETING_RES_MEMORY": result.memory,
-	}
+	# A VC card carries its effect alone (the TUTUM tag and the transcript say the rest); a sales card all three.
+	var rows := {"MEETING_RES_EFFECT": result.effect}
+	if result.has("relation"):
+		var relation: Dictionary = result.relation
+		rows["MEETING_RES_RELATION"] = tr("MEETING_RES_RELATION_LINE").format({"name": relation.name,
+			"from": tr(UiTokens.attitude_word_key(relation.from)), "to": tr(UiTokens.attitude_word_key(relation.to))})
+	rows["MEETING_RES_MEMORY"] = result.get("memory", "")
 	for caption_key: String in rows:
 		if rows[caption_key] == "":
 			continue

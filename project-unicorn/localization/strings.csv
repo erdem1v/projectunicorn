@@ -1129,12 +1129,10 @@ VC_BLOCK_LATE,Mesainin kalanı bir fonla masaya oturmaya yetmez. Artık gelecek 
 VC_CALLBACK_REOPENED,Kapı yeniden açıldı: {investor}. Tekrar iste.,{investor}'s door is open again. Ask again.
 VC_BEAT1_LABEL,Odayı oku · 1/4,Read the room · 1/4
 VC_B1_LINE,"""{investor}. Otur. Vaktim kısa. Beni neden buraya çağırdığını göster.""","""{investor}. Sit. My time is short. Show me why you called me here."""
-VC_B1_MONO_WHY,Odayı oku: {reasons},Read the room: {reasons}
 VC_B1_CHOICE,Odayı oku.,Read the room.
 VC_APPROACH_PERCEPTION,Algı,Perception
 VC_BEAT2_LABEL,Anlatı · 2/4,Narrative · 2/4
 VC_B2_LINE,"""Rakamları gördüm. Şimdi anlatın: bu gelirin devam etmesini sağlayan ne?""","""I have seen the numbers. Now tell me what keeps this revenue coming."""
-VC_B2_MONO,Açı seç. Yanlış açı beni sıkar.,Pick an angle. The wrong one bores me.
 VC_B2_METRIC,Metrik: rakamlar konuşsun.,Metrics: let the numbers talk.
 VC_B2_VISION,Vizyon: nereye gittiğimizi göster.,Vision: show them where this goes.
 VC_B2_TRACTION,Traction: ivmeyi anlat.,Traction: tell them about the momentum.
@@ -1150,27 +1148,16 @@ VC_B3_DEFLECT,Geçiştir: konuyu kaydır.,Deflect: move them off it.
 VC_APPROACH_DEFLECT,Geçiştir,Deflect
 VC_B3_DEFLECT_CAP,"Güvenli, ama masa buradan çıkmaz ({cap} tavan).","Safe, but the table stops here ({cap} ceiling)."
 VC_Q_CHURN,"""Churn'ün konuşuyor. Kaçan müşterileri anlat. Neden gittiler?""","""Your churn is talking. Tell me about the customers who left. Why did they go?"""
-VC_Q_CHURN_MONO,Churn'ü soracak. Sayıları hazırla.,They will ask about churn. Have the numbers ready.
 VC_Q_GROWTH,"""Büyüme grafiği düz. Bu çizgiyi neden yukarı kaldıramadın?""","""The growth chart is flat. Why couldn't you lift that line?"""
-VC_Q_GROWTH_MONO,Büyümenin durgunluğunu görecek.,They will see the growth has stalled.
 VC_Q_CONCENTRATION,"""Gelirin tek bir müşteriye yaslanıyor. O giderse ne kalır?""","""Your revenue leans on one customer. What is left if they walk?"""
-VC_Q_CONCENTRATION_MONO,Gelir yoğunlaşmasını soracak.,They will ask about revenue concentration.
 VC_Q_SCANDAL,"""Yönetemediğin bir skandal var. Ben neden bu ekibe para vereyim?""","""There is a scandal you did not manage. Why would I put money into this team?"""
-VC_Q_SCANDAL_MONO,Skandalı soracak. Sorduğunda gözünü kaçırma.,They will ask about the scandal. Do not look away when they do.
 VC_Q_NO_ENGINEERS,"""Tek mühendisin bile yok. Bu ürünü kim taşıyacak?""","""You do not have a single engineer. Who is going to carry this product?"""
-VC_Q_NO_ENGINEERS_MONO,Ekibin inceliğini görecek.,They will see how thin the team is.
 VC_Q_SOLO,"""Tek başınasın. Sen düşersen şirket de düşer. Bu riski nasıl kapatıyorsun?""","""You are alone. If you go down, the company goes down. How do you cover that risk?"""
-VC_Q_SOLO_MONO,Tek-kurucu riskini soracak.,They will ask about solo-founder risk.
 VC_Q_RIVAL,"""Bir rakip senden önde. Ligde ikinci olan neden kazansın?""","""A rival is ahead of you. Why should second place in the league win?"""
-VC_Q_RIVAL_MONO,Rakibi masaya koyacak.,They will put the rival on the table.
 VC_Q_REFUSED_ACQ,"""Bir satın almayı geri çevirmişsin. Kibir mi, vizyon mu?""","""You turned down an acquisition. Arrogance, or vision?"""
-VC_Q_REFUSED_ACQ_MONO,Reddettiğin teklifi soracak.,They will ask about the offer you refused.
 VC_Q_REPUTATION,"""İtibarın zedeli. Bu hikâyeye kim inanır?""","""Your reputation is damaged. Who believes this story?"""
-VC_Q_REPUTATION_MONO,İtibarını yoklayacak.,They will probe your reputation.
 VC_Q_WEAK_DIM,"""{area} tarafın zayıf. Sektörü bilen biri bunu ilk bakışta görür.""","""Your {area} side is weak. Anyone who knows the sector sees it at a glance."""
-VC_Q_WEAK_DIM_MONO,En zayıf alanı bulacak.,They will find the weakest area.
 VC_Q_CLEAN,"""Doğrusu, saldıracak bir yer bulamadım. Bu iyi bir işaret. Devam et.""","""Honestly, I could not find anywhere to attack. That is a good sign. Go on."""
-VC_Q_CLEAN_MONO,Temiz alan. Nefes al.,Clear ground. Take a breath.
 VC_REACT_GOOD,"""İyi.""","""Good."""
 VC_REACT_OK,"""Hmm. İdare eder.""","""Hmm. It will do."""
 VC_REACT_BAD,"""Beni ikna etmedi.""","""That did not convince me."""
@@ -1178,10 +1165,8 @@ VC_BEAT4_LABEL,Kapanış · 4/4,Closing · 4/4
 VC_B4_WIN_LINE,"""Sana bir teklif göndereceğim. Beğenmeyebilirsin ama ciddi.""","""I am going to send you an offer. You may not like it, but it is serious."""
 VC_B4_WIN_CHOICE,Teşekkürler. Bekliyorum.,Thank you. I will be waiting.
 VC_B4_LOSS_LINE,"""Bugün olmadı. Rakamlar beni buraya getirmedi.""","""Not today. The numbers did not bring me here."""
-VC_B4_LOSS_MONO,Soğuk oda. En azından nedenini biliyorsun.,A cold room. At least you know why.
 VC_B4_LOSS_CHOICE,Anladım. Çıkıyorum.,Understood. I will show myself out.
 VC_B4_WARM_LINE,"""Kararsızım. Bir yol var: sana bir koşul koyayım, tuttur, geri gel. Ya da şansını burada zorla.""","""I am undecided. There is a way: let me set you a condition, meet it, come back. Or push your luck right here."""
-VC_B4_WARM_MONO,"Ilık. Güvenli kapı mı, açgözlü kumar mı?","Lukewarm. The safe door, or the greedy bet?"
 VC_B4_QUIT,İkinci kez ılık. Bırak gitsin.,Lukewarm a second time. Let it go.
 VC_B4_QUIT_CAP,Reddedilme sayılır.,This counts as a rejection.
 VC_B4_CALLBACK,Callback'i kabul et: koşulu tuttur.,Take the callback: meet the condition.
@@ -2406,30 +2391,19 @@ EFFECT_VC_ROAD_CLOSES,VC yolu kapanır,The VC road closes
 EFFECT_SEED_TABLE,Masaya oturursun,You sit down at the table
 EFFECT_FUND_CLOSES,Bu fon kalıcı olarak kapanır,This fund closes for good
 VC_Q_REPEATABLE,"""Bu defterin çoğunu siz kapatmışsınız. Siz odada olmadığınızda da kapanıyor mu?""","""You closed most of this book yourself. Does it close when you are not in the room?"""
-VC_Q_REPEATABLE_MONO,Defteri kimin kapattığını soracak.,They will ask who closed the book.
 SEED_B1_LINE,"""{investor}. Geç oturun, kahve söylemeyeceğim; yarım saatimiz var. Sizi anlatın.""","""{investor}. Sit down, I will not order coffee; we have half an hour. Tell me about you."""
-SEED_B1_MONO_WHY,Odayı oku: {reasons},Read the room: {reasons}
 SEED_B2_LINE,"""Neden siz, neden şimdi? Bu iki soruya verdiğiniz cevap turun tamamı.""","""Why you, and why now? Your answer to those two questions is the whole round."""
-SEED_B2_MONO,Açı seç. Bu odada hikâye rakamdan ağır basar.,Pick an angle. In this room the story outweighs the number.
 SEED_B2_METRIC,Metrik: ödeyen ilk kullanıcıları göster.,Metric: show the first users who paid.
 SEED_B2_VISION,Vizyon: bunun nereye kadar gittiğini anlat.,Vision: say how far this goes.
 SEED_B2_TRACTION,Traction: son üç ayın eğrisini koy.,Traction: put the last three months on the table.
 SEED_Q_FIRST_CUSTOMERS,"""İlk ödeyen müşterileriniz sizi nasıl buldu?""","""How did your first paying customers find you?"""
-SEED_Q_FIRST_CUSTOMERS_MONO,"Dağıtımı soracak, rakamı değil.","They will ask about distribution, not the number."
 SEED_Q_TEAM_WINS,"""Bu işi yapmaya çalışan başka ekipler de var. Neden bu ekip kazansın?""","""Other teams are trying to build this. Why does this one win?"""
-SEED_Q_TEAM_WINS_MONO,"Ekibi soracak. Kişi sayısını değil, neden bu kişiler olduğunu.","They will ask about the team: not how many, but why these people."
 SEED_Q_INSIGHT,"""Bu fikir nereden geldi? Bildiğiniz ve başkalarının bilmediği şey ne?""","""Where did this come from? What do you know that the others do not?"""
-SEED_Q_INSIGHT_MONO,İçgörünün kaynağını soracak.,They will ask where the insight comes from.
 SEED_Q_HOW_BIG,"""Diyelim ki her şey yolunda gitti. Bu ne kadar büyür?""","""Say everything goes right. How big does this get?"""
-SEED_Q_HOW_BIG_MONO,Tavanı soracak. Küçük bir cevap turu bitirir.,They will ask about the ceiling. A small answer ends the round.
 SEED_Q_CLEAN,"""Sormak istediğim bir şey kalmadı, ki bu nadirdir. Devam edin.""","""I have nothing left to ask, which is rare. Go on."""
-SEED_Q_CLEAN_MONO,Temiz alan. Nefes al.,Clean ground. Breathe.
 SEED_B4_LINE_STRONG,"""Bu turu ben açacağım. Kâğıdı bugün gönderiyorum ve rakamlar açık olacak.""","""I will lead this round. The sheet goes out today, and the numbers will be open-handed."""
-SEED_B4_MONO_STRONG,Odayı kazandın.,You won the room.
 SEED_B4_LINE_STANDARD,"""Girerim. Rakamlar standart olacak; anlatı beni ikna etti, geri kalanı henüz erken.""","""I am in. The numbers will be standard: the story convinced me, the rest is still early."""
-SEED_B4_MONO_STANDARD,Girdi. Koşullar ortalama.,They are in. The terms are ordinary.
 SEED_B4_LINE_HARSH,"""Girerim, ama ucuza. Bu aşamada aldığım risk fiyata yansır; kâğıtta göreceksiniz.""","""I am in, but cheaply. The risk I am taking at this stage shows up in the price, and you will see it on the sheet."""
-SEED_B4_MONO_HARSH,Girdi. Ama fiyatını söyledi.,They are in. And they named the price.
 SEED_B4_ACK,Kâğıdı bekliyorum.,I will wait for the sheet.
 SEED_RES_STRONG,"""Kâğıt yolda. İyi bir tur olacak.""","""The sheet is on its way. This will be a good round."""
 SEED_RES_STANDARD,"""Kâğıt yolda. Masada konuşuruz.""","""The sheet is on its way. We will talk at the table."""

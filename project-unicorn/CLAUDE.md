@@ -359,7 +359,7 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   düğmeleri (ilk küme taban, `SETDIFF|`), `--pan-gpu=<A>/<B>[;…]` alt görüntünün GPU ve CPU süresi (`GPU|`, `MEM|`);
   değerlerdeki `;` ve `|` tırnaklanır, düğme listesi `scripts/debug/office_pan_probe.gd` başındadır.
   Görüşme paneli: `--meeting-shot=<tür>` (satış `probe|locked|won|lost|handoff|economy|frank|emph_trust|emph_integrations|emph_onboarding|weak_core|die|returning`,
-  VC `open|sorgu|sheet|callback|ret|seed|long`; `open:tip` ve `sorgu:tip` zar ipucunu açar; satışta `:name` adın, `:tutum` TUTUM çubuğunun ipucunu açar, ör. `probe:name`), `--negotiation-shot=<open|countered|insult|last|confirm>`; en dar dok
+  VC `open|sorgu|sheet|callback|ret|seed|long`; `open:tip` ve `sorgu:tip` zar ipucunu açar; `:name` adın, `:tutum` TUTUM çubuğunun ipucunu açar (satış ve VC), ör. `probe:name`, `open:tutum`), `--negotiation-shot=<open|countered|insult|last|confirm>`; en dar dok
   `--shot-scale=1.25`; davet `--invite-shot=<ring|card|vc|postpone|postpone_vc|held|lapse|lapse_vc>`; term sheet masası
   kabuğun içinde `--vc-shot=<masa türü>:shell`. Ürün sekmesi: `--product-shot=live:<tür>`, sprint
   motoruyla kurulan koşuda çeker (`live:` olmayan tür hata basıp 1 ile çıkar): `pick`, `pick_named`, `pick_relang`, `plan`, `active`, `decision_paper`,
