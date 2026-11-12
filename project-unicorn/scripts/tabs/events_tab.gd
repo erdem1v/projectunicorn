@@ -3,7 +3,7 @@ extends Control
 # Olaylar penceresi: gelen kutusu. Solda liste (Tümü / Bekleyen / Okunmamış süzgeçleri sayılarıyla,
 # önce bekleyenler, sonra gün ayraçlı geçmiş), sağda seçili öğenin okuma bölmesi. Kutunun modeli
 # Inbox'tadır; sayfa yalnız dizer, seçer ve klavyeyi bölmeye geçirir. Pencerenin ortak başlığı
-# koyu dilde açılır, KPI'ı en yakın süredir.
+# koyu dilde açılır.
 
 const INBOX := preload("res://scripts/ui/components/inbox.gd")
 const PANE := preload("res://scripts/tabs/events/mail_pane.gd")
@@ -16,7 +16,6 @@ const BAND_H := 28
 const EDGE := 24          # the row's marker and dot column
 
 var frame_options: Dictionary
-var _kpi: PanelContainer
 var _tabs: HBoxContainer
 var _rows: VBoxContainer
 var _scroll: ScrollContainer
@@ -29,11 +28,7 @@ var _queued := false
 
 
 func _init() -> void:
-	_kpi = UiFactory.D_kpi(tr("INBOX_SOONEST"), "")
-	# The header's slot keeps its room when there is no deadline to show.
-	var slot := HBoxContainer.new()
-	slot.add_child(_kpi)
-	frame_options = {"title": "TAB_EVENTS", "kpi": slot, "pad": Vector2i.ZERO}
+	frame_options = {"title": "TAB_EVENTS", "pad": Vector2i.ZERO}
 
 
 func _ready() -> void:
@@ -150,11 +145,9 @@ func _refresh() -> void:
 		_selected = String(_visible()[0].id) if not _visible().is_empty() else ""
 		_read()
 	# Read again only when the item changed: an armed option survives a repaint.
-	elif [_shown.get("kind"), _shown.get("event_id"), _shown.get("weeks_left")] \
-			!= [now.kind, now.get("event_id"), now.get("weeks_left")]:
+	elif [_shown.get("kind"), _shown.get("event_id")] != [now.kind, now.get("event_id")]:
 		_read()
 	_draw_list()
-	_paint_kpi()
 
 
 func _read() -> void:
@@ -185,22 +178,6 @@ func _visible() -> Array:
 		1: return _items.filter(func(it: Dictionary) -> bool: return it.waiting)
 		2: return _items.filter(func(it: Dictionary) -> bool: return it.unread)
 	return _items
-
-
-func _paint_kpi() -> void:
-	var soonest: int = -1
-	var last: bool = false
-	for it in _items:
-		if it.has("weeks_left"):
-			soonest = int(it.weeks_left) if soonest < 0 else mini(soonest, int(it.weeks_left))
-			last = last or bool(it.get("expiring", false)) or int(it.weeks_left) <= 1
-	_kpi.visible = soonest >= 0
-	var value: Label = UiFactory.D_kpi_value(_kpi)
-	value.text = tr("INBOX_THIS_WEEK") if last else tr(Fmt.count_key("DESK_PAPER_WEEKS", soonest)).format({"n": soonest})
-	if last:
-		value.add_theme_color_override("font_color", UiTokens.D_warn())
-	else:
-		value.remove_theme_color_override("font_color")
 
 
 # --- The list ------------------------------------------------------------------------------------
@@ -304,20 +281,20 @@ static func row(it: Dictionary, selected: bool, pill: bool, on_pick: Callable) -
 	return card
 
 
-## Right of the subject: a paper's weeks, a reminder's figure, a report's kind, a past
-## decision's stamp.
+## Right of the subject: a paper's weeks (the opened paper's too; its deadline shows nowhere else), a reminder's
+## figure, a report's kind, a past decision's stamp.
 static func _row_right(it: Dictionary) -> Control:
+	if it.has("weeks_left"):
+		var box := HBoxContainer.new()
+		box.add_theme_constant_override("separation", UiTokens.SPACE_S)
+		var weeks: int = int(it.weeks_left)
+		var last: bool = it.expiring or weeks <= 1
+		var ink: Color = UiTokens.D_warn() if last else UiTokens.D_INK_3
+		box.add_child(UiFactory.make_glyph(SprintUiShared.CLOCK, UiTokens.D_ICON_PART, ink))
+		box.add_child(UiFactory.make_label(TranslationServer.translate("DESK_PAPER_THIS_WEEK") if last
+			else TranslationServer.translate(Fmt.count_key("DESK_PAPER_WEEKS", weeks)).format({"n": weeks}), &"Caption", ink))
+		return box
 	match String(it.kind):
-		"paper":
-			var box := HBoxContainer.new()
-			box.add_theme_constant_override("separation", UiTokens.SPACE_S)
-			var weeks: int = int(it.weeks_left)
-			var last: bool = it.expiring or weeks <= 1
-			var ink: Color = UiTokens.D_warn() if last else UiTokens.D_INK_3
-			box.add_child(UiFactory.make_glyph(PANE.CLOCK, UiTokens.D_ICON_PART, ink))
-			box.add_child(UiFactory.make_label(TranslationServer.translate("DESK_PAPER_THIS_WEEK") if last
-				else TranslationServer.translate(Fmt.count_key("DESK_PAPER_WEEKS", weeks)).format({"n": weeks}), &"Caption", ink))
-			return box
 		"reminder":
 			if it.has("morale"):
 				var pair := HBoxContainer.new()

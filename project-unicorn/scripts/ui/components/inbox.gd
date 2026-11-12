@@ -121,8 +121,8 @@ static func desk() -> Array:
 					r.merge({"customer": c.id, "risk": risk, "grow": not risk,
 						"value": Fmt.money_chip(c.mrr) + TranslationServer.translate("SALES_PER_MONTH"),
 						"state": TranslationServer.translate("SALES_CHIP_RISK" if risk else "SALES_CHIP_EXPANSION"),
-						"line": TranslationServer.translate("SALES_REASON_PREFIX").format({"reason": risk_reason(c)}) if risk
-							else TranslationServer.translate("SALES_EXPANSION_FICTION"),
+						"line": "", "reason": TranslationServer.translate("SALES_REASON_PREFIX").format({"reason": risk_reason(c)})
+							if risk else TranslationServer.translate("SALES_EXPANSION_FICTION"),
 						"request": "" if risk and c.cs_escalated else ("customer.retention" if risk else EXPANSION_CARD)}, true)
 					out.append(r)
 			"employee":
@@ -248,7 +248,6 @@ static func card_item(id: String, event_id: String, ctx: Dictionary, names: Dict
 	var from: Dictionary = card_sender(card, ctx, names)
 	return {"id": id, "event_id": event_id, "ctx": ctx, "names": names, "event": ev, "day": day, "at": at,
 		"unread": false, "waiting": false, "sender": from, "subject": ev.title, "line": first_line(ev.body_text),
-		"paper": String(card.get("class", "")) == "paper",
 		"topic": "EVENT_TAG_MENTOR" if from.kind == "frank" else String(EvChips.source_tag(ev, String(card.get("category", ""))).key)}
 
 
@@ -370,14 +369,14 @@ static func account_sender(a: Dictionary, line: String) -> Dictionary:
 	var c: Customer = CustomerRegistry.get_customer(String(a.id))
 	var face: Dictionary = {"mono": UiFactory.initials_of(String(a.name))} if c == null \
 		else {"look": CounterpartSystem.buyer_of(c).look}
-	return _sender("contact", line, "", String(a.name), String(a.company), face)
+	return _sender("contact", line, "", face)
 
 
 ## The support report's sender: the rep who wrote it, named with the title the report carries; the report leaves
 ## the room to its table.
 static func support_sender(rep: String) -> Dictionary:
-	return named_employee(rep, "").merged({"well": false, "title": "", "sig_name": "",
-		"sig_line": "", "name": TranslationServer.translate("SUPPORT_RPT_SENDER").format({"name": rep})}, true)
+	return named_employee(rep, "").merged({"well": false, "title": "",
+		"name": TranslationServer.translate("SUPPORT_RPT_SENDER").format({"name": rep})}, true)
 
 
 ## One of the support report's lines in the live language; a line id among its args reads as the line's name.
@@ -412,9 +411,9 @@ static func note_lines(a: Dictionary) -> Array:
 
 
 # --- Senders ---------------------------------------------------------------------------------------
-# {kind, name, title, sig_name, sig_line, look, portrait, well, mono, glyph, ink, gone, serif}: the
-# header's name and title, the signature's two lines, and the face: a person's look (bust), a
-# pre-rendered portrait, or a box with initials or a glyph. `well` adds the large portrait.
+# {kind, name, title, org, look, portrait, well, mono, glyph, ink, gone, serif}: the header's name, title and
+# the company or fund a contact writes for, and the face: a person's look (bust), a pre-rendered portrait, or a
+# box with initials or a glyph. `well` adds the large portrait.
 
 ## Who a card's mail comes from.
 static func card_sender(card: Dictionary, ctx: Dictionary, names: Dictionary) -> Dictionary:
@@ -459,11 +458,11 @@ static func card_sender(card: Dictionary, ctx: Dictionary, names: Dictionary) ->
 				return _person(CounterpartSystem.prospect_people(p)[0], p.company_name) if p != null else gone_person(kept)
 			var c: Customer = CustomerRegistry.get_customer(id)
 			if c == null:
-				return _mono(kept, "", kept)
+				return _mono(kept, "")
 			return contact(c, TranslationServer.translate(String(card.get("sender_title", ""))))
 		"press":
 			var outlet: String = CATEGORY_OUTLETS.get(String(card.get("category", "")), "WORLD_OUTLET_SEKTOR")
-			var from := _mono(TranslationServer.translate(outlet), "", TranslationServer.translate(outlet))
+			var from := _mono(TranslationServer.translate(outlet), "")
 			from.ink = UiTokens.D_outlet(outlet)
 			return from
 		"desk":
@@ -474,15 +473,14 @@ static func card_sender(card: Dictionary, ctx: Dictionary, names: Dictionary) ->
 static func frank() -> Dictionary:
 	var m: Character = CharacterRegistry.get_mentor()
 	var role: String = HRConstants.role_label(m.role)
-	return _sender("frank", m.character_name, role, m.character_name, role, {"well": true, "serif": true,
+	return _sender("frank", m.character_name, role, {"well": true, "serif": true,
 		"portrait": FounderConstants.portrait_path(FounderConstants.MENTOR_PORTRAIT, Vector2i(40, 40)),
 		"well_portrait": FounderConstants.portrait_path(FounderConstants.MENTOR_PORTRAIT, Vector2i(256, 320))})
 
 
 static func employee(e: Character) -> Dictionary:
 	var role: String = HRConstants.role_label(e.role)
-	return _sender("employee", e.character_name, role, e.character_name,
-		"%s · %s" % [role, GameState.company_name], {"look": e.look, "well": true})
+	return _sender("employee", e.character_name, role, {"look": e.look, "well": true})
 
 
 ## An employee named in a message, who may have left since.
@@ -493,14 +491,11 @@ static func named_employee(person: String, role_id: String) -> Dictionary:
 	if person == "":
 		return founder_note()
 	var role: String = HRConstants.role_label(role_id) if role_id != "" else ""
-	var from := _sender("employee", person, role, person, "%s · %s" % [role, GameState.company_name] if role != ""
-		else GameState.company_name, {"mono": UiFactory.initials_of(person)})
-	return from
+	return _sender("employee", person, role, {"mono": UiFactory.initials_of(person)})
 
 
 static func gone_person(person: String) -> Dictionary:
-	return _sender("employee", person, "", person, GameState.company_name,
-		{"mono": UiFactory.initials_of(person), "gone": true})
+	return _sender("employee", person, "", {"mono": UiFactory.initials_of(person), "gone": true})
 
 
 ## The account's buyer met at the table, when it came from a lead; else the sector's contact. A card that says who
@@ -511,7 +506,7 @@ static func contact(c: Customer, title := "") -> Dictionary:
 	if c.acquisition_source != "":
 		return _person(CounterpartSystem.buyer_of(c), c.company_name, "", title)
 	var role: String = title if title != "" else TranslationServer.translate(B2BConstants.sector_contact(c.industry))
-	return _mono(c.company_name, role, role, c.company_name)
+	return _mono(c.company_name, role)
 
 
 static func investor(vc_id: String) -> Dictionary:
@@ -522,30 +517,28 @@ static func investor(vc_id: String) -> Dictionary:
 ## The founder's own note.
 static func founder_note() -> Dictionary:
 	var f: Character = CharacterRegistry.get_founder()
-	return _sender("self", f.character_name, TranslationServer.translate("MAIL_SELF_NOTE"), "", "",
-		{"look": f.look, "well": true, "well_portrait": FounderConstants.portrait_path(GameState.founder_portrait)})
+	return _sender("self", f.character_name, TranslationServer.translate("MAIL_SELF_NOTE"), {"look": f.look, "well": true,
+		"well_portrait": FounderConstants.portrait_path(GameState.founder_portrait)})
 
 
 static func _person(person: Dictionary, company: String, vc_id := "", title := "") -> Dictionary:
 	var role: String = title if title != "" else CounterpartSystem.title(person, vc_id)
-	return _sender("contact", String(person.name), role, String(person.name), "%s · %s" % [role, company],
-		{"look": person.look})
+	return _sender("contact", String(person.name), role, {"look": person.look, "org": company})
 
 
 ## A sender with no face: initials in a box.
-static func _mono(name: String, title: String, sig_name: String, sig_line := "") -> Dictionary:
-	return _sender("contact", name, title, sig_name, sig_line, {"mono": UiFactory.initials_of(name)})
+static func _mono(name: String, title: String) -> Dictionary:
+	return _sender("contact", name, title, {"mono": UiFactory.initials_of(name)})
 
 
 ## A desk of the company: a glyph in a box.
 static func _desk(name: String, company: String) -> Dictionary:
-	return _sender("desk", name, company, name, company, {"glyph": "res://assets/icons/util/doc.svg"})
+	return _sender("desk", name, company, {"glyph": "res://assets/icons/util/doc.svg"})
 
 
-static func _sender(kind: String, name: String, title: String, sig_name: String, sig_line: String,
-		face: Dictionary) -> Dictionary:
-	var out := {"kind": kind, "name": name, "title": title, "sig_name": sig_name, "sig_line": sig_line,
-		"look": {}, "portrait": "", "well_portrait": "", "well": false, "mono": "", "glyph": "",
+static func _sender(kind: String, name: String, title: String, face: Dictionary) -> Dictionary:
+	var out := {"kind": kind, "name": name, "title": title, "org": "", "look": {}, "portrait": "", "well_portrait": "",
+		"well": false, "mono": "", "glyph": "",
 		"ink": Color.TRANSPARENT, "gone": false, "serif": false}
 	out.merge(face, true)
 	return out

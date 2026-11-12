@@ -22,7 +22,7 @@ Sekme kökleri (scripts/tabs/):
 - `scripts/tabs/personal_tab.gd` (266): Kişisel: kurucunun portresi, görev, deneyim, beceri, huy, kilometre taşları, evre hedefi, hisse ve değerleme.
 
 Alt klasörler:
-- `scripts/tabs/events/mail_pane.gd` (898): Okuma bölmesi: kart/mesaj/hatırlatıcı/Ar-Ge notu; seçenek grameri, karar `EventGate.resolve`, sender avatarı, konu hapı;
+- `scripts/tabs/events/mail_pane.gd` (898): Okuma bölmesi: kart/mesaj/hatırlatıcı/Ar-Ge notu; seçenek grameri, karar `EventGate.resolve`, sender avatarı, liste satırının konu hapı (`topic_pill`);
   ↳ şık çipi `EvChips.option_parts`tan, geçmiş satırı `merge_same`den geçer; tek şıklı kutunun (`StakeBox`, dikey iç boşluğu 0) içine `SPACE_M` dikey iç boşluk girer, dar sütunda sarılan çipler kutuyu büyütür ve kenara değmez.
 - `scripts/tabs/finance/finance_ozet_view.gd` (590): `FinanceOzetView`: Özet sayfası (kasa eğrisi, işlemler, hisse tablosu, hedef, akış, gider dağılımı, Frank notu, rakip ligi).
 - `scripts/tabs/hr/hr_ledger.gd` (453): `HRLedger`: Kadro sütunları, başlık, satır, satır menüsü eylemleri ve onayları (`action_list`, `run_action`).
@@ -209,7 +209,7 @@ Anahtarlar `localization/strings.csv`'de (sütunlar keys,tr,en); sekmeler `tr("A
 - `FIN_*` (FIN_GOAL, FIN_PROFIT, FIN_MARKET, FIN_CAPTABLE, FIN_RANGE, FIN_MENTOR, FIN_SUBTAB, FIN_CASH, FIN_MONTHLY, FIN_RUNWAY): finance_tab, finance_ozet_view, mail_pane; `ANGEL_CAP_*` ve `SEED_CAP_*` özette.
 - `HUNT_*` (BADGE, MEETING, WALK, SEC, EST, COUNTER, REQUEST...), `SEED_*` (PITCH, EXPECT, OFFER, DOOR, DONE, BAND), `VC_BLOCK_*`, `VC_EV_*`, `MENTOR_NAME`: yalnız hunt_tab (HUNT_BADGE/CONDITION ayrıca vc_meeting_adapter).
 - `RND_*` (LEGEND, VIEW, TREE, WEEKS, REQ, NEED, FAMILY, PLACE, ASSIGN, ABANDON, COMPLETED, NOTE, HISTORY, FROZEN...): rnd_tab, rnd_ui_shared, rnd_detail_panel, rnd_assign_panel, rnd_history, rnd_tree_view, mail_pane.
-- `INBOX_*`, `MAIL_*` (KIND, RPT, STAMP, REPLY...), `DESK_PAPER_*`, `GATE_ANSWER_*`, `PAPER_GONE_*`, `SUPPORT_RPT_*`, `MONTH_ROW_*`: events_tab, mail_pane (INBOX_* ayrıca inbox.gd).
+- `INBOX_*`, `MAIL_*` (RPT, STAMP...), `DESK_PAPER_*`, `GATE_ANSWER_*`, `PAPER_GONE_*`, `SUPPORT_RPT_*`, `MONTH_ROW_*`: events_tab, mail_pane (INBOX_* ayrıca inbox.gd).
 - `PIYASA_*` (KPI, RANGE, FILTER, SHARE, LIST, COL, ABOUT, CTX_<yıl>...): yalnız piyasa_tab; bağlam satırı yıla göre `PIYASA_CTX_%d`, yoksa `PIYASA_CTX_2012`.
 - `PER_*`, `PERSONAL_MS_*`, `MILESTONE_*`: personal_tab (hedef `PER_GOAL_TRACTION` / `PER_GOAL_SERIES_A`, taş notları `MILESTONE_NOTES` personal_tab.gd:17-20).
 - Ortak: `UI_DISMISS`, `UI_CONFIRM`, `NUM_DECIMAL`, `TOPBAR_SHUTTER`, `TOPBAR_GATE`. Anahtar çözülmezse ekranda ham token çıkar (`loc_residue` yakalar).

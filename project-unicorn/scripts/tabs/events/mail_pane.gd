@@ -1,8 +1,8 @@
 extends ScrollContainer
 
-# Gelen kutusunun okuma bölmesi: seçili öğeyi mail olarak okur. Künye (konu, tür, durum), konu,
-# başlık (gönderen, alıcı, tarih), gövde, imza, kişi yazınca portre kuyusu; sonra kararın "Cevabın"
-# bloğu, geçmişin "Seçimin" belgesi, mesajın tablosu ya da eylem satırı.
+# Gelen kutusunun okuma bölmesi: seçili öğeyi mail olarak okur. Konu, başlık (gönderen, tarih), gövde,
+# kişi yazınca portre kuyusu; sonra kararın seçenekleri, kâğıdın Cevapla'sı, geçmişin "Seçimin" belgesi,
+# mesajın tablosu ya da eylem satırı.
 #
 # Kip `populate(item, mode)`: "live" etkin karardır ve seçim yalnız orada EventGate.resolve'a gider;
 # "preview" kâğıdın önizlemesidir (seçenekler gizli, Cevapla açar) ya da harness'ın çizdiği karttır
@@ -21,7 +21,6 @@ const ENTER_GUARD_MS := 400
 const AVATAR := 40
 const GLYPHS := {"up": "res://assets/icons/stake/cash_in.svg", "cost": "res://assets/icons/stake/cost.svg",
 	"warn": "res://assets/icons/util/warn.svg", "pie": "res://assets/icons/stake/equity.svg"}
-const CLOCK := "res://assets/icons/util/clock.svg"
 const STAR := "res://assets/icons/util/star_full.svg"
 
 var _item: Dictionary = {}
@@ -108,18 +107,8 @@ func on_key(key: Key) -> bool:
 
 func _card() -> void:
 	var ev: GameEvent = _item.event
-	var kind: String = "MAIL_KIND_PAPER" if _item.get("paper", false) \
-		else ("MAIL_KIND_MESSAGE" if _item.get("note", false) else "MAIL_KIND_DECISION")
-	var state := ""
-	var ink = null
-	if _mode == "live":
-		state = tr("TOPBAR_GATE")
-		ink = UiTokens.D_ACCENT
-	elif _item.kind == "paper":
-		state = _within()
-		ink = UiTokens.D_warn() if _item.expiring else null
 	var static_body: bool = _mode != "history" or _static_body()
-	_mail(_kicker(kind, state, ink), ev.title, ev.body_text if static_body else "")
+	_mail(ev.title, ev.body_text if static_body else "")
 	if _mode == "history" and _item.note:
 		# News (§27.51) names what it landed as it arrived; an effectless note has nothing to show.
 		var landed: Array = _row_parts()
@@ -129,7 +118,6 @@ func _card() -> void:
 	elif _mode == "history":
 		_answered()
 	elif _item.kind == "paper":
-		_reply_head(false)
 		_col.add_child(_paper_bar())
 	else:
 		_reply()
@@ -138,26 +126,24 @@ func _card() -> void:
 func _message() -> void:
 	var m: Dictionary = _item.msg
 	var a: Dictionary = m.args
-	var kind: String = {"intro": "MAIL_KIND_MESSAGE", "sales_loss": "MAIL_KIND_MESSAGE", "clause": "MAIL_KIND_MESSAGE",
-		"exit_notice": "MAIL_KIND_MESSAGE", "rnd_discovery": "RND_DISCOVERY_TITLE"}.get(m.kind, "MAIL_KIND_REPORT")
 	match String(m.kind):
 		"intro":
-			_mail(_kicker(kind), _item.subject, tr("MENTOR_INTRO_BODY"))
+			_mail(_item.subject, tr("MENTOR_INTRO_BODY"))
 			_actions("", [[tr("MENTOR_INTRO_CTA"), _go.bind("product"), true]])
 		"summary":
-			_mail(_kicker(kind), _item.subject, "", _summary(a))
+			_mail(_item.subject, "", _summary(a))
 			_actions(SummarySystem.display(a).footer, [[tr("MAIL_CONTINUE"), _close, true]])
 		"sales_week":
-			_mail(_kicker(kind), _item.subject, "", _sales_report(a))
+			_mail(_item.subject, "", _sales_report(a))
 		"sales_loss":
-			_mail(_kicker(kind), _item.subject, INBOX.lost_body(a))
+			_mail(_item.subject, INBOX.lost_body(a))
 		"support_week":
-			_mail(_kicker(kind), _item.subject, "", _support_report(a))
+			_mail(_item.subject, "", _support_report(a))
 			if String(a.fix) != "":
 				_actions("", [[tr("SUPPORT_RPT_BTN_FIX").format({"line": SprintCatalog.cap_name(String(a.fix))}),
 					SprintUiShared.open_product_area.bind(get_tree(), SprintCatalog.area_of_line(String(a.fix))), true]])
 		"clause":
-			_mail(_kicker(kind), _item.subject, INBOX.clause_body(a))
+			_mail(_item.subject, INBOX.clause_body(a))
 			var account: Customer = CustomerRegistry.get_customer(String(a.id))
 			if account != null and account.clause_due_day >= 0:
 				var locked: String = InfraSystem.lock_reason()
@@ -166,23 +152,23 @@ func _message() -> void:
 					"new": Fmt.money_exact(InfraSystem.monthly_bill(InfraSystem.PROVIDER_ENTERPRISE))}),
 					_move_to_enterprise, true]], locked != "" or EventGate.active_id() != "")
 		"exit_notice":
-			_mail(_kicker(kind), _item.subject, INBOX.exit_body(a))
+			_mail(_item.subject, INBOX.exit_body(a))
 		"rnd_note", "rnd_discovery":
 			var note: bool = m.kind == "rnd_note"
 			if note:
-				_mail(_kicker(kind), _item.subject, "\n\n".join(INBOX.note_lines(a)))
+				_mail(_item.subject, "\n\n".join(INBOX.note_lines(a)))
 			else:
-				_mail(_kicker(kind), _item.subject,
-					RnDUiShared.t_or("PROD_RND_NODE_%s_DISCOVERY" % String(a.node).to_upper(), ""), _opened(String(a.node)))
+				_mail(_item.subject, RnDUiShared.t_or("PROD_RND_NODE_%s_DISCOVERY" % String(a.node).to_upper(), ""),
+					_opened(String(a.node)))
 			var product: Array = [tr("RND_NOTE_GO_PRODUCT"), _go.bind("product"), false]
 			var tree: Array = [tr("RND_NOTE_GO_TREE"), _go.bind("rnd"), false]
 			_actions("", [product] if _mode == "rnd" else ([product, tree] if note else [tree, product]),
 				_mode == "rnd" and EventGate.active_id() != "")
 
 
-## The mail's top: kicker, subject, header (dated by the time the item reached the player), body, an extra block
-## (a report's table) and the signature, beside the portrait well when a person writes.
-func _mail(kicker: Control, subject: String, body: String, extra: Control = null) -> void:
+## The mail's top: subject, header (dated by the time the item reached the player), body and an extra block (a
+## report's table), beside the portrait well when a person writes.
+func _mail(subject: String, body: String, extra: Control = null) -> void:
 	var from: Dictionary = _item.sender
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", UiTokens.SPACE_4XL)
@@ -191,11 +177,7 @@ func _mail(kicker: Control, subject: String, body: String, extra: Control = null
 	head.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_theme_constant_override("separation", UiTokens.SPACE_XL)
 	top.add_child(head)
-	var lead := VBoxContainer.new()
-	lead.add_theme_constant_override("separation", UiTokens.SPACE_M)
-	lead.add_child(kicker)
-	lead.add_child(_wrapped(subject, &"TitleH2"))
-	head.add_child(lead)
+	head.add_child(_wrapped(subject, &"TitleH2"))
 	head.add_child(_header(from, INBOX.date_text(int(_item.day), int(_item.at))))
 	head.add_child(HSeparator.new())
 	if body != "":
@@ -209,24 +191,11 @@ func _mail(kicker: Control, subject: String, body: String, extra: Control = null
 		head.add_child(rich)
 	if extra != null:
 		head.add_child(extra)
-	if from.sig_name != "":
-		head.add_child(_signature(from))
 	if from.well and not from.gone:
 		top.add_child(_well(from))
 
 
-func _kicker(kind_key: String, state := "", ink = null) -> HBoxContainer:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", UiTokens.SPACE_M)
-	row.add_child(topic_pill(String(_item.topic)))
-	row.add_child(UiFactory.make_label(tr(kind_key), &"MetaMuted"))
-	if state != "":
-		row.add_child(UiFactory.make_label("·", &"CaptionFaint"))
-		row.add_child(UiFactory.make_label(state, &"MetaMuted", ink))
-	return row
-
-
-## Avatar, name and title; then the recipient and, in a column of its own, the date.
+## Avatar, name and title; under them the company or fund a contact writes for and, on the right, the date.
 func _header(from: Dictionary, date: String) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", UiTokens.SPACE_L)
@@ -248,31 +217,13 @@ func _header(from: Dictionary, date: String) -> HBoxContainer:
 	lines.add_child(one)
 	var two := HBoxContainer.new()
 	two.add_theme_constant_override("separation", UiTokens.SPACE_M)
-	if from.kind != "self":
-		two.add_child(UiFactory.make_label(tr("MAIL_TO"), &"MetaMuted"))
-		var to := UiFactory.make_label("%s · %s" % [CharacterRegistry.get_founder().character_name,
-			GameState.company_name], &"KeyText")
-		to.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		to.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		two.add_child(to)
-	else:
-		two.add_child(RnDUiShared.spacer())
+	var org := UiFactory.make_label(String(from.org), &"MetaMuted")
+	org.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	org.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	two.add_child(org)
 	two.add_child(UiFactory.make_label(date, &"MetaMuted"))
 	lines.add_child(two)
 	return row
-
-
-func _signature(from: Dictionary) -> VBoxContainer:
-	var sig := VBoxContainer.new()
-	sig.add_theme_constant_override("separation", UiTokens.SPACE_XXS)
-	var rule := HSeparator.new()
-	rule.custom_minimum_size.x = UiTokens.SPACE_3XL
-	rule.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	sig.add_child(rule)
-	sig.add_child(UiFactory.make_label(String(from.sig_name), &"TipTitle"))
-	if from.sig_line != "":
-		sig.add_child(UiFactory.make_label(String(from.sig_line), &"Caption"))
-	return sig
 
 
 func _well(from: Dictionary) -> PanelContainer:
@@ -287,24 +238,9 @@ func _well(from: Dictionary) -> PanelContainer:
 
 # --- The reply -----------------------------------------------------------------------------------
 
-## "Cevabın", and while the decision is live the permanence line.
-func _reply_head(live: bool, key := "MAIL_REPLY") -> void:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", UiTokens.SPACE_M)
-	row.add_child(UiFactory.make_label(Fmt.upper(tr(key)), &"KeyLabel"))
-	row.add_child(RnDUiShared.spacer())
-	if live:
-		row.add_child(UiFactory.make_glyph("res://assets/icons/util/pause.svg", UiTokens.D_ICON_ROW, UiTokens.D_INK_3))
-		row.add_child(UiFactory.make_label(tr("EVENT_CHOICE_PERMANENT"), &"MetaMuted"))
-	_col.add_child(row)
-
-
 func _reply() -> void:
 	var ev: GameEvent = _item.event
 	var ctx: Dictionary = _item.ctx
-	var readout: bool = ev.choices.size() == 1 and (ev.choices[0] as EventChoice).modifiers.is_empty() \
-		and (ev.choices[0] as EventChoice).check.is_empty()
-	_reply_head(_mode == "live" and not readout)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", UiTokens.SPACE_M)
 	_col.add_child(box)
@@ -508,7 +444,7 @@ func _choose(idx: int) -> void:
 	EventGate.resolve(String(_item.event_id), idx)
 
 
-## The paper's clock and Cevapla, which opens it (the clock stops); refused while a decision is up.
+## Cevapla, which opens the paper (the clock stops); refused while a decision is up. The list row says how long it has.
 func _paper_bar() -> PanelContainer:
 	var bar := PanelContainer.new()
 	bar.theme_type_variation = &"PaperBar"
@@ -516,11 +452,6 @@ func _paper_bar() -> PanelContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", UiTokens.SPACE_L)
 	bar.add_child(row)
-	var ink: Color = UiTokens.D_warn() if _item.expiring else UiTokens.D_INK_2
-	row.add_child(UiFactory.make_glyph(CLOCK, UiTokens.D_ICON_BUTTON, ink))
-	var left := UiFactory.make_label(_within(), &"DataStrong", ink)
-	left.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(left)
 	row.add_child(RnDUiShared.spacer())
 	var blocked: bool = EventGate.active_id() != ""
 	if blocked:
@@ -558,22 +489,13 @@ func _set_aside_foot() -> HBoxContainer:
 	back.pressed.connect(func() -> void: EventGate.set_aside())
 	row.add_child(back)
 	row.add_child(UiFactory.D_tag(tr("MAIL_KEY_ESC"), &"outline"))
-	row.add_child(RnDUiShared.spacer(UiTokens.SPACE_XL))
-	row.add_child(UiFactory.make_glyph(CLOCK, UiTokens.D_ICON_ROW, UiTokens.D_INK_3))
-	row.add_child(UiFactory.make_label(_within(), &"MetaMuted"))
 	return row
-
-
-func _within() -> String:
-	var weeks: int = int(_item.get("weeks_left", 0))
-	return tr("MAIL_FINAL_WEEK") if _item.get("expiring", false) or weeks <= 1 \
-		else tr(Fmt.count_key("MAIL_WITHIN", weeks)).format({"n": weeks})
 
 
 ## A past decision: the option chosen and what it did, stamped.
 func _answered() -> void:
 	if not _item.expired:
-		_reply_head(false, "MAIL_YOUR_CHOICE")
+		_col.add_child(UiFactory.make_label(Fmt.upper(tr("MAIL_YOUR_CHOICE")), &"KeyLabel"))
 	var box := PanelContainer.new()
 	box.theme_type_variation = &"NoteBox"
 	_col.add_child(box)
@@ -761,9 +683,8 @@ func _opened(node: String) -> PanelContainer:
 
 # --- Reminders -----------------------------------------------------------------------------------
 
-## A reminder reads as a record: who, its state, the facts, and where to attend to it.
+## A reminder reads as a record: who, the facts, a customer's reason and where to attend to it (its state is on its list row).
 func _record() -> void:
-	_col.add_child(_kicker("MAIL_KIND_ATTENTION"))
 	var from: Dictionary = _item.sender
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", UiTokens.SPACE_L)
@@ -772,15 +693,13 @@ func _record() -> void:
 	if person:
 		head.add_child(avatar(from, AVATAR + UiTokens.SPACE_M))
 	head.add_child(UiFactory.make_label(String(from.name) if person else String(_item.subject), &"TitleH2"))
-	if _item.has("state"):
-		head.add_child(UiFactory.D_tag(String(_item.state), &"risk" if _item.risk else &""))
 	if _item.has("customer"):
 		var c: Customer = CustomerRegistry.get_customer(String(_item.customer))
 		var months: int = int(TimeModel.months(GameState.day - c.acquired_on_day))
 		_col.add_child(_facts([[tr("FIN_CAP_MRR"), Fmt.money_chip(c.mrr) + tr("SALES_PER_MONTH")],
 			[tr("MAIL_RPT_SEATS"), str(c.seats)], [tr("REC_SATISFACTION"), str(c.satisfaction)],
 			[tr("MAIL_RPT_CUSTOMER"), tr("REC_TENURE").format({"n": months})]]))
-		_col.add_child(UiFactory.make_label(String(_item.line), &"DataText"))
+		_col.add_child(_wrapped(String(_item.reason), &"DataText"))
 		var am: Character = CharacterRegistry.get_character(c.assigned_to)
 		_col.add_child(UiFactory.make_label(tr("SALES_STEWARD").format(
 			{"name": tr("HR_ROLE_FOUNDER") if c.assigned_to == "" else (am.character_name if am != null else tr("REC_AM_NONE"))}), &"DataText"))

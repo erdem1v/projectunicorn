@@ -482,15 +482,11 @@ ANGEL_EVENT_BODY,"Ürün para kazandırmaya başladı.
 
 Arayan yine Frank.
 
-""Buraya kadar kendi birikimin ve emeğinle geldin. İşleri hızlandırman için yirmi beş bin dolar koyuyorum, yüzde dört alıyorum. Pazarlık yok. Bir kere soruyorum: alıyor musun?""
-
-Cevap bekliyor.","The product has started making money.
+""Buraya kadar kendi birikimin ve emeğinle geldin. İşleri hızlandırman için yirmi beş bin dolar koyuyorum, yüzde dört alıyorum. Pazarlık yok. Bir kere soruyorum: alıyor musun?""","The product has started making money.
 
 Frank again.
 
-""You got this far on your own savings and your own work. I'll put in twenty-five thousand to speed things up, and I'll take four percent. No haggling. I'm asking once: do you want it?""
-
-He waits for an answer."
+""You got this far on your own savings and your own work. I'll put in twenty-five thousand to speed things up, and I'll take four percent. No haggling. I'm asking once: do you want it?"""
 ANGEL_CHOICE_ACCEPT,Kabul et,Accept
 ANGEL_CHOICE_REFUSE,Reddet,Refuse
 ANGEL_CHOICE_REFUSE_LOCK,Zor modda açılır.,Unlocks in hard mode.
@@ -1426,7 +1422,6 @@ MONTH_CLOSED_TICKER,{month} kapandı · MRR {mrr} · takvim ayında nakit {delta
 FIN_GOAL_PROGRESS,{met}/{total},{met}/{total}
 MONTH_ROW_CASH,Kasa,Cash
 MONTH_ROW_BRAND,Marka,Brand
-EVENT_CHOICE_PERMANENT,Seçim kalıcıdır · Oyun duraklatıldı,The choice is permanent · Game paused
 EVENT_TAG_CUSTOMER,MÜŞTERİ,CUSTOMER
 EVENT_TAG_TEAM,EKİP,TEAM
 EVENT_TAG_MARKET,PİYASA,MARKET
@@ -2954,8 +2949,6 @@ CLOCK_HOLD_SPRINT_PLAN,Sprint planı bekliyor,Sprint plan waiting
 CLOCK_HOLD_MILESTONE,Dönüm noktası açık,Milestone open
 WIN_READ_ONLY,Karar bekliyor. Bu pencere yalnız okunur.,A decision is waiting. This window is read only.
 WIN_BACK_TO_DECISION,Karara dön,Back to the decision
-INBOX_SOONEST,En yakın süre,Soonest deadline
-INBOX_THIS_WEEK,Bu hafta,This week
 INBOX_ALL,Tümü,All
 INBOX_WAITING,Bekleyen,Waiting
 INBOX_UNREAD,Okunmamış,Unread
@@ -2971,16 +2964,6 @@ INBOX_ROW_DISCOVERY,keşif,discovery
 INBOX_CHOICE,Seçimin: {option},Your choice: {option}
 INBOX_SUBJ_RISK,Risk altında,At risk
 INBOX_SUBJ_GROW,Büyümek istiyor,Wants to grow
-MAIL_KIND_DECISION,Karar,Decision
-MAIL_KIND_PAPER,Kağıt,Paper
-MAIL_KIND_REPORT,Rapor,Report
-MAIL_KIND_MESSAGE,Mesaj,Message
-MAIL_KIND_ATTENTION,Dikkat,Attention
-MAIL_WITHIN,{n} hafta içinde,Within {n} weeks
-MAIL_WITHIN_ONE,{n} hafta içinde,Within {n} week
-MAIL_FINAL_WEEK,Bu hafta son,Final week
-MAIL_TO,Kime,To
-MAIL_REPLY,Cevabın,Your reply
 MAIL_YOUR_CHOICE,Seçimin,Your choice
 MAIL_CHOOSE,Seç,Choose
 MAIL_RESPOND,Cevapla,Respond

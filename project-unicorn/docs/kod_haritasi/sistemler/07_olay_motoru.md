@@ -112,7 +112,7 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - Kart anahtar aileleri: `EV_<KATEGORİ>_*` (TEAM, FOUNDER, CUSTOMER, RIVAL, PRODUCT, WORLD, FUNDING), `B2B_EV_*`, `B2B_CHOICE_*`, `FRANK_*` (APPROACH, OFFICE, DOOR, ADVISORY), `ANGEL_*`, `VC_EV_*`, `SEED_*`, `GATE_*`,
   ↳ `PROD_*`, `END_EV_*`, `HR_EV_*`
 - Çip metinleri: `EFFECT_*` (okuyan `present/chips.gd`, ör. `EFFECT_NAMES_MORE` `chips.gd:450`), kaynak rozeti `EVENT_TAG_*` (`chips.gd:61`, ayrıca `ui_tokens.gd`, `inbox.gd`), `EV_MODIFIERS_MORE`
-- Masa ve gelen kutusu: `DESK_PAPER_*` (`events_tab.gd`, `inbox.gd`), `INBOX_*`, `EVENT_CHOICE_*` (`mail_pane.gd`); haber bandı `TICKER_SRC_*` (`present/ticker.gd`); anahtarlar `localization/strings.csv`'de (3330 satır)
+- Masa ve gelen kutusu: `DESK_PAPER_*` (`events_tab.gd`, `inbox.gd`), `INBOX_*`, `MAIL_*` (`mail_pane.gd`); haber bandı `TICKER_SRC_*` (`present/ticker.gd`); anahtarlar `localization/strings.csv`'de (3330 satır)
 - Gövdede yalnız `{slot}` ve `{seam:ns.ad}` çözülür (`EvPresenter.SEAM_RE` `presenter.gd:27`, `_interpolate` `:270`); değişken metin `{by_seam, variants}` (`leaf_text` `:241`); iki dilde aynı id kümesi (`EvLint` §17.8)
 
 ## Testler

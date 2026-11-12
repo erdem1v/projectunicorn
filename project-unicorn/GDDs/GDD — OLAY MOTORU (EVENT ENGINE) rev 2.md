@@ -2309,7 +2309,7 @@ alanından yalnız ofisin bildirim yığını gösterir (`Inbox.unread_discovery
 okunmamış notu verir; `EvHistory.newest_unread_note` geçmişi sondan tarar). Ray rozeti kuyruğu ve masayı sayar,
 notu saymaz. Not kutuda okununca `EventGate.mark_read(i)` (`i`, satırın `history()`'deki yeri) satırı okundu yapar ve
 `EventBus.messages_changed` yayar. Listede notun ikinci satırı gövdenin ilk satırıdır, damgası yoktur; okuma
-bölmesinin türü karar değil mesajdır (`MAIL_KIND_MESSAGE`), "Seçimin" kutusu ve damga yerine tek düğme vardır:
+bölmesinde "Seçimin" kutusu ve damga yerine tek düğme vardır:
 kartın seçenek etiketi, kutuyu kapatır.
 
 Harness `modal_requested`'i sayar: not kartı kapıyı isterse `BEAT_MODAL <id> <n>` basar ve koşu `HARNESS FAIL` olur.

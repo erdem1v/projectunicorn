@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git 2123d3ee · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 63778827 · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -229,8 +229,8 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/systems/vc_pitch_system.gd · 1317 · VCPitchSystem · RefCounted · 0 sinyal · 91 func
 - scripts/systems/work_hours_system.gd · 342 · WorkHoursSystem · RefCounted · 0 sinyal · 38 func
 
-### scripts/tabs/ (9 dosya, 3967 satır)
-- scripts/tabs/events_tab.gd · 369 · - · Control · 0 sinyal · 23 func
+### scripts/tabs/ (9 dosya, 3944 satır)
+- scripts/tabs/events_tab.gd · 346 · - · Control · 0 sinyal · 22 func
 - scripts/tabs/finance_tab.gd · 142 · - · Control · 1 sinyal · 9 func
 - scripts/tabs/hr_tab.gd · 537 · - · Control · 1 sinyal · 32 func
 - scripts/tabs/hunt_tab.gd · 533 · - · Control · 0 sinyal · 27 func
@@ -240,8 +240,8 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/tabs/rnd_tab.gd · 256 · - · Control · 1 sinyal · 14 func
 - scripts/tabs/sales_tab.gd · 837 · - · Control · 1 sinyal · 40 func
 
-### scripts/tabs/events/ (1 dosya, 906 satır)
-- scripts/tabs/events/mail_pane.gd · 906 · - · ScrollContainer · 0 sinyal · 47 func
+### scripts/tabs/events/ (1 dosya, 825 satır)
+- scripts/tabs/events/mail_pane.gd · 825 · - · ScrollContainer · 0 sinyal · 43 func
 
 ### scripts/tabs/finance/ (1 dosya, 564 satır)
 - scripts/tabs/finance/finance_ozet_view.gd · 564 · FinanceOzetView · Control · 0 sinyal · 24 func
@@ -289,14 +289,14 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 ### scripts/ui/ (1 dosya, 138 satır)
 - scripts/ui/menu_backdrop.gd · 138 · - · Control · 1 sinyal · 6 func
 
-### scripts/ui/components/ (19 dosya, 3639 satır)
+### scripts/ui/components/ (19 dosya, 3632 satır)
 - scripts/ui/components/bar_kit.gd · 37 · - · RefCounted · 0 sinyal · 3 func
 - scripts/ui/components/build_bar.gd · 168 · - · PanelContainer · 0 sinyal · 11 func
 - scripts/ui/components/build_bar_model.gd · 46 · - · RefCounted · 0 sinyal · 2 func
 - scripts/ui/components/build_hud_panel.gd · 108 · - · Control · 0 sinyal · 6 func
 - scripts/ui/components/cash_curve.gd · 266 · CashCurve · Control · 0 sinyal · 16 func
 - scripts/ui/components/gate_strip.gd · 53 · - · PanelContainer · 0 sinyal · 2 func
-- scripts/ui/components/inbox.gd · 581 · - · RefCounted · 0 sinyal · 42 func
+- scripts/ui/components/inbox.gd · 574 · - · RefCounted · 0 sinyal · 42 func
 - scripts/ui/components/investor_appetite_ui.gd · 40 · InvestorAppetiteUi · RefCounted · 0 sinyal · 3 func
 - scripts/ui/components/left_tabs.gd · 333 · - · Panel · 0 sinyal · 20 func
 - scripts/ui/components/logo_emblem.gd · 188 · LogoEmblem · Control · 0 sinyal · 11 func
@@ -390,7 +390,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - tab_changed(tab_id: String) · scripts/autoload/event_bus.gd:29
   ↳ tab_changed emit: scripts/main/game_shell.gd:43, scripts/main/main.gd:411,593,1608,1611,1622 +54
   ↳ tab_changed connect: scripts/main/main.gd:5559, scripts/ui/components/left_tabs.gd:106, scripts/ui/components/research_bar.gd:61, scripts/ui/components/top_bar.gd:172, scripts/ui/components/window_layer.gd:62
-- finance_subpage_requested(page_id: String) · scripts/autoload/event_bus.gd:32 · emit: scripts/main/main.gd:5132,5641, scripts/tabs/events/mail_pane.gd:847 · connect: scripts/tabs/finance_tab.gd:58
+- finance_subpage_requested(page_id: String) · scripts/autoload/event_bus.gd:32 · emit: scripts/main/main.gd:5132,5641, scripts/tabs/events/mail_pane.gd:766 · connect: scripts/tabs/finance_tab.gd:58
 - goto_tab_requested(tab_id: String, subpage: String) · scripts/autoload/event_bus.gd:34 · emit: scripts/events/core/effects.gd:648 · connect: scripts/main/main.gd:5558
 - settings_requested() · scripts/autoload/event_bus.gd:38 · emit: scripts/main/main.gd:3169, scripts/menu/main_menu.gd:56, scripts/modals/system_menu_modal.gd:39, scripts/ui/components/left_tabs.gd:96 · connect: scripts/main/main.gd:89
 - confirm_requested(config: Dictionary) · scripts/autoload/event_bus.gd:41
@@ -1123,7 +1123,7 @@ Biçim: yol · boyut · üst düzey anahtarlar (en çok 10)
 - data/product/sprint.json · 9.3 KB · {sprint_weeks, quarter_weeks, mvp_lines, effort, fix_effort, limit_k, need, roles, role_areas, person_points_week, +26}
 - data/techtree/rnd_tree.json · 6.3 KB · {_doc, _stars, _cross, _areas, k_arge, report_period_weeks, nodes, _hidden_doc, _hidden_k3_doc, hidden_lines}
 
-## Metin anahtarı aileleri (853 aile, 3213 anahtar)
+## Metin anahtarı aileleri (845 aile, 3200 anahtar)
 
 Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak geçiren .gd/.json (en çok 5). '-' = dinamik kurulmuş olabilir ya da kullanılmıyor.
 - ANGEL_CAP_* · 1 · scripts/tabs/finance/finance_ozet_view.gd
@@ -1251,7 +1251,6 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - END_SPAN_* · 6 · scripts/systems/endings_copy.gd, scripts/debug/endgame_smoke.gd
 - END_STAT_* · 15 · scripts/systems/endings_copy.gd, scripts/debug/endgame_smoke.gd
 - END_VC_* · 13 · scripts/systems/endings_copy.gd
-- EVENT_CHOICE_* · 1 · scripts/tabs/events/mail_pane.gd
 - EVENT_TAG_* · 6 · scripts/events/present/chips.gd, scripts/theme/ui_tokens.gd, scripts/ui/components/inbox.gd, scripts/debug/endgame_smoke.gd
 - EV_CUSTOMER_* · 39 · data/events/cards/customer/b2c_refunds.json, data/events/cards/customer/chargeback.json, data/events/cards/customer/leak_questions.json, data/events/cards/customer/named_in_leak.json +3
 - EV_FOUNDER_* · 29 · data/events/cards/founder/company_of_one.json, data/events/cards/founder/domain_name.json, data/events/cards/founder/friends_test.json, data/events/cards/founder/meetup_talk.json +3
@@ -1384,9 +1383,7 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - INBOX_PANE_* · 1 · scripts/tabs/events/mail_pane.gd
 - INBOX_QUEUE_* · 3 · scripts/tabs/events_tab.gd
 - INBOX_ROW_* · 2 · scripts/tabs/events_tab.gd, scripts/ui/components/inbox.gd
-- INBOX_SOONEST_* · 1 · scripts/tabs/events_tab.gd
 - INBOX_SUBJ_* · 2 · scripts/ui/components/inbox.gd
-- INBOX_THIS_* · 1 · scripts/tabs/events_tab.gd
 - INBOX_UNREAD_* · 1 · scripts/tabs/events_tab.gd
 - INBOX_WAITING_* · 1 · scripts/tabs/events_tab.gd
 - INV_APPETITE_* · 8 · scripts/ui/components/investor_appetite_ui.gd
@@ -1404,18 +1401,13 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - MADE_WITH_* · 1 · -
 - MAIL_CHOOSE_* · 1 · scripts/tabs/events/mail_pane.gd
 - MAIL_CONTINUE_* · 1 · scripts/tabs/events/mail_pane.gd
-- MAIL_FINAL_* · 1 · scripts/tabs/events/mail_pane.gd
 - MAIL_KEY_* · 1 · scripts/tabs/events/mail_pane.gd
-- MAIL_KIND_* · 5 · scripts/tabs/events/mail_pane.gd
-- MAIL_REPLY_* · 1 · scripts/tabs/events/mail_pane.gd
 - MAIL_RESPOND_* · 1 · scripts/main/main.gd, scripts/tabs/events/mail_pane.gd
 - MAIL_RPT_* · 6 · scripts/tabs/events/mail_pane.gd
 - MAIL_SELF_* · 1 · scripts/ui/components/inbox.gd
 - MAIL_SENDER_* · 6 · data/events/cards/customer/incident_month_close.json, data/events/cards/product/incident_outage_b2b.json, data/events/cards/product/incident_outage_b2c.json, data/events/cards/world/cloud_price_cut.json +4
 - MAIL_SET_* · 1 · scripts/tabs/events/mail_pane.gd
 - MAIL_STAMP_* · 4 · scripts/tabs/events/mail_pane.gd, scripts/tabs/events_tab.gd, scripts/ui/components/inbox.gd
-- MAIL_TO_* · 1 · scripts/tabs/events/mail_pane.gd
-- MAIL_WITHIN_* · 2 · scripts/tabs/events/mail_pane.gd
 - MAIL_YOUR_* · 1 · scripts/tabs/events/mail_pane.gd
 - MEETING_ACCEPT_* · 1 · scripts/ui/office/meeting_invite.gd
 - MEETING_AT_* · 1 · scripts/ui/meeting/meeting_panel.gd
@@ -1711,7 +1703,7 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - RND_ASSIGN_* · 4 · scripts/tabs/rnd/rnd_assign_panel.gd, scripts/tabs/rnd/rnd_ui_shared.gd
 - RND_BAR_* · 2 · scripts/tabs/rnd/rnd_ui_shared.gd, scripts/tabs/rnd_tab.gd, scripts/ui/components/research_bar.gd
 - RND_COMPLETED_* · 2 · scripts/tabs/events/mail_pane.gd, scripts/tabs/rnd/rnd_detail_panel.gd
-- RND_DISCOVERY_* · 1 · scripts/systems/rnd_system.gd, scripts/tabs/events/mail_pane.gd
+- RND_DISCOVERY_* · 1 · scripts/systems/rnd_system.gd
 - RND_EA_* · 1 · scripts/tabs/events/mail_pane.gd
 - RND_FAMILY_* · 4 · scripts/tabs/rnd/rnd_ui_shared.gd
 - RND_FOUNDER_* · 1 · scripts/tabs/rnd/rnd_assign_panel.gd
@@ -1936,7 +1928,7 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - TICKER_SRC_* · 1 · scripts/events/present/ticker.gd
 - TOPBAR_BRAND_* · 1 · -
 - TOPBAR_DATE_* · 1 · scripts/ui/components/top_bar.gd
-- TOPBAR_GATE_* · 2 · scripts/tabs/events/mail_pane.gd, scripts/ui/components/research_bar.gd, scripts/ui/components/top_bar.gd, scripts/ui/office/office_hud.gd
+- TOPBAR_GATE_* · 2 · scripts/ui/components/research_bar.gd, scripts/ui/components/top_bar.gd, scripts/ui/office/office_hud.gd
 - TOPBAR_HELD_* · 1 · scripts/ui/components/top_bar.gd
 - TOPBAR_IN_* · 1 · scripts/ui/components/top_bar.gd
 - TOPBAR_NEXT_* · 4 · scripts/theme/ui_tokens.gd, scripts/ui/components/top_bar.gd

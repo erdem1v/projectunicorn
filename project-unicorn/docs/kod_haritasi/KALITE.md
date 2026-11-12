@@ -1,6 +1,6 @@
 # Kod haritası · KALITE
 
-Üretildi: git 2123d3ee · 2026-11-12 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git 63778827 · 2026-11-12 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 255 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
@@ -21,9 +21,9 @@ Kapsam: scripts/ altındaki 255 .gd (tools/ hariç). Kod temizliği ve kıdemli 
 - scripts/autoload/game_state.gd · 1056 satır · 55 func
 - scripts/systems/term_sheet_table_system.gd · 980 satır · 57 func
 - scripts/systems/sprint_catalog.gd · 932 satır · 84 func
-- scripts/tabs/events/mail_pane.gd · 906 satır · 47 func
 - scripts/ui/office/office_people.gd · 852 satır · 50 func
 - scripts/tabs/sales_tab.gd · 837 satır · 40 func
+- scripts/tabs/events/mail_pane.gd · 825 satır · 43 func
 - scripts/systems/rnd_system.gd · 814 satır · 56 func
 - scripts/events/core/engine.gd · 813 satır · 38 func
 - scripts/ui/meeting/meeting_panel.gd · 790 satır · 37 func
@@ -127,14 +127,14 @@ emit'i ya da connect'i bulunamayan sinyal (ada göre). Dizi içi bağ, await ve 
 Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: elle bakılmalı.
 - INBOX · 16 dosya · scripts/main/game_shell.gd:7, scripts/main/main.gd:20, scripts/modals/save_load_modal.gd:19, scripts/modals/system_menu_modal.gd:22, scripts/tabs/events/mail_pane.gd:19, scripts/tabs/events_tab.gd:8 +10
 - WIDTH · 6 dosya · scripts/modals/hr_action_modal.gd:18, scripts/modals/training_modal.gd:19, scripts/modals/work_hours_modal.gd:22, scripts/ui/components/left_tabs.gd:29, scripts/ui/office/office_map_card.gd:11 +1
-- CLOCK · 5 dosya · scripts/tabs/events/mail_pane.gd:24, scripts/tabs/hunt_tab.gd:11, scripts/tabs/product/sprint_ui_shared.gd:19, scripts/tabs/rnd/rnd_detail_panel.gd:20, scripts/tabs/sales_tab.gd:30
 - ChequeRead · 5 dosya · scripts/tabs/finance/finance_ozet_view.gd:34, scripts/tabs/personal_tab.gd:13, scripts/ui/components/top_bar.gd:23, scripts/ui/office/office_notice_stack.gd:13, scripts/debug/endgame_smoke.gd:34
 - ARROW · 4 dosya · scripts/modals/hr_action_modal.gd:19, scripts/tabs/product/board_row.gd:19, scripts/tabs/product/sprint_ui_shared.gd:16, scripts/tabs/sales_tab.gd:33
 - CHECK · 4 dosya · scripts/tabs/product/sprint_ui_shared.gd:18, scripts/tabs/product/stage_paint.gd:33, scripts/tabs/rnd/rnd_tree_view.gd:47, scripts/ui/office/office_notice_stack.gd:14
 - CHEVRON · 4 dosya · scripts/tabs/product/quarter_view.gd:14, scripts/tabs/product/sprint_head.gd:10, scripts/tabs/rnd/rnd_assign_panel.gd:22, scripts/tabs/rnd/rnd_tree_view.gd:46
+- CLOCK · 4 dosya · scripts/tabs/hunt_tab.gd:11, scripts/tabs/product/sprint_ui_shared.gd:19, scripts/tabs/rnd/rnd_detail_panel.gd:20, scripts/tabs/sales_tab.gd:30
 - GraphicsSettingsLib · 4 dosya · scripts/autoload/settings.gd:17, scripts/modals/settings_modal.gd:19, scripts/ui/menu_backdrop.gd:12, scripts/ui/office/office_view.gd:13
 - ModuleLocks · 4 dosya · scripts/events/core/delays.gd:22, scripts/events/seams/seams_world.gd:6, scripts/events/tools/vocab_gen.gd:13, scripts/ui/components/left_tabs.gd:27
-- STAR · 4 dosya · scripts/systems/sprint_catalog.gd:21, scripts/tabs/events/mail_pane.gd:25, scripts/tabs/rnd/rnd_ui_shared.gd:52, scripts/tabs/sales_tab.gd:35
+- STAR · 4 dosya · scripts/systems/sprint_catalog.gd:21, scripts/tabs/events/mail_pane.gd:24, scripts/tabs/rnd/rnd_ui_shared.gd:52, scripts/tabs/sales_tab.gd:35
 - COLUMNS · 3 dosya · scripts/onboarding/steps/company_step.gd:8, scripts/onboarding/steps/origin_traits_step.gd:12, scripts/tabs/hr/hr_ledger.gd:10
 - DATA_PATH · 3 dosya · scripts/menu/credits.gd:9, scripts/systems/graphics_settings.gd:18, scripts/systems/sprint_catalog.gd:11
 - DisplaySettingsLib · 3 dosya · scripts/autoload/settings.gd:16, scripts/modals/settings_modal.gd:18, scripts/systems/graphics_settings.gd:15
