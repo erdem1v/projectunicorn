@@ -2356,7 +2356,6 @@ Büyüme satırının yanı boş. Yorum da bu.","A mail from {investor}: the las
 
 The growth line has nothing written next to it. That's the comment."
 SEED_STALL_READ,Kenara koy,Set it aside
-SEED_STALL_EXPIRE,Çeyrek notu okunmadan kaldı.,The quarterly note went unread.
 SEED_TX_LABEL,Seed turu,Seed round
 SEED_MONTH_HIGHLIGHT,Seed turu kapandı,The seed round closed
 SEED_CAP_ROW,Seed · %{pct},Seed · {pct}%

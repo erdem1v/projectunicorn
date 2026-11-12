@@ -1,0 +1,47 @@
+{
+  "id": "fixture.news_mail",
+  "version_scope": "fixture",
+  "schema": 3,
+  "category": "team",
+  "tick": "request",
+  "class": "info",
+  "mail": true,
+  "tags": [],
+  "family": "fixture_news_mail",
+  "delay_weeks": [0, 0],
+  "delay_reason": "a fixture is asked for by its own smoke case, not by the pool",
+  "plausibility": {
+    "phase_band": ["bootstrap_solo", "bootstrap_team", "traction", "series_a"],
+    "headcount": [0, null],
+    "product": "any",
+    "modules": [],
+    "min_week": 0
+  },
+  "latch": { "cooldown_weeks": 0 },
+  "latch_key": "entity",
+  "scope": {
+    "employee": { "type": "employee", "required": true }
+  },
+  "options": [
+    {
+      "id": "read",
+      "outcome_id": "read",
+      "effects": [
+        { "verb": "change_morale", "scope": "employee", "amount": 3 }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Haber",
+      "body": "Yalnız haberin mail olarak geldiğini ve etkisini gelince indirdiğini sınar.",
+      "options": { "read": "Okudum" }
+    },
+    "en": {
+      "title": "News",
+      "body": "This card only tests that news arrives as mail and lands its effect when it arrives.",
+      "options": { "read": "Read" }
+    }
+  },
+  "_note": "The subject of `event_news_lands_on_arrival`: a one-option `class: info` card with an effect, written down as an unread mail."
+}

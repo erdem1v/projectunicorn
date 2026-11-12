@@ -376,6 +376,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"event_history_names_survive":    fail = _case_event_history_names_survive()
 		"event_history_chip_matches_live": fail = _case_event_history_chip_matches_live()
 		"event_beat_is_note":             fail = _case_event_beat_is_note()
+		"event_news_lands_on_arrival":    fail = _in_fixture_scope(_case_event_news_lands_on_arrival)
 		"event_beat_freezes_seams":       fail = _case_event_beat_freezes_seams()
 		"messages_save_round_trip":       fail = _case_messages_save_round_trip()
 		"sales_weekly_report_is_a_message": fail = _case_sales_weekly_report_is_a_message()
@@ -6325,6 +6326,49 @@ static func _case_event_history_chip_matches_live() -> String:
 		var shown: String = EvChips.text(EvChips.describe(deltas[i], ctx, {}, true)[0])
 		if shown != live[i]:
 			return "%s: the card showed '%s', its history row reads '%s'" % [effects[i].verb, live[i], shown]
+	return ""
+
+
+## Haber mail olarak gelir ve etkisini gelince indirir (yardımcı yönetmen, 2026-11-12; CLAUDE.md §6 "Karar olmayan anlar MessageSystem
+## mesajıdır"; motor GDD §27.51): tek şıklı `mail: true` kart masaya ve kuyruğa girmez, saati tutmaz, gelen kutusuna okunmamış not
+## olarak yazılır. Gelmeden etkisi inmez; geldiği saatte iner ve geçmiş satırı indirdiğini taşır (çip onu okur). Gelmeden öznesi
+## giden haber geri çekilir, hiçbir şey indirmez.
+## Kayıttan dönen bekleyen mail etkisini yine gelince indirir.
+## FALSİFİKASYON: `is_note`'ta `mail` kolunu sil → haber kuyruğa girip açılır, FAIL; pump'taki `EvHistory.land` satırını sil → etki
+## hiç inmez, FAIL; etkiyi kabulde koş → gelmeden iner, FAIL; EvSave.from_dict'ten `restore_unannounced`'ı sil → kayıttan dönen
+## mail hiç gelmez, FAIL.
+static func _case_event_news_lands_on_arrival() -> String:
+	const CARD := "fixture.news_mail"
+	MailClock.instant = false
+	var reader: Character = _make_employee("char_news_reader", "Deniz Ak", HRConstants.ROLE_DEVELOPER)
+	var gone: Character = _make_employee("char_news_gone", "Selin Kaya", HRConstants.ROLE_TESTER)
+	# Before the company's window opens: the mail comes in later today.
+	GameState.set_current_hour(TimeModel.WEEK_START_HOUR)
+	TimeManager.sync_to_current_hour()
+	CharacterRegistry.set_morale(reader.id, 50)
+	for person in [reader, gone]:
+		if not EventGate.request(CARD, {"employee": person.id}):
+			return "the news was refused"
+	if not EvPapers.keys_of(CARD).is_empty() or EventGate.active_id() != "" or TimeManager.is_clock_held():
+		return "news went to the desk or the queue, or held the clock (shown '%s', holds %s)" % [EventGate.active_id(), TimeManager.holds()]
+	var rows: Array = EvHistory.rows().filter(func(r: Dictionary) -> bool: return r.event_id == CARD)
+	if rows.size() != 2 or not rows.all(func(r: Dictionary) -> bool: return r.get("note", false) and r.get("unread", false)):
+		return "the news was not written down as two unread mails"
+	if reader.morale != 50:
+		return "the news landed before it arrived (morale %d)" % reader.morale
+	CharacterRegistry.remove(gone.id)
+	EvSave.from_dict(JSON.parse_string(JSON.stringify(EvSave.to_dict())))
+	TimeManager.advance_hours(TimeModel.HOURS_PER_DAY - GameState.current_hour)
+	if reader.morale != 53:
+		return "the news arrived and did not land (morale %d, want 53)" % reader.morale
+	var landed: Dictionary = EvHistory.rows().filter(func(r: Dictionary) -> bool: return r.event_id == CARD \
+		and r.entities.employee.id == reader.id)[0]
+	if (landed.deltas as Array).is_empty() or EvChips.describe(landed.deltas[0], landed.entities, landed.get("names", {}), true).is_empty():
+		return "the mail's row carries no chip for what it landed: %s" % str(landed.deltas)
+	var dropped: Dictionary = EvHistory.rows().filter(func(r: Dictionary) -> bool: return r.event_id == CARD \
+		and r.entities.employee.id == gone.id)[0]
+	if dropped.resolution != EvHistory.RESOLUTION_DROPPED or not (dropped.deltas as Array).is_empty():
+		return "the news of the one who left ended %s with %s, want withdrawn with nothing landed" % [dropped.resolution, str(dropped.deltas)]
 	return ""
 
 

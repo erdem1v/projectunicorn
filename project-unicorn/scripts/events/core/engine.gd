@@ -465,7 +465,8 @@ static func _admit(event_id: String, verdict: EvGate.Verdict, arc_id: String, im
 		MailClock.SHORT_LIVED_SPREAD_HOURS if lasts_a_week else MailClock.SPREAD_HOURS)
 
 	# A NOTE IS ANSWERED ON ARRIVAL (§27.17): it has nothing to decide, so it neither holds the clock
-	# nor waits; its only option is written down, unread, and the next pump names it to the inbox.
+	# nor waits; its only option is written down, unread, and the pump that sees it arrive lands that option's effects
+	# (news, §27.51) and names it to the inbox.
 	# A PAPER IS NOT QUEUED. `has_pending()` gates the clock and the save, so a queued paper
 	# would hold the game paused for its whole week; and `pump()` would mount it as a modal,
 	# the opposite of §11.4, where a paper waits until the player picks it up.
@@ -528,21 +529,23 @@ static func _expiry_weeks(card: Dictionary) -> int:
 ## pumps once (EvSignals connects it), so the card is re-validated at the hour it is seen, the
 ## most important one comes first and an open card does not block the 00:00 autosave. The notes
 ## written since are named to the inbox at the same moment, so no listener runs inside the batch.
-static func pump() -> bool:
+## `land_news` false (a system's own request, inside its tick): news that has arrived waits for the next pump that may land
+## it (the hour's, the batch's end, the player's own ask), so its effects never run in the middle of another system's loop.
+static func pump(land_news := true) -> bool:
 	if not GameState.run_active or TimeManager.is_batching():
 		return false
-	var waiting: Array = []
-	for note in _unannounced:
-		if not MailClock.delivered(int(note["at"])):
-			waiting.append(note)
-			continue
+	var arrived: Array = _unannounced.filter(func(note: Dictionary) -> bool: return MailClock.delivered(int(note["at"])) \
+		and (land_news or not bool(EvCatalog.card(String(note["event_id"])).get("mail", false))))
+	_unannounced = _unannounced.filter(func(note: Dictionary) -> bool: return not arrived.has(note))
+	for note in arrived:
 		# A note arrives in the workday, after the player's own moves: §4.4's re-validation, as a queued card gets.
 		var verdict: EvGate.Verdict = EvGate.revalidate(String(note["event_id"]), note["context"])
 		if verdict.admitted:
+			var only: Dictionary = EvCatalog.card(String(note["event_id"]))["options"][0]
+			EvHistory.land(int(note["row"]), EvEffects.run_played(only.get("effects", []), note["context"], String(note["event_id"])))
 			EventBus.event_triggered.emit(String(note["event_id"]))
 		else:
 			EvHistory.withdraw(int(note["row"]), verdict.step)
-	_unannounced = waiting
 	if EvQueue.active_id() != "":
 		return false
 	var due: String = _due_paper()
@@ -718,7 +721,7 @@ static func request(event_id: String, context: Dictionary = {}, immediate: bool 
 	if not _admit(event_id, verdict, "", immediate, stamp):
 		return false
 	_step_assign_classes()
-	pump()
+	pump(immediate)
 	return true
 
 

@@ -1,10 +1,11 @@
 {
-  "_worked_example": "class: paper - a beat the player can leave on the desk, which is the register the moment wants: nobody is shouting, a page simply arrived. Being a paper it carries the 17.7 trio, and its on_expire is EMPTY on purpose: not answering a report is not a failure, and the expire_note says only that it went unopened. The 13-week cooldown makes it a quarterly note: it comes back if the stall continues, without nagging.",
+  "_worked_example": "mail: true - a beat with nothing to decide, which is the register the moment wants: nobody is shouting, a page simply arrived in the inbox, unread until the player opens it. The 13-week cooldown makes it a quarterly note: it comes back if the stall continues, without nagging.",
   "id": "funding.seed_stalled",
   "version_scope": "demo",
   "category": "funding",
   "tick": "daily",
-  "class": "paper",
+  "class": "info",
+  "mail": true,
   "tags": [],
   "schema": 3,
   "system": true,
@@ -25,11 +26,6 @@
   },
   "latch": {
     "cooldown_weeks": 13
-  },
-  "expires_weeks": 2,
-  "expire_note": "expire_unanswered",
-  "on_expire": {
-    "penalties": []
   },
   "condition": {
     "all": [
@@ -59,16 +55,14 @@
       "body": "SEED_STALL_BODY",
       "options": {
         "read": "SEED_STALL_READ"
-      },
-      "expire_unanswered": "SEED_STALL_EXPIRE"
+      }
     },
     "en": {
       "title": "SEED_STALL_TITLE",
       "body": "SEED_STALL_BODY",
       "options": {
         "read": "SEED_STALL_READ"
-      },
-      "expire_unanswered": "SEED_STALL_EXPIRE"
+      }
     }
   }
 }

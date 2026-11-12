@@ -128,14 +128,16 @@ static func seams_of(value: Variant) -> Array:
 	return out + [selector] if selector != "" else out
 
 
-## A one-option beat with nothing to decide (§27.17): the option has no effects, no dice and no lock,
-## and the card is neither critical nor a paper. The engine writes it down instead of showing it.
+## A one-option beat with nothing to decide (§27.17): the option has no dice and no lock, the card is neither critical nor
+## a paper, and either the option has no effects or the card is news (`mail: true`), whose one option lands what it reports
+## as the mail arrives (§27.51). The engine writes it down instead of showing it.
 static func is_note(card: Dictionary) -> bool:
 	var options: Array = card["options"]
 	if options.size() != 1 or (card["tags"] as Array).has("critical") or card["class"] == "paper":
 		return false
 	var only: Dictionary = options[0]
-	return (only.get("effects", []) as Array).is_empty() and not only.has("check") and not only.has("requires")
+	return (bool(card.get("mail", false)) or (only.get("effects", []) as Array).is_empty()) and not only.has("check") \
+		and not only.has("requires")
 
 
 ## A kept name as the live language reads it.

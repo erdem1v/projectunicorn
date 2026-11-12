@@ -3,7 +3,8 @@
   "version_scope": "demo",
   "category": "world",
   "tick": "daily",
-  "class": "paper",
+  "class": "info",
+  "mail": true,
   "sender": "employee",
   "sender_desk": "MAIL_SENDER_SERVER_PROVIDER",
   "tags": [],
@@ -82,21 +83,14 @@
       "body": "Önümüzdeki aydan itibaren Standart ve Kurumsal paketlerin fiyatı %30 düşüyor. Sunucularınız için bir şey yapmanız gerekmiyor.",
       "options": {
         "ack": "Anladım"
-      },
-      "expire_note": "Duyuru okunmadan kapandı, sunucu fiyatları aynı kaldı."
+      }
     },
     "en": {
       "title": "New prices",
       "body": "Starting next month, Standard and Enterprise plans are 30% cheaper. You don't need to do anything with your servers.",
       "options": {
         "ack": "Got it"
-      },
-      "expire_note": "The notice closed unread, so server prices stay as they were."
+      }
     }
-  },
-  "expires_weeks": 4,
-  "on_expire": {
-    "penalties": []
-  },
-  "expire_note": "expire_note"
+  }
 }

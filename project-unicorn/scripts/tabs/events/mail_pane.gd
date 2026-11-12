@@ -121,6 +121,10 @@ func _card() -> void:
 	var static_body: bool = _mode != "history" or _static_body()
 	_mail(_kicker(kind, state, ink), ev.title, ev.body_text if static_body else "")
 	if _mode == "history" and _item.note:
+		# News (§27.51) names what it landed as it arrived; an effectless note has nothing to show.
+		var landed: Array = _row_parts()
+		if not landed.is_empty():
+			_col.add_child(_chips(landed))
 		_actions("", [[_item.option, _close, true]])
 	elif _mode == "history":
 		_answered()
@@ -582,12 +586,16 @@ func _answered() -> void:
 	row.add_child(col)
 	if not _item.expired:
 		col.add_child(UiFactory.make_label(String(_item.option), &"OptionLabel"))
-	var row_data: Dictionary = _item.row
-	var parts: Array = []
-	for d in row_data.deltas:
-		parts.append_array(EvChips.describe(d, row_data.entities, row_data.get("names", {}), true))
-	col.add_child(_chips(EvChips.merge_same(parts)))
+	col.add_child(_chips(_row_parts()))
 	row.add_child(stamp(String(_item.stamp), int(GameState.get_date_dict(int(_item.day)).week)))
+
+
+## What the history row landed, as chips (its deltas read as the history reads them).
+func _row_parts() -> Array:
+	var parts: Array = []
+	for d in _item.row.deltas:
+		parts.append_array(EvChips.describe(d, _item.row.entities, _item.row.get("names", {}), true))
+	return EvChips.merge_same(parts)
 
 
 ## "CEVAPLANDI H11", tilted as a stamp is.

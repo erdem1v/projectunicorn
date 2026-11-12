@@ -3,7 +3,8 @@
   "version_scope": "demo",
   "category": "product",
   "tick": "scheduled",
-  "class": "paper",
+  "class": "info",
+  "mail": true,
   "sender": "press",
   "tags": [],
   "schema": 3,
@@ -58,30 +59,14 @@
       "body": "Şifreleme açığını kapattıktan sonra müşterilerine haber vermeyen şirketleri yazdık. Adınız listede. Yorumunuz var mı?",
       "options": {
         "no_comment": "Yorum yapmayalım"
-      },
-      "expire_note": "Cevap gelmedi, yorum yapılmadı ve haber yine de çıktı."
+      }
     },
     "en": {
       "title": "Companies that kept the patch quiet",
       "body": "We ran a story on companies that patched the encryption flaw without telling their customers. Yours is on the list. Any comment?",
       "options": {
         "no_comment": "No comment"
-      },
-      "expire_note": "No answer went out, so the story ran without a comment."
-    }
-  },
-  "expires_weeks": 1,
-  "on_expire": {
-    "penalties": [
-      {
-        "verb": "add_reputation",
-        "amount": -8
-      },
-      {
-        "verb": "audience_delta",
-        "pct": -0.05
       }
-    ]
-  },
-  "expire_note": "expire_note"
+    }
+  }
 }

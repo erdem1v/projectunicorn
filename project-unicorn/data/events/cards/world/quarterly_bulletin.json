@@ -3,7 +3,8 @@
   "version_scope": "demo",
   "category": "world",
   "tick": "daily",
-  "class": "paper",
+  "class": "info",
+  "mail": true,
   "sender": "press",
   "tags": [],
   "schema": 3,
@@ -70,21 +71,14 @@
       "body": "Bir ticaret odası altı yüz üyesine yazılım seçerken neye baktıklarını sormuş. İlk sırada kurulumda yanlarında olunması var, fiyat üçüncü sırada.",
       "options": {
         "focus_onboarding": "Bu çeyrek satış görüşmelerinde kurulum desteğine ağırlık veririm"
-      },
-      "expire_note": "Bülten cevapsız kaldı, bu çeyrek satış görüşmelerinde bir şey değişmedi."
+      }
     },
     "en": {
       "title": "Quarterly bulletin: how businesses pick software",
       "body": "A chamber of commerce asked its six hundred members what they look at when choosing software. Support during setup came first; price came third.",
       "options": {
         "focus_onboarding": "This quarter I'll lean on setup support in my sales meetings"
-      },
-      "expire_note": "The bulletin went unanswered, so sales meetings this quarter stay as they were."
+      }
     }
-  },
-  "expires_weeks": 2,
-  "on_expire": {
-    "penalties": []
-  },
-  "expire_note": "expire_note"
+  }
 }

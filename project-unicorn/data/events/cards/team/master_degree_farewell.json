@@ -3,7 +3,8 @@
   "version_scope": "demo",
   "category": "team",
   "tick": "scheduled",
-  "class": "paper",
+  "class": "info",
+  "mail": true,
   "sender": "employee",
   "tags": [],
   "schema": 3,
@@ -63,27 +64,14 @@
       "body": "Bu hafta son haftam. Devir notlarım ortak klasörde. Beni burada büyüttüğünüz için teşekkürler, iyi ki sizinle çalışmışım.",
       "options": {
         "thank": "Teşekkür et, yolu açık olsun de"
-      },
-      "expire_note": "Cevap gelmedi, çalışan haftanın sonunda sessizce ayrıldı."
+      }
     },
     "en": {
       "title": "My last week",
       "body": "This is my last week. My handover notes are in the shared folder. Thank you for letting me grow here, I'm glad I worked with you.",
       "options": {
         "thank": "Thank them, wish them well"
-      },
-      "expire_note": "No answer came, and they left quietly at the end of the week."
-    }
-  },
-  "expires_weeks": 1,
-  "on_expire": {
-    "penalties": [
-      {
-        "verb": "employee_leaves",
-        "scope": "employee",
-        "reason": "study"
       }
-    ]
-  },
-  "expire_note": "expire_note"
+    }
+  }
 }

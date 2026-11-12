@@ -202,7 +202,7 @@ static func _lint_options(id: String, card: Dictionary, where: String) -> void:
 				_add(SEVERITY_ERROR, "17.8", where,
 					"option '%s' can lock but has no locked_reasons entry" % opt_id)
 
-		_lint_effects(where, opt.get("effects", []), "option", card)
+		_lint_effects(where, opt.get("effects", []), "mail" if bool(card.get("mail", false)) else "option", card)
 
 		# §17.11 / I7 — the dice ------------------------------------------
 		if opt.has("check"):
@@ -259,6 +259,15 @@ static func _lint_effects(where: String, effects: Array, context: String, card: 
 				if economic:
 					_add(SEVERITY_ERROR, "17.3", where,
 						"I2: '%s' needs a played decision, not an ambient context" % verb)
+			# News lands unanswered (§27.51): like an expiry it may cost and never pays nor ends the run. The one gain it may
+			# carry is the vendor's own price (`server_price`), which the world sets and the player only pays.
+			"mail":
+				if economic and EvEffects.is_authored_gain(effect) and verb != "server_price":
+					_add(SEVERITY_ERROR, "17.3", where,
+						"I2: news lands a POSITIVE '%s' nobody chose" % verb)
+				if EvEffects.NOT_ONLY_COST.has(verb) or terminal:
+					_add(SEVERITY_ERROR, "17.3", where,
+						"I2: news lands '%s' unanswered; it needs a played decision" % verb)
 			"after_test":
 				if economic or terminal:
 					_add(SEVERITY_ERROR, "17.3", where,
@@ -646,8 +655,8 @@ static func _lint_v3_options(id: String, card: Dictionary, where: String) -> voi
 		if subject_types.has(String((slots[slot] as Dictionary).get("type", ""))) \
 				and bool((slots[slot] as Dictionary).get("subject", true)):
 			subject_slots[slot] = slots[slot]
-	# A system card is the run speaking, so it owes the player no price. A note owes none either,
-	# and needs no clause here: its one option carries nothing, so it is O1's branch (C R5).
+	# A system card is the run speaking, so it owes the player no price. A note owes none either, and needs no clause here:
+	# its one option carries nothing (O1's branch, C R5) or it is news, which lands what it reports (§27.51).
 	var system: bool = bool(card.get("system", false))
 	# One person's card: the founder alone, or a single named employee. Either way the team's
 	# hours and the team's morale are not theirs to spend. A system card names a sender or an account to
@@ -691,7 +700,9 @@ static func _lint_v3_options(id: String, card: Dictionary, where: String) -> voi
 
 		# A sprint paper names its speaker and the account it is about; its subject is the sprint card, which its
 		# options land on, so the slots are not asked to be hit.
+		# Standing still (no effects, a status_quo_reason) touches nothing by design: O1 already asked it to say why.
 		if not system and not card.has("speaker_role") and not subject_slots.is_empty() \
+				and not ((opt.get("effects", []) as Array).is_empty() and opt.has("status_quo_reason")) \
 				and _touched_slots(effects, subject_slots, id).is_empty():
 			_v3(id, "O4", where, "option '%s' drops nothing on the subject the card is about" % opt_id)
 

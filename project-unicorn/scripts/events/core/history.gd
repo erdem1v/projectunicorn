@@ -75,6 +75,11 @@ static func withdraw(index: int, step: String) -> void:
 	row.erase("unread")
 
 
+## What the note at `index` landed as it arrived (EvEngine.pump), which its chips read.
+static func land(index: int, deltas: Array) -> void:
+	_rows[index]["deltas"] = deltas.duplicate(true)
+
+
 ## The player opened the note at `index` (its place in rows()).
 static func mark_read(index: int) -> void:
 	_rows[index]["unread"] = false

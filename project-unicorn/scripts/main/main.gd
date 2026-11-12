@@ -1515,6 +1515,7 @@ func _seed_paper_world(event_id: String) -> Dictionary:
 ##   offer · queue · customer (an option armed) · locked · history · paper · paper_open ·
 ##   paper_last_week · paper_waiting · attention · resignation · departed · summary · intro ·
 ##   frank_moment · thanks (two release thank-you notes, a kept word and a met request, the newest open) ·
+##   news (a one-option news card arrived as mail, its effect landed and named in its answer block) ·
 ##   rnd_note (week 14's note) · rnd_note_demand (the same note with a bug open on an ERP
 ##   line, so its first line names that line) · rnd_discovery (week 16's, on the Ar-Ge timeline) ·
 ##   weekly_sales · clause_sign · clause_reserve · clause_notice · clause_withdraw (the server clause's four mails of a 3★ account on
@@ -1676,6 +1677,12 @@ func _run_inbox_shot(state: String) -> void:
 			INBOX.show("h:0")
 		"thanks":
 			_stage_release_thanks()
+			INBOX.show("h:%d" % (EventGate.history().size() - 1))
+		"news":
+			# The player's own ask arrives at once: the mail is written down, its effect lands and the inbox opens on it.
+			GameState.current_hour = 10
+			TimeManager.sync_to_current_hour()
+			EventGate.request("team.master_degree_farewell", {"employee": selina}, true)
 			INBOX.show("h:%d" % (EventGate.history().size() - 1))
 		"frank_moment":
 			_shot_card("customer.frank_intro", {}, 8)
