@@ -110,7 +110,7 @@ static func desk() -> Array:
 					"finance", "yatirim"))   # LOC-DATA route id
 			"atlas":
 				var atlas: String = TranslationServer.translate("DESK_PAPER_TAG_ATLAS")
-				out.append(_reminder("atlas", "DESK_PAPER_TAG_ATLAS", _desk(atlas, GameState.company_name),
+				out.append(_reminder("atlas", "DESK_PAPER_TAG_ATLAS", _desk(atlas),
 					TranslationServer.translate("DESK_PAPER_ATLAS_TITLE").format({"n": HRSearchSystem.get_files().size()}), "hr"))
 			"customer":
 				var c: Customer = reminder.ref
@@ -288,7 +288,7 @@ static func _message_item(m: Dictionary) -> Dictionary:
 			it.line = first_line(TranslationServer.translate("MENTOR_INTRO_BODY"))
 			it.right = ""
 		"summary":
-			it.sender = _desk(TranslationServer.translate("MAIL_SENDER_ACCOUNTS"), GameState.company_name)
+			it.sender = _desk(TranslationServer.translate("MAIL_SENDER_ACCOUNTS"))
 			var d: Dictionary = SummarySystem.display(a)
 			it.subject = d.title
 			it.line = "%s %s → %s · %s %s" % [TranslationServer.translate("FIN_CAP_MRR"), Fmt.money_chip(int(a.mrr.from)),
@@ -448,7 +448,7 @@ static func card_sender(card: Dictionary, ctx: Dictionary, names: Dictionary) ->
 			# from the founder's own note.
 			if id == "":
 				if card.has("sender_desk"):
-					return _desk(TranslationServer.translate(String(card.sender_desk)), GameState.company_name)
+					return _desk(TranslationServer.translate(String(card.sender_desk)))
 				return founder_note()
 			var e: Character = CharacterRegistry.get_character(id)
 			return employee(e) if e != null else gone_person(kept)
@@ -466,7 +466,7 @@ static func card_sender(card: Dictionary, ctx: Dictionary, names: Dictionary) ->
 			from.ink = UiTokens.D_outlet(outlet)
 			return from
 		"desk":
-			return _desk(TranslationServer.translate("MAIL_SENDER_SUPPORT"), GameState.company_name)
+			return _desk(TranslationServer.translate("MAIL_SENDER_SUPPORT"))
 	return founder_note()
 
 
@@ -502,7 +502,7 @@ static func gone_person(person: String) -> Dictionary:
 ## writes (`title`, say the finance manager) gives the sender that title in place of their own.
 static func contact(c: Customer, title := "") -> Dictionary:
 	if c.name_key != "":
-		return _desk(TranslationServer.translate("MAIL_SENDER_SUPPORT"), GameState.company_name)
+		return _desk(TranslationServer.translate("MAIL_SENDER_SUPPORT"))
 	if c.acquisition_source != "":
 		return _person(CounterpartSystem.buyer_of(c), c.company_name, "", title)
 	var role: String = title if title != "" else TranslationServer.translate(B2BConstants.sector_contact(c.industry))
@@ -531,9 +531,9 @@ static func _mono(name: String, title: String) -> Dictionary:
 	return _sender("contact", name, title, {"mono": UiFactory.initials_of(name)})
 
 
-## A desk of the company: a glyph in a box.
-static func _desk(name: String, company: String) -> Dictionary:
-	return _sender("desk", name, company, {"glyph": "res://assets/icons/util/doc.svg"})
+## A desk of the player's own company: a glyph in a box, no title (the company is the player's).
+static func _desk(name: String) -> Dictionary:
+	return _sender("desk", name, "", {"glyph": "res://assets/icons/util/doc.svg"})
 
 
 static func _sender(kind: String, name: String, title: String, face: Dictionary) -> Dictionary:

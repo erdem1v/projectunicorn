@@ -1513,7 +1513,7 @@ func _seed_paper_world(event_id: String) -> Dictionary:
 ## --inbox-shot=<state>: the Olaylar inbox over the theme seed (week 14, İş hanı) in the mockups'
 ## states, through the real gate (main's handler holds the clock and opens the inbox on the card):
 ##   offer · queue · customer (an option armed) · locked · history · paper · paper_open ·
-##   paper_last_week · paper_waiting · attention · resignation · departed · summary · intro ·
+##   paper_last_week · paper_waiting · attention · attention_team · resignation · departed · summary · intro ·
 ##   frank_moment · thanks (two release thank-you notes, a kept word and a met request, the newest open) ·
 ##   news (a one-option news card arrived as mail, its effect landed and named in its answer block) ·
 ##   rnd_note (week 14's note) · rnd_note_demand (the same note with a bug open on an ERP
@@ -1668,8 +1668,8 @@ func _run_inbox_shot(state: String) -> void:
 			var key: String = _shot_paper("customer.expansion", {"customer": "co_nordica"}, 2)
 			GameState.day += 1
 			INBOX.show("paper:" + key)
-		"attention":
-			INBOX.show("r:customer:co_ege")
+		"attention", "attention_team":
+			INBOX.show("r:customer:co_ege" if state == "attention" else "r:employee:" + selina)
 		"resignation":
 			_shot_card("team.resignation", {"employee": selina}, 8)
 		"departed":

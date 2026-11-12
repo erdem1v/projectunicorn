@@ -229,7 +229,7 @@ Smoke (tek vaka: `bash tools/smoke_run.sh <vaka>`; tam süit yalnız push önces
 - Görsel (Olaylar): `--inbox-shot=<durum>` Olaylar'ı tema tohumunun şirketinde (14. hafta, İş hanı) gerçek kapıdan çeker; kart ve kapı `offer`, `queue`, `customer` (bir seçenek hazır), `locked`,
   ↳ `held_key` (hız tuşu reddi: çerçevenin yanıp sönmesi ve toast), `resignation`, `frank_moment`, `dying` (Olaylar açıkken aynı karede Ürün açılır ve kart gelir; `GATEFLOW window= active= pane=` satırı).
   ↳ Karar beklerken salt okunur pencereler: `team_read_only` (Ekip), `team_tasks_read_only` (onun Görevler'i), `sales_read_only`, `finance_read_only`, `personal_read_only`,
-  ↳ `personal_cheque_read_only` (Frank'in çekinden sonra, bir müşterinin kartı beklerken). Masa: `paper`, `paper_open`, `paper_waiting`, `paper_last_week`, `attention`; geçmiş: `history`, `departed`,
+  ↳ `personal_cheque_read_only` (Frank'in çekinden sonra, bir müşterinin kartı beklerken). Masa: `paper`, `paper_open`, `paper_waiting`, `paper_last_week`, `attention` (müşteri kaydı), `attention_team` (çalışan kaydı); geçmiş: `history`, `departed`,
   ↳ `beat` (`founder.savings_note` `EventGate.request` ile not olur: önce ofisin not yığını `inbox_shot_beat_stack`, sonra geçmiş satırı),
   ↳ `thanks` (bir sürümün iki teşekkür notu: tutulan söz ve karşılanan istek, `SprintBridges.thank` ile; en yenisi açık). Mesajlar: `intro`, `intro_go` (tanışmanın düğmesi Ürün'ü açar; `GATEFLOW tab= picking= speed=` satırı), `summary`,
   ↳ `rnd_note`, `rnd_note_demand`, `rnd_discovery`, `weekly_sales`; liste `empty`, `long`; `--palette=cb` renk körü paletini yalnız o koşu için açar (PNG `_cb` alır); `clause_sign`, `clause_reserve`, `clause_notice`, `clause_withdraw`:

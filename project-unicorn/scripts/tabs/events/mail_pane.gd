@@ -492,24 +492,19 @@ func _set_aside_foot() -> HBoxContainer:
 	return row
 
 
-## A past decision: the option chosen and what it did, stamped.
+## A past decision: the option chosen and what it did (the list row carries the stamp, the header the date).
 func _answered() -> void:
 	if not _item.expired:
 		_col.add_child(UiFactory.make_label(Fmt.upper(tr("MAIL_YOUR_CHOICE")), &"KeyLabel"))
 	var box := PanelContainer.new()
 	box.theme_type_variation = &"NoteBox"
 	_col.add_child(box)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", UiTokens.SPACE_3XL)
-	box.add_child(row)
 	var col := VBoxContainer.new()
-	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	col.add_theme_constant_override("separation", UiTokens.SPACE_M)
-	row.add_child(col)
+	box.add_child(col)
 	if not _item.expired:
 		col.add_child(UiFactory.make_label(String(_item.option), &"OptionLabel"))
 	col.add_child(_chips(_row_parts()))
-	row.add_child(stamp(String(_item.stamp), int(GameState.get_date_dict(int(_item.day)).week)))
 
 
 ## What the history row landed, as chips (its deltas read as the history reads them).
@@ -705,7 +700,6 @@ func _record() -> void:
 			{"name": tr("HR_ROLE_FOUNDER") if c.assigned_to == "" else (am.character_name if am != null else tr("REC_AM_NONE"))}), &"DataText"))
 	elif _item.has("employee"):
 		_col.add_child(_facts([[tr("HR_COL_MORALE"), str(int(_item.morale))]]))
-		_col.add_child(UiFactory.make_label(String(_item.line), &"DataText"))
 	var request: String = String(_item.get("request", ""))
 	if request == "" and _item.tab == "":
 		return

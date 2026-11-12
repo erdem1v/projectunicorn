@@ -42,7 +42,7 @@ _act	func	scripts/tabs/product_tab.gd:300	product_tab.gd
 _act1	func	scripts/ui/meeting/sales_meeting_adapter.gd:132	SalesMeetingAdapter
 _action_row	func	scripts/tabs/hr/hr_ledger.gd:313	HRLedger
 _action_specs	func	scripts/tabs/hr/hr_ledger.gd:284	HRLedger
-_actions	func	scripts/tabs/events/mail_pane.gd:740	mail_pane.gd
+_actions	func	scripts/tabs/events/mail_pane.gd:734	mail_pane.gd
 _actions	func	scripts/tabs/rnd/rnd_detail_panel.gd:210	RnDDetailPanel
 _active	var	scripts/systems/negotiation_system.gd:36	NegotiationSystem
 _active	var	scripts/systems/rnd_system.gd:42	RnDSystem
@@ -167,7 +167,7 @@ _at_foot	func	scripts/tabs/product/sprint_board.gd:121	SprintBoard
 _at_table	var	scripts/ui/meeting/sales_meeting_adapter.gd:47	SalesMeetingAdapter
 _at_work_start	func	scripts/debug/endgame_smoke.gd:22117	EndgameSmoke
 _atlas_strip	func	scripts/tabs/hr_tab.gd:287	hr_tab.gd
-_attend	func	scripts/tabs/events/mail_pane.gd:732	mail_pane.gd
+_attend	func	scripts/tabs/events/mail_pane.gd:726	mail_pane.gd
 _attitude	var	scripts/ui/meeting/meeting_panel.gd:65	MeetingPanel
 _attitude_row	var	scripts/ui/meeting/meeting_panel.gd:78	MeetingPanel
 _audience_delta_per_hour	func	scripts/systems/sales_system.gd:188	SalesSystem
@@ -244,7 +244,7 @@ _baseline	var	scripts/events/tools/lint.gd:71	EvLint
 _bases	var	scripts/ui/office/office_body.gd:34	OfficeBody
 _batch_meeting	var	scripts/autoload/time_manager.gd:77	TimeManager
 _batching	var	scripts/autoload/time_manager.gd:76	TimeManager
-_bbcode	func	scripts/tabs/events/mail_pane.gd:821	mail_pane.gd
+_bbcode	func	scripts/tabs/events/mail_pane.gd:815	mail_pane.gd
 _beat	var	scripts/systems/vc_pitch_system.gd:35	VCPitchSystem
 _beat	var	scripts/ui/meeting/meeting_panel.gd:70	MeetingPanel
 _beat	var	scripts/ui/meeting/vc_meeting_adapter.gd:36	VcMeetingAdapter
@@ -1070,7 +1070,7 @@ _close	func	scripts/modals/settings_modal.gd:477	settings_modal.gd
 _close	func	scripts/systems/negotiation_system.gd:217	NegotiationSystem
 _close	func	scripts/systems/sales_rep_system.gd:258	SalesRepSystem
 _close	func	scripts/systems/sprint_system.gd:1697	SprintSystem
-_close	func	scripts/tabs/events/mail_pane.gd:769	mail_pane.gd
+_close	func	scripts/tabs/events/mail_pane.gd:763	mail_pane.gd
 _close_btn	var	scripts/menu/licenses.gd:16	licenses.gd
 _close_btn	var	scripts/modals/save_load_modal.gd:34	save_load_modal.gd
 _close_btn	var	scripts/modals/settings_modal.gd:70	settings_modal.gd
@@ -1493,7 +1493,7 @@ _faces	func	scripts/tabs/product/sprint_next.gd:293	SprintNext
 _faces_drawn	func	scripts/main/main.gd:4947	main.gd
 _fact	func	scripts/systems/hr_actions.gd:316	HRActions
 _facts	var	scripts/systems/sales_meeting_system.gd:30	SalesMeetingSystem
-_facts	func	scripts/tabs/events/mail_pane.gd:720	mail_pane.gd
+_facts	func	scripts/tabs/events/mail_pane.gd:714	mail_pane.gd
 _fade	var	scripts/ui/components/news_ticker.gd:57	news_ticker.gd
 _fade	var	scripts/ui/meeting/meeting_panel.gd:87	MeetingPanel
 _fade	var	scripts/ui/office/office_people.gd:74	OfficePeople
@@ -1688,7 +1688,7 @@ _glow_root	var	scripts/ui/office/office_lighting.gd:70	OfficeLighting
 _glyph	var	scripts/ui/components/toast.gd:20	toast.gd
 _glyph_line	func	scripts/tabs/sales_tab.gd:805	sales_tab.gd
 _glyph_text	func	scripts/tabs/rnd/rnd_detail_panel.gd:152	RnDDetailPanel
-_go	func	scripts/tabs/events/mail_pane.gd:763	mail_pane.gd
+_go	func	scripts/tabs/events/mail_pane.gd:757	mail_pane.gd
 _go_product	func	scripts/tabs/sales_tab.gd:292	sales_tab.gd
 _go_public	func	scripts/systems/sprint_system.gd:1817	SprintSystem
 _go_towards	func	scripts/ui/office/office_person.gd:529	OfficePerson
@@ -2353,7 +2353,7 @@ _move	func	scripts/ui/meeting/sales_meeting_adapter.gd:219	SalesMeetingAdapter
 _move	func	scripts/ui/office/office_city.gd:384	OfficeCity
 _move_days	var	scripts/debug/run_probe.gd:312	RunProbe
 _move_the_company	func	scripts/debug/run_probe.gd:1596	RunProbe
-_move_to_enterprise	func	scripts/tabs/events/mail_pane.gd:758	mail_pane.gd
+_move_to_enterprise	func	scripts/tabs/events/mail_pane.gd:752	mail_pane.gd
 _moved	func	scripts/systems/term_sheet_table_system.gd:887	TermSheetTableSystem
 _moves	func	scripts/ui/meeting/sales_meeting_adapter.gd:276	SalesMeetingAdapter
 _mrr_stat	func	scripts/systems/endings_copy.gd:416	EndingsCopy
@@ -2647,7 +2647,7 @@ _open_sales_meeting	func	scripts/main/main.gd:5872	main.gd
 _open_steward_picker	func	scripts/tabs/sales_tab.gd:676	sales_tab.gd
 _open_table	func	scripts/ui/meeting/sales_meeting_adapter.gd:196	SalesMeetingAdapter
 _open_weeks	var	scripts/debug/run_probe.gd:331	RunProbe
-_opened	func	scripts/tabs/events/mail_pane.gd:654	mail_pane.gd
+_opened	func	scripts/tabs/events/mail_pane.gd:649	mail_pane.gd
 _opener	var	scripts/menu/main_menu.gd:28	main_menu.gd
 _opening_conviction	func	scripts/systems/term_sheet_table_system.gd:519	TermSheetTableSystem
 _option	func	scripts/ui/meeting/sales_meeting_adapter.gd:187	SalesMeetingAdapter
@@ -3148,7 +3148,7 @@ _rebuild_controls	func	scripts/ui/office/office_city.gd:316	OfficeCity
 _rebuild_queued	var	scripts/tabs/product_tab.gd:30	product_tab.gd
 _recolor	func	scripts/theme/build_theme.gd:1391	build_theme.gd
 _record	func	scripts/events/present/tempo.gd:233	EvTempo
-_record	func	scripts/tabs/events/mail_pane.gd:687	mail_pane.gd
+_record	func	scripts/tabs/events/mail_pane.gd:682	mail_pane.gd
 _recover	func	scripts/systems/b2b_sales_system.gd:565	B2BSalesSystem
 _redraw_rows	func	scripts/tabs/piyasa_tab.gd:350	piyasa_tab.gd
 _reentry	var	scripts/systems/vc_pitch_system.gd:37	VCPitchSystem
@@ -3345,7 +3345,7 @@ _row	func	scripts/tabs/product/sprint_board.gd:195	SprintBoard
 _row	var	scripts/ui/components/toast.gd:23	toast.gd
 _row	var	scripts/ui/office/office_hud.gd:19	office_hud.gd
 _row	func	scripts/ui/office/office_notice_stack.gd:147	office_notice_stack.gd
-_row_parts	func	scripts/tabs/events/mail_pane.gd:516	mail_pane.gd
+_row_parts	func	scripts/tabs/events/mail_pane.gd:511	mail_pane.gd
 _row_right	func	scripts/tabs/events_tab.gd:286	events_tab.gd
 _row_unlocked	func	scripts/debug/endgame_smoke.gd:5163	EndgameSmoke
 _row_with_verb	func	scripts/debug/endgame_smoke.gd:5122	EndgameSmoke
@@ -3426,7 +3426,7 @@ _said	func	scripts/ui/meeting/meeting_panel.gd:604	MeetingPanel
 _salary_row	func	scripts/systems/hr_actions.gd:324	HRActions
 _salary_trio	func	scripts/systems/hr_candidate_generator.gd:165	HRCandidateGenerator
 _sales_gate_follows_clock	func	scripts/debug/player_paths.gd:58	PlayerPaths
-_sales_report	func	scripts/tabs/events/mail_pane.gd:590	mail_pane.gd
+_sales_report	func	scripts/tabs/events/mail_pane.gd:585	mail_pane.gd
 _same_crew	func	scripts/systems/sprint_system.gd:1620	SprintSystem
 _samples	func	scripts/debug/kit_probe.gd:222	kit_probe.gd
 _satisfaction_row	func	scripts/tabs/sales_tab.gd:614	sales_tab.gd
@@ -3481,7 +3481,7 @@ _seats	func	scripts/tabs/product/product_model.gd:651	ProductModel
 _seats	var	scripts/ui/meeting/meeting_panel.gd:77	MeetingPanel
 _seats_for	func	scripts/systems/sales_rep_system.gd:285	SalesRepSystem
 _second_line	func	scripts/tabs/product/board_row.gd:189	BoardRow
-_section	func	scripts/tabs/events/mail_pane.gd:643	mail_pane.gd
+_section	func	scripts/tabs/events/mail_pane.gd:638	mail_pane.gd
 _section	func	scripts/tabs/hr/hr_dossier.gd:213	hr_dossier.gd
 _section	func	scripts/tabs/personal_tab.gd:259	personal_tab.gd
 _section	func	scripts/tabs/product/sprint_board.gd:226	SprintBoard
@@ -3845,7 +3845,7 @@ _state_machine	func	scripts/ui/office/office_person.gd:1042	OfficePerson
 _state_print	func	scripts/debug/endgame_smoke.gd:10356	EndgameSmoke
 _states	var	scripts/systems/rnd_system.gd:40	RnDSystem
 _states	func	scripts/theme/build_theme.gd:1576	build_theme.gd
-_static_body	func	scripts/tabs/events/mail_pane.gd:531	mail_pane.gd
+_static_body	func	scripts/tabs/events/mail_pane.gd:526	mail_pane.gd
 _station_energy	var	scripts/ui/office/office_lighting.gd:76	OfficeLighting
 _stations	var	scripts/ui/office/office_lighting.gd:75	OfficeLighting
 _status	func	scripts/tabs/product/board_row.gd:214	BoardRow
@@ -3916,14 +3916,14 @@ _sum	var	scripts/debug/sprint_probe.gd:98	sprint_probe.gd
 _sum	func	scripts/systems/product_state.gd:251	ProductState
 _sum	func	scripts/systems/sprint_bugs.gd:172	SprintBugs
 _summary	var	scripts/systems/summary_system.gd:44	SummarySystem
-_summary	func	scripts/tabs/events/mail_pane.gd:538	mail_pane.gd
+_summary	func	scripts/tabs/events/mail_pane.gd:533	mail_pane.gd
 _summary_option	var	scripts/modals/settings_modal.gd:94	settings_modal.gd
-_summary_row	func	scripts/tabs/events/mail_pane.gd:572	mail_pane.gd
+_summary_row	func	scripts/tabs/events/mail_pane.gd:567	mail_pane.gd
 _sun	var	scripts/debug/office_pan_probe.gd:40	office_pan_probe.gd
 _sun	var	scripts/ui/office/office_lighting.gd:63	OfficeLighting
 _support_at	var	scripts/debug/run_probe.gd:320	RunProbe
 _support_news	var	scripts/debug/run_probe.gd:319	RunProbe
-_support_report	func	scripts/tabs/events/mail_pane.gd:630	mail_pane.gd
+_support_report	func	scripts/tabs/events/mail_pane.gd:625	mail_pane.gd
 _support_reports	var	scripts/debug/run_probe.gd:318	RunProbe
 _support_row	var	scripts/ui/components/build_bar.gd:24	build_bar.gd
 _support_weeks	var	scripts/debug/run_probe.gd:317	RunProbe
@@ -4270,7 +4270,7 @@ _world	var	scripts/ui/office/office_view.gd:23	office_view.gd
 _world	var	scripts/ui/office/person_bust.gd:31	PersonBust
 _world_check	func	scripts/events/gate/gate.gd:137	EvGate
 _worst	func	scripts/systems/incident_system.gd:351	IncidentSystem
-_wrapped	func	scripts/tabs/events/mail_pane.gd:812	mail_pane.gd
+_wrapped	func	scripts/tabs/events/mail_pane.gd:806	mail_pane.gd
 _wraps	var	scripts/tabs/product/board_row.gd:49	BoardRow
 _write	func	tools/people/setup_import.gd:80	setup_import.gd
 _write_atomic	func	scripts/autoload/save_manager.gd:520	SaveManager
@@ -4588,7 +4588,7 @@ AUTOSAVE_MIN_REAL_SECONDS	const	scripts/autoload/save_manager.gd:36	SaveManager
 available	func	scripts/systems/rnd_system.gd:700	RnDSystem
 available_resolutions	func	scripts/systems/display_settings.gd:187	DisplaySettings
 AVATAR	const	scripts/tabs/events/mail_pane.gd:21	mail_pane.gd
-avatar	func	scripts/tabs/events/mail_pane.gd:774	mail_pane.gd
+avatar	func	scripts/tabs/events/mail_pane.gd:768	mail_pane.gd
 avatar	func	scripts/tabs/product/sprint_ui_shared.gd:226	SprintUiShared
 average_morale	func	scripts/systems/hr_morale_system.gd:231	HRMoraleSystem
 AVOID_MAX_K	const	scripts/systems/office_constants.gd:67	OfficeConstants
@@ -9465,7 +9465,7 @@ STALL_MIN_S	const	scripts/ui/office/office_person.gd:132	OfficePerson
 STALL_S	const	scripts/debug/office_crowd_probe.gd:13	OfficeCrowdProbe
 STALL_S	const	scripts/ui/office/office_person.gd:131	OfficePerson
 stamp	func	scripts/events/core/flags.gd:79	EvFlags
-stamp	func	scripts/tabs/events/mail_pane.gd:524	mail_pane.gd
+stamp	func	scripts/tabs/events/mail_pane.gd:519	mail_pane.gd
 stamp	func	scripts/util/fmt.gd:95	Fmt
 STANCE_COMPETITIVE	const	scripts/systems/sales_constants.gd:121	SalesConstants
 STANCE_DEFAULT	const	scripts/systems/sales_constants.gd:130	SalesConstants
@@ -9813,7 +9813,7 @@ TOP_FILL_DIR	const	scripts/ui/office/office_lighting.gd:33	OfficeLighting
 TOP_FILL_NIGHT	const	scripts/ui/office/office_lighting.gd:32	OfficeLighting
 top_palette	func	scripts/systems/people_parts.gd:164	PeopleParts
 TOP_PALETTES	const	scripts/systems/people_parts.gd:74	PeopleParts
-topic_pill	func	scripts/tabs/events/mail_pane.gd:797	mail_pane.gd
+topic_pill	func	scripts/tabs/events/mail_pane.gd:791	mail_pane.gd
 total	func	scripts/systems/sprint_system.gd:1988	SprintSystem
 total_skill_points	func	scripts/autoload/character_registry.gd:95	CharacterRegistry
 total_stars	func	scripts/systems/line_gates.gd:49	LineGates
