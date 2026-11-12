@@ -364,11 +364,15 @@ def _():
 
 @glyph("product/area_integrations")
 def _():
-    # a puzzle piece: two knobs out, two sockets in
-    body = R(2.4, 7.8, 14.6, 14.6, 1.6)
-    body = U(body, C(9.7, 6.0, 3.0), C(19.0, 15.1, 3.0))
-    body = cut(body, C(2.4, 15.1, 2.6), C(9.7, 22.4, 2.6))
-    return _fit(S(soften(body, 0.5)), 0.9, 0.9, 23.1, 23.1)
+    # two chain links hooked into each other, each passing over the other at one crossing (Erdem's pick, 2026-11-12,
+    # over the puzzle piece)
+    def link(cx):
+        return R(cx - 6.4, 8.4, 12.8, 7.2, 3.6).difference(R(cx - 4.0, 10.8, 8.0, 2.4, 1.2))
+    a, b = link(7.8), link(16.2)
+    top_b = b.intersection(box(0, 0, 24, 12))
+    a2 = gap(a, top_b, g=1.4)
+    b2 = U(top_b, gap(b.intersection(box(0, 12, 24, 24)), a2, g=1.4))
+    return S(rot(U(a2, b2), -40, (12, 12)))
 
 
 @glyph("product/area_growth")
