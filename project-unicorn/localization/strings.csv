@@ -1066,7 +1066,7 @@ PROD_TYPE_VIDEO_CLIP_BET,Üretici uzun çekiyor ve kısa yayınlıyor. Aradaki i
 PROD_TYPE_VIDEO_CLIP_PITCH,Uzun videodan yayına hazır klip çıkaran araç.,The tool that pulls publish-ready clips out of long video.
 PROD_TYPE_ERP_NAME,ERP,ERP
 PROD_TYPE_ERP_CATEGORY,İşletme,Business
-PROD_TYPE_ERP_DESC,Ön muhasebe · stok · fatura tek defterde.,Bookkeeping · stock · invoicing in one ledger.
+PROD_TYPE_ERP_DESC,Ön muhasebe · stok · fatura tek defterde.,Accounting · inventory · invoicing in one system.
 PROD_TYPE_ERP_TRADEOFF,İlk kurulum uzun sürer ve ilk müşteriler bozulmayan bir ürün ister; tutunca kimse çıkmaz.,"The first install takes long and first customers want something that does not break; once it sticks, nobody leaves."
 PROD_TYPE_ERP_BET,Defter tutan herkes aynı üç şeyi arıyor. Üçünü de doğru yap; gerisini sürümler getirir.,Everyone keeping books wants the same three things. Get all three right and versions bring the rest.
 PROD_TYPE_ERP_PITCH,Kasadan stoka işletmenin defterini tutan sistem.,The system that keeps a business's books from till to stock.
@@ -1905,8 +1905,8 @@ PROD_LINE_ERP_INVOICING,Fatura,Invoicing
 PROD_STEP_ERP_CASHFLOW_K1,Kasa Hareketleri,Cash Movements
 PROD_STEP_ERP_CASHFLOW_K2,Nakit Akış Tablosu,Cash Flow Statement
 PROD_STEP_ERP_CASHFLOW_K3,Nakit Öngörüsü,Cash Forecast
-PROD_STEP_ERP_INTAKE_K1,Elle Giriş,Manual Entry
-PROD_STEP_ERP_INTAKE_K2,Tablo İçe Aktarma,Spreadsheet Import
+PROD_STEP_ERP_INTAKE_K1,Satın Alma Talebi,Purchase Request
+PROD_STEP_ERP_INTAKE_K2,Tedarikçi ve Teklif,Suppliers and Quotes
 PROD_STEP_ERP_INTAKE_K3,Belge Okuma,Document Reading
 PROD_STEP_ERP_LEDGER_K1,Ön Muhasebe,Basic Bookkeeping
 PROD_STEP_ERP_LEDGER_K2,Hesap Planı,Chart of Accounts
@@ -1920,8 +1920,8 @@ PROD_STEP_ERP_INVOICING_K3,Tahsilat Döngüsü,Collection Cycle
 PROD_STEP_ERP_CASHFLOW_K1_DESC,Giren ve çıkan para tarih sırasına dizilir; bakiye günün sonunda bellidir.,"Money in and money out, filed by date; the balance is known when the day closes."
 PROD_STEP_ERP_CASHFLOW_K2_DESC,Alacaklar ve borçlar vadeleriyle tabloya girer; önümüzdeki haftalar bir sütun olur.,Receivables and debts enter the table with their due dates; the coming weeks become a column.
 PROD_STEP_ERP_CASHFLOW_K3_DESC,Geçmiş tahsilat ritmi okunur ve kasanın hangi hafta daralacağı önceden söylenir.,"The rhythm of past collections is read, and the week the treasury tightens is named in advance."
-PROD_STEP_ERP_INTAKE_K1_DESC,Her kalem klavyeden girilir; sistem yalnız girilen kadarını bilir.,Every line arrives by keyboard; the system knows only as much as was typed.
-PROD_STEP_ERP_INTAKE_K2_DESC,Yıllardır tutulan tablolar sütun sütun eşlenir; eski dosya bir akşamda içeri girer.,Years of spreadsheets are matched column by column; the old file comes inside in one evening.
+PROD_STEP_ERP_INTAKE_K1_DESC,"Satın alma talebi formdan açılır, onaydan geçince siparişe döner.",A purchase request opens from a form and turns into an order once approved.
+PROD_STEP_ERP_INTAKE_K2_DESC,Tedarikçiler tek listede durur; teklifler yan yana kıyaslanır.,Suppliers sit in one list; quotes are compared side by side.
 PROD_STEP_ERP_INTAKE_K3_DESC,"Fatura ve irsaliye taranır, alanlar kendiliğinden yerine oturur; insana yalnız itiraz etmek kalır.",Invoices and delivery notes are scanned and the fields settle on their own; a person is left only to object.
 PROD_STEP_ERP_LEDGER_K1_DESC,Gelir ve gider kaydedilir; ay sonunda rakam en azından bir yerde durur.,Income and expense are written down; at month end the figures at least sit somewhere.
 PROD_STEP_ERP_LEDGER_K2_DESC,Her hareket bir hesaba düşer ve dönem kapanışı defterin kendi içinde tutmasını ister.,"Every movement falls into an account, and the period close asks the books to agree with themselves."
@@ -2015,7 +2015,7 @@ PROD_STEP_HIDDEN_SELF_SERVE_K3_ERP_DESC,Tutmayan kayıt hangi adımda kaydığı
 RND_NOTE_DEMAND_B2B_0,Bu ayki hesap talepleri tek bir yeri gösteriyor: {line}. Rakipte aynı işin çalıştığı da söylendi.,This month's account requests point at one place: {line}. It was also said that the job works at a rival.
 RND_NOTE_DEMAND_B2B_1,Yenileme görüşmelerinde bu başlık açıldı: {line}. Fiyat konuşulmadan önce o konuşuldu.,This heading came up in the renewal calls: {line}. It came up before price did.
 RND_NOTE_DEMAND_B2B_2,"Bu ay aynı cümle yeniden not edilmiş: {line}. Kimse bağırmıyor, herkes bekliyor.",The same sentence was written down again this month: {line}. Nobody is shouting; everyone is waiting.
-RND_NOTE_DEMAND_B2B_3,Bir hesabın satın alma ekibi kendi listesini gönderdi ve listenin başında tek başlık var: {line}. Gerisi opsiyonel yazıyor.,"One account's procurement team sent its own list, and a single heading sits at the top of it: {line}. The rest is marked optional."
+RND_NOTE_DEMAND_B2B_3,Bir hesabın tedarik ekibi kendi listesini gönderdi ve listenin başında tek başlık var: {line}. Gerisi opsiyonel yazıyor.,"One account's procurement team sent its own list, and a single heading sits at the top of it: {line}. The rest is marked optional."
 RND_NOTE_DEMAND_B2C_0,"Yorumların çoğu aynı şey üzerine: {line}. Kimse yeni özellik istemiyor, bunun düzgün çalışmasını istiyorlar.",Most of the reviews are about one thing: {line}. Nobody is asking for a new feature; they want this one to work.
 RND_NOTE_DEMAND_B2C_1,Mağaza puanı düşmedi ama yorumlarda aynı başlık tekrar ediyor: {line}. Övgüyle şikâyet yan yana yazılmış.,"The store rating has held, but one heading keeps repeating in the reviews: {line}. Praise and complaint written side by side."
 RND_NOTE_DEMAND_B2C_2,"Bu ay gelen mailin çoğu tek bir başlıkta toplanıyor: {line}. Hepsi kibar, hepsi aynı şeyi söylüyor.","Most of this month's mail gathers under a single heading: {line}. All of it polite, all of it saying the same thing."
