@@ -19135,12 +19135,13 @@ static func _incident_scale_audience(payload: Dictionary) -> String:
 
 ## The night stops at the emergency's hour, once, and goes on from there. Played through the real clock with the window
 ## at 09:00 to 17:00: at 00:00 the die is rolled and nothing is asked for; the card opens at the first full hour after
-## the outage began, stamped with that hour, with the clock held; of the cards waiting (a paper's last warning, which is
-## urgent but no emergency) none shows before it or after it; the answer lets the night run on to 08:00 and it still
-## shows nothing; the card that waited opens when the workday does. The mail comes from the first developer on Build, and
-## from the server's own alert with nobody to write it.
+## the outage began, stamped with that hour, with the clock held; the queued retention card shows neither before it nor
+## after it; the answer lets the night run on to 08:00 and it still shows nothing; the card that waited opens when the
+## workday does. It waits in the queue, not on the desk: a paper on the desk opens at the workday's end and holds the
+## night before midnight (N03, §27.50). The mail comes from the first developer on Build, and from the server's own
+## alert with nobody to write it.
 ## FALSIFICATION: take the hold out of IncidentSystem._ask and the night runs on to 08:00 (the stop check fails); let
-## EvQueue._shown ignore the workday and the paper's warning shows the moment the answer is given (the quiet check fails);
+## EvQueue._shown ignore the workday and the retention card opens before the emergency (the 00:00 check fails);
 ## ask for the card in the 00:00 slice (give hourly_tick a free pass at hour 0) and the first check fails.
 static func _case_incident_night_hold_resumes() -> String:
 	const INBOX := preload("res://scripts/ui/components/inbox.gd")
@@ -19149,17 +19150,19 @@ static func _case_incident_night_hold_resumes() -> String:
 	var risk: Customer = _add_risk_b2b("inc_risk", 900)
 	CustomerRegistry.set_market_ref(risk.id, ProductQuality.market_ref_for(3, risk.industry))   # a picky account: the MVP fits it badly, so it keeps sinking through the nights
 	var warned: Dictionary = _ctx_customer(risk)
-	EvPapers.place(RETAIN_ID, warned, 2)
 	var shown: Array = []
 	EventBus.event_triggered.connect(func(id: String) -> void: shown.append(id))
 	IncidentSystem.force_on("outage", GameState.day + 1)
 	GameState.set_current_hour(22)
 	TimeManager.sync_to_current_hour()
+	# Admitted at 22:00: it waits for the workday (EvQueue._shown).
+	if not EvQueue.admit(RETAIN_ID, warned, "interrupt", "", MailClock.now()):
+		return "fixture: the retention card was already queued"
 	TimeManager.advance_hours(1)
 	TimeManager.advance_hours(1)
 	var tonight: Dictionary = GameState.incident.get("pending", {})
 	if tonight.is_empty() or not EvQueue.ids().has(RETAIN_ID):
-		return "at 00:00 the die should have rolled tonight's emergency (%s) and the paper's last warning be queued (%s)" % [
+		return "at 00:00 the die should have rolled tonight's emergency (%s) and the retention card still be queued (%s)" % [
 			str(tonight), str(EvQueue.ids())]
 	if EventGate.active_id() != "" or EvQueue.ids().has(OUTAGE_B2B) or TimeManager.holds().has(IncidentSystem.HOLD) \
 			or not shown.is_empty():
@@ -19181,7 +19184,7 @@ static func _case_incident_night_hold_resumes() -> String:
 	if String(from.name) != "Deniz Kaya":
 		return "the mail comes from '%s', want the developer" % from.name
 	if EvQueue.rank(OUTAGE_B2B, "", "interrupt") >= EvQueue.rank(RETAIN_ID, EvLatches.key_of(RETAIN_ID, warned), "interrupt"):
-		return "the paper's last warning ranks before the emergency"
+		return "the queued retention card ranks before the emergency"
 	var card: GameEvent = EventGate.active_card()
 	var names: String = EvChips.text(EvChips.describe(card.choices[0].modifiers[0], context, {}, false)[0])
 	var clock: String = MailClock.clock_text(stamp + 160)
