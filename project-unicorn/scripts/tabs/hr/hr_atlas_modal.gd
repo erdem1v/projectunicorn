@@ -123,28 +123,26 @@ func _build_search_step() -> void:
 		levels.add_child(column)
 	body.add_child(spaced(levels, UiTokens.SPACE_L))
 
-	# §10'un iki cümlesi: "bir hafta sonra aday listesi gelir" ve "ücretsizdir; tek ücret
-	# komisyondur".
-	var meta := HBoxContainer.new()
-	meta.add_theme_constant_override("separation", UiTokens.SPACE_M)
-	meta.add_child(UiFactory.make_glyph("res://assets/icons/util/calendar.svg", UiTokens.D_ICON_ROW, UiTokens.D_INK_4))
-	meta.add_child(UiFactory.make_label(tr("HR_ATLAS_ARRIVAL").format({"span": tr("HR_ATLAS_ARRIVAL_SPAN")}), &"MetaMuted"))
-	meta.add_child(UiFactory.make_label("·", &"CaptionFaint"))
-	meta.add_child(UiFactory.make_label(tr("HR_ATLAS_FREE_NOTE"), &"MetaMuted"))
-	body.add_child(spaced(meta, UiTokens.SPACE_XL))
+	# §10'un iki cümlesi ("bir hafta sonra aday listesi gelir", "ücretsizdir; tek ücret komisyondur") Arayış başlat'ın
+	# ipucudur (envanter sales-20); rol ve seviye seçilmeden düğme kapalıdır, cümlesi yok (sales-21).
+	var terms: String = "%s · %s" % [tr("HR_ATLAS_ARRIVAL").format({"span": tr("HR_ATLAS_ARRIVAL_SPAN")}),
+		tr("HR_ATLAS_FREE_NOTE")]
 
 	foot.add_child(button(tr("UI_DISMISS"), &"SecondaryButton", close))
 	foot.add_child(spring())
 	var cta: String = tr("HR_ATLAS_START")
 	if _selected_role == "" or _selected_level < 0:
-		foot.add_child(UiFactory.make_label(tr("HR_ATLAS_NEED_SELECTION"), &"MetaMuted"))
-		foot.add_child(button(cta, &"PrimaryButtonDark", Callable()))
+		var shut: Button = button(cta, &"PrimaryButtonDark", Callable())
+		shut.tooltip_text = terms
+		foot.add_child(shut)
 		return
 	var pv: Dictionary = HRSearchSystem.preview_search(_selected_role, _selected_level)
 	# Seçim özeti türetilmiş unvandır (§3): "Kıdemli Yazılım Mühendisi"; kapalıysa gerekçesi.
 	var can: bool = bool(pv.get("can_start", false))
 	foot.add_child(UiFactory.make_label(String(pv.get("job_title", "")) if can else _first_warning(pv), &"MetaMuted"))
-	foot.add_child(button(cta, &"PrimaryButtonDark", _on_start_pressed if can else Callable()))
+	var start: Button = button(cta, &"PrimaryButtonDark", _on_start_pressed if can else Callable())
+	start.tooltip_text = terms
+	foot.add_child(start)
 
 
 ## Every desk of the office is taken: neither a search starts nor the files on the table can be hired, and the strip
@@ -240,8 +238,8 @@ func _corner_disc(marks: Control, centred: bool) -> void:
 	marks.add_child(disc)
 
 
-## Rol kartı. KİLİTLİ (`lock_text` dolu): ad ve glif soluk, kilit glifi; gerekçe tam mürekkeple altında —
-## ve tıklama hiç bağlanmıyor (kilitli kart "reddedilen" değil, "kapalı").
+## Rol kartı: adı; rolün tarifi kartın ipucundadır (envanter sales-18). KİLİTLİ (`lock_text` dolu): ad soluk, tek kilit
+## glifi; gerekçe yazmaz, gelecek içeriği önceden söylerdi (sales-19); tıklama hiç bağlanmıyor.
 func _role_card(label: String, hint_text: String, lock_text: String, picked: bool, on_pick: Callable) -> PanelContainer:
 	var locked: bool = lock_text != ""
 	var card: Array = _card(&"PickCard", picked, Callable() if locked else on_pick, CARD_INSET)
@@ -254,15 +252,7 @@ func _role_card(label: String, hint_text: String, lock_text: String, picked: boo
 		lock.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		head.add_child(lock)
 	col.add_child(head)
-	var hint := UiFactory.make_label(hint_text, &"MetaMuted")
-	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	col.add_child(hint)
-	if locked:
-		var why := HBoxContainer.new()
-		why.add_theme_constant_override("separation", UiTokens.SPACE_S)
-		why.add_child(UiFactory.make_glyph("res://assets/icons/util/lock.svg", UiTokens.D_ICON_PART, UiTokens.D_INK_4))
-		why.add_child(UiFactory.make_label(lock_text, &"MetaMuted", UiTokens.D_INK_2))
-		col.add_child(why)
+	card[0].tooltip_text = hint_text
 	if picked:
 		_corner_disc(card[2], false)
 	HRUiShared.set_mouse_ignore(col)

@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git fb4347cc · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 4882096c · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -246,9 +246,9 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 ### scripts/tabs/finance/ (1 dosya, 590 satır)
 - scripts/tabs/finance/finance_ozet_view.gd · 590 · FinanceOzetView · Control · 0 sinyal · 25 func
 
-### scripts/tabs/hr/ (7 dosya, 2113 satır)
+### scripts/tabs/hr/ (7 dosya, 2103 satır)
 - scripts/tabs/hr/hr_assignments.gd · 188 · HRAssignments · RefCounted · 0 sinyal · 8 func
-- scripts/tabs/hr/hr_atlas_modal.gd · 488 · - · "res://scripts/tabs/hr/hr_panel.gd" · 0 sinyal · 20 func
+- scripts/tabs/hr/hr_atlas_modal.gd · 478 · - · "res://scripts/tabs/hr/hr_panel.gd" · 0 sinyal · 20 func
 - scripts/tabs/hr/hr_dossier.gd · 232 · - · VBoxContainer · 2 sinyal · 13 func
 - scripts/tabs/hr/hr_ledger.gd · 454 · HRLedger · RefCounted · 0 sinyal · 23 func
 - scripts/tabs/hr/hr_panel.gd · 132 · - · Control · 1 sinyal · 10 func
@@ -693,7 +693,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
   ↳ fit_changed connect: scripts/ui/components/window_layer.gd:169
 
 ### scripts/tabs/hr/hr_panel.gd
-- state_changed() · scripts/tabs/hr/hr_panel.gd:9 · emit: scripts/modals/training_modal.gd:174, scripts/modals/work_hours_modal.gd:491, scripts/tabs/hr/hr_atlas_modal.gd:443,469,487 · connect: scripts/tabs/hr/hr_ui_shared.gd:81
+- state_changed() · scripts/tabs/hr/hr_panel.gd:9 · emit: scripts/modals/training_modal.gd:174, scripts/modals/work_hours_modal.gd:491, scripts/tabs/hr/hr_atlas_modal.gd:433,459,477 · connect: scripts/tabs/hr/hr_ui_shared.gd:81
 
 ### scripts/tabs/hr_tab.gd
 - fit_changed() · scripts/tabs/hr_tab.gd:22 · (ad 7 yerde tanımlı)
