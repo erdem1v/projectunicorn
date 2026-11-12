@@ -275,6 +275,7 @@ func _run_debug_harness() -> bool:
 		"--invite-shot=": _run_invite_shot,
 		"--clock-shot=": _run_clock_shot,
 		"--day-shot=": _run_day_shot,
+		"--minute-shot=": _run_minute_shot,
 		"--office-crowd-probe=": _run_office_crowd_probe,
 		"--player-path=": _run_player_path,
 	}
@@ -2904,6 +2905,24 @@ func _run_day_shot(spec: String) -> void:
 			if after == DAY_SHOT_AFTER:
 				break
 	get_tree().quit()
+
+
+# --minute-shot=<weeks>: the single-founder ERP bot (RunProbe full_run_staff1, sim) played that many weeks, then the
+# shell mounted over its state, the clock paused: what is in front of the player that far into a run at 1x (a week is
+# 22.5 s: week 26 is the clock's tenth minute). minute_shot_w<weeks>.png and one MINUTESHOT line. The bot stops at a
+# week's start, so the first frame is week 2.
+func _run_minute_shot(spec: String) -> void:
+	if not spec.is_valid_int() or int(spec) < 2:
+		_shot_fail("[MinuteShot] weeks must be a whole number from 2: %s" % spec)
+		return
+	_begin_shot()
+	RunProbe.run("full_run_staff1:%s:sim" % spec, _debug_payload())
+	EventBus.speed_change_requested.emit(0)
+	await _mount_shot_shell()
+	await get_tree().create_timer(2.5).timeout
+	print("MINUTESHOT|week=%d|cash=%d|mrr=%d|accounts=%d|run_active=%s" % [GameState.day, GameState.cash, GameState.mrr,
+		CustomerRegistry.account_count(), str(GameState.run_active)])
+	await _finish_shot("minute_shot_w%s" % spec, 1.0)
 
 
 # --office-crowd-probe=<home|ishani|plaza|loft>:<people>:<speed 1-3>: that many people (the

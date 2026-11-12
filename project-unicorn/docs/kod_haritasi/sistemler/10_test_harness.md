@@ -7,7 +7,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 
 ## Dosyalar
 
-- `scripts/main/main.gd` (6302): ana sahne; debug bayrak dağıtıcısı (`_run_debug_harness`), tüm `--*-shot` ve ölçüm koşucuları, fikstür tohumlayıcıları
+- `scripts/main/main.gd` (6321): ana sahne; debug bayrak dağıtıcısı (`_run_debug_harness`), tüm `--*-shot` ve ölçüm koşucuları, fikstür tohumlayıcıları
 - `scripts/debug/endgame_smoke.gd` (30151): `EndgameSmoke`; 475 vakalı smoke süiti, tek süreç = tek vaka, `SMOKE PASS/FAIL` basar
 - `scripts/debug/run_probe.gd` (2442): `RunProbe`; botun oynadığı koşu defteri (`--run-log`), 54 preset, `PROBE ...` satırları
 - `scripts/debug/sprint_probe.gd` (425): `--sprint-probe`; Ürün ekranının sprint planını (`plan_outcome`) kapanışla karşılaştırır, uyuşmazlıkta 1
@@ -53,14 +53,14 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - `EndgameSmoke.run_case()` `scripts/debug/endgame_smoke.gd:51`: tohumu 424242'ye ve build kapsamını demoya sabitler, `match case_name` ile vakayı koşar · `main.gd:207`
 - `RunProbe.run()` `scripts/debug/run_probe.gd:363`: `<preset>:<hafta>:<mod>[:<tohum>][:replay=|window=|build=]` ayrıştırır, `sim` ise `_run_sim()` (`:1130`) · `main.gd:218`
 - `SprintProbe.run()` `scripts/debug/sprint_probe.gd:85`: `--sprint-probe` spec'ini koşar, `bool` döner · `main.gd:258` (`_quit_with`)
-- `Main._run_tick_probe()` `scripts/main/main.gd:548`: kayıt dolu kullanıcı dizininde `TICK ERROR` basıp çıkar; `TICK_PROBE.new().run()` (`tick_probe.gd:24`)
-- `Main._run_tempo_probe()` `scripts/main/main.gd:466`: haftayı 08:00'den 08:00'e gerçek saatle ölçer, `TEMPO_STOP_DAY` (`:458`, 3) tikinde durur
-- `Main._run_render_probe()` `scripts/main/main.gd:389`: sayfa başına kare süresi ve `rebuild_view` ölçer; VSYNC kapatır; sabitler `:377-379`
-- `Main._begin_shot()` `scripts/main/main.gd:590`: her çekimin ortak açılışı; pencereli mod, 1920x1080 ya da `--shot-size`, `--palette=cb`, `--shot-scale`
-- `Main._seed_run_reproducible()` `scripts/main/main.gd:626`: tohum 424242, `IncidentSystem.rolls=false`; çekimlerin önce/sonra çiftini kıyaslanır yapar
-- `Main._finish_shot()` `scripts/main/main.gd:665`: kareyi `user://<ad>[_en][_cb].png` yazar (`:659`) ya da `--theme-audit` ise `AUDIT_BEGIN/END` basar (`_audit_walk` `:3087`)
-- `Main._run_why_fire()` `scripts/main/main.gd:288`: `EvWhy.report(kart)`; `_run_event_plausibility()` `:295` `PLAUSIBILITY.run(spec)`
-- `Main._skip_to_shell()` `scripts/main/main.gd:5491`: menü ve onboarding'siz kabuk; `--skip-onboarding` (`:107`) ve debug F12 (`:5230`) çağırır
+- `Main._run_tick_probe()` `scripts/main/main.gd:549`: kayıt dolu kullanıcı dizininde `TICK ERROR` basıp çıkar; `TICK_PROBE.new().run()` (`tick_probe.gd:24`)
+- `Main._run_tempo_probe()` `scripts/main/main.gd:467`: haftayı 08:00'den 08:00'e gerçek saatle ölçer, `TEMPO_STOP_DAY` (`:459`, 3) tikinde durur
+- `Main._run_render_probe()` `scripts/main/main.gd:390`: sayfa başına kare süresi ve `rebuild_view` ölçer; VSYNC kapatır; sabitler `:378-380`
+- `Main._begin_shot()` `scripts/main/main.gd:591`: her çekimin ortak açılışı; pencereli mod, 1920x1080 ya da `--shot-size`, `--palette=cb`, `--shot-scale`
+- `Main._seed_run_reproducible()` `scripts/main/main.gd:627`: tohum 424242, `IncidentSystem.rolls=false`; çekimlerin önce/sonra çiftini kıyaslanır yapar
+- `Main._finish_shot()` `scripts/main/main.gd:666`: kareyi `user://<ad>[_en][_cb].png` yazar (`:660`) ya da `--theme-audit` ise `AUDIT_BEGIN/END` basar (`_audit_walk` `:3106`)
+- `Main._run_why_fire()` `scripts/main/main.gd:289`: `EvWhy.report(kart)`; `_run_event_plausibility()` `:296` `PLAUSIBILITY.run(spec)`
+- `Main._skip_to_shell()` `scripts/main/main.gd:5510`: menü ve onboarding'siz kabuk; `--skip-onboarding` (`:107`) ve debug F12 (`:5249`) çağırır
 - `GameShell._debug_fkey()` `scripts/main/game_shell.gd:134`: debug build'de Shift+F4/F5/F6 (F4 onboarding'i yeniden tetikler)
 - `SaveManager._is_harness_arg()` `scripts/autoload/save_manager.gd:497`: `smoke`, `-shot`, `audit`, `probe`, `run-log`, `plausibility` alt dizili `--` bayrağı harness sayar
 - `tools/smoke_run.sh run_one()` `tools/smoke_run.sh:38`: `godot --headless --endgame-smoke=<vaka>`; `list_cases()` (`:27`) vaka listesini `match` tablosundan awk ile çeker
@@ -69,12 +69,12 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 
 ## Sinyaller
 
-- `debug_onboarding_retrigger_requested`: yayan `scripts/main/game_shell.gd:140` (Shift+F4) · dinleyen `scripts/main/main.gd:103` -> `_on_debug_onboarding_retrigger` (`:5271`)
+- `debug_onboarding_retrigger_requested`: yayan `scripts/main/game_shell.gd:140` (Shift+F4) · dinleyen `scripts/main/main.gd:103` -> `_on_debug_onboarding_retrigger` (`:5290`)
 - `phase_gate_reached`, `run_ended`: smoke `run_case` her vakada kendi dinleyicisini bağlar (`endgame_smoke.gd:74-75`), `_gate_signals` ve `_endings` dizilerine biriktirir
 - `phase_gate_reached`: `scripts/debug/run_probe.gd:502` da dinler (kapı geçişini defterine yazar)
-- `night_skipped`, `hour_changed`, `day_advanced`: tempo, tick ve crowd probe'ları ölçüm için dinler (`main.gd:478`, `tick_probe.gd`, `office_crowd_probe.gd`)
+- `night_skipped`, `hour_changed`, `day_advanced`: tempo, tick ve crowd probe'ları ölçüm için dinler (`main.gd:479`, `tick_probe.gd`, `office_crowd_probe.gd`)
 - Smoke, 100'ü aşkın sinyali doğrudan `connect` eder (DIZIN.md Sinyaller bölümünde `connect: scripts/debug/endgame_smoke.gd:N` olarak görünür); yeni sinyal eklerken oraya bakın
-- Harness'e özel yeni sinyal yoktur; `EventBus.speed_change_requested.emit(idx)` ve `tab_changed.emit(tab)` çekimlerin ve probe'ların tek sürücü yoludur (`main.gd:93`, `:576`)
+- Harness'e özel yeni sinyal yoktur; `EventBus.speed_change_requested.emit(idx)` ve `tab_changed.emit(tab)` çekimlerin ve probe'ların tek sürücü yoludur (`main.gd:93`, `:577`)
 
 ## Durum ve veri
 
@@ -89,7 +89,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
   ↳ `--tick-probe` `TICK ERROR`; ikisi de `team=` ile kullanır
 - Smoke paylaşılan kayıt yuvaları `manual_9001` / `manual_9002` (`SAVE_SLOT_A`, `SAVE_SLOT_B` `endgame_smoke.gd:10146`); onları kullanan vakalar paralel koşturulmaz (aşağıda Testler)
 - `tools/lint_baseline.json` `tools/lint_v3_frozen.json`: kabul edilen lint bulguları; `--event-lint=baseline` yeniden yazar
-- Çekim PNG'leri `%APPDATA%\Godot\app_userdata\Project Unicorn\` (`user://`); EN `_en`, renk körü `_cb` soneki (`main.gd:654`)
+- Çekim PNG'leri `%APPDATA%\Godot\app_userdata\Project Unicorn\` (`user://`); EN `_en`, renk körü `_cb` soneki (`main.gd:655`)
 - `docs/EVENT_SIGNAL_MANIFEST.md`, `docs/content/events_draft/_vocabulary.md`: araçların ürettiği belgeler (`gen_signal_manifest.py`, `--event-vocab`)
 
 ## Metin anahtarları
@@ -173,7 +173,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - Ölçüm: `--tempo-probe=<hız>[:shell]` (`TEMPO`), `--tick-probe=<hız>[:<pencere>][:accounts=][:team=]` (`TICK`, ayrı `APPDATA` ister), `--render-probe[=<sekme>:...]`, `--office-crowd-probe=<ofis>:<kişi>:<hız>`.
 - Çekim ailesi (pencereli, `valued` tablosu `main.gd:242-276`): `--tab-shot`, `--modal-shot`, `--onboard-shot`, `--office-shot=<ofis>:<saat>[:ek]`, `--event-shot`, `--ending-shot`,
   `--vc-shot`, `--sales-shot` (`offer`: aday teklifi ve süreli indirim), `--negotiation-shot`, `--meeting-shot` (`focus`: "Bu çeyreğin vurgusu" ipucu),
-  `--invite-shot`, `--product-shot`, `--hr-shot`, `--finance-shot`, `--personal-shot`, `--rnd-shot`, `--b2b-shot`, `--inbox-shot` (`exit_notice`, `clause_server_lock`), `--menu-shot`, `--travel-shot`, `--clock-shot`, `--day-shot`, `--probe-shot[=menajer|kit]`.
+  `--invite-shot`, `--product-shot`, `--hr-shot`, `--finance-shot`, `--personal-shot`, `--rnd-shot`, `--b2b-shot`, `--inbox-shot` (`exit_notice`, `clause_server_lock`), `--menu-shot`, `--travel-shot`, `--clock-shot`, `--day-shot`, `--minute-shot=<hafta>` (tek kurucunun ERP botu o haftaya oynar, kabuk üstüne kurulur, saat duruk; `MINUTESHOT|`), `--probe-shot[=menajer|kit]`.
   ↳ `--event-shot=<kart>[:<slot>=<id>...][:long=1][:bare=1]` kartın slotlarını bağlar (yuvasız kart kendi dünyasını kurar: temsilcili hesap, işlenen aday, yaz izni çifti, hat hesapları; `:long=1` uzun adlar; `:bare=1` çıplak tohum dünyası, hesapsız) ve kareden önce `EVENTSHOT|`,
   ↳ `EVENTSHOTTEXT|`, `EVENTSHOTOPTION|`, `EVENTSHOTCHIPS|` satırlarını basar; başsız koşu kareyi yazamaz (`save_png` hatası beklenir) ama bağlama, metin ve çipler okunur (ayrıntı 07_olay_motoru.md). Başsız çekim satırları: `SHOTLINE|<etiket>|<metin>`
   ↳ (sayfada o metni taşıyan etiketler; `none` yoksa), `CLAUSE|`, `MEETINGSHOT|`.
@@ -189,9 +189,9 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - Throwing case geçer görünür: GDScript'te try/catch yok, çalışma hatası gövdeyi keser ve `""` döner; bu yüzden hata yakalama kabuktadır (`smoke_run.sh:4-9`). Smoke'u `SMOKE PASS` satırına bakarak değil `smoke_run.sh` ile koşun.
 - `--endgame-smoke` süreci MCP editör yolunda canlı bırakır (log okunsun diye); CLI'da `get_tree().quit()` çağrılır (`main.gd:205-212`). Harness bayrakları yalnız debug build'de çalışır.
 - `SaveManager._is_harness_arg` alt dizi eşleşmesidir: bayrak adı `smoke/-shot/audit/probe/run-log/plausibility` içeriyorsa otomatik kayıt, ekran ayarı ve `runs_finished` sayacı kapanır
-  (`main.gd:5375`, `display_settings.gd:88`).
+  (`main.gd:5394`, `display_settings.gd:88`).
   `--display-check` bilerek hiçbirini içermez, gerçek pencereyi sürmesi gerekir.
-- Kayıt yazan harness'ler: `--tick-probe` (`auto_*` yuvaları, kayıt varsa reddeder), `--modal-shot=save*|load*` (`_saves_refused` `main.gd:2707`), `--menu-shot` (`user://shot_menu/`),
+- Kayıt yazan harness'ler: `--tick-probe` (`auto_*` yuvaları, kayıt varsa reddeder), `--modal-shot=save*|load*` (`_saves_refused` `main.gd:2708`), `--menu-shot` (`user://shot_menu/`),
   `--display-check` (`settings.json`). Hepsini ayrı `APPDATA` ile koşun.
 - Smoke'un paylaşılan yuvaları `manual_9001/9002`: bu yuvaya yazan vakalar paralel koşulursa birbirini bozar; `--all` sırayla koşar, elle paralel koşuda koruma yoktur (vaka listesi yukarıda Testler)
 - `--import` sonrası sınıf önbelleği tuzağı: sıra import -> ısınma koşusu -> kapı. Bayat `.ctex` yeni sanatı gizler (hafıza: godot-import-cache-gotchas). `plausibility.gd` bu yüzden yoldan yüklenir, `--import` istemez.

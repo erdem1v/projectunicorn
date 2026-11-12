@@ -138,7 +138,7 @@ Satış, Finans, Yatırım:
 - `FinanceTab._show_page(id)` `scripts/tabs/finance_tab.gd:88`: ÖZET/YATIRIM seçer, Yatırım kilitliyse döner · `finance_subpage_requested` (:54), şerit.
 - `FinanceOzetView.cap_table(parent)` `scripts/tabs/finance/finance_ozet_view.gd:451` (static): hisse tablosu · personal_tab.gd:207.
 - `HuntTab._refresh()` `scripts/tabs/hunt_tab.gd:102`: sayfayı baştan kurar; görünmezken `_on_changed` (:82) yalnız `_stale` işaretler · VC/seed sinyalleri.
-- `HuntTab._sit_button` `hunt_tab.gd:509`: "Masaya otur" `term_table_requested` yayar (:510) · main.gd:4821 bağlar.
+- `HuntTab._sit_button` `hunt_tab.gd:509`: "Masaya otur" `term_table_requested` yayar (:510) · main.gd:4840 bağlar.
 
 Ar-Ge, Olaylar, Piyasa, Kişisel:
 - `RnDTab.select_node(id)` `scripts/tabs/rnd_tab.gd:114`: düğümü seçer · `rnd_node_requested` (:80; product_tab.gd:325, research_bar), `_ready` (:60) gizli seçimi tüketir.
@@ -146,7 +146,7 @@ Ar-Ge, Olaylar, Piyasa, Kişisel:
 - `RnDTreeView.select(id, open_assign)` `scripts/tabs/rnd/rnd_tree_view.gd:334`: karo seçimi, `selection_changed` yayar (:339) · karo tıkı, rnd_tab.
 - `EventsTab.select(item_id)` `scripts/tabs/events_tab.gd:77`: öğeyi okuma bölmesinde açar · `Inbox.show` (inbox.gd:31) `call_group(&"inbox", &"select")` ile.
 - `EventsTab._refresh()` `events_tab.gd:145`: listeyi `Inbox.items()`'ten kurar; `_queue_refresh` (:139) karede bir kez · `Inbox.connect_changes` (:70).
-- `MailPane.populate(item, mode)` `scripts/tabs/events/mail_pane.gd:54`: kipler live/preview/history/rnd · events_tab.gd:163, rnd_history.gd, main.gd:1447.
+- `MailPane.populate(item, mode)` `scripts/tabs/events/mail_pane.gd:54`: kipler live/preview/history/rnd · events_tab.gd:163, rnd_history.gd, main.gd:1448.
 - `MailPane._choose(idx)` `mail_pane.gd:494`: yalnız live kipte `EventGate.resolve` · seçenek düğmesi/Enter. `open_paper` (:528) → `EventGate.open_paper`.
 - `PiyasaTab._build()` `scripts/tabs/piyasa_tab.gd:99`: katalogdan baştan kurar (`_queue_build` :94 sonraki karede) · day_advanced, equity_changed (:82).
 - `PersonalTab._build()` `scripts/tabs/personal_tab.gd:70`: sütunları baştan kurar · 9 sinyal (:51).
@@ -168,7 +168,7 @@ Sekmelerin tanımladığı sinyaller (DIZIN.md "Sinyaller" bölümü):
 
 Sekmelerin yaydığı EventBus sinyalleri:
 - `tab_changed`: product_tab.gd:321-327, sales_tab.gd:295, mail_pane.gd:830,836, hr_atlas_modal.gd:168, sprint_ui_shared.gd:557, rnd_ui_shared.gd:149 · dinleyen window_layer.gd:62.
-- `pitch_requested` sales_tab.gd:412 (dinleyen main.gd:4815) · `term_table_requested` hunt_tab.gd:510 (main.gd:4821) · `rnd_node_requested` product_tab.gd:323 (rnd_tab.gd:80).
+- `pitch_requested` sales_tab.gd:412 (dinleyen main.gd:4834) · `term_table_requested` hunt_tab.gd:510 (main.gd:4840) · `rnd_node_requested` product_tab.gd:323 (rnd_tab.gd:80).
 - `finance_subpage_requested` mail_pane.gd:832 (dinleyen finance_tab.gd:54) · `confirm_requested` hunt_tab.gd:234,479, hr_tab.gd:337, hr_ledger.gd:376-425, hr_atlas_modal.gd:453,472 (main.gd:90).
 
 Sekmelerin dinlediği EventBus sinyalleri (hepsi `_exit_tree`'de ya da düğümle birlikte kopar):
@@ -223,7 +223,7 @@ Smoke (tek vaka: `bash tools/smoke_run.sh <vaka>`; tam süit yalnız push önces
   `sprint_lead_row_until_plan_changes` (öneri satırı, `lead_applied` bayrağı ve onu düşüren her seam).
 - Ar-Ge: `rnd_rail_open_with_locked_tree`, `split_bars_name_their_cause` (RnDUiShared). Yatırım: `hunt_offer_lifecycle` (endgame_smoke.gd:2100). Olaylar: `mail_pending_survives_save` (:6511).
 - Kabuk: `rail_tabs_match_scene_order` (endgame_smoke.gd:4423), `clock_resumes_only_by_player` (:13682; product_tab ve hunt_tab'ı örnekler), `all_scripts_load`, `loc_product_derived_keys`.
-- Görsel (pencereli, PNG `%APPDATA%\Godot\app_userdata\Project Unicorn\`): `--tab-shot=<product|sales|hr|finance|piyasa[:durum]|personal|marketing|rnd|events>` `main.gd:2373`; `--lang=tr|en`, `--palette=cb`, `--shot-size=GxY`.
+- Görsel (pencereli, PNG `%APPDATA%\Godot\app_userdata\Project Unicorn\`): `--tab-shot=<product|sales|hr|finance|piyasa[:durum]|personal|marketing|rnd|events>` `main.gd:2374`; `--lang=tr|en`, `--palette=cb`, `--shot-size=GxY`.
 - Sekmeye özel: `--product-shot=live:<tür>` (:4203), `--hr-shot=` (:3301), `--finance-shot=` (:3173), `--personal-shot=` (:2378),
   `--rnd-shot=` (:2416), `--inbox-shot=` (:1107), `--sales-shot=` (:1474), `--vc-shot=hunt*` (:3999); hepsi `scripts/main/main.gd`.
 - Görsel (Olaylar): `--inbox-shot=<durum>` Olaylar'ı tema tohumunun şirketinde (14. hafta, İş hanı) gerçek kapıdan çeker; kart ve kapı `offer`, `queue`, `customer` (bir seçenek hazır), `locked`,
