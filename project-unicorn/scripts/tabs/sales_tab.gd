@@ -215,7 +215,7 @@ func _paint_kpis(custs: Array[Customer]) -> void:
 
 
 ## §7.5 FİYAT DURUŞU, B2B fiyatının tek kaynağı (§15): kurucunun masasında açılış çapası, temsilcinin masasında
-## kapanış fiyatı. Üç kademe hep görünür, yürürlükteki dolu, yanında ne dediği.
+## kapanış fiyatı. Üç kademe hep görünür, yürürlükteki dolu; her kademenin ne dediği kendi ipucunda.
 func _paint_stance(off: bool) -> void:
 	UiFactory.clear(_stance)
 	_stance.add_child(UiFactory.make_label(Fmt.upper(tr("SALES_STANCE_CAPTION")), &"KeyLabel"))
@@ -224,7 +224,6 @@ func _paint_stance(off: bool) -> void:
 		return {"text": tr("SALES_STANCE_" + stance.to_upper()), "tip": tr("SALES_STANCE_HINT_" + stance.to_upper())})
 	_stance.add_child(UiFactory.D_seg_pick(options, SalesConstants.STANCES.find(current), func(i: int) -> void:
 		SalesLedger.set_price_stance(SalesConstants.STANCES[i]), off))
-	_stance.add_child(UiFactory.make_label(tr("SALES_STANCE_HINT_" + current.to_upper()), &"Caption"))
 
 
 ## §3.1 PAZAR: canlı ürün yokken gövde tek boş hâldir, evresiyle: tür seçilmeden yol Ürün'dedir (tür seçilmeden
@@ -308,8 +307,9 @@ func _paint_pipeline(off: bool) -> void:
 			return a.star > b.star
 		return a.expires_on_day < b.expires_on_day)
 	# §3: akış oyuncuya görünen bir sayıdır; temsilci almak onu büyütür ve karşılığı burada okunur.
+	var rate: float = SalesFaucetSystem.lead_rate_per_week()
 	var lane := _lane(_left, "SALES_PIPELINE_HEADER", tr("SALES_FLOW_RATE").format(
-		{"n": Fmt.number(SalesFaucetSystem.lead_rate_per_week(), 1)}))
+		{"n": "<1" if rate > 0.0 and rate < 1.0 else str(roundi(rate))}))
 	if leads.is_empty():
 		lane.add_child(UiFactory.make_label(tr("SALES_PROSPECTS_EMPTY"), &"NoteMuted"))
 	for lead in leads:
@@ -370,9 +370,6 @@ func _lead_card(p: Prospect, off: bool) -> PanelContainer:
 	if p.offer_promise_step != "":
 		words.add_child(_glyph_line(INFO, UiTokens.D_INK_3, UiFactory.make_label(
 			tr("SALES_OFFER_PROMISE").format({"step": B2BConstants.feature_label(p.offer_promise_step)}), &"CaptionPrimary")))
-	# §4: kilit değil telgraf, kurucu her masaya oturabilir.
-	if p.is_above_league(SalesLedger.founder_star()):
-		words.add_child(_line(tr("SALES_ABOVE_LEAGUE"), &"Caption"))
 	top.add_child(words)
 	col.add_child(top)
 	col.add_child(_lead_actions(p, off))
@@ -390,36 +387,38 @@ func _weeks_left(p: Prospect) -> HBoxContainer:
 
 ## §7.2.1'in iki fiili, bu masaya kim oturuyor sorusunun iki cevabı: Ayır masayı kurucuya saklar (temsilci
 ## atlar), Temsilciye ver onu çalışabilecek bir temsilci varken açıktır ve öne alır; basılıyken, temsilci gitmiş olsa
-## da, bir daha basmak geri alır. Gerekçeler (onu alacak temsilci yok, §5.0'ın giriş kapısı) düğmelerin altındadır.
-func _lead_actions(p: Prospect, off: bool) -> VBoxContainer:
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", UiTokens.SPACE_XS)
+## da, bir daha basmak geri alır. Kapalı düğmenin gerekçesi (onu alacak temsilci yok, §5.0'ın giriş kapısı) kendi
+## ipucundadır; Görüş'ün ipucu açıkken de kurucunun liginin üstündeki masayı söyler (§4: kilit değil telgraf).
+func _lead_actions(p: Prospect, off: bool) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_END
 	row.add_theme_constant_override("separation", UiTokens.SPACE_M)
-	col.add_child(row)
-	# Masanın anlaştığı lead'de üç düğme de kapalı; gerekçesi giriş kapısının satırıdır.
-	off = off or p.is_table_deal()
-	var rep_block: String = "" if p.is_table_deal() else SalesLedger.route_block_reason(p)
+	# Masanın anlaştığı lead'de üç düğme de kapalı; gerekçesi giriş kapısınınki, üçünün de ipucunda.
+	var deal: bool = p.is_table_deal()
+	off = off or deal
+	var rep_block: String = "" if deal else SalesLedger.route_block_reason(p)
 	var block: String = SalesLedger.meeting_block_reason(p.id)
-	# A returning lead's unchanged reason shuts both doors with one line.
-	for key in [rep_block, "" if block == rep_block else block]:
-		if key != "":
-			var why := _line(tr(key), &"Caption")
-			why.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-			col.add_child(why)
 	for pair in [[SalesConstants.ROUTE_RESERVED, "SALES_ROUTE_RESERVE"], [SalesConstants.ROUTE_REP, "SALES_ROUTE_GIVE"]]:
 		var route: String = pair[0]
-		var b := _button(tr(pair[1]), off or (route == SalesConstants.ROUTE_REP and p.routing != route and rep_block != ""))
+		var shut_by_rep: bool = route == SalesConstants.ROUTE_REP and p.routing != route and rep_block != ""
+		var b := _button(tr(pair[1]), off or shut_by_rep)
 		b.toggle_mode = true
 		b.set_pressed_no_signal(p.routing == route)
+		if deal and block != "":
+			b.tooltip_text = tr(block)
+		elif shut_by_rep:
+			b.tooltip_text = tr(rep_block)
 		b.pressed.connect(func() -> void:
 			SalesLedger.set_routing(p.id, SalesConstants.ROUTE_NONE if p.routing == route else route))
 		row.add_child(b)
 	var meet := _button(tr("SALES_ACTION_MEET"), off or block != "", ARROW)
+	if block != "":
+		meet.tooltip_text = tr(block)
+	elif p.is_above_league(SalesLedger.founder_star()):
+		meet.tooltip_text = tr("SALES_ABOVE_LEAGUE")
 	meet.pressed.connect(func() -> void: EventBus.pitch_requested.emit(p.id))
 	row.add_child(meet)
-	return col
+	return row
 
 
 ## §7.2 SATIŞ MASASI: satış işine atanmış herkes.
@@ -524,8 +523,7 @@ func _log_line(row: Dictionary) -> String:
 
 ## Önce dikkat isteyen hesaplar; kurucu kendi kapasitesinin üstünde hesap taşıyorsa başta söylenir.
 func _paint_portfolio(custs: Array[Customer], off: bool) -> void:
-	var lane := _lane(_right, "SALES_PORTFOLIO_HEADER",
-		tr(Fmt.count_key("SALES_CUSTOMERS_COUNT", custs.size())).format({"n": custs.size()}))
+	var lane := _lane(_right, "SALES_PORTFOLIO_HEADER")
 	if custs.is_empty():
 		lane.add_child(UiFactory.make_label(tr("SALES_CUSTOMERS_EMPTY"), &"NoteMuted"))
 		return
@@ -558,12 +556,12 @@ func _account_card(c: Customer, off: bool) -> PanelContainer:
 			"date": Fmt.day_month(GameState.get_date_dict(notice_end if notice else c.clause_due_day), true)}),
 			&"risk" if notice else &"warn"))
 	words.add_child(head)
-	words.add_child(_line(_meta_line(c), &"MetaMuted"))
+	var meta: String = _meta_line(c)
+	if meta != "":
+		words.add_child(_line(meta, &"MetaMuted"))
 	if risk:
 		words.add_child(_line(tr("SALES_REASON_PREFIX").format({"reason": INBOX.risk_reason(c)}), &"MetaMuted"))
-	elif c.lifecycle_phase == "expansion":
-		words.add_child(_line(tr("SALES_EXPANSION_FICTION"), &"MetaMuted"))
-	elif B2BSalesSystem.onboarding_ends_under_bar(c):
+	elif c.lifecycle_phase != "expansion" and B2BSalesSystem.onboarding_ends_under_bar(c):
 		words.add_child(_line(tr("SALES_ONBOARDING_ENDS"), &"MetaMuted"))
 	col.add_child(words)
 	_add_promise(col, c)
@@ -572,18 +570,10 @@ func _account_card(c: Customer, off: bool) -> PanelContainer:
 	return _card(UiTokens.D_variation(&"DealRisk") if risk else &"DealDoc", col)
 
 
-## "$1,0K/ay · 12 koltuk · 2 aydır müşteri · $83/koltuk", varsa imza indirimiyle (§5.4) ve süreli indirimin bitişiyle. Koltuk fiyatı bir koltuğun
-## bugün ödediğidir (MRR / koltuk): sonradan verilen indirim MRR'ı düşürür ve burada görünür; imzadaki damga büyümenin
-## fiyatı olarak kalır.
+## Hesabın indirimleri: imza indirimi (§5.4) ve süreli indirimin bitişi; indirimsiz hesapta boş. Ölçek, koltuk ve
+## kıdem kartta yazmaz (envanter, Erdem 2026-11-12).
 func _meta_line(c: Customer) -> String:
-	var months: int = int(TimeModel.months(GameState.day - c.acquired_on_day))
-	var parts: Array[String] = [
-		Fmt.money(c.mrr) + tr("SALES_PER_MONTH"),
-		tr("SALES_SEATS").format({"n": c.seats}),
-		tr("SALES_TENURE_NEW") if months < 1 else tr("SALES_TENURE").format({"n": months}),
-	]
-	if c.seats > 0:
-		parts.append(tr("SALES_SEAT_PRICE").format({"price": Fmt.money_exact(roundi(float(c.mrr) / c.seats))}))
+	var parts: Array[String] = []
 	if c.signing_discount > 0.0:
 		parts.append(tr("SALES_SIGNING_DISCOUNT").format({"pct": int(round(c.signing_discount * 100.0))}))
 	if c.timed_discount_until >= 0:
@@ -636,8 +626,6 @@ func _satisfaction_row(c: Customer) -> HBoxContainer:
 		row.add_child(RnDUiShared.spacer())
 		var churn := HBoxContainer.new()
 		churn.add_theme_constant_override("separation", UiTokens.SPACE_M)
-		churn.add_child(UiFactory.make_label(tr(Fmt.count_key("SALES_CHURN_COUNTDOWN", c.churn_countdown)).format(
-			{"n": c.churn_countdown}), &"MetaMuted", UiTokens.D_neg_ink()))
 		var pips := HBoxContainer.new()
 		pips.add_theme_constant_override("separation", UiTokens.SPACE_XXS)
 		for i in B2BConstants.CHURN_COUNTDOWN_WEEKS:
@@ -803,13 +791,14 @@ func _line(text: String, look: StringName) -> Label:
 	return line
 
 
-## "Teklif aşaması · 2/6 hafta": the deal's stage, the whole weeks behind it and its plan, a decimal only on a half
-## week ("2,5"); a plan of two half weeks is one week.
+## "Teklif aşaması · 2/6 hafta": the deal's stage, the whole weeks behind it and its plan in whole weeks, a half week
+## rounded up ("2,5" reads 3).
 func _deal_line(p: Prospect) -> String:
 	var progress: int = p.deal_progress()
-	return tr(Fmt.count_key("SALES_DEAL_LINE", 1 if p.deal_halfweeks == 2 else 0)).format({
+	var total: int = ceili(p.deal_halfweeks / 2.0)
+	return tr(Fmt.count_key("SALES_DEAL_LINE", 1 if total == 1 else 0)).format({
 		"stage": tr("SALES_STAGE_" + SalesConstants.deal_stage(p.deal_halfweeks, progress, p.is_table_deal()).to_upper()),
-		"done": progress / 2, "total": Fmt.half_weeks(p.deal_halfweeks)})
+		"done": progress / 2, "total": total})
 
 
 ## A glyph, then the line's words.

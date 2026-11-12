@@ -151,7 +151,7 @@ static func _gate(page: Control) -> String:
 		return "mixed"
 	for reason in ["SITTING_BLOCK_EARLY", "SALES_BLOCK_TOO_LATE"]:
 		var text: String = TranslationServer.translate(reason)
-		if _labels(page, text).size() == meet.size():
+		if meet.all(func(b: Button) -> bool: return b.tooltip_text == text):
 			return "shut: " + text
 	return "shut, reason not on every lead"
 

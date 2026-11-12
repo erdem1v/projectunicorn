@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git c2a27c7a · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git dcbd5f50 · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -229,7 +229,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/systems/vc_pitch_system.gd · 1327 · VCPitchSystem · RefCounted · 0 sinyal · 91 func
 - scripts/systems/work_hours_system.gd · 342 · WorkHoursSystem · RefCounted · 0 sinyal · 38 func
 
-### scripts/tabs/ (9 dosya, 4019 satır)
+### scripts/tabs/ (9 dosya, 4008 satır)
 - scripts/tabs/events_tab.gd · 369 · - · Control · 0 sinyal · 23 func
 - scripts/tabs/finance_tab.gd · 144 · - · Control · 1 sinyal · 9 func
 - scripts/tabs/hr_tab.gd · 542 · - · Control · 1 sinyal · 32 func
@@ -238,7 +238,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/tabs/piyasa_tab.gd · 689 · - · Control · 0 sinyal · 34 func
 - scripts/tabs/product_tab.gd · 344 · - · Control · 1 sinyal · 19 func
 - scripts/tabs/rnd_tab.gd · 273 · - · Control · 1 sinyal · 14 func
-- scripts/tabs/sales_tab.gd · 848 · - · Control · 1 sinyal · 40 func
+- scripts/tabs/sales_tab.gd · 837 · - · Control · 1 sinyal · 40 func
 
 ### scripts/tabs/events/ (1 dosya, 898 satır)
 - scripts/tabs/events/mail_pane.gd · 898 · - · ScrollContainer · 0 sinyal · 46 func
@@ -528,7 +528,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - rival_advanced() · scripts/autoload/event_bus.gd:195 · emit: scripts/autoload/rival_registry.gd:86 · connect: scripts/tabs/finance/finance_ozet_view.gd:78
 - prospect_added(prospect_id: String) · scripts/autoload/event_bus.gd:198 · emit: scripts/autoload/prospect_registry.gd:49 · connect: scripts/tabs/sales_tab.gd:66
 - prospect_removed(prospect_id: String) · scripts/autoload/event_bus.gd:199 · emit: scripts/autoload/prospect_registry.gd:86 · connect: scripts/tabs/sales_tab.gd:66
-- pitch_requested(prospect_id: String) · scripts/autoload/event_bus.gd:201 · emit: scripts/tabs/sales_tab.gd:420 · connect: scripts/main/main.gd:5518
+- pitch_requested(prospect_id: String) · scripts/autoload/event_bus.gd:201 · emit: scripts/tabs/sales_tab.gd:419 · connect: scripts/main/main.gd:5518
 - pitch_finished() · scripts/autoload/event_bus.gd:203 · emit: scripts/systems/sales_meeting_system.gd:120, scripts/systems/vc_pitch_system.gd:125,387 · connect: scripts/tabs/hunt_tab.gd:48, scripts/tabs/sales_tab.gd:76
 - prospect_arrived(prospect_id: String) · scripts/autoload/event_bus.gd:208 · emit: scripts/systems/sales_faucet_system.gd:243 · connect: scripts/tabs/sales_tab.gd:67, scripts/debug/run_probe.gd:498
 - lead_expired(prospect_id: String) · scripts/autoload/event_bus.gd:209 · emit: scripts/systems/sales_faucet_system.gd:71 · connect: scripts/tabs/sales_tab.gd:67
@@ -1745,7 +1745,7 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - SALES_BAND_* · 5 · scripts/systems/sales_ledger.gd, scripts/systems/sales_rep_system.gd, scripts/tabs/sales_tab.gd, scripts/debug/endgame_smoke.gd
 - SALES_BLOCK_* · 6 · scripts/systems/sales_ledger.gd, scripts/debug/endgame_smoke.gd, scripts/debug/player_paths.gd
 - SALES_CHIP_* · 4 · scripts/tabs/sales_tab.gd, scripts/ui/components/inbox.gd, scripts/debug/kit_probe.gd
-- SALES_CHURN_* · 2 · scripts/tabs/sales_tab.gd
+- SALES_CHURN_* · 2 · -
 - SALES_CLAUSE_* · 15 · scripts/systems/b2b_constants.gd, scripts/tabs/events/mail_pane.gd, scripts/tabs/product/product_model.gd, scripts/tabs/sales_tab.gd, scripts/ui/components/inbox.gd +1
 - SALES_CUSTOMERS_* · 3 · scripts/tabs/sales_tab.gd
 - SALES_DAYS_* · 2 · scripts/tabs/sales_tab.gd
@@ -1753,7 +1753,7 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - SALES_DESK_* · 2 · scripts/tabs/sales_tab.gd
 - SALES_EMPTY_* · 3 · scripts/tabs/sales_tab.gd
 - SALES_EXIT_* · 2 · scripts/main/main.gd, scripts/systems/b2b_constants.gd
-- SALES_EXPANSION_* · 1 · scripts/tabs/sales_tab.gd, scripts/ui/components/inbox.gd
+- SALES_EXPANSION_* · 1 · scripts/ui/components/inbox.gd
 - SALES_FLOW_* · 1 · scripts/tabs/sales_tab.gd
 - SALES_FOUNDER_* · 1 · scripts/tabs/sales_tab.gd
 - SALES_GO_* · 1 · scripts/tabs/sales_tab.gd
@@ -1777,15 +1777,15 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - SALES_REASON_* · 4 · scripts/tabs/sales_tab.gd, scripts/ui/components/inbox.gd, scripts/debug/endgame_smoke.gd
 - SALES_REP_* · 3 · scripts/systems/sales_rep_system.gd, scripts/tabs/sales_tab.gd, scripts/ui/components/inbox.gd, scripts/debug/kit_probe.gd
 - SALES_ROUTE_* · 5 · scripts/systems/sales_ledger.gd, scripts/tabs/sales_tab.gd
-- SALES_SEAT_* · 1 · scripts/tabs/sales_tab.gd
-- SALES_SEATS_* · 1 · scripts/tabs/sales_tab.gd
+- SALES_SEAT_* · 1 · -
+- SALES_SEATS_* · 1 · -
 - SALES_SIGNING_* · 1 · scripts/tabs/sales_tab.gd
 - SALES_STAGE_* · 6 · scripts/tabs/sales_tab.gd
 - SALES_STANCE_* · 7 · scripts/tabs/sales_tab.gd, scripts/debug/endgame_smoke.gd
 - SALES_STEWARD_* · 6 · scripts/main/main.gd, scripts/tabs/events/mail_pane.gd, scripts/tabs/sales_tab.gd
 - SALES_STRIP_* · 4 · scripts/tabs/sales_tab.gd
 - SALES_TAG_* · 1 · scripts/tabs/sales_tab.gd
-- SALES_TENURE_* · 2 · scripts/tabs/sales_tab.gd
+- SALES_TENURE_* · 2 · -
 - SALES_TICKER_* · 2 · scripts/systems/sales_finalizer.gd, scripts/systems/sales_rep_system.gd, scripts/debug/endgame_smoke.gd
 - SALES_TIMED_* · 1 · scripts/main/main.gd, scripts/tabs/sales_tab.gd
 - SALES_WEEKLY_* · 3 · scripts/main/main.gd, scripts/systems/sales_rep_system.gd, scripts/tabs/events/mail_pane.gd, scripts/ui/components/inbox.gd

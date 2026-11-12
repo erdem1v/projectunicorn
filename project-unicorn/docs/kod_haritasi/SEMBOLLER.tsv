@@ -31,8 +31,8 @@ _absorbed	var	scripts/events/core/queue.gd:36	EvQueue
 _accel	var	scripts/ui/office/office_person.gd:212	OfficePerson
 _accept	func	scripts/ui/office/meeting_invite.gd:201	MeetingInvite
 _accept_button	var	scripts/ui/office/meeting_invite.gd:39	MeetingInvite
-_account_card	func	scripts/tabs/sales_tab.gd:544	sales_tab.gd
-_account_foot	func	scripts/tabs/sales_tab.gd:658	sales_tab.gd
+_account_card	func	scripts/tabs/sales_tab.gd:542	sales_tab.gd
+_account_foot	func	scripts/tabs/sales_tab.gd:646	sales_tab.gd
 _account_owner	func	scripts/systems/b2b_sales_system.gd:151	B2BSalesSystem
 _account_u	var	scripts/debug/run_probe.gd:301	RunProbe
 _accrue	func	scripts/systems/rnd_system.gd:113	RnDSystem
@@ -70,7 +70,7 @@ _add_history	func	scripts/tabs/product/area_panel.gd:97	AreaPanel
 _add_key	func	scripts/tabs/product/area_panel.gd:325	AreaPanel
 _add_move_penalty	func	scripts/systems/vc_pitch_system.gd:845	VCPitchSystem
 _add_profit_progress	func	scripts/tabs/finance/finance_ozet_view.gd:230	FinanceOzetView
-_add_promise	func	scripts/tabs/sales_tab.gd:597	sales_tab.gd
+_add_promise	func	scripts/tabs/sales_tab.gd:587	sales_tab.gd
 _add_prospect	func	scripts/debug/endgame_smoke.gd:8794	EndgameSmoke
 _add_requests	func	scripts/tabs/product/area_panel.gd:127	AreaPanel
 _add_review	func	scripts/systems/sprint_bridges.gd:351	SprintBridges
@@ -228,7 +228,7 @@ _band_high	var	scripts/systems/negotiation_system.gd:41	NegotiationSystem
 _band_index	func	scripts/systems/endings_system.gd:285	EndingsSystem
 _band_line_key	func	scripts/systems/term_sheet_table_system.gd:490	TermSheetTableSystem
 _band_low	var	scripts/systems/negotiation_system.gd:40	NegotiationSystem
-_band_row	func	scripts/tabs/sales_tab.gd:463	sales_tab.gd
+_band_row	func	scripts/tabs/sales_tab.gd:462	sales_tab.gd
 _bankruptcy	func	scripts/systems/endings_copy.gd:157	EndingsCopy
 _bankruptcy_quiet	func	scripts/systems/endings_copy.gd:203	EndingsCopy
 _bar	func	scripts/tabs/product/board_row.gd:431	BoardRow
@@ -383,7 +383,7 @@ _busy	var	scripts/ui/office/person_bust.gd:33	PersonBust
 _busy_label	var	scripts/ui/components/build_bar.gd:23	build_bar.gd
 _button	func	scripts/modals/ending_scene.gd:411	EndingScene
 _button	func	scripts/tabs/hunt_tab.gd:541	hunt_tab.gd
-_button	func	scripts/tabs/sales_tab.gd:839	sales_tab.gd
+_button	func	scripts/tabs/sales_tab.gd:828	sales_tab.gd
 _button	var	scripts/ui/office/office_hud.gd:21	office_hud.gd
 _buttons	func	scripts/debug/player_paths.gd:164	PlayerPaths
 _by_card	func	scripts/systems/sprint_timeline.gd:118	SprintTimeline
@@ -423,7 +423,7 @@ _card	var	scripts/tabs/piyasa_tab.gd:43	piyasa_tab.gd
 _card	var	scripts/tabs/product/board_row.gd:30	BoardRow.CardName
 _card	func	scripts/tabs/product/product_model.gd:1125	ProductModel
 _card	func	scripts/tabs/product/sprint_next.gd:251	SprintNext
-_card	func	scripts/tabs/sales_tab.gd:783	sales_tab.gd
+_card	func	scripts/tabs/sales_tab.gd:771	sales_tab.gd
 _card	var	scripts/ui/components/top_bar.gd:141	top_bar.gd
 _card	func	scripts/ui/meeting/sales_meeting_adapter.gd:319	SalesMeetingAdapter
 _card	var	scripts/ui/office/meeting_invite.gd:34	MeetingInvite
@@ -1235,7 +1235,7 @@ _dbg_onb_random_x20	func	scripts/main/main.gd:6173	main.gd
 _dbtn	func	scripts/theme/build_theme.gd:1464	build_theme.gd
 _deal	var	scripts/ui/meeting/meeting_ruler.gd:20	MeetingRuler
 _deal	func	scripts/ui/meeting/sales_meeting_adapter.gd:305	SalesMeetingAdapter
-_deal_line	func	scripts/tabs/sales_tab.gd:808	sales_tab.gd
+_deal_line	func	scripts/tabs/sales_tab.gd:796	sales_tab.gd
 _debug_endgame_key	func	scripts/main/game_shell.gd:171	game_shell.gd
 _debug_fkey	func	scripts/main/game_shell.gd:134	game_shell.gd
 _debug_open_term_table	func	scripts/main/game_shell.gd:153	game_shell.gd
@@ -1691,10 +1691,10 @@ _glow_mats	var	scripts/ui/office/office_lighting.gd:81	OfficeLighting
 _glow_quad	func	scripts/ui/office/office_lighting.gd:313	OfficeLighting
 _glow_root	var	scripts/ui/office/office_lighting.gd:70	OfficeLighting
 _glyph	var	scripts/ui/components/toast.gd:20	toast.gd
-_glyph_line	func	scripts/tabs/sales_tab.gd:816	sales_tab.gd
+_glyph_line	func	scripts/tabs/sales_tab.gd:805	sales_tab.gd
 _glyph_text	func	scripts/tabs/rnd/rnd_detail_panel.gd:163	RnDDetailPanel
 _go	func	scripts/tabs/events/mail_pane.gd:836	mail_pane.gd
-_go_product	func	scripts/tabs/sales_tab.gd:293	sales_tab.gd
+_go_product	func	scripts/tabs/sales_tab.gd:292	sales_tab.gd
 _go_public	func	scripts/systems/sprint_system.gd:1817	SprintSystem
 _go_towards	func	scripts/ui/office/office_person.gd:529	OfficePerson
 _goal	var	scripts/tabs/finance/finance_ozet_view.gd:46	FinanceOzetView
@@ -1906,7 +1906,7 @@ _input	func	scripts/ui/meeting/meeting_panel.gd:785	MeetingPanel
 _input	func	scripts/ui/office/office_travel.gd:168	office_travel.gd
 _inputs	func	scripts/debug/sprint_probe.gd:477	sprint_probe.gd
 _inset	func	scripts/modals/hr_action_modal.gd:151	hr_action_modal.gd
-_inset	func	scripts/tabs/sales_tab.gd:773	sales_tab.gd
+_inset	func	scripts/tabs/sales_tab.gd:761	sales_tab.gd
 _install_build	func	scripts/events/seams/seams_world.gd:152	EvSeamsWorld
 _install_company	func	scripts/events/seams/seams_hr.gd:136	EvSeamsHR
 _install_founder	func	scripts/events/seams/seams_hr.gd:179	EvSeamsHR
@@ -2007,7 +2007,7 @@ _land_faulty	func	scripts/systems/sprint_system.gd:1834	SprintSystem
 _landed	var	scripts/ui/components/radial_dial.gd:16	RadialDial
 _landing	func	scripts/ui/components/radial_dial.gd:56	RadialDial
 _lane	func	scripts/tabs/product/board_row.gd:368	BoardRow
-_lane	func	scripts/tabs/sales_tab.gd:754	sales_tab.gd
+_lane	func	scripts/tabs/sales_tab.gd:742	sales_tab.gd
 _lane	var	scripts/ui/office/office_person.gd:222	OfficePerson
 _lane_layer	func	scripts/tabs/product/sprint_board.gd:182	SprintBoard
 _lanes	var	scripts/ui/office/office_person.gd:181	OfficePerson
@@ -2037,7 +2037,7 @@ _layout	var	scripts/ui/office/office_lighting.gd:73	OfficeLighting
 _layout	var	scripts/ui/office/office_people.gd:56	OfficePeople
 _lbl	func	scripts/theme/build_theme.gd:1584	build_theme.gd
 _lead	func	scripts/tabs/product/product_model.gd:1173	ProductModel
-_lead_actions	func	scripts/tabs/sales_tab.gd:394	sales_tab.gd
+_lead_actions	func	scripts/tabs/sales_tab.gd:392	sales_tab.gd
 _lead_area	func	scripts/systems/sprint_catalog.gd:867	SprintCatalog
 _lead_card	func	scripts/tabs/sales_tab.gd:323	sales_tab.gd
 _lead_fit	func	scripts/debug/run_probe.gd:778	RunProbe
@@ -2102,7 +2102,7 @@ _lift_open	var	scripts/ui/office/office_people.gd:67	OfficePeople
 _light	func	scripts/ui/components/top_bar.gd:415	top_bar.gd
 _line	func	scripts/tabs/rnd/rnd_tree_view.gd:387	RnDTreeView
 _line	var	scripts/tabs/rnd_tab.gd:42	rnd_tab.gd
-_line	func	scripts/tabs/sales_tab.gd:800	sales_tab.gd
+_line	func	scripts/tabs/sales_tab.gd:788	sales_tab.gd
 _line	var	scripts/ui/office/meeting_invite.gd:38	MeetingInvite
 _line_h	func	scripts/theme/build_theme.gd:1430	build_theme.gd
 _line_is_data	func	scripts/debug/endgame_smoke.gd:10194	EndgameSmoke
@@ -2190,7 +2190,7 @@ _log_customers	func	scripts/debug/run_probe.gd:830	RunProbe
 _log_error	func	scripts/debug/office_crowd_probe.gd:48	OfficeCrowdProbe.Catch
 _log_gate	func	scripts/debug/run_probe.gd:634	RunProbe
 _log_hr	func	scripts/debug/run_probe.gd:1238	RunProbe
-_log_line	func	scripts/tabs/sales_tab.gd:498	sales_tab.gd
+_log_line	func	scripts/tabs/sales_tab.gd:497	sales_tab.gd
 _log_market	func	scripts/debug/run_probe.gd:589	RunProbe
 _log_month_burn	func	scripts/debug/run_probe.gd:613	RunProbe
 _log_promise	func	scripts/debug/run_probe.gd:782	RunProbe
@@ -2288,7 +2288,7 @@ _met_in	func	scripts/tabs/product/product_model.gd:326	ProductModel
 _met_request	func	scripts/debug/endgame_smoke.gd:29484	EndgameSmoke
 _meta	var	scripts/systems/market_catalog.gd:27	MarketCatalog
 _meta_line	func	scripts/modals/save_load_modal.gd:191	save_load_modal.gd
-_meta_line	func	scripts/tabs/sales_tab.gd:578	sales_tab.gd
+_meta_line	func	scripts/tabs/sales_tab.gd:575	sales_tab.gd
 _meter	func	scripts/tabs/personal_tab.gd:160	personal_tab.gd
 _migrate_11	func	scripts/autoload/save_manager.gd:630	SaveManager
 _migrate_13	func	scripts/autoload/save_manager.gd:656	SaveManager
@@ -2382,7 +2382,7 @@ _name_label	var	scripts/ui/components/build_bar.gd:22	build_bar.gd
 _name_label	var	scripts/ui/components/research_bar.gd:34	research_bar.gd
 _name_list	func	scripts/events/present/chips.gd:600	EvChips
 _name_of	func	scripts/events/present/presenter.gd:151	EvPresenter
-_name_row	func	scripts/tabs/sales_tab.gd:791	sales_tab.gd
+_name_row	func	scripts/tabs/sales_tab.gd:779	sales_tab.gd
 _named	func	scripts/events/core/effects.gd:1068	EvEffects
 _names	func	scripts/modals/work_hours_modal.gd:269	work_hours_modal.gd
 _names	func	scripts/tabs/product/board_row.gd:508	BoardRow
@@ -2653,7 +2653,7 @@ _open_raise	func	scripts/tabs/hr/hr_ledger.gd:373	HRLedger
 _open_requests	func	scripts/systems/customer_rep_system.gd:212	CustomerRepSystem
 _open_row	var	scripts/tabs/product/area_panel.gd:33	AreaPanel
 _open_sales_meeting	func	scripts/main/main.gd:5831	main.gd
-_open_steward_picker	func	scripts/tabs/sales_tab.gd:688	sales_tab.gd
+_open_steward_picker	func	scripts/tabs/sales_tab.gd:676	sales_tab.gd
 _open_table	func	scripts/ui/meeting/sales_meeting_adapter.gd:197	SalesMeetingAdapter
 _open_weeks	var	scripts/debug/run_probe.gd:331	RunProbe
 _opened	func	scripts/tabs/events/mail_pane.gd:724	mail_pane.gd
@@ -2713,11 +2713,11 @@ _paint	func	scripts/modals/hr_action_modal.gd:161	hr_action_modal.gd
 _paint	func	scripts/ui/components/left_tabs.gd:140	left_tabs.gd
 _paint	func	scripts/ui/components/top_bar.gd:637	top_bar.gd
 _paint_assignment_tags	func	scripts/tabs/hr_tab.gd:450	hr_tab.gd
-_paint_b2c	func	scripts/tabs/sales_tab.gd:259	sales_tab.gd
+_paint_b2c	func	scripts/tabs/sales_tab.gd:258	sales_tab.gd
 _paint_badge	func	scripts/ui/components/left_tabs.gd:188	left_tabs.gd
 _paint_card	func	scripts/ui/components/top_bar.gd:468	top_bar.gd
-_paint_desk	func	scripts/tabs/sales_tab.gd:426	sales_tab.gd
-_paint_empty	func	scripts/tabs/sales_tab.gd:232	sales_tab.gd
+_paint_desk	func	scripts/tabs/sales_tab.gd:425	sales_tab.gd
+_paint_empty	func	scripts/tabs/sales_tab.gd:231	sales_tab.gd
 _paint_hot	func	scripts/ui/components/build_bar.gd:151	build_bar.gd
 _paint_hours	func	scripts/tabs/hr_tab.gd:355	hr_tab.gd
 _paint_kpi	func	scripts/tabs/events_tab.gd:190	events_tab.gd
@@ -2725,12 +2725,12 @@ _paint_kpis	func	scripts/tabs/finance_tab.gd:79	finance_tab.gd
 _paint_kpis	func	scripts/tabs/sales_tab.gd:201	sales_tab.gd
 _paint_ladder	func	scripts/ui/components/top_bar.gd:344	top_bar.gd
 _paint_line	func	scripts/tabs/rnd_tab.gd:237	rnd_tab.gd
-_paint_log	func	scripts/tabs/sales_tab.gd:481	sales_tab.gd
+_paint_log	func	scripts/tabs/sales_tab.gd:480	sales_tab.gd
 _paint_offers	func	scripts/tabs/hunt_tab.gd:378	hunt_tab.gd
 _paint_option	func	scripts/tabs/events/mail_pane.gd:342	mail_pane.gd
 _paint_pending	func	scripts/tabs/hunt_tab.gd:491	hunt_tab.gd
-_paint_pipeline	func	scripts/tabs/sales_tab.gd:301	sales_tab.gd
-_paint_portfolio	func	scripts/tabs/sales_tab.gd:526	sales_tab.gd
+_paint_pipeline	func	scripts/tabs/sales_tab.gd:300	sales_tab.gd
+_paint_portfolio	func	scripts/tabs/sales_tab.gd:525	sales_tab.gd
 _paint_roster	func	scripts/tabs/hunt_tab.gd:246	hunt_tab.gd
 _paint_row	func	scripts/tabs/hr/hr_ui_shared.gd:174	HRUiShared
 _paint_row	func	scripts/ui/components/left_tabs.gd:169	left_tabs.gd
@@ -3235,7 +3235,7 @@ _render	func	scripts/modals/term_sheet_table_scene.gd:293	TermSheetTableScene
 _render	func	scripts/ui/office/person_bust.gd:107	PersonBust
 _render_lever	func	scripts/modals/term_sheet_table_scene.gd:342	TermSheetTableScene
 _render_rows	func	scripts/modals/hr_action_modal.gd:170	hr_action_modal.gd
-_rep_card	func	scripts/tabs/sales_tab.gd:437	sales_tab.gd
+_rep_card	func	scripts/tabs/sales_tab.gd:436	sales_tab.gd
 _rep_leads	func	scripts/events/gate/scope.gd:360	EvScope
 _repaint	func	scripts/ui/components/build_bar.gd:112	build_bar.gd
 _repaint	func	scripts/ui/components/research_bar.gd:138	research_bar.gd
@@ -3440,7 +3440,7 @@ _sales_gate_follows_clock	func	scripts/debug/player_paths.gd:58	PlayerPaths
 _sales_report	func	scripts/tabs/events/mail_pane.gd:660	mail_pane.gd
 _same_crew	func	scripts/systems/sprint_system.gd:1620	SprintSystem
 _samples	func	scripts/debug/kit_probe.gd:222	kit_probe.gd
-_satisfaction_row	func	scripts/tabs/sales_tab.gd:624	sales_tab.gd
+_satisfaction_row	func	scripts/tabs/sales_tab.gd:614	sales_tab.gd
 _save	func	scripts/autoload/settings.gd:166	Settings
 _save	func	scripts/theme/build_theme.gd:1521	build_theme.gd
 _save_and	func	scripts/modals/system_menu_modal.gd:90	system_menu_modal.gd
@@ -3752,7 +3752,7 @@ _slot_x	var	scripts/ui/components/top_bar.gd:121	top_bar.gd
 _slots	func	scripts/events/tools/plausibility.gd:236	plausibility.gd
 _slots	var	scripts/tabs/rnd/rnd_tree_view.gd:49	RnDTreeView
 _slots_of_type	func	scripts/events/tools/lint.gd:783	EvLint
-_slotted	func	scripts/tabs/sales_tab.gd:826	sales_tab.gd
+_slotted	func	scripts/tabs/sales_tab.gd:815	sales_tab.gd
 _smooth	func	scripts/ui/office/office_body.gd:150	OfficeBody
 _snooze	var	scripts/tabs/finance/finance_ozet_view.gd:51	FinanceOzetView
 _solo	func	scripts/tabs/product/product_model.gd:687	ProductModel
@@ -3899,7 +3899,7 @@ _step_walk	func	scripts/ui/office/office_person.gd:478	OfficePerson
 _stepper	func	scripts/modals/work_hours_modal.gd:296	work_hours_modal.gd
 _steps	func	scripts/debug/office_pan_probe.gd:194	office_pan_probe.gd
 _steps	var	scripts/systems/product_lines.gd:46	ProductLines
-_steward_option	func	scripts/tabs/sales_tab.gd:711	sales_tab.gd
+_steward_option	func	scripts/tabs/sales_tab.gd:699	sales_tab.gd
 _stop_day	var	scripts/debug/run_probe.gd:282	RunProbe
 _stop_waiting	func	scripts/ui/office/office_person.gd:950	OfficePerson
 _stopped	var	scripts/debug/run_probe.gd:283	RunProbe
@@ -4242,7 +4242,7 @@ _week_end	var	scripts/ui/components/top_bar.gd:127	top_bar.gd
 _week_stamp	func	scripts/autoload/save_manager.gd:778	SaveManager
 _week_x	func	scripts/ui/components/top_bar.gd:684	top_bar.gd
 _weeks	var	scripts/events/tools/plausibility.gd:80	plausibility.gd
-_weeks_left	func	scripts/tabs/sales_tab.gd:384	sales_tab.gd
+_weeks_left	func	scripts/tabs/sales_tab.gd:381	sales_tab.gd
 _weeks_until	func	scripts/systems/hr_morale_system.gd:421	HRMoraleSystem
 _weighted_pick	func	scripts/events/core/engine.gd:327	EvEngine
 _weights	func	scripts/systems/incident_system.gd:90	IncidentSystem
