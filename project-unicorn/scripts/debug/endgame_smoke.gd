@@ -17864,7 +17864,8 @@ static func _case_rnd_rail_open_with_locked_tree() -> String:
 	if _node_tree_has_text(page, TranslationServer.translate("RND_TREE_CLOSED")):
 		shell.queue_free()
 		return "before v1 the page still carries the waiting line"
-	if not _node_tree_has_text(page, TranslationServer.translate("RND_LEGEND_INTRA")):
+	# The tree's tiles, one per node (the legend row that once told it is gone: inventory world-22).
+	if page.find_children("Tile_*", "", true, false).is_empty():
 		shell.queue_free()
 		return "before v1 the page did not draw the tree"
 	for id in ResearchSeam.NODES.keys():

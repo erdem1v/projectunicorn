@@ -32,9 +32,7 @@ var _tab := ""
 var _title_label: Label = null
 var _status_label: Label = null      # hafta tahmini VEYA duraklama sebebi
 var _name_label: Label = null
-var _area_label: Label = null
 var _progress: ProgressBar = null
-var _percent_label: Label = null
 var _links: HBoxContainer = null
 var _abandon_note: Label = null
 var _share := 0.0                    # the founder's meeting share the estimate was painted at
@@ -112,8 +110,8 @@ func _build_tree() -> void:
 	col.add_child(names)
 	_name_label = UiFactory.make_label("", &"SubjectStrong")
 	names.add_child(_name_label)
-	_area_label = BarKit.filler(&"Caption")
-	names.add_child(_area_label)
+	# The research's name alone: its area and its percent are not written (inventory world-25).
+	names.add_child(BarKit.filler(&"Caption"))
 
 	var bar := BarKit.line()
 	bar.add_theme_constant_override(&"separation", UiTokens.SPACE_L)
@@ -124,8 +122,6 @@ func _build_tree() -> void:
 	_progress.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_progress.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bar.add_child(_progress)
-	_percent_label = UiFactory.make_label("", &"KeyText")
-	bar.add_child(_percent_label)
 
 	_links = BarKit.line()
 	col.add_child(_links)
@@ -144,10 +140,8 @@ func _repaint() -> void:
 	_status_label.text = _status_text(m)
 	_status_label.theme_type_variation = &"CaptionPrimary" if m.paused else &"Caption"
 	_name_label.text = m.node_name
-	_area_label.text = m.area_line
 	_progress.value = m.percent
 	_progress.theme_type_variation = &"ProgressPaused" if m.paused else &""
-	_percent_label.text = tr("PROD_PERCENT").format({"n": m.percent})
 	# Bağlar her boyamada yeniden kurulur: duraklamışta `duraklat` yerine `vazgeç` ve altında notu, karar
 	# beklerken ikisi de kapalı ve gerekçe sağda (kabuğun tutulan Ofisi taşı düğmesi gibi).
 	UiFactory.clear(_links)

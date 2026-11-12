@@ -79,7 +79,6 @@ func _rebuild() -> void:
 		_assign.setup(_node_id, _switch_note())
 		return
 	_content.add_child(SprintUiShared.prose(RnDUiShared.t("PROD_RND_NODE_%s_DESC" % _node_id.to_upper()), &"DataText"))
-	_content.add_child(_unlocks())
 	var chips: HFlowContainer = _chips(state)
 	if chips.get_child_count() > 0:
 		_content.add_child(chips)
@@ -104,16 +103,6 @@ func _head_row(state: String) -> HBoxContainer:
 		"family": RnDUiShared.family_name(ResearchSeam.family(_node_id)),
 		"tier": RnDUiShared.tier_caption(_node_id),
 	})), &"KeySmall"))
-	return row
-
-
-## "Açtığı şey" + düğümün kendi cümlesi (§8).
-func _unlocks() -> HBoxContainer:
-	var row := SprintUiShared.box(UiTokens.SPACE_L)
-	var key := UiFactory.make_label(Fmt.upper(RnDUiShared.t("RND_UNLOCKS_PREFIX")), &"KeyLabel")
-	key.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	row.add_child(key)
-	row.add_child(SprintUiShared.prose(RnDUiShared.t("PROD_RND_NODE_%s_UNLOCK" % _node_id.to_upper()), &"DataText"))
 	return row
 
 
@@ -198,10 +187,6 @@ func _lines(state: String) -> Array:
 		RnDUiShared.TILE_LOCKED:
 			# Açılmamış çocuk derin bağdan seçilebilir ve kart kendini "Önce {düğüm}." diye açıklar (§7).
 			out.append(RnDUiShared.refusal_line(_node_id, _refusal(), &"MetaMuted"))
-		_:
-			var note: String = _switch_note()
-			if note != "":
-				out.append(RnDUiShared.note(INFO, note))
 	# §6.2 — CANLI uyarı: `user_research` kadroda yazacak kimse yokken de araştırılabilir, ama aylık
 	# rapor SESSİZCE ATLANIR. Kapı araştırmadan ÖNCE yazılır.
 	if _node_id == RnDSystem.NODE_USER_RESEARCH and RnDSystem.note_author() == null:
@@ -240,6 +225,8 @@ func _actions(state: String) -> Control:
 				row.add_child(RnDUiShared.refusal_line(_node_id, refusal, &"NoteMuted"))
 			var start := SprintUiShared.button(RnDUiShared.t("RND_START"), &"PrimaryButtonDark", _set_assign_open.bind(true))
 			start.disabled = gated or refusal != RnDSystem.REFUSE_NOBODY
+			# §5.7: starting this one stops the running research; said on Başlat's tooltip (inventory world-24).
+			start.tooltip_text = _switch_note()
 			row.add_child(start)
 		_:
 			return null   # TAMAMLANDI ve KİLİTLİ'de eylem yok

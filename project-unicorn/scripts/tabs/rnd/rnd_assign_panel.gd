@@ -28,6 +28,7 @@ var _list: VBoxContainer = null
 var _foot: HBoxContainer = null
 var _warn: HBoxContainer = null
 var _why: HBoxContainer = null
+var _switch := ""   # what Başlat stops, its tooltip (inventory world-24)
 
 
 func _ready() -> void:
@@ -46,8 +47,7 @@ func setup(node_id: String, switch_note: String) -> void:
 		_open_groups[String(area)] = true
 	_list = SprintUiShared.column(0)
 	add_child(_list)
-	if switch_note != "":
-		add_child(RnDUiShared.note(RnDDetailPanel.INFO, switch_note))
+	_switch = switch_note
 	_foot = SprintUiShared.box(UiTokens.SPACE_L)
 	add_child(_foot)
 	# Its own row: beside a reason one band would outgrow the card, which does not scroll sideways.
@@ -207,6 +207,7 @@ func refresh_footer() -> void:
 	var gated: bool = EventGate.active_id() != ""
 	var refusal: String = RnDSystem.start_refusal(_node_id, _selected)
 	go.disabled = gated or refusal != ""
+	go.tooltip_text = _switch
 	_foot.add_child(go)
 	_warn.visible = _selected.has(CharacterRegistry.get_founder().id) and SprintSystem.mode() in ["active", "plan"]
 	UiFactory.clear(_why)

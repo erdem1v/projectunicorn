@@ -187,16 +187,13 @@ func _place_detail() -> void:
 	_detail.set_size(Vector2(2.0 * _col_w + UiTokens.D_RND_COL_GAP, UiTokens.D_H_RND_CARD))
 
 
-## A family's head: its caps name, the area it reads (the design family's is its own name), and how
-## many of its nodes are done.
+## A family's head: its caps name and how many of its nodes are done. The area it reads is not written beside it: it
+## would name the family twice (inventory world-20).
 func _make_head(family: String) -> HBoxContainer:
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", UiTokens.SPACE_M)
 	var fam: String = Fmt.upper(RnDUiShared.family_name(family))
 	head.add_child(UiFactory.make_label(fam, &"GroupLabel"))
-	var area: String = RnDUiShared.area_name(family)
-	if Fmt.upper(area) != fam:
-		head.add_child(UiFactory.make_label(RnDUiShared.t("RND_AREA_OF").format({"area": area}), &"Caption"))
 	head.add_child(RnDUiShared.spacer())
 	head.add_child(UiFactory.make_label(_family_counter(family), &"Caption"))
 	for part: Control in head.get_children():
@@ -220,17 +217,11 @@ func _make_tile(node_id: String) -> Control:
 	var tile := Control.new()
 	tile.name = "Tile_%s" % node_id
 	if state == RnDUiShared.TILE_LOCKED:
-		# KİLİTLİ YUVA: zemini YOK, kenarı kesikli. Tek yazısı alanın adı (§3 — ağacın ŞEKLİ
-		# görünür, ADI değil). Tıklanmaz: kilitli bir karoyu tıklatmak adı sızdırırdı. Derin bağ
-		# (select) yine de seçebilir, çünkü orada adı zaten söyleyen bir sebep var.
+		# KİLİTLİ YUVA: zemini YOK, kenarı kesikli, yazısı yok (§3 — ağacın ŞEKLİ görünür, ADI değil; alanın adı da
+		# yazmaz, açılmamış araştırmanın alanını önceden söylerdi: envanter world-18). Tıklanmaz: kilitli bir karoyu
+		# tıklatmak adı sızdırırdı. Derin bağ (select) yine de seçebilir, çünkü orada adı zaten söyleyen bir sebep var.
 		tile.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		HRUiShared.D_dashed(tile)
-		var cap := UiFactory.make_label(RnDUiShared.t("RND_LOCKED_SLOT").format({
-			"area": RnDUiShared.area_name(ResearchSeam.family(node_id))}), &"Caption", UiTokens.D_INK_OFF)
-		cap.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		cap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		cap.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		tile.add_child(cap)
 		return tile
 	# TAMAMLANMIŞ KARO İNCELENEBİLİR KALIR: §7'nin "seçilemez"i YENİDEN BAŞLATILAMAZ
 	# demektir, İNCELENEMEZ değil.
@@ -279,8 +270,7 @@ func _tile_foot(node_id: String, state: String, hex_ink: Color) -> HBoxContainer
 	elif cross != "":
 		mark.add_child(UiFactory.make_glyph(CHEVRON, UiTokens.D_ICON_MARK, UiTokens.D_INK_3))
 		mark.add_child(SprintUiShared.label(RnDUiShared.area_name(ResearchSeam.family(cross)), &"SmallMuted"))
-	else:
-		mark.add_child(SprintUiShared.label(RnDUiShared.tier_caption(node_id), &"SmallMuted"))
+	# A node's tier ("kök · dal") is not written: the tree's lines say where it stands (inventory world-19).
 	foot.add_child(mark)
 	if state == RnDUiShared.TILE_DONE:
 		foot.add_child(RnDUiShared.spacer())
