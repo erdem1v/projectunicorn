@@ -3052,9 +3052,9 @@ PIYASA_ABOUT_TITLE,Hakkında,About
 PIYASA_IPO_MARK,halka arz,listed
 PIYASA_CTX_2012,{month} · Akıllı telefon dalgası listeyi taşıyor,{month} · The smartphone wave carries the list
 PIYASA_CTX_2013,{month} · Mobil reklam yılı,{month} · The year of mobile ads
-PIYASA_RANGE_13W,13H,13W
-PIYASA_RANGE_1Y,1Y,1Y
-PIYASA_RANGE_5Y,5Y,5Y
+PIYASA_RANGE_13W,3 ay,3 mo
+PIYASA_RANGE_1Y,1 yıl,1 yr
+PIYASA_RANGE_5Y,5 yıl,5 yr
 PIYASA_RANGE_ALL,Tümü,All
 PIYASA_MONTH_YEAR,{month} {year},{month} {year}
 PIYASA_NEWS_JUMP,{company} {pct} yükseldi,{company} jumps {pct}

@@ -128,7 +128,7 @@ _apply_speed_visual	func	scripts/ui/components/top_bar.gd:712	top_bar.gd
 _apply_stations	func	scripts/ui/office/office_lighting.gd:266	OfficeLighting
 _approach	func	scripts/ui/office/office_person.gd:1013	OfficePerson
 _approved_ahead	func	scripts/systems/sprint_catalog.gd:639	SprintCatalog
-_arc	func	scripts/tabs/piyasa_tab.gd:545	piyasa_tab.gd
+_arc	func	scripts/tabs/piyasa_tab.gd:538	piyasa_tab.gd
 _arc	func	scripts/ui/components/logo_emblem.gd:126	LogoEmblem
 _arc_context	func	scripts/events/core/engine.gd:196	EvEngine
 _archivo	func	scripts/theme/build_theme.gd:1510	build_theme.gd
@@ -325,7 +325,7 @@ _build_accessibility_section	func	scripts/modals/settings_modal.gd:211	settings_
 _build_audio_section	func	scripts/modals/settings_modal.gd:171	settings_modal.gd
 _build_base_contributions	func	scripts/systems/sales_meeting_system.gd:141	SalesMeetingSystem
 _build_body	func	scripts/modals/term_sheet_table_scene.gd:144	TermSheetTableScene
-_build_card	func	scripts/tabs/piyasa_tab.gd:389	piyasa_tab.gd
+_build_card	func	scripts/tabs/piyasa_tab.gd:384	piyasa_tab.gd
 _build_children	func	scripts/systems/research_tree.gd:312	ResearchTree
 _build_coming_soon	func	scripts/modals/ending_scene.gd:380	EndingScene
 _build_controls	func	scripts/ui/office/office_city.gd:269	OfficeCity
@@ -997,7 +997,7 @@ _characters	var	scripts/autoload/character_registry.gd:12	CharacterRegistry
 _charge_departure	func	scripts/systems/hr_morale_system.gd:374	HRMoraleSystem
 _chart	var	scripts/tabs/piyasa_tab.gd:44	piyasa_tab.gd
 _chart_data	var	scripts/tabs/piyasa_tab.gd:45	piyasa_tab.gd
-_chart_series	func	scripts/tabs/piyasa_tab.gd:563	piyasa_tab.gd
+_chart_series	func	scripts/tabs/piyasa_tab.gd:556	piyasa_tab.gd
 _check_b2b_fixture	func	scripts/debug/run_probe.gd:2218	RunProbe
 _check_brand_collapse	func	scripts/systems/endings_system.gd:136	EndingsSystem
 _check_catalog	func	scripts/events/tools/engine_probe.gd:441	EvProbe
@@ -1283,7 +1283,7 @@ _detail_top	func	scripts/tabs/rnd/rnd_tree_view.gd:93	RnDTreeView
 _detect	func	scripts/systems/graphics_settings.gd:194	graphics_settings.gd
 _detected	var	scripts/systems/graphics_settings.gd:39	graphics_settings.gd
 _dial	var	scripts/modals/term_sheet_table_scene.gd:29	TermSheetTableScene
-_dial	func	scripts/tabs/piyasa_tab.gd:515	piyasa_tab.gd
+_dial	func	scripts/tabs/piyasa_tab.gd:508	piyasa_tab.gd
 _dial_view	func	scripts/systems/term_sheet_table_system.gd:756	TermSheetTableSystem
 _dice	func	scripts/ui/meeting/vc_meeting_adapter.gd:160	VcMeetingAdapter
 _die	var	scripts/ui/meeting/meeting_panel_option.gd:23	meeting_panel_option.gd
@@ -1355,7 +1355,7 @@ _draw_ask	func	scripts/tabs/product/stage_paint.gd:233	StagePaint
 _draw_band	func	scripts/modals/work_hours_modal.gd:105	work_hours_modal.gd
 _draw_bar	func	scripts/tabs/product/stage_paint.gd:271	StagePaint
 _draw_busy	func	scripts/tabs/product/stage_paint.gd:201	StagePaint
-_draw_chart	func	scripts/tabs/piyasa_tab.gd:591	piyasa_tab.gd
+_draw_chart	func	scripts/tabs/piyasa_tab.gd:584	piyasa_tab.gd
 _draw_cross	func	scripts/tabs/rnd/rnd_tree_view.gd:424	RnDTreeView
 _draw_fade	func	scripts/ui/components/news_ticker.gd:208	news_ticker.gd
 _draw_family_lines	func	scripts/tabs/rnd/rnd_tree_view.gd:367	RnDTreeView
@@ -1614,7 +1614,7 @@ _founder_share	func	scripts/systems/endings_copy.gd:453	EndingsCopy
 _founder_start_area	func	scripts/autoload/game_state.gd:634	GameState
 _founder_told	var	scripts/ui/office/office_people.gd:75	OfficePeople
 _founding_clause	func	scripts/systems/endings_copy.gd:478	EndingsCopy
-_four_week	func	scripts/tabs/piyasa_tab.gd:669	piyasa_tab.gd
+_four_week	func	scripts/tabs/piyasa_tab.gd:662	piyasa_tab.gd
 _frame	func	scripts/ui/meeting/meeting_panel.gd:383	MeetingPanel
 _frame_camera	func	scripts/ui/office/office_city.gd:262	OfficeCity
 _frame_ms	var	scripts/debug/office_crowd_probe.gd:40	OfficeCrowdProbe
@@ -1709,7 +1709,7 @@ _grant_sheet	func	scripts/systems/vc_pitch_system.gd:408	VCPitchSystem
 _graphics_body	var	scripts/modals/settings_modal.gd:72	settings_modal.gd
 _grep	func	scripts/events/tools/why.gd:238	EvWhy
 _grep_scripts	func	scripts/events/tools/lint.gd:1171	EvLint
-_grid_step	func	scripts/tabs/piyasa_tab.gd:655	piyasa_tab.gd
+_grid_step	func	scripts/tabs/piyasa_tab.gd:648	piyasa_tab.gd
 _grooves	func	scripts/debug/endgame_smoke.gd:23785	EndgameSmoke
 _grooves	var	scripts/tabs/product/capacity_view.gd:34	CapacityView
 _ground_offset	func	scripts/ui/office/office_camera.gd:219	OfficeCamera
@@ -1936,7 +1936,7 @@ _is_harness_arg	func	scripts/autoload/save_manager.gd:497	SaveManager
 _is_ladder_step	func	scripts/systems/display_settings.gd:289	DisplaySettings
 _is_locked	func	scripts/ui/components/left_tabs.gd:260	left_tabs.gd
 _is_negative	func	scripts/events/core/effects.gd:226	EvEffects
-_is_new	func	scripts/tabs/piyasa_tab.gd:665	piyasa_tab.gd
+_is_new	func	scripts/tabs/piyasa_tab.gd:658	piyasa_tab.gd
 _is_selected	func	scripts/tabs/hr_tab.gd:524	hr_tab.gd
 _is_urgent	func	scripts/events/core/engine.gd:508	EvEngine
 _item	var	scripts/tabs/events/mail_pane.gd:27	mail_pane.gd
@@ -1988,8 +1988,8 @@ _kpis	var	scripts/tabs/product_tab.gd:35	product_tab.gd
 _kpis	var	scripts/tabs/rnd_tab.gd:39	rnd_tab.gd
 _kpis	var	scripts/tabs/sales_tab.gd:39	sales_tab.gd
 _kv	func	scripts/tabs/hr/hr_dossier.gd:198	hr_dossier.gd
-_kv_key	func	scripts/tabs/piyasa_tab.gd:498	piyasa_tab.gd
-_kv_value	func	scripts/tabs/piyasa_tab.gd:505	piyasa_tab.gd
+_kv_key	func	scripts/tabs/piyasa_tab.gd:491	piyasa_tab.gd
+_kv_value	func	scripts/tabs/piyasa_tab.gd:498	piyasa_tab.gd
 _label	var	scripts/ui/meeting/meeting_panel_option.gd:22	meeting_panel_option.gd
 _label_keys	var	scripts/modals/settings_modal.gd:101	settings_modal.gd
 _labels	func	scripts/debug/player_paths.gd:169	PlayerPaths
@@ -2328,7 +2328,7 @@ _month_ends	func	scripts/systems/incident_system.gd:175	IncidentSystem
 _month_line	var	scripts/systems/summary_system.gd:45	SummarySystem
 _month_ticks	func	scripts/tabs/finance/finance_ozet_view.gd:245	FinanceOzetView
 _month_year	func	scripts/autoload/game_state.gd:802	GameState
-_month_year	func	scripts/tabs/piyasa_tab.gd:677	piyasa_tab.gd
+_month_year	func	scripts/tabs/piyasa_tab.gd:670	piyasa_tab.gd
 _months	func	scripts/ui/components/cash_curve.gd:195	CashCurve
 _months_stat	func	scripts/systems/endings_copy.gd:420	EndingsCopy
 _morale_cell	func	scripts/modals/work_hours_modal.gd:369	work_hours_modal.gd
@@ -2531,7 +2531,7 @@ _on_last_probe	func	scripts/systems/sales_meeting_system.gd:314	SalesMeetingSyst
 _on_lead	func	scripts/debug/run_probe.gd:764	RunProbe
 _on_lever_input	func	scripts/modals/term_sheet_table_scene.gd:356	TermSheetTableScene
 _on_link_reached	func	scripts/ui/office/office_person.gd:896	OfficePerson
-_on_list_key	func	scripts/tabs/piyasa_tab.gd:339	piyasa_tab.gd
+_on_list_key	func	scripts/tabs/piyasa_tab.gd:334	piyasa_tab.gd
 _on_live_line	func	scripts/ui/components/news_ticker.gd:111	news_ticker.gd
 _on_load	func	scripts/modals/save_load_modal.gd:233	save_load_modal.gd
 _on_lost	func	scripts/debug/run_probe.gd:743	RunProbe
@@ -2740,7 +2740,7 @@ _paint_tabs	func	scripts/tabs/rnd_tab.gd:220	rnd_tab.gd
 _paint_tile	func	scripts/tabs/rnd/rnd_tree_view.gd:310	RnDTreeView
 _pair	func	scripts/theme/theme_check.gd:108	theme_check.gd
 _pane	var	scripts/tabs/events_tab.gd:23	events_tab.gd
-_pane	func	scripts/tabs/piyasa_tab.gd:470	piyasa_tab.gd
+_pane	func	scripts/tabs/piyasa_tab.gd:465	piyasa_tab.gd
 _pane	var	scripts/tabs/rnd/rnd_history.gd:16	rnd_history.gd
 _panel	var	scripts/modals/confirm_modal.gd:18	confirm_modal.gd
 _panel	var	scripts/modals/save_load_modal.gd:30	save_load_modal.gd
@@ -2789,7 +2789,7 @@ _pause_toggle	var	scripts/modals/settings_modal.gd:95	settings_modal.gd
 _payload	func	scripts/autoload/save_manager.gd:231	SaveManager
 _pct	var	scripts/modals/term_sheet_table_scene.gd:30	TermSheetTableScene
 _pct	func	scripts/systems/term_sheet_table_system.gd:982	TermSheetTableSystem
-_pct	func	scripts/tabs/piyasa_tab.gd:684	piyasa_tab.gd
+_pct	func	scripts/tabs/piyasa_tab.gd:677	piyasa_tab.gd
 _pct_labels	var	scripts/modals/settings_modal.gd:99	settings_modal.gd
 _pen	var	scripts/ui/office/meeting_cast.gd:37	MeetingCast
 _pen_dropped	var	scripts/ui/office/meeting_cast.gd:39	MeetingCast
@@ -3155,7 +3155,7 @@ _recolor	func	scripts/theme/build_theme.gd:1391	build_theme.gd
 _record	func	scripts/events/present/tempo.gd:233	EvTempo
 _record	func	scripts/tabs/events/mail_pane.gd:765	mail_pane.gd
 _recover	func	scripts/systems/b2b_sales_system.gd:565	B2BSalesSystem
-_redraw_rows	func	scripts/tabs/piyasa_tab.gd:355	piyasa_tab.gd
+_redraw_rows	func	scripts/tabs/piyasa_tab.gd:350	piyasa_tab.gd
 _reentry	var	scripts/systems/vc_pitch_system.gd:37	VCPitchSystem
 _ref	func	scripts/systems/product_quality.gd:338	ProductQuality
 _refit	func	scripts/tabs/product_tab.gd:190	product_tab.gd
@@ -3493,7 +3493,7 @@ _section	func	scripts/tabs/personal_tab.gd:258	personal_tab.gd
 _section	func	scripts/tabs/product/sprint_board.gd:226	SprintBoard
 _section	func	scripts/tabs/product/sprint_next.gd:159	SprintNext
 _sections	var	scripts/menu/licenses.gd:14	licenses.gd
-_sector	func	scripts/tabs/piyasa_tab.gd:673	piyasa_tab.gd
+_sector	func	scripts/tabs/piyasa_tab.gd:666	piyasa_tab.gd
 _seed	var	scripts/debug/sprint_probe.gd:94	sprint_probe.gd
 _seed	var	scripts/ui/meeting/vc_meeting_adapter.gd:35	VcMeetingAdapter
 _seed_accounts_state	func	scripts/main/main.gd:534	main.gd
@@ -3606,7 +3606,7 @@ _set_hot	func	scripts/ui/components/build_bar.gd:145	build_bar.gd
 _set_needle	func	scripts/ui/components/radial_dial.gd:60	RadialDial
 _set_open	func	scripts/ui/components/news_ticker.gd:102	news_ticker.gd
 _set_options	func	scripts/ui/meeting/meeting_panel.gd:655	MeetingPanel
-_set_range	func	scripts/tabs/piyasa_tab.gd:553	piyasa_tab.gd
+_set_range	func	scripts/tabs/piyasa_tab.gd:546	piyasa_tab.gd
 _set_scope	func	scripts/modals/work_hours_modal.gd:470	work_hours_modal.gd
 _set_served	func	scripts/debug/endgame_smoke.gd:18860	EndgameSmoke
 _set_ui	func	scripts/tabs/product_tab.gd:266	product_tab.gd
@@ -4129,7 +4129,7 @@ _until	func	scripts/events/core/effects.gd:1070	EvEffects
 _until	func	scripts/ui/office/office_travel.gd:152	office_travel.gd
 _up	func	scripts/theme/theme_check.gd:118	theme_check.gd
 _update_more	func	scripts/tabs/product/sprint_board.gd:297	SprintBoard
-_update_notes	func	scripts/tabs/piyasa_tab.gd:363	piyasa_tab.gd
+_update_notes	func	scripts/tabs/piyasa_tab.gd:358	piyasa_tab.gd
 _update_pct_labels	func	scripts/modals/settings_modal.gd:368	settings_modal.gd
 _update_trackers	func	scripts/systems/endings_system.gd:100	EndingsSystem
 _use_dir	func	scripts/autoload/save_manager.gd:515	SaveManager
@@ -4293,7 +4293,7 @@ _x_of	func	scripts/ui/meeting/meeting_ruler.gd:35	MeetingRuler._Rail
 _xp	func	scripts/debug/kit_probe.gd:207	kit_probe.gd
 _y	func	scripts/ui/components/cash_curve.gd:111	CashCurve
 _yatirim_locked	func	scripts/tabs/finance_tab.gd:141	finance_tab.gd
-_year_ends	func	scripts/tabs/piyasa_tab.gd:478	piyasa_tab.gd
+_year_ends	func	scripts/tabs/piyasa_tab.gd:474	piyasa_tab.gd
 _year_frac	func	scripts/systems/market_catalog.gd:163	MarketCatalog
 _years	var	scripts/systems/market_catalog.gd:30	MarketCatalog
 _z0	var	scripts/debug/office_pan_probe.gd:46	office_pan_probe.gd

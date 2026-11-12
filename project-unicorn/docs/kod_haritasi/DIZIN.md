@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git 48f0b812 · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git fd0c1062 · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -229,13 +229,13 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/systems/vc_pitch_system.gd · 1317 · VCPitchSystem · RefCounted · 0 sinyal · 91 func
 - scripts/systems/work_hours_system.gd · 342 · WorkHoursSystem · RefCounted · 0 sinyal · 38 func
 
-### scripts/tabs/ (9 dosya, 4001 satır)
+### scripts/tabs/ (9 dosya, 3994 satır)
 - scripts/tabs/events_tab.gd · 369 · - · Control · 0 sinyal · 23 func
 - scripts/tabs/finance_tab.gd · 142 · - · Control · 1 sinyal · 9 func
 - scripts/tabs/hr_tab.gd · 537 · - · Control · 1 sinyal · 32 func
 - scripts/tabs/hunt_tab.gd · 544 · - · Control · 0 sinyal · 27 func
 - scripts/tabs/personal_tab.gd · 266 · - · Control · 1 sinyal · 13 func
-- scripts/tabs/piyasa_tab.gd · 689 · - · Control · 0 sinyal · 34 func
+- scripts/tabs/piyasa_tab.gd · 682 · - · Control · 0 sinyal · 34 func
 - scripts/tabs/product_tab.gd · 344 · - · Control · 1 sinyal · 19 func
 - scripts/tabs/rnd_tab.gd · 273 · - · Control · 1 sinyal · 14 func
 - scripts/tabs/sales_tab.gd · 837 · - · Control · 1 sinyal · 40 func
@@ -1569,7 +1569,7 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - PIYASA_CEO_* · 1 · scripts/tabs/piyasa_tab.gd
 - PIYASA_COL_* · 2 · scripts/tabs/piyasa_tab.gd
 - PIYASA_CTX_* · 2 · scripts/tabs/piyasa_tab.gd
-- PIYASA_EOY_* · 1 · scripts/tabs/piyasa_tab.gd
+- PIYASA_EOY_* · 1 · -
 - PIYASA_FILTER_* · 4 · scripts/tabs/piyasa_tab.gd
 - PIYASA_FOUNDER_* · 1 · scripts/tabs/piyasa_tab.gd
 - PIYASA_FOUR_* · 1 · scripts/tabs/piyasa_tab.gd

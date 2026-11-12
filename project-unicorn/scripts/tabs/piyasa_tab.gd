@@ -303,13 +303,9 @@ func _row(c: Dictionary, rank: int, index: int) -> PanelContainer:
 	name_line.add_child(UiFactory.make_label(String(c["name"]), &"ValueText" if top else &"DataStrong", UiTokens.D_INK_1))
 	if _is_new(c):
 		name_line.add_child(UiFactory.D_tag(tr("PIYASA_TAG_NEW"), &"neutral"))
+	# Satır sıra, ad ve piyasa değeridir: sektör satırı ve hisse fiyatı yazmaz (envanter world-11, 12).
 	who.add_child(name_line)
-	who.add_child(UiFactory.make_label(tr(FILTERS[String(c["group"])]), &"SmallMuted"))
 	grid.add_child(who)
-	var price := UiFactory.make_label(Fmt.price(MarketCatalog.price(c, _week)), &"DataText" if top else &"CaptionPrimary")
-	price.custom_minimum_size.x = cols.y
-	price.tooltip_text = tr("PIYASA_COL_PRICE")
-	grid.add_child(price)
 	var worth := UiFactory.make_label(Fmt.money_market(MarketCatalog.value(c, _week)), &"ValueText" if top else &"DataText",
 		UiTokens.D_INK_1 if top else null)
 	worth.custom_minimum_size.x = cols.z - UiTokens.SPACE_M
@@ -318,9 +314,8 @@ func _row(c: Dictionary, rank: int, index: int) -> PanelContainer:
 	for cell: Control in grid.get_children():
 		cell.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	HRUiShared.set_mouse_ignore(grid)
-	for figure: Label in [price, worth]:
-		figure.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		figure.mouse_filter = Control.MOUSE_FILTER_PASS   # the column's name on hover: the list has no head
+	worth.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	worth.mouse_filter = Control.MOUSE_FILTER_PASS   # the column's name on hover: the list has no head
 	row.add_child(grid)
 	row.gui_input.connect(func(event: InputEvent) -> void:
 		if UiFactory.is_left_click(event):
@@ -474,7 +469,8 @@ func _pane(content: Control, first: bool) -> MarginContainer:
 	return pane
 
 
-## The last EOY_ROWS year ends as key:value rows, then the move since the oldest; a listing of this year has none.
+## The move since the last year end as a key:value row; a listing of this year has none. The year ends' own values are
+## not listed (inventory world-14).
 func _year_ends(c: Dictionary, value: float, is_new: bool) -> VBoxContainer:
 	var col := SprintUiShared.column(0)
 	var grid := GridContainer.new()
@@ -486,9 +482,6 @@ func _year_ends(c: Dictionary, value: float, is_new: bool) -> VBoxContainer:
 	var years: Array = ends.keys()
 	years.sort()
 	years.reverse()
-	for i in years.size():
-		grid.add_child(_kv_key(tr("PIYASA_EOY_FIRST").format({"y": years[i]}) if i == 0 else str(years[i])))
-		grid.add_child(_kv_value(UiFactory.make_label(Fmt.money_market(ends[years[i]]), &"DataText")))
 	if not years.is_empty():
 		grid.add_child(_kv_key(tr("PIYASA_SINCE_EOY").format({"y": years[0]})))
 		grid.add_child(_kv_value(_pct(value / ends[years[0]] - 1.0, &"DataText", 0)))
