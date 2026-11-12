@@ -418,6 +418,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"ending_modes_by_build":           fail = _case_ending_modes_by_build()  # EXPECT-ERROR telegraph 'soft_cap_telegraphed' never did
 		"bootstrap_milestone_keeps_the_run": fail = _case_bootstrap_milestone_keeps_the_run()
 		"ending_paper_modes_on_screen":    fail = _case_ending_paper_modes_on_screen()
+		"ending_figures_whole_unit":       fail = _case_ending_figures_whole_unit()
 		"milestone_clock_hold":            fail = _case_milestone_clock_hold()
 		"milestone_paper_waits_for_card":  fail = _case_milestone_paper_waits_for_card()
 		"event_gate_holds_clock":          fail = _case_event_gate_holds_clock()
@@ -11356,12 +11357,14 @@ static func _case_loc_format_locale_flip() -> String:
 	var d := {"week": 37, "month": 9, "year": 2012}
 	var want := {
 		"tr": {
-			"money_exact": "$1.234.567", "money": "$3,5K", "chip_edge": "$1,0M", "chip_k": "$4,2K", "chip_whole_k": "-$5K",
+			"money_exact": "$1.234.567", "money": "$3,5K", "money_edge": "$1,0M", "money_below_edge": "$999,4K",
+			"chip_edge": "$1,0M", "chip_k": "$4,2K", "chip_whole_k": "-$5K",
 			"chip_k_up": "$10K", "chip_k_x50": "$4K", "chip_k_x50_9": "$9,9K", "pct": "%12,5",
 			"date": "Hafta 37 · Eylül 2012", "upper": "İYİ", "month": "Eylül",
 		},
 		"en": {
-			"money_exact": "$1,234,567", "money": "$3.5K", "chip_edge": "$1.0M", "chip_k": "$4.2K", "chip_whole_k": "-$5K",
+			"money_exact": "$1,234,567", "money": "$3.5K", "money_edge": "$1.0M", "money_below_edge": "$999.4K",
+			"chip_edge": "$1.0M", "chip_k": "$4.2K", "chip_whole_k": "-$5K",
 			"chip_k_up": "$10K", "chip_k_x50": "$4K", "chip_k_x50_9": "$9.9K", "pct": "12.5%",
 			"date": "Week 37 · September 2012", "upper": "IYI", "month": "September",
 		},
@@ -11372,6 +11375,8 @@ static func _case_loc_format_locale_flip() -> String:
 		var got := {
 			"money_exact": Fmt.money_exact(1234567),
 			"money": Fmt.money(3500),
+			"money_edge": Fmt.money(999_950),   # the thousands round to 1000 here: the million band, as the chip's
+			"money_below_edge": Fmt.money(999_400),
 			"chip_edge": Fmt.money_chip(999_700),   # the thousands round to 1000 here: the million band
 			"chip_k": Fmt.money_chip(4_200),
 			"chip_whole_k": Fmt.money_chip(-5_000),   # a whole thousand drops its tenth (envanter shell-21)
@@ -14078,6 +14083,27 @@ static func _case_ending_paper_modes_on_screen() -> String:
 		if header_shown != bool(pair[1]) or not wish_shown:
 			return "demo %s: SIRADA NE VAR? shown=%s, WISHLIST'E EKLE shown=%s" % [pair[0], str(header_shown),
 				str(wish_shown)]
+	return ""
+
+
+## The ending paper's figures row: a tenth that prints 0 goes, in either unit and locale (envanter meet-28); the rest
+## reads as Fmt.money prints it, the x50s included (4.05M prints 4.0, 9.95M prints 9.9).
+static func _case_ending_figures_whole_unit() -> String:
+	var loc0: String = TranslationServer.get_locale()
+	var want := {
+		"tr": {3_960_000: "$4M", 4_050_000: "$4M", 22_000_000: "$22M", 9_950_000: "$9,9M", 1_500_000: "$1,5M",
+			999_950: "$1M", 6_000: "$6K", 6_400: "$6,4K", 999: "$999"},
+		"en": {3_960_000: "$4M", 4_050_000: "$4M", 22_000_000: "$22M", 9_950_000: "$9.9M", 1_500_000: "$1.5M",
+			999_950: "$1M", 6_000: "$6K", 6_400: "$6.4K", 999: "$999"},
+	}
+	for loc: String in want:
+		TranslationServer.set_locale(loc)
+		for amount: int in want[loc]:
+			var got: String = EndingsCopy._figure(amount)
+			if got != String(want[loc][amount]):
+				TranslationServer.set_locale(loc0)
+				return "%s: _figure(%d) = '%s', want '%s'" % [loc, amount, got, want[loc][amount]]
+	TranslationServer.set_locale(loc0)
 	return ""
 
 

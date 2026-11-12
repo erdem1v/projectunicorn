@@ -151,11 +151,12 @@ static func signed_percent(points: float, decimals: int = 0) -> String:
 # no-decimal branch keeps it narrow). The sign is peeled off once and re-attached around the
 # finished magnitude, so a negative reads "-$12K", not "$-12K".
 
-## Compact money for body copy: "$999" · "$1.8K"/"$1,8K" · "$12.5M"/"$12,5M".
+## Compact money for body copy: "$999" · "$1.8K"/"$1,8K" · "$12.5M"/"$12,5M". From 999.500 the thousands round to 1000:
+## the million band starts there, as in money_chip ("$1,0M", never "$1000,0K").
 static func money(amount: int) -> String:
 	var a: int = absi(amount)
 	var s: String
-	if a >= 1_000_000:
+	if a >= 999_500:
 		if a >= 10_000_000 and a % 1_000_000 == 0:
 			s = "$%dM" % int(a / 1_000_000.0)
 		else:

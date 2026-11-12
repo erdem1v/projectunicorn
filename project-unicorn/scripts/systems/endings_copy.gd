@@ -485,13 +485,15 @@ static func _founding_clause(ledger: Dictionary) -> String:
 				{"month": Fmt.month_name(clampi(int(ledger.get("start_month", 1)), 1, 12))})
 
 
-## A figures-row amount: one that rounds to a whole million drops its tenth ("$4M", not "$4,0M", for 3.96M too:
-## envanter meet-28); the rest as Fmt.money.
+## A figures-row amount as Fmt.money writes it, a tenth that prints 0 gone ("$4M", not "$4,0M", for 3.96M too; "$6K":
+## envanter meet-28). Read off the printed tenth: a rounding of its own would split from Fmt.money's on the x50s.
 static func _figure(amount: int) -> String:
-	var tenths: int = roundi(amount / 100_000.0)
-	if amount >= 1_000_000 and tenths % 10 == 0:
-		return "$%dM" % (tenths / 10)
-	return Fmt.money(amount)
+	var s: String = Fmt.money(amount)
+	for unit: String in ["M", "K"]:
+		for sep: String in [".", ","]:
+			if s.ends_with(sep + "0" + unit):
+				return s.trim_suffix(sep + "0" + unit) + unit
+	return s
 
 
 static func _valuation_tr(valuation_m: int) -> String:

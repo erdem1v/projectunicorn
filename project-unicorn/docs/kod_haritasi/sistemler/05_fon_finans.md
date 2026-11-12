@@ -27,7 +27,7 @@ Kapsam içi (`scripts/`):
 - `systems/quality_model.gd` (37): `QualityModel`, rakibin üç boyutunun azalan getirili büyümesi `grow` `:22` ve bileşik kalite `composite_quality` `:29`.
   ↳ okuyan `RivalRegistry.advance_all` (`rival_registry.gd:78-80`) ve `Rival.composite()`; oyuncunun ürün kalitesi değil (o `ProductQuality`, 02_urun_sprint.md).
 - `systems/endings_system.gd` (527): terminal taraması, kepenk, bitiş ve kilometre taşı kapıları, satın alma teklifinin sayıları, build kapsamı.
-- `systems/endings_copy.gd` (534): bitiş gazetesinin satırlarını kuran saf okuyucu; `EndingScene` yalnız onu boyar.
+- `systems/endings_copy.gd` (536): bitiş gazetesinin satırlarını kuran saf okuyucu; `EndingScene` yalnız onu boyar.
 - `systems/mail_clock.gd` (121): mail, kâğıt, not, hatırlatıcının geliş saati; mesai penceresi dışı üretileni pencereye taşır.
 - `systems/message_system.gd` (77): gelen kutusunun motor kartı olmayan mesajları; `GameState.messages` ve `mail_outbox`un tek yazarı.
 - `systems/news_feed_system.gd` (429): şeridin veri kaynağı; sektör, rakip, piyasa ve biz satırlarının haftalık kotalı akışı.
