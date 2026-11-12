@@ -101,8 +101,8 @@ static func squares(level: float, px: int, color: Color, count := 3) -> Control:
 static func capacity_row(cap: Dictionary, value_variation: StringName) -> HBoxContainer:
 	var row := box(UiTokens.SPACE_L)
 	row.add_child(CapacityBar.new(cap))
-	var used: int = roundi(float(cap.used))
-	var total: int = roundi(float(cap.total))
+	var used := roundi(cap.used)
+	var total := roundi(cap.total)
 	row.add_child(label("%d/%d" % [used, total], value_variation, UiTokens.D_warn() if used > total else null))
 	return row
 

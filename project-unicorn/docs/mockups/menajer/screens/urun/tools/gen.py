@@ -1020,7 +1020,7 @@ def qcol(sprint, kind, cards, flags=(), editable=False, approved=False, total=12
     if kind == "current":
         t += '<span class="k t-micro">%s</span>' % K("PRODUCT_THIS_SPRINT")
     else:
-        t += tag(K("PRODUCT_PM"), "neutral")
+        t += tag("PM", "neutral")
     head = ['<div class="qc-t">%s</div>' % t, capacity(used, total, 0, [c["effort"] for c in cards])]
     for k, txt in flags:
         head.append('<div><span class="flg">%s</span></div>' % txt)

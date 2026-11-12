@@ -172,7 +172,7 @@ func _column(col: Dictionary, editable: bool) -> PanelContainer:
 	return column
 
 
-## "SPRINT N" (+ BU SPRINT | PM), kapasite çubuğu ve x/y, bayraklar.
+## "SPRINT N" (+ BU SPRINT | PM'in ikonu), kapasite çubuğu ve x/y, bayraklar.
 func _header(col: Dictionary) -> VBoxContainer:
 	var head := SprintUiShared.column(UiTokens.SPACE_M)
 	var title := SprintUiShared.box(UiTokens.SPACE_M)
