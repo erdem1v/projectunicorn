@@ -63,10 +63,6 @@ TRAIT_LONE_WOLF_NAME,Yalnız Kurt,Lone Wolf
 TRAIT_LONE_WOLF_EFFECT,Sormaktansa tek başına çözmeyi seçer.,Would rather work it out alone than ask.
 ONB_SKILLS_HEADER,YETENEKLER,SKILLS
 ONB_SKILLS_SUB,Masaya ne getiriyorsun.,What you bring to the table.
-ONB_SKILL_WORD_0,Yok,None
-ONB_SKILL_WORD_1,Zayıf,Weak
-ONB_SKILL_WORD_2,Yeterli,Fair
-ONB_SKILL_WORD_3,İyi,Good
 ONB_EFFECT_SALES,{stars} yıldızlı hesaplara uzanırsın · adayı okursun,You reach {stars}-star accounts · you can read a prospect
 ONB_EFFECT_SALES_NO_READ,{stars} yıldızlı hesaplara uzanırsın · adayı okumak {n} puan ister,You reach {stars}-star accounts · reading a prospect needs {n} points
 ONB_EFFECT_LEAD_NONE,Ekip morali tam hızla düşer · her puan %{pct} yavaşlatır,Team morale falls at full speed · each point slows it {pct}%

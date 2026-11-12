@@ -66,7 +66,7 @@ Sahipler: autoload `CustomerRegistry`, `ProspectRegistry`, `PromiseRegistry`; mo
 - `SalesFaucetSystem.lock_return()` `scripts/systems/sales_faucet_system.gd:102`: şirketi havuzdan bir süre dışlar · `expire_leads`, `SalesFinalizer._leave` `sales_finalizer.gd:52`
 - `SalesRepSystem.daily_tick()` `scripts/systems/sales_rep_system.gd:36`: haftalık özet, işleme, atama · `B2BSalesSystem.daily_tick` `b2b_sales_system.gd:44`
 - `SalesRepSystem.sign_due()` `scripts/systems/sales_rep_system.gd:198`: planı dolan masa ve masa anlaşmalarını imzalar · günlük yuva ve öğlen `SalesSystem.hourly_tick`
-- `SalesMeetingSystem.open()` `scripts/systems/sales_meeting_system.gd:81`: Perde 1'i açar · `main.gd:5111`
+- `SalesMeetingSystem.open()` `scripts/systems/sales_meeting_system.gd:81`: Perde 1'i açar · `main.gd:5139`
 - `SalesMeetingSystem.choose()` `scripts/systems/sales_meeting_system.gd:239`: bir cevap oynar, iğneyi oynatır, eşik ve zarı değerlendirir · `SalesMeetingAdapter`
 - `SalesMeetingSystem.close()` `scripts/systems/sales_meeting_system.gd:112`: iki saati `TimeManager.advance_hours` ile oynatır, oturumu siler · `sales_meeting_adapter.gd:118`
 - `NegotiationSystem.open()` `scripts/systems/negotiation_system.gd:91`: Perde 2'yi açar · `scripts/ui/meeting/sales_meeting_adapter.gd:197`
@@ -86,7 +86,7 @@ Sahipler: autoload `CustomerRegistry`, `ProspectRegistry`, `PromiseRegistry`; mo
 - `SupportSystem.weekly_report()` `scripts/systems/support_system.gd:320`: haftada en çok bir rapor postası · `daily_tick`, `main.gd:1719` (sahne fikstürü)
 - `SupportSystem.to_dict()` `scripts/systems/support_system.gd:146` (`from_dict` :150): yalnız `_damage_residue` kaydı · `ProductSystem.to_dict` `product_system.gd:22`
 - `MarketCatalog.value()` `scripts/systems/market_catalog.gd:84`: şirketin haftadaki değeri (saf); `price` :98, `listed` :110, `series` :102 · `piyasa_tab.gd:101`, `news_feed_system.gd:368`
-- `CounterpartSystem.prospect_people()` `scripts/systems/counterpart_system.gd:56`: adayın karşısındaki kişiler · `main.gd:5112`, `sales_tab.gd:328`, `inbox.gd:448`
+- `CounterpartSystem.prospect_people()` `scripts/systems/counterpart_system.gd:56`: adayın karşısındaki kişiler · `main.gd:5140`, `sales_tab.gd:328`, `inbox.gd:448`
 - `CounterpartSystem.fill_investor_people()` `scripts/systems/counterpart_system.gd:33`: fonların üç kişisini çeker · `game_state.gd:949`, `save_manager.gd:317`
 - `CustomerRegistry.add()` `scripts/autoload/customer_registry.gd:94`: yeni hesap · `SalesSystem.add_b2b_customer`, `_ensure_b2c_record` `sales_system.gd:238`
 - `PromiseRegistry.create()` `scripts/autoload/promise_registry.gd:50`: söz açar (sprint vadesi) · `SalesFinalizer.sign_deal`, `B2BSalesSystem.accept_promise`
@@ -113,7 +113,7 @@ Emit satırları DIZIN'den ve kaynaktan; "dinleyen" DIZIN'in `connect` sütunudu
 - `lead_expired`: yayan `scripts/systems/sales_faucet_system.gd:71` · `sales_tab.gd:67`
 - `lead_reserved` / `lead_routed` / `lead_unrouted`: yayan `scripts/systems/sales_ledger.gd:61` / `:63` / `:65` · `sales_tab.gd:68`
 - `whale_condition_met`: yayan `scripts/systems/sales_faucet_system.gd:96` (tek yayıcı; `sign_deal` yaymaz) · dinleyen yok
-- `pitch_requested`: yayan `scripts/tabs/sales_tab.gd:412` · `scripts/main/main.gd:4786` (görüşme daveti)
+- `pitch_requested`: yayan `scripts/tabs/sales_tab.gd:412` · `scripts/main/main.gd:4814` (görüşme daveti)
 - `meeting_entered`: yayan `scripts/systems/sales_meeting_system.gd:98` · yalnız probe
 - `meeting_won`: yayan `scripts/systems/sales_meeting_system.gd:320` (`_win`) · dinleyen yok
 - `meeting_lost`: yayan `scripts/systems/sales_ledger.gd:190` (`report_loss`; masa kaybı, yürüyüş-kayıp ve masa kaybı hep buradan) · yalnız probe
@@ -213,7 +213,7 @@ Hepsi `tools/smoke_run.sh <vaka>` ile (komutlar `project-unicorn/`'dan, `GODOT` 
   ↳ 2★ lead'deki yarım haftayla biten anlaşması; `clause` iki hesabın kartında sunucu maddesinin tarihli etiketi (Kuzey: Sunucu maddesi, Palmiye: Fesih bildirimi);
   ↳ `returning` iki lead bir alan yüzünden kaybedilmiş geri geldi: 2★ lead'in Entegrasyonlar'ı hâlâ boş, kapısı kapalı ve gerekçesi düğmelerin altında,
   ↳ 1★ lead'in Çekirdek'i 1★ masaya yetiyor, kapısı açık. Ayrıca `--inbox-shot=sales_read_only` (karar beklerken Satış, 08_sekmeler.md), `--tab-shot=sales`
-- Ekran: `--meeting-shot=<kind>` (`main.gd:4558`), `--negotiation-shot=<open|countered|insult|last|confirm>` (`main.gd:4669`), `--b2b-shot=<retention|retention_capped|escalation|expansion|deal|angel|chips>` (`main.gd:682`), `--inbox-shot=`
+- Ekran: `--meeting-shot=<kind>` (`main.gd:4586`), `--negotiation-shot=<open|countered|insult|last|confirm>` (`main.gd:4697`), `--b2b-shot=<retention|retention_capped|escalation|expansion|deal|angel|chips>` (`main.gd:682`), `--inbox-shot=`
 - Probe: `--run-log=<preset>:<hafta>:sim[:<seed>]` ile `b2b_solo`, `b2b_reps`, `b2b_risk`, `b2b_slip`, `b2b_book20`, `b2b_book330`, `full_run*` (`run_probe.gd:188-233`); preset aileleri `b2b_*`, `b2c*`, `full_run_b2c*`. Kayıt türleri:
   ↳ `STATE` (içinde `mrr=`, `cust=`, `promises=`, `aud=`, `sat=`), `SIGN` (her B2B imzası: gün, saat, kurucu ya da temsilci, yıldız, planın haftası, MRR),
   ↳ `B2C` (tüketici ürünü canlıyken haftalık: kitle, ödeyen, fiyat, dönüşüm, memnuniyet ve hedefi (Çekirdek ile Onboarding uyumu), açık hata, kitleden giden kullanıcı toplamı `lost=`, `q=` B2C kalite terimi, ilgi, doluluk, masa, gelen,

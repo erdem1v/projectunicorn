@@ -3452,15 +3452,19 @@ func _stage_tex_mem() -> float:
 	return Performance.get_monitor(Performance.RENDER_TEXTURE_MEM_USED)
 
 
-# --onboard-shot=<1|2|3>[:<state>] | curtain. Prints the node count of the set-up, which NEW GAME from the menu matches
+# --onboard-shot=<1|2|3>[:<state>][:<tip>] | curtain. Prints the node count of the set-up, which NEW GAME from the menu matches
 # (--backdrop-probe), with its texture memory before the flat is up, and ONB|stage=live|figure=<id> once it is; the
 # frame waits for it. States: 1:plate (the plate and portrait the flat stands on until it is up), 1:cancel (a name
 # typed, then Esc), 2:random (Randomize), 2:hard_locked and 2:hard_open (set on the document alone: the profile's
 # finished runs are never written), 3:guided_locked, 3:reroll (Make new set pressed once); curtain is the curtain over
 # step 3, which names the mockup's company and picks its second emblem. Steps 2 and 3 are mounted straight: their draft
-# need not be whole.
+# need not be whole. 2:owed picks two strengths and no flaw (the flaw counter lit). A third part points at a tip and waits
+# for it: a key (the first control on screen whose tip begins with its text, e.g. 2:hard_locked:ONB_DIFF_HARD_LOCKED) or
+# "skill" (the engineering name's); ONB|tip= prints the tip read and whether the viewport holds that control hovered.
 func _run_onboard_shot(spec: String) -> void:
-	var state: String = spec.get_slice(":", 1) if ":" in spec else ""
+	var parts: PackedStringArray = spec.split(":")
+	var state: String = parts[1] if parts.size() > 1 else ""
+	var tip: String = parts[2] if parts.size() > 2 else ""
 	_begin_shot()
 	_mount_flow()
 	if state.begins_with("hard_"):
@@ -3492,6 +3496,10 @@ func _run_onboard_shot(spec: String) -> void:
 			_flow._ask_cancel()
 		"random":
 			_flow._step.roll()
+		"owed":
+			for t: Dictionary in FounderConstants.TRAITS.filter(func(x: Dictionary) -> bool: return x.polarity == "positive").slice(
+					0, FounderConstants.TRAIT_MAX_POSITIVE):
+				_flow._step._toggle_trait(t)
 		"reroll":
 			_flow._step._reroll += 1
 			_flow._step._refresh()
@@ -3503,6 +3511,31 @@ func _run_onboard_shot(spec: String) -> void:
 		while not live[0]:
 			await get_tree().process_frame
 		await get_tree().create_timer(stage.MENU_FADE_S).timeout
+	if tip != "":
+		var target: Control = null
+		if tip == "skill":
+			if "_skill_rows" in _flow._step:
+				target = _flow._step._skill_rows["engineering"].name
+		else:
+			# The last control on screen that can take the pointer and whose tip begins with the key's text: of the two
+			# trait counters, the flaw's.
+			var want: String = tr(tip).get_slice("{", 0)
+			if want == "":
+				_shot_fail("[OnboardShot] %s: %s begins with a token, nothing to match" % [spec, tip])
+				return
+			for c: Control in get_tree().root.find_children("*", "Control", true, false):
+				if c.is_visible_in_tree() and c.mouse_filter != Control.MOUSE_FILTER_IGNORE and c.tooltip_text.begins_with(want):
+					target = c
+		if target == null:
+			_shot_fail("[OnboardShot] %s: nothing on screen carries %s" % [spec, tip])
+			return
+		var move := InputEventMouseMotion.new()
+		move.position = target.get_global_rect().get_center()
+		move.global_position = move.position
+		get_viewport().push_input(move, true)
+		await get_tree().create_timer(1.2).timeout
+		print("ONB|tip=%s|hovered=%s|disabled=%s|text=%s" % [tip, str(get_viewport().gui_get_hovered_control() == target),
+			str(target is BaseButton and (target as BaseButton).disabled), target.tooltip_text.replace(char(10), " / ")])
 	await _finish_shot("onboard_shot_" + spec.replace(":", "_"))
 
 

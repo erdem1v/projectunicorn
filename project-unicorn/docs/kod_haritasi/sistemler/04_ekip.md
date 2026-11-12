@@ -66,7 +66,7 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
 - `WorkHoursSystem.sitting_open(hours)` `:57`: kurucunun dört oturumunun giriş kapısı · `vc_pitch_system.gd`, `sales_ledger.gd`, `sales_tab.gd`, `hunt_tab.gd`; kapalıyken gerekçesini `sitting_shut_key(late_key)` `:63` verir: haftanın mesai öncesi saatleri `SITTING_BLOCK_EARLY`, gerisi `late_key`
 - `WorkHoursSystem.overtime_pay_accrued_today()` `:333`: Finans çeker (itme yok) · `finance_system.gd`; `company_window()` `work_hours_system.gd:112` · `mail_clock.gd`, `incident_system.gd`
 - `LookSystem.for_person()` `look_system.gd:123`, `founder(portrait_id)` `:116` · `character_registry.gd:530-536`, `hr_search_system.gd:296`, `counterpart_system.gd:101`, onboarding
-- `FounderConstants.validate_alloc/validate_traits` `founder_constants.gd:137/152` · `game_state.gd:965,991`, `origin_traits_step.gd`, `main.gd:5480`
+- `FounderConstants.validate_alloc/validate_traits` `founder_constants.gd:137/152` · `game_state.gd:965,991`, `origin_traits_step.gd`, `main.gd:5508`
 - `FounderConstants.to_ruler(points)` `founder_constants.gd:33`: onboarding birimi → 0-10 cetvel (×2) · `game_state.gd:986` (`_build_founder` `:959`)
 - `FounderConstants.starting_cash(origin, difficulty)` `founder_constants.gd:187` · `first_week_doc.gd`; `portrait_path()` `founder_constants.gd:192` · `ui_factory.gd:113`, `inbox.gd:467`, `personal_tab.gd:87`, onboarding
 - İzin alanı yazıcıları: `CharacterRegistry.set_away(id, kind, until_day)` `character_registry.gd:613` (hastalık), `set_leave_override(id, week, year)` `:623` (kaydırılmış yaz izni haftası)

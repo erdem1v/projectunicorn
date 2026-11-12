@@ -1,16 +1,17 @@
 extends OnboardingStep
 
 # Step 2, Köken: three columns, all data from FounderConstants.
-#   Origin  - Self-Made selectable; the others visible and locked (GDD ch14 §3).
+#   Origin  - the origins this build opens; a locked one is not shown (envanter meet-22).
 #   Traits  - the Software Inc. formula: one positive free, two positives owe exactly one negative
-#             (FounderConstants.validate_traits).
+#             (FounderConstants.validate_traits). The rule is the counters' tip; the negative counter lights once two
+#             positives owe it (meet-23).
 #   Skills  - POINT_POOL points over FounderConstants.SKILLS, each capped at ONBOARDING_CAP; the figure reads on
 #             the 0-10 ruler. Next stays shut until every point is spent.
-# A skill whose effect the engine computes today says that effect for the points it holds; the others keep their
-# description.
+# A skill's name carries its line as a tip (meet-20): the effect the engine computes today for the points it holds,
+# else its description. No word beside the name (meet-21): the bar and the figure say the level.
 
 const COLUMNS := [[352, 400], [300, 332]]   # origin and traits widths, the skills take the rest
-const SKILL_ROW_H := [58, 51]
+const SKILL_ROW_H := [44, 40]   # the same as a trait row: the line under the name is its tip now
 const TRAIT_ROW_H := [44, 40]
 const BAR_W := [100, 72]
 
@@ -21,7 +22,7 @@ var _alloc := {}   # skill -> points; prefill writes every SKILLS key
 var _origin_cards := {}   # selectable origin_id -> PanelContainer
 var _trait_rows := {}     # trait_id -> [check box, name, effect]
 var _counters := {}       # polarity -> Label
-var _skill_rows := {}     # skill -> {name, word, line, bar, value, minus, plus}
+var _skill_rows := {}     # skill -> {name, bar, value, minus, plus}
 var _points: Label
 var _rng := RandomNumberGenerator.new()
 
@@ -50,32 +51,26 @@ func _column(width: int, head: Control) -> VBoxContainer:
 func _build_origins() -> Control:
 	var col := _column(COLUMNS[int(short)][0], _head("ONB_ORIGIN_HEADER", "ONB_ORIGIN_SUB"))
 	for origin: Dictionary in FounderConstants.ORIGINS:
-		col.add_child(_origin_card(origin))
+		if not origin.locked:
+			col.add_child(_origin_card(origin))
 	return col
 
 
+## An origin this build opens (a locked one is not built: _build_origins).
 func _origin_card(origin: Dictionary) -> PanelContainer:
-	var locked: bool = origin.locked
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", UiTokens.SPACE_M)
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var card := _card(box, not locked)
+	var card := _card(box, true)
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", UiTokens.SPACE_M)
-	var title := UiFactory.make_label(tr(origin.name_key), &"OptionLabelLocked" if locked else &"OptionLabel")
+	var title := UiFactory.make_label(tr(origin.name_key), &"OptionLabel")
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(title)
-	if locked:
-		head.add_child(UiFactory.make_glyph(UiFactory.LOCK_ICON, UiTokens.D_ICON_PART, UiTokens.D_INK_OFF))
-		head.add_child(UiFactory.D_tag(tr("LOCK_FULL"), &"outline"))
 	box.add_child(head)
-	var quote := UiFactory.make_label("\"%s\"" % tr(origin.quote_key), &"CaptionFaint" if locked else &"OriginQuote")
+	var quote := UiFactory.make_label("\"%s\"" % tr(origin.quote_key), &"OriginQuote")
 	quote.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	# The narrow paper keeps a locked origin to its title row.
-	quote.visible = not (locked and short)
 	box.add_child(quote)
-	if locked:
-		return card
 	var chips := HFlowContainer.new()
 	chips.add_theme_constant_override("h_separation", UiTokens.SPACE_S)
 	chips.add_theme_constant_override("v_separation", UiTokens.SPACE_S)
@@ -96,7 +91,7 @@ func _origin_card(origin: Dictionary) -> PanelContainer:
 # --- Traits ---
 
 func _build_traits() -> Control:
-	var col := _column(COLUMNS[int(short)][1], _head("ONB_TRAITS_HEADER", "ONB_TRAITS_SUB", true))
+	var col := _column(COLUMNS[int(short)][1], _head("ONB_TRAITS_HEADER", "", true))
 	for polarity: String in ["positive", "negative"]:
 		var box := VBoxContainer.new()
 		box.add_theme_constant_override("separation", 0)
@@ -105,6 +100,8 @@ func _build_traits() -> Control:
 		title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		head.add_child(title)
 		_counters[polarity] = UiFactory.make_label("", &"DataStrong")
+		_counters[polarity].tooltip_text = tr("ONB_TRAITS_SUB")
+		_counters[polarity].mouse_filter = Control.MOUSE_FILTER_PASS
 		head.add_child(_counters[polarity])
 		box.add_child(head)
 		for t: Dictionary in FounderConstants.TRAITS:
@@ -186,17 +183,12 @@ func _skill_row(skill: String) -> Control:
 	text.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", UiTokens.SPACE_M)
-	# The narrow paper holds a row to the name's line and two of the description's: the name takes the caption's size,
-	# and the ruler moves up beside it so the description has the whole row.
+	# The narrow paper takes the caption's size for the name and moves the ruler up beside it.
 	var parts := {"name": UiFactory.make_label(tr(FounderConstants.SKILL_NAME_KEYS[skill]),
-			&"CaptionStrong" if short else &"DataStrong"),
-		"word": UiFactory.make_label("", &"KeySmall"),
-		"line": UiFactory.make_label("", &"CondCaption" if short else &"Caption")}
+			&"CaptionStrong" if short else &"DataStrong")}
+	parts.name.mouse_filter = Control.MOUSE_FILTER_PASS
 	top.add_child(parts.name)
-	top.add_child(parts.word)
 	text.add_child(top)
-	parts.line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	text.add_child(parts.line)
 	row.add_child(text)
 	parts.bar = SegmentBar.new()
 	parts.bar.custom_minimum_size.x = BAR_W[int(short)]
@@ -270,14 +262,19 @@ func _refresh() -> void:
 		row[0].theme_type_variation = &"CheckSquareOn" if on else &"CheckSquare"
 		row[1].theme_type_variation = &"MetaFaint" if off else &"DataStrong"
 		row[2].add_theme_color_override("font_color", UiTokens.D_INK_4 if off else UiTokens.D_INK_3)
+	# Two strengths owe a flaw: until one is picked the flaw counter is lit (FounderConstants.validate_traits).
+	var owed: bool = _count("positive") >= FounderConstants.TRAIT_MAX_POSITIVE and _count("negative") == 0
 	for polarity: String in _counters:
 		_counters[polarity].text = "%d / %d" % [_count(polarity), _cap(polarity)]
+		if polarity == "negative" and owed:
+			_counters[polarity].add_theme_color_override("font_color", UiTokens.D_ACCENT)
+		else:
+			_counters[polarity].remove_theme_color_override("font_color")
 	var remaining := FounderConstants.alloc_remaining(_alloc)
 	for skill: String in FounderConstants.SKILLS:
 		var v: int = _alloc[skill]
 		var parts: Dictionary = _skill_rows[skill]
-		parts.word.text = Fmt.upper(tr("ONB_SKILL_WORD_%d" % mini(v, 3)))
-		parts.line.text = _skill_line(skill, v)
+		parts.name.tooltip_text = _skill_line(skill, v)
 		parts.bar.set_filled(FounderConstants.to_ruler(v))
 		parts.value.text = str(FounderConstants.to_ruler(v))
 		parts.minus.disabled = v <= 0

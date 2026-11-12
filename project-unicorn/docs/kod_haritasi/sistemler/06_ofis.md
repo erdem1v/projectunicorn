@@ -85,7 +85,7 @@ Görünüm:
 - `OfficeView.apply_graphics()` `scripts/ui/office/office_view.gd:196`: ayar, yeniden boyutlama, yeni yerleşim · `GraphicsSettings.apply_view`
 - `OfficeView.set_safe_left` `:131`, `set_dimmed` `:143`, `set_veiled` `:137`: raya göre çerçeve, pencere altında soluklaşma, yolculukta örtü · `scripts/ui/components/window_layer.gd:209,238,135`
 - `OfficeView.select_person` `office_view.gd:172`, `clear_selection` `:176`: dosya açılınca halka · `scripts/ui/components/window_layer.gd:109,152`
-- `OfficeView.close_map()` `office_view.gd:73`, `open_map()` `:79`: karar açılınca harita kapanır · `scripts/main/main.gd:4840`
+- `OfficeView.close_map()` `office_view.gd:73`, `open_map()` `:79`: karar açılınca harita kapanır · `scripts/main/main.gd:4868`
 - `OfficeView.fade(dark, time)` `office_view.gd:150`: 3B görüntüyü karartır · `scripts/ui/office/office_people.gd:119` (gece kapısı)
 - `OfficeLayout.load(id)` `scripts/ui/office/office_layout.gd:37`: yan JSON'u okur · `office_view.gd:89`, `menu_backdrop.gd`
 - `OfficeMaterials.convert_scene()` `scripts/ui/office/office_materials.gd:26` ve `stations()` `:56` · `office_view.gd:95-96`
@@ -108,10 +108,10 @@ Kişiler:
 Harita, toplantı, yolculuk:
 - `OfficeCity.set_layout()` `scripts/ui/office/office_city.gd:105`: harita yerleşimi yüklenince binaları bağlar, HUD'u kurar · `office_view.gd:121`
 - `OfficeCity.open()` `:184`, `close()` `:198`, `pick()` `:156`, `hover()` `:161`, `road(out, tower_label)` `:130` · `office_hud.gd` (`move_pressed`), `office_view.gd`, `office_travel.gd`
-- `OfficeTravel.travel_out()` `scripts/ui/office/office_travel.gd:65`, `travel_home()` `:95` · `scripts/main/main.gd:5814,5833` (`_leave_office` `:5805`, `_return_to_office` `:5826`)
+- `OfficeTravel.travel_out()` `scripts/ui/office/office_travel.gd:65`, `travel_home()` `:95` · `scripts/main/main.gd:5842,5833` (`_leave_office` `:5833`, `_return_to_office` `:5854`)
 - `MeetingCast.stage()` `scripts/ui/office/meeting_cast.gd:58`, `walk_in()` `:82`, `walk_out()` `:89`, `frame_table()` `:75`, `look` `:98`, `post` `:104`, `speak` `:117`, `gesture` `:126`
-  · `scripts/ui/office/office_travel.gd:85-97`, `scripts/ui/meeting/meeting_panel.gd:336`, `scripts/main/main.gd:4495`
-- `MeetingInvite.ring(spec)` `scripts/ui/office/meeting_invite.gd:96`, `stop()` `:120`, `can_ring()` `:133` · `scripts/main/main.gd:4998` (`_ring_call` `:4749`)
+  · `scripts/ui/office/office_travel.gd:85-97`, `scripts/ui/meeting/meeting_panel.gd:336`, `scripts/main/main.gd:4523`
+- `MeetingInvite.ring(spec)` `scripts/ui/office/meeting_invite.gd:96`, `stop()` `:120`, `can_ring()` `:133` · `scripts/main/main.gd:5026` (`_ring_call` `:4777`)
 - `OfficeNoticeStack.dock_below(rect)` `scripts/ui/office/office_notice_stack.gd:64`: BuildHUD'un bittiği yerin altına yerleşir · `scripts/ui/components/build_hud_panel.gd`
 - `bake_nav.gd _initialize()` `tools/office3d/bake_nav.gd:35`: her yerin zemini; `godot --headless -s res://tools/office3d/bake_nav.gd [-- id ...]`
 
@@ -132,7 +132,7 @@ Düğüm sinyalleri:
 - `founder_settled`: yayan `scripts/ui/office/office_people.gd:142,239,658` · `office_travel.gd:106`, `scripts/main/main.gd:2097` (probe)
 - `founder_seated`: yayan `scripts/ui/office/meeting_cast.gd:152` · `office_travel.gd:88`, `scripts/main/main.gd:1998`
 - `founder_out`: yayan `scripts/ui/office/meeting_cast.gd:155` · `office_travel.gd:98`
-- `accepted` / `postponed`: yayan `scripts/ui/office/meeting_invite.gd:191` / `:198` · dinleyen `scripts/main/main.gd:4987,4909`
+- `accepted` / `postponed`: yayan `scripts/ui/office/meeting_invite.gd:191` / `:198` · dinleyen `scripts/main/main.gd:5015,4909`
 
 ## Durum ve veri
 
