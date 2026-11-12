@@ -59,7 +59,7 @@
         "value": true
       },
       {
-        "seam": "urun.decision_renewal_saved",
+        "seam": "urun.decision_request_saved",
         "op": "==",
         "value": true
       }
@@ -104,7 +104,7 @@
   "text": {
     "tr": {
       "title": "Yenilemeden önce görmek istiyorlar",
-      "body": "{customer} sözleşmesini yenilemeden önce bu kartı görmek istiyor. Bu hızla kart yenilemeden sonra çıkıyor.",
+      "body": "{customer} sözleşmesini yenilemeden önce bu kartı görmek istiyor. Bu hızla kart son tarihe yetişmiyor.",
       "options": {
         "front": "Kartı sprintin başına al",
         "discount": "Bir ay indirim ver",
@@ -114,7 +114,7 @@
     },
     "en": {
       "title": "They want to see it before renewal",
-      "body": "{customer} wants to see this card before they renew their contract. At this pace it goes out after the renewal.",
+      "body": "{customer} wants to see this card before they renew their contract. At this pace it misses their deadline.",
       "options": {
         "front": "Move the card to the front of the sprint",
         "discount": "Give them a month's discount",

@@ -284,9 +284,9 @@ static func _install_paper_asks() -> void:
 	EvSeams.register("urun.responsive_shipped", G, TYPE_BOOL,
 		func() -> bool: return ProductState.is_feature_live(SprintCatalog.in_product("line_shared_mobile_k1")),
 		"Product", "the Responsive Interface step is live")
-	EvSeams.register("urun.decision_renewal_saved", G, TYPE_BOOL,
-		func() -> bool: return SprintSystem.decision_renewal_saved(),
-		"Product", "the account's renewal falls after this sprint and before the next, and standing the card first ships it this sprint")
+	EvSeams.register("urun.decision_request_saved", G, TYPE_BOOL,
+		func() -> bool: return SprintSystem.decision_request_saved(),
+		"Product", "this sprint is the deadline of the decision card's account request, the card misses it, and standing the card first ships it this sprint")
 	EvSeams.register("urun.design_late", G, TYPE_BOOL,
 		func() -> bool: return SprintSystem.design_late(SprintSystem.decision_card().get("id", "")),
 		"Product", "the decision card is still in design after this week's work and a developer waits on it")

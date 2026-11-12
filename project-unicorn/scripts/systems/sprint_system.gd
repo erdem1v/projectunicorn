@@ -558,17 +558,17 @@ static func decision_first_finishes() -> bool:
 	return bool(_outcome([lead] + rest, weeks_left(), true, team()).cards[id].finishes)
 
 
-## "Kartı başa al" kartı yenilemeden önce çıkarır: kart ekibin hızıyla bu sprintte yetişmiyor, isteyen hesabın yenilemesi
-## bu sprintin kapanışından sonra ve sonraki kapanıştan önce (`SprintBridges.next_renewal_day`) ve kart başa girince bu
-## sprintte biter.
-static func decision_renewal_saved() -> bool:
+## "Kartı başa al" kartı talebin son tarihine yetiştirir: koşan sprint kartın son tarihli sprinti, son tarih kartın hesabının
+## açık talebinden (`SprintCatalog.due`, panodaki son tarih çipiyle aynı okuma; kademeye söz verilmişse söz konuşur, bu kâğıt
+## susar), kart ekibin hızıyla bu sprintte yetişmiyor ve kart başa girince bu sprintte biter (Erdem, 2026-11-12, H14).
+static func decision_request_saved() -> bool:
 	var c: Dictionary = decision_card()
 	var account: Customer = CustomerRegistry.get_customer(String(c.get("customer_id", "")))
 	if account == null or not card_late(c.id):
 		return false
-	var renewal: int = SprintBridges.next_renewal_day(account)
-	var close: int = GameState.day + weeks_left()
-	return renewal >= close and renewal < close + sprint_weeks() and decision_first_finishes()
+	var due: Dictionary = SprintCatalog.due(c)
+	return not due.promise and int(due.sprint) == sprint_number() and due.customer == account.display_name() \
+		and decision_first_finishes()
 
 
 ## Bekleyen kararın kartı hâlâ tasarımda ve bu haftanın işiyle de tasarımı bitmiyor, ekipte onu bekleyen bir yazılımcı var.

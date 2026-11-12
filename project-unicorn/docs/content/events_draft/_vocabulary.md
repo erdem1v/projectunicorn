@@ -462,7 +462,7 @@ slot of that type (§17.12).
 | `urun.decision_phase` | global | int | Product | the phase the decision card is in: 0 design, 1 development, 2 testing, 3 done; 0 when none waits |
 | `urun.decision_phone_late` | global | bool | Product | the phone layout's points added, the decision card would not finish this sprint |
 | `urun.decision_promised` | global | bool | Product | an account was promised the decision card's step and the promise is still open |
-| `urun.decision_renewal_saved` | global | bool | Product | the account's renewal falls after this sprint and before the next, and standing the card first ships it this sprint |
+| `urun.decision_request_saved` | global | bool | Product | this sprint is the deadline of the decision card's account request, the card misses it, and standing the card first ships it this sprint |
 | `urun.decision_request_votes` | global | int | Product | B2C: the people who asked for the decision card's step; 0 until the consumer request data exists |
 | `urun.decision_root_bugs` | global | int | Product | open bugs the decision card, a fix card, closes; 0 for any other card |
 | `urun.decision_root_cause` | global | bool | Product | the decision card is a fix card with enough bugs on one line to share a root |

@@ -2867,10 +2867,12 @@ yalnız bir pazara aitse onu gizleyen yol yoktur (§3.3: kilitli seçenek görü
 - `expire_note` bir varyant kümesi olabilir (`{by_seam, variants}`; `EvEngine` süre dolumunda çözer): renk kâğıdının ikinci gelişi başka bir cümleyle
   kapanır. Renk kâğıtları tek kartta birleşti (`product.sprint_design_customer_colors`); iki gelişi `urun.colors_again` ve fiyat seam'leridir
   (`colors_hand`, `colors_central`: ikinci gelişte her biri bir puan fazla), süre dolumu ilkinde memnuniyet −8, ikincide kart +3.
-- `SprintBridges.next_renewal_day(hesap)` yenileme penceresinin gösterdiği yenileme günüdür ve talebin penceresiyle `pm_renewal` aynı
-  ifadeyi okur; `urun.decision_renewal_saved` kart yetişmiyorken, yenileme bu sprintin kapanışından sonra ve sonrakinden önceyken ve kart başa girince
-  bu sprintte bitiyorken doğrudur.
-- Seam'ler `urun.decision_{second_account, request_votes, step, phase, trim_finishes, phone_late, renewal_saved, test_half}`,
+- `pm_renewal` talebin son tarihine bağlıdır (Erdem, 2026-11-12, H14): `urun.decision_request_saved` kart yetişmiyorken, bu sprint kartın son
+  tarihli sprintiyken (`SprintCatalog.due`, panodaki son tarih çipiyle aynı okuma; kademeye söz verilmişse söz konuşur, bu kâğıt susar), son tarih
+  kartın hesabının talebindense ve kart başa girince bu sprintte bitiyorken doğrudur. Önce yenileme gününe bakıyordu (`SprintBridges.next_renewal_day`,
+  talebin penceresi hâlâ onu okur): talep yenilemeden 12 hafta önce açılıp 8 haftada vadelendiği için yenileme kapanıştan 5–21 hafta sonra
+  düşüyordu ve kâğıt hiç gelmiyordu (O-4 teşhisi).
+- Seam'ler `urun.decision_{second_account, request_votes, step, phase, trim_finishes, phone_late, request_saved, test_half}`,
   `urun.{cut_test_finishes, responsive_shipped, design_late, paid_plan_open, colors_*}`, `urun.paper_{phone_points, ask_silent,
   first_screen_loss, coupon_loss, test_phones}`; `urun.decision_request_votes` B2C istek verisi (C) gelene kadar 0 döner, o yüzden PM'in B2C kâğıtları
   (`_b2c` ikizleri ve `pm_core_first`) bugün gelmez; `urun.decision_second_account` kartın hesabı dışında, sektörünün öncelikli alanı

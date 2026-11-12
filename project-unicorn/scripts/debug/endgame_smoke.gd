@@ -26890,10 +26890,12 @@ static func _case_next_renewal_day_one_place() -> String:
 
 ## B6a · "Kartı başa al": `sprint_card_first` kâğıdın kartını sprintin başına alır ve kâğıt cevaplanınca kart hemen çalışır
 ## (ataması baştan yapılır); çip yalnız o yüzden sprintten kayan kartı yazar ve geçmiş satırı aynısını okur. Kâğıt
-## yenilemeden önce çıkarmayı vaat ettiği için `urun.decision_renewal_saved` yalnız kart yetişmiyorken, kart başa girince
-## bu sprintte bitiyorken ve yenileme bu sprintin kapanışından sonra, sonrakinden önceyse doğrudur.
+## kartı talebin son tarihine yetiştirmeyi vaat ettiği için `urun.decision_request_saved` yalnız kart yetişmiyorken, kart
+## başa girince bu sprintte bitiyorken, bu sprint kartın son tarihli sprintiyken ve son tarih kartın hesabının talebindense
+## doğrudur (Erdem, 2026-11-12, H14).
 ## FALSİFİKASYON: `decision_first`te `c.decision = false` satırını sil → kartın ataması boş kaldı FAIL; seam'de
-## `renewal < close + sprint_weeks()` koşulunu sil → uzak yenileme de "kurtarılır" FAIL.
+## `int(due.sprint) == sprint_number()` koşulunu sil → gelecek sprintin son tarihi de "kurtarılır" FAIL;
+## `due.customer == account.display_name()` koşulunu sil → başka hesabın son tarihi bu hesaba yazılır FAIL.
 static func _case_paper_renewal_card_first() -> String:
 	_paper_world()
 	var account: Customer = _incident_account("co_renewal", "Renewal Co", "retail", 40, 1800)
@@ -26921,17 +26923,19 @@ static func _case_paper_renewal_card_first() -> String:
 			break
 	if not found:
 		return "fixture: no pair of efforts leaves the request late and saves it when first"
-	var close: int = GameState.day + SprintSystem.weeks_left()
-	account.acquired_on_day = close + 1 - 52
-	if not bool(EvSeams.read("urun.decision_renewal_saved")):
-		return "a renewal on day %d, a day after this sprint closes, did not call for the card first" % SprintBridges.next_renewal_day(account)
-	account.acquired_on_day -= 10
-	if bool(EvSeams.read("urun.decision_renewal_saved")):
-		return "a renewal before this sprint closes can still be saved"
-	account.acquired_on_day = close + 1 - 52 + 40
-	if bool(EvSeams.read("urun.decision_renewal_saved")):
-		return "a renewal a whole sprint after the next close is called saved"
-	account.acquired_on_day = close + 1 - 52
+	var now: int = SprintSystem.sprint_number()
+	req.due_sprint = now
+	if not bool(EvSeams.read("urun.decision_request_saved")):
+		return "a request due this sprint (%d), its card late and finishing first, did not call for the card first" % now
+	req.due_sprint = now + 1
+	if bool(EvSeams.read("urun.decision_request_saved")):
+		return "a request due next sprint is called saved this sprint"
+	req.due_sprint = now
+	var other: Customer = _incident_account("co_other", "Other Co", "retail", 40, 1800)
+	GameState.product.cards[asked].customer_id = other.id
+	if bool(EvSeams.read("urun.decision_request_saved")):
+		return "the card's deadline comes from Renewal Co's request, yet the paper would speak for Other Co"
+	GameState.product.cards[asked].customer_id = account.id
 	var front := {"verb": "sprint_card_first"}
 	var shown: Array = EvChips.describe(front, {}, {}, false).map(EvChips.text)
 	var row: Dictionary = EvEffects.run_played([front], {})[0]
