@@ -19,6 +19,8 @@ static func run(main: Node, case_id: String) -> String:
 			return await _sprint_fit_gets_points(main)
 		"cs_renewal_request_reaches_player":
 			return await _cs_renewal_request_reaches_player(main)
+		"cs_request_rule_holds_second_ask":
+			return await _cs_request_rule_holds_second_ask(main)
 	return "unknown case"
 
 
@@ -148,6 +150,37 @@ static func _cs_renewal_request_reaches_player(main: Node) -> String:
 	var title: String = EventGate.active_card().title
 	if not await _until(main, func() -> bool: return not _labels(main._shell, title).is_empty()):
 		return "the renewal card is on, the inbox does not show '%s'" % title
+	return ""
+
+
+## An account that asked four weeks ago does not ask again: its first request reaches the player at the week's end and is
+## answered; the desk's next escalation, past the card's own two weeks but inside the request cards' rule about one account,
+## keeps the request on the desk and opens no paper that night; once the rule's weeks have passed the account asks again.
+static func _cs_request_rule_holds_second_ask(main: Node) -> String:
+	main._seed_run_reproducible()
+	main._seed_theme_book()
+	main._shot_customer("co_palmiye", "Palmiye Turizm", "retail", "active", 1200, 15, 10, true)   # LOC-DATA debug seed / id
+	var account: Customer = CustomerRegistry.get_customer("co_palmiye")
+	await main._mount_shot_shell()
+	main._wire_modal_signals()
+	var first_day: int = GameState.day
+	for ask in ["first", "held", "after the rule"]:
+		GameState.set_current_hour(TimeModel.WEEK_START_HOUR)
+		TimeManager.sync_to_current_hour()
+		CustomerRegistry.set_support_request(account.id, GameState.day - TimeModel.ticks(B2BConstants.CS_ESCALATE_AFTER_WEEKS))
+		CustomerRepSystem._escalate(account)
+		if ask == "held" and account.support_request_since_day < 0:
+			return "the desk dropped %s's held request" % account.company_name
+		TimeManager.advance_hours(WorkHoursSystem.end_hour_for(CharacterRegistry.get_founder()) - GameState.current_hour)
+		TimeManager.skip_night()
+		var asked: bool = await _until(main, func() -> bool: return EventGate.active_id().begins_with("customer.request_"))
+		if asked != (ask != "held"):
+			return "%s: %s %s" % [ask, account.company_name, "asked again four weeks after its last request" if asked
+				else "did not ask (week %d after its first request)" % (GameState.day - first_day)]
+		if asked:
+			EventGate.resolve(EventGate.active_id(), 0)
+		var cooldown: int = int(EvCatalog.card("customer.request_feature").family_subject.cooldown_weeks)
+		GameState.day = first_day + TimeModel.ticks(4 if ask == "first" else cooldown + 1)
 	return ""
 
 

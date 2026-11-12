@@ -10,7 +10,7 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
   ↳ yükleyici `EvCatalog`; `cards/` altında özyinelemeli yürür.
 
 ## Dosyalar
-- `scripts/events/event_gate.gd` (227): `EventGate`, motorun tek dış cephesi (statik); her çağrıyı `EvEngine/EvQueue/EvPapers/EvPresenter`'a iletir
+- `scripts/events/event_gate.gd` (238): `EventGate`, motorun tek dış cephesi (statik); her çağrıyı `EvEngine/EvQueue/EvPapers/EvPresenter`'a iletir
 - `scripts/events/catalog/catalog.gd` (309): `EvCatalog`, kart ve ark JSON'larını yükler, varsayılanları doldurur, şema v3 `plausibility` bloğunu koşul yapraklarına derler
 - `scripts/events/core/engine.gd` (794): `EvEngine`, günlük/saatlik tik sırası (a-l adımları), `_admit`, `pump`, `resolve`, `request`, `force_fire`, `open_paper`, `set_aside`
 - `scripts/events/core/effects.gd` (1062): `EvEffects`, fiil sözlüğü (NEUTRAL/ECONOMIC/TERMINAL) ve `_apply`; I2/I3/I6 kuralları köken başına (`_permitted`)
@@ -34,7 +34,7 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
   ↳ `describe(..., live := true)` kartın kendi dünyasında hedefi boş etkiyi çizmez (`_aims_at_no_one`: bağlanmamış `scope`/`other`/`amount_slot`, hesap ya da ekip grubu boş; bağlamsız okuma lint ve `event_chip_coverage` için hâlâ her fiile çip verir),
   ↳ `merge_same` bir şıkta bayt bayt aynı çipleri ilkinde " ×n" ile katlar (figürde değerin yanına; sayılı çip, `_counted` ile `count` taşıyan `EFFECT_NEW_BUGS`, `EFFECT_CARD_POINTS`, `EFFECT_WORK_LOST`, `EFFECT_SHIP_BUGS`, `EFFECT_NEXT_SPRINT_WORK`, toplamı kendi sayılı anahtarıyla okur: "1 yeni açık hata" iki kez "2 yeni açık hata"), `option_parts` okuma bölmesinin ve `--event-shot`'ın ortak şık çipi (canlı etkiler + katlama + zarın çipleri)
 - `scripts/events/present/papers.gd` (194): `EvPapers`, masa (süreli kâğıtlar); süre dolumu, `desk_changed`
-- `scripts/events/present/tempo.gd` (316): `EvTempo`, dört katmanlı fren (kart, aile, konu, kategori kotası), sınıf atama `assign`
+- `scripts/events/present/tempo.gd` (321): `EvTempo`, dört katmanlı fren (kart, aile, konu, kategori kotası), sınıf atama `assign`
 - `scripts/events/present/ticker.gd` (60): `EvTicker`, haber bandına itme sözleşmesi (`push`, player/world önceliği)
 - `scripts/events/seams/seams.gd` (161): `EvSeams`, adlı salt okunur sorgular kaydı; `register`, `read`, `read_for`, `mock`
 - `scripts/events/seams/seams_{hr,product,finance,sales,world,ported,incident}.gd` (191/343/66/132/160/194/45): seam alanları (hr+founder, urun+arge+paper, finance, musteri+sales+destek,
@@ -53,15 +53,15 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 
 ## Giriş noktaları
 - `EventGate.request(id, ctx, immediate, stamp)` `scripts/events/event_gate.gd:19` -> `EvEngine.request` `core/engine.gd:715`: bir sistem kartı adıyla ister; masada beklenen örnek varsa onu açar · kim çağırır:
-  ↳ `customer_rep_system.gd:304`, `hr_morale_system.gd:93,341`, `incident_system.gd:268`
+  ↳ `customer_rep_system.gd:307`, `hr_morale_system.gd:93,341`, `incident_system.gd:268`
 - `EventGate.request` çağıranlar devamı: `sprint_system.gd:987,1102,1232`, `sprint_bridges.gd:199`, `endings_system.gd:121` (SHUTTER_CARD), `main.gd:1162`, `mail_pane.gd:800` (immediate=true, oyuncunun isteği)
-- `EventGate.daily_tick()` `event_gate.gd:171` -> `EvEngine.daily_tick` `engine.gd:68` · `TimeManager` günlük dağıtım, Finans ve Faz kapısından sonra, `IncidentSystem`'den önce (`scripts/autoload/time_manager.gd:417`)
-- `EventGate.hourly_tick(hour)` `event_gate.gd:175` -> `EvEngine.hourly_tick` `engine.gd:90` · `TimeManager._dispatch_hourly_tick`, `MailClock.hourly_tick`'ten sonra (`time_manager.gd:451`)
+- `EventGate.daily_tick()` `event_gate.gd:178` -> `EvEngine.daily_tick` `engine.gd:68` · `TimeManager` günlük dağıtım, Finans ve Faz kapısından sonra, `IncidentSystem`'den önce (`scripts/autoload/time_manager.gd:417`)
+- `EventGate.hourly_tick(hour)` `event_gate.gd:182` -> `EvEngine.hourly_tick` `engine.gd:90` · `TimeManager._dispatch_hourly_tick`, `MailClock.hourly_tick`'ten sonra (`time_manager.gd:451`)
 - `EvEngine.pump()` `engine.gd:554`: kuyruktaki en önemli kartı §4.4 yeniden doğrulamasından (`EvGate.revalidate`) geçirip gösterir · tik sonu, `resolve`, `clock_batch_ended` (`signals.gd:54`), `main.gd:5376` (yükleme sonrası)
 - `EventGate.resolve(id, option)` `event_gate.gd:26` -> `EvEngine.resolve` `engine.gd:613`: seçenek id ya da indeksi; etkiler, geçmiş satırı, ark ilerletme · çağıran: `mail_pane.gd:498`, bot ve smoke
-- `EventGate.open_paper(key)` `event_gate.gd:145` -> `engine.gd:759`, `EventGate.set_aside()` `event_gate.gd:151` -> `engine.gd:785`: masadaki kâğıdı aç ve cevapsız geri koy · `mail_pane.gd:535,548`
+- `EventGate.open_paper(key)` `event_gate.gd:152` -> `engine.gd:759`, `EventGate.set_aside()` `event_gate.gd:158` -> `engine.gd:785`: masadaki kâğıdı aç ve cevapsız geri koy · `mail_pane.gd:535,548`
 - `EventGate.force_fire(id, ctx)` `event_gate.gd:40` -> `engine.gd:738`: yalnız debug build; G3, G4, G8'i atlar, satırı `forced: true` yazar · smoke ve `main.gd:1201,1419`
-- `EventGate.flush()` `event_gate.gd:136`: bekleyen sahneleri öldürür · `endings_system.gd:481`; `EventGate.reset()` `event_gate.gd:167` · `save_manager.gd:344` (yeni oyun)
+- `EventGate.flush()` `event_gate.gd:143`: bekleyen sahneleri öldürür · `endings_system.gd:481`; `EventGate.reset()` `event_gate.gd:174` · `save_manager.gd:344` (yeni oyun)
 - `EvGate.propose(id, origin, given)` `gate/gate.gd:71`, `EvGate.revalidate` `gate.gd:122`: G1-G8 kapısı · yalnız `EvEngine._propose` (`engine.gd:433`), `EvWhy.report`, `EventGate.condition_*` çağırır
 - `EvEngine.on_signal` `engine.gd:276`: sinyal tamponu, adım (g)'de boşalır · `EvSignals._relay` (`signals.gd:99`); `EvSignals.install()` `signals.gd:50` her `EvCatalog.reload()`'da (`catalog.gd:47`) bağlanır
 - `EvCatalog.ensure_loaded()` `catalog.gd:32` / `reload()` `catalog.gd:37`: kartları ve arkları yükler, seam'leri kurar (`EvSeams.ensure_installed` `seams.gd:39`) · `main.gd:4820` (`_warm_catalogs`)
@@ -182,6 +182,9 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
   ↳ (`EvChips.landing`); ortak etki yoksa ya da hepsi sessizse çipsizdir. Lint dalda ve `on_expire`da zamanlananı da "referanslı" sayar (`_card_effects`)
 - Takip kartı ebeveyniyle aynı `family`de `family_subject` taşırsa hiç gelmez: ebeveyn özneyi damgalamıştır, katman 2b `-1` verir ve `_propose` zamanlanmış girdiyi
   ↳ sessizce düşürür (`engine.gd:436-442`; `follows` yalnız 1b'den muaftır). Takip kartı kendi ailesini taşır (`team.master_degree_farewell`: `study_farewell`)
+- İstek kökeni 1b ve 2b'yi ödemez (motor md §13.3). Kartın özne başına kuralını (`family_subject`) isteyen sistem tutabilir: `EventGate.family_subject_held(kart, özne)`
+  ↳ (`EvTempo.subject_brake`, katman 2b tek başına; `family_brake` onu çağırır). Yalnız müşteri masası sorar (`CustomerRepSystem._held`); `family_subject`
+  ↳ taşıyan öbür istek kartlarının (sprint kâğıtları, acil durumlar, `product.promise_due`, `team.resignation`, `team.burnout`) kuralı işlemez
 - `amount_slot`: `amount_seam` bir ENTITY seam ise tutar o yuvanın varlığı için okunur (`EvEffects.amount(e, ctx)`); çip, geçmiş satırı ve bot aynı `ctx` ile okur (bot `EventGate.active_context()`). Lint seam'in türünü yuvanın türüyle eşler
 - Seçiciler `EvScope.SELECTORS` listesindedir; lint 17.12 listede olmayan `select`i reddeder (`:` ile biten ad önektir, `market_rival:giant`). `random` ve rakip seçicileri tohumludur: `EvScope.resolve(yuvalar, verilen, kart_id)` gün,
   ↳ kart ve yuvanın hash'iyle

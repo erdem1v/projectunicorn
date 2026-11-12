@@ -24,7 +24,7 @@ Sahipler: autoload `CustomerRegistry`, `ProspectRegistry`, `PromiseRegistry`; mo
 - `scripts/systems/sales_archetypes.gd` (185): müşteri arketipleri (3 taslak); sektör, alıcı tipi, mizaç, pazarlık profili, balina koşulları
 - `scripts/systems/sales_name_pool.gd` (103): şirket adı havuzu (65 seçme ad + üretilmiş); `take` ile kullanılmamış ad çeker
 - `scripts/systems/company_catalog.gd` (116): `COMPANIES` sektör kimliğini düz ad dizisine eşler (13 sektör, 65 ad), `names_for_sector` kopya döner; özel isim, LOC-DATA işaretli
-- `scripts/systems/customer_rep_system.gd` (380): müşteri masası; hesap sahipliği (kapasite, otomatik atama, fazlayı devretme) ve talep kanalı (yut, yükselt)
+- `scripts/systems/customer_rep_system.gd` (390): müşteri masası; hesap sahipliği (kapasite, otomatik atama, fazlayı devretme) ve talep kanalı (yut, yükselt)
 - `scripts/systems/counterpart_system.gd` (101): masanın karşısındaki kişiler; fonun üç kişisi (kaydedilir) ve adayın yıldızı kadar kişi (kimlikten türetilir)
 - `scripts/systems/support_system.gd` (424): Destek; bildirim akışı, doğrulama, iki kademeli memnuniyet zararı, hata ihmali, haftalık destek raporu, ilgi
 - `scripts/systems/market_catalog.gd` (217): Piyasa kataloğu ve saf değer fonksiyonu; veri `data/market/`, kaydedilmez (Piyasa'nın ana anlatımı 05_fon_finans.md)
@@ -80,9 +80,12 @@ Sahipler: autoload `CustomerRegistry`, `ProspectRegistry`, `PromiseRegistry`; mo
 - `CustomerRepSystem.daily_tick()` `scripts/systems/customer_rep_system.gd:192`: talep kanalı (aç, işle, bayatı yükselt) · `b2b_sales_system.gd:39`
 - `CustomerRepSystem.reconcile_assignments()` `scripts/systems/customer_rep_system.gd:89`: kurucunun fazlasını devreder · `b2b_sales_system.gd:34`
 - `CustomerRepSystem.auto_assign_new()` `scripts/systems/customer_rep_system.gd:131`: yeni imzayı en az yüklü temsilciye verir · `SalesSystem.add_b2b_customer`
-- `CustomerRepSystem.pick_request_kind()` `scripts/systems/customer_rep_system.gd:318`: talebin türü (şikâyet, özellik, yenileme) · `seams_ported.gd:59` (`musteri.request_kind`)
+- `CustomerRepSystem.pick_request_kind()` `scripts/systems/customer_rep_system.gd:328`: talebin türü (şikâyet, özellik, yenileme) · `seams_ported.gd:59` (`musteri.request_kind`)
   ↳ seam talep açıkken seçer, talep karta dönünce damgalanan türü (`last_request_kind`) okur: masadan hafta sonunda açılan kâğıt kabul edildiği
   ↳ türü görür, tekrar yasağının yeni seçimini değil. K2 `cs_renewal_request_reaches_player`
+- `CustomerRepSystem._held(c)` `scripts/systems/customer_rep_system.gd:320`: talep kartlarının hesap başına aile kuralı (`EventGate.family_subject_held`;
+  ↳ aile `customer_requests`, kartta 26 hafta) talebi tutuyor mu. Tutarsa talep açık kalır, haftaya yeniden denenir ve masanın saatini harcamaz
+  ↳ (`_work_the_queue`, `_escalate`). K2 `cs_request_rule_holds_second_ask`
 - `SupportSystem.hourly_tick()` `scripts/systems/support_system.gd:106`: bildirim gelir, doğrulanır, hata olur · `time_manager.gd:441`
 - `SupportSystem.daily_tick()` `scripts/systems/support_system.gd:132`: memnuniyet zararı, hata ihmali, ilgi, haftalık rapor · `time_manager.gd:395`
 - `SupportSystem.weekly_report()` `scripts/systems/support_system.gd:320`: haftada en çok bir rapor postası · `daily_tick`, `main.gd:1720` (sahne fikstürü)

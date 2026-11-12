@@ -252,8 +252,11 @@ static func _work_the_queue() -> void:
 	for c in _open_requests():
 		if budget < 1.0:
 			break
+		var easy: bool = request_difficulty(c) <= ceiling
+		if not easy and _held(c):
+			continue
 		budget -= 1.0
-		if request_difficulty(c) <= ceiling:
+		if easy:
 			_absorb(c)
 		else:
 			_escalate(c)
@@ -285,9 +288,9 @@ static func _escalate(c: Customer) -> void:
 	# entirely. This is the one place that guarantees the player is interrupted at most
 	# CS_ESCALATION_WEEKLY_CAP times per window, whatever the book does. The stamp array is a
 	# rolling window, pruned as it is read.
-	# Over budget, or refused by the gate → return WITHOUT clearing the latch or stamping the
-	# window, so the request stays open and is re-offered next week. Deferred, never dropped:
-	# nothing the player owed a decision on silently disappears.
+	# Over budget, held by the request cards' own rule about the account (_held), or refused by the gate → return WITHOUT
+	# clearing the latch or stamping the window, so the request stays open and is re-offered next week. Deferred, never
+	# dropped: nothing the player owed a decision on silently disappears.
 	var cutoff: int = GameState.day - TimeModel.ticks(B2BConstants.CS_ESCALATION_WINDOW_WEEKS)
 	while not GameState.cs_escalation_days.is_empty() and GameState.cs_escalation_days[0] <= cutoff:
 		GameState.cs_escalation_days.remove_at(0)
@@ -301,7 +304,7 @@ static func _escalate(c: Customer) -> void:
 	# are facts about the support desk, not tempo rules, and §13.3's category quota is a
 	# different question asked by a different layer.
 	var kind: String = pick_request_kind(c)
-	if not EventGate.request("customer.request_" + kind, {"customer": c.id}):
+	if _held(c) or not EventGate.request("customer.request_" + kind, {"customer": c.id}):
 		return
 	# The latch clears AT admission: the request has left the desk and become the player's, so
 	# the choice's own modifiers resolve it and no new modifier type is needed to close it out.
@@ -310,6 +313,12 @@ static func _escalate(c: Customer) -> void:
 	# The picker's no-repeat rule reads this stamp, and so does the paper on the desk (`musteri.request_kind` once the
 	# request is closed): written later, the paper would open on another kind and drop.
 	CustomerRegistry.set_last_request_kind(c.id, kind)
+
+
+## The request cards' rule about one account (`family_subject`: one card of the family per account in its cooldown) holds
+## this account's request now. The desk keeps it: the gate does not ask it of a request (motor md §13.3).
+static func _held(c: Customer) -> bool:
+	return EventGate.family_subject_held("customer.request_" + pick_request_kind(c), c.id)
 
 
 ## The request-kind scoring rule: what an account is most likely calling about. The three

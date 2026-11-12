@@ -26,7 +26,7 @@ _A4_WORLDS	const	scripts/main/main.gd:4727	main.gd
 _abandon_note	var	scripts/ui/components/research_bar.gd:37	research_bar.gd
 _above	func	scripts/tabs/personal_tab.gd:266	personal_tab.gd
 _above	var	scripts/tabs/piyasa_tab.gd:36	piyasa_tab.gd
-_absorb	func	scripts/systems/customer_rep_system.gd:264	CustomerRepSystem
+_absorb	func	scripts/systems/customer_rep_system.gd:267	CustomerRepSystem
 _absorbed	var	scripts/events/core/queue.gd:36	EvQueue
 _accel	var	scripts/ui/office/office_person.gd:212	OfficePerson
 _accept	func	scripts/ui/office/meeting_invite.gd:203	MeetingInvite
@@ -274,7 +274,7 @@ _block_reason	func	scripts/systems/hr_actions.gd:269	HRActions
 _blocked	func	scripts/ui/office/office_person.gd:854	OfficePerson
 _blocker_cleared	func	scripts/systems/sales_ledger.gd:353	SalesLedger
 _blocks	var	scripts/ui/office/office_body.gd:38	OfficeBody
-_board	func	scripts/debug/player_paths.gd:193	PlayerPaths
+_board	func	scripts/debug/player_paths.gd:226	PlayerPaths
 _board	var	scripts/tabs/product/sprint_panel.gd:59	SprintPanel
 _board_text	func	scripts/systems/term_sheet_table_system.gd:926	TermSheetTableSystem
 _board_weight	func	scripts/systems/term_sheet_table_system.gd:427	TermSheetTableSystem
@@ -385,7 +385,7 @@ _button	func	scripts/modals/ending_scene.gd:412	EndingScene
 _button	func	scripts/tabs/hunt_tab.gd:530	hunt_tab.gd
 _button	func	scripts/tabs/sales_tab.gd:828	sales_tab.gd
 _button	var	scripts/ui/office/office_hud.gd:21	office_hud.gd
-_buttons	func	scripts/debug/player_paths.gd:197	PlayerPaths
+_buttons	func	scripts/debug/player_paths.gd:230	PlayerPaths
 _by_card	func	scripts/systems/sprint_timeline.gd:118	SprintTimeline
 _by_event	var	scripts/events/core/history.gd:23	EvHistory
 _by_id	var	scripts/systems/market_catalog.gd:29	MarketCatalog
@@ -980,12 +980,12 @@ _cash_delta_of	func	scripts/debug/run_probe.gd:1116	RunProbe
 _cash_ready	func	scripts/systems/rnd_system.gd:366	RnDSystem
 _cast	var	scripts/ui/meeting/meeting_panel.gd:52	MeetingPanel
 _category	func	scripts/theme/theme_check.gd:216	theme_check.gd
-_category_count	func	scripts/events/present/tempo.gd:265	EvTempo
+_category_count	func	scripts/events/present/tempo.gd:270	EvTempo
 _cause	var	scripts/debug/sprint_probe.gd:95	sprint_probe.gd
 _cb_palette	var	scripts/theme/ui_tokens.gd:311	UiTokens
 _cb_toggle	var	scripts/modals/settings_modal.gd:97	settings_modal.gd
 _ceil_to	func	scripts/systems/hr_candidate_generator.gd:271	HRCandidateGenerator
-_ceiling	func	scripts/events/present/tempo.gd:223	EvTempo
+_ceiling	func	scripts/events/present/tempo.gd:228	EvTempo
 _cell	func	scripts/modals/training_modal.gd:161	training_modal.gd
 _cell	func	scripts/tabs/hr/hr_assignments.gd:106	HRAssignments
 _cell	func	scripts/tabs/product/capacity_view.gd:164	CapacityView
@@ -1197,7 +1197,8 @@ _crew_changed	func	scripts/systems/sprint_system.gd:1608	SprintSystem
 _crew_mark	func	scripts/systems/sprint_system.gd:1615	SprintSystem
 _crowded	var	scripts/debug/office_crowd_probe.gd:38	OfficeCrowdProbe
 _cs_at	func	scripts/ui/office/office_lighting.gd:286	OfficeLighting
-_cs_renewal_request_reaches_player	func	scripts/debug/player_paths.gd:126	PlayerPaths
+_cs_renewal_request_reaches_player	func	scripts/debug/player_paths.gd:128	PlayerPaths
+_cs_request_rule_holds_second_ask	func	scripts/debug/player_paths.gd:159	PlayerPaths
 _csv_keys	var	scripts/debug/loc_residue.gd:57	loc_residue.gd
 _ctl	var	scripts/tabs/finance_tab.gd:17	finance_tab.gd
 _ctl	var	scripts/tabs/product_tab.gd:36	product_tab.gd
@@ -1455,8 +1456,8 @@ _ERP_SHIPPED_LINES	const	scripts/main/main.gd:76	main.gd
 _errand	func	scripts/ui/office/office_people.gd:468	OfficePeople
 _error	func	scripts/events/catalog/catalog.gd:94	EvCatalog
 _esc_reopened	var	scripts/main/game_shell.gd:15	game_shell.gd
-_escalate	func	scripts/systems/customer_rep_system.gd:282	CustomerRepSystem
-_escalate_stale	func	scripts/systems/customer_rep_system.gd:273	CustomerRepSystem
+_escalate	func	scripts/systems/customer_rep_system.gd:285	CustomerRepSystem
+_escalate_stale	func	scripts/systems/customer_rep_system.gd:276	CustomerRepSystem
 _escalation_lands	func	scripts/debug/endgame_smoke.gd:4235	EndgameSmoke
 _event_shot_lines	func	scripts/main/main.gd:899	main.gd
 _event_signals_wired	var	scripts/main/main.gd:50	main.gd
@@ -1660,7 +1661,7 @@ _game_version	func	scripts/autoload/save_manager.gd:610	SaveManager
 _gap	func	scripts/tabs/hr/hr_dossier.gd:229	hr_dossier.gd
 _gap	func	scripts/tabs/hr/hr_ledger.gd:216	HRLedger
 _gap_steps	func	scripts/systems/term_sheet_table_system.gd:413	TermSheetTableSystem
-_gate	func	scripts/debug/player_paths.gd:177	PlayerPaths
+_gate	func	scripts/debug/player_paths.gd:210	PlayerPaths
 _gate_day	var	scripts/debug/run_probe.gd:344	RunProbe
 _gate_flow	func	scripts/main/main.gd:1810	main.gd
 _gate_for_phase	func	scripts/systems/phase_gate_system.gd:173	PhaseGateSystem
@@ -1768,6 +1769,7 @@ _header	func	scripts/tabs/product/quarter_view.gd:176	QuarterView
 _headless	func	scripts/ui/office/office_people.gd:851	OfficePeople
 _heads	var	scripts/tabs/rnd/rnd_tree_view.gd:54	RnDTreeView
 _held	var	scripts/events/present/ticker.gd:15	EvTicker
+_held	func	scripts/systems/customer_rep_system.gd:320	CustomerRepSystem
 _held	var	scripts/tabs/hr_tab.gd:52	hr_tab.gd
 _held	func	scripts/ui/components/top_bar.gd:244	top_bar.gd
 _held	var	scripts/ui/office/office_camera.gd:42	OfficeCamera
@@ -1816,7 +1818,7 @@ _hover_name	var	scripts/ui/office/office_city.gd:77	OfficeCity
 _hoverable	func	scripts/tabs/hr/hr_ui_shared.gd:43	HRUiShared
 _hovered_id	var	scripts/ui/office/office_city.gd:79	OfficeCity
 _hr_danger	var	scripts/ui/components/left_tabs.gd:59	left_tabs.gd
-_hr_raise_row_locked_in_cooldown	func	scripts/debug/player_paths.gd:27	PlayerPaths
+_hr_raise_row_locked_in_cooldown	func	scripts/debug/player_paths.gd:29	PlayerPaths
 _hud	var	scripts/ui/office/office_city.gd:71	OfficeCity
 _hues	var	scripts/ui/components/news_ticker.gd:64	news_ticker.gd
 _hush	func	scripts/ui/meeting/meeting_panel.gd:452	MeetingPanel
@@ -1930,7 +1932,7 @@ _insult_from	var	scripts/systems/negotiation_system.gd:45	NegotiationSystem
 _intel	var	scripts/systems/vc_pitch_system.gd:36	VCPitchSystem
 _interpolate	func	scripts/events/present/presenter.gd:276	EvPresenter
 _interrupted_by	func	scripts/systems/sprint_system.gd:1534	SprintSystem
-_interrupts_on	func	scripts/events/present/tempo.gd:273	EvTempo
+_interrupts_on	func	scripts/events/present/tempo.gd:278	EvTempo
 _invalidate	func	scripts/events/core/engine.gd:152	EvEngine
 _investment_tr	func	scripts/systems/endings_copy.gd:503	EndingsCopy
 _is_b2b	func	scripts/systems/infra_system.gd:110	InfraSystem
@@ -1996,7 +1998,7 @@ _kv_key	func	scripts/tabs/piyasa_tab.gd:491	piyasa_tab.gd
 _kv_value	func	scripts/tabs/piyasa_tab.gd:498	piyasa_tab.gd
 _label	var	scripts/ui/meeting/meeting_panel_option.gd:22	meeting_panel_option.gd
 _label_keys	var	scripts/modals/settings_modal.gd:101	settings_modal.gd
-_labels	func	scripts/debug/player_paths.gd:202	PlayerPaths
+_labels	func	scripts/debug/player_paths.gd:235	PlayerPaths
 _ladder	var	scripts/ui/components/top_bar.gd:131	top_bar.gd
 _ladder_gap	func	scripts/tabs/finance/finance_ozet_view.gd:559	FinanceOzetView
 _ladder_row	func	scripts/tabs/finance/finance_ozet_view.gd:530	FinanceOzetView
@@ -2016,8 +2018,8 @@ _largest_night_account	func	scripts/systems/incident_system.gd:423	IncidentSyste
 _last	var	scripts/ui/office/office_camera.gd:41	OfficeCamera
 _last_appetite	var	scripts/debug/run_probe.gd:301	RunProbe
 _last_autosave_msec	var	scripts/autoload/save_manager.gd:46	SaveManager
-_last_day_about	func	scripts/events/present/tempo.gd:289	EvTempo
-_last_day_of	func	scripts/events/present/tempo.gd:281	EvTempo
+_last_day_about	func	scripts/events/present/tempo.gd:294	EvTempo
+_last_day_of	func	scripts/events/present/tempo.gd:286	EvTempo
 _last_lever_acted	var	scripts/systems/term_sheet_table_system.gd:133	TermSheetTableSystem
 _last_metres	func	scripts/ui/office/office_person.gd:730	OfficePerson
 _last_move	var	scripts/systems/term_sheet_table_system.gd:134	TermSheetTableSystem
@@ -2281,7 +2283,7 @@ _mentor_card	var	scripts/tabs/finance/finance_ozet_view.gd:48	FinanceOzetView
 _mentor_quote	var	scripts/tabs/finance/finance_ozet_view.gd:49	FinanceOzetView
 _menu	var	scripts/main/main.gd:46	main.gd
 _menu_id	var	scripts/tabs/hr_tab.gd:51	hr_tab.gd
-_menu_item	func	scripts/debug/player_paths.gd:161	PlayerPaths
+_menu_item	func	scripts/debug/player_paths.gd:194	PlayerPaths
 _meshes	var	scripts/ui/office/office_body.gd:37	OfficeBody
 _message	func	scripts/tabs/events/mail_pane.gd:126	mail_pane.gd
 _message_item	func	scripts/ui/components/inbox.gd:280	inbox.gd
@@ -2624,7 +2626,7 @@ _on_window_mode_selected	func	scripts/modals/settings_modal.gd:233	settings_moda
 _on_wishlist	func	scripts/modals/ending_scene.gd:515	EndingScene
 _on_write_done	func	scripts/autoload/save_manager.gd:460	SaveManager
 _one_run	func	scripts/events/tools/harness.gd:118	EvHarness
-_open	func	scripts/debug/player_paths.gd:155	PlayerPaths
+_open	func	scripts/debug/player_paths.gd:188	PlayerPaths
 _open	func	scripts/systems/sprint_prep.gd:61	SprintPrep
 _open_actions	func	scripts/tabs/hr_tab.gd:484	hr_tab.gd
 _open_after_gate	func	scripts/main/main.gd:5688	main.gd
@@ -2832,7 +2834,7 @@ _person_row	func	scripts/modals/work_hours_modal.gd:244	work_hours_modal.gd
 _person_row	func	scripts/tabs/rnd/rnd_assign_panel.gd:133	RnDAssignPanel
 _person_tip	func	scripts/tabs/product/board_row.gd:273	BoardRow
 _person_tip	func	scripts/tabs/product/capacity_view.gd:255	CapacityView
-_phase_multiplier	func	scripts/events/present/tempo.gd:227	EvTempo
+_phase_multiplier	func	scripts/events/present/tempo.gd:232	EvTempo
 _physics_process	func	scripts/debug/office_crowd_probe.gd:156	OfficeCrowdProbe
 _physics_process	func	scripts/ui/office/office_people.gd:226	OfficePeople
 _physics_process	func	scripts/ui/office/office_person.gd:410	OfficePerson
@@ -3010,7 +3012,7 @@ _propose	func	scripts/events/core/engine.gd:409	EvEngine
 _props	var	scripts/ui/office/office_person.gd:241	OfficePerson
 _prospect	var	scripts/ui/meeting/sales_meeting_adapter.gd:43	SalesMeetingAdapter
 _prospects	var	scripts/autoload/prospect_registry.gd:12	ProspectRegistry
-_prune	func	scripts/events/present/tempo.gd:257	EvTempo
+_prune	func	scripts/events/present/tempo.gd:262	EvTempo
 _prune_assignees	func	scripts/systems/rnd_system.gd:128	RnDSystem
 _pulse	var	scripts/ui/components/top_bar.gd:122	top_bar.gd
 _pulse	var	scripts/ui/office/office_hud.gd:24	office_hud.gd
@@ -3044,7 +3046,7 @@ _quiet	func	scripts/ui/meeting/meeting_panel.gd:634	MeetingPanel
 _quiet_b2c_day	func	scripts/debug/endgame_smoke.gd:870	EndgameSmoke
 _quiet_ticks	var	scripts/events/core/engine.gd:52	EvEngine
 _quit_with	func	scripts/main/main.gd:191	main.gd
-_quota_for	func	scripts/events/present/tempo.gd:218	EvTempo
+_quota_for	func	scripts/events/present/tempo.gd:223	EvTempo
 _Rail	class	scripts/ui/meeting/meeting_ruler.gd:27	MeetingRuler
 _rail	var	scripts/ui/meeting/meeting_ruler.gd:15	MeetingRuler
 _rail_host	var	scripts/modals/ending_scene.gd:43	EndingScene
@@ -3155,7 +3157,7 @@ _rebuild	func	scripts/ui/components/window_layer.gd:156	window_layer.gd
 _rebuild_controls	func	scripts/ui/office/office_city.gd:316	OfficeCity
 _rebuild_queued	var	scripts/tabs/product_tab.gd:30	product_tab.gd
 _recolor	func	scripts/theme/build_theme.gd:1391	build_theme.gd
-_record	func	scripts/events/present/tempo.gd:233	EvTempo
+_record	func	scripts/events/present/tempo.gd:238	EvTempo
 _record	func	scripts/tabs/events/mail_pane.gd:682	mail_pane.gd
 _recover	func	scripts/systems/b2b_sales_system.gd:565	B2BSalesSystem
 _redraw_rows	func	scripts/tabs/piyasa_tab.gd:350	piyasa_tab.gd
@@ -3434,7 +3436,7 @@ _said	var	scripts/debug/sprint_probe.gd:93	sprint_probe.gd
 _said	func	scripts/ui/meeting/meeting_panel.gd:604	MeetingPanel
 _salary_row	func	scripts/systems/hr_actions.gd:324	HRActions
 _salary_trio	func	scripts/systems/hr_candidate_generator.gd:165	HRCandidateGenerator
-_sales_gate_follows_clock	func	scripts/debug/player_paths.gd:60	PlayerPaths
+_sales_gate_follows_clock	func	scripts/debug/player_paths.gd:62	PlayerPaths
 _sales_report	func	scripts/tabs/events/mail_pane.gd:585	mail_pane.gd
 _same_crew	func	scripts/systems/sprint_system.gd:1620	SprintSystem
 _samples	func	scripts/debug/kit_probe.gd:222	kit_probe.gd
@@ -3789,7 +3791,7 @@ _spring	var	scripts/modals/confirm_modal.gd:22	confirm_modal.gd
 _sprint	var	scripts/tabs/product_tab.gd:43	product_tab.gd
 _sprint_bar	func	scripts/tabs/product/product_model.gd:1019	ProductModel
 _sprint_cards	func	scripts/systems/sprint_system.gd:1908	SprintSystem
-_sprint_fit_gets_points	func	scripts/debug/player_paths.gd:86	PlayerPaths
+_sprint_fit_gets_points	func	scripts/debug/player_paths.gd:88	PlayerPaths
 _sprint_hire	func	scripts/debug/endgame_smoke.gd:22307	EndgameSmoke
 _sprint_points	func	scripts/debug/endgame_smoke.gd:22322	EndgameSmoke
 _sprint_row	func	scripts/debug/endgame_smoke.gd:22314	EndgameSmoke
@@ -3916,7 +3918,7 @@ _sub	var	scripts/ui/components/toast.gd:22	toast.gd
 _sub	var	scripts/ui/menu_backdrop.gd:28	menu_backdrop.gd
 _sub	var	scripts/ui/office/office_view.gd:22	office_view.gd
 _subject_character	func	scripts/events/present/presenter.gd:175	EvPresenter
-_subject_gap_for	func	scripts/events/present/tempo.gd:207	EvTempo
+_subject_gap_for	func	scripts/events/present/tempo.gd:212	EvTempo
 _subtype	var	scripts/debug/run_probe.gd:304	RunProbe
 _subtype	var	scripts/tabs/product/type_picker.gd:15	TypePicker
 _subtypes	var	scripts/systems/product_lines.gd:48	ProductLines
@@ -4129,7 +4131,7 @@ _units	var	scripts/systems/negotiation_system.gd:39	NegotiationSystem
 _units_seen	var	scripts/debug/run_probe.gd:318	RunProbe
 _unknown	var	scripts/tabs/product/area_panel.gd:35	AreaPanel
 _untelegraphed_refusals	var	scripts/events/core/effects.gd:114	EvEffects
-_until	func	scripts/debug/player_paths.gd:207	PlayerPaths
+_until	func	scripts/debug/player_paths.gd:240	PlayerPaths
 _until	func	scripts/events/core/effects.gd:1076	EvEffects
 _until	func	scripts/ui/office/office_travel.gd:152	office_travel.gd
 _up	func	scripts/theme/theme_check.gd:118	theme_check.gd
@@ -4710,7 +4712,7 @@ BED_SIDE	const	scripts/ui/office/office_person.gd:112	OfficePerson
 BED_SINK	const	scripts/ui/office/office_person.gd:110	OfficePerson
 BED_SIT_DROP	const	scripts/ui/office/office_person.gd:108	OfficePerson
 before_night	func	scripts/events/core/engine.gd:109	EvEngine
-before_night	func	scripts/events/event_gate.gd:179	EventGate
+before_night	func	scripts/events/event_gate.gd:186	EventGate
 begin_day	func	scripts/systems/summary_system.gd:57	SummarySystem
 begin_meeting	func	scripts/systems/vc_pitch_system.gd:59	VCPitchSystem
 begin_pitch	func	scripts/systems/seed_round_system.gd:105	SeedRoundSystem
@@ -4724,7 +4726,7 @@ BG_NEWS	const	scripts/theme/ui_tokens.gd:56	UiTokens
 BG_PANEL	const	scripts/theme/ui_tokens.gd:61	UiTokens
 BG_TOPBAR	const	scripts/theme/ui_tokens.gd:55	UiTokens
 BIG	const	scripts/debug/office_pan_probe.gd:19	office_pan_probe.gd
-bind_scope	func	scripts/events/event_gate.gd:213	EventGate
+bind_scope	func	scripts/events/event_gate.gd:220	EventGate
 BINDINGS	const	scripts/events/core/signals.gd:22	EvSignals
 BITTI	const	scripts/tabs/product/sprint_card.gd:8	SprintCard.State
 BIZ_BUFFER_CAP	const	scripts/systems/news_feed_system.gd:43	NewsFeedSystem
@@ -4941,7 +4943,7 @@ CAST_WALK_EVERY	const	scripts/main/main.gd:2524	main.gd
 CAST_WALK_MAX	const	scripts/main/main.gd:2525	main.gd
 CATALOG	const	scripts/systems/office_constants.gd:18	OfficeConstants
 CATALOGUE	const	scripts/systems/sales_probes.gd:141	SalesProbes
-catalogue_card	func	scripts/events/event_gate.gd:218	EventGate
+catalogue_card	func	scripts/events/event_gate.gd:225	EventGate
 Catch	class	scripts/debug/office_crowd_probe.gd:45	OfficeCrowdProbe
 catch_rate	func	scripts/systems/sprint_bugs.gd:61	SprintBugs
 category	var	scripts/data_models/character.gd:18	Character
@@ -5125,9 +5127,9 @@ composite	func	scripts/data_models/rival.gd:30	Rival
 COMPOSITE_AXES	const	scripts/systems/rival_catalog.gd:33	RivalCatalog
 composite_quality	func	scripts/systems/quality_model.gd:29	QualityModel
 compute_total_burn	func	scripts/systems/finance_system.gd:213	FinanceSystem
-condition_leaves	func	scripts/events/event_gate.gd:115	EventGate
-condition_met	func	scripts/events/event_gate.gd:109	EventGate
-condition_reason	func	scripts/events/event_gate.gd:122	EventGate
+condition_leaves	func	scripts/events/event_gate.gd:122	EventGate
+condition_met	func	scripts/events/event_gate.gd:116	EventGate
+condition_reason	func	scripts/events/event_gate.gd:129	EventGate
 conditions	func	scripts/systems/sales_archetypes.gd:153	SalesArchetypes
 CONFERENCE_TENURE_WEEKS	const	scripts/events/tools/plausibility.gd:58	plausibility.gd
 configure	func	scripts/ui/components/logo_emblem.gd:48	LogoEmblem
@@ -5769,7 +5771,7 @@ daily_overtime_in	func	scripts/systems/work_hours_system.gd:242	WorkHoursSystem
 daily_rate	func	scripts/systems/finance_system.gd:206	FinanceSystem
 daily_satisfaction_damage	func	scripts/systems/support_system.gd:235	SupportSystem
 daily_tick	func	scripts/events/core/engine.gd:71	EvEngine
-daily_tick	func	scripts/events/event_gate.gd:171	EventGate
+daily_tick	func	scripts/events/event_gate.gd:178	EventGate
 daily_tick	func	scripts/systems/b2b_sales_system.gd:20	B2BSalesSystem
 daily_tick	func	scripts/systems/customer_rep_system.gd:192	CustomerRepSystem
 daily_tick	func	scripts/systems/endings_system.gd:82	EndingsSystem
@@ -5841,7 +5843,7 @@ DEAL_STAGES_DESK	const	scripts/systems/sales_constants.gd:157	SalesConstants
 DEAL_STAGES_TABLE	const	scripts/systems/sales_constants.gd:160	SalesConstants
 deal_walked	signal	scripts/autoload/event_bus.gd:217	EventBus
 DEAL_WEEKS_PER_STAR_ABOVE	const	scripts/systems/sales_constants.gd:150	SalesConstants
-debug_apply_effects	func	scripts/events/event_gate.gd:222	EventGate
+debug_apply_effects	func	scripts/events/event_gate.gd:229	EventGate
 debug_force_gate	func	scripts/systems/phase_gate_system.gd:116	PhaseGateSystem
 debug_force_vc_meeting	func	scripts/main/game_shell.gd:163	game_shell.gd
 debug_onboarding_retrigger_requested	signal	scripts/autoload/event_bus.gd:301	EventBus
@@ -5901,7 +5903,7 @@ DESK_IDLE_EVERY	const	scripts/systems/office_constants.gd:101	OfficeConstants
 DESK_IDLE_S	const	scripts/systems/office_constants.gd:102	OfficeConstants
 DESK_IDLES	const	scripts/ui/office/office_people.gd:48	OfficePeople
 DESK_LAMP	const	scripts/ui/office/office_lighting.gd:34	OfficeLighting
-desk_papers	func	scripts/events/event_gate.gd:163	EventGate
+desk_papers	func	scripts/events/event_gate.gd:170	EventGate
 desk_papers	func	scripts/events/present/presenter.gd:192	EvPresenter
 desk_roster	func	scripts/systems/support_system.gd:177	SupportSystem
 desk_staffed	func	scripts/systems/support_system.gd:205	SupportSystem
@@ -6259,6 +6261,7 @@ FAMILY_ORDER	const	scripts/tabs/rnd/rnd_tree_view.gd:38	RnDTreeView
 FAMILY_PLATFORM	const	scripts/systems/research_seam.gd:19	ResearchSeam
 FAMILY_PRACTICE	const	scripts/systems/research_seam.gd:20	ResearchSeam
 family_root_done	func	scripts/systems/rnd_system.gd:707	RnDSystem
+family_subject_held	func	scripts/events/event_gate.gd:103	EventGate
 FAMILY_SUBJECT_TENURE	const	scripts/events/core/tuning.gd:56	EvTuning
 FAUCET_BASE_PER_WEEK	const	scripts/systems/sales_constants.gd:19	SalesConstants
 FAUCET_PER_REP_PER_WEEK	const	scripts/systems/sales_constants.gd:20	SalesConstants
@@ -6364,7 +6367,7 @@ floor_state	func	scripts/systems/product_read.gd:109	ProductRead
 FLOOR_WARNING_RATIO	const	scripts/systems/product_read.gd:92	ProductRead
 flush	func	scripts/autoload/settings.gd:137	Settings
 flush	func	scripts/events/core/queue.gd:218	EvQueue
-flush	func	scripts/events/event_gate.gd:136	EventGate
+flush	func	scripts/events/event_gate.gd:143	EventGate
 Fmt	class	scripts/util/fmt.gd:1	Fmt
 fnv1a	func	scripts/events/core/dice.gd:22	EvDice
 FNV_OFFSET_BASIS	const	scripts/events/core/dice.gd:17	EvDice
@@ -6499,7 +6502,7 @@ from_dict	func	scripts/events/core/save.gd:40	EvSave
 from_dict	func	scripts/events/core/schedule.gd:149	EvSchedule
 from_dict	func	scripts/events/core/watch.gd:54	EvWatch
 from_dict	func	scripts/events/present/papers.gd:184	EvPapers
-from_dict	func	scripts/events/present/tempo.gd:313	EvTempo
+from_dict	func	scripts/events/present/tempo.gd:318	EvTempo
 from_dict	func	scripts/events/present/ticker.gd:59	EvTicker
 from_dict	func	scripts/systems/finance_system.gd:97	FinanceSystem
 from_dict	func	scripts/systems/hr_morale_system.gd:407	HRMoraleSystem
@@ -6807,9 +6810,9 @@ HOURLY_AUD_BASE	const	scripts/systems/sales_system.gd:56	SalesSystem
 HOURLY_AUD_BRAND_COEF	const	scripts/systems/sales_system.gd:58	SalesSystem
 HOURLY_AUD_QUALITY_COEF	const	scripts/systems/sales_system.gd:57	SalesSystem
 HOURLY_AUD_REPUTATION_COEF	const	scripts/systems/sales_system.gd:59	SalesSystem
-hourly_chance	func	scripts/events/event_gate.gd:227	EventGate
+hourly_chance	func	scripts/events/event_gate.gd:234	EventGate
 hourly_tick	func	scripts/events/core/engine.gd:93	EvEngine
-hourly_tick	func	scripts/events/event_gate.gd:175	EventGate
+hourly_tick	func	scripts/events/event_gate.gd:182	EventGate
 hourly_tick	func	scripts/systems/incident_system.gd:219	IncidentSystem
 hourly_tick	func	scripts/systems/mail_clock.gd:68	MailClock
 hourly_tick	func	scripts/systems/sales_system.gd:151	SalesSystem
@@ -6958,7 +6961,7 @@ install	func	scripts/events/seams/seams_ported.gd:8	EvSeamsPorted
 install	func	scripts/events/seams/seams_product.gd:8	EvSeamsProduct
 install	func	scripts/events/seams/seams_sales.gd:26	EvSeamsSales
 install	func	scripts/events/seams/seams_world.gd:9	EvSeamsWorld
-instances_of	func	scripts/events/event_gate.gd:191	EventGate
+instances_of	func	scripts/events/event_gate.gd:198	EventGate
 instant	var	scripts/systems/mail_clock.gd:23	MailClock
 INSULT_MARGIN	const	scripts/systems/sales_constants.gd:137	SalesConstants
 intake	func	scripts/systems/sprint_system.gd:871	SprintSystem
@@ -6995,7 +6998,7 @@ is_batching	func	scripts/autoload/time_manager.gd:212	TimeManager
 is_being_worked	func	scripts/data_models/prospect.gd:97	Prospect
 is_busy	func	scripts/systems/hr_system.gd:150	HRSystem
 is_candidate	func	scripts/tabs/product/board_row.gd:107	BoardRow
-is_catalogued	func	scripts/events/event_gate.gd:100	EventGate
+is_catalogued	func	scripts/events/event_gate.gd:107	EventGate
 is_clock_held	func	scripts/autoload/time_manager.gd:370	TimeManager
 is_colorblind	func	scripts/theme/ui_tokens.gd:318	UiTokens
 is_complete	func	scripts/systems/product_lines.gd:413	ProductLines
@@ -7849,7 +7852,7 @@ OLD_CALENDAR_YEAR_SHIFT	const	scripts/systems/save_codec.gd:35	SaveCodec
 OLD_SKILLS	const	scripts/systems/founder_constants.gd:16	FounderConstants
 ON_ACCENT	const	scripts/theme/ui_tokens.gd:98	UiTokens
 on_buyout_declined	func	scripts/systems/endings_system.gd:338	EndingsSystem
-on_desk	func	scripts/events/event_gate.gd:197	EventGate
+on_desk	func	scripts/events/event_gate.gd:204	EventGate
 on_escape	func	scripts/tabs/events/mail_pane.gd:79	mail_pane.gd
 on_escape	func	scripts/tabs/events_tab.gd:84	events_tab.gd
 ON_FLOOR	const	scripts/ui/office/office_people.gd:25	OfficePeople
@@ -7911,7 +7914,7 @@ open_map	func	scripts/ui/office/office_view.gd:79	office_view.gd
 open_offset	func	scripts/tabs/product/area_panel.gd:66	AreaPanel
 open_paid_plan	func	scripts/systems/sprint_bridges.gd:165	SprintBridges
 open_paper	func	scripts/events/core/engine.gd:754	EvEngine
-open_paper	func	scripts/events/event_gate.gd:145	EventGate
+open_paper	func	scripts/events/event_gate.gd:152	EventGate
 open_paper	func	scripts/tabs/events/mail_pane.gd:475	mail_pane.gd
 open_pitch_promise	func	scripts/systems/sales_ledger.gd:153	SalesLedger
 open_primary	func	scripts/ui/components/window_layer.gd:75	window_layer.gd
@@ -8126,7 +8129,7 @@ PICK_KEYS	const	scripts/ui/meeting/meeting_panel.gd:48	MeetingPanel
 PICK_KEYS_KP	const	scripts/ui/meeting/meeting_panel.gd:49	MeetingPanel
 pick_lead_for	func	scripts/systems/sales_rep_system.gd:111	SalesRepSystem
 pick_pain_feature	func	scripts/systems/b2b_sales_system.gd:632	B2BSalesSystem
-pick_request_kind	func	scripts/systems/customer_rep_system.gd:319	CustomerRepSystem
+pick_request_kind	func	scripts/systems/customer_rep_system.gd:328	CustomerRepSystem
 pick_reviews	func	scripts/systems/sprint_bridges.gd:298	SprintBridges
 picked	signal	scripts/onboarding/first_week_doc.gd:7	first_week_doc.gd
 picked	signal	scripts/ui/meeting/meeting_ruler.gd:28	MeetingRuler._Rail
@@ -8363,7 +8366,7 @@ PULSE_SCALE	const	scripts/ui/components/top_bar.gd:78	top_bar.gd
 PULSE_SCALE	const	scripts/ui/office/office_hud.gd:13	office_hud.gd
 PULSE_TIME	const	scripts/ui/office/office_hud.gd:15	office_hud.gd
 pump	func	scripts/events/core/engine.gd:534	EvEngine
-pump	func	scripts/events/event_gate.gd:157	EventGate
+pump	func	scripts/events/event_gate.gd:164	EventGate
 purchased_capacity	func	scripts/systems/infra_system.gd:115	InfraSystem
 push	func	scripts/events/present/ticker.gd:21	EvTicker
 push	func	scripts/systems/term_sheet_table_system.gd:272	TermSheetTableSystem
@@ -8386,11 +8389,11 @@ QUEUE_FLOOR	const	scripts/ui/office/office_venue.gd:12	OfficeVenue
 QUEUE_H	const	scripts/tabs/events_tab.gd:14	events_tab.gd
 QUEUE_MAX	const	scripts/ui/office/office_venue.gd:11	OfficeVenue
 queue_plan	func	scripts/events/core/effects.gd:949	EvEffects
-queue_position_of	func	scripts/events/event_gate.gd:201	EventGate
+queue_position_of	func	scripts/events/event_gate.gd:208	EventGate
 queue_size	func	scripts/events/event_gate.gd:86	EventGate
 QUEUE_STEP	const	scripts/ui/office/office_venue.gd:10	OfficeVenue
 queued	var	scripts/ui/office/office_actor.gd:63	OfficeActor
-queued_ids	func	scripts/events/event_gate.gd:187	EventGate
+queued_ids	func	scripts/events/event_gate.gd:194	EventGate
 QUICK_ACTS	const	scripts/systems/incident_system.gd:58	IncidentSystem
 quick_fix	func	scripts/systems/incident_system.gd:447	IncidentSystem
 quick_slot_id	func	scripts/autoload/save_manager.gd:244	SaveManager
@@ -8458,7 +8461,7 @@ record	func	scripts/systems/sprint_bugs.gd:35	SprintBugs
 record_angel_round	func	scripts/autoload/game_state.gd:656	GameState
 record_broken_promise	func	scripts/systems/sales_ledger.gd:230	SalesLedger
 record_close	func	scripts/systems/sales_ledger.gd:387	SalesLedger
-record_family	func	scripts/events/present/tempo.gd:246	EvTempo
+record_family	func	scripts/events/present/tempo.gd:251	EvTempo
 record_insult	func	scripts/systems/sales_ledger.gd:219	SalesLedger
 record_interrupt	func	scripts/systems/sprint_system.gd:650	SprintSystem
 record_loss	func	scripts/systems/sales_ledger.gd:400	SalesLedger
@@ -8514,8 +8517,8 @@ remove	func	scripts/autoload/prospect_registry.gd:82	ProspectRegistry
 remove	func	scripts/events/core/queue.gd:203	EvQueue
 remove	func	scripts/events/present/papers.gd:48	EvPapers
 remove	func	scripts/systems/sprint_system.gd:114	SprintSystem
-remove_queued	func	scripts/events/event_gate.gd:129	EventGate
-render	func	scripts/events/event_gate.gd:207	EventGate
+remove_queued	func	scripts/events/event_gate.gd:136	EventGate
+render	func	scripts/events/event_gate.gd:214	EventGate
 RENDER_PROBE_FRAMES	const	scripts/main/main.gd:390	main.gd
 RENDER_PROBE_REBUILDS	const	scripts/main/main.gd:391	main.gd
 RENDER_PROBE_WARMUP	const	scripts/main/main.gd:389	main.gd
@@ -8593,9 +8596,9 @@ reset	func	scripts/events/core/queue.gd:224	EvQueue
 reset	func	scripts/events/core/save.gd:68	EvSave
 reset	func	scripts/events/core/schedule.gd:141	EvSchedule
 reset	func	scripts/events/core/watch.gd:45	EvWatch
-reset	func	scripts/events/event_gate.gd:167	EventGate
+reset	func	scripts/events/event_gate.gd:174	EventGate
 reset	func	scripts/events/present/papers.gd:174	EvPapers
-reset	func	scripts/events/present/tempo.gd:299	EvTempo
+reset	func	scripts/events/present/tempo.gd:304	EvTempo
 reset	func	scripts/events/present/ticker.gd:51	EvTicker
 reset	func	scripts/events/seams/seams.gd:160	EvSeams
 reset	func	scripts/systems/finance_system.gd:83	FinanceSystem
@@ -9077,7 +9080,7 @@ service_up	func	scripts/systems/incident_system.gd:439	IncidentSystem
 set_action	func	scripts/ui/components/toast.gd:58	toast.gd
 set_active	func	scripts/events/core/queue.gd:114	EvQueue
 set_aside	func	scripts/events/core/engine.gd:804	EvEngine
-set_aside	func	scripts/events/event_gate.gd:151	EventGate
+set_aside	func	scripts/events/event_gate.gd:158	EventGate
 set_assignees	func	scripts/systems/rnd_system.gd:284	RnDSystem
 set_away	func	scripts/autoload/character_registry.gd:605	CharacterRegistry
 set_bar	func	scripts/tabs/product/stage_paint.gd:96	StagePaint
@@ -9616,6 +9619,7 @@ STYLES	const	scripts/ui/components/logo_emblem.gd:9	LogoEmblem
 sub_product_type_id	var	scripts/data_models/rival.gd:15	Rival
 SUB_PRODUCT_TYPES	const	scripts/systems/product_catalog.gd:11	ProductCatalog
 subgenre	var	scripts/autoload/game_state.gd:16	GameState
+subject_brake	func	scripts/events/present/tempo.gd:191	EvTempo
 SUBJECT_FAMILY_COOLDOWN_WEEKS	const	scripts/events/tools/lint.gd:528	EvLint
 SUBJECT_GAP_CUSTOMER_WEEKS	const	scripts/events/core/tuning.gd:23	EvTuning
 SUBJECT_GAP_EMPLOYEE_WEEKS	const	scripts/events/core/tuning.gd:22	EvTuning
@@ -9797,7 +9801,7 @@ to_dict	func	scripts/events/core/save.gd:20	EvSave
 to_dict	func	scripts/events/core/schedule.gd:145	EvSchedule
 to_dict	func	scripts/events/core/watch.gd:49	EvWatch
 to_dict	func	scripts/events/present/papers.gd:178	EvPapers
-to_dict	func	scripts/events/present/tempo.gd:305	EvTempo
+to_dict	func	scripts/events/present/tempo.gd:310	EvTempo
 to_dict	func	scripts/events/present/ticker.gd:55	EvTicker
 to_dict	func	scripts/systems/finance_system.gd:91	FinanceSystem
 to_dict	func	scripts/systems/hr_morale_system.gd:401	HRMoraleSystem

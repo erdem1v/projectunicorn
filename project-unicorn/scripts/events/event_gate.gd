@@ -97,6 +97,13 @@ static func mark_read(index: int) -> void:
 	EvHistory.mark_read(index)
 
 
+## Whether the card's own rule about this subject (`family_subject`, motor md §13.3 layer 2b) holds it now. A request does
+## not pay that layer at the gate; the support desk asks here before naming a request card. The other systems that name
+## cards carrying the rule (sprint papers, emergencies, the promise card, resignation, burnout) do not ask.
+static func family_subject_held(event_id: String, subject_id: String) -> bool:
+	return not EvTempo.subject_brake(EvCatalog.card(event_id), subject_id).is_empty()
+
+
 static func is_catalogued(event_id: String) -> bool:
 	return EvCatalog.has_card(event_id)
 

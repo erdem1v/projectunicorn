@@ -182,9 +182,14 @@ static func family_brake(card: Dictionary, subject_id: String) -> Dictionary:
 				"reason": "layer 1b: family '%s' fired %d week(s) ago, gap is %d"
 					% [family, since, gap]}
 
-	# Layer 2b — this family about THIS person. The finding that started all of it: the same
-	# employee asked for money twice, and a family may be right twice without being right twice
-	# about one person.
+	return subject_brake(card, subject_id)
+
+
+## Layer 2b — this family about THIS person. The finding that started all of it: the same employee asked for money twice,
+## and a family may be right twice without being right twice about one person. Its own door because a request does not pay
+## it here (motor md §13.3): the support desk keeps its request cards' rule through EventGate.family_subject_held.
+static func subject_brake(card: Dictionary, subject_id: String) -> Dictionary:
+	var family: String = String(card.get("family", ""))
 	var rule: Dictionary = card.get("family_subject", {})
 	if subject_id == "" or rule.is_empty():
 		return {}

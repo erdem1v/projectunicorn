@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git c8e96732 · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 3529c61c · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -55,7 +55,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/data_models/rival.gd · 33 · Rival · Resource · 0 sinyal · 1 func
 - scripts/data_models/term_sheet.gd · 63 · TermSheet · Resource · 0 sinyal · 3 func
 
-### scripts/debug/ (12 dosya, 35014 satır)
+### scripts/debug/ (12 dosya, 35047 satır)
 - scripts/debug/endgame_smoke.gd · 30151 · EndgameSmoke · RefCounted · 0 sinyal · 684 func
 - scripts/debug/glyph_audit.gd · 109 · - · SceneTree · 0 sinyal · 6 func
 - scripts/debug/k0_check.gd · 110 · K0Check · RefCounted · 0 sinyal · 6 func
@@ -63,14 +63,14 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/debug/loc_residue.gd · 265 · - · SceneTree · 0 sinyal · 9 func
 - scripts/debug/office_crowd_probe.gd · 326 · OfficeCrowdProbe · Node · 0 sinyal · 15 func
 - scripts/debug/office_pan_probe.gd · 398 · - · RefCounted · 0 sinyal · 17 func
-- scripts/debug/player_paths.gd · 212 · PlayerPaths · RefCounted · 0 sinyal · 12 func
+- scripts/debug/player_paths.gd · 245 · PlayerPaths · RefCounted · 0 sinyal · 13 func
 - scripts/debug/run_probe.gd · 2442 · RunProbe · RefCounted · 0 sinyal · 95 func
 - scripts/debug/sprint_probe.gd · 516 · - · RefCounted · 0 sinyal · 21 func
 - scripts/debug/tick_probe.gd · 133 · - · Node · 0 sinyal · 3 func
 - scripts/debug/write_licenses.gd · 54 · - · SceneTree · 0 sinyal · 2 func
 
-### scripts/events/ (1 dosya, 231 satır)
-- scripts/events/event_gate.gd · 231 · EventGate · RefCounted · 0 sinyal · 36 func
+### scripts/events/ (1 dosya, 238 satır)
+- scripts/events/event_gate.gd · 238 · EventGate · RefCounted · 0 sinyal · 37 func
 
 ### scripts/events/catalog/ (1 dosya, 313 satır)
 - scripts/events/catalog/catalog.gd · 313 · EvCatalog · RefCounted · 0 sinyal · 19 func
@@ -97,11 +97,11 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/events/gate/gate.gd · 289 · EvGate · RefCounted · 0 sinyal · 12 func
 - scripts/events/gate/scope.gd · 408 · EvScope · RefCounted · 0 sinyal · 20 func
 
-### scripts/events/present/ (5 dosya, 1581 satır)
+### scripts/events/present/ (5 dosya, 1586 satır)
 - scripts/events/present/chips.gd · 699 · EvChips · RefCounted · 0 sinyal · 28 func
 - scripts/events/present/papers.gd · 194 · EvPapers · RefCounted · 0 sinyal · 22 func
 - scripts/events/present/presenter.gd · 312 · EvPresenter · RefCounted · 0 sinyal · 16 func
-- scripts/events/present/tempo.gd · 316 · EvTempo · RefCounted · 0 sinyal · 20 func
+- scripts/events/present/tempo.gd · 321 · EvTempo · RefCounted · 0 sinyal · 21 func
 - scripts/events/present/ticker.gd · 60 · EvTicker · RefCounted · 0 sinyal · 6 func
 
 ### scripts/events/seams/ (8 dosya, 1395 satır)
@@ -155,14 +155,14 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/onboarding/steps/origin_traits_step.gd · 329 · - · OnboardingStep · 0 sinyal · 18 func
 - scripts/onboarding/steps/step_base.gd · 119 · OnboardingStep · Control · 1 sinyal · 10 func
 
-### scripts/systems/ (72 dosya, 24606 satır)
+### scripts/systems/ (72 dosya, 24615 satır)
 - scripts/systems/angel_round_system.gd · 52 · AngelRoundSystem · RefCounted · 0 sinyal · 1 func
 - scripts/systems/b2b_constants.gd · 291 · B2BConstants · RefCounted · 0 sinyal · 9 func
 - scripts/systems/b2b_sales_system.gd · 722 · B2BSalesSystem · RefCounted · 0 sinyal · 46 func
 - scripts/systems/cheque_read.gd · 61 · - · RefCounted · 0 sinyal · 3 func
 - scripts/systems/company_catalog.gd · 113 · CompanyCatalog · RefCounted · 0 sinyal · 1 func
 - scripts/systems/counterpart_system.gd · 101 · CounterpartSystem · RefCounted · 0 sinyal · 9 func
-- scripts/systems/customer_rep_system.gd · 381 · CustomerRepSystem · RefCounted · 0 sinyal · 19 func
+- scripts/systems/customer_rep_system.gd · 390 · CustomerRepSystem · RefCounted · 0 sinyal · 20 func
 - scripts/systems/display_settings.gd · 350 · DisplaySettings · RefCounted · 0 sinyal · 27 func
 - scripts/systems/endings_copy.gd · 536 · EndingsCopy · RefCounted · 0 sinyal · 31 func
 - scripts/systems/endings_system.gd · 517 · EndingsSystem · RefCounted · 0 sinyal · 28 func
