@@ -493,7 +493,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"seed_pitch_never_rejects":              fail = _case_seed_pitch_never_rejects()
 		"seed_bands_map_to_terms":               fail = _case_seed_bands_map_to_terms()
 		"seed_sheet_never_in_active_sheets":     fail = _case_seed_sheet_never_in_active_sheets()
-		"seed_table_walk_is_locked":             fail = _case_seed_table_walk_is_locked()  # EXPECT-ERROR walk() at a seed table
+		"seed_table_has_no_walk":                fail = _case_seed_table_has_no_walk()  # EXPECT-ERROR walk() at a seed table
 		"seed_sign_is_not_terminal":             fail = _case_seed_sign_is_not_terminal()
 		"seed_survives_series_a_sign":           fail = _case_seed_survives_series_a_sign()
 		"seed_expectation_grace_then_stall":     fail = _case_seed_expectation_grace_then_stall()
@@ -1942,7 +1942,9 @@ static func _case_table_walk_not_a_rejection() -> String:
 	_grant("nexus")
 	var walked: Array = []
 	EventBus.sheet_walked.connect(func(vc: String) -> void: walked.append(vc))
-	TermSheetTableSystem.open("anchor", PitchConstants.STAGE_SERIES_A)
+	var vs: Dictionary = TermSheetTableSystem.open("anchor", PitchConstants.STAGE_SERIES_A)
+	if not bool(vs.get("walk_shown", false)) or not bool(vs.get("walk_enabled", false)):
+		return "the Series A table hides or closes its walk row (only the seed table has none)"
 	TermSheetTableSystem.walk()
 	if GameState.vc_rejections != 0:
 		return "vc_rejections=%d (want 0 — K11: the player's walk is not a rejection)" % GameState.vc_rejections
@@ -21183,8 +21185,10 @@ static func _case_seed_sheet_never_in_active_sheets() -> String:
 	return ""
 
 
-static func _case_seed_table_walk_is_locked() -> String:
-	# Visible, disabled and saying why: the seed rung has no walk-out on any difficulty (walk() refuses at seed).
+static func _case_seed_table_has_no_walk() -> String:
+	# No walk row at all, not even a locked one: the seed must be taken (Erdem, 2026-11-12, H11), and walk() refuses at seed.
+	# FALSİFİKASYON: `walk_shown`'ı `true` yap → "the seed table shows a walk row" FAIL; walk()'taki seed korumasını sil →
+	# teklif yok olur FAIL.
 	_seed_seed_world()
 	_sim_day_full()
 	if not _play_seed_meeting("anchor", ["b1_read", "b2_vizyon", "b3_durust", "b4_ack"]):
@@ -21194,10 +21198,10 @@ static func _case_seed_table_walk_is_locked() -> String:
 		return "the seed table would not open"
 	if bool(vs.get("walk_enabled", true)):
 		return "the seed table offers a walk"
-	if not bool((vs.get("walk_lock", {}) as Dictionary).get("locked", false)):
-		return "the walk row is disabled without saying why"
-	if String((vs.get("walk_lock", {}) as Dictionary).get("reason_key", "")) == "":
-		return "the walk lock carries no reason key"
+	if bool(vs.get("walk_shown", true)):
+		return "the seed table shows a walk row"
+	if vs.has("walk_lock"):
+		return "the seed table still carries a walk lock"
 	var rejections0: int = GameState.vc_rejections
 	TermSheetTableSystem.walk()
 	if GameState.seed_sheet == null:

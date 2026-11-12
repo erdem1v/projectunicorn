@@ -591,11 +591,10 @@ static func walk() -> void:
 	if _fund_walked:
 		leave()
 		return
-	# THE SECOND SAFETY behind the locked row: the button renders visible and disabled with
-	# its reason, the way Frank's cheque renders REDDET · ZOR MOD, and this refuses even a
-	# direct call. Walking away from the seed round is ZOR MOD (docs/ACIK_ISLER/ACIK_KARARLAR.md).
+	# THE SECOND SAFETY behind the missing row: the seed table draws no walk key (walk_shown), and
+	# this refuses even a direct call. The seed must be taken (Erdem, 2026-11-12, H11).
 	if is_seed():
-		push_error("[TermSheetTableSystem] walk() at a seed table — the refusal row is ZOR MOD")
+		push_error("[TermSheetTableSystem] walk() at a seed table — the seed has no walk")
 		return
 	var vc: String = _vc_id
 	_close_sitting()
@@ -727,12 +726,9 @@ static func view_state() -> Dictionary:
 		# After a walk-out the same row becomes "leave the room" (walk_mode) — the only exit.
 		"walk_enabled": _active and (not is_seed() or _fund_walked),
 		"walk_mode": "leave" if _fund_walked else "walk",
-		# LOCKED-VISIBLE, not hidden: the row stays on screen and says why, which is the
-		# grammar every other locked door in this game uses.
-		"walk_lock": {
-			"locked": is_seed(),
-			"reason_key": "SEED_WALK_LOCK",
-		},
+		# The seed table has no walk row at all, not even a locked one: the seed must be taken (Erdem, 2026-11-12,
+		# H11: "Seed yatırım alması şart; diğer seçeneği direkt çıkartalım"). A seed fund never walks out either.
+		"walk_shown": not is_seed() or _fund_walked,
 		# The seed table's derived readout. "" at Series A, where the valuation is a lever.
 		"derived_caption": TranslationServer.translate("SEED_IMPLIED_POST").format(
 			{"post": Fmt.money_exact(implied_post_money())}) if is_seed() else "",

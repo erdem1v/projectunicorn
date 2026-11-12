@@ -38,7 +38,6 @@ var _other_button: Button
 var _other_why: Label
 var _frank: Label
 var _walk: Button
-var _walk_why: Label
 var _money: Label
 var _derived: Label
 var _cash: Label
@@ -260,15 +259,13 @@ func _key_part(sample: Vector2i, ink: Color, key: String) -> HBoxContainer:
 	return part
 
 
-## The walk with its reason when it is closed, the money with what it is worth, the signature.
+## The walk (none at the seed table), the money with what it is worth, the signature.
 func _build_foot() -> HBoxContainer:
 	var foot := SprintUiShared.box(0)
 	var left := SprintUiShared.box(UiTokens.SPACE_L)
 	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_walk = SprintUiShared.button("", &"DangerButton", _on_walk_pressed)
 	left.add_child(_walk)
-	_walk_why = SprintUiShared.label("", &"Caption")
-	left.add_child(_walk_why)
 	foot.add_child(left)
 	var money := SprintUiShared.column(UiTokens.SPACE_XXS)
 	money.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -325,14 +322,12 @@ func _render(vs: Dictionary) -> void:
 	_other_why.visible = show_other.used
 	_frank.text = vs.frank_line
 	# After a walk-out the same key is the only exit, and it only leaves: the fund closed the door when it
-	# stood up. A walk the run cannot take yet stays on the bar, closed, with its reason beside it.
+	# stood up. The seed table has no walk key (the seed must be taken).
 	_leave_mode = vs.walk_mode == "leave"
-	var lock: Dictionary = vs.walk_lock
+	_walk.visible = vs.walk_shown
 	_walk.text = tr("TERM_LEAVE" if _leave_mode else "TERM_WALK_OK")
 	_walk.theme_type_variation = &"SecondaryButton" if _leave_mode else UiTokens.D_variation(&"DangerButton")
-	_walk.icon = load(SprintUiShared.LOCK) if lock.locked else null
 	_walk.disabled = not vs.walk_enabled or _spinning
-	_walk_why.text = tr(lock.reason_key) if lock.locked else ""
 	_money.text = tr("TERM_INVESTMENT").format({"amount": Fmt.money(int(vs.money_raised))})
 	_derived.text = vs.derived_caption
 	_derived.visible = _derived.text != ""

@@ -2322,7 +2322,6 @@ SEED_EXPECT_STALLED,Durgun. Üç aylık ortalama {avg}; beklenen {need}.,"Stalle
 SEED_EXPECT_UNKNOWN,Ortalama için yeterli kapanmış ay yok.,Not enough closed months to read an average yet.
 SEED_LEVER_RAISE,Yatırım,Investment
 SEED_IMPLIED_POST,İma edilen değerleme {post},Implied valuation {post}
-SEED_WALK_LOCK,Seed turu geri çevrilemez.,The seed round can't be turned down.
 SEED_FRANK_OPENING,"""Teklif duruyor, kaçmıyor. Ama pazarlık ettiğin her şeyin bir bedeli var: sabırları.""","""The offer is not going anywhere. But everything you negotiate for costs the same thing: their patience."""
 SEED_FRANK_NEXT_MOVE,"""Bir hamlen daha var.""","""You have another move."""
 SEED_FRANK_LAST_MOVE,"""Son sabırları. Dikkat.""","""That is the last of their patience."""

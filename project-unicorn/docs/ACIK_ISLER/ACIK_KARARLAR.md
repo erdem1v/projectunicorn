@@ -656,7 +656,7 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
 
 - **GDD'ler arası iki çelişki.** (1) Zor mod: ch01 §6 "v1 yalnız Normal; Hard, Normal kalibre edilene kadar
   kilitli-görünür", ch14 §2 "Hard demo'da çıkar" diyor; ch14 §8 ayarlı mı kaba mı çıkacağını açık bırakıyor. Kodda zor mod
-  yok: son ekranında "ZOR MOD · YAKINDA" kilitli, Frank'in çekini ve seed'i reddetmek "zor modda açılır" kilidinde.
+  yok: son ekranında "ZOR MOD · YAKINDA" kilitli, Frank'in çekini reddetmek "zor modda açılır" kilidinde; seed'i reddetme satırı 2026-11-12'de kalktı (H11).
   `GDDs/README.md` ch01 §6 için ch14'ü okutur. Açık: Hard demo'ya girecek mi. (2) Ar-Ge sekmesi: ch12 §1 ve ch14 §3
   "kilitli-görünür" diyor; Ar-Ge GDD §2 (rev 1.8) ray öğesini ilk günden normal sekme sayıyor, kod (`UiTokens.TABS`) buna
   uyuyor. Açık: ch12 §1 ve ch14 §3 güncellensin mi.
@@ -1504,8 +1504,9 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   bootstrap'ı zafer sonu, ch01 §1 730 günü (bugün 104 hafta) tavan, ch13 §2 Frank şeridini son ekranının öğesi
   sayıyor. Açık: ch13 §1–§2 ve galeri (§4) güncellensin mi. Kaynak: HANDOFF_series_a §D ve §H.2.
 
-- **Seed garanti basamaktır (7946ff3, sahip hükmü 2026-08-27).** Seed odası reddedemez, seed teklifi dolmaz, masadan kalkmak
-  ZOR MOD kilidinde; Frank'in mühürlü seed satırları buna dayanıyor. ch09 §3 seed için "kabul / bir kez pazarlık / ret" ve retle
+- **Seed garanti basamaktır (7946ff3, sahip hükmü 2026-08-27).** Seed odası reddedemez, seed teklifi dolmaz, seed masasında
+  kalkma satırı yok, kilitli olarak da (Erdem, 2026-11-12, H11: "Seed yatırım alması şart; diğer seçeneği direkt
+  çıkartalım"; önce ZOR MOD kilidindeydi); Frank'in mühürlü seed satırları buna dayanıyor. ch09 §3 seed için "kabul / bir kez pazarlık / ret" ve retle
   açık kalan bootstrap yolunu, ch09 §4 "şimdi değil" sonucunu tanımlıyor. Açık: ch09 §3–§4 güncellensin mi; tasarım soruları
   K18–K22'de. Kaynak: ACIK_KARARLAR_D1-D13 B3.
 
