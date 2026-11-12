@@ -31,7 +31,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - `scripts/data_models/rival.gd` (38): `Rival` Resource (tier, üç boyut, momentum, `composite()`)
 - `scripts/data_models/term_sheet.gd` (63): `TermSheet` Resource (Seri A ve seed teklifi, vade, `opening_terms`)
 - `scripts/data_models/event.gd` (21) ve `event_choice.gd` (11): `GameEvent`/`EventChoice` kartın çizim görünümü; asla kaydedilmez
-- `scripts/util/fmt.gd` (239): `Fmt` para, yüzde, tarih, ay adı, büyük harf, `cap_first`; yerel veri strings.csv'dedir
+- `scripts/util/fmt.gd` (250): `Fmt` para, yüzde, tarih, ay adı, büyük harf, `cap_first`; yerel veri strings.csv'dedir
 - `scripts/systems/display_settings.gd` (350): `DisplaySettings`, pencere kipi, çözünürlük, vsync, UI ölçeği; durumsuz, `Settings` saklar bu uygular; `is_inert()` harness pencereyi sahiplenince her çağrıyı keser
 - `scripts/systems/graphics_settings.gd` (211): class_name yok (`Settings` preload eder); 3B görüntü kalitesi, 4 ön ayar `data/graphics/presets.json`, `OfficeView.apply_graphics`; `--gfx=<ön ayar>`
 - `scripts/main/main.gd` (6302): ana sahne kökü; açılış (Godot kartı → menü → onboarding → kabuk), modal montajı, karar kapısı (`hold_clock("event")`), kayıt/yükleme ve yolculuk akışı
@@ -68,7 +68,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - `Settings.get_value/get_choice/set_value/has_stored/reset_to_defaults/apply_all/flush` `settings.gd:78,84,95,91,104,113,137` · modal ve `Display/Audio/Localization/SaveManager/TimeManager` okur
 - `Localization.set_language/get_language/pick/detect_language` `localization.gd:82,35,76,67` · `scripts/modals/settings_modal.gd`; `pick` olay JSON'unu çizimde çözer
 - `AudioManager.apply_from_settings/set_*_volume/set_music_enabled/set_mute_unfocused` `audio_manager.gd:77,100-130` · `scripts/modals/settings_modal.gd:172-187`, `settings.gd:125`
-- `Fmt.money/percent/number/month_name/date_line/upper/cap_first` `scripts/util/fmt.gd:154,139,134,74,85,36,50`: 84 dosya kullanır; her sayı ve tarih buradan geçer
+- `Fmt.money/percent/number/month_name/date_line/upper/cap_first` `scripts/util/fmt.gd:156,139,134,74,85,36,50`: 84 dosya kullanır; her sayı ve tarih buradan geçer
 - `CharacterRegistry.add/get_character/get_founder/assign_job/prune_productivity_mods` `character_registry.gd` · HR, Finans, Ekip; `insert_raw` `:502` kayıt yüklemesi, `reset` `:565`
 - `CustomerRegistry.set_mrr/set_seats/set_satisfaction/add/remove` `customer_registry.gd`; `insert_raw` `:105`, `reset` `:113`
 - `RivalRegistry.advance_all()` `rival_registry.gd` · `time_manager.gd` günlük tik; `reset` `rival_registry.gd:25` katalogdan yeniden tohumlar
@@ -127,7 +127,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - Anahtar ailesi dökümü: `DIZIN.md` "Metin anahtarı aileleri"; CSV'ye elle dokunma kuralı için `strings-csv-surgery` hafıza notu (bayt-aralığı ekleme)
 
 ## Testler
-- Koşturucu: `bash tools/smoke_run.sh <vaka>` (tüm süit `--all`, yalnız push öncesi); bayrak `--endgame-smoke=<vaka>` `--` ayracından ÖNCE; vaka tablosu `scripts/debug/endgame_smoke.gd:78-590` (`match case_name`)
+- Koşturucu: `bash tools/smoke_run.sh <vaka>` (tüm süit `--all`, yalnız push öncesi); bayrak `--endgame-smoke=<vaka>` `--` ayracından ÖNCE; vaka tablosu `scripts/debug/endgame_smoke.gd:78-591` (`match case_name`)
 - Zaman: `speed_preserve` `:94`, `speed_ladder` `:220`, `speed_day_invariant` `:221`, `speed_save_clamps_to_ladder` `:402`, `clock_resumes_only_by_player` `:400`, `milestone_clock_hold` `:397`, `event_gate_holds_clock` `:399`
 - Zaman devamı: `incident_night_hold_resumes` `:340`, `smoke_seed_pinned` `:404`, `sales_meeting_time_skip_founder_share` `:158`, `month_history_*` `:376,381`, `run_ledger`, `growth_streak_semantics`
 - Kayıt: `save_roundtrip_fingerprint` `:298`, `save_continuity_seeded` `:299`, `save_double_load_no_residue` `:300`, `save_backup_fallback` `:301`, `autosave_writes_off_thread` `:302`, `menu_state_machine`
@@ -164,7 +164,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 
 ## Dikkat
 - Göç adı ve koşulu aynı N'dir (`_migrate_N` `version < N`, `save_manager.gd:194-207`); yeni göçte `SCHEMA_VERSION`, koşul, adı ve belgeyi birlikte yaz
-- `_migrate_sector_ids` `:1095`, `_migrate_character_areas` `:1108`, `_migrate_assignments_to_areas` `:1168`, `_migrate_to_rev11` `:1208` zincirde YOK (`MIN_LOADABLE_VERSION` 10); yalnız `endgame_smoke.gd:11967-12201` çağırır
+- `_migrate_sector_ids` `:1095`, `_migrate_character_areas` `:1108`, `_migrate_assignments_to_areas` `:1168`, `_migrate_to_rev11` `:1208` zincirde YOK (`MIN_LOADABLE_VERSION` 10); yalnız `endgame_smoke.gd:11968-12202` çağırır
 - Göç her yuva listelemesinde koşar (`list_slots` her dosyayı `_read_file`dan geçirir): saf, ucuz, canlı durumdan bağımsız olmalı; `_migrate_18` bu yüzden kaydın kendi ürün alt türünü okur
 - `_migrate_15` kartı v18 biçiminde yazar (`_V14_EFFORT`, `_V14_SHARES` `save_manager.gd:821-822`); ×5 ve `need` dönüşümünü yalnız `_migrate_19` yapar. `list_slots` ve `read_slot` her yuvada tam zinciri tekrar koşar
 - `SaveCodec.game_state_fields()` `save_codec.gd:192` `GameState`in HER script `var`ını kaydeder; kaydedilmemesi gereken geçici alan eklenemez. Yeni alan makul varsayılan taşımalı (varsayılan = göç)

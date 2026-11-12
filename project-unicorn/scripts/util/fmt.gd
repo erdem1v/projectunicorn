@@ -149,7 +149,9 @@ static func signed_percent(points: float, decimals: int = 0) -> String:
 # --- Money ------------------------------------------------------------------
 # money() and money_chip() deliberately keep different thresholds (the chip's ≥$10K
 # no-decimal branch keeps it narrow). The sign is peeled off once and re-attached around the
-# finished magnitude, so a negative reads "-$12K", not "$-12K".
+# finished magnitude, so a negative reads "-$12K", not "$-12K". Every band rounds once, half up, in whole numbers
+# (_tenths, or (a + 500) / 1_000 for whole thousands): never "%.1f"/"%.0f", which Godot hands to the platform's printf
+# (x.x5 rounds one way on Windows, another on Mac).
 
 ## Compact money for body copy: "$999" · "$1.8K"/"$1,8K" · "$12.5M"/"$12,5M". From 999.500 the thousands round to 1000:
 ## the million band starts there, as in money_chip ("$1,0M", never "$1000,0K").
@@ -158,31 +160,28 @@ static func money(amount: int) -> String:
 	var s: String
 	if a >= 999_500:
 		if a >= 10_000_000 and a % 1_000_000 == 0:
-			s = "$%dM" % int(a / 1_000_000.0)
+			s = "$%dM" % (a / 1_000_000)
 		else:
-			s = "$%.1fM" % (a / 1_000_000.0)
+			s = "$%sM" % _tenths_text(_tenths(a, 1_000_000))
 	elif a >= 1_000:
-		s = "$%.1fK" % (a / 1_000.0)
+		s = "$%sK" % _tenths_text(_tenths(a, 1_000))
 	else:
 		s = "$%d" % a
 	return _localize_signed(amount, s)
 
 
-## TopBar finance-chip money; stays abbreviated so it cannot widen the chrome group. Under $10K a tenth that prints 0
-## goes ("$5K", not "$5,0K": envanter shell-21); "$4,2K" keeps it.
+## TopBar finance-chip money; stays abbreviated so it cannot widen the chrome group. Under $10K a tenth of 0 goes ("$5K",
+## not "$5,0K": envanter shell-21); "$4,2K" keeps it.
 static func money_chip(value: int) -> String:
 	var a: int = absi(value)
 	var s: String
 	# From 999.500 the thousands round to 1000: the million band starts there, as in money_round.
 	if a >= 999_500:
-		s = "$%.1fM" % (a / 1_000_000.0)
+		s = "$%sM" % _tenths_text(_tenths(a, 1_000_000))
 	elif a >= 10_000:
-		s = "$%.0fK" % (a / 1_000.0)
+		s = "$%dK" % ((a + 500) / 1_000)
 	elif a >= 1_000:
-		# Read off the printed tenth: a rounding of its own would split from %.1f on the x50s (4.050 prints 4.0).
-		s = "$%.1fK" % (a / 1_000.0)
-		if s.ends_with(".0K"):
-			s = s.trim_suffix(".0K") + "K"
+		s = "$%sK" % _tenths_text(_tenths(a, 1_000), true)
 	else:
 		s = "$%d" % a
 	return _localize_signed(value, s)
@@ -194,7 +193,19 @@ static func money_round(amount: int) -> String:
 	var a: int = absi(amount)
 	if a >= 999_500:
 		return money(amount)
-	return _localize_signed(amount, ("$%dK" % roundi(a / 1_000.0)) if a >= 1_000 else "$%d" % a)
+	return _localize_signed(amount, ("$%dK" % ((a + 500) / 1_000)) if a >= 1_000 else "$%d" % a)
+
+
+## `a` (≥ 0) in tenths of `unit`, half up in whole numbers: 4.050 is 41 tenths of a thousand, 9.950 is 100.
+static func _tenths(a: int, unit: int) -> int:
+	return (a * 10 + unit / 2) / unit
+
+
+## Tenths as printf would write them ("4.1"; `_localize_signed` swaps in the locale's mark); `drop_zero` writes 40 as "4".
+static func _tenths_text(tenths: int, drop_zero := false) -> String:
+	if drop_zero and tenths % 10 == 0:
+		return str(tenths / 10)
+	return "%d.%d" % [tenths / 10, tenths % 10]
 
 
 ## Cash in full, thousands-grouped: "$12.340"/"$12,340". Cash is shown exactly because money

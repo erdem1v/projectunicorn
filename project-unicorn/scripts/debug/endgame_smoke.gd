@@ -419,6 +419,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"bootstrap_milestone_keeps_the_run": fail = _case_bootstrap_milestone_keeps_the_run()
 		"ending_paper_modes_on_screen":    fail = _case_ending_paper_modes_on_screen()
 		"ending_figures_whole_unit":       fail = _case_ending_figures_whole_unit()
+		"fmt_money_rounds_half_up":        fail = _case_fmt_money_rounds_half_up()
 		"milestone_clock_hold":            fail = _case_milestone_clock_hold()
 		"milestone_paper_waits_for_card":  fail = _case_milestone_paper_waits_for_card()
 		"event_gate_holds_clock":          fail = _case_event_gate_holds_clock()
@@ -11359,13 +11360,13 @@ static func _case_loc_format_locale_flip() -> String:
 		"tr": {
 			"money_exact": "$1.234.567", "money": "$3,5K", "money_edge": "$1,0M", "money_below_edge": "$999,4K",
 			"chip_edge": "$1,0M", "chip_k": "$4,2K", "chip_whole_k": "-$5K",
-			"chip_k_up": "$10K", "chip_k_x50": "$4K", "chip_k_x50_9": "$9,9K", "pct": "%12,5",
+			"chip_k_up": "$10K", "chip_k_x50": "$4,1K", "chip_k_x50_9": "$10K", "pct": "%12,5",
 			"date": "Hafta 37 · Eylül 2012", "upper": "İYİ", "month": "Eylül",
 		},
 		"en": {
 			"money_exact": "$1,234,567", "money": "$3.5K", "money_edge": "$1.0M", "money_below_edge": "$999.4K",
 			"chip_edge": "$1.0M", "chip_k": "$4.2K", "chip_whole_k": "-$5K",
-			"chip_k_up": "$10K", "chip_k_x50": "$4K", "chip_k_x50_9": "$9.9K", "pct": "12.5%",
+			"chip_k_up": "$10K", "chip_k_x50": "$4.1K", "chip_k_x50_9": "$10K", "pct": "12.5%",
 			"date": "Week 37 · September 2012", "upper": "IYI", "month": "September",
 		},
 	}
@@ -11381,7 +11382,7 @@ static func _case_loc_format_locale_flip() -> String:
 			"chip_k": Fmt.money_chip(4_200),
 			"chip_whole_k": Fmt.money_chip(-5_000),   # a whole thousand drops its tenth (envanter shell-21)
 			"chip_k_up": Fmt.money_chip(9_960),   # rounds to ten thousand: as the band above it writes it
-			# The x50s: the tenth Godot prints decides (4.050 prints 4.0, 9.950 prints 9.9), not a rounding of its own.
+			# The x50s round half up in whole numbers (Fmt._tenths), whatever the platform's printf does with 4.05.
 			"chip_k_x50": Fmt.money_chip(4_050),
 			"chip_k_x50_9": Fmt.money_chip(9_950),
 			"pct": Fmt.percent(12.5, 1),
@@ -14086,14 +14087,39 @@ static func _case_ending_paper_modes_on_screen() -> String:
 	return ""
 
 
+## Money rounds its tenth half up in whole numbers on every platform: the x.x5s (exact in decimal, not in binary) are
+## where Windows' and Mac's printf part, so they are the wants. `_` stands for the locale's decimal mark.
+static func _case_fmt_money_rounds_half_up() -> String:
+	var loc0: String = TranslationServer.get_locale()
+	var cases: Array = [
+		["chip", 1_950, "$2K"], ["chip", 4_050, "$4_1K"], ["chip", 9_950, "$10K"], ["chip", 2_250, "$2_3K"],
+		["chip", 1_050, "$1_1K"], ["chip", 12_500, "$13K"], ["chip", 999_499, "$999K"], ["chip", 1_250_000, "$1_3M"],
+		["chip", -4_050, "-$4_1K"], ["money", 2_250, "$2_3K"], ["money", 4_050, "$4_1K"], ["money", 9_950, "$10_0K"],
+		["money", 999_499, "$999_5K"], ["money", 999_500, "$1_0M"], ["money", 1_950_000, "$2_0M"],
+		["money", 4_050_000, "$4_1M"], ["money", 12_000_000, "$12M"], ["round", 12_500, "$13K"], ["round", 1_499, "$1K"],
+	]
+	for loc: String in ["tr", "en"]:
+		TranslationServer.set_locale(loc)
+		var sep: String = "," if loc == "tr" else "."
+		for c: Array in cases:
+			var v: int = c[1]
+			var got: String = Fmt.money_chip(v) if c[0] == "chip" else (Fmt.money(v) if c[0] == "money" else Fmt.money_round(v))
+			var want: String = String(c[2]).replace("_", sep)
+			if got != want:
+				TranslationServer.set_locale(loc0)
+				return "%s: %s(%d) = '%s', want '%s'" % [loc, c[0], v, got, want]
+	TranslationServer.set_locale(loc0)
+	return ""
+
+
 ## The ending paper's figures row: a tenth that prints 0 goes, in either unit and locale (envanter meet-28); the rest
-## reads as Fmt.money prints it, the x50s included (4.05M prints 4.0, 9.95M prints 9.9).
+## reads as Fmt.money prints it, the x50s rounded half up (4.05M → "$4,1M", 9.95M → "$10M").
 static func _case_ending_figures_whole_unit() -> String:
 	var loc0: String = TranslationServer.get_locale()
 	var want := {
-		"tr": {3_960_000: "$4M", 4_050_000: "$4M", 22_000_000: "$22M", 9_950_000: "$9,9M", 1_500_000: "$1,5M",
+		"tr": {3_960_000: "$4M", 4_050_000: "$4,1M", 22_000_000: "$22M", 9_950_000: "$10M", 1_500_000: "$1,5M",
 			999_950: "$1M", 6_000: "$6K", 6_400: "$6,4K", 999: "$999"},
-		"en": {3_960_000: "$4M", 4_050_000: "$4M", 22_000_000: "$22M", 9_950_000: "$9.9M", 1_500_000: "$1.5M",
+		"en": {3_960_000: "$4M", 4_050_000: "$4.1M", 22_000_000: "$22M", 9_950_000: "$10M", 1_500_000: "$1.5M",
 			999_950: "$1M", 6_000: "$6K", 6_400: "$6.4K", 999: "$999"},
 	}
 	for loc: String in want:

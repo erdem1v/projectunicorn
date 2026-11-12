@@ -122,7 +122,7 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - Makullük defteri: `--event-plausibility=<spec>` kabuk içinden ya da `tools/plausibility_run.sh` (koşu başına süreç ve kullanıcı dizini; `PLAUS FIRE/FAIL/RATE/SUMMARY`); spec `seeds=<N|A-B>:weeks=<N>:variant=<plain|early|both>:preset=`
 - Smoke (`tools/smoke_run.sh <vaka>`, vakalar `scripts/debug/endgame_smoke.gd`): `event_*` 33 vaka (ör. `event_i1_single_gate` `:325`, `event_critical_drop_refunds_latch` `:294`, `event_lint_v3_rules` `:583`, `event_delay_window` `:587`)
 - Smoke devamı: `event_check_with_effects` (şıkta etki ve zar birlikte, zar çipi, yükle-tekrar aynı dal), `event_after_test` (testi bekleyen etki: hata bulunursa iner ve `<sonuç>_tested` satırı yazılır, bulunmazsa düşer, izleme kayıttan geçer), `event_year_roll` (yıl zarı, tohumlu `random` ve rakip seçicileri, `{rival}` adı),
-  ↳ `card_body_tokens_resolve` `endgame_smoke.gd:493`, `loc_event_en_coverage` `:317`, `event_chip_coverage` `:334`, `quiet_cards_fill_empty_floor` `:545`, `event_no_double_resolution_after_load` `:357`,
+  ↳ `card_body_tokens_resolve` `endgame_smoke.gd:494`, `loc_event_en_coverage` `:317`, `event_chip_coverage` `:334`, `quiet_cards_fill_empty_floor` `:546`, `event_no_double_resolution_after_load` `:357`,
   ↳ `event_thesis_day10_to_day90` `:333`, `harness_sniffer_matches_run_log` `:371`
 - Oynanan koşu: `--run-log=<preset>:<hafta>:sim` `PROBE FIRE/PICK/TALLY/WEEK` basar (`run_probe.gd:30-99`); `tools/run_gate.sh` üç koşu; görsel: `--event-shot=<kart id>[:<slot>=<varlık id>][:long=1]` (`main.gd:793`, pencereli)
 - Probe kayıt türleri: `FIRE`, `PICK`, `TALLY_BEGIN` / `TALLY` / `TALLY_END`, `WEEK`, `ERROR` (drain koruması, kilitsiz seçeneği olmayan kart)
