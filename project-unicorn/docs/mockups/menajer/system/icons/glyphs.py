@@ -356,11 +356,10 @@ def _fit(gl, x0, y0, x1, y1):
 
 @glyph("product/area_onboarding")
 def _():
-    # an open door: the frame in tone, the open leaf solid with a knob cut out
-    frame = R(1.4, 1.0, 21.2, 22.0, 1.8)
+    # an open door: the open leaf alone, solid with a knob cut out (the tone frame behind it read as a stray line)
     door = soften(P((5.6, 4.6), (16.2, 1.6), (16.2, 22.4), (5.6, 19.4)), 0.8)
     door = cut(door, C(12.6, 12.6, 1.2))
-    return _fit(S(door, gap(frame, door, g=1.6)), 0.9, 0.9, 23.1, 23.1)
+    return _fit(S(door), 3.0, 0.9, 21.0, 23.1)
 
 
 @glyph("product/area_integrations")
