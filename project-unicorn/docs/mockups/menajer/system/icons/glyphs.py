@@ -173,7 +173,7 @@ def _():
 
 @glyph("skill/qa")
 def _():
-    # the bug with a check through it: finds and verifies. The bug alone is product/bug, the bug count.
+    # the bug with a check through it: finds and verifies.
     head = C(12, 7.4, 3.0).intersection(box(0, 0, 24, 7.4))
     body = E(12, 14.6, 6.6, 6.8)
     legs = U(L((5.6, 11.4), (2.8, 10.0), w=2.2), L((5.4, 15.2), (2.4, 15.2), w=2.2), L((6.2, 19.0), (3.6, 21.0), w=2.2))
@@ -304,7 +304,7 @@ def _():
     return S(cut(d, hook, stem, C(12, 17.6, 1.35)))
 
 
-# ================================================================ PRODUCT (sprint card kinds, voices, bug count)
+# ================================================================ PRODUCT (sprint card kinds, voices)
 @glyph("product/kind_feature")
 def _():
     return S(U(sparkle(10.4, 13.2, 8.6, pinch=0.16), sparkle(18.6, 5.0, 3.4, pinch=0.2)))
@@ -337,13 +337,6 @@ def _():
     b = bubble(2.4, 3.8, 19.2, 13.2, [(6.2, 16.0), (6.2, 21.0), (11.6, 16.0)], r=2.4)
     b = ko(b, [(6.8, 8.6), (17.2, 8.6)], [(6.8, 12.4), (13.4, 12.4)])
     return S(b)
-
-
-@glyph("product/bug")
-def _():
-    head, body, legs, ant = bug_body()
-    body = ko(body, [(12, 9.0), (12, 24)], cap="flat")
-    return S(U(head, body, legs, ant))
 
 
 def _fit(gl, x0, y0, x1, y1):

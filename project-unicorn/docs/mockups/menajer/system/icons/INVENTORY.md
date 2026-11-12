@@ -156,7 +156,6 @@ The proposed repo layout mirrors this folder: `assets/icons/{rail,skill,dept,tra
 | `rail/rivals.svg` | Optional ninth rail tab if the rival world (c706349 PRD) gets one: a podium. |
 | `skill/sales.svg`, `skill/customer_success.svg` | Ekip column heads: tag and headset. |
 | `dept/product_design.svg`, `dept/development.svg`, `dept/sales.svg`, `dept/customer_success.svg` | Roster group headers: bulb, terminal, briefcase, two bubbles. |
-| `product/bug.svg` | Sprint-card bug chip and live bug count. |
 | `stake/cash_in.svg`, `stake/cost.svg`, `stake/equity.svg` | Gain, cost and equity. Danger is `util/warn` and chance is `util/dice`. |
 | `util/plus`, `minus`, `close`, `chevron_left`, `pause`, `play`, `news`, `shield`, `move`, `search`, `filter`, `inbox`, `mail_open`, `reply`, `calendar`, `dice`, `star_full`, `star_half`, `star_empty` | Utility glyphs from the v0 frames and the inbox. `filter` is now sliders; the funnel belongs to Satış. |
 | `util/tri_up`, `tri_down`, `sparkle`, `enter` | Replacements for ▲ ▼ ✦ ⏎ (table D). |

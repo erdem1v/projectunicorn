@@ -126,7 +126,7 @@ M_SKILL = {
     "skill/design": ("TASARIM", None, "Deneyim ekseninin tavanı", "Kalem ucu, yarık ve delik oyulmuş."),
     "skill/engineering": ("YAZILIM", None, "Geliştirme hızı ve hata oranı", "Kod ayracı; eğik çizgi tonda."),
     "skill/qa": ("TEST", CHG, "Beta keşif hızı ve canlı hata aşınması",
-                 "Böcek ve içinden geçen onay: bulur ve doğrular. Yalın böcek product/bug, hata sayısı."),
+                 "Böcek ve içinden geçen onay: bulur ve doğrular."),
     "skill/sales": ("SATIŞ", None, "Kapanış olasılığı ve anlaşma boyutu", "Fiyat etiketi."),
     "skill/customer_success": ("MÜŞTERİ İLİŞKİLERİ", None, "Bilet çözümü ve churn", "Kulaklık; mikrofon tonda."),
 }
@@ -167,7 +167,6 @@ M_PRODUCT = {
     "product/kind_fix": ("DÜZELTME KARTI", None, "Yara bandı, yastığı tonda: \"{capability} düzeltmesi\"."),
     "product/kind_research": ("ARAŞTIRMA KARTI", None, "Mercekte kişi: \"{n} kullanıcıyla görüş\"."),
     "product/voices": ("SESLER", None, "Konuşma balonu: ses sayacı ve bekleyen karar (eski bubble)."),
-    "product/bug": ("HATA", NEW, "Yalın böcek: kartın hata çipi ve canlı hata sayısı (eski role_test bu işi de görüyordu)."),
 }
 M_STAKE = {
     "stake/cash_in": ("KAZANÇ", None, "Dolu daire, yukarı ok oyulmuş. Nakit girişi; yeşil boyanır."),
@@ -355,7 +354,7 @@ def p2(cell, grid, page, ic):
             'grup başlığında 18 px, ink-4 durur. İki aile çakışmaz: Ürün tabela, Ürün & Tasarım ampul; Yazılım ve Test ayraç ve onaylı böcek, '
             'Geliştirme Ekibi terminal; Satış etiket ve çanta; Müşteri İlişkileri kulaklık ve iki balon.</p>'
             '<p><b>Ürün artık tabela.</b> Hedef glifi çeyrek hedefiyle (\"hedef\") çakışıyordu. Tabela yön seçmektir: özellik kararı.</p>'
-            '<p><b>Test, onaylı böcek.</b> Sprint kartında yalın böcek hata sayısıdır (product/bug); beceri ise hatayı bulan ve doğrulayan el.</p>'
+            '<p><b>Test, onaylı böcek.</b> Beceri hatayı bulan ve doğrulayan el.</p>'
             '<p>Sprint kartının rol ikonları (role_product, role_design, role_dev, role_test) ayrı dosya olarak kalmaz, beceri glifini okur. '
             'Liderlik sütunu SPEC\'teki gibi metin başlık; ilk geçişteki bayrak Kilometre Taşı\'na geçti.</p>'
             '<p>Yüzler, AD notundaki gibi aydınlık zeminde (ortası line-2, kenarı surface-3, 1 px line-3 kenar): koyu saç kömür zeminde kaybolmuyor.</p></div>')
@@ -398,9 +397,9 @@ def p4(cell, grid, page, ic):
     st = [cell(k, v[0], v[2], v[1]) for k, v in M_STAKE.items()]
     card = ('<div class="card"><div class="k1">%s ARAŞTIRMA<span style="margin-left:auto;display:flex;gap:6px">%s%s</span></div>'
             '<div class="tt">5 kullanıcıyla görüş</div>'
-            '<div class="k2">%s%s<span class="chipx vo">%s 3</span><span class="chipx bug">%s 2</span></div></div>'
+            '<div class="k2">%s%s<span class="chipx vo">%s 3</span></div></div>'
             % (ic("product/kind_research", 16), ic("skill/product", 16, "var(--ink-3)"), ic("skill/design", 16, "var(--ink-3)"),
-               ic("skill/engineering", 16), ic("skill/qa", 16), ic("product/voices", 16, "var(--ink-2)"), ic("product/bug", 16, "var(--neg-ink)")))
+               ic("skill/engineering", 16), ic("skill/qa", 16), ic("product/voices", 16, "var(--ink-2)")))
     card2 = ('<div class="card"><div class="k1">%s DÜZELTME<span style="margin-left:auto;display:flex;gap:6px">%s</span></div>'
              '<div class="tt">Kayıt akışı düzeltmesi</div><div class="k2">%s%s<span class="chipx vo">%s devreder</span></div></div>'
              % (ic("product/kind_fix", 16), ic("skill/engineering", 16, "var(--ink-3)"), ic("product/kind_feature", 16),
