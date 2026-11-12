@@ -93,6 +93,10 @@ const BREAK_WEIGHTS := {"coffee": Vector2i(3, 2), "wc": Vector2i(2, 1), "visit":
 ## Ambient seconds at a break, by kind.
 const STAYS := {"coffee": Vector2(6.0, 10.0), "wc": Vector2(5.0, 8.0), "booth": Vector2(10.0, 16.0),
 	"visit": Vector2(5.0, 8.0), "eat": Vector2(15.0, 25.0)}
+## Someone with nothing to do this week passes it in the shared area: this long at a seat of the eating
+## tables (at the coffee counter a coffee's stay), and drawn with this weight where the others draw coffee.
+const LOUNGE_S := Vector2(20.0, 40.0)       # [WORKING]
+const LOUNGE_WEIGHT := 8                    # [WORKING]
 const LUNCH_WINDOW := Vector2(720.0, 810.0) # game minutes (12:00 to 13:30): lunch is taken once
 const DESK_IDLE_EVERY := Vector2(12.0, 30.0)  # ambient seconds of work between small idles
 const DESK_IDLE_S := Vector2(4.0, 8.0)
@@ -101,6 +105,8 @@ const MEETING_LEN := Vector2(20.0, 30.0)
 const MEETING_ACT_S := 5.0                  # a seat at the table changes what it does this often
 const MEETING_RETRY := 1.0                  # [WORKING] ambient seconds a meeting due with no team waits to look again
 const MEETING_FOUNDER := 0.3                # the chance the founder sits in on a team meeting
+const KICKOFF_WAIT_S := 8.0                 # [WORKING] ambient seconds a sprint's kick-off waits for its team
+                                            # walking back to their desks
 const ALL_HANDS_MINUTE := 1020.0            # the loft's all-hands, once a week at 17:00 game time
 const ALL_HANDS_S := 20.0
 # The floor rings under the office people, the founder's and the selected person's: 3D scene

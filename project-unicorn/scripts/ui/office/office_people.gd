@@ -27,21 +27,23 @@ const ON_FLOOR := 0.3
 const SEAT_LEG_S := 2.5
 const BED_LEG_S := 4.0
 ## What each job is at the desk without a sprint card (the icon and tooltip), and what the body does for each.
+## Build and Test have nothing off a card: their week's points go to no card (SprintSystem._play_out's spare).
 const JOB_WORK := {
-	HRConstants.JOB_BUILD: "coffee",
-	HRConstants.JOB_TEST: "coffee",
 	HRConstants.JOB_RESEARCH: "research",
 	HRConstants.JOB_SALES: "phone",
 	HRConstants.JOB_SUPPORT: "phone",
 	HRConstants.JOB_ACCOUNTS: "phone",
 }
 const WORK_BODY := {"code": "type", "test": "type", "design": "notes", "research": "read", "plan": "notes",
-	"phone": "phone", "coffee": "drink"}
+	"phone": "phone", "idle": "lean_back"}
+## Nothing to do this week: no icon at the desk, and no coffee there either. They pass the time in the shared
+## area instead (a "lounge", _break_spots), and sit at the desk only while it has no room.
+const IDLE := "idle"
 ## Sprint card role to desk work.
 const SPRINT_WORK := {"design": "design", "dev": "code", "test": "test", "product": "plan"}
 ## What each errand from the desk shows and does: [status, body act].
 const ERRANDS := {"coffee": ["coffee", "drink"], "wc": ["wc", "idle"], "visit": ["visit", "talk"],
-	"booth": ["phone", "phone"], "eat": ["food", "talk"], "meeting": ["meeting", "talk"]}
+	"booth": ["phone", "phone"], "eat": ["food", "talk"], "meeting": ["meeting", "talk"], "lounge": ["coffee", "drink"]}
 ## Short things done at the desk between stretches of work, and round a meeting table in turn.
 const DESK_IDLES := ["look", "lean_back", "stretch", "yawn", "drink"]
 const MEETING_ACTS := ["talk", "listen", "nod", "notes"]
@@ -74,6 +76,7 @@ var _founder_told := true
 var _returning := false  # back from a meeting until at their place: starts at the door, the office at TRIP_K
 var _rooms: Array[float] = []   # per meeting room: ambient seconds to its next team meeting
 var _kickoff: Array = []   # character ids the next kick-off gathers; empty = none due
+var _kickoff_wait := 0.0   # ambient seconds the kick-off still waits for its team walking back to their desks
 var _all_hands_day := -1
 var _selected := ""
 var _rng := RandomNumberGenerator.new()
@@ -94,6 +97,7 @@ func _ready() -> void:
 		for id in _actors:
 			_on_assignment_changed(id)
 		# A sprint's kick-off waits for a free room; an office without rooms has none.
+		_kickoff_wait = OfficeConstants.KICKOFF_WAIT_S
 		_kickoff = SprintSystem.team().map(func(p: Dictionary) -> String: return p.id) \
 			if _placed and not _rooms.is_empty() else [])
 	NavigationServer3D.map_changed.connect(_on_map_changed)
@@ -301,14 +305,15 @@ func _steer(a: OfficeActor, dt: float, minute: float) -> void:
 	if want.is_empty():
 		_head_out(a, minute)
 	elif not a.visible:
-		if _door_free(a):
+		# Someone with nothing to do walks in straight to the shared area, to the desk when it has no room.
+		if _door_free(a) and not (a.work == IDLE and is_same(want, a.seat) and _lounge(a)):
 			_send(a, want)
 	elif not is_same(want, a.seat):
 		if not is_same(a.spot, want):
 			_drop_errand(a)
 			_send(a, want)
 	elif a.errand != "":
-		_on_errand(a, dt)
+		_on_errand(a, dt, minute)
 	elif not is_same(a.spot, a.seat):
 		_send(a, a.seat)
 	elif not a.is_walking():
@@ -326,32 +331,45 @@ func _at_desk(a: OfficeActor, dt: float, minute: float) -> void:
 	a.trip_in -= dt
 	if a.trip_in <= 0.0 and not a.cut:
 		a.trip_in = a.rng.randf_range(OfficeConstants.TRIP_EVERY.x, OfficeConstants.TRIP_EVERY.y)
-		_take_break(a, minute)
+		# Someone with nothing to do looks for room in the shared area again soon.
+		if not _take_break(a, minute) and a.work == IDLE:
+			a.trip_in = a.rng.randf_range(OfficeConstants.POSTPONE.x, OfficeConstants.POSTPONE.y)
 	elif a.idle_in <= 0.0:
 		a.idle_in = a.rng.randf_range(OfficeConstants.DESK_IDLE_EVERY.x, OfficeConstants.DESK_IDLE_EVERY.y)
 		a.idle_left = a.rng.randf_range(OfficeConstants.DESK_IDLE_S.x, OfficeConstants.DESK_IDLE_S.y)
-		a.go_to(a.seat, DESK_IDLES[a.rng.randi_range(0, DESK_IDLES.size() - 1)])
+		var acts := DESK_IDLES if a.work != IDLE else DESK_IDLES.filter(func(act: String) -> bool: return act != "drink")
+		a.go_to(a.seat, acts[a.rng.randi_range(0, acts.size() - 1)])
 
 
 ## Lunch once in its window, else a break drawn by weight from those this office has. A taken
-## coffee counter or restroom has a line; a full line puts the break off.
-func _take_break(a: OfficeActor, minute: float) -> void:
+## coffee counter or restroom has a line; a full line puts the break off. Someone with nothing to do
+## draws the shared area (LOUNGE_WEIGHT) where the others draw coffee, and no booth. False when
+## nobody was sent off.
+func _take_break(a: OfficeActor, minute: float) -> bool:
 	if minute >= OfficeConstants.LUNCH_WINDOW.x and minute < OfficeConstants.LUNCH_WINDOW.y and a.lunch_day != GameState.day:
 		var table := _venue.take(a, _break_spots(a, "eat"))
 		if not table.is_empty():
 			a.lunch_day = GameState.day
 			_errand(a, table, "eat")
-			return
+			return true
 	var kinds := []
 	var weights := PackedFloat32Array()
-	for kind: String in OfficeConstants.BREAK_WEIGHTS:
-		var w: int = OfficeConstants.BREAK_WEIGHTS[kind][int(a.founder)]
-		if w > 0 and not _break_spots(a, kind).is_empty():
-			kinds.append(kind)
+	for base: String in OfficeConstants.BREAK_WEIGHTS:
+		var choice := base
+		var w: int = OfficeConstants.BREAK_WEIGHTS[base][int(a.founder)]
+		if a.work == IDLE and base == "booth":
+			continue
+		if a.work == IDLE and base == "coffee":
+			choice = "lounge"
+			w = OfficeConstants.LOUNGE_WEIGHT
+		if w > 0 and not _break_spots(a, choice).is_empty():
+			kinds.append(choice)
 			weights.append(w)
 	if kinds.is_empty():
-		return
+		return false
 	var kind: String = kinds[a.rng.rand_weighted(weights)]
+	if kind == "lounge":
+		return _lounge(a)
 	var s := _venue.take(a, _break_spots(a, kind))
 	if not s.is_empty():
 		_errand(a, s, kind)
@@ -359,11 +377,25 @@ func _take_break(a: OfficeActor, minute: float) -> void:
 		var place := _venue.join(a, kind)
 		if place.is_empty():
 			a.trip_in = a.rng.randf_range(OfficeConstants.POSTPONE.x, OfficeConstants.POSTPONE.y)
-			return
+			return false
 		a.errand = kind
 		a.queued = true
 		a.status = ERRANDS[kind][0]
 		a.go_to(place, "wait")
+	else:
+		return false
+	return true
+
+
+## Someone with nothing to do to a free place in the shared area, walking or (`walk` false, under a black
+## frame or a load) put there: LOUNGE_S at a seat, a coffee's stay at the counter. False when it has no room.
+func _lounge(a: OfficeActor, walk := true) -> bool:
+	var s := _venue.take(a, _break_spots(a, "lounge"))
+	if s.is_empty():
+		return false
+	var range_s: Vector2 = OfficeConstants.STAYS.coffee if s.pose == "stand" else OfficeConstants.LOUNGE_S
+	_errand(a, s, "lounge", a.rng.randf_range(range_s.x, range_s.y), walk)
+	return true
 
 
 ## The spots a break of `kind` can go to: a seated colleague's visitor place, the booths for a
@@ -372,6 +404,14 @@ func _break_spots(a: OfficeActor, kind: String) -> Array:
 	match kind:
 		"coffee":
 			return _coffee
+		"lounge":
+			# A seat at the eating tables, else a place at the coffee counter while nobody waits in its line;
+			# in the lunch window the counter first, the seats left to those having lunch.
+			var tables := _break_spots(a, "eat")
+			var counter: Array = _coffee if _venue.has_line("coffee") and _venue.line("coffee").is_empty() else []
+			var minute := TimeManager.day_minute()
+			var lunch := minute >= OfficeConstants.LUNCH_WINDOW.x and minute < OfficeConstants.LUNCH_WINDOW.y
+			return counter + tables if lunch else tables + counter
 		"visit":
 			var visits: Array = _layout.spots.get("visit", [])
 			var out := []
@@ -387,8 +427,10 @@ func _break_spots(a: OfficeActor, kind: String) -> Array:
 
 
 ## Away from the desk: in a line until its head takes a spot that frees, then at the break or round
-## a table until the stay runs out, and back.
-func _on_errand(a: OfficeActor, dt: float) -> void:
+## a table until the stay runs out, and back. Someone with nothing to do stays away: after the shared
+## area the next break is drawn there, after any other errand they go back to the shared area; the
+## desk only when it has no room.
+func _on_errand(a: OfficeActor, dt: float, minute: float) -> void:
 	if a.queued:
 		if _venue.head(a.errand) == a:
 			var s := _venue.take(a, _break_spots(a, a.errand))
@@ -410,18 +452,29 @@ func _on_errand(a: OfficeActor, dt: float) -> void:
 			a.idle_in = OfficeConstants.MEETING_ACT_S
 			a.go_to(a.spot, MEETING_ACTS[a.rng.randi_range(0, MEETING_ACTS.size() - 1)])
 	if a.stay <= 0.0:
+		var kind := a.errand
 		_drop_errand(a)
-		_send(a, a.seat)
+		var away := false
+		if a.work == IDLE and not a.cut:
+			away = _take_break(a, minute) if kind == "lounge" else _lounge(a)
+		if not away:
+			_send(a, a.seat)
+			if a.work == IDLE:
+				a.trip_in = a.rng.randf_range(OfficeConstants.POSTPONE.x, OfficeConstants.POSTPONE.y)
 
 
-## Off to `to` on an errand of `kind`, for `stay` ambient seconds (its kind's stay when < 0).
-func _errand(a: OfficeActor, to: Dictionary, kind: String, stay := -1.0) -> void:
+## Off to `to` on an errand of `kind`, for `stay` ambient seconds (its kind's stay when < 0); put there with
+## no walk when `walk` is false.
+func _errand(a: OfficeActor, to: Dictionary, kind: String, stay := -1.0, walk := true) -> void:
 	a.errand = kind
 	a.queued = false
 	var range_s: Vector2 = OfficeConstants.STAYS.get(kind, Vector2.ZERO)
 	a.stay = stay if stay >= 0.0 else a.rng.randf_range(range_s.x, range_s.y)
 	a.status = ERRANDS[kind][0]
-	a.go_to(to, ERRANDS[kind][1])
+	if walk:
+		a.go_to(to, ERRANDS[kind][1])
+	else:
+		a.place(to, ERRANDS[kind][1])
 
 
 func _drop_errand(a: OfficeActor) -> void:
@@ -436,7 +489,9 @@ func _drop_errand(a: OfficeActor) -> void:
 func _meetings(dt: float, minute: float) -> void:
 	if _layout.spots.has("trib") and minute >= OfficeConstants.ALL_HANDS_MINUTE and _all_hands_day != GameState.day:
 		_all_hands_day = GameState.day
-		for a: OfficeActor in _free_hands():
+		# Those passing the time in the shared area come too.
+		for a: OfficeActor in _free_hands(true):
+			_drop_errand(a)
 			var s := _venue.take(a, _layout.spots.present if a.founder else _layout.spots.trib)
 			if not s.is_empty():
 				_errand(a, s, "meeting", OfficeConstants.ALL_HANDS_S)
@@ -444,11 +499,14 @@ func _meetings(dt: float, minute: float) -> void:
 				a.idle_in = OfficeConstants.ALL_HANDS_S
 				if not a.founder:
 					a.go_to(s, "listen")
+	var gathering := not _kickoff.is_empty() and _gathering(dt)
 	for i in _rooms.size():
 		var room: Array = _layout.meet_rooms[i]
 		if not room.all(_venue.is_free):
 			continue
 		if not _kickoff.is_empty():
+			if gathering:
+				continue
 			var team := _kickoff
 			_kickoff = []
 			_meet(room, _free_hands().filter(func(a: OfficeActor) -> bool: return a.founder or team.has(a.character.id)))
@@ -481,11 +539,22 @@ func _meet(room: Array, team: Array) -> void:
 		a.idle_in = OfficeConstants.MEETING_ACT_S
 
 
-## Those at their desks with nothing else on.
-func _free_hands() -> Array:
+## Those at their desks with nothing else on; with `lounging`, those passing the time in the shared area too.
+func _free_hands(lounging := false) -> Array:
 	return _actors.values().filter(func(a: OfficeActor) -> bool:
+		if lounging and a.visible and not a.ghost and not a.cut and a.errand == "lounge" and not a.queued:
+			return true
 		return a.visible and not a.ghost and not a.cut and a.errand.is_empty() and is_same(a.spot, a.seat) \
 			and not a.is_walking())
+
+
+## The kick-off's team still walking back to their desks (the sprint just gave work to those in the shared
+## area): it waits for them, up to KICKOFF_WAIT_S.
+func _gathering(dt: float) -> bool:
+	_kickoff_wait -= dt
+	return _kickoff_wait > 0.0 and _actors.values().any(func(a: OfficeActor) -> bool:
+		return _kickoff.has(a.character.id) and a.visible and a.errand.is_empty() and a.is_walking() \
+			and is_same(a.spot, a.seat))
 
 
 ## To their seat to work, or to bed.
@@ -555,6 +624,8 @@ func _plan_day(a: OfficeActor, minute: float) -> void:
 	a.cut = false
 	a.leave_at = -1.0
 	a.cut_in = minute + _walk_minutes(a.in_len, SEAT_LEG_S) > _hours(a).x + OfficeConstants.ARRIVE_LATE_OK
+	if a.work == IDLE:
+		a.trip_in = 0.0
 
 
 ## (due in, gone by) in game minutes today, on the hours as they stand now.
@@ -636,6 +707,11 @@ func _sync(cut: bool) -> void:
 		a.work = _work_of(c)
 		a.in_len = _path_len(_entry, a.seat) if not a.seat.is_empty() else 0.0
 		a.bed_len = _path_len(a.seat, _bed) if a.founder and not _bed.is_empty() else 0.0
+	# Someone on a break on a seat that is now a newcomer's place makes room.
+	for a: OfficeActor in _actors.values():
+		if a.errand != "" and not a.queued and not a.spot.is_empty() and _spare.has(a.spot.pos) and not is_same(a.spot, a.seat):
+			_drop_errand(a)
+			_send(a, a.seat)
 	if cut:
 		var minute := TimeManager.day_minute()
 		for a: OfficeActor in _actors.values():
@@ -646,6 +722,8 @@ func _sync(cut: bool) -> void:
 ## from a meeting with nowhere to walk to (their day over) is settled out of sight.
 func _place(a: OfficeActor, minute: float) -> void:
 	_drop_errand(a)
+	# The sprint's weekly assignment sends no signal: the morning reads the week's work afresh.
+	a.work = _work_of(a.character)
 	_plan_day(a, minute)
 	var want := _wanted(a, minute)
 	# Not due yet and in time on foot, or back from a meeting: they walk in from the door.
@@ -656,6 +734,8 @@ func _place(a: OfficeActor, minute: float) -> void:
 		if a.founder and _returning and want.is_empty():
 			_returning = false
 			founder_settled.emit()
+	elif is_same(want, a.seat) and a.work == IDLE and _lounge(a, false):
+		pass
 	else:
 		var doing := _doing(a, want)
 		a.status = doing[0]
@@ -669,7 +749,10 @@ static func _work_of(c: Character) -> String:
 		return SPRINT_WORK[role]
 	if c.category == "founder":
 		return "phone" if SupportSystem.founder_passive_care() else "plan"
-	return "coffee" if c.assigned_job_ids.is_empty() else JOB_WORK[c.assigned_job_ids[0]]
+	for job: String in c.assigned_job_ids:
+		if JOB_WORK.has(job):
+			return JOB_WORK[job]
+	return IDLE
 
 
 ## Metres along the floor from one spot to another, their own last metres included.
@@ -755,7 +838,13 @@ func _on_assignment_changed(character_id: String) -> void:
 	if a == null or a.ghost:
 		return
 	a.work = _work_of(a.character)
+	if a.work == IDLE:
+		a.trip_in = 0.0
 	if a.errand.is_empty() and is_same(a.spot, a.seat):
+		_send(a, a.seat)
+	# Work for someone passing the time in the shared area: back to the desk now.
+	elif a.errand == "lounge" and a.work != IDLE and _placed and a.visible:
+		_drop_errand(a)
 		_send(a, a.seat)
 
 

@@ -1,6 +1,6 @@
 # Kod haritası · KALITE
 
-Üretildi: git 1e7d6346 · 2026-11-12 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git 05d51ca0 · 2026-11-12 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 256 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
@@ -22,11 +22,11 @@ Kapsam: scripts/ altındaki 256 .gd (tools/ hariç). Kod temizliği ve kıdemli 
 - scripts/systems/term_sheet_table_system.gd · 987 satır · 57 func
 - scripts/systems/sprint_catalog.gd · 931 satır · 84 func
 - scripts/tabs/events/mail_pane.gd · 898 satır · 46 func
+- scripts/ui/office/office_people.gd · 852 satır · 50 func
 - scripts/tabs/sales_tab.gd · 848 satır · 40 func
 - scripts/events/core/engine.gd · 819 satır · 39 func
 - scripts/systems/rnd_system.gd · 814 satır · 56 func
 - scripts/ui/meeting/meeting_panel.gd · 805 satır · 38 func
-- scripts/ui/office/office_people.gd · 763 satır · 48 func
 - scripts/events/tools/engine_probe.gd · 700 satır · 17 func
 - scripts/systems/b2b_sales_system.gd · 695 satır · 45 func
 - scripts/tabs/piyasa_tab.gd · 689 satır · 34 func

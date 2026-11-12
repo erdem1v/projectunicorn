@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git 1e7d6346 · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 05d51ca0 · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -155,7 +155,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/onboarding/steps/origin_traits_step.gd · 332 · - · OnboardingStep · 0 sinyal · 18 func
 - scripts/onboarding/steps/step_base.gd · 118 · OnboardingStep · Control · 1 sinyal · 10 func
 
-### scripts/systems/ (72 dosya, 24635 satır)
+### scripts/systems/ (72 dosya, 24641 satır)
 - scripts/systems/angel_round_system.gd · 52 · AngelRoundSystem · RefCounted · 0 sinyal · 1 func
 - scripts/systems/b2b_constants.gd · 291 · B2BConstants · RefCounted · 0 sinyal · 9 func
 - scripts/systems/b2b_sales_system.gd · 695 · B2BSalesSystem · RefCounted · 0 sinyal · 45 func
@@ -185,7 +185,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/systems/module_locks.gd · 35 · - · RefCounted · 0 sinyal · 4 func
 - scripts/systems/negotiation_system.gd · 276 · NegotiationSystem · RefCounted · 0 sinyal · 13 func
 - scripts/systems/news_feed_system.gd · 429 · NewsFeedSystem · RefCounted · 0 sinyal · 19 func
-- scripts/systems/office_constants.gd · 109 · OfficeConstants · RefCounted · 0 sinyal · 0 func
+- scripts/systems/office_constants.gd · 115 · OfficeConstants · RefCounted · 0 sinyal · 0 func
 - scripts/systems/office_system.gd · 91 · OfficeSystem · RefCounted · 0 sinyal · 12 func
 - scripts/systems/people_parts.gd · 165 · PeopleParts · RefCounted · 0 sinyal · 2 func
 - scripts/systems/phase_gate_system.gd · 177 · PhaseGateSystem · RefCounted · 0 sinyal · 9 func
@@ -318,7 +318,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/ui/meeting/sales_meeting_adapter.gd · 321 · SalesMeetingAdapter · RefCounted · 0 sinyal · 18 func
 - scripts/ui/meeting/vc_meeting_adapter.gd · 200 · VcMeetingAdapter · RefCounted · 0 sinyal · 12 func
 
-### scripts/ui/office/ (19 dosya, 5186 satır)
+### scripts/ui/office/ (19 dosya, 5275 satır)
 - scripts/ui/office/meeting_cast.gd · 186 · MeetingCast · Node3D · 2 sinyal · 13 func
 - scripts/ui/office/meeting_invite.gd · 198 · MeetingInvite · Control · 2 sinyal · 12 func
 - scripts/ui/office/office_actor.gd · 160 · OfficeActor · OfficePerson · 0 sinyal · 6 func
@@ -332,7 +332,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/ui/office/office_map_card.gd · 164 · - · PanelContainer · 2 sinyal · 3 func
 - scripts/ui/office/office_materials.gd · 105 · OfficeMaterials · RefCounted · 0 sinyal · 3 func
 - scripts/ui/office/office_notice_stack.gd · 196 · - · VBoxContainer · 0 sinyal · 10 func
-- scripts/ui/office/office_people.gd · 763 · OfficePeople · Node3D · 2 sinyal · 48 func
+- scripts/ui/office/office_people.gd · 852 · OfficePeople · Node3D · 2 sinyal · 50 func
 - scripts/ui/office/office_person.gd · 1128 · OfficePerson · Node3D · 0 sinyal · 51 func
 - scripts/ui/office/office_travel.gd · 179 · - · Control · 0 sinyal · 11 func
 - scripts/ui/office/office_venue.gd · 95 · OfficeVenue · RefCounted · 0 sinyal · 10 func
@@ -384,7 +384,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - speed_change_requested(speed: int) · scripts/autoload/event_bus.gd:21 · emit: scripts/autoload/save_manager.gd:370, scripts/main/game_shell.gd:117, scripts/main/main.gd:94,431,504,1835 +51 · connect: scripts/autoload/time_manager.gd:81
 - night_skipped() · scripts/autoload/event_bus.gd:23
   ↳ night_skipped emit: scripts/autoload/time_manager.gd:194
-  ↳ night_skipped connect: scripts/events/tools/plausibility.gd:160, scripts/main/main.gd:489,2826, scripts/ui/office/office_people.gd:86, scripts/ui/office/office_view.gd:64, scripts/debug/endgame_smoke.gd:8626 +3
+  ↳ night_skipped connect: scripts/events/tools/plausibility.gd:160, scripts/main/main.gd:489,2826, scripts/ui/office/office_people.gd:89, scripts/ui/office/office_view.gd:64, scripts/debug/endgame_smoke.gd:8626 +3
 - clock_batch_ended() · scripts/autoload/event_bus.gd:25
   ↳ clock_batch_ended emit: scripts/autoload/time_manager.gd:207
   ↳ clock_batch_ended connect: scripts/events/core/signals.gd:54, scripts/systems/incident_system.gd:314, scripts/systems/sprint_system.gd:1888, scripts/tabs/rnd_tab.gd:81, scripts/ui/components/research_bar.gd:64 +1
@@ -405,7 +405,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
   ↳ palette_changed connect: scripts/tabs/hr_tab.gd:85, scripts/ui/components/left_tabs.gd:164, scripts/ui/components/news_ticker.gd:81, scripts/ui/components/top_bar.gd:110, scripts/ui/components/window_layer.gd:66 +2
 - character_added(character_id: String) · scripts/autoload/event_bus.gd:50
   ↳ character_added emit: scripts/autoload/character_registry.gd:452
-  ↳ character_added connect: scripts/tabs/hr_tab.gd:74, scripts/ui/components/left_tabs.gd:131, scripts/ui/office/office_people.gd:83
+  ↳ character_added connect: scripts/tabs/hr_tab.gd:74, scripts/ui/components/left_tabs.gd:131, scripts/ui/office/office_people.gd:86
 - character_removed(character_id: String) · scripts/autoload/event_bus.gd:51
   ↳ character_removed emit: scripts/autoload/character_registry.gd:552
   ↳ character_removed connect: scripts/systems/sprint_system.gd:1579, scripts/tabs/hr/hr_dossier.gd:55, scripts/tabs/hr_tab.gd:74, scripts/ui/components/inbox.gd:162, scripts/ui/components/left_tabs.gd:132 +1
@@ -497,7 +497,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - sprint_planned(number: int) · scripts/autoload/event_bus.gd:160 · emit: scripts/systems/sprint_system.gd:67,232 · connect: scripts/ui/components/inbox.gd:163, scripts/ui/components/left_tabs.gd:151
 - sprint_started(number: int) · scripts/autoload/event_bus.gd:161
   ↳ sprint_started emit: scripts/systems/sprint_system.gd:201
-  ↳ sprint_started connect: scripts/ui/components/inbox.gd:163, scripts/ui/components/left_tabs.gd:152, scripts/ui/office/office_people.gd:93, scripts/debug/endgame_smoke.gd:24540, scripts/debug/run_probe.gd:487
+  ↳ sprint_started connect: scripts/ui/components/inbox.gd:163, scripts/ui/components/left_tabs.gd:152, scripts/ui/office/office_people.gd:96, scripts/debug/endgame_smoke.gd:24540, scripts/debug/run_probe.gd:487
 - card_phase_changed(card_id: String, phase: int) · scripts/autoload/event_bus.gd:162 · emit: scripts/systems/sprint_system.gd:1318 · connect: scripts/events/core/signals.gd:57
 - card_done(card_id: String) · scripts/autoload/event_bus.gd:163 · emit: scripts/systems/sprint_system.gd:1322 · connect: -
 - card_carried_over(card_id: String) · scripts/autoload/event_bus.gd:164 · emit: scripts/systems/sprint_system.gd:484,1806 · connect: -
@@ -853,8 +853,8 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - move_pressed() · scripts/ui/office/office_map_card.gd:9 · emit: scripts/ui/office/office_hud.gd:49, scripts/ui/office/office_map_card.gd:147 · connect: scripts/ui/office/office_city.gd:112,379 · (ad 2 yerde tanımlı)
 
 ### scripts/ui/office/office_people.gd
-- founder_arrived() · scripts/ui/office/office_people.gd:16 · emit: scripts/ui/office/office_people.gd:235 · connect: scripts/ui/office/office_travel.gd:75
-- founder_settled() · scripts/ui/office/office_people.gd:17 · emit: scripts/ui/office/office_people.gd:142,239,658 · connect: scripts/main/main.gd:2638, scripts/ui/office/office_travel.gd:106
+- founder_arrived() · scripts/ui/office/office_people.gd:16 · emit: scripts/ui/office/office_people.gd:239 · connect: scripts/ui/office/office_travel.gd:75
+- founder_settled() · scripts/ui/office/office_people.gd:17 · emit: scripts/ui/office/office_people.gd:146,243,736 · connect: scripts/main/main.gd:2638, scripts/ui/office/office_travel.gd:106
 
 ## Sahneler (38 .tscn)
 
@@ -1122,7 +1122,7 @@ Biçim: yol · boyut · üst düzey anahtarlar (en çok 10)
 - data/product/sprint.json · 9.3 KB · {sprint_weeks, quarter_weeks, mvp_lines, effort, fix_effort, limit_k, need, roles, role_areas, person_points_week, +26}
 - data/techtree/rnd_tree.json · 6.3 KB · {_doc, _stars, _cross, _areas, k_arge, report_period_weeks, nodes, _hidden_doc, _hidden_k3_doc, hidden_lines}
 
-## Metin anahtarı aileleri (860 aile, 3257 anahtar)
+## Metin anahtarı aileleri (860 aile, 3258 anahtar)
 
 Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak geçiren .gd/.json (en çok 5). '-' = dinamik kurulmuş olabilir ya da kullanılmıyor.
 - ANGEL_CAP_* · 1 · scripts/tabs/finance/finance_ozet_view.gd
@@ -1504,7 +1504,7 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - NUM_9_* · 1 · -
 - NUM_DECIMAL_* · 1 · scripts/modals/work_hours_modal.gd, scripts/tabs/hr/hr_atlas_modal.gd, scripts/tabs/product/sprint_ui_shared.gd, scripts/util/fmt.gd
 - NUM_GROUP_* · 1 · scripts/util/fmt.gd
-- OFFICE_ACT_* · 14 · scripts/systems/hr_system.gd, scripts/ui/office/office_actor.gd
+- OFFICE_ACT_* · 15 · scripts/systems/hr_system.gd, scripts/ui/office/office_actor.gd
 - OFFICE_CARD_* · 10 · scripts/ui/office/office_map_card.gd
 - OFFICE_CHIP_* · 1 · scripts/ui/office/office_city.gd
 - OFFICE_DESC_* · 4 · scripts/systems/office_constants.gd
