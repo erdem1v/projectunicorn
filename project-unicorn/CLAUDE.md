@@ -328,8 +328,10 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   ERP dünyasıyla, `TICK WORLD` satırı; `team=<n>` o kadar kişiyi sprinte oturtur) kurar ve beş haftayı gerçek saatle koşar; saat adımı, gece, sonraki kare ve ilk
   saat karelerinin süresini, TopBar'ın gece başına yenilemesini ve otomatik kaydın karesini `TICK` satırlarında basar.
   `auto_*` yazar: ayrı `APPDATA` ile koşulur (`TICK START udir=`); kayıt taşıyan kullanıcı dizininde çalışmaz. Üst barın saat hâlleri:
-  `--clock-shot=<running|paused|held|released|gate|incident|focus_out|focus_out_off>` (`CLOCKSHOT` satırı: birincil pencere,
-  sprint kipi, tutuşlar, hız; odak kollarında önce ve sonraki hız; dar bar `paused` ve `--shot-scale=1.25`).
+  `--clock-shot=<running|paused|held|released|gate|incident|focus_out|focus_out_off|moved>` (`CLOCKSHOT` satırı: birincil pencere,
+  sprint kipi, tutuşlar, hız; odak kollarında önce ve sonraki hız; dar bar `paused` ve `--shot-scale=1.25`, `paused_tip` II'nin ipucu; `moved` Sıradaki
+  yuvasının eski işlerinin yeni yerleri: hafta çubuğunda görüşmenin elması ve ipucu, saatin altındaki görüşme satırı, rayın
+  Ürün sayacı, bildirim yığınında son haftasındaki kâğıt, son haftasındaki teklif, bekleyen karar).
 - Smoke ve probe demo yapısına sabitlidir; `--run-log` (yalnız `sim`) ve `--sprint-probe` `build=ea|full` ile o yapının kartlarını
   ve sonlarını koşar. EA akışı editörde Main Run Args'a `--build=ea` yazılarak oynanır.
 - Görsel kontrol (pencereli): `--<yüzey>-shot=<tür>` ailesi (tab, modal, onboard, office, event, ending, vc, sales,
@@ -341,11 +343,11 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   döner, aynı karar için sonraki Esc sistem menüsünü açar, Ekip'in üstündeki dosyanın şeridi karara döner, karar
   verilir, saat durmuş kalır, Boşluk saati sürdürür) ve kare başına `GATEFLOW` satırı basar.
   Ofis: `--office-shot=<home|ishani|plaza|loft|city|meet>:<saat>[:<ek>]`, ek `full|card|<sekme>|hr_dossier|crowd40|
-  founders|nav|crown|cast|cheque|untyped|v1|goals|goals_step|goals_seed|card_ishani|card_home|card_over|card_here|card_tick|card_moving|desk_shut` (`crowd40` kırk kişilik kadro,
+  founders|nav|crown|cast|cheque|untyped|v1|goals|goals_step|goals_skip|goals_done|goals_seed|card_ishani|card_home|card_over|card_here|card_tick|card_moving|desk_shut` (`crowd40` kırk kişilik kadro,
   `LOOKS` satırı ve dört yakın kare;
   `founders` portre ile bust yan yana; `nav` fırınlanmış zemin; `meet` toplantı odası, `cast` bakış, duruş ve jest
   dizisi; `cheque` çek listesinin ilk haftası (`_01` tür seçili, `_02` ilk sprint başlamış), `untyped` aynı hafta
-  tür seçilmeden, `v1` v1.0 yayınlanınca (`_01`) ve Ar-Ge açılınca (`_02`); `goals` Frank'in çeki 4/5'te (bir hesap gelir çıtasının yarısında), `goals_step` 1/5'te (sıradaki adımın sayısı yok), `goals_seed` seed listesi 0/2: rayın Hedefler satırı (`_01`) ve ipucu (`_01_tip`), panel açık (`_02`) ve Frank'in ipucu (`_02_tip`); `card_ishani` ve `card_home` yalnız
+  tür seçilmeden, `v1` v1.0 yayınlanınca (`_01`) ve Ar-Ge açılınca (`_02`); `goals` Frank'in çeki 4/5'te (bir hesap gelir çıtasının yarısında), `goals_step` 1/5'te (sıradaki adımın sayısı yok), `goals_skip` 3/5'te sırasız (v1.0'dan önce bir hesap), `goals_done` 5/5'te (çek henüz masada değil), `goals_seed` seed listesi 0/2: üst barın merdiveni (`_01`), üzerine gelinince kartı (`_02`) ve kartta Frank'in ipucu (`_02_tip`); `card_ishani` ve `card_home` yalnız
   `city`'de, şirket Ev'de iken İş hanı'nın ve Ev'in kartı açık; `card_over` aynı Ev'de on dört çalışanla İş hanı'nın kartı,
   `card_here` şirket İş hanı'nda kendi kartı; `card_tick` yalnız `city`'de, Plaza'nın kartı bir günlük
   tikten geçer (`_before` karesi, `OFFICECARD` satırı); `card_moving` yalnız `city`'de, Ev'den İş hanı'na taşınma sürerken İş hanı'nın

@@ -444,6 +444,9 @@ func _menajer(master: Theme) -> Theme:
 	var num := _archivo("d_num", 650, 108, plex_sb)
 	var sansc := _archivo("d_sansc_reg", 500, 87, plex_reg)
 	var sansc_caps := _archivo("d_sansc_caps", 650, 87, plex_reg, 1)
+	# The top bar's goal ladder: its list's sparse caps name and its narrow step.
+	var ladder_caps := _archivo("d_ladder_caps", 500, 100, plex_reg, 2)
+	var ladder_step := _archivo("d_ladder_step", 650, 75, plex_sb)
 	var serif_reg := _dark_font(FONT_SERIF_REG, [], "d_serif_reg")
 	var serif_sb := _dark_font(FONT_SERIF_SB, [], "d_serif_sb")
 	var serif_it := _dark_font(FONT_SERIF_IT, [], "d_serif_it")
@@ -703,7 +706,14 @@ func _menajer(master: Theme) -> Theme:
 		[&"KpiValue", sans_sb, T.D_FS_26, T.D_INK_2],
 		[&"PartValueArmed", sans_b, T.D_FS_26, T.D_INK_2],
 		[&"ClockLabel", sans_sb, T.D_FS_22, T.D_INK_2],
-		[&"GoalTitle", sans_sb, T.D_FS_22, T.D_INK_1],   # the goals panel's step the list stands on
+		# The top bar's goal ladder: the list's name in sparse caps, its step narrow and semibold, the step's figure plain.
+		[&"LadderHead", ladder_caps, T.D_FS_12, T.D_INK_2],
+		[&"LadderStep", ladder_step, T.D_FS_18, T.D_INK_1],
+		[&"LadderFigure", sans_reg, T.D_FS_18, T.D_INK_3],
+		# Its card's steps: done, the one the list stands on, still open.
+		[&"LadderCardDone", sans_reg, T.D_FS_15, T.D_INK_4],
+		[&"LadderCardNow", ladder_step, T.D_FS_16, T.D_INK_1],
+		[&"LadderCardOpen", sans_reg, T.D_FS_15, T.D_INK_3],
 		[&"ValueText", sans_reg, T.D_FS_18, T.D_INK_2],
 		[&"ValueTextStrong", sans_sb, T.D_FS_18, T.D_INK_1],
 		[&"BodyLabel", sans_reg, T.D_FS_16, T.D_INK_2],
@@ -1184,8 +1194,10 @@ func _menajer(master: Theme) -> Theme:
 	_panel(th, &"ChartTip", "Panel", _flat(T.D_SURFACE_4, T.D_RADIUS_2, Vector4.ZERO, T.D_LINE_2))
 	# An open ring: round the locked fund's lock, and a milestone not yet earned.
 	_panel(th, &"LockDisc", "Panel", _flat(clear, T.RADIUS_PILL, Vector4.ZERO, T.D_LINE_2))
-	# The goals ladder's step the list stands on: an ink ring.
-	_panel(th, &"StepNow", "Panel", _flat(clear, T.RADIUS_PILL, Vector4.ZERO, T.D_INK_2, thick))
+	# The goal card's ladder: a step done a filled disc, the one the list stands on an ink ring, the rest an open ring.
+	_panel(th, &"LadderMarkDone", "Panel", _flat(T.D_INK_3, T.RADIUS_PILL, Vector4.ZERO))
+	_panel(th, &"LadderMarkNow", "Panel", _flat(clear, T.RADIUS_PILL, Vector4.ZERO, T.D_INK_1, thick))
+	_panel(th, &"LadderMarkOpen", "Panel", _flat(clear, T.RADIUS_PILL, Vector4.ZERO, T.D_LINE_3))
 	for row in [
 		[&"CardTitle", cond_sb, T.D_FS_15, T.D_INK_2],   # a card's title in its own case: the phase a goal leads to
 		[&"MetaStrong", sans_sb, T.D_FS_14, T.D_INK_1],   # the one name a list stresses: the player's on the ladder

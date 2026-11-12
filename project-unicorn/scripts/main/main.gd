@@ -2246,10 +2246,11 @@ func _seed_goal(state: String) -> void:
 # untyped and cheque open on the goal lists' week 1 (_seed_goal), not the theme seed: untyped before a type is
 # picked; cheque the type picked (_01), then the first sprint started (_02). v1 is the founder alone on the MVP gate
 # (_seed_product_live's gate), v1.0 published (_01), then Ar-Ge opened (_02).
-# goals, goals_step and goals_seed open on the goal lists' week 1 too, Frank's advice delivered: goals is Frank's cheque
-# at 4/5 (shipped, one account at $1.2K of the revenue bar), goals_step at 1/5 (the next step has no figure), goals_seed
-# the seed list at 0/2; the rail's goals row (_01) and its tip (_01_tip), then its panel open (_02) and Frank's tip
-# (_02_tip).
+# goals, goals_step, goals_skip, goals_done and goals_seed open on the goal lists' week 1 too, Frank's advice
+# delivered: goals is Frank's cheque at 4/5 (shipped, one account at $1.2K of the revenue bar), goals_step at 1/5 (the
+# next step has no figure), goals_skip at 3/5 out of order (an account before v1.0), goals_done at 5/5 (the account at
+# the bar, the cheque not yet on the desk), goals_seed the seed list at 0/2; the top bar's ladder (_01), the pointer on
+# it and its card open (_02), then Frank's tip on the card (_02_tip).
 # card_ishani / card_home (city only) = the company still in the flat, İş hanı's / the flat's card
 # open; card_over (city only) = the same flat with fourteen on the roster, İş hanı's card telling a team of fifteen what
 # thirteen desks mean; card_here (city only) = the company in İş hanı, its own card (desks taken, rent); card_tick (city
@@ -2269,11 +2270,13 @@ func _run_office_shot(spec: String) -> void:
 	match extra:
 		"untyped": _seed_goal("untyped")
 		"cheque": _seed_goal("typed")
-		"goals", "goals_step", "goals_seed":
-			_seed_goal({"goals": "cheque", "goals_step": "typed", "goals_seed": "seed"}[extra])
-			if extra == "goals":
-				GameState.set_flag("mvp_shipped", true)
-				_shot_customer("co_goals", "Kaya Lojistik", "logistics", "healthy", 1200, 8, 2, false)   # LOC-DATA debug seed / name
+		"goals", "goals_step", "goals_skip", "goals_done", "goals_seed":
+			_seed_goal({"goals": "cheque", "goals_step": "typed", "goals_skip": "cheque", "goals_done": "cheque",
+				"goals_seed": "seed"}[extra])
+			if extra in ["goals", "goals_skip", "goals_done"]:
+				GameState.set_flag("mvp_shipped", extra != "goals_skip")
+				_shot_customer("co_goals", "Kaya Lojistik", "logistics", "healthy",   # LOC-DATA debug seed / name
+					AngelRoundSystem.MRR_THRESHOLD if extra == "goals_done" else 1200, 8, 2, false)
 				SalesSystem.reflect_mrr()
 			EventBus.mentor_advisory_changed.emit("FRANK_ADVISORY_MEETING_SET", {})
 			GameState.mentor_line_at = -1   # delivered: the shot's hour may sit before its arrival
@@ -2311,26 +2314,21 @@ func _run_office_shot(spec: String) -> void:
 		"cheque":
 			await _shot_step("office_shot_%s_%02d_cheque" % [office_id, hour], func() -> void: SprintSystem.start())
 			return
-		"goals", "goals_step", "goals_seed":
-			# The pointer rests on the row (its tip, _01_tip); the row is pressed and the pointer leaves for the office
-			# (_02), then rests on Frank's face (_02_tip).
+		"goals", "goals_step", "goals_skip", "goals_done", "goals_seed":
+			# The ladder (_01); the pointer rests on it and its card opens (_02), then on Frank's face (_02_tip).
 			var stem := "office_shot_%s_%02d_%s" % [office_id, hour, extra]
 			var point := func(target: Control) -> void:
 				var move := InputEventMouseMotion.new()
 				move.position = target.get_global_rect().get_center()
 				move.global_position = move.position
 				get_viewport().push_input(move, true)
-			var row: Button = _shell.get_node("LeftTabs")._goals_btn
+			var bar: Control = _shell.get_node("TopBar")
 			await get_tree().create_timer(1.2).timeout
 			_save_shot(stem + "_01")
-			point.call(row)
+			point.call(bar._hit)
 			await get_tree().create_timer(1.2).timeout
-			_save_shot(stem + "_01_tip")
-			row.pressed.emit()
-			point.call(_shell.get_node("CenterViewport"))
-			await get_tree().create_timer(0.5).timeout
 			_save_shot(stem + "_02")
-			for face: TextureRect in _shell.get_node("PanelLayer").find_children("*", "TextureRect", true, false):
+			for face: TextureRect in bar._card.find_children("*", "TextureRect", true, false):
 				if face.tooltip_text != "":
 					point.call(face)
 			await _finish_shot(stem + "_02_tip", 1.2)
@@ -2728,13 +2726,17 @@ func _run_invite_shot(kind: String) -> void:
 # --clock-shot=<running|paused|held|released|gate|incident|focus_out|focus_out_off>: the top bar's clock states over the
 # shell, clock_shot_<state>[_1].png and a CLOCKSHOT line a frame (the primary window, the sprint's mode, the
 # holds, the speed). running: 1×, two frames; paused: as every shot opens, two frames a second apart (the
-# compact bar under --shot-scale=1.25). held: a B2C run on its release note with Ürün open (the note holds the
+# compact bar under --shot-scale=1.25), then the pointer on II and its tip (_tip). held: a B2C run on its release note with Ürün open (the note holds the
 # clock), two frames, then Görüşmeye git refused under the hold (_meet, the toast); released: the note left
 # through the page's own plan_next and the sprint started on the lead's plan; gate: a card takes Ürün's
 # place and is answered, and Ürün comes back; incident: the night stopped by an emergency (the theme seed's company
 # from 23:00), the clock held by the emergency and by its card. focus_out: at 1×, the window losing the application's focus
 # pauses the clock (CLOCKSHOT before/after); focus_out_off: the same with the setting off, held in memory
-# only, and the clock runs on.
+# only, and the clock runs on. moved: where the next slot's old work stands, one frame each (clock_shot_moved_<state>):
+# the empty slot, a ringing call and the tip of its diamond on the week bar (_tip), the founder on the way, at the table
+# and on the way back (the line under the clock), the sprint's decision paper (the rail's Ürün count), a long-titled
+# paper in its last week under a short one (the notice stack), an offer in its last week, then a decision waiting. The company is the widest name in
+# the pools.
 func _run_clock_shot(kind: String) -> void:
 	var note: bool = kind in ["held", "released", "gate"]
 	_begin_shot()
@@ -2764,6 +2766,13 @@ func _run_clock_shot(kind: String) -> void:
 			await frame.call("paused")
 			await get_tree().create_timer(0.6).timeout
 			await frame.call("paused_1")
+			var pause_btn: Control = get_tree().get_first_node_in_group(&"top_bar").get_node("TimeBlock/PauseBtn")
+			var move := InputEventMouseMotion.new()
+			move.position = pause_btn.get_global_rect().get_center()
+			move.global_position = move.position
+			get_viewport().push_input(move, true)
+			await get_tree().create_timer(1.2).timeout
+			await frame.call("paused_tip")
 		"held":
 			await frame.call("held")
 			await get_tree().create_timer(0.6).timeout
@@ -2794,6 +2803,47 @@ func _run_clock_shot(kind: String) -> void:
 			_shot_card("funding.frank_cheque", {}, GameState.current_hour)
 			EventGate.resolve(EventGate.active_id(), 0)
 			await frame.call("gate")
+		"moved":
+			var bar: Node = get_tree().get_first_node_in_group(&"top_bar")
+			var place := "Sultanahmet Gayrimenkul"   # LOC-DATA debug seed / the widest company name in the pools
+			# Mid-morning, so the meeting's diamond stands inside the week bar.
+			GameState.set_current_hour(10)
+			TimeManager.sync_to_current_hour()
+			await frame.call("moved_empty")
+			bar.show_meeting("call", place)
+			await frame.call("moved_call")
+			var move := InputEventMouseMotion.new()
+			move.position = bar.get_global_rect().position + Vector2(bar._now_px, bar.MARK_Y)
+			move.global_position = move.position
+			get_viewport().push_input(move, true)
+			await get_tree().create_timer(0.8).timeout
+			await frame.call("moved_call_tip")
+			move.position = Vector2(get_viewport().get_visible_rect().size.x / 2.0, 400.0)
+			move.global_position = move.position
+			get_viewport().push_input(move, true)
+			for phase: String in ["trip", "sitting", "home"]:
+				bar.show_meeting(phase, place)
+				await frame.call("moved_" + phase)
+			bar.show_meeting("")
+			GameState.product["decision"] = {"event_id": "product.sprint_dev_code_review"}
+			var sprint_key: String = _shot_paper("product.sprint_dev_code_review", {}, 2)
+			await frame.call("moved_sprint")
+			EvPapers.remove(sprint_key)
+			GameState.product.erase("decision")
+			# A long title in its last week under a short one that keeps its single line.
+			var short_key: String = _shot_paper("world.cloud_price_cut", {}, 3)
+			var paper_key: String = _shot_paper("world.quarterly_bulletin", {}, 1)
+			await frame.call("moved_paper")
+			EvPapers.remove(paper_key)
+			EvPapers.remove(short_key)
+			EventBus.offer_countdown_changed.emit(1)
+			await frame.call("moved_offer")
+			EventBus.offer_countdown_changed.emit(-1)
+			# Frank's cheque asks for a live product at its bar.
+			GameState.set_flag("mvp_shipped", true)
+			GameState.set_mrr(AngelRoundSystem.MRR_THRESHOLD)
+			_shot_card("funding.frank_cheque", {}, GameState.current_hour)
+			await frame.call("moved_gate")
 		_:
 			_shot_fail("[ClockShot] unknown state: %s" % kind)
 			return

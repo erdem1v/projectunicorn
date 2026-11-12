@@ -22,14 +22,9 @@ static func list() -> String:
 	return ""
 
 
-## Seed listesi çek cevaplanınca açılır; ondan sonra liste yoktur.
-static func following(which: String) -> String:
-	return "seed" if which == "cheque" else ""
-
-
-## `which` listesinin (verilmezse etkin listenin) adımları sırayla, [{id, done, text_key, tab}]; MRR adımları
-## canlı `value` ve `target` da taşır. Ödeyen ve gelir adımları canlıdır: müşteri giderse ya da MRR düşerse adım
-## yeniden açılır.
+## `which` listesinin (verilmezse etkin listenin) adımları sırayla, [{id, done, text_key, tab}]; MRR adımları canlı
+## `value` ve `target` da taşır. Ödeyen ve gelir adımları canlıdır: müşteri giderse ya da MRR düşerse adım yeniden
+## açılır. Üst barın merdiveni adımların tek yazı boyunu iki listenin bütün adımlarından ölçer.
 static func steps(which: String = "") -> Array:
 	match which if which != "" else list():
 		"cheque":
@@ -55,14 +50,12 @@ static func steps(which: String = "") -> Array:
 	return []
 
 
-## `which` listesinin (verilmezse etkin listenin) {list, title_key, done, total, next}: `next` ilk bitmemiş adım,
-## hepsi bittiyse {}. Liste yokken {}.
-static func summary(which: String = "") -> Dictionary:
-	if which == "":
-		which = list()
-	var all: Array = steps(which)
+## {list, title_key, done, total, next}: `next` ilk bitmemiş adım, hepsi bittiyse {}. Liste yokken {}.
+static func summary() -> Dictionary:
+	var all: Array = steps()
 	if all.is_empty():
 		return {}
 	var open: Array = all.filter(func(s: Dictionary) -> bool: return not s.done)
+	var which: String = list()
 	return {"list": which, "title_key": "CHEQUE_TITLE" if which == "cheque" else "SEED_SECTION_TITLE",
 		"done": all.size() - open.size(), "total": all.size(), "next": {} if open.is_empty() else open[0]}

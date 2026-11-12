@@ -2,7 +2,7 @@
 
 **GENERATED — do not hand-edit.** Regenerate with `python tools/gen_signal_manifest.py`.
 Source: `scripts/autoload/event_bus.gd`, every `.gd` under `scripts/`, `EvSignals.BINDINGS` and the card triggers.
-Last generated 2026-10-27.
+Last generated 2026-11-12.
 
 Authority: [`GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](<../GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md>) §15. The read side of
 the same idea is the seam list in [`content/events_draft/_vocabulary.md`](content/events_draft/_vocabulary.md) §b.
@@ -68,7 +68,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `speed_change_requested` | `speed: int` | save_manager · game_shell · main · endings_system · top_bar | 24 | 1 | time_manager |
 | `night_skipped` | `—` | time_manager | 1 | 5 | plausibility · main · office_people · office_view |
 | `clock_batch_ended` | `—` | time_manager | 1 | 6 | signals · incident_system · sprint_system · rnd_tab · research_bar · office_people |
-| `tab_changed` | `tab_id: String` | game_shell · main · product_tab · sales_tab · mail_pane · hr_atlas_modal · sprint_ui_shared · rnd_ui_shared · inbox · left_tabs · research_bar · window_layer · office_notice_stack | 56 | 4 | main · left_tabs · research_bar · window_layer |
+| `tab_changed` | `tab_id: String` | game_shell · main · product_tab · sales_tab · mail_pane · hr_atlas_modal · sprint_ui_shared · rnd_ui_shared · inbox · left_tabs · research_bar · top_bar · window_layer · office_notice_stack | 56 | 5 | main · left_tabs · research_bar · top_bar · window_layer |
 | `finance_subpage_requested` | `page_id: String` | main · mail_pane | 3 | 0 | — |
 | `goto_tab_requested` | `tab_id: String, subpage: String` | effects | 1 | 1 | main |
 
@@ -78,7 +78,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 |---|---|---|---|---|---|
 | `settings_requested` | `—` | main · main_menu · system_menu_modal · left_tabs | 4 | 1 | main |
 | `confirm_requested` | `config: Dictionary` | main · save_load_modal · settings_modal · system_menu_modal · term_sheet_table_scene · hr_tab · hunt_tab · hr_atlas_modal · hr_ledger | 16 | 1 | main |
-| `language_changed` | `locale: String` | localization · main | 2 | 10 | character_registry · system_menu_modal · left_tabs · news_ticker · research_bar · top_bar · window_layer · meeting_invite · office_city · office_notice_stack |
+| `language_changed` | `locale: String` | localization · main | 2 | 11 | character_registry · system_menu_modal · left_tabs · news_ticker · research_bar · top_bar · window_layer · meeting_invite · office_city · office_notice_stack |
 | `palette_changed` | `colorblind: bool` | settings_modal | 2 | 7 | hr_tab · left_tabs · news_ticker · top_bar · window_layer · office_city · office_notice_stack |
 
 ### Character signals
@@ -110,7 +110,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
 | `customer_added` | `customer_id: String` | customer_registry | 1 | 1 | top_bar · EvSignals (card trigger) |
-| `customer_removed` | `customer_id: String` | customer_registry | 1 | 2 | promise_registry · left_tabs |
+| `customer_removed` | `customer_id: String` | customer_registry | 1 | 3 | promise_registry · left_tabs · top_bar |
 | `customer_mrr_changed` | `customer_id: String, new_mrr: int` | customer_registry | 1 | 0 | — |
 | `customer_seats_changed` | `customer_id: String, new_seats: int` | customer_registry | 1 | 0 | — |
 | `customer_satisfaction_changed` | `customer_id: String, new_satisfaction: int` | customer_registry | 1 | 0 | — |
@@ -136,7 +136,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `event_resolved` | `event_id: String, choice_index: int` | engine | 2 | 10 | save_manager · game_shell · main · incident_system · sprint_system · left_tabs · research_bar · top_bar · window_frame · office_hud |
 | `modal_requested` | `event: GameEvent` | engine | 1 | 2 | harness · main |
 | `event_set_aside` | `event_id: String` | engine | 1 | 7 | save_manager · main · left_tabs · research_bar · top_bar · window_frame · office_hud |
-| `desk_changed` | `—` | papers · mail_clock | 6 | 3 | product_tab · left_tabs · top_bar |
+| `desk_changed` | `—` | papers · mail_clock | 6 | 4 | product_tab · left_tabs · top_bar |
 
 ### Inbox messages
 
@@ -241,7 +241,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `mentor_advisory_changed` | `key: String, args: Dictionary` | effects · sprint_bridges · vc_pitch_system | 3 | 3 | game_state · hunt_tab · office_notice_stack |
+| `mentor_advisory_changed` | `key: String, args: Dictionary` | effects · main · sprint_bridges · vc_pitch_system | 4 | 4 | game_state · hunt_tab · top_bar · office_notice_stack |
 | `headline_added` | `source: String, line: Dictionary` | effects · ticker · hr_morale_system · hr_search_system · hr_system · sales_ledger · sprint_bridges | 9 | 2 | time_manager · news_ticker |
 | `ticker_live_line` | `source: String, line: Dictionary` | news_feed_system · sprint_bridges · summary_system · office_travel | 5 | 1 | news_ticker |
 
@@ -270,7 +270,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `sheet_expired` | `vc_id: String` | vc_pitch_system | 1 | 0 | EvSignals (bindable) |
 | `callback_ready` | `vc_id: String` | vc_pitch_system | 1 | 0 | — |
 | `meeting_day` | `vc_id: String` | vc_pitch_system | 1 | 0 | EvSignals (card trigger) |
-| `offer_countdown_changed` | `weeks_left: int` | vc_pitch_system | 1 | 1 | top_bar |
+| `offer_countdown_changed` | `weeks_left: int` | main · vc_pitch_system | 3 | 1 | top_bar |
 | `term_table_requested` | `vc_id: String, stage: String` | effects · game_shell · hunt_tab | 4 | 1 | main |
 | `sheet_walked` | `vc_id: String` | vc_pitch_system | 1 | 0 | — |
 
@@ -294,7 +294,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
 | `day_tick_completed` | `day: int` | time_manager | 1 | 3 | save_manager · plausibility · office_city |
-| `game_loaded` | `slot_id: String` | main | 1 | 1 | left_tabs |
+| `game_loaded` | `slot_id: String` | main | 1 | 2 | left_tabs · top_bar |
 | `system_menu_requested` | `—` | game_shell · main | 4 | 1 | main |
 | `save_load_requested` | `mode: String` | main · main_menu · system_menu_modal | 5 | 1 | main |
 | `quicksave_requested` | `—` | game_shell · main | 4 | 1 | main |

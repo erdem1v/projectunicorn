@@ -4,6 +4,8 @@
 [ext_resource type="FontVariation" path="res://assets/fonts/variations/d_cond_b.tres" id="d_cond_b_f0c0d"]
 [ext_resource type="FontVariation" path="res://assets/fonts/variations/d_cond_sb.tres" id="d_cond_sb_6c810"]
 [ext_resource type="FontVariation" path="res://assets/fonts/variations/d_cond_sb_caps.tres" id="d_cond_sb_caps_de601"]
+[ext_resource type="FontVariation" path="res://assets/fonts/variations/d_ladder_caps.tres" id="d_ladder_caps_83978"]
+[ext_resource type="FontVariation" path="res://assets/fonts/variations/d_ladder_step.tres" id="d_ladder_step_ad607"]
 [ext_resource type="FontVariation" path="res://assets/fonts/variations/d_num.tres" id="d_num_0ce92"]
 [ext_resource type="FontVariation" path="res://assets/fonts/variations/d_sansc_caps.tres" id="d_sansc_caps_0c44f"]
 [ext_resource type="FontVariation" path="res://assets/fonts/variations/d_sansc_reg.tres" id="d_sansc_reg_9fc43"]
@@ -2960,6 +2962,49 @@ bg_color = Color(1, 1, 1, 0)
 border_width_left = 1
 border_color = Color(0.22745098, 0.20392157, 0.1764706, 1)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3df7c"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6c7c4_2"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ba874"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.41568628, 0.37254903, 0.32156864, 1)
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_d6a13"]
 content_margin_left = 0.0
 content_margin_top = 0.0
@@ -5882,22 +5927,6 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c8330"]
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
-bg_color = Color(1, 1, 1, 0)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
-corner_radius_top_left = 999
-corner_radius_top_right = 999
-corner_radius_bottom_right = 999
-corner_radius_bottom_left = 999
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_f1bec_2"]
 content_margin_left = 0.0
 content_margin_top = 0.0
@@ -7426,10 +7455,6 @@ GoalPickSet/styles/disabled = SubResource("StyleBoxFlat_a9059_2")
 GoalPickSet/styles/hover = SubResource("StyleBoxFlat_581e7_2")
 GoalPickSet/styles/normal = SubResource("StyleBoxFlat_323c1_2")
 GoalPickSet/styles/pressed = SubResource("StyleBoxFlat_441c9_2")
-GoalTitle/base_type = &"Label"
-GoalTitle/colors/font_color = Color(1, 1, 1, 1)
-GoalTitle/font_sizes/font_size = 22
-GoalTitle/fonts/font = ExtResource("d_sans_sb_3375b")
 GroupLabel/base_type = &"Label"
 GroupLabel/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
 GroupLabel/font_sizes/font_size = 15
@@ -7600,6 +7625,36 @@ KpiValue/font_sizes/font_size = 26
 KpiValue/fonts/font = ExtResource("d_sans_sb_3375b")
 Label/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
 Label/constants/line_spacing = 0
+LadderCardDone/base_type = &"Label"
+LadderCardDone/colors/font_color = Color(0.6039216, 0.5686275, 0.5176471, 1)
+LadderCardDone/font_sizes/font_size = 15
+LadderCardDone/fonts/font = ExtResource("d_sans_reg_96321")
+LadderCardNow/base_type = &"Label"
+LadderCardNow/colors/font_color = Color(1, 1, 1, 1)
+LadderCardNow/font_sizes/font_size = 16
+LadderCardNow/fonts/font = ExtResource("d_ladder_step_ad607")
+LadderCardOpen/base_type = &"Label"
+LadderCardOpen/colors/font_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
+LadderCardOpen/font_sizes/font_size = 15
+LadderCardOpen/fonts/font = ExtResource("d_sans_reg_96321")
+LadderFigure/base_type = &"Label"
+LadderFigure/colors/font_color = Color(0.7019608, 0.6666667, 0.61960787, 1)
+LadderFigure/font_sizes/font_size = 18
+LadderFigure/fonts/font = ExtResource("d_sans_reg_96321")
+LadderHead/base_type = &"Label"
+LadderHead/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
+LadderHead/font_sizes/font_size = 12
+LadderHead/fonts/font = ExtResource("d_ladder_caps_83978")
+LadderMarkDone/base_type = &"Panel"
+LadderMarkDone/styles/panel = SubResource("StyleBoxFlat_3df7c")
+LadderMarkNow/base_type = &"Panel"
+LadderMarkNow/styles/panel = SubResource("StyleBoxFlat_6c7c4_2")
+LadderMarkOpen/base_type = &"Panel"
+LadderMarkOpen/styles/panel = SubResource("StyleBoxFlat_ba874")
+LadderStep/base_type = &"Label"
+LadderStep/colors/font_color = Color(1, 1, 1, 1)
+LadderStep/font_sizes/font_size = 18
+LadderStep/fonts/font = ExtResource("d_ladder_step_ad607")
 LeadText/base_type = &"Label"
 LeadText/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
 LeadText/font_sizes/font_size = 20
@@ -8639,8 +8694,6 @@ StepKey/styles/disabled = SubResource("StyleBoxFlat_fbc91_7")
 StepKey/styles/hover = SubResource("StyleBoxFlat_08a46_5")
 StepKey/styles/normal = SubResource("StyleBoxFlat_fbc91_8")
 StepKey/styles/pressed = SubResource("StyleBoxFlat_faa9d_6")
-StepNow/base_type = &"Panel"
-StepNow/styles/panel = SubResource("StyleBoxFlat_c8330")
 StepperBox/base_type = &"PanelContainer"
 StepperBox/styles/panel = SubResource("StyleBoxFlat_f1bec_2")
 SubheadLabel/base_type = &"Label"
@@ -8850,7 +8903,7 @@ TopicPill/fonts/font = ExtResource("d_cond_b_caps_3c3ce")
 TopicPill/styles/normal = SubResource("StyleBoxFlat_1b27f")
 TraitBox/base_type = &"PanelContainer"
 TraitBox/styles/panel = SubResource("StyleBoxFlat_e9fa3")
-UiTokensStamp/constants/stamp = 48
+UiTokensStamp/constants/stamp = 49
 VScrollBar/styles/grabber = SubResource("StyleBoxFlat_1c24c")
 VScrollBar/styles/grabber_highlight = SubResource("StyleBoxFlat_85a39")
 VScrollBar/styles/grabber_pressed = SubResource("StyleBoxFlat_85a39_2")

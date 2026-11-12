@@ -3,7 +3,8 @@ extends VBoxContainer
 # The notice stack at the office's top right, under the build cards (BuildHUD says where they end): the inbox's
 # preview. Frank's latest line, in the run's first minute how the clock starts, the newest discovery not read yet,
 # then what waits in the inbox (papers, then reminders, in its order), at most MAX_CARDS cards with a +N badge on
-# the last for the rest. A row reads sender · subject · time left; a click opens it in the inbox. The decision on
+# the last for the rest. A row reads sender · subject · time left on one line; a subject too long for it goes under
+# its sender, as Frank's line does, and wraps across the card's width. A click opens it in the inbox. The decision on
 # screen is not a row: the top bar's gate slot is. Windows are later siblings of the office, and the stack hides
 # while one lies over it, or while a call's card does; hidden, it still keeps up, and a step done on the goal list
 # toasts over the windows. In the dark language from its root.
@@ -138,35 +139,53 @@ func _refresh(arrive: bool) -> void:
 	var hidden: int = desk.size() - shown.size()
 	for i in shown.size():
 		var it: Dictionary = shown[i]
-		var row := _row(it)
-		if i == shown.size() - 1 and hidden > 0:
-			var more := UiFactory.make_label("+%d" % hidden, &"BadgeCount")
-			more.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-			row.add_child(more)
-		_add(row, INBOX.show.bind(String(it.id)), String(it.id), arrive)
+		_add(_row(it, hidden if i == shown.size() - 1 else 0), INBOX.show.bind(String(it.id)), String(it.id), arrive)
 
 
-## sender · subject · time left; the dot says what kind of wait it is.
-func _row(it: Dictionary) -> HBoxContainer:
+## sender · subject · time left; the dot says what kind of wait it is, and the last card shown counts the `more` that
+## are not. When they do not fit on one line the sender stands over the subject, which wraps across the card.
+func _row(it: Dictionary, more: int = 0) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", UiTokens.SPACE_M)
 	var last: bool = it.kind == "paper" and (bool(it.expiring) or int(it.weeks_left) <= 1)
 	var dot: Color = UiTokens.D_neg() if it.get("risk", false) else (UiTokens.D_warn() if last
 		else (UiTokens.D_pos() if it.get("grow", false) else UiTokens.D_info()))
 	row.add_child(UiFactory.make_dot(dot, UiTokens.SPACE_M))
-	row.add_child(UiFactory.make_label(String(it.sender.name), &"MetaMuted"))
+	var sender := UiFactory.make_label(String(it.sender.name), &"MetaMuted")
 	var subject := UiFactory.make_label(String(it.subject), &"NoticeText")
 	subject.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	subject.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	row.add_child(subject)
+	subject.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var left := ""
 	if it.kind == "paper":
 		var weeks: int = int(it.weeks_left)
-		row.add_child(UiFactory.make_label(tr("DESK_PAPER_THIS_WEEK") if last
-			else tr(Fmt.count_key("DESK_PAPER_WEEKS", weeks)).format({"n": weeks}), &"Caption",
-			UiTokens.D_warn() if last else null))
+		left = tr("DESK_PAPER_THIS_WEEK") if last else tr(Fmt.count_key("DESK_PAPER_WEEKS", weeks)).format({"n": weeks})
+	var room: float = WIDTH - 2 * UiTokens.SPACE_XL - UiTokens.SPACE_M - 3 * UiTokens.SPACE_M
+	var count := "+%d" % more if more > 0 else ""
+	if count != "":
+		room -= _width(count, &"BadgeCount") + UiTokens.SPACE_M
+	if _width(sender.text, &"MetaMuted") + _width(subject.text, &"NoticeText") + _width(left, &"Caption") <= room:
+		row.add_child(sender)
+		row.add_child(subject)
+	else:
+		var said := VBoxContainer.new()
+		said.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		said.add_theme_constant_override("separation", 0)
+		said.add_child(sender)
+		said.add_child(subject)
+		row.add_child(said)
+	if left != "":
+		row.add_child(UiFactory.make_label(left, &"Caption", UiTokens.D_warn() if last else null))
+	if count != "":
+		row.add_child(UiFactory.make_label(count, &"BadgeCount"))
 	for c in row.get_children():
 		c.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	return row
+
+
+## `text`'s width in the stack's `type` labels (the row is not in the tree yet; the stack holds the theme).
+func _width(text: String, type: StringName) -> float:
+	return get_theme_font("font", type).get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1,
+		get_theme_font_size("font_size", type)).x
 
 
 func _add(row: Control, on_click: Callable, id: String, arrive: bool) -> void:

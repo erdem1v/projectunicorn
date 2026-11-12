@@ -188,11 +188,9 @@ CHEQUE_STEP_SHIP,v1.0'ı yayınla,Ship v1.0
 CHEQUE_STEP_PAYING,İlk ödeyen müşteri,First paying customer
 CHEQUE_STEP_MRR,Aylık gelir {bar},Monthly revenue {bar}
 GOAL_STEP_TRACTION,Traction'a geç,Reach Traction
-GOAL_STEP_SEED,Seed turu: aylık gelir {bar},Seed round: monthly revenue {bar}
+GOAL_STEP_SEED,Aylık gelir {bar},Monthly revenue {bar}
 GOAL_TOAST,{title} · {done}/{total},{title} · {done}/{total}
-GOALS_TITLE,Hedefler,Goals
-GOAL_ROW_TIP,{head} · {next},{head} · {next}
-GOAL_OF,/ {target},/ {target}
+GOAL_DONE_COUNT,{done}/{total} tamam,{done}/{total} done
 GOAL_GO_PRODUCT,Ürün'e git,Go to Product
 GOAL_GO_SALES,Satış'a git,Go to Sales
 GOAL_GO_FINANCE,Finans'a git,Go to Finance
@@ -1414,13 +1412,10 @@ TOPBAR_SHUTTER_WEEKS_ONE,{n} hafta,{n} week
 TOPBAR_NEXT,Sıradaki,Up next
 TOPBAR_NEXT_OFFER,Teklif · {n} hafta kaldı,Offer · {n} weeks left
 TOPBAR_NEXT_OFFER_LAST,Teklif · bu hafta son,Offer · final week
-TOPBAR_NEXT_SPRINT_FINAL,Sprint kararı · bu hafta son,Sprint decision · final week
-TOPBAR_NEXT_PAPER_FINAL,{subject} · bu hafta son,{subject} · final week
 TOPBAR_NEXT_MEETING,{time} · {company},{time} · {company}
-TOPBAR_NOW,Şimdi,Now
 TOPBAR_IN_MEETING,Görüşmede,In a meeting
 TOPBAR_TRIP_HOME,Ofise dönüş,Back to the office
-TOPBAR_NEXT_WORKDAY_END,Mesai bitimi · {n} saat,Workday ends · {n} h
+TOPBAR_HELD_AT,{state} · {company},{state} · {company}
 MONTH_TITLE,{month} {year},{month} {year}
 SUMMARY_TITLE_WEEK,Hafta {week} · {year},Week {week} · {year}
 SUMMARY_TITLE_QUARTER,{quarter}. Çeyrek {year},Q{quarter} {year}
@@ -1524,7 +1519,7 @@ He hangs up. Five past ten. Nothing else on today."
 TOPBAR_UNIT_PER_MONTH,/ay,/mo
 MEETING_WITHDRAW,Toplantıdan çekil,Withdraw from the meeting
 TOPBAR_PAUSE,II,II
-TOPBAR_PAUSED,DURDU · Boşluk ile sürdür,PAUSED · Space to resume
+TOPBAR_RESUME_TIP,Sürdür · Boşluk,Resume · Space
 NUM_0,sıfır,zero
 NUM_1,bir,one
 NUM_2,iki,two
