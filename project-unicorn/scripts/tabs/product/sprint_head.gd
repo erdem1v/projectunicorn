@@ -1,8 +1,8 @@
 class_name SprintHead
 extends HBoxContainer
 
-# Sprintin başlığı: numarası, çeyreğin çentikleri, v1.0'dan önce MVP rozeti, sprint sürerken hafta çubukları, bir aşamanın
-# yüzleri kümeye dönünce ekip rozeti ve çeyrek hedefinin seçicisi. Yalnız modeli çizer; hedef seçimi sekmeye `pick_goal` olarak çıkar.
+# Sprintin başlığı: numarası, çeyreğin çentikleri, sprint sürerken hafta çubukları, bir aşamanın yüzleri kümeye dönünce ekip
+# rozeti ve çeyrek hedefinin seçicisi. Yalnız modeli çizer; hedef seçimi sekmeye `pick_goal` olarak çıkar.
 # Rozetler akar: yer daralınca alt satıra iner, hiçbir şey kesilmez; seçici sağda durur.
 
 signal action(kind: String, args: Dictionary)
@@ -22,8 +22,6 @@ func setup(model: Dictionary) -> void:
 	add_child(flow)
 	flow.add_child(_item([SprintUiShared.label(Fmt.upper(tr("PRODUCT_SPRINT_TITLE").format({"n": c.sprint})), &"SprintTitle")]))
 	flow.add_child(_quarter(model.quarter))
-	if c.mvp != null:
-		flow.add_child(_mvp(c.mvp))
 	if c.mode == "active":
 		flow.add_child(_week(c))
 	if c.crew != null:
@@ -62,15 +60,6 @@ func _quarter(q: Dictionary) -> HBoxContainer:
 	var left: int = int(q.total) - int(q.pos)
 	var tip: String = tr(Fmt.count_key("PRODUCT_QUARTER_TIP", left)).format({"year": q.year, "q": q.q, "pos": q.pos, "left": left})
 	return _item([SprintUiShared.label(Fmt.upper(tr("PRODUCT_QUARTER_ORD").format({"q": q.q})), &"HeadMeta"), notches], true, tip)
-
-
-## v1.0'dan önce: sürümün adı, biten kart sayısı ve motorun tahmini; ipucu sürüm koşulu.
-func _mvp(line: Dictionary) -> HBoxContainer:
-	var parts: Array = [SprintUiShared.label(String(line.version), &"MvpVersion"),
-		SprintUiShared.label(tr("PRODUCT_MVP_BADGE_CARDS").format(line), &"HeadMeta")]
-	if line.sprint >= 0:
-		parts.append(SprintUiShared.label(tr("PRODUCT_MVP_BADGE_ETA").format({"n": line.sprint}), &"HeadMeta"))
-	return _item(parts, true, tr("PRODUCT_MVP_RULE" if line.sprint >= 0 else "PRODUCT_MVP_RULE_NO_ETA").format(line))
 
 
 ## Koşan sprintin haftaları: geçen kısmı dolu iki çubuk ve "{w}. hafta".

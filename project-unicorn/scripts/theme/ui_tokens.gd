@@ -42,7 +42,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 50
+const THEME_STAMP := 51
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -745,22 +745,17 @@ const D_W_TIMELINE := 396             # its time axis
 const D_TIMELINE_WEEKS := 2.6         # the axis' span: the sprint's two weeks and the next sprint's first 0.6
 const D_H_BOARD_HEAD := 30            # the board's fixed head: the card count and the axis' weeks
 const D_H_CARD_ROW := 56
-const D_H_CARD_ROW_TWO := 74          # a row whose name takes two lines
-const D_CARD_NAME_SHORT := 22         # a name of up to this many characters keeps its row one line
 const D_H_STAGE_BAR := 30             # a stage's bar, centred in its row
 const D_W_STAGE_BAR_LEAST := 6        # the least a bar draws, however short its stage
 const D_STAGE_BAR_PAD := Vector2i(7, 4)   # a bar's content from its left and right edge
 const D_W_TICK_BOX := 20              # a stage done ahead, ticked on the start of the next stage's bar
 const D_NOW_HEAD := Vector2i(10, 6)   # the now line's head
-const D_W_CARD_SLOT := 104            # a card row's module name and its status, at their least
+const D_W_CARD_SLOT := 104            # a card row's status, at its least
 const D_PAD_CARD_ROW := 7             # a card row's info column from its top edge
-const D_H_CARD_LINE := 20             # a card row's first line; the two lines of a long name take D_H_CARD_LINE_TWO
-const D_H_CARD_LINE_TWO := 38
-const D_W_CARD_EFFORT := 30           # a card row's effort figure, at its least
+const D_H_CARD_LINE := 20             # a card row's first line; a name that wraps grows it (BoardRow._fit)
 const D_PAD_CARD_ICON := 3            # the kind icon's drop onto the name's first line
 const D_H_WAIT := 18                  # a wait's dotted line and its end cap, centred on the bar
 const D_SHADOW_INSET := 2             # the preparation's shadow starts and ends this far inside its stage's span
-const D_RISK_BAR := Vector2i(28, 6)   # a card's bug risk
 const D_ASK_DISC := 14                # the "?" on the face of whoever asks about a card
 const D_H_BOARD_SECTION := 28         # a section's row on the board
 const D_H_BOARD_FADE := 40            # the fade under the pill of the cards below
@@ -768,7 +763,6 @@ const D_ROW_ALPHA := 0.62             # a candidate's row at rest
 const D_GHOST_ALPHA := 0.75           # a candidate's bars
 const D_STAGE_BAR_MIX := {"plan": 0.24, "run": 0.12, "done_share": 0.55, "done": 0.7, "late": 0.22}   # a bar's ground: its band's share over the surface
 const D_STAGE_BAR_EDGE := {"plan": 0.6, "wait": 0.45, "ghost": 0.6}   # a bar's edge: its band's alpha
-const D_RISK_RAW := Color(D_INK_3, 0.45)   # the bug risk's stripes: the share the preparation took off
 const D_SHADOW_ALPHA := 0.3           # the preparation's shadow under a bar, and its foot line's
 const D_SHADOW_FOOT_ALPHA := 0.45
 const D_H_SHADOW := 6

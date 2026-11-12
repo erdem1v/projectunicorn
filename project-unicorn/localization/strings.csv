@@ -2679,8 +2679,6 @@ PRODUCT_FOUNDER_LOCKED_TIP,Sonraki planlamada değişir,Changes at the next plan
 PRODUCT_QUARTER_ORD,{q}. çeyrek,Q{q}
 PRODUCT_QUARTER_TIP,{year} · {q}. çeyrek · çeyreğin {pos}. sprinti · çeyrek sonuna {left} sprint,{year} · Q{q} · sprint {pos} of the quarter · {left} sprints to its end
 PRODUCT_QUARTER_TIP_ONE,{year} · {q}. çeyrek · çeyreğin {pos}. sprinti · çeyrek sonuna {left} sprint,{year} · Q{q} · sprint {pos} of the quarter · {left} sprint to its end
-PRODUCT_MVP_BADGE_CARDS,{done}/{need} kart,{done}/{need} cards
-PRODUCT_MVP_BADGE_ETA,≈ Sprint {n},≈ Sprint {n}
 PRODUCT_WEEK_ORD,{w}. hafta,Week {w}
 PRODUCT_QUARTER_GOAL,Bu çeyrek: {goal},This quarter: {goal}
 PRODUCT_QUARTER_BUGS,Hatalar,Bugs
@@ -2717,7 +2715,6 @@ PRODUCT_MORE_BELOW,aşağıda {n} kart daha,{n} more cards below
 PRODUCT_MORE_BELOW_ONE,aşağıda {n} kart daha,{n} more card below
 PRODUCT_CARRIED_SLOT,devreden,carried
 PRODUCT_LATE,yetişmez,late
-PRODUCT_STAGE_PCT,{stage} {pct},{stage} {pct}
 PRODUCT_TO_NEXT,Sonraki sprinte,To the next sprint
 PRODUCT_TO_THIS,Bu sprinte,To this sprint
 PRODUCT_MORE_BELOW_LATE,{n} kart yetişmez,{n} cards will not finish
@@ -2729,8 +2726,6 @@ PRODUCT_DELEGATE_LOCKED,Planlamayı devretmek için ekipte bir ürün yöneticis
 PRODUCT_AUTO_START,Kendiliğinden başlar,Starts on its own
 PRODUCT_PROGRESS,Sprint,Sprint
 PRODUCT_PREP,Hazırlık,Preparation
-PRODUCT_PM_CARDS,{n} kart hazırladı,prepared {n} cards
-PRODUCT_PM_CARDS_ONE,{n} kart hazırladı,prepared {n} card
 PRODUCT_PM_PREPARING,hazırlıkta,preparing
 PRODUCT_CARDS,Kartlar,Cards
 PRODUCT_MORE_CARDS,+{n} kart,+{n} cards

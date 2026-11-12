@@ -27,7 +27,6 @@ extends Control
 #   load    Sağ sütunda bir aşamanın yükü: `spec` {carried, planned, team} efor; devreden kısım taralı, planlı kısım aşamanın
 #           rengiyle dolu, ikisi de ekibin gücüne oranlı (ekip 0 ise sayılar 1'e göre okunur).
 #   seg     Sağ sütunda bir kartın bir aşama payı: `spec` {fill} 0..1; önden yapılan kısım aşamanın renginde dolu.
-#   risk    Kartın hata riski: `spec` {now, raw} 0..1; `raw` hazırlanmamış hâlinin taralı payı.
 #   ask     Kartta bekleyen sorunun "?" işareti: halkalı yuvarlak zemin ve ortasında soru işareti; `spec` {}.
 #   fade    Panonun altında "aşağıda {n} kart daha" hapının arkasında sütunun zeminine solan geçiş.
 
@@ -60,16 +59,6 @@ static func busy(stage_id: String, share: float, cut: float) -> StagePaint:
 	paint.spec = {"busy": share, "cut": cut}
 	paint.custom_minimum_size = Vector2(UiTokens.D_BUSY_BAR)
 	paint.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return paint
-
-
-static func risk(now: float, raw: float) -> StagePaint:
-	var paint := StagePaint.new()
-	paint.kind = &"risk"
-	paint.spec = {"now": now, "raw": raw}
-	paint.custom_minimum_size = Vector2(UiTokens.D_RISK_BAR)
-	paint.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	paint.mouse_filter = Control.MOUSE_FILTER_PASS
 	return paint
 
 
@@ -149,8 +138,6 @@ func _draw() -> void:
 			_draw_load()
 		&"seg":
 			_draw_seg()
-		&"risk":
-			_draw_risk()
 		&"ask":
 			_draw_ask()
 		&"fade":
@@ -241,18 +228,6 @@ func _draw_wait() -> void:
 		x += UiTokens.SPACE_XS
 	draw_rect(Rect2(size.x - UiTokens.BORDER_HAIRLINE, mid - UiTokens.SPACE_S + 1.0, UiTokens.BORDER_FOCUS, UiTokens.SPACE_M),
 		UiTokens.D_INK_4)
-
-
-func _draw_risk() -> void:
-	draw_rect(Rect2(Vector2.ZERO, size), UiTokens.D_SURFACE_4)
-	if spec.raw > spec.now:
-		var raw_end: float = size.x * spec.raw
-		var x := 0.0
-		while x < raw_end:
-			draw_rect(Rect2(x, 0.0, UiTokens.BORDER_HAIRLINE, size.y), UiTokens.D_RISK_RAW)
-			x += UiTokens.SPACE_XXS + UiTokens.BORDER_HAIRLINE
-	draw_rect(Rect2(0.0, 0.0, size.x * spec.now, size.y), UiTokens.D_INK_3)
-	draw_rect(Rect2(Vector2.ZERO, size).grow(-UiTokens.BORDER_HAIRLINE / 2.0), UiTokens.D_LINE_2, false, UiTokens.BORDER_HAIRLINE)
 
 
 func _draw_ask() -> void:

@@ -2,7 +2,7 @@ class_name CapacityView
 extends PanelContainer
 
 # Kapasite bloğu: başlığı (sağda liderin önerisi) ve üç aşamanın satırı. Satırda aşamanın adı, oluğu (ekibin gücü) ve içindeki
-# dolgu (sprintin işi; koşarken önü koyu, sığmayan pay taralı), "Efor {iş} / {ekip}", sığma tiki ya da taşma rozeti ve aşamada
+# dolgu (sprintin işi; koşarken önü koyu, sığmayan pay taralı), "{iş} / {ekip}", sığma tiki ya da taşma rozeti ve aşamada
 # çalışanların yüzleri (kalabalık satırda yıldız kümeleri, seçilemeyenler soluk). Yalnız modeli çizer; öneriyi uygulamak sekmeye
 # `apply_lead` olarak çıkar. Üstüne gelinen adayın hayaleti sayfa kurulmadan `set_ghost` ile gelir.
 
@@ -175,12 +175,11 @@ func _cell(content: Control, width: int, from_right: bool) -> Control:
 	return cell
 
 
-## "Efor {iş} / {ekip}": taşan aşamada iş sayısı uyarı renginde.
+## "{iş} / {ekip}": taşan aşamada iş sayısı uyarı renginde.
 func _figure(row: Dictionary, tip: String) -> HBoxContainer:
 	var figure := SprintUiShared.box(UiTokens.SPACE_XS)
 	figure.mouse_filter = Control.MOUSE_FILTER_PASS
 	figure.tooltip_text = tip
-	figure.add_child(SprintUiShared.label(tr("PRODUCT_EFFORT"), &"CapUnit"))
 	figure.add_child(SprintUiShared.label(str(roundi(row.work)), &"CapFigure", UiTokens.D_warn() if roundi(row.out) > 0 else null))
 	figure.add_child(SprintUiShared.label("/ %d" % roundi(row.team), &"CapTeam"))
 	return figure

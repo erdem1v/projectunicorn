@@ -250,7 +250,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - Sağ sütun sözleşmesi (`ProductModel`): `prep.pms` [{person, stars, cards, preparing}]; `next` {sprint, cards, load, carried}; `next.cards` {id, kind, name, effort (aşama paylarının toplamı),
   ↳ parts [{stage, effort, done, people}], prep {pm, done} ya da null, buttons}; sürüm notunda devredenler kartlarda değil `carried`tadır, kapısı kapanan kart yalnız "×" alır; `next.flags` yoktur.
   ↳ `SprintNext` HAZIRLIK'ı ve sonraki sprint kutusunu, `SprintFoot` alt şeridi çizer; ÇEYREK'in mini kartı `ProductModel._next_minis` ve `_card`tan gelir.
-- Pano sözleşmesi (`ProductModel`): `center.cards` kart satırıdır {id, kind, name, effort, raw_effort, module, fix_text, slot ({kind: due|carried|late} ya da {}), pm, ask, risk, risk_raw, late, founder, buttons, stages}
+- Pano sözleşmesi (`ProductModel`): `center.cards` kart satırıdır {id, kind, name, effort, raw_effort, module_name, fix_text, slot ({kind: due|carried|late} ya da {}), pm, ask, risk, risk_raw, late, founder, buttons, stages}
   ↳ (`_row`; `stages` zaman ekseninin aşamalarıdır, kapısı sonradan kapanıp başlamayacak kartta boş); `effort` kartın sprintteki yükü ÷ hazırlık kazancı, `risk` = H ÷ H_ref (`SprintBugs.ceiling`), `risk_raw` hazırlanmamış hâli;
   ↳ `center.candidates` kartsız planın ilk üç önerisi (aynı satır biçimi, her biri tek başına eklenmiş gibi oynatılır), `center.people` panonun yüzleri {kimlik: kişi + parçaları}, `center.close_at`, `center.now_at`;
   ↳ `ProductModel.now_at(mode)` şimdiki an (sprint başından hafta), `stage_done(aşama listeleri, an)` Kapasite'nin "yapılan"ı, `ghost_row(kart)` imlecin adayının satırı (sayfayı kurmadan panoya girer),

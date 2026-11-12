@@ -47,30 +47,30 @@ Alt klasörler:
   ↳ `SprintSystem.begin_planned`) ya da sprint sürerken ilerleme (`set_progress`). Devirde iki kipte de solda PM'in yüzü, "{PM} planlıyor" ve "Planlamayı geri al";
   ↳ sağda planlamada "Kendiliğinden başlar" (kartlı planda ekip yokken onun yerine çıkış yolu), sprint sürerken ilerleme
   ↳ (çubuğu `D_W_PROGRESS_BAR_TIGHT`e kadar kısalır, ad kesilmez); kutunun ipucu "Efor {biten}/{toplam}" `set_progress`ta sayfa kurulmadan yenilenir.
-- `scripts/tabs/product/sprint_next.gd` (340): `SprintNext`: sağ sütun: HAZIRLIK (PM satırları ya da "PM yok"), sonraki sprint kutusu (kesikli): aşama yükü (`StagePaint` `load`), DEVREDEN (en çok 4 satır ve "+{n} kart"), KARTLAR
-  ↳ (tür ikonu, ad, efor, aşama şeridi `seg`, önden çalışanların yüzleri, hazırlayan PM; üstüne gelince "↑" ve "×"); her aşama kendi payıdır, önden biten pay kendi renginde dolar;
+- `scripts/tabs/product/sprint_next.gd` (344): `SprintNext`: sağ sütun: HAZIRLIK (PM satırları ya da "PM yok"), sonraki sprint kutusu (kesikli): aşama yükü (`StagePaint` `load`), DEVREDEN (en çok 4 satır ve "+{n} kart"), KARTLAR
+  ↳ (tür ikonu, ad, efor, aşama şeridi `seg`, önden çalışanların yüzleri, hazırlayan PM: hazırsa yalnız tik, ipucu "Hazır"; üstüne gelince "↑" ve "×"); her aşama kendi payıdır, önden biten pay kendi renginde dolar;
   ↳ yüzler `FaceCell`te (sığmayanlar "+{n}", hücre en az bir yüz ve "+{n}" kadar geniştir); kart adı kesilmez, sarar ve satır büyür;
-  ↳ ne hazırlamış ne hazırlıkta PM soluk "0 kart hazırladı"; kart ve devreden yoksa yalnız başlık ve aşama yükü.
+  ↳ PM satırında ad, hazırlıktaysa altında "hazırlıkta" (hazırladığı kartların sayısı yazılmaz; panodaki satırın hazırlayan yüzü ve ipucu söyler); kart ve devreden yoksa yalnız başlık ve aşama yükü.
   ↳ İpuçları: PM satırı (ad, yıldız, hazırladığı kartlar), "PM yok", aşama yükü, devreden satırı ve "+{n} kart"ın kalanları, kartın adı, aşama payı ve yüzleri (`_part_tip`), hazırlayan PM.
 - `scripts/tabs/product/sprint_board.gd` (349): `SprintBoard`: panonun sabit başlığı ("{n} KART", erken kapanış bayrağı, hafta etiketleri),
   zaman ekseninin genişliği (`model.axis`: gövde eksi bilgi sütunu ve kaydırma çubuğu, en az `D_W_TIMELINE`; ölçüm kurulandan ayrılınca
   `axis_wanted`, sekme sayfayı o genişlikle yeniden kurar), kayan gövdesi (ızgara, kart satırları, "EKLENEBİLİR",
   hayalet satır, şimdiki an çizgisi), "aşağıda {n} kart daha" hapı (katlamanın altında yetişmeyen kart varsa tehlike renginde ve ipucu "{n} kart yetişmez", yalnız o zaman imleci tutar ve tekerleği panoya iletir; sona kaydırınca gizlenir);
   ↳ erken kapanışın bayrağı, yazısı ve taralı alanı "Bütün kartlar {w}. haftada biter" ipucunu taşır (alan yalnız satırların altında kalan boşlukta imleci alır).
-- `scripts/tabs/product/board_row.gd` (604): `BoardRow`: panonun bir kart satırı: bilgi sütunu (ad, R1, efor, modül, durum yuvası (koşan sprintte tek şey:
-  "yetişmez", koşan aşamanın "{aşama} %{n}"i, "devreden"; son tarih yalnız sol sütunun talep satırında; `set_now` günceller), PM ya da "?" yuvası, "→" ve "×"; aday satırında "+", imlecin hayalet satırında boş yer),
+- `scripts/tabs/product/board_row.gd` (553): `BoardRow`: panonun bir kart satırı: bilgi sütunu (tür ikonu ve ad, "→" ve "×"e yer ayrılmış; efor, hata riski, modül kart ipucunda; durum yuvası (koşan sprintte tek şey:
+  "yetişmez", "devreden"; son tarih yalnız sol sütunun talep satırında), PM ya da "?" yuvası, "→" ve "×"; aday satırında "+", imlecin hayalet satırında boş yer),
   zaman ekseni (çubuk, bekleme, gölge, tarama, tik kutusu (art arda önden biten aşamalar tek kutu, son bitenin renginde), sprint dışı pay, yüzler); `set_now`;
   kart adı (taban iki satır, 22 karakterden uzun adda) ve düzeltme kartının hata metni (en büyük hesapla) kesilmeden sarar, tabandan fazla satır satırı büyütür (`_wraps`, `_fit`), zaman ekseni satırda dikey ortalı.
-  ↳ İpuçları: zengin kart ipucu yalnız adda (`CardName`, `CardTip`); çubuğun düz ipucu açılırken okunur (`_bar_tip`, `StagePaint.tip`); bekleme, gölge, tarama, tik kutusu, risk, efor, modül, yuvalar düz ipucu taşır;
+  ↳ İpuçları: zengin kart ipucu yalnız adda (`CardName`, `CardTip`); çubuğun düz ipucu açılırken okunur (`_bar_tip`, `StagePaint.tip`); bekleme, gölge, tarama, tik kutusu, yuvalar düz ipucu taşır;
   ↳ kapısı kapanmış kartta (`gate`) satırın düz ipucu (adın üstünde de): kapı gerekçesi ve sonraki sütuna geçeceği.
   ↳ Çubuğa sığmayan sayı çubuğun hemen sağında yazılır: `BoardRow._lane` etikete sağındaki boşluğu (`free`: sonraki çubuğa, bekleme çizgisine ya da eksenin sonuna) verir, yetmezse düşer (`StagePaint._draw_label`); ikon düşer.
-- `scripts/tabs/product/card_tip.gd` (131): `CardTip`: zengin kart ipucu paneli (`panel(kart, ekipte PM var mı)`): başlık, aşama efor kutuları, kim çalışıyor ve görüşmeler (tür başına toplam gün), yetişir mi, künye.
-- `scripts/tabs/product/sprint_head.gd` (120): `SprintHead`: SPRINT N, çeyrek çentikleri, MVP ve hafta rozetleri, ekip rozeti, çeyrek hedef seçicisi (`pick_goal`); rozetler akar, kesilmez.
-- `scripts/tabs/product/capacity_view.gd` (333): `CapacityView`: KAPASİTE başlığı ve öneri satırı (`apply_lead`), üç aşama satırı (oluk, dolgu, Efor, rozet, yüzler, kümeler), taşma ipucu paneli (`D_W_TIP`);
+- `scripts/tabs/product/card_tip.gd` (150): `CardTip`: zengin kart ipucu paneli (`panel(kart, ekipte PM var mı)`): başlık (efor), hata riski, aşama efor kutuları, kim çalışıyor ve görüşmeler (tür başına toplam gün), yetişir mi, künye.
+- `scripts/tabs/product/sprint_head.gd` (106): `SprintHead`: SPRINT N, çeyrek çentikleri, hafta rozeti, ekip rozeti, çeyrek hedef seçicisi (`pick_goal`); rozetler akar, kesilmez.
+- `scripts/tabs/product/capacity_view.gd` (332): `CapacityView`: KAPASİTE başlığı ve öneri satırı (`apply_lead`), üç aşama satırı (oluk, dolgu, "{iş} / {ekip}", rozet, yüzler, kümeler), taşma ipucu paneli (`D_W_TIP`);
   ↳ rozetin düz ipucu "Sığıyor" ya da "{n} efor sonraki sprinte kalır";
   `set_ghost`, `set_done`; etiket sütunu üç satırda aynı genişliktedir (en az `D_W_CAP_LABEL`, dilin en uzun aşama adı), sayı sütunu içeriğiyle genişler (`Cell`).
-- `scripts/tabs/product/stage_paint.gd` (363): `StagePaint`: sprint ekranının tek çizim sınıfı (Kapasite: `groove`, `busy`, `bracket`; pano: `grid`, `now`, `early`, `bar`, `label`, `wait`, `shadow`, `meet`, `tick`,
-  `risk`, `ask`, `fade`; sağ sütun: `load`, `seg`); eleman başına çizim sınıfı yoktur. `StagePaint.spill` ve `hatch` taramanın statik çizimidir (`SprintNext.CarryRow` da kullanır).
+- `scripts/tabs/product/stage_paint.gd` (340): `StagePaint`: sprint ekranının tek çizim sınıfı (Kapasite: `groove`, `busy`, `bracket`; pano: `grid`, `now`, `early`, `bar`, `label`, `wait`, `shadow`, `meet`, `tick`,
+  `ask`, `fade`; sağ sütun: `load`, `seg`); eleman başına çizim sınıfı yoktur. `StagePaint.spill` ve `hatch` taramanın statik çizimidir (`SprintNext.CarryRow` da kullanır).
   ↳ `tip` (Callable) verilirse ipucu açılırken `tooltip_text`in yerine ondan okunur (`_get_tooltip`; koşan sprintte bayatlamaz).
 - `scripts/tabs/product/sprint_card.gd` (32): `SprintCard`: ÇEYREK'in mini kartı (`State`): üstte tür ikonu ve puan, altında kendi satırında ad (kesilmez, kelime sınırında sarar, kart uzar);
   ↳ yalnız sözlüğünü çizer. Bu sprintin kartı `BoardRow`, sonraki sprintin kartı `SprintNext`in satırıdır.

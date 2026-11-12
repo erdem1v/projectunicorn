@@ -13,7 +13,6 @@ const STAGE_KEYS := {"design": "PRODUCT_PHASE_DESIGN", "dev": "PRODUCT_PHASE_DEV
 	"product": "PRODUCT_STAGE_RESEARCH"}
 ## Kurucunun görüşmelerinin adı (`TimeModel.MEETING_DAYS` ile aynı anahtarlar).
 const MEETING_KEYS := {"sales": "PRODUCT_MEETING_SALES", "vc": "PRODUCT_MEETING_VC", "table": "PRODUCT_MEETING_TABLE"}
-const BUG := "res://assets/icons/product/bug.svg"
 const ARROW := "res://assets/icons/util/arrow_right.svg"
 const WARN := "res://assets/icons/util/warn.svg"
 const CHECK := "res://assets/icons/util/check.svg"

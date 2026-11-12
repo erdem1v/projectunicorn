@@ -128,24 +128,24 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
   ↳ Devirli koşuda ilerleme çubuğu `D_W_PROGRESS_BAR_TIGHT` 90'a iner, kutu içeriği kadardır (PM'in adı kesilmez).
   ↳ Orta sütun artık kalanı alır (`D_SPRINT_COLUMNS` silindi).
 - Pano (kart satırı ve zaman ekseni) ölçüleri: `D_W_CARD_INFO` 312, `D_W_TIMELINE` 396 (eksenin en azı; eksen orta sütunun kalan genişliğidir),
-  `D_TIMELINE_WEEKS` 2.6 (sprintin iki haftası ve sonrakinin ilk 0,6'sı), `D_H_BOARD_HEAD`, `D_H_CARD_ROW` 56 ve `_TWO` 74,
-  `D_CARD_NAME_SHORT` 22, `D_H_STAGE_BAR` 30, `D_STAGE_BAR_PAD`, `D_W_TICK_BOX`, `D_NOW_HEAD`, `D_W_CARD_SLOT`, `D_RISK_BAR`, `D_ASK_DISC`, `D_H_BOARD_SECTION`, `D_H_BOARD_FADE`, `D_ROW_ALPHA`, `D_GHOST_ALPHA`;
+  `D_TIMELINE_WEEKS` 2.6 (sprintin iki haftası ve sonrakinin ilk 0,6'sı), `D_H_BOARD_HEAD`, `D_H_CARD_ROW` 56,
+  `D_H_STAGE_BAR` 30, `D_STAGE_BAR_PAD`, `D_W_TICK_BOX`, `D_NOW_HEAD`, `D_W_CARD_SLOT`, `D_ASK_DISC`, `D_H_BOARD_SECTION`, `D_H_BOARD_FADE`, `D_ROW_ALPHA`, `D_GHOST_ALPHA`;
   ↳ çubuk ve izler: `D_STAGE_BAR_MIX` (zemin payları), `D_STAGE_BAR_EDGE` (kenar alfası), `D_SHADOW_ALPHA`, `D_SHADOW_FOOT_ALPHA`, `D_H_SHADOW`, `D_SPILL_LINE`, `D_SPILL_STEP`, `D_EARLY_STRIPE`, `D_EARLY_PERIOD`, `D_MEET_LIGHT/DARK/EDGE`,
   `D_MEET_PERIOD`; renkler `D_stage_bar(aşama, tür)` ve `D_stage_bar_edge(aşama, tür)`.
 - Ürün penceresinde kesme yok: hiçbir metin üç noktayla (`text_overrun_behavior`, `max_lines_visible`) kesilmez, hiçbir öğe yer yok diye gizlenmez ya da kırpılmaz (`clip_contents`); sığmayan yazı sarar ve satır, kart ya da çip büyür.
-  ↳ Pano satırı: ad ve düzeltme kartının hata metni sarar, `BoardRow._fit` tabandan fazla satırı satıra ekler (`D_CARD_NAME_SHORT` yalnız taban yüksekliği seçer).
+  ↳ Pano satırı: ad ve düzeltme kartının hata metni sarar, `BoardRow._fit` tek satırlık tabandan fazla satırı satıra ekler.
   ↳ ÇEYREK mini kartında ad kendi satırındadır (`SprintCard`), bayrak çipi sarar (`SprintUiShared.flag`).
   ↳ İçerik pencereyi aşınca kayar: ÇEYREK'in altı sütunu ve "Hepsini onayla" (`QuarterView._right`), sürüm notunun gövdesi (`SprintPanel.Column`; başlık ve alt şerit sabit).
-  ↳ Tasarım seçimi olarak kalanlar: yüz dizisinin "+{n}"i ve "+{n} kart" toplamı, modülün kısa adı (`area_short`; tam adı ipucunda),
+  ↳ Tasarım seçimi olarak kalanlar: yüz dizisinin "+{n}"i ve "+{n} kart" toplamı,
   ↳ dar çubukta düşen ikon (sayı çubuğun sağındaki boşluğa yetiyorsa orada yazılır, yoksa o da düşer; `StagePaint` `label`), çubuğa sığmayan yüzler ve eksenin sonunda düşen sprint dışı pay.
-- Bu bloğun varyasyonları yalnız koyu temadadır: `SprintTitle`, `MvpVersion`, `HeadMeta`, `CrewTotal`, `GoalPick(+Set)`, `QuarterNotch(+Past, +Now)`, `WeekBar`, `FaceRing`,
-  `StarChip`, `ClusterStars`, `AwayLabel`, `CapBlock`, `CapRow(+Hot)`, `CapStage`, `CapUnit`, `CapFigure`, `CapTeam`, `CapBadgeOver(+Ink)`, `CapStreak(+Ink)`; panonun: `CardEffort`, `StageNum`, `AxisLabel`, `MoreHint`,
+- Bu bloğun varyasyonları yalnız koyu temadadır: `SprintTitle`, `HeadMeta`, `CrewTotal`, `GoalPick(+Set)`, `QuarterNotch(+Past, +Now)`, `WeekBar`, `FaceRing`,
+  `StarChip`, `ClusterStars`, `AwayLabel`, `CapBlock`, `CapRow(+Hot)`, `CapStage`, `CapFigure`, `CapTeam`, `CapBadgeOver(+Ink)`, `CapStreak(+Ink)`; panonun: `StageNum`, `AxisLabel`, `MoreHint`,
   `SprintRow(+Hover, +Cand, +CandHover, +Late(+Cb))`, `RowActs`, `RowKey`, `MoreHintPill(+Late(+Cb))`, `GhostRow`;
   alt şeridin ve sağ sütunun: `DelegateBox(+Hover, +Locked)`, `ProgressBox`, `ProgressFigure`, `NextTitle`, `NextBox`, `NextCard`, `PrepRow(+Tight)`, `FaceGhost`, `LoadNum`, `CarriedRow`, `CarriedRest`.
 - `StagePaint` (`scripts/tabs/product/stage_paint.gd`): StyleBox'ın çizemediği izler (şeritli taşma, kesikli çizgi, üç satırın ayracı, çubuklar) için tek Control; `kind` StringName, ölçü ve renk token'dan, yerleşim sahibinde.
   Kapasite: `groove`, `busy`, `bracket`. Pano: `grid` (hafta ayracı, sprint sonu çizgisi, sonraki sprintin çizgili zemini), `now` (şimdiki an çizgisi ve üçgeni), `early` (erken kapanışın taralı alanı), `bar` (aşamanın çubuğu:
   plan, koşan, biten, bekleyen, sprint dışı, hayalet; sol başta dolgu), `label` (çubuğun ikonu ve sayısı: sığmazsa önce ikon sonra sayı düşer), `wait` (bekleme noktalı çizgisi), `shadow` (PM'in gölgesi), `meet` (görüşme taraması),
-  `tick` (önden biten aşamaların tek tik kutusu, son bitenin renginde; kutudaki işaret ve renk `BoardRow` sürer), `risk` (hata göstergesi), `ask` ("?" işareti), `fade` (alttaki hapın arkasında solma).
+  `tick` (önden biten aşamaların tek tik kutusu, son bitenin renginde; kutudaki işaret ve renk `BoardRow` sürer), `ask` ("?" işareti), `fade` (alttaki hapın arkasında solma).
   Sağ sütun: `load` (bir aşamanın yük çubuğu, ekipten taşarsa uyarı rengi), `seg` (sonraki sprintin kartının bir aşama payı, önden yapılan kısmı aşamanın renginde dolu; tek tik kutusu kuralı yalnız panoda).
   `StagePaint.spill` ve `hatch` taramanın statik çizimidir (`SprintNext.CarryRow` da kullanır). `StagePaint.part(kind, aşama, spec, rect)` panonun öğesini kurar;
   `set_bar(spec)` saat ilerleyince çubuğun hâlini, dolgusunu ve yazısını değiştirir. Çizimi `spec` sürer; ipucu için `tooltip_text` öğeye yazılır (`grid`, `now`, `label`, `fade` fareyi görmezden gelir); `tip` ipucunu açılırken kurar.

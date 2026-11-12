@@ -1,17 +1,20 @@
 class_name CardTip
 extends RefCounted
 
-# Zengin kart ipucu: kartın adının üstüne gelince açılan panel (`_make_custom_tooltip`, ok yok). Başlık (tür ikonu, ad, efor), aşama
-# başına efor kutuları (önden biten aşamada tik), aşama başına çalışanlar ve kurucunun görüşmeleri (türü başına bir satır, günleri
-# toplanmış), sprint sonuna yetişip yetişmediği ve künye (müşteri, söz, modül, PM, kurucunun kartı). Kural ve sayım cümlesi yoktur,
-# hafta yazılmaz. Satırın verisini okur; kişilerin yüzleri panel kurulurken istenir (`ProductModel.stage_face`), bu yüzden panel yalnız
-# ipucu açılınca kurulur.
+# Zengin kart ipucu: kartın adının üstüne gelince açılan panel (`_make_custom_tooltip`, ok yok). Başlık (tür ikonu, ad, efor), hata
+# riskinin düzeyi (PM değiştirdiyse "önce yerine şimdi"), aşama başına efor kutuları (önden biten aşamada tik), aşama başına
+# çalışanlar ve kurucunun görüşmeleri (türü başına bir satır, günleri toplanmış), sprint sonuna yetişip yetişmediği ve künye
+# (müşteri, söz, modül, PM, kurucunun kartı). Kural ve sayım cümlesi yoktur, hafta yazılmaz. Satırın verisini okur; kişilerin
+# yüzleri panel kurulurken istenir (`ProductModel.stage_face`), bu yüzden panel yalnız ipucu açılınca kurulur.
+
+const RISK_KEYS := ["PRODUCT_RISK_LOW", "PRODUCT_RISK_MEDIUM", "PRODUCT_RISK_HIGH"]
 
 
 ## `team_pm` ekipte PM olup olmadığıdır: künyede "PM yok" yalnız o yokken yazılır.
 static func panel(card: Dictionary, team_pm: bool) -> Control:
 	var tip := SprintUiShared.tip_column()
 	tip.add_child(_head(card))
+	tip.add_child(_risk(card))
 	var stages: Array = card.stages.filter(func(s: Dictionary) -> bool: return not s.fix)
 	for block: Control in [_needs(stages), _who(stages), _end(card), _notes(card, team_pm)]:
 		if block != null:
@@ -27,6 +30,22 @@ static func _head(card: Dictionary) -> HBoxContainer:
 	head.add_child(SprintUiShared.label(RnDUiShared.t("PRODUCT_EFFORT"), &"MetaMuted"))
 	head.add_child(SprintUiShared.label(str(card.effort), &"ValueTextStrong"))
 	return head
+
+
+## Hata riskinin düzeyi: "Hata riski {düzey}"; PM hazırlayıp düzeyi değiştirdiyse yanında "{PM} hazırladı: {önce} yerine {şimdi}"
+## (hazırlayanın adı künyede zaten durur).
+static func _risk(card: Dictionary) -> Label:
+	var now: String = _risk_word(card.risk)
+	var parts: PackedStringArray = [RnDUiShared.t("PRODUCT_RISK_TIP").format({"level": now})]
+	var before: String = _risk_word(card.risk_raw)
+	if card.pm != null and before != now:
+		parts.append(RnDUiShared.t("PRODUCT_RISK_PREPARED").format({"name": card.pm.name, "before": before, "now": now}))
+	return SprintUiShared.prose(SprintUiShared.SEP.join(parts), &"CaptionPrimary")
+
+
+## Hata riskinin düzey sözcüğü: riskin üçte birlik dilimleri.
+static func _risk_word(risk: float) -> String:
+	return RnDUiShared.t(RISK_KEYS[mini(int(risk * RISK_KEYS.size()), RISK_KEYS.size() - 1)])
 
 
 ## Aşama başına bir kutu: aşamanın bandında ikon ve efor; önden biten aşamada efor yerine tik. Hiç aşama yoksa null.

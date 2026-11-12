@@ -1,7 +1,7 @@
 class_name SprintNext
 extends ScrollContainer
 
-# Sağ sütun: üstte HAZIRLIK (ekipteki PM'ler ve hazırladıkları kart sayısı; PM yoksa soluk "PM yok"), altında kesikli çerçeveli sonraki
+# Sağ sütun: üstte HAZIRLIK (ekipteki PM'ler, sonraki sütunda hazırlıktaysa "hazırlıkta"; PM yoksa soluk "PM yok"), altında kesikli çerçeveli sonraki
 # sprint kutusu: başlık, üç aşamanın yükü (devreden kısım taralı, planlı kısım dolu, ekibin gücüne oranlı), DEVREDEN (sprint
 # çizgisini aşan paylar) ve KARTLAR (ad, efor, her aşamanın payı önden yapılan kadar dolu şerit, önden çalışanların yüzleri, hazırlayan PM).
 # Kart ve devreden yoksa yalnız başlık ve aşama yükü kalır. Yalnız modeli çizer; kart tuşları sekmeye `action` olarak çıkar. Her öğe
@@ -88,8 +88,8 @@ func setup(model: Dictionary) -> void:
 
 # --- Hazırlık -------------------------------------------------------------------------------
 
-## PM'in satırı: yüzü (yıldız çipiyle), adı ve "{n} kart hazırladı" ya da sonraki sütunda hazırlıkta (ikisi de yoksa soluk "0 kart
-## hazırladı"); iki ve daha çok PM'de sıkışık.
+## PM'in satırı: yüzü (yıldız çipiyle), adı ve sonraki sütunda hazırlıktaysa "hazırlıkta" (değilse yalnız ad; bu sprintte
+## hazırladığı kartları panodaki satırın hazırlayan yüzü ve bu satırın ipucu söyler); iki ve daha çok PM'de sıkışık.
 func _pm_row(pm: Dictionary, tight: bool) -> PanelContainer:
 	var row := PanelContainer.new()
 	row.theme_type_variation = &"PrepRowTight" if tight else &"PrepRow"
@@ -105,10 +105,8 @@ func _pm_row(pm: Dictionary, tight: bool) -> PanelContainer:
 	words.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	line.add_child(words)
 	words.add_child(SprintUiShared.prose(String(pm.person.name), &"DataStrong"))
-	# Ne hazırlamış ne hazırlıkta olan PM soluk "0 kart hazırladı" yazar.
-	var n: int = pm.cards.size()
-	var state: String = tr("PRODUCT_PM_PREPARING") if n == 0 and pm.preparing else tr(Fmt.count_key("PRODUCT_PM_CARDS", n)).format({"n": n})
-	words.add_child(SprintUiShared.prose(Fmt.cap_first(state), &"CaptionFaint" if n == 0 and not pm.preparing else &"Caption"))
+	if pm.preparing:
+		words.add_child(SprintUiShared.prose(Fmt.cap_first(tr("PRODUCT_PM_PREPARING")), &"Caption"))
 	HRUiShared.set_mouse_ignore(line)
 	return row
 
@@ -306,16 +304,22 @@ func _faces(parts: Array) -> HBoxContainer:
 	return row
 
 
-## Hazırlayan PM: yüzü ve kum saati "hazırlanıyor" ya da tik "hazır"; ipucu hazırsa kısalttığı efor, değilse hazırlıyor olduğu.
+## Hazırlayan PM: yüzü ve hazırsa yalnız tik (ipucu "Hazır"), değilse kum saati ve "Hazırlanıyor"; satırın ipucu hazırsa PM'in kısalttığı
+## efor, değilse hazırlıyor olduğu.
 func _prep(card: Dictionary) -> HBoxContainer:
 	var prep: Dictionary = card.prep
 	var line := SprintUiShared.box(UiTokens.SPACE_M)
 	line.custom_minimum_size.y = UiTokens.D_AVATAR_ROW_SM
 	line.add_child(SprintUiShared.avatar(prep.pm, UiTokens.D_AVATAR_ROW_SM))
 	var ready: bool = prep.done >= 1.0 - SprintSystem.EPS
-	line.add_child(UiFactory.make_glyph(SprintUiShared.CHECK if ready else SprintUiShared.HOURGLASS, UiTokens.D_ICON_TAG, UiTokens.D_INK_3))
-	line.add_child(SprintUiShared.label(Fmt.cap_first(tr("PRODUCT_READY" if ready else "PRODUCT_PREPARING")), &"Caption"))
+	var mark := UiFactory.make_glyph(SprintUiShared.CHECK if ready else SprintUiShared.HOURGLASS, UiTokens.D_ICON_TAG, UiTokens.D_INK_3)
+	line.add_child(mark)
+	if not ready:
+		line.add_child(SprintUiShared.label(Fmt.cap_first(tr("PRODUCT_PREPARING")), &"Caption"))
 	HRUiShared.set_mouse_ignore(line)
+	if ready:
+		mark.mouse_filter = Control.MOUSE_FILTER_PASS
+		mark.tooltip_text = Fmt.cap_first(tr("PRODUCT_READY"))
 	line.mouse_filter = Control.MOUSE_FILTER_PASS
 	line.tooltip_text = (SprintUiShared.prepared_tip(prep.pm, card.raw_effort, card.effort) if ready
 		else tr("PRODUCT_PREPARING_TIP").format({"name": prep.pm.name}))
