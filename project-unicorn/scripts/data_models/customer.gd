@@ -66,7 +66,7 @@ extends Resource
 # only in their trailing character and String.hash() is djb2, so consecutive signings would get
 # consecutive phases and the whole book would file on consecutive mornings.
 @export var cs_request_phase: int = 0         # tick offset within CS_REQUEST_INTERVAL_WEEKS
-@export var last_request_kind: String = ""    # blocks the same request kind twice in a row
+@export var last_request_kind: String = ""    # blocks the same request kind twice in a row; the open paper's kind
 # Player-set stewardship. reconcile_assignments() runs every morning and would otherwise undo
 # a manual choice the same night; this flag is what lets player intent outlive the automation.
 @export var cs_pinned: bool = false           # true = assigned_to was chosen by the player

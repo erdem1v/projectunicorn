@@ -53,11 +53,16 @@ static func install() -> void:
 	EvSeams.register("musteri.cs_escalated", E, TYPE_BOOL,
 		EvSeamsSales.customer_field("cs_escalated", false),
 		"Sales", "an escalation is already open on this account")
+	# Picked while the request stands open; once it has become a card (CustomerRepSystem._escalate clears it and stamps the
+	# kind) the stamped kind, so the paper opening at the week's end reads the request it was admitted for and not a new pick
+	# the no-repeat rule turns away from that kind.
 	EvSeams.register("musteri.request_kind", E, TYPE_STRING,
 		func(id: String) -> String:
 			var c: Customer = CustomerRegistry.get_customer(id)
-			return CustomerRepSystem.pick_request_kind(c) if c != null else "",
-		"Sales", "complaint | feature | renewal — state-scored, no RNG")
+			if c == null:
+				return ""
+			return CustomerRepSystem.pick_request_kind(c) if c.support_request_since_day >= 0 else c.last_request_kind,
+		"Sales", "complaint | feature | renewal — state-scored while the request is open, then the kind it was taken as; no RNG")
 
 	# Prose, not numbers: §8.4's interpolation reads these, so one card carries fifteen sector
 	# voices. display_name(), not company_name — the B2C userbase record's company_name is empty.

@@ -1,6 +1,6 @@
 # Kod haritası · KALITE
 
-Üretildi: git 8b1ba873 · 2026-11-12 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git 202d94fc · 2026-11-12 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 255 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
@@ -46,8 +46,8 @@ Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları
 - scripts/debug/endgame_smoke.gd:2252 · _case_save_v13_day_stamps_migrate · 209 satır
 - scripts/main/main.gd:1546 · _run_inbox_shot · 205 satır
 - scripts/autoload/game_state.gd:813 · initialize_run · 197 satır
+- scripts/events/seams/seams_ported.gd:8 · install · 180 satır
 - scripts/main/main.gd:2277 · _run_office_shot · 176 satır
-- scripts/events/seams/seams_ported.gd:8 · install · 175 satır
 - scripts/debug/endgame_smoke.gd:16578 · _case_fit_star_context · 165 satır
 - scripts/events/seams/seams_sales.gd:26 · install · 160 satır
 - scripts/main/main.gd:1950 · _run_sales_shot · 158 satır

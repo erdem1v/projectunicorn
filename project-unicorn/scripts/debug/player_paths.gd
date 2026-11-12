@@ -17,6 +17,8 @@ static func run(main: Node, case_id: String) -> String:
 			return await _sales_gate_follows_clock(main)
 		"sprint_fit_gets_points":
 			return await _sprint_fit_gets_points(main)
+		"cs_renewal_request_reaches_player":
+			return await _cs_renewal_request_reaches_player(main)
 	return "unknown case"
 
 
@@ -115,6 +117,37 @@ static func _sprint_fit_gets_points(main: Node) -> String:
 		if SprintSystem.phase(c) < SprintSystem.PHASE_DONE:
 			return "the board said %s finishes, the sprint closed with %s of its work left" % [SprintCatalog.card_name(c),
 				SprintUiShared.points(SprintSystem.remaining(c))]
+	return ""
+
+
+## A long-standing account calls about its renewal: the support desk escalates the open request (the desk's own step; the
+## player's path starts where the paper waits), the paper waits on the desk through the workday and opens when the night
+## begins, the renewal card in the inbox.
+static func _cs_renewal_request_reaches_player(main: Node) -> String:
+	main._seed_run_reproducible()
+	main._seed_theme_book()
+	var tenure: int = TimeModel.ticks(B2BConstants.RENEWAL_MIN_TENURE_WEEKS)
+	GameState.day = maxi(GameState.day, tenure + 1)
+	main._shot_customer("co_palmiye", "Palmiye Turizm", "retail", "active", 1200, 15, tenure, true)   # LOC-DATA debug seed / id
+	var account: Customer = CustomerRegistry.get_customer("co_palmiye")
+	CustomerRegistry.set_support_request(account.id, GameState.day - TimeModel.ticks(B2BConstants.CS_ESCALATE_AFTER_WEEKS))
+	if CustomerRepSystem.pick_request_kind(account) != B2BConstants.CS_KIND_RENEWAL:
+		return "fixture: %s does not call about its renewal" % account.company_name
+	await main._mount_shot_shell()
+	main._wire_modal_signals()
+	GameState.set_current_hour(TimeModel.WEEK_START_HOUR)
+	TimeManager.sync_to_current_hour()
+	CustomerRepSystem._escalate(account)
+	if account.support_request_since_day >= 0:
+		return "the desk did not escalate %s's request" % account.company_name
+	TimeManager.advance_hours(WorkHoursSystem.end_hour_for(CharacterRegistry.get_founder()) - GameState.current_hour)
+	TimeManager.skip_night()
+	var card: String = "customer.request_renewal"
+	if not await _until(main, func() -> bool: return EventGate.active_id() == card):
+		return "the night began and the renewal paper did not open (on screen: '%s')" % EventGate.active_id()
+	var title: String = EventGate.active_card().title
+	if not await _until(main, func() -> bool: return not _labels(main._shell, title).is_empty()):
+		return "the renewal card is on, the inbox does not show '%s'" % title
 	return ""
 
 

@@ -35,7 +35,7 @@ Sahipler: autoload `CustomerRegistry`, `ProspectRegistry`, `PromiseRegistry`; mo
 - `scripts/data_models/prospect.gd` (111): `Prospect` Resource (lead + anlaşma planı + balina + hafıza alanları)
 - `scripts/data_models/promise.gd` (22): `Promise` Resource (`due_sprint`, `extended`, `status`)
 - `data/market/companies.json` (1571 satır, 56 şirket) ve `data/market/people.json` (327 satır, 46 kişi): Piyasa listesi verisi; `meta.sector_slots` sektörün 3 şirketini bağlar
-- Dışarıda ama ayrılmaz: `scripts/tabs/sales_tab.gd` (834), `scripts/ui/meeting/sales_meeting_adapter.gd` (320), `scripts/events/seams/seams_sales.gd` (132), `seams_ported.gd` (194), `scripts/tabs/piyasa_tab.gd` (689)
+- Dışarıda ama ayrılmaz: `scripts/tabs/sales_tab.gd` (834), `scripts/ui/meeting/sales_meeting_adapter.gd` (320), `scripts/events/seams/seams_sales.gd` (132), `seams_ported.gd` (199), `scripts/tabs/piyasa_tab.gd` (689)
 - Satış olay içeriği: `data/events/cards/customer/*.json` (17 dosya; retention, expansion, cs_escalation, request_*, frank_intro); sprint tarafı `data/events/cards/product/support_overflow.json`
 
 ## Giriş noktaları
@@ -81,6 +81,8 @@ Sahipler: autoload `CustomerRegistry`, `ProspectRegistry`, `PromiseRegistry`; mo
 - `CustomerRepSystem.reconcile_assignments()` `scripts/systems/customer_rep_system.gd:89`: kurucunun fazlasını devreder · `b2b_sales_system.gd:34`
 - `CustomerRepSystem.auto_assign_new()` `scripts/systems/customer_rep_system.gd:131`: yeni imzayı en az yüklü temsilciye verir · `SalesSystem.add_b2b_customer`
 - `CustomerRepSystem.pick_request_kind()` `scripts/systems/customer_rep_system.gd:318`: talebin türü (şikâyet, özellik, yenileme) · `seams_ported.gd:59` (`musteri.request_kind`)
+  ↳ seam talep açıkken seçer, talep karta dönünce damgalanan türü (`last_request_kind`) okur: masadan hafta sonunda açılan kâğıt kabul edildiği
+  ↳ türü görür, tekrar yasağının yeni seçimini değil. K2 `cs_renewal_request_reaches_player`
 - `SupportSystem.hourly_tick()` `scripts/systems/support_system.gd:106`: bildirim gelir, doğrulanır, hata olur · `time_manager.gd:441`
 - `SupportSystem.daily_tick()` `scripts/systems/support_system.gd:132`: memnuniyet zararı, hata ihmali, ilgi, haftalık rapor · `time_manager.gd:395`
 - `SupportSystem.weekly_report()` `scripts/systems/support_system.gd:320`: haftada en çok bir rapor postası · `daily_tick`, `main.gd:1719` (sahne fikstürü)

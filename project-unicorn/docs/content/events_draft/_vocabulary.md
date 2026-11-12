@@ -346,7 +346,7 @@ slot of that type (§17.12).
 | `musteri.promise_extended` | entity | bool | Sales | the account's oldest open promise has already moved a sprint; a word moves once |
 | `musteri.promise_fits` | entity | bool | Sales | the account's wish fits the free points of the next plannable sprint, or another clause locks the promise row |
 | `musteri.promise_late` | entity | bool | Sales | the step of the account's oldest open promise is in the running sprint and none of its cards will finish in it |
-| `musteri.request_kind` | entity | string | Sales | complaint | feature | renewal — state-scored, no RNG |
+| `musteri.request_kind` | entity | string | Sales | complaint | feature | renewal — state-scored while the request is open, then the kind it was taken as; no RNG |
 | `musteri.risk_voice` | entity | string | Sales | what an account in Risk says, by the cause of the Risk |
 | `musteri.satisfaction` | entity | int | Sales | WRAPPER; 0-100, the number the player can see |
 | `musteri.scale` | entity | int | Sales | WRAPPER; 1-5, demo binds to 1-3 |

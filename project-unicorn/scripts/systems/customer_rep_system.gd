@@ -307,7 +307,8 @@ static func _escalate(c: Customer) -> void:
 	# the choice's own modifiers resolve it and no new modifier type is needed to close it out.
 	CustomerRegistry.set_support_request(c.id, -1)
 	GameState.cs_escalation_days.append(GameState.day)
-	# The picker's no-repeat rule reads this stamp.
+	# The picker's no-repeat rule reads this stamp, and so does the paper on the desk (`musteri.request_kind` once the
+	# request is closed): written later, the paper would open on another kind and drop.
 	CustomerRegistry.set_last_request_kind(c.id, kind)
 
 

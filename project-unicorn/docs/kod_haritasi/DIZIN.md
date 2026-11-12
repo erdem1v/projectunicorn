@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git 8b1ba873 · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 202d94fc · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -30,10 +30,10 @@ Bölümler: Autoload'lar · Dosyalar · Sinyaller · Sahneler · Veri dosyaları
 
 Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar dahil). Autoload dosyalarında class_name yerine [AutoloadAdı].
 
-### scripts/autoload/ (13 dosya, 5180 satır)
+### scripts/autoload/ (13 dosya, 5181 satır)
 - scripts/autoload/audio_manager.gd · 172 · [AudioManager] · Node · 0 sinyal · 17 func
 - scripts/autoload/character_registry.gd · 639 · [CharacterRegistry] · Node · 0 sinyal · 51 func
-- scripts/autoload/customer_registry.gd · 344 · [CustomerRegistry] · Node · 0 sinyal · 31 func
+- scripts/autoload/customer_registry.gd · 345 · [CustomerRegistry] · Node · 0 sinyal · 31 func
 - scripts/autoload/event_bus.gd · 301 · [EventBus] · Node · 145 sinyal · 0 func
 - scripts/autoload/game_state.gd · 1056 · [GameState] · Node · 0 sinyal · 55 func
 - scripts/autoload/investor_registry.gd · 146 · [InvestorRegistry] · Node · 0 sinyal · 9 func
@@ -55,7 +55,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/data_models/rival.gd · 33 · Rival · Resource · 0 sinyal · 1 func
 - scripts/data_models/term_sheet.gd · 63 · TermSheet · Resource · 0 sinyal · 3 func
 
-### scripts/debug/ (12 dosya, 34948 satır)
+### scripts/debug/ (12 dosya, 34981 satır)
 - scripts/debug/endgame_smoke.gd · 30118 · EndgameSmoke · RefCounted · 0 sinyal · 683 func
 - scripts/debug/glyph_audit.gd · 109 · - · SceneTree · 0 sinyal · 6 func
 - scripts/debug/k0_check.gd · 110 · K0Check · RefCounted · 0 sinyal · 6 func
@@ -63,7 +63,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/debug/loc_residue.gd · 265 · - · SceneTree · 0 sinyal · 9 func
 - scripts/debug/office_crowd_probe.gd · 326 · OfficeCrowdProbe · Node · 0 sinyal · 15 func
 - scripts/debug/office_pan_probe.gd · 398 · - · RefCounted · 0 sinyal · 17 func
-- scripts/debug/player_paths.gd · 179 · PlayerPaths · RefCounted · 0 sinyal · 11 func
+- scripts/debug/player_paths.gd · 212 · PlayerPaths · RefCounted · 0 sinyal · 12 func
 - scripts/debug/run_probe.gd · 2442 · RunProbe · RefCounted · 0 sinyal · 95 func
 - scripts/debug/sprint_probe.gd · 516 · - · RefCounted · 0 sinyal · 21 func
 - scripts/debug/tick_probe.gd · 133 · - · Node · 0 sinyal · 3 func
@@ -104,12 +104,12 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/events/present/tempo.gd · 316 · EvTempo · RefCounted · 0 sinyal · 20 func
 - scripts/events/present/ticker.gd · 60 · EvTicker · RefCounted · 0 sinyal · 6 func
 
-### scripts/events/seams/ (8 dosya, 1390 satır)
+### scripts/events/seams/ (8 dosya, 1395 satır)
 - scripts/events/seams/seams.gd · 161 · EvSeams · RefCounted · 0 sinyal · 16 func
 - scripts/events/seams/seams_finance.gd · 66 · EvSeamsFinance · RefCounted · 0 sinyal · 1 func
 - scripts/events/seams/seams_hr.gd · 201 · EvSeamsHR · RefCounted · 0 sinyal · 5 func
 - scripts/events/seams/seams_incident.gd · 58 · EvSeamsIncident · RefCounted · 0 sinyal · 1 func
-- scripts/events/seams/seams_ported.gd · 194 · EvSeamsPorted · RefCounted · 0 sinyal · 2 func
+- scripts/events/seams/seams_ported.gd · 199 · EvSeamsPorted · RefCounted · 0 sinyal · 2 func
 - scripts/events/seams/seams_product.gd · 360 · EvSeamsProduct · RefCounted · 0 sinyal · 8 func
 - scripts/events/seams/seams_sales.gd · 185 · EvSeamsSales · RefCounted · 0 sinyal · 3 func
 - scripts/events/seams/seams_world.gd · 165 · EvSeamsWorld · RefCounted · 0 sinyal · 7 func
@@ -155,14 +155,14 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/onboarding/steps/origin_traits_step.gd · 329 · - · OnboardingStep · 0 sinyal · 18 func
 - scripts/onboarding/steps/step_base.gd · 119 · OnboardingStep · Control · 1 sinyal · 10 func
 
-### scripts/systems/ (72 dosya, 24605 satır)
+### scripts/systems/ (72 dosya, 24606 satır)
 - scripts/systems/angel_round_system.gd · 52 · AngelRoundSystem · RefCounted · 0 sinyal · 1 func
 - scripts/systems/b2b_constants.gd · 291 · B2BConstants · RefCounted · 0 sinyal · 9 func
 - scripts/systems/b2b_sales_system.gd · 722 · B2BSalesSystem · RefCounted · 0 sinyal · 46 func
 - scripts/systems/cheque_read.gd · 61 · - · RefCounted · 0 sinyal · 3 func
 - scripts/systems/company_catalog.gd · 113 · CompanyCatalog · RefCounted · 0 sinyal · 1 func
 - scripts/systems/counterpart_system.gd · 101 · CounterpartSystem · RefCounted · 0 sinyal · 9 func
-- scripts/systems/customer_rep_system.gd · 380 · CustomerRepSystem · RefCounted · 0 sinyal · 19 func
+- scripts/systems/customer_rep_system.gd · 381 · CustomerRepSystem · RefCounted · 0 sinyal · 19 func
 - scripts/systems/display_settings.gd · 350 · DisplaySettings · RefCounted · 0 sinyal · 27 func
 - scripts/systems/endings_copy.gd · 536 · EndingsCopy · RefCounted · 0 sinyal · 31 func
 - scripts/systems/endings_system.gd · 517 · EndingsSystem · RefCounted · 0 sinyal · 28 func
@@ -450,7 +450,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - customer_expanded(customer_id: String, new_seats: int) · scripts/autoload/event_bus.gd:110
   ↳ customer_expanded emit: scripts/systems/b2b_sales_system.gd:528
   ↳ customer_expanded connect: scripts/events/core/signals.gd:26, scripts/tabs/sales_tab.gd:74, scripts/debug/endgame_smoke.gd:4340
-- customer_assigned(customer_id: String, employee_id: String) · scripts/autoload/event_bus.gd:111 · emit: scripts/autoload/customer_registry.gd:344 · connect: scripts/tabs/hr_tab.gd:78, scripts/tabs/sales_tab.gd:74
+- customer_assigned(customer_id: String, employee_id: String) · scripts/autoload/event_bus.gd:111 · emit: scripts/autoload/customer_registry.gd:345 · connect: scripts/tabs/hr_tab.gd:78, scripts/tabs/sales_tab.gd:74
 - promise_created(promise_id: String) · scripts/autoload/event_bus.gd:113 · emit: scripts/autoload/promise_registry.gd:77 · connect: scripts/debug/run_probe.gd:494
 - promise_kept(promise_id: String) · scripts/autoload/event_bus.gd:114 · emit: scripts/autoload/promise_registry.gd:185 · connect: scripts/debug/endgame_smoke.gd:4159, scripts/debug/run_probe.gd:495
 - promise_broken(promise_id: String) · scripts/autoload/event_bus.gd:115

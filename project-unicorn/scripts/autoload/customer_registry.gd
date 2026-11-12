@@ -281,7 +281,8 @@ func set_support_request(customer_id: String, since_day: int) -> void:
 
 
 func set_last_request_kind(customer_id: String, kind: String) -> void:
-	# HIDDEN — blocks the same request kind arriving twice running from one account.
+	# HIDDEN — blocks the same request kind arriving twice running from one account, and is the kind the paper on
+	# the desk reads once the request has become a card.
 	var c: Customer = _customers.get(customer_id, null)
 	if c == null:
 		return
