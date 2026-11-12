@@ -35,7 +35,7 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
 - `HRSystem.is_busy(c)` `hr_system.gd:150`: izin, eğitim ya da toplantıdaki kurucu · `support_system.gd`, `rnd_system.gd`, `hr_dossier.gd`, `seams_hr.gd`
 - `HRSystem.assigned_to(area)` `hr_system.gd:270` ve `assigned_to_job(job)` `:275`: bugün çalışabilir kişiler · satış, CS ve destek sistemleri
 - `HRSystem.founder_task_state()` `hr_system.gd:236` ve `founder_task_label()` `:219`: türetilir, saklanmaz · `seams_hr.gd`, `hr_dossier.gd`, `personal_tab.gd`
-- `HRSystem.attention_count()` `hr_system.gd:524`: sol ray Ekip rozeti · `left_tabs.gd`, `seams_hr.gd`; `HRSystem.reset()` `hr_system.gd:497` ← `game_state.gd:940`, `save_manager.gd:350`
+- `HRSystem.attention_count()` `hr_system.gd:524`: sol ray Ekip rozeti · `left_tabs.gd`, `seams_hr.gd`; `HRSystem.reset()` `hr_system.gd:497` ← `game_state.gd:939`, `save_manager.gd:350`
 - `HRSystem.to_dict()/from_dict()` `hr_system.gd:507/511`: kayıt kapısı (yalnız moral alt yükü) · `save_manager.gd:383/401`
 - `HRSystem.founder_in_meeting` `hr_system.gd:23`: statik bayrak, kaydedilmez · toplantı sahneleri (satış, VC, seed, term sheet masası) yazar
 - `HRMoraleSystem.apply_delta(emp, delta)` `hr_morale_system.gd:186`: TEK moral girişi (huy ve Liderlik ölçeklemesi burada) · `effects.gd:363-377`, `hr_actions.gd`, `vc_pitch_system.gd:548`
@@ -66,8 +66,8 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
 - `WorkHoursSystem.sitting_open(hours)` `:57`: kurucunun dört oturumunun giriş kapısı · `vc_pitch_system.gd`, `sales_ledger.gd`, `sales_tab.gd`, `hunt_tab.gd`; kapalıyken gerekçesini `sitting_shut_key(late_key)` `:63` verir: haftanın mesai öncesi saatleri `SITTING_BLOCK_EARLY`, gerisi `late_key`
 - `WorkHoursSystem.overtime_pay_accrued_today()` `:333`: Finans çeker (itme yok) · `finance_system.gd`; `company_window()` `work_hours_system.gd:112` · `mail_clock.gd`, `incident_system.gd`
 - `LookSystem.for_person()` `look_system.gd:123`, `founder(portrait_id)` `:116` · `character_registry.gd:530-536`, `hr_search_system.gd:296`, `counterpart_system.gd:101`, onboarding
-- `FounderConstants.validate_alloc/validate_traits` `founder_constants.gd:137/152` · `game_state.gd:966,991`, `origin_traits_step.gd`, `main.gd:5451`
-- `FounderConstants.to_ruler(points)` `founder_constants.gd:33`: onboarding birimi → 0-10 cetvel (×2) · `game_state.gd:987` (`_build_founder` `:960`)
+- `FounderConstants.validate_alloc/validate_traits` `founder_constants.gd:137/152` · `game_state.gd:965,991`, `origin_traits_step.gd`, `main.gd:5463`
+- `FounderConstants.to_ruler(points)` `founder_constants.gd:33`: onboarding birimi → 0-10 cetvel (×2) · `game_state.gd:986` (`_build_founder` `:959`)
 - `FounderConstants.starting_cash(origin, difficulty)` `founder_constants.gd:187` · `first_week_doc.gd`; `portrait_path()` `founder_constants.gd:192` · `ui_factory.gd:113`, `inbox.gd:467`, `personal_tab.gd:87`, onboarding
 - İzin alanı yazıcıları: `CharacterRegistry.set_away(id, kind, until_day)` `character_registry.gd:613` (hastalık), `set_leave_override(id, week, year)` `:623` (kaydırılmış yaz izni haftası)
 - Eğitim durumu yazıcıları: `CharacterRegistry.begin_training` `character_registry.gd:142`, `tick_training` `:158`, `add_experience` `:122`, `training_fee_for` `:134`
@@ -87,7 +87,7 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
 - Tanımlı ama yayanı yok: `raise_requested`, `employee_eligible_for_promotion` (`event_bus.gd:76,73`; GDD'de adı geçtiği için silinmez)
 
 ## Durum ve veri
-- `GameState.hr_search` `game_state.gd:280`: {state, role, level, seed, arrival_day, files}; boş sözlük = idle (`hr_search_system.gd:30-36`); `initialize_run` `:880` temizler
+- `GameState.hr_search` `game_state.gd:279`: {state, role, level, seed, arrival_day, files}; boş sözlük = idle (`hr_search_system.gd:30-36`); `initialize_run` `:880` temizler
 - `GameState.company_start_hour` `:285` (09), `company_work_hours` `:286` (8), `group_work_hours_override` `:288`; varsayılanlar `HRConstants.START_HOUR_DEFAULT`, `WORK_HOURS_DEFAULT`
 - `GameState.issued_looks` `:203` ve `register_look` `:428`: koşuda verilmiş görünüş imzaları; `run_hires` `:200` (aday tohumu, izin haftası, kimlik)
 - `GameState.founder_portrait` `:21`, `name_lang` `:27` (aday isim havuzu koşunun açıldığı dil); `get_founder_skill` `:651` (OLD_SKILLS okunursa push_error)
@@ -169,10 +169,10 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
 - Hastalık yeni bir status değildir: `on_leave` + `leave_kind`. `SprintSystem.away`, `get_active_employees`, mesai ve verim okuyucuları bu yüzden değişmez; yokluğun bittiği günü `_return_day` söyler (`weeks_until_return`,
   ↳ `tick_leave_returns` ve HR sekmesi onu okur). Hasta kişinin yaz izni haftası denk gelirse o yılın yaz izni atlanır (telafi yok, eğitimdeki gibi)
 - Yaz izni haftasını yalnız `summer_week` okur; `leave_week`i doğrudan okuyan yeni kod olay kaymasını görmez
-- Yorum bayatlığı: `hr_morale_system.gd:268` "hr_departure modifier" der, gerçek fiil `employee_leaves` (`effects.gd:416`); `game_state.gd:280` yorumu `band` yazar, anahtar artık `level`
+- Yorum bayatlığı: `hr_morale_system.gd:268` "hr_departure modifier" der, gerçek fiil `employee_leaves` (`effects.gd:416`); `game_state.gd:279` yorumu `band` yazar, anahtar artık `level`
 - Üretim kodunda çağıranı olmayan (yalnız smoke): `HRSystem.output_mult_for_area`, `HRSystem.leadership_output_mult`, `HRConstants.climate_*`, `coordination_for_*`
 - Hiçbir yerde okunmayan: `HRConstants.LEAVE_MAX_DEFERRALS`, `LEAVE_DEFER_WEEKS`, `MORALE_LEAVE_DEFER`, `Character.leave_deferrals` (yalnız kayıt göçü yazar). Silmeden önce GDD'ye bak (CLAUDE.md §2)
-- `MIX_*` sabitleri `hr_candidate_generator.gd:30-33` ile `sales_constants.gd:271-274`'te ikizdir (KALITE.md); birini değiştirirsen aday dosyaları baytça değişir
+- `MIX_*` sabitleri `hr_candidate_generator.gd:30-33` ile `sales_constants.gd:268-271`'te ikizdir (KALITE.md); birini değiştirirsen aday dosyaları baytça değişir
 - Kişisel penceresi seçilen huyları yalnız huy kutusu ve adıyla çizer (`personal_tab.gd:124-134`); "yakında" etiketi kodda ve CSV'de yoktur
 - Ekran karesi (görsel kabul) paralel koşmaz, `--hr-shot` pencerelidir; smoke headless
 

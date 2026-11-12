@@ -104,9 +104,6 @@ const PROBES_ONE_BREATH := 1             # 1★
 const PROBES_STANDARD := 3               # [K] 2★
 const PROBES_DEEP := 5                   # [K] 3★ and whales
 
-# The inner voice is BUDGETED; there is no compulsory opening slot (§5.1.1).
-const INNER_VOICE_BUDGET_PER_RUN := 6    # [K]
-
 const MODIFIER_LINES_MAX := 4            # engine §9.6 — "maksimum 4 satır"
 
 

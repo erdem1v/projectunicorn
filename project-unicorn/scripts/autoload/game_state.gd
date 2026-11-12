@@ -96,7 +96,6 @@ const FLAG_TYPES := {
 	"cs_throughput_progress": TYPE_FLOAT,
 	"sales_faucet_progress": TYPE_FLOAT,       # §3 — sub-lead inflow accumulator
 	"sales_price_stance": TYPE_STRING,         # §7.5 — the SINGLE B2B price source
-	"sales_inner_voice_used": TYPE_INT,        # §5.1.1 — the run's inner-voice budget
 	"sales_open_pitch_promise": TYPE_STRING,   # §6 — the ONE open pitch promise, by account
 	"sales_pitch_focus": TYPE_DICTIONARY,      # {area, until}: a card's pitch emphasis (SalesMeetingSystem.set_pitch_focus), {} = none
 	"sales_last_signed_star": TYPE_INT,        # §14 — sales.last_signed_star()

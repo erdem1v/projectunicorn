@@ -123,7 +123,7 @@ func _beat_step(vs: Dictionary) -> Dictionary:
 		"beat": vs.beat_label,
 		"speaker": _speaker(_beat),
 		"attitude": {"value": int(vs.conviction.value), "word_key": UiTokens.attitude_word_key(band),
-			"band": band, "odds_text": "", "hover": [],
+			"band": band, "hover": [],
 			"edges": [UiTokens.ATTITUDE_WARY_MIN, PitchConstants.ILIK_MIN, PitchConstants.WON_MIN]},
 		"can_withdraw": vs.can_withdraw,
 		"options": [],

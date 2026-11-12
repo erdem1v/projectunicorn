@@ -366,20 +366,6 @@ static func _blocker_cleared(p: Prospect) -> bool:
 
 
 # ============================================================================
-#  §5.1.1 · The inner-voice budget
-# ============================================================================
-
-static func inner_voice_left() -> int:
-	return maxi(SalesConstants.INNER_VOICE_BUDGET_PER_RUN
-		- int(GameState.get_flag("sales_inner_voice_used", 0)), 0)
-
-
-static func spend_inner_voice() -> void:
-	GameState.set_flag("sales_inner_voice_used",
-		int(GameState.get_flag("sales_inner_voice_used", 0)) + 1)
-
-
-# ============================================================================
 #  §7.3 · The weekly summary's ROWS
 # ============================================================================
 #

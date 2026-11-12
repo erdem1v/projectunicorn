@@ -57,7 +57,7 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - `EventGate.request` çağıranlar devamı: `sprint_system.gd:987,1102,1232`, `sprint_bridges.gd:199`, `endings_system.gd:121` (SHUTTER_CARD), `main.gd:1161`, `mail_pane.gd:800` (immediate=true, oyuncunun isteği)
 - `EventGate.daily_tick()` `event_gate.gd:171` -> `EvEngine.daily_tick` `engine.gd:68` · `TimeManager` günlük dağıtım, Finans ve Faz kapısından sonra, `IncidentSystem`'den önce (`scripts/autoload/time_manager.gd:417`)
 - `EventGate.hourly_tick(hour)` `event_gate.gd:175` -> `EvEngine.hourly_tick` `engine.gd:90` · `TimeManager._dispatch_hourly_tick`, `MailClock.hourly_tick`'ten sonra (`time_manager.gd:451`)
-- `EvEngine.pump()` `engine.gd:554`: kuyruktaki en önemli kartı §4.4 yeniden doğrulamasından (`EvGate.revalidate`) geçirip gösterir · tik sonu, `resolve`, `clock_batch_ended` (`signals.gd:54`), `main.gd:5310` (yükleme sonrası)
+- `EvEngine.pump()` `engine.gd:554`: kuyruktaki en önemli kartı §4.4 yeniden doğrulamasından (`EvGate.revalidate`) geçirip gösterir · tik sonu, `resolve`, `clock_batch_ended` (`signals.gd:54`), `main.gd:5311` (yükleme sonrası)
 - `EventGate.resolve(id, option)` `event_gate.gd:26` -> `EvEngine.resolve` `engine.gd:613`: seçenek id ya da indeksi; etkiler, geçmiş satırı, ark ilerletme · çağıran: `mail_pane.gd:498`, bot ve smoke
 - `EventGate.open_paper(key)` `event_gate.gd:145` -> `engine.gd:759`, `EventGate.set_aside()` `event_gate.gd:151` -> `engine.gd:785`: masadaki kâğıdı aç ve cevapsız geri koy · `mail_pane.gd:535,548`
 - `EventGate.force_fire(id, ctx)` `event_gate.gd:40` -> `engine.gd:738`: yalnız debug build; G3, G4, G8'i atlar, satırı `forced: true` yazar · smoke ve `main.gd:1200,1419`
@@ -72,7 +72,7 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
   ↳ yoksa yüklemede unutulan not yeniden doğrulamasız ve `event_triggered`'siz gelen kutusuna düşerdi
 - Bayrak yönlendirmesi `scripts/main/main.gd:226-251`: `--event-probe`, `--event-lint[=baseline]`, `--event-vocab`, `--why-fire=` (`_run_why_fire`), `--event-harness=`, `--event-plausibility=`,
   ↳ `--event-shot=` (`_run_event_shot` `main.gd:793`)
-- Sunum yolu: `EvPresenter.build_view` `present/presenter.gd:40` -> `EventBus.modal_requested` -> `main.gd:5378` (`hold_clock("event")`, Olaylar kutusu açılır) -> `mail_pane.gd` -> `EventGate.resolve`
+- Sunum yolu: `EvPresenter.build_view` `present/presenter.gd:40` -> `EventBus.modal_requested` -> `main.gd:5390` (`hold_clock("event")`, Olaylar kutusu açılır) -> `mail_pane.gd` -> `EventGate.resolve`
 
 ## Sinyaller
 - `event_triggered(event_id)` `scripts/autoload/event_bus.gd:118`: yayan `core/engine.gd:565` (not geldi), `engine.gd:606` (kart gösterildi) · dinleyen: `top_bar.gd:159`, `left_tabs.gd:112`, `research_bar.gd:60`,
@@ -96,7 +96,7 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - Blok anahtarları (`save.gd:20-36`): `flags/timed_flags/stamps` (EvFlags), `rows` (EvHistory), `latches`, `schedule`, `watch`, `arcs`, `queue/active_event_id/active_context`, `papers`, `budgets`, `held` (EvTicker), `tempo_*`,
   ↳ `delays/modules_open/last_unlocked_module`, `run_seed`
 - Katalog kayda girmez; kartlar her açılışta diskten okunur (`save.gd:6-7` yorumu); kayıtta yalnız kimlik ve skaler tutulur (`EvSave.verify_no_resources` `save.gd:81`)
-- Komşu GameState alanları: `messages` `game_state.gd:318`, `mail_outbox` `:320`, `desk_arrivals` `:322`, `mentor_line_at` `:314`, `run_seed` `:24`, `run_active` `:132` (motor `run_active` false iken tik atmaz)
+- Komşu GameState alanları: `messages` `game_state.gd:317`, `mail_outbox` `:319`, `desk_arrivals` `:321`, `mentor_line_at` `:313`, `run_seed` `:24`, `run_active` `:131` (motor `run_active` false iken tik atmaz)
 - Kart şeması alanları (kodda okunanlar): id, version_scope, category, tick, class, tags, schema, family, family_subject, plausibility, scope, guards, condition, latch, latch_key, min_gap_weeks, weight, allowed_hours, expires_weeks
 - Kart alanları devamı: expire_note, on_expire, delay_weeks, delay_reason, follows, trigger.signal, arc, options[id, outcome_id, effects, requires, check], speaker, speaker_role, stage, pool_group, sender, system, text.tr/en
 - `tick` değerleri: `daily`, `hourly`, `signal`, `scheduled`, `request` (kapı `_g4_window` `gate.gd:171`; `request` tikli kartı hiçbir saat taramaz); `class`: `interrupt`, `paper`, `info` (+ `ambient` kuyruk önceliğinde)
@@ -122,7 +122,7 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - Makullük defteri: `--event-plausibility=<spec>` kabuk içinden ya da `tools/plausibility_run.sh` (koşu başına süreç ve kullanıcı dizini; `PLAUS FIRE/FAIL/RATE/SUMMARY`); spec `seeds=<N|A-B>:weeks=<N>:variant=<plain|early|both>:preset=`
 - Smoke (`tools/smoke_run.sh <vaka>`, vakalar `scripts/debug/endgame_smoke.gd`): `event_*` 33 vaka (ör. `event_i1_single_gate` `:325`, `event_critical_drop_refunds_latch` `:294`, `event_lint_v3_rules` `:583`, `event_delay_window` `:587`)
 - Smoke devamı: `event_check_with_effects` (şıkta etki ve zar birlikte, zar çipi, yükle-tekrar aynı dal), `event_after_test` (testi bekleyen etki: hata bulunursa iner ve `<sonuç>_tested` satırı yazılır, bulunmazsa düşer, izleme kayıttan geçer), `event_year_roll` (yıl zarı, tohumlu `random` ve rakip seçicileri, `{rival}` adı),
-  ↳ `card_body_tokens_resolve` `endgame_smoke.gd:493`, `loc_event_en_coverage` `:318`, `event_chip_coverage` `:335`, `quiet_cards_fill_empty_floor` `:545`, `event_no_double_resolution_after_load` `:358`,
+  ↳ `card_body_tokens_resolve` `endgame_smoke.gd:492`, `loc_event_en_coverage` `:317`, `event_chip_coverage` `:334`, `quiet_cards_fill_empty_floor` `:544`, `event_no_double_resolution_after_load` `:357`,
   ↳ `event_thesis_day10_to_day90` `:333`, `harness_sniffer_matches_run_log` `:371`
 - Oynanan koşu: `--run-log=<preset>:<hafta>:sim` `PROBE FIRE/PICK/TALLY/WEEK` basar (`run_probe.gd:30-99`); `tools/run_gate.sh` üç koşu; görsel: `--event-shot=<kart id>[:<slot>=<varlık id>][:long=1]` (`main.gd:793`, pencereli)
 - Probe kayıt türleri: `FIRE`, `PICK`, `TALLY_BEGIN` / `TALLY` / `TALLY_END`, `WEEK`, `ERROR` (drain koruması, kilitsiz seçeneği olmayan kart)

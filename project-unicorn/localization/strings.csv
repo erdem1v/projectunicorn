@@ -2165,7 +2165,6 @@ SALES_STANCE_HINT_PREMIUM,Koltuk fiyatı bandın üstünde. Temsilcinin işlemes
 SALES_SEAT_PRICE,{price}/koltuk,{price}/seat
 SALES_SIGNING_DISCOUNT,imza indirimi %{pct},signing discount {pct}%
 SALES_TIMED_DISCOUNT,{date} tarihine kadar indirimli,Discounted until {date}
-SALES_ODDS,İkna %{n},Persuasion {n}%
 SALES_MEETING_SKIP,Teklife geç,Skip to the offer
 SALES_MEETING_OPEN_OFFER,Rakamı konuş,Talk numbers
 SALES_MEETING_OBJECTION,"Açık konuşayım, {area} tarafınız bize yetmiyor.","To be frank, your {area} side is not enough for us."
@@ -2217,9 +2216,6 @@ SALES_PROBE_PROBE_LADDER_LOCKED,İhtiyacımız olan kademe listede var ama kapal
 SALES_PROBE_PROBE_PROVIDER_TRUST,Veri nerede duruyor? Altyapıyı kimden alıyorsunuz?,Where does the data sit? Who do you buy infrastructure from?
 SALES_PROBE_PROBE_WHO_DO_I_CALL,Bir sorun çıktığında kimi arıyorum?,"When something breaks, who do I call?"
 SALES_PROBE_PROBE_SWITCHING_RISK,"Geçiş ne kadar sürer? İki kere sistem değiştirdik, ikisi de uzadı.",How long is the switch? We have done this twice and both ran long.
-SALES_INNER_VOICE_0,Her cevap not ediliyor.,Every answer is being written down.
-SALES_INNER_VOICE_1,Sorular hazırlanmış. Bu görüşmeye çalışmışlar.,The questions were prepared. They worked on this meeting.
-SALES_INNER_VOICE_2,Kimse acele etmiyor. Bu iyiye de kötüye de gidebilir.,Nobody is hurrying. That can go either way.
 SALES_WIN_CUT,Bu kadar soru yeter. Rakamı konuşalım.,Enough questions. Let's talk numbers.
 SALES_LOSS_WEAK_AREA,{area} sizde henüz zayıf. O taraf güçlenince yeniden konuşalım.,Your {area} side is still weak. Let us talk again once it is stronger.
 SALES_LOSS_MISSING_TIER,İhtiyacımız olan kademe yok. Onsuz alamayız.,The tier we need is not there. We cannot buy without it.

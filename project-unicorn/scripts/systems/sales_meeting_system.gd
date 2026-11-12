@@ -37,7 +37,6 @@ static var _base_contributions: Array = []
 static var _answer_contributions: Array = []
 static var _path: Array = []
 static var _promised_feature: String = ""
-static var _inner_voice_key: String = ""   # the line THIS sitting drew; a key, never text
 static var _outcome: String = ""            # "" | "won" | "lost"
 static var _loss_reason: String = ""
 static var _ctx: Dictionary = {}            # how this table reads the product (ProductQuality.prospect_ctx)
@@ -69,7 +68,6 @@ static func reset() -> void:
 	_answer_contributions = []
 	_path = []
 	_promised_feature = ""
-	_inner_voice_key = ""
 	_outcome = ""
 	_loss_reason = ""
 	_ctx = {}
@@ -404,7 +402,6 @@ static func promised_feature() -> String:
 	return _promised_feature
 
 
-
 # ============================================================================
 #  View
 # ============================================================================
@@ -421,7 +418,6 @@ static func view_state() -> Dictionary:
 		# This question's answer is the last one; whatever it leaves between the cuts rolls.
 		"last_probe": _on_last_probe(),
 		"memory_line": _memory_line(ProspectRegistry.get_prospect(_lead_id)),
-		"inner_voice": _inner_voice_line(),
 		"objection": _objection(),
 		# The area the view's lines name as {area}.
 		"area": _area_name(),
@@ -481,23 +477,3 @@ static func _memory_line(p: Prospect) -> String:
 	return SalesLedger.memory_line(p.last_loss_reason, SalesLedger.loss_target(p.company_name))
 
 
-# DESIGN-PARKED: §5.1.1 says budgeted and conditional but not WHICH line or WHEN. At most
-# once per sitting, on the second probe, cycling three lines while the run has budget.
-# Alternative seen: a criteria-scored picker like the probes — more content machinery than
-# three lines can pay for, and the writing round may want a different shape entirely.
-## §5.1.1 — the inner voice is BUDGETED and CONDITIONAL: no compulsory opening slot, at most
-## once per sitting, and only while the run still has budget.
-##
-## DRAWN ONCE, SHOWN FOR AS LONG AS ITS PROBE IS ON SCREEN. `view_state()` is not a one-shot
-## (open() returns one, which main.gd discards, and the adapter's start() asks for another), so
-## the budget is spent exactly once and the KEY is cached; the text is rendered at display time
-## so a locale switch mid-sitting reads correctly.
-static func _inner_voice_line() -> String:
-	if _outcome != "" or _probe_index != 1:
-		return ""
-	if _inner_voice_key == "" and SalesLedger.inner_voice_left() > 0:
-		SalesLedger.spend_inner_voice()
-		_inner_voice_key = "SALES_INNER_VOICE_%d" % (SalesLedger.inner_voice_left() % 3)
-	if _inner_voice_key == "":
-		return ""
-	return TranslationServer.translate(_inner_voice_key)

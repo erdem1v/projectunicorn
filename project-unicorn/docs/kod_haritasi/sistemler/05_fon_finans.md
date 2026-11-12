@@ -87,7 +87,7 @@ Sonlar:
 - `EndingsCopy.build()` `endings_copy.gd:52`: gazete görünümü · `modals/ending_scene.gd:67`.
 
 Mesaj ve teslim saati:
-- `MessageSystem.post(kind, key, args, urgent)` `message_system.gd:19`: mesajı ya dış kutuya ya hemen kutuya koyar · `summary_system.gd`, `rnd_system.gd`, `sales_rep_system.gd`, `support_system.gd`, `game_state.gd:954`.
+- `MessageSystem.post(kind, key, args, urgent)` `message_system.gd:19`: mesajı ya dış kutuya ya hemen kutuya koyar · `summary_system.gd`, `rnd_system.gd`, `sales_rep_system.gd`, `support_system.gd`, `game_state.gd:953`.
 - `MessageSystem.release()` `:28`: vakti gelen dış kutuyu teslim eder · `MailClock.hourly_tick` `mail_clock.gd:69`.
 - `MailClock.arrival(key, urgent, spread)` `mail_clock.gd:55`: geliş saatini çeker · `message_system.gd:20`, `events/core/engine.gd`, `events/present/papers.gd`, `sprint_system.gd`.
 - `MailClock.delivered(at)` `:43`: gösteren okuyucuların sorusu · `events/core/queue.gd`, `history.gd`, `inbox.gd`, `news_ticker.gd`.
@@ -113,13 +113,13 @@ Hepsi `EventBus`te (`autoload/event_bus.gd`); satır numarası tanım satırı.
 - `meeting_day` `event_bus.gd:267`: yayan `vc_pitch_system.gd:903` · `hunt_tab.gd:47`, `events/core/signals.gd:35`.
 - `offer_countdown_changed` `event_bus.gd:268`: yayan `vc_pitch_system.gd:914` · `ui/components/top_bar.gd:170`.
 - `meeting_scene_requested` `event_bus.gd:261`: yayan `vc_pitch_system.gd:104` · `main/main.gd:2062`, `:4358`, `:4557` (VcMeetingAdapter ve MeetingPanel kurulumu).
-- `pitch_finished` `event_bus.gd:203`: yayan `vc_pitch_system.gd:125`, `:387` (ve `sales_meeting_system.gd:120`) · `hunt_tab.gd:48`, `sales_tab.gd:76`.
+- `pitch_finished` `event_bus.gd:203`: yayan `vc_pitch_system.gd:125`, `:387` (ve `sales_meeting_system.gd:118`) · `hunt_tab.gd:48`, `sales_tab.gd:76`.
 - `term_table_requested` `event_bus.gd:269`: yayan `events/core/effects.gd:575`, `:594`, `hunt_tab.gd:521`, `game_shell.gd:163` · `main.gd:4792`.
-- `mentor_advisory_changed` `event_bus.gd:231`: yayan `vc_pitch_system.gd:890` (geri arama açıldı) · `hunt_tab.gd:59`, `office_notice_stack.gd:44`, `game_state.gd:333`.
+- `mentor_advisory_changed` `event_bus.gd:231`: yayan `vc_pitch_system.gd:890` (geri arama açıldı) · `hunt_tab.gd:59`, `office_notice_stack.gd:44`, `game_state.gd:332`.
 - `run_ended` `event_bus.gd:245`: yayan `endings_system.gd:484` · `main.gd:4787` (`_on_run_ended` `:5083`); `milestone_reached` `event_bus.gd:248`: yayan `endings_system.gd:448` · `main.gd:4788`.
-- `shutter_changed` `event_bus.gd:250`: yayan `game_state.gd:412` (`set_shutter_weeks_left`) · `top_bar.gd:155`, `finance_ozet_view.gd:80`, `finance_tab.gd:51`.
-- `equity_changed` `event_bus.gd:18`: yayan `game_state.gd:615`, `:626` (tur kayıtları) · `finance_ozet_view.gd:65`.
-- `cash_changed` `event_bus.gd:7`, `burn_changed` `:9`, `runway_recalculated` `:15`: `GameState.set_cash/set_daily_burn` (`game_state.gd:340`, `:351`) yayar · TopBar, Finans.
+- `shutter_changed` `event_bus.gd:250`: yayan `game_state.gd:411` (`set_shutter_weeks_left`) · `top_bar.gd:155`, `finance_ozet_view.gd:80`, `finance_tab.gd:51`.
+- `equity_changed` `event_bus.gd:18`: yayan `game_state.gd:614`, `:625` (tur kayıtları) · `finance_ozet_view.gd:65`.
+- `cash_changed` `event_bus.gd:7`, `burn_changed` `:9`, `runway_recalculated` `:15`: `GameState.set_cash/set_daily_burn` (`game_state.gd:339`, `:350`) yayar · TopBar, Finans.
 - `month_ended` `event_bus.gd:253`: yayan `summary_system.gd:126` · `save_manager.gd:62`, `top_bar.gd:158`, `finance_ozet_view.gd:68`.
 - `messages_changed` `event_bus.gd:129`: yayan `message_system.gd:55`, `:69`, `:76`, `events/core/history.gd:81` · gelen kutusu arayüzü (`inbox.gd`, `events_tab.gd`).
 - `summary_ready` `event_bus.gd:256` ve `product_note_issued` `:179`: yayan `message_system.gd:58`, `:60` (teslimde) · `main.gd:4789`, `:4556`.
@@ -232,7 +232,7 @@ Tek koşturucu `bash tools/smoke_run.sh <vaka>`; vaka listesi `scripts/debug/end
 - Kapı eşiği tek evde: `SalesSystem.TRACTION_MRR_TARGET`. Çek eşiği `AngelRoundSystem.MRR_THRESHOLD` ayrı tutulur; paylaşılırsa çek ve Series A kapısı aynı gün açılır (`angel_round_system.gd:24`).
 - Dağıtım sırası kırılgan: Finans, kapı, olay, haber, VC, Endings, Summary. `VCPitchSystem.daily_tick` Endings'ten önce olmalı, yoksa kaskad ertelemesi bayat `active_sheets` okur (`time_manager.gd:422-426`).
 - `EndingsSystem.trigger_ending` telegraph parametresinin varsayılanı YOK (I3: telgrafsız kayıp yok). Kayıp bitişi telegraph'ı geçmişte atılmamışsa `push_error` basar, engellemez (`endings_system.gd:489`).
-- `brand_collapse` yalnız debug ile ulaşılır: `active_scandal`ı F6 dışında yazan yok (`game_state.gd:140`, `game_shell.gd:215`). `unmanaged_major_scandal` da rezerve; `vc_pitch_system.gd:180` ve `:245` okur.
+- `brand_collapse` yalnız debug ile ulaşılır: `active_scandal`ı F6 dışında yazan yok (`game_state.gd:139`, `game_shell.gd:215`). `unmanaged_major_scandal` da rezerve; `vc_pitch_system.gd:180` ve `:245` okur.
 - Bitiş kümesi 7 kimlik (`ENDINGS` `endings_system.gd:71`); EA/full'de yalnız kârlı bootstrap kilometre taşıdır (`ending_mode` `:422`). Yeni bir bitiş `END_META_*`, `EndingsCopy.build` kolu, `ENDINGS` ve telegraph ister.
 - `export_presets.cfg` üç Windows preset'i taşır (Demo `custom_features` "", EA `"ea"`, Full `"full"`); `EndingsSystem.build_scope()` `endings_system.gd:382` build kapsamını export'ta bu özellik etiketinden (`ea`, `full`),
   ↳ debug build'de `--build=`'den okur, etiketsizse demo; smoke ve probe `build_scope_override` ile demoya sabitler

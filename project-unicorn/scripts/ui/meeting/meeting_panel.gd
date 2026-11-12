@@ -3,7 +3,7 @@ extends Control
 
 # A sitting, played in a dock at the right of the office view while the room sits at the table
 # beside it. The head names who speaks for the other side (portrait, name, role and company, a
-# customer's stars and one-line read), who sits at the table, the table's attitude or, at the price,
+# customer's stars, its one-line read the name's tip), who sits at the table, the table's attitude or, at the price,
 # its patience, and what they remember; the transcript under it keeps the whole sitting, its newest
 # row on the deck; the deck at the bottom holds the price ruler, the options, the result card and
 # Devam.
@@ -78,7 +78,6 @@ var _seats := HBoxContainer.new()
 var _attitude_row: HBoxContainer
 var _gauge := Control.new()
 var _word_slot := HBoxContainer.new()
-var _odds: Label
 var _patience_row: HBoxContainer
 var _patience := HBoxContainer.new()
 var _memory_row: HBoxContainer
@@ -201,7 +200,7 @@ func _build_head() -> Control:
 	_role = UiFactory.make_label("", &"MetaMuted")
 	_role.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	id.add_child(_role)
-	# A customer's stars (a rule unit, so glyphs) and the one-line read; a whale's condition under it.
+	# A customer's stars (a rule unit, so glyphs), a whale's condition under them; the one-line read is the name's tip.
 	_read.add_theme_constant_override("separation", UiTokens.SPACE_M)
 	_read_box = SprintUiShared.pad(_read, Vector4i(0, UiTokens.SPACE_S, 0, 0))
 	_read_box.hide()
@@ -218,8 +217,8 @@ func _build_head() -> Control:
 	_seats.add_theme_constant_override("separation", UiTokens.SPACE_XL)
 	rows.add_child(SprintUiShared.pad(_key_row("MEETING_AT_TABLE", _seats), Vector4i(0, UiTokens.SPACE_XS, 0, 0)))
 
-	# TUTUM: one neutral fill over the band edges, the band's word as a tag; a sales table adds its
-	# persuasion, with the reasons on hover.
+	# TUTUM: one neutral fill over the band edges; a VC table's band word as a tag. A sales table's reasons are the
+	# gauge's tip.
 	_gauge.custom_minimum_size.y = UiTokens.D_H_TUT_NOW
 	_gauge.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_gauge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -229,11 +228,6 @@ func _build_head() -> Control:
 	reading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	reading.add_child(_gauge)
 	reading.add_child(_word_slot)
-	_odds = UiFactory.make_label("", &"KeyText")
-	_odds.mouse_filter = Control.MOUSE_FILTER_PASS
-	_odds.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_odds.draw.connect(_draw_dotted.bind(_odds))
-	reading.add_child(_odds)
 	_attitude_row = _key_row("MEETING_ATTITUDE", reading)
 	rows.add_child(_attitude_row)
 
@@ -397,8 +391,9 @@ func _frame(step: Dictionary) -> void:
 		var identity: Dictionary = step.identity
 		UiFactory.clear(_read)
 		_read.add_child(UiFactory.D_stars(identity.stars))
-		_read.add_child(SprintUiShared.prose(identity.sub, &"Caption"))
 		_read_box.show()
+		_name.tooltip_text = identity.sub
+		_name.mouse_filter = Control.MOUSE_FILTER_PASS if identity.sub != "" else Control.MOUSE_FILTER_IGNORE
 		UiFactory.clear(_badge)
 		_badge.visible = identity.badge != ""
 		if _badge.visible:
@@ -486,11 +481,11 @@ func _settle_head(step: Dictionary) -> void:
 		_attitude_row.visible = not _attitude.is_empty()
 		if _attitude_row.visible:
 			UiFactory.clear(_word_slot)
-			_word_slot.add_child(UiFactory.D_tag(tr(_attitude.word_key),
-				&"pos" if _attitude.band == "warm" else &"outline"))
-			_odds.text = _attitude.odds_text
-			_odds.visible = _odds.text != ""
-			_odds.tooltip_text = "\n".join(PackedStringArray(_attitude.hover))
+			if _attitude.word_key != "":
+				_word_slot.add_child(UiFactory.D_tag(tr(_attitude.word_key),
+					&"pos" if _attitude.band == "warm" else &"outline"))
+			_gauge.tooltip_text = "\n".join(PackedStringArray(_attitude.hover))
+			_gauge.mouse_filter = Control.MOUSE_FILTER_PASS if _gauge.tooltip_text != "" else Control.MOUSE_FILTER_IGNORE
 	if step.has("patience"):
 		_patience_row.show()
 		UiFactory.clear(_patience)
@@ -590,16 +585,6 @@ func _draw_gauge() -> void:
 		var nx := edge / 100.0 * w
 		_gauge.draw_rect(Rect2(nx, mid - UiTokens.D_NOTCH.y * 0.5, UiTokens.D_NOTCH.x, UiTokens.D_NOTCH.y), UiTokens.D_INK_4)
 	_gauge.draw_rect(Rect2(x - UiTokens.BORDER_HAIRLINE, 0, UiTokens.BORDER_FOCUS, _gauge.size.y), UiTokens.D_INK_1)
-
-
-## The persuasion's dotted underline: its reasons are on hover.
-func _draw_dotted(label: Label) -> void:
-	var y: float = label.size.y - UiTokens.BORDER_HAIRLINE
-	var x := 0.0
-	while x < label.size.x:
-		label.draw_line(Vector2(x, y), Vector2(minf(x + UiTokens.SPACE_XXS, label.size.x), y), UiTokens.D_INK_4,
-			UiTokens.BORDER_HAIRLINE)
-		x += UiTokens.SPACE_XS
 
 
 # ============================================================================

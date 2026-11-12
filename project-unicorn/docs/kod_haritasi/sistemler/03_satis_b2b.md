@@ -13,13 +13,13 @@ Sahipler: autoload `CustomerRegistry`, `ProspectRegistry`, `PromiseRegistry`; mo
 - `scripts/systems/sales_system.gd` (556): giriş kapısı; B2C kitle/MRR/fiyat formülleri, `add_b2b_customer` (tek B2B imza yolu), `reflect_mrr` (tek MRR köprüsü), satış günlüğü
 - `scripts/systems/b2b_sales_system.gd` (644): hesap yaşam döngüsü motoru; iki katmanlı memnuniyet, risk/churn sayacı, genişleme, söz sonuçları, güven defteri, sunucu maddesi
 - `scripts/systems/b2b_constants.gd` (286): hesap makinesinin ayar bloğu (yaşam döngüsü, tolerans, söz, müşteri masası, genişleme, sektör kimlikleri)
-- `scripts/systems/sales_constants.gd` (299): satış modülünün ayar bloğu (şelale, yıldız, görüşme eşikleri, pazarlık, anlaşma planı, kayıp nedenleri, karıştırıcı sabitleri)
+- `scripts/systems/sales_constants.gd` (297): satış modülünün ayar bloğu (şelale, yıldız, görüşme eşikleri, pazarlık, anlaşma planı, kayıp nedenleri, karıştırıcı sabitleri)
 - `scripts/systems/sales_faucet_system.gd` (307): lead şelalesi, lead ömrü, dönüş kilidi, balina koşulu, `spawn` (lead'in tek yaratım yolu)
 - `scripts/systems/sales_rep_system.gd` (317): satış masası; temsilci lead seçimi, işleme, `sign_due` süpürmesi, fiyat kırma anı, kayıp postası, haftalık özet
-- `scripts/systems/sales_meeting_system.gd` (489): Perde 1 (ikna); iğne, soru seçimi, cevap, kesim eşikleri, tek zar, kayıp nedeni; oturum durumu kaydedilmez
+- `scripts/systems/sales_meeting_system.gd` (479): Perde 1 (ikna); iğne, soru seçimi, cevap, kesim eşikleri, tek zar, kayıp nedeni; oturum durumu kaydedilmez
 - `scripts/systems/negotiation_system.gd` (276): Perde 2 (pazarlık); cetvel, gizli rezerv, sabır, hakaret; tür-bağımsız (`b2b_deal` ve `series_a`)
 - `scripts/systems/sales_finalizer.gd` (108): biten pazarlığın uygulayıcısı; masa anlaşması açma, imza, yürüyüş/hakaret/kayıp yolları
-- `scripts/systems/sales_ledger.gd` (425): Satış okuma yüzeyi (GDD §14) ve yazma seam'leri; yönlendirme, fiyat duruşu, kayıp hafızası, toplantı kapısı, haftalık satırlar
+- `scripts/systems/sales_ledger.gd` (418): Satış okuma yüzeyi (GDD §14) ve yazma seam'leri; yönlendirme, fiyat duruşu, kayıp hafızası, toplantı kapısı, haftalık satırlar
 - `scripts/systems/sales_probes.gd` (337): soru kataloğu (storylet seçici), gerçek sözlüğü `facts_for`, cevap kapıları; metinler türetilmiş CSV anahtarı
 - `scripts/systems/sales_archetypes.gd` (185): müşteri arketipleri (3 taslak); sektör, alıcı tipi, mizaç, pazarlık profili, balina koşulları
 - `scripts/systems/sales_name_pool.gd` (103): şirket adı havuzu (65 seçme ad + üretilmiş); `take` ile kullanılmamış ad çeker
@@ -66,16 +66,16 @@ Sahipler: autoload `CustomerRegistry`, `ProspectRegistry`, `PromiseRegistry`; mo
 - `SalesFaucetSystem.lock_return()` `scripts/systems/sales_faucet_system.gd:102`: şirketi havuzdan bir süre dışlar · `expire_leads`, `SalesFinalizer._leave` `sales_finalizer.gd:52`
 - `SalesRepSystem.daily_tick()` `scripts/systems/sales_rep_system.gd:36`: haftalık özet, işleme, atama · `B2BSalesSystem.daily_tick` `b2b_sales_system.gd:44`
 - `SalesRepSystem.sign_due()` `scripts/systems/sales_rep_system.gd:198`: planı dolan masa ve masa anlaşmalarını imzalar · günlük yuva ve öğlen `SalesSystem.hourly_tick`
-- `SalesMeetingSystem.open()` `scripts/systems/sales_meeting_system.gd:83`: Perde 1'i açar · `main.gd:5109`
-- `SalesMeetingSystem.choose()` `scripts/systems/sales_meeting_system.gd:241`: bir cevap oynar, iğneyi oynatır, eşik ve zarı değerlendirir · `SalesMeetingAdapter`
-- `SalesMeetingSystem.close()` `scripts/systems/sales_meeting_system.gd:114`: iki saati `TimeManager.advance_hours` ile oynatır, oturumu siler · `sales_meeting_adapter.gd:118`
-- `NegotiationSystem.open()` `scripts/systems/negotiation_system.gd:91`: Perde 2'yi açar · `scripts/ui/meeting/sales_meeting_adapter.gd:198`
-- `NegotiationSystem.offer()` `scripts/systems/negotiation_system.gd:168`: teklif; imza, hakaret ya da karşı teklif · `sales_meeting_adapter.gd:224` (`accept_counter` negotiation_system.gd:195, `walk` :202)
+- `SalesMeetingSystem.open()` `scripts/systems/sales_meeting_system.gd:81`: Perde 1'i açar · `main.gd:5109`
+- `SalesMeetingSystem.choose()` `scripts/systems/sales_meeting_system.gd:239`: bir cevap oynar, iğneyi oynatır, eşik ve zarı değerlendirir · `SalesMeetingAdapter`
+- `SalesMeetingSystem.close()` `scripts/systems/sales_meeting_system.gd:112`: iki saati `TimeManager.advance_hours` ile oynatır, oturumu siler · `sales_meeting_adapter.gd:118`
+- `NegotiationSystem.open()` `scripts/systems/negotiation_system.gd:91`: Perde 2'yi açar · `scripts/ui/meeting/sales_meeting_adapter.gd:197`
+- `NegotiationSystem.offer()` `scripts/systems/negotiation_system.gd:168`: teklif; imza, hakaret ya da karşı teklif · `sales_meeting_adapter.gd:223` (`accept_counter` negotiation_system.gd:195, `walk` :202)
 - `SalesFinalizer.apply()` `scripts/systems/sales_finalizer.gd:22`: biten pazarlığın sonucunu uygular · `scripts/ui/meeting/sales_meeting_adapter.gd:111`
 - `SalesLedger.meeting_block_reason()` `scripts/systems/sales_ledger.gd:324`: görüşmeye giriş kapısı, CSV anahtarı döner · Satış sekmesi ve `main.gd` davet yolu
 - `SalesLedger.set_routing()` `scripts/systems/sales_ledger.gd:52`: Ayır / Temsilciye ver · `scripts/tabs/sales_tab.gd:409`
 - `SalesLedger.set_price_stance()` `scripts/systems/sales_ledger.gd:131`: fiyat kadranı · Satış sekmesi
-- `SalesLedger.record_close()/close_week()` `sales_ledger.gd:401`/`:407` ve `record_loss()/lost_week()` `:414`/`:419`:
+- `SalesLedger.record_close()/close_week()` `sales_ledger.gd:387`/`:393` ve `record_loss()/lost_week()` `:400`/`:405`:
   ↳ haftalık kapanış ve kayıp satırları (`sales_weekly_close_rows`, `sales_weekly_loss_rows` bayrakları) tek yardımcıdan yazılır ve boşaltılarak okunur (`_append_row` `:423`, `_take_rows` `:429`) · `SalesRepSystem` haftalık özeti
 - `CustomerRepSystem.daily_tick()` `scripts/systems/customer_rep_system.gd:192`: talep kanalı (aç, işle, bayatı yükselt) · `b2b_sales_system.gd:39`
 - `CustomerRepSystem.reconcile_assignments()` `scripts/systems/customer_rep_system.gd:89`: kurucunun fazlasını devreder · `b2b_sales_system.gd:34`
@@ -87,7 +87,7 @@ Sahipler: autoload `CustomerRegistry`, `ProspectRegistry`, `PromiseRegistry`; mo
 - `SupportSystem.to_dict()` `scripts/systems/support_system.gd:146` (`from_dict` :150): yalnız `_damage_residue` kaydı · `ProductSystem.to_dict` `product_system.gd:22`
 - `MarketCatalog.value()` `scripts/systems/market_catalog.gd:84`: şirketin haftadaki değeri (saf); `price` :98, `listed` :110, `series` :102 · `piyasa_tab.gd:101`, `news_feed_system.gd:368`
 - `CounterpartSystem.prospect_people()` `scripts/systems/counterpart_system.gd:56`: adayın karşısındaki kişiler · `main.gd:5110`, `sales_tab.gd:328`, `inbox.gd:448`
-- `CounterpartSystem.fill_investor_people()` `scripts/systems/counterpart_system.gd:33`: fonların üç kişisini çeker · `game_state.gd:950`, `save_manager.gd:317`
+- `CounterpartSystem.fill_investor_people()` `scripts/systems/counterpart_system.gd:33`: fonların üç kişisini çeker · `game_state.gd:949`, `save_manager.gd:317`
 - `CustomerRegistry.add()` `scripts/autoload/customer_registry.gd:94`: yeni hesap · `SalesSystem.add_b2b_customer`, `_ensure_b2c_record` `sales_system.gd:238`
 - `PromiseRegistry.create()` `scripts/autoload/promise_registry.gd:50`: söz açar (sprint vadesi) · `SalesFinalizer.sign_deal`, `B2BSalesSystem.accept_promise`
 - `PromiseRegistry.tick_deadlines()` `scripts/autoload/promise_registry.gd:164`: vadesi geçen sözü kırar · `B2BSalesSystem.daily_tick` `b2b_sales_system.gd:33`
@@ -114,10 +114,10 @@ Emit satırları DIZIN'den ve kaynaktan; "dinleyen" DIZIN'in `connect` sütunudu
 - `lead_reserved` / `lead_routed` / `lead_unrouted`: yayan `scripts/systems/sales_ledger.gd:61` / `:63` / `:65` · `sales_tab.gd:68`
 - `whale_condition_met`: yayan `scripts/systems/sales_faucet_system.gd:96` (tek yayıcı; `sign_deal` yaymaz) · dinleyen yok
 - `pitch_requested`: yayan `scripts/tabs/sales_tab.gd:412` · `scripts/main/main.gd:4786` (görüşme daveti)
-- `meeting_entered`: yayan `scripts/systems/sales_meeting_system.gd:100` · yalnız probe
-- `meeting_won`: yayan `scripts/systems/sales_meeting_system.gd:322` (`_win`) · dinleyen yok
+- `meeting_entered`: yayan `scripts/systems/sales_meeting_system.gd:98` · yalnız probe
+- `meeting_won`: yayan `scripts/systems/sales_meeting_system.gd:320` (`_win`) · dinleyen yok
 - `meeting_lost`: yayan `scripts/systems/sales_ledger.gd:190` (`report_loss`; masa kaybı, yürüyüş-kayıp ve masa kaybı hep buradan) · yalnız probe
-- `pitch_finished`: yayan `scripts/systems/sales_meeting_system.gd:120` (VC de yayar: `vc_pitch_system.gd:125,387`) · `sales_tab.gd:76`, `hunt_tab.gd:48`
+- `pitch_finished`: yayan `scripts/systems/sales_meeting_system.gd:118` (VC de yayar: `vc_pitch_system.gd:125,387`) · `sales_tab.gd:76`, `hunt_tab.gd:48`
 - `deal_signed`: yayan `scripts/systems/sales_system.gd:407` · `sales_tab.gd:70`, probe
 - `deal_walked`: yayan `scripts/systems/sales_finalizer.gd:55` (`_leave`) · `sales_tab.gd:70`
 - `rep_deal_closed`: yayan `scripts/systems/sales_rep_system.gd:272` · `sales_tab.gd:70`
@@ -129,17 +129,17 @@ Emit satırları DIZIN'den ve kaynaktan; "dinleyen" DIZIN'in `connect` sütunudu
 - Destek ve Piyasa sinyal yaymaz; destek raporu `MessageSystem.post("support_week")` `support_system.gd:336` ile gelen kutusuna düşer.
 
 ## Durum ve veri
-- `GameState.sales_log` (`SALES_LOG_CAP` 12) `scripts/autoload/game_state.gd:158`: etkinlik günlüğü; yazan `SalesSystem.record_sales_event` `sales_system.gd:327`
-- Koşu sayaçları `game_state.gd:189-193`: `run_customers_signed`, `run_customers_lost`, `run_customers_expanded`, `run_prospects_spawned` (lead kimliğini tekil tutar, tek yön artar)
-- `GameState.b2b_signed_company_names` `game_state.gd:196`: imzalı şirket adları; churn'den sağ çıkar, şelale bu adı bir daha sunmaz
-- `GameState.cs_escalation_days` `game_state.gd:199`: müşteri masasının haftalık yükseltme tavanı için kayan pencere
-- `GameState.sales_loss_log`, `sales_account_memory`, `sales_return_locks`, `sales_band_caps`, `sales_line_memory` `game_state.gd:212-221`: Satış defteri (yazan `SalesLedger`; `sales_line_memory`'yi `SalesProbes.remember` yazar)
-- `GameState.sales_meetings_week` `game_state.gd:186`: {tick, count}; haftanın görüşme sayısı, sıfırlama yok (tik damgası taşır)
-- `GameState.trust_drains` `game_state.gd:325`: süren güven bedelleri; tek yazıcı `B2BSalesSystem.add_trust_drain`
-- `GameState.investor_people` `game_state.gd:206`: fonların üç kişisi (kaydedilir); adayın kişileri kaydedilmez, kimlikten yeniden türer
-- `GameState.market_shocks`, `market_catalog_version` `game_state.gd:296-297`: Piyasa şok defteri; üretimde yazıcısı yok (Dikkat)
-- Tipli bayraklar `GameState.FLAG_TYPES` `game_state.gd:48` (b2c ve sales girdileri :86-103): `sales_faucet_progress`, `sales_price_stance`, `sales_inner_voice_used`, `sales_open_pitch_promise`, `sales_weekly_*`, `cs_throughput_progress`
-- Bayraklar (sabit tipli değil, anahtar öneki): `b2b_broke_<müşteri>` `game_state.gd:127` (kırılmış söz mandalı); `mvp_market_type` `game_state.gd:56` pazarın B2B mi B2C mi olduğunu söyler
+- `GameState.sales_log` (`SALES_LOG_CAP` 12) `scripts/autoload/game_state.gd:157`: etkinlik günlüğü; yazan `SalesSystem.record_sales_event` `sales_system.gd:327`
+- Koşu sayaçları `game_state.gd:188-192`: `run_customers_signed`, `run_customers_lost`, `run_customers_expanded`, `run_prospects_spawned` (lead kimliğini tekil tutar, tek yön artar)
+- `GameState.b2b_signed_company_names` `game_state.gd:195`: imzalı şirket adları; churn'den sağ çıkar, şelale bu adı bir daha sunmaz
+- `GameState.cs_escalation_days` `game_state.gd:198`: müşteri masasının haftalık yükseltme tavanı için kayan pencere
+- `GameState.sales_loss_log`, `sales_account_memory`, `sales_return_locks`, `sales_band_caps`, `sales_line_memory` `game_state.gd:211-220`: Satış defteri (yazan `SalesLedger`; `sales_line_memory`'yi `SalesProbes.remember` yazar)
+- `GameState.sales_meetings_week` `game_state.gd:185`: {tick, count}; haftanın görüşme sayısı, sıfırlama yok (tik damgası taşır)
+- `GameState.trust_drains` `game_state.gd:324`: süren güven bedelleri; tek yazıcı `B2BSalesSystem.add_trust_drain`
+- `GameState.investor_people` `game_state.gd:205`: fonların üç kişisi (kaydedilir); adayın kişileri kaydedilmez, kimlikten yeniden türer
+- `GameState.market_shocks`, `market_catalog_version` `game_state.gd:295-296`: Piyasa şok defteri; üretimde yazıcısı yok (Dikkat)
+- Tipli bayraklar `GameState.FLAG_TYPES` `game_state.gd:48` (b2c ve sales girdileri :86-102): `sales_faucet_progress`, `sales_price_stance`, `sales_open_pitch_promise`, `sales_weekly_*`, `cs_throughput_progress`
+- Bayraklar (sabit tipli değil, anahtar öneki): `b2b_broke_<müşteri>` `game_state.gd:126` (kırılmış söz mandalı); `mvp_market_type` `game_state.gd:56` pazarın B2B mi B2C mi olduğunu söyler
 - Kayıt: `SaveManager.SCHEMA_VERSION` 19 `scripts/autoload/save_manager.gd:16`. `Customer`/`Prospect`/`Promise` `@export` listesi şemadır, varsayılan göçtür
 - Oturum durumu kaydedilmez: `SalesMeetingSystem` ve `NegotiationSystem` statik değişkenleri; `can_save()` oturum açıkken reddeder `save_manager.gd:93-94`, `reset_all_owners` sıfırlar `:353-354`
 - `SupportSystem._damage_residue` `scripts/systems/support_system.gd:99`: kesirli memnuniyet zararı artığı; kaydı `ProductSystem.to_dict` taşır
@@ -151,7 +151,7 @@ Emit satırları DIZIN'den ve kaynaktan; "dinleyen" DIZIN'in `connect` sütunudu
 - Önemli sabitler, yaşam döngüsü: `ONBOARDING_WEEKS` `b2b_constants.gd:10`, `SAT_DRIFT_STEP` `:30`, `CHURN_COUNTDOWN_WEEKS` `:28`, `RISK_REENTRY_WEEKS` `:27`, `EXPANSION_MATURE_WEEKS` `:29`, `TOLERANCE_BASE` `:39`
 - Önemli sabitler, söz ve masa: `PROMISE_DEADLINE_WEEKS` `b2b_constants.gd:152`, `PROMISE_RELOCK_WEEKS` `:167`, `CS_ESCALATION_SAT` `:176`, `CS_REQUEST_INTERVAL_WEEKS` `:241`, `CS_ESCALATION_WEEKLY_CAP` `:248`
 - Önemli sabitler, sunucu maddesi: `CLAUSE_STAR` `b2b_constants.gd:49`, `CLAUSE_WEEKS` :50, `CLAUSE_NOTICE_WEEKS` :51, `CLAUSE_MARGIN` :52; sektör kimlikleri `SECTORS` :97, fikstür sektörü `SECTOR_FIXTURE` :103
-- Önemli sabitler, satış: `FAUCET_BASE_PER_WEEK` `sales_constants.gd:19`, `LEAD_LIFE_WEEKS` :56, `RETURN_LOCK_WEEKS` :57, `MEETINGS_PER_WEEK` :68, `CUT_HIGH` :97, `CUT_LOW` :98, `SEAT_PRICE_MIN` :120, `DEAL_BASE_WEEKS` :152
+- Önemli sabitler, satış: `FAUCET_BASE_PER_WEEK` `sales_constants.gd:19`, `LEAD_LIFE_WEEKS` :56, `RETURN_LOCK_WEEKS` :57, `MEETINGS_PER_WEEK` :68, `CUT_HIGH` :97, `CUT_LOW` :98, `SEAT_PRICE_MIN` :117, `DEAL_BASE_WEEKS` :149
 - Destek sabitleri `support_system.gd`: `INFLOW_BASE` :33, `VALIDATION_COEF` :48, `DAMAGE_DAILY_CAP` :69, `NEGLECT_BUGS` :86, `NEGLECT_WEEKS` :88, `REPORT_KIND` :314
 - B2C: `B2C_USERBASE_ID` `sales_system.gd:25` (tek toplu kayıt `co_b2c_userbase`), `SATISFACTION_DRIFT_PER_DAY` :40, `TRACTION_MRR_TARGET` :46 (Series A çıtası, ekranda sayı olarak gösterilmez)
 - Veri dosyaları: `data/market/companies.json` (`meta`: version, knot_weeks, noise, sector_slots; her şirkette `anchors` yıl sonu değerleri, `beta`, `noise`, `shares_outstanding`) ve `people.json`; yükleyen `market_catalog.gd:34`
@@ -160,8 +160,8 @@ Emit satırları DIZIN'den ve kaynaktan; "dinleyen" DIZIN'in `connect` sütunudu
 
 ## Metin anahtarları
 Tüm anahtarlar `localization/strings.csv`'de. Türetilmiş anahtarlarda sabit metin aranamaz; `loc_sales_derived_keys` ve `loc_b2b_derived_keys` vakaları bu katalogları gezer.
-- `SALES_PROBE_<ID>`, `SALES_ANS_<ID>_<CEVAP>`, `SALES_LOCK_<GERÇEK>`: soru, cevap ve kilit satırları · `sales_probes.gd`, `sales_meeting_system.gd:457` (`_lock_key`)
-- `SALES_MOD_*`: zar ipucu satırları (`_modifier_labels` `sales_meeting_system.gd:194`); `SALES_LOSS_*`, `SALES_WIN_CUT`, `SALES_MEMORY_*`, `SALES_INNER_VOICE_*`, `SALES_MEETING_OBJECTION` · `sales_meeting_system.gd`, `sales_ledger.gd`
+- `SALES_PROBE_<ID>`, `SALES_ANS_<ID>_<CEVAP>`, `SALES_LOCK_<GERÇEK>`: soru, cevap ve kilit satırları · `sales_probes.gd`, `sales_meeting_system.gd:453` (`_lock_key`)
+- `SALES_MOD_*`: zar ipucu satırları (`_modifier_labels` `sales_meeting_system.gd:192`); `SALES_LOSS_*`, `SALES_WIN_CUT`, `SALES_MEMORY_*`, `SALES_MEETING_OBJECTION` · `sales_meeting_system.gd`, `sales_ledger.gd`
 - `SALES_ARCH_<ID>_LINE`: arketip sesi · `sales_archetypes.gd:115`
 - `SALES_BLOCK_*`, `SALES_ROUTE_*`, `SALES_BAND_*`: görüşme kapısı, yönlendirme ve bant gerekçeleri · `sales_ledger.gd`, `sales_rep_system.gd`, `sales_tab.gd`
 - `SALES_TICKER_*`, `NOTICE_SRC_*`: imza haberi · `sales_finalizer.gd:108`, `sales_rep_system.gd:274` (başlık satırları), `sales_ledger.gd:277` (`announce_signing`)
@@ -188,7 +188,7 @@ Hepsi `tools/smoke_run.sh <vaka>` ile (komutlar `project-unicorn/`'dan, `GODOT` 
 - Şelale: `sales_lead_expiry_and_return_lock`, `sales_faucet_guard_b2c`, `sales_star_mix_reads_fit`, `sales_sectors_all_produce_leads`
 - Boru hattı: `b2b_prospect_dedup_excludes_signed`, `prospect_id_unique_after_removal`, `company_catalog_pool_integrity`
 - Görüşme: `sales_meeting_reads_fit`, `sales_meeting_replays_identically`, `sales_check_replays_after_load`, `sales_loss_reason_from_asked`, `sales_weak_area_loss`
-- Görüşme, devamı: `sales_inner_voice_reaches_view`, `sales_meeting_time_skip_founder_share`, `b2b_pitch_meeting_signs`
+- Görüşme, devamı: `sales_meeting_time_skip_founder_share`, `b2b_pitch_meeting_signs`
 - Masa ve temsilci: `sales_desk_deal_runs_its_plan`, `sales_deal_plan_rule`, `sales_rep_close_die`, `sales_rep_selection_rule`, `sales_rep_loss_mail`
 - Masa ve temsilci, devamı: `sales_weekly_report_is_a_message`, `hotfix_weekly_summary_rows`, `sales_seat_price_stamp_and_expansion`
 - Müşteri masası: `cs_auto_assignment_capacity`, `cs_request_channel_gated_on_rep`, `cs_request_absorption_by_expertise`, `cs_request_kind_state_driven`
@@ -196,7 +196,7 @@ Hepsi `tools/smoke_run.sh <vaka>` ile (komutlar `project-unicorn/`'dan, `GODOT` 
 - Destek: `support_desk_rates_stack`, `support_inflow_is_bug_free`, `support_report_quiet_week`, `neglect_reputation_below_zero`
 - Piyasa: `market_catalog_lint`, `market_value_deterministic`, `market_value_texture`, `market_price_band`, `market_listed_week_gating`, `market_year_end_follows_anchors`, `market_share_tracks_mrr`, `market_save_roundtrip`
 - Kayıt: `sales_save_roundtrip_rev6`, `save_v17_market_ref`; yerelleştirme: `loc_sales_derived_keys`, `loc_b2b_derived_keys`, `loc_csv_integrity`
-- Pazarlık için ayrı vaka yok; Perde 2 `b2b_pitch_meeting_signs` (`endgame_smoke.gd:3629`) içinde `NegotiationSystem.open/offer` ile ve ekran vakası `--negotiation-shot` ile gezilir
+- Pazarlık için ayrı vaka yok; Perde 2 `b2b_pitch_meeting_signs` (`endgame_smoke.gd:3628`) içinde `NegotiationSystem.open/offer` ile ve ekran vakası `--negotiation-shot` ile gezilir
 - Ekran: `--sales-shot=<pipeline|desk|picker|inbox|edge|edge_end|stretched|empty|b2c|b2c_live|b2b_pre|untyped|morning|evening|norep|discounted|frank|risk_stability|deals|returning|clause|offer>` (`main.gd:1925`)
   ↳ `offer` bir kartın adaya yazdığı teklifi ve hesaba verdiği süreli indirimi çizer: üç lead'e teklif (kartın `prospect_offer` fiiliyle: 1★ indirim, 2★ bir kademede söz, 3★ ikisi) ve Nordica'ya 26 hafta %10 süreli indirim
   ↳ (`B2BSalesSystem.apply_timed_discount`); lead kartında `SALES_OFFER_DISCOUNT` / `SALES_OFFER_PROMISE` satırları, hesap kartının künye satırında `SALES_TIMED_DISCOUNT`; her biri `SHOTLINE|offer|<satır>` olarak basılır (başsız çekimde kare yok);
@@ -232,8 +232,8 @@ Hepsi `tools/smoke_run.sh <vaka>` ile (komutlar `project-unicorn/`'dan, `GODOT` 
 - Sıra yüklüdür `B2BSalesSystem.daily_tick` `b2b_sales_system.gd:20`: söz vadesi, devir, hesap süpürmesi, müşteri masası, şelale, satış masası, lead ömrü.
 - Aynı gün imzalanan hesap kendi imza gününde süpürülmez; öğlen imzası süpürmeden sonra gelir.
 - `SalesFaucetSystem.market_open()` ve `SalesSystem.is_b2b_market()` iki kez sorulur (bilerek). B2C koşuda sıfır lead ve sıfır B2B yaşam döngüsü çıkmalı; vaka `sales_faucet_guard_b2c`, `b2b_market_gate_b2c_run`.
-- RNG yok: şelale, kişi, rezerv, koltuk sayısı ve temsilci zarı `SalesConstants.mix`/`mix_seed`/`mix_unit` ile tohum+kimlikten türer (`sales_constants.gd:286-298`). Kimlik ya da tuz değişirse eski kayıttaki sonuçlar kayar.
-- Tek zar `SalesMeetingSystem._resolve_by_check` `sales_meeting_system.gd:306`: anahtar koşu tohumu, gün, lead ve OYNANAN YOL. Yeniden yüklemek sonucu değiştirmez; yol kimliğini bozmak zarı yeniden atar.
+- RNG yok: şelale, kişi, rezerv, koltuk sayısı ve temsilci zarı `SalesConstants.mix`/`mix_seed`/`mix_unit` ile tohum+kimlikten türer (`sales_constants.gd:283-295`). Kimlik ya da tuz değişirse eski kayıttaki sonuçlar kayar.
+- Tek zar `SalesMeetingSystem._resolve_by_check` `sales_meeting_system.gd:304`: anahtar koşu tohumu, gün, lead ve OYNANAN YOL. Yeniden yüklemek sonucu değiştirmez; yol kimliğini bozmak zarı yeniden atar.
 - Oturum durumu (`SalesMeetingSystem._active`, `NegotiationSystem._reserve` …) static ve KAYDEDİLMEZ; yeni oturum alanı `reset()` içine de eklenmeli, yoksa bir önceki görüşmeden sızar.
 - Gizli rezerv ve `tolerance` oyuncuya hiç gösterilmez (cetvel yalnız karşı teklifle açılır); UI'a rakam eklenirse bilgi oyunu ölür. Zar ipucu satırları sayı yazmaz (`SALES_MOD_*`).
 - Satış masasının "sunucu Ekonomik mi" olgusu tek kaynaktan okunur:
@@ -251,7 +251,7 @@ Hepsi `tools/smoke_run.sh <vaka>` ile (komutlar `project-unicorn/`'dan, `GODOT` 
   ↳ `drop_prospect` satışın kayıp yolundan (`SalesFinalizer.lose`) sebep `event` ile geçer; geri dönen şirketin hafızası `SALES_MEMORY_EVENT`
 - Kart gövdesinde yalnız `{slot}` ve `{seam:ns.ad}` çözülür; `customer/*.json` yazarken süslü parantezli başka belirteç ekrana olduğu gibi çıkar (hafıza: unresolvable-card-token-class).
 - Bazı `EventBus` sinyallerinin kodda dinleyeni yok (`KALITE.md` "yarım sinyaller"); olay motoru yalnız `signals.gd:22` izin listesindekileri dinler, yeni tetik sinyali oraya da yazılmalıdır.
-- `MarketCatalog` önbelleği `static var` ve bilerek `reset_all_owners` dışında (dosya verisi); `GameState.market_shocks` üretimde yazılmıyor, yalnız smoke yazıyor (`endgame_smoke.gd:24334`).
+- `MarketCatalog` önbelleği `static var` ve bilerek `reset_all_owners` dışında (dosya verisi); `GameState.market_shocks` üretimde yazılmıyor, yalnız smoke yazıyor (`endgame_smoke.gd:24296`).
 - `SalesNamePool._pools` `sales_name_pool.gd:61` de önbellektir ve geçersiz kılınmaz; `STEMS` ya da `COMPANIES` çalışma zamanında değişmez, kod değişikliği yeni süreç ister.
 - `SalesArchetypes.TABLE` sektör sırası yüklüdür (`% size` çekimi, fikstürler `[0]` okur); yeni sektör sona eklenir. Sektör kimlikleri kayıtlıdır (`Customer.industry`), yeniden adlandırma göç ister (`LEGACY_SECTOR_IDS`).
 - Kurucuya otomatik hesap verilmez (`CustomerRepSystem.ranked_reps` yalnız `employee` döner) ve bu MÜHÜRLÜ bir hükümdür; "boştaki kurucuya hesap ver" diye değiştirilmez.

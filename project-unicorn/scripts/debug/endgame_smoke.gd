@@ -141,7 +141,6 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"b2b_ignore_then_churn": fail = _case_b2b_ignore_then_churn()
 		"b2b_pitch_meeting_signs": fail = _case_b2b_pitch_meeting_signs()
 		"sales_meeting_replays_identically": fail = _case_sales_meeting_replays_identically()
-		"sales_inner_voice_reaches_view": fail = _case_sales_inner_voice_reaches_view()
 		"sales_loss_reason_from_asked": fail = _case_sales_loss_reason_from_asked()
 		"sales_meeting_reads_fit": fail = _case_sales_meeting_reads_fit()
 		"sales_emphasis_question": fail = _case_sales_emphasis_question()
@@ -3846,39 +3845,6 @@ static func _replay_once(lead_id: String) -> String:
 	if ProspectRegistry.get_prospect(lead_id) != null:
 		ProspectRegistry.remove(lead_id)
 	return outcome
-
-## §5.1.1 — THE INNER VOICE REACHES THE SCREEN. main.gd discards open()'s frame and the scene
-## paints its own view_state(); a line spent on the first call was never seen. The line must
-## survive every view of its probe, cost the run's budget once, and leave with the probe.
-## FALSIFICATION: return `_take_inner_voice()`'s text straight from view_state again (the old
-## take-and-forget) and the second frame comes back empty.
-static func _case_sales_inner_voice_reaches_view() -> String:
-	GameState.set_flag("mvp_shipped", true)
-	GameState.set_flag("mvp_market_type", "b2b")
-	_seed_b2b_lines("erp")
-	GameState.set_flag("sales_inner_voice_used", 0)
-	GameState.sales_meetings_week.clear()
-	var p: Prospect = _add_prospect("voice_lead", 3, "ai_vec_filter")
-	var opened: Dictionary = SalesMeetingSystem.open(p.id)
-	if opened.is_empty() or String(opened.get("outcome", "")) != "":
-		SalesMeetingSystem.close()
-		return "the sitting did not open on a probe"
-	var shown: Dictionary = SalesMeetingSystem.view_state()
-	var line: String = String(shown.get("inner_voice", ""))
-	if line == "":
-		SalesMeetingSystem.close()
-		return "the scene's own frame carries no inner voice"
-	if line != String(opened.get("inner_voice", "")):
-		SalesMeetingSystem.close()
-		return "the two frames of one probe disagree on the inner voice"
-	var left: int = SalesLedger.inner_voice_left()
-	if left != SalesConstants.INNER_VOICE_BUDGET_PER_RUN - 1:
-		SalesMeetingSystem.close()
-		return "the budget moved %d for one line, want 1" \
-			% (SalesConstants.INNER_VOICE_BUDGET_PER_RUN - left)
-	SalesMeetingSystem.close()
-	return ""
-
 
 ## §5.2 — the customer walks out over what it SAID or ASKED about. A table that found an area lacking walks out over that
 ## area whatever else it asked (its opening objection named it); one that did not names a gap it asked about, each open at
@@ -20851,7 +20817,6 @@ static func _case_sales_save_roundtrip_rev6() -> String:
 	SalesFaucetSystem.lock_return("Kilitli A.Ş.", 12)
 	SalesLedger.set_open_pitch_promise(c.id)
 	SalesLedger.count_meeting()
-	SalesLedger.spend_inner_voice()
 	SalesProbes.remember("probe_ladder_reach")
 
 	var slot: String = "smoke_sales_v11"
@@ -20911,8 +20876,6 @@ static func _case_sales_save_roundtrip_rev6() -> String:
 		return "the open pitch promise did not survive"
 	if SalesLedger.meetings_this_week() != 1:
 		return "the week's meeting count did not survive (%d)" % SalesLedger.meetings_this_week()
-	if SalesLedger.inner_voice_left() >= SalesConstants.INNER_VOICE_BUDGET_PER_RUN:
-		return "the inner-voice budget did not survive"
 	if not GameState.sales_line_memory.has("probe_ladder_reach"):
 		return "the content repeat memory did not survive"
 	SaveManager.delete_slot(slot)
@@ -20947,8 +20910,7 @@ static func _case_loc_sales_derived_keys() -> String:
 		wanted.append("SALES_STANCE_HINT_%s" % String(stance).to_upper())
 	for key in ["SALES_BLOCK_NO_B2B", "SALES_BLOCK_WEEK_FULL", "SALES_BLOCK_TOO_LATE", "SITTING_BLOCK_EARLY",
 			"SALES_BLOCK_NO_LEAD", "SALES_BLOCK_REASON_UNCHANGED", "SALES_BAND_ABOVE_REP",
-			"SALES_BAND_ABOVE_CAP", "SALES_WIN_CUT", "SALES_MEETING_OBJECTION", "SALES_INNER_VOICE_0",
-			"SALES_INNER_VOICE_1", "SALES_INNER_VOICE_2"]:
+			"SALES_BAND_ABOVE_CAP", "SALES_WIN_CUT", "SALES_MEETING_OBJECTION"]:
 		wanted.append(key)
 	for locale in ["tr", "en"]:
 		TranslationServer.set_locale(locale)

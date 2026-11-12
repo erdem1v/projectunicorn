@@ -133,14 +133,15 @@ func _act1(vs: Dictionary, entries: Array, gestures: Array) -> Dictionary:
 	_view = vs
 	var value := int(round(vs.odds * 100.0))
 	var band := _band(vs.odds)
-	# The persuasion's tip lists every reason: the die's chips stop at four and the "+N more factors" line.
-	var hover := []
+	# The gauge's tip names the band, then lists every reason: the die's chips stop at four and the "+N more factors" line.
+	var hover := [Fmt.cap_first(tr(UiTokens.attitude_word_key(band)))]
 	for m: Dictionary in vs.modifier_lines:
 		for r: Dictionary in m.get("rest", [m]):
 			hover.append("%s %s" % [r.sign, r.label])
 	var step := {
-		"attitude": {"value": value, "word_key": UiTokens.attitude_word_key(band), "band": band,
-			"odds_text": tr("SALES_ODDS").format({"n": value}), "hover": hover,
+		# The gauge alone says where the table stands (envanter meet-01): no band word, no figure; the band's word and the
+		# reasons are its tip.
+		"attitude": {"value": value, "word_key": "", "band": band, "hover": hover,
 			"edges": [UiTokens.ATTITUDE_WARY_MIN, LUKEWARM_MIN, int(round(SalesConstants.CUT_HIGH * 100.0))]},
 		"entries": entries,
 		"gestures": gestures,
@@ -152,8 +153,6 @@ func _act1(vs: Dictionary, entries: Array, gestures: Array) -> Dictionary:
 		if vs.objection != "":
 			entries.append({"kind": "counterpart", "seat": step.speaker, "text": vs.objection})
 		entries.append({"kind": "counterpart", "seat": step.speaker, "text": tr(vs.probe_key)})
-		if vs.inner_voice != "":
-			entries.append({"kind": "quiet", "text": vs.inner_voice})
 		step.options = _answers(vs)
 		return step
 	step.speaker = LEAD

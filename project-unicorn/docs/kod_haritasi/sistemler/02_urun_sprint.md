@@ -177,7 +177,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 
 ## Durum ve veri
 
-- `GameState.product` `scripts/autoload/game_state.gd:302`: sprint, next, mode(plan|active|release), cards, release, releases, requests, rival_hits, quarter, decision, delegate… (`new_state` sprint_system.gd:74-84)
+- `GameState.product` `scripts/autoload/game_state.gd:301`: sprint, next, mode(plan|active|release), cards, release, releases, requests, rival_hits, quarter, decision, delegate… (`new_state` sprint_system.gd:74-84)
 - `GameState.product` ek alanlar: `interrupt` {sprint, kind} (sprint_system.gd:649), `promise_due` {card, step, promises}, `type_draft`, `pending_faulty`, `empty_sprint`, `decision_sprint`
   ↳ `last_paper` (kâğıdın ya da acil durum ve söz kesintisinin geldiği son sprintin numarası; `new_state` 0): eski kayıtta yok, okuma `get` varsayılanı sprintin numarası - 1 (yüklemede zorlanmış zar olmaz), şema sürümü artmaz
 - Koşan kartta `progress_at_start`: sprintin başındaki `progress` (`_begin`, `put_first`; eski kayıtta `progress` okunur)
@@ -185,9 +185,9 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - Kart `SprintCatalog.new_card` `sprint_catalog.gd:255`: id, kind(feature|request|fix|research), line, step, target_tier, area, need[3], progress[3], state, assignees, bugs, decision, cut
 - Kart kimlik önekleri `sprint_catalog.gd:194-222`: `feat:<kademe>`, `req:<talep>`, `plan:cap_paid_plan`, `fix:<hat>`, `res:<alan>`; kart `need`/`progress` sırası [Tasarım, Geliştirme, Test]
 - Sürüm kaydı `sprint_system.gd:1490-1484`: number, sprint, shipped, carried, velocity, expected, actual, press, gate, day, changed_areas, alerts_cleared, faulty (+ `thanks`, `reviews`)
-- `GameState.incident` `game_state.gd:329`: last_day, pending, shifted, open, drains, forced (şema başlığı `incident_system.gd:32-34`)
+- `GameState.incident` `game_state.gd:328`: last_day, pending, shifted, open, drains, forced (şema başlığı `incident_system.gd:32-34`)
 - `GameState.flags` `mvp_*` (`FLAG_TYPES` `game_state.gd:48-91`; adlar `product_state.gd:11-39`): mvp_shipped, mvp_version, mvp_line_tiers, mvp_open_bugs, mvp_infra_*, mvp_interest…
-- `GameState.trust_drains` `game_state.gd:325` (B2BSalesSystem yazar): `IncidentSystem.resolve` "per_sprint" bedelini oraya ekler (`B2BSalesSystem.add_trust_drain`)
+- `GameState.trust_drains` `game_state.gd:324` (B2BSalesSystem yazar): `IncidentSystem.resolve` "per_sprint" bedelini oraya ekler (`B2BSalesSystem.add_trust_drain`)
 - Ar-Ge durumu `rnd_system.gd:40-49` (kayıt `to_dict` :759, `systems.rnd`): states, progress, active, assignees, paid, freeze_job, note_*; `_was_frozen` kayıt dışı (:53)
 - Kayıt: `SCHEMA_VERSION` 19 (`save_manager.gd:16`), `MIN_LOADABLE_VERSION` 10 (:23); göçler `_migrate_15` :825, `_migrate_16` :911, `_migrate_18` :977 (v17 → v18 `market_ref`), `_migrate_19` :1010 (sprint puanı ×5)
 - Kayıt sistem blokları `save_manager.gd:379-380`: `systems.product` ({support}) ve `systems.rnd`; ürün/sprint/incident `game_state` bloğunda

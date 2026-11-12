@@ -21,10 +21,10 @@ extends RefCounted
 const TYPE_TAG := "__res"
 
 # Flags no system owns any more: the product's quality axes and the stamps that fed them, the new-code term of the report
-# inflow, and the investor-prep switch. A save written while they lived still carries them, whatever its schema number;
-# they are dropped on every load, after the migrations that read them.
+# inflow, the investor-prep switch and the sales meeting's inner-voice budget. A save written while they lived still
+# carries them, whatever its schema number; they are dropped on every load, after the migrations that read them.
 const RETIRED_FLAGS := ["mvp_innovation", "mvp_stability", "mvp_experience", "mvp_step_realization", "mvp_new_code_effort",
-	"pitch_prep_active"]
+	"pitch_prep_active", "sales_inner_voice_used"]
 
 # One-time charge ids no card writes any more. A save still carries their rows in the transactions log, and the Finance
 # tab would draw the raw id; they are dropped on every load.

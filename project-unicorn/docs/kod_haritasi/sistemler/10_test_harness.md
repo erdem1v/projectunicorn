@@ -7,8 +7,8 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 
 ## Dosyalar
 
-- `scripts/main/main.gd` (5430): ana sahne; debug bayrak dağıtıcısı (`_run_debug_harness`), tüm `--*-shot` ve ölçüm koşucuları, fikstür tohumlayıcıları
-- `scripts/debug/endgame_smoke.gd` (27808): `EndgameSmoke`; 475 vakalı smoke süiti, tek süreç = tek vaka, `SMOKE PASS/FAIL` basar
+- `scripts/main/main.gd` (6239): ana sahne; debug bayrak dağıtıcısı (`_run_debug_harness`), tüm `--*-shot` ve ölçüm koşucuları, fikstür tohumlayıcıları
+- `scripts/debug/endgame_smoke.gd` (29854): `EndgameSmoke`; 475 vakalı smoke süiti, tek süreç = tek vaka, `SMOKE PASS/FAIL` basar
 - `scripts/debug/run_probe.gd` (2420): `RunProbe`; botun oynadığı koşu defteri (`--run-log`), 49 preset, `PROBE ...` satırları
 - `scripts/debug/sprint_probe.gd` (425): `--sprint-probe`; Ürün ekranının sprint planını (`plan_outcome`) kapanışla karşılaştırır, uyuşmazlıkta 1
 - `scripts/debug/tick_probe.gd` (133): `--tick-probe`; gerçek saatte kare maliyeti (gece, saat adımı, otomatik kayıt) `TICK` satırları
@@ -59,7 +59,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - `Main._seed_run_reproducible()` `scripts/main/main.gd:626`: tohum 424242, `IncidentSystem.rolls=false`; çekimlerin önce/sonra çiftini kıyaslanır yapar
 - `Main._finish_shot()` `scripts/main/main.gd:665`: kareyi `user://<ad>[_en][_cb].png` yazar (`:659`) ya da `--theme-audit` ise `AUDIT_BEGIN/END` basar (`_audit_walk` `:3086`)
 - `Main._run_why_fire()` `scripts/main/main.gd:288`: `EvWhy.report(kart)`; `_run_event_plausibility()` `:295` `PLAUSIBILITY.run(spec)`
-- `Main._skip_to_shell()` `scripts/main/main.gd:5433`: menü ve onboarding'siz kabuk; `--skip-onboarding` (`:107`) ve debug F12 (`:5185`) çağırır
+- `Main._skip_to_shell()` `scripts/main/main.gd:5445`: menü ve onboarding'siz kabuk; `--skip-onboarding` (`:107`) ve debug F12 (`:5185`) çağırır
 - `GameShell._debug_fkey()` `scripts/main/game_shell.gd:134`: debug build'de Shift+F4/F5/F6 (F4 onboarding'i yeniden tetikler)
 - `SaveManager._is_harness_arg()` `scripts/autoload/save_manager.gd:497`: `smoke`, `-shot`, `audit`, `probe`, `run-log`, `plausibility` alt dizili `--` bayrağı harness sayar
 - `tools/smoke_run.sh run_one()` `tools/smoke_run.sh:38`: `godot --headless --endgame-smoke=<vaka>`; `list_cases()` (`:27`) vaka listesini `match` tablosundan awk ile çeker
@@ -86,7 +86,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - `RunProbe.PRESETS` `scripts/debug/run_probe.gd:188`: preset adı -> alan sözlüğü (`subtype`, `policy`, `vc`, `staff_cap`, `fix`, `desk`, `core_only`, `server`, `cash`, `accounts`, `staff`); 49 anahtar
 - `RunProbe.SMALL_CREW` `run_probe.gd:249`, `GROWTH_ROLES` `:1506`, `seed_crew()` `:2350`: ekip tohumlama; `seed_crew` oturtulamayan büyüklükte `false` döner (kimse işe alınmaz), çağıran bildirir: `--sprint-probe` `SPRINTPROBE ERROR`,
   ↳ `--tick-probe` `TICK ERROR`; ikisi de `team=` ile kullanır
-- Smoke paylaşılan kayıt yuvaları `manual_9001` / `manual_9002` (`SAVE_SLOT_A`, `SAVE_SLOT_B` `endgame_smoke.gd:10177`); onları kullanan vakalar paralel koşturulmaz (aşağıda Testler)
+- Smoke paylaşılan kayıt yuvaları `manual_9001` / `manual_9002` (`SAVE_SLOT_A`, `SAVE_SLOT_B` `endgame_smoke.gd:10143`); onları kullanan vakalar paralel koşturulmaz (aşağıda Testler)
 - `tools/lint_baseline.json` `tools/lint_v3_frozen.json`: kabul edilen lint bulguları; `--event-lint=baseline` yeniden yazar
 - Çekim PNG'leri `%APPDATA%\Godot\app_userdata\Project Unicorn\` (`user://`); EN `_en`, renk körü `_cb` soneki (`main.gd:654`)
 - `docs/EVENT_SIGNAL_MANIFEST.md`, `docs/content/events_draft/_vocabulary.md`: araçların ürettiği belgeler (`gen_signal_manifest.py`, `--event-vocab`)
@@ -95,7 +95,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 
 - Harness çıktıları (`SMOKE`, `PROBE`, `TICK`, `TEMPO`, `CROWD`, `PAN`, `SPRINTPROBE` vb.) çevrilmez; `scripts/debug/` ve `scenes/debug/` `loc_residue` SKIP listesindedir (`loc_residue.gd:30-33`)
 - `main.gd` `scripts/` altında olduğu için Türkçe literal taşıyan fikstür satırları `# LOC-DATA <gerekçe>` işaretini ister (main.gd'de 91 işaret var)
-- `loc_residue.gd` ve `loc_csv_integrity` vakası (`endgame_smoke.gd:316`, gövde `:10862`) `strings.csv` anahtarlarını okur; `glyph_audit.gd` CSV'nin iki dilini okur
+- `loc_residue.gd` ve `loc_csv_integrity` vakası (`endgame_smoke.gd:315`, gövde `:10828`) `strings.csv` anahtarlarını okur; `glyph_audit.gd` CSV'nin iki dilini okur
 - `--lang=tr|en` bayrağını `Localization` okur (`scripts/autoload/localization.gd:20-53`); çekim dosya adına `_en` ekler
 
 ## Testler
@@ -104,7 +104,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - Bayrak `--` ayıracının ARKASINA konmaz (`smoke_run.sh:10`): `main.gd` `OS.get_cmdline_args()` okur, ayıraçtan sonrası ulaşmaz ve süreç oyunu açıp asılı kalır. İstisna: `-s` girişleri (`--event-plausibility-probe=`) kullanıcı argümanıdır.
 - Smoke tek vaka: `bash tools/smoke_run.sh <vaka>`; hepsi: `bash tools/smoke_run.sh --all` (475 vaka, saatler sürer; yalnız push/entegrasyon öncesi). Çıkış 0 yeşil, 1 vaka düştü, 2 harness sorunu. `CASE_TIMEOUT` varsayılan 120 sn.
 - Smoke karar kuralı (`smoke_run.sh:38-66`): satırlarda `^ERROR:|SCRIPT ERROR|Parse Error|Compile Error` varsa vaka düşer, `SMOKE PASS` yazsa da; hiç verdict yoksa ya da süre aşıldıysa düşer.
-- `# EXPECT-ERROR <ileti parçası>` match kolunda kuralı bilerek bozan vakayı bağışlar; parça hiç basılmazsa "stale marker" ile düşer (örnek: `founder_5skill_init`, `endgame_smoke.gd:171`).
+- `# EXPECT-ERROR <ileti parçası>` match kolunda kuralı bilerek bozan vakayı bağışlar; parça hiç basılmazsa "stale marker" ile düşer (örnek: `founder_5skill_init`, `endgame_smoke.gd:170`).
 - Vaka ailesi önekleri (475 vaka): sales 34, event 33, sprint 25, hr 23, save 21, b2b 19, seed 14, paper 14, loc 14, promise 13, incident 10, product 9, cs 9; kalan 237 vaka daha küçük ailelerde (market, hotfix, angel, research ...).
 - Smoke önek → sistem sayfası (kaba eşleşme: bir vaka iki sistemi birden sınayabilir, liste başlangıç noktasıdır, tam seçim değildir). 01 Çekirdek: `speed_*`, `smoke_seed_pinned`, `run_ledger`, `growth_streak_semantics`,
   ↳ `month_history_*`; Kayıt: `save_*`, `menu_state_machine`, `autosave_writes_off_thread`, `legacy_v12_save_opens_live_table`, `sales_save_roundtrip_rev6`, `sales_check_replays_after_load`, `seed_sheet_round_trips`,
@@ -129,7 +129,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
   ↳ `save_roundtrip_fingerprint`, `save_v10_product_state`, `valuation_old_save_derives_seed`. Kendi yuvası olanlar yuvaları paylaşmaz: `legacy_v12_save_opens_live_table` (işlem kimlikli yuva),
   ↳ `sales_save_roundtrip_rev6` (`smoke_sales_v11`); `menu_state_machine` kayıt dizinini geçici bir dizine çevirir (`SaveManager._use_dir`);
   ↳ `milestone_paper_waits_for_card` gerçek kayıt dizinine bir `manual_<n>` yazıp siler (`_keep_run_for_main_menu`)
-- `all_scripts_load` (`endgame_smoke.gd:324,12313`) `scripts/` ve `scenes/` altındaki her `.gd`yi ayrık GDScript kopyasıyla derler; `addons/` kapsam dışı. `ResourceLoader.load` ve `reload()` motoru düşürür, kullanmayın.
+- `all_scripts_load` (`endgame_smoke.gd:323,12313`) `scripts/` ve `scenes/` altındaki her `.gd`yi ayrık GDScript kopyasıyla derler; `addons/` kapsam dışı. `ResourceLoader.load` ve `reload()` motoru düşürür, kullanmayın.
 - Oynanan koşu kapısı: `bash tools/run_gate.sh` (3 preset x 730 hafta, `RUN_TIMEOUT` 900). Tek koşu: `"$GODOT" --headless --path . --run-log=full_run:730:sim[:seed][:window=11-13][:build=ea|full]`.
 - Probe kayıt türleri (`run_probe.gd` başlık yorumu çıktı sözleşmesidir): `BEGIN`, `STATE`, `SIGNAL`, `GATE`, `LEAD` (gelen her B2B aday: arketip, sektör, yıldız, evre, geldiği günkü uyumu `u=` ve eksik alanı `loss=`),
   ↳ `SIGN` (sonunda sektör, arketip, tolerans, evre ve imza anında pazarın her alanının yuvarlanmamış seviyesi `areas=`; lead'siz fikstür hesabında arketip `-`);
@@ -184,7 +184,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - Throwing case geçer görünür: GDScript'te try/catch yok, çalışma hatası gövdeyi keser ve `""` döner; bu yüzden hata yakalama kabuktadır (`smoke_run.sh:4-9`). Smoke'u `SMOKE PASS` satırına bakarak değil `smoke_run.sh` ile koşun.
 - `--endgame-smoke` süreci MCP editör yolunda canlı bırakır (log okunsun diye); CLI'da `get_tree().quit()` çağrılır (`main.gd:205-212`). Harness bayrakları yalnız debug build'de çalışır.
 - `SaveManager._is_harness_arg` alt dizi eşleşmesidir: bayrak adı `smoke/-shot/audit/probe/run-log/plausibility` içeriyorsa otomatik kayıt, ekran ayarı ve `runs_finished` sayacı kapanır
-  (`main.gd:5328`, `display_settings.gd:88`).
+  (`main.gd:5329`, `display_settings.gd:88`).
   `--display-check` bilerek hiçbirini içermez, gerçek pencereyi sürmesi gerekir.
 - Kayıt yazan harness'ler: `--tick-probe` (`auto_*` yuvaları, kayıt varsa reddeder), `--modal-shot=save*|load*` (`_saves_refused` `main.gd:2706`), `--menu-shot` (`user://shot_menu/`),
   `--display-check` (`settings.json`). Hepsini ayrı `APPDATA` ile koşun.

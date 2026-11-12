@@ -5302,7 +5302,8 @@ const MEETING_SHOT_VC := {
 ## and its condition; ret = a cold room's rejection, its cost and Frank on the way out; seed = the
 ## seed room's result card; long = a lukewarm room's closing beat under every earlier one, the most
 ## the panel holds (pair it with --shot-scale=1.25 for the narrowest dock). A VC kind with ":tip" hovers the first
-## option with a die (a frame cannot hover): open:tip, sorgu:tip.
+## option with a die (a frame cannot hover): open:tip, sorgu:tip. A sales kind with ":name" rests the pointer on the
+## name (the customer's one-line read is its tip), with ":tutum" on the attitude gauge (its reasons): probe:name.
 func _run_meeting_shot(shot: String) -> void:
 	var kind: String = shot.get_slice(":", 0)
 	_begin_shot()
@@ -5380,6 +5381,17 @@ func _run_meeting_shot(shot: String) -> void:
 				return
 		if kind == "economy":
 			print("MEETINGSHOT|economy|load=%d|asked=%s" % [InfraSystem.load_percent(), ",".join(SalesMeetingSystem._used_families)])
+		for rest: Array in [["name", "_name"], ["tutum", "_gauge"]]:
+			if shot.ends_with(":" + String(rest[0])):
+				var target: Control = _meeting_panel.get(rest[1])
+				if not target.is_visible_in_tree():
+					_shot_fail("[MeetingShot] %s: %s is not on screen at this step" % [shot, rest[0]])
+					return
+				var move := InputEventMouseMotion.new()
+				move.position = target.get_global_rect().get_center()
+				move.global_position = move.position
+				get_viewport().push_input(move, true)
+				await get_tree().create_timer(1.2).timeout
 	_probe_pause_interactivity(_meeting_panel, "meeting/" + kind)
 	await get_tree().create_timer(0.5).timeout
 	_save_shot("meeting_shot_%s" % shot.replace(":", "_"))
