@@ -1,6 +1,6 @@
 # Kod haritası · KALITE
 
-Üretildi: git 3c4c139a · 2026-11-11 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git d98e00f9 · 2026-11-12 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 256 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
@@ -9,7 +9,7 @@ Kapsam: scripts/ altındaki 256 .gd (tools/ hariç). Kod temizliği ve kıdemli 
 - scripts/main/main.gd · 6100 satır · 221 func
 - scripts/debug/run_probe.gd · 2392 satır · 92 func
 - scripts/systems/sprint_system.gd · 2074 satır · 171 func
-- scripts/theme/build_theme.gd · 1654 satır · 31 func
+- scripts/theme/build_theme.gd · 1655 satır · 31 func
 - scripts/events/tools/lint.gd · 1343 satır · 47 func
 - scripts/systems/vc_pitch_system.gd · 1327 satır · 91 func
 - scripts/autoload/save_manager.gd · 1297 satır · 61 func
@@ -34,7 +34,7 @@ Kapsam: scripts/ altındaki 256 .gd (tools/ hariç). Kod temizliği ve kıdemli 
 ## 80 satırdan uzun fonksiyonlar (99 tane, en uzun 40)
 
 Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları arada sayılır).
-- scripts/theme/build_theme.gd:421 · _menajer · 892 satır
+- scripts/theme/build_theme.gd:421 · _menajer · 893 satır
 - scripts/debug/endgame_smoke.gd:51 · run_case · 588 satır
 - scripts/events/core/effects.gd:240 · _apply · 584 satır
 - scripts/events/tools/vocab_gen.gd:20 · run · 322 satır

@@ -72,11 +72,12 @@ Alt klasörler:
   ↳ `tip` (Callable) verilirse ipucu açılırken `tooltip_text`in yerine ondan okunur (`_get_tooltip`; koşan sprintte bayatlamaz).
 - `scripts/tabs/product/sprint_card.gd` (32): `SprintCard`: ÇEYREK'in mini kartı (`State`): üstte tür ikonu ve puan, altında kendi satırında ad (kesilmez, kelime sınırında sarar, kart uzar);
   ↳ yalnız sözlüğünü çizer. Bu sprintin kartı `BoardRow`, sonraki sprintin kartı `SprintNext`in satırıdır.
-- `scripts/tabs/product/sprint_ui_shared.gd` (563): `SprintUiShared`: ortak statik parçalar (label, box, pad, avatar, `face`, `face_slot`, `open_goal_menu`, ÇEYREK çubuğu, `switch`, `due_chip`, `flag` (sütun genişliğinde sarar),
+- `scripts/tabs/product/sprint_ui_shared.gd` (564): `SprintUiShared`: ortak statik parçalar (label, box, pad, avatar, `face`, `face_slot`, `open_goal_menu`,
+  ↳ ÇEYREK çubuğu, `switch`, `due_chip` (yazının ilk harfi çipte büyür), `flag` (sütun genişliğinde sarar),
   ↳ `row_keys`, `way_out`, `add_key`, `keep_scroll`); Ürün dışında 10+ dosya kullanır. İpucu parçaları: `STAGE_KEYS`, `stage_name`, `stage_icon`, `stage_done`, `done_text`, `named_stars`, `effort_tip`,
   ↳ `prepared_tip`, `meet_lines`, `meet_lines_of` (`total`: türü başına günler toplanır), `tip_column` (zengin ipucunun kökü).
-- `scripts/tabs/product/area_panel.gd` (369): `AreaPanel`: sol sütun (SPRINT ve ÇEYREK): Geçmiş, MÜŞTERİ TALEPLERİ, MODÜLLER ve açık modülün adayları (düzeltme adayı tam hata metnini sarar yazar,
-  ↳ başka sprintin adayı "Sprint {n}" damgası taşır); adayların sonunda araştırma bekleyen sıradaki kart (`_waiting_card`: Ar-Ge ikonlu soluk satır, efor ve şerit yok, tık Ar-Ge'yi o düğümde açar);
+- `scripts/tabs/product/area_panel.gd` (370): `AreaPanel`: sol sütun (SPRINT ve ÇEYREK): Geçmiş, MÜŞTERİ TALEPLERİ, MODÜLLER ve açık modülün adayları (düzeltme adayı tam hata metnini sarar yazar,
+  ↳ başka sprintin adayı "Sprint {n}" damgası taşır); adayların sonunda araştırma bekleyen sıradaki kart (`_waiting_card`: Ar-Ge ikonlu soluk satır, efor ve şerit yok, üstüne gelince kenarı aydınlanır, tık Ar-Ge'yi o düğümde açar);
   ↳ "+" değerleri sonraki karelerde gelir; imleç ya da tık sırayı beklemez, o "+"nın değeri o an hesaplanır (`_learn`).
   ↳ Modül başlığı ve talep satırı modülün ikonunu `MonoBox` kutusunda taşır (`AREA_ICONS` kimlikten yola, `_area_mark` → `HRUiShared.D_mono_box`; talep satırında ipucu modülün adı).
 - `scripts/tabs/product/quarter_view.gd` (192): `QuarterView`: ÇEYREK görünümü: hedef şeridi (menü SprintHead ile ortak), sol sütun (`AreaPanel`), altı sprint sütunu, onay düğmeleri;

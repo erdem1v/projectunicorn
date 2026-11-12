@@ -3415,6 +3415,22 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_18a21"]
+content_margin_left = 8.0
+content_margin_top = 8.0
+content_margin_right = 8.0
+content_margin_bottom = 8.0
+bg_color = Color(0.101960786, 0.09019608, 0.078431375, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.58431375, 0.54901963, 0.49411765, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_f6b09"]
 content_margin_left = 8.0
 content_margin_top = 8.0
@@ -7740,6 +7756,8 @@ ModalCard/base_type = &"PanelContainer"
 ModalCard/styles/panel = SubResource("StyleBoxFlat_bd967")
 ModuleCandidate/base_type = &"PanelContainer"
 ModuleCandidate/styles/panel = SubResource("StyleBoxFlat_05034")
+ModuleCandidateHover/base_type = &"PanelContainer"
+ModuleCandidateHover/styles/panel = SubResource("StyleBoxFlat_18a21")
 ModuleRow/base_type = &"PanelContainer"
 ModuleRow/styles/panel = SubResource("StyleBoxFlat_f6b09")
 ModuleRowHover/base_type = &"PanelContainer"
@@ -8832,7 +8850,7 @@ TopicPill/fonts/font = ExtResource("d_cond_b_caps_3c3ce")
 TopicPill/styles/normal = SubResource("StyleBoxFlat_1b27f")
 TraitBox/base_type = &"PanelContainer"
 TraitBox/styles/panel = SubResource("StyleBoxFlat_e9fa3")
-UiTokensStamp/constants/stamp = 47
+UiTokensStamp/constants/stamp = 48
 VScrollBar/styles/grabber = SubResource("StyleBoxFlat_1c24c")
 VScrollBar/styles/grabber_highlight = SubResource("StyleBoxFlat_85a39")
 VScrollBar/styles/grabber_pressed = SubResource("StyleBoxFlat_85a39_2")

@@ -153,7 +153,8 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 - Zengin ipucu (`_make_custom_tooltip`): `CardTip.panel` (kart; yalnız adı, `BoardRow.CardName`), `CapacityView._over_tip` (taşan aşama; `TipBox`); kök `SprintUiShared.tip_column` (menajer temalı, `D_W_TIP`),
   ↳ yeni varyasyon yok: `TipTitle`, `MetaMuted`, `ValueTextStrong`, `Caption(+Strong, Primary)`; aşama efor kutusu `StagePaint` çubuğu ve etiketidir (`D_NEED_BOX`).
   ↳ kök `SprintUiShared.TipColumn`: Godot pencereyi satır kıran yazılar genişliğini bilmeden ölçer; asgari boy değiştikçe pencere içeriğin boyuna iner, imlecin altına konur.
-- Sol sütunun varyasyonları yalnız koyu temadadır (master taşımaz, `theme_check` ikisinde geçer): `RequestRow` (+`Hover`, `Planned`), `ModuleRow` (+`Hover`, `Open`), `ModuleCandidate`, `DueChip`, `DueChipSoon`, `MoreLink`
+- Sol sütunun varyasyonları yalnız koyu temadadır (master taşımaz, `theme_check` ikisinde geçer): `RequestRow` (+`Hover`, `Planned`), `ModuleRow` (+`Hover`, `Open`),
+  ↳ `ModuleCandidate` (+`Hover`: tıkı kendisi alan araştırma bekleyen kart), `DueChip`, `DueChipSoon`, `MoreLink`
   ↳ `MonoBox` HR ve posta ile ortaktır.
 - Tema yolu: `UiTokens.MENAJER_THEME` `ui_tokens.gd:450`; proje teması `project.godot` `theme/custom` = `master_theme.tres`; Menajer teması taşınan her alt ağacın köküne ve her CanvasLayer köküne elle atanır
 - Boyut merdiveni: `SIZE_MICRO 9 … SIZE_DISPLAY 22` `ui_tokens.gd:196-203`, editorial `SIZE_ED_*` `:208-212`, koyu `D_FS_12 … D_FS_40` `:603-614`; term sheet sütunu `D_STAGE` `:817`

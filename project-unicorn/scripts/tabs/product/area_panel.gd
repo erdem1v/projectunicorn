@@ -185,7 +185,7 @@ func _planned_chip(r: Dictionary) -> HBoxContainer:
 	chip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	chip.tooltip_text = tr("PRODUCT_REQUEST_PLANNED_TIP")
 	chip.add_child(UiFactory.make_glyph(SprintUiShared.CHECK, UiTokens.D_ICON_TAG, UiTokens.D_ST_TEST))
-	chip.add_child(SprintUiShared.label(String(r.due_text), &"CaptionName", UiTokens.D_INK_3))
+	chip.add_child(SprintUiShared.label(Fmt.cap_first(String(r.due_text)), &"CaptionName", UiTokens.D_INK_3))
 	return chip
 
 
@@ -262,7 +262,7 @@ func _candidate(c: Dictionary) -> PanelContainer:
 
 
 ## Modülün araştırma bekleyen sıradaki kartı: efor ve şerit yok, "+" yerinde Ar-Ge'nin ikonu, ad soluk; ipucu araştırılacak düğümü
-## söyler, tık Ar-Ge'yi o düğümde açar.
+## söyler, tık Ar-Ge'yi o düğümde açar; üstüne gelince kenarı talep satırı gibi aydınlanır.
 func _waiting_card(w: Dictionary) -> PanelContainer:
 	var card := PanelContainer.new()
 	card.theme_type_variation = &"ModuleCandidate"
@@ -275,6 +275,7 @@ func _waiting_card(w: Dictionary) -> PanelContainer:
 	HRUiShared.set_mouse_ignore(top)
 	card.tooltip_text = String(w.reason)
 	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_hover(card, card.theme_type_variation, &"ModuleCandidateHover")
 	card.gui_input.connect(func(ev: InputEvent) -> void:
 		if UiFactory.is_left_click(ev):
 			action.emit("rnd", {"node": String(w.node)}))

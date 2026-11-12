@@ -431,7 +431,8 @@ static func flag(text: String, warn := false) -> PanelContainer:
 	return chip
 
 
-## Söz tarihinin çipi: kum saati ve "bu çeyrek", "gelecek çeyrek" ya da "{q}. çeyrek" (`glyph` "" ise yalnız yazı: sprint damgası).
+## Söz tarihinin çipi: kum saati ve "Bu çeyrek", "Gelecek çeyrek" ya da "{q}. çeyrek" (`glyph` "" ise yalnız yazı: sprint damgası).
+## Yazının ilk harfi çipte büyür (`Fmt.cap_first`): CSV okunuşu küçük harflidir, ipucunda cümle içinde okunur ("söz: bu çeyrek").
 ## Hâlleri aynı boydadır; yakın olan yalnız daha açık mürekkep ve kenarla ayrılır.
 static func due_chip(text: String, soon := false, glyph := HOURGLASS) -> PanelContainer:
 	var chip := PanelContainer.new()
@@ -442,7 +443,7 @@ static func due_chip(text: String, soon := false, glyph := HOURGLASS) -> PanelCo
 	var row := box(UiTokens.SPACE_XS)
 	if glyph != "":
 		row.add_child(UiFactory.make_glyph(glyph, UiTokens.D_ICON_TAG, ink))
-	row.add_child(label(text, &"CaptionName", ink))
+	row.add_child(label(Fmt.cap_first(text), &"CaptionName", ink))
 	chip.add_child(row)
 	return chip
 

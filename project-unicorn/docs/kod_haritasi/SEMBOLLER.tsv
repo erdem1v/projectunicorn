@@ -62,7 +62,7 @@ _add_desks	func	scripts/tabs/hr/hr_atlas_modal.gd:47	hr_atlas_modal.gd
 _add_group	func	scripts/tabs/hr_tab.gd:398	hr_tab.gd
 _add_hard_mode	func	scripts/modals/ending_scene.gd:404	EndingScene
 _add_history	func	scripts/tabs/product/area_panel.gd:97	AreaPanel
-_add_key	func	scripts/tabs/product/area_panel.gd:301	AreaPanel
+_add_key	func	scripts/tabs/product/area_panel.gd:302	AreaPanel
 _add_move_penalty	func	scripts/systems/vc_pitch_system.gd:845	VCPitchSystem
 _add_profit_progress	func	scripts/tabs/finance/finance_ozet_view.gd:230	FinanceOzetView
 _add_promise	func	scripts/tabs/sales_tab.gd:597	sales_tab.gd
@@ -126,7 +126,7 @@ _approved_ahead	func	scripts/systems/sprint_catalog.gd:638	SprintCatalog
 _arc	func	scripts/tabs/piyasa_tab.gd:545	piyasa_tab.gd
 _arc	func	scripts/ui/components/logo_emblem.gd:126	LogoEmblem
 _arc_context	func	scripts/events/core/engine.gd:211	EvEngine
-_archivo	func	scripts/theme/build_theme.gd:1501	build_theme.gd
+_archivo	func	scripts/theme/build_theme.gd:1502	build_theme.gd
 _arcs	var	scripts/events/catalog/catalog.gd:24	EvCatalog
 _area	func	scripts/ui/components/cash_curve.gd:210	CashCurve
 _area	func	scripts/ui/components/window_layer.gd:199	window_layer.gd
@@ -295,7 +295,7 @@ _box	var	scripts/tabs/hr/hr_panel.gd:15	hr_panel.gd
 _box	func	scripts/tabs/product/card_tip.gd:46	CardTip
 _box	func	scripts/tabs/product/sprint_foot.gd:143	SprintFoot
 _box	func	scripts/tabs/product/sprint_next.gd:135	SprintNext
-_box	func	scripts/theme/build_theme.gd:1545	build_theme.gd
+_box	func	scripts/theme/build_theme.gd:1546	build_theme.gd
 _box	func	scripts/ui/components/build_bar.gd:102	build_bar.gd
 _box	func	scripts/ui/office/office_body.gd:230	OfficeBody
 _box	func	scripts/ui/office/office_layout.gd:97	OfficeLayout
@@ -1079,7 +1079,7 @@ _close_slot	var	scripts/ui/components/window_frame.gd:20	window_frame.gd
 _close_term_table	func	scripts/main/main.gd:6015	main.gd
 _close_top	var	scripts/ui/components/window_frame.gd:21	window_frame.gd
 _closed	func	scripts/tabs/hr/hr_assignments.gd:144	HRAssignments
-_closed_tip	func	scripts/tabs/product/area_panel.gd:323	AreaPanel
+_closed_tip	func	scripts/tabs/product/area_panel.gd:324	AreaPanel
 _closes_rival_gap	func	scripts/systems/sprint_catalog.gd:761	SprintCatalog
 _closing	var	scripts/tabs/product_tab.gd:29	product_tab.gd
 _closing_carry	func	scripts/systems/sprint_system.gd:331	SprintSystem
@@ -1115,7 +1115,7 @@ _commit	var	scripts/modals/hr_action_modal.gd:22	hr_action_modal.gd
 _commit	func	scripts/onboarding/onboarding_flow.gd:192	onboarding_flow.gd
 _commit	func	scripts/tabs/hr/hr_ledger.gd:438	HRLedger
 _commit_btn	var	scripts/modals/hr_action_modal.gd:30	hr_action_modal.gd
-_commit_button	func	scripts/theme/build_theme.gd:1641	build_theme.gd
+_commit_button	func	scripts/theme/build_theme.gd:1642	build_theme.gd
 _commit_key	var	scripts/modals/hr_action_modal.gd:23	hr_action_modal.gd
 _committing	var	scripts/onboarding/onboarding_flow.gd:55	onboarding_flow.gd
 _common	func	scripts/systems/endings_copy.gd:364	EndingsCopy
@@ -1160,7 +1160,7 @@ _conviction_series_a	func	scripts/systems/vc_pitch_system.gd:161	VCPitchSystem
 _cooldown_of	func	scripts/events/core/latches.gd:82	EvLatches
 _copies	func	scripts/systems/sprint_system.gd:999	SprintSystem
 _copy	func	scripts/autoload/investor_registry.gd:143	InvestorRegistry
-_copy_dark	func	scripts/theme/build_theme.gd:1315	build_theme.gd
+_copy_dark	func	scripts/theme/build_theme.gd:1316	build_theme.gd
 _copyright	func	scripts/debug/write_licenses.gd:42	write_licenses.gd
 _core_only	var	scripts/debug/run_probe.gd:297	RunProbe
 _corner_disc	func	scripts/tabs/hr/hr_atlas_modal.gd:229	hr_atlas_modal.gd
@@ -1207,8 +1207,8 @@ _customers_lost	func	scripts/systems/vc_pitch_system.gd:521	VCPitchSystem
 _cut_disc	func	tools/people/portrait_baker.gd:177	portrait_baker.gd
 _d	var	scripts/ui/components/cash_curve.gd:32	CashCurve
 _damage_residue	var	scripts/systems/support_system.gd:94	SupportSystem
-_dark_box	func	scripts/theme/build_theme.gd:1367	build_theme.gd
-_dark_font	func	scripts/theme/build_theme.gd:1492	build_theme.gd
+_dark_box	func	scripts/theme/build_theme.gd:1368	build_theme.gd
+_dark_font	func	scripts/theme/build_theme.gd:1493	build_theme.gd
 _dark_symbols	var	scripts/theme/build_theme.gd:25	build_theme.gd
 _dash	func	scripts/ui/components/cash_curve.gd:266	CashCurve
 _dashed_note	func	scripts/tabs/hunt_tab.gd:415	hunt_tab.gd
@@ -1227,7 +1227,7 @@ _dbg_close_request	func	scripts/main/main.gd:6041	main.gd
 _dbg_finish_run	func	scripts/main/main.gd:6059	main.gd
 _dbg_menu_digest	func	scripts/main/main.gd:6064	main.gd
 _dbg_onb_random_x20	func	scripts/main/main.gd:6046	main.gd
-_dbtn	func	scripts/theme/build_theme.gd:1452	build_theme.gd
+_dbtn	func	scripts/theme/build_theme.gd:1453	build_theme.gd
 _deal	var	scripts/ui/meeting/meeting_ruler.gd:20	MeetingRuler
 _deal	func	scripts/ui/meeting/sales_meeting_adapter.gd:305	SalesMeetingAdapter
 _deal_line	func	scripts/tabs/sales_tab.gd:808	sales_tab.gd
@@ -1303,7 +1303,7 @@ _do_hire	func	scripts/tabs/hr/hr_atlas_modal.gd:469	hr_atlas_modal.gd
 _do_save	func	scripts/modals/save_load_modal.gd:228	save_load_modal.gd
 _do_sign	func	scripts/modals/term_sheet_table_scene.gd:399	TermSheetTableScene
 _do_walk	func	scripts/modals/term_sheet_table_scene.gd:420	TermSheetTableScene
-_doc	func	scripts/theme/build_theme.gd:1434	build_theme.gd
+_doc	func	scripts/theme/build_theme.gd:1435	build_theme.gd
 _dock	var	scripts/ui/meeting/meeting_panel.gd:67	MeetingPanel
 _doing	func	scripts/ui/office/office_people.gd:499	OfficePeople
 _domain	func	scripts/systems/term_sheet_table_system.gd:506	TermSheetTableSystem
@@ -1554,7 +1554,7 @@ _fit	var	scripts/systems/sales_meeting_system.gd:44	SalesMeetingSystem
 _fit	func	scripts/tabs/product/board_row.gd:153	BoardRow
 _fit	func	scripts/tabs/product/sprint_next.gd:49	SprintNext.FaceCell
 _fit	func	scripts/tabs/product/sprint_ui_shared.gd:149	SprintUiShared.TipColumn
-_fit	func	scripts/theme/build_theme.gd:1411	build_theme.gd
+_fit	func	scripts/theme/build_theme.gd:1412	build_theme.gd
 _fit	func	scripts/ui/components/window_layer.gd:222	window_layer.gd
 _fit	func	scripts/ui/office/office_map_card.gd:160	office_map_card.gd
 _fit	func	scripts/ui/office/office_view.gd:213	office_view.gd
@@ -1575,7 +1575,7 @@ _flag_value	func	scripts/main/main.gd:184	main.gd
 _flags	var	scripts/events/core/flags.gd:19	EvFlags
 _flags	func	scripts/tabs/product/product_model.gd:870	ProductModel
 _flat	func	scripts/debug/office_crowd_probe.gd:296	OfficeCrowdProbe
-_flat	func	scripts/theme/build_theme.gd:1393	build_theme.gd
+_flat	func	scripts/theme/build_theme.gd:1394	build_theme.gd
 _floor	func	scripts/ui/office/office_camera.gd:187	OfficeCamera
 _floor_empty_streak	var	scripts/events/core/engine.gd:50	EvEngine
 _floor_empty_total	var	scripts/events/core/engine.gd:48	EvEngine
@@ -1793,7 +1793,7 @@ _hour_label	func	scripts/modals/work_hours_modal.gd:139	work_hours_modal.gd
 _hours	var	scripts/tabs/hr_tab.gd:41	hr_tab.gd
 _hours	func	scripts/ui/office/office_people.gd:561	OfficePeople
 _hours_cell	func	scripts/modals/work_hours_modal.gd:281	work_hours_modal.gd
-_hover	func	scripts/tabs/product/area_panel.gd:365	AreaPanel
+_hover	func	scripts/tabs/product/area_panel.gd:366	AreaPanel
 _hover	func	scripts/tabs/product/board_row.gd:106	BoardRow
 _hover	func	scripts/tabs/product/capacity_view.gd:283	CapacityView
 _hover	var	scripts/ui/components/cash_curve.gd:37	CashCurve
@@ -2028,7 +2028,7 @@ _layout	var	scripts/ui/office/meeting_cast.gd:30	MeetingCast
 _layout	var	scripts/ui/office/office_city.gd:72	OfficeCity
 _layout	var	scripts/ui/office/office_lighting.gd:73	OfficeLighting
 _layout	var	scripts/ui/office/office_people.gd:54	OfficePeople
-_lbl	func	scripts/theme/build_theme.gd:1572	build_theme.gd
+_lbl	func	scripts/theme/build_theme.gd:1573	build_theme.gd
 _lead	func	scripts/tabs/product/product_model.gd:1123	ProductModel
 _lead_actions	func	scripts/tabs/sales_tab.gd:394	sales_tab.gd
 _lead_area	func	scripts/systems/sprint_catalog.gd:867	SprintCatalog
@@ -2054,7 +2054,7 @@ _league	var	scripts/tabs/finance/finance_ozet_view.gd:53	FinanceOzetView
 _league_card	var	scripts/tabs/finance/finance_ozet_view.gd:52	FinanceOzetView
 _lean	var	scripts/ui/office/office_person.gd:235	OfficePerson
 _lean_eased	var	scripts/ui/office/office_person.gd:246	OfficePerson
-_learn	func	scripts/tabs/product/area_panel.gd:331	AreaPanel
+_learn	func	scripts/tabs/product/area_panel.gd:332	AreaPanel
 _leave	func	scripts/modals/system_menu_modal.gd:74	system_menu_modal.gd
 _leave	func	scripts/systems/sales_finalizer.gd:52	SalesFinalizer
 _leave	func	scripts/ui/office/office_person.gd:790	OfficePerson
@@ -2096,7 +2096,7 @@ _line	func	scripts/tabs/rnd/rnd_tree_view.gd:387	RnDTreeView
 _line	var	scripts/tabs/rnd_tab.gd:42	rnd_tab.gd
 _line	func	scripts/tabs/sales_tab.gd:800	sales_tab.gd
 _line	var	scripts/ui/office/meeting_invite.gd:34	MeetingInvite
-_line_h	func	scripts/theme/build_theme.gd:1418	build_theme.gd
+_line_h	func	scripts/theme/build_theme.gd:1419	build_theme.gd
 _line_is_data	func	scripts/debug/endgame_smoke.gd:10190	EndgameSmoke
 _line_key	var	scripts/systems/term_sheet_table_system.gd:141	TermSheetTableSystem
 _line_name	func	scripts/events/present/chips.gd:669	EvChips
@@ -2295,7 +2295,7 @@ _min_cash_pre_seed	var	scripts/debug/run_probe.gd:324	RunProbe
 _minute	var	scripts/ui/menu_backdrop.gd:26	menu_backdrop.gd
 _miss	func	scripts/systems/sprint_bugs.gd:155	SprintBugs
 _mix	func	scripts/systems/hr_candidate_generator.gd:233	HRCandidateGenerator
-_mkfont	func	scripts/theme/build_theme.gd:1484	build_theme.gd
+_mkfont	func	scripts/theme/build_theme.gd:1485	build_theme.gd
 _mocks	var	scripts/events/seams/seams.gd:25	EvSeams
 _modal_layer	func	scripts/main/main.gd:5410	main.gd
 _mode	var	scripts/debug/run_probe.gd:285	RunProbe
@@ -2359,7 +2359,7 @@ _mute_unfocused	var	scripts/autoload/audio_manager.gd:28	AudioManager
 _mvp	func	scripts/tabs/product/sprint_head.gd:68	SprintHead
 _mvp_rule	func	scripts/tabs/product/sprint_panel.gd:303	SprintPanel
 _n	var	scripts/debug/office_pan_probe.gd:49	office_pan_probe.gd
-_name	func	scripts/tabs/product/area_panel.gd:358	AreaPanel
+_name	func	scripts/tabs/product/area_panel.gd:359	AreaPanel
 _name	func	scripts/tabs/product/sprint_next.gd:227	SprintNext
 _name	var	scripts/tabs/product/type_picker.gd:16	TypePicker
 _name	var	scripts/ui/meeting/meeting_panel.gd:72	MeetingPanel
@@ -2399,7 +2399,7 @@ _night_gate	var	scripts/autoload/time_manager.gd:68	TimeManager
 _night_max_wait_s	var	scripts/autoload/time_manager.gd:69	TimeManager
 _night_s	var	scripts/debug/office_crowd_probe.gd:39	OfficeCrowdProbe
 _night_wait_s	var	scripts/autoload/time_manager.gd:70	TimeManager
-_no_focus	func	scripts/theme/build_theme.gd:1555	build_theme.gd
+_no_focus	func	scripts/theme/build_theme.gd:1556	build_theme.gd
 _no_pm	func	scripts/tabs/product/sprint_next.gd:117	SprintNext
 _no_stop	var	scripts/debug/run_probe.gd:296	RunProbe
 _no_target	func	scripts/events/core/effects.gd:1093	EvEffects
@@ -2461,8 +2461,8 @@ _offset	var	scripts/ui/office/office_camera.gd:37	OfficeCamera
 _ok	func	scripts/events/tools/engine_probe.gd:38	EvProbe
 _on_action	func	scripts/tabs/product_tab.gd:288	product_tab.gd
 _on_action_bindings	func	scripts/debug/endgame_smoke.gd:28655	EndgameSmoke
-_on_add_hover	func	scripts/tabs/product/area_panel.gd:344	AreaPanel
-_on_add_pressed	func	scripts/tabs/product/area_panel.gd:338	AreaPanel
+_on_add_hover	func	scripts/tabs/product/area_panel.gd:345	AreaPanel
+_on_add_pressed	func	scripts/tabs/product/area_panel.gd:339	AreaPanel
 _on_advisory	func	scripts/tabs/hunt_tab.gd:91	hunt_tab.gd
 _on_apply	func	scripts/modals/work_hours_modal.gd:489	work_hours_modal.gd
 _on_assign	func	scripts/ui/components/research_bar.gd:190	research_bar.gd
@@ -2691,7 +2691,7 @@ _pace	func	scripts/ui/office/office_people.gd:589	OfficePeople
 _paced	func	scripts/ui/office/office_person.gd:1097	OfficePerson
 _pad	func	scripts/tabs/hr/hr_ledger.gd:191	HRLedger
 _pad	var	scripts/tabs/hr/hr_panel.gd:17	hr_panel.gd
-_pad_of	func	scripts/theme/build_theme.gd:1422	build_theme.gd
+_pad_of	func	scripts/theme/build_theme.gd:1423	build_theme.gd
 _pages	var	scripts/tabs/finance_tab.gd:19	finance_tab.gd
 _paid	var	scripts/systems/rnd_system.gd:44	RnDSystem
 _paint	func	scripts/modals/hr_action_modal.gd:161	hr_action_modal.gd
@@ -2735,7 +2735,7 @@ _pane	var	scripts/tabs/rnd/rnd_history.gd:16	rnd_history.gd
 _panel	var	scripts/modals/confirm_modal.gd:18	confirm_modal.gd
 _panel	var	scripts/modals/save_load_modal.gd:30	save_load_modal.gd
 _panel	var	scripts/tabs/hr/hr_popover.gd:18	HRPopover
-_panel	func	scripts/theme/build_theme.gd:1579	build_theme.gd
+_panel	func	scripts/theme/build_theme.gd:1580	build_theme.gd
 _panes	var	scripts/ui/office/office_lighting.gd:77	OfficeLighting
 _paper_asked	func	scripts/debug/sprint_probe.gd:284	sprint_probe.gd
 _paper_bar	func	scripts/tabs/events/mail_pane.gd:508	mail_pane.gd
@@ -2841,7 +2841,7 @@ _pick_type	func	scripts/tabs/product/type_picker.gd:74	TypePicker
 _picker_view	var	scripts/tabs/product_tab.gd:45	product_tab.gd
 _picks	var	scripts/debug/run_probe.gd:281	RunProbe
 _pill	var	scripts/tabs/product/sprint_board.gd:28	SprintBoard
-_pin	func	scripts/theme/build_theme.gd:1427	build_theme.gd
+_pin	func	scripts/theme/build_theme.gd:1428	build_theme.gd
 _pin	var	scripts/ui/office/office_city.gd:84	OfficeCity
 _pin_at	var	scripts/ui/office/office_city.gd:86	OfficeCity
 _pin_hit	var	scripts/ui/office/office_city.gd:85	OfficeCity
@@ -3144,7 +3144,7 @@ _rebuild	func	scripts/tabs/rnd/rnd_detail_panel.gd:69	RnDDetailPanel
 _rebuild	func	scripts/ui/components/window_layer.gd:156	window_layer.gd
 _rebuild_controls	func	scripts/ui/office/office_city.gd:316	OfficeCity
 _rebuild_queued	var	scripts/tabs/product_tab.gd:30	product_tab.gd
-_recolor	func	scripts/theme/build_theme.gd:1382	build_theme.gd
+_recolor	func	scripts/theme/build_theme.gd:1383	build_theme.gd
 _record	func	scripts/events/present/tempo.gd:233	EvTempo
 _record	func	scripts/tabs/events/mail_pane.gd:757	mail_pane.gd
 _recover	func	scripts/systems/b2b_sales_system.gd:538	B2BSalesSystem
@@ -3283,7 +3283,7 @@ _reveal	var	scripts/tabs/piyasa_tab.gd:41	piyasa_tab.gd
 _reveal	func	scripts/ui/meeting/meeting_panel.gd:446	MeetingPanel
 _reveal_children	func	scripts/systems/rnd_system.gd:475	RnDSystem
 _reveal_open	var	scripts/tabs/product_tab.gd:34	product_tab.gd
-_rich_fonts	func	scripts/theme/build_theme.gd:1584	build_theme.gd
+_rich_fonts	func	scripts/theme/build_theme.gd:1585	build_theme.gd
 _right	var	scripts/tabs/product/quarter_view.gd:18	QuarterView
 _right	var	scripts/tabs/sales_tab.gd:45	sales_tab.gd
 _right	var	scripts/ui/components/cash_curve.gd:36	CashCurve
@@ -3362,7 +3362,7 @@ _rows_for	func	scripts/modals/training_modal.gd:107	training_modal.gd
 _rule	func	scripts/modals/ending_scene.gd:208	EndingScene
 _rule	func	scripts/modals/work_hours_modal.gd:332	work_hours_modal.gd
 _rule	func	scripts/systems/hr_actions.gd:320	HRActions
-_rule	func	scripts/theme/build_theme.gd:1559	build_theme.gd
+_rule	func	scripts/theme/build_theme.gd:1560	build_theme.gd
 _ruled	func	scripts/tabs/hr/hr_ledger.gd:201	HRLedger
 _ruler	var	scripts/ui/meeting/meeting_panel.gd:90	MeetingPanel
 _run	func	scripts/events/core/effects.gd:154	EvEffects
@@ -3427,7 +3427,7 @@ _same_crew	func	scripts/systems/sprint_system.gd:1620	SprintSystem
 _samples	func	scripts/debug/kit_probe.gd:222	kit_probe.gd
 _satisfaction_row	func	scripts/tabs/sales_tab.gd:624	sales_tab.gd
 _save	func	scripts/autoload/settings.gd:166	Settings
-_save	func	scripts/theme/build_theme.gd:1509	build_theme.gd
+_save	func	scripts/theme/build_theme.gd:1510	build_theme.gd
 _save_and	func	scripts/modals/system_menu_modal.gd:90	system_menu_modal.gd
 _save_draft	func	scripts/tabs/product/type_picker.gd:81	TypePicker
 _save_fingerprint	func	scripts/debug/endgame_smoke.gd:10302	EndgameSmoke
@@ -3582,7 +3582,7 @@ _server_note	func	scripts/tabs/product/product_model.gd:1030	ProductModel
 _server_policy	var	scripts/debug/run_probe.gd:303	RunProbe
 _set	var	scripts/onboarding/steps/company_step.gd:15	company_step.gd
 _set_act	func	scripts/ui/office/office_person.gd:1020	OfficePerson
-_set_add	func	scripts/tabs/product/area_panel.gd:316	AreaPanel
+_set_add	func	scripts/tabs/product/area_panel.gd:317	AreaPanel
 _set_area_tiers	func	scripts/debug/endgame_smoke.gd:9145	EndgameSmoke
 _set_aside_foot	func	scripts/tabs/events/mail_pane.gd:547	mail_pane.gd
 _set_assign_open	func	scripts/tabs/rnd/rnd_detail_panel.gd:270	RnDDetailPanel
@@ -3607,14 +3607,14 @@ _settle	func	scripts/ui/office/office_person.gd:759	OfficePerson
 _settle_decision	func	scripts/systems/sprint_system.gd:1540	SprintSystem
 _settle_gate	func	scripts/main/main.gd:5464	main.gd
 _settle_head	func	scripts/ui/meeting/meeting_panel.gd:475	MeetingPanel
-_settle_scroll	func	scripts/tabs/product/sprint_ui_shared.gd:497	SprintUiShared
+_settle_scroll	func	scripts/tabs/product/sprint_ui_shared.gd:498	SprintUiShared
 _settled	func	scripts/onboarding/onboarding_flow.gd:149	onboarding_flow.gd
 _sfx	var	scripts/autoload/audio_manager.gd:27	AudioManager
 _sfx_bus	var	scripts/autoload/audio_manager.gd:23	AudioManager
 _sfx_slider	var	scripts/modals/settings_modal.gd:91	settings_modal.gd
 _shadow	func	scripts/debug/office_pan_probe.gd:392	office_pan_probe.gd
 _shadow	func	scripts/tabs/product/board_row.gd:529	BoardRow
-_shadow	func	scripts/theme/build_theme.gd:1442	build_theme.gd
+_shadow	func	scripts/theme/build_theme.gd:1443	build_theme.gd
 _shape	func	scripts/ui/office/office_body.gd:93	OfficeBody
 _shape_shot_account	func	scripts/main/main.gd:1035	main.gd
 _shape_shot_employee	func	scripts/main/main.gd:1065	main.gd
@@ -3683,7 +3683,7 @@ _shown	var	scripts/tabs/events_tab.gd:27	events_tab.gd
 _shows	var	scripts/ui/components/cash_curve.gd:35	CashCurve
 _shuffled	func	scripts/ui/components/logo_emblem.gd:85	LogoEmblem
 _sick_leave_steps	func	scripts/debug/endgame_smoke.gd:8087	EndgameSmoke
-_sides_box	func	scripts/theme/build_theme.gd:1551	build_theme.gd
+_sides_box	func	scripts/theme/build_theme.gd:1552	build_theme.gd
 _sign	var	scripts/modals/term_sheet_table_scene.gd:45	TermSheetTableScene
 _sign_book	func	scripts/debug/sprint_probe.gd:404	sprint_probe.gd
 _sign_extra	func	scripts/systems/vc_pitch_system.gd:595	VCPitchSystem
@@ -3768,7 +3768,7 @@ _speaker	func	scripts/ui/meeting/vc_meeting_adapter.gd:107	VcMeetingAdapter
 _spec	var	scripts/events/tools/plausibility_main.gd:26	plausibility_main.gd
 _spec	var	scripts/ui/office/meeting_invite.gd:41	MeetingInvite
 _speed	func	scripts/ui/office/office_people.gd:583	OfficePeople
-_speed_button	func	scripts/theme/build_theme.gd:1621	build_theme.gd
+_speed_button	func	scripts/theme/build_theme.gd:1622	build_theme.gd
 _speed_refused	func	scripts/main/main.gd:196	main.gd
 _spinning	var	scripts/modals/term_sheet_table_scene.gd:47	TermSheetTableScene
 _split	var	scripts/tabs/rnd/rnd_history.gd:13	rnd_history.gd
@@ -3813,7 +3813,7 @@ _stall_best	var	scripts/ui/office/office_person.gd:215	OfficePerson
 _stamp	func	scripts/events/core/condition.gd:183	EvCondition
 _stamp_audit	var	scripts/debug/endgame_smoke.gd:6524	EndgameSmoke
 _stamp_each	func	scripts/autoload/save_manager.gd:797	SaveManager
-_stamp_ids	func	scripts/theme/build_theme.gd:1516	build_theme.gd
+_stamp_ids	func	scripts/theme/build_theme.gd:1517	build_theme.gd
 _stamp_keys	func	scripts/autoload/save_manager.gd:789	SaveManager
 _stamp_look	func	scripts/autoload/character_registry.gd:521	CharacterRegistry
 _stamp_urgent	func	scripts/debug/endgame_smoke.gd:6591	EndgameSmoke
@@ -3842,7 +3842,7 @@ _state_fingerprint	func	scripts/debug/run_probe.gd:2047	RunProbe
 _state_machine	func	scripts/ui/office/office_person.gd:1042	OfficePerson
 _state_print	func	scripts/debug/endgame_smoke.gd:10311	EndgameSmoke
 _states	var	scripts/systems/rnd_system.gd:40	RnDSystem
-_states	func	scripts/theme/build_theme.gd:1567	build_theme.gd
+_states	func	scripts/theme/build_theme.gd:1568	build_theme.gd
 _static_body	func	scripts/tabs/events/mail_pane.gd:601	mail_pane.gd
 _station_energy	var	scripts/ui/office/office_lighting.gd:76	OfficeLighting
 _stations	var	scripts/ui/office/office_lighting.gd:75	OfficeLighting
@@ -3889,7 +3889,7 @@ _streams	var	scripts/systems/rng_streams.gd:24	RngStreams
 _stride	func	scripts/ui/office/office_person.gd:881	OfficePerson
 _strings	func	scripts/debug/glyph_audit.gd:80	glyph_audit.gd
 _strings_in	func	scripts/events/tools/lint.gd:1224	EvLint
-_strip	func	scripts/tabs/product/area_panel.gd:285	AreaPanel
+_strip	func	scripts/tabs/product/area_panel.gd:286	AreaPanel
 _strip	var	scripts/ui/components/window_frame.gd:19	window_frame.gd
 _strips	var	scripts/tabs/hr_tab.gd:43	hr_tab.gd
 _structure_key	var	scripts/tabs/hr_tab.gd:48	hr_tab.gd
@@ -3941,7 +3941,7 @@ _t	func	scripts/tabs/product/product_model.gd:1157	ProductModel
 _t	var	scripts/ui/office/office_person.gd:209	OfficePerson
 _t	func	scripts/util/fmt.gd:17	Fmt
 _tab	var	scripts/ui/components/research_bar.gd:30	research_bar.gd
-_tab_button	func	scripts/theme/build_theme.gd:1600	build_theme.gd
+_tab_button	func	scripts/theme/build_theme.gd:1601	build_theme.gd
 _table	var	scripts/systems/graphics_settings.gd:38	graphics_settings.gd
 _table_from_card	var	scripts/main/main.gd:68	main.gd
 _table_open	var	scripts/tabs/hunt_tab.gd:31	hunt_tab.gd
@@ -4044,7 +4044,7 @@ _toggle_goals	func	scripts/ui/components/left_tabs.gd:297	left_tabs.gd
 _toggle_group	func	scripts/tabs/hr_tab.gd:432	hr_tab.gd
 _toggle_trait	func	scripts/onboarding/steps/origin_traits_step.gd:142	origin_traits_step.gd
 _token_rows	func	scripts/theme/theme_check.gd:230	theme_check.gd
-_tone	func	scripts/theme/build_theme.gd:1354	build_theme.gd
+_tone	func	scripts/theme/build_theme.gd:1355	build_theme.gd
 _tools	func	scripts/onboarding/steps/step_base.gd:64	OnboardingStep
 _tooltip	var	scripts/ui/office/office_view.gd:28	office_view.gd
 _tooltip_label	var	scripts/ui/office/office_view.gd:29	office_view.gd
@@ -4151,7 +4151,7 @@ _value	var	scripts/modals/hr_action_modal.gd:27	hr_action_modal.gd
 _value	func	scripts/systems/product_quality.gd:306	ProductQuality
 _value_row	func	scripts/modals/hr_action_modal.gd:200	hr_action_modal.gd
 _variant	var	scripts/events/tools/plausibility.gd:84	plausibility.gd
-_variation	func	scripts/theme/build_theme.gd:1470	build_theme.gd
+_variation	func	scripts/theme/build_theme.gd:1471	build_theme.gd
 _vc	func	scripts/systems/vc_pitch_system.gd:1194	VCPitchSystem
 _vc_booked	var	scripts/debug/run_probe.gd:340	RunProbe
 _vc_capture	func	scripts/debug/run_probe.gd:2023	RunProbe
@@ -4387,8 +4387,8 @@ add_b2c_audience	func	scripts/systems/sales_system.gd:298	SalesSystem
 add_bugs	func	scripts/systems/product_state.gd:202	ProductState
 add_experience	func	scripts/autoload/character_registry.gd:122	CharacterRegistry
 add_founder_meeting	func	scripts/autoload/game_state.gd:434	GameState
-add_key	func	scripts/tabs/product/sprint_ui_shared.gd:456	SprintUiShared
-add_look	func	scripts/tabs/product/sprint_ui_shared.gd:451	SprintUiShared
+add_key	func	scripts/tabs/product/sprint_ui_shared.gd:457	SprintUiShared
+add_look	func	scripts/tabs/product/sprint_ui_shared.gd:452	SprintUiShared
 add_productivity_mod	func	scripts/autoload/character_registry.gd:572	CharacterRegistry
 add_productivity_mod	func	scripts/systems/hr_system.gd:426	HRSystem
 add_strain	func	scripts/systems/vc_pitch_system.gd:262	VCPitchSystem
@@ -4766,12 +4766,12 @@ BUG	const	scripts/tabs/product/sprint_ui_shared.gd:16	SprintUiShared
 bug_confirmed	signal	scripts/autoload/event_bus.gd:150	EventBus
 BUG_DROP_DAY	const	scripts/systems/product_state.gd:22	ProductState
 BUG_LINE	const	scripts/debug/endgame_smoke.gd:808	EndgameSmoke
-bug_line	func	scripts/tabs/product/sprint_ui_shared.gd:539	SprintUiShared
+bug_line	func	scripts/tabs/product/sprint_ui_shared.gd:540	SprintUiShared
 bug_row_of	func	scripts/tabs/product/product_model.gd:233	ProductModel
 BUG_STREAK	const	scripts/systems/product_state.gd:20	ProductState
 bugs_free	var	scripts/systems/product_state.gd:223	ProductState
 bugs_part	func	scripts/systems/sprint_catalog.gd:453	SprintCatalog
-bugs_text	func	scripts/tabs/product/sprint_ui_shared.gd:519	SprintUiShared
+bugs_text	func	scripts/tabs/product/sprint_ui_shared.gd:520	SprintUiShared
 build	func	scripts/systems/endings_copy.gd:52	EndingsCopy
 build	func	scripts/systems/sprint_timeline.gd:39	SprintTimeline
 build	func	scripts/tabs/hr/hr_assignments.gd:38	HRAssignments
@@ -4799,7 +4799,7 @@ busiest_week	var	scripts/events/tools/harness.gd:65	EvHarness.Result
 BUST	const	scripts/onboarding/onboarding_flow.gd:28	onboarding_flow.gd
 busy	func	scripts/tabs/product/stage_paint.gd:56	StagePaint
 button	func	scripts/tabs/hr/hr_panel.gd:99	hr_panel.gd
-button	func	scripts/tabs/product/sprint_ui_shared.gd:507	SprintUiShared
+button	func	scripts/tabs/product/sprint_ui_shared.gd:508	SprintUiShared
 buyer	func	scripts/systems/sales_archetypes.gd:127	SalesArchetypes
 BUYER_FINANCE	const	scripts/systems/sales_archetypes.gd:39	SalesArchetypes
 buyer_of	func	scripts/systems/counterpart_system.gd:61	CounterpartSystem
@@ -5189,7 +5189,7 @@ cost_trait_ids	func	scripts/systems/hr_constants.gd:500	HRConstants
 costed	func	scripts/systems/product_state.gd:227	ProductState
 count	func	scripts/autoload/prospect_registry.gd:27	ProspectRegistry
 count	var	scripts/tabs/product/sprint_ui_shared.gd:41	SprintUiShared.Squares
-count	func	scripts/tabs/product/sprint_ui_shared.gd:562	SprintUiShared
+count	func	scripts/tabs/product/sprint_ui_shared.gd:563	SprintUiShared
 count	func	scripts/ui/office/meeting_cast.gd:137	MeetingCast
 count_active_by_role	func	scripts/autoload/character_registry.gd:357	CharacterRegistry
 count_active_developers	func	scripts/autoload/character_registry.gd:374	CharacterRegistry
@@ -5991,7 +5991,7 @@ DROPPED_CALL_GLYPH	const	scripts/main/main.gd:34	main.gd
 DT	const	scripts/theme/theme_check.gd:12	theme_check.gd
 due	func	scripts/systems/sprint_catalog.gd:296	SprintCatalog
 DUE_BUGS	const	scripts/debug/run_probe.gd:343	RunProbe
-due_chip	func	scripts/tabs/product/sprint_ui_shared.gd:436	SprintUiShared
+due_chip	func	scripts/tabs/product/sprint_ui_shared.gd:437	SprintUiShared
 DUE_HOLD	const	scripts/events/core/engine.gd:45	EvEngine
 due_sprint	var	scripts/data_models/promise.gd:19	Promise
 DURUST_DIFF	const	scripts/systems/pitch_constants.gd:48	PitchConstants
@@ -6878,7 +6878,7 @@ ids	func	scripts/systems/module_locks.gd:17	module_locks.gd
 ids	func	scripts/systems/sales_archetypes.gd:99	SalesArchetypes
 ignore_risk	func	scripts/systems/b2b_sales_system.gd:481	B2BSalesSystem
 ILIK_MIN	const	scripts/systems/pitch_constants.gd:10	PitchConstants
-impact_bits	func	scripts/tabs/product/sprint_ui_shared.gd:529	SprintUiShared
+impact_bits	func	scripts/tabs/product/sprint_ui_shared.gd:530	SprintUiShared
 implied_post_money	func	scripts/systems/term_sheet_table_system.gd:625	TermSheetTableSystem
 in_len	var	scripts/ui/office/office_actor.gd:74	OfficeActor
 in_office	func	scripts/systems/work_hours_system.gd:125	WorkHoursSystem
@@ -7102,7 +7102,7 @@ K0Check	class	scripts/debug/k0_check.gd:1	K0Check
 k_arge	func	scripts/systems/research_tree.gd:396	ResearchTree
 KEEP_BEGIN	const	scripts/events/tools/vocab_gen.gd:16	EvVocabGen
 KEEP_END	const	scripts/events/tools/vocab_gen.gd:17	EvVocabGen
-keep_scroll	func	scripts/tabs/product/sprint_ui_shared.gd:488	SprintUiShared
+keep_scroll	func	scripts/tabs/product/sprint_ui_shared.gd:489	SprintUiShared
 KEY	const	scripts/tabs/rnd_tab.gd:34	rnd_tab.gd
 KEY_ARRIVAL_DAY	const	scripts/systems/hr_search_system.gd:35	HRSearchSystem
 KEY_COLORBLIND	const	scripts/modals/settings_modal.gd:50	settings_modal.gd
@@ -7915,7 +7915,7 @@ open_paper	func	scripts/events/event_gate.gd:145	EventGate
 open_paper	func	scripts/tabs/events/mail_pane.gd:540	mail_pane.gd
 open_pitch_promise	func	scripts/systems/sales_ledger.gd:153	SalesLedger
 open_primary	func	scripts/ui/components/window_layer.gd:75	window_layer.gd
-open_product_area	func	scripts/tabs/product/sprint_ui_shared.gd:556	SprintUiShared
+open_product_area	func	scripts/tabs/product/sprint_ui_shared.gd:557	SprintUiShared
 open_request	func	scripts/systems/sprint_bridges.gd:66	SprintBridges
 open_requests	func	scripts/systems/sprint_catalog.gd:785	SprintCatalog
 OPEN_S	const	scripts/modals/term_sheet_table_scene.gd:19	TermSheetTableScene
@@ -9651,7 +9651,7 @@ SURFACE_ROW_TINT	const	scripts/theme/ui_tokens.gd:74	UiTokens
 SURFACE_SUNKEN	const	scripts/theme/ui_tokens.gd:71	UiTokens
 SURFACES	const	scripts/systems/people_parts.gd:16	PeopleParts
 SWEEP_HOURS	const	scripts/events/tools/harness.gd:43	EvHarness
-switch	func	scripts/tabs/product/sprint_ui_shared.gd:469	SprintUiShared
+switch	func	scripts/tabs/product/sprint_ui_shared.gd:470	SprintUiShared
 SYMBOL_FACE	const	scripts/theme/ui_tokens.gd:448	UiTokens
 sync	func	scripts/ui/components/gate_strip.gd:49	gate_strip.gd
 sync_desk	func	scripts/systems/mail_clock.gd:112	MailClock
