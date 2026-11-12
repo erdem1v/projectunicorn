@@ -2,7 +2,8 @@ extends VBoxContainer
 
 # The notice stack at the office's top right, under the build cards (BuildHUD says where they end): the inbox's
 # preview. Frank's latest line, in the run's first minute how the clock starts, the newest discovery not read yet,
-# then what waits in the inbox (papers, then reminders, in its order), at most MAX_CARDS cards with a +N badge on
+# then what waits in the inbox (papers, then reminders, in its order; a customer's reminder is not one: its state is
+# the inbox's row and the Sales portfolio's tag, envanter shell-06), at most MAX_CARDS cards with a +N badge on
 # the last for the rest. A row reads sender · subject · time left on one line; a subject too long for it goes under
 # its sender, as Frank's line does, and wraps across the card's width. A click opens it in the inbox. The decision on
 # screen is not a row: the top bar's gate slot is. Windows are later siblings of the office, and the stack hides
@@ -134,7 +135,8 @@ func _refresh(arrive: bool) -> void:
 		_goal_done = goal.done
 		get_tree().call_group(&"toast", &"show_toast", INBOX.goal_head(goal), INBOX.goal_next(goal), CHECK,
 			UiTokens.D_pos())
-	var desk: Array = INBOX.unread_discovery() + INBOX.desk()
+	var desk: Array = INBOX.unread_discovery() + INBOX.desk().filter(
+		func(it: Dictionary) -> bool: return not (it.kind == "reminder" and it.has("customer")))
 	var shown: Array = desk.slice(0, room)
 	var hidden: int = desk.size() - shown.size()
 	for i in shown.size():

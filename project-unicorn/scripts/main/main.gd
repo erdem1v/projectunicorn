@@ -2671,8 +2671,9 @@ func _run_travel_shot(spec: String) -> void:
 # saying why; lapse = the prospect's call left ringing until the founder's last entry hour has passed, then
 # the clock run as the player would and the call dropping with a toast; lapse_vc = the fund's call left
 # ringing and the clock asked past the founder's last sitting hour: the call holds the clock (N03), so the
-# hours do not pass, it keeps ringing and nothing is charged (each an INVITE line). The notice stack holds three rows (a
-# paper, an account at risk, someone who may leave), which an open card stands clear of or hides.
+# hours do not pass, it keeps ringing and nothing is charged (each an INVITE line). The notice stack holds two rows (a
+# paper, someone who may leave; the account at risk is the inbox's, not the stack's: envanter shell-06), which an open
+# card stands clear of or hides.
 # invite_shot_<kind>.png; a lapse saves invite_shot_<kind>_ring.png first.
 func _run_invite_shot(kind: String) -> void:
 	var vc: bool = kind.ends_with("vc")
