@@ -171,8 +171,8 @@ static func _check_vc_cascade() -> bool:
 		# the rest of the run, which continues to another terminal instead of stalling.
 		GameState.set_flag("pivot_offer_made", true)
 		return false
-	# HUNT_FRANK_LINE counts the closed tables on screen ("Kapanan masa: 2. Üçüncüde
-	# yol biter."), so the player is warned — but by a UI strip History cannot see.
+	# The Hunt page's three table pips count the closed tables on screen and their tip says the
+	# third ends the road (HUNT_TABLES_TIP), so the player is warned — but by a UI strip History cannot see.
 	trigger_ending("vc_rejection_cascade", TELEGRAPH_UI_ONLY)
 	return true
 

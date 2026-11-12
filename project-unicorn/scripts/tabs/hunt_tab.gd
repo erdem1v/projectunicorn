@@ -139,8 +139,8 @@ func _frank_strip() -> PanelContainer:
 	var words := SprintUiShared.column(UiTokens.SPACE_XXS)
 	words.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	words.add_child(UiFactory.make_label(tr("MENTOR_NAME"), &"Caption"))
-	words.add_child(UiFactory.make_label(_frank_line if _frank_line != "" \
-		else tr("HUNT_FRANK_LINE").format({"n": GameState.vc_rejections}), &"FrankQuote", UiTokens.D_INK_1))
+	words.add_child(UiFactory.make_label(_frank_line if _frank_line != "" else tr("HUNT_FRANK_LINE"), &"FrankQuote",
+		UiTokens.D_INK_1))
 	row.add_child(words)
 	return strip
 
@@ -242,32 +242,33 @@ func _confirm_seed_pitch(vc_id: String) -> void:
 
 # --- Roster ---
 
-## The funds, each on its row; the head counts the tables closed so far (or says the road is the pivot's).
+## The funds a pitch can reach, each on its row; the head shows the tables closed so far as pips, the rule their tip
+## (envanter meet-08/09), or says the road is the pivot's.
 func _paint_roster(card: VBoxContainer) -> void:
 	var count := SprintUiShared.box(UiTokens.SPACE_M)
 	if GameState.pivot_used:
 		count.add_child(SprintUiShared.label(tr("HUNT_COUNTER_PIVOT"), &"MetaMuted"))
 	else:
-		count.add_child(SprintUiShared.label(tr("HUNT_COUNTER_TABLES").format({"closed": GameState.vc_rejections,
-			"total": EndingsSystem.CASCADE_TABLES}), &"MetaMuted"))
 		var pips := SprintUiShared.box(UiTokens.SPACE_XS)
+		pips.mouse_filter = Control.MOUSE_FILTER_PASS
+		pips.tooltip_text = tr("HUNT_TABLES_TIP")
 		for i in EndingsSystem.CASCADE_TABLES:
 			var pip := Panel.new()
 			pip.theme_type_variation = UiTokens.D_variation(&"PipOn" if i < GameState.vc_rejections else &"PipOff")
 			pip.custom_minimum_size = Vector2.ONE * UiTokens.D_PIP_TABLE
 			pip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			pip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			pips.add_child(pip)
 		count.add_child(pips)
 	card.add_child(UiFactory.D_card_head(tr("HUNT_SEC_INVESTORS"), count))
 	var rows := SprintUiShared.column(0)
 	card.add_child(rows)
-	for inv in InvestorRegistry.get_all():
+	for inv in InvestorRegistry.get_active():
 		rows.add_child(_fund_row(inv))
 
 
 ## A fund: its lead partner's face, its name and domain, its way in the room and the partner, its state; under
-## them what the player can do with it now, so the face and the state stay beside the name. The locked slot is a
-## disc round its lock and a word.
+## them what the player can do with it now, so the face and the state stay beside the name.
 func _fund_row(inv: Dictionary) -> PanelContainer:
 	var vc_id: String = String(inv.get("id", ""))
 	var row := PanelContainer.new()
@@ -282,20 +283,6 @@ func _fund_row(inv: Dictionary) -> PanelContainer:
 	var body := SprintUiShared.column(UiTokens.SPACE_XXS)
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	if inv.get("locked", false):
-		var disc := Panel.new()
-		disc.theme_type_variation = &"LockDisc"
-		disc.custom_minimum_size = Vector2.ONE * UiTokens.D_AVATAR_DOC
-		disc.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		var middle := CenterContainer.new()
-		middle.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		middle.add_child(UiFactory.make_glyph("res://assets/icons/util/lock.svg", UiTokens.D_ICON_ROW, UiTokens.D_INK_OFF))
-		disc.add_child(middle)
-		line.add_child(disc)
-		body.add_child(UiFactory.make_label(tr("HUNT_TIER2_SLOT"), &"SubjectLabel", UiTokens.D_INK_OFF))
-		body.add_child(UiFactory.make_label(tr("HUNT_LOCKED_SOON"), &"Caption"))
-		line.add_child(body)
-		return row
 	var status: String = String(GameState.vc_states.get(vc_id, {}).get("status", "open"))
 	var closed: bool = status in CLOSED or GameState.pivot_used
 	var lead: Dictionary = CounterpartSystem.lead(vc_id)
@@ -406,9 +393,11 @@ func _paint_offers(card: VBoxContainer, road_closed: bool) -> void:
 		var glyph := UiFactory.make_glyph("res://assets/icons/util/queue.svg", UiTokens.D_ICON_BUTTON, UiTokens.D_INK_4)
 		glyph.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 		line.add_child(glyph)
-		line.add_child(SprintUiShared.prose(tr("HUNT_QUEUED_OFFER").format({"investor": _vc_name(vc_id),
-			"n": PitchConstants.SHEET_VALIDITY_WEEKS}), &"MetaMuted"))
-		docs.add_child(_dashed_note(line))
+		line.add_child(SprintUiShared.prose(tr("HUNT_QUEUED_OFFER").format({"investor": _vc_name(vc_id)}), &"MetaMuted"))
+		var note := _dashed_note(line)
+		note.mouse_filter = Control.MOUSE_FILTER_PASS
+		note.tooltip_text = tr("HUNT_QUEUED_TIP").format({"n": PitchConstants.SHEET_VALIDITY_WEEKS})
+		docs.add_child(note)
 
 
 ## A box with a dashed edge round `child`: an offer that is not here yet.

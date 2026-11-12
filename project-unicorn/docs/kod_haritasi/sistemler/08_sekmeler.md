@@ -15,7 +15,7 @@ Sekme kökleri (scripts/tabs/):
 - `scripts/tabs/sales_tab.gd` (834): Satış: fiyat duruşu, boru hattı (lead belgesi), satış masası, son hareketler, müşteri portföyü, canlı B2C kitle sayfası.
 - `scripts/tabs/hr_tab.gd` (542): Ekip: Kadro/Görevler görünümleri, Atlas ve Mesai panel açıcıları, satır menüsü, yapı anahtarıyla yerinde boyama.
 - `scripts/tabs/finance_tab.gd` (144): Finans kabuğu: nakit/net/runway KPI'ları, ÖZET|YATIRIM şeridi, Yatırım kilidi (`_yatirim_locked`).
-- `scripts/tabs/hunt_tab.gd` (544): Yatırım sayfası: Frank şeridi, seed turu kartı, yatırımcı listesi, teklifler, bekleyen toplantı (VC sistemlerinin ince arayüzü).
+- `scripts/tabs/hunt_tab.gd` (533): Yatırım sayfası: Frank şeridi, seed turu kartı, yatırımcı listesi, teklifler, bekleyen toplantı (VC sistemlerinin ince arayüzü).
 - `scripts/tabs/rnd_tab.gd` (273): Ar-Ge kabuğu: AĞAÇ|GEÇMİŞ şeridi, koşan araştırma satırı, ağaç yapı anahtarı, seçili düğümü bayrakla saklama.
 - `scripts/tabs/events_tab.gd` (369): Olaylar (gelen kutusu): süzgeçli liste, gün ayraçları, klavye gezintisi; modeli `Inbox`'tadır, okuma bölmesi `mail_pane.gd`.
 - `scripts/tabs/piyasa_tab.gd` (689): Piyasa: üç karo, süzgeç çipleri, sıralı liste, rapor kartı, yıl sonu satırları, 13H/1Y/5Y/Tümü grafiği; salt okunur.
@@ -138,7 +138,7 @@ Satış, Finans, Yatırım:
 - `FinanceTab._show_page(id)` `scripts/tabs/finance_tab.gd:114`: ÖZET/YATIRIM seçer, Yatırım kilitliyse döner · `finance_subpage_requested` (:58), şerit.
 - `FinanceOzetView.cap_table(parent)` `scripts/tabs/finance/finance_ozet_view.gd:451` (static): hisse tablosu · personal_tab.gd:207.
 - `HuntTab._refresh()` `scripts/tabs/hunt_tab.gd:102`: sayfayı baştan kurar; görünmezken `_on_changed` (:82) yalnız `_stale` işaretler · VC/seed sinyalleri.
-- `HuntTab._sit_button` `hunt_tab.gd:520`: "Masaya otur" `term_table_requested` yayar (:521) · main.gd:4792 bağlar.
+- `HuntTab._sit_button` `hunt_tab.gd:509`: "Masaya otur" `term_table_requested` yayar (:510) · main.gd:4792 bağlar.
 
 Ar-Ge, Olaylar, Piyasa, Kişisel:
 - `RnDTab.select_node(id)` `scripts/tabs/rnd_tab.gd:114`: düğümü seçer · `rnd_node_requested` (:80; product_tab.gd:325, research_bar), `_ready` (:60) gizli seçimi tüketir.
@@ -168,7 +168,7 @@ Sekmelerin tanımladığı sinyaller (DIZIN.md "Sinyaller" bölümü):
 
 Sekmelerin yaydığı EventBus sinyalleri:
 - `tab_changed`: product_tab.gd:321-327, sales_tab.gd:295, mail_pane.gd:830,836, hr_atlas_modal.gd:168, sprint_ui_shared.gd:557, rnd_ui_shared.gd:149 · dinleyen window_layer.gd:62.
-- `pitch_requested` sales_tab.gd:412 (dinleyen main.gd:4786) · `term_table_requested` hunt_tab.gd:521 (main.gd:4792) · `rnd_node_requested` product_tab.gd:323 (rnd_tab.gd:80).
+- `pitch_requested` sales_tab.gd:412 (dinleyen main.gd:4786) · `term_table_requested` hunt_tab.gd:510 (main.gd:4792) · `rnd_node_requested` product_tab.gd:323 (rnd_tab.gd:80).
 - `finance_subpage_requested` mail_pane.gd:832 (dinleyen finance_tab.gd:58) · `confirm_requested` hunt_tab.gd:234,479, hr_tab.gd:337, hr_ledger.gd:376-425, hr_atlas_modal.gd:453,472 (main.gd:90).
 
 Sekmelerin dinlediği EventBus sinyalleri (hepsi `_exit_tree`'de ya da düğümle birlikte kopar):
@@ -277,7 +277,7 @@ Smoke (tek vaka: `bash tools/smoke_run.sh <vaka>`; tam süit yalnız push önces
 - Sekmeler arası çapraz çağrı kırılgan: `product_tab._act("hire")` (product_tab.gd:326-328) ve `SprintUiShared.open_product_area` (sprint_ui_shared.gd:556-557) `tab_changed` senkron kurduğu varsayımıyla sayfa gövdesine metot çağırır.
 - `GameState.flags["rnd_selected"]` kayıtlı `flags` içinde durur (rnd_tab.gd:99); pencere kapanıp oyun kaydedilirse bayat seçim kayda sızabilir (`_ready` onu bir sonraki açılışta siler).
 - `SprintUiShared` ve `HRUiShared` sekme dışında da çağrılır (modals, ui/meeting, ui/office, ui/components: sırasıyla 11 ve 14 dosya); imza değişikliği bu dosyaları kırar. `FinanceOzetView` `cash_curve.gd` ve Kişisel'den çağrılır.
-- Karar sonrası `_act` + `_refresh` (hunt_tab.gd:536) sinyali olmayan eylemler için elle yeniden çizer; yeni Yatırım eylemi sinyal yaymıyorsa aynı deseni kullan.
+- Karar sonrası `_act` + `_refresh` (hunt_tab.gd:525) sinyali olmayan eylemler için elle yeniden çizer; yeni Yatırım eylemi sinyal yaymıyorsa aynı deseni kullan.
 - Chrome kuralı ve token yasası: ham `Color(...)`/ham boyut yok, `D_*` token'ları (CLAUDE.md §7); koyu pencere `menajer_theme`'i `frame_options.title` ile alır (window_frame.gd:36-38).
 - `product_tab.gd` ve `hunt_tab.gd` kirli ağaçta olabilir (`git status`: product_tab Oct 22 21:43); başka bir oturum yazıyorsa satır numaraları kayar, `uret.py` ile dizini yenile.
 
@@ -297,4 +297,4 @@ Smoke (tek vaka: `bash tools/smoke_run.sh <vaka>`; tam süit yalnız push önces
 - Metin ekleme: `localization/strings.csv`'ye tr+en birlikte (bayt-splice, strings-csv-surgery notu), çevirisiz anahtar `loc_residue`'u düşürür.
 - Olaylar okuma bölmesi: `mail_pane.gd` kipleri `Inbox.items()` öğe alanlarına bağlı (inbox.gd:42); öğe alanı eklersen `Inbox`, `MailPane`, `Ar-Ge geçmişi` (`rnd_history.gd`) ve `--inbox-shot` durumlarına bak.
 - Ar-Ge ağacı karosu ya da düğüm durumu: `RnDUiShared.tile_state` (rnd_ui_shared.gd:182), `RnDTab._compute_structure_key` (rnd_tab.gd:209; yeni durum anahtara girmezse yerinde boyama yeniden kurmaz), `research_bar_model.gd`.
-- Yatırım sayfası eylemi: `VCPitchSystem`/`SeedRoundSystem` çağrısı + `HuntTab._act` (hunt_tab.gd:536) + `--vc-shot=hunt*` ile görsel kabul + `hunt_offer_lifecycle`.
+- Yatırım sayfası eylemi: `VCPitchSystem`/`SeedRoundSystem` çağrısı + `HuntTab._act` (hunt_tab.gd:525) + `--vc-shot=hunt*` ile görsel kabul + `hunt_offer_lifecycle`.

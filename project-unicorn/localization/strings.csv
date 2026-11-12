@@ -751,8 +751,6 @@ HUNT_PAGE_TITLE,Series A Avı,The Series A Hunt
 HUNT_SEC_INVESTORS,Yatırımcılar,Investors
 HUNT_SEC_OFFERS,Teklifler,Offers
 HUNT_SEC_PENDING,Bekleyen,Pending
-HUNT_LOCKED_SOON,Yakında,Soon
-HUNT_TIER2_SLOT,2. kademe fonu,Tier 2 fund
 HUNT_CONDITION,Koşul: {condition},Condition: {condition}
 HUNT_MEETING_SET,Toplantı ayarlandı.,Meeting is set.
 HUNT_NO_OFFERS,Henüz teklif yok.,No offers yet.
@@ -765,7 +763,8 @@ HUNT_EST_DILUTION,%{lo} ile %{hi},{lo}% to {hi}%
 HUNT_EST_VALUATION_KEY,Tahmini değerleme,Est. valuation
 HUNT_EST_EQUITY_KEY,Tahmini pay,Est. equity
 HUNT_DECISION_DUE,Süre doldu. Fon bir cevap bekliyor.,Time is up. The fund wants an answer.
-HUNT_QUEUED_OFFER,{investor} · sırada. Bir teklif kapanınca masaya gelir; süresi o hafta başlar ({n} hafta).,"{investor} · queued. It arrives when an offer slot frees up, with a fresh {n} weeks."
+HUNT_QUEUED_OFFER,{investor} · sırada,{investor} · queued
+HUNT_QUEUED_TIP,Bir teklif kapanınca masaya gelir; süresi o hafta başlar ({n} hafta).,"It arrives when an offer slot frees up, with a fresh {n} weeks."
 HUNT_SIT_DOWN,Masaya otur,Sit down
 HUNT_WALK_AWAY,Masadan kalk,Walk away
 HUNT_WALK_CONFIRM_TITLE,Masadan kalkılsın mı?,Walk away from the table?
@@ -777,7 +776,7 @@ HUNT_THIS_WEEK,bu hafta,this week
 HUNT_NEXT_WEEK,gelecek hafta,next week
 HUNT_NONE_PENDING,Bekleyen yok.,Nothing pending.
 HUNT_COUNTER_PIVOT,Pivot: bootstrap yolu,Pivot: the bootstrap road
-HUNT_COUNTER_TABLES,Kapanan masa: {closed}/{total},Tables closed: {closed}/{total}
+HUNT_TABLES_TIP,Üçüncü masa kapanınca yol biter.,The third table that closes ends the road.
 HUNT_BADGE_OFFERED,Teklif var,Offer in
 HUNT_BADGE_PENDING_SHEET,Teklif bekliyor,Offer pending
 HUNT_BADGE_CALLBACK,Geri dönüş,Callback
@@ -790,7 +789,7 @@ HUNT_CB_MRR,MRR {target} ({current}/{target}),MRR {target} ({current}/{target})
 HUNT_CB_CHURN,{weeks} içinde müşteri kaybı {target} altında (şu an {current}),Customer churn under {target} in {weeks} ({current} so far)
 HUNT_CB_FIRST_ENGINEER,İlk mühendisi işe al,Hire the first engineer
 HUNT_CB_SCANDAL,Skandalı çöz,Resolve the scandal
-HUNT_FRANK_LINE,Av açık. Kapanan masa: {n}. Üçüncüde yol biter.,The hunt is on. Tables closed: {n}. The third one ends it.
+HUNT_FRANK_LINE,Av açık.,The hunt is on.
 HUNT_REQUEST_AGAIN,Tekrar iste ({when}),Ask again ({when})
 HUNT_REQUEST_MEETING,Toplantı iste ({when}),Request a meeting ({when})
 HUNT_MEETING_BUSY,Başka bir toplantı bekliyor,Another meeting is already pending

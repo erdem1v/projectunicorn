@@ -70,7 +70,8 @@ const INVESTORS := [
 		"opening_terms": {"valuation_m": 16, "dilution_pct": 18, "board_seats": 0, "board_veto": false},
 		"warm_intro": false,
 	},
-	# Locked Tier-2 teaser (wishlist telegraph) — no meeting, greyed card; the Hunt names it from HUNT_TIER2_SLOT.
+	# Locked Tier-2 teaser (wishlist telegraph) — no meeting; no screen shows it since envanter meet-11 (2026-11-12),
+	# the Hunt lists get_active() only; the pitch and seed guards still refuse it.
 	{
 		"id": "locked_tier2",
 		"role_key": "",

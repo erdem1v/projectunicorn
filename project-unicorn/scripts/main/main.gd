@@ -5045,7 +5045,8 @@ func _seed_sales_world() -> void:
 ## one offer; the product fund's customer-loss callback under a reputation the neglected bugs took to the floor; Traction
 ## with the seed door open, at 00:00 before the workday in hunt_seed_early), the term-sheet table in its states and the expired-offer
 ## decision card. Pushes go through the real table system with the SkillCheck debug force. A table's kind
-## with ":shell" mounts it in the shell's ModalLayer, as the game does, over the shell (vc_shot_<kind>_shell).
+## with ":shell" mounts it in the shell's ModalLayer, as the game does, over the shell (vc_shot_<kind>_shell). A Hunt
+## kind with ":pips" rests the pointer on the closed-table pips, with ":queued" on the queued offer's note: their tips.
 func _run_vc_shot(spec: String) -> void:
 	var kind: String = spec.get_slice(":", 0)
 	var shelled: bool = spec.get_slice(":", 1) == "shell"
@@ -5140,7 +5141,20 @@ func _run_vc_shot(spec: String) -> void:
 	else:
 		_on_shot_layer(TERM_TABLE_SCENE.instantiate())
 	await get_tree().process_frame
-	await _finish_shot("vc_shot_%s%s" % [kind, "_shell" if shelled else ""], 0.5)
+	var tip_key: String = {"pips": "HUNT_TABLES_TIP", "queued": "HUNT_QUEUED_TIP"}.get(spec.get_slice(":", 1), "")
+	if tip_key != "":
+		var want: String = tr(tip_key).get_slice("{", 0)
+		var hits: Array = get_tree().root.find_children("*", "Control", true, false).filter(
+			func(c: Control) -> bool: return c.is_visible_in_tree() and c.tooltip_text != "" and c.tooltip_text.begins_with(want))
+		if hits.is_empty():
+			_shot_fail("[VcShot] %s: nothing on screen carries %s" % [spec, tip_key])
+			return
+		var move := InputEventMouseMotion.new()
+		move.position = (hits[0] as Control).get_global_rect().get_center()
+		move.global_position = move.position
+		get_viewport().push_input(move, true)
+		await get_tree().create_timer(1.2).timeout
+	await _finish_shot("vc_shot_%s%s" % [spec.replace(":", "_") if tip_key != "" else kind, "_shell" if shelled else ""], 0.5)
 
 
 ## The shots' ERP at K2 on every line: no area is lacking at any table, so a sitting plays to the offer.

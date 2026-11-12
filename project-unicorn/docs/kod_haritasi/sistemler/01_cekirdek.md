@@ -23,7 +23,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - `scripts/autoload/prospect_registry.gd` (73): imzasız B2B adaylar; imzada Customer olur ve buradan çıkar
 - `scripts/autoload/promise_registry.gd` (187): müşteriye verilen sözler; `build_phase_changed` ve `customer_removed` dinler
 - `scripts/autoload/rival_registry.gd` (210): rakip alanı; `RivalCatalog`tan tohumlanır, `advance_all` günlük tikte
-- `scripts/autoload/investor_registry.gd` (145): Seri A fon tablosu (const); koşu durumu `GameState.vc_states`te
+- `scripts/autoload/investor_registry.gd` (146): Seri A fon tablosu (const); koşu durumu `GameState.vc_states`te
 - `scripts/data_models/character.gd` (106): `Character` Resource (kimlik, maaş, moral, `role_stats`, atama, izin, eğitim, verim satırları)
 - `scripts/data_models/customer.gd` (124): `Customer` Resource (B2B/B2C hesap, iki katmanlı memnuniyet, churn sayacı, `market_ref`)
 - `scripts/data_models/prospect.gd` (111): `Prospect` Resource (aday, yıldız, arketip, anlaşma alanları)
@@ -34,7 +34,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - `scripts/util/fmt.gd` (223): `Fmt` para, yüzde, tarih, ay adı, büyük harf, `cap_first`; yerel veri strings.csv'dedir
 - `scripts/systems/display_settings.gd` (350): `DisplaySettings`, pencere kipi, çözünürlük, vsync, UI ölçeği; durumsuz, `Settings` saklar bu uygular; `is_inert()` harness pencereyi sahiplenince her çağrıyı keser
 - `scripts/systems/graphics_settings.gd` (211): class_name yok (`Settings` preload eder); 3B görüntü kalitesi, 4 ön ayar `data/graphics/presets.json`, `OfficeView.apply_graphics`; `--gfx=<ön ayar>`
-- `scripts/main/main.gd` (6246): ana sahne kökü; açılış (Godot kartı → menü → onboarding → kabuk), modal montajı, karar kapısı (`hold_clock("event")`), kayıt/yükleme ve yolculuk akışı
+- `scripts/main/main.gd` (6260): ana sahne kökü; açılış (Godot kartı → menü → onboarding → kabuk), modal montajı, karar kapısı (`hold_clock("event")`), kayıt/yükleme ve yolculuk akışı
   ↳ modal ve menü giriş noktaları 09_arayuz_bilesen.md'de, debug bayrak dağıtıcısı ve `--*-shot` koşucuları 10_test_harness.md'de
 - `scripts/main/game_shell.gd` (240): `GameShell.tscn` kökü (grup `game_shell`, ALWAYS); Esc zinciri `_input` `game_shell.gd:55`, `request_speed` `:114`, `say_held` `:126`, şerit yerleşimi, sprint kapanınca Ürün'ü açar
   ↳ debug F tuşları `_debug_fkey` `:138`, `_debug_endgame_key` `:192` (10_test_harness.md, 05_fon_finans.md)
@@ -58,7 +58,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
   ↳ ürün (`ProductSystem`, `SprintSystem`, `SupportSystem`, `InfraSystem`, `ProductRead.emit_edges`), Ar-Ge, ekip, satış, `CharacterRegistry.prune_productivity_mods`, rakipler, ofis, finans, faz kapısı ve seed, olaylar,
   ↳ `IncidentSystem.daily_tick`, haber, VC, sonlar, `SummarySystem.daily_tick` (yuva 10), `MailClock.sync_desk`; gün `EventBus.day_tick_completed` ile kapanır (autosave sınırı). Saatlik sıra: `SupportSystem`, `SalesSystem`,
   ↳ `InfraSystem.auto_adjust`, `MailClock.hourly_tick`, `IncidentSystem.hourly_tick`, `EventGate.hourly_tick`; 00:00'ın saatlik dilimi `advance_day()`'den önce koşar (`TimeManager.is_rolling_over()` o dilimde doğrudur)
-- `SaveManager.save_to_slot/read_slot/apply_loaded_state` `save_manager.gd:219,153,286` · `scripts/main/main.gd:5231,5200,5211`
+- `SaveManager.save_to_slot/read_slot/apply_loaded_state` `save_manager.gd:219,153,286` · `scripts/main/main.gd:5245,5200,5211`
   ↳ Göç zincirini `read_slot` değil `_read_file` `:170` koşar; `read_slot` yalnız onu çağırır ve bozuk ya da eksik hedefte slotun `.bak`'ına düşer (sonuca `from_backup`); `SAVE_ERR_NEWER` ve `SAVE_ERR_TOO_OLD` geriye düşmez
 - `SaveManager.list_slots/list_runs` `save_manager.gd:120,138` · `scripts/menu/main_menu.gd:42`, `scripts/modals/save_load_modal.gd:55`
 - `SaveManager.end_run()` `save_manager.gd:364`: koşuyu süreç içinde bitirir · `scripts/main/main.gd:128,5385` (menüye dönüş)
@@ -88,7 +88,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - `EventBus.palette_changed(colorblind)` `event_bus.gd:47`: yayan `settings_modal.gd:251,282` · `left_tabs.gd:132`, `top_bar.gd:157`, `news_ticker.gd:81`
 - `EventBus.month_ended(close)` `event_bus.gd:253`: yayan `scripts/systems/summary_system.gd:126` · `save_manager.gd:62` (aylık autosave)
 - `EventBus.event_resolved/event_set_aside` `event_bus.gd:119,122`: `save_manager.gd:63-66` kirli bayrağı kurar ve bekleyen autosave'i yeniden dener
-- `EventBus.game_loaded(slot_id)` `event_bus.gd:289`: yayan `main.gd:5309` · `left_tabs.gd:128`
+- `EventBus.game_loaded(slot_id)` `event_bus.gd:289`: yayan `main.gd:5323` · `left_tabs.gd:128`
 - `EventBus.quicksave_requested/quickload_requested/save_load_requested/system_menu_requested/settings_requested` `event_bus.gd:296,297,293,291,38`: yayan `main.gd`, `game_shell.gd` · dinleyen `main.gd:4793-4784,89`
 - `EventBus.headline_added(source, line)` `event_bus.gd:236`: `time_manager.gd:85` `NewsFeedSystem.on_headline_added`'e bağlar (statik sistem için önyükleme)
 - Geri kalan 125 sinyal başka sistemlerin: `grep "^- ad(" docs/kod_haritasi/DIZIN.md`; `KALITE.md` "Yarım sinyaller" bölümü emit/connect'siz olanları listeler
@@ -111,7 +111,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - Göç zinciri devamı: `<18` `_migrate_18` `:977` (v17 → v18 `market_ref`), `<19` `_migrate_19` `:1010` (v18 → v19 sprint puanı ×5, kartta `need`); yardımcılar `_scale_sprint_card` `:1031`, `_retire_stability` `:1056`;
   ↳ `_migrate_N` N'den önce yazılmış kaydı N'e getirir; emekli bayraklar göçlerden sonra `SaveCodec.RETIRED_FLAGS` ile her yüklemede düşer (`SaveCodec._decode_flags` `save_codec.gd:234`), şema artmaz
 - Ayar dosyası: `user://settings.json` `settings.gd:10`, `{schema_version:1, values}`; `DEFAULTS` `:24-53`; `SAVE_DEBOUNCE_SEC` 0,5 `:56`
-- Ayar anahtarları dışarıda: `language` (Localization'ın), `runs_finished` (`main.gd:5331`, `scripts/onboarding/first_week_doc.gd:15`); `reset_to_defaults` yalnız `DEFAULTS` anahtarlarını siler
+- Ayar anahtarları dışarıda: `language` (Localization'ın), `runs_finished` (`main.gd:5345`, `scripts/onboarding/first_week_doc.gd:15`); `reset_to_defaults` yalnız `DEFAULTS` anahtarlarını siler
 - Ses: `MUSIC_TRACK_PATH` `audio_manager.gd:10` = `res://assets/audio/Döngü Modu.mp3`; bus'lar Master(0), "Music", "SFX" çalışma anında kurulur `:63`
 - Dil: `STRINGS_CSV` `localization.gd:12` (`keys,tr,en`), `SUPPORTED` ["tr","en"] `:15`; `BOOT|lang=|source=` satırı `:32`
 - JSON veri dosyası (`data/`) bu sistemin değil; çekirdek yalnız `strings.csv` ve `project.godot` okur
