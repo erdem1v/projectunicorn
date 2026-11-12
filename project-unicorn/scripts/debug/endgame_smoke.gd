@@ -11356,11 +11356,13 @@ static func _case_loc_format_locale_flip() -> String:
 	var d := {"week": 37, "month": 9, "year": 2012}
 	var want := {
 		"tr": {
-			"money_exact": "$1.234.567", "money": "$3,5K", "chip_edge": "$1,0M", "pct": "%12,5",
+			"money_exact": "$1.234.567", "money": "$3,5K", "chip_edge": "$1,0M", "chip_k": "$4,2K", "chip_whole_k": "-$5K",
+			"chip_k_up": "$10K", "chip_k_x50": "$4K", "chip_k_x50_9": "$9,9K", "pct": "%12,5",
 			"date": "Hafta 37 · Eylül 2012", "upper": "İYİ", "month": "Eylül",
 		},
 		"en": {
-			"money_exact": "$1,234,567", "money": "$3.5K", "chip_edge": "$1.0M", "pct": "12.5%",
+			"money_exact": "$1,234,567", "money": "$3.5K", "chip_edge": "$1.0M", "chip_k": "$4.2K", "chip_whole_k": "-$5K",
+			"chip_k_up": "$10K", "chip_k_x50": "$4K", "chip_k_x50_9": "$9.9K", "pct": "12.5%",
 			"date": "Week 37 · September 2012", "upper": "IYI", "month": "September",
 		},
 	}
@@ -11371,6 +11373,12 @@ static func _case_loc_format_locale_flip() -> String:
 			"money_exact": Fmt.money_exact(1234567),
 			"money": Fmt.money(3500),
 			"chip_edge": Fmt.money_chip(999_700),   # the thousands round to 1000 here: the million band
+			"chip_k": Fmt.money_chip(4_200),
+			"chip_whole_k": Fmt.money_chip(-5_000),   # a whole thousand drops its tenth (envanter shell-21)
+			"chip_k_up": Fmt.money_chip(9_960),   # rounds to ten thousand: as the band above it writes it
+			# The x50s: the tenth Godot prints decides (4.050 prints 4.0, 9.950 prints 9.9), not a rounding of its own.
+			"chip_k_x50": Fmt.money_chip(4_050),
+			"chip_k_x50_9": Fmt.money_chip(9_950),
 			"pct": Fmt.percent(12.5, 1),
 			"date": Fmt.date_line(d),
 			"upper": Fmt.upper("iyi"),

@@ -167,7 +167,8 @@ static func money(amount: int) -> String:
 	return _localize_signed(amount, s)
 
 
-## TopBar finance-chip money; stays abbreviated so it cannot widen the chrome group.
+## TopBar finance-chip money; stays abbreviated so it cannot widen the chrome group. Under $10K a tenth that prints 0
+## goes ("$5K", not "$5,0K": envanter shell-21); "$4,2K" keeps it.
 static func money_chip(value: int) -> String:
 	var a: int = absi(value)
 	var s: String
@@ -177,7 +178,10 @@ static func money_chip(value: int) -> String:
 	elif a >= 10_000:
 		s = "$%.0fK" % (a / 1_000.0)
 	elif a >= 1_000:
+		# Read off the printed tenth: a rounding of its own would split from %.1f on the x50s (4.050 prints 4.0).
 		s = "$%.1fK" % (a / 1_000.0)
+		if s.ends_with(".0K"):
+			s = s.trim_suffix(".0K") + "K"
 	else:
 		s = "$%d" % a
 	return _localize_signed(value, s)

@@ -31,7 +31,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - `scripts/data_models/rival.gd` (38): `Rival` Resource (tier, üç boyut, momentum, `composite()`)
 - `scripts/data_models/term_sheet.gd` (63): `TermSheet` Resource (Seri A ve seed teklifi, vade, `opening_terms`)
 - `scripts/data_models/event.gd` (21) ve `event_choice.gd` (11): `GameEvent`/`EventChoice` kartın çizim görünümü; asla kaydedilmez
-- `scripts/util/fmt.gd` (234): `Fmt` para, yüzde, tarih, ay adı, büyük harf, `cap_first`; yerel veri strings.csv'dedir
+- `scripts/util/fmt.gd` (238): `Fmt` para, yüzde, tarih, ay adı, büyük harf, `cap_first`; yerel veri strings.csv'dedir
 - `scripts/systems/display_settings.gd` (350): `DisplaySettings`, pencere kipi, çözünürlük, vsync, UI ölçeği; durumsuz, `Settings` saklar bu uygular; `is_inert()` harness pencereyi sahiplenince her çağrıyı keser
 - `scripts/systems/graphics_settings.gd` (211): class_name yok (`Settings` preload eder); 3B görüntü kalitesi, 4 ön ayar `data/graphics/presets.json`, `OfficeView.apply_graphics`; `--gfx=<ön ayar>`
 - `scripts/main/main.gd` (6296): ana sahne kökü; açılış (Godot kartı → menü → onboarding → kabuk), modal montajı, karar kapısı (`hold_clock("event")`), kayıt/yükleme ve yolculuk akışı
@@ -164,7 +164,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 
 ## Dikkat
 - Göç adı ve koşulu aynı N'dir (`_migrate_N` `version < N`, `save_manager.gd:194-207`); yeni göçte `SCHEMA_VERSION`, koşul, adı ve belgeyi birlikte yaz
-- `_migrate_sector_ids` `:1095`, `_migrate_character_areas` `:1108`, `_migrate_assignments_to_areas` `:1168`, `_migrate_to_rev11` `:1208` zincirde YOK (`MIN_LOADABLE_VERSION` 10); yalnız `endgame_smoke.gd:11954-12188` çağırır
+- `_migrate_sector_ids` `:1095`, `_migrate_character_areas` `:1108`, `_migrate_assignments_to_areas` `:1168`, `_migrate_to_rev11` `:1208` zincirde YOK (`MIN_LOADABLE_VERSION` 10); yalnız `endgame_smoke.gd:11962-12196` çağırır
 - Göç her yuva listelemesinde koşar (`list_slots` her dosyayı `_read_file`dan geçirir): saf, ucuz, canlı durumdan bağımsız olmalı; `_migrate_18` bu yüzden kaydın kendi ürün alt türünü okur
 - `_migrate_15` kartı v18 biçiminde yazar (`_V14_EFFORT`, `_V14_SHARES` `save_manager.gd:821-822`); ×5 ve `need` dönüşümünü yalnız `_migrate_19` yapar. `list_slots` ve `read_slot` her yuvada tam zinciri tekrar koşar
 - `SaveCodec.game_state_fields()` `save_codec.gd:192` `GameState`in HER script `var`ını kaydeder; kaydedilmemesi gereken geçici alan eklenemez. Yeni alan makul varsayılan taşımalı (varsayılan = göç)

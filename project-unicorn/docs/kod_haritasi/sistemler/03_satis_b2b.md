@@ -251,7 +251,7 @@ Hepsi `tools/smoke_run.sh <vaka>` ile (komutlar `project-unicorn/`'dan, `GODOT` 
   ↳ `drop_prospect` satışın kayıp yolundan (`SalesFinalizer.lose`) sebep `event` ile geçer; geri dönen şirketin hafızası `SALES_MEMORY_EVENT`
 - Kart gövdesinde yalnız `{slot}` ve `{seam:ns.ad}` çözülür; `customer/*.json` yazarken süslü parantezli başka belirteç ekrana olduğu gibi çıkar (hafıza: unresolvable-card-token-class).
 - Bazı `EventBus` sinyallerinin kodda dinleyeni yok (`KALITE.md` "yarım sinyaller"); olay motoru yalnız `signals.gd:22` izin listesindekileri dinler, yeni tetik sinyali oraya da yazılmalıdır.
-- `MarketCatalog` önbelleği `static var` ve bilerek `reset_all_owners` dışında (dosya verisi); `GameState.market_shocks` üretimde yazılmıyor, yalnız smoke yazıyor (`endgame_smoke.gd:24320`).
+- `MarketCatalog` önbelleği `static var` ve bilerek `reset_all_owners` dışında (dosya verisi); `GameState.market_shocks` üretimde yazılmıyor, yalnız smoke yazıyor (`endgame_smoke.gd:24328`).
 - `SalesNamePool._pools` `sales_name_pool.gd:61` de önbellektir ve geçersiz kılınmaz; `STEMS` ya da `COMPANIES` çalışma zamanında değişmez, kod değişikliği yeni süreç ister.
 - `SalesArchetypes.TABLE` sektör sırası yüklüdür (`% size` çekimi, fikstürler `[0]` okur); yeni sektör sona eklenir. Sektör kimlikleri kayıtlıdır (`Customer.industry`), yeniden adlandırma göç ister (`LEGACY_SECTOR_IDS`).
 - Kurucuya otomatik hesap verilmez (`CustomerRepSystem.ranked_reps` yalnız `employee` döner) ve bu MÜHÜRLÜ bir hükümdür; "boştaki kurucuya hesap ver" diye değiştirilmez.
