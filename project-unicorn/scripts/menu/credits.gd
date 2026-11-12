@@ -32,7 +32,7 @@ func _ready() -> void:
 	%CloseBtn.grab_focus()
 
 
-## "Demo · Version 0.1.0", under the lock-up here and in the main menu's corner.
+## "Demo · Version 0.1.0", under the lock-up here (the main menu shows none: envanter meet-14).
 static func version_line() -> String:
 	return TranslationServer.translate("MENU_VERSION").format({
 		"build": TranslationServer.translate("MENU_BUILD_" + EndingsSystem.build_scope().to_upper()),

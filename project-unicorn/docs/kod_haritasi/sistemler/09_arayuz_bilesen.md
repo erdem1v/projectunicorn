@@ -39,7 +39,7 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 - `scripts/ui/meeting/meeting_panel_option.gd` (125): güvertedeki seçenek kartı (tuş, etiket, zar, kilit) · `meeting_ruler.gd` (122): `MeetingRuler`; fiyat cetveli
 - `scripts/ui/meeting/sales_meeting_adapter.gd` (320) ve `vc_meeting_adapter.gd` (200): sistemin görünümünü panelin "adım" sözlüğüne çevirir (RefCounted)
 - `scripts/ui/menu_backdrop.gd` (138): menü ve onboarding'in arkasındaki 3B yer (ofis sahnesi, kişisiz, sabit saatte); `live_ready` sinyali
-- `scripts/menu/main_menu.gd` (100): ana menü (Devam, Yeni oyun, Yükle, Ayarlar, Jenerik, Çık) tek odak zinciri · `continue_card.gd` (19): Devam kartı
+- `scripts/menu/main_menu.gd` (94): ana menü (Devam, Yeni oyun, Yükle, Ayarlar, Jenerik, Çık) tek odak zinciri · `continue_card.gd` (19): Devam kartı
 - `scripts/menu/godot_card.gd` (35): "Godot ile yapıldı" kartı · `credits.gd` (60): Jenerik (`data/credits.json`) · `licenses.gd` (80): düz lisans metni
 - `scripts/modals/confirm_modal.gd` (65): genel onay · `hr_action_modal.gd` (237): zam/terfi/izin/çıkarma onayı (kaydırıcılı) · `system_menu_modal.gd` (106): ESC menüsü
 - `scripts/modals/settings_modal.gd` (480): altı bölümlü canlı Ayarlar · `save_load_modal.gd` (262): Kaydet/Yükle, iki kip · `ending_scene.gd` (563): `EndingScene`; Ekonomi Postası ve dönüm noktası kâğıdı
@@ -97,7 +97,7 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 - `main_menu_requested` / `exit_save_requested`: `system_menu_modal.gd:19,20` (yayın `:63`, `:93`); `ending_scene.gd:41` · `main.gd:5198,5104,5271`
 - `continue_requested`: `ending_scene.gd:40` (yayın `:445`) · `main.gd:5376` (`_on_milestone_continue`)
 - `closed`: `meeting_panel.gd:19`, `term_sheet_table_scene.gd:17` · `main.gd:5121` (`_close_meeting`), `main.gd:5435` (`_close_term_table`)
-- `new_game_requested`: `main_menu.gd:7` (yayın `:54`) · `main.gd:130` · `finished`: `godot_card.gd:6` (yayın `:35`) · `main.gd:118` · `back`: `licenses.gd:7` · `credits.gd:44`
+- `new_game_requested`: `main_menu.gd:7` (yayın `:51`) · `main.gd:130` · `finished`: `godot_card.gd:6` (yayın `:35`) · `main.gd:118` · `back`: `licenses.gd:7` · `credits.gd:44`
 - `completed` / `cancelled`: `onboarding_flow.gd:11,12` (yayın `:203`, `:172,177`) · `main.gd:154,155` · `live_ready`: `menu_backdrop.gd:9` (yayın `:138`) · `main.gd:2947`, `onboarding_flow.gd:70`
 - `changed`: `step_base.gd:15` · `onboarding_flow.gd:_mount_step` · `picked(field, value)`: `first_week_doc.gd:7` · `onboarding_flow.gd:_ready` (taslağı yazar, `_refresh`)
 - `open_changed(open)`: `news_ticker.gd:53` (yayın `:108`) · `game_shell.gd:30` (`_lay_ticker`) · `spin_finished`: `radial_dial.gd:9` (yayın `:70`) · `term_sheet_table_scene.gd:72`
@@ -106,7 +106,7 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 - EventBus'tan dinlenenler (devam): `palette_changed` (`window_layer.gd:66`, `top_bar.gd:157`, `left_tabs.gd:132`, `news_ticker.gd:81`)
 - `event_triggered`/`event_resolved`/`event_set_aside`/`desk_changed` dinleyenler: `top_bar.gd:159-162`, `left_tabs.gd` (Olaylar rozeti), `window_frame.gd:56-58` (salt okunur şerit)
 - TopBar saat: `TimeManager.speed_changed` ve `hold_changed` (`top_bar.gd:179-181`); hız tuşları `EventBus.speed_change_requested` yayar (`top_bar.gd:183`)
-- UI'nin yaydığı EventBus sinyalleri: `tab_changed` (`left_tabs.gd` `_on_tab_button` `:235`, `window_frame.gd` kapatma), `settings_requested` (`left_tabs.gd:96`, `main_menu.gd:56`, `system_menu_modal.gd:39`)
+- UI'nin yaydığı EventBus sinyalleri: `tab_changed` (`left_tabs.gd` `_on_tab_button` `:235`, `window_frame.gd` kapatma), `settings_requested` (`left_tabs.gd:96`, `main_menu.gd:53`, `system_menu_modal.gd:39`)
 - UI'nin yaydığı (devam): `confirm_requested` (`settings_modal.gd:269`, `save_load_modal.gd:212`, `system_menu_modal.gd:78`, `term_sheet_table_scene.gd:393`), `save_load_requested`, `palette_changed` (`settings_modal.gd:251,282`)
 
 ## Durum ve veri
@@ -160,7 +160,7 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 - `UiTokens.TABS` `ui_tokens.gd:294`: id sırası = `LeftTabs.tscn` düğme sırası; `lock: "ea"` bu yapıda kilitli sekme; sekme başlığı anahtarı `TAB_` + ID büyük harf (`left_tabs.gd:147`, `window_layer.gd:246`)
 - Pencere boyları `WindowLayer.SPECS` `window_layer.gd:38` (1920×1080 tabanı), `EDGE 24` `:43`; sekme sahneleri `TAB_SCENES` `:13`; ekran eşiği `DisplaySettings.COMPACT_SHELL_BELOW 1680` `display_settings.gd:72`
 - Kabuk ölçüleri: TopBar 64 px (`TopBar.tscn` custom_minimum_size), NewsTicker 40 px (`NewsTicker.tscn`), katmanlar PanelLayer 9, ModalLayer 10, ToastLayer 11 (`GameShell.tscn`)
-- Önemli sabitler: `Toast` IN 0,2 / HOLD 2,4 / OUT 0,2 sn (`toast.gd:11-13`); `MeetingPanel.DOCK_SHARE 0.34` `meeting_panel.gd:31`; `MainMenu.MENU_OFFICE "city"`, `MENU_MINUTE 1170` `main_menu.gd:13,14`; `GODOT_CARD_S 1.5` `godot_card.gd:8`
+- Önemli sabitler: `Toast` IN 0,2 / HOLD 2,4 / OUT 0,2 sn (`toast.gd:11-13`); `MeetingPanel.DOCK_SHARE 0.34` `meeting_panel.gd:31`; `MainMenu.MENU_OFFICE "city"`, `MENU_MINUTE 1170` `main_menu.gd:12,14`; `GODOT_CARD_S 1.5` `godot_card.gd:8`
 - JSON: `data/credits.json` (Jenerik), `themes/*.tres` (üretilmiş). Lisans gövdeleri çalışma anında motordan okunur (`licenses.gd`), çevrilmez
 
 ## Metin anahtarları

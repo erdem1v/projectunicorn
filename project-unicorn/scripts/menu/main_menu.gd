@@ -8,21 +8,19 @@ signal new_game_requested
 signal load_requested(slot_id: String)
 
 const CREDITS := preload("res://scenes/menu/Credits.tscn")
-const CREDITS_SCRIPT := preload("res://scripts/menu/credits.gd")
 const MENU_COVER_S := 0.2   # [WORKING] the boot's ground lifting off the menu
 const MENU_OFFICE := "city"   # [WORKING] the evening city behind the menu
 const MENU_MINUTE := 1170.0   # [WORKING] 19:30
-# The column and the version line read over the city: the ground's colour this strong at the left edge and at the
-# bottom, fading out over the gradients' stops.
+# The column reads over the city: the ground's colour this strong at the left edge and at the bottom, fading out over
+# the gradients' stops.
 const SIDE_FADE := 0.85
 const FOOT_FADE := 0.6
 const LOCKUP_AUTHORED_S := 128.0   # lockup.svg's square, in the file's own pixels
-# The layout of a screen 1080 tall, then of a shorter one: column origin, lock-up S, the gap under it, the version's
-# distance from the left and the bottom edges.
+# The layout of a screen 1080 tall, then of a shorter one: column origin, lock-up S, the gap under it. The version line
+# is the credits' (envanter meet-14: not on the menu).
 const COLUMN := [Vector2(112, 236), Vector2(88, 112)]
 const LOCKUP_S := [96, 76]
 const LIST_GAP := [48, 40]
-const VERSION_INSET := [Vector2(112, 32), Vector2(88, 24)]
 
 ## Focus order; an item is in the chain while it is visible.
 @onready var items := {"CONTINUE": %Continue, "NEW": %NewGame, "LOAD": %Load, "SETTINGS": %Settings,
@@ -37,7 +35,6 @@ func _ready() -> void:
 	# Settings over the menu changes the UI scale, and with it the logical height the layout is chosen by.
 	_apply_layout()
 	get_viewport().size_changed.connect(_apply_layout)
-	%Version.text = CREDITS_SCRIPT.version_line()
 
 	var slots: Array = SaveManager.list_slots()
 	var newest: Array = slots.filter(func(row: Dictionary) -> bool: return row.loadable)
@@ -83,9 +80,6 @@ func _apply_layout() -> void:
 	%Column.position = COLUMN[short]
 	%Lockup.custom_minimum_size = %Lockup.texture.get_size() * LOCKUP_S[short] / LOCKUP_AUTHORED_S
 	%ListGap.custom_minimum_size.y = LIST_GAP[short]
-	%Version.offset_left = VERSION_INSET[short].x
-	%Version.offset_top = -VERSION_INSET[short].y
-	%Version.offset_bottom = -VERSION_INSET[short].y
 
 
 ## The id of the item that holds the focus, "" while a window has it.

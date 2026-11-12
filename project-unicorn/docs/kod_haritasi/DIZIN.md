@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git c2b81989 · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git c6797051 · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -127,12 +127,12 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/main/game_shell.gd · 219 · - · Control · 0 sinyal · 11 func
 - scripts/main/main.gd · 6268 · - · Node · 0 sinyal · 224 func
 
-### scripts/menu/ (5 dosya, 292 satır)
+### scripts/menu/ (5 dosya, 286 satır)
 - scripts/menu/continue_card.gd · 19 · - · Button · 0 sinyal · 1 func
 - scripts/menu/credits.gd · 60 · - · Control · 1 sinyal · 5 func
 - scripts/menu/godot_card.gd · 35 · - · Control · 1 sinyal · 4 func
 - scripts/menu/licenses.gd · 78 · - · Control · 2 sinyal · 5 func
-- scripts/menu/main_menu.gd · 100 · - · Control · 2 sinyal · 5 func
+- scripts/menu/main_menu.gd · 94 · - · Control · 2 sinyal · 5 func
 
 ### scripts/modals/ (9 dosya, 2810 satır)
 - scripts/modals/confirm_modal.gd · 65 · - · Control · 3 sinyal · 4 func
@@ -392,7 +392,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
   ↳ tab_changed connect: scripts/main/main.gd:5559, scripts/ui/components/left_tabs.gd:106, scripts/ui/components/research_bar.gd:61, scripts/ui/components/top_bar.gd:172, scripts/ui/components/window_layer.gd:62
 - finance_subpage_requested(page_id: String) · scripts/autoload/event_bus.gd:32 · emit: scripts/main/main.gd:5132,5641, scripts/tabs/events/mail_pane.gd:766 · connect: scripts/tabs/finance_tab.gd:58
 - goto_tab_requested(tab_id: String, subpage: String) · scripts/autoload/event_bus.gd:34 · emit: scripts/events/core/effects.gd:648 · connect: scripts/main/main.gd:5558
-- settings_requested() · scripts/autoload/event_bus.gd:38 · emit: scripts/main/main.gd:3169, scripts/menu/main_menu.gd:56, scripts/modals/system_menu_modal.gd:39, scripts/ui/components/left_tabs.gd:96 · connect: scripts/main/main.gd:89
+- settings_requested() · scripts/autoload/event_bus.gd:38 · emit: scripts/main/main.gd:3169, scripts/menu/main_menu.gd:53, scripts/modals/system_menu_modal.gd:39, scripts/ui/components/left_tabs.gd:96 · connect: scripts/main/main.gd:89
 - confirm_requested(config: Dictionary) · scripts/autoload/event_bus.gd:41
   ↳ confirm_requested emit: scripts/main/main.gd:3186,6031, scripts/modals/save_load_modal.gd:212, scripts/modals/settings_modal.gd:269, scripts/modals/system_menu_modal.gd:78, scripts/modals/term_sheet_table_scene.gd:388 +10
   ↳ confirm_requested connect: scripts/main/main.gd:91
@@ -597,7 +597,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
   ↳ day_tick_completed connect: scripts/autoload/save_manager.gd:61, scripts/events/tools/plausibility.gd:159, scripts/tabs/sales_tab.gd:76, scripts/ui/components/inbox.gd:160, scripts/ui/office/office_city.gd:102 +4
 - game_loaded(slot_id: String) · scripts/autoload/event_bus.gd:289 · emit: scripts/main/main.gd:6077 · connect: scripts/ui/components/left_tabs.gd:128, scripts/ui/components/top_bar.gd:169
 - system_menu_requested() · scripts/autoload/event_bus.gd:291 · emit: scripts/main/game_shell.gd:102, scripts/main/main.gd:2490,3172,3194 · connect: scripts/main/main.gd:5567
-- save_load_requested(mode: String) · scripts/autoload/event_bus.gd:293 · emit: scripts/main/main.gd:3174,3178, scripts/menu/main_menu.gd:55, scripts/modals/system_menu_modal.gd:37,38 · connect: scripts/main/main.gd:90
+- save_load_requested(mode: String) · scripts/autoload/event_bus.gd:293 · emit: scripts/main/main.gd:3174,3178, scripts/menu/main_menu.gd:52, scripts/modals/system_menu_modal.gd:37,38 · connect: scripts/main/main.gd:90
 - quicksave_requested() · scripts/autoload/event_bus.gd:296 · emit: scripts/main/game_shell.gd:61, scripts/main/main.gd:2466,2471,3199 · connect: scripts/main/main.gd:5568
 - quickload_requested() · scripts/autoload/event_bus.gd:297 · emit: scripts/main/game_shell.gd:63, scripts/main/main.gd:2463,2491,2496,2502 · connect: scripts/main/main.gd:5569
 - debug_onboarding_retrigger_requested() · scripts/autoload/event_bus.gd:301 · emit: scripts/main/game_shell.gd:140 · connect: scripts/main/main.gd:104
@@ -623,8 +623,8 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
   ↳ dismissed connect: scripts/main/main.gd:5916,5941,5960,5994, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
 
 ### scripts/menu/main_menu.gd
-- new_game_requested() · scripts/menu/main_menu.gd:7 · emit: scripts/main/main.gd:3433, scripts/menu/main_menu.gd:54 · connect: scripts/main/main.gd:131
-- load_requested(slot_id: String) · scripts/menu/main_menu.gd:8 · emit: scripts/menu/main_menu.gd:53, scripts/modals/save_load_modal.gd:237,239 · connect: scripts/main/main.gd:134,5996 · (ad 2 yerde tanımlı)
+- new_game_requested() · scripts/menu/main_menu.gd:7 · emit: scripts/main/main.gd:3433, scripts/menu/main_menu.gd:51 · connect: scripts/main/main.gd:131
+- load_requested(slot_id: String) · scripts/menu/main_menu.gd:8 · emit: scripts/menu/main_menu.gd:50, scripts/modals/save_load_modal.gd:237,239 · connect: scripts/main/main.gd:134,5996 · (ad 2 yerde tanımlı)
 
 ### scripts/modals/confirm_modal.gd
 - confirmed() · scripts/modals/confirm_modal.gd:11 · emit: scripts/modals/hr_action_modal.gd:224 · connect: scripts/main/main.gd:5936, scripts/onboarding/onboarding_flow.gd:177 · (ad 2 yerde tanımlı)
@@ -648,7 +648,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
   ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:77, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
   ↳ dismissed connect: scripts/main/main.gd:5916,5941,5960,5994, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
 - save_requested(slot_id: String) · scripts/modals/save_load_modal.gd:15 · emit: scripts/modals/save_load_modal.gd:229 · connect: scripts/main/main.gd:5995
-- load_requested(slot_id: String) · scripts/modals/save_load_modal.gd:16 · emit: scripts/menu/main_menu.gd:53, scripts/modals/save_load_modal.gd:237,239 · connect: scripts/main/main.gd:134,5996 · (ad 2 yerde tanımlı)
+- load_requested(slot_id: String) · scripts/modals/save_load_modal.gd:16 · emit: scripts/menu/main_menu.gd:50, scripts/modals/save_load_modal.gd:237,239 · connect: scripts/main/main.gd:134,5996 · (ad 2 yerde tanımlı)
 
 ### scripts/modals/settings_modal.gd
 - dismissed() · scripts/modals/settings_modal.gd:16 · (ad 7 yerde tanımlı)

@@ -118,7 +118,7 @@ _apply	func	scripts/events/core/effects.gd:241	EvEffects
 _apply_bus	func	scripts/autoload/audio_manager.gd:169	AudioManager
 _apply_enabled	func	scripts/autoload/audio_manager.gd:162	AudioManager
 _apply_known	func	scripts/tabs/product/area_panel.gd:77	AreaPanel
-_apply_layout	func	scripts/menu/main_menu.gd:81	main_menu.gd
+_apply_layout	func	scripts/menu/main_menu.gd:78	main_menu.gd
 _apply_layout	func	scripts/onboarding/onboarding_flow.gd:75	onboarding_flow.gd
 _apply_phase_lock	func	scripts/tabs/finance_tab.gd:127	finance_tab.gd
 _apply_positions	func	scripts/tabs/rnd/rnd_tree_view.gd:166	RnDTreeView
@@ -2090,7 +2090,7 @@ _libraries	func	scripts/ui/office/office_person.gd:1027	OfficePerson
 _libs	var	scripts/ui/office/office_person.gd:174	OfficePerson
 _licenses_btn	var	scripts/menu/credits.gd:12	credits.gd
 _lift	var	scripts/ui/office/office_people.gd:66	OfficePeople
-_lift_cover	func	scripts/menu/main_menu.gd:75	main_menu.gd
+_lift_cover	func	scripts/menu/main_menu.gd:72	main_menu.gd
 _lift_open	var	scripts/ui/office/office_people.gd:67	OfficePeople
 _light	func	scripts/ui/components/top_bar.gd:415	top_bar.gd
 _line	func	scripts/tabs/rnd/rnd_tree_view.gd:377	RnDTreeView
@@ -2611,7 +2611,7 @@ _on_version_shipped	func	scripts/ui/components/left_tabs.gd:252	left_tabs.gd
 _on_walk_pressed	func	scripts/modals/term_sheet_table_scene.gd:404	TermSheetTableScene
 _on_week_start	func	scripts/debug/run_probe.gd:1148	RunProbe
 _on_week_start	func	scripts/events/tools/plausibility.gd:176	plausibility.gd
-_on_window_closing	func	scripts/menu/main_menu.gd:98	main_menu.gd
+_on_window_closing	func	scripts/menu/main_menu.gd:92	main_menu.gd
 _on_window_mode_selected	func	scripts/modals/settings_modal.gd:233	settings_modal.gd
 _on_wishlist	func	scripts/modals/ending_scene.gd:514	EndingScene
 _on_write_done	func	scripts/autoload/save_manager.gd:460	SaveManager
@@ -2648,7 +2648,7 @@ _open_steward_picker	func	scripts/tabs/sales_tab.gd:676	sales_tab.gd
 _open_table	func	scripts/ui/meeting/sales_meeting_adapter.gd:196	SalesMeetingAdapter
 _open_weeks	var	scripts/debug/run_probe.gd:331	RunProbe
 _opened	func	scripts/tabs/events/mail_pane.gd:654	mail_pane.gd
-_opener	var	scripts/menu/main_menu.gd:30	main_menu.gd
+_opener	var	scripts/menu/main_menu.gd:28	main_menu.gd
 _opening_conviction	func	scripts/systems/term_sheet_table_system.gd:519	TermSheetTableSystem
 _option	func	scripts/ui/meeting/sales_meeting_adapter.gd:187	SalesMeetingAdapter
 _option_effects	func	scripts/events/tools/lint.gd:752	EvLint
@@ -3083,7 +3083,7 @@ _ready	func	scripts/main/main.gd:83	main.gd
 _ready	func	scripts/menu/credits.gd:15	credits.gd
 _ready	func	scripts/menu/godot_card.gd:14	godot_card.gd
 _ready	func	scripts/menu/licenses.gd:19	licenses.gd
-_ready	func	scripts/menu/main_menu.gd:33	main_menu.gd
+_ready	func	scripts/menu/main_menu.gd:31	main_menu.gd
 _ready	func	scripts/modals/confirm_modal.gd:28	confirm_modal.gd
 _ready	func	scripts/modals/ending_scene.gd:55	EndingScene
 _ready	func	scripts/modals/hr_action_modal.gd:140	hr_action_modal.gd
@@ -5079,7 +5079,7 @@ collect_payload	func	scripts/onboarding/steps/origin_traits_step.gd:311	origin_t
 collect_payload	func	scripts/onboarding/steps/step_base.gd:36	OnboardingStep
 color	var	scripts/tabs/product/sprint_ui_shared.gd:39	SprintUiShared.Squares
 color	var	scripts/tabs/rnd/rnd_ui_shared.gd:199	RnDUiShared.HexGlyph
-COLUMN	const	scripts/menu/main_menu.gd:22	main_menu.gd
+COLUMN	const	scripts/menu/main_menu.gd:21	main_menu.gd
 Column	class	scripts/tabs/product/sprint_panel.gd:20	SprintPanel
 column	func	scripts/tabs/product/sprint_ui_shared.gd:179	SprintUiShared
 COLUMNS	const	scripts/onboarding/steps/company_step.gd:8	company_step.gd
@@ -5210,7 +5210,6 @@ CREAM_DIM	const	scripts/theme/ui_tokens.gd:87	UiTokens
 CREAM_DIM_DISABLED	const	scripts/theme/ui_tokens.gd:88	UiTokens
 create	func	scripts/autoload/promise_registry.gd:50	PromiseRegistry
 CREDITS	const	scripts/menu/main_menu.gd:10	main_menu.gd
-CREDITS_SCRIPT	const	scripts/menu/main_menu.gd:11	main_menu.gd
 CREW_FACES	const	scripts/tabs/product/sprint_head.gd:12	SprintHead
 CREW_MIX	const	scripts/debug/run_probe.gd:254	RunProbe
 crew_names	func	scripts/events/core/effects.gd:1068	EvEffects
@@ -6369,7 +6368,7 @@ FOCUS_SHIFT_PX	const	scripts/ui/office/office_city.gd:26	OfficeCity
 FOCUS_TIME	const	scripts/ui/office/office_city.gd:27	OfficeCity
 FOCUS_ZOOM	const	scripts/ui/office/meeting_invite.gd:27	MeetingInvite
 FOCUS_ZOOM	const	scripts/ui/office/office_city.gd:25	OfficeCity
-focused_id	func	scripts/menu/main_menu.gd:92	main_menu.gd
+focused_id	func	scripts/menu/main_menu.gd:86	main_menu.gd
 fog	var	scripts/ui/office/office_layout.gd:14	OfficeLayout
 FOLLOW	const	scripts/ui/office/office_person.gd:155	OfficePerson.Phase
 FOLLOW_CLEAR	const	scripts/ui/office/office_person.gd:138	OfficePerson
@@ -6388,7 +6387,7 @@ FONT_SERIF_SB	const	scripts/theme/build_theme.gd:30	build_theme.gd
 FONT_SYMBOLS	const	scripts/theme/build_theme.gd:38	build_theme.gd
 foot	var	scripts/tabs/hr/hr_panel.gd:14	hr_panel.gd
 foot	func	scripts/tabs/product/sprint_panel.gd:46	SprintPanel.Column
-FOOT_FADE	const	scripts/menu/main_menu.gd:18	main_menu.gd
+FOOT_FADE	const	scripts/menu/main_menu.gd:17	main_menu.gd
 FOOTROOM	const	tools/office3d/bake_nav.gd:22	bake_nav.gd
 for_person	func	scripts/systems/look_system.gd:123	LookSystem
 FORBIDDEN_TERMS	const	scripts/events/tools/lint.gd:44	EvLint
@@ -7051,7 +7050,7 @@ is_walking	func	scripts/ui/office/office_person.gd:391	OfficePerson
 is_whale	var	scripts/data_models/prospect.gd:63	Prospect
 ISSUE_PERIOD_WEEKS	const	scripts/systems/endings_copy.gd:33	EndingsCopy
 issued_looks	var	scripts/autoload/game_state.gd:220	GameState
-items	var	scripts/menu/main_menu.gd:28	main_menu.gd
+items	var	scripts/menu/main_menu.gd:26	main_menu.gd
 items	func	scripts/tabs/rnd/rnd_history.gd:22	rnd_history.gd
 items	func	scripts/ui/components/inbox.gd:43	inbox.gd
 JAM_NEAR	const	scripts/ui/office/office_person.gd:134	OfficePerson
@@ -7305,7 +7304,7 @@ LINES_TENSE	const	scripts/systems/term_sheet_table_system.gd:108	TermSheetTableS
 LineSwatch	class	scripts/tabs/rnd/rnd_ui_shared.gd:222	RnDUiShared
 links	func	scripts/tabs/rnd/rnd_ui_shared.gd:268	RnDUiShared
 list	func	scripts/systems/cheque_read.gd:15	cheque_read.gd
-LIST_GAP	const	scripts/menu/main_menu.gd:24	main_menu.gd
+LIST_GAP	const	scripts/menu/main_menu.gd:23	main_menu.gd
 list_runs	func	scripts/autoload/save_manager.gd:138	SaveManager
 list_series	func	scripts/systems/market_catalog.gd:137	MarketCatalog
 list_slots	func	scripts/autoload/save_manager.gd:120	SaveManager
@@ -7348,8 +7347,8 @@ lock_weeks_left	func	scripts/systems/infra_system.gd:246	InfraSystem
 locked_line	func	scripts/systems/sales_probes.gd:96	SalesProbes
 locked_type_ids	func	scripts/systems/product_catalog.gd:77	ProductCatalog
 LOCKS	const	scripts/ui/office/office_camera.gd:24	OfficeCamera
-LOCKUP_AUTHORED_S	const	scripts/menu/main_menu.gd:19	main_menu.gd
-LOCKUP_S	const	scripts/menu/main_menu.gd:23	main_menu.gd
+LOCKUP_AUTHORED_S	const	scripts/menu/main_menu.gd:18	main_menu.gd
+LOCKUP_S	const	scripts/menu/main_menu.gd:22	main_menu.gd
 LOCKUP_S	const	scripts/onboarding/onboarding_flow.gd:31	onboarding_flow.gd
 LOD	const	scripts/ui/office/office_person.gd:144	OfficePerson
 LOG_ROWS	const	scripts/tabs/sales_tab.gd:20	sales_tab.gd
@@ -7539,10 +7538,10 @@ MENU_BACKDROP	const	scripts/main/main.gd:18	main.gd
 MENU_CITY_FOCUS	const	scripts/ui/menu_backdrop.gd:16	menu_backdrop.gd
 MENU_CITY_HIDDEN	const	scripts/ui/menu_backdrop.gd:18	menu_backdrop.gd
 MENU_CITY_ZOOM	const	scripts/ui/menu_backdrop.gd:15	menu_backdrop.gd
-MENU_COVER_S	const	scripts/menu/main_menu.gd:12	main_menu.gd
+MENU_COVER_S	const	scripts/menu/main_menu.gd:11	main_menu.gd
 MENU_FADE_S	const	scripts/ui/menu_backdrop.gd:14	menu_backdrop.gd
-MENU_MINUTE	const	scripts/menu/main_menu.gd:14	main_menu.gd
-MENU_OFFICE	const	scripts/menu/main_menu.gd:13	main_menu.gd
+MENU_MINUTE	const	scripts/menu/main_menu.gd:13	main_menu.gd
+MENU_OFFICE	const	scripts/menu/main_menu.gd:12	main_menu.gd
 MENU_SHOT_PRESS	const	scripts/main/main.gd:3285	main.gd
 MENU_SHOTS	const	scripts/main/main.gd:3283	main.gd
 MENU_STAGE_FEET	const	scripts/ui/menu_backdrop.gd:23	menu_backdrop.gd
@@ -9288,7 +9287,7 @@ SHUTTER_CARD	const	scripts/systems/endings_system.gd:27	EndingsSystem
 shutter_changed	signal	scripts/autoload/event_bus.gd:250	EventBus
 SHUTTER_WEEKS	const	scripts/systems/endings_system.gd:25	EndingsSystem
 shutter_weeks_left	var	scripts/autoload/game_state.gd:140	GameState
-SIDE_FADE	const	scripts/menu/main_menu.gd:17	main_menu.gd
+SIDE_FADE	const	scripts/menu/main_menu.gd:16	main_menu.gd
 sign	func	scripts/systems/term_sheet_table_system.gd:555	TermSheetTableSystem
 sign_deal	func	scripts/systems/sales_finalizer.gd:84	SalesFinalizer
 sign_due	func	scripts/systems/sales_rep_system.gd:198	SalesRepSystem
@@ -10022,7 +10021,6 @@ version	func	scripts/systems/product_state.gd:62	ProductState
 version_age	func	scripts/systems/product_read.gd:29	ProductRead
 version_age	func	scripts/systems/product_state.gd:262	ProductState
 version_age_weeks	func	scripts/systems/product_state.gd:270	ProductState
-VERSION_INSET	const	scripts/menu/main_menu.gd:25	main_menu.gd
 version_label	func	scripts/systems/sprint_system.gd:1281	SprintSystem
 VERSION_LAUNCH_DAY	const	scripts/systems/product_state.gd:28	ProductState
 version_line	func	scripts/menu/credits.gd:36	credits.gd

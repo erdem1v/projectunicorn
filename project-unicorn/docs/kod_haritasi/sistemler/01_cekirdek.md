@@ -60,7 +60,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
   ↳ `InfraSystem.auto_adjust`, `MailClock.hourly_tick`, `IncidentSystem.hourly_tick`, `EventGate.hourly_tick`; 00:00'ın saatlik dilimi `advance_day()`'den önce koşar (`TimeManager.is_rolling_over()` o dilimde doğrudur)
 - `SaveManager.save_to_slot/read_slot/apply_loaded_state` `save_manager.gd:219,153,286` · `scripts/main/main.gd:5247,5200,5211`
   ↳ Göç zincirini `read_slot` değil `_read_file` `:170` koşar; `read_slot` yalnız onu çağırır ve bozuk ya da eksik hedefte slotun `.bak`'ına düşer (sonuca `from_backup`); `SAVE_ERR_NEWER` ve `SAVE_ERR_TOO_OLD` geriye düşmez
-- `SaveManager.list_slots/list_runs` `save_manager.gd:120,138` · `scripts/menu/main_menu.gd:42`, `scripts/modals/save_load_modal.gd:55`
+- `SaveManager.list_slots/list_runs` `save_manager.gd:120,138` · `scripts/menu/main_menu.gd:39`, `scripts/modals/save_load_modal.gd:55`
 - `SaveManager.end_run()` `save_manager.gd:364`: koşuyu süreç içinde bitirir · `scripts/main/main.gd:128,5385` (menüye dönüş)
 - `SaveManager.reset_all_owners()` `save_manager.gd:326`: statik/kayıtlı koşu durumunun tek sıfırlama listesi
 - `SaveManager.can_save/cannot_save_reason_key/has_unsaved_progress` `save_manager.gd:81,85,99`: kayıt kapısı (karar bekliyor, oturum açık, koşu yok)
