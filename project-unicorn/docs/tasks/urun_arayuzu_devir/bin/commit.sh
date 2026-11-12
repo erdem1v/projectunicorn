@@ -5,10 +5,14 @@
 . "$(dirname "$0")/env.sh"
 tag="$1"; old="$2"; msg="$3"; changed="$4"; deleted="${5:-}"
 M="$S/m_$tag/project-unicorn"; X="$S/x_$tag"; PFX=project-unicorn
-[ -f "$K/kapi/sahip" ] && grep -q '^URUN_ARAYUZU' "$K/kapi/sahip" || { echo "ABORT: kapı kilidi bende değil"; exit 2; }
+[ -f "$K/kapi/sahip" ] && grep -q "^$ETIKET" "$K/kapi/sahip" || { echo "ABORT: kapı kilidi bende değil"; exit 2; }
 cd "$R" || exit 2
 oldfull=$(git rev-parse "$old") || exit 2
 [ "$(git rev-parse HEAD)" = "$oldfull" ] || { echo "ABORT: HEAD $(git rev-parse --short HEAD) != $old; adım 2'ye dön"; exit 4; }
+# Test planı T-2: bu HEAD'e karşı alınmış yeşil hizli kaydı (hizli.sh) yoksa commit yok.
+ok="$S/g_$tag/hizli.ok"
+{ [ -f "$ok" ] && [ "$(head -1 "$ok")" = "$oldfull" ]; } || { echo "ABORT: bu HEAD'e karşı yeşil hizli kaydı yok ($ok); önce hizli.sh $tag $old"; exit 3; }
+echo "hizli: $(sed -n 2p "$ok")"
 paths=$(cat "$changed"; for g in DIZIN.md SEMBOLLER.tsv KALITE.md; do
   f="docs/kod_haritasi/$g"; h=$(git rev-parse -q --verify "$oldfull:$PFX/$f") && [ "$(git hash-object --path="$PFX/$f" "$M/$f")" != "$h" ] && echo "$f"
 done)
