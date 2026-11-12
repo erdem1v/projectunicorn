@@ -263,6 +263,8 @@ static func _tick_at_risk(c: Customer) -> void:
 
 ## The retention card, asked again in a Risk spell's last week when it went unanswered (_ask_retention).
 const RETENTION_CARD := "customer.retention"
+## The server clause's last-week decision (_tick_clause).
+const CLAUSE_CARD := "customer.clause_last_week"
 
 
 ## An account does not leave from Risk unheard (Erdem, 2026-11-12, N03: "oyuncu bir şey kaçırmasın"). Entering Risk is
@@ -380,9 +382,13 @@ static func meet_clauses() -> void:
 		CustomerRegistry.set_clause(c.id, -1, -1)
 
 
-## Maddesi açık hesabın günlük adımı: sözleşmenin bittiği tikte hesap kayıp sayılır ve true döner.
+## Maddesi açık hesabın günlük adımı: sözleşmenin bittiği tikte hesap kayıp sayılır ve true döner. Bildirimin son haftasına
+## girilen tik `customer.clause_last_week` kâğıdını ister (Erdem, 2026-11-12, N03: bildirim mailinin düğmesi son haftada mesai
+## sonunda karar kartına döner): "Kurumsal sunucuya geç" ya da "Bırak gitsin".
 static func _tick_clause(c: Customer) -> bool:
 	if c.notice_end_day >= 0:
+		if GameState.day == c.notice_end_day - TimeModel.ticks(1):
+			EventGate.request(CLAUSE_CARD, {"customer": c.id})
 		if GameState.day < c.notice_end_day:
 			return false
 		SalesSystem.record_sales_event("clause_ended", "", c.company_name, c.mrr)

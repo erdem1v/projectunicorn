@@ -215,6 +215,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"infra_local_provider_tradeoff": fail = _case_infra_local_provider_tradeoff()
 		"infra_price_lock":            fail = _case_infra_price_lock()
 		"enterprise_clause_timeline":    fail = _case_enterprise_clause_timeline()
+		"clause_last_week_asks":         fail = _case_clause_last_week_asks()
 		"b2b_exit_notice":               fail = _case_b2b_exit_notice()
 		"b2b_timed_discount":            fail = _case_b2b_timed_discount()
 		"sales_offer_signing":           fail = _case_sales_offer_signing()
@@ -15431,6 +15432,62 @@ static func _case_infra_price_lock() -> String:
 		return "the multipliers came back as %s and %s, prices %s" % [ProductState.infra_price_mult(), tiers, prices.call("b2c")]
 	if ProductState.infra_lock_until() != until or ProductState.infra_lock_units() != 3 or InfraSystem.lock_weeks_left() != 8 or InfraSystem.set_capacity(1) != 3:
 		return "the contract came back as until %d for %d units (%d weeks left)" % [ProductState.infra_lock_until(), ProductState.infra_lock_units(), InfraSystem.lock_weeks_left()]
+	return ""
+
+
+## Sunucu maddesinin fesih bildirimi son haftasına girince karar kâğıdı gelir (N03, Erdem 2026-11-12: bildirim mailinin düğmesi son
+## haftada mesai sonunda karar kartına döner); bildirimin başka haftalarında istenmez. "Kurumsal sunucuya geç" sunucuyu Infra'nın kendi
+## geçişinden (`InfraSystem.set_provider`) Kurumsal'a taşır, bütün bildirimler geri alınır, hesaplar kalır; aynı hafta son haftasındaki
+## öbür hesabın kâğıdı artık açılmaz (`musteri.clause_notice`). Çip iki kademeyi ve aylık faturayı yazar, geçmiş satırı aynı çipi okur.
+## Sunucu sözleşmesi sürerken o şık kilitli.
+## FALSİFİKASYON: `_tick_clause`'daki isteği sil → son haftada kâğıt yok, FAIL; `server_enterprise` kolunda set_provider'ı atla →
+## bildirim sürer, FAIL; şıkkın `requires`'ını sil → sözleşme sürerken şık açık, FAIL; kartın koşulunu sil → geçişten sonra öbür
+## hesabın "bu hafta ayrılıyor" kâğıdı açılır, FAIL.
+static func _case_clause_last_week_asks() -> String:
+	const CARD := B2BSalesSystem.CLAUSE_CARD
+	_seed_b2b(2000)
+	InfraSystem.set_provider(InfraSystem.PROVIDER_CLOUD)
+	InfraSystem.set_capacity(20)
+	var c: Customer = SalesSystem.add_b2b_customer(_add_prospect("clause_last", 3, ""), 60, 100, 70)
+	var other: Customer = SalesSystem.add_b2b_customer(_add_prospect("clause_other", 3, ""), 60, 100, 70)
+	if c.clause_due_day < 0 or other.clause_due_day < 0:
+		return "fixture: a 3★ account signed without a server clause"
+	var ctx: Dictionary = _ctx_customer(c)
+	var key: String = EvLatches.key_of(CARD, ctx)
+	var other_key: String = EvLatches.key_of(CARD, _ctx_customer(other))
+	for account: Customer in [c, other]:
+		CustomerRegistry.set_clause(account.id, account.clause_due_day, GameState.day + TimeModel.ticks(3))
+	GameState.advance_day()
+	B2BSalesSystem.daily_tick()
+	if EvPapers.has(key):
+		return "the clause card came two weeks before the notice ends, want its last week"
+	GameState.advance_day()
+	B2BSalesSystem.daily_tick()
+	if not EvPapers.has(key) or not EvPapers.has(other_key):
+		return "the notices entered their last week (end day %d, today %d) and no card came" % [c.notice_end_day, GameState.day]
+	InfraSystem.lock(2)
+	var held: GameEvent = EventGate.render(CARD, ctx)
+	var row: int = _row_with_verb(held, "server_enterprise")
+	if row < 0 or _row_unlocked(held, row, ctx):
+		return "under a server contract the move to Enterprise is open (row %d)" % row
+	ProductState.set_infra_lock(GameState.day, InfraSystem.units())
+	var effects: Array = (EvCatalog.card(CARD).options[0] as Dictionary).effects
+	var texts := func(parts: Array) -> Array: return parts.map(func(p: Dictionary) -> String: return EvChips.text(p))
+	var bill: String = Fmt.money_chip(InfraSystem.monthly_bill(InfraSystem.PROVIDER_ENTERPRISE))
+	var shown: Array = texts.call(EvChips.option_parts(effects, {}, ctx))
+	if shown.size() != 1 or not shown[0].contains(bill) or not shown[0].contains(Fmt.money_chip(InfraSystem.monthly_bill())):
+		return "the move reads %s, want the bill now and %s on Enterprise" % [str(shown), bill]
+	if not EventGate.open_paper(key):
+		return "the clause card did not open off the desk"
+	EventGate.resolve(CARD, "move")
+	if InfraSystem.provider() != InfraSystem.PROVIDER_ENTERPRISE or c.notice_end_day != -1 or c.clause_due_day != -1:
+		return "after the move: tier %s, notice %d, clause %d; want Enterprise and both withdrawn" % [
+			InfraSystem.provider(), c.notice_end_day, c.clause_due_day]
+	var kept: Array = texts.call(EvChips.describe(EvHistory.rows()[-1]["deltas"][0], EvHistory.rows()[-1]["entities"], {}, true))
+	if kept != shown:
+		return "the card showed %s, its history row reads %s" % [str(shown), str(kept)]
+	if EventGate.open_paper(other_key) or other.notice_end_day != -1:
+		return "after the move the other account's card still opened (notice %d)" % other.notice_end_day
 	return ""
 
 

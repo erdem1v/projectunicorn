@@ -80,12 +80,13 @@ const ECONOMIC_VERBS := [
 	"audience_delta",
 	"change_salary", "fire_employee", "employee_leaves", "promote", "start_training",
 	"add_prospect", "angel_accept", "b2b_expand", "b2b_retain_discount", "b2b_month_discount", "marketing_push", "incident",
-	"promise_break", "account_notice", "prospect_offer", "drop_prospect", "server_price",
+	"promise_break", "account_notice", "prospect_offer", "drop_prospect", "server_price", "server_enterprise",
 ]
 
 ## Economic verbs that are never only a cost, so no expiry applies them: a marketing push spends money to buy growth, a
-## training to buy a skill, a dismissal pays a severance to stop a salary, a signature only gains an account.
-const NOT_ONLY_COST := ["marketing_push", "start_training", "fire_employee", "add_customer"]
+## training to buy a skill, a dismissal pays a severance to stop a salary, a signature only gains an account, Enterprise servers
+## raise the bill to keep the accounts their clause holds.
+const NOT_ONLY_COST := ["marketing_push", "start_training", "fire_employee", "add_customer", "server_enterprise"]
 
 ## Ends the run. Played decisions only — never a dice branch (I6), never an expiry, never an
 ## ambient tick.
@@ -806,6 +807,14 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 			var quote: Dictionary = server_price_plan(e)
 			InfraSystem.scale_price(float(e.get("mult", 1.0)), e.get("tiers", []))
 			return quote.merged({"verb": verb, "mult": e.get("mult", 1.0), "tiers": e.get("tiers", [])})
+		# A move to Enterprise through the Infra page's own switch (InfraSystem.set_provider, WRITE-THROUGH): it meets every
+		# account's server clause and there is no way back down. The row keeps both tiers and the month's bill before and after,
+		# which the chip said; a switch a server contract holds is refused and moves nothing.
+		"server_enterprise":
+			var move: Dictionary = server_enterprise_plan()
+			if not InfraSystem.set_provider(InfraSystem.PROVIDER_ENTERPRISE):
+				return {"verb": verb, "refused": "the server tier cannot change now"}
+			return move.merged({"verb": verb})
 		# A contract: the tier stays and the capacity does not fall under today's for `weeks`; the row keeps that capacity.
 		"server_lock":
 			var contract_weeks: int = int(e.get("weeks", 1))
@@ -904,6 +913,13 @@ static func server_price_plan(e: Dictionary) -> Dictionary:
 	var hit: bool = tiers.is_empty() or tiers.has(InfraSystem.provider())
 	return {"before": InfraSystem.monthly_bill(),
 		"after": InfraSystem.monthly_bill("", float(e.get("mult", 1.0)) if hit else 1.0)}
+
+
+## What a `server_enterprise` move does and what the player reads for it: the tier now and Enterprise, the month's bill now
+## and on Enterprise.
+static func server_enterprise_plan() -> Dictionary:
+	return {"from": InfraSystem.provider(), "to": InfraSystem.PROVIDER_ENTERPRISE, "before": InfraSystem.monthly_bill(),
+		"after": InfraSystem.monthly_bill(InfraSystem.PROVIDER_ENTERPRISE)}
 
 
 ## What an `assign_to` pins and what the player reads for it: the slot's person, the weeks (`weeks`, else the `weeks_seam`), and the

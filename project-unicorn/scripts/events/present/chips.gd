@@ -329,6 +329,12 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 			var quote: Dictionary = item if is_delta else EvEffects.server_price_plan(item)
 			return [_part(_t("EFFECT_SERVER_PRICE").format({"pct": Fmt.signed_percent(price_pct),
 				"v": _money(int(quote.get("after", 0)) - int(quote.get("before", 0)))}), "", _signed(-price_pct))]
+		# The move: from which tier to which, and the month's bill before and after (the row keeps the bills it moved between).
+		"server_enterprise":
+			var move: Dictionary = item if is_delta else EvEffects.server_enterprise_plan()
+			return [_part(_t("PRODUCT_SERVER_TIER_PREVIEW").format({"from": _t(ProductModel.TIER_KEYS.get(String(move.get("from", "")), "")),
+				"to": _t(ProductModel.TIER_KEYS.get(String(move.get("to", "")), "")), "old": Fmt.money_chip(int(move.get("before", 0))),
+				"new": Fmt.money_chip(int(move.get("after", 0)))}), "", "cost")]
 		# The contract: the weeks the tier stays and the capacity it may not fall under (the row keeps the one it was signed at).
 		"server_lock":
 			var in_seats: bool = ProductState.market_type() == "b2b"

@@ -1,0 +1,83 @@
+{
+  "id": "customer.clause_last_week",
+  "version_scope": "demo",
+  "category": "customer",
+  "tick": "request",
+  "class": "paper",
+  "tags": [],
+  "schema": 3,
+  "system": true,
+  "family": "customer_clause",
+  "delay_weeks": [0, 0],
+  "delay_reason": "request: the server clause's notice names it the tick its last week begins",
+  "plausibility": {
+    "phase_band": ["bootstrap_solo", "bootstrap_team", "traction", "series_a"],
+    "headcount": [0, null],
+    "product": "live",
+    "modules": [],
+    "min_week": 0
+  },
+  "guards": {
+    "market": "b2b"
+  },
+  "scope": {
+    "customer": { "type": "customer", "required": true }
+  },
+  "latch": { "cooldown_weeks": 4 },
+  "latch_key": "entity",
+  "condition": {
+    "entity_seam": "musteri.clause_notice",
+    "scope": "customer",
+    "op": "==",
+    "value": true
+  },
+  "options": [
+    {
+      "id": "move",
+      "outcome_id": "moved",
+      "effects": [
+        { "verb": "server_enterprise" }
+      ],
+      "requires": {
+        "seam": "urun.server_switch_open",
+        "op": "==",
+        "value": true
+      }
+    },
+    {
+      "id": "let_go",
+      "outcome_id": "let_go",
+      "effects": []
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "{customer} bu hafta ayrılıyor",
+      "body": "Sözleşmedeki kurumsal sunucu maddesi karşılanmadığı için {customer} sözleşmeyi bu haftanın sonunda bitiriyor. Bu hafta Kurumsal sunucuya geçersek kalıyorlar.",
+      "options": {
+        "move": "Kurumsal sunucuya geç",
+        "let_go": "Bırak gitsin"
+      },
+      "locked_reasons": {
+        "move": "Sunucu sözleşmen sürüyor; kademe değişmez."
+      },
+      "expire_note": "Cevap gelmedi."
+    },
+    "en": {
+      "title": "{customer} leaves this week",
+      "body": "The enterprise-server clause in the contract was never met, so {customer} ends it at the end of this week. If we move to Enterprise servers this week, they stay.",
+      "options": {
+        "move": "Move to Enterprise",
+        "let_go": "Let them go"
+      },
+      "locked_reasons": {
+        "move": "Your server contract is running; the tier can't change."
+      },
+      "expire_note": "No answer came."
+    }
+  },
+  "expires_weeks": 1,
+  "on_expire": { "penalties": [] },
+  "expire_note": "expire_note",
+  "_port_note": "tick: request. B2BSalesSystem._tick_clause names it the tick a server-clause notice enters its last week (Erdem, 2026-11-12, N03: the notice mail's button becomes a decision at the workday's end). The account leaves at the notice's end whatever the card says; only the move keeps it. Moving to Enterprise meets every account's clause (InfraSystem.set_provider → meet_clauses) and has no way back, which the chip's bill says."
+}

@@ -788,7 +788,8 @@ func _run_b2b_shot(kind: String) -> void:
 ## the outage's with `load=<pct>`, the server load it was rolled at, which its card tells above 90);
 ## the promise card stands in the second week of a sprint, its sender the person who works the promised card;
 ## an offer's expiry warning stands in the `investor` slot's sheet (anchor's without it) on its first warning week, and its
-## decision card in the same sheet on the day it runs out; a sprint paper stands in the sprint it interrupts;
+## decision card in the same sheet on the day it runs out; the server clause's last-week card stands in the live ERP on Standard
+## servers (`live:server_clause`'s world) with its 3★ account's notice ending next week; a sprint paper stands in the sprint it interrupts;
 ## the unseen build's card stands in the second sprint of a product nobody has launched; the savings note and the side
 ## work paper stand in a founder whose savings run down, and the investor's monthly update in a company whose cash drains
 ## (`runway=profit` shoots it in the company that earns its costs, where the note says nothing of a runway). A card whose
@@ -840,6 +841,11 @@ func _run_event_shot(spec: String) -> void:
 		given.merge(promised, false)
 	elif "expiring_sheet" in selects or "decision_sheet" in selects:
 		_seed_expiring_sheet(String(given.get("investor", "anchor")), PitchConstants.WARNING_WEEKS if "expiring_sheet" in selects else 0)
+	elif event_id == "customer.clause_last_week":
+		_seed_product_live("server_clause")
+		var held: Customer = CustomerRegistry.get_by_market("b2b").filter(func(c: Customer) -> bool: return c.clause_due_day >= 0)[0]
+		CustomerRegistry.set_clause(held.id, held.clause_due_day, GameState.day + TimeModel.ticks(1))
+		given["customer"] = held.id
 	elif event_id in ["product.b2c_floor_signal", "product.b2c_floor_churn"]:
 		_seed_floor_world()
 	elif event_id in ["founder.savings_note", "founder.side_contract"]:

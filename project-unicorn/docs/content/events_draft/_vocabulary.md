@@ -12,9 +12,9 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **312** |
-| Effect verbs (write) | **85** |
-| Cards in the catalogue | 180 |
+| Seams (read) | **314** |
+| Effect verbs (write) | **86** |
+| Cards in the catalogue | 181 |
 | Arcs | 3 |
 
 ## a · Effect verbs
@@ -121,6 +121,7 @@ Barred from ambient origins entirely; on expiry, allowed only in the negative.
 - `prospect_offer`
 - `drop_prospect`
 - `server_price`
+- `server_enterprise`
 
 ### Terminal
 
@@ -320,6 +321,7 @@ slot of that type (§17.12).
 | `musteri.can_request.line_video_clip_pipeline` | entity | bool | Sales | a request for the line_video_clip_pipeline line's next tier can be opened for the account |
 | `musteri.can_request.line_video_clip_timeline` | entity | bool | Sales | a request for the line_video_clip_timeline line's next tier can be opened for the account |
 | `musteri.churn_countdown` | entity | int | Sales | WRAPPER; -1 when not counting, else weeks to churn |
+| `musteri.clause_notice` | entity | bool | Sales | the account has given notice under the server clause (B2BSalesSystem._tick_clause); a move to Enterprise withdraws it |
 | `musteri.company_name` | entity | string | Sales | for {customer} in prose |
 | `musteri.complaint_voice` | entity | string | Sales | the per-sector complaint line |
 | `musteri.count` | global | int | Sales | active customer RECORDS — includes the B2C aggregate; see sales.account_count |
@@ -521,6 +523,7 @@ slot of that type (§17.12).
 | `urun.security_bugs` | global | int | Product | open bugs on the Security and Access line |
 | `urun.security_fix_planned` | global | bool | Product | the Security and Access fix card is in the running sprint |
 | `urun.security_tier` | global | int | Product | the tier the Security and Access line has reached; 0 before it is built |
+| `urun.server_switch_open` | global | bool | Product | no server contract holds the tier, so the Infra switch can move it (Enterprise only upward) |
 | `urun.sprint_has_tester` | global | bool | Product | a tester works in the sprint's team (the Test job); the founder testing is not one |
 | `urun.sprint_last_week` | global | bool | Product | a running sprint is in its last week, week 2 |
 | `urun.sprint_number` | global | int | Product | the open sprint; 0 before the product type is chosen |
@@ -646,6 +649,7 @@ the catalogue already uses, and the gap each pays:
 |---|---|---|
 | `award` | 6 | 1 |
 | `customer_abuse` | 6 | 1 |
+| `customer_clause` | 6 | 1 |
 | `customer_data` | 6 | 1 |
 | `customer_escalation` | 6 | 1 |
 | `customer_feedback` | 6 | 1 |
@@ -753,7 +757,7 @@ AUTHORITY, which is the linter's §17.14: a verb is writable only when it has a
 working arm in `EvEffects._apply` AND a chip in `EvChips`, so what an option promises
 is what the player is shown and what lands.
 
-### Writer verbs (57) — any card, inside the two rules below
+### Writer verbs (58) — any card, inside the two rules below
 
 - `add_cash`
 - `add_brand`
@@ -806,6 +810,7 @@ is what the player is shown and what lands.
 - `pitch_focus`
 - `server_price`
 - `server_lock`
+- `server_enterprise`
 - `assign_to`
 - `queue_card`
 - `after_test`

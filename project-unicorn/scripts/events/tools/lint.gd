@@ -473,7 +473,7 @@ const WRITER_VERBS := [
 	"send_on_leave", "summer_leave", "sick_leave", "promote", "work_hours",
 	"damage_product", "line_harden", "sprint_card_test", "sprint_fix_first",
 	"sprint_card_trim", "sprint_card_outlook", "sprint_card_first", "b2b_month_discount",
-	"account_notice", "prospect_offer", "drop_prospect", "take_account", "pitch_focus", "server_price", "server_lock",
+	"account_notice", "prospect_offer", "drop_prospect", "take_account", "pitch_focus", "server_price", "server_lock", "server_enterprise",
 	"assign_to", "queue_card", "after_test", "start_training", "fire_employee", "add_customer",
 ]
 

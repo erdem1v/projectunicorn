@@ -116,6 +116,11 @@ static func install() -> void:
 			var c: Customer = CustomerRegistry.get_customer(id)
 			return c != null and (c.exit_notice_day >= 0 or c.notice_end_day >= 0),
 		"Sales", "the account has given notice, outside the server clause or under it")
+	EvSeams.register("musteri.clause_notice", E, TYPE_BOOL,
+		func(id: String) -> bool:
+			var c: Customer = CustomerRegistry.get_customer(id)
+			return c != null and c.notice_end_day >= 0,
+		"Sales", "the account has given notice under the server clause (B2BSalesSystem._tick_clause); a move to Enterprise withdraws it")
 
 	# --- Prospects ----------------------------------------------------------
 	EvSeams.register("aday.sector", E, TYPE_STRING,
