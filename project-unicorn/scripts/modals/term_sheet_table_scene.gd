@@ -161,8 +161,9 @@ func _build_body(vs: Dictionary) -> HBoxContainer:
 	return body
 
 
-## A lever's row: its key (a lock while it is closed), its name, the term now and what a won push makes it, the
-## odds behind the push, and on the selected row the push. A closed lever reads off whole.
+## A lever's row: its key (a lock while it is closed), its name, the term now and what a won push makes it, a closed
+## lever's reason, and on the selected row the push. A closed lever reads off whole. An open lever's odds breakdown is
+## the dial's tip (envanter meet-12).
 func _build_lever(lever: Dictionary, number: int) -> PanelContainer:
 	var row := HRUiShared.D_row(false, &"LeverRow")
 	row.custom_minimum_size.y = UiTokens.D_H_LEVER
@@ -307,6 +308,10 @@ func _render(vs: Dictionary) -> void:
 	else:
 		_dial.show_result_rest(dial.chance, dial.result == "success")
 	_pct.text = Fmt.percent(roundi(dial.chance * 100.0), 0)
+	# The selected open lever's odds breakdown is the percentage's tip; a closed one has no odds to break down.
+	var picked: Array = vs.levers.filter(func(l: Dictionary) -> bool: return l.id == vs.selected_lever and not l.locked)
+	_pct.tooltip_text = String(picked[0].odds.split_text) if not picked.is_empty() else ""
+	_pct.mouse_filter = Control.MOUSE_FILTER_PASS if _pct.tooltip_text != "" else Control.MOUSE_FILTER_IGNORE
 	_last_roll.visible = dial.result != ""
 	# Red only when the fund leaves; the final offer is a warning; a refusal is not a danger.
 	_result.text = vs.result_caption
@@ -332,19 +337,19 @@ func _render(vs: Dictionary) -> void:
 	_derived.text = vs.derived_caption
 	_derived.visible = _derived.text != ""
 	var footer: Dictionary = vs.footer
-	_cash.text = footer.kasa_runway_text if footer.counter_text == "" else tr("MEETING_RES_PAIR").format(
-		{"first": footer.kasa_runway_text, "second": footer.counter_text})
+	_cash.text = footer.kasa_runway_text
 	_sign.disabled = not vs.sign_enabled or _spinning
 
 
-## A lever's row: the selection, the term now and what a won push makes it, the odds, and the push on the
-## selected open row.
+## A lever's row: the selection, the term now and what a won push makes it, a closed lever's reason, and the push on
+## the selected open row.
 func _render_lever(row: Dictionary, lever: Dictionary, selected: bool) -> void:
 	HRUiShared.D_select_row(row.row, selected)
 	row.now.text = lever.current_text
 	row.ghost.text = lever.ghost_text
 	row.arrow.visible = lever.ghost_text != ""
-	row.odds.text = lever.odds.split_text
+	row.odds.text = lever.odds.split_text if lever.locked else ""
+	row.odds.visible = row.odds.text != ""
 	row.push.visible = selected and not lever.locked
 	row.push.disabled = not lever.push_enabled or _spinning
 

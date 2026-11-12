@@ -715,13 +715,8 @@ static func view_state() -> Dictionary:
 		},
 		"frank_line": _frank_line(lev_active, other_name),
 		"money_raised": money_raised(),
-		"footer": {
-			"kasa_runway_text": _kasa_runway_text(),
-			# EMPTY AT SEED. A "0/3 tables closed" counter at a table that cannot close one would
-			# tell the player the opposite: the seed rung cannot reject.
-			"counter_text": "" if is_seed() else TranslationServer.translate("TERM_TABLES_CLOSED").format({
-				"closed": GameState.vc_rejections, "total": EndingsSystem.CASCADE_TABLES}),
-		},
+		# The cash and its runway alone (envanter meet-13): the closed tables are the Hunt page's pips.
+		"footer": {"kasa_runway_text": _kasa_runway_text()},
 		"sign_enabled": _active and not _fund_walked,
 		# After a walk-out the same row becomes "leave the room" (walk_mode) — the only exit.
 		"walk_enabled": _active and (not is_seed() or _fund_walked),
@@ -953,10 +948,12 @@ static func _lever_name(lever: String) -> String:
 static func _kasa_runway_text() -> String:
 	# GROSS runway, the table's own lens (the fund ignores revenue; the shell shows the net), in the shell's
 	# months. A company that spends nothing has no months to count: the cash stands alone.
+	# The top bar's chip shape: "$330K", no tenth past ten thousand (envanter meet-13).
 	var runway: String = UiTokens.net_runway_text(VCPitchSystem.gross_runway_months())
 	if runway == "":
-		return TranslationServer.translate("TERM_CASH").format({"cash": Fmt.money(GameState.cash)})
-	return TranslationServer.translate("TERM_CASH_RUNWAY").format({"cash": Fmt.money(GameState.cash), "runway": runway})
+		return TranslationServer.translate("TERM_CASH").format({"cash": Fmt.money_chip(GameState.cash)})
+	return TranslationServer.translate("TERM_CASH_RUNWAY").format({"cash": Fmt.money_chip(GameState.cash),
+		"runway": runway})
 
 
 # ============================================================================

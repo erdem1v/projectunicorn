@@ -108,7 +108,7 @@ Kişiler:
 Harita, toplantı, yolculuk:
 - `OfficeCity.set_layout()` `scripts/ui/office/office_city.gd:105`: harita yerleşimi yüklenince binaları bağlar, HUD'u kurar · `office_view.gd:121`
 - `OfficeCity.open()` `:184`, `close()` `:198`, `pick()` `:156`, `hover()` `:161`, `road(out, tower_label)` `:130` · `office_hud.gd` (`move_pressed`), `office_view.gd`, `office_travel.gd`
-- `OfficeTravel.travel_out()` `scripts/ui/office/office_travel.gd:65`, `travel_home()` `:95` · `scripts/main/main.gd:5812,5833` (`_leave_office` `:5803`, `_return_to_office` `:5824`)
+- `OfficeTravel.travel_out()` `scripts/ui/office/office_travel.gd:65`, `travel_home()` `:95` · `scripts/main/main.gd:5814,5833` (`_leave_office` `:5805`, `_return_to_office` `:5826`)
 - `MeetingCast.stage()` `scripts/ui/office/meeting_cast.gd:58`, `walk_in()` `:82`, `walk_out()` `:89`, `frame_table()` `:75`, `look` `:98`, `post` `:104`, `speak` `:117`, `gesture` `:126`
   · `scripts/ui/office/office_travel.gd:85-97`, `scripts/ui/meeting/meeting_panel.gd:336`, `scripts/main/main.gd:4495`
 - `MeetingInvite.ring(spec)` `scripts/ui/office/meeting_invite.gd:96`, `stop()` `:120`, `can_ring()` `:133` · `scripts/main/main.gd:4998` (`_ring_call` `:4749`)

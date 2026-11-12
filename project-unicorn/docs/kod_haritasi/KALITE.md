@@ -1,12 +1,12 @@
 # Kod haritası · KALITE
 
-Üretildi: git 260cc102 · 2026-11-12 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git cbf5b662 · 2026-11-12 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 255 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
 
 - scripts/debug/endgame_smoke.gd · 29967 satır · 679 func
-- scripts/main/main.gd · 6267 satır · 224 func
+- scripts/main/main.gd · 6269 satır · 224 func
 - scripts/debug/run_probe.gd · 2392 satır · 92 func
 - scripts/systems/sprint_system.gd · 2074 satır · 171 func
 - scripts/theme/build_theme.gd · 1663 satır · 31 func
@@ -19,7 +19,7 @@ Kapsam: scripts/ altındaki 255 .gd (tools/ hariç). Kod temizliği ve kıdemli 
 - scripts/events/core/effects.gd · 1118 satır · 34 func
 - scripts/theme/ui_tokens.gd · 1073 satır · 45 func
 - scripts/autoload/game_state.gd · 1056 satır · 55 func
-- scripts/systems/term_sheet_table_system.gd · 983 satır · 57 func
+- scripts/systems/term_sheet_table_system.gd · 980 satır · 57 func
 - scripts/systems/sprint_catalog.gd · 932 satır · 84 func
 - scripts/tabs/events/mail_pane.gd · 906 satır · 47 func
 - scripts/ui/office/office_people.gd · 852 satır · 50 func
@@ -82,9 +82,9 @@ UYARI: call("a"+b) gibi kurulmuş adlar, sinyal adıyla bağlama, harness bayrak
 - scripts/debug/office_crowd_probe.gd:48 · _log_error · debug
 - scripts/events/present/papers.gd:145 · arc_of
 - scripts/main/game_shell.gd:163 · debug_force_vc_meeting · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/main/main.gd:6208 · _dbg_close_request · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/main/main.gd:6213 · _dbg_onb_random_x20 · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/main/main.gd:6226 · _dbg_finish_run · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
+- scripts/main/main.gd:6210 · _dbg_close_request · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
+- scripts/main/main.gd:6215 · _dbg_onb_random_x20 · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
+- scripts/main/main.gd:6228 · _dbg_finish_run · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
 - scripts/systems/line_gates.gd:126 · speed_bonus_for
 - scripts/systems/product_catalog.gd:237 · type_sector_labels
 - scripts/systems/rnd_system.gd:707 · family_root_done

@@ -5046,7 +5046,8 @@ func _seed_sales_world() -> void:
 ## with the seed door open, at 00:00 before the workday in hunt_seed_early), the term-sheet table in its states and the expired-offer
 ## decision card. Pushes go through the real table system with the SkillCheck debug force. A table's kind
 ## with ":shell" mounts it in the shell's ModalLayer, as the game does, over the shell (vc_shot_<kind>_shell). A Hunt
-## kind with ":pips" rests the pointer on the closed-table pips, with ":queued" on the queued offer's note: their tips.
+## kind with ":pips" rests the pointer on the closed-table pips, with ":queued" on the queued offer's note, a table kind
+## with ":pct" on the dial's percentage (the selected lever's odds breakdown): their tips.
 func _run_vc_shot(spec: String) -> void:
 	var kind: String = spec.get_slice(":", 0)
 	var shelled: bool = spec.get_slice(":", 1) == "shell"
@@ -5141,7 +5142,8 @@ func _run_vc_shot(spec: String) -> void:
 	else:
 		_on_shot_layer(TERM_TABLE_SCENE.instantiate())
 	await get_tree().process_frame
-	var tip_key: String = {"pips": "HUNT_TABLES_TIP", "queued": "HUNT_QUEUED_TIP"}.get(spec.get_slice(":", 1), "")
+	var tip_key: String = {"pips": "HUNT_TABLES_TIP", "queued": "HUNT_QUEUED_TIP", "pct": "TERM_SPLIT_BASE"}.get(
+		spec.get_slice(":", 1), "")
 	if tip_key != "":
 		var want: String = tr(tip_key).get_slice("{", 0)
 		var hits: Array = get_tree().root.find_children("*", "Control", true, false).filter(

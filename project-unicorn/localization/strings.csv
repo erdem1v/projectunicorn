@@ -1244,7 +1244,6 @@ TERM_BOARD_VETO, + veto, + veto
 TERM_INVESTMENT,{amount} yatırım,{amount} investment
 TERM_CASH_RUNWAY,Kasa: {cash} · Runway: {runway},Cash: {cash} · Runway: {runway}
 TERM_CASH,Kasa: {cash},Cash: {cash}
-TERM_TABLES_CLOSED,Kapanan masa: {closed}/{total},Tables closed: {closed}/{total}
 TERM_LEVERAGE_BOX,Cebinde 2. term sheet var: {investor}. Bunu onlar da biliyor.,You have a second term sheet in your pocket: {investor}. They know it too.
 TERM_RESULT_ACCEPTED,Kabul ettiler. {move}.,They accepted. {move}.
 TERM_RESULT_REFUSED,Reddettiler. Olduğu yerde kaldı: {value}.,They refused. It stays where it was: {value}.

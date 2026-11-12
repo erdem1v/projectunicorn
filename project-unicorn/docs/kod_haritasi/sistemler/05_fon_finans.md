@@ -116,7 +116,7 @@ Hepsi `EventBus`te (`autoload/event_bus.gd`); satır numarası tanım satırı.
 - `pitch_finished` `event_bus.gd:203`: yayan `vc_pitch_system.gd:125`, `:387` (ve `sales_meeting_system.gd:118`) · `hunt_tab.gd:48`, `sales_tab.gd:76`.
 - `term_table_requested` `event_bus.gd:269`: yayan `events/core/effects.gd:575`, `:594`, `hunt_tab.gd:510`, `game_shell.gd:163` · `main.gd:4792`.
 - `mentor_advisory_changed` `event_bus.gd:231`: yayan `vc_pitch_system.gd:890` (geri arama açıldı) · `hunt_tab.gd:59`, `office_notice_stack.gd:44`, `game_state.gd:332`.
-- `run_ended` `event_bus.gd:245`: yayan `endings_system.gd:484` · `main.gd:4787` (`_on_run_ended` `:5084`); `milestone_reached` `event_bus.gd:248`: yayan `endings_system.gd:448` · `main.gd:4788`.
+- `run_ended` `event_bus.gd:245`: yayan `endings_system.gd:484` · `main.gd:4787` (`_on_run_ended` `:5085`); `milestone_reached` `event_bus.gd:248`: yayan `endings_system.gd:448` · `main.gd:4788`.
 - `shutter_changed` `event_bus.gd:250`: yayan `game_state.gd:411` (`set_shutter_weeks_left`) · `top_bar.gd:155`, `finance_ozet_view.gd:80`, `finance_tab.gd:51`.
 - `equity_changed` `event_bus.gd:18`: yayan `game_state.gd:614`, `:625` (tur kayıtları) · `finance_ozet_view.gd:65`.
 - `cash_changed` `event_bus.gd:7`, `burn_changed` `:9`, `runway_recalculated` `:15`: `GameState.set_cash/set_daily_burn` (`game_state.gd:339`, `:350`) yayar · TopBar, Finans.
