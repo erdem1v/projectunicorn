@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git cbf5b662 · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 9b5f21ae · 2026-11-12 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -1600,10 +1600,10 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - PRODUCT_BUG_* · 2 · scripts/tabs/product/product_model.gd, scripts/ui/components/build_bar.gd, scripts/debug/endgame_smoke.gd
 - PRODUCT_BUGS_* · 2 · scripts/tabs/product/product_model.gd
 - PRODUCT_CAND_* · 1 · scripts/tabs/product/area_panel.gd
-- PRODUCT_CAP_* · 6 · scripts/systems/sprint_catalog.gd, scripts/tabs/product/capacity_view.gd, scripts/debug/endgame_smoke.gd
+- PRODUCT_CAP_* · 7 · scripts/systems/sprint_catalog.gd, scripts/tabs/product/capacity_view.gd, scripts/debug/endgame_smoke.gd
 - PRODUCT_CAPACITY_* · 1 · scripts/tabs/product/capacity_view.gd
 - PRODUCT_CARDS_* · 1 · scripts/tabs/product/sprint_next.gd
-- PRODUCT_CARRIED_* · 3 · scripts/tabs/product/board_row.gd, scripts/tabs/product/sprint_next.gd, scripts/tabs/product/sprint_panel.gd
+- PRODUCT_CARRIED_* · 2 · scripts/tabs/product/board_row.gd, scripts/tabs/product/sprint_next.gd, scripts/tabs/product/sprint_panel.gd
 - PRODUCT_CLUSTER_* · 2 · scripts/tabs/product/capacity_view.gd
 - PRODUCT_CREW_* · 1 · scripts/tabs/product/sprint_head.gd
 - PRODUCT_DAYS_* · 2 · scripts/tabs/product/sprint_ui_shared.gd

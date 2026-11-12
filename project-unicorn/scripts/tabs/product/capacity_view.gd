@@ -208,7 +208,7 @@ func _ring(streak: int) -> PanelContainer:
 	var ring := PanelContainer.new()
 	ring.theme_type_variation = UiTokens.D_variation(&"CapStreak")
 	ring.add_child(SprintUiShared.label("%d." % streak, UiTokens.D_variation(&"CapStreakInk")))
-	ring.tooltip_text = tr("PRODUCT_NECK_STREAK").format({"n": streak})
+	ring.tooltip_text = tr("PRODUCT_CAP_STREAK_TIP").format({"n": streak})
 	return ring
 
 

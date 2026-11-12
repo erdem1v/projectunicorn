@@ -207,9 +207,10 @@ func _second_line() -> HBoxContainer:
 	return line
 
 
-## Durum yuvası. Planlamada en az `D_W_CARD_SLOT` geniş (sütunlar hizalı kalsın): "devreden" ya da kırmızı "yetişmez"; yoksa boş.
-## Koşan sprintte tek şey, sırayla: kırmızı "yetişmez", "devreden"; hiçbiri yoksa gizlenir. Söz ve talep tarihi burada yazmaz: tek
-## yeri sol sütundaki talep satırıdır (kartın ipucunda müşteri ve söz yine durur). Yazı kesilmez: sığmayan yazıda yuva genişler.
+## Durum yuvası. Planlamada en az `D_W_CARD_SLOT` geniş (sütunlar hizalı kalsın): devreden kartın geri oku (adı ipucunda) ya da
+## kırmızı "yetişmez"; yoksa boş. Koşan sprintte tek şey, sırayla: kırmızı "yetişmez", devreden oku; hiçbiri yoksa gizlenir. Söz ve
+## talep tarihi burada yazmaz: tek yeri sol sütundaki talep satırıdır (kartın ipucunda müşteri ve söz yine durur). "Yetişmez"
+## kesilmez: sığmazsa yuva genişler.
 func _status() -> Control:
 	var active: bool = _ctx.mode == "active"
 	var shown := String(card.slot.get("kind", ""))
@@ -224,9 +225,8 @@ func _status() -> Control:
 	match shown:
 		"carried":
 			var back := UiFactory.make_glyph(ARROW, UiTokens.D_ICON_TAG, UiTokens.D_INK_4)
-			(back as TextureRect).flip_h = true
+			back.flip_h = true
 			cell.add_child(back)
-			cell.add_child(SprintUiShared.label(tr("PRODUCT_CARRIED_SLOT"), &"Caption"))
 			cell.mouse_filter = Control.MOUSE_FILTER_PASS
 			cell.tooltip_text = tr("PRODUCT_CARRIED_TIP")
 		"late":

@@ -3852,7 +3852,7 @@ _states	func	scripts/theme/build_theme.gd:1576	build_theme.gd
 _static_body	func	scripts/tabs/events/mail_pane.gd:609	mail_pane.gd
 _station_energy	var	scripts/ui/office/office_lighting.gd:76	OfficeLighting
 _stations	var	scripts/ui/office/office_lighting.gd:75	OfficeLighting
-_status	func	scripts/tabs/product/board_row.gd:213	BoardRow
+_status	func	scripts/tabs/product/board_row.gd:214	BoardRow
 _status_for	func	scripts/autoload/rival_registry.gd:91	RivalRegistry
 _status_label	var	scripts/ui/components/research_bar.gd:33	research_bar.gd
 _status_line	func	scripts/tabs/product/area_panel.gd:188	AreaPanel

@@ -2684,7 +2684,7 @@ PRODUCT_AVAILABLE,Eklenebilir,Available
 PRODUCT_ADD_CARD,Kart ekle,Add a card
 PRODUCT_MORE_BELOW,aşağıda {n} kart daha,{n} more cards below
 PRODUCT_MORE_BELOW_ONE,aşağıda {n} kart daha,{n} more card below
-PRODUCT_CARRIED_SLOT,devreden,carried
+PRODUCT_CAP_STREAK_TIP,{n} sprinttir üst üste sığmıyor,Has not fit for {n} sprints in a row
 PRODUCT_LATE,yetişmez,late
 PRODUCT_TO_NEXT,Sonraki sprinte,To the next sprint
 PRODUCT_TO_THIS,Bu sprinte,To this sprint

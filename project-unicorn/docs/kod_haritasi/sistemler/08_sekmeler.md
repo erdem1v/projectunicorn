@@ -58,7 +58,7 @@ Alt klasörler:
   hayalet satır, şimdiki an çizgisi), "aşağıda {n} kart daha" hapı (katlamanın altında yetişmeyen kart varsa tehlike renginde ve ipucu "{n} kart yetişmez", yalnız o zaman imleci tutar ve tekerleği panoya iletir; sona kaydırınca gizlenir);
   ↳ erken kapanışın bayrağı, yazısı ve taralı alanı "Bütün kartlar {w}. haftada biter" ipucunu taşır (alan yalnız satırların altında kalan boşlukta imleci alır).
 - `scripts/tabs/product/board_row.gd` (553): `BoardRow`: panonun bir kart satırı: bilgi sütunu (tür ikonu ve ad, "→" ve "×"e yer ayrılmış; efor, hata riski, modül kart ipucunda; durum yuvası (koşan sprintte tek şey:
-  "yetişmez", "devreden"; son tarih yalnız sol sütunun talep satırında), PM ya da "?" yuvası, "→" ve "×"; aday satırında "+", imlecin hayalet satırında boş yer),
+  "yetişmez", devreden kartın oku (yazısı ipucunda); son tarih yalnız sol sütunun talep satırında), PM ya da "?" yuvası, "→" ve "×"; aday satırında "+", imlecin hayalet satırında boş yer),
   zaman ekseni (çubuk, bekleme, gölge, tarama, tik kutusu (art arda önden biten aşamalar tek kutu, son bitenin renginde), sprint dışı pay, yüzler); `set_now`;
   kart adı (taban iki satır, 22 karakterden uzun adda) ve düzeltme kartının hata metni (en büyük hesapla) kesilmeden sarar, tabandan fazla satır satırı büyütür (`_wraps`, `_fit`), zaman ekseni satırda dikey ortalı.
   ↳ İpuçları: zengin kart ipucu yalnız adda (`CardName`, `CardTip`); çubuğun düz ipucu açılırken okunur (`_bar_tip`, `StagePaint.tip`); bekleme, gölge, tarama, tik kutusu, yuvalar düz ipucu taşır;
