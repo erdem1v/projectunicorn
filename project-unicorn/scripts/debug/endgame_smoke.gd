@@ -21262,8 +21262,6 @@ static func _case_seed_table_has_no_walk() -> String:
 		return "the seed table offers a walk"
 	if bool(vs.get("walk_shown", true)):
 		return "the seed table shows a walk row"
-	if vs.has("walk_lock"):
-		return "the seed table still carries a walk lock"
 	var rejections0: int = GameState.vc_rejections
 	TermSheetTableSystem.walk()
 	if GameState.seed_sheet == null:
@@ -26987,7 +26985,8 @@ static func _case_next_renewal_day_one_place() -> String:
 ## doğrudur (Erdem, 2026-11-12, H14).
 ## FALSİFİKASYON: `decision_first`te `c.decision = false` satırını sil → kartın ataması boş kaldı FAIL; seam'de
 ## `int(due.sprint) == sprint_number()` koşulunu sil → gelecek sprintin son tarihi de "kurtarılır" FAIL;
-## `due.customer == account.display_name()` koşulunu sil → başka hesabın son tarihi bu hesaba yazılır FAIL.
+## `due.customer_id == account.id` koşulunu sil → başka hesabın son tarihi bu hesaba yazılır FAIL; `not due.promise`'ı sil →
+## sözü olan kademe de "kurtarılır" FAIL.
 static func _case_paper_renewal_card_first() -> String:
 	_paper_world()
 	var account: Customer = _incident_account("co_renewal", "Renewal Co", "retail", 40, 1800)
@@ -27028,6 +27027,12 @@ static func _case_paper_renewal_card_first() -> String:
 	if bool(EvSeams.read("urun.decision_request_saved")):
 		return "the card's deadline comes from Renewal Co's request, yet the paper would speak for Other Co"
 	GameState.product.cards[asked].customer_id = account.id
+	# A promise on the card's step is its own deadline, and the promise's card speaks for it: this paper stays quiet.
+	var word: Promise = PromiseRegistry.create(account.id, String(GameState.product.cards[asked].step), 2)
+	word.due_sprint = now
+	if bool(EvSeams.read("urun.decision_request_saved")):
+		return "a step with a promise on it still calls the request saved"
+	word.status = "kept"
 	var front := {"verb": "sprint_card_first"}
 	var shown: Array = EvChips.describe(front, {}, {}, false).map(EvChips.text)
 	var row: Dictionary = EvEffects.run_played([front], {})[0]

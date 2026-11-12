@@ -290,7 +290,7 @@ static func card_name(card: Dictionary) -> String:
 	return step_name(card.step)
 
 
-## Kartın son tarihi {sprint, customer, value, promise}: kademesine verilmiş en yakın açık söz (müşterisi, o müşterinin açık talebinin
+## Kartın son tarihi {sprint, customer, customer_id, value, promise}: kademesine verilmiş en yakın açık söz (müşterisi, o müşterinin açık talebinin
 ## yıllık değeri ya da 0), yoksa karşıladığı açık talebin son tarihi (talebin müşterisi ve değeri); ikisi de yoksa sprint -1. Sprint
 ## hesabı olmayan (gün sayan) söz son tarih vermez.
 static func due(card: Dictionary) -> Dictionary:
@@ -299,11 +299,12 @@ static func due(card: Dictionary) -> Dictionary:
 			var asked: Array = open_requests().filter(func(r: Dictionary) -> bool:
 				return r.customer_id == p.customer_id and r.step == card.step)
 			return {"sprint": p.due_sprint, "customer": CustomerRegistry.get_customer(p.customer_id).display_name(),
-				"value": int(asked[0].value) if not asked.is_empty() else 0, "promise": true}
+				"customer_id": p.customer_id, "value": int(asked[0].value) if not asked.is_empty() else 0, "promise": true}
 	var request: Dictionary = _request_of(card)
 	if request.is_empty():
-		return {"sprint": -1, "customer": "", "value": 0, "promise": false}
-	return {"sprint": int(request.due_sprint), "customer": customer_name(request), "value": int(request.value), "promise": false}
+		return {"sprint": -1, "customer": "", "customer_id": "", "value": 0, "promise": false}
+	return {"sprint": int(request.due_sprint), "customer": customer_name(request), "customer_id": String(request.customer_id),
+		"value": int(request.value), "promise": false}
 
 
 ## Kilitli kademenin gerekçesi ("2★ Tasarım gerekli"), yalnız karşılanmayan parçalarla; kilitsizse "". Ücretli

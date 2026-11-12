@@ -728,7 +728,7 @@ static func view_state() -> Dictionary:
 		"walk_mode": "leave" if _fund_walked else "walk",
 		# The seed table has no walk row at all, not even a locked one: the seed must be taken (Erdem, 2026-11-12,
 		# H11: "Seed yatırım alması şart; diğer seçeneği direkt çıkartalım"). A seed fund never walks out either.
-		"walk_shown": not is_seed() or _fund_walked,
+		"walk_shown": not is_seed(),
 		# The seed table's derived readout. "" at Series A, where the valuation is a lever.
 		"derived_caption": TranslationServer.translate("SEED_IMPLIED_POST").format(
 			{"post": Fmt.money_exact(implied_post_money())}) if is_seed() else "",

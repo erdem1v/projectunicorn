@@ -567,7 +567,7 @@ static func decision_request_saved() -> bool:
 	if account == null or not card_late(c.id):
 		return false
 	var due: Dictionary = SprintCatalog.due(c)
-	return not due.promise and int(due.sprint) == sprint_number() and due.customer == account.display_name() \
+	return not due.promise and int(due.sprint) == sprint_number() and due.customer_id == account.id \
 		and decision_first_finishes()
 
 
