@@ -14046,6 +14046,29 @@ static func _case_ending_paper_modes_on_screen() -> String:
 			return "%s: DEVAM ET %s, ANA MENÜ %s" % [tag, str(texts.has(cont)), str(texts.has(menu))]
 		if texts.has(share) != bool(r[7]):
 			return "%s: GAZETEYİ PAYLAŞ shown=%s" % [tag, str(texts.has(share))]
+	# The demo's Series A paper keeps only the store button on its rail (envanter meet-26); the bankruptcy paper keeps
+	# the milestones under SIRADA NE VAR? (meet-30).
+	var next_header: String = TranslationServer.translate("ENDING_NEXT")
+	for pair: Array in [["series_a_close", false], ["bankruptcy", true]]:
+		EndingsSystem.build_scope_override = EndingsSystem.BUILD_DEMO
+		var paper_data: Dictionary = EndingsSystem._build_ending_data(String(pair[0]), {})
+		paper_data["mode"] = EndingsSystem.MODE_ENDING
+		var paper: Control = scene.instantiate()
+		host.add_child(paper)
+		paper.populate(paper_data)
+		var header_shown := false
+		for l in paper.find_children("*", "Label", true, false):
+			if String((l as Label).text) == next_header:
+				header_shown = true
+		var wish_shown := false
+		for b in paper.find_children("*", "Button", true, false):
+			if String((b as Button).text) == wish:
+				wish_shown = true
+		paper.free()
+		EndingsSystem.build_scope_override = ""
+		if header_shown != bool(pair[1]) or not wish_shown:
+			return "demo %s: SIRADA NE VAR? shown=%s, WISHLIST'E EKLE shown=%s" % [pair[0], str(header_shown),
+				str(wish_shown)]
 	return ""
 
 

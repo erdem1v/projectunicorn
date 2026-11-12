@@ -217,7 +217,7 @@ Anahtarlar `localization/strings.csv`'de (sütunlar keys,tr,en); sekmeler `tr("A
 ## Testler
 
 Smoke (tek vaka: `bash tools/smoke_run.sh <vaka>`; tam süit yalnız push öncesi, CLAUDE.md §10, §12). Arayüz doğrulaması esas olarak görsel kabuldür.
-- Ekip: `hr_active_filters`, `hr_overload_badge`, `gorevler_has_no_founder`, `menu_has_one_path` (HRLedger/HRPopover sabitlerini ve silinen `W_MENU`, `_place_notch`, `_draw_notch` adlarını sınar, endgame_smoke.gd:14293).
+- Ekip: `hr_active_filters`, `hr_overload_badge`, `gorevler_has_no_founder`, `menu_has_one_path` (HRLedger/HRPopover sabitlerini ve silinen `W_MENU`, `_place_notch`, `_draw_notch` adlarını sınar, endgame_smoke.gd:14316).
 - Ürün: `product_bug_rows_read_the_store`, `fit_star_context`, `capacity_step_immediate`, `sprint_fix_card_clears_its_line`, `sprint_fix_close_matches_note`,
   `line_impact_names_the_accounts`, `paper_card_trim`, `sprint_follow_card_cannot_be_removed`, `sprint_timeline_matches_play_out` (hepsi ProductModel/SprintUiShared okur),
   `sprint_lead_row_until_plan_changes` (öneri satırı, `lead_applied` bayrağı ve onu düşüren her seam).

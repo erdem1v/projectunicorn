@@ -30,7 +30,6 @@ const YEAR_WEEKS := 50             # >= → "bir yıla yakın" framing
 const OVER_YEAR_WEEKS := 54        # "bir yılı aşkın" — a run clearly past its first year
 const TWO_YEAR_WEEKS := 100        # "iki yıla yakın" — the soft cap's own span (EndingsSystem.SOFT_CAP_WEEK)
 const OVER_TWO_YEAR_WEEKS := 106   # "iki yılı aşkın" — only a run past its milestone gets here (EA / full: no cap)
-const ISSUE_PERIOD_WEEKS := 1      # weekly paper: masthead "SAYI N" = run week  # WORKING
 const ENGRAVING_DIR := "res://assets/endings/"
 
 # Month words come from Fmt.month_name (the single home; it does NOT lowercase a
@@ -112,8 +111,8 @@ static func _series_a(ledger: Dictionary, data: Dictionary) -> Dictionary:
 	vs.ledger_lines = _assemble(pool, [_t("END_SA_CLOSER_1"), _t("END_SA_CLOSER_2")])
 	# Stat row (4 big figures under the photo). Set per template. # WORKING
 	vs.stat_cells = [
-		_stat(Fmt.money(investment), _t("END_STAT_INVESTMENT")),
-		_stat(Fmt.money(valuation * 1_000_000), _t("END_STAT_VALUATION")),
+		_stat(_figure(investment), _t("END_STAT_INVESTMENT")),
+		_stat(_figure(valuation * 1_000_000), _t("END_STAT_VALUATION")),
 		_people_stat(ledger),
 		_stat(Fmt.percent(_founder_share(ledger), 0), _t("END_STAT_FOUNDER_SHARE")),
 	]
@@ -145,7 +144,7 @@ static func _acquisition(ledger: Dictionary, data: Dictionary) -> Dictionary:
 	vs.ledger_lines = _assemble(pool, [_t("END_ACQ_CLOSER_1"), _t("END_ACQ_CLOSER_2")])
 	# WORKING
 	vs.stat_cells = [
-		_stat(Fmt.money(EndingsSystem.acquisition_valuation()),
+		_stat(_figure(EndingsSystem.acquisition_valuation()),
 			_t("END_STAT_SALE_PRICE")),
 		_people_stat(ledger),
 		_employees_stat(ledger),
@@ -365,7 +364,6 @@ static func _common(ending_id: String, ledger: Dictionary, data: Dictionary) -> 
 	return {
 		"variant": "",
 		"masthead": _t("WORLD_OUTLET_EKONOMI_CAPS"),
-		"date_line": _date_line(ledger),
 		"headline": "",
 		"subhead": "",
 		"engraving_path": _engraving_path(ending_id, ledger),
@@ -414,7 +412,7 @@ static func _employees_stat(ledger: Dictionary) -> Dictionary:
 
 
 static func _mrr_stat(ledger: Dictionary, label_key: String) -> Dictionary:
-	return _stat(Fmt.money(int(ledger.get("mrr", 0))), _t(label_key))
+	return _stat(_figure(int(ledger.get("mrr", 0))), _t(label_key))
 
 
 static func _months_stat(ledger: Dictionary) -> Dictionary:
@@ -487,16 +485,13 @@ static func _founding_clause(ledger: Dictionary) -> String:
 				{"month": Fmt.month_name(clampi(int(ledger.get("start_month", 1)), 1, 12))})
 
 
-static func _date_line(ledger: Dictionary) -> String:
-	# Masthead meta line: the chrome date line in capitals + issue number ("HAFTA 46 · KASIM
-	# 2012 · SAYI 99"). A date and an edition, never a run length — the raw count lives ONLY in
-	# the rail's run-meta line (Rule 2). Ledger-driven, not GameState.day, so the paper dates
-	# the ledger it was handed (a fixture ledger included), not the live clock.
-	var day := _day(ledger)
-	var issue := maxi(1, int(float(day) / TimeModel.ticks(ISSUE_PERIOD_WEEKS)))
-	return _t("END_DATE_LINE").format({
-		"date": Fmt.upper(Fmt.date_line(GameState.get_date_dict(day) if day > 0 else GameState.get_date_dict())),
-		"issue": issue})
+## A figures-row amount: one that rounds to a whole million drops its tenth ("$4M", not "$4,0M", for 3.96M too:
+## envanter meet-28); the rest as Fmt.money.
+static func _figure(amount: int) -> String:
+	var tenths: int = roundi(amount / 100_000.0)
+	if amount >= 1_000_000 and tenths % 10 == 0:
+		return "$%dM" % (tenths / 10)
+	return Fmt.money(amount)
 
 
 static func _valuation_tr(valuation_m: int) -> String:

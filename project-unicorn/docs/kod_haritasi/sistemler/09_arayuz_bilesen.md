@@ -42,7 +42,7 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 - `scripts/menu/main_menu.gd` (94): ana menü (Devam, Yeni oyun, Yükle, Ayarlar, Jenerik, Çık) tek odak zinciri · `continue_card.gd` (19): Devam kartı
 - `scripts/menu/godot_card.gd` (35): "Godot ile yapıldı" kartı · `credits.gd` (60): Jenerik (`data/credits.json`) · `licenses.gd` (80): düz lisans metni
 - `scripts/modals/confirm_modal.gd` (65): genel onay · `hr_action_modal.gd` (237): zam/terfi/izin/çıkarma onayı (kaydırıcılı) · `system_menu_modal.gd` (106): ESC menüsü
-- `scripts/modals/settings_modal.gd` (480): altı bölümlü canlı Ayarlar · `save_load_modal.gd` (262): Kaydet/Yükle, iki kip · `ending_scene.gd` (563): `EndingScene`; Ekonomi Postası ve dönüm noktası kâğıdı
+- `scripts/modals/settings_modal.gd` (480): altı bölümlü canlı Ayarlar · `save_load_modal.gd` (262): Kaydet/Yükle, iki kip · `ending_scene.gd` (557): `EndingScene`; Ekonomi Postası ve dönüm noktası kâğıdı
 - `scripts/modals/term_sheet_table_scene.gd` (437): `TermSheetTableScene`; tam ekran term sheet masası, sistemin `view_state`ini boyar
 - `scripts/modals/training_modal.gd` (175) ve `work_hours_modal.gd` (492): HR paneli modalları; `scripts/tabs/hr/hr_panel.gd`i genişletir, PanelLayer'a `HRUiShared.mount_panel_modal` ile takılır
 - `scripts/onboarding/onboarding_flow.gd` (213): ilk kullanım akışı, `draft` sahibi · `first_week_doc.gd` (235): yandaki "ilk hafta" belgesi
@@ -95,7 +95,7 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 - `confirmed` / `alt_selected`: `confirm_modal.gd:11,12`, `hr_action_modal.gd:15` · `main.gd:5201,5082` (`config.on_confirm`, `on_alt`), `onboarding_flow.gd:177` (iptal onayı)
 - `save_requested(slot_id)` / `load_requested(slot_id)`: `save_load_modal.gd:15,16`; `main_menu.gd:8` yayar · `main.gd:5260,5138` ve `main.gd:133` (`_load_slot` `:5068`)
 - `main_menu_requested` / `exit_save_requested`: `system_menu_modal.gd:19,20` (yayın `:63`, `:93`); `ending_scene.gd:41` · `main.gd:5226,5104,5271`
-- `continue_requested`: `ending_scene.gd:40` (yayın `:445`) · `main.gd:5404` (`_on_milestone_continue`)
+- `continue_requested`: `ending_scene.gd:40` (yayın `:446`) · `main.gd:5404` (`_on_milestone_continue`)
 - `closed`: `meeting_panel.gd:19`, `term_sheet_table_scene.gd:17` · `main.gd:5149` (`_close_meeting`), `main.gd:5463` (`_close_term_table`)
 - `new_game_requested`: `main_menu.gd:7` (yayın `:51`) · `main.gd:130` · `finished`: `godot_card.gd:6` (yayın `:35`) · `main.gd:118` · `back`: `licenses.gd:7` · `credits.gd:44`
 - `completed` / `cancelled`: `onboarding_flow.gd:11,12` (yayın `:203`, `:172,177`) · `main.gd:154,155` · `live_ready`: `menu_backdrop.gd:9` (yayın `:138`) · `main.gd:2947`, `onboarding_flow.gd:70`

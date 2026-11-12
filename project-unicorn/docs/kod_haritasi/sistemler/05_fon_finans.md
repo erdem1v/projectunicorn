@@ -27,7 +27,7 @@ Kapsam içi (`scripts/`):
 - `systems/quality_model.gd` (37): `QualityModel`, rakibin üç boyutunun azalan getirili büyümesi `grow` `:22` ve bileşik kalite `composite_quality` `:29`.
   ↳ okuyan `RivalRegistry.advance_all` (`rival_registry.gd:78-80`) ve `Rival.composite()`; oyuncunun ürün kalitesi değil (o `ProductQuality`, 02_urun_sprint.md).
 - `systems/endings_system.gd` (527): terminal taraması, kepenk, bitiş ve kilometre taşı kapıları, satın alma teklifinin sayıları, build kapsamı.
-- `systems/endings_copy.gd` (539): bitiş gazetesinin satırlarını kuran saf okuyucu; `EndingScene` yalnız onu boyar.
+- `systems/endings_copy.gd` (534): bitiş gazetesinin satırlarını kuran saf okuyucu; `EndingScene` yalnız onu boyar.
 - `systems/mail_clock.gd` (121): mail, kâğıt, not, hatırlatıcının geliş saati; mesai penceresi dışı üretileni pencereye taşır.
 - `systems/message_system.gd` (77): gelen kutusunun motor kartı olmayan mesajları; `GameState.messages` ve `mail_outbox`un tek yazarı.
 - `systems/news_feed_system.gd` (429): şeridin veri kaynağı; sektör, rakip, piyasa ve biz satırlarının haftalık kotalı akışı.
@@ -41,7 +41,7 @@ Kapsam içi (`scripts/`):
 Komşu (bu sistemin kapısını açar ya da okur, başka haritada ele alınır):
 - `systems/seed_round_system.gd` (225), `seed_constants.gd` (149), `term_sheet_table_system.gd` (987), `counterpart_system.gd` (101), `data_models/term_sheet.gd` (63).
 - `systems/summary_system.gd` (244): ay kapanışı ve dönem özeti; runway eşiği satırını şeride yazar.
-- Arayüz: `tabs/finance_tab.gd` (144), `tabs/finance/finance_ozet_view.gd` (590), `tabs/hunt_tab.gd` (544), `modals/ending_scene.gd` (563), `ui/components/news_ticker.gd` (237).
+- Arayüz: `tabs/finance_tab.gd` (144), `tabs/finance/finance_ozet_view.gd` (590), `tabs/hunt_tab.gd` (544), `modals/ending_scene.gd` (557), `ui/components/news_ticker.gd` (237).
 - Veri: `data/market/{companies,people}.json`, `data/product/rivals.json` (okuyan `systems/sprint_catalog.gd:12`), `data/events/cards/funding/*.json`.
 
 ## Giriş noktaları
@@ -84,7 +84,7 @@ Sonlar:
 - `EndingsSystem.build_scope()` `:387`, `shipped_scopes()` `:408`, `ending_mode()` `:422`: build kapsamı · `events/core/tuning.gd`, `modals/ending_scene.gd:65`, `main.gd:86`.
 - `EndingsSystem.road_over()` `:304`, `acquisition_valuation()` `:270`, `acquisition_founder_share()` `:278`, `profitability_signal()` `:203`: kart ve arayüz okumaları · `seams_ported.gd:170-181`, `finance_ozet_view.gd:231`.
 - `EndingsSystem.on_buyout_declined()` `:343`: Series A yolunu kapatır, reddi hatırlar · `events/core/effects.gd:597` (`decline_buyout` fiili).
-- `EndingsCopy.build()` `endings_copy.gd:52`: gazete görünümü · `modals/ending_scene.gd:67`.
+- `EndingsCopy.build()` `endings_copy.gd:51`: gazete görünümü · `modals/ending_scene.gd:67`.
 
 Mesaj ve teslim saati:
 - `MessageSystem.post(kind, key, args, urgent)` `message_system.gd:19`: mesajı ya dış kutuya ya hemen kutuya koyar · `summary_system.gd`, `rnd_system.gd`, `sales_rep_system.gd`, `support_system.gd`, `game_state.gd:953`.

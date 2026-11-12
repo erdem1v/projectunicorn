@@ -140,14 +140,10 @@ func _build_paper(vs: Dictionary) -> PanelContainer:
 	col.add_theme_constant_override("separation", 14)
 	panel.add_child(col)
 
-	# Masthead + dateline
+	# Masthead; no dateline under it (envanter meet-27: the run's length is the rail's run-meta line)
 	var masthead := UiFactory.make_label(String(vs.get("masthead", "")), &"MastheadSerif")
 	masthead.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(masthead)
-
-	var date := UiFactory.make_label(String(vs.get("date_line", "")), &"NewsMeta")
-	date.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	col.add_child(date)
 
 	col.add_child(_rule(3))
 
@@ -376,8 +372,18 @@ func _build_rail() -> PanelContainer:
 	return panel
 
 
-## The demo's Coming-Soon block: the header, the two named milestones and WISHLIST'E EKLE.
+## The demo's Coming-Soon block: the header, the two named milestones and WISHLIST'E EKLE. The Series A paper keeps
+## only the button (envanter meet-26); every other ending, the bankruptcy among them (meet-30), the whole block.
 func _build_coming_soon(col: VBoxContainer) -> void:
+	if String(_data.get("ending_id", "")) != "series_a_close":
+		_build_milestones(col)
+	# WISHLIST'E EKLE — always visible in the demo; inert while the store URL is empty.
+	var wishlist := _button(&"CommitButtonDark", "ENDING_WISHLIST")
+	wishlist.pressed.connect(_on_wishlist)
+	col.add_child(wishlist)
+
+
+func _build_milestones(col: VBoxContainer) -> void:
 	var header := UiFactory.make_label(tr("ENDING_NEXT"), &"ZoneLabel")
 	col.add_child(header)
 
@@ -392,11 +398,6 @@ func _build_coming_soon(col: VBoxContainer) -> void:
 	col.add_child(_build_tier_card(
 		tr("ENDING_CARD_IPO_TAG"), tr("ENDING_CARD_IPO_TITLE"),
 		tr("LOCK_FULL"), tr("ENDING_CARD_IPO_BODY")))
-
-	# WISHLIST'E EKLE — always visible in the demo; inert while the store URL is empty.
-	var wishlist := _button(&"CommitButtonDark", "ENDING_WISHLIST")
-	wishlist.pressed.connect(_on_wishlist)
-	col.add_child(wishlist)
 
 
 ## Zor opens once a run is finished (FounderConstants.HARD_OPENS_AFTER_RUNS) and this screen is where one finishes: a notice,

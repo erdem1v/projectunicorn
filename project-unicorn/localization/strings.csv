@@ -1501,7 +1501,6 @@ NUM_11,on bir,eleven
 NUM_12,on iki,twelve
 WORLD_OUTLET_EKONOMI_CAPS,EKONOMİ POSTASI,ECONOMY POST
 END_LEDGER_TITLE,RAKAMLARLA {company},{company} BY THE NUMBERS
-END_DATE_LINE,{date} · SAYI {issue},{date} · NO. {issue}
 END_MILLIONS,{n} milyon dolar,{n} million dollars
 END_SPAN_NEAR_YEAR,bir yıla yakın sürede,in close to a year
 END_SPAN_UNDER_MONTH,bir aydan kısa sürede,in under a month
