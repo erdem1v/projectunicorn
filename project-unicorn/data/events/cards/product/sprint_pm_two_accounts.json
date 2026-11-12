@@ -102,7 +102,7 @@
   "text": {
     "tr": {
       "title": "İki hesap aynı ekranı farklı istiyor",
-      "body": "Bu kartı hem {customer} hem {seam:urun.decision_second_account} istedi ama ekranı farklı biçimde istiyorlar. İkisini birden yaparsak kart büyür.",
+      "body": "Bu kartı {customer} istedi. {seam:urun.decision_second_account} aynı ekranı başka biçimde bekliyor. İkisini birden yaparsak kart büyür.",
       "options": {
         "first_way": "{customer} nasıl istiyorsa öyle yap",
         "second_way": "{seam:urun.decision_second_account} nasıl istiyorsa öyle yap",
@@ -112,7 +112,7 @@
     },
     "en": {
       "title": "Two accounts want the same screen differently",
-      "body": "{customer} and {seam:urun.decision_second_account} both asked for this card, but each wants the screen built a different way. Doing both makes the card bigger.",
+      "body": "{customer} asked for this card, and {seam:urun.decision_second_account} is waiting on the same screen, built a different way. Doing both makes the card bigger.",
       "options": {
         "first_way": "Build it the way {customer} wants",
         "second_way": "Build it the way {seam:urun.decision_second_account} wants",

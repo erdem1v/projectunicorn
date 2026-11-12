@@ -464,7 +464,9 @@ Açık kalanlar (2026-11-11 hâli):
 - `EFFECT_TRAINING`, `EFFECT_FIRED` onaylı: K22 kapsamında ("playtest'te okuduğum metin onaylı sayılır").
 - Erdem'in 2026-11-12 onayları (karar sayfası, TR ve EN): T01 `EFFECT_LEAVE_OVERLAP` çipi; T02 `SITTING_BLOCK_EARLY`
   ("Mesai daha başlamadı."); T03 `EFFECT_CUSTOMER_SIGNED`; T04 `ENDING_HARD_MODE` ("ZOR MOD · AÇILDI"); T05 kart 7'nin
-  gövdesi (`team.same_leave_dev`, `_pm`, `_tester`: "… ile ikimizin yaz izni çakışıyor. İkimiz birden yokken …").
+  gövdesi (`team.same_leave_dev`, `_pm`, `_tester`: "… ile ikimizin yaz izni çakışıyor. İkimiz birden yokken …");
+  T07 `product.sprint_pm_two_accounts`'un gövdesi ("Bu kartı {customer} istedi. {second} aynı ekranı başka biçimde
+  bekliyor. …"; Erdem'in onayladığı "{second} de" ünlü uyumu için eksiz yazıldı, yardımcı yönetmen).
 - Erdem: ikon seçimi (Lucide'ye geçiş kararıyla DUZELTME'de); ACIK 14'ün kalanı
   `change_salary` (`add_customer` bağlandı, `convert_audience` ve `open_paid_tier` silindi: GOREV_OLAYLAR_2026-11-11 O-5);
   #7'nin "kendi aralarında" şıkkı Erdem'e yeniden soruldu; #32 kabul.
