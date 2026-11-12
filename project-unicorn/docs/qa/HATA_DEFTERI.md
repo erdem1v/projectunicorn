@@ -51,3 +51,4 @@ Bir hata iki basamağa uyuyorsa küçük numaralı olan, yani daha ağır olan y
 
 | Kimlik | Bulundu | Oyuncu ne görür | Kare | Nasıl tekrarlanır | Önem | Karar | Durum | Kapanış |
 |---|---|---|---|---|---|---|---|---|
+| H-001 | 2026-11-12, OLAYLAR (ayrılık çipinin kod incelemesi), e45b7054 | Gerçek lider huylu çalışanın morali biri istifa edince 10, biri işten çıkarılınca 5 düşüyor; huyu ayrılıkları ağır aldığını söylüyor. | `kareler/H-001/once.png` (istifa kartının çipi; işten çıkarmanın farkı karede görünmez, adımlarda) | 1. Ekipte Gerçek lider huylu bir çalışan ve iki çalışan daha olsun. 2. Birini Ekip'ten işten çıkar: Gerçek liderin morali 5 düşer. 3. Öbürü istifa etsin (`--event-shot=team.resignation` kartı): Gerçek liderin morali 10 düşer. Kodda `HRActions.fire` huyun `departure_morale_extra` ekini uygulamıyor, `HRMoraleSystem._charge_departure` uyguluyor. | 2 | | açık | |

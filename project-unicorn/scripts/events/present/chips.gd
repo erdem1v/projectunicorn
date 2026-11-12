@@ -262,9 +262,17 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 			return [_part(_t("EFFECT_FIRED").format({"name": _first_name(fired, ctx, names, _t("EFFECT_AN_EMPLOYEE"))}), "", "danger"),
 				_part(HRConstants.cost_label_severance(), _money(-int(terms.get("severance", 0))), "cost"),
 				_figure("EFFECT_TEAM", _num(-HRConstants.MORALE_FIRE_TEAM), "cost")]
+		# The person goes and the team pays the departure's morale (HRMoraleSystem._charge_departure); with nobody beside
+		# them there is no team to pay it. The figure is the base every teammate pays: a trait that takes departures harder
+		# (`departure_morale_extra`) says so in its own text. A row without `team` (an older save, the linter's raw effect)
+		# shows the person alone.
 		"employee_leaves":
-			var leaver: String = _first_name(_employee(item, ctx, is_delta), ctx, names, _t("EFFECT_AN_EMPLOYEE"))
-			return [_part(_t("EFFECT_DEPARTURE").format({"who": leaver}), "", "danger")]
+			var lid: String = _employee(item, ctx, is_delta)
+			var leaver: String = _first_name(lid, ctx, names, _t("EFFECT_AN_EMPLOYEE"))
+			var gone: Array = [_part(_t("EFFECT_DEPARTURE").format({"who": leaver}), "", "danger")]
+			if (int(item.get("team", 0)) if is_delta else HRMoraleSystem.departure_payers(lid).size()) > 0:
+				gone.append(_figure("EFFECT_TEAM", _num(-HRConstants.MORALE_FIRE_TEAM), "cost"))
+			return gone
 		# The cut is derived the way the `b2b_retain_discount` effect derives it from the account's
 		# own MRR; a history row carries the cut that landed.
 		"b2b_retain_discount":

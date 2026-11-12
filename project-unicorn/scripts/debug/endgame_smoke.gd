@@ -352,6 +352,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"event_trust_chip_share":         fail = _case_event_trust_chip_share()
 		"event_start_training_player_path": fail = _in_fixture_scope(_case_event_start_training_player_path)
 		"event_fire_employee_player_path": fail = _in_fixture_scope(_case_event_fire_employee_player_path)  # EXPECT-ERROR I2: on_expire may apply a negative delta
+		"event_departure_chip_team":      fail = _case_event_departure_chip_team()
 		"event_paper_keeps_its_moment": fail = _in_fixture_scope(_case_event_paper_keeps_its_moment)
 		"event_paper_opens_before_expiry": fail = _in_fixture_scope(_case_event_paper_opens_before_expiry)
 		"event_add_customer_signs": fail = _in_fixture_scope(_case_event_add_customer_signs)  # EXPECT-ERROR I2: on_expire may apply a negative delta
@@ -18631,6 +18632,45 @@ static func _case_event_fire_employee_player_path() -> String:
 			or not EvEffects.run_played(effects, on, CARD).all(func(r: Dictionary) -> bool: return r.has("refused")) \
 			or GameState.cash != cash:
 		return "someone already gone: chips %s, cash %d → %d" % [str(texts.call(EvChips.option_parts(effects, {}, on))), cash, GameState.cash]
+	return ""
+
+
+## Ayrılık ekibe moral bedeli öder (HRMoraleSystem._charge_departure, işten çıkarmadaki gibi); `employee_leaves` çipi bu bedeli
+## seçimden önce gösterir, geçmiş satırı da ayrılık anında ödeyenleri okur, bugünkü kadroyu değil. Yanında çalışan kalmayan
+## kişinin ayrılığında ödeyecek ekip yoktur: çip yalnız kişiyi yazar, geçmiş satırı da.
+## FALSİFİKASYON: çipten ekip figürünü çıkar → yanında çalışan varken iki parça aranır, FAIL; fiilin sonucundan `team`'i çıkar →
+## geçmiş satırı bedeli yazmaz, FAIL; geçmiş satırını bugünkü kadrodan say → kadro boşalınca ilk satır bedeli kaybeder, FAIL.
+static func _case_event_departure_chip_team() -> String:
+	var effects: Array = [{"verb": "employee_leaves", "scope": "employee"}]
+	var team_chip: String = "%s %d" % [TranslationServer.translate("EFFECT_TEAM").format({"v": ""}).strip_edges(),
+		-HRConstants.MORALE_FIRE_TEAM]
+	var texts := func(parts: Array) -> Array: return parts.map(func(p: Dictionary) -> String: return EvChips.text(p))
+	var leaver: Character = _make_employee("char_leave_dev", "Deniz Ak", HRConstants.ROLE_DEVELOPER, SEED_PACE, 6000, 30)
+	var stays: Character = _make_employee("char_leave_test", "Selin Kaya", HRConstants.ROLE_TESTER, SEED_PACE, 5000, 60)
+	var on: Dictionary = {"employee": {"type": "employee", "id": leaver.id}}
+	var shown: Array = texts.call(EvChips.option_parts(effects, {}, on))
+	if shown.size() != 2 or not String(shown[0]).contains("Deniz") or shown[1] != team_chip:
+		return "with a teammate the card reads %s, want the person and '%s'" % [str(shown), team_chip]
+	var morale: int = stays.morale
+	var deltas: Array = EvEffects.run_played(effects, on)
+	if CharacterRegistry.get_character(leaver.id) != null or stays.morale != morale - HRConstants.MORALE_FIRE_TEAM:
+		return "the departure did not land as its chip says: on the roster %s, the teammate's morale %d → %d" % [
+			CharacterRegistry.get_character(leaver.id) != null, morale, stays.morale]
+	# The leaver is off the roster, so the row's chip names them by the fallback; the figures must match.
+	var kept: Array = texts.call(EvChips.describe(deltas[0], on, {}, true))
+	if kept.size() != 2 or kept[1] != team_chip:
+		return "the card showed %s, its history row reads %s" % [str(shown), str(kept)]
+	var alone: Dictionary = {"employee": {"type": "employee", "id": stays.id}}
+	shown = texts.call(EvChips.option_parts(effects, {}, alone))
+	if shown.size() != 1 or not String(shown[0]).contains("Selin"):
+		return "with nobody beside them the card reads %s, want the person alone" % str(shown)
+	kept = texts.call(EvChips.describe(EvEffects.run_played(effects, alone)[0], alone, {}, true))
+	if kept.size() != 1:
+		return "alone, the history row reads %s, want the person alone" % str(kept)
+	# Nobody is left now; the first row still names the teammate who paid then.
+	kept = texts.call(EvChips.describe(deltas[0], on, {}, true))
+	if kept.size() != 2 or kept[1] != team_chip:
+		return "with the roster empty, the first departure's history row reads %s, want the team's hit it paid" % str(kept)
 	return ""
 
 

@@ -48,6 +48,7 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
 - `HRMoraleSystem.plan_summer_leave(a, b, apart)` `:291` yazmadan planlar (`apart` geç başlayanı iki hafta arkaya alır, arkası pencereye sığmazsa kaydırmaz; `apart` olmadan ikisi yerinde kalır ve çakışır, `weeks_away` çakışmanın başına kalan hafta),
   ↳ `apply_summer_leave(plan)` `:313` iki haftayı da bu yıla yazar (`CharacterRegistry.set_leave_override`) · `effects.gd:426` (verb `summer_leave`) ve çipi
 - `HRMoraleSystem.confirm_departure(id)` `hr_morale_system.gd:270`: istifanın kadrodan çıktığı TEK yer · `effects.gd:420` (verb `employee_leaves`)
+  ↳ `departure_payers(id)`: ayrılığın moral bedelini ödeyen ekip (ayrılan dışında her çalışan); `_charge_departure` ve `employee_leaves` çipi okur
 - `HRMoraleSystem.forget_employee(id)` `hr_morale_system.gd:297`: ayrılanın latch temizliği · `confirm_departure`, `HRActions.fire`
 - `HRMoraleSystem.tick_burnout()` `hr_morale_system.gd:86`: `EventGate.request("team.burnout")` · `HRSystem.daily_tick`
 - `HRMoraleSystem._maybe_resign()` `hr_morale_system.gd:330`: `EventGate.request("team.resignation")`; `_pending` bu kişi için roll'u durdurur

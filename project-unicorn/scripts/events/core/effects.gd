@@ -475,8 +475,10 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 			var lid: String = entity_of(e, ctx, EvScope.TYPE_EMPLOYEE)
 			if CharacterRegistry.get_character(lid) == null:
 				return _no_target(verb, lid)
+			# The row keeps how many teammates paid the team's hit, so its chip reads what the card's did.
+			var payers: int = HRMoraleSystem.departure_payers(lid).size()
 			HRMoraleSystem.confirm_departure(lid)
-			return {"verb": verb, "employee": lid, "reason": e.get("reason", "")}
+			return {"verb": verb, "employee": lid, "reason": e.get("reason", ""), "team": payers}
 
 		# --- customers --------------------------------------------------------
 		"satisfaction_delta":

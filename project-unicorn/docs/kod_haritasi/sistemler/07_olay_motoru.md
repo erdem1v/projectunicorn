@@ -196,6 +196,10 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
   ↳ `summer_leave` `CONSEQUENCE_VERBS`te ve lint `other`ın bir çalışan yuvası olmasını ister
 - Dosyanın iki eylemi: `start_training {scope}` (`HRSystem.send_to_training`, kişinin rolünün anahtar alanına; plan `EvEffects.training_plan`) ve `fire_employee {scope}` (`HRActions.fire`). İkisi de
   ↳ EKONOMİK ve `EvEffects.NOT_ONLY_COST`ta: ortam kökeni ve süre dolumu onları uygulamaz. Oyuncunun yapamayacağı kişiye ikisi de `refused` satırı yazar ve canlı kart çip çizmez; ikisi de `WRITER_VERBS` ve `SUBJECT_VERBS`te
+- Ayrılık: `employee_leaves {scope, reason}` (`HRMoraleSystem.confirm_departure`). Çipi kişiyi ve, yanında çalışan kaldıysa, ayrılığın ekibe
+  ↳ moral bedelini yazar (`EFFECT_TEAM`, `MORALE_FIRE_TEAM`; `HRMoraleSystem.departure_payers`). Sonuç satırı bedeli ödeyen kişi sayısını `team` diye
+  ↳ taşır, geçmiş çipi onu okur; `team` taşımayan satır (eski kayıt, lint'in ham etkisi) yalnız kişiyi yazar. Figür tabandır:
+  ↳ `departure_morale_extra` huyunun eki çipte yok, huyun kendi metni söyler. Vaka `event_departure_chip_team`
 - Satış ve hesap fiilleri: `account_notice {scope, reason, mail}` (`B2BSalesSystem.give_notice`; sebebi postalı bildirim `B2BConstants.EXIT_NOTICE_MAILS`ta olmalı, `mail: false` kartın kendisi bildirimse),
   ↳ `prospect_offer {scope, discount_pct, discount_weeks, promise_step, promise_weeks}` (`ProspectRegistry.set_offer`, yeni teklif eskisinin yerine geçer; lint: `discount_pct` > 0 ile `discount_weeks` >= 1 birlikte;
   ↳ `promise_step` kart verisinde temel kimlikle yazılır, fiil `SprintCatalog.in_product` ile ürünün kimliğine çevirir), `drop_prospect {scope}` (`SalesFinalizer.lose`, sebep `event`), `take_account {scope}` (`assign_customer("", true)`),

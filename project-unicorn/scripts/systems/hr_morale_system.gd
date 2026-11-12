@@ -372,11 +372,15 @@ static func confirm_departure(character_id: String) -> void:
 ## Ayrılışın kalan ekibe moral bedeli: MORALE_FIRE_TEAM, GERÇEK LİDER taşıyanlara
 ## `departure_morale_extra` kadar fazlası.
 static func _charge_departure(leaver_id: String) -> void:
-	for other in CharacterRegistry.get_employees():
-		if other.id == leaver_id:
-			continue
+	for other in departure_payers(leaver_id):
 		var extra: float = HRConstants.trait_sum(other.traits, "departure_morale_extra")
 		apply_delta(other, -(HRConstants.MORALE_FIRE_TEAM + int(round(absf(extra)))))
+
+
+## The teammates a departure charges: every employee but the leaver. The departure chip shows the team's hit only when
+## someone is there to pay it.
+static func departure_payers(leaver_id: String) -> Array:
+	return CharacterRegistry.get_employees().filter(func(c: Character) -> bool: return c.id != leaver_id)
 
 
 ## Ayrılanın HR tarafı latch'lerini temizler. confirm_departure ve HRActions.fire,
