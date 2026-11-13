@@ -62,7 +62,7 @@ func setup(model: Dictionary) -> void:
 	var areas := AreaPanel.new()
 	areas.action.connect(action.emit)
 	areas.ui_changed.connect(ui_changed.emit)
-	areas.request_picked.connect(func(area_id: String) -> void: ui_changed.emit("open_area", area_id))
+	areas.request_picked.connect(func(line_id: String) -> void: ui_changed.emit("open_area", line_id))
 	_left.add_child(areas)
 	body.add_child(_left)
 	areas.setup(model)

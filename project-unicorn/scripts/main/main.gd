@@ -4765,10 +4765,10 @@ const _A4_WORLDS := {
 	"a4_meet_tip": {"crew": _A4_SIX + "5", "before": [_A4_PREP], "bugs": 1, "fill": "over", "load": 1.15, "queue": 1,
 		"sit": ["sales", "sales"], "tip": "founder"},
 	"a4_next_tip": {"crew": _A4_SIX + "5", "before": [_A4_PREP], "fill": "over", "load": 1.15, "queue": 2, "run": 1.9, "tip": "next"},
-	"a4_waiting": {"crew": "d4 d3 v5 v4 v3 v3 t3 t3 p5", "before": _A4_WAITING, "fill": 3, "areas": ["trust"], "open": "core"},
-	"a4_waiting_tip": {"crew": "d4 d3 v5 v4 v3 v3 t3 t3 p5", "before": _A4_WAITING, "fill": 3, "areas": ["trust"], "open": "core",
+	"a4_waiting": {"crew": "d4 d3 v5 v4 v3 v3 t3 t3 p5", "before": _A4_WAITING, "fill": 3, "areas": ["trust"], "open": "line_erp_cashflow"},
+	"a4_waiting_tip": {"crew": "d4 d3 v5 v4 v3 v3 t3 t3 p5", "before": _A4_WAITING, "fill": 3, "areas": ["trust"], "open": "line_erp_cashflow",
 		"tip": "waiting"},
-	"a4_waiting_all": {"crew": "d4 d3 v5 v4 v3 v3 t3 t3 p5", "before": _A4_WAITING, "fill": 3, "areas": ["trust"], "open": "onboarding"},
+	"a4_waiting_all": {"crew": "d4 d3 v5 v4 v3 v3 t3 t3 p5", "before": _A4_WAITING, "fill": 3, "areas": ["trust"], "open": "line_shared_mobile@erp"},
 	"a4_pm_tip": {"crew": _A4_SIX + "5", "before": [_A4_PREP], "bugs": 1, "fill": "over", "load": 1.15, "queue": 1, "tip": "plain"},
 }
 
@@ -5014,7 +5014,7 @@ func _product_a4_ready(kind: String) -> bool:
 	var page: Control = get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()
 	if kind == "a4_six_hover":
 		var open: Array = SprintCatalog.open_cards([]).filter(func(c: Dictionary) -> bool: return SprintSystem.can_add(c.id))
-		page._set_ui(open[0].area, "open_area")
+		page._set_ui(open[0].line, "open_area")
 		page._set_ui(open[0].id, "hover_card")
 	elif kind == "a4_requests":
 		page._set_ui(ProductModel.live().requests[0].module_id, "open_area")

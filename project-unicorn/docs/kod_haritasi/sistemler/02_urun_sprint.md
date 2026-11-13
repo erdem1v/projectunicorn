@@ -343,8 +343,8 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
   ↳ `tip`li türler: `a4_eleven_tip` "card", `a4_eleven_streak` "cap", `a4_run_w2_bar` "bar", `a4_fix_tip` "fix" (`a4_eleven`), `a4_meet_tip` "founder" (`a4_six_meetings2`), `a4_next_tip` "next" (`a4_run_end`), `a4_pm_tip` "plain",
   ↳ `a4_waiting_tip` "waiting" (`a4_waiting`)
   ↳ `a4_waiting` iki tasarımcı (4★, 3★), dört geliştirici (5, 4, 3, 3★), iki testçi (3★) ve 5★ PM; önceki üç sprintte ilkinde dört modülün kartları alınmış (stok hattının K2'si hariç: `skip`),
-  ↳ sonraki ikisinde yalnız Çekirdek ve Onboarding'inkiler (`areas`); planda üç Güven kartı, sol sütunda Çekirdek açık (`open`): "+"lı adayın altında araştırma bekleyen sıradaki kart görünür;
-  ↳ `a4_waiting_tip` onun ikinci karesi (imleç o kartta, ipucu "{düğüm} araştırılmalı"); `a4_waiting_all` aynı dünya, Onboarding açık (adaylarının hepsi kilitli modül)
+  ↳ sonraki ikisinde yalnız Çekirdek ve Onboarding'inkiler (`areas`); planda üç Güven kartı, sol sütunda Nakit Akışı modülü açık (`open`, hattın kimliği): K3'ü araştırma bekleyen sıradaki kart görünür;
+  ↳ `a4_waiting_tip` onun ikinci karesi (imleç o kartta, ipucu "{düğüm} araştırılmalı"); `a4_waiting_all` aynı dünya, Mobil modülü açık (K3'ü araştırma bekliyor)
   ↳ `a4_req_plan` sol sütunun talep satırları, gerçek ad havuzuyla: planı olmayan (bu ve gelecek çeyrek), bu sprintte, sonraki sprintte, PM'in onaylı
   ↳ çeyrek planında ve bu çeyrekte biten talep; `a4_req_run` aynı dünyanın koşan sprinti (Tasarım, Geliştirme, Test aşamasında kartlar); ikisi de
   ↳ talep satırlarını `REQROW|müşteri|kart|durum|son tarih` diye yazar
@@ -388,7 +388,8 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
   ↳ ekip satırları `SprintTimeline.row_power`dan (her satırın kişileri `SprintSystem.capacity_of`a)
 - Kart ipucuları açılırken kurulur (`CardTip`, yüzler `ProductModel.stage_face`; çubuğun `_bar_tip`i); `live()` ilk kareye ipucu hesabı yüklemez, satırda yalnız düz alanlar (`module_name`, `finishes`, `gate`) durur.
 - `remove()` kâğıdın takip kartını (`follow`) reddeder; `ProductModel._row` ve `_next_card` ona Kaldır düğmesi vermez
-- Sol sütun `live()`ın `requests` ve `modules` alanlarını okur; `areas` yalnız çeyrek hedef menüsünün listesidir (`{id, name, goal_text}`), `customers` ve hat başına hata listesi yoktur (`bug_row_of` Destek raporunundur)
+- Sol sütun `live()`ın `requests`, `modules` ve `research` alanlarını okur. Modül hattın kendisidir (`id` hattın kimliği, `area` yalnız ikonun alanı; alan başlığı çizilmez); kullanıcıyla görüş ürün başına tektir (kimlik alanında doğar, `research`) ve listenin altında durur. `areas` yalnız çeyrek hedef menüsünün listesidir (`{id, name, goal_text}`), `customers` ve hat başına hata listesi yoktur (`bug_row_of` Destek raporunundur)
+- `open_area` açık modülün hattını taşır; `ProductTab.open_area` alan alırsa (Destek kartı, gelen kutusu) alanın en çok açık hatası olan hattını açar (`SprintCatalog.area_module`)
 - Adayın `addable`ı `live()`da `null`dır: `ProductModel.resolve_addable` her karede en az bir `can_add` (8 ms) ister, `ghost` imleç "+"a gelince `timeline([aday])` kurar; ikisinin önbelleği her `live()`da atılır
 - İki ayrı efor tablosu: hat JSON `effort` (bant 5-7/7-9/9-12, `ProductLines.effort_of`, yalnız yeni-kod terimi ve doğrulama) ile sprint.json `effort` k1 15·k2 25·k3 40 (`SprintCatalog.step_effort` :171, kart eforu). Karıştırma
 - `SprintCatalog.cfg()` (:29) eksik anahtarda sert hata verir (`v[key]`); sprint.json bozuksa `JSON.parse_string` null döner. Yeni anahtar eklerken okuyan her çağrı yerini birlikte ekle

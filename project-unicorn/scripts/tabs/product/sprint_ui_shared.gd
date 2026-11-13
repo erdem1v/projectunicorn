@@ -554,10 +554,11 @@ static func bug_line(row: Dictionary, variation: StringName) -> HBoxContainer:
 	return line
 
 
-## Ürün penceresi SPRINT'te, `area_id` alanı açık: önce sayfa açılır, sayfa kendi durumunu kurulurken alanı tohumlar.
-static func open_product_area(tree: SceneTree, area_id: String) -> void:
+## Ürün penceresi SPRINT'te, `id`nin modülü açık (hat; alan verilirse alanın en çok hatalı hattı): önce sayfa açılır, sayfa
+## kendi durumunu kurulurken modülü tohumlar.
+static func open_product_area(tree: SceneTree, id: String) -> void:
 	EventBus.tab_changed.emit("product")
-	tree.get_first_node_in_group(&"window_layer").get_current_page_body().open_area(area_id)
+	tree.get_first_node_in_group(&"window_layer").get_current_page_body().open_area(id)
 
 
 ## Sayılan anahtarın metni: `n` 1 ise tekili, binlik ayraçlı.

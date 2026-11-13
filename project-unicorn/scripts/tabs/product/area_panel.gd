@@ -9,14 +9,14 @@ extends MarginContainer
 
 signal action(kind: String, args: Dictionary)
 signal ui_changed(key: String, value: Variant)
-## Bir talep satırına tıklandı: modülü açılır ve görünür kaydırılır.
-signal request_picked(area_id: String)
+## Bir talep satırına tıklandı: modülü (hattı) açılır ve görünür kaydırılır.
+signal request_picked(line_id: String)
 ## İmleç bir adayın açık "+"ına geldi ya da ondan ayrıldı (""): hayaletin olayı.
 signal hovered(card_id: String)
 
 const CHEVRONS := ["res://assets/icons/util/chevron_right.svg", "res://assets/icons/util/chevron_down.svg"]
 const CHEVRON_UP := "res://assets/icons/util/chevron_up.svg"
-## Modülün işareti: modül kimliği → ikon.
+## Modülün işareti: modülün alanının kimliği → ikon.
 const AREA_ICONS := {
 	"core": "res://assets/icons/rail/product.svg",
 	"trust": "res://assets/icons/util/shield.svg",
@@ -59,6 +59,8 @@ func setup(model: Dictionary) -> void:
 	_col.add_child(list)
 	for module in model.modules:
 		list.add_child(_module_row(module))
+	for c in model.research:
+		list.add_child(_candidate(c))
 	set_process(not _unknown.is_empty())
 
 
@@ -162,7 +164,7 @@ func _request_row(r: Dictionary) -> PanelContainer:
 		who.add_child(SprintUiShared.due_chip(String(r.due_text), r.soon))
 	col.add_child(who)
 	var what := SprintUiShared.box(UiTokens.SPACE_M)
-	var mark := _area_mark(String(r.module_id))
+	var mark := _area_mark(String(r.area))
 	what.add_child(mark)
 	what.add_child(_name(String(r.card_name), &"CaptionPrimary", null))
 	col.add_child(what)
@@ -172,7 +174,7 @@ func _request_row(r: Dictionary) -> PanelContainer:
 		col.add_child(SprintUiShared.pad(status, Vector4i(UiTokens.D_BOX_MONO + UiTokens.SPACE_M, 0, 0, 0)))
 	HRUiShared.set_mouse_ignore(col)
 	# İkon modülün adını ipucu taşır: imleci alır, tıkı satıra geçirir.
-	mark.tooltip_text = SprintCatalog.area_name(String(r.module_id))
+	mark.tooltip_text = SprintCatalog.cap_name(String(r.module_id))
 	mark.mouse_filter = Control.MOUSE_FILTER_PASS
 	row.tooltip_text = r.tip
 	row.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -212,7 +214,7 @@ class StageRing extends Control:
 
 # --- Modüller ---------------------------------------------------------------------------
 
-## Modülün ikonu, kutusunda ortalı.
+## Modülün ikonu (modülün alanının ikonu), kutusunda ortalı.
 func _area_mark(area_id: String) -> PanelContainer:
 	return HRUiShared.D_mono_box(UiTokens.D_BOX_MONO, UiFactory.make_glyph(AREA_ICONS[area_id], UiTokens.D_ICON_ROW, UiTokens.D_INK_2))
 
@@ -227,7 +229,7 @@ func _module_row(m: Dictionary) -> PanelContainer:
 	row.add_child(col)
 	var head := SprintUiShared.box(UiTokens.SPACE_M)
 	head.custom_minimum_size.y = UiTokens.D_BOX_MONO
-	head.add_child(_area_mark(String(m.id)))
+	head.add_child(_area_mark(String(m.area)))
 	head.add_child(_name(String(m.name), &"TipTitle", UiTokens.D_INK_2))
 	if m.planned:
 		var tick := UiFactory.make_glyph(SprintUiShared.CHECK, UiTokens.D_ICON_ROW, UiTokens.D_ST_TEST)

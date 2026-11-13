@@ -83,6 +83,19 @@ static func _capabilities_of(area_id: String, subtype: String) -> Array[String]:
 	return out
 
 
+## Kartın modülünün adı (modül hattın kendisidir); hattı olmayan kart (kullanıcıyla görüş) bir modülün değildir: "".
+static func module_name(card: Dictionary) -> String:
+	return "" if card.line == "" else cap_name(card.line)
+
+
+## Alanı adresleyen düğmenin (gelen kutusunun düzeltme satırı) açacağı modül: alanın en çok açık hatası olan hattı
+## (`ProductState.lines_by_bugs`), hatasız alanda ilk hattı.
+static func area_module(area_id: String) -> String:
+	var lines: Array[String] = capabilities(area_id)
+	var ranked: Array = ProductState.lines_by_bugs().filter(func(l: String) -> bool: return l in lines)
+	return lines[0] if ranked.is_empty() else ranked[0]
+
+
 static func cap_name(line_id: String) -> String:
 	if line_id == PAID_PLAN:
 		return _t(PAID_PLAN_NAME_KEY)
@@ -192,8 +205,8 @@ static func card_need(kind: String, line: String, tier: int, effort: float) -> A
 
 
 ## Alanın aday kartları (PRD §3.2): yetenek başına sonraki kademe (kapısı kapalıysa da görünür),
-## açık talep o kademeyi talep kartına çevirir, açık hatası olan yetenek başına düzeltme, alan başına
-## araştırma (yapıldığı sprintin ardından bir kapanış gizli). Sprintte ya da sonrakinde duran kart
+## açık talep o kademeyi talep kartına çevirir, açık hatası olan yetenek başına düzeltme, kimlik alanında
+## ürünün tek araştırma kartı (kullanıcıyla görüş; yapıldığı sprintin ardından bir kapanış gizli). Sprintte ya da sonrakinde duran kart
 ## saklanan hâliyle döner. Sıra: öncelikli önde, kilitsiz önde, sonra etki/efor azalan.
 static func candidates(area_id: String) -> Array:
 	var stored: Dictionary = _p().get("cards", {})
@@ -227,7 +240,7 @@ static func candidates(area_id: String) -> Array:
 			card.bugs = int(bugs[line_id])
 			out.append(card)
 	var researched: Variant = _p().get("research_done", {}).get(area_id)
-	if researched == null or SprintSystem.last_closed() > int(researched):
+	if area_id == _identity_area() and (researched == null or SprintSystem.last_closed() > int(researched)):
 		out.append(new_card("res:" + area_id, "research", area_id, int(cfg("effort.research"))))
 	var keyed: Array = out.map(func(c: Dictionary) -> Array:
 		var card: Dictionary = (stored.get(c.id, c) as Dictionary).duplicate(true)
@@ -557,8 +570,12 @@ static func release_lead_sentence(release: Dictionary) -> String:
 	if not carried.is_empty():
 		return _t("PRODUCT_LEAD_CARRIED").format({"card": card_name(card_by_id(carried[0].id))})
 	var pool: Array = open_cards([])
-	return "" if pool.is_empty() else _t("PRODUCT_LEAD_WEAKEST").format(
-		{"area": area_short(_lead_area(pool, SprintSystem.capacity()))})
+	if pool.is_empty():
+		return ""
+	var area: String = _lead_area(pool, SprintSystem.capacity())
+	var named: Array = ((_p().next.cards as Array).map(func(id: String) -> Dictionary: return _p().cards[id])
+		+ pool.filter(func(c: Dictionary) -> bool: return c.area == area)).filter(func(c: Dictionary) -> bool: return c.line != "")
+	return "" if named.is_empty() else _t("PRODUCT_LEAD_WEAKEST").format({"area": cap_name(named[0].line)})
 
 
 ## Çekirdek'te K1'e varması gereken kimlik yeteneği sayısı; canlı üründe 0.

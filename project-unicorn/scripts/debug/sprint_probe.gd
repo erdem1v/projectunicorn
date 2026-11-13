@@ -366,12 +366,11 @@ static func _plan_ms(verdicts: Array) -> void:
 
 ## The cards whose "+" the page's first frame leaves unknown, in screen order.
 static func _deferred(page: Dictionary) -> Array:
-	var ids: Array = []
+	var cards: Array = []
 	for module: Dictionary in page.modules:
-		for c: Dictionary in module.candidates:
-			if c.addable == null:
-				ids.append(c.id)
-	return ids
+		cards.append_array(module.candidates)
+	cards.append_array(page.research)
+	return cards.filter(func(c: Dictionary) -> bool: return c.addable == null).map(func(c: Dictionary) -> String: return c.id)
 
 
 ## Frames until every deferred "+" value has come, as the page asks for them.

@@ -22876,13 +22876,16 @@ static func _case_productivity_mod_paces_the_sprint() -> String:
 
 
 ## "+" kartı ancak bu sprintte puan alacaksa ve eklendikten sonra yük tavanı (%125) aşmıyorsa alır;
-## boş sprint her kartı alır. Tek kurucu 8 saatte: ikinci K1 boş puana rağmen tavanı aşar, Çekirdek'in
-## araştırması kalan puanı alıp girer, ondan sonra tavanın altındaki kart da boş puan kalmadığı için girmez.
+## boş sprint her kartı alır. Tek kurucu 8 saatte: ikinci K1 boş puana rağmen tavanı aşar, kullanıcıyla görüş
+## kalan puanı alıp girer, ondan sonra tavanın altındaki ikinci görüş kartı (fikstür) da boş puan kalmadığı için girmez.
 static func _case_sprint_ceiling_125_blocks_add() -> String:
 	_seed_sprint()
 	var ceiling: float = SprintSystem.capacity() * float(SprintCatalog.cfg("cap_ceiling"))
 	var refused: Dictionary = {"full": 0, "ceiling": 0}
-	for c in SprintCatalog.candidates("core") + SprintCatalog.candidates("onboarding"):
+	# Kullanıcıyla görüş ürün başına tektir: tavanın altında kalan ikinci küçük kart, bu kuraldan önceki bir kaydın görüş kartıdır.
+	var extra: Dictionary = SprintCatalog.new_card("res:onboarding", "research", "onboarding", int(SprintCatalog.cfg("effort.research")))
+	GameState.product.cards[extra.id] = extra
+	for c in SprintCatalog.candidates("core") + [extra]:
 		if SprintCatalog.gate_reason(c.step) != "":
 			continue
 		var used: float = SprintSystem.used()
@@ -24738,8 +24741,10 @@ static func _case_product_bug_rows_read_the_store() -> String:
 	_seed_sprint_live("erp")
 	_seed_line_accounts()
 	var fixes := func() -> Array:
-		var core: Array = ProductModel.live().modules.filter(func(m: Dictionary) -> bool: return m.id == "core")
-		return [] if core.is_empty() else core[0].candidates.filter(func(c: Dictionary) -> bool: return c.id.begins_with("fix:"))
+		var out: Array = []
+		for m: Dictionary in ProductModel.live().modules:
+			out.append_array(m.candidates.filter(func(c: Dictionary) -> bool: return c.id.begins_with("fix:")))
+		return out
 	if not fixes.call().is_empty():
 		return "a product with no open bugs offered the fix candidates %s" % [fixes.call()]
 	ProductState.add_bugs("line_erp_ledger", 8)
@@ -24750,7 +24755,7 @@ static func _case_product_bug_rows_read_the_store() -> String:
 	var lines: Array = ["line_erp_ledger", "line_erp_stock", "line_erp_cashflow"]
 	var read: Array = fixes.call()
 	if read.size() != lines.size():
-		return "the core module offers %d fix cards, want the %d lines with open bugs and none without" % [read.size(), lines.size()]
+		return "the modules offer %d fix cards, want the %d lines with open bugs and none without" % [read.size(), lines.size()]
 	var rows: Array = []
 	for line in lines:
 		var card: Array = read.filter(func(c: Dictionary) -> bool: return c.id == "fix:" + line)
@@ -25178,6 +25183,8 @@ static func _case_sprint_departure_restaffs_card() -> String:
 	var dev: Character = _sprint_hire("char_left_dev", HRConstants.ROLE_DEVELOPER)
 	var founder: String = CharacterRegistry.get_founder().id
 	SprintSystem.add("res:core")
+	# Kullanıcıyla görüş ürün başına tektir; eşit ikinci kart, bu kuraldan önceki bir kaydın sprintinde kalan görüş kartıdır.
+	GameState.product.cards["res:onboarding"] = SprintCatalog.new_card("res:onboarding", "research", "onboarding", 5)
 	SprintSystem.add("res:onboarding")
 	if not SprintSystem.start():
 		return "fixture: the sprint did not start"
@@ -25354,7 +25361,7 @@ static func _case_sprint_never_stalls_in_plan() -> String:
 	for line_id in ProductLines.line_ids(ProductState.subtype()):
 		ProductState.set_line_tier(String(line_id), ProductLines.TIER_MAX)
 	GameState.set_flag("b2c_paid_tier_open", true)
-	var research: Array = SprintCatalog.area_ids().map(func(a: String) -> String: return "res:" + a)
+	var research: Array = ["res:core"]
 	if not _play_sprint(research) or SprintSystem.mode() != "release" \
 			or not (GameState.product.release.carried as Array).is_empty():
 		return "fixture: the research sprint did not ship whole (%s)" % SprintSystem.mode()
@@ -26026,6 +26033,8 @@ static func _case_sprint_lead_row_until_plan_changes() -> String:
 		SprintSystem.remove(id)
 		p.sprint.lead_applied = true
 		SprintSystem.add(id)
+	# Havuzda plana girmemiş bir kart kalsın (kullanıcıyla görüş ürün başına tektir): bir hatta açık hata, düzeltme kartı doğar.
+	ProductState.add_bugs("line_erp_ledger", 3)
 	var seams: Array = [
 		["the quarter goal", func() -> void: SprintSystem.pick_goal(SprintCatalog.pm_goal()), true],
 		["the founder key", func() -> void: SprintSystem.set_founder_in_sprint(true), true],

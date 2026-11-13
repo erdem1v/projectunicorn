@@ -1334,14 +1334,15 @@ static func _plan_the_sprint() -> void:
 			if not _plannable(GameState.product.cards[id]):
 				SprintSystem.remove(id)
 				_plan_actions += 1
-	# With no K1 step or fix left to plan, a research sprint; a plan that still cannot start is _run_sim's error.
+	# With no K1 step or fix left to plan, the product's one research card; while it rests (a close after it ran) the
+	# lead's plan, so the sprint still starts.
 	if _k1_only and not SprintSystem.can_start():
-		for area in SprintCatalog.areas_for(ProductState.subtype(), ProductState.market_type()):
-			var research: Array = SprintCatalog.candidates(area.id).filter(func(c: Dictionary) -> bool: return c.kind == "research")
-			if not research.is_empty():
-				SprintSystem.add(research[0].id)
-				_plan_actions += 1
-				break
+		var research: Array = SprintCatalog.open_cards([]).filter(func(c: Dictionary) -> bool: return c.kind == "research")
+		if research.is_empty():
+			SprintSystem.apply_lead()
+		else:
+			SprintSystem.add(research[0].id)
+		_plan_actions += 1
 	_plan_actions += 1
 	if _start_logged():
 		print("PROBE PLAY day=%d sprint %d start cards=%s used=%.2f capacity=%.2f actions=%d" % [GameState.day,

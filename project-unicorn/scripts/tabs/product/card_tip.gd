@@ -120,8 +120,8 @@ static func _end(card: Dictionary) -> Label:
 		UiTokens.D_neg_ink() if card.late else null)
 
 
-## Künye: müşteri ve yıllık değeri, söz tarihi (varsa), modül ve hazırlayan PM (ekipte PM yoksa "PM yok"; PM var ama kartı
-## hazırlamadıysa yalnız modül), kurucunun kartıysa onu.
+## Künye: müşteri ve yıllık değeri, söz tarihi (varsa), modül (kullanıcıyla görüşün modülü yok) ve hazırlayan PM (ekipte PM yoksa
+## "PM yok"; PM var ama kartı hazırlamadıysa yalnız modül), kurucunun kartıysa onu. Yazacak bir şey yoksa null.
 static func _notes(card: Dictionary, team_pm: bool) -> VBoxContainer:
 	var col := SprintUiShared.column(UiTokens.SPACE_XS)
 	var slot: Dictionary = card.slot
@@ -132,15 +132,16 @@ static func _notes(card: Dictionary, team_pm: bool) -> VBoxContainer:
 		col.add_child(_note(SprintUiShared.BUILDING, SprintUiShared.SEP.join(deal)))
 		if slot.promise:
 			col.add_child(_note(SprintUiShared.HOURGLASS, RnDUiShared.t("PRODUCT_TIP_PROMISE").format({"when": slot.text})))
-	var about: PackedStringArray = [card.module_name]
+	var about: PackedStringArray = [] if card.module_name == "" else [card.module_name]
 	if card.pm != null:
 		about.append(RnDUiShared.t("PRODUCT_PREPARED_BY").format({"name": card.pm.name}))
 	elif not team_pm:
 		about.append(RnDUiShared.t("PRODUCT_NO_PM"))
 	if card.founder:
 		about.append(RnDUiShared.t("PRODUCT_FOUNDER_CARD"))
-	col.add_child(SprintUiShared.prose(SprintUiShared.SEP.join(about), &"CaptionPrimary"))
-	return col
+	if not about.is_empty():
+		col.add_child(SprintUiShared.prose(SprintUiShared.SEP.join(about), &"CaptionPrimary"))
+	return null if col.get_child_count() == 0 else col
 
 
 static func _note(glyph: String, text: String) -> HBoxContainer:

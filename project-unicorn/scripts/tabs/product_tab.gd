@@ -271,11 +271,11 @@ func _set_ui(value: Variant, key: String) -> void:
 
 
 ## SPRINT görünümünde bu modül açık ve görünür: Destek kartı en çok açık hatası olan hattın modülüne, bir talep satırı kendi
-## modülüne götürür.
-func open_area(area_id: String) -> void:
+## modülüne götürür. `id` bir hat ya da bir alandır; alan, en çok açık hatası olan hattının modülünü açar.
+func open_area(id: String) -> void:
 	_set_ui("sprint", "view")
 	_reveal_open = true
-	_set_ui(area_id, "open_area")
+	_set_ui(SprintCatalog.area_module(id) if id in SprintCatalog.area_ids() else id, "open_area")
 
 
 ## İmleç bir adayın "+"ında: sayfa kurulmaz, kartın kimliği `ui.hover_card` olur, hayaletin hesabı kurulur (sayfanın bir sonraki

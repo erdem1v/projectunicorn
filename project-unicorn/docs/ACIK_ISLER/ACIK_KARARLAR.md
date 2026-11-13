@@ -1483,6 +1483,16 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
 
 ## GDD'ye işlenmemiş sahip kararları
 
+- **Modül katmanı: alan grubu yok, modül hattın kendisidir (Erdem 2026-11-13/14, PRD_ERP).** Erdem'in tur 4 ortak kuralı 7:
+  "Çekirdek mantığını tamamen kaldırmamız gerekebilir ... modül based." Sprint planının sol sütunu hatları düz bir modül listesi
+  olarak gösterir. Kullanıcıyla görüş kartı ürün başına tektir (PRD_ERP soru 6; Erdem'in cevabı bekleniyor, PRD önerisiyle).
+  ch03 §12.1'in hat modeli kalır; değişen yerler:
+  - GUNCELLEMELER'in sprint turu maddesindeki "Alanlar" ve yıldız beklenti tablosu;
+  - ch03 §12.2'nin üç paylaşılan hat adı (PRD_ERP §2.2).
+  Bugün yalnız oyuncunun gördüğü katman değişti; alanlar içeride kalite modelinin, çeyrek hedefinin ve satışın okumasında
+  sürüyor (kalite modelinin modüle geçişi PRD_ERP §2.1 ve §4.2). Açık: GUNCELLEMELER ve ch03 güncellensin mi. Kaynak: Erdem'in
+  tur 4 yorumu (2026-11-13, ortak kural 7), yardımcı yönetmenin modül şeması ve PRD_ERP §2.1 (görev belgeleri).
+
 - **Satın alma sonu.** ch01 §3, ch13 §1 ve ch14 §6 "CUT: acquisition" diyor. Oysa `funding.acquisition_offer` kartı (Frank v6
   metni, 7946ff3) ve `acquisition` sonu canlı. f50d481 satışı EA/tam'da da son yaptı (onay bekliyor); kilometre taşından sonra
   kârlı şirkete de teklif gelebiliyor. Açık: satın alma v1'de var mı (D1). Varsa ch01, ch13 ve ch14 güncellenir, yoksa kart

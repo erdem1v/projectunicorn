@@ -21,7 +21,7 @@ extends RefCounted
 #   quarter: {state: "locked_no_pm"|"open",
 #             goal: {area_id ("" hedef yok, "bugs" Hatalar ya da alan), area_name, meter: {text, now, target, total, progress_text} or
 #             null (yalnız alan hedefinde)} or null (sprint yok), columns: [column]},
-#   ui: {view: "overview"|"sprint"|"quarter", open_area: area id or "", history_open, hover_card: card id or "" (imleç bir adayın
+#   ui: {view: "overview"|"sprint"|"quarter", open_area: açık modülün hattı or "", history_open, hover_card: card id or "" (imleç bir adayın
 #         "+"ında), server_preview: kademe id or "" (açık geçiş önizlemesi), requests_open (talep listesinin fazlası açık)},
 #   overview: {server: server} or null (v1.0'dan önce: GENEL BAKIŞ kilitli),
 #   areas: [{id, name, goal_text}],
@@ -56,16 +56,17 @@ extends RefCounted
 #
 # Yeni ekranın okuma yüzeyi, yukarıdakilerin yanında (efor sayıları görünen eforudur: kalan ihtiyaç ÷ hazırlık kazancı):
 #   founder: {on (kurucu sprint kartı alır), locked: "" | "running" | "rnd", rnd_text},
-#   requests: null (B2C) | [{customer, card_id, card_name, module_id, value (yıllık), due_text (sözün, yoksa talebin son sprinti:
+#   requests: null (B2C) | [{customer, card_id, card_name, module_id (hattın kimliği), area (ikonunun alanı), value (yıllık), due_text (sözün, yoksa talebin son sprinti:
 #             "bu çeyrek", "gelecek çeyrek" ya da "{q}. çeyrek"; karşılanmışta ""), soon (bu çeyrek; karşılanmışta false), status: {kind: "" (planda değil) | "plan" (kartı bir
 #             sprintin planında: `sprint` en erken olanın numarası) | "dev" (koşan sprintte aşamada: `stage`; yüzde yok) | "met" (kartı
 #             bir sürümle çıktı, bu ürün çeyreğinde: `q` sürümün takvim çeyreği), text (satırın yazısı; "" ise satır yok)}, tip}]
 #             (açıklar önde: planda olmayan önde, bu çeyrek önde, sonra son tarih; karşılananlar altta, en yeni önde),
-#   modules: [{id, name, planned (bu sprintte kartı var), candidates: [{id, name, effort, parts: [{stage, effort}] (sıfırdan
+#   modules: [{id (hattın kimliği: modül hattın kendisidir), area (ikonunun alanı), name, planned (bu sprintte kartı var), candidates: [{id, name, effort, parts: [{stage, effort}] (sıfırdan
 #             büyük aşama payları, eforu kesirli), planned (bu sprintin planında), stamp (başka sprintte: sprint numarası, yoksa
 #             -1), addable (null: "+"nın değeri henüz istenmedi, `resolve_addable` ister; false: adaylıktan çıkmış kartın "+"ı yok),
 #             bugs, fix_text}], waiting: null | {name, node, reason} (modülün araştırma bekleyen sıradaki kartı: tek eksik kapısı araştırma;
 #             başka kapısı da eksik kart yok)}] (kilitli aday listelenmez; adaylarının hepsi kilitli ve bekleyeni olmayan modül listelenmez),
+#   research: [modülün adayı biçiminde] (kullanıcıyla görüş: ürünün kartı, modül listesinin altında),
 #   prep: {pms: [{person, stars, cards (bu sprintin kartlarından hazırladıklarının adı), preparing (sonraki sütunda hazırladığı var)}]},
 #   quarter: + {q, year (ürün çeyreğinin başladığı takvim çeyreği), pos, total (çeyreğin kaçıncı sprinti, kaç sprintlik)},
 #   center: + {now_at (koşan sprintin haftasında şimdiki an, sprint başından hafta), close_at (SprintTimeline), progress: {done,
@@ -90,7 +91,7 @@ extends RefCounted
 #         sprintte başlıyor), prep: {pm: person, done: 0..1} or null (hazırlayan PM yok), buttons}] (sürüm notunda devreden kartlar
 #         `carried`ta yer alır, burada değil; planlamada "↑" ve "×", öbür kiplerde "×").
 # person = {id, name, role_text, look, stars, founder}.
-# Kart satırı (pano) = {id, kind, name, effort, raw_effort, module_name (modülün tam adı, ipucunda), fix_text
+# Kart satırı (pano) = {id, kind, name, effort, raw_effort, module_name (modülün adı, ipucunda; kullanıcıyla görüşte ""), fix_text
 #   (düzeltme kartında hata sayısı, etkilenenler ve en büyük hesap), slot: {kind: "due" (+ text, soon, customer, value, promise: söz mü talep mi; yalnız kartın ipucu okur, yuvada çip yok) | "carried" |
 #   "late"} ya da {}, carried (devreden kart), pm, ask, risk, risk_raw (0..1: beklenen hatanın tavana oranı, hazırlanmamış hâli), late, finishes (sprint sonuna
 #   yetişir), founder, gate (başlamayacak kartın kapı gerekçesi, yoksa ""), buttons, stages (SprintTimeline aşamaları)}. Planlamada
@@ -146,18 +147,23 @@ static func live() -> Dictionary:
 	var suggestion: Dictionary = SprintCatalog.NO_LEAD
 	if mode == "plan" and n > 0 and not SprintSystem.delegated() and not p.sprint.get("lead_applied", false):
 		suggestion = SprintCatalog.lead_suggestion()
-	var planned: Array = p.get("sprint", {}).get("cards", []).map(func(id: String) -> String: return p.cards[id].area)
+	var planned: Array = p.get("sprint", {}).get("cards", []).map(func(id: String) -> String: return String(p.cards[id].line))
 	var areas: Array = []
 	var modules: Array = []
+	var research: Array = []
 	var pool: Dictionary = {}
 	for a in SprintCatalog.areas_for(ProductState.subtype(), ProductState.market_type()):
 		var cards: Array = SprintCatalog.candidates(a.id)
 		for c in cards:
 			pool[c.id] = c
 		areas.append({"id": a.id, "name": SprintCatalog.area_name(a.id), "goal_text": goal_text(a.id)})
-		var module: Variant = _module(a.id, cards, a.id in planned, n, tags)
-		if module != null:
-			modules.append(module)
+		for line: String in SprintCatalog.capabilities(a.id):
+			var module: Variant = _module(line, a.id, cards.filter(func(c: Dictionary) -> bool: return c.line == line),
+				line in planned, n, tags)
+			if module != null:
+				modules.append(module)
+		research.append_array(cards.filter(func(c: Dictionary) -> bool: return c.kind == "research").map(
+			func(c: Dictionary) -> Dictionary: return _module_card(c, int(tags.get(c.id, -1)), n)))
 	var center: Dictionary = _center(mode, release, outcome)
 	center.merge(_plan_view(mode, run, suggestion, pool), true)
 	var next: Dictionary = _next(mode, run)
@@ -180,6 +186,7 @@ static func live() -> Dictionary:
 		"founder": _founder(mode, center.rnd_node),
 		"requests": _requests(tags, mode),
 		"modules": modules,
+		"research": research,
 		"prep": _prep(),
 		"center": center,
 		"next": next,
@@ -243,16 +250,16 @@ static func bug_row_of(line_name: String, part: Dictionary, delta: int) -> Dicti
 	return {"text": SprintUiShared.SEP.join(bits), "tip": "\n".join(tip), "delta": delta}
 
 
-## Yeni sol sütunun modülü: kilitli aday listelenmez; araştırma bekleyen sıradaki kart `waiting`te durur. Adaylarının hepsi kilitli ve
-## bekleyeni olmayan modül listelenmez. `cards` alanın ham adayları, `planned` modülün bu sprintin planında kartı olması, `sprint` bu sprintin numarası, `tags`
-## bu ve sonraki sprintin kartlarının sprint numarası.
-static func _module(area_id: String, cards: Array, planned: bool, sprint: int, tags: Dictionary) -> Variant:
+## Sol sütunun modülü (modül hattın kendisidir, `area_id` yalnız ikonunu verir): kilitli aday listelenmez; araştırma bekleyen sıradaki
+## kart `waiting`te durur. Gösterecek adayı ve bekleyeni olmayan modül (bitmiş ya da hepsi kilitli hat) listelenmez. `cards` hattın ham adayları, `planned`
+## modülün bu sprintin planında kartı olması, `sprint` bu sprintin numarası, `tags` bu ve sonraki sprintin kartlarının sprint numarası.
+static func _module(line_id: String, area_id: String, cards: Array, planned: bool, sprint: int, tags: Dictionary) -> Variant:
 	var listed: Array = cards.filter(func(c: Dictionary) -> bool:
 		return c.state != "candidate" or SprintCatalog.gate_reason(c.step) == "")
 	var waiting: Variant = _waiting(cards)
-	if listed.is_empty() and not cards.is_empty() and waiting == null:
+	if listed.is_empty() and waiting == null:
 		return null
-	return {"id": area_id, "name": SprintCatalog.area_name(area_id), "planned": planned,
+	return {"id": line_id, "area": area_id, "name": SprintCatalog.cap_name(line_id), "planned": planned,
 		"candidates": listed.map(func(c: Dictionary) -> Dictionary: return _module_card(c, int(tags.get(c.id, -1)), sprint)),
 		"waiting": waiting}
 
@@ -301,20 +308,20 @@ static func _requests(tags: Dictionary, mode: String) -> Variant:
 		if customer == "" or not (r.status == "open" or not met.is_empty()):
 			continue
 		var card_id: String = "feat:" + r.step if stored.has("feat:" + r.step) else String(r.card_id)
-		var area_id: String = SprintCatalog.area_of_line(r.line)
 		var promise: int = promised.get(String(r.customer_id) + "|" + String(r.step), -1)
 		var due: int = promise if promise >= 0 else int(r.due_sprint)
 		var when: Dictionary = _due(due)
 		var card_name: String = SprintCatalog.step_name(r.step)
 		var parts: PackedStringArray = [customer,
-			_t("PRODUCT_TIP_CARD_MODULE").format({"card": card_name, "module": SprintCatalog.area_name(area_id)}),
+			_t("PRODUCT_TIP_CARD_MODULE").format({"card": card_name, "module": SprintCatalog.cap_name(r.line)}),
 			_t("PRODUCT_PER_YEAR").format({"amount": Fmt.money_exact(int(r.value))})]
 		if promise >= 0 and r.status == "open":
 			parts.append(_t("PRODUCT_TIP_PROMISE").format({"when": when.text}))
 		var status: Dictionary = _request_status(card_id, tags, mode, met)
 		var order: Array = [1, -int(met.day), 0, 0, 0, keyed.size()] if not met.is_empty() else [0, 0, int(status.kind != ""),
 			int(not when.soon), due, keyed.size()]
-		keyed.append([order, {"customer": customer, "card_id": card_id, "card_name": card_name, "module_id": area_id,
+		keyed.append([order, {"customer": customer, "card_id": card_id, "card_name": card_name, "module_id": String(r.line),
+			"area": SprintCatalog.area_of_line(r.line),
 			"value": int(r.value), "due_text": "" if not met.is_empty() else when.text, "soon": when.soon and met.is_empty(),
 			"status": status, "tip": SprintUiShared.SEP.join(parts)}])
 	keyed.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
@@ -772,7 +779,7 @@ static func _row(c: Dictionary, t: Dictionary, buttons: Array) -> Dictionary:
 	var bugs: Dictionary = SprintCatalog.bugs_part(c.line, c.bugs) if fix else {}
 	return {"id": c.id, "kind": _kind(c), "name": SprintCatalog.card_name(c), "effort": roundi(_effort(c)),
 		"raw_effort": roundi(SprintSystem.card_load(c)),
-		"module_name": SprintCatalog.area_name(c.area),
+		"module_name": SprintCatalog.module_name(c),
 		"fix_text": SprintUiShared.bugs_text(bugs) if fix else "",
 		"slot": slot, "pm": null if preparer == null else _face(preparer, HRConstants.AREA_PRODUCT), "ask": _ask(c),
 		"risk": minf(1.0, t.get("h", 0.0) / ref) if ref > 0.0 else 0.0, "risk_raw": minf(1.0, t.get("h0", 0.0) / ref) if ref > 0.0 else 0.0,

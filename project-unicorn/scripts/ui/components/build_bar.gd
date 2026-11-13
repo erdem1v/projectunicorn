@@ -163,6 +163,6 @@ func _on_support_input(ev: InputEvent) -> void:
 		_open_product()
 
 
-## Ürün penceresi, en çok hatası olan hattın alanı açık.
+## Ürün penceresi, en çok hatası olan hattın modülü açık (alanın en çok hatalı hattı odur).
 func _open_product() -> void:
 	SprintUiShared.open_product_area(get_tree(), _model.worst_area)
