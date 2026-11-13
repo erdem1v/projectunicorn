@@ -1227,9 +1227,9 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   `END_META_*_FRANK` satırları FRANK_ORPHANS'ta. Kaynak: ONERI_v3 K23, SONLAR_GAZETE_MODLAR §1.6 ve §5.6, SONLAR #17
   ve #21, PUSH_ONCESI_KONTROL §10.
 
-- **Karışık dilli satırlar.** TR ekranda İngilizce kalanlar: `TERM_LEVER_BOARD` "Board", `EFFECT_TERM_TABLE`
-  "Term sheet masası açılır". İkisi de sözlükte ya da ödünç kelime listesinde yok. Seçenek: Türkçeleştir ya da
-  listeye ekle. Kaynak: RAPOR_LOKAL T2.4, TOPLANTI_VE_SERIES_A_ONERI §D9.
+- **Karışık dilli satırlar.** TR ekranda İngilizce kalan: `EFFECT_TERM_TABLE` "Term sheet masası açılır"; sözlükte ya
+  da ödünç kelime listesinde yok. Seçenek: Türkçeleştir ya da listeye ekle. `TERM_LEVER_BOARD` Erdem'in onayıyla
+  "Yönetim kurulu" oldu (2026-11-14). Kaynak: RAPOR_LOKAL T2.4, TOPLANTI_VE_SERIES_A_ONERI §D9.
 
 - **DRAFT-EN kaydı.** EN'i "düz doğru" ama ses geçişi görmemiş aileler (kayıt 2026-08-19, TR önce kuralından önce).
   Kayıttaki anahtarlardan CSV'de duran ve üretim kodunun okudukları (`6e3e190`):

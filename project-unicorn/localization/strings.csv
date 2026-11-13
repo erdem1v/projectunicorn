@@ -1221,7 +1221,7 @@ TERM_PUSH,İtir,Push
 TERM_RESULT_HEADER,SONUÇ,RESULT
 TERM_DIAL_CHANCE,İtme şansı,Push chance
 TERM_DIAL_ROLL,Son zar,Last roll
-TERM_LEVER_BOARD,Board,Board
+TERM_LEVER_BOARD,Yönetim kurulu,Board
 TERM_BOARD_CLEAN,temiz,clean
 TERM_BOARD_SEATS,{n} koltuk,{n} seats
 TERM_BOARD_VETO, + veto, + veto
