@@ -3,7 +3,8 @@
 # the first failure and where the full logs are, so nobody pipes the output through head and runs it again. A run that
 # prints an engine error fails whatever its verdict said (gate_common.sh), as in smoke_run.sh.
 #
-#   tools/test.sh hizli   the K0 link check and every K2 player path (PlayerPaths' match table), all at once
+#   tools/test.sh hizli   the K0 link check and every K2 player path (PlayerPaths' match table), all at once;
+#                         HIZLI_P=2 tools/test.sh hizli keeps at most two Godot processes alive at a time
 #   tools/test.sh tam     hizli, then together: every smoke case (smoke_run.sh, P at a time), the event lint,
 #                         loc_residue, run_gate.sh and plausibility_run.sh; a line per layer and a total
 #   P=12 CASE_TIMEOUT=300 tools/test.sh tam      (the defaults: P=8, CASE_TIMEOUT=300)
@@ -53,7 +54,10 @@ hizli() {
     | grep -oE '^\s*"[a-z0-9_]+":' | tr -d '\t ":')"
   [ -n "$cases" ] || { echo "${0##*/}: no K2 case found in player_paths.gd" >&2; return 2; }
   job k0 --k0-check K0 &
-  for c in $cases; do job "k2_$c" "--player-path=$c" K2 & done
+  for c in $cases; do
+    while [ "${HIZLI_P:-0}" -gt 0 ] && [ "$(jobs -rp | wc -l)" -ge "$HIZLI_P" ]; do wait -n 2>/dev/null || sleep 1; done
+    job "k2_$c" "--player-path=$c" K2 &
+  done
   wait
   for v in "$LOGS"/k0.verdict "$LOGS"/k2_*.verdict; do
     [ -e "$v" ] || continue
