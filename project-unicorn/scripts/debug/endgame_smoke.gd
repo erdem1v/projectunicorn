@@ -27232,13 +27232,13 @@ static func _paper_pool_end(saved: Array) -> void:
 	SprintCatalog._data.decision = saved[1]
 
 
-## Kâğıt, kartta o aşamada çalışan kişinin ağzından gelir: konuşan istek anında kartın atananlarındadır, `role_of` o
-## aşamanın rolünü verir, karakter rolü kâğıdın `speaker_role`'üdür ve kâğıt ona bağlanır (`employee` slotu; kurucuysa
+## Kâğıt, kartta o aşamada çalışan kişinin ağzından gelir: konuşan istek anında kartın atananlarındadır, kartın o anki fazı
+## (`_role`) kâğıdın aşamasıdır, karakter rolü kâğıdın `speaker_role`'üdür ve kâğıt ona bağlanır (`employee` slotu; kurucuysa
 ## `founder`). Tasarım aşamasında kartta atanmış yazılımcı tasarımcı kâğıdını söylemez, PM sprint puanı üretmediği için hiçbir
 ## kartta atanmış olmaz; payı Destek'e geçmiş yazılımcı atanmaz ve konuşmaz. PM kâğıdını çeyreği planlayan PM söyler, konusu
 ## sprintte bekleyeni olan karttır, hesap bekleyenin hesabıdır; PM yoksa gelmez. Tek kurucunun kâğıdı kendi notudur.
 ## FALSİFİKASYON: SprintSystem._speaker'daki `.role == role` koşulunu sil → yazılımcılı ekipte tasarımcı kâğıdı geldi FAIL;
-## `role_of(id) == stage` koşulunu sil → yazılımcı kâğıdının aşaması FAIL; PM dalındaki `askers` koşulunu sil → PM kâğıdı
+## `_speaker`'daki kartın aşaması koşulunu sil → tasarımdaki kartlarla yazılımcı kâğıdı geldi FAIL; PM dalındaki `askers` koşulunu sil → PM kâğıdı
 ## bekleyeni olmayan karta düştü FAIL.
 static func _case_paper_speaker_is_assignee() -> String:
 	var saved: Array = _paper_pool([])
@@ -27247,9 +27247,10 @@ static func _case_paper_speaker_is_assignee() -> String:
 		var card: Dictionary = GameState.product.cards[card_id]
 		var speaker: String = GameState.product.decision.speaker
 		seen.append({"speaker": speaker, "card": card_id, "assignees": card.assignees.duplicate(),
-			"stage": SprintSystem.role_of(speaker)}))
+			"stage": SprintSystem._role(card, SprintSystem.phase(card))}))
 	# Bir sprint: ekip `roles` (kurucu ayrıca) ve havuzda yalnız `paper`; kâğıt ilk haftanın sonunda istenir. Kartlar `points`
-	# puanlıktır: kırk puanlık kart ilk haftanın sonunda geliştirmededir, çok büyük kart hâlâ tasarımda. Kâğıt gelmediyse {}.
+	# puanlıktır: altmış puanlık kart ilk haftanın sonunda geliştirmededir (geliştirici, kurucu ve testçi geliştirmede birlikte
+	# çalışır; kırk puanlığın geliştirmesi tek haftada biter), çok büyük kart hâlâ tasarımda. Kâğıt gelmediyse {}.
 	var play := func(roles: Array, paper: String, b2b: bool, desk_dev: bool, points: float) -> Dictionary:
 		SaveManager.reset_all_owners()
 		GameState.initialize_run({"seed": 424242})
@@ -27296,7 +27297,7 @@ static func _case_paper_speaker_is_assignee() -> String:
 				role_id, paper.speaker, who.role, str(paper.assignees), paper.stage, role_id, stage]
 		return ""
 	var dev: Dictionary = play.call([HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_DESIGNER, HRConstants.ROLE_TESTER],
-		PAPER_DEV, false, false, 40.0)
+		PAPER_DEV, false, false, 60.0)
 	fail = worked.call(dev, HRConstants.ROLE_DEVELOPER, "dev")
 	if fail == "" and (not EventGate.open_paper(PAPER_DEV) or EventGate.active_context().employee.id != dev.speaker):
 		fail = "the developer paper is not bound to the developer on the card (%s)" % str(EventGate.active_context())

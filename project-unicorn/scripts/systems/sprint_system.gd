@@ -1562,15 +1562,18 @@ static func _request_decision() -> bool:
 
 
 ## Kâğıdı söyleyecek kişi, yoksa "": PM kâğıdını çeyreği planlayan PM söyler ve konusu sprintte bekleyeni olan karttır
-## (PM sprint kartı almaz, önden gider); öbürlerini kartın bu haftaki atananlarından rolü `roles`'tan biri olan ve
-## (`stage` "any" değilse) o aşamada çalışan ilk kişi. Payı Destek'te kalan kişi atanmaz, tasarımcı yokken PM tasarımcı
-## sayılmaz.
+## (PM sprint kartı almaz, önden gider); öbürlerini kartın bu haftaki atananlarından rolü `roles`'tan biri olan ilk kişi,
+## `stage` "any" değilse kart o aşamadayken. Aşama kişinin değil kartındır: bir haftada birkaç karta düşen kişi (testin önünde
+## durup kalanını sıradaki karta veren geliştirici) hangi kartında o aşamada çalışıyorsa orada konuşur. Payı Destek'te kalan
+## kişi atanmaz, tasarımcı yokken PM tasarımcı sayılmaz.
 static func _speaker(c: Dictionary, roles: Array, stage: String) -> String:
 	if HRConstants.ROLE_PRODUCT_MANAGER in roles:
 		var pm: Character = SprintCatalog.quarter_pm()
 		return pm.id if pm != null and not SprintCatalog.askers(c.step).is_empty() else ""
+	if stage != "any" and _role(c, phase(c)) != stage:
+		return ""
 	for id in c.assignees:
-		if CharacterRegistry.get_character(id).role in roles and (stage == "any" or role_of(id) == stage):
+		if CharacterRegistry.get_character(id).role in roles:
 			return id
 	return ""
 
