@@ -132,6 +132,8 @@ func _ready() -> void:
 	EventBus.palette_changed.connect(_paint.unbind(1))
 	# v1.0 opens Ar-Ge's tree.
 	EventBus.version_shipped.connect(_on_version_shipped)
+	# Choosing the type names the Satış row.
+	EventBus.sprint_planned.connect(_paint.unbind(1))
 	_paint()
 
 
@@ -144,7 +146,10 @@ func _paint() -> void:
 		var id: String = String(UiTokens.TABS[i].id)
 		# Kilitli sekme (--tab-shot=marketing onu açabilir) kilitli görünümde kalır, hiç vurgulanmaz.
 		var state: String = "locked" if _is_locked(i) else ("active" if i == current_tab_idx else "idle")
-		_paint_row(tab_buttons[i], "TAB_" + id.to_upper(), state, icons)
+		var key: String = "TAB_" + id.to_upper()
+		if id == "sales" and SalesSystem.is_marketplace():
+			key = "TAB_MARKETPLACE"
+		_paint_row(tab_buttons[i], key, state, icons)
 		_paint_badge(tab_buttons[i].get_node("Badge"), id in DANGER_TABS or (id == "hr" and _hr_danger),
 			state == "active", icons)
 		if id == "events":

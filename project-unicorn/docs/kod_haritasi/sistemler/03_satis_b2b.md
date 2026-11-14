@@ -38,7 +38,7 @@ Sahipler: autoload `CustomerRegistry`, `ProspectRegistry`, `PromiseRegistry`; mo
 - `scripts/data_models/prospect.gd` (111): `Prospect` Resource (lead + anlaşma planı + balina + hafıza alanları)
 - `scripts/data_models/promise.gd` (22): `Promise` Resource (`due_sprint`, `extended`, `status`)
 - `data/market/companies.json` (1571 satır, 56 şirket) ve `data/market/people.json` (327 satır, 46 kişi): Piyasa listesi verisi; `meta.sector_slots` sektörün 3 şirketini bağlar
-- Dışarıda ama ayrılmaz: `scripts/tabs/sales_tab.gd` (838), `scripts/ui/meeting/sales_meeting_adapter.gd` (320), `scripts/events/seams/seams_sales.gd` (132), `seams_ported.gd` (199), `scripts/tabs/piyasa_tab.gd` (681)
+- Dışarıda ama ayrılmaz: `scripts/tabs/sales_tab.gd` (817), `scripts/ui/meeting/sales_meeting_adapter.gd` (320), `scripts/events/seams/seams_sales.gd` (132), `seams_ported.gd` (199), `scripts/tabs/piyasa_tab.gd` (681)
 - Satış olay içeriği: `data/events/cards/customer/*.json` (17 dosya; retention, expansion, cs_escalation, request_*, frank_intro); sprint tarafı `data/events/cards/product/support_overflow.json`
 
 ## Giriş noktaları
@@ -71,14 +71,14 @@ Sahipler: autoload `CustomerRegistry`, `ProspectRegistry`, `PromiseRegistry`; mo
 - `SalesFaucetSystem.lock_return()` `scripts/systems/sales_faucet_system.gd:102`: şirketi havuzdan bir süre dışlar · `expire_leads`, `SalesFinalizer._leave` `sales_finalizer.gd:52`
 - `SalesRepSystem.daily_tick()` `scripts/systems/sales_rep_system.gd:36`: haftalık özet, işleme, atama · `B2BSalesSystem.daily_tick` `b2b_sales_system.gd:44`
 - `SalesRepSystem.sign_due()` `scripts/systems/sales_rep_system.gd:198`: planı dolan masa ve masa anlaşmalarını imzalar · günlük yuva ve öğlen `SalesSystem.hourly_tick`
-- `SalesMeetingSystem.open()` `scripts/systems/sales_meeting_system.gd:81`: Perde 1'i açar · `main.gd:5206`
+- `SalesMeetingSystem.open()` `scripts/systems/sales_meeting_system.gd:81`: Perde 1'i açar · `main.gd:5269`
 - `SalesMeetingSystem.choose()` `scripts/systems/sales_meeting_system.gd:239`: bir cevap oynar, iğneyi oynatır, eşik ve zarı değerlendirir · `SalesMeetingAdapter`
 - `SalesMeetingSystem.close()` `scripts/systems/sales_meeting_system.gd:112`: iki saati `TimeManager.advance_hours` ile oynatır, oturumu siler · `sales_meeting_adapter.gd:118`
 - `NegotiationSystem.open()` `scripts/systems/negotiation_system.gd:91`: Perde 2'yi açar · `scripts/ui/meeting/sales_meeting_adapter.gd:197`
 - `NegotiationSystem.offer()` `scripts/systems/negotiation_system.gd:168`: teklif; imza, hakaret ya da karşı teklif · `sales_meeting_adapter.gd:223` (`accept_counter` negotiation_system.gd:195, `walk` :202)
 - `SalesFinalizer.apply()` `scripts/systems/sales_finalizer.gd:22`: biten pazarlığın sonucunu uygular · `scripts/ui/meeting/sales_meeting_adapter.gd:111`
 - `SalesLedger.meeting_block_reason()` `scripts/systems/sales_ledger.gd:324`: görüşmeye giriş kapısı, CSV anahtarı döner · Satış sekmesi ve `main.gd` davet yolu
-- `SalesLedger.set_routing()` `scripts/systems/sales_ledger.gd:52`: Ayır / Temsilciye ver · `scripts/tabs/sales_tab.gd:409`
+- `SalesLedger.set_routing()` `scripts/systems/sales_ledger.gd:52`: Ayır / Temsilciye ver · `scripts/tabs/sales_tab.gd:383`
 - `SalesLedger.set_price_stance()` `scripts/systems/sales_ledger.gd:131`: fiyat kadranı · Satış sekmesi
 - `SalesLedger.record_close()/close_week()` `sales_ledger.gd:387`/`:393` ve `record_loss()/lost_week()` `:400`/`:405`:
   ↳ haftalık kapanış ve kayıp satırları (`sales_weekly_close_rows`, `sales_weekly_loss_rows` bayrakları) tek yardımcıdan yazılır ve boşaltılarak okunur (`_append_row` `:423`, `_take_rows` `:429`) · `SalesRepSystem` haftalık özeti
@@ -94,49 +94,49 @@ Sahipler: autoload `CustomerRegistry`, `ProspectRegistry`, `PromiseRegistry`; mo
 - `SupportSystem.hourly_tick()` `scripts/systems/support_system.gd:101`: bildirim gelir, doğrulanır, hata olur · `time_manager.gd:451`
 - `SupportSystem.daily_tick()` `scripts/systems/support_system.gd:127`: memnuniyet zararı (pazaryerinde hiçbir kayda yazılmaz), hata ihmali, ilgi, haftalık rapor · `time_manager.gd:404`
 - `SupportSystem.unanswered_share()` `scripts/systems/support_system.gd:173`: cevapsız bildirimin payı, `min(1; bekleyen bildirim ÷ bir haftada gelen bildirim)` (`reports_incoming`, `reports_per_day`; haftalık sayaçtan değil, rapor onu Satış yuvasından önce sıfırlar) · `MarketplaceSystem.world` (`unanswered`)
-- `SupportSystem.weekly_report()` `scripts/systems/support_system.gd:325`: haftada en çok bir rapor postası · `daily_tick`, `main.gd:2220` (sahne fikstürü)
+- `SupportSystem.weekly_report()` `scripts/systems/support_system.gd:325`: haftada en çok bir rapor postası · `daily_tick`, `main.gd:2277` (sahne fikstürü)
 - `SupportSystem.to_dict()` `scripts/systems/support_system.gd:141` (`from_dict` :145): yalnız `_damage_residue` kaydı · `ProductSystem.to_dict` `product_system.gd:22`
 - `MarketCatalog.value()` `scripts/systems/market_catalog.gd:84`: şirketin haftadaki değeri (saf); `price` :98, `listed` :110, `series` :102 · `piyasa_tab.gd:101`, `news_feed_system.gd:368`
-- `CounterpartSystem.prospect_people()` `scripts/systems/counterpart_system.gd:56`: adayın karşısındaki kişiler · `main.gd:5207`, `sales_tab.gd:328`, `inbox.gd:439`
+- `CounterpartSystem.prospect_people()` `scripts/systems/counterpart_system.gd:56`: adayın karşısındaki kişiler · `main.gd:5270`, `sales_tab.gd:302`, `inbox.gd:439`
 - `CounterpartSystem.fill_investor_people()` `scripts/systems/counterpart_system.gd:33`: fonların üç kişisini çeker · `game_state.gd:968`, `save_manager.gd:325`
 - `CustomerRegistry.add()` `scripts/autoload/customer_registry.gd:94`: yeni hesap · `SalesSystem.add_b2b_customer`, `_ensure_b2c_record` `sales_system.gd:238`, `MarketplaceSystem._reflect` (mağazalar ve kullanıcılar kayıtları)
 - `PromiseRegistry.create()` `scripts/autoload/promise_registry.gd:50`: söz açar (sprint vadesi) · `SalesFinalizer.sign_deal`, `B2BSalesSystem.accept_promise`
 - `PromiseRegistry.tick_deadlines()` `scripts/autoload/promise_registry.gd:164`: vadesi geçen sözü kırar · `B2BSalesSystem.daily_tick` `b2b_sales_system.gd:33`
 
 ## Sinyaller
-Emit satırları DIZIN'den ve kaynaktan; "dinleyen" DIZIN'in `connect` sütunudur: dizi içi bağlamalar (`scripts/tabs/sales_tab.gd:62`) ve olay motoru izin listesi (`scripts/events/core/signals.gd:22`) dahil.
-- `customer_added`: yayan `scripts/autoload/customer_registry.gd:102` · `top_bar.gd:167`, `inbox.gd:152`, `sales_tab.gd:71`, `finance_ozet_view.gd:73`, olay motoru (`signals.gd:23`)
-- `customer_removed`: yayan `scripts/autoload/customer_registry.gd:128` · `promise_registry.gd:21` (söz düşer), `left_tabs.gd:119`, `top_bar.gd:168`, `inbox.gd:152`, `sales_tab.gd:71`, `finance_ozet_view.gd:74`
+Emit satırları DIZIN'den ve kaynaktan; "dinleyen" DIZIN'in `connect` sütunudur: dizi içi bağlamalar (`scripts/tabs/sales_tab.gd:67`) ve olay motoru izin listesi (`scripts/events/core/signals.gd:22`) dahil.
+- `customer_added`: yayan `scripts/autoload/customer_registry.gd:102` · `top_bar.gd:167`, `inbox.gd:152`, `sales_tab.gd:76`, `finance_ozet_view.gd:73`, olay motoru (`signals.gd:23`)
+- `customer_removed`: yayan `scripts/autoload/customer_registry.gd:128` · `promise_registry.gd:21` (söz düşer), `left_tabs.gd:119`, `top_bar.gd:168`, `inbox.gd:152`, `sales_tab.gd:76`, `finance_ozet_view.gd:74`
 - `customer_mrr_changed`: yayan `scripts/autoload/customer_registry.gd:140` · dinleyen yok
-- `customer_seats_changed`: yayan `scripts/autoload/customer_registry.gd:155` · `sales_tab.gd:75`
-- `customer_satisfaction_changed`: yayan `scripts/autoload/customer_registry.gd:171` · `sales_tab.gd:75`
-- `customer_health_changed`: yayan `scripts/autoload/customer_registry.gd:186` (faz değişince; `set_lifecycle_phase`) · `left_tabs.gd:117`, `inbox.gd:153`, `sales_tab.gd:72`, olay motoru (`signals.gd:24`; `customer.retention` buna bağlı)
-- `customer_churn_countdown_changed`: yayan `scripts/autoload/customer_registry.gd:199` · `sales_tab.gd:72`
-- `customer_churned`: yayan `scripts/systems/b2b_sales_system.gd:318` (`_remove_lost`; olay yolundaki `churn_customer` bunu yaymaz, `effects.gd:274`) · `left_tabs.gd:118`, `sales_tab.gd:73`, olay motoru
-- `customer_expanded`: yayan `scripts/systems/b2b_sales_system.gd:470` · `sales_tab.gd:74`, olay motoru
-- `customer_assigned`: yayan `scripts/autoload/customer_registry.gd:321` · `hr_tab.gd:78`, `sales_tab.gd:74`
+- `customer_seats_changed`: yayan `scripts/autoload/customer_registry.gd:155` · `sales_tab.gd:80`
+- `customer_satisfaction_changed`: yayan `scripts/autoload/customer_registry.gd:171` · `sales_tab.gd:80`
+- `customer_health_changed`: yayan `scripts/autoload/customer_registry.gd:186` (faz değişince; `set_lifecycle_phase`) · `left_tabs.gd:117`, `inbox.gd:153`, `sales_tab.gd:77`, olay motoru (`signals.gd:24`; `customer.retention` buna bağlı)
+- `customer_churn_countdown_changed`: yayan `scripts/autoload/customer_registry.gd:199` · `sales_tab.gd:77`
+- `customer_churned`: yayan `scripts/systems/b2b_sales_system.gd:318` (`_remove_lost`; olay yolundaki `churn_customer` bunu yaymaz, `effects.gd:274`) · `left_tabs.gd:118`, `sales_tab.gd:78`, olay motoru
+- `customer_expanded`: yayan `scripts/systems/b2b_sales_system.gd:470` · `sales_tab.gd:79`, olay motoru
+- `customer_assigned`: yayan `scripts/autoload/customer_registry.gd:321` · `hr_tab.gd:78`, `sales_tab.gd:79`
 - `promise_created`: yayan `scripts/autoload/promise_registry.gd:77` · yalnız probe (`run_probe.gd:494`)
 - `promise_kept`: yayan `scripts/autoload/promise_registry.gd:185` (kısmi de buradan) · yalnız smoke ve probe
 - `promise_broken`: yayan `scripts/autoload/promise_registry.gd:183` · olay motoru (`signals.gd:29`), smoke
-- `prospect_added`: yayan `scripts/autoload/prospect_registry.gd:49` · `sales_tab.gd:66`
-- `prospect_removed`: yayan `scripts/autoload/prospect_registry.gd:73` · `sales_tab.gd:66`
-- `prospect_arrived`: yayan `scripts/systems/sales_faucet_system.gd:243` · `sales_tab.gd:67`, `run_probe.gd:510`
-- `lead_expired`: yayan `scripts/systems/sales_faucet_system.gd:71` · `sales_tab.gd:67`
-- `lead_reserved` / `lead_routed` / `lead_unrouted`: yayan `scripts/systems/sales_ledger.gd:61` / `:63` / `:65` · `sales_tab.gd:68`
+- `prospect_added`: yayan `scripts/autoload/prospect_registry.gd:49` · `sales_tab.gd:71`
+- `prospect_removed`: yayan `scripts/autoload/prospect_registry.gd:73` · `sales_tab.gd:71`
+- `prospect_arrived`: yayan `scripts/systems/sales_faucet_system.gd:243` · `sales_tab.gd:72`, `run_probe.gd:510`
+- `lead_expired`: yayan `scripts/systems/sales_faucet_system.gd:71` · `sales_tab.gd:72`
+- `lead_reserved` / `lead_routed` / `lead_unrouted`: yayan `scripts/systems/sales_ledger.gd:61` / `:63` / `:65` · `sales_tab.gd:73`
 - `whale_condition_met`: yayan `scripts/systems/sales_faucet_system.gd:96` (tek yayıcı; `sign_deal` yaymaz) · dinleyen yok
-- `pitch_requested`: yayan `scripts/tabs/sales_tab.gd:412` · `scripts/main/main.gd:4889` (görüşme daveti)
+- `pitch_requested`: yayan `scripts/tabs/sales_tab.gd:386` · `scripts/main/main.gd:4952` (görüşme daveti)
 - `meeting_entered`: yayan `scripts/systems/sales_meeting_system.gd:98` · yalnız probe
 - `meeting_won`: yayan `scripts/systems/sales_meeting_system.gd:320` (`_win`) · dinleyen yok
 - `meeting_lost`: yayan `scripts/systems/sales_ledger.gd:190` (`report_loss`; masa kaybı, yürüyüş-kayıp ve masa kaybı hep buradan) · yalnız probe
-- `pitch_finished`: yayan `scripts/systems/sales_meeting_system.gd:118` (VC de yayar: `vc_pitch_system.gd:125,387`) · `sales_tab.gd:76`, `hunt_tab.gd:48`
-- `deal_signed`: yayan `scripts/systems/sales_system.gd:407` · `sales_tab.gd:70`, probe
-- `deal_walked`: yayan `scripts/systems/sales_finalizer.gd:55` (`_leave`) · `sales_tab.gd:70`
-- `rep_deal_closed`: yayan `scripts/systems/sales_rep_system.gd:272` · `sales_tab.gd:70`
+- `pitch_finished`: yayan `scripts/systems/sales_meeting_system.gd:118` (VC de yayar: `vc_pitch_system.gd:125,387`) · `sales_tab.gd:81`, `hunt_tab.gd:48`
+- `deal_signed`: yayan `scripts/systems/sales_system.gd:407` · `sales_tab.gd:75`, probe
+- `deal_walked`: yayan `scripts/systems/sales_finalizer.gd:55` (`_leave`) · `sales_tab.gd:75`
+- `rep_deal_closed`: yayan `scripts/systems/sales_rep_system.gd:272` · `sales_tab.gd:75`
 - `rep_deal_lost`: yayan `scripts/systems/sales_rep_system.gd:255` · yalnız smoke ve probe
 - `rep_discount_requested`: yayan `scripts/systems/sales_rep_system.gd:233` · yalnız smoke; fiyat kırma kartı bağlı değil (aşağıda Dikkat)
 - `pitch_promise_made` / `pitch_promise_kept` / `pitch_promise_broken`: yayan `sales_finalizer.gd:100` / `b2b_sales_system.gd:536` / `:534` · dinleyen yok
 - `weekly_sales_report_issued`: yayan `scripts/systems/sales_rep_system.gd:315` · yalnız smoke
-- `price_stance_changed` / `rep_band_cap_changed`: yayan `scripts/systems/sales_ledger.gd:135` / `:109` · `sales_tab.gd:69`
+- `price_stance_changed` / `rep_band_cap_changed`: yayan `scripts/systems/sales_ledger.gd:135` / `:109` · `sales_tab.gd:74`
 - Destek ve Piyasa sinyal yaymaz; destek raporu `MessageSystem.post("support_week")` `support_system.gd:336` ile gelen kutusuna düşer.
 
 ## Durum ve veri
@@ -223,7 +223,7 @@ Hepsi `tools/smoke_run.sh <vaka>` ile (komutlar `project-unicorn/`'dan, `GODOT` 
   ↳ 2★ lead'deki yarım haftayla biten anlaşması; `clause` iki hesabın kartında sunucu maddesinin tarihli etiketi (Kuzey: Sunucu maddesi, Palmiye: Fesih bildirimi);
   ↳ `returning` iki lead bir alan yüzünden kaybedilmiş geri geldi: 2★ lead'in Entegrasyonlar'ı hâlâ boş, kapısı kapalı ve gerekçesi düğmelerin altında,
   ↳ 1★ lead'in Çekirdek'i 1★ masaya yetiyor, kapısı açık. Ayrıca `--inbox-shot=sales_read_only` (karar beklerken Satış, 08_sekmeler.md), `--tab-shot=sales`
-- Ekran: `--meeting-shot=<kind>` (`main.gd:4620`), `--negotiation-shot=<open|countered|insult|last|confirm>` (`main.gd:4731`), `--b2b-shot=<retention|retention_capped|escalation|expansion|expansion_capped|deal|angel|chips>` (`main.gd:683`), `--inbox-shot=`
+- Ekran: `--meeting-shot=<kind>` (`main.gd:4668`), `--negotiation-shot=<open|countered|insult|last|confirm>` (`main.gd:4794`), `--b2b-shot=<retention|retention_capped|escalation|expansion|expansion_capped|deal|angel|chips>` (`main.gd:683`), `--inbox-shot=`
 - Probe: `--run-log=<preset>:<hafta>:sim[:<seed>]` ile `b2b_solo`, `b2b_reps`, `b2b_risk`, `b2b_slip`, `b2b_book20`, `b2b_book330`, `full_run*` (`run_probe.gd:197-247`); preset aileleri `b2b_*`, `b2c*`, `full_run_b2c*`. Kayıt türleri:
   ↳ `STATE` (içinde `mrr=`, `cust=`, `promises=`, `aud=`, `sat=`), `SIGN` (her B2B imzası: gün, saat, kurucu ya da temsilci, yıldız, planın haftası, MRR),
   ↳ `B2C` (tüketici ürünü canlıyken haftalık: kitle, ödeyen, fiyat, dönüşüm, memnuniyet ve hedefi (Çekirdek ile Onboarding uyumu), açık hata, kitleden giden kullanıcı toplamı `lost=`, `q=` B2C kalite terimi, ilgi, doluluk, masa, gelen,

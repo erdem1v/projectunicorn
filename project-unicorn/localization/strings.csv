@@ -512,6 +512,7 @@ TAB_HR,Ekip,Team
 TAB_FINANCE,Finans,Finance
 TAB_PIYASA,Piyasa,Market
 TAB_SALES,Satış,Sales
+TAB_MARKETPLACE,Pazaryeri,Marketplace
 TAB_MARKETING,Pazarlama,Marketing
 TAB_RND,Ar-Ge,R&D
 TAB_PERSONAL,Kişisel,Personal
@@ -2128,12 +2129,7 @@ DESK_PAPER_THIS_WEEK,bu hafta,this week
 SALES_PIPELINE_HEADER,Boru hattı,Pipeline
 SALES_LOCKED_NO_B2B,Canlı B2B ürün yok.,No live B2B product.
 SALES_EMPTY_UNTYPED,Önce Ürün'de yolunu seç.,Pick your path in Product first.
-SALES_EMPTY_B2C_PRE,{version} yayınlanınca kullanıcıların burada görünür.,Your users show up here once {version} ships.
 SALES_EMPTY_B2B_PRE,{version} yayınlanınca adaylar gelir.,Leads arrive once {version} ships.
-SALES_B2C_CONVERSION,Dönüşüm,Conversion
-SALES_B2C_PLAN_CLOSED,Kapalı,Closed
-SALES_B2C_CURVE,Haftalık kullanıcı,Weekly users
-SALES_B2C_PLAN_HINT,"Gelir, Ürün'de Gelir alanındaki Ücretli plan kartıyla başlar.",Revenue starts with the Paid plan card in Product's Revenue area.
 SALES_GO_PRODUCT,Ürün'e git,Go to Product
 SALES_FLOW_RATE,Akış: {n}/hafta,Flow: {n}/week
 SALES_DAYS_LEFT,{n} hafta,{n} weeks
@@ -3437,3 +3433,6 @@ EV_RIVAL_SHUTDOWN_NOTICE_EXPIRED,Alternatif listelerinin hepsinde başka adlar v
 EV_LOCK_REQUEST_CLOSED,Tabloya aktarma bu hesap için şimdi sıraya girmez.,Spreadsheet export can't be queued for this account right now.
 MP_STORES_RECORD,{product} mağazaları,{product} stores
 MP_USERS_RECORD,{product} kullanıcıları,{product} users
+MP_KPI_USERS,Aktif kullanıcı,Active users
+MP_KPI_STORES,Mağaza,Stores
+MP_KPI_ORDERS,Haftalık sipariş,Weekly orders

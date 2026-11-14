@@ -108,7 +108,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
   ↳ smoke `sprint_timeline_matches_play_out`) · `SprintCatalog.lead_suggestion`, `ProductModel._center`
 - `SprintCatalog.row_of()/due()` `sprint_catalog.gd:122`/`:301`: çalışanın kapasite satırı; kartın söz son tarihi, müşterisi ve değeri (talebin son tarihi yok) · `SprintTimeline`, `ProductModel._row`
 - `SprintSystem.plan_outcome()/mvp_eta()/team()/payers()` `sprint_system.gd:814`/`:844`/`:745`/`:767`: plan önizlemesi, MVP tahmini, ekip, bedel ödeyenler · ProductModel, effects.gd
-- `SprintCatalog.cfg()` `scripts/systems/sprint_catalog.gd:29`: sprint.json okuması (yoksa yükler) · yaklaşık her sistem; `load_data()` :23 → `main.gd:4844`
+- `SprintCatalog.cfg()` `scripts/systems/sprint_catalog.gd:29`: sprint.json okuması (yoksa yükler) · yaklaşık her sistem; `load_data()` :23 → `main.gd:4907`
 - `SprintCatalog.candidates()` `sprint_catalog.gd:194`: alanın aday kartları (feat:/plan:/fix:/res:; talebin konusu kademenin feat: kartıdır, bekleyenleri `SprintCatalog.askers`) · ProductModel, `SprintSystem`
 - `SprintCatalog.lead_suggestion()/pm_plans()` `sprint_catalog.gd:509`/`:658`: lider `{this, next}` (bu sprint, sonraki sütun) ve PM planı (`_suggest` :1007); PM planı Ürün puanından bağımsız tam kart taşır · `apply_lead`, ÇEYREK
 - `SprintCatalog._lead_picks()` `sprint_catalog.gd:532`: iki sütunun ortak alım döngüsü; sütunda tavan `room` = kapasite − sütunun kalanı − `SprintSystem.carried_points` `sprint_system.gd:859` · `lead_suggestion`
@@ -132,7 +132,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `ProductQuality.fit()/close_chance()/account_fit()` `scripts/systems/product_quality.gd:261`/`:233`/`:246`: uyum U ve kapanış ihtimali · `b2b_sales_system.gd:169`, `sales_system.gd:222`
 - `ProductQuality.lowest(alanlar, oranlar)` `product_quality.gd:389`: `alanlar` içinde oranı en düşük alan (eşitlikte öndeki, oranı olan alan yoksa "") · `weakest_area`, `fit_from_levels`, `ProductRead.worst_floor`
 - `LineGates.evaluate()/is_unlocked()/unmet_parts()` `scripts/systems/line_gates.gd:65`/`:88`/`:95`: kademe kapısı · `product_read.gd:79`, `sprint_catalog.gd:284`, `b2b_sales_system.gd:622`
-- `ModuleLocks.is_open()/ids()` `scripts/systems/module_locks.gd:21`/`:17`: sekme açık mı · `left_tabs.gd:260`, `events/core/delays.gd:108`, `seams_world.gd:148`
+- `ModuleLocks.is_open()/ids()` `scripts/systems/module_locks.gd:21`/`:17`: sekme açık mı · `left_tabs.gd:265`, `events/core/delays.gd:108`, `seams_world.gd:148`
 - `InfraSystem.daily_tick()` `scripts/systems/infra_system.gd:244`: faturayı "servers" burn kalemine yazar, hizmet edilen geçmişini tutar · `time_manager.gd:396`
 - `InfraSystem.set_provider()/adjust_capacity()/auto_adjust()` `infra_system.gd:178`/`:204`/`:214`: oyuncu kararları ve otomatik ayar · `product_tab.gd:323-327`, `time_manager.gd:445`
 - `InfraSystem.is_economy()` `infra_system.gd:83`: seçili sağlayıcı Ekonomik mi; satış masasının `provider_not_economy` olgusunun, kayıp engelinin ve `report_inflow_multiplier`'ın tek okuması · `sales_probes.gd`,
@@ -147,7 +147,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `RnDSystem.drop_assignee()` `rnd_system.gd:335`: kişi işten çekilince atamadan düşer · `character_registry.gd:253`, `:309`
 - `RnDSystem.node_completed()` `rnd_system.gd:677`: düğüm bitti mi · `ResearchSeam.completed` (`research_seam.gd:64`) · Ürün, Destek, Satış, Altyapı
 - `RnDSystem.to_dict()/from_dict()` `rnd_system.gd:759`/`:787`: kayıt; `from_dict` sonda `restore_hidden_lines` (:507) çağırır · `save_manager.gd:388`, `:406`
-- `RnDSystem.pending_note()/mark_note_read()` `rnd_system.gd:647`/`:652`: aylık ürün notu · `ui/components/inbox.gd:191`, `main.gd:2547`
+- `RnDSystem.pending_note()/mark_note_read()` `rnd_system.gd:647`/`:652`: aylık ürün notu · `ui/components/inbox.gd:191`, `main.gd:2604`
 - `ResearchTree.ensure_loaded()` `scripts/systems/research_tree.gd:68`: `rnd_tree.json` yükler ve doğrular · her erişimci; hata `load_errors()` :85
 
 ## Sinyaller
@@ -172,7 +172,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `research_completed`: yayan `rnd_system.gd:462` · left_tabs.gd:121, research_bar.gd:50
 - `research_frozen`, `research_resumed`: yayan `rnd_system.gd:145`, `:147` · left_tabs.gd:122-123, research_bar.gd:51-52
 - `node_revealed`, `hidden_line_unlocked`: yayan `rnd_system.gd:481`, `:502` · dinleyen yok
-- `product_note_read`: yayan `rnd_system.gd:659` · left_tabs.gd:125; `product_note_issued` MessageSystem'den (`message_system.gd:60`) · main.gd:4893
+- `product_note_read`: yayan `rnd_system.gd:659` · left_tabs.gd:125; `product_note_issued` MessageSystem'den (`message_system.gd:60`) · main.gd:4956
 - `research_progress_changed`: yayan `time_manager.gd:400` · research_bar.gd:48, build_hud_panel.gd:53
 - `headline_added`, `ticker_live_line`, `mentor_advisory_changed`: yayan `sprint_bridges.gd:117`, `:83`, `:134` · haber bandı ve Frank satırı
 - `module_unlocked`: yayan `scripts/events/core/engine.gd:270` (`EvDelays.module_openings`, ModuleLocks'u okur) · olay motoru `signals.gd:41`
@@ -326,7 +326,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
   ↳ `server_final` Kurumsal'dayken alt kademeler kilitli (imleç Ekonomik'te), `server_clause` tek hesap 3★ ve sözleşmesinde sunucu maddesi açık (bloğun altında "Kurumsal sunucu bekleyen 1 hesap" etiketi),
   ↳ `server_lock` 10 haftalık sunucu sözleşmesi sürüyor (kademeler ve Azalt kapalı, ipucu sözleşmenin gerekçesi; imleç Azalt'ta), `server_b2c` not uygulaması,
   ↳ 12.400 kullanıcı 13 birimde (%96)
-- `live:a4_*` sprint ekranının kare dünyalarıdır (35 tür; `_seed_product_a4` `main.gd:4740`, tablo `_A4_WORLDS` `:4695`): kurucu tek başına ERP'yi v1.0'a oynar, kadro sonra dosyasının maaşıyla işe alınır ve kadroya yeten ofise taşınır, hesaplar imzalanır, önceki sprintler oynanır;
+- `live:a4_*` sprint ekranının kare dünyalarıdır (35 tür; `_seed_product_a4` `main.gd:4803`, tablo `_A4_WORLDS` `:4743`): kurucu tek başına ERP'yi v1.0'a oynar, kadro sonra dosyasının maaşıyla işe alınır ve kadroya yeten ofise taşınır, hesaplar imzalanır, önceki sprintler oynanır;
   ↳ kurulumun sonunda kasa şirketin altı aylık net kaybıdır (tek kurucu birikimini tutar); altıdan çok kişide Frank'in çeki ve seed alınmış (Traction), yirmiden çokta Series A avı (`_a4_books`);
   ↳ her tür kurulunca `PRODUCTSHOT|kind=|cards=|people=|row_gaps=|now=` basar; `row_gaps` zaman ekseninin bütün kart satırlarındaki boşluk sayısıdır (`SprintTimeline.row_gaps`, smoke'un Z3'üyle aynı işlev),
   ↳ `now` koşan sprintte şimdiki an (sprint başından hafta, değilse 0);

@@ -1903,17 +1903,16 @@ func _shot_pane(card_id: String, ctx: Dictionary, names := {}) -> void:
 	pane.populate(INBOX.card_item("preview", card_id, ctx, names, GameState.day).merged({"kind": "active"}), "preview")
 
 
-## --sales-shot=<pipeline|desk|picker|inbox|edge|edge_end|stretched|empty|b2c|b2c_live|b2b_pre|untyped|morning|evening|
-## norep|discounted|frank|risk_stability|deals|returning|clause|offer|sources>. `desk` puts a rep mid-processing on the desk;
+## --sales-shot=<pipeline|desk|picker|inbox|edge|edge_end|stretched|empty|b2b_pre|untyped|morning|evening|
+## norep|discounted|frank|risk_stability|deals|returning|clause|offer|sources|mp_pre|mp_launch>. `desk` puts a rep mid-processing on the desk;
 ## `picker` opens the steward
 ## picker on the first account, `inbox` presses its İlgilen (Olaylar opens on the account's mail); `edge` draws the
 ## rarer lines (a reserved lead, one given to a rep, a whale's condition, tables above the founder's league, the
 ## week's meetings spent, an open promise by sprint, the log) with three calm accounts, Aras in its onboarding floor's
 ## last week under the product's bar with the warning line, `edge_end` the same with both columns scrolled to their
 ## ends; `stretched` the founder holding one account more than he can, a 1★ rep and a lead in its last week; `empty` an
-## open market with no lead, rep or account; `b2c` and `b2b_pre` photograph §3.1's empty window before the MVP ships in
-## a B2C and a B2B run, `untyped` before a type is picked, `b2c_live` the B2C page four weeks after live:b2c_live
-## publishes; `morning` paints the page at 00:00 (every lead locked) and shoots it again once the clock reaches 08:00,
+## open market with no lead, rep or account; `b2b_pre` photographs §3.1's empty window before the MVP ships in a B2B
+## run, `untyped` before a type is picked, `mp_*` the Pazaryeri window (`_run_marketplace_shot`); `morning` paints the page at 00:00 (every lead locked) and shoots it again once the clock reaches 08:00,
 ## `evening` paints it at 10:00 and shoots it again at the founder's last workday hour: the entry gate follows the
 ## clock. `norep` is one lead and nobody on the Satış job: its Temsilciye ver is closed with the reason under it;
 ## `discounted` gives Nordica, signed at $100 a seat, the retention discount: its row reads what a seat pays now.
@@ -1933,12 +1932,8 @@ func _shot_pane(card_id: String, ctx: Dictionary, names := {}) -> void:
 ## headless shot has no frame to read).
 func _run_sales_shot(kind: String) -> void:
 	_begin_shot()
-	if kind == "b2c_live":
-		_seed_run_reproducible()
-		_seed_product_live(kind)
-		await _mount_shot_shell()
-		EventBus.tab_changed.emit("sales")
-		await _finish_shot("sales_shot_b2c_live", 0.6)
+	if kind.begins_with("mp_"):
+		await _run_marketplace_shot(kind)
 		return
 	_seed_sales_world()
 	GameState.day = 14
@@ -1947,10 +1942,9 @@ func _run_sales_shot(kind: String) -> void:
 	ProductState.add_bugs("line_erp_ledger", 12 if kind != "risk_stability" else B2BConstants.COMPLAINT_BUG_GATE)
 	var edge: bool = kind.begins_with("edge")
 	match kind:
-		"b2c", "b2b_pre":
+		"b2b_pre":
 			GameState.flags.erase("mvp_shipped")
-			var b2c: bool = kind == "b2c"
-			SprintSystem.choose_type("note_tool" if b2c else "erp", "Notly" if b2c else "Fatura")   # LOC-DATA debug seed / id
+			SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
 		"untyped":
 			for flag in ["mvp_shipped", "mvp_market_type", "mvp_sub_product_type_id"]:
 				GameState.flags.erase(flag)
@@ -2092,6 +2086,69 @@ func _run_sales_shot(kind: String) -> void:
 			[tr("SALES_OFFER_DISCOUNT").get_slice("{", 0), tr("SALES_OFFER_PROMISE").get_slice("{", 0),
 			tr("SALES_TIMED_DISCOUNT").get_slice("{", 1).get_slice("}", 1)])
 	await _finish_shot("sales_shot_%s" % kind, 0.6)
+
+
+## The marketplace shots' worlds: `day` is the week a world stops at before the MVP; `closes` the weeks played after the MVP ships.
+const _MP_WORLDS := {
+	"mp_pre": {"day": 3},
+	"mp_launch": {"closes": 4},
+}
+## The sprints a world may play to reach the MVP gate, as `_seed_product_live`.
+const _MP_SPRINTS := 12
+
+
+## --sales-shot=mp_<pre|launch>: the Pazaryeri window of a company the engine played (`_seed_marketplace_world`). `pre` is week 3
+## with the founder alone and Moda open, before the MVP; `launch` the week the engine ships the MVP and four closes after it,
+## the founder on Moda. Prints the world's figures as `SHOT|mp_world`.
+func _run_marketplace_shot(kind: String) -> void:
+	if not _MP_WORLDS.has(kind):
+		_shot_fail("[SalesShot] unknown marketplace shot: %s" % kind)
+		return
+	if not _seed_marketplace_world(_MP_WORLDS[kind]):
+		return
+	await _mount_shot_shell()
+	EventBus.tab_changed.emit("sales")
+	var state: Dictionary = MarketplaceSystem._read()
+	print("SHOT|mp_world kind=%s week=%d launch=%d cash=%d mrr=%d users=%d stores=%d orders=%d" % [kind, GameState.day,
+		int(GameState.get_flag("mvp_launch_day", -1)), GameState.cash, GameState.mrr, roundi(state.users),
+		roundi(MarketplaceSystem.stores()), roundi(MarketplaceModel.metrics(state, MarketplaceSystem.world()).orders)])
+	await _finish_shot("sales_shot_%s" % kind, 0.6)
+
+
+## A marketplace run the engine plays: the type chosen at the start and Moda open. `day` stops it before the MVP; `closes` plays
+## the founder's sprints to the MVP gate, assigns the founder to Moda, lets a week pass, ships through `SprintSystem.publish`
+## and plays that many weeks after it. Every week is the clock's daily dispatch, so stores, users, orders, MRR and cash come from
+## the engine. False (the shot is failed) when the gate is not reached.
+func _seed_marketplace_world(world: Dictionary) -> bool:
+	_seed_run_reproducible()
+	GameState.founder_portrait = "founder_01"
+	SprintSystem.choose_type(MarketplaceSystem.TYPE_ID, "Çarşım")   # LOC-DATA debug seed / id
+	MarketplaceSystem.open_category("fashion")
+	if world.has("day"):
+		while GameState.day < world.day:
+			_play_week()
+		return true
+	SprintSystem.apply_lead()
+	SprintSystem.start()
+	for i in _MP_SPRINTS:
+		_play_sprint(_play_week)
+		if GameState.product.release.get("gate", false):
+			break
+	if not GameState.product.release.get("gate", false):
+		_shot_fail("[SalesShot] the marketplace's MVP gate is not reached in %d sprints" % _MP_SPRINTS)
+		return false
+	MarketplaceSystem.assign(CharacterRegistry.get_founder().id, "fashion")
+	_play_week()
+	SprintSystem.publish()
+	for i in world.closes:
+		_play_week()
+	return true
+
+
+## One week the way the clock turns it: the day moves and every system's daily step runs in the dispatcher's order.
+func _play_week() -> void:
+	GameState.advance_day()
+	TimeManager._dispatch_daily_tick()
 
 
 # Theme-matrix shots (--tab-shot / --modal-shot / --onboard-shot / --theme-audit) cover the
@@ -4604,15 +4661,6 @@ func _seed_product_live(scenario: String) -> void:
 	var day := func() -> void:
 		GameState.advance_day()
 		SprintSystem.daily_tick()
-	var start_next := func() -> void:
-		if SprintSystem.mode() == "release":
-			SprintSystem.plan_next()
-			SprintSystem.apply_lead()
-			SprintSystem.start()
-	var sprint := func() -> void:
-		start_next.call()
-		while SprintSystem.mode() == "active":
-			day.call()
 	SprintSystem.apply_lead()
 	if scenario in ["plan", "active"]:
 		SprintSystem.send_next(SprintCatalog.open_cards([])[0].id)
@@ -4658,7 +4706,7 @@ func _seed_product_live(scenario: String) -> void:
 		SprintSystem.plan_next()
 		return
 	for i in 12:
-		sprint.call()
+		_play_sprint(day)
 		if GameState.product.release.get("gate", false):
 			if scenario == "gate":
 				return
@@ -4678,7 +4726,7 @@ func _seed_product_live(scenario: String) -> void:
 		return
 	if scenario == "b2c_live":
 		for week in 4:
-			start_next.call()
+			_start_next_sprint()
 			for hour in 24:
 				SalesSystem.hourly_tick(hour)
 			day.call()
@@ -4694,9 +4742,24 @@ func _seed_product_live(scenario: String) -> void:
 		var lead: Prospect = SalesFaucetSystem.spawn_prospect("mid", "event")
 		SalesSystem.add_b2b_customer(lead, 12, 50, 85)
 		ProspectRegistry.remove(lead.id)
-	sprint.call()
+	_play_sprint(day)
 	SprintSystem.plan_next()
 	SprintSystem.apply_lead()
+
+
+## Starts the next sprint when the release note is open.
+func _start_next_sprint() -> void:
+	if SprintSystem.mode() == "release":
+		SprintSystem.plan_next()
+		SprintSystem.apply_lead()
+		SprintSystem.start()
+
+
+## Starts the next sprint and plays its weeks with `week`.
+func _play_sprint(week: Callable) -> void:
+	_start_next_sprint()
+	while SprintSystem.mode() == "active":
+		week.call()
 
 
 ## live:a4_<frame>: the frames of the Ürün > Sprint screen as worlds the engine plays; each prints

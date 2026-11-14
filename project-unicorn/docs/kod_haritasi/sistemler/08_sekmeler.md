@@ -12,7 +12,7 @@ Sekme kökleri (scripts/tabs/):
 - `scripts/tabs/product_tab.gd` (355): Ürün penceresi kabuğu: başlık KPI'ları, GENEL BAKIŞ/SPRINT/ÇEYREK şeridi ve ayrı TALEPLER sekmesi (B2B; Kurucu sprintte ve Geçmiş anahtarları), yerel `_ui` durumu, eylem yönlendirme (`_act`);
   yeniden kurulumda sol sütunun kaydırması korunur (`SprintUiShared.keep_scroll`); `hour_changed` koşan sprintte yalnız `SprintPanel.set_now`u çağırır (`_on_hour`);
   ↳ pano zaman ekseninin genişliğini ölçer (`_axis`, `_on_axis`): pencere ya da ray değişince sayfa o genişlikle yeniden kurulur; ÇEYREK'te pencere içeriği kadar uzar (`fit_height`).
-- `scripts/tabs/sales_tab.gd` (838): Satış: fiyat duruşu, boru hattı (lead belgesi), satış masası, son hareketler, müşteri portföyü, canlı B2C kitle sayfası.
+- `scripts/tabs/sales_tab.gd` (817): Satış: fiyat duruşu, boru hattı (lead belgesi), satış masası, son hareketler, müşteri portföyü, canlı B2C kitle sayfası.
 - `scripts/tabs/hr_tab.gd` (542): Ekip: Kadro/Görevler görünümleri, Atlas ve Mesai panel açıcıları, satır menüsü, yapı anahtarıyla yerinde boyama.
 - `scripts/tabs/finance_tab.gd` (116): Finans kabuğu: başlıkta yalnız ad (nakit/net/runway üst barda, shell-03), Yatırım açılınca ÖZET|YATIRIM şeridi, Yatırım kilidi (`_yatirim_locked`).
 - `scripts/tabs/hunt_tab.gd` (533): Yatırım sayfası: Frank şeridi, seed turu kartı, yatırımcı listesi, teklifler, bekleyen toplantı (VC sistemlerinin ince arayüzü).
@@ -138,15 +138,15 @@ Ekip:
 - `HRTab.open_atlas()` `hr_tab.gd:390`: Atlas panelini açar · product_tab.gd:335, hr_tab.gd (Atlas şeridi, boş grup, Görevler).
 - `HRTab.hold_person(id, on)` `hr_tab.gd:520`: dosyası/diyaloğu açık kişinin satırını seçili tutar · hr_dossier.gd:59,66, hr_action_modal.gd:66,147, training_modal.gd:31,42.
 - `HRLedger.run_action(host, emp, action)` `scripts/tabs/hr/hr_ledger.gd:356`: zam, terfi, izin, çıkarma, eğitim, dosya · satır menüsü ve dosya (`action_list` :270).
-- `HRPopover.mount(anchor, dark)` `scripts/tabs/hr/hr_popover.gd:99`: tek açılır panel · hr_tab `_open_actions` hr_tab.gd:489, sales_tab.gd:676.
+- `HRPopover.mount(anchor, dark)` `scripts/tabs/hr/hr_popover.gd:99`: tek açılır panel · hr_tab `_open_actions` hr_tab.gd:489, sales_tab.gd:650.
 - `HRUiShared.mount_panel_modal(host, path, on_changed)` `hr_ui_shared.gd:78`: Atlas/Mesai/Eğitim panellerini kurar · hr_tab.gd:386,392, hr_ledger.gd:368, personal_tab.gd:96.
 
 Satış, Finans, Yatırım:
-- `SalesTab._refresh()` `scripts/tabs/sales_tab.gd:174`: KPI, duruş, boru hattı, masa, günlük, portföy (B2C'de `_paint_b2c` :259) baştan çizilir · `_on_state_changed`.
+- `SalesTab._refresh()` `scripts/tabs/sales_tab.gd:180`: KPI, duruş, boru hattı, masa, günlük, portföy baştan çizilir; Pazaryeri koşusunda `_paint_marketplace` ölçüleri yazar, şeridi kurar ve sayfanın `refresh()`'ini çağırır (sayfa `scripts/tabs/marketplace/marketplace_page.gd`: `PAGES` sırası şerit, alt sayfa betikleri `refresh()` bilen VBoxContainer) · `_on_state_changed` (`marketplace_changed` dahil).
 - `FinanceTab._show_page(id)` `scripts/tabs/finance_tab.gd:88`: ÖZET/YATIRIM seçer, Yatırım kilitliyse döner · `finance_subpage_requested` (:54), şerit.
 - `FinanceOzetView.cap_table(parent)` `scripts/tabs/finance/finance_ozet_view.gd:451` (static): hisse tablosu · personal_tab.gd:207.
 - `HuntTab._refresh()` `scripts/tabs/hunt_tab.gd:102`: sayfayı baştan kurar; görünmezken `_on_changed` (:82) yalnız `_stale` işaretler · VC/seed sinyalleri.
-- `HuntTab._sit_button` `hunt_tab.gd:509`: "Masaya otur" `term_table_requested` yayar (:510) · main.gd:4893 bağlar.
+- `HuntTab._sit_button` `hunt_tab.gd:509`: "Masaya otur" `term_table_requested` yayar (:510) · main.gd:4956 bağlar.
 
 Ar-Ge, Olaylar, Piyasa, Kişisel:
 - `RnDTab.select_node(id)` `scripts/tabs/rnd_tab.gd:114`: düğümü seçer · `rnd_node_requested` (:80; product_tab.gd:332, research_bar), `_ready` (:62) gizli seçimi tüketir.
@@ -175,8 +175,8 @@ Sekmelerin tanımladığı sinyaller (DIZIN.md "Sinyaller" bölümü):
 - `started` / `closed`: yayan `rnd_assign_panel.gd:230,232` / `:203` · dinleyen `rnd_detail_panel.gd:76,77`. `selection_changed(node_id)`: yayan `rnd_tree_view.gd:339` · dinleyen `rnd_tab.gd:144`.
 
 Sekmelerin yaydığı EventBus sinyalleri:
-- `tab_changed`: product_tab.gd:328-334, sales_tab.gd:295, mail_pane.gd:830,836, hr_atlas_modal.gd:168, sprint_ui_shared.gd:551, rnd_ui_shared.gd:149 · dinleyen window_layer.gd:62.
-- `pitch_requested` sales_tab.gd:412 (dinleyen main.gd:4887) · `term_table_requested` hunt_tab.gd:510 (main.gd:4893) · `rnd_node_requested` product_tab.gd:330 (rnd_tab.gd:80).
+- `tab_changed`: product_tab.gd:328-334, sales_tab.gd:269, mail_pane.gd:830,836, hr_atlas_modal.gd:168, sprint_ui_shared.gd:551, rnd_ui_shared.gd:149 · dinleyen window_layer.gd:62.
+- `pitch_requested` sales_tab.gd:386 (dinleyen main.gd:4950) · `term_table_requested` hunt_tab.gd:510 (main.gd:4956) · `rnd_node_requested` product_tab.gd:330 (rnd_tab.gd:80).
 - `finance_subpage_requested` mail_pane.gd:832 (dinleyen finance_tab.gd:54) · `confirm_requested` hunt_tab.gd:234,479, hr_tab.gd:337, hr_ledger.gd:376-425, hr_atlas_modal.gd:453,472 (main.gd:90).
 
 Sekmelerin dinlediği EventBus sinyalleri (hepsi `_exit_tree`'de ya da düğümle birlikte kopar):
@@ -185,7 +185,7 @@ Sekmelerin dinlediği EventBus sinyalleri (hepsi `_exit_tree`'de ya da düğüml
 - Finans `finance_tab.gd:48-54`: phase_changed, seed_door_opened, finance_subpage_requested. Özet `finance_ozet_view.gd:60`: ek equity/month_ended/sheet_*/rival_*.
 - Yatırım `hunt_tab.gd:45-61`: sheet_*, callback_ready, meeting_day, day_advanced (:47), pitch_finished, seed_*, phase_changed, event_*, TimeManager.hold_changed, mentor_advisory_changed, hour_changed, assignment_changed.
 - Ekip `hr_tab.gd:73-85`: character_added/removed, morale_changed, hr_day_processed, customer_assigned, employee_*, productivity_changed, event_*, palette_changed. Dosya `hr_dossier.gd:54-55`: hr_day_processed, character_removed.
-- Satış `sales_tab.gd:65-82`: prospect_*, lead_*, deal_*, customer_* (9 sinyal), price_stance_changed, mrr_changed, day_tick_completed, pitch_finished, assignment_changed, event_*, hour_changed.
+- Satış `sales_tab.gd:70-87`: prospect_*, lead_*, deal_*, customer_* (9 sinyal), price_stance_changed, mrr_changed, day_tick_completed, pitch_finished, assignment_changed, event_*, hour_changed.
 - Ar-Ge `rnd_tab.gd:69-81`: research_*, node_revealed, hidden_line_unlocked, assignment_changed, messages_changed, event_*, version_shipped, rnd_node_requested, clock_batch_ended.
 - Kişisel `personal_tab.gd:51`: equity, phase, hr_day_processed, employee_experience/training, version_shipped, event_*. Piyasa `piyasa_tab.gd:82`: day_advanced, equity_changed.
 - Olaylar `events_tab.gd:70` → `Inbox.connect_changes` (`scripts/ui/components/inbox.gd:148-155`, 19 sinyal: desk_changed, event_*, messages_changed, sprint_*, version_shipped ...).
@@ -195,12 +195,12 @@ Sekmelerin dinlediği EventBus sinyalleri (hepsi `_exit_tree`'de ya da düğüml
 - Sekmeler kayıt şeması tanımlamaz (`scripts/tabs` içinde SaveManager yok); okudukları durum sistemlerde: `GameState.product` (`product_model.gd:136`), `ProductState`, `SprintSystem`, `HRSystem`, `CharacterRegistry`.
 - Yerel durum sayfaya aittir ve dil/palet değişiminde kaybolur (WindowLayer yıkıp kurar, `window_layer.gd:66-67,156`): hr_tab `_view`/`_collapsed`, piyasa `_filter`/`_selected`, finance `_current`.
 - İstisnalar: `ProductTab._last_view` (static, `product_tab.gd:26`, kayda yazılmaz) ve `GameState.flags["rnd_selected"]` (`rnd_tab.gd:64-65,99`, `_ready`'de tüketilip silinir).
-- Diğer bayraklar: `finance_runway_warn_snooze_until_day` (`finance_ozet_view.gd:21,479,499`, ertele 2 hafta); `b2c_paid_tier_open`, `b2c_price`, `b2c_audience_history` yalnız okunur (`sales_tab.gd:261-275`).
+- Diğer bayraklar: `finance_runway_warn_snooze_until_day` (`finance_ozet_view.gd:21,479,499`, ertele 2 hafta). Pazaryeri penceresinin kare türleri `--sales-shot=mp_pre|mp_launch` (`main.gd` `_run_marketplace_shot`, dünya `_seed_marketplace_world`: `SHOT|mp_world` satırı).
 - Düzen sabitleri: `WindowLayer.SPECS` `window_layer.gd:38` (Ürün 1688×928: 1920'de pencere alanının tamamı; Piyasa 1424×928,
-  Ekip 1352×928, Finans 1344×720, Satış 1280×760, Ar-Ge 1280×928, Kişisel 1000×928, Olaylar 1240×900, dosya 320×928).
+  Ekip 1352×928, Finans 1344×720, Satış 1280×928, Ar-Ge 1280×928, Kişisel 1000×928, Olaylar 1240×900, dosya 320×928).
 - Tablo sabitleri: `HRLedger.COMPACT_FROM = 12` (`hr_ledger.gd:16`), `TABLE_W` 1302 (:8), `COLUMNS` (:10) ve `COLUMNS_COMPACT` (:13); `HRAssignments.W` ve `W_JOBS` (`hr_assignments.gd:16-17`).
 - Boyut belirteçleri `scripts/theme/ui_tokens.gd`: `TABS` :294, `D_H_WIN_CTL` :659, `D_W_LEFT` :702, `D_W_TYPE_LIST` :731, `D_W_INVESTORS` :744, `D_H_HUNT_HEAD` :746, `D_H_PERSONAL_BODY` :766, `D_H_RND_HISTORY` :780, `D_AVATAR_*` :672-797.
-- Sayfa sabitleri: Olaylar `LIST_W` 400/`ROW_H` 96 (`events_tab.gd:12-16`); Satış `SAT_MID` 50/`HISTORY_WEEKS` 26/`LOG_ROWS` 5 (`sales_tab.gd:20-29`); Piyasa `NEW_WEEKS` 4/`SHARE_FLOOR` 0,1 (`piyasa_tab.gd:15-19`).
+- Sayfa sabitleri: Olaylar `LIST_W` 400/`ROW_H` 96 (`events_tab.gd:12-16`); Satış `SAT_MID` 50/`LOG_ROWS` 5 (`sales_tab.gd:21-31`); Piyasa `NEW_WEEKS` 4/`SHARE_FLOOR` 0,1 (`piyasa_tab.gd:15-19`).
 - Diğer sabitler: Finans özeti `RUNWAY_WARN_MONTHS` 6/`TX_SHOWN` 8 (`finance_ozet_view.gd:19-22`); `MailPane.ENTER_GUARD_MS` 400/`AVATAR` 40 (`mail_pane.gd:20-21`); Atlas `W_SEARCH` 1440/`W_FILES` 1560 (`hr_atlas_modal.gd:25-26`).
 - JSON'u sekmeler doğrudan okumaz (`scripts/tabs` içinde FileAccess/res://data yok); sistemler okur:
   Ar-Ge `data/techtree/rnd_tree.json` (ResearchSeam), Piyasa `data/market/{companies,people}.json` (`market_catalog.gd:18-19`), sprint `data/product/sprint.json`.
@@ -212,7 +212,7 @@ Anahtarlar `localization/strings.csv`'de (sütunlar keys,tr,en); sekmeler `tr("A
 - `TAB_*` (TAB_PRODUCT, TAB_SALES, TAB_HR, TAB_FINANCE, TAB_PIYASA, TAB_PERSONAL, TAB_RND, TAB_EVENTS): her sekmenin `_init` içindeki `frame_options.title`.
 - `PRODUCT_*` / `PROD_*` (PRODUCT_VIEW, PRODUCT_OV, PRODUCT_CARD, PRODUCT_SERVER, PRODUCT_FX, PROD_PATH/NAME/TYPE):
   product_tab, product_model, sprint_panel, sprint_head, capacity_view, sprint_card, sprint_ui_shared, area_panel, quarter_view, type_picker, overview_view.
-- `SALES_*`: sales_tab (STEWARD, LOG, STRIP, STANCE, ROUTE, CHIP, B2C, PROMISE, BAND, ACTION), mail_pane (SALES_PER/ACTION/WEEKLY/STEWARD/CLAUSE), hr_assignments (SALES_LOCKED).
+- `SALES_*`: sales_tab (STEWARD, LOG, STRIP, STANCE, ROUTE, CHIP, PROMISE, BAND, ACTION), mail_pane (SALES_PER/ACTION/WEEKLY/STEWARD/CLAUSE), hr_assignments (SALES_LOCKED).
 - `HR_*` (HR_COL, HR_CARD, HR_ROW, HR_ATLAS 26 kullanım, HR_HOURS, HR_TAB, HR_KPI, HR_STATE, HR_BADGE, HR_ASSIGN, HR_LEGEND, HR_DOSSIER): hr_tab, hr_ledger, hr_assignments, hr_atlas_modal, hr_dossier, hr_ui_shared, personal_tab, events_tab.
 - `FIN_*` (FIN_GOAL, FIN_PROFIT, FIN_MARKET, FIN_CAPTABLE, FIN_RANGE, FIN_MENTOR, FIN_SUBTAB, FIN_RUNWAY): finance_tab, finance_ozet_view, mail_pane; `ANGEL_CAP_*` ve `SEED_CAP_*` özette.
 - `HUNT_*` (BADGE, MEETING, WALK, SEC, EST, COUNTER, REQUEST...), `SEED_*` (PITCH, EXPECT, OFFER, DOOR, DONE, BAND), `VC_BLOCK_*`, `VC_EV_*`, `MENTOR_NAME`: yalnız hunt_tab (HUNT_BADGE/CONDITION ayrıca vc_meeting_adapter).
@@ -231,7 +231,7 @@ Smoke (tek vaka: `bash tools/smoke_run.sh <vaka>`; tam süit yalnız push önces
   `sprint_lead_row_until_plan_changes` (öneri satırı, `lead_applied` bayrağı ve onu düşüren her seam).
 - Ar-Ge: `rnd_rail_open_with_locked_tree`, `split_bars_name_their_cause` (RnDUiShared). Yatırım: `hunt_offer_lifecycle` (endgame_smoke.gd:2103). Olaylar: `mail_pending_survives_save` (:6633).
 - Kabuk: `rail_tabs_match_scene_order` (endgame_smoke.gd:4420), `clock_resumes_only_by_player` (:13860; product_tab ve hunt_tab'ı örnekler), `all_scripts_load`, `loc_product_derived_keys`.
-- Görsel (pencereli, PNG `%APPDATA%\Godot\app_userdata\Project Unicorn\`): `--tab-shot=<product|sales|hr|finance|piyasa[:durum]|personal|marketing|rnd|events>` `main.gd:2364`; `--lang=tr|en`, `--palette=cb`, `--shot-size=GxY`.
+- Görsel (pencereli, PNG `%APPDATA%\Godot\app_userdata\Project Unicorn\`): `--tab-shot=<product|sales|hr|finance|piyasa[:durum]|personal|marketing|rnd|events>` `main.gd:2421`; `--lang=tr|en`, `--palette=cb`, `--shot-size=GxY`.
 - Sekmeye özel: `--product-shot=live:<tür>` (:4203), `--hr-shot=` (:3301), `--finance-shot=` (:3173), `--personal-shot=` (:2378),
   `--rnd-shot=` (:2416), `--inbox-shot=` (:1107), `--sales-shot=` (:1474), `--vc-shot=hunt*` (:3999); hepsi `scripts/main/main.gd`.
 - Görsel (Olaylar): `--inbox-shot=<durum>` Olaylar'ı tema tohumunun şirketinde (14. hafta, İş hanı) gerçek kapıdan çeker; kart ve kapı `offer`, `queue`, `customer` (bir seçenek hazır), `locked`,
@@ -265,7 +265,7 @@ Smoke (tek vaka: `bash tools/smoke_run.sh <vaka>`; tam süit yalnız push önces
 - Karar beklerken (`EventGate.active_id() != ""`) pencereler yalnız okunur: `window_frame.gd:106-119` tıkları yutar,
   `gate_reads` meta'lı denetim geçer. Okuma amaçlı yeni denetime meta ekle; eylem denetimini `disabled` yap (sales_tab/hunt_tab `off`/`_off`).
 - Olaylar penceresi kapıdan muaftır (`window_layer.gd:93`, `guarded = false`); cevap yalnız `MailPane._choose` → `EventGate.resolve` ile gider ve yalnız live kipte.
-- Gün sınırı: `day_advanced` günlük tiklerden ÖNCE atılır (hr_tab.gd:13, sales_tab.gd:12, rnd_tab.gd:16 uyarır). HR `hr_day_processed`, Satış `day_tick_completed`, Ar-Ge `research_progress_changed` kullanır.
+- Gün sınırı: `day_advanced` günlük tiklerden ÖNCE atılır (hr_tab.gd:13, sales_tab.gd:13, rnd_tab.gd:16 uyarır). HR `hr_day_processed`, Satış `day_tick_completed`, Ar-Ge `research_progress_changed` kullanır.
 - Ürün ve Piyasa `day_advanced`'e bağlıdır ama yeniden kurmayı ertelerler (`call_deferred`, `process_frame` ONE_SHOT). 
   Yatırım sayfası ise `day_advanced`'e doğrudan bağlıdır (hunt_tab.gd:47); kalan-hafta sayaçları bir tik geriden okunabilir (doğrulanmadı).
 - Dil ve palet değişince WindowLayer sayfayı yıkıp yeniden kurar (`window_layer.gd:66-67`); sekmeden ayrıca bağlanma, yoksa çift kurulum olur (rnd_tab.gd:20-21). Yerel durum kaybolur; korunacaksa bayrak ya da static gerekir.

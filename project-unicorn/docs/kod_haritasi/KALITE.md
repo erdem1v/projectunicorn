@@ -1,12 +1,12 @@
 # Kod haritası · KALITE
 
-Üretildi: git da8fe8a7 · 2026-11-14 · `python -I tools/kod_haritasi/uret.py`
-Kapsam: scripts/ altındaki 262 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
+Üretildi: git a486a2f7 · 2026-11-14 · `python -I tools/kod_haritasi/uret.py`
+Kapsam: scripts/ altındaki 263 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
 
 - scripts/debug/endgame_smoke.gd · 31204 satır · 709 func
-- scripts/main/main.gd · 6375 satır · 228 func
+- scripts/main/main.gd · 6438 satır · 233 func
 - scripts/debug/run_probe.gd · 2446 satır · 95 func
 - scripts/systems/sprint_system.gd · 2139 satır · 173 func
 - scripts/theme/build_theme.gd · 1663 satır · 31 func
@@ -24,8 +24,8 @@ Kapsam: scripts/ altındaki 262 .gd (tools/ hariç). Kod temizliği ve kıdemli 
 - scripts/systems/sprint_catalog.gd · 988 satır · 91 func
 - scripts/systems/term_sheet_table_system.gd · 980 satır · 57 func
 - scripts/ui/office/office_people.gd · 853 satır · 50 func
-- scripts/tabs/sales_tab.gd · 843 satır · 40 func
 - scripts/tabs/events/mail_pane.gd · 819 satır · 43 func
+- scripts/tabs/sales_tab.gd · 817 satır · 40 func
 - scripts/systems/rnd_system.gd · 814 satır · 56 func
 - scripts/events/core/engine.gd · 813 satır · 38 func
 - scripts/ui/meeting/meeting_panel.gd · 790 satır · 37 func
@@ -41,17 +41,17 @@ Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları
 - scripts/theme/build_theme.gd:46 · _initialize · 320 satır
 - scripts/events/present/chips.gd:72 · describe · 311 satır
 - scripts/debug/endgame_smoke.gd:24211 · _case_sprint_timeline_matches_play_out · 266 satır
-- scripts/main/main.gd:3960 · _run_hr_shot · 263 satır
+- scripts/main/main.gd:4017 · _run_hr_shot · 263 satır
 - scripts/debug/endgame_smoke.gd:8749 · _case_hr_constants_contract · 220 satır
 - scripts/debug/endgame_smoke.gd:2279 · _case_save_v13_day_stamps_migrate · 209 satır
 - scripts/main/main.gd:1533 · _run_inbox_shot · 201 satır
 - scripts/autoload/game_state.gd:833 · initialize_run · 200 satır
 - scripts/events/seams/seams_ported.gd:8 · install · 180 satır
-- scripts/main/main.gd:2268 · _run_office_shot · 180 satır
+- scripts/main/main.gd:2325 · _run_office_shot · 180 satır
 - scripts/debug/endgame_smoke.gd:17094 · _case_fit_star_context · 166 satır
-- scripts/main/main.gd:1934 · _run_sales_shot · 161 satır
 - scripts/events/seams/seams_sales.gd:26 · install · 160 satır
 - scripts/debug/endgame_smoke.gd:2498 · _case_legacy_v12_save_opens_live_table · 157 satır
+- scripts/main/main.gd:1933 · _run_sales_shot · 156 satır
 - scripts/onboarding/first_week_doc.gd:20 · lay_out · 154 satır
 - scripts/debug/endgame_smoke.gd:8294 · _case_hr_leave_shift · 149 satır
 - scripts/debug/endgame_smoke.gd:7546 · _case_hr_candidate_invariants · 145 satır
@@ -64,13 +64,13 @@ Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları
 - scripts/debug/endgame_smoke.gd:18556 · _case_rnd_note_author_and_lines · 129 satır
 - scripts/debug/endgame_smoke.gd:23133 · _case_sprint_founder_share_frozen · 128 satır
 - scripts/debug/endgame_smoke.gd:28413 · _case_save_v15_tickets_become_open_bugs · 128 satır
-- scripts/main/main.gd:4572 · _seed_product_live · 128 satır
 - scripts/debug/endgame_smoke.gd:1072 · _case_gate_decline_reminder · 125 satır
 - scripts/debug/endgame_smoke.gd:21050 · _thesis_presenter_body · 124 satır
 - scripts/debug/endgame_smoke.gd:21283 · _case_sales_meeting_time_skip_founder_share · 124 satır
 - scripts/events/seams/seams_product.gd:15 · _install_product · 123 satır
 - scripts/events/tools/why.gd:28 · report · 121 satır
 - scripts/events/tools/engine_probe.gd:582 · _check_invalidation · 119 satır
+- scripts/main/main.gd:4629 · _seed_product_live · 119 satır
 - scripts/events/tools/lint.gd:229 · _lint_effects · 118 satır
 - scripts/debug/run_probe.gd:363 · run · 117 satır
 - scripts/debug/endgame_smoke.gd:1464 · _case_month_summary · 116 satır
@@ -119,9 +119,9 @@ UYARI: call("a"+b) gibi kurulmuş adlar, sinyal adıyla bağlama, harness bayrak
 - scripts/debug/office_crowd_probe.gd:48 · _log_error · debug
 - scripts/events/present/papers.gd:145 · arc_of
 - scripts/main/game_shell.gd:163 · debug_force_vc_meeting · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/main/main.gd:6316 · _dbg_close_request · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/main/main.gd:6321 · _dbg_onb_random_x20 · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/main/main.gd:6334 · _dbg_finish_run · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
+- scripts/main/main.gd:6379 · _dbg_close_request · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
+- scripts/main/main.gd:6384 · _dbg_onb_random_x20 · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
+- scripts/main/main.gd:6397 · _dbg_finish_run · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
 - scripts/systems/line_gates.gd:126 · speed_bonus_for
 - scripts/systems/rnd_system.gd:707 · family_root_done
 - scripts/systems/sales_ledger.gd:34 · lead_star

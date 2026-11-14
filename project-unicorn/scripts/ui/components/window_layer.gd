@@ -37,7 +37,7 @@ const OFFICE := preload("res://scripts/ui/office/office_view.gd")
 ## ağaçla kısa, seçili düğümün kartıyla uzun açılır.
 const SPECS := {
 	"finance": Vector2(1344, 720), "hr": Vector2(1352, 928), "product": Vector2(1688, 928), "piyasa": Vector2(1424, 928),
-	"sales": Vector2(1280, 760), "rnd": Vector2(1280, 928), "personal": Vector2(1000, 928),
+	"sales": Vector2(1280, 928), "rnd": Vector2(1280, 928), "personal": Vector2(1000, 928),
 	"events": Vector2(1240, 900), "marketing": Vector2(900, 640), "hr_dossier": Vector2(320, 928),
 }
 const EDGE := 24.0            # pencere ile pencere alanının (ray dışı merkez alan) kenarı arasındaki boşluk
