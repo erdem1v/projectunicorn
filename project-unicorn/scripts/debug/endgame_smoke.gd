@@ -4511,7 +4511,7 @@ static func _case_role_locks_and_runway_pair() -> String:
 	# B1 · MÜŞTERİ TEMSİLCİSİ KİLİDİ KALKTI, SATIŞ UZMANI KİLİDİ KALDI. MT'nin kilidi aynı
 	# B2B kapısını taşıyordu ve GEREKÇESİ YALAN SÖYLÜYORDU: kart "Destek sistemi ile
 	# açılacak" diyordu, kapı ise `has_b2b_product()`'tı — hiç değerlendirilmeyen bir koşulun
-	# adı. §10.6 kilitli-görünür olarak yalnız Pazarlama ve in-house İK'yı sayıyor.
+	# adı. §10.6'nın kilitli-görünür kartı yalnız in-house İK'dır.
 	#
 	# B2 · ADAY KARTINDAKİ RUNWAY GERÇEĞİ SÖYLESİN. Şerit iki değeri de tam aya yuvarlıyordu,
 	# yani ~0,6 aylık gerçek bir düşüş "5 ay → 5 ay" diye okunuyor ve kutu YİNE DE kırmızı
@@ -5860,7 +5860,8 @@ static func _case_support_desk_rates_stack() -> String:
 ## two days (`sales` -> `accounts`) and the Musteri Temsilcisi row shipped broken for longer
 ## (`customer_success` -> `accounts`), both silently: the person was employed, assigned, and
 ## standing in the wrong column.
-## FALSIFICATION: point either AREA_PRIMARY_JOB row back at "accounts" and this fails by name.
+## FALSIFICATION: point either AREA_PRIMARY_JOB row back at "accounts" and this fails by name; put "sales" into
+## JOB_AREAS["marketing"] and the marketer is counted on the Sales desk.
 static func _case_hires_land_in_own_column() -> String:
 	for role_id in HRConstants.ROLE_AREAS.keys():
 		var role: String = String(role_id)
@@ -5868,6 +5869,11 @@ static func _case_hires_land_in_own_column() -> String:
 		var job: String = HRConstants.default_job_for_role(role)
 		if job == "":
 			return "role '%s' has no default job at all" % role
+		# Pazarlama is held by role, not by area.
+		if job == HRConstants.JOB_MARKETING:
+			if not HRConstants.can_hold_job(role, job):
+				return "role '%s' is born into Marketing, which it cannot hold" % role
+			continue
 		var areas: Array = HRConstants.JOB_AREAS.get(job, [])
 		if not areas.has(key_area):
 			return "role '%s' (key area %s) is born into '%s', which that area cannot work" % [
@@ -5879,6 +5885,14 @@ static func _case_hires_land_in_own_column() -> String:
 	var crep: Character = _make_employee("char_col_cs", "Col CS", HRConstants.ROLE_CUSTOMER_REP)
 	if not crep.assigned_job_ids.has(HRConstants.JOB_SUPPORT):
 		return "a fresh Musteri Temsilcisi is in %s, not the support duty" % str(crep.assigned_job_ids)
+	# A marketer sits in Marketing and works no lead: the job writes no area, so the Sales desk never counts them.
+	var mkt: Character = _make_employee("char_col_mkt", "Col Mkt", HRConstants.ROLE_MARKETING_SPECIALIST)
+	if mkt.assigned_job_ids != [HRConstants.JOB_MARKETING]:
+		return "a fresh Pazarlama Uzmani is in %s, not the Marketing job" % str(mkt.assigned_job_ids)
+	if HRSystem.assigned_to(HRConstants.AREA_SALES).has(mkt):
+		return "a marketer in Marketing is counted on the Sales desk"
+	if HRConstants.can_hold_job(HRConstants.ROLE_SALES_REP, HRConstants.JOB_MARKETING):
+		return "a Satis Temsilcisi can hold the Marketing job"
 	return ""
 
 
@@ -8405,8 +8419,8 @@ static func _case_hr_constants_contract() -> String:
 		return "UZMANLIK-5 dampen is %.4f, want the old cs_skill-55 value 0.725" % B2BConstants.cs_dampen(5)
 
 	# --- Roles, departments, labels ---
-	if HRConstants.EMPLOYEE_ROLES.size() != 6:
-		return "employee role count is %d, want the design's six" % HRConstants.EMPLOYEE_ROLES.size()
+	if HRConstants.EMPLOYEE_ROLES.size() != 8:
+		return "employee role count is %d, want the design's eight" % HRConstants.EMPLOYEE_ROLES.size()
 	for role_id in HRConstants.EMPLOYEE_ROLES:
 		if HRConstants.role_label(role_id) == role_id:
 			return "role '%s' has no display label" % role_id
@@ -8426,7 +8440,7 @@ static func _case_hr_constants_contract() -> String:
 			return "role '%s' still carries secondary '%s' — §4.4 removes it" % [role_id, secondary]
 	if HRConstants.role_label(HRConstants.ROLE_MENTOR) != "Operating Partner":
 		return "the mentor label drifted (it is already on screen): '%s'" % HRConstants.role_label(HRConstants.ROLE_MENTOR)
-	# §13.1 DÖRT GRUP, ve altı rolün hepsi tam olarak birine düşer. Departman tablosu kalktı;
+	# §13.1'in DÖRT GRUBU ve Pazarlama; sekiz rolün hepsi tam olarak birine düşer. Departman tablosu kalktı;
 	# bu iddia onun yerine taksonomilerin TEKLİĞİNİ ölçüyor.
 	var seen_groups: Dictionary = {}
 	for role_id2 in HRConstants.EMPLOYEE_ROLES:
@@ -11951,11 +11965,11 @@ static func _case_hr_read_catalogue() -> String:
 	CharacterRegistry.clear_jobs(CharacterRegistry.get_founder().id)
 	if HRSystem.founder_task_state() != HRSystem.FOUNDER_STATE_IDLE:
 		return "an unassigned founder did not read as Boşta"
-	# §2.5: durum Kişisel sayfasında TEK SATIR olarak OKUNUR. Yedi id'nin yedisi de bir
+	# §2.5: durum Kişisel sayfasında TEK SATIR olarak OKUNUR. Sekiz id'nin sekizi de bir
 	# cümleye çözülmek zorunda — çözülmeyen bir id ekrana ham anahtar basar, ve
 	# TranslationServer eksik satırda anahtarın KENDİSİNİ döndürdüğü için bunu yakalamanın
 	# tek yolu anahtarla karşılaştırmaktır.
-	for st in [HRSystem.FOUNDER_STATE_BUILD, HRSystem.FOUNDER_STATE_SALES,
+	for st in [HRSystem.FOUNDER_STATE_BUILD, HRSystem.FOUNDER_STATE_SALES, HRSystem.FOUNDER_STATE_MARKETING,
 			HRSystem.FOUNDER_STATE_SUPPORT, HRSystem.FOUNDER_STATE_RESEARCH,
 			HRSystem.FOUNDER_STATE_TRAINING,
 			HRSystem.FOUNDER_STATE_CARE, HRSystem.FOUNDER_STATE_IDLE]:
@@ -21263,7 +21277,7 @@ static func _case_sales_presentation_rules() -> String:
 ## SATIŞ rev 6 §11.7 + §11.8 — THE TWO RULINGS THE SALES GDD HANDS TO THE EKİP GENERATOR.
 ## They are PARAMETERS of the one generator, never a second one (§15 puts candidate generation
 ## in Ekip §10.2 and a sales-only copy would be the second source that table forbids).
-## FALSIFICATION: delete ROLE_ARCHETYPE_SHAPE and the curve branch fails on the first level;
+## FALSIFICATION: point archetype_shape away from SALES_KEY_SHAPE and the curve branch fails on the first level;
 ## delete ROLE_TRAIT_BAN and the trap-trait branch fails inside a dozen seeds.
 static func _case_sales_candidate_curve_and_traits() -> String:
 	# THE CURVE SITS UNDER EVERY OTHER ROLE'S, at every level and every archetype. In sales a

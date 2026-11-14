@@ -45,7 +45,7 @@ Her madde: **Bölüm ve madde** · Eski metin (özet) · Yürürlükteki kural �
 
 - **§3 Display (the complexity rule)**
   - Eski metin: Roller Geliştirici, Tasarımcı, Satışçı, MB/Destek, Pazarlamacı, Operasyon; her rolün bir anahtar + iki destek yeteneği var; kapalı kart rol uyumu ★ + anahtar yetenek ★ gösterir.
-  - Yürürlükteki kural: Altı rol, üç seviyede (Junior / Orta / Kıdemli): Yazılım Mühendisi, Ürün Yöneticisi, Test Mühendisi, UX/UI Designer, Satış Temsilcisi, Müşteri Temsilcisi. Her rolün bir ana alanı (×1,0) ve varsa bir ikincil alanı (×0,8) vardır; eşleme Ekip §4.4'te mühürlüdür. Kapalı satır ana alanı, varsa ikincil alanı ve Liderlik'i gösterir; altı alanın tamamı açılmış detayda ve Kişisel'de görünür. Yıldız: 0–10 ham → 5★, yarım yıldız çözünürlüğü; ham değer yalnız derin hover'da. Atama Görevler matrisidir (satır kişi, sütun iş; kişi başına en çok iki iş).
+  - Yürürlükteki kural: Sekiz rol, üç seviyede (Junior / Orta / Kıdemli): Yazılım Mühendisi, Ürün Yöneticisi, Test Mühendisi, UX/UI Designer, Satış Temsilcisi, Müşteri Temsilcisi, Pazarlama Uzmanı, Pazarlama Müdürü (Ekip §3 maddesi). Her rolün bir ana alanı (×1,0) ve varsa bir ikincil alanı (×0,8) vardır; eşleme Ekip §4.4'te mühürlüdür. Kapalı satır ana alanı, varsa ikincil alanı ve Liderlik'i gösterir; altı alanın tamamı açılmış detayda ve Kişisel'de görünür. Yıldız: 0–10 ham → 5★, yarım yıldız çözünürlüğü; ham değer yalnız derin hover'da. Atama Görevler matrisidir (satır kişi, sütun iş; kişi başına en çok iki iş).
   - Kaynak: Ekip GDD §0, §3, §4.1, §4.3, §4.4, §12, §12.0, §12.1.
 
 - **§4 Founder-only, Liderlik satırı**
@@ -609,7 +609,17 @@ Bu bölümdeki maddeler yalnız Series A içindir; seed akışı (§3, §4 "not 
   - Yürürlükteki kural: Demo alt-tipleri mühürlüdür: Not & Bilgi Aracı ve Video Klip Aracı (B2C), ERP (B2B). B2B'nin ikinci slotu ruling bekler ve tip ekranında kilitli kart olarak durur. Tip ekranında yol başına 3 kilitli kart gösterilir (B2C: Kod Yazan Asistan, Görsel Düzenleyici, Yapay Zeka Asistanı; B2B: Kurumsal Arama, CRM, açık slot). Derinlik hat modelinden gelir: alt-tip başına 9 hat (5 kimlik + 4 paylaşılan), her hat 3 isimli kademe (K1–K3); düz katalog kaldırılmıştır. Araştırma kilidi her hattın K3 kademesidir (Ar-Ge düğümü + yıldız). §8'in alt-tip sorusu, ikinci B2B slotu dışında kapanmıştır. Açık: teknoloji borcu, düz katalog kodunun silinmesi (ACIK_KARARLAR 44).
   - Kaynak: Ürün GDD rev 6.1 §12.1, §12.3, §12.11 (mühürlü; direktörün 2026-08-25 kürasyonu), §23.
 
+- **§4 Early Access adds, pazarlama sistemi**
+  - Eski metin: Pazarlama sistemi Early Access'te gelir; `MARKETING MODULE resarch.docx` o iş için bekler.
+  - Yürürlükteki kural: Pazarlama demodadır. Pazarlama sekmesi B2B ve B2C'de ayrı kurulur, pazarlama sprinte puan vermez; ekibi Pazarlama Uzmanı ve Pazarlama Müdürü'dür (Ekip §3 maddesi). Tasarım `../docs/tasks/PRD_PAZARLAMA.md`'dedir.
+  - Kaynak: Erdem'in kararı PZ4 (karar sayfası, 2026-11-12: "Pazarlama sekmesi, evet, demoda"); tur 4 yorumu (2026-11-13).
+
 ## GDD — EKİP MODÜLÜ (rev 11)
+
+- **§3 Roller; §2.3 kurucunun durumları; §10.6 Atlas'ın kilitli-görünür kartları; §12.0 İşler; §13.1 Kadro grupları**
+  - Eski metin: Altı rol; Atlas'ta Pazarlama ve in-house İK kilitli-görünür durur; altı iş; dört kadro grubu.
+  - Yürürlükteki kural: Pazarlama Uzmanı ve Pazarlama Müdürü işe alınır, Pazarlama kadro grubundadır; Atlas'ın kilitli-görünür kartı yalnız in-house İK'dır. Pazarlama alan değil iştir (ch02 §2 maddesi): iki rolün ana alanı Satış'tır, ikincil alanı yoktur (§4.4); müdürün etkisi Liderlik'ten okunur. Yeni iş Pazarlama'yı yalnız iki pazarlama rolü ve kurucu tutar; pazarlama rolleri işe alınınca ona oturur, satış temsilcisi tutamaz. İş alan çıktısı vermez, pazarlamacı Satış masasında sayılmaz; elle Satış işine konabilir, bu yüzden maaş bandı ve aday eğrisi satış temsilcisininkidir, müdürün bandı ~%50 yukarıdadır [WORKING]. Pazarlama işindeki kurucunun durumu "Pazarlamada"dır.
+  - Kaynak: Erdem PZ4 (2026-11-12); `../docs/tasks/PRD_PAZARLAMA.md` §4 E1 ve soru 4 (Erdem'in cevabı bekleniyor; PRD önerisiyle, Ekip §4.4 gereği ikincil alansız; yardımcı yönetmen 2026-11-14).
 
 - **§2 KURUCU, "Şirket çalışma saatini devralır … tam verimle çalışır" ve "Kısa günün moral faydasından da yararlanmaz" maddeleri; §2.2 meşguliyet listesi (toplantı oturumu)**
   - Eski metin: Kurucu şirket çalışma saatini devralır; ek mesaide moral cezası ve mesai ücreti almaz, saatleri tam verimle çalışır; çalışma süresinin onun üzerindeki tek etkisi çıktısının saatle orantılı değişmesidir. Meşguliyet listesi izin, eğitim ve (kurucu) yatırım hazırlığıdır.

@@ -74,7 +74,8 @@ static func _install_people() -> void:
 		func(id: String) -> String:
 			var c: Character = _emp(id)
 			return c.role if c != null else "",
-		"HR", "WRAPPER over Character.role: product_manager | designer | developer | tester | sales_rep | customer_rep")
+		"HR", "WRAPPER over Character.role: product_manager | designer | developer | tester | sales_rep | customer_rep"
+			+ " | marketing_specialist | marketing_manager")
 	EvSeams.register("hr.salary", E, TYPE_INT,
 		func(id: String) -> int:
 			var c: Character = _emp(id)
@@ -89,7 +90,8 @@ static func _install_people() -> void:
 		func(id: String) -> String:
 			var c: Character = _emp(id)
 			return String(c.assigned_job_ids[0]) if c != null and not c.assigned_job_ids.is_empty() else "",
-		"HR", "WRAPPER: the first job held, build | test | support | accounts | sales | research; \"\" with none")
+		"HR", "WRAPPER: the first job held, build | test | support | accounts | sales | research"
+			+ " | marketing; \"\" with none")
 	EvSeams.register("hr.flight_risk", E, TYPE_BOOL,
 		func(id: String) -> bool:
 			var c: Character = _emp(id)
@@ -189,7 +191,7 @@ static func _install_founder() -> void:
 		"HR", "0-10; the morale ceiling and the team output multiplier")
 	EvSeams.register("founder.task_state", G, TYPE_STRING,
 		func() -> String: return HRSystem.founder_task_state(),
-		"HR", "build | sales | support | research | training | idle")
+		"HR", "build | sales | marketing | support | research | training | care | idle")
 	EvSeams.register("founder.is_busy", G, TYPE_BOOL,
 		func() -> bool: return HRSystem.is_busy(CharacterRegistry.get_founder()),
 		"HR", "assigned, in training, or in a sitting")

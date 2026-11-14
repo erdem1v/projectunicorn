@@ -122,6 +122,8 @@ const ROLE_STYLES := {
 	HRConstants.ROLE_PRODUCT_MANAGER: "smart",
 	HRConstants.ROLE_CUSTOMER_REP: "smart",
 	HRConstants.ROLE_SALES_REP: "jacket",
+	HRConstants.ROLE_MARKETING_SPECIALIST: "smart",
+	HRConstants.ROLE_MARKETING_MANAGER: "jacket",
 	CounterpartSystem.ROLE_LEAD: "jacket",
 	CounterpartSystem.ROLE_PARTNER: "jacket",
 	CounterpartSystem.ROLE_ANALYST: "smart",

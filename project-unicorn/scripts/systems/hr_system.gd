@@ -199,6 +199,7 @@ static func short_day_active(c: Character) -> bool:
 ## §2.3 · KURUCUNUN GÖREV DURUMU — TÜRETİLİR, SAKLANMAZ (§15.1'in rozet kuralı).
 const FOUNDER_STATE_BUILD := "build"
 const FOUNDER_STATE_SALES := "sales"
+const FOUNDER_STATE_MARKETING := "marketing"
 const FOUNDER_STATE_SUPPORT := "support"
 const FOUNDER_STATE_RESEARCH := "research"
 const FOUNDER_STATE_TRAINING := "training"
@@ -212,7 +213,7 @@ const FOUNDER_STATE_IDLE := "idle"
 ## Kişisel sayfasının tek satırı (Ekip §2.5). Durum id'si MOTORUN, cümle EKRANIN; ikisi de
 ## burada durur (§16).
 ##
-## İKİ SÜREKLİ İŞ İÇİN SEKİZİNCİ BİR DURUM İCAT EDİLMEZ: §2.3 kapalı bir tablodur. Satır
+## İKİ SÜREKLİ İŞ İÇİN YENİ BİR DURUM İCAT EDİLMEZ: §2.3 kapalı bir tablodur. Satır
 ## §12.2'nin çalışan grameri ödünç alır — iki ayrı işin kısa etiketi, `·` ile. Meşgul
 ## durum (eğitim) atamanın üstünü örter, o yüzden önce gelir. Satır ofisin
 ## gördüğünü söyler: gece uyur, yapım atamasının kartı yoksa (sprint arası) planlama yapar.
@@ -252,6 +253,8 @@ static func founder_task_state() -> String:
 	if f.assigned_job_ids.has(HRConstants.JOB_SALES) \
 			or f.assigned_job_ids.has(HRConstants.JOB_ACCOUNTS):
 		return FOUNDER_STATE_SALES
+	if f.assigned_job_ids.has(HRConstants.JOB_MARKETING):
+		return FOUNDER_STATE_MARKETING
 	if f.assigned_job_ids.has(HRConstants.JOB_SUPPORT):
 		return FOUNDER_STATE_SUPPORT
 	# Atama YOKLUĞUNU okur: canlı bir ürün varken işsiz kurucu müşterilerle ilgileniyordur ve

@@ -1369,9 +1369,9 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
 
 ## Kod ve test altyapısı
 
-- **EA/tam'da kalan "yakında" izleri.** Av'daki kilitli "2. kademe fonu" satırı (`InvestorRegistry` `locked_tier2`)
-  ve Pazarlama sekmesinin koşulsuz `"lock": "ea"` kilidi her build'de görünüyor. Seçenekler: build kapsamına bağla ya da
-  olduğu gibi bırak. Kaynak: SONLAR_GAZETE_MODLAR §U.4 madde 3.
+- **EA/tam'da kalan "yakında" izi.** Av'daki kilitli "2. kademe fonu" satırı (`InvestorRegistry` `locked_tier2`) her
+  build'de görünüyor. Seçenekler: build kapsamına bağla ya da olduğu gibi bırak. Pazarlama sekmesinin kilidi Erdem'in PZ4
+  kararıyla kalkar (`../tasks/PRD_PAZARLAMA.md`). Kaynak: SONLAR_GAZETE_MODLAR §U.4 madde 3.
 
 - **Pre-commit kancası.** Git kökündeki pre-commit kancası (`--event-lint` ve `loc_residue`) hazır, ama `core.hooksPath`
   ayarlı değil. Açmak tek bir `git config` komutu ve sahibe bırakıldı. Kaynak: EVENT_ENGINE_QUESTIONS Q16.

@@ -215,7 +215,7 @@ slot of that type (§17.12).
 | `founder.leadership` | global | int | HR | 0-10; the morale ceiling and the team output multiplier |
 | `founder.origin` | global | string | HR | self_made | heir | corporate_refugee |
 | `founder.skill` | global | int | Founder | the skill a check leaned on; the specific seam wins when one exists |
-| `founder.task_state` | global | string | HR | build | sales | support | research | training | idle |
+| `founder.task_state` | global | string | HR | build | sales | marketing | support | research | training | care | idle |
 
 ### `funding.`
 
@@ -256,7 +256,7 @@ slot of that type (§17.12).
 | `hr.is_busy` | entity | bool | HR | leave or training, plus a sitting for the founder |
 | `hr.is_idle` | entity | bool | HR | an employee with no job at all |
 | `hr.is_overloaded` | entity | bool | HR | more than one job |
-| `hr.job` | entity | string | HR | WRAPPER: the first job held, build | test | support | accounts | sales | research; "" with none |
+| `hr.job` | entity | string | HR | WRAPPER: the first job held, build | test | support | accounts | sales | research | marketing; "" with none |
 | `hr.job_count` | entity | int | HR | 0, 1 or 2 |
 | `hr.leave_cooldown_left` | entity | int | HR | weeks until the player may send this person on leave again; 0 means now |
 | `hr.leave_weeks_left` | entity | int | HR | weeks until this person's summer leave starts; -1 once taken, once the window has passed, or without a week |
@@ -268,7 +268,7 @@ slot of that type (§17.12).
 | `hr.payroll_monthly` | global | int | HR | not status-filtered: leave is paid |
 | `hr.raise_cooldown_left` | entity | int | HR | weeks until a raise is allowed again; 0 means now |
 | `hr.resign_voice` | entity | string | HR | the per-person resignation line |
-| `hr.role` | entity | string | HR | WRAPPER over Character.role: product_manager | designer | developer | tester | sales_rep | customer_rep |
+| `hr.role` | entity | string | HR | WRAPPER over Character.role: product_manager | designer | developer | tester | sales_rep | customer_rep | marketing_specialist | marketing_manager |
 | `hr.run_hires` | global | int | HR | WRAPPER; hires made this run, the founder excluded. Counts a person who has since left |
 | `hr.salary` | entity | int | HR | WRAPPER over Character.monthly_salary, USD/month |
 | `hr.salary_band_position` | entity | float | HR | WRAPPER: <0 under the band, 0..1 inside it |

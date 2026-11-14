@@ -11,10 +11,11 @@ extends RefCounted
 # kutu; atanamaz → kesikli ve boş (alanı yok) ya da kesikli ve kilitli (gerekçesi üstüne gelince).
 # Araştırma sütunu salt okunurdur: araştırandaki kesikli kutu işaretlidir.
 
-## face, name, the two areas, Durum, then Yapım ekibi, Test, Destek, Hesap sahipliği, Satış, Araştırma.
+## face, name, the two areas, Durum, then Yapım ekibi, Test, Destek, Hesap sahipliği, Satış, Araştırma, Pazarlama.
 ## Durum holds the risk and overload tags side by side in EN.
-const W := [48, 210, 150, 240]
-const W_JOBS := [104, 92, 104, 136, 92, 126]
+## Both add up to HRLedger.TABLE_W.
+const W := [48, 210, 150, 224]
+const W_JOBS := [96, 80, 88, 136, 80, 94, 96]
 
 
 static func head() -> PanelContainer:
@@ -108,7 +109,8 @@ static func _cell(c: Character, job_id: String, on_toggle: Callable, read_only: 
 	var checked: bool = c.assigned_job_ids.has(job_id)
 	# Önce ALAN: işi hiç yapamayan birine dünyanın hâlini anlatmak yalan olurdu.
 	if coef <= 0.0:
-		return _closed(tr_key("HR_ASSIGN_NOT_YOUR_AREA"), "", UiTokens.D_BOX_JOB)
+		return _closed(tr_key("HR_ASSIGN_MARKETING_ONLY" if job_id == HRConstants.JOB_MARKETING else "HR_ASSIGN_NOT_YOUR_AREA"),
+			"", UiTokens.D_BOX_JOB)
 	# Satış canlı B2B ürün yokken kilitli-görünür (Satış §3.1): gizlemek "böyle bir şey yok"
 	# der, kilitli kare "henüz yok, sebebi bu".
 	if job_id == HRConstants.JOB_SALES and not ProductSystem.has_b2b_product():

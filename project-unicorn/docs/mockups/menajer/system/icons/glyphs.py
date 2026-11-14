@@ -230,6 +230,12 @@ def _():
     return S(front, gap(back, front))
 
 
+@glyph("dept/marketing")
+def _():
+    # the rail's megaphone: the roster group is the module's people
+    return G["rail/marketing"]()
+
+
 # ================================================================ TRAITS (8 employee traits + unspecified)
 @glyph("trait/loyal")
 def _():

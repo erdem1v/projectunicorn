@@ -92,6 +92,9 @@ const ROLE_AREAS := {
 	# ikincili bir eksiklik değil, hükümdür.
 	"sales_rep": {"key": "sales", "secondary": ""},
 	"customer_rep": {"key": "customer_success", "secondary": ""},
+	# Pazarlama alan değil iştir: pazarlamacının yıldızı Satış'ta, müdürün etkisi Liderlik'te.
+	"marketing_specialist": {"key": "sales", "secondary": ""},
+	"marketing_manager": {"key": "sales", "secondary": ""},
 }
 
 # ============================== İŞLER — §12.0 ================================
@@ -104,11 +107,12 @@ const JOB_ACCOUNTS := "accounts"    # Hesap sahipliği
 # Kurucunun pitch'i ise bir toplantıdır, hiçbir atamaya dokunmaz (SalesMeetingSystem).
 const JOB_SALES := "sales"          # Satış masası (lead işleme, kapanış)
 const JOB_RESEARCH := "research"    # Ar-Ge §5.0 — DIŞLAYICI iş; JOB_EXCLUSIVE'e bakın
-const JOBS := ["build", "test", "support", "accounts", "sales", "research"]
+const JOB_MARKETING := "marketing"  # Pazarlama: yalnız pazarlama rolleri ve kurucu
+const JOBS := ["build", "test", "support", "accounts", "sales", "research", "marketing"]
 
 ## SÜREKLİ işler SLOT tutar: kişi başına en fazla iki, ikisi odağı böler (§12.1) ve ikisi de
 ## koşar, ikisi de yavaşlar. Araştırma slot tutmaz, kişinin tamamını alır (JOB_EXCLUSIVE).
-const JOB_CONTINUOUS := ["build", "test", "support", "accounts", "sales"]
+const JOB_CONTINUOUS := ["build", "test", "support", "accounts", "sales", "marketing"]
 
 
 ## Tavan yalnız slot tutan işleri sayar; araştırmayı reddetmesi bu yüzden imkânsızdır.
@@ -128,6 +132,8 @@ const JOB_AREAS := {
 	# Ar-Ge §5.2: yalnız `can_hold_job` kapısı; düğümün okuduğu alan düğümün kendi `areas`'ında.
 	# sales_rep ve customer_rep katsayı 0 alır, araştırmaya konamaz (§5.3).
 	"research": ["product", "design", "engineering", "qa"],
+	# Alanı yok: işi rol tutar (`job_coefficient`) ve alan aynasına bir şey yazmaz; pazarlamacı Satış masasında sayılmaz.
+	"marketing": [],
 }
 
 ## Ar-Ge §5.0 — kişiyi MEŞGUL EDEN işler: atanınca diğer işleri duraklar (silinmez) ve kişi
@@ -166,6 +172,8 @@ static func job_label(job_id: String) -> String:
 static func job_coefficient(role_id: String, job_id: String, category: String = "employee") -> float:
 	if category == "founder":
 		return 1.0 if is_job(job_id) else 0.0
+	if job_id == JOB_MARKETING:
+		return 1.0 if ROLE_GROUP.get(role_id, "") == GROUP_MARKETING else 0.0
 	var key: String = role_key_area(role_id)
 	var sec: String = role_secondary_area(role_id)
 	var best: float = 0.0
@@ -201,8 +209,10 @@ static func primary_job_for_area(area_id: String) -> String:
 	return String(AREA_PRIMARY_JOB.get(area_id, ""))
 
 
-## Yeni işe alınan kendi ana alanının birincil işine oturur; kimse boşta doğmaz.
+## Yeni işe alınan kendi ana alanının birincil işine, pazarlamacı Pazarlama'ya oturur; kimse boşta doğmaz.
 static func default_job_for_role(role_id: String) -> String:
+	if ROLE_GROUP.get(role_id, "") == GROUP_MARKETING:
+		return JOB_MARKETING
 	return primary_job_for_area(role_key_area(role_id))
 
 
@@ -307,22 +317,26 @@ const ROLE_DEVELOPER := "developer"
 const ROLE_TESTER := "tester"
 const ROLE_SALES_REP := "sales_rep"
 const ROLE_CUSTOMER_REP := "customer_rep"
+const ROLE_MARKETING_SPECIALIST := "marketing_specialist"
+const ROLE_MARKETING_MANAGER := "marketing_manager"
 # Personel olmayan id'ler: yalnız ham kod basılmasın diye etiket taşırlar.
 const ROLE_FOUNDER := "founder"
 const ROLE_MENTOR := "mentor"
 
-# Düz altı id'lik dizi: HRCandidateGenerator tohum indeksini find() ile buradan türetir ve
-# smoke boyutunu doğrular; filtrelemek ya da araya id sokmak her aday havuzunu değiştirir.
-const EMPLOYEE_ROLES := ["product_manager", "designer", "developer", "tester", "sales_rep", "customer_rep"]
+# Düz id dizisi: HRCandidateGenerator tohum indeksini find() ile buradan türetir ve smoke boyutunu
+# doğrular; filtrelemek ya da araya id sokmak her aday havuzunu değiştirir, yeni rol sona eklenir.
+const EMPLOYEE_ROLES := ["product_manager", "designer", "developer", "tester", "sales_rep", "customer_rep",
+	"marketing_specialist", "marketing_manager"]
 
 # Türetilmiş etiket anahtarları tr("LITERAL") aramasında görünmez; `loc_hr_derived_keys`
 # gerçek id listelerini yürüyüp her anahtarın iki dilde çözüldüğünü doğrular.
 
-# KADRO GRUPLARI — §13.1'in dört bandı ve modülün tek insan taksonomisi (§8.1 çalışma saati
+# KADRO GRUPLARI — §13.1'in dört bandı, Pazarlama ve modülün tek insan taksonomisi (§8.1 çalışma saati
 # kapsamı ve TAT KAÇIRAN'ın "takım arkadaşı" tanımı bunu okur).
 const GROUP_PRODUCT_DESIGN := "product_design"
 const GROUP_DEVELOPMENT := "development"
-const ROSTER_GROUPS := ["product_design", "development", "sales", "customer_success"]
+const GROUP_MARKETING := "marketing"
+const ROSTER_GROUPS := ["product_design", "development", "sales", "customer_success", "marketing"]
 const ROLE_GROUP := {
 	"product_manager": "product_design",
 	"designer": "product_design",
@@ -330,6 +344,8 @@ const ROLE_GROUP := {
 	"tester": "development",
 	"sales_rep": "sales",
 	"customer_rep": "customer_success",
+	"marketing_specialist": "marketing",
+	"marketing_manager": "marketing",
 }
 ## Ham kod ekrana çıkmaz: bilinmeyen id logda bağırır ve kendini döndürür.
 static func role_label(role_id: String) -> String:
@@ -383,9 +399,9 @@ static func is_role_hireable(role_id: String) -> bool:
 	return role_lock_reason_key(role_id) == ""
 
 
-## §10.6 Atlas'ın kilitli-görünür iki kartı: çizilir, sönüktür, tıklanamaz, gerekçesini
-## gösterir. EMPLOYEE_ROLES'a girmezler (aday havuzu tohumları); rol değil vitrin.
-const FUTURE_ROLES := ["marketing", "hr_inhouse"]
+## §10.6 Atlas'ın kilitli-görünür kartı: çizilir, sönüktür, tıklanamaz, gerekçesini
+## gösterir. EMPLOYEE_ROLES'a girmez (aday havuzu tohumları); rol değil vitrin.
+const FUTURE_ROLES := ["hr_inhouse"]
 const FUTURE_ROLE_LOCK_KEY := "HR_ROLE_LOCK_FULL_VERSION"
 
 
@@ -480,12 +496,14 @@ static func trait_carries_cost(trait_id: String) -> bool:
 
 ## Satış rev 6 §11.8 tuzak-huy yasağı: "faydası o rolün işlerinde ateşlenemeyen huy, o rolün
 ## aday havuzuna girmez." GERÇEK LİDER yalnız bir BUILD liderinde ateşlenir, TİTİZ'in faydası
-## yalnız geliştirmede (bug oranı); satış ve müşteri temsilcisinde ikisi de saf bedeldir.
+## yalnız geliştirmede (bug oranı); satış, müşteri temsilcisi ve pazarlamacıda ikisi de saf bedeldir.
 ## Havuz filtresidir, huyun ne yaptığını değiştirmez. Kalan üç bedelli huy üç dosyalık bir
 ## aramanın en kötü durumuna tam yeter.
 const ROLE_TRAIT_BAN := {
 	"sales_rep": ["takes_them_under", "double_checker"],
 	"customer_rep": ["takes_them_under", "double_checker"],
+	"marketing_specialist": ["takes_them_under", "double_checker"],
+	"marketing_manager": ["takes_them_under", "double_checker"],
 }
 
 
@@ -590,6 +608,9 @@ const SALARY_BANDS_BY_LEVEL := {
 	"designer":        [[2250, 3375], [3375, 6750], [6750, 11250]],
 	"sales_rep":       [[2250, 3375], [3375, 6750], [6750, 11250]],
 	"customer_rep":    [[2250, 3375], [3375, 6750], [6750, 11250]],
+	# Pazarlamacı elle Satış işine konabilir: satışçıdan ucuz doğmaz. Müdür uzmandan ~%50 pahalı [WORKING].
+	"marketing_specialist": [[2250, 3375], [3375, 6750], [6750, 11250]],
+	"marketing_manager":    [[3375, 5050], [5050, 10100], [10100, 16900]],
 }
 
 
@@ -625,28 +646,28 @@ const ARCHETYPE_SHAPE := {
 
 ## Satış rev 6 §11.7 — satış eğrisi yarım basamak aşağıda: satışta yıldız doğrudan paradır
 ## (koltuk bandı) ve rolün puan harcayacağı ikincili yok. Her satır rol-nötr kardeşinin ana
-## alanda −2, geri kalanda −1'idir (tabanı 0), arketip şekilleri korunur.
-const ROLE_ARCHETYPE_SHAPE := {
-	"sales_rep": {
-		0: {"uzman": [3, 0, 0], "dengeli": [2, 1, 1], "pazarlik": [3, 0, 0]},
-		1: {"uzman": [5, 1, 1], "dengeli": [4, 3, 2], "pazarlik": [5, 0, 0]},
-		2: {"uzman": [6, 3, 2], "dengeli": [5, 4, 4], "pazarlik": [6, 2, 1]},
-	},
+## alanda −2, geri kalanda −1'idir (tabanı 0), arketip şekilleri korunur. Satış yıldızlı pazarlamacı
+## aynı eğridedir: elle Satış işine konabildiği için satışçıdan iyi doğmaz. Eğri, tavan ve junior tepe dosyası
+## rolü değil ana alanı (Satış) okur.
+const SALES_KEY_SHAPE := {
+	0: {"uzman": [3, 0, 0], "dengeli": [2, 1, 1], "pazarlik": [3, 0, 0]},
+	1: {"uzman": [5, 1, 1], "dengeli": [4, 3, 2], "pazarlik": [5, 0, 0]},
+	2: {"uzman": [6, 3, 2], "dengeli": [5, 4, 4], "pazarlik": [6, 2, 1]},
 }
 
 
 static func archetype_shape(level: int, archetype: String, role_id: String = "") -> Array:
-	var table: Dictionary = ROLE_ARCHETYPE_SHAPE.get(role_id, ARCHETYPE_SHAPE) as Dictionary
+	var table: Dictionary = SALES_KEY_SHAPE if role_key_area(role_id) == AREA_SALES else ARCHETYPE_SHAPE
 	var per_level: Dictionary = table[clampi(level, LEVEL_JUNIOR, LEVEL_SENIOR)] as Dictionary
 	return (per_level.get(archetype, per_level["dengeli"]) as Array).duplicate()
 
 
-## §11.7 demo aday tavanı: satış ★3,5'te durur, diğer roller cetvelin sonuna varabilir (§5.3).
-const ROLE_STAR_CAP_RAW := {"sales_rep": 7}
+## §11.7 demo aday tavanı: satış ve pazarlama ★3,5'te durur, diğer roller cetvelin sonuna varabilir (§5.3).
+const SALES_STAR_CAP_RAW := 7
 
 
 static func role_star_cap(role_id: String) -> int:
-	return int(ROLE_STAR_CAP_RAW.get(role_id, AREA_MAX))
+	return SALES_STAR_CAP_RAW if role_key_area(role_id) == AREA_SALES else AREA_MAX
 
 
 ## §11.7 junior satış tepe dosyası ★2'dir, demo tavanı değil: aynı üçlüde ★1 ile ★3,5
@@ -656,7 +677,7 @@ const SALES_TOP_JUNIOR_CHANCE := 0.25   # [K] §11.7 "aramaların ~%25'inde"
 
 
 static func role_top_value(role_id: String, level: int) -> int:
-	if role_id == ROLE_SALES_REP and level == LEVEL_JUNIOR:
+	if role_key_area(role_id) == AREA_SALES and level == LEVEL_JUNIOR:
 		return SALES_TOP_JUNIOR_RAW
 	return role_star_cap(role_id)
 
@@ -666,7 +687,7 @@ static func role_top_value(role_id: String, level: int) -> int:
 static func role_top_chance(role_id: String, level: int) -> float:
 	if level == LEVEL_SENIOR:
 		return FIVE_STAR_CHANCE
-	if role_id == ROLE_SALES_REP and level == LEVEL_JUNIOR:
+	if role_key_area(role_id) == AREA_SALES and level == LEVEL_JUNIOR:
 		return SALES_TOP_JUNIOR_CHANCE
 	return 0.0
 

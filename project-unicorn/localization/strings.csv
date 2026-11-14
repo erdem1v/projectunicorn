@@ -151,7 +151,7 @@ SALES_STEWARD_FULL,kapasite dolu,at capacity
 SALES_STEWARD_FOUNDER,Kurucu (kendim tutayım),Founder (keep it myself)
 HR_ROLE_LOCK_SALES,Bu rol için B2B ürün gerekir.,This role needs a B2B product.
 HR_ROLE_LOCK_FULL_VERSION,Tam sürümde gelecek.,Coming in the full version.
-HR_ROLE_MARKETING,Pazarlama,Marketing
+HR_JOB_MARKETING,Pazarlama,Marketing
 HR_ROLE_HR_INHOUSE,İnsan Kaynakları,In-house HR
 WIN_PAGE_PLACEHOLDER,İçerik yolda,Content on the way
 DESK_PAPER_TAG_GATE,EŞİK,GATE
@@ -382,12 +382,14 @@ HR_AREA_SALES,Satış,Sales
 HR_AREA_CUSTOMER_SUCCESS,Müşteri İlişkileri,Customer Success
 HR_AREA_LEADERSHIP,Liderlik,Leadership
 HR_ASSIGN_NOT_YOUR_AREA,Bu kişinin bu alanda yıldızı yok.,This person has no stars in that area.
+HR_ASSIGN_MARKETING_ONLY,Bu işi yalnız pazarlama ekibi yapar.,Only the marketing team takes this job.
 HR_TAB_ROSTER,KADRO,ROSTER
 HR_TAB_ASSIGNMENTS,GÖREVLER,ASSIGNMENTS
 HR_GROUP_PRODUCT_DESIGN,Ürün & Tasarım,Product & Design
 HR_GROUP_DEVELOPMENT,Geliştirme Ekibi,Development
 HR_GROUP_SALES,Satış,Sales
 HR_GROUP_CUSTOMER_SUCCESS,Müşteri İlişkileri,Customer Success
+HR_GROUP_MARKETING,Pazarlama,Marketing
 HR_COL_TASK,GÖREV,TASK
 HR_COL_ROLES,ROLLER,ROLES
 HR_COL_ROLE,Rol,Role
@@ -426,6 +428,7 @@ PER_TENURE_KEY,Kıdem,Tenure
 PER_TENURE_VALUE,{n}. hafta,Week {n}
 HR_FOUNDER_STATE_BUILD,Yapımda görev alıyor,Working on the build
 HR_FOUNDER_STATE_SALES,Satışta,In sales
+HR_FOUNDER_STATE_MARKETING,Pazarlamada,In marketing
 HR_FOUNDER_STATE_SUPPORT,Destekte,On support
 HR_FOUNDER_STATE_RESEARCH,Araştırmada,In research
 HR_FOUNDER_STATE_TRAINING,Eğitimde,In training
@@ -560,6 +563,8 @@ HR_ROLE_DEVELOPER,Yazılım Mühendisi,Software Engineer
 HR_ROLE_TESTER,Test Mühendisi,QA Engineer
 HR_ROLE_SALES_REP,Satış Temsilcisi,Sales Representative
 HR_ROLE_CUSTOMER_REP,Müşteri Temsilcisi,Customer Success Manager
+HR_ROLE_MARKETING_SPECIALIST,Pazarlama Uzmanı,Marketing Specialist
+HR_ROLE_MARKETING_MANAGER,Pazarlama Müdürü,Marketing Manager
 HR_ROLE_MENTOR,Operating Partner,Operating Partner
 HR_LEVEL_PREFIX_JUNIOR,Junior,Junior
 HR_LEVEL_PREFIX_SENIOR,Kıdemli,Senior
@@ -807,7 +812,8 @@ HR_ROLE_HINT_DEVELOPER,Ürünü yazar. Kod tabanı ondan çıkar.,Writes the pro
 HR_ROLE_HINT_TESTER,Ürünü kırmaya çalışır. Bulduğu her hata müşteriye gitmeyen hatadır.,Tries to break the product. Every bug they find is one the customer never sees.
 HR_ROLE_HINT_SALES_REP,"Aday müşteri bulur, anlaşmayı kapatır.",Finds prospects and closes them.
 HR_ROLE_HINT_CUSTOMER_REP,Mevcut müşterileri elde tutar. Müşteriden gelen her şey önce ona uğrar.,Keeps existing customers. Everything from a customer reaches them first.
-HR_ROLE_HINT_MARKETING,Ürünü duyurur ve talebi büyütür.,Gets the product heard and grows demand.
+HR_ROLE_HINT_MARKETING_SPECIALIST,Ürünü duyurur ve talebi büyütür.,Gets the product heard and grows demand.
+HR_ROLE_HINT_MARKETING_MANAGER,"Pazarlama bütçesini kanallara dağıtır, büyük ekibi bir arada tutar.",Splits the marketing budget across channels and keeps a large team in step.
 HR_ROLE_HINT_HR_INHOUSE,İşe alımı ve ekibin iç işlerini şirket içinden yürütür.,Runs hiring and the team's internal affairs from inside the company.
 HR_AGENCY_NAME,Atlas Recruitment,Atlas Recruitment
 HR_RESIGN_VOICE_1,"""Bir süre düşündüm. Burada tükeniyorum, daha fazla taşımak istemiyorum.""","""I've thought about it for a while. I'm burning out here, and I don't want to carry it anymore."""

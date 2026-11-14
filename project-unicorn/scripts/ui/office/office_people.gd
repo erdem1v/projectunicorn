@@ -33,6 +33,7 @@ const JOB_WORK := {
 	HRConstants.JOB_SALES: "phone",
 	HRConstants.JOB_SUPPORT: "phone",
 	HRConstants.JOB_ACCOUNTS: "phone",
+	HRConstants.JOB_MARKETING: "plan",
 }
 const WORK_BODY := {"code": "type", "test": "type", "design": "notes", "research": "read", "plan": "notes",
 	"phone": "phone", "idle": "lean_back"}
