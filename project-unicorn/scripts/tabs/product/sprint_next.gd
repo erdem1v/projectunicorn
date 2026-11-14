@@ -111,18 +111,16 @@ func _pm_row(pm: Dictionary, tight: bool) -> PanelContainer:
 	return row
 
 
-## Ekipte PM yokken: boş disk ve soluk "PM yok".
+## Ekipte PM yokken eksik rolün biçimi: kesik çizgili boş koltuk ve "PM YOK" etiketi.
 func _no_pm() -> PanelContainer:
 	var row := PanelContainer.new()
 	row.theme_type_variation = &"PrepRow"
 	var line := SprintUiShared.box(UiTokens.SPACE_L)
 	row.add_child(line)
-	var disc := Panel.new()
-	disc.theme_type_variation = &"FaceGhost"
-	disc.custom_minimum_size = Vector2.ONE * UiTokens.D_AVATAR_ROW
-	disc.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	line.add_child(disc)
-	line.add_child(SprintUiShared.label(tr("PRODUCT_NO_PM"), &"DataStrong", UiTokens.D_INK_OFF))
+	var seat := SprintUiShared.Seat.new("product", UiTokens.D_AVATAR_ROW)
+	seat.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	line.add_child(seat)
+	line.add_child(UiFactory.D_tag(tr("PRODUCT_NO_PM"), &"outline"))
 	HRUiShared.set_mouse_ignore(line)
 	row.tooltip_text = tr("PRODUCT_NO_PM_TIP")
 	return row

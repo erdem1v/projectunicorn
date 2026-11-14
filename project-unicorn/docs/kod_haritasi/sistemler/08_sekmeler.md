@@ -48,7 +48,7 @@ Alt klasörler:
   ↳ `SprintSystem.begin_planned`) ya da sprint sürerken ilerleme (`set_progress`). Devirde iki kipte de solda PM'in yüzü, "{PM} planlıyor" ve "Planlamayı geri al";
   ↳ sağda planlamada "Kendiliğinden başlar" (kartlı planda ekip yokken onun yerine çıkış yolu), sprint sürerken ilerleme
   ↳ (çubuğu `D_W_PROGRESS_BAR_TIGHT`e kadar kısalır, ad kesilmez); kutunun ipucu "Efor {biten}/{toplam}" `set_progress`ta sayfa kurulmadan yenilenir.
-- `scripts/tabs/product/sprint_next.gd` (344): `SprintNext`: sağ sütun: HAZIRLIK (PM satırları ya da "PM yok"), sonraki sprint kutusu (kesikli): aşama yükü (`StagePaint` `load`), DEVREDEN (en çok 4 satır ve "+{n} kart"), KARTLAR
+- `scripts/tabs/product/sprint_next.gd` (344): `SprintNext`: sağ sütun: HAZIRLIK (PM satırları ya da eksik rolün biçiminde boş koltuk ve "PM YOK" etiketi), sonraki sprint kutusu (kesikli): aşama yükü (`StagePaint` `load`), DEVREDEN (en çok 4 satır ve "+{n} kart"), KARTLAR
   ↳ (tür ikonu, ad, efor, aşama şeridi `seg`, önden çalışanların yüzleri, hazırlayan PM: hazırsa yalnız tik, ipucu "Hazır"; üstüne gelince "↑" ve "×"); her aşama kendi payıdır, önden biten pay kendi renginde dolar;
   ↳ yüzler `FaceCell`te (sığmayanlar "+{n}", hücre en az bir yüz ve "+{n}" kadar geniştir); kart adı kesilmez, sarar ve satır büyür;
   ↳ PM satırında ad, hazırlıktaysa altında "hazırlıkta" (hazırladığı kartların sayısı yazılmaz; panodaki satırın hazırlayan yüzü ve ipucu söyler); kart ve devreden yoksa yalnız başlık ve aşama yükü.
@@ -69,7 +69,7 @@ Alt klasörler:
 - `scripts/tabs/product/sprint_head.gd` (106): `SprintHead`: SPRINT N, çeyrek çentikleri, hafta rozeti, ekip rozeti, çeyrek hedef seçicisi (`pick_goal`); rozetler akar, kesilmez.
 - `scripts/tabs/product/capacity_view.gd` (339): `CapacityView`: KAPASİTE başlığı ve öneri satırı (`apply_lead`), üç aşama satırı (oluk, dolgu, "{iş} / {ekip}", rozet, yüzler, kümeler), taşma ipucu paneli (`D_W_TIP`);
   ↳ uzmanı olmayan aşamada (`ProductModel.SPECIALIST_STAGES`, `missing`) adın yanında "TASARIMCI YOK" / "TESTÇİ YOK" etiketi (sütun genişliğine
-  ↳ girer), yüzlerin önünde kesik çizgili boş koltuk (`Seat`), aşamada çalışan öbür satırların çipsiz yüzleri (`helpers`) ve taralı dolgu;
+  ↳ girer), yüzlerin önünde kesik çizgili boş koltuk (`SprintUiShared.Seat`), aşamada çalışan öbür satırların çipsiz yüzleri (`helpers`) ve taralı dolgu;
   ↳ rozetin düz ipucu "Sığıyor" ya da "{n} efor sonraki sprinte kalır";
   `set_ghost`, `set_done`; etiket sütunu üç satırda aynı genişliktedir (en az `D_W_CAP_LABEL`, dilin en uzun aşama adı), sayı sütunu içeriğiyle genişler (`Cell`).
 - `scripts/tabs/product/stage_paint.gd` (340): `StagePaint`: sprint ekranının tek çizim sınıfı (Kapasite: `groove`, `busy`, `bracket`; pano: `grid`, `now`, `early`, `bar`, `label`, `wait`, `shadow`, `meet`, `tick`,

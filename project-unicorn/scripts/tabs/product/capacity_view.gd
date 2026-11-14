@@ -34,21 +34,6 @@ class Cell extends Control:
 		return Vector2(maxf(least, (get_child(0) as Control).get_combined_minimum_size().x), UiTokens.D_H_CAP_LINE)
 
 
-## Uzmanı olmayan aşamanın boş koltuğu: yüz kadar, kesik çizgili halka ve ortasında aşamanın rol ikonu.
-class Seat extends CenterContainer:
-	const DASHES := 12
-
-	func _init(stage: String) -> void:
-		custom_minimum_size = Vector2.ONE * UiTokens.D_AVATAR_ROW_SM
-		size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-		add_child(UiFactory.make_glyph(SprintUiShared.ROLE_ICONS[stage], UiTokens.D_ICON_MARK, UiTokens.D_INK_3))
-
-	func _draw() -> void:
-		var r: float = minf(size.x, size.y) / 2.0 - UiTokens.BORDER_FOCUS
-		for i in DASHES:
-			draw_arc(size / 2.0, r, TAU * i / DASHES, TAU * (i + 0.5) / DASHES, 4, UiTokens.D_INK_3, UiTokens.BORDER_FOCUS, true)
-
-
 var _rows: Array = []
 var _grooves: Array = []
 ## Her satırın "yapıldı" taşıyan ipucunun düğümleri [etiket, sayı]: sprint sürerken yenilenir.
@@ -249,7 +234,7 @@ func _people(row: Dictionary) -> HFlowContainer:
 	flow.add_theme_constant_override("h_separation", UiTokens.SPACE_XS)
 	flow.add_theme_constant_override("v_separation", UiTokens.SPACE_XS)
 	if row.missing:
-		var seat := Seat.new(row.stage)
+		var seat := SprintUiShared.Seat.new(row.stage, UiTokens.D_AVATAR_ROW_SM)
 		seat.tooltip_text = tr(MISSING_KEYS[row.stage][1])
 		flow.add_child(seat)
 		if row.helpers.size() > ProductModel.CLUSTER_OVER:

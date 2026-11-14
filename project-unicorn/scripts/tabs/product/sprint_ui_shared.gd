@@ -34,6 +34,21 @@ const ROW_KEYS := {"send_next": [ARROW, "PRODUCT_TO_NEXT"], "pull": ["res://asse
 const TREND_ICONS := {1: "res://assets/icons/util/tri_up.svg", -1: "res://assets/icons/util/tri_down.svg"}
 
 
+## Eksik rolün boş koltuğu (kapasite satırı, Hazırlık): `px` kadar, kesik çizgili halka ve ortasında rolün ikonu.
+class Seat extends CenterContainer:
+	const DASHES := 12
+
+	func _init(role: String, px: int) -> void:
+		custom_minimum_size = Vector2.ONE * px
+		size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		add_child(UiFactory.make_glyph(ROLE_ICONS[role], UiTokens.D_ICON_MARK, UiTokens.D_INK_3))
+
+	func _draw() -> void:
+		var r: float = minf(size.x, size.y) / 2.0 - UiTokens.BORDER_FOCUS
+		for i in DASHES:
+			draw_arc(size / 2.0, r, TAU * i / DASHES, TAU * (i + 0.5) / DASHES, 4, UiTokens.D_INK_3, UiTokens.BORDER_FOCUS, true)
+
+
 ## `count` kare: soldan `level` kadarı `color`da dolu (kesirli seviye kareyi kısmen doldurur), gerisi çizgidir.
 class Squares extends Control:
 	var level: float

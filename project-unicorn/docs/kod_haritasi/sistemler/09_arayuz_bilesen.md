@@ -141,7 +141,7 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 - Bu bloğun varyasyonları yalnız koyu temadadır: `SprintTitle`, `HeadMeta`, `CrewTotal`, `GoalPick(+Set)`, `QuarterNotch(+Past, +Now)`, `WeekBar`, `FaceRing`,
   `StarChip`, `ClusterStars`, `AwayLabel`, `CapBlock`, `CapRow(+Hot)`, `CapStage`, `CapFigure`, `CapTeam`, `CapBadgeOver(+Ink)`, `CapStreak(+Ink)`; panonun: `StageNum`, `AxisLabel`, `MoreHint`,
   `SprintRow(+Hover, +Cand, +CandHover, +Late(+Cb))`, `RowActs`, `RowKey`, `MoreHintPill(+Late(+Cb))`, `GhostRow`;
-  alt şeridin ve sağ sütunun: `DelegateBox(+Hover, +Locked)`, `ProgressBox`, `ProgressFigure`, `NextTitle`, `NextBox`, `NextCard`, `PrepRow(+Tight)`, `FaceGhost`, `LoadNum`, `CarriedRow`, `CarriedRest`.
+  alt şeridin ve sağ sütunun: `DelegateBox(+Hover, +Locked)`, `ProgressBox`, `ProgressFigure`, `NextTitle`, `NextBox`, `NextCard`, `PrepRow(+Tight)`, `LoadNum`, `CarriedRow`, `CarriedRest`.
 - `StagePaint` (`scripts/tabs/product/stage_paint.gd`): StyleBox'ın çizemediği izler (şeritli taşma, kesikli çizgi, üç satırın ayracı, çubuklar) için tek Control; `kind` StringName, ölçü ve renk token'dan, yerleşim sahibinde.
   Kapasite: `groove`, `busy`, `bracket`. Pano: `grid` (hafta ayracı, sprint sonu çizgisi, sonraki sprintin çizgili zemini), `now` (şimdiki an çizgisi ve üçgeni), `early` (erken kapanışın taralı alanı), `bar` (aşamanın çubuğu:
   plan, koşan, biten, bekleyen, sprint dışı, hayalet; sol başta dolgu), `label` (çubuğun ikonu ve sayısı: sığmazsa önce ikon sonra sayı düşer), `wait` (bekleme noktalı çizgisi), `shadow` (PM'in gölgesi), `meet` (görüşme taraması),

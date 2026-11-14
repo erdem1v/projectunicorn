@@ -1066,9 +1066,9 @@ func _menajer(master: Theme) -> Theme:
 	# The header's quarter notches and week bars, the goal pick, and the capacity block: its frame, a person's ring.
 	for row in [
 		[&"QuarterNotch", clear, T.D_LINE_3], [&"QuarterNotchPast", T.D_LINE_3, clear], [&"QuarterNotchNow", T.D_INK_1, clear],
-		[&"FaceRing", clear, T.D_INK_1], [&"FaceGhost", clear, T.D_LINE_2],
+		[&"FaceRing", clear, T.D_INK_1],
 	]:
-		var round_face: bool = row[0] in [&"FaceRing", &"FaceGhost"]
+		var round_face: bool = row[0] == &"FaceRing"
 		_panel(th, row[0], "Panel", _flat(row[1], T.RADIUS_PILL if round_face else T.D_RADIUS_1, Vector4.ZERO, row[2],
 			Vector4i.ONE * (T.BORDER_FOCUS if round_face else T.BORDER_HAIRLINE)))
 	th.set_type_variation(&"WeekBar", &"ProgressBar")

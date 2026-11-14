@@ -1763,22 +1763,6 @@ border_width_right = 1
 border_width_bottom = 1
 border_color = Color(0.43137255, 0.39607844, 0.3254902, 1)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1768e"]
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
-bg_color = Color(1, 1, 1, 0)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.2901961, 0.25882354, 0.22352941, 1)
-corner_radius_top_left = 999
-corner_radius_top_right = 999
-corner_radius_bottom_right = 999
-corner_radius_bottom_left = 999
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6c7c4"]
 content_margin_left = 0.0
 content_margin_top = 0.0
@@ -7218,8 +7202,6 @@ Eyebrow/base_type = &"Label"
 Eyebrow/colors/font_color = Color(0.6039216, 0.5686275, 0.5176471, 1)
 Eyebrow/font_sizes/font_size = 12
 Eyebrow/fonts/font = ExtResource("d_wide_sb_caps_618c0")
-FaceGhost/base_type = &"Panel"
-FaceGhost/styles/panel = SubResource("StyleBoxFlat_1768e")
 FaceRing/base_type = &"Panel"
 FaceRing/styles/panel = SubResource("StyleBoxFlat_6c7c4")
 FactBox/base_type = &"PanelContainer"
@@ -8860,7 +8842,7 @@ TopicPill/fonts/font = ExtResource("d_cond_b_caps_3c3ce")
 TopicPill/styles/normal = SubResource("StyleBoxFlat_1b27f")
 TraitBox/base_type = &"PanelContainer"
 TraitBox/styles/panel = SubResource("StyleBoxFlat_e9fa3")
-UiTokensStamp/constants/stamp = 54
+UiTokensStamp/constants/stamp = 55
 VScrollBar/styles/grabber = SubResource("StyleBoxFlat_1c24c")
 VScrollBar/styles/grabber_highlight = SubResource("StyleBoxFlat_85a39")
 VScrollBar/styles/grabber_pressed = SubResource("StyleBoxFlat_85a39_2")
