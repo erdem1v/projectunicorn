@@ -388,7 +388,9 @@ Dört kural. `set_policy(kural, seçenek)` kuralı değiştirir ve dört hafta k
 
 ### 3.11 Talepler
 - `request_topics()` satırları döndürür: konu, taraf, modül, son dört haftanın bileti, haftada etkilenen sipariş, neden,
-  durum, konunun yaşı, kaynak. Demodaki konu kataloğu ve bilet oranları `tur4_ekranlar_2026-11-13/pazaryeri/
+  durum, konunun yaşı, kaynak ve konunun kartının kimliği (`card_id`: kademe konusunda modülün o kademesinin özellik kartı,
+  ek özellikte `ext:<konu>`). Yalnız ilk isteği gelmiş konu satır olur; durum kapanışta yazılır (hafta içinde plana alınan
+  konu sonraki kapanışa kadar "bekliyor" okunur). Demodaki konu kataloğu ve bilet oranları `tur4_ekranlar_2026-11-13/pazaryeri/
   TALEPLER_ICERIK.md` §2 ve §3'teki on iki konudur; katalog `data/product/marketplace.json`'a girer (konu, taraf, modül, sıradaki
   kademe ya da ek özellik, bağlı adım, bilet oranı; kullanıcı tarafındaki ek özellikte eksikken adım çarpanı).
 - **Kullanıcı bileti** (haftalık): konunun bağlı olduğu adımda kaybedilen sayı × konunun bilet oranı (Sepete eklemeyen

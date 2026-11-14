@@ -662,6 +662,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"marketplace_premium_closed_no_burn": fail = _case_marketplace_premium_closed_no_burn()
 		"marketplace_erp_run_untouched":     fail = _case_marketplace_erp_run_untouched()
 		"support_backlog_row_survives":      fail = _case_support_backlog_row_survives()
+		"marketplace_topic_planned":         fail = _case_marketplace_topic_planned()
+		"marketplace_open_topic_report":     fail = _case_marketplace_open_topic_report()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -31111,4 +31113,90 @@ static func _case_support_backlog_row_survives() -> String:
 	_sim_day()
 	if not backlog.call().is_empty():
 		return "every report was answered and the Support backlog row stayed: %s" % str(backlog.call())
+	return ""
+
+
+## Talepler satırının durumu kapanışta ürünün kademesinden ve sprint planından okunur: kademe konusunun kartı koşan sprintte ya da sonraki
+## sütunda duruyorsa `planned`, plandan çıkınca `waiting`, modül o kademeye varınca `shipped` ve isteği gelmiş konuda kullanıcı tarafının
+## defterine "Karşılandı" yazılır. Her kademe konusunun `card_id`'si modülün o kademesinin gerçek aday kartıdır; ek özelliğin
+## `ext:<konu>`'dur.
+##
+## FALSİFİKASYON: `MarketplaceSystem.world`de `planned`i boş bırak → `planned` iddiaları FAIL; `_planned`ta yalnız koşan sprinti oku →
+## sonraki sütun iddiası FAIL, yalnız sonraki sütunu oku → koşan sprint iddiası FAIL; `_tier_card`ı modülün hat kimliğiyle kur
+## ("feat:" + hat) → kart iddiası FAIL; `_tier_card`ta kademeyi bir artır → kart iddiası FAIL.
+static func _case_marketplace_topic_planned() -> String:
+	_seed_marketplace_world()
+	MarketplaceSystem.daily_tick()
+	var tiers: Dictionary = MarketplaceModel.tier_topics()
+	var rows: Array = MarketplaceSystem.request_topics()
+	if rows.filter(func(r: Dictionary) -> bool: return tiers.has(r.id)).size() != tiers.size():
+		return "fixture: a tier topic has no row after the first close"
+	for r: Dictionary in rows:
+		if tiers.has(r.id):
+			var card: Dictionary = SprintCatalog.card_by_id(r.card_id)
+			if card.is_empty() or card.line != MarketplaceSystem.MODULE_LINES[tiers[r.id].module] or card.target_tier != tiers[r.id].tier:
+				return "tier topic %s names card %s, not its module's next tier card (%s)" % [r.id, r.card_id, str(card.get("id"))]
+		elif r.card_id != "ext:" + r.id:
+			return "extra feature %s names card %s, want ext:%s" % [r.id, r.card_id, r.id]
+	var topic := "reviews_ratings"
+	var card_id := "feat:line_marketplace_reviews_k1"
+	var status := func() -> String:
+		for r: Dictionary in MarketplaceSystem.request_topics():
+			if r.id == topic:
+				return r.status
+		return ""
+	var close := func() -> void:
+		GameState.advance_day()
+		MarketplaceSystem.daily_tick()
+	var met := func() -> Array:
+		return GameState.marketplace.ledger.users.filter(func(r: Dictionary) -> bool: return r.key == "met" and r.arg == topic)
+	if status.call() != "waiting":
+		return "the reviews topic reads '%s' with no card planned, want 'waiting'" % status.call()
+	SprintSystem.add(card_id)
+	if card_id not in GameState.product.sprint.cards:
+		return "fixture: the card did not enter this sprint"
+	close.call()
+	if status.call() != "planned":
+		return "the card is in this sprint and the topic reads '%s', want 'planned'" % status.call()
+	SprintSystem.remove(card_id)
+	close.call()
+	if status.call() != "waiting":
+		return "the card left the plan and the topic reads '%s', want 'waiting'" % status.call()
+	SprintSystem.send_next(card_id)
+	if card_id not in GameState.product.next.cards:
+		return "fixture: the card did not enter the next column"
+	close.call()
+	if status.call() != "planned":
+		return "the card is in the next column and the topic reads '%s', want 'planned'" % status.call()
+	if not met.call().is_empty():
+		return "a 'Met' row was written before the topic shipped"
+	ProductState.set_line_tier("line_marketplace_reviews", 1)
+	close.call()
+	if status.call() != "shipped" or met.call().size() != 1:
+		return "the module reached the tier: the topic reads '%s' with %d 'Met' rows, want 'shipped' and one" % [status.call(), met.call().size()]
+	return ""
+
+
+## Rapordan açılan konu satır olur: `open_topic` bileti olmayan konuyu açar (kaynak `report`, verilen etkilenen sipariş, kartı
+## `ext:<konu>`); aynı konunun ikinci çağrısı ve katalogda olmayan konu reddedilir ve sinyal yaymaz.
+##
+## FALSİFİKASYON: `MarketplaceSystem.open_topic`te `_written` yerine sonucu doğrudan döndür → sinyal satırı FAIL; `request_topics`ta ek
+## özelliğin kimliğini `feat:` ile kur → kart satırı FAIL.
+static func _case_marketplace_open_topic_report() -> String:
+	_seed_marketplace_world()
+	var emits: Array[int] = [0]
+	EventBus.marketplace_changed.connect(func() -> void: emits[0] += 1)
+	var rows := func() -> Array:
+		return MarketplaceSystem.request_topics().filter(func(r: Dictionary) -> bool: return r.id == "coupon_abuse")
+	if not rows.call().is_empty():
+		return "a topic with no ticket and no report already has a row"
+	if not MarketplaceSystem.open_topic("coupon_abuse", 12.0) or emits[0] != 1:
+		return "open_topic did not apply with one emit (emits %d)" % emits[0]
+	var row: Dictionary = rows.call()[0]
+	if row.source != "report" or row.affected != 12.0 or row.card_id != "ext:coupon_abuse" or row.side != "users" or row.tickets != 0.0:
+		return "the opened topic reads %s" % str(row)
+	if MarketplaceSystem.open_topic("coupon_abuse", 30.0) or MarketplaceSystem.open_topic("no_such_topic", 5.0) or emits[0] != 1:
+		return "a second call or an unknown topic applied or emitted (emits %d)" % emits[0]
+	if rows.call()[0].affected != 12.0:
+		return "the second call overwrote the reported figure with %s" % rows.call()[0].affected
 	return ""

@@ -45,7 +45,7 @@ static func world() -> Dictionary:
 		if _can_work(c):
 			stars[person] = 1 if c.category == "founder" else int(HRConstants.stars_for(HRSystem.skill(c, HRConstants.AREA_SALES)))
 	return {"week": GameState.day, "published": ProductState.is_live(), "tiers": tiers, "bugs": bugs, "stars": stars,
-		"unanswered": SupportSystem.unanswered_share()}
+		"unanswered": SupportSystem.unanswered_share(), "planned": _planned()}
 
 
 # --- Yazan seam'ler -----------------------------------------------------------------------------
@@ -88,6 +88,11 @@ static func add_users(n: float) -> bool:
 	return _written(MarketplaceModel.add_users(_s(), n))
 
 
+## Bileti olmayan konuyu rapordan açar: `affected` haftalık etkilenen sipariş.
+static func open_topic(id: String, affected: float) -> bool:
+	return _written(MarketplaceModel.open_topic(_s(), world(), id, affected))
+
+
 ## Atanabilen: işbaşındaki kurucu ya da Satış Temsilcisi.
 static func _can_work(c: Character) -> bool:
 	return c != null and c.status == HRConstants.STATUS_ACTIVE and (c.category == "founder" or c.role == HRConstants.ROLE_SALES_REP)
@@ -124,6 +129,28 @@ static func stores() -> float:
 	for cat in MarketplaceModel.open_ids(state):
 		total += state.cats[cat].stores
 	return total
+
+
+## Talepler'in satırları: modelin satırları ve her satırın kartının kimliği; kademe konusunda modülün o kademesinin özellik kartı
+## (`feat:<adım>`), ek özellikte `ext:<konu>`.
+static func request_topics() -> Array:
+	var tiers := MarketplaceModel.tier_topics()
+	var rows: Array = MarketplaceModel.topic_rows(_read(), world())
+	for row in rows:
+		row.card_id = _tier_card(tiers[row.id]) if tiers.has(row.id) else "ext:" + row.id
+	return rows
+
+
+## Kademe konusunun kartının kimliği: modülün o kademesinin adımının özellik kartı.
+static func _tier_card(topic: Dictionary) -> String:
+	return "feat:" + String(ProductLines.step_at(MODULE_LINES[topic.module], topic.tier).id)
+
+
+## Kartı koşan sprintte ya da sonraki sütunda duran kademe konularının kimliği.
+static func _planned() -> Array:
+	var cards: Array = GameState.product.get("sprint", {}).get("cards", []) + GameState.product.get("next", {}).get("cards", [])
+	var tiers := MarketplaceModel.tier_topics()
+	return tiers.keys().filter(func(id: String) -> bool: return _tier_card(tiers[id]) in cards)
 
 
 # --- Haftalık kapanış ---------------------------------------------------------------------------

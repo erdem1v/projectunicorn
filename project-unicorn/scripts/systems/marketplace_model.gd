@@ -652,6 +652,15 @@ static func _settle(state: Dictionary, world: Dictionary, totals: Dictionary) ->
 
 # --- Talepler: konular ve biletler -----------------------------------------------------------
 
+## Kademe konularının modülü ve kademesi ({konu: {module, tier}}); ek özelliklerin kademesi yoktur.
+static func tier_topics() -> Dictionary:
+	var out := {}
+	for topic in _c.topics.catalog:
+		if topic.has("tier"):
+			out[topic.id] = {"module": topic.module, "tier": int(topic.tier)}
+	return out
+
+
 ## Konunun özelliği yayında mı: kademe konusunda modülün kademesi yetiyor, ek özellikte dünyanın yayındaki listesinde.
 static func _topic_live(world: Dictionary, topic: Dictionary) -> bool:
 	if topic.has("tier"):

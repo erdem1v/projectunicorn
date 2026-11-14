@@ -34,9 +34,11 @@ kapanışından sonra), ikisi de Finans'tan önce (`:416`). Sıra doğruluğu de
   tarafında bir konu açar. Kupon ve kargo eşiği kural ezmez.
 - **ERP:** aday bir kayıttır, sahibin seam'iyle doğar (`SalesFaucetSystem.spawn(star, source)`, kaynak `mkt_*`); ziyaret bir
   toplamdır, okunur.
-- **Bilet satırı:** pazaryerinde bilet tiki Pazaryeri'nin sistem paketindedir; alanlar `talepler/TASARIM.md` §11'deki gibi.
-  Pazaryeri kapanışında sürüm kaydını okur (`GameState.product.releases`) ve kendi defterine "Karşılandı: <konu>", sekiz
-  haftayı geçen konuya "Geciken talep: <konu>" yazar; `sprint_bridges.gd` pazaryerini bilmez. `tick_requests` OLAYLAR'ındır.
+- **Bilet satırı:** pazaryerinde bilet tiki Pazaryeri'nin kapanışının içindedir; alanlar `talepler/TASARIM.md` §11'deki gibi.
+  Konunun durumu (bekliyor, planda, yayında) kapanışta ürünün kademesinden ve sprint planından okunur; kapanış kendi
+  defterine "Karşılandı: <konu>", sekiz haftayı geçen konuya "Geciken talep: <konu>" yazar. Talepler görünümü satırları
+  `MarketplaceSystem.request_topics()`'ten okur (her satırda konunun `card_id`'si); `sprint_bridges.gd` pazaryerini bilmez.
+  `tick_requests` OLAYLAR'ındır.
 
 Yardımcı yönetmenin kararları (13 Kasım; adlar Erdem'in onayında): taraf adları her ekranda "kullanıcı" ve "mağaza"; ikinci
 göstergenin adı "Reklam doyumu". Ödeyen tarafın adı açık: Pazarlama "Şirket" yazıyor, Politikalar Erdem'in önerisiyle "Biz

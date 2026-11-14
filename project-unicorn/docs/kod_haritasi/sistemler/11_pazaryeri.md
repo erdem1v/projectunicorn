@@ -6,8 +6,8 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 
 ## Dosyalar
 
-- `systems/marketplace_model.gd` (986): `MarketplaceModel`; yalnız `static` işlevler. `state` ve `world` sözlüklerinin alanları dosya başındaki yorumda.
-- `systems/marketplace_system.gd` (171): `MarketplaceSystem`; yalnız `static` işlevler. `GameState.marketplace`'in tek yazarı, yazan seam'ler, sözleşme okuyucuları, `world()` ve haftalık kapanış.
+- `systems/marketplace_model.gd` (995): `MarketplaceModel`; yalnız `static` işlevler. `state` ve `world` sözlüklerinin alanları dosya başındaki yorumda.
+- `systems/marketplace_system.gd` (198): `MarketplaceSystem`; yalnız `static` işlevler. `GameState.marketplace`'in tek yazarı, yazan seam'ler, sözleşme okuyucuları, `world()` ve haftalık kapanış.
 - `debug/marketplace_probe.gd` (1034): `-s` betiği; oynanan çizelge ve 37 mekanik denetimi, `MPPROBE ...` satırları.
 - `data/product/categories.json` (16): altı kategori ve sütunları: sepet, ziyaret sıklığı, kâr payı, sektör iadesi, gereken mağaza, başlangıç komisyonu, taban ilgi, büyük sepet payı, reklam havuzu (`ad_pool`, haftalık arama).
 - `data/product/lines/marketplace.json` (153): modül verisi; 5 kimlik hattı (Ürün Yükleme, Vitrin, Sepet ve Ödeme, Siparişler, Yorum ve Güvence)
@@ -19,8 +19,8 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 ## Giriş noktaları
 
 - Sistem (`MarketplaceSystem`): `TYPE_ID` ("marketplace"), `MODULE_LINES` (modelin dokuz modülünden oyundaki hat kimliğine; paylaşılan dört hat `@marketplace` son ekiyle; Üyelik hattı değil `SprintCatalog.PAID_PLAN`).
-  ↳ `world()` her çağrıda sahiplerden kurulur: `week` `GameState.day`, `published` `ProductState.is_live()`, `tiers` ve `bugs` hat kimliğiyle, `stars` atanmışların Satış yıldızı (kurucu 1), `unanswered` Destek'in cevapsız bildirim payı (`SupportSystem.unanswered_share`); kalan alan modelin varsayılanında.
-  ↳ Yazan seam'ler (`true` uygulandı ve sinyal yayıldı, `false` reddedildi): `open_category`, `set_commission`, `set_policy`, `set_fee`, `set_perk`, `set_trial`, `set_store_terms`, `add_users`, `assign`, `unassign`.
+  ↳ `world()` her çağrıda sahiplerden kurulur: `week` `GameState.day`, `published` `ProductState.is_live()`, `tiers` ve `bugs` hat kimliğiyle, `stars` atanmışların Satış yıldızı (kurucu 1), `unanswered` Destek'in cevapsız bildirim payı (`SupportSystem.unanswered_share`), `planned` kartı koşan sprintte ya da sonraki sütunda duran kademe konularının kimliği (`_planned`); `features` bağlı değil (ek özellik kartları sonraki pakette); kalan alan modelin varsayılanında.
+  ↳ Yazan seam'ler (`true` uygulandı ve sinyal yayıldı, `false` reddedildi): `open_category`, `set_commission`, `set_policy`, `set_fee`, `set_perk`, `set_trial`, `set_store_terms`, `add_users`, `open_topic`, `assign`, `unassign`.
   ↳ `assign(kişi, kategori)`: yalnız işbaşındaki (`STATUS_ACTIVE`) kurucu ya da Satış Temsilcisi ve açık kategori; `daily_tick` kapanıştan önce yalnız kaydı kalmayanın (işten ayrılan) atamasını düşürür, izinli ve eğitimdeki kişi atamasını korur ama `world().stars`ta olmadığı için o hafta kazandırmaz.
   ↳ `_reflect` iki toplu `CustomerRegistry` kaydını (`STORES_ID` `co_mp_stores`, `USERS_ID` `co_mp_users`; `b2c`, `individual`, yayından sonraki ilk kapanışta doğar) yalnız seam'le yazar: komisyon mağazalar kaydının, üyelik kullanıcılar kaydının MRR'ı (eksi net komisyonda MRR 0'da durur, `revenue_weeks` eksiyi saklar),
   ↳ koltuk mağaza sayısı ve ücret ödeyen üye (`MarketplaceModel.paying_members`), memnuniyet modelin `sat`'ının tam sayısı; en sonda `SalesSystem.reflect_mrr()`. `CustomerRegistry.account_count` `individual` kayıtları saymaz.
@@ -42,7 +42,9 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
   ↳ `organic` (kendiliğinden haftalık ziyaret), `margin`, `base_interest`, `ad_pool`;
   ↳ `source_revenue(state, world, kaynak)` = kaynaktan son on iki haftada gelenlerin (elde tutmayla küçülmüş) son dört haftada bıraktığı net komisyon;
   ↳ kullanıcı o dört haftanın burada olduğu kadarıyla sayılır (bu hafta gelen dörtte bir), yani yeni kanalın satırı küçük başlar.
-- Talepler: `topic_rows(state, world)` ilk isteği gelmiş her konunun satırı (`id`, `side`, `module`, `tickets`, `affected`, `reason`, `status`, `age`, `source`); konu kimlikleri `marketplace.json` `topics.catalog`'ta, metin yok.
+- Talepler (sistem): `request_topics()` modelin `topic_rows`'u ve her satıra `card_id`: kademe konusunda modülün o kademesinin adım kimliğiyle `feat:<adım>` (hat `MODULE_LINES`'tan, adım `ProductLines.step_at`ten; `SprintCatalog` adayının kimliğiyle aynı kalıp), ek özellikte `ext:<konu>` (kartı sonraki pakette doğar);
+  ↳ `open_topic(kimlik, etkilenen)` modelin `open_topic`ini çağıran yazan seam (uygulanınca sinyal, reddedilen çağrı yaymaz). Konu durumu (`waiting`, `planned`, `shipped`) kapanışta ürünün kademesinden ve sprint planından okunur; `MarketplaceModel.tier_topics()` kademe konularının modülünü ve kademesini verir.
+- Talepler (model): `topic_rows(state, world)` ilk isteği gelmiş her konunun satırı (`id`, `side`, `module`, `tickets`, `affected`, `reason`, `status`, `age`, `source`); konu kimlikleri `marketplace.json` `topics.catalog`'ta, metin yok.
 - Rapordan açılan konu: `open_topic(state, world, kimlik, etkilenen)` bileti olmayan konunun satırını açar (`since_day` = hafta, `source` = `report`, haftalık etkilenen sipariş `topics[konu].affected`); katalogda olmayan ya da satırı açık konuda false.
 - Önizleme: `project(state, world)` kopyada dört kapanış koşar; `preview_commission`, `preview_policy`, `preview_premium` değişiklikli ve değişiklikssiz farkı döndürür (`metrics` anahtarları; `store_earnings` oran, öbürleri fark);
   ↳ reddedilen değişiklikte `{}`.
@@ -101,7 +103,7 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
   ↳ kampanya satırına yazılır; iki satırın toplamı her zaman teslim × kargo bedelidir.
 - "Zorlanıyor" ve "Kazancı yetmiyor" defter satırları yalnız mağazası olan kategoriye yazılır; "Seçenek az" tersine mağazası azken yanar.
 - Önizleme çipleri `world.week`'ten başlayan dört kapanışın sonudur (kilit süresi); olay, acil durum (bekleyen kesinti ve komisyonsuz hafta dahil) ve kampanya kaybı koşulmaz, Pazarlama'nın değerleri sabit kalır.
-- `world.features` katalogdaki konu kimliğini taşır; sistem ürünün ek özellik kartını bu kimliğe eşler. Kimlikler eşleşmezse konu hiç yayına çıkmış sayılmaz,
+- `world.features` katalogdaki konu kimliğini taşır; sistem ürünün ek özellik kartını bu kimliğe eşler (sistem henüz bağlamadı, boş kalır). Kimlikler eşleşmezse konu hiç yayına çıkmış sayılmaz,
   ↳ adımı kısmaya ve "Geciken talep" satırı kalıcı olmaya devam eder.
 - JSON turundan sayılar float, anahtarlar metin döner; model gün ve sayaçları `int(...)` ile okur. Kişi kimlikleri `assign` ve `stars` anahtarıdır, metin olmalı.
 - Kodlayıcı tam değerli ondalığı tam sayıya çevirir (`SaveCodec._normalize_number`): iki durum değerini bölen yer bir tarafı `float(...)` okur (`retention`, `returning_share`, `_leave_rate`);
