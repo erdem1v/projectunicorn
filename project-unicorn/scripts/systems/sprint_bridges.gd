@@ -14,19 +14,17 @@ extends RefCounted
 
 ## Günlük. Her aktif B2B hesabı en çok bir açık talep taşır; talep imzadan `first_after_weeks` sonra
 ## ve her yenilemeden `before_renewal_weeks` önce açılan pencerede bir kez doğar, kaçırılan eski
-## pencere atlanır. Yetenek hesabın sektörünün vurgu 1 alanından, kilidi açık ve başka açık
-## talepte olmayan sonraki kademelerden hash'le seçilir. Son tarih planlanabilir sprintten
-## `deadline_weeks` sonraki sprinttir; o sprint kapanmış ya da hesabı
-## kapanan açık talep sessizce düşer (zamanında olan kapanışta on_release'te karşılanmıştır). Yenileme penceresinin
-## açıldığı gün hesap pazar referansını yeniden kopyalar (`Customer.market_ref`).
+## pencere atlanır. Talebin konusu hesabın acısıdır (`Customer.pain_feature_id`: bir hattın sonraki kademesi, kilitli de olabilir);
+## acısı yayında ya da bir kademe değilse pencere sürdükçe her tik yeniden bakılır. Aynı konuyu birçok hesap isteyebilir. Talep sessizce düşmez:
+## yayına çıkınca karşılanır (on_release), hesap gidince biter. Yenileme penceresinin açıldığı gün hesap pazar referansını yeniden
+## kopyalar (`Customer.market_ref`).
 static func tick_requests() -> void:
-	var last_closed: int = SprintSystem.last_closed()
 	var accounts: Array[Customer] = CustomerRegistry.get_by_market("b2b")
 	var account_ids: Array = accounts.map(func(c: Customer) -> String: return c.id)
 	var requests: Array = _p().requests
 	for r in requests:
-		if r.status == "open" and (int(r.due_sprint) <= last_closed or not account_ids.has(r.customer_id)):
-			r.status = "late"
+		if r.status == "open" and not account_ids.has(r.customer_id):
+			r.status = "gone"
 	var lead: int = TimeModel.ticks(int(SprintCatalog.cfg("request.before_renewal_weeks")))
 	var first: int = TimeModel.ticks(int(SprintCatalog.cfg("request.first_after_weeks")))
 	for c in accounts:
@@ -37,52 +35,48 @@ static func tick_requests() -> void:
 		if GameState.day < window or requests.any(func(r: Dictionary) -> bool:
 				return r.customer_id == c.id and (r.status == "open" or int(r.day) >= window)):
 			continue
-		var area: String = ProductQuality.emphasis(c.industry)[0]
-		var taken: Array = requests.filter(func(r: Dictionary) -> bool: return r.status == "open").map(
-			func(r: Dictionary) -> String: return r.step)
-		var steps: Array = []
-		for line_id in SprintCatalog.capabilities(area):
-			var step: Dictionary = ProductLines.step_at(line_id, ProductState.line_tier(line_id) + 1)
-			if not step.is_empty() and not taken.has(step.id) and SprintCatalog.gate_reason(step.id) == "":
-				steps.append(step)
-		if steps.is_empty():
-			continue
-		_append_request(c, steps[absi(hash("%s|%d" % [c.id, window])) % steps.size()], "%s.%d" % [c.id, window])
+		var step: Dictionary = ProductLines.step(c.pain_feature_id)
+		if not step.is_empty() and not ProductState.is_feature_live(step.id):
+			_append_request(c, step, "%s.%d" % [c.id, window])
 
 
 ## Hesabın `line` hattında talep edebileceği sonraki kademe; hesap yoksa, hat bittiyse, kademenin kartı sprintte ya da saklıysa,
-## kapısı kapalıysa ya da hesabın (ya da kademenin) açık talebi varsa {}. Tek açık talep kuralı `tick_requests`'in kuralıdır.
+## kapısı kapalıysa ya da hesabın açık talebi varsa {}. Tek açık talep kuralı `tick_requests`'in kuralıdır.
 static func request_step(customer_id: String, line: String) -> Dictionary:
 	var own: String = SprintCatalog.in_product(line)
 	var step: Dictionary = ProductLines.step_at(own, ProductState.line_tier(own) + 1)
 	if step.is_empty() or CustomerRegistry.get_customer(customer_id) == null or SprintCatalog.gate_reason(step.id) != "" \
 			or _p().cards.has("feat:" + step.id) \
-			or SprintCatalog.open_requests().any(func(r: Dictionary) -> bool: return r.customer_id == customer_id or r.step == step.id):
+			or SprintCatalog.open_requests().any(func(r: Dictionary) -> bool: return r.customer_id == customer_id):
 		return {}
 	return step
 
 
-## `request_step`in kademesi için hesabın talebini açar; talep kartının kimliği, açılamadıysa "".
+## `request_step`in kademesi için hesabın talebini açar; konunun kartının kimliği, açılamadıysa "".
 static func open_request(customer_id: String, line: String) -> String:
 	var step: Dictionary = request_step(customer_id, line)
 	if step.is_empty():
 		return ""
-	var id: String = "%s.%d" % [customer_id, GameState.day]
-	_append_request(CustomerRegistry.get_customer(customer_id), step, id)
-	return "req:" + id
+	_append_request(CustomerRegistry.get_customer(customer_id), step, "%s.%d" % [customer_id, GameState.day])
+	return "feat:" + step.id
 
 
-## Hesabın `step` için açık talebi: son tarih planlanabilir sprintten `deadline_weeks` sonraki sprint, değeri yıllık MRR.
+## Talep kartı (`req:<id>`) günlerinden kalma kayıtta talep satırının kartı konunun kartına döner (SprintSystem.request_cards_to_topics
+## her yüklemede çağırır).
+static func request_rows_to_topics() -> void:
+	for r: Dictionary in _p().get("requests", []):
+		if String(r.get("card_id", "")).begins_with("req:"):
+			r.card_id = "feat:" + String(r.step)
+
+
+## Hesabın `step` için açık talebi; değeri yıllık MRR, kartı konunun (kademenin) özellik kartı. `day` beklemenin başıdır.
 static func _append_request(c: Customer, step: Dictionary, id: String) -> void:
-	var plannable: int = SprintSystem.plannable_sprint()
 	_p().requests.append({"id": id, "customer_id": c.id, "line": step.line_id, "step": step.id,
-		"created_sprint": plannable,
-		"due_sprint": plannable + SprintSystem.sprints_in(int(SprintCatalog.cfg("request.deadline_weeks"))),
-		"value": c.mrr * 12, "status": "open", "card_id": "req:" + id, "day": GameState.day})
+		"created_sprint": SprintSystem.plannable_sprint(), "value": c.mrr * 12, "status": "open", "card_id": "feat:" + step.id,
+		"day": GameState.day})
 
 
-## Koşan sprintte hesabın en eski açık sözünün kademesini yapan kartlar. Kimlikten değil kademeden: hesabın istediği kademe
-## talep kartı (`req:<id>`) olarak koşar.
+## Koşan sprintte hesabın en eski açık sözünün kademesini yapan kartlar (kademeden okunur: konunun kartı kademenin özellik kartıdır).
 static func promise_cards(customer_id: String) -> Array:
 	var open: Array = PromiseRegistry.get_open_for(customer_id)
 	if open.is_empty():
@@ -100,9 +94,15 @@ static func next_renewal_day(c: Customer) -> int:
 	return c.acquired_on_day + maxi(1, int(float(GameState.day - c.acquired_on_day + lead) / term)) * term
 
 
-## Herkese açık sürüm, kademeler yazıldıktan sonra: kademesi canlıya geçen açık talep zamanında
-## karşılanmıştır (geç kalan talep tick_requests'te çoktan düşmüştür). Sunucuya dokunulmaz: kapasiteyi
-## yalnız oyuncu ve açtığı otomatik ayar değiştirir.
+## Hesabın öndeki yenilemesine kalan tik (sözleşme imzadan `request.contract_weeks` haftada bir yenilenir). next_renewal_day
+## yenileme geçince de pencerenin gününü verir; bekleyişin yenilemeye ne kadar dokunduğunu bu okur.
+static func renews_in(c: Customer) -> int:
+	var term: int = TimeModel.ticks(int(SprintCatalog.cfg("request.contract_weeks")))
+	return term - posmod(GameState.day - c.acquired_on_day, term)
+
+
+## Herkese açık sürüm, kademeler yazıldıktan sonra: kademesi canlıya geçen açık talep karşılanmıştır. Sunucuya dokunulmaz:
+## kapasiteyi yalnız oyuncu ve açtığı otomatik ayar değiştirir.
 static func on_release() -> void:
 	for r in _p().requests:
 		if r.status == "open" and ProductState.is_feature_live(r.step):
@@ -305,7 +305,7 @@ static func pick_reviews(release: Dictionary) -> Dictionary:
 		if GameState.day - int(r.day) < TimeModel.ticks(int(cfg.repeat_weeks)):
 			shown.append_array(r.get("reviews", {}).get("ids", []))
 	var tiers: Array = release.shipped.filter(func(c: Dictionary) -> bool:
-		return c.kind in ["feature", "request"] and c.line != SprintCatalog.PAID_PLAN)
+		return c.kind == "feature" and c.line != SprintCatalog.PAID_PLAN)
 	var identity: Array = tiers.filter(func(c: Dictionary) -> bool: return not ProductLines.line(c.line).shared)
 	identity.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return [a.target_tier, SprintSystem.total(a)] > [b.target_tier, SprintSystem.total(b)])

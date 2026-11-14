@@ -35,8 +35,8 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
 - `HRSystem.is_busy(c)` `hr_system.gd:150`: izin, eğitim ya da toplantıdaki kurucu · `support_system.gd`, `rnd_system.gd`, `hr_dossier.gd`, `seams_hr.gd`
 - `HRSystem.assigned_to(area)` `hr_system.gd:270` ve `assigned_to_job(job)` `:275`: bugün çalışabilir kişiler · satış, CS ve destek sistemleri
 - `HRSystem.founder_task_state()` `hr_system.gd:236` ve `founder_task_label()` `:219`: türetilir, saklanmaz · `seams_hr.gd`, `hr_dossier.gd`, `personal_tab.gd`
-- `HRSystem.attention_count()` `hr_system.gd:524`: sol ray Ekip rozeti · `left_tabs.gd`, `seams_hr.gd`; `HRSystem.reset()` `hr_system.gd:497` ← `game_state.gd:955`, `save_manager.gd:350`
-- `HRSystem.to_dict()/from_dict()` `hr_system.gd:507/511`: kayıt kapısı (yalnız moral alt yükü) · `save_manager.gd:383/401`
+- `HRSystem.attention_count()` `hr_system.gd:524`: sol ray Ekip rozeti · `left_tabs.gd`, `seams_hr.gd`; `HRSystem.reset()` `hr_system.gd:497` ← `game_state.gd:955`, `save_manager.gd:351`
+- `HRSystem.to_dict()/from_dict()` `hr_system.gd:507/511`: kayıt kapısı (yalnız moral alt yükü) · `save_manager.gd:384/401`
 - `HRSystem.founder_in_meeting` `hr_system.gd:23`: statik bayrak, kaydedilmez · toplantı sahneleri (satış, VC, seed, term sheet masası) yazar
 - `HRMoraleSystem.apply_delta(emp, delta)` `hr_morale_system.gd:186`: TEK moral girişi (huy ve Liderlik ölçeklemesi burada) · `effects.gd:364-378`, `hr_actions.gd`, `vc_pitch_system.gd:548`
 - `HRMoraleSystem.scaled_delta()` `hr_morale_system.gd:199`: aynı hesap, yazmadan; önizlemeler okur · `hr_actions.gd:58,119,188`
@@ -67,23 +67,23 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
 - `WorkHoursSystem.sitting_open(hours)` `:57`: kurucunun dört oturumunun giriş kapısı · `vc_pitch_system.gd`, `sales_ledger.gd`, `sales_tab.gd`, `hunt_tab.gd`; kapalıyken gerekçesini `sitting_shut_key(late_key)` `:63` verir: haftanın mesai öncesi saatleri `SITTING_BLOCK_EARLY`, gerisi `late_key`
 - `WorkHoursSystem.overtime_pay_accrued_today()` `:333`: Finans çeker (itme yok) · `finance_system.gd`; `company_window()` `work_hours_system.gd:112` · `mail_clock.gd`, `incident_system.gd`
 - `LookSystem.for_person()` `look_system.gd:123`, `founder(portrait_id)` `:116` · `character_registry.gd:530-536`, `hr_search_system.gd:296`, `counterpart_system.gd:101`, onboarding
-- `FounderConstants.validate_alloc/validate_traits` `founder_constants.gd:137/152` · `game_state.gd:981,1007`, `origin_traits_step.gd`, `main.gd:5550`
+- `FounderConstants.validate_alloc/validate_traits` `founder_constants.gd:137/152` · `game_state.gd:981,1007`, `origin_traits_step.gd`, `main.gd:5537`
 - `FounderConstants.to_ruler(points)` `founder_constants.gd:33`: onboarding birimi → 0-10 cetvel (×2) · `game_state.gd:1002` (`_build_founder` `:975`)
 - `FounderConstants.starting_cash(origin, difficulty)` `founder_constants.gd:187` · `first_week_doc.gd`; `portrait_path()` `founder_constants.gd:192` · `ui_factory.gd:113`, `inbox.gd:458`, `personal_tab.gd:87`, onboarding
 - İzin alanı yazıcıları: `CharacterRegistry.set_away(id, kind, until_day)` `character_registry.gd:613` (hastalık), `set_leave_override(id, week, year)` `:623` (kaydırılmış yaz izni haftası)
 - Eğitim durumu yazıcıları: `CharacterRegistry.begin_training` `character_registry.gd:142`, `tick_training` `:158`, `add_experience` `:122`, `training_fee_for` `:134`
 
 ## Sinyaller
-- `hr_day_processed`: yayan `hr_system.gd:51` (günün sonu) · dinleyen `sprint_system.gd:1315`, `hr_dossier.gd:54`
-- `assignment_changed(id)`: yayan `character_registry.gd:244,285,294,311` ve `work_hours_system.gd:270-317` (her mesai yazıcısı) · `sprint_system.gd:1317`, `research_bar.gd:58`, `office_people.gd:85`
+- `hr_day_processed`: yayan `hr_system.gd:51` (günün sonu) · dinleyen `sprint_system.gd:1357`, `hr_dossier.gd:54`
+- `assignment_changed(id)`: yayan `character_registry.gd:244,285,294,311` ve `work_hours_system.gd:270-317` (her mesai yazıcısı) · `sprint_system.gd:1359`, `research_bar.gd:58`, `office_people.gd:85`
 - `headline_added(source, line)`: yayan `hr_system.gd:100`, `hr_morale_system.gd:41,264`, `hr_search_system.gd:302` · `time_manager.gd:85`, `news_ticker.gd:72`
 - `employee_promoted(id, level)`: yayan `hr_actions.gd:154` · dinleyen yok
 - `leave_requested(id)`: yayan `hr_morale_system.gd:65` (yaz izni başlarken; izin yine de otomatik başlar) · dinleyen yok
 - `employee_training_changed(id, weeks_left)`: yayan `character_registry.gd:153,164,180` · `build_bar.gd:45`, `research_bar.gd:59`
-- `training_started(id, area)`: yayan `character_registry.gd:154` · `sprint_system.gd:1319`; `training_completed` `character_registry.gd:182` · dinleyen yok
+- `training_started(id, area)`: yayan `character_registry.gd:154` · `sprint_system.gd:1361`; `training_completed` `character_registry.gd:182` · dinleyen yok
 - `employee_experience_changed` ve `experience_bar_full`: yayan `character_registry.gd:129-130,181` · bar_full yalnız smoke dinler
-- `employee_hired(id)` `character_registry.gd:462` · `sprint_system.gd:1318`; `character_added` `character_registry.gd:460` · `left_tabs.gd:109`, `office_people.gd:83`
-- `character_removed` `character_registry.gd:560` · `sprint_system.gd:1316`, `hr_dossier.gd:55`, `left_tabs.gd:110`, `office_people.gd:84`; `employee_departed` `character_registry.gd:561` · dinleyen yok
+- `employee_hired(id)` `character_registry.gd:462` · `sprint_system.gd:1360`; `character_added` `character_registry.gd:460` · `left_tabs.gd:109`, `office_people.gd:83`
+- `character_removed` `character_registry.gd:560` · `sprint_system.gd:1358`, `hr_dossier.gd:55`, `left_tabs.gd:110`, `office_people.gd:84`; `employee_departed` `character_registry.gd:561` · dinleyen yok
 - `morale_changed` `character_registry.gd:624` · `left_tabs.gd:108`; `morale_band_changed` `character_registry.gd:627` · yalnız smoke; `productivity_changed` `:585,596` · dinleyen yok
 - Tanımlı ama yayanı yok: `raise_requested`, `employee_eligible_for_promotion` (`event_bus.gd:76,73`; GDD'de adı geçtiği için silinmez)
 
@@ -99,7 +99,7 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
 - Devamı: productivity_mods `:99`, employment_history `:103`, look `:22`, traits `:33`, role_stats `:36`; hepsi `@export`, `SaveCodec` kendisi bulur
 - Bayraklar: `hr_manual_leave_<id>` (`hr_morale_system.gd:19`; 0 = yaz izni, >0 oyuncu izninin haftası), `debug_hr_force` (`:348`, yalnız debug build)
 - Statik durum: `HRMoraleSystem._pending` (bekleyen istifalar, `hr_morale_system.gd:24`); `HRSystem.founder_in_meeting`. Başka statik yok, aday dosyaları `GameState.hr_search`'te
-- Kayıt: `HRSystem.to_dict` yalnız `{"morale": {"pending_departures": [...]}}` taşır (`save_manager.gd:383`); gerisi GameState ve Character alanlarıdır
+- Kayıt: `HRSystem.to_dict` yalnız `{"morale": {"pending_departures": [...]}}` taşır (`save_manager.gd:384`); gerisi GameState ve Character alanlarıdır
 - Veri dosyası YOK: `data/` altında hr dizini yoktur, sayılar kodda. Yalnız kartlar JSON'dadır: `data/events/cards/team/*.json` (burnout, resignation, lead_overtime, outside_offer, password_rule, demo_day …)
 - `HRConstants` ana sabitler: roller `:314-324`, `ROLE_GROUP` `:340`, işler `:102-148` (`JOBS`, `MAX_JOBS_PER_PERSON`), `FOCUS_MULT_*` `:151`, `SECONDARY_AREA_MULT` `:246`
 - Devamı: `TRAITS` `:435`, `ROLE_TRAIT_BAN` `:502`, `SALARY_BANDS_BY_LEVEL` `:604`, `ARCHETYPES` `:635`, `ARCHETYPE_SHAPE` `:640`, `SEARCH_COMMISSION_PCT` `:734`, `CANDIDATE_COUNT` `:737`
@@ -157,7 +157,7 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
 - Finans bordroyu ÇEKER: HR maaş ya da mesai itmez. `FinanceSystem.daily_tick` yuva 5, HR yuva 3; işe alım komisyonu ve tazminat `apply_one_time_cost` ile kasayı eksiye düşürebilir (kasıtlı, kilit yok)
 - `HRSearchSystem.hire` kimliği `char_emp_<gün>_<run_hires>`; `add()` `hire_day=today` damgalar, hire hemen ardından `day+1` yapar (kıdem ertesi tikten). Sıra değişirse YENİ rozeti ve tazminat kayar
 - Aday dosyaları tohumdan üretilir ve tohum saklanır (dosyalar değil); `generate` RNG kullanmaz, global akışı tüketirse olay ve istifa zarı kayar. Baskın aday = `push_error`, dosyalar yine döner
-- `arrival_day` gün damgasıdır: kayıt göçü onu çevirir (`save_manager.gd:697-699`); `current_level` eski `band` anahtarını da okur (`hr_search_system.gd:85`)
+- `arrival_day` gün damgasıdır: kayıt göçü onu çevirir (`save_manager.gd:698-700`); `current_level` eski `band` anahtarını da okur (`hr_search_system.gd:85`)
 - `HRSystem.daily_tick` kurucuyu çoğu yolda dışlar: `get_employees()` yalnız `category == "employee"` döner. Kurucu için `tick_experience` ve `tick_training` onu ayrıca ekler; yeni tik eklerken aynısını yap
 - Yaz izni haftası işe alım sırasından yayılır (`leave_week_for(run_hires)`, adım 5 / 13); `leave_taken_year` takvim yılıdır, kayıtta `SaveCodec.restore_registries` düzeltir (CLAUDE.md §6)
 - `FounderConstants.TRAITS` yorumu doğru: 8 kurucu huyunun etkisini hiçbir sistem tüketmez (üretim kodunda `"visionary"` vb. okuyan yok); yalnız seçim kuralı ve ekran metni çalışır
@@ -180,7 +180,7 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
 ## Bir değişiklik yaparken
 - Yeni HR sayısı: `HRConstants`'a koy ([WORKING] etiketli ayar sabiti), tasarım sabiti değişikliği "onay bekliyor" altında raporlanır (CLAUDE.md §3); `hr_constants_contract` vakasını koş
 - Moral kaynağı ekle: ham delta ver, `HRMoraleSystem.apply_delta` çağır; önizleme gerekiyorsa `scaled_delta`; olay kartıysa fiil `change_morale`/`morale_all`/`morale_crew` (`effects.gd:358-379`) zaten geçer
-- Yeni kişi alanı: `Character`'a `@export` ekle (SaveCodec bulur), anlamlı varsayılan ver, göç gerekiyorsa `save_manager.gd:1241-1274` desenine bak; `SCHEMA_VERSION` ve `reset` yolunu kontrol et
+- Yeni kişi alanı: `Character`'a `@export` ekle (SaveCodec bulur), anlamlı varsayılan ver, göç gerekiyorsa `save_manager.gd:1242-1275` desenine bak; `SCHEMA_VERSION` ve `reset` yolunu kontrol et
 - İzin olmayan yeni yokluk türü: yeni status yerine `Character.leave_kind` + `away_until_day` ve `tick_leave_returns`ta kendi dalı (hastalık örneği)
 - Yeni durum (`STATUS_*`): `HRConstants.STATUS_*`, `HRSystem.is_busy`, `_on_duty`, `effective_skill`, `HRMoraleSystem.tick_drift`, `WorkHoursSystem.in_office` ve `D_state_cell` (`hr_ui_shared.gd`) beraber ele alınır
 - Çalışma saati kuralı: `_resolve` + taslak ikizleri (`*_in` işlevleri) + `HRSearchSystem.preview_hire` + `work_hours_modal.gd`; `FinanceSystem` mesai tahakkukunu `overtime_pay_accrued_today`'dan çeker

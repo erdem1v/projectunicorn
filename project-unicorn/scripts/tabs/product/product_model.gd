@@ -290,13 +290,12 @@ static func _module_card(c: Dictionary, tag: int, sprint: int) -> Dictionary:
 		"bugs": c.bugs if fix else 0, "fix_text": SprintUiShared.bugs_text(SprintCatalog.bugs_part(c.line, c.bugs)) if fix else ""}
 
 
-## Müşteri talepleri (B2B; B2C'de null): her açık talep bir satır, altında bu ürün çeyreğinde karşılananlar. Son tarih sözün, yoksa
-## talebin son sprintidir (`_due`). Her satırın `status`u (`_request_status`) kayıtlardan okunur, yeni alan saklanmaz. Sıra: açıklar önde
-## (planda olmayan önde, bu çeyrek önde, sonra son tarih), sonra karşılananlar, en yeni sürüm önde.
+## Müşteri talepleri (B2B; B2C'de null): her açık talep bir satır, altında bu ürün çeyreğinde karşılananlar. Tarih yalnız sözün
+## son sprintidir (`_due`; talebin son tarihi yoktur). Her satırın `status`u (`_request_status`) kayıtlardan okunur, yeni alan
+## saklanmaz. Sıra: açıklar önde (planda olmayan önde, bu çeyrek önde, sonra söz tarihi), sonra karşılananlar, en yeni sürüm önde.
 static func _requests(tags: Dictionary, mode: String) -> Variant:
 	if ProductState.market_type() != "b2b":
 		return null
-	var stored: Dictionary = GameState.product.get("cards", {})
 	var promised: Dictionary = {}
 	for promise in PromiseRegistry.get_all():
 		if promise.status == "open" and promise.due_sprint >= 0:
@@ -308,10 +307,9 @@ static func _requests(tags: Dictionary, mode: String) -> Variant:
 		var met: Dictionary = _met_in(r) if r.status == "met" else {}
 		if customer == "" or not (r.status == "open" or not met.is_empty()):
 			continue
-		var card_id: String = "feat:" + r.step if stored.has("feat:" + r.step) else String(r.card_id)
+		var card_id: String = String(r.card_id)
 		var promise: int = promised.get(String(r.customer_id) + "|" + String(r.step), -1)
-		var due: int = promise if promise >= 0 else int(r.due_sprint)
-		var when: Dictionary = _due(due)
+		var when: Dictionary = _due(promise) if promise >= 0 else {"text": "", "soon": false}
 		var card_name: String = SprintCatalog.step_name(r.step)
 		var parts: PackedStringArray = [customer,
 			_t("PRODUCT_TIP_CARD_MODULE").format({"card": card_name, "module": SprintCatalog.cap_name(r.line)}),
@@ -320,7 +318,7 @@ static func _requests(tags: Dictionary, mode: String) -> Variant:
 			parts.append(_t("PRODUCT_TIP_PROMISE").format({"when": when.text}))
 		var status: Dictionary = _request_status(card_id, tags, mode, met)
 		var order: Array = [1, -int(met.day), 0, 0, 0, keyed.size()] if not met.is_empty() else [0, 0, int(status.kind != ""),
-			int(not when.soon), due, keyed.size()]
+			int(not when.soon), promise, keyed.size()]
 		keyed.append([order, {"customer": customer, "card_id": card_id, "card_name": card_name, "module_id": String(r.line),
 			"area": SprintCatalog.area_of_line(r.line),
 			"value": int(r.value), "due_text": "" if not met.is_empty() else when.text, "soon": when.soon and met.is_empty(),
@@ -467,7 +465,7 @@ static func _release(r: Dictionary, lead: Character) -> Dictionary:
 		"shipped": r.shipped.map(_shipped),
 		"carried": r.carried.map(func(item: Dictionary) -> Dictionary:
 			var c: Dictionary = SprintCatalog.card_by_id(item.id)
-			return {"name": SprintCatalog.card_name(c), "kind": _kind(c), "done": item.done, "total": item.total,
+			return {"name": SprintCatalog.card_name(c), "kind": c.kind, "done": item.done, "total": item.total,
 				"to_sprint": int(item.to_sprint)}),
 		"velocity": r.velocity,
 		"result": _result(r),
@@ -781,7 +779,7 @@ static func _row(c: Dictionary, t: Dictionary, buttons: Array) -> Dictionary:
 		slot = {"kind": "late"}
 	var fix: bool = c.kind == "fix"
 	var bugs: Dictionary = SprintCatalog.bugs_part(c.line, c.bugs) if fix else {}
-	return {"id": c.id, "kind": _kind(c), "name": SprintCatalog.card_name(c), "effort": roundi(_effort(c)),
+	return {"id": c.id, "kind": c.kind, "name": SprintCatalog.card_name(c), "effort": roundi(_effort(c)),
 		"raw_effort": roundi(SprintSystem.card_load(c)),
 		"module_name": SprintCatalog.module_name(c),
 		"fix_text": SprintUiShared.bugs_text(bugs) if fix else "",
@@ -863,7 +861,7 @@ static func _next_card(c: Dictionary, mode: String, gains: Dictionary, seat: Dic
 	var raw := 0.0
 	for share: Dictionary in _shares([c.id], {c.id: 0.0}):
 		raw += share.effort
-	return {"id": c.id, "kind": _kind(c), "name": SprintCatalog.card_name(c), "effort": roundi(effort), "raw_effort": roundi(raw),
+	return {"id": c.id, "kind": c.kind, "name": SprintCatalog.card_name(c), "effort": roundi(effort), "raw_effort": roundi(raw),
 		"parts": parts, "ahead": starts,
 		"prep": null if pm == null else {"pm": _face(pm, HRConstants.AREA_PRODUCT), "done": float(prep.done)},
 		"buttons": keys.filter(func(key: String) -> bool: return key != "remove" or not c.get("follow", false))}
@@ -927,16 +925,10 @@ static func _out_shares(run: Dictionary) -> Array:
 	return out
 
 
-## ÇEYREK sütununun bayrakları: gri, o sprintin rakip çıkışı; kırmızı, son tarihi o sprint olan talep.
+## ÇEYREK sütununun bayrakları: o sprintin rakip çıkışları.
 static func _flags(n: int) -> Array:
-	var flags: Array = SprintCatalog.rival_launch_in(n).map(func(l: Dictionary) -> Dictionary:
-		return {"k": "rival", "text": _t("PRODUCT_RIVAL_TOPIC").format({"topic": l.topic})})
-	for r in GameState.product.get("requests", []):
-		var customer: String = SprintCatalog.customer_name(r)
-		if r.status == "open" and int(r.due_sprint) == n and customer != "":
-			flags.append({"k": "deadline", "text": _t("PRODUCT_FLAG_DEADLINE").format(
-				{"customer": customer, "request": SprintCatalog.step_name(r.step)})})
-	return flags
+	return SprintCatalog.rival_launch_in(n).map(func(l: Dictionary) -> Dictionary:
+		return {"text": _t("PRODUCT_RIVAL_TOPIC").format({"topic": l.topic})})
 
 
 # --- Çeyrek ----------------------------------------------------------------------------
@@ -1134,7 +1126,7 @@ static func _tier(id: String, kind: String, active: String, units: int, bill: in
 # --- Kart ------------------------------------------------------------------------------
 
 static func _card(c: Dictionary, state: SprintCard.State, extra := {}) -> Dictionary:
-	var card := {"id": c.id, "name": SprintCatalog.card_name(c), "kind": _kind(c), "effort": roundi(SprintSystem.total(c)),
+	var card := {"id": c.id, "name": SprintCatalog.card_name(c), "kind": c.kind, "effort": roundi(SprintSystem.total(c)),
 		"state": state, "remaining": -1}
 	card.merge(extra, true)
 	return card
@@ -1143,11 +1135,6 @@ static func _card(c: Dictionary, state: SprintCard.State, extra := {}) -> Dictio
 ## Sprinte ya da sonrakine alınmış ama kapısı sonradan kapanmış kart kilitli çizilir.
 static func _planned(c: Dictionary, state: SprintCard.State, extra: Dictionary) -> Dictionary:
 	return _card(c, SprintCard.State.KILITLI if SprintCatalog.gate_reason(c.step) != "" else state, extra)
-
-
-## Talep kartı çizimde yeni özellik kartıdır.
-static func _kind(c: Dictionary) -> String:
-	return "feature" if c.kind == "request" else c.kind
 
 
 ## Önceki sprintten ilerlemeyle gelen kartın kalan puanı; ilerlemesi eforundan bir şey eksiltmediyse

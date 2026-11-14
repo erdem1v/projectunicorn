@@ -32,7 +32,7 @@ static func load_data() -> void:
 	_rivals = JSON.parse_string(FileAccess.get_file_as_string(RIVALS_PATH))
 
 
-## sprint.json'a nokta yolu: cfg("effort.k1"), cfg("request.deadline_weeks").
+## sprint.json'a nokta yolu: cfg("effort.k1"), cfg("request.contract_weeks").
 static func cfg(path: String) -> Variant:
 	if _data.is_empty():
 		load_data()
@@ -207,15 +207,12 @@ static func card_need(kind: String, line: String, tier: int, effort: float) -> A
 	return row.map(func(part: float) -> float: return part * effort / sum)
 
 
-## Alanın aday kartları (PRD §3.2): yetenek başına sonraki kademe (kapısı kapalıysa da görünür),
-## açık talep o kademeyi talep kartına çevirir, açık hatası olan yetenek başına düzeltme, kimlik alanında
+## Alanın aday kartları (PRD §3.2): yetenek başına sonraki kademe (kapısı kapalıysa da görünür; talebin konusu da budur,
+## isteyenleri `askers`), açık hatası olan yetenek başına düzeltme, kimlik alanında
 ## ürünün tek araştırma kartı (kullanıcıyla görüş; yapıldığı sprintin ardından bir kapanış gizli). Sprintte ya da sonrakinde duran kart
 ## saklanan hâliyle döner. Sıra: öncelikli önde, kilitsiz önde, sonra etki/efor azalan.
 static func candidates(area_id: String) -> Array:
 	var stored: Dictionary = _p().get("cards", {})
-	var requests: Dictionary = {}
-	for r in open_requests():
-		requests[String(r.step)] = r
 	var out: Array = []
 	var caps: Array[String] = capabilities(area_id)
 	for line_id in caps:
@@ -227,15 +224,7 @@ static func candidates(area_id: String) -> Array:
 		if next == 0:
 			continue
 		var step: String = ProductLines.step_at(line_id, next).id
-		var request: Variant = requests.get(step)
-		if request != null and not stored.has("feat:" + step):
-			var card: Dictionary = new_card("req:" + str(request.id), "request", area_id, step_effort(step), line_id,
-				step, next)
-			card.customer_id = request.customer_id
-			card.request_id = str(request.id)
-			out.append(card)
-		else:
-			out.append(new_card("feat:" + step, "feature", area_id, step_effort(step), line_id, step, next))
+		out.append(new_card("feat:" + step, "feature", area_id, step_effort(step), line_id, step, next))
 	var bugs: Dictionary = ProductState.open_bugs_by_line()
 	for line_id in caps:
 		if bugs.has(line_id):
@@ -275,8 +264,7 @@ static func new_card(id: String, kind: String, area_id: String, effort: int, lin
 	return {"id": id, "kind": kind, "line": line, "step": step, "target_tier": target_tier, "area": area_id,
 		"need": need, "roles": range(need.size()).filter(func(i: int) -> bool: return need[i] > 0.0).map(
 			func(i: int) -> String: return roles[i]),
-		"progress": [0.0, 0.0, 0.0], "state": "candidate", "assignees": [], "bugs": 0, "customer_id": "",
-		"request_id": "", "decision": false, "cut": 0.0}
+		"progress": [0.0, 0.0, 0.0], "state": "candidate", "assignees": [], "bugs": 0, "decision": false, "cut": 0.0}
 
 
 ## Saklanan kart ya da adayı; yoksa {}.
@@ -291,24 +279,18 @@ static func card_by_id(card_id: String) -> Dictionary:
 	return {}
 
 
-## Kartın adı: kademe adı, "{yetenek} düzeltmesi", "{n} kullanıcıyla görüş" ya da "{kademe} ({müşteri})".
+## Kartın adı: kademe adı, "{yetenek} düzeltmesi" ya da "{n} kullanıcıyla görüş".
 static func card_name(card: Dictionary) -> String:
 	match card.kind:
 		"fix":
 			return _t("PRODUCT_FIX_CARD").format({"capability": cap_name(card.line)})
 		"research":
 			return _t("PRODUCT_RESEARCH_CARD").format({"n": int(cfg("research_users"))})
-		"request":
-			# Hesabı kapanan müşterinin talebi ertesi tike kadar kartta kalır; adı boş parantez yazmasın.
-			var customer: String = customer_name(card)
-			if customer != "":
-				return _t("PRODUCT_REQUEST_CARD").format({"step": step_name(card.step), "customer": customer})
 	return step_name(card.step)
 
 
-## Kartın son tarihi {sprint, customer, customer_id, value, promise}: kademesine verilmiş en yakın açık söz (müşterisi, o müşterinin açık talebinin
-## yıllık değeri ya da 0), yoksa karşıladığı açık talebin son tarihi (talebin müşterisi ve değeri); ikisi de yoksa sprint -1. Sprint
-## hesabı olmayan (gün sayan) söz son tarih vermez.
+## Kartın son tarihi {sprint, customer, customer_id, value, promise}: kademesine verilmiş en yakın açık söz (müşterisi, o müşterinin açık
+## talebinin yıllık değeri ya da 0); yoksa sprint -1. Talebin son tarihi yoktur. Sprint hesabı olmayan (gün sayan) söz son tarih vermez.
 static func due(card: Dictionary) -> Dictionary:
 	for p in _promises_on(card.step):
 		if p.due_sprint >= 0:
@@ -316,11 +298,7 @@ static func due(card: Dictionary) -> Dictionary:
 				return r.customer_id == p.customer_id and r.step == card.step)
 			return {"sprint": p.due_sprint, "customer": CustomerRegistry.get_customer(p.customer_id).display_name(),
 				"customer_id": p.customer_id, "value": int(asked[0].value) if not asked.is_empty() else 0, "promise": true}
-	var request: Dictionary = _request_of(card)
-	if request.is_empty():
-		return {"sprint": -1, "customer": "", "customer_id": "", "value": 0, "promise": false}
-	return {"sprint": int(request.due_sprint), "customer": customer_name(request), "customer_id": String(request.customer_id),
-		"value": int(request.value), "promise": false}
+	return {"sprint": -1, "customer": "", "customer_id": "", "value": 0, "promise": false}
 
 
 ## Kilitli kademenin gerekçesi ("2★ tasarımcı gerekli"), yalnız karşılanmayan parçalarla; kilitsizse "". Ücretli
@@ -368,9 +346,9 @@ static func card_effect(card: Dictionary) -> Array:
 		out.append({"k": "holds", "area": area_short(area), "word": level.to_word})
 		out.append({"k": "cap", "name": cap_name(card.line), "from": cap_from, "to": cap_to,
 			"from_word": ProductQuality.word_for(cap_from, expect), "to_word": ProductQuality.word_for(cap_to, expect)})
-	var request: Dictionary = _request_of(card)
-	if not request.is_empty():
-		out.append({"k": "request", "customer": customer_name(request), "value": int(request.value)})
+	var asked: Array = askers(card.step)
+	if not asked.is_empty():
+		out.append({"k": "request", "customer": asked[0].display_name()})
 	out.append_array(_promise_parts(card.step))
 	return out
 
@@ -431,14 +409,15 @@ static func in_product(id: String) -> String:
 
 ## Karar kartının hattını kullanan hesaplardan kâğıdın konusu olan (`select` kipi): "line_top" en büyük, "line_warehouse" depo
 ## işi sektörlerindeki (sprint.json `paper.warehouse_sectors`) en büyük, "line_newest" en yeni imzalanan, "line_slow"
-## `paper.slow_seats` koltuğa varan en büyük, "request" kartı isteyen hesap. `used`taki hesaplar sayılmaz. Karar ya da
+## `paper.slow_seats` koltuğa varan en büyük, "request" kartın konusunu bekleyenlerin ilki (`askers`). `used`taki hesaplar sayılmaz. Karar ya da
 ## böyle bir hesap yoksa "".
 static func paper_account(mode: String, used: Dictionary) -> String:
 	var card: Dictionary = SprintSystem.decision_card()
 	if card.is_empty():
 		return ""
 	if mode == "request":
-		return String(card.customer_id)
+		var asked: Array = askers(card.step)
+		return asked[0].id if not asked.is_empty() else ""
 	var accounts: Array = line_accounts(card.line).filter(func(c: Customer) -> bool:
 		if used.has(c.id):
 			return false
@@ -455,11 +434,15 @@ static func paper_account(mode: String, used: Dictionary) -> String:
 	return "" if accounts.is_empty() else accounts[0].id
 
 
-## Karar kartının hesabı dışında, sektörünün öncelikli alanı kartın hattını kapsayan en büyük B2B hesap (isteği o hattı kapsayan
-## alandan gelen öbür müşteri), yoksa null. Talep her kademede tek hesaptan açık durur, bu yüzden öbür hesabın açık talebi aranmaz.
+## Karar kartının konusunu bekleyen ikinci hesap (`askers`); yoksa ilk bekleyen dışında, sektörünün öncelikli alanı kartın hattını
+## kapsayan en büyük B2B hesap; o da yoksa null.
 static func second_account(card: Dictionary) -> Customer:
+	var asked: Array = askers(String(card.get("step", "")))
+	if asked.size() > 1:
+		return asked[1]
+	var first: String = asked[0].id if not asked.is_empty() else ""
 	var accounts: Array = CustomerRegistry.get_by_market("b2b").filter(func(c: Customer) -> bool:
-		return c.id != card.get("customer_id", "") and card.get("line", "") in capabilities(ProductQuality.emphasis(c.industry)[0]))
+		return c.id != first and card.get("line", "") in capabilities(ProductQuality.emphasis(c.industry)[0]))
 	accounts.sort_custom(larger_account)
 	return null if accounts.is_empty() else accounts[0]
 
@@ -549,11 +532,9 @@ static func _lead_picks(order: Array, steps: int, placed: Array, skip: Array, pe
 ## Önerinin 1 ile 5. basamakları sırasıyla (bir kart birden çok basamakta olabilir); `ranked` etki ÷ iş sırasındaki açık
 ## adaylardır. Hedef yokken 5. basamak liderin alanına bakar.
 static func _lead_steps(ranked: Array, goal: String, capacity: float) -> Array:
-	var due: int = SprintSystem.sprint_number() + 1
 	var out: Array = _promised(ranked)
 	out.append_array(ranked.filter(func(c: Dictionary) -> bool: return c.line == PAID_PLAN))
-	out.append_array(_requested(ranked).filter(func(c: Dictionary) -> bool:
-		return int(_request_of(c).due_sprint) <= due).slice(0, 1))
+	out.append_array(_requested(ranked).slice(0, 1))
 	out.append_array(ranked.filter(func(c: Dictionary) -> bool:
 		return SprintSystem.total(c) - SprintSystem.remaining(c) > SprintSystem.EPS))
 	out.append_array(ranked.filter(is_priority))
@@ -826,12 +807,15 @@ static func recent_hits(lines: Array) -> Array:
 		return String(h.line) in lines and SprintSystem.sprint_number() - int(h.sprint) < window)
 
 
-## Kartın karşıladığı açık talep: talep kartının kendisi ya da aynı kademeyi yapan özellik kartı.
-static func _request_of(card: Dictionary) -> Dictionary:
-	for r in open_requests():
-		if str(r.id) == card.request_id or (card.kind == "feature" and r.step == card.step):
-			return r
-	return {}
+## Konuyu (kademeyi) bekleyen hesaplar: açık talebi o kademede olanlar, yenilemesi en yakın önde (SprintBridges.renews_in),
+## eşitse büyük önde.
+static func askers(step: String) -> Array:
+	var out: Array = open_requests().filter(func(r: Dictionary) -> bool: return r.step == step).map(
+		func(r: Dictionary) -> Customer: return CustomerRegistry.get_customer(String(r.customer_id)))
+	out.sort_custom(func(a: Customer, b: Customer) -> bool:
+		var left: int = SprintBridges.renews_in(a) - SprintBridges.renews_in(b)
+		return left < 0 if left != 0 else larger_account(a, b))
+	return out
 
 
 ## Açık talepler. Hesabı kapanan müşterinin talebi ertesi tikte düşer; o arada sayılmaz.
@@ -854,7 +838,7 @@ static func _promise_parts(step: String) -> Array:
 		return {"k": "promise", "customer": CustomerRegistry.get_customer(p.customer_id).display_name()})
 
 
-## Talebin ya da talep kartının müşterisi; hesap kapanmışsa "".
+## Talebin müşterisi; hesap kapanmışsa "".
 static func customer_name(owner: Dictionary) -> String:
 	var customer: Customer = CustomerRegistry.get_customer(String(owner.customer_id))
 	return customer.display_name() if customer != null else ""
@@ -873,7 +857,7 @@ static func _impact(card: Dictionary) -> float:
 		ProductQuality.level(card.area, {card.line: card.target_tier}) - ProductQuality.level(card.area))
 	if _closes_rival_gap(card):
 		v += w.rival_gap
-	if not _request_of(card).is_empty():
+	if not askers(card.step).is_empty():
 		v += w.request
 	if mvp_cards_left() > 0 and is_mvp_card(card):
 		v += w.mvp
@@ -935,7 +919,7 @@ static func _lead_area(pool: Array, capacity: float) -> String:
 
 
 ## PM'in planının kuralı. Zorunlu kartlar sırasıyla tavana (%125) kadar, oynatmadan yüklenir: verilmiş sözlerin kartları
-## (son tarihi yakın önde), son tarihi en yakın talep, ücretli plan (B2C'de yayından sonra gelirin kapısıdır), alanın en iyi
+## (son tarihi yakın önde), en çok hesabın beklediği konu (`_requested`), ücretli plan (B2C'de yayından sonra gelirin kapısıdır), alanın en iyi
 ## kartı ve açık öncelikli düzeltmeler; boş sprint, "+" gibi, tavanı aşan kartı da alır. Kalan yer etkisi olan, etki/efor
 ## oranı en yüksek kartlarla kapasiteye kadar dolar. Bu ya da sonraki sprintte duran ve kilitli kartlar önerilmez. `taken`
 ## başka sprintlere ayrılmış kartlardır (onaylı planlar, PM'in önceki sütunları); `goal` (çeyrek hedefi ya da PM'in en zayıf
@@ -980,9 +964,19 @@ static func _promised(cards: Array) -> Array:
 	return out
 
 
-## Talep kartları, son tarihi yakın önde.
+## Bekleyeni olan kartlar: en çok hesabın beklediği önde, eşitse yenilemesi en yakın isteyeni olan, sonra kimlik.
 static func _requested(cards: Array) -> Array:
-	var out: Array = cards.filter(func(c: Dictionary) -> bool: return c.kind == "request")
+	var asked: Dictionary = {}
+	for c in cards:
+		var who: Array = askers(c.step)
+		if not who.is_empty():
+			asked[c.id] = who
+	var out: Array = cards.filter(func(c: Dictionary) -> bool: return asked.has(c.id))
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		return int(_request_of(a).due_sprint) < int(_request_of(b).due_sprint))
+		var x: Array = asked[a.id]
+		var y: Array = asked[b.id]
+		if x.size() != y.size():
+			return x.size() > y.size()
+		var left: int = SprintBridges.renews_in(x[0]) - SprintBridges.renews_in(y[0])
+		return left < 0 if left != 0 else a.id < b.id)
 	return out

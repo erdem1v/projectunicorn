@@ -142,7 +142,7 @@ static func _install_papers() -> void:
 	var G := EvSeams.Kind.GLOBAL
 	EvSeams.register("urun.decision_kind", G, TYPE_STRING,
 		func() -> String: return String(_decision_field("kind", "")),
-		"Product", "feature | request | fix | research: what the decision card is; empty when none waits")
+		"Product", "feature | fix | research: what the decision card is; empty when none waits")
 	EvSeams.register("urun.decision_line", G, TYPE_STRING,
 		func() -> String: return String(_decision_field("line", "")).get_slice("@", 0),
 		"Product", "id of the line the decision card is on, a shared line by its base id; empty when none waits")
@@ -199,18 +199,18 @@ static func _install_papers() -> void:
 		"Product", "a tester works in the sprint's team (the Test job); the founder testing is not one")
 	EvSeams.register("urun.durability_tier", G, TYPE_INT,
 		func() -> int: return ProductState.line_tier(SprintCatalog.in_product("line_shared_durability")),
-		"Product", "the tier the Durability line has reached; 1 is autosave and nothing more")
+		"Product", "the tier the Backup line has reached; 1 is autosave and nothing more")
 	EvSeams.register("urun.security_tier", G, TYPE_INT,
 		func() -> int: return ProductState.line_tier(SprintCatalog.in_product("line_shared_security")),
-		"Product", "the tier the Security and Access line has reached; 0 before it is built")
+		"Product", "the tier the Users and Access line has reached; 0 before it is built")
 	EvSeams.register("urun.security_bugs", G, TYPE_INT,
 		func() -> int: return ProductState.line_bugs(SprintCatalog.in_product("line_shared_security")),
-		"Product", "open bugs on the Security and Access line")
+		"Product", "open bugs on the Users and Access line")
 	EvSeams.register("urun.security_fix_planned", G, TYPE_BOOL,
 		func() -> bool:
 			var fix: String = "fix:" + SprintCatalog.in_product("line_shared_security")
 			return fix in GameState.product.get("sprint", {}).get("cards", []),
-		"Product", "the Security and Access fix card is in the running sprint")
+		"Product", "the Users and Access fix card is in the running sprint")
 	# One seam per line, a shared line by the base id cards write, so a card can ask how far a line has come.
 	var lines: Array = []
 	for subtype in ProductLines.subtypes():
@@ -254,7 +254,7 @@ static func _install_paper_asks() -> void:
 		func() -> String:
 			var second: Customer = SprintCatalog.second_account(SprintSystem.decision_card())
 			return "" if second == null else second.display_name(),
-		"Product", "the largest other B2B account whose sector's first area covers the decision card's line (it would ask for this step); empty when none")
+		"Product", "the decision card's second asker, else the largest B2B account but its first asker whose sector's first area covers the card's line; empty when none")
 	EvSeams.register("urun.decision_request_votes", G, TYPE_INT,
 		func() -> int: return 0,
 		"Product", "B2C: the people who asked for the decision card's step; 0 until the consumer request data exists")
@@ -289,7 +289,7 @@ static func _install_paper_asks() -> void:
 		"Product", "the Responsive Interface step is live")
 	EvSeams.register("urun.decision_request_saved", G, TYPE_BOOL,
 		func() -> bool: return SprintSystem.decision_request_saved(),
-		"Product", "this sprint is the deadline of the decision card's account request, the card misses it, and standing the card first ships it this sprint")
+		"Product", "the decision card's soonest-renewing asker renews inside this sprint, no word is on the step, the card misses it, and standing the card first ships it this sprint")
 	EvSeams.register("urun.design_late", G, TYPE_BOOL,
 		func() -> bool: return SprintSystem.design_late(SprintSystem.decision_card().get("id", "")),
 		"Product", "the decision card is still in design after this week's work and a developer waits on it")

@@ -178,7 +178,7 @@ extends RefCounted
 ##               It also decides the answer to an emergency card: "none" leaves the fix for the next sprint, every
 ##               other arm stops the sprint for it;
 ##   no_stop   — the arm never stops the sprint for an emergency (the same run with that answer left out);
-##   core_only — rides the fix arm: no feature or request card outside the core area stays in a sprint, fix and
+##   core_only — rides the fix arm: no feature card outside the core area stays in a sprint, fix and
 ##               research cards are kept, and the lead fills what is left from the rest of the pool;
 ##   desk      — with a rep on the Satış job the founder sits only the leads above the reps' band, the rest are
 ##               the reps' (the game's own pick_lead_for); with no rep he sits every lead, as the other arms do;
@@ -306,7 +306,7 @@ static var _staff_cap: int = 0              # full_run*: the headcount the B2B l
 static var _k1_only: bool = false           # full_run*: never plan a K2 or K3 step
 static var _fix_arm: String = ""            # full_run*: "" | none | worst | due | off (see PRESETS)
 static var _no_stop: bool = false           # full_run*: an emergency never stops the sprint for its fix
-static var _core_only: bool = false         # full_run*: the sprint keeps no feature or request card outside the core
+static var _core_only: bool = false         # full_run*: the sprint keeps no feature card outside the core
 static var _plan_actions: int = 0           # the plan's Sprint-tab actions: apply the lead, each add and remove, start (the arms' parking is not one)
 static var _desk: bool = false              # full_run*: the founder leaves the reps' band to the reps
 static var _release_seen: bool = false      # PROBE UFLUX: a version shipped since the last weekly reading
@@ -1385,10 +1385,10 @@ static func _plan_fix_arm() -> void:
 	_plan_actions += 1
 
 
-## A feature or request card of another area than the core, which the core-only arm never plans. Fix and research
+## A feature card of another area than the core, which the core-only arm never plans. Fix and research
 ## cards are the arm's too, whatever their area.
 static func _outside_core(c: Dictionary) -> bool:
-	return _core_only and c.area != "core" and (c.kind == "feature" or c.kind == "request")
+	return _core_only and c.area != "core" and c.kind == "feature"
 
 
 ## A sprint waiting on its plan starts on the lead's plan the morning its note opens, as the Product page

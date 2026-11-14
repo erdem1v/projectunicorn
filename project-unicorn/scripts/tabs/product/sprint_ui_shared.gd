@@ -416,20 +416,13 @@ static func open_goal_menu(anchor: Control, areas: Array, picked: String, on_pic
 	menu.open_at(anchor, true)
 
 
-## Cümle düzeninde bayrak: rakip çıkışı nötr, bu ya da sonraki sprintte biten son tarih uyarı renginde. Sütunun genişliğini alır;
-## uzun yazı kesilmez, sarar ve çip uzar (saat ilk satırın hizasında).
-static func flag(text: String, warn := false) -> PanelContainer:
+## Cümle düzeninde bayrak (sütunun rakip çıkışı). Sütunun genişliğini alır; uzun yazı kesilmez, sarar ve çip uzar.
+static func flag(text: String) -> PanelContainer:
 	var chip := PanelContainer.new()
-	chip.theme_type_variation = UiTokens.D_variation(&"FlagChipWarn") if warn else &"FlagChip"
+	chip.theme_type_variation = &"FlagChip"
 	chip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var row := box(UiTokens.SPACE_S)
-	if warn:
-		var clock := UiFactory.make_glyph(CLOCK, UiTokens.D_ICON_PART, UiTokens.D_warn())
-		clock.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-		row.add_child(clock)
-	row.add_child(prose(text, &"CaptionStrong", UiTokens.D_warn() if warn else null))
-	chip.add_child(row)
+	chip.add_child(prose(text, &"CaptionStrong"))
 	return chip
 
 

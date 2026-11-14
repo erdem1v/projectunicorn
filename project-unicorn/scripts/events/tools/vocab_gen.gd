@@ -246,7 +246,7 @@ static func run() -> bool:
 		EvLint.PAPER_STAGES.map(func(s: String) -> String: return "`%s`" % s)))
 	L.append("to its `founder` slot for the founder's own note, and a card nobody of that role works is not asked for.")
 	L.append("`speaker_role` may be a list of roles: the first person working the card with any of them speaks.")
-	L.append("A `product_manager` paper is spoken by the quarter's PM and is about a planned customer request card: its")
+	L.append("A `product_manager` paper is spoken by the quarter's PM and is about a planned card an account waits on: its")
 	L.append("`customer` slot is the request's account. `pool_group` (%s) counts the paper in the" % ", ".join(
 		EvLint.PAPER_GROUPS.map(func(g: String) -> String: return "`%s`" % g)))
 	L.append("pool. A paper carries `latch: {cooldown_weeks: 52, max_fires: 3}` (the two stack); a card with no")

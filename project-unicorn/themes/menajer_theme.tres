@@ -1878,38 +1878,6 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_34821"]
-content_margin_left = 8.0
-content_margin_top = 2.0
-content_margin_right = 8.0
-content_margin_bottom = 2.0
-bg_color = Color(0.9098039, 0.5686275, 0.22745098, 0.12)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.9098039, 0.5686275, 0.22745098, 0.55)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3e18b"]
-content_margin_left = 8.0
-content_margin_top = 2.0
-content_margin_right = 8.0
-content_margin_bottom = 2.0
-bg_color = Color(0.9647059, 0.91764706, 0.52156866, 0.1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.9647059, 0.91764706, 0.52156866, 0.5)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_78a5d"]
 content_margin_left = 12.0
 content_margin_top = 11.0
@@ -6267,6 +6235,22 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_34821"]
+content_margin_left = 8.0
+content_margin_top = 2.0
+content_margin_right = 8.0
+content_margin_bottom = 2.0
+bg_color = Color(0.9098039, 0.5686275, 0.22745098, 0.12)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.9098039, 0.5686275, 0.22745098, 0.55)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_34821_2"]
 content_margin_left = 8.0
 content_margin_top = 2.0
@@ -6283,23 +6267,7 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_34821_3"]
-content_margin_left = 8.0
-content_margin_top = 2.0
-content_margin_right = 8.0
-content_margin_bottom = 2.0
-bg_color = Color(0.9098039, 0.5686275, 0.22745098, 0.12)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.9098039, 0.5686275, 0.22745098, 0.55)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3e18b_2"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3e18b"]
 content_margin_left = 8.0
 content_margin_top = 2.0
 content_margin_right = 8.0
@@ -6315,7 +6283,7 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3e18b_3"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3e18b_2"]
 content_margin_left = 8.0
 content_margin_top = 2.0
 content_margin_right = 8.0
@@ -7268,10 +7236,6 @@ FileDocSelected/base_type = &"PanelContainer"
 FileDocSelected/styles/panel = SubResource("StyleBoxFlat_abf1f")
 FlagChip/base_type = &"PanelContainer"
 FlagChip/styles/panel = SubResource("StyleBoxFlat_92168")
-FlagChipWarn/base_type = &"PanelContainer"
-FlagChipWarn/styles/panel = SubResource("StyleBoxFlat_34821")
-FlagChipWarnCb/base_type = &"PanelContainer"
-FlagChipWarnCb/styles/panel = SubResource("StyleBoxFlat_3e18b")
 FloatButton/base_type = &"Button"
 FloatButton/colors/font_color = Color(0.9137255, 0.89411765, 0.85490197, 1)
 FloatButton/colors/font_disabled_color = Color(0.41960785, 0.3882353, 0.34509805, 1)
@@ -8803,16 +8767,16 @@ TagWarn/base_type = &"Label"
 TagWarn/colors/font_color = Color(0.9098039, 0.5686275, 0.22745098, 1)
 TagWarn/font_sizes/font_size = 13
 TagWarn/fonts/font = ExtResource("d_cond_b_caps_3c3ce")
-TagWarn/styles/normal = SubResource("StyleBoxFlat_34821_2")
+TagWarn/styles/normal = SubResource("StyleBoxFlat_34821")
 TagWarnBox/base_type = &"PanelContainer"
-TagWarnBox/styles/panel = SubResource("StyleBoxFlat_34821_3")
+TagWarnBox/styles/panel = SubResource("StyleBoxFlat_34821_2")
 TagWarnBoxCb/base_type = &"PanelContainer"
-TagWarnBoxCb/styles/panel = SubResource("StyleBoxFlat_3e18b_2")
+TagWarnBoxCb/styles/panel = SubResource("StyleBoxFlat_3e18b")
 TagWarnCb/base_type = &"Label"
 TagWarnCb/colors/font_color = Color(0.9647059, 0.91764706, 0.52156866, 1)
 TagWarnCb/font_sizes/font_size = 13
 TagWarnCb/fonts/font = ExtResource("d_cond_b_caps_3c3ce")
-TagWarnCb/styles/normal = SubResource("StyleBoxFlat_3e18b_3")
+TagWarnCb/styles/normal = SubResource("StyleBoxFlat_3e18b_2")
 TagWarnInk/base_type = &"Label"
 TagWarnInk/colors/font_color = Color(0.9098039, 0.5686275, 0.22745098, 1)
 TagWarnInk/font_sizes/font_size = 13
@@ -8896,7 +8860,7 @@ TopicPill/fonts/font = ExtResource("d_cond_b_caps_3c3ce")
 TopicPill/styles/normal = SubResource("StyleBoxFlat_1b27f")
 TraitBox/base_type = &"PanelContainer"
 TraitBox/styles/panel = SubResource("StyleBoxFlat_e9fa3")
-UiTokensStamp/constants/stamp = 53
+UiTokensStamp/constants/stamp = 54
 VScrollBar/styles/grabber = SubResource("StyleBoxFlat_1c24c")
 VScrollBar/styles/grabber_highlight = SubResource("StyleBoxFlat_85a39")
 VScrollBar/styles/grabber_pressed = SubResource("StyleBoxFlat_85a39_2")

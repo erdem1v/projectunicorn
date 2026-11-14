@@ -2687,7 +2687,6 @@ PRODUCT_SERVER_TIER_LOCKED,Kurumsal sunucudasın; geri dönüş yok.,You are on 
 PRODUCT_SERVER_TIER_PREVIEW,{from} → {to} · ayda {old} → {new},{from} → {to} · {old} → {new} a month
 PRODUCT_SERVER_TIER_SWITCH,Geç,Switch
 PRODUCT_SERVER_LOCK_REASON,"Sunucu sözleşmen sürüyor, kademe {weeks} daha değişmez.",Your server contract is running; the tier stays fixed for another {weeks}.
-PRODUCT_FLAG_DEADLINE,{customer} · {request} · son tarih,{customer} · {request} · deadline
 PRODUCT_THIS_QUARTER,Bu çeyrek,This quarter
 PRODUCT_QUARTER_PM_TIP,PM'in önerisi,Your PM's proposal
 PRODUCT_APPROVE,Onayla,Approve
@@ -2818,7 +2817,6 @@ PRODUCT_STAGE_RESEARCH,Araştırma,Research
 PRODUCT_CAP_PAID_PLAN,Ücretli plan,Paid plan
 PRODUCT_FIX_CARD,{capability} düzeltmesi,{capability} fix
 PRODUCT_RESEARCH_CARD,{n} kullanıcıyla görüş,Talk to {n} users
-PRODUCT_REQUEST_CARD,{step} ({customer}),{step} ({customer})
 PRODUCT_NEWS_RIVAL_LAUNCH_0,{rival} yeni özelliğini duyurdu: {capability},{rival} announced a new feature: {capability}
 PRODUCT_NEWS_RIVAL_LAUNCH_1,{rival} kullanıcılarına yeni bir araç sundu: {capability},{rival} rolled out a new tool for its users: {capability}
 PRODUCT_PRESS_CORE_0,{product} yeni sürümünü çıkardı: {capability},{product} released a new version: {capability}

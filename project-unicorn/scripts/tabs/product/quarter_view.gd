@@ -191,5 +191,5 @@ func _header(col: Dictionary) -> VBoxContainer:
 	if col.capacity != null:
 		head.add_child(SprintUiShared.capacity_row(col.capacity, &"DataStrong"))
 	for flag in col.flags:
-		head.add_child(SprintUiShared.flag(flag.text, flag.k == "deadline"))
+		head.add_child(SprintUiShared.flag(flag.text))
 	return head

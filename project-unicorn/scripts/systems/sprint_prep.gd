@@ -2,7 +2,7 @@ class_name SprintPrep
 extends RefCounted
 
 # PM'in önden hazırlığı. PM sprint puanı üretmez: haftasını sonraki sütunda henüz başlamamış kartları hazırlamaya verir
-# (SprintSystem._ahead_cards; özellik ve istek kartı, düzeltme ve araştırma kartı hazırlanmaz). Hazırlık işi kartın puanının
+# (SprintSystem._ahead_cards; özellik kartı, düzeltme ve araştırma kartı hazırlanmaz). Hazırlık işi kartın puanının
 # `prep.share` payıdır, PM'in hızı P(s) = rate[0] + rate[1] × √((s − 2) ÷ 8) puan/hafta (s Ürün puanı, 1★'ın altında sıfıra
 # doğrusal iner) ve çalışma saati, verim, huy ve sprint payıyla çarpılır (SprintSystem.team'in `prep`'i). Kart hazırlığı
 # bittiği oranda kartı hazırlayan PM'in yıldızından fayda alır: kartın her aşamasında hız (`prep_gain`, SprintSystem._work) ve

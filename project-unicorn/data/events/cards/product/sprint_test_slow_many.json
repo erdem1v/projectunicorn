@@ -63,11 +63,8 @@
       },
       {
         "seam": "urun.decision_kind",
-        "op": "in",
-        "value": [
-          "feature",
-          "request"
-        ]
+        "op": "==",
+        "value": "feature"
       }
     ]
   },

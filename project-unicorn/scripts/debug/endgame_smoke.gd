@@ -155,7 +155,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sales_star_mix_reads_fit": fail = _case_sales_star_mix_reads_fit()
 		"sales_sectors_all_produce_leads": fail = _case_sales_sectors_all_produce_leads()
 		"account_uses_area_rule": fail = _case_account_uses_area_rule()
-		"request_area_follows_emphasis": fail = _case_request_area_follows_emphasis()
+		"requests_one_open_per_account": fail = _case_requests_one_open_per_account()
+		"save_request_cards_become_topics": fail = _case_save_request_cards_become_topics()
 		"sales_faucet_guard_b2c": fail = _case_sales_faucet_guard_b2c()
 		"sales_lead_expiry_and_return_lock": fail = _case_sales_lead_expiry_and_return_lock()
 		"sales_meeting_time_skip_founder_share": fail = _case_sales_meeting_time_skip_founder_share()
@@ -9828,27 +9829,76 @@ static func _case_account_uses_area_rule() -> String:
 	return ""
 
 
-## Hesabın isteği sektörünün vurgu 1 alanındandır: Teknoloji Entegrasyonlar, İnşaat İlk kullanım, Medya Güven; alıcı tipi alan seçmez.
-## FALSİFİKASYON: `tick_requests`te `ProductQuality.emphasis(c.industry)[0]` yerine `"core"` yaz → alan iddiası FAIL.
-static func _case_request_area_follows_emphasis() -> String:
+## İstek hesabın acısıdır ve hesap başına tek açık istek: pencerede (imzadan iki hafta sonra) acısı bir kademe olan her hesap bir
+## istek açar, aynı acıyı taşıyan iki hesap aynı konunun iki bekleyenidir; pencereden önce istek yok. Açık istek süreyle düşmez,
+## hesap gidince biter (`gone`). Ortak konunun "öbür hesabı" (`second_account`) ikinci bekleyendir.
+## FALSİFİKASYON: `tick_requests`te pencere koşulunu sil → 11. gün istek açılır FAIL; tek açık istek koşulunu sil → hesap ikinci
+## istek açar FAIL; `gone` dalını sil → giden hesabın isteği açık kalır FAIL; `second_account`ın ikinci bekleyen dalını sil → FAIL.
+static func _case_requests_one_open_per_account() -> String:
 	_seed_sprint_live("erp")
-	_sprint_hire("char_ask_design", HRConstants.ROLE_DESIGNER)   # Onboarding's first tier asks a design person
-	var asked := {}
-	for sector in ["technology", "construction", "media"]:
-		var c: Customer = _incident_account("co_ask_" + sector, "Ask " + sector, sector, 40, 1800)
+	var nexts: Array = []   # the next tier of each core line: steps no account has yet
+	for line in SprintCatalog.capabilities("core"):
+		var next: Dictionary = ProductLines.step_at(line, ProductState.line_tier(line) + 1)
+		if not next.is_empty():
+			nexts.append(next.id)
+	var shared: String = nexts[0]
+	var pains := {"co_ask_a": shared, "co_ask_b": shared, "co_ask_c": nexts[1]}
+	for id in pains:
+		var big: bool = id == "co_ask_c"   # larger than both askers: the fallback rule of `second_account` would never pick co_ask_b
+		var c: Customer = _incident_account(id, "Ask " + id, "technology", 80 if big else 40, 3600 if big else 1800)
 		c.acquired_on_day = 10
-		asked[c.id] = sector
+		CustomerRegistry.set_pain_feature(id, pains[id])
 	GameState.product.requests.clear()
-	for day in range(11, 14):
+	GameState.day = 11
+	SprintBridges.tick_requests()
+	if not GameState.product.requests.is_empty():
+		return "a request opened before the account's window: %s" % str(GameState.product.requests)
+	for day in range(12, 52):   # past the renewal window of day 50: an open request keeps the account from asking again
 		GameState.day = day
 		SprintBridges.tick_requests()
-	for id in asked:
+	for id in pains:
 		var mine: Array = GameState.product.requests.filter(func(r: Dictionary) -> bool: return r.customer_id == id)
-		if mine.size() != 1:
-			return "%s opened %d requests, want one" % [id, mine.size()]
-		var want: String = ProductQuality.emphasis(asked[id])[0]
-		if SprintCatalog.area_of_line(mine[0].line) != want:
-			return "the %s account asks in %s, want its first emphasis %s" % [asked[id], SprintCatalog.area_of_line(mine[0].line), want]
+		if mine.size() != 1 or mine[0].status != "open" or mine[0].step != pains[id]:
+			return "%s holds %s on day 51, want one open request for its pain %s" % [id, str(mine), pains[id]]
+	var waiting: Array = SprintCatalog.askers(shared).map(func(c: Customer) -> String: return c.id)
+	waiting.sort()
+	if waiting != ["co_ask_a", "co_ask_b"]:
+		return "the shared topic is waited on by %s, want both accounts that ask it" % str(waiting)
+	var second: Customer = SprintCatalog.second_account({"step": shared, "line": ProductLines.step(shared).line_id})
+	if second == null or second != SprintCatalog.askers(shared)[1]:
+		return "the shared topic's second account is %s, want its second asker" % (second.id if second != null else "none")
+	CustomerRegistry.remove("co_ask_c")
+	SprintBridges.tick_requests()
+	var left: Array = GameState.product.requests.filter(func(r: Dictionary) -> bool: return r.customer_id == "co_ask_c")
+	if left[0].status != "gone":
+		return "the request of an account that left reads '%s', want gone" % left[0].status
+	return ""
+
+
+## Talep kartı günlerinden kalma kayıt: sprintteki `req:<id>` kartı ve ona bakan talep yüklenince konunun özellik kartına döner
+## (kart, sprint, talep); ikinci yükleme bir şey değiştirmez.
+## FALSİFİKASYON: `request_cards_to_topics`te sütun takasını sil → sprint eski kimliği taşır FAIL; talep satırının `card_id`sini
+## çevirme → talep eski karta bakar FAIL.
+static func _case_save_request_cards_become_topics() -> String:
+	_seed_sprint_live("erp")
+	var line: String = SprintCatalog.capabilities("core")[3]
+	var step: String = line + "_k1"
+	var old_id := "req:co_old.1"
+	var old: Dictionary = SprintCatalog.new_card(old_id, "feature", "core", 10, line, step, 1)
+	old.merge({"kind": "request", "customer_id": "co_old", "request_id": "co_old.1"}, true)
+	GameState.product.cards[old_id] = old
+	GameState.product.sprint.cards.append(old_id)
+	GameState.product.requests.append({"id": "co_old.1", "customer_id": "co_old", "step": step, "line": line, "status": "open",
+		"card_id": old_id, "due_sprint": 9, "day": 0, "value": 0, "created_sprint": 1})
+	var topic: String = "feat:" + step
+	for load in [1, 2]:
+		SprintSystem.request_cards_to_topics()
+		var p: Dictionary = GameState.product
+		var card: Dictionary = p.cards.get(topic, {})
+		if p.cards.has(old_id) or card.get("kind", "") != "feature" or card.has("customer_id") or not p.sprint.cards.has(topic) \
+				or p.sprint.cards.has(old_id) or p.requests.back().card_id != topic:
+			return "load %d left cards %s, the sprint %s and the request %s" % [load, str(p.cards.keys()), str(p.sprint.cards),
+				str(p.requests.back())]
 	return ""
 
 
@@ -16284,10 +16334,9 @@ static func _case_sales_offer_signing() -> String:
 	return ""
 
 
-## `musteri.promise_late`: hesabın en eski açık sözünün kademesi koşan sprintte ve ekibin hızıyla yetişmiyor. Hesabın istediği
-## kademe sprinte istek kartı olarak (`req:<istek>`) girer; seam kartı kademesinden bulur. Sprintte olmayan ve yetişen kart geç
-## okunmaz.
-## FALSİFİKASYON: seam'i kartı `"feat:" + kademe` kimliğiyle arayan hâline döndür → istek kartı iddiası FAIL.
+## `musteri.promise_late`: hesabın en eski açık sözünün kademesi koşan sprintte ve ekibin hızıyla yetişmiyor; seam kartı kademesinden
+## bulur (konunun kartı kademenin özellik kartıdır). Sprintte olmayan ve yetişen kart geç okunmaz.
+## FALSİFİKASYON: `SprintBridges.promise_cards` [] dönsün → geç kart iddiası FAIL.
 static func _case_sales_promise_late_request_card() -> String:
 	var account: Customer = _seed_open_request()
 	if account == null:
@@ -16302,7 +16351,7 @@ static func _case_sales_promise_late_request_card() -> String:
 	SprintSystem.plan_next()
 	SprintSystem.add(req.card_id)
 	var card: Dictionary = GameState.product.cards.get(req.card_id, {})
-	if card.get("kind", "") != "request" or not SprintSystem.start():
+	if card.get("kind", "") != "feature" or not SprintSystem.start():
 		return "fixture: the request card %s did not start a sprint (%s)" % [req.card_id, card]
 	_size(card, 500.0)
 	if not EvSeams.read_for("musteri.promise_late", account.id):
@@ -25159,9 +25208,9 @@ static func _seed_open_request() -> Customer:
 	return account
 
 
-## B2B talebi: hesap imzadan bir sprint sonra sektörünün vurgu 1 alanından bir kademe ister.
-## Talep kartı adaylarda ve liderin önerisinde görünür; son tarihten önce çıkan sürüm talebi karşılar ve aynı kademeye
-## verilmiş sözü o sürümün "shipped"iyle tutar.
+## B2B talebi: hesap imzadan bir sprint sonra acısını (bir hattın sonraki kademesi) ister. Konunun kartı (kademenin özellik kartı)
+## adaylarda ve liderin önerisinde görünür, hesap onun bekleyenidir; çıkan sürüm talebi karşılar ve aynı kademeye verilmiş sözü o
+## sürümün "shipped"iyle tutar.
 static func _case_sprint_request_on_time_met() -> String:
 	var account: Customer = _seed_open_request()
 	if account == null:
@@ -25170,23 +25219,22 @@ static func _case_sprint_request_on_time_met() -> String:
 	if open.size() != 1 or open[0].customer_id != account.id:
 		return "a sprint after signing the account holds requests %s, want one from %s" % [open, account.id]
 	var req: Dictionary = open[0]
-	var deadline: int = SprintSystem.sprints_in(int(SprintCatalog.cfg("request.deadline_weeks")))
-	if SprintCatalog.area_of_line(req.line) != ProductQuality.emphasis(account.industry)[0] \
-			or int(req.due_sprint) != int(req.created_sprint) + deadline \
+	if req.step != account.pain_feature_id or req.card_id != "feat:" + req.step or req.has("due_sprint") \
 			or int(req.value) != account.mrr * 12:
-		return "the request reads %s; want the sector's first emphasis area, the deadline sprint and a year of MRR" % req
+		return "the request reads %s; want the account's pain %s as its feature card, no deadline and a year of MRR" % [
+			req, account.pain_feature_id]
 	SprintSystem.plan_next()
 	if not SprintCatalog.candidates(SprintCatalog.area_of_line(req.line)).any(
-			func(c: Dictionary) -> bool: return c.id == req.card_id and c.kind == "request"):
-		return "the request card %s is not among the candidates" % req.card_id
+			func(c: Dictionary) -> bool: return c.id == req.card_id and c.kind == "feature") \
+			or not SprintCatalog.askers(req.step).has(account):
+		return "the topic card %s is not among the candidates with %s waiting on it" % [req.card_id, account.id]
 	if not SprintCatalog.lead_suggestion().this.has(req.card_id):
-		return "the lead's plan skips the open request"
+		return "the lead's plan skips the topic the account waits on"
 	var promise: Promise = PromiseRegistry.create(account.id, req.step, 10)
 	if not _play_sprint([req.card_id]):
 		return "fixture: sprint 2 did not start"
 	if req.status != "met":
-		return "a request shipped in sprint %d, due %d, reads '%s'" % [SprintSystem.sprint_number(),
-			int(req.due_sprint), req.status]
+		return "a request shipped in sprint %d reads '%s'" % [SprintSystem.sprint_number(), req.status]
 	if promise.status != "kept":
 		return "the release met the request but not the word given for the same step ('%s')" % promise.status
 	return ""
@@ -26844,9 +26892,8 @@ static func _late_world(solo: bool, request: bool, promised := false) -> String:
 	var step: String = "%s_k1" % line
 	var card_id: String = "feat:" + step
 	if request:
-		card_id = "req:co_demir.1"
 		GameState.product.requests.append({"id": "co_demir.1", "customer_id": account.id, "step": step, "line": line,
-			"status": "open", "created_sprint": 1, "due_sprint": 99, "value": 21600, "card_id": card_id, "day": GameState.day})
+			"status": "open", "created_sprint": 1, "value": 21600, "card_id": card_id, "day": GameState.day})
 	if promised:
 		PromiseRegistry.create(account.id, step, B2BConstants.PROMISE_DEADLINE_WEEKS).due_sprint = SprintSystem.sprint_number() + 1
 	SprintSystem.add(card_id)
@@ -26865,9 +26912,9 @@ static func _late_world(solo: bool, request: bool, promised := false) -> String:
 
 ## "Sprint yetişmeyecek" yalnız kartı bekleyen biri varken, sprintin son haftasında, kart bu hızla yetişmeyip fazla mesaiyle
 ## yetişiyorsa ve kartta söz yoksa gelir: ekipte kartın o aşamada çalışanı (bir çalışan) söyler, kurucu tekken kurucunun kendi notudur
-## (`product.sprint_late_solo`); konu hesap isteyen hesaptır. Kartı isteyen olmayan (özellik kartı) ya da sözü olan kartta gelmez.
+## (`product.sprint_late_solo`); konu kartı bekleyen hesaptır. Kartı bekleyen olmayan ya da sözü olan kartta gelmez.
 ## Fazla mesai sprintin saatini ×1,25 yapar; ekipte herkesin morali düşer, kurucu tekken düşmez.
-## FALSİFİKASYON: kartın koşulundan `urun.decision_kind == request` yaprağını sil → özellik kartında geldi FAIL; `urun.decision_promised`
+## FALSİFİKASYON: kartın `customer` yuvasının `required`ını false yap → bekleyeni olmayan kartta geldi FAIL; `urun.decision_promised`
 ## yaprağını sil → sözlü kartta geldi FAIL; `crunch_finishes` yaprağını sil → yetişmeyen kartta geldi FAIL; sprint.json
 ## `decision.cards`tan `product.sprint_late_solo`yu çıkar → kurucu tekken gelmedi FAIL.
 static func _case_sprint_late_for_requests() -> String:
@@ -26889,7 +26936,7 @@ static func _case_sprint_late_for_requests() -> String:
 			if came != row[3] or (row[3] != "" and not EventGate.on_desk(row[3])) \
 					or (row[3] == "" and (EventGate.on_desk("product.sprint_late") or EventGate.on_desk("product.sprint_late_solo"))):
 				return "a late %s card (solo %s, promised %s) brought '%s', want '%s'" % [
-					"request" if row[1] else "feature", row[0], row[2], came, row[3]]
+					"awaited" if row[1] else "unawaited", row[0], row[2], came, row[3]]
 			if row[3] == "":
 				continue
 			var speaker: Character = CharacterRegistry.get_character(GameState.product.decision.speaker)
@@ -26939,17 +26986,17 @@ static func _paper_pool_end(saved: Array) -> void:
 ## aşamanın rolünü verir, karakter rolü kâğıdın `speaker_role`'üdür ve kâğıt ona bağlanır (`employee` slotu; kurucuysa
 ## `founder`). Tasarım aşamasında kartta atanmış yazılımcı tasarımcı kâğıdını söylemez, PM sprint puanı üretmediği için hiçbir
 ## kartta atanmış olmaz; payı Destek'e geçmiş yazılımcı atanmaz ve konuşmaz. PM kâğıdını çeyreği planlayan PM söyler, konusu
-## sprintteki müşteri isteği kartıdır, hesap isteğin hesabıdır; PM yoksa gelmez. Tek kurucunun kâğıdı kendi notudur.
+## sprintte bekleyeni olan karttır, hesap bekleyenin hesabıdır; PM yoksa gelmez. Tek kurucunun kâğıdı kendi notudur.
 ## FALSİFİKASYON: SprintSystem._speaker'daki `.role == role` koşulunu sil → yazılımcılı ekipte tasarımcı kâğıdı geldi FAIL;
-## `role_of(id) == stage` koşulunu sil → yazılımcı kâğıdının aşaması FAIL; PM dalındaki `c.kind == "request"` koşulunu
-## sil → PM kâğıdı istek olmayan karta düştü FAIL.
+## `role_of(id) == stage` koşulunu sil → yazılımcı kâğıdının aşaması FAIL; PM dalındaki `askers` koşulunu sil → PM kâğıdı
+## bekleyeni olmayan karta düştü FAIL.
 static func _case_paper_speaker_is_assignee() -> String:
 	var saved: Array = _paper_pool([])
 	var seen: Array = []
 	EventBus.card_decision_requested.connect(func(card_id: String) -> void:
 		var card: Dictionary = GameState.product.cards[card_id]
 		var speaker: String = GameState.product.decision.speaker
-		seen.append({"speaker": speaker, "kind": card.kind, "assignees": card.assignees.duplicate(),
+		seen.append({"speaker": speaker, "card": card_id, "assignees": card.assignees.duplicate(),
 			"stage": SprintSystem.role_of(speaker)}))
 	# Bir sprint: ekip `roles` (kurucu ayrıca) ve havuzda yalnız `paper`; kâğıt ilk haftanın sonunda istenir. Kartlar `points`
 	# puanlıktır: kırk puanlık kart ilk haftanın sonunda geliştirmededir, çok büyük kart hâlâ tasarımda. Kâğıt gelmediyse {}.
@@ -26974,10 +27021,10 @@ static func _case_paper_speaker_is_assignee() -> String:
 			SalesSystem.reflect_mrr()
 			var line: String = SprintCatalog.capabilities("core")[3]
 			GameState.product.requests.append({"id": "co_paper.1", "customer_id": "co_paper", "step": line + "_k1",
-				"line": line, "status": "open", "created_sprint": 1, "due_sprint": 99, "value": 21600,
-				"card_id": "req:co_paper.1", "day": GameState.day})
+				"line": line, "status": "open", "created_sprint": 1, "value": 21600, "card_id": "feat:%s_k1" % line,
+				"day": GameState.day})
 			cards.append("feat:%s_k1" % SprintCatalog.capabilities("core")[4])   # first in the sprint: not the PM's subject
-			cards.append("req:co_paper.1")
+			cards.append("feat:%s_k1" % line)
 		else:
 			for line_id in SprintCatalog.capabilities("core").slice(0, 3):
 				cards.append("feat:%s_k1" % line_id)
@@ -27033,8 +27080,8 @@ static func _case_paper_speaker_is_assignee() -> String:
 		var pm: Dictionary = play.call([HRConstants.ROLE_PRODUCT_MANAGER, HRConstants.ROLE_DEVELOPER], PAPER_PM, true, false, 40.0)
 		var pm_id: String = "" if SprintCatalog.quarter_pm() == null else SprintCatalog.quarter_pm().id
 		_drain_all_modals()   # the account's first-contact card is on screen; one modal at a time
-		if pm.is_empty() or pm.get("speaker", "") != pm_id or pm.get("kind", "") != "request":
-			fail = "the product manager paper reads %s, want the quarter's PM %s on a request card" % [str(pm), pm_id]
+		if pm.is_empty() or pm.get("speaker", "") != pm_id or pm.get("card", "") != "feat:%s_k1" % SprintCatalog.capabilities("core")[3]:
+			fail = "the product manager paper reads %s, want the quarter's PM %s on the card the account waits on" % [str(pm), pm_id]
 		elif not EventGate.open_paper(PAPER_PM) or EventGate.active_context().employee.id != pm_id \
 				or EventGate.active_context().customer.id != "co_paper":
 			fail = "the product manager paper is bound to %s" % str(EventGate.active_context())
@@ -27430,9 +27477,9 @@ static func _case_paper_outlook_reads_the_plan() -> String:
 ## eski ifadeye döndür ve next_renewal_day'in terimini değiştir → talep penceresi kaydı FAIL.
 static func _case_next_renewal_day_one_place() -> String:
 	_paper_world()
-	# Construction names Onboarding first, which no other account of the world does: its first tier is free to ask for.
 	var account: Customer = _incident_account("co_renewal", "Renewal Co", "construction", 40, 1800)
 	account.acquired_on_day = 10
+	CustomerRegistry.set_pain_feature(account.id, "%s_k1" % SprintCatalog.capabilities("core")[3])
 	# [today, the renewal the window shows]
 	for pair in [[11, 62], [49, 62], [50, 62], [62, 62], [63, 62], [101, 62], [102, 114], [150, 114]]:
 		GameState.day = pair[0]
@@ -27448,31 +27495,28 @@ static func _case_next_renewal_day_one_place() -> String:
 		var mine: Array = GameState.product.requests.filter(func(r: Dictionary) -> bool: return r.customer_id == account.id)
 		if mine.size() > opened.size():
 			opened.append(day)
-			mine.back().status = "late"
+			mine.back().status = "met"
 	if opened != [12, 50]:
 		return "the account's requests opened on days %s, want [12, 50]" % str(opened)
 	return ""
 
 
 ## B6a · "Kartı başa al": `sprint_card_first` kâğıdın kartını sprintin başına alır ve kâğıt cevaplanınca kart hemen çalışır
-## (ataması baştan yapılır); çip yalnız o yüzden sprintten kayan kartı yazar ve geçmiş satırı aynısını okur. Kâğıt
-## kartı talebin son tarihine yetiştirmeyi vaat ettiği için `urun.decision_request_saved` yalnız kart yetişmiyorken, kart
-## başa girince bu sprintte bitiyorken, bu sprint kartın son tarihli sprintiyken ve son tarih kartın hesabının talebindense
-## doğrudur (Erdem, 2026-11-12, H14).
-## FALSİFİKASYON: `decision_first`te `c.decision = false` satırını sil → kartın ataması boş kaldı FAIL; seam'de
-## `int(due.sprint) == sprint_number()` koşulunu sil → gelecek sprintin son tarihi de "kurtarılır" FAIL;
-## `due.customer_id == account.id` koşulunu sil → başka hesabın son tarihi bu hesaba yazılır FAIL; `not due.promise`'ı sil →
-## sözü olan kademe de "kurtarılır" FAIL.
+## (ataması baştan yapılır); çip yalnız o yüzden sprintten kayan kartı yazar ve geçmiş satırı aynısını okur. Kâğıt kartı
+## bekleyen hesabın yenilemesine yetiştirmeyi vaat ettiği için `urun.decision_request_saved` yalnız kart yetişmiyorken, kart
+## başa girince bu sprintte bitiyorken, kartın konusunu bekleyenlerden yenilemesi en yakın olanın yenilemesi bu sprinte
+## düşüyorken ve kademeye söz verilmemişken doğrudur; kâğıdın hesabı o bekleyendir, ilk isteyen değil.
+## FALSİFİKASYON: `decision_first`te `c.decision = false` satırını sil → kartın ataması boş kaldı FAIL; seam'de `weeks_left()`
+## sınırını sil → yenilemesi sprintten sonra olan hesap da "kurtarılır" FAIL; `askers`ın yenileme sırasını sil → kâğıt yenilemesi
+## yaklaşanı değil ilk isteyeni anar FAIL; söz koşulunu sil → sözü olan kademe de "kurtarılır" FAIL.
 static func _case_paper_renewal_card_first() -> String:
 	_paper_world()
 	var account: Customer = _incident_account("co_renewal", "Renewal Co", "retail", 40, 1800)
 	var lines: Array = SprintCatalog.capabilities("core")
 	var first_id: String = _paper_card(3, 30)
-	var req := {"id": "co_renewal.1", "customer_id": account.id, "step": lines[1] + "_k1", "line": lines[1],
-		"status": "open", "created_sprint": 1, "due_sprint": 99, "value": 21600, "card_id": "req:co_renewal.1",
-		"day": GameState.day}
-	GameState.product.requests.append(req)
-	var asked: String = "req:co_renewal.1"
+	var asked: String = "feat:%s_k1" % lines[1]
+	GameState.product.requests.append({"id": "co_renewal.1", "customer_id": account.id, "step": lines[1] + "_k1",
+		"line": lines[1], "status": "open", "created_sprint": 1, "value": 21600, "card_id": asked, "day": GameState.day})
 	SprintSystem.add(asked)
 	if not SprintSystem.start():
 		return "fixture: the sprint did not start"
@@ -27490,22 +27534,27 @@ static func _case_paper_renewal_card_first() -> String:
 			break
 	if not found:
 		return "fixture: no pair of efforts leaves the request late and saves it when first"
-	var now: int = SprintSystem.sprint_number()
-	req.due_sprint = now
+	# The account's renewal `ticks` from today (SprintBridges.renews_in): signed that long short of a contract term ago.
+	var term: int = TimeModel.ticks(int(SprintCatalog.cfg("request.contract_weeks")))
+	var renews := func(c: Customer, ticks: int) -> void:
+		c.acquired_on_day = GameState.day - term + ticks
+	var left: int = TimeModel.ticks(SprintSystem.weeks_left())
+	renews.call(account, left)
 	if not bool(EvSeams.read("urun.decision_request_saved")):
-		return "a request due this sprint (%d), its card late and finishing first, did not call for the card first" % now
-	req.due_sprint = now + 1
+		return "the account renews inside this sprint, its card late and finishing first, yet the paper does not call for the card first"
+	renews.call(account, left + 1)
 	if bool(EvSeams.read("urun.decision_request_saved")):
-		return "a request due next sprint is called saved this sprint"
-	req.due_sprint = now
-	var other: Customer = _incident_account("co_other", "Other Co", "retail", 40, 1800)
-	GameState.product.cards[asked].customer_id = other.id
-	if bool(EvSeams.read("urun.decision_request_saved")):
-		return "the card's deadline comes from Renewal Co's request, yet the paper would speak for Other Co"
-	GameState.product.cards[asked].customer_id = account.id
+		return "an account renewing after this sprint is called saved this sprint"
+	# A second, smaller asker who asked later but renews sooner is the one the paper speaks for.
+	var other: Customer = _incident_account("co_other", "Other Co", "retail", 20, 900)
+	GameState.product.requests.append({"id": "co_other.1", "customer_id": other.id, "step": lines[1] + "_k1",
+		"line": lines[1], "status": "open", "created_sprint": 1, "value": 21600, "card_id": asked, "day": GameState.day})
+	renews.call(other, 1)
+	if not bool(EvSeams.read("urun.decision_request_saved")) or SprintCatalog.paper_account("request", {}) != other.id:
+		return "the asker renewing inside this sprint is %s, the paper speaks for %s" % [other.id, SprintCatalog.paper_account("request", {})]
 	# A promise on the card's step is its own deadline, and the promise's card speaks for it: this paper stays quiet.
 	var word: Promise = PromiseRegistry.create(account.id, String(GameState.product.cards[asked].step), 2)
-	word.due_sprint = now
+	word.due_sprint = SprintSystem.sprint_number()
 	if bool(EvSeams.read("urun.decision_request_saved")):
 		return "a step with a promise on it still calls the request saved"
 	word.status = "kept"
@@ -27758,9 +27807,9 @@ static func _paper_pm_asked() -> String:
 	var lines: Array = SprintCatalog.capabilities("core")
 	var account: Customer = _incident_account("co_asked", "Asked Co", "technology", 40, 1800)
 	var first_id: String = _paper_card(3, 30)
+	var asked: String = "feat:%s_k1" % lines[1]
 	GameState.product.requests.append({"id": "co_asked.1", "customer_id": account.id, "step": lines[1] + "_k1", "line": lines[1],
-		"status": "open", "created_sprint": 1, "due_sprint": 99, "value": 21600, "card_id": "req:co_asked.1", "day": GameState.day})
-	var asked: String = "req:co_asked.1"
+		"status": "open", "created_sprint": 1, "value": 21600, "card_id": asked, "day": GameState.day})
 	SprintSystem.add(asked)
 	if not SprintSystem.start():
 		_paper_pool_end(saved)
@@ -30319,9 +30368,8 @@ static func _case_release_through_close() -> String:
 	var line: String = SprintCatalog.capabilities("core")[3]
 	var step := "%s_k1" % line
 	GameState.product.requests.append({"id": "co_thanks.1", "customer_id": "co_thanks", "step": step, "line": line,
-		"status": "open", "created_sprint": 1, "due_sprint": 99, "value": 21600, "card_id": "req:co_thanks.1",
-		"day": GameState.day})
-	if not _play_sprint(["req:co_thanks.1"]):
+		"status": "open", "created_sprint": 1, "value": 21600, "card_id": "feat:" + step, "day": GameState.day})
+	if not _play_sprint(["feat:" + step]):
 		return "fixture: the sprint did not start"
 	var record: Dictionary = GameState.product.releases.back()
 	if record.thanks.map(func(t: Dictionary) -> String: return t.customer) != ["co_thanks"] or _thanks_row("co_thanks").is_empty():

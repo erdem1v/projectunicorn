@@ -615,7 +615,7 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 			var queued: Dictionary = queue_plan(e, ctx)
 			var queued_id: String = String(queued.get("id", ""))
 			if queued_id == "" and not queued.is_empty():
-				queued_id = SprintBridges.open_request(queued.of.customer_id, queued.of.line)
+				queued_id = SprintBridges.open_request(queued.customer, queued.of.line)
 			if queued_id == "":
 				return _no_target(verb, "")
 			SprintSystem.send_next(queued_id)
@@ -968,14 +968,14 @@ static func pin_plan(e: Dictionary, ctx: Dictionary) -> Dictionary:
 
 ## What a `queue_card` puts in the next sprint and what the player reads for it: with a `scope` the customer slot's new request on
 ## `line` (SprintBridges.request_step), else the first feature card of the `area`'s (the `line`'s area) candidates that no column
-## holds and whose gate is open; {} with none. {id: "" for a request not opened yet, of}.
+## holds and whose gate is open; {} with none. {id: "" for a request not opened yet (and its `customer`), of}.
 static func queue_plan(e: Dictionary, ctx: Dictionary) -> Dictionary:
 	var line: String = line_of(e)
 	if e.has("scope"):
 		var account: String = entity_of(e, ctx, EvScope.TYPE_CUSTOMER)
 		var step: Dictionary = SprintBridges.request_step(account, line)
-		return {} if step.is_empty() else {"id": "", "of": {"kind": "request", "line": step.line_id, "step": step.id,
-			"customer_id": account}}
+		return {} if step.is_empty() else {"id": "", "customer": account, "of": {"kind": "feature", "line": step.line_id,
+			"step": step.id}}
 	var area: String = String(e.get("area", SprintCatalog.area_of_line(line)))
 	for c in ([] if area == "" else SprintCatalog.candidates(area)):
 		if c.id.begins_with("feat:") and c.state == "candidate" and SprintCatalog.gate_reason(c.step) == "" \

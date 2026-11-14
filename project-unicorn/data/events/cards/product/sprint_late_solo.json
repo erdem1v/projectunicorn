@@ -39,7 +39,7 @@
     },
     "customer": {
       "type": "customer",
-      "required": false,
+      "required": true,
       "select": "request"
     }
   },
@@ -58,11 +58,6 @@
         "seam": "urun.sprint_last_week",
         "op": "==",
         "value": true
-      },
-      {
-        "seam": "urun.decision_kind",
-        "op": "==",
-        "value": "request"
       },
       {
         "seam": "urun.decision_card_late",

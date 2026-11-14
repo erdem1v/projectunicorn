@@ -796,10 +796,8 @@ func _menajer(master: Theme) -> Theme:
 		_panel(th, "FxChipDanger" + twin, "PanelContainer", _flat(risk.bg, T.D_RADIUS_2,
 			_fit(sans_reg, T.D_FS_14, T.D_H_FX, T.SPACE_M, T.SPACE_M), risk.line))
 		_panel(th, "RiskStripHover" + twin, "PanelContainer", _flat(T.D_neg_bg(), T.D_RADIUS_3, strip_pad, T.D_neg()))
-		# A deadline that ends this sprint or the next.
-		var warn: Dictionary = T.D_badge_palette(&"accent")
-		_panel(th, "FlagChipWarn" + twin, "PanelContainer", _flat(warn.bg, T.D_RADIUS_2, flag_pad, warn.line))
 		# A tag with a glyph before its word: the box holds both, the word is bare.
+		var warn: Dictionary = T.D_badge_palette(&"accent")
 		_panel(th, "TagWarnBox" + twin, "PanelContainer", _flat(warn.bg, T.D_RADIUS_2, tag, warn.line))
 		_lbl(th, "TagWarnInk" + twin, cond_b_caps, T.D_FS_13, warn.fg)
 		var gain: Dictionary = T.D_badge_palette(&"positive")

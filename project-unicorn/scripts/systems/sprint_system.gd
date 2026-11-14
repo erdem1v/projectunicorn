@@ -204,14 +204,14 @@ static func _begin() -> void:
 
 ## Sürüm notundan sonraki sprintin planlamasına: sonraki sütun (devredenler önde) bu sprint olur,
 ## yeni sonraki sütuna onaylı PM planı geçer. Çeyreğin haftaları sprintlerle dolunca çeyrek döner, hedef
-## boşalır (PM'in planı en zayıf alana bakar). Kademesine başka bir kartla varılmış saklı kart düşer
-## (geç kalan talebin kartı ile aynı kademenin özellik kartı ikisi de saklanabilir); kâğıdın takip kartı (`follow`) kalır.
+## boşalır (PM'in planı en zayıf alana bakar). Kademesine başka bir kartla varılmış saklı kart düşer; kâğıdın takip kartı
+## (`follow`) kalır.
 static func plan_next() -> void:
 	if mode() != "release":
 		return
 	var p: Dictionary = _p()
 	for c in p.cards.values():
-		if c.kind in ["feature", "request"] and not c.get("follow", false) and int(c.target_tier) <= SprintCatalog.tier(c.line):
+		if c.kind == "feature" and not c.get("follow", false) and int(c.target_tier) <= SprintCatalog.tier(c.line):
 			p.cards.erase(c.id)
 			p.next.cards.erase(c.id)
 	var number: int = int(p.next.number)
@@ -276,7 +276,7 @@ static func put_first(card: Dictionary) -> void:
 
 
 ## Düzeltme kartı sütunun başına girse hangi kart sprintten kayardı: bugünkü sırada biten, kart başa geçince bitmeyen
-## ilk kart ({kind, line, step, customer_id}: adı SprintCatalog.card_name verir), yoksa {}. Çip bunu `fix_first`
+## ilk kart ({kind, line, step}: adı SprintCatalog.card_name verir), yoksa {}. Çip bunu `fix_first`
 ## çalışmadan söyler; `bugs` fix_first'teki gibi hattın henüz düşmemiş hatasıdır.
 static func fix_first_bumps(line: String, bugs := 0) -> Dictionary:
 	var fix: Dictionary = SprintCatalog.card_by_id("fix:" + line)
@@ -316,7 +316,7 @@ static func first_bumps(card: Dictionary) -> Dictionary:
 ## Kartı adlandıran alanlar (`SprintCatalog.card_name`'in okuduğu): çip ve geçmiş satırı kartın adını bununla yazar, kart
 ## sürümle silinse de.
 static func card_ref(c: Dictionary) -> Dictionary:
-	return {} if c.is_empty() else {"kind": c.kind, "line": c.line, "step": c.step, "customer_id": c.customer_id}
+	return {} if c.is_empty() else {"kind": c.kind, "line": c.line, "step": c.step}
 
 
 ## Düzeltme kartı sonraki sprintin başına girer: sürüm notundayken ya da koşan sprint bu gece kapanacak ve günün
@@ -390,6 +390,50 @@ static func publish() -> void:
 	EventBus.build_phase_changed.emit("shipped")
 	EventBus.version_shipped.emit(1)
 	_changed()
+
+
+## Talep kartı (`req:<id>`, tek hesabın) günlerinden kalma kayıt: kart konunun özellik kartına (`feat:<kademe>`) döner (kartlar,
+## iki sütun, çeyrek planları, bekleyen karar, sürümlerin devreden kimlikleri ve gönderilen türleri; talep satırlarını
+## SprintBridges çevirir); aynı kademenin iki kartı varsa ilerlemesi çok olan kalır. Testi bekleyen etkinin (`EvWatch`) eski
+## kimliği çevrilmez. Her yüklemede çalışır, dönmüş kayıtta bir şey yapmaz.
+static func request_cards_to_topics() -> void:
+	var p: Dictionary = GameState.product
+	var cards: Dictionary = p.get("cards", {})
+	var renamed: Dictionary = {}
+	for id: String in cards.keys().filter(func(k: String) -> bool: return k.begins_with("req:")):
+		var c: Dictionary = cards[id]
+		var topic: String = "feat:" + String(c.step)
+		renamed[id] = topic
+		cards.erase(id)
+		if not cards.has(topic) or _worked(cards[topic]) < _worked(c):
+			c.merge({"id": topic, "kind": "feature"}, true)
+			cards[topic] = c
+	for c: Dictionary in cards.values():
+		c.erase("customer_id")
+		c.erase("request_id")
+	SprintBridges.request_rows_to_topics()
+	if renamed.is_empty():
+		return
+	var swap := func(ids: Array) -> Array:
+		var out: Array = []
+		for id in ids:
+			var now: String = renamed.get(id, id)
+			if not out.has(now):
+				out.append(now)
+		return out
+	for column in [p.sprint, p.next]:
+		column.cards = swap.call(column.cards)
+	p.next.cards = p.next.cards.filter(func(id: String) -> bool: return not p.sprint.cards.has(id))
+	for plan: Dictionary in p.quarter.plans:
+		plan.cards = swap.call(plan.cards)
+	if p.decision.has("card_id"):
+		p.decision.card_id = renamed.get(p.decision.card_id, p.decision.card_id)
+	for release: Dictionary in p.releases + ([p.release] if not p.release.is_empty() else []):
+		for item: Dictionary in release.get("carried", []):
+			item.id = renamed.get(item.id, item.id)
+		for shipped: Dictionary in release.get("shipped", []):
+			if shipped.get("kind", "") == "request":
+				shipped.kind = "feature"
 
 
 ## Beta kanalı günlerinden kalma kayıt: betada bekleyen kart biten sayılır ve sıradaki kapanışta yayına girer
@@ -521,7 +565,7 @@ static func decision_trim(plan: Dictionary) -> String:
 	return c.id
 
 
-## Kartın kademesini yapan takip kartı: özellik kartıdır, istek bağı ve lisans bedeli yoktur (kademenin lisansı ilk kartta
+## Kartın kademesini yapan takip kartı: özellik kartıdır, lisans bedeli yoktur (kademenin lisansı ilk kartta
 ## ödenir); `plan_next` kademesi tutulmuş kartı siler, bunu silmez.
 static func _follow_card(c: Dictionary, work: int) -> Dictionary:
 	var follow: Dictionary = SprintCatalog.new_card("follow:%s:%d" % [c.id, sprint_number()], "feature", c.area, work,
@@ -558,17 +602,15 @@ static func decision_first_finishes() -> bool:
 	return bool(_outcome([lead] + rest, weeks_left(), true, team()).cards[id].finishes)
 
 
-## "Kartı başa al" kartı talebin son tarihine yetiştirir: koşan sprint kartın son tarihli sprinti, son tarih kartın hesabının
-## açık talebinden (`SprintCatalog.due`, panodaki son tarih çipiyle aynı okuma; kademeye söz verilmişse söz konuşur, bu kâğıt
-## susar), kart ekibin hızıyla bu sprintte yetişmiyor ve kart başa girince bu sprintte biter (Erdem, 2026-11-12, H14).
+## "Kartı başa al" kartı, kartı bekleyen hesabın yenilemesine yetiştirir: kartın konusunu bekleyenlerin ilkinin
+## (`SprintCatalog.askers`) yenilemesi koşan sprintin içine düşüyor, kademeye söz verilmemiş (söz verilmişse söz konuşur, bu kâğıt
+## susar), kart ekibin hızıyla bu sprintte yetişmiyor ve kart başa girince bu sprintte biter.
 static func decision_request_saved() -> bool:
 	var c: Dictionary = decision_card()
-	var account: Customer = CustomerRegistry.get_customer(String(c.get("customer_id", "")))
-	if account == null or not card_late(c.id):
+	var asked: Array = SprintCatalog.askers(String(c.get("step", "")))
+	if asked.is_empty() or not card_late(c.id) or SprintCatalog.due(c).promise:
 		return false
-	var due: Dictionary = SprintCatalog.due(c)
-	return not due.promise and int(due.sprint) == sprint_number() and due.customer_id == account.id \
-		and decision_first_finishes()
+	return SprintBridges.renews_in(asked[0]) <= TimeModel.ticks(weeks_left()) and decision_first_finishes()
 
 
 ## Bekleyen kararın kartı hâlâ tasarımda ve bu haftanın işiyle de tasarımı bitmiyor, ekipte onu bekleyen bir yazılımcı var.
@@ -1487,8 +1529,8 @@ static func _request_decision() -> bool:
 			var given: Dictionary = {}
 			if speaker != "":
 				given["founder" if CharacterRegistry.get_character(speaker).category == "founder" else "employee"] = speaker
-			if HRConstants.ROLE_PRODUCT_MANAGER in roles and c.customer_id != "":
-				given["customer"] = c.customer_id
+			if HRConstants.ROLE_PRODUCT_MANAGER in roles:   # _speaker gives a PM only for a card someone waits on
+				given["customer"] = SprintCatalog.askers(c.step)[0].id
 			p.decision = {"card_id": c.id, "event_id": event_id, "speaker": speaker}
 			c.decision = true
 			if EventGate.request(event_id, given):
@@ -1501,14 +1543,14 @@ static func _request_decision() -> bool:
 	return false
 
 
-## Kâğıdı söyleyecek kişi, yoksa "": PM kâğıdını çeyreği planlayan PM söyler ve konusu sprintteki müşteri isteği kartıdır
+## Kâğıdı söyleyecek kişi, yoksa "": PM kâğıdını çeyreği planlayan PM söyler ve konusu sprintte bekleyeni olan karttır
 ## (PM sprint kartı almaz, önden gider); öbürlerini kartın bu haftaki atananlarından rolü `roles`'tan biri olan ve
 ## (`stage` "any" değilse) o aşamada çalışan ilk kişi. Payı Destek'te kalan kişi atanmaz, tasarımcı yokken PM tasarımcı
 ## sayılmaz.
 static func _speaker(c: Dictionary, roles: Array, stage: String) -> String:
 	if HRConstants.ROLE_PRODUCT_MANAGER in roles:
 		var pm: Character = SprintCatalog.quarter_pm()
-		return pm.id if pm != null and c.kind == "request" else ""
+		return pm.id if pm != null and not SprintCatalog.askers(c.step).is_empty() else ""
 	for id in c.assignees:
 		if CharacterRegistry.get_character(id).role in roles and (stage == "any" or role_of(id) == stage):
 			return id

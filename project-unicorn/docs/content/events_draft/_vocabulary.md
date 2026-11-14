@@ -12,7 +12,7 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **314** |
+| Seams (read) | **324** |
 | Effect verbs (write) | **87** |
 | Cards in the catalogue | 182 |
 | Arcs | 3 |
@@ -307,6 +307,11 @@ slot of that type (§17.12).
 | `musteri.can_request.line_erp_invoicing` | entity | bool | Sales | a request for the line_erp_invoicing line's next tier can be opened for the account |
 | `musteri.can_request.line_erp_ledger` | entity | bool | Sales | a request for the line_erp_ledger line's next tier can be opened for the account |
 | `musteri.can_request.line_erp_stock` | entity | bool | Sales | a request for the line_erp_stock line's next tier can be opened for the account |
+| `musteri.can_request.line_marketplace_checkout` | entity | bool | Sales | a request for the line_marketplace_checkout line's next tier can be opened for the account |
+| `musteri.can_request.line_marketplace_listing` | entity | bool | Sales | a request for the line_marketplace_listing line's next tier can be opened for the account |
+| `musteri.can_request.line_marketplace_orders` | entity | bool | Sales | a request for the line_marketplace_orders line's next tier can be opened for the account |
+| `musteri.can_request.line_marketplace_reviews` | entity | bool | Sales | a request for the line_marketplace_reviews line's next tier can be opened for the account |
+| `musteri.can_request.line_marketplace_storefront` | entity | bool | Sales | a request for the line_marketplace_storefront line's next tier can be opened for the account |
 | `musteri.can_request.line_note_tool_capture` | entity | bool | Sales | a request for the line_note_tool_capture line's next tier can be opened for the account |
 | `musteri.can_request.line_note_tool_editor` | entity | bool | Sales | a request for the line_note_tool_editor line's next tier can be opened for the account |
 | `musteri.can_request.line_note_tool_linking` | entity | bool | Sales | a request for the line_note_tool_linking line's next tier can be opened for the account |
@@ -456,7 +461,7 @@ slot of that type (§17.12).
 | `urun.decision_card_done` | global | int | Product | points already worked on the decision card; 0 when none waits |
 | `urun.decision_card_effort` | global | int | Product | the decision card's effort in points; 0 when none waits |
 | `urun.decision_card_late` | global | bool | Product | at the team's pace the decision card will not finish this sprint; false when none waits |
-| `urun.decision_kind` | global | string | Product | feature | request | fix | research: what the decision card is; empty when none waits |
+| `urun.decision_kind` | global | string | Product | feature | fix | research: what the decision card is; empty when none waits |
 | `urun.decision_line` | global | string | Product | id of the line the decision card is on, a shared line by its base id; empty when none waits |
 | `urun.decision_line_accounts` | global | int | Product | B2B accounts that use the decision card's line |
 | `urun.decision_line_bugs` | global | int | Product | open bugs on the decision card's line |
@@ -465,18 +470,18 @@ slot of that type (§17.12).
 | `urun.decision_phase` | global | int | Product | the phase the decision card is in: 0 design, 1 development, 2 testing, 3 done; 0 when none waits |
 | `urun.decision_phone_late` | global | bool | Product | the phone layout's points added, the decision card would not finish this sprint |
 | `urun.decision_promised` | global | bool | Product | an account was promised the decision card's step and the promise is still open |
-| `urun.decision_request_saved` | global | bool | Product | this sprint is the deadline of the decision card's account request, the card misses it, and standing the card first ships it this sprint |
+| `urun.decision_request_saved` | global | bool | Product | the decision card's soonest-renewing asker renews inside this sprint, no word is on the step, the card misses it, and standing the card first ships it this sprint |
 | `urun.decision_request_votes` | global | int | Product | B2C: the people who asked for the decision card's step; 0 until the consumer request data exists |
 | `urun.decision_root_bugs` | global | int | Product | open bugs the decision card, a fix card, closes; 0 for any other card |
 | `urun.decision_root_cause` | global | bool | Product | the decision card is a fix card with enough bugs on one line to share a root |
-| `urun.decision_second_account` | global | string | Product | the largest other B2B account whose sector's first area covers the decision card's line (it would ask for this step); empty when none |
+| `urun.decision_second_account` | global | string | Product | the decision card's second asker, else the largest B2B account but its first asker whose sector's first area covers the card's line; empty when none |
 | `urun.decision_step` | global | string | Product | id of the step the decision card takes its line to, a shared line's step by its base id; empty when none waits |
 | `urun.decision_test_half` | global | int | Product | half of the decision card's testing left, in points; the work a developer helping with the test does |
 | `urun.decision_test_untouched` | global | bool | Product | the decision card has reached testing and nobody has tested it yet |
 | `urun.decision_tier` | global | int | Product | the tier the decision card takes its line to; 0 when none waits |
 | `urun.decision_trim_finishes` | global | bool | Product | taking the trim share off the decision card finishes it this sprint |
 | `urun.design_late` | global | bool | Product | the decision card is still in design after this week's work and a developer waits on it |
-| `urun.durability_tier` | global | int | Product | the tier the Durability line has reached; 1 is autosave and nothing more |
+| `urun.durability_tier` | global | int | Product | the tier the Backup line has reached; 1 is autosave and nothing more |
 | `urun.enterprise_trust` | global | bool | Product | Enterprise servers or the security_cert research: the trust bar the security and leak cards read |
 | `urun.floor_area` | global | string | Product | localization key (PRODUCT_AREA_*_SHORT) of the worst area's name, '' without one; a card body prints it translated |
 | `urun.floor_state` | global | string | Product | '' | warning | crossed: the state of the worst area; '' in B2B and while no area is below the warning ratio |
@@ -487,6 +492,11 @@ slot of that type (§17.12).
 | `urun.line_tier.line_erp_invoicing` | global | int | Product | the tier the line_erp_invoicing line has reached; 0 before it is built |
 | `urun.line_tier.line_erp_ledger` | global | int | Product | the tier the line_erp_ledger line has reached; 0 before it is built |
 | `urun.line_tier.line_erp_stock` | global | int | Product | the tier the line_erp_stock line has reached; 0 before it is built |
+| `urun.line_tier.line_marketplace_checkout` | global | int | Product | the tier the line_marketplace_checkout line has reached; 0 before it is built |
+| `urun.line_tier.line_marketplace_listing` | global | int | Product | the tier the line_marketplace_listing line has reached; 0 before it is built |
+| `urun.line_tier.line_marketplace_orders` | global | int | Product | the tier the line_marketplace_orders line has reached; 0 before it is built |
+| `urun.line_tier.line_marketplace_reviews` | global | int | Product | the tier the line_marketplace_reviews line has reached; 0 before it is built |
+| `urun.line_tier.line_marketplace_storefront` | global | int | Product | the tier the line_marketplace_storefront line has reached; 0 before it is built |
 | `urun.line_tier.line_note_tool_capture` | global | int | Product | the tier the line_note_tool_capture line has reached; 0 before it is built |
 | `urun.line_tier.line_note_tool_editor` | global | int | Product | the tier the line_note_tool_editor line has reached; 0 before it is built |
 | `urun.line_tier.line_note_tool_linking` | global | int | Product | the tier the line_note_tool_linking line has reached; 0 before it is built |
@@ -521,9 +531,9 @@ slot of that type (§17.12).
 | `urun.promise_extended` | global | bool | Product | one of those promises has already moved a sprint; a word moves once |
 | `urun.promise_open` | global | int | Product | promises the latest promise event is about that are still open |
 | `urun.responsive_shipped` | global | bool | Product | the Responsive Interface step is live |
-| `urun.security_bugs` | global | int | Product | open bugs on the Security and Access line |
-| `urun.security_fix_planned` | global | bool | Product | the Security and Access fix card is in the running sprint |
-| `urun.security_tier` | global | int | Product | the tier the Security and Access line has reached; 0 before it is built |
+| `urun.security_bugs` | global | int | Product | open bugs on the Users and Access line |
+| `urun.security_fix_planned` | global | bool | Product | the Users and Access fix card is in the running sprint |
+| `urun.security_tier` | global | int | Product | the tier the Users and Access line has reached; 0 before it is built |
 | `urun.server_switch_open` | global | bool | Product | no server contract holds the tier, so the Infra switch can move it (Enterprise only upward) |
 | `urun.sprint_has_tester` | global | bool | Product | a tester works in the sprint's team (the Test job); the founder testing is not one |
 | `urun.sprint_last_week` | global | bool | Product | a running sprint is in its last week, week 2 |
@@ -719,7 +729,7 @@ sprint's cards. `speaker_role` (`product_manager`, `designer`, `developer`, `tes
 person who works the card at `stage` (`any`, `design`, `dev`, `test`; `any` is any phase) to the card's `employee` slot, or
 to its `founder` slot for the founder's own note, and a card nobody of that role works is not asked for.
 `speaker_role` may be a list of roles: the first person working the card with any of them speaks.
-A `product_manager` paper is spoken by the quarter's PM and is about a planned customer request card: its
+A `product_manager` paper is spoken by the quarter's PM and is about a planned card an account waits on: its
 `customer` slot is the request's account. `pool_group` (`pm`, `designer`, `developer`, `tester`, `no_tester`, `solo`, `system`) counts the paper in the
 pool. A paper carries `latch: {cooldown_weeks: 52, max_fires: 3}` (the two stack); a card with no
 `speaker_role` is spoken by no one.

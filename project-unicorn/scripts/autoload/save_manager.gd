@@ -309,8 +309,9 @@ func apply_loaded_state(payload: Dictionary) -> bool:
 	# A save can carry a promise with an empty feature_id, which would keep has_open_promise
 	# true forever. Runs after the registries because it reads what they restored.
 	PromiseRegistry.drop_targetless()
-	# A save from the beta channel's days may hold cards waiting in beta.
+	# A save from the beta channel's days may hold cards waiting in beta; one from the request cards' days holds those.
 	SprintSystem.finish_beta_cards()
+	SprintSystem.request_cards_to_topics()
 	# A save written before people had looks gets them here, apart from the restored team; one
 	# from before the funds had people gets those too.
 	CharacterRegistry.fill_missing_looks()
@@ -876,7 +877,7 @@ func _migrate_15(state: Dictionary) -> void:
 			cards["feat:" + step] = {"id": "feat:" + step, "kind": "feature", "line": line, "step": step, "target_tier": tier,
 				"area": area.id, "effort": effort, "roles": ["design", "dev", "test"], "shares": _V14_SHARES.duplicate(),
 				"progress": [effort * _V14_SHARES[0], effort * _V14_SHARES[1] * done, 0.0], "state": "planned",
-				"assignees": [], "bugs": 0, "customer_id": "", "request_id": "", "decision": false, "effort_mod": 0,
+				"assignees": [], "bugs": 0, "decision": false, "effort_mod": 0,
 				"faulty": false, "cut": false, "paid": true}
 
 	# The version history becomes the release list Geçmiş reads. A release from before sprints
