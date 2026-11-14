@@ -31,6 +31,21 @@ static func read_state() -> Dictionary:
 	return GameState.marketplace if not GameState.marketplace.is_empty() else MarketplaceModel.new_state()
 
 
+## Yüklenen durumda olmayan her anahtar (iç içe sözlüklerde de) modelin ilk durumundan gelir, var olan değere dokunulmaz; boş
+## durum (pazaryeri koşusu olmayan oyun) boş kalır. Model eksik anahtarı varsayılanla okumaz.
+static func fill_missing_state() -> void:
+	if not GameState.marketplace.is_empty():
+		_fill(GameState.marketplace, MarketplaceModel.new_state())
+
+
+static func _fill(have: Dictionary, initial: Dictionary) -> void:
+	for key in initial:
+		if not have.has(key):
+			have[key] = initial[key]
+		elif initial[key] is Dictionary and have[key] is Dictionary:
+			_fill(have[key], initial[key])
+
+
 ## Modelin bu hafta için okuduğu dünya: sahiplerden kurulur, verilmeyen alan modelin varsayılanında kalır.
 static func world() -> Dictionary:
 	var open_bugs: Dictionary = ProductState.open_bugs_by_line()

@@ -61,8 +61,8 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - `SaveManager.save_to_slot/read_slot/apply_loaded_state` `save_manager.gd:226,157,293` · `scripts/main/main.gd:6176,6138,6149`
   ↳ Göç zincirini `read_slot` değil `_read_file` `:174` koşar; `read_slot` yalnız onu çağırır ve bozuk ya da eksik hedefte slotun `.bak`'ına düşer (sonuca `from_backup`); `SAVE_ERR_NEWER` ve `SAVE_ERR_TOO_OLD` geriye düşmez
 - `SaveManager.list_slots/list_runs` `save_manager.gd:124,142` · `scripts/menu/main_menu.gd:39`, `scripts/modals/save_load_modal.gd:55`
-- `SaveManager.end_run()` `save_manager.gd:372`: koşuyu süreç içinde bitirir · `scripts/main/main.gd:131,6323` (menüye dönüş)
-- `SaveManager.reset_all_owners()` `save_manager.gd:334`: statik/kayıtlı koşu durumunun tek sıfırlama listesi
+- `SaveManager.end_run()` `save_manager.gd:374`: koşuyu süreç içinde bitirir · `scripts/main/main.gd:131,6323` (menüye dönüş)
+- `SaveManager.reset_all_owners()` `save_manager.gd:336`: statik/kayıtlı koşu durumunun tek sıfırlama listesi
 - `SaveManager.can_save/cannot_save_reason_key/has_unsaved_progress` `save_manager.gd:85,89,103`: kayıt kapısı (karar bekliyor, oturum açık, koşu yok)
 - `SaveManager.quick_slot_id/exit_slot_id/delete_slot/build_meta` `save_manager.gd:251,256,261,270`: yuva adları ve liste için meta
 - `Settings.get_value/get_choice/set_value/has_stored/reset_to_defaults/apply_all/flush` `settings.gd:78,84,95,91,104,113,137` · modal ve `Display/Audio/Localization/SaveManager/TimeManager` okur
@@ -77,7 +77,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 ## Sinyaller
 - `speed_changed(new_speed)`: yayan `time_manager.gd:321,337` (TimeManager'in kendi sinyali) · dinleyen `scripts/ui/components/top_bar.gd:179`, `sprint_system.gd:1382`, `office_notice_stack.gd:49`
 - `hold_changed()`: yayan `time_manager.gd:355,361` · dinleyen `top_bar.gd:181`, `scripts/ui/office/office_notice_stack.gd:50`
-- `EventBus.speed_change_requested(speed)` `event_bus.gd:21`: isteği `main.gd`, `game_shell.gd:121`, `save_manager.gd:378` yayar · dinleyen `time_manager.gd:81`
+- `EventBus.speed_change_requested(speed)` `event_bus.gd:21`: isteği `main.gd`, `game_shell.gd:121`, `save_manager.gd:380` yayar · dinleyen `time_manager.gd:81`
 - `EventBus.day_advanced(new_day)` `event_bus.gd:12`: yayan `game_state.gd:390` · `top_bar.gd:152`, `product_tab.gd:115`, `research_bar.gd:53`
 - `EventBus.hour_changed(hour)` `event_bus.gd:13`: yayan `game_state.gd:394` · `top_bar.gd:153`, `news_ticker.gd:74`, `sales_tab.gd:87`
 - `EventBus.day_tick_completed(day)` `event_bus.gd:286`: yayan `time_manager.gd:432` (günlük dağıtımın sonu) · `save_manager.gd:65` autosave sınırı, `office_city.gd:102`, `plausibility.gd:159`
@@ -103,7 +103,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - `GameState.START_DATE` `game_state.gd:8` = 1 Oca 2012; `PHASE_KEYS` `:399` (FIN_PHASE_* anahtarları); `get_runway_months` `:502`, `runway_months_for` `:508`
 - `TimeModel` (`scripts/systems/time_model.gd:10-20`): `SECONDS_PER_HOUR` [0, 2.5, 1.25, 0.833], `WEEK_START_HOUR` 8, `WORKDAY_LATEST_END` 24, `WEEK_WORK_HOURS` 40, `DAYS_PER_TICK` 7, `DAYS_PER_MONTH` 30
 - `TimeManager` durum: `current_speed` `:40`, `last_running_speed` `:41`, `_in_game_hours` `:47` (kayda girer), `_holds` `:60`, `_freezes` `:64`, `_night_gate` `:68`, `_suspended` `:52`; `HOLD_LABELS` `:32`
-- Kayıt dosyası: `user://saves/<slot>.json` (+ `.bak`, `.tmp`) `save_manager.gd:28,518`; yuva kimlikleri `quick_<run>`, `auto_<run>_<1..3>`, `manual_<n>` (`:32-33`)
+- Kayıt dosyası: `user://saves/<slot>.json` (+ `.bak`, `.tmp`) `save_manager.gd:28,520`; yuva kimlikleri `quick_<run>`, `auto_<run>_<1..3>`, `manual_<n>` (`:32-33`)
 - Kayıt gövdesi `_payload` `save_manager.gd:238`: `schema_version`, `game_version`, `meta`, `state{game_state, registries, systems{product, rnd, finance, event_engine, hr, time, rng}}`
 - Kayıt sürümü: `SCHEMA_VERSION` 20 `save_manager.gd:16`, `MIN_LOADABLE_VERSION` 10 `:23`; autosave `AUTO_SLOTS_PER_RUN` 3 `:32`, `AUTOSAVE_MIN_REAL_SECONDS` 10 `:40`, `AUTOSAVE_FREQUENCIES` `:36`
 - Kayıt kayıtları: `SaveCodec._registries()` `save_codec.gd:261` sırası characters, customers, prospects, rivals, promises (sözler son: müşteri düşünce söz de düşer)
@@ -120,7 +120,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 ## Metin anahtarları
 - `CLOCK_HOLD_*`, `CLOCK_HELD`, `GATE_ANSWER_FIRST`: `time_manager.gd:32-38,374` `hold_label()`; okuyan `top_bar.gd:603`, `game_shell.gd:130`, `scripts/tabs/hunt_tab.gd:205`
 - `SAVE_ERR_*` (CORRUPT, NEWER, TOO_OLD, MODAL_OPEN, DECISION_WAITING, WRITE, NO_RUN, NO_QUICK, PRODUCT_GONE): `save_manager.gd`, `main.gd`, `save_load_modal.gd`
-- `SAVE_QUICK_SLOT`, `SAVE_AUTO_SLOT`, `SAVE_MANUAL_SLOT`: `save_manager.gd:608` `label_for`; `SAVE_META_*`, `SAVE_GROUP_*`, `SAVE_TOAST_*`, `SAVE_DELETE_*`, `SAVE_OVERWRITE_*`: `save_load_modal.gd`, `main.gd`
+- `SAVE_QUICK_SLOT`, `SAVE_AUTO_SLOT`, `SAVE_MANUAL_SLOT`: `save_manager.gd:610` `label_for`; `SAVE_META_*`, `SAVE_GROUP_*`, `SAVE_TOAST_*`, `SAVE_DELETE_*`, `SAVE_OVERWRITE_*`: `save_load_modal.gd`, `main.gd`
 - `SET_*` (ayarlar), `LANG_TR_*`, `LANG_EN_*`, `SETTINGS_LANGUAGE_*`: `scripts/modals/settings_modal.gd`; `SET_UI_*`, `SET_WINDOW_*`, `SET_RESOLUTION_*` ayrıca `display_settings.gd`
 - `SYS_*` (sistem menüsü): `scripts/modals/system_menu_modal.gd`, `main.gd`
 - `FIN_PHASE_*`, `MONTH_HL_*`: `game_state.gd:399,395` faz adı ve ay vurgusu
@@ -132,7 +132,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - Zaman: `speed_preserve` `:94`, `speed_ladder` `:220`, `speed_day_invariant` `:221`, `speed_save_clamps_to_ladder` `:402`, `clock_resumes_only_by_player` `:400`, `milestone_clock_hold` `:397`, `event_gate_holds_clock` `:399`
 - Zaman devamı: `incident_night_hold_resumes` `:340`, `smoke_seed_pinned` `:404`, `sales_meeting_time_skip_founder_share` `:158`, `month_history_*` `:376,381`, `run_ledger`, `growth_streak_semantics`
 - Kayıt: `save_roundtrip_fingerprint` `:298`, `save_continuity_seeded` `:299`, `save_double_load_no_residue` `:300`, `save_backup_fallback` `:301`, `autosave_writes_off_thread` `:302`, `menu_state_machine`
-  ↳ `save_refuses_removed_product` (not ve video kaydı reddedilir, ERP ve türsüz kayıt açılır), `marketplace_save_roundtrip` (`retention`'ın bölmesi gerçek kayıt yolunda)
+  ↳ `save_refuses_removed_product` (not ve video kaydı reddedilir, ERP ve türsüz kayıt açılır), `marketplace_save_roundtrip` (`retention`'ın bölmesi gerçek kayıt yolunda), `marketplace_save_fills_missing` (silinmiş pazaryeri anahtarları yüklemede ilk durumdan tamamlanır)
 - Göç: `save_v13_day_stamps_migrate` `:304`, `save_v14_build_becomes_sprint_plan` `:550`, `save_v14_history_becomes_releases` `:551`, `save_v19_cards_scale_and_shape` `:552`, `save_v19_running_sprint_continues` `:553`
 - Göç devamı: `save_v15_tickets_become_open_bugs` `:555`, `save_v15_callback_bugs_under` `:556`, `save_v17_market_ref` `:447`, `save_v10_product_state` `:465`, `legacy_v12_save_opens_live_table`, `office_move_gates_and_save` (12 → 13)
 - Eski göç yardımcıları yalnız smoke'ta: `save_migration_v3_to_v4` `:416`, `save_migration_v4_to_v5` `:422`, `save_migration_v6_to_v7` `:424`, `save_migration_v6_to_v7_drops` `:425`
@@ -162,16 +162,16 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
   ↳ Ayrıca `--lang=en`, `--shot-scale=`, `--palette=cb`; metin kapısı `scripts/debug/loc_residue.gd` (10_test_harness.md)
 - Ölçüm (Platform): `--display-check` gerçek pencereyi tam ekran, çerçevesiz ve pencereli kiplerden, çözünürlüklerden ve vsync'ten geçirip DisplayServer'ın bildirdiğini basar;
   ↳ kalıcı ayarlayıcıları kullandığı için `settings.json`'a yazar ve sonda eski değerleri geri yükler. Zaman aşımı ya da çökmede ayarlar değişmiş kalır; `--display-check` bilerek harness bayrağı sayılmaz (`SaveManager._is_harness_arg`)
-- Harness bayrağı sayılanlar `save_manager.gd:505`: `--` ile başlayıp "smoke", "-shot", "audit", "probe", "run-log", "plausibility" içerenler; autosave kapanır, `DisplaySettings.is_inert` de bunu okur
+- Harness bayrağı sayılanlar `save_manager.gd:507`: `--` ile başlayıp "smoke", "-shot", "audit", "probe", "run-log", "plausibility" içerenler; autosave kapanır, `DisplaySettings.is_inert` de bunu okur
 
 ## Dikkat
 - Göç adı ve koşulu aynı N'dir (`_migrate_N` `version < N`, `save_manager.gd:198-211`); yeni göçte `SCHEMA_VERSION`, koşul, adı ve belgeyi birlikte yaz
 - `_migrate_character_areas` `:1112`, `_migrate_assignments_to_areas` `:1172`, `_migrate_to_rev11` `:1212` zincirde YOK (`MIN_LOADABLE_VERSION` 10); yalnız `endgame_smoke.gd:12138-12372` çağırır
 - Göç her yuva listelemesinde koşar (`list_slots` her dosyayı `_read_file`dan geçirir): saf, ucuz, canlı durumdan bağımsız olmalı; `_migrate_18` bu yüzden kaydın kendi ürün alt türünü okur
-- `_migrate_15` kartı v18 biçiminde yazar (`_V14_EFFORT`, `_V14_SHARES` `save_manager.gd:829-830`); ×5 ve `need` dönüşümünü yalnız `_migrate_19` yapar. `list_slots` ve `read_slot` her yuvada tam zinciri tekrar koşar
+- `_migrate_15` kartı v18 biçiminde yazar (`_V14_EFFORT`, `_V14_SHARES` `save_manager.gd:831-832`); ×5 ve `need` dönüşümünü yalnız `_migrate_19` yapar. `list_slots` ve `read_slot` her yuvada tam zinciri tekrar koşar
 - `SaveCodec.game_state_fields()` `save_codec.gd:192` `GameState`in HER script `var`ını kaydeder; kaydedilmemesi gereken geçici alan eklenemez. Yeni alan makul varsayılan taşımalı (varsayılan = göç)
 - JSON her sayıyı float yapar: yeni `GameState.flags` anahtarı `FLAG_TYPES` ya da `FLAG_TYPE_PREFIXES` ister, yoksa tipi geri gelmez; debug yapıda `set_flag` sapmayı uyarır (`game_state.gd:504-531`)
-- Yükleme bir OS yeniden başlatması gibi davranmalı: statik/kayıtlı koşu durumu ekleyen sahip `reset_all_owners` `save_manager.gd:334`e girmeli, yoksa eski koşu sızar. Sıra bağımlıdır (saat önce, RNG son)
+- Yükleme bir OS yeniden başlatması gibi davranmalı: statik/kayıtlı koşu durumu ekleyen sahip `reset_all_owners` `save_manager.gd:336`e girmeli, yoksa eski koşu sızar. Sıra bağımlıdır (saat önce, RNG son)
 - Yükleme sırası: `TimeManager.set_suspended(true)` → `reset_all_owners` → `initialize_run(restore)` → registries → `_restore_systems` → sabitleme; saat bloğu `from_dict` her zaman duraklı döndürür (`time_manager.gd:304`)
 - `can_save()` karar bekleyen kart (`EventGate.active_id`) ya da dört oturum sistemi (`VCPitchSystem`, `TermSheetTableSystem`, `SalesMeetingSystem`, `NegotiationSystem`) açıkken reddeder; oturum durumu kaydedilmez
 - Saat iki bağımsız sayaçtır: `_in_game_hours` ve `GameState.current_hour`. `current_hour`ı başka yoldan yazan `sync_to_current_hour()` çağırmalı, yoksa saatlik tik atlanır (`time_manager.gd:20-24,236`)
@@ -179,7 +179,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - `hold_clock` hızı 0'a çeker ve oyuncu başlatana kadar tutar; aynı neden ikinci kez sessizdir. Yeni neden `HOLD_LABELS` `time_manager.gd:32`e girmezse adı `CLOCK_HELD` olur
 - Yükleme sonrası hız 0'dır; `speed_change_requested(>0)` koşu bitmişse ya da tutuş varsa yutulur (`time_manager.gd:326-340`); `EventBus.speed_change_requested` yorumundaki "4=4x" bayat, merdiven 3 basamak
 - Günlük tik sırası bağımlıdır (her yuva öncekinin yerleştirdiğini okur): `SummarySystem.begin_day` önce, `FinanceSystem` faz kapısından ve olaylardan önce, `EndingsSystem` VC'den sonra (`time_manager.gd:383-435`)
-- `Settings` `SaveManager`dan SONRA yüklenir: SaveManager ayarı kullanım anında okur (`save_manager.gd:438`), `_ready`de okumaz. Autoload sırasını değiştirmek bu bağlılıkları kırar
+- `Settings` `SaveManager`dan SONRA yüklenir: SaveManager ayarı kullanım anında okur (`save_manager.gd:440`), `_ready`de okumaz. Autoload sırasını değiştirmek bu bağlılıkları kırar
 - `Settings` DisplaySettings/GraphicsSettings'e `preload` ile bağlıdır, sınıf adıyla değil: sınıf önbelleği bayatken autoload çözülemezse tüm oyun düşer (`settings.gd:13-17`); `class_name` değişince `--headless --import` şart
 - `AudioManager` `Settings`ten sonra yüklenir; `Settings.apply_all` onu `is_node_ready` ile korur (`settings.gd:124-125`). SFX bus'ında oynatıcı yok; kaydırıcı boş bus'ı oynatır
 - `Localization.pick(tr, en)` çizimde çözer; olay önbelleği açılışta bir kez kurulduğu için yükleme anında dil dondurmak yanlıştır. Boş `en` "metin zaten yerelleşmiş" sözleşmesidir (`localization.gd:73-80`)

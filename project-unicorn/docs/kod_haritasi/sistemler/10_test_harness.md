@@ -62,7 +62,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - `Main._run_why_fire()` `scripts/main/main.gd:289`: `EvWhy.report(kart)`; `_run_event_plausibility()` `:296` `PLAUSIBILITY.run(spec)`
 - `Main._skip_to_shell()` `scripts/main/main.gd:5618`: menü ve onboarding'siz kabuk; `--skip-onboarding` (`:107`) ve debug F12 (`:5357`) çağırır
 - `GameShell._debug_fkey()` `scripts/main/game_shell.gd:134`: debug build'de Shift+F4/F5/F6 (F4 onboarding'i yeniden tetikler)
-- `SaveManager._is_harness_arg()` `scripts/autoload/save_manager.gd:498`: `smoke`, `-shot`, `audit`, `probe`, `run-log`, `plausibility` alt dizili `--` bayrağı harness sayar
+- `SaveManager._is_harness_arg()` `scripts/autoload/save_manager.gd:500`: `smoke`, `-shot`, `audit`, `probe`, `run-log`, `plausibility` alt dizili `--` bayrağı harness sayar
 - `tools/smoke_run.sh run_one()` `tools/smoke_run.sh:38`: `godot --headless --endgame-smoke=<vaka>`; `list_cases()` (`:27`) vaka listesini `match` tablosundan awk ile çeker
 - `tools/run_gate.sh` `tools/run_gate.sh:22-48`: her preset için `--run-log=<preset>:730:sim`; `PROBE END` sayısı, `ending=` ve hata satırı denetler
 - `tools/plausibility_run.sh plaus_run()` `tools/plausibility_run.sh:42`: `-s plausibility_main.gd -- --event-plausibility-probe=...`; `PLAUS SUMMARY` okur
@@ -125,7 +125,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
   ↳ `messages_*`, `inbox_no_night_stamp`, `mail_pending_survives_save`; 07 Olay motoru ve içerik: `event_*`, `ambient_*`, `harness_sniffer_matches_run_log`, `source_tag_speaker_wins`, `card_body_tokens_resolve`, `loc_event_en_coverage`,
   ↳ `event_chip_coverage`, `event_chip_live_targets` (canlı kartta hedefi boş çip çizilmez, boş kitapta uygulama hatasız), `event_chip_merge_same` (aynı çipler ×n, sayılı çip toplamla), `event_trust_chip_share` (güven çipi kartın payını okur), `quiet_cards_fill_empty_floor`
 - Paylaşılan kayıt yuvasına (`manual_9001`, `manual_9002`) yazan vakalar paralel koşturulmaz (koşturucu zorlamaz: `--all` sırayla koşar, elle paralel koşuda koruma yoktur): `account_ownership_round_trip`, `b2b_exit_notice`,
-  ↳ `b2b_timed_discount`, `event_trust_delta_lasting`, `incident_save_roundtrip`, `look_registry_unique_and_saved`, `mail_pending_survives_save`, `market_save_roundtrip`, `marketplace_save_roundtrip`, `meeting_cast_seeded_and_saved`,
+  ↳ `b2b_timed_discount`, `event_trust_delta_lasting`, `incident_save_roundtrip`, `look_registry_unique_and_saved`, `mail_pending_survives_save`, `market_save_roundtrip`, `marketplace_save_fills_missing`, `marketplace_save_roundtrip`, `meeting_cast_seeded_and_saved`,
   ↳ `messages_save_round_trip`, `month_history_save_typing`, `sales_offer_signing`, `sales_rep_close_die`, `sales_rep_loss_mail`, `save_backup_fallback`, `save_continuity_seeded`, `save_double_load_no_residue`,
   ↳ `save_refuses_removed_product`, `save_roundtrip_fingerprint`, `save_v10_product_state`, `valuation_old_save_derives_seed`. Kendi yuvası olanlar yuvaları paylaşmaz: `legacy_v12_save_opens_live_table` (işlem kimlikli yuva),
   ↳ `sales_save_roundtrip_rev6` (`smoke_sales_v11`); `menu_state_machine` kayıt dizinini geçici bir dizine çevirir (`SaveManager._use_dir`);

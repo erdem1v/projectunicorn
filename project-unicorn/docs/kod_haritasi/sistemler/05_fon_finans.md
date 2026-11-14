@@ -71,7 +71,7 @@ Finans:
   ↳ `spawn`'a sektörünü verir; `row_mrr()` kaynağın son `erp.mrr_window_weeks` haftada imzaladığı hesapların bugünkü MRR'ı
   ↳ (`Customer.lead_source`); `source_tag()` Satış'ın aday satırındaki etiket, "trade_fair" fuar (`mkt_event`) sayılır.
 - `FinanceSystem.get_burn_breakdown_pct()` `:281`, `get_monthly_flow()` `:271`, `runway_band()` `:313`: okuma kapıları · `finance_ozet_view.gd`, `top_bar.gd`, `summary_system.gd:161`.
-- `FinanceSystem.to_dict()/from_dict()/reset()` `:87/:93/:79`: yalnız `burn_breakdown`; blok `autoload/save_manager.gd:382` ve `:400`, sıfırlama `:350`.
+- `FinanceSystem.to_dict()/from_dict()/reset()` `:87/:93/:79`: yalnız `burn_breakdown`; blok `autoload/save_manager.gd:384` ve `:400`, sıfırlama `:350`.
 
 Fon merdiveni:
 - `AngelRoundSystem.accept_offer()` `angel_round_system.gd:37`: çekin kabulü · `events/core/effects.gd:566` (`angel_accept` fiili, kart `funding.frank_cheque`).
@@ -156,7 +156,7 @@ GameState alanları (`autoload/game_state.gd`):
   ↳ `summary` (`SummarySystem.daily_tick`), `rnd_note` ve `rnd_discovery` (`RnDSystem`), `sales_week` ve `sales_loss` (`SalesRepSystem`), `support_week` (`SupportSystem`),
   ↳ `clause` (`B2BSalesSystem`: `{id, stage: sign|reserve|notice|withdraw, company, name, due, end}`)
 - Piyasa: `market_catalog_version` `:296`, `market_shocks` `:297`, `market_ownership` `:298`. Katalogun kendisi kaydedilmez.
-- `FinanceSystem.burn_breakdown` statik değişkendir (`finance_system.gd:23`), GameState'te değil; kayda `save_manager.gd:382` bloğuyla girer.
+- `FinanceSystem.burn_breakdown` statik değişkendir (`finance_system.gd:23`), GameState'te değil; kayda `save_manager.gd:384` bloğuyla girer.
 - Rakipler: `RivalRegistry._rivals` kayda `save_codec.gd:266` (`["rivals", Rival, RivalRegistry]`) ile girer, yüklemede `insert_raw` (`rival_registry.gd:37`) katalog tohumunun üstüne biner.
 
 Sabitler:

@@ -667,6 +667,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"marketplace_sales_role_opens":      fail = _case_marketplace_sales_role_opens()
 		"marketplace_topic_names":           fail = _case_marketplace_topic_names()
 		"marketplace_source_new_users":      fail = _case_marketplace_source_new_users()
+		"marketplace_save_fills_missing":    fail = _case_marketplace_save_fills_missing()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -31313,4 +31314,52 @@ static func _case_marketplace_source_new_users() -> String:
 			% [second, first, str(GameState.marketplace.sources.organic)]
 	if MarketplaceSystem.source_new_users("search_ads") != 0.0:
 		return "a source that brought no visit reads %s new users" % MarketplaceSystem.source_new_users("search_ads")
+	return ""
+
+
+## Durumunda sonradan eklenmiş anahtarı taşımayan pazaryeri kaydı (üst düzey bir alan, bir kategorinin alanı, bir konunun kaydı ve bir
+## ayrıcalığın kaydı silinmiş) gerçek kayıt yolundan yüklenince eksik her anahtar modelin ilk durumundaki değeriyle gelir, var olan
+## değerler aynen kalır; boş durum (pazaryeri koşusu olmayan oyunun durumu) boş kalır.
+##
+## FALSİFİKASYON: `SaveManager.apply_loaded_state`ten `MarketplaceSystem.fill_missing_state()` çağrısını sil → eksik anahtar satırı FAIL;
+## `_fill`de `if not have.has(key)`i `if true` yap (var olan değeri de ilk durumunkiyle ez) → var olan değer satırı FAIL;
+## `fill_missing_state`ten boş durum denetimini sil → boş durum satırı FAIL.
+static func _case_marketplace_save_fills_missing() -> String:
+	_seed_marketplace_world()
+	var state: Dictionary = GameState.marketplace
+	MarketplaceSystem.set_commission("fashion", 12)
+	MarketplaceModel.waive_commission(state, 2)
+	MarketplaceSystem.set_policy("return_window", "d14")
+	state.topics.reviews_ratings.tickets = [5.0]
+	var path: String = SaveManager.SAVE_DIR + SAVE_SLOT_A + ".json"
+	var reload := func(cut: bool) -> bool:
+		if not SaveManager.save_to_slot(SAVE_SLOT_A):
+			return false
+		if cut:
+			var raw: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path)) as Dictionary
+			var block: Dictionary = raw.state.game_state.marketplace
+			block.erase("outage")
+			block.cats.fashion.erase("terms")
+			block.topics.erase("size_chart")
+			block.premium.perks.erase("member_discount")
+			_put_text(path, JSON.stringify(raw, "\t", false, true))
+		var loaded: bool = SaveManager.apply_loaded_state(SaveManager.read_slot(SAVE_SLOT_A))
+		_cleanup_save_slots()
+		return loaded
+	if not reload.call(true):
+		return "the cut save did not save or load back"
+	var m: Dictionary = GameState.marketplace
+	var first: Dictionary = MarketplaceModel.new_state()
+	if m.get("outage") != first.outage or m.cats.fashion.get("terms") != first.cats.fashion.terms \
+			or m.topics.get("size_chart") != first.topics.size_chart or m.premium.perks.get("member_discount") != first.premium.perks.member_discount:
+		return "the load left a cut key missing or unlike the first state: outage %s, terms %s, size chart %s, member discount %s" % [
+			m.get("outage"), m.cats.fashion.get("terms"), m.topics.get("size_chart"), m.premium.perks.get("member_discount")]
+	if not is_equal_approx(float(m.users), 2000.0) or int(m.cats.fashion.commission) != 12 or int(m.waive) != 2 \
+			or m.policy.return_window.pick != "d14" or m.topics.reviews_ratings.tickets.size() != 1 \
+			or float(m.topics.reviews_ratings.tickets[0]) != 5.0:
+		return "the load changed a value the save carried: users %s, commission %s, waive %s, return window %s, reviews tickets %s" % [
+			m.users, m.cats.fashion.commission, m.waive, m.policy.return_window.pick, m.topics.reviews_ratings.tickets]
+	m.clear()
+	if not reload.call(false) or not GameState.marketplace.is_empty():
+		return "an emptied marketplace state loaded back as %s" % str(GameState.marketplace.keys())
 	return ""

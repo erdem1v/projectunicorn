@@ -7,7 +7,7 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 ## Dosyalar
 
 - `systems/marketplace_model.gd` (1080): `MarketplaceModel`; yalnız `static` işlevler. `state` ve `world` sözlüklerinin alanları dosya başındaki yorumda.
-- `systems/marketplace_system.gd` (216): `MarketplaceSystem`; yalnız `static` işlevler. `GameState.marketplace`'in tek yazarı, yazan seam'ler, sözleşme okuyucuları, `world()` ve haftalık kapanış.
+- `systems/marketplace_system.gd` (231): `MarketplaceSystem`; yalnız `static` işlevler. `GameState.marketplace`'in tek yazarı, yazan seam'ler, sözleşme okuyucuları, `world()` ve haftalık kapanış.
 - `debug/marketplace_probe.gd` (1179): `-s` betiği; oynanan çizelge ve 42 mekanik denetimi, `MPPROBE ...` satırları.
 - `data/product/categories.json` (16): altı kategori ve sütunları: sepet, ziyaret sıklığı, kâr payı, sektör iadesi, gereken mağaza, başlangıç komisyonu, taban ilgi, büyük sepet payı, reklam havuzu (`ad_pool`, haftalık arama).
 - `data/product/lines/marketplace.json` (153): modül verisi; 5 kimlik hattı (Ürün Yükleme, Vitrin, Sepet ve Ödeme, Siparişler, Yorum ve Güvence)
@@ -26,6 +26,7 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
   ↳ koltuk mağaza sayısı ve ücret ödeyen üye (`MarketplaceModel.paying_members`), memnuniyet modelin `sat`'ının tam sayısı; en sonda `SalesSystem.reflect_mrr()`. `CustomerRegistry.account_count` `individual` kayıtları saymaz.
   ↳ Okuyucular saklanan durumdan okur, kapanış koşturmaz: `policy_value`, `channel_read`, `source_revenue`, `source_new_users` (öbür ekiplerin sözleşmesi) ve `stores()` (açık kategorilerin mağaza toplamı, `_reflect` kullanır). Okuyucu ve `world()` boş durumu doldurmaz: `read_state()` boşken modelin ilk durumunu saklamadan okur; arayüz modelin saf okuyucularını `read_state()` ve `world()` ile çağırır (pencerenin başlığı ve kare dünyası bugün öyle okur).
   ↳ `daily_tick()` yalnız ürün yayındayken: `world()` kurar, `close_week`, `tick_topics`, `_reflect`, Finans'ın `pazaryeri` kalemi (`daily_rate(monthly_cost)`, her kapanışta, sıfır dahil), bir `marketplace_changed`. Satış yuvası onu yalnız pazaryeri türünde çağırır (`SalesSystem.is_marketplace`). Durum yazan seam'de ve kapanışta (`_s()`) `MarketplaceModel.new_state()` ile yerinde dolar; pazaryeri koşusu olmayan oyunda hiçbiri çalışmaz, sözlük boş kalır.
+  ↳ `fill_missing_state()` yüklenen durumda olmayan her anahtarı (iç içe sözlüklerde de) `new_state()`'ten tamamlar, var olan değere dokunmaz, boş durumu doldurmaz; `SaveManager.apply_loaded_state` yüklemenin sonunda çağırır, şema numarası değişmez.
 - Kurma: `new_state()`, `new_world()` (varsayılanlı dünya; verilmeyen alan `WORLD`'den okunur), `cat_ids()`, `cat_def(kategori)`, `open_ids(state)`,
   ↳ `cfg("steps.reach")` `marketplace.json`'u nokta yoluyla okur (olmayan yol motor hatası verir, varsayılan dönmez; sözlük ve dizi kopya döner; arayüz ulaşılabilir oranı, komisyon sınırını ve kural seçeneklerini buradan alır).
 - Haftalık kapanış: `close_week(state, world)` bağlayıcı sırayla `state`'i değiştirir (mağaza akışı, ziyaret ve adımlar, iade, kullanıcı, gelir ve gider, Premium, defter); sinyal ve kayıt çağıranındır.
@@ -61,7 +62,7 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 
 ## Durum ve veri
 
-- Durumun evi `GameState.marketplace` (`initialize_run` boşaltır, ERP koşusunda boş kalır; kodlayıcı `GameState` alanlarını kendisi bulur, göç yok: şema 20); `marketplace_save_roundtrip` `retention`'ın bölmesini gerçek kayıt yolunda sınar.
+- Durumun evi `GameState.marketplace` (`initialize_run` boşaltır, ERP koşusunda boş kalır; kodlayıcı `GameState` alanlarını kendisi bulur, göç yok: şema 20); `marketplace_save_roundtrip` `retention`'ın bölmesini, `marketplace_save_fills_missing` silinmiş anahtarların yüklemede tamamlanmasını gerçek kayıt yolunda sınar.
 - `state` dosya başındaki yorumda sayılır; `sat[taraf]` iki memnuniyettir (sistem paketi `CustomerRegistry` kaydına yansıtır), `burn[kalem]` son kapanışın haftalık `pazaryeri` giderinin adlı kalemleri,
   ↳ `premium.orders` son dört haftanın üye siparişidir, `lost` birikmiş kayıp, `topics[konu]` (`tickets` son dört hafta yeni önde, `since_day`, `status`, `source`).
 - Talepler: bilet kullanıcı konusunda bağlı adımda sayılan büyüklük × oran, mağaza konusunda derdi olan mağazaların payı × oran; yayındaki konuya bilet gelmez.
@@ -70,14 +71,14 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 - Ek özellik adım çarpanıdır: kullanıcı özelliği (`missing_mult` alanı, bağlı adım `link`) yayında değilken adımı o kadar kısar (`_feature_mult`, `step_factors`);
   ↳ yayında olmayan her kullanıcı konusu adımı kıstığı için, adım ulaşılabilir oranda iken konu zaten yayındadır.
 - Bilet oranı (`rate`) olmayan konu bilet almaz (`_tickets`): `coupon_abuse` (kullanıcı, Sepet ve Ödeme, ek özellik, adım çarpanı yok) yalnız `open_topic` ile satır olur; satırın `affected`'ı verilen sayıdır ve konu
-  ↳ `world.features`'ta adı geçince yayına çıkar (etkilenen 0; "Karşılandı" ve "Geciken talep" öbür konular gibi işler). Model eksik konuyu varsayılanla okumaz: durumu yükleyen sistem eksik konuyu `new_state`'ten tamamlamalıdır (henüz yazılmadı).
+  ↳ `world.features`'ta adı geçince yayına çıkar (etkilenen 0; "Karşılandı" ve "Geciken talep" öbür konular gibi işler). Model eksik konuyu varsayılanla okumaz: yükleme `fill_missing_state` ile eksik konuyu `new_state`'ten tamamlar.
 - Defter: istenmiş konu ilk kez yayına çıkınca tarafa `met` satırı (8 hafta); taraf başına tek `late_topic` satırı, `topics.late_weeks`'i geçmiş en eski yayında olmayan konunun kimliğiyle (planda olan dahil).
 - Etkilenen sipariş: kademe konusunda `gain({"tier": …})`, ek özellik konusunda `gain({"features": [konu]})` (çıkınca gerçekten kazanılan teslim edilmiş sipariş);
   ↳ Yorum ve Puan (`link` = `returning`) kademeyle haftada iade edilmeyecek sipariş (teslim × iade oranı farkı); mağaza konusunda derdi olan mağazaların siparişi × `_leave_rate`.
 - Acil durum: `state.waive` kalan komisyonsuz hafta; kapanış brüt komisyonu bütün kategorilerde 0 yapar ve birer azaltır (yeni mağaza şartının indirimi brütle orantılı olduğu için o da 0 olur,
   ↳ şirketin karşıladığı indirim ve kupon yine düşer, net eksiye inebilir). `state.outage` bekleyen `{points, cost}`: kapanış `points`'i kullanıcı defterine −`points` "Kesinti" satırı olarak (`rows.outage.weeks` hafta) yazar,
   ↳ `cost`'u o haftanın toplam net komisyonundan düşer (`revenue_weeks`'e giren toplam; kategori satırına bölünmez; komisyonsuz haftada düşmez, çünkü o haftanın komisyonu zaten 0), sonra ikisini sıfırlar.
-  ↳ Kesinti `world`'de değil `state`'tedir: yazan tek sefer çağırır, kapanış tüketir. Model eksik alanı varsayılanla okumaz: eski kayıttaki durumu yükleyen sistem eksik `waive` ve `outage`'ı `new_state`'ten tamamlamalıdır (henüz yazılmadı).
+  ↳ Kesinti `world`'de değil `state`'tedir: yazan tek sefer çağırır, kapanış tüketir. Model eksik alanı varsayılanla okumaz: yükleme `fill_missing_state` ile eksik `waive` ve `outage`'ı `new_state`'ten tamamlar.
 - Sayılar ondalıklı kalır; defter satırı `{key, arg, points, weeks}` (`weeks` WHILE=-1 koşul sürdükçe), metin değil kimlik. Gün alanları hafta sayısıdır, hiç değişmemişin günü `NEVER`.
 - Ayarı değişebilecek seçimler tek sabitte: fiyata yansıma `stores.pass_through` (0 = komisyon siparişi düşürmez), gelir penceresi `income.window_weeks` (1 = bu hafta × 4,33), iade kargosu seçenekleri `rules.options.return_shipping`,
   ↳ mağaza kazanımının yayınla başlaması `acquisition_of` içindeki `published` kapısı.
@@ -124,7 +125,7 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 - Yeni defter satırı: sayı `marketplace.json` `ledger.rows`'ta, koşulu `_settle`'da; süreli satır yazan işlev `_add`'i çağırır.
 - Yeni konu: `topics.catalog`'a kayıt (`side`, `module`, kademe konusuysa `tier`, kullanıcı ek özelliğiyse `missing_mult`, bağlı adım ya da mağaza derdi `link`, `base`, `rate`; bileti olmayan, rapordan açılacak konuda `base` ve `rate` yok);
   ↳ kodda değişiklik gerekmez. Yeni mağaza derdi `topics.pains`'e girer.
-- Kapanışa bir kez tüketilen yeni girdi (komisyonsuz hafta, kesinti gibi): `state`'e bekleyen alan (`new_state`), `close_week`'te okuma ve sıfırlama ya da azaltma, `project`'te temizleme; `world` alanı olmaz, `state_survives_codec` yeni alanı da kapsar.
+- Kapanışa bir kez tüketilen yeni girdi (komisyonsuz hafta, kesinti gibi): `state`'e bekleyen alan (`new_state`), `close_week`'te okuma ve sıfırlama ya da azaltma, `project`'te temizleme; `world` alanı olmaz, `state_survives_codec` yeni alanı da kapsar. Durumdaki her yeni anahtar eski kayıtta yoktur: `fill_missing_state` ilk durumun değeriyle tamamlar; ilk değer süren oyunda yanlışsa (var olan durumdan türemesi gerekiyorsa) göç gerekir.
 - Yeni ayrıcalık ya da kural: `premium.perks` ya da `rules.options` kaydı, `_close_category` (kullanım ve gider), `premium_pull` ve `set_*` şartları.
 - Yeni önizleme büyüklüğü `metrics`'e girer; `_preview` hepsini otomatik fark alır. Önizleme `set_*` işlevlerini kopyada çağırır;
   ↳ probe'daki `preview_figures` çipleri bağımsız sayılarla (`store_keep` oranı, defter puanı ve haftada 5 puan tavanı) karşılaştırır.

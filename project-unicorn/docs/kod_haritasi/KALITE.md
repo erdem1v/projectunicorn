@@ -5,14 +5,14 @@ Kapsam: scripts/ altındaki 263 .gd (tools/ hariç). Kod temizliği ve kıdemli 
 
 ## En büyük 25 .gd
 
-- scripts/debug/endgame_smoke.gd · 31316 satır · 712 func
+- scripts/debug/endgame_smoke.gd · 31365 satır · 713 func
 - scripts/main/main.gd · 6481 satır · 234 func
 - scripts/debug/run_probe.gd · 2446 satır · 95 func
 - scripts/systems/sprint_system.gd · 2139 satır · 173 func
 - scripts/theme/build_theme.gd · 1663 satır · 31 func
 - scripts/events/tools/lint.gd · 1357 satır · 47 func
 - scripts/systems/vc_pitch_system.gd · 1317 satır · 91 func
-- scripts/autoload/save_manager.gd · 1293 satır · 60 func
+- scripts/autoload/save_manager.gd · 1295 satır · 60 func
 - scripts/tabs/product/product_model.gd · 1288 satır · 68 func
 - scripts/systems/hr_constants.gd · 1186 satır · 90 func
 - scripts/debug/marketplace_probe.gd · 1179 satır · 58 func
@@ -35,45 +35,45 @@ Kapsam: scripts/ altındaki 263 .gd (tools/ hariç). Kod temizliği ve kıdemli 
 
 Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları arada sayılır).
 - scripts/theme/build_theme.gd:421 · _menajer · 901 satır
-- scripts/debug/endgame_smoke.gd:52 · run_case · 624 satır
+- scripts/debug/endgame_smoke.gd:52 · run_case · 625 satır
 - scripts/events/core/effects.gd:242 · _apply · 610 satır
 - scripts/events/tools/vocab_gen.gd:20 · run · 322 satır
 - scripts/theme/build_theme.gd:46 · _initialize · 320 satır
 - scripts/events/present/chips.gd:72 · describe · 311 satır
 - scripts/main/main.gd:4024 · _run_hr_shot · 276 satır
-- scripts/debug/endgame_smoke.gd:24239 · _case_sprint_timeline_matches_play_out · 266 satır
-- scripts/debug/endgame_smoke.gd:8777 · _case_hr_constants_contract · 220 satır
-- scripts/debug/endgame_smoke.gd:2282 · _case_save_v13_day_stamps_migrate · 209 satır
+- scripts/debug/endgame_smoke.gd:24240 · _case_sprint_timeline_matches_play_out · 266 satır
+- scripts/debug/endgame_smoke.gd:8778 · _case_hr_constants_contract · 220 satır
+- scripts/debug/endgame_smoke.gd:2283 · _case_save_v13_day_stamps_migrate · 209 satır
 - scripts/main/main.gd:1533 · _run_inbox_shot · 201 satır
 - scripts/autoload/game_state.gd:833 · initialize_run · 200 satır
 - scripts/events/seams/seams_ported.gd:8 · install · 180 satır
 - scripts/main/main.gd:2325 · _run_office_shot · 180 satır
-- scripts/debug/endgame_smoke.gd:17122 · _case_fit_star_context · 166 satır
+- scripts/debug/endgame_smoke.gd:17123 · _case_fit_star_context · 166 satır
 - scripts/events/seams/seams_sales.gd:26 · install · 160 satır
-- scripts/debug/endgame_smoke.gd:2501 · _case_legacy_v12_save_opens_live_table · 157 satır
+- scripts/debug/endgame_smoke.gd:2502 · _case_legacy_v12_save_opens_live_table · 157 satır
 - scripts/main/main.gd:1933 · _run_sales_shot · 156 satır
 - scripts/onboarding/first_week_doc.gd:20 · lay_out · 154 satır
-- scripts/debug/endgame_smoke.gd:8322 · _case_hr_leave_shift · 149 satır
-- scripts/debug/endgame_smoke.gd:7574 · _case_hr_candidate_invariants · 145 satır
-- scripts/debug/endgame_smoke.gd:16417 · _case_sales_offer_signing · 144 satır
-- scripts/debug/endgame_smoke.gd:12045 · _case_job_assignment_and_idle · 140 satır
-- scripts/debug/endgame_smoke.gd:17957 · _case_rnd_tree_loads_and_validates · 140 satır
-- scripts/debug/endgame_smoke.gd:14740 · _case_clock_resumes_only_by_player · 135 satır
+- scripts/debug/endgame_smoke.gd:8323 · _case_hr_leave_shift · 149 satır
+- scripts/debug/endgame_smoke.gd:7575 · _case_hr_candidate_invariants · 145 satır
+- scripts/debug/endgame_smoke.gd:16418 · _case_sales_offer_signing · 144 satır
+- scripts/debug/endgame_smoke.gd:12046 · _case_job_assignment_and_idle · 140 satır
+- scripts/debug/endgame_smoke.gd:17958 · _case_rnd_tree_loads_and_validates · 140 satır
+- scripts/debug/endgame_smoke.gd:14741 · _case_clock_resumes_only_by_player · 135 satır
 - scripts/ui/office/office_map_card.gd:17 · _init · 134 satır
-- scripts/debug/endgame_smoke.gd:12508 · _case_effective_skill_formula · 132 satır
-- scripts/debug/endgame_smoke.gd:18584 · _case_rnd_note_author_and_lines · 129 satır
-- scripts/debug/endgame_smoke.gd:23161 · _case_sprint_founder_share_frozen · 128 satır
-- scripts/debug/endgame_smoke.gd:28441 · _case_save_v15_tickets_become_open_bugs · 128 satır
-- scripts/debug/endgame_smoke.gd:1075 · _case_gate_decline_reminder · 125 satır
-- scripts/debug/endgame_smoke.gd:21078 · _thesis_presenter_body · 124 satır
-- scripts/debug/endgame_smoke.gd:21311 · _case_sales_meeting_time_skip_founder_share · 124 satır
+- scripts/debug/endgame_smoke.gd:12509 · _case_effective_skill_formula · 132 satır
+- scripts/debug/endgame_smoke.gd:18585 · _case_rnd_note_author_and_lines · 129 satır
+- scripts/debug/endgame_smoke.gd:23162 · _case_sprint_founder_share_frozen · 128 satır
+- scripts/debug/endgame_smoke.gd:28442 · _case_save_v15_tickets_become_open_bugs · 128 satır
+- scripts/debug/endgame_smoke.gd:1076 · _case_gate_decline_reminder · 125 satır
+- scripts/debug/endgame_smoke.gd:21079 · _thesis_presenter_body · 124 satır
+- scripts/debug/endgame_smoke.gd:21312 · _case_sales_meeting_time_skip_founder_share · 124 satır
 - scripts/events/seams/seams_product.gd:15 · _install_product · 123 satır
 - scripts/events/tools/why.gd:28 · report · 121 satır
 - scripts/events/tools/engine_probe.gd:582 · _check_invalidation · 119 satır
 - scripts/main/main.gd:4672 · _seed_product_live · 119 satır
 - scripts/events/tools/lint.gd:229 · _lint_effects · 118 satır
 - scripts/debug/run_probe.gd:363 · run · 117 satır
-- scripts/debug/endgame_smoke.gd:1467 · _case_month_summary · 116 satır
+- scripts/debug/endgame_smoke.gd:1468 · _case_month_summary · 116 satır
 
 ## Ölü kod adayları (62)
 

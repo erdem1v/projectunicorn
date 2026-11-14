@@ -323,6 +323,8 @@ func apply_loaded_state(payload: Dictionary) -> bool:
 	# from before the funds had people gets those too.
 	CharacterRegistry.fill_missing_looks()
 	CounterpartSystem.fill_investor_people()
+	# A save written before a marketplace state key existed gets it from the model's first state.
+	MarketplaceSystem.fill_missing_state()
 
 	TimeManager.set_suspended(false)
 	_dirty = false

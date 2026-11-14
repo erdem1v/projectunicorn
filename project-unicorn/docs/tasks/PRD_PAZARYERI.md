@@ -589,8 +589,10 @@ başlar, kartıyla tek commit'te iner; kol yalnız `MarketplaceSystem`'in işlev
   girer; `b2c_paid_tier_open` Üyelik modülünün kademesi olarak kalır.
   (`ORTAK_ARAYUZLER.md`'nin "numara PRD'ye yazılmaz" kuralı öbür ekiplerin sonradan alacağı numaralar içindir; 20 bu PRD'nindir.)
 - Artışın nedeni: artış olmazsa eski bir sürüm pazaryeri kaydını reddetmez ve sessizce eski ekonomiyle açar
-  (`_read_file`, `SAVE_ERR_NEWER`). Sonraki paketler sözlüğe anahtar ekler; okuyan `.get(anahtar, varsayılan)` kullanır; yeni
-  artış gerekmez. `MIN_LOADABLE_VERSION` 10 kalır.
+  (`_read_file`, `SAVE_ERR_NEWER`). Sonraki paketler sözlüğe anahtar ekler; yüklenen durumda olmayan her anahtarı (iç içe
+  sözlüklerde de) yükleme `MarketplaceSystem.fill_missing_state` ile modelin ilk durumundan tamamlar, var olan değere dokunmaz,
+  boş durum boş kalır. Yeni artış yalnız ilk değerin süren oyunda yanlış olacağı anahtarda gerekir. `MIN_LOADABLE_VERSION` 10
+  kalır.
 - Sözlüğün anahtarları metindir (sayı anahtar JSON'dan geri gelmez). Durum `GameState`'te durduğu için `reset_all_owners`'a
   ek gerekmez; sistem önbellek tutarsa o önbellek sıfırlanır.
 - Ret: `_read_file`'da göçlerden sonra, kayıttaki ürün türü `note_tool` ya da `video_clip` ise kayıt yuva listesinde hata
