@@ -832,8 +832,9 @@ static func week_points(draft: Dictionary = {}) -> float:
 
 ## Bu sprintte çalışabilecekler: Görevler matrisinde Yapım ya da Test işini tutan aktif kişiler, kurucu
 ## dahil (`founder_in_sprint` açıkken ve haftanın donmuş payı 0'dan büyükken). {id, name, points (haftalık, sprint
-## payıyla; PM'inki 0), prep (PM'in haftalık hazırlık puanı, öbürlerinin 0), share (sprint payı), fits (uyduğu roller),
-## founder, ahead (ürün ve tasarım rolü: geliştirme ve teste uymaz, yalnız ilk fazda çalışır ve önden gider)}.
+## payıyla; PM'inki 0), prep (PM'in haftalık hazırlık puanı, öbürlerinin 0), share (sprint payı), fits (uyduğu roller), main
+## (ana rolünün fazı, `SprintCatalog.row_of`; kurucuda ve PM'de ""), founder, ahead (ürün ve tasarım rolü: geliştirme ve teste
+## uymaz, yalnız ilk fazda çalışır ve önden gider)}.
 static func team() -> Array:
 	var people: Array[Character] = CharacterRegistry.get_active_employees()
 	var founder: Character = CharacterRegistry.get_founder()
@@ -849,7 +850,7 @@ static func team() -> Array:
 		var fits: Array = _fits(c)
 		out.append({"id": c.id, "name": c.character_name, "points": _points(c, WorkHoursSystem.hours_for(c)) * hours,
 			"prep": SprintPrep.rate(c, WorkHoursSystem.hours_for(c)) * hours,
-			"share": share, "fits": fits, "founder": c.category == "founder",
+			"share": share, "fits": fits, "main": SprintCatalog.row_of(c), "founder": c.category == "founder",
 			"ahead": not (fits.has("dev") or fits.has("test"))})
 	return out
 
@@ -1174,7 +1175,7 @@ static func _finish_sprint(cards: Array, people: Array, ahead: Array = [], log =
 	for c in cards:
 		for id in c.assignees:
 			if by_id.has(id):
-				budget[id] = _work(c, by_id[id], budget.get(id, by_id[id].points), week.get("cards"))
+				budget[id] = _work(c, by_id[id], budget.get(id, by_id[id].points), week.get("cards"), _hands(c, by_id[id]))
 	for c in ahead:
 		for id in c.assignees:
 			if by_id.has(id):
@@ -1352,7 +1353,7 @@ static func _end_week() -> void:
 		var before: int = phase(c)
 		for id in c.assignees:
 			if people.has(id):
-				budget[id] = _work(c, people[id], budget.get(id, people[id].points))
+				budget[id] = _work(c, people[id], budget.get(id, people[id].points), null, _hands(c, people[id]))
 				worked_ids.append(id)
 		var after: int = phase(c)
 		if after != before:
@@ -1380,9 +1381,11 @@ static func _staff_week(ask_paper: bool) -> void:
 
 
 ## Haftanın ataması: önce sprintin kartları sırasıyla, sonra sonraki sütunun önden hazırlanan kartları
-## (`ahead`). Kartın sıradaki fazına uyan kişi önce, sonra haftasından çok puanı kalan; kart bu hafta
-## bitecek kadar kişi alır. Kartını bitirenin kalan puanı sıradaki karta geçer. Tasarım rolü yalnız ilk
-## fazda çalışır; sprintte o fazı bekleyen kart kalmayınca sonraki sütuna önden gider, oraya başkası
+## (`ahead`). Kartın sıradaki fazına uyan kişi önce, uyanlar arasında ana rolü o faz olan (testi testçi, tasarımı tasarımcı
+## yapar), sonra haftasından çok puanı kalan; kart bu hafta bitecek kadar kişi alır. Testçilerin o haftaki boş puanı kartın
+## kalan testine yetiyorsa testçi olmayan Test fazının önünde durur ve kartın testini o hafta yalnız testçiler yapar
+## (`test_hand`); yetmiyorsa (testçiler dolu ya da yok) testi bugünkü gibi role uyan alır, kart testçi beklemez. Kartını
+## bitirenin kalan puanı sıradaki karta geçer. Tasarım rolü yalnız ilk fazda çalışır; sprintte o fazı bekleyen kart kalmayınca sonraki sütuna önden gider, oraya başkası
 ## gitmez. Sprint puanı olmayan PM atamaya girmez: haftasını sonraki sütunun kartlarını hazırlamaya verir (SprintPrep).
 ## Kilitli kişi (kartın `pinned`ı, `until` gününe `day` varmadıkça) yalnız o karta gider ve onun atamasında rolden önce gelir;
 ## o hafta çalışamıyorsa kart kimsesiz bekler.
@@ -1401,6 +1404,7 @@ static func _assign(cards: Array, people: Array, ahead: Array = [], day: int = G
 	for i in all.size():
 		var c: Dictionary = all[i]
 		c.assignees = []
+		c.test_hand = false
 		if c.decision or c.id in waits:
 			continue
 		var probe: Dictionary = c.duplicate(true)
@@ -1411,12 +1415,16 @@ static func _assign(cards: Array, people: Array, ahead: Array = [], day: int = G
 			# Kilit yokken kilidin süzgeci ve sırası koşmaz: plan ekranı haftaları kurulum başına onlarca kez oynatır.
 			if not locked.is_empty():
 				able = able.filter(func(p: Dictionary) -> bool: return locked.get(p.id, c.id) == c.id)
+			if c.test_hand and at == TEST_PHASE:
+				able = able.filter(func(p: Dictionary) -> bool: return p.main == "test")
 			if able.is_empty():
 				break
 			var role: String = _role(probe, at)
 			able.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 				if (role in a.fits) != (role in b.fits):
 					return role in a.fits
+				if (a.main == role) != (b.main == role):
+					return a.main == role
 				if a.left != b.left:
 					return a.left > b.left
 				return a.id < b.id)
@@ -1426,10 +1434,20 @@ static func _assign(cards: Array, people: Array, ahead: Array = [], day: int = G
 					able.push_front(able.pop_at(k))
 			var person: Dictionary = able[0]
 			free.erase(person)
-			person.left = _work(probe, person, person.left)
+			var test_left: float = float(probe.need[TEST_PHASE]) - float(probe.progress[TEST_PHASE])
+			var hand: bool = (person.main != "test" and at < TEST_PHASE and i < cards.size() and test_left > EPS
+				and free.filter(func(p: Dictionary) -> bool: return p.main == "test" and locked.get(p.id, c.id) == c.id).reduce(
+					func(sum: float, p: Dictionary) -> float: return sum + p.left, 0.0) * (1.0 + float(probe.get("prep_gain", 0.0))) >= test_left)
+			person.left = _work(probe, person, person.left, null, hand)
+			c.test_hand = c.test_hand or (hand and phase(probe) == TEST_PHASE)
 			c.assignees.append(person.id)
 			if person.left > EPS:
 				free.append(person)
+
+
+## Atamanın kararı: kartın testini o hafta testçiler yapıyorsa (`test_hand`) testçi olmayan Test fazının önünde durur.
+static func _hands(c: Dictionary, person: Dictionary) -> bool:
+	return c.get("test_hand", false) and person.main != "test"
 
 
 ## Kişinin bütçesi kartın sıradaki fazlarına dökülür, harcanmayanı döner; uymadığı rolün fazında
@@ -1437,10 +1455,10 @@ static func _assign(cards: Array, people: Array, ahead: Array = [], day: int = G
 ## durur. Yapılan iş kartta kişiye yazılır (SprintBugs.record); test biten kartın hatası o anda belirlenir ve bulunanların
 ## düzeltmesi Geliştirme satırına eklenir (SprintBugs.settle). `log` verilirse yapılan her iş parçası oraya yazılır (kart,
 ## kişi, aşama, aşamanın rolü, yapılan iş, harcanan bütçe): oynatma zaman eksenine buradan dökülür (SprintTimeline). Atamanın
-## sınaması (`_assign`) yazmaz.
-static func _work(c: Dictionary, person: Dictionary, budget: float, log = null) -> float:
+## sınaması (`_assign`) yazmaz. `hand` doğruysa kişi Test fazının önünde durur (testi o hafta testçi yapar, `_assign`).
+static func _work(c: Dictionary, person: Dictionary, budget: float, log = null, hand := false) -> float:
 	var at: int = phase(c)
-	while at < PHASE_DONE and budget > EPS and (at == 0 or not person.ahead):
+	while at < PHASE_DONE and budget > EPS and (at == 0 or not person.ahead) and not (hand and at == TEST_PHASE):
 		var role: String = _role(c, at)
 		var speed: float = (1.0 if role in person.fits else float(SprintCatalog.cfg("no_role_speed"))) \
 			* (1.0 + float(c.get("prep_gain", 0.0)))
@@ -1476,7 +1494,7 @@ static func _play_out(cards: Array, weeks: int, people: Array, ahead: Array = []
 		var budget: Dictionary = {}
 		for c in cards:
 			for id in c.assignees:
-				budget[id] = _work(c, by_id[id], budget.get(id, by_id[id].points), week.get("cards"))
+				budget[id] = _work(c, by_id[id], budget.get(id, by_id[id].points), week.get("cards"), _hands(c, by_id[id]))
 				var row: Dictionary = (split.get_or_add(c.id, {}) as Dictionary).get_or_add(id,
 					{"id": id, "name": by_id[id].name, "weeks": 0})
 				row.weeks += 1
@@ -1680,6 +1698,9 @@ static func _restaff() -> void:
 	var busy: Array = []
 	for c in _sprint_cards():
 		c.assignees = c.assignees.filter(func(id: String) -> bool: return id in here)
+		# Testi üstlenen testçi gittiyse kartın geliştiricisi Test'in önünde beklemez.
+		if c.get("test_hand", false) and not people.any(func(p: Dictionary) -> bool: return p.main == "test" and p.id in c.assignees):
+			c.test_hand = false
 		busy.append_array(c.assignees)
 	_assign(_sprint_cards().filter(func(c: Dictionary) -> bool: return c.assignees.is_empty()),
 		people.filter(func(person: Dictionary) -> bool: return person.id not in busy))

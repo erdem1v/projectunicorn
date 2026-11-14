@@ -12,7 +12,10 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 
 ## Dosyalar
 
-- `scripts/systems/sprint_system.gd` (2115): sprint motoru: tür seçimi, plan eylemleri, haftalık atama/ilerleme, kapanış ve sürüm, karar kâğıdı, söz olayı, plan tutuşu, kişiyi karta kilitleme; `GameState.product`'ın tek yazarı
+- `scripts/systems/sprint_system.gd` (2136): sprint motoru: tür seçimi, plan eylemleri, haftalık atama/ilerleme, kapanış ve sürüm, karar kâğıdı, söz olayı, plan tutuşu, kişiyi karta kilitleme; `GameState.product`'ın tek yazarı
+  ↳ haftanın ataması (`_assign`): aşamaya uyan önce, uyanlar arasında ana rolü o aşama olan (`team()` `main`), sonra haftası boş;
+  ↳ testçilerin o haftaki boş puanı kartın kalan testine yetiyorsa testçi olmayan Test fazının önünde durur (`test_hand`, `_hands`; plan
+  ↳ önizlemesi ve haftanın dökümü aynı bayrağı okur), yetmiyorsa testi role uyan alır
 - `scripts/systems/sprint_bugs.gd` (176): `SprintBugs` (RefCounted), kartın hata modeli: beklenen hata yükü, testin yakalama oranı, testi biten kartın tohumlu zarı, sürüme bırakılan hata;
   ↳ sayılar `data/product/sprint.json` `bugs` bloğunda [WORKING]
 - `scripts/systems/sprint_prep.gd` (134): `SprintPrep`, PM'in sonraki sütunu önden hazırlaması: hazırlık işi, PM hızı, kart sahipliği (kural A), hız ve hata kazancı; sayılar `sprint.json` `prep` bloğunda [WORKING]
