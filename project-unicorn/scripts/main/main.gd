@@ -3986,8 +3986,13 @@ func _run_hr_shot(kind: String) -> void:
 			GameState.office_id = "ishani"
 			if kind == "atlas-dolu":   # LOC-DATA debug seed / id
 				OfficeCrowdProbe.seed_staff(OfficeSystem.desks_free())
+		# The roster's company runs its product's first sprint, mid-morning with the founder at the desk.
 		SprintSystem.choose_type("erp", "Defterix Fatura ve Ön Muhasebe" if kind == "ekip-uzun" else "Fatura")   # LOC-DATA debug seed / id
+		SprintSystem.apply_lead()
+		SprintSystem.start()
 		_seed_payroll()
+		GameState.set_current_hour(11)
+		TimeManager.sync_to_current_hour()
 		if kind.ends_with("-kilit"):
 			CharacterRegistry.get_employees()[0].last_raise_day = GameState.day
 	match kind:
@@ -3995,9 +4000,6 @@ func _run_hr_shot(kind: String) -> void:
 			pass
 		"saatler-sprint":   # LOC-DATA debug seed / id
 			SprintSystem.choose_type("note_tool", "Notly")   # LOC-DATA debug seed / id
-		"ekip-uzun":   # LOC-DATA debug seed / id
-			SprintSystem.apply_lead()
-			SprintSystem.start()
 		"urunsuz":   # LOC-DATA debug seed / id
 			# add() seats each on the role's first job (build, support); hired four weeks ago, so YENİ does not
 			# take Kadro's one Durum tag.
