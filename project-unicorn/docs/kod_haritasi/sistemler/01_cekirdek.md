@@ -11,7 +11,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 
 ## Dosyalar
 - `project.godot:24-39` (autoload): sıra EventBus, GameState, 5 kayıt defteri (Character..Rival), InvestorRegistry, TimeManager, SaveManager, Settings, Localization, AudioManager, MCPRuntime
-- `scripts/autoload/event_bus.gd` (301): 145 sinyal, durumsuz; `# --- X ---` başlıkları `tools/gen_signal_manifest.py` bölümleridir
+- `scripts/autoload/event_bus.gd` (305): 146 sinyal, durumsuz; `# --- X ---` başlıkları `tools/gen_signal_manifest.py` bölümleridir
 - `scripts/autoload/game_state.gd` (1078): koşunun tüm skaler ve liste durumu; her `var` kayıt şemasıdır; setter'lar sinyal yayar; `initialize_run` yeni koşu ve yükleme tabanı
 - `scripts/autoload/time_manager.gd` (451): saat birikimi, hız, tutuş/donma, gece atlama, günlük ve saatlik tik dağıtımı, saat bloğunun kaydı
 - `scripts/autoload/save_manager.gd` (1293): yuva politikası, atomik yazım, autosave, yükleme, `reset_all_owners`, v10 → v19 göç zinciri ve smoke'a kalan eski göçler

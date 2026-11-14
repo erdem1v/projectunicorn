@@ -647,6 +647,10 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"event_delay_window":               fail = _case_event_delay_window()
 		"event_on_action_bindings":         fail = _case_event_on_action_bindings()
 		"cs_renewal_floor":                 fail = _case_cs_renewal_floor()
+		# --- Pazaryeri ---
+		"marketplace_seams_write_through":   fail = _case_marketplace_seams_write_through()
+		"marketplace_world_reads_owners":    fail = _case_marketplace_world_reads_owners()
+		"marketplace_tick_waits_for_launch": fail = _case_marketplace_tick_waits_for_launch()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -30510,4 +30514,147 @@ static func _case_rival_composite_table() -> String:
 		read += 1
 	if read != RIVAL_COMPOSITES.size() * RivalCatalog.TEMPLATE.size():
 		return "%d rivals were read, want %d" % [read, RIVAL_COMPOSITES.size() * RivalCatalog.TEMPLATE.size()]
+	return ""
+
+
+# --- Pazaryeri ---------------------------------------------------------------------------------
+
+## Yayındaki pazaryeri koşusu: Moda açık ve 40 mağazalı, 2.000 kullanıcı.
+static func _seed_marketplace_world() -> void:
+	_seed_sprint_live(MarketplaceSystem.TYPE_ID)
+	MarketplaceSystem.open_category("fashion")
+	MarketplaceSystem.add_users(2000.0)
+	GameState.marketplace.cats.fashion.stores = 40.0
+
+
+## Yazan her seam uygulanınca sinyali bir kez yayar ve true döner; reddedilen çağrı (kapalı Premium'da ayrıcalık, deneme ve ücret,
+## sınır dışı komisyon, kapalı kategori, kilit içinde ikinci değişiklik, değişmeyen kullanıcı sayısı ya da deneme) yaymaz, false
+## döner ve durumu değiştirmez.
+##
+## FALSİFİKASYON: `MarketplaceSystem._written`te `emit`i `if applied`ın dışına al → reddedilen çağrılar FAIL; `open_category`
+## gövdesinde sonucu `_written` yerine doğrudan döndür → ilk uygulanan çağrı FAIL.
+static func _case_marketplace_seams_write_through() -> String:
+	_seed_marketplace_world()
+	var emits: Array[int] = [0]
+	EventBus.marketplace_changed.connect(func() -> void: emits[0] += 1)
+	var rejected: Array[Callable] = [
+		func() -> bool: return MarketplaceSystem.set_perk("member_discount", "premium"),
+		func() -> bool: return MarketplaceSystem.set_fee(5),
+		func() -> bool: return MarketplaceSystem.set_trial(true),
+		func() -> bool: return MarketplaceSystem.set_commission("fashion", 31),
+		func() -> bool: return MarketplaceSystem.set_commission("fashion", 0),
+		func() -> bool: return MarketplaceSystem.set_commission("electronics", 9),
+		func() -> bool: return MarketplaceSystem.set_policy("admission", "registered"),
+		func() -> bool: return MarketplaceSystem.open_category("fashion"),
+		func() -> bool: return MarketplaceSystem.add_users(0.0),
+	]
+	var before: Dictionary = GameState.marketplace.duplicate(true)
+	for i in rejected.size():
+		if rejected[i].call() or emits[0] != 0 or GameState.marketplace != before:
+			return "rejected call %d returned true, emitted or changed the state" % i
+	GameState.set_flag("b2c_paid_tier_open", true)
+	var applied: Array[Callable] = [
+		func() -> bool: return MarketplaceSystem.open_category("electronics"),
+		func() -> bool: return MarketplaceSystem.set_commission("fashion", 12),
+		func() -> bool: return MarketplaceSystem.set_policy("return_window", "d14"),
+		func() -> bool: return MarketplaceSystem.set_store_terms("fashion", 0.5, 8),
+		func() -> bool: return MarketplaceSystem.add_users(500.0),
+	]
+	for i in applied.size():
+		var seen: int = emits[0]
+		if not applied[i].call() or emits[0] != seen + 1:
+			return "applied call %d did not return true with exactly one emit" % i
+	MarketplaceSystem.daily_tick()
+	emits[0] = 0
+	var premium: Array[Callable] = [
+		func() -> bool: return MarketplaceSystem.set_fee(5),
+		func() -> bool: return MarketplaceSystem.set_perk("member_discount", "premium"),
+		func() -> bool: return MarketplaceSystem.set_trial(true),
+	]
+	for i in premium.size():
+		if not premium[i].call() or emits[0] != i + 1:
+			return "premium call %d did not return true with exactly one emit" % i
+	before = GameState.marketplace.duplicate(true)
+	var refused: Array[Callable] = [
+		func() -> bool: return MarketplaceSystem.set_commission("fashion", 11),
+		func() -> bool: return MarketplaceSystem.set_policy("return_window", "d30"),
+		func() -> bool: return MarketplaceSystem.set_fee(6),
+		func() -> bool: return MarketplaceSystem.set_perk("member_discount", "off"),
+		func() -> bool: return MarketplaceSystem.set_trial(true),
+	]
+	emits[0] = 0
+	for i in refused.size():
+		if refused[i].call() or emits[0] != 0 or GameState.marketplace != before:
+			return "refused call %d (inside its lock, or no change) returned true, emitted or changed the state" % i
+	return ""
+
+
+## `world()` kademeyi, açık hatayı, yayını, Üyelik kademesini ve atananın Satış yıldızını sahiplerinden okur; her modülün hattı
+## türün hat verisinde vardır; boş durumda okumak (`world`, `policy_value`, `channel_read`, `source_revenue`) durumu doğurmaz.
+##
+## FALSİFİKASYON: `MODULE_LINES`ta `checkout`un hattını `line_marketplace_orders` yap → açık hata satırı FAIL; `mobile`ın hattından
+## son eki sil → hat verisi satırı FAIL; `membership`i sabit 0 yaz → Üyelik satırı FAIL; kurucuya Satış yıldızını oku → yıldız satırı
+## FAIL; `policy_value`de `_read()` yerine `_s()` kullan → boş durum satırı FAIL.
+static func _case_marketplace_world_reads_owners() -> String:
+	_seed_sprint_live(MarketplaceSystem.TYPE_ID)
+	MarketplaceSystem.policy_value("shipping")
+	MarketplaceSystem.channel_read("fashion")
+	MarketplaceSystem.source_revenue("organic")
+	MarketplaceSystem.world()
+	if not GameState.marketplace.is_empty():
+		return "a read filled GameState.marketplace: %s" % str(GameState.marketplace.keys())
+	for line in MarketplaceSystem.MODULE_LINES.values():
+		if not line in ProductLines.line_ids(MarketplaceSystem.TYPE_ID):
+			return "%s is not a line of the marketplace type" % line
+	ProductState.set_line_tier("line_marketplace_storefront", 2)
+	ProductState.set_line_tier("line_shared_integrations@marketplace", 1)
+	ProductState.add_bugs("line_marketplace_checkout", 2)
+	var rep: Character = _make_employee("mp_rep", "Ece", HRConstants.ROLE_SALES_REP, SEED_PACE, 0, 50, 8)
+	var founder: String = CharacterRegistry.get_founder().id
+	_set_founder_area(HRConstants.AREA_SALES, 6)
+	MarketplaceSystem.open_category("fashion")
+	GameState.marketplace.assign[founder] = "fashion"
+	GameState.marketplace.assign[rep.id] = "fashion"
+	var w: Dictionary = MarketplaceSystem.world()
+	if w.week != GameState.day or not w.published:
+		return "week %s published %s" % [w.week, w.published]
+	if w.tiers.listing != 1 or w.tiers.storefront != 2 or w.tiers.checkout != 1 or w.tiers.integrations != 1 or w.tiers.mobile != 0:
+		return "tiers read %s" % str(w.tiers)
+	if w.tiers.membership != 0:
+		return "Membership tier %s before the paid plan opens" % w.tiers.membership
+	if w.bugs.checkout != 2 or w.bugs.orders != 0:
+		return "bugs read %s" % str(w.bugs)
+	if w.stars.get(founder, 0) != 1 or w.stars.get(rep.id, 0) != 4:
+		return "stars read %s, want founder 1 and the Sales 8-point rep 4" % str(w.stars)
+	GameState.set_flag("b2c_paid_tier_open", true)
+	GameState.set_flag("mvp_shipped", false)
+	w = MarketplaceSystem.world()
+	if w.tiers.membership != 1 or w.published:
+		return "membership %s published %s after the paid plan opened and the launch was undone" % [w.tiers.membership, w.published]
+	return ""
+
+
+## Yayından önce `daily_tick` durumu değiştirmez ve sinyal yaymaz; yayından sonra bir kapanış koşar: geçen haftanın sayıları yazılır,
+## o haftanın bileti kapanıştan sonra yazılır (kapanışın yazdığı haftadan doğar), sinyal bir kez yayılır.
+##
+## FALSİFİKASYON: `daily_tick`in başındaki yayın kapısını kaldır → yayından önceki çağrı FAIL; `tick_topics`i `close_week`ten önce
+## çağır → bilet satırı FAIL; sinyali `close_week`ten önce ve sonra yay → sinyal sayısı FAIL.
+static func _case_marketplace_tick_waits_for_launch() -> String:
+	_seed_marketplace_world()
+	GameState.set_flag("mvp_shipped", false)
+	var emits: Array[int] = [0]
+	EventBus.marketplace_changed.connect(func() -> void: emits[0] += 1)
+	var before: Dictionary = GameState.marketplace.duplicate(true)
+	MarketplaceSystem.daily_tick()
+	if GameState.marketplace != before or emits[0] != 0:
+		return "a close ran before the launch (emits %d)" % emits[0]
+	GameState.set_flag("mvp_shipped", true)
+	MarketplaceSystem.daily_tick()
+	var state: Dictionary = GameState.marketplace
+	if emits[0] != 1:
+		return "the first close emitted %d times" % emits[0]
+	if state.cats.fashion.week.get("visits", 0.0) <= 0.0 or state.users == 2000.0:
+		return "the close wrote no week figures (visits %s, users %s)" % [state.cats.fashion.week.get("visits"), state.users]
+	if state.topics.size_chart.tickets.size() != 1 or state.topics.size_chart.tickets[0] <= 0.0:
+		return "the topic tick did not read the week the close wrote: %s" % str(state.topics.size_chart.tickets)
 	return ""

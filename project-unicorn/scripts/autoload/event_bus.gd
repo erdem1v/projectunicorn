@@ -280,6 +280,10 @@ signal seed_round_closed(vc_id: String)         # SeedRoundSystem.accept — mon
 signal office_move_started(office_id: String, arrival_day: int)
 signal office_changed(office_id: String)
 
+# --- Marketplace ---
+# One publisher, MarketplaceSystem: every applied write seam and the weekly close.
+signal marketplace_changed()
+
 # --- Save / system-menu signals ---
 # END of TimeManager._dispatch_daily_tick, once every daily slot has settled: the only correct
 # autosave boundary (day_advanced fires before the slots run).

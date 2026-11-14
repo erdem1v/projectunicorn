@@ -48,7 +48,7 @@ grep -n "^## " docs/kod_haritasi/sistemler/02_urun_sprint.md                    
 - `sistemler/08_sekmeler.md`: `scripts/tabs/` pencereleri (Ürün, Satış, Ekip, Finans, Yatırım, Piyasa, Kişisel, Ar-Ge, Olaylar), sekme sözleşmesi, kalabalık kadroda tablo düzeni. Sekme arayüzü.
 - `sistemler/09_arayuz_bilesen.md`: UiTokens, UiFactory, tema üretimi, TopBar, sol ray, pencere katmanı, modallar, ana menü, onboarding, görüşme paneli, portre ve avatar. Ortak UI ve tema.
 - `sistemler/10_test_harness.md`: smoke süiti, `--run-log` probe, sprint/tempo/tick/render probe'ları, `--*-shot` ailesi, kabuk kapıları, `tools/`. Test koşmak ya da harness eklemek.
-- `sistemler/11_pazaryeri.md`: pazaryeri ekonomisinin saf çekirdeği (`MarketplaceModel`): mağaza ve kullanıcı akışı, dört adım, iade ve gelir, memnuniyet defteri, kurallar, Premium, önizleme; başsız probe. Komisyon, kural, Premium.
+- `sistemler/11_pazaryeri.md`: pazaryeri ekonomisinin saf çekirdeği (`MarketplaceModel`) ve onu oyuna bağlayan `MarketplaceSystem`: mağaza ve kullanıcı akışı, dört adım, iade ve gelir, memnuniyet defteri, kurallar, Premium, önizleme; yazan seam'ler, `world()`, haftalık kapanış; başsız probe. Komisyon, kural, Premium.
 - Bir dosya birden çok sayfada geçebilir: ana anlatım "Dosyalar" bölümünde ayrıntılı satırı olan sayfadadır, öbürleri "Dışarıda ama ayrılmaz" ya da "Komşu" diye yalnız anar.
 
 ## 4. Kod incelemesi ve temizlik

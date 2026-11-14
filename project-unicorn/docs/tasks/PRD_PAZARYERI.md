@@ -147,7 +147,8 @@ yazılır; arayüzün her önizlemesi aynı saf işlevi çağırır (§3.13). Bu
 
 ### 3.1 Durum ve sahiplik
 `GameState.marketplace` sözlüğü (anahtarlar metin; §7). Tek yazarı `MarketplaceSystem`'dir; arayüz, olay kolu ve öbür sistemler
-onun işlevlerini çağırır. Her değişiklik `EventBus.marketplace_changed` yayar.
+onun işlevlerini çağırır. Her değişiklik `EventBus.marketplace_changed` yayar. Sözlük sistemin ilk yazışında ya da ilk
+kapanışında dolar; okumak onu doldurmaz ve pazaryeri koşusu olmayan oyunda (ERP) boş kalır.
 
 | Anahtar | İçerik |
 |---|---|
@@ -206,6 +207,7 @@ onun işlevlerini çağırır. Her değişiklik `EventBus.marketplace_changed` y
 1. Mağaza akışı (§3.4). 2. Ziyaret ve dört adım, kategori kategori (§3.5). 3. İade (§3.6). 4. Kullanıcı (§3.7). 5. Gelir ve
 giderler (§3.6). 6. Premium üyeleri ve ayrıcalıkların kullanımı (§3.10). 7. Defter ve iki memnuniyet (§3.8). 8. Talepler'in
 biletleri (§3.11). 9. Olay 5.1'in isteği. 10. `marketplace_changed`. Pazarlama'nın değerleri okunur, yazılmaz (§3.12).
+Kapanış yalnız ürün yayındayken koşar; kategori açmak yayından önce de serbesttir.
 
 ### 3.4 Mağaza: payı, bölgesi, kazanımı ve kaybı
 - **Mağazaya kalan** (sepetin payı olarak), kategori başına:

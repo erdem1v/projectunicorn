@@ -2,7 +2,7 @@
 
 **GENERATED — do not hand-edit.** Regenerate with `python tools/gen_signal_manifest.py`.
 Source: `scripts/autoload/event_bus.gd`, every `.gd` under `scripts/`, `EvSignals.BINDINGS` and the card triggers.
-Last generated 2026-11-12.
+Last generated 2026-11-14.
 
 Authority: [`GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](<../GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md>) §15. The read side of
 the same idea is the seam list in [`content/events_draft/_vocabulary.md`](content/events_draft/_vocabulary.md) §b.
@@ -10,16 +10,16 @@ the same idea is the seam list in [`content/events_draft/_vocabulary.md`](conten
 ## Why this is generated
 
 §15.1 asks for a static manifest of emitter, listeners and payload. Hand-keeping that
-for 145 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
+for 146 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
 signal with no emit point" a lint error, so the manifest is the lint rule's input.
 
 ## Headline numbers
 
 | | count |
 |---|---|
-| Signals declared | **145** |
+| Signals declared | **146** |
 | Declared with **no production emitter** | **2** |
-| Emitted with **no production listener** | **66** |
+| Emitted with **no production listener** | **67** |
 
 The second number is the §15.2 violation set. The third is **not** a defect: the Ekip,
 Ürün, Ar-Ge and Satış modules publish their read-surface signals ahead of any consumer,
@@ -68,7 +68,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `speed_change_requested` | `speed: int` | save_manager · game_shell · main · endings_system · top_bar | 24 | 1 | time_manager |
 | `night_skipped` | `—` | time_manager | 1 | 5 | plausibility · main · office_people · office_view |
 | `clock_batch_ended` | `—` | time_manager | 1 | 6 | signals · incident_system · sprint_system · rnd_tab · research_bar · office_people |
-| `tab_changed` | `tab_id: String` | game_shell · main · product_tab · sales_tab · mail_pane · hr_atlas_modal · sprint_ui_shared · rnd_ui_shared · inbox · left_tabs · research_bar · top_bar · window_layer · office_notice_stack | 56 | 5 | main · left_tabs · research_bar · top_bar · window_layer |
+| `tab_changed` | `tab_id: String` | game_shell · main · product_tab · sales_tab · mail_pane · hr_atlas_modal · sprint_ui_shared · rnd_ui_shared · inbox · left_tabs · research_bar · top_bar · window_layer · office_notice_stack | 57 | 5 | main · left_tabs · research_bar · top_bar · window_layer |
 | `finance_subpage_requested` | `page_id: String` | main · mail_pane | 3 | 0 | — |
 | `goto_tab_requested` | `tab_id: String, subpage: String` | effects | 1 | 1 | main |
 
@@ -288,6 +288,12 @@ excluded from both counts and shown in the notes column when they are all a sign
 |---|---|---|---|---|---|
 | `office_move_started` | `office_id: String, arrival_day: int` | office_system | 1 | 1 | office_hud |
 | `office_changed` | `office_id: String` | office_system | 1 | 2 | office_hud · office_view |
+
+### Marketplace
+
+| signal | payload | emitter(s) | E | L | listener(s) |
+|---|---|---|---|---|---|
+| `marketplace_changed` | `—` | marketplace_system | 2 | 0 | — |
 
 ### Save / system-menu signals
 
