@@ -2631,7 +2631,7 @@ PRODUCT_GATE_BODY,Yayınlarsan kullanıcılar bu hafta gelmeye başlar. Bir spri
 LAUNCH_GATE_TITLE,Yayın şartı,Launch requirement
 LAUNCH_GATE_DONE,bitti,done
 LAUNCH_GATE_SPRINT,bu sprintte,this sprint
-LAUNCH_GATE_NEXT,sıradaki sprintte,next sprint
+LAUNCH_GATE_NEXT,sonraki sprintte,next sprint
 LAUNCH_GATE_WAITING,bekliyor,waiting
 PRODUCT_GATE_ONE_MORE,Bir sprint daha,One more sprint
 PRODUCT_RELEASE_RND_OPEN,Ar-Ge açıldı,R&D is open
@@ -2722,6 +2722,10 @@ PRODUCT_CREW_TIP,Ekip: {n} kişi · sprintte {sprint} · eğitimde {training} ·
 PRODUCT_CAPACITY,Kapasite,Capacity
 PRODUCT_EFFORT,Efor,Effort
 PRODUCT_CAP_TIP,{stage} · efor {work} · ekip {team},{stage} · effort {work} · team {team}
+PRODUCT_CAP_NO_DESIGNER,Tasarımcı yok,No designer
+PRODUCT_CAP_NO_DESIGNER_TIP,Tasarımı tasarımcı olmayan biri yapıyor.,Someone who is not a designer does the design.
+PRODUCT_CAP_NO_TESTER,Testçi yok,No tester
+PRODUCT_CAP_NO_TESTER_TIP,"Testi testçi olmayanlar yapıyor; kaçan hata, modülü kullanan her hesaba dokunur.","People who are not testers do the testing; an escaped bug reaches every account that uses the module."
 PRODUCT_CAP_TIP_DONE,yapıldı {n},done {n}
 PRODUCT_CAP_FITS,Sığıyor,Fits
 PRODUCT_CAP_SPILL,{n} efor sonraki sprinte kalır,{n} effort waits for the next sprint

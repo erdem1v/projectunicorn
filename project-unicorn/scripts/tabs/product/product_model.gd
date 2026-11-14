@@ -113,6 +113,8 @@ const TIER_KEYS := {InfraSystem.PROVIDER_LOCAL: "PRODUCT_SERVER_TIER_ECONOMY", I
 	InfraSystem.PROVIDER_ENTERPRISE: "PRODUCT_SERVER_TIER_ENTERPRISE"}
 ## Bir aşamanın satırı bu kadar kişiden çoksa yüzlerin yerini yıldız kümeleri alır.
 const CLUSTER_OVER := 9
+## Uzmanı olan aşamalar: sprint ekibinde aşamanın rolünden kimse yoksa satır boş koltuğu gösterir.
+const SPECIALIST_STAGES := ["design", "test"]
 ## Planlamada bu sprintin kartının ("→", "×") ve sonraki sprintin kartının ("↑", "×") düğmeleri.
 const PLAN_KEYS := ["send_next", "remove"]
 const NEXT_KEYS := ["pull", "remove"]
@@ -602,12 +604,14 @@ static func _crew(run: Dictionary) -> Variant:
 ## sprint sayısıdır (en az 2 ise rozet), `hot` en çok taşan aşama o süreklilikteyse. `stays` aşamada kalan kartlar [{card, effort}].
 ## `people` aşamada çalışanlar {person, busy (kalan haftaların dolu payı), cut (görüşmelerin aldığı pay), effort (sprintteki gücü)},
 ## `away` seçilemeyenler {person, reason}; `cluster` satır `CLUSTER_OVER`dan çok kişi tutunca yüzlerin yerini alan kümeler. Ekip yalnız
-## kurucuysa üç satır `shared`dır ve kurucu Test satırındadır.
+## kurucuysa üç satır `shared`dır ve kurucu Test satırındadır. Uzmanı olan aşamada (`SPECIALIST_STAGES`) `missing` sprint ekibinde
+## aşamanın rolünden kimsenin oturmamasıdır (yalnız kurucu ya da kimse; işi olmayan satırda değil), `helpers` o zaman aşamada
+## çalışan öbür satırların yüzleri.
 static func _capacity(mode: String, run: Dictionary, now: float) -> Variant:
 	if run.is_empty():
 		return null
 	var rows: Array = SprintSystem.STAGES.map(func(stage: String) -> Dictionary:
-		return {"stage": stage, "work": 0.0, "team": 0.0, "done": 0.0, "out": 0.0, "stays": {}})
+		return {"stage": stage, "work": 0.0, "team": 0.0, "done": 0.0, "out": 0.0, "stays": {}, "missing": false, "helpers": []})
 	var seats: Dictionary = _seats(run)
 	for id in run.cards:
 		for s in run.cards[id].stages:
@@ -640,6 +644,12 @@ static func _capacity(mode: String, run: Dictionary, now: float) -> Variant:
 		row["people"] = seat.people
 		row["away"] = seat.away
 		row["cluster"] = _cluster(seat)
+		row.missing = (not solo and row.stage in SPECIALIST_STAGES and (row.work > SprintSystem.EPS or row.team > SprintSystem.EPS)
+			and seat.people.all(func(p: Dictionary) -> bool: return p.person.founder))
+		if row.missing:
+			row.helpers = run.people.keys().filter(func(id: String) -> bool:
+				return run.people[id].row != row.stage and run.people[id].pieces.any(func(p: Dictionary) -> bool: return p.stage == row.stage)
+			).map(func(id: String) -> Dictionary: return stage_face(id, row.stage))
 	return rows
 
 

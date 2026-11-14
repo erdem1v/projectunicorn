@@ -1,6 +1,6 @@
 # Kod haritası · KALITE
 
-Üretildi: git cf0032ac · 2026-11-14 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git fe76dddf · 2026-11-14 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 259 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
@@ -13,7 +13,7 @@ Kapsam: scripts/ altındaki 259 .gd (tools/ hariç). Kod temizliği ve kıdemli 
 - scripts/events/tools/lint.gd · 1357 satır · 47 func
 - scripts/systems/vc_pitch_system.gd · 1317 satır · 91 func
 - scripts/autoload/save_manager.gd · 1298 satır · 61 func
-- scripts/tabs/product/product_model.gd · 1206 satır · 66 func
+- scripts/tabs/product/product_model.gd · 1216 satır · 66 func
 - scripts/systems/hr_constants.gd · 1185 satır · 90 func
 - scripts/events/core/effects.gd · 1147 satır · 35 func
 - scripts/ui/office/office_person.gd · 1128 satır · 51 func
@@ -161,7 +161,7 @@ Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: 
 - ChequeRead · 5 dosya · scripts/tabs/finance/finance_ozet_view.gd:34, scripts/tabs/personal_tab.gd:13, scripts/ui/components/top_bar.gd:23, scripts/ui/office/office_notice_stack.gd:14, scripts/debug/endgame_smoke.gd:34
 - DATA_PATH · 5 dosya · scripts/menu/credits.gd:9, scripts/systems/graphics_settings.gd:18, scripts/systems/marketing_system.gd:9, scripts/systems/marketplace_model.gd:37, scripts/systems/sprint_catalog.gd:11
 - ARROW · 4 dosya · scripts/modals/hr_action_modal.gd:19, scripts/tabs/product/board_row.gd:19, scripts/tabs/product/sprint_ui_shared.gd:17, scripts/tabs/sales_tab.gd:33
-- CHECK · 4 dosya · scripts/tabs/product/sprint_ui_shared.gd:19, scripts/tabs/product/stage_paint.gd:33, scripts/tabs/rnd/rnd_tree_view.gd:47, scripts/ui/office/office_notice_stack.gd:15
+- CHECK · 4 dosya · scripts/tabs/product/sprint_ui_shared.gd:19, scripts/tabs/product/stage_paint.gd:34, scripts/tabs/rnd/rnd_tree_view.gd:47, scripts/ui/office/office_notice_stack.gd:15
 - CHEVRON · 4 dosya · scripts/tabs/product/quarter_view.gd:14, scripts/tabs/product/sprint_head.gd:10, scripts/tabs/rnd/rnd_assign_panel.gd:22, scripts/tabs/rnd/rnd_tree_view.gd:46
 - CLOCK · 4 dosya · scripts/tabs/hunt_tab.gd:11, scripts/tabs/product/sprint_ui_shared.gd:20, scripts/tabs/rnd/rnd_detail_panel.gd:20, scripts/tabs/sales_tab.gd:30
 - GraphicsSettingsLib · 4 dosya · scripts/autoload/settings.gd:17, scripts/modals/settings_modal.gd:19, scripts/ui/menu_backdrop.gd:13, scripts/ui/office/office_view.gd:13

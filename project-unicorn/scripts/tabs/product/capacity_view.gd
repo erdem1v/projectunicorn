@@ -3,7 +3,8 @@ extends PanelContainer
 
 # Kapasite bloğu: başlığı (sağda liderin önerisi) ve üç aşamanın satırı. Satırda aşamanın adı, oluğu (ekibin gücü) ve içindeki
 # dolgu (sprintin işi; koşarken önü koyu, sığmayan pay taralı), "{iş} / {ekip}", sığma tiki ya da taşma rozeti ve aşamada
-# çalışanların yüzleri (kalabalık satırda yıldız kümeleri, seçilemeyenler soluk). Yalnız modeli çizer; öneriyi uygulamak sekmeye
+# çalışanların yüzleri (kalabalık satırda yıldız kümeleri, seçilemeyenler soluk); uzmanı olmayan aşamada adın yanında etiket, yüzlerin
+# önünde boş koltuk ve aşamada çalışan öbür satırların yüzleri, dolgu taralı. Yalnız modeli çizer; öneriyi uygulamak sekmeye
 # `apply_lead` olarak çıkar. Üstüne gelinen adayın hayaleti sayfa kurulmadan `set_ghost` ile gelir.
 
 signal action(kind: String, args: Dictionary)
@@ -11,6 +12,9 @@ signal action(kind: String, args: Dictionary)
 const STAYS_KEYS := {"design": "PRODUCT_STAYS_DESIGN", "dev": "PRODUCT_STAYS_DEV", "test": "PRODUCT_STAYS_TEST"}
 const AWAY_KEYS := {"training": "PRODUCT_AWAY_TRAINING", "leave": "PRODUCT_AWAY_LEAVE", "research": "PRODUCT_AWAY_RESEARCH",
 	"meetings": "PRODUCT_AWAY_MEETINGS"}
+## Uzmanı olmayan aşamanın etiketi ve ipucu.
+const MISSING_KEYS := {"design": ["PRODUCT_CAP_NO_DESIGNER", "PRODUCT_CAP_NO_DESIGNER_TIP"],
+	"test": ["PRODUCT_CAP_NO_TESTER", "PRODUCT_CAP_NO_TESTER_TIP"]}
 
 
 ## Aşamanın etiketi ve rozeti: üstüne gelince `build` verilmişse onun kurduğu zengin ipucu, yoksa düz metin.
@@ -28,6 +32,21 @@ class Cell extends Control:
 
 	func _get_minimum_size() -> Vector2:
 		return Vector2(maxf(least, (get_child(0) as Control).get_combined_minimum_size().x), UiTokens.D_H_CAP_LINE)
+
+
+## Uzmanı olmayan aşamanın boş koltuğu: yüz kadar, kesik çizgili halka ve ortasında aşamanın rol ikonu.
+class Seat extends CenterContainer:
+	const DASHES := 12
+
+	func _init(stage: String) -> void:
+		custom_minimum_size = Vector2.ONE * UiTokens.D_AVATAR_ROW_SM
+		size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		add_child(UiFactory.make_glyph(SprintUiShared.ROLE_ICONS[stage], UiTokens.D_ICON_MARK, UiTokens.D_INK_3))
+
+	func _draw() -> void:
+		var r: float = minf(size.x, size.y) / 2.0 - UiTokens.BORDER_FOCUS
+		for i in DASHES:
+			draw_arc(size / 2.0, r, TAU * i / DASHES, TAU * (i + 0.5) / DASHES, 4, UiTokens.D_INK_3, UiTokens.BORDER_FOCUS, true)
 
 
 var _rows: Array = []
@@ -52,11 +71,15 @@ func setup(model: Dictionary) -> void:
 	var list := SprintUiShared.column(0)
 	var rows := MarginContainer.new()
 	rows.add_child(list)
-	# Etiket sütunu üç satırda aynı genişliktedir, oluklar aynı yerden başlar: en az D_W_CAP_LABEL, dilin en uzun aşama adı sığmazsa onun kadar.
+	# Etiket sütunu üç satırda aynı genişliktedir, oluklar aynı yerden başlar: en az D_W_CAP_LABEL, dilin en uzun aşama adı (eksik rolün
+	# etiketi ve kutusuyla) sığmazsa onun kadar.
 	var label_w: float = UiTokens.D_W_CAP_LABEL
+	var tag_pad: float = (load(UiTokens.MENAJER_THEME) as Theme).get_stylebox(&"normal", &"TagOutline").get_minimum_size().x
 	for row: Dictionary in _rows:
+		var tag: float = (UiTokens.SPACE_M + tag_pad + StagePaint.text_width(Fmt.upper(tr(MISSING_KEYS[row.stage][0])), &"TagOutline")
+			if row.missing else 0.0)
 		label_w = maxf(label_w, ceilf(UiTokens.D_ICON_ROW + UiTokens.SPACE_M
-			+ StagePaint.text_width(SprintUiShared.stage_name(row.stage), &"CapStage")))
+			+ StagePaint.text_width(SprintUiShared.stage_name(row.stage), &"CapStage") + tag))
 	for row: Dictionary in _rows:
 		list.add_child(_row(row, c.mode == "active", label_w))
 	if _rows[0].shared:
@@ -133,10 +156,15 @@ func _row(row: Dictionary, running: bool, label_w: float) -> PanelContainer:
 	name_cell.custom_minimum_size.x = label_w
 	name_cell.add_child(UiFactory.make_glyph(SprintUiShared.ROLE_ICONS[row.stage], UiTokens.D_ICON_ROW, UiTokens.D_stage(row.stage)))
 	name_cell.add_child(SprintUiShared.label(SprintUiShared.stage_name(row.stage), &"CapStage", UiTokens.D_INK_OFF if empty else null))
+	if row.missing:
+		var tag := UiFactory.D_tag(tr(MISSING_KEYS[row.stage][0]), &"outline")
+		tag.tooltip_text = tr(MISSING_KEYS[row.stage][1])
+		tag.mouse_filter = Control.MOUSE_FILTER_PASS
+		name_cell.add_child(tag)
 	line.add_child(name_cell)
 	var groove := StagePaint.groove(row.stage, {"work": row.work, "groove": row.team, "done": row.done,
 		"outer": maxf(0.0, row.out - row.out_inside), "inner": row.out_inside, "ghost": 0.0, "scale": 1.0, "shared": row.shared,
-		"empty": empty})
+		"empty": empty, "plain": row.missing})
 	groove.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_grooves.append(groove)
 	line.add_child(groove)
@@ -213,12 +241,24 @@ func _ring(streak: int) -> PanelContainer:
 
 
 ## Aşamanın yüzleri: yanında oturanlar tek tek (üstünde yıldız çipi, altında doluluk çizgisi), seçilemeyenler soluk ve nedeniyle;
-## satır kalabalıksa yıldız kümeleri.
+## satır kalabalıksa yıldız kümeleri. Uzmanı yoksa önde boş koltuk ve aşamada çalışan öbür satırların yüzleri (çipsiz, yıldızı
+## ipucunda; kalabalıksa tek küme).
 func _people(row: Dictionary) -> HFlowContainer:
 	var flow := HFlowContainer.new()
 	flow.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	flow.add_theme_constant_override("h_separation", UiTokens.SPACE_XS)
 	flow.add_theme_constant_override("v_separation", UiTokens.SPACE_XS)
+	if row.missing:
+		var seat := Seat.new(row.stage)
+		seat.tooltip_text = tr(MISSING_KEYS[row.stage][1])
+		flow.add_child(seat)
+		if row.helpers.size() > ProductModel.CLUSTER_OVER:
+			flow.add_child(_cluster(row.helpers[0], SprintUiShared.stage_name(row.stage), row.helpers.size(), false))
+		else:
+			for person: Dictionary in row.helpers:
+				var face := SprintUiShared.face(person, UiTokens.D_AVATAR_ROW_SM, false, false)
+				face.tooltip_text = SprintUiShared.named_stars(person)
+				flow.add_child(face)
 	var crowd: Variant = row.cluster
 	if crowd == null:
 		for p: Dictionary in row.people:

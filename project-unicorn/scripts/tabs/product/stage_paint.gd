@@ -4,10 +4,11 @@ extends Control
 # Sprint ekranının çizilen izleri: StyleBox'ın çizemediği şeritler, kesikli ve noktalı çizgiler, taramalar ve çubuklar. Renk ve ölçü
 # UiTokens'tan gelir; yerleşim sahibi spec'i ve boyutu verir. Panoda her öğe kendi Control'üdür (`part`): üstüne gelinen yer ve
 # ipucu o öğeye bağlanır, çizim ortak.
-#   groove  Kapasite bölümünde bir aşamanın oluğu: `spec` {work, groove, done, outer, inner, ghost, scale, shared, empty},
+#   groove  Kapasite bölümünde bir aşamanın oluğu: `spec` {work, groove, done, outer, inner, ghost, scale, shared, empty, plain},
 #           hepsi efor; `scale` tam genişliğin eforudur. Oluğun çerçevesi kalın bir çizgiyle biter (aşamaları yalnız kurucu
 #           paylaşıyorsa kesikli), dolgu aşamanın eforudur, `done` onun koyu önüdür, taşma şeritlidir (`outer` oluğun ötesinde,
-#           `inner` içinde), `ghost` adayın eforu dolgunun ardından kesiklidir, boş aşama (`empty`) kesikli bir çizgidir.
+#           `inner` içinde), `ghost` adayın eforu dolgunun ardından kesiklidir, boş aşama (`empty`) kesikli bir çizgidir; uzmanı
+#           olmayan aşamanın (`plain`) dolgusu aşamanın kenar renginde taralıdır.
 #   busy    Kişinin yüzünün altındaki yük: `spec` {busy, cut} 0..1, `cut` görüşmelerin haftadan aldığı pay.
 #   bracket Oluklardan solda üç satırın ayracı: `spec` {x, top, bottom}.
 #   grid    Panonun zaman ekseni zemini: `spec` {px (hafta başına piksel), weeks (sprintin haftası)}; hafta ayracı, sprint sonu
@@ -158,6 +159,8 @@ func _draw_groove() -> void:
 	var fill := Rect2(0, inset, minf(work, edge), h - 2.0 * inset)
 	draw_rect(fill, UiTokens.D_stage_fill(stage))
 	draw_rect(Rect2(0, inset, minf(spec.done * per, edge), fill.size.y), UiTokens.D_stage(stage))
+	if spec.plain:
+		hatch(self, fill, Color.TRANSPARENT, UiTokens.D_stage_edge(stage), UiTokens.D_HATCH)
 	if spec.inner > 0.0:
 		spill(self, Rect2(fill.end.x - spec.inner * per, inset, spec.inner * per, fill.size.y))
 	if spec.outer > 0.0:

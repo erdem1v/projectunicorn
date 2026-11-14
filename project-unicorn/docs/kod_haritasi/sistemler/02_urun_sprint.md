@@ -248,7 +248,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - Plan tutuşu: `plan_opens_at_work_start` (gece kapanan sprintin planı mesai başlangıcında saati tutar: 10:00 mesaisinde 08:00 ve 09:00'da saat akar, 08:00 mesaisinde hemen; adım adım ve toplu adımda);
   ↳ `sprint_starts_only_with_consent`, `delegate_needs_pm` ve `sprint_team_follows_job_matrix` saati `_at_work_start` ile mesai başlangıcına koyar
 - Sprint ekranı sözleşmesi (`ProductModel`): `center.capacity` aşama başına {stage, work, team, done, out, out_inside, streak, hot, shared, stays, people, away,
-  cluster}; ayrıca `center.suggest`, `crew`, `team_empty`, `delegate` {on, pm (yüz ya da null: devret kilitli)}, `progress` {done, total, known} (koşarken; saatlik güncelleme `ProductModel.progress_at(aşama listeleri, known, an)`),
+  cluster, missing, helpers}; ayrıca `center.suggest`, `crew`, `team_empty`, `delegate` {on, pm (yüz ya da null: devret kilitli)}, `progress` {done, total, known} (koşarken; saatlik güncelleme `ProductModel.progress_at(aşama listeleri, known, an)`),
   ↳ `can_start` (planlamada ve ekip varken; kartsız da açık), `start_skips` (başlatılacak kart yok: "0 kart", başlat `skip` çağırır), `start_reason` (ekip yokken gerekçe); `quarter.goal` {area_id, area_name, meter}.
 - Sağ sütun sözleşmesi (`ProductModel`): `prep.pms` [{person, stars, cards, preparing}]; `next` {sprint, cards, load, carried}; `next.cards` {id, kind, name, effort (aşama paylarının toplamı),
   ↳ parts [{stage, effort, done, people}], prep {pm, done} ya da null, buttons}; sürüm notunda devredenler kartlarda değil `carried`tadır, kapısı kapanan kart yalnız "×" alır; `next.flags` yoktur.
@@ -338,7 +338,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
   ↳ dört hesabın dört açık talebi (hesap başına bir açık talep); `a4_empty` altı kişi, bir geliştirici eğitimde, boş plan; `a4_run_end` aynı ekibin düzeltme kartsız sprinti 2.
   ↳ haftanın sonunda (sonraki sütunda iki kart), tasarımcı sonraki sütunun kartında önden; `a4_next_prefilled` onun sonraki planlaması: devreden test, önden yapılmış tasarım, plan erken biter; `a4_early` altı kişi, iki kartlık plan,
   ↳ sprint 1. haftanın sonunda kapanır; `a4_first_sprint` v1.0 öncesi Sprint 1: tasarımcı, 5★ geliştirici, kurucu (en çok çalıştığı Geliştirme satırında), sonraki sütunda iki kart; `a4_first_next` onun ardından Sprint 2 planı; `a4_first_close` aynı sprint kapanmış, v1.0 öncesi sürüm notu
-  ↳ (yayın şartı şeridinde sıradaki sprintin planındaki parça "sıradaki sprintte");
+  ↳ (yayın şartı şeridinde sonraki sprintin planındaki parça "sonraki sprintte");
   ↳ `a4_six_founder_off` `a4_six_pm5`'in planı, kurucu anahtarı kapalı; `a4_six_meetings2` aynı plan, kurucunun haftasında iki satış görüşmesi; `a4_account_week` aynı plan, kurucu haftasını bir hesaba verdi (`account` 5 gün: ekip özetinde "hesap işinde"), `a4_account_tip` iki gün ve kurucunun ipucu ("Hesap işi · 2 gün"); `a4_run_table` `a4_eleven`'ın sprinti 1. haftanın ortasında, masa 2 gün tarar;
   ↳ `a4_run_delegate` `a4_run_end`'in sprinti, planlama PM'e devredilmiş (şeritte "{PM} planlıyor" ve ilerleme); `a4_cards_noteam` tasarımcı, geliştirici, testçi ve 5★ PM,
   ↳ kurucu kapalı, üç kartlık plan, plandan sonra PM dışında herkes izinde (`away`; şeritte "Ekip'e git"); `a4_delegate_noteam` aynısı, planlama devredilmiş;

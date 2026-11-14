@@ -68,6 +68,8 @@ Alt klasörler:
 - `scripts/tabs/product/card_tip.gd` (150): `CardTip`: zengin kart ipucu paneli (`panel(kart, ekipte PM var mı)`): başlık (efor), hata riski, aşama efor kutuları, kim çalışıyor ve görüşmeler (tür başına toplam gün), yetişir mi, künye.
 - `scripts/tabs/product/sprint_head.gd` (106): `SprintHead`: SPRINT N, çeyrek çentikleri, hafta rozeti, ekip rozeti, çeyrek hedef seçicisi (`pick_goal`); rozetler akar, kesilmez.
 - `scripts/tabs/product/capacity_view.gd` (339): `CapacityView`: KAPASİTE başlığı ve öneri satırı (`apply_lead`), üç aşama satırı (oluk, dolgu, "{iş} / {ekip}", rozet, yüzler, kümeler), taşma ipucu paneli (`D_W_TIP`);
+  ↳ uzmanı olmayan aşamada (`ProductModel.SPECIALIST_STAGES`, `missing`) adın yanında "TASARIMCI YOK" / "TESTÇİ YOK" etiketi (sütun genişliğine
+  ↳ girer), yüzlerin önünde kesik çizgili boş koltuk (`Seat`), aşamada çalışan öbür satırların çipsiz yüzleri (`helpers`) ve taralı dolgu;
   ↳ rozetin düz ipucu "Sığıyor" ya da "{n} efor sonraki sprinte kalır";
   `set_ghost`, `set_done`; etiket sütunu üç satırda aynı genişliktedir (en az `D_W_CAP_LABEL`, dilin en uzun aşama adı), sayı sütunu içeriğiyle genişler (`Cell`).
 - `scripts/tabs/product/stage_paint.gd` (340): `StagePaint`: sprint ekranının tek çizim sınıfı (Kapasite: `groove`, `busy`, `bracket`; pano: `grid`, `now`, `early`, `bar`, `label`, `wait`, `shadow`, `meet`, `tick`,
@@ -79,7 +81,7 @@ Alt klasörler:
   ↳ ÇEYREK çubuğu, `switch`, `due_chip` (yazının ilk harfi çipte büyür), `flag` (sütun genişliğinde sarar),
   ↳ `row_keys`, `way_out`, `add_key`, `keep_scroll`); Ürün dışında 10+ dosya kullanır. İpucu parçaları: `STAGE_KEYS`, `stage_name`, `stage_icon`, `stage_done`, `done_text`, `named_stars`, `effort_tip`,
   ↳ `prepared_tip`, `meet_lines`, `meet_lines_of` (kalemler `GameState.founder_meetings_frozen` kayıtlarıdır, günü `TimeModel.meeting_days`: hesaba verilen zaman `account` kendi gününü taşır; `total`: türü başına günler toplanır); kurucunun haftası yalnız hesaplara gitmişse Sprint ekibi onu "hesap işinde" yazar (`capacity_view._away_text`), `tip_column` (zengin ipucunun kökü).
-- `scripts/tabs/product/launch_gate.gd`: `LaunchGate`: yayın şartı şeridi (`SprintCatalog.mvp_parts`: bitti onay, planda (bu sprintte; sürüm notunda sıradaki sprintte) dolu nokta, bekliyor boş halka;
+- `scripts/tabs/product/launch_gate.gd`: `LaunchGate`: yayın şartı şeridi (`SprintCatalog.mvp_parts`: bitti onay, planda (bu sprintte; sürüm notunda sonraki sprintte) dolu nokta, bekliyor boş halka;
   ↳ sözcüğü ipucunda), `flag()` şartın modülünün sol sütundaki bayrağı.
 - `scripts/tabs/product/area_panel.gd` (392): `AreaPanel`: sol sütun (SPRINT ve ÇEYREK): Geçmiş, MÜŞTERİ TALEPLERİ, MODÜLLER ve açık modülün adayları (düzeltme adayı tam hata metnini sarar yazar,
   ↳ başka sprintin adayı "Sprint {n}" damgası taşır); adayların sonunda kilitli kartlar (`_locked_card`: soluk ad ve altında şartı, efor ve şerit yok; araştırma kilidinde Ar-Ge ikonu ve tık Ar-Ge'yi o düğümde açar, kişi kilidinde tık işe alım atlasını açar, canlı ürün kilidi yalnız okunur); kapalı modülün yapılacak kartı yoksa ilk kilidin şartı adının altında;

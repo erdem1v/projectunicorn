@@ -88,7 +88,8 @@ sahip kararı 2026-10-11). `[WORKING]` = yönetmen F5'te revize edebilir.
 | lider *(build)* | lead | LİDERİN ÖNERİSİ / LEAD'S PICK. Satıştaki "aday ↔ lead"den ayrı anahtar ailesi. |
 | devreden | carried over | Kart damgası küçük harf: devreden / carried. |
 | sürüm notu | release note | |
-| Yayın şartı *(v1.0'ın adlı modülleri)* | Launch requirement | `LAUNCH_GATE_TITLE`, Erdem'in sözü (tur 4). Şeridin sözcükleri: bitti ↔ done, bu sprintte ↔ this sprint (planda), sıradaki sprintte ↔ next sprint (sürüm notunda), bekliyor ↔ waiting. TR/EN onay bekliyor. |
+| Tasarımcı yok · Testçi yok *(kapasite satırının etiketi)* | No designer · No tester | `PRODUCT_CAP_NO_DESIGNER`, `_NO_TESTER`; kısa etiket, rolün adı Ekip'te "Tasarımcı", "Test Mühendisi". TR/EN onay bekliyor. |
+| Yayın şartı *(v1.0'ın adlı modülleri)* | Launch requirement | `LAUNCH_GATE_TITLE`, Erdem'in sözü (tur 4). Şeridin sözcükleri: bitti ↔ done, bu sprintte ↔ this sprint (planda), sonraki sprintte ↔ next sprint (sürüm notunda; plan sütunu "SONRAKİ" ile aynı söz), bekliyor ↔ waiting. TR/EN onay bekliyor. |
 | hız *(sprint)* | velocity | HIZ / VELOCITY. Kişi ekseni "Hız ↔ Pace"ten ayrı anlam. |
 
 ## 4. İnsanlar — eksenler, roller, bölümler, bantlar, HR

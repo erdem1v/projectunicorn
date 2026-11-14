@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git cf0032ac · 2026-11-14 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git fe76dddf · 2026-11-14 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -258,14 +258,14 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/tabs/hr/hr_popover.gd · 113 · HRPopover · Control · 0 sinyal · 8 func
 - scripts/tabs/hr/hr_ui_shared.gd · 506 · HRUiShared · RefCounted · 0 sinyal · 32 func
 
-### scripts/tabs/product/ (17 dosya, 5413 satır)
+### scripts/tabs/product/ (17 dosya, 5466 satır)
 - scripts/tabs/product/area_panel.gd · 411 · AreaPanel · MarginContainer · 4 sinyal · 25 func
 - scripts/tabs/product/board_row.gd · 551 · BoardRow · PanelContainer · 1 sinyal · 32 func
-- scripts/tabs/product/capacity_view.gd · 339 · CapacityView · PanelContainer · 1 sinyal · 22 func
+- scripts/tabs/product/capacity_view.gd · 379 · CapacityView · PanelContainer · 1 sinyal · 24 func
 - scripts/tabs/product/card_tip.gd · 151 · CardTip · RefCounted · 0 sinyal · 11 func
 - scripts/tabs/product/launch_gate.gd · 68 · LaunchGate · PanelContainer · 0 sinyal · 5 func
 - scripts/tabs/product/overview_view.gd · 101 · - · HBoxContainer · 1 sinyal · 6 func
-- scripts/tabs/product/product_model.gd · 1206 · ProductModel · RefCounted · 0 sinyal · 66 func
+- scripts/tabs/product/product_model.gd · 1216 · ProductModel · RefCounted · 0 sinyal · 66 func
 - scripts/tabs/product/quarter_view.gd · 195 · QuarterView · VBoxContainer · 2 sinyal · 7 func
 - scripts/tabs/product/sprint_board.gd · 349 · SprintBoard · VBoxContainer · 2 sinyal · 16 func
 - scripts/tabs/product/sprint_card.gd · 32 · SprintCard · PanelContainer · 0 sinyal · 1 func
@@ -274,7 +274,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/tabs/product/sprint_next.gd · 344 · SprintNext · ScrollContainer · 1 sinyal · 21 func
 - scripts/tabs/product/sprint_panel.gd · 329 · SprintPanel · HBoxContainer · 2 sinyal · 15 func
 - scripts/tabs/product/sprint_ui_shared.gd · 560 · SprintUiShared · RefCounted · 0 sinyal · 48 func
-- scripts/tabs/product/stage_paint.gd · 340 · StagePaint · Control · 0 sinyal · 21 func
+- scripts/tabs/product/stage_paint.gd · 343 · StagePaint · Control · 0 sinyal · 21 func
 - scripts/tabs/product/type_picker.gd · 181 · TypePicker · HBoxContainer · 1 sinyal · 11 func
 
 ### scripts/tabs/rnd/ (5 dosya, 1312 satır)
@@ -723,7 +723,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
   ↳ action connect: scripts/tabs/product/quarter_view.gd:63, scripts/tabs/product/sprint_board.gd:198, scripts/tabs/product/sprint_panel.gd:90,133,139,145 +5
 
 ### scripts/tabs/product/capacity_view.gd
-- action(kind: String, args: Dictionary) · scripts/tabs/product/capacity_view.gd:9 · (ad 10 yerde tanımlı)
+- action(kind: String, args: Dictionary) · scripts/tabs/product/capacity_view.gd:10 · (ad 10 yerde tanımlı)
   ↳ action emit: scripts/main/main.gd:4413, scripts/tabs/product/area_panel.gd:322,383, scripts/tabs/product/board_row.gd:181,268,302 +28
   ↳ action connect: scripts/tabs/product/quarter_view.gd:63, scripts/tabs/product/sprint_board.gd:198, scripts/tabs/product/sprint_panel.gd:90,133,139,145 +5
 
@@ -1127,7 +1127,7 @@ Biçim: yol · boyut · üst düzey anahtarlar (en çok 10)
 - data/product/sprint.json · 9.4 KB · {sprint_weeks, quarter_weeks, mvp_lines, mvp_named, effort, fix_effort, limit_k, need, roles, role_areas, +27}
 - data/techtree/rnd_tree.json · 6.3 KB · {_doc, _stars, _cross, _areas, k_arge, report_period_weeks, nodes, _hidden_doc, _hidden_k3_doc, hidden_lines}
 
-## Metin anahtarı aileleri (844 aile, 3268 anahtar)
+## Metin anahtarı aileleri (844 aile, 3272 anahtar)
 
 Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak geçiren .gd/.json (en çok 5). '-' = dinamik kurulmuş olabilir ya da kullanılmıyor.
 - ANGEL_CAP_* · 1 · scripts/tabs/finance/finance_ozet_view.gd
@@ -1592,7 +1592,7 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - PRODUCT_BUG_* · 2 · scripts/tabs/product/product_model.gd, scripts/ui/components/build_bar.gd, scripts/debug/endgame_smoke.gd
 - PRODUCT_BUGS_* · 2 · scripts/tabs/product/product_model.gd
 - PRODUCT_CAND_* · 1 · scripts/tabs/product/area_panel.gd
-- PRODUCT_CAP_* · 7 · scripts/systems/sprint_catalog.gd, scripts/tabs/product/capacity_view.gd, scripts/debug/endgame_smoke.gd
+- PRODUCT_CAP_* · 11 · scripts/systems/sprint_catalog.gd, scripts/tabs/product/capacity_view.gd, scripts/debug/endgame_smoke.gd
 - PRODUCT_CAPACITY_* · 1 · scripts/tabs/product/capacity_view.gd
 - PRODUCT_CARDS_* · 1 · scripts/tabs/product/sprint_next.gd
 - PRODUCT_CARRIED_* · 2 · scripts/tabs/product/board_row.gd, scripts/tabs/product/sprint_next.gd, scripts/tabs/product/sprint_panel.gd

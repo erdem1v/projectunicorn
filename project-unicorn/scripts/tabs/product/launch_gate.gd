@@ -2,12 +2,12 @@ class_name LaunchGate
 extends PanelContainer
 
 # Yayın şartı şeridi: ürün yayına çıkmadan bitmesi gereken adlı modüller ve durumları (`SprintCatalog.mvp_parts`);
-# şerit ürün türünü bilmez. Durum biçimle okunur: bitti onay işareti, planda (bu ya da sıradaki sprintte) dolu nokta,
+# şerit ürün türünü bilmez. Durum biçimle okunur: bitti onay işareti, planda (bu ya da sonraki sprintte) dolu nokta,
 # bekliyor boş halka; sözcüğü ipucundadır.
 
 const STATE_KEYS := {"done": "LAUNCH_GATE_DONE", "sprint": "LAUNCH_GATE_SPRINT", "next": "LAUNCH_GATE_NEXT",
 	"waiting": "LAUNCH_GATE_WAITING"}
-## Parçanın adı: planda duran (bu ya da sıradaki sprintte) öne çıkar, bekleyen sönük.
+## Parçanın adı: planda duran (bu ya da sonraki sprintte) öne çıkar, bekleyen sönük.
 const NAME_INK := {"done": UiTokens.D_INK_2, "sprint": UiTokens.D_INK_1, "next": UiTokens.D_INK_1, "waiting": UiTokens.D_INK_3}
 
 
