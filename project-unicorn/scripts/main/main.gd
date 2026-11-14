@@ -4792,13 +4792,17 @@ const _A4_WORLDS := {
 
 func _seed_product_a4(kind: String) -> void:
 	var world: Dictionary = _A4_WORLDS[kind]
-	GameState.set_cash(1_000_000)
+	var savings: int = GameState.cash
+	GameState.set_cash(1_000_000)   # the setup's weeks never reach the shutter; _a4_books writes the world's cash
 	(SprintCatalog.cfg("decision") as Dictionary).sprint_chance = 0.0
 	SprintSystem.choose_type("erp", "Fatura")
 	var live: bool = not world.get("pre", false)
 	if live:
 		_a4_live()
 	_a4_seat(_a4_hire(String(world.get("crew", "")), world.get("twin", [])))
+	var crew: int = CharacterRegistry.count_employees()
+	if live and crew > 0:
+		_a4_office(crew)
 	if live:
 		if world.get("quarter_now", false):
 			_a4_quarter_now()
@@ -4841,6 +4845,38 @@ func _seed_product_a4(kind: String) -> void:
 			_a4_week()
 		var start: int = WorkHoursSystem.start_hour()
 		TimeManager.advance_hours(roundi(start + (run - int(run)) * (WorkHoursSystem.workday_end() - start) - TimeManager.day_minute() / 60.0))
+	_a4_books(crew, savings)
+
+
+## The smallest office whose desks seat the crew and the founder, moved into through OfficeSystem (the up-front rent
+## leaves the setup's cash); the move's week is taken as gone, so the office stands and its rent is in the burn.
+func _a4_office(crew: int) -> void:
+	for id: String in ["ishani", "plaza", "loft"]:
+		if int(OfficeConstants.CATALOG[id].desks) > crew or id == "loft":
+			OfficeSystem.move_to(id)
+			GameState.office_move_day = GameState.day
+			OfficeSystem.daily_tick()
+			return
+
+
+## The books as the world's size reads them. The founder alone keeps the savings; a crew's cash covers six months of
+## what the company loses a month (its burn when revenue covers it). Past six people the company has taken Frank's
+## cheque and a seed at the standard opening, its cash theirs (Traction); past twenty it hunts Series A.
+func _a4_books(crew: int, savings: int) -> void:
+	if crew == 0:
+		GameState.set_cash(savings)
+		return
+	FinanceSystem.set_burn_category("salaries", FinanceSystem.daily_rate(CharacterRegistry.get_total_monthly_salaries()))
+	var loss: int = -GameState.get_net_daily_flow()
+	var cash: int = roundi(6 * TimeModel.DAYS_PER_MONTH * (loss if loss > 0 else GameState.daily_burn))
+	if crew <= 6:
+		GameState.set_cash(cash)
+		return
+	GameState.set_phase(3 if crew > 20 else 2)
+	GameState.set_cash(0)
+	AngelRoundSystem.accept_offer()
+	SeedRoundSystem.accept("anchor", {"raise": cash - AngelRoundSystem.CASH_AMOUNT,
+		"dilution_pct": SeedConstants.OPENING[SeedConstants.BAND_STANDARD].dilution_pct})
 
 
 ## The employees of a crew string, hired through the registry: [[id, state], …].
@@ -4859,7 +4895,11 @@ func _a4_hire(crew: String, twin: Array) -> Array:
 		c.role = _A4_ROLES[tokens[i][0]]
 		c.category = "employee"
 		c.morale = 60
-		c.role_stats = HRConstants.seed_skills(c.role, tokens[i][1].to_int() * HRConstants.POINTS_PER_STAR, 3, 2)
+		var stars: int = tokens[i][1].to_int()
+		c.role_stats = HRConstants.seed_skills(c.role, stars * HRConstants.POINTS_PER_STAR, 3, 2)
+		# Paid as a hire's file quotes: the middle of the band for the level the stars read.
+		var band: Array = HRConstants.salary_band_for_level(c.role, int((stars - 1) / 2.0))
+		c.monthly_salary = snappedi((int(band[0]) + int(band[1])) / 2.0, 50)
 		c.traits.assign(["picks_it_up_fast"])
 		CharacterRegistry.add(c)
 		staff.append([c.id, tokens[i].get_slice(":", 1)])
