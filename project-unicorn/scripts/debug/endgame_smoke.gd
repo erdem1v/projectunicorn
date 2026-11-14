@@ -10586,7 +10586,7 @@ static func _case_save_roundtrip_fingerprint() -> String:
 	# under test: a title that resolves proves the rebuild, and a title that is still its own
 	# key proves only that a token round-tripped.
 	var view: GameEvent = EventGate.render(EXPANSION_ID, EventGate.bind_scope(EXPANSION_ID))
-	if view == null or view.choices.size() != 2:
+	if view == null or view.choices.size() != EvCatalog.card(EXPANSION_ID).options.size():
 		_cleanup_save_slots()
 		return "the card did not rebuild its options from the catalogue"
 	if view.title == "" or view.title == "B2B_EV_EXPANSION_TITLE":
