@@ -467,6 +467,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"founder_not_double_counted":     fail = _case_founder_not_double_counted()
 		# --- Ürün modülü · hat modeli (GDD ÜRÜN rev 6 §12).
 		"product_lines_catalog_loads":    fail = _case_product_lines_catalog_loads()
+		"product_unknown_type_errors":    fail = _case_product_unknown_type_errors()  # EXPECT-ERROR unknown sub-product type 'no_such_type'
 		"line_ladder_rules":              fail = _case_line_ladder_rules()
 		"line_k3_locked_without_research": fail = _case_line_k3_locked_without_research()
 		"gate_scope_and_halves":          fail = _case_gate_scope_and_halves()
@@ -14858,7 +14859,7 @@ static func _ui_host() -> Node:
 
 
 ## §12.11 MÜHÜRLÜ — tip ekranının OYNANABİLİR kartları ile hat içeriği olan alt-tipler
-## AYNI KÜME olmak zorunda; hattı tür seçilebilir olmadan önce inen tür `waiting` listesinde bekler. İkisi iki ayrı dosyada yaşıyor (ProductCatalog.TYPE_SCREEN ve
+## AYNI KÜME olmak zorunda; hattı olup ekranda olmayan tür `waiting` listesinde adıyla bekler. İkisi iki ayrı dosyada yaşıyor (ProductCatalog.TYPE_SCREEN ve
 ## data/product/lines/*.json) ve ayrıştıkları an oyuncu tıklanabilir bir karttan BOŞ bir
 ## ürüne düşer — motoru görünmez kılan tam olarak bu kopukluktu.
 ##
@@ -14884,9 +14885,8 @@ static func _case_type_screen_matches_line_content() -> String:
 			if not ProductLines.has_subtype(pid):
 				return "%s is playable on the type screen but has no line content" % pid
 			playable.append(pid)
-	# Bekleyen tür: hattı var, kartı yok; hat verisi tür seçilebilir olmadan önce iner. Tür oynanabilir olunca bu vaka
-	# düşer ve türü listeden çıkarır.
-	var waiting: Array[String] = ["marketplace"]
+	# Bekleyen tür: hattı var, kartı yok. Tür ekrana girince ya da hat verisi silinince vaka düşer ve türü listeden çıkarır.
+	var waiting: Array[String] = ["marketplace", "note_tool", "video_clip"]
 	for pid in waiting:
 		if playable.has(pid):
 			return "%s is on the type screen; drop it from waiting" % pid
@@ -14905,7 +14905,18 @@ static func _case_type_screen_matches_line_content() -> String:
 	return ""
 
 
-## The type picker is ONE screen: both markets' playable cards are there with an empty draft and no click,
+## A sub-product id the catalog does not know prints an error and has no market; a known one reads its market. The arm's
+## EXPECT-ERROR names the unknown id, so any other error line fails the case.
+## FALSIFICATION: delete the `push_error` in `ProductCatalog.get_market_type` → the marker never prints; make it return
+## "b2c" for an unknown id → the first reading FAILs.
+static func _case_product_unknown_type_errors() -> String:
+	var got: Array = ["no_such_type", "erp", "marketplace"].map(ProductCatalog.get_market_type)
+	if got != ["", "b2b", "b2c"]:
+		return "an unknown id, erp and marketplace read %s, want [\"\", b2b, b2c]" % str(got)
+	return ""
+
+
+## The type picker is ONE screen: every playable card is there with an empty draft and no click,
 ## picking a card writes it into the draft, and a typed name confirms as `chosen(subtype, name)`.
 ## FALSIFICATION: restoring the two-step market gate hides every card until a path is clicked.
 static func _case_type_picker_one_screen() -> String:

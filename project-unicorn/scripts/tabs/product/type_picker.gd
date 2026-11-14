@@ -50,11 +50,14 @@ func _list() -> VBoxContainer:
 	col.custom_minimum_size.x = UiTokens.D_W_TYPE_LIST
 	col.add_child(UiFactory.make_label(tr("PROD_PATH_TITLE"), &"TitleH2"))
 	for market: String in MARKETS:
+		var playable: Array = ProductCatalog.playable_types(market)
+		if playable.is_empty():
+			continue
 		var head := SprintUiShared.box(UiTokens.SPACE_M)
 		head.add_child(UiFactory.make_glyph(MARKETS[market][1], UiTokens.D_ICON_GROUP, UiTokens.D_INK_4))
 		head.add_child(_group_label(market))
 		col.add_child(SprintUiShared.pad(head, Vector4i(0, UiTokens.SPACE_L, 0, 0)))
-		for st in ProductCatalog.playable_types(market):
+		for st in playable:
 			col.add_child(_row(String(st.id)))
 	return col
 

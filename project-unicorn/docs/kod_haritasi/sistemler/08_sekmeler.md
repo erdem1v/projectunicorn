@@ -92,7 +92,8 @@ Alt klasörler:
 - `scripts/tabs/product/quarter_view.gd` (195): `QuarterView`: ÇEYREK görünümü: hedef şeridi (menü SprintHead ile ortak), sol sütun (`AreaPanel`), altı sprint sütunu, onay düğmeleri;
   ↳ sütunlar ve "Hepsini onayla" içerik pencereyi aşınca dikey kayar (`_right`, yeniden kurulumda yeri korunur), `content_height` içeriğin kendi boyunu okur.
 - `scripts/tabs/product/overview_view.gd` (96): GENEL BAKIŞ kâğıdı (şimdilik yalnız Sunucu bloğu; Azalt düğmesi kapasite 0 birimdeyken `server.decrease.off` ile kapalı); class_name yok.
-- `scripts/tabs/product/type_picker.gd` (181): `TypePicker`: MVP öncesi tek ekranlık tür ve ad seçici (solda pazara göre gruplu liste, sağda seçilenin dosyası: tanım, gelir, müşteri, katalogdaki `desks` ve `plus`/`minus` kavramları); taslak `SprintSystem`'e yazılır, onay `chosen` olur.
+- `scripts/tabs/product/type_picker.gd` (184): `TypePicker`: MVP öncesi tek ekranlık tür ve ad seçici (solda pazara göre gruplu liste, sağda seçilenin dosyası: tanım, gelir, müşteri, katalogdaki `desks` ve `plus`/`minus` kavramları); taslak `SprintSystem`'e yazılır, onay `chosen` olur.
+  ↳ Oynanabilir türü olmayan pazarın başlığı çizilmez (`_list`)
 - `scripts/tabs/rnd/rnd_tree_view.gd` (433): `RnDTreeView`: aile sütunları (3 satır kafes), karolar, seçili düğümün kartı alanı.
 - `scripts/tabs/rnd/rnd_detail_panel.gd` (272): `RnDDetailPanel`: düğüm kartı (durumlar, gereksinim çipleri, Başlat/Duraklat/Vazgeç).
 - `scripts/tabs/rnd/rnd_assign_panel.gd` (236): `RnDAssignPanel`: kartın içindeki atama paneli (alan grupları, onay kutuları, yüzler).

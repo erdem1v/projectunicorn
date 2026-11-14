@@ -49,8 +49,9 @@ const SUB_PRODUCT_TYPES := {
 	],
 }
 
-## §12.11 — demo tip ekranı. `playable` hat içeriği olan alt-tiplerdir; hattı tür seçilebilir olmadan önce inen tür
-## `type_screen_matches_line_content`'in `waiting` listesinde bekler.
+## §12.11 — demo tip ekranı. `playable` hat içeriği olan alt-tiplerdir. B2C'nin oynanabilir türü yok: pazaryerinin tür
+## ekranı arayüzü henüz yok; hattı olup burada olmayan tür `type_screen_matches_line_content`'in `waiting` listesinde
+## adıyla durur.
 ## Kilitli kartlar düz katalogdan seçilir, §12.11 pazar başına üç der. B2B'nin üçüncüsü
 ## bir ürün değil §12.11'in AÇIK SLOT'udur: dördüncü B2B alt-tipi gelene kadar kilitli
 ## kart olarak durur.
@@ -58,7 +59,7 @@ const TYPE_SCREEN_SLOT := "b2b_open_slot"
 
 const TYPE_SCREEN := {
 	"b2c": {
-		"playable": ["note_tool", "video_clip"],
+		"playable": [],
 		"locked": ["ai_code_copilot", "ai_photo_editor", "ai_assistant"],
 	},
 	"b2b": {
@@ -200,9 +201,13 @@ static func get_feature_pool(sub_product_type_id: String) -> Array:
 	return FEATURE_POOLS.get(sub_product_type_id, [])
 
 
-## PostShip satış modeli. Bilinmeyen id "b2c" okur: B2C aday hattı istemez.
+## PostShip satış modeli. Katalogda olmayan id hatadır ve "" döner.
 static func get_market_type(sub_product_type_id: String) -> String:
-	return String(get_sub_product_type_by_id(sub_product_type_id).get("market_type", "b2c"))
+	var record: Dictionary = get_sub_product_type_by_id(sub_product_type_id)
+	if record.is_empty():
+		push_error("[ProductCatalog] unknown sub-product type '%s'" % sub_product_type_id)
+		return ""
+	return String(record.market_type)
 
 
 ## "premium" | "neutral" | "volume" — SalesSystem.product_value()'nun optimumunu kaydırır.
