@@ -1,6 +1,6 @@
 # Kod haritası · KALITE
 
-Üretildi: git eca852e1 · 2026-11-14 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git d2d24e04 · 2026-11-14 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 255 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd

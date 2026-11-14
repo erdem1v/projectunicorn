@@ -941,6 +941,106 @@ def _():
     return S(front, gap(back, front))
 
 
+# ================================================================ MODULE (a product module: its id is its line's id)
+def _arrow(p0, p1, w=2.4, head=3.4):
+    # a shaft and a head opening at 90 degrees, like util/arrow_right
+    (x0, y0), (x1, y1) = p0, p1
+    a = math.atan2(y1 - y0, x1 - x0)
+    l, r = a + math.radians(135), a - math.radians(135)
+    return U(L(p0, p1, w=w), L((x1 + head * math.cos(l), y1 + head * math.sin(l)), (x1, y1),
+                               (x1 + head * math.cos(r), y1 + head * math.sin(r)), w=w))
+
+
+@glyph("module/line_erp_ledger")
+def _():
+    # an open ledger: two pages, the ruled rows knocked out, the right page in tone with the paper notch
+    left = ko(R(2.4, 4.4, 8.6, 15.6, 1.2), [(4.6, 8.6), (8.8, 8.6)], [(4.6, 12.2), (8.8, 12.2)], [(4.6, 15.8), (7.2, 15.8)])
+    right = notch(R(13.0, 4.4, 8.6, 15.6, 1.2), 21.6, 4.4)
+    right = ko(right, [(15.2, 8.6), (19.4, 8.6)], [(15.2, 12.2), (19.4, 12.2)], [(15.2, 15.8), (17.8, 15.8)])
+    return S(left, right)
+
+
+@glyph("module/line_erp_invoicing")
+def _():
+    # an invoice slip with the paper notch: two lines and a heavier total knocked out, the torn zigzag foot
+    pts = [(5.0, 2.4), (19.6, 2.4), (19.6, 21.6)]
+    for i in range(5):
+        pts += [(19.6 - (i + 0.5) * 2.92, 19.4), (19.6 - (i + 1) * 2.92, 21.6)]
+    page = notch(soften(P(*pts), 0.6), 19.6, 2.4)
+    page = ko(page, [(8.0, 8.0), (14.0, 8.0)], [(8.0, 11.4), (16.4, 11.4)])
+    return S(cut(page, R(8.0, 14.0, 8.4, 2.6, 0.8)))
+
+
+@glyph("module/line_erp_cashflow")
+def _():
+    # a safe: the box with its dial knocked out as a ring, the handle slot, two feet
+    body = R(3.2, 3.6, 17.6, 15.6, 2.0)
+    body = cut(body, ring(10.0, 11.4, 3.6, w=2.0), C(10.0, 11.4, 1.0), R(16.8, 9.0, 2.0, 4.8, 1.0))
+    return S(U(body, R(5.0, 19.2, 3.0, 2.4, 0.6), R(16.0, 19.2, 3.0, 2.4, 0.6)))
+
+
+@glyph("module/line_erp_intake")
+def _():
+    # a delivery box with the arrow coming down into it
+    box_ = ko(R(3.6, 11.2, 16.8, 10.4, 1.4), [(0, 14.8), (24, 14.8)], cap="flat")
+    a = _arrow((12.0, 3.6), (12.0, 11.0))
+    return S(U(gap(box_, a), a))
+
+
+@glyph("module/line_erp_stock")
+def _():
+    # cartons stacked: two below, one on top, each with its tape knocked out
+    def carton(x, y):
+        return ko(R(x, y, 8.6, 8.4, 1.0), [(x + 4.3, y - 1), (x + 4.3, y + 3.6)], cap="flat")
+    return S(U(carton(2.4, 13.2), carton(13.0, 13.2), carton(7.7, 2.4)))
+
+
+@glyph("module/line_shared_security")
+def _():
+    return G["origin/heir"]()
+
+
+@glyph("module/line_shared_durability")
+def _():
+    # a cloud with the up arrow knocked out
+    cloud = U(C(7.4, 13.6, 4.6), C(13.0, 10.8, 5.8), C(17.4, 14.6, 3.8), R(2.8, 13.6, 18.4, 5.2, 2.6))
+    return S(cut(cloud, _arrow((12.0, 15.6), (12.0, 8.6), w=2.2, head=3.0)))
+
+
+@glyph("module/line_shared_integrations")
+def _():
+    return G["product/area_integrations"]()
+
+
+@glyph("module/line_shared_mobile")
+def _():
+    # a phone: the body, the screen and the home button knocked out
+    return S(cut(R(6.0, 2.4, 12.0, 19.2, 2.4), R(7.8, 5.0, 8.4, 10.8, 0.6), C(12.0, 18.8, 0.8)))
+
+
+@glyph("module/line_erp_bulk_import")
+def _():
+    # a table, its grid knocked out, the arrow coming in from the left in front of it
+    table = R(8.4, 3.6, 13.2, 16.8, 1.4)
+    table = ko(table, [(8.4, 9.2), (24, 9.2)], [(8.4, 14.8), (24, 14.8)], [(14.2, 0), (14.2, 24)], cap="flat", w=1.8)
+    a = _arrow((3.6, 12.0), (12.2, 12.0))
+    return S(U(gap(table, a), a))
+
+
+@glyph("module/line_erp_approval")
+def _():
+    # a seal: a disc with the check knocked out
+    return S(ko(C(12, 12, 9.6), [(7.6, 12.4), (10.8, 15.6), (16.6, 9.0)], w=2.4))
+
+
+@glyph("module/line_erp_multi_company")
+def _():
+    # two companies: util/building's tower in front, a lower tower behind in tone
+    front = mv(G["util/building"]()["s"], 5.2, 0)
+    back = cut(R(2.4, 6.4, 5.6, 15.2, 1.2), *[R(4.2, y, 2.0, 2.4, 0.4) for y in (8.8, 13.0)])
+    return S(front, gap(back, front))
+
+
 # ---------------------------------------------------------------- head icon map (office_actor.gd ICONS)
 HEAD = {"code": "skill/engineering", "design": "skill/design", "test": "skill/qa", "research": "util/search",
         "phone": "office/phone", "meeting": "rail/hr", "coffee": "office/coffee", "food": "office/food",
