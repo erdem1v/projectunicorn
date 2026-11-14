@@ -1050,6 +1050,44 @@ def _():
     return S(front, gap(back, front))
 
 
+@glyph("module/line_marketplace_listing")
+def _():
+    # a price tag with its hole knocked out, and the arrow going up into the catalogue
+    tag = cut(soften(P((9.6, 9.6), (21.6, 9.6), (21.6, 21.6), (9.6, 21.6), (4.8, 15.6)), 1.2), C(9.4, 15.6, 1.6))
+    a = _arrow((15.6, 7.6), (15.6, 3.6), w=2.4, head=3.0)
+    return S(U(gap(tag, a), a))
+
+
+@glyph("module/line_marketplace_storefront")
+def _():
+    # where a buyer finds a product: the category page's tiles in tone, the search glass in front of them
+    tiles = U(*[R(x, y, 8.4, 8.4, 1.2) for x in (2.4, 13.2) for y in (2.4, 13.2)])
+    glass = U(ring(13.6, 13.6, 4.2, w=2.4), L((16.8, 16.8), (20.4, 20.4), w=2.4))
+    return S(glass, gap(tiles, glass))
+
+
+@glyph("module/line_marketplace_checkout")
+def _():
+    # a cart: the handle, the basket with a row knocked out, two wheels
+    basket = ko(P((6.2, 6.8), (21.6, 6.8), (19.4, 15.2), (8.0, 15.2)), [(9.0, 10.4), (18.4, 10.4)], cap="flat")
+    handle = L((3.6, 4.6), (5.6, 4.6), (7.8, 15.2), (19.4, 15.2), w=2.2)
+    return S(U(basket, handle, C(9.4, 20.0, 1.6), C(17.8, 20.0, 1.6)))
+
+
+@glyph("module/line_marketplace_orders")
+def _():
+    # a parcel: its tape knocked out at the top like line_erp_stock's cartons, and the check of a fulfilled order
+    parcel = ko(R(3.2, 3.6, 17.6, 18.0, 1.4), [(12.0, 2.6), (12.0, 8.4)], cap="flat")
+    return S(ko(parcel, [(7.8, 14.6), (10.8, 17.6), (16.2, 12.2)], w=2.2))
+
+
+@glyph("module/line_marketplace_reviews")
+def _():
+    # the reviews: a speech bubble with the star knocked out (the buyer protection the module also holds is not drawn)
+    b = bubble(2.4, 3.6, 19.2, 14.0, [(6.2, 16.0), (6.2, 21.0), (11.6, 16.0)], r=2.4)
+    return S(cut(b, soften(P(*star_pts(12.0, 10.6, 5.0, 2.1)), 0.4)))
+
+
 # ---------------------------------------------------------------- head icon map (office_actor.gd ICONS)
 HEAD = {"code": "skill/engineering", "design": "skill/design", "test": "skill/qa", "research": "util/search",
         "phone": "office/phone", "meeting": "rail/hr", "coffee": "office/coffee", "food": "office/food",
