@@ -1,7 +1,7 @@
 # Kod haritası · KALITE
 
 Üretildi: git 8864e641 · 2026-11-14 · `python -I tools/kod_haritasi/uret.py`
-Kapsam: scripts/ altındaki 255 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
+Kapsam: scripts/ altındaki 257 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
 
@@ -28,8 +28,8 @@ Kapsam: scripts/ altındaki 255 .gd (tools/ hariç). Kod temizliği ve kıdemli 
 - scripts/events/core/engine.gd · 813 satır · 38 func
 - scripts/ui/meeting/meeting_panel.gd · 790 satır · 37 func
 - scripts/systems/b2b_sales_system.gd · 735 satır · 48 func
+- scripts/systems/marketplace_model.gd · 726 satır · 61 func
 - scripts/ui/components/top_bar.gd · 714 satır · 36 func
-- scripts/events/present/chips.gd · 708 satır · 28 func
 
 ## 80 satırdan uzun fonksiyonlar (100 tane, en uzun 40)
 
@@ -75,10 +75,31 @@ Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları
 - scripts/debug/run_probe.gd:363 · run · 117 satır
 - scripts/debug/endgame_smoke.gd:1440 · _case_month_summary · 116 satır
 
-## Ölü kod adayları (21)
+## Ölü kod adayları (42)
 
 Tanım satırı dışında scripts/, scenes/, data/ içinde adı hiç geçmeyen func (yorumlar sayılmaz, dizeler sayılır). Godot geri çağrıları hariç.
 UYARI: call("a"+b) gibi kurulmuş adlar, sinyal adıyla bağlama, harness bayrakları ve tools/*.sh çağrıları yüzünden yanlış pozitif olabilir; silmeden önce grep ile doğrula.
+- scripts/debug/marketplace_probe.gd:200 · _check_empty_category_no_orders · debug
+- scripts/debug/marketplace_probe.gd:216 · _check_acquisition_waits_for_publish · debug
+- scripts/debug/marketplace_probe.gd:229 · _check_leaving_zone_stores_fall · debug
+- scripts/debug/marketplace_probe.gd:244 · _check_lock_rejects · debug
+- scripts/debug/marketplace_probe.gd:261 · _check_campaign_override_expires · debug
+- scripts/debug/marketplace_probe.gd:277 · _check_revenue_window_spike · debug
+- scripts/debug/marketplace_probe.gd:298 · _check_premium_closed_no_perk_cost · debug
+- scripts/debug/marketplace_probe.gd:315 · _check_campaign_free_shipping_single_write · debug
+- scripts/debug/marketplace_probe.gd:342 · _check_preview_figures · debug
+- scripts/debug/marketplace_probe.gd:369 · _check_known_store_earnings · debug
+- scripts/debug/marketplace_probe.gd:380 · _check_known_return_rate · debug
+- scripts/debug/marketplace_probe.gd:388 · _check_known_order_rate · debug
+- scripts/debug/marketplace_probe.gd:396 · _check_json_roundtrip · debug
+- scripts/debug/marketplace_probe.gd:404 · _check_ledger_expiry · debug
+- scripts/debug/marketplace_probe.gd:424 · _check_zone_limits_consistent · debug
+- scripts/debug/marketplace_probe.gd:443 · _check_constants_switch · debug
+- scripts/debug/marketplace_probe.gd:465 · _check_gain_and_weakest · debug
+- scripts/debug/marketplace_probe.gd:480 · _check_acquisition_multipliers · debug
+- scripts/debug/marketplace_probe.gd:511 · _check_store_terms_discount · debug
+- scripts/debug/marketplace_probe.gd:527 · _check_premium_members · debug
+- scripts/debug/marketplace_probe.gd:547 · _check_zone_rows_need_stores · debug
 - scripts/debug/office_crowd_probe.gd:48 · _log_error · debug
 - scripts/events/present/papers.gd:145 · arc_of
 - scripts/main/game_shell.gd:163 · debug_force_vc_meeting · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
@@ -122,7 +143,7 @@ emit'i ya da connect'i bulunamayan sinyal (ada göre). Dizi içi bağ, await ve 
 - scripts/autoload/event_bus.gd:224 · whale_condition_met · connect yok
 - scripts/modals/confirm_modal.gd:12 · alt_selected · emit yok
 
-## Birden çok dosyada tanımlı const (90 ad)
+## Birden çok dosyada tanımlı const (93 ad)
 
 Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: elle bakılmalı.
 - INBOX · 16 dosya · scripts/main/game_shell.gd:7, scripts/main/main.gd:20, scripts/modals/save_load_modal.gd:19, scripts/modals/system_menu_modal.gd:22, scripts/tabs/events/mail_pane.gd:19, scripts/tabs/events_tab.gd:8 +10
@@ -132,11 +153,11 @@ Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: 
 - CHECK · 4 dosya · scripts/tabs/product/sprint_ui_shared.gd:19, scripts/tabs/product/stage_paint.gd:33, scripts/tabs/rnd/rnd_tree_view.gd:47, scripts/ui/office/office_notice_stack.gd:15
 - CHEVRON · 4 dosya · scripts/tabs/product/quarter_view.gd:14, scripts/tabs/product/sprint_head.gd:10, scripts/tabs/rnd/rnd_assign_panel.gd:22, scripts/tabs/rnd/rnd_tree_view.gd:46
 - CLOCK · 4 dosya · scripts/tabs/hunt_tab.gd:11, scripts/tabs/product/sprint_ui_shared.gd:20, scripts/tabs/rnd/rnd_detail_panel.gd:20, scripts/tabs/sales_tab.gd:30
+- DATA_PATH · 4 dosya · scripts/menu/credits.gd:9, scripts/systems/graphics_settings.gd:18, scripts/systems/marketplace_model.gd:33, scripts/systems/sprint_catalog.gd:11
 - GraphicsSettingsLib · 4 dosya · scripts/autoload/settings.gd:17, scripts/modals/settings_modal.gd:19, scripts/ui/menu_backdrop.gd:13, scripts/ui/office/office_view.gd:13
 - ModuleLocks · 4 dosya · scripts/events/core/delays.gd:22, scripts/events/seams/seams_world.gd:6, scripts/events/tools/vocab_gen.gd:13, scripts/ui/components/left_tabs.gd:27
 - STAR · 4 dosya · scripts/systems/sprint_catalog.gd:24, scripts/tabs/events/mail_pane.gd:24, scripts/tabs/rnd/rnd_ui_shared.gd:52, scripts/tabs/sales_tab.gd:35
 - COLUMNS · 3 dosya · scripts/onboarding/steps/company_step.gd:8, scripts/onboarding/steps/origin_traits_step.gd:13, scripts/tabs/hr/hr_ledger.gd:10
-- DATA_PATH · 3 dosya · scripts/menu/credits.gd:9, scripts/systems/graphics_settings.gd:18, scripts/systems/sprint_catalog.gd:11
 - DisplaySettingsLib · 3 dosya · scripts/autoload/settings.gd:16, scripts/modals/settings_modal.gd:18, scripts/systems/graphics_settings.gd:15
 - EMBLEM · 3 dosya · scripts/menu/continue_card.gd:6, scripts/onboarding/first_week_doc.gd:9, scripts/onboarding/steps/company_step.gd:10
 - GROUP · 3 dosya · scripts/ui/components/inbox.gd:14, scripts/ui/components/toast.gd:10, scripts/ui/components/window_layer.gd:45
@@ -147,6 +168,7 @@ Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: 
 - STAR_MAX · 3 dosya · scripts/systems/hr_constants.gd:31, scripts/systems/product_quality.gd:21, scripts/systems/sales_constants.gd:45
 - STRINGS_CSV · 3 dosya · scripts/autoload/localization.gd:12, scripts/debug/k0_check.gd:8, scripts/debug/loc_residue.gd:26
 - W · 3 dosya · scripts/modals/training_modal.gd:21, scripts/tabs/hr/hr_assignments.gd:17, scripts/debug/kit_probe.gd:11
+- ARG · 2 dosya · scripts/events/tools/plausibility_main.gd:24, scripts/debug/marketplace_probe.gd:18
 - BAND_H · 2 dosya · scripts/modals/work_hours_modal.gd:34, scripts/tabs/events_tab.gd:15
 - BAR_W · 2 dosya · scripts/onboarding/first_week_doc.gd:12, scripts/onboarding/steps/origin_traits_step.gd:16
 - BarKit · 2 dosya · scripts/ui/components/build_bar.gd:14, scripts/ui/components/research_bar.gd:26
@@ -161,6 +183,7 @@ Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: 
 - CONV_SHUTTER_PENALTY · 2 dosya · scripts/systems/pitch_constants.gd:26, scripts/systems/seed_constants.gd:94
 - CONV_THIN_RUNWAY_PENALTY · 2 dosya · scripts/systems/pitch_constants.gd:27, scripts/systems/seed_constants.gd:95
 - CONV_WARM_INTRO_BONUS · 2 dosya · scripts/systems/pitch_constants.gd:30, scripts/systems/seed_constants.gd:93
+- DEFAULT_WEEKS · 2 dosya · scripts/events/tools/plausibility.gd:40, scripts/debug/marketplace_probe.gd:19
 - DIL_STEP · 2 dosya · scripts/systems/pitch_constants.gd:124, scripts/systems/seed_constants.gd:47
 - EDGE · 2 dosya · scripts/tabs/events_tab.gd:16, scripts/ui/components/window_layer.gd:43
 - EFFORT_BANDS · 2 dosya · scripts/systems/product_lines.gd:23, scripts/systems/research_tree.gd:37
@@ -207,6 +230,7 @@ Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: 
 - STALL_S · 2 dosya · scripts/ui/office/office_person.gd:131, scripts/debug/office_crowd_probe.gd:13
 - START_IMMUNITY_WEEKS · 2 dosya · scripts/events/core/tuning.gd:124, scripts/events/tools/plausibility.gd:52
 - STATE_ACTIVE · 2 dosya · scripts/events/core/arcs.gd:16, scripts/systems/rnd_system.gd:31
+- STEPS · 2 dosya · scripts/onboarding/onboarding_flow.gd:14, scripts/systems/marketplace_model.gd:40
 - STYLES · 2 dosya · scripts/systems/people_parts.gd:99, scripts/ui/components/logo_emblem.gd:9
 - TABLE · 2 dosya · scripts/systems/product_quality.gd:46, scripts/systems/sales_archetypes.gd:41
 - TOAST · 2 dosya · scripts/modals/ending_scene.gd:37, scripts/debug/kit_probe.gd:7

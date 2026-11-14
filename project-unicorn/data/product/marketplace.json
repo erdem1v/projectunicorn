@@ -1,0 +1,98 @@
+{
+  "visits": {
+    "organic_rate": 0.065,
+    "sat_floor": 55,
+    "sat_span": 45,
+    "member_freq": 1.4,
+    "retention": {"base": 0.94, "per_sat": 0.0005, "sat_ref": 70, "member_share": 0.03, "min": 0.85, "max": 0.99},
+    "source_weeks": 12
+  },
+  "steps": {
+    "reach": {"cart": 0.15, "checkout": 0.70, "order": 0.88, "delivered": 0.97},
+    "tier_from_1": [0.83, 0.96, 1.0],
+    "tier_from_0": [0.90, 0.95, 0.98, 1.0],
+    "bug_each": 0.027,
+    "bug_cap": 10
+  },
+  "stores": {
+    "acquire_base": [2, 3, 4, 6, 8],
+    "zone_mult": {"comfortable": 1.0, "strained": 0.6, "leaving": 0.2},
+    "zone_ease": 0.40,
+    "zone_strain": 0.33,
+    "pass_through": 0.5,
+    "admission_mult": 0.6,
+    "listing_acquire": [1.0, 1.5, 2.0],
+    "listing_stay": [1.0, 0.9, 0.8],
+    "organic_rate": 0.0004,
+    "leave_base": 0.008,
+    "leave_zone": 0.03,
+    "leave_idle": 0.07,
+    "idle_orders": 1.2,
+    "leave_sat": 0.0015,
+    "sat_ok": 60,
+    "joined_weeks": 8
+  },
+  "rules": {
+    "lock_weeks": 4,
+    "options": {
+      "shipping": ["user_pays", "big_basket", "store_pays"],
+      "return_window": ["d7", "d14", "d30"],
+      "return_shipping": ["store_pays", "we_pay"],
+      "admission": ["open", "registered"]
+    },
+    "needs": {"admission": {"module": "reviews", "tier": 2}},
+    "shipping": {"fee": 3, "user_pays_mult": 0.83},
+    "returns": {
+      "window_mult": {"d7": 1.0, "d14": 1.08, "d30": 1.2},
+      "window_retention": {"d7": 0.0, "d14": 0.005, "d30": 0.01},
+      "we_pay_mult": 1.05,
+      "registered_mult": 0.9,
+      "reviews_mult": [1.0, 0.95, 0.92, 0.90]
+    }
+  },
+  "commission": {"min": 1, "max": 30, "elasticity": 1.5},
+  "store_terms": {"options": [{"share": 0.5, "mult": 1.4}, {"share": 0.0, "mult": 1.8}]},
+  "premium": {
+    "needs": {"module": "membership", "tier": 1},
+    "fee_start": 4,
+    "fee_min": 1,
+    "fee_max": 15,
+    "target": 0.012,
+    "fee_sensitivity": 0.25,
+    "approach": 0.10,
+    "approach_trial": 0.20,
+    "trial_weeks": 4,
+    "perks": {
+      "free_shipping": {"options": ["off", "premium"], "pull": 3, "needs": {"module": "integrations", "tier": 1}},
+      "fast_delivery": {"options": ["off", "everyone", "premium"], "pull": 2, "needs": {"module": "integrations", "tier": 2}},
+      "doorstep_returns": {"options": ["off", "everyone", "premium"], "pull": 1, "unit_cost": 3,
+        "needs": {"module": "orders", "tier": 2}},
+      "member_discount": {"options": ["off", "premium"], "pull": 2, "discount": 0.05}
+    }
+  },
+  "ledger": {
+    "base": 70,
+    "max_step": 5,
+    "rows": {
+      "commission_raised": {"points": -2, "weeks": 8},
+      "strained": {"points": -4},
+      "earnings_thin": {"points": -10},
+      "return_window": {"stores": {"d14": -3, "d30": -6}, "users": {"d14": 2, "d30": 4}},
+      "return_shipping_paid": {"points": 5},
+      "registered_stores": {"points": 3},
+      "thin_selection": {"points": -3, "below": 0.2},
+      "late_delivery": {"points": -4, "below": 0.90},
+      "support_backlog": {"per_share": -20, "floor": -10},
+      "weak_security": {"points": -3, "users_over": 1000},
+      "met": {"points": 3, "weeks": 8},
+      "late_topic": {"points": -4},
+      "sale_loss": {"points": -4, "weeks": 6},
+      "fast_members_only": {"points": -3, "weeks": 8},
+      "fast_delivery": {"points": 3},
+      "doorstep_returns": {"points": 2},
+      "outage": {"weeks": 4}
+    }
+  },
+  "income": {"window_weeks": 4, "month_weeks": 4.33},
+  "preview": {"weeks": 4}
+}

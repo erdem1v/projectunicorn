@@ -1500,6 +1500,13 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   kârlı şirkete de teklif gelebiliyor. Açık: satın alma v1'de var mı (D1). Varsa ch01, ch13 ve ch14 güncellenir, yoksa kart
   kapanır. Kaynak: ACIK_KARARLAR_D1-D13 B1 ve D1, SONLAR_GAZETE_MODLAR §U.4 madde 1, SONLAR #9.
 
+- **B2C ürünü pazaryeridir; not ve video ürünleri oyundan kalkar (Erdem 2026-11-13/14, PRD_PAZARYERI).** Erdem'in tur 4 kararı:
+  demodaki B2C ürünü iki taraflı bir pazaryeri olur; not uygulaması ve video ürünü kalkar. Uygulama `docs/tasks/PRD_PAZARYERI.md`
+  sırasıyla iner; §12'deki on açık soruda PRD'nin önerisi uygulanır (Erdem'in cevabı bekleniyor). GDD'nin değişen yerleri: B2C ürün
+  türleri ve hatları (Ürün); B2C'nin kitlesi, ödeyen kullanıcısı ve fiyatı yerine mağaza, kullanıcı, kategori başına komisyon ve
+  üyelik (Satış); kitleye bağlı B2C kartları (ch11). Kapılar aylık gelire bakmayı sürdürür (Erdem 2026-11-13). İlk commit yalnız
+  ekonominin saf işlevlerini ekler (`MarketplaceModel`); oyun o commit'le değişmez. Kaynak: `ERDEM_YORUMU_TUR4.md` §2, PRD_PAZARYERI.
+
 - **Series A kapısı yalnız MRR; çip kalır (K1–K3, 8e49dbd).** Kapının tek şartı `finance.mrr ≥ SalesSystem.TRACTION_MRR_TARGET` (120K$).
   Büyüme serisi ve marka tabanı kapıdan kalktı; çip kaldı, çubuk ve "n/3" kalktı. ch01 §2 kapıyı "MRR çıtası + süren büyüme +
   marka + kapanış penceresi" diye tanımlıyor. ch08 §5 "kapı yalnız MRR" diyor, ama çipin yerine Finans'ta tek satırlık bir Frank

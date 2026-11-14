@@ -26,7 +26,7 @@ Bölümler: Autoload'lar · Dosyalar · Sinyaller · Sahneler · Veri dosyaları
 - AudioManager · scripts/autoload/audio_manager.gd
 - MCPRuntime · addons/godot_mcp_runtime/mcp_runtime_autoload.gd · uid://bvdfxyfwqs84q
 
-## Dosyalar (259 .gd)
+## Dosyalar (261 .gd)
 
 Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar dahil). Autoload dosyalarında class_name yerine [AutoloadAdı].
 
@@ -55,12 +55,13 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/data_models/rival.gd · 33 · Rival · Resource · 0 sinyal · 1 func
 - scripts/data_models/term_sheet.gd · 63 · TermSheet · Resource · 0 sinyal · 3 func
 
-### scripts/debug/ (12 dosya, 35227 satır)
+### scripts/debug/ (13 dosya, 35786 satır)
 - scripts/debug/endgame_smoke.gd · 30331 · EndgameSmoke · RefCounted · 0 sinyal · 686 func
 - scripts/debug/glyph_audit.gd · 109 · - · SceneTree · 0 sinyal · 6 func
 - scripts/debug/k0_check.gd · 110 · K0Check · RefCounted · 0 sinyal · 6 func
 - scripts/debug/kit_probe.gd · 298 · - · RefCounted · 0 sinyal · 10 func
 - scripts/debug/loc_residue.gd · 265 · - · SceneTree · 0 sinyal · 9 func
+- scripts/debug/marketplace_probe.gd · 559 · - · SceneTree · 0 sinyal · 34 func
 - scripts/debug/office_crowd_probe.gd · 326 · OfficeCrowdProbe · Node · 0 sinyal · 15 func
 - scripts/debug/office_pan_probe.gd · 398 · - · RefCounted · 0 sinyal · 17 func
 - scripts/debug/player_paths.gd · 245 · PlayerPaths · RefCounted · 0 sinyal · 13 func
@@ -155,7 +156,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/onboarding/steps/origin_traits_step.gd · 329 · - · OnboardingStep · 0 sinyal · 18 func
 - scripts/onboarding/steps/step_base.gd · 119 · OnboardingStep · Control · 1 sinyal · 10 func
 
-### scripts/systems/ (72 dosya, 24690 satır)
+### scripts/systems/ (73 dosya, 25416 satır)
 - scripts/systems/angel_round_system.gd · 52 · AngelRoundSystem · RefCounted · 0 sinyal · 1 func
 - scripts/systems/b2b_constants.gd · 290 · B2BConstants · RefCounted · 0 sinyal · 9 func
 - scripts/systems/b2b_sales_system.gd · 735 · B2BSalesSystem · RefCounted · 0 sinyal · 48 func
@@ -181,6 +182,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/systems/look_system.gd · 145 · LookSystem · RefCounted · 0 sinyal · 9 func
 - scripts/systems/mail_clock.gd · 121 · MailClock · RefCounted · 0 sinyal · 10 func
 - scripts/systems/market_catalog.gd · 217 · MarketCatalog · RefCounted · 0 sinyal · 25 func
+- scripts/systems/marketplace_model.gd · 726 · MarketplaceModel · RefCounted · 0 sinyal · 61 func
 - scripts/systems/message_system.gd · 77 · MessageSystem · RefCounted · 0 sinyal · 5 func
 - scripts/systems/module_locks.gd · 35 · - · RefCounted · 0 sinyal · 4 func
 - scripts/systems/negotiation_system.gd · 276 · NegotiationSystem · RefCounted · 0 sinyal · 13 func
@@ -893,7 +895,7 @@ Biçim: yol · kök düğüm türü (örnek: = miras alınan sahne) · kök beti
 - scenes/ui/components/ResearchBar.tscn · PanelContainer · scripts/ui/components/research_bar.gd
 - scenes/ui/components/TopBar.tscn · Panel · scripts/ui/components/top_bar.gd
 
-## Veri dosyaları (222 .json, data/)
+## Veri dosyaları (224 .json, data/)
 
 Biçim: yol · boyut · üst düzey anahtarlar (en çok 10)
 - data/credits.json · 419 B · {_, year, holder, roles}
@@ -1111,10 +1113,12 @@ Biçim: yol · boyut · üst düzey anahtarlar (en çok 10)
 - data/graphics/presets.json · 2.1 KB · {_, presets, detect}
 - data/market/companies.json · 30.8 KB · {meta, companies}
 - data/market/people.json · 6.1 KB · {people}
+- data/product/categories.json · 1.2 KB · {categories}
 - data/product/lines/erp.json · 4.9 KB · {subtype, _doc, _anchor, _telegraph, shared_gate_overrides, lines}
 - data/product/lines/note_tool.json · 4.3 KB · {subtype, _doc, _canon, _anchor, lines}
 - data/product/lines/shared.json · 3.7 KB · {_doc, _profile_shape, _numbers, _nodes, lines}
 - data/product/lines/video_clip.json · 4.5 KB · {subtype, _doc, _usage, _anchor, lines}
+- data/product/marketplace.json · 3.4 KB · {visits, steps, stores, rules, commission, store_terms, premium, ledger, income, preview}
 - data/product/rivals.json · 5.3 KB · {note_tool, video_clip, erp}
 - data/product/sprint.json · 9.3 KB · {sprint_weeks, quarter_weeks, mvp_lines, effort, fix_effort, limit_k, need, roles, role_areas, person_points_week, +26}
 - data/techtree/rnd_tree.json · 6.3 KB · {_doc, _stars, _cross, _areas, k_arge, report_period_weeks, nodes, _hidden_doc, _hidden_k3_doc, hidden_lines}
