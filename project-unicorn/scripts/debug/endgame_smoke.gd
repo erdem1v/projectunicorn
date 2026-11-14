@@ -12667,9 +12667,8 @@ static func _case_loc_save_sector_migration() -> String:
 ## _VOICE …), so no grep for tr("LITERAL") can see them, and a typo would reach the player
 ## as the raw id. Walks every sub-product type, its sectors and its features in both locales:
 ## the name on all of them (the product page and the sales name read it for a save that runs
-## a subtype the type screen no longer offers), the type-screen card rows (category,
-## description, tradeoff) on the cards the screen shows, playable and locked, and the bet and
-## pitch on the three sealed subtypes.
+## a subtype the type screen no longer offers), a playable type's dossier (its line, definition,
+## revenue and customers, and each desk and concept it names with its tooltip).
 static func _case_loc_product_derived_keys() -> String:
 	var loc0: String = TranslationServer.get_locale()
 	var types: Array = ProductCatalog.get_all_sub_product_types()
@@ -12677,26 +12676,26 @@ static func _case_loc_product_derived_keys() -> String:
 		TranslationServer.set_locale(loc0)
 		return "only %d sub product types found — the scan is not looking where it thinks" % types.size()
 	var playable: Array = []
-	var on_screen: Array = []
 	for market in ["b2c", "b2b"]:
 		for pt in ProductCatalog.playable_types(market):
 			playable.append(String((pt as Dictionary).get("id", "")))
-		on_screen.append_array(ProductCatalog.locked_type_ids(market))
-	on_screen.append_array(playable)
-	if on_screen.size() < 8:
-		TranslationServer.set_locale(loc0)
-		return "only %d type-screen cards found — the scan is not looking where it thinks" % on_screen.size()
 	for loc in ["tr", "en"]:
 		TranslationServer.set_locale(loc)
 		for st in types:
 			var tid: String = String((st as Dictionary).get("id", ""))
-			var suffixes: Array = ["_NAME"]
-			if on_screen.has(tid):
-				suffixes.append_array(["_CATEGORY", "_DESC", "_TRADEOFF"])
+			var keys: Array = ["PROD_TYPE_" + tid.to_upper() + "_NAME"]
 			if playable.has(tid):
-				suffixes.append_array(["_BET", "_PITCH"])
-			for suffix in suffixes:
-				var key: String = "PROD_TYPE_" + tid.to_upper() + suffix
+				for suffix in ["_SHORT", "_DEF", "_EARN", "_WHO"]:
+					keys.append("PROD_TYPE_" + tid.to_upper() + suffix)
+				var named: Array = []
+				for desk in (st as Dictionary).get("desks", []):
+					named.append("PROD_DESK_" + String(desk).to_upper())
+				for side in ["plus", "minus"]:
+					if (st as Dictionary).has(side):
+						named.append("PROD_CONCEPT_" + String(st[side]).to_upper())
+				for k in named:
+					keys.append_array([k, k + "_TIP"])
+			for key: String in keys:
 				if TranslationServer.translate(key) == key:
 					TranslationServer.set_locale(loc0)
 					return "[%s] %s has no row" % [loc, key]
@@ -14687,9 +14686,8 @@ static func _case_type_screen_matches_line_content() -> String:
 
 
 ## The type picker is ONE screen: both markets' playable cards are there with an empty draft and no click,
-## picking a card writes its market with it, and a typed name confirms as `chosen(subtype, name)`.
-## FALSIFICATION: restoring the two-step market gate hides every card until a path is clicked, and a
-## `_pick_type` that leaves `_market` alone writes "" (or the old market) into the draft.
+## picking a card writes it into the draft, and a typed name confirms as `chosen(subtype, name)`.
+## FALSIFICATION: restoring the two-step market gate hides every card until a path is clicked.
 static func _case_type_picker_one_screen() -> String:
 	var host: Node = _ui_host()
 	if host == null:
@@ -14723,7 +14721,7 @@ static func _case_type_picker_one_screen() -> String:
 	if fail == "":
 		picker._pick_type("erp")
 		var draft: Dictionary = GameState.product.get("type_draft", {})
-		if draft.get("market", "") != "b2b" or draft.get("subtype", "") != "erp":
+		if draft.get("subtype", "") != "erp":
 			fail = "picking erp wrote the draft %s" % str(draft)
 	if fail == "":
 		picker.setup()

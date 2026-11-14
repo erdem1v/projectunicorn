@@ -42,7 +42,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 52
+const THEME_STAMP := 53
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -696,6 +696,8 @@ const D_ICON_PART := 14      # a part's polarity glyph beside its value
 const D_ICON_MARK := 12      # a mark on another glyph's corner (the rail lock)
 const D_ICON_TAG := 12       # a tag's leading glyph
 const D_ICON_EMPTY := 32     # an empty state's glyph
+const D_ICON_TYPE := 40      # a product type's glyph in the type picker's list
+const D_ICON_TYPE_HERO := 96 # the picked type's glyph at the head of its dossier
 # --- the sprint screen (Ürün) ---
 const D_W_LEFT := 288                 # the left column, customer requests and modules, its scrollbar lane included
 const D_H_SPRINT_HEAD := 52           # the sprint header's row: title, badges, goal pick
@@ -726,7 +728,7 @@ const D_BOX_MONO := 24                # a module's icon box
 const D_H_KEY_CAND := 24              # the "+" key of a module's candidate
 const D_W_STAGE_STRIP := 168          # a candidate's stage strip
 const D_H_STAGE_STRIP := 6
-const D_W_PICKER := 640               # the type picker's column
+const D_W_TYPE_LIST := 540            # the type picker's list; the picked type's dossier takes the rest
 const D_H_SECTION := 28              # a section's caps label and its rule
 const D_W_NEXT := 300                 # the right column: the preparation and the next sprint's box
 const D_H_FOOT := 68                  # the centre column's foot

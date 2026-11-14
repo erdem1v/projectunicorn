@@ -985,7 +985,9 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
       geçer (`SprintSystem.approve`, `edit`, `plan_next`). (39) Hedef şeridi 10 kare, çizgi 5. karede; dolu kare = en
       çok 10, yuvarla(seviye / beklenti × 5) (`sprint.json` `pm.goal_squares`, `pm.goal_mark`). (40) Tür seçici yalnız
       oynanabilir türleri çizer; yol başına üç kilitli kart (ch03 §12.11, GUNCELLEMELER ch14 §2) çizilmez
-      (`type_picker.gd`).
+      (`type_picker.gd`). Erdem 2026-11-13/14, PRD_TUR_SECIMI_ACILIS soru 2: cevap bekleniyor; varsayılan PRD'nin
+      önerisi (seçim ekranında henüz gelmeyen tür görünmez, GDD maddesi güncellenir). Katalogun kilitli listesi
+      (`ProductCatalog.TYPE_SCREEN`) yalnız smoke'un §12.11 sınamasında okunur.
     - Kayıt. (41) v15 göçünde ilerleme birimi faz puanıdır; yapımın gizli hataları, tasarım eforu, beta ve iterasyon
       durumu taşınmaz; cila eşlemesi 1,0'ın üstü → 0,5, 1,11 ve üstü → 1,0; `bug_count_at_bugfix_start_*` de düşer;
       sürüm geçmişi `releases`'a sprintsiz (−1) geçer (`save_manager.gd` `_migrate_15`).

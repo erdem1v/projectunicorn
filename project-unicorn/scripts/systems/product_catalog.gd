@@ -7,7 +7,8 @@ extends RefCounted
 # Dış anahtar PAZAR DEĞİL, HABER/OLAY HAVUZUDUR (GameState.subgenre; news_feed_system
 # "ai" | "saas" | "social" bekler). Pazarı `market_type` söyler: "b2c" kitle + büyüme
 # kararları, "b2b" aday + satış toplantısı. Bu yüzden B2C bir not aracı "saas"
-# havuzunda durur. `sectors` kart chip'leri ve SECTOR_* satırlarıdır.
+# havuzunda durur. `sectors` kart chip'leri ve SECTOR_* satırlarıdır. Tür seçim ekranı oynanabilir türün
+# `desks`'ini (yolun açacağı masalar, PROD_DESK_*) ve `plus`/`minus`'unu (adı olan iki kavram, PROD_CONCEPT_*) okur.
 const SUB_PRODUCT_TYPES := {
 	"ai": [
 		# K3 yönü AI (otomatik klip seçimi, altyazı zekâsı); haberleri bu yüzden "ai" havuzundan.
@@ -27,7 +28,8 @@ const SUB_PRODUCT_TYPES := {
 			"sectors": ["consumer", "productivity", "education"], "market_type": "b2c"},
 		{"id": "erp",
 			"sectors": ["manufacturing", "retail", "logistics"], "market_type": "b2b",
-			"price_tendency": "neutral"},
+			"price_tendency": "neutral",
+			"desks": ["modules", "sales", "requests", "renewal"], "plus": "switching_cost", "minus": "long_sales_cycle"},
 		{"id": "saas_project_mgmt",
 			"sectors": ["agency", "software", "construction"], "market_type": "b2b"},
 		{"id": "saas_crm",
@@ -219,19 +221,6 @@ static func _derived(prefix: String, id: String, suffix: String = "") -> String:
 
 static func type_name(sub_product_type_id: String) -> String:
 	return _derived("PROD_TYPE_", sub_product_type_id, "_NAME")
-
-
-static func type_category(sub_product_type_id: String) -> String:
-	return _derived("PROD_TYPE_", sub_product_type_id, "_CATEGORY")
-
-
-static func type_desc(sub_product_type_id: String) -> String:
-	return _derived("PROD_TYPE_", sub_product_type_id, "_DESC")
-
-
-## Tipin altındaki tek satırlık "ne kazanırsın, neye mal olur" cümlesi.
-static func type_tradeoff(sub_product_type_id: String) -> String:
-	return _derived("PROD_TYPE_", sub_product_type_id, "_TRADEOFF")
 
 
 static func type_sector_labels(sub_product_type_id: String) -> Array:

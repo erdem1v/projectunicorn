@@ -170,7 +170,7 @@ FIN_GOAL_P3_HUNT_ONE,{n} teklif masada,{n} offer on the table
 FIN_GOAL_P3_CLOSED,Series A kapandı,Series A closed
 CHEQUE_TITLE,Frank'in çeki,Frank's cheque
 CHEQUE_NEXT,Sıradaki: {step},Next: {step}
-CHEQUE_STEP_TYPE,Ürün tipini seç,Pick a product type
+CHEQUE_STEP_TYPE,Yolunu seç,Choose your path
 CHEQUE_STEP_SPRINT,İlk sprinti başlat,Start the first sprint
 CHEQUE_STEP_SHIP,v1.0'ı yayınla,Ship v1.0
 CHEQUE_STEP_PAYING,İlk ödeyen müşteri,First paying customer
@@ -1009,48 +1009,42 @@ PROD_FEAT_SAAS_OPS_SCHEDULING_VOICE,"Randevu ve planlamayı tek takvimde topla. 
 PROD_FEAT_SAAS_OPS_FIELD_VOICE,"Sahadaki ekip zayıf bağlantıda bile çalışır, sonra senkronlar. Sahanın bel kemiği.",The field crew keeps working on a weak signal and syncs later. The backbone of field work.
 PROD_FEAT_SAAS_OPS_MOBILE_VOICE,Saha ekibi telefondan girer. Sadece masaüstünde kalan ürün sahada ölür.,The field team gets in from a phone. A product that stays on the desktop dies in the field.
 PROD_TYPE_AI_ASSISTANT_NAME,Yapay Zeka Asistanı,AI Assistant
-PROD_TYPE_AI_ASSISTANT_CATEGORY,Asistan,Assistant
-PROD_TYPE_AI_ASSISTANT_DESC,Genel amaçlı sohbet asistanı.,A general-purpose chat assistant.
-PROD_TYPE_AI_ASSISTANT_TRADEOFF,Kitle büyük ama sadakat düşük; dev şirketlerin gölgesinde yaşarsın.,The audience is huge but loyalty is thin; you live in the shadow of giants.
 PROD_TYPE_AI_PHOTO_EDITOR_NAME,Görsel Düzenleyici,Photo Editor
-PROD_TYPE_AI_PHOTO_EDITOR_CATEGORY,Görsel · üretken,Visual · generative
-PROD_TYPE_AI_PHOTO_EDITOR_DESC,Görsel düzenleme ve üretim aracı.,An image editing and generation tool.
-PROD_TYPE_AI_PHOTO_EDITOR_TRADEOFF,Viral büyüme şansı var; API maliyeti marjı yer.,There is a shot at viral growth; API cost eats the margin.
 PROD_TYPE_AI_CODE_COPILOT_NAME,Kod Yazan Asistan,Code Copilot
-PROD_TYPE_AI_CODE_COPILOT_CATEGORY,Geliştirici,Developer
-PROD_TYPE_AI_CODE_COPILOT_DESC,Kod yazımını hızlandıran yardımcı.,A helper that speeds up writing code.
-PROD_TYPE_AI_CODE_COPILOT_TRADEOFF,Geliştirici severse yayar; beğenmezse ilk gün siler.,If developers love it they spread it; if not they delete it on day one.
 PROD_TYPE_AI_VECTOR_SEARCH_NAME,Kurumsal Arama,Enterprise Search
-PROD_TYPE_AI_VECTOR_SEARCH_CATEGORY,Arama,Search
-PROD_TYPE_AI_VECTOR_SEARCH_DESC,Anlamsal kurumsal arama motoru.,A semantic enterprise search engine.
-PROD_TYPE_AI_VECTOR_SEARCH_TRADEOFF,Bütçeler büyük ama karar yavaş; imza altı ay sürebilir.,The budgets are large but the decision is slow; a signature can take six months.
 PROD_TYPE_SAAS_PROJECT_MGMT_NAME,Proje Yönetimi,Project Management
 PROD_TYPE_SAAS_CRM_NAME,Müşteri Takip (CRM),Customer Tracking (CRM)
-PROD_TYPE_SAAS_CRM_CATEGORY,Satış,Sales
-PROD_TYPE_SAAS_CRM_DESC,Müşteri ve görüşmeleri tek ekranda toplar.,Customers and conversations gathered on one screen.
-PROD_TYPE_SAAS_CRM_TRADEOFF,"Her şirkete lazım; geçiş maliyeti seni de korur, rakibi de.",Every company needs one; switching cost protects you and your rival alike.
 PROD_TYPE_SAAS_ANALYTICS_NAME,Veri Panosu,Analytics Dashboard
 PROD_TYPE_SAAS_BILLING_NAME,Faturalama Altyapısı,Billing Infrastructure
 PROD_TYPE_SAAS_DEV_TOOLS_NAME,Geliştirici Araçları,Developer Tools
 PROD_TYPE_SAAS_OPS_NAME,Süreç Otomasyon Platformu,Process Automation Platform
 PROD_TYPE_NOTE_TOOL_NAME,Not & Bilgi Aracı,Notes and Knowledge Tool
-PROD_TYPE_NOTE_TOOL_CATEGORY,Çalışma alanı,Workspace
-PROD_TYPE_NOTE_TOOL_DESC,Not · bağlantı · arama tek çalışma alanında.,Notes · links · search in one workspace.
-PROD_TYPE_NOTE_TOOL_TRADEOFF,Herkesin bir not uygulaması var; seninkini ayıracak olan aramanın kalitesi.,Everyone already has a notes app; what will set yours apart is the quality of the search.
-PROD_TYPE_NOTE_TOOL_BET,İnsanlar not tutuyor ama bulamıyor. Sen bulmayı çöz; gerisi arkasından gelir.,People take notes and then cannot find them. Solve finding and the rest follows.
-PROD_TYPE_NOTE_TOOL_PITCH,Yazdığın her şeyi hatırlayan çalışma alanı.,The workspace that remembers everything you wrote.
+PROD_TYPE_NOTE_TOOL_SHORT,Çalışma alanı,Workspace
+PROD_TYPE_NOTE_TOOL_DEF,Not · bağlantı · arama tek çalışma alanında.,Notes · links · search in one workspace.
+PROD_TYPE_NOTE_TOOL_EARN,Aylık abonelik,Monthly subscription
+PROD_TYPE_NOTE_TOOL_WHO,Bireysel kullanıcılar,Individual users
 PROD_TYPE_VIDEO_CLIP_NAME,Video Klip Aracı,Video Clip Tool
-PROD_TYPE_VIDEO_CLIP_CATEGORY,İçerik,Content
-PROD_TYPE_VIDEO_CLIP_DESC,Uzun videoyu kısa kliplere böler ve altyazılar.,Cuts long video into short clips and captions them.
-PROD_TYPE_VIDEO_CLIP_TRADEOFF,Pazar hızlı büyüyor ama her ay yeni bir rakip çıkıyor.,The market grows fast but a new rival turns up every month.
-PROD_TYPE_VIDEO_CLIP_BET,Üretici uzun çekiyor ve kısa yayınlıyor. Aradaki işi sen yap.,Creators shoot long and publish short. Do the work in between.
-PROD_TYPE_VIDEO_CLIP_PITCH,Uzun videodan yayına hazır klip çıkaran araç.,The tool that pulls publish-ready clips out of long video.
+PROD_TYPE_VIDEO_CLIP_SHORT,İçerik,Content
+PROD_TYPE_VIDEO_CLIP_DEF,Uzun videoyu kısa kliplere böler ve altyazılar.,Cuts long video into short clips and captions them.
+PROD_TYPE_VIDEO_CLIP_EARN,Aylık abonelik,Monthly subscription
+PROD_TYPE_VIDEO_CLIP_WHO,İçerik üreticileri,Content creators
 PROD_TYPE_ERP_NAME,ERP,ERP
-PROD_TYPE_ERP_CATEGORY,İşletme,Business
-PROD_TYPE_ERP_DESC,Ön muhasebe · stok · fatura tek defterde.,Accounting · inventory · invoicing in one system.
-PROD_TYPE_ERP_TRADEOFF,İlk kurulum uzun sürer ve ilk müşteriler bozulmayan bir ürün ister; tutunca kimse çıkmaz.,"The first install takes long and first customers want something that does not break; once it sticks, nobody leaves."
-PROD_TYPE_ERP_BET,Defter tutan herkes aynı üç şeyi arıyor. Üçünü de doğru yap; gerisini sürümler getirir.,Everyone keeping books wants the same three things. Get all three right and versions bring the rest.
-PROD_TYPE_ERP_PITCH,Kasadan stoka işletmenin defterini tutan sistem.,The system that keeps a business's books from till to stock.
+PROD_TYPE_ERP_SHORT,Kurumsal kaynak planlaması,Enterprise resource planning
+PROD_TYPE_ERP_DEF,"İşletmenin muhasebe, stok, satın alma ve satış süreçlerini tek bir yazılımda birleştiren yönetim sistemi.","Management software that brings a company's accounting, stock, purchasing and sales into one integrated system."
+PROD_TYPE_ERP_EARN,"Yıllık sözleşme, aylık ödeme","Yearly contract, paid monthly"
+PROD_TYPE_ERP_WHO,"Üretim, lojistik ve perakende şirketleri","Manufacturing, logistics and retail companies"
+PROD_DESK_MODULES,Modüller,Modules
+PROD_DESK_MODULES_TIP,Modülleri sırayla çıkarırsın; her kademe bir beceri ister,You ship the modules one by one; each tier needs a skill
+PROD_DESK_SALES,Satış: adaylar ve görüşmeler,Sales: leads and meetings
+PROD_DESK_SALES_TIP,"Adaylar nereden gelir, hesabı görüşmede ve pazarlıkta kazanırsın",Where leads come from; you win the account in the meeting and the negotiation
+PROD_DESK_REQUESTS,Müşteri istekleri ve sözler,Customer requests and promises
+PROD_DESK_REQUESTS_TIP,Söz verilen istek zorunlu,A promised request is binding
+PROD_DESK_RENEWAL,Yenileme ve destek,Renewal and support
+PROD_DESK_RENEWAL_TIP,Memnun olmayan hesap yenilemede gider,An unhappy account leaves at renewal
+PROD_CONCEPT_SWITCHING_COST,Geçiş maliyeti yüksek,High switching cost
+PROD_CONCEPT_SWITCHING_COST_TIP,Kurulan ERP kolay değiştirilmez; memnun müşteri kalır,An installed ERP is hard to replace; a happy customer stays
+PROD_CONCEPT_LONG_SALES_CYCLE,Uzun satış döngüsü,Long sales cycle
+PROD_CONCEPT_LONG_SALES_CYCLE_TIP,"Şirket almadan önce görüşür, dener, pazarlık eder","A company meets, tries and negotiates before it buys"
 SECTOR_SUBSCRIPTION,Abonelik,Subscription
 SECTOR_AGENCY,Ajans,Agency
 SECTOR_EDUCATION,Eğitim,Education
@@ -1061,11 +1055,13 @@ SECTOR_SALES,Satış,Sales
 SECTOR_SOCIAL_MEDIA,Sosyal Medya,Social Media
 SECTOR_PRODUCTIVITY,Verimlilik,Productivity
 SECTOR_SOFTWARE,Yazılım,Software
-PROD_PATH_TITLE,Yolunu seç,Choose your road
-PROD_PATH_SUB,Bu seçim ürünün nasıl para kazandığını belirler. Sonradan değişmez.,This choice decides how the product makes money. It cannot be changed later.
-PROD_PATH_B2C,Kitle,Consumer
-PROD_PATH_B2C_DESC,"Kitleye satarsın. Kullanıcılar gelir, gider, sayılar dalgalanır.","You sell to a crowd. Users arrive, users leave, the numbers swing."
-PROD_PATH_B2B_DESC,"Şirketlere satarsın. Kontratlar büyük, ama ilk müşteriler sağlam bir ürün bekler.","You sell to companies. Contracts are big, but first customers expect a product that holds up."
+PROD_PATH_TITLE,Yolunu seç,Choose your path
+PROD_PATH_EMPTY,Soldan bir yol seç,Pick a path on the left
+PROD_PATH_FINAL,Sonradan değişmez,You can't change this later
+PROD_FACT_EARN,Gelir,Revenue
+PROD_FACT_WHO,Müşterin,Your customers
+PROD_DESKS_LABEL,Bu yolda yöneteceklerin,What you will run
+PROD_PATH_B2C,Kitleye satarsın,You sell to consumers
 PROD_NAME_LABEL,Ürün adı,Product name
 PROD_CONFIRM_START,Onayla ve başlat,Confirm and start
 PROD_DEV_VERSION,Geliştir · v{version},Build · v{version}
@@ -1095,7 +1091,7 @@ PROD_EV_ITER_DECISION_BODY,"İlk tasarım turu bitti. Frank prototipin başında
 
 ""The rounds keep going on their own · each one burns time and polishes the design a little more. But every round returns less than the one before. The moment you say enough, we move to development; at some point you need better people, not more rounds."""
 PROD_ITER_KEEP_GOING,Turlar sürsün,Keep the rounds going
-PROD_PATH_B2B,Kontrat,Contract
+PROD_PATH_B2B,Şirketlere satarsın,You sell to companies
 VC_WHY_MRR_STRONG,MRR güçlü,MRR is strong
 VC_WHY_MRR_WEAK,MRR zayıf,MRR is weak
 VC_WHY_BRAND_SOLID,Marka sağlam,Brand holds up

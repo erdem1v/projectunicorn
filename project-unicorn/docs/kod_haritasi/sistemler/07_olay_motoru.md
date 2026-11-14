@@ -81,7 +81,7 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
   ↳ `incident_system.gd:313`, `sprint_system.gd:1290`, `game_shell.gd:29`
 - `modal_requested(event: GameEvent)` `event_bus.gd:120`: yayan `engine.gd:607` · dinleyen `main.gd:4829` (`_on_event_modal_requested` `main.gd:4861`), `harness.gd:99`
 - `event_set_aside(event_id)` `event_bus.gd:122`: yayan `engine.gd:792` · dinleyen `main.gd:4831`, `save_manager.gd:66`, `top_bar.gd:160`, `left_tabs.gd:114`
-- `desk_changed()` `event_bus.gd:125`: yayan `present/papers.gd:44,49,60,98` ve `systems/mail_clock.gd:72,108` · dinleyen `top_bar.gd:162`, `left_tabs.gd:115`, `product_tab.gd:117` (`_on_desk`)
+- `desk_changed()` `event_bus.gd:125`: yayan `present/papers.gd:44,49,60,98` ve `systems/mail_clock.gd:72,108` · dinleyen `top_bar.gd:162`, `left_tabs.gd:115`, `product_tab.gd:111` (`_on_desk`)
 - `module_unlocked(module_id)` `event_bus.gd:135`: yayan yalnız `engine.gd:270` (`_step_module_watch`) · dinleyen kart tetikleri (`EvSignals.BINDINGS`); `goto_tab_requested(tab_id, subpage)` `event_bus.gd:34`:
   ↳ yayan `effects.gd:543` · dinleyen `main.gd:4832`
 - Motorun DİNLEDİĞİ sinyaller `EvSignals.BINDINGS` `core/signals.gd:22` (17 ad, izin listesi): customer_added/_health_changed/_churned/_expanded, employee_hired/_departed, promise_broken, version_shipped, build_phase_changed

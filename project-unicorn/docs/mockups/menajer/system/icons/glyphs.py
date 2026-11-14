@@ -902,6 +902,39 @@ def _():
     return S(U(w, c))
 
 
+# ================================================================ TYPE (the type picker: a product type, a market)
+@glyph("type/erp")
+def _():
+    # a ledger: a bound book with the paper notch, its rows knocked out, a second volume behind in tone
+    book = notch(R(5.6, 2.4, 14.4, 19.2, 1.4), 20.0, 2.4, n=4.0)
+    book = ko(book, [(9.4, 2.4), (9.4, 21.6)], [(11.6, 8.2), (17.4, 8.2)], [(11.6, 12.2), (17.4, 12.2)],
+              [(11.6, 16.2), (15.0, 16.2)])
+    return S(book, gap(R(2.4, 4.8, 4.4, 16.8, 1.2), book))
+
+
+@glyph("type/note_tool")
+def _():
+    # a notebook with the paper notch: its binding holes knocked out on the left, three written lines
+    nb = notch(R(4.8, 2.4, 15.2, 19.2, 1.6), 20.0, 2.4, n=4.4)
+    nb = ko(nb, [(10.4, 8.6), (16.6, 8.6)], [(10.4, 12.4), (16.6, 12.4)], [(10.4, 16.2), (14.2, 16.2)])
+    return S(cut(nb, *[C(6.8, y, 1.2) for y in (6.4, 12.0, 17.6)]))
+
+
+@glyph("type/video_clip")
+def _():
+    # a clip cut from a strip: the front frame with the play mark knocked out, the rest of the strip in tone
+    front = cut(R(7.2, 4.8, 14.4, 12.0, 1.6), P((12.6, 7.8), (12.6, 13.8), (17.6, 10.8)))
+    return S(front, gap(R(2.4, 8.4, 6.4, 10.8, 1.2), front))
+
+
+@glyph("type/b2c")
+def _():
+    # a crowd: one person in front, two behind in tone
+    front = U(*person(12.0, 7.2, 3.2, 10.4, 21.2))
+    back = U(*person(5.2, 8.8, 2.6, 7.6, 19.6), *person(18.8, 8.8, 2.6, 7.6, 19.6))
+    return S(front, gap(back, front))
+
+
 # ---------------------------------------------------------------- head icon map (office_actor.gd ICONS)
 HEAD = {"code": "skill/engineering", "design": "skill/design", "test": "skill/qa", "research": "util/search",
         "phone": "office/phone", "meeting": "rail/hr", "coffee": "office/coffee", "food": "office/food",

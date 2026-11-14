@@ -91,23 +91,17 @@ func _ready() -> void:
 	_overview.action.connect(_on_action)
 	_overview_view.add_child(_overview)
 
-	# Tür seçici ortada, içeriği kadar uzun; pencere kısaysa gövde kayar.
+	# Tür seçici pencerenin gövdesini doldurur; pencere kısaysa gövde kayar.
 	_picker_view = ScrollContainer.new()
 	_picker_view.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	var center := CenterContainer.new()
-	center.use_top_left = false
-	center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_picker_view.add_child(center)
-	var frame := PanelContainer.new()
-	frame.theme_type_variation = &"SprintColumn"
-	frame.custom_minimum_size.x = UiTokens.D_W_PICKER
-	center.add_child(frame)
 	var picker := TypePicker.new()
+	picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	picker.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_picker_view.add_child(picker)
 	# Tür seçilince liderin planı hazırdır: ilk sprint tek tıkla başlar.
 	picker.chosen.connect(func(subtype: String, product_name: String) -> void:
 		SprintSystem.choose_type(subtype, product_name)
 		SprintSystem.apply_lead())
-	frame.add_child(SprintUiShared.pad(picker, Vector4i.ONE * UiTokens.SPACE_3XL))
 	picker.setup()
 	for view: Control in [_overview_view, _sprint_view, _quarter, _picker_view]:
 		body.add_child(SprintUiShared.pad(view, BODY_PAD))

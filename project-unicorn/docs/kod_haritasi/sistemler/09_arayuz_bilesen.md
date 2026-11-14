@@ -14,9 +14,9 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
   ↳ `SegmentBar`; kurallar `FounderConstants`'ta (04_ekip.md).
 
 ## Dosyalar
-- `scripts/theme/ui_tokens.gd` (1022): `UiTokens`; tüm renkler, SIZE_* merdiveni, krem palet, koyu dil `D_*`, `TABS`, `THEME_STAMP`, renk körü anahtarı ve `D_` yardımcıları
+- `scripts/theme/ui_tokens.gd` (1075): `UiTokens`; tüm renkler, SIZE_* merdiveni, krem palet, koyu dil `D_*`, `TABS`, `THEME_STAMP`, renk körü anahtarı ve `D_` yardımcıları
 - `scripts/theme/ui_factory.gd` (543): `UiFactory`; statik Control üreticileri (label, pill, badge, kart, avatar, `D_tag`, `D_kpi`, `D_seg_tabs`, `D_said`, `D_stars`) hep tema varyasyonu adlarıyla
-- `scripts/theme/build_theme.gd` (1620): `-s` betiği; UiTokens'tan `themes/master_theme.tres` (krem) ve `themes/menajer_theme.tres` (koyu) üretir,
+- `scripts/theme/build_theme.gd` (1665): `-s` betiği; UiTokens'tan `themes/master_theme.tres` (krem) ve `themes/menajer_theme.tres` (koyu) üretir,
   FontVariation sarmalarını kurar (koyu yüzler Archivo'nun değişken yüzü; yedek Plex, sonra Noto Sans Symbols 2)
 - `scripts/theme/theme_check.gd` (270): tema denetçisi (eksik öğe, içerik payı, WCAG kontrastı) ve koyu temanın `contrast_audit` kapısı
 - `scripts/ui/components/top_bar.gd` (714): üst bar; iki satırlık metrik ızgarası, gün/saat/hafta çubuğu, hız tuşları; yuvada hedefin merdiveni (çentikler, ilk bitmemiş adım, üzerine gelince kart), masadaki teklifin süresi ya da karar kapısı
@@ -86,7 +86,7 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 - `MenuBackdrop.start(office_id, minute, figure)` `menu_backdrop.gd:40`, `stop()` `:65`, `set_figure()` `:75` · `main_menu.gd` (MenuBackdrop sahnede), `onboarding_flow.gd:70`, `main.gd:138`
 - `UiFactory.make_person_avatar(name, look, px, grey)` `ui_factory.gd:106` → `PersonBust.texture(look, px)` `person_bust.gd:38` · meeting_panel.gd:571, term_sheet_table_scene.gd:110,224
 - `UiFactory.make_mentor_avatar(px)` `ui_factory.gd:111`: Frank'in önceden render edilmiş portresi · meeting_panel.gd:423, term_sheet_table_scene.gd:246
-- `UiTokens.set_colorblind(on)` `ui_tokens.gd:317`, `D_variation(name)` `:972`: palet anahtarı; çağıran `Settings`/`settings_modal.gd:249`, sonra `EventBus.palette_changed`
+- `UiTokens.set_colorblind(on)` `ui_tokens.gd:317`, `D_variation(name)` `:974`: palet anahtarı; çağıran `Settings`/`settings_modal.gd:249`, sonra `EventBus.palette_changed`
 - `BuildTheme._initialize()` `build_theme.gd:42` → `_menajer(master)` `:421`: iki temayı yazar · elle: `godot --headless --path . -s res://scripts/theme/build_theme.gd`
 - `ThemeCheck.contrast_audit(th, T)` `theme_check.gd:156`: koyu temanın kontrast kapısı · `main.gd:235` (`--theme-contrast-audit`); `missing()` `theme_check.gd:44`, `unset_margins()` `:71`, `contrast()` `:83`
 
@@ -156,7 +156,7 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
   ↳ `ModuleCandidate` (+`Hover`: tıkı kendisi alan araştırma bekleyen kart), `DueChip`, `DueChipSoon`, `MoreLink`
   ↳ `MonoBox` HR ve posta ile ortaktır.
 - Tema yolu: `UiTokens.MENAJER_THEME` `ui_tokens.gd:450`; proje teması `project.godot` `theme/custom` = `master_theme.tres`; Menajer teması taşınan her alt ağacın köküne ve her CanvasLayer köküne elle atanır
-- Boyut merdiveni: `SIZE_MICRO 9 … SIZE_DISPLAY 22` `ui_tokens.gd:196-203`, editorial `SIZE_ED_*` `:208-212`, koyu `D_FS_12 … D_FS_40` `:603-614`; term sheet sütunu `D_STAGE` `:817`
+- Boyut merdiveni: `SIZE_MICRO 9 … SIZE_DISPLAY 22` `ui_tokens.gd:196-203`, editorial `SIZE_ED_*` `:208-212`, koyu `D_FS_12 … D_FS_40` `:603-614`; term sheet sütunu `D_STAGE` `:819`
 - `UiTokens.TABS` `ui_tokens.gd:294`: id sırası = `LeftTabs.tscn` düğme sırası; `lock: "ea"` bu yapıda kilitli sekme; sekme başlığı anahtarı `TAB_` + ID büyük harf (`left_tabs.gd:147`, `window_layer.gd:246`)
 - Pencere boyları `WindowLayer.SPECS` `window_layer.gd:38` (1920×1080 tabanı), `EDGE 24` `:43`; sekme sahneleri `TAB_SCENES` `:13`; ekran eşiği `DisplaySettings.COMPACT_SHELL_BELOW 1680` `display_settings.gd:72`
 - Kabuk ölçüleri: TopBar 64 px (`TopBar.tscn` custom_minimum_size), NewsTicker 40 px (`NewsTicker.tscn`), katmanlar PanelLayer 9, ModalLayer 10, ToastLayer 11 (`GameShell.tscn`)

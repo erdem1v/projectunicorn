@@ -4359,7 +4359,7 @@ func _run_ending_shot(key: String) -> void:
 
 
 # --product-shot=live:<scenario>: the Product tab drawn from ProductModel.live() over a run seeded through SprintSystem
-# (_seed_product_live); any other kind fails the shot. live:pick_named is the type picker with B2C, a type and a name picked,
+# (_seed_product_live); any other kind fails the shot. live:pick_named is the type picker with ERP and a name picked,
 # live:pick_relang saves it and switches this run to English (<stem>_rebuilt: the rebuilt picker keeps the picks);
 # live:decision_paper presses the asking card's "?", so the frame is Olaylar on the sprint paper; live:gate saves the MVP gate,
 # presses its Yayınla and saves the v1.0 note (<stem>_publish); live:b2c_goal saves the planning with the lead's plan offered, applies
@@ -4385,8 +4385,8 @@ func _run_product_shot(id: String) -> void:
 		return
 	if id in ["live:pick_named", "live:pick_relang"]:
 		var picker: TypePicker = _shell.find_children("*", "TypePicker", true, false)[0]
-		picker._pick_type("note_tool")
-		picker._name = "Notly"   # LOC-DATA debug seed / name
+		picker._pick_type("erp")
+		picker._name = "Defter"   # LOC-DATA debug seed / name
 		picker._save_draft()
 	if id.begins_with("live:decision_paper"):
 		await get_tree().process_frame

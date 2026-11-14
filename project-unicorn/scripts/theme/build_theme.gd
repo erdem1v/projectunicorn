@@ -890,6 +890,8 @@ func _menajer(master: Theme) -> Theme:
 		[&"PickCard", _flat(T.D_SURFACE_3, T.D_RADIUS_3, hairline, T.D_LINE_2)],
 		[&"PickCardHover", _flat(T.D_SURFACE_3, T.D_RADIUS_3, hairline, T.D_LINE_HOVER)],
 		[&"PickCardSelected", _flat(T.D_SURFACE_4, T.D_RADIUS_3, hairline, T.D_LINE_2)],
+		# A desk the picked product type opens: a framed box around a value-size word (the type picker's dossier).
+		[&"DeskBox", _flat(clear, T.D_RADIUS_2, Vector4(T.SPACE_XL, T.SPACE_M, T.SPACE_XL, T.SPACE_M), T.D_LINE_2)],
 		[&"FileDoc", _doc(_flat(T.D_SURFACE_3, 0, hairline, T.D_LINE_2), T.D_CUT)],
 		[&"FileDocHover", _doc(_flat(T.D_SURFACE_3, 0, hairline, T.D_LINE_HOVER), T.D_CUT)],
 		[&"FileDocSelected", _doc(_flat(T.D_SURFACE_4, 0, hairline, T.D_LINE_2), T.D_CUT)],
