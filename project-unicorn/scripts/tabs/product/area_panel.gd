@@ -166,7 +166,7 @@ func _request_row(r: Dictionary) -> PanelContainer:
 		who.add_child(SprintUiShared.due_chip(String(r.due_text), r.soon))
 	col.add_child(who)
 	var what := SprintUiShared.box(UiTokens.SPACE_M)
-	var mark := _module_mark(String(r.module_id), String(r.area))
+	var mark := module_mark(String(r.module_id), String(r.area))
 	what.add_child(mark)
 	what.add_child(_name(String(r.card_name), &"CaptionPrimary", null))
 	col.add_child(what)
@@ -217,7 +217,7 @@ class StageRing extends Control:
 # --- Modüller ---------------------------------------------------------------------------
 
 ## Modülün işareti: hattın ikonu; ikonu olmayan türde alanın ikonu.
-func _module_mark(line_id: String, area_id: String) -> PanelContainer:
+static func module_mark(line_id: String, area_id: String) -> PanelContainer:
 	var icon: String = MODULE_ICON % line_id.get_slice("@", 0)
 	return HRUiShared.D_mono_box(UiTokens.D_BOX_MONO, UiFactory.make_glyph(icon if ResourceLoader.exists(icon) else AREA_ICONS[area_id],
 		UiTokens.D_ICON_ROW, UiTokens.D_INK_2))
@@ -233,7 +233,7 @@ func _module_row(m: Dictionary) -> PanelContainer:
 	row.add_child(col)
 	var head := SprintUiShared.box(UiTokens.SPACE_M)
 	head.custom_minimum_size.y = UiTokens.D_BOX_MONO
-	head.add_child(_module_mark(String(m.id), String(m.area)))
+	head.add_child(module_mark(String(m.id), String(m.area)))
 	head.add_child(_name(String(m.name), &"TipTitle", UiTokens.D_INK_2))
 	if m.launch:
 		head.add_child(LaunchGate.flag())

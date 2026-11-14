@@ -791,6 +791,12 @@ static func _rival_tier(rival: int, line_id: String) -> int:
 	return mini(t, max_tier(line_id))
 
 
+## Rakiplerden biri bu kademeye ya da üstüne varmış (rakip tablosu ve çıkışları).
+static func rival_has(step_id: String) -> bool:
+	var s: Dictionary = ProductLines.step(step_id)
+	return range(rival_table().rivals.size()).any(func(i: int) -> bool: return _rival_tier(i, s.line_id) >= int(s.tier))
+
+
 ## Rakiplerden biri bu kademeye ya da üstüne varmış ve kart oyuncuyu ona yetiştiriyor.
 static func _closes_rival_gap(card: Dictionary) -> bool:
 	var best: int = 0

@@ -21,8 +21,10 @@ extends RefCounted
 #   quarter: {state: "locked_no_pm"|"open",
 #             goal: {area_id ("" hedef yok, "bugs" Hatalar ya da alan), area_name, meter: {text, now, target, total, progress_text} or
 #             null (yalnız alan hedefinde)} or null (sprint yok), columns: [column]},
-#   ui: {view: "overview"|"sprint"|"quarter", open_area: açık modülün hattı or "", history_open, hover_card: card id or "" (imleç bir adayın
-#         "+"ında), server_preview: kademe id or "" (açık geçiş önizlemesi), requests_open (talep listesinin fazlası açık)},
+#   ui: {view: "overview"|"sprint"|"quarter"|"requests", open_area: açık modülün hattı or "", history_open, hover_card: card id or ""
+#         (imleç bir adayın "+"ında), server_preview: kademe id or "" (açık geçiş önizlemesi), requests_open (talep listesinin fazlası
+#         açık), requests_sort ("count"|"risk"|"due"), requests_filter ("all"|"waiting"|"planned"|"promised"|"shipped"), requests_topic
+#         (TALEPLER'de seçili kademe or "")},
 #   overview: {server: server} or null (v1.0'dan önce: GENEL BAKIŞ kilitli),
 #   areas: [{id, name, goal_text}],
 #   center: center,
@@ -128,12 +130,7 @@ static func live() -> Dictionary:
 	var p: Dictionary = GameState.product
 	var mode: String = SprintSystem.mode()
 	var release: Dictionary = p.get("release", {}) if mode == "release" else {}
-	# Bu ya da sonraki sprintte duran kartın sprint numarası: adaydaki kopyası soluklaşıp damga alır.
-	var tags: Dictionary = {}
-	for key in ["sprint", "next"]:
-		var s: Dictionary = p.get(key, {})
-		for id in s.get("cards", []):
-			tags[id] = int(s.number)
+	var tags: Dictionary = _tags()
 	var versions: Array = []
 	for r in p.get("releases", []):
 		if int(r.number) > 0:
@@ -184,7 +181,7 @@ static func live() -> Dictionary:
 		"versions": versions,
 		"quarter": _quarter(center, next),
 		"ui": {"view": "sprint", "open_area": "", "history_open": false, "hover_card": "", "server_preview": "",
-			"requests_open": false},
+			"requests_open": false, "requests_sort": "count", "requests_filter": "all", "requests_topic": ""},
 		"overview": {"server": _server()} if live_now else null,
 		"areas": areas,
 		"founder": _founder(mode, center.rnd_node),
@@ -198,6 +195,81 @@ static func live() -> Dictionary:
 
 
 # --- Modüller ve talepler ------------------------------------------------------------
+
+## Bu ya da sonraki sprintte duran kartın sprint numarası, kimlikle: adaydaki kopyası soluklaşıp damga alır.
+static func _tags() -> Dictionary:
+	var tags: Dictionary = {}
+	for key in ["sprint", "next"]:
+		var s: Dictionary = GameState.product.get(key, {})
+		for id in s.get("cards", []):
+			tags[id] = int(s.number)
+	return tags
+
+
+## Talepler görünümü (B2B; B2C'de null) {topics, next (sonraki sprintin numarası)}. Açık talebi olan her kademe bir konudur, ardından
+## bu ürün çeyreğinde karşılananlar (`_met_in`); Ar-Ge'nin açmadığı hat konu doğurmaz. Konu {id (kademe), card_id, name, line, area,
+## module, status, sprint, lock, lock_full, rival, count, risk, value, size, askers}. status: "promised" (kademede söz; sprint en yakın
+## sözün son sprinti) · "locked" (kapı: lock ilk şart, lock_full bütünü) · "planned" (kart bir sprintte ya da onaylı planda;
+## `_request_status`) · "new" (ilk isteği bu hafta) · "waiting" · "shipped". risk Risk evresindeki ya da yenilemesine
+## `request.risk_renew_weeks` haftadan az kalan isteyenlerin (yayındakinde 0), value bütün isteyenlerin aylık geliridir; size kartın
+## kalan işinin (hazırlığın hızıyla) ekibin sprint kapasitesine oranı (kapasite yoksa -1). askers en riskliden: {name, mrr, sat,
+## renew (hafta), soon, at_risk, waited (hafta), promise (sprint ya da -1)}.
+static func topics() -> Variant:
+	if ProductState.market_type() != "b2b":
+		return null
+	var p: Dictionary = GameState.product
+	var tags: Dictionary = _tags()
+	var areas: Dictionary = {}   # gösterilen hat → alanı
+	for a in SprintCatalog.areas_for(ProductState.subtype(), ProductState.market_type()):
+		for line: String in SprintCatalog.capabilities(a.id):
+			areas[line] = a.id
+	var promised: Dictionary = {}   # "<hesap>|<kademe>" ve kademe → en yakın sözün son sprinti
+	for promise in PromiseRegistry.get_all():
+		if promise.status == "open" and promise.due_sprint >= 0:
+			for key in [promise.customer_id + "|" + promise.feature_id, promise.feature_id]:
+				promised[key] = mini(int(promised.get(key, promise.due_sprint)), promise.due_sprint)
+	var soon: int = TimeModel.ticks(int(SprintCatalog.cfg("request.risk_renew_weeks")))
+	var capacity: float = SprintSystem.capacity()
+	var grouped: Dictionary = {}   # kademe → [{r, met}]
+	for r: Dictionary in p.get("requests", []):
+		if not areas.has(String(r.line)) or SprintCatalog.customer_name(r) == "" or r.status not in ["open", "met"]:
+			continue
+		var met: Dictionary = _met_in(r) if r.status == "met" else {}
+		if r.status == "open" or not met.is_empty():
+			grouped.get_or_add(r.step, []).append({"r": r, "met": met})
+	var out: Array = []
+	for step: String in grouped:
+		var asked: Array = grouped[step]
+		var shipped: bool = not asked[0].met.is_empty()
+		var askers: Array = []
+		for a: Dictionary in asked:
+			var c: Customer = CustomerRegistry.get_customer(String(a.r.customer_id))
+			var renew: int = SprintBridges.renews_in(c)
+			askers.append({"name": c.display_name(), "mrr": c.mrr, "sat": c.satisfaction, "renew": renew, "soon": renew < soon,
+				"at_risk": c.lifecycle_phase == "risk", "promise": int(promised.get(c.id + "|" + step, -1)),
+				"waited": (int(a.met.day) if shipped else GameState.day) - int(a.r.day)})
+		askers.sort_custom(func(x: Dictionary, y: Dictionary) -> bool:
+			var rx: int = int(x.at_risk or x.soon)
+			var ry: int = int(y.at_risk or y.soon)
+			return rx > ry if rx != ry else x.renew < y.renew)
+		var card_id: String = "feat:" + step
+		var plan: Dictionary = _request_status(card_id, tags, SprintSystem.mode(), {})
+		var lock: String = SprintCatalog.gate_reason(step)
+		var first: int = asked.reduce(func(m: int, a: Dictionary) -> int: return mini(m, int(a.r.day)), GameState.day)
+		var status: String = "shipped" if shipped else "promised" if promised.has(step) else "locked" if lock != "" \
+			else "planned" if plan.kind != "" else "new" if first == GameState.day else "waiting"
+		var card: Dictionary = p.cards.get(card_id, {})
+		var left: float = SprintSystem.remaining(card) / (1.0 + float(card.get("prep_gain", 0.0))) if not card.is_empty() \
+			else float(SprintCatalog.step_effort(step))
+		var line: String = String(asked[0].r.line)
+		out.append({"id": step, "card_id": card_id, "name": SprintCatalog.step_name(step), "line": line, "area": areas[line],
+			"module": SprintCatalog.cap_name(line), "status": status,
+			"sprint": int(promised.get(step, -1)) if status == "promised" else int(plan.get("sprint", p.sprint.get("number", -1))),
+			"lock": lock.get_slice(SprintCatalog.SEP, 0), "lock_full": lock, "rival": SprintCatalog.rival_has(step),
+			"count": askers.size(), "value": askers.reduce(func(s: int, a: Dictionary) -> int: return s + a.mrr, 0),
+			"risk": 0 if shipped else askers.reduce(func(s: int, a: Dictionary) -> int: return s + (a.mrr if a.at_risk or a.soon else 0), 0),
+			"size": left / capacity if capacity > 0.0 else -1.0, "askers": askers})
+	return {"topics": out, "next": int(p.get("next", {}).get("number", -1))}
 
 ## "+"nın değeri ve hayalet hesabı (`SprintSystem.timeline([aday])`) sayfanın bir sonraki kurulumuna kadar kart kimliğiyle burada
 ## durur: `live()` atar, `addable` ve `ghost` ister.

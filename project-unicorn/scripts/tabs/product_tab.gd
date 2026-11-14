@@ -17,7 +17,8 @@ signal fit_changed
 const INBOX := preload("res://scripts/ui/components/inbox.gd")
 ## Sürüm notu ekrandayken saat durur: oyuncu notu okumadan sonraki sprint işlemesin.
 const HOLD_RELEASE_NOTE := "product_release_note"
-const VIEW_KEYS := {"overview": "PRODUCT_OV_TAB_OVERVIEW", "sprint": "PRODUCT_VIEW_SPRINT", "quarter": "PRODUCT_VIEW_QUARTER"}
+const VIEW_KEYS := {"overview": "PRODUCT_OV_TAB_OVERVIEW", "sprint": "PRODUCT_VIEW_SPRINT", "quarter": "PRODUCT_VIEW_QUARTER",
+	"requests": "PRODUCT_VIEW_REQUESTS"}
 const OVERVIEW := preload("res://scripts/tabs/product/overview_view.gd")
 const BODY_PAD := Vector4i(UiTokens.SPACE_3XL, UiTokens.SPACE_XL, UiTokens.SPACE_3XL, UiTokens.SPACE_3XL)
 
@@ -42,6 +43,7 @@ var _areas_scroll: ScrollContainer
 var _areas: AreaPanel
 var _sprint: SprintPanel
 var _quarter: QuarterView
+var _requests: RequestsView
 var _picker_view: ScrollContainer
 
 
@@ -84,6 +86,9 @@ func _ready() -> void:
 	_quarter = QuarterView.new()
 	_quarter.action.connect(_on_action)
 	_quarter.ui_changed.connect(func(key: String, value: Variant) -> void: _set_ui(value, key))
+	_requests = RequestsView.new()
+	_requests.action.connect(_on_action)
+	_requests.ui_changed.connect(func(key: String, value: Variant) -> void: _set_ui(value, key))
 	_overview_view = ScrollContainer.new()
 	_overview_view.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_overview = OVERVIEW.new()
@@ -103,7 +108,7 @@ func _ready() -> void:
 		SprintSystem.choose_type(subtype, product_name)
 		SprintSystem.apply_lead())
 	picker.setup()
-	for view: Control in [_overview_view, _sprint_view, _quarter, _picker_view]:
+	for view: Control in [_overview_view, _sprint_view, _quarter, _requests, _picker_view]:
 		body.add_child(SprintUiShared.pad(view, BODY_PAD))
 		view.get_parent().set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
@@ -152,7 +157,7 @@ func _rebuild() -> void:
 		view = "sprint"
 		_ui.view = view
 		_last_view = view
-	if m.center.mode == "release" or (view == "quarter" and m.quarter.state != "open"):
+	if m.center.mode == "release" or (view == "quarter" and m.quarter.state != "open") or (view == "requests" and m.requests == null):
 		view = "sprint"
 	var picking: bool = not SprintSystem.is_typed()
 	_build_head(m.header)
@@ -163,8 +168,11 @@ func _rebuild() -> void:
 	_sprint_view.get_parent().visible = view == "sprint" and not picking
 	_quarter.get_parent().visible = view == "quarter" and not picking
 	_quarter.visible = _quarter.get_parent().visible
+	_requests.get_parent().visible = view == "requests" and not picking
 	if _quarter.visible:
 		_quarter.setup(m)
+	elif _requests.get_parent().visible:
+		_requests.setup(_ui)
 	elif _overview_view.get_parent().visible:
 		_overview.setup(m)
 	elif _sprint_view.get_parent().visible:
@@ -233,13 +241,17 @@ func _build_head(h: Dictionary) -> void:
 func _build_ctl(m: Dictionary, view: String) -> void:
 	UiFactory.clear(_ctl_row)
 	var open_views: Array = VIEW_KEYS.keys().filter(func(id: String) -> bool:
-		return (id != "overview" or m.get("overview") != null) and (id != "quarter" or m.quarter.state == "open"))
+		return (id != "overview" or m.get("overview") != null) and (id != "quarter" or m.quarter.state == "open") and id != "requests")
 	if "overview" not in open_views:
 		_add_locked_view("overview", "PRODUCT_OV_LOCK_SHORT", "PRODUCT_OV_LOCKED")
 	_ctl_row.add_child(UiFactory.D_seg_tabs(open_views.map(func(id: String) -> String: return tr(VIEW_KEYS[id])),
 		open_views.find(view), func(i: int) -> void: _set_ui(open_views[i], "view")))
 	if "quarter" not in open_views:
 		_add_locked_view("quarter", "PRODUCT_NEED_PM", "PRODUCT_QUARTER_NEED_PM")
+	# Talepler ayrı bir sekme grubudur (B2B): Çeyrek'in kilidi onu etkilemez.
+	if m.requests != null:
+		_ctl_row.add_child(UiFactory.D_seg_tabs([tr(VIEW_KEYS.requests)], 0 if view == "requests" else -1,
+			func(_i: int) -> void: _set_ui("requests", "view")))
 	_ctl_row.add_child(RnDUiShared.spacer())
 	var founder: Dictionary = m.founder
 	var founder_tip: String = tr("PRODUCT_FOUNDER_ON_TIP" if founder.on else "PRODUCT_FOUNDER_OFF_TIP")
@@ -260,7 +272,8 @@ func _add_locked_view(id: String, condition_key: String, tip_key: String) -> voi
 	_ctl_row.add_child(SprintUiShared.label(tr(condition_key), &"MetaMuted"))
 
 
-## Yalnız yerel durum: geçmiş anahtarı, görünüm, açık modül, talep listesinin açıklığı ve açık kademe önizlemesi.
+## Yalnız yerel durum: geçmiş anahtarı, görünüm, açık modül, talep listesinin açıklığı, açık kademe önizlemesi ve Talepler'in
+## sıralaması, süzgeci ve seçili konusu.
 func _set_ui(value: Variant, key: String) -> void:
 	_ui[key] = value
 	if key == "view":

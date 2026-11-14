@@ -34,14 +34,14 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - `scripts/util/fmt.gd` (263): `Fmt` para, yüzde, tarih, ay adı, büyük harf, `cap_first`; yerel veri strings.csv'dedir
 - `scripts/systems/display_settings.gd` (350): `DisplaySettings`, pencere kipi, çözünürlük, vsync, UI ölçeği; durumsuz, `Settings` saklar bu uygular; `is_inert()` harness pencereyi sahiplenince her çağrıyı keser
 - `scripts/systems/graphics_settings.gd` (211): class_name yok (`Settings` preload eder); 3B görüntü kalitesi, 4 ön ayar `data/graphics/presets.json`, `OfficeView.apply_graphics`; `--gfx=<ön ayar>`
-- `scripts/main/main.gd` (6315): ana sahne kökü; açılış (Godot kartı → menü → onboarding → kabuk), modal montajı, karar kapısı (`hold_clock("event")`), kayıt/yükleme ve yolculuk akışı
+- `scripts/main/main.gd` (6335): ana sahne kökü; açılış (Godot kartı → menü → onboarding → kabuk), modal montajı, karar kapısı (`hold_clock("event")`), kayıt/yükleme ve yolculuk akışı
   ↳ modal ve menü giriş noktaları 09_arayuz_bilesen.md'de, debug bayrak dağıtıcısı ve `--*-shot` koşucuları 10_test_harness.md'de
 - `scripts/main/game_shell.gd` (240): `GameShell.tscn` kökü (grup `game_shell`, ALWAYS); Esc zinciri `_input` `game_shell.gd:55`, `request_speed` `:114`, `say_held` `:126`, şerit yerleşimi, sprint kapanınca Ürün'ü açar
   ↳ debug F tuşları `_debug_fkey` `:138`, `_debug_endgame_key` `:192` (10_test_harness.md, 05_fon_finans.md)
 - Komşular (kapsam dışı ama bağlı): `scripts/systems/save_codec.gd` (299), `time_model.gd` (72), `rng_streams.gd` (79), `scripts/events/core/save.gd` (103)
 
 ## Giriş noktaları
-- `GameState.initialize_run(payload)` `scripts/autoload/game_state.gd:832`: yeni koşu ve her yükleme · `scripts/onboarding/onboarding_flow.gd:197`, `scripts/main/main.gd:647,6268`, `save_manager.gd:310`, harness'ler
+- `GameState.initialize_run(payload)` `scripts/autoload/game_state.gd:832`: yeni koşu ve her yükleme · `scripts/onboarding/onboarding_flow.gd:197`, `scripts/main/main.gd:647,6284`, `save_manager.gd:310`, harness'ler
 - `GameState.set_cash/set_mrr/set_daily_burn/set_brand/set_reputation` `game_state.gd:343-365`: dışarıdan tek yazma yolu; sinyal yayar ve runway'i yeniden hesaplar
 - `GameState.advance_day()` `game_state.gd:368` ve `set_current_hour()` `:372`: yalnız TimeManager çağırır; `GameState.advance_phase()` `:386` kapı açıkken Frank kartı
 - `GameState.set_flag/get_flag/flag_type_for` `game_state.gd:456,487,465`: tipli bayrak; kayıt tipi `FLAG_TYPES` `:48` ve `FLAG_TYPE_PREFIXES` `:125` verir
@@ -50,18 +50,18 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - `TimeManager._step_hour` `time_manager.gd:144`: bir oyun saati; 00:00'da `advance_day` ve günlük tik · `_drain_boundaries` `:127`, `_run_batch` `:193`
 - `TimeManager.advance_hours(n, meeting)` `time_manager.gd:173` · `scripts/main/main.gd:1293,1317,1321,2167`, `scripts/systems/sales_meeting_system.gd:117`, `term_sheet_table_system.gd:574`
 - `TimeManager.skip_night()` `time_manager.gd:183`: gecenin saatlerini tek toplu adımda koşar · `_advance_real` içinden; `scripts/main/main.gd:1290` (gece probe'u)
-- `TimeManager.hold_clock/release_clock` `time_manager.gd:350,359` · `main.gd:2147,4751,5268` (milestone_paper, event),
-  ↳ `incident_system.gd:311`, `sprint_system.gd:1909` (plan bekliyor ve saat mesai başlangıcında), `scripts/tabs/product_tab.gd:334,342`
-- `TimeManager.freeze_clock/thaw_clock` `time_manager.gd:250,256` · yolculuk için `main.gd:5075,4981` (`tree_runs` true), çekimlerde `main.gd:2034,2133`
+- `TimeManager.hold_clock/release_clock` `time_manager.gd:350,359` · `main.gd:2147,4767,5284` (milestone_paper, event),
+  ↳ `incident_system.gd:311`, `sprint_system.gd:1909` (plan bekliyor ve saat mesai başlangıcında), `scripts/tabs/product_tab.gd:347,355`
+- `TimeManager.freeze_clock/thaw_clock` `time_manager.gd:250,256` · yolculuk için `main.gd:5091,4997` (`tree_runs` true), çekimlerde `main.gd:2034,2133`
 - `TimeManager.register_night_gate/unregister_night_gate` `time_manager.gd:264,269` · `scripts/ui/office/office_people.gd:100,104` (ofis boşalma yüklemi)
 - `TimeManager._dispatch_daily_tick` `time_manager.gd:385` ve `_dispatch_hourly_tick` `:439`: sistem sırası burada; yeni sistem tiki buraya takılır. Günlük sıra: `SummarySystem.begin_day` (yuva 0),
   ↳ ürün (`ProductSystem`, `SprintSystem`, `SupportSystem`, `InfraSystem`, `ProductRead.emit_edges`), Ar-Ge, ekip, satış, `CharacterRegistry.prune_productivity_mods`, rakipler, ofis, finans, faz kapısı ve seed, olaylar,
   ↳ `IncidentSystem.daily_tick`, haber, VC, sonlar, `SummarySystem.daily_tick` (yuva 10), `MailClock.sync_desk`; gün `EventBus.day_tick_completed` ile kapanır (autosave sınırı). Saatlik sıra: `SupportSystem`, `SalesSystem`,
   ↳ `InfraSystem.auto_adjust`, `MailClock.hourly_tick`, `IncidentSystem.hourly_tick`, `EventGate.hourly_tick`; 00:00'ın saatlik dilimi `advance_day()`'den önce koşar (`TimeManager.is_rolling_over()` o dilimde doğrudur)
-- `SaveManager.save_to_slot/read_slot/apply_loaded_state` `save_manager.gd:226,157,293` · `scripts/main/main.gd:6057,6122,6133`
+- `SaveManager.save_to_slot/read_slot/apply_loaded_state` `save_manager.gd:226,157,293` · `scripts/main/main.gd:6073,6138,6149`
   ↳ Göç zincirini `read_slot` değil `_read_file` `:174` koşar; `read_slot` yalnız onu çağırır ve bozuk ya da eksik hedefte slotun `.bak`'ına düşer (sonuca `from_backup`); `SAVE_ERR_NEWER` ve `SAVE_ERR_TOO_OLD` geriye düşmez
 - `SaveManager.list_slots/list_runs` `save_manager.gd:124,142` · `scripts/menu/main_menu.gd:39`, `scripts/modals/save_load_modal.gd:55`
-- `SaveManager.end_run()` `save_manager.gd:372`: koşuyu süreç içinde bitirir · `scripts/main/main.gd:131,6307` (menüye dönüş)
+- `SaveManager.end_run()` `save_manager.gd:372`: koşuyu süreç içinde bitirir · `scripts/main/main.gd:131,6323` (menüye dönüş)
 - `SaveManager.reset_all_owners()` `save_manager.gd:334`: statik/kayıtlı koşu durumunun tek sıfırlama listesi
 - `SaveManager.can_save/cannot_save_reason_key/has_unsaved_progress` `save_manager.gd:85,89,103`: kayıt kapısı (karar bekliyor, oturum açık, koşu yok)
 - `SaveManager.quick_slot_id/exit_slot_id/delete_slot/build_meta` `save_manager.gd:251,256,261,270`: yuva adları ve liste için meta
@@ -78,7 +78,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - `speed_changed(new_speed)`: yayan `time_manager.gd:321,337` (TimeManager'in kendi sinyali) · dinleyen `scripts/ui/components/top_bar.gd:179`, `sprint_system.gd:1382`, `office_notice_stack.gd:49`
 - `hold_changed()`: yayan `time_manager.gd:355,361` · dinleyen `top_bar.gd:181`, `scripts/ui/office/office_notice_stack.gd:50`
 - `EventBus.speed_change_requested(speed)` `event_bus.gd:21`: isteği `main.gd`, `game_shell.gd:121`, `save_manager.gd:378` yayar · dinleyen `time_manager.gd:81`
-- `EventBus.day_advanced(new_day)` `event_bus.gd:12`: yayan `game_state.gd:390` · `top_bar.gd:152`, `product_tab.gd:110`, `research_bar.gd:53`
+- `EventBus.day_advanced(new_day)` `event_bus.gd:12`: yayan `game_state.gd:390` · `top_bar.gd:152`, `product_tab.gd:115`, `research_bar.gd:53`
 - `EventBus.hour_changed(hour)` `event_bus.gd:13`: yayan `game_state.gd:394` · `top_bar.gd:153`, `news_ticker.gd:74`, `sales_tab.gd:82`
 - `EventBus.day_tick_completed(day)` `event_bus.gd:286`: yayan `time_manager.gd:432` (günlük dağıtımın sonu) · `save_manager.gd:65` autosave sınırı, `office_city.gd:102`, `plausibility.gd:159`
 - `EventBus.night_skipped()` `event_bus.gd:23`: yayan `time_manager.gd:190` · `main.gd:492,2902`, `office_view.gd:64`, `office_people.gd:86`
@@ -88,8 +88,8 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - `EventBus.palette_changed(colorblind)` `event_bus.gd:47`: yayan `settings_modal.gd:251,282` · `left_tabs.gd:132`, `top_bar.gd:157`, `news_ticker.gd:81`
 - `EventBus.month_ended(close)` `event_bus.gd:253`: yayan `scripts/systems/summary_system.gd:126` · `save_manager.gd:66` (aylık autosave)
 - `EventBus.event_resolved/event_set_aside` `event_bus.gd:119,122`: `save_manager.gd:67-70` kirli bayrağı kurar ve bekleyen autosave'i yeniden dener
-- `EventBus.game_loaded(slot_id)` `event_bus.gd:289`: yayan `main.gd:6124` · `left_tabs.gd:128`
-- `EventBus.quicksave_requested/quickload_requested/save_load_requested/system_menu_requested/settings_requested` `event_bus.gd:296,297,293,291,38`: yayan `main.gd`, `game_shell.gd` · dinleyen `main.gd:5614-5616,91-92`
+- `EventBus.game_loaded(slot_id)` `event_bus.gd:289`: yayan `main.gd:6140` · `left_tabs.gd:128`
+- `EventBus.quicksave_requested/quickload_requested/save_load_requested/system_menu_requested/settings_requested` `event_bus.gd:296,297,293,291,38`: yayan `main.gd`, `game_shell.gd` · dinleyen `main.gd:5630-5632,91-92`
 - `EventBus.headline_added(source, line)` `event_bus.gd:236`: `time_manager.gd:85` `NewsFeedSystem.on_headline_added`'e bağlar (statik sistem için önyükleme)
 - Geri kalan 125 sinyal başka sistemlerin: `grep "^- ad(" docs/kod_haritasi/DIZIN.md`; `KALITE.md` "Yarım sinyaller" bölümü emit/connect'siz olanları listeler
 
@@ -112,7 +112,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
   ↳ `_migrate_N` N'den önce yazılmış kaydı N'e getirir; emekli bayraklar göçlerden sonra `SaveCodec.RETIRED_FLAGS` ile her yüklemede düşer (`SaveCodec._decode_flags` `save_codec.gd:234`), şema artmaz
   ↳ Ret: göçlerden sonra `_read_file`, ürün türü (`flags.mvp_sub_product_type_id`) `REMOVED_PRODUCTS`taysa (`note_tool`, `video_clip`) `SAVE_ERR_PRODUCT_GONE` döner, `.bak`a düşmez; v20 göç taşımaz, yalnız `GameState.marketplace` ekledi
 - Ayar dosyası: `user://settings.json` `settings.gd:10`, `{schema_version:1, values}`; `DEFAULTS` `:24-53`; `SAVE_DEBOUNCE_SEC` 0,5 `:56`
-- Ayar anahtarları dışarıda: `language` (Localization'ın), `runs_finished` (`main.gd:5386`, `scripts/onboarding/first_week_doc.gd:15`); `reset_to_defaults` yalnız `DEFAULTS` anahtarlarını siler
+- Ayar anahtarları dışarıda: `language` (Localization'ın), `runs_finished` (`main.gd:5402`, `scripts/onboarding/first_week_doc.gd:15`); `reset_to_defaults` yalnız `DEFAULTS` anahtarlarını siler
 - Ses: `MUSIC_TRACK_PATH` `audio_manager.gd:10` = `res://assets/audio/Döngü Modu.mp3`; bus'lar Master(0), "Music", "SFX" çalışma anında kurulur `:63`
 - Dil: `STRINGS_CSV` `localization.gd:12` (`keys,tr,en`), `SUPPORTED` ["tr","en"] `:15`; `BOOT|lang=|source=` satırı `:32`
 - JSON veri dosyası (`data/`) bu sistemin değil; çekirdek yalnız `strings.csv` ve `project.godot` okur

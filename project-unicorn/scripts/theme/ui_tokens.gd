@@ -42,7 +42,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 55
+const THEME_STAMP := 56
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -731,6 +731,9 @@ const D_BOX_MONO := 24                # a module's icon box
 const D_H_KEY_CAND := 24              # the "+" key of a module's candidate
 const D_W_STAGE_STRIP := 168          # a candidate's stage strip
 const D_H_STAGE_STRIP := 6
+const D_W_REQUEST_DETAIL := 640       # the Talepler view's detail column: the topic, its actions and who asks
+const D_W_REQUEST_FIGURE := 96        # a Talepler row's figure columns (asked by, at risk, effort), right aligned
+const D_W_REQUEST_STATUS := 168       # a Talepler row's status column: a tag, or a lock's first condition wrapped
 const D_W_TYPE_LIST := 540            # the type picker's list; the picked type's dossier takes the rest
 const D_H_SECTION := 28              # a section's caps label and its rule
 const D_W_NEXT := 300                 # the right column: the preparation and the next sprint's box

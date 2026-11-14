@@ -4373,7 +4373,8 @@ func _run_ending_shot(key: String) -> void:
 # the Sprint-1 plan with the pointer on the locked GENEL BAKIŞ tab (<stem>_tip); live:server_* is GENEL BAKIŞ on the
 # live ERP (see _seed_server), the plain frame and, for the states that have a tip to read, <stem>_tip with the pointer
 # on the control it belongs to. live:a4_<frame> are the Ürün > Sprint frame worlds (_seed_product_a4), each printing
-# its PRODUCTSHOT line.
+# its PRODUCTSHOT line. live:req_solo, live:req_w60 and live:req_w98 are Ürün > Talepler over the bot's own run (REQ_RUNS),
+# printing a REQSHOT line: the week, the people, the team's capacity and each topic (step:status:askers:size).
 func _run_product_shot(id: String) -> void:
 	if not id.begins_with("live:"):
 		_shot_fail("[ProductShot] unknown kind '%s', want live:<scenario>" % id)
@@ -4445,6 +4446,13 @@ func _run_product_shot(id: String) -> void:
 		get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()._set_ui(true, "history_open")
 	if id == "live:b2b_quarter":
 		get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()._set_ui("quarter", "view")
+	if REQ_RUNS.has(id.trim_prefix("live:")):
+		get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()._set_ui("requests", "view")
+		var rows: PackedStringArray = []
+		for topic: Dictionary in ProductModel.topics().topics:
+			rows.append("%s:%s:%d:%.2f" % [topic.id, topic.status, topic.count, topic.size])
+		print("REQSHOT|%s|week=%d|people=%d|capacity=%.1f|topics=%s" % [id, GameState.day, SprintSystem.team().size(),
+			SprintSystem.capacity(), ",".join(rows)])
 	await _finish_shot(stem)
 
 
@@ -4557,8 +4565,16 @@ func _tip_target(page: Control, tip: String) -> Control:
 ## view open: the PM's goal strip right after the MVP. b2b_requests signs two accounts once the faucet
 ## opens at MVP and plays one more sprint, so the next planning carries the cards they wait on. overview_pre is plan on the
 ## ERP, before v1.0; server_* are the ERP past v1.0 on its next planning (_seed_server); a4_* are the A4 frames (_seed_product_a4).
+## The bot runs the Talepler frames stand in: one founder in week 16, six people in week 60, the unbounded team in week 98.
+const REQ_RUNS := {"req_solo": "full_run_staff1:16", "req_w60": "full_run_staff6:60", "req_w98": "full_run:98"}
+
+
 func _seed_product_live(scenario: String) -> void:
 	if scenario.begins_with("pick"):
+		return
+	if REQ_RUNS.has(scenario):
+		RunProbe.run(REQ_RUNS[scenario] + ":sim", _debug_payload())
+		EventBus.speed_change_requested.emit(0)
 		return
 	if scenario.begins_with("a4_"):
 		_seed_product_a4(scenario)

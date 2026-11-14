@@ -2618,6 +2618,52 @@ PRODUCT_HISTORY_CARDS,{n} kart,{n} cards
 PRODUCT_HISTORY_CARDS_ONE,{n} kart,{n} card
 PRODUCT_VIEW_SPRINT,Sprint,Sprint
 PRODUCT_VIEW_QUARTER,Çeyrek,Quarter
+PRODUCT_VIEW_REQUESTS,Talepler,Requests
+REQ_SUMMARY_TOPICS,{n} konu,{n} topics
+REQ_SUMMARY_TOPICS_ONE,{n} konu,{n} topic
+REQ_SUMMARY_WAITING,{n} hesap bekliyor,{n} accounts waiting
+REQ_SUMMARY_WAITING_ONE,{n} hesap bekliyor,{n} account waiting
+REQ_SUMMARY_PROMISED,{n} sözlü,{n} promised
+REQ_SUMMARY_PROMISED_ONE,{n} sözlü,{n} promised
+REQ_SORT,Sırala,Sort
+REQ_SORT_COUNT,En çok isteyen,Most asked
+REQ_SORT_RISK,Risk altındaki gelir,Revenue at risk
+REQ_SORT_DUE,En yakın söz,Nearest promise
+REQ_FILTER_ALL,Hepsi,All
+REQ_FILTER_WAITING,Bekleyen,Waiting
+REQ_FILTER_PLANNED,Planda,Planned
+REQ_FILTER_PROMISED,Sözlü,Promised
+REQ_FILTER_SHIPPED,Yayında,Shipped
+REQ_EMPTY,Henüz talep yok,No requests yet
+REQ_EMPTY_FILTER,Bu süzgeçte konu yok,No topics here
+REQ_COL_TOPIC,Konu,Topic
+REQ_COL_COUNT,İsteyen,Asked by
+REQ_COL_RISK,Risk altında,At risk
+REQ_COL_RISK_TIP,Risk evresindeki ya da yenilemesine {weeks} haftadan az kalan isteyenlerin aylık geliri.,Monthly revenue of the askers in Risk or with fewer than {weeks} weeks to renewal.
+REQ_COL_SIZE,Süre,Duration
+REQ_COL_STATUS,Durum,Status
+REQ_COUNT_ACCOUNTS,{n} hesap,{n} accounts
+REQ_COUNT_ACCOUNTS_ONE,{n} hesap,{n} account
+REQ_SIZE_QUARTER,Sprintin dörtte biri,A quarter of a sprint
+REQ_SIZE_HALF,Yarım sprint,Half a sprint
+REQ_SIZE_SPRINTS,{n} sprint,{n} sprints
+REQ_SIZE_SPRINTS_ONE,{n} sprint,{n} sprint
+REQ_RIVAL_TAG,Rakipte var,Rival has it
+REQ_STATUS_PROMISED,Söz · Sprint {n},Promised · Sprint {n}
+REQ_STATUS_PLANNED,Planda · Sprint {n},Planned · Sprint {n}
+REQ_STATUS_SHIPPED,Yayında,Shipped
+REQ_STATUS_NEW,Yeni,New
+REQ_STATUS_WAITING,Bekliyor,Waiting
+REQ_ACCOUNTS_REVENUE,Hesapların geliri,Accounts' revenue
+REQ_DELIVERED_LINE,Karşılandı: {topic} · {n} hesap,Delivered: {topic} · {n} accounts
+REQ_DELIVERED_LINE_ONE,Karşılandı: {topic} · {n} hesap,Delivered: {topic} · {n} account
+REQ_ACT_SEE_PLAN,Planda gör,See in plan
+REQ_ACT_PLAN,Plana al · Sprint {n},Add to plan · Sprint {n}
+REQ_REQUESTERS,İsteyenler,Asked by
+REQ_COL_MRR,Gelir,Revenue
+REQ_COL_SAT,Memnuniyet,Satisfaction
+REQ_COL_RENEW,Yenilemeye,To renewal
+REQ_COL_SINCE,Bekliyor,Waiting
 PRODUCT_QUARTER_NEED_PM,PM işe alınca,Once you hire a PM
 PRODUCT_OV_TAB_OVERVIEW,Genel Bakış,Overview
 PRODUCT_OV_LOCKED,v1.0 yayınlanınca açılır.,Opens when v1.0 ships.
