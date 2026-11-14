@@ -1266,6 +1266,7 @@ FIN_BURN_OVERTIME,Ek mesai,Overtime
 FIN_BURN_MARKETING,Pazarlama,Marketing
 FIN_BURN_OFFICE,Ofis,Office
 FIN_BURN_SERVERS,Sunucular,Servers
+FIN_BURN_PAZARYERI,Pazaryeri,Marketplace
 FIN_BURN_EMPTY,Bu ay gider yok.,No expenses this month.
 FIN_OFFICE_TIP,{office} kirası · ayda {amount},{office} rent · {amount} a month
 FIN_ONETIME_BUILD,Özellik maliyeti,Feature cost

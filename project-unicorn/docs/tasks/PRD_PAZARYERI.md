@@ -295,7 +295,8 @@ Kapanış yalnız ürün yayındayken koşar; kategori açmak yayından önce de
   Reklam gideri gelirden düşülmez. B2B'de MRR bugünkü gibi brüt kalır. Kapı çıtaları değişmez (`angel_round_system.gd:27`
   2.500; `seed_round_system.gd:72`'nin okuduğu `SeedConstants.DOOR_MRR` 20.000; `phase_gate_system.gd:49-57` 120.000).
 - **Giderler** Finans'ta yeni bir kalemde toplanır (`pazaryeri`; `finance_system.gd:15-27`'ye altıncı kalem) ve her hafta
-  `FinanceSystem.set_burn_category("pazaryeri", haftalık tutar × 4,33)` ile yeniden yazılır: "Biz öderiz" iade kargosu
+  `FinanceSystem.set_burn_category("pazaryeri", FinanceSystem.daily_rate(haftalık tutar × 4,33))` ile yeniden yazılır (kalem
+  öbür kalemler gibi günlük tutarı taşır, para aynıdır; sıfır da yazılır, eski tutar kalmaz): "Biz öderiz" iade kargosu
   (`iade × 3`), kampanyanın bedava kargosu (`sipariş × 3`; Premium'un "Kargo bedava"sı açıksa üye siparişi o satıra, kalanı buraya
   yazılır) ve Premium'un ayrıcalık giderleri (§3.10). Kalemin ipucu bu
   kalemleri adlarıyla listeler.

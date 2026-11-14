@@ -11,20 +11,21 @@ extends RefCounted
 # copy and GameState's starting daily_burn derives from it (starting_daily_burn()).
 # A category is here because a system WRITES it: salaries and overtime are daily_tick's pulls,
 # marketing is an event card's campaign (start_marketing_push), servers is InfraSystem's
-# set_burn_category, office is OfficeSystem's rent (get_burn_breakdown_pct skips zero rows). No invented
-# fixed line.
+# set_burn_category, office is OfficeSystem's rent, pazaryeri is MarketplaceSystem's weekly close
+# (get_burn_breakdown_pct skips zero rows). No invented fixed line.
 const STARTING_BURN_BREAKDOWN := {
 	"salaries": 0,     # Overwritten every tick by pull from CharacterRegistry
 	"overtime": 0,     # Overwritten every tick by pull from WorkHoursSystem; 0 when nobody is over 8h
 	"marketing": 0,    # A card's marketing push while it runs (start_marketing_push); 0 otherwise
 	"office": 0,       # OfficeSystem writes the rent of the office the company works in; 0 at home
 	"servers": 0,      # InfraSystem writes the monthly bill / 30 every day; 0 until the product ships
+	"pazaryeri": 0,    # MarketplaceSystem writes the last close's monthly cost / 30 every week; 0 outside a marketplace run
 }
 static var burn_breakdown := STARTING_BURN_BREAKDOWN.duplicate()
 
 # Legal burn category ids; burn_category_label screams on any other. Display names are
 # strings.csv FIN_BURN_<ID>.
-const BURN_IDS := ["salaries", "overtime", "marketing", "office", "servers"]
+const BURN_IDS := ["salaries", "overtime", "marketing", "office", "servers", "pazaryeri"]
 
 # One-time charge id -> localization key. Callers pass ids and one_time_label_display translates
 # at render time, so the transactions list follows the current language.

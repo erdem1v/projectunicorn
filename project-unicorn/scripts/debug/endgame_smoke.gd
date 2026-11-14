@@ -2947,15 +2947,16 @@ static func _case_targeted_modifier_hits_named_customer() -> String:
 
 
 ## Finans'ın gider listesi yalnız oyuncunun görüp yönettiği kalemleri taşır: gün 1'de gider 0 ve liste boştur,
-## beş kalem (maaş, ek mesai, pazarlama, ofis, sunucu) yazıldıkça kendi satırıyla çıkar ve satırların toplamı
-## günlük burn'dür; araç ve servis kalemi yoktur; yüklenen kayıt, o kalemleri taşıyan eski toplamı taşımaz.
+## altı kalem (maaş, ek mesai, pazarlama, ofis, sunucu, pazaryeri) yazıldıkça kendi satırıyla çıkar ve satırların toplamı
+## günlük burn'dür; sıfır kalem (pazaryeri dahil) çizilmez; araç ve servis kalemi yoktur; yüklenen kayıt, o kalemleri taşıyan eski
+## toplamı taşımaz ve kalemi olmayan eski kayıt pazaryeri kalemini 0'la açar.
 ##
 ## FALSIFICATION: FinanceSystem.from_dict'in son satırını (`GameState.set_daily_burn(compute_total_burn())`) sil →
-## son iddia FAIL (kayıt eski toplamla açılır).
+## son iddia FAIL (kayıt eski toplamla açılır); `STARTING_BURN_BREAKDOWN`dan "pazaryeri"yi sil → anahtar satırı FAIL.
 static func _case_burn_lines_visible() -> String:
 	if FinanceSystem.starting_daily_burn() != 0 or GameState.daily_burn != 0:
 		return "day 1 costs %d (start %d) a day, want 0" % [GameState.daily_burn, FinanceSystem.starting_daily_burn()]
-	var want_keys: Array = ["salaries", "overtime", "marketing", "office", "servers"]
+	var want_keys: Array = ["salaries", "overtime", "marketing", "office", "servers", "pazaryeri"]
 	if FinanceSystem.STARTING_BURN_BREAKDOWN.keys() != want_keys or FinanceSystem.BURN_IDS != want_keys:
 		return "burn categories are %s / %s, want %s" % [
 			str(FinanceSystem.STARTING_BURN_BREAKDOWN.keys()), str(FinanceSystem.BURN_IDS), str(want_keys)]
@@ -2982,6 +2983,8 @@ static func _case_burn_lines_visible() -> String:
 	var loaded: Dictionary = FinanceSystem.get_burn_breakdown()
 	if loaded.has("tools") or loaded.has("service"):
 		return "a loaded save kept a dropped line: %s" % str(loaded)
+	if loaded.get("pazaryeri", -1) != 0:
+		return "a save written before the marketplace line opened it at %s, want 0" % str(loaded.get("pazaryeri"))
 	if GameState.daily_burn != 240:
 		return "a loaded save opens at a daily burn of %d, want 240 (its lines' sum)" % GameState.daily_burn
 	return ""
