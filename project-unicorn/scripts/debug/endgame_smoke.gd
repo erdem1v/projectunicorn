@@ -20091,11 +20091,12 @@ static func _case_incident_regression_fixture(payload: Dictionary) -> String:
 	return fail
 
 
-## İtibarın ürün ve müşteri girdileri (`Reputation`, PRD_ERP §4.3), oyunun yollarından: stok modülünden kaçan hata sürümde stoku
-## kullanan her hesap için bir düşer (en çok `REP_ESCAPE_MAX`), yayına çıkan kademe +1, zamanında tutulan söz +2, bozulan söz -3,
+## İtibarın ürün ve müşteri girdileri (`Reputation`, PRD_ERP §4.3), oyunun yollarından: stok modülünden kaçan hata sürümde
+## `REP_ESCAPED` düşürür ve stoku kullanan hesap sayısı kayda girer, yayına çıkan kademe +1, zamanında tutulan söz +2, bozulan söz -3,
 ## kaybedilen hesap -3. Yayından önce biten kademe İtibar'ı oynatmaz. Her değişim nedeniyle kayda girer, en yeni önde, en çok
 ## `REP_LOG_MAX` kayıt; 100'de kalan değişim kayda girmez.
-## FALSİFİKASYON: `Reputation.wire`'dan `version_shipped` bağını sil → kaçan hata iddiası FAIL; `_on_tier`'dan canlı ürün şartını
+## FALSİFİKASYON: `Reputation.wire`'dan `version_shipped` bağını sil → kaçan hata iddiası FAIL; `_on_release`'te
+## `-REP_ESCAPED` yerine `-touched.size()` yaz → kaçan hata iddiası FAIL; `_on_tier`'dan canlı ürün şartını
 ## sil → yayın öncesi iddiası FAIL; `_on_kept`'te REP_KEPT yerine REP_PARTIAL yaz → dört girdi iddiası FAIL; `_add`'da
 ## `moved == 0` dönüşünü sil → sınır iddiası FAIL.
 static func _case_sales_reputation_inputs() -> String:
@@ -20111,7 +20112,7 @@ static func _case_sales_reputation_inputs() -> String:
 	var hit: int = SprintCatalog.line_accounts("line_erp_stock").size()
 	_close_escaped("line_erp_stock")
 	var top: Dictionary = {} if Reputation.recent().is_empty() else Reputation.recent().front()
-	var want: int = -mini(hit * SalesConstants.REP_ESCAPE_PER_ACCOUNT, SalesConstants.REP_ESCAPE_MAX)
+	var want: int = -SalesConstants.REP_ESCAPED
 	if (hit < 2 or top.get("kind", "") != "escaped" or int(top.delta) != want or int(top.args.accounts) != hit
 			or top.args.line != "line_erp_stock"):
 		return "a stock bug that escaped to %d accounts logged %s, want escaped %d on line_erp_stock" % [hit, str(top), want]

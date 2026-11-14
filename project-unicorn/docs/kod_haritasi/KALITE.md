@@ -1,11 +1,11 @@
 # Kod haritası · KALITE
 
-Üretildi: git e7b6d792 · 2026-11-14 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git dea7f54e · 2026-11-14 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 262 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
 
-- scripts/debug/endgame_smoke.gd · 31202 satır · 709 func
+- scripts/debug/endgame_smoke.gd · 31203 satır · 709 func
 - scripts/main/main.gd · 6375 satır · 228 func
 - scripts/debug/run_probe.gd · 2446 satır · 95 func
 - scripts/systems/sprint_system.gd · 2136 satır · 173 func
@@ -40,7 +40,7 @@ Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları
 - scripts/events/tools/vocab_gen.gd:20 · run · 322 satır
 - scripts/theme/build_theme.gd:46 · _initialize · 320 satır
 - scripts/events/present/chips.gd:72 · describe · 311 satır
-- scripts/debug/endgame_smoke.gd:24210 · _case_sprint_timeline_matches_play_out · 266 satır
+- scripts/debug/endgame_smoke.gd:24211 · _case_sprint_timeline_matches_play_out · 266 satır
 - scripts/main/main.gd:3960 · _run_hr_shot · 263 satır
 - scripts/debug/endgame_smoke.gd:8749 · _case_hr_constants_contract · 220 satır
 - scripts/debug/endgame_smoke.gd:2279 · _case_save_v13_day_stamps_migrate · 209 satır
@@ -62,12 +62,12 @@ Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları
 - scripts/ui/office/office_map_card.gd:17 · _init · 134 satır
 - scripts/debug/endgame_smoke.gd:12480 · _case_effective_skill_formula · 132 satır
 - scripts/debug/endgame_smoke.gd:18556 · _case_rnd_note_author_and_lines · 129 satır
-- scripts/debug/endgame_smoke.gd:23132 · _case_sprint_founder_share_frozen · 128 satır
-- scripts/debug/endgame_smoke.gd:28411 · _case_save_v15_tickets_become_open_bugs · 128 satır
+- scripts/debug/endgame_smoke.gd:23133 · _case_sprint_founder_share_frozen · 128 satır
+- scripts/debug/endgame_smoke.gd:28412 · _case_save_v15_tickets_become_open_bugs · 128 satır
 - scripts/main/main.gd:4572 · _seed_product_live · 128 satır
 - scripts/debug/endgame_smoke.gd:1072 · _case_gate_decline_reminder · 125 satır
-- scripts/debug/endgame_smoke.gd:21049 · _thesis_presenter_body · 124 satır
-- scripts/debug/endgame_smoke.gd:21282 · _case_sales_meeting_time_skip_founder_share · 124 satır
+- scripts/debug/endgame_smoke.gd:21050 · _thesis_presenter_body · 124 satır
+- scripts/debug/endgame_smoke.gd:21283 · _case_sales_meeting_time_skip_founder_share · 124 satır
 - scripts/events/seams/seams_product.gd:15 · _install_product · 123 satır
 - scripts/events/tools/why.gd:28 · report · 121 satır
 - scripts/events/tools/engine_probe.gd:582 · _check_invalidation · 119 satır
@@ -223,10 +223,10 @@ Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: 
 - LOCKUP_S · 2 dosya · scripts/menu/main_menu.gd:22, scripts/onboarding/onboarding_flow.gd:29
 - MAIN_MENU_SCRIPT · 2 dosya · scripts/main/main.gd:17, scripts/onboarding/onboarding_flow.gd:13
 - MARKET_B2B · 2 dosya · scripts/systems/infra_system.gd:33, scripts/systems/support_system.gd:87
-- MIX_INCREMENT · 2 dosya · scripts/systems/hr_candidate_generator.gd:32, scripts/systems/sales_constants.gd:271
-- MIX_MODULUS · 2 dosya · scripts/systems/hr_candidate_generator.gd:30, scripts/systems/sales_constants.gd:269
-- MIX_MULTIPLIER · 2 dosya · scripts/systems/hr_candidate_generator.gd:31, scripts/systems/sales_constants.gd:270
-- MIX_SALT_STRIDE · 2 dosya · scripts/systems/hr_candidate_generator.gd:33, scripts/systems/sales_constants.gd:272
+- MIX_INCREMENT · 2 dosya · scripts/systems/hr_candidate_generator.gd:32, scripts/systems/sales_constants.gd:270
+- MIX_MODULUS · 2 dosya · scripts/systems/hr_candidate_generator.gd:30, scripts/systems/sales_constants.gd:268
+- MIX_MULTIPLIER · 2 dosya · scripts/systems/hr_candidate_generator.gd:31, scripts/systems/sales_constants.gd:269
+- MIX_SALT_STRIDE · 2 dosya · scripts/systems/hr_candidate_generator.gd:33, scripts/systems/sales_constants.gd:271
 - Model · 2 dosya · scripts/ui/components/build_bar.gd:13, scripts/ui/components/research_bar.gd:25
 - NAME_W · 2 dosya · scripts/onboarding/steps/character_step.gd:9, scripts/onboarding/steps/company_step.gd:7
 - ONBOARDING_VOICE_TENURE_WEEKS · 2 dosya · scripts/events/tools/plausibility.gd:56, scripts/systems/b2b_constants.gd:263

@@ -52,8 +52,7 @@ const REP_KEPT := 2                      # [WORKING] onay bekliyor: zamanında t
 const REP_PARTIAL := 1                   # [WORKING] onay bekliyor: geç tutulan söz
 const REP_BROKEN := 3                    # [WORKING] onay bekliyor: bozulan söz
 const REP_LOST := 3                      # [WORKING] onay bekliyor: kaybedilen hesap
-const REP_ESCAPE_PER_ACCOUNT := 1        # [WORKING] onay bekliyor: sürümden kaçan hatanın dokunduğu her hesap
-const REP_ESCAPE_MAX := 3                # [WORKING] onay bekliyor: bir sürümün kaçan hatasının en çok düşürdüğü
+const REP_ESCAPED := 1                   # [WORKING] onay bekliyor: sürümden kaçan hata (en az bir hesaba dokunan), hesap sayısından bağımsız
 const REP_LOG_MAX := 6                   # nedeniyle saklanan son değişim
 
 

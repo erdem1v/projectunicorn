@@ -457,7 +457,7 @@ Ortak kâğıt kuralı (Erdem'in olay seçeneği kuralları):
 | Kapılar | §2.3 tablosu | `data/product/lines/erp.json`, `shared_gate_overrides` |
 | Yayın şartı | 4 adlı modülün K1'i | `sprint.json` `mvp_named` |
 | İhtiyaç listeleri | sektör × yıldız × modül kademesi | `erp.json` `buyer_sectors` |
-| İtibar'ın girdileri | yayındaki kademe +1, tutulan söz +2 (bozulmuş sözün geç tutulması +1), bozulan söz −3, kaybedilen hesap −3, kaçan hata hesap başına −1 (sürümde en çok −3) | `SalesConstants.REP_*` |
+| İtibar'ın girdileri | yayındaki kademe +1, tutulan söz +2 (bozulmuş sözün geç tutulması +1), bozulan söz −3, kaybedilen hesap −3, kaçan hata sürüm başına −1, dokunduğu hesap sayısından bağımsız (ölçek kuralı; yardımcı yönetmen 2026-11-14) | `SalesConstants.REP_*` |
 | Bant eşiği | `market_fit(star)` ≥ beklenti | `SalesConstants` |
 | Testçi olmayanın yakalaması | ×0,6 | `sprint.json` `bugs` |
 | Sözlü iş payı | sprintin dörtte biri | `sprint.json` (OLAYLAR) |

@@ -45,8 +45,9 @@ static func _on_lost(customer_id: String) -> void:
 	_add("lost", -SalesConstants.REP_LOST, _account(customer_id))
 
 
-## Sürümden kaçan hatanın dokunduğu hesaplar (her hesap bir kez): hesap başına düşer, sürüm başına en çok `REP_ESCAPE_MAX`.
-## Kayıttaki hat en çok hesaba dokunandır.
+## Kaçan hatası en az bir hesaba dokunan sürüm `REP_ESCAPED` düşürür, kaç hesaba dokunduğundan bağımsız: bedel şirketin
+## ölçeğiyle büyümesin (bir hesapta da elli hesapta da aynı). Kayıt dokunulan hesap sayısını (her hesap bir kez) ve en çok hesaba
+## dokunan hattı taşır.
 static func _on_release(_number: int) -> void:
 	var touched: Dictionary = {}
 	var line: String = ""
@@ -59,8 +60,7 @@ static func _on_release(_number: int) -> void:
 			most = accounts.size()
 			line = escaped
 	if not touched.is_empty():
-		_add("escaped", -mini(touched.size() * SalesConstants.REP_ESCAPE_PER_ACCOUNT, SalesConstants.REP_ESCAPE_MAX),
-			{"line": line, "accounts": touched.size()})
+		_add("escaped", -SalesConstants.REP_ESCAPED, {"line": line, "accounts": touched.size()})
 
 
 static func _account(customer_id: String) -> Dictionary:
