@@ -17,7 +17,7 @@ kapanışından sonra), ikisi de Finans'tan önce (`:416`). Sıra doğruluğu de
 | Ad | `MarketingSystem.channel_visits(kategori)` (kanal ve kampanya kimliğiyle), `return_lift()`, `impression_share(kategori)` | `MarketingSystem.active_campaign()`: tür, kalan hafta, hazırlığın yapılan ve toplam haftası, kategoriler, derinlik, şirketin payı, `overrides`. `MarketplaceSystem.policy_value(kural)`: ezme varsa onu, yoksa saklı seçimi döndürür | `SprintUiShared.open_requests(tree, opts)`; `opts`: `status`, `side`, `sort`, `topic` |
 | Sahibi ve yazarı | Pazarlama: kanal kademesi, yuvadaki kişi, içerik birikimi. Gideri her hafta, sıfır dahil, `FinanceSystem.set_burn_category("marketing", …)` ile | Pazarlama: kampanyanın ayarı, hazırlığı ve kişi tarafı. Kuralın saklı seçimine ve dört haftalık kilidine kimse dokunmaz | Talepler görünümü (OLAYLAR); durum yazılmaz |
 | Okuyan | Pazaryeri, kapanışında: ziyaret = organik + kanallar; kaynak ayrımını kendi durumuna yazar. Kategoriler reklam doyumunu okur | Pazaryeri, kapanışında: sipariş artışı, çukur, mağaza tepkisi (deftere adlı satır). Politikalar satırı salt okunur ve ne olduğunu yazar: "İndirim günleri · N hafta kargo bedava" | Pazaryeri › Genel ve Destek raporu: `{status: waiting}`; taraf satırından `side` ile |
-| Karşı okuma | Pazarlama ← `MarketplaceSystem.channel_read(kategori)`: dönüşüm, bir kullanıcının aylık komisyonu, organik ziyaret, kategorinin kâr payı ve reklam havuzu (haftalık arama). `source_revenue(kaynak)`: son on iki haftada o kaynaktan gelen kullanıcıların son dört haftada bıraktığı net komisyon (Pazaryeri yeni kullanıcıyı kaynağıyla saklar) | Formül Pazaryeri'nin saf işlevidir (kupon dahil); Pazarlama'nın önizlemesi ve raporu aynı işlevi okur | `ProductModel._requests` pazaryerinde `MarketplaceSystem.request_topics()`'i okur |
+| Karşı okuma | Pazarlama ← `MarketplaceSystem.channel_read(kategori)`: dönüşüm, bir kullanıcının aylık komisyonu, organik ziyaret, kategorinin kâr payı ve reklam havuzu (haftalık arama). `source_revenue(kaynak)`: son on iki haftada o kaynaktan gelen kullanıcıların son dört haftada bıraktığı net komisyon (Pazaryeri yeni kullanıcıyı kaynağıyla saklar). `source_new_users(kaynak)`: kaynağın geçen kapanışta getirdiği yeni kullanıcı. Kaynak kimliğini Pazarlama verir: `tür:kategori`, satır başına tek kaynak; anahtar haftadan haftaya sabit | Formül Pazaryeri'nin saf işlevidir (kupon dahil); Pazarlama'nın önizlemesi ve raporu aynı işlevi okur | `ProductModel._requests` pazaryerinde `MarketplaceSystem.request_topics()`'i okur |
 | Sinyal | `marketing_changed()`, `marketplace_changed()`; gider `burn_changed` ile yayılıyor | `marketing_changed()` | Var olan `tab_changed` |
 | Uzlaşma | DUZELTME | DUZELTME, yardımcı yönetmen | OLAYLAR |
 
@@ -38,6 +38,8 @@ kapanışından sonra), ikisi de Finans'tan önce (`:416`). Sıra doğruluğu de
   Konunun durumu (bekliyor, planda, yayında) kapanışta ürünün kademesinden ve sprint planından okunur; kapanış kendi
   defterine "Karşılandı: <konu>", sekiz haftayı geçen konuya "Geciken talep: <konu>" yazar. Talepler görünümü satırları
   `MarketplaceSystem.request_topics()`'ten okur (her satırda konunun `card_id`'si); `sprint_bridges.gd` pazaryerini bilmez.
+  Konunun oyuncuya görünen adı tek yerden okunur: `MarketplaceSystem.topic_name(kimlik)` (Genel'in defter satırı ve
+  Talepler görünümü).
   `tick_requests` OLAYLAR'ındır.
 
 Yardımcı yönetmenin kararları (13 Kasım; adlar Erdem'in onayında): taraf adları her ekranda "kullanıcı" ve "mağaza"; ikinci

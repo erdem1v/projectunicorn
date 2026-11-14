@@ -47,6 +47,13 @@ const NEVER := -1000
 const WHILE := -1
 const SIDES := ["users", "stores"]
 const STEPS := ["cart", "checkout", "order", "delivered"]
+## Adımı taşıyan modüller; kademe çarpanı hepsinden gelir.
+const STEP_MODULES := {"cart": ["storefront"], "checkout": ["mobile"], "order": ["checkout"], "delivered": ["orders", "integrations"]}
+## Açık hatanın kıstığı adımlar; Sepete ekledi ve Ödemeye geçti adımını hata kısmaz.
+const BUG_STEPS := ["order", "delivered"]
+## Modüllerin son kademesi; adım çarpanı tabloları orada biter. `ProductLines.TIER_MAX` ile aynı sayıdır ama oradan okunmaz:
+## çekirdek oyunun sınıflarına bağlanırsa probe (otomatik yükleyiciler olmadan derlenir) derlenmez.
+const LAST_TIER := 3
 ## Adım çarpanı tablosu 1. kademeden başlayan modüller (0,83, 0,96, 1): Vitrin, Sepet ve Ödeme, Siparişler. Öbürleri (Mobil,
 ## Entegrasyonlar) yokken de çalışır; tabloları 0. kademeden başlar (0,90, 0,95, 0,98, 1).
 const TABLE_FROM_TIER_1 := ["storefront", "checkout", "orders"]
@@ -106,6 +113,15 @@ static func new_state() -> Dictionary:
 
 
 # --- Kategori ve kural erişimi ---------------------------------------------------------------
+
+## `marketplace.json`'a nokta yoluyla: cfg("steps.reach"), cfg("commission.max"). Olmayan yol motor hatası verir, varsayılan dönmez;
+## sözlük ve dizi kopya döner, okuyan sabiti değiştiremez.
+static func cfg(path: String) -> Variant:
+	var v: Variant = _c
+	for key in path.split("."):
+		v = v[key]
+	return v.duplicate(true) if v is Dictionary or v is Array else v
+
 
 static func cat_ids() -> Array:
 	return _cats.keys()
@@ -251,14 +267,25 @@ static func acquisition_of(state: Dictionary, world: Dictionary, cat: String, st
 	return rate
 
 
+## Kategoriye atanmış kişiler, `state.assign` sırasıyla: `live` atama bir kapanıştan geçti, `working` kişi `world.stars`'ta (işbaşında), `weekly` kişinin
+## haftalık kazanımı (`live` olmayanın da getireceği sayı; işbaşında olmayanın yıldızı dünyada olmadığından 0).
+static func crew(state: Dictionary, world: Dictionary, cat: String) -> Array:
+	var stars: Dictionary = _w(world, "stars")
+	var members := []
+	for person in state.assign:
+		var job: Dictionary = state.assign[person]
+		if job.cat == cat:
+			members.append({"person": person, "live": job.live, "working": stars.has(person),
+				"weekly": acquisition_of(state, world, cat, int(stars[person])) if stars.has(person) else 0.0})
+	return members
+
+
 ## Kategoride çalışanların haftalık kazanımı; atama bir kapanıştan geçince sayılır, `stars`ta olmayan (işbaşında olmayan) kişi sayılmaz.
 static func acquisition(state: Dictionary, world: Dictionary, cat: String) -> float:
 	var total := 0.0
-	var stars: Dictionary = _w(world, "stars")
-	for person in state.assign:
-		var job: Dictionary = state.assign[person]
-		if job.cat == cat and job.live and stars.has(person):
-			total += acquisition_of(state, world, cat, int(stars[person]))
+	for member in crew(state, world, cat):
+		if member.live and member.working:
+			total += member.weekly
 	return total
 
 
@@ -310,12 +337,15 @@ static func _feature_mult(world: Dictionary, step: String) -> float:
 ## Adım başına çarpan; hepsi 1 iken adım ulaşılabilir oranındadır. En küçüğü en zayıf adımdır.
 static func step_factors(state: Dictionary, world: Dictionary, cat: String) -> Dictionary:
 	var price: float = pow(1.0 + price_pass(cat, state.cats[cat].commission), -_c.commission.elasticity)
-	var factors := {
-		"cart": _tier_mult(world, "storefront") * variety(state, cat) * price,
-		"checkout": ship_mult(state, world, cat) * _tier_mult(world, "mobile"),
-		"order": _tier_mult(world, "checkout") * _bug_mult(world, ["checkout"]),
-		"delivered": _tier_mult(world, "orders") * _tier_mult(world, "integrations") * _bug_mult(world, ["orders", "integrations"]),
-	}
+	var factors := {}
+	for step in STEPS:
+		factors[step] = 1.0
+		for module in STEP_MODULES[step]:
+			factors[step] *= _tier_mult(world, module)
+	factors.cart *= variety(state, cat) * price
+	factors.checkout *= ship_mult(state, world, cat)
+	for step in BUG_STEPS:
+		factors[step] *= _bug_mult(world, STEP_MODULES[step])
 	for step in STEPS:
 		factors[step] *= _feature_mult(world, step)
 	return factors
@@ -355,6 +385,44 @@ static func gain(state: Dictionary, world: Dictionary, cat: String, change: Dict
 	var visits: float = state.cats[cat].week.get("visits", 0.0)
 	return _funnel(visits, step_factors(changed_state, changed_world, cat)).delivered \
 		- _funnel(visits, step_factors(state, world, cat)).delivered
+
+
+## Açık kategorilerin geçen haftaki toplamı: ziyaret ve üç kaynağı (`organic`, `channel`, `returning`) ile dört adım; ilk kapanışını
+## bekleyen kategori 0 katar.
+static func funnel(state: Dictionary) -> Dictionary:
+	var total := {"visits": 0.0, "organic": 0.0, "channel": 0.0, "returning": 0.0, "cart": 0.0, "checkout": 0.0, "order": 0.0,
+		"delivered": 0.0}
+	for id in open_ids(state):
+		for key in total:
+			total[key] += state.cats[id].week.get(key, 0.0)
+	return total
+
+
+## Adımın ipucu. `module`: adımın ilk modülü, o son kademedeyse sonraki (hepsi sondaysa sonuncusu), `tier` onun kademesi, `next_tier`
+## sıradaki kademe (son kademede 0); `bugs` adımı kısan açık hata (hatanın kısmadığı iki adımda 0); `next_gain` sıradaki kademenin,
+## `bug_gain` o hataların düzelmesinin açık kategorilerdeki `gain` toplamı.
+static func step_hint(state: Dictionary, world: Dictionary, step: String) -> Dictionary:
+	var modules: Array = STEP_MODULES[step]
+	var module: String = modules.back()
+	for candidate in modules:
+		if _tier(world, candidate) < LAST_TIER:
+			module = candidate
+			break
+	var tier := _tier(world, module)
+	var next_tier := tier + 1 if tier < LAST_TIER else 0
+	var fixed := {}
+	var bugs := 0
+	if step in BUG_STEPS:
+		for part in modules:
+			fixed[part] = 0
+			bugs += int(_w(world, "bugs").get(part, 0))
+	var next_gain := 0.0
+	var bug_gain := 0.0
+	for cat in open_ids(state):
+		if next_tier > 0:
+			next_gain += gain(state, world, cat, {"tier": {module: next_tier}})
+		bug_gain += gain(state, world, cat, {"bugs": fixed})
+	return {"module": module, "tier": tier, "next_tier": next_tier, "next_gain": next_gain, "bugs": bugs, "bug_gain": bug_gain}
 
 
 static func _visits(state: Dictionary, world: Dictionary, cat: String) -> Dictionary:
@@ -459,6 +527,12 @@ static func source_revenue(state: Dictionary, world: Dictionary, source: String)
 	for i in arrivals.size():
 		present += arrivals[i] * pow(keep, i) * minf(i + 1.0, window) / window
 	return present * _sum(state.revenue_weeks) / state.users
+
+
+## Kaynağın geçen kapanışta getirdiği yeni kullanıcı; hiç ziyaret getirmemiş kaynakta 0.
+static func source_new_users(state: Dictionary, source: String) -> float:
+	var weeks: Array = state.sources.get(source, [])
+	return 0.0 if weeks.is_empty() else weeks[0]
 
 
 # --- Yazan işlevler --------------------------------------------------------------------------
@@ -597,6 +671,17 @@ static func target_sat(state: Dictionary, side: String) -> float:
 	for row in state.ledger[side]:
 		points += row.points
 	return clampf(_c.ledger.base + points, 0.0, 100.0)
+
+
+## Tarafın en ağır olumsuz satırı (en küçük `points`); eşitlikte koşul sürdükçe duran satır, o da eşitse listede önce gelen. Olumsuz satır
+## yoksa boş sözlük.
+static func ledger_worst(state: Dictionary, side: String) -> Dictionary:
+	var worst := {}
+	for row in state.ledger[side]:
+		if row.points < 0.0 and (worst.is_empty() or row.points < worst.points
+				or (row.points == worst.points and row.weeks == WHILE and worst.weeks != WHILE)):
+			worst = row
+	return worst
 
 
 ## Kapanışın 7. adımı: koşul satırlarını yeniden yazar, konu durumundan "Karşılandı" ve "Geciken talep" satırlarını çıkarır,

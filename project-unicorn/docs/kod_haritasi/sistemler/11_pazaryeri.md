@@ -1,14 +1,14 @@
 # Pazaryeri
 
 Ne yapar: B2C ürünün pazaryeri ekonomisinin saf çekirdeği: mağaza ve kullanıcı akışı, dört adım, iade, gelir, iki memnuniyet defteri, dört kural, Premium, dört haftalık önizleme, Talepler'in konu ve biletleri, Pazarlama'nın iki okuması.
-Oyuna kısmen bağlı: `MarketplaceSystem` durumu (`GameState.marketplace`, yazan seam ve kapanış ilk kez çalışınca doğar) yazar ve haftalık kapanışı `daily_tick` ile koşturur; pazaryeri türünde Satış yuvası onu haftada bir çağırır (`SalesSystem.daily_tick`), tür seçilemez, arayüz yok. Tür seçilince (`SprintSystem.choose_type`) Satış Temsilcisi işe alınabilir, Ekip'in Satış hücresi açılır (`ProductSystem.has_sales_desk`) ve Satış işi yayına kadar uykuda durur (`HRSystem.job_waiting_key`); vaka `marketplace_sales_role_opens`. Vakalar ve probe çağırır; arayüzün önizlemeleri aynı model işlevlerini okuyacak.
+Oyuna kısmen bağlı: `MarketplaceSystem` durumu (`GameState.marketplace`, yazan seam ve kapanış ilk kez çalışınca doğar) yazar ve haftalık kapanışı `daily_tick` ile koşturur; pazaryeri türünde Satış yuvası onu haftada bir çağırır (`SalesSystem.daily_tick`), tür seçilemez; Satış yuvası pazaryeri koşusunda PAZARYERİ penceresini kurar (`tabs/marketplace/marketplace_page.gd`, sayfa 08), alt sayfaları henüz yok. Tür seçilince (`SprintSystem.choose_type`) Satış Temsilcisi işe alınabilir, Ekip'in Satış hücresi açılır (`ProductSystem.has_sales_desk`) ve Satış işi yayına kadar uykuda durur (`HRSystem.job_waiting_key`); vaka `marketplace_sales_role_opens`. Vakalar ve probe çağırır; arayüzün önizlemeleri aynı model işlevlerini okuyacak.
 Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test). Sahip: `MarketplaceModel` (statik, durumsuz) ve onu oyuna bağlayan `MarketplaceSystem` (statik, durumun tek yazarı).
 
 ## Dosyalar
 
-- `systems/marketplace_model.gd` (995): `MarketplaceModel`; yalnız `static` işlevler. `state` ve `world` sözlüklerinin alanları dosya başındaki yorumda.
-- `systems/marketplace_system.gd` (198): `MarketplaceSystem`; yalnız `static` işlevler. `GameState.marketplace`'in tek yazarı, yazan seam'ler, sözleşme okuyucuları, `world()` ve haftalık kapanış.
-- `debug/marketplace_probe.gd` (1034): `-s` betiği; oynanan çizelge ve 37 mekanik denetimi, `MPPROBE ...` satırları.
+- `systems/marketplace_model.gd` (1080): `MarketplaceModel`; yalnız `static` işlevler. `state` ve `world` sözlüklerinin alanları dosya başındaki yorumda.
+- `systems/marketplace_system.gd` (216): `MarketplaceSystem`; yalnız `static` işlevler. `GameState.marketplace`'in tek yazarı, yazan seam'ler, sözleşme okuyucuları, `world()` ve haftalık kapanış.
+- `debug/marketplace_probe.gd` (1179): `-s` betiği; oynanan çizelge ve 42 mekanik denetimi, `MPPROBE ...` satırları.
 - `data/product/categories.json` (16): altı kategori ve sütunları: sepet, ziyaret sıklığı, kâr payı, sektör iadesi, gereken mağaza, başlangıç komisyonu, taban ilgi, büyük sepet payı, reklam havuzu (`ad_pool`, haftalık arama).
 - `data/product/lines/marketplace.json` (153): modül verisi; 5 kimlik hattı (Ürün Yükleme, Vitrin, Sepet ve Ödeme, Siparişler, Yorum ve Güvence)
   ↳ Mobil, Entegrasyonlar, Kullanıcılar ve Yetki, Yedekleme `shared.json`'dan; Üyelik, Gelir alanının `cap_paid_plan`'ı.
@@ -24,9 +24,10 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
   ↳ `assign(kişi, kategori)`: yalnız işbaşındaki (`STATUS_ACTIVE`) kurucu ya da Satış Temsilcisi ve açık kategori; `daily_tick` kapanıştan önce yalnız kaydı kalmayanın (işten ayrılan) atamasını düşürür, izinli ve eğitimdeki kişi atamasını korur ama `world().stars`ta olmadığı için o hafta kazandırmaz.
   ↳ `_reflect` iki toplu `CustomerRegistry` kaydını (`STORES_ID` `co_mp_stores`, `USERS_ID` `co_mp_users`; `b2c`, `individual`, yayından sonraki ilk kapanışta doğar) yalnız seam'le yazar: komisyon mağazalar kaydının, üyelik kullanıcılar kaydının MRR'ı (eksi net komisyonda MRR 0'da durur, `revenue_weeks` eksiyi saklar),
   ↳ koltuk mağaza sayısı ve ücret ödeyen üye (`MarketplaceModel.paying_members`), memnuniyet modelin `sat`'ının tam sayısı; en sonda `SalesSystem.reflect_mrr()`. `CustomerRegistry.account_count` `individual` kayıtları saymaz.
-  ↳ Okuyucular saklanan durumdan okur, kapanış koşturmaz: `policy_value`, `channel_read`, `source_revenue` (öbür ekiplerin sözleşmesi) ve `stores()` (açık kategorilerin mağaza toplamı, `_reflect` kullanır). Okuyucu ve `world()` boş durumu doldurmaz: `_read()` boşken modelin ilk durumunu saklamadan okur.
+  ↳ Okuyucular saklanan durumdan okur, kapanış koşturmaz: `policy_value`, `channel_read`, `source_revenue`, `source_new_users` (öbür ekiplerin sözleşmesi) ve `stores()` (açık kategorilerin mağaza toplamı, `_reflect` kullanır). Okuyucu ve `world()` boş durumu doldurmaz: `read_state()` boşken modelin ilk durumunu saklamadan okur; arayüz modelin saf okuyucularını `read_state()` ve `world()` ile çağırır (pencerenin başlığı ve kare dünyası bugün öyle okur).
   ↳ `daily_tick()` yalnız ürün yayındayken: `world()` kurar, `close_week`, `tick_topics`, `_reflect`, Finans'ın `pazaryeri` kalemi (`daily_rate(monthly_cost)`, her kapanışta, sıfır dahil), bir `marketplace_changed`. Satış yuvası onu yalnız pazaryeri türünde çağırır (`SalesSystem.is_marketplace`). Durum yazan seam'de ve kapanışta (`_s()`) `MarketplaceModel.new_state()` ile yerinde dolar; pazaryeri koşusu olmayan oyunda hiçbiri çalışmaz, sözlük boş kalır.
-- Kurma: `new_state()`, `new_world()` (varsayılanlı dünya; verilmeyen alan `WORLD`'den okunur), `cat_ids()`, `cat_def(kategori)`, `open_ids(state)`.
+- Kurma: `new_state()`, `new_world()` (varsayılanlı dünya; verilmeyen alan `WORLD`'den okunur), `cat_ids()`, `cat_def(kategori)`, `open_ids(state)`,
+  ↳ `cfg("steps.reach")` `marketplace.json`'u nokta yoluyla okur (olmayan yol motor hatası verir, varsayılan dönmez; sözlük ve dizi kopya döner; arayüz ulaşılabilir oranı, komisyon sınırını ve kural seçeneklerini buradan alır).
 - Haftalık kapanış: `close_week(state, world)` bağlayıcı sırayla `state`'i değiştirir (mağaza akışı, ziyaret ve adımlar, iade, kullanıcı, gelir ve gider, Premium, defter); sinyal ve kayıt çağıranındır.
   ↳ Kapanış `state.lost`'a kaybı ekler (`users` += kullanıcı × (1 − elde tutma), `stores` += ayrılan mağaza); iki sayı birikmiş toplamdır.
 - Biletler: `tick_topics(state, world)` kapanıştan sonra, haftada bir koşar; her konunun o haftaki biletini son dört haftaya yazar. Konu durumu (`waiting`, `planned`, `shipped`) ve defter satırları kapanışın 7. adımında dünyadan okunur.
@@ -36,14 +37,19 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 - Acil durum (oyuna henüz bağlı değil; acil durum sistemi ve Pazarlama çağıracak): `waive_commission(state, hafta)` bir hafta komisyon almamak (haftalar toplanır, 1'den azı false); `note_outage(state, puan, bedel)` izleyen kapanışa kesinti yazar (ikisi de 0 ise false);
   ↳ `lost_commission(state, sipariş)` kaçan siparişin komisyonu (açık kategorilerin geçen haftaki teslim payıyla ağırlıklı sepet × komisyon, teslim yoksa eşit ağırlık, iade düşülmez);
   ↳ `backup_mult(world)` Yedekleme'nin kesintide kaçan siparişe çarpanı: modül yokken 1, kademeleriyle 0,7; 0,5; 0,3 (`ledger.rows.outage.backup`).
-- Okuyanlar: `policy_value` (kampanyanın ezmesi önce), `store_keep` ve `zone` ve `zone_limits` (mağazaya kalan, bölge, çubuğun iki sınırı), `variety`, `acquisition` ve `acquisition_of`, `return_rate`, `price_pass`,
-  ↳ `step_factors` ve `weakest_step`, `gain(state, world, kategori, değişiklik)`, `monthly_revenue` ve `monthly_cost`, `target_sat`, `premium_pull`, `returning_share`, `retention`.
+- Okuyanlar: `policy_value` (kampanyanın ezmesi önce), `store_keep` ve `zone` ve `zone_limits` (mağazaya kalan, bölge, çubuğun iki sınırı), `variety`, `acquisition_of` (bir kişi), `crew` (kategoriye atanmış kişiler: `person`, `live`, `working`, `weekly`; işbaşında olmayanın yıldızı dünyada yok, `weekly` 0, `live` olmayan getireceği sayıyı yazar) ve `acquisition` (canlı ve işbaşındaki `crew`'un `weekly` toplamı), `return_rate`, `price_pass`,
+  ↳ `step_factors` (adımın modülleri `STEP_MODULES`; hata çarpanı yalnız `BUG_STEPS`'teki Sipariş verdi ve Teslim edildi adımında) ve `weakest_step`, `gain(state, world, kategori, değişiklik)`, `monthly_revenue` ve `monthly_cost`, `target_sat`, `premium_pull`, `returning_share`, `retention`.
+  ↳ Genel'in okuyucuları: `funnel(state)` açık kategorilerin geçen haftaki toplamı (`visits`, `organic`, `channel`, `returning`, `cart`, `checkout`, `order`, `delivered`; ilk kapanışını bekleyen kategori 0 katar);
+  ↳ `step_hint(state, world, adım)` = `module` (adımın ilk modülü, son kademedeyse sonraki), `tier`, `next_tier` (son kademede 0), `next_gain` (sıradaki kademenin açık kategorilerdeki `gain` toplamı), `bugs` (adımı kısan açık hata: `BUG_STEPS`'teki adımda modüllerindeki açık hata, Sepete ekledi ve Ödemeye geçti adımında 0), `bug_gain` (onların düzelmesinin `gain` toplamı);
+  ↳ `ledger_worst(state, taraf)` tarafın en ağır olumsuz defter satırı (eşitlikte koşul sürdükçe duran, o da eşitse listede önce gelen), olumsuz satır yoksa `{}`.
 - Pazarlama'nın okuması: `channel_read(state, world, kategori)` = `conversion` (ziyaretten teslim edilen siparişe), `monthly_commission` (bir kullanıcının aylık net komisyonu),
   ↳ `organic` (kendiliğinden haftalık ziyaret), `margin`, `base_interest`, `ad_pool`;
   ↳ `source_revenue(state, world, kaynak)` = kaynaktan son on iki haftada gelenlerin (elde tutmayla küçülmüş) son dört haftada bıraktığı net komisyon;
-  ↳ kullanıcı o dört haftanın burada olduğu kadarıyla sayılır (bu hafta gelen dörtte bir), yani yeni kanalın satırı küçük başlar.
+  ↳ kullanıcı o dört haftanın burada olduğu kadarıyla sayılır (bu hafta gelen dörtte bir), yani yeni kanalın satırı küçük başlar;
+  ↳ `source_new_users(state, kaynak)` = kaynağın geçen kapanışta getirdiği yeni kullanıcı (`sources[kaynak]`'ın ilk hücresi; hiç ziyaret getirmemiş kaynakta 0); vaka `marketplace_source_new_users`.
 - Talepler (sistem): `request_topics()` modelin `topic_rows`'u ve her satıra `card_id`: kademe konusunda modülün o kademesinin adım kimliğiyle `feat:<adım>` (hat `MODULE_LINES`'tan, adım `ProductLines.step_at`ten; `SprintCatalog` adayının kimliğiyle aynı kalıp), ek özellikte `ext:<konu>` (kartı sonraki pakette doğar);
   ↳ `open_topic(kimlik, etkilenen)` modelin `open_topic`ini çağıran yazan seam (uygulanınca sinyal, reddedilen çağrı yaymaz). Konu durumu (`waiting`, `planned`, `shipped`) kapanışta ürünün kademesinden ve sprint planından okunur; `MarketplaceModel.tier_topics()` kademe konularının modülünü ve kademesini verir.
+  ↳ `topic_name(kimlik)` konunun oyuncuya görünen adının tek okuyucusu: kademe konusunda modülün o kademesinin adı (`SprintCatalog.step_name`), ek özellikte `MP_TOPIC_<KİMLİK>` metni; defter satırının konusu ve Talepler adı buradan okuyacak (bugün çağıranı yalnız vaka `marketplace_topic_names`).
 - Talepler (model): `topic_rows(state, world)` ilk isteği gelmiş her konunun satırı (`id`, `side`, `module`, `tickets`, `affected`, `reason`, `status`, `age`, `source`); konu kimlikleri `marketplace.json` `topics.catalog`'ta, metin yok.
 - Rapordan açılan konu: `open_topic(state, world, kimlik, etkilenen)` bileti olmayan konunun satırını açar (`since_day` = hafta, `source` = `report`, haftalık etkilenen sipariş `topics[konu].affected`); katalogda olmayan ya da satırı açık konuda false.
 - Önizleme: `project(state, world)` kopyada dört kapanış koşar; `preview_commission`, `preview_policy`, `preview_premium` değişiklikli ve değişiklikssiz farkı döndürür (`metrics` anahtarları; `store_earnings` oran, öbürleri fark);
@@ -89,7 +95,8 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
   ↳ `campaign_free_shipping_single_write`, `preview_figures`, `known_store_earnings`, `known_return_rate`, `known_order_rate`, `json_roundtrip`, `ledger_expiry`, `zone_limits_consistent`, `constants_switch`,
   ↳ `gain_and_weakest`, `acquisition_multipliers`, `store_terms_discount`, `premium_members`, `zone_rows_need_stores`, `add_users_bounds`, `lost_counters`, `channel_read_values`, `source_revenue_values`, `state_survives_codec`,
   ↳ `topic_rows_known`, `topic_ticket_gates`, `topic_ledger_rows`, `feature_gain_matches_close`, `reviews_affected_is_return_gap`, `assignment_waits_a_close`,
-  ↳ `waive_zeroes_one_close`, `outage_row_and_cost`, `lost_commission_weighted`, `backup_mult_tiers`, `open_topic_report_row`.
+  ↳ `waive_zeroes_one_close`, `outage_row_and_cost`, `lost_commission_weighted`, `backup_mult_tiers`, `open_topic_report_row`, `cfg_reads_constants` (okuyanın boşalttığı kopya sabiti değiştirmez),
+  ↳ `funnel_sums_categories`, `step_hint_matches_gain`, `ledger_worst_picks_heaviest`, `crew_follows_assignment`.
 
 ## Dikkat
 
@@ -110,6 +117,7 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
   ↳ yeni bölme de öyle yazılır, `state_survives_codec` (probe) ve `marketplace_save_roundtrip` (`retention`'ın bölmesi, gerçek kayıt yolu) sınar.
 - Sabitler `static var _c` ve `_cats`'ta durur (dosya yüklenince okunur); probe `constants_switch` sabiti çalışırken değiştirip geri koyar.
 - Probe çıkışında motor bazen `ObjectDB instances leaked` ve `resources still in use` satırı basar; sonuçları ve çıkış kodunu etkilemez. Probe bir kapıya bağlanırsa (`ERROR:` satırı vakayı düşürür) bu satır bağışlanmalı.
+  ↳ `cfg_reads_constants` bilerek iki `SCRIPT ERROR: Invalid access to property or key 'nope'` basar (olmayan yol hatası); kapıya bağlanırsa onlar da bağışlanmalı.
 
 ## Bir değişiklik yaparken
 
@@ -122,4 +130,4 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
   ↳ probe'daki `preview_figures` çipleri bağımsız sayılarla (`store_keep` oranı, defter puanı ve haftada 5 puan tavanı) karşılaştırır.
 - Modül ekle ya da değiştir: `lines/marketplace.json` (kimlik hattı sayısı 5, dağılım tasarım 2, geliştirme 2, test 1; test hattının K3'ü `bug_tracker`), CSV'de ad, kademe adları ve `_DESC`, `rivals.json` `tiers`.
 - Çekirdek `GameState`'i okumaz; `MarketplaceSystem.world()` o haftanın dünyasını kurup `close_week`'i çağırır. Yeni bir sahip girdisi (Pazarlama, cevapsız pay, ek özellikler) `world()`'e girer; yedek dal yazılmaz.
-- Yazan seam modelin aynı adlı işlevini `_s()` ve (`set_trial`, `set_store_terms`, `add_users` dışında) `world()` ile çağırır; yeni yazan seam `_written` ile sarılır ki sinyal tek yerden yayılsın. Okuyucu `_s()` değil `_read()` kullanır.
+- Yazan seam modelin aynı adlı işlevini `_s()` ve (`set_trial`, `set_store_terms`, `add_users` dışında) `world()` ile çağırır; yeni yazan seam `_written` ile sarılır ki sinyal tek yerden yayılsın. Okuyucu `_s()` değil `read_state()` kullanır.

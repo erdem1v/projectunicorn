@@ -395,6 +395,8 @@ Dört kural. `set_policy(kural, seçenek)` kuralı değiştirir ve dört hafta k
   konu sonraki kapanışa kadar "bekliyor" okunur). Demodaki konu kataloğu ve bilet oranları `tur4_ekranlar_2026-11-13/pazaryeri/
   TALEPLER_ICERIK.md` §2 ve §3'teki on iki konudur; katalog `data/product/marketplace.json`'a girer (konu, taraf, modül, sıradaki
   kademe ya da ek özellik, bağlı adım, bilet oranı; kullanıcı tarafındaki ek özellikte eksikken adım çarpanı).
+- `topic_name(kimlik)` konunun oyuncuya görünen adının tek okuyucusudur: kademe konusunda modülün o kademesinin adı, ek
+  özellikte konunun kendi metni. Defter satırı ("Karşılandı", "Geciken talep"), Genel ve Talepler adı buradan okur.
 - **Kullanıcı bileti** (haftalık): konunun bağlı olduğu adımda kaybedilen sayı × konunun bilet oranı (Sepete eklemeyen
   ziyaretin binde 1'i; ödemeye geçmeyen sepetin %1'i; tamamlanmayan ödemenin %4'ü; siparişin %2'si; iade edilen siparişin
   %8'i; siparişin %1'i). **Mağaza bileti:** derdi olan mağazaların payı × konunun oranı (50'den çok ürünü olan mağazaların
@@ -435,7 +437,10 @@ commit'inde bağlanır, yedek dal yazılmaz.
 gelen kullanıcı `elde tutma^i` ile küçülür; kullanıcı başına net komisyon, son dört haftanın net komisyonu ÷ aktif kullanıcıdır.
 Kullanıcı o dört haftanın yalnız burada olduğu kadarıyla sayılır (`min(i + 1; 4) ÷ 4`: bu hafta gelen dörtte bir, dördüncü
 haftasından itibaren tam); yeni açılan kanalın satırı bu yüzden küçük başlar. Organik kaynak da aynı formülle hesaplanır
-(Pazarlama ile uzlaşma, 14 Kasım).
+(Pazarlama ile uzlaşma, 14 Kasım). `source_new_users(kaynak)` kaynağın geçen kapanışta getirdiği yeni kullanıcıdır (hiç
+ziyaret getirmemiş kaynakta 0); Pazarlama'nın kanal satırındaki yeni kullanıcı sayısı budur. Kaynak kimliğini Pazarlama verir:
+`tür:kategori` (ör. `search_ads:fashion`), satır başına tek kaynak; anahtar haftadan haftaya sabittir, çekirdek onu ayırt
+etmeden saklar.
 
 ### 3.13 Kod öncesi: saf işlevler ve probe
 Arayüzden önce §3'ün formülleri saf işlev olarak yazılır ve başsız bir probe ile koşulur (`-s res://scripts/debug/marketplace_probe.gd -- --marketplace-probe=weeks=<n>`;

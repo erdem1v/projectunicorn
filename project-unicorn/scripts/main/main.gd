@@ -2108,7 +2108,7 @@ func _run_marketplace_shot(kind: String) -> void:
 		return
 	await _mount_shot_shell()
 	EventBus.tab_changed.emit("sales")
-	var state: Dictionary = MarketplaceSystem._read()
+	var state: Dictionary = MarketplaceSystem.read_state()
 	print("SHOT|mp_world kind=%s week=%d launch=%d cash=%d mrr=%d users=%d stores=%d orders=%d" % [kind, GameState.day,
 		int(GameState.get_flag("mvp_launch_day", -1)), GameState.cash, GameState.mrr, roundi(state.users),
 		roundi(MarketplaceSystem.stores()), roundi(MarketplaceModel.metrics(state, MarketplaceSystem.world()).orders)])

@@ -26,8 +26,8 @@ static func _s() -> Dictionary:
 	return GameState.marketplace
 
 
-## Okuyanlar için: durum boşsa modelin ilk durumu (saklanmaz), doluysa `GameState.marketplace`.
-static func _read() -> Dictionary:
+## Okuyanlar için (arayüz de buradan okur): durum boşsa modelin ilk durumu (saklanmaz), doluysa `GameState.marketplace`.
+static func read_state() -> Dictionary:
 	return GameState.marketplace if not GameState.marketplace.is_empty() else MarketplaceModel.new_state()
 
 
@@ -40,7 +40,7 @@ static func world() -> Dictionary:
 		tiers[module] = ProductState.line_tier(MODULE_LINES[module])
 		bugs[module] = int(open_bugs.get(MODULE_LINES[module], 0))
 	var stars := {}
-	for person in _read().assign:
+	for person in read_state().assign:
 		var c: Character = CharacterRegistry.get_character(person)
 		if _can_work(c):
 			stars[person] = 1 if c.category == "founder" else int(HRConstants.stars_for(HRSystem.skill(c, HRConstants.AREA_SALES)))
@@ -111,20 +111,24 @@ static func unassign(person: String) -> bool:
 # --- Okuyucular: saklanan durumdan okur, kapanış koşturmaz --------------------------------------
 
 static func policy_value(rule: String) -> String:
-	return MarketplaceModel.policy_value(_read(), world(), rule)
+	return MarketplaceModel.policy_value(read_state(), world(), rule)
 
 
 static func channel_read(cat: String) -> Dictionary:
-	return MarketplaceModel.channel_read(_read(), world(), cat)
+	return MarketplaceModel.channel_read(read_state(), world(), cat)
 
 
 static func source_revenue(source: String) -> float:
-	return MarketplaceModel.source_revenue(_read(), world(), source)
+	return MarketplaceModel.source_revenue(read_state(), world(), source)
+
+
+static func source_new_users(source: String) -> float:
+	return MarketplaceModel.source_new_users(read_state(), source)
 
 
 ## Açık kategorilerin mağaza toplamı.
 static func stores() -> float:
-	var state := _read()
+	var state := read_state()
 	var total := 0.0
 	for cat in MarketplaceModel.open_ids(state):
 		total += state.cats[cat].stores
@@ -135,7 +139,7 @@ static func stores() -> float:
 ## (`feat:<adım>`), ek özellikte `ext:<konu>`.
 static func request_topics() -> Array:
 	var tiers := MarketplaceModel.tier_topics()
-	var rows: Array = MarketplaceModel.topic_rows(_read(), world())
+	var rows: Array = MarketplaceModel.topic_rows(read_state(), world())
 	for row in rows:
 		row.card_id = _tier_card(tiers[row.id]) if tiers.has(row.id) else "ext:" + row.id
 	return rows
@@ -143,7 +147,21 @@ static func request_topics() -> Array:
 
 ## Kademe konusunun kartının kimliği: modülün o kademesinin adımının özellik kartı.
 static func _tier_card(topic: Dictionary) -> String:
-	return "feat:" + String(ProductLines.step_at(MODULE_LINES[topic.module], topic.tier).id)
+	return "feat:" + _tier_step(topic)
+
+
+## Kademe konusunun adımının kimliği: modülün o kademesi.
+static func _tier_step(topic: Dictionary) -> String:
+	return String(ProductLines.step_at(MODULE_LINES[topic.module], topic.tier).id)
+
+
+## Konunun oyuncuya görünen adı, tek yerden: kademe konusunda modülün o kademesinin adı, ek özellikte konunun kendi metni
+## (`MP_TOPIC_<KİMLİK>`).
+static func topic_name(id: String) -> String:
+	var tiers := MarketplaceModel.tier_topics()
+	if tiers.has(id):
+		return SprintCatalog.step_name(_tier_step(tiers[id]))
+	return TranslationServer.translate("MP_TOPIC_" + id.to_upper())
 
 
 ## Kartı koşan sprintte ya da sonraki sütunda duran kademe konularının kimliği.

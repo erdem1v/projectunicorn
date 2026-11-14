@@ -26,7 +26,8 @@ const CHECKS := ["empty_category_no_orders", "acquisition_waits_for_publish", "l
 	"premium_members", "zone_rows_need_stores", "add_users_bounds", "lost_counters", "channel_read_values", "source_revenue_values",
 	"state_survives_codec", "topic_rows_known", "topic_ticket_gates", "topic_ledger_rows", "feature_gain_matches_close",
 	"reviews_affected_is_return_gap", "assignment_waits_a_close", "waive_zeroes_one_close", "outage_row_and_cost",
-	"lost_commission_weighted", "backup_mult_tiers", "open_topic_report_row"]
+	"lost_commission_weighted", "backup_mult_tiers", "open_topic_report_row", "cfg_reads_constants", "funnel_sums_categories",
+	"step_hint_matches_gain", "ledger_worst_picks_heaviest", "crew_follows_assignment"]
 
 var _weeks := DEFAULT_WEEKS
 var _printing := false
@@ -1032,3 +1033,147 @@ func _check_open_topic_report_row() -> Array:
 		"unopened topics are silent=%s; opened at week 10 with 42 affected=%s, second call %s, unknown id %s, topic already ticketed %s; row at week 12 %s; "
 		% [silent, opened, again, unknown, ticketed, row] + "size_chart keeps its own tickets=%s; late rows week 18 %s, week 19 (planned) %s, week 20 (shipped) %s; met rows %d; shipped row %s"
 		% [ticks_ok, week18, week19, week20, met.size(), done]]
+
+
+## `cfg` marketplace.json'u nokta yoluyla okur; sözlük ve dizi kopya döner: okuyanın boşalttığı kopya sabiti değiştirmez.
+func _check_cfg_reads_constants() -> Array:
+	var reach: Dictionary = MarketplaceModel.cfg("steps.reach")
+	var options: Array = MarketplaceModel.cfg("rules.options.shipping")
+	var limits: Array = [MarketplaceModel.cfg("commission.min"), MarketplaceModel.cfg("commission.max")]
+	var read := "steps.reach %s, rules.options.shipping %s, commission limits %s" % [reach, options, limits]
+	var ok: bool = _equal(reach, {"cart": 0.15, "checkout": 0.70, "order": 0.88, "delivered": 0.97}) \
+		and options == ["user_pays", "big_basket", "store_pays"] and _equal(limits, [1, 30])
+	reach.cart = 0.0
+	options.clear()
+	var cart: float = MarketplaceModel.cfg("steps.reach.cart")
+	var kept: Array = MarketplaceModel.cfg("rules.options.shipping")
+	return [ok and _near(cart, 0.15) and kept.size() == 3,
+		"%s; after the reader emptied its copies the constants read reach.cart %s and %d shipping options" % [read, cart, kept.size()]]
+
+
+## `funnel` açık kategorilerin geçen haftaki satırlarının toplamıdır; ziyaret üç kaynağının toplamıdır; ilk kapanışını bekleyen açık
+## kategori 0 katar.
+func _check_funnel_sums_categories() -> Array:
+	var state := _timeline(24)
+	var total := MarketplaceModel.funnel(state)
+	var fashion: Dictionary = state.cats.fashion.week
+	var electronics: Dictionary = state.cats.electronics.week
+	var keys := ["visits", "organic", "channel", "returning", "cart", "checkout", "order", "delivered"]
+	var summed := total.size() == keys.size()
+	for key in keys:
+		summed = summed and _near(total[key], fashion[key] + electronics[key])
+	var parts: float = total.organic + total.channel + total.returning
+	var waiting := MarketplaceModel.new_state()
+	MarketplaceModel.open_category(waiting, _live_world(), "fashion")
+	var nothing_open := MarketplaceModel.funnel(MarketplaceModel.new_state())
+	var before_close := MarketplaceModel.funnel(waiting)
+	var blank: bool = keys.all(func(key: String) -> bool: return nothing_open[key] == 0.0 and before_close[key] == 0.0)
+	return [summed and _near(total.visits, parts) and total.channel > 0.0 and total.delivered > 0.0 and blank,
+		"week 24, Fashion + Electronics: visits %.0f (%.0f organic + %.0f channel + %.0f returning) -> placed %.0f -> delivered %.0f, every key is the sum of the two rows=%s; no open category and an open category before its first close are all zero=%s"
+		% [total.visits, total.organic, total.channel, total.returning, total.order, total.delivered, summed, blank]]
+
+
+## Adımın ipucu: modül, kademe, sıradaki kademe; `next_gain` aynı değişikliğin `gain` toplamı (elle: sipariş × kademe oranı), son kademede 0 ve
+## modül ikinciye geçer; `bugs` ve `bug_gain` hatanın kıstığı iki adımda açık hata ve düzelmesinin kazancı, öbür ikisinde 0 (Vitrin'in
+## iki açık hatası Sepete ekledi adımında sayılmaz).
+func _check_step_hint_matches_gain() -> Array:
+	var state := _store_state(["fashion", "electronics"], 3000.0)
+	var world := _live_world().merged({"bugs": {"storefront": 2, "checkout": 3, "orders": 2}}, true)
+	_run(state, world, 3)
+	var delivered: float = state.cats.fashion.week.delivered + state.cats.electronics.week.delivered
+	var gain_sum := func(at: Dictionary, change: Dictionary) -> float:
+		return MarketplaceModel.gain(state, at, "fashion", change) + MarketplaceModel.gain(state, at, "electronics", change)
+	# Adım: [modül, kademe, sıradaki kademe, adımı kısan açık hata, sıradaki kademenin oranı, düzelmenin oranı]
+	var want := {"cart": ["storefront", 1, 2, 0, 0.96 / 0.83, 1.0], "checkout": ["mobile", 0, 1, 0, 0.95 / 0.90, 1.0],
+		"order": ["checkout", 1, 2, 3, 0.96 / 0.83, 1.0 / (1.0 - 0.027 * 3)],
+		"delivered": ["orders", 1, 2, 2, 0.96 / 0.83, 1.0 / (1.0 - 0.027 * 2)]}
+	var ok := delivered > 0.0
+	var shown := []
+	for step in want:
+		var hint := MarketplaceModel.step_hint(state, world, step)
+		var row: Array = want[step]
+		ok = ok and hint.module == row[0] and hint.tier == row[1] and hint.next_tier == row[2] and hint.bugs == row[3] \
+			and _near(hint.next_gain, delivered * (row[4] - 1.0)) \
+			and _near(hint.next_gain, gain_sum.call(world, {"tier": {row[0]: row[2]}})) \
+			and _near(hint.bug_gain, delivered * (row[5] - 1.0))
+		shown.append("%s %s %d->%d +%.2f bugs %d +%.2f" % [step, hint.module, hint.tier, hint.next_tier, hint.next_gain, hint.bugs, hint.bug_gain])
+	var maxed := world.merged({"tiers": world.tiers.merged({"checkout": 3, "orders": 3}, true)}, true)
+	var last := MarketplaceModel.step_hint(state, maxed, "order")
+	var moved := MarketplaceModel.step_hint(state, maxed, "delivered")
+	var all_last := MarketplaceModel.step_hint(state, maxed.merged({"tiers": maxed.tiers.merged({"integrations": 3}, true)}, true), "delivered")
+	var none_open := MarketplaceModel.step_hint(MarketplaceModel.new_state(), world, "order")
+	ok = ok and last.module == "checkout" and last.tier == 3 and last.next_tier == 0 and last.next_gain == 0.0 \
+		and moved.module == "integrations" and moved.tier == 0 and moved.next_tier == 1 and moved.next_gain > 0.0 \
+		and _near(moved.next_gain, gain_sum.call(maxed, {"tier": {"integrations": 1}})) \
+		and all_last.module == "integrations" and all_last.tier == 3 and all_last.next_tier == 0 and all_last.next_gain == 0.0 \
+		and none_open.bugs == 3 and none_open.next_gain == 0.0 and none_open.bug_gain == 0.0
+	return [ok, "%.2f weekly orders; " % delivered + "; ".join(shown) + "; last tier: order %s tier %d next %d +%.1f; Orders at 3 moves Delivered to %s tier %d next %d +%.2f; both at 3: %s next %d +%.1f; no open category: +%.1f +%.1f"
+		% [last.module, last.tier, last.next_tier, last.next_gain, moved.module, moved.tier, moved.next_tier, moved.next_gain, all_last.module,
+		all_last.next_tier, all_last.next_gain, none_open.next_gain, none_open.bug_gain]]
+
+
+## `ledger_worst` en küçük puanı seçer; olumlu satırı saymaz; eşitlikte koşul sürdükçe duran satırı, o da eşitse listede öndekini seçer; olumsuz satır
+## yoksa ya da defter boşsa boş sözlük. Gerçek bir defterde iade süresi satırı komisyon artışından ağır gelir.
+func _check_ledger_worst_picks_heaviest() -> Array:
+	var state := MarketplaceModel.new_state()
+	var timed := {"key": "commission_raised", "arg": "fashion", "points": -4.0, "weeks": 5}
+	var strained := {"key": "strained", "arg": "fashion", "points": -4.0, "weeks": MarketplaceModel.WHILE}
+	var boost := {"key": "return_shipping_paid", "arg": "", "points": 5.0, "weeks": MarketplaceModel.WHILE}
+	var thin := {"key": "earnings_thin", "arg": "electronics", "points": -10.0, "weeks": MarketplaceModel.WHILE}
+	var selection := {"key": "thin_selection", "arg": "home", "points": -4.0, "weeks": MarketplaceModel.WHILE}
+	var worst_of := func(rows: Array) -> String:
+		state.ledger.stores = rows
+		return MarketplaceModel.ledger_worst(state, "stores").get("key", "")
+	var picked: Array = [worst_of.call([timed, strained, boost, thin, selection]), worst_of.call([timed, strained, boost, selection]),
+		worst_of.call([strained, timed]), worst_of.call([timed, boost]), worst_of.call([boost]), worst_of.call([])]
+	var full := {"key": "late_topic", "arg": "size_chart", "points": -4.0, "weeks": MarketplaceModel.WHILE}
+	state.ledger.users = [full]
+	var users_row := MarketplaceModel.ledger_worst(state, "users")
+	var stores_row := MarketplaceModel.ledger_worst(state, "stores")
+	var real := _store_state(["fashion"], 3000.0)
+	var world := _live_world(10)
+	MarketplaceModel.set_commission(real, world, "fashion", 12)
+	MarketplaceModel.set_policy(real, world, "return_window", "d30")
+	_run(real, world, 1)
+	var live := MarketplaceModel.ledger_worst(real, "stores")
+	var ok: bool = picked == ["earnings_thin", "strained", "strained", "commission_raised", "", ""] and users_row == full and stores_row.is_empty() \
+		and live.get("key") == "return_window" and live.get("points") == -6.0 and real.ledger.stores.any(func(r: Dictionary) -> bool: return r.key == "commission_raised")
+	return [ok, "rows (-4 for 5 weeks, -4 while, +5, -10, -4 while) %s; without the -10 %s; the -4 while row listed after the timed one wins the tie, and also listed before it %s; one timed -4 beside a +5 %s; only +5 '%s'; empty '%s'; "
+		% [picked[0], picked[1], picked[2], picked[3], picked[4], picked[5]] + "other side holds its own row=%s, empty side is empty=%s; real ledger after a raise to 12 and a 30-day window: %s %.0f"
+		% [users_row == full, stores_row.is_empty(), live.get("key"), live.get("points", 0.0)]]
+
+
+## `crew` kategorideki kişileri atama sırasıyla verir: ilk kapanıştan önce `live` false, sonra true; işbaşında olmayan `working` false ve `weekly` 0;
+## canlı ve işbaşındakilerin `weekly` toplamı `acquisition`'dır; `weekly` bölgeyi izler; taşınan kişi eski kategoride görünmez.
+func _check_crew_follows_assignment() -> Array:
+	var state := _store_state(["fashion", "electronics"], 0.0)
+	var world := _live_world(5).merged({"stars": {"founder": 1, "sales_a": 3, "sales_c": 2}}, true)
+	MarketplaceModel.assign(state, "founder", "fashion")
+	MarketplaceModel.assign(state, "sales_a", "fashion")
+	MarketplaceModel.assign(state, "sales_b", "electronics")
+	var fashion_before := MarketplaceModel.crew(state, world, "fashion")
+	var away := MarketplaceModel.crew(state, world, "electronics")
+	var paid_before := MarketplaceModel.acquisition(state, world, "fashion")
+	_run(state, world, 1)
+	MarketplaceModel.assign(state, "sales_c", "fashion")
+	var fashion_after := MarketplaceModel.crew(state, world, "fashion")
+	var paid_after := MarketplaceModel.acquisition(state, world, "fashion")
+	var counted := 0.0
+	for member in fashion_after:
+		counted += member.weekly if member.live and member.working else 0.0
+	state.cats.fashion.commission = 20
+	var leaving := MarketplaceModel.crew(state, world, "fashion").map(func(m: Dictionary) -> float: return m.weekly)
+	MarketplaceModel.assign(state, "founder", "electronics")
+	var moved := MarketplaceModel.crew(state, world, "electronics").map(func(m: Dictionary) -> String: return m.person)
+	var stayed := MarketplaceModel.crew(state, world, "fashion").map(func(m: Dictionary) -> String: return m.person)
+	moved.sort()
+	var ok: bool = _equal(fashion_before, [{"person": "founder", "live": false, "working": true, "weekly": 2.0},
+			{"person": "sales_a", "live": false, "working": true, "weekly": 4.0}]) \
+		and _equal(away, [{"person": "sales_b", "live": false, "working": false, "weekly": 0.0}]) and paid_before == 0.0 \
+		and _equal(fashion_after, [{"person": "founder", "live": true, "working": true, "weekly": 2.0},
+			{"person": "sales_a", "live": true, "working": true, "weekly": 4.0}, {"person": "sales_c", "live": false, "working": true, "weekly": 3.0}]) \
+		and _near(counted, 6.0) and _near(paid_after, counted) and _equal(leaving, [0.4, 0.8, 0.6]) \
+		and moved == ["founder", "sales_b"] and stayed == ["sales_a", "sales_c"] and MarketplaceModel.crew(state, world, "home").is_empty()
+	return [ok, "before the first close: %s; Electronics' away person %s; acquisition %.1f; after one close and a newcomer: %s, live and working add to %.1f = acquisition %.1f; "
+		% [fashion_before, away, paid_before, fashion_after, counted, paid_after] + "at 20%% commission (leaving zone) weekly %s; founder moved to Electronics: Electronics %s, Fashion %s; closed Home empty"
+		% [leaving, moved, stayed]]

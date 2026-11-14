@@ -26,7 +26,7 @@ static func header_cells() -> Array:
 
 ## Active users, stores and last week's delivered orders, from the stored state.
 static func paint_header(cells: Array) -> void:
-	var state := MarketplaceSystem._read()
+	var state := MarketplaceSystem.read_state()
 	var orders: float = MarketplaceModel.metrics(state, MarketplaceSystem.world()).orders
 	for pair in [[cells[0], state.users], [cells[1], MarketplaceSystem.stores()], [cells[2], orders]]:
 		UiFactory.D_kpi_value(pair[0]).text = Fmt.group(roundi(pair[1]))

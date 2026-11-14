@@ -665,6 +665,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"marketplace_topic_planned":         fail = _case_marketplace_topic_planned()
 		"marketplace_open_topic_report":     fail = _case_marketplace_open_topic_report()
 		"marketplace_sales_role_opens":      fail = _case_marketplace_sales_role_opens()
+		"marketplace_topic_names":           fail = _case_marketplace_topic_names()
+		"marketplace_source_new_users":      fail = _case_marketplace_source_new_users()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -30820,20 +30822,26 @@ static func _case_marketplace_seams_write_through() -> String:
 	return ""
 
 
-## `world()` kademeyi, açık hatayı, yayını, Üyelik kademesini ve atananın Satış yıldızını sahiplerinden okur; her modülün hattı
-## türün hat verisinde vardır; boş durumda okumak (`world`, `policy_value`, `channel_read`, `source_revenue`) durumu doğurmaz.
+## `world()` kademeyi, açık hatayı, yayını, Üyelik kademesini ve atananın Satış yıldızını sahiplerinden okur; çekirdeğin son
+## kademesi oyunun son kademesidir; her modülün hattı
+## türün hat verisinde vardır; boş durumda okumak (`world`, `policy_value`, `channel_read`, `source_revenue`, `source_new_users`)
+## durumu doğurmaz.
 ##
 ## FALSİFİKASYON: `MODULE_LINES`ta `checkout`un hattını `line_marketplace_orders` yap → açık hata satırı FAIL; `mobile`ın hattından
 ## son eki sil → hat verisi satırı FAIL; `membership`i sabit 0 yaz → Üyelik satırı FAIL; kurucuya Satış yıldızını oku → yıldız satırı
-## FAIL; `policy_value`de `_read()` yerine `_s()` kullan → boş durum satırı FAIL.
+## FAIL; `policy_value`de `read_state()` yerine `_s()` kullan → boş durum satırı FAIL; `MarketplaceModel.LAST_TIER`ı 2 yap → son
+## kademe satırı FAIL.
 static func _case_marketplace_world_reads_owners() -> String:
 	_seed_sprint_live(MarketplaceSystem.TYPE_ID)
 	MarketplaceSystem.policy_value("shipping")
 	MarketplaceSystem.channel_read("fashion")
 	MarketplaceSystem.source_revenue("organic")
+	MarketplaceSystem.source_new_users("organic")
 	MarketplaceSystem.world()
 	if not GameState.marketplace.is_empty():
 		return "a read filled GameState.marketplace: %s" % str(GameState.marketplace.keys())
+	if MarketplaceModel.LAST_TIER != ProductLines.TIER_MAX:
+		return "the core's last tier is %d, the game's is %d" % [MarketplaceModel.LAST_TIER, ProductLines.TIER_MAX]
 	for line in MarketplaceSystem.MODULE_LINES.values():
 		if not line in ProductLines.line_ids(MarketplaceSystem.TYPE_ID):
 			return "%s is not a line of the marketplace type" % line
@@ -31151,7 +31159,7 @@ static func _case_support_backlog_row_survives() -> String:
 ##
 ## FALSİFİKASYON: `MarketplaceSystem.world`de `planned`i boş bırak → `planned` iddiaları FAIL; `_planned`ta yalnız koşan sprinti oku →
 ## sonraki sütun iddiası FAIL, yalnız sonraki sütunu oku → koşan sprint iddiası FAIL; `_tier_card`ı modülün hat kimliğiyle kur
-## ("feat:" + hat) → kart iddiası FAIL; `_tier_card`ta kademeyi bir artır → kart iddiası FAIL.
+## ("feat:" + hat) → kart iddiası FAIL; `_tier_step`te kademeyi bir artır → kart iddiası FAIL.
 static func _case_marketplace_topic_planned() -> String:
 	_seed_marketplace_world()
 	MarketplaceSystem.daily_tick()
@@ -31267,4 +31275,42 @@ static func _case_marketplace_sales_role_opens() -> String:
 				if subtype != MarketplaceSystem.TYPE_ID and runs != SalesFaucetSystem.market_open():
 					return "%s with shipped %s: the Sales job runs %s, the desk is open %s" % [
 						subtype, shipped, runs, SalesFaucetSystem.market_open()]
+	return ""
+
+
+## Konunun adı tek yerden okunur: kademe konusunda modülün o kademesinin adı (Toplu Yükleme, Ürün Yükleme'nin ikinci kademesi;
+## Arama ve Filtre, Vitrin'in ikincisi; Tekil Bağlantı, Entegrasyonlar'ın birincisi), ek özellikte konunun kendi metni.
+##
+## FALSİFİKASYON: `MarketplaceSystem.topic_name`te kademe konusunu da `MP_TOPIC_` anahtarına gönder → kademe adı FAIL;
+## `_tier_step`te kademeyi bir artır → kademe adı FAIL.
+static func _case_marketplace_topic_names() -> String:
+	_seed_marketplace_world()
+	var want := {"bulk_upload": "PROD_STEP_MARKETPLACE_LISTING_K2", "search_filter": "PROD_STEP_MARKETPLACE_STOREFRONT_K2",
+		"single_connection": "PROD_STEP_SHARED_INTEGRATIONS_K1", "size_chart": "MP_TOPIC_SIZE_CHART"}
+	for id: String in want:
+		if MarketplaceSystem.topic_name(id) != TranslationServer.translate(want[id]):
+			return "%s reads '%s', want '%s'" % [id, MarketplaceSystem.topic_name(id), TranslationServer.translate(want[id])]
+	return ""
+
+
+## Kaynağın yeni kullanıcısı geçen kapanışın yazdığıdır: yayından sonraki ilk kapanışta kendiliğinden gelenler ("organic")
+## sıfırdan büyüktür; ikinci kapanıştan sonra okunan sayı yenisidir (dizi en yeniyi başta tutar); hiç ziyaret getirmemiş kaynak 0
+## okunur.
+##
+## FALSİFİKASYON: `MarketplaceModel.source_new_users`ta dizinin sonunu oku → ikinci kapanış satırı FAIL; boş dizide de ilk
+## hücreyi oku → ziyaret getirmemiş kaynak satırı FAIL.
+static func _case_marketplace_source_new_users() -> String:
+	_seed_marketplace_world()
+	MarketplaceSystem.daily_tick()
+	var first: float = MarketplaceSystem.source_new_users("organic")
+	if first <= 0.0:
+		return "the first close after the launch brought %s organic new users" % first
+	GameState.day += 1
+	MarketplaceSystem.daily_tick()
+	var second: float = MarketplaceSystem.source_new_users("organic")
+	if second == first or GameState.marketplace.sources.organic != [second, first]:
+		return "after two closes the source reads %s, the first close read %s, stored %s (want the newest first)" \
+			% [second, first, str(GameState.marketplace.sources.organic)]
+	if MarketplaceSystem.source_new_users("search_ads") != 0.0:
+		return "a source that brought no visit reads %s new users" % MarketplaceSystem.source_new_users("search_ads")
 	return ""
