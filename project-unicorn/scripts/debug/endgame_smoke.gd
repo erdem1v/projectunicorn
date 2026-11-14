@@ -10466,8 +10466,8 @@ static func _seed_save_world() -> void:
 	CharacterRegistry.add(_make_employee("emp_save", "Kayit Testi", "developer"))
 	PromiseRegistry.create("cust_smoke_corp", "ai_vec_embed_api", 10)
 	RivalRegistry.advance_all()
-	GameState.set_flag("b2c_audience", 1234.5)      # KESİRLİ: int'e yuvarlanırsa yakalanır
-	GameState.set_flag("b2c_price", 29)             # int kalmalı
+	GameState.set_flag(ProductState.REPORTS_PROGRESS, 0.35)   # KESİRLİ: int'e yuvarlanırsa yakalanır
+	GameState.set_flag(ProductState.REPORTS_INCOMING, 29)     # int kalmalı
 	FinanceSystem.set_burn_category("marketing", 777)
 	GameState.cs_escalation_days.append(42)         # Array[int] tipli kalmalı (net_history_90 2026-08-19'da emekli)
 
@@ -10536,13 +10536,14 @@ static func _case_save_roundtrip_fingerprint() -> String:
 		return "payload differs after a load round-trip (%d vs %d bytes)" % [before.length(), after.length()]
 
 	# Tip bütünlüğü: JSON her sayıyı float döndürür, geri kazanım şart.
-	var aud: Variant = GameState.get_flag("b2c_audience", 0.0)
-	if typeof(aud) != TYPE_FLOAT or not is_equal_approx(float(aud), 1234.5):
+	var progress: Variant = GameState.get_flag(ProductState.REPORTS_PROGRESS, 0)
+	if typeof(progress) != TYPE_FLOAT or not is_equal_approx(float(progress), 0.35):
 		_cleanup_save_slots()
-		return "b2c_audience lost its float accumulator (%s)" % str(aud)
-	if typeof(GameState.get_flag("b2c_price", 0)) != TYPE_INT:
+		return "mvp_reports_progress lost its float accumulator (%s)" % str(progress)
+	if typeof(GameState.get_flag(ProductState.REPORTS_INCOMING, 0.0)) != TYPE_INT \
+			or ProductState.reports_incoming() != 29:
 		_cleanup_save_slots()
-		return "b2c_price came back as a non-int"
+		return "mvp_reports_incoming came back as a non-int or changed (%s)" % str(GameState.get_flag(ProductState.REPORTS_INCOMING))
 	if GameState.cs_escalation_days.get_typed_builtin() != TYPE_INT:
 		_cleanup_save_slots()
 		return "cs_escalation_days lost its Array[int] typing"
@@ -14994,7 +14995,7 @@ static func _case_founder_not_double_counted() -> String:
 	var done := func(why: String) -> String:
 		SaveManager.delete_slot(slot)
 		return why
-	_seed_sprint_live("note_tool")
+	_seed_sprint_live("erp")
 	var founder: Character = CharacterRegistry.get_founder()
 	_set_founder_area(HRConstants.AREA_CUSTOMER_SUCCESS, HRConstants.AREA_MAX)
 	# 1 · Yalnız Yapım (koşu başlangıcı): sprintte tam, masada yok.
@@ -15174,15 +15175,18 @@ static func _case_money_never_double_minus() -> String:
 # =========================================================================
 
 ## Canlı bir ürünü elle kurar — yapım hattından geçmeden, çünkü bu case'ler
-## DESTEK/ALTYAPI aritmetiğini ölçüyor, yapım borusunu değil. Tek canlı hattı `line_note_tool_search`'tür:
-## doğrulanan bildirim düşecek bir hat bulur.
-static func _seed_support_fixture(market: String = "b2c") -> void:
+## DESTEK/ALTYAPI aritmetiğini ölçüyor, yapım borusunu değil. Varsayılan pazar B2B: ERP, tek canlı hattı `line_erp_stock`
+## (doğrulanan bildirim düşecek bir hat bulur). `"b2c"`: not uygulaması ve `line_note_tool_search`; yalnız B2C ekonomisini
+## ölçen vakalar ister.
+static func _seed_support_fixture(market: String = "b2b") -> void:
+	var b2c: bool = market == "b2c"
+	var live_line: String = "line_note_tool_search" if b2c else "line_erp_stock"
 	ProductLines.reload()
 	GameState.set_flag("mvp_shipped", true)
-	GameState.set_flag("mvp_sub_product_type_id", "note_tool")
+	GameState.set_flag("mvp_sub_product_type_id", "note_tool" if b2c else "erp")
 	GameState.set_flag("mvp_market_type", market)
 	GameState.set_flag("mvp_version", 1)
-	GameState.set_flag(ProductState.LINE_TIERS, {"line_note_tool_search": 1})
+	GameState.set_flag(ProductState.LINE_TIERS, {live_line: 1})
 	GameState.set_flag(ProductState.REPORTS_INCOMING, 0)
 	GameState.set_flag(ProductState.REPORTS_PROGRESS, 0.0)
 	GameState.set_flag(ProductState.OPEN_BUGS, {})
@@ -15203,7 +15207,7 @@ static func _seed_support_fixture(market: String = "b2c") -> void:
 ## SUPPORT_BASE_POINTS 0 → "verified nothing" FAIL; 3 → "three times" FAIL;
 ## hourly_tick doğrulamayı atlarsa → "verified nothing" FAIL.
 static func _case_destek_empty_desk_piles_up() -> String:
-	_seed_support_fixture("b2c")
+	_seed_support_fixture()
 	var founder: Character = CharacterRegistry.get_founder()
 	_set_founder_area(HRConstants.AREA_CUSTOMER_SUCCESS, 0)
 	CharacterRegistry.assign_job(founder.id, HRConstants.JOB_BUILD)
@@ -15216,17 +15220,23 @@ static func _case_destek_empty_desk_piles_up() -> String:
 		return "the founder with CS 0 verifies %.2f/day at the desk against %.2f idle" % [
 			SupportSystem.validation_per_day(), alone]
 	CharacterRegistry.clear_jobs(founder.id)
-	var unit: float = SupportSystem.USAGE_DIV_B2C   # one usage unit of audience doubles the inflow's multiplier
-	var week := func(audience: float) -> int:
-		GameState.set_flag("b2c_audience", audience)
+	var unit: int = int(SupportSystem.USAGE_DIV_B2B)   # one usage unit of accounts adds 1 to the inflow's multiplier
+	var week := func(accounts: int) -> int:
+		# The book grows to `accounts` signed accounts. They are filler: the hourly ticks read only how many there are, and
+		# `insert_raw` keeps thousands of `customer_added` signals out of the run.
+		for n in range(CustomerRegistry.get_by_market("b2b").size(), accounts):
+			var filler := Customer.new()
+			filler.id = "co_desk_%05d" % n
+			filler.market_type = "b2b"
+			CustomerRegistry.insert_raw(filler)
 		var pile: int = ProductState.reports_incoming()
 		for h in TimeModel.HOURS_PER_DAY:
 			SupportSystem.hourly_tick(h)
 		return ProductState.reports_incoming() - pile
 
-	# İki hafta, kurucunun Müşteri İlişkileri 0, masada kimse yok; kitle büyüyor.
-	var small: int = week.call(40.0 * unit)
-	var grown: int = week.call(80.0 * unit)
+	# İki hafta, kurucunun Müşteri İlişkileri 0, masada kimse yok; defter büyüyor.
+	var small: int = week.call(40 * unit)
+	var grown: int = week.call(80 * unit)
 	if ProductState.open_bugs() <= 0:
 		return "a founder with CS 0 and nobody at the desk verified nothing in two weeks"
 	if grown <= small:
@@ -15238,7 +15248,7 @@ static func _case_destek_empty_desk_piles_up() -> String:
 	if SupportSystem.validation_per_day() < 3.0 * alone:
 		return "one rep at the desk verifies %.2f/day against %.2f without; want three times" % [
 			SupportSystem.validation_per_day(), alone]
-	var with_rep: int = week.call(84.0 * unit)
+	var with_rep: int = week.call(84 * unit)
 	if with_rep >= grown:
 		return "a rep at the desk did not slow the pile (%d -> %d)" % [grown, with_rep]
 	if not HRActions.apply_leave(rep, HRConstants.VACATION_WEEKS_MIN):
@@ -15312,8 +15322,8 @@ static func _case_open_bugs_store_reads_and_writes() -> String:
 ## pay iddiası FAIL; hattı global randi() ile seç → aynı tohum iddiası FAIL; `if lines.is_empty():` dönüşünü sil → hatsız
 ## iddia FAIL.
 static func _case_bugs_land_on_random_live_lines() -> String:
-	_seed_support_fixture("b2c")
-	var lines: Array = ["line_note_tool_capture", "line_note_tool_search", "line_note_tool_sync"]
+	_seed_support_fixture()
+	var lines: Array = ["line_erp_ledger", "line_erp_stock", "line_erp_intake"]
 	var tiers: Dictionary = {}
 	for line in lines:
 		tiers[line] = 1
@@ -15376,18 +15386,18 @@ static func _case_bugs_land_on_random_live_lines() -> String:
 
 ## §10 — kapasite HER AN, birimin onda biri kadar (en az bir birim) artıp azalır, CEZASIZ; fatura günlük olarak
 ## (aylık/30) burn'e işler ve YENİ FİYAT ERTESİ GÜNDEN itibaren geçerlidir. Dolu sunucunun fatura ve kesinti ihtimalinden
-## başka bedeli yoktur: aynı kitle taşan ve bol kapasitede aynı destek zararını, bildirim akışını ve edinimi okur.
+## başka bedeli yoktur: aynı koltuk sayısı taşan ve bol kapasitede aynı destek zararını, bildirim akışını ve edinimi okur.
 ##
 ## FALSİFİKASYON: adjust_capacity'ye bir ceza/kilit ekle → simetri iddiası FAIL; SupportSystem.daily_satisfaction_damage'a
 ## ya da InfraSystem.report_inflow_multiplier'a taşma çarpanı koy → gizli aşım iddiası FAIL.
 static func _case_infra_capacity_moves_both_ways() -> String:
-	_seed_support_fixture("b2c")
+	_seed_support_fixture()
 	InfraSystem.set_provider(InfraSystem.PROVIDER_CLOUD)
 	InfraSystem.set_capacity(10)
 	if InfraSystem.units() != 10:
 		return "capacity did not take (%d)" % InfraSystem.units()
 	var bill_10: int = InfraSystem.monthly_bill()
-	if bill_10 != 10 * InfraSystem.unit_price(InfraSystem.PROVIDER_CLOUD, "b2c"):
+	if bill_10 != 10 * InfraSystem.unit_price(InfraSystem.PROVIDER_CLOUD, "b2b"):
 		return "monthly bill %d is not units x unit price" % bill_10
 
 	# YUKARI ve AŞAĞI, birimin onda biri kadar: küçük kapasitede bir birim, büyükte onda bir; hiçbir yönde ceza yok.
@@ -15404,18 +15414,19 @@ static func _case_infra_capacity_moves_both_ways() -> String:
 	if InfraSystem.set_capacity(-5) != 0:
 		return "capacity went negative"
 
-	# Dolu sunucunun fatura ve kesinti ihtimalinden başka bedeli yok: aynı 5.000 kişi 2 birimde (taşıyor) ve 8 birimde
+	# Dolu sunucunun fatura ve kesinti ihtimalinden başka bedeli yok: aynı beş birimlik koltuk 2 birimde (taşıyor) ve 8 birimde
 	# (bol) aynı zararı, aynı akışı ve aynı edinimi okur.
-	GameState.set_flag("b2c_audience", 5000.0)
+	var book: Customer = _add_customer("co_infra_book", "Infra Book")
+	book.seats = 5 * InfraSystem.unit_size()
 	GameState.set_flag(ProductState.REPORTS_INCOMING, 60)
-	ProductState.add_bugs("line_note_tool_search", 40)
+	ProductState.add_bugs("line_erp_stock", 40)
 	var readings: Array = []
 	for units in [2, 8]:
 		InfraSystem.set_capacity(units)
 		readings.append([InfraSystem.is_over_capacity(), SupportSystem.daily_satisfaction_damage(),
-			SupportSystem.reports_per_day(), SalesSystem._audience_delta_per_hour()])
+			SupportSystem.reports_per_day(), SalesFaucetSystem.lead_rate_per_week()])
 	if not readings[0][0] or readings[1][0]:
-		return "5000 users should overflow 2 units and fit 8 (%s, %s)" % [readings[0][0], readings[1][0]]
+		return "%d seats should overflow 2 units and fit 8 (%s, %s)" % [book.seats, readings[0][0], readings[1][0]]
 	for i in range(1, 4):
 		if not is_equal_approx(float(readings[0][i]), float(readings[1][i])):
 			return "capacity moved reading %d: %s on 2 units, %s on 8" % [i, readings[0][i], readings[1][i]]
@@ -15426,7 +15437,7 @@ static func _case_infra_capacity_moves_both_ways() -> String:
 	InfraSystem.set_provider(InfraSystem.PROVIDER_ENTERPRISE)
 	if GameState.cash != cash_before:
 		return "switching provider charged a migration fee (%d -> %d)" % [cash_before, GameState.cash]
-	if InfraSystem.monthly_bill() != 10 * InfraSystem.unit_price(InfraSystem.PROVIDER_ENTERPRISE, "b2c"):
+	if InfraSystem.monthly_bill() != 10 * InfraSystem.unit_price(InfraSystem.PROVIDER_ENTERPRISE, "b2b"):
 		return "the new provider's price did not reach the bill"
 	# Günlük fatura aylık/30'dur ve burn'e "servers" kaleminden işler.
 	InfraSystem.daily_tick()
@@ -15584,8 +15595,7 @@ static func _case_auto_capacity_grows_only() -> String:
 ##
 ## FALSİFİKASYON: LOCAL_INFLOW_MULT'u 1.0 yap → akış iddiası FAIL; set_provider'daki Kurumsal denetimini sil → iniş iddiası FAIL.
 static func _case_infra_local_provider_tradeoff() -> String:
-	_seed_support_fixture("b2c")
-	GameState.set_flag("b2c_audience", 1000.0)
+	_seed_support_fixture()
 
 	InfraSystem.set_provider(InfraSystem.PROVIDER_CLOUD)
 	if absf(InfraSystem.report_inflow_multiplier() - 1.0) > 0.0001:
@@ -15608,8 +15618,8 @@ static func _case_infra_local_provider_tradeoff() -> String:
 		return "the local provider satisfies the enterprise trust condition"
 
 	# Ve ucuzdur.
-	if InfraSystem.unit_price(InfraSystem.PROVIDER_LOCAL, "b2c") \
-			>= InfraSystem.unit_price(InfraSystem.PROVIDER_CLOUD, "b2c"):
+	if InfraSystem.unit_price(InfraSystem.PROVIDER_LOCAL, "b2b") \
+			>= InfraSystem.unit_price(InfraSystem.PROVIDER_CLOUD, "b2b"):
 		return "the local provider is not the cheap one"
 	if not InfraSystem.set_provider(InfraSystem.PROVIDER_ENTERPRISE):
 		return "the move up to the enterprise provider was refused"
@@ -15631,11 +15641,11 @@ static func _case_infra_local_provider_tradeoff() -> String:
 ## kapasite iddiası FAIL; `lock_weeks_left`e bir tik ekle → süre iddiası FAIL; `server_price` kolunda planı yazmadan sonra al → satır
 ## iddiası FAIL; `server_price_plan`da `hit`i hep true yap → Ekonomik iddiası FAIL; çipin kutbunu ters çevir → çip iddiası FAIL.
 static func _case_infra_price_lock() -> String:
-	_seed_support_fixture("b2c")
+	_seed_support_fixture()
 	InfraSystem.set_provider(InfraSystem.PROVIDER_CLOUD)
 	InfraSystem.set_capacity(10)
-	if InfraSystem.monthly_bill() != 2500 or ProductState.infra_price_mult() != 1.0 or InfraSystem.lock_reason() != "":
-		return "servers no event has touched bill %d, multiplier %s, lock '%s'; want 2500, 1 and none" % [
+	if InfraSystem.monthly_bill() != 1200 or ProductState.infra_price_mult() != 1.0 or InfraSystem.lock_reason() != "":
+		return "servers no event has touched bill %d, multiplier %s, lock '%s'; want 1200, 1 and none" % [
 			InfraSystem.monthly_bill(), ProductState.infra_price_mult(), InfraSystem.lock_reason()]
 	var prices := func(market: String) -> Array:
 		return [InfraSystem.PROVIDER_LOCAL, InfraSystem.PROVIDER_CLOUD, InfraSystem.PROVIDER_ENTERPRISE].map(
@@ -15647,26 +15657,26 @@ static func _case_infra_price_lock() -> String:
 	var rise := {"verb": "server_price", "mult": 1.2}
 	var rise_chip: Dictionary = chip.call(rise, false)
 	var rise_row: Dictionary = EvEffects.run_played([rise], {})[0]
-	if int(rise_row.before) != 2500 or int(rise_row.after) != 3000 or InfraSystem.monthly_bill() != 3000:
-		return "a x1.2 rise took the bill from %s to %s (now %d), want 2500 to 3000" % [rise_row.get("before"), rise_row.get("after"), InfraSystem.monthly_bill()]
+	if int(rise_row.before) != 1200 or int(rise_row.after) != 1440 or InfraSystem.monthly_bill() != 1440:
+		return "a x1.2 rise took the bill from %s to %s (now %d), want 1200 to 1440" % [rise_row.get("before"), rise_row.get("after"), InfraSystem.monthly_bill()]
 	var rise_text: String = EvChips.text(rise_chip)
-	if rise_chip.polarity != "cost" or not rise_text.contains("20") or not rise_text.contains("500") \
+	if rise_chip.polarity != "cost" or not rise_text.contains("20") or not rise_text.contains("240") \
 			or EvChips.text(chip.call(rise_row, true)) != rise_text:
 		return "the rise reads '%s' (%s) on the card and '%s' on the row" % [rise_text, rise_chip.polarity, EvChips.text(chip.call(rise_row, true))]
 	if prices.call("b2c") != [150, 300, 600] or prices.call("b2b") != [72, 144, 288]:
 		return "x1.2 gave B2C prices %s and B2B prices %s, want [150, 300, 600] and [72, 144, 288]" % [prices.call("b2c"), prices.call("b2b")]
-	GameState.set_flag("mvp_market_type", "b2b")
-	var b2b_bill: int = InfraSystem.monthly_bill()
 	GameState.set_flag("mvp_market_type", "b2c")
+	var b2c_bill: int = InfraSystem.monthly_bill()
+	GameState.set_flag("mvp_market_type", "b2b")
 	InfraSystem.daily_tick()
-	if b2b_bill != 1440 or int(FinanceSystem.get_burn_breakdown().get(InfraSystem.BURN_CATEGORY, -1)) != FinanceSystem.daily_rate(3000):
-		return "the multiplier reached the B2B bill as %d (want 1440) or the burn as %s" % [b2b_bill, FinanceSystem.get_burn_breakdown()]
+	if b2c_bill != 3000 or int(FinanceSystem.get_burn_breakdown().get(InfraSystem.BURN_CATEGORY, -1)) != FinanceSystem.daily_rate(1440):
+		return "the multiplier reached the B2C bill as %d (want 3000) or the burn as %s" % [b2c_bill, FinanceSystem.get_burn_breakdown()]
 
 	# A cut on two tiers only: the local tier keeps its price, a company on it is promised no change.
 	var cut := {"verb": "server_price", "mult": 0.75, "tiers": [InfraSystem.PROVIDER_CLOUD, InfraSystem.PROVIDER_ENTERPRISE]}
 	var cut_chip: Dictionary = chip.call(cut, false)
 	var cut_row: Dictionary = EvEffects.run_played([cut], {})[0]
-	if int(cut_row.before) != 3000 or int(cut_row.after) != 2250 or prices.call("b2c") != [150, 225, 450] or prices.call("b2b") != [72, 108, 216]:
+	if int(cut_row.before) != 1440 or int(cut_row.after) != 1080 or prices.call("b2c") != [150, 225, 450] or prices.call("b2b") != [72, 108, 216]:
 		return "a x0.75 cut on Standard and Enterprise took the bill from %s to %s, prices %s and %s" % [
 			cut_row.get("before"), cut_row.get("after"), prices.call("b2c"), prices.call("b2b")]
 	var cut_text: String = EvChips.text(cut_chip)
@@ -15683,7 +15693,7 @@ static func _case_infra_price_lock() -> String:
 	var contract := {"verb": "server_lock", "weeks": 52}
 	var contract_chip: String = EvChips.text(chip.call(contract, false))
 	var contract_row: Dictionary = EvEffects.run_played([contract], {})[0]
-	if int(contract_row.capacity) != 10000 or not contract_chip.contains("52") or not contract_chip.contains(Fmt.group(10000)) \
+	if int(contract_row.capacity) != 500 or not contract_chip.contains("52") or not contract_chip.contains(Fmt.group(500)) \
 			or EvChips.text(chip.call(contract_row, true)) != contract_chip:
 		return "the contract reads '%s' on the card and '%s' on the row (capacity %s)" % [contract_chip, EvChips.text(chip.call(contract_row, true)), contract_row.get("capacity")]
 	var reason: String = InfraSystem.lock_reason()
@@ -15696,8 +15706,10 @@ static func _case_infra_price_lock() -> String:
 		return "capacity went under the contract's 10 units (%d)" % InfraSystem.units()
 	if InfraSystem.set_capacity(15) != 15:
 		return "a contract kept the capacity from growing"
+	# 625 seats: 84% of 15 units, past the 80% edge; the 65% target takes 20 units.
+	var book: Customer = _add_customer("co_lock_book", "Lock Book")
+	book.seats = roundi(12.5 * InfraSystem.unit_size())
 	ProductState.set_infra_auto(true)
-	GameState.set_flag("b2c_audience", 12500.0)
 	InfraSystem.auto_adjust()
 	ProductState.set_infra_auto(false)
 	if InfraSystem.units() != 20 or InfraSystem.set_capacity(4) != 10:
@@ -16227,8 +16239,8 @@ static func _case_sales_promise_late_request_card() -> String:
 ## ProductRead.line_next_step'i hep "" döndür → sorgu iddiası FAIL.
 static func _case_product_read_catalogue() -> String:
 	ProductLines.reload()
-	_seed_support_fixture("b2c")
-	ProductState.set_line_tier("line_note_tool_search", 1)
+	_seed_support_fixture()
+	ProductState.set_line_tier("line_erp_stock", 1)
 
 	# --- SORGULAR ---
 	var q: Dictionary = {
@@ -16236,29 +16248,29 @@ static func _case_product_read_catalogue() -> String:
 		"unconfirmed": ProductRead.unconfirmed(""),
 		"version_age": ProductRead.version_age(""),
 		"usage": ProductRead.usage(""),
-		"line_tier": ProductRead.line_tier("", "line_note_tool_search"),
-		"line_next_step": ProductRead.line_next_step("", "line_note_tool_search"),
+		"line_tier": ProductRead.line_tier("", "line_erp_stock"),
+		"line_next_step": ProductRead.line_next_step("", "line_erp_stock"),
 		"lines_open": ProductRead.lines_open(""),
 		"steps_shipped": ProductRead.steps_shipped(""),
 		"interest": ProductRead.interest(""),
 		"capacity_tier": ProductRead.capacity_tier(""),
 		"support_staffed": ProductRead.support_staffed(""),
-		"step_unlockable": ProductRead.step_unlockable("line_note_tool_search_k2"),
+		"step_unlockable": ProductRead.step_unlockable("line_erp_stock_k2"),
 	}
 
 	# Birkaçının GERÇEKTEN okuduğunu kanıtla — imza sınavı yeterli değil.
 	if int(q["line_tier"]) != 1:
 		return "line_tier read %d, the fixture set 1" % int(q["line_tier"])
-	if String(q["line_next_step"]) != "line_note_tool_search_k2":
+	if String(q["line_next_step"]) != "line_erp_stock_k2":
 		return "line_next_step read '%s'" % String(q["line_next_step"])
 	if int(q["lines_open"]) != 1 or int(q["steps_shipped"]) != 1:
 		return "lines_open/steps_shipped read %d/%d, want 1/1" \
 			% [int(q["lines_open"]), int(q["steps_shipped"])]
 	# Tamamlanmış hat sıradaki kademeyi ÖNERMEZ.
-	ProductState.set_line_tier("line_note_tool_search", 3)
-	if ProductRead.line_next_step("", "line_note_tool_search") != "":
+	ProductState.set_line_tier("line_erp_stock", 3)
+	if ProductRead.line_next_step("", "line_erp_stock") != "":
 		return "a completed line still offered a next step"
-	ProductState.set_line_tier("line_note_tool_search", 1)
+	ProductState.set_line_tier("line_erp_stock", 1)
 
 	# --- SİNYALLER ---
 	var declared: Array[String] = []
@@ -16276,8 +16288,8 @@ static func _case_product_read_catalogue() -> String:
 	if int(EvSeams.read("urun.sprint_number")) != 0 or bool(EvSeams.read("urun.sprint_running")):
 		return "an untyped product reads a sprint (%s, running %s)" % [
 			EvSeams.read("urun.sprint_number"), EvSeams.read("urun.sprint_running")]
-	SprintSystem.choose_type("note_tool", "Fokus")
-	SprintSystem.add("feat:line_note_tool_capture_k1")
+	SprintSystem.choose_type("erp", "Fokus")
+	SprintSystem.add("feat:line_erp_cashflow_k1")
 	SprintSystem.start()
 	if int(EvSeams.read("urun.sprint_number")) != 1 or not bool(EvSeams.read("urun.sprint_running")) \
 			or int(EvSeams.read("urun.sprint_week")) != 1:
@@ -16290,17 +16302,17 @@ static func _case_product_read_catalogue() -> String:
 	EventBus.unconfirmed_threshold_crossed.connect(
 		func(_b: String) -> void: seen.append("threshold"))
 	ProductRead.reset()
-	ProductState.add_bugs("line_note_tool_search", 5)
+	ProductState.add_bugs("line_erp_stock", 5)
 	ProductRead.emit_edges()          # tohumlama — sessiz olmalı
 	if not seen.is_empty():
 		return "the first edge sweep emitted %s instead of seeding" % str(seen)
-	ProductState.add_bugs("line_note_tool_editor", 4)
+	ProductState.add_bugs("line_erp_invoicing", 4)
 	ProductRead.emit_edges()
 	if not seen.has("bug_confirmed"):
 		return "a rise in open bugs emitted nothing"
 	# Düşüş (düzeltme) bu sinyali ATMAZ — yalnız doğrulama atar.
 	seen.clear()
-	ProductState.clear_line_bugs("line_note_tool_search")
+	ProductState.clear_line_bugs("line_erp_stock")
 	ProductRead.emit_edges()
 	if seen.has("bug_confirmed"):
 		return "fixing bugs emitted bug_confirmed"
@@ -18053,7 +18065,7 @@ static func _case_paused_job_resumes_on_direct_return() -> String:
 ## FALSİFİKASYON: BuildBarModel.derive'daki masa döngüsünü sil → DESTEK iddiası FAIL.
 ## `founder_task_label`'ın kompozisyon dalını sil → satır tek etikete düşer ve FAIL.
 static func _case_split_bars_name_their_cause() -> String:
-	_seed_support_fixture("b2c")
+	_seed_support_fixture()
 	var founder: Character = CharacterRegistry.get_founder()
 	for area in HRConstants.AREAS:
 		founder.role_stats[area] = HRConstants.AREA_MAX
@@ -23676,7 +23688,7 @@ static func _case_sprint_pm_prep_benefit() -> String:
 ## sürüm kaydının `carried`ı aynı sayıyı yazar.
 ## FALSİFİKASYON: SprintSystem._outcome'da `done`ı kalanın azalması (`before - remaining(c)`) yap → plan ile kapanış iddiası FAIL.
 static func _case_sprint_plan_done_counts_fix_work() -> String:
-	_seed_sprint_live("note_tool")
+	_seed_sprint_live("erp")
 	_bugs_c(5.0)
 	var lines: Array = SprintCatalog.capabilities("core").slice(int(SprintCatalog.cfg("mvp_lines")))
 	var id: String = "feat:%s_k1" % lines[0]
@@ -24342,7 +24354,7 @@ static func _release_load_flaws(side: String) -> String:
 ## yerine ilk canlı hatta yaz → hat iddiası FAIL; `releases` yükleminden `c.bugs == 0` koşulunu sil → "no release" iddiası FAIL;
 ## `bugs_after` satırını `0` yap → sürüm notunun sonraki-sayı iddiası FAIL.
 static func _case_sprint_escaped_bug_on_card_line() -> String:
-	_seed_sprint_live("note_tool")
+	_seed_sprint_live("erp")
 	_bugs_c(0.6)
 	_set_founder_area(HRConstants.AREA_ENGINEERING, 4)
 	_set_founder_area(HRConstants.AREA_QA, 4)
@@ -24443,7 +24455,7 @@ static func _case_sprint_escaped_pre_launch_lands_at_v1() -> String:
 ## SprintSystem._close'ta clear_line_bugs yerine `ProductState.line_bugs(c.line)` oku → hat temizlenmedi iddiası FAIL;
 ## `releases` yükleminden `c.bugs == 0` koşulunu sil → "no release" iddiası FAIL.
 static func _case_sprint_fix_card_clears_its_line() -> String:
-	_seed_sprint_live("note_tool")
+	_seed_sprint_live("erp")
 	_sprint_hire("char_fix_dev", HRConstants.ROLE_DEVELOPER)
 	var lines: Array = SprintCatalog.capabilities("core")
 	var hit: String = lines[0]
@@ -24497,16 +24509,14 @@ static func _case_sprint_fix_card_clears_its_line() -> String:
 
 
 ## Düzeltme kartının kapanışı hattı siler ve sürüm notu gerçek sayıyı yazar. Sprintte o hatta yeni hata düşmezse kapanış
-## tam N hatayı siler, düşerse hattın o anki sayısını siler (satırda "N → 0", sonuç cümlesinde "N hata kapandı"). Kart etki
-## satırında hata sayısını ve B2C'de kullanıcıyı (kitle × hattın payı) söyler; 4 hata 8 puan, 5 hata 10 puan ve öncelikli.
+## tam N hatayı siler, düşerse hattın o anki sayısını siler (satırda "N → 0", sonuç cümlesinde "N hata kapandı"); 4 hata 8 puan,
+## 5 hata 10 puan ve öncelikli.
 ## FALSİFİKASYON: SprintSystem._close'ta `clear_line_bugs` yerine `c.bugs`'ı koru (hattı silme) → hat temizlenmedi iddiası FAIL;
 ## ProductModel._shipped'ta `"to": int(c.bugs_after)`'ı `"to": int(c.bugs)` yap → satır iddiası FAIL;
-## SprintCatalog.fix_effort'ta `bugs * ...`ı `maxi(bugs, 5) * ...` yap → 4 hata 10 puan olur ve efor iddiası FAIL;
-## SprintCatalog.line_share'te `maxi(1, total)`'u `total * 2` yap → payların toplamı 1 olmaz ve pay iddiası FAIL.
+## SprintCatalog.fix_effort'ta `bugs * ...`ı `maxi(bugs, 5) * ...` yap → 4 hata 10 puan olur ve efor iddiası FAIL.
 static func _case_sprint_fix_close_matches_note() -> String:
-	_seed_sprint_live("note_tool")
+	_seed_sprint_live("erp")
 	_sprint_hire("char_fix_prev_dev", HRConstants.ROLE_DEVELOPER)
-	GameState.set_flag("b2c_audience", 2700.0)
 	var lines: Array = SprintCatalog.capabilities("core")
 	var small: String = lines[0]
 	var big: String = lines[1]
@@ -24520,15 +24530,6 @@ static func _case_sprint_fix_close_matches_note() -> String:
 	if fixes.size() != 2 or roundi(SprintSystem.total(fixes[small])) != 4 * per_bug or SprintCatalog.is_priority(fixes[small]) \
 			or roundi(SprintSystem.total(fixes[big])) != 5 * per_bug or not SprintCatalog.is_priority(fixes[big]):
 		return "4 bugs and 5 bugs read fix cards %s, want %d points unmarked and %d points priority" % [fixes, 4 * per_bug, 5 * per_bug]
-	var share_sum: float = 0.0
-	for line in ProductState.live_lines():
-		share_sum += SprintCatalog.line_share(line)
-	var users: int = roundi(2700.0 * SprintCatalog.line_share(small))
-	if not is_equal_approx(share_sum, 1.0) or SprintCatalog.line_share(lines[4]) != 0.0 or users <= 0 \
-			or SprintCatalog.card_effect(fixes[small])[0] != {"k": "bugs", "n": 4, "accounts": -1, "users": users, "top": "",
-			"top_users": 0}:
-		return "the live lines share %.3f of the audience, a line with no tier %.3f; the 4-bug card reads %s, want %d users and no accounts" % [
-			share_sum, SprintCatalog.line_share(lines[4]), SprintCatalog.card_effect(fixes[small]), users]
 	# No new bug on the line: the close removes the 4 the card named.
 	SprintSystem.add(fixes[small].id)
 	if not SprintSystem.start():
@@ -24574,7 +24575,7 @@ static func _case_sprint_fix_close_matches_note() -> String:
 ## FAIL (kâğıdın puanı düşer); yenilenen durumlar listesine "running" ekle → kilit iddiası FAIL; `SprintSystem.start`'tan
 ## `_refresh_fix_cards()`'ı sil → başlatma iddiası FAIL.
 static func _case_sprint_fix_card_refreshes_until_it_runs() -> String:
-	_seed_sprint_live("note_tool")
+	_seed_sprint_live("erp")
 	_sprint_hire("char_fix_refresh_dev", HRConstants.ROLE_DEVELOPER)
 	var lines: Array = SprintCatalog.capabilities("core")
 	var gone: String = lines[0]       # hattı boşalır, kart silinir
@@ -24637,7 +24638,7 @@ static func _case_sprint_fix_card_refreshes_until_it_runs() -> String:
 ## taban iddiası FAIL; fix_first'ten `_refresh_fix_cards()`'ı sil → sonraki sütundaki kart eski sayıyla kilitlenir ve
 ## sayı iddiası FAIL.
 static func _case_sprint_fix_first_puts_the_card_on_top() -> String:
-	_seed_sprint_live("note_tool")
+	_seed_sprint_live("erp")
 	_sprint_hire("char_fix_first_dev", HRConstants.ROLE_DEVELOPER)
 	var lines: Array = SprintCatalog.capabilities("core")
 	var feature: String = "feat:%s_k1" % lines[3]
@@ -24698,7 +24699,7 @@ static func _case_sprint_fix_first_puts_the_card_on_top() -> String:
 ## put_first'te koşan kartın dönüşünü sil → koşan kart yerinde kalmadı iddiası FAIL.
 static func _case_sprint_fix_first_leads_the_carried() -> String:
 	MailClock.instant = false
-	_seed_sprint_live("note_tool")
+	_seed_sprint_live("erp")
 	for pair in [["char_lead_dev", HRConstants.ROLE_DEVELOPER], ["char_lead_des", HRConstants.ROLE_DESIGNER],
 			["char_lead_test", HRConstants.ROLE_TESTER]]:
 		_sprint_hire(pair[0], pair[1])
@@ -24787,7 +24788,7 @@ static func _case_sprint_fix_first_leads_the_carried() -> String:
 ## FALSİFİKASYON: `SprintCatalog.fix_effort`i eski kademeye çevir (`5 if bugs <= 4 else 10`) → 6 hata iddiası FAIL;
 ## `fix_effort`e `maxi(..., 5)` alt sınırı koy → 1 hata iddiası FAIL; `sprint.json` `need.fix`i [0.0, 0.5, 0.5] yap → pay iddiası FAIL.
 static func _case_sprint_fix_card_double() -> String:
-	_seed_sprint_live("note_tool")
+	_seed_sprint_live("erp")
 	_sprint_hire("char_fix_double_dev", HRConstants.ROLE_DEVELOPER)
 	var lines: Array = SprintCatalog.capabilities("core")
 	var six: String = lines[0]
@@ -25138,7 +25139,7 @@ static func _case_sprint_paid_plan_opens_paid_tier() -> String:
 ## kartı olur ve sıradaki kapanışta yayına girer.
 ## FALSİFİKASYON: SprintSystem.finish_beta_cards'ın gövdesini boşalt → kart betada kalır ve FAIL.
 static func _case_sprint_legacy_beta_cards_ship() -> String:
-	_seed_sprint_live("note_tool")
+	_seed_sprint_live("erp")
 	for role_id in [HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_TESTER]:
 		_sprint_hire("char_legacy_" + role_id, role_id)
 	var id: String = "feat:%s_k1" % SprintCatalog.capabilities("core")[3]
@@ -25492,13 +25493,12 @@ static func _case_sprint_pin_leaves_with_card() -> String:
 ## kapanış sonra yeniden açılır, sprint oyuncuyu bekler ve liderin planı onu alır.
 ## FALSİFİKASYON: SprintSystem._auto_start'ta _begin() yerine start() çağır → FAIL.
 static func _case_sprint_never_stalls_in_plan() -> String:
-	_seed_sprint_live("note_tool")
+	_seed_sprint_live("erp")
 	_sprint_hire("char_stall_des1", HRConstants.ROLE_DESIGNER)
 	_sprint_hire("char_stall_des2", HRConstants.ROLE_DESIGNER)
 	_sprint_hire("char_stall_dev", HRConstants.ROLE_DEVELOPER)
 	for line_id in ProductLines.line_ids(ProductState.subtype()):
 		ProductState.set_line_tier(String(line_id), ProductLines.TIER_MAX)
-	GameState.set_flag("b2c_paid_tier_open", true)
 	var research: Array = ["res:core"]
 	if not _play_sprint(research) or SprintSystem.mode() != "release" \
 			or not (GameState.product.release.carried as Array).is_empty():
@@ -25793,11 +25793,12 @@ static func _case_promise_cut_test_escape() -> String:
 static func _sent_card_ships_with_its_known_bugs() -> String:
 	SaveManager.reset_all_owners()
 	GameState.initialize_run({"seed": 424242})
-	_seed_sprint_live("note_tool")
+	_seed_sprint_live("erp")
 	var lines: Array = SprintCatalog.capabilities("core").slice(int(SprintCatalog.cfg("mvp_lines")))
-	var ids: Array = ["feat:%s_k1" % lines[0], "feat:%s_k1" % lines[1]]
-	ids.append(SprintCatalog.open_cards([]).filter(
-		func(c: Dictionary) -> bool: return c.kind == "feature" and c.id not in ids)[0].id)
+	var ids: Array = ["feat:%s_k1" % lines[0]]
+	for _i in 2:
+		ids.append(SprintCatalog.open_cards([]).filter(
+			func(c: Dictionary) -> bool: return c.kind == "feature" and int(c.target_tier) == 1 and c.id not in ids)[0].id)
 	for id in ids:
 		SprintSystem.add(id)
 		_size(GameState.product.cards[id], 5.0)
@@ -25957,27 +25958,31 @@ static func _case_sprint_lead_offers_paid_plan_b2c() -> String:
 	return ""
 
 
-## Liderin önerisi altı basamakla ekibin yapabileceği kadar dolar (PRD Faz D Karar 12 ve 14): sıra ücretli plan, bırakılan kart,
-## öncelikli düzeltme, hedefin kartı, kalanlar; sığmayan aday atlanır ve önerinin düzeltme işi ekibin kapasitesinin yarısını aşmaz.
+## Liderin önerisi altı basamakla ekibin yapabileceği kadar dolar (PRD Faz D Karar 12 ve 14): sıra bırakılan kart, öncelikli
+## düzeltme, hedefin kartı, kalanlar; sığmayan aday atlanır ve önerinin düzeltme işi ekibin kapasitesinin yarısını aşmaz.
 ## Sprintte düzeltme işi yoksa ilk düzeltme kartı yarıdan büyük olsa da girer. Ekip: iki geliştirici, bir tasarımcı, bir testçi
-## (kapasite 80); hatalar çekirdek hatlarında 12, 10 ve 4 (düzeltme kartları 24, 20 ve 8 puan, yarı 40).
+## (kapasite 80); bırakılan kartın tasarımı bitmiş, 24 puanlık işi kalmış; hatalar çekirdek hatlarında 12, 10 ve 4 (düzeltme
+## kartları 24, 20 ve 8 puan, yarı 40).
 ## FALSİFİKASYON: SprintSystem.fix_share_takes'in son satırını `return true` yap → ikinci düzeltme kartı girer FAIL; satırdaki
 ## `work <= EPS or`'u sil → 25 hatalı hattın 50 puanlık kartı girmez FAIL; SprintCatalog._lead_picks'te `skipped >` dalını
 ## sil → `lead.skip` 0 iken öneri durmaz FAIL; pay tavanına takılan düzeltmeyi uymayan aday say → `lead.skip` 0 iken öneri ikinci
 ## düzeltmede durur FAIL; _lead_steps'ten bırakılan kart satırını ya da hedef alanın kartını sil → sıra iddiası FAIL; "Hatalar"
 ## dalını sil → küçük düzeltme girmez FAIL.
 static func _case_sprint_lead_fills_to_ceiling() -> String:
-	_seed_sprint_live("note_tool")
+	_seed_sprint_live("erp")
 	GameState.set_founder_in_sprint(false)
 	var crew: Array = [HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_DESIGNER, HRConstants.ROLE_TESTER, HRConstants.ROLE_DEVELOPER]
 	for i in crew.size():
 		_sprint_hire("char_lead_%d" % i, crew[i])
 	var lines: Array = SprintCatalog.capabilities("core")
-	var paid: String = "plan:" + SprintCatalog.PAID_PLAN
 	var dropped: String = SprintCatalog.candidates("core").filter(
 		func(c: Dictionary) -> bool: return c.kind == "feature" and int(c.target_tier) == 1)[0].id
 	SprintSystem.add(dropped)
-	GameState.product.cards[dropped].progress[0] = GameState.product.cards[dropped].need[0]
+	# The dropped card has its design done and 24 points (0.3 of the team's 80) still to do: behind it and the 24 point fix the
+	# 15 point cards and the 8 point fix fill what is left of the ceiling.
+	var held: Dictionary = GameState.product.cards[dropped]
+	_size(held, SprintSystem.capacity() * 0.3 / (1.0 - float(held.need[0]) / SprintSystem.total(held)))
+	held.progress[0] = held.need[0]
 	SprintSystem.remove(dropped)
 	var fixes: Array = lines.slice(0, 3).map(func(line: String) -> String: return "fix:" + line)
 	for i in 3:
@@ -25992,9 +25997,9 @@ static func _case_sprint_lead_fills_to_ceiling() -> String:
 		return "fixture: the dropped card reads '%s' and the capacity %.1f, want a candidate and 80" % [
 			GameState.product.cards[dropped].state, cap]
 	var lead: Array = SprintCatalog.lead_suggestion().this
-	# Sıra: ücretli plan, bırakılan kart, öncelikli düzeltme, sonra kalanlar; ikinci düzeltme pay tavanına takılır ve atlanır.
-	if lead.slice(0, 3) != [paid, dropped, fixes[0]] or lead.has(fixes[1]) or lead.size() <= 3:
-		return "the lead is %s, want the paid plan, the dropped card and the biggest priority fix first, the second fix out and cards after it" % [lead]
+	# Sıra: bırakılan kart, öncelikli düzeltme, sonra kalanlar; ikinci düzeltme pay tavanına takılır ve atlanır.
+	if lead.slice(0, 2) != [dropped, fixes[0]] or lead.has(fixes[1]) or lead.size() <= 2:
+		return "the lead is %s, want the dropped card and the biggest priority fix first, the second fix out and cards after it" % [lead]
 	if load.call(lead, "fix") > cap * 0.5 or load.call(lead, "") < cap * 0.9 or load.call(lead, "") > ceiling:
 		return "the lead puts %.1f fix points and %.1f points in a capacity of %.1f (ceiling %.1f), want at most half in fixes and 90%% to the ceiling filled" % [
 			load.call(lead, "fix"), load.call(lead, ""), cap, ceiling]
@@ -26017,8 +26022,9 @@ static func _case_sprint_lead_fills_to_ceiling() -> String:
 	if not in_trust.call(trust) or in_trust.call(lead):
 		return "goal Trust: the lead is %s against %s with no goal, want a Trust card in that was not" % [trust, lead]
 	SprintSystem.pick_goal("")
-	# Atlama sınırı: tavan kapasitenin %95'iyken (76 puan) dördüncü karttan sonraki 15 puanlık kart sığmaz, ardındaki 8 puanlık
-	# düzeltme sığar; `lead.skip` 0 iken öneri o 15 puanlık kartta durur. Pay tavanına takılan düzeltme atlama sayılmaz.
+	# Atlama sınırı: tavan kapasitenin %95'iyken (76 puan) bırakılan kart, ilk düzeltme ve ilk 15 puanlık kart (63 puan) girince
+	# ikinci 15 puanlık kart sığmaz (78), ardındaki 8 puanlık düzeltme sığar (71); `lead.skip` 0 iken öneri o 15 puanlık kartta
+	# durur. Pay tavanına takılan düzeltme atlama sayılmaz.
 	var skip: int = int(SprintCatalog.cfg("lead.skip"))
 	var mult: float = float(SprintCatalog.cfg("cap_ceiling"))
 	SprintCatalog._data.cap_ceiling = 0.95
@@ -26027,7 +26033,7 @@ static func _case_sprint_lead_fills_to_ceiling() -> String:
 	var stopped: Array = SprintCatalog.lead_suggestion().this
 	SprintCatalog._data.lead.skip = skip
 	SprintCatalog._data.cap_ceiling = mult
-	if not skipping.has(fixes[2]) or stopped.has(fixes[2]) or stopped.size() <= 3 or skipping.slice(0, stopped.size()) != stopped:
+	if not skipping.has(fixes[2]) or stopped.has(fixes[2]) or stopped.size() < 3 or skipping.slice(0, stopped.size()) != stopped:
 		return "a 95%% ceiling: the lead is %s, with no skip allowed %s; want the small fix %s in past the card that does not fit, and the no skip lead to stop there, past the second fix" % [
 			skipping, stopped, fixes[2]]
 	# Sprintte düzeltme işi yokken ilk düzeltme kartı yarıdan büyük olsa da girer.
@@ -26052,7 +26058,7 @@ static func _case_sprint_lead_fills_to_ceiling() -> String:
 ## ekle → onaysız PM planı sütuna girer FAIL; `_auto_start`ta `apply_lead()` yerine yalnız `lead_suggestion().this`i yerleştir →
 ## devirde sütun boş kalır FAIL.
 static func _case_sprint_lead_fills_next_column() -> String:
-	_seed_sprint_live("note_tool")
+	_seed_sprint_live("erp")
 	GameState.set_founder_in_sprint(false)
 	var crew: Array = [HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_DESIGNER, HRConstants.ROLE_TESTER, HRConstants.ROLE_DEVELOPER]
 	for i in crew.size():
@@ -26672,7 +26678,7 @@ static func _case_paper_card_effects() -> String:
 ## sil → özellik kartı FAIL; `sprint_has_tester`dan `not t.founder`ı sil → kurucu testçi sayıldı FAIL; `line_in_first_version`da
 ## `number <= 1`i sil → sonraki sürümün hattı FAIL.
 static func _case_paper_seams() -> String:
-	_seed_sprint_live("note_tool")
+	_seed_sprint_live("erp")
 	var security: String = SprintCatalog.in_product("line_shared_security")
 	var built: String = "feat:%s_k1" % SprintCatalog.capabilities("core")[3]
 	ProductState.add_bugs(security, 2)
@@ -27949,7 +27955,7 @@ static func _case_save_v19_running_sprint_continues() -> String:
 	var done := func(why: String) -> String:
 		SaveManager.delete_slot(slot)
 		return why
-	_seed_sprint_live("note_tool")
+	_seed_sprint_live("erp")
 	_sprint_hire("char_v19_dev", HRConstants.ROLE_DEVELOPER)
 	_sprint_hire("char_v19_test", HRConstants.ROLE_TESTER)
 	var ids: Array = SprintCatalog.open_cards([]).filter(func(c: Dictionary) -> bool: return c.kind == "feature").slice(0, 2).map(
@@ -28021,7 +28027,7 @@ static func _case_save_v15_tickets_become_open_bugs() -> String:
 	var done := func(why: String) -> String:
 		SaveManager.delete_slot(slot)
 		return why
-	_seed_sprint_live("note_tool")
+	_seed_sprint_live("erp")
 	_sprint_hire("char_v15_dev", HRConstants.ROLE_DEVELOPER)
 	var live: Array = ProductState.live_lines()
 	# A sprint ships a fix card of 2 bugs on live[1]; on its release note a fix card of 3 on live[0] waits in the next column.
@@ -28221,7 +28227,7 @@ static func _case_product_pm_plan_opens_as_next_sprint() -> String:
 ## `quarter_goal()` yerine "" ver → öneri iddiaları FAIL; _lead_steps'in GOAL_BUGS dalını sil → Hatalar iddiası FAIL;
 ## pm_goal'ı `quarter_goal()`a eşitle → PM'li iddia FAIL (PM planının yedeği `fit_star_context`ta da sınanır).
 static func _case_quarter_goal_without_pm() -> String:
-	_seed_sprint_live("note_tool")
+	_seed_sprint_live("erp")
 	_sprint_hire("char_goal_dev", HRConstants.ROLE_DEVELOPER)
 	var fix_line: String = SprintCatalog.capabilities("core")[0]
 	ProductState.add_bugs(fix_line, 2)
@@ -28229,6 +28235,15 @@ static func _case_quarter_goal_without_pm() -> String:
 	var area_of := func(id: String) -> String: return SprintCatalog.card_by_id(id).area
 	if SprintCatalog.quarter_pm() != null or SprintCatalog.quarter_goal() != "":
 		return "with no PM and no pick the quarter goal reads '%s', want empty" % SprintCatalog.quarter_goal()
+	# The sprint is part full: what its ceiling has left holds the two cards the plain lead puts first and not the 4 point fix card
+	# behind them (nor a Trust card); only a goal brings those forward.
+	var held: float = 0.0
+	for id in SprintCatalog.lead_suggestion().this.slice(0, 2):
+		held += SprintSystem.remaining(SprintCatalog.card_by_id(id))
+	var filler: String = "feat:%s_k1" % SprintCatalog.capabilities("core")[3]
+	SprintSystem.add(filler)
+	_size(GameState.product.cards[filler], SprintSystem.capacity() * float(SprintCatalog.cfg("cap_ceiling")) - held
+		- SprintSystem.remaining(SprintCatalog.card_by_id(fix_id)) / 2.0)
 	var base: Array = SprintCatalog.lead_suggestion().this
 	if fix_id in base or base.any(func(id: String) -> bool: return area_of.call(id) == "core"):
 		return "the lead with no goal suggests %s, want no Core card and no fix card (the capacity is full without them)" % [base]
@@ -29456,12 +29471,30 @@ static func _case_bug_cost_b2b_account_lines() -> String:
 
 ## B2C'de açık hata kitleyi eritir: saatte hata başına B2C_BUG_CHURN_COEF × kitle, B2C_BUG_CHURN_CAP hataya kadar; kalite
 ## aşınmasının YANINA eklenir, yerine geçmez; kayıp `b2c_users_lost`ta birikir (ürün fonunun geri dönüşü bunu sayar).
-## `fix_off` anahtarı bedeli sıfırlar.
+## `fix_off` anahtarı bedeli sıfırlar. Düzeltme kartının etki satırı hatanın eriteceği kitleyi söyler: kitle × hattın payı;
+## canlı hatların payları toplamı 1'dir, kademesiz hattın payı 0.
 ## FALSİFİKASYON: `_audience_loss_per_hour`da hata terimini sil → "bugs" iddiası FAIL; `+ bugs` yerine `max(erosion, bugs)` yaz →
 ## "next to erosion" iddiası FAIL; `mini(..., CAP)`i sil → tavan iddiası FAIL; `_tick_b2c_audience`ten `b2c_users_lost` yazımını sil →
-## sayaç iddiası FAIL; `costed`ı kaldır → anahtar iddiası FAIL.
+## sayaç iddiası FAIL; `costed`ı kaldır → anahtar iddiası FAIL; SprintCatalog.line_share'te `maxi(1, total)`'u `total * 2` yap →
+## payların toplamı 1 olmaz ve pay iddiası FAIL.
 static func _case_bug_cost_b2c_audience() -> String:
 	_seed_support_fixture("b2c")
+	# The card's effect line: the audience times the line's share of it. The three Core lines the MVP ships are live, the others are not.
+	var core: Array = SprintCatalog.capabilities("core")
+	GameState.set_flag(ProductState.LINE_TIERS, {core[0]: 1, core[1]: 1, core[2]: 1})
+	GameState.set_flag("b2c_audience", 2700.0)
+	ProductState.add_bugs(core[0], 4)
+	var share_sum: float = 0.0
+	for live in ProductState.live_lines():
+		share_sum += SprintCatalog.line_share(live)
+	var users: int = roundi(2700.0 * SprintCatalog.line_share(core[0]))
+	var effect: Array = SprintCatalog.card_effect(SprintCatalog.card_by_id("fix:" + core[0]))
+	if not is_equal_approx(share_sum, 1.0) or SprintCatalog.line_share(core[4]) != 0.0 or users <= 0 \
+			or effect[0] != {"k": "bugs", "n": 4, "accounts": -1, "users": users, "top": "", "top_users": 0}:
+		return "the live lines share %.3f of the audience, a line with no tier %.3f; the 4-bug card reads %s, want %d users and no accounts" % [
+			share_sum, SprintCatalog.line_share(core[4]), effect, users]
+	ProductState.clear_line_bugs(core[0])
+	GameState.set_flag(ProductState.LINE_TIERS, {"line_note_tool_search": 1})
 	GameState.set_flag("b2c_audience", 10000.0)
 	var loss := func(bugs_on_search: int) -> float:
 		GameState.set_flag(ProductState.OPEN_BUGS, {"line_note_tool_search": bugs_on_search} if bugs_on_search > 0 else {})
@@ -29513,12 +29546,11 @@ static func _case_bug_cost_b2c_audience() -> String:
 ## Açık hata bildirim akışını beslemez: hata yalnız kullanımdan ve yeni koddan doğar.
 ## FALSİFİKASYON: `reports_per_day`e `+ 0.05 * float(ProductState.open_bugs())` ekle → FAIL.
 static func _case_support_inflow_is_bug_free() -> String:
-	_seed_support_fixture("b2c")
-	GameState.set_flag("b2c_audience", 1000.0)
+	_seed_support_fixture()
 	var flow: float = SupportSystem.reports_per_day()
 	if flow <= 0.0:
 		return "fixture: a live product has no inflow"
-	ProductState.add_bugs("line_note_tool_search", 50)
+	ProductState.add_bugs("line_erp_stock", 50)
 	if absf(SupportSystem.reports_per_day() - flow) > 1e-9:
 		return "50 open bugs moved the inflow from %.4f to %.4f a day" % [flow, SupportSystem.reports_per_day()]
 	return ""
@@ -29536,9 +29568,9 @@ static func _case_support_inflow_is_bug_free() -> String:
 ## koşulunu sil → düzeltme haftası ve "önceki en kötü hat azaldı" iddiaları FAIL; `REPORT_WORST_LEAD`i 1 yap → "bir farkla
 ## geçti" iddiası FAIL.
 static func _case_support_report_quiet_week() -> String:
-	_seed_support_fixture("b2c")
-	var first: String = "line_note_tool_search"
-	var second: String = (ProductLines.line_ids("note_tool").filter(func(id: String) -> bool: return id != first))[0]
+	_seed_support_fixture()
+	var first: String = "line_erp_stock"
+	var second: String = (ProductLines.line_ids("erp").filter(func(id: String) -> bool: return id != first))[0]
 	ProductState.set_line_tier(second, 1)
 	var reports := func() -> Array:
 		return GameState.messages.filter(func(m: Dictionary) -> bool: return m.kind == SupportSystem.REPORT_KIND)
@@ -29607,9 +29639,9 @@ static func _case_support_report_quiet_week() -> String:
 ## `>= NEGLECT_BUGS` yerine `> NEGLECT_BUGS` → eşik iddiası FAIL; sayacı sıfırlayan `else 0`ı sil → "consecutive" iddiası FAIL;
 ## `costed`ı kuraldan çıkar → anahtar iddiası FAIL; `neglect_note`ta tarihi biçimleyen `.format(...)`ı sil → cümle iddiası FAIL.
 static func _case_neglect_reputation_below_zero() -> String:
-	_seed_support_fixture("b2c")
+	_seed_support_fixture()
 	GameState.set_reputation(0)
-	var line := "line_note_tool_search"
+	var line := "line_erp_stock"
 	var week := func() -> void:
 		GameState.advance_day()
 		SupportSystem.daily_tick()
@@ -29684,8 +29716,8 @@ static func _case_neglect_reputation_below_zero() -> String:
 ## 18 hat iddiası FAIL; teslim terimini sil → teslim iddiası FAIL; kayıtlardaki `weeks`i yok say → teslim iddiası FAIL; `_tick_neglect`te `neglect_threshold()` yerine `NEGLECT_BUGS` oku →
 ## 18 hat ve teslim iddiaları FAIL.
 static func _case_support_neglect_scales_with_k() -> String:
-	_seed_support_fixture("b2c")
-	var line := "line_note_tool_search"
+	_seed_support_fixture()
+	var line := "line_erp_stock"
 	var falls := func(bugs: int) -> bool:
 		ProductState.clear_line_bugs(line)
 		ProductState.add_bugs(line, bugs)
