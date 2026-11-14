@@ -26,7 +26,7 @@ const CHECKS := ["empty_category_no_orders", "acquisition_waits_for_publish", "l
 	"premium_members", "zone_rows_need_stores", "add_users_bounds", "lost_counters", "channel_read_values", "source_revenue_values",
 	"state_survives_codec", "topic_rows_known", "topic_ticket_gates", "topic_ledger_rows", "feature_gain_matches_close",
 	"reviews_affected_is_return_gap", "assignment_waits_a_close", "waive_zeroes_one_close", "outage_row_and_cost",
-	"lost_commission_weighted", "backup_mult_tiers"]
+	"lost_commission_weighted", "backup_mult_tiers", "open_topic_report_row"]
 
 var _weeks := DEFAULT_WEEKS
 var _printing := false
@@ -662,12 +662,14 @@ func _check_state_survives_codec() -> Array:
 	state.cats.fashion.week = {"visits": 900.0, "returning": 500.0, "delivered": 20.0}
 	MarketplaceModel.waive_commission(state, 2)
 	MarketplaceModel.note_outage(state, 3.0, 40.0)
+	MarketplaceModel.open_topic(state, _live_world(), "coupon_abuse", 42.0)
 	var decoded: Dictionary = _as_loaded(JSON.parse_string(JSON.stringify(state)))
 	var integral: bool = typeof(decoded.users) == TYPE_INT and typeof(decoded.members) == TYPE_INT \
 		and typeof(decoded.cats.fashion.stores) == TYPE_INT and typeof(decoded.waive) == TYPE_INT and typeof(decoded.outage.cost) == TYPE_INT
 	var world := _live_world()
 	var keep := MarketplaceModel.retention(decoded, world)
 	var share := MarketplaceModel.returning_share(decoded, ["fashion"])
+	var coupon: Array = MarketplaceModel.topic_rows(decoded, world).filter(func(r: Dictionary) -> bool: return r.id == "coupon_abuse")
 	var costed := decoded.duplicate(true)
 	costed.waive = 0
 	MarketplaceModel.close_week(costed, world)
@@ -677,8 +679,9 @@ func _check_state_survives_codec() -> Array:
 		and _near(decoded.lost.stores, 30.0 * (0.008 + 0.07 * (1.0 - (20.0 / 30.0) / 1.2))) \
 		and decoded.waive == 1 and decoded.revenue_weeks[0] == 0.0 and decoded.outage.points == 0.0 and decoded.outage.cost == 0.0 \
 		and _near(costed.revenue_weeks[0], costed.cats.fashion.week.net - 40.0) and costed.waive == 0 and costed.outage.cost == 0.0 \
-		and decoded.ledger.users.any(func(r: Dictionary) -> bool: return r.key == "outage" and r.points == -3.0)
-	return [ok, "integral state decoded as ints=%s: retention %.4f (0.943), returning share %.4f (0.5556), lost users %.2f (171), lost stores %.4f (1.1733); pending waive 2 -> 1: waived close revenue %.0f (no outage cost), Outage row -3; the same state without waive pays the cost: revenue %.0f"
+		and decoded.ledger.users.any(func(r: Dictionary) -> bool: return r.key == "outage" and r.points == -3.0) \
+		and coupon.size() == 1 and coupon[0].affected == 42.0 and coupon[0].source == "report" and typeof(decoded.topics.coupon_abuse.affected) == TYPE_INT
+	return [ok, "integral state decoded as ints=%s: retention %.4f (0.943), returning share %.4f (0.5556), lost users %.2f (171), lost stores %.4f (1.1733); pending waive 2 -> 1: waived close revenue %.0f (no outage cost), Outage row -3; the same state without waive pays the cost: revenue %.0f; a coupon_abuse row opened by the report keeps affected 42"
 		% [integral, keep, share, decoded.lost.users, decoded.lost.stores, decoded.revenue_weeks[0], costed.revenue_weeks[0]]]
 
 
@@ -724,7 +727,7 @@ func _check_topic_rows_known() -> Array:
 		if not good:
 			wrong.append(row.id)
 		ok = ok and good
-	return [ok, "five weekly ticks of a fixed week: %d of 12 topics listed, tickets over the last four weeks = 4 x weekly, affected orders: "
+	return [ok, "five weekly ticks of a fixed week: %d of 12 ticketed topics listed, tickets over the last four weeks = 4 x weekly, affected orders: "
 		% rows.size() + "tier gain %.2f, size_chart %.2f, favorites %.2f, guest_checkout %.2f, single_connection %.2f, reviews_ratings %.2f; age 4; wrong: %s"
 		% [tier, want.size_chart[1], want.favorites[1], want.guest_checkout[1], want.single_connection[1], want.reviews_ratings[1], wrong]]
 
@@ -986,3 +989,46 @@ func _check_backup_mult_tiers() -> Array:
 		got.append(MarketplaceModel.backup_mult(_live_world().merged({"tiers": tiers}, true)))
 	got.append(MarketplaceModel.backup_mult(MarketplaceModel.new_world()))
 	return [_equal(got, [1.0, 0.7, 0.5, 0.3, 1.0, 1.0]), "outage multiplier without Backup, tiers 1-3, other modules only, default world: %s" % [got]]
+
+
+## Rapordan açılan konu: bileti olmadan satır olur, verilen etkilenen sipariş durur; ikinci çağrı, bilinmeyen kimlik ve bileti başlamış konu
+## reddedilir. Sekiz haftayı geçince "Geciken talep" konunun adıyla yazılır (planda olsa da), yayına çıkınca "Karşılandı" yazılır ve etkilenen 0 olur.
+func _check_open_topic_report_row() -> Array:
+	var state := _topic_state()
+	var world := _live_world(10)
+	var silent: bool = MarketplaceModel.topic_rows(state, world).is_empty()
+	var opened := MarketplaceModel.open_topic(state, world, "coupon_abuse", 42.0)
+	var again := MarketplaceModel.open_topic(state, world.merged({"week": 12}, true), "coupon_abuse", 7.0)
+	var unknown := MarketplaceModel.open_topic(state, world, "no_such_topic", 1.0)
+	MarketplaceModel.tick_topics(state, world)
+	var ticketed := MarketplaceModel.open_topic(state, world, "size_chart", 5.0)
+	var rows := MarketplaceModel.topic_rows(state, world.merged({"week": 12}, true))
+	var coupon: Array = rows.filter(func(r: Dictionary) -> bool: return r.id == "coupon_abuse")
+	var row: Dictionary = coupon[0] if coupon.size() == 1 else {}
+	var size_chart: Array = rows.filter(func(r: Dictionary) -> bool: return r.id == "size_chart")
+	var row_ok: bool = row.get("side") == "users" and row.get("module") == "checkout" and row.get("source") == "report" \
+		and row.get("tickets") == 0.0 and row.get("affected") == 42.0 and row.get("age") == 2 and row.get("status") == "waiting"
+	var ticks_ok: bool = size_chart.size() == 1 and size_chart[0].source == "tickets" and size_chart[0].tickets > 0.0 and not state.topics.has("no_such_topic")
+	var live := _store_state(["fashion"], 3000.0)
+	MarketplaceModel.open_topic(live, world, "coupon_abuse", 42.0)
+	var late := func(s: Dictionary) -> Array:
+		var late_rows: Array = s.ledger.users.filter(func(r: Dictionary) -> bool: return r.key == "late_topic")
+		return late_rows.map(func(r: Dictionary) -> String: return r.arg)
+	_run(live, world.merged({"week": 18}, true), 1)
+	var week18: Array = late.call(live)
+	var planned := world.merged({"week": 19, "planned": ["coupon_abuse"]}, true)
+	_run(live, planned, 1)
+	var week19: Array = late.call(live)
+	var waiting: Array = MarketplaceModel.topic_rows(live, planned)
+	var shipped_world := world.merged({"week": 20, "features": ["coupon_abuse"]}, true)
+	_run(live, shipped_world, 1)
+	var week20: Array = late.call(live)
+	var met: Array = live.ledger.users.filter(func(r: Dictionary) -> bool: return r.key == "met")
+	var done: Array = MarketplaceModel.topic_rows(live, shipped_world)
+	var life_ok: bool = week18 == [] and week19 == ["coupon_abuse"] and waiting.size() == 1 and waiting[0].status == "planned" \
+		and waiting[0].affected == 42.0 and week20 == [] and met.size() == 1 and met[0].arg == "coupon_abuse" and met[0].points == 3.0 \
+		and done.size() == 1 and done[0].status == "shipped" and done[0].affected == 0.0 and done[0].tickets == 0.0 and done[0].age == 10
+	return [silent and opened and not again and not unknown and not ticketed and row_ok and ticks_ok and life_ok,
+		"unopened topics are silent=%s; opened at week 10 with 42 affected=%s, second call %s, unknown id %s, topic already ticketed %s; row at week 12 %s; "
+		% [silent, opened, again, unknown, ticketed, row] + "size_chart keeps its own tickets=%s; late rows week 18 %s, week 19 (planned) %s, week 20 (shipped) %s; met rows %d; shipped row %s"
+		% [ticks_ok, week18, week19, week20, met.size(), done]]

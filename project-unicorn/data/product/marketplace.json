@@ -112,7 +112,8 @@
       {"id": "bulk_upload", "side": "stores", "module": "listing", "tier": 2, "link": "upload", "rate": 0.08},
       {"id": "color_size_options", "side": "stores", "module": "listing", "link": "upload", "rate": 0.08},
       {"id": "shipping_label", "side": "stores", "module": "orders", "link": "ship", "rate": 0.06},
-      {"id": "payout_statement", "side": "stores", "module": "orders", "link": "payout", "rate": 0.02}
+      {"id": "payout_statement", "side": "stores", "module": "orders", "link": "payout", "rate": 0.02},
+      {"id": "coupon_abuse", "side": "users", "module": "checkout", "link": "checkout"}
     ]
   }
 }

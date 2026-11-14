@@ -160,7 +160,7 @@ kapanışında dolar; okumak onu doldurmaz ve pazaryeri koşusu olmayan oyunda (
 | `premium` | `open`, `fee`, `fee_day`, `trial`, `joined` (son dört haftada katılan üye), `perks[ayrıcalık]` (`pick`, `day`, son dört haftanın kullanımı ve bedeli) |
 | `ledger` | `users` ve `stores`: adlı satırlar (`key`, `arg`, `points`, `weeks`) |
 | `revenue_weeks` | Son dört haftanın net komisyonu |
-| `topics[kimlik]` | `tickets` (son dört haftanın bileti, hafta hafta), `since_day` (ilk isteğin haftası), `status` (`waiting`, `planned`, `shipped`), `source` (`tickets` ya da `report`) |
+| `topics[kimlik]` | `tickets` (son dört haftanın bileti, hafta hafta), `since_day` (ilk isteğin haftası), `status` (`waiting`, `planned`, `shipped`), `source` (`tickets` ya da `report`); rapordan açılan konuda `affected` (raporun verdiği haftalık etkilenen sipariş) |
 | `lost` | `users` ve `stores`: kaybedilen kullanıcının ve ayrılan mağazanın birikmiş toplamı |
 | `waive` | Komisyonun alınmayacağı kalan hafta sayısı (acil durumun "bir hafta komisyon almamak" şıkkı; §5.2) |
 | `outage` | Bekleyen kesinti: `points` (kullanıcı defterine yazılacak düşüş) ve `cost` (net komisyondan düşecek tutar); izleyen kapanış uygular ve sıfırlar |
@@ -402,8 +402,12 @@ Dört kural. `set_policy(kural, seçenek)` kuralı değiştirir ve dört hafta k
   İsteği gelmiş bir konu yayına çıkınca tarafına bir kez "Karşılandı: {konu}" yazılır; isteği hiç gelmemiş konu satır yazmaz.
   "Geciken talep" taraf başına tek satırdır (§3.8): ilk isteğinden bu yana sekiz haftadan çok geçmiş, yayında olmayan en eski
   konu.
-- `open_topic(kimlik)` bileti olmayan konu açar (kaynağı `report`); Pazarlama'nın kupon raporundaki "Ürüne doğrulama ekle"
-  düğmesi bunu çağırır.
+- `open_topic(kimlik, etkilenen)` satırı henüz açılmamış bir konuyu rapordan açar: kaynağı `report`, ilk isteği o hafta,
+  haftalık etkilenen siparişi raporun verdiği sayıdır. Konu katalogda yoksa ya da satırı zaten açıksa reddedilir.
+  Pazarlama'nın kupon raporundaki "Ürüne doğrulama ekle" düğmesi bunu `coupon_abuse` konusuyla çağırır. Bu konu kataloğun on
+  üçüncü kaydıdır (kullanıcı tarafı, Ödeme modülü): bilet oranı ve adım çarpanı yoktur, bilet almaz, yalnız rapordan açılır.
+  Rapordan açılan konu yayına çıkınca öbür konular gibi "Karşılandı" yazar ve etkilenen siparişi 0 olur; sekiz haftayı
+  geçerse "Geciken talep"e girer.
 
 ### 3.12 Pazarlama ile arayüz
 `ORTAK_ARAYUZLER.md` §1. Pazaryeri kapanışta `channel_visits`, `return_lift`, `impression_share` ve `active_campaign`'i okur.

@@ -55,13 +55,13 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/data_models/rival.gd · 33 · Rival · Resource · 0 sinyal · 1 func
 - scripts/data_models/term_sheet.gd · 63 · TermSheet · Resource · 0 sinyal · 3 func
 
-### scripts/debug/ (13 dosya, 36694 satır)
+### scripts/debug/ (13 dosya, 36740 satır)
 - scripts/debug/endgame_smoke.gd · 30801 · EndgameSmoke · RefCounted · 0 sinyal · 698 func
 - scripts/debug/glyph_audit.gd · 109 · - · SceneTree · 0 sinyal · 6 func
 - scripts/debug/k0_check.gd · 110 · K0Check · RefCounted · 0 sinyal · 6 func
 - scripts/debug/kit_probe.gd · 298 · - · RefCounted · 0 sinyal · 10 func
 - scripts/debug/loc_residue.gd · 265 · - · SceneTree · 0 sinyal · 9 func
-- scripts/debug/marketplace_probe.gd · 988 · - · SceneTree · 0 sinyal · 52 func
+- scripts/debug/marketplace_probe.gd · 1034 · - · SceneTree · 0 sinyal · 53 func
 - scripts/debug/office_crowd_probe.gd · 326 · OfficeCrowdProbe · Node · 0 sinyal · 15 func
 - scripts/debug/office_pan_probe.gd · 398 · - · RefCounted · 0 sinyal · 17 func
 - scripts/debug/player_paths.gd · 251 · PlayerPaths · RefCounted · 0 sinyal · 13 func
@@ -156,7 +156,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/onboarding/steps/origin_traits_step.gd · 329 · - · OnboardingStep · 0 sinyal · 18 func
 - scripts/onboarding/steps/step_base.gd · 119 · OnboardingStep · Control · 1 sinyal · 10 func
 
-### scripts/systems/ (75 dosya, 25960 satır)
+### scripts/systems/ (75 dosya, 25979 satır)
 - scripts/systems/angel_round_system.gd · 52 · AngelRoundSystem · RefCounted · 0 sinyal · 1 func
 - scripts/systems/b2b_constants.gd · 279 · B2BConstants · RefCounted · 0 sinyal · 9 func
 - scripts/systems/b2b_sales_system.gd · 735 · B2BSalesSystem · RefCounted · 0 sinyal · 48 func
@@ -183,7 +183,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/systems/mail_clock.gd · 121 · MailClock · RefCounted · 0 sinyal · 10 func
 - scripts/systems/market_catalog.gd · 217 · MarketCatalog · RefCounted · 0 sinyal · 25 func
 - scripts/systems/marketing_system.gd · 105 · - · RefCounted · 0 sinyal · 11 func
-- scripts/systems/marketplace_model.gd · 967 · MarketplaceModel · RefCounted · 0 sinyal · 81 func
+- scripts/systems/marketplace_model.gd · 986 · MarketplaceModel · RefCounted · 0 sinyal · 82 func
 - scripts/systems/marketplace_system.gd · 169 · MarketplaceSystem · RefCounted · 0 sinyal · 21 func
 - scripts/systems/message_system.gd · 77 · MessageSystem · RefCounted · 0 sinyal · 5 func
 - scripts/systems/module_locks.gd · 35 · - · RefCounted · 0 sinyal · 4 func
@@ -1124,7 +1124,7 @@ Biçim: yol · boyut · üst düzey anahtarlar (en çok 10)
 - data/product/lines/note_tool.json · 4.3 KB · {subtype, _doc, _canon, _anchor, lines}
 - data/product/lines/shared.json · 3.7 KB · {_doc, _profile_shape, _numbers, _nodes, lines}
 - data/product/lines/video_clip.json · 4.5 KB · {subtype, _doc, _usage, _anchor, lines}
-- data/product/marketplace.json · 5.0 KB · {visits, steps, stores, rules, commission, store_terms, premium, ledger, income, preview, +1}
+- data/product/marketplace.json · 5.1 KB · {visits, steps, stores, rules, commission, store_terms, premium, ledger, income, preview, +1}
 - data/product/rivals.json · 7.1 KB · {note_tool, video_clip, erp, marketplace}
 - data/product/sprint.json · 9.4 KB · {sprint_weeks, quarter_weeks, mvp_lines, mvp_named, effort, fix_effort, limit_k, need, roles, role_areas, +27}
 - data/techtree/rnd_tree.json · 6.3 KB · {_doc, _stars, _cross, _areas, k_arge, report_period_weeks, nodes, _hidden_doc, _hidden_k3_doc, hidden_lines}

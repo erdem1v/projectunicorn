@@ -6,15 +6,15 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 
 ## Dosyalar
 
-- `systems/marketplace_model.gd` (967): `MarketplaceModel`; yalnız `static` işlevler. `state` ve `world` sözlüklerinin alanları dosya başındaki yorumda.
+- `systems/marketplace_model.gd` (986): `MarketplaceModel`; yalnız `static` işlevler. `state` ve `world` sözlüklerinin alanları dosya başındaki yorumda.
 - `systems/marketplace_system.gd` (169): `MarketplaceSystem`; yalnız `static` işlevler. `GameState.marketplace`'in tek yazarı, yazan seam'ler, sözleşme okuyucuları, `world()` ve haftalık kapanış.
-- `debug/marketplace_probe.gd` (988): `-s` betiği; oynanan çizelge ve 36 mekanik denetimi, `MPPROBE ...` satırları.
+- `debug/marketplace_probe.gd` (1034): `-s` betiği; oynanan çizelge ve 37 mekanik denetimi, `MPPROBE ...` satırları.
 - `data/product/categories.json` (16): altı kategori ve sütunları: sepet, ziyaret sıklığı, kâr payı, sektör iadesi, gereken mağaza, başlangıç komisyonu, taban ilgi, büyük sepet payı, reklam havuzu (`ad_pool`, haftalık arama).
 - `data/product/lines/marketplace.json` (153): modül verisi; 5 kimlik hattı (Ürün Yükleme, Vitrin, Sepet ve Ödeme, Siparişler, Yorum ve Güvence)
   ↳ Mobil, Entegrasyonlar, Kullanıcılar ve Yetki, Yedekleme `shared.json`'dan; Üyelik, Gelir alanının `cap_paid_plan`'ı.
   ↳ Yayın şartının dört adlı modülü (Ürün Yükleme, Vitrin, Sepet ve Ödeme, Siparişler) `sprint.json` `mvp_named["marketplace"]`'da.
   ↳ Tür `ProductCatalog`'ta kayıtlı ama `TYPE_SCREEN`'de yok: seçilemez. Rakipler `RivalCatalog.NAMES` ve `rivals.json`, Piyasa yuvaları (Orinoco, Bidwell, Dealflock) `companies.json` `sector_slots`.
-- `data/product/marketplace.json` (118): öbür bütün sabitler, gruplu: `visits`, `steps`, `stores`, `rules`, `commission`, `store_terms`, `premium`, `ledger`, `income`, `preview`, `topics` (konu kataloğu ve mağaza dertleri).
+- `data/product/marketplace.json` (119): öbür bütün sabitler, gruplu: `visits`, `steps`, `stores`, `rules`, `commission`, `store_terms`, `premium`, `ledger`, `income`, `preview`, `topics` (konu kataloğu ve mağaza dertleri).
 
 ## Giriş noktaları
 
@@ -43,6 +43,7 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
   ↳ `source_revenue(state, world, kaynak)` = kaynaktan son on iki haftada gelenlerin (elde tutmayla küçülmüş) son dört haftada bıraktığı net komisyon;
   ↳ kullanıcı o dört haftanın burada olduğu kadarıyla sayılır (bu hafta gelen dörtte bir), yani yeni kanalın satırı küçük başlar.
 - Talepler: `topic_rows(state, world)` ilk isteği gelmiş her konunun satırı (`id`, `side`, `module`, `tickets`, `affected`, `reason`, `status`, `age`, `source`); konu kimlikleri `marketplace.json` `topics.catalog`'ta, metin yok.
+- Rapordan açılan konu: `open_topic(state, world, kimlik, etkilenen)` bileti olmayan konunun satırını açar (`since_day` = hafta, `source` = `report`, haftalık etkilenen sipariş `topics[konu].affected`); katalogda olmayan ya da satırı açık konuda false.
 - Önizleme: `project(state, world)` kopyada dört kapanış koşar; `preview_commission`, `preview_policy`, `preview_premium` değişiklikli ve değişiklikssiz farkı döndürür (`metrics` anahtarları; `store_earnings` oran, öbürleri fark);
   ↳ reddedilen değişiklikte `{}`.
 
@@ -60,6 +61,8 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
   ↳ Konu ilk biletiyle ya da isteğiyle satır olur (`since_day`); yaşı o haftadan sayılır.
 - Ek özellik adım çarpanıdır: kullanıcı özelliği (`missing_mult` alanı, bağlı adım `link`) yayında değilken adımı o kadar kısar (`_feature_mult`, `step_factors`);
   ↳ yayında olmayan her kullanıcı konusu adımı kıstığı için, adım ulaşılabilir oranda iken konu zaten yayındadır.
+- Bilet oranı (`rate`) olmayan konu bilet almaz (`_tickets`): `coupon_abuse` (kullanıcı, Sepet ve Ödeme, ek özellik, adım çarpanı yok) yalnız `open_topic` ile satır olur; satırın `affected`'ı verilen sayıdır ve konu
+  ↳ `world.features`'ta adı geçince yayına çıkar (etkilenen 0; "Karşılandı" ve "Geciken talep" öbür konular gibi işler). Model eksik konuyu varsayılanla okumaz: durumu yükleyen sistem eksik konuyu `new_state`'ten tamamlamalıdır (henüz yazılmadı).
 - Defter: istenmiş konu ilk kez yayına çıkınca tarafa `met` satırı (8 hafta); taraf başına tek `late_topic` satırı, `topics.late_weeks`'i geçmiş en eski yayında olmayan konunun kimliğiyle (planda olan dahil).
 - Etkilenen sipariş: kademe konusunda `gain({"tier": …})`, ek özellik konusunda `gain({"features": [konu]})` (çıkınca gerçekten kazanılan teslim edilmiş sipariş);
   ↳ Yorum ve Puan (`link` = `returning`) kademeyle haftada iade edilmeyecek sipariş (teslim × iade oranı farkı); mağaza konusunda derdi olan mağazaların siparişi × `_leave_rate`.
@@ -84,7 +87,7 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
   ↳ `campaign_free_shipping_single_write`, `preview_figures`, `known_store_earnings`, `known_return_rate`, `known_order_rate`, `json_roundtrip`, `ledger_expiry`, `zone_limits_consistent`, `constants_switch`,
   ↳ `gain_and_weakest`, `acquisition_multipliers`, `store_terms_discount`, `premium_members`, `zone_rows_need_stores`, `add_users_bounds`, `lost_counters`, `channel_read_values`, `source_revenue_values`, `state_survives_codec`,
   ↳ `topic_rows_known`, `topic_ticket_gates`, `topic_ledger_rows`, `feature_gain_matches_close`, `reviews_affected_is_return_gap`, `assignment_waits_a_close`,
-  ↳ `waive_zeroes_one_close`, `outage_row_and_cost`, `lost_commission_weighted`, `backup_mult_tiers`.
+  ↳ `waive_zeroes_one_close`, `outage_row_and_cost`, `lost_commission_weighted`, `backup_mult_tiers`, `open_topic_report_row`.
 
 ## Dikkat
 
@@ -108,7 +111,7 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 ## Bir değişiklik yaparken
 
 - Yeni defter satırı: sayı `marketplace.json` `ledger.rows`'ta, koşulu `_settle`'da; süreli satır yazan işlev `_add`'i çağırır.
-- Yeni konu: `topics.catalog`'a kayıt (`side`, `module`, kademe konusuysa `tier`, kullanıcı ek özelliğiyse `missing_mult`, bağlı adım ya da mağaza derdi `link`, `base`, `rate`);
+- Yeni konu: `topics.catalog`'a kayıt (`side`, `module`, kademe konusuysa `tier`, kullanıcı ek özelliğiyse `missing_mult`, bağlı adım ya da mağaza derdi `link`, `base`, `rate`; bileti olmayan, rapordan açılacak konuda `base` ve `rate` yok);
   ↳ kodda değişiklik gerekmez. Yeni mağaza derdi `topics.pains`'e girer.
 - Kapanışa bir kez tüketilen yeni girdi (komisyonsuz hafta, kesinti gibi): `state`'e bekleyen alan (`new_state`), `close_week`'te okuma ve sıfırlama ya da azaltma, `project`'te temizleme; `world` alanı olmaz, `state_survives_codec` yeni alanı da kapsar.
 - Yeni ayrıcalık ya da kural: `premium.perks` ya da `rules.options` kaydı, `_close_category` (kullanım ve gider), `premium_pull` ve `set_*` şartları.

@@ -27,6 +27,7 @@ extends RefCounted
 # `waive` (komisyonsuz kalan hafta; kapanış brüt komisyonu 0 yapar ve birer azaltır), `outage` (bekleyen kesinti: `points` kullanıcı
 # defterine "Kesinti" satırı olarak yazılır, `cost` o haftanın toplam net komisyonundan düşer, komisyonsuz haftada düşmez; kapanış
 # ikisini sıfırlar).
+# Rapordan açılan konuda ayrıca `topics[konu].affected` (verilen haftalık etkilenen sipariş).
 #
 # `world`: `week`, `published`, `tiers[modül]` (0 = yok), `bugs[modül]` (açık hata), `stars[kişi]` (işbaşındaki atananın Satış
 # yıldızı; olmayan kazandırmaz), `channel[kategori][kaynak]` (Pazarlama'nın kanal ziyareti), `return_lift`, `overrides[kural]`
@@ -698,7 +699,10 @@ static func _ticket_base(week: Dictionary, topic: Dictionary) -> float:
 
 ## Konunun bu haftaki bileti: kullanıcı konusunda bağlı adımda sayılan büyüklük × oran, mağaza konusunda derdi olan mağazaların payı ×
 ## oran. Yayında olmayan her kullanıcı konusu bağlı adımı kısar, yani adım ulaşılabilir oranda iken konu zaten yayındadır.
+## Oranı olmayan konu (yalnız rapordan açılır) bilet almaz.
 static func _tickets(state: Dictionary, topic: Dictionary) -> float:
+	if not topic.has("rate"):
+		return 0.0
 	var total := 0.0
 	for cat in open_ids(state):
 		if topic.side == "stores":
@@ -719,12 +723,27 @@ static func tick_topics(state: Dictionary, world: Dictionary) -> void:
 			ts.since_day = int(_w(world, "week"))
 
 
+## Bileti olmayan konuyu rapordan açar: ilk isteği bu hafta, haftalık etkilenen sipariş `affected`. Konu katalogda yoksa ya da satırı
+## zaten açıksa false.
+static func open_topic(state: Dictionary, world: Dictionary, id: String, affected: float) -> bool:
+	var ts: Dictionary = state.topics.get(id, {})
+	if ts.is_empty() or ts.since_day != NEVER:
+		return false
+	ts.since_day = int(_w(world, "week"))
+	ts.source = "report"
+	ts.affected = affected
+	return true
+
+
 ## Haftada etkilenen sipariş: yayındaki konuda 0. Kullanıcı konusunda konu çıkınca kazanılan teslim edilmiş sipariş (`gain`: kademe ya
 ## da ek özellik); adımsız `returning` konusunda kademeyle haftada iade edilmeyecek sipariş. Mağaza konusunda derdi olan mağazaların
-## siparişi × o hafta ayrılma olasılığı.
+## siparişi × o hafta ayrılma olasılığı. Rapordan açılan konuda raporun verdiği sayı.
 static func _affected(state: Dictionary, world: Dictionary, topic: Dictionary) -> float:
 	if _topic_live(world, topic):
 		return 0.0
+	var ts: Dictionary = state.topics[topic.id]
+	if ts.source == "report":
+		return ts.affected
 	var total := 0.0
 	for cat in open_ids(state):
 		var delivered: float = state.cats[cat].week.get("delivered", 0.0)
