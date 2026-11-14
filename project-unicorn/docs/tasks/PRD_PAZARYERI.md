@@ -162,6 +162,8 @@ kapanışında dolar; okumak onu doldurmaz ve pazaryeri koşusu olmayan oyunda (
 | `revenue_weeks` | Son dört haftanın net komisyonu |
 | `topics[kimlik]` | `tickets` (son dört haftanın bileti, hafta hafta), `since_day` (ilk isteğin haftası), `status` (`waiting`, `planned`, `shipped`), `source` (`tickets` ya da `report`) |
 | `lost` | `users` ve `stores`: kaybedilen kullanıcının ve ayrılan mağazanın birikmiş toplamı |
+| `waive` | Komisyonun alınmayacağı kalan hafta sayısı (acil durumun "bir hafta komisyon almamak" şıkkı; §5.2) |
+| `outage` | Bekleyen kesinti: `points` (kullanıcı defterine yazılacak düşüş) ve `cost` (net komisyondan düşecek tutar); izleyen kapanış uygular ve sıfırlar |
 | `latches` | Olay 5.1'in geldiği kategoriler |
 
 - İki kalabalık `CustomerRegistry`'de iki toplu kayıttır: kullanıcılar ve mağazalar. Memnuniyetleri bu kayıtlarda durur
@@ -180,8 +182,8 @@ kapanışında dolar; okumak onu doldurmaz ve pazaryeri koşusu olmayan oyunda (
   yansıtır.
   Çekirdek oyunun geri kalanını `world` sözlüğünden okur; onu her kapanışta sistem kurar: hafta, ürünün yayında olup
   olmadığı, modül kademeleri ve açık hataları, yayındaki ek özellikler (`features`) ve sprint planındaki konular (`planned`;
-  ikisi de konu kataloğunun kimliğiyle: sistem ürünün kartını bu kimliğe eşler), Pazarlama'nın değerleri, cevapsız
-  bildirimin payı ve kesinti.
+  ikisi de konu kataloğunun kimliğiyle: sistem ürünün kartını bu kimliğe eşler), Pazarlama'nın değerleri ve cevapsız
+  bildirimin payı. Kesinti dünyadan gelmez: acil durum onu duruma yazar (`outage`), izleyen kapanış uygular.
 
 ### 3.2 Kategoriler
 - Altı kategori, veri `data/product/categories.json`. Tanıtım metni yoktur.
@@ -283,6 +285,9 @@ Kapanış yalnız ürün yayındayken koşar; kategori açmak yayından önce de
   karşıladığı indirim ve kupon`. Yeni mağaza şartının indirimi: `brüt komisyon × (şart süresi içindeki katılan mağaza ÷ mağaza)
   × (1 − şartta alınan pay)`. Şirketin karşıladığı indirim ve kupon Pazarlama'nın kampanyasından ve "Üyelere özel indirim"den gelir.
   Net komisyon sınırlanmaz: şirketin büyük indirim karşıladığı haftada eksiye düşebilir.
+  Komisyonun alınmadığı haftada (`waive`; §5.2) brüt komisyon bütün kategorilerde 0'dır; yeni mağaza şartının indirimi
+  brütle orantılı olduğundan o da 0'dır, şirketin karşıladığı indirim yine düşer. Kesintinin bedeli (§5.2) o haftanın
+  toplam net komisyonundan bir kez düşer; kategori satırlarına dağıtılmaz.
 - **Aylık gelir** (öneri, onay bekliyor; §12 soru 4):
   - komisyon geliri = `revenue_weeks` toplamı × 4,33 ÷ 4; mağazalar kaydının MRR'ına yazılır (yayının ilk dört haftasında
     sayı bu yüzden haftadan haftaya dolar);
@@ -331,9 +336,9 @@ yazıldığı haftadan sayılır ve süresi dolunca düşer.
 | Hızlı teslimat yalnız üyeye | kullanıcı | −3 | 8 hafta | Hızlı teslimat "Herkese"den "Premium'a" alınınca |
 | Hızlı teslimat | kullanıcı | +3 | sürdükçe | Hızlı teslimat "Herkese" |
 | Adresten iade | kullanıcı | +2 | sürdükçe | Adresten iade "Herkese" |
-- Kesinti acil durumu bugünkü gibi `IncidentSystem`'den gelir; kullanıcı memnuniyetine yazdığı düşüş deftere "Kesinti" adıyla
-  4 haftalık satır olarak girer (tutarı olayın planından). Yedekleme modülü kesintide kaçan siparişi azaltır: yokken × 1;
-  kademeleriyle × 0,7; × 0,5; × 0,3.
+- Kesinti acil durumu bugünkü gibi `IncidentSystem`'den gelir; kullanıcı memnuniyetine yazdığı düşüş izleyen kapanışta deftere
+  "Kesinti" adıyla 4 haftalık satır olarak girer (tutarı olayın planından; `note_outage`). Yedekleme modülü kesintide kaçan
+  siparişi azaltır: yokken × 1; kademeleriyle × 0,7; × 0,5; × 0,3 (`backup_mult`).
 - Genel sayfası iki satırın yanında en ağır olumsuz satırın kısa adını gösterir ("Geciken talep", "Geç teslimat"; konunun ve
   kategorinin adı ipucunda); ipucu bütün satırları tam adıyla ve puanıyla listeler.
 - Etkisi: kullanıcı memnuniyeti organik ziyareti ve elde tutmayı (§3.5, §3.7), mağaza memnuniyeti mağazanın kalışını (§3.4) oynatır.
@@ -539,6 +544,11 @@ başlar, kartıyla tek commit'te iner; kol yalnız `MarketplaceSystem`'in işlev
 - Acil durumlar: eşikler ve bedel kitleden değil siparişten türer (kaçan sipariş × sepet × komisyon; Yedekleme çarpanı §3.8).
   "Ücretsiz ay" şıkkı "bir hafta komisyon almamak" olur (`incident_system.gd:115, 167-169, 246-248, 521, 536, 638-660`; çip
   `chips.gd:591-593`).
+  Kaçan siparişin komisyonu açık kategorilerin geçen haftaki teslim payıyla ağırlıklı `sepet × komisyon`dur (teslim yoksa
+  eşit ağırlık; iade düşülmez; `lost_commission`) ve izleyen kapanışın net komisyonundan düşer. "Bir hafta komisyon
+  almamak" izleyen kapanışta brüt komisyonu sıfırlar (`waive_commission`). İkisi aynı kapanışa düşerse kesintinin bedeli
+  ayrıca düşülmez: o hafta kaçan siparişin komisyonu da alınmayacaktı; "Kesinti" satırı yine yazılır (onay bekliyor).
+  Önizleme bekleyen kesintiyi ve komisyonsuz haftayı saymaz (§3.13).
 - Üç PM kâğıdı Talepler'in bilet sayısını okur.
 
 ## 6. Kitleyi okuyan öbür yerler

@@ -24,14 +24,16 @@ extends RefCounted
 # kapanışın haftalık `pazaryeri` gideri); `lost` (kapanışlarda kaybedilen `users` ve `stores`, birikir); `topics[konu]` =
 # `tickets` (son dört haftanın bileti, yeni önde), `since_day` (ilk biletin ya da isteğin haftası), `status`, `source` (`tickets`
 # ya da `report`).
+# `waive` (komisyonsuz kalan hafta; kapanış brüt komisyonu 0 yapar ve birer azaltır), `outage` (bekleyen kesinti: `points` kullanıcı
+# defterine "Kesinti" satırı olarak yazılır, `cost` o haftanın toplam net komisyonundan düşer, komisyonsuz haftada düşmez; kapanış
+# ikisini sıfırlar).
 #
 # `world`: `week`, `published`, `tiers[modül]` (0 = yok), `bugs[modül]` (açık hata), `stars[kişi]` (işbaşındaki atananın Satış
 # yıldızı; olmayan kazandırmaz), `channel[kategori][kaynak]` (Pazarlama'nın kanal ziyareti), `return_lift`, `overrides[kural]`
 # (kampanyanın ezmesi),
 # `campaign_discount[kategori]` (şirketin karşıladığı haftalık indirim), `campaign_loss` (kampanya bitti, katılan mağaza zarar etti),
 # `unanswered` (Destek'in cevapsız bildirim payı), `features` (yayındaki ek özellik konularının kimliği: yayında olmayan
-# kullanıcı özelliği bağlı adımı `missing_mult` kadar kısar), `planned` (sprint planındaki konuların kimliği), `outage` (acil
-# durumun kullanıcı memnuniyetine yazdığı düşüş).
+# kullanıcı özelliği bağlı adımı `missing_mult` kadar kısar), `planned` (sprint planındaki konuların kimliği).
 #
 # "Sipariş" teslim edilen siparişin adıdır (gain, haftalık sipariş, mağaza başına sipariş, üye siparişi, kargo ve iade
 # sayıları); "Sipariş verdi" adımı `order` ayrı sayılır.
@@ -49,10 +51,11 @@ const STEPS := ["cart", "checkout", "order", "delivered"]
 const TABLE_FROM_TIER_1 := ["storefront", "checkout", "orders"]
 ## Önizlemede fark yerine oran olarak okunan büyüklükler.
 const RELATIVE := ["store_earnings"]
+const NO_OUTAGE := {"points": 0.0, "cost": 0.0}
 const WORLD := {
 	"week": 0, "published": false, "tiers": {}, "bugs": {}, "stars": {}, "channel": {}, "return_lift": 0.0, "overrides": {},
 	"campaign_discount": {}, "campaign_loss": false, "unanswered": 0.0, "features": [],
-	"planned": [], "outage": 0.0,
+	"planned": [],
 }
 
 static var _c: Dictionary = _read(DATA_PATH)
@@ -97,6 +100,7 @@ static func new_state() -> Dictionary:
 		"premium": {"open": false, "fee": int(_c.premium.fee_start), "fee_day": NEVER, "trial": false, "joined": [],
 			"orders": [], "perks": perks},
 		"ledger": {"users": [], "stores": []}, "sat": {"users": base, "stores": base}, "revenue_weeks": [], "burn": {},
+		"waive": 0, "outage": NO_OUTAGE.duplicate(),
 		"lost": {"users": 0.0, "stores": 0.0}, "topics": topics}
 
 
@@ -548,6 +552,38 @@ static func unassign(state: Dictionary, person: String) -> bool:
 	return state.assign.erase(person)
 
 
+# --- Acil durum: komisyonsuz hafta ve kesinti ------------------------------------------------
+
+## Komisyonu `weeks` hafta daha almamak (haftalar toplanır): kapanış brüt komisyonu 0 yapar. `weeks` 1'den azsa false.
+static func waive_commission(state: Dictionary, weeks: int) -> bool:
+	if weeks < 1:
+		return false
+	state.waive += weeks
+	return true
+
+
+## İzleyen kapanışa kesinti yazar: `points` kullanıcı defterindeki "Kesinti" satırının düşüşü (satır −`points`), `cost` o haftanın
+## toplam net komisyonundan düşer (komisyonsuz haftada düşmez). İkisi de 0 ise false.
+static func note_outage(state: Dictionary, points: float, cost: float) -> bool:
+	if points == 0.0 and cost == 0.0:
+		return false
+	state.outage.points += points
+	state.outage.cost += cost
+	return true
+
+
+## Kaçan `orders` siparişin komisyonu: açık kategorilerin geçen haftaki teslim payıyla ağırlıklı sepet × komisyon (teslim yoksa eşit
+## ağırlık); iade düşülmez.
+static func lost_commission(state: Dictionary, orders: float) -> float:
+	return orders * _weighted(state, open_ids(state), func(id: String) -> float: return cat_def(id).basket * state.cats[id].commission / 100.0)
+
+
+## Yedekleme modülünün kesintide kaçan siparişi çarptığı sayı: modül yokken 1, kademeleriyle `ledger.rows.outage.backup`.
+static func backup_mult(world: Dictionary) -> float:
+	var tier := _tier(world, "backup")
+	return 1.0 if tier == 0 else _c.ledger.rows.outage.backup[tier - 1]
+
+
 # --- Memnuniyet defteri ----------------------------------------------------------------------
 
 static func _add(state: Dictionary, side: String, key: String, arg: String, points: float, weeks: int) -> void:
@@ -603,9 +639,8 @@ static func _settle(state: Dictionary, world: Dictionary, totals: Dictionary) ->
 			_add(state, side, "late_topic", late, rows.late_topic.points, WHILE)
 	if _w(world, "campaign_loss"):
 		_add(state, "stores", "sale_loss", "", rows.sale_loss.points, int(rows.sale_loss.weeks))
-	var outage: float = _w(world, "outage")
-	if outage > 0.0:
-		_add(state, "users", "outage", "", -outage, int(rows.outage.weeks))
+	if state.outage.points > 0.0:
+		_add(state, "users", "outage", "", -state.outage.points, int(rows.outage.weeks))
 	for side in SIDES:
 		state.sat[side] = move_toward(state.sat[side], target_sat(state, side), _c.ledger.max_step)
 		for row in state.ledger[side]:
@@ -748,7 +783,10 @@ static func close_week(state: Dictionary, world: Dictionary) -> void:
 			state.sources[source] = []
 	for source in state.sources:
 		_push(state.sources[source], totals.new.get(source, 0.0), int(_c.visits.source_weeks))
-	_push(state.revenue_weeks, totals.net, window)
+	# Komisyonsuz haftada kesintinin bedeli düşmez: o haftanın komisyonu zaten 0.
+	_push(state.revenue_weeks, totals.net if state.waive > 0 else totals.net - state.outage.cost, window)
+	if state.waive > 0:
+		state.waive -= 1
 	state.burn = totals.burn
 	open_premium(state, world)
 	var pr: Dictionary = state.premium
@@ -763,6 +801,7 @@ static func close_week(state: Dictionary, world: Dictionary) -> void:
 		_push(pr.perks[perk].uses, totals.perks[perk].uses, window)
 		_push(pr.perks[perk].cost, totals.perks[perk].cost, window)
 	_settle(state, world, totals)
+	state.outage = NO_OUTAGE.duplicate()
 
 
 ## Bir kategorinin ziyareti, dört adımı, iadesi, net komisyonu ve ayrıcalık kullanımı (kapanışın 2, 3 ve 5. adımları).
@@ -807,7 +846,8 @@ static func _close_category(state: Dictionary, world: Dictionary, cat: String, m
 	if perks.member_discount.pick == "premium":
 		discount = member_orders * _c.premium.perks.member_discount.discount * d.basket
 		use.call("member_discount", member_orders, discount)
-	var gross: float = (n.delivered - returns) * d.basket * cs.commission / 100.0
+	# Komisyonsuz haftada brüt 0: şartın indirimi brütle orantılı olduğundan o da 0, şirketin karşıladığı indirim yine düşer.
+	var gross: float = 0.0 if state.waive > 0 else (n.delivered - returns) * d.basket * cs.commission / 100.0
 	var terms_cut := 0.0
 	if not cs.terms.is_empty() and cs.stores > 0.0:
 		terms_cut = gross * minf(1.0, _sum(cs.joined.slice(0, int(cs.terms.weeks))) / cs.stores) * (1.0 - cs.terms.share)
@@ -840,10 +880,13 @@ static func _sum(values: Array) -> float:
 
 # --- Önizleme --------------------------------------------------------------------------------
 
-## Durumun kopyasında kapanışı önizleme süresince ileri koşar: Pazarlama'nın değerleri aynı kalır, olay ve acil durum yoktur.
+## Durumun kopyasında kapanışı önizleme süresince ileri koşar: Pazarlama'nın değerleri aynı kalır, olay, acil durum, bekleyen kesinti
+## ve komisyonsuz hafta yoktur.
 static func project(state: Dictionary, world: Dictionary) -> Dictionary:
 	var ahead := state.duplicate(true)
-	var quiet := world.merged({"outage": 0.0, "campaign_loss": false}, true)
+	ahead.waive = 0
+	ahead.outage = NO_OUTAGE.duplicate()
+	var quiet := world.merged({"campaign_loss": false}, true)
 	for i in int(_c.preview.weeks):
 		close_week(ahead, quiet.merged({"week": int(_w(world, "week")) + i}, true))
 	return ahead

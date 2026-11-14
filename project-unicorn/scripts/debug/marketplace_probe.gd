@@ -25,7 +25,8 @@ const CHECKS := ["empty_category_no_orders", "acquisition_waits_for_publish", "l
 	"zone_limits_consistent", "constants_switch", "gain_and_weakest", "acquisition_multipliers", "store_terms_discount",
 	"premium_members", "zone_rows_need_stores", "add_users_bounds", "lost_counters", "channel_read_values", "source_revenue_values",
 	"state_survives_codec", "topic_rows_known", "topic_ticket_gates", "topic_ledger_rows", "feature_gain_matches_close",
-	"reviews_affected_is_return_gap", "assignment_waits_a_close"]
+	"reviews_affected_is_return_gap", "assignment_waits_a_close", "waive_zeroes_one_close", "outage_row_and_cost",
+	"lost_commission_weighted", "backup_mult_tiers"]
 
 var _weeks := DEFAULT_WEEKS
 var _printing := false
@@ -659,18 +660,26 @@ func _check_state_survives_codec() -> Array:
 	var state := _store_state(["fashion"], 3000.0)
 	state.members = 300.0
 	state.cats.fashion.week = {"visits": 900.0, "returning": 500.0, "delivered": 20.0}
+	MarketplaceModel.waive_commission(state, 2)
+	MarketplaceModel.note_outage(state, 3.0, 40.0)
 	var decoded: Dictionary = _as_loaded(JSON.parse_string(JSON.stringify(state)))
 	var integral: bool = typeof(decoded.users) == TYPE_INT and typeof(decoded.members) == TYPE_INT \
-		and typeof(decoded.cats.fashion.stores) == TYPE_INT
+		and typeof(decoded.cats.fashion.stores) == TYPE_INT and typeof(decoded.waive) == TYPE_INT and typeof(decoded.outage.cost) == TYPE_INT
 	var world := _live_world()
 	var keep := MarketplaceModel.retention(decoded, world)
 	var share := MarketplaceModel.returning_share(decoded, ["fashion"])
+	var costed := decoded.duplicate(true)
+	costed.waive = 0
+	MarketplaceModel.close_week(costed, world)
 	MarketplaceModel.close_week(decoded, world)
 	var ok: bool = integral and _near(keep, 0.94 + 0.03 * (300.0 / 3000.0)) and _near(share, 20.0 * 500.0 / 900.0 / 20.0) \
 		and _near(decoded.lost.users, 3000.0 * (1.0 - 0.943)) \
-		and _near(decoded.lost.stores, 30.0 * (0.008 + 0.07 * (1.0 - (20.0 / 30.0) / 1.2)))
-	return [ok, "integral state decoded as ints=%s: retention %.4f (0.943), returning share %.4f (0.5556), lost users %.2f (171), lost stores %.4f (1.1733)"
-		% [integral, keep, share, decoded.lost.users, decoded.lost.stores]]
+		and _near(decoded.lost.stores, 30.0 * (0.008 + 0.07 * (1.0 - (20.0 / 30.0) / 1.2))) \
+		and decoded.waive == 1 and decoded.revenue_weeks[0] == 0.0 and decoded.outage.points == 0.0 and decoded.outage.cost == 0.0 \
+		and _near(costed.revenue_weeks[0], costed.cats.fashion.week.net - 40.0) and costed.waive == 0 and costed.outage.cost == 0.0 \
+		and decoded.ledger.users.any(func(r: Dictionary) -> bool: return r.key == "outage" and r.points == -3.0)
+	return [ok, "integral state decoded as ints=%s: retention %.4f (0.943), returning share %.4f (0.5556), lost users %.2f (171), lost stores %.4f (1.1733); pending waive 2 -> 1: waived close revenue %.0f (no outage cost), Outage row -3; the same state without waive pays the cost: revenue %.0f"
+		% [integral, keep, share, decoded.lost.users, decoded.lost.stores, decoded.revenue_weeks[0], costed.revenue_weeks[0]]]
 
 
 ## Elle konan haftalık sayılarla Moda: ziyaret 10.000, sepet 1.200, ödeme 800, sipariş 600, teslim 560, iade 100; 30 mağaza.
@@ -851,3 +860,129 @@ func _check_assignment_waits_a_close() -> Array:
 		and state.assign.is_empty()
 	return [ok, "closed category refused=%s, before the first close %.2f, after it %.2f (1-star base 2), same category again refused=%s, moved: old %.2f, new %.2f, one close later %.2f, not on duty %.2f, unassign=%s then %s"
 		% [not closed, before_close, after_close, not repeat, old_category, new_category, resumed, absent, left, again]]
+
+
+## Bir hafta komisyon: feragatli kapanışta brüt 0 (net = şirketin karşıladığı indirimin eksisi), izleyen kapanış normale döner, haftalar
+## toplanır, önizleme bekleyeni görmez. Elle: Moda sepeti 38, komisyonu %10; Elektronik sepeti 95, komisyonu %6.
+func _check_waive_zeroes_one_close() -> Array:
+	var world := _live_world()
+	var discount := world.merged({"campaign_discount": {"fashion": 20.0}}, true)
+	var start := _store_state(["fashion", "electronics"], 3000.0)
+	var normal := func(s: Dictionary) -> float:
+		var f: Dictionary = s.cats.fashion.week
+		var e: Dictionary = s.cats.electronics.week
+		return (f.delivered - f.returns) * 38.0 * 0.10 + (e.delivered - e.returns) * 95.0 * 0.06
+	var plain := start.duplicate(true)
+	_run(plain, discount, 1)
+	var waived := start.duplicate(true)
+	var refused: bool = not MarketplaceModel.waive_commission(waived, 0) and not MarketplaceModel.waive_commission(waived, -2) and waived.waive == 0
+	MarketplaceModel.waive_commission(waived, 1)
+	_run(waived, discount, 1)
+	var zero_nets := [waived.cats.fashion.week.net, waived.cats.electronics.week.net]
+	var zeroed: bool = waived.cats.fashion.week.net == -20.0 and waived.cats.electronics.week.net == 0.0 and waived.revenue_weeks[0] == -20.0 \
+		and waived.cats.fashion.week.delivered == plain.cats.fashion.week.delivered \
+		and _near(plain.revenue_weeks[0], normal.call(plain) - 20.0) and plain.revenue_weeks[0] > 0.0
+	_run(waived, world.merged({"week": 1}, true), 1)
+	var back: bool = waived.waive == 0 and waived.revenue_weeks[0] > 0.0 and _near(waived.revenue_weeks[0], normal.call(waived))
+	var twice := start.duplicate(true)
+	MarketplaceModel.waive_commission(twice, 1)
+	MarketplaceModel.waive_commission(twice, 1)
+	var stacked: int = twice.waive
+	var nets := []
+	for i in 3:
+		_run(twice, world.merged({"week": i}, true), 1)
+		nets.append(twice.revenue_weeks[0])
+	var two_weeks: bool = stacked == 2 and nets[0] == 0.0 and nets[1] == 0.0 and nets[2] > 0.0 and _near(nets[2], normal.call(twice)) and twice.waive == 0
+	var pending := start.duplicate(true)
+	MarketplaceModel.waive_commission(pending, 2)
+	var preview_blind: bool = pending.waive == 2 and _equal(MarketplaceModel.project(pending, world), MarketplaceModel.project(start, world))
+	return [refused and zeroed and back and two_weeks and preview_blind,
+		"waive 1: rejects 0 and -2=%s; waived close net Fashion %.2f, Electronics %.2f (the company covers a 20 discount; the same week without waive %.2f), orders unchanged; "
+		% [refused, zero_nets[0], zero_nets[1], plain.revenue_weeks[0]]
+		+ "next close back to %.2f (hand %.2f); waive 2 stacked=%d: nets %.2f %.2f %.2f, left %d; preview ignores pending waive=%s"
+		% [waived.revenue_weeks[0], normal.call(waived), stacked, nets[0], nets[1], nets[2], twice.waive, preview_blind]]
+
+
+## Kesinti: izleyen kapanışta "Kesinti" satırı `rows.outage.weeks` hafta sürer, bedel toplam net komisyondan düşer, bekleyen sıfırlanır.
+func _check_outage_row_and_cost() -> Array:
+	var world := _live_world()
+	var start := _store_state(["fashion", "electronics"], 3000.0)
+	var plain := start.duplicate(true)
+	_run(plain, world, 1)
+	var plain_net: float = plain.cats.fashion.week.net + plain.cats.electronics.week.net
+	var hit := start.duplicate(true)
+	var refused: bool = not MarketplaceModel.note_outage(hit, 0.0, 0.0)
+	MarketplaceModel.note_outage(hit, 3.0, 40.0)
+	MarketplaceModel.note_outage(hit, 2.0, 10.0)
+	var summed: bool = hit.outage.points == 5.0 and hit.outage.cost == 50.0
+	var pending := hit.duplicate(true)
+	var rows := func(s: Dictionary) -> Array:
+		return s.ledger.users.filter(func(r: Dictionary) -> bool: return r.key == "outage")
+	var counts := []
+	var first_row := {}
+	var first_revenue := 0.0
+	var first_drop := 0.0
+	var split_kept := false
+	var cleared := false
+	var costless_after := true
+	for i in 4:
+		_run(hit, world.merged({"week": i}, true), 1)
+		var found: Array = rows.call(hit)
+		counts.append(found.size())
+		if i == 0:
+			first_row = found[0].duplicate() if found.size() == 1 else {}
+			first_revenue = hit.revenue_weeks[0]
+			first_drop = MarketplaceModel.target_sat(hit, "users") - MarketplaceModel.target_sat(plain, "users")
+			split_kept = _near(hit.cats.fashion.week.net, plain.cats.fashion.week.net) and _near(hit.cats.electronics.week.net, plain.cats.electronics.week.net)
+			cleared = hit.outage.points == 0.0 and hit.outage.cost == 0.0
+		else:
+			costless_after = costless_after and _near(hit.revenue_weeks[0], hit.cats.fashion.week.net + hit.cats.electronics.week.net)
+	var row_ok: bool = first_row.get("points", 0.0) == -5.0 and first_row.get("weeks", 0) == 3
+	var cost_ok: bool = _near(first_revenue, plain_net - 50.0) and split_kept and first_revenue < plain_net
+	var preview_blind: bool = pending.outage.cost == 50.0 and _equal(MarketplaceModel.project(pending, world), MarketplaceModel.project(start, world))
+	# Komisyonsuz hafta ile kesinti aynı kapanışta: bedel düşmez (komisyon zaten 0), satır yazılır, izleyen kapanış normal.
+	var covered := world.merged({"campaign_discount": {"fashion": 20.0}}, true)
+	var both := start.duplicate(true)
+	MarketplaceModel.waive_commission(both, 1)
+	MarketplaceModel.note_outage(both, 3.0, 40.0)
+	_run(both, covered, 1)
+	var both_net: float = both.revenue_weeks[0]
+	var both_rows: Array = rows.call(both)
+	var both_cleared: bool = both.outage.cost == 0.0 and both.waive == 0
+	_run(both, world.merged({"week": 1}, true), 1)
+	var both_ok: bool = both_net == -20.0 and both_rows.size() == 1 and both_rows[0].points == -3.0 and both_cleared and rows.call(both).size() == 1
+	both_ok = both_ok and both.revenue_weeks[0] > 0.0 and _near(both.revenue_weeks[0], both.cats.fashion.week.net + both.cats.electronics.week.net)
+	return [refused and summed and counts == [1, 1, 1, 0] and row_ok and cost_ok and _near(first_drop, -5.0) and cleared and costless_after and preview_blind \
+		and both_ok,
+		"note_outage rejects 0/0=%s, 3+2 points and 40+10 cost add up=%s; closes 1-4 leave outage rows %s (written once, 4 weeks), first row %s; "
+		% [refused, summed, counts, first_row] + "net commission %.2f -> %.2f (cost 50 off the total, category rows unchanged=%s), target satisfaction %+.2f, pending cleared=%s, "
+		% [plain_net, first_revenue, cost_ok, first_drop, cleared] + "later weeks cost nothing=%s, preview ignores pending=%s; waive and outage in one close: month net %.2f (only the company discount), row written, next close normal=%s"
+		% [costless_after, preview_blind, both_net, both_ok]]
+
+
+## Kaçan siparişin komisyonu: geçen haftaki teslim payıyla ağırlıklı; teslim yoksa eşit; iade ve kapalı kategori sayılmaz.
+func _check_lost_commission_weighted() -> Array:
+	var state := _store_state(["fashion", "electronics"], 3000.0)
+	state.cats.fashion.week = {"delivered": 600.0, "returns": 100.0}
+	state.cats.electronics.week = {"delivered": 200.0, "returns": 50.0}
+	state.cats.home.week = {"delivered": 1000.0}
+	var weighted := MarketplaceModel.lost_commission(state, 10.0)
+	state.cats.fashion.commission = 12
+	var raised := MarketplaceModel.lost_commission(state, 10.0)
+	state.cats.fashion.commission = 10
+	state.cats.fashion.week = {}
+	state.cats.electronics.week = {}
+	var even := MarketplaceModel.lost_commission(state, 10.0)
+	var none := MarketplaceModel.lost_commission(MarketplaceModel.new_state(), 10.0)
+	# Elle: Moda 3,80 ve Elektronik 5,70 sipariş başına; payları 0,75 ve 0,25 (komisyon %12'de Moda 4,56), teslim yokken 0,5 ve 0,5.
+	return [_near(weighted, 42.75) and _near(raised, 48.45) and _near(even, 47.5) and none == 0.0,
+		"10 lost orders: Fashion 600 / Electronics 200 delivered %.2f (42.75), Fashion at 12%% %.2f (48.45), no deliveries last week %.2f (47.5), no open category %.1f"
+		% [weighted, raised, even, none]]
+
+
+func _check_backup_mult_tiers() -> Array:
+	var got := []
+	for tiers in [{}, {"backup": 1}, {"backup": 2}, {"backup": 3}, {"mobile": 3, "accounts": 3}]:
+		got.append(MarketplaceModel.backup_mult(_live_world().merged({"tiers": tiers}, true)))
+	got.append(MarketplaceModel.backup_mult(MarketplaceModel.new_world()))
+	return [_equal(got, [1.0, 0.7, 0.5, 0.3, 1.0, 1.0]), "outage multiplier without Backup, tiers 1-3, other modules only, default world: %s" % [got]]
