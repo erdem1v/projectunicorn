@@ -158,6 +158,8 @@ var transactions: Array = []           # [{day: int, label: String, amount: int}
 var marketing_push: Dictionary = {}
 # Pazarlama's ledger (MarketingSystem): rows, next row id. Empty until the company runs a row.
 var marketing: Dictionary = {}
+# Pazaryeri's state (sole writer MarketplaceSystem): empty outside a marketplace run.
+var marketplace: Dictionary = {}
 # What the sales/customer desks did on their own, so the player can reconstruct a cause the
 # ticker has scrolled past. Sole append point: SalesSystem.record_sales_event.
 const SALES_LOG_CAP := 12
@@ -882,6 +884,7 @@ func initialize_run(payload: Dictionary) -> void:
 	transactions.clear()
 	marketing_push.clear()
 	marketing.clear()
+	marketplace.clear()
 	sales_log.clear()
 
 	# Month-End Summary + run counters (the ledgers are opened at the END: the period snapshot needs the roster)

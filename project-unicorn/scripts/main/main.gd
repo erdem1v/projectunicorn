@@ -3172,7 +3172,7 @@ func _seed_rnd(week: int, note := true) -> void:
 #   waiting) · load_delete (deleting Kayıt 1 asked) · confirm (the seed pitch) · confirm3 (quitting over the menu
 #   with weeks unsaved) · confirm3_gate (the same, a decision waiting) · return_confirm, return_confirm_gate (the same
 #   two returning to the main menu, three weeks unsaved) · f5_gate (F5 refused while a decision waits).
-# The save and load kinds write or delete six real saves (_shot_saves): run them with a private APPDATA.
+# The save and load kinds write or delete seven real saves (_shot_saves): run them with a private APPDATA.
 func _run_modal_shot(kind: String) -> void:
 	_begin_shot()
 	if (kind.begins_with("save") or kind.begins_with("load")) and _saves_refused():
@@ -3273,8 +3273,8 @@ func _shot_open_list(body: String, index: int, hover: int) -> void:
 ## The mockups' saves, newest first, written for a full list and deleted for an empty one: this run's quicksave and
 ## two autosaves, then PromptPilot's from before run ids (their meta carries no run_id, logo or saved_msec, and the
 ## logo's old style):
-## Kayıt 1 (week 23, the Series A, $24.000 cash and $6,4K MRR), a Kayıt 2 too old to open and a Kayıt 3 that cannot
-## be read. Their meta is set on the written files.
+## Kayıt 1 (week 23, the Series A, $24.000 cash and $6,4K MRR), a Kayıt 4 made with a product that left the game,
+## a Kayıt 2 too old to open and a Kayıt 3 that cannot be read. Their meta is set on the written files.
 func _shot_saves(full: bool) -> void:
 	# One run id on every shot, so a rerun writes over the same files.
 	GameState.run_id = "unicorn"
@@ -3283,7 +3283,7 @@ func _shot_saves(full: bool) -> void:
 	for row in [[SaveManager.quick_slot_id(), 0, {}], ["auto_%s_1" % GameState.run_id, 660, {}],
 			["auto_%s_2" % GameState.run_id, 2040, {}],
 			["manual_1", 224880, older.merged({"day": 23, "phase": 3, "cash": 24000, "mrr": 6400})],
-			["manual_2", 1532220, older], ["manual_3", 1900000, older]]:
+			["manual_4", 900000, older], ["manual_2", 1532220, older], ["manual_3", 1900000, older]]:
 		if not full:
 			SaveManager.delete_slot(row[0])
 			continue
@@ -3300,6 +3300,8 @@ func _shot_saves(full: bool) -> void:
 			data.schema_version = SaveManager.MIN_LOADABLE_VERSION - 1
 		if row[0] == "manual_3":
 			data.erase("state")
+		if row[0] == "manual_4":
+			data.state.game_state.flags["mvp_sub_product_type_id"] = "note_tool"
 		FileAccess.open(path, FileAccess.WRITE).store_string(JSON.stringify(data, "\t", false))
 
 

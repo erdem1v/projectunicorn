@@ -365,6 +365,7 @@ SAVE_ERR_DECISION_WAITING,Karar beklerken kaydedilemez.,Not while a decision is 
 SAVE_ERR_WRITE,Kayıt yazılamadı.,The save could not be written.
 SAVE_ERR_NO_RUN,Kaydedilecek bir oyun yok.,There is no run to save.
 SAVE_ERR_NO_QUICK,Bu şirketin hızlı kaydı yok.,This company has no quicksave.
+SAVE_ERR_PRODUCT_GONE,Bu kayıt oyundan kalkan bir ürünle yapılmış.,This save was made with a product that is no longer in the game.
 SAVE_TOAST_SAVED,Kaydedildi,Saved
 SAVE_TOAST_NOT_SAVED,Kaydedilmedi,Not saved
 SAVE_TOAST_LOADED,Yüklendi,Loaded

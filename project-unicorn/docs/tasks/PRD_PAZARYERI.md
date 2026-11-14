@@ -543,7 +543,9 @@ başlar, kartıyla tek commit'te iner; kol yalnız `MarketplaceSystem`'in işlev
 ## 7. Kayıt
 
 - `SCHEMA_VERSION` 19'dan 20'ye, sistem paketinde, tek başına bir commit'te çıkar. O commit: `GameState.marketplace`
-  sözlüğü; dört `b2c_*` bayrağı ve `b2c_audience_history` `RETIRED_FLAGS`'e; eski not ve video kaydının reddi.
+  sözlüğü (boş doğar; yeni alan göç istemez) ve eski not ve video kaydının reddi. `b2c_audience`, `b2c_price` ve
+  `b2c_users_lost` bayrakları ile `b2c_audience_history`, onları okuyan eski ekonominin silindiği commit'te `RETIRED_FLAGS`'e
+  girer; `b2c_paid_tier_open` Üyelik modülünün kademesi olarak kalır.
   (`ORTAK_ARAYUZLER.md`'nin "numara PRD'ye yazılmaz" kuralı öbür ekiplerin sonradan alacağı numaralar içindir; 20 bu PRD'nindir.)
 - Artışın nedeni: artış olmazsa eski bir sürüm pazaryeri kaydını reddetmez ve sessizce eski ekonomiyle açar
   (`_read_file`, `SAVE_ERR_NEWER`). Sonraki paketler sözlüğe anahtar ekler; okuyan `.get(anahtar, varsayılan)` kullanır; yeni

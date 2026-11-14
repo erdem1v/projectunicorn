@@ -13,14 +13,18 @@ extends Node
 # NegotiationSystem) are reset, never serialised: can_save() refuses while any of them
 # is_active(), so a sitting is always idle at the moment a save is taken.
 
-const SCHEMA_VERSION := 19
+const SCHEMA_VERSION := 20
 
 ## GDD ÜRÜN rev 6.1 §22.5 — eski kayıt TAŞINMAZ. "Yükleyici eski sürümü görürse kullanıcıya
 ## AÇIK MESAJ verir, sessizce bozuk state üretmez." Düz özellik listesi hat durumlarına
 ## çevrilemez ve v9 olay bloğu v10 motorunun arklarını/latch'lerini taşımaz; çevirmeye
 ## çalışmak çalışıyor görünen ve yanlış olan bir koşu üretir. O yüzden kapı sürümdedir.
-## v11-v19 alanlarının hepsi bildirilmiş varsayılan ya da göç taşıdığı için v10 hâlâ yüklenir.
+## v11-v20 alanlarının hepsi bildirilmiş varsayılan ya da göç taşıdığı için v10 hâlâ yüklenir.
 const MIN_LOADABLE_VERSION := 10
+
+## Oyundan kalkan ürünler: bu türle yapılmış kayıt yuva listesinde gerekçesiyle durur, açılmaz.
+const REMOVED_PRODUCTS := ["note_tool", "video_clip"]
+
 const SAVE_DIR := "user://saves/"
 
 # Slot ids are also filenames on disk, i.e. a compatibility surface: quick_<run>, auto_<run>_<n> and manual_<n>. The
@@ -205,6 +209,9 @@ func _read_file(path: String) -> Dictionary:
 		_migrate_18(state)
 	if version < 19:
 		_migrate_19(state)
+	var flags: Dictionary = (state.get("game_state", {}) as Dictionary).get("flags", {}) as Dictionary
+	if String(flags.get("mvp_sub_product_type_id", "")) in REMOVED_PRODUCTS:
+		return _refused("SAVE_ERR_PRODUCT_GONE", meta)
 	return {"ok": true, "error_key": "", "meta": meta, "state": state}
 
 

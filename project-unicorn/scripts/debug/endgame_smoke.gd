@@ -315,6 +315,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"save_continuity_seeded":             fail = _case_save_continuity_seeded()
 		"save_double_load_no_residue":        fail = _case_save_double_load_no_residue()
 		"save_backup_fallback":               fail = _case_save_backup_fallback()
+		"save_refuses_removed_product":       fail = _case_save_refuses_removed_product()
+		"marketplace_save_roundtrip":         fail = _case_marketplace_save_roundtrip()
 		"autosave_writes_off_thread":         fail = _case_autosave_writes_off_thread()
 		"menu_state_machine":                 fail = _case_menu_state_machine()
 		"save_v13_day_stamps_migrate":        fail = _case_save_v13_day_stamps_migrate()
@@ -10877,6 +10879,91 @@ static func _case_save_backup_fallback() -> String:
 	return ""
 
 
+## A save made with a product the game no longer has is refused with its reason: the slot list keeps the row as unloadable and the
+## file is not touched. An ERP save from before the marketplace loads and leaves the marketplace's state empty (the run before
+## the load has its own cleared), and a save with no type chosen loads.
+## FALSIFICATION: delete the refusal in `SaveManager._read_file` → the note and video saves load and FAIL; take "video_clip" out of
+## `SaveManager.REMOVED_PRODUCTS` → the video save FAILs; delete `marketplace.clear()` in `GameState.initialize_run` → the state of
+## the run before the load survives and FAILs.
+static func _case_save_refuses_removed_product() -> String:
+	var path: String = SaveManager.SAVE_DIR + SAVE_SLOT_A + ".json"
+	var done := func(why: String) -> String:
+		_cleanup_save_slots()
+		return why
+	for subtype: String in ["", "erp", "note_tool", "video_clip"]:
+		if subtype != "":
+			GameState.set_flag("mvp_sub_product_type_id", subtype)
+		if not SaveManager.save_to_slot(SAVE_SLOT_A):
+			return done.call("save_to_slot failed (%s)" % SaveManager.cannot_save_reason_key())
+		var raw: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path)) as Dictionary
+		raw["schema_version"] = 19
+		raw.state.game_state.erase("marketplace")
+		_put_text(path, JSON.stringify(raw, "\t", false, true))
+		var text: String = FileAccess.get_file_as_string(path)
+		var read: Dictionary = SaveManager.read_slot(SAVE_SLOT_A)
+		var row: Dictionary = {}
+		for r: Dictionary in SaveManager.list_slots():
+			if r.slot_id == SAVE_SLOT_A:
+				row = r
+		var removed: bool = subtype in ["note_tool", "video_clip"]
+		var key: String = "SAVE_ERR_PRODUCT_GONE" if removed else ""
+		if bool(read.ok) == removed or String(read.error_key) != key or row.is_empty() or bool(row.loadable) == removed \
+				or String(row.error_key) != key:
+			return done.call("a v19 save of '%s' read ok %s (%s), its slot row loadable %s (%s); want %s" % [subtype, read.ok,
+				read.error_key, row.get("loadable"), row.get("error_key"), "refused with " + key if removed else "loaded"])
+		if FileAccess.get_file_as_string(path) != text:
+			return done.call("reading the v19 save of '%s' changed the file" % subtype)
+		if not removed:
+			GameState.marketplace["users"] = 99.0
+			if not SaveManager.apply_loaded_state(read) or not GameState.marketplace.is_empty():
+				return done.call("the v19 save of '%s' loaded with the marketplace state %s, want it empty" % [subtype, str(GameState.marketplace)])
+	if TranslationServer.translate("SAVE_ERR_PRODUCT_GONE") == "SAVE_ERR_PRODUCT_GONE":
+		return done.call("SAVE_ERR_PRODUCT_GONE has no string: the player would see the key")
+	return done.call("")
+
+
+## The marketplace's state rides the real save path (atomic write, JSON, the codec turning a whole-valued float into an int): a
+## state after twelve weeks is saved with whole-valued users and members, loaded, and a week closed on the loaded state and on its
+## twin reads the same users, stores, delivered orders, net commission, both satisfactions and losses.
+## FALSIFICATION: read `state.members` without `float(...)` in `MarketplaceModel.retention` → the loaded users drift (integer
+## division) and FAIL; skip the `marketplace` field in `SaveCodec.capture_game_state` → the loaded state is empty and the case FAILs.
+static func _case_marketplace_save_roundtrip() -> String:
+	var world := MarketplaceModel.new_world()
+	world.published = true
+	world.tiers = {"listing": 1, "storefront": 1, "checkout": 1, "orders": 1}
+	world.stars = {"founder": 3}
+	var state := MarketplaceModel.new_state()
+	MarketplaceModel.open_category(state, world, "fashion")
+	state.assign.founder = "fashion"
+	for week in range(1, 13):
+		MarketplaceModel.close_week(state, world.merged({"week": week}, true))
+	if state.cats.fashion.stores <= 0.0 or state.lost.users <= 0.0 or state.cats.fashion.week.delivered <= 0.0:
+		return "fixture: twelve weeks left no stores (%s), losses (%s) or deliveries" % [state.cats.fashion.stores, state.lost.users]
+	state.users = 3000.0
+	state.members = 300.0
+	var twin: Dictionary = state.duplicate(true)
+	GameState.marketplace = state.duplicate(true)
+	if not SaveManager.save_to_slot(SAVE_SLOT_A):
+		_cleanup_save_slots()
+		return "save_to_slot failed (%s)" % SaveManager.cannot_save_reason_key()
+	var saved: Dictionary = SaveManager.read_slot(SAVE_SLOT_A)
+	_cleanup_save_slots()
+	if not SaveManager.apply_loaded_state(saved):
+		return "the slot did not load back"
+	var next := world.merged({"week": 13}, true)
+	MarketplaceModel.close_week(twin, next)
+	MarketplaceModel.close_week(GameState.marketplace, next)
+	var figures := func(s: Dictionary) -> Array:
+		return [s.users, s.cats.fashion.stores, s.cats.fashion.week.delivered, s.cats.fashion.week.net, s.sat.users, s.sat.stores,
+			s.lost.users, s.lost.stores]
+	var want: Array = figures.call(twin)
+	var got: Array = figures.call(GameState.marketplace)
+	for i in want.size():
+		if not is_equal_approx(float(got[i]), float(want[i])):
+			return "a week after the load reads (users, stores, delivered, net, two satisfactions, losses) %s, its twin %s" % [str(got), str(want)]
+	return ""
+
+
 ## The autosave leaves the calling thread: the call returns with its task in flight, _join_write waits
 ## for it and the slot then reads back the day it captured. A save_to_slot taken while a write is in
 ## flight lets it land first, so two writers never share the slot's .tmp. The slot is the case's own,
@@ -17566,19 +17653,19 @@ static func _case_save_v10_product_state() -> String:
 
 	# --- durumu kur -----------------------------------------------------
 	GameState.set_flag("mvp_shipped", true)
-	GameState.set_flag("mvp_sub_product_type_id", "note_tool")
-	GameState.set_flag("mvp_market_type", "b2c")
+	GameState.set_flag("mvp_sub_product_type_id", "erp")
+	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_version", 3)
-	ProductState.set_line_tier("line_note_tool_search", 2)
-	ProductState.set_line_tier("line_note_tool_editor", 1)
-	ProductState.set_line_tier("line_shared_durability@note_tool", 1)
+	ProductState.set_line_tier("line_erp_ledger", 2)
+	ProductState.set_line_tier("line_erp_stock", 1)
+	ProductState.set_line_tier("line_shared_durability@erp", 1)
 	ProductState.open_hidden_line("line_hidden_auto_organize")
 	GameState.set_flag(ProductState.REPORTS_INCOMING, 41)
 	# Dokuz açık hata iki hatta; üçü son anlık görüntüden sonra gelmiş.
-	ProductState.add_bugs("line_note_tool_search", 6)
+	ProductState.add_bugs("line_erp_ledger", 6)
 	ProductState.snapshot_open_bugs()
-	ProductState.add_bugs("line_note_tool_search", 2)
-	ProductState.add_bugs("line_note_tool_editor", 1)
+	ProductState.add_bugs("line_erp_ledger", 2)
+	ProductState.add_bugs("line_erp_stock", 1)
 	var bugs_before: Dictionary = ProductState.open_bugs_by_line()
 	GameState.set_flag(ProductState.VERSION_LAUNCH_DAY, maxf(1.0, ProductSystem.clock_stamp() - 2.0))
 	GameState.set_flag(ProductState.INTEREST, 62.5)
@@ -17603,9 +17690,9 @@ static func _case_save_v10_product_state() -> String:
 		return "apply_loaded_state returned false"
 
 	# --- her alan hayatta mı --------------------------------------------
-	if ProductState.line_tier("line_note_tool_search") != 2:
+	if ProductState.line_tier("line_erp_ledger") != 2:
 		_cleanup_save_slots()
-		return "line tier did not survive the reload (%d)" % ProductState.line_tier("line_note_tool_search")
+		return "line tier did not survive the reload (%d)" % ProductState.line_tier("line_erp_ledger")
 	if ProductState.lines_open() != 3 or ProductState.steps_shipped() != 4:
 		_cleanup_save_slots()
 		return "line totals came back wrong: %d open, %d steps" \
@@ -17614,7 +17701,7 @@ static func _case_save_v10_product_state() -> String:
 		_cleanup_save_slots()
 		return "an opened hidden line closed itself on reload"
 	if ProductState.reports_incoming() != 41 or ProductState.open_bugs_by_line() != bugs_before \
-			or ProductState.open_bugs_delta() != 3 or ProductState.open_bugs_delta("line_note_tool_editor") != 1:
+			or ProductState.open_bugs_delta() != 3 or ProductState.open_bugs_delta("line_erp_stock") != 1:
 		_cleanup_save_slots()
 		return "the DESTEK counter and the bug store did not survive (%d incoming, %s, weekly change %d)" \
 			% [ProductState.reports_incoming(), ProductState.open_bugs_by_line(), ProductState.open_bugs_delta()]
@@ -27810,8 +27897,8 @@ static func _case_save_v14_build_becomes_sprint_plan() -> String:
 		return why
 	ProductLines.reload()
 	GameState.set_cash(200000)
-	GameState.set_flag("mvp_sub_product_type_id", "note_tool")
-	var lines: Array = ProductLines.line_ids("note_tool")
+	GameState.set_flag("mvp_sub_product_type_id", "erp")
+	var lines: Array = ProductLines.line_ids("erp")
 	ProductState.set_line_tier(lines[0], 1)
 	ProductState.set_line_tier(lines[1], 1)
 	GameState.set_flag("mvp_step_realization", {"%s_k1" % lines[0]: 1.11, "%s_k1" % lines[1]: 1.05})
@@ -27847,7 +27934,7 @@ static func _case_save_v14_build_becomes_sprint_plan() -> String:
 	for k in dropped:
 		if flags.has(k):
 			return done.call("flag '%s' survived the migration" % k)
-	if String(flags.get("mvp_product_name", "")) != "Notly" or String(flags.get("mvp_market_type", "")) != "b2c":
+	if String(flags.get("mvp_product_name", "")) != "Notly" or String(flags.get("mvp_market_type", "")) != "b2b":
 		return done.call("the type reads name '%s', market '%s'; want the build's name and the subtype's market" % [
 			flags.get("mvp_product_name", ""), flags.get("mvp_market_type", "")])
 	var ids: Array = steps.map(func(s: String) -> String: return "feat:" + s)
@@ -27903,16 +27990,16 @@ static func _case_save_v14_build_becomes_sprint_plan() -> String:
 ## ve kart sayısı yoktur (-1, çizilmez).
 ## FALSİFİKASYON: _migrate_15'te "releases": releases yerine [] yaz → FAIL.
 static func _case_save_v14_history_becomes_releases() -> String:
-	var state := {"game_state": {"day": 30.0, "flags": {"mvp_sub_product_type_id": "note_tool",
-		"mvp_market_type": "b2c", "mvp_shipped": true, "mvp_version": 2.0, "mvp_line_tiers": {},
+	var state := {"game_state": {"day": 30.0, "flags": {"mvp_sub_product_type_id": "erp",
+		"mvp_market_type": "b2b", "mvp_shipped": true, "mvp_version": 2.0, "mvp_line_tiers": {},
 		"mvp_version_history": [{"version": 1.0, "day": 10.0}, {"version": 2.0, "day": 20.0}]}},
 		"systems": {"product": {}}}
 	SaveManager._migrate_15(state)
 	var releases: Array = state.game_state.product.releases
 	if releases.map(func(r: Dictionary) -> int: return int(r.number)) != [1, 2]:
 		return "releases came back %s, want versions 1 and 2" % str(releases)
-	GameState.set_flag("mvp_sub_product_type_id", "note_tool")
-	GameState.set_flag("mvp_market_type", "b2c")
+	GameState.set_flag("mvp_sub_product_type_id", "erp")
+	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.product = state.game_state.product
 	var rows: Array = ProductModel.live().versions
 	if rows.size() != 2 or int(rows[0].sprint) != -1 or int(rows[0].shipped_count) != -1:

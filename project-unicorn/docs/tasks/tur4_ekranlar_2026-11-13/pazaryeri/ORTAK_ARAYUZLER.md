@@ -50,8 +50,8 @@ aynı tanımı okur.
 Koddan: kayıtta olmayan `GameState` alanı varsayılanında kalır, bilinmeyen anahtar yok sayılır; şema 19'dan beri beş
 `founder_*` alanı artışsız eklendi. Numara iki şeyi korur: eski sürüm yeni kaydı reddeder (`SAVE_ERR_NEWER`), göçler ona bakar.
 
-- **Tek artış PAZARYERI'nde:** 19'dan 20'ye, sistem paketinde, tek başına bir commit (`GameState.marketplace`, emekli B2C
-  bayrakları). Gerekçe: artış olmazsa eski bir sürüm pazaryeri kaydını sessizce eski B2C ekonomisiyle açar
+- **Tek artış PAZARYERI'nde:** 19'dan 20'ye, sistem paketinde, tek başına bir commit (`GameState.marketplace` ve not ile video
+  kaydının reddi; B2C bayrakları eski ekonominin silindiği commit'te emekli olur). Gerekçe: artış olmazsa eski bir sürüm pazaryeri kaydını sessizce eski B2C ekonomisiyle açar
   (`product_catalog.gd:198`).
 - **Her ekip kendi durumunu kendi alanında tutar** (Pazaryeri `marketplace`, Pazarlama `marketing`); kimse öbürününkine
   yazmaz. Yeni alan ya da anahtar anlamlı varsayılanla doğar ve artış istemez.

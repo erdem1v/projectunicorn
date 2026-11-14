@@ -1,7 +1,8 @@
 # Pazaryeri
 
 Ne yapar: B2C ürünün pazaryeri ekonomisinin saf çekirdeği: mağaza ve kullanıcı akışı, dört adım, iade, gelir, iki memnuniyet defteri, dört kural, Premium, dört haftalık önizleme, Talepler'in konu ve biletleri, Pazarlama'nın iki okuması.
-Henüz oyuna bağlı değil: `GameState`'e, sistemlere ve arayüze dokunmaz; yalnız başsız probe çağırır. Sistem paketi `GameState.marketplace`'i `state` diye verecek, arayüzün önizlemeleri aynı işlevleri okuyacak.
+Henüz oyuna bağlı değil: sistemlere ve arayüze dokunmaz; yalnız başsız probe ve `marketplace_save_roundtrip` çağırır.
+Sistem paketi `GameState.marketplace`'i `state` diye verecek, arayüzün önizlemeleri aynı işlevleri okuyacak.
 Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test). Sahip: `MarketplaceModel` (statik, durumsuz).
 
 ## Dosyalar
@@ -39,6 +40,7 @@ Yok.
 
 ## Durum ve veri
 
+- Durumun evi `GameState.marketplace` (`initialize_run` boşaltır, ERP koşusunda boş kalır; kodlayıcı `GameState` alanlarını kendisi bulur, göç yok: şema 20); `marketplace_save_roundtrip` `retention`'ın bölmesini gerçek kayıt yolunda sınar.
 - `state` dosya başındaki yorumda sayılır; `sat[taraf]` iki memnuniyettir (sistem paketi `CustomerRegistry` kaydına yansıtır), `burn[kalem]` son kapanışın haftalık `pazaryeri` giderinin adlı kalemleri,
   ↳ `premium.orders` son dört haftanın üye siparişidir, `lost` birikmiş kayıp, `topics[konu]` (`tickets` son dört hafta yeni önde, `since_day`, `status`, `source`).
 - Talepler: bilet kullanıcı konusunda bağlı adımda sayılan büyüklük × oran, mağaza konusunda derdi olan mağazaların payı × oran; yayındaki konuya bilet gelmez.
@@ -81,7 +83,7 @@ Yok.
   ↳ adımı kısmaya ve "Geciken talep" satırı kalıcı olmaya devam eder.
 - JSON turundan sayılar float, anahtarlar metin döner; model gün ve sayaçları `int(...)` ile okur. Kişi kimlikleri `assign` ve `stars` anahtarıdır, metin olmalı.
 - Kodlayıcı tam değerli ondalığı tam sayıya çevirir (`SaveCodec._normalize_number`): iki durum değerini bölen yer bir tarafı `float(...)` okur (`retention`, `returning_share`, `_leave_rate`);
-  ↳ yeni bölme de öyle yazılır, `state_survives_codec` sınar.
+  ↳ yeni bölme de öyle yazılır, `state_survives_codec` (probe) ve `marketplace_save_roundtrip` (`retention`'ın bölmesi, gerçek kayıt yolu) sınar.
 - Sabitler `static var _c` ve `_cats`'ta durur (dosya yüklenince okunur); probe `constants_switch` sabiti çalışırken değiştirip geri koyar.
 - Probe çıkışında motor bazen `ObjectDB instances leaked` ve `resources still in use` satırı basar; sonuçları ve çıkış kodunu etkilemez. Probe bir kapıya bağlanırsa (`ERROR:` satırı vakayı düşürür) bu satır bağışlanmalı.
 

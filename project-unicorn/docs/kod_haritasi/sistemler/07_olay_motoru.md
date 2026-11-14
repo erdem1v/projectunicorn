@@ -57,33 +57,33 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - `EventGate.request` çağıranlar devamı: `sprint_system.gd:1029,1144,1274`, `sprint_bridges.gd:199`, `endings_system.gd:121` (SHUTTER_CARD), `main.gd:1164`, `mail_pane.gd:800` (immediate=true, oyuncunun isteği)
 - `EventGate.daily_tick()` `event_gate.gd:178` -> `EvEngine.daily_tick` `engine.gd:68` · `TimeManager` günlük dağıtım, Finans ve Faz kapısından sonra, `IncidentSystem`'den önce (`scripts/autoload/time_manager.gd:417`)
 - `EventGate.hourly_tick(hour)` `event_gate.gd:182` -> `EvEngine.hourly_tick` `engine.gd:90` · `TimeManager._dispatch_hourly_tick`, `MailClock.hourly_tick`'ten sonra (`time_manager.gd:451`)
-- `EvEngine.pump()` `engine.gd:554`: kuyruktaki en önemli kartı §4.4 yeniden doğrulamasından (`EvGate.revalidate`) geçirip gösterir · tik sonu, `resolve`, `clock_batch_ended` (`signals.gd:54`), `main.gd:5387` (yükleme sonrası)
+- `EvEngine.pump()` `engine.gd:554`: kuyruktaki en önemli kartı §4.4 yeniden doğrulamasından (`EvGate.revalidate`) geçirip gösterir · tik sonu, `resolve`, `clock_batch_ended` (`signals.gd:54`), `main.gd:5389` (yükleme sonrası)
 - `EventGate.resolve(id, option)` `event_gate.gd:26` -> `EvEngine.resolve` `engine.gd:613`: seçenek id ya da indeksi; etkiler, geçmiş satırı, ark ilerletme · çağıran: `mail_pane.gd:498`, bot ve smoke
 - `EventGate.open_paper(key)` `event_gate.gd:152` -> `engine.gd:759`, `EventGate.set_aside()` `event_gate.gd:158` -> `engine.gd:785`: masadaki kâğıdı aç ve cevapsız geri koy · `mail_pane.gd:535,548`
 - `EventGate.force_fire(id, ctx)` `event_gate.gd:40` -> `engine.gd:738`: yalnız debug build; G3, G4, G8'i atlar, satırı `forced: true` yazar · smoke ve `main.gd:1203,1421`
-- `EventGate.flush()` `event_gate.gd:143`: bekleyen sahneleri öldürür · `endings_system.gd:481`; `EventGate.reset()` `event_gate.gd:174` · `save_manager.gd:345` (yeni oyun)
+- `EventGate.flush()` `event_gate.gd:143`: bekleyen sahneleri öldürür · `endings_system.gd:481`; `EventGate.reset()` `event_gate.gd:174` · `save_manager.gd:352` (yeni oyun)
 - `EvGate.propose(id, origin, given)` `gate/gate.gd:71`, `EvGate.revalidate` `gate.gd:122`: G1-G8 kapısı · yalnız `EvEngine._propose` (`engine.gd:433`), `EvWhy.report`, `EventGate.condition_*` çağırır
 - `EvEngine.on_signal` `engine.gd:276`: sinyal tamponu, adım (g)'de boşalır · `EvSignals._relay` (`signals.gd:99`); `EvSignals.install()` `signals.gd:50` her `EvCatalog.reload()`'da (`catalog.gd:47`) bağlanır
-- `EvCatalog.ensure_loaded()` `catalog.gd:32` / `reload()` `catalog.gd:37`: kartları ve arkları yükler, seam'leri kurar (`EvSeams.ensure_installed` `seams.gd:39`) · `main.gd:4843` (`_warm_catalogs`)
-- `EvSave.to_dict()` `save.gd:20` / `from_dict()` `save.gd:39` · `save_manager.gd:383,401`; `EvLint.run` `lint.gd:79`, `EvProbe.run` `engine_probe.gd:16`, `EvHarness.run` `harness.gd:84`, `EvWhy.report` `why.gd:28`,
+- `EvCatalog.ensure_loaded()` `catalog.gd:32` / `reload()` `catalog.gd:37`: kartları ve arkları yükler, seam'leri kurar (`EvSeams.ensure_installed` `seams.gd:39`) · `main.gd:4845` (`_warm_catalogs`)
+- `EvSave.to_dict()` `save.gd:20` / `from_dict()` `save.gd:39` · `save_manager.gd:390,408`; `EvLint.run` `lint.gd:79`, `EvProbe.run` `engine_probe.gd:16`, `EvHarness.run` `harness.gd:84`, `EvWhy.report` `why.gd:28`,
   ↳ `EvVocabGen.run` `vocab_gen.gd:20`
   ↳ `from_dict` geçmişten ve saatten sonra `EvEngine.restore_unannounced()` `engine.gd:683` çağırır:
   ↳ motorun adını anacağı not listesi (`_unannounced`, kaydedilmez) kaydın geçmiş satırlarından yeniden kurulur (`EvHistory.notes_awaiting_arrival()` `history.gd:174`: okunmamış ve geliş saati şimdiden sonra not),
   ↳ yoksa yüklemede unutulan not yeniden doğrulamasız ve `event_triggered`'siz gelen kutusuna düşerdi
 - Bayrak yönlendirmesi `scripts/main/main.gd:226-251`: `--event-probe`, `--event-lint[=baseline]`, `--event-vocab`, `--why-fire=` (`_run_why_fire`), `--event-harness=`, `--event-plausibility=`,
   ↳ `--event-shot=` (`_run_event_shot` `main.gd:796`)
-- Sunum yolu: `EvPresenter.build_view` `present/presenter.gd:40` -> `EventBus.modal_requested` -> `main.gd:5641` (`hold_clock("event")`, Olaylar kutusu açılır) -> `mail_pane.gd` -> `EventGate.resolve`
+- Sunum yolu: `EvPresenter.build_view` `present/presenter.gd:40` -> `EventBus.modal_requested` -> `main.gd:5643` (`hold_clock("event")`, Olaylar kutusu açılır) -> `mail_pane.gd` -> `EventGate.resolve`
 
 ## Sinyaller
 - `event_triggered(event_id)` `scripts/autoload/event_bus.gd:118`: yayan `core/engine.gd:565` (not geldi), `engine.gd:606` (kart gösterildi) · dinleyen: `top_bar.gd:159`, `left_tabs.gd:112`, `research_bar.gd:60`,
   ↳ `window_frame.gd:56`, `office_hud.gd:58`
-- `event_resolved(event_id, choice_index)` `event_bus.gd:119`: yayan `engine.gd:631` (-1: varlık gitti), `engine.gd:672` · dinleyen: `main.gd:4853` (kapı kapanır), `save_manager.gd:63` (kirli işareti),
+- `event_resolved(event_id, choice_index)` `event_bus.gd:119`: yayan `engine.gd:631` (-1: varlık gitti), `engine.gd:672` · dinleyen: `main.gd:4855` (kapı kapanır), `save_manager.gd:67` (kirli işareti),
   ↳ `incident_system.gd:313`, `sprint_system.gd:1332`, `game_shell.gd:29`
-- `modal_requested(event: GameEvent)` `event_bus.gd:120`: yayan `engine.gd:607` · dinleyen `main.gd:4852` (`_on_event_modal_requested` `main.gd:4884`), `harness.gd:99`
-- `event_set_aside(event_id)` `event_bus.gd:122`: yayan `engine.gd:792` · dinleyen `main.gd:4854`, `save_manager.gd:66`, `top_bar.gd:160`, `left_tabs.gd:114`
+- `modal_requested(event: GameEvent)` `event_bus.gd:120`: yayan `engine.gd:607` · dinleyen `main.gd:4854` (`_on_event_modal_requested` `main.gd:4886`), `harness.gd:99`
+- `event_set_aside(event_id)` `event_bus.gd:122`: yayan `engine.gd:792` · dinleyen `main.gd:4856`, `save_manager.gd:70`, `top_bar.gd:160`, `left_tabs.gd:114`
 - `desk_changed()` `event_bus.gd:125`: yayan `present/papers.gd:44,49,60,98` ve `systems/mail_clock.gd:72,108` · dinleyen `top_bar.gd:162`, `left_tabs.gd:115`, `product_tab.gd:111` (`_on_desk`)
 - `module_unlocked(module_id)` `event_bus.gd:135`: yayan yalnız `engine.gd:270` (`_step_module_watch`) · dinleyen kart tetikleri (`EvSignals.BINDINGS`); `goto_tab_requested(tab_id, subpage)` `event_bus.gd:34`:
-  ↳ yayan `effects.gd:544` · dinleyen `main.gd:4855`
+  ↳ yayan `effects.gd:544` · dinleyen `main.gd:4857`
 - Motorun DİNLEDİĞİ sinyaller `EvSignals.BINDINGS` `core/signals.gd:22` (17 ad, izin listesi): customer_added/_health_changed/_churned/_expanded, employee_hired/_departed, promise_broken, version_shipped, build_phase_changed
 - BINDINGS devamı: sheet_expired, sheet_granted, seed_sheet_granted, meeting_day (investor slotu), phase_gate_reached, axis_floor_warning, axis_floor_crossed, module_unlocked;
   ↳ listede olmayan sinyal kartı tetikleyemez (`EvLint._lint_signals` `lint.gd:1140` EventBus'ta var mı diye bakar)
@@ -92,11 +92,11 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - `clock_batch_ended()` `event_bus.gd:25`: yayan `time_manager.gd:203` · `EvSignals.install` `EvEngine.pump`'a bağlar (`signals.gd:54`); tam liste `docs/EVENT_SIGNAL_MANIFEST.md` (`tools/gen_signal_manifest.py` üretir)
 
 ## Durum ve veri
-- Motor durumu GameState'te değil, `Ev*` sınıflarının statik değişkenlerindedir; tek kayıt bloğu `EvSave.BLOCK_KEY = "event_engine"`, `BLOCK_VERSION = 1` (`save.gd:16-17`); `SaveManager._capture_systems` `save_manager.gd:383`
+- Motor durumu GameState'te değil, `Ev*` sınıflarının statik değişkenlerindedir; tek kayıt bloğu `EvSave.BLOCK_KEY = "event_engine"`, `BLOCK_VERSION = 1` (`save.gd:16-17`); `SaveManager._capture_systems` `save_manager.gd:390`
 - Blok anahtarları (`save.gd:20-36`): `flags/timed_flags/stamps` (EvFlags), `rows` (EvHistory), `latches`, `schedule`, `watch`, `arcs`, `queue/active_event_id/active_context`, `papers`, `budgets`, `held` (EvTicker), `tempo_*`,
   ↳ `delays/modules_open/last_unlocked_module`, `run_seed`
 - Katalog kayda girmez; kartlar her açılışta diskten okunur (`save.gd:6-7` yorumu); kayıtta yalnız kimlik ve skaler tutulur (`EvSave.verify_no_resources` `save.gd:81`)
-- Komşu GameState alanları: `messages` `game_state.gd:319`, `mail_outbox` `:321`, `desk_arrivals` `:323`, `mentor_line_at` `:315`, `run_seed` `:24`, `run_active` `:131` (motor `run_active` false iken tik atmaz)
+- Komşu GameState alanları: `messages` `game_state.gd:321`, `mail_outbox` `:323`, `desk_arrivals` `:325`, `mentor_line_at` `:317`, `run_seed` `:24`, `run_active` `:131` (motor `run_active` false iken tik atmaz)
 - Kart şeması alanları (kodda okunanlar): id, version_scope, category, tick, class, tags, schema, family, family_subject, plausibility, scope, guards, condition, latch, latch_key, min_gap_weeks, weight, allowed_hours, expires_weeks
 - Kart alanları devamı: expire_note, on_expire, delay_weeks, delay_reason, follows, trigger.signal, arc, options[id, outcome_id, effects, requires, check], speaker, speaker_role, stage, pool_group, sender, system, text.tr/en
 - `tick` değerleri: `daily`, `hourly`, `signal`, `scheduled`, `request` (kapı `_g4_window` `gate.gd:171`; `request` tikli kartı hiçbir saat taramaz); `class`: `interrupt`, `paper`, `info` (+ `ambient` kuyruk önceliğinde)
@@ -242,8 +242,8 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
   ↳ lint 17.3 ve süre dolumunun denetimi aynı yardımcıyı sorar, böylece sıfıra yuvarlanan seam değeri maliyeti kazanca çevirmez
 - Lint süre dolumunun haber bandı satırını da (`expire_note`: kartın metin bloğundaki bir ad ya da satırın kendisi) marka yasağı ve saat denetiminden geçirir (`EvLint._lint_text` `lint.gd:853`)
 - Kayıt: etkin kartın `from_desk` ve `at` değeri kayda yazılmaz (`queue.gd:230-235`); yüklemeden sonra masadan açılmış kart kesinti gibi davranır (`set_aside` false döner). Bkz. `event_no_double_resolution_after_load`
-- Kaldırılan kart kayıtta yetim kalır: `SaveManager._REMOVED_CARD` (`save_manager.gd:907`, süzme `:959-968`) `product.bug_pile` için kuyruk, takvim, satır ve masayı temizler;
-  ↳ kart silince benzer göç gerekir. `SCHEMA_VERSION` 19 (`save_manager.gd:16`)
+- Kaldırılan kart kayıtta yetim kalır: `SaveManager._REMOVED_CARD` (`save_manager.gd:916`, süzme `:968-978`) `product.bug_pile` için kuyruk, takvim, satır ve masayı temizler;
+  ↳ kart silince benzer göç gerekir. `SCHEMA_VERSION` 20 (`save_manager.gd:16`)
 - Lint kuralları içerik ayrıntısıdır: marka listesi `FORBIDDEN_TERMS` (`lint.gd:44`), tire yasağı `DASH_CHARS` (`:55`), günlük kartta saat yasağı (`_clock_re` `:66`),
   ↳ yüklenmeyen seam/fiil hatası (`17.x`). Kabul edilen bulgu gerekçesiyle taban dosyasına gider
 - Aynı sabit iki yerde: `plausibility.gd` (`FAMILY_GAP_WEEKS`, `START_IMMUNITY_WEEKS`, satır 52-54) `EvTuning` değerlerinin kopyasıdır (KALITE.md de işaretler); `EvTuning` ayarlanınca defter bayat yargılar.
