@@ -633,31 +633,15 @@ WORLD_OUTLET_GIRISIM,Girişim Bülteni,Startup Bulletin
 WORLD_OUTLET_SEKTOR,Sektör Telgrafı,Sector Wire
 UI_DISMISS,Vazgeç,Cancel
 UI_CONTINUE,DEVAM ET,CONTINUE
-SECTOR_CONSTRUCTION,İnşaat,Construction
-SECTOR_HEALTH,Sağlık,Healthcare
-SECTOR_LOGISTICS,Lojistik,Logistics
-SECTOR_INSURANCE,Sigorta,Insurance
-SECTOR_MANUFACTURING,Üretim,Manufacturing
-SECTOR_RETAIL,Perakende,Retail
-SECTOR_REAL_ESTATE,Emlak,Real Estate
-SECTOR_LEGAL,Hukuk,Legal
-SECTOR_TECHNOLOGY,Teknoloji,Technology
-SECTOR_ECOMMERCE,E-ticaret,E-commerce
-SECTOR_MEDIA,Medya,Media
-SECTOR_FINANCE,Finans,Finance
 B2B_CONTACT_CONSTRUCTION,Saha Sorumlusu,Site Supervisor
-B2B_CONTACT_HEALTH,Başhekim Yardımcısı,Deputy Chief Physician
 B2B_CONTACT_LOGISTICS,Operasyon Müdürü,Operations Manager
-B2B_CONTACT_INSURANCE,BT Müdürü,IT Manager
 B2B_CONTACT_MANUFACTURING,Üretim Müdürü,Production Manager
 B2B_CONTACT_RETAIL,Mağaza Müdürü,Store Manager
-B2B_CONTACT_REAL_ESTATE,Satış Müdürü,Sales Manager
 B2B_CONTACT_TEXTILE,Planlama Şefi,Planning Lead
-B2B_CONTACT_LEGAL,Ofis Yöneticisi,Office Manager
-B2B_CONTACT_TECHNOLOGY,CTO,CTO
+B2B_CONTACT_WHOLESALE,Satın Alma Müdürü,Purchasing Manager
+B2B_CONTACT_AUTO_PARTS,Servis Müdürü,Service Manager
+B2B_CONTACT_FOOD,Kalite Müdürü,Quality Manager
 B2B_CONTACT_ECOMMERCE,Operasyon Direktörü,Director of Operations
-B2B_CONTACT_MEDIA,Yayın Yönetmeni,Broadcast Director
-B2B_CONTACT_FINANCE,Risk Müdürü,Risk Manager
 B2B_CONTACT_FALLBACK,Yetkili,Contact
 FEATURE_LABEL_AI_VEC_EMBED_API,anlam altyapısı,semantic layer
 FEATURE_LABEL_AI_VEC_SEARCH_API,anlamlı arama,semantic search
@@ -673,18 +657,14 @@ FEATURE_LABEL_SAAS_OPS_FIELD,saha bağlantısı,field connectivity
 FEATURE_LABEL_SAAS_OPS_MOBILE,mobil uygulama,mobile app
 FEATURE_LABEL_FALLBACK,yeni özellik,a new feature
 B2B_COMPLAINT_CONSTRUCTION,"Sahadaki ekip sisteme bağlanamıyor, bağlantı sürekli kopuyor. Böyle iş yürümez.",The site crew can't stay connected. It keeps dropping. We can't work like this.
-B2B_COMPLAINT_HEALTH,"Ekranlar sürekli çöküyor, hasta kapıda beklerken sistemi açamıyoruz.","The screens keep crashing, and we can't bring the system up with a patient waiting at the desk."
 B2B_COMPLAINT_LOGISTICS,"Sevkiyat saatinde sistem donuyor, operasyon aksıyor.","It freezes right at dispatch, and the whole operation stalls."
-B2B_COMPLAINT_INSURANCE,"Sisteminiz son haftalarda sürekli düşüyor, ekibim poliçe işlerini yürütemiyor.",Your system has been going down for weeks. My team can't process policies.
 B2B_COMPLAINT_MANUFACTURING,"Hat başında sistem takılıyor, üretim raporu tutmuyor.","It hangs on the line, and the production report never adds up."
 B2B_COMPLAINT_RETAIL,"Yoğun saatte sistem kilitleniyor, kasa akmıyor.","It locks up at peak hour, and the tills stop."
-B2B_COMPLAINT_REAL_ESTATE,"Sistem sık sık kopuyor, ekip müşteriye dönemiyor.","It drops out all day, and the team can't get back to clients."
 B2B_COMPLAINT_TEXTILE,"Sipariş ekranı sürekli hata veriyor, üretim planı kayıyor.","The order screen throws errors all day, and the production plan slips."
-B2B_COMPLAINT_LEGAL,"Dosyalara erişemiyoruz, sistem gün içinde defalarca düşüyor.",We can't get to our files. It goes down several times a day.
-B2B_COMPLAINT_TECHNOLOGY,"Sisteminiz sürekli hata veriyor, ekibimiz üretime dönemiyor.","Your system keeps erroring out, and my team can't get back to shipping."
+B2B_COMPLAINT_WHOLESALE,"Sipariş girerken sistem donuyor, stok tutmuyor.","It freezes while orders come in, and the stock stops adding up."
+B2B_COMPLAINT_AUTO_PARTS,"Parça tezgâhında sistem sürekli hata veriyor, servis bekliyor.","It keeps erroring at the parts counter, and the service bay waits."
+B2B_COMPLAINT_FOOD,"Parti numaraları kayboluyor, son kullanma tarihleri tutmuyor.","Lot numbers go missing, and the expiry dates stop adding up."
 B2B_COMPLAINT_ECOMMERCE,"Kampanya saatinde sistem çöküyor, siparişleri kaybediyoruz.","It crashes the moment a campaign goes live, and we lose orders."
-B2B_COMPLAINT_MEDIA,"Yayın anında sistem donuyor, akış kesiliyor.","It freezes mid-broadcast, and the stream cuts out."
-B2B_COMPLAINT_FINANCE,"Sistem gün içinde düşüyor, işlemler askıda kalıyor.","It goes down during the day, and transactions hang."
 B2B_COMPLAINT_FALLBACK,"Sisteminiz son zamanlarda sık sık aksıyor, ekibim işini yapamıyor.",Your system has been failing a lot lately. My team can't do their job.
 B2B_RISK_VOICE_BROKEN,"Olacak dediniz, olmadı. Başka seçeneklere bakmaya başladık.",You said it would be there. It isn't. We've started looking at other options.
 B2B_RISK_VOICE_SHORT_1,İlk gün ne yapıyorsa bugün de onu yapıyor. Şimdiye kadar daha fazlasını bekliyorduk.,It does what it did on day one. We needed it to do more by now.
@@ -693,7 +673,6 @@ B2B_RISK_VOICE_SHORT_3,Yönetim bunun için neden hâlâ para ödediğimizi sord
 B2B_RISK_VOICE_ONBOARDING_1,"Hâlâ kurulumdayız ve ekibim şimdiden doğru karar mıydı diye soruyor.","We're still setting it up, and my team is already asking if this was the right call."
 B2B_RISK_VOICE_ONBOARDING_2,"Başlamak, demonuzda göründüğünden zor oldu.",Getting started has been harder than your demo made it look.
 B2B_EV_RISK_EXPIRED,{customer} bir daha aramadı.,{customer} didn't call again.
-SECTOR_CONSUMER,Tüketici,Consumer
 SALES_B2C_USERBASE,{product} kullanıcıları,{product} users
 B2B_EV_RISK_TITLE,Müşteri riski,Account at risk
 B2B_EV_EXPANSION_TITLE,Büyüme fırsatı,Growth opening
@@ -1037,7 +1016,7 @@ PROD_TYPE_ERP_NAME,ERP,ERP
 PROD_TYPE_ERP_SHORT,Kurumsal kaynak planlaması,Enterprise resource planning
 PROD_TYPE_ERP_DEF,"İşletmenin muhasebe, stok, satın alma ve satış süreçlerini tek bir yazılımda birleştiren yönetim sistemi.","Management software that brings a company's accounting, stock, purchasing and sales into one integrated system."
 PROD_TYPE_ERP_EARN,"Yıllık sözleşme, aylık ödeme","Yearly contract, paid monthly"
-PROD_TYPE_ERP_WHO,"Üretim, lojistik ve perakende şirketleri","Manufacturing, logistics and retail companies"
+PROD_TYPE_ERP_WHO,"İnşaat, üretim, tekstil, toptan ticaret, lojistik, perakende, e-ticaret, oto yedek parça ve gıda şirketleri","Construction, manufacturing, textile, wholesale, logistics, retail, e-commerce, auto parts and food companies"
 PROD_TYPE_MARKETPLACE_NAME,Pazaryeri,Marketplace
 PROD_TYPE_MARKETPLACE_SHORT,Çok mağazalı e-ticaret sitesi,A multi-store e-commerce site
 PROD_TYPE_MARKETPLACE_DEF,Birçok mağazanın ürünlerini tek bir sitede sattığı e-ticaret türü.,A type of e-commerce site where many third-party stores sell their products.
@@ -1069,16 +1048,6 @@ PROD_CONCEPT_NETWORK_EFFECT,Ağ etkisi,Network effect
 PROD_CONCEPT_NETWORK_EFFECT_TIP,"Her yeni mağaza kullanıcıya, her yeni kullanıcı mağazaya değer katar","Every new store adds value for users, every new user for stores"
 PROD_CONCEPT_CHICKEN_EGG,Tavuk ve yumurta sorunu,Chicken-and-egg problem
 PROD_CONCEPT_CHICKEN_EGG_TIP,"Mağaza olmadan kullanıcı, kullanıcı olmadan mağaza gelmez","Without stores no users come, without users no stores"
-SECTOR_SUBSCRIPTION,Abonelik,Subscription
-SECTOR_AGENCY,Ajans,Agency
-SECTOR_EDUCATION,Eğitim,Education
-SECTOR_FINTECH,Fintech,Fintech
-SECTOR_ENTERPRISE,Kurumsal,Enterprise
-SECTOR_SAAS,SaaS,SaaS
-SECTOR_SALES,Satış,Sales
-SECTOR_SOCIAL_MEDIA,Sosyal Medya,Social Media
-SECTOR_PRODUCTIVITY,Verimlilik,Productivity
-SECTOR_SOFTWARE,Yazılım,Software
 PROD_PATH_TITLE,Yolunu seç,Choose your path
 PROD_PATH_EMPTY,Soldan bir yol seç,Pick a path on the left
 PROD_PATH_FINAL,Sonradan değişmez,You can't change this later
@@ -2244,9 +2213,6 @@ NEG_CAPACITY,Kapasite: {used}/{cap},Capacity: {used}/{cap}
 NEG_DEAL_IF_ACCEPT,Kabul edersen: {line},If you accept: {line}
 NEG_LOCK_PROMISE,Verilen söz üst ucu kapattı.,The promise closed the top end.
 NEG_INSULT_REASON,Bu rakam masayı devirir.,That number tips the table over.
-SALES_ARCH_OPS_CAUTIOUS_LINE,"Ölçülü bir alıcı. Acele etmez, her rakamı tartar.",A measured buyer. Takes its time and weighs every number.
-SALES_ARCH_TECH_EXACTING_LINE,Teknik taraf soruyor. Ürünün nereye kadar gittiğini bilmek ister.,The technical side is asking. They want to know how far the product goes.
-SALES_ARCH_FINANCE_BRISK_LINE,"Hızlı konuşur, düşük rakam ister.",Talks fast and wants a low number.
 SALES_PROBE_PROBE_EMPHASIS_TRUST,Bizim için en önemli konu verinin güvende olması ve sistemin ayakta kalması. Bu tarafta neyiniz var?,What matters most to us is safe data and a system that stays up. What do you have there?
 SALES_PROBE_PROBE_EMPHASIS_INTEGRATIONS,Bizim işimiz başka programlara bağlı. Ürününüz bizim programlarımızla konuşabiliyor mu?,Our work runs through other software. Can your product talk to ours?
 SALES_PROBE_PROBE_EMPHASIS_ONBOARDING,Ekibimiz sahada ve telefonda çalışıyor. Ürününüzü ilk gün kullanabilirler mi?,"Our team works in the field, on phones. Can they use your product on day one?"

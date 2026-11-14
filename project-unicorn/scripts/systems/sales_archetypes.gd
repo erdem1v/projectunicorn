@@ -12,7 +12,7 @@ extends RefCounted
 # WHY EVERY DIMENSION MUST CHANGE PLAY (§11.1). A dimension that only changes a label is
 # content cost with no gameplay return, so each field below names the machine that reads it:
 #
-#   sector          → which name family the pool draws from, and which sub-types it likes
+#   subtype_affinity → which sub-types this buyer type prefers (the sector is the product's: `erp.json` `buyer_sectors`)
 #                     (SUB-TYPE IDS ARE THE LINE-LADDER ONES — `erp`, `note_tool`,
 #                      `video_clip`; Ürün rev 6.1 §20)
 #   star_range      → which faucet band this archetype can fill
@@ -23,8 +23,7 @@ extends RefCounted
 #                     (the flag is what §7.6 reads to decide a price-break card is possible)
 #   conditions      → the ordered whale condition list (§8); empty = never a whale
 #
-# NO LOCALISED TEXT LIVES HERE. Ids in, sentences at render time. Player-facing archetype
-# voice is a CSV key derived from the id (`SALES_ARCH_<ID>_LINE`).
+# NO LOCALISED TEXT LIVES HERE. Ids in, sentences at render time; on screen a lead names its sector, not its buyer type.
 
 const DEFAULT_ID := "ops_cautious"
 
@@ -40,10 +39,8 @@ const BUYER_FINANCE := "finance"
 
 const TABLE := {
 	# --- Stub 1 · the cautious operations buyer -----------------------------
-	# Haggles slowly. The §10 language sample is written against this shape. Sector order is load-bearing (the faucet draws
-	# `% size`, the fixtures read [0]): a new sector goes last.
+	# Haggles slowly. The §10 language sample is written against this shape.
 	"ops_cautious": {
-		"sectors": ["logistics", "construction", "manufacturing", "health", "textile"],
 		"subtype_affinity": ["erp"],       # the only B2B sub-type that ships today
 		"star_range": [1, 3],
 		"buyer": BUYER_OPERATIONS,
@@ -61,7 +58,6 @@ const TABLE := {
 	# --- Stub 2 · the technical buyer ---------------------------------------
 	# Wants the ladder climbed. Moves fast and is NOT price sensitive, so it never produces a price-break card (§7.6).
 	"tech_exacting": {
-		"sectors": ["technology", "ecommerce", "finance", "media"],
 		"subtype_affinity": [],            # no second B2B sub-type to prefer yet
 		"star_range": [1, 3],
 		"buyer": BUYER_TECHNICAL,
@@ -79,7 +75,6 @@ const TABLE := {
 	# --- Stub 3 · the finance buyer -----------------------------------------
 	# Buys cheaply. Impatient, very price sensitive, and the archetype the price-break card was designed against.
 	"finance_brisk": {
-		"sectors": ["insurance", "legal", "retail", "real_estate"],
 		"subtype_affinity": [],
 		"star_range": [1, 2],
 		"buyer": BUYER_FINANCE,
@@ -108,15 +103,6 @@ static func has(archetype_id: String) -> bool:
 
 static func _row(archetype_id: String) -> Dictionary:
 	return TABLE.get(archetype_id, TABLE[DEFAULT_ID]) as Dictionary
-
-
-## Player-facing single line (§4 "arketip sesi tek satır").
-static func voice_line(archetype_id: String) -> String:
-	return TranslationServer.translate("SALES_ARCH_%s_LINE" % archetype_id.to_upper())
-
-
-static func sectors(archetype_id: String) -> Array:
-	return (_row(archetype_id).get("sectors", []) as Array).duplicate()
 
 
 static func accepts_star(archetype_id: String, star: int) -> bool:

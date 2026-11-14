@@ -133,7 +133,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - Kayıt: `save_roundtrip_fingerprint` `:298`, `save_continuity_seeded` `:299`, `save_double_load_no_residue` `:300`, `save_backup_fallback` `:301`, `autosave_writes_off_thread` `:302`, `menu_state_machine`
 - Göç: `save_v13_day_stamps_migrate` `:304`, `save_v14_build_becomes_sprint_plan` `:550`, `save_v14_history_becomes_releases` `:551`, `save_v19_cards_scale_and_shape` `:552`, `save_v19_running_sprint_continues` `:553`
 - Göç devamı: `save_v15_tickets_become_open_bugs` `:555`, `save_v15_callback_bugs_under` `:556`, `save_v17_market_ref` `:447`, `save_v10_product_state` `:465`, `legacy_v12_save_opens_live_table`, `office_move_gates_and_save` (12 → 13)
-- Eski göç yardımcıları yalnız smoke'ta: `save_migration_v3_to_v4` `:416`, `save_migration_v4_to_v5` `:422`, `save_migration_v6_to_v7` `:424`, `save_migration_v6_to_v7_drops` `:425`, `loc_save_sector_migration` `:321`
+- Eski göç yardımcıları yalnız smoke'ta: `save_migration_v3_to_v4` `:416`, `save_migration_v4_to_v5` `:422`, `save_migration_v6_to_v7` `:424`, `save_migration_v6_to_v7_drops` `:425`
 - Kayıt temizliği: `save_retired_product_flags` `:449`, `save_drops_retired_transaction_label` `:119`, `save_old_calendar_leave_year` `:120`, `seed_sheet_round_trips` `:491`, `month_history_save_typing` `:381`
 - Yerelleştirme ve ayar: `loc_csv_integrity` `:316`, `loc_format_locale_flip` `:317`, `loc_pick_fallback` `:319`, `loc_language_switch` `:366`, `locale_switch`, `ui_scale_ladder_fits_settings` `:314`
 - Kapı sırası (CLAUDE.md §12): event-lint → `scripts/debug/loc_residue.gd` → `smoke_run.sh loc_csv_integrity` → hedefli vaka; yeni vaka yalnız çekirdek mantık için (§10)
@@ -141,7 +141,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
   ↳ `--tempo-probe` her haftayı 08:00'den 08:00'e (gece atlamasının indiği an) ölçer, `TimeModel.seconds_per_tick` hedefinden sapmayı basar ve üçüncü haftada durur; çıplak hâli kabuk kurmaz,
   ↳ `:shell` kabuğu ve ofisi kurar (gece çıkış kapısının maliyeti de ölçülür);
   ↳ `--tick-probe=<hız>[:<pencere>][:accounts=<n>][:team=<n>]` (`scripts/debug/tick_probe.gd`) aynı tempo dünyasını (`main._seed_tempo_state`; `accounts=<n>` ile n B2B hesaplı canlı ERP dünyası `main._seed_accounts_state`:
-  ↳ 13 sektör × 3 yıldız, hesap başına tek koltuk, tolerans 0,
+  ↳ alıcı sektörleri (`B2BConstants.SECTORS`) × 3 yıldız, hesap başına tek koltuk, tolerans 0,
   ↳ `TICK WORLD` satırı) başsız kabukla ve isteğe bağlı açık pencereyle beş hafta gerçek saatle koşar; her kareyi iki `process_frame` arası ölçer ve içinde yayılan sinyalle sınıflar; (gece `night_skipped`, saat `hour_changed`,
   ↳ onlardan sonraki kare, koşunun ilk saati), TopBar'ın kare başına yenilemesini (`refresh_count`) ve autosave karesini sayar; `TICK` satırları basar. Karar kapısı bağlı değildir (shot kabuğu): kart saati tutmaz, geldiği kare sayılır;
   ↳ bot kartı sonraki kare ölçülünce `RunProbe._drain_modals` ile cevaplar, sürüm notu tutuşunu oyuncu gibi kaldırır; duruşla biten adım `TICK|stopped` basar; `auto_*` yazar: kayıt taşıyan kullanıcı dizininde çalışmaz;
@@ -164,7 +164,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 
 ## Dikkat
 - Göç adı ve koşulu aynı N'dir (`_migrate_N` `version < N`, `save_manager.gd:194-207`); yeni göçte `SCHEMA_VERSION`, koşul, adı ve belgeyi birlikte yaz
-- `_migrate_sector_ids` `:1095`, `_migrate_character_areas` `:1108`, `_migrate_assignments_to_areas` `:1168`, `_migrate_to_rev11` `:1208` zincirde YOK (`MIN_LOADABLE_VERSION` 10); yalnız `endgame_smoke.gd:12138-12372` çağırır
+- `_migrate_character_areas` `:1108`, `_migrate_assignments_to_areas` `:1168`, `_migrate_to_rev11` `:1208` zincirde YOK (`MIN_LOADABLE_VERSION` 10); yalnız `endgame_smoke.gd:12138-12372` çağırır
 - Göç her yuva listelemesinde koşar (`list_slots` her dosyayı `_read_file`dan geçirir): saf, ucuz, canlı durumdan bağımsız olmalı; `_migrate_18` bu yüzden kaydın kendi ürün alt türünü okur
 - `_migrate_15` kartı v18 biçiminde yazar (`_V14_EFFORT`, `_V14_SHARES` `save_manager.gd:822-823`); ×5 ve `need` dönüşümünü yalnız `_migrate_19` yapar. `list_slots` ve `read_slot` her yuvada tam zinciri tekrar koşar
 - `SaveCodec.game_state_fields()` `save_codec.gd:192` `GameState`in HER script `var`ını kaydeder; kaydedilmemesi gereken geçici alan eklenemez. Yeni alan makul varsayılan taşımalı (varsayılan = göç)

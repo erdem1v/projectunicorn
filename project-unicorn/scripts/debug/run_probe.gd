@@ -777,6 +777,9 @@ static func _on_rep_lost(_rep_id: String, lead_id: String, area: String) -> void
 
 static func _on_lead(lead_id: String) -> void:
 	var p: Prospect = ProspectRegistry.get_prospect(lead_id)
+	var sub_id: String = String(GameState.get_flag("mvp_sub_product_type_id", ""))
+	if not ProductLines.buyer_sectors(sub_id).has(p.industry):
+		push_error("PROBE lead %s came from %s, outside %s's buyer sectors" % [lead_id, p.industry, sub_id])
 	var fit: Dictionary = _lead_fit(p)
 	print("PROBE LEAD day=%d id=%s arch=%s sector=%s star=%d phase=%d u=%s loss=%s" % [
 		GameState.day, lead_id, p.archetype_id, p.industry, p.star, GameState.phase,
@@ -2323,9 +2326,9 @@ static func _seed_b2b_world(preset: String) -> void:
 	# is the only way the retention → promise → churn chain is reachable without hand-forcing it.
 	var specs := [
 		{"id": "probe_a", "name": "Kuzey Lojistik", "industry": "logistics", "star": 1, "seats": 7, "price": 50, "sat": 72},
-		{"id": "probe_b", "name": "Ege Sağlık", "industry": "health", "star": 2, "seats": 16, "price": 50, "sat": 64},
+		{"id": "probe_b", "name": "Anadolu Market", "industry": "retail", "star": 2, "seats": 16, "price": 50, "sat": 64},
 		{"id": "probe_c", "name": "Marmara İnşaat", "industry": "construction", "star": 2, "seats": 14, "price": 50, "sat": 57},
-		{"id": "probe_d", "name": "Toros Sigorta", "industry": "insurance", "star": 1, "seats": 6, "price": 50, "sat": 68},
+		{"id": "probe_d", "name": "Deniz Lojistik", "industry": "logistics", "star": 1, "seats": 6, "price": 50, "sat": 68},
 		{"id": "probe_e", "name": "Anadolu Üretim", "industry": "manufacturing", "star": 3, "seats": 11, "price": 50, "sat": 61},
 	]
 	for s in specs:

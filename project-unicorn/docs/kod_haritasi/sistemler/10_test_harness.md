@@ -106,10 +106,10 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - Smoke tek vaka: `bash tools/smoke_run.sh <vaka>`; hepsi: `bash tools/smoke_run.sh --all` (475 vaka, saatler sürer; yalnız push/entegrasyon öncesi). Çıkış 0 yeşil, 1 vaka düştü, 2 harness sorunu. `CASE_TIMEOUT` varsayılan 120 sn.
 - Smoke karar kuralı (`smoke_run.sh:38-66`): satırlarda `^ERROR:|SCRIPT ERROR|Parse Error|Compile Error` varsa vaka düşer, `SMOKE PASS` yazsa da; hiç verdict yoksa ya da süre aşıldıysa düşer.
 - `# EXPECT-ERROR <ileti parçası>` match kolunda kuralı bilerek bozan vakayı bağışlar; parça hiç basılmazsa "stale marker" ile düşer (örnek: `founder_5skill_init`, `endgame_smoke.gd:171`).
-- Vaka ailesi önekleri (475 vaka): sales 34, event 33, sprint 25, hr 23, save 21, b2b 19, seed 14, paper 14, loc 14, promise 13, incident 10, product 9, cs 9; kalan 237 vaka daha küçük ailelerde (market, hotfix, angel, research ...).
+- Vaka ailesi önekleri (474 vaka): sales 34, event 33, sprint 25, hr 23, save 21, b2b 19, seed 14, paper 14, loc 13, promise 13, incident 10, product 9, cs 9; kalan 237 vaka daha küçük ailelerde (market, hotfix, angel, research ...).
 - Smoke önek → sistem sayfası (kaba eşleşme: bir vaka iki sistemi birden sınayabilir, liste başlangıç noktasıdır, tam seçim değildir). 01 Çekirdek: `speed_*`, `smoke_seed_pinned`, `run_ledger`, `growth_streak_semantics`,
-  ↳ `month_history_*`; Kayıt: `save_*`, `menu_state_machine`, `autosave_writes_off_thread`, `legacy_v12_save_opens_live_table`, `sales_save_roundtrip_rev6`, `sales_check_replays_after_load`, `seed_sheet_round_trips`,
-  ↳ `loc_save_sector_migration`; Platform: `loc_*`, `locale_switch`, `ui_scale_ladder_fits_settings`, `borderless_note_key_exists`. 09 Tema, menü, kabuk, onboarding: `build_percent_single_source`, `star_ruler_contract`,
+  ↳ `month_history_*`; Kayıt: `save_*`, `menu_state_machine`, `autosave_writes_off_thread`, `legacy_v12_save_opens_live_table`, `sales_save_roundtrip_rev6`, `sales_check_replays_after_load`, `seed_sheet_round_trips`;
+  ↳ Platform: `loc_*`, `locale_switch`, `ui_scale_ladder_fits_settings`, `borderless_note_key_exists`. 09 Tema, menü, kabuk, onboarding: `build_percent_single_source`, `star_ruler_contract`,
   ↳ `rail_tabs_match_scene_order`, `onboarding_pages_contract`, `topbar_speed_cluster_three_rungs`, `milestone_paper_waits_for_card`, `event_gate_holds_clock`, `clock_resumes_only_by_player`, `rnd_rail_open_with_locked_tree`,
   ↳ `all_scripts_load`. 06 Ofis: `office_*`, `desk_cap_blocks_hire`, `look_registry_unique_and_saved`; 02 Ürün: `sprint_*`, `plan_*`, `paper_*`, `product_*`, `floor_ladder_areas`, `line_*`, `infra_*`,
   ↳ `capacity_step_immediate`, `load_mult_steps`,

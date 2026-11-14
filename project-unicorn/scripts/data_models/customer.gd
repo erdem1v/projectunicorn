@@ -16,7 +16,7 @@ extends Resource
 # noun ("Nordica Logistics") and proper nouns do not localize.
 @export var name_key: String = ""             # "" = company_name is the name; else a CSV key
 @export var name_arg: String = ""             # {product} for name_key, when it takes one
-@export var industry: String = ""             # SECTOR ID, ASCII ("logistics", "real_estate")
+@export var industry: String = ""             # SECTOR ID, ASCII ("logistics", "construction")
 @export var company_size: String = "mid"      # "small" | "mid" | "enterprise" — B2B archetype; "individual" for B2C
 @export var market_type: String = "b2c"       # "b2c" | "b2b" — the sales model this customer came from
 

@@ -21,9 +21,9 @@ Sahipler: autoload `CustomerRegistry`, `ProspectRegistry`, `PromiseRegistry`; mo
 - `scripts/systems/sales_finalizer.gd` (108): biten pazarlığın uygulayıcısı; masa anlaşması açma, imza, yürüyüş/hakaret/kayıp yolları
 - `scripts/systems/sales_ledger.gd` (418): Satış okuma yüzeyi (GDD §14) ve yazma seam'leri; yönlendirme, fiyat duruşu, kayıp hafızası, toplantı kapısı, haftalık satırlar
 - `scripts/systems/sales_probes.gd` (337): soru kataloğu (storylet seçici), gerçek sözlüğü `facts_for`, cevap kapıları; metinler türetilmiş CSV anahtarı
-- `scripts/systems/sales_archetypes.gd` (185): müşteri arketipleri (3 taslak); sektör, alıcı tipi, mizaç, pazarlık profili, balina koşulları
-- `scripts/systems/sales_name_pool.gd` (103): şirket adı havuzu (65 seçme ad + üretilmiş); `take` ile kullanılmamış ad çeker
-- `scripts/systems/company_catalog.gd` (116): `COMPANIES` sektör kimliğini düz ad dizisine eşler (13 sektör, 65 ad), `names_for_sector` kopya döner; özel isim, LOC-DATA işaretli
+- `scripts/systems/sales_archetypes.gd` (185): müşteri arketipleri (3 taslak); alıcı tipi, mizaç, pazarlık profili, balina koşulları (sektör ürün türünün verisidir: `erp.json` `buyer_sectors`, `ProductLines.buyer_sectors`)
+- `scripts/systems/sales_name_pool.gd` (99): şirket adı havuzu (`CompanyCatalog` seçme adları + üretilmiş); `take` ile kullanılmamış ad çeker
+- `scripts/systems/company_catalog.gd` (65): `COMPANIES` sektör kimliğini düz ad dizisine eşler (ERP'nin alıcı sektörleri; toptan, oto yedek parça ve gıdanın seçme adı yok, adları havuz üretir), `names_for_sector` kopya döner; özel isim, LOC-DATA işaretli
 - `scripts/systems/customer_rep_system.gd` (391): müşteri masası; hesap sahipliği (kapasite, otomatik atama, fazlayı devretme) ve talep kanalı (yut, yükselt); masadaki temsilcinin bir hesaba verdiği günler (`GameState.rep_days_week`, `account_time`) o hafta masadan düşer (`throughput_of`)
 - `scripts/systems/counterpart_system.gd` (101): masanın karşısındaki kişiler; fonun üç kişisi (kaydedilir) ve adayın yıldızı kadar kişi (kimlikten türetilir)
 - `scripts/systems/support_system.gd` (424): Destek; bildirim akışı, doğrulama, iki kademeli memnuniyet zararı, hata ihmali, haftalık destek raporu, ilgi
@@ -167,7 +167,6 @@ Emit satırları DIZIN'den ve kaynaktan; "dinleyen" DIZIN'in `connect` sütunudu
 Tüm anahtarlar `localization/strings.csv`'de. Türetilmiş anahtarlarda sabit metin aranamaz; `loc_sales_derived_keys` ve `loc_b2b_derived_keys` vakaları bu katalogları gezer.
 - `SALES_PROBE_<ID>`, `SALES_ANS_<ID>_<CEVAP>`, `SALES_LOCK_<GERÇEK>`: soru, cevap ve kilit satırları · `sales_probes.gd`, `sales_meeting_system.gd:453` (`_lock_key`)
 - `SALES_MOD_*`: zar ipucu satırları (`_modifier_labels` `sales_meeting_system.gd:192`); `SALES_LOSS_*`, `SALES_WIN_CUT`, `SALES_MEMORY_*`, `SALES_MEETING_OBJECTION` · `sales_meeting_system.gd`, `sales_ledger.gd`
-- `SALES_ARCH_<ID>_LINE`: arketip sesi · `sales_archetypes.gd:115`
 - `SALES_BLOCK_*`, `SALES_ROUTE_*`, `SALES_BAND_*`: görüşme kapısı, yönlendirme ve bant gerekçeleri · `sales_ledger.gd`, `sales_rep_system.gd`, `sales_tab.gd`
 - `SALES_TICKER_*`, `NOTICE_SRC_*`: imza haberi · `sales_finalizer.gd:108`, `sales_rep_system.gd:274` (başlık satırları), `sales_ledger.gd:277` (`announce_signing`)
 - `SALES_WEEKLY_*`, `SALES_REP_LOST_TITLE`: haftalık satış özeti ve temsilci kayıp postası · `sales_rep_system.gd:245-316`, `inbox.gd`, `mail_pane.gd`
@@ -258,7 +257,7 @@ Hepsi `tools/smoke_run.sh <vaka>` ile (komutlar `project-unicorn/`'dan, `GODOT` 
 - Bazı `EventBus` sinyallerinin kodda dinleyeni yok (`KALITE.md` "yarım sinyaller"); olay motoru yalnız `signals.gd:22` izin listesindekileri dinler, yeni tetik sinyali oraya da yazılmalıdır.
 - `MarketCatalog` önbelleği `static var` ve bilerek `reset_all_owners` dışında (dosya verisi); `GameState.market_shocks` üretimde yazılmıyor, yalnız smoke yazıyor (`endgame_smoke.gd:24590`).
 - `SalesNamePool._pools` `sales_name_pool.gd:61` de önbellektir ve geçersiz kılınmaz; `STEMS` ya da `COMPANIES` çalışma zamanında değişmez, kod değişikliği yeni süreç ister.
-- `SalesArchetypes.TABLE` sektör sırası yüklüdür (`% size` çekimi, fikstürler `[0]` okur); yeni sektör sona eklenir. Sektör kimlikleri kayıtlıdır (`Customer.industry`), yeniden adlandırma göç ister (`LEGACY_SECTOR_IDS`).
+- `erp.json` `buyer_sectors` sırası yüklüdür (`SalesFaucetSystem.spawn`'ın sektör çekimi `% size`); yeni sektör sona eklenir. Sektör kimlikleri kayıtlıdır (`Customer.industry`): yeniden adlandırma ya da listeden çıkarma kayıt göçü ister; tabloda olmayan kimlik `ProductQuality.FALLBACK_SECTOR` satırını okur.
 - Kurucuya otomatik hesap verilmez (`CustomerRepSystem.ranked_reps` yalnız `employee` döner) ve bu MÜHÜRLÜ bir hükümdür; "boştaki kurucuya hesap ver" diye değiştirilmez.
 - Doğrudan `Customer.new()` ile müşteri yaratmayın: `SalesSystem.add_b2b_customer` sayaçları, sunucu maddesini, atamayı, pazar referansını ve şirket adı hafızasını birlikte yazar (kayıt geri yükleme `insert_raw` kullanır).
 
@@ -267,7 +266,8 @@ Hepsi `tools/smoke_run.sh <vaka>` ile (komutlar `project-unicorn/`'dan, `GODOT` 
 - Yeni Satış sayısı (eşik, ağırlık) eklersen: `SalesConstants` ya da `B2BConstants`'a "[ÇALIŞMA]" etiketiyle; başka dosyada literal bırakma. Hesap yaşam döngüsü sayısıysa `B2BConstants`, görüşme ve şelale sayısıysa `SalesConstants`.
 - Yeni soru ya da cevap eklersen: `SalesProbes.CATALOGUE` satırı + türetilmiş CSV anahtarları (`SALES_PROBE_`, `SALES_ANS_`, `SALES_LOCK_`) iki dilde + `facts_for` içinde karşılığı olan gerçek; vaka `loc_sales_derived_keys`.
 - Yeni kayıp nedeni eklersen: `SalesConstants.LOSS_*` + `SalesLedger._blocker_cleared` (`sales_ledger.gd:353`) + `SalesMeetingSystem._derive_loss_reason`/`_loss_target` + `SALES_LOSS_*` ve `SALES_MEMORY_*` anahtarları.
-- Yeni arketip eklersen: `SalesArchetypes.TABLE` satırı, `SALES_ARCH_<ID>_LINE`, sektörleri `B2BConstants.SECTORS` ve `SalesNamePool.SECTOR_WORDS` içinde olmalı; sektör sırası kuralına dikkat.
+- Yeni arketip eklersen: `SalesArchetypes.TABLE` satırı (yalnız pazarlık huyu ve balina koşulu).
+- Yeni alıcı sektörü eklersen: ürünün `buyer_sectors`'ı, `B2BConstants.SECTORS`, `SalesNamePool.SECTOR_WORDS`, `ProductQuality.TABLE`, seçme adlar için `CompanyCatalog.COMPANIES` (ad tablosu Erdem'in onayıyla), `B2B_CONTACT_`/`B2B_COMPLAINT_` anahtarları iki dilde; vakalar `sales_sectors_all_produce_leads`, `loc_b2b_derived_keys`, `product_quality_sector_table`; koşuda `RunProbe._on_lead` listede olmayan sektörden adayı ERROR basar.
 - Hesap memnuniyeti ya da churn kuralı değişirse: `B2BSalesSystem._target_on`/`_drift`/`_tick_at_risk` + `B2BConstants` + olay seam'leri `musteri.*` (`seams_ported.gd`, `seams_sales.gd`) + `Inbox.risk_reason`.
 - Aynı değişiklikte koşulacak vakalar: `b2b_lifecycle_and_countdown`, `risk_reentry_hysteresis`.
 - Yeni müşteri olayı eklersen: kart `data/events/cards/customer/` + `signals.gd` izin listesi (sinyal tetikliyorsa) + `seams_*` (yeni koşul okuyorsa) + `EvEffects` (yeni fiil) + `--why-fire` ve `--event-lint`.

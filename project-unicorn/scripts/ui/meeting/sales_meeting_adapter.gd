@@ -66,7 +66,7 @@ func start() -> Dictionary:
 		"kicker": tr("MEETING_KICKER_SALES"),
 		"company": _prospect.company_name,
 		"cast": cast,
-		"identity": {"stars": _prospect.star, "sub": SalesArchetypes.voice_line(_prospect.archetype_id),
+		"identity": {"stars": _prospect.star, "sub": "",
 			"badge": tr("SALES_WHALE_" + whale.to_upper()) if whale != "" else ""},
 		"memory": vs.memory_line,
 	}

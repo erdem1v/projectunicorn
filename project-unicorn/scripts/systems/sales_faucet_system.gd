@@ -10,8 +10,8 @@ extends RefCounted
 # never dries: with zero sales staff a base inbound continues, and the 1★ band carries a hard
 # floor under every multiplier.
 #
-# THE POOL NEVER EXHAUSTS (§3). Names come from SalesNamePool, the curated 65 plus a generated
-# majority. Signing removes a name for the run; an expired company comes back after its
+# THE POOL NEVER EXHAUSTS (§3). Names come from SalesNamePool, the curated CompanyCatalog names plus a
+# generated majority. Signing removes a name for the run; an expired company comes back after its
 # return lock (§4) as ITSELF, which is why the lock is keyed by name rather than consuming one.
 #
 # THE MARKET GUARD (§3.1) IS CHECKED HERE TOO. SalesSystem.daily_tick already gates the whole
@@ -186,7 +186,7 @@ static func _roll_star(nth_today: int, mix: Array) -> int:
 ## expiry.
 ##
 ## Returns null when the market is shut, when no archetype fits the star, or when the
-## archetype's sectors hold no free name; a caller that gets null has produced nothing and
+## product's buyer sectors hold no free name; a caller that gets null has produced nothing and
 ## burned nothing.
 static func spawn(star: int, source: String) -> Prospect:
 	if not market_open():
@@ -201,17 +201,16 @@ static func spawn(star: int, source: String) -> Prospect:
 	var archetype: String = String(pool[SalesConstants.mix_seed(seed_base, SALT_ARCHETYPE) % pool.size()])
 
 	var excluded: Dictionary = _excluded_names()
-	var sectors: Array = SalesArchetypes.sectors(archetype)
+	var sectors: Array = ProductLines.buyer_sectors(sub_id)
 	var chosen_sector: String = ""
 	var company: String = ""
-	# A second round of the mixer: one round would make the sector the archetype's draw shifted by a constant, and a buyer type
-	# whose sector count equals its pool slots would only ever meet the sectors that constant away from its own slot.
+	# A second round of the mixer keeps the sector's draw independent of the archetype's: both start from the same seed.
 	var sector_draw: int = SalesConstants.mix_seed(SalesConstants.mix_seed(seed_base, SALT_SECTOR), SALT_SECTOR)
 	for offset in sectors.size():
-		var sector: String = String(sectors[(sector_draw + offset) % sectors.size()])
-		var name: String = SalesNamePool.take(sector, seed_base + offset, excluded)
+		var s_id: String = String(sectors[(sector_draw + offset) % sectors.size()])
+		var name: String = SalesNamePool.take(s_id, seed_base + offset, excluded)
 		if name != "":
-			chosen_sector = sector
+			chosen_sector = s_id
 			company = name
 			break
 	if company == "":

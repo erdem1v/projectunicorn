@@ -1099,18 +1099,6 @@ func _rows(state: Dictionary, key: String) -> Array:
 	return []
 
 
-## v1 → v2: `industry` became an ASCII sector id. Unknown values are left alone: more likely
-## a future sector than corruption.
-func _migrate_sector_ids(state: Dictionary) -> void:
-	for bucket in ["customers", "prospects"]:
-		for row in _rows(state, bucket):
-			if typeof(row) != TYPE_DICTIONARY:
-				continue
-			var old_id: String = String(row.get("industry", ""))
-			if B2BConstants.LEGACY_SECTOR_IDS.has(old_id):
-				row["industry"] = String(B2BConstants.LEGACY_SECTOR_IDS[old_id])
-
-
 ## v3 → v4: three employee axes and five founder skills became the skill AREAS. Needed
 ## because the codec replaces role_stats wholesale, so the old keys would land intact on a
 ## model that reads areas and every skill would read 0.

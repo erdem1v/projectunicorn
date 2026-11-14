@@ -528,7 +528,7 @@ func _seed_tempo_state(team: int = 1) -> bool:
 	return true
 
 
-## The tick probe's book world: the live ERP product on its real lines and `count` B2B accounts, thirteen sectors
+## The tick probe's book world: the live ERP product on its real lines and `count` B2B accounts, the buyer sectors
 ## by three stars in turn, signed through the signing seam. A seat each at a small price keeps the book's MRR under
 ## the Series A bar, so no fund calls inside the five weeks, and a tolerance of 0 keeps every account out of Risk,
 ## so no retention card queues: the weeks time the healthy path.
@@ -727,8 +727,8 @@ func _run_b2b_shot(kind: String) -> void:
 	_seed_line_state("erp", _ERP_SHIPPED_LINES)
 	var p := Prospect.new()
 	p.id = "shot"
-	p.company_name = "Ege Sigorta"
-	p.industry = "insurance"
+	p.company_name = "Ege Kargo"
+	p.industry = "logistics"
 	p.star = 1
 	var c: Customer = SalesSystem.add_b2b_customer(p, 20, 50, 70)   # 20 seats x $50 = $1.000
 	var card_id: String = "customer.retention"
@@ -1095,11 +1095,11 @@ func _shot_employee(id: String, ename: String, role: String, tenure_weeks: int) 
 	return emp
 
 
-## An `account_rep` slot's fixture: Palmiye Turizm under a Müşteri İlişkileri rep (the one `open_request` and `escalated`
+## An `account_rep` slot's fixture: Anadolu Market under a Müşteri İlişkileri rep (the one `open_request` and `escalated`
 ## stage), shaped by the card's customer slot, its rep by the rep's own slot (a seniority floor the compiled `where` writes).
 func _stage_rep_account(scope: Dictionary) -> void:
 	if CustomerRegistry.get_customer("co_palmiye") == null:
-		_shot_customer("co_palmiye", "Palmiye Turizm", "retail", "active", 1200, 15, 20, true)   # LOC-DATA debug seed / id
+		_shot_customer("co_palmiye", "Anadolu Market", "retail", "active", 1200, 15, 20, true)   # LOC-DATA debug seed / id
 	var account: Customer = CustomerRegistry.get_customer("co_palmiye")
 	_shape_shot_account(account, _shot_wants(scope.get("customer", {}).get("where", {})))
 	_shape_shot_employee(CharacterRegistry.get_character(account.assigned_to), _shot_wants(_shot_slot(scope, "account_rep").get("where", {})))
@@ -1148,7 +1148,7 @@ func _stage_leave_pair(scope: Dictionary) -> void:
 ## The accounts that use `line_id`, brought to `count` from a spare few (a paper that names several accounts of its line).
 func _stage_line_accounts(line_id: String, count: int) -> void:
 	for spare in [["co_kuzey", "Kuzey İnşaat", "construction"], ["co_nordica", "Nordica", "logistics"],   # LOC-DATA debug seed / id
-			["co_ege", "Ege Sigorta", "insurance"], ["co_palmiye", "Palmiye Turizm", "retail"]]:   # LOC-DATA debug seed / id
+			["co_ege", "Ege Kargo", "logistics"], ["co_palmiye", "Anadolu Market", "retail"]]:   # LOC-DATA debug seed / id
 		if SprintCatalog.line_accounts(line_id).size() >= count:
 			break
 		if CustomerRegistry.get_customer(spare[0]) == null:
@@ -1391,7 +1391,7 @@ func _seed_company_world(event_id: String, selects: Array, scope := {}, floor_da
 	if _card_has_verb(event_id, SHOT_SPRINT_VERBS):
 		SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id; the sprint state a card that queues a request or a card reads
 	if "open_request" in selects or "escalated" in selects:
-		_shot_customer("co_palmiye", "Palmiye Turizm", "retail", "active", 1200, 15, 20, true)   # LOC-DATA debug seed / id
+		_shot_customer("co_palmiye", "Anadolu Market", "retail", "active", 1200, 15, 20, true)   # LOC-DATA debug seed / id
 		CustomerRegistry.set_support_request("co_palmiye", GameState.day - 1)
 		CustomerRegistry.get_customer("co_palmiye").cs_escalated = "escalated" in selects
 	if "account_rep" in selects:
@@ -1410,7 +1410,7 @@ func _seed_company_world(event_id: String, selects: Array, scope := {}, floor_da
 		_stage_leave_pair(scope)
 
 
-## A release that kept Ege Sigorta's word and met Nordica's request: two thank-you notes, through the real bridge.
+## A release that kept Ege Kargo's word and met Nordica's request: two thank-you notes, through the real bridge.
 func _stage_release_thanks() -> void:
 	var invoicing := "line_erp_invoicing_k2"
 	var ledger := "line_erp_ledger_k2"
@@ -1941,7 +1941,7 @@ func _shot_pane(card_id: String, ctx: Dictionary, names := {}) -> void:
 ## `frank` adds Frank's introduction to the three leads of a founder with no Satış: it heads the list, tagged.
 ## `risk_stability` keeps the bugs at the complaint gate, so neither Risk account is there over outages: Ege, which
 ## holds no broken promise, reads the product's stability, Lale, whose promise broke, its falling satisfaction.
-## `clause` gives Kuzey an open server clause and Palmiye a notice: the cards' dated labels.
+## `clause` gives Kuzey an open server clause and Anadolu Market a notice: the cards' dated labels.
 ## `returning` gives two leads a loss over an area: the 2★ lead's Integrations is still empty (its door is shut, the reason
 ## under its buttons), the 1★ lead's Core is enough for a 1★ table (open).
 ## `deals` shows the founder's two table deals (the 3★ lead's two weeks into its plan, the 1★ lead's agreed this week)
@@ -2018,8 +2018,8 @@ func _run_sales_shot(kind: String) -> void:
 		SalesRepSystem.daily_tick()
 	if kind != "empty":
 		_shot_customer("co_kuzey", "Kuzey İnşaat", "construction", "active", 1000, 12, 13, false)   # LOC-DATA debug seed / id
-		_shot_customer("co_palmiye", "Palmiye Holding", "insurance", "active", 1500, 16, 21, true)
-		_shot_customer("co_aras", "Aras Klinik", "health", "onboarding", 700, 6, 1, false)
+		_shot_customer("co_palmiye", "Kardelen Mağazacılık", "retail", "active", 1500, 16, 21, true)
+		_shot_customer("co_aras", "Beykoz Tekstil", "textile", "onboarding", 700, 6, 1, false)
 	if edge:
 		var leads: Array[Prospect] = ProspectRegistry.get_all()
 		SalesLedger.set_routing(leads[0].id, SalesConstants.ROUTE_RESERVED)
@@ -2036,7 +2036,7 @@ func _run_sales_shot(kind: String) -> void:
 		CustomerRegistry.get_customer("co_aras").acquired_on_day = \
 			GameState.day + 1 - TimeModel.ticks(B2BConstants.ONBOARDING_GRACE_WEEKS)
 	elif kind != "empty":
-		_shot_customer("co_ege", "Ege Sigorta", "insurance", "risk", 1000, 12, 9, false)
+		_shot_customer("co_ege", "Ege Kargo", "logistics", "risk", 1000, 12, 9, false)
 		CustomerRegistry.set_churn_countdown("co_ege", TimeModel.ticks(B2BConstants.CHURN_COUNTDOWN_WEEKS))
 		_shot_customer("co_nordica", "Nordica", "logistics", "expansion", 2000, 20, 26, false)
 	if kind == "risk_stability":
@@ -2049,7 +2049,7 @@ func _run_sales_shot(kind: String) -> void:
 		last.spawned_on_day = GameState.day - TimeModel.ticks(3)
 		last.expires_on_day = GameState.day + TimeModel.ticks(1)
 	if kind == "clause":
-		# Kuzey's server clause is open for five more weeks; Palmiye gave notice and its contract ends in three.
+		# Kuzey's server clause is open for five more weeks; Anadolu Market gave notice and its contract ends in three.
 		CustomerRegistry.set_clause("co_kuzey", GameState.day + TimeModel.ticks(5), -1)
 		CustomerRegistry.set_clause("co_palmiye", GameState.day - TimeModel.ticks(1), GameState.day + TimeModel.ticks(3))
 	if kind == "discounted":
@@ -2129,7 +2129,7 @@ func _seed_theme_book() -> void:
 	ProductState.add_bugs("line_erp_ledger", 12)
 	_seed_hr_roster()
 	_shot_customer("co_kuzey", "Kuzey İnşaat", "construction", "active", 1000, 12, 13, false)   # LOC-DATA debug seed / id
-	_shot_customer("co_ege", "Ege Sigorta", "insurance", "risk", 1000, 12, 9, false)
+	_shot_customer("co_ege", "Ege Kargo", "logistics", "risk", 1000, 12, 9, false)
 	_shot_customer("co_nordica", "Nordica", "logistics", "expansion", 2000, 20, 26, false)
 	SalesFaucetSystem.spawn_prospect("small", "find")
 	SalesFaucetSystem.spawn_prospect("mid", "find")
@@ -2147,7 +2147,7 @@ func _stage_desk_losses(closes: bool) -> void:
 	for line_id in SprintCatalog.capabilities("trust"):
 		ProductState.set_line_tier(line_id, 1)
 	var rep: Character = CharacterRegistry.get_character("char_emp_shot_4")
-	var leads: Array = [["Ege Lojistik", "logistics", "ops_cautious", 2, true], ["Taurus Gayrimenkul", "real_estate", "finance_brisk", 2, true],   # LOC-DATA debug seed / id
+	var leads: Array = [["Ege Lojistik", "logistics", "ops_cautious", 2, true], ["Taurus Otomotiv", "auto_parts", "finance_brisk", 2, true],   # LOC-DATA debug seed / id
 		["Karadeniz Tekstil", "textile", "ops_cautious", 2, true], ["Liman Lojistik", "logistics", "ops_cautious", 1, false],
 		["Zeytin Market", "retail", "finance_brisk", 1, false]]
 	for i in leads.size():
@@ -2698,7 +2698,7 @@ func _run_invite_shot(kind: String) -> void:
 	TimeManager.freeze_clock(SHOT_FREEZE)   # the hour stays the call's at any speed
 	var lead: Prospect = SalesFaucetSystem.spawn(2, "faucet")
 	OfficeCrowdProbe.seed_staff(TRAVEL_SHOT_STAFF)
-	_shot_customer("co_ege", "Ege Sigorta", "insurance", "risk", 1000, 12, 9, false)
+	_shot_customer("co_ege", "Ege Kargo", "logistics", "risk", 1000, 12, 9, false)
 	_shot_customer("co_nordica", "Nordica", "logistics", "expansion", 2000, 20, 26, false)
 	_shot_paper("customer.expansion", {"customer": "co_nordica"}, 2)
 	CharacterRegistry.set_morale("char_crowd_0", 22)
@@ -4311,12 +4311,12 @@ func _run_ending_shot(key: String) -> void:
 
 	# The MÜŞTERİ and ÇALIŞAN cells read live registries, not the run counters. The customer
 	# seam bumps run_customers_signed and reflects MRR, so both are written after it.
-	var companies := ["Ege Sigorta", "Kule Lojistik"]
+	var companies := ["Ege Kargo", "Kule Lojistik"]
 	for ci in companies.size():
 		var pr := Prospect.new()
 		pr.id = "shot_cust_%d" % ci
 		pr.company_name = companies[ci]
-		pr.industry = "insurance"
+		pr.industry = "logistics"
 		pr.star = 1
 		pr.pain_feature_id = "ai_vec_filter"
 		SalesSystem.add_b2b_customer(pr, 20, 50, 70)   # 20 seats x $50 = $1.000

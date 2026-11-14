@@ -37,10 +37,10 @@ const ONBOARDING_AMP := 1.5             # onboarding-window swing amplifier
 # Sign note (see PROMISE_* below): higher scale = pickier; unchanged, intended.
 const TOLERANCE_BASE := 33              # scale-1 tolerance floor
 const TOLERANCE_PER_SCALE := 9          # + per star (larger = pickier; Tier-2 scale 5 → 69, re-seat with that unlock)
-# Per-sector addition to the bar (same sign as TOLERANCE_PER_SCALE: + = pickier). Working;
-# unlisted sectors add 0.
+# Per-sector addition to the bar (same sign as TOLERANCE_PER_SCALE: + = pickier); unlisted sectors add 0.
+# [WORKING] onay bekliyor.
 const SECTOR_TOLERANCE_BONUS := {
-	"construction": 5, "health": 5, "insurance": 3,
+	"construction": 5,
 }
 
 
@@ -98,24 +98,12 @@ const CHURN_BRAND := -2                 # brand hit at the ACTUAL churn moment (
 # it holds the ASCII id; the sector copy on screen is a strings.csv row derived from the id at
 # display time (B2B_CONTACT_<ID>, B2B_COMPLAINT_<ID>) — the BILINGUAL BIRTH LAW's "store ids,
 # render labels".
-const SECTORS := ["construction", "health", "logistics", "insurance", "manufacturing",
-	"retail", "real_estate", "textile", "legal", "technology", "ecommerce", "media",
-	"finance"]
-# A FIXTURE sector, deliberately outside SECTORS: smoke and the run probe need a prospect
-# whose sector is not one of the thirteen the CompanyCatalog stocks. It has no copy rows and
-# no company pool, so every derived lookup on it falls back to the family's generic line.
+const SECTORS := ["construction", "manufacturing", "textile", "wholesale", "logistics", "retail", "ecommerce",
+	"auto_parts", "food"]
+# A FIXTURE sector, deliberately outside SECTORS: smoke and the run probe need a prospect whose sector no product
+# sells to. It has no TABLE row, copy rows or name words, so every lookup on it falls back (the fallback row, the
+# family's generic line).
 const SECTOR_FIXTURE := "testing"
-
-# Saves written before this migration carry the old Turkish name in `industry`.
-# SaveManager's v1→v2 migration maps them through this table; it is the ONLY place the
-# legacy spellings survive, and it is data, not copy.
-const LEGACY_SECTOR_IDS := {
-	"İnşaat": "construction", "Sağlık": "health", "Lojistik": "logistics",        # LOC-DATA legacy save values
-	"Sigorta": "insurance", "Üretim": "manufacturing", "Perakende": "retail",     # LOC-DATA legacy save values
-	"Emlak": "real_estate", "Tekstil": "textile", "Hukuk": "legal",               # LOC-DATA legacy save values
-	"Teknoloji": "technology", "E-ticaret": "ecommerce", "Medya": "media",        # LOC-DATA legacy save values
-	"Finans": "finance", "Testing": "testing",                                    # LOC-DATA legacy save values
-}
 
 
 # --- Sector / feature copy ------------------------------------------------------
@@ -123,6 +111,7 @@ const LEGACY_SECTOR_IDS := {
 # table can drift from the CSV. A derived key is invisible to a grep for tr("LITERAL"), so
 # the smoke case `loc_b2b_derived_keys` walks SECTORS and the feature ids and asserts every
 # derived key resolves — that is what stops a typo rendering a raw token on screen.
+
 
 static func sector_contact(industry: String) -> String:
 	return _derived("B2B_CONTACT_", industry, "B2B_CONTACT_FALLBACK")

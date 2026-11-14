@@ -130,7 +130,7 @@ static func _cs_renewal_request_reaches_player(main: Node) -> String:
 	main._seed_theme_book()
 	var tenure: int = TimeModel.ticks(B2BConstants.RENEWAL_MIN_TENURE_WEEKS)
 	GameState.day = maxi(GameState.day, tenure + 1)
-	main._shot_customer("co_palmiye", "Palmiye Turizm", "retail", "active", 1200, 15, tenure, true)   # LOC-DATA debug seed / id
+	main._shot_customer("co_palmiye", "Anadolu Market", "retail", "active", 1200, 15, tenure, true)   # LOC-DATA debug seed / id
 	var account: Customer = CustomerRegistry.get_customer("co_palmiye")
 	CustomerRegistry.set_support_request(account.id, GameState.day - TimeModel.ticks(B2BConstants.CS_ESCALATE_AFTER_WEEKS))
 	if CustomerRepSystem.pick_request_kind(account) != B2BConstants.CS_KIND_RENEWAL:
@@ -159,7 +159,7 @@ static func _cs_renewal_request_reaches_player(main: Node) -> String:
 static func _cs_request_rule_holds_second_ask(main: Node) -> String:
 	main._seed_run_reproducible()
 	main._seed_theme_book()
-	main._shot_customer("co_palmiye", "Palmiye Turizm", "retail", "active", 1200, 15, 10, true)   # LOC-DATA debug seed / id
+	main._shot_customer("co_palmiye", "Anadolu Market", "retail", "active", 1200, 15, 10, true)   # LOC-DATA debug seed / id
 	var account: Customer = CustomerRegistry.get_customer("co_palmiye")
 	await main._mount_shot_shell()
 	main._wire_modal_signals()

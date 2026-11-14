@@ -334,7 +334,6 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"loc_event_en_coverage":     fail = _case_loc_event_en_coverage()
 		"loc_pick_fallback":         fail = _case_loc_pick_fallback()
 		"loc_b2b_derived_keys":      fail = _case_loc_b2b_derived_keys()
-		"loc_save_sector_migration": fail = _case_loc_save_sector_migration()
 		"loc_product_derived_keys":  fail = _case_loc_product_derived_keys()
 		"loc_format_args":           fail = _case_loc_format_args()
 		"all_scripts_load":          fail = _case_all_scripts_load()
@@ -3481,7 +3480,7 @@ static func _case_b2b_account_reads_fit() -> String:
 		lead.deal_price = 50
 		ProspectRegistry.add(lead)
 		return lead
-	var small: Prospect = lead_of.call("fit_small", "insurance", 1)
+	var small: Prospect = lead_of.call("fit_small", "logistics", 1)
 	var big: Prospect = lead_of.call("fit_big", "manufacturing", 3)
 	var desk: Prospect = lead_of.call("fit_desk", "logistics", 1)
 	# The MVP meets a 1★ table exactly; a 3★ table wants far more than the MVP and opens on its floor, not on the seed.
@@ -3582,7 +3581,7 @@ static func _add_risk_b2b(pid: String, mrr: int) -> Customer:
 	var p := Prospect.new()
 	p.id = pid
 	p.company_name = "R_" + pid
-	p.industry = "insurance"
+	p.industry = "logistics"
 	p.star = 1
 	p.pain_feature_id = "ai_vec_filter"
 	var c: Customer = _sign_fixture(p, mrr, 70)
@@ -4096,7 +4095,7 @@ static func _case_sales_emphasis_question() -> String:
 			if row.id == row_id:
 				return SalesProbes.answers_for(row, asked.facts, "")[0]
 		return {}
-	var rows := {"finance": "trust", "logistics": "integrations", "construction": "onboarding"}
+	var rows := {"retail": "trust", "logistics": "integrations", "construction": "onboarding"}
 	for sector in rows:
 		for archetype in SalesArchetypes.ids():
 			var asked: Dictionary = table.call(1, sector, archetype)
@@ -4200,29 +4199,19 @@ static func _case_sales_weak_area_loss() -> String:
 
 
 static func _case_b2b_prospect_pain_references_real_feature() -> String:
-	# B.4: a prospect's surface need maps to a feature that EXISTS in the active
-	# product's pool (so a special request later is buildable, not a phantom ask).
+	# B.4: a prospect's surface need maps to a step that EXISTS in the active product's lines (so a special request later
+	# is buildable, not a phantom ask).
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
-	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
-	var pool_ids: Array = []
-	for f in ProductCatalog.get_feature_pool("ai_vector_search"):
-		pool_ids.append(String(f.get("id", "")))
-	GameState.set_flag("mvp_shipped", true)
-	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.set_flag("mvp_sub_product_type_id", "erp")
 	for i in 6:
 		var p: Prospect = SalesFaucetSystem.spawn(1, "faucet")
 		if p == null:
 			return "the faucet dried at draw %d" % i
 		if p.pain_feature_id == "":
 			return "lead %d has empty pain_feature_id" % i
-		if not pool_ids.has(p.pain_feature_id):
-			return "pain_feature_id %s not in the product pool" % p.pain_feature_id
-		# `display_need()` is RETIRED with the read-gated need pools (§19). What a lead
-		# renders instead is its archetype's one line, and the pain is an ID that a promise
-		# and the CS request channel can both point at.
-		if SalesArchetypes.voice_line(p.archetype_id) == "":
-			return "lead %d renders no archetype line" % i
+		if ProductLines.step(p.pain_feature_id).is_empty():
+			return "pain_feature_id %s is not a step of the product's lines" % p.pain_feature_id
 	return ""
 
 
@@ -4334,7 +4323,7 @@ static func _case_b2b_cs_absorbs_routine() -> String:
 	var p := Prospect.new()
 	p.id = "csm"
 	p.company_name = "CS Managed"
-	p.industry = "insurance"
+	p.industry = "logistics"
 	p.star = 1
 	p.pain_feature_id = "ai_vec_filter"
 	var cs_mgd: Customer = _sign_fixture(p, 1000, 70)
@@ -4365,8 +4354,8 @@ static func _case_b2b_cs_escalation_refuse() -> String:
 	var cs: Character = _make_cs("char_cs_1", 4, 60)
 	var p := Prospect.new()
 	p.id = "esc"
-	p.company_name = "Ege Sigorta"
-	p.industry = "insurance"
+	p.company_name = "Ege Kargo"
+	p.industry = "logistics"
 	p.star = 1
 	p.pain_feature_id = "ai_vec_filter"
 	var c: Customer = _sign_fixture(p, 2000, 70)
@@ -6486,8 +6475,8 @@ static func _case_event_history_names_survive() -> String:
 	var cs: Character = _make_cs("char_cs_nm", 4, 60)
 	var p := Prospect.new()
 	p.id = "esc_nm"
-	p.company_name = "Ege Sigorta"
-	p.industry = "insurance"
+	p.company_name = "Ege Kargo"
+	p.industry = "logistics"
 	p.star = 1
 	p.pain_feature_id = "ai_vec_filter"
 	var c: Customer = _sign_fixture(p, 2000, 70)
@@ -6499,7 +6488,7 @@ static func _case_event_history_names_survive() -> String:
 	EventGate.resolve(ESC_ID, "refuse")
 	row = EvHistory.rows()[-1]
 	var lost_name: String = EvPresenter.resolve_text("{customer}", row["entities"], row.get("names", {}))
-	if CustomerRegistry.get_customer(c.id) != null or lost_name != "Ege Sigorta":
+	if CustomerRegistry.get_customer(c.id) != null or lost_name != "Ege Kargo":
 		return "the lost account's row reads '%s'" % lost_name
 
 	var gone: Customer = _add_risk_b2b("paper_nm", 800)
@@ -7012,13 +7001,11 @@ static func _case_b2b_scale_and_sector_gating() -> String:
 	# §2 THE DEMO CEILING (MÜHÜRLÜ): the faucet produces 1-3 stars only. 4-5 is not generated
 	# and not written, and there is no locked 4-star card either — dim stars ARE the scale
 	# telegraph.
-	# §3 SECTOR AFFINITY moved from a product-keyed table to the ARCHETYPE's own sectors, so
-	# the fiction stays clean without a second narrowing.
 	# FALSIFICATION: the old spawner rolled scale from CustomerArchetypes and could hand back
 	# a 5 whenever b2b_high_scale_unlocked was set; nothing set it, which was the bug.
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
-	GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
+	GameState.set_flag("mvp_sub_product_type_id", "erp")
 	for i in 12:
 		var p: Prospect = SalesFaucetSystem.spawn(SalesConstants.STAR_MAX + 2, "faucet")
 		if p == null:
@@ -7027,8 +7014,6 @@ static func _case_b2b_scale_and_sector_gating() -> String:
 			return "lead star out of the demo range: %d" % p.star
 		if not SalesArchetypes.has(p.archetype_id):
 			return "lead carries an unknown archetype: %s" % p.archetype_id
-		if not SalesArchetypes.sectors(p.archetype_id).has(p.industry):
-			return "lead industry %s is not one of %s's sectors" % [p.industry, p.archetype_id]
 		if not SalesArchetypes.accepts_star(p.archetype_id, p.star):
 			return "archetype %s does not take a %d-star table" % [p.archetype_id, p.star]
 		# A lead spawned after the week began gets one more week (SalesFaucetSystem.spawn).
@@ -9020,7 +9005,7 @@ static func _case_coupling_cs_dampen_axis() -> String:
 	var p := Prospect.new()
 	p.id = "dmp"
 	p.company_name = "Dampen Co"
-	p.industry = "insurance"
+	p.industry = "logistics"
 	p.star = 1
 	p.pain_feature_id = "ai_vec_filter"
 	var bb: Customer = _sign_fixture(p, 1000, 70)
@@ -9588,7 +9573,7 @@ static func _case_sales_rep_loss_mail() -> String:
 	_set_area_tiers({"core": 1, "integrations": 0, "onboarding": 0})
 	var rep: Character = _make_sales_rep("char_sr_1", 0, 9)
 	var a: Prospect = _die_lead("mail_a", 2, "logistics", true)       # integrations, trust: integrations lacking
-	var b: Prospect = _die_lead("mail_b", 2, "real_estate", true)     # onboarding, integrations: both empty, the first named
+	var b: Prospect = _die_lead("mail_b", 2, "construction", true)    # onboarding, trust: onboarding lacking, named first
 	var c: Prospect = _die_lead("mail_c", 2, "textile", true)         # integrations, onboarding: integrations named first
 	var signer: Prospect = _add_prospect("mail_sign", 1, "")           # a 1 star table only asks the core's MVP
 	if a == null or b == null or c == null:
@@ -9696,8 +9681,9 @@ static func _case_sales_rep_loss_mail() -> String:
 static func _case_sales_star_mix_reads_fit() -> String:
 	GameState.set_phase(3)
 	_seed_b2b(1000)
-	if B2BConstants.SECTORS.size() != 13 or ProductQuality.TABLE.size() != 13:
-		return "fixture: the market has %d sectors and the table %d rows, want thirteen" % [B2BConstants.SECTORS.size(), ProductQuality.TABLE.size()]
+	var buyers: int = ProductLines.buyer_sectors("erp").size()
+	if B2BConstants.SECTORS.size() != buyers or ProductQuality.TABLE.size() != buyers:
+		return "fixture: the market has %d sectors and the table %d rows, want ERP's %d buyer sectors" % [B2BConstants.SECTORS.size(), ProductQuality.TABLE.size(), buyers]
 	var table: Array = SalesConstants.star_mix(GameState.phase)
 	var floor_share: float = SalesConstants.QUALITY_SHIFT_FLOOR
 	# What the faucet reads now, and the two things it must equal.
@@ -9710,7 +9696,7 @@ static func _case_sales_star_mix_reads_fit() -> String:
 			"strength": SalesFaucetSystem.product_strength(), "mix": mix, "kept": float(mix[2]) / float(table[2])}
 	var wrong := func(r: Dictionary) -> String:
 		if r.fit != r.mean:
-			return "market fit %d is not the mean of the thirteen sectors' 3 star fits %d" % [r.fit, r.mean]
+			return "market fit %d is not the mean of the buyer sectors' 3 star fits %d" % [r.fit, r.mean]
 		if not is_equal_approx(r.strength, r.fit / 70.0):
 			return "strength %.3f is not market fit %d over 70" % [r.strength, r.fit]
 		if not is_equal_approx(float(r.mix[0]) + float(r.mix[1]) + float(r.mix[2]), 1.0) or not is_equal_approx(float(r.mix[1]), float(table[1])):
@@ -9750,38 +9736,27 @@ static func _case_sales_star_mix_reads_fit() -> String:
 	return ""
 
 
-## On üç sektörün hepsi aday üretir: her sektör tam bir alıcı tipinin listesindedir, ilk üç sektörün sırası yerinde kalır (yeni sektör sona eklenir:
-## sektör çekimi listenin uzunluğuna bölünür, fikstürler `sectors(...)[0]`'ı okur) ve musluk 600 adayda on üçünü de çıkarır.
-## FALSİFİKASYON: `sales_archetypes.gd`den "textile"ı sil → "no buyer type claims" iddiası FAIL; `SalesFaucetSystem.spawn`da sektör çekiminin ikinci
-## karıştırma turunu kaldır → "never offered insurance" iddiası FAIL (tek turda Sigorta ve Hukuk hiç gelmez).
+## ERP yalnız alıcı sektörlerine satılır (`erp.json` `buyer_sectors`, PRD_ERP §4.1): listedeki her sektörün metni, tablo satırı ve ad
+## sözcükleri vardır; musluk 600 adayda listenin hepsini çıkarır, listede olmayan sektörden aday doğmaz.
+## FALSİFİKASYON: `SalesFaucetSystem.spawn`da sektörü `ProductLines.buyer_sectors` yerine sabit bir listeden çek → "outside" ya da "never
+## offered" iddiası FAIL.
 static func _case_sales_sectors_all_produce_leads() -> String:
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_sub_product_type_id", "erp")
-	var claimed: Dictionary = {}
-	for id in SalesArchetypes.ids():
-		for sector in SalesArchetypes.sectors(String(id)):
-			if claimed.has(sector):
-				return "%s is claimed by %s and %s" % [sector, claimed[sector], id]
-			claimed[sector] = id
-	for sector in B2BConstants.SECTORS:
-		if not claimed.has(sector):
-			return "no buyer type claims %s, so the faucet never offers it" % sector
-	if claimed.size() != B2BConstants.SECTORS.size():
-		return "the buyer types claim %d sectors, the market has %d" % [claimed.size(), B2BConstants.SECTORS.size()]
-	for row in [["ops_cautious", ["logistics", "construction", "manufacturing", "health", "textile"]],
-			["tech_exacting", ["technology", "ecommerce", "finance", "media"]], ["finance_brisk", ["insurance", "legal", "retail", "real_estate"]]]:
-		if SalesArchetypes.sectors(row[0]) != row[1]:
-			return "%s reads sectors %s, want %s (new sectors go last)" % [row[0], SalesArchetypes.sectors(row[0]), row[1]]
+	var buyers: Array = ProductLines.buyer_sectors("erp")
+	for sector in buyers:
+		if not B2BConstants.SECTORS.has(sector) or not ProductQuality.TABLE.has(sector) or not SalesNamePool.SECTOR_WORDS.has(sector):
+			return "ERP sells to %s, which has no copy, table row or name words" % sector
 	var seen: Dictionary = {}
 	for i in 600:
 		var p: Prospect = SalesFaucetSystem.spawn(1 + i % 3, "faucet")
 		if p == null:
 			return "the faucet dried at draw %d" % i
+		if not buyers.has(p.industry):
+			return "a lead came from %s, outside ERP's buyer sectors" % p.industry
 		seen[p.industry] = true
-		if seen.size() == B2BConstants.SECTORS.size():
-			return ""
-	for sector in B2BConstants.SECTORS:
+	for sector in buyers:
 		if not seen.has(sector):
 			return "600 leads never offered %s (saw %s)" % [sector, seen.keys()]
 	return ""
@@ -9821,7 +9796,7 @@ static func _case_account_uses_area_rule() -> String:
 	_seed_bugs(5)
 	ProductState.add_bugs(integrations, 3)
 	ProductState.add_bugs(onboarding, 2)
-	for row in [["construction", 7], ["logistics", 8], ["media", 7], ["real_estate", 10]]:
+	for row in [["construction", 7], ["logistics", 8], ["food", 8], ["textile", 10]]:
 		var account: Customer = CustomerRegistry.get_customer("co_use_" + row[0])
 		if B2BSalesSystem.account_bugs(account) != row[1]:
 			return "the %s account counts %d bugs, want %d (the core's 5 and the bugs of the lines of its two emphasis areas)" % [
@@ -9845,7 +9820,7 @@ static func _case_requests_one_open_per_account() -> String:
 	var pains := {"co_ask_a": shared, "co_ask_b": shared, "co_ask_c": nexts[1]}
 	for id in pains:
 		var big: bool = id == "co_ask_c"   # larger than both askers: the fallback rule of `second_account` would never pick co_ask_b
-		var c: Customer = _incident_account(id, "Ask " + id, "technology", 80 if big else 40, 3600 if big else 1800)
+		var c: Customer = _incident_account(id, "Ask " + id, "manufacturing", 80 if big else 40, 3600 if big else 1800)
 		c.acquired_on_day = 10
 		CustomerRegistry.set_pain_feature(id, pains[id])
 	GameState.product.requests.clear()
@@ -10239,7 +10214,7 @@ static func _case_b2b_prospect_dedup_excludes_signed() -> String:
 	# offers the signed company back within a handful of draws.
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
-	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	GameState.set_flag("mvp_sub_product_type_id", "erp")
 	var first: Prospect = SalesFaucetSystem.spawn(1, "faucet")
 	if first == null:
 		return "fresh run spawned null"
@@ -10294,7 +10269,7 @@ static func _case_company_catalog_pool_integrity() -> String:
 	# below runs out, which is exactly the plateau that was measured.
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
-	GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
+	GameState.set_flag("mvp_sub_product_type_id", "erp")
 	# Every curated name is still offered — nothing was thrown away.
 	for sector in B2BConstants.SECTORS:
 		var pool: Array = SalesNamePool.pool_for(String(sector))
@@ -10341,7 +10316,7 @@ static func _case_market_share_tracks_mrr() -> String:
 	# Fix 3: player share derives from MRR (rises with it), the snapshot sums to ~100,
 	# the roster holds every catalog rival + market actor, the formatter keeps the
 	# sliver legible, and the computation is pure (two same-day calls byte-equal).
-	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	GameState.set_flag("mvp_sub_product_type_id", "erp")
 	_seed_b2b(1500)   # real customer record — set_mrr alone would be bridge-clobbered
 	var snap: Dictionary = RivalRegistry.get_market_snapshot("ai_vector_search")
 	var p1: float = float(snap["player_pct"])
@@ -10528,7 +10503,7 @@ static func _case_cs_request_kind_state_driven() -> String:
 	var a := Customer.new()
 	a.id = "co_state_a"
 	a.company_name = "Durum A"
-	a.industry = "technology"
+	a.industry = "manufacturing"
 	a.satisfaction = 25
 	a.tolerance = 50
 	a.acquired_on_day = GameState.day
@@ -10540,7 +10515,7 @@ static func _case_cs_request_kind_state_driven() -> String:
 	var b := Customer.new()
 	b.id = "co_state_b"
 	b.company_name = "Durum B"
-	b.industry = "finance"
+	b.industry = "retail"
 	b.satisfaction = 85
 	b.tolerance = 40
 	b.acquired_on_day = GameState.day
@@ -10551,7 +10526,7 @@ static func _case_cs_request_kind_state_driven() -> String:
 	var c := Customer.new()
 	c.id = "co_state_c"
 	c.company_name = "Durum C"
-	c.industry = "media"
+	c.industry = "food"
 	c.satisfaction = 70
 	c.tolerance = 40
 	c.acquired_on_day = GameState.day - 180
@@ -12905,36 +12880,10 @@ static func _case_save_migration_v3_to_v4() -> String:
 	return ""
 
 
-static func _case_loc_save_sector_migration() -> String:
-	var state := {
-		"customers": [
-			{"id": "co_a", "industry": "İnşaat"},      # LOC-DATA legacy fixture
-			{"id": "co_b", "industry": "Sağlık"},      # LOC-DATA legacy fixture
-			{"id": "co_c", "industry": "logistics"},   # already migrated — must not double-map
-			{"id": "co_d", "industry": "Marslılar"},   # LOC-DATA unknown — must be LEFT ALONE
-		],
-		"prospects": [{"id": "p_a", "industry": "Finans"}],   # LOC-DATA legacy fixture
-	}
-	SaveManager._migrate_sector_ids(state)
-	var got: Array = []
-	for row in (state["customers"] as Array):
-		got.append(String((row as Dictionary)["industry"]))
-	got.append(String(((state["prospects"] as Array)[0] as Dictionary)["industry"]))
-	var want := ["construction", "health", "logistics", "Marslılar", "finance"]   # LOC-DATA
-	if got != want:
-		return "sector migration produced %s, want %s" % [str(got), str(want)]
-	# Every legacy value must land on a REAL sector id, or the table itself is the bug.
-	for legacy in B2BConstants.LEGACY_SECTOR_IDS:
-		var mapped: String = String(B2BConstants.LEGACY_SECTOR_IDS[legacy])
-		if not B2BConstants.SECTORS.has(mapped) and mapped != B2BConstants.SECTOR_FIXTURE:
-			return "legacy map sends '%s' to unknown id '%s'" % [legacy, mapped]
-	return ""
-
-
 ## Product catalog derived keys resolve. Same guard as loc_b2b_derived_keys: the catalog
 ## builds its copy keys from ids at runtime (PROD_TYPE_ + ID + _NAME, PROD_FEAT_ + ID +
 ## _VOICE …), so no grep for tr("LITERAL") can see them, and a typo would reach the player
-## as the raw id. Walks every sub-product type, its sectors and its features in both locales:
+## as the raw id. Walks every sub-product type and its features in both locales:
 ## the name on all of them (the product page and the sales name read it for a save that runs
 ## a subtype the type screen no longer offers), a playable type's dossier (its line, definition,
 ## revenue and customers, and each desk and concept it names with its tooltip).
@@ -12968,11 +12917,6 @@ static func _case_loc_product_derived_keys() -> String:
 				if TranslationServer.translate(key) == key:
 					TranslationServer.set_locale(loc0)
 					return "[%s] %s has no row" % [loc, key]
-			for sid in (st as Dictionary).get("sectors", []):
-				var skey: String = "SECTOR_" + String(sid).to_upper()
-				if TranslationServer.translate(skey) == skey:
-					TranslationServer.set_locale(loc0)
-					return "[%s] %s has no row" % [loc, skey]
 			for f in ProductCatalog.get_feature_pool(tid):
 				var fid: String = String((f as Dictionary).get("id", ""))
 				for fsuffix in ["_NAME", "_VOICE"]:
@@ -16195,24 +16139,24 @@ static func _case_sales_offer_signing() -> String:
 
 	# The rep's lead, its rep, its sector and its name.
 	var worked: Prospect = _add_prospect("offer_a", 2, "")
-	worked.industry = "health"
+	worked.industry = "food"
 	worked.worked_by = rep.id
 	var other_sector: Prospect = _add_prospect("offer_b", 2, "")
-	other_sector.industry = "finance"
+	other_sector.industry = "retail"
 	other_sector.worked_by = rep.id
 	var idle: Prospect = _add_prospect("offer_c", 2, "")
-	idle.industry = "health"
+	idle.industry = "food"
 	var table: Prospect = _add_prospect("offer_d", 2, "")
-	table.industry = "health"
+	table.industry = "food"
 	table.worked_by = founder_id
 	var slots: Dictionary = {
 		"prospect": {"type": "prospect", "required": true, "select": "rep_lead",
-			"where": {"entity_seam": "aday.sector", "scope": "prospect", "op": "==", "value": "health"}},
+			"where": {"entity_seam": "aday.sector", "scope": "prospect", "op": "==", "value": "food"}},
 		"employee": {"type": "employee", "required": true, "select": "lead_rep"}}
 	var bound: Dictionary = EvScope.resolve(slots, {}, "fixture.offer")
 	if not bound.ok or bound.context.prospect.id != worked.id or bound.context.employee.id != rep.id:
 		return "the rep's health lead did not bind with its rep: %s" % [str(bound)]
-	if EvSeams.read_for("aday.sector", worked.id) != "health" or EvSeams.read_for("aday.sector", other_sector.id) != "finance":
+	if EvSeams.read_for("aday.sector", worked.id) != "food" or EvSeams.read_for("aday.sector", other_sector.id) != "retail":
 		return "aday.sector does not read the lead's sector"
 	if EvPresenter.name_text(EvPresenter.freeze_names(bound.context).prospect) != worked.company_name:
 		return "the {prospect} slot keeps '%s', want the company's name" % [str(EvPresenter.freeze_names(bound.context).prospect)]
@@ -16592,12 +16536,12 @@ static func _case_product_lines_catalog_loads() -> String:
 ## oran olarak verilir (Çekirdek, Onboarding, Entegrasyonlar, Güven); dört alanın beklentisi 1 iken seviye = oran.
 ##
 ## FALSİFİKASYON: ProductQuality.CORE_LEAD'i 9.0 yap → P2 hücreleri tavansız 63'e çıkar, ilk iddia FAIL.
-## TABLE["finance"]'ın iki vurgusunu ters çevir → P1 Finans 77'den düşer.
+## TABLE["retail"]'ın iki vurgusunu ters çevir → P1 Perakende 77'den düşer.
 static func _case_product_fit_table() -> String:
 	var areas: Array = ["core", "onboarding", "integrations", "trust"]
 	var ref: Dictionary = {"core": 1.0, "onboarding": 1.0, "integrations": 1.0, "trust": 1.0}
 	var products: Dictionary = {"P1": [1.5, 1.0, 0.0, 1.0], "P2": [0.4, 1.0, 1.5, 1.5], "P3": [1.0, 0.0, 1.5, 1.0]}
-	var cells: Dictionary = {"finance": {"P1": 77, "P2": 46, "P3": 68}, "logistics": {"P1": 70, "P2": 46, "P3": 72},
+	var cells: Dictionary = {"retail": {"P1": 77, "P2": 46, "P3": 68}, "logistics": {"P1": 70, "P2": 46, "P3": 72},
 		"construction": {"P1": 81, "P2": 46, "P3": 56}}
 	for sector in cells:
 		for p in products:
@@ -16611,15 +16555,15 @@ static func _case_product_fit_table() -> String:
 				return "%s on %s: capped=%s loss_area='%s'; only P2's weak Core hits the cap, and it names Core" % [
 					p, sector, got.capped, got.loss_area]
 
-	# Tavansız P2 Finans 63 eder: 17 puanı tavan alır.
-	var w: Dictionary = ProductQuality.weights("b2b", "finance")
+	# Tavansız P2 Perakende 63 eder: 17 puanı tavan alır.
+	var w: Dictionary = ProductQuality.weights("b2b", "retail")
 	var uncapped: float = 0.0
 	for i in areas.size():
 		uncapped += w[areas[i]] * products.P2[i]
 	if roundi(ProductQuality.FIT_SCALE * uncapped) != 63:
-		return "P2 on finance without the cap reads %d, want 63" % roundi(ProductQuality.FIT_SCALE * uncapped)
+		return "P2 on retail without the cap reads %d, want 63" % roundi(ProductQuality.FIT_SCALE * uncapped)
 
-	var b2b: Dictionary = {"market": "b2b", "sector": "finance", "ref": ref}
+	var b2b: Dictionary = {"market": "b2b", "sector": "retail", "ref": ref}
 	var met: Dictionary = ProductQuality.fit_from_levels(ref, b2b)
 	if met.value != 70 or met.capped or met.loss_area != "":
 		return "a product at every expectation reads %s, want U 70, no cap and no lacking area" % met
@@ -16644,7 +16588,7 @@ static func _case_product_fit_table() -> String:
 	# Beklentisi olmayan alan U'ya girmez: seviyesi 0 olsa da 70 kalır.
 	var unexpected: Dictionary = ProductQuality.fit_from_levels(
 		{"core": 1.0, "onboarding": 0.0, "integrations": 0.0, "trust": 1.0},
-		{"market": "b2b", "sector": "finance", "ref": {"core": 1.0, "onboarding": 0.0, "integrations": 0.0, "trust": 1.0}})
+		{"market": "b2b", "sector": "retail", "ref": {"core": 1.0, "onboarding": 0.0, "integrations": 0.0, "trust": 1.0}})
 	if unexpected.value != 70:
 		return "areas nobody expects still weigh on U: reads %d, want 70" % unexpected.value
 
@@ -16696,10 +16640,11 @@ static func _case_product_quality_sector_table() -> String:
 			return "%s: emphasis %s and weights %s do not follow the row %s" % [
 				sector, ProductQuality.emphasis(sector), w, row]
 
-	var home: Dictionary = ProductQuality.weights("b2b", String(SalesArchetypes.sectors(SalesArchetypes.DEFAULT_ID)[0]))
-	for sector in [B2BConstants.SECTOR_FIXTURE, "healthcare"]:
+	var home: Dictionary = ProductQuality.weights("b2b", ProductQuality.FALLBACK_SECTOR)
+	# "health" is an old save's sector that ERP no longer sells: it reads the fallback row like any unknown id.
+	for sector in [B2BConstants.SECTOR_FIXTURE, "healthcare", "health"]:
 		if ProductQuality.weights("b2b", sector) != home:
-			return "unknown sector '%s' reads %s, not the default buyer's first sector %s" % [
+			return "unknown sector '%s' reads %s, not the fallback row %s" % [
 				sector, ProductQuality.weights("b2b", sector), home]
 
 	var b2c: Dictionary = ProductQuality.weights("b2c", "")
@@ -16953,7 +16898,7 @@ static func _case_fit_star_context() -> String:
 			mvp_1.value, mvp_1.loss_area, mvp_2.value, mvp_2.loss_area]
 
 	# Evre geçişi hiçbir adayın ve hesabın U'sunu ve sayfanın kelimesini oynatmaz.
-	var account: Customer = _sign_fixture(asked.call(3, "health"), 6000, 70)
+	var account: Customer = _sign_fixture(asked.call(3, "retail"), 6000, 70)
 	var guest: Prospect = asked.call(2, "construction")
 	var snapshot := func() -> Array:
 		return [ProductQuality.prospect_fit(guest), ProductQuality.account_fit(account), ProductQuality.word("core"),
@@ -17220,7 +17165,7 @@ static func _case_save_v17_market_ref() -> String:
 				{"day": 4, "account": "Fiyat A.Ş.", "reason": "price", "target": ""}]},
 		"registries": {"customers": [
 			{"id": "co_a", "market_type": "b2b", "scale": 2, "industry": "logistics"},
-			{"id": "co_b", "market_type": "b2b", "scale": 3, "industry": "health"},
+			{"id": "co_b", "market_type": "b2b", "scale": 3, "industry": "health"},   # an old save keeps a sector ERP no longer sells
 			{"id": "co_c", "market_type": "b2b", "scale": 2, "industry": "logistics"},
 			{"id": "co_users", "market_type": "b2c"}],
 			"prospects": [{"id": "p_old", "last_loss_reason": "stability"}, {"id": "p_price", "last_loss_reason": "price"}]}}
@@ -17262,7 +17207,7 @@ static func _case_save_v17_market_ref() -> String:
 		p.star = star
 		return _sign_fixture(p, 3000 * star, 70)
 	var small: Customer = sign.call("lead_v17_a", 1, "logistics")
-	var large: Customer = sign.call("lead_v17_b", 3, "health")
+	var large: Customer = sign.call("lead_v17_b", 3, "retail")
 	_drain_all_modals()
 	if not SaveManager.save_to_slot(old_slot):
 		return done.call("save_to_slot failed (%s)" % SaveManager.cannot_save_reason_key())
@@ -17277,7 +17222,7 @@ static func _case_save_v17_market_ref() -> String:
 	var payload: Dictionary = SaveManager.read_slot(slot)
 	if not bool(payload.get("ok", false)):
 		return done.call("the v17 save was refused: %s" % payload.get("error_key", ""))
-	var want: Dictionary = {small.id: ProductQuality.market_ref_for(1, "logistics"), large.id: ProductQuality.market_ref_for(3, "health")}
+	var want: Dictionary = {small.id: ProductQuality.market_ref_for(1, "logistics"), large.id: ProductQuality.market_ref_for(3, "retail")}
 	for row in payload["state"]["registries"]["customers"]:
 		if row.get("market_type", "") == "b2b" and row.get("market_ref", {}) != want.get(row["id"], {}):
 			return done.call("%s migrated with the reference %s, want %s" % [row["id"], row.get("market_ref"), want.get(row["id"])])
@@ -19351,7 +19296,7 @@ static func _incident_world(started := true) -> void:
 	_seed_sprint_live("erp")
 	_incident_account("co_marmara", "Marmara Lojistik", "logistics", 60, 1900)
 	_incident_account("co_ege_metal", "Ege Metal", "manufacturing", 40, 1500)
-	_incident_account("co_demir", "Demir Holding", "finance", 100, 2400)
+	_incident_account("co_demir", "Demir Holding", "ecommerce", 100, 2400)
 	_incident_account("co_kuzey", "Kuzey Perakende", "retail", 30, 1800)
 	SalesSystem.reflect_mrr()
 	InfraSystem.set_provider(InfraSystem.PROVIDER_CLOUD)
@@ -21408,8 +21353,6 @@ static func _case_sales_save_roundtrip_rev6() -> String:
 static func _case_loc_sales_derived_keys() -> String:
 	var loc0: String = TranslationServer.get_locale()
 	var wanted: Array[String] = []
-	for id in SalesArchetypes.ids():
-		wanted.append("SALES_ARCH_%s_LINE" % String(id).to_upper())
 	for row in SalesProbes.CATALOGUE:
 		var rid: String = String((row as Dictionary).get("id", ""))
 		wanted.append("SALES_PROBE_%s" % rid.to_upper())
@@ -24962,8 +24905,8 @@ static func _case_line_impact_names_the_accounts() -> String:
 	# [id, sector, seats, MRR, status, market]
 	for row in [["co_a", "construction", 40, 4000, "active", "b2b"], ["co_zz", "logistics", 100, 9000, "active", "b2b"],
 			["co_aa", "retail", 100, 9000, "active", "b2b"], ["co_00", "healthcare", 100, 8000, "active", "b2b"],
-			["co_try", "real_estate", 10, 1000, "trial", "b2b"], ["co_old", "technology", 500, 50000, "churned", "b2b"],
-			["co_c2c", "technology", 900, 900, "active", "b2c"]]:
+			["co_try", "textile", 10, 1000, "trial", "b2b"], ["co_old", "manufacturing", 500, 50000, "churned", "b2b"],
+			["co_c2c", "manufacturing", 900, 900, "active", "b2c"]]:
 		var c: Customer = _add_customer(row[0], "Firm " + row[0])
 		c.industry = row[1]
 		c.seats = row[2]
@@ -24971,7 +24914,7 @@ static func _case_line_impact_names_the_accounts() -> String:
 		c.status = row[4]
 		c.market_type = row[5]
 	# The core: every sector (the unknown "healthcare" reads the default row, Integrations and Trust). An emphasis area: the sectors
-	# that name it first or second; construction and real estate name Onboarding, real estate leaves Trust last.
+	# that name it first or second; construction and textile name Onboarding, textile leaves Trust last.
 	var want: Dictionary = {
 		"line_erp_ledger": {"accounts": 5, "seats": 350, "top_id": "co_aa", "top_seats": 100},
 		SprintCatalog.in_product("line_shared_integrations"): {"accounts": 4, "seats": 310, "top_id": "co_aa", "top_seats": 100},
@@ -24992,12 +24935,13 @@ static func _case_line_impact_names_the_accounts() -> String:
 	return ""
 
 
-## Beş B2B hesabı (kimlik, sektör, koltuk, MRR, durum): Çekirdeğin ve Entegrasyonlar'ın hattı beşini (350 koltuk), Güven'in hatları emlak
-## hesabı dışındaki dördünü (310) kullanır. En büyük hesap co_aa'dır (koltuk eşitliğinde MRR, sonra kimlik).
+## Beş B2B hesabı (kimlik, sektör, koltuk, MRR, durum): Çekirdeğin ve Entegrasyonlar'ın hattı beşini (350 koltuk), Güven'in hatları tekstil
+## hesabı dışındaki dördünü (310) kullanır. En büyük hesap co_aa'dır (koltuk eşitliğinde MRR, sonra kimlik). "healthcare" bilinmeyen bir
+## kimliktir, varsayılan satırı okur.
 static func _seed_line_accounts() -> void:
-	for row in [["co_a", "real_estate", 40, 4000, "active"], ["co_zz", "logistics", 100, 9000, "active"],
+	for row in [["co_a", "textile", 40, 4000, "active"], ["co_zz", "logistics", 100, 9000, "active"],
 			["co_aa", "retail", 100, 9000, "active"], ["co_00", "healthcare", 100, 8000, "active"],
-			["co_try", "legal", 10, 1000, "trial"]]:
+			["co_try", "wholesale", 10, 1000, "trial"]]:
 		var c: Customer = _add_customer(row[0], "Firm " + row[0])
 		c.industry = row[1]
 		c.seats = row[2]
@@ -25199,7 +25143,7 @@ static func _seed_open_request() -> Customer:
 	var lead := Prospect.new()
 	lead.id = "lead_request"
 	lead.company_name = "Request Co"
-	lead.industry = String(SalesArchetypes.sectors("tech_exacting")[0])
+	lead.industry = "manufacturing"
 	lead.star = 2
 	var account: Customer = SalesSystem.add_b2b_customer(lead, 12, 50, 85)
 	if not _play_sprint(["res:core"]):
@@ -25754,7 +25698,7 @@ static func _promise_world(late: float, due := 0) -> Dictionary:
 	GameState.initialize_run({"seed": 424242})
 	EvCatalog.ensure_loaded()
 	_seed_sprint_live("erp")
-	var account: Customer = _incident_account("co_demir", "Demir Holding", "finance", 100, 2400)
+	var account: Customer = _incident_account("co_demir", "Demir Holding", "ecommerce", 100, 2400)
 	SalesSystem.reflect_mrr()
 	_incident_hire("char_inc_dev", "Deniz Kaya", HRConstants.ROLE_DEVELOPER, 6)
 	_incident_hire("char_inc_test", "Selin Aras", HRConstants.ROLE_TESTER, 4)
@@ -26407,7 +26351,7 @@ static func _seed_promise_sprint() -> Array:
 	var lead := Prospect.new()
 	lead.id = "lead_word"
 	lead.company_name = "Word Co"
-	lead.industry = String(SalesArchetypes.sectors("tech_exacting")[0])
+	lead.industry = "manufacturing"
 	lead.star = 2
 	var account: Customer = SalesSystem.add_b2b_customer(lead, 12, 50, 85)
 	SprintSystem.add("res:core")
@@ -26561,7 +26505,7 @@ static func _case_promise_row_locked_when_no_room() -> String:
 		var lead := Prospect.new()
 		lead.id = id
 		lead.company_name = id
-		lead.industry = String(SalesArchetypes.sectors("tech_exacting")[0])
+		lead.industry = "manufacturing"
 		lead.star = 2
 		accounts.append(SalesSystem.add_b2b_customer(lead, 12, 50, 85))
 	var c: Customer = accounts[0]
@@ -26883,7 +26827,7 @@ static func _late_world(solo: bool, request: bool, promised := false) -> String:
 	GameState.initialize_run({"seed": 424242})
 	EvCatalog.ensure_loaded()
 	_seed_sprint_live("erp")
-	var account: Customer = _incident_account("co_demir", "Demir Holding", "finance", 100, 2400)
+	var account: Customer = _incident_account("co_demir", "Demir Holding", "ecommerce", 100, 2400)
 	SalesSystem.reflect_mrr()
 	if not solo:
 		_incident_hire("char_inc_dev", "Deniz Kaya", HRConstants.ROLE_DEVELOPER, 6)
@@ -27671,7 +27615,7 @@ static func _case_paper_account_selectors() -> String:
 				best = c
 		return "" if best == null else best.id
 	var biggest: String = largest.call(users)
-	# Every core line is used by every account, Demir Holding (finance, 100 seats) among them: it is no warehouse sector, so the
+	# Every core line is used by every account, Demir Holding (ecommerce, 100 seats) among them: it is no warehouse sector, so the
 	# modes read their own rule.
 	var warehouse: Array = users.filter(func(c: Customer) -> bool: return c.industry in SprintCatalog.cfg("paper.warehouse_sectors"))
 	var slow: Array = users.filter(func(c: Customer) -> bool: return c.seats >= int(SprintCatalog.cfg("paper.slow_seats")))
@@ -27805,7 +27749,7 @@ static func _paper_pm_asked() -> String:
 	var paper := "product.sprint_pm_scope_grew"
 	var saved: Array = _paper_pool([paper])
 	var lines: Array = SprintCatalog.capabilities("core")
-	var account: Customer = _incident_account("co_asked", "Asked Co", "technology", 40, 1800)
+	var account: Customer = _incident_account("co_asked", "Asked Co", "manufacturing", 40, 1800)
 	var first_id: String = _paper_card(3, 30)
 	var asked: String = "feat:%s_k1" % lines[1]
 	GameState.product.requests.append({"id": "co_asked.1", "customer_id": account.id, "step": lines[1] + "_k1", "line": lines[1],
@@ -29348,7 +29292,7 @@ static func _case_cs_renewal_floor() -> String:
 	var c := Customer.new()
 	c.id = "co_renewal_floor"
 	c.company_name = "Yenileme"
-	c.industry = "technology"
+	c.industry = "manufacturing"
 	c.satisfaction = 80
 	c.tolerance = 40
 	c.retain_stalls = 1     # yenilemenin kendi aciliyet izi: onu tutan tek şey taban kalsın
@@ -29385,7 +29329,7 @@ static func _add_customer(id: String, company_name: String) -> Customer:
 	var c := Customer.new()
 	c.id = id
 	c.company_name = company_name
-	c.industry = "technology"
+	c.industry = "manufacturing"
 	c.market_type = "b2b"
 	c.acquired_on_day = GameState.day
 	CustomerRegistry.add(c)
@@ -29571,7 +29515,7 @@ static func _case_bug_cost_b2b_account_lines() -> String:
 	var fresh_p := Prospect.new()
 	fresh_p.id = "lead_fresh"
 	fresh_p.company_name = "Fresh Co"
-	fresh_p.industry = "technology"
+	fresh_p.industry = "manufacturing"
 	fresh_p.star = 1
 	var fresh: Customer = _sign_fixture(fresh_p, 1000, 70)
 	if B2BSalesSystem.satisfaction_target(fresh) != fresh.tolerance + B2BConstants.ONBOARDING_GRACE_MARGIN:

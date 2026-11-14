@@ -7,43 +7,43 @@ extends RefCounted
 # Dış anahtar PAZAR DEĞİL, HABER/OLAY HAVUZUDUR (GameState.subgenre; news_feed_system
 # "ai" | "saas" | "social" bekler). Pazarı `market_type` söyler: "b2c" kitle + büyüme
 # kararları, "b2b" aday + satış toplantısı. Bu yüzden B2C bir not aracı "saas"
-# havuzunda durur. `sectors` kart chip'leri ve SECTOR_* satırlarıdır. Tür seçim ekranı oynanabilir türün
+# havuzunda durur. Tür seçim ekranı oynanabilir türün
 # `desks`'ini (yolun açacağı masalar, PROD_DESK_*) ve `plus`/`minus`'unu (adı olan iki kavram, PROD_CONCEPT_*) okur.
 const SUB_PRODUCT_TYPES := {
 	"ai": [
 		# K3 yönü AI (otomatik klip seçimi, altyazı zekâsı); haberleri bu yüzden "ai" havuzundan.
 		{"id": "video_clip",
-			"sectors": ["consumer", "social_media", "media"], "market_type": "b2c"},
+			"market_type": "b2c"},
 		{"id": "ai_assistant",
-			"sectors": ["consumer", "education", "productivity"], "market_type": "b2c"},
+			"market_type": "b2c"},
 		{"id": "ai_photo_editor",
-			"sectors": ["consumer", "social_media", "ecommerce"], "market_type": "b2c", "price_tendency": "volume"},
+			"market_type": "b2c", "price_tendency": "volume"},
 		{"id": "ai_code_copilot",
-			"sectors": ["software", "technology"], "market_type": "b2c"},
+			"market_type": "b2c"},
 		{"id": "ai_vector_search",
-			"sectors": ["enterprise", "finance", "legal"], "market_type": "b2b", "price_tendency": "premium"},
+			"market_type": "b2b", "price_tendency": "premium"},
 	],
 	"saas": [
 		{"id": "note_tool",
-			"sectors": ["consumer", "productivity", "education"], "market_type": "b2c"},
+			"market_type": "b2c"},
 		{"id": "erp",
-			"sectors": ["manufacturing", "retail", "logistics"], "market_type": "b2b",
+			"market_type": "b2b",
 			"price_tendency": "neutral",
 			"desks": ["modules", "sales", "requests", "renewal"], "plus": "switching_cost", "minus": "long_sales_cycle"},
 		{"id": "saas_project_mgmt",
-			"sectors": ["agency", "software", "construction"], "market_type": "b2b"},
+			"market_type": "b2b"},
 		{"id": "saas_crm",
-			"sectors": ["sales", "insurance", "real_estate"], "market_type": "b2b"},
+			"market_type": "b2b"},
 		{"id": "saas_analytics",
-			"sectors": ["retail", "finance", "media"], "market_type": "b2b"},
+			"market_type": "b2b"},
 		{"id": "saas_billing",
-			"sectors": ["saas", "subscription", "fintech"], "market_type": "b2b"},
+			"market_type": "b2b"},
 		{"id": "saas_dev_tools",
-			"sectors": ["software", "technology", "fintech"], "market_type": "b2b", "price_tendency": "premium"},
+			"market_type": "b2b", "price_tendency": "premium"},
 		{"id": "saas_ops",
-			"sectors": ["construction", "logistics", "health"], "market_type": "b2b", "price_tendency": "neutral"},
+			"market_type": "b2b", "price_tendency": "neutral"},
 		{"id": "marketplace",
-			"sectors": ["consumer", "retail", "ecommerce"], "market_type": "b2c",
+			"market_type": "b2c",
 			"desks": ["product_dev", "categories", "policies", "premium", "campaigns"],
 			"plus": "network_effect", "minus": "chicken_egg"},
 	],
@@ -225,10 +225,3 @@ static func _derived(prefix: String, id: String, suffix: String = "") -> String:
 
 static func type_name(sub_product_type_id: String) -> String:
 	return _derived("PROD_TYPE_", sub_product_type_id, "_NAME")
-
-
-static func type_sector_labels(sub_product_type_id: String) -> Array:
-	var out: Array = []
-	for sid in get_sub_product_type_by_id(sub_product_type_id).get("sectors", []):
-		out.append(_derived("SECTOR_", String(sid)))
-	return out

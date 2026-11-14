@@ -41,23 +41,21 @@ const REST_3 := 1.0
 ## [WORKING] onay bekliyor, E1'de kalibre.
 const AUDIENCE_STARS := [1000.0, 10000.0, 50000.0]
 
-## Sektörün alanları: vurgu 1, vurgu 2, kalan. Tanınmayan sektör (fikstür sektörleri) alıcı tipi varsayılanının
-## ilk sektörünün satırını okur.
+## Sektörün alanları: vurgu 1, vurgu 2, kalan; satır ERP'nin alıcı sektörlerinindir (`erp.json` `buyer_sectors`).
 const TABLE := {
-	"health": ["trust", "integrations", "onboarding"],
-	"finance": ["trust", "integrations", "onboarding"],
-	"insurance": ["integrations", "trust", "onboarding"],
-	"legal": ["integrations", "trust", "onboarding"],
 	"logistics": ["integrations", "trust", "onboarding"],
 	"construction": ["onboarding", "trust", "integrations"],
 	"ecommerce": ["trust", "integrations", "onboarding"],
 	"retail": ["trust", "integrations", "onboarding"],
-	"technology": ["integrations", "trust", "onboarding"],
 	"manufacturing": ["integrations", "trust", "onboarding"],
-	"real_estate": ["onboarding", "integrations", "trust"],
 	"textile": ["integrations", "onboarding", "trust"],   # [WORKING] onay bekliyor
-	"media": ["trust", "onboarding", "integrations"],     # [WORKING] onay bekliyor
+	"wholesale": ["integrations", "trust", "onboarding"],  # [WORKING] onay bekliyor
+	"auto_parts": ["integrations", "onboarding", "trust"], # [WORKING] onay bekliyor
+	"food": ["trust", "integrations", "onboarding"],       # [WORKING] onay bekliyor
 }
+
+## Tabloda olmayan sektörün (fikstür sektörü, eski kayıttan gelen başka bir sektör) okuduğu satır.
+const FALLBACK_SECTOR := "logistics"
 
 
 ## Alanın ağırlıkları, toplamı 1. Toplama sırası Çekirdek, vurgu 1, vurgu 2, kalandır. B2C'de `sector` boştur.
@@ -192,7 +190,7 @@ static func prospect_fit(p: Prospect) -> Dictionary:
 	return fit(prospect_ctx(p))
 
 
-## Ürünün bir yıldızdaki müşterilere uyumu (0-100): B2B'de 13 sektörün o yıldızdaki aday U'sunun ortalaması, B2C'de kitle
+## Ürünün bir yıldızdaki müşterilere uyumu (0-100): B2B'de tablodaki alıcı sektörlerinin o yıldızdaki aday U'sunun ortalaması, B2C'de kitle
 ## bağlamındaki U (yıldız okunmaz). Yıldız karışımı 3★'ı okur.
 static func market_fit(star: int) -> int:
 	if ProductState.market_type() == "b2c":
@@ -359,7 +357,7 @@ static func _ratio(lvl: float, expect: float) -> float:
 
 
 static func _row(sector: String) -> Array:
-	return TABLE.get(sector, TABLE[SalesArchetypes.sectors(SalesArchetypes.DEFAULT_ID)[0]]) as Array
+	return TABLE.get(sector, TABLE[FALLBACK_SECTOR]) as Array
 
 
 ## `areas` içinde oranı en düşük alan; eşitlikte öndeki. Oranı olan alan yoksa "".

@@ -17,7 +17,7 @@ extends Resource
 # --- Identity ---
 @export var id: String = ""                   # "lead_<day>_<counter>"
 @export var company_name: String = ""
-@export var industry: String = ""             # SECTOR ID, ASCII ("logistics", "real_estate")
+@export var industry: String = ""             # SECTOR ID, ASCII ("logistics", "construction")
 
 ## §2 — the customer star, 1..3 in the demo. THE size encoding: seat band, money, difficulty
 ## and prestige all read it, and the row always draws five stars (Ekip §4.1 grammar).

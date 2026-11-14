@@ -50,7 +50,7 @@ Açık işlerin tek yeri bu klasördür.
 - **Yeniden yuva listesi (PRD §5.9, §7.23).** GDD'de adı geçtiği ya da sahip tuttuğu için kalan, sprint geçişiyle
   oyun içi çağıranı kalmayan öğeler; her biri sprint ekranında bir yere bağlanır ya da sahibin kararıyla silinir:
   - Tip ekranının kilitli üçlüsü (ch03 §12.11, GUNCELLEMELER ch14 §2): `ProductCatalog.locked_type_ids`,
-    `TYPE_SCREEN` kilitli listesi, `type_sector_labels`; tür seçici yalnız oynanabilir türleri çiziyor
+    `TYPE_SCREEN` kilitli listesi; tür seçici yalnız oynanabilir türleri çiziyor
     (ACIK_KARARLAR 96).
   - Hat okumaları (ch03 §12.9): `ProductLines.is_complete` (yalnız smoke). Kapı üstü hız basamakları
     (`LineGates.speed_bonus_for`, `ABOVE_GATE_*`, ch03 §12.8) okuyucusuz duruyor, kararı ACIK_KARARLAR 41'de.

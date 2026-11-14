@@ -3,7 +3,7 @@ extends RefCounted
 
 # COMPANY NAME POOL (§11.3) — the machinery that makes §3's "havuz tükenmez" true.
 #
-# The 65 curated names in `CompanyCatalog` come first and are the memorable minority (§19:
+# The curated names in `CompanyCatalog` come first and are the memorable minority (§19:
 # "isimler §11.3 havuzuna ve kahraman hesaplara devşirilir"); the generated names below are the
 # majority behind them, so a signature or a return lock never empties a sector.
 #
@@ -37,22 +37,18 @@ const STEMS := [
 ]
 
 # --- Sector words, in the curated set's register ---------------------------
-# Two to four per sector so a stem yields more than one company and the pool scales with the
+# Several per sector so a stem yields more than one company and the pool scales with the
 # product of the two tables rather than the length of one.
 const SECTOR_WORDS := {
-	"insurance": ["Sigorta", "Poliçe", "Teminat"],                       # LOC-DATA company name suffix (proper noun)
+	"wholesale": ["Dağıtım", "Toptan", "Dış Ticaret"],                       # LOC-DATA company name suffix (proper noun)
+	"auto_parts": ["Otomotiv", "Oto Yedek Parça", "Rulman"],                # LOC-DATA company name suffix (proper noun)
+	"food": ["Gıda", "Süt", "Bakliyat"],                                    # LOC-DATA company name suffix (proper noun)
 	"construction": ["İnşaat", "Yapı", "Beton", "Proje"],                # LOC-DATA company name suffix (proper noun)
 	"logistics": ["Lojistik", "Kargo", "Nakliyat", "Terminal"],          # LOC-DATA company name suffix (proper noun)
-	"health": ["Klinik", "Sağlık", "Medikal", "Poliklinik"],             # LOC-DATA company name suffix (proper noun)
 	"manufacturing": ["Üretim", "Fabrika", "Metal", "Endüstri"],         # LOC-DATA company name suffix (proper noun)
 	"retail": ["Market", "Mağazacılık", "Perakende"],                    # LOC-DATA company name suffix (proper noun)
-	"real_estate": ["Gayrimenkul", "Emlak", "Holding", "Arsa"],          # LOC-DATA company name suffix (proper noun)
 	"textile": ["Tekstil", "Dokuma", "Konfeksiyon"],                     # LOC-DATA company name suffix (proper noun)
-	"legal": ["Hukuk", "Danışmanlık", "Legal"],                          # LOC-DATA company name suffix (proper noun)
-	"technology": ["Yazılım", "Teknoloji", "Bilişim", "Sistemler"],      # LOC-DATA company name suffix (proper noun)
 	"ecommerce": ["Ticaret", "Pazar", "Online", "Sepet"],                # LOC-DATA company name suffix (proper noun)
-	"media": ["Medya", "Yayın", "Prodüksiyon", "Stüdyo"],                # LOC-DATA company name suffix (proper noun)
-	"finance": ["Finans", "Yatırım", "Portföy", "Kapital"],              # LOC-DATA company name suffix (proper noun)
 }
 
 const SALT_NAME := 211

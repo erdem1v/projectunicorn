@@ -401,7 +401,7 @@ static func _plan_row(team: int, cards: int, what: String, ms: Array) -> void:
 
 ## Four signed accounts, the biggest two of a night-shift sector: the book an emergency lands on (market=b2b).
 static func _sign_book() -> void:
-	for row in [["logistics", 60, 3200], ["manufacturing", 40, 2400], ["retail", 30, 1800], ["insurance", 20, 1400]]:
+	for row in [["logistics", 60, 3200], ["manufacturing", 40, 2400], ["retail", 30, 1800], ["wholesale", 20, 1400]]:
 		var c := Customer.new()
 		c.id = "co_probe_" + row[0]
 		c.company_name = c.id

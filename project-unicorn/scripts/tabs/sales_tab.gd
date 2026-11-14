@@ -346,7 +346,6 @@ func _lead_card(p: Prospect, off: bool) -> PanelContainer:
 	if not p.is_being_worked():
 		head.add_child(_weeks_left(p))
 	words.add_child(head)
-	words.add_child(_line(SalesArchetypes.voice_line(p.archetype_id), &"MetaMuted"))
 	# §7.2: anlaşma kimin (temsilci ya da sen), hangi aşamada ve kaç haftası geride.
 	if p.is_being_worked():
 		var seller: Character = CharacterRegistry.get_character(p.worked_by)

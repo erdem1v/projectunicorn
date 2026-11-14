@@ -46,6 +46,7 @@ static var _lines: Dictionary = {}        # line_id -> line record
 static var _steps: Dictionary = {}        # step_id -> step record
 static var _by_subtype: Dictionary = {}   # subtype -> Array of line ids
 static var _subtypes: Array[String] = []
+static var _buyer_sectors: Dictionary = {}   # subtype -> the sectors that buy it (B2B)
 static var _loaded := false
 static var _load_errors: Array[String] = []
 ## Hat kümesinden türeyen sorguların önbelleği (`SprintCatalog.capabilities`): çalışma anı hattı eklenince ve yeniden yüklemede
@@ -68,10 +69,17 @@ static func reload() -> void:
 	_steps.clear()
 	_by_subtype.clear()
 	_subtypes.clear()
+	_buyer_sectors.clear()
 	_load_errors.clear()
 	_loaded = false
 	memo.clear()
 	ensure_loaded()
+
+
+## The sectors that buy this product (its data's `buyer_sectors`); a B2B lead comes only from one of them.
+static func buyer_sectors(subtype: String) -> Array:
+	ensure_loaded()
+	return (_buyer_sectors.get(subtype, []) as Array).duplicate()
 
 
 static func load_errors() -> Array[String]:
@@ -102,6 +110,9 @@ static func _load_subtype(path: String, shared: Dictionary) -> void:
 	if _by_subtype.has(subtype):
 		_fail("duplicate subtype %s" % subtype)
 		return
+	_buyer_sectors[subtype] = doc.get("buyer_sectors", [])
+	if ProductCatalog.get_market_type(subtype) == "b2b" and (_buyer_sectors[subtype] as Array).is_empty():
+		_fail("%s sells to companies and lists no buyer_sectors" % subtype)
 
 	var identity: Array = doc.get("lines", []) as Array
 	if identity.size() != IDENTITY_LINE_COUNT:
