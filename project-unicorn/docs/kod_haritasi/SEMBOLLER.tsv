@@ -61,7 +61,7 @@ _adapter	var	scripts/ui/meeting/meeting_panel.gd:51	MeetingPanel
 _add	func	scripts/debug/glyph_audit.gd:63	glyph_audit.gd
 _add	func	scripts/debug/k0_check.gd:109	K0Check
 _add	func	scripts/events/tools/lint.gd:1294	EvLint
-_add	func	scripts/systems/marketplace_model.gd:528	MarketplaceModel
+_add	func	scripts/systems/marketplace_model.gd:530	MarketplaceModel
 _add	func	scripts/ui/office/office_notice_stack.gd:193	office_notice_stack.gd
 _add_chip	func	scripts/ui/office/office_city.gd:333	OfficeCity
 _add_customer	func	scripts/debug/endgame_smoke.gd:29384	EndgameSmoke
@@ -87,7 +87,7 @@ _advance_probe	func	scripts/systems/sales_meeting_system.gd:241	SalesMeetingSyst
 _advance_real	func	scripts/autoload/time_manager.gd:104	TimeManager
 _advancing	var	scripts/autoload/time_manager.gd:76	TimeManager
 _affected	func	scripts/systems/incident_system.gd:652	IncidentSystem
-_affected	func	scripts/systems/marketplace_model.gd:665	MarketplaceModel
+_affected	func	scripts/systems/marketplace_model.gd:667	MarketplaceModel
 _after_follow	var	scripts/ui/office/office_person.gd:206	OfficePerson
 _agent	var	scripts/ui/office/office_person.gd:204	OfficePerson
 _ahead	func	scripts/systems/sprint_timeline.gd:298	SprintTimeline
@@ -146,7 +146,7 @@ _areas_scroll	var	scripts/tabs/product_tab.gd:41	product_tab.gd
 _armed	var	scripts/events/core/delays.gd:26	EvDelays
 _armed	var	scripts/tabs/events/mail_pane.gd:30	mail_pane.gd
 _arms	func	scripts/events/tools/lint.gd:1269	EvLint
-_as_loaded	func	scripts/debug/marketplace_probe.gd:640	marketplace_probe.gd
+_as_loaded	func	scripts/debug/marketplace_probe.gd:643	marketplace_probe.gd
 _as_v18_card	func	scripts/debug/endgame_smoke.gd:28076	EndgameSmoke
 _aside	func	scripts/modals/system_menu_modal.gd:52	system_menu_modal.gd
 _ask	func	scripts/systems/incident_system.gd:254	IncidentSystem
@@ -1032,7 +1032,7 @@ _check_constants_switch	func	scripts/debug/marketplace_probe.gd:445	marketplace_
 _check_dangling	func	scripts/events/tools/harness.gd:296	EvHarness
 _check_effects	func	scripts/events/tools/engine_probe.gd:333	EvProbe
 _check_empty_category_no_orders	func	scripts/debug/marketplace_probe.gd:202	marketplace_probe.gd
-_check_feature_gain_matches_close	func	scripts/debug/marketplace_probe.gd:785	marketplace_probe.gd
+_check_feature_gain_matches_close	func	scripts/debug/marketplace_probe.gd:788	marketplace_probe.gd
 _check_file	func	scripts/debug/loc_residue.gd:164	loc_residue.gd
 _check_flags	func	scripts/events/tools/engine_probe.gd:144	EvProbe
 _check_gain_and_weakest	func	scripts/debug/marketplace_probe.gd:467	marketplace_probe.gd
@@ -1053,7 +1053,7 @@ _check_preview_figures	func	scripts/debug/marketplace_probe.gd:344	marketplace_p
 _check_profitable_bootstrap	func	scripts/systems/endings_system.gd:220	EndingsSystem
 _check_queue	func	scripts/events/tools/engine_probe.gd:317	EvProbe
 _check_revenue_window_spike	func	scripts/debug/marketplace_probe.gd:279	marketplace_probe.gd
-_check_reviews_affected_is_return_gap	func	scripts/debug/marketplace_probe.gd:811	marketplace_probe.gd
+_check_reviews_affected_is_return_gap	func	scripts/debug/marketplace_probe.gd:814	marketplace_probe.gd
 _check_save_block	func	scripts/events/tools/engine_probe.gd:398	EvProbe
 _check_scene_text	func	scripts/debug/loc_residue.gd:240	loc_residue.gd
 _check_schedule	func	scripts/events/tools/engine_probe.gd:280	EvProbe
@@ -1062,12 +1062,12 @@ _check_script_line	func	scripts/debug/loc_residue.gd:192	loc_residue.gd
 _check_seams	func	scripts/events/tools/engine_probe.gd:60	EvProbe
 _check_soft_cap	func	scripts/systems/endings_system.gd:238	EndingsSystem
 _check_source_revenue_values	func	scripts/debug/marketplace_probe.gd:621	marketplace_probe.gd
-_check_state_survives_codec	func	scripts/debug/marketplace_probe.gd:654	marketplace_probe.gd
+_check_state_survives_codec	func	scripts/debug/marketplace_probe.gd:657	marketplace_probe.gd
 _check_store_terms_discount	func	scripts/debug/marketplace_probe.gd:513	marketplace_probe.gd
 _check_thesis	func	scripts/events/tools/engine_probe.gd:480	EvProbe
-_check_topic_ledger_rows	func	scripts/debug/marketplace_probe.gd:754	marketplace_probe.gd
-_check_topic_rows_known	func	scripts/debug/marketplace_probe.gd:689	marketplace_probe.gd
-_check_topic_ticket_gates	func	scripts/debug/marketplace_probe.gd:719	marketplace_probe.gd
+_check_topic_ledger_rows	func	scripts/debug/marketplace_probe.gd:757	marketplace_probe.gd
+_check_topic_rows_known	func	scripts/debug/marketplace_probe.gd:692	marketplace_probe.gd
+_check_topic_ticket_gates	func	scripts/debug/marketplace_probe.gd:722	marketplace_probe.gd
 _check_vc_cascade	func	scripts/systems/endings_system.gd:155	EndingsSystem
 _check_view	func	scripts/systems/vc_pitch_system.gd:1231	VCPitchSystem
 _check_zone_limits_consistent	func	scripts/debug/marketplace_probe.gd:426	marketplace_probe.gd
@@ -1124,7 +1124,7 @@ _close	func	scripts/tabs/events/mail_pane.gd:763	mail_pane.gd
 _close_btn	var	scripts/menu/licenses.gd:16	licenses.gd
 _close_btn	var	scripts/modals/save_load_modal.gd:34	save_load_modal.gd
 _close_btn	var	scripts/modals/settings_modal.gd:70	settings_modal.gd
-_close_category	func	scripts/systems/marketplace_model.gd:742	MarketplaceModel
+_close_category	func	scripts/systems/marketplace_model.gd:744	MarketplaceModel
 _close_detail	func	scripts/ui/components/window_layer.gd:146	window_layer.gd
 _close_escaped	func	scripts/debug/endgame_smoke.gd:19896	EndgameSmoke
 _close_gap	func	scripts/systems/term_sheet_table_system.gd:432	TermSheetTableSystem
@@ -2086,7 +2086,7 @@ _last_row	func	scripts/events/core/history.gd:199	EvHistory
 _last_unlocked	var	scripts/events/core/delays.gd:33	EvDelays
 _last_view	var	scripts/tabs/product_tab.gd:25	product_tab.gd
 _late_tip	func	scripts/tabs/product/board_row.gd:284	BoardRow
-_late_topic	func	scripts/systems/marketplace_model.gd:613	MarketplaceModel
+_late_topic	func	scripts/systems/marketplace_model.gd:615	MarketplaceModel
 _late_world	func	scripts/debug/endgame_smoke.gd:26881	EndgameSmoke
 _lay	func	scripts/systems/sprint_timeline.gd:244	SprintTimeline
 _lay_ticker	func	scripts/main/game_shell.gd:32	game_shell.gd
@@ -3020,7 +3020,7 @@ _prev_open	var	scripts/systems/product_read.gd:129	ProductRead
 _prev_pos	var	scripts/ui/office/office_person.gd:227	OfficePerson
 _prev_yaw	var	scripts/ui/office/office_person.gd:228	OfficePerson
 _preview	var	scripts/modals/hr_action_modal.gd:21	hr_action_modal.gd
-_preview	func	scripts/systems/marketplace_model.gd:865	MarketplaceModel
+_preview	func	scripts/systems/marketplace_model.gd:867	MarketplaceModel
 _preview	func	scripts/tabs/product/overview_view.gd:63	overview_view.gd
 _price	var	scripts/ui/meeting/meeting_ruler.gd:18	MeetingRuler
 _price_label	var	scripts/ui/meeting/meeting_ruler.gd:17	MeetingRuler
@@ -3087,7 +3087,7 @@ _prune	func	scripts/events/present/tempo.gd:262	EvTempo
 _prune_assignees	func	scripts/systems/rnd_system.gd:128	RnDSystem
 _pulse	var	scripts/ui/components/top_bar.gd:122	top_bar.gd
 _pulse	var	scripts/ui/office/office_hud.gd:24	office_hud.gd
-_push	func	scripts/systems/marketplace_model.gd:802	MarketplaceModel
+_push	func	scripts/systems/marketplace_model.gd:804	MarketplaceModel
 _push_counts	var	scripts/systems/term_sheet_table_system.gd:127	TermSheetTableSystem
 _push_until_done	func	scripts/debug/run_probe.gd:1976	RunProbe
 _pushable_levers	func	scripts/debug/run_probe.gd:1963	RunProbe
@@ -3275,7 +3275,7 @@ _refresh_sales_badge	func	scripts/ui/components/left_tabs.gd:315	left_tabs.gd
 _refresh_scale_options	func	scripts/modals/settings_modal.gd:340	settings_modal.gd
 _refresh_state	func	scripts/ui/components/top_bar.gd:590	top_bar.gd
 _refresh_time	func	scripts/ui/components/top_bar.gd:574	top_bar.gd
-_refresh_topics	func	scripts/systems/marketplace_model.gd:602	MarketplaceModel
+_refresh_topics	func	scripts/systems/marketplace_model.gd:604	MarketplaceModel
 _refresh_transactions	func	scripts/tabs/finance/finance_ozet_view.gd:259	FinanceOzetView
 _refresh_views	func	scripts/tabs/hr/hr_ledger.gd:448	HRLedger
 _refusal	func	scripts/systems/hr_actions.gd:291	HRActions
@@ -3694,7 +3694,7 @@ _set_served	func	scripts/debug/endgame_smoke.gd:19330	EndgameSmoke
 _set_ui	func	scripts/tabs/product_tab.gd:264	product_tab.gd
 _settings_modal	var	scripts/main/main.gd:52	main.gd
 _settle	func	scripts/debug/office_pan_probe.gd:159	office_pan_probe.gd
-_settle	func	scripts/systems/marketplace_model.gd:542	MarketplaceModel
+_settle	func	scripts/systems/marketplace_model.gd:544	MarketplaceModel
 _settle	func	scripts/ui/meeting/meeting_panel.gd:500	MeetingPanel
 _settle	func	scripts/ui/office/office_person.gd:759	OfficePerson
 _settle_decision	func	scripts/systems/sprint_system.gd:1581	SprintSystem
@@ -4007,7 +4007,7 @@ _subtypes	var	scripts/systems/product_lines.gd:48	ProductLines
 _suggest	func	scripts/systems/sprint_catalog.gd:927	SprintCatalog
 _suggest	func	scripts/tabs/product/product_model.gd:742	ProductModel
 _sum	var	scripts/debug/sprint_probe.gd:98	sprint_probe.gd
-_sum	func	scripts/systems/marketplace_model.gd:807	MarketplaceModel
+_sum	func	scripts/systems/marketplace_model.gd:809	MarketplaceModel
 _sum	func	scripts/systems/product_state.gd:251	ProductState
 _sum	func	scripts/systems/sprint_bugs.gd:172	SprintBugs
 _summary	var	scripts/systems/summary_system.gd:44	SummarySystem
@@ -4107,9 +4107,9 @@ _tick_weekly_summary	func	scripts/systems/sales_rep_system.gd:304	SalesRepSystem
 _tick_whale_conditions	func	scripts/systems/sales_faucet_system.gd:88	SalesFaucetSystem
 _ticker	var	scripts/main/game_shell.gd:18	game_shell.gd
 _ticker_toggle	var	scripts/modals/settings_modal.gd:85	settings_modal.gd
-_ticket_base	func	scripts/systems/marketplace_model.gd:629	MarketplaceModel
-_tickets	func	scripts/systems/marketplace_model.gd:641	MarketplaceModel
-_tickets_of	func	scripts/debug/marketplace_probe.gd:680	marketplace_probe.gd
+_ticket_base	func	scripts/systems/marketplace_model.gd:631	MarketplaceModel
+_tickets	func	scripts/systems/marketplace_model.gd:643	MarketplaceModel
+_tickets_of	func	scripts/debug/marketplace_probe.gd:683	marketplace_probe.gd
 _ticks	var	scripts/debug/office_crowd_probe.gd:42	OfficeCrowdProbe
 _tier	func	scripts/systems/marketplace_model.gd:115	MarketplaceModel
 _tier	func	scripts/tabs/product/product_model.gd:1107	ProductModel
@@ -4159,8 +4159,8 @@ _tooltip	var	scripts/ui/office/office_view.gd:28	office_view.gd
 _tooltip_label	var	scripts/ui/office/office_view.gd:29	office_view.gd
 _top	var	scripts/debug/office_pan_probe.gd:41	office_pan_probe.gd
 _top	var	scripts/ui/office/office_lighting.gd:64	OfficeLighting
-_topic_live	func	scripts/systems/marketplace_model.gd:595	MarketplaceModel
-_topic_state	func	scripts/debug/marketplace_probe.gd:673	marketplace_probe.gd
+_topic_live	func	scripts/systems/marketplace_model.gd:597	MarketplaceModel
+_topic_state	func	scripts/debug/marketplace_probe.gd:676	marketplace_probe.gd
 _total	func	scripts/systems/incident_system.gd:98	IncidentSystem
 _touched_slots	func	scripts/events/tools/lint.gd:827	EvLint
 _touches_arc	func	scripts/events/core/engine.gd:130	EvEngine
@@ -4339,7 +4339,7 @@ _weeks	var	scripts/debug/marketplace_probe.gd:30	marketplace_probe.gd
 _weeks	var	scripts/events/tools/plausibility.gd:80	plausibility.gd
 _weeks_left	func	scripts/tabs/sales_tab.gd:381	sales_tab.gd
 _weeks_until	func	scripts/systems/hr_morale_system.gd:425	HRMoraleSystem
-_weighted	func	scripts/systems/marketplace_model.gd:854	MarketplaceModel
+_weighted	func	scripts/systems/marketplace_model.gd:856	MarketplaceModel
 _weighted_pick	func	scripts/events/core/engine.gd:327	EvEngine
 _weights	func	scripts/systems/incident_system.gd:90	IncidentSystem
 _well	func	scripts/modals/save_load_modal.gd:176	save_load_modal.gd
@@ -4511,7 +4511,7 @@ add_rep_days	func	scripts/autoload/game_state.gd:450	GameState
 add_row	func	scripts/systems/marketing_system.gd:42	marketing_system.gd
 add_strain	func	scripts/systems/vc_pitch_system.gd:262	VCPitchSystem
 add_trust_drain	func	scripts/systems/b2b_sales_system.gd:214	B2BSalesSystem
-add_users	func	scripts/systems/marketplace_model.gd:519	MarketplaceModel
+add_users	func	scripts/systems/marketplace_model.gd:521	MarketplaceModel
 addable	func	scripts/tabs/product/product_model.gd:210	ProductModel
 ADDABLE_FRAME_MS	const	scripts/tabs/product/product_model.gd:205	ProductModel
 adjust_capacity	func	scripts/systems/infra_system.gd:204	InfraSystem
@@ -5191,7 +5191,7 @@ CLOSE_ICON	const	scripts/theme/ui_factory.gd:9	UiFactory
 close_map	func	scripts/ui/office/office_view.gd:73	office_view.gd
 close_requested	signal	scripts/tabs/hr/hr_dossier.gd:11	hr_dossier.gd
 close_top	func	scripts/ui/components/window_layer.gd:114	window_layer.gd
-close_week	func	scripts/systems/marketplace_model.gd:700	MarketplaceModel
+close_week	func	scripts/systems/marketplace_model.gd:702	MarketplaceModel
 close_week	func	scripts/systems/sales_ledger.gd:393	SalesLedger
 CLOSED	const	scripts/tabs/hunt_tab.gd:21	hunt_tab.gd
 closed	signal	scripts/modals/term_sheet_table_scene.gd:17	TermSheetTableScene
@@ -7706,7 +7706,7 @@ messages	var	scripts/autoload/game_state.gd:339	GameState
 messages_changed	signal	scripts/autoload/event_bus.gd:129	EventBus
 MessageSystem	class	scripts/systems/message_system.gd:1	MessageSystem
 meta	func	scripts/systems/market_catalog.gd:68	MarketCatalog
-metrics	func	scripts/systems/marketplace_model.gd:827	MarketplaceModel
+metrics	func	scripts/systems/marketplace_model.gd:829	MarketplaceModel
 MIGRATE_AREA_FLOOR	const	scripts/autoload/save_manager.gd:1071	SaveManager
 MILESTONE_CLOCK_HOLD	const	scripts/main/main.gd:40	main.gd
 MILESTONE_ICON	const	scripts/tabs/personal_tab.gd:11	personal_tab.gd
@@ -8054,7 +8054,7 @@ open_bugs_by_line	func	scripts/systems/product_state.gd:161	ProductState
 open_bugs_delta	func	scripts/systems/product_state.gd:190	ProductState
 OPEN_BUGS_PREV	const	scripts/systems/product_state.gd:16	ProductState
 open_cards	func	scripts/systems/sprint_catalog.gd:892	SprintCatalog
-open_category	func	scripts/systems/marketplace_model.gd:449	MarketplaceModel
+open_category	func	scripts/systems/marketplace_model.gd:451	MarketplaceModel
 open_changed	signal	scripts/ui/components/news_ticker.gd:53	news_ticker.gd
 open_detail	func	scripts/ui/components/window_layer.gd:100	window_layer.gd
 open_goal_menu	func	scripts/tabs/product/sprint_ui_shared.gd:385	SprintUiShared
@@ -8395,12 +8395,12 @@ preset_values	func	scripts/systems/graphics_settings.gd:73	graphics_settings.gd
 PRESETS	const	scripts/debug/run_probe.gd:197	RunProbe
 press_line	func	scripts/systems/sprint_bridges.gd:131	SprintBridges
 PRESTIGE_SIGNING_BRAND	const	scripts/systems/sales_constants.gd:176	SalesConstants
-preview_commission	func	scripts/systems/marketplace_model.gd:880	MarketplaceModel
+preview_commission	func	scripts/systems/marketplace_model.gd:882	MarketplaceModel
 preview_fire	func	scripts/systems/hr_actions.gd:221	HRActions
 preview_hire	func	scripts/systems/hr_search_system.gd:225	HRSearchSystem
 preview_leave	func	scripts/systems/hr_actions.gd:195	HRActions
-preview_policy	func	scripts/systems/marketplace_model.gd:884	MarketplaceModel
-preview_premium	func	scripts/systems/marketplace_model.gd:889	MarketplaceModel
+preview_policy	func	scripts/systems/marketplace_model.gd:886	MarketplaceModel
+preview_premium	func	scripts/systems/marketplace_model.gd:891	MarketplaceModel
 preview_promotion	func	scripts/systems/hr_actions.gd:111	HRActions
 preview_raise	func	scripts/systems/hr_actions.gd:48	HRActions
 preview_search	func	scripts/systems/hr_search_system.gd:204	HRSearchSystem
@@ -8463,7 +8463,7 @@ profitability_signal	func	scripts/systems/endings_system.gd:201	EndingsSystem
 progress	func	scripts/systems/rnd_system.gd:686	RnDSystem
 progress_at	func	scripts/tabs/product/product_model.gd:555	ProductModel
 progress_effort	func	scripts/systems/rnd_system.gd:693	RnDSystem
-project	func	scripts/systems/marketplace_model.gd:817	MarketplaceModel
+project	func	scripts/systems/marketplace_model.gd:819	MarketplaceModel
 Promise	class	scripts/data_models/promise.gd:1	Promise
 promise_accounts	func	scripts/events/core/effects.gd:1060	EvEffects
 PROMISE_BAND_NARROW	const	scripts/systems/sales_constants.gd:141	SalesConstants
@@ -9269,7 +9269,7 @@ set_churn_countdown	func	scripts/autoload/customer_registry.gd:189	CustomerRegis
 set_class	func	scripts/events/core/queue.gd:196	EvQueue
 set_clause	func	scripts/autoload/customer_registry.gd:239	CustomerRegistry
 set_colorblind	func	scripts/theme/ui_tokens.gd:315	UiTokens
-set_commission	func	scripts/systems/marketplace_model.gd:457	MarketplaceModel
+set_commission	func	scripts/systems/marketplace_model.gd:459	MarketplaceModel
 set_company_hours	func	scripts/systems/work_hours_system.gd:273	WorkHoursSystem
 set_company_start_hour	func	scripts/systems/work_hours_system.gd:278	WorkHoursSystem
 set_current_hour	func	scripts/autoload/game_state.gd:390	GameState
@@ -9280,7 +9280,7 @@ set_dimmed	func	scripts/ui/office/office_view.gd:143	office_view.gd
 set_done	func	scripts/tabs/product/capacity_view.gd:72	CapacityView
 set_exit_notice	func	scripts/autoload/customer_registry.gd:250	CustomerRegistry
 set_expansion_offer_day	func	scripts/autoload/customer_registry.gd:333	CustomerRegistry
-set_fee	func	scripts/systems/marketplace_model.gd:479	MarketplaceModel
+set_fee	func	scripts/systems/marketplace_model.gd:481	MarketplaceModel
 set_filled	func	scripts/ui/components/segment_bar.gd:25	SegmentBar
 set_filter	func	scripts/tabs/piyasa_tab.gd:113	piyasa_tab.gd
 set_flag	func	scripts/autoload/game_state.gd:502	GameState
@@ -9334,11 +9334,11 @@ set_open_pitch_promise	func	scripts/systems/sales_ledger.gd:157	SalesLedger
 set_option	func	scripts/systems/graphics_settings.gd:111	graphics_settings.gd
 set_override	func	scripts/systems/module_locks.gd:30	module_locks.gd
 set_pain_feature	func	scripts/autoload/customer_registry.gd:292	CustomerRegistry
-set_perk	func	scripts/systems/marketplace_model.gd:488	MarketplaceModel
+set_perk	func	scripts/systems/marketplace_model.gd:490	MarketplaceModel
 set_person_hours	func	scripts/systems/work_hours_system.gd:301	WorkHoursSystem
 set_phase	func	scripts/autoload/game_state.gd:398	GameState
 set_pitch_focus	func	scripts/systems/sales_meeting_system.gd:131	SalesMeetingSystem
-set_policy	func	scripts/systems/marketplace_model.gd:470	MarketplaceModel
+set_policy	func	scripts/systems/marketplace_model.gd:472	MarketplaceModel
 set_preset	func	scripts/systems/graphics_settings.gd:105	graphics_settings.gd
 set_price_stance	func	scripts/systems/sales_ledger.gd:131	SalesLedger
 set_progress	func	scripts/tabs/product/sprint_foot.gd:48	SprintFoot
@@ -9358,14 +9358,14 @@ set_sfx_volume	func	scripts/autoload/audio_manager.gd:120	AudioManager
 set_shutter_weeks_left	func	scripts/autoload/game_state.gd:431	GameState
 set_station_state	func	scripts/ui/office/office_lighting.gd:171	OfficeLighting
 set_status	func	scripts/autoload/character_registry.gd:593	CharacterRegistry
-set_store_terms	func	scripts/systems/marketplace_model.gd:510	MarketplaceModel
+set_store_terms	func	scripts/systems/marketplace_model.gd:512	MarketplaceModel
 set_subgenre	func	scripts/autoload/game_state.gd:394	GameState
 set_support_request	func	scripts/autoload/customer_registry.gd:273	CustomerRegistry
 set_suspended	func	scripts/autoload/time_manager.gd:283	TimeManager
 set_timed	func	scripts/events/core/flags.gd:50	EvFlags
 set_timed_discount	func	scripts/autoload/customer_registry.gd:261	CustomerRegistry
 set_tolerance	func	scripts/autoload/customer_registry.gd:202	CustomerRegistry
-set_trial	func	scripts/systems/marketplace_model.gd:502	MarketplaceModel
+set_trial	func	scripts/systems/marketplace_model.gd:504	MarketplaceModel
 set_trust_offset	func	scripts/autoload/customer_registry.gd:219	CustomerRegistry
 set_type_draft	func	scripts/systems/sprint_system.gd:73	SprintSystem
 set_ui_scale	func	scripts/systems/display_settings.gd:336	DisplaySettings
@@ -9561,7 +9561,7 @@ SNOOZE_FLAG	const	scripts/tabs/finance/finance_ozet_view.gd:21	FinanceOzetView
 SOFT_CAP_WEEK	const	scripts/systems/endings_system.gd:38	EndingsSystem
 SOLE	const	scripts/systems/people_parts.gd:156	PeopleParts
 source	var	scripts/data_models/prospect.gd:86	Prospect
-source_revenue	func	scripts/systems/marketplace_model.gd:436	MarketplaceModel
+source_revenue	func	scripts/systems/marketplace_model.gd:437	MarketplaceModel
 source_tag	func	scripts/events/present/chips.gd:496	EvChips
 SPACE_3XL	const	scripts/theme/ui_tokens.gd:235	UiTokens
 SPACE_4XL	const	scripts/theme/ui_tokens.gd:236	UiTokens
@@ -9890,7 +9890,7 @@ target	var	scripts/ui/office/office_camera.gd:28	OfficeCamera
 TARGET_BIZ	const	scripts/systems/news_feed_system.gd:38	NewsFeedSystem
 TARGET_PIYASA	const	scripts/systems/news_feed_system.gd:37	NewsFeedSystem
 TARGET_RAKIP	const	scripts/systems/news_feed_system.gd:36	NewsFeedSystem
-target_sat	func	scripts/systems/marketplace_model.gd:533	MarketplaceModel
+target_sat	func	scripts/systems/marketplace_model.gd:535	MarketplaceModel
 TARGET_SEKTOR	const	scripts/systems/news_feed_system.gd:35	NewsFeedSystem
 task_text	func	scripts/tabs/hr/hr_ledger.gd:224	HRLedger
 team	func	scripts/systems/sprint_system.gd:837	SprintSystem
@@ -9946,7 +9946,7 @@ TICK_PROBE	const	scripts/main/main.gd:37	main.gd
 tick_requests	func	scripts/systems/sprint_bridges.gd:21	SprintBridges
 tick_rivals	func	scripts/systems/sprint_bridges.gd:117	SprintBridges
 tick_thresholds	func	scripts/systems/hr_morale_system.gd:75	HRMoraleSystem
-tick_topics	func	scripts/systems/marketplace_model.gd:653	MarketplaceModel
+tick_topics	func	scripts/systems/marketplace_model.gd:655	MarketplaceModel
 tick_training	func	scripts/autoload/character_registry.gd:158	CharacterRegistry
 tick_training	func	scripts/systems/hr_system.gd:91	HRSystem
 ticker_live_line	signal	scripts/autoload/event_bus.gd:239	EventBus
@@ -10023,7 +10023,7 @@ TOP_FILL_NIGHT	const	scripts/ui/office/office_lighting.gd:32	OfficeLighting
 top_palette	func	scripts/systems/people_parts.gd:166	PeopleParts
 TOP_PALETTES	const	scripts/systems/people_parts.gd:74	PeopleParts
 topic_pill	func	scripts/tabs/events/mail_pane.gd:791	mail_pane.gd
-topic_rows	func	scripts/systems/marketplace_model.gd:685	MarketplaceModel
+topic_rows	func	scripts/systems/marketplace_model.gd:687	MarketplaceModel
 total	func	scripts/systems/sprint_system.gd:2029	SprintSystem
 total_skill_points	func	scripts/autoload/character_registry.gd:95	CharacterRegistry
 total_stars	func	scripts/systems/line_gates.gd:49	LineGates

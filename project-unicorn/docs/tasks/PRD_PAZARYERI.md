@@ -406,6 +406,9 @@ commit'inde bağlanır, yedek dal yazılmaz.
 çarpımı; mağazası olmayan kategoride 0). Bir kullanıcının aylık komisyonu `ziyaret sıklığı × 4,33 × dönüşüm × (1 − iade oranı)
 × sepet × komisyon` çarpımıdır (üyenin sıklığı, yeni mağaza şartı ve indirim hesaba girmez). `source_revenue`'da i hafta önce
 gelen kullanıcı `elde tutma^i` ile küçülür; kullanıcı başına net komisyon, son dört haftanın net komisyonu ÷ aktif kullanıcıdır.
+Kullanıcı o dört haftanın yalnız burada olduğu kadarıyla sayılır (`min(i + 1; 4) ÷ 4`: bu hafta gelen dörtte bir, dördüncü
+haftasından itibaren tam); yeni açılan kanalın satırı bu yüzden küçük başlar. Organik kaynak da aynı formülle hesaplanır
+(Pazarlama ile uzlaşma, 14 Kasım).
 
 ### 3.13 Kod öncesi: saf işlevler ve probe
 Arayüzden önce §3'ün formülleri saf işlev olarak yazılır ve başsız bir probe ile koşulur (`-s res://scripts/debug/marketplace_probe.gd -- --marketplace-probe=weeks=<n>`;

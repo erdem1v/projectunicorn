@@ -432,16 +432,18 @@ static func channel_read(state: Dictionary, world: Dictionary, cat: String) -> D
 
 
 ## Kaynaktan son on iki haftada gelen kullanıcıların (elde tutmayla küçülmüş) son dört haftada bıraktığı net komisyon: kalan
-## kullanıcı × aktif kullanıcı başına son dört haftanın net komisyonu.
+## kullanıcı × aktif kullanıcı başına son dört haftanın net komisyonu × o dört haftanın kaçında burada olduğu (bu hafta gelen
+## dörtte bir, dördüncü haftasından itibaren tam).
 static func source_revenue(state: Dictionary, world: Dictionary, source: String) -> float:
 	if state.users <= 0.0:
 		return 0.0
 	var keep := retention(state, world)
-	var remaining := 0.0
+	var window: float = _c.income.window_weeks
+	var present := 0.0
 	var arrivals: Array = state.sources.get(source, [])
 	for i in arrivals.size():
-		remaining += arrivals[i] * pow(keep, i)
-	return remaining * _sum(state.revenue_weeks) / state.users
+		present += arrivals[i] * pow(keep, i) * minf(i + 1.0, window) / window
+	return present * _sum(state.revenue_weeks) / state.users
 
 
 # --- Yazan işlevler --------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 # Kod haritası · KALITE
 
-Üretildi: git d8646a87 · 2026-11-14 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git cf0032ac · 2026-11-14 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 259 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
@@ -21,10 +21,10 @@ Kapsam: scripts/ altındaki 259 .gd (tools/ hariç). Kod temizliği ve kıdemli 
 - scripts/autoload/game_state.gd · 1075 satır · 57 func
 - scripts/systems/sprint_catalog.gd · 982 satır · 90 func
 - scripts/systems/term_sheet_table_system.gd · 980 satır · 57 func
-- scripts/systems/marketplace_model.gd · 897 satır · 74 func
+- scripts/systems/marketplace_model.gd · 899 satır · 74 func
 - scripts/ui/office/office_people.gd · 853 satır · 50 func
 - scripts/tabs/sales_tab.gd · 838 satır · 40 func
-- scripts/debug/marketplace_probe.gd · 825 satır · 47 func
+- scripts/debug/marketplace_probe.gd · 828 satır · 47 func
 - scripts/tabs/events/mail_pane.gd · 819 satır · 43 func
 - scripts/systems/rnd_system.gd · 814 satır · 56 func
 - scripts/events/core/engine.gd · 813 satır · 38 func
@@ -104,12 +104,12 @@ UYARI: call("a"+b) gibi kurulmuş adlar, sinyal adıyla bağlama, harness bayrak
 - scripts/debug/marketplace_probe.gd:579 · _check_lost_counters · debug
 - scripts/debug/marketplace_probe.gd:597 · _check_channel_read_values · debug
 - scripts/debug/marketplace_probe.gd:621 · _check_source_revenue_values · debug
-- scripts/debug/marketplace_probe.gd:654 · _check_state_survives_codec · debug
-- scripts/debug/marketplace_probe.gd:689 · _check_topic_rows_known · debug
-- scripts/debug/marketplace_probe.gd:719 · _check_topic_ticket_gates · debug
-- scripts/debug/marketplace_probe.gd:754 · _check_topic_ledger_rows · debug
-- scripts/debug/marketplace_probe.gd:785 · _check_feature_gain_matches_close · debug
-- scripts/debug/marketplace_probe.gd:811 · _check_reviews_affected_is_return_gap · debug
+- scripts/debug/marketplace_probe.gd:657 · _check_state_survives_codec · debug
+- scripts/debug/marketplace_probe.gd:692 · _check_topic_rows_known · debug
+- scripts/debug/marketplace_probe.gd:722 · _check_topic_ticket_gates · debug
+- scripts/debug/marketplace_probe.gd:757 · _check_topic_ledger_rows · debug
+- scripts/debug/marketplace_probe.gd:788 · _check_feature_gain_matches_close · debug
+- scripts/debug/marketplace_probe.gd:814 · _check_reviews_affected_is_return_gap · debug
 - scripts/debug/office_crowd_probe.gd:48 · _log_error · debug
 - scripts/events/present/papers.gd:145 · arc_of
 - scripts/main/game_shell.gd:163 · debug_force_vc_meeting · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)

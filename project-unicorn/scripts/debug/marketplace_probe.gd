@@ -623,16 +623,19 @@ func _check_source_revenue_values() -> Array:
 	var world := _live_world()
 	state.users = 1000.0
 	state.revenue_weeks = [100.0, 100.0, 100.0, 100.0]
-	state.sources = {"ads": [50.0, 40.0, 30.0], "organic": [10.0]}
+	state.sources = {"ads": [50.0, 40.0, 30.0], "organic": [10.0], "mail": [0.0, 0.0, 0.0, 20.0]}
 	var ads := MarketplaceModel.source_revenue(state, world, "ads")
 	var organic := MarketplaceModel.source_revenue(state, world, "organic")
+	var mail := MarketplaceModel.source_revenue(state, world, "mail")
 	var unknown := MarketplaceModel.source_revenue(state, world, "coupon")
 	state.users = 0.0
 	var empty := MarketplaceModel.source_revenue(state, world, "ads")
-	var want := (50.0 + 40.0 * 0.94 + 30.0 * 0.94 * 0.94) * 400.0 / 1000.0
-	return [_near(ads, want) and _near(organic, 4.0) and unknown == 0.0 and empty == 0.0,
-		"1000 users, 400 net commission in four weeks, retention 0.94: ads (50, 40, 30) %.4f (expected %.4f), organic (10) %.2f, unknown %.1f, no users %.1f"
-		% [ads, want, organic, unknown, empty]]
+	var want := (50.0 * 0.25 + 40.0 * 0.94 * 0.5 + 30.0 * 0.94 * 0.94 * 0.75) * 400.0 / 1000.0
+	var want_mail := 20.0 * 0.94 * 0.94 * 0.94 * 400.0 / 1000.0
+	return [_near(ads, want) and _near(organic, 1.0) and _near(mail, want_mail) and unknown == 0.0 and empty == 0.0,
+		"1000 users, 400 net commission in four weeks, retention 0.94: ads (50, 40, 30 arriving 0, 1, 2 weeks ago count 1/4, 2/4, 3/4) %.4f (expected %.4f), "
+		% [ads, want] + "organic (10 this week) %.2f, mail (20 three weeks ago, counted in full) %.4f (expected %.4f), unknown %.1f, no users %.1f"
+		% [organic, mail, want_mail, unknown, empty]]
 
 
 ## `SaveCodec.from_json`'un yükleyişi: JSON'dan dönen tam değerli ondalık tam sayı olur (SaveCodec autoload'a dayanır, `-s`
