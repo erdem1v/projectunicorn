@@ -296,7 +296,7 @@ _bottom	func	scripts/systems/look_system.gd:79	LookSystem
 _bottom	var	scripts/tabs/rnd/rnd_tree_view.gd:60	RnDTreeView
 _bound	func	scripts/ui/components/inbox.gd:561	inbox.gd
 _box	func	scripts/debug/office_pan_probe.gd:307	office_pan_probe.gd
-_box	func	scripts/tabs/events_tab.gd:321	events_tab.gd
+_box	func	scripts/tabs/events_tab.gd:324	events_tab.gd
 _box	func	scripts/tabs/hr/hr_assignments.gd:134	HRAssignments
 _box	var	scripts/tabs/hr/hr_panel.gd:15	hr_panel.gd
 _box	func	scripts/tabs/product/card_tip.gd:65	CardTip
@@ -1364,7 +1364,7 @@ _door	func	scripts/debug/office_crowd_probe.gd:215	OfficeCrowdProbe
 _door_free	func	scripts/ui/office/office_people.gd:604	OfficePeople
 _door_turn	var	scripts/ui/office/office_people.gd:74	OfficePeople
 _dossier	func	scripts/tabs/product/type_picker.gd:94	TypePicker
-_dot	func	scripts/tabs/events_tab.gd:337	events_tab.gd
+_dot	func	scripts/tabs/events_tab.gd:340	events_tab.gd
 _down	func	scripts/debug/office_crowd_probe.gd:308	OfficeCrowdProbe
 _down	func	scripts/ui/office/office_person.gd:780	OfficePerson
 _draft	var	scripts/modals/work_hours_modal.gd:42	work_hours_modal.gd
@@ -3416,7 +3416,7 @@ _row	var	scripts/ui/components/toast.gd:23	toast.gd
 _row	var	scripts/ui/office/office_hud.gd:19	office_hud.gd
 _row	func	scripts/ui/office/office_notice_stack.gd:149	office_notice_stack.gd
 _row_parts	func	scripts/tabs/events/mail_pane.gd:511	mail_pane.gd
-_row_right	func	scripts/tabs/events_tab.gd:286	events_tab.gd
+_row_right	func	scripts/tabs/events_tab.gd:289	events_tab.gd
 _row_unlocked	func	scripts/debug/endgame_smoke.gd:5248	EndgameSmoke
 _row_with_verb	func	scripts/debug/endgame_smoke.gd:5207	EndgameSmoke
 _row_y	func	scripts/tabs/rnd/rnd_tree_view.gd:109	RnDTreeView

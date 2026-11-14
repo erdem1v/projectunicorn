@@ -232,7 +232,10 @@ static func row(it: Dictionary, selected: bool, pill: bool, on_pick: Callable) -
 	lines.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lines.alignment = BoxContainer.ALIGNMENT_CENTER
 	lines.add_theme_constant_override("separation", UiTokens.SPACE_XS)
-	card.get_child(0).add_child(lines)
+	# A row that grows past ROW_H keeps room above and below its lines; a shorter one stays centred in ROW_H.
+	var padded := SprintUiShared.pad(lines, Vector4i(0, UiTokens.SPACE_M, 0, UiTokens.SPACE_M))
+	padded.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.get_child(0).add_child(padded)
 	var one := HBoxContainer.new()
 	var from := UiFactory.make_label(String(it.sender.name), &"MetaMuted")
 	if it.sender.gone:
