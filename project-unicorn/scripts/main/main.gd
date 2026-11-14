@@ -727,7 +727,7 @@ func _run_b2b_shot(kind: String) -> void:
 	_seed_line_state("erp", _ERP_SHIPPED_LINES)
 	var p := Prospect.new()
 	p.id = "shot"
-	p.company_name = "Ege Kargo"
+	p.company_name = _pool_name("logistics", 2)
 	p.industry = "logistics"
 	p.star = 1
 	var c: Customer = SalesSystem.add_b2b_customer(p, 20, 50, 70)   # 20 seats x $50 = $1.000
@@ -1098,7 +1098,7 @@ func _shot_employee(id: String, ename: String, role: String, tenure_weeks: int) 
 ## stage), shaped by the card's customer slot, its rep by the rep's own slot (a seniority floor the compiled `where` writes).
 func _stage_rep_account(scope: Dictionary) -> void:
 	if CustomerRegistry.get_customer("co_palmiye") == null:
-		_shot_customer("co_palmiye", "Anadolu Market", "retail", "active", 1200, 15, 20, true)   # LOC-DATA debug seed / id
+		_shot_customer("co_palmiye", _pool_name("retail"), "retail", "active", 1200, 15, 20, true)   # LOC-DATA debug seed / id
 	var account: Customer = CustomerRegistry.get_customer("co_palmiye")
 	_shape_shot_account(account, _shot_wants(scope.get("customer", {}).get("where", {})))
 	_shape_shot_employee(CharacterRegistry.get_character(account.assigned_to), _shot_wants(_shot_slot(scope, "account_rep").get("where", {})))
@@ -1146,12 +1146,12 @@ func _stage_leave_pair(scope: Dictionary) -> void:
 
 ## The accounts that use `line_id`, brought to `count` from a spare few (a paper that names several accounts of its line).
 func _stage_line_accounts(line_id: String, count: int) -> void:
-	for spare in [["co_kuzey", "Kuzey İnşaat", "construction"], ["co_nordica", "Nordica", "logistics"],   # LOC-DATA debug seed / id
-			["co_ege", "Ege Kargo", "logistics"], ["co_palmiye", "Anadolu Market", "retail"]]:   # LOC-DATA debug seed / id
+	for spare in [["co_kuzey", "construction", 0], ["co_nordica", "logistics", 1], ["co_ege", "logistics", 2],   # LOC-DATA debug seed / id
+			["co_palmiye", "retail", 0]]:   # LOC-DATA debug seed / id
 		if SprintCatalog.line_accounts(line_id).size() >= count:
 			break
 		if CustomerRegistry.get_customer(spare[0]) == null:
-			_shot_customer(spare[0], spare[1], spare[2], "active", 1300, 20, 18, false)
+			_shot_customer(spare[0], _pool_name(spare[1], spare[2]), spare[1], "active", 1300, 20, 18, false)
 	SalesSystem.reflect_mrr()
 
 
@@ -1254,8 +1254,8 @@ func _seed_incident_world(kind: String, b2b: bool, load_pct := 0) -> Dictionary:
 	var given := {}
 	if b2b:
 		_seed_theme_book()
-		_shot_customer("co_marmara", "Marmara Lojistik", "logistics", "active", 1900, 60, 20, false)   # LOC-DATA debug seed / id
-		_shot_customer("co_ege_metal", "Ege Metal", "manufacturing", "active", 1500, 40, 18, false)   # LOC-DATA debug seed / id
+		_shot_customer("co_marmara", _pool_name("logistics", 3), "logistics", "active", 1900, 60, 20, false)   # LOC-DATA debug seed / id
+		_shot_customer("co_ege_metal", _pool_name("manufacturing", 2), "manufacturing", "active", 1500, 40, 18, false)   # LOC-DATA debug seed / id
 		SalesSystem.reflect_mrr()
 		given["customer"] = IncidentSystem.night_accounts()[0].id
 	else:
@@ -1375,7 +1375,7 @@ func _seed_company_world(event_id: String, selects: Array, scope := {}, floor_da
 	_seed_theme_book()
 	GameState.day = maxi(GameState.day, floor_day)
 	if "open_request" in selects or "escalated" in selects:
-		_shot_customer("co_palmiye", "Anadolu Market", "retail", "active", 1200, 15, 20, true)   # LOC-DATA debug seed / id
+		_shot_customer("co_palmiye", _pool_name("retail"), "retail", "active", 1200, 15, 20, true)   # LOC-DATA debug seed / id
 		CustomerRegistry.set_support_request("co_palmiye", GameState.day - 1)
 		CustomerRegistry.get_customer("co_palmiye").cs_escalated = "escalated" in selects
 	if "account_rep" in selects:
@@ -1416,7 +1416,7 @@ func _seed_promise_world() -> Dictionary:
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_version", 1)
 	_seed_hr_roster()
-	_shot_customer("co_nordica", "Nordica", "logistics", "active", 2000, 20, 26, false)   # LOC-DATA debug seed / id
+	_shot_customer("co_nordica", _pool_name("logistics", 1), "logistics", "active", 2000, 20, 26, false)   # LOC-DATA debug seed / id
 	SalesSystem.reflect_mrr()
 	var step: String = "%s_k1" % SprintCatalog.capabilities("core")[3]
 	var card: Dictionary = SprintCatalog.candidates(SprintCatalog.area_of_line(ProductLines.step(step).line_id)).filter(
@@ -1459,8 +1459,8 @@ func _seed_paper_world(event_id: String) -> Dictionary:
 	_seed_hr_roster()
 	CharacterRegistry.set_status("char_emp_shot_2", HRConstants.STATUS_ACTIVE)   # the developer, back from leave
 	if b2b:
-		_shot_customer("co_marmara", "Marmara Lojistik", "logistics", "active", 1900, 60, 20, false)   # LOC-DATA debug seed / id
-		_shot_customer("co_ege_metal", "Ege Metal", "manufacturing", "active", 1500, 40, 18, false)   # LOC-DATA debug seed / id
+		_shot_customer("co_marmara", _pool_name("logistics", 3), "logistics", "active", 1900, 60, 20, false)   # LOC-DATA debug seed / id
+		_shot_customer("co_ege_metal", _pool_name("manufacturing", 2), "manufacturing", "active", 1500, 40, 18, false)   # LOC-DATA debug seed / id
 		SalesSystem.reflect_mrr()
 	else:
 		SalesSystem.add_b2c_audience(12400)
@@ -1996,9 +1996,9 @@ func _run_sales_shot(kind: String) -> void:
 		CharacterRegistry.assign_job(rep.id, HRConstants.JOB_SALES)
 		SalesRepSystem.daily_tick()
 	if kind != "empty":
-		_shot_customer("co_kuzey", "Kuzey İnşaat", "construction", "active", 1000, 12, 13, false)   # LOC-DATA debug seed / id
-		_shot_customer("co_palmiye", "Kardelen Mağazacılık", "retail", "active", 1500, 16, 21, true)   # LOC-DATA debug seed / id
-		_shot_customer("co_aras", "Beykoz Tekstil", "textile", "onboarding", 700, 6, 1, false)
+		_shot_customer("co_kuzey", _pool_name("construction"), "construction", "active", 1000, 12, 13, false)   # LOC-DATA debug seed / id
+		_shot_customer("co_palmiye", _pool_name("retail", 2), "retail", "active", 1500, 16, 21, true)   # LOC-DATA debug seed / id
+		_shot_customer("co_aras", _pool_name("textile"), "textile", "onboarding", 700, 6, 1, false)
 	if edge:
 		var leads: Array[Prospect] = ProspectRegistry.get_all()
 		SalesLedger.set_routing(leads[0].id, SalesConstants.ROUTE_RESERVED)
@@ -2009,20 +2009,20 @@ func _run_sales_shot(kind: String) -> void:
 		# A shipped product has a type, and a typed product's promise is due by a sprint's end.
 		SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
 		PromiseRegistry.create("co_kuzey", CustomerRegistry.get_customer("co_kuzey").pain_feature_id, 1)
-		SalesSystem.record_sales_event("lead_expired", "", "Efes Emlak", 0)   # LOC-DATA debug seed / id
-		SalesSystem.record_sales_event("founder_close", "", "Aras Klinik", 700)   # LOC-DATA debug seed / id
+		SalesSystem.record_sales_event("lead_expired", "", _pool_name("wholesale"), 0)
+		SalesSystem.record_sales_event("founder_close", "", CustomerRegistry.get_customer("co_aras").company_name, 700)
 		# Aras in its onboarding floor's last week, the product under its bar: the card warns.
 		CustomerRegistry.get_customer("co_aras").acquired_on_day = \
 			GameState.day + 1 - TimeModel.ticks(B2BConstants.ONBOARDING_GRACE_WEEKS)
 	elif kind != "empty":
-		_shot_customer("co_ege", "Ege Kargo", "logistics", "risk", 1000, 12, 9, false)
+		_shot_customer("co_ege", _pool_name("logistics", 2), "logistics", "risk", 1000, 12, 9, false)
 		CustomerRegistry.set_churn_countdown("co_ege", TimeModel.ticks(B2BConstants.CHURN_COUNTDOWN_WEEKS))
-		_shot_customer("co_nordica", "Nordica", "logistics", "expansion", 2000, 20, 26, false)
+		_shot_customer("co_nordica", _pool_name("logistics", 1), "logistics", "expansion", 2000, 20, 26, false)
 	if kind == "risk_stability":
-		_shot_customer("co_lale", "Lale Lojistik", "logistics", "risk", 800, 8, 5, false)   # LOC-DATA debug seed / id
+		_shot_customer("co_lale", _pool_name("logistics"), "logistics", "risk", 800, 8, 5, false)   # LOC-DATA debug seed / id
 		CustomerRegistry.set_trust_offset("co_lale", B2BConstants.PROMISE_BROKEN_OFFSET)
 	if kind == "stretched":
-		_shot_customer("co_lale", "Lale Lojistik", "logistics", "active", 800, 8, 5, false)   # LOC-DATA debug seed / id
+		_shot_customer("co_lale", _pool_name("logistics"), "logistics", "active", 800, 8, 5, false)   # LOC-DATA debug seed / id
 		# The 3★ lead is above the 1★ rep's league, so it waits: three weeks on the board, one left.
 		var last: Prospect = ProspectRegistry.get_all().filter(func(p: Prospect) -> bool: return p.star == 3)[0]
 		last.spawned_on_day = GameState.day - TimeModel.ticks(3)
@@ -2113,9 +2113,9 @@ func _seed_theme_book() -> void:
 	SprintSystem.apply_lead()
 	SprintSystem.start()
 	SprintSystem.set_delegate(true)
-	_shot_customer("co_kuzey", "Kuzey İnşaat", "construction", "active", 1000, 12, 13, false)   # LOC-DATA debug seed / id
-	_shot_customer("co_ege", "Ege Kargo", "logistics", "risk", 1000, 12, 9, false)
-	_shot_customer("co_nordica", "Nordica", "logistics", "expansion", 2000, 20, 26, false)
+	_shot_customer("co_kuzey", _pool_name("construction"), "construction", "active", 1000, 12, 13, false)   # LOC-DATA debug seed / id
+	_shot_customer("co_ege", _pool_name("logistics", 2), "logistics", "risk", 1000, 12, 9, false)
+	_shot_customer("co_nordica", _pool_name("logistics", 1), "logistics", "expansion", 2000, 20, 26, false)
 	SalesFaucetSystem.spawn_prospect("small", "find")
 	SalesFaucetSystem.spawn_prospect("mid", "find")
 	SalesSystem.reflect_mrr()
@@ -2132,9 +2132,9 @@ func _stage_desk_losses(closes: bool) -> void:
 	for line_id in SprintCatalog.capabilities("trust"):
 		ProductState.set_line_tier(line_id, 1)
 	var rep: Character = CharacterRegistry.get_character("char_emp_shot_4")
-	var leads: Array = [["Ege Lojistik", "logistics", "ops_cautious", 2, true], ["Taurus Otomotiv", "auto_parts", "finance_brisk", 2, true],   # LOC-DATA debug seed / id
-		["Karadeniz Tekstil", "textile", "ops_cautious", 2, true], ["Liman Lojistik", "logistics", "ops_cautious", 1, false],
-		["Zeytin Market", "retail", "finance_brisk", 1, false]]
+	var leads: Array = [[_pool_name("logistics"), "logistics", "ops_cautious", 2, true],   # LOC-DATA debug seed / id
+		[_pool_name("auto_parts"), "auto_parts", "finance_brisk", 2, true], [_pool_name("textile", 1), "textile", "ops_cautious", 2, true],
+		[_pool_name("logistics", 3), "logistics", "ops_cautious", 1, false], [_pool_name("retail", 1), "retail", "finance_brisk", 1, false]]
 	for i in leads.size():
 		var row: Array = leads[i]
 		if not closes and not row[4]:
@@ -2275,7 +2275,7 @@ func _run_office_shot(spec: String) -> void:
 				"goals_seed": "seed"}[extra])
 			if extra in ["goals", "goals_skip", "goals_done"]:
 				GameState.set_flag("mvp_shipped", extra != "goals_skip")
-				_shot_customer("co_goals", "Kaya Lojistik", "logistics", "healthy",   # LOC-DATA debug seed / name
+				_shot_customer("co_goals", _pool_name("logistics"), "logistics", "healthy",   # LOC-DATA debug seed / id
 					AngelRoundSystem.MRR_THRESHOLD if extra == "goals_done" else 1200, 8, 2, false)
 				SalesSystem.reflect_mrr()
 			EventBus.mentor_advisory_changed.emit("FRANK_ADVISORY_MEETING_SET", {})
@@ -2677,8 +2677,8 @@ func _run_invite_shot(kind: String) -> void:
 	TimeManager.freeze_clock(SHOT_FREEZE)   # the hour stays the call's at any speed
 	var lead: Prospect = SalesFaucetSystem.spawn(2, "faucet")
 	OfficeCrowdProbe.seed_staff(TRAVEL_SHOT_STAFF)
-	_shot_customer("co_ege", "Ege Kargo", "logistics", "risk", 1000, 12, 9, false)
-	_shot_customer("co_nordica", "Nordica", "logistics", "expansion", 2000, 20, 26, false)
+	_shot_customer("co_ege", _pool_name("logistics", 2), "logistics", "risk", 1000, 12, 9, false)
+	_shot_customer("co_nordica", _pool_name("logistics", 1), "logistics", "expansion", 2000, 20, 26, false)
 	_shot_paper("customer.expansion", {"customer": "co_nordica"}, 2)
 	CharacterRegistry.set_morale("char_crowd_0", 22)
 	SalesSystem.reflect_mrr()
@@ -2810,7 +2810,10 @@ func _run_clock_shot(kind: String) -> void:
 			await frame.call("gate")
 		"moved":
 			var bar: Node = get_tree().get_first_node_in_group(&"top_bar")
-			var place := "Sultanahmet Gayrimenkul"   # LOC-DATA debug seed / the widest company name in the pools
+			var place := ""   # the pools' longest name
+			for sector: String in B2BConstants.SECTORS:
+				for nm: String in SalesNamePool.pool_for(sector):
+					place = nm if nm.length() > place.length() else place
 			# Mid-morning, so the meeting's diamond stands inside the week bar.
 			GameState.set_current_hour(10)
 			TimeManager.sync_to_current_hour()
@@ -4288,7 +4291,7 @@ func _run_ending_shot(key: String) -> void:
 
 	# The MÜŞTERİ and ÇALIŞAN cells read live registries, not the run counters. The customer
 	# seam bumps run_customers_signed and reflects MRR, so both are written after it.
-	var companies := ["Ege Kargo", "Kule Lojistik"]
+	var companies := [_pool_name("logistics", 2), _pool_name("logistics")]
 	for ci in companies.size():
 		var pr := Prospect.new()
 		pr.id = "shot_cust_%d" % ci
@@ -5394,7 +5397,7 @@ func _run_meeting_shot(shot: String) -> void:
 		if kind == "economy":
 			ProductState.set_infra_provider("local")
 			InfraSystem.set_capacity(1)
-			_shot_customer("co_kuzey", "Kuzey İnşaat", "construction", "active", 3000, 60, 13, false)   # LOC-DATA debug seed / id
+			_shot_customer("co_kuzey", _pool_name("construction"), "construction", "active", 3000, 60, 13, false)   # LOC-DATA debug seed / id
 		if kind in ["won", "handoff", "economy"]:
 			_shot_healthy_erp()
 		if kind in ["lost", "frank"]:
@@ -5518,6 +5521,11 @@ func _run_negotiation_shot(kind: String) -> void:
 	await get_tree().create_timer(0.4).timeout
 	_save_shot("negotiation_shot_%s" % kind)
 	get_tree().quit()
+
+
+## A staged company's name: the sector pool's, in the order a run meets them (its curated head first).
+func _pool_name(sector: String, i := 0) -> String:
+	return String(SalesNamePool.pool_for(sector)[i])
 
 
 func _shot_customer(id: String, cname: String, industry: String, phase: String, mrr: int, seats: int, weeks_ago: int, cs: bool) -> void:
