@@ -237,7 +237,7 @@ static func row(it: Dictionary, selected: bool, pill: bool, on_pick: Callable) -
 	var from := UiFactory.make_label(String(it.sender.name), &"MetaMuted")
 	if it.sender.gone:
 		from.text = "%s · %s" % [it.sender.name, TranslationServer.translate("MAIL_STAMP_LEFT")]
-	from.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	from.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	from.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	one.add_theme_constant_override("separation", UiTokens.SPACE_M)
 	one.add_child(from)
@@ -254,7 +254,7 @@ static func row(it: Dictionary, selected: bool, pill: bool, on_pick: Callable) -
 	else:
 		var subject := UiFactory.make_label(String(it.subject),
 			&"SubjectStrong" if it.unread or it.kind == "active" else &"SubjectLabel")
-		subject.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		subject.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		subject.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		two.add_child(subject)
 	var right: Control = _row_right(it)
@@ -262,7 +262,7 @@ static func row(it: Dictionary, selected: bool, pill: bool, on_pick: Callable) -
 		two.add_child(right)
 	lines.add_child(two)
 	var line := UiFactory.make_label(String(it.line), &"MetaMuted")
-	line.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lines.add_child(line)
 	var edge: Control = card.get_child(0).get_child(0)

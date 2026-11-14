@@ -53,6 +53,7 @@ func _init(body: Control, on_close: Callable, guarded := true) -> void:
 	if guarded:
 		_strip = GATE_STRIP.new(tr("WIN_READ_ONLY"), INBOX.show.bind("active"), 0 if owns_close else CLOSE_GUTTER)
 		col.add_child(_strip)
+		_strip.minimum_size_changed.connect(_place_close)
 		EventBus.event_triggered.connect(_sync_gate.unbind(1))
 		EventBus.event_resolved.connect(_sync_gate.unbind(2))
 		EventBus.event_set_aside.connect(_sync_gate.unbind(1))
@@ -95,9 +96,14 @@ func _head(title: String, kpi: Control, on_close: Callable) -> PanelContainer:
 
 func _sync_gate() -> void:
 	_strip.sync()
+	_place_close()
+
+
+## The close glyph sits below the strip, which grows when its lines wrap.
+func _place_close() -> void:
 	if _close_slot != null:
 		_close_slot.add_theme_constant_override("margin_top",
-			_close_top + (int(_strip.custom_minimum_size.y) if _strip.visible else 0))
+			_close_top + (int(_strip.get_combined_minimum_size().y) if _strip.visible else 0))
 
 
 ## While the strip shows, a press on the page reaches only its scrollbars, the wheel and a control marked

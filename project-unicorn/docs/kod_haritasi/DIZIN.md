@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git b91cba7a · 2026-11-14 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 94a882bb · 2026-11-14 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -135,12 +135,12 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/menu/licenses.gd · 78 · - · Control · 2 sinyal · 5 func
 - scripts/menu/main_menu.gd · 94 · - · Control · 2 sinyal · 5 func
 
-### scripts/modals/ (9 dosya, 2811 satır)
+### scripts/modals/ (9 dosya, 2812 satır)
 - scripts/modals/confirm_modal.gd · 65 · - · Control · 3 sinyal · 4 func
 - scripts/modals/ending_scene.gd · 557 · EndingScene · Control · 2 sinyal · 26 func
 - scripts/modals/hr_action_modal.gd · 237 · - · Control · 2 sinyal · 10 func
 - scripts/modals/save_load_modal.gd · 262 · - · Control · 3 sinyal · 18 func
-- scripts/modals/settings_modal.gd · 480 · - · Control · 1 sinyal · 26 func
+- scripts/modals/settings_modal.gd · 481 · - · Control · 1 sinyal · 26 func
 - scripts/modals/system_menu_modal.gd · 106 · - · Control · 3 sinyal · 9 func
 - scripts/modals/term_sheet_table_scene.gd · 437 · TermSheetTableScene · Control · 1 sinyal · 22 func
 - scripts/modals/training_modal.gd · 175 · - · "res://scripts/tabs/hr/hr_panel.gd" · 0 sinyal · 7 func
@@ -232,13 +232,13 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/systems/vc_pitch_system.gd · 1317 · VCPitchSystem · RefCounted · 0 sinyal · 91 func
 - scripts/systems/work_hours_system.gd · 342 · WorkHoursSystem · RefCounted · 0 sinyal · 38 func
 
-### scripts/tabs/ (9 dosya, 3915 satır)
+### scripts/tabs/ (9 dosya, 3911 satır)
 - scripts/tabs/events_tab.gd · 346 · - · Control · 0 sinyal · 22 func
 - scripts/tabs/finance_tab.gd · 116 · - · Control · 1 sinyal · 8 func
-- scripts/tabs/hr_tab.gd · 537 · - · Control · 1 sinyal · 32 func
-- scripts/tabs/hunt_tab.gd · 533 · - · Control · 0 sinyal · 27 func
-- scripts/tabs/personal_tab.gd · 265 · - · Control · 1 sinyal · 13 func
-- scripts/tabs/piyasa_tab.gd · 682 · - · Control · 0 sinyal · 34 func
+- scripts/tabs/hr_tab.gd · 536 · - · Control · 1 sinyal · 32 func
+- scripts/tabs/hunt_tab.gd · 532 · - · Control · 0 sinyal · 27 func
+- scripts/tabs/personal_tab.gd · 264 · - · Control · 1 sinyal · 13 func
+- scripts/tabs/piyasa_tab.gd · 681 · - · Control · 0 sinyal · 34 func
 - scripts/tabs/product_tab.gd · 342 · - · Control · 1 sinyal · 20 func
 - scripts/tabs/rnd_tab.gd · 256 · - · Control · 1 sinyal · 14 func
 - scripts/tabs/sales_tab.gd · 838 · - · Control · 1 sinyal · 40 func
@@ -246,8 +246,8 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 ### scripts/tabs/events/ (1 dosya, 819 satır)
 - scripts/tabs/events/mail_pane.gd · 819 · - · ScrollContainer · 0 sinyal · 43 func
 
-### scripts/tabs/finance/ (1 dosya, 561 satır)
-- scripts/tabs/finance/finance_ozet_view.gd · 561 · FinanceOzetView · Control · 0 sinyal · 24 func
+### scripts/tabs/finance/ (1 dosya, 560 satır)
+- scripts/tabs/finance/finance_ozet_view.gd · 560 · FinanceOzetView · Control · 0 sinyal · 24 func
 
 ### scripts/tabs/hr/ (7 dosya, 2105 satır)
 - scripts/tabs/hr/hr_assignments.gd · 190 · HRAssignments · RefCounted · 0 sinyal · 8 func
@@ -277,11 +277,11 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/tabs/product/stage_paint.gd · 340 · StagePaint · Control · 0 sinyal · 21 func
 - scripts/tabs/product/type_picker.gd · 181 · TypePicker · HBoxContainer · 1 sinyal · 11 func
 
-### scripts/tabs/rnd/ (5 dosya, 1294 satır)
-- scripts/tabs/rnd/rnd_assign_panel.gd · 237 · RnDAssignPanel · VBoxContainer · 2 sinyal · 11 func
+### scripts/tabs/rnd/ (5 dosya, 1312 satır)
+- scripts/tabs/rnd/rnd_assign_panel.gd · 236 · RnDAssignPanel · VBoxContainer · 2 sinyal · 11 func
 - scripts/tabs/rnd/rnd_detail_panel.gd · 259 · RnDDetailPanel · Control · 0 sinyal · 14 func
 - scripts/tabs/rnd/rnd_history.gd · 85 · - · Control · 0 sinyal · 6 func
-- scripts/tabs/rnd/rnd_tree_view.gd · 423 · RnDTreeView · Control · 1 sinyal · 25 func
+- scripts/tabs/rnd/rnd_tree_view.gd · 442 · RnDTreeView · Control · 1 sinyal · 26 func
 - scripts/tabs/rnd/rnd_ui_shared.gd · 290 · RnDUiShared · RefCounted · 0 sinyal · 22 func
 
 ### scripts/theme/ (4 dosya, 3557 satır)
@@ -293,13 +293,13 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 ### scripts/ui/ (1 dosya, 102 satır)
 - scripts/ui/menu_backdrop.gd · 102 · - · Control · 1 sinyal · 4 func
 
-### scripts/ui/components/ (19 dosya, 3623 satır)
-- scripts/ui/components/bar_kit.gd · 37 · - · RefCounted · 0 sinyal · 3 func
+### scripts/ui/components/ (19 dosya, 3635 satır)
+- scripts/ui/components/bar_kit.gd · 36 · - · RefCounted · 0 sinyal · 3 func
 - scripts/ui/components/build_bar.gd · 168 · - · PanelContainer · 0 sinyal · 11 func
 - scripts/ui/components/build_bar_model.gd · 46 · - · RefCounted · 0 sinyal · 2 func
 - scripts/ui/components/build_hud_panel.gd · 108 · - · Control · 0 sinyal · 6 func
 - scripts/ui/components/cash_curve.gd · 266 · CashCurve · Control · 0 sinyal · 16 func
-- scripts/ui/components/gate_strip.gd · 53 · - · PanelContainer · 0 sinyal · 2 func
+- scripts/ui/components/gate_strip.gd · 60 · - · PanelContainer · 0 sinyal · 2 func
 - scripts/ui/components/inbox.gd · 565 · - · RefCounted · 0 sinyal · 42 func
 - scripts/ui/components/investor_appetite_ui.gd · 40 · InvestorAppetiteUi · RefCounted · 0 sinyal · 3 func
 - scripts/ui/components/left_tabs.gd · 333 · - · Panel · 0 sinyal · 20 func
@@ -311,7 +311,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/ui/components/segment_bar.gd · 39 · SegmentBar · Control · 0 sinyal · 3 func
 - scripts/ui/components/toast.gd · 94 · - · PanelContainer · 0 sinyal · 4 func
 - scripts/ui/components/top_bar.gd · 714 · - · Panel · 0 sinyal · 36 func
-- scripts/ui/components/window_frame.gd · 119 · - · PanelContainer · 0 sinyal · 4 func
+- scripts/ui/components/window_frame.gd · 125 · - · PanelContainer · 0 sinyal · 5 func
 - scripts/ui/components/window_layer.gd · 247 · - · Panel · 0 sinyal · 16 func
 
 ### scripts/ui/meeting/ (5 dosya, 1556 satır)
@@ -369,7 +369,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - reputation_changed(new_value: int) · scripts/autoload/event_bus.gd:11 · emit: scripts/autoload/game_state.gd:384 · connect: scripts/ui/components/top_bar.gd:151
 - day_advanced(new_day: int) · scripts/autoload/event_bus.gd:12
   ↳ day_advanced emit: scripts/autoload/game_state.gd:388
-  ↳ day_advanced connect: scripts/tabs/hunt_tab.gd:47, scripts/tabs/piyasa_tab.gd:82, scripts/tabs/product_tab.gd:113, scripts/ui/components/build_bar.gd:40, scripts/ui/components/research_bar.gd:51, scripts/ui/components/top_bar.gd:152 +2
+  ↳ day_advanced connect: scripts/tabs/hunt_tab.gd:47, scripts/tabs/piyasa_tab.gd:81, scripts/tabs/product_tab.gd:113, scripts/ui/components/build_bar.gd:40, scripts/ui/components/research_bar.gd:51, scripts/ui/components/top_bar.gd:152 +2
 - hour_changed(hour: int) · scripts/autoload/event_bus.gd:13
   ↳ hour_changed emit: scripts/autoload/game_state.gd:392
   ↳ hour_changed connect: scripts/systems/sprint_system.gd:1897, scripts/tabs/hunt_tab.gd:60, scripts/tabs/product_tab.gd:116, scripts/tabs/sales_tab.gd:82, scripts/ui/components/news_ticker.gd:74, scripts/ui/components/top_bar.gd:153 +5
@@ -379,7 +379,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - runway_recalculated(months: float) · scripts/autoload/event_bus.gd:15 · emit: scripts/autoload/game_state.gd:825 · connect: scripts/tabs/hr_tab.gd:76, scripts/ui/components/left_tabs.gd:111, scripts/ui/components/top_bar.gd:149
 - equity_changed(investor_pct: int) · scripts/autoload/event_bus.gd:18
   ↳ equity_changed emit: scripts/autoload/game_state.gd:676,687
-  ↳ equity_changed connect: scripts/tabs/finance/finance_ozet_view.gd:64, scripts/tabs/personal_tab.gd:49, scripts/tabs/piyasa_tab.gd:82, scripts/ui/office/office_hud.gd:55, scripts/debug/endgame_smoke.gd:4816
+  ↳ equity_changed connect: scripts/tabs/finance/finance_ozet_view.gd:64, scripts/tabs/personal_tab.gd:49, scripts/tabs/piyasa_tab.gd:81, scripts/ui/office/office_hud.gd:55, scripts/debug/endgame_smoke.gd:4816
 - speed_change_requested(speed: int) · scripts/autoload/event_bus.gd:21 · emit: scripts/autoload/save_manager.gd:370, scripts/main/game_shell.gd:117, scripts/main/main.gd:96,434,507,1853 +51 · connect: scripts/autoload/time_manager.gd:85
 - night_skipped() · scripts/autoload/event_bus.gd:23
   ↳ night_skipped emit: scripts/autoload/time_manager.gd:198
@@ -583,7 +583,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - callback_ready(vc_id: String) · scripts/autoload/event_bus.gd:266 · emit: scripts/systems/vc_pitch_system.gd:889 · connect: scripts/tabs/hunt_tab.gd:46
 - meeting_day(vc_id: String) · scripts/autoload/event_bus.gd:267 · emit: scripts/systems/vc_pitch_system.gd:903 · connect: scripts/events/core/signals.gd:35, scripts/tabs/hunt_tab.gd:47
 - offer_countdown_changed(weeks_left: int) · scripts/autoload/event_bus.gd:268 · emit: scripts/main/main.gd:2858,2860, scripts/systems/vc_pitch_system.gd:914 · connect: scripts/ui/components/top_bar.gd:170
-- term_table_requested(vc_id: String, stage: String) · scripts/autoload/event_bus.gd:269 · emit: scripts/events/core/effects.gd:683,702, scripts/main/game_shell.gd:159, scripts/tabs/hunt_tab.gd:510 · connect: scripts/main/main.gd:5627
+- term_table_requested(vc_id: String, stage: String) · scripts/autoload/event_bus.gd:269 · emit: scripts/events/core/effects.gd:683,702, scripts/main/game_shell.gd:159, scripts/tabs/hunt_tab.gd:509 · connect: scripts/main/main.gd:5627
 - sheet_walked(vc_id: String) · scripts/autoload/event_bus.gd:270
   ↳ sheet_walked emit: scripts/systems/vc_pitch_system.gd:628
   ↳ sheet_walked connect: scripts/tabs/finance/finance_ozet_view.gd:76, scripts/tabs/hunt_tab.gd:48, scripts/ui/components/inbox.gd:153, scripts/debug/endgame_smoke.gd:1958
@@ -664,7 +664,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 
 ### scripts/modals/term_sheet_table_scene.gd
 - closed() · scripts/modals/term_sheet_table_scene.gd:17 · (ad 3 yerde tanımlı)
-  ↳ closed emit: scripts/main/main.gd:2655, scripts/modals/term_sheet_table_scene.gd:401,409,422, scripts/tabs/rnd/rnd_assign_panel.gd:203, scripts/ui/meeting/meeting_panel.gd:353
+  ↳ closed emit: scripts/main/main.gd:2655, scripts/modals/term_sheet_table_scene.gd:401,409,422, scripts/tabs/rnd/rnd_assign_panel.gd:202, scripts/ui/meeting/meeting_panel.gd:353
   ↳ closed connect: scripts/main/main.gd:5950,6237, scripts/tabs/rnd/rnd_detail_panel.gd:77
 
 ### scripts/onboarding/first_week_doc.gd
@@ -687,7 +687,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
   ↳ fit_changed connect: scripts/ui/components/window_layer.gd:169
 
 ### scripts/tabs/hr/hr_dossier.gd
-- close_requested() · scripts/tabs/hr/hr_dossier.gd:11 · emit: scripts/tabs/hr/hr_dossier.gd:83,132 · connect: scripts/ui/components/window_frame.gd:62
+- close_requested() · scripts/tabs/hr/hr_dossier.gd:11 · emit: scripts/tabs/hr/hr_dossier.gd:83,132 · connect: scripts/ui/components/window_frame.gd:63
 - fit_changed() · scripts/tabs/hr/hr_dossier.gd:12 · (ad 7 yerde tanımlı)
   ↳ fit_changed emit: scripts/tabs/finance_tab.gd:47,78,97, scripts/tabs/hr/hr_dossier.gd:46, scripts/tabs/hr_tab.gd:265, scripts/tabs/personal_tab.gd:48 +5
   ↳ fit_changed connect: scripts/ui/components/window_layer.gd:169
@@ -780,13 +780,13 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
   ↳ fit_changed connect: scripts/ui/components/window_layer.gd:169
 
 ### scripts/tabs/rnd/rnd_assign_panel.gd
-- started() · scripts/tabs/rnd/rnd_assign_panel.gd:18 · emit: scripts/tabs/rnd/rnd_assign_panel.gd:231,233 · connect: scripts/tabs/rnd/rnd_detail_panel.gd:76
+- started() · scripts/tabs/rnd/rnd_assign_panel.gd:18 · emit: scripts/tabs/rnd/rnd_assign_panel.gd:230,232 · connect: scripts/tabs/rnd/rnd_detail_panel.gd:76
 - closed() · scripts/tabs/rnd/rnd_assign_panel.gd:20 · (ad 3 yerde tanımlı)
-  ↳ closed emit: scripts/main/main.gd:2655, scripts/modals/term_sheet_table_scene.gd:401,409,422, scripts/tabs/rnd/rnd_assign_panel.gd:203, scripts/ui/meeting/meeting_panel.gd:353
+  ↳ closed emit: scripts/main/main.gd:2655, scripts/modals/term_sheet_table_scene.gd:401,409,422, scripts/tabs/rnd/rnd_assign_panel.gd:202, scripts/ui/meeting/meeting_panel.gd:353
   ↳ closed connect: scripts/main/main.gd:5950,6237, scripts/tabs/rnd/rnd_detail_panel.gd:77
 
 ### scripts/tabs/rnd/rnd_tree_view.gd
-- selection_changed(node_id: String) · scripts/tabs/rnd/rnd_tree_view.gd:35 · emit: scripts/tabs/rnd/rnd_tree_view.gd:329 · connect: scripts/tabs/rnd_tab.gd:140
+- selection_changed(node_id: String) · scripts/tabs/rnd/rnd_tree_view.gd:35 · emit: scripts/tabs/rnd/rnd_tree_view.gd:348 · connect: scripts/tabs/rnd_tab.gd:140
 
 ### scripts/tabs/rnd_tab.gd
 - fit_changed() · scripts/tabs/rnd_tab.gd:28 · (ad 7 yerde tanımlı)
@@ -806,7 +806,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 
 ### scripts/ui/meeting/meeting_panel.gd
 - closed() · scripts/ui/meeting/meeting_panel.gd:19 · (ad 3 yerde tanımlı)
-  ↳ closed emit: scripts/main/main.gd:2655, scripts/modals/term_sheet_table_scene.gd:401,409,422, scripts/tabs/rnd/rnd_assign_panel.gd:203, scripts/ui/meeting/meeting_panel.gd:353
+  ↳ closed emit: scripts/main/main.gd:2655, scripts/modals/term_sheet_table_scene.gd:401,409,422, scripts/tabs/rnd/rnd_assign_panel.gd:202, scripts/ui/meeting/meeting_panel.gd:353
   ↳ closed connect: scripts/main/main.gd:5950,6237, scripts/tabs/rnd/rnd_detail_panel.gd:77
 
 ### scripts/ui/meeting/meeting_panel_option.gd

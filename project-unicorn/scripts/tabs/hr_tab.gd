@@ -320,8 +320,7 @@ func _atlas_strip() -> Control:
 	action.disabled = EventGate.active_id() != ""
 	var line := UiFactory.make_label(text, &"DataText")
 	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	line.clip_text = true
-	line.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row.add_child(line)
 	row.add_child(action)
 	for part: Control in row.get_children():

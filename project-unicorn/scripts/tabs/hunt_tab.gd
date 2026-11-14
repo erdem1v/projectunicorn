@@ -293,8 +293,7 @@ func _fund_row(inv: Dictionary) -> PanelContainer:
 	l1.add_child(UiFactory.D_tag(InvestorRegistry.domain_chip(vc_id)))
 	body.add_child(l1)
 	var arc := UiFactory.make_label(InvestorRegistry.archetype_line(vc_id), &"MetaMuted" if closed else &"MetaText")
-	arc.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	arc.clip_text = true
+	arc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.add_child(arc)
 	body.add_child(UiFactory.make_label("%s · %s" % [lead.name, CounterpartSystem.title(lead, vc_id)], &"Caption"))
 	line.add_child(body)

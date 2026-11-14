@@ -48,8 +48,7 @@ var _signals: Array = []
 
 func _init() -> void:
 	_ctx = UiFactory.make_label("", &"BodyLabel", UiTokens.D_INK_3)
-	_ctx.clip_text = true
-	_ctx.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_ctx.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	frame_options = {"title": "TAB_PIYASA", "kpi": _ctx, "pad": Vector2i.ZERO}
 
 

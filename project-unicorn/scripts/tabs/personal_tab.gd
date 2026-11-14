@@ -146,8 +146,7 @@ func _skill_row(key: String, value: int) -> HBoxContainer:
 	row.add_child(glyph)
 	var label := SprintUiShared.label(Fmt.upper(HRUiShared.skill_label(key)), &"KeyLabel")
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	label.clip_text = true
-	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row.add_child(label)
 	row.add_child(_meter(value))
 	return row

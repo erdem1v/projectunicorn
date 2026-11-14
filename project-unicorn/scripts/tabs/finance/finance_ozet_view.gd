@@ -537,9 +537,8 @@ func _ladder_row(rank: String, display: String, is_player: bool, trend: int, sha
 		row.add_child(UiFactory.D_tag(tr("FIN_MARKET_YOU"), &"neutral"))
 		row.add_child(RnDUiShared.spacer())
 	else:
-		# A rival's long name gives way before its share does.
-		label.clip_text = true
-		label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		# A rival's long name wraps; its share stays on the row.
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var arrow: Control = UiFactory.make_glyph("res://assets/icons/util/tri_%s.svg" % ("up" if trend > 0 else "down"),
 		UiTokens.D_ICON_TAG, UiTokens.D_INK_3) if trend != 0 else Control.new()

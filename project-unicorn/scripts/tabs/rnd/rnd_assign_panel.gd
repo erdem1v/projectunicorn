@@ -158,8 +158,7 @@ func _person_row(c: Character, area: String) -> PanelContainer:
 		line.add_child(UiFactory.D_tag(away[0], &"neutral"))
 		line.add_child(SprintUiShared.label(Fmt.weeks(away[1]), &"CondCaption"))
 	var role := SprintUiShared.label(_role_line(c, away.is_empty()), &"CondCaption")
-	role.clip_text = true
-	role.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	role.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	role.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	line.add_child(role)
 	cells.add_child(line)

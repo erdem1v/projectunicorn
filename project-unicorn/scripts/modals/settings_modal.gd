@@ -445,7 +445,8 @@ func _add_volume_row(label_key: String, setter: Callable) -> HSlider:
 func _dropdown(count: int) -> OptionButton:
 	var o := OptionButton.new()
 	o.custom_minimum_size.x = CONTROL_W
-	o.clip_text = true   # uzun EN metni satırı genişletip paneli şişirmesin
+	o.fit_to_longest_item = false
+	o.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART   # uzun EN metni paneli genişletmez, sarar
 	for i in count:
 		o.add_item("", i)
 	return o

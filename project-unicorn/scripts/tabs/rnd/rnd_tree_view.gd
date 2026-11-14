@@ -58,6 +58,8 @@ var _detail: RnDDetailPanel = null
 var _col_w: float = 0.0
 var _tile_w: float = 0.0
 var _bottom: float = 0.0
+## D_RND_TILE_H fits a two-line name; a name that wraps further grows every tile by its extra lines.
+var _tile_h: float = 0.0
 
 
 func _ready() -> void:
@@ -83,11 +85,29 @@ func _gui_input(event: InputEvent) -> void:
 func _measure() -> void:
 	_col_w = (size.x - 3.0 * UiTokens.D_RND_COL_GAP) / 4.0
 	_tile_w = (_col_w - UiTokens.D_RND_CORRIDOR) * 0.5
-	_bottom = _row_y(ROWS - 1) + UiTokens.D_RND_TILE_H
+	_tile_h = UiTokens.D_RND_TILE_H + _name_overflow()
+	_bottom = _row_y(ROWS - 1) + _tile_h
+
+
+func _name_overflow() -> float:
+	# A hidden label at the tile's text width counts the lines exactly as a tile's name wraps.
+	var probe := Label.new()
+	probe.theme_type_variation = &"TipTitle"
+	probe.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	probe.visible = false
+	add_child(probe)
+	probe.size.x = _tile_w - UiTokens.SPACE_L - UiTokens.SPACE_M - 2.0 * UiTokens.BORDER_HAIRLINE
+	var lines: int = 2
+	for id in ResearchTree.node_ids():
+		probe.text = ResearchSeam.node_name(String(id))
+		lines = maxi(lines, probe.get_line_count())
+	var extra: float = (lines - 2) * probe.get_line_height()
+	probe.queue_free()
+	return extra
 
 
 func _row_y(row: int) -> float:
-	return HEAD + UiTokens.SPACE_XL + float(row) * (UiTokens.D_RND_TILE_H + UiTokens.D_RND_ROW_GAP)
+	return HEAD + UiTokens.SPACE_XL + float(row) * (_tile_h + UiTokens.D_RND_ROW_GAP)
 
 
 func _detail_top() -> float:
@@ -102,17 +122,17 @@ func _compute_slots() -> void:
 		_col_x[family] = col_x
 		var root: String = String(_roots[family])
 		# KÖK sütuna ortalı — merkezi koridorun merkezidir.
-		_slots[root] = Rect2(col_x + (_col_w - _tile_w) * 0.5, _row_y(0), _tile_w, UiTokens.D_RND_TILE_H)
+		_slots[root] = Rect2(col_x + (_col_w - _tile_w) * 0.5, _row_y(0), _tile_w, _tile_h)
 		# DAL A / DAL B, aralarında koridor. Sıra ResearchTree.children_of'un
 		# sıralı çıktısıdır — bir isimlendirme kuralı DEĞİL.
 		var branches: Array = ResearchTree.children_of(root)
 		for j in branches.size():
 			var b: String = String(branches[j])
 			var bx: float = col_x if j == 0 else col_x + _tile_w + UiTokens.D_RND_CORRIDOR
-			_slots[b] = Rect2(bx, _row_y(1), _tile_w, UiTokens.D_RND_TILE_H)
+			_slots[b] = Rect2(bx, _row_y(1), _tile_w, _tile_h)
 			# DEVAM dalın tam altında: dikey bağ düz bir çizgi olsun diye AYNI x.
 			for c in ResearchTree.children_of(b):
-				_slots[String(c)] = Rect2(bx, _row_y(2), _tile_w, UiTokens.D_RND_TILE_H)
+				_slots[String(c)] = Rect2(bx, _row_y(2), _tile_w, _tile_h)
 
 
 # ---------------------------------------------------------------- kurulum
@@ -241,7 +261,6 @@ func _make_tile(node_id: String) -> Control:
 	var col := SprintUiShared.column(0)
 	var name_label := UiFactory.make_label(ResearchSeam.node_name(node_id), &"TipTitle", look[0])
 	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	name_label.max_lines_visible = 2
 	name_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	col.add_child(name_label)
 	col.add_child(_tile_foot(node_id, state, look[1]))

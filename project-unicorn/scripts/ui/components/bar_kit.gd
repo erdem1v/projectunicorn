@@ -28,10 +28,9 @@ static func line() -> HBoxContainer:
 	return h
 
 
-## Satırın kalanını alan yazı; uzarsa üç noktayla kısalır.
+## Satırın kalanını alan yazı; uzarsa sarar, satır büyür.
 static func filler(variation: StringName) -> Label:
 	var l := UiFactory.make_label("", variation)
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	l.clip_text = true
-	l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	return l

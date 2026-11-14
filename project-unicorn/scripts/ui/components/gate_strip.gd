@@ -17,6 +17,9 @@ func _init(say: String, on_back: Callable, right := 0) -> void:
 	custom_minimum_size.y = UiTokens.D_H_BTN_SM + UiTokens.SPACE_M
 	var margin := MarginContainer.new()
 	margin.add_theme_constant_override("margin_right", right)
+	# Room above and below the reason and the decision's name, which sit on two lines.
+	margin.add_theme_constant_override("margin_top", UiTokens.SPACE_XS)
+	margin.add_theme_constant_override("margin_bottom", UiTokens.SPACE_XS)
 	add_child(margin)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", UiTokens.SPACE_L)
@@ -26,14 +29,18 @@ func _init(say: String, on_back: Callable, right := 0) -> void:
 	dot.custom_minimum_size = Vector2.ONE * UiTokens.SPACE_M
 	dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(dot)
+	# The decision's name sits under the reason so it always has the row's width, even in the narrow dossier.
+	var words := VBoxContainer.new()
+	words.add_theme_constant_override("separation", 0)
+	words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	words.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(words)
 	var reason := UiFactory.make_label(say, &"DataStrong")
-	reason.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(reason)
+	reason.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	words.add_child(reason)
 	_from = UiFactory.make_label("", &"MetaMuted")
-	_from.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_from.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_from.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	row.add_child(_from)
+	_from.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	words.add_child(_from)
 	var back := Button.new()
 	back.text = tr("WIN_BACK_TO_DECISION")
 	back.icon = load("res://assets/icons/util/reply.svg")

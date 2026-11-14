@@ -209,7 +209,7 @@ func _header(from: Dictionary, date: String) -> HBoxContainer:
 	one.add_theme_constant_override("separation", UiTokens.SPACE_M)
 	one.add_child(UiFactory.make_label(String(from.name), &"SenderName"))
 	var title := UiFactory.make_label(String(from.title), &"MetaMuted")
-	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	one.add_child(title)
 	if from.gone:

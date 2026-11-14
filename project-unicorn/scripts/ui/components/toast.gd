@@ -53,14 +53,14 @@ func _ready() -> void:
 		add_to_group(GROUP)
 
 
-## The ending's toast carries an action: its line yields room to the button and shortens, and the toast
+## The ending's toast carries an action: its line yields room to the button and wraps, and the toast
 ## waits while the pointer is on it. The button passes the pointer on, so it counts as on the toast.
 func set_action(text: String, on_press: Callable) -> void:
 	mouse_filter = Control.MOUSE_FILTER_PASS
 	mouse_entered.connect(func() -> void: _tween.set_speed_scale(0.0))
 	mouse_exited.connect(func() -> void: _tween.set_speed_scale(1.0))
 	_sub.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_sub.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var action := Button.new()
 	action.theme_type_variation = &"GhostButtonSmall"
 	action.focus_mode = Control.FOCUS_NONE

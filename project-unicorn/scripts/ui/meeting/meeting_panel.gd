@@ -195,10 +195,10 @@ func _build_head() -> Control:
 	who.add_child(_portrait)
 	var id := SprintUiShared.column(UiTokens.SPACE_XXS)
 	_name = UiFactory.make_label("", &"TitleH2")
-	_name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	id.add_child(_name)
 	_role = UiFactory.make_label("", &"MetaMuted")
-	_role.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_role.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	id.add_child(_role)
 	# A customer's stars (a rule unit, so glyphs), a whale's condition under them; the one-line read is the name's tip.
 	_read.add_theme_constant_override("separation", UiTokens.SPACE_M)
