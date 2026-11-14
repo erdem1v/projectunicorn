@@ -46,8 +46,9 @@ const NEUTRAL_VERBS := [
 	"sprint_fix_first", "sprint_card_trim", "sprint_card_outlook", "sprint_card_first",
 	# a card for the next sprint, and the effects a card's test holds back until it is done
 	"queue_card", "after_test",
-	# customers — satisfaction is a relationship, not a payment; whose desk an account sits on is not either
-	"satisfaction_delta", "trust_delta", "promise_create", "promise_extend", "take_account",
+	# customers — satisfaction is a relationship, not a payment; whose desk an account sits on, and the week someone gives
+	# it, are not either
+	"satisfaction_delta", "trust_delta", "promise_create", "promise_extend", "take_account", "account_time",
 	# the sales meeting's emphasis
 	"pitch_focus",
 	# the server contract: the tier stays and the capacity does not fall, which moves no money by itself
@@ -739,9 +740,10 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 				return _no_target(verb, dc)
 			# The amount is what landed: the seam refuses a discount past its cap.
 			var cut_from: int = dcust.mrr
-			B2BSalesSystem.apply_discount(dc,
-				-int(round(float(dcust.mrr) * B2BConstants.RETAIN_DISCOUNT_PCT)))
-			return {"verb": verb, "customer": dc, "amount": dcust.mrr - cut_from}
+			# `growth`: the price of more seats, not a rescue; the account was not leaving.
+			var growth: bool = bool(e.get("growth", false))
+			B2BSalesSystem.apply_discount(dc, -int(round(float(dcust.mrr) * B2BConstants.RETAIN_DISCOUNT_PCT)), not growth)
+			return {"verb": verb, "customer": dc, "amount": dcust.mrr - cut_from, "growth": growth}
 		# A month's discount on the slot's account, once: money out, the account's MRR stays.
 		"b2b_month_discount":
 			var gift: Dictionary = month_discount_plan(e, ctx)
@@ -767,6 +769,17 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 		"b2b_expand_decline":
 			B2BSalesSystem.decline_expansion(entity_of(e, ctx, EvScope.TYPE_CUSTOMER))
 			return {"verb": verb}
+		# Workdays of this week the account's steward gives it: a rep's come off the desk, the founder's off his output and
+		# sprint pay.
+		"account_time":
+			var time: Dictionary = account_time_plan(e, ctx)
+			if CustomerRegistry.get_customer(time.customer) == null:
+				return _no_target(verb, time.customer)
+			if time.steward != "":
+				GameState.add_rep_days(time.steward, time.days)
+			else:
+				GameState.add_founder_days(time.days)
+			return time.merged({"verb": verb})
 
 		# --- the sales desk, each through its owning seam ----------------------
 		# Terms on the lead that become the account's if it signs (B2BSalesSystem.apply_offer); the card never signs it.
@@ -904,6 +917,16 @@ static func trim_plan(e: Dictionary) -> Dictionary:
 
 
 ## What a `b2b_month_discount` costs: sprint.json `paper.renewal_discount` of the slot's account's MRR, once.
+## Whose time an account takes and how much (`account_time` and its chip): its rep while the rep is on the desk
+## (CustomerRepSystem.ranked_reps), else the founder (steward ""); the card's weeks as workdays.
+static func account_time_plan(e: Dictionary, ctx: Dictionary) -> Dictionary:
+	var id: String = entity_of(e, ctx, EvScope.TYPE_CUSTOMER)
+	var c: Customer = CustomerRegistry.get_customer(id)
+	var rep: Character = CharacterRegistry.get_character(c.assigned_to) if c != null else null
+	var on_desk: bool = rep != null and CustomerRepSystem.ranked_reps().has(rep)
+	return {"customer": id, "steward": rep.id if on_desk else "", "days": TimeModel.workdays(float(e.weeks))}
+
+
 static func month_discount_plan(e: Dictionary, ctx: Dictionary) -> Dictionary:
 	var id: String = entity_of(e, ctx, EvScope.TYPE_CUSTOMER)
 	var c: Customer = CustomerRegistry.get_customer(id)

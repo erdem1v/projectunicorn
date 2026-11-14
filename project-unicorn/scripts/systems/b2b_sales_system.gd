@@ -495,10 +495,10 @@ static func hold(customer_id: String) -> void:
 			c.churn_countdown + TimeModel.ticks(B2BConstants.RETAIN_DELAY_WEEKS))
 
 
-static func apply_discount(customer_id: String, mrr_delta: int) -> void:
-	# "İndirim ver": MRR drops by the pre-computed delta, the customer stays (recovers from
-	# Risk). The `b2b_retain_discount` verb computes the delta (MRR × RETAIN_DISCOUNT_PCT);
-	# this seam just applies it through the MRR seam + bridge.
+static func apply_discount(customer_id: String, mrr_delta: int, rescue := true) -> void:
+	# "İndirim ver": MRR drops by the pre-computed delta; `rescue`, the customer stays (recovers from
+	# Risk); a growth discount is a price, not a rescue. The `b2b_retain_discount` verb computes the delta
+	# (MRR × RETAIN_DISCOUNT_PCT); this seam just applies it through the MRR seam + bridge.
 	# CAP: RETAIN_DISCOUNT_MAX_USES per account across both channels (retention and renewal
 	# request). The cards lock the row through `musteri.discounts_used`; this guard is the
 	# seam's own defense.
@@ -511,7 +511,8 @@ static func apply_discount(customer_id: String, mrr_delta: int) -> void:
 	if mrr_delta != 0:
 		CustomerRegistry.set_mrr(c.id, c.mrr + mrr_delta)
 		SalesSystem.reflect_mrr()
-	_recover(c, B2BConstants.RETAIN_SAT_BUMP)
+	if rescue:
+		_recover(c, B2BConstants.RETAIN_SAT_BUMP)
 
 
 static func ignore_risk(_customer_id: String) -> void:

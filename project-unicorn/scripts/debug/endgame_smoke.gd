@@ -255,6 +255,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"news_feed_weights_and_no_repeat":    fail = _case_news_feed_weights_and_no_repeat()
 		"cs_request_kind_state_driven":       fail = _case_cs_request_kind_state_driven()
 		"expansion_only_after_kept_promise":  fail = _case_expansion_only_after_kept_promise()
+		"account_time_books_the_stewards_week": fail = _case_account_time_books_the_stewards_week()
 		# --- Bug cleanup 2026-08-07: each of these FAILS against the
 		#     pre-fix engine, which is what makes them regression guards rather than décor.
 		"b2b_expansion_no_refire":            fail = _case_b2b_expansion_no_refire()
@@ -5490,6 +5491,67 @@ static func _case_expansion_only_after_kept_promise() -> String:
 	B2BSalesSystem.decline_expansion(fresh.id)
 	if fresh.lifecycle_phase != "onboarding":
 		return "declining growth inside the onboarding window left the account %s" % fresh.lifecycle_phase
+	return ""
+
+
+## An account's time comes out of its steward's week. The founder's workdays leave his sprint pay when the week turns and
+## stand in the plan's ledger as the account's own days; a rep's leave the desk's throughput for the week and come back with
+## the next. The chip names the steward as the history row does. The growth paper's "Koltukları ekle" books the setup week;
+## "İndirimle ekle" spends one of the account's discounts and rescues nothing (satisfaction stays), its chip as its row.
+static func _case_account_time_books_the_stewards_week() -> String:
+	_seed_b2b(1000)
+	var c: Customer = CustomerRegistry.get_customer("co_lead_smoke")
+	var ctx: Dictionary = _ctx_customer(c)
+	var two := {"verb": "account_time", "scope": "customer", "weeks": 0.4}
+	GameState.start_work_week()
+	var live: String = EvChips.text(EvChips.describe(two, ctx, {}, false)[0])
+	var row: Dictionary = EvEffects.run_played([two], ctx)[0]
+	if EvChips.text(EvChips.describe(row, ctx, {}, true)[0]) != live:
+		return "the chip showed '%s', the history row reads otherwise" % live
+	GameState.freeze_founder_sprint_pay()
+	if not is_equal_approx(GameState.founder_sprint_pay, 1.0 - TimeModel.days_share(2.0)):
+		return "two days for the account left the founder a sprint pay of %.2f" % GameState.founder_sprint_pay
+	var booked: Array = GameState.founder_meetings_frozen.filter(func(m: Dictionary) -> bool: return m.kind == "account")
+	if booked.size() != 1 or not is_equal_approx(TimeModel.meeting_days(booked[0]), 2.0):
+		return "the plan's ledger does not hold the account's two days: %s" % str(GameState.founder_meetings_frozen)
+	var rep: Character = _make_cs("char_cs_time", 5)
+	CustomerRegistry.assign_customer(c.id, rep.id)
+	var full: float = CustomerRepSystem.throughput_of(rep)
+	live = EvChips.text(EvChips.describe(two, ctx, {}, false)[0])
+	row = EvEffects.run_played([two], ctx)[0]
+	if not live.contains("Burcu") or EvChips.text(EvChips.describe(row, ctx, {}, true)[0]) != live:
+		return "the rep's account: the chip showed '%s', the history row reads otherwise" % live
+	if not is_equal_approx(CustomerRepSystem.throughput_of(rep), full * (1.0 - TimeModel.days_share(2.0))):
+		return "two days for the account left the rep's desk at %.2f of %.2f" % [CustomerRepSystem.throughput_of(rep), full]
+	if GameState.founder_meetings_week.size() != 1:
+		return "the rep's account took the founder's days too"
+	GameState.start_work_week()
+	if not is_equal_approx(CustomerRepSystem.throughput_of(rep), full):
+		return "the rep's desk did not come back with the next week"
+	CustomerRegistry.set_lifecycle_phase(c.id, "active")
+	if not B2BSalesSystem.offer_expansion(c):
+		return "fixture: the kept promise offered no growth"
+	if not EventGate.open_paper(EvLatches.key_of(EXPANSION_ID, ctx)):
+		return "the growth paper would not open"
+	EventGate.resolve(EXPANSION_ID, "expand")
+	if not is_equal_approx(float(GameState.rep_days_week.get(rep.id, 0.0)), 5.0):
+		return "adding the seats did not book the rep's setup week: %s" % str(GameState.rep_days_week)
+	var p := Prospect.new()
+	p.id = "lead_discounted"
+	p.company_name = "Discount A.Ş."
+	p.industry = "testing"
+	p.star = 1
+	_sign_fixture(p, 900, 80)
+	var d: Customer = CustomerRegistry.get_customer("co_lead_discounted")
+	var discount := {"verb": "b2b_retain_discount", "scope": "customer", "growth": true}
+	var dctx: Dictionary = _ctx_customer(d)
+	var sat: int = d.satisfaction
+	live = EvChips.text(EvChips.describe(discount, dctx, {}, false)[0])
+	row = EvEffects.run_played([discount], dctx)[0]
+	if EvChips.text(EvChips.describe(row, dctx, {}, true)[0]) != live:
+		return "the growth discount: the chip showed '%s', the history row reads otherwise" % live
+	if d.retain_discounts != 1 or d.satisfaction != sat:
+		return "the growth discount spent %d discounts and moved satisfaction %d -> %d" % [d.retain_discounts, sat, d.satisfaction]
 	return ""
 
 
@@ -23794,7 +23856,7 @@ static func _case_sprint_timeline_matches_play_out() -> String:
 	GameState.start_work_week()
 	tl = SprintSystem.timeline()
 	var kinds: Array = tl.cards[solo].stages.filter(func(s: Dictionary) -> bool: return not s.meet.is_empty()).map(
-		func(s: Dictionary) -> Array: return s.meet[0].kinds)
+		func(s: Dictionary) -> Array: return s.meet[0].meets.map(func(m: Dictionary) -> String: return m.kind))
 	if not is_equal_approx(hatch.call(tl, 1), 0.4) or kinds.is_empty() or kinds[0] != ["table"]:
 		return "A16: a term sheet table hatches %.3f of the founder's week as %s, want 0.4 as the table" % [hatch.call(tl, 1), str(kinds)]
 	SprintSystem.remove(solo)
@@ -24077,7 +24139,7 @@ static func _contract_flaws(tl: Dictionary, label: String) -> String:
 			for wait in s.waits:
 				checks.append([wait, ["from", "to", "person", "role", "busy"], "a wait of " + id])
 			for meet in s.meet:
-				checks.append([meet, ["from", "to", "kinds", "week"], "a meeting of " + id])
+				checks.append([meet, ["from", "to", "meets", "week"], "a meeting of " + id])
 	for id in tl.ahead:
 		for key in tl.ahead[id]:
 			checks.append([tl.ahead[id][key], ["by", "done"] if key == "prep" else ["done", "people", "start"],

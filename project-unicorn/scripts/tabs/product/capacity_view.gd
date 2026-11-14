@@ -233,7 +233,7 @@ func _people(row: Dictionary) -> HFlowContainer:
 	for group: Dictionary in crowd.stars:
 		flow.add_child(_cluster(group.person, SprintUiShared.stars_text(group.stars), group.n, false))
 	for group: Dictionary in crowd.away:
-		flow.add_child(_cluster(group.person, tr(AWAY_KEYS[group.reason]), group.n, true))
+		flow.add_child(_cluster(group.person, _away_text(group.reason), group.n, true))
 	return flow
 
 
@@ -257,9 +257,16 @@ func _person_tip(p: Dictionary) -> String:
 		"effort": roundi(p.effort), "busy": Fmt.percent(p.busy * 100.0, 0)})
 
 
+## Kişinin sprintte olmama nedeni; kurucunun haftasını yalnız hesaplara verdiği zaman (`account_time`) aldıysa "hesap işinde".
+func _away_text(reason: String) -> String:
+	if reason == "meetings" and GameState.founder_meetings_frozen.all(func(m: Dictionary) -> bool: return m.kind == "account"):
+		return tr("PRODUCT_AWAY_ACCOUNT")
+	return tr(AWAY_KEYS[reason])
+
+
 ## Sprinte seçilemeyen kişi: soluk gri yüz ve yanında nedeni; ipucu adı, yıldızı ve nedeni.
 func _away(gone: Dictionary) -> Control:
-	var reason: String = tr(AWAY_KEYS[gone.reason])
+	var reason: String = _away_text(gone.reason)
 	var item := SprintUiShared.box(UiTokens.SPACE_M)
 	item.add_child(SprintUiShared.face(gone.person, UiTokens.D_AVATAR_ROW_SM, true))
 	item.add_child(SprintUiShared.label(reason, &"AwayLabel"))

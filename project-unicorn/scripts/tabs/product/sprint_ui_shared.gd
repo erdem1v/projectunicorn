@@ -11,8 +11,9 @@ const ROLE_ICONS := {"design": "res://assets/icons/skill/design.svg", "dev": "re
 ## Aşamanın adının anahtarı; "product" araştırma kartının çubuğudur.
 const STAGE_KEYS := {"design": "PRODUCT_PHASE_DESIGN", "dev": "PRODUCT_PHASE_DEV", "test": "PRODUCT_PHASE_TEST",
 	"product": "PRODUCT_STAGE_RESEARCH"}
-## Kurucunun görüşmelerinin adı (`TimeModel.MEETING_DAYS` ile aynı anahtarlar).
-const MEETING_KEYS := {"sales": "PRODUCT_MEETING_SALES", "vc": "PRODUCT_MEETING_VC", "table": "PRODUCT_MEETING_TABLE"}
+## Kurucunun görüşmelerinin adı (`TimeModel.MEETING_DAYS`ın anahtarları ve hesaba verilen zaman, `account`).
+const MEETING_KEYS := {"sales": "PRODUCT_MEETING_SALES", "vc": "PRODUCT_MEETING_VC", "table": "PRODUCT_MEETING_TABLE",
+	"account": "PRODUCT_MEETING_ACCOUNT"}
 const ARROW := "res://assets/icons/util/arrow_right.svg"
 const WARN := "res://assets/icons/util/warn.svg"
 const CHECK := "res://assets/icons/util/check.svg"
@@ -313,30 +314,30 @@ static func prepared_tip(pm: Dictionary, before: int, now: int) -> String:
 	return RnDUiShared.t("PRODUCT_PM_PREPARED").format({"name": pm.name, "stars": stars_text(pm.stars), "before": before, "now": now})
 
 
-## Kurucunun görüşme kalemleri, kalem başına bir satır: "{görüşme} · {n} gün" (hafta yazılmaz, bir tik hafta olduğu için gün yalnız
-## görüşmenin süresidir).
-static func meet_lines(kinds: Array) -> PackedStringArray:
+## Kurucunun görüşme kalemleri (`GameState.founder_meetings_frozen`'ın kayıtları), kalem başına bir satır: "{görüşme} · {n} gün"
+## (hafta yazılmaz, bir tik hafta olduğu için gün yalnız görüşmenin süresidir).
+static func meet_lines(meets: Array) -> PackedStringArray:
 	var out := PackedStringArray()
-	for kind: String in kinds:
-		out.append(_meet_line(kind, TimeModel.MEETING_DAYS[kind]))
+	for m: Dictionary in meets:
+		out.append(_meet_line(m.kind, TimeModel.meeting_days(m)))
 	return out
 
 
 ## `stages`in taramalarının kalemleri: kurucunun haftasının görüşmeleri o hafta çalıştığı her aşamanın taramasında yazılıdır, bir hafta
 ## bir kez okunur. `total` doğruysa aynı türden kalemler tek satırdır, günleri toplanır ("Satış görüşmesi · 4 gün").
 static func meet_lines_of(stages: Array, total := false) -> PackedStringArray:
-	var kinds: Array = []
+	var meets: Array = []
 	var seen: Dictionary = {}
 	for s: Dictionary in stages:
 		for m: Dictionary in s.meet:
 			if not seen.has(m.week):
 				seen[m.week] = true
-				kinds.append_array(m.kinds)
+				meets.append_array(m.meets)
 	if not total:
-		return meet_lines(kinds)
+		return meet_lines(meets)
 	var days: Dictionary = {}
-	for kind: String in kinds:
-		days[kind] = days.get(kind, 0.0) + TimeModel.MEETING_DAYS[kind]
+	for m: Dictionary in meets:
+		days[m.kind] = days.get(m.kind, 0.0) + TimeModel.meeting_days(m)
 	return PackedStringArray(days.keys().map(func(kind: String) -> String: return _meet_line(kind, days[kind])))
 
 

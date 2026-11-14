@@ -408,7 +408,7 @@ func _bar(s: Dictionary, rect: Rect2, piece: String, ticks: Array) -> StagePaint
 			var to: float = minf(_x(m.to), rect.end.x)
 			if to - from >= 1.0:
 				var scan: StagePaint = StagePaint.part(&"meet", s.stage, m, Rect2(from - rect.position.x, 0.0, to - from, rect.size.y))
-				scan.tooltip_text = "\n".join(SprintUiShared.meet_lines(m.kinds))
+				scan.tooltip_text = "\n".join(SprintUiShared.meet_lines(m.meets))
 				bar.add_child(scan)
 	var left: float = UiTokens.D_W_TICK_BOX + UiTokens.SPACE_S if not ticks.is_empty() else float(UiTokens.D_STAGE_BAR_PAD.x)
 	var label: StagePaint = StagePaint.part(&"label", s.stage, {"state": state, "late": card.late, "main": main, "sub": sub, "left": left,

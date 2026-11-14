@@ -67,9 +67,10 @@ static func throughput_of(rep: Character) -> float:
 	# §4.5: kişinin ne ürettiği TEK EVDE (HRSystem.effective_skill) — alan katsayısı, odak,
 	# moral payı ve huy çarpanları orada. Masanın kendi şekli (taban + kişi başı kapasite, ve
 	# ranked_reps'in istif sırası) burada kalıyor.
-	return B2BConstants.CS_THROUGHPUT_BASE \
-		+ HRSystem.daily_contribution(rep, HRConstants.AREA_CUSTOMER_SUCCESS) \
-			* B2BConstants.CS_THROUGHPUT_PER_PACE
+	# The workdays the rep gave an account this week (`account_time`) are not at the desk.
+	var away: float = TimeModel.days_share(float(GameState.rep_days_week.get(rep.id, 0.0)))
+	return (B2BConstants.CS_THROUGHPUT_BASE + HRSystem.daily_contribution(rep, HRConstants.AREA_CUSTOMER_SUCCESS)
+		* B2BConstants.CS_THROUGHPUT_PER_PACE) * maxf(0.0, 1.0 - away)
 
 
 static func desk_throughput() -> float:

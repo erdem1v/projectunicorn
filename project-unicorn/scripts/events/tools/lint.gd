@@ -384,6 +384,10 @@ static func _lint_server_effect(where: String, effect: Dictionary) -> void:
 			_add(SEVERITY_ERROR, "17.1", where, "server_price tiers is [\"cloud\", \"enterprise\"] with a mult under 1: the chip names those two and a cut")
 	if verb == "server_lock" and int(effect.get("weeks", 0)) < 1:
 		_add(SEVERITY_ERROR, "17.1", where, "server_lock needs weeks of 1 or more")
+	if verb == "account_time":
+		var days: float = TimeModel.workdays(float(effect.get("weeks", 0.0)))
+		if days < 1.0 or days > TimeModel.workdays(1.0) or not is_equal_approx(days, roundf(days)):
+			_add(SEVERITY_ERROR, "17.1", where, "account_time needs weeks of whole workdays, from one day to a week")
 
 
 ## The sprint verbs' arguments. A person is held to the pending decision's card or the one a customer slot's promise waits on, for
@@ -482,7 +486,7 @@ const WRITER_VERBS := [
 	"damage_product", "line_harden", "sprint_card_test", "sprint_fix_first",
 	"sprint_card_trim", "sprint_card_outlook", "sprint_card_first", "b2b_month_discount",
 	"account_notice", "prospect_offer", "drop_prospect", "take_account", "pitch_focus", "server_price", "server_lock", "server_enterprise",
-	"assign_to", "queue_card", "after_test", "start_training", "fire_employee", "add_customer",
+	"assign_to", "queue_card", "after_test", "start_training", "fire_employee", "add_customer", "account_time",
 ]
 
 ## V2: reserved for a system card. Each moves the run itself — a phase, a table, an arc, an
@@ -513,7 +517,7 @@ const SUBJECT_VERBS := {
 	"satisfaction_delta": "customer", "trust_delta": "customer", "customer_mrr_delta": "customer", "seats": "customer",
 	"churn_customer": "customer", "promise_create": "customer", "b2b_retain_discount": "customer",
 	"b2b_retain_delay": "customer", "b2b_retain_ignore": "customer", "b2b_expand": "customer",
-	"b2b_expand_decline": "customer", "account_notice": "customer", "take_account": "customer",
+	"b2b_expand_decline": "customer", "account_notice": "customer", "take_account": "customer", "account_time": "customer",
 	"prospect_offer": "prospect", "drop_prospect": "prospect", "add_customer": "prospect",
 	"promise_extend": "customer", "promise_break": "customer",
 }

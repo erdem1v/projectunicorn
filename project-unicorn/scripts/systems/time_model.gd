@@ -30,6 +30,17 @@ static func days_share(days: float) -> float:
 	return days * HRConstants.WORK_HOURS_DEFAULT / WEEK_WORK_HOURS
 
 
+## The workdays a ledger entry takes out of the founder's week: its own `days` (an account's time, `account_time`), else its
+## sitting's.
+static func meeting_days(m: Dictionary) -> float:
+	return float(m.days) if m.has("days") else MEETING_DAYS[m.kind]
+
+
+## The workdays in `weeks` of a standard week (a card writes durations in weeks; the ledger counts days).
+static func workdays(weeks: float) -> float:
+	return weeks * WEEK_WORK_HOURS / HRConstants.WORK_HOURS_DEFAULT
+
+
 ## Week data → ticks. One to one, but every duration read goes through here.
 static func ticks(weeks: int) -> int:
 	return weeks

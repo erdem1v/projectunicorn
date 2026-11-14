@@ -54,6 +54,33 @@
         {
           "verb": "b2b_expand",
           "scope": "customer"
+        },
+        {
+          "verb": "account_time",
+          "scope": "customer",
+          "weeks": 1
+        }
+      ]
+    },
+    {
+      "id": "expand_discount",
+      "outcome_id": "expanded",
+      "requires": {
+        "entity_seam": "musteri.discounts_used",
+        "scope": "customer",
+        "op": "<",
+        "value": 2,
+        "reason": "B2B_DISCOUNT_SPENT_DESC"
+      },
+      "effects": [
+        {
+          "verb": "b2b_retain_discount",
+          "scope": "customer",
+          "growth": true
+        },
+        {
+          "verb": "b2b_expand",
+          "scope": "customer"
         }
       ]
     },
@@ -74,7 +101,11 @@
       "body": "B2B_EV_EXPANSION_BODY",
       "options": {
         "expand": "B2B_CHOICE_EXPAND",
+        "expand_discount": "B2B_CHOICE_EXPAND_DISCOUNT",
         "not_yet": "B2B_CHOICE_NOT_YET"
+      },
+      "locked_reasons": {
+        "expand_discount": "B2B_DISCOUNT_SPENT_DESC"
       },
       "expire_note": "B2B_EXPANSION_EXPIRED"
     },
@@ -83,7 +114,11 @@
       "body": "B2B_EV_EXPANSION_BODY",
       "options": {
         "expand": "B2B_CHOICE_EXPAND",
+        "expand_discount": "B2B_CHOICE_EXPAND_DISCOUNT",
         "not_yet": "B2B_CHOICE_NOT_YET"
+      },
+      "locked_reasons": {
+        "expand_discount": "B2B_DISCOUNT_SPENT_DESC"
       },
       "expire_note": "B2B_EXPANSION_EXPIRED"
     }

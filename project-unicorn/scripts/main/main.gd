@@ -714,7 +714,7 @@ func _print_shot_lines(root: Node, tag: String, needles: Array) -> void:
 		print("SHOTLINE|%s|none" % tag)
 
 
-## --b2b-shot=<retention|retention_capped|escalation|expansion|deal|angel|chips>: one
+## --b2b-shot=<retention|retention_capped|escalation|expansion|expansion_capped|deal|angel|chips>: one
 ## factory-built card in the inbox's reading pane. `chips` is the fixture whose options carry the trust hit,
 ## the standing per-sprint cost and the crew list, over the HR roster.
 func _run_b2b_shot(kind: String) -> void:
@@ -748,11 +748,13 @@ func _run_b2b_shot(kind: String) -> void:
 			# The `escalated` selector filters on this flag, which only a tick writes.
 			c.cs_escalated = true
 			card_id = "customer.cs_escalation"
-		"expansion":
+		"expansion", "expansion_capped":
 			# can_offer_expansion wants an account a kept promise offered growth, that has not answered it.
 			CustomerRegistry.set_expansion_offer_day(c.id, GameState.day)
 			CustomerRegistry.set_lifecycle_phase(c.id, "expansion")
 			CustomerRegistry.set_satisfaction(c.id, 80)
+			if kind == "expansion_capped":   # both discounts spent: "İndirimle ekle" shows locked with its reason
+				CustomerRegistry.set_retain_discounts(c.id, B2BConstants.RETAIN_DISCOUNT_MAX_USES)
 			card_id = "customer.expansion"
 		"deal":
 			# Frank's portrait on an event card, the MENTOR source badge and the
@@ -4763,6 +4765,9 @@ const _A4_WORLDS := {
 	"a4_fix_tip": {"crew": _A4_ELEVEN, "sit": ["table"], "bugs": 1, "fill": "over", "load": 1.25, "tip": "fix"},
 	"a4_meet_tip": {"crew": _A4_SIX + "5", "before": [_A4_PREP], "bugs": 1, "fill": "over", "load": 1.15, "queue": 1,
 		"sit": ["sales", "sales"], "tip": "founder"},
+	"a4_account_week": {"crew": _A4_SIX + "5", "before": [_A4_PREP], "fill": "over", "load": 1.15, "queue": 1, "account": 5.0},
+	"a4_account_tip": {"crew": _A4_SIX + "5", "before": [_A4_PREP], "fill": "over", "load": 1.15, "queue": 1, "account": 2.0,
+		"tip": "founder"},
 	"a4_next_tip": {"crew": _A4_SIX + "5", "before": [_A4_PREP], "fill": "over", "load": 1.15, "queue": 2, "run": 1.9, "tip": "next"},
 	"a4_waiting": {"crew": "d4 d3 v5 v4 v3 v3 t3 t3 p5", "before": _A4_WAITING, "fill": 3, "areas": ["trust"], "open": "line_erp_cashflow"},
 	"a4_waiting_all": {"crew": "d4 d3 v5 v4 v3 v3 t3 t3 p5", "before": _A4_WAITING, "fill": 3, "areas": ["trust"], "open": "line_shared_mobile@erp"},
@@ -4800,7 +4805,9 @@ func _seed_product_a4(kind: String) -> void:
 	var sittings: Array = world.get("sit", [])
 	for sitting: String in sittings:
 		TimeManager.advance_hours(TimeModel.SITTING_HOURS[sitting], sitting)
-	if not sittings.is_empty():
+	if world.has("account"):   # workdays the founder gave an account (account_time)
+		GameState.add_founder_days(world.account)
+	if not sittings.is_empty() or world.has("account"):
 		_a4_week()
 	_a4_plan(world)
 	for c: Character in CharacterRegistry.get_employees():

@@ -732,6 +732,7 @@ B2B_CHOICE_DISCOUNT,İndirim ver,Offer a discount
 B2B_CHOICE_LEAVE_ALONE,Kendi haline bırak,Let it go
 B2B_CHOICE_EXPAND,Koltukları ekle,Add the seats
 B2B_CHOICE_NOT_YET,Şimdi değil,Not now
+B2B_CHOICE_EXPAND_DISCOUNT,İndirimle ekle,Add them at a discount
 B2B_CHOICE_PROMISE_FIX,Düzeltme sözü ver,Promise a fix
 B2B_EV_RENEWAL_TITLE,Yenileme sinyali,Renewal signal
 HUNT_PAGE_TITLE,Series A Avı,The Series A Hunt
@@ -1433,8 +1434,11 @@ EFFECT_AN_EMPLOYEE,Çalışan,An employee
 EFFECT_PROMISE_CREATE,Müşteri kalır · söz borcu,The customer stays · a promise owed
 EFFECT_RETAIN_DELAY,Kısa vadeli hamle,A short-term move
 EFFECT_RETAIN_DISCOUNT,Müşteri kalır · MRR {v},The customer stays · MRR {v}
+EFFECT_GROWTH_DISCOUNT,İndirim · MRR {v},Discount · MRR {v}
 EFFECT_RETAIN_IGNORE,Müdahale yok · sayaç işlemeye devam eder,No intervention · the counter keeps running
 EFFECT_EXPAND,Koltuk +{seats} · MRR {mrr},Seats +{seats} · MRR {mrr}
+EFFECT_ACCOUNT_TIME,{name}: haftanın {n} günü,{name}: {n} days of the week
+EFFECT_ACCOUNT_TIME_ONE,{name}: haftanın {n} günü,{name}: {n} day of the week
 EFFECT_NO_CHANGE,Değişiklik yok,No change
 EFFECT_TO_FRANK,Frank'e,To Frank
 EFFECT_EQUITY,%{equity} hisse,{equity}% equity
@@ -2659,6 +2663,7 @@ PRODUCT_SUGGEST_APPLY,Öneriyi uygula,Apply the suggestion
 PRODUCT_AWAY_TRAINING,eğitimde,training
 PRODUCT_AWAY_RESEARCH,araştırmada,researching
 PRODUCT_AWAY_MEETINGS,görüşmede,in meetings
+PRODUCT_AWAY_ACCOUNT,hesap işinde,on account work
 PRODUCT_AWAY_LEAVE,izinde,on leave
 PRODUCT_PERSON_TIP,{name} {stars} · efor {effort} · doluluk {busy},{name} {stars} · effort {effort} · {busy} busy
 PRODUCT_CLUSTER_TIP,{stars} · {n} kişi,{stars} · {n} people
@@ -2725,6 +2730,7 @@ PRODUCT_WAIT_PRODUCT,Bekliyor: ürün yöneticisi ya da kurucu,Waiting for a pro
 PRODUCT_MEETING_SALES,Satış görüşmesi,Sales meeting
 PRODUCT_MEETING_VC,Yatırımcı görüşmesi,Investor meeting
 PRODUCT_MEETING_TABLE,Term sheet masası,Term sheet table
+PRODUCT_MEETING_ACCOUNT,Hesap işi,Account work
 PRODUCT_DAYS,{n} gün,{n} days
 PRODUCT_DAYS_ONE,{n} gün,{n} day
 PRODUCT_NO_PM_TIP,Ekipte ürün yöneticisi yok,No product manager on the team

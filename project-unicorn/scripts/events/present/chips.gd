@@ -221,6 +221,12 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 				return [_part(String(terms.reason), "", "neutral")]
 			return [_part(_t("EFFECT_PROMOTION").format({"name": _first_name(promoted, ctx, names, _t("EFFECT_AN_EMPLOYEE")),
 				"level": HRConstants.level_label(int(terms.get("level", 0))), "v": Fmt.money_chip(int(terms.get("salary", 0)))}), "", "cost")]
+		# Whose workdays, and how many (EvEffects.account_time_plan).
+		"account_time":
+			var time: Dictionary = item if is_delta else EvEffects.account_time_plan(item, ctx)
+			var steward: String = String(time.steward)
+			var who: String = _t("HR_ROLE_FOUNDER") if steward == "" else _first_name(steward, ctx, names, _t("EFFECT_AN_EMPLOYEE"))
+			return [_counted("EFFECT_ACCOUNT_TIME", roundi(float(time.days)), {"name": who}, "cost")]
 		"work_hours":
 			return [_part(_t("EFFECT_WORK_HOURS").format({"n": int(item.get("hours", HRConstants.WORK_HOURS_DEFAULT)),
 				"name": _first_name(_employee(item, ctx, is_delta), ctx, names, _t("EFFECT_AN_EMPLOYEE"))}), "", "neutral")]
@@ -283,7 +289,7 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 			if not is_delta:
 				var rc: Customer = CustomerRegistry.get_customer(EvEffects.entity_of(item, ctx, EvScope.TYPE_CUSTOMER))
 				cut = -int(round(float(rc.mrr) * B2BConstants.RETAIN_DISCOUNT_PCT)) if rc != null else 0
-			return [_figure("EFFECT_RETAIN_DISCOUNT", _money(cut), "cost")]
+			return [_figure("EFFECT_GROWTH_DISCOUNT" if bool(item.get("growth", false)) else "EFFECT_RETAIN_DISCOUNT", _money(cut), "cost")]
 		# A month's discount: the account and the share it keeps (EvEffects.month_discount_plan), money out once.
 		"b2b_month_discount":
 			var gift: Dictionary = item if is_delta else EvEffects.month_discount_plan(item, ctx)

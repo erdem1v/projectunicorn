@@ -48,7 +48,7 @@ static func build(run: Dictionary, log: Array, people: Array, start: int, runnin
 	var ctx := {"start": start, "weeks": log.size(), "running": running, "founder": founder, "by_id": by_id, "seen": seen,
 		"rows": capacity_rows(people, seen[founder].roles if founder != "" else {}), "lost": lost, "hatch": _hatches(log, founder, start, lost),
 		"by_card": _by_card(log),
-		"kinds": GameState.founder_meetings_frozen.map(func(m: Dictionary) -> String: return m.kind)}
+		"meets": GameState.founder_meetings_frozen}
 	var cards: Dictionary = {}
 	for i in run.cards.size():
 		cards[run.cards[i].id] = _card(run.from[i], run.cards[i], ctx)
@@ -268,7 +268,7 @@ static func _lay(entries: Array, stages: Array, k: float, j: int, ctx: Dictionar
 			var meet_from: float = maxf(piece.from, hatch.from)
 			var meet_to: float = minf(piece.to, hatch.to)
 			if meet_to - meet_from > SprintSystem.EPS:
-				stages[kind].meet.append({"from": meet_from, "to": meet_to, "kinds": ctx.kinds, "week": ctx.start + j + 1})
+				stages[kind].meet.append({"from": meet_from, "to": meet_to, "meets": ctx.meets, "week": ctx.start + j + 1})
 	piece.to = last
 
 

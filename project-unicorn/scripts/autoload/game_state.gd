@@ -185,11 +185,13 @@ var runway_warn_band: int = 0
 # Hours spent in meetings this working week; TimeManager starts a new week at WEEK_START_HOUR, so
 # the night and its 00:00 daily tick still read the week that just ended.
 var founder_meeting_hours: float = 0.0
-# The founder's meeting ledger, [{kind: "sales"|"vc"|"table", day: GameState.day}]: the sittings held this
-# working week, and the meetings behind the frozen sprint pay (the week before's sittings but a booked one, and
-# the Series A meeting booked for the week now running, whose day is that week's).
+# The founder's meeting ledger, [{kind: "sales"|"vc"|"table"|"account", day: GameState.day, days?}]: the sittings held
+# this working week, and the meetings behind the frozen sprint pay (the week before's sittings but a booked one, and
+# the Series A meeting booked for the week now running, whose day is that week's). An account's time carries its days.
 var founder_meetings_week: Array = []
 var founder_meetings_frozen: Array = []
+# The workdays each customer rep gave an account this working week ({rep id: days}): the desk works its queue without them.
+var rep_days_week: Dictionary = {}
 # The founder's sprint pay (0..1): the share of his sprint work that meetings left him, frozen when the
 # week turns (SprintSystem) so that the plan, the week's assignment and its spending read one number.
 # A booked Series A meeting lowers its own week's; a sitting held on the spot lowers the next week's.
@@ -435,6 +437,18 @@ func add_founder_meeting(kind: String, hours: float) -> void:
 	founder_meetings_week.append({"kind": kind, "day": day})
 
 
+## Workdays of this week the founder gives an account (`account_time`): out of his output now, out of his sprint pay
+## when the week turns.
+func add_founder_days(days: float) -> void:
+	founder_meeting_hours += days * HRConstants.WORK_HOURS_DEFAULT
+	founder_meetings_week.append({"kind": "account", "day": day, "days": days})
+
+
+## Workdays of this week a customer rep gives an account (`account_time`).
+func add_rep_days(rep_id: String, days: float) -> void:
+	rep_days_week[rep_id] = float(rep_days_week.get(rep_id, 0.0)) + days
+
+
 ## The share of this working week's founder output that meetings took (0..1).
 func founder_meeting_share() -> float:
 	return clampf(founder_meeting_hours / float(TimeModel.WEEK_WORK_HOURS), 0.0, 1.0)
@@ -443,6 +457,7 @@ func founder_meeting_share() -> float:
 func start_work_week() -> void:
 	founder_meeting_hours = 0.0
 	founder_meetings_week.clear()
+	rep_days_week.clear()
 
 
 ## The week turns: the sittings of the week that ended and the Series A meeting booked for the week now
@@ -461,7 +476,7 @@ func freeze_founder_sprint_pay() -> void:
 	founder_meetings_frozen = behind
 	var days: float = 0.0
 	for m: Dictionary in behind:
-		days += TimeModel.MEETING_DAYS[m.kind]
+		days += TimeModel.meeting_days(m)
 	founder_sprint_pay = 1.0 - clampf(TimeModel.days_share(days), 0.0, 1.0)
 
 
@@ -874,6 +889,7 @@ func initialize_run(payload: Dictionary) -> void:
 	founder_meeting_hours = 0.0
 	founder_meetings_week.clear()
 	founder_meetings_frozen.clear()
+	rep_days_week.clear()
 	founder_sprint_pay = 1.0
 	founder_booking_charged = false
 	founder_in_sprint = true

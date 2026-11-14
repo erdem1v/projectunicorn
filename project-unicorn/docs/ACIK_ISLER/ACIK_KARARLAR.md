@@ -1628,7 +1628,11 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     hesap başına bir kez, haftada (bir sürümde) en çok `thanks.max` hesap; kurulumdaki hesabın imza sözü de sayılır (cevaptan
     sonra hesap takvimdeki evresine döner), Risk'teki ve bildirimdeki hesap büyümez; gelen kutusunda büyüme hatırlatıcısı yok.
     `EXPANSION_MATURE_WEEKS` kalktı.
-  - Sıradakiler PRD_TALEPLER'de: teslimden ve yenilemeden doğan büyüme (§8.2), bedelli şıklar (kurulum haftası, URUN'un D2 fiili;
-    hacim indirimi).
+  - Kâğıdın şıkları bedellidir: "Koltukları ekle" hesabın sorumlusunun kurulum haftası (`account_time`, bir hafta: masadaki
+    temsilcinin masası ya da kurucunun sprint payı; fiil URUN'un D2 kurulum kâğıdıyla ortak), "İndirimle ekle" kurulumu hesap
+    üstlenir ve bugünkü indirim satırı uygulanır (`b2b_retain_discount`, hesap başına iki indirim, sonra kilitli; kurtarma değil,
+    memnuniyet oynamaz), "Şimdi değil" bedelsiz.
+  - Sıradakiler PRD_TALEPLER'de: teslimden ve yenilemeden doğan büyüme (§8.2); yenilemeye kalan istek; yıldız bandı doluysa referans
+    aday (PRD_ERP §2.5, URUN'un aday kaynağı paketinden sonra).
   - Açık: Satış GDD'sinin genişleme bölümü ve Zaman Modeli tablosunun satırı güncellensin mi. Kaynak: ERDEM_YORUMU_TUR4 §4 (ekran
     21), PRD_TALEPLER §8.1 ölçümü.

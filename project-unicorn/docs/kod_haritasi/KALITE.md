@@ -1,24 +1,24 @@
 # Kod haritası · KALITE
 
-Üretildi: git 16d7b9c5 · 2026-11-14 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git 498eb940 · 2026-11-14 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 255 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
 
-- scripts/debug/endgame_smoke.gd · 30237 satır · 685 func
-- scripts/main/main.gd · 6320 satır · 225 func
+- scripts/debug/endgame_smoke.gd · 30299 satır · 686 func
+- scripts/main/main.gd · 6327 satır · 225 func
 - scripts/debug/run_probe.gd · 2443 satır · 95 func
 - scripts/systems/sprint_system.gd · 2074 satır · 171 func
 - scripts/theme/build_theme.gd · 1665 satır · 31 func
-- scripts/events/tools/lint.gd · 1353 satır · 47 func
+- scripts/events/tools/lint.gd · 1357 satır · 47 func
 - scripts/systems/vc_pitch_system.gd · 1317 satır · 91 func
 - scripts/autoload/save_manager.gd · 1297 satır · 61 func
 - scripts/tabs/product/product_model.gd · 1214 satır · 67 func
 - scripts/systems/hr_constants.gd · 1185 satır · 90 func
+- scripts/events/core/effects.gd · 1147 satır · 35 func
 - scripts/ui/office/office_person.gd · 1128 satır · 51 func
-- scripts/events/core/effects.gd · 1124 satır · 34 func
 - scripts/theme/ui_tokens.gd · 1078 satır · 45 func
-- scripts/autoload/game_state.gd · 1056 satır · 55 func
+- scripts/autoload/game_state.gd · 1072 satır · 57 func
 - scripts/systems/term_sheet_table_system.gd · 980 satır · 57 func
 - scripts/systems/sprint_catalog.gd · 951 satır · 86 func
 - scripts/ui/office/office_people.gd · 853 satır · 50 func
@@ -27,53 +27,53 @@ Kapsam: scripts/ altındaki 255 .gd (tools/ hariç). Kod temizliği ve kıdemli 
 - scripts/systems/rnd_system.gd · 814 satır · 56 func
 - scripts/events/core/engine.gd · 813 satır · 38 func
 - scripts/ui/meeting/meeting_panel.gd · 790 satır · 37 func
-- scripts/systems/b2b_sales_system.gd · 734 satır · 48 func
+- scripts/systems/b2b_sales_system.gd · 735 satır · 48 func
 - scripts/ui/components/top_bar.gd · 714 satır · 36 func
-- scripts/events/present/chips.gd · 702 satır · 28 func
+- scripts/events/present/chips.gd · 708 satır · 28 func
 
 ## 80 satırdan uzun fonksiyonlar (100 tane, en uzun 40)
 
 Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları arada sayılır).
 - scripts/theme/build_theme.gd:421 · _menajer · 903 satır
-- scripts/events/core/effects.gd:241 · _apply · 598 satır
-- scripts/debug/endgame_smoke.gd:51 · run_case · 597 satır
+- scripts/events/core/effects.gd:242 · _apply · 610 satır
+- scripts/debug/endgame_smoke.gd:51 · run_case · 598 satır
 - scripts/events/tools/vocab_gen.gd:20 · run · 322 satır
 - scripts/theme/build_theme.gd:46 · _initialize · 320 satır
-- scripts/events/present/chips.gd:72 · describe · 305 satır
-- scripts/debug/endgame_smoke.gd:23751 · _case_sprint_timeline_matches_play_out · 266 satır
-- scripts/main/main.gd:3967 · _run_hr_shot · 263 satır
-- scripts/debug/endgame_smoke.gd:8466 · _case_hr_constants_contract · 220 satır
-- scripts/debug/endgame_smoke.gd:2254 · _case_save_v13_day_stamps_migrate · 209 satır
-- scripts/main/main.gd:1547 · _run_inbox_shot · 205 satır
-- scripts/autoload/game_state.gd:813 · initialize_run · 197 satır
+- scripts/events/present/chips.gd:72 · describe · 311 satır
+- scripts/debug/endgame_smoke.gd:23813 · _case_sprint_timeline_matches_play_out · 266 satır
+- scripts/main/main.gd:3969 · _run_hr_shot · 263 satır
+- scripts/debug/endgame_smoke.gd:8528 · _case_hr_constants_contract · 220 satır
+- scripts/debug/endgame_smoke.gd:2255 · _case_save_v13_day_stamps_migrate · 209 satır
+- scripts/main/main.gd:1549 · _run_inbox_shot · 205 satır
+- scripts/autoload/game_state.gd:828 · initialize_run · 198 satır
 - scripts/events/seams/seams_ported.gd:8 · install · 180 satır
-- scripts/main/main.gd:2278 · _run_office_shot · 176 satır
-- scripts/debug/endgame_smoke.gd:16687 · _case_fit_star_context · 165 satır
+- scripts/main/main.gd:2280 · _run_office_shot · 176 satır
+- scripts/debug/endgame_smoke.gd:16749 · _case_fit_star_context · 165 satır
 - scripts/events/seams/seams_sales.gd:26 · install · 160 satır
-- scripts/main/main.gd:1951 · _run_sales_shot · 158 satır
-- scripts/debug/endgame_smoke.gd:2473 · _case_legacy_v12_save_opens_live_table · 157 satır
+- scripts/main/main.gd:1953 · _run_sales_shot · 158 satır
+- scripts/debug/endgame_smoke.gd:2474 · _case_legacy_v12_save_opens_live_table · 157 satır
 - scripts/onboarding/first_week_doc.gd:20 · lay_out · 154 satır
-- scripts/debug/endgame_smoke.gd:8011 · _case_hr_leave_shift · 149 satır
-- scripts/debug/endgame_smoke.gd:7263 · _case_hr_candidate_invariants · 145 satır
-- scripts/debug/endgame_smoke.gd:15982 · _case_sales_offer_signing · 144 satır
-- scripts/debug/endgame_smoke.gd:11607 · _case_job_assignment_and_idle · 140 satır
-- scripts/debug/endgame_smoke.gd:17521 · _case_rnd_tree_loads_and_validates · 140 satır
-- scripts/debug/endgame_smoke.gd:14333 · _case_clock_resumes_only_by_player · 135 satır
+- scripts/debug/endgame_smoke.gd:8073 · _case_hr_leave_shift · 149 satır
+- scripts/debug/endgame_smoke.gd:7325 · _case_hr_candidate_invariants · 145 satır
+- scripts/debug/endgame_smoke.gd:16044 · _case_sales_offer_signing · 144 satır
+- scripts/debug/endgame_smoke.gd:11669 · _case_job_assignment_and_idle · 140 satır
+- scripts/debug/endgame_smoke.gd:17583 · _case_rnd_tree_loads_and_validates · 140 satır
+- scripts/debug/endgame_smoke.gd:14395 · _case_clock_resumes_only_by_player · 135 satır
 - scripts/ui/office/office_map_card.gd:17 · _init · 134 satır
-- scripts/debug/endgame_smoke.gd:12070 · _case_effective_skill_formula · 132 satır
-- scripts/debug/endgame_smoke.gd:18148 · _case_rnd_note_author_and_lines · 129 satır
-- scripts/debug/endgame_smoke.gd:22675 · _case_sprint_founder_share_frozen · 128 satır
-- scripts/debug/endgame_smoke.gd:27957 · _case_save_v15_tickets_become_open_bugs · 128 satır
-- scripts/debug/endgame_smoke.gd:1047 · _case_gate_decline_reminder · 125 satır
-- scripts/debug/endgame_smoke.gd:20590 · _thesis_presenter_body · 124 satır
-- scripts/debug/endgame_smoke.gd:20823 · _case_sales_meeting_time_skip_founder_share · 124 satır
+- scripts/debug/endgame_smoke.gd:12132 · _case_effective_skill_formula · 132 satır
+- scripts/debug/endgame_smoke.gd:18210 · _case_rnd_note_author_and_lines · 129 satır
+- scripts/debug/endgame_smoke.gd:22737 · _case_sprint_founder_share_frozen · 128 satır
+- scripts/debug/endgame_smoke.gd:28019 · _case_save_v15_tickets_become_open_bugs · 128 satır
+- scripts/debug/endgame_smoke.gd:1048 · _case_gate_decline_reminder · 125 satır
+- scripts/debug/endgame_smoke.gd:20652 · _thesis_presenter_body · 124 satır
+- scripts/debug/endgame_smoke.gd:20885 · _case_sales_meeting_time_skip_founder_share · 124 satır
 - scripts/events/seams/seams_product.gd:15 · _install_product · 123 satır
-- scripts/main/main.gd:4561 · _seed_product_live · 123 satır
+- scripts/main/main.gd:4563 · _seed_product_live · 123 satır
 - scripts/events/tools/why.gd:28 · report · 121 satır
 - scripts/events/tools/engine_probe.gd:582 · _check_invalidation · 119 satır
 - scripts/events/tools/lint.gd:229 · _lint_effects · 118 satır
 - scripts/debug/run_probe.gd:363 · run · 117 satır
-- scripts/debug/endgame_smoke.gd:1439 · _case_month_summary · 116 satır
+- scripts/debug/endgame_smoke.gd:1440 · _case_month_summary · 116 satır
 
 ## Ölü kod adayları (21)
 
@@ -82,9 +82,9 @@ UYARI: call("a"+b) gibi kurulmuş adlar, sinyal adıyla bağlama, harness bayrak
 - scripts/debug/office_crowd_probe.gd:48 · _log_error · debug
 - scripts/events/present/papers.gd:145 · arc_of
 - scripts/main/game_shell.gd:163 · debug_force_vc_meeting · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/main/main.gd:6261 · _dbg_close_request · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/main/main.gd:6266 · _dbg_onb_random_x20 · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/main/main.gd:6279 · _dbg_finish_run · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
+- scripts/main/main.gd:6268 · _dbg_close_request · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
+- scripts/main/main.gd:6273 · _dbg_onb_random_x20 · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
+- scripts/main/main.gd:6286 · _dbg_finish_run · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
 - scripts/systems/line_gates.gd:126 · speed_bonus_for
 - scripts/systems/product_catalog.gd:226 · type_sector_labels
 - scripts/systems/rnd_system.gd:707 · family_root_done
@@ -128,10 +128,10 @@ Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: 
 - INBOX · 16 dosya · scripts/main/game_shell.gd:7, scripts/main/main.gd:20, scripts/modals/save_load_modal.gd:19, scripts/modals/system_menu_modal.gd:22, scripts/tabs/events/mail_pane.gd:19, scripts/tabs/events_tab.gd:8 +10
 - WIDTH · 6 dosya · scripts/modals/hr_action_modal.gd:18, scripts/modals/training_modal.gd:19, scripts/modals/work_hours_modal.gd:22, scripts/ui/components/left_tabs.gd:29, scripts/ui/office/office_map_card.gd:11 +1
 - ChequeRead · 5 dosya · scripts/tabs/finance/finance_ozet_view.gd:34, scripts/tabs/personal_tab.gd:13, scripts/ui/components/top_bar.gd:23, scripts/ui/office/office_notice_stack.gd:14, scripts/debug/endgame_smoke.gd:34
-- ARROW · 4 dosya · scripts/modals/hr_action_modal.gd:19, scripts/tabs/product/board_row.gd:19, scripts/tabs/product/sprint_ui_shared.gd:16, scripts/tabs/sales_tab.gd:33
-- CHECK · 4 dosya · scripts/tabs/product/sprint_ui_shared.gd:18, scripts/tabs/product/stage_paint.gd:33, scripts/tabs/rnd/rnd_tree_view.gd:47, scripts/ui/office/office_notice_stack.gd:15
+- ARROW · 4 dosya · scripts/modals/hr_action_modal.gd:19, scripts/tabs/product/board_row.gd:19, scripts/tabs/product/sprint_ui_shared.gd:17, scripts/tabs/sales_tab.gd:33
+- CHECK · 4 dosya · scripts/tabs/product/sprint_ui_shared.gd:19, scripts/tabs/product/stage_paint.gd:33, scripts/tabs/rnd/rnd_tree_view.gd:47, scripts/ui/office/office_notice_stack.gd:15
 - CHEVRON · 4 dosya · scripts/tabs/product/quarter_view.gd:14, scripts/tabs/product/sprint_head.gd:10, scripts/tabs/rnd/rnd_assign_panel.gd:22, scripts/tabs/rnd/rnd_tree_view.gd:46
-- CLOCK · 4 dosya · scripts/tabs/hunt_tab.gd:11, scripts/tabs/product/sprint_ui_shared.gd:19, scripts/tabs/rnd/rnd_detail_panel.gd:20, scripts/tabs/sales_tab.gd:30
+- CLOCK · 4 dosya · scripts/tabs/hunt_tab.gd:11, scripts/tabs/product/sprint_ui_shared.gd:20, scripts/tabs/rnd/rnd_detail_panel.gd:20, scripts/tabs/sales_tab.gd:30
 - GraphicsSettingsLib · 4 dosya · scripts/autoload/settings.gd:17, scripts/modals/settings_modal.gd:19, scripts/ui/menu_backdrop.gd:13, scripts/ui/office/office_view.gd:13
 - ModuleLocks · 4 dosya · scripts/events/core/delays.gd:22, scripts/events/seams/seams_world.gd:6, scripts/events/tools/vocab_gen.gd:13, scripts/ui/components/left_tabs.gd:27
 - STAR · 4 dosya · scripts/systems/sprint_catalog.gd:24, scripts/tabs/events/mail_pane.gd:24, scripts/tabs/rnd/rnd_ui_shared.gd:52, scripts/tabs/sales_tab.gd:35
@@ -171,7 +171,7 @@ Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: 
 - FERRY_SPEED · 2 dosya · scripts/ui/office/office_city.gd:41, scripts/ui/office/office_lighting.gd:61
 - FERRY_TURN · 2 dosya · scripts/ui/office/office_city.gd:42, scripts/ui/office/office_lighting.gd:60
 - FILTERS · 2 dosya · scripts/tabs/events_tab.gd:10, scripts/tabs/piyasa_tab.gd:9
-- FLAG · 2 dosya · scripts/systems/graphics_settings.gd:23, scripts/tabs/product/sprint_ui_shared.gd:20
+- FLAG · 2 dosya · scripts/systems/graphics_settings.gd:23, scripts/tabs/product/sprint_ui_shared.gd:21
 - FOCUS_ZOOM · 2 dosya · scripts/ui/office/meeting_invite.gd:27, scripts/ui/office/office_city.gd:25
 - FRAME · 2 dosya · scripts/ui/components/window_layer.gd:28, scripts/ui/office/person_bust.gd:14
 - GATE_STRIP · 2 dosya · scripts/modals/save_load_modal.gd:18, scripts/ui/components/window_frame.gd:12
@@ -214,7 +214,7 @@ Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: 
 - TRAINING_MODAL · 2 dosya · scripts/tabs/hr/hr_ledger.gd:31, scripts/tabs/personal_tab.gd:8
 - TRAITS · 2 dosya · scripts/systems/founder_constants.gd:44, scripts/systems/hr_constants.gd:435
 - TX_LABEL · 2 dosya · scripts/systems/angel_round_system.gd:30, scripts/systems/seed_constants.gd:122
-- WARN · 2 dosya · scripts/tabs/product/sprint_ui_shared.gd:17, scripts/tabs/rnd/rnd_detail_panel.gd:19
+- WARN · 2 dosya · scripts/tabs/product/sprint_ui_shared.gd:18, scripts/tabs/rnd/rnd_detail_panel.gd:19
 
 ## TODO/FIXME/HACK (yorumlarda, 0 dosya, toplam 0)
 
