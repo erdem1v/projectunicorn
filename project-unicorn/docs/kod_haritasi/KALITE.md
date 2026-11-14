@@ -1,6 +1,6 @@
 # Kod haritası · KALITE
 
-Üretildi: git 9ca2ead2 · 2026-11-14 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git f0a4fc45 · 2026-11-14 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 259 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
@@ -21,15 +21,15 @@ Kapsam: scripts/ altındaki 259 .gd (tools/ hariç). Kod temizliği ve kıdemli 
 - scripts/autoload/game_state.gd · 1075 satır · 57 func
 - scripts/systems/sprint_catalog.gd · 988 satır · 90 func
 - scripts/systems/term_sheet_table_system.gd · 980 satır · 57 func
+- scripts/systems/marketplace_model.gd · 897 satır · 74 func
 - scripts/ui/office/office_people.gd · 853 satır · 50 func
 - scripts/tabs/sales_tab.gd · 838 satır · 40 func
+- scripts/debug/marketplace_probe.gd · 825 satır · 47 func
 - scripts/tabs/events/mail_pane.gd · 819 satır · 43 func
 - scripts/systems/rnd_system.gd · 814 satır · 56 func
 - scripts/events/core/engine.gd · 813 satır · 38 func
 - scripts/ui/meeting/meeting_panel.gd · 790 satır · 37 func
 - scripts/systems/b2b_sales_system.gd · 735 satır · 48 func
-- scripts/systems/marketplace_model.gd · 726 satır · 61 func
-- scripts/ui/components/top_bar.gd · 714 satır · 36 func
 
 ## 80 satırdan uzun fonksiyonlar (100 tane, en uzun 40)
 
@@ -75,31 +75,41 @@ Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları
 - scripts/debug/run_probe.gd:363 · run · 117 satır
 - scripts/debug/endgame_smoke.gd:1444 · _case_month_summary · 116 satır
 
-## Ölü kod adayları (42)
+## Ölü kod adayları (52)
 
 Tanım satırı dışında scripts/, scenes/, data/ içinde adı hiç geçmeyen func (yorumlar sayılmaz, dizeler sayılır). Godot geri çağrıları hariç.
 UYARI: call("a"+b) gibi kurulmuş adlar, sinyal adıyla bağlama, harness bayrakları ve tools/*.sh çağrıları yüzünden yanlış pozitif olabilir; silmeden önce grep ile doğrula.
-- scripts/debug/marketplace_probe.gd:200 · _check_empty_category_no_orders · debug
-- scripts/debug/marketplace_probe.gd:216 · _check_acquisition_waits_for_publish · debug
-- scripts/debug/marketplace_probe.gd:229 · _check_leaving_zone_stores_fall · debug
-- scripts/debug/marketplace_probe.gd:244 · _check_lock_rejects · debug
-- scripts/debug/marketplace_probe.gd:261 · _check_campaign_override_expires · debug
-- scripts/debug/marketplace_probe.gd:277 · _check_revenue_window_spike · debug
-- scripts/debug/marketplace_probe.gd:298 · _check_premium_closed_no_perk_cost · debug
-- scripts/debug/marketplace_probe.gd:315 · _check_campaign_free_shipping_single_write · debug
-- scripts/debug/marketplace_probe.gd:342 · _check_preview_figures · debug
-- scripts/debug/marketplace_probe.gd:369 · _check_known_store_earnings · debug
-- scripts/debug/marketplace_probe.gd:380 · _check_known_return_rate · debug
-- scripts/debug/marketplace_probe.gd:388 · _check_known_order_rate · debug
-- scripts/debug/marketplace_probe.gd:396 · _check_json_roundtrip · debug
-- scripts/debug/marketplace_probe.gd:404 · _check_ledger_expiry · debug
-- scripts/debug/marketplace_probe.gd:424 · _check_zone_limits_consistent · debug
-- scripts/debug/marketplace_probe.gd:443 · _check_constants_switch · debug
-- scripts/debug/marketplace_probe.gd:465 · _check_gain_and_weakest · debug
-- scripts/debug/marketplace_probe.gd:480 · _check_acquisition_multipliers · debug
-- scripts/debug/marketplace_probe.gd:511 · _check_store_terms_discount · debug
-- scripts/debug/marketplace_probe.gd:527 · _check_premium_members · debug
-- scripts/debug/marketplace_probe.gd:547 · _check_zone_rows_need_stores · debug
+- scripts/debug/marketplace_probe.gd:202 · _check_empty_category_no_orders · debug
+- scripts/debug/marketplace_probe.gd:218 · _check_acquisition_waits_for_publish · debug
+- scripts/debug/marketplace_probe.gd:231 · _check_leaving_zone_stores_fall · debug
+- scripts/debug/marketplace_probe.gd:246 · _check_lock_rejects · debug
+- scripts/debug/marketplace_probe.gd:263 · _check_campaign_override_expires · debug
+- scripts/debug/marketplace_probe.gd:279 · _check_revenue_window_spike · debug
+- scripts/debug/marketplace_probe.gd:300 · _check_premium_closed_no_perk_cost · debug
+- scripts/debug/marketplace_probe.gd:317 · _check_campaign_free_shipping_single_write · debug
+- scripts/debug/marketplace_probe.gd:344 · _check_preview_figures · debug
+- scripts/debug/marketplace_probe.gd:371 · _check_known_store_earnings · debug
+- scripts/debug/marketplace_probe.gd:382 · _check_known_return_rate · debug
+- scripts/debug/marketplace_probe.gd:390 · _check_known_order_rate · debug
+- scripts/debug/marketplace_probe.gd:398 · _check_json_roundtrip · debug
+- scripts/debug/marketplace_probe.gd:406 · _check_ledger_expiry · debug
+- scripts/debug/marketplace_probe.gd:426 · _check_zone_limits_consistent · debug
+- scripts/debug/marketplace_probe.gd:445 · _check_constants_switch · debug
+- scripts/debug/marketplace_probe.gd:467 · _check_gain_and_weakest · debug
+- scripts/debug/marketplace_probe.gd:482 · _check_acquisition_multipliers · debug
+- scripts/debug/marketplace_probe.gd:513 · _check_store_terms_discount · debug
+- scripts/debug/marketplace_probe.gd:529 · _check_premium_members · debug
+- scripts/debug/marketplace_probe.gd:549 · _check_zone_rows_need_stores · debug
+- scripts/debug/marketplace_probe.gd:564 · _check_add_users_bounds · debug
+- scripts/debug/marketplace_probe.gd:579 · _check_lost_counters · debug
+- scripts/debug/marketplace_probe.gd:597 · _check_channel_read_values · debug
+- scripts/debug/marketplace_probe.gd:621 · _check_source_revenue_values · debug
+- scripts/debug/marketplace_probe.gd:654 · _check_state_survives_codec · debug
+- scripts/debug/marketplace_probe.gd:689 · _check_topic_rows_known · debug
+- scripts/debug/marketplace_probe.gd:719 · _check_topic_ticket_gates · debug
+- scripts/debug/marketplace_probe.gd:754 · _check_topic_ledger_rows · debug
+- scripts/debug/marketplace_probe.gd:785 · _check_feature_gain_matches_close · debug
+- scripts/debug/marketplace_probe.gd:811 · _check_reviews_affected_is_return_gap · debug
 - scripts/debug/office_crowd_probe.gd:48 · _log_error · debug
 - scripts/events/present/papers.gd:145 · arc_of
 - scripts/main/game_shell.gd:163 · debug_force_vc_meeting · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
@@ -149,7 +159,7 @@ Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: 
 - INBOX · 16 dosya · scripts/main/game_shell.gd:7, scripts/main/main.gd:20, scripts/modals/save_load_modal.gd:19, scripts/modals/system_menu_modal.gd:22, scripts/tabs/events/mail_pane.gd:19, scripts/tabs/events_tab.gd:8 +10
 - WIDTH · 6 dosya · scripts/modals/hr_action_modal.gd:18, scripts/modals/training_modal.gd:19, scripts/modals/work_hours_modal.gd:22, scripts/ui/components/left_tabs.gd:29, scripts/ui/office/office_map_card.gd:11 +1
 - ChequeRead · 5 dosya · scripts/tabs/finance/finance_ozet_view.gd:34, scripts/tabs/personal_tab.gd:13, scripts/ui/components/top_bar.gd:23, scripts/ui/office/office_notice_stack.gd:14, scripts/debug/endgame_smoke.gd:34
-- DATA_PATH · 5 dosya · scripts/menu/credits.gd:9, scripts/systems/graphics_settings.gd:18, scripts/systems/marketing_system.gd:9, scripts/systems/marketplace_model.gd:33, scripts/systems/sprint_catalog.gd:11
+- DATA_PATH · 5 dosya · scripts/menu/credits.gd:9, scripts/systems/graphics_settings.gd:18, scripts/systems/marketing_system.gd:9, scripts/systems/marketplace_model.gd:37, scripts/systems/sprint_catalog.gd:11
 - ARROW · 4 dosya · scripts/modals/hr_action_modal.gd:19, scripts/tabs/product/board_row.gd:19, scripts/tabs/product/sprint_ui_shared.gd:17, scripts/tabs/sales_tab.gd:33
 - CHECK · 4 dosya · scripts/tabs/product/sprint_ui_shared.gd:19, scripts/tabs/product/stage_paint.gd:33, scripts/tabs/rnd/rnd_tree_view.gd:47, scripts/ui/office/office_notice_stack.gd:15
 - CHEVRON · 4 dosya · scripts/tabs/product/quarter_view.gd:14, scripts/tabs/product/sprint_head.gd:10, scripts/tabs/rnd/rnd_assign_panel.gd:22, scripts/tabs/rnd/rnd_tree_view.gd:46
@@ -232,7 +242,7 @@ Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: 
 - START_IMMUNITY_WEEKS · 2 dosya · scripts/events/core/tuning.gd:124, scripts/events/tools/plausibility.gd:52
 - STATE_ACTIVE · 2 dosya · scripts/events/core/arcs.gd:16, scripts/systems/rnd_system.gd:31
 - STATE_KEYS · 2 dosya · scripts/tabs/product/launch_gate.gd:8, scripts/ui/components/investor_appetite_ui.gd:13
-- STEPS · 2 dosya · scripts/onboarding/onboarding_flow.gd:14, scripts/systems/marketplace_model.gd:40
+- STEPS · 2 dosya · scripts/onboarding/onboarding_flow.gd:14, scripts/systems/marketplace_model.gd:44
 - STYLES · 2 dosya · scripts/systems/people_parts.gd:99, scripts/ui/components/logo_emblem.gd:9
 - TABLE · 2 dosya · scripts/systems/product_quality.gd:46, scripts/systems/sales_archetypes.gd:41
 - TOAST · 2 dosya · scripts/modals/ending_scene.gd:37, scripts/debug/kit_probe.gd:7

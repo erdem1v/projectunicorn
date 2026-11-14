@@ -10,7 +10,8 @@ extends RefCounted
 # Kimlikler: kategori `fashion`, `electronics`, `home`, `beauty`, `baby`, `sports`; adım `cart`, `checkout`, `order`, `delivered`;
 # bölge `comfortable`, `strained`, `leaving`; kural `shipping`, `return_window`, `return_shipping`, `admission`; ayrıcalık
 # `free_shipping`, `fast_delivery`, `doorstep_returns`, `member_discount`; modül `listing`, `storefront`, `checkout`, `orders`,
-# `reviews`, `mobile`, `integrations`, `accounts`, `backup`, `membership`; defter tarafı `users`, `stores`.
+# `reviews`, `mobile`, `integrations`, `accounts`, `backup`, `membership`; defter tarafı `users`, `stores`; Talepler konusu
+# `data/product/marketplace.json` `topics.catalog`'ta, durumu `waiting`, `planned`, `shipped`.
 #
 # `state` (gün alanları hafta sayısıdır, hiç değişmemişin günü NEVER): `users`, `members`; `sources[kaynak]` son on iki
 # haftanın yeni kullanıcısı (yeni önde); `cats[kategori]` = `open`, `open_day`, `commission` (yüzde), `commission_day`, `stores`,
@@ -19,13 +20,16 @@ extends RefCounted
 # `pick`, `day`; `premium` = `open`, `fee`, `fee_day`, `trial`, `joined` (denemede katılan üye, son dört hafta), `orders` (üye
 # siparişi, son dört hafta), `perks[ayrıcalık]` = `pick`, `day`, `uses`, `cost` (son dört hafta); `ledger[taraf]` = satırlar
 # (`key`, `arg`, `points`, `weeks`; WHILE koşul sürdükçe); `revenue_weeks`; `sat[taraf]` (iki memnuniyet); `burn[kalem]` (son
-# kapanışın haftalık `pazaryeri` gideri).
+# kapanışın haftalık `pazaryeri` gideri); `lost` (kapanışlarda kaybedilen `users` ve `stores`, birikir); `topics[konu]` =
+# `tickets` (son dört haftanın bileti, yeni önde), `since_day` (ilk biletin ya da isteğin haftası), `status`, `source` (`tickets`
+# ya da `report`).
 #
 # `world`: `week`, `published`, `tiers[modül]` (0 = yok), `bugs[modül]` (açık hata), `stars[kişi]` (Satış yıldızı, yoksa 1),
 # `channel[kategori][kaynak]` (Pazarlama'nın kanal ziyareti), `return_lift`, `overrides[kural]` (kampanyanın ezmesi),
 # `campaign_discount[kategori]` (şirketin karşıladığı haftalık indirim), `campaign_loss` (kampanya bitti, katılan mağaza zarar etti),
-# `unanswered` (Destek'in cevapsız bildirim payı), `met[taraf]` ve `late[taraf]` (Talepler'in yayına çıkan ve geciken konusu),
-# `outage` (acil durumun kullanıcı memnuniyetine yazdığı düşüş).
+# `unanswered` (Destek'in cevapsız bildirim payı), `features` (yayındaki ek özellik konularının kimliği: yayında olmayan
+# kullanıcı özelliği bağlı adımı `missing_mult` kadar kısar), `planned` (sprint planındaki konuların kimliği), `outage` (acil
+# durumun kullanıcı memnuniyetine yazdığı düşüş).
 #
 # "Sipariş" teslim edilen siparişin adıdır (gain, haftalık sipariş, mağaza başına sipariş, üye siparişi, kargo ve iade
 # sayıları); "Sipariş verdi" adımı `order` ayrı sayılır.
@@ -45,8 +49,8 @@ const TABLE_FROM_TIER_1 := ["storefront", "checkout", "orders"]
 const RELATIVE := ["store_earnings"]
 const WORLD := {
 	"week": 0, "published": false, "tiers": {}, "bugs": {}, "stars": {}, "channel": {}, "return_lift": 0.0, "overrides": {},
-	"campaign_discount": {}, "campaign_loss": false, "unanswered": 0.0, "met": {"users": [], "stores": []},
-	"late": {"users": "", "stores": ""}, "outage": 0.0,
+	"campaign_discount": {}, "campaign_loss": false, "unanswered": 0.0, "features": [],
+	"planned": [], "outage": 0.0,
 }
 
 static var _c: Dictionary = _read(DATA_PATH)
@@ -83,11 +87,15 @@ static func new_state() -> Dictionary:
 	var perks := {}
 	for perk in _c.premium.perks:
 		perks[perk] = {"pick": "off", "day": NEVER, "uses": [], "cost": []}
+	var topics := {}
+	for topic in _c.topics.catalog:
+		topics[topic.id] = {"tickets": [], "since_day": NEVER, "status": "waiting", "source": "tickets"}
 	var base: float = _c.ledger.base
 	return {"users": 0.0, "members": 0.0, "sources": {}, "cats": cats, "assign": {}, "policy": policy,
 		"premium": {"open": false, "fee": int(_c.premium.fee_start), "fee_day": NEVER, "trial": false, "joined": [],
 			"orders": [], "perks": perks},
-		"ledger": {"users": [], "stores": []}, "sat": {"users": base, "stores": base}, "revenue_weeks": [], "burn": {}}
+		"ledger": {"users": [], "stores": []}, "sat": {"users": base, "stores": base}, "revenue_weeks": [], "burn": {},
+		"lost": {"users": 0.0, "stores": 0.0}, "topics": topics}
 
 
 # --- Kategori ve kural erişimi ---------------------------------------------------------------
@@ -255,32 +263,52 @@ static func _visit_share(state: Dictionary, cat: String) -> float:
 	return state.cats[cat].week.get("visits", 0.0) / total
 
 
-## Kapanışın 1. adımı: katılan mağaza (kazanım ve kendiliğinden gelen) ve ayrılan.
-static func _store_flow(state: Dictionary, world: Dictionary, cat: String) -> void:
+## Bir mağazanın haftada ayrılma olasılığı; mağazası olmayan kategoride 0.
+static func _leave_rate(state: Dictionary, world: Dictionary, cat: String) -> float:
+	var cs: Dictionary = state.cats[cat]
+	var st: Dictionary = _c.stores
+	if cs.stores <= 0.0:
+		return 0.0
+	var idle: float = clampf(1.0 - float(cs.week.get("delivered", 0.0)) / cs.stores / st.idle_orders, 0.0, 1.0)
+	var in_zone: float = st.leave_zone if zone(state, world, cat) == "leaving" else 0.0
+	return st.leave_base * st.listing_stay[clampi(_tier(world, "listing") - 1, 0, 2)] + in_zone \
+		+ st.leave_idle * idle + st.leave_sat * maxf(0.0, st.sat_ok - state.sat.stores)
+
+
+## Kapanışın 1. adımı: katılan mağaza (kazanım ve kendiliğinden gelen) ve ayrılan; ayrılanı döndürür.
+static func _store_flow(state: Dictionary, world: Dictionary, cat: String) -> float:
 	var cs: Dictionary = state.cats[cat]
 	var st: Dictionary = _c.stores
 	var joins: float = acquisition(state, world, cat) + state.users * st.organic_rate * _visit_share(state, cat)
-	var leaving := 0.0
-	if cs.stores > 0.0:
-		var idle: float = clampf(1.0 - cs.week.get("delivered", 0.0) / cs.stores / st.idle_orders, 0.0, 1.0)
-		var in_zone: float = st.leave_zone if zone(state, world, cat) == "leaving" else 0.0
-		leaving = cs.stores * (st.leave_base * st.listing_stay[clampi(_tier(world, "listing") - 1, 0, 2)] + in_zone \
-			+ st.leave_idle * idle + st.leave_sat * maxf(0.0, st.sat_ok - state.sat.stores))
+	var leaving: float = cs.stores * _leave_rate(state, world, cat)
 	cs.stores += joins - leaving
 	_push(cs.joined, joins, int(st.joined_weeks))
+	return leaving
 
 
 # --- Ziyaretten teslimata --------------------------------------------------------------------
 
+## Bağlı adımı kısan, yayında olmayan ek özelliklerin çarpanı.
+static func _feature_mult(world: Dictionary, step: String) -> float:
+	var mult := 1.0
+	for topic in _c.topics.catalog:
+		if topic.has("missing_mult") and topic.link == step and not _topic_live(world, topic):
+			mult *= topic.missing_mult
+	return mult
+
+
 ## Adım başına çarpan; hepsi 1 iken adım ulaşılabilir oranındadır. En küçüğü en zayıf adımdır.
 static func step_factors(state: Dictionary, world: Dictionary, cat: String) -> Dictionary:
 	var price: float = pow(1.0 + price_pass(cat, state.cats[cat].commission), -_c.commission.elasticity)
-	return {
+	var factors := {
 		"cart": _tier_mult(world, "storefront") * variety(state, cat) * price,
 		"checkout": ship_mult(state, world, cat) * _tier_mult(world, "mobile"),
 		"order": _tier_mult(world, "checkout") * _bug_mult(world, ["checkout"]),
 		"delivered": _tier_mult(world, "orders") * _tier_mult(world, "integrations") * _bug_mult(world, ["orders", "integrations"]),
 	}
+	for step in STEPS:
+		factors[step] *= _feature_mult(world, step)
+	return factors
 
 
 static func weakest_step(state: Dictionary, world: Dictionary, cat: String) -> String:
@@ -303,7 +331,8 @@ static func _funnel(visits: float, factors: Dictionary) -> Dictionary:
 
 
 ## Değişiklik bugün yürürlükte olsaydı geçen haftanın ziyaretinden haftalık siparişin kaç artacağı. `change`:
-## `tier` ({modül: kademe}), `bugs` ({modül: açık hata}), `policy` ({kural: seçenek}); biri ya da birkaçı.
+## `tier` ({modül: kademe}), `bugs` ({modül: açık hata}), `policy` ({kural: seçenek}), `features` (yayına çıkan ek özellik konularının
+## kimlikleri); biri ya da birkaçı.
 static func gain(state: Dictionary, world: Dictionary, cat: String, change: Dictionary) -> float:
 	var changed_state := state
 	if change.has("policy"):
@@ -311,7 +340,8 @@ static func gain(state: Dictionary, world: Dictionary, cat: String, change: Dict
 		for rule in change.policy:
 			changed_state.policy[rule].pick = change.policy[rule]
 	var changed_world := world.merged({"tiers": _w(world, "tiers").merged(change.get("tier", {}), true),
-		"bugs": _w(world, "bugs").merged(change.get("bugs", {}), true)}, true)
+		"bugs": _w(world, "bugs").merged(change.get("bugs", {}), true),
+		"features": _w(world, "features") + change.get("features", [])}, true)
 	var visits: float = state.cats[cat].week.get("visits", 0.0)
 	return _funnel(visits, step_factors(changed_state, changed_world, cat)).delivered \
 		- _funnel(visits, step_factors(state, world, cat)).delivered
@@ -338,7 +368,7 @@ static func _visits(state: Dictionary, world: Dictionary, cat: String) -> Dictio
 
 static func retention(state: Dictionary, world: Dictionary) -> float:
 	var r: Dictionary = _c.visits.retention
-	var member_share: float = state.members / state.users if state.users > 0.0 else 0.0
+	var member_share: float = float(state.members) / state.users if state.users > 0.0 else 0.0
 	return clampf(r.base + r.per_sat * (state.sat.users - r.sat_ref) \
 		+ _c.rules.returns.window_retention[policy_value(state, world, "return_window")] + r.member_share * member_share, r.min, r.max)
 
@@ -368,7 +398,7 @@ static func returning_share(state: Dictionary, cats: Array) -> float:
 		var wk: Dictionary = state.cats[id].week
 		orders += wk.get("delivered", 0.0)
 		if wk.get("visits", 0.0) > 0.0:
-			returning += wk.delivered * wk.returning / wk.visits
+			returning += wk.delivered * wk.returning / float(wk.visits)
 	return returning / orders if orders > 0.0 else 0.0
 
 
@@ -384,6 +414,34 @@ static func monthly_revenue(state: Dictionary) -> Dictionary:
 ## Son kapanışın `pazaryeri` gideri, aylık.
 static func monthly_cost(state: Dictionary) -> float:
 	return _sum(state.burn.values()) * _c.income.month_weeks
+
+
+# --- Pazarlama'nın okuması -------------------------------------------------------------------
+
+## Kategorideki kanal ziyaretinin değeri. `conversion`: ziyaretten teslim edilen siparişe oran; `monthly_commission`: bir kullanıcının
+## kategoride bıraktığı aylık net komisyon (haftalık ziyaret sıklığı × dönüşüm × iade sonrası siparişin komisyonu × ay haftası);
+## `organic`: kendiliğinden gelecek haftalık ziyaret; öbürleri kategorinin sabitleri. Kapalı kategoride dönüşüm ve ziyaret 0.
+static func channel_read(state: Dictionary, world: Dictionary, cat: String) -> Dictionary:
+	var d: Dictionary = _cats[cat]
+	var cs: Dictionary = state.cats[cat]
+	var conversion: float = _funnel(1.0, step_factors(state, world, cat)).delivered
+	var per_order: float = (1.0 - return_rate(state, world, cat)) * d.basket * cs.commission / 100.0
+	return {"conversion": conversion, "monthly_commission": d.visit_freq * _c.income.month_weeks * conversion * per_order,
+		"organic": _visits(state, world, cat).organic if cs.open else 0.0, "margin": d.margin, "base_interest": d.base_interest,
+		"ad_pool": d.ad_pool}
+
+
+## Kaynaktan son on iki haftada gelen kullanıcıların (elde tutmayla küçülmüş) son dört haftada bıraktığı net komisyon: kalan
+## kullanıcı × aktif kullanıcı başına son dört haftanın net komisyonu.
+static func source_revenue(state: Dictionary, world: Dictionary, source: String) -> float:
+	if state.users <= 0.0:
+		return 0.0
+	var keep := retention(state, world)
+	var remaining := 0.0
+	var arrivals: Array = state.sources.get(source, [])
+	for i in arrivals.size():
+		remaining += arrivals[i] * pow(keep, i)
+	return remaining * _sum(state.revenue_weeks) / state.users
 
 
 # --- Yazan işlevler --------------------------------------------------------------------------
@@ -457,6 +515,14 @@ static func set_store_terms(state: Dictionary, cat: String, share: float, weeks:
 	return false
 
 
+## Olayın kullanıcı ekleyişi ya da çıkarışı (`n` eksi olabilir); üye sayısı kullanıcıyı aşmaz. Kullanıcı sayısı değişmediyse false.
+static func add_users(state: Dictionary, n: float) -> bool:
+	var before: float = state.users
+	state.users = maxf(0.0, before + n)
+	state.members = minf(state.members, state.users)
+	return state.users != before
+
+
 # --- Memnuniyet defteri ----------------------------------------------------------------------
 
 static func _add(state: Dictionary, side: String, key: String, arg: String, points: float, weeks: int) -> void:
@@ -471,8 +537,8 @@ static func target_sat(state: Dictionary, side: String) -> float:
 	return clampf(_c.ledger.base + points, 0.0, 100.0)
 
 
-## Kapanışın 7. adımı: koşul satırlarını yeniden yazar, olayların satırlarını ekler, memnuniyeti hedefe yaklaştırır, süreli
-## satırların süresini bir hafta azaltır.
+## Kapanışın 7. adımı: koşul satırlarını yeniden yazar, konu durumundan "Karşılandı" ve "Geciken talep" satırlarını çıkarır,
+## olayların satırlarını ekler, memnuniyeti hedefe yaklaştırır, süreli satırların süresini bir hafta azaltır.
 static func _settle(state: Dictionary, world: Dictionary, totals: Dictionary) -> void:
 	var rows: Dictionary = _c.ledger.rows
 	for side in SIDES:
@@ -505,12 +571,11 @@ static func _settle(state: Dictionary, world: Dictionary, totals: Dictionary) ->
 	for perk in ["fast_delivery", "doorstep_returns"]:
 		if state.premium.perks[perk].pick == "everyone":
 			_add(state, "users", perk, "", rows[perk].points, WHILE)
+	_refresh_topics(state, world)
 	for side in SIDES:
-		var late: String = _w(world, "late").get(side, "")
+		var late := _late_topic(state, world, side)
 		if late != "":
 			_add(state, side, "late_topic", late, rows.late_topic.points, WHILE)
-		for topic in _w(world, "met").get(side, []):
-			_add(state, side, "met", topic, rows.met.points, int(rows.met.weeks))
 	if _w(world, "campaign_loss"):
 		_add(state, "stores", "sale_loss", "", rows.sale_loss.points, int(rows.sale_loss.weeks))
 	var outage: float = _w(world, "outage")
@@ -524,14 +589,118 @@ static func _settle(state: Dictionary, world: Dictionary, totals: Dictionary) ->
 		state.ledger[side] = state.ledger[side].filter(func(r: Dictionary) -> bool: return r.weeks != 0)
 
 
+# --- Talepler: konular ve biletler -----------------------------------------------------------
+
+## Konunun özelliği yayında mı: kademe konusunda modülün kademesi yetiyor, ek özellikte dünyanın yayındaki listesinde.
+static func _topic_live(world: Dictionary, topic: Dictionary) -> bool:
+	if topic.has("tier"):
+		return _tier(world, topic.module) >= int(topic.tier)
+	return topic.id in _w(world, "features")
+
+
+## Konu durumunu dünyadan okur; isteği gelmiş bir konu ilk kez yayına çıkınca tarafına "Karşılandı" satırı yazar.
+static func _refresh_topics(state: Dictionary, world: Dictionary) -> void:
+	var met: Dictionary = _c.ledger.rows.met
+	for topic in _c.topics.catalog:
+		var ts: Dictionary = state.topics[topic.id]
+		var live := _topic_live(world, topic)
+		if live and ts.status != "shipped" and ts.since_day != NEVER:
+			_add(state, topic.side, "met", topic.id, met.points, int(met.weeks))
+		ts.status = "shipped" if live else ("planned" if topic.id in _w(world, "planned") else "waiting")
+
+
+## Tarafın en eski gecikmiş konusu: yayında olmayan (planda olan dahil) ve ilk isteğinden bu yana eşikten çok hafta geçmiş; yoksa "".
+static func _late_topic(state: Dictionary, world: Dictionary, side: String) -> String:
+	var oldest := ""
+	var since := 0
+	for topic in _c.topics.catalog:
+		var ts: Dictionary = state.topics[topic.id]
+		if topic.side != side or ts.status == "shipped" or ts.since_day == NEVER \
+				or int(_w(world, "week")) - int(ts.since_day) <= int(_c.topics.late_weeks):
+			continue
+		if oldest == "" or ts.since_day < since:
+			oldest = topic.id
+			since = int(ts.since_day)
+	return oldest
+
+
+## Biletin sayıldığı büyüklük: `lost` bağlı adımın bir önceki adıma (ziyaret, sepet, ödeme, sipariş) göre kaybı, `returns` iade
+## edilen sipariş, öbürü teslim edilen sipariş.
+static func _ticket_base(week: Dictionary, topic: Dictionary) -> float:
+	match topic.base:
+		"lost":
+			var at: int = STEPS.find(topic.link)
+			return week.get("visits" if at == 0 else STEPS[at - 1], 0.0) - week.get(topic.link, 0.0)
+		"returns":
+			return week.get("returns", 0.0)
+	return week.get("delivered", 0.0)
+
+
+## Konunun bu haftaki bileti: kullanıcı konusunda bağlı adımda sayılan büyüklük × oran, mağaza konusunda derdi olan mağazaların payı ×
+## oran. Yayında olmayan her kullanıcı konusu bağlı adımı kısar, yani adım ulaşılabilir oranda iken konu zaten yayındadır.
+static func _tickets(state: Dictionary, topic: Dictionary) -> float:
+	var total := 0.0
+	for cat in open_ids(state):
+		if topic.side == "stores":
+			total += state.cats[cat].stores * _c.topics.pains[topic.link] * topic.rate
+		else:
+			total += _ticket_base(state.cats[cat].week, topic) * topic.rate
+	return total
+
+
+## Kapanıştan sonra haftada bir: her konunun o haftaki biletini son dört haftaya yazar (yayındaki konuya bilet gelmez); ilk bileti
+## gelen konunun yaşı o haftadan başlar.
+static func tick_topics(state: Dictionary, world: Dictionary) -> void:
+	for topic in _c.topics.catalog:
+		var ts: Dictionary = state.topics[topic.id]
+		var tickets := 0.0 if _topic_live(world, topic) else _tickets(state, topic)
+		_push(ts.tickets, tickets, int(_c.topics.window_weeks))
+		if tickets > 0.0 and ts.since_day == NEVER:
+			ts.since_day = int(_w(world, "week"))
+
+
+## Haftada etkilenen sipariş: yayındaki konuda 0. Kullanıcı konusunda konu çıkınca kazanılan teslim edilmiş sipariş (`gain`: kademe ya
+## da ek özellik); adımsız `returning` konusunda kademeyle haftada iade edilmeyecek sipariş. Mağaza konusunda derdi olan mağazaların
+## siparişi × o hafta ayrılma olasılığı.
+static func _affected(state: Dictionary, world: Dictionary, topic: Dictionary) -> float:
+	if _topic_live(world, topic):
+		return 0.0
+	var total := 0.0
+	for cat in open_ids(state):
+		var delivered: float = state.cats[cat].week.get("delivered", 0.0)
+		if topic.side == "stores":
+			total += delivered * _c.topics.pains[topic.link] * _leave_rate(state, world, cat)
+		elif topic.link == "returning":
+			var tiered := world.merged({"tiers": _w(world, "tiers").merged({topic.module: int(topic.tier)}, true)}, true)
+			total += delivered * (return_rate(state, world, cat) - return_rate(state, tiered, cat))
+		elif topic.has("tier"):
+			total += gain(state, world, cat, {"tier": {topic.module: int(topic.tier)}})
+		else:
+			total += gain(state, world, cat, {"features": [topic.id]})
+	return total
+
+
+## Talepler'in satırları, ilk isteği gelmiş her konu için: `tickets` son dört haftanın toplamı, `affected` haftada etkilenen sipariş,
+## `reason` konunun bağlı adımı ya da mağaza derdi, `age` ilk istekten bu yana hafta.
+static func topic_rows(state: Dictionary, world: Dictionary) -> Array:
+	var rows := []
+	for topic in _c.topics.catalog:
+		var ts: Dictionary = state.topics[topic.id]
+		if ts.since_day != NEVER:
+			rows.append({"id": topic.id, "side": topic.side, "module": topic.module, "tickets": _sum(ts.tickets),
+				"affected": _affected(state, world, topic), "reason": topic.link, "status": ts.status,
+				"age": int(_w(world, "week")) - int(ts.since_day), "source": ts.source})
+	return rows
+
+
 # --- Haftalık kapanış ------------------------------------------------------------------------
 
-## Sıra bağlayıcıdır: mağaza akışı, ziyaret ve adımlar, iade, kullanıcı, gelir ve gider, Premium, defter. Talepler'in
-## biletleri, olay isteği ve sinyal bu çekirdeğin dışındadır.
+## Sıra bağlayıcıdır: mağaza akışı, ziyaret ve adımlar, iade, kullanıcı, gelir ve gider, Premium, defter. Haftanın biletleri
+## (`tick_topics`, kapanıştan sonra), olay isteği ve sinyal bu çekirdeğin dışındadır.
 static func close_week(state: Dictionary, world: Dictionary) -> void:
 	var ids := open_ids(state)
 	for cat in ids:
-		_store_flow(state, world, cat)
+		state.lost.stores += _store_flow(state, world, cat)
 	var member_share := 0.0
 	if state.users > 0.0:
 		var freq: float = _c.visits.member_freq
@@ -544,7 +713,9 @@ static func close_week(state: Dictionary, world: Dictionary) -> void:
 		_close_category(state, world, cat, member_share, totals)
 	var window := int(_c.income.window_weeks)
 	var fresh: float = _sum(totals.new.values())
-	state.users = state.users * retention(state, world) + fresh
+	var keep := retention(state, world)
+	state.lost.users += state.users * (1.0 - keep)
+	state.users = state.users * keep + fresh
 	for source in totals.new:
 		if not state.sources.has(source):
 			state.sources[source] = []
@@ -645,7 +816,7 @@ static func _sum(values: Array) -> float:
 ## Durumun kopyasında kapanışı önizleme süresince ileri koşar: Pazarlama'nın değerleri aynı kalır, olay ve acil durum yoktur.
 static func project(state: Dictionary, world: Dictionary) -> Dictionary:
 	var ahead := state.duplicate(true)
-	var quiet := world.merged({"met": {"users": [], "stores": []}, "outage": 0.0, "campaign_loss": false}, true)
+	var quiet := world.merged({"outage": 0.0, "campaign_loss": false}, true)
 	for i in int(_c.preview.weeks):
 		close_week(ahead, quiet.merged({"week": int(_w(world, "week")) + i}, true))
 	return ahead

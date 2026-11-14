@@ -94,5 +94,25 @@
     }
   },
   "income": {"window_weeks": 4, "month_weeks": 4.33},
-  "preview": {"weeks": 4}
+  "preview": {"weeks": 4},
+  "topics": {
+    "window_weeks": 4,
+    "late_weeks": 8,
+    "pains": {"upload": 0.34, "ship": 0.22, "payout": 1.0},
+    "catalog": [
+      {"id": "search_filter", "side": "users", "module": "storefront", "tier": 2, "link": "cart", "base": "lost", "rate": 0.001},
+      {"id": "size_chart", "side": "users", "module": "storefront", "link": "cart", "base": "lost", "rate": 0.001, "missing_mult": 0.97},
+      {"id": "favorites", "side": "users", "module": "storefront", "link": "cart", "base": "lost", "rate": 0.001, "missing_mult": 0.99},
+      {"id": "guest_checkout", "side": "users", "module": "checkout", "link": "checkout", "base": "lost", "rate": 0.01, "missing_mult": 0.95},
+      {"id": "one_page_checkout", "side": "users", "module": "checkout", "tier": 2, "link": "order", "base": "lost", "rate": 0.04},
+      {"id": "single_connection", "side": "users", "module": "integrations", "tier": 1, "link": "delivered", "base": "delivered",
+        "rate": 0.02},
+      {"id": "returns_request", "side": "users", "module": "orders", "tier": 2, "link": "delivered", "base": "returns", "rate": 0.08},
+      {"id": "reviews_ratings", "side": "users", "module": "reviews", "tier": 1, "link": "returning", "base": "delivered", "rate": 0.01},
+      {"id": "bulk_upload", "side": "stores", "module": "listing", "tier": 2, "link": "upload", "rate": 0.08},
+      {"id": "color_size_options", "side": "stores", "module": "listing", "link": "upload", "rate": 0.08},
+      {"id": "shipping_label", "side": "stores", "module": "orders", "link": "ship", "rate": 0.06},
+      {"id": "payout_statement", "side": "stores", "module": "orders", "link": "payout", "rate": 0.02}
+    ]
+  }
 }

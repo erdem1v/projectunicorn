@@ -159,7 +159,8 @@ onun işlevlerini çağırır. Her değişiklik `EventBus.marketplace_changed` y
 | `premium` | `open`, `fee`, `fee_day`, `trial`, `joined` (son dört haftada katılan üye), `perks[ayrıcalık]` (`pick`, `day`, son dört haftanın kullanımı ve bedeli) |
 | `ledger` | `users` ve `stores`: adlı satırlar (`key`, `arg`, `points`, `weeks`) |
 | `revenue_weeks` | Son dört haftanın net komisyonu |
-| `topics[kimlik]` | Son dört haftanın bileti, `since_day`, `status`, `source` |
+| `topics[kimlik]` | `tickets` (son dört haftanın bileti, hafta hafta), `since_day` (ilk isteğin haftası), `status` (`waiting`, `planned`, `shipped`), `source` (`tickets` ya da `report`) |
+| `lost` | `users` ve `stores`: kaybedilen kullanıcının ve ayrılan mağazanın birikmiş toplamı |
 | `latches` | Olay 5.1'in geldiği kategoriler |
 
 - İki kalabalık `CustomerRegistry`'de iki toplu kayıttır: kullanıcılar ve mağazalar. Memnuniyetleri bu kayıtlarda durur
@@ -172,6 +173,10 @@ onun işlevlerini çağırır. Her değişiklik `EventBus.marketplace_changed` y
 - Saf çekirdek (`MarketplaceModel`) oyun durumundan bağımsız koşsun diye sözlükte üç alan daha durur: `sat` (iki memnuniyet),
   `burn` (haftalık `pazaryeri` gider kalemleri) ve `premium.orders` (üye siparişi). Sistem `sat`'ı iki kaydın memnuniyetine
   yansıtır.
+  Çekirdek oyunun geri kalanını `world` sözlüğünden okur; onu her kapanışta sistem kurar: hafta, ürünün yayında olup
+  olmadığı, modül kademeleri ve açık hataları, yayındaki ek özellikler (`features`) ve sprint planındaki konular (`planned`;
+  ikisi de konu kataloğunun kimliğiyle: sistem ürünün kartını bu kimliğe eşler), Pazarlama'nın değerleri, cevapsız
+  bildirimin payı ve kesinti.
 
 ### 3.2 Kategoriler
 - Altı kategori, veri `data/product/categories.json`. Tanıtım metni yoktur.
@@ -239,13 +244,16 @@ biletleri (§3.11). 9. Olay 5.1'in isteği. 10. `marketplace_changed`. Pazarlama
 
 | Adım | Formül |
 |---|---|
-| Sepete ekledi | `ziyaret × 0,15 × Vitrin çarpanı × seçenek × fiyat çarpanı`; fiyat çarpanı `(1 + fiyata yansıyan)^−1,5` |
-| Ödemeye geçti | `sepete ekleyen × 0,70 × kargo çarpanı × Mobil çarpanı` |
+| Sepete ekledi | `ziyaret × 0,15 × Vitrin çarpanı × seçenek × fiyat çarpanı × ek özellik çarpanı`; fiyat çarpanı `(1 + fiyata yansıyan)^−1,5` |
+| Ödemeye geçti | `sepete ekleyen × 0,70 × kargo çarpanı × Mobil çarpanı × ek özellik çarpanı` |
 | Sipariş verdi | `ödemeye geçen × 0,88 × Sepet ve Ödeme çarpanı × hata çarpanı` |
 | Teslim edildi | `sipariş × 0,97 × Siparişler çarpanı × Entegrasyonlar çarpanı × hata çarpanı` |
 - **Kademe çarpanı.** Yayın şartının modülleri (Vitrin, Sepet ve Ödeme, Siparişler): 1. kademe 0,83; 2. kademe 0,96; 3. kademe
   1. Yayın şartında olmayan destek modülleri (Mobil, Entegrasyonlar): hiç yokken 0,90; 1. kademe 0,95; 2. kademe 0,98; 3. kademe 1.
 - **Hata çarpanı:** `1 − 0,027 × min(10; adımın modüllerindeki açık hata)`.
+- **Ek özellik çarpanı.** Kullanıcı tarafındaki ek özellik (§3.11) yayında değilken bağlı olduğu adımı çarpar: Beden tablosu
+  "Sepete ekledi" adımını 0,97; Favoriler "Sepete ekledi" adımını 0,99; Üyeliksiz alışveriş "Ödemeye geçti" adımını 0,95.
+  Yayına çıkan özelliğin çarpanı 1'dir. Mağaza tarafındaki ek özellik adım çarpanı taşımaz.
 - **Kargo çarpanı:** "Kullanıcı öder" 0,83; "Büyük sepette mağaza öder" `0,83 + 0,17 × büyük sepet payı`; "Hep mağaza öder" ya
   da kampanya kargoyu bedava yapmışsa 1.
 - Çarpanların hepsi 1 olduğunda adım **ulaşılabilir oranındadır** (%15, %70, %88, %97). Teslim edilmeyen sipariş iptaldir.
@@ -254,7 +262,8 @@ biletleri (§3.11). 9. Olay 5.1'in isteği. 10. `marketplace_changed`. Pazarlama
   iade sayıları) teslim edilen sipariştir; dönüşümdeki "Sipariş verdi" satırı verilen siparişi gösterir. Teslim edilmeyen
   sipariş gelir, kullanıcı ya da gider yazmaz.
 - **Kazanılabilir sipariş** bir saf işlevdir: `gain(kategori, değişiklik)` o değişiklik bugün yürürlükte olsaydı haftalık
-  siparişin kaç artacağını döndürür (bir modülün sıradaki kademesi, bir modülün açık hatalarının düzelmesi, bir kural seçeneği).
+  siparişin kaç artacağını döndürür (bir modülün sıradaki kademesi, bir modülün açık hatalarının düzelmesi, bir kural seçeneği,
+  bir ek özelliğin yayına çıkması).
   Genel'in ipucu, Talepler'in "etkilenen sipariş" sütunu ve önizleme çipleri onu okur.
 
 ### 3.6 İade, gelir, giderler ve kapı
@@ -286,6 +295,8 @@ biletleri (§3.11). 9. Olay 5.1'in isteği. 10. `marketplace_changed`. Pazarlama
 - `aktif(h+1) = aktif × elde tutma + yeni kullanıcı`. Yeni kullanıcı kaynağına göre `sources`'a yazılır (organik; kanal
   ziyaretinden doğanlar Pazarlama'nın verdiği kanal ve kampanya kimliğiyle); on üçüncü hafta düşer.
 - "Geri dönen kullanıcı" göstergesi: `geri gelen ziyaretten doğan sipariş ÷ sipariş`.
+- Kaybedilen kullanıcı (`aktif × (1 − elde tutma)`) ve ayrılan mağaza her kapanışta `lost`'a eklenir (§3.1). `add_users(n)` bir
+  olayın kullanıcı eklemesi ya da çıkarmasıdır: kullanıcı sıfırın altına inmez, üye kullanıcıyı aşmaz, `sources`'a yazılmaz.
 
 ### 3.8 Memnuniyet defteri
 İki defter: kullanıcılar ve mağazalar. Hedef `70 + satırların toplamı` (0 ile 100 arası); memnuniyet hedefe haftada en çok 5
@@ -359,17 +370,24 @@ Dört kural. `set_policy(kural, seçenek)` kuralı değiştirir ve dört hafta k
 ### 3.11 Talepler
 - `request_topics()` satırları döndürür: konu, taraf, modül, son dört haftanın bileti, haftada etkilenen sipariş, neden,
   durum, konunun yaşı, kaynak. Demodaki konu kataloğu ve bilet oranları `tur4_ekranlar_2026-11-13/pazaryeri/
-  TALEPLER_ICERIK.md` §2 ve §3'teki on konudur; katalog `data/product/marketplace.json`'a girer (konu, taraf, modül, sıradaki
-  kademe ya da ek özellik, bağlı adım, bilet oranı).
+  TALEPLER_ICERIK.md` §2 ve §3'teki on iki konudur; katalog `data/product/marketplace.json`'a girer (konu, taraf, modül, sıradaki
+  kademe ya da ek özellik, bağlı adım, bilet oranı; kullanıcı tarafındaki ek özellikte eksikken adım çarpanı).
 - **Kullanıcı bileti** (haftalık): konunun bağlı olduğu adımda kaybedilen sayı × konunun bilet oranı (Sepete eklemeyen
   ziyaretin binde 1'i; ödemeye geçmeyen sepetin %1'i; tamamlanmayan ödemenin %4'ü; siparişin %2'si; iade edilen siparişin
   %8'i; siparişin %1'i). **Mağaza bileti:** derdi olan mağazaların payı × konunun oranı (50'den çok ürünü olan mağazaların
-  %8'i; haftada 10'dan çok sipariş alanların %6'sı; mağazaların %2'si). Adım ulaşılabilir orandaysa ya da özellik yayındaysa
-  bilet gelmez. Hata bileti talep değildir.
-- **Etkilenen sipariş:** kullanıcı konusunda `gain` (§3.5); mağaza konusunda derdi olan mağazaların siparişi × o hafta
-  ayrılma olasılığı (§3.4).
-- "Plana al" konunun kartını bugünkü sprint yolundan ekler. Kapanışta sürüm kaydı okunur (`GameState.product.releases`): konusu
-  yayına çıkan tarafa "Karşılandı: {konu}" yazılır. "Geciken talep" taraf başına tek satırdır (§3.8).
+  %8'i; haftada 10'dan çok sipariş alanların %6'sı; mağazaların %2'si). Derdi olan mağazaların payı sabittir: mağazaların
+  0,34'ünün 50'den çok ürünü vardır, 0,22'si haftada 10'dan çok sipariş alır. Konunun özelliği yayındaysa bilet gelmez: kademe
+  konusu modül o kademeye varınca, ek özellik çıkınca yayındadır. Haftanın bileti kapanıştan sonra yazılır; konunun yaşı ilk
+  biletin haftasından sayılır. Hata bileti talep değildir.
+- **Etkilenen sipariş:** kullanıcı konusunda konu yayına çıkınca kazanılan haftalık sipariştir (`gain`, §3.5: sıradaki kademe
+  ya da ek özellik); Yorum ve Puan'da kademe çıkınca haftada iade edilmeyecek sipariştir (`teslim × (bugünkü iade oranı −
+  kademeyle iade oranı)`); mağaza konusunda derdi olan mağazaların siparişi × o hafta ayrılma olasılığıdır (§3.4; sipariş
+  mağaza payıyla orantılı sayılır). Yayındaki konuda 0'dır. Gösterilen sayı, konu çıkınca gerçekleşen sayıdır.
+- "Plana al" konunun kartını bugünkü sprint yolundan ekler. Kapanış konunun durumunu okur (bekliyor, planda, yayında):
+  kademe konusunda modülün kademesinden, ek özellikte ürünün yayındaki ek özelliklerinden, plandaki konuda sprint planından.
+  İsteği gelmiş bir konu yayına çıkınca tarafına bir kez "Karşılandı: {konu}" yazılır; isteği hiç gelmemiş konu satır yazmaz.
+  "Geciken talep" taraf başına tek satırdır (§3.8): ilk isteğinden bu yana sekiz haftadan çok geçmiş, yayında olmayan en eski
+  konu.
 - `open_topic(kimlik)` bileti olmayan konu açar (kaynağı `report`); Pazarlama'nın kupon raporundaki "Ürüne doğrulama ekle"
   düğmesi bunu çağırır.
 
@@ -383,6 +401,11 @@ derinliğinin `kalan`'a oranı ve şirketin payı), sipariş artışı, sonraki 
 satırı; kapanış aynı işlevi uygular. Formülün sayıları Pazarlama'nın PRD'siyle birlikte yazılır. Pazarlama inene kadar
 `channel_visits` ve `return_lift` 0, `active_campaign` boştur; Pazarlama'ya bağlı üç gösterge iki işten sonra inenin
 commit'inde bağlanır, yedek dal yazılmaz.
+
+`channel_read`'in tanımları: dönüşüm, bugünkü durumla bir ziyaretin teslim edilen siparişe dönme oranıdır (dört adımın
+çarpımı; mağazası olmayan kategoride 0). Bir kullanıcının aylık komisyonu `ziyaret sıklığı × 4,33 × dönüşüm × (1 − iade oranı)
+× sepet × komisyon` çarpımıdır (üyenin sıklığı, yeni mağaza şartı ve indirim hesaba girmez). `source_revenue`'da i hafta önce
+gelen kullanıcı `elde tutma^i` ile küçülür; kullanıcı başına net komisyon, son dört haftanın net komisyonu ÷ aktif kullanıcıdır.
 
 ### 3.13 Kod öncesi: saf işlevler ve probe
 Arayüzden önce §3'ün formülleri saf işlev olarak yazılır ve başsız bir probe ile koşulur (`-s res://scripts/debug/marketplace_probe.gd -- --marketplace-probe=weeks=<n>`;
@@ -574,7 +597,8 @@ Kategori sabitleri `data/product/categories.json`'da (§3.2'nin tablosu), modül
 - **Memnuniyet:** taban 70; haftada en çok 5 puan; §3.8'in tablosundaki puanlar, süreler ve eşikler; Yedekleme'nin kesinti
   çarpanı 0,7, 0,5, 0,3.
 - **Gelir:** ay 4,33 hafta; pencere 4 hafta. **Önizleme:** 4 hafta ileri.
-- **Talepler:** §3.11'deki bilet oranları; geciken talep eşiği 8 hafta.
+- **Talepler:** §3.11'deki bilet oranları ve derdi olan mağaza payları (0,34; 0,22; 1); bilet penceresi 4 hafta; geciken talep
+  eşiği 8 hafta; ek özellik çarpanları 0,97; 0,99; 0,95 (§3.5).
 - **Olay 5.1:** en az 4 hafta atanmış temsilci; şart çarpanları 1,4 ve 1,8; paylar 0,5 ve 0; süre 8 hafta; moral −4.
 
 ## 10. Test ve kapılar
@@ -689,3 +713,9 @@ alma" birinci şıkla aynı bedele daha çok mağaza getiriyordu (§5.1); "Üyel
 günleri Pazarlama'da bir şablondur, ayrıca açılmaz. İki sabit karelerdeki örneğe göre ayarlandı (2. kademe çarpanı 0,96;
 açık hata başına 0,027). Karelerdeki sayılar örnektir: aynı ekranda birbirine bağlı olanlar (çarpım, toplam, defter puanı,
 birim bedel) bu PRD ile tutar; modelin kendi çıktısı §3.13'ün probe'undan gelir.
+
+Çekirdek Talepler'in ve Pazarlama'nın okumalarıyla genişlerken (14 Kasım sabahı; bir Opus incelemesi, tek tur) şunlar netleşti:
+kullanıcı tarafındaki ek özellik bağlı adımı gerçekten oynatır ve "etkilenen sipariş" o özelliğin kazancıdır, yani gösterilen
+sayı konu çıkınca gerçekleşir (§3.5, §3.11); Yorum ve Puan'ın etkilenen siparişi iade farkıdır; konu kataloğu on iki konudur;
+kayıp sayaçları birikir (§3.1); "Karşılandı" yalnız isteği gelmiş konuya yazılır (§3.11). Hepsi PAZARYERI oturumunun kararıdır,
+onay bekliyor.

@@ -23,7 +23,9 @@ const CHECKS := ["empty_category_no_orders", "acquisition_waits_for_publish", "l
 	"campaign_override_expires", "revenue_window_spike", "premium_closed_no_perk_cost", "campaign_free_shipping_single_write",
 	"preview_figures", "known_store_earnings", "known_return_rate", "known_order_rate", "json_roundtrip", "ledger_expiry",
 	"zone_limits_consistent", "constants_switch", "gain_and_weakest", "acquisition_multipliers", "store_terms_discount",
-	"premium_members", "zone_rows_need_stores"]
+	"premium_members", "zone_rows_need_stores", "add_users_bounds", "lost_counters", "channel_read_values", "source_revenue_values",
+	"state_survives_codec", "topic_rows_known", "topic_ticket_gates", "topic_ledger_rows", "feature_gain_matches_close",
+	"reviews_affected_is_return_gap"]
 
 var _weeks := DEFAULT_WEEKS
 var _printing := false
@@ -557,3 +559,267 @@ func _check_zone_rows_need_stores() -> Array:
 	var keys: Array = state.ledger.stores.map(func(r: Dictionary) -> String: return r.key)
 	return [zone == "leaving" and empty and keys == ["earnings_thin"],
 		"store pays shipping puts fashion in the leaving zone: store ledger with no stores empty=%s, with stores %s" % [empty, keys]]
+
+
+func _check_add_users_bounds() -> Array:
+	var state := _store_state(["fashion"], 1000.0)
+	state.members = 100.0
+	var grown := MarketplaceModel.add_users(state, 250.0)
+	var after_growth: float = state.users
+	var members_kept: float = state.members
+	var unchanged: bool = not MarketplaceModel.add_users(state, 0.0) and state.users == after_growth
+	var emptied := MarketplaceModel.add_users(state, -5000.0)
+	var already_empty: bool = not MarketplaceModel.add_users(state, -10.0) and state.users == 0.0
+	return [grown and after_growth == 1250.0 and members_kept == 100.0 and unchanged and emptied and state.users == 0.0 \
+		and state.members == 0.0 and already_empty, "1000 users +250 = %.0f (members kept %.0f); +0 refused=%s; -5000 -> users %.0f, members %.0f; "
+		% [after_growth, members_kept, unchanged, state.users, state.members] + "-10 at zero refused=%s" % already_empty]
+
+
+## Kayıp birikir: ilk hafta elle hesap, ikinci hafta o haftanın elde tutması ve ayrılma oranıyla eklenir.
+func _check_lost_counters() -> Array:
+	var state := _store_state(["fashion"], 3000.0)
+	var world := _live_world()
+	_run(state, world, 1)
+	var first: Dictionary = state.lost.duplicate()
+	var users_before: float = state.users
+	var stores_before: float = state.cats.fashion.stores
+	var sat_before: float = state.sat.users
+	var delivered: float = state.cats.fashion.week.delivered
+	_run(state, world.merged({"week": 1}, true), 1)
+	var week2_users := users_before * (1.0 - (0.94 + 0.0005 * (sat_before - 70.0)))
+	var week2_stores := stores_before * (0.008 + 0.07 * clampf(1.0 - delivered / stores_before / 1.2, 0.0, 1.0))
+	var ok: bool = _near(first.users, 3000.0 * (1.0 - 0.94)) and _near(first.stores, 30.0 * (0.008 + 0.07 * 1.0)) \
+		and _near(state.lost.users, first.users + week2_users) and _near(state.lost.stores, first.stores + week2_stores)
+	return [ok, "week 1: users %.2f (3000 x 6%%), stores %.3f (30 x 7.8%%); after week 2 the totals are users %.2f (+%.2f at satisfaction %.0f), stores %.3f (+%.3f)"
+		% [first.users, first.stores, state.lost.users, week2_users, sat_before, state.lost.stores, week2_stores]]
+
+
+func _check_channel_read_values() -> Array:
+	var state := _store_state(["fashion"], 3000.0)
+	state.policy.shipping.pick = "store_pays"
+	var world := _live_world().merged({"tiers": {"storefront": 3, "checkout": 3, "orders": 3, "mobile": 3, "integrations": 3}}, true)
+	var fashion := MarketplaceModel.channel_read(state, world, "fashion")
+	var featured := MarketplaceModel.channel_read(state, world.merged({"features": ["size_chart", "favorites", "guest_checkout"]}, true), "fashion")
+	var closed := MarketplaceModel.channel_read(state, world, "electronics")
+	var reach := 0.15 * 0.70 * 0.88 * 0.97
+	# Üç kullanıcı ek özelliği yayında değil: Sepete ekledi 0,97 x 0,99, Ödemeye geçti 0,95.
+	var conversion := reach * (0.97 * 0.99) * 0.95
+	var pools := {"fashion": 82000.0, "electronics": 46000.0, "home": 38000.0, "beauty": 27000.0, "baby": 22000.0, "sports": 22000.0}
+	var pools_ok := true
+	for cat in pools:
+		pools_ok = pools_ok and _near(MarketplaceModel.channel_read(state, world, cat).ad_pool, pools[cat])
+	var ok: bool = _near(fashion.conversion, conversion) and _near(featured.conversion, reach) \
+		and _near(fashion.monthly_commission, 0.30 * 4.33 * conversion * (1.0 - 0.20) * 38.0 * 0.10) \
+		and _near(fashion.organic, 3000.0 * 0.065 * (15.0 / 45.0) + 450.0) and _near(fashion.margin, 0.22) \
+		and _near(fashion.base_interest, 450.0) and closed.conversion == 0.0 and closed.organic == 0.0 \
+		and closed.monthly_commission == 0.0 and _near(closed.margin, 0.13) and _near(closed.base_interest, 250.0) and pools_ok
+	return [ok, "fashion with three user features missing: conversion %.6f (%.6f), all three live %.6f (0.089628), monthly commission per user %.4f, organic visits %.1f (515); "
+		% [fashion.conversion, conversion, featured.conversion, fashion.monthly_commission, fashion.organic]
+		+ "closed electronics conversion %.1f organic %.1f; six ad pools match=%s" % [closed.conversion, closed.organic, pools_ok]]
+
+
+func _check_source_revenue_values() -> Array:
+	var state := MarketplaceModel.new_state()
+	var world := _live_world()
+	state.users = 1000.0
+	state.revenue_weeks = [100.0, 100.0, 100.0, 100.0]
+	state.sources = {"ads": [50.0, 40.0, 30.0], "organic": [10.0]}
+	var ads := MarketplaceModel.source_revenue(state, world, "ads")
+	var organic := MarketplaceModel.source_revenue(state, world, "organic")
+	var unknown := MarketplaceModel.source_revenue(state, world, "coupon")
+	state.users = 0.0
+	var empty := MarketplaceModel.source_revenue(state, world, "ads")
+	var want := (50.0 + 40.0 * 0.94 + 30.0 * 0.94 * 0.94) * 400.0 / 1000.0
+	return [_near(ads, want) and _near(organic, 4.0) and unknown == 0.0 and empty == 0.0,
+		"1000 users, 400 net commission in four weeks, retention 0.94: ads (50, 40, 30) %.4f (expected %.4f), organic (10) %.2f, unknown %.1f, no users %.1f"
+		% [ads, want, organic, unknown, empty]]
+
+
+## `SaveCodec.from_json`'un yükleyişi: JSON'dan dönen tam değerli ondalık tam sayı olur (SaveCodec autoload'a dayanır, `-s`
+## betiğinde derlenmez).
+func _as_loaded(v: Variant) -> Variant:
+	if v is Dictionary:
+		var out := {}
+		for key in v:
+			out[key] = _as_loaded(v[key])
+		return out
+	if v is Array:
+		return v.map(_as_loaded)
+	if v is float and v == floorf(v):
+		return int(v)
+	return v
+
+
+## Yüklemede tam değerli ondalık tam sayı olur; model bölmelerinde tam sayı bölmesi doğmamalı.
+func _check_state_survives_codec() -> Array:
+	var state := _store_state(["fashion"], 3000.0)
+	state.members = 300.0
+	state.cats.fashion.week = {"visits": 900.0, "returning": 500.0, "delivered": 20.0}
+	var decoded: Dictionary = _as_loaded(JSON.parse_string(JSON.stringify(state)))
+	var integral: bool = typeof(decoded.users) == TYPE_INT and typeof(decoded.members) == TYPE_INT \
+		and typeof(decoded.cats.fashion.stores) == TYPE_INT
+	var world := _live_world()
+	var keep := MarketplaceModel.retention(decoded, world)
+	var share := MarketplaceModel.returning_share(decoded, ["fashion"])
+	MarketplaceModel.close_week(decoded, world)
+	var ok: bool = integral and _near(keep, 0.94 + 0.03 * (300.0 / 3000.0)) and _near(share, 20.0 * 500.0 / 900.0 / 20.0) \
+		and _near(decoded.lost.users, 3000.0 * (1.0 - 0.943)) \
+		and _near(decoded.lost.stores, 30.0 * (0.008 + 0.07 * (1.0 - (20.0 / 30.0) / 1.2)))
+	return [ok, "integral state decoded as ints=%s: retention %.4f (0.943), returning share %.4f (0.5556), lost users %.2f (171), lost stores %.4f (1.1733)"
+		% [integral, keep, share, decoded.lost.users, decoded.lost.stores]]
+
+
+## Elle konan haftalık sayılarla Moda: ziyaret 10.000, sepet 1.200, ödeme 800, sipariş 600, teslim 560, iade 100; 30 mağaza.
+func _topic_state() -> Dictionary:
+	var state := _store_state(["fashion"], 3000.0)
+	state.cats.fashion.week = {"visits": 10000.0, "cart": 1200.0, "checkout": 800.0, "order": 600.0, "delivered": 560.0, "returns": 100.0}
+	return state
+
+
+## Bir haftalık tik sonrası her konunun o haftaki bileti; durum dokunulmaz.
+func _tickets_of(state: Dictionary, world: Dictionary) -> Dictionary:
+	var ticked := state.duplicate(true)
+	MarketplaceModel.tick_topics(ticked, world)
+	var out := {}
+	for id in ticked.topics:
+		out[id] = ticked.topics[id].tickets[0]
+	return out
+
+
+func _check_topic_rows_known() -> Array:
+	var state := _topic_state()
+	for week in range(1, 6):
+		MarketplaceModel.tick_topics(state, _live_world(week))
+	var rows := MarketplaceModel.topic_rows(state, _live_world(5))
+	# Dünya: Vitrin, Sepet ve Ödeme, Siparişler 1. kademe (0,83); kargoyu kullanıcı öder (0,83); Mobil ve Entegrasyonlar yok (0,90);
+	# üç kullanıcı ek özelliği yok (Sepete ekledi 0,97 x 0,99, Ödemeye geçti 0,95).
+	var base := 10000.0 * (0.15 * 0.70 * 0.88 * 0.97) * (0.83 * 0.97 * 0.99) * (0.83 * 0.90 * 0.95) * 0.83 * (0.83 * 0.90)
+	var tier := base * (0.96 / 0.83 - 1.0)
+	var leave_week := 0.008
+	var want := {
+		"search_filter": [8800.0 * 0.001, tier], "size_chart": [8800.0 * 0.001, base * (1.0 / 0.97 - 1.0)],
+		"favorites": [8800.0 * 0.001, base * (1.0 / 0.99 - 1.0)], "guest_checkout": [400.0 * 0.01, base * (1.0 / 0.95 - 1.0)],
+		"one_page_checkout": [200.0 * 0.04, tier], "single_connection": [560.0 * 0.02, base * (0.95 / 0.90 - 1.0)],
+		"returns_request": [100.0 * 0.08, tier], "reviews_ratings": [560.0 * 0.01, 560.0 * (0.20 - 0.20 * 0.95)],
+		"bulk_upload": [30.0 * 0.34 * 0.08, 560.0 * 0.34 * leave_week], "color_size_options": [30.0 * 0.34 * 0.08, 560.0 * 0.34 * leave_week],
+		"shipping_label": [30.0 * 0.22 * 0.06, 560.0 * 0.22 * leave_week], "payout_statement": [30.0 * 1.0 * 0.02, 560.0 * leave_week]}
+	var ok := rows.size() == want.size()
+	var wrong := []
+	for row in rows:
+		var good: bool = want.has(row.id) and _near(row.tickets, 4.0 * want[row.id][0]) and _near(row.affected, want[row.id][1]) \
+			and row.age == 4 and row.status == "waiting" and row.source == "tickets"
+		if not good:
+			wrong.append(row.id)
+		ok = ok and good
+	return [ok, "five weekly ticks of a fixed week: %d of 12 topics listed, tickets over the last four weeks = 4 x weekly, affected orders: "
+		% rows.size() + "tier gain %.2f, size_chart %.2f, favorites %.2f, guest_checkout %.2f, single_connection %.2f, reviews_ratings %.2f; age 4; wrong: %s"
+		% [tier, want.size_chart[1], want.favorites[1], want.guest_checkout[1], want.single_connection[1], want.reviews_ratings[1], wrong]]
+
+
+func _check_topic_ticket_gates() -> Array:
+	var state := _topic_state()
+	state.policy.shipping.pick = "store_pays"
+	var tiers := {"storefront": 3, "checkout": 3, "orders": 3, "mobile": 3, "integrations": 3}
+	var reach_world := _live_world().merged({"tiers": tiers, "features": ["size_chart", "favorites", "guest_checkout"]}, true)
+	var factors := MarketplaceModel.step_factors(state, reach_world, "fashion")
+	var reachable := _tickets_of(state, reach_world)
+	var users := ["search_filter", "size_chart", "favorites", "guest_checkout", "one_page_checkout", "single_connection", "returns_request"]
+	var all_reachable: bool = MarketplaceModel.STEPS.all(func(step: String) -> bool: return factors[step] == 1.0)
+	var quiet: bool = users.all(func(id: String) -> bool: return reachable[id] == 0.0)
+	var missing_world := _live_world().merged({"tiers": tiers}, true)
+	var missing := _tickets_of(state, missing_world)
+	var cut := MarketplaceModel.step_factors(state, missing_world, "fashion")
+	var live_feature := _tickets_of(state, _live_world().merged({"tiers": tiers.merged({"storefront": 2}, true), "features": ["size_chart"]}, true))
+	var raised := state.duplicate(true)
+	MarketplaceModel.tick_topics(raised, _live_world())
+	var settled: Array = MarketplaceModel.topic_rows(raised, reach_world).filter(func(r: Dictionary) -> bool: return r.id in users)
+	var storeless := state.duplicate(true)
+	storeless.cats.fashion.stores = 0.0
+	var no_stores := _tickets_of(storeless, _live_world())
+	var ok: bool = all_reachable and quiet and _near(reachable.reviews_ratings, 5.6) and _near(reachable.payout_statement, 0.6) \
+		and _near(cut.cart, 0.97 * 0.99) and _near(cut.checkout, 0.95) and _near(missing.size_chart, 8.8) and _near(missing.favorites, 8.8) \
+		and _near(missing.guest_checkout, 4.0) and missing.search_filter == 0.0 and missing.one_page_checkout == 0.0 \
+		and live_feature.size_chart == 0.0 and live_feature.search_filter == 0.0 and _near(live_feature.favorites, 8.8) \
+		and settled.size() == users.size() and settled.all(func(r: Dictionary) -> bool: return r.affected == 0.0) \
+		and no_stores.bulk_upload == 0.0 and no_stores.color_size_options == 0.0 and no_stores.shipping_label == 0.0 \
+		and no_stores.payout_statement == 0.0 and _near(no_stores.size_chart, 8.8)
+	return [ok, "all steps reachable (every factor 1=%s): user topics quiet=%s, reviews_ratings %.1f and payout_statement %.2f still tick; three features missing: cart factor %.4f, checkout %.2f, "
+		% [all_reachable, quiet, reachable.reviews_ratings, reachable.payout_statement, cut.cart, cut.checkout]
+		+ "size_chart %.1f favorites %.1f guest_checkout %.1f; size_chart live: %.1f (favorites %.1f, search_filter %.1f live by tier); live topics affect %d rows of 0; no stores: bulk_upload %.1f payout %.1f"
+		% [missing.size_chart, missing.favorites, missing.guest_checkout, live_feature.size_chart, live_feature.favorites, live_feature.search_filter,
+		settled.size(), no_stores.bulk_upload, no_stores.payout_statement]]
+
+
+## Satırlar konu durumundan çıkar: taraf başına tek "Geciken talep", yayına çıkan istenmiş konuya "Karşılandı", istenmemişe değil.
+func _check_topic_ledger_rows() -> Array:
+	var state := _store_state(["fashion"], 3000.0)
+	var raised := {"size_chart": 1, "favorites": 3, "bulk_upload": 2, "payout_statement": 5}
+	for id in raised:
+		state.topics[id].since_day = raised[id]
+	var late := func(side: String) -> Array:
+		var late_rows: Array = state.ledger[side].filter(func(r: Dictionary) -> bool: return r.key == "late_topic")
+		return late_rows.map(func(r: Dictionary) -> String: return r.arg)
+	var met := func(side: String) -> Array:
+		var met_rows: Array = state.ledger[side].filter(func(r: Dictionary) -> bool: return r.key == "met")
+		return met_rows.map(func(r: Dictionary) -> Dictionary: return r.duplicate())
+	var world := _live_world(12).merged({"planned": ["size_chart"]}, true)
+	_run(state, world, 1)
+	var week12 := [late.call("users"), late.call("stores"), met.call("users").size()]
+	_run(state, world.merged({"week": 13, "planned": [], "features": ["size_chart", "guest_checkout"]}, true), 1)
+	var week13 := [late.call("users"), late.call("stores"), met.call("users")]
+	_run(state, world.merged({"week": 14, "features": ["size_chart", "guest_checkout"]}, true), 1)
+	var week14 := [late.call("users"), late.call("stores")]
+	var rows := MarketplaceModel.topic_rows(state, world.merged({"week": 14}, true))
+	var shipped: Array = rows.filter(func(r: Dictionary) -> bool: return r.id == "size_chart")
+	var met13: Array = week13[2]
+	var shipped_row: Dictionary = shipped[0] if shipped else {}
+	var ok: bool = week12 == [["size_chart"], ["bulk_upload"], 0] and week13[0] == ["favorites"] and week13[1] == ["bulk_upload"] \
+		and met13.size() == 1 and met13[0].arg == "size_chart" and met13[0].points == 3.0 and met13[0].weeks == 7 \
+		and week14 == [["favorites"], ["bulk_upload"]] and shipped.size() == 1 and shipped_row.status == "shipped" and shipped_row.age == 13
+	return [ok, "week 12 late rows users %s stores %s (size_chart is planned and still counts, payout_statement is not yet overdue); week 13 after size_chart ships: users %s, met rows %d; "
+		% [week12[0], week12[1], week13[0], met13.size()] + "week 14 with two overdue store topics: stores %s; size_chart row %s age %d"
+		% [week14[1], shipped_row.get("status", "missing"), shipped_row.get("age", -1)]]
+
+
+## Üç kullanıcı ek özelliği ayrı sayı verir; yayına çıkınca adım tam bu `gain` kadar artar (aynı durumdan iki gerçek kapanış).
+func _check_feature_gain_matches_close() -> Array:
+	var start := _store_state(["fashion"], 3000.0)
+	var world := _live_world()
+	var without := start.duplicate(true)
+	_run(without, world, 1)
+	var delivered: float = without.cats.fashion.week.delivered
+	var missing := {"size_chart": ["cart", 0.97], "favorites": ["cart", 0.99], "guest_checkout": ["checkout", 0.95]}
+	var gains := []
+	var ok := delivered > 0.0
+	for id in missing:
+		var step: String = missing[id][0]
+		var mult: float = missing[id][1]
+		var expected := delivered * (1.0 / mult - 1.0)
+		var read := MarketplaceModel.gain(without, world, "fashion", {"features": [id]})
+		var lit := start.duplicate(true)
+		_run(lit, world.merged({"features": [id]}, true), 1)
+		var rose: float = lit.cats.fashion.week.delivered - delivered
+		ok = ok and _near(read, expected) and _near(rose, read) \
+			and _near(lit.cats.fashion.week[step] / float(without.cats.fashion.week[step]), 1.0 / mult)
+		gains.append(read)
+	ok = ok and not is_equal_approx(gains[0], gains[1]) and not is_equal_approx(gains[1], gains[2]) and not is_equal_approx(gains[0], gains[2])
+	return [ok, "weekly orders %.2f; size_chart +%.3f (1/0.97), favorites +%.3f (1/0.99), guest_checkout +%.3f (1/0.95): each equals the rise after a real close with the feature live"
+		% [delivered, gains[0], gains[1], gains[2]]]
+
+
+## Yorum ve Puan'ın etkilenen siparişi, kademeyle iade edilmeyecek siparişe eşittir (iki gerçek kapanışın iade farkı).
+func _check_reviews_affected_is_return_gap() -> Array:
+	var start := _store_state(["fashion"], 3000.0)
+	var world := _live_world()
+	var base := start.duplicate(true)
+	_run(base, world, 1)
+	var tiered := start.duplicate(true)
+	_run(tiered, world.merged({"tiers": world.tiers.merged({"reviews": 1}, true)}, true), 1)
+	var gap: float = base.cats.fashion.week.returns - tiered.cats.fashion.week.returns
+	var delivered: float = base.cats.fashion.week.delivered
+	MarketplaceModel.tick_topics(base, world)
+	var row: Array = MarketplaceModel.topic_rows(base, world).filter(func(r: Dictionary) -> bool: return r.id == "reviews_ratings")
+	var affected: float = row[0].affected if row else -1.0
+	return [_near(delivered, tiered.cats.fashion.week.delivered) and _near(affected, gap) and _near(gap, delivered * (0.20 - 0.20 * 0.95)) and gap > 0.0,
+		"%.2f weekly orders: Reviews tier 1 cuts returns 20%% -> 19%%, %.3f fewer returns a week in two real closes; reviews_ratings affected %.3f"
+		% [delivered, gap, affected]]
