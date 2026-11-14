@@ -359,6 +359,7 @@ static func add_b2b_customer(prospect: Prospect, seats: int, seat_price: int,
 	c.mrr = c.seats * c.seat_price
 	c.satisfaction = clampi(satisfaction, 0, 100)
 	c.acquisition_source = source
+	c.lead_source = prospect.source
 	c.acquired_on_day = GameState.day
 	# B2B lifecycle seed: the star seeds the hidden tolerance (with the sector), drives the seat
 	# band and is what every star row draws; larger/older/loyal accounts endure low satisfaction

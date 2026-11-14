@@ -2142,6 +2142,12 @@ SALES_ROUTE_RESERVE,Ayır,Reserve
 SALES_ROUTE_GIVE,Temsilciye ver,Give to a rep
 SALES_ROUTE_RESERVED,Ayrıldı,Reserved
 SALES_ROUTE_REP,Temsilcide,With a rep
+SALES_SOURCE_ORGANIC,Organik,Organic
+SALES_SOURCE_CONTENT,İçerik,Content
+SALES_SOURCE_ADS,Reklam,Ads
+SALES_SOURCE_REFERRAL,Referans,Referral
+SALES_SOURCE_TARGET,Hedef sektör,Target sector
+SALES_SOURCE_EVENT,Fuar,Trade fair
 SALES_TAG_FRANK_INTRO,Frank'in tanıştırdığı,Frank's introduction
 SALES_ROUTE_NO_REP,Temsilci yok,No rep to take it
 SALES_ABOVE_LEAGUE,Bu masa liginin üstünde.,This table is above your league.

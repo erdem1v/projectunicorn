@@ -1904,7 +1904,7 @@ func _shot_pane(card_id: String, ctx: Dictionary, names := {}) -> void:
 
 
 ## --sales-shot=<pipeline|desk|picker|inbox|edge|edge_end|stretched|empty|b2c|b2c_live|b2b_pre|untyped|morning|evening|
-## norep|discounted|frank|risk_stability|deals|returning|clause|offer>. `desk` puts a rep mid-processing on the desk;
+## norep|discounted|frank|risk_stability|deals|returning|clause|offer|sources>. `desk` puts a rep mid-processing on the desk;
 ## `picker` opens the steward
 ## picker on the first account, `inbox` presses its İlgilen (Olaylar opens on the account's mail); `edge` draws the
 ## rarer lines (a reserved lead, one given to a rep, a whale's condition, tables above the founder's league, the
@@ -1918,6 +1918,7 @@ func _shot_pane(card_id: String, ctx: Dictionary, names := {}) -> void:
 ## clock. `norep` is one lead and nobody on the Satış job: its Temsilciye ver is closed with the reason under it;
 ## `discounted` gives Nordica, signed at $100 a seat, the retention discount: its row reads what a seat pays now.
 ## `frank` adds Frank's introduction to the three leads of a founder with no Satış: it heads the list, tagged.
+## `sources` brings the three leads from three sources (Organik, İçerik, Reklam): the source tags of the lead rows (PRD_PAZARLAMA B3).
 ## `risk_stability` keeps the bugs at the complaint gate, so neither Risk account is there over outages: Ege, which
 ## holds no broken promise, reads the product's stability, Lale, whose promise broke, its falling satisfaction.
 ## `clause` gives Kuzey an open server clause and Anadolu Market a notice: the cards' dated labels.
@@ -1957,6 +1958,9 @@ func _run_sales_shot(kind: String) -> void:
 			pass
 		"norep":
 			SalesFaucetSystem.spawn(1, "faucet")
+		"sources":
+			for row in [[3, "faucet"], [2, "mkt_content"], [1, "mkt_ads"]]:
+				SalesFaucetSystem.spawn(row[0], row[1])
 		_:
 			for star in [1, 2, 3]:
 				SalesFaucetSystem.spawn(star, "faucet")

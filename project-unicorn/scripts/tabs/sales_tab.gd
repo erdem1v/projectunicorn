@@ -1,5 +1,7 @@
 extends Control
 
+const MarketingSystem := preload("res://scripts/systems/marketing_system.gd")
+
 # ============================================================================
 # Satış penceresi (GDD Satış rev 6: §3.1 pazar, §4 boru hattı, §7.2 masa, §7.5 fiyat duruşu, §19 portföy).
 # Koyu başlıkta Satış ve dört ölçü, denetim şeridinde fiyat duruşu. Gövdede solda boru hattı, satış masası ve
@@ -342,6 +344,10 @@ func _lead_card(p: Prospect, off: bool) -> PanelContainer:
 	elif p.routing == SalesConstants.ROUTE_REP:
 		head.add_child(UiFactory.D_tag(tr("SALES_ROUTE_REP")))
 	head.add_child(RnDUiShared.spacer())
+	# Adayın kaynağı (PRD_PAZARLAMA B3): Organik, İçerik, Reklam…; etiketi olmayan kaynak etiket göstermez.
+	var source_key: String = MarketingSystem.source_tag(p.source)
+	if source_key != "":
+		head.add_child(UiFactory.D_tag(tr(source_key), &"neutral"))
 	# Anlaşmadaki lead'in sayacı donar: kartta tek hafta sayacı kalır, anlaşmanınki.
 	if not p.is_being_worked():
 		head.add_child(_weeks_left(p))

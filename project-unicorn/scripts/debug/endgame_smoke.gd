@@ -131,6 +131,10 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"marketing_burn_written_weekly": fail = _case_marketing_burn_written_weekly()
 		"marketing_runner_and_load": fail = _case_marketing_runner_and_load()
 		"marketing_save_roundtrip": fail = _case_marketing_save_roundtrip()
+		"marketing_erp_lead_source": fail = _case_marketing_erp_lead_source()
+		"marketing_target_sector_leads": fail = _case_marketing_target_sector_leads()
+		"marketing_referral_counts_happy_accounts": fail = _case_marketing_referral_counts_happy_accounts()
+		"marketing_row_mrr_counts_recent_signings": fail = _case_marketing_row_mrr_counts_recent_signings()
 		"investor_strain_fades_from_the_room": fail = _case_investor_strain_fades_from_the_room()
 		# --- İterasyon döngüsü (player-gated restore) + ekip kalite tavanı ---
 		"runway_net_status":    fail = _case_runway_net_status()
@@ -3151,6 +3155,127 @@ static func _case_marketing_save_roundtrip() -> String:
 	if int(MarketingSystem.rows()[0].budget) != 5000:
 		return "a loaded $2.000 row stepped to %s, want 5000" % str(MarketingSystem.rows()[0].budget)
 	return ""
+## An ERP row's budget brings leads through the sales faucet, sourced to the row: the week's whole leads arrive, the
+## fraction is banked for the next week, and a company whose market is not open yet cannot open a row.
+## FALSIFICATION: drop the bank → the second week brings one lead too few FAIL; drop the market test in `add_row` → a row
+## opens while the market is shut FAIL.
+static func _case_marketing_erp_lead_source() -> String:
+	_seed_b2b(10000)
+	var count := func() -> int:
+		return ProspectRegistry.get_all().filter(func(p: Prospect) -> bool: return p.source == "mkt_ads").size()
+	var r: Dictionary = MarketingSystem.add_row("search_ads", "", CharacterRegistry.get_founder().id)
+	MarketingSystem.set_budget(int(r.id), 1000)
+	var rate: float = MarketingSystem.leads_per_week(r)
+	if rate <= 1.0 or rate - floorf(rate) < 0.5:
+		return "fixture: $1.000 of search brings %.2f leads a week, want more than one and a fraction of at least half" % rate
+	MarketingSystem.daily_tick()
+	if int(count.call()) != floori(rate):
+		return "the first week brought %d search leads, want %d" % [int(count.call()), floori(rate)]
+	GameState.advance_day()
+	MarketingSystem.daily_tick()
+	if int(count.call()) != floori(rate * 2.0):
+		return "two weeks brought %d search leads, want %d (the fraction banks)" % [int(count.call()), floori(rate * 2.0)]
+	var mkt: Character = _make_employee("char_mkt_erp", "Ece", HRConstants.ROLE_MARKETING_SPECIALIST)
+	mkt.assigned_job_ids.append(HRConstants.JOB_MARKETING)
+	GameState.set_flag("mvp_shipped", false)
+	if not MarketingSystem.add_row("content_seo", "", mkt.id).is_empty():
+		return "a row opened while the market is shut"
+	GameState.set_flag("mvp_shipped", true)
+	if MarketingSystem.add_row("content_seo", "", mkt.id).is_empty():
+		return "fixture: the specialist cannot open the row once the market is open"
+	return ""
+
+
+## Hedef sektör opens only on one of the product's buyer sectors, and its leads come from that sector one star up from the
+## market's mix: none of them is a 1 star table, and none sits in a band the market keeps shut.
+## FALSIFICATION: drop the sector from `_spawn_leads`' spawn call → leads arrive from every buyer sector FAIL; return the
+## market's mix for target_sector in `_star_mix` → a 1 star lead arrives FAIL.
+static func _case_marketing_target_sector_leads() -> String:
+	_seed_b2b(10000)
+	var founder: String = CharacterRegistry.get_founder().id
+	if not MarketingSystem.add_row("target_sector", "insurance", founder).is_empty() \
+			or not MarketingSystem.add_row("target_sector", "", founder).is_empty():
+		return "a Hedef sektör row opened on a sector ERP does not sell to"
+	var r: Dictionary = MarketingSystem.add_row("target_sector", "food", founder)
+	if r.is_empty():
+		return "fixture: no Hedef sektör row on food"
+	MarketingSystem.set_budget(int(r.id), 5000)
+	for week in 3:
+		MarketingSystem.daily_tick()
+		GameState.advance_day()
+	var leads: Array = ProspectRegistry.get_all().filter(func(p: Prospect) -> bool: return p.source == "mkt_target")
+	if leads.size() < 6:
+		return "fixture: three weeks of $5.000 brought %d targeted leads, want six or more" % leads.size()
+	# The shut band claim acts once PRD_ERP package 6 A3 lands: today the quality shifter keeps every band open.
+	var open: Array = SalesFaucetSystem.star_mix_now()
+	for p: Prospect in leads:
+		if p.industry != "food" or p.star < SalesConstants.STAR_MIN + 1:
+			return "a targeted lead came as %s at %d stars, want food at 2 stars or more" % [p.industry, p.star]
+		if float(open[p.star - SalesConstants.STAR_MIN]) <= 0.0:
+			return "a targeted lead came at %d stars, a band the market keeps shut (%s)" % [p.star, open]
+	return ""
+
+
+## Referans has no budget: its leads a week are leads_per_account for each B2B account whose satisfaction clears its bar,
+## and none when no account does.
+## FALSIFICATION: count every active account in `leads_per_week` → the unhappy book still brings leads FAIL.
+static func _case_marketing_referral_counts_happy_accounts() -> String:
+	_seed_b2b(1000)
+	var r: Dictionary = MarketingSystem.add_row("referral", "", CharacterRegistry.get_founder().id)
+	MarketingSystem.set_budget(int(r.id), 5000)
+	if int(r.budget) != 0:
+		return "Referans took a budget of %d" % int(r.budget)
+	var happy: Array = CustomerRegistry.get_active().filter(func(c: Customer) -> bool: return c.market_type == "b2b" and c.health == "healthy")
+	if happy.is_empty():
+		return "fixture: no happy B2B account"
+	var per: float = float(MarketingSystem.cfg("erp.referral.leads_per_account"))
+	if not is_equal_approx(MarketingSystem.leads_per_week(r), per * happy.size()):
+		return "Referans brings %.3f leads a week, want %.3f for %d happy accounts" % [MarketingSystem.leads_per_week(r), per * happy.size(), happy.size()]
+	for c: Customer in happy:
+		c.health = "at_risk"
+	if MarketingSystem.leads_per_week(r) != 0.0:
+		return "Referans brings %.3f leads a week with no happy account, want none" % MarketingSystem.leads_per_week(r)
+	return ""
+
+
+## A row's MRR contribution is today's MRR of the accounts its source signed in the last 26 weeks: an older signing and
+## another source's account do not count. The account keeps its lead's source, the trade fair card's leads count as the
+## fair's, and every source tag the lead row shows has a row in both languages.
+## FALSIFICATION: drop the window test in `row_mrr` → the 30 week old account counts FAIL; drop `c.lead_source =` in
+## `add_b2b_customer` → the account loses its source FAIL.
+static func _case_marketing_row_mrr_counts_recent_signings() -> String:
+	_seed_b2b(1000)
+	var sign := func(id: String, source: String, mrr: int, weeks_ago: int) -> Customer:
+		var p := Prospect.new()
+		p.id = id
+		p.company_name = id
+		p.industry = "logistics"
+		p.star = 1
+		p.source = source
+		var c: Customer = _sign_fixture(p, mrr, 70)
+		c.acquired_on_day = GameState.day - TimeModel.ticks(weeks_ago)
+		return c
+	var recent: Customer = sign.call("lead_ads_new", "mkt_ads", 2000, 3)
+	sign.call("lead_ads_old", "mkt_ads", 5000, 30)
+	sign.call("lead_organic", "faucet", 7000, 2)
+	if recent.lead_source != "mkt_ads":
+		return "the account signed from a search lead keeps the source '%s', want mkt_ads" % recent.lead_source
+	var ads: Dictionary = MarketingSystem.add_row("search_ads", "", CharacterRegistry.get_founder().id)
+	if MarketingSystem.row_mrr(ads) != recent.mrr:
+		return "the search row's MRR contribution reads %d, want the recent account's %d" % [MarketingSystem.row_mrr(ads), recent.mrr]
+	if MarketingSystem.lead_source_id("trade_fair") != "mkt_event" or MarketingSystem.source_tag("trade_fair") != "SALES_SOURCE_EVENT":
+		return "the trade fair's leads do not count as the fair's"
+	var loc0: String = TranslationServer.get_locale()
+	for loc in ["tr", "en"]:
+		TranslationServer.set_locale(loc)
+		for key: String in MarketingSystem.SOURCE_TAGS.values():
+			if TranslationServer.translate(key) == key:
+				TranslationServer.set_locale(loc0)
+				return "[%s] the source tag %s has no row" % [loc, key]
+	TranslationServer.set_locale(loc0)
+	return ""
+
+
 
 
 ## A card's strain with a fund (investor_strain) starts both of its rooms that many points lower and

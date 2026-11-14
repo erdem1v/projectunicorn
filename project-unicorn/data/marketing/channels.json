@@ -1,6 +1,14 @@
 {
 	"budget_ladder": [0, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000],
 	"founder_share_pct": 50,
+	"erp": {
+		"leads_cap_per_week": 14,
+		"mrr_window_weeks": 26,
+		"search_ads": {"lead_cost": 600, "mix": [0.75, 0.2, 0.05]},
+		"content_seo": {"lead_cost": 450, "start_cost": 2400, "mature_weeks": 26},
+		"target_sector": {"lead_cost": 900},
+		"referral": {"leads_per_account": 0.04}
+	},
 	"kinds": {
 		"search_ads": {"markets": ["b2b", "b2c"], "load_pct": 50, "budgeted": true},
 		"content_seo": {"markets": ["b2b", "b2c"], "load_pct": 50, "budgeted": true},

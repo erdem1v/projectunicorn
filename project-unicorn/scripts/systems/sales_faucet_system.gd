@@ -186,9 +186,9 @@ static func _roll_star(nth_today: int, mix: Array) -> int:
 ## expiry.
 ##
 ## Returns null when the market is shut, when no archetype fits the star, or when the
-## product's buyer sectors hold no free name; a caller that gets null has produced nothing and
+## product's buyer sectors (or the asked one) hold no free name; a caller that gets null has produced nothing and
 ## burned nothing.
-static func spawn(star: int, source: String) -> Prospect:
+static func spawn(star: int, source: String, sector := "") -> Prospect:
 	if not market_open():
 		return null
 	var s: int = clampi(star, SalesConstants.STAR_MIN, SalesConstants.STAR_MAX)
@@ -201,7 +201,10 @@ static func spawn(star: int, source: String) -> Prospect:
 	var archetype: String = String(pool[SalesConstants.mix_seed(seed_base, SALT_ARCHETYPE) % pool.size()])
 
 	var excluded: Dictionary = _excluded_names()
+	# The product's buyer sectors; Pazarlama's Hedef sektör asks for one of them (MarketingSystem._spawn_leads).
 	var sectors: Array = ProductLines.buyer_sectors(sub_id)
+	if sector != "":
+		sectors = [sector] if sectors.has(sector) else []
 	var chosen_sector: String = ""
 	var company: String = ""
 	# A second round of the mixer keeps the sector's draw independent of the archetype's: both start from the same seed.

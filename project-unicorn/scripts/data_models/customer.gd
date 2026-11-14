@@ -32,6 +32,7 @@ extends Resource
 # --- Acquisition (set when a customer is created) ---
 @export var acquisition_source: String = ""   # "founder_pitch" | "sales_rep:<id>" | "organic" | "event" | "referral"
 @export var acquired_on_day: int = 0          # GameState.day at signing (serves as signed_day)
+@export var lead_source: String = ""          # the lead's Prospect.source at signing ("faucet", "mkt_ads", "trade_fair"…)
 
 # --- B2B lifecycle (two-layer satisfaction + watched churn) ---
 # `industry` above serves as the sector channel (tolerance seed, complaint voice, contact seam).
