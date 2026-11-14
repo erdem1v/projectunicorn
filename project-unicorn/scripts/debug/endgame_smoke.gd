@@ -651,6 +651,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"marketplace_seams_write_through":   fail = _case_marketplace_seams_write_through()
 		"marketplace_world_reads_owners":    fail = _case_marketplace_world_reads_owners()
 		"marketplace_tick_waits_for_launch": fail = _case_marketplace_tick_waits_for_launch()
+		"marketplace_revenue_two_records":   fail = _case_marketplace_revenue_two_records()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -5864,7 +5865,9 @@ static func _case_hotfix_ticker_routine_vs_news() -> String:
 ## F12 — ONE COUNTING RULE. The top bar filtered to b2b and the summary counted every active
 ## record, so they disagreed by exactly the B2C aggregate userbase: an audience wearing a
 ## customer's shape, with zero seats.
-## FALSIFICATION: point account_count at get_active().size() and the check fails by one.
+## The marketplace's two records (stores and users) are aggregates too: an aggregate is `individual`, an account is not.
+## FALSIFICATION: point account_count at get_active().size() and the check fails by one; make it exclude only the B2C user
+## base's id and the marketplace records count.
 static func _case_hotfix_account_count_excludes_base() -> String:
 	_seed_b2b(1000)
 	var before: int = CustomerRegistry.account_count()
@@ -5874,18 +5877,29 @@ static func _case_hotfix_account_count_excludes_base() -> String:
 	base.id = SalesSystem.B2C_USERBASE_ID
 	base.market_type = "b2c"
 	base.industry = "consumer"
+	base.company_size = "individual"
 	base.seats = 0
 	CustomerRegistry.add(base)
 	if CustomerRegistry.account_count() != before:
 		return "the aggregate userbase counted as an account"
 	if CustomerRegistry.get_active().size() != before + 1:
 		return "the raw active list did not see the userbase at all"
+	for id in [MarketplaceSystem.STORES_ID, MarketplaceSystem.USERS_ID]:
+		var record := Customer.new()
+		record.id = id
+		record.market_type = "b2c"
+		record.company_size = "individual"
+		CustomerRegistry.add(record)
+	if CustomerRegistry.account_count() != before:
+		return "a marketplace record counted as an account"
+	if CustomerRegistry.get_active().size() != before + 3:
+		return "the raw active list did not see the marketplace records"
 	# AND THE OTHER HALF, which is the half that bit. `musteri.count` must KEEP counting the
 	# aggregate: the traction gate asks it for "your first real customer", and on a B2C run that
 	# customer IS the aggregate. Repointing that seam at account_count broke `gate1_b2c` on
 	# every B2C path — two questions, two names, and this pins both so they cannot merge again.
-	if int(EvSeams.read("musteri.count")) != before + 1:
-		return "musteri.count stopped seeing the B2C userbase; the traction gate needs it"
+	if int(EvSeams.read("musteri.count")) != before + 3:
+		return "musteri.count stopped seeing the aggregate records; the traction gate needs them"
 	if int(EvSeams.read("sales.account_count")) != before:
 		return "sales.account_count did not read the account rule"
 	return ""
@@ -30657,4 +30671,64 @@ static func _case_marketplace_tick_waits_for_launch() -> String:
 		return "the close wrote no week figures (visits %s, users %s)" % [state.cats.fashion.week.get("visits"), state.users]
 	if state.topics.size_chart.tickets.size() != 1 or state.topics.size_chart.tickets[0] <= 0.0:
 		return "the topic tick did not read the week the close wrote: %s" % str(state.topics.size_chart.tickets)
+	return ""
+
+
+## İki toplu kayıt yayından sonraki ilk kapanışta doğar ve durumun görüntüsüdür: komisyon mağazalar kaydının, üyelik kullanıcılar
+## kaydının MRR'ına yazılır; toplam MRR `reflect_mrr` ile kayıtların toplamıdır; eksi net komisyonda mağazalar kaydının MRR'ı 0'da
+## durur ve `revenue_weeks` eksiyi saklar; koltuk mağaza sayısı ve ücret ödeyen üyedir; memnuniyet modelin `sat`'ının tam sayısıdır.
+##
+## FALSİFİKASYON: `_reflect`te komisyonu kullanıcılar kaydına yaz → MRR satırı FAIL; kullanıcılar kaydının koltuğuna `members`ı
+## yaz → deneme satırı FAIL; `reflect_mrr` çağrısını sil → toplam MRR satırı FAIL; komisyonu `absf` ile yaz → eksi
+## komisyon satırı FAIL.
+static func _case_marketplace_revenue_two_records() -> String:
+	_seed_marketplace_world()
+	GameState.set_flag("mvp_shipped", false)
+	GameState.set_flag("b2c_paid_tier_open", true)
+	MarketplaceSystem.daily_tick()
+	if CustomerRegistry.get_customer(MarketplaceSystem.STORES_ID) != null or CustomerRegistry.get_customer(MarketplaceSystem.USERS_ID) != null:
+		return "a record was born before the launch"
+	GameState.set_flag("mvp_shipped", true)
+	GameState.advance_day()
+	MarketplaceSystem.daily_tick()
+	var stores_record: Customer = CustomerRegistry.get_customer(MarketplaceSystem.STORES_ID)
+	var users_record: Customer = CustomerRegistry.get_customer(MarketplaceSystem.USERS_ID)
+	if stores_record == null or users_record == null:
+		return "the first close after the launch did not birth both records"
+	if stores_record.market_type != "b2c" or users_record.market_type != "b2c" or stores_record.status != "active" \
+			or stores_record.name_key != "MP_STORES_RECORD" or users_record.name_key != "MP_USERS_RECORD" \
+			or stores_record.name_arg != SalesSystem.product_display_name():
+		return "a record is not an active b2c aggregate named by its key and the product"
+	MarketplaceSystem.set_perk("member_discount", "premium")
+	MarketplaceSystem.set_policy("return_window", "d30")
+	for i in 5:
+		GameState.advance_day()
+		MarketplaceSystem.daily_tick()
+	var state: Dictionary = GameState.marketplace
+	var revenue: Dictionary = MarketplaceModel.monthly_revenue(state)
+	if revenue.commission <= 0.0 or revenue.membership <= 0.0:
+		return "the fixture earned no commission or no membership: %s" % str(revenue)
+	if stores_record.mrr != roundi(revenue.commission) or users_record.mrr != roundi(revenue.membership):
+		return "records read stores $%d and users $%d, want commission %.1f and membership %.1f" \
+			% [stores_record.mrr, users_record.mrr, revenue.commission, revenue.membership]
+	if GameState.mrr != stores_record.mrr + users_record.mrr or GameState.mrr != CustomerRegistry.get_total_mrr():
+		return "total MRR %d is not the records' %d + %d" % [GameState.mrr, stores_record.mrr, users_record.mrr]
+	if stores_record.seats != roundi(MarketplaceSystem.stores()) or users_record.seats != roundi(state.members):
+		return "seats read %d and %d, want stores %d and members %d" \
+			% [stores_record.seats, users_record.seats, roundi(MarketplaceSystem.stores()), roundi(state.members)]
+	if stores_record.satisfaction != roundi(state.sat.stores) or users_record.satisfaction != roundi(state.sat.users):
+		return "satisfaction reads %d and %d, want %d and %d" \
+			% [stores_record.satisfaction, users_record.satisfaction, roundi(state.sat.stores), roundi(state.sat.users)]
+	MarketplaceSystem.set_trial(true)
+	GameState.advance_day()
+	MarketplaceSystem.daily_tick()
+	if users_record.seats != roundi(MarketplaceModel.paying_members(state)) or users_record.seats >= roundi(state.members):
+		return "a member in the free trial still holds a seat: seats %d of %d members" % [users_record.seats, roundi(state.members)]
+	state.revenue_weeks = [-1.0e6, -1.0e6, -1.0e6, -1.0e6]
+	GameState.advance_day()
+	MarketplaceSystem.daily_tick()
+	if MarketplaceModel.monthly_revenue(state).commission >= 0.0 or state.revenue_weeks[1] != -1.0e6:
+		return "the fixture's commission window did not stay negative"
+	if stores_record.mrr != 0 or GameState.mrr != users_record.mrr:
+		return "a negative commission left the stores record at $%d and the total at $%d" % [stores_record.mrr, GameState.mrr]
 	return ""

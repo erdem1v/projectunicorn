@@ -41,14 +41,15 @@ func get_active() -> Array[Customer]:
 ##
 ## The B2C user base lives in this registry as ONE aggregate `Customer` record — an audience
 ## wearing a customer's shape: its `seats` is the paying-user count and its name is composed
-## copy. It belongs here (satisfaction, churn and MRR all run through the same machinery) but
-## it is not an account. An ACCOUNT is an active customer that is not the aggregate: in a pure
+## copy. The marketplace keeps two such records, its stores and its users. They belong here
+## (satisfaction, churn and MRR all run through the same machinery) but they are not accounts.
+## An aggregate is `individual`; an ACCOUNT is an active customer of any other size: in a pure
 ## B2B run that is the b2b book; in a B2C run it is zero — a B2C company has an audience, not a
 ## client list.
 func account_count() -> int:
 	var n: int = 0
 	for c in _customers.values():
-		if c.status == "active" and c.id != SalesSystem.B2C_USERBASE_ID:
+		if c.status == "active" and c.company_size != "individual":
 			n += 1
 	return n
 

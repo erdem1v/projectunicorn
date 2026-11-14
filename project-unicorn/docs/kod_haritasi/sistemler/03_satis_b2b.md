@@ -93,7 +93,7 @@ Sahipler: autoload `CustomerRegistry`, `ProspectRegistry`, `PromiseRegistry`; mo
 - `MarketCatalog.value()` `scripts/systems/market_catalog.gd:84`: şirketin haftadaki değeri (saf); `price` :98, `listed` :110, `series` :102 · `piyasa_tab.gd:101`, `news_feed_system.gd:368`
 - `CounterpartSystem.prospect_people()` `scripts/systems/counterpart_system.gd:56`: adayın karşısındaki kişiler · `main.gd:5148`, `sales_tab.gd:328`, `inbox.gd:439`
 - `CounterpartSystem.fill_investor_people()` `scripts/systems/counterpart_system.gd:33`: fonların üç kişisini çeker · `game_state.gd:968`, `save_manager.gd:325`
-- `CustomerRegistry.add()` `scripts/autoload/customer_registry.gd:94`: yeni hesap · `SalesSystem.add_b2b_customer`, `_ensure_b2c_record` `sales_system.gd:238`
+- `CustomerRegistry.add()` `scripts/autoload/customer_registry.gd:94`: yeni hesap · `SalesSystem.add_b2b_customer`, `_ensure_b2c_record` `sales_system.gd:238`, `MarketplaceSystem._reflect` (mağazalar ve kullanıcılar kayıtları)
 - `PromiseRegistry.create()` `scripts/autoload/promise_registry.gd:50`: söz açar (sprint vadesi) · `SalesFinalizer.sign_deal`, `B2BSalesSystem.accept_promise`
 - `PromiseRegistry.tick_deadlines()` `scripts/autoload/promise_registry.gd:164`: vadesi geçen sözü kırar · `B2BSalesSystem.daily_tick` `b2b_sales_system.gd:33`
 
@@ -229,6 +229,7 @@ Hepsi `tools/smoke_run.sh <vaka>` ile (komutlar `project-unicorn/`'dan, `GODOT` 
 
 ## Dikkat
 - YAZMA YOLU: müşteri alanı yalnız `CustomerRegistry.set_*` ile; toplam MRR yalnız `SalesSystem.reflect_mrr()` ile (CLAUDE.md WRITE-THROUGH LAW).
+- `CustomerRegistry.account_count()` `company_size == "individual"` toplu kayıtları saymaz: B2C kitle kaydı ve pazaryerinin mağaza ve kullanıcı kayıtları hesap değildir; `get_active()` hepsini sayar.
 - Kodda seam'siz doğrudan yazılan üç alan var: `retain_stalls` `b2b_sales_system.gd:425`, `cs_escalated` `:61`, `promise_broken_day` `:569`. Yeni yazıcı eklerken bunlara bakıp seam'e çevirmeyi düşün.
 - `CustomerRegistry.reset()` ve `insert_raw` sinyal yaymaz, `remove` yayar `customer_registry.gd:113-128`; reset `remove` döngüsüne çevrilirse `PromiseRegistry.drop_open_for` N kez koşar ve yüklemede yarışır.
 - Günlük sabitler tikte yedi kat uygulanır: `SAT_DRIFT_STEP`, `TRUST_OFFSET_DECAY_PER_DAY`, destek oranları `TimeModel.per_tick` ile çarpılır. "Günde 3 puan" demek haftalık tikte 21 puan demektir.

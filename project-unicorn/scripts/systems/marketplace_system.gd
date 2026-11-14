@@ -3,10 +3,13 @@ extends RefCounted
 
 # Pazaryeri ekonomisinin oyundaki sahibi: `GameState.marketplace`'in tek yazarı. Yazan seam'ler modelin aynı adlı işlevini
 # durum ve `world()` ile çağırır; uygulananı `marketplace_changed` ile duyurur ve true döner, reddedileni duyurmaz ve false
-# döner. `daily_tick` haftalık kapanıştır. Durum yalnız yazan seam'lerde ve kapanışta doğar; okuyanlar boş durumu saklamadan
-# modelin ilk durumuyla okur, böylece pazaryeri koşusu olmayan oyun sözlüğü hiç doldurmaz.
+# döner. `daily_tick` haftalık kapanıştır ve durumu iki toplu müşteri kaydına yansıtır. Durum yalnız yazan seam'lerde ve
+# kapanışta doğar; okuyanlar boş durumu saklamadan modelin ilk durumuyla okur, böylece pazaryeri koşusu olmayan oyun sözlüğü
+# hiç doldurmaz.
 
 const TYPE_ID := "marketplace"
+const STORES_ID := "co_mp_stores"
+const USERS_ID := "co_mp_users"
 ## Modelin modül kimliğinden oyundaki hat kimliğine; paylaşılan hatlar türün son ekini taşır.
 const MODULE_LINES := {
 	"listing": "line_marketplace_listing", "storefront": "line_marketplace_storefront",
@@ -97,6 +100,15 @@ static func source_revenue(source: String) -> float:
 	return MarketplaceModel.source_revenue(_read(), world(), source)
 
 
+## Açık kategorilerin mağaza toplamı.
+static func stores() -> float:
+	var state := _read()
+	var total := 0.0
+	for cat in MarketplaceModel.open_ids(state):
+		total += state.cats[cat].stores
+	return total
+
+
 # --- Haftalık kapanış ---------------------------------------------------------------------------
 
 static func daily_tick() -> void:
@@ -106,4 +118,33 @@ static func daily_tick() -> void:
 	var w := world()
 	MarketplaceModel.close_week(state, w)
 	MarketplaceModel.tick_topics(state, w)
+	_reflect(state)
 	EventBus.marketplace_changed.emit()
+
+
+## Kapanışın durumunu iki kayda yazar: komisyon mağazalar kaydının, üyelik kullanıcılar kaydının MRR'ı; koltuk mağaza sayısı
+## ve ücret ödeyen üye; memnuniyet modelin `sat`'ı. Kayıtlar yayından sonraki ilk kapanışta doğar.
+static func _reflect(state: Dictionary) -> void:
+	var income: Dictionary = MarketplaceModel.monthly_revenue(state)
+	var records := {
+		STORES_ID: {"name": "MP_STORES_RECORD", "mrr": income.commission, "seats": stores(), "sat": state.sat.stores},
+		USERS_ID: {"name": "MP_USERS_RECORD", "mrr": income.membership, "seats": MarketplaceModel.paying_members(state),
+			"sat": state.sat.users},
+	}
+	for id in records:
+		var r: Dictionary = records[id]
+		if CustomerRegistry.get_customer(id) == null:
+			var record := Customer.new()
+			record.id = id
+			record.name_key = r.name
+			record.name_arg = SalesSystem.product_display_name()
+			record.industry = "consumer"
+			record.company_size = "individual"
+			record.market_type = "b2c"
+			record.acquisition_source = "organic"
+			record.acquired_on_day = GameState.day
+			CustomerRegistry.add(record)
+		CustomerRegistry.set_mrr(id, roundi(r.mrr))
+		CustomerRegistry.set_seats(id, roundi(r.seats))
+		CustomerRegistry.set_satisfaction(id, roundi(r.sat))
+	SalesSystem.reflect_mrr()

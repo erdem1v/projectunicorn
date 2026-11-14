@@ -6,8 +6,8 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 
 ## Dosyalar
 
-- `systems/marketplace_model.gd` (899): `MarketplaceModel`; yalnız `static` işlevler. `state` ve `world` sözlüklerinin alanları dosya başındaki yorumda.
-- `systems/marketplace_system.gd` (109): `MarketplaceSystem`; yalnız `static` işlevler. `GameState.marketplace`'in tek yazarı, yazan seam'ler, sözleşme okuyucuları, `world()` ve haftalık kapanış.
+- `systems/marketplace_model.gd` (904): `MarketplaceModel`; yalnız `static` işlevler. `state` ve `world` sözlüklerinin alanları dosya başındaki yorumda.
+- `systems/marketplace_system.gd` (150): `MarketplaceSystem`; yalnız `static` işlevler. `GameState.marketplace`'in tek yazarı, yazan seam'ler, sözleşme okuyucuları, `world()` ve haftalık kapanış.
 - `debug/marketplace_probe.gd` (828): `-s` betiği; oynanan çizelge ve 31 mekanik denetimi, `MPPROBE ...` satırları.
 - `data/product/categories.json` (16): altı kategori ve sütunları: sepet, ziyaret sıklığı, kâr payı, sektör iadesi, gereken mağaza, başlangıç komisyonu, taban ilgi, büyük sepet payı, reklam havuzu (`ad_pool`, haftalık arama).
 - `data/product/lines/marketplace.json` (153): modül verisi; 5 kimlik hattı (Ürün Yükleme, Vitrin, Sepet ve Ödeme, Siparişler, Yorum ve Güvence)
@@ -21,8 +21,10 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 - Sistem (`MarketplaceSystem`): `TYPE_ID` ("marketplace"), `MODULE_LINES` (modelin dokuz modülünden oyundaki hat kimliğine; paylaşılan dört hat `@marketplace` son ekiyle; Üyelik hattı değil `SprintCatalog.PAID_PLAN`).
   ↳ `world()` her çağrıda sahiplerden kurulur: `week` `GameState.day`, `published` `ProductState.is_live()`, `tiers` ve `bugs` hat kimliğiyle, `stars` atanmışların Satış yıldızı (kurucu 1); kalan alan modelin varsayılanında.
   ↳ Yazan seam'ler (`true` uygulandı ve sinyal yayıldı, `false` reddedildi): `open_category`, `set_commission`, `set_policy`, `set_fee`, `set_perk`, `set_trial`, `set_store_terms`, `add_users`.
-  ↳ Okuyucular saklanan durumdan okur, kapanış koşturmaz: `policy_value`, `channel_read`, `source_revenue` (öbür ekiplerin sözleşmesi). Okuyucu ve `world()` boş durumu doldurmaz: `_read()` boşken modelin ilk durumunu saklamadan okur.
-  ↳ `daily_tick()` yalnız ürün yayındayken: `world()` kurar, `close_week`, `tick_topics`, bir `marketplace_changed`. Durum yazan seam'de ve kapanışta (`_s()`) `MarketplaceModel.new_state()` ile yerinde dolar; pazaryeri koşusu olmayan oyunda hiçbiri çalışmaz, sözlük boş kalır.
+  ↳ `_reflect` iki toplu `CustomerRegistry` kaydını (`STORES_ID` `co_mp_stores`, `USERS_ID` `co_mp_users`; `b2c`, `individual`, yayından sonraki ilk kapanışta doğar) yalnız seam'le yazar: komisyon mağazalar kaydının, üyelik kullanıcılar kaydının MRR'ı (eksi net komisyonda MRR 0'da durur, `revenue_weeks` eksiyi saklar),
+  ↳ koltuk mağaza sayısı ve ücret ödeyen üye (`MarketplaceModel.paying_members`), memnuniyet modelin `sat`'ının tam sayısı; en sonda `SalesSystem.reflect_mrr()`. `CustomerRegistry.account_count` `individual` kayıtları saymaz.
+  ↳ Okuyucular saklanan durumdan okur, kapanış koşturmaz: `policy_value`, `channel_read`, `source_revenue` (öbür ekiplerin sözleşmesi) ve `stores()` (açık kategorilerin mağaza toplamı, `_reflect` kullanır). Okuyucu ve `world()` boş durumu doldurmaz: `_read()` boşken modelin ilk durumunu saklamadan okur.
+  ↳ `daily_tick()` yalnız ürün yayındayken: `world()` kurar, `close_week`, `tick_topics`, `_reflect`, bir `marketplace_changed`. Durum yazan seam'de ve kapanışta (`_s()`) `MarketplaceModel.new_state()` ile yerinde dolar; pazaryeri koşusu olmayan oyunda hiçbiri çalışmaz, sözlük boş kalır.
 - Kurma: `new_state()`, `new_world()` (varsayılanlı dünya; verilmeyen alan `WORLD`'den okunur), `cat_ids()`, `cat_def(kategori)`, `open_ids(state)`.
 - Haftalık kapanış: `close_week(state, world)` bağlayıcı sırayla `state`'i değiştirir (mağaza akışı, ziyaret ve adımlar, iade, kullanıcı, gelir ve gider, Premium, defter); sinyal ve kayıt çağıranındır.
   ↳ Kapanış `state.lost`'a kaybı ekler (`users` += kullanıcı × (1 − elde tutma), `stores` += ayrılan mağaza); iki sayı birikmiş toplamdır.
@@ -62,7 +64,7 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 
 ## Metin anahtarları
 
-- Çekirdek oyuncuya görünen metin üretmez; arayüz kimlikten kurar.
+- Çekirdek oyuncuya görünen metin üretmez; arayüz kimlikten kurar. İki kaydın adı `MP_STORES_RECORD` ve `MP_USERS_RECORD` (`{product}` ürün adı).
 - Tür ve modül verisi: `PROD_TYPE_MARKETPLACE_*`, `PROD_DESK_*` (beş masa), `PROD_CONCEPT_*` (ağ etkisi, tavuk ve yumurta), `PROD_LINE_MARKETPLACE_*`, `PROD_STEP_MARKETPLACE_*`, paylaşılan hatların `_MARKETPLACE_DESC` satırları.
 
 ## Testler
@@ -76,6 +78,7 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 
 ## Dikkat
 
+- `SalesSystem._tick_satisfaction` her `b2c` kaydın memnuniyetini B2C hedefine sürükler: pazaryeri koşusunda koşarsa iki kaydın `sat` yansımasını ezer; kapanışı Satış yuvasına bağlayan iş onu türe göre keser.
 - `Dictionary.merged(x)` varsayılanda var olan anahtarı ezmez; dünya ve durum birleştirmelerinde hep `merged(x, true)`.
 - `:=` Dictionary erişiminden tür çıkaramaz (Variant); bu dosyada her sözlük okuması açık türle (`var x: float = ...`) yazılır.
 - "Sipariş" teslim edilendir; "Sipariş verdi" adımı `order` ayrıdır. "Geç teslimat" satırı teslim ÷ verilen oranına bakar: 0,97 × Siparişler çarpanı × Entegrasyonlar çarpanı × hata çarpanı, eşik 0,90.

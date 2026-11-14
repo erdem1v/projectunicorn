@@ -404,11 +404,16 @@ static func returning_share(state: Dictionary, cats: Array) -> float:
 
 # --- Gelir ve gider --------------------------------------------------------------------------
 
+## Ücret ödeyen üye: denemede katılan ödemez.
+static func paying_members(state: Dictionary) -> float:
+	return maxf(0.0, state.members - _sum(state.premium.joined))
+
+
 ## Komisyon geliri mağazalar kaydının, üyelik geliri kullanıcılar kaydının MRR'ına yazılır.
 static func monthly_revenue(state: Dictionary) -> Dictionary:
 	var inc: Dictionary = _c.income
-	var paying: float = maxf(0.0, state.members - _sum(state.premium.joined))
-	return {"commission": _sum(state.revenue_weeks) * inc.month_weeks / inc.window_weeks, "membership": paying * state.premium.fee}
+	return {"commission": _sum(state.revenue_weeks) * inc.month_weeks / inc.window_weeks,
+		"membership": paying_members(state) * state.premium.fee}
 
 
 ## Son kapanışın `pazaryeri` gideri, aylık.

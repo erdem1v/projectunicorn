@@ -166,7 +166,11 @@ kapanışında dolar; okumak onu doldurmaz ve pazaryeri koşusu olmayan oyunda (
 
 - İki kalabalık `CustomerRegistry`'de iki toplu kayıttır: kullanıcılar ve mağazalar. Memnuniyetleri bu kayıtlarda durur
   (`set_satisfaction`). **Komisyon geliri mağazalar kaydının, üyelik geliri kullanıcılar kaydının MRR'ına yazılır**
-  (`set_mrr`); toplam gelir bugünkü gibi `SalesSystem.reflect_mrr()` ile yansır.
+  (`set_mrr`); toplam gelir bugünkü gibi `SalesSystem.reflect_mrr()` ile yansır. Kayıtlar yayından sonraki ilk kapanışta
+  doğar ve yalnız kapanışta güncellenir. Koltuk, mağazalar kaydında açık kategorilerin mağaza toplamı, kullanıcılar
+  kaydında ücret ödeyen üyedir (denemedeki üye ödemez). Net komisyon eksiye düşerse mağazalar kaydının MRR'ı sıfırda
+  durur; `revenue_weeks` eksiyi saklar. İki kayıt hesap sayılmaz: `CustomerRegistry.account_count()` bireysel
+  (`individual`) toplu kayıtları saymaz.
 - Her şey haftalıktır: sistemin tek tiki haftalık kapanıştır ve günlük dağıtımın Satış yuvasında çalışır
   (`time_manager.gd:409`; sprint kapanışından ve Pazarlama tikinden sonra, Finans'tan önce). Saatlik tiki yoktur.
 - Sınırlar: komisyon %1 ile %30 arası tam sayı; Premium ücreti $1 ile $15 arası tam sayı.
