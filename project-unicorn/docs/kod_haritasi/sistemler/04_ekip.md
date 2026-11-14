@@ -67,7 +67,7 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
 - `WorkHoursSystem.sitting_open(hours)` `:57`: kurucunun dört oturumunun giriş kapısı · `vc_pitch_system.gd`, `sales_ledger.gd`, `sales_tab.gd`, `hunt_tab.gd`; kapalıyken gerekçesini `sitting_shut_key(late_key)` `:63` verir: haftanın mesai öncesi saatleri `SITTING_BLOCK_EARLY`, gerisi `late_key`
 - `WorkHoursSystem.overtime_pay_accrued_today()` `:333`: Finans çeker (itme yok) · `finance_system.gd`; `company_window()` `work_hours_system.gd:112` · `mail_clock.gd`, `incident_system.gd`
 - `LookSystem.for_person()` `look_system.gd:123`, `founder(portrait_id)` `:116` · `character_registry.gd:530-536`, `hr_search_system.gd:296`, `counterpart_system.gd:101`, onboarding
-- `FounderConstants.validate_alloc/validate_traits` `founder_constants.gd:137/152` · `game_state.gd:981,1007`, `origin_traits_step.gd`, `main.gd:5539`
+- `FounderConstants.validate_alloc/validate_traits` `founder_constants.gd:137/152` · `game_state.gd:981,1007`, `origin_traits_step.gd`, `main.gd:5552`
 - `FounderConstants.to_ruler(points)` `founder_constants.gd:33`: onboarding birimi → 0-10 cetvel (×2) · `game_state.gd:1002` (`_build_founder` `:975`)
 - `FounderConstants.starting_cash(origin, difficulty)` `founder_constants.gd:187` · `first_week_doc.gd`; `portrait_path()` `founder_constants.gd:192` · `ui_factory.gd:113`, `inbox.gd:458`, `personal_tab.gd:87`, onboarding
 - İzin alanı yazıcıları: `CharacterRegistry.set_away(id, kind, until_day)` `character_registry.gd:613` (hastalık), `set_leave_override(id, week, year)` `:623` (kaydırılmış yaz izni haftası)
@@ -131,7 +131,7 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
   ↳ Dolu ofiste kadro masaya varınca `_hire_the_team` masadaki dosyaları da işe almaz (`PROBE DECISION … hire desks_full`), dosya ya da istenen rol bekliyorsa bir kez yazılır
 - Görsel: `--hr-shot=<tür>` (`main.gd` `_run_hr_shot` `:3800`): `ekip`, `ekip-saat`, `ekip-uzun` (koşan sprintte uzun ürün adı: Görev sarar), `atlas`, `atlas-secili`, `atlas-ofis`, `atlas-dolu`, `dosyalar`, `dosyalar-pm`, `dosyalar-tasarim`, `dosyalar-dolu`, `dosyalar-tehlike`,
   ↳ `dosyalar-onay`, `dosyalar-mesai`, `gider`, `saatler`, `saatler-gece`, `saatler-sprint`, `gorevler`, `gorevler-arge`, `gorevler-bos`. Ayrıca `egitim`, `egitim-modal`, `egitim-secili`, `zam`, `menu`, `menu-kilit`, `cikar`,
-  ↳ `cikar-eksi`, `bos`, `dosya`, `dosya-kilit`, `dosya-kurucu`, `kalabalik`, `verim`, `urunsuz`, `izin`; kadro üç bölümden (biri izinde, biri tükenmiş, biri yeni işe alınmış); `kalabalik` kırk kişilik sıkı Kadro, Geliştirme kapalı,
+  ↳ `cikar-eksi`, `bos`, `dosya`, `dosya-kilit`, `dosya-kurucu`, `kalabalik`, `verim`, `urunsuz`, `izin`; kadro üç bölümden (biri izinde, biri tükenmiş, biri yeni işe alınmış), ürünü ERP, bordrosu burn'de; `kalabalik` kırk kişilik sıkı Kadro, Geliştirme kapalı,
   ↳ liste başlığın altına kaymış; `ekip-saat` Durum'da mesai istisnaları; `atlas-secili` rol ve seviye seçili arama; `saatler-sprint` kadro yok, kurucu tek başına, ürün türü seçili,
   ↳ mesai modalinin taslağı 15 saatte (haftalık sprint puanı satırı); `dosyalar` Orta geliştirici, `dosyalar-tasarim` tasarımcı (ikisinde haftalık sprint puanı satırı var),
   ↳ `dosyalar-pm` ürün yöneticisi dosyaları (satır yok: PM sprint puanı üretmez); `atlas-ofis` şirket İş hanı'nda, boş masalı arama (başlıkta masa satırı ve Ofisleri gör, şeritsiz); `atlas-dolu` on üç masanın hepsi dolu:

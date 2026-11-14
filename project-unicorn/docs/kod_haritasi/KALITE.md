@@ -1,12 +1,12 @@
 # Kod haritası · KALITE
 
-Üretildi: git c11ba01a · 2026-11-14 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git 4216fdf1 · 2026-11-14 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 259 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
 
 - scripts/debug/endgame_smoke.gd · 30415 satır · 689 func
-- scripts/main/main.gd · 6329 satır · 225 func
+- scripts/main/main.gd · 6342 satır · 226 func
 - scripts/debug/run_probe.gd · 2443 satır · 95 func
 - scripts/systems/sprint_system.gd · 2073 satır · 171 func
 - scripts/theme/build_theme.gd · 1665 satır · 31 func
@@ -41,13 +41,13 @@ Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları
 - scripts/theme/build_theme.gd:46 · _initialize · 320 satır
 - scripts/events/present/chips.gd:72 · describe · 311 satır
 - scripts/debug/endgame_smoke.gd:23906 · _case_sprint_timeline_matches_play_out · 266 satır
-- scripts/main/main.gd:3971 · _run_hr_shot · 263 satır
+- scripts/main/main.gd:3979 · _run_hr_shot · 261 satır
 - scripts/debug/endgame_smoke.gd:8606 · _case_hr_constants_contract · 220 satır
 - scripts/debug/endgame_smoke.gd:2259 · _case_save_v13_day_stamps_migrate · 209 satır
 - scripts/main/main.gd:1551 · _run_inbox_shot · 205 satır
 - scripts/autoload/game_state.gd:830 · initialize_run · 199 satır
+- scripts/main/main.gd:2282 · _run_office_shot · 184 satır
 - scripts/events/seams/seams_ported.gd:8 · install · 180 satır
-- scripts/main/main.gd:2282 · _run_office_shot · 176 satır
 - scripts/debug/endgame_smoke.gd:16839 · _case_fit_star_context · 166 satır
 - scripts/events/seams/seams_sales.gd:26 · install · 160 satır
 - scripts/main/main.gd:1955 · _run_sales_shot · 158 satır
@@ -67,8 +67,8 @@ Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları
 - scripts/debug/endgame_smoke.gd:1052 · _case_gate_decline_reminder · 125 satır
 - scripts/debug/endgame_smoke.gd:20743 · _thesis_presenter_body · 124 satır
 - scripts/debug/endgame_smoke.gd:20976 · _case_sales_meeting_time_skip_founder_share · 124 satır
+- scripts/main/main.gd:4577 · _seed_product_live · 124 satır
 - scripts/events/seams/seams_product.gd:15 · _install_product · 123 satır
-- scripts/main/main.gd:4565 · _seed_product_live · 123 satır
 - scripts/events/tools/why.gd:28 · report · 121 satır
 - scripts/events/tools/engine_probe.gd:582 · _check_invalidation · 119 satır
 - scripts/events/tools/lint.gd:229 · _lint_effects · 118 satır
@@ -103,9 +103,9 @@ UYARI: call("a"+b) gibi kurulmuş adlar, sinyal adıyla bağlama, harness bayrak
 - scripts/debug/office_crowd_probe.gd:48 · _log_error · debug
 - scripts/events/present/papers.gd:145 · arc_of
 - scripts/main/game_shell.gd:163 · debug_force_vc_meeting · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/main/main.gd:6270 · _dbg_close_request · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/main/main.gd:6275 · _dbg_onb_random_x20 · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/main/main.gd:6288 · _dbg_finish_run · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
+- scripts/main/main.gd:6283 · _dbg_close_request · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
+- scripts/main/main.gd:6288 · _dbg_onb_random_x20 · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
+- scripts/main/main.gd:6301 · _dbg_finish_run · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
 - scripts/systems/line_gates.gd:126 · speed_bonus_for
 - scripts/systems/product_catalog.gd:226 · type_sector_labels
 - scripts/systems/rnd_system.gd:707 · family_root_done

@@ -2301,7 +2301,15 @@ func _run_office_shot(spec: String) -> void:
 		"v1":
 			_seed_run_reproducible()
 			_seed_product_live("gate")
-		_: _seed_theme_surface()
+		"desk_shut": _seed_theme_surface()
+		_:
+			# The theme seed's company shipped an ERP: typed at v1.0, its sprint running, its crew on the payroll.
+			_seed_theme_surface()
+			SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
+			GameState.set_flag("mvp_version", 1)
+			SprintSystem.apply_lead()
+			SprintSystem.start()
+			_seed_payroll()
 	EventBus.speed_change_requested.emit(0)
 	# Debug path: the shot writes the office straight past OfficeSystem. The map and the meeting
 	# room are no office: the company sits in a real one, which the map's pin and chips read.
@@ -3981,9 +3989,8 @@ func _run_hr_shot(kind: String) -> void:
 			GameState.office_id = "ishani"
 			if kind == "atlas-dolu":   # LOC-DATA debug seed / id
 				OfficeCrowdProbe.seed_staff(OfficeSystem.desks_free())
-		# Kasa ve burn maaşları görsün: üst bar ile önizlemeler aynı gerçeği okur.
-		GameState.set_cash(240000)
-		FinanceSystem.daily_tick()
+		SprintSystem.choose_type("erp", "Defterix Fatura ve Ön Muhasebe" if kind == "ekip-uzun" else "Fatura")   # LOC-DATA debug seed / id
+		_seed_payroll()
 		if kind.ends_with("-kilit"):
 			CharacterRegistry.get_employees()[0].last_raise_day = GameState.day
 	match kind:
@@ -3992,7 +3999,6 @@ func _run_hr_shot(kind: String) -> void:
 		"saatler-sprint":   # LOC-DATA debug seed / id
 			SprintSystem.choose_type("note_tool", "Notly")   # LOC-DATA debug seed / id
 		"ekip-uzun":   # LOC-DATA debug seed / id
-			SprintSystem.choose_type("erp", "Defterix Fatura ve Ön Muhasebe")   # LOC-DATA debug seed / id
 			SprintSystem.apply_lead()
 			SprintSystem.start()
 		"urunsuz":   # LOC-DATA debug seed / id
@@ -4231,6 +4237,12 @@ func _run_hr_shot(kind: String) -> void:
 					_shot_fail("[HRShot] menüde İŞTEN ÇIKAR bulunamadı")
 					return
 	await _finish_shot("hr_shot_%s" % kind, 0.5)
+
+
+## The roster's company as the top bar reads it: its cash, and one finance tick that pulls the payroll into the burn.
+func _seed_payroll() -> void:
+	GameState.set_cash(240000)
+	FinanceSystem.daily_tick()
 
 
 func _seed_hr_roster() -> void:
@@ -4541,12 +4553,12 @@ func _tip_target(page: Control, tip: String) -> Control:
 
 
 ## live:<pick|pick_named|pick_relang|plan|active|decision_paper|b2c_mvp|b2c_live|b2c_goal|b2b_mvp|b2b_mature|b2b_quarter|
-## b2b_requests|gate|rnd|delegate|delegate_rehire|solo15|solo15_tip|solo12_active|overview_pre|server_80|server_94|server_104|server_growth|
+## b2b_requests|gate|rnd|delegate|delegate_rehire|solo15|solo15_tip|solo12_active|b2b_solo15|overview_pre|server_80|server_94|server_104|server_growth|
 ## server_auto|server_tier|server_final|server_clause|server_lock|server_b2c>. The pick ones leave the product untyped (the type picker). The solo ones
 ## leave the founder alone from 09:00: solo15 and solo15_tip stop in Sprint 1 planning at 15 hours, solo15 with
 ## the lead's plan applied, solo15_tip with the plan only offered; solo12_active
-## starts the lead's plan at 12 hours, two cards over capacity (30/28). The rest choose a type, staff it with the
-## HR shot roster (gate and rnd keep the founder alone at the default hours) and play through SprintSystem with
+## starts the lead's plan at 12 hours, two cards over capacity (30/28); b2b_solo15 is solo15 on the ERP. The rest choose
+## a type, staff it with the HR shot roster and its payroll (gate and rnd keep the founder alone at the default hours) and play through SprintSystem with
 ## only its own daily step ticking, so no card mounts: plan stops in Sprint 1 planning with the lead's plan and
 ## the first open card in the next column (the product and design roles go ahead on it), active (that card too) and
 ## decision_paper in its second week with a sprint paper on the desk (drawn at chance 1: the developer fixture paper,
@@ -4576,7 +4588,7 @@ func _seed_product_live(scenario: String) -> void:
 		scenario = "decision_paper"
 	var alone: bool = paper.begins_with("product.sprint_solo")
 	SprintSystem.choose_type("erp" if b2b else "note_tool", "Fatura" if b2b else "Notly")
-	if scenario.begins_with("solo"):
+	if "solo" in scenario:
 		WorkHoursSystem.set_company_hours(12 if scenario == "solo12_active" else 15)
 		if scenario != "solo15_tip":
 			SprintSystem.apply_lead()
@@ -4585,6 +4597,7 @@ func _seed_product_live(scenario: String) -> void:
 		return
 	if scenario not in ["gate", "rnd"] and not alone:
 		_seed_hr_roster()
+		_seed_payroll()
 	if scenario == "decision_paper" and not alone:
 		CharacterRegistry.set_status("char_emp_shot_2", HRConstants.STATUS_ACTIVE)   # the developer, whose paper it is
 	if paper.begins_with("product.sprint_untested"):
