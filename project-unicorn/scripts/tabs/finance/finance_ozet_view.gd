@@ -287,9 +287,9 @@ func _refresh_transactions() -> void:
 		rows.add_child(row)
 
 
-## Hedef: hedef listesi açıkken (Frank'in çeki, sonra seed turu) başlığı, biten adım sayısı, sıradaki adımı ve
-## göstergesi; liste yokken fazın hedefi. Altında yatırımcı iştahı (rakamsız: kapı yalnız MRR, çıtası basılmaz).
-## İkinci fazda liste yokken kart yalnız başlığı taşır, iştah onun hemen altındadır.
+## Hedef: açık listenin (Frank'in çeki, seed, Series A) başlığı, biten adım sayısı, sıradaki adımı ve göstergesi;
+## Series A avında sıradaki adımın yerinde masadaki teklif sayısı, tur imzalanınca turun tutarı. Altında yatırımcı
+## iştahı (rakamsız: kapı yalnız MRR, çıtası basılmaz).
 func _refresh_goal() -> void:
 	UiFactory.clear(_goal)
 	var head := SprintUiShared.box(UiTokens.SPACE_M)
@@ -297,18 +297,15 @@ func _refresh_goal() -> void:
 	var goal: Dictionary = ChequeRead.summary()
 	var value := ""
 	var title := ""
-	if not goal.is_empty():
-		title = goal.title_key
-		value = INBOX.goal_next(goal)
-	elif GameState.phase == 2:
-		title = "FIN_GOAL_P2_LABEL"
-	elif GameState.series_a_closed:
+	if goal.is_empty():
 		title = "FIN_GOAL_P3_CLOSED"
 		value = Fmt.money(GameState.run_investment_amount)
 	else:
-		var n: int = GameState.active_sheets.size()
-		title = "FIN_GOAL_P3_LABEL"
-		value = tr(Fmt.count_key("FIN_GOAL_P3_HUNT", n)).format({"n": n})
+		title = goal.title_key
+		value = INBOX.goal_next(goal)
+		if goal.list == "series_a" and GameState.phase >= 3:
+			var n: int = GameState.active_sheets.size()
+			value = tr(Fmt.count_key("FIN_GOAL_P3_HUNT", n)).format({"n": n})
 	# Fazın adı yazıldığı gibi; anahtarın sonundaki iki nokta başlıkta kesilir.
 	head.add_child(SprintUiShared.label(tr(title).trim_suffix(":"), &"CardTitle"))
 	if not goal.is_empty():

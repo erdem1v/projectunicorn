@@ -77,6 +77,9 @@ const MARKETING_WEEKS_MAX := 12
 const RUNWAY_ALERT_MONTHS := [3, 1]
 const RUNWAY_ALERT_REARM_MONTHS := 0.5
 
+# Near break-even the runway runs to hundreds of months; past this many it reads "24+". [WORKING]
+const RUNWAY_SHOWN_MAX_MONTHS := 24
+
 
 # --- Run boundary + save (SaveManager) ---
 

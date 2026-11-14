@@ -388,14 +388,14 @@ func _step_parts(step: Dictionary) -> PackedStringArray:
 
 
 ## The one size every goal step's words take at `room` in the live language: their own, or the largest under it
-## that the longest step of either list fits, never under LADDER_LEAST_FS. One size, so the words keep it from step to
+## that the longest step of any list fits, never under LADDER_LEAST_FS. One size, so the words keep it from step to
 ## step and from list to list.
 func _step_size(room: float) -> int:
 	var key := "%s|%d" % [TranslationServer.get_locale(), int(room)]
 	if not _step_px.has(key):
 		var words_font: Font = get_theme_font("font", &"LadderStep")
 		var figure_font: Font = get_theme_font("font", &"LadderFigure")
-		var all: Array = (ChequeRead.steps("cheque") + ChequeRead.steps("seed")).map(_step_parts)
+		var all: Array = (ChequeRead.steps("cheque") + ChequeRead.steps("seed") + ChequeRead.steps("series_a")).map(_step_parts)
 		var px: int = get_theme_font_size("font_size", &"LadderStep")
 		while px > LADDER_LEAST_FS and all.any(func(p: PackedStringArray) -> bool:
 				return words_font.get_string_size(p[0], HORIZONTAL_ALIGNMENT_LEFT, -1, px).x \

@@ -90,7 +90,7 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 		"morale_all": return [_figure("EFFECT_TEAM", _num(d), _signed(d))]
 		"morale_crew":
 			var crew: Array = item.get("names", []) if is_delta else EvEffects.crew_names(EvEffects.crew_of(item, ctx))
-			return [_figure("EFFECT_NIGHT_CREW", _num(d), _signed(d), {"names": _name_list(crew)})]
+			return [_figure("EFFECT_MORALE_NAMES", _num(d), _signed(d), {"names": _name_list(crew)})]
 		"trust_delta": return _trust_parts(item if is_delta else EvEffects.trust_plan(item, ctx))
 		"incident": return _incident_parts(item if is_delta else IncidentSystem.plan(String(item.get("act", ""))))
 		"promise_break": return _break_parts(item if is_delta else EvEffects.break_plan(item, ctx))
@@ -167,9 +167,12 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 		"damage_product":
 			var bugs: int = int(item.get("bugs", 1))
 			return [_counted("EFFECT_NEW_BUGS", bugs, {"line": _line_name(item)}, "cost")]
+		# One person's morale reads like the night crew's ("Emre: moral −4"); with nobody to name, the axis alone.
 		"change_morale":
-			var who: String = _first_name(_employee(item, ctx, is_delta), ctx, names, _t("EFFECT_MORALE"))
-			return [_figure("EFFECT_AXIS", _num(d), _signed(d), {"axis": who})]
+			var who: String = _first_name(_employee(item, ctx, is_delta), ctx, names, "")
+			if who == "":
+				return [_figure("EFFECT_AXIS", _num(d), _signed(d), {"axis": _t("EFFECT_MORALE")})]
+			return [_figure("EFFECT_MORALE_NAMES", _num(d), _signed(d), {"names": who})]
 		# The row's figures, else the terms HRSystem lands them at (the lone founder's cap included).
 		"productivity_mod":
 			var pace: Dictionary = item if is_delta \

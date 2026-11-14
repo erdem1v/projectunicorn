@@ -4301,7 +4301,8 @@ func _run_ending_shot(key: String) -> void:
 		pr.star = 1
 		pr.pain_feature_id = "ai_vec_filter"
 		SalesSystem.add_b2b_customer(pr, 20, 50, 70)   # 20 seats x $50 = $1.000
-	GameState.run_customers_signed = 9
+	# Gazetenin "kazanıldı" satırı MÜŞTERİ ve KAYBEDİLEN hücreleriyle tutsun.
+	GameState.run_customers_signed = companies.size() + GameState.run_customers_lost
 	GameState.mrr = 6400
 	var emp_names := ["Burcu Çetin", "Mert Aydın", "Selin Koç"]   # LOC-DATA debug seed / id
 	for i in emp_names.size():

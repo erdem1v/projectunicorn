@@ -4989,7 +4989,7 @@ static func _case_cheque_read_steps() -> String:
 	EvHistory.record(ANGEL_ID, EvHistory.RESOLUTION_CHOSEN, "decline", "refused", {}, [])
 	reads.call("cheque declined", "seed 0/2 traction@sales")
 	GameState.seed_pitch_used = true
-	reads.call("seed pitch burned", "none")
+	reads.call("seed pitch burned", "series_a 0/2 hunt@sales")
 
 	SaveManager.reset_all_owners()
 	GameState.initialize_run({"seed": 424242})
@@ -5013,7 +5013,14 @@ static func _case_cheque_read_steps() -> String:
 	GameState.seed_sheet = TermSheet.new()   # the offer waits on the table: the round is not burned
 	reads.call("seed offer waiting", "seed 2/2 -")
 	GameState.record_seed_round(15, 120000, "anchor")
-	reads.call("seed signed", "none")
+	reads.call("seed signed", "series_a 0/2 hunt@sales")
+	bar.call("seed signed", SalesSystem.TRACTION_MRR_TARGET)
+	GameState.phase_gate_ready = true
+	GameState.pending_next_phase = 3
+	GameState.advance_phase()
+	reads.call("series a hunt", "series_a 1/2 sign@finance")
+	GameState.series_a_closed = true
+	reads.call("series a signed", "none")
 
 	SaveManager.reset_all_owners()
 	GameState.initialize_run({"seed": 424242})

@@ -383,7 +383,7 @@ slot of that type (§17.12).
 | `olay.odds_15` | global | float | Events | a fixed dice odds, EvTuning.ODDS |
 | `olay.odds_20` | global | float | Events | a fixed dice odds, EvTuning.ODDS |
 | `olay.odds_25` | global | float | Events | a fixed dice odds, EvTuning.ODDS |
-| `olay.outage_load` | global | int | Incident | the server load, in percent, the open outage was rolled at, for by_seam text; 0 for another kind |
+| `olay.outage_load` | global | int | Incident | the server load, in percent, the open outage was rolled at, for by_seam text; 0 for another kind or no server capacity |
 | `olay.payers` | global | int | Incident | people a fix outside the sprint costs morale (SprintSystem.payers, on the line the emergency hit); 0 locks the option |
 | `olay.service_up` | global | bool | Incident | no emergency is open, or the fix it was answered with is done |
 | `olay.shares` | global | int | Incident | how many times the post going round has been shared: a share of the audience |

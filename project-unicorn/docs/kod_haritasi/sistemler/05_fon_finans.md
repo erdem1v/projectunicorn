@@ -17,7 +17,7 @@ Sahipler (Mesajlar ve teslim saati): `MessageSystem` (`GameState.messages` ve `m
 Kapsam içi (`scripts/`):
 - `systems/finance_system.gd` (325): kasa tiki, burn kalemleri, tek seferlik gider/gelir, işlem günlüğü, pazarlama kampanyası, runway eşikleri.
 - `systems/angel_round_system.gd` (52): Frank'in çeki. `accept_offer` kasayı, hisse tablosunu ve sürümü tek adımda yazar.
-- `systems/cheque_read.gd` (68): koşunun adlı hedef listesi (çek, sonra seed). `class_name` yok, okuyanlar preload eder.
+- `systems/cheque_read.gd` (73): koşunun adlı hedef listesi (çek, sonra seed, sonra Series A). `class_name` yok, okuyanlar preload eder.
 - `systems/phase_gate_system.gd` (178): faz kapısı mandalı (Traction ve Series A), Series A sinyali ve yaklaşma adımı.
 - `systems/vc_pitch_system.gd` (1327): VC görüşmesi (5 vuruş), inanç, teklif üretimi, term sheet sonuçları, geri arama, görüşme takvimi.
 - `systems/pitch_constants.gd` (187): VC odasının ve masanın ayar sabitleri; `class_name PitchConstants`.
@@ -65,7 +65,7 @@ Finans:
 
 Fon merdiveni:
 - `AngelRoundSystem.accept_offer()` `angel_round_system.gd:37`: çekin kabulü · `events/core/effects.gd:565` (`angel_accept` fiili, kart `funding.frank_cheque`).
-- `ChequeRead.list()/steps()/summary()` `cheque_read.gd:15/:28/:54`: hedef listesi; `steps(which)` adı verilen listeyi de okur (üst barın adım boyu iki listenin en uzun adımına göre) · `finance_ozet_view.gd:300`, `personal_tab.gd:198`, `top_bar.gd:344`, `inbox.gd`, `office_notice_stack.gd:130`.
+- `ChequeRead.list()/steps()/summary()` `cheque_read.gd:18/:31/:66`: hedef listesi; `steps(which)` adı verilen listeyi de okur (üst barın adım boyu üç listenin en uzun adımına göre) · `finance_ozet_view.gd:300`, `personal_tab.gd:198`, `top_bar.gd:344`, `inbox.gd`, `office_notice_stack.gd:130`.
 - `PhaseGateSystem.on_gate_declined()` `phase_gate_system.gd:94`: "Henüz değil" · `events/core/effects.gd:562` (`phase_gate_decline` fiili).
 - `PhaseGateSystem.on_shutter_started()` `:102`: sıradaki kapı kartlarını kuyruktan çeker · `EndingsSystem._tick_shutter` `endings_system.gd:119`.
 - `PhaseGateSystem.series_a_signal()/series_a_approach()` `:135/:157`: kapalı, ısınıyor, açık okuması · `seams_world.gd:37`, `finance_ozet_view.gd:328`, `investor_appetite_ui.gd`.
@@ -167,7 +167,7 @@ Sabitler:
 `localization/strings.csv`; aile önekleri ve okuyan dosyalar (DIZIN.md "Metin anahtarı aileleri"):
 - `FIN_BURN_*`, `FIN_ONETIME_*`, `ANGEL_TX_*`, `SEED_TX_*`: `finance_system.gd` (kalem ve işlem adları, `ONE_TIME_LABELS` değerleri).
 - `FIN_*` geri kalanı (`FIN_CAP_*`, `FIN_GOAL_*`, `FIN_PROFIT_*`, `FIN_MARKET_*`): `finance_ozet_view.gd`, `finance_tab.gd`, `top_bar.gd`.
-- `CHEQUE_STEP_*`, `CHEQUE_TITLE`, `GOAL_STEP_*`, `SEED_SECTION_TITLE`: `cheque_read.gd`; `ANGEL_CHOICE_*`, `ANGEL_EVENT_*`, `ANGEL_NUDGE_*`: kartlar `frank_cheque.json`, `hire_nudge.json`;
+- `CHEQUE_STEP_*`, `CHEQUE_TITLE`, `GOAL_STEP_*`, `SEED_SECTION_TITLE`, `GOAL_SERIES_A_TITLE`: `cheque_read.gd`; `ANGEL_CHOICE_*`, `ANGEL_EVENT_*`, `ANGEL_NUDGE_*`: kartlar `frank_cheque.json`, `hire_nudge.json`;
   `ANGEL_MONTH_HIGHLIGHT`: `angel_round_system.gd:52`.
 - `GATE_*` (`GATE_OPENED` `phase_gate_system.gd:87`), `FRANK_DOOR_*`, `FRANK_APPROACH_*`, `FRANK_OFFICE_*`: `data/events/cards/funding/*.json`.
 - `VC_*` (`VC_B1..B4`, `VC_Q_*`, `VC_WHY_*`, `VC_FRANK_*`, `VC_REACT_*`, `VC_RES_*`, `VC_APPROACH_*`), `SEED_B*`, `SEED_Q_*`, `SEED_RES_*`: `vc_pitch_system.gd`; ön ek `_k()` ile seçilir (`vc_pitch_system.gd:1310`).

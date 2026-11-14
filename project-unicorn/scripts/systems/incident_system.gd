@@ -384,9 +384,11 @@ static func version() -> String:
 	return String(GameState.incident.get("open", {}).get("version", ""))
 
 
-## The server load, in percent, the open outage was rolled at; 0 for another kind of emergency.
+## The server load, in percent, the open outage was rolled at; 0 for another kind of emergency and for a product with
+## no server capacity, whose load is not a percentage.
 static func outage_load() -> int:
-	return int(GameState.incident.get("open", {}).get("load", 0))
+	var pct := int(GameState.incident.get("open", {}).get("load", 0))
+	return 0 if pct == InfraSystem.LOAD_UNBOUNDED else pct
 
 
 ## Which of a card's bodies the open emergency reads (the card's `by_seam` variants): a month that cannot close and a

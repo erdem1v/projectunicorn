@@ -402,6 +402,8 @@ static func net_runway_text(months: float) -> String:
 		return _runway_weeks_text(0.0)
 	if months == INF:
 		return ""
+	if months > FinanceSystem.RUNWAY_SHOWN_MAX_MONTHS:
+		return "%d+ %s" % [FinanceSystem.RUNWAY_SHOWN_MAX_MONTHS, TranslationServer.translate("RUNWAY_UNIT_MONTHS")]
 	# Under a month a bare "0 ay" reads as insolvency; say it in weeks.
 	if months < 1.0:
 		return _runway_weeks_text(months)
@@ -410,13 +412,14 @@ static func net_runway_text(months: float) -> String:
 
 ## İki runway değeri yan yana ("önce → sonra" şeritleri). net_runway_text tam aya
 ## yuvarlar; iki sayı yan yana konduğunda bu, "5 ay → 5 ay" yazan bir yalan üretir. Ay
-## metinleri aynı çıkıp hafta metinleri ayrışıyorsa ikisi de HAFTA'da yazılır. `changed`,
-## ekrana basılan iki metnin farklı olmasıdır: aynı okunan çift kırmızıya boyanmaz. Net akış
-## eksiye dönmüyorsa taraf "" okur (hem öncesi hem sonrası boşsa şerit çizilmez).
+## metinleri aynı çıkıp hafta metinleri ayrışıyorsa ikisi de HAFTA'da yazılır; tavanın
+## üstündeki çift "24+ ay" kalır. `changed`, ekrana basılan iki metnin farklı olmasıdır:
+## aynı okunan çift kırmızıya boyanmaz. Net akış eksiye dönmüyorsa taraf "" okur (hem
+## öncesi hem sonrası boşsa şerit çizilmez).
 static func net_runway_pair(before: float, after: float) -> Dictionary:
 	var before_text: String = net_runway_text(before)
 	var after_text: String = net_runway_text(after)
-	if before_text == after_text and is_finite(before) and GameState.cash >= 0 \
+	if before_text == after_text and before <= FinanceSystem.RUNWAY_SHOWN_MAX_MONTHS and GameState.cash >= 0 \
 			and TimeModel.whole_ticks(before) != TimeModel.whole_ticks(after):
 		before_text = _runway_weeks_text(before)
 		after_text = _runway_weeks_text(after)

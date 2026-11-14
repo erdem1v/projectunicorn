@@ -211,7 +211,7 @@ Anahtarlar `localization/strings.csv`'de (sütunlar keys,tr,en); sekmeler `tr("A
 - `RND_*` (LEGEND, VIEW, TREE, WEEKS, REQ, NEED, FAMILY, PLACE, ASSIGN, ABANDON, COMPLETED, NOTE, HISTORY, FROZEN...): rnd_tab, rnd_ui_shared, rnd_detail_panel, rnd_assign_panel, rnd_history, rnd_tree_view, mail_pane.
 - `INBOX_*`, `MAIL_*` (RPT, STAMP...), `DESK_PAPER_*`, `GATE_ANSWER_*`, `PAPER_GONE_*`, `SUPPORT_RPT_*`, `MONTH_ROW_*`: events_tab, mail_pane (INBOX_* ayrıca inbox.gd).
 - `PIYASA_*` (KPI, RANGE, FILTER, SHARE, LIST, COL, ABOUT, CTX_<yıl>...): yalnız piyasa_tab; bağlam satırı yıla göre `PIYASA_CTX_%d`, yoksa `PIYASA_CTX_2012`.
-- `PER_*`, `PERSONAL_MS_*`, `MILESTONE_*`: personal_tab (hedef `PER_GOAL_TRACTION` / `PER_GOAL_SERIES_A`, taş notları `MILESTONE_NOTES` personal_tab.gd:17-20).
+- `PER_*`, `PERSONAL_MS_*`, `MILESTONE_*`: personal_tab (hedef açık listeden, `ChequeRead`; Series A imzalanınca `FIN_GOAL_P3_CLOSED`; taş notları `MILESTONE_NOTES` personal_tab.gd:15-18).
 - Ortak: `UI_DISMISS`, `UI_CONFIRM`, `NUM_DECIMAL`, `TOPBAR_SHUTTER`, `TOPBAR_GATE`. Anahtar çözülmezse ekranda ham token çıkar (`loc_residue` yakalar).
 
 ## Testler

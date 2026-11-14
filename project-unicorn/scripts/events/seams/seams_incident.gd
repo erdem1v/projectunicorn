@@ -31,7 +31,7 @@ static func install() -> void:
 		"Incident", "the version the open regression broke, v1.4")
 	EvSeams.register("olay.outage_load", G, TYPE_INT,
 		func() -> int: return IncidentSystem.outage_load(),
-		"Incident", "the server load, in percent, the open outage was rolled at, for by_seam text; 0 for another kind")
+		"Incident", "the server load, in percent, the open outage was rolled at, for by_seam text; 0 for another kind or no server capacity")
 	EvSeams.register("olay.affected_accounts", G, TYPE_INT,
 		func() -> int: return SprintCatalog.line_accounts(IncidentSystem.hit_line()).size(),
 		"Incident", "active B2B accounts that use the line the emergency hit")
