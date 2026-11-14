@@ -3473,8 +3473,8 @@ func _stage_tex_mem() -> float:
 
 
 # --onboard-shot=<1|2|3>[:<state>][:<tip>] | curtain. Prints the node count of the set-up, which NEW GAME from the menu matches
-# (--backdrop-probe), with its texture memory before the flat is up, and ONB|stage=live|figure=<id> once it is; the
-# frame waits for it. States: 1:plate (the plate and portrait the flat stands on until it is up), 1:cancel (a name
+# (--backdrop-probe), with its texture memory before the stage is up, and ONB|stage=live once it is; the
+# frame waits for it. States: 1:plate (the plate alone, before the live city), 1:cancel (a name
 # typed, then Esc), 2:random (Randomize), 2:hard_locked and 2:hard_open (set on the document alone: the profile's
 # finished runs are never written), 3:guided_locked, 3:reroll (Make new set pressed once); curtain is the curtain over
 # step 3, which names the mockup's company and picks its second emblem. Steps 2 and 3 are mounted straight: their draft
@@ -3494,7 +3494,7 @@ func _run_onboard_shot(spec: String) -> void:
 	var live := [false]
 	stage.live_ready.connect(func() -> void:
 		live[0] = true
-		print("ONB|stage=live|figure=%s" % _flow.draft.portrait_id))
+		print("ONB|stage=live"))
 	await get_tree().process_frame
 	await get_tree().process_frame
 	print("ONB|nodes=%d|tex_mib=%.2f" % [Performance.get_monitor(Performance.OBJECT_NODE_COUNT),

@@ -38,14 +38,14 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 - `scripts/ui/meeting/meeting_panel.gd` (790): `MeetingPanel`; satış ve VC görüşmesinin dok paneli (baş, dökümcük, güverte), adaptörün adımlarını oynatır
 - `scripts/ui/meeting/meeting_panel_option.gd` (125): güvertedeki seçenek kartı (tuş, etiket, zar, kilit) · `meeting_ruler.gd` (122): `MeetingRuler`; fiyat cetveli
 - `scripts/ui/meeting/sales_meeting_adapter.gd` (320) ve `vc_meeting_adapter.gd` (200): sistemin görünümünü panelin "adım" sözlüğüne çevirir (RefCounted)
-- `scripts/ui/menu_backdrop.gd` (138): menü ve onboarding'in arkasındaki 3B yer (ofis sahnesi, kişisiz, sabit saatte); `live_ready` sinyali
+- `scripts/ui/menu_backdrop.gd` (102): menü ve onboarding'in arkasındaki 3B şehir (kişisiz, sabit saatte; ofis yalnız plaka fırını ve ölçüm için); `live_ready` sinyali
 - `scripts/menu/main_menu.gd` (94): ana menü (Devam, Yeni oyun, Yükle, Ayarlar, Jenerik, Çık) tek odak zinciri · `continue_card.gd` (19): Devam kartı
 - `scripts/menu/godot_card.gd` (35): "Godot ile yapıldı" kartı · `credits.gd` (60): Jenerik (`data/credits.json`) · `licenses.gd` (80): düz lisans metni
 - `scripts/modals/confirm_modal.gd` (65): genel onay · `hr_action_modal.gd` (237): zam/terfi/izin/çıkarma onayı (kaydırıcılı) · `system_menu_modal.gd` (106): ESC menüsü
 - `scripts/modals/settings_modal.gd` (480): altı bölümlü canlı Ayarlar · `save_load_modal.gd` (262): Kaydet/Yükle, iki kip · `ending_scene.gd` (557): `EndingScene`; Ekonomi Postası ve dönüm noktası kâğıdı
 - `scripts/modals/term_sheet_table_scene.gd` (437): `TermSheetTableScene`; tam ekran term sheet masası, sistemin `view_state`ini boyar
 - `scripts/modals/training_modal.gd` (175) ve `work_hours_modal.gd` (492): HR paneli modalları; `scripts/tabs/hr/hr_panel.gd`i genişletir, PanelLayer'a `HRUiShared.mount_panel_modal` ile takılır
-- `scripts/onboarding/onboarding_flow.gd` (213): ilk kullanım akışı, `draft` sahibi · `first_week_doc.gd` (235): yandaki "ilk hafta" belgesi
+- `scripts/onboarding/onboarding_flow.gd` (208): ilk kullanım akışı, `draft` sahibi · `first_week_doc.gd` (235): yandaki "ilk hafta" belgesi
 - `scripts/onboarding/steps/step_base.gd` (119): `OnboardingStep` sözleşmesi · `character_step.gd` (111) · `origin_traits_step.gd` (329) · `company_step.gd` (104)
 - Sahneler: `scenes/ui/components/` (TopBar, LeftTabs, NewsTicker, BuildBar, BuildHUDPanel, ResearchBar, `avatar_bust.gdshader`), `scenes/menu/` (5 tscn, `menu_grade.gdshader`)
 - Sahneler (devam): `scenes/modals/` (10 tscn; HRAtlasModal'ın betiği `scripts/tabs/hr/hr_atlas_modal.gd`), `scenes/onboarding/` (OnboardingFlow, 3 adım), `scenes/debug/ThemeProbe.tscn`
@@ -81,9 +81,9 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 - `MeetingPanel.open(adapter, cast)` `meeting_panel.gd:124`, `pick(id)` `:145`, `proceed()` `:168`, sinyal `closed` `:19`: panel oynatır, seçimi adaptöre iletir · `main.gd:5165`
 - `SalesMeetingAdapter._init(prospect_id)` `sales_meeting_adapter.gd:51`, `start` `:56`, `pick` `:81`, `select` `:102`, `proceed` `:109`, `end_sitting` `:117` · `MeetingPanel` ve `main.gd:5152`
 - `VcMeetingAdapter._init(view_state)` `vc_meeting_adapter.gd:41`, `start` `:50`, `pick` `:62`, `proceed` `:92`, `withdraw` `:99`, `end_sitting` `:104` · `MeetingPanel` ve `main.gd:5142`
-- `OnboardingFlow._commit()` `onboarding_flow.gd:192`: perdeyi çizer, sahneyi durdurur, `GameState.initialize_run(draft)` `game_state.gd:768`, `completed` · `_on_next()` `onboarding_flow.gd:155` son adımda
-- `OnboardingStep` sözleşmesi `step_base.gd`: `prefill` `:23`, `invalid_reason` `:28`, `is_valid` `:32`, `collect_payload` `:36`, `roll` `:40` · yalnız `onboarding_flow.gd:92` (`_mount_step`) çağırır
-- `MenuBackdrop.start(office_id, minute, figure)` `menu_backdrop.gd:40`, `stop()` `:65`, `set_figure()` `:75` · `main_menu.gd` (MenuBackdrop sahnede), `onboarding_flow.gd:70`, `main.gd:138`
+- `OnboardingFlow._commit()` `onboarding_flow.gd:187`: perdeyi çizer, sahneyi durdurur, `GameState.initialize_run(draft)` `game_state.gd:768`, `completed` · `_on_next()` `onboarding_flow.gd:150` son adımda
+- `OnboardingStep` sözleşmesi `step_base.gd`: `prefill` `:23`, `invalid_reason` `:28`, `is_valid` `:32`, `collect_payload` `:36`, `roll` `:40` · yalnız `onboarding_flow.gd:91` (`_mount_step`) çağırır
+- `MenuBackdrop.start(office_id, minute)` `menu_backdrop.gd:33`, `stop()` `:57` · `main_menu.gd` (MenuBackdrop sahnede), `onboarding_flow.gd:70`, `main.gd:138`
 - `UiFactory.make_person_avatar(name, look, px, grey)` `ui_factory.gd:106` → `PersonBust.texture(look, px)` `person_bust.gd:38` · meeting_panel.gd:571, term_sheet_table_scene.gd:110,224
 - `UiFactory.make_mentor_avatar(px)` `ui_factory.gd:111`: Frank'in önceden render edilmiş portresi · meeting_panel.gd:423, term_sheet_table_scene.gd:246
 - `UiTokens.set_colorblind(on)` `ui_tokens.gd:317`, `D_variation(name)` `:974`: palet anahtarı; çağıran `Settings`/`settings_modal.gd:249`, sonra `EventBus.palette_changed`
@@ -92,13 +92,13 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 
 ## Sinyaller
 - `dismissed`: modallar yayar (tanım `confirm_modal.gd:13`, `hr_action_modal.gd:16`, `save_load_modal.gd:14`, `settings_modal.gd:16`, `system_menu_modal.gd:18`, `credits.gd:6`, `licenses.gd:8`) · `main.gd:5201,5083,5102,5136` ve menü
-- `confirmed` / `alt_selected`: `confirm_modal.gd:11,12`, `hr_action_modal.gd:15` · `main.gd:5221,5082` (`config.on_confirm`, `on_alt`), `onboarding_flow.gd:177` (iptal onayı)
+- `confirmed` / `alt_selected`: `confirm_modal.gd:11,12`, `hr_action_modal.gd:15` · `main.gd:5221,5082` (`config.on_confirm`, `on_alt`), `onboarding_flow.gd:172` (iptal onayı)
 - `save_requested(slot_id)` / `load_requested(slot_id)`: `save_load_modal.gd:15,16`; `main_menu.gd:8` yayar · `main.gd:5280,5138` ve `main.gd:133` (`_load_slot` `:5088`)
 - `main_menu_requested` / `exit_save_requested`: `system_menu_modal.gd:19,20` (yayın `:63`, `:93`); `ending_scene.gd:41` · `main.gd:5246,5104,5271`
 - `continue_requested`: `ending_scene.gd:40` (yayın `:446`) · `main.gd:5424` (`_on_milestone_continue`)
 - `closed`: `meeting_panel.gd:19`, `term_sheet_table_scene.gd:17` · `main.gd:5169` (`_close_meeting`), `main.gd:5483` (`_close_term_table`)
 - `new_game_requested`: `main_menu.gd:7` (yayın `:51`) · `main.gd:130` · `finished`: `godot_card.gd:6` (yayın `:35`) · `main.gd:118` · `back`: `licenses.gd:7` · `credits.gd:44`
-- `completed` / `cancelled`: `onboarding_flow.gd:11,12` (yayın `:203`, `:172,177`) · `main.gd:154,155` · `live_ready`: `menu_backdrop.gd:9` (yayın `:138`) · `main.gd:2967`, `onboarding_flow.gd:70`
+- `completed` / `cancelled`: `onboarding_flow.gd:11,12` (yayın `:196`, `:166,171`) · `main.gd:154,155` · `live_ready`: `menu_backdrop.gd:10` (yayın `:102`) · `main.gd:2967`
 - `changed`: `step_base.gd:15` · `onboarding_flow.gd:_mount_step` · `picked(field, value)`: `first_week_doc.gd:7` · `onboarding_flow.gd:_ready` (taslağı yazar, `_refresh`)
 - `open_changed(open)`: `news_ticker.gd:53` (yayın `:108`) · `game_shell.gd:30` (`_lay_ticker`) · `spin_finished`: `radial_dial.gd:9` (yayın `:70`) · `term_sheet_table_scene.gd:72`
 - `clicked` / `hovered(on)`: `meeting_panel_option.gd:9,10` · `meeting_panel.gd:663,679` · `changed(value)`: `meeting_ruler.gd:13` · `meeting_panel.gd:506`
@@ -221,7 +221,7 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
   ↳ tutuş altında reddedilen Kabul et, kesime düşen satış çağrısının tostu ve `INVITE|lapse` satırı. Tostsuz düşen fon çağrısının erteleme bedeli `INVITE|lapse_vc|ringing=…|penalty=…` satırı;
   ↳ düşüşlerde önce `invite_shot_<tür>_ring` karesi, sonra `invite_shot_<tür>`
 - Görsel (Onboarding): `--onboard-shot=<1|2|3>[:<durum>]` | `curtain` (durumlar `1:plate`, `1:cancel`, `2:random`, `2:hard_locked`, `2:hard_open`, `3:guided_locked`, `3:reroll`; `2` taslakta bir beceriye 2 dağıtım puanı yazar:
-  ↳ cetvelde 4); kurulumun düğüm sayısını `ONB|nodes=|tex_mib=` basar, sahne gelince `ONB|stage=live|figure=`; `--theme-audit=onboard:<1|2|3>`, `--inbox-shot=intro`;
+  ↳ cetvelde 4); kurulumun düğüm sayısını `ONB|nodes=|tex_mib=` basar, sahne gelince `ONB|stage=live`; `--theme-audit=onboard:<1|2|3>`, `--inbox-shot=intro`;
   ↳ `project.godot` `main_args`'taki `--skip-onboarding` doğrudan kabuğa geçer; probe onboarding'i atlar (kayıt türü yok)
 - Ortak bayraklar: `--lang=tr|en`, `--shot-size=GxY`, `--shot-scale=1.25`, `--palette=cb` (`main.gd:598`). Kayıt yazan `--modal-shot=save*|load*` ve `--menu-shot` ayrı `APPDATA` ile koşar (CLAUDE.md §12)
 - Debug seam'leri (argsız, MCP): `_dbg_menu_digest()` `main.gd:5539`, `_dbg_close_request()` `:5260`, `_dbg_finish_run()` `:5278`, `_dbg_onb_random_x20()` `:5265`; `kit_probe.gd` `--probe-shot=kit` koyu kitin durumlarını çizer
@@ -249,7 +249,7 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 - Büst önbelleği (look imzası, piksel boyutu) anahtarlıdır (`person_bust.gd:41`): aynı kişi iki boyutta iki ayrı iş kuyruğa girer, doku çizilene kadar boştur
 - Frank ve kurucu portreleri önceden render edilmiş PNG (`FounderConstants.portrait_path`, `assets/art/portraits/`); kurucuda 11 kimlik `PORTRAIT_IDS`
 - Kalabalık satır ölçümü için `--render-probe=hr:<kişi>` (`main.gd:390`) kare maliyetini ve doku belleğini basar
-- Onboarding yerleşimi iki değerli tablolardır (`PAPER`, `DOC`, `BUST` `onboarding_flow.gd:24-27`; 1080 yüksek ve daha kısa): yeni öğe ikisine de eklenir; `main_menu.gd` `COLUMN`/`LOCKUP_S` aynı desen
+- Onboarding yerleşimi iki değerli tablolardır (`PAPER`, `DOC` `onboarding_flow.gd:26-27`; 1080 yüksek ve daha kısa): yeni öğe ikisine de eklenir; `main_menu.gd` `COLUMN`/`LOCKUP_S` aynı desen
 - Onboarding'in neden etiketi alt şeritteki `Paper/Col/Foot/Row/Reason` düğümüdür (`OnboardingFlow.tscn:121`, kodda `%Reason`); karakter adımı portreyi doku olarak koyar (`character_step.gd:55`, `FounderConstants.portrait_path`),
   ↳ ayrı bir portre kartı bileşeni yoktur
 - `NewsTicker` `PROCESS_MODE_ALWAYS`tır ve gerçek zamanda akar; `_exit_tree` bağlantıları elle koparır (`news_ticker.gd:85`); yeni `EventBus` bağlantısı eklersen kopar

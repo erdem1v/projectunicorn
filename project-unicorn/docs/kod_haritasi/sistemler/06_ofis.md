@@ -79,7 +79,7 @@ Sistem:
 - `OfficeSystem.upfront(id)` `scripts/systems/office_system.gd:25`: peşin kira (`UPFRONT_MONTHS` × kira) · `office_map_card.gd:34`, `can_move_to`, `move_to`
 
 Görünüm:
-- `OfficeView._ready()` `scripts/ui/office/office_view.gd:49`: sahne açılışında; ışık, `cast`, `travel`, `invite` kurulur · `scenes/main/GameShell.tscn:43`, `scripts/ui/menu_backdrop.gd:50`
+- `OfficeView._ready()` `scripts/ui/office/office_view.gd:49`: sahne açılışında; ışık, `cast`, `travel`, `invite` kurulur · `scenes/main/GameShell.tscn:43`, `scripts/ui/menu_backdrop.gd:42`
 - `OfficeView.load_layout(id, road)` `scripts/ui/office/office_view.gd:86`: ofis/city/meet yükler, zemin ve bağlantıları kurar · `office_changed` sinyali (`:63`), `OfficeTravel._blink` (`office_travel.gd:144`)
 - `OfficeView._process()` `scripts/ui/office/office_view.gd:180`: her karede `OfficeLighting.apply(TimeManager.day_minute())` ve hover
 - `OfficeView.apply_graphics()` `scripts/ui/office/office_view.gd:196`: ayar, yeniden boyutlama, yeni yerleşim · `GraphicsSettings.apply_view`
@@ -99,7 +99,7 @@ Kişiler:
 - `OfficePeople.office_empty()` `scripts/ui/office/office_people.gd:110`: gece kapısı · `TimeManager.register_night_gate` (`:100`, `time_manager.gd:264`)
 - `OfficePeople.pick()` `:203`, `hover()` `:208`, `select()` `:216` · `office_view.gd:185,228`
 - `OfficePeople.send_founder_out()` `:125`, `founder_back()` `:138`, `seat_founder_now()` `:147`, `nearest_to_founder()` `:161` · `scripts/ui/office/office_travel.gd:69,104,107`
-- `OfficePerson.setup(look)` `scripts/ui/office/office_person.gd:253`, `place()` `:335`, `go_to()` `:372`: gövde kurulur, yerleştirilir, yürütülür · `office_actor.gd:88`, `menu_backdrop.gd:_stand_figure`
+- `OfficePerson.setup(look)` `scripts/ui/office/office_person.gd:253`, `place()` `:335`, `go_to()` `:372`: gövde kurulur, yerleştirilir, yürütülür · `office_actor.gd:88`
 - `OfficeActor.setup_actor(c)` `scripts/ui/office/office_actor.gd:84`, `decorate(icon_size)` `:104` · `office_people.gd:_sync`, `_process`
 - `OfficeBody.build(look)` `scripts/ui/office/office_body.gd:42`, `mesh_of()` `:68` · `office_person.gd:257`, `person_bust.gd`
 - `PersonBust.texture(look, px)` `scripts/ui/office/person_bust.gd:38`: arayüz avatarı için büst · `scripts/theme/ui_factory.gd:107`, `scripts/tabs/events/mail_pane.gd:276`
@@ -211,8 +211,8 @@ Pencereli görsel ve ölçüm (bayrak `main.gd` tablosunda, `:271-276`; PNG `%AP
 - `tools/office3d/src/` tasarımın bayt-bayt kopyasıdır; değişebilen tek şey `DESIGN_SOURCE.md` tablosundaki deltalardır (`tools/office3d` işaretli bloklar). Geometriye elle dokunulmaz
 - Godot düğümlere ve malzemelere ADLA bağlanır (`station_<i>_lamp`, `pane_<i>`, `frame_<id>`, `pin`, `ferry`...); içe aktarma ipucu sonekleri (`_col`, `_noimp`, `_occ`) adlarda yasak (README "Bağlama sözleşmesi")
 - `OfficeCamera.LOCKS` (`office_camera.gd:24`) mahallenin kapsadığı kareden ölçülmüştür; `neighbourhood.js` ya da builder ölçüleri değişirse yeniden ölçülmeli, yoksa kamera mahalle dışını gösterir
-- `MenuBackdrop` `OfficeView.tscn`'in düğüm yollarına (`Viewport3D/SubViewport`, `World/People`, `World/City`, `Camera3D`, `SceneRoot`) sabit bağlıdır (`menu_backdrop.gd:52-56,117`); adı değiştirmek menüyü düşürür
-- `OfficePerson` statik durum tutar (`_links`, `_lanes`, `_waiting`, `_people`; `office_person.gd:173-185`); `set_links` her yerleşimde sıfırlar, menü figürü ve `MeetingCast` aynı statikleri paylaşır
+- `MenuBackdrop` `OfficeView.tscn`'in düğüm yollarına (`Viewport3D/SubViewport`, `World/People`, `World/City`, `Camera3D`, `SceneRoot`) sabit bağlıdır (`menu_backdrop.gd:43-46,71,84,85`); adı değiştirmek menüyü düşürür
+- `OfficePerson` statik durum tutar (`_links`, `_lanes`, `_waiting`, `_people`; `office_person.gd:173-185`); `set_links` her yerleşimde sıfırlar, `MeetingCast` aynı statikleri kullanır
 - `OfficeActor.status_key()` anahtarı durum adından kurar (`"OFFICE_ACT_" + status.to_upper()`): yeni durum = CSV anahtarı (TR+EN) + `ICONS` girdisi (`office_actor.gd:9`) + `OfficePeople.ERRANDS`/`JOB_WORK`
 - `PersonBust.texture` başsız koşuda `null` döner (`person_bust.gd:38`); çağıranlar baş harf yedeğine düşer (`UiFactory.make_avatar`). Stüdyo karede tek portre çizer, önbellek görünüm imzası + piksele göredir
 - Kurucu ve Frank portreleri `assets/art/portraits/`'e `tools/people/bake_portraits.gd` ile pişirilir (pencereli); görünüş, kadraj ya da ışık değişince yeniden üretilir

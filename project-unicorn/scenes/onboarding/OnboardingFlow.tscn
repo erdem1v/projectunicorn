@@ -21,13 +21,6 @@ script = ExtResource("1_flow")
 unique_name_in_owner = true
 layout_mode = 1
 
-[node name="Bust" type="TextureRect" parent="."]
-unique_name_in_owner = true
-layout_mode = 0
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 6
-
 [node name="Head" type="PanelContainer" parent="."]
 layout_mode = 1
 anchors_preset = 10

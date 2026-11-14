@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git c47b8932 · 2026-11-14 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git eca852e1 · 2026-11-14 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -145,9 +145,9 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/modals/training_modal.gd · 175 · - · "res://scripts/tabs/hr/hr_panel.gd" · 0 sinyal · 7 func
 - scripts/modals/work_hours_modal.gd · 492 · - · "res://scripts/tabs/hr/hr_panel.gd" · 0 sinyal · 28 func
 
-### scripts/onboarding/ (2 dosya, 441 satır)
+### scripts/onboarding/ (2 dosya, 433 satır)
 - scripts/onboarding/first_week_doc.gd · 228 · - · PanelContainer · 1 sinyal · 3 func
-- scripts/onboarding/onboarding_flow.gd · 213 · - · Control · 2 sinyal · 12 func
+- scripts/onboarding/onboarding_flow.gd · 205 · - · Control · 2 sinyal · 12 func
 
 ### scripts/onboarding/steps/ (4 dosya, 654 satır)
 - scripts/onboarding/steps/character_step.gd · 102 · - · OnboardingStep · 0 sinyal · 5 func
@@ -286,8 +286,8 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/theme/ui_factory.gd · 543 · UiFactory · RefCounted · 0 sinyal · 39 func
 - scripts/theme/ui_tokens.gd · 1078 · UiTokens · RefCounted · 0 sinyal · 45 func
 
-### scripts/ui/ (1 dosya, 138 satır)
-- scripts/ui/menu_backdrop.gd · 138 · - · Control · 1 sinyal · 6 func
+### scripts/ui/ (1 dosya, 102 satır)
+- scripts/ui/menu_backdrop.gd · 102 · - · Control · 1 sinyal · 4 func
 
 ### scripts/ui/components/ (19 dosya, 3632 satır)
 - scripts/ui/components/bar_kit.gd · 37 · - · RefCounted · 0 sinyal · 3 func
@@ -623,7 +623,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - load_requested(slot_id: String) · scripts/menu/main_menu.gd:8 · emit: scripts/menu/main_menu.gd:50, scripts/modals/save_load_modal.gd:237,239 · connect: scripts/main/main.gd:134,6042 · (ad 2 yerde tanımlı)
 
 ### scripts/modals/confirm_modal.gd
-- confirmed() · scripts/modals/confirm_modal.gd:11 · emit: scripts/modals/hr_action_modal.gd:224 · connect: scripts/main/main.gd:5982, scripts/onboarding/onboarding_flow.gd:177 · (ad 2 yerde tanımlı)
+- confirmed() · scripts/modals/confirm_modal.gd:11 · emit: scripts/modals/hr_action_modal.gd:224 · connect: scripts/main/main.gd:5982, scripts/onboarding/onboarding_flow.gd:170 · (ad 2 yerde tanımlı)
 - alt_selected() · scripts/modals/confirm_modal.gd:12 · emit: - · connect: scripts/main/main.gd:5986
 - dismissed() · scripts/modals/confirm_modal.gd:13 · (ad 7 yerde tanımlı)
   ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:77, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
@@ -634,7 +634,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - main_menu_requested() · scripts/modals/ending_scene.gd:41 · emit: scripts/modals/ending_scene.gd:457, scripts/modals/system_menu_modal.gd:63 · connect: scripts/main/main.gd:6007,6175 · (ad 2 yerde tanımlı)
 
 ### scripts/modals/hr_action_modal.gd
-- confirmed() · scripts/modals/hr_action_modal.gd:15 · emit: scripts/modals/hr_action_modal.gd:224 · connect: scripts/main/main.gd:5982, scripts/onboarding/onboarding_flow.gd:177 · (ad 2 yerde tanımlı)
+- confirmed() · scripts/modals/hr_action_modal.gd:15 · emit: scripts/modals/hr_action_modal.gd:224 · connect: scripts/main/main.gd:5982, scripts/onboarding/onboarding_flow.gd:170 · (ad 2 yerde tanımlı)
 - dismissed() · scripts/modals/hr_action_modal.gd:16 · (ad 7 yerde tanımlı)
   ↳ dismissed emit: scripts/menu/credits.gd:59, scripts/menu/licenses.gd:77, scripts/modals/confirm_modal.gd:64, scripts/modals/hr_action_modal.gd:225,236, scripts/modals/save_load_modal.gd:261 +2
   ↳ dismissed connect: scripts/main/main.gd:5962,5987,6006,6040, scripts/menu/credits.gd:47, scripts/modals/settings_modal.gd:264 +1
@@ -666,16 +666,16 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 ### scripts/onboarding/first_week_doc.gd
 - picked(field: String, value: Variant) · scripts/onboarding/first_week_doc.gd:7 · (ad 2 yerde tanımlı)
   ↳ picked emit: scripts/onboarding/first_week_doc.gd:132,169, scripts/ui/meeting/meeting_ruler.gd:48
-  ↳ picked connect: scripts/onboarding/onboarding_flow.gd:60, scripts/ui/meeting/meeting_ruler.gd:85
+  ↳ picked connect: scripts/onboarding/onboarding_flow.gd:58, scripts/ui/meeting/meeting_ruler.gd:85
 
 ### scripts/onboarding/onboarding_flow.gd
-- completed() · scripts/onboarding/onboarding_flow.gd:11 · emit: scripts/onboarding/onboarding_flow.gd:203 · connect: scripts/main/main.gd:155
-- cancelled() · scripts/onboarding/onboarding_flow.gd:12 · emit: scripts/onboarding/onboarding_flow.gd:172,177 · connect: scripts/main/main.gd:156
+- completed() · scripts/onboarding/onboarding_flow.gd:10 · emit: scripts/onboarding/onboarding_flow.gd:195 · connect: scripts/main/main.gd:155
+- cancelled() · scripts/onboarding/onboarding_flow.gd:11 · emit: scripts/onboarding/onboarding_flow.gd:165,170 · connect: scripts/main/main.gd:156
 
 ### scripts/onboarding/steps/step_base.gd
 - changed() · scripts/onboarding/steps/step_base.gd:15 · (ad 2 yerde tanımlı)
   ↳ changed emit: scripts/main/main.gd:3526,5330, scripts/onboarding/steps/character_step.gd:33,53,102, scripts/onboarding/steps/company_step.gd:35 +8
-  ↳ changed connect: scripts/onboarding/onboarding_flow.gd:101, scripts/ui/meeting/meeting_panel.gd:268,506
+  ↳ changed connect: scripts/onboarding/onboarding_flow.gd:98, scripts/ui/meeting/meeting_panel.gd:268,506
 
 ### scripts/tabs/finance_tab.gd
 - fit_changed() · scripts/tabs/finance_tab.gd:10 · (ad 7 yerde tanımlı)
@@ -816,13 +816,13 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 ### scripts/ui/meeting/meeting_ruler.gd
 - changed(value: int) · scripts/ui/meeting/meeting_ruler.gd:13 · (ad 2 yerde tanımlı)
   ↳ changed emit: scripts/main/main.gd:3526,5330, scripts/onboarding/steps/character_step.gd:33,53,102, scripts/onboarding/steps/company_step.gd:35 +8
-  ↳ changed connect: scripts/onboarding/onboarding_flow.gd:101, scripts/ui/meeting/meeting_panel.gd:268,506
+  ↳ changed connect: scripts/onboarding/onboarding_flow.gd:98, scripts/ui/meeting/meeting_panel.gd:268,506
 - picked(value: int) · scripts/ui/meeting/meeting_ruler.gd:28 · (ad 2 yerde tanımlı)
   ↳ picked emit: scripts/onboarding/first_week_doc.gd:132,169, scripts/ui/meeting/meeting_ruler.gd:48
-  ↳ picked connect: scripts/onboarding/onboarding_flow.gd:60, scripts/ui/meeting/meeting_ruler.gd:85
+  ↳ picked connect: scripts/onboarding/onboarding_flow.gd:58, scripts/ui/meeting/meeting_ruler.gd:85
 
 ### scripts/ui/menu_backdrop.gd
-- live_ready() · scripts/ui/menu_backdrop.gd:9 · emit: scripts/ui/menu_backdrop.gd:138 · connect: scripts/main/main.gd:3337,3366,3423,3452,3495, scripts/onboarding/onboarding_flow.gd:70
+- live_ready() · scripts/ui/menu_backdrop.gd:10 · emit: scripts/ui/menu_backdrop.gd:102 · connect: scripts/main/main.gd:3337,3366,3423,3452,3495
 
 ### scripts/ui/office/meeting_cast.gd
 - founder_seated() · scripts/ui/office/meeting_cast.gd:14 · emit: scripts/ui/office/meeting_cast.gd:152 · connect: scripts/main/main.gd:2551, scripts/ui/office/office_travel.gd:88

@@ -1,7 +1,7 @@
 extends OnboardingStep
 
-# Step 1, Karakter: the founder's name and face. The face picked here is the one standing in the flat behind the
-# papers, so the step shows no preview of its own. The grid holds the portraits there are, then places for faces to
+# Step 1, Karakter: the founder's name and face. The first-week document beside the papers shows the face picked,
+# so the step shows no preview of its own. The grid holds the portraits there are, then places for faces to
 # come.
 
 const GRID_COLUMNS := 8

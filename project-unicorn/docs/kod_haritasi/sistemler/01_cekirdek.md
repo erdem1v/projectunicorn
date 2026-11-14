@@ -41,7 +41,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - Komşular (kapsam dışı ama bağlı): `scripts/systems/save_codec.gd` (299), `time_model.gd` (50), `rng_streams.gd` (79), `scripts/events/core/save.gd` (103)
 
 ## Giriş noktaları
-- `GameState.initialize_run(payload)` `scripts/autoload/game_state.gd:768`: yeni koşu ve her yükleme · `scripts/onboarding/onboarding_flow.gd:202`, `scripts/main/main.gd:628,5346`, `save_manager.gd:303`, harness'ler
+- `GameState.initialize_run(payload)` `scripts/autoload/game_state.gd:768`: yeni koşu ve her yükleme · `scripts/onboarding/onboarding_flow.gd:197`, `scripts/main/main.gd:628,5346`, `save_manager.gd:303`, harness'ler
 - `GameState.set_cash/set_mrr/set_daily_burn/set_brand/set_reputation` `game_state.gd:339-361`: dışarıdan tek yazma yolu; sinyal yayar ve runway'i yeniden hesaplar
 - `GameState.advance_day()` `game_state.gd:364` ve `set_current_hour()` `:368`: yalnız TimeManager çağırır; `GameState.advance_phase()` `:382` kapı açıkken Frank kartı
 - `GameState.set_flag/get_flag/flag_type_for` `game_state.gd:440,470,448`: tipli bayrak; kayıt tipi `FLAG_TYPES` `:48` ve `FLAG_TYPE_PREFIXES` `:125` verir

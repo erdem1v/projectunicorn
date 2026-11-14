@@ -1,6 +1,6 @@
 # Kod haritası · KALITE
 
-Üretildi: git c47b8932 · 2026-11-14 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git eca852e1 · 2026-11-14 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 255 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
@@ -132,7 +132,7 @@ Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: 
 - CHECK · 4 dosya · scripts/tabs/product/sprint_ui_shared.gd:18, scripts/tabs/product/stage_paint.gd:33, scripts/tabs/rnd/rnd_tree_view.gd:47, scripts/ui/office/office_notice_stack.gd:15
 - CHEVRON · 4 dosya · scripts/tabs/product/quarter_view.gd:14, scripts/tabs/product/sprint_head.gd:10, scripts/tabs/rnd/rnd_assign_panel.gd:22, scripts/tabs/rnd/rnd_tree_view.gd:46
 - CLOCK · 4 dosya · scripts/tabs/hunt_tab.gd:11, scripts/tabs/product/sprint_ui_shared.gd:19, scripts/tabs/rnd/rnd_detail_panel.gd:20, scripts/tabs/sales_tab.gd:30
-- GraphicsSettingsLib · 4 dosya · scripts/autoload/settings.gd:17, scripts/modals/settings_modal.gd:19, scripts/ui/menu_backdrop.gd:12, scripts/ui/office/office_view.gd:13
+- GraphicsSettingsLib · 4 dosya · scripts/autoload/settings.gd:17, scripts/modals/settings_modal.gd:19, scripts/ui/menu_backdrop.gd:13, scripts/ui/office/office_view.gd:13
 - ModuleLocks · 4 dosya · scripts/events/core/delays.gd:22, scripts/events/seams/seams_world.gd:6, scripts/events/tools/vocab_gen.gd:13, scripts/ui/components/left_tabs.gd:27
 - STAR · 4 dosya · scripts/systems/sprint_catalog.gd:24, scripts/tabs/events/mail_pane.gd:24, scripts/tabs/rnd/rnd_ui_shared.gd:52, scripts/tabs/sales_tab.gd:35
 - COLUMNS · 3 dosya · scripts/onboarding/steps/company_step.gd:8, scripts/onboarding/steps/origin_traits_step.gd:13, scripts/tabs/hr/hr_ledger.gd:10
@@ -151,7 +151,7 @@ Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: 
 - BAR_W · 2 dosya · scripts/onboarding/first_week_doc.gd:12, scripts/onboarding/steps/origin_traits_step.gd:16
 - BarKit · 2 dosya · scripts/ui/components/build_bar.gd:14, scripts/ui/components/research_bar.gd:26
 - CALENDAR · 2 dosya · scripts/tabs/hunt_tab.gd:12, scripts/tabs/sales_tab.gd:31
-- CONFIRM_MODAL · 2 dosya · scripts/main/main.gd:23, scripts/onboarding/onboarding_flow.gd:21
+- CONFIRM_MODAL · 2 dosya · scripts/main/main.gd:23, scripts/onboarding/onboarding_flow.gd:20
 - CONV_BASE · 2 dosya · scripts/systems/pitch_constants.gd:18, scripts/systems/seed_constants.gd:83
 - CONV_BRAND_FLOOR · 2 dosya · scripts/systems/pitch_constants.gd:24, scripts/systems/seed_constants.gd:87
 - CONV_BRAND_MAX · 2 dosya · scripts/systems/pitch_constants.gd:25, scripts/systems/seed_constants.gd:88
@@ -182,8 +182,8 @@ Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: 
 - KINDS · 2 dosya · scripts/systems/people_parts.gd:11, scripts/tabs/rnd/rnd_history.gd:11
 - LEAD · 2 dosya · scripts/ui/meeting/sales_meeting_adapter.gd:19, scripts/ui/meeting/vc_meeting_adapter.gd:17
 - LICENSES · 2 dosya · scripts/menu/credits.gd:8, scripts/modals/settings_modal.gd:20
-- LOCKUP_S · 2 dosya · scripts/menu/main_menu.gd:22, scripts/onboarding/onboarding_flow.gd:31
-- MAIN_MENU_SCRIPT · 2 dosya · scripts/main/main.gd:17, scripts/onboarding/onboarding_flow.gd:14
+- LOCKUP_S · 2 dosya · scripts/menu/main_menu.gd:22, scripts/onboarding/onboarding_flow.gd:29
+- MAIN_MENU_SCRIPT · 2 dosya · scripts/main/main.gd:17, scripts/onboarding/onboarding_flow.gd:13
 - MARKET_B2B · 2 dosya · scripts/systems/infra_system.gd:33, scripts/systems/support_system.gd:87
 - MIX_INCREMENT · 2 dosya · scripts/systems/hr_candidate_generator.gd:32, scripts/systems/sales_constants.gd:271
 - MIX_MODULUS · 2 dosya · scripts/systems/hr_candidate_generator.gd:30, scripts/systems/sales_constants.gd:269

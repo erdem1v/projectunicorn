@@ -3,8 +3,9 @@ extends Control
 ## A 3D place behind a screen with no run: the office view's world without its people and map, lit at a fixed minute,
 ## with no clock, input or game state. The plate baked from the same scene stands from the first frame; the scene
 ## fades in over it once its model has loaded off the main thread. The low graphics preset keeps the plate alone.
-## An office is framed close on one figure standing in it, with every light on; the city has none, and stands in the
-## menu's warm greys (menu_grade.gdshader), cropped close enough that only blocks and streets fill the frame.
+## The menu and the onboarding stand on the city, in the menu's warm greys (menu_grade.gdshader), cropped close
+## enough that only blocks and streets fill the frame. An office (the plate bake and the backdrop probe) stands at the
+## camera's fit with every light on.
 
 signal live_ready
 
@@ -16,19 +17,12 @@ const MENU_CITY_ZOOM := 2.8    # [WORKING] the city closer than the camera's fit
 const MENU_CITY_FOCUS := Vector2(-0.05, 0.3)   # [WORKING] the frame's centre from the fit's, in frame heights (right, up)
 ## Scene nodes the menu's city goes without.
 const MENU_CITY_HIDDEN := [&"ferry", &"boat_0", &"boat_1", &"boat_2", &"boat_3"]
-const MENU_STAGE_ZOOM := 7.4   # [WORKING] the office this much closer than the fit: the figure stands 460 of 1080 px tall
-const MENU_STAGE_POS := Vector3(2.2, 0.0, 3.9)   # [WORKING] the figure's spot: the bookcase behind, the dining table beside
-## Where the figure's feet stand from the frame's centre, in frame heights (right, down): the figure fills the portrait
-## box beside the papers.
-const MENU_STAGE_FEET := Vector2(0.15, 0.005)
 
 var _office := ""
 var _minute := 0.0
 var _model := ""
 var _sub: SubViewport
-var _figure := {}
 var _camera: OfficeCamera   # set once the live scene stands
-var _person: OfficePerson
 
 
 func _ready() -> void:
@@ -36,9 +30,7 @@ func _ready() -> void:
 
 
 ## `minute` is the time of day the light stands at; the plate is assets/art/menu/backdrop_<office>_<HHMM>.png.
-## `figure` is the look of the one person standing in an office.
-func start(office_id: String, minute: float, figure := {}) -> void:
-	_figure = figure
+func start(office_id: String, minute: float) -> void:
 	var plate := "res://assets/art/menu/backdrop_%s_%02d%02d.png" % [office_id, floori(minute / 60.0), int(minute) % 60]
 	# A place and minute with no plate yet: --menu-shot=bake_plate draws its scene alone.
 	if ResourceLoader.exists(plate):
@@ -68,27 +60,6 @@ func stop() -> void:
 		_sub.free()
 		_sub = null
 		_camera = null
-		_person = null
-
-
-## Stands `look` in place of the figure, in the same frame once the live scene is up.
-func set_figure(look: Dictionary) -> void:
-	_figure = look
-	if _person != null:
-		_person.free()
-		_person = null
-	if _camera != null:
-		_stand_figure()
-
-
-func _stand_figure() -> void:
-	_person = OfficePerson.new()
-	_camera.get_parent().get_node("SceneRoot").add_child(_person)
-	_person.setup(_figure)
-	_person.full_rate = true
-	# Facing the camera.
-	_person.place({"pos": MENU_STAGE_POS, "face": atan2(_camera.global_basis.z.x, _camera.global_basis.z.z),
-		"pose": "stand"}, "idle")
 
 
 func _process(_delta: float) -> void:
@@ -113,12 +84,7 @@ func _process(_delta: float) -> void:
 	GraphicsSettingsLib.apply_view(_sub, world, world.get_node("SceneRoot"), GraphicsSettingsLib.options(), 1.0)
 	_camera = world.get_node("Camera3D")
 	_camera.fit(layout.bounds, lowest, _office)
-	if layout.staffed():
-		_camera.fit_zoom *= MENU_STAGE_ZOOM
-		var frame_h := OfficeCamera.FH / _camera.fit_zoom
-		_camera.focus(MENU_STAGE_POS - (_camera.global_basis.x * MENU_STAGE_FEET.x
-			- _camera.global_basis.y * MENU_STAGE_FEET.y) * frame_h, _camera.fit_zoom, 0.0)
-	else:
+	if not layout.staffed():
 		# The city in the menu's warm greys, without its boats.
 		var grade := ShaderMaterial.new()
 		grade.shader = GRADE
@@ -132,7 +98,5 @@ func _process(_delta: float) -> void:
 			+ _camera.global_basis.y * MENU_CITY_FOCUS.y) * frame_h, _camera.fit_zoom, 0.0)
 	# The view takes the container's size a frame after it joins, and again on every resize.
 	_sub.size_changed.connect(_camera.refit)
-	if not _figure.is_empty():
-		_stand_figure()
 	create_tween().tween_property(%Live, "modulate:a", 1.0, MENU_FADE_S)
 	live_ready.emit()

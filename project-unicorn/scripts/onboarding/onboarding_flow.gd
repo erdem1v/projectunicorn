@@ -1,9 +1,8 @@
 extends Control
 
-# New game, set in the founder's flat on its first evening: three tabbed papers (Karakter · Köken · Şirket) on the
-# desk, the first-week document beside them, the chosen founder standing in the room behind. The draft is the one
-# source of in-progress truth; nothing reaches GameState before Found and start, and the curtain covers the run and
-# the shell being built.
+# New game, over the city at night: three tabbed papers (Karakter · Köken · Şirket), the first-week document beside
+# them. The draft is the one source of in-progress truth; nothing reaches GameState before Found and start, and the
+# curtain covers the run and the shell being built.
 #
 # One step scene lives at a time (OnboardingStep). The root runs while the tree is paused (process_mode ALWAYS):
 # main pauses the clock before mounting the flow.
@@ -19,13 +18,12 @@ const STEPS: Array[PackedScene] = [
 ]
 const STEP_NAME_KEYS := ["ONB_STEP_CHARACTER", "ONB_STEP_ORIGIN", "ONB_STEP_COMPANY"]
 const CONFIRM_MODAL := preload("res://scenes/modals/ConfirmModal.tscn")
-const STAGE_OFFICE := "home"
-const MENU_STAGE_MINUTE := 1170.0   # [WORKING] 19:30
+# The menu's city, later in the night: the run, and its office, have not begun.
+const MENU_STAGE_MINUTE := 1290.0   # [WORKING] 21:30
 # The layout of a screen 1080 tall, then of a shorter one (1536×864 logical): the raised paper, the first-week
-# document, the portrait standing in for the founder until the flat is up, the lock-up's S.
+# document, the lock-up's S.
 const PAPER := [Rect2(48, 388, 1348, 660), Rect2(24, 260, 1088, 588)]
 const DOC := [Rect2(1428, 88, 444, 960), Rect2(1136, 80, 376, 768)]
-const BUST := [Rect2(930, 66, 384, 480), Rect2(720, 62, 300, 375)]
 const TAB_H := 44
 const TAB_H_NOW := 53
 const LOCKUP_S := 40
@@ -67,8 +65,7 @@ func _ready() -> void:
 	_apply_layout()
 	get_viewport().size_changed.connect(_apply_layout)
 	_pristine = draft.duplicate(true)
-	%Stage.live_ready.connect(%Bust.hide)
-	%Stage.start(STAGE_OFFICE, MENU_STAGE_MINUTE, LookSystem.founder(draft.portrait_id))
+	%Stage.start(MAIN_MENU_SCRIPT.MENU_OFFICE, MENU_STAGE_MINUTE)
 
 
 ## Places the papers for the logical screen, and rebuilds what sizes itself by it.
@@ -79,7 +76,7 @@ func _apply_layout() -> void:
 	# Sized once the new content is sorted: a Control never takes a size below its minimum of that moment, and a
 	# wrapping label's minimum is known only once it has a width.
 	(func() -> void:
-		for part: Array in [[%Paper, PAPER], [%Doc, DOC], [%Bust, BUST]]:
+		for part: Array in [[%Paper, PAPER], [%Doc, DOC]]:
 			var at: Rect2 = part[1][short]
 			part[0].position = at.position
 			part[0].size = at.size).call_deferred()
@@ -106,11 +103,7 @@ func _mount_step(index: int) -> void:
 
 
 func _on_step_changed() -> void:
-	var face: String = draft.portrait_id
 	draft.merge(_step.collect_payload(), true)
-	if draft.portrait_id != face:
-		%Bust.texture = load(FounderConstants.portrait_path(draft.portrait_id))
-		%Stage.set_figure(LookSystem.founder(draft.portrait_id))
 	_refresh()
 
 
@@ -187,8 +180,7 @@ func _ask_cancel() -> void:
 	_confirm.get_node("%Panel").custom_minimum_size.x = CANCEL_W
 
 
-## The curtain is drawn before the flat stops, and the flat is gone before the run starts: the people it stood in
-## the room are a static list the shell's own crowd reads.
+## The curtain is drawn before the stage stops, and the stage is freed before the shell is built.
 func _commit() -> void:
 	_committing = true
 	%Next.disabled = true
