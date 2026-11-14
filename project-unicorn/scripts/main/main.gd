@@ -2018,7 +2018,7 @@ func _run_sales_shot(kind: String) -> void:
 		SalesRepSystem.daily_tick()
 	if kind != "empty":
 		_shot_customer("co_kuzey", "Kuzey İnşaat", "construction", "active", 1000, 12, 13, false)   # LOC-DATA debug seed / id
-		_shot_customer("co_palmiye", "Kardelen Mağazacılık", "retail", "active", 1500, 16, 21, true)
+		_shot_customer("co_palmiye", "Kardelen Mağazacılık", "retail", "active", 1500, 16, 21, true)   # LOC-DATA debug seed / id
 		_shot_customer("co_aras", "Beykoz Tekstil", "textile", "onboarding", 700, 6, 1, false)
 	if edge:
 		var leads: Array[Prospect] = ProspectRegistry.get_all()
