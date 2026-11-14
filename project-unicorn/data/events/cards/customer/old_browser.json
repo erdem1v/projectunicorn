@@ -51,7 +51,7 @@
         "entity_seam": "aday.sector",
         "scope": "prospect",
         "op": "==",
-        "value": "health"
+        "value": "manufacturing"
       }
     },
     "employee": {
@@ -100,7 +100,7 @@
   "text": {
     "tr": {
       "title": "Şart: {prospect}",
-      "body": "{prospect} demoyu çok beğendi ama bilgi işlem sorumlusu bir şart koydu. Klinikteki bütün bilgisayarlarda Fenstra'nın eski tarayıcısı var, hasta kayıt programları yalnız onda çalışıyor. Ürünümüz o tarayıcıda açılmazsa imza yok.",
+      "body": "{prospect} demoyu çok beğendi ama bilgi işlem sorumlusu bir şart koydu. Fabrikadaki bütün bilgisayarlarda Fenstra'nın eski tarayıcısı var, üretim takip programı yalnız onda çalışıyor. Ürünümüz o tarayıcıda açılmazsa imza yok.",
       "options": {
         "promise_support": "Desteğe söz ver",
         "decline": "Yapamayacağımızı söyle"
@@ -109,7 +109,7 @@
     },
     "en": {
       "title": "A condition from {prospect}",
-      "body": "{prospect} loved the demo, but their IT lead set one condition. Every computer at the clinic runs Fenstra's old browser, because their patient records software only works there. If our product doesn't open in that browser, there's no deal.",
+      "body": "{prospect} loved the demo, but their IT lead set one condition. Every computer at the factory runs Fenstra's old browser, because their production tracking software only works there. If our product doesn't open in that browser, there's no deal.",
       "options": {
         "promise_support": "Promise the support",
         "decline": "Tell them we can't do it"

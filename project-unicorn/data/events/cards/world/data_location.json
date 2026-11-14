@@ -43,8 +43,8 @@
         "scope": "customer",
         "op": "in",
         "value": [
-          "health",
-          "finance"
+          "ecommerce",
+          "retail"
         ]
       }
     },
