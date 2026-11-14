@@ -1267,11 +1267,11 @@ static func _founder_closed_the_book() -> bool:
 
 
 static func _b2b_concentration() -> bool:
-	# WORKING PROXY: a single B2B customer > 50% of MRR.
-	var actives: Array = CustomerRegistry.get_active()
-	if actives.size() <= 1 or GameState.mrr <= 0:
+	# WORKING PROXY: a single B2B account > 50% of MRR; the marketplace's two aggregate records are not accounts.
+	var accounts: Array = CustomerRegistry.get_by_market("b2b")
+	if accounts.size() <= 1 or GameState.mrr <= 0:
 		return false
-	for c in actives:
+	for c in accounts:
 		if int(c.mrr) * 2 > GameState.mrr:
 			return true
 	return false

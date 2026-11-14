@@ -668,6 +668,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"marketplace_topic_names":           fail = _case_marketplace_topic_names()
 		"marketplace_source_new_users":      fail = _case_marketplace_source_new_users()
 		"marketplace_save_fills_missing":    fail = _case_marketplace_save_fills_missing()
+		"marketplace_pitch_skips_aggregates": fail = _case_marketplace_pitch_skips_aggregates()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -31362,4 +31363,39 @@ static func _case_marketplace_save_fills_missing() -> String:
 	m.clear()
 	if not reload.call(false) or not GameState.marketplace.is_empty():
 		return "an emptied marketplace state loaded back as %s" % str(GameState.marketplace.keys())
+	return ""
+
+
+## Yatırımcı görüşmesinin yoğunlaşma sorusu yalnız B2B hesaplarına bakar: pazaryeri koşusunda mağazalar kaydı aylık gelirin yarısından
+## fazlasını taşırken (iki toplu kayıt müşteri değildir) gelmez; ERP'de tek hesap gelirin yarısından fazlasını taşırken gelir.
+##
+## FALSİFİKASYON: `VCPitchSystem._b2b_concentration`da `get_by_market("b2b")` yerine `get_active()` oku → pazaryeri satırı FAIL;
+## işlevin gövdesini `return false` yap → ERP satırı FAIL.
+static func _case_marketplace_pitch_skips_aggregates() -> String:
+	_seed_marketplace_world()
+	MarketplaceSystem.daily_tick()
+	CustomerRegistry.set_mrr(MarketplaceSystem.STORES_ID, 60000)
+	CustomerRegistry.set_mrr(MarketplaceSystem.USERS_ID, 20000)
+	SalesSystem.reflect_mrr()
+	var stores: int = CustomerRegistry.get_customer(MarketplaceSystem.STORES_ID).mrr
+	if stores * 2 <= GameState.mrr or GameState.mrr < PitchConstants.CONV_MRR_REFERENCE or GameState.run_customers_lost != 0:
+		return "fixture: stores record %d of %d MRR, %d customers lost" % [stores, GameState.mrr, GameState.run_customers_lost]
+	var asked: String = VCPitchSystem._sorgu_metrics().key
+	if asked == "concentration":
+		return "the stores record carries %d of %d MRR and the metrics fund asks the concentration question" % [stores, GameState.mrr]
+	SaveManager.reset_all_owners()
+	GameState.initialize_run({"seed": 424242})
+	_seed_b2b(80000)
+	var small := Prospect.new()
+	small.id = "lead_small"
+	small.company_name = "Small Corp"
+	small.industry = "testing"
+	small.star = 1
+	_sign_fixture(small, 20000, 70)
+	var big: int = CustomerRegistry.get_customer("co_lead_smoke").mrr
+	if big * 2 <= GameState.mrr or GameState.mrr < PitchConstants.CONV_MRR_REFERENCE or GameState.run_customers_lost != 0:
+		return "fixture: ERP account %d of %d MRR, %d customers lost" % [big, GameState.mrr, GameState.run_customers_lost]
+	asked = VCPitchSystem._sorgu_metrics().key
+	if asked != "concentration":
+		return "one ERP account carries %d of %d MRR and the metrics fund asks '%s', want the concentration question" % [big, GameState.mrr, asked]
 	return ""

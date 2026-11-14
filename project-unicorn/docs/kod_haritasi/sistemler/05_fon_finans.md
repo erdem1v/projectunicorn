@@ -249,6 +249,7 @@ Tek koşturucu `bash tools/smoke_run.sh <vaka>`; vaka listesi `scripts/debug/end
 - `export_presets.cfg` üç Windows preset'i taşır (Demo `custom_features` "", EA `"ea"`, Full `"full"`); `EndingsSystem.build_scope()` `endings_system.gd:382` build kapsamını export'ta bu özellik etiketinden (`ea`, `full`),
   ↳ debug build'de `--build=`'den okur, etiketsizse demo; smoke ve probe `build_scope_override` ile demoya sabitler
 - `soft_cap` 104 hafta (`SOFT_CAP_WEEK`); smoke adı `soft_cap_ends_run_at_730` eski gün sayımını taşır. Kilometre taşı alınmış koşuda tavan uygulanmaz (`endings_system.gd:240`).
+- Yatırımcı görüşmesinin yoğunlaşma sorusu (`VCPitchSystem._b2b_concentration`) yalnız `CustomerRegistry.get_by_market("b2b")`e bakar: pazaryerinin iki toplu kaydı (mağazalar, kullanıcılar) hesap değildir ve biri hemen her zaman gelirin yarısından fazlasını taşır.
 - `VCPitchSystem` görüşme durumu statik ve kayda girmez; `SaveManager.can_save` görüşme sürerken kaydı reddeder (`save_manager.gd:93`). `reset()` sıfırlar (`vc_pitch_system.gd:1291`).
 - `_vc(vc_id)` satır YARATIR; salt okunan yollar (`series_a_road_closed`, `is_last_answer_moment`, `meeting_blocked_reason`) `vc_states.get` kullanır, kart koşulu hiçbir şey yazmamalı.
 - Ret sayısı yalnız fonun çıkışında ve `_reject`te artar (`WALK_REASON_FUND`); oyuncunun kendi geri çekilişi (`"declined"`) ret değildir ve kaskada girmez (`vc_pitch_system.gd:608-632`).
