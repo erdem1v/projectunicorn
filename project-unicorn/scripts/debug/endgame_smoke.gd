@@ -14864,7 +14864,7 @@ static func _ui_host() -> Node:
 
 
 ## §12.11 MÜHÜRLÜ — tip ekranının OYNANABİLİR kartları ile hat içeriği olan alt-tipler
-## AYNI KÜME olmak zorunda. İkisi iki ayrı dosyada yaşıyor (ProductCatalog.TYPE_SCREEN ve
+## AYNI KÜME olmak zorunda; hattı tür seçilebilir olmadan önce inen tür `waiting` listesinde bekler. İkisi iki ayrı dosyada yaşıyor (ProductCatalog.TYPE_SCREEN ve
 ## data/product/lines/*.json) ve ayrıştıkları an oyuncu tıklanabilir bir karttan BOŞ bir
 ## ürüne düşer — motoru görünmez kılan tam olarak bu kopukluktu.
 ##
@@ -14890,6 +14890,13 @@ static func _case_type_screen_matches_line_content() -> String:
 			if not ProductLines.has_subtype(pid):
 				return "%s is playable on the type screen but has no line content" % pid
 			playable.append(pid)
+	# Bekleyen tür: hattı var, kartı yok; hat verisi tür seçilebilir olmadan önce iner. Tür oynanabilir olunca bu vaka
+	# düşer ve türü listeden çıkarır.
+	var waiting: Array[String] = ["marketplace"]
+	for pid in waiting:
+		if playable.has(pid):
+			return "%s is on the type screen; drop it from waiting" % pid
+	playable.append_array(waiting)
 	var lines_side: Array[String] = ProductLines.subtypes()
 	playable.sort()
 	lines_side.sort()
@@ -17411,7 +17418,7 @@ static func _case_loc_product_line_keys_resolve() -> String:
 
 	if not missing.is_empty():
 		return "%d unresolved key(s), first: %s" % [missing.size(), ", ".join(missing.slice(0, 6))]
-	# 3 alt-tip × (9 ad + 27 kademe adı + 27 açıklama) × 2 dil = 378 okuma.
+	# 4 alt-tip × (9 ad + 27 kademe adı + 27 açıklama) × 2 dil = 504 okuma.
 	if checked < 300:
 		return "only %d keys were checked — the catalog walk is not covering the tree" % checked
 	return ""
@@ -17440,7 +17447,7 @@ static func _case_research_node_map_binds() -> String:
 	if int(by_place.get(ResearchSeam.PLACE_CONT, 0)) != 7:
 		return "expected 7 continuation nodes, found %d" % int(by_place.get(ResearchSeam.PLACE_CONT, 0))
 
-	# §12.5 — paylaşılan harita, ÜÇ ALT-TİPTE DE aynı.
+	# §12.5 — paylaşılan harita, DÖRT ALT-TİPTE DE aynı.
 	for st in ProductLines.subtypes():
 		for base_line in ResearchSeam.SHARED_LINE_NODES:
 			var want: String = String(ResearchSeam.SHARED_LINE_NODES[base_line])
@@ -17466,9 +17473,9 @@ static func _case_research_node_map_binds() -> String:
 				if not ResearchSeam.may_gate_visible_step(node):
 					return "%s binds '%s', a %s node — Ar-Ge §3.1 forbids it" \
 						% [s.get("id"), node, ResearchSeam.placement(node)]
-	# 3 alt-tip × 9 hat = 27 K3, hepsi düğüm taşır (§12.5).
-	if visible != 27:
-		return "%d steps carry a research node, expected 27 (one K3 per line)" % visible
+	# 4 alt-tip × 9 hat = 36 K3, hepsi düğüm taşır (§12.5).
+	if visible != 36:
+		return "%d steps carry a research node, expected 36 (one K3 per line)" % visible
 
 	# Ar-Ge §4.5.1 (MÜHÜRLÜ) — HER ALT-TİPİN KİMLİK TEST HATTININ K3'Ü bug_tracker'a
 	# bağlanır. Bu, PRACTICE ailesinin görünür içerik açtığı tek yerdir: dört etkisi de
@@ -17479,7 +17486,7 @@ static func _case_research_node_map_binds() -> String:
 	# her alt-tipte paylaşılmayan test profilli hat TEKTİR. İsimle arasaydık üç alt-tip için üç
 	# literal gerekirdi ve dördüncü alt-tip geldiğinde sessizce eksik kalırdı.
 	#
-	# FALSİFİKASYON: üç JSON'dan birinde bu tek token'ı geri al → FAIL, alt-tipi adıyla yazar.
+	# FALSİFİKASYON: dört JSON'dan birinde bu tek token'ı geri al → FAIL, alt-tipi adıyla yazar.
 	var practice_gates: int = 0
 	for st3 in ProductLines.subtypes():
 		var found: String = ""
@@ -17495,8 +17502,8 @@ static func _case_research_node_map_binds() -> String:
 			practice_gates += 1
 		if found == "":
 			return "%s has no identity test line; §12.2 wants exactly one" % st3
-	if practice_gates != 3:
-		return "%d identity test lines gate bug_tracker, §4.5.1 wants 3" % practice_gates
+	if practice_gates != 4:
+		return "%d identity test lines gate bug_tracker, §4.5.1 wants 4" % practice_gates
 	return ""
 
 
@@ -28473,7 +28480,7 @@ static func _case_market_catalog_lint() -> String:
 			return "private row %s must carry listed_week -1 and a last_round" % id
 	if public_rows < 50:
 		return "only %d public rows; Ek A.8 (49) plus the sector slots expected" % public_rows
-	for subtype in ["erp", "note_tool", "video_clip"]:
+	for subtype in ["erp", "note_tool", "video_clip", "marketplace"]:
 		var slots: Array = MarketCatalog.sector_slots(subtype)
 		if slots.size() != 3:
 			return "%s has %d sector slots, 3 expected" % [subtype, slots.size()]
@@ -30379,7 +30386,7 @@ static func _case_save_retired_product_flags() -> String:
 	return done.call("")
 
 
-# Rakip bileşkeleri sabitlendi: 13 alt-tür × 8 rakip, sıra `RivalCatalog.TEMPLATE` sırası. Ağırlık tablosu ya da şablon kayarsa
+# Rakip bileşkeleri sabitlendi: 14 alt-tür × 8 rakip, sıra `RivalCatalog.TEMPLATE` sırası. Ağırlık tablosu ya da şablon kayarsa
 # rakip sayıları değişir; `rival_composite_table` onu yakalar.
 const RIVAL_COMPOSITES := {
 	"video_clip": [285.0000, 161.0000, 140.0000, 71.3333, 60.0000, 49.3333, 40.3333, 32.6667],
@@ -30389,6 +30396,7 @@ const RIVAL_COMPOSITES := {
 	"ai_vector_search": [283.7879, 158.5455, 138.3636, 68.1818, 57.7576, 47.7576, 39.2121, 32.1515],
 	"note_tool": [285.0000, 161.0000, 140.0000, 71.3333, 60.0000, 49.3333, 40.3333, 32.6667],
 	"erp": [285.0000, 161.0000, 140.0000, 71.3333, 60.0000, 49.3333, 40.3333, 32.6667],
+	"marketplace": [285.0000, 161.0000, 140.0000, 71.3333, 60.0000, 49.3333, 40.3333, 32.6667],
 	"saas_project_mgmt": [284.5313, 161.0625, 140.8125, 70.5000, 60.0000, 49.6875, 40.7188, 33.0938],
 	"saas_crm": [284.3750, 160.5000, 140.2500, 70.0000, 59.5000, 49.2500, 40.3750, 32.8750],
 	"saas_analytics": [284.8438, 160.2188, 139.1250, 70.7500, 59.3125, 48.6875, 39.8125, 32.3125],
@@ -30398,8 +30406,8 @@ const RIVAL_COMPOSITES := {
 }
 
 
-## Rakip bileşkesinin ağırlıkları rakip kataloğundadır ve rakip sayıları sabittir: on üç alt-türün sekiz rakibinin bileşkesi
-## sabitlenmiş değerlerle aynı. Satırı olmayan alt-türler (erp, note_tool, video_clip) eşit karışımdır.
+## Rakip bileşkesinin ağırlıkları rakip kataloğundadır ve rakip sayıları sabittir: on dört alt-türün sekiz rakibinin bileşkesi
+## sabitlenmiş değerlerle aynı. Satırı olmayan alt-türler (erp, note_tool, video_clip, marketplace) eşit karışımdır.
 ##
 ## FALSİFİKASYON: `RivalCatalog.COMPOSITE_AXES`ta "saas_billing"in stability ağırlığını 1.6'dan 1.5 yap → o alt-türün satırı FAIL;
 ## `Rival.composite`te tablo yerine boş dizi ver → tablolu alt-türler FAIL.

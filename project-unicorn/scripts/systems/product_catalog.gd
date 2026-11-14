@@ -42,11 +42,15 @@ const SUB_PRODUCT_TYPES := {
 			"sectors": ["software", "technology", "fintech"], "market_type": "b2b", "price_tendency": "premium"},
 		{"id": "saas_ops",
 			"sectors": ["construction", "logistics", "health"], "market_type": "b2b", "price_tendency": "neutral"},
+		{"id": "marketplace",
+			"sectors": ["consumer", "retail", "ecommerce"], "market_type": "b2c",
+			"desks": ["product_dev", "categories", "policies", "premium", "campaigns"],
+			"plus": "network_effect", "minus": "chicken_egg"},
 	],
 }
 
-## §12.11 — demo tip ekranı. `playable` hat içeriği olan alt-tiplerdir ve
-## ProductLines.subtypes() ile birebir eşleşir (smoke: line_subtypes_match_type_screen).
+## §12.11 — demo tip ekranı. `playable` hat içeriği olan alt-tiplerdir; hattı tür seçilebilir olmadan önce inen tür
+## `type_screen_matches_line_content`'in `waiting` listesinde bekler.
 ## Kilitli kartlar düz katalogdan seçilir, §12.11 pazar başına üç der. B2B'nin üçüncüsü
 ## bir ürün değil §12.11'in AÇIK SLOT'udur: dördüncü B2B alt-tipi gelene kadar kilitli
 ## kart olarak durur.

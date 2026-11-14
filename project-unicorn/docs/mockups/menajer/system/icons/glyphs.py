@@ -918,6 +918,15 @@ def _():
     return S(book, gap(R(2.4, 4.8, 4.4, 16.8, 1.2), book))
 
 
+@glyph("type/marketplace")
+def _():
+    # a shop front: a scalloped awning over the counter, the door and two windows knocked out
+    awn = U(R(2.4, 3.2, 19.2, 4.6, 1.2), *[C(4.8 + 4.8 * i, 7.8, 2.4) for i in range(4)])
+    body = cut(R(3.6, 11.4, 16.8, 9.6, 1.2), R(10.0, 14.4, 4.0, 6.6, 0.6), R(5.4, 13.6, 3.0, 3.0, 0.4),
+               R(15.6, 13.6, 3.0, 3.0, 0.4))
+    return S(U(gap(body, awn), awn))
+
+
 @glyph("type/note_tool")
 def _():
     # a notebook with the paper notch: its binding holes knocked out on the left, three written lines

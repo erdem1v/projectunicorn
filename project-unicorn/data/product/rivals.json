@@ -82,5 +82,33 @@
       {"rival": 2, "line": "line_erp_ledger", "sprint": 41, "topic_key": "PROD_LINE_ERP_LEDGER"},
       {"rival": 0, "line": "line_shared_integrations@erp", "sprint": 47, "topic_key": "PROD_LINE_SHARED_INTEGRATIONS"}
     ]
+  },
+  "marketplace": {
+    "rivals": [3, 5, 6],
+    "tiers": {
+      "line_marketplace_listing": [1, 1, 0],
+      "line_marketplace_storefront": [1, 1, 1],
+      "line_marketplace_checkout": [1, 0, 1],
+      "line_marketplace_orders": [1, 1, 0],
+      "line_marketplace_reviews": [0, 1, 0],
+      "line_shared_integrations@marketplace": [1, 0, 1],
+      "line_shared_security@marketplace": [1, 1, 0],
+      "line_shared_durability@marketplace": [0, 1, 0],
+      "line_shared_mobile@marketplace": [1, 0, 1],
+      "cap_paid_plan": [1, 1, 0]
+    },
+    "launches": [
+      {"rival": 2, "line": "line_shared_mobile@marketplace", "sprint": 4, "topic_key": "PROD_LINE_SHARED_MOBILE"},
+      {"rival": 0, "line": "line_marketplace_storefront", "sprint": 7, "topic_key": "PROD_LINE_MARKETPLACE_STOREFRONT"},
+      {"rival": 1, "line": "line_shared_integrations@marketplace", "sprint": 10, "topic_key": "PROD_LINE_SHARED_INTEGRATIONS"},
+      {"rival": 2, "line": "line_marketplace_checkout", "sprint": 13, "topic_key": "PROD_LINE_MARKETPLACE_CHECKOUT"},
+      {"rival": 0, "line": "line_marketplace_listing", "sprint": 17, "topic_key": "PROD_LINE_MARKETPLACE_LISTING"},
+      {"rival": 1, "line": "line_marketplace_reviews", "sprint": 21, "topic_key": "PROD_LINE_MARKETPLACE_REVIEWS"},
+      {"rival": 2, "line": "line_marketplace_orders", "sprint": 25, "topic_key": "PROD_LINE_MARKETPLACE_ORDERS"},
+      {"rival": 0, "line": "line_shared_security@marketplace", "sprint": 30, "topic_key": "PROD_LINE_SHARED_SECURITY"},
+      {"rival": 1, "line": "line_marketplace_storefront", "sprint": 35, "topic_key": "PROD_LINE_MARKETPLACE_STOREFRONT"},
+      {"rival": 2, "line": "line_shared_durability@marketplace", "sprint": 41, "topic_key": "PROD_LINE_SHARED_DURABILITY"},
+      {"rival": 0, "line": "line_marketplace_checkout", "sprint": 47, "topic_key": "PROD_LINE_MARKETPLACE_CHECKOUT"}
+    ]
   }
 }

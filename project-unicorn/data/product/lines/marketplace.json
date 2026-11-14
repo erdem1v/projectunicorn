@@ -1,0 +1,153 @@
+{
+  "subtype": "marketplace",
+  "_doc": "İş profili kapının rolünden ayrıdır. Efor, kullanım ağırlığı ve kapılar [WORKING].",
+  "lines": [
+    {
+      "id": "line_marketplace_listing",
+      "profile": "design",
+      "steps": [
+        {
+          "id": "line_marketplace_listing_k1",
+          "effort": 5,
+          "usage_weight": 0,
+          "requires": {}
+        },
+        {
+          "id": "line_marketplace_listing_k2",
+          "effort": 7,
+          "usage_weight": 1,
+          "requires": {
+            "person": [{ "area": "engineering", "stars": 1 }]
+          }
+        },
+        {
+          "id": "line_marketplace_listing_k3",
+          "effort": 10,
+          "usage_weight": 2,
+          "ai": true,
+          "requires": {
+            "research": "ai_engine",
+            "person": [{ "area": "engineering", "stars": 2 }]
+          }
+        }
+      ]
+    },
+    {
+      "id": "line_marketplace_storefront",
+      "profile": "design",
+      "steps": [
+        {
+          "id": "line_marketplace_storefront_k1",
+          "effort": 6,
+          "usage_weight": 0,
+          "requires": {}
+        },
+        {
+          "id": "line_marketplace_storefront_k2",
+          "effort": 8,
+          "usage_weight": 1,
+          "requires": {
+            "person": [{ "area": "design", "stars": 1 }]
+          }
+        },
+        {
+          "id": "line_marketplace_storefront_k3",
+          "effort": 11,
+          "usage_weight": 3,
+          "ai": true,
+          "requires": {
+            "research": "semantic_index",
+            "person": [{ "area": "design", "stars": 2 }]
+          }
+        }
+      ]
+    },
+    {
+      "id": "line_marketplace_checkout",
+      "profile": "dev",
+      "steps": [
+        {
+          "id": "line_marketplace_checkout_k1",
+          "effort": 6,
+          "usage_weight": 1,
+          "requires": {}
+        },
+        {
+          "id": "line_marketplace_checkout_k2",
+          "effort": 8,
+          "usage_weight": 1,
+          "requires": {
+            "person": [{ "area": "engineering", "stars": 1 }]
+          }
+        },
+        {
+          "id": "line_marketplace_checkout_k3",
+          "effort": 11,
+          "usage_weight": 1,
+          "requires": {
+            "research": "security_cert",
+            "person": [{ "area": "engineering", "stars": 2 }]
+          }
+        }
+      ]
+    },
+    {
+      "id": "line_marketplace_orders",
+      "profile": "dev",
+      "steps": [
+        {
+          "id": "line_marketplace_orders_k1",
+          "effort": 6,
+          "usage_weight": 1,
+          "requires": {}
+        },
+        {
+          "id": "line_marketplace_orders_k2",
+          "effort": 8,
+          "usage_weight": 1,
+          "requires": {
+            "person": [{ "area": "engineering", "stars": 1 }]
+          }
+        },
+        {
+          "id": "line_marketplace_orders_k3",
+          "effort": 11,
+          "usage_weight": 2,
+          "requires": {
+            "research": "scalable_backend",
+            "person": [{ "area": "engineering", "stars": 2 }]
+          }
+        }
+      ]
+    },
+    {
+      "id": "line_marketplace_reviews",
+      "profile": "test",
+      "steps": [
+        {
+          "id": "line_marketplace_reviews_k1",
+          "effort": 6,
+          "usage_weight": 0,
+          "requires": {}
+        },
+        {
+          "id": "line_marketplace_reviews_k2",
+          "effort": 8,
+          "usage_weight": 1,
+          "requires": {
+            "person": [{ "area": "qa", "stars": 1 }]
+          }
+        },
+        {
+          "id": "line_marketplace_reviews_k3",
+          "effort": 12,
+          "usage_weight": 1,
+          "requires": {
+            "research": "bug_tracker",
+            "person": [{ "area": "qa", "stars": 2 }]
+          }
+        }
+      ]
+    }
+  ]
+}

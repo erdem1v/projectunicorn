@@ -29,7 +29,7 @@ const TEMPLATE := [
 ]
 
 # Weight of each dimension in a rival's composite (Rival.composite), per sub-type. A sub-type without a row (erp,
-# note_tool, video_clip) blends the three equally (QualityModel.DEFAULT_AXES).
+# note_tool, video_clip, marketplace) blends the three equally (QualityModel.DEFAULT_AXES).
 const COMPOSITE_AXES := {
 	# --- AI (mostly B2C) ---
 	"ai_assistant": [
@@ -104,15 +104,16 @@ const NAMES := {
 	"saas_billing":      ["Kasadar", "Faturon", "Billwise", "Tahsila", "Subskript", "Oranla", "Ödemely", "Recurro"],   # LOC-DATA product name (proper noun)
 	"saas_dev_tools":    ["Nöbetçi", "Karakol", "Kütükçü", "CIforge", "Sandboxy", "Devkit", "APIgate", "Uçbirim"],   # LOC-DATA product name (proper noun)
 	"saas_ops":          ["FlowSuite", "Prosedo", "Operanda", "Akista", "Otomo", "Süreçly", "Rutin", "Adımla"],   # LOC-DATA product name (proper noun)
-	# Ürün §12.11'in üç mühürlü demo alt-tipi. Bunlar OYUNCUNUN seçebildiği tiplerdir, yani
+	# Ürün §12.11'in üç mühürlü demo alt-tipi ve pazaryeri. Bunlar OYUNCUNUN seçebildiği tiplerdir, yani
 	# rakip adlarının en çok görüldüğü yer — isimsiz bırakılsalardı board ve pazar payı
-	# merdiveni "note_tool #7" gibi HAM KİMLİK basardı. Adlar PRD Rakip Dünyası Ek A.2-A.4'ün
-	# parodi setleridir: slot 0-2 Piyasa listesinin şirketleridir (company_id, MarketCatalog
-	# sector_slots), 3-7 özeldir. Hedefi çözülmemiş slot o setin yedek adını taşır.
+	# merdiveni "note_tool #7" gibi HAM KİMLİK basardı. Adlar parodi setleridir: slot 0-2
+	# Piyasa listesinin şirketleridir (company_id, MarketCatalog sector_slots), 3-7 özeldir.
+	# Hedefi çözülmemiş slot o setin yedek adını taşır.
 	# Geçici adların listesi: companies.json `provisional` bayrağı ve ISLER (Piyasa I1 sonrası).
 	"note_tool":         ["Unonote", "Elephanta", "Surmise", "Meander", "Ursa", "Dittofy", "Tezkire", "Monoline"],   # LOC-DATA product name (proper noun)
 	"video_clip":        ["Bitwaltz", "Pivotreel", "Tefrika", "Wunderreel", "Inset", "Watermarkt", "Joinery", "Cutaway"],   # LOC-DATA product name (proper noun)
 	"erp":               ["Datenwald", "Pythia", "Werktag", "Ardenna", "Tacita", "Raketenhaus", "Sumpter", "Thymeworks"],   # LOC-DATA product name (proper noun)
+	"marketplace":       ["Orinoco", "Bidwell", "Dealflock", "Arasta", "Bedesten", "Cartmoor", "Pazarcı", "Stallio"],   # LOC-DATA product name (proper noun)
 }
 
 

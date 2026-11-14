@@ -1038,6 +1038,11 @@ PROD_TYPE_ERP_SHORT,Kurumsal kaynak planlaması,Enterprise resource planning
 PROD_TYPE_ERP_DEF,"İşletmenin muhasebe, stok, satın alma ve satış süreçlerini tek bir yazılımda birleştiren yönetim sistemi.","Management software that brings a company's accounting, stock, purchasing and sales into one integrated system."
 PROD_TYPE_ERP_EARN,"Yıllık sözleşme, aylık ödeme","Yearly contract, paid monthly"
 PROD_TYPE_ERP_WHO,"Üretim, lojistik ve perakende şirketleri","Manufacturing, logistics and retail companies"
+PROD_TYPE_MARKETPLACE_NAME,Pazaryeri,Marketplace
+PROD_TYPE_MARKETPLACE_SHORT,Çok mağazalı e-ticaret sitesi,A multi-store e-commerce site
+PROD_TYPE_MARKETPLACE_DEF,Birçok mağazanın ürünlerini tek bir sitede sattığı e-ticaret türü.,A type of e-commerce site where many third-party stores sell their products.
+PROD_TYPE_MARKETPLACE_EARN,"Mağazadan komisyon, kullanıcıdan üyelik","Commission from stores, membership from users"
+PROD_TYPE_MARKETPLACE_WHO,Mağazalar ve kullanıcılar,Stores and users
 PROD_DESK_MODULES,Modüller,Modules
 PROD_DESK_MODULES_TIP,Modülleri sırayla çıkarırsın; her kademe bir beceri ister,You ship the modules one by one; each tier needs a skill
 PROD_DESK_SALES,Satış: adaylar ve görüşmeler,Sales: leads and meetings
@@ -1046,10 +1051,24 @@ PROD_DESK_REQUESTS,Müşteri istekleri ve sözler,Customer requests and promises
 PROD_DESK_REQUESTS_TIP,Söz verilen istek zorunlu,A promised request is binding
 PROD_DESK_RENEWAL,Yenileme ve destek,Renewal and support
 PROD_DESK_RENEWAL_TIP,Memnun olmayan hesap yenilemede gider,An unhappy account leaves at renewal
+PROD_DESK_PRODUCT_DEV,Ürün geliştirme,Product development
+PROD_DESK_PRODUCT_DEV_TIP,Özellikleri modül modül çıkarırsın,You ship features module by module
+PROD_DESK_CATEGORIES,Kategori yönetimi,Category management
+PROD_DESK_CATEGORIES_TIP,"Hangi kategori açık, komisyonu ne","Which categories are open, at what commission"
+PROD_DESK_POLICIES,Memnuniyet politikaları,Satisfaction policies
+PROD_DESK_POLICIES_TIP,"Kargo, iade ve mağaza kuralları","Shipping, returns and store rules"
+PROD_DESK_PREMIUM,Premium üyelik,Premium membership
+PROD_DESK_PREMIUM_TIP,"Hangi ayrıcalık ücretli, sen seçersin",You choose which perk is paid
+PROD_DESK_CAMPAIGNS,Kampanyalar,Campaigns
+PROD_DESK_CAMPAIGNS_TIP,"İndirim günleri, kupon, hediye çeki","Sale days, coupons, gift cards"
 PROD_CONCEPT_SWITCHING_COST,Geçiş maliyeti yüksek,High switching cost
 PROD_CONCEPT_SWITCHING_COST_TIP,Kurulan ERP kolay değiştirilmez; memnun müşteri kalır,An installed ERP is hard to replace; a happy customer stays
 PROD_CONCEPT_LONG_SALES_CYCLE,Uzun satış döngüsü,Long sales cycle
 PROD_CONCEPT_LONG_SALES_CYCLE_TIP,"Şirket almadan önce görüşür, dener, pazarlık eder","A company meets, tries and negotiates before it buys"
+PROD_CONCEPT_NETWORK_EFFECT,Ağ etkisi,Network effect
+PROD_CONCEPT_NETWORK_EFFECT_TIP,"Her yeni mağaza kullanıcıya, her yeni kullanıcı mağazaya değer katar","Every new store adds value for users, every new user for stores"
+PROD_CONCEPT_CHICKEN_EGG,Tavuk ve yumurta sorunu,Chicken-and-egg problem
+PROD_CONCEPT_CHICKEN_EGG_TIP,"Mağaza olmadan kullanıcı, kullanıcı olmadan mağaza gelmez","Without stores no users come, without users no stores"
 SECTOR_SUBSCRIPTION,Abonelik,Subscription
 SECTOR_AGENCY,Ajans,Agency
 SECTOR_EDUCATION,Eğitim,Education
@@ -1906,6 +1925,53 @@ PROD_STEP_SHARED_DURABILITY_K3_ERP_DESC,Depoda internet yokken de çalışılır
 PROD_STEP_SHARED_MOBILE_K1_ERP_DESC,Ekran küçüldüğünde tablolar dağılmaz; patron faturayı telefondan da açar.,"Tables hold together as the screen shrinks, and the owner opens an invoice from a phone."
 PROD_STEP_SHARED_MOBILE_K2_ERP_DESC,Onay bekleyen sipariş cepte görünür; imza yolda atılır.,An order waiting for approval shows up in a pocket; the signature happens on the road.
 PROD_STEP_SHARED_MOBILE_K3_ERP_DESC,Sahadaki satıcı kapsama dışında sipariş yazar; akşam ofise kendi girer.,"The rep in the field writes an order out of coverage, and in the evening it walks into the office on its own."
+PROD_LINE_MARKETPLACE_LISTING,Ürün Yükleme,Listing
+PROD_LINE_MARKETPLACE_STOREFRONT,Vitrin,Storefront
+PROD_LINE_MARKETPLACE_CHECKOUT,Sepet ve Ödeme,Cart and Checkout
+PROD_LINE_MARKETPLACE_ORDERS,Siparişler,Orders
+PROD_LINE_MARKETPLACE_REVIEWS,Yorum ve Güvence,Reviews and Protection
+PROD_STEP_MARKETPLACE_LISTING_K1,Tek Tek Ürün Ekleme,One by One Listing
+PROD_STEP_MARKETPLACE_LISTING_K2,Toplu Yükleme,Bulk Upload
+PROD_STEP_MARKETPLACE_LISTING_K3,Katalog Eşleme,Catalogue Matching
+PROD_STEP_MARKETPLACE_STOREFRONT_K1,Kategori Sayfası,Category Page
+PROD_STEP_MARKETPLACE_STOREFRONT_K2,Arama ve Filtre,Search and Filters
+PROD_STEP_MARKETPLACE_STOREFRONT_K3,Kişisel Öneri,Personal Picks
+PROD_STEP_MARKETPLACE_CHECKOUT_K1,Kartla ve Kapıda Ödeme,Card and Cash on Delivery
+PROD_STEP_MARKETPLACE_CHECKOUT_K2,Tek Sayfa Ödeme ve Taksit,One Page Checkout and Instalments
+PROD_STEP_MARKETPLACE_CHECKOUT_K3,Kayıtlı Kart,Saved Card
+PROD_STEP_MARKETPLACE_ORDERS_K1,Sipariş Kaydı,Order Record
+PROD_STEP_MARKETPLACE_ORDERS_K2,İade Talebi,Return Request
+PROD_STEP_MARKETPLACE_ORDERS_K3,Stok Eşitleme,Stock Sync
+PROD_STEP_MARKETPLACE_REVIEWS_K1,Yorum ve Puan,Reviews and Ratings
+PROD_STEP_MARKETPLACE_REVIEWS_K2,Kullanıcı Koruması,User Protection
+PROD_STEP_MARKETPLACE_REVIEWS_K3,Sahte Avı,Fake Hunt
+PROD_STEP_MARKETPLACE_LISTING_K1_DESC,"Mağaza ürününü tek tek ekler: fotoğraf, fiyat, stok.","A store adds products one at a time: photo, price, stock."
+PROD_STEP_MARKETPLACE_LISTING_K2_DESC,Bin ürünlük dosya tek seferde yüklenir; mağaza haftalarını ürün girmekle geçirmez.,A file of a thousand products goes up in one go; a store does not spend its weeks typing in listings.
+PROD_STEP_MARKETPLACE_LISTING_K3_DESC,Aynı ürünü satan mağazalar tek sayfada toplanır; kullanıcı fiyatları yan yana görür.,Stores selling the same product share one page; a user sees the prices side by side.
+PROD_STEP_MARKETPLACE_STOREFRONT_K1_DESC,Kategori sayfası ve ürün listesi. Arama henüz yok.,A category page and a product list. No search yet.
+PROD_STEP_MARKETPLACE_STOREFRONT_K2_DESC,"Kullanıcı aradığını yazar, fiyata ve bedene göre süzer.",Users type what they want and filter by price and size.
+PROD_STEP_MARKETPLACE_STOREFRONT_K3_DESC,Ana sayfa her kullanıcıya kendi baktıklarını gösterir.,The front page shows each user what they have been looking at.
+PROD_STEP_MARKETPLACE_CHECKOUT_K1_DESC,Sepet; kartla ya da kapıda ödeme. Komisyon buradan kesilir.,A cart; pay by card or cash on delivery. The commission is taken here.
+PROD_STEP_MARKETPLACE_CHECKOUT_K2_DESC,Toplam tutar baştan görünür; ödeme ve taksit tek sayfada biter.,The total shows up front; payment and instalments are settled on one page.
+PROD_STEP_MARKETPLACE_CHECKOUT_K3_DESC,"Kart bir kez kaydedilir, sonraki sipariş tek tıkla ödenir.",The card is saved once and the next order pays in one click.
+PROD_STEP_MARKETPLACE_ORDERS_K1_DESC,Mağaza siparişi görür ve gönderdiğini işaretler. Kullanıcıya durum e-postası gider.,The store sees the order and marks it shipped. The user gets a status mail.
+PROD_STEP_MARKETPLACE_ORDERS_K2_DESC,"Kullanıcı iadeyi siteden başlatır, mağaza aynı ekrandan onaylar.",Users start a return on the site and stores approve it on the same screen.
+PROD_STEP_MARKETPLACE_ORDERS_K3_DESC,Mağazanın stoğu her siparişte kendiliğinden düşer.,A store's stock drops by itself with every order.
+PROD_STEP_MARKETPLACE_REVIEWS_K1_DESC,Kullanıcı aldığı ürüne yorum yazar ve puan verir.,Users review and rate what they bought.
+PROD_STEP_MARKETPLACE_REVIEWS_K2_DESC,Sorunlu ya da gelmeyen sipariş için kullanıcı parasını geri ister; Mağaza kabulü kuralı bu kademeyle açılır.,A user can claim a refund for an order that went wrong or never arrived; the Store admission rule opens with this tier.
+PROD_STEP_MARKETPLACE_REVIEWS_K3_DESC,Sahte ürün ve sahte yorum daha yayına girmeden yakalanır.,Fake products and fake reviews are caught before they go live.
+PROD_STEP_SHARED_INTEGRATIONS_K1_MARKETPLACE_DESC,İlk kargo firması bağlanır; takip numarası siparişe düşer.,The first courier is connected; the tracking number lands on the order.
+PROD_STEP_SHARED_INTEGRATIONS_K2_MARKETPLACE_DESC,Birden çok kargo firması ve mağazanın muhasebe programı bağlanır.,Several couriers and the store's accounting program are connected.
+PROD_STEP_SHARED_INTEGRATIONS_K3_MARKETPLACE_DESC,Büyük mağaza kendi sistemini doğrudan bağlar.,A large store plugs its own system straight in.
+PROD_STEP_SHARED_SECURITY_K1_MARKETPLACE_DESC,Kullanıcı ve mağaza hesapları için güvenli oturum.,Safe sessions for user and store accounts.
+PROD_STEP_SHARED_SECURITY_K2_MARKETPLACE_DESC,Mağaza panelini çalışanlarıyla paylaşır; herkes kendi işini görür.,A store shares the panel with staff; each sees their own work.
+PROD_STEP_SHARED_SECURITY_K3_MARKETPLACE_DESC,Her işlem kayda geçer ve ödeme verisi şifreli durur.,Every action is logged and payment data stays encrypted.
+PROD_STEP_SHARED_DURABILITY_K1_MARKETPLACE_DESC,Sepet kaybolmaz; yarım kalan sipariş kaldığı yerden sürer.,The cart is never lost; a half-done order picks up where it stopped.
+PROD_STEP_SHARED_DURABILITY_K2_MARKETPLACE_DESC,Mağaza ürün bilgisini eski sürüme döndürebilir.,A store can roll a product listing back to an earlier version.
+PROD_STEP_SHARED_DURABILITY_K3_MARKETPLACE_DESC,Bağlantı koptuğunda mağaza paneli çalışmayı sürdürür.,The store panel keeps working when the connection drops.
+PROD_STEP_SHARED_MOBILE_K1_MARKETPLACE_DESC,Site telefonda da açılır ve alışveriş yapılır.,The site opens on a phone and shopping works there.
+PROD_STEP_SHARED_MOBILE_K2_MARKETPLACE_DESC,Kullanıcının telefonunda uygulama; fırsatlar bildirimle gelir.,An app on the user's phone; offers arrive as notifications.
+PROD_STEP_SHARED_MOBILE_K3_MARKETPLACE_DESC,Bağlantı yokken de sepet ve sipariş durumu telefonda durur.,The cart and order status stay on the phone without a connection.
 PROD_VERSION_SHORT,v{version},v{version}
 PROD_LOCK_RESEARCH,{node} araştırılmalı,Research {node} first
 PROD_LOCK_ROLE,{stars} {role} gerekli,{stars} {role} needed
@@ -1978,6 +2044,9 @@ PROD_STEP_HIDDEN_SELF_SERVE_K3_VIDEO_CLIP_DESC,Reddedilen dosya kendi çözümü
 PROD_STEP_HIDDEN_SELF_SERVE_K1_ERP_DESC,Fatura ve stok ekranlarının yanında kısa açıklamalar durur. Muhasebeci en sık takıldığı yerde soruyu kendi çözer.,Short explanations sit beside the invoice and stock screens. The bookkeeper settles the question at the spot where it usually comes up.
 PROD_STEP_HIDDEN_SELF_SERVE_K2_ERP_DESC,Dönem kapanışından vergi kalemine kadar her konu aranabilir bir bankada toplanır. Aranan şey iş yaparken bulunur.,Everything from the period close to a tax line gathers into a bank that can be searched. What is looked for is found without leaving the work.
 PROD_STEP_HIDDEN_SELF_SERVE_K3_ERP_DESC,Tutmayan kayıt hangi adımda kaydığını söyler ve düzeltmeyi kendi önerir. Destek hattı hiç aranmaz.,A record that does not agree says which step it slipped at and proposes the correction itself. The support line is never called.
+PROD_STEP_HIDDEN_SELF_SERVE_K1_MARKETPLACE_DESC,Sipariş ve iade sayfalarının yanında en sık sorulanlar durur. Kullanıcı sorusunu destek yazmadan çözer.,The most common questions sit beside the order and return pages. A user settles the question without writing to support.
+PROD_STEP_HIDDEN_SELF_SERVE_K2_MARKETPLACE_DESC,"Kargo, iade ve ödeme konuları aranabilir bir yardım sayfasında toplanır.","Shipping, return and payment topics gather on a help page that can be searched."
+PROD_STEP_HIDDEN_SELF_SERVE_K3_MARKETPLACE_DESC,Takılan sipariş nerede kaldığını söyler ve çözümü kendi önerir. Destek hattı hiç aranmaz.,A stuck order says where it stopped and proposes the fix itself. The support line is never called.
 RND_NOTE_DEMAND_B2B_0,Bu ayki hesap talepleri tek bir yeri gösteriyor: {line}. Rakipte aynı işin çalıştığı da söylendi.,This month's account requests point at one place: {line}. It was also said that the job works at a rival.
 RND_NOTE_DEMAND_B2B_1,Yenileme görüşmelerinde bu başlık açıldı: {line}. Fiyat konuşulmadan önce o konuşuldu.,This heading came up in the renewal calls: {line}. It came up before price did.
 RND_NOTE_DEMAND_B2B_2,"Bu ay aynı cümle yeniden not edilmiş: {line}. Kimse bağırmıyor, herkes bekliyor.",The same sentence was written down again this month: {line}. Nobody is shouting; everyone is waiting.

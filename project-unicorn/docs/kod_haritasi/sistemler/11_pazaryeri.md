@@ -9,6 +9,10 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 - `systems/marketplace_model.gd` (897): `MarketplaceModel`; yalnız `static` işlevler. `state` ve `world` sözlüklerinin alanları dosya başındaki yorumda.
 - `debug/marketplace_probe.gd` (825): `-s` betiği; oynanan çizelge ve 31 mekanik denetimi, `MPPROBE ...` satırları.
 - `data/product/categories.json` (16): altı kategori ve sütunları: sepet, ziyaret sıklığı, kâr payı, sektör iadesi, gereken mağaza, başlangıç komisyonu, taban ilgi, büyük sepet payı, reklam havuzu (`ad_pool`, haftalık arama).
+- `data/product/lines/marketplace.json` (153): modül verisi; 5 kimlik hattı (Ürün Yükleme, Vitrin, Sepet ve Ödeme, Siparişler, Yorum ve Güvence)
+  ↳ Mobil, Entegrasyonlar, Kullanıcılar ve Yetki, Yedekleme `shared.json`'dan; Üyelik, Gelir alanının `cap_paid_plan`'ı.
+  ↳ Yayın şartının dört adlı modülü (Ürün Yükleme, Vitrin, Sepet ve Ödeme, Siparişler) `sprint.json` `mvp_named["marketplace"]`'da.
+  ↳ Tür `ProductCatalog`'ta kayıtlı ama `TYPE_SCREEN`'de yok: seçilemez. Rakipler `RivalCatalog.NAMES` ve `rivals.json`, Piyasa yuvaları (Orinoco, Bidwell, Dealflock) `companies.json` `sector_slots`.
 - `data/product/marketplace.json` (118): öbür bütün sabitler, gruplu: `visits`, `steps`, `stores`, `rules`, `commission`, `store_terms`, `premium`, `ledger`, `income`, `preview`, `topics` (konu kataloğu ve mağaza dertleri).
 
 ## Giriş noktaları
@@ -50,7 +54,8 @@ Yok.
 
 ## Metin anahtarları
 
-Yok: çekirdek oyuncuya görünen metin üretmez; arayüz kimlikten kurar.
+- Çekirdek oyuncuya görünen metin üretmez; arayüz kimlikten kurar.
+- Tür ve modül verisi: `PROD_TYPE_MARKETPLACE_*`, `PROD_DESK_*` (beş masa), `PROD_CONCEPT_*` (ağ etkisi, tavuk ve yumurta), `PROD_LINE_MARKETPLACE_*`, `PROD_STEP_MARKETPLACE_*`, paylaşılan hatların `_MARKETPLACE_DESC` satırları.
 
 ## Testler
 
@@ -87,4 +92,5 @@ Yok: çekirdek oyuncuya görünen metin üretmez; arayüz kimlikten kurar.
 - Yeni ayrıcalık ya da kural: `premium.perks` ya da `rules.options` kaydı, `_close_category` (kullanım ve gider), `premium_pull` ve `set_*` şartları.
 - Yeni önizleme büyüklüğü `metrics`'e girer; `_preview` hepsini otomatik fark alır. Önizleme `set_*` işlevlerini kopyada çağırır;
   ↳ probe'daki `preview_figures` çipleri bağımsız sayılarla (`store_keep` oranı, defter puanı ve haftada 5 puan tavanı) karşılaştırır.
+- Modül ekle ya da değiştir: `lines/marketplace.json` (kimlik hattı sayısı 5, dağılım tasarım 2, geliştirme 2, test 1; test hattının K3'ü `bug_tracker`), CSV'de ad, kademe adları ve `_DESC`, `rivals.json` `tiers`.
 - Sistem paketi bağlarken: çekirdek `GameState`'i okumaz; `world`'ü o hafta kurup `close_week`'i çağırır, sonra `monthly_revenue` ve `monthly_cost`'u kayıtlara ve Finans'a yansıtır.

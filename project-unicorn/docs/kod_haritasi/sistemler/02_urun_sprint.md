@@ -24,7 +24,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `scripts/systems/product_read.gd` (172): olay motoruna açılan salt okuma yüzeyi; B2C taban merdiveni; `emit_edges` kenar sinyalleri
 - `scripts/systems/product_lines.gd` (432): hat/kademe tablosunu `data/product/lines/*.json`'dan yükler, doğrular; Ar-Ge katsayıları (lisans, tasarım eforu, AI ağırlığı); gizli hat kaydı
 - `scripts/systems/product_quality.gd` (394): ürünün tek kalitesi: alan seviyesi, beklenti, sözcük, uyum U (0-100), satışçı kapanış ihtimali, hesap uyumu
-- `scripts/systems/product_catalog.gd` (230): alt-tür tablosu, demo tür ekranı (hangi tür oynanır/kilitli), eski düz özellik havuzları
+- `scripts/systems/product_catalog.gd` (234): alt-tür tablosu (`marketplace` `saas` havuzunun sonunda; `desks`, `plus`, `minus` tür seçim ekranının alanları), demo tür ekranı (hangi tür oynanır/kilitli), eski düz özellik havuzları
 - `scripts/systems/line_gates.gd` (130): kademe gereksinim doğrulayıcı (Ar-Ge düğümü, kişi ★, şirket toplamı ★); kart, tooltip ve satış aynı fonksiyonu okur
 - `scripts/systems/module_locks.gd` (35): sekme/modül sayfası bu yapıda açık mı; `UiTokens.TABS` satırındaki `lock` adı kilitler
 - `scripts/systems/incident_system.gd` (664): gecenin acil durumları: zar, tür, damga, kart isteği, saat tutuşu, cevabın bedeli (`plan`) ve uygulaması (`resolve`)
@@ -33,8 +33,8 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `scripts/systems/research_tree.gd` (427): `rnd_tree.json` yükleyici ve doğrulayıcı: efor/nakit/yıldız bantları, çapraz koşul, 8 katsayı, gizli hat profilleri
 - `scripts/systems/research_seam.gd` (100): Ürün tarafının Ar-Ge'ye açılan kapısı: 19 düğüm kimliği tablosu, `completed()`, yerleşim ve aile
 - `data/product/sprint.json` (140): tüm sprint/acil durum/kâğıt/rapor sayıları ve alan tanımları ([WORKING] değerler)
-- `data/product/rivals.json` (86): alt-tür başına 3 rakip ve çıkış takvimi
-- `data/product/lines/{erp,note_tool,video_clip,shared}.json` (169, 158, 160, 128): alt-tür hatları ve 4 paylaşılan platform hattı
+- `data/product/rivals.json` (114): alt-tür başına 3 rakip, başlangıç kademeleri ve çıkış takvimi
+- `data/product/lines/{erp,marketplace,note_tool,video_clip,shared}.json` (169, 154, 158, 160, 128): alt-tür hatları ve 4 paylaşılan platform hattı
 - `data/techtree/rnd_tree.json` (57): düğüm başına efor, nakit, alan, yıldız, ebeveyn, çapraz koşul, etki; 4 gizli hat
 - Yakın, kapsam dışı (yalnız yol): `scripts/tabs/product_tab.gd` (338), `scripts/tabs/product/*.gd` (16 dosya, en büyüğü `product_model.gd` 1149), `scripts/tabs/rnd_tab.gd` (273), `scripts/tabs/rnd/*.gd` (5 dosya)
 - Yakın: `scripts/ui/components/{research_bar,research_bar_model,build_bar,build_bar_model,build_hud_panel}.gd`, `scripts/events/seams/{seams_product,seams_incident}.gd`, `scripts/systems/support_system.gd` (424)
@@ -193,6 +193,9 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - Kayıt sistem blokları `save_manager.gd:379-380`: `systems.product` ({support}) ve `systems.rnd`; ürün/sprint/incident `game_state` bloğunda
 - `data/product/sprint.json` blokları: effort :5, need :7, roles :16, request :40, pm :41, decision :42, paper :43, incident :50, paid_plan :79, impact :80, thanks :82, reviews :83, areas :132
 - `data/product/lines/*.json`: `subtype`, `lines[]` (id, profile design|dev|test, 3 kademe: effort, usage_weight, license_cost, requires{research,person,total}); `shared.json` 4 hat
+- Pazaryeri (`marketplace`): `lines/marketplace.json` 5 kimlik hattı (Ürün Yükleme, Vitrin, Sepet ve Ödeme, Siparişler, Yorum ve Güvence; tasarım 2, geliştirme 2, test 1), öbür dört modül `shared.json`'dan
+  ↳ Üyelik hat değil, Gelir alanındaki `cap_paid_plan`'dır. Hat verisi var ama `TYPE_SCREEN`'de yok: tür seçilemez, `ProductLines.subtypes()` onu sayar
+  ↳ Rakip adları `RivalCatalog.NAMES`, Piyasa yuvaları `companies.json` `sector_slots`; yayın şartı `sprint.json` `mvp_named["marketplace"]` (ilk dört hat)
 - `data/techtree/rnd_tree.json`: `k_arge` :7, `report_period_weeks` :8, `nodes` :10 (19 düğüm), `hidden_lines` :38 (4 hat, yalnız `line_hidden_self_serve` yazılı)
 - Sabitler: `SprintSystem` :14-24 (`HOLD_PLAN`, `CRUNCH_MULT`, `MVP_HORIZON`); `ProductQuality` :10-44 (`FIT_SCALE`, `RATIO_CAP`, `CLOSE_CURVE`, `AUDIENCE_STARS`)
 - Sabitler: `InfraSystem` :15-68 (`LOAD_AMBER` 90, `LOAD_OVER` 100, `AUTO_EDGE` 80, `AUTO_TARGET` 65); `ProductLines` :17-41; `ResearchTree` :22-56 (`CASH_TABLE`, `STARS_BY_PLACE`)
@@ -223,7 +226,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `PRODUCT_*` (79 aile, 277 anahtar): Ürün sayfası, sprint kartı, sürüm notu, sunucu bloğu; okuyanlar `scripts/tabs/product/*.gd`, `product_tab.gd`, `sprint_catalog.gd`, `sprint_bridges.gd`, `sprint_system.gd`
 - `PRODUCT_SERVER_*` (37 anahtar): sunucu/kapasite arayüzü: `overview_view.gd`, `product_model.gd`, `main.gd`
 - `PRODUCT_REVIEW_*` (29): B2C yorum havuzu; `data/product/sprint.json` `reviews` bloğu ve `sprint_bridges.gd`
-- `PROD_LINE_*` (20) ve `PROD_STEP_*` (150): hat ve kademe adı; anahtar `ProductLines.line_name_key` (:290) ve `product_lines.gd:177`; `PROD_TYPE_*` tür adı (`product_catalog.gd`)
+- `PROD_LINE_*` (25) ve `PROD_STEP_*` (195): hat ve kademe adı; anahtar `ProductLines.line_name_key` (:290) ve `product_lines.gd:177`; `PROD_TYPE_*` tür adı (`product_catalog.gd`)
 - `PROD_LOCK_*` (kilit gerekçesi, `sprint_catalog.gd`; `PROD_LOCK_RESEARCH` kart ipucunda ve sol sütunun kilitli kartında aynı okunur; `PROD_LOCK_ROLE_*` kişi kilidinin rol adıdır, alandan `SprintCatalog.LOCK_ROLE_KEYS` ile okunur),
   ↳ `PROD_SHIP_*`/`PROD_VERSION_*` (sürüm başlığı, `sprint_system.gd`), `PROD_RND_NODE_*` (düğüm adı, `ResearchSeam.node_name`)
 - `RND_*`: Ar-Ge penceresi (`scripts/tabs/rnd/*.gd`, `rnd_tab.gd`, `research_bar.gd`); `RND_NOTE_*` (29) aylık not ve `RND_DISCOVERY_*` keşif notu: `rnd_system.gd`, `inbox.gd`, `mail_pane.gd`
@@ -419,7 +422,8 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - sprint.json sayısını/bloğunu değiştirirsen: okuyan `cfg("…")` çağrılarına, `sprint_probe.gd`, CLAUDE.md "[WORKING]" bölümüne ve bu sayfanın Durum ve veri bölümündeki hata modeli,
   ↳ PM hazırlığı ve probe satırlarına bak; puan birimi değişirse `SaveManager` göçü şart
 - `GameState.product`'a alan eklersen: `new_state` (`sprint_system.gd:74`) + eski kayıt için varsayılan/göç (`save_manager.gd`) + `save_v19_running_sprint_continues`, `sprint_save_roundtrip` vakaları
-- Yeni hat/kademe/alt-tür: `data/product/lines/*.json` + `PROD_LINE_*`/`PROD_STEP_*` (strings.csv) + `ProductCatalog.TYPE_SCREEN` + `rivals.json` + `ProductQuality.TABLE`; `loc_product_line_keys_resolve` koş
+- Yeni hat/kademe/alt-tür: `data/product/lines/*.json` + `PROD_LINE_*`/`PROD_STEP_*` (strings.csv; gizli hat: `PROD_STEP_HIDDEN_SELF_SERVE_K*_<TÜR>_DESC`) + `ProductCatalog.TYPE_SCREEN` + `rivals.json` + `ProductQuality.TABLE`
+  ↳ `RivalCatalog.NAMES`; `loc_product_line_keys_resolve` koş; alt-tür sayısına bağlı sabitler: `research_node_map_binds` (36 K3, 4 test hattı), `rival_composite_table`, `market_catalog_lint`, `type_screen_matches_line_content`
 - Ar-Ge düğümü: `ResearchSeam.NODES` + `rnd_tree.json` (iki yönlü küme denetimi) + `PROD_RND_NODE_*` + `RND_*` metni; etkisini sahibi sistemde uygula (`ResearchSeam.completed`); `research_node_map_binds`
 - Acil durum türü: `IncidentSystem.CARDS` (:37), `_allows` (:161), `_schedule` (:182), `plan`/`resolve` + sprint.json `incident` + kart JSON + `effects.gd:304` + `seams_incident.gd`; `incident_*` vakaları
 - Kart/olay fiili (`sprint_*`, `line_harden`, `damage_product`): `effects.gd` liste (:43-48) ve uygulama (:476-525) + `--event-vocab` + `--event-lint` + çip (`events/present/chips.gd`)
