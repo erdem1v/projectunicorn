@@ -23,8 +23,6 @@ const CATEGORY_SENDERS := {"funding": "frank", "founder": "self", "team": "self"
 	"rival": "press", "customer": "desk", "product": "desk"}
 ## The outlet a category's news comes from.
 const CATEGORY_OUTLETS := {"world": "WORLD_OUTLET_SEKTOR", "rival": "WORLD_OUTLET_GIRISIM"}
-## The paper that offers an account more: it stands for the account's reminder and reads as growth.
-const EXPANSION_CARD := "customer.expansion"
 
 
 ## Opens the inbox on `item_id` (Olaylar comes up if it is not the open window; an open one keeps
@@ -79,14 +77,10 @@ static func desk() -> Array:
 	var active: String = EventGate.active_id()
 	var ctx: Dictionary = EventGate.active_context()
 	var busy: Array = ctx.values().map(func(b: Dictionary) -> String: return String(b.get("id", "")))
-	var expansion_papers: Array = []
 	for p in EventGate.desk_papers():
-		var grow: bool = String(p.event_id) == EXPANSION_CARD
-		if grow:
-			expansion_papers.append(_bound(p.context, EvScope.TYPE_CUSTOMER))
 		if String(p.event_id) == active and p.context == ctx:
 			continue
-		out.append(_paper_item(p).merged({"grow": grow}))
+		out.append(_paper_item(p).merged({"grow": String(p.event_id) == B2BSalesSystem.EXPANSION_CARD}))
 	for reminder in MailClock.reminders():
 		if not MailClock.delivered(MailClock.reminder_at(String(reminder.id))):
 			continue
@@ -114,16 +108,14 @@ static func desk() -> Array:
 					TranslationServer.translate("DESK_PAPER_ATLAS_TITLE").format({"n": HRSearchSystem.get_files().size()}), "hr"))
 			"customer":
 				var c: Customer = reminder.ref
-				if not busy.has(c.id) and not (c.lifecycle_phase == "expansion" and expansion_papers.has(c.id)):
-					var risk: bool = c.lifecycle_phase == "risk"
+				if not busy.has(c.id):
 					var r := _reminder("customer:" + c.id, "EVENT_TAG_CUSTOMER", contact(c),
-						TranslationServer.translate("INBOX_SUBJ_RISK" if risk else "INBOX_SUBJ_GROW"), "sales")
-					r.merge({"customer": c.id, "risk": risk, "grow": not risk,
+						TranslationServer.translate("INBOX_SUBJ_RISK"), "sales")
+					r.merge({"customer": c.id, "risk": true,
 						"value": Fmt.money_chip(c.mrr) + TranslationServer.translate("SALES_PER_MONTH"),
-						"state": TranslationServer.translate("SALES_CHIP_RISK" if risk else "SALES_CHIP_EXPANSION"),
-						"line": "", "reason": TranslationServer.translate("SALES_REASON_PREFIX").format({"reason": risk_reason(c)})
-							if risk else TranslationServer.translate("SALES_EXPANSION_FICTION"),
-						"request": "" if risk and c.cs_escalated else ("customer.retention" if risk else EXPANSION_CARD)}, true)
+						"state": TranslationServer.translate("SALES_CHIP_RISK"), "line": "",
+						"reason": TranslationServer.translate("SALES_REASON_PREFIX").format({"reason": risk_reason(c)}),
+						"request": "" if c.cs_escalated else "customer.retention"}, true)
 					out.append(r)
 			"employee":
 				var e: Character = reminder.ref
@@ -202,11 +194,10 @@ static func mark_read(it: Dictionary) -> void:
 		MessageSystem.mark_read(String(it.msg.id))
 
 
-## The item an account's reminder is in the inbox: its expansion paper when one is on the desk (it stands for
-## the reminder), else the reminder itself.
+## The item the Sales tab's button opens for an account: its growth paper when one is on the desk, else its Risk reminder.
 static func account_item(customer_id: String) -> String:
 	for p in EventGate.desk_papers():
-		if String(p.event_id) == EXPANSION_CARD and _bound(p.context, EvScope.TYPE_CUSTOMER) == customer_id:
+		if String(p.event_id) == B2BSalesSystem.EXPANSION_CARD and _bound(p.context, EvScope.TYPE_CUSTOMER) == customer_id:
 			return "paper:" + String(p.id)
 	return "r:customer:" + customer_id
 

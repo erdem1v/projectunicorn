@@ -9,7 +9,7 @@ extends RefCounted
 #
 # Owns the two-layer satisfaction model (visible `satisfaction` computed from product health;
 # hidden per-customer `tolerance` seeded at signing), the lifecycle phase machine (onboarding →
-# active → risk → churning, plus the healthy → expansion promotion), and the WATCHED churn
+# active → risk → churning, and expansion while a growth offer waits), and the WATCHED churn
 # countdown — churn is never instant, it always runs down a visible counter that recovery resets.
 #
 # WRITE-THROUGH LAW: every customer field change routes through a CustomerRegistry seam; churn
@@ -263,6 +263,8 @@ static func _tick_at_risk(c: Customer) -> void:
 
 ## The retention card, asked again in a Risk spell's last week when it went unanswered (_ask_retention).
 const RETENTION_CARD := "customer.retention"
+## The growth paper: an account a kept promise offered more seats (offer_expansion).
+const EXPANSION_CARD := "customer.expansion"
 ## The server clause's last-week decision (_tick_clause).
 const CLAUSE_CARD := "customer.clause_last_week"
 
@@ -298,9 +300,7 @@ static func can_offer_retention(c: Customer) -> bool:
 
 static func _tick_healthy(c: Customer) -> void:
 	# Satisfaction is at/above tolerance: recovery resets the risk machinery, and the phase
-	# advances onboarding → active → (mature) expansion. ONE TRANSITION PER TICK:
-	# set_lifecycle_phase writes through to this very instance, so the phase is matched ONCE —
-	# otherwise a rescued account would go risk → active → expansion the same day.
+	# advances onboarding → active.
 	CustomerRegistry.set_risk_streak(c.id, 0)
 	match c.lifecycle_phase:
 		"risk":
@@ -308,24 +308,33 @@ static func _tick_healthy(c: Customer) -> void:
 		"onboarding":
 			if GameState.day >= c.onboarding_until:
 				CustomerRegistry.set_lifecycle_phase(c.id, "active")
-		"active":
-			# Healthy + mature + never offered before → the positive family: a seat/MRR
-			# upsell. The phase is a fact about the account that other readers use;
-			# `customer.expansion` fires off `musteri.is_expansion_ready`.
-			if can_offer_expansion(c):
-				CustomerRegistry.set_lifecycle_phase(c.id, "expansion")
-		# expansion / churning are not promotable states
+		"expansion":
+			# Only a kept promise opens the phase (offer_expansion); an account a save left in it without an offer goes back.
+			if c.expansion_offer_day < 0:
+				CustomerRegistry.set_lifecycle_phase(c.id, "active")
+		# active / churning: healthy is not a reason to grow
 
 
-# THE EXPANSION GATE, in one place so the daily sweep and the Sales-tab button cannot
-# drift apart. The tab's manual trigger bypasses _tick_healthy entirely, so a latch that
-# lived only in the sweep would leave the loop wide open through the UI.
+# THE EXPANSION GATE, read by the card's condition and its selector: a kept promise offered the account growth, and it
+# has not answered yet.
 static func can_offer_expansion(c: Customer) -> bool:
-	if c.market_type != "b2b" or c.status != "active":
+	return c.expansion_offer_day >= 0 and c.last_expansion_day < 0
+
+
+## Growth is earned: a promise kept on time offers the account more seats, once per account, and in one week (one release)
+## to at most as many accounts as a release thanks (`thanks.max`). Not to an account in Risk or under notice. The phase
+## marks it for the Sales tab; the paper is the offer. True when the paper was asked for.
+static func offer_expansion(c: Customer) -> bool:
+	if c.lifecycle_phase not in ["onboarding", "active"] or c.expansion_offer_day >= 0 or c.last_expansion_day >= 0 \
+			or c.exit_notice_day >= 0 or c.notice_end_day >= 0:
 		return false
-	if c.last_expansion_day >= 0:
-		return false   # this account has already had its expansion moment
-	return (GameState.day - c.acquired_on_day) >= TimeModel.ticks(B2BConstants.EXPANSION_MATURE_WEEKS)
+	var today: int = CustomerRegistry.get_by_market("b2b").filter(func(x: Customer) -> bool:
+		return x.expansion_offer_day == GameState.day).size()
+	if today >= int(SprintCatalog.cfg("thanks.max")):
+		return false
+	CustomerRegistry.set_expansion_offer_day(c.id, GameState.day)
+	CustomerRegistry.set_lifecycle_phase(c.id, "expansion")
+	return EventGate.request(EXPANSION_CARD, {"customer": c.id})
 
 
 static func _churn(c: Customer) -> void:
@@ -512,7 +521,7 @@ static func ignore_risk(_customer_id: String) -> void:
 	pass
 
 
-# --- Expansion (upsell): healthy mature accounts grow seats → MRR. ---
+# --- Expansion (upsell): an account a kept promise offered growth adds seats → MRR. ---
 static func expand(customer_id: String, add_seats: int, per_seat_mrr: int) -> void:
 	var c: Customer = CustomerRegistry.get_customer(customer_id)
 	if c == null or add_seats <= 0:
@@ -526,23 +535,26 @@ static func expand(customer_id: String, add_seats: int, per_seat_mrr: int) -> vo
 	SalesSystem.reflect_mrr()
 	GameState.run_customers_expanded += 1  # run counter seam — genuine upsell only
 	EventBus.customer_expanded.emit(c.id, c.seats)
-	# Back to a settled account after the upsell moment — and STAMP the latch, or the
-	# account lands right back on the condition that promoted it and re-fires next tick.
+	# The answer closes the offer (the latch can_offer_expansion reads) and the account settles.
 	CustomerRegistry.set_last_expansion_day(c.id, GameState.day)
 	if c.lifecycle_phase == "expansion":
-		CustomerRegistry.set_lifecycle_phase(c.id, "active")
+		CustomerRegistry.set_lifecycle_phase(c.id, _settled_phase(c))
 
 
 static func decline_expansion(customer_id: String) -> void:
-	# "Şimdilik gerek yok": no growth, the account settles back to active (a real,
-	# different state — the upsell simply does not happen; no counter, no MRR move).
+	# "Şimdilik gerek yok": no growth, no counter, no MRR move; the account settles.
 	# The latch is stamped on BOTH branches: declining is an answer, not a postponement.
 	var c: Customer = CustomerRegistry.get_customer(customer_id)
 	if c == null:
 		return
 	CustomerRegistry.set_last_expansion_day(c.id, GameState.day)
 	if c.lifecycle_phase == "expansion":
-		CustomerRegistry.set_lifecycle_phase(c.id, "active")
+		CustomerRegistry.set_lifecycle_phase(c.id, _settled_phase(c))
+
+
+## The phase a settled account is in: the onboarding window is a fact about the calendar.
+static func _settled_phase(c: Customer) -> String:
+	return "onboarding" if GameState.day < c.onboarding_until else "active"
 
 
 static func founder_managed_count() -> int:
@@ -569,10 +581,9 @@ static func _recover(c: Customer, sat_bump: int) -> void:
 	if c.lifecycle_phase == "risk":
 		CustomerRegistry.set_churn_countdown(c.id, -1)
 		CustomerRegistry.set_last_risk_exit_day(c.id, GameState.day)   # hysteresis stamp
-		# A rescue INSIDE the onboarding window returns to onboarding, not active: the window
-		# is a fact about the CALENDAR, and _tick_satisfaction keeps amplifying until it closes.
-		CustomerRegistry.set_lifecycle_phase(c.id,
-			"onboarding" if GameState.day < c.onboarding_until else "active")
+		# A rescue INSIDE the onboarding window returns to onboarding, not active: _tick_satisfaction
+		# keeps amplifying until the window closes.
+		CustomerRegistry.set_lifecycle_phase(c.id, _settled_phase(c))
 
 
 # --- The sales-domain reaction to a promise resolving (called by PromiseRegistry;
@@ -604,6 +615,7 @@ static func on_promise_resolved(p: Promise) -> void:
 				# risk streak on the spot, so delivering rescues the account the same day
 				# even when the bump alone would not clear its tolerance bar.
 				_recover(c, B2BConstants.PROMISE_KEPT_SAT)
+				offer_expansion(c)
 			GameState.set_flag("b2b_broke_%s" % p.customer_id, false)
 		"partial":
 			# Shipped late: a soft satisfaction penalty (better than an outright break).

@@ -254,6 +254,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"market_share_tracks_mrr":            fail = _case_market_share_tracks_mrr()
 		"news_feed_weights_and_no_repeat":    fail = _case_news_feed_weights_and_no_repeat()
 		"cs_request_kind_state_driven":       fail = _case_cs_request_kind_state_driven()
+		"expansion_only_after_kept_promise":  fail = _case_expansion_only_after_kept_promise()
 		# --- Bug cleanup 2026-08-07: each of these FAILS against the
 		#     pre-fix engine, which is what makes them regression guards rather than décor.
 		"b2b_expansion_no_refire":            fail = _case_b2b_expansion_no_refire()
@@ -4360,8 +4361,7 @@ static func _case_b2b_expansion_moves_seats_mrr_counter() -> String:
 		return "run_customers_expanded not incremented"
 	if expanded.is_empty():
 		return "customer_expanded never fired"
-	# Event-driven path: a healthy, mature account auto-enqueues the expansion family on
-	# the daily tick (state-bound, not calendar-polled) and resolving "Büyüt" upsells it.
+	# Event-driven path: a kept promise offers growth as a paper, and resolving "Büyüt" upsells it.
 	#
 	# A SECOND, DISTINCT account — not a re-seed of co_lead_smoke. `expand()` above already
 	# spent that account's one expansion moment, and since the expansion-loop fix the engine remembers it. The
@@ -4375,18 +4375,13 @@ static func _case_b2b_expansion_moves_seats_mrr_counter() -> String:
 	var m: Customer = CustomerRegistry.get_customer("co_lead_mature")
 	if m == null:
 		return "the mature fixture account was not created"
-	m.acquired_on_day = GameState.day - (TimeModel.ticks(B2BConstants.EXPANSION_MATURE_WEEKS) + 1)  # mature
 	CustomerRegistry.set_lifecycle_phase(m.id, "active")
-	CustomerRegistry.set_satisfaction(m.id, 80)  # healthy (>= tolerance)
 	var seats_before: int = m.seats
-	GameState.advance_day()
-	B2BSalesSystem.daily_tick()      # marks the account `expansion` — the fact, not the card
-	# THE EXPANSION IS A PAPER NOW, and that is the behaviour change worth pinning. It used to
-	# mount a modal the moment an account matured: an interruption for good news with no
-	# deadline behind it. It lands on the desk, and the desk is where the player picks it up.
+	# THE EXPANSION IS A PAPER: good news with no deadline behind it lands on the desk, not as a modal, and the desk
+	# is where the player picks it up.
 	var eid: String = EXPANSION_ID
-	if not EventGate.request(eid, {"customer": m.id}):
-		return "the expansion card was refused for a mature healthy account"
+	if not B2BSalesSystem.offer_expansion(m):
+		return "the expansion card was refused for an account offered growth"
 	var paper: String = EvLatches.key_of(eid, _ctx_customer(m))
 	var desk: Array = EventGate.desk_papers(8)
 	var on_desk: bool = false
@@ -5427,26 +5422,91 @@ static func _case_fumes_zero_revenue_ledger() -> String:
 	return ""
 
 
+## Growth comes from a kept promise, never from age. Aged and healthy, an account stays active and the inbox holds no
+## reminder for it; a kept promise offers growth (phase, offer day, the paper) to at most `thanks.max` accounts a week;
+## an account a save left in the phase without an offer goes back to active, an offered one stays. A new account's kept
+## signing promise offers growth too, and declining it returns the account to onboarding.
+static func _case_expansion_only_after_kept_promise() -> String:
+	_seed_b2b(1000)
+	var cap: int = int(SprintCatalog.cfg("thanks.max"))
+	for i in cap:
+		var p := Prospect.new()
+		p.id = "lead_grow_%d" % i
+		p.company_name = "Grow %d A.Ş." % i
+		p.industry = "testing"
+		p.star = 1
+		_sign_fixture(p, 900, 80)
+	var accounts: Array = CustomerRegistry.get_by_market("b2b")
+	if accounts.size() != cap + 1:
+		return "the fixture signed %d accounts, want %d" % [accounts.size(), cap + 1]
+	for c: Customer in accounts:
+		c.acquired_on_day = GameState.day - TimeModel.ticks(20)   # well past any age a calendar rule could ask
+		CustomerRegistry.set_lifecycle_phase(c.id, "active")
+		CustomerRegistry.set_satisfaction(c.id, 80)
+	GameState.advance_day()
+	B2BSalesSystem.daily_tick()
+	for c: Customer in accounts:
+		if c.lifecycle_phase == "expansion" or B2BSalesSystem.can_offer_expansion(c):
+			return "%s turned to growth at 20 healthy weeks with no kept promise" % c.id
+	if MailClock.reminders().any(func(r: Dictionary) -> bool: return r.kind == "customer"):
+		return "the inbox holds a reminder for a healthy account"
+	var offered: int = 0
+	for c: Customer in accounts:
+		var kept := Promise.new()
+		kept.customer_id = c.id
+		kept.status = "kept"
+		B2BSalesSystem.on_promise_resolved(kept)
+		offered += int(c.expansion_offer_day == GameState.day)
+	if offered != cap:
+		return "%d kept promises offered growth to %d accounts in one week, want %d" % [accounts.size(), offered, cap]
+	var papers: int = EventGate.desk_papers().filter(
+		func(p) -> bool: return String(p.event_id) == B2BSalesSystem.EXPANSION_CARD).size()
+	if papers != cap:
+		return "%d growth papers on the desk, want %d" % [papers, cap]
+	var first: Customer = accounts[0]
+	var old: Customer = accounts[cap]   # past the week's cap: never offered
+	CustomerRegistry.set_lifecycle_phase(old.id, "expansion")
+	GameState.advance_day()
+	B2BSalesSystem.daily_tick()
+	if old.lifecycle_phase != "active":
+		return "an account left in the growth phase with no offer stayed there"
+	if first.lifecycle_phase != "expansion":
+		return "an account offered growth left the phase before answering"
+	var p := Prospect.new()
+	p.id = "lead_grow_new"
+	p.company_name = "Grow New A.Ş."
+	p.industry = "testing"
+	p.star = 1
+	_sign_fixture(p, 900, 80)
+	var fresh: Customer = CustomerRegistry.get_customer("co_lead_grow_new")
+	if fresh == null or fresh.lifecycle_phase != "onboarding":
+		return "the new account is not onboarding"
+	var signing := Promise.new()
+	signing.customer_id = fresh.id
+	signing.status = "kept"
+	B2BSalesSystem.on_promise_resolved(signing)
+	if fresh.lifecycle_phase != "expansion":
+		return "a new account's kept signing promise did not offer growth"
+	B2BSalesSystem.decline_expansion(fresh.id)
+	if fresh.lifecycle_phase != "onboarding":
+		return "declining growth inside the onboarding window left the account %s" % fresh.lifecycle_phase
+	return ""
+
+
 static func _case_b2b_expansion_no_refire() -> String:
-	# The promotion test is MONOTONE (day - acquired_on_day >= MATURE_WEEKS) and
-	# BOTH resolutions used to put the account straight back to "active" — the exact state
-	# that predicate passes — so the identical modal re-fired every morning forever and
-	# "Büyüt" was an unbounded free MRR faucet for one click a day.
-	# FAILS against the pre-fix engine on the first re-tick, on BOTH branches.
+	# Either answer closes the offer for good: the card does not come back and a second kept promise offers nothing,
+	# or "Büyüt" would be a free MRR faucet. On BOTH branches.
 	GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
 	_seed_b2b(1000)
 
 	# --- Branch 1: ACCEPT ---
 	var c: Customer = CustomerRegistry.get_customer("co_lead_smoke")
-	c.acquired_on_day = GameState.day - (TimeModel.ticks(B2BConstants.EXPANSION_MATURE_WEEKS) + 1)
 	CustomerRegistry.set_lifecycle_phase(c.id, "active")
 	CustomerRegistry.set_satisfaction(c.id, 80)
 	# A PAPER, not a modal — see _case_b2b_expansion_moves_seats_mrr_counter for the why. The
 	# gate is asked the same question either way; what changed is the surface it lands on.
 	var eid: String = EXPANSION_ID
-	GameState.advance_day()
-	B2BSalesSystem.daily_tick()
-	if not EventGate.request(eid, {"customer": c.id}):
+	if not B2BSalesSystem.offer_expansion(c):
 		return "expansion never offered"
 	var paper: String = EvLatches.key_of(eid, _ctx_customer(c))
 	if not EventGate.open_paper(paper):
@@ -5460,6 +5520,8 @@ static func _case_b2b_expansion_no_refire() -> String:
 			return "expansion re-fired after ACCEPT (day %d)" % GameState.day
 	if c.mrr != mrr_after_upsell:
 		return "MRR kept growing after one upsell (%d -> %d)" % [mrr_after_upsell, c.mrr]
+	if B2BSalesSystem.offer_expansion(c):
+		return "a second kept promise offered growth again"
 
 	# --- Branch 2: DECLINE, on a second account ---
 	var p := Prospect.new()
@@ -5471,15 +5533,12 @@ static func _case_b2b_expansion_no_refire() -> String:
 	var d: Customer = CustomerRegistry.get_customer("co_lead_decliner")
 	if d == null:
 		return "second account was not created"
-	d.acquired_on_day = GameState.day - (TimeModel.ticks(B2BConstants.EXPANSION_MATURE_WEEKS) + 1)
 	CustomerRegistry.set_lifecycle_phase(d.id, "active")
 	CustomerRegistry.set_satisfaction(d.id, 80)
 	# ONE card id for the whole family; the entity latch makes each account's offer its own
 	# instance, with its own paper on the desk.
 	var did: String = EXPANSION_ID
-	GameState.advance_day()
-	B2BSalesSystem.daily_tick()
-	if not EventGate.request(did, {"customer": d.id}):
+	if not B2BSalesSystem.offer_expansion(d):
 		return "expansion never offered to the second account"
 	var d_paper: String = EvLatches.key_of(did, _ctx_customer(d))
 	if not EventGate.open_paper(d_paper):
@@ -10360,11 +10419,9 @@ static func _seed_save_world() -> void:
 	# kaydetmeyi REDDEDER (save_manager.gd:148) — koruduğu şey sunulmuş ama yanıtlanmamış bir
 	# karardır. Bir kâğıt tam da bunun karşıtıdır: motor durumudur, EvSave bloğunda gidip
 	# gelir, ve oyuncunun gerçek kayıtları da böyle görünür — masada kâğıt, ekranda modal yok.
-	var aged: Customer = CustomerRegistry.get_by_market("b2b")[0]
-	aged.acquired_on_day = GameState.day - (TimeModel.ticks(B2BConstants.EXPANSION_MATURE_WEEKS) + 1)
-	CustomerRegistry.set_lifecycle_phase(aged.id, "active")
-	CustomerRegistry.set_satisfaction(aged.id, 80)
-	EventGate.request(EXPANSION_ID, {"customer": aged.id})
+	var account: Customer = CustomerRegistry.get_by_market("b2b")[0]
+	CustomerRegistry.set_lifecycle_phase(account.id, "active")
+	B2BSalesSystem.offer_expansion(account)
 
 
 ## Diske YAZ, geri OKU, normalleştir. Gerçek yolu kullanır (atomik yazım + JSON

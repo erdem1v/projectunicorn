@@ -85,7 +85,7 @@ Görünüm:
 - `OfficeView.apply_graphics()` `scripts/ui/office/office_view.gd:196`: ayar, yeniden boyutlama, yeni yerleşim · `GraphicsSettings.apply_view`
 - `OfficeView.set_safe_left` `:131`, `set_dimmed` `:143`, `set_veiled` `:137`: raya göre çerçeve, pencere altında soluklaşma, yolculukta örtü · `scripts/ui/components/window_layer.gd:209,238,135`
 - `OfficeView.select_person` `office_view.gd:172`, `clear_selection` `:176`: dosya açılınca halka · `scripts/ui/components/window_layer.gd:109,152`
-- `OfficeView.close_map()` `office_view.gd:73`, `open_map()` `:79`: karar açılınca harita kapanır · `scripts/main/main.gd:4888`
+- `OfficeView.close_map()` `office_view.gd:73`, `open_map()` `:79`: karar açılınca harita kapanır · `scripts/main/main.gd:4892`
 - `OfficeView.fade(dark, time)` `office_view.gd:150`: 3B görüntüyü karartır · `scripts/ui/office/office_people.gd:119` (gece kapısı)
 - `OfficeLayout.load(id)` `scripts/ui/office/office_layout.gd:37`: yan JSON'u okur · `office_view.gd:89`, `menu_backdrop.gd`
 - `OfficeMaterials.convert_scene()` `scripts/ui/office/office_materials.gd:26` ve `stations()` `:56` · `office_view.gd:95-96`
@@ -108,10 +108,10 @@ Kişiler:
 Harita, toplantı, yolculuk:
 - `OfficeCity.set_layout()` `scripts/ui/office/office_city.gd:105`: harita yerleşimi yüklenince binaları bağlar, HUD'u kurar · `office_view.gd:121`
 - `OfficeCity.open()` `:184`, `close()` `:198`, `pick()` `:156`, `hover()` `:161`, `road(out, tower_label)` `:130` · `office_hud.gd` (`move_pressed`), `office_view.gd`, `office_travel.gd`
-- `OfficeTravel.travel_out()` `scripts/ui/office/office_travel.gd:65`, `travel_home()` `:95` · `scripts/main/main.gd:5862,5833` (`_leave_office` `:5853`, `_return_to_office` `:5874`)
+- `OfficeTravel.travel_out()` `scripts/ui/office/office_travel.gd:65`, `travel_home()` `:95` · `scripts/main/main.gd:5868,5839` (`_leave_office` `:5859`, `_return_to_office` `:5880`)
 - `MeetingCast.stage()` `scripts/ui/office/meeting_cast.gd:58`, `walk_in()` `:82`, `walk_out()` `:89`, `frame_table()` `:75`, `look` `:98`, `post` `:104`, `speak` `:117`, `gesture` `:126`
-  · `scripts/ui/office/office_travel.gd:85-97`, `scripts/ui/meeting/meeting_panel.gd:336`, `scripts/main/main.gd:4543`
-- `MeetingInvite.ring(spec)` `scripts/ui/office/meeting_invite.gd:96`, `stop()` `:120`, `can_ring()` `:133` · `scripts/main/main.gd:5046` (`_ring_call` `:4797`)
+  · `scripts/ui/office/office_travel.gd:85-97`, `scripts/ui/meeting/meeting_panel.gd:336`, `scripts/main/main.gd:4547`
+- `MeetingInvite.ring(spec)` `scripts/ui/office/meeting_invite.gd:96`, `stop()` `:120`, `can_ring()` `:133` · `scripts/main/main.gd:5050` (`_ring_call` `:4801`)
 - `OfficeNoticeStack.dock_below(rect)` `scripts/ui/office/office_notice_stack.gd:65`: BuildHUD'un bittiği yerin altına yerleşir · `scripts/ui/components/build_hud_panel.gd`
 - `bake_nav.gd _initialize()` `tools/office3d/bake_nav.gd:35`: her yerin zemini; `godot --headless -s res://tools/office3d/bake_nav.gd [-- id ...]`
 
@@ -132,7 +132,7 @@ Düğüm sinyalleri:
 - `founder_settled`: yayan `scripts/ui/office/office_people.gd:142,239,658` · `office_travel.gd:106`, `scripts/main/main.gd:2098` (probe)
 - `founder_seated`: yayan `scripts/ui/office/meeting_cast.gd:152` · `office_travel.gd:88`, `scripts/main/main.gd:1999`
 - `founder_out`: yayan `scripts/ui/office/meeting_cast.gd:155` · `office_travel.gd:98`
-- `accepted` / `postponed`: yayan `scripts/ui/office/meeting_invite.gd:191` / `:198` · dinleyen `scripts/main/main.gd:5035,4909`
+- `accepted` / `postponed`: yayan `scripts/ui/office/meeting_invite.gd:191` / `:198` · dinleyen `scripts/main/main.gd:5039,4913`
 
 ## Durum ve veri
 
@@ -165,11 +165,11 @@ Düğüm sinyalleri:
 ## Testler
 
 Smoke (`bash tools/smoke_run.sh <vaka>`; bayrak `--` ardına konmaz):
-- `office_move_gates_and_save` `scripts/debug/endgame_smoke.gd:20391`: para kapısı, peşin bir kez, kira varış haftasında, kayıt turu
-- `desk_cap_blocks_hire` `endgame_smoke.gd:20487`: evde sınır yok, ofiste masa dolunca arama kapanır, büyük ofiste açılır
-- `office_brand_once` `endgame_smoke.gd:20561`: ilk varışta +3/+6/+10, ikincide ve aşağı taşınmada 0, kayıttan sonra tek sefer
-- `office_pace_linear` `endgame_smoke.gd:8323`: `k` oyun hızıyla doğrusal, tavansız
-- `look_registry_unique_and_saved` `endgame_smoke.gd:10328`: görünümler eşsiz, kayıtta korunur
+- `office_move_gates_and_save` `scripts/debug/endgame_smoke.gd:20448`: para kapısı, peşin bir kez, kira varış haftasında, kayıt turu
+- `desk_cap_blocks_hire` `endgame_smoke.gd:20544`: evde sınır yok, ofiste masa dolunca arama kapanır, büyük ofiste açılır
+- `office_brand_once` `endgame_smoke.gd:20618`: ilk varışta +3/+6/+10, ikincide ve aşağı taşınmada 0, kayıttan sonra tek sefer
+- `office_pace_linear` `endgame_smoke.gd:8382`: `k` oyun hızıyla doğrusal, tavansız
+- `look_registry_unique_and_saved` `endgame_smoke.gd:10387`: görünümler eşsiz, kayıtta korunur
 - Kişiler, ışık, kamera, harita smoke'ta YOK (başsız çalışmada kişiler çizilmez); arayüz doğrulaması görsel kabulledir (CLAUDE.md §11)
 
 Pencereli görsel ve ölçüm (bayrak `main.gd` tablosunda, `:271-276`; PNG `%APPDATA%\Godot\app_userdata\Project Unicorn\`):

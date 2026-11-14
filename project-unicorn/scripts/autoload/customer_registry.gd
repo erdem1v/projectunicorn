@@ -328,6 +328,15 @@ func set_last_expansion_day(customer_id: String, day: int) -> void:
 	c.last_expansion_day = day
 
 
+## The day a kept promise offered the account growth (B2BSalesSystem.offer_expansion); no signal, the phase change that comes
+## with it is what the UI repaints on.
+func set_expansion_offer_day(customer_id: String, day: int) -> void:
+	var c: Customer = _customers.get(customer_id, null)
+	if c == null:
+		return
+	c.expansion_offer_day = day
+
+
 func assign_customer(customer_id: String, employee_id: String, pinned: bool = false) -> void:
 	# Delegation seam: "" = founder-managed, else a Customer Success employee id.
 	# `pinned` marks the assignment as a PLAYER decision. reconcile_assignments() runs every

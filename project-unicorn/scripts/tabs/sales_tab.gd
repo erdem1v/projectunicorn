@@ -654,17 +654,18 @@ func _account_foot(c: Customer, off: bool) -> HBoxContainer:
 	change.toggle_mode = true
 	change.pressed.connect(_open_steward_picker.bind(c, change))
 	row.add_child(change)
-	var attend: String = ""
-	if c.lifecycle_phase == "expansion":
-		attend = "SALES_ACTION_EXPAND"
-	elif c.lifecycle_phase == "risk" and not c.cs_escalated:
-		attend = "SALES_ACTION_RETAIN"
-	if attend != "":
+	var grow: bool = c.lifecycle_phase == "expansion"
+	if grow or (c.lifecycle_phase == "risk" and not c.cs_escalated):
 		row.add_child(RnDUiShared.spacer())
-		var go := _button(tr(attend), off, MAIL)
+		var go := _button(tr("SALES_ACTION_EXPAND" if grow else "SALES_ACTION_RETAIN"), off, MAIL)
 		go.pressed.connect(func() -> void:
+			var item: String = INBOX.account_item(c.id)
+			if grow and not item.begins_with("paper:"):
+				# The growth paper the workday has not brought yet: the gate opens the waiting paper.
+				EventGate.request(B2BSalesSystem.EXPANSION_CARD, {"customer": c.id}, true)
+				return
 			MailClock.reach("customer:" + c.id)
-			INBOX.show(INBOX.account_item(c.id)))
+			INBOX.show(item))
 		row.add_child(go)
 	return row
 

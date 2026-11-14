@@ -707,7 +707,7 @@ func _record() -> void:
 	if _item.has("employee"):
 		go = func() -> void: get_tree().call_group(&"window_layer", &"open_detail", "hr_dossier",
 			{"character_id": String(_item.employee)})
-	_actions("", [[tr("SALES_ACTION_EXPAND" if _item.get("grow", false) else "SALES_ACTION_RETAIN"), go, true]],
+	_actions("", [[tr("SALES_ACTION_RETAIN"), go, true]],
 		request != "" and EventGate.active_id() != "")
 
 

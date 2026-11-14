@@ -332,7 +332,7 @@ slot of that type (§17.12).
 | `musteri.has_pain_feature` | entity | bool | Sales | the account wants a specific feature |
 | `musteri.is_assigned` | entity | bool | Sales | WRAPPER; a CS rep carries it, rather than the founder |
 | `musteri.is_at_risk` | entity | bool | Sales | the account is in a Risk episode |
-| `musteri.is_expansion_ready` | entity | bool | Sales | mature, healthy, and never yet offered expansion |
+| `musteri.is_expansion_ready` | entity | bool | Sales | a kept promise offered growth and the account has not answered |
 | `musteri.lifecycle_phase` | entity | string | Sales | onboarding | active | risk | churning | expansion |
 | `musteri.lost_this_run` | global | int | Sales | WRAPPER; churn counter |
 | `musteri.met_feature` | entity | string | Sales | the name KEY of the step the account's latest thanks is for; text reads it in the live language, a history row keeps the key |

@@ -46,12 +46,10 @@ extends Resource
 @export var retain_stalls: int = 0            # how many times "Oyala" has been used (works 1-2x, then caught on)
 @export var retain_discounts: int = 0     # how many discounts this account has been given (cap B2BConstants.RETAIN_DISCOUNT_MAX_USES, both channels)
 @export var last_risk_exit_day: int = -1  # HYSTERESIS latch: the tick the account last left Risk; -1 = never. No re-entry for RISK_REENTRY_WEEKS
-# HIDDEN expansion latch. The maturity test in B2BSalesSystem.can_offer_expansion is MONOTONE
-# (day - acquired_on_day >= EXPANSION_MATURE_WEEKS) and BOTH resolutions put the account back to
-# "active", so without a record that the moment already happened the account would be promoted
-# back to "expansion" every morning. Stored as the DAY rather than a bool so a future re-arm
-# rule can read it without a schema migration.
-@export var last_expansion_day: int = -1      # -1 = expansion moment not yet offered
+# HIDDEN expansion latch: the day the account answered its growth offer (either way). Both answers put it back to "active";
+# this keeps it from being offered again.
+@export var last_expansion_day: int = -1      # -1 = growth offer not yet answered
+@export var expansion_offer_day: int = -1     # the day a kept promise offered growth; -1 = never offered
 @export var cs_escalated: bool = false        # a CS-managed account has raised its one escalation (until it recovers)
 
 # --- Trust ledger + the customer-rep request channel (all HIDDEN, no signals) ---

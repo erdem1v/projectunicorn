@@ -88,7 +88,7 @@ static func reminders() -> Array:
 	if HRSearchSystem.has_files_ready():
 		out.append({"id": "atlas", "kind": "atlas"})
 	for c in CustomerRegistry.get_by_market("b2b"):
-		if c.lifecycle_phase in ["risk", "expansion"]:
+		if c.lifecycle_phase == "risk":
 			out.append({"id": "customer:" + c.id, "kind": "customer", "ref": c})
 	for e in CharacterRegistry.get_employees():
 		if HRConstants.is_flight_risk(e.morale):

@@ -19,7 +19,7 @@ static func install() -> void:
 		func(id: String) -> bool:
 			var c: Customer = CustomerRegistry.get_customer(id)
 			return c != null and B2BSalesSystem.can_offer_expansion(c),
-		"Sales", "mature, healthy, and never yet offered expansion")
+		"Sales", "a kept promise offered growth and the account has not answered")
 	EvSeams.register("musteri.has_pain_feature", E, TYPE_BOOL,
 		func(id: String) -> bool:
 			var c: Customer = CustomerRegistry.get_customer(id)

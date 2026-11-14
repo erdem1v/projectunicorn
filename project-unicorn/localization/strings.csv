@@ -129,7 +129,6 @@ SALES_REASON_PREFIX,Sebep: {reason},Reason: {reason}
 SALES_REASON_OUTAGE,kullandığı hatlardaki açık hatalar,open bugs on the lines they use
 SALES_REASON_STABILITY,ürün yeterince güvenilir değil (Güven & Ölçek),the product is not reliable enough (Trust & Scale)
 SALES_REASON_SATISFACTION,memnuniyet düşüyor,satisfaction is falling
-SALES_EXPANSION_FICTION,Başka departmana yaymak istiyor.,Wants to roll it out to another department.
 SALES_ONBOARDING_ENDS,Onboarding gelecek hafta bitiyor. Ürüne henüz ısınmadı.,Onboarding ends next week. Not sold on the product yet.
 SALES_ACTION_RETAIN,İlgilen,Check in
 SALES_ACTION_EXPAND,Değerlendir,Evaluate
@@ -2955,7 +2954,6 @@ INBOX_ROW_REPORT,rapor,report
 INBOX_ROW_DISCOVERY,keşif,discovery
 INBOX_CHOICE,Seçimin: {option},Your choice: {option}
 INBOX_SUBJ_RISK,Risk altında,At risk
-INBOX_SUBJ_GROW,Büyümek istiyor,Wants to grow
 MAIL_YOUR_CHOICE,Seçimin,Your choice
 MAIL_CHOOSE,Seç,Choose
 MAIL_RESPOND,Cevapla,Respond

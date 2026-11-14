@@ -749,9 +749,9 @@ func _run_b2b_shot(kind: String) -> void:
 			c.cs_escalated = true
 			card_id = "customer.cs_escalation"
 		"expansion":
-			# can_offer_expansion wants a MATURE account that was never offered one.
-			c.acquired_on_day = GameState.day - (TimeModel.ticks(B2BConstants.EXPANSION_MATURE_WEEKS) + 1)
-			CustomerRegistry.set_lifecycle_phase(c.id, "active")
+			# can_offer_expansion wants an account a kept promise offered growth, that has not answered it.
+			CustomerRegistry.set_expansion_offer_day(c.id, GameState.day)
+			CustomerRegistry.set_lifecycle_phase(c.id, "expansion")
 			CustomerRegistry.set_satisfaction(c.id, 80)
 			card_id = "customer.expansion"
 		"deal":
@@ -2907,22 +2907,26 @@ func _run_day_shot(spec: String) -> void:
 	get_tree().quit()
 
 
-# --minute-shot=<weeks>: the single-founder ERP bot (RunProbe full_run_staff1, sim) played that many weeks, then the
-# shell mounted over its state, the clock paused: what is in front of the player that far into a run at 1x (a week is
-# 22.5 s: week 26 is the clock's tenth minute). minute_shot_w<weeks>.png and one MINUTESHOT line. The bot stops at a
-# week's start, so the first frame is week 2.
+# --minute-shot=<weeks>[:<tab>]: the single-founder ERP bot (RunProbe full_run_staff1, sim) played that many weeks, then
+# the shell mounted over its state, the clock paused: what is in front of the player that far into a run at 1x (a week is
+# 22.5 s: week 26 is the clock's tenth minute). A tab id (`events`, `sales`, ...) opens that tab. minute_shot_w<weeks>.png
+# (`_<tab>` after it) and one MINUTESHOT line. The bot stops at a week's start, so the first frame is week 2.
 func _run_minute_shot(spec: String) -> void:
-	if not spec.is_valid_int() or int(spec) < 2:
+	var weeks: String = spec.get_slice(":", 0)
+	var tab: String = spec.get_slice(":", 1) if spec.contains(":") else ""
+	if not weeks.is_valid_int() or int(weeks) < 2:
 		_shot_fail("[MinuteShot] weeks must be a whole number from 2: %s" % spec)
 		return
 	_begin_shot()
-	RunProbe.run("full_run_staff1:%s:sim" % spec, _debug_payload())
+	RunProbe.run("full_run_staff1:%s:sim" % weeks, _debug_payload())
 	EventBus.speed_change_requested.emit(0)
 	await _mount_shot_shell()
+	if tab != "":
+		EventBus.tab_changed.emit(tab)
 	await get_tree().create_timer(2.5).timeout
 	print("MINUTESHOT|week=%d|cash=%d|mrr=%d|accounts=%d|run_active=%s" % [GameState.day, GameState.cash, GameState.mrr,
 		CustomerRegistry.account_count(), str(GameState.run_active)])
-	await _finish_shot("minute_shot_w%s" % spec, 1.0)
+	await _finish_shot("minute_shot_w%s%s" % [weeks, "_" + tab if tab != "" else ""], 1.0)
 
 
 # --office-crowd-probe=<home|ishani|plaza|loft>:<people>:<speed 1-3>: that many people (the
@@ -5539,6 +5543,8 @@ func _shot_customer(id: String, cname: String, industry: String, phase: String, 
 	c.seats = seats
 	c.satisfaction = 25 if phase == "risk" else 72
 	c.lifecycle_phase = phase
+	if phase == "expansion":
+		c.expansion_offer_day = GameState.day   # a kept promise's offer, its paper not on the desk yet
 	c.acquired_on_day = GameState.day - weeks_ago
 	c.scale = 3
 	c.pain_feature_id = "saas_ops_integration"

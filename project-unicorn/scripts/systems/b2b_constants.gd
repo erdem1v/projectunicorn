@@ -26,7 +26,6 @@ const RISK_TRIGGER_WEEKS := 1           # consecutive ticks under tolerance → 
 # the CAUSE (a sprint, a version) before the account asks again.
 const RISK_REENTRY_WEEKS := 3           # [WORKING] weeks after leaving Risk before it can re-enter
 const CHURN_COUNTDOWN_WEEKS := 2        # visible "Churn'e ~N hafta" counter length
-const EXPANSION_MATURE_WEEKS := 6       # active + this old → eligible for expansion
 const SAT_DRIFT_STEP := 3               # max satisfaction move per day (drift toward target)
 const ONBOARDING_AMP := 1.5             # onboarding-window swing amplifier
 

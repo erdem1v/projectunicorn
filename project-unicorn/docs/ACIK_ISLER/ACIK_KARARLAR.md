@@ -1621,3 +1621,14 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   - Steam istek listesi: menüde 'İstek listesine ekle' düğmesi yoktur. Sonlardaki WISHLIST'E EKLE'nin mağaza adresi boştur (`ending_scene.gd`) ve basılınca bir şey yapmaz; adres gelince menüde de olup olmayacağı ve yeri sahibin.
   - UI tık sesi ve menü müziği: menüde bugünkü tek parça çalar; SFX bus'ında oynatıcı olmadığından Ayarlar'da Efektler kaydırıcısı kapalıdır (`SET_SFX_NONE`). Tık sesi ve menüye ayrı parça, parçanın kaynağı ve lisansı (`Döngü Modu.mp3`) açılana dek yapılmaz.
   - Kaynak: ana menü denetimi (L5, D6, M7, M8); sahip kararı 2026-10-11 (istek listesi menüden düştü; D6 ve M7 ertelendi).
+
+- **110 · Büyüme yalnız değerden (Erdem 2026-11-13/14, PRD_TALEPLER §8.2; Erdem'in cevabı bekleniyor, PRD önerisiyle, soru 4).**
+  - Satış GDD'si (rev 6, genişleme) ve Zaman Modeli GDD'sinin sabit tablosu (`EXPANSION_MATURE_*`, 6 hafta) "memnun ve olgun
+    hesap bir kez büyür" diyor. Kod artık bunu yapmıyor: büyüme yalnız zamanında tutulan sözden doğar (`B2BSalesSystem.offer_expansion`),
+    hesap başına bir kez, haftada (bir sürümde) en çok `thanks.max` hesap; kurulumdaki hesabın imza sözü de sayılır (cevaptan
+    sonra hesap takvimdeki evresine döner), Risk'teki ve bildirimdeki hesap büyümez; gelen kutusunda büyüme hatırlatıcısı yok.
+    `EXPANSION_MATURE_WEEKS` kalktı.
+  - Sıradakiler PRD_TALEPLER'de: teslimden ve yenilemeden doğan büyüme (§8.2), bedelli şıklar (kurulum haftası, URUN'un D2 fiili;
+    hacim indirimi).
+  - Açık: Satış GDD'sinin genişleme bölümü ve Zaman Modeli tablosunun satırı güncellensin mi. Kaynak: ERDEM_YORUMU_TUR4 §4 (ekran
+    21), PRD_TALEPLER §8.1 ölçümü.
