@@ -81,13 +81,13 @@ static func _sales_gate_follows_clock(main: Node) -> String:
 	return ""
 
 
-## What the sprint screen draws, the sprint does: the founder alone at 15 hours plans Sprint 1 with the lead's plan. A card
+## What the sprint screen draws, the sprint does: the founder alone at 15 hours on the ERP plans Sprint 1 with the lead's plan. A card
 ## whose bar starts on the board's time axis inside week 1 (the second one starts on the first one's leftover) has work after
 ## week 1, and every card the board says finishes (the row's on-time tip) is done when the sprint closes. A sprint paper
 ## would stop a card on the player's answer, which no plan foresees, so the pinned world must stay without one.
 static func _sprint_fit_gets_points(main: Node) -> String:
 	main._seed_run_reproducible()
-	main._seed_product_live("solo15")
+	main._seed_product_live("b2b_solo15")
 	await main._mount_shot_shell()
 	var page: Control = _open(main, "product")
 	var cards: Array = SprintSystem.starting()
