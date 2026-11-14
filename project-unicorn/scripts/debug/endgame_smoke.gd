@@ -32,6 +32,7 @@ const EXPANSION_ID := "customer.expansion"
 const SHEET_WARN_ID := "funding.sheet_expiry"
 const SHEET_DECISION_ID := "funding.sheet_decision"
 const ChequeRead := preload("res://scripts/systems/cheque_read.gd")
+const MarketingSystem := preload("res://scripts/systems/marketing_system.gd")
 
 # Fixture skill defaults. The names are kept because fifty-odd call sites pass them
 # positionally; what they set are areas:
@@ -127,6 +128,9 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"burn_lines_visible":   fail = _case_burn_lines_visible()
 		"add_cash_writes_ledger": fail = _case_add_cash_writes_ledger()
 		"marketing_push_burns_and_ends": fail = _case_marketing_push_burns_and_ends()  # EXPECT-ERROR refused 'marketing_push' from expire
+		"marketing_burn_written_weekly": fail = _case_marketing_burn_written_weekly()
+		"marketing_runner_and_load": fail = _case_marketing_runner_and_load()
+		"marketing_save_roundtrip": fail = _case_marketing_save_roundtrip()
 		"investor_strain_fades_from_the_room": fail = _case_investor_strain_fades_from_the_room()
 		# --- İterasyon döngüsü (player-gated restore) + ekip kalite tavanı ---
 		"runway_net_status":    fail = _case_runway_net_status()
@@ -3062,6 +3066,80 @@ static func _case_marketing_push_burns_and_ends() -> String:
 		"weeks": 2}], {})
 	if not (log[0] as Dictionary).has("refused") or not GameState.marketing_push.is_empty():
 		return "an expiry bought a marketing push"
+	return ""
+
+
+## Pazarlama's ledger writes the Finance line every week, zero included: a row's budget is charged the week it runs, as
+## the daily rate the line holds, and a closed row stops costing at once. The − / + ladder walks 0, 100, 200, 500, 1.000.
+## FALSIFICATION: skip the write when the spend is 0 and the closed row keeps costing.
+static func _case_marketing_burn_written_weekly() -> String:
+	_seed_b2b(10000)
+	var r: Dictionary = MarketingSystem.add_row("search_ads", "", CharacterRegistry.get_founder().id)
+	if r.is_empty():
+		return "the founder could not open a search row"
+	var id: int = int(r.id)
+	for want in [100, 200, 500, 1000]:
+		MarketingSystem.step_budget(id, 1)
+		if int(r.budget) != want:
+			return "the + step reached %d, want %d" % [int(r.budget), want]
+	MarketingSystem.daily_tick()
+	var line: int = int(FinanceSystem.get_burn_breakdown()["marketing"])
+	if line != roundi(1000 / float(TimeModel.DAYS_PER_TICK)):
+		return "a $1.000 week wrote %d a day" % line
+	MarketingSystem.remove_row(id)
+	MarketingSystem.daily_tick()
+	if int(FinanceSystem.get_burn_breakdown()["marketing"]) != 0:
+		return "a closed row still costs %d a day" % int(FinanceSystem.get_burn_breakdown()["marketing"])
+	return ""
+
+
+## Who runs a row and how full their week is: one paid row fills the founder's Marketing share (no second founder row),
+## a marketer on the Marketing job carries two rows at 100%, a sales rep runs none, and a marketer taken off the job hands
+## the rows to the founder at the week's tick.
+## FALSIFICATION: drop the founder share from load_pct and the founder reads 50.
+static func _case_marketing_runner_and_load() -> String:
+	_seed_b2b(10000)
+	var founder: Character = CharacterRegistry.get_founder()
+	var mkt: Character = _make_employee("char_mkt_runner", "Ece", HRConstants.ROLE_MARKETING_SPECIALIST)
+	var rep: Character = _make_employee("char_mkt_rep", "Burak", HRConstants.ROLE_SALES_REP)
+	MarketingSystem.add_row("content_seo", "", founder.id)
+	if MarketingSystem.load_pct(founder.id) != 100:
+		return "one paid row reads %d%% of the founder's week, want 100" % MarketingSystem.load_pct(founder.id)
+	if not MarketingSystem.add_row("search_ads", "", founder.id).is_empty():
+		return "a founder with a full Marketing share opened a second row"
+	if not MarketingSystem.add_row("search_ads", "", rep.id).is_empty():
+		return "a sales rep opened a Marketing row"
+	var a: Dictionary = MarketingSystem.add_row("search_ads", "", mkt.id)
+	var b: Dictionary = MarketingSystem.add_row("target_sector", "retail", mkt.id)
+	if a.is_empty() or b.is_empty() or MarketingSystem.load_pct(mkt.id) != 100:
+		return "the marketer's two rows read %d%%, want 100" % MarketingSystem.load_pct(mkt.id)
+	if not MarketingSystem.add_row("search_ads", "", mkt.id).is_empty():
+		return "the same kind opened twice on one target"
+	CharacterRegistry.unassign_job(mkt.id, HRConstants.JOB_MARKETING)
+	MarketingSystem.daily_tick()
+	if a.runner != founder.id or b.runner != founder.id or MarketingSystem.load_pct(founder.id) != 300:
+		return "the rows of a marketer off the job are with %s and %s" % [a.runner, b.runner]
+	return ""
+
+
+## The ledger rides the save: rows, budgets and runners come back, and a loaded row still steps its budget.
+static func _case_marketing_save_roundtrip() -> String:
+	_seed_b2b(10000)
+	var r: Dictionary = MarketingSystem.add_row("search_ads", "", CharacterRegistry.get_founder().id)
+	MarketingSystem.set_budget(int(r.id), 2000)
+	MarketingSystem.daily_tick()
+	var before: Dictionary = GameState.marketing.duplicate(true)
+	if not SaveManager.save_to_slot(SAVE_SLOT_A):
+		return "save_to_slot refused"
+	var saved: Dictionary = SaveManager.read_slot(SAVE_SLOT_A)
+	_cleanup_save_slots()
+	if not SaveManager.apply_loaded_state(saved):
+		return "the slot did not load back"
+	if str(GameState.marketing) != str(before):
+		return "the ledger came back as %s, want %s" % [str(GameState.marketing), str(before)]
+	MarketingSystem.step_budget(int(r.id), 1)
+	if int(MarketingSystem.rows()[0].budget) != 5000:
+		return "a loaded $2.000 row stepped to %s, want 5000" % str(MarketingSystem.rows()[0].budget)
 	return ""
 
 

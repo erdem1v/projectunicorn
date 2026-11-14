@@ -16,6 +16,8 @@ Sahipler (Mesajlar ve teslim saati): `MessageSystem` (`GameState.messages` ve `m
 
 Kapsam içi (`scripts/`):
 - `systems/finance_system.gd` (325): kasa tiki, burn kalemleri, tek seferlik gider/gelir, işlem günlüğü, pazarlama kampanyası, runway eşikleri.
+- `systems/marketing_system.gd` (105): Pazarlama defteri: kanal satırları, haftalık bütçe, yürüten, yük ve Finans'ın `marketing` kalemi;
+  ↳ katalog ve [WORKING] sayılar `data/marketing/channels.json`. `class_name` yok, okuyanlar preload eder.
 - `systems/angel_round_system.gd` (52): Frank'in çeki. `accept_offer` kasayı, hisse tablosunu ve sürümü tek adımda yazar.
 - `systems/cheque_read.gd` (73): koşunun adlı hedef listesi (çek, sonra seed, sonra Series A). `class_name` yok, okuyanlar preload eder.
 - `systems/phase_gate_system.gd` (178): faz kapısı mandalı (Traction ve Series A), Series A sinyali ve yaklaşma adımı.
@@ -60,6 +62,10 @@ Finans:
   `rnd_system.gd:25`, `sprint_system.gd:170`, `incident_system.gd:521`.
 - `FinanceSystem.set_burn_category()` `:216`: kalemi yazar, `daily_burn`ü hemen tazeler · `infra_system.gd:224`, `office_system.gd:89`.
 - `FinanceSystem.start_marketing_push()` `:162`: kartın pazarlama kampanyasını başlatır · `events/core/effects.gd:299`; çarpan `marketing_growth_mult()` `finance_system.gd:171` · `sales_system.gd:204`.
+- `MarketingSystem.add_row()/remove_row()/set_budget()/step_budget()` `marketing_system.gd:42/:56/:61/:68`: satır yazma kapıları (kurucu
+  ↳ Pazarlama payı doluyken yeni satır açamaz); `load_pct()` `:83` (kurucunun payı `founder_share_pct`); `daily_tick()` `:96` HR'den sonra,
+  ↳ Finans'tan önce: yürüteni gitmiş satır kurucuya geçer, `marketing` kalemi haftanın harcamasını günlük oran olarak taşır (bir satır
+  ↳ koştuktan sonra sıfır dahil; o zamana kadar kalem kartın itkisinindir).
 - `FinanceSystem.get_burn_breakdown_pct()` `:281`, `get_monthly_flow()` `:271`, `runway_band()` `:313`: okuma kapıları · `finance_ozet_view.gd`, `top_bar.gd`, `summary_system.gd:161`.
 - `FinanceSystem.to_dict()/from_dict()/reset()` `:87/:93/:79`: yalnız `burn_breakdown`; blok `autoload/save_manager.gd:381` ve `:399`, sıfırlama `:349`.
 
@@ -132,7 +138,7 @@ Hepsi `EventBus`te (`autoload/event_bus.gd`); satır numarası tanım satırı.
 ## Durum ve veri
 
 GameState alanları (`autoload/game_state.gd`):
-- Kasa: `cash` `:30`, `mrr` `:31`, `daily_burn` `:32`, `transactions` `:152` (üst sınır `TRANSACTIONS_CAP` 50 `:151`), `marketing_push` `:155`, `cash_history`, `month_ledger`, `month_history`.
+- Kasa: `cash` `:30`, `mrr` `:31`, `daily_burn` `:32`, `transactions` `:152` (üst sınır `TRANSACTIONS_CAP` 50 `:151`), `marketing_push` `:155`, `marketing` (Pazarlama defteri: `rows`, `next_id`), `cash_history`, `month_ledger`, `month_history`.
 - Faz ve son: `phase` `:37`, `phase_gate_ready` `:134`, `pending_next_phase` `:135`, `run_active` `:132`, `ending_id` `:133`, `series_a_closed` `:136`, `shutter_weeks_left` `:137`.
 - Son sayaçları: `vc_rejections` `:138`, `pivot_used` `:139`, `active_scandal` `:140`, `unmanaged_major_scandal` `:141`, `brand_low_since_day` `:142`, `faced_series_a(_by)` `:272`, `acq_road_over_day` `:274`,
   `bootstrap_milestone_day` `:277`.
@@ -185,6 +191,7 @@ Sabitler:
 Tek koşturucu `bash tools/smoke_run.sh <vaka>`; vaka listesi `scripts/debug/endgame_smoke.gd` `match case_name:` tablosudur (dosya ~25.950 satır). `export GODOT=...` gerekir; `--all` yalnız push öncesi.
 - Finans: `month_summary`, `month_history_close_and_cap`, `burn_refresh_same_tick`, `burn_lines_visible`, `runway_net_status`, `runway_weeks_seam`, `runway_days_and_negative_cash`, `gross_runway_months`,
   `add_cash_writes_ledger`, `marketing_push_burns_and_ends`, `run_ledger`.
+- Pazarlama: `marketing_burn_written_weekly`, `marketing_runner_and_load`, `marketing_save_roundtrip`.
 - Çek ve turlar: `cheque_read_steps`, `angel_fires_at_crossing`, `angel_never_pre_ship`, `angel_not_below_threshold`, `angel_accept_is_atomic`, `angel_locked_choice_inert`, `angel_decline_opens_on_hard`, `angel_one_shot_falsified`,
   `angel_survives_series_a`, `angel_hire_nudge`, `seed_*`, `valuation_*`.
 - Kapılar ve görüşme: `gate1_b2b`, `gate1_b2c`, `gate2`, `gate_decline_reminder`, `gate_scope_and_halves`, `traction_gate_one_option`, `series_a_gate_mrr_only`, `series_a_signal_states`, `series_a_sheet_derives_from_arr`,

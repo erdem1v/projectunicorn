@@ -1,0 +1,16 @@
+{
+	"budget_ladder": [0, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000],
+	"founder_share_pct": 50,
+	"kinds": {
+		"search_ads": {"markets": ["b2b", "b2c"], "load_pct": 50, "budgeted": true},
+		"content_seo": {"markets": ["b2b", "b2c"], "load_pct": 50, "budgeted": true},
+		"referral": {"markets": ["b2b"], "load_pct": 30, "budgeted": false},
+		"target_sector": {"markets": ["b2b"], "load_pct": 50, "budgeted": true},
+		"social_ads": {"markets": ["b2c"], "load_pct": 50, "budgeted": true},
+		"display_ads": {"markets": ["b2c"], "load_pct": 50, "budgeted": true},
+		"price_compare": {"markets": ["b2c"], "load_pct": 50, "budgeted": true},
+		"affiliate": {"markets": ["b2c"], "load_pct": 50, "budgeted": true},
+		"email": {"markets": ["b2c"], "load_pct": 30, "budgeted": false},
+		"influencer": {"markets": ["b2c"], "load_pct": 50, "budgeted": true}
+	}
+}

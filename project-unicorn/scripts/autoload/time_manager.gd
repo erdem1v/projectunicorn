@@ -1,5 +1,7 @@
 extends Node
 
+const MarketingSystem := preload("res://scripts/systems/marketing_system.gd")
+
 # Game clock.
 #
 # One game day (tick) is one week (TimeModel). Tempo is REAL SECONDS PER IN-GAME HOUR, one entry
@@ -404,8 +406,9 @@ func _dispatch_daily_tick() -> void:
 	# 2 · R&D
 	RnDSystem.daily_tick()
 	EventBus.research_progress_changed.emit()
-	# 3 · HR, 4 · Sales (aggregates MRR), rivals, 5 · Finance (applies the week's net flow).
+	# 3 · HR, Marketing, 4 · Sales (aggregates MRR), rivals, 5 · Finance (applies the week's net flow).
 	HRSystem.daily_tick()
+	MarketingSystem.daily_tick()   # after HR (who is on the job), before Finance (the line)
 	SalesSystem.daily_tick()
 	# After the last reader of the week's pace (sprint, support, R&D, the customer desk).
 	CharacterRegistry.prune_productivity_mods()
