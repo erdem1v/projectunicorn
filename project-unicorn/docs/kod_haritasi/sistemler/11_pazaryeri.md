@@ -1,13 +1,13 @@
 # Pazaryeri
 
 Ne yapar: B2C ürünün pazaryeri ekonomisinin saf çekirdeği: mağaza ve kullanıcı akışı, dört adım, iade, gelir, iki memnuniyet defteri, dört kural, Premium, dört haftalık önizleme, Talepler'in konu ve biletleri, Pazarlama'nın iki okuması.
-Oyuna kısmen bağlı: `MarketplaceSystem` durumu (`GameState.marketplace`, yazan seam ve kapanış ilk kez çalışınca doğar) yazar ve haftalık kapanışı `daily_tick` ile koşturur; saat onu henüz çağırmaz (Satış yuvasına bağlanması sonraki iş), tür seçilemez, arayüz yok. Vakalar ve probe çağırır; arayüzün önizlemeleri aynı model işlevlerini okuyacak.
+Oyuna kısmen bağlı: `MarketplaceSystem` durumu (`GameState.marketplace`, yazan seam ve kapanış ilk kez çalışınca doğar) yazar ve haftalık kapanışı `daily_tick` ile koşturur; pazaryeri türünde Satış yuvası onu haftada bir çağırır (`SalesSystem.daily_tick`), tür seçilemez, arayüz yok. Vakalar ve probe çağırır; arayüzün önizlemeleri aynı model işlevlerini okuyacak.
 Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test). Sahip: `MarketplaceModel` (statik, durumsuz) ve onu oyuna bağlayan `MarketplaceSystem` (statik, durumun tek yazarı).
 
 ## Dosyalar
 
 - `systems/marketplace_model.gd` (986): `MarketplaceModel`; yalnız `static` işlevler. `state` ve `world` sözlüklerinin alanları dosya başındaki yorumda.
-- `systems/marketplace_system.gd` (169): `MarketplaceSystem`; yalnız `static` işlevler. `GameState.marketplace`'in tek yazarı, yazan seam'ler, sözleşme okuyucuları, `world()` ve haftalık kapanış.
+- `systems/marketplace_system.gd` (170): `MarketplaceSystem`; yalnız `static` işlevler. `GameState.marketplace`'in tek yazarı, yazan seam'ler, sözleşme okuyucuları, `world()` ve haftalık kapanış.
 - `debug/marketplace_probe.gd` (1034): `-s` betiği; oynanan çizelge ve 37 mekanik denetimi, `MPPROBE ...` satırları.
 - `data/product/categories.json` (16): altı kategori ve sütunları: sepet, ziyaret sıklığı, kâr payı, sektör iadesi, gereken mağaza, başlangıç komisyonu, taban ilgi, büyük sepet payı, reklam havuzu (`ad_pool`, haftalık arama).
 - `data/product/lines/marketplace.json` (153): modül verisi; 5 kimlik hattı (Ürün Yükleme, Vitrin, Sepet ve Ödeme, Siparişler, Yorum ve Güvence)
@@ -25,7 +25,7 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
   ↳ `_reflect` iki toplu `CustomerRegistry` kaydını (`STORES_ID` `co_mp_stores`, `USERS_ID` `co_mp_users`; `b2c`, `individual`, yayından sonraki ilk kapanışta doğar) yalnız seam'le yazar: komisyon mağazalar kaydının, üyelik kullanıcılar kaydının MRR'ı (eksi net komisyonda MRR 0'da durur, `revenue_weeks` eksiyi saklar),
   ↳ koltuk mağaza sayısı ve ücret ödeyen üye (`MarketplaceModel.paying_members`), memnuniyet modelin `sat`'ının tam sayısı; en sonda `SalesSystem.reflect_mrr()`. `CustomerRegistry.account_count` `individual` kayıtları saymaz.
   ↳ Okuyucular saklanan durumdan okur, kapanış koşturmaz: `policy_value`, `channel_read`, `source_revenue` (öbür ekiplerin sözleşmesi) ve `stores()` (açık kategorilerin mağaza toplamı, `_reflect` kullanır). Okuyucu ve `world()` boş durumu doldurmaz: `_read()` boşken modelin ilk durumunu saklamadan okur.
-  ↳ `daily_tick()` yalnız ürün yayındayken: `world()` kurar, `close_week`, `tick_topics`, `_reflect`, bir `marketplace_changed`. Durum yazan seam'de ve kapanışta (`_s()`) `MarketplaceModel.new_state()` ile yerinde dolar; pazaryeri koşusu olmayan oyunda hiçbiri çalışmaz, sözlük boş kalır.
+  ↳ `daily_tick()` yalnız ürün yayındayken: `world()` kurar, `close_week`, `tick_topics`, `_reflect`, Finans'ın `pazaryeri` kalemi (`daily_rate(monthly_cost)`, her kapanışta, sıfır dahil), bir `marketplace_changed`. Satış yuvası onu yalnız pazaryeri türünde çağırır (`SalesSystem.is_marketplace`). Durum yazan seam'de ve kapanışta (`_s()`) `MarketplaceModel.new_state()` ile yerinde dolar; pazaryeri koşusu olmayan oyunda hiçbiri çalışmaz, sözlük boş kalır.
 - Kurma: `new_state()`, `new_world()` (varsayılanlı dünya; verilmeyen alan `WORLD`'den okunur), `cat_ids()`, `cat_def(kategori)`, `open_ids(state)`.
 - Haftalık kapanış: `close_week(state, world)` bağlayıcı sırayla `state`'i değiştirir (mağaza akışı, ziyaret ve adımlar, iade, kullanıcı, gelir ve gider, Premium, defter); sinyal ve kayıt çağıranındır.
   ↳ Kapanış `state.lost`'a kaybı ekler (`users` += kullanıcı × (1 − elde tutma), `stores` += ayrılan mağaza); iki sayı birikmiş toplamdır.
@@ -91,7 +91,7 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 
 ## Dikkat
 
-- `SalesSystem._tick_satisfaction` her `b2c` kaydın memnuniyetini B2C hedefine sürükler: pazaryeri koşusunda koşarsa iki kaydın `sat` yansımasını ezer; kapanışı Satış yuvasına bağlayan iş onu türe göre keser.
+- `SalesSystem._tick_satisfaction` her `b2c` kaydın memnuniyetini B2C hedefine sürükler: pazaryeri koşusunda koşarsa iki kaydın `sat` yansımasını ezer; bu yüzden `SalesSystem.daily_tick` pazaryeri türünde yalnız `MarketplaceSystem.daily_tick`i çağırır ve `hourly_tick` kitle akışını ve kitleden MRR türetimini koşturmaz (`SalesSystem.is_marketplace`).
 - `Dictionary.merged(x)` varsayılanda var olan anahtarı ezmez; dünya ve durum birleştirmelerinde hep `merged(x, true)`.
 - `:=` Dictionary erişiminden tür çıkaramaz (Variant); bu dosyada her sözlük okuması açık türle (`var x: float = ...`) yazılır.
 - "Sipariş" teslim edilendir; "Sipariş verdi" adımı `order` ayrıdır. "Geç teslimat" satırı teslim ÷ verilen oranına bakar: 0,97 × Siparişler çarpanı × Entegrasyonlar çarpanı × hata çarpanı, eşik 0,90.

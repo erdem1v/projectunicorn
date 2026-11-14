@@ -658,6 +658,9 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"marketplace_tick_waits_for_launch": fail = _case_marketplace_tick_waits_for_launch()
 		"marketplace_revenue_two_records":   fail = _case_marketplace_revenue_two_records()
 		"marketplace_assign_next_week":      fail = _case_marketplace_assign_next_week()
+		"marketplace_close_week_wires":      fail = _case_marketplace_close_week_wires()
+		"marketplace_premium_closed_no_burn": fail = _case_marketplace_premium_closed_no_burn()
+		"marketplace_erp_run_untouched":     fail = _case_marketplace_erp_run_untouched()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -30980,4 +30983,100 @@ static func _case_marketplace_assign_next_week() -> String:
 		return "unassign did not apply once with one emit and refuse the repeat"
 	if state.assign.keys() != [away.id]:
 		return "unassign left %s" % str(state.assign.keys())
+	return ""
+
+
+## Oyunun saati pazaryeri koşusunda haftalık kapanışı koşturur: yayından önceki hafta kapanış olmaz; yayından sonraki hafta tek kapanış
+## koşar (sipariş yazılır, iki kayıt güncellenir, `pazaryeri` kalemi `daily_rate(aylık gider)` olur, sinyal bir kez yayılır); eski B2C
+## kolları koşmaz (kitle sıfır kalır, `co_b2c_userbase` doğmaz, iki kaydın memnuniyeti B2C hedefine sürüklenmez).
+##
+## FALSİFİKASYON: `SalesSystem.daily_tick`te pazaryeri kolunu sil → kapanış satırı FAIL; `hourly_tick`te `not is_marketplace()`i sil →
+## aylık gelir satırı FAIL; pazaryeri kolunu eski kolların `else`inin yanına al (`_tick_satisfaction` da koşsun) → memnuniyet satırı FAIL;
+## `MarketplaceSystem.daily_tick`te gider yazımını sil → kalem satırı FAIL; `daily_rate`i at → kalem satırı FAIL; Satış'taki yayın
+## kapısını ve `MarketplaceSystem.daily_tick`in kapısını sil → yayından önceki hafta FAIL.
+static func _case_marketplace_close_week_wires() -> String:
+	_seed_marketplace_world()
+	SprintSystem.set_founder_in_sprint(false)
+	GameState.set_flag("mvp_shipped", false)
+	GameState.set_flag("b2c_paid_tier_open", true)
+	var emits: Array[int] = [0]
+	EventBus.marketplace_changed.connect(func() -> void: emits[0] += 1)
+	var before: Dictionary = GameState.marketplace.duplicate(true)
+	var day: int = GameState.day
+	_sim_day_full()
+	if GameState.day != day + 1:
+		return "fixture: the clock did not carry the week (day %d, want %d)" % [GameState.day, day + 1]
+	if GameState.marketplace != before or emits[0] != 0 or CustomerRegistry.get_customer(MarketplaceSystem.STORES_ID) != null \
+			or FinanceSystem.get_burn_breakdown().pazaryeri != 0:
+		return "a week before the launch ran a close (emits %d)" % emits[0]
+	GameState.set_flag("mvp_shipped", true)
+	MarketplaceSystem.set_policy("return_shipping", "we_pay")
+	emits[0] = 0
+	_sim_day_full()
+	var state: Dictionary = GameState.marketplace
+	if emits[0] != 1:
+		return "the first week after the launch emitted marketplace_changed %d times, want 1" % emits[0]
+	if state.cats.fashion.week.get("delivered", 0.0) <= 0.0 or state.users == 2000.0:
+		return "the week wrote no orders (delivered %s, users %s)" % [state.cats.fashion.week.get("delivered"), state.users]
+	var stores_record: Customer = CustomerRegistry.get_customer(MarketplaceSystem.STORES_ID)
+	var users_record: Customer = CustomerRegistry.get_customer(MarketplaceSystem.USERS_ID)
+	if stores_record == null or users_record == null:
+		return "the first close after the launch did not birth both records"
+	var revenue: Dictionary = MarketplaceModel.monthly_revenue(state)
+	if stores_record.mrr <= 0 or stores_record.mrr != roundi(revenue.commission) or GameState.mrr != stores_record.mrr + users_record.mrr:
+		return "records read stores $%d and users $%d, total $%d, want commission %.1f" \
+			% [stores_record.mrr, users_record.mrr, GameState.mrr, revenue.commission]
+	if stores_record.satisfaction != roundi(state.sat.stores) or users_record.satisfaction != roundi(state.sat.users):
+		return "satisfaction reads %d and %d, want the model's %d and %d (the B2C drift ran)" \
+			% [stores_record.satisfaction, users_record.satisfaction, roundi(state.sat.stores), roundi(state.sat.users)]
+	var cost: int = FinanceSystem.daily_rate(roundi(MarketplaceModel.monthly_cost(state)))
+	if cost <= 0 or FinanceSystem.get_burn_breakdown().pazaryeri != cost:
+		return "the pazaryeri line reads %s, want %d (the close's monthly cost over 30)" % [FinanceSystem.get_burn_breakdown().pazaryeri, cost]
+	if SalesSystem.b2c_audience() != 0.0 or CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID) != null:
+		return "the old B2C audience ran in a marketplace week (audience %.2f)" % SalesSystem.b2c_audience()
+	return ""
+
+
+## Premium kapalıyken hiçbir ayrıcalık gider yazmaz: `pazaryeri` kalemi sıfırdır ve her kapanışta yeniden yazılır (eski bir tutar
+## sıfıra döner); Üyelik çıkıp ayrıcalık Premium'a alınınca kalem o haftadan türeyen tutara çıkar.
+##
+## FALSİFİKASYON: `MarketplaceSystem.daily_tick`te gider yazımını `if` ile yalnız aylık gider sıfırdan büyükken yap → eski tutarın sıfıra
+## dönmesi FAIL; yazımı `monthly_cost` yerine `monthly_revenue` ile yap → Premium kapalı kolu FAIL.
+static func _case_marketplace_premium_closed_no_burn() -> String:
+	_seed_marketplace_world()
+	SprintSystem.set_founder_in_sprint(false)
+	FinanceSystem.set_burn_category("pazaryeri", 77)
+	_sim_day_full()
+	var state: Dictionary = GameState.marketplace
+	if state.premium.open or MarketplaceModel.monthly_cost(state) != 0.0 or FinanceSystem.get_burn_breakdown().pazaryeri != 0:
+		return "with Premium closed the pazaryeri line reads %s (monthly cost %.2f, Premium open %s), want 0" \
+			% [FinanceSystem.get_burn_breakdown().pazaryeri, MarketplaceModel.monthly_cost(state), state.premium.open]
+	GameState.set_flag("b2c_paid_tier_open", true)
+	ProductState.set_line_tier("line_shared_integrations@marketplace", 1)
+	_sim_day_full()
+	if not state.premium.open or not MarketplaceSystem.set_perk("free_shipping", "premium"):
+		return "fixture: Premium did not open or the Free shipping perk would not turn on"
+	state.members = 1200.0
+	_sim_day_full()
+	var cost: int = FinanceSystem.daily_rate(roundi(MarketplaceModel.monthly_cost(state)))
+	if state.burn.perk_shipping <= 0.0 or cost <= 0 or FinanceSystem.get_burn_breakdown().pazaryeri != cost:
+		return "an open Premium perk wrote %s to the pazaryeri line, want %d (perk shipping %.1f a week)" \
+			% [FinanceSystem.get_burn_breakdown().pazaryeri, cost, state.burn.perk_shipping]
+	return ""
+
+
+## ERP koşusunda bir hafta ilerleyince pazaryeri hiç doğmaz: `GameState.marketplace` boş kalır, iki kayıt ve `pazaryeri` kalemi yok.
+##
+## FALSİFİKASYON: `SalesSystem.daily_tick`te `is_marketplace()` koşulunu kaldır (`if true:`) → durum satırı FAIL.
+static func _case_marketplace_erp_run_untouched() -> String:
+	_seed_sprint_live("erp")
+	SprintSystem.set_founder_in_sprint(false)
+	var day: int = GameState.day
+	_sim_day_full()
+	if GameState.day != day + 1:
+		return "fixture: the clock did not carry the week (day %d, want %d)" % [GameState.day, day + 1]
+	if not GameState.marketplace.is_empty():
+		return "an ERP week filled GameState.marketplace: %s" % str(GameState.marketplace.keys())
+	if CustomerRegistry.get_customer(MarketplaceSystem.STORES_ID) != null or FinanceSystem.get_burn_breakdown().pazaryeri != 0:
+		return "an ERP week wrote a marketplace record or the pazaryeri line"
 	return ""

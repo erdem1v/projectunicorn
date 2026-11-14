@@ -42,8 +42,8 @@ Sahipler: autoload `CustomerRegistry`, `ProspectRegistry`, `PromiseRegistry`; mo
 - Satış olay içeriği: `data/events/cards/customer/*.json` (17 dosya; retention, expansion, cs_escalation, request_*, frank_intro); sprint tarafı `data/events/cards/product/support_overflow.json`
 
 ## Giriş noktaları
-- `SalesSystem.daily_tick()` `scripts/systems/sales_system.gd:125`: günlük yuva 4 · `TimeManager._dispatch_daily_tick` `scripts/autoload/time_manager.gd:403`
-- `SalesSystem.hourly_tick()` `scripts/systems/sales_system.gd:151`: B2C'de saatlik kitle/MRR, B2B'de 12:00 süpürmesi `sign_due` · `time_manager.gd:443`
+- `SalesSystem.daily_tick()` `scripts/systems/sales_system.gd:127`: günlük yuva 4 (pazaryeri türünde haftalık kapanış `MarketplaceSystem.daily_tick`, B2B'de B2B masası, öbüründe B2C memnuniyet tiki) · `TimeManager._dispatch_daily_tick` `scripts/autoload/time_manager.gd:403`
+- `SalesSystem.hourly_tick()` `scripts/systems/sales_system.gd:161`: B2C'de saatlik kitle/MRR (pazaryerinde yok: yalnız `reflect_mrr`), B2B'de 12:00 süpürmesi `sign_due` · `time_manager.gd:443`
 - `B2BSalesSystem.daily_tick()` `scripts/systems/b2b_sales_system.gd:20`: sıra yüklü; söz vadesi, devir, hesap süpürmesi, müşteri masası, şelale, satış masası, lead ömrü · `SalesSystem.daily_tick` (yalnız B2B ürün)
 - `B2BSalesSystem._tick_customer()` `scripts/systems/b2b_sales_system.gd:48`: bir hesabın günü (madde, güven affı, memnuniyet, risk ya da sağlıklı)
 - `B2BSalesSystem.satisfaction_target()` `scripts/systems/b2b_sales_system.gd:159`: ürün uyumu eksi hata bedeli artı güven izi · `_tick_satisfaction`, Satış sekmesi, olay çipleri

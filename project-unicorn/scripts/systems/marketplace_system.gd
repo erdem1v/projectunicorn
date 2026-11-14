@@ -3,9 +3,9 @@ extends RefCounted
 
 # Pazaryeri ekonomisinin oyundaki sahibi: `GameState.marketplace`'in tek yazarı. Yazan seam'ler modelin aynı adlı işlevini
 # durum ve `world()` ile çağırır; uygulananı `marketplace_changed` ile duyurur ve true döner, reddedileni duyurmaz ve false
-# döner. `daily_tick` haftalık kapanıştır ve durumu iki toplu müşteri kaydına yansıtır. Durum yalnız yazan seam'lerde ve
-# kapanışta doğar; okuyanlar boş durumu saklamadan modelin ilk durumuyla okur, böylece pazaryeri koşusu olmayan oyun sözlüğü
-# hiç doldurmaz.
+# döner. `daily_tick` haftalık kapanıştır: pazaryeri türünde Satış yuvası onu haftada bir çağırır; durumu iki toplu müşteri
+# kaydına ve Finans'ın `pazaryeri` giderine yansıtır. Durum yalnız yazan seam'lerde ve kapanışta doğar; okuyanlar boş durumu
+# saklamadan modelin ilk durumuyla okur, böylece pazaryeri koşusu olmayan oyun sözlüğü hiç doldurmaz.
 
 const TYPE_ID := "marketplace"
 const STORES_ID := "co_mp_stores"
@@ -138,6 +138,7 @@ static func daily_tick() -> void:
 	MarketplaceModel.close_week(state, w)
 	MarketplaceModel.tick_topics(state, w)
 	_reflect(state)
+	FinanceSystem.set_burn_category("pazaryeri", FinanceSystem.daily_rate(roundi(MarketplaceModel.monthly_cost(state))))
 	EventBus.marketplace_changed.emit()
 
 

@@ -13,11 +13,13 @@ extends RefCounted
 #          Bidirectional → bad management shrinks the base → MRR falls → runway threat.
 #   - B2B: closed at the founder's table or by a rep (add_b2b_customer); fixed MRR
 #          (seats × seat price), no hourly derivation.
-#   - Both: daily customer-satisfaction drift → health band.
+#   - Marketplace: neither. The daily tick calls MarketplaceSystem.daily_tick (the weekly close, which writes the two
+#          aggregate records); the audience flow, the satisfaction drift and the derived MRR below do not run for it.
+#   - Both (B2C, B2B): daily customer-satisfaction drift → health band.
 # Canonical MRR bridge (aggregate active customers → GameState.mrr) is the sink.
 #
 # Driven by TimeManager: hourly_tick (B2C audience + derived MRR) + _dispatch_daily_tick slot 4
-# (B2C satisfaction, the B2B desk on a B2B product, bridge backstop). The paid plan card
+# (B2C satisfaction, the B2B desk on a B2B product, the weekly close on a marketplace, bridge backstop). The paid plan card
 # (SprintBridges.open_paid_plan → apply_b2c_price) sets the price and applies the hike reaction.
 
 # --- Tunables (working values; playtest revises) ---
@@ -127,7 +129,9 @@ static func daily_tick() -> void:
 	# THE MARKET GATE, symmetric with hourly_tick's (Satış §3.1): the B2B desk — lifecycle,
 	# retention, expansion, faucet, the autonomous rep systems — runs only on a B2B product.
 	if GameState.get_flag("mvp_shipped", false):
-		if is_b2b_market():
+		if is_marketplace():
+			MarketplaceSystem.daily_tick()
+		elif is_b2b_market():
 			B2BSalesSystem.daily_tick()
 		else:
 			_tick_satisfaction()
@@ -146,10 +150,16 @@ static func is_b2b_market() -> bool:
 	return String(GameState.get_flag("mvp_market_type", "b2c")) == "b2b"
 
 
+# Is the product a marketplace? Its economy is MarketplaceSystem's weekly close, so the audience flow, the satisfaction
+# drift and the derived MRR skip it (the daily and hourly gates here).
+static func is_marketplace() -> bool:
+	return ProductState.subtype() == MarketplaceSystem.TYPE_ID
+
+
 # --- Hourly tick: bidirectional audience → derived MRR; B2B deals due at noon sign ---
 
 static func hourly_tick(hour: int) -> void:
-	if GameState.get_flag("mvp_shipped", false) and not is_b2b_market():
+	if GameState.get_flag("mvp_shipped", false) and not is_b2b_market() and not is_marketplace():
 		# The product's fit is read once an hour and shared by the audience flow, the price and the conversion.
 		var quality: float = b2c_quality()
 		_tick_b2c_audience(quality)

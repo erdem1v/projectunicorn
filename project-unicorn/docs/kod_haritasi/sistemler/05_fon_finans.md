@@ -60,7 +60,7 @@ Günlük dağıtım sırası `TimeManager._dispatch_daily_tick` (`autoload/time_
 Finans:
 - `FinanceSystem.apply_one_time_cost()` `finance_system.gd:179` ve `apply_one_time_income()` `:189`: önce işlem satırı, en son `set_cash` · `events/core/effects.gd:238`, `systems/hr_actions.gd:15`, `office_system.gd:66`,
   `rnd_system.gd:25`, `sprint_system.gd:170`, `incident_system.gd:521`.
-- `FinanceSystem.set_burn_category()` `:224`: kalemi yazar, `daily_burn`ü hemen tazeler · `infra_system.gd:286`, `office_system.gd:91`; altıncı kalem `pazaryeri` (pazaryeri koşusunun gideri; sıfırken Finans'ta çizilmez, eski kayıtta 0'la açılır).
+- `FinanceSystem.set_burn_category()` `:224`: kalemi yazar, `daily_burn`ü hemen tazeler · `infra_system.gd:286`, `office_system.gd:91`; altıncı kalem `pazaryeri` (pazaryeri koşusunun gideri: `MarketplaceSystem.daily_tick` her kapanışta, sıfır dahil, `daily_rate(monthly_cost)` yazar; sıfırken Finans'ta çizilmez, eski kayıtta 0'la açılır).
 - `FinanceSystem.start_marketing_push()` `:162`: kartın pazarlama kampanyasını başlatır · `events/core/effects.gd:299`; çarpan `marketing_growth_mult()` `finance_system.gd:171` · `sales_system.gd:204`.
 - `MarketingSystem.add_row()/remove_row()/set_budget()/step_budget()` `marketing_system.gd:42/:56/:61/:68`: satır yazma kapıları (kurucu
   ↳ Pazarlama payı doluyken yeni satır açamaz); `load_pct()` `:83` (kurucunun payı `founder_share_pct`); `daily_tick()` `:96` HR'den sonra,

@@ -174,7 +174,8 @@ kapanışında dolar; okumak onu doldurmaz ve pazaryeri koşusu olmayan oyunda (
   durur; `revenue_weeks` eksiyi saklar. İki kayıt hesap sayılmaz: `CustomerRegistry.account_count()` bireysel
   (`individual`) toplu kayıtları saymaz.
 - Her şey haftalıktır: sistemin tek tiki haftalık kapanıştır ve günlük dağıtımın Satış yuvasında çalışır
-  (`time_manager.gd:409`; sprint kapanışından ve Pazarlama tikinden sonra, Finans'tan önce). Saatlik tiki yoktur.
+  (`time_manager.gd:409`; sprint kapanışından ve Pazarlama tikinden sonra, Finans'tan önce). Saatlik tiki yoktur. Pazaryeri türünde eski B2C kolları (saatlik kitle akışı,
+  kitleden türeyen MRR, günlük B2C memnuniyet kayması) koşmaz.
 - Sınırlar: komisyon %1 ile %30 arası tam sayı; Premium ücreti $1 ile $15 arası tam sayı.
 
 - Saf çekirdek (`MarketplaceModel`) oyun durumundan bağımsız koşsun diye sözlükte üç alan daha durur: `sat` (iki memnuniyet),
