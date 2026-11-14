@@ -16,16 +16,18 @@ extends RefCounted
 # `state` (gün alanları hafta sayısıdır, hiç değişmemişin günü NEVER): `users`, `members`; `sources[kaynak]` son on iki
 # haftanın yeni kullanıcısı (yeni önde); `cats[kategori]` = `open`, `open_day`, `commission` (yüzde), `commission_day`, `stores`,
 # `joined` (son sekiz hafta), `terms` ({} ya da `share`, `weeks`, `mult`), `week` (kapanışın sayıları: `returning`, `organic`,
-# `channel`, `visits`, `cart`, `checkout`, `order`, `delivered`, `returns`, `net`); `assign[kişi]` = kategori; `policy[kural]` =
-# `pick`, `day`; `premium` = `open`, `fee`, `fee_day`, `trial`, `joined` (denemede katılan üye, son dört hafta), `orders` (üye
-# siparişi, son dört hafta), `perks[ayrıcalık]` = `pick`, `day`, `uses`, `cost` (son dört hafta); `ledger[taraf]` = satırlar
+# `channel`, `visits`, `cart`, `checkout`, `order`, `delivered`, `returns`, `net`); `assign[kişi]` = `cat` ve `live` (bir
+# kapanıştan geçti); `policy[kural]` = `pick`, `day`; `premium` = `open`, `fee`, `fee_day`, `trial`, `joined`
+# (denemede katılan üye, son dört hafta), `orders` (üye siparişi, son dört hafta), `perks[ayrıcalık]` = `pick`, `day`, `uses`,
+# `cost` (son dört hafta); `ledger[taraf]` = satırlar
 # (`key`, `arg`, `points`, `weeks`; WHILE koşul sürdükçe); `revenue_weeks`; `sat[taraf]` (iki memnuniyet); `burn[kalem]` (son
 # kapanışın haftalık `pazaryeri` gideri); `lost` (kapanışlarda kaybedilen `users` ve `stores`, birikir); `topics[konu]` =
 # `tickets` (son dört haftanın bileti, yeni önde), `since_day` (ilk biletin ya da isteğin haftası), `status`, `source` (`tickets`
 # ya da `report`).
 #
-# `world`: `week`, `published`, `tiers[modül]` (0 = yok), `bugs[modül]` (açık hata), `stars[kişi]` (Satış yıldızı, yoksa 1),
-# `channel[kategori][kaynak]` (Pazarlama'nın kanal ziyareti), `return_lift`, `overrides[kural]` (kampanyanın ezmesi),
+# `world`: `week`, `published`, `tiers[modül]` (0 = yok), `bugs[modül]` (açık hata), `stars[kişi]` (işbaşındaki atananın Satış
+# yıldızı; olmayan kazandırmaz), `channel[kategori][kaynak]` (Pazarlama'nın kanal ziyareti), `return_lift`, `overrides[kural]`
+# (kampanyanın ezmesi),
 # `campaign_discount[kategori]` (şirketin karşıladığı haftalık indirim), `campaign_loss` (kampanya bitti, katılan mağaza zarar etti),
 # `unanswered` (Destek'in cevapsız bildirim payı), `features` (yayındaki ek özellik konularının kimliği: yayında olmayan
 # kullanıcı özelliği bağlı adımı `missing_mult` kadar kısar), `planned` (sprint planındaki konuların kimliği), `outage` (acil
@@ -244,11 +246,14 @@ static func acquisition_of(state: Dictionary, world: Dictionary, cat: String, st
 	return rate
 
 
+## Kategoride çalışanların haftalık kazanımı; atama bir kapanıştan geçince sayılır, `stars`ta olmayan (işbaşında olmayan) kişi sayılmaz.
 static func acquisition(state: Dictionary, world: Dictionary, cat: String) -> float:
 	var total := 0.0
+	var stars: Dictionary = _w(world, "stars")
 	for person in state.assign:
-		if state.assign[person] == cat:
-			total += acquisition_of(state, world, cat, int(_w(world, "stars").get(person, 1)))
+		var job: Dictionary = state.assign[person]
+		if job.cat == cat and job.live and stars.has(person):
+			total += acquisition_of(state, world, cat, int(stars[person]))
 	return total
 
 
@@ -530,6 +535,19 @@ static func add_users(state: Dictionary, n: float) -> bool:
 	return state.users != before
 
 
+## Kişiyi açık bir kategoriye atar (başka kategoriden taşırsa atama yeniden başlar). Kategori kapalıysa ya da kişi orada zaten
+## çalışıyorsa false.
+static func assign(state: Dictionary, person: String, cat: String) -> bool:
+	if not state.cats[cat].open or state.assign.get(person, {}).get("cat", "") == cat:
+		return false
+	state.assign[person] = {"cat": cat, "live": false}
+	return true
+
+
+static func unassign(state: Dictionary, person: String) -> bool:
+	return state.assign.erase(person)
+
+
 # --- Memnuniyet defteri ----------------------------------------------------------------------
 
 static func _add(state: Dictionary, side: String, key: String, arg: String, points: float, weeks: int) -> void:
@@ -708,6 +726,8 @@ static func close_week(state: Dictionary, world: Dictionary) -> void:
 	var ids := open_ids(state)
 	for cat in ids:
 		state.lost.stores += _store_flow(state, world, cat)
+	for job in state.assign.values():
+		job.live = true
 	var member_share := 0.0
 	if state.users > 0.0:
 		var freq: float = _c.visits.member_freq

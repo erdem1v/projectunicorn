@@ -652,6 +652,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"marketplace_world_reads_owners":    fail = _case_marketplace_world_reads_owners()
 		"marketplace_tick_waits_for_launch": fail = _case_marketplace_tick_waits_for_launch()
 		"marketplace_revenue_two_records":   fail = _case_marketplace_revenue_two_records()
+		"marketplace_assign_next_week":      fail = _case_marketplace_assign_next_week()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -10952,7 +10953,7 @@ static func _case_marketplace_save_roundtrip() -> String:
 	world.stars = {"founder": 3}
 	var state := MarketplaceModel.new_state()
 	MarketplaceModel.open_category(state, world, "fashion")
-	state.assign.founder = "fashion"
+	MarketplaceModel.assign(state, "founder", "fashion")
 	for week in range(1, 13):
 		MarketplaceModel.close_week(state, world.merged({"week": week}, true))
 	if state.cats.fashion.stores <= 0.0 or state.lost.users <= 0.0 or state.cats.fashion.week.delivered <= 0.0:
@@ -30627,8 +30628,8 @@ static func _case_marketplace_world_reads_owners() -> String:
 	var founder: String = CharacterRegistry.get_founder().id
 	_set_founder_area(HRConstants.AREA_SALES, 6)
 	MarketplaceSystem.open_category("fashion")
-	GameState.marketplace.assign[founder] = "fashion"
-	GameState.marketplace.assign[rep.id] = "fashion"
+	MarketplaceSystem.assign(founder, "fashion")
+	MarketplaceSystem.assign(rep.id, "fashion")
 	var w: Dictionary = MarketplaceSystem.world()
 	if w.week != GameState.day or not w.published:
 		return "week %s published %s" % [w.week, w.published]
@@ -30731,4 +30732,70 @@ static func _case_marketplace_revenue_two_records() -> String:
 		return "the fixture's commission window did not stay negative"
 	if stores_record.mrr != 0 or GameState.mrr != users_record.mrr:
 		return "a negative commission left the stores record at $%d and the total at $%d" % [stores_record.mrr, GameState.mrr]
+	return ""
+
+
+## Atama atandığı haftadan sonraki ilk kapanışta mağaza kazandırmaz, sonrakilerde kazandırır. İşten ayrılanın ataması kapanışta
+## düşer ve ondan önce de kazandırmaz; izne çıkanın ataması durur, o hafta kazandırmaz, dönünce kazandırır. Kapalı kategoriye,
+## atanamayan kişiye ya da zaten orada çalışan kişiye atama reddedilir (sinyal yok, durum değişmez); `unassign` kişiyi çıkarır.
+##
+## FALSİFİKASYON: `acquisition`da `job.live` şartını sil → ilk kapanışın kazanımı FAIL; `close_week`teki `live = true`yu sil →
+## ikinci kapanışın kazanımı FAIL; `daily_tick`te silme koşulunu `not _can_work(…)` yap → izinli kişinin ataması FAIL; `world`de
+## `_can_work(c)` yerine `c != null` yaz → izinli kişinin kazanımı FAIL; `daily_tick`teki silmeyi kaldır → ayrılanın ataması FAIL.
+static func _case_marketplace_assign_next_week() -> String:
+	_seed_marketplace_world()
+	var emits: Array[int] = [0]
+	EventBus.marketplace_changed.connect(func() -> void: emits[0] += 1)
+	var founder: String = CharacterRegistry.get_founder().id
+	var gone: Character = _make_employee("mp_gone", "Ece", HRConstants.ROLE_SALES_REP, SEED_PACE, 0, 50, 8)
+	var away: Character = _make_employee("mp_away", "Ali", HRConstants.ROLE_SALES_REP, SEED_PACE, 0, 50, 6)
+	var dev: Character = _make_employee("mp_dev", "Can", HRConstants.ROLE_DEVELOPER)
+	var state: Dictionary = GameState.marketplace
+	var before: Dictionary = state.duplicate(true)
+	for refused: Array in [[founder, "electronics"], [dev.id, "fashion"], ["nobody", "fashion"]]:
+		if MarketplaceSystem.assign(refused[0], refused[1]) or emits[0] != 0 or state != before:
+			return "assigning %s to %s was not refused cleanly" % [refused[0], refused[1]]
+	if not MarketplaceSystem.assign(founder, "fashion") or emits[0] != 1:
+		return "the founder's assignment did not apply with one emit"
+	if MarketplaceSystem.assign(founder, "fashion") or emits[0] != 1:
+		return "a second assignment to the same category applied or emitted"
+	var fashion: Dictionary = state.cats.fashion
+	GameState.advance_day()
+	if MarketplaceModel.acquisition(state, MarketplaceSystem.world(), "fashion") != 0.0:
+		return "the assignment already earns stores before its first close"
+	MarketplaceSystem.daily_tick()
+	var first: float = fashion.joined[0]
+	var earned: float = MarketplaceModel.acquisition(state, MarketplaceSystem.world(), "fashion")
+	if not is_equal_approx(earned, 2.0):
+		return "the next close would earn %.2f stores from the 1-star founder, want 2" % earned
+	GameState.advance_day()
+	MarketplaceSystem.daily_tick()
+	if fashion.joined[0] - first < 1.5:
+		return "the next close added %.2f stores over the first close's %.2f, want about 2 more" % [fashion.joined[0], first]
+	MarketplaceSystem.assign(gone.id, "fashion")
+	MarketplaceSystem.assign(away.id, "fashion")
+	for i in 2:
+		GameState.advance_day()
+		MarketplaceSystem.daily_tick()
+	earned = MarketplaceModel.acquisition(state, MarketplaceSystem.world(), "fashion")
+	if not is_equal_approx(earned, 12.0):
+		return "founder 2 + 4-star 6 + 3-star 4 should earn 12 stores a close, read %.2f" % earned
+	CharacterRegistry.remove(gone.id)
+	CharacterRegistry.set_status(away.id, HRConstants.STATUS_ON_LEAVE)
+	earned = MarketplaceModel.acquisition(state, MarketplaceSystem.world(), "fashion")
+	if not is_equal_approx(earned, 2.0):
+		return "one left and one is on leave, yet the close would earn %.2f stores, want the founder's 2" % earned
+	GameState.advance_day()
+	MarketplaceSystem.daily_tick()
+	if state.assign.keys() != [founder, away.id]:
+		return "after one left and one went on leave the assignments read %s" % str(state.assign.keys())
+	CharacterRegistry.set_status(away.id, HRConstants.STATUS_ACTIVE)
+	earned = MarketplaceModel.acquisition(state, MarketplaceSystem.world(), "fashion")
+	if not is_equal_approx(earned, 6.0):
+		return "the returned 3-star should earn again at once: %.2f stores, want 6" % earned
+	emits[0] = 0
+	if not MarketplaceSystem.unassign(founder) or emits[0] != 1 or MarketplaceSystem.unassign(founder) or emits[0] != 1:
+		return "unassign did not apply once with one emit and refuse the repeat"
+	if state.assign.keys() != [away.id]:
+		return "unassign left %s" % str(state.assign.keys())
 	return ""

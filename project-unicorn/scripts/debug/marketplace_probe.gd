@@ -25,7 +25,7 @@ const CHECKS := ["empty_category_no_orders", "acquisition_waits_for_publish", "l
 	"zone_limits_consistent", "constants_switch", "gain_and_weakest", "acquisition_multipliers", "store_terms_discount",
 	"premium_members", "zone_rows_need_stores", "add_users_bounds", "lost_counters", "channel_read_values", "source_revenue_values",
 	"state_survives_codec", "topic_rows_known", "topic_ticket_gates", "topic_ledger_rows", "feature_gain_matches_close",
-	"reviews_affected_is_return_gap"]
+	"reviews_affected_is_return_gap", "assignment_waits_a_close"]
 
 var _weeks := DEFAULT_WEEKS
 var _printing := false
@@ -101,12 +101,12 @@ func _play(state: Dictionary, week: int) -> void:
 	match week:
 		1:
 			_act(week, "open fashion", MarketplaceModel.open_category(state, world, "fashion"))
-			state.assign.founder = "fashion"
+			MarketplaceModel.assign(state, "founder", "fashion")
 		6:
-			state.assign.sales_a = "fashion"
+			MarketplaceModel.assign(state, "sales_a", "fashion")
 		10:
 			_act(week, "open electronics", MarketplaceModel.open_category(state, world, "electronics"))
-			state.assign.sales_b = "electronics"
+			MarketplaceModel.assign(state, "sales_b", "electronics")
 		12:
 			_act(week, "fashion commission 12", MarketplaceModel.set_commission(state, world, "fashion", 12))
 		18:
@@ -153,6 +153,7 @@ func _live_world(week: int = 0) -> Dictionary:
 	world.week = week
 	world.published = true
 	world.tiers = {"listing": 1, "storefront": 1, "checkout": 1, "orders": 1}
+	world.stars = {"founder": 1}
 	return world
 
 
@@ -220,7 +221,7 @@ func _check_acquisition_waits_for_publish() -> Array:
 	var world := _live_world()
 	world.published = false
 	MarketplaceModel.open_category(state, world, "fashion")
-	state.assign.founder = "fashion"
+	MarketplaceModel.assign(state, "founder", "fashion")
 	_run(state, world, 6)
 	var before: float = state.cats.fashion.stores
 	_run(state, world.merged({"published": true}, true), 1)
@@ -512,8 +513,8 @@ func _check_acquisition_multipliers() -> Array:
 
 func _check_store_terms_discount() -> Array:
 	var state := _store_state(["fashion"], 3000.0)
-	state.assign.founder = "fashion"
 	var world := _live_world()
+	MarketplaceModel.assign(state, "founder", "fashion")
 	MarketplaceModel.set_store_terms(state, "fashion", 0.0, 8)
 	_run(state, world, 3)
 	var wk: Dictionary = state.cats.fashion.week
@@ -826,3 +827,27 @@ func _check_reviews_affected_is_return_gap() -> Array:
 	return [_near(delivered, tiered.cats.fashion.week.delivered) and _near(affected, gap) and _near(gap, delivered * (0.20 - 0.20 * 0.95)) and gap > 0.0,
 		"%.2f weekly orders: Reviews tier 1 cuts returns 20%% -> 19%%, %.3f fewer returns a week in two real closes; reviews_ratings affected %.3f"
 		% [delivered, gap, affected]]
+
+
+func _check_assignment_waits_a_close() -> Array:
+	var state := _store_state(["fashion", "electronics"], 0.0)
+	var world := _live_world(5)
+	var closed := MarketplaceModel.assign(MarketplaceModel.new_state(), "founder", "fashion")
+	var first := MarketplaceModel.assign(state, "founder", "fashion")
+	var repeat := MarketplaceModel.assign(state, "founder", "fashion")
+	var before_close := MarketplaceModel.acquisition(state, world, "fashion")
+	_run(state, world, 1)
+	var after_close := MarketplaceModel.acquisition(state, world, "fashion")
+	var moved := MarketplaceModel.assign(state, "founder", "electronics")
+	var old_category := MarketplaceModel.acquisition(state, world, "fashion")
+	var new_category := MarketplaceModel.acquisition(state, world, "electronics")
+	_run(state, world, 1)
+	var resumed := MarketplaceModel.acquisition(state, world, "electronics")
+	var absent := MarketplaceModel.acquisition(state, world.merged({"stars": {}}, true), "electronics")
+	var left := MarketplaceModel.unassign(state, "founder")
+	var again := MarketplaceModel.unassign(state, "founder")
+	var ok: bool = not closed and first and not repeat and before_close == 0.0 and _near(after_close, 2.0) and moved \
+		and old_category == 0.0 and new_category == 0.0 and _near(resumed, 2.0) and absent == 0.0 and left and not again \
+		and state.assign.is_empty()
+	return [ok, "closed category refused=%s, before the first close %.2f, after it %.2f (1-star base 2), same category again refused=%s, moved: old %.2f, new %.2f, one close later %.2f, not on duty %.2f, unassign=%s then %s"
+		% [not closed, before_close, after_close, not repeat, old_category, new_category, resumed, absent, left, again]]

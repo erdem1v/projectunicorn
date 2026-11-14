@@ -155,7 +155,7 @@ kapanışında dolar; okumak onu doldurmaz ve pazaryeri koşusu olmayan oyunda (
 | `users`, `members` | Aktif kullanıcı ve içindeki Premium üyesi |
 | `sources[kaynak]` | Son on iki haftada o kaynaktan gelen yeni kullanıcı, hafta hafta (kaynak: `organic` ya da Pazarlama'nın kanal ve kampanya kimliği) |
 | `cats[kimlik]` | `open`, `open_day`, `commission` (yüzde), `commission_day`, `stores`, `joined` (son sekiz haftada katılan mağaza, hafta hafta), `terms` (yeni mağaza şartı: alınan pay ve hafta; yoksa boş), `week` (geçen haftanın sayıları: organik ve kanal ziyareti, sepet, ödeme, sipariş, teslim, iade, net komisyon) |
-| `assign` | Kişi kimliği → kategori |
+| `assign` | Kişi kimliği → `cat` (kategori) ve `live` (atama bir kapanıştan geçti) |
 | `policy[kural]` | `pick` (seçenek), `day` (son değişikliğin günü) |
 | `premium` | `open`, `fee`, `fee_day`, `trial`, `joined` (son dört haftada katılan üye), `perks[ayrıcalık]` (`pick`, `day`, son dört haftanın kullanımı ve bedeli) |
 | `ledger` | `users` ve `stores`: adlı satırlar (`key`, `arg`, `points`, `weeks`) |
@@ -225,8 +225,11 @@ Kapanış yalnız ürün yayındayken koşar; kategori açmak yayından önce de
   ve iade kargosu kuralı değişince çubuk kayar.
 - **Mağazanın kazancı** çipi `kalan`'ın yüzde değişimidir (Moda'da %12'den %13'e: −%5).
 - **Kazanım** ürün yayınlanınca başlar; yayından önce mağaza sıfırdır. Bir kişi bir kategoriye atanır (`assign`). Atanan,
-  kurucu ya da Satış Temsilcisi olabilir; bir kategoride birden çok kişi çalışabilir; atama değişikliği sonraki hafta işler;
-  işten ayrılanın ataması silinir. Kurucunun ataması bugünkü Satış işi gibi sprint payından yer. Satış rolü pazaryerinde
+  kurucu ya da Satış Temsilcisi olabilir; bir kategoride birden çok kişi çalışabilir. Atamanın bedeli bir haftalık
+  kazanımdır: yeni atanan ya da kategorisi değişen kişi ilk kapanışta mağaza kazandırmaz (taşınan kişi eski kategorisinde
+  de kazandırmaz), sonraki kapanışlarda kazandırır. Yalnız işten ayrılanın ataması silinir; izne çıkan ya da eğitime giden
+  kişi atamasını korur ama işbaşında olmadığı kapanışta mağaza kazandırmaz. İki kural onay bekliyor; ikisi de atama
+  yapılırken ekranda görünür (§4.3). Kurucunun ataması bugünkü Satış işi gibi sprint payından yer. Satış rolü pazaryerinde
   açılır: `hr_constants.gd:374-378`, `hr_assignments.gd`'deki hücre kilidi ve `hr_system.gd:304-306` üçü birlikte değişir.
   Kişi başına haftalık kazanım:
   `taban(yıldız) × bölge çarpanı × kabul çarpanı × Ürün Yükleme çarpanı × şart çarpanı`.
@@ -468,6 +471,10 @@ Kareler `tur4_ekranlar_2026-11-13/pazaryeri/kareler/` altında; her bölümün k
      sipariş, Aylık gelir (`preview_commission`; §12 soru 1). "Mağazanın kazancı"nın ipucu: "Mağazaya komisyon ve kargodan
      sonra kalan."
   5. MAĞAZA KAZANIMI: atanan her kişi (yüz, ad, rol, Satış yıldızı, "haftada 6 mağaza", "Değiştir") ve boş bir "Ata" yuvası.
+     Kazandırmayan atama nedeniyle görünür (yardımcı yönetmenin şartı, adil ekonomi): ilk kapanışını bekleyen kişinin
+     satırında "haftada 6 mağaza" yerine kazanımın gelecek hafta başladığı, işbaşında olmayan (izinli, eğitimde) kişinin
+     satırında o hafta kazandırmadığı yazar; "Ata" ve "Değiştir" seçiminde ilk haftanın kazandırmadığı seçimden önce
+     okunur. Biçimi (çip ya da ipucu) ARAYUZ'la, metinleri arayüz paketinde; TR ve EN onay bekliyor.
      Ürün yayınlanmadıysa tek satır: "v1.0 yayınlanınca başlar".
 
 ### 4.4 Politikalar (PY7a, PY7b)

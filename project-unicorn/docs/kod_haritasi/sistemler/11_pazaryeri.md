@@ -6,9 +6,9 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 
 ## Dosyalar
 
-- `systems/marketplace_model.gd` (904): `MarketplaceModel`; yalnız `static` işlevler. `state` ve `world` sözlüklerinin alanları dosya başındaki yorumda.
-- `systems/marketplace_system.gd` (150): `MarketplaceSystem`; yalnız `static` işlevler. `GameState.marketplace`'in tek yazarı, yazan seam'ler, sözleşme okuyucuları, `world()` ve haftalık kapanış.
-- `debug/marketplace_probe.gd` (828): `-s` betiği; oynanan çizelge ve 31 mekanik denetimi, `MPPROBE ...` satırları.
+- `systems/marketplace_model.gd` (924): `MarketplaceModel`; yalnız `static` işlevler. `state` ve `world` sözlüklerinin alanları dosya başındaki yorumda.
+- `systems/marketplace_system.gd` (169): `MarketplaceSystem`; yalnız `static` işlevler. `GameState.marketplace`'in tek yazarı, yazan seam'ler, sözleşme okuyucuları, `world()` ve haftalık kapanış.
+- `debug/marketplace_probe.gd` (853): `-s` betiği; oynanan çizelge ve 32 mekanik denetimi, `MPPROBE ...` satırları.
 - `data/product/categories.json` (16): altı kategori ve sütunları: sepet, ziyaret sıklığı, kâr payı, sektör iadesi, gereken mağaza, başlangıç komisyonu, taban ilgi, büyük sepet payı, reklam havuzu (`ad_pool`, haftalık arama).
 - `data/product/lines/marketplace.json` (153): modül verisi; 5 kimlik hattı (Ürün Yükleme, Vitrin, Sepet ve Ödeme, Siparişler, Yorum ve Güvence)
   ↳ Mobil, Entegrasyonlar, Kullanıcılar ve Yetki, Yedekleme `shared.json`'dan; Üyelik, Gelir alanının `cap_paid_plan`'ı.
@@ -20,7 +20,8 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 
 - Sistem (`MarketplaceSystem`): `TYPE_ID` ("marketplace"), `MODULE_LINES` (modelin dokuz modülünden oyundaki hat kimliğine; paylaşılan dört hat `@marketplace` son ekiyle; Üyelik hattı değil `SprintCatalog.PAID_PLAN`).
   ↳ `world()` her çağrıda sahiplerden kurulur: `week` `GameState.day`, `published` `ProductState.is_live()`, `tiers` ve `bugs` hat kimliğiyle, `stars` atanmışların Satış yıldızı (kurucu 1); kalan alan modelin varsayılanında.
-  ↳ Yazan seam'ler (`true` uygulandı ve sinyal yayıldı, `false` reddedildi): `open_category`, `set_commission`, `set_policy`, `set_fee`, `set_perk`, `set_trial`, `set_store_terms`, `add_users`.
+  ↳ Yazan seam'ler (`true` uygulandı ve sinyal yayıldı, `false` reddedildi): `open_category`, `set_commission`, `set_policy`, `set_fee`, `set_perk`, `set_trial`, `set_store_terms`, `add_users`, `assign`, `unassign`.
+  ↳ `assign(kişi, kategori)`: yalnız işbaşındaki (`STATUS_ACTIVE`) kurucu ya da Satış Temsilcisi ve açık kategori; `daily_tick` kapanıştan önce yalnız kaydı kalmayanın (işten ayrılan) atamasını düşürür, izinli ve eğitimdeki kişi atamasını korur ama `world().stars`ta olmadığı için o hafta kazandırmaz.
   ↳ `_reflect` iki toplu `CustomerRegistry` kaydını (`STORES_ID` `co_mp_stores`, `USERS_ID` `co_mp_users`; `b2c`, `individual`, yayından sonraki ilk kapanışta doğar) yalnız seam'le yazar: komisyon mağazalar kaydının, üyelik kullanıcılar kaydının MRR'ı (eksi net komisyonda MRR 0'da durur, `revenue_weeks` eksiyi saklar),
   ↳ koltuk mağaza sayısı ve ücret ödeyen üye (`MarketplaceModel.paying_members`), memnuniyet modelin `sat`'ının tam sayısı; en sonda `SalesSystem.reflect_mrr()`. `CustomerRegistry.account_count` `individual` kayıtları saymaz.
   ↳ Okuyucular saklanan durumdan okur, kapanış koşturmaz: `policy_value`, `channel_read`, `source_revenue` (öbür ekiplerin sözleşmesi) ve `stores()` (açık kategorilerin mağaza toplamı, `_reflect` kullanır). Okuyucu ve `world()` boş durumu doldurmaz: `_read()` boşken modelin ilk durumunu saklamadan okur.
@@ -31,6 +32,7 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 - Biletler: `tick_topics(state, world)` kapanıştan sonra, haftada bir koşar; her konunun o haftaki biletini son dört haftaya yazar. Konu durumu (`waiting`, `planned`, `shipped`) ve defter satırları kapanışın 7. adımında dünyadan okunur.
 - Yazan işlevler (`true` uygulandı, `false` reddedildi): `open_category`, `set_commission`, `set_policy`, `set_fee`, `set_perk`, `set_trial`, `open_premium`, `set_store_terms`,
   ↳ `add_users(state, n)` (olayın kullanıcı ekleyişi ya da çıkarışı, `n` eksi olabilir; kullanıcı sayısı değişmediyse false); kilit `lock_left(gün, world)`.
+  ↳ `assign(state, kişi, kategori)` `state.assign[kişi] = {cat, live: false}` yazar (kapalı kategori ya da kişi orada zaten çalışıyorsa false; başka kategoriye taşıma `live`'ı sıfırlar), `unassign(state, kişi)`; `close_week` kazanımı hesaplayınca her atamayı `live` yapar, `acquisition` yalnız `live` ve `stars`ta olan kişiyi sayar (atamadan sonraki ilk kapanış atlar).
 - Okuyanlar: `policy_value` (kampanyanın ezmesi önce), `store_keep` ve `zone` ve `zone_limits` (mağazaya kalan, bölge, çubuğun iki sınırı), `variety`, `acquisition` ve `acquisition_of`, `return_rate`, `price_pass`,
   ↳ `step_factors` ve `weakest_step`, `gain(state, world, kategori, değişiklik)`, `monthly_revenue` ve `monthly_cost`, `target_sat`, `premium_pull`, `returning_share`, `retention`.
 - Pazarlama'nın okuması: `channel_read(state, world, kategori)` = `conversion` (ziyaretten teslim edilen siparişe), `monthly_commission` (bir kullanıcının aylık net komisyonu),
@@ -74,7 +76,7 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 - Denetimler: `empty_category_no_orders`, `acquisition_waits_for_publish`, `leaving_zone_stores_fall`, `lock_rejects`, `campaign_override_expires`, `revenue_window_spike`, `premium_closed_no_perk_cost`,
   ↳ `campaign_free_shipping_single_write`, `preview_figures`, `known_store_earnings`, `known_return_rate`, `known_order_rate`, `json_roundtrip`, `ledger_expiry`, `zone_limits_consistent`, `constants_switch`,
   ↳ `gain_and_weakest`, `acquisition_multipliers`, `store_terms_discount`, `premium_members`, `zone_rows_need_stores`, `add_users_bounds`, `lost_counters`, `channel_read_values`, `source_revenue_values`, `state_survives_codec`,
-  ↳ `topic_rows_known`, `topic_ticket_gates`, `topic_ledger_rows`, `feature_gain_matches_close`, `reviews_affected_is_return_gap`.
+  ↳ `topic_rows_known`, `topic_ticket_gates`, `topic_ledger_rows`, `feature_gain_matches_close`, `reviews_affected_is_return_gap`, `assignment_waits_a_close`.
 
 ## Dikkat
 

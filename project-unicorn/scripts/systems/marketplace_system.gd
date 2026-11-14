@@ -42,7 +42,8 @@ static func world() -> Dictionary:
 	var stars := {}
 	for person in _read().assign:
 		var c: Character = CharacterRegistry.get_character(person)
-		stars[person] = 1 if c.category == "founder" else int(HRConstants.stars_for(HRSystem.skill(c, HRConstants.AREA_SALES)))
+		if _can_work(c):
+			stars[person] = 1 if c.category == "founder" else int(HRConstants.stars_for(HRSystem.skill(c, HRConstants.AREA_SALES)))
 	return {"week": GameState.day, "published": ProductState.is_live(), "tiers": tiers, "bugs": bugs, "stars": stars}
 
 
@@ -86,6 +87,21 @@ static func add_users(n: float) -> bool:
 	return _written(MarketplaceModel.add_users(_s(), n))
 
 
+## Atanabilen: işbaşındaki kurucu ya da Satış Temsilcisi.
+static func _can_work(c: Character) -> bool:
+	return c != null and c.status == HRConstants.STATUS_ACTIVE and (c.category == "founder" or c.role == HRConstants.ROLE_SALES_REP)
+
+
+static func assign(person: String, cat: String) -> bool:
+	if not _can_work(CharacterRegistry.get_character(person)):
+		return false
+	return _written(MarketplaceModel.assign(_s(), person, cat))
+
+
+static func unassign(person: String) -> bool:
+	return _written(MarketplaceModel.unassign(_s(), person))
+
+
 # --- Okuyucular: saklanan durumdan okur, kapanış koşturmaz --------------------------------------
 
 static func policy_value(rule: String) -> String:
@@ -115,6 +131,9 @@ static func daily_tick() -> void:
 	if not ProductState.is_live():
 		return
 	var state := _s()
+	for person in state.assign.keys():
+		if CharacterRegistry.get_character(person) == null:
+			MarketplaceModel.unassign(state, person)
 	var w := world()
 	MarketplaceModel.close_week(state, w)
 	MarketplaceModel.tick_topics(state, w)
