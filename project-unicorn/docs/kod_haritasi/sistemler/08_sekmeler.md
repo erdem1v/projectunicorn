@@ -18,7 +18,7 @@ Sekme kökleri (scripts/tabs/):
 - `scripts/tabs/hunt_tab.gd` (533): Yatırım sayfası: Frank şeridi, seed turu kartı, yatırımcı listesi, teklifler, bekleyen toplantı (VC sistemlerinin ince arayüzü).
 - `scripts/tabs/rnd_tab.gd` (273): Ar-Ge kabuğu: AĞAÇ|GEÇMİŞ şeridi, koşan araştırma satırı, ağaç yapı anahtarı, seçili düğümü bayrakla saklama.
 - `scripts/tabs/events_tab.gd` (369): Olaylar (gelen kutusu): süzgeçli liste, gün ayraçları, klavye gezintisi; modeli `Inbox`'tadır, okuma bölmesi `mail_pane.gd`.
-- `scripts/tabs/piyasa_tab.gd` (689): Piyasa: üç karo, süzgeç çipleri, sıralı liste, rapor kartı, yıl sonu satırları, 13H/1Y/5Y/Tümü grafiği; salt okunur.
+- `scripts/tabs/piyasa_tab.gd` (681): Piyasa: üç karo, süzgeç çipleri, sıralı liste, rapor kartı, yıl sonu satırları, 13H/1Y/5Y/Tümü grafiği; salt okunur.
 - `scripts/tabs/personal_tab.gd` (266): Kişisel: kurucunun portresi, görev, deneyim, beceri, huy, kilometre taşları, evre hedefi, hisse ve değerleme.
 
 Alt klasörler:
@@ -141,7 +141,7 @@ Satış, Finans, Yatırım:
 - `FinanceTab._show_page(id)` `scripts/tabs/finance_tab.gd:88`: ÖZET/YATIRIM seçer, Yatırım kilitliyse döner · `finance_subpage_requested` (:54), şerit.
 - `FinanceOzetView.cap_table(parent)` `scripts/tabs/finance/finance_ozet_view.gd:451` (static): hisse tablosu · personal_tab.gd:207.
 - `HuntTab._refresh()` `scripts/tabs/hunt_tab.gd:102`: sayfayı baştan kurar; görünmezken `_on_changed` (:82) yalnız `_stale` işaretler · VC/seed sinyalleri.
-- `HuntTab._sit_button` `hunt_tab.gd:509`: "Masaya otur" `term_table_requested` yayar (:510) · main.gd:4864 bağlar.
+- `HuntTab._sit_button` `hunt_tab.gd:509`: "Masaya otur" `term_table_requested` yayar (:510) · main.gd:4862 bağlar.
 
 Ar-Ge, Olaylar, Piyasa, Kişisel:
 - `RnDTab.select_node(id)` `scripts/tabs/rnd_tab.gd:114`: düğümü seçer · `rnd_node_requested` (:80; product_tab.gd:319, research_bar), `_ready` (:60) gizli seçimi tüketir.
@@ -171,7 +171,7 @@ Sekmelerin tanımladığı sinyaller (DIZIN.md "Sinyaller" bölümü):
 
 Sekmelerin yaydığı EventBus sinyalleri:
 - `tab_changed`: product_tab.gd:315-321, sales_tab.gd:295, mail_pane.gd:830,836, hr_atlas_modal.gd:168, sprint_ui_shared.gd:558, rnd_ui_shared.gd:149 · dinleyen window_layer.gd:62.
-- `pitch_requested` sales_tab.gd:412 (dinleyen main.gd:4858) · `term_table_requested` hunt_tab.gd:510 (main.gd:4864) · `rnd_node_requested` product_tab.gd:317 (rnd_tab.gd:80).
+- `pitch_requested` sales_tab.gd:412 (dinleyen main.gd:4856) · `term_table_requested` hunt_tab.gd:510 (main.gd:4862) · `rnd_node_requested` product_tab.gd:317 (rnd_tab.gd:80).
 - `finance_subpage_requested` mail_pane.gd:832 (dinleyen finance_tab.gd:54) · `confirm_requested` hunt_tab.gd:234,479, hr_tab.gd:337, hr_ledger.gd:376-425, hr_atlas_modal.gd:453,472 (main.gd:90).
 
 Sekmelerin dinlediği EventBus sinyalleri (hepsi `_exit_tree`'de ya da düğümle birlikte kopar):

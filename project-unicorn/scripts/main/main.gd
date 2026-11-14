@@ -3007,8 +3007,6 @@ func _seed_piyasa(state: String) -> void:
 			GameState.run_valuation_m = 18
 		"ipo":
 			GameState.day = 20
-		"filtre", "sektor":   # LOC-DATA debug fixture id
-			GameState.set_subgenre("erp")
 
 
 # --personal-shot=<normal|cheque|ready|training|seed>: the Kişisel window on the theme seed. cheque: after Frank's

@@ -103,7 +103,7 @@ func _build() -> void:
 	var ctx_key: String = "PIYASA_CTX_%d" % int(GameState.get_date_dict().year)
 	_ctx.text = tr(ctx_key if tr(ctx_key) != ctx_key else CTX_FALLBACK).format({"month": _month_year(_week)})
 	# Sektörüm has nothing to show before the product type is picked (the placeholder type has no slots).
-	_chips.get_child(FILTERS.keys().find("mine")).visible = not MarketCatalog.sector_slots(GameState.subgenre).is_empty()
+	_chips.get_child(FILTERS.keys().find("mine")).visible = not MarketCatalog.sector_slots(ProductState.subtype()).is_empty()
 	_build_tiles()
 	_build_list()
 	_build_card()
@@ -263,7 +263,7 @@ func _note_text(line: MarginContainer, text: String) -> void:
 
 func _build_list() -> void:
 	UiFactory.clear(_list)
-	var mine: Array = MarketCatalog.sector_slots(GameState.subgenre)
+	var mine: Array = MarketCatalog.sector_slots(ProductState.subtype())
 	var shown := 0
 	for i in _rows.size():
 		var c: Dictionary = _rows[i]
