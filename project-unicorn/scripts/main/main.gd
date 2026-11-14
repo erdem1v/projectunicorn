@@ -3986,7 +3986,8 @@ func _press_button_labelled(root: Node, label: String) -> bool:
 
 # --hr-shot=<ekip|ekip-saat|atlas|atlas-secili|atlas-ofis|atlas-dolu|dosyalar|gider|saatler|saatler-gece|gorevler|gorevler-arge|
 # dosyalar-pm|dosyalar-tasarim|gorevler-bos|egitim|egitim-modal|egitim-secili|zam|menu|menu-kilit|cikar|cikar-eksi|bos|dosya|dosya-kilit|
-# dosya-kurucu|kalabalik|verim|saatler-sprint|urunsuz|dosyalar-tehlike|dosyalar-onay|dosyalar-mesai|izin|dosyalar-dolu|ekip-uzun>:
+# dosya-kurucu|kalabalik|verim|saatler-sprint|urunsuz|dosyalar-tehlike|dosyalar-onay|dosyalar-mesai|izin|dosyalar-dolu|ekip-uzun|
+# gorevler-pazaryeri|atlas-urunsuz>:
 # a roster across all three departments (one on leave, one burning out, one fresh hire), driven to the
 # requested HR surface. kalabalik = forty on the roster (the compact Kadro), Geliştirme folded and the
 # list scrolled under its head; dosya = the first employee's file over Kadro; dosya-kurucu = the
@@ -4014,12 +4015,18 @@ func _press_button_labelled(root: Node, label: String) -> bool:
 # button pressed: the file with her away and the leave row locked on its reason (hr_shot_izin), and a week on, back
 # from leave, the row locked on the wait for the next leave (hr_shot_izin_donus).
 # ekip-uzun = Kadro while a sprint runs on a long product name: Görev reads the release it builds and wraps.
+# gorevler-pazaryeri = the roster's company on a marketplace (type chosen at week 1, v1.0 published at week 8, now week 10 in
+# the second week of the sprint begun at week 9), the founder and the roster's sales rep on the Sales job: Görevler with the
+# Satış column open. Prints HRSHOT|gorevler-pazaryeri|week=<n>|live=<bool>|version=<n>|launch=<n>|sprint=<n>|sprint_week=<n>|
+# quarter_start=<n>|cash=<n>|mrr=<n>|sales=<names>.
+# atlas-urunsuz = no roster, no product type: the search's role cards with the Satış Temsilcisi card locked on its reason.
+# Prints HRSHOT|atlas-urunsuz|typed=<bool>|sales_lock=<key>.
 func _run_hr_shot(kind: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
 	GameState.day = 10
 	if kind not in ["bos", "gorevler-bos", "saatler-sprint", "urunsuz", "dosyalar-tehlike", "dosyalar-onay",
-			"dosyalar-mesai"]:   # LOC-DATA debug seed / id
+			"dosyalar-mesai", "atlas-urunsuz"]:   # LOC-DATA debug seed / id
 		_seed_hr_roster()
 		if kind == "kalabalik":   # LOC-DATA debug seed / id
 			OfficeCrowdProbe.seed_staff(34)
@@ -4028,16 +4035,19 @@ func _run_hr_shot(kind: String) -> void:
 			if kind == "atlas-dolu":   # LOC-DATA debug seed / id
 				OfficeCrowdProbe.seed_staff(OfficeSystem.desks_free())
 		# The roster's company runs its product's first sprint, mid-morning with the founder at the desk.
-		SprintSystem.choose_type("erp", "Defterix Fatura ve Ön Muhasebe" if kind == "ekip-uzun" else "Fatura")   # LOC-DATA debug seed / id
-		SprintSystem.apply_lead()
-		SprintSystem.start()
+		if kind == "gorevler-pazaryeri":   # LOC-DATA debug seed / id
+			_seed_marketplace_launch()
+		else:
+			SprintSystem.choose_type("erp", "Defterix Fatura ve Ön Muhasebe" if kind == "ekip-uzun" else "Fatura")   # LOC-DATA debug seed / id
+			SprintSystem.apply_lead()
+			SprintSystem.start()
 		_seed_payroll()
 		GameState.set_current_hour(11)
 		TimeManager.sync_to_current_hour()
 		if kind.ends_with("-kilit"):
 			CharacterRegistry.get_employees()[0].last_raise_day = GameState.day
 	match kind:
-		"gorevler-bos", "atlas", "atlas-secili", "atlas-ofis", "atlas-dolu", "dosya-kurucu":   # LOC-DATA debug seed / id
+		"gorevler-bos", "atlas", "atlas-secili", "atlas-ofis", "atlas-dolu", "dosya-kurucu", "gorevler-pazaryeri", "atlas-urunsuz":   # LOC-DATA debug seed / id
 			pass
 		"saatler-sprint":   # LOC-DATA debug seed / id
 			SprintSystem.choose_type("note_tool", "Notly")   # LOC-DATA debug seed / id
@@ -4132,13 +4142,16 @@ func _run_hr_shot(kind: String) -> void:
 		_shot_fail("[HRShot] sekme gövdesi bulunamadı (get_current_page_body null)")
 		return
 	match kind:
-		"atlas", "dosyalar", "dosyalar-pm", "dosyalar-tasarim", "atlas-secili", "atlas-ofis", "atlas-dolu", "dosyalar-dolu":   # LOC-DATA debug seed / id
+		"atlas", "dosyalar", "dosyalar-pm", "dosyalar-tasarim", "atlas-secili", "atlas-ofis", "atlas-dolu", "dosyalar-dolu", "atlas-urunsuz":   # LOC-DATA debug seed / id
 			tab.open_atlas()
 			if kind == "atlas-secili":   # LOC-DATA debug seed / id
 				var atlas: Node = get_tree().get_root().find_child("PanelLayer", true, false).get_child(-1)
 				atlas._selected_role = HRConstants.ROLE_DEVELOPER
 				atlas._selected_level = HRConstants.LEVEL_MID
 				atlas._rebuild()
+			if kind == "atlas-urunsuz":   # LOC-DATA debug seed / id
+				print("HRSHOT|atlas-urunsuz|typed=%s|sales_lock=%s" % [
+					SprintSystem.is_typed(), HRConstants.role_lock_reason_key(HRConstants.ROLE_SALES_REP)])
 		"dosyalar-tehlike", "dosyalar-onay", "dosyalar-mesai":   # LOC-DATA debug seed / id
 			tab.open_atlas()
 			if kind == "dosyalar-onay":   # LOC-DATA debug seed / id
@@ -4192,6 +4205,13 @@ func _run_hr_shot(kind: String) -> void:
 			tab._show_view(tab.VIEW_ASSIGNMENTS)
 		"gorevler-bos":   # LOC-DATA debug seed / id
 			tab._show_view(tab.VIEW_ASSIGNMENTS)
+		"gorevler-pazaryeri":   # LOC-DATA debug seed / id
+			tab._show_view(tab.VIEW_ASSIGNMENTS)
+			var on_sales: Array = HRSystem.assigned_to_job(HRConstants.JOB_SALES).map(func(c: Character) -> String: return c.character_name)
+			print("HRSHOT|gorevler-pazaryeri|week=%d|live=%s|version=%d|launch=%d|sprint=%d|sprint_week=%d|quarter_start=%d|cash=%d|mrr=%d|sales=%s" % [
+				GameState.day, ProductState.is_live(), ProductState.version(), int(GameState.get_flag("mvp_launch_day", 0)),
+				SprintSystem.sprint_number(), SprintSystem.week(), int(GameState.product.quarter.start_day), GameState.cash,
+				GameState.mrr, ", ".join(PackedStringArray(on_sales))])
 		"egitim-modal", "egitim-secili":   # LOC-DATA debug seed / id
 			var who: Array[Character] = CharacterRegistry.get_employees()
 			if not who.is_empty():
@@ -4277,6 +4297,29 @@ func _run_hr_shot(kind: String) -> void:
 					_shot_fail("[HRShot] menüde İŞTEN ÇIKAR bulunamadı")
 					return
 	await _finish_shot("hr_shot_%s" % kind, 0.5)
+
+
+## --hr-shot=gorevler-pazaryeri's product, through the sprint seams week by week: the type chosen at week 1, the MVP sprint
+## started at week 6 and closed at week 8 with every MVP module at K1, v1.0 published at the gate, the founder put on the Sales
+## job beside the roster's rep, the next sprint planned at week 8 and started at week 9. The shot stands at week 10, that
+## sprint's second week.
+func _seed_marketplace_launch() -> void:
+	GameState.day = 1
+	SprintSystem.choose_type(MarketplaceSystem.TYPE_ID, "Çarşım")   # LOC-DATA debug seed / id
+	GameState.day = 6
+	SprintSystem.apply_lead()
+	SprintSystem.begin_planned()
+	for line_id in SprintCatalog.mvp_lines():
+		ProductState.set_line_tier(line_id, 1)
+	GameState.day = 8
+	SprintSystem._close()
+	SprintSystem.publish()
+	CharacterRegistry.assign_job(CharacterRegistry.get_founder().id, HRConstants.JOB_SALES)
+	SprintSystem.plan_next()
+	GameState.day = 9
+	SprintSystem.apply_lead()
+	SprintSystem.begin_planned()
+	GameState.day = 10
 
 
 ## The roster's company as the top bar reads it: its cash, and one finance tick that pulls the payroll into the burn.

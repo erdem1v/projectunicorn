@@ -390,8 +390,9 @@ static func role_lock_reason_key(role_id: String) -> String:
 	# açıklanmış; asla sessizce yok).
 	match role_id:
 		ROLE_SALES_REP:
-			# Kurumsal satış masası yalnız B2B pazarında vardır.
-			return "" if ProductSystem.has_b2b_product() else "HR_ROLE_LOCK_SALES"
+			# Satış Temsilcisi B2B ürünün satış masasında ya da pazaryerinin mağaza kazanımında çalışır;
+			# ürün türü seçilene dek ikisi de yok.
+			return "" if ProductSystem.has_sales_desk() else "SALES_EMPTY_UNTYPED"
 	return ""
 
 

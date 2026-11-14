@@ -305,7 +305,8 @@ static func job_waiting_key(job_id: String) -> String:
 		HRConstants.JOB_SUPPORT, HRConstants.JOB_ACCOUNTS:
 			return "" if ProductState.is_live() else "HR_TASK_WAITING_LIVE"
 		HRConstants.JOB_SALES:
-			return "" if SalesFaucetSystem.market_open() else "HR_TASK_WAITING_LIVE"
+			# Satış işi canlı üründe, satış masası olan türde (B2B ya da pazaryeri) çalışır.
+			return "" if ProductState.is_live() and ProductSystem.has_sales_desk() else "HR_TASK_WAITING_LIVE"
 	return ""
 
 

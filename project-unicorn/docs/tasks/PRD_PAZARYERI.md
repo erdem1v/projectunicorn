@@ -233,7 +233,9 @@ Kapanış yalnız ürün yayındayken koşar; kategori açmak yayından önce de
   de kazandırmaz), sonraki kapanışlarda kazandırır. Yalnız işten ayrılanın ataması silinir; izne çıkan ya da eğitime giden
   kişi atamasını korur ama işbaşında olmadığı kapanışta mağaza kazandırmaz. İki kural onay bekliyor; ikisi de atama
   yapılırken ekranda görünür (§4.3). Kurucunun ataması bugünkü Satış işi gibi sprint payından yer. Satış rolü pazaryerinde
-  açılır: `hr_constants.gd:374-378`, `hr_assignments.gd`'deki hücre kilidi ve `hr_system.gd:304-306` üçü birlikte değişir.
+  açıktır: Satış Temsilcisi ürün türü seçilince işe alınır ve Ekip'in Satış hücresi açılır (`ProductSystem.has_sales_desk`);
+  Satış işi yayına kadar bekler (`HRSystem.job_waiting_key`). Tür seçilmemişken rol kartı ve hücre, Satış penceresinin
+  türsüz hâliyle aynı şartı aynı cümleyle söyler.
   Kişi başına haftalık kazanım:
   `taban(yıldız) × bölge çarpanı × kabul çarpanı × Ürün Yükleme çarpanı × şart çarpanı`.
   Taban 1★ 2, 2★ 3, 3★ 4, 4★ 6, 5★ 8 mağaza (kurucu 1★ sayılır). Bölge: rahat 1; zorlanır 0,6; ayrılır 0,2. Kabul: "Yalnız

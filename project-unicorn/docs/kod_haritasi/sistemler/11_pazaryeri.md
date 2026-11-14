@@ -1,7 +1,7 @@
 # Pazaryeri
 
 Ne yapar: B2C ürünün pazaryeri ekonomisinin saf çekirdeği: mağaza ve kullanıcı akışı, dört adım, iade, gelir, iki memnuniyet defteri, dört kural, Premium, dört haftalık önizleme, Talepler'in konu ve biletleri, Pazarlama'nın iki okuması.
-Oyuna kısmen bağlı: `MarketplaceSystem` durumu (`GameState.marketplace`, yazan seam ve kapanış ilk kez çalışınca doğar) yazar ve haftalık kapanışı `daily_tick` ile koşturur; pazaryeri türünde Satış yuvası onu haftada bir çağırır (`SalesSystem.daily_tick`), tür seçilemez, arayüz yok. Vakalar ve probe çağırır; arayüzün önizlemeleri aynı model işlevlerini okuyacak.
+Oyuna kısmen bağlı: `MarketplaceSystem` durumu (`GameState.marketplace`, yazan seam ve kapanış ilk kez çalışınca doğar) yazar ve haftalık kapanışı `daily_tick` ile koşturur; pazaryeri türünde Satış yuvası onu haftada bir çağırır (`SalesSystem.daily_tick`), tür seçilemez, arayüz yok. Tür seçilince (`SprintSystem.choose_type`) Satış Temsilcisi işe alınabilir, Ekip'in Satış hücresi açılır (`ProductSystem.has_sales_desk`) ve Satış işi yayına kadar uykuda durur (`HRSystem.job_waiting_key`); vaka `marketplace_sales_role_opens`. Vakalar ve probe çağırır; arayüzün önizlemeleri aynı model işlevlerini okuyacak.
 Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test). Sahip: `MarketplaceModel` (statik, durumsuz) ve onu oyuna bağlayan `MarketplaceSystem` (statik, durumun tek yazarı).
 
 ## Dosyalar

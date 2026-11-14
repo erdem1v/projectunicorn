@@ -124,6 +124,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `ProductState.set_line_tier()` `product_state.gd:92`: kademe yazma (merdiveni sormaz) · `SprintSystem._close` :1430
 - `ProductState.set_infra_provider()/set_infra_units()/set_infra_price()/set_infra_lock()` `product_state.gd:299`/`:306`/`:350`/`:364`: sunucu durumu yazma, `infra_changed` yayar · `InfraSystem` tek çağıran
 - `ProductSystem.daily_tick()/reset()` `scripts/systems/product_system.gd:29`/`:11`: açık hata görüntüsü; koşu sınırı · TimeManager, `save_manager.gd:355`
+- `ProductSystem.has_sales_desk()` `product_system.gd:37`: Satış Temsilcisi çalışacak yer var mı (tür B2B ya da pazaryeri; tür seçilmemişken false) · `hr_constants.gd` (`role_lock_reason_key`), `hr_system.gd` (`job_waiting_key`), `hr_assignments.gd` (Satış hücresi)
 - `ProductRead.emit_edges()` `scripts/systems/product_read.gd:144`: bug/uyarı/taban kenar sinyalleri · `time_manager.gd:397`
 - `ProductRead.step_unlockable()` `product_read.gd:78`: kademe şimdi alınabilir mi · seam `urun.*` (`seams_product.gd:8`)
 - `ProductLines.ensure_loaded()/reload()` `scripts/systems/product_lines.gd:58`/`:66`: tembel yükleme/sıfırlama · her erişimci; `ProductSystem.reset`

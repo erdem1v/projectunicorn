@@ -9,7 +9,7 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
   ↳ `HRLedger`, `HRPopover` (08_sekmeler.md).
 
 ## Dosyalar
-- `scripts/systems/hr_system.gd` (554): günlük orkestratör + okuma yüzeyi (etkin çıktı, verim, atama sorguları, kurucu görev durumu, deneyim ve eğitim tiki)
+- `scripts/systems/hr_system.gd` (558): günlük orkestratör + okuma yüzeyi (etkin çıktı, verim, atama sorguları, kurucu görev durumu, deneyim ve eğitim tiki)
 - `scripts/systems/hr_morale_system.gd` (353): moral hedef/ease/sürüklenme, yaz izni, kaçma riski, istifa zarı, tükenmişlik, ayrılış
 - `scripts/systems/hr_search_system.gd` (303): Atlas arayışı durum makinesi (idle, searching, files_ready), işe alım, aday önizlemeleri
 - `scripts/systems/hr_candidate_generator.gd` (276): aday dosyası üreticisi; saf, RNG'siz, tohumdan üçlü ve baskınlık denetimi
@@ -28,15 +28,17 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
 - `HRSystem.tick_experience()` `hr_system.gd:66`: işi olan aktif çalışan ve kurucu deneyim biriktirir · yalnız `daily_tick`
 - `HRSystem.tick_training()` `hr_system.gd:91`: eğitim haftasını düşürür, bitişte haber satırı · yalnız `daily_tick`
 - `HRSystem.send_to_training(id, area)` `hr_system.gd:107`: ücreti `FinanceSystem.apply_one_time_cost("training")` ile keser · `scripts/modals/training_modal.gd:173`
-- `HRSystem.effective_skill(c, area)` `hr_system.gd:376`: kanonik etkin çıktı; Liderlik burada YOK · `b2b_sales_system.gd`, `rnd_system.gd`
-- `HRSystem.daily_contribution(c, area)` `hr_system.gd:491`: etkin çıktı × saat çarpanı · `customer_rep_system.gd`, `rnd_system.gd`, `support_system.gd`
-- `HRSystem.productivity(c)` `hr_system.gd:397`: (1 + moral payı) × olay payı · `sprint_system.gd`, `sales_rep_system.gd`
-- `HRSystem.add_productivity_mod(...)` `hr_system.gd:426`: olay kartının süreli verim satırı · `EvEffects` verbü `productivity_mod` (`scripts/events/core/effects.gd`)
+- `HRSystem.effective_skill(c, area)` `hr_system.gd:380`: kanonik etkin çıktı; Liderlik burada YOK · `b2b_sales_system.gd`, `rnd_system.gd`
+- `HRSystem.daily_contribution(c, area)` `hr_system.gd:495`: etkin çıktı × saat çarpanı · `customer_rep_system.gd`, `rnd_system.gd`, `support_system.gd`
+- `HRSystem.productivity(c)` `hr_system.gd:401`: (1 + moral payı) × olay payı · `sprint_system.gd`, `sales_rep_system.gd`
+- `HRSystem.add_productivity_mod(...)` `hr_system.gd:430`: olay kartının süreli verim satırı · `EvEffects` verbü `productivity_mod` (`scripts/events/core/effects.gd`)
 - `HRSystem.is_busy(c)` `hr_system.gd:150`: izin, eğitim ya da toplantıdaki kurucu · `support_system.gd`, `rnd_system.gd`, `hr_dossier.gd`, `seams_hr.gd`
-- `HRSystem.assigned_to(area)` `hr_system.gd:270` ve `assigned_to_job(job)` `:275`: bugün çalışabilir kişiler · satış, CS ve destek sistemleri
-- `HRSystem.founder_task_state()` `hr_system.gd:236` ve `founder_task_label()` `:219`: türetilir, saklanmaz · `seams_hr.gd`, `hr_dossier.gd`, `personal_tab.gd`
-- `HRSystem.attention_count()` `hr_system.gd:524`: sol ray Ekip rozeti · `left_tabs.gd`, `seams_hr.gd`; `HRSystem.reset()` `hr_system.gd:497` ← `game_state.gd:955`, `save_manager.gd:351`
-- `HRSystem.to_dict()/from_dict()` `hr_system.gd:507/511`: kayıt kapısı (yalnız moral alt yükü) · `save_manager.gd:384/401`
+- `HRSystem.assigned_to(area)` `hr_system.gd:273` ve `assigned_to_job(job)` `:278`: bugün çalışabilir kişiler · satış, CS ve destek sistemleri
+- `HRConstants.role_lock_reason_key(role)` `hr_constants.gd:388`: "" ise rol işe alınabilir, değilse nedeninin CSV anahtarı; yalnız Satış Temsilcisi kilitlenir ve kilit `ProductSystem.has_sales_desk()` (B2B ürün ya da pazaryeri) ile kalkar, tür seçilmemişken `SALES_EMPTY_UNTYPED` (Satış hücresinin ipucuyla aynı cümle) · `hr_search_system.gd`, `hr_atlas_modal.gd`
+- `HRSystem.job_waiting_key(job)` `hr_system.gd:301`: uykudaki işin bekleme cümlesinin anahtarı, iş koşuyorsa boş; Satış işi canlı üründe ve satış masası olan türde (`ProductSystem.has_sales_desk()`: B2B ya da pazaryeri) çalışır · `hr_ledger.gd`, `HRSystem.is_waiting`
+- `HRSystem.founder_task_state()` `hr_system.gd:237` ve `founder_task_label()` `:220`: türetilir, saklanmaz · `seams_hr.gd`, `hr_dossier.gd`, `personal_tab.gd`
+- `HRSystem.attention_count()` `hr_system.gd:528`: sol ray Ekip rozeti · `left_tabs.gd`, `seams_hr.gd`; `HRSystem.reset()` `hr_system.gd:501` ← `game_state.gd:955`, `save_manager.gd:351`
+- `HRSystem.to_dict()/from_dict()` `hr_system.gd:511/515`: kayıt kapısı (yalnız moral alt yükü) · `save_manager.gd:384/401`
 - `HRSystem.founder_in_meeting` `hr_system.gd:23`: statik bayrak, kaydedilmez · toplantı sahneleri (satış, VC, seed, term sheet masası) yazar
 - `HRMoraleSystem.apply_delta(emp, delta)` `hr_morale_system.gd:186`: TEK moral girişi (huy ve Liderlik ölçeklemesi burada) · `effects.gd:364-378`, `hr_actions.gd`, `vc_pitch_system.gd:548`
 - `HRMoraleSystem.scaled_delta()` `hr_morale_system.gd:199`: aynı hesap, yazmadan; önizlemeler okur · `hr_actions.gd:58,119,188`
@@ -120,6 +122,7 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
 ## Testler
 - Hedefli smoke: `bash tools/smoke_run.sh <vaka>` (`CASE_TIMEOUT=300` xargs -P 2 altında). Vakalar `scripts/debug/endgame_smoke.gd` match tablosunda
 - Aday ve arama: `hr_candidate_invariants`, `hr_archetype_trio`, `hr_search_cycle`, `hr_search_cancel_dismiss`, `hr_axis_key_lock`, `hires_land_in_own_column`, `desk_cap_blocks_hire`
+- Satış rolü ve işi: `role_locks_and_runway_pair` (tür seçilmemişken Satış Temsilcisi ve Ekip'in Satış hücresi kilitli, ERP'de ve pazaryerinde açık), `marketplace_sales_role_opens` (pazaryerinde Satış işinin bekleme nedeni yayına bakar; masası olmayan B2C türünde kilit durur)
 - Moral ve izin: `hr_morale_drift_shape`, `hr_recovery_channels`, `hr_leave_cycle`, `hr_leave_shift` (olay kartının yaz izni kaydırması), `hr_newcomer_summer_leave` (yeni gelen ilk 26 hafta yaz iznine çıkmaz), `hr_sick_leave` (hastalık yokluğu), `hr_raise_and_leave`, `hr_burnout_streak`, `hr_resignation_path`,
   ↳ `leave_does_not_pause_build`, `save_old_calendar_leave_year`
 - Eylemler: `hr_fire_path`, `promotion_and_raise_gate`, `hr_frank_guard`, `money_never_double_minus`; okuma yüzeyi: `hr_read_catalogue`, `hr_active_filters`, `hr_overload_badge`, `hr_constants_contract`
@@ -130,13 +133,14 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
 - Probe kayıt türleri (Ekip): `HR`, `GATE` (roller ve maaş), `STATE` içinde `emp=`, `PLAY` (`_hire_the_team`, `_move_the_company`, `_keep_the_team`), `DECISION` (hafta, yüzey: kademe, kapasite, taşınma, işe alım; hedef).
   ↳ Dolu ofiste kadro masaya varınca `_hire_the_team` masadaki dosyaları da işe almaz (`PROBE DECISION … hire desks_full`), dosya ya da istenen rol bekliyorsa bir kez yazılır
 - Görsel: `--hr-shot=<tür>` (`main.gd` `_run_hr_shot` `:3800`): `ekip`, `ekip-saat`, `ekip-uzun` (koşan sprintte uzun ürün adı: Görev sarar), `atlas`, `atlas-secili`, `atlas-ofis`, `atlas-dolu`, `dosyalar`, `dosyalar-pm`, `dosyalar-tasarim`, `dosyalar-dolu`, `dosyalar-tehlike`,
-  ↳ `dosyalar-onay`, `dosyalar-mesai`, `gider`, `saatler`, `saatler-gece`, `saatler-sprint`, `gorevler`, `gorevler-arge`, `gorevler-bos`. Ayrıca `egitim`, `egitim-modal`, `egitim-secili`, `zam`, `menu`, `menu-kilit`, `cikar`,
+  ↳ `dosyalar-onay`, `dosyalar-mesai`, `gider`, `saatler`, `saatler-gece`, `saatler-sprint`, `gorevler`, `gorevler-arge`, `gorevler-bos`, `gorevler-pazaryeri`, `atlas-urunsuz`. Ayrıca `egitim`, `egitim-modal`, `egitim-secili`, `zam`, `menu`, `menu-kilit`, `cikar`,
   ↳ `cikar-eksi`, `bos`, `dosya`, `dosya-kilit`, `dosya-kurucu`, `kalabalik`, `verim`, `urunsuz`, `izin`; kadro üç bölümden (biri izinde, biri tükenmiş, biri yeni işe alınmış), ürünü ERP ve ilk sprinti koşuyor, bordrosu burn'de, saat 11:00 (kurucu masada); `kalabalik` kırk kişilik sıkı Kadro, Geliştirme kapalı,
   ↳ liste başlığın altına kaymış; `ekip-saat` Durum'da mesai istisnaları; `atlas-secili` rol ve seviye seçili arama; `saatler-sprint` kadro yok, kurucu tek başına, ürün türü seçili,
   ↳ mesai modalinin taslağı 15 saatte (haftalık sprint puanı satırı); `dosyalar` Orta geliştirici, `dosyalar-tasarim` tasarımcı (ikisinde haftalık sprint puanı satırı var),
   ↳ `dosyalar-pm` ürün yöneticisi dosyaları (satır yok: PM sprint puanı üretmez); `atlas-ofis` şirket İş hanı'nda, boş masalı arama (başlıkta masa satırı ve Ofisleri gör, şeritsiz); `atlas-dolu` on üç masanın hepsi dolu:
   ↳ kehribar masa satırı ve uyarı renginde neden şeridi, Arayış başlat kapalı (evde `atlas` ikisini de çizmez); `dosyalar-dolu` evde başlamış aramanın dosyaları masada, şirket İş hanı'nda ve on üç masa dolu:
-  ↳ dosyaların üstünde masa şeridi, İşe al kapalı; `gorevler-arge` araştırmadaki kişiyle Görevler; `menu-kilit` ve `dosya-kilit` bugün zam almış kişiyle, Zam yap satırı bekleme gerekçesiyle kilitli;
+  ↳ dosyaların üstünde masa şeridi, İşe al kapalı; `gorevler-arge` araştırmadaki kişiyle Görevler; `gorevler-pazaryeri` pazaryeri koşusunda Görevler (tür 1. haftada seçilmiş, v1.0 8. haftada yayınlanmış, kare 10. haftada, 9. haftada başlayan sprintin ikinci haftası;
+  ↳ kurucu ve kadronun Satış Temsilcisi Satış işinde, Satış sütunu açık; `HRSHOT|gorevler-pazaryeri|week=…|live=…|version=…|launch=…|sprint=…|sprint_week=…|quarter_start=…|cash=…|mrr=…|sales=…`); `atlas-urunsuz` kadro yok, ürün türü seçilmemiş: aramanın rol kartlarında Satış Temsilcisi kilitli; `menu-kilit` ve `dosya-kilit` bugün zam almış kişiyle, Zam yap satırı bekleme gerekçesiyle kilitli;
   ↳ `izin` ilk çalışanın dosyası ve İzne gönder onay penceresi (`hr_shot_izin_onay`), sonra pencerenin kendi düğmesiyle gönderilmiş: kişi izinde, satır kalan haftayla kilitli (`hr_shot_izin`), bir hafta sonra dönmüş:
   ↳ satır sonraki izne kalan süreyle kilitli (`hr_shot_izin_donus`); `verim` düşük moralli tasarımcıda ve kurucuda olay kartı satırlarıyla Kadro satırının ipucu (`hr_shot_verim_ipucu`), izindeki geliştiricinin ipucu (`_izin`),
   ↳ tasarımcının dosyası (`_dosya`), aynı dosya izinden bugün dönmüş (`_dosya_izin`) ve kurucunun dosyası (`_kurucu`); `urunsuz` kadro yok, ürün türü seçilmeden bir Geliştirici ve bir Müşteri Temsilcisi: bekleme cümlesi ve Boşta,

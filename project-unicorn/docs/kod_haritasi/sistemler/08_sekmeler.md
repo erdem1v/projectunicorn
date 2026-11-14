@@ -26,7 +26,7 @@ Alt klasörler:
   ↳ şık çipi `EvChips.option_parts`tan, geçmiş satırı `merge_same`den geçer; tek şıklı kutunun (`StakeBox`, dikey iç boşluğu 0) içine `SPACE_M` dikey iç boşluk girer, dar sütunda sarılan çipler kutuyu büyütür ve kenara değmez.
 - `scripts/tabs/finance/finance_ozet_view.gd` (590): `FinanceOzetView`: Özet sayfası (kasa eğrisi, işlemler, hisse tablosu, hedef, akış, gider dağılımı, Frank notu, rakip ligi).
 - `scripts/tabs/hr/hr_ledger.gd` (453): `HRLedger`: Kadro sütunları, başlık, satır, satır menüsü eylemleri ve onayları (`action_list`, `run_action`).
-- `scripts/tabs/hr/hr_assignments.gd` (188): `HRAssignments`: Görevler matrisi (kim hangi işte), kutu hâlleri, lejant; kurucu yok.
+- `scripts/tabs/hr/hr_assignments.gd` (188): `HRAssignments`: Görevler matrisi (kim hangi işte), kutu hâlleri, lejant; kurucu yok. Satış hücresi `ProductSystem.has_sales_desk()` yokken (tür seçilmemiş) kilitli, gerekçesi `SALES_EMPTY_UNTYPED`.
 - `scripts/tabs/hr/hr_atlas_modal.gd` (484): Atlas paneli: rol/seviye seçimi ve aday dosyaları, işe alım ve masa şeridi (`hr_panel.gd`'den türer).
 - `scripts/tabs/hr/hr_panel.gd` (132): Ekip penceresinin PanelLayer paneli tabanı (Atlas, Eğitim, Mesai); `button`, `spring`, `spaced`, `seat`.
 - `scripts/tabs/hr/hr_dossier.gd` (232): Ekip dosyası: kişinin ayrıntı penceresi (`DETAILS["hr_dossier"]`), kişi ayrılınca kendini kapatır.
@@ -212,7 +212,7 @@ Anahtarlar `localization/strings.csv`'de (sütunlar keys,tr,en); sekmeler `tr("A
 - `TAB_*` (TAB_PRODUCT, TAB_SALES, TAB_HR, TAB_FINANCE, TAB_PIYASA, TAB_PERSONAL, TAB_RND, TAB_EVENTS): her sekmenin `_init` içindeki `frame_options.title`.
 - `PRODUCT_*` / `PROD_*` (PRODUCT_VIEW, PRODUCT_OV, PRODUCT_CARD, PRODUCT_SERVER, PRODUCT_FX, PROD_PATH/NAME/TYPE):
   product_tab, product_model, sprint_panel, sprint_head, capacity_view, sprint_card, sprint_ui_shared, area_panel, quarter_view, type_picker, overview_view.
-- `SALES_*`: sales_tab (STEWARD, LOG, STRIP, STANCE, ROUTE, CHIP, PROMISE, BAND, ACTION), mail_pane (SALES_PER/ACTION/WEEKLY/STEWARD/CLAUSE), hr_assignments (SALES_LOCKED).
+- `SALES_*`: sales_tab (STEWARD, LOG, STRIP, STANCE, ROUTE, CHIP, PROMISE, BAND, ACTION), mail_pane (SALES_PER/ACTION/WEEKLY/STEWARD/CLAUSE), hr_assignments (SALES_EMPTY_UNTYPED).
 - `HR_*` (HR_COL, HR_CARD, HR_ROW, HR_ATLAS 26 kullanım, HR_HOURS, HR_TAB, HR_KPI, HR_STATE, HR_BADGE, HR_ASSIGN, HR_LEGEND, HR_DOSSIER): hr_tab, hr_ledger, hr_assignments, hr_atlas_modal, hr_dossier, hr_ui_shared, personal_tab, events_tab.
 - `FIN_*` (FIN_GOAL, FIN_PROFIT, FIN_MARKET, FIN_CAPTABLE, FIN_RANGE, FIN_MENTOR, FIN_SUBTAB, FIN_RUNWAY): finance_tab, finance_ozet_view, mail_pane; `ANGEL_CAP_*` ve `SEED_CAP_*` özette.
 - `HUNT_*` (BADGE, MEETING, WALK, SEC, EST, COUNTER, REQUEST...), `SEED_*` (PITCH, EXPECT, OFFER, DOOR, DONE, BAND), `VC_BLOCK_*`, `VC_EV_*`, `MENTOR_NAME`: yalnız hunt_tab (HUNT_BADGE/CONDITION ayrıca vc_meeting_adapter).

@@ -32,10 +32,10 @@ static func daily_tick() -> void:
 		ProductState.snapshot_open_bugs()
 
 
-## Ürün B2B mi: tür Ürün sekmesinde seçildiği anda yazılır, kurucu kurumsal iş için o andan
-## kadro kurabilir. SalesSystem.is_b2b_market()'ten ("kurumsal masa bugün çalışıyor mu") geniştir.
-static func has_b2b_product() -> bool:
-	return String(GameState.get_flag("mvp_market_type", "")) == "b2b"
+## Satış Temsilcisinin çalışacağı bir yer var mı: B2B ürünün kurumsal masası ya da pazaryerinin mağaza kazanımı. Tür
+## Ürün sekmesinde seçildiği anda yazılır (kurucu o andan kadro kurabilir); seçilene dek yok.
+static func has_sales_desk() -> bool:
+	return ProductState.market_type() == "b2b" or ProductState.subtype() == MarketplaceSystem.TYPE_ID
 
 
 # --- Saat damgası ---

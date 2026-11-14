@@ -111,10 +111,10 @@ static func _cell(c: Character, job_id: String, on_toggle: Callable, read_only: 
 	if coef <= 0.0:
 		return _closed(tr_key("HR_ASSIGN_MARKETING_ONLY" if job_id == HRConstants.JOB_MARKETING else "HR_ASSIGN_NOT_YOUR_AREA"),
 			"", UiTokens.D_BOX_JOB)
-	# Satış canlı B2B ürün yokken kilitli-görünür (Satış §3.1): gizlemek "böyle bir şey yok"
-	# der, kilitli kare "henüz yok, sebebi bu".
-	if job_id == HRConstants.JOB_SALES and not ProductSystem.has_b2b_product():
-		return _closed(tr_key("SALES_LOCKED_NO_B2B"), "util/lock", UiTokens.D_BOX_JOB)
+	# Satış, ürün türü seçilene dek kilitli-görünür: gizlemek "böyle bir şey yok" der, kilitli kare
+	# "henüz yok, sebebi bu".
+	if job_id == HRConstants.JOB_SALES and not ProductSystem.has_sales_desk():
+		return _closed(tr_key("SALES_EMPTY_UNTYPED"), "util/lock", UiTokens.D_BOX_JOB)
 	# Araştırma sütunu salt okunur (Ar-Ge §5.3): atama düğümün üzerinde yapılır, tek bir kutu
 	# bunca düğümden hangisine diyemez. Tavandan önce: bu sütun tavan ne olursa olsun kapalı.
 	if job_id == HRConstants.JOB_RESEARCH:

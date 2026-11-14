@@ -664,6 +664,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"support_backlog_row_survives":      fail = _case_support_backlog_row_survives()
 		"marketplace_topic_planned":         fail = _case_marketplace_topic_planned()
 		"marketplace_open_topic_report":     fail = _case_marketplace_open_topic_report()
+		"marketplace_sales_role_opens":      fail = _case_marketplace_sales_role_opens()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -4725,25 +4726,50 @@ static func _case_role_locks_and_runway_pair() -> String:
 	# yani ~0,6 aylık gerçek bir düşüş "5 ay → 5 ay" diye okunuyor ve kutu YİNE DE kırmızı
 	# yanıyordu.
 	#
+	# Satış Temsilcisi tür seçilene dek kilitli: rolde ve Ekip'in Satış hücresinde, tek şartla ve tek cümleyle
+	# (`SALES_EMPTY_UNTYPED`); ERP'de ve pazaryerinde açık.
+	#
 	# FALSİFİKASYON: `role_lock_reason_key`e ROLE_CUSTOMER_REP dalını geri koy → ilk iddia
-	# FAIL. `net_runway_pair`in çözünürlük dalını sil → dördüncü iddia FAIL.
+	# FAIL. `net_runway_pair`in çözünürlük dalını sil → dördüncü iddia FAIL. `role_lock_reason_key`te Satış gerekçesini
+	# eski anahtara çevir → türsüz koşunun kilidi FAIL; `has_sales_desk`ten pazaryeri ya da B2B terimini sil → o türün kilidi
+	# FAIL; Satış hücresinin şartını `market_type() == "b2b"`ye geri al → pazaryerinin hücresi FAIL; hücrenin kilidini sil
+	# ya da gerekçesini başka anahtara çevir → türsüz koşunun hücresi FAIL.
 	GameState.set_flag("mvp_shipped", false)
-	if ProductSystem.has_b2b_product():
-		return "fixture: the run already carries a B2B product; the lock cannot be measured"
+	if ProductSystem.has_sales_desk():
+		return "fixture: the run already carries a sales desk; the lock cannot be measured"
 
 	# 1 · MT B2C KOŞUSUNDA DA İŞE ALINIR.
 	if not HRConstants.is_role_hireable(HRConstants.ROLE_CUSTOMER_REP):
 		return "Müşteri Temsilcisi is still locked in a B2C run: '%s'" % \
 			HRConstants.role_lock_reason_key(HRConstants.ROLE_CUSTOMER_REP)
-	# 2 · SATIŞÇI KİLİDİ DURUYOR VE GEREKÇESİNİ YAZIYOR.
+	# 2 · SATIŞÇI KİLİDİ TÜR SEÇİLENE DEK DURUYOR VE GEREKÇESİNİ YAZIYOR; EKİP'TEKİ SATIŞ HÜCRESİ DE.
 	var sales_key: String = HRConstants.role_lock_reason_key(HRConstants.ROLE_SALES_REP)
-	if sales_key != "HR_ROLE_LOCK_SALES":
-		return "the Satış Uzmanı gate is '%s', want HR_ROLE_LOCK_SALES" % sales_key
+	if sales_key != "SALES_EMPTY_UNTYPED":
+		return "the Satış Uzmanı gate is '%s', want SALES_EMPTY_UNTYPED" % sales_key
 	if TranslationServer.translate(sales_key) == sales_key:
 		return "the sales lock reason has no string — a locked card must say WHY (§10.6)"
+	var rep: Character = _make_employee("char_lock_rep", "Lock Rep", HRConstants.ROLE_SALES_REP)
+	var cell: Control = HRAssignments._cell(rep, HRConstants.JOB_SALES, Callable(), true)
+	var cell_reason: String = "" if cell is Button else cell.tooltip_text
+	cell.free()
+	if cell_reason != TranslationServer.translate(sales_key):
+		return "the Satış cell of a run with no product type reads '%s', want the role's own sentence '%s'" % [
+			cell_reason, TranslationServer.translate(sales_key)]
+	# ERP ve pazaryeri: rol işe alınabilir, hücre açık.
+	for desk: Array in [["b2b", "erp"], ["b2c", MarketplaceSystem.TYPE_ID]]:
+		GameState.set_flag("mvp_market_type", desk[0])
+		GameState.set_flag("mvp_sub_product_type_id", desk[1])
+		cell = HRAssignments._cell(rep, HRConstants.JOB_SALES, Callable(), true)
+		var cell_open: bool = cell is Button
+		cell.free()
+		if not HRConstants.is_role_hireable(HRConstants.ROLE_SALES_REP) or not cell_open:
+			return "a %s run keeps Satış Temsilcisi locked ('%s') or its Satış cell closed (open %s)" % [
+				desk[1], HRConstants.role_lock_reason_key(HRConstants.ROLE_SALES_REP), cell_open]
 	# 3 · ÖLÜ GEREKÇE DİZESİ AĞAÇTAN GİTTİ.
 	if TranslationServer.translate("HR_ROLE_LOCK_CS") != "HR_ROLE_LOCK_CS":
 		return "HR_ROLE_LOCK_CS still resolves; the reason it named was never evaluated"
+	if TranslationServer.translate("HR_ROLE_LOCK_SALES") != "HR_ROLE_LOCK_SALES":
+		return "HR_ROLE_LOCK_SALES still resolves; the Satış lock reads SALES_EMPTY_UNTYPED"
 
 	# 4 · YUVARLAMA YALANI: AYNI AYA YUVARLANAN iki değer, gerçek bir düşüşle.
 	# SAYILAR ÖNCE ÇARPIŞMAYI KANITLAR. İlk denemede 5,6 → 4,95 seçilmişti ve o çift zaten
@@ -31201,4 +31227,44 @@ static func _case_marketplace_open_topic_report() -> String:
 		return "a second call or an unknown topic applied or emitted (emits %d)" % emits[0]
 	if rows.call()[0].affected != 12.0:
 		return "the second call overwrote the reported figure with %s" % rows.call()[0].affected
+	return ""
+
+
+## Pazaryeri türü seçilince Satış Temsilcisi işe alınabilir ve Satış işi yayına kadar uykuda durur: bekleme nedeni yayından önce
+## "canlı ürün yok", yayınla birlikte boş. Katalogdaki her türde rol yalnız B2B ve pazaryerinde açıktır, iş yalnız o türlerin
+## canlı ürününde çalışır; pazaryeri dışındaki bütün türlerde sonuç `SalesFaucetSystem.market_open()`'ın eski kuralıyla aynıdır.
+##
+## FALSİFİKASYON: `job_waiting_key`te `is_live()` şartını sil → yayından önceki bekleme nedeni FAIL; `has_sales_desk()` şartını
+## `SalesFaucetSystem.market_open()` yap → yayından sonraki bekleme nedeni FAIL; `has_sales_desk`ten pazaryeri terimini sil →
+## rolün kilidi FAIL; terimi `ProductState.subtype() != ""` yap ya da B2B terimini sil → tür turunda ilgili tür FAIL.
+static func _case_marketplace_sales_role_opens() -> String:
+	_seed_sprint(MarketplaceSystem.TYPE_ID)
+	if not HRConstants.is_role_hireable(HRConstants.ROLE_SALES_REP):
+		return "Satış Temsilcisi is locked in a marketplace run: '%s'" % HRConstants.role_lock_reason_key(HRConstants.ROLE_SALES_REP)
+	var rep: Character = _make_employee("mp_sales_rep", "Ece", HRConstants.ROLE_SALES_REP)
+	if rep.assigned_job_ids != [HRConstants.JOB_SALES]:
+		return "a new Satış Temsilcisi is on %s, want the Sales job" % str(rep.assigned_job_ids)
+	var waiting: String = HRSystem.job_waiting_key(HRConstants.JOB_SALES)
+	if waiting != "HR_TASK_WAITING_LIVE" or not HRSystem.is_waiting(rep):
+		return "before launch the Sales job reads '%s' (rep waiting %s), want HR_TASK_WAITING_LIVE" % [waiting, HRSystem.is_waiting(rep)]
+	GameState.set_flag("mvp_shipped", true)
+	waiting = HRSystem.job_waiting_key(HRConstants.JOB_SALES)
+	if waiting != "" or HRSystem.is_waiting(rep):
+		return "after launch the Sales job still reads '%s' (rep waiting %s)" % [waiting, HRSystem.is_waiting(rep)]
+	for group: Array in ProductCatalog.SUB_PRODUCT_TYPES.values():
+		for type: Dictionary in group:
+			var subtype: String = String(type.id)
+			GameState.set_flag("mvp_sub_product_type_id", subtype)
+			GameState.set_flag("mvp_market_type", String(type.market_type))
+			var desk: bool = subtype == MarketplaceSystem.TYPE_ID or String(type.market_type) == "b2b"
+			if HRConstants.is_role_hireable(HRConstants.ROLE_SALES_REP) != desk:
+				return "%s: Satış Temsilcisi hireable is %s, want %s" % [subtype, not desk, desk]
+			for shipped: bool in [false, true]:
+				GameState.set_flag("mvp_shipped", shipped)
+				var runs: bool = HRSystem.job_waiting_key(HRConstants.JOB_SALES) == ""
+				if runs != (shipped and desk):
+					return "%s with shipped %s: the Sales job runs %s, want %s" % [subtype, shipped, runs, shipped and desk]
+				if subtype != MarketplaceSystem.TYPE_ID and runs != SalesFaucetSystem.market_open():
+					return "%s with shipped %s: the Sales job runs %s, the desk is open %s" % [
+						subtype, shipped, runs, SalesFaucetSystem.market_open()]
 	return ""
