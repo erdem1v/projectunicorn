@@ -14992,7 +14992,7 @@ static func _case_leave_does_not_pause_build() -> String:
 	_seed_sprint()
 	var dev: Character = _make_employee("char_leave_sprint", "Leave Dev", HRConstants.ROLE_DEVELOPER)
 	_park_leave([dev])
-	var card_id: String = "feat:line_note_tool_capture_k1"
+	var card_id: String = "feat:line_erp_cashflow_k1"
 	SprintSystem.add(card_id)
 	if not SprintSystem.start():
 		return "fixture: the sprint did not start"
@@ -17628,7 +17628,7 @@ static func _case_research_occupies_person() -> String:
 	_seed_sprint()
 	GameState.set_flag("mvp_shipped", true)      # §2 — Ar-Ge v1 yayınından sonra açılır
 	var founder: Character = _seed_build_crew()
-	var card_id: String = "feat:line_note_tool_capture_k1"
+	var card_id: String = "feat:line_erp_cashflow_k1"
 	SprintSystem.add(card_id)
 	if not SprintSystem.start():
 		return "fixture: the sprint did not start"
@@ -17691,7 +17691,7 @@ static func _case_research_and_build_pause_each_other() -> String:
 	var founder: Character = _seed_build_crew()
 
 	# --- YÖN A: sprint koşuyor, araştırma başlıyor ---
-	SprintSystem.add("feat:line_note_tool_capture_k1")
+	SprintSystem.add("feat:line_erp_cashflow_k1")
 	if not SprintSystem.start():
 		return "fixture: the sprint did not start"
 	# One star in the root's area, its own requirement: a stronger founder finishes it in a week.
@@ -18958,7 +18958,7 @@ static func _case_event_morale_payers() -> String:
 	var designer: Character = hire.call("char_pay_des", "Ece Yurt", HRConstants.ROLE_DESIGNER)
 	var pm: Character = hire.call("char_pay_pm", "Pelin Er", HRConstants.ROLE_PRODUCT_MANAGER)
 	var founder: Character = CharacterRegistry.get_founder()
-	var card_id := "feat:line_note_tool_capture_k1"
+	var card_id := "feat:line_erp_cashflow_k1"
 	SprintSystem.add(card_id)
 	if not SprintSystem.start():
 		return "fixture: the sprint did not start"
@@ -22280,7 +22280,7 @@ static func _case_office_brand_once() -> String:
 ## kepenk sayacını başlatmayacak kadar derin; ekipte yalnız kurucu var. Kâğıt ihtimali 0'dır (test
 ## sabiti): sprint karar kartları destededir, kararı ölçen vaka ihtimali kendisi açar. Hata modelinin c'si de 0'dır
 ## (test sabiti): kartlar yalnız kendi işini yapar, testin bulduğu düzeltme işi eklemez; modeli ölçen vaka `_bugs_c` ile açar.
-static func _seed_sprint(subtype: String = "note_tool") -> void:
+static func _seed_sprint(subtype: String = "erp") -> void:
 	ProductLines.reload()
 	GameState.set_cash(500000)
 	_paper_chance(0.0)
@@ -22392,7 +22392,7 @@ static func _case_sprint_two_days_close() -> String:
 	var closed: Array = []
 	EventBus.sprint_closed.connect(func(n: int) -> void: closed.append(n))
 	var start_day: int = GameState.day
-	SprintSystem.add("feat:line_note_tool_capture_k1")
+	SprintSystem.add("feat:line_erp_cashflow_k1")
 	if not SprintSystem.start():
 		return "fixture: the sprint did not start"
 	if SprintSystem.mode() != "active" or SprintSystem.week() != 1:
@@ -22853,7 +22853,7 @@ static func _case_productivity_mod_paces_the_sprint() -> String:
 	var team_pace := [{"verb": "productivity_mod", "scope": "team", "pct": -10, "weeks": 2}]
 	if not (EvEffects.run_played(team_pace, {}, "team.demo_day")[0] as Dictionary).has("refused"):
 		return "a team row landed with no sprint running"
-	SprintSystem.add("feat:line_note_tool_capture_k1")
+	SprintSystem.add("feat:line_erp_cashflow_k1")
 	if not SprintSystem.start():
 		return "fixture: the sprint did not start"
 	EvEffects.run_played(team_pace, {}, "team.demo_day")
@@ -22936,7 +22936,7 @@ static func _case_sprint_ceiling_125_blocks_add() -> String:
 ## kapanıştan ayrılır FAIL; SprintCatalog._lead_picks'te `fits = take.takes`'i `fits = not take.cards.is_empty()` yap (yalnız tavan) → öneri
 ## düzeltme kartını koyar FAIL.
 static func _case_sprint_intake_uses_applied_plan() -> String:
-	_seed_sprint("note_tool")
+	_seed_sprint()
 	_sprint_hire("char_in_dev", HRConstants.ROLE_DEVELOPER)
 	_sprint_hire("char_in_des", HRConstants.ROLE_DESIGNER)
 	GameState.set_founder_in_sprint(false)
@@ -23103,14 +23103,14 @@ static func _case_sprint_overflow_phase_recorded() -> String:
 static func _case_sprint_carry_keeps_progress() -> String:
 	_seed_sprint()
 	WorkHoursSystem.set_company_hours(12)
-	var id: String = "feat:line_note_tool_editor_k1"
-	var total: int = SprintCatalog.step_effort("line_note_tool_editor_k1")
-	if not _play_sprint(["feat:line_note_tool_capture_k1", id]):
+	var id: String = "feat:line_erp_stock_k1"
+	var total: int = SprintCatalog.step_effort("line_erp_stock_k1")
+	if not _play_sprint(["feat:line_erp_cashflow_k1", id]):
 		return "fixture: sprint 1 did not start"
-	if ProductState.line_tier("line_note_tool_capture") != 1:
+	if ProductState.line_tier("line_erp_cashflow") != 1:
 		return "fixture: the first K1 did not ship in sprint 1"
 	var worked: float = _card_worked(id)
-	var residual: float = SprintSystem.capacity() - SprintCatalog.step_effort("line_note_tool_capture_k1")
+	var residual: float = SprintSystem.capacity() - SprintCatalog.step_effort("line_erp_cashflow_k1")
 	if not is_equal_approx(worked, residual):
 		return "the second K1 carried %.2f of %d out of sprint 1, want the %.2f the first card left" % [
 			worked, total, residual]
@@ -23127,7 +23127,7 @@ static func _case_sprint_carry_keeps_progress() -> String:
 			SprintSystem.used(), total - worked]
 	if not _play_sprint([]):
 		return "fixture: sprint 2 did not start"
-	if ProductState.line_tier("line_note_tool_editor") != 1:
+	if ProductState.line_tier("line_erp_stock") != 1:
 		return "the carried card never shipped in sprint 2 (worked %.2f)" % _card_worked(id)
 	return ""
 
@@ -23208,10 +23208,10 @@ static func _case_sprint_mvp_three_identity_k1() -> String:
 	return ""
 
 
-## Hata modelinin sınadığı kart: Arama hattının 40 puanlık K3'ü (Yazılım kapısı 2★). Geliştirmeyi `builders`, testi `testers`
+## Hata modelinin sınadığı kart: Nakit Akışı hattının 40 puanlık K3'ü (Yazılım kapısı 2★). Geliştirmeyi `builders`, testi `testers`
 ## eşit paylarla yapmıştır ve test bitmiştir; kartın hatası henüz belirlenmemiştir.
 static func _bug_card(builders: Array, testers: Array) -> Dictionary:
-	var line := "line_note_tool_search"
+	var line := "line_erp_cashflow"
 	var card: Dictionary = SprintCatalog.new_card("feat:%s_k3" % line, "feature", "core", 40, line, "%s_k3" % line, 3)
 	for id in builders:
 		SprintBugs.record(card, SprintSystem.DEV_PHASE, id, float(card.need[SprintSystem.DEV_PHASE]) / builders.size())
@@ -23246,7 +23246,7 @@ static func _case_sprint_bug_ceiling_formula() -> String:
 	strict.traits = ["double_checker"]
 	var card: Dictionary = _bug_card([two.id], [])
 	if SprintBugs.requirement(card) != 2:
-		return "the Search K3 reads a Software gate of %d stars, want 2" % SprintBugs.requirement(card)
+		return "the Cash Flow K3 reads a Software gate of %d stars, want 2" % SprintBugs.requirement(card)
 	var reads := func(c: Dictionary, want: float, what: String) -> String:
 		var got: Dictionary = SprintBugs.expected(c)
 		if not is_equal_approx(float(got.h), want):
@@ -23265,7 +23265,7 @@ static func _case_sprint_bug_ceiling_formula() -> String:
 		var why: String = reads.call(row[0], row[1], row[2])
 		if why != "":
 			return why
-	var fix: Dictionary = SprintCatalog.new_card("fix:line_note_tool_search", "fix", "core", 10, "line_note_tool_search")
+	var fix: Dictionary = SprintCatalog.new_card("fix:line_erp_cashflow", "fix", "core", 10, "line_erp_cashflow")
 	SprintBugs.record(fix, SprintSystem.DEV_PHASE, two.id, float(fix.need[SprintSystem.DEV_PHASE]))
 	var fix_why: String = reads.call(fix, 0.212 * 10.0 * 1.0 * 0.3 * 0.2 * pow(0.5, 0.5), "a 2-star builder on a fix card")
 	if fix_why != "":
@@ -23395,14 +23395,14 @@ static func _case_sprint_skill_assignment() -> String:
 	var three: Character = hire.call("char_skill_3", 6)
 	var one: Character = hire.call("char_skill_1", 2)
 	var week := func(cards: Array) -> void: SprintPrep.week(cards, SprintSystem.team(), 1)
-	var capture := "line_note_tool_capture"
+	var cashflow := "line_erp_cashflow"
 	# 1 · Altı kart, üç PM: en karmaşık kart 5★'a, en basit ikisi 1★'a; sahip yıldızı karmaşıklık sırasında azalır.
-	var big: Dictionary = card.call("big", 40, capture, 1)
-	var gated: Dictionary = card.call("gated", 15, capture, 2)
-	var mid: Dictionary = card.call("mid", 25, capture, 1)
-	var small: Dictionary = card.call("small", 15, capture, 1)
-	var tiny_a: Dictionary = card.call("tiny_a", 10, capture, 1)
-	var tiny_b: Dictionary = card.call("tiny_b", 10, capture, 1)
+	var big: Dictionary = card.call("big", 40, cashflow, 1)
+	var gated: Dictionary = card.call("gated", 15, cashflow, 2)
+	var mid: Dictionary = card.call("mid", 25, cashflow, 1)
+	var small: Dictionary = card.call("small", 15, cashflow, 1)
+	var tiny_a: Dictionary = card.call("tiny_a", 10, cashflow, 1)
+	var tiny_b: Dictionary = card.call("tiny_b", 10, cashflow, 1)
 	week.call([tiny_b, small, mid, gated, tiny_a, big])
 	if owner_of.call(big) != five.id or owner_of.call(tiny_a) != one.id or owner_of.call(tiny_b) != one.id:
 		return "the 40-point card went to %s, the two 10-point cards to %s and %s; want the 5-star manager on the big one and the 1-star on the small ones" % [
@@ -23416,26 +23416,26 @@ static func _case_sprint_skill_assignment() -> String:
 				i, stars.call(order[i]), i + 1, stars.call(order[i + 1])]
 	# 2 · Karmaşıklık puan × Yazılım kapısıdır: aynı iki PM'e 15 puanlık 2★ kapılı kart (30), 25 puanlık kapısız karttan (25) önce gelir.
 	CharacterRegistry.remove(three.id)
-	var heavy: Dictionary = card.call("heavy", 15, capture, 2)
-	var wide: Dictionary = card.call("wide", 25, capture, 1)
+	var heavy: Dictionary = card.call("heavy", 15, cashflow, 2)
+	var wide: Dictionary = card.call("wide", 25, cashflow, 1)
 	week.call([wide, heavy])
 	if owner_of.call(heavy) != five.id or owner_of.call(wide) != one.id:
 		return "the 15-point card behind a 2-star Software gate went to %s and the 25-point open card to %s; want the 5-star manager on the gated one (complexity is points times the gate)" % [
 			owner_of.call(heavy), owner_of.call(wide)]
 	# 3 · Ürün kapısı: 2★ Ürün isteyen küçük kartın dilimi 1★ PM'e düşer ama kapıyı geçemez, 5★ PM alır; kapısız ikizi 1★'a gider.
-	var linking := "line_note_tool_linking"
-	var anchor: Dictionary = card.call("anchor", 40, capture, 1)
-	var locked: Dictionary = card.call("locked", 15, linking, 2)
-	var open: Dictionary = card.call("open", 15, linking, 1)
+	var ledger := "line_erp_ledger"
+	var anchor: Dictionary = card.call("anchor", 40, cashflow, 1)
+	var locked: Dictionary = card.call("locked", 15, ledger, 2)
+	var open: Dictionary = card.call("open", 15, ledger, 1)
 	week.call([anchor, locked])
-	var control: Array = [card.call("anchor2", 40, capture, 1), open]
+	var control: Array = [card.call("anchor2", 40, cashflow, 1), open]
 	week.call(control)
 	if owner_of.call(locked) != five.id or owner_of.call(open) != one.id:
 		return "a 15-point card behind a 2-star Product gate went to %s and its gate-free twin to %s; want the 5-star manager and the 1-star one" % [
 			owner_of.call(locked), owner_of.call(open)]
 	# 4 · Hazırlayan değişmez: yalnız zayıf PM varken başlanan kartlar, 5★ PM gelince de onda kalır; yeni PM sahipsiz kartı alır.
 	CharacterRegistry.remove(five.id)
-	var huge: Array = [card.call("huge_1", 400, capture, 1), card.call("huge_2", 400, capture, 1), card.call("huge_3", 400, capture, 1)]
+	var huge: Array = [card.call("huge_1", 400, cashflow, 1), card.call("huge_2", 400, cashflow, 1), card.call("huge_3", 400, cashflow, 1)]
 	week.call(huge)
 	var first_owner: String = owner_of.call(huge[0])
 	if first_owner != one.id or float(huge[0].get("prep_done", 0.0)) <= 0.0 or float(huge[0].get("prep_done", 0.0)) >= 1.0:
@@ -23539,7 +23539,7 @@ static func _case_sprint_pm_prep_benefit() -> String:
 		if not is_equal_approx(float(back.get(key, -1.0)), float(hc[key])):
 			return "the loaded card reads %s %.6f, saved %.6f" % [key, float(back.get(key, -1.0)), float(hc[key])]
 	# 5 · Hız kartın her aşamasında işler: aynı bütçe hazırlanmış kartta (1 + g) kat iş yapar.
-	var plain: Dictionary = SprintCatalog.new_card("feat:speed", "feature", "core", 100, "line_note_tool_capture", "line_note_tool_capture_k1", 1)
+	var plain: Dictionary = SprintCatalog.new_card("feat:speed", "feature", "core", 100, "line_erp_cashflow", "line_erp_cashflow_k1", 1)
 	var swift: Dictionary = plain.duplicate(true)
 	swift.prep_gain = 0.25
 	var worker := {"id": "char_prep_worker", "fits": ["design", "dev", "test"], "ahead": false}
@@ -28028,10 +28028,11 @@ static func _case_save_v15_tickets_become_open_bugs() -> String:
 
 
 ## Ücretli plan yayındaki ürünün katmanıdır: MVP'den önce kilitli ve gerekçeli, "+" ve "→" onu
-## almaz, lider önermez; MVP'den sonra açılır.
+## almaz, lider önermez; MVP'den sonra açılır. Plan yalnız B2C pazarının gelir alanındadır
+## (`sprint.json` areas `revenue`, markets `b2c`), o yüzden vaka B2C ürünüyle kurulur.
 ## FALSİFİKASYON: SprintCatalog.gate_reason'daki PAID_PLAN dalını sil → FAIL.
 static func _case_product_paid_plan_locked_until_mvp() -> String:
-	_seed_sprint()
+	_seed_sprint("note_tool")
 	var id: String = "plan:" + SprintCatalog.PAID_PLAN
 	if SprintCatalog.gate_reason(SprintCatalog.PAID_PLAN) == "":
 		return "the paid plan is open before MVP"

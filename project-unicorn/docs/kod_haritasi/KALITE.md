@@ -1,11 +1,11 @@
 # Kod haritası · KALITE
 
-Üretildi: git d2d24e04 · 2026-11-14 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git 35bf8b3c · 2026-11-14 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 255 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
 
-- scripts/debug/endgame_smoke.gd · 30179 satır · 684 func
+- scripts/debug/endgame_smoke.gd · 30180 satır · 684 func
 - scripts/main/main.gd · 6314 satır · 225 func
 - scripts/debug/run_probe.gd · 2443 satır · 95 func
 - scripts/systems/sprint_system.gd · 2074 satır · 171 func
