@@ -1,0 +1,80 @@
+class_name Reputation
+extends RefCounted
+
+## İtibarın ürün ve müşteri girdileri (PRD_ERP §4.3): yayına çıkan kademe, tutulan ve bozulan söz, kaybedilen hesap, sürümden
+## kaçan hatanın dokunduğu hesaplar. Sinyalleri dinler, İtibar'ı `GameState.set_reputation` ile yazar ve her değişimi nedeniyle
+## `reputation_log` bayrağına kaydeder. Olay fiillerinin (olay kartıyla kaybedilen hesap, `churn_customer`, dahil) ve hata ihmalinin
+## (`SupportSystem`) değişimi kendi yerinde yazılır, bu kayda girmez. Ağırlıklar `SalesConstants.REP_*`.
+
+const LOG := "reputation_log"
+
+
+## Sinyallere bağlanır; TimeManager açılışta bir kez çağırır.
+static func wire() -> void:
+	EventBus.line_upgraded.connect(_on_tier)
+	EventBus.promise_kept.connect(_on_kept)
+	EventBus.promise_broken.connect(_on_broken)
+	EventBus.customer_churned.connect(_on_lost)
+	EventBus.version_shipped.connect(_on_release)
+
+
+## Son değişimler, en yeni önde: {day, kind, delta, args}. `kind` ve `args`: "tier" {line, tier}, "kept", "partial" (bozulmuş
+## sözün geç tutulması) ve "broken" {customer},
+## "lost" {customer}, "escaped" {line, accounts}; `customer` hesabın adıdır (kaybedilen hesap kayıttan silinir).
+static func recent() -> Array:
+	return GameState.get_flag(LOG, [])
+
+
+## Yayından önce biten kademe kimseye görünmedi: İtibar'ı oynatmaz.
+static func _on_tier(line_id: String, tier: int) -> void:
+	if not ProductState.is_live():
+		return
+	_add("tier", SalesConstants.REP_TIER, {"line": line_id, "tier": tier})
+
+
+static func _on_kept(promise_id: String) -> void:
+	var p: Promise = PromiseRegistry.get_promise(promise_id)
+	_add(p.status, SalesConstants.REP_KEPT if p.status == "kept" else SalesConstants.REP_PARTIAL, _account(p.customer_id))
+
+
+static func _on_broken(promise_id: String) -> void:
+	_add("broken", -SalesConstants.REP_BROKEN, _account(PromiseRegistry.get_promise(promise_id).customer_id))
+
+
+static func _on_lost(customer_id: String) -> void:
+	_add("lost", -SalesConstants.REP_LOST, _account(customer_id))
+
+
+## Sürümden kaçan hatanın dokunduğu hesaplar (her hesap bir kez): hesap başına düşer, sürüm başına en çok `REP_ESCAPE_MAX`.
+## Kayıttaki hat en çok hesaba dokunandır.
+static func _on_release(_number: int) -> void:
+	var touched: Dictionary = {}
+	var line: String = ""
+	var most: int = 0
+	for escaped: String in GameState.product.releases.back().get("escaped", []):
+		var accounts: Array = SprintCatalog.line_accounts(escaped)
+		for c: Customer in accounts:
+			touched[c.id] = true
+		if accounts.size() > most:
+			most = accounts.size()
+			line = escaped
+	if not touched.is_empty():
+		_add("escaped", -mini(touched.size() * SalesConstants.REP_ESCAPE_PER_ACCOUNT, SalesConstants.REP_ESCAPE_MAX),
+			{"line": line, "accounts": touched.size()})
+
+
+static func _account(customer_id: String) -> Dictionary:
+	var c: Customer = CustomerRegistry.get_customer(customer_id)
+	return {"customer": c.company_name if c != null else customer_id}
+
+
+## İtibar'ı `delta` kadar oynatır; sınırda kalan (−10..100) değişim kayda girmez.
+static func _add(kind: String, delta: int, args: Dictionary) -> void:
+	var before: int = GameState.reputation
+	GameState.set_reputation(before + delta)
+	var moved: int = GameState.reputation - before
+	if moved == 0:
+		return
+	var rows: Array = recent().duplicate()
+	rows.push_front({"day": GameState.day, "kind": kind, "delta": moved, "args": args})
+	GameState.set_flag(LOG, rows.slice(0, SalesConstants.REP_LOG_MAX))

@@ -14,6 +14,9 @@ Sahipler: autoload `CustomerRegistry`, `ProspectRegistry`, `PromiseRegistry`; mo
 - `scripts/systems/b2b_sales_system.gd` (735): hesap yaşam döngüsü motoru; iki katmanlı memnuniyet, risk/churn sayacı, genişleme (yalnız zamanında tutulan sözden: `offer_expansion`, haftada en çok `thanks.max` hesap; kâğıdın bedelli şıkları: "Koltukları ekle" sorumlunun kurulum haftası `account_time`, "İndirimle ekle" indirim satırı `b2b_retain_discount` `growth` (kurtarma değil, memnuniyet oynamaz), hak dolunca kilitli), söz sonuçları, güven defteri, sunucu maddesi
 - `scripts/systems/b2b_constants.gd` (290): hesap makinesinin ayar bloğu (yaşam döngüsü, tolerans, söz, müşteri masası, genişleme, sektör kimlikleri)
 - `scripts/systems/sales_constants.gd` (297): satış modülünün ayar bloğu (şelale, yıldız, görüşme eşikleri, pazarlık, anlaşma planı, kayıp nedenleri, karıştırıcı sabitleri)
+- `scripts/systems/reputation.gd` (76): `Reputation`, İtibar'ın ürün ve müşteri girdileri (kademe yayını, söz, kaybedilen hesap, sürümden
+  kaçan hatanın dokunduğu hesaplar): sinyalleri dinler (`TimeManager._ready` bağlar), `GameState.set_reputation` ile yazar, değişimi
+  nedeniyle `reputation_log` bayrağına kaydeder; ağırlıklar `SalesConstants.REP_*`
 - `scripts/systems/sales_faucet_system.gd` (307): lead şelalesi, lead ömrü, dönüş kilidi, balina koşulu, `spawn` (lead'in tek yaratım yolu)
 - `scripts/systems/sales_rep_system.gd` (317): satış masası; temsilci lead seçimi, işleme, `sign_due` süpürmesi, fiyat kırma anı, kayıp postası, haftalık özet
 - `scripts/systems/sales_meeting_system.gd` (479): Perde 1 (ikna); iğne, soru seçimi, cevap, kesim eşikleri, tek zar, kayıp nedeni; oturum durumu kaydedilmez

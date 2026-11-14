@@ -327,12 +327,15 @@ Gizli Kendi Kendine Destek hattı Ar-Ge'den açılırsa 13. modül olur. İkonla
 
 ### 4.3 Aday akışı
 
-- **Ün bir stoktur.**
-  - Giriş: kademe yayını, tutulan söz, teşekkür notu, referans hesap (D1).
-  - Çıkış: kaçan hatanın dokunduğu hesaplar, bozulan söz, kaybedilen hesap.
-  - Akış ünü okur: yayında haftada 1 aday (E3, beğenildi), ün büyüdükçe artar.
-  - Ün düşünce nedeni Satış başlığının ipucunda ve haber şeridinde görünür.
-  - Kayıtta tek yeni alan (artışsız, anlamlı varsayılan).
+- **Ün oyunun İtibar'ıdır** (üst bar, `GameState.reputation`, −10..100; ayrı bir stok iki sayıyla aynı şeyi anlatırdı. Yardımcı
+  yönetmen 2026-11-14, onay bekliyor).
+  - Giriş: kademe yayını, tutulan söz; teşekkür notu ve referans hesap (D1) kâğıtları gelince bağlanır.
+  - Çıkış: kaçan hatanın dokunduğu hesaplar, bozulan söz, kaybedilen hesap. Olay fiilleri ve hata ihmali bugünkü gibi yazar; olay
+    kartıyla kaybedilen hesap (`churn_customer` fiili) bu çıkışa girmez.
+  - Girdileri `Reputation` dinler ve `set_reputation` ile yazar; ağırlıklar `SalesConstants.REP_*`.
+  - Akış İtibar'ı okur: yayında haftada 1 aday (E3, beğenildi), İtibar büyüdükçe artar.
+  - İtibar düşünce nedeni Satış başlığının ipucunda ve haber şeridinde görünür.
+  - Kayıtta tek yeni alan: değişimlerin nedenli kaydı (`reputation_log`, artışsız, varsayılan boş).
 - **Yıldız bandı ürünün o boya uyumunu okur.** 2★ şirketler ürün 2★ ihtiyaç listesini karşılayınca, 3★ şirketler 3★ listesini
   karşılayınca gelir (`ProductQuality.market_fit(star)`, kapanışın ölçüsü). Herhangi bir modülün K2'si bandı açmaz.
 - **Sektör çekimi:** adayın sektörü ürünün güçlü olduğu modülleri kullanan sektörlerden ağırlıklı çekilir. Depoyu derinleştiren
@@ -346,8 +349,9 @@ Gizli Kendi Kendine Destek hattı Ar-Ge'den açılırsa 13. modül olur. İkonla
 - **Aday satırı:** ad, yıldız, süre, düğmeler. Alıcı tipinin "sesi" ("Hızlı konuşur, düşük rakam ister.") satırdan ve görüşme
   panelinin başlığından kalkar (kural 2): `sales_tab.gd:349`, `sales_meeting_adapter.gd:69`. `SALES_ARCH_*_LINE` anahtarları silinir.
   Adayın söylediği şart ("Yazılı bir hizmet sözü istiyor") kalır: aday onu söyler.
-- **Randevu:** aday görüşmeyi en çok iki hafta ertelemeye razı olur, ilgisi görünür biçimde soğur. Görüşmenin sonucu o haftanın
-  ürün uyumunu okur. "Görüşmeye git" düğmesi kurucunun sprintinden düşen saati yazar.
+- **Randevu (park; paket 6'nın dışında, yardımcı yönetmen 2026-11-14):** aday görüşmeyi en çok iki hafta ertelemeye razı olur,
+  ilgisi görünür biçimde soğur. Görüşmenin sonucu o haftanın ürün uyumunu okur. "Görüşmeye git" düğmesi kurucunun sprintinden
+  düşen saati yazar.
 
 ### 4.4 Ünün kaynakları ve gerçeklik
 
@@ -439,7 +443,7 @@ Ortak kâğıt kuralı (Erdem'in olay seçeneği kuralları):
 
 - Kayıtlı alanların biçimi değişmez. Şema 19 → 20 artışı pazaryerinin sistem commit'inde olur.
 - Yeni alanlar anlamlı varsayılanla, artışsız eklenir:
-  - ün stoku;
+  - İtibar'ın değişim kaydı (`reputation_log`);
   - ölçek kartları ve sayaçları;
   - kademesiz istek kimlikleri;
   - derinlik maddelerinin durumu;
@@ -453,7 +457,7 @@ Ortak kâğıt kuralı (Erdem'in olay seçeneği kuralları):
 | Kapılar | §2.3 tablosu | `data/product/lines/erp.json`, `shared_gate_overrides` |
 | Yayın şartı | 4 adlı modülün K1'i | `sprint.json` `mvp_named` |
 | İhtiyaç listeleri | sektör × yıldız × modül kademesi | `erp.json` `buyer_sectors` |
-| Ün | yayında 1/hafta; giriş ve çıkış ağırlıkları | `SalesConstants` |
+| İtibar'ın girdileri | yayındaki kademe +1, tutulan söz +2 (bozulmuş sözün geç tutulması +1), bozulan söz −3, kaybedilen hesap −3, kaçan hata hesap başına −1 (sürümde en çok −3) | `SalesConstants.REP_*` |
 | Bant eşiği | `market_fit(star)` ≥ beklenti | `SalesConstants` |
 | Testçi olmayanın yakalaması | ×0,6 | `sprint.json` `bugs` |
 | Sözlü iş payı | sprintin dörtte biri | `sprint.json` (OLAYLAR) |

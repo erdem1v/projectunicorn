@@ -149,6 +149,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sales_meeting_reads_fit": fail = _case_sales_meeting_reads_fit()
 		"sales_emphasis_question": fail = _case_sales_emphasis_question()
 		"sales_weak_area_loss": fail = _case_sales_weak_area_loss()
+		"sales_reputation_inputs": fail = _case_sales_reputation_inputs()
 		"sales_rep_close_chance": fail = _case_sales_rep_close_chance()
 		"sales_rep_close_die": fail = _case_sales_rep_close_die()
 		"sales_rep_loss_mail": fail = _case_sales_rep_loss_mail()
@@ -19952,6 +19953,57 @@ static func _case_incident_regression_fixture(payload: Dictionary) -> String:
 		fail = _regression_audience(payload)
 	incident.base = saved_base
 	return fail
+
+
+## İtibarın ürün ve müşteri girdileri (`Reputation`, PRD_ERP §4.3), oyunun yollarından: stok modülünden kaçan hata sürümde stoku
+## kullanan her hesap için bir düşer (en çok `REP_ESCAPE_MAX`), yayına çıkan kademe +1, zamanında tutulan söz +2, bozulan söz -3,
+## kaybedilen hesap -3. Yayından önce biten kademe İtibar'ı oynatmaz. Her değişim nedeniyle kayda girer, en yeni önde, en çok
+## `REP_LOG_MAX` kayıt; 100'de kalan değişim kayda girmez.
+## FALSİFİKASYON: `Reputation.wire`'dan `version_shipped` bağını sil → kaçan hata iddiası FAIL; `_on_tier`'dan canlı ürün şartını
+## sil → yayın öncesi iddiası FAIL; `_on_kept`'te REP_KEPT yerine REP_PARTIAL yaz → dört girdi iddiası FAIL; `_add`'da
+## `moved == 0` dönüşünü sil → sınır iddiası FAIL.
+static func _case_sales_reputation_inputs() -> String:
+	_incident_world(false)
+	GameState.set_reputation(10)
+	GameState.set_flag(Reputation.LOG, [])
+	GameState.set_flag("mvp_shipped", false)
+	EventBus.line_upgraded.emit("line_erp_stock", 2)
+	GameState.set_flag("mvp_shipped", true)
+	if GameState.reputation != 10 or not Reputation.recent().is_empty():
+		return "a tier before launch moved reputation to %d and logged %s, want 10 and nothing" % [GameState.reputation,
+			str(Reputation.recent())]
+	var hit: int = SprintCatalog.line_accounts("line_erp_stock").size()
+	_close_escaped("line_erp_stock")
+	var top: Dictionary = {} if Reputation.recent().is_empty() else Reputation.recent().front()
+	var want: int = -mini(hit * SalesConstants.REP_ESCAPE_PER_ACCOUNT, SalesConstants.REP_ESCAPE_MAX)
+	if (hit < 2 or top.get("kind", "") != "escaped" or int(top.delta) != want or int(top.args.accounts) != hit
+			or top.args.line != "line_erp_stock"):
+		return "a stock bug that escaped to %d accounts logged %s, want escaped %d on line_erp_stock" % [hit, str(top), want]
+	GameState.set_flag(Reputation.LOG, [])
+	var before: int = GameState.reputation
+	EventBus.line_upgraded.emit("line_erp_stock", 2)
+	var kept: Promise = PromiseRegistry.create("co_marmara", "line_erp_stock_k2", 4)
+	PromiseRegistry._resolve(kept, "kept")
+	PromiseRegistry.break_promise(PromiseRegistry.create("co_ege_metal", "line_erp_stock_k3", 4).id)
+	B2BSalesSystem._churn(CustomerRegistry.get_customer("co_kuzey"))
+	var got: Array = Reputation.recent().map(func(r: Dictionary) -> Array:
+		return [r.kind, int(r.delta), r.args.get("customer", r.args.get("line", ""))])
+	var rows: Array = [["lost", -3, "Kuzey Perakende"], ["broken", -3, "Ege Metal"], ["kept", 2, "Marmara Lojistik"],
+		["tier", 1, "line_erp_stock"]]
+	if got != rows or GameState.reputation != before - 3:
+		return "four inputs logged %s and moved reputation %d → %d, want %s and %d" % [str(got), before, GameState.reputation,
+			str(rows), before - 3]
+	GameState.set_reputation(95)
+	for i in SalesConstants.REP_LOG_MAX + 2:
+		EventBus.line_upgraded.emit("line_erp_stock", 2)
+	var log_size: int = Reputation.recent().size()
+	if (GameState.reputation != 100 or log_size != SalesConstants.REP_LOG_MAX
+			or Reputation.recent().slice(0, 5).any(func(r: Dictionary) -> bool: return r.kind != "tier")):
+		return "eight releases from 95 read reputation %d with %d rows, want 100 and the last %d rows (five releases)" % [
+			GameState.reputation, log_size, SalesConstants.REP_LOG_MAX]
+	if Reputation.recent()[5].kind != "lost":
+		return "a release at 100 was logged: row 6 is %s, want the lost account" % str(Reputation.recent()[5])
+	return ""
 
 
 ## A sprint that closes on the fix card of `line`, which let one bug escape its testing (see `_play_sprint_escaping`).

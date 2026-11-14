@@ -87,6 +87,7 @@ func _ready() -> void:
 	# The news feed's "Biz" source captures the non-modal notification channel; wired here so
 	# the static system needs no bootstrap.
 	EventBus.headline_added.connect(NewsFeedSystem.on_headline_added)
+	Reputation.wire()
 
 
 ## In-game hours per real second at a speed index, derived from TimeModel.SECONDS_PER_HOUR.

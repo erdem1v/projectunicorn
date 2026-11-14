@@ -92,6 +92,7 @@ const FLAG_TYPES := {
 	"b2c_users_lost": TYPE_FLOAT,              # running total the audience lost to erosion and bug churn
 	"mvp_bug_streak": TYPE_INT,                # weekly ticks in a row at the neglect threshold
 	"mvp_bug_drop_day": TYPE_INT,              # the tick the neglect rule last cost reputation, 0 = never
+	"reputation_log": TYPE_ARRAY,              # Reputation'ın son değişimleri nedenleriyle, en yeni önde
 	# --- sales / customer desks ---
 	"cs_throughput_progress": TYPE_FLOAT,
 	"sales_faucet_progress": TYPE_FLOAT,       # §3 — sub-lead inflow accumulator
@@ -381,7 +382,7 @@ func set_brand(value: int) -> void:
 	EventBus.brand_changed.emit(brand)
 
 func set_reputation(value: int) -> void:
-	# Bugs left open for weeks push reputation below zero; -10 is the floor.
+	# Olay fiilleri, hata ihmali ve ürünün ve hesapların sonucu (Reputation) oynatır; taban -10.
 	reputation = clampi(value, -10, 100)
 	EventBus.reputation_changed.emit(reputation)
 

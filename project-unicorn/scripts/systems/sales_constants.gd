@@ -52,6 +52,19 @@ const QUALITY_STRENGTH_LOW := 0.6        # [WORKING] onay bekliyor: strength tha
 const QUALITY_STRENGTH_HIGH := 1.0       # [WORKING] onay bekliyor: strength at which the top band opens fully (a product that meets a 3★ company)
 
 
+# ============================ İtibarın girdileri (PRD_ERP §4.3) ===============
+# Reputation bu ağırlıklarla İtibar'ı (GameState.reputation, -10..100) yazar; olay fiillerinin ±1-3'ü ve hata ihmalinin
+# haftalık -1'i ile aynı ölçek.
+const REP_TIER := 1                      # [WORKING] onay bekliyor: yayına çıkan her kademe
+const REP_KEPT := 2                      # [WORKING] onay bekliyor: zamanında tutulan söz
+const REP_PARTIAL := 1                   # [WORKING] onay bekliyor: geç tutulan söz
+const REP_BROKEN := 3                    # [WORKING] onay bekliyor: bozulan söz
+const REP_LOST := 3                      # [WORKING] onay bekliyor: kaybedilen hesap
+const REP_ESCAPE_PER_ACCOUNT := 1        # [WORKING] onay bekliyor: sürümden kaçan hatanın dokunduğu her hesap
+const REP_ESCAPE_MAX := 3                # [WORKING] onay bekliyor: bir sürümün kaçan hatasının en çok düşürdüğü
+const REP_LOG_MAX := 6                   # nedeniyle saklanan son değişim
+
+
 # ============================ §4 · Pipeline ==================================
 const LEAD_LIFE_WEEKS := 1               # [K] an unworked lead waits this long
 const RETURN_LOCK_WEEKS := 4             # [K] an expired company will not return before this
