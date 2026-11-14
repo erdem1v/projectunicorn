@@ -13,6 +13,9 @@ const RIVALS_PATH := "res://data/product/rivals.json"
 ## Gelir alanının tek yeteneği: katalogda hattı yok, ücretli katmanın açık olmasından okunur.
 const PAID_PLAN := "cap_paid_plan"
 const PAID_PLAN_NAME_KEY := "PRODUCT_CAP_PAID_PLAN"
+## Kişi kilidinin yazdığı rol: becerinin ana rolü (kapı becerinin kendisine bakar; ikinci becerisi olan da karşılar).
+const LOCK_ROLE_KEYS := {"design": "PROD_LOCK_ROLE_DESIGN", "product": "PROD_LOCK_ROLE_PRODUCT",
+	"engineering": "PROD_LOCK_ROLE_ENGINEERING", "qa": "PROD_LOCK_ROLE_QA"}
 ## Çeyrek hedefinin alan olmayan seçeneği ("Hatalar"): hedefin kartları düzeltme kartlarıdır.
 const GOAL_BUGS := "bugs"
 ## Liderin önerecek kartı yok: bu sprinte de sonraki sütuna da.
@@ -320,7 +323,7 @@ static func due(card: Dictionary) -> Dictionary:
 		"value": int(request.value), "promise": false}
 
 
-## Kilitli kademenin gerekçesi ("2★ Tasarım gerekli"), yalnız karşılanmayan parçalarla; kilitsizse "". Ücretli
+## Kilitli kademenin gerekçesi ("2★ tasarımcı gerekli"), yalnız karşılanmayan parçalarla; kilitsizse "". Ücretli
 ## plan yayındaki ürünün katmanıdır, MVP'den önce açılmaz.
 static func gate_reason(step_id: String) -> String:
 	if step_id == PAID_PLAN:
@@ -337,8 +340,7 @@ static func gate_reason(step_id: String) -> String:
 				"stars": str(part.stars) + STAR,
 				"have": (str(roundi(have)) if is_equal_approx(have, roundf(have)) else Fmt.number(have, 1)) + STAR}))
 		else:
-			parts.append(_t("PROD_LOCK_PERSON").format({"area": HRConstants.area_label(part.area),
-				"stars": str(part.stars) + STAR}))
+			parts.append(_t("PROD_LOCK_ROLE").format({"stars": str(part.stars) + STAR, "role": _t(LOCK_ROLE_KEYS[part.area])}))
 	return SEP.join(parts)
 
 

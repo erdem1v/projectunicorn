@@ -1899,7 +1899,11 @@ PROD_STEP_SHARED_MOBILE_K2_ERP_DESC,Onay bekleyen sipariş cepte görünür; imz
 PROD_STEP_SHARED_MOBILE_K3_ERP_DESC,Sahadaki satıcı kapsama dışında sipariş yazar; akşam ofise kendi girer.,"The rep in the field writes an order out of coverage, and in the evening it walks into the office on its own."
 PROD_VERSION_SHORT,v{version},v{version}
 PROD_LOCK_RESEARCH,{node} araştırılmalı,Research {node} first
-PROD_LOCK_PERSON,{stars} {area} gerekli,{stars} {area} needed
+PROD_LOCK_ROLE,{stars} {role} gerekli,{stars} {role} needed
+PROD_LOCK_ROLE_DESIGN,tasarımcı,designer
+PROD_LOCK_ROLE_PRODUCT,ürün yöneticisi,product manager
+PROD_LOCK_ROLE_ENGINEERING,yazılım mühendisi,software engineer
+PROD_LOCK_ROLE_QA,test mühendisi,QA engineer
 PROD_LOCK_TOTAL,Toplam {area}: {stars} gerekli (sizde {have}),Total {area}: {stars} needed (you have {have})
 PROD_TEAM_GROUP_COUNT,({n}),({n})
 PROD_RND_NODE_DATA_MODEL_DESC,Verinin ortak şeması. Her kayıt aynı dilden konuşur.,A common schema for the data. Every record starts speaking the same language.
@@ -2561,6 +2565,8 @@ PRODUCT_VIEW_QUARTER,Çeyrek,Quarter
 PRODUCT_QUARTER_NEED_PM,PM işe alınca,Once you hire a PM
 PRODUCT_OV_TAB_OVERVIEW,Genel Bakış,Overview
 PRODUCT_OV_LOCKED,v1.0 yayınlanınca açılır.,Opens when v1.0 ships.
+PRODUCT_OV_LOCK_SHORT,v1.0 yayınlanınca,after v1.0 ships
+PRODUCT_NEED_PM,ürün yöneticisi gerekli,product manager needed
 PRODUCT_SERVER_HEAD,Sunucu,Server
 PRODUCT_SERVER_TIER_ECONOMY,Ekonomik,Economy
 PRODUCT_SERVER_TIER_STANDARD,Standart,Standard

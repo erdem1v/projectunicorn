@@ -64,8 +64,9 @@ extends RefCounted
 #   modules: [{id (hattın kimliği: modül hattın kendisidir), area (ikonunun alanı), name, planned (bu sprintte kartı var), candidates: [{id, name, effort, parts: [{stage, effort}] (sıfırdan
 #             büyük aşama payları, eforu kesirli), planned (bu sprintin planında), stamp (başka sprintte: sprint numarası, yoksa
 #             -1), addable (null: "+"nın değeri henüz istenmedi, `resolve_addable` ister; false: adaylıktan çıkmış kartın "+"ı yok),
-#             bugs, fix_text}], waiting: null | {name, node, reason} (modülün araştırma bekleyen sıradaki kartı: tek eksik kapısı araştırma;
-#             başka kapısı da eksik kart yok)}] (kilitli aday listelenmez; adaylarının hepsi kilitli ve bekleyeni olmayan modül listelenmez),
+#             bugs, fix_text}], locked: null | {name, reason (kilidin şartı), node (araştırılacak Ar-Ge düğümü ya da ""), action: "rnd" (tek eksiği
+#             araştırma) | "hire" | "" (canlı ürün gerekli)} (sıradaki kademenin kilitli kartı; o kademeyi müşteri istemişse talep
+#             kartı)}] (bitmiş modül listelenmez),
 #   research: [modülün adayı biçiminde] (kullanıcıyla görüş: ürünün kartı, modül listesinin altında),
 #   prep: {pms: [{person, stars, cards (bu sprintin kartlarından hazırladıklarının adı), preparing (sonraki sütunda hazırladığı var)}]},
 #   quarter: + {q, year (ürün çeyreğinin başladığı takvim çeyreği), pos, total (çeyreğin kaçıncı sprinti, kaç sprintlik)},
@@ -250,29 +251,27 @@ static func bug_row_of(line_name: String, part: Dictionary, delta: int) -> Dicti
 	return {"text": SprintUiShared.SEP.join(bits), "tip": "\n".join(tip), "delta": delta}
 
 
-## Sol sütunun modülü (modül hattın kendisidir, `area_id` yalnız ikonunu verir): kilitli aday listelenmez; araştırma bekleyen sıradaki
-## kart `waiting`te durur. Gösterecek adayı ve bekleyeni olmayan modül (bitmiş ya da hepsi kilitli hat) listelenmez. `cards` hattın ham adayları, `planned`
+## Sol sütunun modülü (modül hattın kendisidir, `area_id` yalnız ikonunu verir): kilitli aday `locked`ta şartıyla durur. Adayı ve
+## kilitli adayı olmayan (bitmiş) modül listelenmez. `cards` hattın ham adayları, `planned`
 ## modülün bu sprintin planında kartı olması, `sprint` bu sprintin numarası, `tags` bu ve sonraki sprintin kartlarının sprint numarası.
 static func _module(line_id: String, area_id: String, cards: Array, planned: bool, sprint: int, tags: Dictionary) -> Variant:
-	var listed: Array = cards.filter(func(c: Dictionary) -> bool:
-		return c.state != "candidate" or SprintCatalog.gate_reason(c.step) == "")
-	var waiting: Variant = _waiting(cards)
-	if listed.is_empty() and waiting == null:
+	var listed: Array = []
+	var locked: Variant = null
+	for c: Dictionary in cards:
+		var reason: String = SprintCatalog.gate_reason(c.step) if c.state == "candidate" else ""
+		if reason == "":
+			listed.append(c)
+			continue
+		# Kademede en çok bir Ar-Ge düğümü vardır: tek eksiği araştırmaysa tık Ar-Ge'yi açar, kişi de eksikse işe alımı.
+		var unmet: Array = LineGates.unmet_parts(c.step)
+		var rnd: bool = unmet.size() == 1 and unmet[0].kind == LineGates.KIND_RESEARCH
+		locked = {"name": SprintCatalog.card_name(c), "reason": reason, "node": String(unmet[0].node) if rnd else "",
+			"action": "rnd" if rnd else "" if unmet.is_empty() else "hire"}
+	if listed.is_empty() and locked == null:
 		return null
 	return {"id": line_id, "area": area_id, "name": SprintCatalog.cap_name(line_id), "planned": planned,
 		"candidates": listed.map(func(c: Dictionary) -> Dictionary: return _module_card(c, int(tags.get(c.id, -1)), sprint)),
-		"waiting": waiting}
-
-
-## Modülün araştırma bekleyen sıradaki adayı: tek eksik kapısı araştırma olan ilk aday (modülün sırasıyla), yoksa null.
-static func _waiting(cards: Array) -> Variant:
-	for c: Dictionary in cards:
-		if c.state != "candidate":
-			continue
-		var unmet: Array = LineGates.unmet_parts(c.step)
-		if unmet.size() == 1 and unmet[0].kind == LineGates.KIND_RESEARCH:
-			return {"name": SprintCatalog.card_name(c), "node": unmet[0].node, "reason": SprintCatalog.gate_reason(c.step)}
-	return null
+		"locked": locked}
 
 
 ## Modülün adayı: sıfırdan büyük aşama paylarının eforu (kalan ihtiyaç ÷ hazırlık kazancı, aşama kartın türünün rolünden), bu

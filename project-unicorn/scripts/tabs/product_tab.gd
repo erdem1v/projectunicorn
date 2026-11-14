@@ -228,22 +228,18 @@ func _build_head(h: Dictionary) -> void:
 		_kpis.add_child(UiFactory.D_kpi(tr("PRODUCT_KPI_PAYING"), Fmt.group(h.paying)))
 
 
-## GENEL BAKIŞ | SPRINT | ÇEYREK (v1.0'dan önce GENEL BAKIŞ, PM yokken ÇEYREK kilitli, gerekçesi ipucunda) ...
+## GENEL BAKIŞ | SPRINT | ÇEYREK (v1.0'dan önce GENEL BAKIŞ, PM yokken ÇEYREK kilitli; kilidin yanında şartı) ...
 ## Kurucu sprintte ve Geçmiş anahtarları. Kurucu anahtarı koşan sprintte ve kurucu Ar-Ge'deyken soluk ve basılmaz, değerini gösterir.
 func _build_ctl(m: Dictionary, view: String) -> void:
 	UiFactory.clear(_ctl_row)
 	var open_views: Array = VIEW_KEYS.keys().filter(func(id: String) -> bool:
 		return (id != "overview" or m.get("overview") != null) and (id != "quarter" or m.quarter.state == "open"))
 	if "overview" not in open_views:
-		var overview := UiFactory.D_locked_tab(tr(VIEW_KEYS.overview))
-		overview.tooltip_text = tr("PRODUCT_OV_LOCKED")
-		_ctl_row.add_child(overview)
+		_add_locked_view("overview", "PRODUCT_OV_LOCK_SHORT", "PRODUCT_OV_LOCKED")
 	_ctl_row.add_child(UiFactory.D_seg_tabs(open_views.map(func(id: String) -> String: return tr(VIEW_KEYS[id])),
 		open_views.find(view), func(i: int) -> void: _set_ui(open_views[i], "view")))
 	if "quarter" not in open_views:
-		var quarter := UiFactory.D_locked_tab(tr(VIEW_KEYS.quarter))
-		quarter.tooltip_text = tr("PRODUCT_QUARTER_NEED_PM")
-		_ctl_row.add_child(quarter)
+		_add_locked_view("quarter", "PRODUCT_NEED_PM", "PRODUCT_QUARTER_NEED_PM")
 	_ctl_row.add_child(RnDUiShared.spacer())
 	var founder: Dictionary = m.founder
 	var founder_tip: String = tr("PRODUCT_FOUNDER_ON_TIP" if founder.on else "PRODUCT_FOUNDER_OFF_TIP")
@@ -254,6 +250,14 @@ func _build_ctl(m: Dictionary, view: String) -> void:
 	SprintUiShared.switch(_ctl_row, tr("PRODUCT_FOUNDER_IN_SPRINT"), founder.on,
 		func(on: bool) -> void: _on_action("founder", {"on": on}), founder_tip, founder.locked != "")
 	SprintUiShared.switch(_ctl_row, tr("PRODUCT_HISTORY"), _ui.history_open, _set_ui.bind("history_open"))
+
+
+## Kilitli görünüm sekmesi ve yanında şartı; ipucu uzun gerekçedir.
+func _add_locked_view(id: String, condition_key: String, tip_key: String) -> void:
+	var tab := UiFactory.D_locked_tab(tr(VIEW_KEYS[id]))
+	tab.tooltip_text = tr(tip_key)
+	_ctl_row.add_child(tab)
+	_ctl_row.add_child(SprintUiShared.label(tr(condition_key), &"MetaMuted"))
 
 
 ## Yalnız yerel durum: geçmiş anahtarı, görünüm, açık modül, talep listesinin açıklığı ve açık kademe önizlemesi.

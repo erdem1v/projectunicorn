@@ -4501,14 +4501,8 @@ func _product_tip_shot(tip: String, kind: String, stem: String) -> void:
 ## The control a tip frame points at, or null: "card" the name of the first board row with a due date (else of the first row), "fix"
 ## of the first fix card, "founder" of the founder's first card, "plain" of the first card no PM prepared; "bar" the first running
 ## bar (board order); "next" the first strip part of the next column's cards with work done ahead; "cap" the name cell of the stage
-## that has spilled for two sprints; "waiting" the left-column card that waits for research.
+## that has spilled for two sprints.
 func _tip_target(page: Control, tip: String) -> Control:
-	if tip == "waiting":
-		var reasons: Array = ProductModel.live().modules.filter(func(m: Dictionary) -> bool: return m.waiting != null).map(
-			func(m: Dictionary) -> String: return m.waiting.reason)
-		var found: Array = page.find_children("*", "PanelContainer", true, false).filter(
-			func(n: PanelContainer) -> bool: return n.tooltip_text in reasons)
-		return null if found.is_empty() else found[0]
 	if tip == "cap":
 		var cap: CapacityView = page.find_children("*", "CapacityView", true, false)[0]
 		for i in cap._rows.size():
@@ -4697,7 +4691,7 @@ func _seed_product_live(scenario: String) -> void:
 ## week; `delegate` the planning handed to the PM; `paper` a decision paper asked in the first week (off in every other world); `away`
 ## every employee but the PMs on leave once the plan is made (a plan with cards nobody can work); `pm` the PMs' name; `tip` the pointer's
 ## rest for a second frame with the tip open ("card", "fix", "founder" or "plain" a card's name, "bar" a running bar, "next" a next
-## column card's strip part, "cap" the stage that keeps spilling, "waiting" the card of the open module that waits for research;
+## column card's strip part, "cap" the stage that keeps spilling;
 ## `_tip_target`). The *_tip worlds and a4_run_w2_bar copy a frame's world for its tip. `areas` keeps the plan to those modules' cards,
 ## `skip` leaves cards out of it, `open` opens that module in the left column.
 const _A4_ROLES := {"p": HRConstants.ROLE_PRODUCT_MANAGER, "d": HRConstants.ROLE_DESIGNER, "v": HRConstants.ROLE_DEVELOPER,
@@ -4767,8 +4761,6 @@ const _A4_WORLDS := {
 		"sit": ["sales", "sales"], "tip": "founder"},
 	"a4_next_tip": {"crew": _A4_SIX + "5", "before": [_A4_PREP], "fill": "over", "load": 1.15, "queue": 2, "run": 1.9, "tip": "next"},
 	"a4_waiting": {"crew": "d4 d3 v5 v4 v3 v3 t3 t3 p5", "before": _A4_WAITING, "fill": 3, "areas": ["trust"], "open": "line_erp_cashflow"},
-	"a4_waiting_tip": {"crew": "d4 d3 v5 v4 v3 v3 t3 t3 p5", "before": _A4_WAITING, "fill": 3, "areas": ["trust"], "open": "line_erp_cashflow",
-		"tip": "waiting"},
 	"a4_waiting_all": {"crew": "d4 d3 v5 v4 v3 v3 t3 t3 p5", "before": _A4_WAITING, "fill": 3, "areas": ["trust"], "open": "line_shared_mobile@erp"},
 	"a4_pm_tip": {"crew": _A4_SIX + "5", "before": [_A4_PREP], "bugs": 1, "fill": "over", "load": 1.15, "queue": 1, "tip": "plain"},
 }

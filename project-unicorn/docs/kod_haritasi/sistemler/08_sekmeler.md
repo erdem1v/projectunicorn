@@ -43,7 +43,7 @@ Alt klasörler:
   ↳ alt şerit (`SprintFoot`), sürüm notunda bugünkü `_release` (gövdesi `Column(scrolls)`te uzunsa kayar, başlık ve alt şerit sabit); sağ sütun 300 px sabit, orta sütun kalanı alır.
   ↳ Yeniden kurulumda pano, sürüm notunun gövdesi ve sağ sütunun kaydırması korunur;
   ↳ `running()` ve `set_now(at)` saat hattıdır (pano, Kapasite'nin "yapılan" dolgusu ve alt şeridin ilerlemesi).
-- `scripts/tabs/product/sprint_foot.gd` (148): `SprintFoot`: alt şerit (68 px): solda "Planlamayı devret" (PM'in yüzüyle, PM yokken kilitli), sağda "Sprinti başlat" (ekip yokken kapalı, kartsız planda yanında "0 kart"; basınca
+- `scripts/tabs/product/sprint_foot.gd` (148): `SprintFoot`: alt şerit (68 px): solda "Planlamayı devret" (PM'in yüzüyle, PM yokken kilitli, yanında şartı), sağda "Sprinti başlat" (ekip yokken kapalı, kartsız planda yanında "0 kart"; basınca
   ↳ `SprintSystem.begin_planned`) ya da sprint sürerken ilerleme (`set_progress`). Devirde iki kipte de solda PM'in yüzü, "{PM} planlıyor" ve "Planlamayı geri al";
   ↳ sağda planlamada "Kendiliğinden başlar" (kartlı planda ekip yokken onun yerine çıkış yolu), sprint sürerken ilerleme
   ↳ (çubuğu `D_W_PROGRESS_BAR_TIGHT`e kadar kısalır, ad kesilmez); kutunun ipucu "Efor {biten}/{toplam}" `set_progress`ta sayfa kurulmadan yenilenir.
@@ -79,7 +79,7 @@ Alt klasörler:
   ↳ `row_keys`, `way_out`, `add_key`, `keep_scroll`); Ürün dışında 10+ dosya kullanır. İpucu parçaları: `STAGE_KEYS`, `stage_name`, `stage_icon`, `stage_done`, `done_text`, `named_stars`, `effort_tip`,
   ↳ `prepared_tip`, `meet_lines`, `meet_lines_of` (`total`: türü başına günler toplanır), `tip_column` (zengin ipucunun kökü).
 - `scripts/tabs/product/area_panel.gd` (392): `AreaPanel`: sol sütun (SPRINT ve ÇEYREK): Geçmiş, MÜŞTERİ TALEPLERİ, MODÜLLER ve açık modülün adayları (düzeltme adayı tam hata metnini sarar yazar,
-  ↳ başka sprintin adayı "Sprint {n}" damgası taşır); adayların sonunda araştırma bekleyen sıradaki kart (`_waiting_card`: Ar-Ge ikonlu soluk satır, efor ve şerit yok, üstüne gelince kenarı aydınlanır, tık Ar-Ge'yi o düğümde açar);
+  ↳ başka sprintin adayı "Sprint {n}" damgası taşır); adayların sonunda kilitli kartlar (`_locked_card`: soluk ad ve altında şartı, efor ve şerit yok; araştırma kilidinde Ar-Ge ikonu ve tık Ar-Ge'yi o düğümde açar, kişi kilidinde tık işe alım atlasını açar, canlı ürün kilidi yalnız okunur); kapalı modülün yapılacak kartı yoksa ilk kilidin şartı adının altında;
   ↳ "+" değerleri sonraki karelerde gelir; imleç ya da tık sırayı beklemez, o "+"nın değeri o an hesaplanır (`_learn`).
   ↳ Talep satırı üç satır: müşteri ve son tarih çipi, modül ve kart, durum (`_status_line`: tik ve "Sprint {n}", aşamanın renginde halka
   ↳ (`StageRing`) ve adı, tik ve "{q}. çeyrekte tamamlandı"); biten talepler katın dışında, sayıya girmez. Planlı modülün başlığında tik.

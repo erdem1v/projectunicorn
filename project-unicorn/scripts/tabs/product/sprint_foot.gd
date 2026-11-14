@@ -52,7 +52,8 @@ func set_progress(progress: Dictionary) -> void:
 	_progress_box.tooltip_text = tr("PRODUCT_PROGRESS_TIP").format({"done": roundi(progress.done), "total": roundi(progress.total)})
 
 
-## Planlamayı devret: PM varken yüzü ve adıyla basılır (sprint sürerken de), PM yokken kilit ikonuyla soluk ve basılmaz.
+## Planlamayı devret: PM varken yüzü ve adıyla basılır (sprint sürerken de), PM yokken kilit ikonuyla soluk ve basılmaz, yanında
+## şartı.
 func _delegate(pm: Variant) -> PanelContainer:
 	var box := _box(&"DelegateBox" if pm != null else &"DelegateBoxLocked")
 	var row := SprintUiShared.box(UiTokens.SPACE_M)
@@ -61,6 +62,7 @@ func _delegate(pm: Variant) -> PanelContainer:
 		box.tooltip_text = tr("PRODUCT_DELEGATE_LOCKED")
 		row.add_child(UiFactory.make_glyph(SprintUiShared.LOCK, UiTokens.D_ICON_BUTTON, UiTokens.D_INK_OFF))
 		row.add_child(SprintUiShared.label(tr("PRODUCT_DELEGATE_PLAIN"), &"DataStrong", UiTokens.D_INK_OFF))
+		row.add_child(SprintUiShared.label(tr("PRODUCT_NEED_PM"), &"MetaMuted", UiTokens.D_INK_OFF))
 		HRUiShared.set_mouse_ignore(row)
 		return box
 	row.add_child(SprintUiShared.avatar(pm, UiTokens.D_AVATAR_ROW_SM))

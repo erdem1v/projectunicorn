@@ -219,8 +219,8 @@ func _area_mark(area_id: String) -> PanelContainer:
 	return HRUiShared.D_mono_box(UiTokens.D_BOX_MONO, UiFactory.make_glyph(AREA_ICONS[area_id], UiTokens.D_ICON_ROW, UiTokens.D_INK_2))
 
 
-## Modül satırı: işaret, ad, tik (bu sprintte kartı varsa; ipucu `PRODUCT_IN_PLAN_TIP`) ve şevron; açıksa altında adayları. Satırın başı tıklanınca açılır ya da
-## kapanır.
+## Modül satırı: işaret, ad, tik (bu sprintte kartı varsa; ipucu `PRODUCT_IN_PLAN_TIP`) ve şevron; açıksa altında adayları ve kilitli
+## kartı, kapalıyken yapılacak kartı yoksa kilidin şartı. Satırın başı (kapalıyken şartıyla) tıklanınca açılır ya da kapanır.
 func _module_row(m: Dictionary) -> PanelContainer:
 	var open: bool = m.id == String(_model.ui.open_area)
 	var row := PanelContainer.new()
@@ -236,25 +236,29 @@ func _module_row(m: Dictionary) -> PanelContainer:
 		tick.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		head.add_child(tick)
 	head.add_child(UiFactory.make_glyph(CHEVRONS[int(open)], UiTokens.D_ICON_MARK, UiTokens.D_INK_4))
-	HRUiShared.set_mouse_ignore(head)
-	head.mouse_filter = Control.MOUSE_FILTER_STOP
-	head.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	head.tooltip_text = String(m.name) + (SprintUiShared.SEP + tr("PRODUCT_IN_PLAN_TIP") if m.planned else "")
-	head.gui_input.connect(func(ev: InputEvent) -> void:
-		if UiFactory.is_left_click(ev):
-			ui_changed.emit("open_area", "" if open else m.id))
 	col.add_child(head)
+	var hit: Control = head
 	if open:
 		_open_row = row
 		var cards := SprintUiShared.column(UiTokens.SPACE_S)
 		for c in m.candidates:
 			cards.add_child(_candidate(c))
-		if m.waiting != null:
-			cards.add_child(_waiting_card(m.waiting))
+		if m.locked != null:
+			cards.add_child(_locked_card(m.locked))
 		col.add_child(cards)
 	else:
-		head.mouse_entered.connect(func() -> void: row.theme_type_variation = &"ModuleRowHover")
-		head.mouse_exited.connect(func() -> void: row.theme_type_variation = &"ModuleRow")
+		if (m.candidates as Array).is_empty():
+			col.add_child(_name(String(m.locked.reason), &"Caption", UiTokens.D_INK_3))
+		hit = col
+		hit.mouse_entered.connect(func() -> void: row.theme_type_variation = &"ModuleRowHover")
+		hit.mouse_exited.connect(func() -> void: row.theme_type_variation = &"ModuleRow")
+	HRUiShared.set_mouse_ignore(hit)
+	hit.mouse_filter = Control.MOUSE_FILTER_STOP
+	hit.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	hit.tooltip_text = String(m.name) + (SprintUiShared.SEP + tr("PRODUCT_IN_PLAN_TIP") if m.planned else "")
+	hit.gui_input.connect(func(ev: InputEvent) -> void:
+		if UiFactory.is_left_click(ev):
+			ui_changed.emit("open_area", "" if open else m.id))
 	return row
 
 
@@ -286,24 +290,29 @@ func _candidate(c: Dictionary) -> PanelContainer:
 	return card
 
 
-## Modülün araştırma bekleyen sıradaki kartı: efor ve şerit yok, "+" yerinde Ar-Ge'nin ikonu, ad soluk; ipucu araştırılacak düğümü
-## söyler, tık Ar-Ge'yi o düğümde açar; üstüne gelince kenarı talep satırı gibi aydınlanır.
-func _waiting_card(w: Dictionary) -> PanelContainer:
+## Modülün kilitli kartı: efor ve şerit yok, ad soluk, altında şartı; araştırma kilidinde "+" yerinde Ar-Ge'nin ikonu. Tık
+## araştırma kilidinde Ar-Ge'yi o düğümde, kişi kilidinde işe alım atlasını açar; üstüne gelince kenarı talep satırı gibi
+## aydınlanır. Eylemi olmayan kilit (canlı ürün gerekli) yalnız okunur.
+func _locked_card(l: Dictionary) -> PanelContainer:
 	var card := PanelContainer.new()
 	card.theme_type_variation = &"ModuleCandidate"
+	var col := SprintUiShared.column(UiTokens.SPACE_XS)
+	card.add_child(col)
 	var top := SprintUiShared.box(UiTokens.SPACE_M)
-	top.add_child(_name(String(w.name), &"CaptionName", UiTokens.D_INK_3))
-	var mark := UiFactory.make_glyph(RnDUiShared.ICON, UiTokens.D_ICON_ROW, UiTokens.D_INK_3)
-	mark.custom_minimum_size.x = UiTokens.D_H_KEY_CAND
-	top.add_child(mark)
-	card.add_child(top)
-	HRUiShared.set_mouse_ignore(top)
-	card.tooltip_text = String(w.reason)
-	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_hover(card, card.theme_type_variation, &"ModuleCandidateHover")
-	card.gui_input.connect(func(ev: InputEvent) -> void:
-		if UiFactory.is_left_click(ev):
-			action.emit("rnd", {"node": String(w.node)}))
+	top.add_child(_name(String(l.name), &"CaptionName", UiTokens.D_INK_3))
+	if l.action == "rnd":
+		var mark := UiFactory.make_glyph(RnDUiShared.ICON, UiTokens.D_ICON_ROW, UiTokens.D_INK_3)
+		mark.custom_minimum_size.x = UiTokens.D_H_KEY_CAND
+		top.add_child(mark)
+	col.add_child(top)
+	col.add_child(_name(String(l.reason), &"Caption", UiTokens.D_INK_3))
+	HRUiShared.set_mouse_ignore(col)
+	if l.action != "":
+		card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		_hover(card, card.theme_type_variation, &"ModuleCandidateHover")
+		card.gui_input.connect(func(ev: InputEvent) -> void:
+			if UiFactory.is_left_click(ev):
+				action.emit(l.action, {"node": String(l.node)}))
 	return card
 
 

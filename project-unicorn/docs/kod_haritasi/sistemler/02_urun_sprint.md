@@ -224,7 +224,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `PRODUCT_SERVER_*` (37 anahtar): sunucu/kapasite arayüzü: `overview_view.gd`, `product_model.gd`, `main.gd`
 - `PRODUCT_REVIEW_*` (29): B2C yorum havuzu; `data/product/sprint.json` `reviews` bloğu ve `sprint_bridges.gd`
 - `PROD_LINE_*` (20) ve `PROD_STEP_*` (150): hat ve kademe adı; anahtar `ProductLines.line_name_key` (:290) ve `product_lines.gd:177`; `PROD_TYPE_*` tür adı (`product_catalog.gd`)
-- `PROD_LOCK_*` (kilit gerekçesi, `sprint_catalog.gd`; `PROD_LOCK_RESEARCH` kart ipucunda ve sol sütunun bekleyen kartında aynı okunur),
+- `PROD_LOCK_*` (kilit gerekçesi, `sprint_catalog.gd`; `PROD_LOCK_RESEARCH` kart ipucunda ve sol sütunun kilitli kartında aynı okunur; `PROD_LOCK_ROLE_*` kişi kilidinin rol adıdır, alandan `SprintCatalog.LOCK_ROLE_KEYS` ile okunur),
   ↳ `PROD_SHIP_*`/`PROD_VERSION_*` (sürüm başlığı, `sprint_system.gd`), `PROD_RND_NODE_*` (düğüm adı, `ResearchSeam.node_name`)
 - `RND_*`: Ar-Ge penceresi (`scripts/tabs/rnd/*.gd`, `rnd_tab.gd`, `research_bar.gd`); `RND_NOTE_*` (29) aylık not ve `RND_DISCOVERY_*` keşif notu: `rnd_system.gd`, `inbox.gd`, `mail_pane.gd`
 - `BUILD_BUSY_*`/`BUILD_PHASE_*`: Ar-Ge duraklama cümlesi (`rnd_system.gd`) ve DESTEK kartı (`build_bar.gd`); `CLOCK_HOLD_SPRINT_PLAN`, `CLOCK_HOLD_RELEASE_NOTE`: `time_manager.gd:32`
@@ -340,11 +340,10 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
   ↳ kurucu kapalı, üç kartlık plan, plandan sonra PM dışında herkes izinde (`away`; şeritte "Ekip'e git"); `a4_delegate_noteam` aynısı, planlama devredilmiş;
   ↳ `a4_run_delegate_long` `a4_run_delegate`, PM'in adı havuzların en geniş adı (`pm`: "Jordan Bennett"; şeridin en dar hâli); `tip` alanı türe ikinci bir kare ekler:
   ↳ düz kare, sonra imleç ipucunun sahibine konur ve `<kök>_tip` kaydedilir (`_product_tip_shot`, sahibi `_tip_target`; yoksa `SHOT|tip_missing|<tür>` ve yalnız düz kare)
-  ↳ `tip`li türler: `a4_eleven_tip` "card", `a4_eleven_streak` "cap", `a4_run_w2_bar` "bar", `a4_fix_tip` "fix" (`a4_eleven`), `a4_meet_tip` "founder" (`a4_six_meetings2`), `a4_next_tip` "next" (`a4_run_end`), `a4_pm_tip` "plain",
-  ↳ `a4_waiting_tip` "waiting" (`a4_waiting`)
+  ↳ `tip`li türler: `a4_eleven_tip` "card", `a4_eleven_streak` "cap", `a4_run_w2_bar` "bar", `a4_fix_tip` "fix" (`a4_eleven`), `a4_meet_tip` "founder" (`a4_six_meetings2`), `a4_next_tip` "next" (`a4_run_end`), `a4_pm_tip` "plain"
   ↳ `a4_waiting` iki tasarımcı (4★, 3★), dört geliştirici (5, 4, 3, 3★), iki testçi (3★) ve 5★ PM; önceki üç sprintte ilkinde dört modülün kartları alınmış (stok hattının K2'si hariç: `skip`),
-  ↳ sonraki ikisinde yalnız Çekirdek ve Onboarding'inkiler (`areas`); planda üç Güven kartı, sol sütunda Nakit Akışı modülü açık (`open`, hattın kimliği): K3'ü araştırma bekleyen sıradaki kart görünür;
-  ↳ `a4_waiting_tip` onun ikinci karesi (imleç o kartta, ipucu "{düğüm} araştırılmalı"); `a4_waiting_all` aynı dünya, Mobil modülü açık (K3'ü araştırma bekliyor)
+  ↳ sonraki ikisinde yalnız Çekirdek ve Onboarding'inkiler (`areas`); planda üç Güven kartı, sol sütunda Nakit Akışı modülü açık (`open`, hattın kimliği): K3'ü araştırma bekleyen kilitli kart şartıyla görünür;
+  ↳ `a4_waiting_all` aynı dünya, Mobil modülü açık (K3'ü araştırma bekliyor)
   ↳ `a4_req_plan` sol sütunun talep satırları, gerçek ad havuzuyla: planı olmayan (bu ve gelecek çeyrek), bu sprintte, sonraki sprintte, PM'in onaylı
   ↳ çeyrek planında ve bu çeyrekte biten talep; `a4_req_run` aynı dünyanın koşan sprinti (Tasarım, Geliştirme, Test aşamasında kartlar); ikisi de
   ↳ talep satırlarını `REQROW|müşteri|kart|durum|son tarih` diye yazar
