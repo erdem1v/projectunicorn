@@ -165,6 +165,7 @@ static func _cs_request_rule_holds_second_ask(main: Node) -> String:
 	main._wire_modal_signals()
 	var first_day: int = GameState.day
 	for ask in ["first", "held", "after the rule"]:
+		EventBus.tab_changed.emit("")   # the player closes the window, a closed sprint's release note among them
 		GameState.set_current_hour(TimeModel.WEEK_START_HOUR)
 		TimeManager.sync_to_current_hour()
 		CustomerRegistry.set_support_request(account.id, GameState.day - TimeModel.ticks(B2BConstants.CS_ESCALATE_AFTER_WEEKS))
@@ -173,7 +174,12 @@ static func _cs_request_rule_holds_second_ask(main: Node) -> String:
 			return "the desk dropped %s's held request" % account.company_name
 		TimeManager.advance_hours(WorkHoursSystem.end_hour_for(CharacterRegistry.get_founder()) - GameState.current_hour)
 		TimeManager.skip_night()
-		var asked: bool = await _until(main, func() -> bool: return EventGate.active_id().begins_with("customer.request_"))
+		# The player answers what comes before the account's ask: Frank's cheque, the seed's company being at its bar.
+		var asked: bool = await _until(main, func() -> bool:
+			var shown: String = EventGate.active_id()
+			if shown != "" and not shown.begins_with("customer.request_"):
+				EventGate.resolve(shown, 0)
+			return EventGate.active_id().begins_with("customer.request_"))
 		if asked != (ask != "held"):
 			return "%s: %s %s" % [ask, account.company_name, "asked again four weeks after its last request" if asked
 				else "did not ask (week %d after its first request)" % (GameState.day - first_day)]

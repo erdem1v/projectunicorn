@@ -858,8 +858,7 @@ func _run_event_shot(spec: String) -> void:
 	elif event_id == "funding.monthly_update":
 		_seed_company_world(event_id, selects)
 		if not profit:
-			# A shot never ticks, and the tick is what pulls the payroll into the burn; 8.5 weeks of the net flow read as 8.
-			FinanceSystem.set_burn_category("salaries", FinanceSystem.daily_rate(CharacterRegistry.get_total_monthly_salaries()))
+			# 8.5 weeks of the net flow read as 8.
 			GameState.set_cash(int(-GameState.get_net_daily_flow() * TimeModel.days(8.5)))
 	elif String(card.get("pool_group", "")) != "":
 		given.merge(_seed_paper_world(event_id), false)
@@ -1223,19 +1222,6 @@ func _stage_unmet_wheres(scope: Dictionary, given: Dictionary) -> void:
 			taken.append(shaped.id)
 
 
-## The verbs that read or write the sprint's state, which the theme seed (a typed product with no sprint) does not hold.
-const SHOT_SPRINT_VERBS := ["queue_request", "queue_card", "pin_card", "after_test"]
-
-
-## Whether an option of the card carries one of `verbs`.
-func _card_has_verb(event_id: String, verbs: Array) -> bool:
-	for option: Dictionary in EvCatalog.card(event_id).get("options", []):
-		for effect: Dictionary in option.get("effects", []):
-			if String(effect.get("verb", "")) in verbs:
-				return true
-	return false
-
-
 ## Whether a slot's `where` reads `seam` (a card about accounts whose promise is late is shot in the promise world).
 func _scope_reads(scope: Dictionary, seam: String) -> bool:
 	return scope.values().any(func(slot: Dictionary) -> bool: return _shot_wants(slot.get("where", {})).has(seam))
@@ -1302,17 +1288,17 @@ func _seed_incident_world(kind: String, b2b: bool, load_pct := 0) -> Dictionary:
 ## A month that cannot close, failing payments, a broken release or a post going round on the live product: a full
 ## sprint is running, the line the emergency hit holds its bugs, and its mail is stamped at its hour.
 func _stage_emergency(kind: String, b2b: bool, given: Dictionary) -> Dictionary:
-	ProductState.clear_line_bugs("line_erp_ledger")
-	SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id; the B2C world chose its type before its audience
-	for line_id in SprintCatalog.mvp_lines():
-		ProductState.set_line_tier(line_id, 1)
 	(SprintCatalog.cfg("decision") as Dictionary).sprint_chance = 0.0
 	(SprintCatalog.cfg("fix_effort") as Dictionary).per_bug = 30   # a fix this big leaves the full sprint no room for it
-	for card in SprintCatalog.open_cards([]):
-		SprintSystem.add(card.id)
-		if not GameState.product.sprint.cards.has(card.id):
-			break
-	SprintSystem.start()
+	if not b2b:
+		# The note app has no sprint yet: its MVP lines and a full one, running. The ERP's is the theme seed's.
+		for line_id in SprintCatalog.mvp_lines():
+			ProductState.set_line_tier(line_id, 1)
+		for card in SprintCatalog.open_cards([]):
+			SprintSystem.add(card.id)
+			if not GameState.product.sprint.cards.has(card.id):
+				break
+		SprintSystem.start()
 	var line: String = "line_erp_stock" if b2b else "line_shared_security@note_tool"
 	var hour: int = 10
 	var began: int = 22 * 60 + 40
@@ -1388,8 +1374,6 @@ func _seed_expiring_sheet(vc_id: String, weeks_left := PitchConstants.WARNING_WE
 func _seed_company_world(event_id: String, selects: Array, scope := {}, floor_day := 0) -> void:
 	_seed_theme_book()
 	GameState.day = maxi(GameState.day, floor_day)
-	if _card_has_verb(event_id, SHOT_SPRINT_VERBS):
-		SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id; the sprint state a card that queues a request or a card reads
 	if "open_request" in selects or "escalated" in selects:
 		_shot_customer("co_palmiye", "Anadolu Market", "retail", "active", 1200, 15, 20, true)   # LOC-DATA debug seed / id
 		CustomerRegistry.set_support_request("co_palmiye", GameState.day - 1)
@@ -1401,7 +1385,6 @@ func _seed_company_world(event_id: String, selects: Array, scope := {}, floor_da
 	if "seed_lead" in selects:
 		SeedRoundSystem.accept("anchor", {"raise": 130000, "dilution_pct": 16})
 	if event_id == SprintBridges.THANKS_CARD:
-		SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
 		_stage_release_thanks()
 	if event_id == "product.support_overflow":
 		GameState.set_flag(ProductState.REPORTS_INCOMING, SupportSystem.WARMTH_HOT_AT + 1)
@@ -1566,12 +1549,8 @@ func _run_inbox_shot(state: String) -> void:
 	if state.begins_with("rnd_"):
 		_seed_rnd(16 if state == "rnd_discovery" else 14, state != "rnd_note_demand")
 	if state == "rnd_note_demand":
-		# A bug needs a catalogued product type; the theme seed's has no lines.
-		SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
 		ProductState.add_bugs(SprintCatalog.capabilities("integrations")[0], 1)
 		RnDSystem._tick_note()
-	if state == "thanks":
-		SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
 	if state in ["rep_lost", "weekly_lost", "weekly_lost_only"]:
 		_stage_desk_losses(state != "weekly_lost_only")
 	if state.begins_with("clause_"):
@@ -2029,7 +2008,7 @@ func _run_sales_shot(kind: String) -> void:
 		GameState.sales_meetings_week = {"tick": GameState.day, "count": SalesConstants.MEETINGS_PER_WEEK}
 		# A shipped product has a type, and a typed product's promise is due by a sprint's end.
 		SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
-		PromiseRegistry.create("co_kuzey", "saas_ops_integration", 1)   # LOC-DATA debug seed / id
+		PromiseRegistry.create("co_kuzey", CustomerRegistry.get_customer("co_kuzey").pain_feature_id, 1)
 		SalesSystem.record_sales_event("lead_expired", "", "Efes Emlak", 0)   # LOC-DATA debug seed / id
 		SalesSystem.record_sales_event("founder_close", "", "Aras Klinik", 700)   # LOC-DATA debug seed / id
 		# Aras in its onboarding floor's last week, the product under its bar: the card warns.
@@ -2119,7 +2098,8 @@ func _seed_theme_surface() -> void:
 	_seed_theme_book()
 
 
-## The theme seed's company over a run already seeded: week 14, a shipped ERP, the HR shot roster, three accounts and two leads.
+## The theme seed's company over a run already seeded: week 14, a shipped ERP at v1.0 whose sprint runs with the planning
+## handed to the PM (nobody waits in planning), the HR shot roster on its payroll, three accounts and two leads.
 func _seed_theme_book() -> void:
 	GameState.day = 14
 	GameState.set_flag("mvp_shipped", true)
@@ -2128,12 +2108,18 @@ func _seed_theme_book() -> void:
 	_seed_line_state("erp", _ERP_SHIPPED_LINES)
 	ProductState.add_bugs("line_erp_ledger", 12)
 	_seed_hr_roster()
+	SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
+	GameState.set_flag("mvp_version", 1)
+	SprintSystem.apply_lead()
+	SprintSystem.start()
+	SprintSystem.set_delegate(true)
 	_shot_customer("co_kuzey", "Kuzey İnşaat", "construction", "active", 1000, 12, 13, false)   # LOC-DATA debug seed / id
 	_shot_customer("co_ege", "Ege Kargo", "logistics", "risk", 1000, 12, 9, false)
 	_shot_customer("co_nordica", "Nordica", "logistics", "expansion", 2000, 20, 26, false)
 	SalesFaucetSystem.spawn_prospect("small", "find")
 	SalesFaucetSystem.spawn_prospect("mid", "find")
 	SalesSystem.reflect_mrr()
+	_seed_payroll()
 
 
 ## --inbox-shot=rep_lost | weekly_lost | weekly_lost_only: the theme seed's company with a live ERP at its MVP whose Entegrasyonlar
@@ -2141,7 +2127,6 @@ func _seed_theme_book() -> void:
 ## over an area (the first is the rep's mail, the other two the weekly summary's lines) and, with `closes`, two 1★ leads sign (its
 ## rows). A lead's id is picked for its die: a losing lead is one whose own die lands above its close chance.
 func _stage_desk_losses(closes: bool) -> void:
-	SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
 	for line_id in SprintCatalog.capabilities("core"):
 		ProductState.set_line_tier(line_id, 1)
 	for line_id in SprintCatalog.capabilities("trust"):
@@ -2211,8 +2196,6 @@ func _clause_switch_button() -> Button:
 ## went to 7 (a new priority line, now the worst) with 2 on the invoicing line. support_behind adds a week the rep did not
 ## keep up with (23 reports in, 15 done); support_go presses the report's button.
 func _stage_support(state: String) -> void:
-	SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
-	GameState.set_flag("mvp_version", 1)
 	var rep := Character.new()
 	rep.id = "char_emp_shot_5"
 	rep.character_name = "Zeynep Aydın"   # LOC-DATA debug seed / id
@@ -2300,15 +2283,13 @@ func _run_office_shot(spec: String) -> void:
 		"v1":
 			_seed_run_reproducible()
 			_seed_product_live("gate")
-		"desk_shut": _seed_theme_surface()
-		_:
-			# The theme seed's company shipped an ERP: typed at v1.0, its sprint running, its crew on the payroll.
-			_seed_theme_surface()
-			SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
-			GameState.set_flag("mvp_version", 1)
-			SprintSystem.apply_lead()
-			SprintSystem.start()
-			_seed_payroll()
+		"desk_shut":
+			# A live note app of its own: the theme seed's company is an ERP.
+			_seed_run_reproducible()
+			GameState.day = 14
+			GameState.set_flag("mvp_shipped", true)
+			GameState.set_flag("mvp_launch_day", 6)
+		_: _seed_theme_surface()
 	EventBus.speed_change_requested.emit(0)
 	# Debug path: the shot writes the office straight past OfficeSystem. The map and the meeting
 	# room are no office: the company sits in a real one, which the map's pin and chips read.
@@ -2393,8 +2374,6 @@ func _run_office_shot(spec: String) -> void:
 			SprintSystem.choose_type("note_tool", "Notly")   # LOC-DATA debug seed / name
 			GameState.set_flag("mvp_version", 5)
 			GameState.set_flag("b2c_audience", 2400.0)
-			# The theme surface's bugs sit on an ERP line this product has not.
-			ProductState.clear_line_bugs("line_erp_ledger")
 			var lines: Array = ProductLines.line_ids("note_tool")
 			for line: String in lines.slice(0, 2):
 				ProductState.set_line_tier(line, 2)
@@ -3079,10 +3058,6 @@ func _run_rnd_shot(kind: String) -> void:
 			HRMoraleSystem.send_on_leave(CharacterRegistry.get_character(selin), HRConstants.LEAVE_WEEKS, false)
 		"discovery_design":
 			RnDSystem._complete("design_system")
-		"assign_founder":
-			SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
-			SprintSystem.apply_lead()
-			SprintSystem.start()
 		"stars":
 			CharacterRegistry.remove("char_emp_shot_0")
 			CharacterRegistry.remove("char_emp_shot_1")
@@ -5559,7 +5534,7 @@ func _shot_customer(id: String, cname: String, industry: String, phase: String, 
 		c.expansion_offer_day = GameState.day   # a kept promise's offer, its paper not on the desk yet
 	c.acquired_on_day = GameState.day - weeks_ago
 	c.scale = 3
-	c.pain_feature_id = "saas_ops_integration"
+	c.pain_feature_id = B2BSalesSystem.pick_pain_feature(ProductState.subtype(), c.scale)
 	if cs:
 		var rep := Character.new()
 		rep.id = "char_cs_" + id
