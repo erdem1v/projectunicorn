@@ -1485,6 +1485,10 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
 
 ## GDD'ye işlenmemiş sahip kararları
 
+- **Yayın şartı adlı modüllerin K1'idir (PRD_ERP §2.4, PRD_PAZARYERI §2.3).** ERP'de Muhasebe, Fatura, Kasa ve Banka,
+  Kullanıcılar ve Yetki (`sprint.json` `mvp_named`); sprint planı ve sürüm notu dört parçalı şeridi gösterir, tahmin yazmaz.
+  1★ beklentisi yayın şartıdır (alanın adlı modüllerinin payı). Adlı listesi olmayan türde ch03'ün "3 Çekirdek kartı" MVP'si
+  (`mvp_lines`) sürer. Açık: ch03 ve GUNCELLEMELER güncellensin mi.
 - **Modül katmanı: alan grubu yok, modül hattın kendisidir (Erdem 2026-11-13/14, PRD_ERP).** Erdem'in tur 4 ortak kuralı 7:
   "Çekirdek mantığını tamamen kaldırmamız gerekebilir ... modül based." Sprint planının sol sütunu hatları düz bir modül listesi
   olarak gösterir. Kullanıcıyla görüş kartı ürün başına tektir (PRD_ERP soru 6; Erdem'in cevabı bekleniyor, PRD önerisiyle).

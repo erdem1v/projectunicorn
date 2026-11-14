@@ -1,6 +1,6 @@
 {
   "subtype": "erp",
-  "_doc": "GDD URUN rev 6 §12.11 — ERP (B2B). Kanca: v1 = ön muhasebe + stok + fatura; sürümlerle tam ERP'ye büyür. K3 yönü: AI nakit akışı öngörüsü (analytics_engine). Ürün kendi adıyla anılır; küçük işletme kısaltması ne adda ne chip'te geçer.",
+  "_doc": "GDD URUN rev 6 §12.11 — ERP (B2B). Kanca: v1 yayın şartıdır (sprint.json mvp_named); sürümlerle tam ERP'ye büyür. K3 yönü: AI nakit akışı öngörüsü (analytics_engine). Ürün kendi adıyla anılır; küçük işletme kısaltması ne adda ne chip'te geçer.",
   "_anchor": "line_erp_cashflow_k3 is §12.10's solo-reachable K3: research node (analytics_engine) + engineering ★2 + product ★1. It is the lightest K3 in the file by design.",
   "_telegraph": "§12.10 ekip telegrafı: ERP 'buna ekip lazım' diyen alt-tiptir. Paylaşılan Güvenlik & Yetki K3'ü YALNIZ ERP'de yükselir (toplam Yazılım ★5 + Test ★2 kişi). Denetim izi ve şifreleme, tek başına kurucunun uzanamayacağı kademedir; iskelet ve kademe adı ortak kalır, değişen yalnız kapıdır.",
   "shared_gate_overrides": {
@@ -140,9 +140,7 @@
           "id": "line_erp_invoicing_k1",
           "effort": 6,
           "usage_weight": 1,
-          "requires": {
-            "person": [{ "area": "design", "stars": 1 }]
-          }
+          "requires": {}
         },
         {
           "id": "line_erp_invoicing_k2",

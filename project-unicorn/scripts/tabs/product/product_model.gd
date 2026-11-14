@@ -30,7 +30,8 @@ extends RefCounted
 # }
 # center = {mode: "plan"|"active"|"release", sprint (-1 = sprint yok), weeks (sprintin süresi), week (active),
 #           staffed (kadroda çalışan var), cards: [row],
-#           mvp: {version, area, need, done (bu sprintte biten dahil), sprint (-1 = tahmin yok), week}
+#           mvp: {version, area, need, done (bu sprintte biten dahil), sprint (-1 = tahmin yok), week,
+#                 parts: [{name, state: "done"|"sprint"|"waiting"}] (adlı yayın şartının şeridi; adsız türde boş)}
 #                     or null (canlıda),
 #           spare (planda hiçbir karta gitmeyen puan var), ceiling_pct (yükün "+" kapanan eşiği, yüzde), can_start (planlamada ve
 #           ekip varken; kartsız plan da başlar),
@@ -61,7 +62,7 @@ extends RefCounted
 #             sprintin planında: `sprint` en erken olanın numarası) | "dev" (koşan sprintte aşamada: `stage`; yüzde yok) | "met" (kartı
 #             bir sürümle çıktı, bu ürün çeyreğinde: `q` sürümün takvim çeyreği), text (satırın yazısı; "" ise satır yok)}, tip}]
 #             (açıklar önde: planda olmayan önde, bu çeyrek önde, sonra son tarih; karşılananlar altta, en yeni önde),
-#   modules: [{id (hattın kimliği: modül hattın kendisidir), area (ikonunun alanı), name, planned (bu sprintte kartı var), candidates: [{id, name, effort, parts: [{stage, effort}] (sıfırdan
+#   modules: [{id (hattın kimliği: modül hattın kendisidir), area (ikonunun alanı), name, launch (yayın şartının modülü, v1.0'a dek), planned (bu sprintte kartı var), candidates: [{id, name, effort, parts: [{stage, effort}] (sıfırdan
 #             büyük aşama payları, eforu kesirli), planned (bu sprintin planında), stamp (başka sprintte: sprint numarası, yoksa
 #             -1), addable (null: "+"nın değeri henüz istenmedi, `resolve_addable` ister; false: adaylıktan çıkmış kartın "+"ı yok),
 #             bugs, fix_text}], locked: null | {name, reason (kilidin şartı), node (araştırılacak Ar-Ge düğümü ya da ""), action: "rnd" (tek eksiği
@@ -270,6 +271,7 @@ static func _module(line_id: String, area_id: String, cards: Array, planned: boo
 	if listed.is_empty() and locked == null:
 		return null
 	return {"id": line_id, "area": area_id, "name": SprintCatalog.cap_name(line_id), "planned": planned,
+		"launch": line_id in SprintCatalog.mvp_named() and not ProductState.is_live(),
 		"candidates": listed.map(func(c: Dictionary) -> Dictionary: return _module_card(c, int(tags.get(c.id, -1)), sprint)),
 		"locked": locked}
 
@@ -423,11 +425,12 @@ static func _center(mode: String, release: Dictionary, outcome: Dictionary) -> D
 	var total: float = SprintSystem.capacity()
 	var lead: Character = _lead()
 	var sprint_cards: Array = sprint.get("cards", [])
-	var eta: Dictionary = SprintSystem.mvp_eta() if n > 0 else {}
-	var need: int = int(SprintCatalog.cfg("mvp_lines"))
-	# Sürüm koşulunda bu sprintte biten Çekirdek K1 de bitmiş sayılır.
+	var named: Array = SprintCatalog.mvp_named()
+	var eta: Dictionary = SprintSystem.mvp_eta() if n > 0 and named.is_empty() else {}
+	var need: int = int(SprintCatalog.cfg("mvp_lines")) if named.is_empty() else named.size()
+	# Sürüm koşulunda bu sprintte biten yayın şartı K1'i de bitmiş sayılır.
 	var finished: int = p.get("cards", {}).values().filter(func(c: Dictionary) -> bool:
-		return c.area == "core" and int(c.target_tier) == 1 and c.state == "done").size()
+		return SprintCatalog.is_mvp_card(c) and c.state == "done").size()
 	# Araştıran kurucu sprint ekibinden düşer: Ürün bunu düğümün adıyla söyler ve Ar-Ge'ye götürür.
 	var rnd: Variant = null
 	if CharacterRegistry.get_founder().assigned_job_ids.has(HRConstants.JOB_RESEARCH):
@@ -441,7 +444,8 @@ static func _center(mode: String, release: Dictionary, outcome: Dictionary) -> D
 		"mvp": null if n <= 0 or ProductState.is_live() else {"version": SprintSystem.version_label(1),
 			"area": SprintCatalog.area_short("core"), "need": need,
 			"done": need - SprintCatalog.mvp_cards_left() + finished,
-			"sprint": eta.get("sprint", -1), "week": eta.get("week", -1)},
+			"sprint": eta.get("sprint", -1), "week": eta.get("week", -1),
+			"parts": SprintCatalog.mvp_parts(p.get("next", {}).get("cards", []) if mode == "release" else sprint_cards)},
 		"spare": outcome.get("spare", 0.0) > SprintSystem.EPS,
 		"ceiling_pct": roundi(float(SprintCatalog.cfg("cap_ceiling")) * 100.0),
 		"can_start": mode == "plan" and total > 0.0,

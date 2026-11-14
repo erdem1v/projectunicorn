@@ -1012,11 +1012,10 @@ static func mvp_eta() -> Dictionary:
 		return {}
 	var p: Dictionary = _p()
 	var weeks: int = sprint_weeks()
-	var k1 := func(c: Dictionary) -> bool: return c.area == "core" and int(c.target_tier) == 1
 	var queue: Array = (_sprint_cards() + p.next.cards.map(func(id: String) -> Dictionary: return p.cards[id])
 		+ SprintCatalog.mvp_candidates()).map(
 		func(c: Dictionary) -> Dictionary: return c.duplicate(true).merged({"decision": false}, true))
-	var all: Array = queue.duplicate()
+	var mvp: Array = queue.filter(SprintCatalog.is_mvp_card)
 	var locked: bool = mode() == "active"
 	var cards: Array = queue.slice(0, p.sprint.cards.size()) if locked else []
 	queue = queue.slice(cards.size())
@@ -1037,7 +1036,7 @@ static func mvp_eta() -> Dictionary:
 		_play_out(cards, 1, people, [], null, GameState.day + _w)
 		left -= 1
 		var shut: bool = left == 0 or _finished(cards)
-		if all.filter(func(c: Dictionary) -> bool: return k1.call(c) and phase(c) == PHASE_DONE).size() >= need:
+		if mvp.filter(func(c: Dictionary) -> bool: return phase(c) == PHASE_DONE).size() >= need:
 			return {"sprint": number, "week": close - (left if shut else 0) - 1}
 		if shut:
 			cards = cards.filter(func(c: Dictionary) -> bool: return phase(c) < PHASE_DONE)

@@ -276,7 +276,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - Harness: `--sprint-probe=hours=<h>:cards=<1|2>:ticks=<t>[:market=…][:incident=<tür>@<tik>][:promise=1][:team=<n>]` (`main.gd:258`, `sprint_probe.gd:3`) basar `SPRINTPROBE` satırları
 - Harness: `--sprint-probe` (`scripts/debug/sprint_probe.gd`, sınıf adı yok, `main.gd`'de `SPRINT_PROBE`) kurucunun `note_tool` koşusunu tohum tohum oynar; bilinmeyen anahtar
   ↳ `SPRINTPROBE ERROR` basıp 1 ile çıkar. Anahtarlar: `hours=<h>` şirketin çalıştığı saat, `start=<saat>` başlangıcı (yoksa oyunun varsayılanı),
-  ↳ `cards=<1|2>` plana alınan kart sayısı (devredenler kalır, açık Çekirdek K1'ler efor sırasıyla `add` ile), `ticks=<t>` koşu süresi; `seeds=<n>` ve `seed=<n>` tohum `seed`, `seed+1`, … üzerinde n koşu;
+  ↳ `cards=<1|2>` plana alınan kart sayısı (devredenler kalır, yayın şartının açık K1'leri efor sırasıyla `add` ile), `ticks=<t>` koşu süresi; `seeds=<n>` ve `seed=<n>` tohum `seed`, `seed+1`, … üzerinde n koşu;
   ↳ `events=0|1` (0: yalnız sprintin günlük adımı, karar kâğıdı yok; 1: bütün saat toplu adımlarla koşar, kart geceyi durdurur, masayı `RunProbe` cevaplar, kâğıt ihtimali `decision.sprint_chance`, `rate=<r>` onu ezer);
   ↳ `lead=1` liderin planını alır;
   ↳ `gate=publish|more` MVP kapısında yayınlar (varsayılan) ya da ilk kapıda Bir sprint daha der; `fill=1` her açık kartı "+" gibi alır (`SprintCatalog.open_cards`, `cards=` okunmaz);

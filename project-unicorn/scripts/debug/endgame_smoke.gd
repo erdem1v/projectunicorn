@@ -850,9 +850,9 @@ static func _seed_growth_streak(last: int) -> void:
 	_seed_month_closes([m1, m2, m3, last])
 
 
-## The first `mvp_lines` Core lines of the live product at K1: the MVP the sprint engine ships.
+## The live product's MVP at K1 (`SprintCatalog.mvp_lines`): the launch requirement the sprint engine ships.
 static func _seed_mvp_lines() -> void:
-	for line_id in SprintCatalog.capabilities("core").slice(0, int(SprintCatalog.cfg("mvp_lines"))):
+	for line_id in SprintCatalog.mvp_lines():
 		ProductState.set_line_tier(line_id, 1)
 
 
@@ -16792,7 +16792,8 @@ static func _case_fit_star_context() -> String:
 					area, star, ProductQuality.expectation(area, {"star": star}), highest]
 
 	# Sıradaki yıldız: MVP'den sonra lider ve PM'in hedefi 2★'ın baktığı boş bir alana bakar. Çekirdek MVP'nin altına inince
-	# sıradaki yıldız 1'dir ve 1★'ın bakmadığı alan 2★'ın değeriyle tartılır: sıfıra bölme olmaz, hedef seçilince şerit 0 kare der.
+	# sıradaki yıldız 1'dir: Güven yayın şartındaki payıyla (yarısı) tartılır, 1★'ın bakmadığı alan 2★'ın değeriyle: sıfıra bölme
+	# olmaz, hedef seçilince şerit 0 kare der.
 	if SprintCatalog.pm_goal() not in ["onboarding", "integrations", "trust"]:
 		return "right after the MVP the PM's goal reads '%s', want an empty area the next star looks at" % SprintCatalog.pm_goal()
 	var wobble: String = SprintCatalog.capabilities("core")[0]
@@ -16802,14 +16803,14 @@ static func _case_fit_star_context() -> String:
 	SprintSystem.pick_goal(SprintCatalog.pm_goal())
 	var strip: Dictionary = ProductModel._goal()
 	SprintSystem.pick_goal("")
-	if ProductQuality.next_star() != 1 or not is_equal_approx(ProductQuality.next_ratio("trust"), 1.0) \
+	if ProductQuality.next_star() != 1 or not is_equal_approx(ProductQuality.next_ratio("trust"), 2.0) \
 			or not is_equal_approx(ProductQuality.next_ratio("core"), 0.4 / 0.6) \
 			or strip.area_id not in ["onboarding", "integrations"] or strip.meter.now != 0:
-		return "below the MVP the next star reads %d, Trust %.2f and Core %.2f of it, the strip %s; want 1, 1, 0.67 and an empty area at 0" % [
+		return "below the MVP the next star reads %d, Trust %.2f and Core %.2f of it, the strip %s; want 1, 2, 0.67 and an empty area at 0" % [
 			ProductQuality.next_star(), ProductQuality.next_ratio("trust"), ProductQuality.next_ratio("core"), strip]
 	ProductState.set_line_tier(wobble, 1)
 	for line_id in SprintCatalog.capabilities("trust"):
-		ProductState.set_line_tier(line_id, 0)
+		ProductState.set_line_tier(line_id, int(line_id in SprintCatalog.mvp_lines()))
 
 	var mvp_1: Dictionary = ProductQuality.prospect_fit(asked.call(1, "logistics"))
 	var mvp_2: Dictionary = ProductQuality.prospect_fit(asked.call(2, "logistics"))
@@ -23263,7 +23264,7 @@ static func _case_sprint_carry_keeps_progress() -> String:
 	return ""
 
 
-## MVP: Çekirdek'in kimlik yeteneklerinden üçü K1'e varınca kapanış sürüm kapısında durur: sürüm 0, ürün
+## MVP: yayın şartının modülleri K1'e varınca kapanış sürüm kapısında durur: sürüm 0, ürün
 ## kapalı, sinyal ve MVP bayrağı yok; bir gün geçmesi kapıyı atlamaz. "Bir sprint daha" (plan_next) o sprintte
 ## K1 çıkmasa da sonraki kapanışta aynı kapıya varır. Kapıda bir gün geçtikten sonra Yayınla (publish) ürünü
 ## CANLI v1.0 yapar: sinyaller (version_shipped ve "shipped") tam bir kez atılır, MVP bayrakları o gün yazılır;
@@ -23275,12 +23276,13 @@ static func _case_sprint_mvp_three_identity_k1() -> String:
 	EventBus.version_shipped.connect(func(n: int) -> void: versions.append(n))
 	EventBus.build_phase_changed.connect(func(phase: String) -> void: ships.append(phase))
 	var lines: Array = []
-	# Sprint 1 brings one identity line to K1, sprint 2 the other two.
+	# The launch requirement's fourth module shipped in an earlier sprint; sprint 1 brings one more to K1, sprint 2 the last two.
 	var to_three := func() -> String:
 		_seed_sprint()
 		for role_id in [HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_TESTER]:
 			_sprint_hire("char_mvp_" + role_id, role_id)
-		lines.assign(SprintCatalog.capabilities("core"))
+		lines.assign(SprintCatalog.mvp_lines())
+		ProductState.set_line_tier(lines[3], 1)
 		if not _play_sprint(["feat:%s_k1" % lines[0]]) or ProductState.line_tier(lines[0]) != 1:
 			return "fixture: sprint 1 did not ship %s" % lines[0]
 		if GameState.product.release.gate or ProductState.is_live() or not versions.is_empty() or not ships.is_empty():
@@ -23330,7 +23332,8 @@ static func _case_sprint_mvp_three_identity_k1() -> String:
 			ProductState.is_live(), versions, ships, r.gate, int(r.number), int(record.number), r.expected, r.actual,
 			int(r.day), int(record.day), GameState.get_flag("mvp_launch_day", -1),
 			GameState.get_flag("mvp_version_history", [])]
-	if not _play_sprint(["feat:%s_k1" % lines[3]]):
+	var spare: String = SprintCatalog.capabilities("core").filter(func(l: String) -> bool: return l not in lines)[0]
+	if not _play_sprint(["feat:%s_k1" % spare]):
 		return "fixture: sprint 4 did not start"
 	if versions != [1, 2] or ships.size() != 2 or int(GameState.get_flag("mvp_launch_day", -1)) != launch \
 			or int(GameState.product.release.number) != 2:
@@ -23721,7 +23724,7 @@ static func _case_sprint_plan_done_counts_fix_work() -> String:
 static func _case_sprint_follow_card_cannot_be_removed() -> String:
 	_paper_world()
 	var big: String = _paper_card(3, 40)
-	var other: String = _paper_card(4, 10)
+	var other: String = _paper_card(1, 10)
 	SprintSystem.send_next(other)
 	if not SprintSystem.start():
 		return "fixture: the sprint did not start"
@@ -24420,30 +24423,30 @@ static func _case_sprint_escaped_bug_on_card_line() -> String:
 ## `_land_faulty()` çağrısını sil → hatalar yayında da bekler ve düşme iddiası FAIL.
 static func _case_sprint_escaped_pre_launch_lands_at_v1() -> String:
 	_seed_sprint()
-	var lines: Array = SprintCatalog.capabilities("core")
+	var lines: Array = SprintCatalog.mvp_lines()
 	if not _play_sprint_escaping(["feat:%s_k1" % lines[0]]):
 		return "fixture: sprint 1 did not start"
 	if ProductState.is_live() or GameState.product.release.gate:
-		return "fixture: one identity line at K1 reached the gate"
+		return "fixture: one launch module at K1 reached the gate"
 	if GameState.product.pending_faulty != [lines[0]] or ProductState.open_bugs() != 0:
 		return "a close short of the gate left pending %s and bugs %s; want the escaped bug waiting on %s" % [
 			GameState.product.pending_faulty, ProductState.open_bugs_by_line(), lines[0]]
-	# Two more identity lines at K1 put the next close on the gate; its escaped bug waits too.
+	# Two more launch modules at K1 put the next close on the gate; its escaped bug waits too.
 	ProductState.set_line_tier(lines[1], 1)
-	ProductState.set_line_tier(lines[2], 1)
-	if not _play_sprint_escaping(["feat:%s_k1" % lines[3]]):
+	ProductState.set_line_tier(lines[3], 1)
+	if not _play_sprint_escaping(["feat:%s_k1" % lines[2]]):
 		return "fixture: sprint 2 did not start"
 	if not GameState.product.release.gate or ProductState.is_live():
 		return "fixture: the second close did not stop at the gate"
-	if GameState.product.pending_faulty != [lines[0], lines[3]] or ProductState.open_bugs() != 0:
+	if GameState.product.pending_faulty != [lines[0], lines[2]] or ProductState.open_bugs() != 0:
 		return "at the gate pending reads %s and bugs %s; want both waiting" % [
 			GameState.product.pending_faulty, ProductState.open_bugs_by_line()]
 	_sim_day()
 	SprintSystem.publish()
 	if not ProductState.is_live() or not (GameState.product.pending_faulty as Array).is_empty() \
-			or ProductState.line_bugs(lines[0]) != 1 or ProductState.line_bugs(lines[3]) != 1 or ProductState.open_bugs() != 2:
+			or ProductState.line_bugs(lines[0]) != 1 or ProductState.line_bugs(lines[2]) != 1 or ProductState.open_bugs() != 2:
 		return "published: live %s, pending %s, bugs %s; want one bug on %s and one on %s" % [ProductState.is_live(),
-			GameState.product.pending_faulty, ProductState.open_bugs_by_line(), lines[0], lines[3]]
+			GameState.product.pending_faulty, ProductState.open_bugs_by_line(), lines[0], lines[2]]
 	return ""
 
 
@@ -24708,7 +24711,7 @@ static func _case_sprint_fix_first_leads_the_carried() -> String:
 	# A fix five weeks big: it outlasts two sprints, and whatever stands behind it cannot finish in the first.
 	(SprintCatalog.cfg("fix_effort") as Dictionary).per_bug = roundi(5.0 * week_points)
 	var slow: String = "feat:%s_k1" % lines[3]
-	var waiting: String = "feat:%s_k1" % lines[4]
+	var waiting: String = "feat:%s_k1" % lines[1]
 	var fix_line: String = lines[0]
 	var fix: String = "fix:" + fix_line
 	var ids := func(rows: Array) -> Array:
@@ -26240,13 +26243,13 @@ static func _case_plan_opens_at_work_start() -> String:
 	return ""
 
 
-## Tek kurucu dört rolün hepsinde tam hızdadır: liderin önerisiyle her sprint bir K1 biter ve MVP
-## üçüncü kapanışta, kapıda yayınlanınca türün seçildiği günden en geç altı tik sonra çıkar.
+## Tek kurucu dört rolün hepsinde tam hızdadır: liderin önerisiyle her sprint bir K1 biter ve MVP yayın şartının
+## dördüncü modülüyle dördüncü kapanışta, kapıda yayınlanınca türün seçildiği günden en geç sekiz tik sonra çıkar.
 ## FALSİFİKASYON: sprint.json founder_roles'u ["product", "dev"] yap → FAIL.
 static func _case_sprint_solo_mvp_by_week_six() -> String:
 	_seed_sprint()
 	var start: int = GameState.day
-	while not ProductState.is_live() and GameState.day - start < 6:
+	while not ProductState.is_live() and GameState.day - start < 8:
 		if SprintSystem.mode() == "release":
 			SprintSystem.plan_next()
 		SprintSystem.apply_lead()
@@ -26256,8 +26259,8 @@ static func _case_sprint_solo_mvp_by_week_six() -> String:
 		_sim_day()
 		SprintSystem.publish()
 	var launch: int = int(GameState.get_flag("mvp_launch_day", -1))
-	if not ProductState.is_live() or launch - start > 6:
-		return "the solo founder's MVP: live %s, %d ticks after the type; want live within 6" % [
+	if not ProductState.is_live() or launch - start > 8:
+		return "the solo founder's MVP: live %s, %d ticks after the type; want live within 8" % [
 			ProductState.is_live(), launch - start]
 	return ""
 
@@ -27283,7 +27286,7 @@ static func _case_paper_card_trim() -> String:
 		return "planning the next sprint dropped the follow card, whose tier the first card reached"
 	ProductModel.live()
 	# A card that ships with a bug: the bug lands on its line when the card ships, and it escaped no testing.
-	var small: String = _paper_card(4, 10)
+	var small: String = _paper_card(1, 10)
 	if not SprintSystem.start():
 		return "fixture: sprint 2 did not start"
 	_paper_waits_on(small)
@@ -27380,7 +27383,7 @@ static func _case_paper_renewal_card_first() -> String:
 	var account: Customer = _incident_account("co_renewal", "Renewal Co", "retail", 40, 1800)
 	var lines: Array = SprintCatalog.capabilities("core")
 	var first_id: String = _paper_card(3, 30)
-	var req := {"id": "co_renewal.1", "customer_id": account.id, "step": lines[4] + "_k1", "line": lines[4],
+	var req := {"id": "co_renewal.1", "customer_id": account.id, "step": lines[1] + "_k1", "line": lines[1],
 		"status": "open", "created_sprint": 1, "due_sprint": 99, "value": 21600, "card_id": "req:co_renewal.1",
 		"day": GameState.day}
 	GameState.product.requests.append(req)
@@ -27608,7 +27611,7 @@ static func _case_paper_cards_render() -> String:
 ## o aşamada çalışan kişisidir (PM'de çeyreğin PM'i), hesap ve ikinci çalışan kartın hattından bağlanır; koşulu taşımayan kartta
 ## (hattı başka) ya da sprintsiz kâğıt istenmez.
 ## FALSİFİKASYON: `paper_account`un `line_warehouse` süzgecini sil → depo dışı hesap bağlandı FAIL; stock_transfer'in koşulundan
-## `urun.decision_line` yaprağını sil → fatura hattındaki kartta da istendi FAIL; `sprint_dev` seçicisinde rol süzgecini sil →
+## `urun.decision_line` yaprağını sil → alım hattındaki kartta da istendi FAIL; `sprint_dev` seçicisinde rol süzgecini sil →
 ## yazılımcı olmayan bağlandı FAIL.
 static func _case_paper_cards_are_asked() -> String:
 	var ask := func(paper: String, line: String, effort: int, phases_done: int) -> Dictionary:
@@ -27648,10 +27651,10 @@ static func _case_paper_cards_are_asked() -> String:
 	if not got.asked or role_of.call(got.ctx, "employee") != HRConstants.ROLE_TESTER \
 			or got.ctx.get("customer", {}).get("id", "") != got.warehouse:
 		return "the stock transfer paper was not asked, not spoken by the tester or not about the stock line's warehouse account (%s)" % str(got)
-	got = ask.call("product.sprint_test_stock_transfer", "line_erp_invoicing", 200, 2)
+	got = ask.call("product.sprint_test_stock_transfer", "line_erp_intake", 200, 2)
 	if got.asked:
-		return "the stock transfer paper was asked about the invoicing line"
-	got = ask.call("product.sprint_test_readonly_delete", "line_erp_invoicing", 200, 2)
+		return "the stock transfer paper was asked about the intake line"
+	got = ask.call("product.sprint_test_readonly_delete", "line_erp_intake", 200, 2)
 	if not got.asked or role_of.call(got.ctx, "employee") != HRConstants.ROLE_TESTER \
 			or role_of.call(got.ctx, "dev") != HRConstants.ROLE_DEVELOPER:
 		return "the read only delete paper was not asked, not spoken by the tester or names no developer (%s)" % str(got)
@@ -27670,7 +27673,7 @@ static func _paper_pm_asked() -> String:
 	var lines: Array = SprintCatalog.capabilities("core")
 	var account: Customer = _incident_account("co_asked", "Asked Co", "technology", 40, 1800)
 	var first_id: String = _paper_card(3, 30)
-	GameState.product.requests.append({"id": "co_asked.1", "customer_id": account.id, "step": lines[4] + "_k1", "line": lines[4],
+	GameState.product.requests.append({"id": "co_asked.1", "customer_id": account.id, "step": lines[1] + "_k1", "line": lines[1],
 		"status": "open", "created_sprint": 1, "due_sprint": 99, "value": 21600, "card_id": "req:co_asked.1", "day": GameState.day})
 	var asked: String = "req:co_asked.1"
 	SprintSystem.add(asked)
@@ -28207,7 +28210,8 @@ static func _case_product_pm_plan_opens_as_next_sprint() -> String:
 		SprintSystem.apply_lead()
 		if ahead.any(func(id: String) -> bool: return id in GameState.product.sprint.cards):
 			return "the lead took cards approved for later sprints into sprint %d" % (n - 1)
-		if not SprintSystem.start():
+		# Onaylı üç plan adayları tüketince 1. sprintin planı kartsız kalır: oyuncunun düğmesi gibi kartsız sprint başlar.
+		if not SprintSystem.begin_planned():
 			return "sprint %d did not start" % (n - 1)
 		for _d in 3:
 			if SprintSystem.mode() != "release":
@@ -29864,9 +29868,11 @@ static func _case_vc_weakest_area() -> String:
 	if lacking.seed != "how_big" or lacking.fit != met_fit - TermSheetTableSystem.E_FIT_PRODUCT_DIMS:
 		return "lacking: seed '%s', fit %d; want how_big and the table without the +%d" % [
 			lacking.seed, lacking.fit, TermSheetTableSystem.E_FIT_PRODUCT_DIMS]
-	# A 1★ customer looks only at Core: Trust at 0 is not named. `areas` narrows the look.
-	if ProductQuality.weakest_area({"market": "b2b", "sector": "logistics", "star": 1}) != "":
-		return "star: a 1★ context named '%s' with Core past its bar" % ProductQuality.weakest_area({"market": "b2b", "sector": "logistics", "star": 1})
+	# A 1★ customer looks at the launch requirement: Core past its bar, Trust at 0 (its launch module unbuilt) is named. `areas`
+	# narrows the look.
+	if ProductQuality.weakest_area({"market": "b2b", "sector": "logistics", "star": 1}) != "trust":
+		return "star: a 1★ context named '%s' with Core past its bar and Trust at 0, want trust" % ProductQuality.weakest_area(
+			{"market": "b2b", "sector": "logistics", "star": 1})
 	if ProductQuality.weakest_area({"areas": ["integrations"]}) != "" or ProductQuality.weakest_area({"areas": ["core", "trust"]}) != "trust":
 		return "areas: the filter reads '%s' and '%s', want '' and trust" % [
 			ProductQuality.weakest_area({"areas": ["integrations"]}), ProductQuality.weakest_area({"areas": ["core", "trust"]})]

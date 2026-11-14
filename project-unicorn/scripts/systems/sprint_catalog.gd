@@ -580,19 +580,52 @@ static func release_lead_sentence(release: Dictionary) -> String:
 	return "" if named.is_empty() else _t("PRODUCT_LEAD_WEAKEST").format({"area": cap_name(named[0].line)})
 
 
-## Çekirdek'te K1'e varması gereken kimlik yeteneği sayısı; canlı üründe 0.
+## v1.0'a kalan K1: adlı yayın şartı olan türde K1'i çıkmamış adlı modül, öbür türde `mvp_lines`'a eksik kimlik hattı;
+## canlı üründe 0.
 static func mvp_cards_left() -> int:
 	if ProductState.is_live():
 		return 0
+	var named: Array = mvp_named()
+	if not named.is_empty():
+		return named.filter(func(l: String) -> bool: return tier(l) < 1).size()
 	var shipped: int = _identity_lines().filter(func(l: String) -> bool: return tier(l) >= 1).size()
 	return maxi(0, int(cfg("mvp_lines")) - shipped)
 
 
-## Çekirdek'in açık K1 adayları efor, eşitse id sırasıyla; MVP tahmini ve sprint probe'u sprinti bu sırayla
+## Yayın şartının adlı modülleri sırasıyla (`sprint.json` `mvp_named`); adlı şartı olmayan türde boş.
+static func mvp_named(subtype: String = ProductState.subtype()) -> Array:
+	return (cfg("mvp_named") as Dictionary).get(subtype, [])
+
+
+## Fikstürlerin ve botun MVP'si: adlı türde adlı modüller, öbür türde kimlik alanının ilk `mvp_lines` hattı.
+static func mvp_lines() -> Array:
+	var named: Array = mvp_named()
+	return named if not named.is_empty() else _identity_lines().slice(0, int(cfg("mvp_lines")))
+
+
+## Kart yayın şartının bir K1'i mi: adlı türde adlı modülün, öbür türde kimlik alanının.
+static func is_mvp_card(card: Dictionary) -> bool:
+	var named: Array = mvp_named()
+	return int(card.target_tier) == 1 and card.line in (_identity_lines() if named.is_empty() else named)
+
+
+## Yayın şartı şeridinin parçaları sırasıyla, {name, state}: K1'i çıkmış ya da bu kapanışta bitmişse "done",
+## `planned` kartlarında K1'i duruyorsa "sprint", yoksa "waiting".
+static func mvp_parts(planned: Array) -> Array:
+	var mvp: Array = _p().cards.values().filter(is_mvp_card)
+	var done: Array = mvp.filter(func(c: Dictionary) -> bool: return c.state == "done").map(func(c: Dictionary) -> String: return c.line)
+	var queued: Array = mvp.filter(func(c: Dictionary) -> bool: return c.id in planned).map(func(c: Dictionary) -> String: return c.line)
+	return mvp_named().map(func(l: String) -> Dictionary:
+		return {"name": cap_name(l), "state": "done" if tier(l) >= 1 or l in done else "sprint" if l in queued else "waiting"})
+
+
+## Yayın şartının açık K1 adayları efor, eşitse id sırasıyla; MVP tahmini ve sprint probe'u sprinti bu sırayla
 ## doldurur.
 static func mvp_candidates() -> Array:
-	var open: Array = candidates(_identity_area()).filter(func(c: Dictionary) -> bool:
-		return c.state == "candidate" and int(c.target_tier) == 1)
+	var lines: Array = mvp_lines() if not mvp_named().is_empty() else _identity_lines()
+	var open: Array = []
+	for area_id in area_ids().filter(func(a: String) -> bool: return capabilities(a).any(func(l: String) -> bool: return l in lines)):
+		open.append_array(candidates(area_id).filter(func(c: Dictionary) -> bool: return c.state == "candidate" and is_mvp_card(c)))
 	open.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		var size_a: int = roundi(SprintSystem.total(a))
 		var size_b: int = roundi(SprintSystem.total(b))
@@ -828,7 +861,7 @@ static func customer_name(owner: Dictionary) -> String:
 
 
 ## Etki puanı (sprint.json `impact`): kademe, alan seviyesindeki ham artış, rakip açığı, talep,
-## MVP öncesi boş kimlik yeteneği; düzeltmede kapanan hata ve kalkan "!", araştırmada sabit.
+## v1.0'a dek yayın şartının K1'i; düzeltmede kapanan hata ve kalkan "!", araştırmada sabit.
 static func _impact(card: Dictionary) -> float:
 	var w: Dictionary = cfg("impact")
 	match card.kind:
@@ -842,7 +875,7 @@ static func _impact(card: Dictionary) -> float:
 		v += w.rival_gap
 	if not _request_of(card).is_empty():
 		v += w.request
-	if mvp_cards_left() > 0 and tier(card.line) == 0 and card.line in _identity_lines():
+	if mvp_cards_left() > 0 and is_mvp_card(card):
 		v += w.mvp
 	return v
 
@@ -883,7 +916,7 @@ static func open_cards(taken: Array) -> Array:
 ## Liderin alanı: kartı olan alanların en zayıfı. Araştırmanın etkisi yoktur: küçük ekipte (sprint en
 ## çok `lead.small_team_cards` K1 alır) tek kartı araştırma olan alan en zayıf sayılmaz, yoksa ekibin
 ## haftaları alanı ilerletmeyen işe bağlanırdı. Yayında olmayan ürünün tek hedefi MVP'dir: açık kartı
-## kaldıkça Çekirdek.
+## kaldıkça yayın şartının alanı (adlı türde havuzda ilk duran yayın şartı K1'inin alanı, öbür türde kimlik alanı).
 static func _lead_area(pool: Array, capacity: float) -> String:
 	var areas: Array = area_ids().filter(func(a: String) -> bool:
 		return pool.any(func(c: Dictionary) -> bool: return c.area == a))
@@ -892,8 +925,12 @@ static func _lead_area(pool: Array, capacity: float) -> String:
 			return pool.any(func(c: Dictionary) -> bool: return c.area == a and c.kind != "research"))
 		if not built.is_empty():
 			areas = built
-	if mvp_cards_left() > 0 and _identity_area() in areas:
-		return _identity_area()
+	if mvp_cards_left() > 0:
+		var mvp: Array = [_identity_area()] if mvp_named().is_empty() else pool.filter(is_mvp_card).map(
+			func(c: Dictionary) -> String: return c.area)
+		for a in mvp:
+			if a in areas:
+				return a
 	return _weakest(areas, pool)
 
 

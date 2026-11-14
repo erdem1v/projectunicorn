@@ -16,7 +16,9 @@ signal hovered(card_id: String)
 
 const CHEVRONS := ["res://assets/icons/util/chevron_right.svg", "res://assets/icons/util/chevron_down.svg"]
 const CHEVRON_UP := "res://assets/icons/util/chevron_up.svg"
-## Modülün işareti: modülün alanının kimliği → ikon.
+## Modülün ikonu, hattın kimliğiyle (paylaşılan hattın türü olmadan).
+const MODULE_ICON := "res://assets/icons/module/%s.svg"
+## Modül ikonu olmayan türde modülün işareti: alanının ikonu.
 const AREA_ICONS := {
 	"core": "res://assets/icons/rail/product.svg",
 	"trust": "res://assets/icons/util/shield.svg",
@@ -164,7 +166,7 @@ func _request_row(r: Dictionary) -> PanelContainer:
 		who.add_child(SprintUiShared.due_chip(String(r.due_text), r.soon))
 	col.add_child(who)
 	var what := SprintUiShared.box(UiTokens.SPACE_M)
-	var mark := _area_mark(String(r.area))
+	var mark := _module_mark(String(r.module_id), String(r.area))
 	what.add_child(mark)
 	what.add_child(_name(String(r.card_name), &"CaptionPrimary", null))
 	col.add_child(what)
@@ -214,9 +216,11 @@ class StageRing extends Control:
 
 # --- Modüller ---------------------------------------------------------------------------
 
-## Modülün ikonu (modülün alanının ikonu), kutusunda ortalı.
-func _area_mark(area_id: String) -> PanelContainer:
-	return HRUiShared.D_mono_box(UiTokens.D_BOX_MONO, UiFactory.make_glyph(AREA_ICONS[area_id], UiTokens.D_ICON_ROW, UiTokens.D_INK_2))
+## Modülün işareti: hattın ikonu; ikonu olmayan türde alanın ikonu.
+func _module_mark(line_id: String, area_id: String) -> PanelContainer:
+	var icon: String = MODULE_ICON % line_id.get_slice("@", 0)
+	return HRUiShared.D_mono_box(UiTokens.D_BOX_MONO, UiFactory.make_glyph(icon if ResourceLoader.exists(icon) else AREA_ICONS[area_id],
+		UiTokens.D_ICON_ROW, UiTokens.D_INK_2))
 
 
 ## Modül satırı: işaret, ad, tik (bu sprintte kartı varsa; ipucu `PRODUCT_IN_PLAN_TIP`) ve şevron; açıksa altında adayları ve kilitli
@@ -229,8 +233,10 @@ func _module_row(m: Dictionary) -> PanelContainer:
 	row.add_child(col)
 	var head := SprintUiShared.box(UiTokens.SPACE_M)
 	head.custom_minimum_size.y = UiTokens.D_BOX_MONO
-	head.add_child(_area_mark(String(m.area)))
+	head.add_child(_module_mark(String(m.id), String(m.area)))
 	head.add_child(_name(String(m.name), &"TipTitle", UiTokens.D_INK_2))
+	if m.launch:
+		head.add_child(LaunchGate.flag())
 	if m.planned:
 		var tick := UiFactory.make_glyph(SprintUiShared.CHECK, UiTokens.D_ICON_ROW, UiTokens.D_ST_TEST)
 		tick.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -255,7 +261,8 @@ func _module_row(m: Dictionary) -> PanelContainer:
 	HRUiShared.set_mouse_ignore(hit)
 	hit.mouse_filter = Control.MOUSE_FILTER_STOP
 	hit.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	hit.tooltip_text = String(m.name) + (SprintUiShared.SEP + tr("PRODUCT_IN_PLAN_TIP") if m.planned else "")
+	hit.tooltip_text = SprintUiShared.SEP.join([m.name] + ([tr("LAUNCH_GATE_TITLE")] if m.launch else [])
+		+ ([tr("PRODUCT_IN_PLAN_TIP")] if m.planned else []))
 	hit.gui_input.connect(func(ev: InputEvent) -> void:
 		if UiFactory.is_left_click(ev):
 			ui_changed.emit("open_area", "" if open else m.id))

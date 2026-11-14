@@ -29,9 +29,9 @@ const USE_AREA_MIN := 0.15
 ## düz. Baktığı hiçbir alanı eksik olmayan aday bu eğriye girmez, kesin kapanır.
 const CLOSE_CURVE := [[40.0, 0.30], [55.0, 0.60], [70.0, 0.85], [80.0, 0.95]]
 
-# Yıldız beklenti tablosu: seviye 1 alanın her hattının ilk sürümüdür. Hat sayısına bağlı tek hücre hesaplanır: Çekirdek
-# 1★'ta MVP'dir (`mvp_lines` ÷ Çekirdek hat sayısı). Tabloda olmayan hücre 0'dır: o yıldız o alana bakmaz. MVP hücresi
-# ve 3★ satırı [WORKING] onay bekliyor.
+# Yıldız beklenti tablosu: seviye 1 alanın her hattının ilk sürümüdür. 1★ satırı yayın şartıdır ve hat sayısından hesaplanır:
+# adlı şartı olan türde alanın adlı modüllerinin payı, öbür türde Çekirdek'te `mvp_lines` ÷ Çekirdek hat sayısı. Tabloda
+# olmayan hücre 0'dır: o yıldız o alana bakmaz. 1★ satırı ve 3★ satırı [WORKING] onay bekliyor.
 const CORE_2 := 1.25
 const EMPHASIS_2 := 1.0
 const CORE_3 := 2.0
@@ -115,9 +115,10 @@ static func ratio(area: String, expect: float) -> float:
 ## 2★'ın büyüğü; rakipsizdir.
 static func expectation(area: String, ctx: Dictionary = {}) -> float:
 	var market: String = ctx.get("market", ProductState.market_type())
-	var caps: Array[String] = SprintCatalog.capabilities(area, ctx.get("subtype", ProductState.subtype()))
+	var subtype: String = ctx.get("subtype", ProductState.subtype())
+	var caps: Array[String] = SprintCatalog.capabilities(area, subtype)
 	var role: String = _role(area, market, ctx.get("sector", ""))
-	var value: float = _value(role, caps.size(), ctx, market) if role != "" else 0.0
+	var value: float = _value(role, caps, SprintCatalog.mvp_named(subtype), ctx, market) if role != "" else 0.0
 	if ctx.get("rivals", false) and value > 0.0:
 		value += minf(float(SprintCatalog.cfg("rival_bump")) * SprintCatalog.recent_hits(caps).size(),
 			float(SprintCatalog.cfg("rival_bump_max")))
@@ -303,19 +304,21 @@ static func _role(area: String, market: String, sector: String) -> String:
 	return "emphasis" if _row(sector).find(area) < 2 else "rest"
 
 
-static func _value(role: String, lines: int, ctx: Dictionary, market: String) -> float:
+static func _value(role: String, caps: Array[String], named: Array, ctx: Dictionary, market: String) -> float:
 	if market == "b2c" and not ctx.has("star"):
 		var star: float = _audience_star()
 		var at: float = (star if ctx.get("audience", false) else maxf(star, PAGE_STAR)) - 1.0
 		var low: int = mini(int(at), STAR_MAX - 2)
-		return lerpf(_star_value(low + 1, role, lines), _star_value(low + 2, role, lines), at - low)
-	return _star_value(ctx.get("star", PAGE_STAR), role, lines)
+		return lerpf(_star_value(low + 1, role, caps, named), _star_value(low + 2, role, caps, named), at - low)
+	return _star_value(ctx.get("star", PAGE_STAR), role, caps, named)
 
 
-static func _star_value(star: int, role: String, lines: int) -> float:
+static func _star_value(star: int, role: String, caps: Array[String], named: Array) -> float:
+	if star == 1:
+		if not named.is_empty():
+			return float(caps.filter(func(l: String) -> bool: return l in named).size()) / caps.size()
+		return float(SprintCatalog.cfg("mvp_lines")) / caps.size() if role == "core" else 0.0
 	match [star, role]:
-		[1, "core"]:
-			return float(SprintCatalog.cfg("mvp_lines")) / lines
 		[2, "core"]:
 			return CORE_2
 		[3, "core"]:

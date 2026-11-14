@@ -2234,7 +2234,7 @@ static func _seed_b2c_world() -> void:
 ## "declining" arm of the B2C growth measurement.
 static func _seed_b2c_neglect() -> void:
 	_seed_live_product("b2c", "note_tool", "Nova")
-	for line_id in SprintCatalog.capabilities("core").slice(0, int(SprintCatalog.cfg("mvp_lines"))):
+	for line_id in SprintCatalog.mvp_lines():
 		ProductState.set_line_tier(line_id, 1)
 	ProductState.add_bugs(FIXTURE_BUG_LINE, 12)
 	SalesSystem.add_b2c_audience(200)

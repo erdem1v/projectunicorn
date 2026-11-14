@@ -133,6 +133,8 @@ func _center(model: Dictionary) -> void:
 	head.action.connect(action.emit)
 	head.setup(model)
 	col.head.add_child(head)
+	if c.mvp != null and not c.mvp.parts.is_empty():
+		col.head.add_child(LaunchGate.new(c.mvp.parts))
 	_capacity = CapacityView.new()
 	_capacity.action.connect(action.emit)
 	_capacity.setup(model)
@@ -179,16 +181,19 @@ func _release(col: Column, c: Dictionary, next_sprint: int) -> void:
 	head.add_child(SprintUiShared.label(tr("PRODUCT_SPRINT_END").format({"n": c.sprint}), &"MetaMuted"))
 	col.head.add_child(head)
 
-	# MVP'ye varan kapanış kapıdır: v1.0 hazır, yayın oyuncunun. Öncesindeki kapanış sürüm çıkarmaz:
-	# başlığın altında sürüm koşulu, notta v1.0'a kalan kart.
+	# MVP'ye varan kapanış kapıdır: v1.0 hazır, yayın oyuncunun. Öncesindeki kapanış sürüm çıkarmaz. Adlı türde yayın
+	# şartının şeridi v1.0'a dek her notun başlığındadır; adsız türde başlıkta sürüm koşulu, notta v1.0'a kalan kart.
+	if c.mvp != null and not c.mvp.parts.is_empty():
+		col.head.add_child(LaunchGate.new(c.mvp.parts))
 	if r.gate:
 		col.stack.add_child(SprintUiShared.label(tr("PRODUCT_GATE_TITLE").format(c.mvp), &"ReleaseValue"))
-		col.stack.add_child(SprintUiShared.prose(tr("PRODUCT_GATE_BODY").format(c.mvp), &"DataText"))
+		col.stack.add_child(SprintUiShared.prose(tr("PRODUCT_GATE_BODY"), &"DataText"))
 	elif c.mvp != null:
-		col.head.add_child(_mvp_rule(c.mvp))
-		var left: int = c.mvp.need - c.mvp.done
-		col.stack.add_child(SprintUiShared.label(tr(Fmt.count_key("PRODUCT_MVP_LEFT", left)).format(
-			{"n": left, "version": c.mvp.version}), &"DataText"))
+		if c.mvp.parts.is_empty():
+			col.head.add_child(_mvp_rule(c.mvp))
+			var left: int = c.mvp.need - c.mvp.done
+			col.stack.add_child(SprintUiShared.label(tr(Fmt.count_key("PRODUCT_MVP_LEFT", left)).format(
+				{"n": left, "version": c.mvp.version}), &"DataText"))
 	elif r.version == "":
 		col.stack.add_child(SprintUiShared.label(tr("PRODUCT_NO_RELEASE"), &"DataText"))
 	else:

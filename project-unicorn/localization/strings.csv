@@ -2558,7 +2558,11 @@ PRODUCT_NO_RELEASE,Bu sprint sürüm çıkmadı,No release this sprint
 PRODUCT_MVP_LEFT,{version} için {n} kart kaldı,{n} cards left for {version}
 PRODUCT_MVP_LEFT_ONE,{version} için {n} kart kaldı,{n} card left for {version}
 PRODUCT_GATE_TITLE,{version} hazır,{version} is ready
-PRODUCT_GATE_BODY,{area} kartları bitti. Yayınlarsan kullanıcılar bu hafta gelmeye başlar. Bir sprint daha beklersen ürün sonraki kapanışa kadar kapalı kalır.,The {area} cards are done. Ship now and users start arriving this week. Wait one more sprint and the product stays closed until the next close.
+PRODUCT_GATE_BODY,Yayınlarsan kullanıcılar bu hafta gelmeye başlar. Bir sprint daha beklersen ürün sonraki kapanışa kadar kapalı kalır.,Ship now and users start arriving this week. Wait one more sprint and the product stays closed until the next close.
+LAUNCH_GATE_TITLE,Yayın şartı,Launch requirement
+LAUNCH_GATE_DONE,bitti,done
+LAUNCH_GATE_SPRINT,bu sprintte,this sprint
+LAUNCH_GATE_WAITING,bekliyor,waiting
 PRODUCT_GATE_ONE_MORE,Bir sprint daha,One more sprint
 PRODUCT_RELEASE_RND_OPEN,Ar-Ge açıldı,R&D is open
 PRODUCT_RELEASE_USERS,İlk hafta {n} kullanıcı,{n} users in the first week

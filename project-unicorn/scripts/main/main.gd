@@ -77,6 +77,8 @@ const _ERP_SHIPPED_LINES := [
 	["line_erp_ledger", 2],
 	["line_erp_stock", 1],
 	["line_erp_invoicing", 1],
+	["line_erp_cashflow", 1],
+	["line_shared_security@erp", 1],
 ]
 
 
@@ -1302,7 +1304,7 @@ func _seed_incident_world(kind: String, b2b: bool, load_pct := 0) -> Dictionary:
 func _stage_emergency(kind: String, b2b: bool, given: Dictionary) -> Dictionary:
 	ProductState.clear_line_bugs("line_erp_ledger")
 	SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id; the B2C world chose its type before its audience
-	for line_id in SprintCatalog.capabilities("core").slice(0, int(SprintCatalog.cfg("mvp_lines"))):
+	for line_id in SprintCatalog.mvp_lines():
 		ProductState.set_line_tier(line_id, 1)
 	(SprintCatalog.cfg("decision") as Dictionary).sprint_chance = 0.0
 	(SprintCatalog.cfg("fix_effort") as Dictionary).per_bug = 30   # a fix this big leaves the full sprint no room for it
@@ -1426,7 +1428,7 @@ func _stage_release_thanks() -> void:
 func _seed_promise_world() -> Dictionary:
 	ProductLines.reload()
 	SprintSystem.choose_type("erp", "Fatura")
-	for line_id in SprintCatalog.capabilities("core").slice(0, int(SprintCatalog.cfg("mvp_lines"))):
+	for line_id in SprintCatalog.mvp_lines():
 		ProductState.set_line_tier(line_id, 1)
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_version", 1)
@@ -1465,7 +1467,7 @@ func _seed_paper_world(event_id: String) -> Dictionary:
 	var b2b: bool = String(paper.get("guards", {}).get("market", "b2b")) == "b2b"
 	ProductLines.reload()
 	SprintSystem.choose_type("erp" if b2b else "note_tool", "Fatura" if b2b else "Notly")   # LOC-DATA debug seed / id
-	for line_id in SprintCatalog.capabilities("core").slice(0, int(SprintCatalog.cfg("mvp_lines"))):
+	for line_id in SprintCatalog.mvp_lines():
 		ProductState.set_line_tier(line_id, 1)
 	GameState.day = 14
 	GameState.set_flag("mvp_shipped", true)

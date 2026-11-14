@@ -41,6 +41,7 @@ Alt klasörler:
   ↳ düzeltme kartının `fix_text`i en büyük hesabı da yazar; sonraki kart `raw_effort` ve `ahead` (önden işi başlıyor); `stage_face(id, aşama)` ipucunun kişileridir.
 - `scripts/tabs/product/sprint_panel.gd` (324): `SprintPanel`: orta (bu sprint) ve sağ (sonraki sprint, `SprintNext`) sütunlar; orta sütunda başlık (`SprintHead` + `CapacityView`), pano (`SprintBoard`) ve
   ↳ alt şerit (`SprintFoot`), sürüm notunda bugünkü `_release` (gövdesi `Column(scrolls)`te uzunsa kayar, başlık ve alt şerit sabit); sağ sütun 300 px sabit, orta sütun kalanı alır.
+  ↳ v1.0'dan önce adlı yayın şartı olan türde planın başlığında ve sürüm notunda `LaunchGate` şeridi, öbür türde sürüm koşulu (`_mvp_rule`);
   ↳ Yeniden kurulumda pano, sürüm notunun gövdesi ve sağ sütunun kaydırması korunur;
   ↳ `running()` ve `set_now(at)` saat hattıdır (pano, Kapasite'nin "yapılan" dolgusu ve alt şeridin ilerlemesi).
 - `scripts/tabs/product/sprint_foot.gd` (148): `SprintFoot`: alt şerit (68 px): solda "Planlamayı devret" (PM'in yüzüyle, PM yokken kilitli, yanında şartı), sağda "Sprinti başlat" (ekip yokken kapalı, kartsız planda yanında "0 kart"; basınca
@@ -78,12 +79,14 @@ Alt klasörler:
   ↳ ÇEYREK çubuğu, `switch`, `due_chip` (yazının ilk harfi çipte büyür), `flag` (sütun genişliğinde sarar),
   ↳ `row_keys`, `way_out`, `add_key`, `keep_scroll`); Ürün dışında 10+ dosya kullanır. İpucu parçaları: `STAGE_KEYS`, `stage_name`, `stage_icon`, `stage_done`, `done_text`, `named_stars`, `effort_tip`,
   ↳ `prepared_tip`, `meet_lines`, `meet_lines_of` (kalemler `GameState.founder_meetings_frozen` kayıtlarıdır, günü `TimeModel.meeting_days`: hesaba verilen zaman `account` kendi gününü taşır; `total`: türü başına günler toplanır); kurucunun haftası yalnız hesaplara gitmişse Sprint ekibi onu "hesap işinde" yazar (`capacity_view._away_text`), `tip_column` (zengin ipucunun kökü).
+- `scripts/tabs/product/launch_gate.gd`: `LaunchGate`: yayın şartı şeridi (`SprintCatalog.mvp_parts`: bitti onay, bu sprintte dolu nokta, bekliyor boş halka;
+  ↳ sözcüğü ipucunda), `flag()` şartın modülünün sol sütundaki bayrağı.
 - `scripts/tabs/product/area_panel.gd` (392): `AreaPanel`: sol sütun (SPRINT ve ÇEYREK): Geçmiş, MÜŞTERİ TALEPLERİ, MODÜLLER ve açık modülün adayları (düzeltme adayı tam hata metnini sarar yazar,
   ↳ başka sprintin adayı "Sprint {n}" damgası taşır); adayların sonunda kilitli kartlar (`_locked_card`: soluk ad ve altında şartı, efor ve şerit yok; araştırma kilidinde Ar-Ge ikonu ve tık Ar-Ge'yi o düğümde açar, kişi kilidinde tık işe alım atlasını açar, canlı ürün kilidi yalnız okunur); kapalı modülün yapılacak kartı yoksa ilk kilidin şartı adının altında;
   ↳ "+" değerleri sonraki karelerde gelir; imleç ya da tık sırayı beklemez, o "+"nın değeri o an hesaplanır (`_learn`).
   ↳ Talep satırı üç satır: müşteri ve son tarih çipi, modül ve kart, durum (`_status_line`: tik ve "Sprint {n}", aşamanın renginde halka
   ↳ (`StageRing`) ve adı, tik ve "{q}. çeyrekte tamamlandı"); biten talepler katın dışında, sayıya girmez. Planlı modülün başlığında tik.
-  ↳ Modül başlığı ve talep satırı modülün ikonunu `MonoBox` kutusunda taşır (`AREA_ICONS` kimlikten yola, `_area_mark` → `HRUiShared.D_mono_box`; talep satırında ipucu modülün adı).
+  ↳ Modül başlığı ve talep satırı modülün ikonunu `MonoBox` kutusunda taşır (`_module_mark`: `MODULE_ICON` hattın kimliğiyle, `@tür` olmadan; dosyası yoksa `AREA_ICONS`; talep satırında ipucu modülün adı).
 - `scripts/tabs/product/quarter_view.gd` (195): `QuarterView`: ÇEYREK görünümü: hedef şeridi (menü SprintHead ile ortak), sol sütun (`AreaPanel`), altı sprint sütunu, onay düğmeleri;
   ↳ sütunlar ve "Hepsini onayla" içerik pencereyi aşınca dikey kayar (`_right`, yeniden kurulumda yeri korunur), `content_height` içeriğin kendi boyunu okur.
 - `scripts/tabs/product/overview_view.gd` (96): GENEL BAKIŞ kâğıdı (şimdilik yalnız Sunucu bloğu; Azalt düğmesi kapasite 0 birimdeyken `server.decrease.off` ile kapalı); class_name yok.
