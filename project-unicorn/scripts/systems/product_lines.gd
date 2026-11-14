@@ -121,9 +121,8 @@ static func _load_subtype(path: String, shared: Dictionary) -> void:
 			% [subtype, profile_tally, IDENTITY_PROFILE_SHAPE])
 		return
 
-	# §12.10 ekip telegrafları paylaşılan bir kademenin kapısını alt-tipe göre
-	# değiştirebilir (ERP'nin Güvenlik & Yetki K3'ü). İskelet ve ad ortak kalır;
-	# değişen yalnız gereksinim bloğudur.
+	# Alt-tip paylaşılan bir kademenin kapısını kendi tablosuyla değiştirebilir (ERP'nin kapıları, §12.10 telegrafı
+	# dahil). İskelet ve ad ortak kalır; değişen yalnız gereksinim bloğudur.
 	var gate_overrides: Dictionary = doc.get("shared_gate_overrides", {}) as Dictionary
 	for raw in shared.get("lines", []) as Array:
 		var rec: Dictionary = _build_line(raw as Dictionary, subtype, true, gate_overrides)

@@ -334,7 +334,8 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
   ↳ 2 tasarımcı, 2 testçi, kurucu kapalı, plan %130: üç aşama taşar; `a4_fourteen` 11 kişi, dört düzeltme kartı, 14 kartlık plan (%160); `a4_requests` beş kişi, kurucu kapalı,
   ↳ dört hesabın dört açık talebi (motor bir hat için bir talep verir, bu ERP'de en çok dört); `a4_empty` altı kişi, bir geliştirici eğitimde, boş plan; `a4_run_end` aynı ekibin düzeltme kartsız sprinti 2.
   ↳ haftanın sonunda (sonraki sütunda iki kart), tasarımcı sonraki sütunun kartında önden; `a4_next_prefilled` onun sonraki planlaması: devreden test, önden yapılmış tasarım, plan erken biter; `a4_early` altı kişi, iki kartlık plan,
-  ↳ sprint 1. haftanın sonunda kapanır; `a4_first_sprint` v1.0 öncesi Sprint 1: tasarımcı, 5★ geliştirici, kurucu (en çok çalıştığı Geliştirme satırında), sonraki sütunda iki kart; `a4_first_next` onun ardından Sprint 2 planı;
+  ↳ sprint 1. haftanın sonunda kapanır; `a4_first_sprint` v1.0 öncesi Sprint 1: tasarımcı, 5★ geliştirici, kurucu (en çok çalıştığı Geliştirme satırında), sonraki sütunda iki kart; `a4_first_next` onun ardından Sprint 2 planı; `a4_first_close` aynı sprint kapanmış, v1.0 öncesi sürüm notu
+  ↳ (yayın şartı şeridinde sıradaki sprintin planındaki parça "sıradaki sprintte");
   ↳ `a4_six_founder_off` `a4_six_pm5`'in planı, kurucu anahtarı kapalı; `a4_six_meetings2` aynı plan, kurucunun haftasında iki satış görüşmesi; `a4_account_week` aynı plan, kurucu haftasını bir hesaba verdi (`account` 5 gün: ekip özetinde "hesap işinde"), `a4_account_tip` iki gün ve kurucunun ipucu ("Hesap işi · 2 gün"); `a4_run_table` `a4_eleven`'ın sprinti 1. haftanın ortasında, masa 2 gün tarar;
   ↳ `a4_run_delegate` `a4_run_end`'in sprinti, planlama PM'e devredilmiş (şeritte "{PM} planlıyor" ve ilerleme); `a4_cards_noteam` tasarımcı, geliştirici, testçi ve 5★ PM,
   ↳ kurucu kapalı, üç kartlık plan, plandan sonra PM dışında herkes izinde (`away`; şeritte "Ekip'e git"); `a4_delegate_noteam` aynısı, planlama devredilmiş;
@@ -342,7 +343,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
   ↳ düz kare, sonra imleç ipucunun sahibine konur ve `<kök>_tip` kaydedilir (`_product_tip_shot`, sahibi `_tip_target`; yoksa `SHOT|tip_missing|<tür>` ve yalnız düz kare)
   ↳ `tip`li türler: `a4_eleven_tip` "card", `a4_eleven_streak` "cap", `a4_run_w2_bar` "bar", `a4_fix_tip` "fix" (`a4_eleven`), `a4_meet_tip` "founder" (`a4_six_meetings2`), `a4_next_tip` "next" (`a4_run_end`), `a4_pm_tip` "plain"
   ↳ `a4_waiting` iki tasarımcı (4★, 3★), dört geliştirici (5, 4, 3, 3★), iki testçi (3★) ve 5★ PM; önceki üç sprintte ilkinde dört modülün kartları alınmış (stok hattının K2'si hariç: `skip`),
-  ↳ sonraki ikisinde yalnız Çekirdek ve Onboarding'inkiler (`areas`); planda üç Güven kartı, sol sütunda Nakit Akışı modülü açık (`open`, hattın kimliği): K3'ü araştırma bekleyen kilitli kart şartıyla görünür;
+  ↳ sonraki ikisinde yalnız Çekirdek ve Onboarding'inkiler (`areas`); planda üç Güven kartı, sol sütunda Kasa ve Banka modülü açık (`open`, hattın kimliği): K3'ü araştırma bekleyen kilitli kart şartıyla görünür;
   ↳ `a4_waiting_all` aynı dünya, Mobil modülü açık (K3'ü araştırma bekliyor)
   ↳ `a4_req_plan` sol sütunun talep satırları, gerçek ad havuzuyla: planı olmayan (bu ve gelecek çeyrek), bu sprintte, sonraki sprintte, PM'in onaylı
   ↳ çeyrek planında ve bu çeyrekte biten talep; `a4_req_run` aynı dünyanın koşan sprinti (Tasarım, Geliştirme, Test aşamasında kartlar); ikisi de

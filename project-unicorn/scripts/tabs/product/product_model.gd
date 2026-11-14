@@ -31,7 +31,7 @@ extends RefCounted
 # center = {mode: "plan"|"active"|"release", sprint (-1 = sprint yok), weeks (sprintin süresi), week (active),
 #           staffed (kadroda çalışan var), cards: [row],
 #           mvp: {version, area, need, done (bu sprintte biten dahil), sprint (-1 = tahmin yok), week,
-#                 parts: [{name, state: "done"|"sprint"|"waiting"}] (adlı yayın şartının şeridi; adsız türde boş)}
+#                 parts: [{name, state: "done"|"sprint"|"next"|"waiting"}] (adlı yayın şartının şeridi; adsız türde boş)}
 #                     or null (canlıda),
 #           spare (planda hiçbir karta gitmeyen puan var), ceiling_pct (yükün "+" kapanan eşiği, yüzde), can_start (planlamada ve
 #           ekip varken; kartsız plan da başlar),
@@ -445,7 +445,8 @@ static func _center(mode: String, release: Dictionary, outcome: Dictionary) -> D
 			"area": SprintCatalog.area_short("core"), "need": need,
 			"done": need - SprintCatalog.mvp_cards_left() + finished,
 			"sprint": eta.get("sprint", -1), "week": eta.get("week", -1),
-			"parts": SprintCatalog.mvp_parts(p.get("next", {}).get("cards", []) if mode == "release" else sprint_cards)},
+			"parts": SprintCatalog.mvp_parts(p.get("next", {}).get("cards", []), "next") if mode == "release"
+				else SprintCatalog.mvp_parts(sprint_cards)},
 		"spare": outcome.get("spare", 0.0) > SprintSystem.EPS,
 		"ceiling_pct": roundi(float(SprintCatalog.cfg("cap_ceiling")) * 100.0),
 		"can_start": mode == "plan" and total > 0.0,

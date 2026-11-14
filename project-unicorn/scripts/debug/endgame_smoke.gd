@@ -16517,13 +16517,13 @@ static func _case_product_lines_catalog_loads() -> String:
 		if steps != 27:
 			return "%s resolved %d steps, §12.1 wants 27" % [sub, steps]
 
-	# §12.10 — ERP'nin ekip telegrafı: paylaşılan Güvenlik & Yetki K3'ü ERP'de
+	# §12.10 — ERP'nin ekip telegrafı: paylaşılan Kullanıcılar ve Yetki K3'ü ERP'de
 	# YÜKSELİR. Aynı kademe not aracında yükselmez; override alt-tip başınadır.
 	var erp_gate: Dictionary = ProductLines.step("line_shared_security_k3@erp").get("requires", {})
 	var note_gate: Dictionary = ProductLines.step("line_shared_security_k3@note_tool").get("requires", {})
 	var erp_total: Array = erp_gate.get("total", []) as Array
 	if erp_total.is_empty():
-		return "ERP's shared Güvenlik & Yetki K3 carries no total gate — §12.10's telegraph is missing"
+		return "ERP's shared Users and Access K3 carries no total gate — §12.10's telegraph is missing"
 	if int((erp_total[0] as Dictionary).get("stars", 0)) != 5:
 		return "ERP telegraph asks for %d total stars, §12.10 says 5" \
 			% int((erp_total[0] as Dictionary).get("stars", 0))
@@ -17353,7 +17353,7 @@ static func _case_gate_scope_and_halves() -> String:
 			if not bool(part.get("met", false)):
 				return "total ★4 unmet at 5,5 company stars — halves were dropped"
 	if not saw_total:
-		return "the shared Mobil & Erişim K2 lost its total gate"
+		return "the shared Mobile K2 lost its total gate"
 
 	# §12.7 — İZİNDEKİ/EĞİTİMDEKİ kişinin yıldızı SAYILIR (bilgi kaybı yoktur).
 	a.status = HRConstants.STATUS_ON_LEAVE
@@ -23420,7 +23420,7 @@ static func _case_sprint_mvp_three_identity_k1() -> String:
 	return ""
 
 
-## Hata modelinin sınadığı kart: Nakit Akışı hattının 40 puanlık K3'ü (Yazılım kapısı 2★). Geliştirmeyi `builders`, testi `testers`
+## Hata modelinin sınadığı kart: Kasa ve Banka hattının 40 puanlık K3'ü (Yazılım kapısı 2★). Geliştirmeyi `builders`, testi `testers`
 ## eşit paylarla yapmıştır ve test bitmiştir; kartın hatası henüz belirlenmemiştir.
 static func _bug_card(builders: Array, testers: Array) -> Dictionary:
 	var line := "line_erp_cashflow"
@@ -23458,7 +23458,7 @@ static func _case_sprint_bug_ceiling_formula() -> String:
 	strict.traits = ["double_checker"]
 	var card: Dictionary = _bug_card([two.id], [])
 	if SprintBugs.requirement(card) != 2:
-		return "the Cash Flow K3 reads a Software gate of %d stars, want 2" % SprintBugs.requirement(card)
+		return "the Cash and Bank K3 reads a Software gate of %d stars, want 2" % SprintBugs.requirement(card)
 	var reads := func(c: Dictionary, want: float, what: String) -> String:
 		var got: Dictionary = SprintBugs.expected(c)
 		if not is_equal_approx(float(got.h), want):
@@ -23637,7 +23637,7 @@ static func _case_sprint_skill_assignment() -> String:
 	# 3 · Ürün kapısı: 2★ Ürün isteyen küçük kartın dilimi 1★ PM'e düşer ama kapıyı geçemez, 5★ PM alır; kapısız ikizi 1★'a gider.
 	var ledger := "line_erp_ledger"
 	var anchor: Dictionary = card.call("anchor", 40, cashflow, 1)
-	var locked: Dictionary = card.call("locked", 15, ledger, 2)
+	var locked: Dictionary = card.call("locked", 15, ledger, 3)
 	var open: Dictionary = card.call("open", 15, ledger, 1)
 	week.call([anchor, locked])
 	var control: Array = [card.call("anchor2", 40, cashflow, 1), open]
@@ -26751,8 +26751,8 @@ static func _case_paper_card_effects() -> String:
 
 ## Kâğıtların okuduğu seam'ler: hat kimliği paylaşılan hatta temel kimlikle okunur ve adı hattın adıdır; kök neden yalnız yeterli
 ## hatası olan düzeltme kartında doğrudur; ekipte testçi var mı Test işindekilere bakar (kurucu sayılmaz); ilk sürümün hattı v1.0'a
-## kadarki sürümlerin kartlarındandır; ay sonuna kalan tik ayın son tikinde 1'dir; yedek kâğıdı Dayanıklılık'ın kademesini, kayıt kodu
-## kâğıdı Güvenlik'in hatasını ve düzeltme kartının sprintte olup olmadığını okur, ilk cevabı düzeltme kartını başa alır (çip kartın
+## kadarki sürümlerin kartlarındandır; ay sonuna kalan tik ayın son tikinde 1'dir; yedek kâğıdı Yedekleme'nin kademesini, kayıt kodu
+## kâğıdı Kullanıcılar ve Yetki'nin hatasını ve düzeltme kartının sprintte olup olmadığını okur, ilk cevabı düzeltme kartını başa alır (çip kartın
 ## adını yazar).
 ## FALSİFİKASYON: `urun.security_fix_planned`ı `false` döndür → planlı düzeltme FAIL; `urun.decision_line`dan `get_slice`ı sil →
 ## paylaşılan hat FAIL; `decision_root_cause`dan `kind == "fix"` koşulunu

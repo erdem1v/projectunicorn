@@ -1753,15 +1753,15 @@ PROD_LINE_SHARED_INTEGRATIONS,Entegrasyonlar,Integrations
 PROD_STEP_SHARED_INTEGRATIONS_K1,Tekil Bağlantı,Single Connection
 PROD_STEP_SHARED_INTEGRATIONS_K2,Çoklu Entegrasyon,Multiple Integrations
 PROD_STEP_SHARED_INTEGRATIONS_K3,Açık API & Webhook,Open API and Webhooks
-PROD_LINE_SHARED_SECURITY,Güvenlik & Yetki,Security and Access
+PROD_LINE_SHARED_SECURITY,Kullanıcılar ve Yetki,Users and Access
 PROD_STEP_SHARED_SECURITY_K1,Hesap & Oturum,Accounts and Sessions
 PROD_STEP_SHARED_SECURITY_K2,Roller ve İzinler,Roles and Permissions
 PROD_STEP_SHARED_SECURITY_K3,Denetim İzi & Şifreleme,Audit Trail and Encryption
-PROD_LINE_SHARED_DURABILITY,Dayanıklılık,Durability
+PROD_LINE_SHARED_DURABILITY,Yedekleme,Backup
 PROD_STEP_SHARED_DURABILITY_K1,Otomatik Kayıt,Autosave
 PROD_STEP_SHARED_DURABILITY_K2,Sürüm Geçmişi,Version History
 PROD_STEP_SHARED_DURABILITY_K3,Çevrimdışı Çalışma,Offline Work
-PROD_LINE_SHARED_MOBILE,Mobil & Erişim,Mobile and Access
+PROD_LINE_SHARED_MOBILE,Mobil,Mobile
 PROD_STEP_SHARED_MOBILE_K1,Duyarlı Arayüz,Responsive Interface
 PROD_STEP_SHARED_MOBILE_K2,Mobil Uygulama,Mobile App
 PROD_STEP_SHARED_MOBILE_K3,Çevrimdışı Mobil,Offline Mobile
@@ -1859,7 +1859,7 @@ PROD_STEP_SHARED_DURABILITY_K3_VIDEO_CLIP_DESC,"İnternet gider, kurgu kalır; b
 PROD_STEP_SHARED_MOBILE_K1_VIDEO_CLIP_DESC,Zaman çizelgesi dar ekranda da açılır; kesmek için masaya oturmak şart değildir.,The timeline opens on a narrow screen too. Cutting no longer means sitting down at a desk.
 PROD_STEP_SHARED_MOBILE_K2_VIDEO_CLIP_DESC,"Çekim telefondan yüklenir, klip telefondan çıkar. Kayıt ile paylaşım arasında bilgisayar durmaz.",Footage goes up from the phone and the clip comes back out of it. No computer stands between the recording and the post.
 PROD_STEP_SHARED_MOBILE_K3_VIDEO_CLIP_DESC,Uçakta kesilen klip inişte kendi kendine yüklenir; sahada çekim ile yayın arasına mesafe girmez.,A clip cut on a plane uploads itself on landing. Out in the field nothing widens the gap between shooting and posting.
-PROD_LINE_ERP_CASHFLOW,Nakit Akışı,Cash Flow
+PROD_LINE_ERP_CASHFLOW,Kasa ve Banka,Cash and Bank
 PROD_LINE_ERP_INTAKE,Satın Alma,Purchasing
 PROD_LINE_ERP_LEDGER,Muhasebe,Accounting
 PROD_LINE_ERP_STOCK,Stok,Inventory
@@ -1867,14 +1867,14 @@ PROD_LINE_ERP_INVOICING,Fatura,Invoicing
 PROD_STEP_ERP_CASHFLOW_K1,Kasa Hareketleri,Cash Movements
 PROD_STEP_ERP_CASHFLOW_K2,Nakit Akış Tablosu,Cash Flow Statement
 PROD_STEP_ERP_CASHFLOW_K3,Nakit Öngörüsü,Cash Forecast
-PROD_STEP_ERP_INTAKE_K1,Satın Alma Talebi,Purchase Request
+PROD_STEP_ERP_INTAKE_K1,Alış Faturası ve Gider,Purchase Invoices and Expenses
 PROD_STEP_ERP_INTAKE_K2,Tedarikçi ve Teklif,Suppliers and Quotes
 PROD_STEP_ERP_INTAKE_K3,Belge Okuma,Document Reading
 PROD_STEP_ERP_LEDGER_K1,Ön Muhasebe,Basic Bookkeeping
-PROD_STEP_ERP_LEDGER_K2,Hesap Planı,Chart of Accounts
+PROD_STEP_ERP_LEDGER_K2,Muhasebeciye Aktarım,Accountant Export
 PROD_STEP_ERP_LEDGER_K3,Otomatik Mutabakat,Automatic Reconciliation
 PROD_STEP_ERP_STOCK_K1,Stok Sayacı,Stock Count
-PROD_STEP_ERP_STOCK_K2,Depo ve Raf,Warehouse and Shelf
+PROD_STEP_ERP_STOCK_K2,Çoklu Depo,Multiple Warehouses
 PROD_STEP_ERP_STOCK_K3,El Terminali,Handheld Scanner
 PROD_STEP_ERP_INVOICING_K1,Fatura Kesme,Issuing Invoices
 PROD_STEP_ERP_INVOICING_K2,Toplu Fatura,Batch Invoicing
@@ -1882,14 +1882,14 @@ PROD_STEP_ERP_INVOICING_K3,Tahsilat Döngüsü,Collection Cycle
 PROD_STEP_ERP_CASHFLOW_K1_DESC,Giren ve çıkan para tarih sırasına dizilir; bakiye günün sonunda bellidir.,"Money in and money out, filed by date; the balance is known when the day closes."
 PROD_STEP_ERP_CASHFLOW_K2_DESC,Alacaklar ve borçlar vadeleriyle tabloya girer; önümüzdeki haftalar bir sütun olur.,Receivables and debts enter the table with their due dates; the coming weeks become a column.
 PROD_STEP_ERP_CASHFLOW_K3_DESC,Geçmiş tahsilat ritmi okunur ve kasanın hangi hafta daralacağı önceden söylenir.,"The rhythm of past collections is read, and the week the treasury tightens is named in advance."
-PROD_STEP_ERP_INTAKE_K1_DESC,"Satın alma talebi formdan açılır, onaydan geçince siparişe döner.",A purchase request opens from a form and turns into an order once approved.
+PROD_STEP_ERP_INTAKE_K1_DESC,Tedarikçi faturası ve gider fişi bir kez girilir; kime ne borçlu olunduğu tek listede durur.,"Supplier invoices and expense slips are entered once; what is owed, and to whom, sits on one list."
 PROD_STEP_ERP_INTAKE_K2_DESC,Tedarikçiler tek listede durur; teklifler yan yana kıyaslanır.,Suppliers sit in one list; quotes are compared side by side.
 PROD_STEP_ERP_INTAKE_K3_DESC,"Fatura ve irsaliye taranır, alanlar kendiliğinden yerine oturur; insana yalnız itiraz etmek kalır.",Invoices and delivery notes are scanned and the fields settle on their own; a person is left only to object.
 PROD_STEP_ERP_LEDGER_K1_DESC,Gelir ve gider kaydedilir; ay sonunda rakam en azından bir yerde durur.,Income and expense are written down; at month end the figures at least sit somewhere.
-PROD_STEP_ERP_LEDGER_K2_DESC,Her hareket bir hesaba düşer ve dönem kapanışı defterin kendi içinde tutmasını ister.,"Every movement falls into an account, and the period close asks the books to agree with themselves."
+PROD_STEP_ERP_LEDGER_K2_DESC,"Defter, mali müşavirin programının okuduğu biçimde dışarı çıkar; ayın kayıtları ikinci kez elle girilmez.","The books go out in the format the accountant's software reads; the month's entries are never typed in twice."
 PROD_STEP_ERP_LEDGER_K3_DESC,Banka ekstresi ile defter gece boyunca karşılaştırılır; sabaha yalnız tutmayanlar kalır.,Statement and ledger are set against each other overnight; by morning only the disagreements are left.
 PROD_STEP_ERP_STOCK_K1_DESC,Adetler tek listede tutulur; depoya inen kişi listeyi kendi eliyle günceller.,"Quantities live in a single list, and whoever goes down to the warehouse updates it by hand."
-PROD_STEP_ERP_STOCK_K2_DESC,"Aynı ürün hangi depoda, hangi rafta, hangi partide ayrı ayrı bilinir.","The same product is known warehouse by warehouse, shelf by shelf, lot by lot."
+PROD_STEP_ERP_STOCK_K2_DESC,"Aynı ürün hangi depoda, hangi partide ayrı ayrı bilinir.","The same product is known warehouse by warehouse, lot by lot."
 PROD_STEP_ERP_STOCK_K3_DESC,Sayım rafın önünde yapılır; barkod okutulur ve stok o anda yerine oturur.,The count happens in front of the shelf; a barcode is read and the stock settles at that moment.
 PROD_STEP_ERP_INVOICING_K1_DESC,"Fatura tek tek düzenlenir, kaydedilir ve müşteriye gönderilir.","An invoice is drawn up one at a time, filed, and sent to the customer."
 PROD_STEP_ERP_INVOICING_K2_DESC,Ayın faturaları tek seferde çıkar; ödenmeyenler ayrı bir listede birikir.,The month's invoices go out in one run; the unpaid ones gather on a list of their own.
@@ -1926,9 +1926,9 @@ PROD_RND_NODE_EDGE_INFERENCE_UNLOCK,Model artık cihazda çalışıyor; yapay ze
 PROD_RND_NODE_KNOWLEDGE_GRAPH_DESC,Kayıtlar arasındaki ilişki de veriye dönüşür. Ürün neyin neye bağlı olduğunu bilir.,The relations between records become data too. The product knows what is tied to what.
 PROD_RND_NODE_KNOWLEDGE_GRAPH_UNLOCK,Otomatik Düzenleme adında yeni bir özellik hattı. İçeriği Erken Erişim'de açılır.,A new feature line called Automatic Organisation. Its content opens in Early Access.
 PROD_RND_NODE_SCALABLE_BACKEND_DESC,Yük birçok makineye dağıtılır.,The load is spread across many machines.
-PROD_RND_NODE_SCALABLE_BACKEND_UNLOCK,"Dayanıklılık hattının son kademesi · ERP'de tahsilat, Video Klip'te ortak kurgu.","The last tier of the Durability line · collection in ERP, shared editing in Video Clip."
+PROD_RND_NODE_SCALABLE_BACKEND_UNLOCK,"Yedekleme hattının son kademesi · ERP'de tahsilat, Video Klip'te ortak kurgu.","The last tier of the Backup line · collection in ERP, shared editing in Video Clip."
 PROD_RND_NODE_SECURITY_CERT_DESC,Denetimden geçmiş güvenlik belgesi. Kurumsal alıcının ilk sorusu cevaplanmış olur.,A security certificate that has been through an audit. The corporate buyer's first question is already answered.
-PROD_RND_NODE_SECURITY_CERT_UNLOCK,Güvenlik & Yetki hattının son kademesi.,The last tier of the Security and Access line.
+PROD_RND_NODE_SECURITY_CERT_UNLOCK,Kullanıcılar ve Yetki hattının son kademesi.,The last tier of the Users and Access line.
 PROD_RND_NODE_ANALYTICS_ENGINE_DESC,Ham kayıtları okuyan hesap katmanı. Sayıların ne dediği ürünün içinde görünür.,A computing layer that reads the raw records. What the numbers say becomes visible inside the product.
 PROD_RND_NODE_ANALYTICS_ENGINE_UNLOCK,ERP'nin nakit öngörüsü kademesi.,The cash forecast tier in ERP.
 PROD_RND_NODE_MODEL_OPTIMIZATION_DESC,Aynı model daha az işlemciyle koşar. Zekânın faturası küçülür.,The same model runs on less silicon. The bill for the intelligence shrinks.
@@ -1944,7 +1944,7 @@ PROD_RND_NODE_TEST_AUTOMATION_UNLOCK,Yardım Merkezi adında yeni bir özellik h
 PROD_RND_NODE_SELF_SERVICE_DESC,Sık sorulanın cevabı ürünün içinde durur. Kullanıcı beklemeden çıkışı bulur.,The answer to the common question sits inside the product. The user finds the way out without waiting.
 PROD_RND_NODE_SELF_SERVICE_UNLOCK,Kullanıcı cevabı ürünün içinde buluyor; destek masasına daha az iş düşüyor.,"Users find the answer inside the product, and less work reaches the support desk."
 PROD_RND_NODE_DESIGN_SYSTEM_DESC,Arayüzün parçaları bir kez tanımlanır. Her yeni ekran hazır parçalardan kurulur.,The pieces of the interface are defined once. Every new screen is built from parts that already exist.
-PROD_RND_NODE_DESIGN_SYSTEM_UNLOCK,"Mobil & Erişim hattının son kademesi ve ürünün kendi tasarım kademelerinden biri. Tasarım ağırlıklı kademeler artık daha az efor istiyor, çünkü onları hazır parçalardan kuruyoruz.","The last tier of the Mobile and Access line, and one of the product's own design tiers. Tiers that are mostly design work take less effort now, because we build them out of ready parts."
+PROD_RND_NODE_DESIGN_SYSTEM_UNLOCK,"Mobil hattının son kademesi ve ürünün kendi tasarım kademelerinden biri. Tasarım ağırlıklı kademeler artık daha az efor istiyor, çünkü onları hazır parçalardan kuruyoruz.","The last tier of the Mobile line, and one of the product's own design tiers. Tiers that are mostly design work take less effort now, because we build them out of ready parts."
 PROD_RND_NODE_USER_RESEARCH_DESC,Kullanıcıyla düzenli konuşma alışkanlığı. Ne istediklerini tahmin etmek gerekmez.,The habit of talking to users on a schedule. Guessing what they want stops being necessary.
 PROD_RND_NODE_USER_RESEARCH_UNLOCK,Aylık ürün notu · bir Ürün Yöneticisi ya da Tasarımcı gerektirir. Kadroda öyle biri yoksa rapor gelmez.,The monthly product note · it needs a Product Manager or a Designer. With nobody like that on staff the note never arrives.
 PROD_RND_NODE_ONBOARDING_FLOW_DESC,İlk açılışta yol gösteren kurulu bir akış. Yeni gelen ürünü ilk beş dakikada anlar.,A built flow that guides the first opening. A newcomer understands the product in the first five minutes.
@@ -2562,6 +2562,7 @@ PRODUCT_GATE_BODY,Yayınlarsan kullanıcılar bu hafta gelmeye başlar. Bir spri
 LAUNCH_GATE_TITLE,Yayın şartı,Launch requirement
 LAUNCH_GATE_DONE,bitti,done
 LAUNCH_GATE_SPRINT,bu sprintte,this sprint
+LAUNCH_GATE_NEXT,sıradaki sprintte,next sprint
 LAUNCH_GATE_WAITING,bekliyor,waiting
 PRODUCT_GATE_ONE_MORE,Bir sprint daha,One more sprint
 PRODUCT_RELEASE_RND_OPEN,Ar-Ge açıldı,R&D is open

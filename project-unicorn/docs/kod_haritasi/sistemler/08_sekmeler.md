@@ -79,7 +79,7 @@ Alt klasörler:
   ↳ ÇEYREK çubuğu, `switch`, `due_chip` (yazının ilk harfi çipte büyür), `flag` (sütun genişliğinde sarar),
   ↳ `row_keys`, `way_out`, `add_key`, `keep_scroll`); Ürün dışında 10+ dosya kullanır. İpucu parçaları: `STAGE_KEYS`, `stage_name`, `stage_icon`, `stage_done`, `done_text`, `named_stars`, `effort_tip`,
   ↳ `prepared_tip`, `meet_lines`, `meet_lines_of` (kalemler `GameState.founder_meetings_frozen` kayıtlarıdır, günü `TimeModel.meeting_days`: hesaba verilen zaman `account` kendi gününü taşır; `total`: türü başına günler toplanır); kurucunun haftası yalnız hesaplara gitmişse Sprint ekibi onu "hesap işinde" yazar (`capacity_view._away_text`), `tip_column` (zengin ipucunun kökü).
-- `scripts/tabs/product/launch_gate.gd`: `LaunchGate`: yayın şartı şeridi (`SprintCatalog.mvp_parts`: bitti onay, bu sprintte dolu nokta, bekliyor boş halka;
+- `scripts/tabs/product/launch_gate.gd`: `LaunchGate`: yayın şartı şeridi (`SprintCatalog.mvp_parts`: bitti onay, planda (bu sprintte; sürüm notunda sıradaki sprintte) dolu nokta, bekliyor boş halka;
   ↳ sözcüğü ipucunda), `flag()` şartın modülünün sol sütundaki bayrağı.
 - `scripts/tabs/product/area_panel.gd` (392): `AreaPanel`: sol sütun (SPRINT ve ÇEYREK): Geçmiş, MÜŞTERİ TALEPLERİ, MODÜLLER ve açık modülün adayları (düzeltme adayı tam hata metnini sarar yazar,
   ↳ başka sprintin adayı "Sprint {n}" damgası taşır); adayların sonunda kilitli kartlar (`_locked_card`: soluk ad ve altında şartı, efor ve şerit yok; araştırma kilidinde Ar-Ge ikonu ve tık Ar-Ge'yi o düğümde açar, kişi kilidinde tık işe alım atlasını açar, canlı ürün kilidi yalnız okunur); kapalı modülün yapılacak kartı yoksa ilk kilidin şartı adının altında;

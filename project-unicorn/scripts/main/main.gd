@@ -4766,6 +4766,7 @@ const _A4_WORLDS := {
 	"a4_early": {"crew": _A4_SIX + "5", "fill": 2},
 	"a4_first_sprint": {"pre": true, "crew": "d3 v5", "queue": 2},
 	"a4_first_next": {"pre": true, "crew": "d3 v5", "before": [{"queue": 2}]},
+	"a4_first_close": {"pre": true, "crew": "d3 v5", "queue": 2, "run": 2.0},
 	"a4_six_founder_off": {"crew": _A4_SIX + "5", "before": [_A4_PREP], "bugs": 1, "fill": "over", "load": 1.15, "queue": 1, "off": true},
 	"a4_six_meetings2": {"crew": _A4_SIX + "5", "before": [_A4_PREP], "bugs": 1, "fill": "over", "load": 1.15, "queue": 1,
 		"sit": ["sales", "sales"]},

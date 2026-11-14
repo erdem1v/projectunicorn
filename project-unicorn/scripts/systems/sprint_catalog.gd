@@ -610,13 +610,13 @@ static func is_mvp_card(card: Dictionary) -> bool:
 
 
 ## Yayın şartı şeridinin parçaları sırasıyla, {name, state}: K1'i çıkmış ya da bu kapanışta bitmişse "done",
-## `planned` kartlarında K1'i duruyorsa "sprint", yoksa "waiting".
-static func mvp_parts(planned: Array) -> Array:
+## `planned` kartlarında K1'i duruyorsa `queued_state`, yoksa "waiting".
+static func mvp_parts(planned: Array, queued_state := "sprint") -> Array:
 	var mvp: Array = _p().cards.values().filter(is_mvp_card)
 	var done: Array = mvp.filter(func(c: Dictionary) -> bool: return c.state == "done").map(func(c: Dictionary) -> String: return c.line)
 	var queued: Array = mvp.filter(func(c: Dictionary) -> bool: return c.id in planned).map(func(c: Dictionary) -> String: return c.line)
 	return mvp_named().map(func(l: String) -> Dictionary:
-		return {"name": cap_name(l), "state": "done" if tier(l) >= 1 or l in done else "sprint" if l in queued else "waiting"})
+		return {"name": cap_name(l), "state": "done" if tier(l) >= 1 or l in done else queued_state if l in queued else "waiting"})
 
 
 ## Yayın şartının açık K1 adayları efor, eşitse id sırasıyla; MVP tahmini ve sprint probe'u sprinti bu sırayla

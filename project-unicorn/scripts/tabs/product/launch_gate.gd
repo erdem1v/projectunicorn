@@ -2,15 +2,16 @@ class_name LaunchGate
 extends PanelContainer
 
 # Yayın şartı şeridi: ürün yayına çıkmadan bitmesi gereken adlı modüller ve durumları (`SprintCatalog.mvp_parts`);
-# şerit ürün türünü bilmez. Durum biçimle okunur: bitti onay işareti, bu sprintte dolu nokta, bekliyor boş halka;
-# sözcüğü ipucundadır.
+# şerit ürün türünü bilmez. Durum biçimle okunur: bitti onay işareti, planda (bu ya da sıradaki sprintte) dolu nokta,
+# bekliyor boş halka; sözcüğü ipucundadır.
 
-const STATE_KEYS := {"done": "LAUNCH_GATE_DONE", "sprint": "LAUNCH_GATE_SPRINT", "waiting": "LAUNCH_GATE_WAITING"}
-## Parçanın adı: bu sprintteki öne çıkar, bekleyen sönük.
-const NAME_INK := {"done": UiTokens.D_INK_2, "sprint": UiTokens.D_INK_1, "waiting": UiTokens.D_INK_3}
+const STATE_KEYS := {"done": "LAUNCH_GATE_DONE", "sprint": "LAUNCH_GATE_SPRINT", "next": "LAUNCH_GATE_NEXT",
+	"waiting": "LAUNCH_GATE_WAITING"}
+## Parçanın adı: planda duran (bu ya da sıradaki sprintte) öne çıkar, bekleyen sönük.
+const NAME_INK := {"done": UiTokens.D_INK_2, "sprint": UiTokens.D_INK_1, "next": UiTokens.D_INK_1, "waiting": UiTokens.D_INK_3}
 
 
-## Bitmemiş parçanın işareti: bu sprintte halkalı dolu nokta, bekleyen boş halka.
+## Bitmemiş parçanın işareti: planda duran halkalı dolu nokta, bekleyen boş halka.
 class Mark extends Control:
 	var state: String
 
@@ -22,7 +23,7 @@ class Mark extends Control:
 
 	func _draw() -> void:
 		var middle: Vector2 = size / 2.0
-		if state == "sprint":
+		if state != "waiting":
 			draw_circle(middle, size.x * 0.5, UiTokens.D_ACCENT_GLOW)
 			draw_circle(middle, size.x * 0.32, UiTokens.D_ACCENT)
 		else:
@@ -63,5 +64,5 @@ func _part(part: Dictionary) -> HBoxContainer:
 		item.add_child(UiFactory.make_glyph(SprintUiShared.CHECK, UiTokens.D_ICON_ROW, UiTokens.D_pos()))
 	else:
 		item.add_child(Mark.new(state))
-	item.add_child(SprintUiShared.label(part.name, &"DataStrong" if state == "sprint" else &"DataText", NAME_INK[state]))
+	item.add_child(SprintUiShared.label(part.name, &"DataText" if state in ["done", "waiting"] else &"DataStrong", NAME_INK[state]))
 	return item
