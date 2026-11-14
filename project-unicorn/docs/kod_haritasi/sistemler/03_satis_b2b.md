@@ -91,10 +91,11 @@ Sahipler: autoload `CustomerRegistry`, `ProspectRegistry`, `PromiseRegistry`; mo
 - `CustomerRepSystem._held(c)` `scripts/systems/customer_rep_system.gd:321`: talep kartlarının hesap başına aile kuralı (`EventGate.family_subject_held`;
   ↳ aile `customer_requests`, kartta 26 hafta) talebi tutuyor mu. Tutarsa talep açık kalır, haftaya yeniden denenir ve masanın saatini harcamaz
   ↳ (`_work_the_queue`, `_escalate`). K2 `cs_request_rule_holds_second_ask`
-- `SupportSystem.hourly_tick()` `scripts/systems/support_system.gd:106`: bildirim gelir, doğrulanır, hata olur · `time_manager.gd:441`
-- `SupportSystem.daily_tick()` `scripts/systems/support_system.gd:132`: memnuniyet zararı, hata ihmali, ilgi, haftalık rapor · `time_manager.gd:395`
-- `SupportSystem.weekly_report()` `scripts/systems/support_system.gd:320`: haftada en çok bir rapor postası · `daily_tick`, `main.gd:1700` (sahne fikstürü)
-- `SupportSystem.to_dict()` `scripts/systems/support_system.gd:146` (`from_dict` :150): yalnız `_damage_residue` kaydı · `ProductSystem.to_dict` `product_system.gd:22`
+- `SupportSystem.hourly_tick()` `scripts/systems/support_system.gd:101`: bildirim gelir, doğrulanır, hata olur · `time_manager.gd:451`
+- `SupportSystem.daily_tick()` `scripts/systems/support_system.gd:127`: memnuniyet zararı (pazaryerinde hiçbir kayda yazılmaz), hata ihmali, ilgi, haftalık rapor · `time_manager.gd:404`
+- `SupportSystem.unanswered_share()` `scripts/systems/support_system.gd:173`: cevapsız bildirimin payı, `min(1; bekleyen bildirim ÷ bir haftada gelen bildirim)` (`reports_incoming`, `reports_per_day`; haftalık sayaçtan değil, rapor onu Satış yuvasından önce sıfırlar) · `MarketplaceSystem.world` (`unanswered`)
+- `SupportSystem.weekly_report()` `scripts/systems/support_system.gd:325`: haftada en çok bir rapor postası · `daily_tick`, `main.gd:2220` (sahne fikstürü)
+- `SupportSystem.to_dict()` `scripts/systems/support_system.gd:141` (`from_dict` :145): yalnız `_damage_residue` kaydı · `ProductSystem.to_dict` `product_system.gd:22`
 - `MarketCatalog.value()` `scripts/systems/market_catalog.gd:84`: şirketin haftadaki değeri (saf); `price` :98, `listed` :110, `series` :102 · `piyasa_tab.gd:101`, `news_feed_system.gd:368`
 - `CounterpartSystem.prospect_people()` `scripts/systems/counterpart_system.gd:56`: adayın karşısındaki kişiler · `main.gd:5207`, `sales_tab.gd:328`, `inbox.gd:439`
 - `CounterpartSystem.fill_investor_people()` `scripts/systems/counterpart_system.gd:33`: fonların üç kişisini çeker · `game_state.gd:968`, `save_manager.gd:325`

@@ -661,6 +661,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"marketplace_close_week_wires":      fail = _case_marketplace_close_week_wires()
 		"marketplace_premium_closed_no_burn": fail = _case_marketplace_premium_closed_no_burn()
 		"marketplace_erp_run_untouched":     fail = _case_marketplace_erp_run_untouched()
+		"support_backlog_row_survives":      fail = _case_support_backlog_row_survives()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -31079,4 +31080,35 @@ static func _case_marketplace_erp_run_untouched() -> String:
 		return "an ERP week filled GameState.marketplace: %s" % str(GameState.marketplace.keys())
 	if CustomerRegistry.get_customer(MarketplaceSystem.STORES_ID) != null or FinanceSystem.get_burn_breakdown().pazaryeri != 0:
 		return "an ERP week wrote a marketplace record or the pazaryeri line"
+	return ""
+
+
+## Cevapsız bildirim varken pazaryerinin kapanışı kullanıcı defterine "Destek yığını" yazar; satır koşul sürdükçe sonraki haftalarda da
+## durur (Destek'in haftalık raporu haftanın sayacını Satış yuvasından önce sıfırlasa da) ve bildirimler cevaplanınca düşer. Pazaryerinde
+## Destek müşteri kaydına memnuniyet zararı yazmaz: Üyelik kartının eski yoldan açtığı B2C kaydı değişmez.
+##
+## FALSİFİKASYON: `MarketplaceSystem.world`den `unanswered`ı sil → satır FAIL; `SupportSystem.unanswered_share`i haftanın sayacından
+## (`ProductState.REPORT_WEEK`) oku → satır FAIL; `apply_daily_satisfaction_damage`ten `is_marketplace()` koşulunu sil → eski B2C kaydı FAIL.
+static func _case_support_backlog_row_survives() -> String:
+	_seed_marketplace_world()
+	SalesSystem.open_b2c_paid_tier(15)
+	var old_record: Customer = CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID)
+	if old_record == null:
+		return "fixture: the paid plan did not open the old B2C record"
+	var old_satisfaction: int = old_record.satisfaction
+	var backlog := func() -> Array:
+		return GameState.marketplace.ledger.users.filter(func(r: Dictionary) -> bool: return r.key == "support_backlog")
+	GameState.set_flag(ProductState.REPORTS_INCOMING, 40)
+	GameState.set_flag(ProductState.REPORT_WEEK, {"in": 40, "done": 0})
+	for week in 3:
+		_sim_day()
+		var rows: Array = backlog.call()
+		if rows.size() != 1 or rows[0].points != -10.0:
+			return "week %d with 40 reports waiting: the users' ledger holds %s, want one Support backlog row of -10" % [week + 1, str(rows)]
+	if old_record.satisfaction != old_satisfaction:
+		return "Support wrote satisfaction damage to the old B2C record in a marketplace run (%d -> %d)" % [old_satisfaction, old_record.satisfaction]
+	GameState.set_flag(ProductState.REPORTS_INCOMING, 0)
+	_sim_day()
+	if not backlog.call().is_empty():
+		return "every report was answered and the Support backlog row stayed: %s" % str(backlog.call())
 	return ""

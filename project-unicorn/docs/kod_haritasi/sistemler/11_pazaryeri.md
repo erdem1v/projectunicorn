@@ -7,7 +7,7 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 ## Dosyalar
 
 - `systems/marketplace_model.gd` (986): `MarketplaceModel`; yalnız `static` işlevler. `state` ve `world` sözlüklerinin alanları dosya başındaki yorumda.
-- `systems/marketplace_system.gd` (170): `MarketplaceSystem`; yalnız `static` işlevler. `GameState.marketplace`'in tek yazarı, yazan seam'ler, sözleşme okuyucuları, `world()` ve haftalık kapanış.
+- `systems/marketplace_system.gd` (171): `MarketplaceSystem`; yalnız `static` işlevler. `GameState.marketplace`'in tek yazarı, yazan seam'ler, sözleşme okuyucuları, `world()` ve haftalık kapanış.
 - `debug/marketplace_probe.gd` (1034): `-s` betiği; oynanan çizelge ve 37 mekanik denetimi, `MPPROBE ...` satırları.
 - `data/product/categories.json` (16): altı kategori ve sütunları: sepet, ziyaret sıklığı, kâr payı, sektör iadesi, gereken mağaza, başlangıç komisyonu, taban ilgi, büyük sepet payı, reklam havuzu (`ad_pool`, haftalık arama).
 - `data/product/lines/marketplace.json` (153): modül verisi; 5 kimlik hattı (Ürün Yükleme, Vitrin, Sepet ve Ödeme, Siparişler, Yorum ve Güvence)
@@ -19,7 +19,7 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 ## Giriş noktaları
 
 - Sistem (`MarketplaceSystem`): `TYPE_ID` ("marketplace"), `MODULE_LINES` (modelin dokuz modülünden oyundaki hat kimliğine; paylaşılan dört hat `@marketplace` son ekiyle; Üyelik hattı değil `SprintCatalog.PAID_PLAN`).
-  ↳ `world()` her çağrıda sahiplerden kurulur: `week` `GameState.day`, `published` `ProductState.is_live()`, `tiers` ve `bugs` hat kimliğiyle, `stars` atanmışların Satış yıldızı (kurucu 1); kalan alan modelin varsayılanında.
+  ↳ `world()` her çağrıda sahiplerden kurulur: `week` `GameState.day`, `published` `ProductState.is_live()`, `tiers` ve `bugs` hat kimliğiyle, `stars` atanmışların Satış yıldızı (kurucu 1), `unanswered` Destek'in cevapsız bildirim payı (`SupportSystem.unanswered_share`); kalan alan modelin varsayılanında.
   ↳ Yazan seam'ler (`true` uygulandı ve sinyal yayıldı, `false` reddedildi): `open_category`, `set_commission`, `set_policy`, `set_fee`, `set_perk`, `set_trial`, `set_store_terms`, `add_users`, `assign`, `unassign`.
   ↳ `assign(kişi, kategori)`: yalnız işbaşındaki (`STATUS_ACTIVE`) kurucu ya da Satış Temsilcisi ve açık kategori; `daily_tick` kapanıştan önce yalnız kaydı kalmayanın (işten ayrılan) atamasını düşürür, izinli ve eğitimdeki kişi atamasını korur ama `world().stars`ta olmadığı için o hafta kazandırmaz.
   ↳ `_reflect` iki toplu `CustomerRegistry` kaydını (`STORES_ID` `co_mp_stores`, `USERS_ID` `co_mp_users`; `b2c`, `individual`, yayından sonraki ilk kapanışta doğar) yalnız seam'le yazar: komisyon mağazalar kaydının, üyelik kullanıcılar kaydının MRR'ı (eksi net komisyonda MRR 0'da durur, `revenue_weeks` eksiyi saklar),
@@ -92,6 +92,7 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 ## Dikkat
 
 - `SalesSystem._tick_satisfaction` her `b2c` kaydın memnuniyetini B2C hedefine sürükler: pazaryeri koşusunda koşarsa iki kaydın `sat` yansımasını ezer; bu yüzden `SalesSystem.daily_tick` pazaryeri türünde yalnız `MarketplaceSystem.daily_tick`i çağırır ve `hourly_tick` kitle akışını ve kitleden MRR türetimini koşturmaz (`SalesSystem.is_marketplace`).
+- Cevapsız pay Destek'in kapanıştan önce çalışan haftalık raporundan etkilenmez: `reports_incoming` ve `reports_per_day`dan okunur, haftalık sayaçtan okunmaz. Pazaryerinde Destek kayda memnuniyet zararı yazmaz (`SupportSystem.apply_daily_satisfaction_damage` `SalesSystem.is_marketplace()`te döner); zarar kullanıcı defterinin `support_backlog` satırıdır (pay × −20, en çok −10, koşul sürdükçe her kapanışta yeniden yazılır).
 - `Dictionary.merged(x)` varsayılanda var olan anahtarı ezmez; dünya ve durum birleştirmelerinde hep `merged(x, true)`.
 - `:=` Dictionary erişiminden tür çıkaramaz (Variant); bu dosyada her sözlük okuması açık türle (`var x: float = ...`) yazılır.
 - "Sipariş" teslim edilendir; "Sipariş verdi" adımı `order` ayrıdır. "Geç teslimat" satırı teslim ÷ verilen oranına bakar: 0,97 × Siparişler çarpanı × Entegrasyonlar çarpanı × hata çarpanı, eşik 0,90.

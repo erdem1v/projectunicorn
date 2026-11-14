@@ -338,6 +338,9 @@ yazıldığı haftadan sayılır ve süresi dolunca düşer.
 | Hızlı teslimat yalnız üyeye | kullanıcı | −3 | 8 hafta | Hızlı teslimat "Herkese"den "Premium'a" alınınca |
 | Hızlı teslimat | kullanıcı | +3 | sürdükçe | Hızlı teslimat "Herkese" |
 | Adresten iade | kullanıcı | +2 | sürdükçe | Adresten iade "Herkese" |
+- Cevapsız bildirimin payı `min(1; bekleyen bildirim ÷ bir haftada gelen bildirim)`'dir (`SupportSystem.unanswered_share()`;
+  haftalık raporun sayacından okunmaz). Pazaryerinde Destek müşteri kaydına memnuniyet zararı yazmaz: zarar "Destek yığını"
+  satırıdır.
 - Kesinti acil durumu bugünkü gibi `IncidentSystem`'den gelir; kullanıcı memnuniyetine yazdığı düşüş izleyen kapanışta deftere
   "Kesinti" adıyla 4 haftalık satır olarak girer (tutarı olayın planından; `note_outage`). Yedekleme modülü kesintide kaçan
   siparişi azaltır: yokken × 1; kademeleriyle × 0,7; × 0,5; × 0,3 (`backup_mult`).

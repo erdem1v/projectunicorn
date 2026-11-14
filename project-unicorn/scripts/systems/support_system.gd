@@ -167,6 +167,14 @@ static func usage_multiplier() -> float:
 	return 1.0 + SalesSystem.b2c_audience() / USAGE_DIV_B2C
 
 
+## Cevapsız bildirimin payı: bekleyen (doğrulanmamış) bildirim ÷ bir haftada gelen bildirim, en çok 1; canlı ürün yokken 0.
+## Haftanın sayacından okunmaz: haftalık rapor onu Satış yuvasından önce sıfırlar. Pazaryerinin kullanıcı defterindeki
+## "Destek yığını" satırı bu paya göre yazılır.
+static func unanswered_share() -> float:
+	var weekly: float = TimeModel.per_tick(reports_per_day())
+	return minf(1.0, float(ProductState.reports_incoming()) / weekly) if weekly > 0.0 else 0.0
+
+
 # =========================================================================
 #  §8.2 · DOĞRULAMA — Müşteri İlişkileri'nin işi, ATAMAYA duyarlı
 # =========================================================================
@@ -242,10 +250,11 @@ static func daily_satisfaction_damage() -> float:
 
 ## §8.3 dağıtımı — tikin zararı, tavanlı günlük zararın yedi günüdür. B2B'de zarar AKTİF
 ## HESAPLARA EŞİT bölünür, B2C'de Satış'ın tek toplu kitle kaydına işler (ücretli kademe
-## açılmadan o kayıt yoktur). Yazma yolu CustomerRegistry.set_satisfaction (WRITE-THROUGH LAW).
+## açılmadan o kayıt yoktur). Pazaryerinde hiçbir kayda yazılmaz: zarar kullanıcı defterinin "Destek yığını" satırıdır
+## (`unanswered_share`). Yazma yolu CustomerRegistry.set_satisfaction (WRITE-THROUGH LAW).
 static func apply_daily_satisfaction_damage() -> void:
 	var damage: float = TimeModel.per_tick(daily_satisfaction_damage())
-	if damage >= 0.0:
+	if damage >= 0.0 or SalesSystem.is_marketplace():
 		return
 	var targets: Array[Customer] = []
 	if ProductState.market_type() == MARKET_B2B:

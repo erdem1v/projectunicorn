@@ -44,7 +44,8 @@ static func world() -> Dictionary:
 		var c: Character = CharacterRegistry.get_character(person)
 		if _can_work(c):
 			stars[person] = 1 if c.category == "founder" else int(HRConstants.stars_for(HRSystem.skill(c, HRConstants.AREA_SALES)))
-	return {"week": GameState.day, "published": ProductState.is_live(), "tiers": tiers, "bugs": bugs, "stars": stars}
+	return {"week": GameState.day, "published": ProductState.is_live(), "tiers": tiers, "bugs": bugs, "stars": stars,
+		"unanswered": SupportSystem.unanswered_share()}
 
 
 # --- Yazan seam'ler -----------------------------------------------------------------------------
