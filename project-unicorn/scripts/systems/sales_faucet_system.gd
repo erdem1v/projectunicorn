@@ -6,9 +6,8 @@ extends RefCounted
 # desk, so a rep starting work today can pick up a lead that arrived today, and expire_leads
 # runs AFTER it, so the tick a lead expires on is still a tick a rep can take it.
 #
-# THE FAUCET READS THREE THINGS (§3) — assigned sales capacity, interest, and phase — and it
-# never dries: with zero sales staff a base inbound continues, and the 1★ band carries a hard
-# floor under every multiplier.
+# AKIŞ ÜÇ ŞEYİ OKUR (PRD_ERP §4.3): yayındaki ürün, İtibar ve Satış'a atanmış kişiler (`lead_rate_per_week`). Hiç kurumaz: satışçısız ve
+# İtibar sıfırın altındayken de yayındaki ürün haftada bir adayla tanışır.
 #
 # THE POOL NEVER EXHAUSTS (§3). Names come from SalesNamePool, the curated CompanyCatalog names plus a
 # generated majority. Signing removes a name for the run; an expired company comes back after its
@@ -115,18 +114,12 @@ static func is_return_locked(company_name: String) -> bool:
 #  §3 — the flow
 # ============================================================================
 
-## Leads per week (one tick) before the tick cap. PUBLIC so the pipeline panel and the smoke
-## suite read the same number the tick uses.
+## Haftada gelen aday (tik sınırından önce): yayındaki ürün, İtibar'ın payı (sıfırın altında 0, `REP_FULL`'da `FLOW_REP_MAX`) ve
+## Satış'a atanmış kişiler; kurucu da atanınca sayılır (Ekip §12.0). Satış başlığı, tik ve smoke aynı sayıyı okur.
 static func lead_rate_per_week() -> float:
-	# §3's "atanmış satış kapasitesi" is an ASSIGNMENT question, never a job title one: the
-	# founder counts when assigned, exactly like anyone else (Ekip §12.0).
-	var rate: float = SalesConstants.FAUCET_BASE_PER_WEEK \
-		+ SalesConstants.FAUCET_PER_REP_PER_WEEK * float(HRSystem.assigned_to(HRConstants.AREA_SALES).size())
-	rate *= SalesConstants.interest_mult(ProductRead.interest())
-	rate *= SalesConstants.phase_mult(GameState.phase)
-	# §3 — "1★ akışı hiçbir durumda kurumaz." The floor sits UNDER the product of every
-	# multiplier, so a stale version with no interest still meets someone.
-	return maxf(rate, SalesConstants.ONE_STAR_FLOOR_PER_WEEK)
+	return (SalesConstants.FLOW_LIVE_PER_WEEK
+		+ SalesConstants.FLOW_REP_MAX * clampf(float(GameState.reputation) / SalesConstants.REP_FULL, 0.0, 1.0)
+		+ SalesConstants.FAUCET_PER_REP_PER_WEEK * float(HRSystem.assigned_to(HRConstants.AREA_SALES).size()))
 
 
 static func _tick_inflow() -> void:

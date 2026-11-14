@@ -9207,24 +9207,29 @@ static func _add_prospect(pid: String, star: int, pain: String,
 	return p
 
 
+## Akış (PRD_ERP §4.3): yayındaki ürün satışçısız haftada `FLOW_LIVE_PER_WEEK` adayla tanışır ve on tikte aday gelir; İtibar
+## `REP_FULL`'un yarısındayken `FLOW_REP_MAX`'ın yarısı eklenir, üstünde tavanda kalır, sıfırın altında eklenmez; taze sürümün
+## ilgisi ve evre akışı oynatmaz; atanmış satışçı tam bir satışçı payı ekler.
+## FALSİFİKASYON: `lead_rate_per_week`'te `clampf`'ın üst sınırını kaldır → tavan iddiası FAIL; `interest_mult` çarpanını geri
+## koy → İtibar 0 satırı FAIL (taze sürümde ilgi 100, ×1,3); `phase_mult`'u geri koy → evre iddiası FAIL.
 static func _case_sales_pipeline_rate_by_pace() -> String:
-	# §3 THE FAUCET, and the assertion is the OPPOSITE of the one this case used to make.
-	# Before rev 6 the desk produced nothing without a rep and a button produced the rest;
-	# now a BASE INBOUND continues with zero sales staff and an assigned rep ADDS to it.
-	# FALSIFICATION: against the old desk the first branch fails outright — its rate with no
-	# rep was exactly zero.
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
 	_seed_b2b(1000)
-	var mult: float = SalesConstants.interest_mult(ProductRead.interest()) \
-		* SalesConstants.phase_mult(GameState.phase)
-	var base: float = SalesConstants.FAUCET_BASE_PER_WEEK * mult
+	var base: float = SalesConstants.FLOW_LIVE_PER_WEEK
+	var half: int = roundi(SalesConstants.REP_FULL / 2.0)
+	for row in [[0, base], [-10, base], [half, base + SalesConstants.FLOW_REP_MAX * half / float(SalesConstants.REP_FULL)],
+			[SalesConstants.REP_FULL * 2, base + SalesConstants.FLOW_REP_MAX]]:
+		GameState.set_reputation(int(row[0]))
+		if not is_equal_approx(SalesFaucetSystem.lead_rate_per_week(), float(row[1])):
+			return "İtibar %d reads %.2f leads a week with no sales staff, want %.2f" % [row[0],
+				SalesFaucetSystem.lead_rate_per_week(), row[1]]
+	GameState.set_reputation(0)
+	GameState.set_phase(2)
 	if not is_equal_approx(SalesFaucetSystem.lead_rate_per_week(), base):
-		return "base inbound %f with no sales staff, want %f" % [
+		return "phase 2 reads %.2f leads a week, want %.2f (the phase does not move the flow)" % [
 			SalesFaucetSystem.lead_rate_per_week(), base]
-	if base <= 0.0:
-		return "the faucet is dry with no sales staff — §3 says the base inbound continues"
 	var before: int = ProspectRegistry.count()
 	for i in 10:
 		GameState.advance_day()
@@ -9232,9 +9237,8 @@ static func _case_sales_pipeline_rate_by_pace() -> String:
 	if ProspectRegistry.count() <= before:
 		return "no leads arrived over ten ticks with the base inbound running"
 
-	# An ASSIGNED rep raises the flow by exactly one rep's worth (§3: +2/week).
 	_make_sales_rep("char_sr_1", 6, 1)
-	var want: float = (SalesConstants.FAUCET_BASE_PER_WEEK + SalesConstants.FAUCET_PER_REP_PER_WEEK) * mult
+	var want: float = base + SalesConstants.FAUCET_PER_REP_PER_WEEK
 	if not is_equal_approx(SalesFaucetSystem.lead_rate_per_week(), want):
 		return "rate with one rep %f, want %f" % [SalesFaucetSystem.lead_rate_per_week(), want]
 	return ""
@@ -9253,9 +9257,7 @@ static func _case_sales_pipeline_stack_diminishes() -> String:
 	var one: float = SalesFaucetSystem.lead_rate_per_week()
 	_make_sales_rep("char_sr_2", 6, 1)
 	var two: float = SalesFaucetSystem.lead_rate_per_week()
-	var step: float = SalesConstants.FAUCET_PER_REP_PER_WEEK \
-		* SalesConstants.interest_mult(ProductRead.interest()) \
-		* SalesConstants.phase_mult(GameState.phase)
+	var step: float = SalesConstants.FAUCET_PER_REP_PER_WEEK
 	if not is_equal_approx(two - one, step):
 		return "a second rep added %f, want one rep's worth %f" % [two - one, step]
 	# The tick cap holds however much flow comes in.

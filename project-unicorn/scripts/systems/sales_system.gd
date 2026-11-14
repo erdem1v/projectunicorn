@@ -183,8 +183,7 @@ static func _tick_b2c_audience(quality: float = b2c_quality()) -> void:
 # Shared audience-growth delta per calendar hour: _tick_b2c_audience and growth_band BOTH call
 # this, so the "büyüyor / eriyor" verdict can never drift from the actual audience motion. `quality` is the
 # B2C quality term, read once an hour by hourly_tick and handed down. Interest (Ürün §9) scales base
-# acquisition through the same band the B2B faucet reads, so a fresh release pulls users in and an aging
-# one slows the trickle.
+# acquisition through SalesConstants.interest_mult: a fresh release pulls users in and an aging one slows the trickle.
 static func _audience_delta_per_hour(quality: float = b2c_quality()) -> float:
 	var grow: float = (HOURLY_AUD_BASE \
 		+ quality * HOURLY_AUD_QUALITY_COEF \

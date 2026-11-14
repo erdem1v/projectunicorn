@@ -13,27 +13,19 @@ extends RefCounted
 # calibration surface; the SHAPE is sealed, the NUMBERS are a playtest pass.
 
 
-# ============================ §3 · The faucet ================================
-# "Musluk üç şeyi okur: atanmış satış kapasitesi + ilgi + faz."
-# A tick is a week, so the per-week rate lands whole on every tick.
-const FAUCET_BASE_PER_WEEK := 3.0        # [K] base inbound with ZERO sales staff
-const FAUCET_PER_REP_PER_WEEK := 2.0     # [K] added per assigned sales rep
+# ============================ §3 · Aday akışı (PRD_ERP §4.3) ==================
+# Haftada gelen aday: yayındaki ürün FLOW_LIVE_PER_WEEK, İtibar büyüdükçe en çok FLOW_REP_MAX daha (İtibar REP_FULL'da tam),
+# Satış'a atanmış her kişi FAUCET_PER_REP_PER_WEEK. Bir tik bir haftadır.
+const FLOW_LIVE_PER_WEEK := 1.0          # [WORKING] onay bekliyor: yayındaki ürünün haftalık adayı
+const FLOW_REP_MAX := 2.0                # [WORKING] onay bekliyor: İtibar'ın akışa en çok katkısı
+const REP_FULL := 30                     # [WORKING] onay bekliyor: katkının tam olduğu İtibar
+const FAUCET_PER_REP_PER_WEEK := 2.0     # [K] Satış'a atanmış her kişi
 
-# Interest (§3; owner Ürün §9) maps onto a multiplier band. Zero interest still flows: the
-# faucet never dries, it slows.
+# Interest (Ürün §9) scales B2C base acquisition between these bounds: an aging release slows intake, never stops it.
 const INTEREST_MULT_MIN := 0.8           # [K]
 const INTEREST_MULT_MAX := 1.3           # [K]
 
-# Phase multiplier (§3). Series A shares Traction's figure: the GDD names two phases and
-# the third is the same market.
-const PHASE_MULT_BOOTSTRAP := 1.0        # [K]
-const PHASE_MULT_TRACTION := 1.25        # [K]
-
-# "1★ akışı hiçbir durumda kurumaz" (§3). A hard floor under the product of every
-# multiplier, expressed per week and applied to the 1★ band alone.
-const ONE_STAR_FLOOR_PER_WEEK := 1.0     # [K]
-
-# A tick cannot deliver more than this however the multipliers stack. Legible on purpose: a
+# A tick cannot deliver more than this however the flow stacks. Legible on purpose: a
 # full column reads as "you are not meeting anyone", never as "the faucet broke".
 const FAUCET_TICK_MAX := 14              # [K]
 
@@ -224,15 +216,10 @@ const LOSS_REASONS := [LOSS_WEAK_AREA, LOSS_MISSING_TIER, LOSS_PROVIDER_TRUST,
 
 # ============================ Derived helpers ================================
 
-## Interest 0-100 → the §3 multiplier band. Linear, clamped at both ends.
+## Interest 0-100 → the B2C audience's multiplier band. Linear, clamped at both ends.
 static func interest_mult(interest: float) -> float:
 	var t: float = clampf(interest / ProductState.INTEREST_MAX, 0.0, 1.0)
 	return lerpf(INTEREST_MULT_MIN, INTEREST_MULT_MAX, t)
-
-
-## Phase (GameState.phase, 1/2/3) → the §3 multiplier.
-static func phase_mult(phase: int) -> float:
-	return PHASE_MULT_BOOTSTRAP if phase <= 1 else PHASE_MULT_TRACTION
 
 
 ## The star mix for a phase, as a fresh three-element array the caller may mutate.
