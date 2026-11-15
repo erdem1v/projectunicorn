@@ -171,13 +171,15 @@ static func open_paid_plan() -> void:
 
 # --- Sonuç -------------------------------------------------------------------------------
 
-## Sürümden bir gün sonraki SONUÇ satırı: B2C'de v1.0'ınki ilk haftanın kullanıcılarıdır; öbürlerinde
+## Sürümden bir gün sonraki SONUÇ satırı: B2C'de v1.0'ınki ilk haftanın kullanıcılarıdır (pazaryerinde kullanıcı Pazaryeri'nin
+## kapanışında gelir: o güne dek gelmediyse satır sayı yazmaz, alanın kelimesine düşer); öbürlerinde
 ## sürümde değişen alanın kelimesi bugün değiştiyse o, yoksa kapanan hata sayısı, o da yoksa "görünür bir
 ## değişiklik olmadı".
 static func actual_sentence(release: Dictionary) -> Dictionary:
 	if int(release.number) == 1 and not SalesSystem.is_b2b_market():
 		var users: int = int(SalesSystem.b2c_audience())
-		return {"key": Fmt.count_key("PRODUCT_RELEASE_USERS", users), "args": {"n": users}}
+		if users > 0 or not SalesSystem.is_marketplace():
+			return {"key": Fmt.count_key("PRODUCT_RELEASE_USERS", users), "args": {"n": users}}
 	for change in release.changed_areas:
 		var from: String = ProductQuality.word_for(float(change.from), ProductQuality.expectation(change.area))
 		var to: String = ProductQuality.word(change.area)

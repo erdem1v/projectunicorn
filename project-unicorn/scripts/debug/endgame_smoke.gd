@@ -572,6 +572,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sprint_escaped_pre_launch_lands_at_v1": fail = _case_sprint_escaped_pre_launch_lands_at_v1()
 		"sprint_fix_card_clears_its_line":       fail = _case_sprint_fix_card_clears_its_line()
 		"sprint_fix_close_matches_note":         fail = _case_sprint_fix_close_matches_note()
+		"marketplace_release_result_reads_users": fail = _case_marketplace_release_result_reads_users()
 		"sprint_fix_card_refreshes_until_it_runs": fail = _case_sprint_fix_card_refreshes_until_it_runs()
 		"sprint_fix_first_puts_the_card_on_top": fail = _case_sprint_fix_first_puts_the_card_on_top()
 		"sprint_fix_first_leads_the_carried":    fail = _case_sprint_fix_first_leads_the_carried()
@@ -25422,6 +25423,58 @@ static func _case_sprint_fix_card_clears_its_line() -> String:
 	if int(GameState.product.release.number) != 0 or ProductState.version() != 2:
 		return "a fix card that found nothing to clear made release %d (version %d), want none" % [
 			int(GameState.product.release.number), ProductState.version()]
+	return ""
+
+
+## Pazaryerinin v1.0 sonuç satırı: o güne dek Pazaryeri'nin kapanışı kullanıcı getirdiyse gerçek sayıyı yazar, getirmediyse
+## "İlk hafta 0 kullanıcı" yerine sürümde değişen alanın kelimesini yazar. Not uygulaması 0 kullanıcıda da sayıyı yazar (kitle
+## akışı saat saat işler, 0 gerçektir); ERP kullanıcı yazmaz.
+##
+## FALSİFİKASYON: SprintBridges.actual_sentence'tan `if users > 0 or not SalesSystem.is_marketplace():` koşulunu sil (her zaman
+## sayı) → kullanıcısız pazaryeri iddiası FAIL; koşulu `if not SalesSystem.is_marketplace():` yap (pazaryerinde hiç sayı yok) →
+## kullanıcılı pazaryeri iddiası FAIL; `users > 0 or` yerine yalnız `users > 0` yap → not uygulamasının 0 iddiası FAIL.
+static func _case_marketplace_release_result_reads_users() -> String:
+	# v1.0'ın notu: MVP hatlarıyla yükselen ilk alan 0'dan bugünkü düzeyine çıkmıştır.
+	var release := func() -> Dictionary:
+		var lifted: Array = SprintCatalog.area_ids().filter(func(a: String) -> bool: return ProductQuality.level(a) > 0.0)
+		if lifted.is_empty():
+			return {"number": 1, "shipped": [], "changed_areas": []}
+		return {"number": 1, "shipped": [], "changed_areas": [{"area": lifted[0], "from": 0.0, "to": ProductQuality.level(lifted[0])}]}
+	_seed_sprint(MarketplaceSystem.TYPE_ID)
+	_seed_mvp_lines()
+	GameState.set_flag("mvp_shipped", true)
+	if SalesSystem.b2c_audience() != 0.0:
+		return "fixture: a marketplace before its first close reads %s users" % SalesSystem.b2c_audience()
+	var said: Dictionary = SprintBridges.actual_sentence(release.call())
+	if String(said.key) != "PRODUCT_RESULT_LEVEL_ACTUAL":
+		return "a marketplace with no users yet reads %s, want the changed area's word" % str(said)
+	SaveManager.reset_all_owners()
+	GameState.initialize_run({"seed": 424242})
+	_seed_marketplace_world()
+	var users: int = int(SalesSystem.b2c_audience())
+	if users <= 0:
+		return "fixture: the played marketplace reads %d users" % users
+	said = SprintBridges.actual_sentence(release.call())
+	if not String(said.key).begins_with("PRODUCT_RELEASE_USERS") or int(said.args.get("n", -1)) != users:
+		return "a marketplace with %d users reads %s, want its users" % [users, str(said)]
+	SaveManager.reset_all_owners()
+	GameState.initialize_run({"seed": 424242})
+	_seed_sprint("erp")
+	_seed_mvp_lines()
+	said = SprintBridges.actual_sentence(release.call())
+	if String(said.key) != "PRODUCT_RESULT_LEVEL_ACTUAL":
+		return "the ERP's v1.0 result reads %s, want the changed area's word" % str(said)
+	SaveManager.reset_all_owners()
+	GameState.initialize_run({"seed": 424242})
+	_seed_sprint("note_tool")
+	_seed_b2c()
+	said = SprintBridges.actual_sentence(release.call())
+	if not String(said.key).begins_with("PRODUCT_RELEASE_USERS") or int(said.args.get("n", -1)) != 200:
+		return "the note app's v1.0 result reads %s, want its 200 first-week users" % str(said)
+	GameState.set_flag("b2c_audience", 0.0)
+	said = SprintBridges.actual_sentence(release.call())
+	if not String(said.key).begins_with("PRODUCT_RELEASE_USERS") or int(said.args.get("n", -1)) != 0:
+		return "the note app with no users reads %s, want its 0 first-week users" % str(said)
 	return ""
 
 
