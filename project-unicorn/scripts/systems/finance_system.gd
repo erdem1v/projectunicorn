@@ -16,7 +16,7 @@ extends RefCounted
 const STARTING_BURN_BREAKDOWN := {
 	"salaries": 0,     # Overwritten every tick by pull from CharacterRegistry
 	"overtime": 0,     # Overwritten every tick by pull from WorkHoursSystem; 0 when nobody is over 8h
-	"marketing": 0,    # Pazarlama's rows: the week's budgets as a daily rate (MarketingSystem.daily_tick)
+	"marketing": 0,    # Pazarlama's rows: the week's spend as a daily rate (MarketingSystem.daily_tick)
 	"office": 0,       # OfficeSystem writes the rent of the office the company works in; 0 at home
 	"servers": 0,      # InfraSystem writes the monthly bill / 30 every day; 0 until the product ships
 	"pazaryeri": 0,    # MarketplaceSystem writes the last close's monthly cost / 30 every week; 0 outside a marketplace run

@@ -1,10 +1,12 @@
 extends Control
 
 # ============================================================================
-# Pazarlama penceresi (PRD_PAZARLAMA §5 ve §7, ERP içeriği). Koyu başlıkta Pazarlama ve dört ölçü (bu hafta aday,
-# Satış'a giden, eşik altında, haftalık harcama); denetim şeridinde ekip (yükleriyle) ve devir eşiği. Gövdede kanal
-# satırları (bütçe, haftalık aday, aday başı, MRR katkısı, yürüten), kanal ekle ve Satış'ın kendi akışı (Organik).
-# ERP canlı değilken gövde tek boş hâldir ve şartını yazar.
+# Pazarlama penceresi (PRD_PAZARLAMA §3, §5 ve §7). ERP: koyu başlıkta dört ölçü (bu hafta aday, Satış'a giden, eşik
+# altında, haftalık harcama); denetim şeridinde ekip (yükleriyle) ve devir eşiği; gövdede kanal satırları (bütçe, haftalık
+# aday, aday başı, MRR katkısı, yürüten), kanal ekle ve Satış'ın kendi akışı (Organik). Pazaryeri: başlıkta yeni kullanıcı,
+# ücretli pay ve haftalık harcama (altında satışlara oranı); şeritte ekip; satır kategoride yürür ve dört sayısını yazar
+# (bütçe, yeni kullanıcı, kullanıcı başı, MRR katkısı), doyum yüksekken uyarı etiketi, kullanıcı başı geçen haftadan pahalıysa
+# yukarı ok. Ürün canlı değilken gövde tek boş hâldir ve şartını yazar.
 #
 # Sayfa durumu okur ve MarketingSystem'in kapılarını tetikler, kendisi yazmaz (WRITE-THROUGH LAW). Karar beklerken
 # denetimleri kapalıdır. PROCESS_MODE_ALWAYS (.tscn): duraklatılmış düğüm çizilir ama tıklama almaz.
@@ -14,20 +16,28 @@ extends Control
 signal fit_changed
 
 const MarketingSystem := preload("res://scripts/systems/marketing_system.gd")
+## Weekly user counts read as Pazaryeri's window writes them: one decimal under 10, a grouped whole number above.
+const MpParts := preload("res://scripts/tabs/marketplace/mp_parts.gd")
 const PLUS := "res://assets/icons/util/plus.svg"
 const MINUS := "res://assets/icons/util/minus.svg"
 const CHEVRON := "res://assets/icons/util/chevron_down.svg"
 const EMPTY_GLYPH := "res://assets/icons/rail/marketing.svg"
 const KIND_GLYPHS := {"content_seo": "res://assets/icons/util/doc.svg", "search_ads": "res://assets/icons/dept/marketing.svg",
-	"referral": "res://assets/icons/dept/customer_success.svg", "target_sector": "res://assets/icons/util/flag.svg"}
+	"referral": "res://assets/icons/dept/customer_success.svg", "target_sector": "res://assets/icons/util/flag.svg",
+	"social_ads": "res://assets/icons/util/globe.svg", "display_ads": "res://assets/icons/util/news.svg",
+	"price_compare": "res://assets/icons/util/queue.svg", "affiliate": "res://assets/icons/util/move.svg",
+	"email": "res://assets/icons/util/mail_open.svg", "influencer": "res://assets/icons/util/sparkle.svg"}
 const ORGANIC_GLYPH := "res://assets/icons/type/erp.svg"
+const ORGANIC_GLYPH_MP := "res://assets/icons/type/marketplace.svg"
+const UP := "res://assets/icons/util/tri_up.svg"
 ## The handoff threshold's three positions, as MarketingSystem.HANDOFFS names them.
 const HANDOFF_KEYS := ["MKT_HANDOFF_ALL", "MKT_HANDOFF_2", "MKT_HANDOFF_3"]
 ## Column widths of a channel row [name, budget, leads a week, per lead, MRR]; the runner takes the rest.
 const W := [208, 152, 112, 112, 112]
 
 var frame_options: Dictionary
-var _kpis: Array = []   # leads this week, handed to Sales, under the threshold
+var _kpis: Array = []   # ERP: leads this week, handed to Sales, under the threshold · marketplace: new users, paid share
+var _mp: bool = false
 var _kpi_slot: HBoxContainer
 var _spend: Control
 var _outer: VBoxContainer
@@ -40,11 +50,14 @@ var _signals: Array = []
 
 
 func _init() -> void:
+	_mp = SalesSystem.is_marketplace()
 	_kpi_slot = HBoxContainer.new()
 	_kpi_slot.add_theme_constant_override("separation", 0)
-	for key in ["MKT_KPI_LEADS", "MKT_KPI_HANDED", "MKT_KPI_BELOW"]:
+	for key in (["MKT_KPI_NEW_USERS", "MKT_KPI_PAID_SHARE"] if _mp else ["MKT_KPI_LEADS", "MKT_KPI_HANDED", "MKT_KPI_BELOW"]):
 		_kpis.append(UiFactory.D_kpi(tr(key), ""))
 		_kpi_slot.add_child(_kpis.back())
+	if _mp:
+		_kpis[1].tooltip_text = tr("MKT_KPI_PAID_SHARE_TIP")
 	frame_options = {"title": "TAB_MARKETING", "kpi": _kpi_slot, "pad": Vector2i.ZERO}
 
 
@@ -113,7 +126,7 @@ func fit_height() -> float:
 
 
 func _refresh() -> void:
-	var open: bool = ProductState.is_live() and SalesFaucetSystem.market_open()
+	var open: bool = ProductState.is_live() and (SalesFaucetSystem.market_open() or _mp)
 	var off: bool = EventGate.active_id() != ""
 	_ctl.visible = open
 	_rows.visible = open
@@ -127,7 +140,9 @@ func _refresh() -> void:
 	if open:
 		_paint_kpis()
 		_paint_team()
-		_paint_handoff(off)
+		_handoff.visible = not _mp   # the threshold is Sales' (ERP leads); a marketplace has none
+		if not _mp:
+			_paint_handoff(off)
 		_paint_rows(off)
 	else:
 		_paint_empty()
@@ -136,14 +151,25 @@ func _refresh() -> void:
 
 func _paint_kpis() -> void:
 	var week: Dictionary = GameState.marketing.get("week", {})
-	var spend: int = 0
-	for r: Dictionary in MarketingSystem.rows():
-		spend += int(r.budget)
-	UiFactory.D_kpi_value(_kpis[0]).text = str(int(week.get("made", 0)))
-	UiFactory.D_kpi_value(_kpis[1]).text = str(int(week.get("handed", 0)))
-	UiFactory.D_kpi_value(_kpis[2]).text = str(MarketingSystem.nurture().size())
-	# The spend's cell carries its cost glyph, so it is built with its value.
+	# What Finance's line will carry: a marketplace row at its cap spends less than its budget.
+	var spend: int = MarketingSystem.week_spend()
+	if _mp:
+		UiFactory.D_kpi_value(_kpis[0]).text = MpParts.count(MarketingSystem.week_new_users())
+		# With no new user in four weeks the share has no value, and the cell stays empty (as per lead does with no lead).
+		var paid: float = MarketingSystem.paid_share()
+		UiFactory.D_kpi_value(_kpis[1]).text = Fmt.percent(paid * 100.0, 0) if paid >= 0.0 else ""
+	else:
+		UiFactory.D_kpi_value(_kpis[0]).text = str(int(week.get("made", 0)))
+		UiFactory.D_kpi_value(_kpis[1]).text = str(int(week.get("handed", 0)))
+		UiFactory.D_kpi_value(_kpis[2]).text = str(MarketingSystem.nurture().size())
+	# The spend's cell carries its cost glyph, so it is built with its value; a marketplace's line under it is last week's
+	# spend against the stores' sales, written only in a week that had sales.
 	_spend = UiFactory.D_kpi(tr("MKT_KPI_SPEND"), Fmt.money_exact(spend), true)
+	var ratio: float = MarketingSystem.sales_ratio() if _mp else -1.0
+	if ratio >= 0.0:
+		_spend.get_child(0).add_child(UiFactory.make_label(tr("MKT_SALES_RATIO").format({"pct": Fmt.percent(ratio * 100.0, 1)}),
+			&"Caption"))
+		_spend.tooltip_text = tr("MKT_SALES_RATIO_TIP")
 	_kpi_slot.add_child(_spend)
 
 
@@ -186,10 +212,16 @@ func _paint_rows(off: bool) -> void:
 	var head := PanelContainer.new()
 	head.theme_type_variation = &"TableHead"
 	var cols := HBoxContainer.new()
+	var caps: Array = ["MKT_COL_CHANNELS", "MKT_COL_BUDGET", "MKT_COL_NEW_USERS", "MKT_COL_PER_USER", "MKT_COL_MRR"] if _mp \
+		else ["MKT_COL_CHANNELS", "MKT_COL_BUDGET", "MKT_COL_LEADS", "MKT_COL_PER_LEAD", "MKT_COL_MRR"]
+	# A marketplace's per user and MRR contribution say in their tip what they are counted against (ortak kural 6).
+	var tips: Array = ["", "", "", "MKT_COL_PER_USER_TIP", "MKT_COL_MRR_MP_TIP"] if _mp else ["", "", "", "", ""]
 	for i in W.size():
-		var cap := UiFactory.make_label(Fmt.upper(tr(["MKT_COL_CHANNELS", "MKT_COL_BUDGET", "MKT_COL_LEADS", "MKT_COL_PER_LEAD",
-			"MKT_COL_MRR"][i])), &"KeyLabel")
+		var cap := UiFactory.make_label(Fmt.upper(tr(caps[i])), &"KeyLabel")
 		cap.custom_minimum_size.x = W[i]
+		if tips[i] != "":
+			cap.tooltip_text = tr(tips[i])
+			cap.mouse_filter = Control.MOUSE_FILTER_PASS
 		cols.add_child(cap)
 	head.add_child(cols)
 	_rows.add_child(head)
@@ -206,15 +238,18 @@ func _paint_rows(off: bool) -> void:
 	_rows.add_child(foot)
 	var organic := HBoxContainer.new()
 	organic.add_theme_constant_override("separation", UiTokens.SPACE_L)
-	organic.add_child(UiFactory.make_glyph(ORGANIC_GLYPH, UiTokens.D_ICON_LINE, UiTokens.D_INK_3))
+	organic.add_child(UiFactory.make_glyph(ORGANIC_GLYPH_MP if _mp else ORGANIC_GLYPH, UiTokens.D_ICON_LINE, UiTokens.D_INK_3))
 	organic.add_child(UiFactory.make_label(tr("SALES_SOURCE_ORGANIC"), &"DataText"))
-	organic.add_child(UiFactory.make_label(tr("MKT_PER_WEEK").format({"n": Fmt.number(SalesFaucetSystem.lead_rate_per_week())}),
+	# A marketplace's organic flow is the users who came by themselves at the last close; an ERP's, Sales' own leads.
+	var flow: float = MarketplaceSystem.source_new_users("organic") if _mp else SalesFaucetSystem.lead_rate_per_week()
+	organic.add_child(UiFactory.make_label(tr("MKT_PER_WEEK").format({"n": MpParts.count(flow) if _mp else Fmt.number(flow)}),
 		&"DataStrong"))
 	_rows.add_child(_card(&"DealDoc", organic))
 
 
 ## One channel: its name, the stars its leads usually are and its last four weeks of leads; the budget's − and +; its leads a
-## week, what a lead costs and the MRR its signings bring; its runner, whose menu also closes the row.
+## week, what a lead costs and the MRR its signings bring; its runner, whose menu also closes the row. A marketplace row:
+## the saturation tag while high and its last four weeks of new users; its new users, per user and MRR contribution.
 func _row_card(r: Dictionary, off: bool) -> PanelContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 0)
@@ -226,8 +261,13 @@ func _row_card(r: Dictionary, off: bool) -> PanelContainer:
 	title.add_child(UiFactory.make_glyph(KIND_GLYPHS[r.kind], UiTokens.D_ICON_LINE, UiTokens.D_INK_3))
 	title.add_child(_line(MarketingSystem.row_label(r), &"DataStrong"))
 	name_col.add_child(title)
-	name_col.add_child(UiFactory.D_stars(MarketingSystem.typical_star(r)))
-	name_col.add_child(_bars(r.get("hist", [])))
+	if _mp:
+		if float(r.get("share", 0.0)) >= float(MarketingSystem.cfg("market.warn_share")):
+			name_col.add_child(_saturation(r))
+		name_col.add_child(_bars((r.get("weeks", []) as Array).slice(-4).map(func(w: Dictionary) -> int: return roundi(float(w.users)))))
+	else:
+		name_col.add_child(UiFactory.D_stars(MarketingSystem.typical_star(r)))
+		name_col.add_child(_bars(r.get("hist", [])))
 	row.add_child(name_col)
 	var budget := HBoxContainer.new()
 	budget.custom_minimum_size.x = W[1]
@@ -241,17 +281,21 @@ func _row_card(r: Dictionary, off: bool) -> PanelContainer:
 		up.pressed.connect(func() -> void: MarketingSystem.step_budget(int(r.id), 1); _refresh())
 		budget.add_child(up)
 	row.add_child(budget)
-	var rate: float = MarketingSystem.leads_per_week(r)
-	row.add_child(_cell(Fmt.number(rate), W[2]))
-	row.add_child(_cell(Fmt.money_exact(roundi(int(r.budget) / rate)) if rate > 0.0 and int(r.budget) > 0 else "", W[3]))
-	var mrr: int = MarketingSystem.row_mrr(r)
-	# A channel with no signing yet reads $0, muted; per lead stays empty with no leads (it has no value then).
-	var mrr_cell := _cell("+" + Fmt.money_exact(mrr) if mrr > 0 else Fmt.money_exact(0), W[4])
-	if mrr > 0:
-		mrr_cell.add_theme_color_override("font_color", UiTokens.D_pos())
+	if _mp and r.kind == "email":
+		# E-posta brings no new user: it raises the returning visits, and that is its number.
+		var lift := _cell(tr("MKT_EMAIL_LIFT").format({"pct": Fmt.percent(float(MarketingSystem.cfg("market.email_lift")) * 100.0, 0)}),
+			W[2] + W[3] + W[4])
+		lift.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		row.add_child(lift)
+	elif _mp:
+		row.add_child(_cell(MpParts.count(MarketingSystem.row_new_users(r)), W[2]))
+		row.add_child(_per_user(r))
 	else:
-		mrr_cell.theme_type_variation = &"NoteMuted"
-	row.add_child(mrr_cell)
+		var rate: float = MarketingSystem.leads_per_week(r)
+		row.add_child(_cell(Fmt.number(rate), W[2]))
+		row.add_child(_cell(Fmt.money_exact(roundi(int(r.budget) / rate)) if rate > 0.0 and int(r.budget) > 0 else "", W[3]))
+	if not (_mp and r.kind == "email"):
+		row.add_child(_mrr_cell(MarketingSystem.row_mrr(r)))
 	var runner: Character = CharacterRegistry.get_character(String(r.runner))
 	var pick := _button(_who(runner), off, CHEVRON)
 	pick.size_flags_horizontal = Control.SIZE_EXPAND | Control.SIZE_SHRINK_END
@@ -261,6 +305,55 @@ func _row_card(r: Dictionary, off: bool) -> PanelContainer:
 	for part: Control in row.get_children():
 		part.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	return _card(&"DealDoc", row)
+
+
+## A channel with no signing yet reads $0, muted; per lead stays empty with no leads (it has no value then).
+func _mrr_cell(mrr: int) -> Label:
+	var cell := _cell("+" + Fmt.money_exact(mrr) if mrr > 0 else Fmt.money_exact(0), W[4])
+	if mrr > 0:
+		cell.add_theme_color_override("font_color", UiTokens.D_pos())
+	else:
+		cell.theme_type_variation = &"NoteMuted"
+	return cell
+
+
+## A marketplace row's cost per new user at the last close; empty with no spend or no user. Its tip names the kind's traffic in
+## a word (intent to buy or browsing: why a cheap click can make a dear user). Dearer than the week before, an
+## up arrow in the warning ink beside it (a cost's language in Pazaryeri; red is for danger), and its tip the week before's figure and the row's saturation: the budget a
+## player raised buys the dearer slots, and the row says so where its cost is read.
+func _per_user(r: Dictionary) -> Control:
+	var cell := HBoxContainer.new()
+	cell.custom_minimum_size.x = W[3]
+	cell.add_theme_constant_override("separation", UiTokens.SPACE_S)
+	var now: float = MarketingSystem.row_per_user(r)
+	if now < 0.0:
+		return cell
+	cell.add_child(UiFactory.make_label(Fmt.money_exact(roundi(now)), &"DataText"))
+	var kind_word: String = tr("MKT_INTENT_HIGH" if MarketingSystem.intent(String(r.kind)) else "MKT_INTENT_LOW")
+	cell.tooltip_text = kind_word
+	cell.mouse_filter = Control.MOUSE_FILTER_STOP
+	var before: float = MarketingSystem.row_per_user_before(r)
+	if before > 0.0 and roundi(now) > roundi(before):
+		var up := UiFactory.make_glyph(UP, UiTokens.D_ICON_LINE, UiTokens.D_warn())
+		up.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		cell.add_child(up)
+		# Dearer than last week, the tip says why: last week's cost and the slots it now pays for.
+		cell.tooltip_text = tr("MKT_PER_USER_UP_TIP").format({"was": Fmt.money_exact(roundi(before)),
+			"pct": Fmt.percent(float(r.get("share", 0.0)) * 100.0, 0)})
+	return cell
+
+
+## The saturation tag (M5): the share of the row's weekly ad slots it was shown in, while high; its tip the two counts.
+func _saturation(r: Dictionary) -> Control:
+	var cat: String = tr("MP_CAT_" + String(r.target).to_upper())
+	var share: float = float(r.share)
+	# The row already names its category; the tag stays short in the name column and the category is in its tip.
+	var tag := UiFactory.D_tag(tr("MKT_SATURATION").format({"pct": Fmt.percent(share * 100.0, 0)}), &"warn")
+	var slots: float = MarketingSystem.ad_slots(r)
+	tag.tooltip_text = tr("MKT_SATURATION_TIP_SEARCH" if r.kind == "search_ads" else "MKT_SATURATION_TIP").format(
+		{"cat": cat, "pool": Fmt.number(slots), "shown": Fmt.number(slots * share)})
+	tag.mouse_filter = Control.MOUSE_FILTER_STOP
+	return tag
 
 
 ## The last weeks' leads as small bars, the tallest week full height.

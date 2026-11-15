@@ -138,6 +138,11 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"marketing_handoff_nurtures_below_threshold": fail = _case_marketing_handoff_nurtures_below_threshold()
 		"marketing_wasted_meeting_costs_morale": fail = _case_marketing_wasted_meeting_costs_morale()
 		"marketing_dropped_lead_costs_runner": fail = _case_marketing_dropped_lead_costs_runner()
+		"marketing_market_visits_reach_close": fail = _case_marketing_market_visits_reach_close()
+		"marketing_market_saturation_raises_cost": fail = _case_marketing_market_saturation_raises_cost()
+		"marketing_market_content_builds_and_fades": fail = _case_marketing_market_content_builds_and_fades()
+		"marketing_market_email_lifts_return": fail = _case_marketing_market_email_lifts_return()
+		"marketing_market_quality_weighs_visits": fail = _case_marketing_market_quality_weighs_visits()
 		"investor_strain_fades_from_the_room": fail = _case_investor_strain_fades_from_the_room()
 		# --- İterasyon döngüsü (player-gated restore) + ekip kalite tavanı ---
 		"runway_net_status":    fail = _case_runway_net_status()
@@ -3433,6 +3438,169 @@ static func _case_marketing_dropped_lead_costs_runner() -> String:
 	MarketingSystem._tick_nurture()
 	if mails.call().size() != count:
 		return "a week with no drop sent a mail"
+	return ""
+
+
+## Pazaryeri kanalı (PRD_PAZARLAMA §3 M3, M4): yayındaki pazaryerinde Moda'ya açılan Arama reklamı satırının haftalık ziyareti
+## Pazaryeri'nin kapanışına `world().channel.fashion["search_ads:fashion"]` ile girer; kapanış o kaynağa yeni kullanıcı yazar ve
+## satır onu okur; tavanın üstündeki bütçe tamamı harcanmaz ve Finans'ın pazarlama kalemi satırın gerçekten harcadığıdır;
+## ücretli pay organik kullanıcıyla birlikte 0 ile 1 arasıdır; satışlara oranı geçen haftanın harcaması ÷ Pazaryeri'nin satış
+## hacmidir; ikinci haftanın tiki ilk haftayı (harcama, kapanışın yeni kullanıcısı) satırın haftalarına yazar. Açık olmayan
+## kategoride ve kategorisiz satır açılmaz.
+##
+## FALSİFİKASYON: `MarketplaceSystem.world()`ten "channel" anahtarını çıkar → yeni kullanıcı satırı FAIL; `daily_tick`'te
+## `spend = _tick_market()` satırını sil (kalem bütçeyi yazar) → kalem satırı FAIL; `_targets`'ta açık kategori yerine bütün
+## kategorileri döndür → kapalı kategori satırı FAIL; `_tick_market`te haftayı bu haftanın harcamasıyla yaz → ikinci hafta
+## satırı FAIL.
+static func _case_marketing_market_visits_reach_close() -> String:
+	_seed_marketplace_world()
+	var founder: String = CharacterRegistry.get_founder().id
+	if not MarketingSystem.add_row("search_ads", "electronics", founder).is_empty():
+		return "a search row opened in Elektronik, which is not open"
+	if not MarketingSystem.add_row("search_ads", "", founder).is_empty():
+		return "a search row opened without a category"
+	var r: Dictionary = MarketingSystem.add_row("search_ads", "fashion", founder)
+	if r.is_empty():
+		return "the search row did not open in Moda"
+	MarketingSystem.set_budget(int(r.id), 5000)
+	var bought: Dictionary = MarketingSystem.paid_week(r)
+	MarketingSystem.daily_tick()
+	var visits: float = float((MarketplaceSystem.world().channel as Dictionary).get("fashion", {}).get("search_ads:fashion", 0.0))
+	if visits <= 0.0 or not is_equal_approx(visits, float(bought.visits) * MarketingSystem.quality("search_ads")):
+		return "the close reads %s visits from the row, the row bought %s" % [visits, bought.visits]
+	if int(r.spent) <= 0 or int(r.spent) >= 5000:
+		return "a $5.000 budget past the cap spent %s" % r.get("spent")
+	var line: int = roundi(int(r.spent) / float(TimeModel.DAYS_PER_TICK))
+	if int(FinanceSystem.get_burn_breakdown()["marketing"]) != line:
+		return "the marketing line is %s a day, the row spent %s this week" % [FinanceSystem.get_burn_breakdown()["marketing"], r.get("spent")]
+	MarketplaceSystem.daily_tick()
+	var users: float = MarketingSystem.row_new_users(r)
+	if users <= 0.0:
+		return "the close wrote %s new users to the row's source" % users
+	var first_spent: int = int(r.spent)
+	GameState.day += 1
+	MarketingSystem.daily_tick()
+	if not is_equal_approx(MarketingSystem.row_per_user_before(r), first_spent / users):
+		return "the second week reads the first as %s a user, want %s ÷ %s" % [MarketingSystem.row_per_user_before(r), first_spent, users]
+	MarketplaceSystem.daily_tick()
+	var paid: float = MarketingSystem.paid_share()
+	if paid <= 0.0 or paid >= 1.0:
+		return "with organic and search users the paid share reads %s" % paid
+	var gmv: float = MarketplaceSystem.week_gmv()
+	if gmv <= 0.0 or not is_equal_approx(MarketingSystem.sales_ratio(), int(r.spent) / gmv):
+		return "sales ratio %s, want %s ÷ %s" % [MarketingSystem.sales_ratio(), r.get("spent"), gmv]
+	return ""
+
+
+## Doyum (M5): Moda'daki Arama reklamı satırı bütçesi büyüdükçe daha çok ziyaret alır ama tıklama başı daha pahalıya; pay en çok
+## share_cap'tir ve tavana vuran bütçenin artanı harcanmaz; kartın itkisi tıklamanın taban bedelini oranında düşürür.
+##
+## Bütçeler tavanın bedelinin kesirleridir (kalibrasyon değişince tavana vurmazlar).
+##
+## FALSİFİKASYON: `paid_week`te `k`yı 0 say (doyumsuz: payı bütçe ÷ unit) → tıklama bedeli satırı FAIL; tavan dalında `spent`i
+## bütçe bırak → tavan satırı FAIL; `base_click_cost`tan `cost_mult`u sil → itki satırı FAIL.
+static func _case_marketing_market_saturation_raises_cost() -> String:
+	_seed_marketplace_world()
+	var r: Dictionary = MarketingSystem.add_row("search_ads", "fashion", CharacterRegistry.get_founder().id)
+	var cap: float = float(MarketingSystem.cfg("market.share_cap"))
+	var last_visits: float = 0.0
+	var last_click: float = 0.0
+	var full_cost: int = MarketingSystem.cap_spend(r)
+	for budget: int in [roundi(full_cost * 0.15), roundi(full_cost * 0.4), roundi(full_cost * 0.8)]:
+		MarketingSystem.set_budget(int(r.id), budget)
+		var b: Dictionary = MarketingSystem.paid_week(r)
+		var click: float = float(b.spent) / float(b.visits)
+		if float(b.visits) <= last_visits:
+			return "$%d bought %s visits, the smaller budget %s" % [budget, b.visits, last_visits]
+		if click <= last_click:
+			return "at $%d a click costs %s, at the smaller budget %s: the dearer slots did not cost more" % [budget, click, last_click]
+		if int(b.spent) != budget or float(b.share) >= cap:
+			return "$%d under the cap spent %s at share %s" % [budget, b.spent, b.share]
+		last_visits = float(b.visits)
+		last_click = click
+	MarketingSystem.set_budget(int(r.id), full_cost * 3)
+	var full: Dictionary = MarketingSystem.paid_week(r)
+	if not is_equal_approx(float(full.share), cap) or int(full.spent) != full_cost:
+		return "three times the cap's cost reached share %s and spent %s (want the cap %s and %s spent)" % [full.share, full.spent, cap, full_cost]
+	var base: float = MarketingSystem.base_click_cost(r)
+	MarketingSystem.boost("search_ads", 20, 4)
+	if not is_equal_approx(MarketingSystem.base_click_cost(r), base * 0.8):
+		return "a 20%% boost left the click at %s, before %s" % [MarketingSystem.base_click_cost(r), base]
+	return ""
+
+
+## İçerik ve SEO (M8): bütçeli satırın ziyareti hafta hafta birikir; bütçe sıfırlanınca söner ama bir anda bitmez, her hafta keep
+## oranında kalır.
+##
+## FALSİFİKASYON: `content_week`te birikimi sil (`r.stock = added`) → birikim satırı FAIL; keep'i 0 yap → sönme satırı FAIL.
+static func _case_marketing_market_content_builds_and_fades() -> String:
+	_seed_marketplace_world()
+	var r: Dictionary = MarketingSystem.add_row("content_seo", "fashion", CharacterRegistry.get_founder().id)
+	MarketingSystem.set_budget(int(r.id), 500)
+	var last: float = 0.0
+	for week in 6:
+		var v: float = float(MarketingSystem.content_week(r).visits)
+		if v <= last:
+			return "week %d of content brought %s visits, the week before %s" % [week + 1, v, last]
+		last = v
+	MarketingSystem.set_budget(int(r.id), 0)
+	var keep: float = float(MarketingSystem.cfg("market.content.keep"))
+	for week in 4:
+		var v: float = float(MarketingSystem.content_week(r).visits)
+		if v <= 0.0 or not is_equal_approx(v, last * keep):
+			return "a stopped week %d reads %s visits, want %s" % [week + 1, v, last * keep]
+		last = v
+	return ""
+
+
+## E-posta (M9): bütçesiz satır yeni kullanıcı getirmez, Pazaryeri'nin geri dönen ziyaretine email_lift oranını verir
+## (`world().return_lift`); kategoriye açılmaz.
+##
+## FALSİFİKASYON: `_tick_market`te `lift`i yazma → geri dönüş satırı FAIL; `MarketplaceSystem.world()`te "return_lift"i 0 ver →
+## aynı satır FAIL.
+static func _case_marketing_market_email_lifts_return() -> String:
+	_seed_marketplace_world()
+	var founder: String = CharacterRegistry.get_founder().id
+	MarketingSystem.daily_tick()
+	if float(MarketplaceSystem.world().return_lift) != 0.0:
+		return "with no E-posta row the return lift is %s" % MarketplaceSystem.world().return_lift
+	if not MarketingSystem.add_row("email", "fashion", founder).is_empty():
+		return "an E-posta row opened in a category"
+	if MarketingSystem.add_row("email", "", founder).is_empty():
+		return "the E-posta row did not open"
+	MarketingSystem.daily_tick()
+	var lift: float = float(MarketingSystem.cfg("market.email_lift"))
+	if not is_equal_approx(float(MarketplaceSystem.world().return_lift), lift):
+		return "the return lift is %s, want %s" % [MarketplaceSystem.world().return_lift, lift]
+	if not (MarketplaceSystem.world().channel as Dictionary).is_empty():
+		return "E-posta brought channel visits: %s" % str(MarketplaceSystem.world().channel)
+	return ""
+
+
+## Nitelik (yardımcı yönetmen 15 Kasım): Pazaryeri'ne giden kanal ziyareti tıklama × türün niteliğidir; Moda'da aynı bütçeli
+## Arama reklamı ile Görüntülü reklam satırından görüntülü daha çok tıklama alır ama kapanışa daha az alıcı ziyareti verir.
+## Satırların ikisi kurucunun; vaka onları add_row'un yük denetimini aşarak yazar (nitelik yükten bağımsızdır).
+##
+## FALSİFİKASYON: `_tick_market`te ziyareti `quality` ile çarpma → görüntülü satırı FAIL.
+static func _case_marketing_market_quality_weighs_visits() -> String:
+	_seed_marketplace_world()
+	var founder: String = CharacterRegistry.get_founder().id
+	var rows: Array = GameState.marketing.get_or_add("rows", [])
+	for i in 2:
+		rows.append({"id": 90 + i, "kind": ["search_ads", "display_ads"][i], "target": "fashion", "budget": 1000, "runner": founder})
+	var clicks: Array = rows.map(func(r: Dictionary) -> float: return float(MarketingSystem.paid_week(r).visits))
+	MarketingSystem.daily_tick()
+	var channel: Dictionary = (MarketplaceSystem.world().channel as Dictionary).get("fashion", {})
+	for i in rows.size():
+		var r: Dictionary = rows[i]
+		var want: float = float(clicks[i]) * MarketingSystem.quality(String(r.kind))
+		if float(clicks[i]) <= 0.0 or not is_equal_approx(float(channel.get(MarketingSystem.source_key(r), 0.0)), want):
+			return "%s bought %s clicks and gave the close %s visits, want %s" % [r.kind, clicks[i],
+				channel.get(MarketingSystem.source_key(r)), want]
+	if float(clicks[1]) <= float(clicks[0]) \
+			or float(channel["display_ads:fashion"]) >= float(channel["search_ads:fashion"]):
+		return "display: %s clicks, %s to the close; search: %s clicks, %s to the close (want more clicks, fewer buyers)" \
+			% [clicks[1], channel["display_ads:fashion"], clicks[0], channel["search_ads:fashion"]]
 	return ""
 
 

@@ -2182,6 +2182,22 @@ MKT_PER_WEEK,{n}/hafta,{n}/week
 MKT_NEEDS_ERP,Pazaryeri ya da ERP gerekli,A marketplace or an ERP is required
 MKT_DROPPED_TITLE,Düşen adaylar,Dropped leads
 MKT_DROPPED_LINE,Düşen aday · {channel}: {n},Dropped lead · {channel}: {n}
+MKT_KPI_NEW_USERS,Yeni kullanıcı,New users
+MKT_KPI_PAID_SHARE,Ücretli pay,Paid share
+MKT_KPI_PAID_SHARE_TIP,"Son dört haftada gelen yeni kullanıcıların reklam, kampanya ve kupondan gelen payı. İçerik, E-posta ve Organik ücretli sayılmaz.","The share of the last four weeks' new users that came from ads, campaigns and coupons. Content, Email and Organic are not paid."
+MKT_SALES_RATIO,Satışlara oranı: {pct},{pct} of sales
+MKT_SALES_RATIO_TIP,Geçen haftanın reklam harcaması ÷ mağazaların o hafta sattığı ürünlerin toplam tutarı.,Last week's ad spend ÷ what the stores sold that week.
+MKT_COL_NEW_USERS,Yeni kullanıcı,New users
+MKT_COL_PER_USER,Kullanıcı başı,Per user
+MKT_COL_PER_USER_TIP,Geçen haftaki harcama ÷ o hafta kanaldan gelen yeni kullanıcı.,Last week's spend ÷ the new users the channel brought that week.
+MKT_COL_MRR_MP_TIP,Bu kanaldan son 12 haftada gelen kullanıcıların son dört haftada bıraktığı net komisyon.,The net commission the channel's users of the last 12 weeks left in the last four.
+MKT_SATURATION,Reklam doyumu {pct},Ad saturation {pct}
+MKT_SATURATION_TIP_SEARCH,{cat} aramalarında haftalık reklam yeri: {pool} · gösterildiğin: {shown},Weekly ad slots in {cat} searches: {pool} · shown in: {shown}
+MKT_SATURATION_TIP,{cat} için haftalık reklam yeri: {pool} · gösterildiğin: {shown},Weekly ad slots for {cat}: {pool} · shown in: {shown}
+MKT_PER_USER_UP_TIP,Geçen hafta {was} · reklam doyumu {pct},Last week {was} · ad saturation {pct}
+MKT_INTENT_HIGH,Niyetli,High-intent
+MKT_INTENT_LOW,Niyetsiz,Low-intent
+MKT_EMAIL_LIFT,Geri dönen ziyaret +{pct},Returning visits +{pct}
 MAIL_SENDER_MARKETING,Pazarlama,Marketing
 SECTOR_CONSTRUCTION,İnşaat,Construction
 SECTOR_MANUFACTURING,Üretim,Manufacturing
