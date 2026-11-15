@@ -307,6 +307,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"event_queue_dedupe_by_id":           fail = _case_event_queue_dedupe_by_id()
 		"event_instance_per_subject":         fail = _case_event_instance_per_subject()
 		"scope_given_subject_gone_refused":   fail = _case_scope_given_subject_gone_refused()
+		"scope_customer_skips_stores":        fail = _case_scope_customer_skips_stores()
 		"event_scope_where_filters_pool":     fail = _case_event_scope_where_filters_pool()
 		# --- Driver-run fixes, 2026-08-17. Each one FAILS against the pre-fix engine;
 		#     each was found by a 90-day driver run (--run-log), not by reading.
@@ -1591,9 +1592,16 @@ static func _case_month_summary() -> String:
 	# `get_lowest_satisfaction_customer(<the event's market>)`, computed at apply time; the new
 	# one takes its subject from the card's bound scope, and a bare effect list has no scope.
 	# Naming the account is what the card does too — it just does it through a slot.
+	# The verb loses the account through B2BSalesSystem.remove_lost, so the churn signal fires as on any other loss.
+	var churned: Array = []
+	var on_churn := func(id: String) -> void: churned.append(id)
+	EventBus.customer_churned.connect(on_churn)
 	EventGate.debug_apply_effects([{"verb": "churn_customer", "entity_id": "co_lead_month_smoke"}])
+	EventBus.customer_churned.disconnect(on_churn)
 	if GameState.run_customers_lost != 1:
 		return "run_customers_lost = %d, want 1" % GameState.run_customers_lost
+	if churned != ["co_lead_month_smoke"]:
+		return "the churn_customer verb sent customer_churned %s, want [co_lead_month_smoke]" % str(churned)
 	_make_employee("char_month_smoke_emp", "Smoke Hire", HRConstants.ROLE_DEVELOPER)
 	if GameState.run_hires != 1:
 		return "run_hires = %d, want 1" % GameState.run_hires
@@ -7638,6 +7646,26 @@ static func _case_event_scope_where_filters_pool() -> String:
 	return ""
 
 
+## A customer slot never binds the marketplace's stores record: the population a selector and a `where` choose from, and the
+## selectors, see the users record only, however large the stores record.
+## FALSIFICATION: let `EvScope._customers` return `CustomerRegistry.get_active()` → the stores record is in the population FAIL.
+static func _case_scope_customer_skips_stores() -> String:
+	var others: Dictionary = {}
+	for c in CustomerRegistry.get_active():
+		others[c.id] = true
+	for row in [[MarketplaceSystem.STORES_ID, 100000], [MarketplaceSystem.USERS_ID, 1]]:
+		var c: Customer = _add_customer(row[0], row[0])
+		c.market_type = "b2c"
+		c.mrr = row[1]
+	var ids: Array = EvScope._ids(EvScope.TYPE_CUSTOMER)
+	if ids.has(MarketplaceSystem.STORES_ID) or not ids.has(MarketplaceSystem.USERS_ID):
+		return "a customer slot chooses from %s, want the users record and not the stores" % str(ids)
+	var picked: String = EvScope._select_customer("largest", others)
+	if picked != MarketplaceSystem.USERS_ID:
+		return "the largest-account selector picked '%s' over the far larger stores record, want the users record" % picked
+	return ""
+
+
 ## §4.3: a subject the caller named binds or the card is refused. A lost account's churn edge
 ## drains after the account is removed; the `at_risk` selector must not hand its retention card
 ## to another account in Risk. FALSIFICATION: let a given slot fall back to its selector.
@@ -7645,7 +7673,7 @@ static func _case_scope_given_subject_gone_refused() -> String:
 	_seed_b2b(500)
 	var lost: Customer = _add_risk_b2b("lost", 800)
 	_add_risk_b2b("other", 900)
-	B2BSalesSystem._remove_lost(lost)
+	B2BSalesSystem.remove_lost(lost)
 	# What the signal drain proposes for that edge.
 	var v: EvGate.Verdict = EvGate.propose(RETAIN_ID, EvGate.Origin.SIGNAL, {"customer": lost.id})
 	if v.admitted or v.step != "G5":
@@ -10897,7 +10925,7 @@ static func _case_b2b_prospect_dedup_excludes_signed() -> String:
 		ProspectRegistry.remove(p.id)
 		SalesFaucetSystem.lock_return(p.company_name, 9999)
 	# Churn the signed account (shared loss seam) — the name must STAY excluded.
-	B2BSalesSystem._remove_lost(c)
+	B2BSalesSystem.remove_lost(c)
 	if CustomerRegistry.get_customer(c.id) != null:
 		return "churn did not remove the customer record"
 	for i in 40:
@@ -16639,7 +16667,7 @@ static func _case_clause_last_week_asks() -> String:
 ## maddeleri kapatır ve bildirimi geri aldırır; Kurumsal'dan inilmez ve Kurumsal'da imzalayan hesap maddesizdir.
 ##
 ## FALSİFİKASYON: meet_clauses'taki set_clause(-1, -1) satırını sil → geçiş iddiası FAIL; set_provider'daki Kurumsal denetimini sil →
-## iniş iddiası FAIL; _tick_clause'taki _remove_lost'u sil → fesih iddiası FAIL; clause_applies'ı Kurumsal'a bakmadan yaz →
+## iniş iddiası FAIL; _tick_clause'taki remove_lost'u sil → fesih iddiası FAIL; clause_applies'ı Kurumsal'a bakmadan yaz →
 ## Kurumsal'da imza iddiası FAIL.
 static func _case_enterprise_clause_timeline() -> String:
 	_seed_b2b(2000)

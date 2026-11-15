@@ -48,7 +48,7 @@ static func daily_tick() -> void:
 static func _tick_customer(c: Customer) -> void:
 	if c.exit_notice_day >= 0 and GameState.day >= c.exit_notice_day:
 		SalesSystem.record_sales_event("notice_ended", c.exit_notice_reason, c.company_name, c.mrr)
-		_remove_lost(c)
+		remove_lost(c)
 		return
 	if c.timed_discount_until >= 0 and GameState.day >= c.timed_discount_until:
 		CustomerRegistry.set_timed_discount(c.id, 0, -1)
@@ -343,12 +343,12 @@ static func _churn(c: Customer) -> void:
 	# `churn_customer` verb with its own brand modifier and never reaches _churn, so there is
 	# no double-apply.
 	GameState.set_brand(GameState.brand + B2BConstants.CHURN_BRAND)
-	_remove_lost(c)
+	remove_lost(c)
 
 
-static func _remove_lost(c: Customer) -> void:
-	# Account loss: run counter + churn signal first (so a listener can still read the
-	# record), then remove + reflect MRR.
+## The one way a B2B account is lost (watched churn, server clause, `churn_customer`): counter and churn signal first, so a
+## listener can still read the record; then remove and reflect MRR.
+static func remove_lost(c: Customer) -> void:
 	GameState.run_customers_lost += 1  # run counter seam, B2B loss path
 	CustomerRegistry.set_lifecycle_phase(c.id, "churning")
 	EventBus.customer_churned.emit(c.id)
@@ -401,7 +401,7 @@ static func _tick_clause(c: Customer) -> bool:
 		if GameState.day < c.notice_end_day:
 			return false
 		SalesSystem.record_sales_event("clause_ended", "", c.company_name, c.mrr)
-		_remove_lost(c)
+		remove_lost(c)
 		return true
 	var due_now: bool = GameState.day == c.clause_due_day
 	var month_start: bool = int(GameState.month_ledger.get("start_day", -1)) == GameState.day

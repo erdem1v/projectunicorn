@@ -188,7 +188,7 @@ static func _ids(type_id: String) -> Array:
 		TYPE_FOUNDER:
 			var f: Character = CharacterRegistry.get_founder()
 			return [f.id] if f != null else []
-		TYPE_CUSTOMER: return CustomerRegistry.get_active().map(func(c): return c.id)
+		TYPE_CUSTOMER: return _customers().map(func(c): return c.id)
 		TYPE_PROSPECT: return ProspectRegistry.get_all().map(func(o): return o.id)
 		TYPE_RIVAL:    return RivalRegistry.get_all().map(func(o): return o.id)
 		TYPE_INVESTOR: return InvestorRegistry.get_active().map(func(inv): return String(inv.get("id", "")))
@@ -363,8 +363,14 @@ static func _rep_leads() -> Array:
 		func(p: Prospect) -> String: return p.id)
 
 
+## The customers a slot may bind. The marketplace's stores record never is one: a card about a customer lands on the users
+## record, not on the stores.
+static func _customers() -> Array:
+	return CustomerRegistry.get_active().filter(func(c: Customer) -> bool: return c.id != MarketplaceSystem.STORES_ID)
+
+
 static func _select_customer(mode: String, used: Dictionary) -> String:
-	var pool: Array = CustomerRegistry.get_active().filter(func(c): return not used.has(c.id))
+	var pool: Array = _customers().filter(func(c): return not used.has(c.id))
 	var by_satisfaction := func(c): return c.satisfaction
 	match mode:
 		"at_risk":

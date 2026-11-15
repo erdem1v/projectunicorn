@@ -296,9 +296,7 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 			if victim.market_type == "b2c":
 				SalesSystem.add_b2c_audience(-int(round(SalesSystem.b2c_audience() * B2C_CHURN_PCT)))
 				return {"verb": verb, "customer": chid, "audience_pct": -B2C_CHURN_PCT}
-			CustomerRegistry.remove(chid)
-			GameState.run_customers_lost += 1
-			SalesSystem.reflect_mrr()
+			B2BSalesSystem.remove_lost(victim)
 			return {"verb": verb, "customer": chid}
 		"audience_delta":
 			var n: int = amount(e, ctx)

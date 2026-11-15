@@ -165,11 +165,11 @@ Düğüm sinyalleri:
 ## Testler
 
 Smoke (`bash tools/smoke_run.sh <vaka>`; bayrak `--` ardına konmaz):
-- `office_move_gates_and_save` `scripts/debug/endgame_smoke.gd:20559`: para kapısı, peşin bir kez, kira varış haftasında, kayıt turu
-- `desk_cap_blocks_hire` `endgame_smoke.gd:20655`: evde sınır yok, ofiste masa dolunca arama kapanır, büyük ofiste açılır
-- `office_brand_once` `endgame_smoke.gd:20729`: ilk varışta +3/+6/+10, ikincide ve aşağı taşınmada 0, kayıttan sonra tek sefer
-- `office_pace_linear` `endgame_smoke.gd:8445`: `k` oyun hızıyla doğrusal, tavansız
-- `look_registry_unique_and_saved` `endgame_smoke.gd:10499`: görünümler eşsiz, kayıtta korunur
+- `office_move_gates_and_save` `scripts/debug/endgame_smoke.gd:20587`: para kapısı, peşin bir kez, kira varış haftasında, kayıt turu
+- `desk_cap_blocks_hire` `endgame_smoke.gd:20683`: evde sınır yok, ofiste masa dolunca arama kapanır, büyük ofiste açılır
+- `office_brand_once` `endgame_smoke.gd:20757`: ilk varışta +3/+6/+10, ikincide ve aşağı taşınmada 0, kayıttan sonra tek sefer
+- `office_pace_linear` `endgame_smoke.gd:8473`: `k` oyun hızıyla doğrusal, tavansız
+- `look_registry_unique_and_saved` `endgame_smoke.gd:10527`: görünümler eşsiz, kayıtta korunur
 - Kişiler, ışık, kamera, harita smoke'ta YOK (başsız çalışmada kişiler çizilmez); arayüz doğrulaması görsel kabulledir (CLAUDE.md §11)
 
 Pencereli görsel ve ölçüm (bayrak `main.gd` tablosunda, `:271-276`; PNG `%APPDATA%\Godot\app_userdata\Project Unicorn\`):

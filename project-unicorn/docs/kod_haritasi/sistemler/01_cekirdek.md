@@ -21,7 +21,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - `scripts/autoload/character_registry.gd` (627): çalışan, kurucu, mentor ve NPC tek doğruluk kaynağı; yazma yalnız buradan (write-through)
 - `scripts/autoload/customer_registry.gd` (354): müşteri hesapları; MRR, koltuk, memnuniyet yazımı sinyal yayar
 - `scripts/autoload/prospect_registry.gd` (73): imzasız B2B adaylar; imzada Customer olur ve buradan çıkar
-- `scripts/autoload/promise_registry.gd` (187): müşteriye verilen sözler; `build_phase_changed` ve `customer_removed` dinler
+- `scripts/autoload/promise_registry.gd` (185): müşteriye verilen sözler; `build_phase_changed` ve `customer_removed` dinler
 - `scripts/autoload/rival_registry.gd` (210): rakip alanı; `RivalCatalog`tan tohumlanır, `advance_all` günlük tikte
 - `scripts/autoload/investor_registry.gd` (146): Seri A fon tablosu (const); koşu durumu `GameState.vc_states`te
 - `scripts/data_models/character.gd` (106): `Character` Resource (kimlik, maaş, moral, `role_stats`, atama, izin, eğitim, verim satırları)
@@ -72,7 +72,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - `CharacterRegistry.add/get_character/get_founder/assign_job/prune_productivity_mods` `character_registry.gd` · HR, Finans, Ekip; `insert_raw` `:502` kayıt yüklemesi, `reset` `:565`
 - `CustomerRegistry.set_mrr/set_seats/set_satisfaction/add/remove` `customer_registry.gd`; `insert_raw` `:105`, `reset` `:113`
 - `RivalRegistry.advance_all()` `rival_registry.gd` · `time_manager.gd` günlük tik; `reset` `rival_registry.gd:25` katalogdan yeniden tohumlar
-- `PromiseRegistry.create/extend/drop_targetless` `promise_registry.gd:50,83,105` · kart efekti `promise_create`, `SalesFinalizer`, `save_manager.gd` yüklemede
+- `PromiseRegistry.create/extend/drop_targetless` `promise_registry.gd:48,81,103` · kart efekti `promise_create`, `SalesFinalizer`, `save_manager.gd` yüklemede
 
 ## Sinyaller
 - `speed_changed(new_speed)`: yayan `time_manager.gd:321,337` (TimeManager'in kendi sinyali) · dinleyen `scripts/ui/components/top_bar.gd:179`, `sprint_system.gd:1382`, `office_notice_stack.gd:49`
@@ -128,7 +128,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - Anahtar ailesi dökümü: `DIZIN.md` "Metin anahtarı aileleri"; CSV'ye elle dokunma kuralı için `strings-csv-surgery` hafıza notu (bayt-aralığı ekleme)
 
 ## Testler
-- Koşturucu: `bash tools/smoke_run.sh <vaka>` (tüm süit `--all`, yalnız push öncesi); bayrak `--endgame-smoke=<vaka>` `--` ayracından ÖNCE; vaka tablosu `scripts/debug/endgame_smoke.gd:78-595` (`match case_name`)
+- Koşturucu: `bash tools/smoke_run.sh <vaka>` (tüm süit `--all`, yalnız push öncesi); bayrak `--endgame-smoke=<vaka>` `--` ayracından ÖNCE; vaka tablosu `scripts/debug/endgame_smoke.gd:78-596` (`match case_name`)
 - Zaman: `speed_preserve` `:94`, `speed_ladder` `:220`, `speed_day_invariant` `:221`, `speed_save_clamps_to_ladder` `:402`, `clock_resumes_only_by_player` `:400`, `milestone_clock_hold` `:397`, `event_gate_holds_clock` `:399`
 - Zaman devamı: `incident_night_hold_resumes` `:340`, `smoke_seed_pinned` `:404`, `sales_meeting_time_skip_founder_share` `:158`, `month_history_*` `:376,381`, `run_ledger`, `growth_streak_semantics`
 - Kayıt: `save_roundtrip_fingerprint` `:298`, `save_continuity_seeded` `:299`, `save_double_load_no_residue` `:300`, `save_backup_fallback` `:301`, `autosave_writes_off_thread` `:302`, `menu_state_machine`
@@ -166,7 +166,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 
 ## Dikkat
 - Göç adı ve koşulu aynı N'dir (`_migrate_N` `version < N`, `save_manager.gd:198-211`); yeni göçte `SCHEMA_VERSION`, koşul, adı ve belgeyi birlikte yaz
-- `_migrate_character_areas` `:1112`, `_migrate_assignments_to_areas` `:1172`, `_migrate_to_rev11` `:1212` zincirde YOK (`MIN_LOADABLE_VERSION` 10); yalnız `endgame_smoke.gd:12138-12372` çağırır
+- `_migrate_character_areas` `:1112`, `_migrate_assignments_to_areas` `:1172`, `_migrate_to_rev11` `:1212` zincirde YOK (`MIN_LOADABLE_VERSION` 10); yalnız `endgame_smoke.gd:12166-12400` çağırır
 - Göç her yuva listelemesinde koşar (`list_slots` her dosyayı `_read_file`dan geçirir): saf, ucuz, canlı durumdan bağımsız olmalı; `_migrate_18` bu yüzden kaydın kendi ürün alt türünü okur
 - `_migrate_15` kartı v18 biçiminde yazar (`_V14_EFFORT`, `_V14_SHARES` `save_manager.gd:831-832`); ×5 ve `need` dönüşümünü yalnız `_migrate_19` yapar. `list_slots` ve `read_slot` her yuvada tam zinciri tekrar koşar
 - `SaveCodec.game_state_fields()` `save_codec.gd:192` `GameState`in HER script `var`ını kaydeder; kaydedilmemesi gereken geçici alan eklenemez. Yeni alan makul varsayılan taşımalı (varsayılan = göç)

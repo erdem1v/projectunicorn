@@ -28,7 +28,7 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - `scripts/events/core/dice.gd` (65): `EvDice`, FNV-1a ile belirlenimci zar (`unit`, `check`); `core/budgets.gd` (53): `EvBudgets`, adlı bütçeler
 - `scripts/events/core/save.gd` (108): `EvSave`, motorun `event_engine` kayıt bloğunu tüm depolardan toplar ve geri yükler
 - `scripts/events/gate/gate.gd` (288): `EvGate`, tek kabul kapısı `propose` (G1-G8), `revalidate`, `Verdict`, başlangıç bağışıklığı
-- `scripts/events/gate/scope.gd` (408): `EvScope`, adlı kapsam slotları (employee/founder/customer/prospect/rival/investor) ve seçiciler
+- `scripts/events/gate/scope.gd` (414): `EvScope`, adlı kapsam slotları (employee/founder/customer/prospect/rival/investor) ve seçiciler
 - `scripts/events/present/presenter.gd` (306): `EvPresenter`, kart sözlüğünden `GameEvent` görünümü, metin çözme, ad ve seam dondurma, masa satırları
 - `scripts/events/present/chips.gd` (708): `EvChips`, etki ve delta çiplerinin tek kurucusu (`describe`), kaynak rozeti `source_tag`;
   ↳ `describe(..., live := true)` kartın kendi dünyasında hedefi boş etkiyi çizmez (`_aims_at_no_one`: bağlanmamış `scope`/`other`/`amount_slot`, hesap ya da ekip grubu boş; bağlamsız okuma lint ve `event_chip_coverage` için hâlâ her fiile çip verir),
@@ -83,11 +83,11 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - `event_set_aside(event_id)` `event_bus.gd:122`: yayan `engine.gd:792` · dinleyen `main.gd:5052`, `save_manager.gd:70`, `top_bar.gd:160`, `left_tabs.gd:114`
 - `desk_changed()` `event_bus.gd:125`: yayan `present/papers.gd:44,49,60,98` ve `systems/mail_clock.gd:72,108` · dinleyen `top_bar.gd:162`, `left_tabs.gd:115`, `product_tab.gd:116` (`_on_desk`)
 - `module_unlocked(module_id)` `event_bus.gd:135`: yayan yalnız `engine.gd:270` (`_step_module_watch`) · dinleyen kart tetikleri (`EvSignals.BINDINGS`); `goto_tab_requested(tab_id, subpage)` `event_bus.gd:34`:
-  ↳ yayan `effects.gd:544` · dinleyen `main.gd:5053`
+  ↳ yayan `effects.gd:542` · dinleyen `main.gd:5053`
 - Motorun DİNLEDİĞİ sinyaller `EvSignals.BINDINGS` `core/signals.gd:22` (17 ad, izin listesi): customer_added/_health_changed/_churned/_expanded, employee_hired/_departed, promise_broken, version_shipped, build_phase_changed
 - BINDINGS devamı: sheet_expired, sheet_granted, seed_sheet_granted, meeting_day (investor slotu), phase_gate_reached, axis_floor_warning, axis_floor_crossed, module_unlocked;
   ↳ listede olmayan sinyal kartı tetikleyemez (`EvLint._lint_signals` `lint.gd:1140` EventBus'ta var mı diye bakar)
-- Yayanlar: `customer_registry.gd:102,186`, `b2b_sales_system.gd:318,470`, `character_registry.gd:462,561`, `promise_registry.gd:183`, `sprint_system.gd:315,316,1549,1550`, `vc_pitch_system.gd:405,417,644,872,903`,
+- Yayanlar: `customer_registry.gd:102,186`, `b2b_sales_system.gd:318,470`, `character_registry.gd:462,561`, `promise_registry.gd:181`, `sprint_system.gd:315,316,1549,1550`, `vc_pitch_system.gd:405,417,644,872,903`,
   ↳ `phase_gate_system.gd:85`, `product_read.gd:165,167`
 - `clock_batch_ended()` `event_bus.gd:25`: yayan `time_manager.gd:203` · `EvSignals.install` `EvEngine.pump`'a bağlar (`signals.gd:54`); tam liste `docs/EVENT_SIGNAL_MANIFEST.md` (`tools/gen_signal_manifest.py` üretir)
 
@@ -122,7 +122,7 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - Makullük defteri: `--event-plausibility=<spec>` kabuk içinden ya da `tools/plausibility_run.sh` (koşu başına süreç ve kullanıcı dizini; `PLAUS FIRE/FAIL/RATE/SUMMARY`); spec `seeds=<N|A-B>:weeks=<N>:variant=<plain|early|both>:preset=`
 - Smoke (`tools/smoke_run.sh <vaka>`, vakalar `scripts/debug/endgame_smoke.gd`): `event_*` 33 vaka (ör. `event_i1_single_gate` `:325`, `event_critical_drop_refunds_latch` `:294`, `event_lint_v3_rules` `:583`, `event_delay_window` `:587`)
 - Smoke devamı: `event_check_with_effects` (şıkta etki ve zar birlikte, zar çipi, yükle-tekrar aynı dal), `event_after_test` (testi bekleyen etki: hata bulunursa iner ve `<sonuç>_tested` satırı yazılır, bulunmazsa düşer, izleme kayıttan geçer), `event_year_roll` (yıl zarı, tohumlu `random` ve rakip seçicileri, `{rival}` adı),
-  ↳ `card_body_tokens_resolve` `endgame_smoke.gd:498`, `loc_event_en_coverage` `:320`, `event_chip_coverage` `:337`, `quiet_cards_fill_empty_floor` `:550`, `event_no_double_resolution_after_load` `:360`,
+  ↳ `card_body_tokens_resolve` `endgame_smoke.gd:499`, `loc_event_en_coverage` `:321`, `event_chip_coverage` `:338`, `quiet_cards_fill_empty_floor` `:551`, `event_no_double_resolution_after_load` `:361`,
   ↳ `event_thesis_day10_to_day90` `:333`, `harness_sniffer_matches_run_log` `:371`
 - Oynanan koşu: `--run-log=<preset>:<hafta>:sim` `PROBE FIRE/PICK/TALLY/WEEK` basar (`run_probe.gd:30-99`); `tools/run_gate.sh` üç koşu; görsel: `--event-shot=<kart id>[:<slot>=<varlık id>][:long=1]` (`main.gd:796`, pencereli)
 - Probe kayıt türleri: `FIRE`, `PICK`, `TALLY_BEGIN` / `TALLY` / `TALLY_END`, `WEEK`, `ERROR` (drain koruması, kilitsiz seçeneği olmayan kart)
@@ -234,11 +234,11 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
   ↳ O4 (`_touched_slots` `lint.gd:817`), şıkkın zamanladığı ve `follows` ile bu karta bağlı takip kartının aynı adlı yuvalarda yaptığını da şıkkın sayar (özyineli); `promise_extend` ve `promise_break` müşteri fiilidir
 
 - Fiil sözlüğü ile `_apply` ayrışık: `change_salary` listede var ama `_apply` kolu YOK;
-  ↳ çağrı `not implemented` döner (`effects.gd:836`)
+  ↳ çağrı `not implemented` döner (`effects.gd:834`)
 - Bu fiil `_vocabulary.md`'de de görünür ve yalnız `_fixtures/lint_v3/_bad_v1.json`'da (V1'in karşı örneği) geçer; yeni fiil yazarken sözlükte olması uygulandığını GÖSTERMEZ
-- `add_customer` (`effects.gd:793`) kartın aday yuvasını imzalatır: `SalesFinalizer.sign_now`, süren masa anlaşmasının ya da masada kapanışın koşulları (`event_terms`); yalnız kazançtır, `NOT_ONLY_COST`'ta; smoke `event_add_customer_signs`
+- `add_customer` (`effects.gd:791`) kartın aday yuvasını imzalatır: `SalesFinalizer.sign_now`, süren masa anlaşmasının ya da masada kapanışın koşulları (`event_terms`); yalnız kazançtır, `NOT_ONLY_COST`'ta; smoke `event_add_customer_signs`
 - I2/I3: ekonomik fiil yalnız oyuncunun oynadığı seçenekten (`run_played`); `on_expire` yalnız negatif, ambient hiçbiri; `trigger_ending` telegraph ister (`effects.gd:169-212`). Reddedilen fiil `push_error` basar ve smoke'u düşürür
-- Ekonomik etkinin kazanç mı maliyet mi olduğu yazarın işaretinden okunur: `EvEffects.is_authored_gain(effect)` `effects.gd:792` (seam'li tutarda `amount_mult`'un işareti, düz tutarda `amount` ya da `delta`; ikisi de yoksa maliyet);
+- Ekonomik etkinin kazanç mı maliyet mi olduğu yazarın işaretinden okunur: `EvEffects.is_authored_gain(effect)` `effects.gd:790` (seam'li tutarda `amount_mult`'un işareti, düz tutarda `amount` ya da `delta`; ikisi de yoksa maliyet);
   ↳ lint 17.3 ve süre dolumunun denetimi aynı yardımcıyı sorar, böylece sıfıra yuvarlanan seam değeri maliyeti kazanca çevirmez
 - Lint süre dolumunun haber bandı satırını da (`expire_note`: kartın metin bloğundaki bir ad ya da satırın kendisi) marka yasağı ve saat denetiminden geçirir (`EvLint._lint_text` `lint.gd:853`)
 - Kayıt: etkin kartın `from_desk` ve `at` değeri kayda yazılmaz (`queue.gd:230-235`); yüklemeden sonra masadan açılmış kart kesinti gibi davranır (`set_aside` false döner). Bkz. `event_no_double_resolution_after_load`

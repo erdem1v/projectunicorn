@@ -80,9 +80,9 @@ Finans:
 - `FinanceSystem.to_dict()/from_dict()/reset()` `:87/:93/:79`: yalnız `burn_breakdown`; blok `autoload/save_manager.gd:384` ve `:400`, sıfırlama `:350`.
 
 Fon merdiveni:
-- `AngelRoundSystem.accept_offer()` `angel_round_system.gd:37`: çekin kabulü · `events/core/effects.gd:566` (`angel_accept` fiili, kart `funding.frank_cheque`).
+- `AngelRoundSystem.accept_offer()` `angel_round_system.gd:37`: çekin kabulü · `events/core/effects.gd:564` (`angel_accept` fiili, kart `funding.frank_cheque`).
 - `ChequeRead.list()/steps()/summary()` `cheque_read.gd:18/:32/:70`: hedef listesi; `steps(which)` adı verilen listeyi de okur (üst barın adım boyu üç listenin en uzun adımına göre) · `finance_ozet_view.gd:300`, `personal_tab.gd:198`, `top_bar.gd:344`, `inbox.gd`, `office_notice_stack.gd:130`.
-- `PhaseGateSystem.on_gate_declined()` `phase_gate_system.gd:94`: "Henüz değil" · `events/core/effects.gd:563` (`phase_gate_decline` fiili).
+- `PhaseGateSystem.on_gate_declined()` `phase_gate_system.gd:94`: "Henüz değil" · `events/core/effects.gd:561` (`phase_gate_decline` fiili).
 - `PhaseGateSystem.on_shutter_started()` `:102`: sıradaki kapı kartlarını kuyruktan çeker · `EndingsSystem._tick_shutter` `endings_system.gd:119`.
 - `PhaseGateSystem.series_a_signal()/series_a_approach()` `:135/:157`: kapalı, ısınıyor, açık okuması · `seams_world.gd:37`, `finance_ozet_view.gd:328`, `investor_appetite_ui.gd`.
 - `VCPitchSystem.request_meeting()` `vc_pitch_system.gd:772`: görüşme rezervasyonu · `main/main.gd:4560` (Av sekmesinin düğmesi).
@@ -90,16 +90,16 @@ Fon merdiveni:
 - `VCPitchSystem.advance()` `:107` ve `withdraw()` `:118`: vuruş çözümü · `ui/meeting/vc_meeting_adapter.gd:68`, `:100`; kapanışta `end_sitting()` `vc_pitch_system.gd:131` (adapter `vc_meeting_adapter.gd:105`) saati ilerletir.
 - `VCPitchSystem.call_waiting()/lapse_call()/postpone_call()` `:784/:801/:794`: fonun çağrısı · `main.gd:5194`, `:4919`, `:5048`.
 - `VCPitchSystem.sign_table()/walk_table()` `:554/:608`: masa sonuçları · `term_sheet_table_system.gd:562`, `:350`, `:602`; sign Series A'da `EndingsSystem.trigger_ending("series_a_close")` çağırır.
-- `VCPitchSystem.decline_expired_sheet()` `:637`: süresi dolan teklifi kapatır, ret sayılmaz · `events/core/effects.gd:582`.
-- `VCPitchSystem.add_strain()` `:262`: fona kırgınlık · `events/core/effects.gd:589` (`investor_strain` fiili).
+- `VCPitchSystem.decline_expired_sheet()` `:637`: süresi dolan teklifi kapatır, ret sayılmaz · `events/core/effects.gd:580`.
+- `VCPitchSystem.add_strain()` `:262`: fona kırgınlık · `events/core/effects.gd:587` (`investor_strain` fiili).
 - `InvestorRegistry.get_investor()/get_active()/favored_angle()` `investor_registry.gd:93/:105/:114`: fon tablosu okuması · `vc_pitch_system.gd`, `term_sheet_table_system.gd`, `hunt_tab.gd`.
 
 Sonlar:
-- `EndingsSystem.trigger_ending(ending_id, telegraph, extra)` `endings_system.gd:471`: tek terminal kapı; `run_ended` yayar · `vc_pitch_system.gd` (`sign_table`), `events/core/effects.gd:666`, debug `game_shell.gd:203`.
+- `EndingsSystem.trigger_ending(ending_id, telegraph, extra)` `endings_system.gd:471`: tek terminal kapı; `run_ended` yayar · `vc_pitch_system.gd` (`sign_table`), `events/core/effects.gd:664`, debug `game_shell.gd:203`.
 - `EndingsSystem.trigger_milestone()` `:433`: EA/full'de kârlı bootstrap kilometre taşı; `milestone_reached` yayar · `_check_profitable_bootstrap` `:222`.
 - `EndingsSystem.build_scope()` `:387`, `shipped_scopes()` `:408`, `ending_mode()` `:422`: build kapsamı · `events/core/tuning.gd`, `modals/ending_scene.gd:65`, `main.gd:86`.
 - `EndingsSystem.road_over()` `:304`, `acquisition_valuation()` `:270`, `acquisition_founder_share()` `:278`, `profitability_signal()` `:203`: kart ve arayüz okumaları · `seams_ported.gd:170-181`, `finance_ozet_view.gd:231`.
-- `EndingsSystem.on_buyout_declined()` `:343`: Series A yolunu kapatır, reddi hatırlar · `events/core/effects.gd:598` (`decline_buyout` fiili).
+- `EndingsSystem.on_buyout_declined()` `:343`: Series A yolunu kapatır, reddi hatırlar · `events/core/effects.gd:596` (`decline_buyout` fiili).
 - `EndingsCopy.build()` `endings_copy.gd:51`: gazete görünümü · `modals/ending_scene.gd:67`.
 
 Mesaj ve teslim saati:
@@ -130,7 +130,7 @@ Hepsi `EventBus`te (`autoload/event_bus.gd`); satır numarası tanım satırı.
 - `offer_countdown_changed` `event_bus.gd:268`: yayan `vc_pitch_system.gd:914` · `ui/components/top_bar.gd:170`.
 - `meeting_scene_requested` `event_bus.gd:261`: yayan `vc_pitch_system.gd:104` · `main/main.gd:2037`, `:4562`, `:4768` (VcMeetingAdapter ve MeetingPanel kurulumu).
 - `pitch_finished` `event_bus.gd:203`: yayan `vc_pitch_system.gd:125`, `:387` (ve `sales_meeting_system.gd:118`) · `hunt_tab.gd:48`, `sales_tab.gd:81`.
-- `term_table_requested` `event_bus.gd:269`: yayan `events/core/effects.gd:576`, `:595`, `hunt_tab.gd:510`, `game_shell.gd:163` · `main.gd:5059`.
+- `term_table_requested` `event_bus.gd:269`: yayan `events/core/effects.gd:574`, `:593`, `hunt_tab.gd:510`, `game_shell.gd:163` · `main.gd:5059`.
 - `mentor_advisory_changed` `event_bus.gd:231`: yayan `vc_pitch_system.gd:890` (geri arama açıldı) · `hunt_tab.gd:59`, `office_notice_stack.gd:45`, `game_state.gd:334`.
 - `run_ended` `event_bus.gd:245`: yayan `endings_system.gd:484` · `main.gd:5054` (`_on_run_ended` `:5344`); `milestone_reached` `event_bus.gd:248`: yayan `endings_system.gd:448` · `main.gd:5055`.
 - `shutter_changed` `event_bus.gd:250`: yayan `game_state.gd:413` (`set_shutter_weeks_left`) · `top_bar.gd:155`, `finance_ozet_view.gd:80`, `finance_tab.gd:49`.

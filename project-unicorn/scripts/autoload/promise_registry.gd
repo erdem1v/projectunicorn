@@ -13,11 +13,9 @@ var _promises: Dictionary = {}  # id (String) -> Promise
 func _ready() -> void:
 	# Ship-coupling: a Product feature reaching live keeps a matching open promise.
 	EventBus.build_phase_changed.connect(_on_build_phase_changed)
-	# A promise cannot outlive the company it was made to. Bound to the REMOVAL SIGNAL
-	# rather than to B2BSalesSystem's churn seam on purpose: accounts also leave through
-	# the `churn_customer` event modifier, which deletes the record directly, and a promise
-	# left behind by that path breaks weeks later — charging brand a second time for a
-	# company that already took its churn hit and is gone from every screen.
+	# A promise cannot outlive the company it was made to. Bound to the REMOVAL SIGNAL, which
+	# every way an account leaves sends: a promise left behind breaks weeks later, charging
+	# brand a second time for a company that already took its churn hit.
 	EventBus.customer_removed.connect(drop_open_for)
 
 
