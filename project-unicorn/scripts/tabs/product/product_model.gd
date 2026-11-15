@@ -176,7 +176,8 @@ static func live() -> Dictionary:
 			"live_version": SprintSystem.version_text(ProductState.version()) if live_now else "",
 			"market": ProductState.market_type().to_upper(),
 			"type_text": ProductCatalog.type_name(ProductState.subtype()),
-			"users": int(SalesSystem.b2c_audience()) if b2c_live else -1,
+			# Pazaryeri penceresi gibi en yakına: kitle kesirlidir.
+			"users": roundi(SalesSystem.b2c_audience()) if b2c_live else -1,
 			# Ödeyen pazaryerinde komisyon ödeyen mağazadır: ücret ödeyen üye yalnız Premium'la doğar.
 			"payers_key": "MP_KPI_STORES" if mp else "PRODUCT_KPI_PAYING",
 			"payers": -1 if not b2c_live else (roundi(MarketplaceSystem.stores()) if mp else SalesSystem.b2c_paying_users()),

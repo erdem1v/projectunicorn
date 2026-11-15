@@ -177,7 +177,7 @@ static func open_paid_plan() -> void:
 ## değişiklik olmadı".
 static func actual_sentence(release: Dictionary) -> Dictionary:
 	if int(release.number) == 1 and not SalesSystem.is_b2b_market():
-		var users: int = int(SalesSystem.b2c_audience())
+		var users: int = roundi(SalesSystem.b2c_audience())  # Başlık ve Pazaryeri penceresi gibi en yakına.
 		if users > 0 or not SalesSystem.is_marketplace():
 			return {"key": Fmt.count_key("PRODUCT_RELEASE_USERS", users), "args": {"n": users}}
 	for change in release.changed_areas:
