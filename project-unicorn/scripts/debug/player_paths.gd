@@ -21,6 +21,8 @@ static func run(main: Node, case_id: String) -> String:
 			return await _cs_renewal_request_reaches_player(main)
 		"cs_request_rule_holds_second_ask":
 			return await _cs_request_rule_holds_second_ask(main)
+		"mp_policy_locks_after_apply":
+			return await _mp_policy_locks_after_apply(main)
 	return "unknown case"
 
 
@@ -187,6 +189,109 @@ static func _cs_request_rule_holds_second_ask(main: Node) -> String:
 			EventGate.resolve(EventGate.active_id(), 0)
 		var cooldown: int = int(EvCatalog.card("customer.request_feature").family_subject.cooldown_weeks)
 		GameState.day = first_day + TimeModel.ticks(4 if ask == "first" else cooldown + 1)
+	return ""
+
+
+## Politikalar: every rule shows its own options; Mağaza kabulü, whose tier the launch week has not built, writes that tier and
+## its options are shut. A choice on another option opens its results under the row in the order of the rule's list (shipping,
+## return shipping, then the return window: one choice at a time, so one Uygula) with the return chip's reason in its tip; the
+## choice is framed in all three states the pointer can put it in; a press on the option in force takes it back. Uygula writes
+## the rule and the row stands locked: the lock row writes four weeks, its options are shut, the option in force loses its fill
+## and a press on them changes nothing; the other rules stay open.
+## FALSIFICATION: Uygula not calling `set_policy` (the rule stays 7 days) → FAIL; the locked row's options open (`_row` giving
+## `_options` `open` alone) → FAIL; Mağaza kabulü's need check dropped (`open` true in `_row`) → FAIL; the option in force not
+## connected while a choice waits → FAIL; a rule's chip missing or out of order → FAIL; the return chip's tip without its reason
+## → FAIL; `mark_pending` or `restyle_segments` not called → FAIL; the frame on `normal` alone (lost under the pointer) → FAIL;
+## the closed pick's option in force left filled → FAIL; the lock row one week off → FAIL.
+static func _mp_policy_locks_after_apply(main: Node) -> String:
+	if not main._seed_marketplace_world(main._MP_WORLDS.mp_launch):
+		return "fixture: the marketplace world did not reach its launch"
+	if MarketplaceModel.policy_open(MarketplaceSystem.world(), "admission") or MarketplaceSystem.policy_value("return_window") != "d7":
+		return "fixture: Kullanıcı Koruması is built or the return window is not at 7 days"
+	await main._mount_shot_shell()
+	var page: Control = _open(main, "sales")
+	if not main._press_button_labelled(page, Fmt.upper(TranslationServer.translate("MP_TAB_POLICIES"))):
+		return "no Politikalar on the strip"
+	var options: Dictionary = MarketplaceModel.cfg("rules.options")
+	for rule: String in options:
+		for option: String in options[rule]:
+			var found: int = _option_keys(page, rule, option).size()
+			if found != 1:
+				return "Politikalar has %d keys for %s %s" % [found, rule, option]
+	var need: String = TranslationServer.translate("MP_NEEDS_TIER").format(
+		{"tier": TranslationServer.translate("PROD_STEP_MARKETPLACE_REVIEWS_K2")})
+	if _labels(page, need).is_empty():
+		return "Mağaza kabulü does not say '%s'" % need
+	for option: String in options.admission:
+		var shut: Button = _option_keys(page, "admission", option)[0]
+		shut.pressed.emit()
+		if not shut.disabled or MarketplaceSystem.policy_value("admission") != "open" or not _chips(page).is_empty():
+			return "Mağaza kabulü %s is open to a press before its tier ships" % option
+	var apply: String = TranslationServer.translate("MP_APPLY")
+	_option_keys(page, "shipping", "store_pays")[0].pressed.emit()
+	var fail := _chip_fail(page, "shipping", ["MP_CHIP_ORDERS", "MP_CHIP_STORE_EARNINGS", "MP_CHIP_REVENUE"])
+	if fail != "":
+		return fail
+	_option_keys(page, "return_shipping", "we_pay")[0].pressed.emit()
+	fail = _chip_fail(page, "return_shipping", ["MP_CHIP_STORE_SAT", "MP_CHIP_RETURN_RATE", "MP_CHIP_COST"])
+	if fail != "":
+		return fail
+	_option_keys(page, "return_window", "d30")[0].pressed.emit()
+	fail = _chip_fail(page, "return_window", ["MP_CHIP_RETURNING", "MP_CHIP_RETURN_RATE", "MP_CHIP_STORE_SAT", "MP_CHIP_REVENUE"])
+	if fail != "":
+		return fail
+	if _buttons(page, apply).size() != 1:
+		return "a choice on a second rule left %d Uygula, one expected" % _buttons(page, apply).size()
+	var thirty: Button = _option_keys(page, "return_window", "d30")[0]
+	var seven: Button = _option_keys(page, "return_window", "d7")[0]
+	if not thirty.has_meta(&"pending") or not await _until(main, func() -> bool:
+			return [&"normal", &"hover", &"pressed"].all(func(st: StringName) -> bool: return thirty.has_theme_stylebox_override(st))):
+		return "the pending 30 days is not framed in every state the pointer can put it in"
+	var tip: Control = _chips(page)[3].build.call()
+	var tipped: bool = not _labels(tip, TranslationServer.translate("MP_TIP_NO_COMMISSION_ON_RETURN")).is_empty()
+	tip.free()
+	if not tipped:
+		return "the return window's Aylık gelir chip does not say why a return pays no commission"
+	seven.pressed.emit()
+	if not _chips(page).is_empty() or not _buttons(page, apply).is_empty():
+		return "a press on the option in force left the choice standing"
+	_option_keys(page, "return_window", "d30")[0].pressed.emit()
+	_buttons(page, apply)[0].pressed.emit()
+	if MarketplaceSystem.policy_value("return_window") != "d30":
+		return "Uygula left the return window at %s" % MarketplaceSystem.policy_value("return_window")
+	var lock: String = TranslationServer.translate("MP_LOCK_FOR").format({"weeks": Fmt.weeks(4)})
+	if not await _until(main, func() -> bool: return not _labels(page, lock).is_empty() and _chips(page).is_empty()):
+		return "the applied rule does not stand locked for four weeks ('%s') with its choice closed" % lock
+	if not await _until(main, func() -> bool:
+			return _option_keys(page, "return_window", "d30")[0].has_theme_stylebox_override(&"disabled")):
+		return "the locked return window's 30 days keeps the fill of an open choice"
+	for option: String in options.return_window:
+		var key: Button = _option_keys(page, "return_window", option)[0]
+		key.pressed.emit()
+		if not key.disabled or MarketplaceSystem.policy_value("return_window") != "d30" or not _chips(page).is_empty():
+			return "the locked return window's %s is open to a press" % option
+	if _option_keys(page, "shipping", "user_pays")[0].disabled:
+		return "the lock on the return window shut the shipping fee's options"
+	return ""
+
+
+## The keys of a rule's option on the Politikalar page.
+static func _option_keys(page: Control, rule: String, option: String) -> Array:
+	return _buttons(page, TranslationServer.translate("MP_OPT_%s_%s" % [rule.to_upper(), option.to_upper()]))
+
+
+## The result chips on screen.
+static func _chips(page: Control) -> Array:
+	return page.find_children("*", "PanelContainer", true, false).filter(
+		func(c: PanelContainer) -> bool: return c.theme_type_variation == &"FxChip" and c.is_visible_in_tree())
+
+
+## "" when the page shows exactly `keys`' chips in that order, else what it shows.
+static func _chip_fail(page: Control, rule: String, keys: Array) -> String:
+	var shown: Array = _chips(page).map(func(c: PanelContainer) -> String: return c.tooltip_text)
+	var want: Array = keys.map(func(k: String) -> String: return TranslationServer.translate(k).get_slice("{", 0))
+	if shown.size() != want.size() or range(want.size()).any(func(i: int) -> bool: return not (shown[i] as String).begins_with(want[i])):
+		return "a choice on %s shows %s, its list is %s" % [rule, shown, want]
 	return ""
 
 

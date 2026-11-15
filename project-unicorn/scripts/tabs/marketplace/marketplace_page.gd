@@ -6,7 +6,8 @@ extends VBoxContainer
 
 ## The sub-pages in the strip's order: [tab key, script]. A script is a VBoxContainer that repaints itself in `refresh()`.
 const PAGES := [["MP_TAB_OVERVIEW", preload("res://scripts/tabs/marketplace/mp_overview.gd")],
-	["MP_TAB_CATEGORIES", preload("res://scripts/tabs/marketplace/mp_categories.gd")]]
+	["MP_TAB_CATEGORIES", preload("res://scripts/tabs/marketplace/mp_categories.gd")],
+	["MP_TAB_POLICIES", preload("res://scripts/tabs/marketplace/mp_policies.gd")]]
 const PARTS := preload("res://scripts/tabs/marketplace/mp_parts.gd")
 
 var _pages: Array[Control] = []

@@ -1,7 +1,7 @@
 extends RefCounted
 
-# Pazaryeri penceresinin sayfalarının ortak parçaları: tablo hücresi, adım düğmeli sayı seçici ("eski → yeni"), ipuçlu sonuç çipi
-# ve süreli kilit satırı. Parçalar yalnız çizer; değeri ve eylemi çağıran verir.
+# Pazaryeri penceresinin sayfalarının ortak parçaları: tablo hücresi, adım düğmeli sayı seçici ("eski → yeni"), ipuçlu sonuç çipi,
+# süreli kilit satırı ve parçalı seçimin bekleyen seçim çerçevesiyle boyası. Parçalar yalnız çizer; değeri ve eylemi çağıran verir.
 
 const ICON := "res://assets/icons/util/%s.svg"
 ## The figure of a stepper: wide enough for "was → now" to keep the keys where they are.
@@ -137,3 +137,25 @@ static func apply_cell(weeks: int, can_apply: bool, on_press: Callable) -> HBoxC
 	apply.disabled = not can_apply
 	cell.add_child(apply)
 	return cell
+
+
+## A choice made and not applied yet: its segment gets a frame (`restyle_segments` draws it). `pick` is a `D_seg_pick` box.
+static func mark_pending(pick: Control, index: int) -> void:
+	(pick.get_child(0).get_children().filter(func(n: Node) -> bool: return n is Button)[index] as Button).set_meta(&"pending", true)
+
+
+## The chosen segment of a closed pick under `root` loses its fill, so a shut row does not read as open; the segment a pending
+## choice is on gets a frame in every state the pointer can put it in. The theme's own boxes are copied, so sizes stay. The theme
+## has no variation for these two states, so the window's segments are styled here, in script. Call it deferred after painting.
+static func restyle_segments(root: Node) -> void:
+	for b: Button in root.find_children("*", "Button", true, false):
+		if b.disabled and b.theme_type_variation == &"SegPickOn":
+			var dim := b.get_theme_stylebox(&"disabled").duplicate() as StyleBoxFlat
+			dim.bg_color = Color.TRANSPARENT
+			b.add_theme_stylebox_override(&"disabled", dim)
+		if b.has_meta(&"pending"):
+			for state in [&"normal", &"hover", &"pressed"]:
+				var frame := b.get_theme_stylebox(state).duplicate() as StyleBoxFlat
+				frame.border_color = UiTokens.D_INK_1
+				frame.set_border_width_all(UiTokens.BORDER_HAIRLINE)
+				b.add_theme_stylebox_override(state, frame)

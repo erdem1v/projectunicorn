@@ -3640,3 +3640,28 @@ MP_TIP_STORE_EARNINGS,Mağazaya komisyon ve kargodan sonra kalan.,What the store
 MP_TIP_PREVIEW,Dört hafta sonraki fark.,The difference four weeks from now.
 MP_SECTOR_AVERAGE_CAPTION,sektör ortalaması,sector average
 MP_REMINDER_NO_CATEGORY,Açık kategori yok,No open category
+MP_TAB_POLICIES,Politikalar,Policies
+MP_GROUP_SHOPPING,Alışveriş,Shopping
+MP_GROUP_STORE_RULES,Mağaza kuralları,Store rules
+MP_RULE_SHIPPING,Kargo ücreti,Shipping fee
+MP_RULE_RETURN_WINDOW,İade süresi,Return window
+MP_RULE_RETURN_SHIPPING,İade kargosu,Return shipping
+MP_RULE_ADMISSION,Mağaza kabulü,Store admission
+MP_OPT_SHIPPING_USER_PAYS,Kullanıcı öder,User pays
+MP_OPT_SHIPPING_BIG_BASKET,Büyük sepette mağaza öder,Store pays on large baskets
+MP_OPT_SHIPPING_STORE_PAYS,Hep mağaza öder,Store always pays
+MP_OPT_RETURN_WINDOW_D7,7 gün,7 days
+MP_OPT_RETURN_WINDOW_D14,14 gün,14 days
+MP_OPT_RETURN_WINDOW_D30,30 gün,30 days
+MP_OPT_RETURN_SHIPPING_STORE_PAYS,Mağaza öder,Store pays
+MP_OPT_RETURN_SHIPPING_WE_PAY,Biz öderiz,We pay
+MP_OPT_ADMISSION_OPEN,Herkese açık,Open to all
+MP_OPT_ADMISSION_REGISTERED,Yalnız vergi levhalı,Registered businesses only
+MP_NEEDS_TIER,{tier} çıkınca,After {tier} ships
+MP_CHIP_RETURNING,Geri dönen kullanıcı {v},Returning users {v}
+MP_CHIP_RETURN_RATE,İade oranı {v},Return rate {v}
+MP_CHIP_STORE_SAT,Mağaza memnuniyeti {v},Store satisfaction {v}
+MP_CHIP_USER_SAT,Kullanıcı memnuniyeti {v},User satisfaction {v}
+MP_CHIP_ACQUISITION,Mağaza kazanımı {v},Store acquisition {v}
+MP_CHIP_COST,Aylık gider {v},Monthly cost {v}
+MP_TIP_NO_COMMISSION_ON_RETURN,İade edilen siparişten komisyon alınmaz.,No commission is taken on a returned order.

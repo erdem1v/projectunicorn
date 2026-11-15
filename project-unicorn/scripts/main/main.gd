@@ -1922,7 +1922,7 @@ func _shot_pane(card_id: String, ctx: Dictionary, names := {}) -> void:
 
 
 ## --sales-shot=<pipeline|desk|picker|inbox|edge|edge_end|stretched|empty|b2b_pre|untyped|morning|evening|
-## norep|discounted|frank|risk_stability|deals|returning|clause|offer|sources|mp_pre|mp_launch|mp_growth|mp_growth_tip>. `desk` puts a rep mid-processing on the desk;
+## norep|discounted|frank|risk_stability|deals|returning|clause|offer|sources|mp_pre|mp_launch|mp_growth|mp_growth_tip|mp_cat|mp_policy|mp_policy_locked>. `desk` puts a rep mid-processing on the desk;
 ## `picker` opens the steward
 ## picker on the first account, `inbox` presses its İlgilen (Olaylar opens on the account's mail); `edge` draws the
 ## rarer lines (a reserved lead, one given to a rep, a whale's condition, tables above the founder's league, the
@@ -2106,6 +2106,8 @@ func _run_sales_shot(kind: String) -> void:
 	await _finish_shot("sales_shot_%s" % kind, 0.6)
 
 
+## The player's moves of the worlds that reach week 60: a sales rep, Moda's rate and Elektronik.
+const _MP_MOVES_60 := [[20, "hire", HRConstants.ROLE_SALES_REP], [30, "commission", 12], [40, "open", "electronics"]]
 ## The marketplace shots' worlds: `day` is the week a world stops at before the MVP; `closes` the weeks played after the MVP ships,
 ## `until` the week the last of them ends in; `crew` the roles hired before the last week (`_mp_hire`), `bugs` the open bugs of the
 ## Cart and Checkout line that week's close reads; `tip` the key of the step row the pointer rests on; `later` the player's moves on
@@ -2113,8 +2115,9 @@ func _run_sales_shot(kind: String) -> void:
 ## `commission` Moda's rate, `channel` a marketing specialist hired to run that channel on Moda at a budget of 1,000, `campaign` a
 ## discount-days campaign the company pays for, run by the founder (its week of preparation is the next close, the campaign the
 ## one after it); `tab` the sub-page's key pressed on the strip, `pick` the category row the Kategoriler page is on, `raise`
-## the plus key pressed once on the commission stepper; `no_category` leaves every category closed and shoots the office's
-## notice stack, then the window its reminder opens.
+## the plus key pressed once on the commission stepper, `choose` the [rule, option] pressed on the Politikalar page, `apply` Uygula
+## pressed after it; `no_category` leaves every category closed and shoots the office's notice stack, then the window its
+## reminder opens.
 const _MP_WORLDS := {
 	"mp_pre": {"day": 3, "pick": "electronics"},
 	"mp_launch": {"closes": 4},
@@ -2127,22 +2130,26 @@ const _MP_WORLDS := {
 		"later": [[30, "channel", "search_ads"], [40, "campaign", "discount_days"]], "tip": "MP_STEP_CART"},
 	"mp_campaign_visits": {"until": 42, "crew": [HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER], "bugs": 3,
 		"later": [[30, "channel", "search_ads"], [40, "campaign", "discount_days"]], "tip": "MP_STEP_VISITS"},
-	"mp_cat": {"until": 60, "tab": "MP_TAB_CATEGORIES", "raise": true,
-		"later": [[20, "hire", HRConstants.ROLE_SALES_REP], [30, "commission", 12], [40, "open", "electronics"]]},
+	"mp_cat": {"until": 60, "tab": "MP_TAB_CATEGORIES", "raise": true, "later": _MP_MOVES_60},
+	"mp_policy": {"until": 60, "tab": "MP_TAB_POLICIES", "choose": ["return_window", "d30"], "later": _MP_MOVES_60},
+	"mp_policy_locked": {"until": 60, "tab": "MP_TAB_POLICIES", "choose": ["return_window", "d30"], "apply": true,
+		"later": _MP_MOVES_60},
 }
 ## The sprints a world may play to reach the MVP gate, as `_seed_product_live`.
 const _MP_SPRINTS := 12
 
 
-## --sales-shot=mp_<pre|launch|reminder|growth|growth_tip|campaign|campaign_tip|campaign_visits|cat>: the Pazaryeri window of a company the
-## engine played (`_seed_marketplace_world`). `pre` is week 3 with the founder alone and Moda open, before the MVP, the page on Elektronik; `launch`
-## the week the engine ships the MVP and four closes after it, the founder on Moda; `growth` week 42 with two hires and three open
-## bugs on Cart and Checkout, `growth_tip` the same with the pointer on the Placed an order row; `campaign` the same world with a
-## marketing specialist running search ads on Moda since week 30, in the week of a discount-days campaign the company called in week
-## 40, `campaign_tip` with the pointer on the Added to cart row, `campaign_visits` on the Visits row; `cat` week 60 with a sales rep hired in week 20 on Moda, whose rate
-## went to 12% in week 30, and Elektronik open since week 40, the page on Moda with 13% chosen; `reminder` is `launch` with no
-## category open and the founder on none: frame `_01` is the office's notice stack with the reminder, `_02` the window its
-## click opens, on Kategoriler. Prints the world's figures as `SHOT|mp_world`.
+## --sales-shot=mp_<pre|launch|reminder|growth|growth_tip|campaign|campaign_tip|campaign_visits|cat|policy|policy_locked>: the Pazaryeri
+## window of a company the engine played (`_seed_marketplace_world`). `pre` is week 3 with the founder alone and Moda open, before the
+## MVP, the page on Elektronik; `launch` the week the engine ships the MVP and four closes after it, the founder on Moda; `growth` week
+## 42 with two hires and three open bugs on Cart and Checkout, `growth_tip` the same with the pointer on the Placed an order row;
+## `campaign` the same world with a marketing specialist running search ads on Moda since week 30, in the week of a discount-days
+## campaign the company called in week 40, `campaign_tip` with the pointer on the Added to cart row, `campaign_visits` on the Visits
+## row; `cat` week 60 with a sales rep hired in week 20 on Moda, whose rate went to 12% in week 30, and Elektronik open since week 40,
+## the page on Moda with 13% chosen; `policy` the same company on the Politikalar page with 30 days chosen on the return window and not
+## applied, `policy_locked` with it applied; `reminder` is `launch` with no category open and the founder on none: frame `_01` is the
+## office's notice stack with the reminder, `_02` the window its click opens, on Kategoriler. Prints the world's figures as
+## `SHOT|mp_world` and, for a choice, its four-close preview as `SHOT|mp_policy`.
 func _run_marketplace_shot(kind: String) -> void:
 	if not _MP_WORLDS.has(kind):
 		_shot_fail("[SalesShot] unknown marketplace shot: %s" % kind)
@@ -2204,6 +2211,21 @@ func _run_marketplace_shot(kind: String) -> void:
 			_shot_fail("[SalesShot] %s: no open plus key on the commission stepper" % kind)
 			return
 		keys[0].pressed.emit()
+	if world.has("choose"):
+		var rule: String = world.choose[0]
+		var option: String = world.choose[1]
+		var key := "MP_OPT_%s_%s" % [rule.to_upper(), option.to_upper()]
+		if not _press_button_labelled(_shell, tr(key)):
+			_shot_fail("[SalesShot] %s: no option key %s on the Politikalar page" % [kind, key])
+			return
+		if MarketplaceModel.policy_open(MarketplaceSystem.world(), "admission"):
+			_shot_fail("[SalesShot] %s: User Protection is built, the need row cannot show" % kind)
+			return
+		print("SHOT|mp_policy rule=%s option=%s diff=%s" % [rule, option,
+			MarketplaceModel.preview_policy(state, MarketplaceSystem.world(), rule, option)])
+		if world.has("apply") and not _press_button_labelled(_shell, tr("MP_APPLY")):
+			_shot_fail("[SalesShot] %s: no Uygula under the chosen option" % kind)
+			return
 	var tip: String = world.get("tip", "")
 	if tip != "":
 		await get_tree().create_timer(0.5).timeout
