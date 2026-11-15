@@ -3570,6 +3570,7 @@ MP_TIP_ORDER,Sipariş verdi · ödemeye geçenin {rate} kadarı · en çok {cap}
 MP_TIP_DELIVERED,Teslim edildi · siparişin {rate} kadarı · en çok {cap},Delivered · {rate} of orders · at most {cap}
 MP_TIP_MODULE,{module} · {tier},{module} · {tier}
 MP_TIP_NEXT,{tier} çıkarsa haftada +{n} sipariş,Ship {tier} for +{n} orders a week
+MP_TIP_CAMPAIGN,Kampanya: en çok ×{n},Campaign: up to ×{n}
 MP_TIP_BUGS,{n} açık hata düzelirse haftada +{m} sipariş,Fix {n} open bugs for +{m} orders a week
 MP_TIP_BUGS_ONE,1 açık hata düzelirse haftada +{m} sipariş,Fix 1 open bug for +{m} orders a week
 MP_TIP_ROW,{row} {v},{row} {v}

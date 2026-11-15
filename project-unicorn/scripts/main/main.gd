@@ -2110,13 +2110,21 @@ func _run_sales_shot(kind: String) -> void:
 ## `until` the week the last of them ends in; `crew` the roles hired before the last week (`_mp_hire`), `bugs` the open bugs of the
 ## Cart and Checkout line that week's close reads; `tip` the key of the step row the pointer rests on; `later` the player's moves on
 ## the way, each [week, move, argument] and made the first week at or after it: `hire` a role (seated on Moda), `open` a category,
-## `commission` Moda's rate; `tab` the sub-page's key pressed on the strip, `pick` the category row the Kategoriler page is on, `raise`
+## `commission` Moda's rate, `channel` a marketing specialist hired to run that channel on Moda at a budget of 1,000, `campaign` a
+## discount-days campaign the company pays for, run by the founder (its week of preparation is the next close, the campaign the
+## one after it); `tab` the sub-page's key pressed on the strip, `pick` the category row the Kategoriler page is on, `raise`
 ## the plus key pressed once on the commission stepper.
 const _MP_WORLDS := {
 	"mp_pre": {"day": 3, "pick": "electronics"},
 	"mp_launch": {"closes": 4},
 	"mp_growth": {"until": 42, "crew": [HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER], "bugs": 3},
 	"mp_growth_tip": {"until": 42, "crew": [HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER], "bugs": 3, "tip": "MP_STEP_ORDER"},
+	"mp_campaign": {"until": 42, "crew": [HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER], "bugs": 3,
+		"later": [[30, "channel", "search_ads"], [40, "campaign", "discount_days"]]},
+	"mp_campaign_tip": {"until": 42, "crew": [HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER], "bugs": 3,
+		"later": [[30, "channel", "search_ads"], [40, "campaign", "discount_days"]], "tip": "MP_STEP_CART"},
+	"mp_campaign_visits": {"until": 42, "crew": [HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER], "bugs": 3,
+		"later": [[30, "channel", "search_ads"], [40, "campaign", "discount_days"]], "tip": "MP_STEP_VISITS"},
 	"mp_cat": {"until": 60, "tab": "MP_TAB_CATEGORIES", "raise": true,
 		"later": [[20, "hire", HRConstants.ROLE_SALES_REP], [30, "commission", 12], [40, "open", "electronics"]]},
 }
@@ -2124,11 +2132,13 @@ const _MP_WORLDS := {
 const _MP_SPRINTS := 12
 
 
-## --sales-shot=mp_<pre|launch|growth|growth_tip|cat>: the Pazaryeri window of a company the engine played (`_seed_marketplace_world`).
-## `pre` is week 3 with the founder alone and Moda open, before the MVP, the page on Elektronik; `launch` the week the engine ships
-## the MVP and four closes after it, the founder on Moda; `growth` week 42 with two hires and three open bugs on Cart and Checkout,
-## `growth_tip` the same with the pointer on the Placed an order row; `cat` week 60 with a sales rep hired in week 20 on Moda, whose
-## rate went to 12% in week 30, and Elektronik open since week 40, the page on Moda with 13% chosen. Prints the world's figures as
+## --sales-shot=mp_<pre|launch|growth|growth_tip|campaign|campaign_tip|campaign_visits|cat>: the Pazaryeri window of a company the engine played
+## (`_seed_marketplace_world`). `pre` is week 3 with the founder alone and Moda open, before the MVP, the page on Elektronik; `launch`
+## the week the engine ships the MVP and four closes after it, the founder on Moda; `growth` week 42 with two hires and three open
+## bugs on Cart and Checkout, `growth_tip` the same with the pointer on the Placed an order row; `campaign` the same world with a
+## marketing specialist running search ads on Moda since week 30, in the week of a discount-days campaign the company called in week
+## 40, `campaign_tip` with the pointer on the Added to cart row, `campaign_visits` on the Visits row; `cat` week 60 with a sales rep hired in week 20 on Moda, whose rate
+## went to 12% in week 30, and Elektronik open since week 40, the page on Moda with 13% chosen. Prints the world's figures as
 ## `SHOT|mp_world`.
 func _run_marketplace_shot(kind: String) -> void:
 	if not _MP_WORLDS.has(kind):
@@ -2142,6 +2152,14 @@ func _run_marketplace_shot(kind: String) -> void:
 	print("SHOT|mp_world kind=%s week=%d launch=%d cash=%d mrr=%d users=%d stores=%d orders=%d" % [kind, GameState.day,
 		int(GameState.get_flag("mvp_launch_day", -1)), GameState.cash, GameState.mrr, roundi(state.users),
 		roundi(MarketplaceSystem.stores()), roundi(MarketplaceModel.metrics(state, MarketplaceSystem.world()).orders)])
+	# the visits' bar reads its parts as shares of the visits: its sources must add up to them, a campaign's week too
+	var funnel := MarketplaceModel.funnel(state)
+	var sources: float = funnel.returning + funnel.organic + funnel.channel + funnel.get("campaign", 0.0)
+	print("SHOT|mp_visits returning=%.1f organic=%.1f channel=%.1f campaign=%.1f visits=%.1f" % [funnel.returning, funnel.organic,
+		funnel.channel, funnel.get("campaign", 0.0), funnel.visits])
+	if absf(sources - funnel.visits) > 0.01:
+		_shot_fail("[SalesShot] %s: the visits' sources add up to %.1f, the visits are %.1f" % [kind, sources, funnel.visits])
+		return
 	var world: Dictionary = _MP_WORLDS[kind]
 	await get_tree().process_frame
 	if world.has("tab") and not _press_button_labelled(_shell, Fmt.upper(tr(world.tab))):
@@ -2224,8 +2242,8 @@ func _seed_marketplace_world(world: Dictionary) -> bool:
 	return true
 
 
-## A move of a marketplace world's player: [week, move, argument] (`_MP_WORLDS`). A hired role is seated on Moda. False when the
-## seam refuses the move.
+## A move of a marketplace world's player: [week, move, argument] (`_MP_WORLDS`). A hired sales role is seated on Moda, a hired
+## marketing specialist runs the move's channel there. False when the seam refuses the move.
 func _mp_move(move: Array) -> bool:
 	match move[1]:
 		"hire":
@@ -2233,6 +2251,17 @@ func _mp_move(move: Array) -> bool:
 			return MarketplaceSystem.assign(_mp_hire(move[2], HRConstants.LEVEL_MID).id, "fashion")
 		"open":
 			return MarketplaceSystem.open_category(move[2])
+		"channel":
+			GameState.set_cash(1_000_000)
+			var runner := _mp_hire(HRConstants.ROLE_MARKETING_SPECIALIST, HRConstants.LEVEL_MID)
+			var row: Dictionary = MarketingSystem.add_row(move[2], "fashion", runner.id)
+			if row.is_empty():
+				return false
+			MarketingSystem.set_budget(int(row.id), 1000)   # LOC-DATA debug seed / budget
+			return true
+		"campaign":
+			return MarketingSystem.start_campaign(move[2], "now", {"depth": 10, "shipping": "rule"}, "company",
+				CharacterRegistry.get_founder().id)
 	return MarketplaceSystem.set_commission("fashion", move[2])
 
 

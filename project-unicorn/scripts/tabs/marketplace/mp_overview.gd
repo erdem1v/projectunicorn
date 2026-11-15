@@ -124,8 +124,14 @@ func _rate(i: int) -> float:
 	return _count(i) / before if before > 0.0 else 0.0
 
 
+## The most a step's rate can reach over the open categories: the module's mark, lifted by last week's campaign.
 func _reach(i: int) -> float:
-	return MarketplaceModel.cfg("steps.reach." + STEPS[i])
+	return MarketplaceModel.step_reach(_state, "", STEPS[i])
+
+
+## How far last week's campaign lifted a step's reachable rate; 1 in a week without one.
+func _campaign_lift(i: int) -> float:
+	return _reach(i) / MarketplaceModel.cfg("steps.reach." + STEPS[i])
 
 
 ## The share of the reachable rate a step has reached.
@@ -194,7 +200,7 @@ func _funnel_head() -> PanelContainer:
 
 
 ## A step's row: name, count, rate (faint, the weakest step's in the warning colour) and bar. The tip of what carries the step
-## opens when the pointer rests on its row; the visits have none.
+## opens when the pointer rests on its row; the visits' tip lists their sources.
 func _funnel_row(i: int, weak: bool) -> PanelContainer:
 	var row := PARTS.TipRow.new()
 	row.theme_type_variation = &"TableRow"
@@ -205,6 +211,9 @@ func _funnel_row(i: int, weak: bool) -> PanelContainer:
 	if i == 0:
 		line.add_child(PARTS.cell("", &"DataText", RATE, HORIZONTAL_ALIGNMENT_RIGHT))
 		line.add_child(_visits_bar())
+		if _count(0) > 0.0:
+			row.build = _visits_tip
+			row.tooltip_text = tr(STEP_KEYS[0])
 	else:
 		line.add_child(PARTS.cell(Fmt.percent(_rate(i) * 100.0, 0), &"DataStrong" if weak else &"NoteMuted", RATE,
 			HORIZONTAL_ALIGNMENT_RIGHT, UiTokens.D_warn() if weak else null))
@@ -230,9 +239,32 @@ func _visits_bar() -> SourceBar:
 	return SourceBar.new(parts)
 
 
+## The visits' tip, a key of the bar: each source that brought visits last week, a sample of its part's tone, its count and its
+## share of them, lightest first (a tree key's sample, as R&D's). The bar has no room for a narrow part's name.
+func _visits_tip() -> Control:
+	var tip := SprintUiShared.tip_column()
+	tip.add_theme_constant_override("separation", UiTokens.SPACE_S)
+	var visits := _count(0)
+	for source: Array in VISIT_SOURCES:
+		var n: float = _funnel.get(source[0], 0.0)
+		if n <= 0.0:
+			continue
+		var line := SprintUiShared.box(UiTokens.SPACE_M)
+		var sample := ColorRect.new()
+		sample.color = source[2]
+		sample.custom_minimum_size = UiTokens.D_SWATCH
+		sample.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		line.add_child(sample)
+		line.add_child(SprintUiShared.label(tr("MP_TIP_ROW").format({"row": tr(source[1]),
+			"v": PARTS.count(n) + SprintUiShared.SEP + Fmt.percent(n / visits * 100.0, 0)}), &"CaptionPrimary"))
+		tip.add_child(line)
+	return tip
+
+
 ## The tip of a step, a line each saying what it is of: the step, its rate of the step before it and the most it can reach; the
 ## module that carries it and the tier it stands at; the next tier and the weekly orders it would bring; the open bugs and the
-## weekly orders their fix would bring. A module with no tier yet has no line of its own.
+## weekly orders their fix would bring; in a campaign's week, how far the campaign lifted the mark. A module with no tier yet has
+## no line of its own.
 func _step_tip(i: int) -> Control:
 	var hint: Dictionary = MarketplaceModel.step_hint(_state, _world, STEPS[i])
 	var line: String = MarketplaceSystem.MODULE_LINES[hint.module]
@@ -251,6 +283,9 @@ func _step_tip(i: int) -> Control:
 	if bugs > 0:
 		tip.add_child(SprintUiShared.prose(tr(Fmt.count_key("MP_TIP_BUGS", bugs)).format(
 			{"n": Fmt.group(bugs), "m": PARTS.count(hint.bug_gain)}), &"CaptionPrimary"))
+	var lift := _campaign_lift(i)
+	if lift > 1.0:
+		tip.add_child(SprintUiShared.prose(tr("MP_TIP_CAMPAIGN").format({"n": Fmt.number(lift, 1)}), &"CaptionPrimary"))
 	return tip
 
 
