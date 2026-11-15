@@ -3665,3 +3665,14 @@ MP_CHIP_USER_SAT,Kullanıcı memnuniyeti {v},User satisfaction {v}
 MP_CHIP_ACQUISITION,Mağaza kazanımı {v},Store acquisition {v}
 MP_CHIP_COST,Aylık gider {v},Monthly cost {v}
 MP_TIP_NO_COMMISSION_ON_RETURN,İade edilen siparişten komisyon alınmaz.,No commission is taken on a returned order.
+MP_ACQUISITION,Mağaza kazanımı,Store acquisition
+MP_ACQ_PER_WEEK,haftada {n} mağaza,{n} stores a week
+MP_ACQ_PER_WEEK_ONE,haftada 1 mağaza,1 store a week
+MP_ACQ_CHANGE,Değiştir,Change
+MP_ACQ_ASSIGN,Ata,Assign
+MP_ACQ_AFTER_LAUNCH,{version} yayınlanınca başlar,Starts when {version} ships
+MP_ACQ_NEXT_WEEK,gelecek hafta başlar,starts next week
+MP_ACQ_FIRST_WEEK,İlk hafta mağaza gelmez,No stores in the first week
+MP_ACQ_HERE,Bu kategoride,In this category
+MP_ACQ_TAKES_SALES,Satış işini de alır: zamanı bölünür,Takes on the Sales job too: split focus
+HR_TASK_WAITING_CATEGORY,Kategoriye atanınca başlar,Starts once assigned to a category

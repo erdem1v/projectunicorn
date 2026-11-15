@@ -111,6 +111,9 @@ static func _cell(c: Character, job_id: String, on_toggle: Callable, read_only: 
 	if coef <= 0.0:
 		return _closed(tr_key("HR_ASSIGN_MARKETING_ONLY" if job_id == HRConstants.JOB_MARKETING else "HR_ASSIGN_NOT_YOUR_AREA"),
 			"", UiTokens.D_BOX_JOB)
+	# Pazaryerinin hesabı yoktur: iki toplu kaydı bir kişinin sahiplenebileceği hesap değildir.
+	if job_id == HRConstants.JOB_ACCOUNTS and SalesSystem.is_marketplace():
+		return _closed("", "", UiTokens.D_BOX_JOB)
 	# Satış, ürün türü seçilene dek kilitli-görünür: gizlemek "böyle bir şey yok" der, kilitli kare
 	# "henüz yok, sebebi bu".
 	if job_id == HRConstants.JOB_SALES and not ProductSystem.has_sales_desk():

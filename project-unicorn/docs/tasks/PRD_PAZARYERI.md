@@ -233,9 +233,13 @@ Kapanış yalnız ürün yayındayken koşar; kategori açmak yayından önce de
 - **Kazanım** ürün yayınlanınca başlar; yayından önce mağaza sıfırdır. Bir kişi bir kategoriye atanır (`assign`). Atanan,
   kurucu ya da Satış Temsilcisi olabilir; bir kategoride birden çok kişi çalışabilir. Atamanın bedeli bir haftalık
   kazanımdır: yeni atanan ya da kategorisi değişen kişi ilk kapanışta mağaza kazandırmaz (taşınan kişi eski kategorisinde
-  de kazandırmaz), sonraki kapanışlarda kazandırır. Yalnız işten ayrılanın ataması silinir; izne çıkan ya da eğitime giden
-  kişi atamasını korur ama işbaşında olmadığı kapanışta mağaza kazandırmaz. İki kural onay bekliyor; ikisi de atama
-  yapılırken ekranda görünür (§4.3). Kurucunun ataması bugünkü Satış işi gibi sprint payından yer. Satış rolü pazaryerinde
+  de kazandırmaz), sonraki kapanışlarda kazandırır. Atama kişiye Ekip'te Satış işini verir; Satış dışında iki sürekli işi
+  olan kişi atanamaz (seçicide şartıyla görünür). İşten ayrılanın ve Ekip'te Satış işi kaldırılanın ataması hemen silinir.
+  Ar-Ge'ye geçenin Satış işi duraklar: ataması kalır ama o kapanışlarda mağaza kazandırmaz. İzne çıkan ya da eğitime giden
+  kişi atamasını korur ama işbaşında olmadığı kapanışta mağaza kazandırmaz. Atamadan çıkan kurucunun (rolü Satış
+  Temsilcisi olmayan herkesin) Satış işi kalkar, Satış Temsilcisininki kalır. Kategoriye atanmamış Satış işi Ekip'te
+  "bekliyor" okunur ve şartını söyler ("Kategoriye atanınca başlar"). Kurallar onay bekliyor; hepsi atama yapılırken
+  ekranda görünür (§4.3). Kurucunun ataması Satış işi olduğu için sprint payından yer. Satış rolü pazaryerinde
   açıktır: Satış Temsilcisi ürün türü seçilince işe alınır ve Ekip'in Satış hücresi açılır (`ProductSystem.has_sales_desk`);
   Satış işi yayına kadar bekler (`HRSystem.job_waiting_key`). Tür seçilmemişken rol kartı ve hücre, Satış penceresinin
   türsüz hâliyle aynı şartı aynı cümleyle söyler.
@@ -524,6 +528,9 @@ Kareler `tur4_ekranlar_2026-11-13/pazaryeri/kareler/` altında; her bölümün k
      satırında "haftada 6 mağaza" yerine kazanımın gelecek hafta başladığı, işbaşında olmayan (izinli, eğitimde) kişinin
      satırında o hafta kazandırmadığı yazar; "Ata" ve "Değiştir" seçiminde ilk haftanın kazandırmadığı seçimden önce
      okunur. Biçimi (çip ya da ipucu) ARAYUZ'la, metinleri arayüz paketinde; TR ve EN onay bekliyor.
+     "Değiştir" satırın kişisinin yerine seçileni atar; eskisi kategoriden çıkar. Seçilen başka bir kategorideyse
+     oradan taşınır ve iki kategoride de ilk kapanışta kazandırmaz. Seçici atamadan önce bedeli söyler: Satış işi
+     olmayan kişi (kurucu) Satış işini alır ve sprint payı bölünür.
      Ürün yayınlanmadıysa tek satır: "v1.0 yayınlanınca başlar".
 
 ### 4.4 Politikalar (PY7a, PY7b)

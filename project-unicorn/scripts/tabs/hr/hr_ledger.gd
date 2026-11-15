@@ -226,17 +226,18 @@ static func task_text(emp: Character) -> String:
 	if jobs.size() >= 2:
 		var labels: Array[String] = []
 		for job_id in jobs:
-			labels.append(_job_text(job_id, true))
+			labels.append(_job_text(job_id, true, emp))
 		return " · ".join(labels)
 	if jobs.size() == 1:
-		return _job_text(jobs[0], false)
+		return _job_text(jobs[0], false, emp)
 	return ""
 
 
 ## §12.2 iş metni. Sprint koşarken Build çıkacak sürümün adıyla okunur ("Notly v1.5"):
 ## oyuncunun kafasındaki şey o sürümdür. `short` iki iş hâlinin kısa etiketidir: yalnız işin
-## adı, bir iddia değil. Uykudaki işin hücresi boştur: Durum hücresi BOŞTA der (envanter sales-12).
-static func _job_text(job_id: String, short: bool) -> String:
+## adı, bir iddia değil. Uykudaki işin hücresi boştur: Durum hücresi BOŞTA der (envanter sales-12). Pazaryerinde kategori
+## bekleyen Satış işi ise şartını yazar: onu oyuncunun bir hamlesi açar.
+static func _job_text(job_id: String, short: bool, emp: Character) -> String:
 	if job_id == HRConstants.JOB_BUILD:
 		if SprintSystem.mode() == "active":
 			var product: String = SalesSystem.product_display_name()
@@ -246,8 +247,9 @@ static func _job_text(job_id: String, short: bool) -> String:
 			return tr_key("HR_TASK_ON_PRODUCT").format({"product": product, "version": label})
 	if short:
 		return HRConstants.job_label(job_id)
-	if HRSystem.job_waiting_key(job_id) != "":
-		return ""
+	var waiting: String = HRSystem.job_waiting_key(job_id, emp)
+	if waiting != "":
+		return tr_key(waiting) if waiting == "HR_TASK_WAITING_CATEGORY" else ""
 	var key: String = "HR_TASK_ON_JOB_%s" % job_id.to_upper()
 	var sentence: String = tr_key(key)
 	# Cümlesi olmayan iş (Araştırma) adıyla okunur; ham anahtar ekrana düşmez.

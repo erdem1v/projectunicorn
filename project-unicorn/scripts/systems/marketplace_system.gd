@@ -34,10 +34,12 @@ static func read_state() -> Dictionary:
 
 
 ## Yüklenen durumda olmayan her anahtar (iç içe sözlüklerde de) modelin ilk durumundan gelir, var olan değere dokunulmaz; boş
-## durum (pazaryeri koşusu olmayan oyun) boş kalır. Model eksik anahtarı varsayılanla okumaz.
+## durum (pazaryeri koşusu olmayan oyun) boş kalır. Model eksik anahtarı varsayılanla okumaz. Yüklenen atamaların düşürmesi
+## burada bağlanır (yeni koşuda ilk `assign`).
 static func fill_missing_state() -> void:
 	if not GameState.marketplace.is_empty():
 		_fill(GameState.marketplace, MarketplaceModel.new_state())
+		_watch_staffing()
 
 
 static func _fill(have: Dictionary, initial: Dictionary) -> void:
@@ -57,10 +59,11 @@ static func world() -> Dictionary:
 		tiers[module] = ProductState.line_tier(MODULE_LINES[module])
 		bugs[module] = int(open_bugs.get(MODULE_LINES[module], 0))
 	var stars := {}
+	# Ar-Ge'nin duraklattığı Satış işi atamayı tutar ama o hafta kazandırmaz.
 	for person in read_state().assign:
 		var c: Character = CharacterRegistry.get_character(person)
-		if _can_work(c):
-			stars[person] = 1 if c.category == "founder" else int(HRConstants.stars_for(HRSystem.skill(c, HRConstants.AREA_SALES)))
+		if _can_work(c) and HRConstants.JOB_SALES in c.assigned_job_ids:
+			stars[person] = int(sales_stars(c))
 	return {"week": GameState.day, "published": ProductState.is_live(), "tiers": tiers, "bugs": bugs, "stars": stars,
 		"unanswered": SupportSystem.unanswered_share(), "planned": _planned(),
 		"channel": MarketingSystem.market_visits(), "return_lift": MarketingSystem.return_lift(),
@@ -128,14 +131,65 @@ static func _can_work(c: Character) -> bool:
 	return c != null and c.status == HRConstants.STATUS_ACTIVE and (c.category == "founder" or c.role == HRConstants.ROLE_SALES_REP)
 
 
+## Atanabilenler: işbaşındaki kurucu ve Satış Temsilcileri.
+static func assignable() -> Array:
+	return CharacterRegistry.get_all().filter(_can_work)
+
+
+## Satış işini alamayan: Satış'ı yok ve sürekli işleri (duraklamışlar dahil, iş tavanını Ekip'in kaydı böyle sayar) dolu.
+static func at_job_cap(c: Character) -> bool:
+	var held: Array = c.assigned_job_ids + c.paused_job_ids
+	return HRConstants.JOB_SALES not in held and held.filter(HRConstants.is_continuous_job).size() >= HRConstants.MAX_JOBS_PER_PERSON
+
+
+## Kişinin kazanımdaki Satış yıldızı: kurucu 1, Temsilci Satış becerisinin yıldızı (yarım yıldızıyla; model tam yıldızı okur).
+static func sales_stars(c: Character) -> float:
+	return 1.0 if c.category == "founder" else HRConstants.stars_for(HRSystem.skill(c, HRConstants.AREA_SALES))
+
+
+## Atama kişiye Satış işini de verir (kurucunun sprint payı Satış işindeki kadar azalır); iş verilemezse (iş tavanı) atama olmaz.
+## İş önce verilir: işin sinyalini dinleyen düşürme, Satış işi henüz verilmemiş atamayı görmesin. Model reddederse bu çağrının
+## verdiği iş geri alınır.
 static func assign(person: String, cat: String) -> bool:
-	if not _can_work(CharacterRegistry.get_character(person)):
+	var c: Character = CharacterRegistry.get_character(person)
+	if not _can_work(c):
 		return false
-	return _written(MarketplaceModel.assign(_s(), person, cat))
+	_watch_staffing()
+	var had: bool = HRConstants.JOB_SALES in c.assigned_job_ids + c.paused_job_ids
+	if CharacterRegistry.assign_job(person, HRConstants.JOB_SALES) != "":
+		return false
+	if not MarketplaceModel.assign(_s(), person, cat):
+		if not had:
+			CharacterRegistry.unassign_job(person, HRConstants.JOB_SALES)
+		return false
+	return _written(true)
 
 
+## Ataması kalkan kişinin atamayla aldığı Satış işi de kalkar; Satış Temsilcisi işini işe alımda almıştır, işi kalır.
 static func unassign(person: String) -> bool:
-	return _written(MarketplaceModel.unassign(_s(), person))
+	var applied := MarketplaceModel.unassign(_s(), person)
+	if applied and CharacterRegistry.get_character(person).role != HRConstants.ROLE_SALES_REP:
+		CharacterRegistry.unassign_job(person, HRConstants.JOB_SALES)
+	return _written(applied)
+
+
+## Atama Satış işine ve kişinin kaydına bağlıdır: Ekip'te Satış işi kalkınca ya da kişi ayrılınca atama kapanışı beklemeden düşer.
+static func _watch_staffing() -> void:
+	if not EventBus.assignment_changed.is_connected(_on_staffing_changed):
+		EventBus.assignment_changed.connect(_on_staffing_changed)
+		EventBus.character_removed.connect(_on_staffing_changed)
+
+
+## Duraklamış Satış işi (Ar-Ge'ye geçen kişi) atamayı tutar; izne ya da eğitime giden kişinin işi ve ataması kalır.
+static func _on_staffing_changed(_id: String) -> void:
+	var state := read_state()
+	var dropped := false
+	for person in state.assign.keys():
+		var c: Character = CharacterRegistry.get_character(person)
+		if c == null or not (HRConstants.JOB_SALES in c.assigned_job_ids or HRConstants.JOB_SALES in c.paused_job_ids):
+			MarketplaceModel.unassign(state, person)
+			dropped = true
+	_written(dropped)
 
 
 # --- Okuyucular: saklanan durumdan okur, kapanış koşturmaz --------------------------------------
@@ -249,9 +303,6 @@ static func daily_tick() -> void:
 	if not ProductState.is_live():
 		return
 	var state := _s()
-	for person in state.assign.keys():
-		if CharacterRegistry.get_character(person) == null:
-			MarketplaceModel.unassign(state, person)
 	var w := world()
 	MarketplaceModel.close_week(state, w)
 	MarketplaceModel.tick_topics(state, w)

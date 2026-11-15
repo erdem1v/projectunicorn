@@ -24,7 +24,7 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 - `scripts/ui/components/window_layer.gd` (247): `CenterViewport`un betiği; bir birincil ve bir ayrıntı pencereyi ofisin üstünde sabit yuvalarda açar
 - `scripts/ui/components/window_frame.gd` (119): pencere kabuğu (`WindowPanel`, kapatma glifi, ortak başlık bandı, karar beklerken salt okunur şerit)
 - `scripts/ui/components/gate_strip.gd` (53): karar beklerken pencerenin üstündeki "geri dön" şeridi
-- `scripts/ui/components/inbox.gd` (572): gelen kutusunun tek görünüm modeli (statik, durumsuz); Olaylar penceresi, bildirim yığını, kapı yuvası ve rozet bunu okur
+- `scripts/ui/components/inbox.gd` (581): gelen kutusunun tek görünüm modeli (statik, durumsuz); Olaylar penceresi, bildirim yığını, kapı yuvası ve rozet bunu okur
 - `scripts/ui/components/toast.gd` (94): kabuğun tek toast'ı (grup `toast`); son ekranda raya gömülü ve eylemli sürüm
 - `scripts/ui/components/news_ticker.gd` (237): alt haber şeridi; gerçek zamanda sola kayar, oyun duraklasa da akar, aç/kapa hücresi
 - `scripts/ui/components/build_hud_panel.gd` (108): sağ üstteki yüzen kart yığınının taşıyıcısı; görünürlük, sürükleme, pencere altında gizlenme

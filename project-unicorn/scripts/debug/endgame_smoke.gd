@@ -670,6 +670,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"marketplace_tick_waits_for_launch": fail = _case_marketplace_tick_waits_for_launch()
 		"marketplace_revenue_two_records":   fail = _case_marketplace_revenue_two_records()
 		"marketplace_assign_next_week":      fail = _case_marketplace_assign_next_week()
+		"marketplace_assign_gives_sales_job": fail = _case_marketplace_assign_gives_sales_job()
 		"marketplace_close_week_wires":      fail = _case_marketplace_close_week_wires()
 		"marketplace_premium_closed_no_burn": fail = _case_marketplace_premium_closed_no_burn()
 		"marketplace_erp_run_untouched":     fail = _case_marketplace_erp_run_untouched()
@@ -31466,13 +31467,14 @@ static func _case_marketplace_revenue_two_records() -> String:
 	return ""
 
 
-## Atama atandığı haftadan sonraki ilk kapanışta mağaza kazandırmaz, sonrakilerde kazandırır. İşten ayrılanın ataması kapanışta
-## düşer ve ondan önce de kazandırmaz; izne çıkanın ataması durur, o hafta kazandırmaz, dönünce kazandırır. Kapalı kategoriye,
-## atanamayan kişiye ya da zaten orada çalışan kişiye atama reddedilir (sinyal yok, durum değişmez); `unassign` kişiyi çıkarır.
+## Atama atandığı haftadan sonraki ilk kapanışta mağaza kazandırmaz, sonrakilerde kazandırır. İşten ayrılanın ataması ayrıldığı
+## anda düşer; izne çıkanın ataması durur, o hafta kazandırmaz, dönünce kazandırır. Kapalı kategoriye, atanamayan kişiye ya da
+## zaten orada çalışan kişiye atama reddedilir (sinyal yok, durum değişmez); `unassign` kişiyi çıkarır.
 ##
 ## FALSİFİKASYON: `acquisition`da `job.live` şartını sil → ilk kapanışın kazanımı FAIL; `close_week`teki `live = true`yu sil →
-## ikinci kapanışın kazanımı FAIL; `daily_tick`te silme koşulunu `not _can_work(…)` yap → izinli kişinin ataması FAIL; `world`de
-## `_can_work(c)` yerine `c != null` yaz → izinli kişinin kazanımı FAIL; `daily_tick`teki silmeyi kaldır → ayrılanın ataması FAIL.
+## ikinci kapanışın kazanımı FAIL; `_on_staffing_changed`te düşürme koşuluna `or c.status != HRConstants.STATUS_ACTIVE` ekle →
+## izinli kişinin ataması FAIL; `world`de `_can_work(c)` yerine `c != null` yaz → izinli kişinin kazanımı FAIL; `_watch_staffing`te
+## `character_removed` bağını sil → ayrılanın ataması FAIL.
 static func _case_marketplace_assign_next_week() -> String:
 	_seed_marketplace_world()
 	var emits: Array[int] = [0]
@@ -31511,8 +31513,8 @@ static func _case_marketplace_assign_next_week() -> String:
 	earned = MarketplaceModel.acquisition(state, MarketplaceSystem.world(), "fashion")
 	if not is_equal_approx(earned, 12.0):
 		return "founder 2 + 4-star 6 + 3-star 4 should earn 12 stores a close, read %.2f" % earned
-	CharacterRegistry.remove(gone.id)
 	CharacterRegistry.set_status(away.id, HRConstants.STATUS_ON_LEAVE)
+	CharacterRegistry.remove(gone.id)
 	earned = MarketplaceModel.acquisition(state, MarketplaceSystem.world(), "fashion")
 	if not is_equal_approx(earned, 2.0):
 		return "one left and one is on leave, yet the close would earn %.2f stores, want the founder's 2" % earned
@@ -31529,6 +31531,68 @@ static func _case_marketplace_assign_next_week() -> String:
 		return "unassign did not apply once with one emit and refuse the repeat"
 	if state.assign.keys() != [away.id]:
 		return "unassign left %s" % str(state.assign.keys())
+	return ""
+
+
+## Atama kişiye Satış işini de verir: iki işi dolu ve Satış'ı olmayan kurucunun ataması reddedilir (durum ve işleri değişmez,
+## sinyal yok); iki işi Ar-Ge'nin duraklattığı kurucu da tavandadır (Ekip'in kaydı duraklamış işi sayar). İşi boşalınca atanır ve
+## Satış işini alır; Ekip'te Satış işi kaldırılmış Temsilci atanınca işi geri gelir. Satış işi kalkan kişinin ataması kapanış
+## beklemeden düşer (sinyal bir kez). Araştırmadaki kişi atanınca atama kalır (iş atamadan önce verilir); Ar-Ge'ye geçip Satış işi
+## duraklayan kişinin ataması durur ama kazandırmaz. "Değiştir" (yeni kişi atanır, eskisi çıkar) Temsilcinin işe alımda aldığı
+## Satış işini bırakır, kurucunun atamayla aldığını kaldırır.
+##
+## FALSİFİKASYON: `assign`te `assign_job` çağrısını sil → iş tavanı satırı FAIL; `assign_job`un reddinde dönmeyi sil (atama yine
+## yazılsın) → iş tavanı satırı FAIL; `at_job_cap` yalnız atanmış işleri saysın → Ar-Ge'deki kurucunun tavan satırı FAIL;
+## `_on_staffing_changed`te Satış işi şartını sil (yalnız kaydı kalmayan düşsün) → Satış işi kalkan kurucunun satırı FAIL;
+## `assign`te modeli işten önce yaz (iş reddinde atamayı geri alarak) → araştırmadaki kurucunun satırı FAIL; `world`de Satış
+## işi şartını sil → duraklamış Satış işi satırı FAIL; `unassign`te rol şartını sil ya da `unassign_job` çağrısını sil → Değiştir
+## satırı FAIL.
+static func _case_marketplace_assign_gives_sales_job() -> String:
+	_seed_marketplace_world()
+	var emits: Array[int] = [0]
+	EventBus.marketplace_changed.connect(func() -> void: emits[0] += 1)
+	var founder: Character = CharacterRegistry.get_founder()
+	var ece: Character = _make_employee("mp_ece", "Ece", HRConstants.ROLE_SALES_REP, SEED_PACE, 0, 50, 8)
+	var ali: Character = _make_employee("mp_ali", "Ali", HRConstants.ROLE_SALES_REP, SEED_PACE, 0, 50, 6)
+	var state: Dictionary = GameState.marketplace
+	CharacterRegistry.assign_job(founder.id, HRConstants.JOB_BUILD)
+	CharacterRegistry.assign_job(founder.id, HRConstants.JOB_SUPPORT)
+	var jobs: Array = founder.assigned_job_ids.duplicate()
+	if jobs.size() != HRConstants.MAX_JOBS_PER_PERSON or HRConstants.JOB_SALES in jobs:
+		return "fixture: the founder holds %s, want two jobs and no Sales" % str(jobs)
+	var before: Dictionary = state.duplicate(true)
+	if MarketplaceSystem.assign(founder.id, "fashion") or emits[0] != 0 or state != before or founder.assigned_job_ids != jobs:
+		return "the founder at two jobs was assigned or his jobs changed: %s" % str(founder.assigned_job_ids)
+	CharacterRegistry.assign_job(founder.id, HRConstants.JOB_RESEARCH)
+	if not MarketplaceSystem.at_job_cap(founder) or MarketplaceSystem.assign(founder.id, "fashion") or emits[0] != 0:
+		return "the founder in research with two paused jobs is not at the job cap (paused %s)" % str(founder.paused_job_ids)
+	CharacterRegistry.unassign_job(founder.id, HRConstants.JOB_RESEARCH)
+	CharacterRegistry.unassign_job(founder.id, HRConstants.JOB_SUPPORT)
+	if not MarketplaceSystem.assign(founder.id, "fashion") or emits[0] != 1 or HRConstants.JOB_SALES not in founder.assigned_job_ids:
+		return "the founder's assignment did not apply once with the Sales job (emits %d, jobs %s)" % [emits[0],
+			str(founder.assigned_job_ids)]
+	CharacterRegistry.unassign_job(ece.id, HRConstants.JOB_SALES)
+	if not MarketplaceSystem.assign(ece.id, "fashion") or HRConstants.JOB_SALES not in ece.assigned_job_ids:
+		return "Ece's assignment did not give her the Sales job back"
+	emits[0] = 0
+	CharacterRegistry.unassign_job(founder.id, HRConstants.JOB_SALES)
+	if state.assign.has(founder.id) or emits[0] != 1:
+		return "the founder's Sales job came off and his assignment stayed until a close (emits %d)" % emits[0]
+	CharacterRegistry.assign_job(founder.id, HRConstants.JOB_RESEARCH)
+	if not MarketplaceSystem.assign(founder.id, "fashion") or not state.assign.has(founder.id):
+		return "the founder in research was assigned and lost it at once (jobs %s)" % str(founder.assigned_job_ids)
+	CharacterRegistry.assign_job(founder.id, HRConstants.JOB_RESEARCH)
+	if not state.assign.has(founder.id) or MarketplaceSystem.world().stars.has(founder.id):
+		return "the founder's Sales job paused for research: kept %s, earning %s; want kept and not earning" % [
+			state.assign.has(founder.id), MarketplaceSystem.world().stars.has(founder.id)]
+	CharacterRegistry.unassign_job(founder.id, HRConstants.JOB_RESEARCH)
+	if not MarketplaceSystem.assign(ali.id, "fashion") or not MarketplaceSystem.unassign(ece.id) \
+			or not MarketplaceSystem.unassign(founder.id):
+		return "Change did not put Ali in place of Ece and the founder"
+	if state.assign.keys() != [ali.id] or HRConstants.JOB_SALES not in ece.assigned_job_ids \
+			or HRConstants.JOB_SALES in founder.assigned_job_ids:
+		return "after Change: assignments %s, Ece's jobs %s, the founder's %s" % [str(state.assign.keys()),
+			str(ece.assigned_job_ids), str(founder.assigned_job_ids)]
 	return ""
 
 
@@ -31738,12 +31802,14 @@ static func _case_marketplace_open_topic_report() -> String:
 
 
 ## Pazaryeri türü seçilince Satış Temsilcisi işe alınabilir ve Satış işi yayına kadar uykuda durur: bekleme nedeni yayından önce
-## "canlı ürün yok", yayınla birlikte boş. Katalogdaki her türde rol yalnız B2B ve pazaryerinde açıktır, iş yalnız o türlerin
+## "canlı ürün yok", yayından sonra kategoriye atanana dek "kategoriye atanınca başlar" (Kadro'nun iş hücresi bu şartı yazar),
+## atanınca boş. Atamadan çıkan temsilci işini korur; ERP'de onun Kadro hücresi işi yazar, kategori şartı yazmaz. Katalogdaki her türde rol yalnız B2B ve pazaryerinde açıktır, iş yalnız o türlerin
 ## canlı ürününde çalışır; pazaryeri dışındaki bütün türlerde sonuç `SalesFaucetSystem.market_open()`'ın eski kuralıyla aynıdır.
 ##
 ## FALSİFİKASYON: `job_waiting_key`te `is_live()` şartını sil → yayından önceki bekleme nedeni FAIL; `has_sales_desk()` şartını
-## `SalesFaucetSystem.market_open()` yap → yayından sonraki bekleme nedeni FAIL; `has_sales_desk`ten pazaryeri terimini sil →
-## rolün kilidi FAIL; terimi `ProductState.subtype() != ""` yap ya da B2B terimini sil → tür turunda ilgili tür FAIL.
+## `SalesFaucetSystem.market_open()` yap → yayından sonraki bekleme nedeni FAIL; `job_waiting_key`te kategori şartını sil →
+## kategorisiz temsilcinin satırı FAIL; `_job_text`te kategori şartını da boş döndür → Kadro hücresi satırı FAIL; kategori şartından
+## `is_marketplace()`i sil → ERP'nin Kadro hücresi satırı FAIL; `has_sales_desk`ten pazaryeri terimini sil → rolün kilidi FAIL; terimi `ProductState.subtype() != ""` yap ya da B2B terimini sil → tür turunda ilgili tür FAIL.
 static func _case_marketplace_sales_role_opens() -> String:
 	_seed_sprint(MarketplaceSystem.TYPE_ID)
 	if not HRConstants.is_role_hireable(HRConstants.ROLE_SALES_REP):
@@ -31755,9 +31821,22 @@ static func _case_marketplace_sales_role_opens() -> String:
 	if waiting != "HR_TASK_WAITING_LIVE" or not HRSystem.is_waiting(rep):
 		return "before launch the Sales job reads '%s' (rep waiting %s), want HR_TASK_WAITING_LIVE" % [waiting, HRSystem.is_waiting(rep)]
 	GameState.set_flag("mvp_shipped", true)
-	waiting = HRSystem.job_waiting_key(HRConstants.JOB_SALES)
+	waiting = HRSystem.job_waiting_key(HRConstants.JOB_SALES, rep)
+	if waiting != "HR_TASK_WAITING_CATEGORY" or not HRSystem.is_waiting(rep):
+		return "after launch the rep with no category reads '%s' (waiting %s), want HR_TASK_WAITING_CATEGORY" % [waiting,
+			HRSystem.is_waiting(rep)]
+	var condition: String = TranslationServer.translate("HR_TASK_WAITING_CATEGORY")
+	var working: String = TranslationServer.translate("HR_TASK_ON_JOB_SALES")
+	if HRLedger.task_text(rep) != condition:
+		return "the Kadro cell of the rep with no category reads '%s', want '%s'" % [HRLedger.task_text(rep), condition]
+	MarketplaceSystem.open_category("fashion")
+	MarketplaceSystem.assign(rep.id, "fashion")
+	waiting = HRSystem.job_waiting_key(HRConstants.JOB_SALES, rep)
 	if waiting != "" or HRSystem.is_waiting(rep):
-		return "after launch the Sales job still reads '%s' (rep waiting %s)" % [waiting, HRSystem.is_waiting(rep)]
+		return "the rep on Moda still reads '%s' (waiting %s)" % [waiting, HRSystem.is_waiting(rep)]
+	if HRLedger.task_text(rep) != working:
+		return "the Kadro cell of the rep on Moda reads '%s', want '%s'" % [HRLedger.task_text(rep), working]
+	MarketplaceSystem.unassign(rep.id)
 	for group: Array in ProductCatalog.SUB_PRODUCT_TYPES.values():
 		for type: Dictionary in group:
 			var subtype: String = String(type.id)
@@ -31774,6 +31853,8 @@ static func _case_marketplace_sales_role_opens() -> String:
 				if subtype != MarketplaceSystem.TYPE_ID and runs != SalesFaucetSystem.market_open():
 					return "%s with shipped %s: the Sales job runs %s, the desk is open %s" % [
 						subtype, shipped, runs, SalesFaucetSystem.market_open()]
+				if runs and subtype != MarketplaceSystem.TYPE_ID and HRLedger.task_text(rep) != working:
+					return "%s: the rep's Kadro cell reads '%s', want '%s'" % [subtype, HRLedger.task_text(rep), working]
 	return ""
 
 

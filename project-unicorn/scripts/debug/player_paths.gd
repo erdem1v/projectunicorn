@@ -7,6 +7,7 @@ extends RefCounted
 # for its condition. `main` is the Main node, where the world seeds and the shell live.
 
 const WAIT_FRAMES := 120
+const MP_PARTS := preload("res://scripts/tabs/marketplace/mp_parts.gd")
 
 
 static func run(main: Node, case_id: String) -> String:
@@ -23,6 +24,8 @@ static func run(main: Node, case_id: String) -> String:
 			return await _cs_request_rule_holds_second_ask(main)
 		"mp_policy_locks_after_apply":
 			return await _mp_policy_locks_after_apply(main)
+		"mp_assign_reads_first_week":
+			return await _mp_assign_reads_first_week(main)
 	return "unknown case"
 
 
@@ -295,6 +298,93 @@ static func _chip_fail(page: Control, rule: String, keys: Array) -> String:
 	return ""
 
 
+## The store acquisition is the player's to place. On Moda's panel the free slot opens a picker with its one line about the first
+## week, the founder (on Moda already) shut on that reason and a rep with the stores they would bring a week; the rep, whose Sales
+## job the player had ticked off in Ekip, is picked: the row says "next week" and the rep holds the Sales job again; after a close
+## the row reads the week's stores. Change on that row puts a second rep in the first one's place: the first leaves Moda, keeps the
+## Sales job a rep is hired with and waits for a category.
+##
+## FALSIFICATION: make `MarketplaceModel.crew` return `live` true always → the "next week" line FAILs; write 0 for the picker's
+## weekly stores in `_option` → the candidate's line FAILs; delete the `assign_job` call in `MarketplaceSystem.assign` → the
+## founder's line FAILs (his assignment came without the job and drops at the first job change); delete `unassign(replaced)` in
+## `_assign` → the Change line FAILs; drop the role condition in `MarketplaceSystem.unassign` or the category condition in
+## `HRSystem.job_waiting_key` → the waiting rep's line FAILs; delete the first-week line in `_open_picker` → the picker line FAILs.
+static func _mp_assign_reads_first_week(main: Node) -> String:
+	if not main._seed_marketplace_world(main._MP_WORLDS.mp_launch):
+		return "the marketplace world did not reach its launch"
+	GameState.set_cash(1_000_000)   # the world's weeks never reach the shutter
+	var ana: Character = main._mp_hire(HRConstants.ROLE_SALES_REP, HRConstants.LEVEL_MID)
+	var bora: Character = main._mp_hire(HRConstants.ROLE_SALES_REP, HRConstants.LEVEL_MID)
+	CharacterRegistry.unassign_job(ana.id, HRConstants.JOB_SALES)
+	await main._mount_shot_shell()
+	var page: Control = _open(main, "sales")
+	if not main._press_button_labelled(page, Fmt.upper(TranslationServer.translate("MP_TAB_CATEGORIES"))):
+		return "no Kategoriler on the strip"
+	# The page's own words for what a person brings Moda a week.
+	var week := func(person: Character) -> String:
+		var stores: float = MarketplaceModel.acquisition_of(MarketplaceSystem.read_state(), MarketplaceSystem.world(), "fashion",
+			int(MarketplaceSystem.sales_stars(person)))
+		return TranslationServer.translate(Fmt.count_key("MP_ACQ_PER_WEEK", 1 if is_equal_approx(stores, 1.0) else 0)).format(
+			{"n": MP_PARTS.count(stores)})
+	var says := func(person: Character, text: String) -> bool:
+		var row: Node = page.find_child(person.id, true, false)
+		return row != null and not _labels(row, text).is_empty()
+	if not await _until(main, func() -> bool: return page.find_child("AssignSlot", true, false) != null):
+		return "Moda's panel has no free slot"
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	var slot: Control = page.find_child("AssignSlot", true, false)
+	slot.gui_input.emit(click)
+	var pop: Node = _picker(main)
+	if pop == null or _labels(pop, TranslationServer.translate("MP_ACQ_FIRST_WEEK")).is_empty():
+		return "the free slot's picker does not open with its first-week line"
+	var founder: Character = CharacterRegistry.get_founder()
+	var here: Array = _buttons(pop, founder.character_name)
+	if here.size() != 1 or not here[0].disabled or _labels(here[0], TranslationServer.translate("MP_ACQ_HERE")).is_empty():
+		return "the founder, on Moda already, is not shut with the reason in the picker"
+	var pick: Array = _buttons(pop, ana.character_name)
+	if pick.size() != 1 or pick[0].disabled or _labels(pick[0], week.call(ana)).is_empty():
+		return "%s's picker row is not open with '%s'" % [ana.character_name, week.call(ana)]
+	pick[0].pressed.emit()
+	if MarketplaceSystem.read_state().assign.get(ana.id, {}).get("cat", "") != "fashion":
+		return "the pick did not put %s on Moda" % ana.character_name
+	if HRConstants.JOB_SALES not in ana.assigned_job_ids:
+		return "%s is on Moda without the Sales job" % ana.character_name
+	var next_week: String = TranslationServer.translate("MP_ACQ_NEXT_WEEK")
+	if not await _until(main, func() -> bool: return says.call(ana, next_week)):
+		return "%s's row does not say '%s' in the week of the pick" % [ana.character_name, next_week]
+	GameState.advance_day()
+	MarketplaceSystem.daily_tick()
+	if not await _until(main, func() -> bool: return says.call(ana, week.call(ana))):
+		return "after a close %s's row does not read '%s'" % [ana.character_name, week.call(ana)]
+	var change: Array = _buttons(page.find_child(ana.id, true, false), TranslationServer.translate("MP_ACQ_CHANGE"))
+	if change.size() != 1:
+		return "%s's row has no Change" % ana.character_name
+	change[0].pressed.emit()
+	pop = _picker(main)
+	pick = [] if pop == null else _buttons(pop, bora.character_name)
+	if pick.size() != 1 or pick[0].disabled:
+		return "%s is not open in Change's picker" % bora.character_name
+	pick[0].pressed.emit()
+	var assigned: Dictionary = MarketplaceSystem.read_state().assign
+	if assigned.has(ana.id) or assigned.get(bora.id, {}).get("cat", "") != "fashion":
+		return "Change left %s on Moda or did not put %s there" % [ana.character_name, bora.character_name]
+	if HRConstants.JOB_SALES not in ana.assigned_job_ids or not HRSystem.is_waiting(ana):
+		return "%s left Moda and is not a rep with the Sales job waiting for a category" % ana.character_name
+	var swapped := func() -> bool: return page.find_child(ana.id, true, false) == null and page.find_child(bora.id, true, false) != null
+	if not await _until(main, swapped):
+		return "the panel still shows %s on Moda or does not show %s" % [ana.character_name, bora.character_name]
+	return ""
+
+
+## The open popover of the shell's panel layer (a picker, a row menu), or null.
+static func _picker(main: Node) -> Node:
+	var open: Array = main._shell.get_node("PanelLayer").find_children("*", "HRPopover", true, false).filter(
+		func(pop: Node) -> bool: return not pop.is_queued_for_deletion())
+	return null if open.is_empty() else open[-1]
+
+
 ## Opens `tab` the way the rail does; the window layer mounts its page at once.
 static func _open(main: Node, tab: String) -> Control:
 	EventBus.tab_changed.emit(tab)
@@ -307,11 +397,9 @@ static func _menu_item(main: Node, page: Control, emp: Character, label: String)
 	click.button_index = MOUSE_BUTTON_LEFT
 	click.pressed = true
 	(page._rows[emp.id] as Control).gui_input.emit(click)
-	var layer: Node = main._shell.get_node("PanelLayer")
 	var item := func() -> Button:
-		var open: Array = layer.find_children("*", "HRPopover", true, false).filter(
-			func(pop: Node) -> bool: return not pop.is_queued_for_deletion())
-		var hits: Array = [] if open.is_empty() else _buttons(open[-1], label)
+		var pop: Node = _picker(main)
+		var hits: Array = [] if pop == null else _buttons(pop, label)
 		return null if hits.is_empty() else hits[0]
 	await _until(main, func() -> bool: return item.call() != null)
 	return item.call()

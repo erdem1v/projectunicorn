@@ -1922,7 +1922,7 @@ func _shot_pane(card_id: String, ctx: Dictionary, names := {}) -> void:
 
 
 ## --sales-shot=<pipeline|desk|picker|inbox|edge|edge_end|stretched|empty|b2b_pre|untyped|morning|evening|
-## norep|discounted|frank|risk_stability|deals|returning|clause|offer|sources|mp_pre|mp_launch|mp_growth|mp_growth_tip|mp_cat|mp_policy|mp_policy_locked>. `desk` puts a rep mid-processing on the desk;
+## norep|discounted|frank|risk_stability|deals|returning|clause|offer|sources|mp_pre|mp_launch|mp_growth|mp_growth_tip|mp_cat|mp_policy|mp_policy_locked|mp_assign>. `desk` puts a rep mid-processing on the desk;
 ## `picker` opens the steward
 ## picker on the first account, `inbox` presses its İlgilen (Olaylar opens on the account's mail); `edge` draws the
 ## rarer lines (a reserved lead, one given to a rep, a whale's condition, tables above the founder's league, the
@@ -2117,7 +2117,8 @@ const _MP_MOVES_60 := [[20, "hire", HRConstants.ROLE_SALES_REP], [30, "commissio
 ## one after it); `tab` the sub-page's key pressed on the strip, `pick` the category row the Kategoriler page is on, `raise`
 ## the plus key pressed once on the commission stepper, `choose` the [rule, option] pressed on the Politikalar page, `apply` Uygula
 ## pressed after it; `no_category` leaves every category closed and shoots the office's notice stack, then the window its
-## reminder opens.
+## reminder opens; `seat` assigns the last of the crew to Moda after the last close (the player's move of that week), `picker`
+## presses the free slot of Moda's store acquisition instead and leaves the picker open.
 const _MP_WORLDS := {
 	"mp_pre": {"day": 3, "pick": "electronics"},
 	"mp_launch": {"closes": 4},
@@ -2130,7 +2131,10 @@ const _MP_WORLDS := {
 		"later": [[30, "channel", "search_ads"], [40, "campaign", "discount_days"]], "tip": "MP_STEP_CART"},
 	"mp_campaign_visits": {"until": 42, "crew": [HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER], "bugs": 3,
 		"later": [[30, "channel", "search_ads"], [40, "campaign", "discount_days"]], "tip": "MP_STEP_VISITS"},
-	"mp_cat": {"until": 60, "tab": "MP_TAB_CATEGORIES", "raise": true, "later": _MP_MOVES_60},
+	"mp_cat": {"until": 60, "tab": "MP_TAB_CATEGORIES", "raise": true, "crew": [HRConstants.ROLE_SALES_REP], "seat": true,
+		"later": _MP_MOVES_60},
+	"mp_assign": {"until": 60, "tab": "MP_TAB_CATEGORIES", "raise": true, "crew": [HRConstants.ROLE_SALES_REP], "picker": true,
+		"later": _MP_MOVES_60},
 	"mp_policy": {"until": 60, "tab": "MP_TAB_POLICIES", "choose": ["return_window", "d30"], "later": _MP_MOVES_60},
 	"mp_policy_locked": {"until": 60, "tab": "MP_TAB_POLICIES", "choose": ["return_window", "d30"], "apply": true,
 		"later": _MP_MOVES_60},
@@ -2139,14 +2143,15 @@ const _MP_WORLDS := {
 const _MP_SPRINTS := 12
 
 
-## --sales-shot=mp_<pre|launch|reminder|growth|growth_tip|campaign|campaign_tip|campaign_visits|cat|policy|policy_locked>: the Pazaryeri
+## --sales-shot=mp_<pre|launch|reminder|growth|growth_tip|campaign|campaign_tip|campaign_visits|cat|assign|policy|policy_locked>: the Pazaryeri
 ## window of a company the engine played (`_seed_marketplace_world`). `pre` is week 3 with the founder alone and Moda open, before the
 ## MVP, the page on Elektronik; `launch` the week the engine ships the MVP and four closes after it, the founder on Moda; `growth` week
 ## 42 with two hires and three open bugs on Cart and Checkout, `growth_tip` the same with the pointer on the Placed an order row;
 ## `campaign` the same world with a marketing specialist running search ads on Moda since week 30, in the week of a discount-days
 ## campaign the company called in week 40, `campaign_tip` with the pointer on the Added to cart row, `campaign_visits` on the Visits
 ## row; `cat` week 60 with a sales rep hired in week 20 on Moda, whose rate went to 12% in week 30, and Elektronik open since week 40,
-## the page on Moda with 13% chosen; `policy` the same company on the Politikalar page with 30 days chosen on the return window and not
+## the page on Moda with 13% chosen and a second rep assigned this week; `assign` the same week with that rep not yet assigned and the
+## free slot's picker open; `policy` the week-60 company on the Politikalar page with 30 days chosen on the return window and not
 ## applied, `policy_locked` with it applied; `reminder` is `launch` with no category open and the founder on none: frame `_01` is the
 ## office's notice stack with the reminder, `_02` the window its click opens, on Kategoriler. Prints the world's figures as
 ## `SHOT|mp_world` and, for a choice, its four-close preview as `SHOT|mp_policy`.
@@ -2195,14 +2200,14 @@ func _run_marketplace_shot(kind: String) -> void:
 	if world.has("tab") and not _press_button_labelled(_shell, Fmt.upper(tr(world.tab))):
 		_shot_fail("[SalesShot] %s: no sub-page key %s on the strip" % [kind, world.tab])
 		return
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
 	if world.has("pick"):
 		var row := _shell.find_child(world.pick, true, false) as Control
 		if row == null:
 			_shot_fail("[SalesShot] %s: no category row named %s" % [kind, world.pick])
 			return
-		var click := InputEventMouseButton.new()
-		click.button_index = MOUSE_BUTTON_LEFT
-		click.pressed = true
 		row.gui_input.emit(click)
 	if world.has("raise"):
 		var keys: Array = _shell.find_children("*", "Button", true, false).filter(
@@ -2226,6 +2231,15 @@ func _run_marketplace_shot(kind: String) -> void:
 		if world.has("apply") and not _press_button_labelled(_shell, tr("MP_APPLY")):
 			_shot_fail("[SalesShot] %s: no Uygula under the chosen option" % kind)
 			return
+	if world.has("picker"):
+		# The panel was repainted this frame: the picker opens under the slot once the slot is laid out.
+		await get_tree().process_frame
+		await get_tree().process_frame
+		var slot := _shell.find_child("AssignSlot", true, false) as Control
+		if slot == null:
+			_shot_fail("[SalesShot] %s: no free slot in the store acquisition" % kind)
+			return
+		slot.gui_input.emit(click)
 	var tip: String = world.get("tip", "")
 	if tip != "":
 		await get_tree().create_timer(0.5).timeout
@@ -2239,9 +2253,10 @@ func _run_marketplace_shot(kind: String) -> void:
 
 
 ## A marketplace run the engine plays: the type chosen at the start and Moda open. `day` stops it before the MVP; `closes` plays
-## the founder's sprints to the MVP gate, assigns the founder to Moda, lets a week pass, ships through `SprintSystem.publish`
+## the founder's sprints to the MVP gate, lets a week pass, ships through `SprintSystem.publish`, assigns the founder to Moda
 ## and plays that many weeks after it; the world's `later` moves are made on the way (`_mp_move`); the last of them is played after
-## the world's `crew` is hired (`_mp_hire`, in the smallest office that seats it) and its `bugs` are open. Every week is the clock's daily dispatch, so stores, users, orders and MRR come
+## the world's `crew` is hired (`_mp_hire`, in the smallest office that seats it) and its `bugs` are open, and its `seat` is made after
+## it. Every week is the clock's daily dispatch, so stores, users, orders and MRR come
 ## from the engine; a hired crew moves into the office that seats it and its cash is written after (`_a4_books`: six months of the
 ## company's loss, the rent in it), or the shutter would close on a 42-week world. `no_category` opens no category and assigns no
 ## one. False (the shot is failed) when the gate is not reached.
@@ -2264,10 +2279,10 @@ func _seed_marketplace_world(world: Dictionary) -> bool:
 	if not GameState.product.release.get("gate", false):
 		_shot_fail("[SalesShot] the marketplace's MVP gate is not reached in %d sprints" % _MP_SPRINTS)
 		return false
-	if not world.has("no_category"):
-		MarketplaceSystem.assign(CharacterRegistry.get_founder().id, "fashion")
 	_play_week()
 	SprintSystem.publish()
+	if not world.has("no_category"):
+		MarketplaceSystem.assign(CharacterRegistry.get_founder().id, "fashion")
 	var closes: int = world.closes if world.has("closes") else world.until - GameState.day
 	var later: Array = world.get("later", []).duplicate()
 	for i in closes - 1:
@@ -2277,8 +2292,9 @@ func _seed_marketplace_world(world: Dictionary) -> bool:
 				_shot_fail("[SalesShot] the world's move %s was refused" % [move])
 				return false
 		_play_week()
+	var hired: Character = null
 	for role: String in world.get("crew", []):
-		_mp_hire(role, HRConstants.LEVEL_MID)
+		hired = _mp_hire(role, HRConstants.LEVEL_MID)
 	var staff := CharacterRegistry.count_employees()
 	if staff > 0:
 		GameState.set_cash(1_000_000)   # the move's up-front rent; _a4_books writes the world's cash after it
@@ -2287,6 +2303,9 @@ func _seed_marketplace_world(world: Dictionary) -> bool:
 	if world.has("bugs"):
 		ProductState.add_bugs("line_marketplace_checkout", world.bugs)
 	_play_week()
+	if world.get("seat", false) and not MarketplaceSystem.assign(hired.id, "fashion"):
+		_shot_fail("[SalesShot] the world's last hire was refused Moda")
+		return false
 	return true
 
 
@@ -2313,10 +2332,12 @@ func _mp_move(move: Array) -> bool:
 	return MarketplaceSystem.set_commission("fashion", move[2])
 
 
-## The first file of the generator's table for `role_id` at `level`, hired the way a search's hire lands (`HRSearchSystem.hire`).
+## The first file of the generator's table for `role_id` at `level` that has not been hired yet (one file per hire of the role, or
+## two reps would be twins), hired the way a search's hire lands (`HRSearchSystem.hire`).
 func _mp_hire(role_id: String, level: int) -> Character:
+	var held: int = CharacterRegistry.get_employees().filter(func(c: Character) -> bool: return c.role == role_id).size()
 	GameState.hr_search = {HRSearchSystem.KEY_STATE: HRConstants.SEARCH_FILES_READY, HRSearchSystem.KEY_LEVEL: level,
-		HRSearchSystem.KEY_FILES: HRCandidateGenerator.generate(role_id, level, GameState.run_seed, GameState.name_lang).slice(0, 1)}
+		HRSearchSystem.KEY_FILES: HRCandidateGenerator.generate(role_id, level, GameState.run_seed, GameState.name_lang).slice(held, held + 1)}
 	return HRSearchSystem.hire(0)
 
 
@@ -4305,7 +4326,7 @@ func _press_button_labelled(root: Node, label: String) -> bool:
 # --hr-shot=<ekip|ekip-saat|atlas|atlas-secili|atlas-ofis|atlas-dolu|dosyalar|gider|saatler|saatler-gece|gorevler|gorevler-arge|
 # dosyalar-pm|dosyalar-tasarim|gorevler-bos|egitim|egitim-modal|egitim-secili|zam|menu|menu-kilit|cikar|cikar-eksi|bos|dosya|dosya-kilit|
 # dosya-kurucu|kalabalik|verim|saatler-sprint|urunsuz|dosyalar-tehlike|dosyalar-onay|dosyalar-mesai|izin|dosyalar-dolu|ekip-uzun|
-# gorevler-pazaryeri|atlas-urunsuz>:
+# gorevler-pazaryeri|ekip-pazaryeri|atlas-urunsuz>:
 # a roster across all three departments (one on leave, one burning out, one fresh hire), driven to the
 # requested HR surface. kalabalik = forty on the roster (the compact Kadro), Geliştirme folded and the
 # list scrolled under its head; dosya = the first employee's file over Kadro; dosya-kurucu = the
@@ -4336,7 +4357,8 @@ func _press_button_labelled(root: Node, label: String) -> bool:
 # gorevler-pazaryeri = the roster's company on a marketplace (type chosen at week 1, v1.0 published at week 8, now week 10 in
 # the second week of the sprint begun at week 9), the founder and the roster's sales rep on the Sales job: Görevler with the
 # Satış column open. Prints HRSHOT|gorevler-pazaryeri|week=<n>|live=<bool>|version=<n>|launch=<n>|sprint=<n>|sprint_week=<n>|
-# quarter_start=<n>|cash=<n>|mrr=<n>|sales=<names>.
+# quarter_start=<n>|cash=<n>|mrr=<n>|sales=<names>. ekip-pazaryeri = the same company's Kadro: the founder on Moda, the rep with
+# no category, whose Görev cell writes the condition its Sales job waits on.
 # atlas-urunsuz = no roster, no product type: the search's role cards with the Satış Temsilcisi card locked on its reason.
 # Prints HRSHOT|atlas-urunsuz|typed=<bool>|sales_lock=<key>.
 func _run_hr_shot(kind: String) -> void:
@@ -4353,7 +4375,7 @@ func _run_hr_shot(kind: String) -> void:
 			if kind == "atlas-dolu":   # LOC-DATA debug seed / id
 				OfficeCrowdProbe.seed_staff(OfficeSystem.desks_free())
 		# The roster's company runs its product's first sprint, mid-morning with the founder at the desk.
-		if kind == "gorevler-pazaryeri":   # LOC-DATA debug seed / id
+		if kind in ["gorevler-pazaryeri", "ekip-pazaryeri"]:   # LOC-DATA debug seed / id
 			_seed_marketplace_launch()
 		else:
 			SprintSystem.choose_type("erp", "Defterix Fatura ve Ön Muhasebe" if kind == "ekip-uzun" else "Fatura")   # LOC-DATA debug seed / id
@@ -4617,13 +4639,14 @@ func _run_hr_shot(kind: String) -> void:
 	await _finish_shot("hr_shot_%s" % kind, 0.5)
 
 
-## --hr-shot=gorevler-pazaryeri's product, through the sprint seams week by week: the type chosen at week 1, the MVP sprint
-## started at week 6 and closed at week 8 with every MVP module at K1, v1.0 published at the gate, the founder put on the Sales
-## job beside the roster's rep, the next sprint planned at week 8 and started at week 9. The shot stands at week 10, that
+## --hr-shot=gorevler-pazaryeri's product, through the sprint seams week by week: the type chosen and Moda opened at week 1, the
+## MVP sprint started at week 6 and closed at week 8 with every MVP module at K1, v1.0 published at the gate, the founder assigned
+## to Moda (which gives him the Sales job beside the roster's rep, who has no category), the next sprint planned at week 8 and started at week 9. The shot stands at week 10, that
 ## sprint's second week.
 func _seed_marketplace_launch() -> void:
 	GameState.day = 1
 	SprintSystem.choose_type(MarketplaceSystem.TYPE_ID, "Çarşım")   # LOC-DATA debug seed / id
+	MarketplaceSystem.open_category("fashion")
 	GameState.day = 6
 	SprintSystem.apply_lead()
 	SprintSystem.begin_planned()
@@ -4632,7 +4655,7 @@ func _seed_marketplace_launch() -> void:
 	GameState.day = 8
 	SprintSystem._close()
 	SprintSystem.publish()
-	CharacterRegistry.assign_job(CharacterRegistry.get_founder().id, HRConstants.JOB_SALES)
+	MarketplaceSystem.assign(CharacterRegistry.get_founder().id, "fashion")
 	SprintSystem.plan_next()
 	GameState.day = 9
 	SprintSystem.apply_lead()

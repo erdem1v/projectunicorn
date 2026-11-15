@@ -297,8 +297,9 @@ static func is_idle(c: Character) -> bool:
 	return c != null and c.category == "employee" and c.assigned_job_ids.is_empty()
 
 
-## UYKUDAKİ İŞ: üzerinde çalışılacak bir şey henüz yok. Dönen, Ekip'in bekleme cümlesinin anahtarıdır; iş koşuyorsa boş.
-static func job_waiting_key(job_id: String) -> String:
+## UYKUDAKİ İŞ: üzerinde çalışılacak bir şey henüz yok. Dönen, Ekip'in bekleme cümlesinin anahtarıdır; iş koşuyorsa boş. `c`
+## verilince kişinin hâli de okunur: pazaryerinde Satış işi kişinin kategorisinde çalışır, kategorisiz kişi mağaza getirmez.
+static func job_waiting_key(job_id: String, c: Character = null) -> String:
 	match job_id:
 		HRConstants.JOB_BUILD, HRConstants.JOB_TEST:
 			return "" if SprintSystem.is_typed() else "HR_TASK_WAITING_PRODUCT"
@@ -306,7 +307,10 @@ static func job_waiting_key(job_id: String) -> String:
 			return "" if ProductState.is_live() else "HR_TASK_WAITING_LIVE"
 		HRConstants.JOB_SALES:
 			# Satış işi canlı üründe, satış masası olan türde (B2B ya da pazaryeri) çalışır.
-			return "" if ProductState.is_live() and ProductSystem.has_sales_desk() else "HR_TASK_WAITING_LIVE"
+			if not (ProductState.is_live() and ProductSystem.has_sales_desk()):
+				return "HR_TASK_WAITING_LIVE"
+			var unplaced: bool = c != null and SalesSystem.is_marketplace() and not MarketplaceSystem.read_state().assign.has(c.id)
+			return "HR_TASK_WAITING_CATEGORY" if unplaced else ""
 	return ""
 
 
@@ -316,7 +320,7 @@ static func is_waiting(c: Character) -> bool:
 	if c.assigned_job_ids.is_empty():
 		return false
 	for job in c.assigned_job_ids:
-		if job_waiting_key(job) == "":
+		if job_waiting_key(job, c) == "":
 			return false
 	return true
 

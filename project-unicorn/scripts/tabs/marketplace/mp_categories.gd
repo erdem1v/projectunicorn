@@ -1,8 +1,9 @@
 extends VBoxContainer
 
 # Pazaryeri'nin Kategoriler sayfası: altı kategorinin listesi ve seçilenin paneli. Kapalı kategori sektörün iadesini ve "Kategoriyi
-# aç"ı, açık kategori iadesini, satış hacmini ve komisyonu taşır; komisyon adım adım seçilir, dört hafta sonraki farkı çiplerde
-# okunur, Uygula yazar. Değerler saklanan durumdan ve modelin saf okuyucularından gelir; yazan yalnız sahibin seam'leridir.
+# aç"ı, açık kategori iadesini, satış hacmini, komisyonu ve mağaza kazanımını taşır; komisyon adım adım seçilir, dört hafta sonraki
+# farkı çiplerde okunur, Uygula yazar; kazanımı kategoriye atanan kişiler getirir, seçici onları atar ya da değiştirir. Değerler
+# saklanan durumdan ve modelin saf okuyucularından gelir; yazan yalnız sahibin seam'leridir.
 
 const PARTS := preload("res://scripts/tabs/marketplace/mp_parts.gd")
 const COL := 76
@@ -192,7 +193,7 @@ func _paint_closed(pane: VBoxContainer) -> void:
 	pane.add_child(open)
 
 
-## An open category: the two measured figures and the commission with the band the stores stand in.
+## An open category: the two measured figures, the commission with the band the stores stand in and who brings the stores.
 func _paint_open(pane: VBoxContainer) -> void:
 	var delivered: float = _state.cats[_selected].week.get("delivered", 0.0)
 	var stats := SprintUiShared.box(UiTokens.SPACE_XL)
@@ -205,6 +206,7 @@ func _paint_open(pane: VBoxContainer) -> void:
 		stats.add_child(cell)
 	pane.add_child(stats)
 	pane.add_child(_commission())
+	pane.add_child(_acquisition())
 
 
 ## The commission: stepper and Apply on one row, the band under it and, once a choice differs from the rate in force, the results
@@ -265,6 +267,148 @@ func _tone(change: float, higher_is_better: bool) -> StringName:
 ## A magnitude with the sign of `value` in front; a zero has none.
 func _signed(value: float, magnitude: String) -> String:
 	return ("+" if value > 0.0 else "-" if value < 0.0 else "") + magnitude
+
+
+# --- Mağaza kazanımı ------------------------------------------------------------------------------------
+
+## The people who bring the category its stores, a row each, and under them the free slot. Before the launch there is one line
+## saying when it starts.
+func _acquisition() -> VBoxContainer:
+	var block := SprintUiShared.column(UiTokens.SPACE_M)
+	block.add_child(SprintUiShared.section("MP_ACQUISITION"))
+	if not _world.published:
+		block.add_child(SprintUiShared.label(
+			tr("MP_ACQ_AFTER_LAUNCH").format({"version": SprintSystem.version_label(1)}), &"NoteMuted"))
+		return block
+	for member: Dictionary in MarketplaceModel.crew(_state, _world, _selected):
+		block.add_child(_member(member))
+	block.add_child(_free_slot())
+	return block
+
+
+## One person of the crew: face, name and role, Sales stars, what they bring and Change, which opens the picker for their place.
+func _member(member: Dictionary) -> HBoxContainer:
+	var c: Character = CharacterRegistry.get_character(member.person)
+	var row := SprintUiShared.box(UiTokens.SPACE_L)
+	row.name = member.person
+	row.add_child(_who(c))
+	row.add_child(UiFactory.D_stars(MarketplaceSystem.sales_stars(c)))
+	row.add_child(_brings(c, member))
+	row.add_child(RnDUiShared.spacer())
+	row.add_child(SprintUiShared.button(tr("MP_ACQ_CHANGE"), &"SecondaryButtonSmall",
+		func() -> void: _open_picker(row, member.person)))
+	return row
+
+
+## What a person brings: while not at work the leave or course tag the roster shows (research, which pauses the Sales job, the tag
+## the sprint's capacity shows), "starts next week" until the assignment has been through a close, else the week's stores.
+func _brings(c: Character, member: Dictionary) -> Control:
+	if not member.working:
+		var away: Array = HRUiShared.away_state(c)
+		var row := SprintUiShared.box(UiTokens.SPACE_S)
+		row.add_child(UiFactory.D_tag(Fmt.cap_first(tr("PRODUCT_AWAY_RESEARCH")) if away.is_empty() else away[0], &"neutral"))
+		if not away.is_empty() and away[1] > 0:
+			row.add_child(SprintUiShared.label(Fmt.weeks(away[1]), &"CondCaption"))
+		return row
+	return SprintUiShared.label(_per_week(member.weekly) if member.live else tr("MP_ACQ_NEXT_WEEK"), &"Caption")
+
+
+## Face, name and role in a column as wide as the Ekip matrix's name column: the stars and figures after it line up row under row.
+func _who(c: Character) -> HBoxContainer:
+	var who := HRUiShared.D_who(c, UiTokens.D_AVATAR_ROW)
+	who.custom_minimum_size.x = UiTokens.D_AVATAR_ROW + UiTokens.SPACE_L + HRAssignments.W[1]
+	return who
+
+
+func _per_week(stores: float) -> String:
+	return tr(Fmt.count_key("MP_ACQ_PER_WEEK", 1 if is_equal_approx(stores, 1.0) else 0)).format({"n": PARTS.count(stores)})
+
+
+## The free slot of the crew: a dashed box with its one word, which opens the picker.
+func _free_slot() -> MarginContainer:
+	var slot := MarginContainer.new()
+	slot.name = "AssignSlot"
+	slot.custom_minimum_size.y = UiTokens.D_H_ROW
+	slot.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	var row := SprintUiShared.box(UiTokens.SPACE_M)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_child(UiFactory.make_glyph(PARTS.ICON % "plus", UiTokens.D_ICON_ROW, UiTokens.D_INK_3))
+	row.add_child(SprintUiShared.label(tr("MP_ACQ_ASSIGN"), &"DataMedium", UiTokens.D_INK_3))
+	HRUiShared.set_mouse_ignore(row)
+	slot.add_child(row)
+	HRUiShared.D_dashed(slot)
+	slot.gui_input.connect(func(event: InputEvent) -> void:
+		if UiFactory.is_left_click(event):
+			_open_picker(slot, ""))
+	return slot
+
+
+## The picker under `anchor`: who can take the category, each with what they would bring a week or why they cannot, and above
+## them the one line every pick shares. `replaced` is the person a Change takes the place of, "" for the free slot.
+func _open_picker(anchor: Control, replaced: String) -> void:
+	var pop: HRPopover = HRPopover.mount(anchor, true)
+	pop.body().custom_minimum_size.x = UiTokens.D_W_STEWARD_MENU
+	pop.body().add_theme_constant_override("separation", 0)
+	pop.body().add_child(SprintUiShared.pad(SprintUiShared.label(tr("MP_ACQ_FIRST_WEEK"), &"Caption"),
+		Vector4i(UiTokens.SPACE_M, UiTokens.SPACE_S, UiTokens.SPACE_M, UiTokens.SPACE_S)))
+	for c: Character in MarketplaceSystem.assignable():
+		_option(pop, c, replaced)
+	pop.open_at(anchor, true, true)
+
+
+## A candidate's row: face, name, stars, the category they would leave and, at the end, the week's stores they would bring, or
+## why they cannot take the category: already in it, or the job cap. Under the stores, faint, the cost of a pick that hands someone
+## the Sales job beside another job.
+func _option(pop: HRPopover, c: Character, replaced: String) -> void:
+	var now: String = _state.assign.get(c.id, {}).get("cat", "")
+	var why := ""
+	if now == _selected:
+		why = "MP_ACQ_HERE"
+	elif MarketplaceSystem.at_job_cap(c):
+		why = "HR_ASSIGN_JOB_CAP"
+	var weekly: float = MarketplaceModel.acquisition_of(_state, _world, _selected, int(MarketplaceSystem.sales_stars(c)))
+	var row := SprintUiShared.box(UiTokens.SPACE_L)
+	var who := _who(c)
+	var stars := UiFactory.D_stars(MarketplaceSystem.sales_stars(c))
+	row.add_child(who)
+	row.add_child(stars)
+	if now != "" and why == "":
+		row.add_child(UiFactory.D_tag(tr("MP_CAT_" + now.to_upper()), &"outline"))
+	row.add_child(RnDUiShared.spacer())
+	var right := SprintUiShared.column(0)
+	var figure := SprintUiShared.label(tr(why) if why != "" else _per_week(weekly), &"Caption")
+	figure.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	right.add_child(figure)
+	if why == "" and HRConstants.JOB_SALES not in c.assigned_job_ids + c.paused_job_ids and not c.assigned_job_ids.is_empty():
+		right.add_child(SprintUiShared.label(tr("MP_ACQ_TAKES_SALES"), &"CaptionFaint"))
+	row.add_child(right)
+	var item := Button.new()
+	item.theme_type_variation = &"MenuItem"
+	item.focus_mode = Control.FOCUS_NONE
+	item.disabled = why != ""
+	if item.disabled:
+		who.modulate.a = UiTokens.D_AWAY_ALPHA
+		stars.modulate.a = UiTokens.D_AWAY_ALPHA
+	for part: Control in row.get_children():
+		part.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	HRUiShared.set_mouse_ignore(row)
+	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	row.offset_left = UiTokens.SPACE_M
+	row.offset_right = -UiTokens.SPACE_M
+	item.add_child(row)
+	pop.body().add_child(item)
+	# A button does not measure its children; the row is measured once it reads the menu's theme.
+	item.custom_minimum_size = Vector2(row.get_combined_minimum_size().x + 2 * UiTokens.SPACE_M, UiTokens.D_H_ROW_LG)
+	if not item.disabled:
+		item.pressed.connect(func() -> void:
+			pop.close()
+			_assign(c.id, replaced))
+
+
+## The pick takes the category, and the person it replaces leaves it.
+func _assign(person: String, replaced: String) -> void:
+	if MarketplaceSystem.assign(person, _selected) and replaced != "":
+		MarketplaceSystem.unassign(replaced)
 
 
 # --- Eylemler -------------------------------------------------------------------------------------------
