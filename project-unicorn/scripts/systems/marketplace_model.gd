@@ -535,6 +535,11 @@ static func source_new_users(state: Dictionary, source: String) -> float:
 	return 0.0 if weeks.is_empty() else weeks[0]
 
 
+## Kategorinin geçen haftaki satış hacmi: teslim edilen sipariş × sepet; iade düşülmez.
+static func gmv(state: Dictionary, cat: String) -> float:
+	return state.cats[cat].week.get("delivered", 0.0) * _cats[cat].basket
+
+
 # --- Yazan işlevler --------------------------------------------------------------------------
 
 static func open_category(state: Dictionary, world: Dictionary, cat: String) -> bool:

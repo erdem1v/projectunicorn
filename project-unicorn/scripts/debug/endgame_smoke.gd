@@ -672,6 +672,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"marketplace_source_new_users":      fail = _case_marketplace_source_new_users()
 		"marketplace_save_fills_missing":    fail = _case_marketplace_save_fills_missing()
 		"marketplace_pitch_skips_aggregates": fail = _case_marketplace_pitch_skips_aggregates()
+		"marketplace_week_gmv":              fail = _case_marketplace_week_gmv()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -30966,7 +30967,8 @@ static func _case_marketplace_seams_write_through() -> String:
 
 ## `world()` kademeyi, açık hatayı, yayını, Üyelik kademesini ve atananın Satış yıldızını sahiplerinden okur; çekirdeğin son
 ## kademesi oyunun son kademesidir; her modülün hattı
-## türün hat verisinde vardır; boş durumda okumak (`world`, `policy_value`, `channel_read`, `source_revenue`, `source_new_users`)
+## türün hat verisinde vardır; boş durumda okumak (`world`, `policy_value`, `channel_read`, `source_revenue`, `source_new_users`,
+## `week_gmv`)
 ## durumu doğurmaz.
 ##
 ## FALSİFİKASYON: `MODULE_LINES`ta `checkout`un hattını `line_marketplace_orders` yap → açık hata satırı FAIL; `mobile`ın hattından
@@ -30979,6 +30981,7 @@ static func _case_marketplace_world_reads_owners() -> String:
 	MarketplaceSystem.channel_read("fashion")
 	MarketplaceSystem.source_revenue("organic")
 	MarketplaceSystem.source_new_users("organic")
+	MarketplaceSystem.week_gmv()
 	MarketplaceSystem.world()
 	if not GameState.marketplace.is_empty():
 		return "a read filled GameState.marketplace: %s" % str(GameState.marketplace.keys())
@@ -31538,4 +31541,32 @@ static func _case_marketplace_pitch_skips_aggregates() -> String:
 	asked = VCPitchSystem._sorgu_metrics().key
 	if asked != "concentration":
 		return "one ERP account carries %d of %d MRR and the metrics fund asks '%s', want the concentration question" % [big, GameState.mrr, asked]
+	return ""
+
+
+## Geçen kapanışın satış hacmi teslim edilen siparişin sepet tutarıdır: kapanıştan önce 0; açık iki kategoride toplam iki kategorinin
+## toplamıdır ve her kategoride hacim × komisyon × (1 − iade payı) o kapanışın yazdığı net komisyondur.
+##
+## FALSİFİKASYON: `MarketplaceModel.gmv`de `delivered` yerine `order` oku → komisyon satırı FAIL; `MarketplaceSystem.week_gmv`de
+## döngüyü ilk açık kategoride kes → toplam satırı FAIL.
+static func _case_marketplace_week_gmv() -> String:
+	_seed_marketplace_world()
+	MarketplaceSystem.open_category("electronics")
+	GameState.marketplace.cats.electronics.stores = 40.0
+	if MarketplaceSystem.week_gmv() != 0.0:
+		return "before the first close the volume reads %s" % MarketplaceSystem.week_gmv()
+	MarketplaceSystem.daily_tick()
+	var state: Dictionary = GameState.marketplace
+	var total := 0.0
+	for cat: String in ["fashion", "electronics"]:
+		var wk: Dictionary = state.cats[cat].week
+		if wk.delivered <= 0.0:
+			return "fixture: %s delivered no order in the close" % cat
+		var volume: float = MarketplaceModel.gmv(state, cat)
+		var booked: float = volume * state.cats[cat].commission / 100.0 * (1.0 - wk.returns / wk.delivered)
+		if not is_equal_approx(booked, wk.net):
+			return "%s: a volume of %.2f books %.2f of commission, the close wrote %.2f" % [cat, volume, booked, wk.net]
+		total += volume
+	if not is_equal_approx(MarketplaceSystem.week_gmv(), total):
+		return "the week's volume reads %.2f, the two categories sum to %.2f" % [MarketplaceSystem.week_gmv(), total]
 	return ""

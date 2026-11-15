@@ -203,7 +203,8 @@ kapanışında dolar; okumak onu doldurmaz ve pazaryeri koşusu olmayan oyunda (
 | Spor ve Outdoor | $45 | 0,15 | %20 | %12 | 25 | %9 | 120 | 0,40 | 22.000 |
 - Sepet, sıklık, kâr payı ve gereken mağaza ilk üç satırda kâğıt simülasyonunun ayar adayıdır
   (`tur4_ekranlar_2026-11-13/pazaryeri/sim/pazaryeri_sim.py` `CATS`); son üç satır ve son üç sütun varsayımdır. "Reklam havuzu" Pazarlama'nın reklam doyumunu hesapladığı sayıdır (o
-  kategorideki haftalık arama; Pazarlama okur). Adlar
+  kategorideki haftalık arama; Pazarlama okur). Ziyaretle aynı ölçekte değildir; payı Pazarlama hesaplar (kuralı
+  PRD_PAZARLAMA M5'tedir). Adlar
   pazaryerlerinin 2012 ve bugünkü menülerinden (`arastirma/d_kategori_iade.md`). İade sıralaması kaynaklı, sayılar düşük
   güvenlidir (Moda için Türkiye 2024 verisi yüzde 19,84; Anne ve Bebek için kaynak bulunamadı). "Büyük sepet payı", kargo
   kuralındaki eşiğin ($50) üstünde kalan siparişin payıdır.
@@ -440,7 +441,8 @@ haftasından itibaren tam); yeni açılan kanalın satırı bu yüzden küçük 
 (Pazarlama ile uzlaşma, 14 Kasım). `source_new_users(kaynak)` kaynağın geçen kapanışta getirdiği yeni kullanıcıdır (hiç
 ziyaret getirmemiş kaynakta 0); Pazarlama'nın kanal satırındaki yeni kullanıcı sayısı budur. Kaynak kimliğini Pazarlama verir:
 `tür:kategori` (ör. `search_ads:fashion`), satır başına tek kaynak; anahtar haftadan haftaya sabittir, çekirdek onu ayırt
-etmeden saklar.
+etmeden saklar. `week_gmv()` geçen kapanışın satış hacmidir (açık kategorilerin teslim edilen siparişi × sepeti; iade
+düşülmez); Pazarlama reklam harcamasının satışlara oranını bununla yazar.
 
 ### 3.13 Kod öncesi: saf işlevler ve probe
 Arayüzden önce §3'ün formülleri saf işlev olarak yazılır ve başsız bir probe ile koşulur (`-s res://scripts/debug/marketplace_probe.gd -- --marketplace-probe=weeks=<n>`;

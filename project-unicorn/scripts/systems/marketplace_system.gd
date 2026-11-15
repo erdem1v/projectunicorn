@@ -141,6 +141,15 @@ static func source_new_users(source: String) -> float:
 	return MarketplaceModel.source_new_users(read_state(), source)
 
 
+## Geçen kapanışın satış hacmi: açık kategorilerin toplamı.
+static func week_gmv() -> float:
+	var state := read_state()
+	var total := 0.0
+	for cat in MarketplaceModel.open_ids(state):
+		total += MarketplaceModel.gmv(state, cat)
+	return total
+
+
 ## Açık kategorilerin mağaza toplamı.
 static func stores() -> float:
 	var state := read_state()
