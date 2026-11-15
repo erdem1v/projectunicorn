@@ -36,12 +36,9 @@ const STAR_MIX_TRACTION := [0.35, 0.50, 0.15]    # [K]
 const STAR_MIN := 1
 const STAR_MAX := 3                      # demo ceiling (§2, MÜHÜRLÜ)
 
-# Quality shifter (§3): "üst bandın payı ürün okumasıyla açılır; zayıf ürünle büyük balık
-# kapıyı çalmaz." Product strength (the product's fit to a 3★ company as a share of 70) scales the top
-# band's share and the mass it loses falls to the 1★ band, so the mix always sums to 1 without a second table.
-const QUALITY_SHIFT_FLOOR := 0.25        # [K] the weakest product still keeps this much of the top band
-const QUALITY_STRENGTH_LOW := 0.6        # [WORKING] onay bekliyor: strength that reads as weak
-const QUALITY_STRENGTH_HIGH := 1.0       # [WORKING] onay bekliyor: strength at which the top band opens fully (a product that meets a 3★ company)
+# Yıldız bandı (PRD_ERP §4.3): s★ şirketler ürünün o boya uyumu (`ProductQuality.market_fit(s)`) beklentinin BAND_MATCH katına
+# varınca gelir; kapalı bandın payı açık en yüksek banda düşer, karışımın toplamı 1 kalır.
+const BAND_MATCH := 1.0                  # [WORKING] onay bekliyor: 1 = o boydaki şirketin beklediğini karşılar
 
 
 # ============================ İtibarın girdileri (PRD_ERP §4.3) ===============

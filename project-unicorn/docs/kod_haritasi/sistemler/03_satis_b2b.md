@@ -67,6 +67,9 @@ Sahipler: autoload `CustomerRegistry`, `ProspectRegistry`, `PromiseRegistry`; mo
 - `SalesSystem.reflect_mrr()` `scripts/systems/sales_system.gd:166`: toplam MRR'ı `GameState.set_mrr`'a yansıtan tek yer · MRR değiştiren her çağıran
 - `SalesFaucetSystem.lead_rate_per_week()` `scripts/systems/sales_faucet_system.gd`: haftalık aday = yayında 1 +
   İtibar'ın payı (`REP_FULL`'da `FLOW_REP_MAX`) + Satış'a atanmış kişi başına 2 · `_tick_inflow`, Satış başlığı
+- `SalesFaucetSystem.star_mix_now()`, `top_band()`: yıldız bandı, s★ `ProductQuality.market_fit(s)` beklentiyi karşılayınca
+  açılır, kapalı bandın payı açık en yüksek banda düşer · `_tick_inflow`, `MarketingSystem._star_mix`
+- `SalesFaucetSystem.sector_order()`: adayın sektörü ürünün o boydaki uyumuyla (`ProductQuality.sector_fit`) ağırlıklı · `spawn`
 - `SalesFaucetSystem.daily_tick()` `scripts/systems/sales_faucet_system.gd:37`: kilit süpürmesi, balina koşulu, lead girişi · `B2BSalesSystem.daily_tick` `b2b_sales_system.gd:43`
 - `SalesFaucetSystem.spawn()` `scripts/systems/sales_faucet_system.gd:191`: lead'in tek yaratım yolu · `_tick_inflow` ve `spawn_prospect` `sales_faucet_system.gd:251` (olay efekti `add_prospect`, `effects.gd:295`); isteğe bağlı `sector` Pazarlama'nın Hedef sektör satırından (`MarketingSystem._spawn_leads`), listede yoksa aday doğmaz; imzalanan hesap adayın kaynağını `Customer.lead_source`'ta tutar
 - `SalesFaucetSystem.lock_return()` `scripts/systems/sales_faucet_system.gd:102`: şirketi havuzdan bir süre dışlar · `expire_leads`, `SalesFinalizer._leave` `sales_finalizer.gd:52`
@@ -196,7 +199,7 @@ Hepsi `tools/smoke_run.sh <vaka>` ile (komutlar `project-unicorn/`'dan, `GODOT` 
 - Söz: `b2b_promise_kept_on_ship`, `b2b_promise_broken_on_deadline`, `promise_relock_after_break`, `promise_extend_once`
 - Sunucu maddesi ve olay fiilleri: `enterprise_clause_timeline`, `b2b_exit_notice` (maddeden bağımsız bildirim), `b2b_timed_discount`, `sales_offer_signing` (aday teklifi, `drop_prospect`, `rep_lead` / `lead_rep`),
   ↳ `sales_promise_late_request_card` (`musteri.promise_late` konunun kartını kademesinden bulur)
-- Şelale: `sales_lead_expiry_and_return_lock`, `sales_faucet_guard_b2c`, `sales_star_mix_reads_fit`, `sales_sectors_all_produce_leads`
+- Şelale: `sales_lead_expiry_and_return_lock`, `sales_faucet_guard_b2c`, `sales_star_mix_reads_fit`, `sales_sector_pull_reads_fit`, `sales_sectors_all_produce_leads`
 - Boru hattı: `b2b_prospect_dedup_excludes_signed`, `prospect_id_unique_after_removal`, `company_catalog_pool_integrity`
 - Görüşme: `sales_meeting_reads_fit`, `sales_meeting_replays_identically`, `sales_check_replays_after_load`, `sales_loss_reason_from_asked`, `sales_weak_area_loss`
 - Görüşme, devamı: `sales_meeting_time_skip_founder_share`, `b2b_pitch_meeting_signs`

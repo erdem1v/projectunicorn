@@ -169,6 +169,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sales_rep_close_die": fail = _case_sales_rep_close_die()
 		"sales_rep_loss_mail": fail = _case_sales_rep_loss_mail()
 		"sales_star_mix_reads_fit": fail = _case_sales_star_mix_reads_fit()
+		"sales_sector_pull_reads_fit": fail = _case_sales_sector_pull_reads_fit()
 		"sales_sectors_all_produce_leads": fail = _case_sales_sectors_all_produce_leads()
 		"account_uses_area_rule": fail = _case_account_uses_area_rule()
 		"requests_one_open_per_account": fail = _case_requests_one_open_per_account()
@@ -3260,7 +3261,6 @@ static func _case_marketing_target_sector_leads() -> String:
 	var leads: Array = ProspectRegistry.get_all().filter(func(p: Prospect) -> bool: return p.source == "mkt_target")
 	if leads.size() < 6:
 		return "fixture: three weeks of $5.000 brought %d targeted leads, want six or more" % leads.size()
-	# The shut band claim acts once PRD_ERP package 6 A3 lands: today the quality shifter keeps every band open.
 	var open: Array = SalesFaucetSystem.star_mix_now()
 	for p: Prospect in leads:
 		if p.industry != "food" or p.star < SalesConstants.STAR_MIN + 1:
@@ -10360,11 +10360,12 @@ static func _case_sales_rep_loss_mail() -> String:
 	return ""
 
 
-## Yıldız karışımının gücü ürünün 3★ şirketlere uyumudur: `market_fit(3)` 13 sektörün 3★ aday U'sunun ortalaması (rakip penceresi dahil; B2C'de kitle
-## bağlamındaki U), güç onun 70'e oranı. 3★ şirketin beklediğini karşılayan ürün üst bandı tam açar, ürün boşken üst bandın payı `QUALITY_SHIFT_FLOOR`'a
-## iner, arası doğrusaldır; kaybedilen pay 1★'a gider ve toplam 1 kalır.
-## FALSİFİKASYON: `product_strength`te `STAR_MAX` yerine 2 yaz → "strength is not market fit" iddiası FAIL; `QUALITY_STRENGTH_HIGH`ı 1,6'ya çıkar →
-## "wide open" iddiası FAIL.
+## Yıldız bandı ürünün o boya uyumunu okur (PRD_ERP §4.3): `market_fit(s)` alıcı sektörlerinin s★ aday U'sunun ortalaması
+## (rakip penceresi dahil; B2C'de kitle bağlamındaki U); s★ bandı, altındaki açıkken uyum beklentiyi (`FIT_SCALE` × `BAND_MATCH`)
+## karşılayınca açılır ve kapalı bantların payı açık en yüksek banda düşer, toplam 1 kalır. Bütün modülleri K2 ürün 3★'a kadar
+## açar, Çekirdek'i K2 ve gerisi K1 ürün 2★'a kadar, boş ürün yalnız 1★ alır.
+## FALSİFİKASYON: `top_band`ta `FIT_SCALE` yerine 0 yaz → ara ürün iddiası FAIL; `star_mix_now`da kapalı bandın payını 1★'a
+## düşür → ara ürünün karışım iddiası FAIL.
 static func _case_sales_star_mix_reads_fit() -> String:
 	GameState.set_phase(3)
 	_seed_b2b(1000)
@@ -10372,54 +10373,70 @@ static func _case_sales_star_mix_reads_fit() -> String:
 	if B2BConstants.SECTORS.size() != buyers or ProductQuality.TABLE.size() != buyers:
 		return "fixture: the market has %d sectors and the table %d rows, want ERP's %d buyer sectors" % [B2BConstants.SECTORS.size(), ProductQuality.TABLE.size(), buyers]
 	var table: Array = SalesConstants.star_mix(GameState.phase)
-	var floor_share: float = SalesConstants.QUALITY_SHIFT_FLOOR
-	# What the faucet reads now, and the two things it must equal.
-	var read := func() -> Dictionary:
+	var read := func() -> String:
 		var sum: int = 0
 		for sector in B2BConstants.SECTORS:
 			sum += ProductQuality.fit({"market": "b2b", "sector": sector, "star": 3, "rivals": true}).value
+		if ProductQuality.market_fit(3) != roundi(float(sum) / B2BConstants.SECTORS.size()):
+			return "market fit %d is not the mean of the buyer sectors' 3 star fits" % ProductQuality.market_fit(3)
+		var top: int = SalesConstants.STAR_MIN
+		while top < SalesConstants.STAR_MAX and ProductQuality.market_fit(top + 1) >= ProductQuality.FIT_SCALE * SalesConstants.BAND_MATCH:
+			top += 1
+		var want: Array = table.duplicate()
+		for i in range(top, want.size()):
+			want[top - 1] = float(want[top - 1]) + float(want[i])
+			want[i] = 0.0
 		var mix: Array = SalesFaucetSystem.star_mix_now()
-		return {"fit": ProductQuality.market_fit(3), "mean": roundi(float(sum) / B2BConstants.SECTORS.size()),
-			"strength": SalesFaucetSystem.product_strength(), "mix": mix, "kept": float(mix[2]) / float(table[2])}
-	var wrong := func(r: Dictionary) -> String:
-		if r.fit != r.mean:
-			return "market fit %d is not the mean of the buyer sectors' 3 star fits %d" % [r.fit, r.mean]
-		if not is_equal_approx(r.strength, r.fit / 70.0):
-			return "strength %.3f is not market fit %d over 70" % [r.strength, r.fit]
-		if not is_equal_approx(float(r.mix[0]) + float(r.mix[1]) + float(r.mix[2]), 1.0) or not is_equal_approx(float(r.mix[1]), float(table[1])):
-			return "the mix %s does not keep the 2 star share and sum to one" % [r.mix]
-		return ""
-	# The shared ERP at K2 meets what a 3 star company expects: the top band is wide open.
-	var mature: Dictionary = read.call()
-	if wrong.call(mature) != "":
-		return wrong.call(mature)
-	if (mature.strength < SalesConstants.QUALITY_STRENGTH_HIGH or not is_equal_approx(mature.kept, 1.0)
-			or not is_equal_approx(float(mature.mix[0]), float(table[0]))):
-		return "wide open: a product meeting the 3 star table reads strength %.2f and keeps %.2f of the top band (mix %s), want all of it" % [
-			mature.strength, mature.kept, mature.mix]
-	# The core at K2 and the rest at K1: strength between the two ends, the top band partly open, what it loses falling to 1 star.
+		if SalesFaucetSystem.top_band() != top or mix != want:
+			return "fits %d/%d at 2 and 3 stars open the bands to %d★ with mix %s, want %d★ and %s" % [ProductQuality.market_fit(2),
+				ProductQuality.market_fit(3), SalesFaucetSystem.top_band(), mix, top, want]
+		return "%d" % top
+	var mature: String = read.call()
+	if mature != "3":
+		return mature if mature.length() > 1 else "a product with every module at K2 opens the bands to %s★, want 3★" % mature
 	_set_area_tiers({"integrations": 1, "trust": 1, "onboarding": 1})
-	var mid: Dictionary = read.call()
-	if wrong.call(mid) != "":
-		return wrong.call(mid)
-	if mid.strength <= SalesConstants.QUALITY_STRENGTH_LOW or mid.strength >= SalesConstants.QUALITY_STRENGTH_HIGH:
-		return "fixture: strength %.2f is not between %.2f and %.2f" % [mid.strength, SalesConstants.QUALITY_STRENGTH_LOW, SalesConstants.QUALITY_STRENGTH_HIGH]
-	var t: float = (mid.strength - SalesConstants.QUALITY_STRENGTH_LOW) / (SalesConstants.QUALITY_STRENGTH_HIGH - SalesConstants.QUALITY_STRENGTH_LOW)
-	if (not is_equal_approx(mid.kept, lerpf(floor_share, 1.0, t))
-			or not is_equal_approx(float(mid.mix[0]), float(table[0]) + float(table[2]) * (1.0 - mid.kept))):
-		return "at strength %.2f the top band keeps %.3f and the mix reads %s; want the line from the floor %.2f to all, the rest falling to 1 star" % [
-			mid.strength, mid.kept, mid.mix, floor_share]
-	# An empty product keeps the floor.
+	var mid: String = read.call()
+	if mid != "2":
+		return mid if mid.length() > 1 else "a product with the core at K2 and the rest at K1 opens the bands to %s★, want 2★" % mid
 	_set_area_tiers({"core": 0, "integrations": 0, "trust": 0, "onboarding": 0})
-	var empty: Dictionary = read.call()
-	if wrong.call(empty) != "":
-		return wrong.call(empty)
-	if not is_equal_approx(empty.kept, floor_share):
-		return "an empty product keeps %.3f of the top band, want the floor %.2f" % [empty.kept, floor_share]
-	# On a consumer product the market fit is the audience's.
+	var empty: String = read.call()
+	if empty != "1":
+		return empty if empty.length() > 1 else "an empty product opens the bands to %s★, want 1★" % empty
 	GameState.set_flag("mvp_market_type", "b2c")
 	if ProductQuality.market_fit(3) != ProductQuality.fit(SalesSystem.B2C_FIT_CTX).value:
 		return "a consumer product's market fit %d is not its audience's fit %d" % [ProductQuality.market_fit(3), ProductQuality.fit(SalesSystem.B2C_FIT_CTX).value]
+	return ""
+
+
+## Adayın sektörü ürünün o boydaki uyumuyla ağırlıklı çekilir (PRD_ERP §4.3): çekilişin bütün değerleri üzerinden her sektör
+## `sector_fit`'i (en az 1) kadar kez başa geçer; Entegrasyonlar'ı derin, Kurulum'u boş üründe Entegrasyonlar'ı vurgulayan
+## lojistik Kurulum'u vurgulayan inşaattan sık gelir; `spawn` adayın sektörünü bu sıranın başından alır.
+## FALSİFİKASYON: `sector_order`da ağırlığı 1 yap → lojistik iddiası FAIL; `spawn`da `sector_order` yerine alıcı listesini kullan →
+## spawn iddiası FAIL.
+static func _case_sales_sector_pull_reads_fit() -> String:
+	GameState.set_phase(3)
+	_seed_b2b(1000)
+	_set_area_tiers({"integrations": 3, "trust": 2, "onboarding": 0})
+	var sectors: Array = ProductLines.buyer_sectors("erp")
+	var weights: Dictionary = {}
+	for s in sectors:
+		weights[s] = maxi(1, ProductQuality.sector_fit(s, 2))
+	if weights.logistics <= weights.construction:
+		return "fixture: logistics fits %d and construction %d at 2 stars, want logistics ahead" % [weights.logistics, weights.construction]
+	var total: int = weights.values().reduce(func(sum: int, w: int) -> int: return sum + w, 0)
+	var firsts: Dictionary = {}
+	for n in 4000:
+		var first: String = SalesFaucetSystem.sector_order(sectors, 2, n)[0]
+		firsts[first] = int(firsts.get(first, 0)) + 1
+	for s in sectors:
+		var share: float = float(firsts.get(s, 0)) / 4000.0
+		if absf(share - float(weights[s]) / total) > 0.01:
+			return "%s heads the draw %.3f of the time, want its weight's share %.3f (weights %s)" % [s, share, float(weights[s]) / total, weights]
+	for n in 5:
+		var head: String = SalesFaucetSystem.sector_order(sectors, 2, SalesFaucetSystem._day_seed(GameState.run_prospects_spawned))[0]
+		var lead: Prospect = SalesFaucetSystem.spawn(2, "faucet")
+		if lead == null or lead.industry != head:
+			return "spawn %d drew %s, want the head of the pull order %s" % [n, "nothing" if lead == null else lead.industry, head]
 	return ""
 
 
@@ -30757,7 +30774,7 @@ static func _case_support_neglect_scales_with_k() -> String:
 ## Satış ve yatırımcı hatayı okumaz: 0 ve 50 açık hatalı iki dünyada dönüşüm, ürün değeri, toplantı ihtimali
 ## (kalıcı katkılar), yıldız karışımı, satış sorusunun gerçekleri, kayıp sebebi ve yeniden sunum kapısı, VC'nin tohum ve
 ## Series A sorguları, term sheet uyumu birebir aynıdır. İki ürün iki kayıp sebebi ve iki kapı durumu verir: Güven'i boş ürünün
-## 2★ adayı Güven & Ölçek'i zayıf bulur ve kapı kapalıdır, bütün hatları K2 üründe fiyat ve kapı açıktır.
+## 2★ adayı Güven & Ölçek'i zayıf bulur, kapı ve 3★ bandı kapalıdır; bütün hatları K2 üründe fiyat, kapı ve bant açıktır.
 ## FALSİFİKASYON: `conversion_rate`e hata çarpanı ekle → "conversion" FAIL; `ProductQuality.level`dan `0.8 × açık hata`
 ## düş → "value" FAIL; `SalesProbes.facts_for`a hata gerçeği ekle → "facts" FAIL; `_sorgu_product`a hata
 ## dalı ekle → "series_a_query" FAIL; `_domain_fit`e Meridian hata terimi ekle → "term_sheet_fit" FAIL;
@@ -30807,10 +30824,9 @@ static func _case_bugs_leave_sales_and_vc_alone() -> String:
 		var want_asked: Array = ["how_big", "weak_dim"] if lacking else ["clean", "clean"]
 		if asked != want_asked:
 			return "fixture: the %s product's seed and Series A questions read %s, want %s" % [name, asked, want_asked]
-		var strength: float = SalesFaucetSystem.product_strength()
-		var moving: bool = strength > SalesConstants.QUALITY_STRENGTH_LOW and strength < SalesConstants.QUALITY_STRENGTH_HIGH
-		if moving != lacking:
-			return "fixture: the %s product reads strength %.2f against the star mix's moving band" % [name, strength]
+		if (SalesFaucetSystem.top_band() < SalesConstants.STAR_MAX) != lacking:
+			return "fixture: the %s product opens the bands to %d★, want the 3★ band shut only when Trust is empty" % [name,
+				SalesFaucetSystem.top_band()]
 		var weak: bool = clean.loss_reason == SalesConstants.LOSS_WEAK_AREA
 		if weak != lacking or clean.repitch_gate == weak:
 			return "fixture: the %s product reads loss reason '%s' and re-pitch gate %s, want a weak area and a shut gate when Trust is empty, neither at K2" % [

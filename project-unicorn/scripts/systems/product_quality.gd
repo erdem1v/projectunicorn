@@ -191,14 +191,19 @@ static func prospect_fit(p: Prospect) -> Dictionary:
 
 
 ## Ürünün bir yıldızdaki müşterilere uyumu (0-100): B2B'de tablodaki alıcı sektörlerinin o yıldızdaki aday U'sunun ortalaması, B2C'de kitle
-## bağlamındaki U (yıldız okunmaz). Yıldız karışımı 3★'ı okur.
+## bağlamındaki U (yıldız okunmaz). Akışın yıldız bandı okur (`SalesFaucetSystem.top_band`).
 static func market_fit(star: int) -> int:
 	if ProductState.market_type() == "b2c":
 		return fit(SalesSystem.B2C_FIT_CTX).value
 	var sum: int = 0
 	for sector in TABLE:
-		sum += fit(_candidate_ctx(sector, star)).value
+		sum += sector_fit(sector, star)
 	return roundi(float(sum) / TABLE.size())
+
+
+## Bir sektörün bir yıldızdaki adayına ürünün uyumu (0-100, rakip penceresi dahil); akışın sektör çekimi okur.
+static func sector_fit(sector: String, star: int) -> int:
+	return fit(_candidate_ctx(sector, star)).value
 
 
 ## Satışçının adayı kapanış anında imzalama ihtimali (0-1): adayın bugünkü U'sundan `CLOSE_CURVE` ile. Baktığı hiçbir alan

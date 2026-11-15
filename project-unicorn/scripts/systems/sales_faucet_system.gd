@@ -137,24 +137,29 @@ static func _tick_inflow() -> void:
 	GameState.set_flag("sales_faucet_progress", minf(progress, 1.0))
 
 
-## §3 — the star mix, after the quality shifter has moved the top band's share.
+## Yıldız karışımı: evrenin tablosu, açık en yüksek bandın (`top_band`) üstündeki bantların payı ona düşer; kapalı bandın payı
+## 0'dır, Pazarlamanın kanal karışımı buna dayanır (`MarketingSystem`).
 static func star_mix_now() -> Array:
 	var mix: Array = SalesConstants.star_mix(GameState.phase)
-	var strength: float = product_strength()
-	# "zayıf ürünle büyük balık kapıyı çalmaz": the top band keeps only a fraction of its
-	# share, and what it loses falls to 1★ so the mix still sums to 1 without a second table.
-	var t: float = clampf((strength - SalesConstants.QUALITY_STRENGTH_LOW)
-		/ maxf(SalesConstants.QUALITY_STRENGTH_HIGH - SalesConstants.QUALITY_STRENGTH_LOW, 0.001),
-		0.0, 1.0)
-	var keep: float = lerpf(SalesConstants.QUALITY_SHIFT_FLOOR, 1.0, t)
-	var top: float = float(mix[2])
-	mix[2] = top * keep
-	mix[0] = float(mix[0]) + top * (1.0 - keep)
+	var top: int = top_band() - SalesConstants.STAR_MIN
+	for i in range(top + 1, mix.size()):
+		mix[top] = float(mix[top]) + float(mix[i])
+		mix[i] = 0.0
 	return mix
 
 
-## How far the shipped product reaches the top band: its fit to a 3★ company (ProductQuality.market_fit) as a share of the
-## fit of a product that meets what such a company expects. 1.0 means "meets it"; the quality shifter is the only consumer.
+## Akışın açık en yüksek yıldızı: 1★ hep açık; s★, altındaki bant açıkken ürünün o boya uyumu (`market_fit(s)`) beklentinin
+## (`FIT_SCALE`) `BAND_MATCH` katına varınca açılır (PRD_ERP §4.3). Bir modülün K2'si bandı tek başına açmaz: uyum o boydaki
+## şirketin bütün beklentisini okur.
+static func top_band() -> int:
+	var top: int = SalesConstants.STAR_MIN
+	while top < SalesConstants.STAR_MAX and ProductQuality.market_fit(top + 1) >= ProductQuality.FIT_SCALE * SalesConstants.BAND_MATCH:
+		top += 1
+	return top
+
+
+## Ürünün 3★ şirkete uyumu (ProductQuality.market_fit), böyle bir şirketin beklediğini karşılayan ürünün uyumuna oranı; 1 "karşılar".
+## Pazarlamanın kanal formülü okur (PRD_PAZARLAMA B0).
 static func product_strength() -> float:
 	return float(ProductQuality.market_fit(SalesConstants.STAR_MAX)) / ProductQuality.FIT_SCALE
 
@@ -194,16 +199,16 @@ static func spawn(star: int, source: String, sector := "") -> Prospect:
 	var archetype: String = String(pool[SalesConstants.mix_seed(seed_base, SALT_ARCHETYPE) % pool.size()])
 
 	var excluded: Dictionary = _excluded_names()
-	# The product's buyer sectors; Pazarlama's Hedef sektör asks for one of them (MarketingSystem._spawn_leads).
+	# The product's buyer sectors in pull order; Pazarlama's Hedef sektör asks for one of them (MarketingSystem._spawn_leads).
 	var sectors: Array = ProductLines.buyer_sectors(sub_id)
 	if sector != "":
 		sectors = [sector] if sectors.has(sector) else []
+	else:
+		sectors = sector_order(sectors, s, seed_base)
 	var chosen_sector: String = ""
 	var company: String = ""
-	# A second round of the mixer keeps the sector's draw independent of the archetype's: both start from the same seed.
-	var sector_draw: int = SalesConstants.mix_seed(SalesConstants.mix_seed(seed_base, SALT_SECTOR), SALT_SECTOR)
 	for offset in sectors.size():
-		var s_id: String = String(sectors[(sector_draw + offset) % sectors.size()])
+		var s_id: String = String(sectors[offset])
 		var name: String = SalesNamePool.take(s_id, seed_base + offset, excluded)
 		if name != "":
 			chosen_sector = s_id
@@ -237,6 +242,23 @@ static func spawn(star: int, source: String, sector := "") -> Prospect:
 	ProspectRegistry.add(p)
 	EventBus.prospect_arrived.emit(p.id)
 	return p
+
+
+## Alıcı sektörleri çekim sırasıyla (PRD_ERP §4.3): ilki ürünün o boydaki uyumuyla (`ProductQuality.sector_fit`, en az 1)
+## ağırlıklı çekilir, güçlü olduğu alanları vurgulayan sektör öndedir; kalanı listedeki sırasıyla onun ardından gelir, adı
+## tükenmiş sektörün yerine sıradaki geçer. Çekiliş `seed_base`'den karıştırıcının ikinci turudur, alıcı tipinin çekilişinden
+## bağımsızdır.
+static func sector_order(sectors: Array, star: int, seed_base: int) -> Array:
+	if sectors.is_empty():
+		return []
+	var weights: Array = sectors.map(func(s: String) -> int: return maxi(1, ProductQuality.sector_fit(s, star)))
+	var at: int = SalesConstants.mix_seed(SalesConstants.mix_seed(seed_base, SALT_SECTOR), SALT_SECTOR) % int(
+		weights.reduce(func(sum: int, w: int) -> int: return sum + w, 0))
+	var first: int = 0
+	while at >= weights[first]:
+		at -= weights[first]
+		first += 1
+	return sectors.slice(first) + sectors.slice(0, first)
 
 
 ## The event channel's door into the pipeline. Satış §3 routes the whale role through "kahraman

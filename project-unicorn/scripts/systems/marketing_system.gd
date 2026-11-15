@@ -131,7 +131,6 @@ static func leads_per_week(r: Dictionary) -> float:
 
 ## The row's star mix: Arama reklamı brings mostly small companies, Hedef sektör one star up from the market's mix. Neither
 ## opens a band the market keeps shut: a shut band's share falls to the highest open band below it (the product's rule).
-## Today no band is ever shut (the quality shifter keeps a floor); the fold acts once PRD_ERP package 6 A3 reads a shut band as 0.
 static func _star_mix(kind: String) -> Array:
 	var m: Array = SalesFaucetSystem.star_mix_now()
 	var mix: Array = m.duplicate()
