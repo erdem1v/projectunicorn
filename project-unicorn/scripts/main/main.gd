@@ -1922,7 +1922,7 @@ func _shot_pane(card_id: String, ctx: Dictionary, names := {}) -> void:
 
 
 ## --sales-shot=<pipeline|desk|picker|inbox|edge|edge_end|stretched|empty|b2b_pre|untyped|morning|evening|
-## norep|discounted|frank|risk_stability|deals|returning|clause|offer|sources|mp_pre|mp_launch|mp_growth|mp_growth_tip|mp_cat|mp_policy|mp_policy_locked|mp_assign>. `desk` puts a rep mid-processing on the desk;
+## norep|discounted|frank|risk_stability|deals|returning|clause|offer|sources|mp_pre|mp_launch|mp_growth|mp_growth_tip|mp_cat|mp_policy|mp_policy_locked|mp_assign|mp_assign_first>. `desk` puts a rep mid-processing on the desk;
 ## `picker` opens the steward
 ## picker on the first account, `inbox` presses its İlgilen (Olaylar opens on the account's mail); `edge` draws the
 ## rarer lines (a reserved lead, one given to a rep, a whale's condition, tables above the founder's league, the
@@ -2118,7 +2118,8 @@ const _MP_MOVES_60 := [[20, "hire", HRConstants.ROLE_SALES_REP], [30, "commissio
 ## the plus key pressed once on the commission stepper, `choose` the [rule, option] pressed on the Politikalar page, `apply` Uygula
 ## pressed after it; `no_category` leaves every category closed and shoots the office's notice stack, then the window its
 ## reminder opens; `seat` assigns the last of the crew to Moda after the last close (the player's move of that week), `picker`
-## presses the free slot of Moda's store acquisition instead and leaves the picker open.
+## presses the free slot of Moda's store acquisition instead and leaves the picker open; `unassigned` seats no one on Moda
+## after the launch (the player's first pick still ahead: the founder's row in the picker carries what the pick costs).
 const _MP_WORLDS := {
 	"mp_pre": {"day": 3, "pick": "electronics"},
 	"mp_launch": {"closes": 4},
@@ -2135,6 +2136,7 @@ const _MP_WORLDS := {
 		"later": _MP_MOVES_60},
 	"mp_assign": {"until": 60, "tab": "MP_TAB_CATEGORIES", "raise": true, "crew": [HRConstants.ROLE_SALES_REP], "picker": true,
 		"later": _MP_MOVES_60},
+	"mp_assign_first": {"closes": 2, "tab": "MP_TAB_CATEGORIES", "unassigned": true, "picker": true},
 	"mp_policy": {"until": 60, "tab": "MP_TAB_POLICIES", "choose": ["return_window", "d30"], "later": _MP_MOVES_60},
 	"mp_policy_locked": {"until": 60, "tab": "MP_TAB_POLICIES", "choose": ["return_window", "d30"], "apply": true,
 		"later": _MP_MOVES_60},
@@ -2281,7 +2283,7 @@ func _seed_marketplace_world(world: Dictionary) -> bool:
 		return false
 	_play_week()
 	SprintSystem.publish()
-	if not world.has("no_category"):
+	if not world.has("no_category") and not world.has("unassigned"):
 		MarketplaceSystem.assign(CharacterRegistry.get_founder().id, "fashion")
 	var closes: int = world.closes if world.has("closes") else world.until - GameState.day
 	var later: Array = world.get("later", []).duplicate()

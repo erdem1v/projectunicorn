@@ -195,12 +195,11 @@ func _paint_closed(pane: VBoxContainer) -> void:
 
 ## An open category: the two measured figures, the commission with the band the stores stand in and who brings the stores.
 func _paint_open(pane: VBoxContainer) -> void:
-	var delivered: float = _state.cats[_selected].week.get("delivered", 0.0)
 	var stats := SprintUiShared.box(UiTokens.SPACE_XL)
 	var returns := _stat("MP_RETURNS", Fmt.percent(MarketplaceModel.return_rate(_state, _world, _selected) * 100.0, 0),
 		tr("MP_SECTOR_AVERAGE").format({"rate": Fmt.percent(_sector_return(), 0)}))
 	var volume := _stat("MP_VOLUME", tr("MP_VOLUME_WEEK").format(
-		{"amount": Fmt.money_round(roundi(delivered * MarketplaceModel.cat_def(_selected).basket))}))
+		{"amount": Fmt.money_round(roundi(MarketplaceModel.gmv(_state, _selected)))}))
 	for cell: Control in [returns, volume]:
 		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		stats.add_child(cell)
@@ -357,8 +356,8 @@ func _open_picker(anchor: Control, replaced: String) -> void:
 
 
 ## A candidate's row: face, name, stars, the category they would leave and, at the end, the week's stores they would bring, or
-## why they cannot take the category: already in it, or the job cap. Under the stores, faint, the cost of a pick that hands someone
-## the Sales job beside another job.
+## why they cannot take the category: already in it, or the job cap. Under the stores, in the role line's caption, the cost of a
+## pick that hands someone the Sales job beside another job (faint is kept for the rows that cannot be picked).
 func _option(pop: HRPopover, c: Character, replaced: String) -> void:
 	var now: String = _state.assign.get(c.id, {}).get("cat", "")
 	var why := ""
@@ -380,7 +379,7 @@ func _option(pop: HRPopover, c: Character, replaced: String) -> void:
 	figure.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	right.add_child(figure)
 	if why == "" and HRConstants.JOB_SALES not in c.assigned_job_ids + c.paused_job_ids and not c.assigned_job_ids.is_empty():
-		right.add_child(SprintUiShared.label(tr("MP_ACQ_TAKES_SALES"), &"CaptionFaint"))
+		right.add_child(SprintUiShared.label(tr("MP_ACQ_TAKES_SALES"), &"CondCaption"))
 	row.add_child(right)
 	var item := Button.new()
 	item.theme_type_variation = &"MenuItem"
