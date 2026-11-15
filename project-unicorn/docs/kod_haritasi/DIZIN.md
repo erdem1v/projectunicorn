@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git 298a1eb5 · 2026-11-15 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 4d656811 · 2026-11-15 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -235,12 +235,12 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/systems/vc_pitch_system.gd · 1317 · VCPitchSystem · RefCounted · 0 sinyal · 91 func
 - scripts/systems/work_hours_system.gd · 342 · WorkHoursSystem · RefCounted · 0 sinyal · 38 func
 
-### scripts/tabs/ (10 dosya, 4495 satır)
+### scripts/tabs/ (10 dosya, 4497 satır)
 - scripts/tabs/events_tab.gd · 349 · - · Control · 0 sinyal · 22 func
 - scripts/tabs/finance_tab.gd · 116 · - · Control · 1 sinyal · 8 func
 - scripts/tabs/hr_tab.gd · 536 · - · Control · 1 sinyal · 32 func
 - scripts/tabs/hunt_tab.gd · 532 · - · Control · 0 sinyal · 27 func
-- scripts/tabs/marketing_tab.gd · 591 · - · Control · 1 sinyal · 30 func
+- scripts/tabs/marketing_tab.gd · 593 · - · Control · 1 sinyal · 30 func
 - scripts/tabs/personal_tab.gd · 264 · - · Control · 1 sinyal · 13 func
 - scripts/tabs/piyasa_tab.gd · 681 · - · Control · 0 sinyal · 34 func
 - scripts/tabs/product_tab.gd · 355 · - · Control · 1 sinyal · 20 func
@@ -1156,7 +1156,7 @@ Biçim: yol · boyut · üst düzey anahtarlar (en çok 10)
 - data/product/sprint.json · 9.5 KB · {sprint_weeks, quarter_weeks, mvp_lines, mvp_named, effort, fix_effort, limit_k, need, roles, role_areas, +27}
 - data/techtree/rnd_tree.json · 6.3 KB · {_doc, _stars, _cross, _areas, k_arge, report_period_weeks, nodes, _hidden_doc, _hidden_k3_doc, hidden_lines}
 
-## Metin anahtarı aileleri (898 aile, 3494 anahtar)
+## Metin anahtarı aileleri (898 aile, 3495 anahtar)
 
 Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak geçiren .gd/.json (en çok 5). '-' = dinamik kurulmuş olabilir ya da kullanılmıyor.
 - ANGEL_CAP_* · 1 · scripts/tabs/finance/finance_ozet_view.gd
@@ -1496,7 +1496,7 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - MKT_SATURATION_* · 3 · scripts/tabs/marketing_tab.gd
 - MKT_SET_* · 9 · scripts/modals/campaign_modal.gd
 - MKT_SHIPPING_* · 2 · scripts/modals/campaign_modal.gd
-- MKT_STAGE_* · 3 · scripts/tabs/marketing_tab.gd
+- MKT_STAGE_* · 4 · scripts/tabs/marketing_tab.gd
 - MKT_TEAM_* · 1 · scripts/tabs/marketing_tab.gd
 - MKT_TEMPLATE_* · 4 · scripts/modals/campaign_modal.gd, scripts/tabs/marketing_tab.gd
 - MKT_WASTED_* · 1 · scripts/tabs/events/mail_pane.gd

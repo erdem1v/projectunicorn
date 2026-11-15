@@ -250,7 +250,7 @@ _bar	func	scripts/tabs/product/product_model.gd:1282	ProductModel
 _bar	var	scripts/tabs/product/sprint_foot.gd:14	SprintFoot
 _bar_tip	func	scripts/tabs/product/board_row.gd:433	BoardRow
 _bare	var	scripts/theme/build_theme.gd:27	build_theme.gd
-_bars	func	scripts/tabs/marketing_tab.gd:483	marketing_tab.gd
+_bars	func	scripts/tabs/marketing_tab.gd:485	marketing_tab.gd
 _bars	func	scripts/tabs/piyasa_tab.gd:193	piyasa_tab.gd
 _bars	var	scripts/ui/components/build_hud_panel.gd:28	build_hud_panel.gd
 _base	var	scripts/debug/office_pan_probe.gd:45	office_pan_probe.gd
@@ -403,7 +403,7 @@ _busy_label	var	scripts/ui/components/build_bar.gd:23	build_bar.gd
 _busy_state	func	scripts/debug/marketplace_probe.gd:1194	marketplace_probe.gd
 _button	func	scripts/modals/ending_scene.gd:412	EndingScene
 _button	func	scripts/tabs/hunt_tab.gd:529	hunt_tab.gd
-_button	func	scripts/tabs/marketing_tab.gd:582	marketing_tab.gd
+_button	func	scripts/tabs/marketing_tab.gd:584	marketing_tab.gd
 _button	func	scripts/tabs/product/requests_view.gd:229	RequestsView
 _button	func	scripts/tabs/sales_tab.gd:806	sales_tab.gd
 _button	var	scripts/ui/office/office_hud.gd:21	office_hud.gd
@@ -424,7 +424,7 @@ _camera	var	scripts/ui/menu_backdrop.gd:25	menu_backdrop.gd
 _campaign	func	scripts/systems/marketplace_model.gd:1148	MarketplaceModel
 _campaign_card	func	scripts/tabs/marketing_tab.gd:311	marketing_tab.gd
 _campaign_lift	func	scripts/tabs/marketplace/mp_overview.gd:133	mp_overview.gd
-_campaign_name	func	scripts/tabs/marketing_tab.gd:353	marketing_tab.gd
+_campaign_name	func	scripts/tabs/marketing_tab.gd:355	marketing_tab.gd
 _campaign_share	func	scripts/systems/marketplace_model.gd:1163	MarketplaceModel
 _can_assign	func	scripts/tabs/rnd/rnd_detail_panel.gd:244	RnDDetailPanel
 _can_enter	func	scripts/ui/office/office_person.gd:923	OfficePerson
@@ -450,7 +450,7 @@ _card	func	scripts/onboarding/steps/step_base.gd:86	OnboardingStep
 _card	func	scripts/systems/sprint_timeline.gd:174	SprintTimeline
 _card	func	scripts/tabs/events/mail_pane.gd:108	mail_pane.gd
 _card	func	scripts/tabs/hr/hr_atlas_modal.gd:184	hr_atlas_modal.gd
-_card	func	scripts/tabs/marketing_tab.gd:558	marketing_tab.gd
+_card	func	scripts/tabs/marketing_tab.gd:560	marketing_tab.gd
 _card	var	scripts/tabs/piyasa_tab.gd:43	piyasa_tab.gd
 _card	var	scripts/tabs/product/board_row.gd:27	BoardRow.CardName
 _card	func	scripts/tabs/product/product_model.gd:1210	ProductModel
@@ -1065,7 +1065,7 @@ _ceil_to	func	scripts/systems/hr_candidate_generator.gd:271	HRCandidateGenerator
 _ceiling	func	scripts/events/present/tempo.gd:228	EvTempo
 _cell	func	scripts/modals/training_modal.gd:161	training_modal.gd
 _cell	func	scripts/tabs/hr/hr_assignments.gd:107	HRAssignments
-_cell	func	scripts/tabs/marketing_tab.gd:552	marketing_tab.gd
+_cell	func	scripts/tabs/marketing_tab.gd:554	marketing_tab.gd
 _cell	func	scripts/tabs/product/capacity_view.gd:177	CapacityView
 _cell	func	scripts/tabs/rnd/rnd_assign_panel.gd:171	RnDAssignPanel
 _cells	var	scripts/onboarding/steps/character_step.gd:12	character_step.gd
@@ -2286,7 +2286,7 @@ _lift	var	scripts/ui/office/office_people.gd:67	OfficePeople
 _lift_cover	func	scripts/menu/main_menu.gd:72	main_menu.gd
 _lift_open	var	scripts/ui/office/office_people.gd:68	OfficePeople
 _light	func	scripts/ui/components/top_bar.gd:415	top_bar.gd
-_line	func	scripts/tabs/marketing_tab.gd:575	marketing_tab.gd
+_line	func	scripts/tabs/marketing_tab.gd:577	marketing_tab.gd
 _line	func	scripts/tabs/rnd/rnd_tree_view.gd:396	RnDTreeView
 _line	var	scripts/tabs/rnd_tab.gd:39	rnd_tab.gd
 _line	func	scripts/tabs/sales_tab.gd:766	sales_tab.gd
@@ -2482,7 +2482,7 @@ _mentor_quote	var	scripts/tabs/finance/finance_ozet_view.gd:49	FinanceOzetView
 _menu	var	scripts/main/main.gd:48	main.gd
 _menu_id	var	scripts/tabs/hr_tab.gd:51	hr_tab.gd
 _menu_item	func	scripts/debug/player_paths.gd:200	PlayerPaths
-_menu_item	func	scripts/tabs/marketing_tab.gd:518	marketing_tab.gd
+_menu_item	func	scripts/tabs/marketing_tab.gd:520	marketing_tab.gd
 _menu_pick	func	scripts/modals/campaign_modal.gd:186	campaign_modal.gd
 _meshes	var	scripts/ui/office/office_body.gd:37	OfficeBody
 _message	func	scripts/tabs/events/mail_pane.gd:126	mail_pane.gd
@@ -2574,7 +2574,7 @@ _mp_hire	func	scripts/main/main.gd:2269	main.gd
 _mp_move	func	scripts/main/main.gd:2247	main.gd
 _MP_SPRINTS	const	scripts/main/main.gd:2132	main.gd
 _MP_WORLDS	const	scripts/main/main.gd:2117	main.gd
-_mrr_cell	func	scripts/tabs/marketing_tab.gd:437	marketing_tab.gd
+_mrr_cell	func	scripts/tabs/marketing_tab.gd:439	marketing_tab.gd
 _mrr_stat	func	scripts/systems/endings_copy.gd:414	EndingsCopy
 _music_bus	var	scripts/autoload/audio_manager.gd:22	AudioManager
 _music_slider	var	scripts/modals/settings_modal.gd:90	settings_modal.gd
@@ -2594,7 +2594,7 @@ _name_label	var	scripts/ui/components/research_bar.gd:34	research_bar.gd
 _name_list	func	scripts/events/present/chips.gd:622	EvChips
 _name_of	func	scripts/events/present/presenter.gd:153	EvPresenter
 _name_overflow	func	scripts/tabs/rnd/rnd_tree_view.gd:92	RnDTreeView
-_name_row	func	scripts/tabs/marketing_tab.gd:566	marketing_tab.gd
+_name_row	func	scripts/tabs/marketing_tab.gd:568	marketing_tab.gd
 _name_row	func	scripts/tabs/sales_tab.gd:757	sales_tab.gd
 _named	func	scripts/events/core/effects.gd:1115	EvEffects
 _names	func	scripts/modals/work_hours_modal.gd:269	work_hours_modal.gd
@@ -2853,7 +2853,7 @@ _open	func	scripts/debug/player_paths.gd:194	PlayerPaths
 _open	func	scripts/systems/sprint_prep.gd:61	SprintPrep
 _open	var	scripts/tabs/product/requests_view.gd:28	RequestsView
 _open_actions	func	scripts/tabs/hr_tab.gd:483	hr_tab.gd
-_open_add_menu	func	scripts/tabs/marketing_tab.gd:509	marketing_tab.gd
+_open_add_menu	func	scripts/tabs/marketing_tab.gd:511	marketing_tab.gd
 _open_after_gate	func	scripts/main/main.gd:6123	main.gd
 _open_answer	func	scripts/main/main.gd:5705	main.gd
 _open_band	var	scripts/ui/meeting/sales_meeting_adapter.gd:46	SalesMeetingAdapter
@@ -2877,7 +2877,7 @@ _open_promotion	func	scripts/tabs/hr/hr_ledger.gd:391	HRLedger
 _open_raise	func	scripts/tabs/hr/hr_ledger.gd:374	HRLedger
 _open_requests	func	scripts/systems/customer_rep_system.gd:213	CustomerRepSystem
 _open_row	var	scripts/tabs/product/area_panel.gd:35	AreaPanel
-_open_runner_menu	func	scripts/tabs/marketing_tab.gd:495	marketing_tab.gd
+_open_runner_menu	func	scripts/tabs/marketing_tab.gd:497	marketing_tab.gd
 _open_sales_meeting	func	scripts/main/main.gd:6360	main.gd
 _open_steward_picker	func	scripts/tabs/sales_tab.gd:654	sales_tab.gd
 _open_table	func	scripts/ui/meeting/sales_meeting_adapter.gd:196	SalesMeetingAdapter
@@ -2949,7 +2949,7 @@ _paint_card	func	scripts/ui/components/top_bar.gd:468	top_bar.gd
 _paint_closed	func	scripts/tabs/marketplace/mp_categories.gd:186	mp_categories.gd
 _paint_conversion	func	scripts/tabs/marketplace/mp_overview.gd:156	mp_overview.gd
 _paint_desk	func	scripts/tabs/sales_tab.gd:402	sales_tab.gd
-_paint_empty	func	scripts/tabs/marketing_tab.gd:533	marketing_tab.gd
+_paint_empty	func	scripts/tabs/marketing_tab.gd:535	marketing_tab.gd
 _paint_empty	func	scripts/tabs/sales_tab.gd:235	sales_tab.gd
 _paint_handoff	func	scripts/tabs/marketing_tab.gd:222	marketing_tab.gd
 _paint_hot	func	scripts/ui/components/build_bar.gd:151	build_bar.gd
@@ -3063,7 +3063,7 @@ _people_count	func	scripts/systems/endings_copy.gd:391	EndingsCopy
 _people_for	func	scripts/systems/counterpart_system.gd:75	CounterpartSystem
 _people_line	func	scripts/systems/endings_copy.gd:397	EndingsCopy
 _people_stat	func	scripts/systems/endings_copy.gd:406	EndingsCopy
-_per_user	func	scripts/tabs/marketing_tab.gd:449	marketing_tab.gd
+_per_user	func	scripts/tabs/marketing_tab.gd:451	marketing_tab.gd
 _perfect_world	func	scripts/debug/marketplace_probe.gd:1188	marketplace_probe.gd
 _permitted	func	scripts/events/core/effects.gd:182	EvEffects
 _persist_signed_terms	func	scripts/systems/vc_pitch_system.gd:582	VCPitchSystem
@@ -3631,7 +3631,7 @@ _row	func	scripts/tabs/product/type_picker.gd:66	TypePicker
 _row	var	scripts/ui/components/toast.gd:23	toast.gd
 _row	var	scripts/ui/office/office_hud.gd:19	office_hud.gd
 _row	func	scripts/ui/office/office_notice_stack.gd:149	office_notice_stack.gd
-_row_card	func	scripts/tabs/marketing_tab.gd:362	marketing_tab.gd
+_row_card	func	scripts/tabs/marketing_tab.gd:364	marketing_tab.gd
 _row_name	func	scripts/tabs/marketplace/mp_overview.gd:365	mp_overview.gd
 _row_parts	func	scripts/tabs/events/mail_pane.gd:515	mail_pane.gd
 _row_right	func	scripts/tabs/events_tab.gd:289	events_tab.gd
@@ -3728,7 +3728,7 @@ _same_crew	func	scripts/systems/sprint_system.gd:1682	SprintSystem
 _samples	func	scripts/debug/kit_probe.gd:222	kit_probe.gd
 _sat_row	func	scripts/tabs/marketplace/mp_overview.gd:323	mp_overview.gd
 _satisfaction_row	func	scripts/tabs/sales_tab.gd:591	sales_tab.gd
-_saturation	func	scripts/tabs/marketing_tab.gd:470	marketing_tab.gd
+_saturation	func	scripts/tabs/marketing_tab.gd:472	marketing_tab.gd
 _save	func	scripts/autoload/settings.gd:166	Settings
 _save	func	scripts/theme/build_theme.gd:1518	build_theme.gd
 _save_and	func	scripts/modals/system_menu_modal.gd:90	system_menu_modal.gd
@@ -4612,7 +4612,7 @@ _well	func	scripts/tabs/events/mail_pane.gd:233	mail_pane.gd
 _when	func	scripts/tabs/hunt_tab.gd:501	hunt_tab.gd
 _who	func	scripts/modals/campaign_modal.gd:218	campaign_modal.gd
 _who	func	scripts/tabs/hr/hr_ledger.gd:168	HRLedger
-_who	func	scripts/tabs/marketing_tab.gd:548	marketing_tab.gd
+_who	func	scripts/tabs/marketing_tab.gd:550	marketing_tab.gd
 _who	func	scripts/tabs/product/card_tip.gd:77	CardTip
 _who	var	scripts/ui/office/meeting_invite.gd:36	MeetingInvite
 _why	var	scripts/tabs/rnd/rnd_assign_panel.gd:30	RnDAssignPanel

@@ -36,7 +36,7 @@ const CALENDAR := "res://assets/icons/util/calendar.svg"
 const CAMPAIGN_MODAL := "res://scenes/modals/CampaignModal.tscn"
 ## A marketplace page's right column (the campaign and the history); the channel table takes the rest.
 const SIDE := 360
-const STAGE_TAGS := {"prep": &"outline", "run": &"pos", "after": &"warn"}
+const STAGE_TAGS := {"scheduled": &"outline", "prep": &"outline", "run": &"pos", "after": &"warn"}
 ## The handoff threshold's three positions, as MarketingSystem.HANDOFFS names them.
 const HANDOFF_KEYS := ["MKT_HANDOFF_ALL", "MKT_HANDOFF_2", "MKT_HANDOFF_3"]
 ## Column widths of a channel row [name, budget, leads a week, per lead, MRR]; the runner takes the rest.
@@ -314,7 +314,9 @@ func _campaign_card(c: Dictionary, off: bool) -> PanelContainer:
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", UiTokens.SPACE_M)
 	head.add_child(_line(_campaign_name(c), &"DataStrong"))
-	head.add_child(UiFactory.D_tag(tr("MKT_STAGE_" + String(c.stage).to_upper()), STAGE_TAGS[c.stage]))
+	# Before its preparation weeks the campaign only waits: "scheduled", so the tag does not say preparing above the start date.
+	var stage: String = "scheduled" if c.stage == "prep" and not MarketingSystem._preparing(c) else String(c.stage)
+	head.add_child(UiFactory.D_tag(tr("MKT_STAGE_" + stage.to_upper()), STAGE_TAGS[stage]))
 	col.add_child(head)
 	var when := HBoxContainer.new()
 	when.add_theme_constant_override("separation", UiTokens.SPACE_S)

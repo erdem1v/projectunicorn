@@ -2206,6 +2206,7 @@ MKT_TEMPLATE_FIRST_ORDER,İlk siparişe özel,First order offer
 MKT_TEMPLATE_DISCOUNT_DAYS,İndirim günleri,Discount days
 MKT_TEMPLATE_BUY_X_PAY_Y,X Al Y Öde,Buy X Pay Y
 MKT_TEMPLATE_COUPON,Kupon,Coupon
+MKT_STAGE_SCHEDULED,Planlandı,Scheduled
 MKT_STAGE_PREP,Hazırlıkta,Preparing
 MKT_STAGE_RUN,Sürüyor,Running
 MKT_STAGE_AFTER,Çukur,Dip
