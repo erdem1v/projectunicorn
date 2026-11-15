@@ -2157,6 +2157,41 @@ MKT_KIND_PRICE_COMPARE,Fiyat karşılaştırma,Price comparison
 MKT_KIND_AFFILIATE,Satış ortaklığı,Affiliate
 MKT_KIND_EMAIL,E-posta,Email
 MKT_KIND_INFLUENCER,Fenomen,Influencer
+MKT_WASTED_MEETING,Boşa giden görüşme · {lead},Wasted meeting · {lead}
+MKT_KPI_LEADS,Bu hafta aday,Leads this week
+MKT_KPI_HANDED,Satışa giden,Handed to Sales
+MKT_KPI_BELOW,Eşik altında,Under the threshold
+MKT_KPI_SPEND,Haftalık harcama,Weekly spend
+MKT_TEAM_CAPTION,Ekip,Team
+MKT_HANDOFF_CAPTION,Devir eşiği,Handoff threshold
+MKT_HANDOFF_ALL,Tümü,All
+MKT_HANDOFF_ALL_TIP,Her aday Satış'a gider; kaybedilen görüşme temsilcinin moralini düşürür,Every lead goes to Sales; a lost meeting costs the rep morale
+MKT_HANDOFF_2,2★ ve üstü,2★ and up
+MKT_HANDOFF_2_TIP,Küçük adaylar dört hafta bekler; İçerik onları büyütebilir; düşen aday satırın yürütenine moral kaybettirir,Small leads wait four weeks; Content can grow them; a dropped lead costs the row's runner morale
+MKT_NEEDS_SPECIALIST,Pazarlama Uzmanı gerekli,A marketing specialist is required
+MKT_HANDOFF_3,3★,3★
+MKT_HANDOFF_3_TIP,Yalnız büyük adaylar gider; düşen aday satırın yürütenine moral kaybettirir,Only large leads go; a dropped lead costs the row's runner morale
+MKT_COL_CHANNELS,Kanallar,Channels
+MKT_COL_BUDGET,Bütçe,Budget
+MKT_COL_LEADS,Aday/hafta,Leads/week
+MKT_COL_PER_LEAD,Aday başı,Per lead
+MKT_COL_MRR,MRR katkısı,MRR added
+MKT_ADD_CHANNEL,Kanal ekle,Add channel
+MKT_CLOSE_ROW,Kanalı kapat,Close the channel
+MKT_PER_WEEK,{n}/hafta,{n}/week
+MKT_NEEDS_ERP,Pazaryeri ya da ERP gerekli,A marketplace or an ERP is required
+MKT_DROPPED_TITLE,Düşen adaylar,Dropped leads
+MKT_DROPPED_LINE,Düşen aday · {channel}: {n},Dropped lead · {channel}: {n}
+MAIL_SENDER_MARKETING,Pazarlama,Marketing
+SECTOR_CONSTRUCTION,İnşaat,Construction
+SECTOR_MANUFACTURING,Üretim,Manufacturing
+SECTOR_TEXTILE,Tekstil,Textile
+SECTOR_WHOLESALE,Toptan ticaret,Wholesale
+SECTOR_LOGISTICS,Lojistik,Logistics
+SECTOR_RETAIL,Perakende,Retail
+SECTOR_ECOMMERCE,E-ticaret,E-commerce
+SECTOR_AUTO_PARTS,Oto yedek parça,Auto parts
+SECTOR_FOOD,Gıda,Food
 SALES_TAG_FRANK_INTRO,Frank'in tanıştırdığı,Frank's introduction
 SALES_ROUTE_NO_REP,Temsilci yok,No rep to take it
 SALES_ABOVE_LEAGUE,Bu masa liginin üstünde.,This table is above your league.

@@ -266,6 +266,7 @@ func _run_debug_harness() -> bool:
 		"--hr-shot=": _run_hr_shot,
 		"--finance-shot=": _run_finance_shot,
 		"--tab-shot=": _run_tab_shot,
+		"--marketing-shot=": _run_marketing_shot,
 		"--personal-shot=": _run_personal_shot,
 		"--rnd-shot=": _run_rnd_shot,
 		"--modal-shot=": _run_modal_shot,
@@ -1524,7 +1525,8 @@ func _seed_paper_world(event_id: String) -> Dictionary:
 ##   reason to its left; a SHOTLINE|clause_server_lock line carries the reason) · exit_notice (the notice mail a card's `account_notice`
 ##   with the reason rude_call sends, in the reading pane; a SHOTLINE|exit_notice line carries its subject and body) ·
 ##   rep_lost (the sales rep's mail of a desk deal lost over an area, through the real close) · weekly_lost
-##   (the same week's summary: two closes and the two lost deals the rep did not mail) · weekly_lost_only (a week of the
+##   (the same week's summary: two closes and the two lost deals the rep did not mail) · wasted (rep_lost over leads Pazarlama's
+##   search row handed over: the mail says why the rep's morale fell) · weekly_lost_only (a week of the
 ##   lost deals alone: no table) · support_week (the weekly support report of a Müşteri İlişkileri rep, through the real weekly
 ##   tick: a fix empties the worst line, another passes the priority mark, no title news) · support_behind (the same week and the rep
 ##   did not keep up) · support_go (its button pressed: Ürün opens on the worst line's area) · empty · long · team_read_only (Ekip
@@ -1562,8 +1564,8 @@ func _run_inbox_shot(state: String) -> void:
 	if state == "rnd_note_demand":
 		ProductState.add_bugs(SprintCatalog.capabilities("integrations")[0], 1)
 		RnDSystem._tick_note()
-	if state in ["rep_lost", "weekly_lost", "weekly_lost_only"]:
-		_stage_desk_losses(state != "weekly_lost_only")
+	if state in ["rep_lost", "weekly_lost", "weekly_lost_only", "wasted"]:
+		_stage_desk_losses(state != "weekly_lost_only", "mkt_ads" if state == "wasted" else "faucet")
 	if state.begins_with("clause_"):
 		_stage_clause(state)
 	if state == "exit_notice":
@@ -1711,8 +1713,8 @@ func _run_inbox_shot(state: String) -> void:
 			await get_tree().process_frame
 			_print_shot_lines(get_tree().get_first_node_in_group(INBOX.GROUP), "exit_notice",
 				[tr("SALES_EXIT_RUDE_CALL_SUBJECT"), tr("SALES_EXIT_RUDE_CALL_BODY").get_slice("{", 0)])
-		"rep_lost", "weekly_lost", "weekly_lost_only":
-			var kind: String = "sales_loss" if state == "rep_lost" else "sales_week"
+		"rep_lost", "weekly_lost", "weekly_lost_only", "wasted":
+			var kind: String = "sales_loss" if state in ["rep_lost", "wasted"] else "sales_week"
 			INBOX.show("m:" + String(GameState.messages.filter(func(m: Dictionary) -> bool: return m.kind == kind)[-1].id))
 		"support_week", "support_behind", "support_go":
 			INBOX.show("m:" + String(GameState.messages.filter(
@@ -2231,7 +2233,7 @@ func _seed_theme_book() -> void:
 ## and İlk kullanım are empty, and its sales rep closing desk deals in one week through the real close: three 2★ leads are lost
 ## over an area (the first is the rep's mail, the other two the weekly summary's lines) and, with `closes`, two 1★ leads sign (its
 ## rows). A lead's id is picked for its die: a losing lead is one whose own die lands above its close chance.
-func _stage_desk_losses(closes: bool) -> void:
+func _stage_desk_losses(closes: bool, source: String) -> void:
 	for line_id in SprintCatalog.capabilities("core"):
 		ProductState.set_line_tier(line_id, 1)
 	for line_id in SprintCatalog.capabilities("trust"):
@@ -2249,6 +2251,7 @@ func _stage_desk_losses(closes: bool) -> void:
 		lead.industry = row[1]
 		lead.archetype_id = row[2]
 		lead.star = row[3]
+		lead.source = source
 		lead.spawned_on_day = GameState.day
 		lead.expires_on_day = GameState.day + 1
 		for n in 400:
@@ -3061,6 +3064,30 @@ func _run_office_crowd_probe(spec: String) -> void:
 # $18M post-money signed) · ipo (week 20, the social network's listing week, its card) · filtre (My sector
 # on an erp run, the sector giant's card) · sektor (the erp league leader's card, the list scrolled to it).
 # cheque or seed opens any tab on the goal lists' week 1 (_seed_goal) in place of the theme seed.
+## --marketing-shot=<erp|empty>: Pazarlama's window. `erp` is P3_kanallar_erp's company (PRD_PAZARLAMA §11): the theme seed's
+## live ERP, a marketing specialist beside the founder, İçerik ve SEO at $500 (the founder) and Arama reklamı at $1.000 (the
+## specialist) four weeks into the 2★ threshold; `empty` a new ERP company before v1.0 (no accounts, no MRR): the page's condition.
+func _run_marketing_shot(kind: String) -> void:
+	_begin_shot()
+	_seed_run_reproducible()
+	if kind == "empty":   # LOC-DATA debug fixture id
+		SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
+	else:
+		_seed_theme_surface()
+		var mkt: Character = _shot_employee("char_mkt_shot", "Zeynep Koç", HRConstants.ROLE_MARKETING_SPECIALIST, 20)   # LOC-DATA debug seed / name
+		CharacterRegistry.assign_job(mkt.id, HRConstants.JOB_MARKETING)
+		MarketingSystem.set_handoff("2")
+		for row in [["content_seo", 500, CharacterRegistry.get_founder().id], ["search_ads", 1000, mkt.id]]:
+			var r: Dictionary = MarketingSystem.add_row(row[0], "", row[2])
+			MarketingSystem.set_budget(int(r.id), row[1])
+		for _week in 4:
+			GameState.advance_day()
+			MarketingSystem.daily_tick()
+	await _mount_shot_shell()
+	EventBus.tab_changed.emit("marketing")
+	await _finish_shot("marketing_shot_%s" % kind)
+
+
 func _run_tab_shot(spec: String) -> void:
 	_begin_shot()
 	var tab_id: String = spec.get_slice(":", 0)

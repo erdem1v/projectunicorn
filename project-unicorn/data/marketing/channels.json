@@ -5,6 +5,9 @@
 	"erp": {
 		"leads_cap_per_week": 14,
 		"mrr_window_weeks": 26,
+		"nurture_weeks": 4,
+		"wasted_meeting_morale": -1,
+		"drop_morale": -1,
 		"search_ads": {"lead_cost": 600, "mix": [0.75, 0.2, 0.05]},
 		"content_seo": {"lead_cost": 450, "start_cost": 2400, "mature_weeks": 26},
 		"target_sector": {"lead_cost": 900},

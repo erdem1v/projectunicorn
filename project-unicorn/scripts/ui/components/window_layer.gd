@@ -19,6 +19,7 @@ const TAB_SCENES := {
 	"personal": preload("res://scenes/tabs/PersonalTab.tscn"),
 	"rnd": preload("res://scenes/tabs/RnDTab.tscn"),
 	"events": preload("res://scenes/tabs/EventsTab.tscn"),
+	"marketing": preload("res://scenes/tabs/MarketingTab.tscn"),
 }
 ## Ayrıntı sayfaları `populate(payload)` uygular.
 const DETAILS := {
@@ -28,7 +29,7 @@ const DETAILS := {
 const FRAME := preload("res://scripts/ui/components/window_frame.gd")
 const OFFICE := preload("res://scripts/ui/office/office_view.gd")
 ## 1920×1080 tabanında pencere boyları; pencere alanı daha darsa pencere ona sığacak kadar
-## küçülür. Sahnesi olmayan sekme yer tutucunun (marketing) boyunu alır. Ekip 1352: kadronun EN
+## küçülür. Ekip 1352: kadronun EN
 ## sütunları; 1920'de BuildHUD'un 16 px solunda biter. Finans 1344 BuildHUD'un solunda biter; Ürün
 ## 1920'de pencere alanının tamamıdır (1920 − ray 184 − 2 × EDGE) ve BuildHUD gizlenir, zaman ekseni kalan genişliği alır;
 ## Piyasa 1424, dar alanda liste ve kart kendi içinde kayar. `fit_height()` taşıyan sayfanın penceresi (Ekip, dosya)
@@ -38,7 +39,7 @@ const OFFICE := preload("res://scripts/ui/office/office_view.gd")
 const SPECS := {
 	"finance": Vector2(1344, 720), "hr": Vector2(1352, 928), "product": Vector2(1688, 928), "piyasa": Vector2(1424, 928),
 	"sales": Vector2(1280, 928), "rnd": Vector2(1280, 928), "personal": Vector2(1000, 928),
-	"events": Vector2(1240, 900), "marketing": Vector2(900, 640), "hr_dossier": Vector2(320, 928),
+	"events": Vector2(1240, 900), "marketing": Vector2(1240, 900), "hr_dossier": Vector2(320, 928),
 }
 const EDGE := 24.0            # pencere ile pencere alanının (ray dışı merkez alan) kenarı arasındaki boşluk
 ## Ofis ve sayfalar ayrıntı penceresini bu gruptan açar: open_detail(kind, payload).

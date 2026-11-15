@@ -397,8 +397,12 @@ static func close_week() -> Array:
 ## One lost desk deal into the open window's lost rows, the ones the founder was not mailed about: the seller's name (stored,
 ## like a close's), the company and the area id found lacking. They sit beside the closes' rows, so the report's table and
 ## total read the closes alone.
-static func record_loss(rep: String, company: String, area: String) -> void:
-	_append_row(_LOSS_ROWS, {"company": company, "area": area, "rep": rep})
+## `wasted`: the morale a rep's wasted meeting cost (MarketingSystem.charge_wasted_meeting), kept on the row only when it landed.
+static func record_loss(rep: String, company: String, area: String, wasted: int) -> void:
+	var row := {"company": company, "area": area, "rep": rep}
+	if wasted != 0:
+		row["wasted"] = wasted
+	_append_row(_LOSS_ROWS, row)
 
 
 ## Ends the open window and returns its lost rows.

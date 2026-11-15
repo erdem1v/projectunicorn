@@ -1,6 +1,8 @@
 class_name SalesRepSystem
 extends RefCounted
 
+const MarketingSystem := preload("res://scripts/systems/marketing_system.gd")
+
 # THE SALES DESK (§7) — what an assigned Satış Temsilcisi actually does. Pure static logic,
 # no scene dependency. Dispatched daily from B2BSalesSystem.daily_tick, LAST, after the
 # faucet: a close creates a Customer and a same-day-signed account must not be lifecycle
@@ -243,15 +245,18 @@ static func lost_area(lead: Prospect) -> String:
 
 ## The deal is lost: it takes the road a lost sitting takes, the seller tells the founder, and the desk moves to its next lead.
 static func _lose(rep: Character, lead: Prospect, area: String) -> void:
+	var wasted: int = MarketingSystem.charge_wasted_meeting(rep, lead)
 	SalesFinalizer.lose(lead.id, lead.company_name, SalesConstants.LOSS_WEAK_AREA, area, SalesConstants.RETURN_LOCK_WEEKS)
 	# The first loss of a week is a mail from the seller; the week's others wait for the summary's lines, and so does every loss of
 	# the founder at the desk, who would be writing to himself.
 	if rep.category == "founder" or int(GameState.get_flag("sales_loss_mail_day", 0)) == GameState.day:
-		SalesLedger.record_loss(rep.character_name, lead.company_name, area)
+		SalesLedger.record_loss(rep.character_name, lead.company_name, area, wasted)
 	else:
 		GameState.set_flag("sales_loss_mail_day", GameState.day)
-		MessageSystem.post("sales_loss", "SALES_REP_LOST_TITLE",
-			{"rep": rep.character_name, "company": lead.company_name, "area": area})
+		var args := {"rep": rep.character_name, "company": lead.company_name, "area": area}
+		if wasted != 0:
+			args["wasted"] = wasted
+		MessageSystem.post("sales_loss", "SALES_REP_LOST_TITLE", args)
 	EventBus.rep_deal_lost.emit(rep.id, lead.id, area)
 
 

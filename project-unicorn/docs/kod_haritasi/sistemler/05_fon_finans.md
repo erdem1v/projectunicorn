@@ -72,6 +72,10 @@ Finans:
   ↳ (Referans bütçesiz, memnun hesap başına); `_spawn_leads()` yalnız pazar açıkken, kaynak `SOURCES` (`mkt_*`), Hedef sektör
   ↳ `spawn`'a sektörünü verir; `row_mrr()` kaynağın son `erp.mrr_window_weeks` haftada imzaladığı hesapların bugünkü MRR'ı
   ↳ (`Customer.lead_source`); `source_tag()` Satış'ın aday satırındaki etiket, "trade_fair" fuar (`mkt_event`) sayılır.
+- Devir eşiği (B4): `handoff()`/`set_handoff()` ("all" · "2" · "3"); eşik altındaki satır adayı `nurture()`'da bekler, `_tick_nurture()`
+  ↳ `erp.nurture_weeks` sonunda İçerik satırı koşuyorsa bir yıldız büyütür (kapalı banda değil), eşiği tutarsa Satış'a, tutmazsa düşer
+  ↳ (`dropped()`); `charge_wasted_meeting()` "Tümü"de temsilcinin kaybettiği pazarlama adayı başına moral (haftada bir, kurucu
+  ↳ muaf) · `SalesRepSystem._lose`; kayıp maili ve haftalık satır `wasted` taşır, `mail_pane._wasted` nedenini ve çipi yazar.
 - `FinanceSystem.get_burn_breakdown_pct()` `:281`, `get_monthly_flow()` `:271`, `runway_band()` `:313`: okuma kapıları · `finance_ozet_view.gd`, `top_bar.gd`, `summary_system.gd:161`.
 - `FinanceSystem.to_dict()/from_dict()/reset()` `:87/:93/:79`: yalnız `burn_breakdown`; blok `autoload/save_manager.gd:384` ve `:400`, sıfırlama `:350`.
 
@@ -198,7 +202,13 @@ Tek koşturucu `bash tools/smoke_run.sh <vaka>`; vaka listesi `scripts/debug/end
 - Finans: `month_summary`, `month_history_close_and_cap`, `burn_refresh_same_tick`, `burn_lines_visible`, `runway_net_status`, `runway_weeks_seam`, `runway_days_and_negative_cash`, `gross_runway_months`,
   `add_cash_writes_ledger`, `run_ledger`.
 - Pazarlama: `marketing_burn_written_weekly`, `marketing_runner_and_load`, `marketing_save_roundtrip`, `marketing_erp_lead_source`,
-  `marketing_target_sector_leads`, `marketing_referral_counts_happy_accounts`, `marketing_row_mrr_counts_recent_signings`.
+  `marketing_target_sector_leads`, `marketing_referral_counts_happy_accounts`, `marketing_row_mrr_counts_recent_signings`,
+  `marketing_handoff_nurtures_below_threshold`, `marketing_wasted_meeting_costs_morale`, `marketing_dropped_lead_costs_runner`.
+- Pazarlama sekmesi `scripts/tabs/marketing_tab.gd` (`scenes/tabs/MarketingTab.tscn`, 1240×900): başlıkta bu hafta aday, Satış'a
+  ↳ giden, eşik altında ve haftalık harcama (`GameState.marketing.week`), şeritte ekip ve devir eşiği, gövdede kanal satırları
+  ↳ (`runners()`, `set_runner()`, `addable()`, `free_runner()`, `row_label()`, `typical_star()`); ERP canlı değilken şartını yazar.
+  ↳ Kare `--marketing-shot=<erp|empty>`. Sıkı eşikte düşen aday satırın yürütenine moral (`_charge_drop`), haftalık mail
+  ↳ `mkt_dropped`.
 - Çek ve turlar: `cheque_read_steps`, `angel_fires_at_crossing`, `angel_never_pre_ship`, `angel_not_below_threshold`, `angel_accept_is_atomic`, `angel_locked_choice_inert`, `angel_decline_opens_on_hard`, `angel_one_shot_falsified`,
   `angel_survives_series_a`, `angel_hire_nudge`, `seed_*`, `valuation_*`.
 - Kapılar ve görüşme: `gate1_b2b`, `gate1_b2c`, `gate2`, `gate_decline_reminder`, `gate_scope_and_halves`, `traction_gate_one_option`, `series_a_gate_mrr_only`, `series_a_signal_states`, `series_a_sheet_derives_from_arr`,

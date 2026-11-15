@@ -135,6 +135,9 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"marketing_target_sector_leads": fail = _case_marketing_target_sector_leads()
 		"marketing_referral_counts_happy_accounts": fail = _case_marketing_referral_counts_happy_accounts()
 		"marketing_row_mrr_counts_recent_signings": fail = _case_marketing_row_mrr_counts_recent_signings()
+		"marketing_handoff_nurtures_below_threshold": fail = _case_marketing_handoff_nurtures_below_threshold()
+		"marketing_wasted_meeting_costs_morale": fail = _case_marketing_wasted_meeting_costs_morale()
+		"marketing_dropped_lead_costs_runner": fail = _case_marketing_dropped_lead_costs_runner()
 		"investor_strain_fades_from_the_room": fail = _case_investor_strain_fades_from_the_room()
 		# --- İterasyon döngüsü (player-gated restore) + ekip kalite tavanı ---
 		"runway_net_status":    fail = _case_runway_net_status()
@@ -3302,6 +3305,134 @@ static func _case_marketing_row_mrr_counts_recent_signings() -> String:
 	return ""
 
 
+## The handoff threshold (B4): under "3" a search row's smaller leads wait in nurture and only 3 star leads reach Sales. A
+## waiting lead that has waited four weeks goes a star up while an İçerik ve SEO row runs and reaches Sales with its source,
+## and drops and is counted without one; lowering the threshold hands a waiting lead over at once.
+## FALSIFICATION: drop the threshold test in `_spawn_leads` → a small search lead reaches Sales FAIL; drop the İçerik test in
+## `_tick_nurture` → the lead with no İçerik row matures FAIL.
+static func _case_marketing_handoff_nurtures_below_threshold() -> String:
+	_seed_b2b(10000)
+	MarketingSystem.set_handoff("3")
+	var r: Dictionary = MarketingSystem.add_row("search_ads", "", CharacterRegistry.get_founder().id)
+	MarketingSystem.set_budget(int(r.id), 5000)
+	MarketingSystem.daily_tick()
+	var handed: Array = ProspectRegistry.get_all().filter(func(p: Prospect) -> bool: return p.source == "mkt_ads")
+	if MarketingSystem.nurture().is_empty():
+		return "fixture: a week of $5.000 search held no lead under the 3 star threshold"
+	for p: Prospect in handed:
+		if p.star < 3:
+			return "a %d star search lead reached Sales under the 3 star threshold" % p.star
+	MarketingSystem.remove_row(int(r.id))
+	var before: int = ProspectRegistry.get_all().size()
+	GameState.marketing["nurture"] = [{"star": 2, "source": "mkt_ads", "sector": "", "weeks": 3, "row": 0},
+		{"star": 1, "source": "mkt_ads", "sector": "", "weeks": 3, "row": 0}]
+	MarketingSystem._tick_nurture()
+	if MarketingSystem.dropped() != 2 or ProspectRegistry.get_all().size() != before:
+		return "with no İçerik row two waited-out leads left %d dropped and %d new leads, want two dropped and none" % [
+			MarketingSystem.dropped(), ProspectRegistry.get_all().size() - before]
+	var content: Dictionary = MarketingSystem.add_row("content_seo", "", CharacterRegistry.get_founder().id)
+	MarketingSystem.set_budget(int(content.id), 200)
+	GameState.marketing["nurture"] = [{"star": 2, "source": "mkt_ads", "sector": "", "weeks": 3, "row": 0}]
+	MarketingSystem._tick_nurture()
+	var grown: Array = ProspectRegistry.get_all().filter(func(p: Prospect) -> bool: return p.source == "mkt_ads" and p.star == 3)
+	if grown.size() != handed.filter(func(p: Prospect) -> bool: return p.star == 3).size() + 1:
+		return "İçerik did not take the waited 2 star lead to Sales as a 3 star search lead"
+	GameState.marketing["nurture"] = [{"star": 1, "source": "mkt_ads", "sector": "", "weeks": 0, "row": 0}]
+	MarketingSystem.set_handoff("all")
+	var pipeline: int = ProspectRegistry.get_all().size()
+	var gone: int = MarketingSystem.dropped()
+	MarketingSystem._tick_nurture()
+	if not MarketingSystem.nurture().is_empty() or ProspectRegistry.get_all().size() != pipeline + 1 or MarketingSystem.dropped() != gone:
+		return "a waiting lead did not go to Sales once the threshold fell to every lead (pipeline %d → %d, dropped %d → %d)" % [
+			pipeline, ProspectRegistry.get_all().size(), gone, MarketingSystem.dropped()]
+	return ""
+
+
+## The loose threshold's price: a sales rep's lost meeting with a lead a row handed over costs the rep 1 morale, once a week,
+## and the mail says why; a second loss that week, the founder, Sales' own lead and a stricter threshold cost nothing.
+## FALSIFICATION: drop the week test in `charge_wasted_meeting` → the second loss costs morale too FAIL; drop the source test →
+## the organic lead's loss costs morale FAIL.
+static func _case_marketing_wasted_meeting_costs_morale() -> String:
+	_seed_b2b(1000)
+	var rep: Character = _make_sales_rep("char_sr_waste", 0, 9)
+	var lead := func(id: String, source: String) -> Prospect:
+		var p: Prospect = _add_prospect(id, 2, "logistics")
+		p.source = source
+		return p
+	var m0: int = rep.morale
+	SalesRepSystem._lose(rep, lead.call("waste_a", "mkt_ads"), "integrations")
+	var mails: Array = GameState.messages.filter(func(m: Dictionary) -> bool: return m.kind == "sales_loss")
+	if rep.morale != m0 - 1 or mails.is_empty() or int(mails[-1].args.get("wasted", 0)) != -1:
+		return "the first wasted meeting left morale %d (from %d) and the mail %s, want one point down and the mail saying so" % [
+			rep.morale, m0, mails.map(func(m: Dictionary) -> Dictionary: return m.args)]
+	SalesRepSystem._lose(rep, lead.call("waste_b", "mkt_content"), "integrations")
+	SalesRepSystem._lose(rep, lead.call("waste_c", "faucet"), "integrations")
+	if rep.morale != m0 - 1:
+		return "a second loss in the week moved morale to %d, want %d" % [rep.morale, m0 - 1]
+	GameState.advance_day()
+	SalesRepSystem._lose(rep, lead.call("waste_d", "faucet"), "integrations")
+	SalesRepSystem._lose(CharacterRegistry.get_founder(), lead.call("waste_e", "mkt_ads"), "integrations")
+	if rep.morale != m0 - 1:
+		return "Sales' own lead or the founder's loss cost morale (%d, want %d)" % [rep.morale, m0 - 1]
+	SalesRepSystem._lose(rep, lead.call("waste_g", "mkt_ads"), "integrations")
+	var rows: Array = GameState.get_flag("sales_weekly_loss_rows", [])
+	if rep.morale != m0 - 2 or rows.filter(func(row: Dictionary) -> bool: return int(row.get("wasted", 0)) == -1).size() != 1:
+		return "the week's second loss, a marketing lead, left morale %d and rows %s, want %d and one row saying why" % [
+			rep.morale, rows, m0 - 2]
+	MarketingSystem.set_handoff("2")
+	SalesRepSystem._lose(rep, lead.call("waste_f", "mkt_ads"), "integrations")
+	if rep.morale != m0 - 2:
+		return "the 2 star threshold's loss cost morale (%d, want %d)" % [rep.morale, m0 - 2]
+	return ""
+
+
+
+
+
+## A held threshold's price (PRD_PAZARLAMA §7 B4): a waited-out lead that drops costs its row's runner 1 morale, under "3" and
+## under "2", once a week however many drop, and the week's one mail lists the drops by channel with the morale; a closed row
+## costs nothing, and a week with no drop sends no mail.
+## FALSIFICATION: drop `charged` → two drops in a week cost two points FAIL; drop the empty-row test in `_charge_drop` → the
+## closed row's drop costs morale FAIL.
+static func _case_marketing_dropped_lead_costs_runner() -> String:
+	_seed_b2b(10000)
+	var mkt: Character = _make_employee("char_mkt_drop", "Ece", HRConstants.ROLE_MARKETING_SPECIALIST)
+	mkt.assigned_job_ids.append(HRConstants.JOB_MARKETING)
+	var r: Dictionary = MarketingSystem.add_row("search_ads", "", mkt.id)
+	var held := func(n: int) -> Array:
+		var out: Array = []
+		for i in n:
+			out.append({"star": 1, "source": "mkt_ads", "sector": "", "weeks": 3, "row": int(r.id)})
+		return out
+	var mails := func() -> Array:
+		return GameState.messages.filter(func(m: Dictionary) -> bool: return m.kind == "mkt_dropped")
+	var m0: int = mkt.morale
+	MarketingSystem.set_handoff("3")
+	GameState.marketing["nurture"] = held.call(2)
+	MarketingSystem._tick_nurture()
+	if mkt.morale != m0 - 1 or mails.call().size() != 1:
+		return "two drops under 3 stars left morale %d (from %d) and %d mails, want one point and one mail" % [mkt.morale, m0, mails.call().size()]
+	var args: Dictionary = mails.call()[0].args
+	if args.lines != [{"kind": "search_ads", "n": 2}] or args.morale.size() != 1 or int(args.morale[0].morale) != -1:
+		return "the mail says %s, want two search drops and the runner's -1" % [args]
+	GameState.advance_day()
+	MarketingSystem.set_handoff("2")
+	GameState.marketing["nurture"] = held.call(1)
+	MarketingSystem._tick_nurture()
+	if mkt.morale != m0 - 2:
+		return "a drop under 2 stars the next week left morale %d, want %d" % [mkt.morale, m0 - 2]
+	MarketingSystem.set_handoff("3")
+	MarketingSystem.remove_row(int(r.id))
+	GameState.marketing["nurture"] = held.call(1)
+	MarketingSystem._tick_nurture()
+	if mkt.morale != m0 - 2:
+		return "a closed row's drop cost its old runner morale"
+	var count: int = mails.call().size()
+	GameState.marketing["nurture"] = []
+	MarketingSystem._tick_nurture()
+	if mails.call().size() != count:
+		return "a week with no drop sent a mail"
+	return ""
 
 
 ## A card's strain with a fund (investor_strain) starts both of its rooms that many points lower and
@@ -18503,20 +18634,14 @@ static func _case_rnd_rail_open_with_locked_tree() -> String:
 
 	# --- VERİ TARAFI: ray tanımı ---
 	var rnd_row := {}
-	var mkt_row := {}
 	for row in UiTokens.TABS:
 		if String(row.get("id", "")) == "rnd":
 			rnd_row = row
-		elif String(row.get("id", "")) == "marketing":
-			mkt_row = row
-	if rnd_row.is_empty() or mkt_row.is_empty():
-		return "fixture: rnd or marketing missing from UiTokens.TABS"
+	if rnd_row.is_empty():
+		return "fixture: rnd missing from UiTokens.TABS"
 	if rnd_row.has("lock"):
 		return "the Ar-Ge rail entry still carries a lock ('%s'); the gate is the PAGE now" \
 			% rnd_row["lock"]
-	# Ve hüküm hedeflidir, toptan bir açma değil: Pazarlama rozetini KORUR.
-	if String(mkt_row.get("lock", "")) != "ea":
-		return "Marketing lost its lock; YAKINDA must still mean 'not in this build'"
 
 	# --- SAYFA TARAFI: v1 öncesi de ağaç, karoları kilitli ---
 	var host: Node = EventBus
@@ -29111,15 +29236,15 @@ static func _case_event_v3_seams() -> String:
 	# FALSİFİKASYON: ModuleLocks.is_open'ın _override dalını sil → dördüncü iddia FAIL;
 	# hr.weeks_since_last_hire'ı en BÜYÜK kıdeme çevir → sonuncusu FAIL.
 	const ModuleLocks := preload("res://scripts/systems/module_locks.gd")
-	var want: Dictionary = {"marketing": false, "product": true, "rnd": true, "piyasa": true}
+	var want: Dictionary = {"marketing": true, "product": true, "rnd": true, "piyasa": true}
 	for id in want:
 		if EvSeams.read("build.module_unlocked." + String(id)) != want[id]:
 			return "build.module_unlocked.%s demo build'de %s olmalı" % [id, want[id]]
-	ModuleLocks.set_override("marketing", true)
-	if EvSeams.read("build.module_unlocked.marketing") != true:
-		return "set_override kilitli modülü açmadı"
-	ModuleLocks.clear_overrides()
+	ModuleLocks.set_override("marketing", false)
 	if EvSeams.read("build.module_unlocked.marketing") != false:
+		return "set_override açık modülü kapatmadı"
+	ModuleLocks.clear_overrides()
+	if EvSeams.read("build.module_unlocked.marketing") != true:
 		return "clear_overrides override'ı kaldırmadı"
 	var weeks: int = int(EvSeams.read("hr.weeks_since_last_hire"))
 	if weeks != -1:
@@ -29601,6 +29726,8 @@ static func _on_action_bindings() -> String:
 
 	var seen: Array = []
 	EventBus.module_unlocked.connect(func(id: String) -> void: seen.append(id))
+	# Every module is open in this build: the watch sees Pazarlama shut first, so opening it is an opening.
+	ModuleLocks.set_override("marketing", false)
 	EvEngine._step_module_watch()
 	if not seen.is_empty():
 		return "boş görüntüyle ilk tik %s yaydı" % str(seen)
@@ -29627,6 +29754,7 @@ static func _on_action_bindings() -> String:
 	EvEngine._step_signal_drain()
 	if seen.size() != 1 or EvQueue.has(MOD_ID):
 		return "açık kalan modül ikinci tikte yeniden açıldı sayıldı: %s" % str(seen)
+	ModuleLocks.clear_overrides()
 	return ""
 
 

@@ -135,8 +135,12 @@ func _message() -> void:
 			_actions(SummarySystem.display(a).footer, [[tr("MAIL_CONTINUE"), _close, true]])
 		"sales_week":
 			_mail(_item.subject, "", _sales_report(a))
+		"mkt_dropped":
+			_mail(_item.subject, "", _dropped(a))
 		"sales_loss":
 			_mail(_item.subject, INBOX.lost_body(a))
+			if int(a.get("wasted", 0)) != 0:
+				_col.add_child(_wasted(a))
 		"support_week":
 			_mail(_item.subject, "", _support_report(a))
 			if String(a.fix) != "":
@@ -618,7 +622,34 @@ func _sales_report(a: Dictionary) -> VBoxContainer:
 	col.add_child(foot)
 	for lost in a.get("lost", []):
 		col.add_child(_wrapped(INBOX.lost_line(lost), &"DataText"))
+		if int(lost.get("wasted", 0)) != 0:
+			col.add_child(_wasted(lost))
 	return col
+
+
+## The week's dropped leads, a line a channel, and the runners' morale when the tight threshold cost it (PRD_PAZARLAMA B4).
+func _dropped(a: Dictionary) -> VBoxContainer:
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", UiTokens.SPACE_L)
+	for line: Dictionary in a.lines:
+		col.add_child(_wrapped(INBOX.dropped_line(line), &"DataText"))
+	var parts: Array = []
+	for m: Dictionary in a.morale:
+		parts.append_array(EvChips.describe({"verb": "morale_crew", "amount": int(m.morale),
+			"names": [String(m.rep).get_slice(" ", 0)]}, {}, {}, true))
+	if not parts.is_empty():
+		col.add_child(_chips(parts))
+	return col
+
+
+## Why a seller's morale fell (PRD_PAZARLAMA B4): "Boşa giden görüşme · {lead}" and the morale chip, the rep named by first name.
+func _wasted(loss: Dictionary) -> HFlowContainer:
+	var flow := _chips(EvChips.describe({"verb": "morale_crew", "amount": int(loss.wasted),
+		"names": [String(loss.rep).get_slice(" ", 0)]}, {}, {}, true))
+	var why := UiFactory.make_label(tr("MKT_WASTED_MEETING").format({"lead": loss.company}), &"DataText")
+	flow.add_child(why)
+	flow.move_child(why, 0)
+	return flow
 
 
 ## The support report's table: the lines with open bugs, then the week's news.

@@ -24,7 +24,7 @@ signal night_skipped()
 # A TimeManager batch (advance_hours / skip_night) finished; cards held during it show now.
 signal clock_batch_ended()
 # "" = sekme yok, pencere yok. Sekme id'leri ray sırasıyla: "product", "sales", "hr",
-# "finance", "personal", "marketing", "rnd", "events". "marketing" KİLİTLİ: rayda görünür
+# "finance", "personal", "marketing", "rnd", "events". Kilitli bir sekme (UiTokens.TABS'ta `lock`) rayda görünür
 # ama tıklanamaz, bu sinyal onu taşımaz.
 signal tab_changed(tab_id: String)
 # Mount edilmiş Finance sekmesine alt sayfa seçtirir ("ozet"|"yatirim"). tab_changed("finance")

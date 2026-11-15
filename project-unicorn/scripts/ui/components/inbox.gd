@@ -15,7 +15,7 @@ const GROUP := &"inbox"
 const MENTOR_ID := "char_mentor_frank"
 ## A message kind's topic.
 const MESSAGE_TOPICS := {"intro": "EVENT_TAG_MENTOR", "summary": "EVENT_TAG_AGENDA",
-	"sales_week": "EVENT_TAG_CUSTOMER", "sales_loss": "EVENT_TAG_CUSTOMER", "clause": "EVENT_TAG_CUSTOMER",
+	"sales_week": "EVENT_TAG_CUSTOMER", "sales_loss": "EVENT_TAG_CUSTOMER", "mkt_dropped": "EVENT_TAG_CUSTOMER", "clause": "EVENT_TAG_CUSTOMER",
 	"exit_notice": "EVENT_TAG_CUSTOMER", "support_week": "EVENT_TAG_PRODUCT", "rnd_note": "EVENT_TAG_PRODUCT",
 	"rnd_discovery": "EVENT_TAG_PRODUCT"}
 ## A category's sender when the card's speaker and slots name none.
@@ -299,6 +299,9 @@ static func _message_item(m: Dictionary) -> Dictionary:
 			# A week of lost deals alone has no closes to list: the preview reads its first lost line.
 			it.line = lost_line(lost[0]) if names.is_empty() \
 				else "%s · %s" % [", ".join(names), Fmt.money_exact(total) + TranslationServer.translate("SALES_PER_MONTH")]
+		"mkt_dropped":
+			it.sender = _desk(TranslationServer.translate("MAIL_SENDER_MARKETING"))
+			it.line = dropped_line(a.lines[0])
 		"sales_loss":
 			it.sender = named_employee(String(a.rep), HRConstants.ROLE_SALES_REP)
 			it.subject = TranslationServer.translate(String(m.key)).format({"company": a.company})
@@ -376,6 +379,12 @@ static func support_line(row: Dictionary) -> String:
 	for key in args:
 		args[key] = SprintCatalog.cap_name(String(args[key])) if key == "line" else Fmt.group(int(args[key]))
 	return TranslationServer.translate(String(row.key)).format(args)
+
+
+## A dropped-lead mail's line: "Düşen aday · Arama reklamı: 3".
+static func dropped_line(line: Dictionary) -> String:
+	return TranslationServer.translate("MKT_DROPPED_LINE").format({"channel": TranslationServer.translate(
+		"MKT_KIND_" + String(line.kind).to_upper()), "n": int(line.n)})
 
 
 ## One lost deal as the weekly report says it.

@@ -144,7 +144,7 @@ func _paint() -> void:
 	custom_minimum_size.x = WIDTH_ICONS if icons else WIDTH
 	for i in tab_buttons.size():
 		var id: String = String(UiTokens.TABS[i].id)
-		# Kilitli sekme (--tab-shot=marketing onu açabilir) kilitli görünümde kalır, hiç vurgulanmaz.
+		# Kilitli sekme kilitli görünümde kalır, hiç vurgulanmaz.
 		var state: String = "locked" if _is_locked(i) else ("active" if i == current_tab_idx else "idle")
 		var key: String = "TAB_" + id.to_upper()
 		if id == "sales" and SalesSystem.is_marketplace():
