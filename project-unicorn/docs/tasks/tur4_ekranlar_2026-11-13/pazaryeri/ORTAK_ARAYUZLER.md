@@ -41,6 +41,10 @@ kapanışından sonra), ikisi de Finans'tan önce (`:416`). Sıra doğruluğu de
   Konunun oyuncuya görünen adı tek yerden okunur: `MarketplaceSystem.topic_name(kimlik)` (Genel'in defter satırı ve
   Talepler görünümü).
   `tick_requests` OLAYLAR'ındır.
+- **Olay motoru:** `MarketplaceSystem.waive_commission(hafta)` izleyen kapanışların brüt komisyonunu sıfırlar;
+  `week_commission()` komisyonsuz haftanın bedelidir (geçen kapanışta alınacak komisyon, yeni mağaza şartının payı
+  düşülmüş); `add_satisfaction(kayıt, puan)` toplu kayda yazılan memnuniyeti tarafın defterine süreli
+  "Verdiğimiz karar" satırı olarak yazar. Yazanlar `marketplace_changed()` yayar; sahibi Pazaryeri, çağıranı OLAYLAR.
 
 Yardımcı yönetmenin kararları (13 Kasım; adlar Erdem'in onayında): taraf adları her ekranda "kullanıcı" ve "mağaza"; ikinci
 göstergenin adı "Reklam doyumu". Ödeyen tarafın adı açık: Pazarlama "Şirket" yazıyor, Politikalar Erdem'in önerisiyle "Biz

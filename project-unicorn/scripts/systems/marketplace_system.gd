@@ -1,7 +1,7 @@
 class_name MarketplaceSystem
 extends RefCounted
 
-# Pazaryeri ekonomisinin oyundaki sahibi: `GameState.marketplace`'in tek yazarı. Yazan seam'ler modelin aynı adlı işlevini
+# Pazaryeri ekonomisinin oyundaki sahibi: `GameState.marketplace`'in tek yazarı. Yazan seam'ler modelin işlevini
 # durum ve `world()` ile çağırır; uygulananı `marketplace_changed` ile duyurur ve true döner, reddedileni duyurmaz ve false
 # döner. `daily_tick` haftalık kapanıştır: pazaryeri türünde Satış yuvası onu haftada bir çağırır; durumu iki toplu müşteri
 # kaydına ve Finans'ın `pazaryeri` giderine yansıtır. Durum yalnız yazan seam'lerde ve kapanışta doğar; okuyanlar boş durumu
@@ -107,6 +107,17 @@ static func add_users(n: float) -> bool:
 	return _written(MarketplaceModel.add_users(_s(), n))
 
 
+static func waive_commission(weeks: int) -> bool:
+	return _written(MarketplaceModel.waive_commission(_s(), weeks))
+
+
+## Olayın memnuniyet etkisi bir toplu kayıtta: tarafın defterine süreli bir satır (`note_decision`). Satır hemen görünür, sayı
+## izleyen kapanışlarda hedefe yürür; kaydın memnuniyeti kapanışın yansımasıdır. Pazaryerinin kaydı değilse false.
+static func add_satisfaction(record_id: String, amount: int) -> bool:
+	var side: String = {USERS_ID: "users", STORES_ID: "stores"}.get(record_id, "")
+	return side != "" and _written(MarketplaceModel.note_decision(_s(), side, amount))
+
+
 ## Bileti olmayan konuyu rapordan açar: `affected` haftalık etkilenen sipariş.
 static func open_topic(id: String, affected: float) -> bool:
 	return _written(MarketplaceModel.open_topic(_s(), world(), id, affected))
@@ -152,6 +163,11 @@ static func week_gmv() -> float:
 	for cat in MarketplaceModel.open_ids(state):
 		total += MarketplaceModel.gmv(state, cat)
 	return total
+
+
+## Komisyonsuz bir haftanın bedeli: geçen kapanışta alınacak komisyon (yeni mağaza şartının payı düşülmüş).
+static func week_commission() -> int:
+	return roundi(MarketplaceModel.week_commission(read_state()))
 
 
 ## Açık kategorilerin mağaza toplamı.

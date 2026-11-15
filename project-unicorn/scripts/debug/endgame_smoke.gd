@@ -686,6 +686,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"marketplace_paid_plan_waits_for_premium": fail = _case_marketplace_paid_plan_waits_for_premium()
 		"marketplace_audience_seams_redirect": fail = _case_marketplace_audience_seams_redirect(pinned)
 		"marketplace_no_category_reminder":  fail = _case_marketplace_no_category_reminder()
+		"marketplace_event_seams":           fail = _case_marketplace_event_seams()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -32195,3 +32196,61 @@ static func _no_category_reminder() -> Array:
 	const INBOX := preload("res://scripts/ui/components/inbox.gd")
 	return [MailClock.reminders().any(func(r: Dictionary) -> bool: return r.kind == "mp_no_category"),
 		INBOX.desk().any(func(it: Dictionary) -> bool: return it.id == "r:mp_no_category")]
+
+
+## Olay motorunun üç seam'i: `waive_commission(1)` sinyali bir kez yayar ve izleyen kapanışın komisyonunu 0 yapar, `waive_commission(0)`
+## reddedilir; `week_commission()` kapanıştan önce 0, normal haftada o haftanın komisyonu, bekleyen komisyonsuz haftada geçen
+## haftanın sayısı, komisyonsuz kapanıştan sonra o haftanın alınacak komisyonudur (Moda: sepet 38, komisyon %10, elle);
+## `add_satisfaction` kullanıcı kaydında kullanıcı, mağaza kaydında mağaza defterine süreli "decision" satırı yazar, sinyali bir kez
+## yayar ve memnuniyeti kapanıştan önce oynatmaz; başka kimlikte false döner, yaymaz, durumu değiştirmez ve boş durumu doğurmaz.
+##
+## FALSİFİKASYON: `MarketplaceSystem.waive_commission`da `_written`i atıp modelin sonucunu döndür → sinyal satırı FAIL;
+## `MarketplaceModel.week_commission`da kategorinin `net`ini topla → komisyonsuz kapanış satırı FAIL; `add_satisfaction`da iki kimliğin
+## tarafını takas et → taraf satırı FAIL; kimlik kapısını kaldır (bilinmeyen kimlik `users`a yazar) → reddedilen çağrı satırı FAIL;
+## kimlik kapısının önünde `_s()` çağır → boş durum satırı FAIL.
+static func _case_marketplace_event_seams() -> String:
+	if MarketplaceSystem.add_satisfaction("co_other", 5) or not GameState.marketplace.is_empty():
+		return "a record that is not the marketplace's returned true or filled the empty state"
+	_seed_marketplace_world()
+	var emits: Array[int] = [0]
+	EventBus.marketplace_changed.connect(func() -> void: emits[0] += 1)
+	var state: Dictionary = GameState.marketplace
+	var before: Dictionary = state.duplicate(true)
+	if MarketplaceSystem.waive_commission(0) or MarketplaceSystem.add_satisfaction("co_other", 5) or emits[0] != 0 or state != before:
+		return "a rejected call (waive 0 weeks, a record that is not the marketplace's) returned true, emitted or changed the state"
+	if MarketplaceSystem.week_commission() != 0:
+		return "before the first close a waived week costs %d" % MarketplaceSystem.week_commission()
+	MarketplaceSystem.daily_tick()
+	var wk: Dictionary = state.cats.fashion.week
+	if wk.delivered <= 0.0:
+		return "fixture: Fashion delivered no order in the close"
+	var normal: int = MarketplaceSystem.week_commission()
+	if normal != roundi(wk.net):
+		return "a normal week's cost reads %d, the close booked %.2f of commission" % [normal, wk.net]
+	emits[0] = 0
+	if not MarketplaceSystem.waive_commission(1) or emits[0] != 1:
+		return "waive 1 week did not return true with exactly one emit (%d)" % emits[0]
+	if MarketplaceSystem.week_commission() != normal:
+		return "a pending waived week moved its cost from %d to %d" % [normal, MarketplaceSystem.week_commission()]
+	MarketplaceSystem.daily_tick()
+	wk = state.cats.fashion.week
+	var gross: float = (wk.delivered - wk.returns) * 38.0 * 0.10
+	if wk.net != 0.0 or state.revenue_weeks[0] != 0.0:
+		return "the waived close booked %.2f of commission" % wk.net
+	if gross <= 0.0 or MarketplaceSystem.week_commission() != roundi(gross):
+		return "after the waived close its cost reads %d, its deliveries less returns are worth %.2f" % [MarketplaceSystem.week_commission(), gross]
+	var row := {"key": "decision", "arg": "", "points": -6.0, "weeks": int(MarketplaceModel.cfg("ledger.rows.decision.weeks"))}
+	var sat: Dictionary = state.sat.duplicate()
+	for side: String in ["users", "stores"]:
+		var id: String = MarketplaceSystem.USERS_ID if side == "users" else MarketplaceSystem.STORES_ID
+		var other: String = "stores" if side == "users" else "users"
+		var others: int = state.ledger[other].size()
+		var seen: int = emits[0]
+		if not MarketplaceSystem.add_satisfaction(id, -6) or emits[0] != seen + 1:
+			return "%s: add_satisfaction did not return true with exactly one emit" % id
+		if state.ledger[side].back() != row or state.ledger[other].size() != others:
+			return "%s: the last %s row is %s, the %s ledger holds %d rows (had %d)" % [id, side, state.ledger[side].back(), other,
+				state.ledger[other].size(), others]
+	if state.sat != sat:
+		return "the satisfaction moved before a close: %s, was %s" % [state.sat, sat]
+	return ""

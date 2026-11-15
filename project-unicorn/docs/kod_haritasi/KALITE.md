@@ -5,17 +5,17 @@ Kapsam: scripts/ altındaki 268 .gd (tools/ hariç). Kod temizliği ve kıdemli 
 
 ## En büyük 25 .gd
 
-- scripts/debug/endgame_smoke.gd · 32197 satır · 733 func
+- scripts/debug/endgame_smoke.gd · 32256 satır · 734 func
 - scripts/main/main.gd · 6782 satır · 241 func
 - scripts/debug/run_probe.gd · 2446 satır · 95 func
 - scripts/systems/sprint_system.gd · 2139 satır · 173 func
 - scripts/theme/build_theme.gd · 1663 satır · 31 func
 - scripts/events/tools/lint.gd · 1378 satır · 48 func
-- scripts/systems/marketplace_model.gd · 1324 satır · 105 func
+- scripts/systems/marketplace_model.gd · 1342 satır · 107 func
 - scripts/systems/vc_pitch_system.gd · 1317 satır · 91 func
+- scripts/debug/marketplace_probe.gd · 1313 satır · 65 func
 - scripts/autoload/save_manager.gd · 1295 satır · 60 func
 - scripts/tabs/product/product_model.gd · 1288 satır · 68 func
-- scripts/debug/marketplace_probe.gd · 1262 satır · 64 func
 - scripts/systems/hr_constants.gd · 1186 satır · 90 func
 - scripts/events/core/effects.gd · 1149 satır · 35 func
 - scripts/ui/office/office_person.gd · 1128 satır · 51 func
@@ -35,47 +35,47 @@ Kapsam: scripts/ altındaki 268 .gd (tools/ hariç). Kod temizliği ve kıdemli 
 
 Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları arada sayılır).
 - scripts/theme/build_theme.gd:421 · _menajer · 901 satır
-- scripts/debug/endgame_smoke.gd:52 · run_case · 643 satır
+- scripts/debug/endgame_smoke.gd:52 · run_case · 644 satır
 - scripts/events/core/effects.gd:244 · _apply · 610 satır
 - scripts/events/tools/vocab_gen.gd:20 · run · 322 satır
 - scripts/theme/build_theme.gd:46 · _initialize · 320 satır
 - scripts/events/present/chips.gd:74 · describe · 308 satır
 - scripts/main/main.gd:4320 · _run_hr_shot · 276 satır
-- scripts/debug/endgame_smoke.gd:24740 · _case_sprint_timeline_matches_play_out · 266 satır
-- scripts/debug/endgame_smoke.gd:9246 · _case_hr_constants_contract · 220 satır
-- scripts/debug/endgame_smoke.gd:2315 · _case_save_v13_day_stamps_migrate · 209 satır
+- scripts/debug/endgame_smoke.gd:24741 · _case_sprint_timeline_matches_play_out · 266 satır
+- scripts/debug/endgame_smoke.gd:9247 · _case_hr_constants_contract · 220 satır
+- scripts/debug/endgame_smoke.gd:2316 · _case_save_v13_day_stamps_migrate · 209 satır
 - scripts/main/main.gd:1547 · _run_inbox_shot · 205 satır
 - scripts/autoload/game_state.gd:830 · initialize_run · 199 satır
 - scripts/events/seams/seams_ported.gd:8 · install · 180 satır
 - scripts/main/main.gd:2479 · _run_office_shot · 180 satır
-- scripts/debug/endgame_smoke.gd:17629 · _case_fit_star_context · 166 satır
+- scripts/debug/endgame_smoke.gd:17630 · _case_fit_star_context · 166 satır
 - scripts/events/seams/seams_sales.gd:26 · install · 160 satır
-- scripts/debug/endgame_smoke.gd:2534 · _case_legacy_v12_save_opens_live_table · 157 satır
+- scripts/debug/endgame_smoke.gd:2535 · _case_legacy_v12_save_opens_live_table · 157 satır
 - scripts/main/main.gd:1951 · _run_sales_shot · 156 satır
 - scripts/onboarding/first_week_doc.gd:20 · lay_out · 154 satır
-- scripts/debug/endgame_smoke.gd:8791 · _case_hr_leave_shift · 149 satır
-- scripts/debug/endgame_smoke.gd:8043 · _case_hr_candidate_invariants · 145 satır
-- scripts/debug/endgame_smoke.gd:16886 · _case_sales_offer_signing · 144 satır
-- scripts/debug/endgame_smoke.gd:12514 · _case_job_assignment_and_idle · 140 satır
-- scripts/debug/endgame_smoke.gd:18464 · _case_rnd_tree_loads_and_validates · 140 satır
-- scripts/debug/endgame_smoke.gd:15209 · _case_clock_resumes_only_by_player · 135 satır
+- scripts/debug/endgame_smoke.gd:8792 · _case_hr_leave_shift · 149 satır
+- scripts/debug/endgame_smoke.gd:8044 · _case_hr_candidate_invariants · 145 satır
+- scripts/debug/endgame_smoke.gd:16887 · _case_sales_offer_signing · 144 satır
+- scripts/debug/endgame_smoke.gd:12515 · _case_job_assignment_and_idle · 140 satır
+- scripts/debug/endgame_smoke.gd:18465 · _case_rnd_tree_loads_and_validates · 140 satır
+- scripts/debug/endgame_smoke.gd:15210 · _case_clock_resumes_only_by_player · 135 satır
 - scripts/ui/office/office_map_card.gd:17 · _init · 134 satır
-- scripts/debug/endgame_smoke.gd:12977 · _case_effective_skill_formula · 132 satır
-- scripts/debug/endgame_smoke.gd:19085 · _case_rnd_note_author_and_lines · 129 satır
-- scripts/debug/endgame_smoke.gd:23662 · _case_sprint_founder_share_frozen · 128 satır
-- scripts/debug/endgame_smoke.gd:28942 · _case_save_v15_tickets_become_open_bugs · 128 satır
-- scripts/debug/endgame_smoke.gd:1094 · _case_gate_decline_reminder · 125 satır
-- scripts/debug/endgame_smoke.gd:21579 · _thesis_presenter_body · 124 satır
-- scripts/debug/endgame_smoke.gd:21812 · _case_sales_meeting_time_skip_founder_share · 124 satır
+- scripts/debug/endgame_smoke.gd:12978 · _case_effective_skill_formula · 132 satır
+- scripts/debug/endgame_smoke.gd:19086 · _case_rnd_note_author_and_lines · 129 satır
+- scripts/debug/endgame_smoke.gd:23663 · _case_sprint_founder_share_frozen · 128 satır
+- scripts/debug/endgame_smoke.gd:28943 · _case_save_v15_tickets_become_open_bugs · 128 satır
+- scripts/debug/endgame_smoke.gd:1095 · _case_gate_decline_reminder · 125 satır
+- scripts/debug/endgame_smoke.gd:21580 · _thesis_presenter_body · 124 satır
+- scripts/debug/endgame_smoke.gd:21813 · _case_sales_meeting_time_skip_founder_share · 124 satır
 - scripts/events/seams/seams_product.gd:15 · _install_product · 123 satır
 - scripts/events/tools/why.gd:28 · report · 121 satır
 - scripts/events/tools/engine_probe.gd:582 · _check_invalidation · 119 satır
 - scripts/events/tools/lint.gd:231 · _lint_effects · 119 satır
 - scripts/main/main.gd:4973 · _seed_product_live · 119 satır
 - scripts/debug/run_probe.gd:363 · run · 117 satır
-- scripts/debug/endgame_smoke.gd:1500 · _case_month_summary · 116 satır
+- scripts/debug/endgame_smoke.gd:1501 · _case_month_summary · 116 satır
 
-## Ölü kod adayları (64)
+## Ölü kod adayları (65)
 
 Tanım satırı dışında scripts/, scenes/, data/ içinde adı hiç geçmeyen func (yorumlar sayılmaz, dizeler sayılır). Godot geri çağrıları hariç.
 UYARI: call("a"+b) gibi kurulmuş adlar, sinyal adıyla bağlama, harness bayrakları ve tools/*.sh çağrıları yüzünden yanlış pozitif olabilir; silmeden önce grep ile doğrula.
@@ -93,36 +93,37 @@ UYARI: call("a"+b) gibi kurulmuş adlar, sinyal adıyla bağlama, harness bayrak
 - scripts/debug/marketplace_probe.gd:394 · _check_known_order_rate · debug
 - scripts/debug/marketplace_probe.gd:402 · _check_json_roundtrip · debug
 - scripts/debug/marketplace_probe.gd:410 · _check_ledger_expiry · debug
-- scripts/debug/marketplace_probe.gd:430 · _check_zone_limits_consistent · debug
-- scripts/debug/marketplace_probe.gd:449 · _check_constants_switch · debug
-- scripts/debug/marketplace_probe.gd:471 · _check_gain_and_weakest · debug
-- scripts/debug/marketplace_probe.gd:486 · _check_acquisition_multipliers · debug
-- scripts/debug/marketplace_probe.gd:517 · _check_store_terms_discount · debug
-- scripts/debug/marketplace_probe.gd:533 · _check_premium_members · debug
-- scripts/debug/marketplace_probe.gd:553 · _check_zone_rows_need_stores · debug
-- scripts/debug/marketplace_probe.gd:568 · _check_add_users_bounds · debug
-- scripts/debug/marketplace_probe.gd:583 · _check_lost_counters · debug
-- scripts/debug/marketplace_probe.gd:601 · _check_channel_read_values · debug
-- scripts/debug/marketplace_probe.gd:625 · _check_source_revenue_values · debug
-- scripts/debug/marketplace_probe.gd:661 · _check_state_survives_codec · debug
-- scripts/debug/marketplace_probe.gd:707 · _check_topic_rows_known · debug
-- scripts/debug/marketplace_probe.gd:737 · _check_topic_ticket_gates · debug
-- scripts/debug/marketplace_probe.gd:772 · _check_topic_ledger_rows · debug
-- scripts/debug/marketplace_probe.gd:803 · _check_feature_gain_matches_close · debug
-- scripts/debug/marketplace_probe.gd:829 · _check_reviews_affected_is_return_gap · debug
-- scripts/debug/marketplace_probe.gd:846 · _check_assignment_waits_a_close · debug
-- scripts/debug/marketplace_probe.gd:872 · _check_waive_zeroes_one_close · debug
-- scripts/debug/marketplace_probe.gd:914 · _check_outage_row_and_cost · debug
-- scripts/debug/marketplace_probe.gd:973 · _check_lost_commission_weighted · debug
-- scripts/debug/marketplace_probe.gd:992 · _check_backup_mult_tiers · debug
-- scripts/debug/marketplace_probe.gd:1002 · _check_open_topic_report_row · debug
-- scripts/debug/marketplace_probe.gd:1044 · _check_cfg_reads_constants · debug
-- scripts/debug/marketplace_probe.gd:1061 · _check_funnel_sums_categories · debug
-- scripts/debug/marketplace_probe.gd:1084 · _check_step_hint_matches_gain · debug
-- scripts/debug/marketplace_probe.gd:1122 · _check_ledger_worst_picks_heaviest · debug
-- scripts/debug/marketplace_probe.gd:1153 · _check_crew_follows_assignment · debug
-- scripts/debug/marketplace_probe.gd:1215 · _check_returning_orders_follow_frequency · debug
-- scripts/debug/marketplace_probe.gd:1255 · _check_word_of_mouth_brings_users · debug
+- scripts/debug/marketplace_probe.gd:433 · _check_decision_row_drifts · debug
+- scripts/debug/marketplace_probe.gd:459 · _check_zone_limits_consistent · debug
+- scripts/debug/marketplace_probe.gd:478 · _check_constants_switch · debug
+- scripts/debug/marketplace_probe.gd:500 · _check_gain_and_weakest · debug
+- scripts/debug/marketplace_probe.gd:515 · _check_acquisition_multipliers · debug
+- scripts/debug/marketplace_probe.gd:546 · _check_store_terms_discount · debug
+- scripts/debug/marketplace_probe.gd:571 · _check_premium_members · debug
+- scripts/debug/marketplace_probe.gd:591 · _check_zone_rows_need_stores · debug
+- scripts/debug/marketplace_probe.gd:606 · _check_add_users_bounds · debug
+- scripts/debug/marketplace_probe.gd:621 · _check_lost_counters · debug
+- scripts/debug/marketplace_probe.gd:639 · _check_channel_read_values · debug
+- scripts/debug/marketplace_probe.gd:663 · _check_source_revenue_values · debug
+- scripts/debug/marketplace_probe.gd:699 · _check_state_survives_codec · debug
+- scripts/debug/marketplace_probe.gd:745 · _check_topic_rows_known · debug
+- scripts/debug/marketplace_probe.gd:775 · _check_topic_ticket_gates · debug
+- scripts/debug/marketplace_probe.gd:810 · _check_topic_ledger_rows · debug
+- scripts/debug/marketplace_probe.gd:841 · _check_feature_gain_matches_close · debug
+- scripts/debug/marketplace_probe.gd:867 · _check_reviews_affected_is_return_gap · debug
+- scripts/debug/marketplace_probe.gd:884 · _check_assignment_waits_a_close · debug
+- scripts/debug/marketplace_probe.gd:910 · _check_waive_zeroes_one_close · debug
+- scripts/debug/marketplace_probe.gd:963 · _check_outage_row_and_cost · debug
+- scripts/debug/marketplace_probe.gd:1024 · _check_lost_commission_weighted · debug
+- scripts/debug/marketplace_probe.gd:1043 · _check_backup_mult_tiers · debug
+- scripts/debug/marketplace_probe.gd:1053 · _check_open_topic_report_row · debug
+- scripts/debug/marketplace_probe.gd:1095 · _check_cfg_reads_constants · debug
+- scripts/debug/marketplace_probe.gd:1112 · _check_funnel_sums_categories · debug
+- scripts/debug/marketplace_probe.gd:1135 · _check_step_hint_matches_gain · debug
+- scripts/debug/marketplace_probe.gd:1173 · _check_ledger_worst_picks_heaviest · debug
+- scripts/debug/marketplace_probe.gd:1204 · _check_crew_follows_assignment · debug
+- scripts/debug/marketplace_probe.gd:1266 · _check_returning_orders_follow_frequency · debug
+- scripts/debug/marketplace_probe.gd:1306 · _check_word_of_mouth_brings_users · debug
 - scripts/debug/office_crowd_probe.gd:48 · _log_error · debug
 - scripts/events/present/papers.gd:145 · arc_of
 - scripts/main/game_shell.gd:163 · debug_force_vc_meeting · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)

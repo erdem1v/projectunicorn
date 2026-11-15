@@ -354,12 +354,16 @@ yazıldığı haftadan sayılır ve süresi dolunca düşer.
 | Hızlı teslimat yalnız üyeye | kullanıcı | −3 | 8 hafta | Hızlı teslimat "Herkese"den "Premium'a" alınınca |
 | Hızlı teslimat | kullanıcı | +3 | sürdükçe | Hızlı teslimat "Herkese" |
 | Adresten iade | kullanıcı | +2 | sürdükçe | Adresten iade "Herkese" |
+| Verdiğimiz karar | olayın kaydının tarafı (kullanıcı ya da mağaza) | olayın puanı | 8 hafta | Olayın memnuniyet etkisi pazaryerinin kaydına yazılınca; her karar ayrı satırdır |
 - Cevapsız bildirimin payı `min(1; bekleyen bildirim ÷ bir haftada gelen bildirim)`'dir (`SupportSystem.unanswered_share()`;
   haftalık raporun sayacından okunmaz). Pazaryerinde Destek müşteri kaydına memnuniyet zararı yazmaz: zarar "Destek yığını"
   satırıdır.
 - Kesinti acil durumu bugünkü gibi `IncidentSystem`'den gelir; kullanıcı memnuniyetine yazdığı düşüş izleyen kapanışta deftere
   "Kesinti" adıyla 4 haftalık satır olarak girer (tutarı olayın planından; `note_outage`). Yedekleme modülü kesintide kaçan
   siparişi azaltır: yokken × 1; kademeleriyle × 0,7; × 0,5; × 0,3 (`backup_mult`).
+- Olayın memnuniyet etkisi kaydın sayısını oynatmaz (kapanış sayıyı defterden yeniden yazar): deftere "Verdiğimiz karar"
+  adıyla süreli satır olarak girer (`note_decision`), memnuniyet izleyen kapanışlarda hedefe yürür. Çağıran seam
+  `MarketplaceSystem.add_satisfaction(kayıt, puan)`; süre [WORKING], satırın adı TR ve EN onay bekliyor.
 - Genel sayfası iki satırın yanında en ağır olumsuz satırın kısa adını gösterir ("Geciken talep", "Geç teslimat"; konunun ve
   kategorinin adı ipucunda); ipucu bütün satırları tam adıyla ve puanıyla listeler.
 - Etkisi: kullanıcı memnuniyeti organik ziyareti ve elde tutmayı (§3.5, §3.7), mağaza memnuniyeti mağazanın kalışını (§3.4) oynatır.
@@ -456,7 +460,10 @@ haftasından itibaren tam); yeni açılan kanalın satırı bu yüzden küçük 
 ziyaret getirmemiş kaynakta 0); Pazarlama'nın kanal satırındaki yeni kullanıcı sayısı budur. Kaynak kimliğini Pazarlama verir:
 `tür:kategori` (ör. `search_ads:fashion`), satır başına tek kaynak; anahtar haftadan haftaya sabittir, çekirdek onu ayırt
 etmeden saklar. `week_gmv()` geçen kapanışın satış hacmidir (açık kategorilerin teslim edilen siparişi × sepeti; iade
-düşülmez); Pazarlama reklam harcamasının satışlara oranını bununla yazar.
+düşülmez); Pazarlama reklam harcamasının satışlara oranını bununla yazar. `week_commission()` komisyonsuz bir haftanın
+bedelidir: geçen kapanışta açık kategorilerden alınacak komisyon ((teslim edilen − iade) × sepet × o haftanın komisyonu,
+yeni mağaza şartının payı düşülmüş; kampanyanın ve üye indiriminin şirketçe karşılanan kısmı girmez, çünkü komisyonsuz
+haftada da düşer), yuvarlanmış; ilk kapanıştan önce 0. Olay motoru komisyonsuz haftanın bedelini bununla yazar.
 
 ### 3.13 Kod öncesi: saf işlevler ve probe
 Arayüzden önce §3'ün formülleri saf işlev olarak yazılır ve başsız bir probe ile koşulur (`-s res://scripts/debug/marketplace_probe.gd -- --marketplace-probe=weeks=<n>`;
@@ -586,7 +593,10 @@ başlar, kartıyla tek commit'te iner; kol yalnız `MarketplaceSystem`'in işlev
   `chips.gd:591-593`).
   Kaçan siparişin komisyonu açık kategorilerin geçen haftaki teslim payıyla ağırlıklı `sepet × komisyon`dur (teslim yoksa
   eşit ağırlık; iade düşülmez; `lost_commission`) ve izleyen kapanışın net komisyonundan düşer. "Bir hafta komisyon
-  almamak" izleyen kapanışta brüt komisyonu sıfırlar (`waive_commission`). İkisi aynı kapanışa düşerse kesintinin bedeli
+  almamak" izleyen kapanışta brüt komisyonu sıfırlar (`waive_commission`): çağıran seam
+  `MarketplaceSystem.waive_commission(1)`, çipin bedeli `MarketplaceSystem.week_commission()`'dır; kartın memnuniyet
+  etkisi pazaryerinin kaydında `MarketplaceSystem.add_satisfaction(kayıt, puan)` ile defter satırı olur (§3.8).
+  İkisi aynı kapanışa düşerse kesintinin bedeli
   ayrıca düşülmez: o hafta kaçan siparişin komisyonu da alınmayacaktı; "Kesinti" satırı yine yazılır (onay bekliyor).
   Önizleme bekleyen kesintiyi ve komisyonsuz haftayı saymaz (§3.13).
 - Üç PM kâğıdı Talepler'in bilet sayısını okur.

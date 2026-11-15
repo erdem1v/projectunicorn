@@ -16,7 +16,7 @@ extends RefCounted
 # `state` (gün alanları hafta sayısıdır, hiç değişmemişin günü NEVER): `users`, `members`; `sources[kaynak]` son on iki
 # haftanın yeni kullanıcısı (yeni önde); `cats[kategori]` = `open`, `open_day`, `commission` (yüzde), `commission_day`, `stores`,
 # `joined` (son sekiz hafta), `terms` ({} ya da `share`, `weeks`, `mult`), `week` (kapanışın sayıları: `returning`, `organic`,
-# `channel`, `visits`, `cart`, `checkout`, `order`, `delivered`, `returns`, `net`); `assign[kişi]` = `cat` ve `live` (bir
+# `channel`, `visits`, `cart`, `checkout`, `order`, `delivered`, `returns`, `due` (alınacak komisyon), `net`); `assign[kişi]` = `cat` ve `live` (bir
 # kapanıştan geçti); `policy[kural]` = `pick`, `day`; `premium` = `open`, `fee`, `fee_day`, `trial`, `joined`
 # (denemede katılan üye, son dört hafta), `orders` (üye siparişi, son dört hafta), `perks[ayrıcalık]` = `pick`, `day`, `uses`,
 # `cost` (son dört hafta); `ledger[taraf]` = satırlar
@@ -570,6 +570,16 @@ static func gmv(state: Dictionary, cat: String) -> float:
 	return state.cats[cat].week.get("delivered", 0.0) * _cats[cat].basket
 
 
+## Geçen kapanışta alınacak komisyon, açık kategorilerin toplamı (yeni mağaza şartının payı düşülmüş); kampanyanın ve üye
+## indiriminin şirketçe karşılanan kısmı girmez, komisyonsuz haftada da düşer. Komisyonsuz hafta ve kesinti girmez: kapanış
+## `due`'yu komisyonsuz haftada da yazar.
+static func week_commission(state: Dictionary) -> float:
+	var total := 0.0
+	for cat in open_ids(state):
+		total += state.cats[cat].week.get("due", 0.0)
+	return total
+
+
 # --- Yazan işlevler --------------------------------------------------------------------------
 
 static func open_category(state: Dictionary, world: Dictionary, cat: String) -> bool:
@@ -698,6 +708,15 @@ static func backup_mult(world: Dictionary) -> float:
 
 static func _add(state: Dictionary, side: String, key: String, arg: String, points: float, weeks: int) -> void:
 	state.ledger[side].append({"key": key, "arg": arg, "points": points, "weeks": weeks})
+
+
+## Olayda verilen karar: tarafın defterine `ledger.rows.decision.weeks` haftalık "decision" satırı; her karar kendi
+## satırıdır. `points` 0 ise false.
+static func note_decision(state: Dictionary, side: String, points: float) -> bool:
+	if points == 0.0:
+		return false
+	_add(state, side, "decision", "", points, int(_c.ledger.rows.decision.weeks))
+	return true
 
 
 ## Hedef: taban artı satırların toplamı, 0 ile 100 arası.
@@ -1000,15 +1019,14 @@ static func _close_category(state: Dictionary, world: Dictionary, cat: String, m
 	if perks.member_discount.pick == "premium":
 		discount = member_orders * _c.premium.perks.member_discount.discount * d.basket
 		use.call("member_discount", member_orders, discount)
-	# Komisyonsuz haftada brüt 0: şartın indirimi brütle orantılı olduğundan o da 0, şirketin karşıladığı indirim yine düşer.
-	var gross: float = 0.0 if state.waive > 0 else (n.delivered - returns) * d.basket * cs.commission / 100.0
-	var terms_cut := 0.0
+	# Alınacak komisyon: yeni mağaza şartının payı düşülmüş. Komisyonsuz haftada alınmaz; şirketin karşıladığı indirim yine düşer.
+	var due: float = (n.delivered - returns) * d.basket * cs.commission / 100.0
 	if not cs.terms.is_empty() and cs.stores > 0.0:
-		terms_cut = gross * minf(1.0, _sum(cs.joined.slice(0, int(cs.terms.weeks))) / cs.stores) * (1.0 - cs.terms.share)
+		due *= 1.0 - minf(1.0, _sum(cs.joined.slice(0, int(cs.terms.weeks))) / cs.stores) * (1.0 - cs.terms.share)
 	var covered: float = campaign_cost(state, world, cat, n.delivered) if running else 0.0
-	var net: float = gross - terms_cut - covered - discount
+	var net: float = (0.0 if state.waive > 0 else due) - covered - discount
 	cs.week = {"returning": vis.returning, "organic": vis.organic, "channel": vis.channel, "visits": visits, "cart": n.cart,
-		"checkout": n.checkout, "order": n.order, "delivered": n.delivered, "returns": returns, "net": net}
+		"checkout": n.checkout, "order": n.order, "delivered": n.delivered, "returns": returns, "due": due, "net": net}
 	# Kampanyanın haftaya yaptığı: geçen haftayı çizen okuyucular (`step_reach`, `funnel`) ve kampanyanın sonucu için. Kampanya
 	# ziyareti haftanın dördüncü kaynağıdır.
 	if not lift.is_empty():

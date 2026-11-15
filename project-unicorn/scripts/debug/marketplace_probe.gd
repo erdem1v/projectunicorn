@@ -28,7 +28,7 @@ const CHECKS := ["empty_category_no_orders", "acquisition_waits_for_publish", "l
 	"reviews_affected_is_return_gap", "assignment_waits_a_close", "waive_zeroes_one_close", "outage_row_and_cost",
 	"lost_commission_weighted", "backup_mult_tiers", "open_topic_report_row", "cfg_reads_constants", "funnel_sums_categories",
 	"step_hint_matches_gain", "ledger_worst_picks_heaviest", "crew_follows_assignment", "returning_orders_follow_frequency",
-	"word_of_mouth_brings_users"]
+	"word_of_mouth_brings_users", "decision_row_drifts"]
 
 var _weeks := DEFAULT_WEEKS
 var _printing := false
@@ -427,6 +427,35 @@ func _check_ledger_expiry() -> Array:
 		% [row.key, row.points, weeks_written, held_seven, gone, steps.max(), state.sat.stores]]
 
 
+## Verilen karar: `note_decision` tarafın defterine 8 haftalık "decision" satırı yazar, iki karar iki satırdır; hedef taban + puan
+## olur, memnuniyet kapanış başına en çok 5 puan yürür; sekizinci kapanışta satırlar düşer, hedef tabana döner. Elle: taban 70,
+## iki satır −6: hedef 58; kapanışlar 65, 60, 58, …, 58, dokuzuncu kapanış tabana doğru 63.
+func _check_decision_row_drifts() -> Array:
+	var state := _store_state(["fashion"], 0.0)
+	var world := _live_world()
+	var refused: bool = not MarketplaceModel.note_decision(state, "stores", 0.0) and state.ledger.stores.is_empty()
+	var users_side: bool = MarketplaceModel.note_decision(state, "users", 3.0) and state.ledger.stores.is_empty() \
+		and _equal(state.ledger.users, [{"key": "decision", "arg": "", "points": 3.0, "weeks": 8}])
+	MarketplaceModel.note_decision(state, "stores", -6.0)
+	MarketplaceModel.note_decision(state, "stores", -6.0)
+	var rows: Array = state.ledger.stores.duplicate(true)
+	var target := MarketplaceModel.target_sat(state, "stores")
+	var sats := []
+	var expiry := false
+	for i in 9:
+		_run(state, world.merged({"week": i}, true), 1)
+		sats.append(state.sat.stores)
+		if i == 6:
+			expiry = state.ledger.stores.size() == 2
+		if i == 7:
+			expiry = expiry and state.ledger.stores.is_empty() and MarketplaceModel.target_sat(state, "stores") == 70.0
+	var row := {"key": "decision", "arg": "", "points": -6.0, "weeks": 8}
+	return [refused and users_side and _equal(rows, [row, row]) and target == 58.0 and expiry
+			and _equal(sats, [65.0, 60.0, 58.0, 58.0, 58.0, 58.0, 58.0, 58.0, 63.0]),
+		"0 points refused=%s, +3 lands on users only=%s; two -6 decisions: rows %s, target %.0f (70 - 12); still there after 7 closes and gone after 8 with the target back at 70=%s; store satisfaction by close %s"
+		% [refused, users_side, rows, target, expiry, sats]]
+
+
 func _check_zone_limits_consistent() -> Array:
 	var state := MarketplaceModel.new_state()
 	var world := _live_world()
@@ -526,8 +555,17 @@ func _check_store_terms_discount() -> Array:
 	for n in state.cats.fashion.joined.slice(0, 8):
 		joined += n
 	var cut: float = gross * minf(1.0, joined / state.cats.fashion.stores)
-	return [_near(wk.net, gross - cut) and cut > 0.0,
-		"gross %.2f, new-store discount %.2f (stores joined in 8 weeks %.1f of %.1f), net %.2f" % [gross, cut, joined, state.cats.fashion.stores, wk.net]]
+	# Bütün mağazalar yeni ve pay 0,5: alınacak komisyon elle brütün yarısı (Moda sepeti 38, komisyonu %10), net de odur.
+	var fresh := _store_state(["fashion"], 3000.0)
+	MarketplaceModel.set_store_terms(fresh, "fashion", 0.5, 8)
+	fresh.cats.fashion.joined = [fresh.cats.fashion.stores]
+	_run(fresh, world, 1)
+	var fw: Dictionary = fresh.cats.fashion.week
+	var half: float = (fw.delivered - fw.returns) * 38.0 * 0.10 * 0.5
+	var due_ok: bool = half > 0.0 and _near(MarketplaceModel.week_commission(fresh), half) and _near(fw.net, half)
+	return [_near(wk.net, gross - cut) and cut > 0.0 and _near(MarketplaceModel.week_commission(state), wk.net) and due_ok,
+		"gross %.2f, new-store discount %.2f (stores joined in 8 weeks %.1f of %.1f), net %.2f; every store new at share 0.5: commission due %.2f, half the hand gross %.2f"
+		% [gross, cut, joined, state.cats.fashion.stores, wk.net, MarketplaceModel.week_commission(fresh), half]]
 
 
 func _check_premium_members() -> Array:
@@ -889,6 +927,15 @@ func _check_waive_zeroes_one_close() -> Array:
 	var zeroed: bool = waived.cats.fashion.week.net == -20.0 and waived.cats.electronics.week.net == 0.0 and waived.revenue_weeks[0] == -20.0 \
 		and waived.cats.fashion.week.delivered == plain.cats.fashion.week.delivered \
 		and _near(plain.revenue_weeks[0], normal.call(plain) - 20.0) and plain.revenue_weeks[0] > 0.0
+	# Komisyonsuz haftanın bedeli: kapanıştan önce 0; kampanyanın karşılanan kısmı, bekleyen ve geçen komisyonsuz hafta ve kapanıştan
+	# sonraki komisyon değişikliği onu değiştirmez.
+	var pending_waive := plain.duplicate(true)
+	MarketplaceModel.waive_commission(pending_waive, 1)
+	MarketplaceModel.set_commission(pending_waive, world, "fashion", 12)
+	var waived_cost := MarketplaceModel.week_commission(waived)
+	var cost_ok: bool = MarketplaceModel.week_commission(start) == 0.0 and _near(MarketplaceModel.week_commission(plain), normal.call(plain)) \
+		and pending_waive.cats.fashion.commission == 12 and _near(MarketplaceModel.week_commission(pending_waive), normal.call(plain)) \
+		and waived_cost > 0.0 and _near(waived_cost, normal.call(waived))
 	_run(waived, world.merged({"week": 1}, true), 1)
 	var back: bool = waived.waive == 0 and waived.revenue_weeks[0] > 0.0 and _near(waived.revenue_weeks[0], normal.call(waived))
 	var twice := start.duplicate(true)
@@ -903,11 +950,13 @@ func _check_waive_zeroes_one_close() -> Array:
 	var pending := start.duplicate(true)
 	MarketplaceModel.waive_commission(pending, 2)
 	var preview_blind: bool = pending.waive == 2 and _equal(MarketplaceModel.project(pending, world), MarketplaceModel.project(start, world))
-	return [refused and zeroed and back and two_weeks and preview_blind,
+	return [refused and zeroed and back and two_weeks and preview_blind and cost_ok,
 		"waive 1: rejects 0 and -2=%s; waived close net Fashion %.2f, Electronics %.2f (the company covers a 20 discount; the same week without waive %.2f), orders unchanged; "
 		% [refused, zero_nets[0], zero_nets[1], plain.revenue_weeks[0]]
-		+ "next close back to %.2f (hand %.2f); waive 2 stacked=%d: nets %.2f %.2f %.2f, left %d; preview ignores pending waive=%s"
-		% [waived.revenue_weeks[0], normal.call(waived), stacked, nets[0], nets[1], nets[2], twice.waive, preview_blind]]
+		+ "next close back to %.2f (hand %.2f); waive 2 stacked=%d: nets %.2f %.2f %.2f, left %d; preview ignores pending waive=%s; "
+		% [waived.revenue_weeks[0], normal.call(waived), stacked, nets[0], nets[1], nets[2], twice.waive, preview_blind]
+		+ "a waived week's cost: 0 before a close, gross by hand after it (the coupon's covered part left out), unchanged by a pending waive and a later raise to 12%%, the waived close's own gross %.2f=%s"
+		% [waived_cost, cost_ok]]
 
 
 ## Kesinti: izleyen kapanışta "Kesinti" satırı `rows.outage.weeks` hafta sürer, bedel toplam net komisyondan düşer, bekleyen sıfırlanır.
@@ -941,6 +990,8 @@ func _check_outage_row_and_cost() -> Array:
 			first_revenue = hit.revenue_weeks[0]
 			first_drop = MarketplaceModel.target_sat(hit, "users") - MarketplaceModel.target_sat(plain, "users")
 			split_kept = _near(hit.cats.fashion.week.net, plain.cats.fashion.week.net) and _near(hit.cats.electronics.week.net, plain.cats.electronics.week.net)
+			# Komisyonsuz haftanın bedeli kesinti haftasında da brüttür: kesintinin bedeli ona girmez.
+			split_kept = split_kept and _near(MarketplaceModel.week_commission(hit), plain_net)
 			cleared = hit.outage.points == 0.0 and hit.outage.cost == 0.0
 		else:
 			costless_after = costless_after and _near(hit.revenue_weeks[0], hit.cats.fashion.week.net + hit.cats.electronics.week.net)
@@ -964,7 +1015,7 @@ func _check_outage_row_and_cost() -> Array:
 	return [refused and summed and counts == [1, 1, 1, 0] and row_ok and cost_ok and _near(first_drop, -5.0) and cleared and costless_after and preview_blind \
 		and both_ok,
 		"note_outage rejects 0/0=%s, 3+2 points and 40+10 cost add up=%s; closes 1-4 leave outage rows %s (written once, 4 weeks), first row %s; "
-		% [refused, summed, counts, first_row] + "net commission %.2f -> %.2f (cost 50 off the total, category rows unchanged=%s), target satisfaction %+.2f, pending cleared=%s, "
+		% [refused, summed, counts, first_row] + "net commission %.2f -> %.2f (cost 50 off the total, category rows and the week's gross commission unchanged=%s), target satisfaction %+.2f, pending cleared=%s, "
 		% [plain_net, first_revenue, cost_ok, first_drop, cleared] + "later weeks cost nothing=%s, preview ignores pending=%s; waive and outage in one close: month net %.2f (only the company discount), row written, next close normal=%s"
 		% [costless_after, preview_blind, both_net, both_ok]]
 

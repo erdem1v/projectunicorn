@@ -3600,6 +3600,7 @@ MP_ROW_FAST_MEMBERS_ONLY,Hızlı teslimat yalnız üyeye,Fast delivery now membe
 MP_ROW_FAST_DELIVERY,Hızlı teslimat,Fast delivery
 MP_ROW_DOORSTEP_RETURNS,Adresten iade,Doorstep returns
 MP_ROW_OUTAGE,Kesinti,Outage
+MP_ROW_DECISION,Verdiğimiz karar,Our decision
 MP_CAT_FASHION,Moda,Fashion
 MP_CAT_ELECTRONICS,Elektronik,Electronics
 MP_CAT_HOME,Ev ve Yaşam,Home and Living
