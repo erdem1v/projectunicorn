@@ -675,8 +675,9 @@ func _section(heading_key: String, rows: Array) -> VBoxContainer:
 	return box
 
 
-## What a finished research opened (§5.8): no money, no chip, only the door. Its sentence, the continuation
-## slots it named, and the new line, unless the sentence already names it.
+## What a finished research opened (§5.8): no money, no chip, only the door. Its sentence (`ResearchTree.unlock_text`: a
+## node without one names the tiers it opens in this product), the continuation slots it named, and the new line, unless
+## the sentence already names it.
 func _opened(node: String) -> PanelContainer:
 	var box := PanelContainer.new()
 	box.theme_type_variation = &"DiscBox"
@@ -684,7 +685,7 @@ func _opened(node: String) -> PanelContainer:
 	col.add_theme_constant_override("separation", UiTokens.SPACE_S)
 	box.add_child(col)
 	col.add_child(UiFactory.make_label(Fmt.upper(tr("RND_UNLOCKS_PREFIX")), &"KeyLabel"))
-	var unlock: String = RnDUiShared.t_or("PROD_RND_NODE_%s_UNLOCK" % node.to_upper(), "")
+	var unlock: String = ResearchTree.unlock_text(node)
 	if unlock != "":
 		col.add_child(_wrapped(unlock, &"DataText"))
 	var opened: Array = ResearchTree.children_of(node)

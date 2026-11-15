@@ -1517,6 +1517,7 @@ func _seed_paper_world(event_id: String) -> Dictionary:
 ##   news (a one-option news card arrived as mail, its effect landed and named in its answer block) ·
 ##   rnd_note (week 14's note) · rnd_note_demand (the same note with a bug open on an ERP
 ##   line, so its first line names that line) · rnd_discovery (week 16's, on the Ar-Ge timeline) ·
+##   rnd_discovery_tiers (week 17's Anlamsal Dizin, a node with no sentence of its own: it names the ERP tier it opens) ·
 ##   weekly_sales · clause_sign · clause_reserve · clause_notice · clause_withdraw (the server clause's four mails of a 3★ account on
 ##   Standard servers, the newest open: its signing, the day its period ends over a satisfied account and over one it does not
 ##   satisfy, and that notice taken back by the move to Enterprise; a CLAUSE line names the decision on screen and whether the
@@ -1560,7 +1561,11 @@ func _run_inbox_shot(state: String) -> void:
 		GameState.current_hour = TimeModel.HOURS_PER_DAY - 1
 		TimeManager.sync_to_current_hour()
 	if state.begins_with("rnd_"):
-		_seed_rnd(16 if state == "rnd_discovery" else 14, state != "rnd_note_demand")
+		_seed_rnd(16 if state in ["rnd_discovery", "rnd_discovery_tiers"] else 14, state != "rnd_note_demand")
+	if state == "rnd_discovery_tiers":
+		GameState.day = 17
+		RnDSystem.start("semantic_index", ["char_emp_shot_0"])
+		RnDSystem._complete("semantic_index")
 	if state == "rnd_note_demand":
 		ProductState.add_bugs(SprintCatalog.capabilities("integrations")[0], 1)
 		RnDSystem._tick_note()
@@ -1687,7 +1692,7 @@ func _run_inbox_shot(state: String) -> void:
 			TimeManager.sync_to_current_hour()
 			var payload: Dictionary = SummarySystem._build_summary_data("quarterly", GameState.day - 1)
 			MessageSystem.post("summary", String(SummarySystem.PERIOD_KEYS.quarterly.title), payload, true)
-		"rnd_note", "rnd_note_demand", "rnd_discovery":
+		"rnd_note", "rnd_note_demand", "rnd_discovery", "rnd_discovery_tiers":
 			INBOX.show("m:" + String(GameState.messages[-1].id))
 		"weekly_sales":
 			var rows := []

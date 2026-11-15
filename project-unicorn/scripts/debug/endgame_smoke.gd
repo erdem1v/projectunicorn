@@ -513,6 +513,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"rnd_rail_open_with_locked_tree": fail = _case_rnd_rail_open_with_locked_tree()
 		"rnd_note_author_and_lines": fail = _case_rnd_note_author_and_lines()
 		"rnd_design_discount_reads_profile": fail = _case_rnd_design_discount_reads_profile()
+		"rnd_unlock_lists_own_tiers": fail = _case_rnd_unlock_lists_own_tiers()
 		"card_math_matches_gdd_example":  fail = _case_card_math_matches_gdd_example()
 		"save_v10_product_state":         fail = _case_save_v10_product_state()
 		# --- rev 6.1 · router devri (2026-08-25). İkisi de ÖNCEKİ ağaca karşı DÜŞER.
@@ -17485,6 +17486,44 @@ static func _case_product_line_profiles() -> String:
 		return "the authored hidden line did not register with its profile"
 	if ProductLines.work_profile("line_nope") != "":
 		return "an unknown line reads a profile"
+	return ""
+
+
+## Araştırma bitti postasının açtıkları: kendi açılım cümlesi olmayan düğüm bu ürünün o düğümle açılan kademelerini sayar,
+## başka ürünün kademesini saymaz. Not, Video ve ERP kademelerini sayan dört cümle yoktur; ERP'de Anlamsal Dizin belge okuma
+## kademesini, Ölçeklenebilir Altyapı faturalama ve yedekleme kademelerini açar, Yapay Zeka Motoru hiçbir kademeyi açmaz;
+## pazaryerinde Yapay Zeka Motoru ilan kademesini açar. Tür seçilmeden liste boştur.
+##
+## FALSİFİKASYON: ResearchTree.steps_opened_by'da `ProductState.subtype()` yerine bütün alt türlerin hatlarını gez → ilk
+## "tür seçilmeden" iddiası FAIL (ERP'nin Yapay Zeka iddiası da düşer); ResearchTree.unlock_text'in yedeğini "" yap → ERP'nin
+## Anlamsal Dizin metni iddiası FAIL; strings.csv'ye PROD_RND_NODE_AI_ENGINE_UNLOCK'ı geri koy → cümle iddiası FAIL.
+static func _case_rnd_unlock_lists_own_tiers() -> String:
+	for node in ["ai_engine", "semantic_index", "scalable_backend", "analytics_engine"]:
+		var key: String = "PROD_RND_NODE_%s_UNLOCK" % node.to_upper()
+		if TranslationServer.translate(key) != key:
+			return "%s keeps its own sentence (%s), which named other products' tiers" % [node, TranslationServer.translate(key)]
+	SaveManager.reset_all_owners()
+	GameState.initialize_run({"seed": 424242})
+	if not ResearchTree.steps_opened_by("semantic_index").is_empty():
+		return "no type picked: semantic_index opens %s, want nothing" % str(ResearchTree.steps_opened_by("semantic_index"))
+	_seed_sprint("erp")
+	var want := {"semantic_index": ["line_erp_intake_k3"], "analytics_engine": ["line_erp_cashflow_k3"], "ai_engine": [],
+		"scalable_backend": ["line_erp_invoicing_k3", "line_shared_durability_k3@erp"]}
+	for node: String in want:
+		if ResearchTree.steps_opened_by(node) != want[node]:
+			return "ERP: %s opens %s, want %s" % [node, str(ResearchTree.steps_opened_by(node)), str(want[node])]
+	# Postanın cümlesi: kendi cümlesi olan düğüm onu, olmayan bu ürünün kademelerini yazar.
+	if ResearchTree.unlock_text("semantic_index") != SprintCatalog.step_name("line_erp_intake_k3"):
+		return "ERP: semantic_index's mail reads '%s', want the document reading tier's name" % ResearchTree.unlock_text("semantic_index")
+	if ResearchTree.unlock_text("ai_engine") != "":
+		return "ERP: ai_engine's mail reads '%s', want no tier" % ResearchTree.unlock_text("ai_engine")
+	if ResearchTree.unlock_text("data_model") != TranslationServer.translate("PROD_RND_NODE_DATA_MODEL_UNLOCK"):
+		return "ERP: data_model's mail lost its own sentence: '%s'" % ResearchTree.unlock_text("data_model")
+	SaveManager.reset_all_owners()
+	GameState.initialize_run({"seed": 424242})
+	_seed_sprint(MarketplaceSystem.TYPE_ID)
+	if ResearchTree.steps_opened_by("ai_engine") != ["line_marketplace_listing_k3"]:
+		return "marketplace: ai_engine opens %s, want the listing tier" % str(ResearchTree.steps_opened_by("ai_engine"))
 	return ""
 
 

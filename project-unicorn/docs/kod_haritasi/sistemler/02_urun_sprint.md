@@ -34,7 +34,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `scripts/systems/incident_system.gd` (664): gecenin acil durumları: zar, tür, damga, kart isteği, saat tutuşu, cevabın bedeli (`plan`) ve uygulaması (`resolve`)
 - `scripts/systems/infra_system.gd` (290): sunucu sağlayıcı kademesi, kapasite birimi, yük yüzdesi, otomatik ayar, fatura, olayların fiyat çarpanı ve sözleşme kilidi; durumu `ProductState`'te tutar
 - `scripts/systems/rnd_system.gd` (814): Ar-Ge motoru: başlat/duraklat/vazgeç, atananlar, birikim, donma, tamamlama, gizli hat, aylık ürün notu, kayıt
-- `scripts/systems/research_tree.gd` (427): `rnd_tree.json` yükleyici ve doğrulayıcı: efor/nakit/yıldız bantları, çapraz koşul, 8 katsayı, gizli hat profilleri
+- `scripts/systems/research_tree.gd` (449): `rnd_tree.json` yükleyici ve doğrulayıcı: efor/nakit/yıldız bantları, çapraz koşul, 8 katsayı, gizli hat profilleri
 - `scripts/systems/research_seam.gd` (100): Ürün tarafının Ar-Ge'ye açılan kapısı: 19 düğüm kimliği tablosu, `completed()`, yerleşim ve aile
 - `data/product/sprint.json` (140): tüm sprint/acil durum/kâğıt/rapor sayıları ve alan tanımları ([WORKING] değerler)
 - `data/product/rivals.json` (114): alt-tür başına 3 rakip, başlangıç kademeleri ve çıkış takvimi
@@ -151,6 +151,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `RnDSystem.to_dict()/from_dict()` `rnd_system.gd:759`/`:787`: kayıt; `from_dict` sonda `restore_hidden_lines` (:507) çağırır · `save_manager.gd:390`, `:406`
 - `RnDSystem.pending_note()/mark_note_read()` `rnd_system.gd:647`/`:652`: aylık ürün notu · `ui/components/inbox.gd:191`, `main.gd:2678`
 - `ResearchTree.ensure_loaded()` `scripts/systems/research_tree.gd:68`: `rnd_tree.json` yükler ve doğrular · her erişimci; hata `load_errors()` :85
+- `ResearchTree.steps_opened_by()/unlock_text()` `research_tree.gd:398`/`:410`: bu ürünün (alt türün hatlarının) o düğümle açılan kademeleri ve araştırma bitti postasının açtıkları cümlesi (düğümün kendi cümlesi, yoksa bu kademelerin adları; başka ürünün kademesi sayılmaz) · `mail_pane.gd` `_opened`
 
 ## Sinyaller
 

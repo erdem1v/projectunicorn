@@ -1956,19 +1956,15 @@ PROD_TEAM_GROUP_COUNT,({n}),({n})
 PROD_RND_NODE_DATA_MODEL_DESC,Verinin ortak şeması. Her kayıt aynı dilden konuşur.,A common schema for the data. Every record starts speaking the same language.
 PROD_RND_NODE_DATA_MODEL_UNLOCK,Entegrasyonlar hattının son kademesi.,The last tier of the Integrations line.
 PROD_RND_NODE_AI_ENGINE_DESC,Dil modeli altyapısı. Ürününüz artık anlayabilir.,Language model infrastructure. Your product can understand now.
-PROD_RND_NODE_AI_ENGINE_UNLOCK,Not & Bilgi ve Video Klip'in yapay zeka kademeleri.,"The AI tiers in Notes and Knowledge, and the ones in Video Clip."
 PROD_RND_NODE_SEMANTIC_INDEX_DESC,Anlamın kendisi indekslenir. Ürün kelimeyi değil kastedileni arar.,"Meaning itself is indexed. The product looks for what was meant, not for the word."
-PROD_RND_NODE_SEMANTIC_INDEX_UNLOCK,"Not & Bilgi'nin arama kademesi, ERP'nin belge okuma kademesi.","The search tier in Notes and Knowledge, and the document reading tier in ERP."
 PROD_RND_NODE_EDGE_INFERENCE_DESC,Model kullanıcının cihazında koşar. Zekâ için sunucuya gitmek gerekmez.,The model runs on the user's own device. Intelligence stops being a round trip to the server.
 PROD_RND_NODE_EDGE_INFERENCE_UNLOCK,Model artık cihazda çalışıyor; yapay zeka kademeleri sunucuya eskisi kadar yüklenmiyor.,"The model runs on the device now, and the AI tiers lean on the servers less than they did."
 PROD_RND_NODE_KNOWLEDGE_GRAPH_DESC,Kayıtlar arasındaki ilişki de veriye dönüşür. Ürün neyin neye bağlı olduğunu bilir.,The relations between records become data too. The product knows what is tied to what.
 PROD_RND_NODE_KNOWLEDGE_GRAPH_UNLOCK,Otomatik Düzenleme adında yeni bir özellik hattı. İçeriği Erken Erişim'de açılır.,A new feature line called Automatic Organisation. Its content opens in Early Access.
 PROD_RND_NODE_SCALABLE_BACKEND_DESC,Yük birçok makineye dağıtılır.,The load is spread across many machines.
-PROD_RND_NODE_SCALABLE_BACKEND_UNLOCK,"Yedekleme hattının son kademesi · ERP'de tahsilat, Video Klip'te ortak kurgu.","The last tier of the Backup line · collection in ERP, shared editing in Video Clip."
 PROD_RND_NODE_SECURITY_CERT_DESC,Denetimden geçmiş güvenlik belgesi. Kurumsal alıcının ilk sorusu cevaplanmış olur.,A security certificate that has been through an audit. The corporate buyer's first question is already answered.
 PROD_RND_NODE_SECURITY_CERT_UNLOCK,Kullanıcılar ve Yetki hattının son kademesi.,The last tier of the Users and Access line.
 PROD_RND_NODE_ANALYTICS_ENGINE_DESC,Ham kayıtları okuyan hesap katmanı. Sayıların ne dediği ürünün içinde görünür.,A computing layer that reads the raw records. What the numbers say becomes visible inside the product.
-PROD_RND_NODE_ANALYTICS_ENGINE_UNLOCK,ERP'nin nakit öngörüsü kademesi.,The cash forecast tier in ERP.
 PROD_RND_NODE_MODEL_OPTIMIZATION_DESC,Aynı model daha az işlemciyle koşar. Zekânın faturası küçülür.,The same model runs on less silicon. The bill for the intelligence shrinks.
 PROD_RND_NODE_MODEL_OPTIMIZATION_UNLOCK,Artık aynı modeli daha ucuza koşturuyoruz; kademelerin lisans faturası düşüyor.,"We run the same model for less now, and the licence bill on the tiers comes down with it."
 PROD_RND_NODE_DATA_WAREHOUSE_DESC,"Bütün kayıtlar tek ambarda toplanır. Geçmiş, sorulabilir bir şeye dönüşür.",Every record gathers in one warehouse. The past turns into something you can question.

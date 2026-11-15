@@ -393,6 +393,28 @@ static func children_of(node_id: String) -> Array:
 	return (_children.get(node_id, []) as Array).duplicate()
 
 
+## Bu ürünün (bugünkü alt türün) hatlarında kapısı bu düğüm olan kademeler (step kimliği), hat sırasıyla; tür seçilmeden boş.
+## Kendi açılım cümlesi olmayan düğümde araştırma bitti postası bunları sayar: başka ürünün kademesi sayılmaz.
+static func steps_opened_by(node_id: String) -> Array:
+	var out: Array = []
+	for line_id in ProductLines.line_ids(ProductState.subtype()):
+		for step_id in ProductLines.line(String(line_id)).steps:
+			var req: Dictionary = ProductLines.step(String(step_id)).get("requires", {}) as Dictionary
+			if String(req.get("research", "")) == node_id:
+				out.append(String(step_id))
+	return out
+
+
+## Araştırma bitti postasının açtıkları cümlesi: düğümün kendi cümlesi, yoksa bu ürünün o düğümle açılan kademelerinin adları
+## (`steps_opened_by`); ikisi de yoksa boş.
+static func unlock_text(node_id: String) -> String:
+	var key: String = "PROD_RND_NODE_%s_UNLOCK" % node_id.to_upper()
+	var own: String = TranslationServer.translate(key)
+	if own != key:
+		return own
+	return SprintCatalog.SEP.join(steps_opened_by(node_id).map(func(s: String) -> String: return SprintCatalog.step_name(s)))
+
+
 static func k_arge() -> float:
 	ensure_loaded()
 	return _k_arge
