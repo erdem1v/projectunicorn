@@ -384,7 +384,9 @@ static func publish() -> void:
 	release.day = GameState.day
 	release.actual = {}
 	release.press = SprintBridges.press_line(release)
-	release.expected = {"key": "PRODUCT_RESULT_MVP_EXPECTED", "args": {}}
+	# Pazaryerinde ilk kullanıcı mağazalarla gelir, en erken iki kapanış sonra: "bu hafta" sözü verilmez.
+	release.expected = {"key": "PRODUCT_RESULT_MVP_EXPECTED_MARKETPLACE" if SalesSystem.is_marketplace()
+		else "PRODUCT_RESULT_MVP_EXPECTED", "args": {}}
 	release.gate = false
 	p.releases[-1] = release.duplicate(true)
 	EventBus.build_phase_changed.emit("shipped")

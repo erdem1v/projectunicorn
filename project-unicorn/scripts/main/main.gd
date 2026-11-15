@@ -2108,7 +2108,8 @@ func _run_sales_shot(kind: String) -> void:
 
 ## The player's moves of the worlds that reach week 60: a sales rep, Moda's rate and Elektronik.
 const _MP_MOVES_60 := [[20, "hire", HRConstants.ROLE_SALES_REP], [30, "commission", 12], [40, "open", "electronics"]]
-## The marketplace shots' worlds: `day` is the week a world stops at before the MVP; `closes` the weeks played after the MVP ships,
+## The marketplace shots' worlds: `day` is the week a world stops at before the MVP; `publish_day` stops on the publish day (v1.0's
+## note still on its Expected line); `closes` the weeks played after the MVP ships,
 ## `until` the week the last of them ends in; `crew` the roles hired before the last week (`_mp_hire`), `bugs` the open bugs of the
 ## Cart and Checkout line that week's close reads; `tip` the key of the step row the pointer rests on; `later` the player's moves on
 ## the way, each [week, move, argument] and made the first week at or after it: `hire` a role (seated on Moda), `open` a category,
@@ -2123,6 +2124,7 @@ const _MP_MOVES_60 := [[20, "hire", HRConstants.ROLE_SALES_REP], [30, "commissio
 const _MP_WORLDS := {
 	"mp_pre": {"day": 3, "pick": "electronics"},
 	"mp_launch": {"closes": 4},
+	"mp_release": {"publish_day": true},
 	"mp_reminder": {"closes": 4, "no_category": true},
 	"mp_growth": {"until": 42, "crew": [HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER], "bugs": 3},
 	"mp_growth_tip": {"until": 42, "crew": [HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER], "bugs": 3, "tip": "MP_STEP_ORDER"},
@@ -2285,6 +2287,8 @@ func _seed_marketplace_world(world: Dictionary) -> bool:
 	SprintSystem.publish()
 	if not world.has("no_category") and not world.has("unassigned"):
 		MarketplaceSystem.assign(CharacterRegistry.get_founder().id, "fashion")
+	if world.get("publish_day", false):
+		return true
 	var closes: int = world.closes if world.has("closes") else world.until - GameState.day
 	var later: Array = world.get("later", []).duplicate()
 	for i in closes - 1:
@@ -4890,8 +4894,8 @@ func _run_product_shot(id: String) -> void:
 		_save_shot(stem)
 		step[0].call()
 		stem = base + step[1]
-	if id == "live:b2c_live":
-		# Geçmiş açık: v1.0'ın satırı ilk haftanın kullanıcılarını okur.
+	if id in ["live:b2c_live", "live:mp_release_next"]:
+		# Geçmiş açık: v1.0'ın satırı ilk haftanın kullanıcılarını (pazaryerinde yayın ertesi günün sonucunu) okur.
 		get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()._set_ui(true, "history_open")
 	if id == "live:b2b_quarter":
 		get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()._set_ui("quarter", "view")
@@ -4999,8 +5003,10 @@ func _tip_target(page: Control, tip: String) -> Control:
 
 ## live:<pick|pick_named|pick_mp|pick_relang|plan|active|decision_paper|b2c_mvp|b2c_live|b2c_goal|b2b_mvp|b2b_mature|b2b_quarter|
 ## b2b_requests|gate|rnd|delegate|delegate_rehire|solo15|solo15_tip|solo12_active|b2b_solo15|overview_pre|server_80|server_94|server_104|server_growth|
-## server_auto|server_tier|server_final|server_clause|server_lock|server_b2c|mp_live>. The pick ones leave the product untyped (the type picker).
-## mp_live is the marketplace of --sales-shot=mp_launch (four closes after its launch, `_seed_marketplace_world`). The solo ones
+## server_auto|server_tier|server_final|server_clause|server_lock|server_b2c|mp_live|mp_release|mp_release_next>. The pick ones leave
+## the product untyped (the type picker). mp_live is the marketplace of --sales-shot=mp_launch (four closes after its launch,
+## `_seed_marketplace_world`); mp_release stops on its publish day (v1.0's note on its Expected line), mp_release_next plans and
+## starts the next sprint, plays the day after and opens Geçmiş (v1.0's row on its Actual line). The solo ones
 ## leave the founder alone from 09:00: solo15 and solo15_tip stop in Sprint 1 planning at 15 hours, solo15 with
 ## the lead's plan applied, solo15_tip with the plan only offered; solo12_active
 ## starts the lead's plan at 12 hours, two cards over capacity (30/28); b2b_solo15 is solo15 on the ERP. The rest choose
@@ -5027,8 +5033,12 @@ const REQ_RUNS := {"req_solo": "full_run_staff1:16", "req_w60": "full_run_staff6
 func _seed_product_live(scenario: String) -> void:
 	if scenario.begins_with("pick"):
 		return
-	if scenario == "mp_live":
-		_seed_marketplace_world(_MP_WORLDS.mp_launch)
+	if scenario in ["mp_live", "mp_release", "mp_release_next"]:
+		_seed_marketplace_world(_MP_WORLDS.mp_launch if scenario == "mp_live" else _MP_WORLDS.mp_release)
+		if scenario == "mp_release_next":
+			# Oyuncu notu sonraki sprintin planıyla kapatır; ertesi gün v1.0'ın Gerçekleşen satırı Geçmiş'tedir.
+			_start_next_sprint()
+			_play_week()
 		return
 	if REQ_RUNS.has(scenario):
 		RunProbe.run(REQ_RUNS[scenario] + ":sim", _debug_payload())

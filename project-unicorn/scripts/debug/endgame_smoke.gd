@@ -25427,12 +25427,13 @@ static func _case_sprint_fix_card_clears_its_line() -> String:
 
 
 ## Pazaryerinin v1.0 sonuç satırı: o güne dek Pazaryeri'nin kapanışı kullanıcı getirdiyse gerçek sayıyı yazar, getirmediyse
-## "İlk hafta 0 kullanıcı" yerine sürümde değişen alanın kelimesini yazar. Not uygulaması 0 kullanıcıda da sayıyı yazar (kitle
-## akışı saat saat işler, 0 gerçektir); ERP kullanıcı yazmaz.
+## "İlk hafta 0 kullanıcı" yerine "Yayında · henüz kullanıcı yok" yazar (alanın kelimesine ve hata merdivenine düşmez). Not
+## uygulaması 0 kullanıcıda da sayıyı yazar (kitle akışı saat saat işler, 0 gerçektir); ERP kullanıcı yazmaz, alanın kelimesini yazar.
 ##
 ## FALSİFİKASYON: SprintBridges.actual_sentence'tan `if users > 0 or not SalesSystem.is_marketplace():` koşulunu sil (her zaman
 ## sayı) → kullanıcısız pazaryeri iddiası FAIL; koşulu `if not SalesSystem.is_marketplace():` yap (pazaryerinde hiç sayı yok) →
-## kullanıcılı pazaryeri iddiası FAIL; `users > 0 or` yerine yalnız `users > 0` yap → not uygulamasının 0 iddiası FAIL.
+## kullanıcılı pazaryeri iddiası FAIL; `users > 0 or` yerine yalnız `users > 0` yap → not uygulamasının 0 iddiası FAIL;
+## `PRODUCT_RESULT_LIVE_ACTUAL` dönüşünü sil (merdivene düş) → kullanıcısız pazaryeri iddiası FAIL.
 static func _case_marketplace_release_result_reads_users() -> String:
 	# v1.0'ın notu: MVP hatlarıyla yükselen ilk alan 0'dan bugünkü düzeyine çıkmıştır.
 	var release := func() -> Dictionary:
@@ -25446,8 +25447,8 @@ static func _case_marketplace_release_result_reads_users() -> String:
 	if SalesSystem.b2c_audience() != 0.0:
 		return "fixture: a marketplace before its first close reads %s users" % SalesSystem.b2c_audience()
 	var said: Dictionary = SprintBridges.actual_sentence(release.call())
-	if String(said.key) != "PRODUCT_RESULT_LEVEL_ACTUAL":
-		return "a marketplace with no users yet reads %s, want the changed area's word" % str(said)
+	if String(said.key) != "PRODUCT_RESULT_LIVE_ACTUAL":
+		return "a marketplace with no users yet reads %s, want \"live, no users yet\"" % str(said)
 	SaveManager.reset_all_owners()
 	GameState.initialize_run({"seed": 424242})
 	_seed_marketplace_world()

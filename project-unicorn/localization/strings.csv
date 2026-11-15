@@ -3001,6 +3001,8 @@ PRODUCT_RESULT_BUGS_ACTUAL_ONE,{n} hata kapandı,{n} bug closed
 PRODUCT_RESULT_NONE_EXPECTED,Görünür bir değişiklik beklenmiyor,No visible change expected
 PRODUCT_RESULT_NONE_ACTUAL,Görünür bir değişiklik olmadı,Nothing visible changed
 PRODUCT_RESULT_MVP_EXPECTED,Ürün yayında · ilk kullanıcılar bu hafta gelir,The product is live · first users arrive this week
+PRODUCT_RESULT_MVP_EXPECTED_MARKETPLACE,Pazaryeri yayında · ilk kullanıcılar ilk mağazalarla gelir,The marketplace is live · the first users arrive with the first stores
+PRODUCT_RESULT_LIVE_ACTUAL,Yayında · henüz kullanıcı yok,Live · no users yet
 PRODUCT_LEAD_CARRIED,{card} bir sprint daha ister.,{card} needs one more sprint.
 PRODUCT_LEAD_WEAKEST,{area} sırada.,{area} is next.
 PRODUCT_AUTO_STARTED,Sprint otomatik başladı,Sprint started automatically
