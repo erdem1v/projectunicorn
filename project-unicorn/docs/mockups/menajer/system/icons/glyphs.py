@@ -38,6 +38,21 @@ def bubble(x, y, w, h, tail, r=2.2):
     return soften(U(R(x, y, w, h, r), P(*tail)), 0.5)
 
 
+def price_tag(x0, y0, w, h, point=4.0, hole=1.4, soft=1.0, hole_dx=0.4):
+    """A price tag pointing left: (x0, y0) the point's column and the top, `point` how far the point reaches; its hole
+    knocked out `hole_dx` past where the point starts."""
+    cy = y0 + h / 2
+    t = soften(P((x0 + point, y0), (x0 + point + w, y0), (x0 + point + w, y0 + h), (x0 + point, y0 + h), (x0, cy)), soft)
+    return cut(t, C(x0 + point + hole_dx, cy, hole))
+
+
+def sales_tag(x, y, s):
+    """skill/sales's tag, a square on its corner with the top left cut and the hole beside the cut: (x, y) its top left,
+    `s` its scale."""
+    pts = [(0.0, 0.0), (8.4, 0.0), (18.0, 9.6), (9.6, 18.0), (0.0, 8.4)]
+    return cut(soften(P(*[(x + px * s, y + py * s) for px, py in pts]), 1.4 * s), C(x + 4.8 * s, y + 4.8 * s, 2.0 * s))
+
+
 def bug_body():
     head = C(12, 8.0, 3.0).intersection(box(0, 0, 24, 8.0))
     body = E(12, 15.0, 5.5, 6.2)
@@ -185,8 +200,7 @@ def _():
 
 @glyph("skill/sales")
 def _():
-    tag = soften(P((3.0, 3.0), (11.4, 3.0), (21.0, 12.6), (12.6, 21.0), (3.0, 11.4)), 1.4)
-    return S(cut(tag, C(7.8, 7.8, 2.0)))
+    return S(sales_tag(3.0, 3.0, 1.0))
 
 
 @glyph("skill/customer_success")
@@ -1053,7 +1067,7 @@ def _():
 @glyph("module/line_marketplace_listing")
 def _():
     # a price tag with its hole knocked out, and the arrow going up into the catalogue
-    tag = cut(soften(P((9.6, 9.6), (21.6, 9.6), (21.6, 21.6), (9.6, 21.6), (4.8, 15.6)), 1.2), C(9.4, 15.6, 1.6))
+    tag = price_tag(4.8, 9.6, 12.0, 12.0, point=4.8, hole=1.6, soft=1.2, hole_dx=-0.2)
     a = _arrow((15.6, 7.6), (15.6, 3.6), w=2.4, head=3.0)
     return S(U(gap(tag, a), a))
 
@@ -1086,6 +1100,23 @@ def _():
     # the reviews: a speech bubble with the star knocked out (the buyer protection the module also holds is not drawn)
     b = bubble(2.4, 3.6, 19.2, 14.0, [(6.2, 16.0), (6.2, 21.0), (11.6, 16.0)], r=2.4)
     return S(cut(b, soften(P(*star_pts(12.0, 10.6, 5.0, 2.1)), 0.4)))
+
+
+@glyph("channel/price_compare")
+def _():
+    # two tags side by side, the same goods at two prices: the dearer one behind in tone, standing higher; the cheaper one
+    # in front, solid and lower, so the eye reads "compare" and "the lower wins"
+    back = price_tag(9.8, 2.4, 7.4, 9.6, hole=1.3)
+    front = price_tag(2.4, 11.0, 8.4, 10.6)
+    return S(front, gap(back, front))
+
+
+@glyph("channel/affiliate")
+def _():
+    # someone else selling your goods for a share: a person behind in tone, skill/sales's tag smaller and solid in front
+    h, b = person(15.6, 6.8, 3.6, 12.0, 20.0)
+    tag = sales_tag(2.4, 9.0, 0.7)
+    return S(tag, gap(U(h, b), tag))
 
 
 # ---------------------------------------------------------------- head icon map (office_actor.gd ICONS)
