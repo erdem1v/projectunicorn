@@ -1,6 +1,6 @@
 {
   "visits": {
-    "organic_rate": 0.065,
+    "referral_rate": 0.065,
     "sat_floor": 55,
     "sat_span": 45,
     "member_freq": 1.4,

@@ -425,6 +425,27 @@ static func step_hint(state: Dictionary, world: Dictionary, step: String) -> Dic
 	return {"module": module, "tier": tier, "next_tier": next_tier, "next_gain": next_gain, "bugs": bugs, "bug_gain": bug_gain}
 
 
+## Bir sipariş için gereken ziyaret: dört adımın ulaşılabilir oranlarının çarpımının tersi.
+static func _visits_per_order() -> float:
+	var reach := 1.0
+	for step in STEPS:
+		reach *= _c.steps.reach[step]
+	return 1.0 / reach
+
+
+## Kategorinin geri gelen kullanıcıdan payı: çekiciliği × seçeneği, açık kategorilerin toplamına oranla. Paylar 1'e toplanır:
+## kullanıcı sıklığını açık kategoriler arasında böler, kategori açmak kullanıcının haftalık siparişini çarpmaz; mağazasız
+## kategori pay almaz.
+static func _shopper_share(state: Dictionary, cat: String) -> float:
+	var total := 0.0
+	for id in open_ids(state):
+		total += _cats[id].base_interest * variety(state, id)
+	return _cats[cat].base_interest * variety(state, cat) / total if total > 0.0 else 0.0
+
+
+## Kategorinin haftalık ziyareti, üç kaynağıyla. Sipariş sıklığı ve tavsiye oranı sipariş ve kullanıcı birimindedir (yol
+## kusursuzken bir kullanıcının haftalık siparişi, memnun bir kullanıcının haftada getirdiği kullanıcı); ziyarete
+## `_visits_per_order` çevirir, dört adım ziyareti yeniden siparişe indirir.
 static func _visits(state: Dictionary, world: Dictionary, cat: String) -> Dictionary:
 	var d: Dictionary = _cats[cat]
 	var v: Dictionary = _c.visits
@@ -435,9 +456,12 @@ static func _visits(state: Dictionary, world: Dictionary, cat: String) -> Dictio
 	var channel := 0.0
 	for source_visits in _w(world, "channel").get(cat, {}).values():
 		channel += source_visits
+	var visits_per_order := _visits_per_order()
 	return {
-		"returning": (state.users - state.members + state.members * v.member_freq) * d.visit_freq * (1.0 + _w(world, "return_lift")),
-		"organic": (state.users * v.organic_rate * sat_coef * d.base_interest / base_total + d.base_interest) * variety(state, cat),
+		"returning": (state.users - state.members + state.members * v.member_freq) * d.order_freq * visits_per_order
+			* _shopper_share(state, cat) * (1.0 + _w(world, "return_lift")),
+		"organic": (state.users * v.referral_rate * visits_per_order * sat_coef * d.base_interest / base_total + d.base_interest)
+			* variety(state, cat),
 		"channel": channel,
 	}
 
@@ -501,15 +525,17 @@ static func monthly_cost(state: Dictionary) -> float:
 
 # --- Pazarlama'nın okuması -------------------------------------------------------------------
 
-## Kategorideki kanal ziyaretinin değeri. `conversion`: ziyaretten teslim edilen siparişe oran; `monthly_commission`: bir kullanıcının
-## kategoride bıraktığı aylık net komisyon (haftalık ziyaret sıklığı × dönüşüm × iade sonrası siparişin komisyonu × ay haftası);
+## Kategorideki kanal ziyaretinin değeri. `conversion`: ziyaretten teslim edilen siparişe oran; `monthly_commission`: alışverişini bu
+## kategoride yapan bir kullanıcının bıraktığı aylık net komisyon (haftalık sipariş sıklığı × sipariş başına ziyaret × dönüşüm × iade
+## sonrası siparişin komisyonu × ay haftası; kategorinin payı hesaba girmez);
 ## `organic`: kendiliğinden gelecek haftalık ziyaret; öbürleri kategorinin sabitleri. Kapalı kategoride dönüşüm ve ziyaret 0.
 static func channel_read(state: Dictionary, world: Dictionary, cat: String) -> Dictionary:
 	var d: Dictionary = _cats[cat]
 	var cs: Dictionary = state.cats[cat]
 	var conversion: float = _funnel(1.0, step_factors(state, world, cat)).delivered
-	var per_order: float = (1.0 - return_rate(state, world, cat)) * d.basket * cs.commission / 100.0
-	return {"conversion": conversion, "monthly_commission": d.visit_freq * _c.income.month_weeks * conversion * per_order,
+	var order_commission: float = (1.0 - return_rate(state, world, cat)) * d.basket * cs.commission / 100.0
+	return {"conversion": conversion,
+		"monthly_commission": d.order_freq * _visits_per_order() * _c.income.month_weeks * conversion * order_commission,
 		"organic": _visits(state, world, cat).organic if cs.open else 0.0, "margin": d.margin, "base_interest": d.base_interest,
 		"ad_pool": d.ad_pool}
 

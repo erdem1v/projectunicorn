@@ -1,16 +1,16 @@
 {
   "categories": [
-    {"id": "fashion", "basket": 38, "visit_freq": 0.30, "margin": 0.22, "sector_return": 0.20, "stores_needed": 30,
+    {"id": "fashion", "basket": 38, "order_freq": 0.30, "margin": 0.22, "sector_return": 0.20, "stores_needed": 30,
       "start_commission_pct": 10, "base_interest": 450, "big_basket_share": 0.25, "ad_pool": 82000},
-    {"id": "electronics", "basket": 95, "visit_freq": 0.14, "margin": 0.13, "sector_return": 0.09, "stores_needed": 30,
+    {"id": "electronics", "basket": 95, "order_freq": 0.14, "margin": 0.13, "sector_return": 0.09, "stores_needed": 30,
       "start_commission_pct": 6, "base_interest": 250, "big_basket_share": 0.80, "ad_pool": 46000},
-    {"id": "home", "basket": 32, "visit_freq": 0.27, "margin": 0.19, "sector_return": 0.12, "stores_needed": 17,
+    {"id": "home", "basket": 32, "order_freq": 0.27, "margin": 0.19, "sector_return": 0.12, "stores_needed": 17,
       "start_commission_pct": 9, "base_interest": 210, "big_basket_share": 0.20, "ad_pool": 38000},
-    {"id": "beauty", "basket": 22, "visit_freq": 0.35, "margin": 0.25, "sector_return": 0.05, "stores_needed": 20,
+    {"id": "beauty", "basket": 22, "order_freq": 0.35, "margin": 0.25, "sector_return": 0.05, "stores_needed": 20,
       "start_commission_pct": 11, "base_interest": 150, "big_basket_share": 0.10, "ad_pool": 27000},
-    {"id": "baby", "basket": 28, "visit_freq": 0.40, "margin": 0.18, "sector_return": 0.08, "stores_needed": 20,
+    {"id": "baby", "basket": 28, "order_freq": 0.40, "margin": 0.18, "sector_return": 0.08, "stores_needed": 20,
       "start_commission_pct": 8, "base_interest": 120, "big_basket_share": 0.15, "ad_pool": 22000},
-    {"id": "sports", "basket": 45, "visit_freq": 0.15, "margin": 0.20, "sector_return": 0.12, "stores_needed": 25,
+    {"id": "sports", "basket": 45, "order_freq": 0.15, "margin": 0.20, "sector_return": 0.12, "stores_needed": 25,
       "start_commission_pct": 9, "base_interest": 120, "big_basket_share": 0.40, "ad_pool": 22000}
   ]
 }

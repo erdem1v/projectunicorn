@@ -14,11 +14,11 @@ Kapsam: scripts/ altındaki 267 .gd (tools/ hariç). Kod temizliği ve kıdemli 
 - scripts/systems/vc_pitch_system.gd · 1317 satır · 91 func
 - scripts/autoload/save_manager.gd · 1295 satır · 60 func
 - scripts/tabs/product/product_model.gd · 1288 satır · 68 func
+- scripts/debug/marketplace_probe.gd · 1258 satır · 64 func
 - scripts/systems/hr_constants.gd · 1186 satır · 90 func
-- scripts/debug/marketplace_probe.gd · 1179 satır · 58 func
 - scripts/events/core/effects.gd · 1149 satır · 35 func
 - scripts/ui/office/office_person.gd · 1128 satır · 51 func
-- scripts/systems/marketplace_model.gd · 1085 satır · 90 func
+- scripts/systems/marketplace_model.gd · 1111 satır · 92 func
 - scripts/theme/ui_tokens.gd · 1081 satır · 45 func
 - scripts/autoload/game_state.gd · 1075 satır · 57 func
 - scripts/systems/sprint_catalog.gd · 990 satır · 91 func
@@ -75,52 +75,54 @@ Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları
 - scripts/debug/run_probe.gd:363 · run · 117 satır
 - scripts/debug/endgame_smoke.gd:1494 · _case_month_summary · 116 satır
 
-## Ölü kod adayları (62)
+## Ölü kod adayları (64)
 
 Tanım satırı dışında scripts/, scenes/, data/ içinde adı hiç geçmeyen func (yorumlar sayılmaz, dizeler sayılır). Godot geri çağrıları hariç.
 UYARI: call("a"+b) gibi kurulmuş adlar, sinyal adıyla bağlama, harness bayrakları ve tools/*.sh çağrıları yüzünden yanlış pozitif olabilir; silmeden önce grep ile doğrula.
-- scripts/debug/marketplace_probe.gd:205 · _check_empty_category_no_orders · debug
-- scripts/debug/marketplace_probe.gd:221 · _check_acquisition_waits_for_publish · debug
-- scripts/debug/marketplace_probe.gd:234 · _check_leaving_zone_stores_fall · debug
-- scripts/debug/marketplace_probe.gd:249 · _check_lock_rejects · debug
-- scripts/debug/marketplace_probe.gd:266 · _check_campaign_override_expires · debug
-- scripts/debug/marketplace_probe.gd:282 · _check_revenue_window_spike · debug
-- scripts/debug/marketplace_probe.gd:303 · _check_premium_closed_no_perk_cost · debug
-- scripts/debug/marketplace_probe.gd:320 · _check_campaign_free_shipping_single_write · debug
-- scripts/debug/marketplace_probe.gd:347 · _check_preview_figures · debug
-- scripts/debug/marketplace_probe.gd:374 · _check_known_store_earnings · debug
-- scripts/debug/marketplace_probe.gd:385 · _check_known_return_rate · debug
-- scripts/debug/marketplace_probe.gd:393 · _check_known_order_rate · debug
-- scripts/debug/marketplace_probe.gd:401 · _check_json_roundtrip · debug
-- scripts/debug/marketplace_probe.gd:409 · _check_ledger_expiry · debug
-- scripts/debug/marketplace_probe.gd:429 · _check_zone_limits_consistent · debug
-- scripts/debug/marketplace_probe.gd:448 · _check_constants_switch · debug
-- scripts/debug/marketplace_probe.gd:470 · _check_gain_and_weakest · debug
-- scripts/debug/marketplace_probe.gd:485 · _check_acquisition_multipliers · debug
-- scripts/debug/marketplace_probe.gd:516 · _check_store_terms_discount · debug
-- scripts/debug/marketplace_probe.gd:532 · _check_premium_members · debug
-- scripts/debug/marketplace_probe.gd:552 · _check_zone_rows_need_stores · debug
-- scripts/debug/marketplace_probe.gd:567 · _check_add_users_bounds · debug
-- scripts/debug/marketplace_probe.gd:582 · _check_lost_counters · debug
-- scripts/debug/marketplace_probe.gd:600 · _check_channel_read_values · debug
-- scripts/debug/marketplace_probe.gd:624 · _check_source_revenue_values · debug
-- scripts/debug/marketplace_probe.gd:660 · _check_state_survives_codec · debug
-- scripts/debug/marketplace_probe.gd:706 · _check_topic_rows_known · debug
-- scripts/debug/marketplace_probe.gd:736 · _check_topic_ticket_gates · debug
-- scripts/debug/marketplace_probe.gd:771 · _check_topic_ledger_rows · debug
-- scripts/debug/marketplace_probe.gd:802 · _check_feature_gain_matches_close · debug
-- scripts/debug/marketplace_probe.gd:828 · _check_reviews_affected_is_return_gap · debug
-- scripts/debug/marketplace_probe.gd:845 · _check_assignment_waits_a_close · debug
-- scripts/debug/marketplace_probe.gd:871 · _check_waive_zeroes_one_close · debug
-- scripts/debug/marketplace_probe.gd:911 · _check_outage_row_and_cost · debug
-- scripts/debug/marketplace_probe.gd:968 · _check_lost_commission_weighted · debug
-- scripts/debug/marketplace_probe.gd:987 · _check_backup_mult_tiers · debug
-- scripts/debug/marketplace_probe.gd:997 · _check_open_topic_report_row · debug
-- scripts/debug/marketplace_probe.gd:1039 · _check_cfg_reads_constants · debug
-- scripts/debug/marketplace_probe.gd:1056 · _check_funnel_sums_categories · debug
-- scripts/debug/marketplace_probe.gd:1079 · _check_step_hint_matches_gain · debug
-- scripts/debug/marketplace_probe.gd:1117 · _check_ledger_worst_picks_heaviest · debug
-- scripts/debug/marketplace_probe.gd:1148 · _check_crew_follows_assignment · debug
+- scripts/debug/marketplace_probe.gd:206 · _check_empty_category_no_orders · debug
+- scripts/debug/marketplace_probe.gd:222 · _check_acquisition_waits_for_publish · debug
+- scripts/debug/marketplace_probe.gd:235 · _check_leaving_zone_stores_fall · debug
+- scripts/debug/marketplace_probe.gd:250 · _check_lock_rejects · debug
+- scripts/debug/marketplace_probe.gd:267 · _check_campaign_override_expires · debug
+- scripts/debug/marketplace_probe.gd:283 · _check_revenue_window_spike · debug
+- scripts/debug/marketplace_probe.gd:304 · _check_premium_closed_no_perk_cost · debug
+- scripts/debug/marketplace_probe.gd:321 · _check_campaign_free_shipping_single_write · debug
+- scripts/debug/marketplace_probe.gd:348 · _check_preview_figures · debug
+- scripts/debug/marketplace_probe.gd:375 · _check_known_store_earnings · debug
+- scripts/debug/marketplace_probe.gd:386 · _check_known_return_rate · debug
+- scripts/debug/marketplace_probe.gd:394 · _check_known_order_rate · debug
+- scripts/debug/marketplace_probe.gd:402 · _check_json_roundtrip · debug
+- scripts/debug/marketplace_probe.gd:410 · _check_ledger_expiry · debug
+- scripts/debug/marketplace_probe.gd:430 · _check_zone_limits_consistent · debug
+- scripts/debug/marketplace_probe.gd:449 · _check_constants_switch · debug
+- scripts/debug/marketplace_probe.gd:471 · _check_gain_and_weakest · debug
+- scripts/debug/marketplace_probe.gd:486 · _check_acquisition_multipliers · debug
+- scripts/debug/marketplace_probe.gd:517 · _check_store_terms_discount · debug
+- scripts/debug/marketplace_probe.gd:533 · _check_premium_members · debug
+- scripts/debug/marketplace_probe.gd:553 · _check_zone_rows_need_stores · debug
+- scripts/debug/marketplace_probe.gd:568 · _check_add_users_bounds · debug
+- scripts/debug/marketplace_probe.gd:583 · _check_lost_counters · debug
+- scripts/debug/marketplace_probe.gd:601 · _check_channel_read_values · debug
+- scripts/debug/marketplace_probe.gd:625 · _check_source_revenue_values · debug
+- scripts/debug/marketplace_probe.gd:661 · _check_state_survives_codec · debug
+- scripts/debug/marketplace_probe.gd:707 · _check_topic_rows_known · debug
+- scripts/debug/marketplace_probe.gd:737 · _check_topic_ticket_gates · debug
+- scripts/debug/marketplace_probe.gd:772 · _check_topic_ledger_rows · debug
+- scripts/debug/marketplace_probe.gd:803 · _check_feature_gain_matches_close · debug
+- scripts/debug/marketplace_probe.gd:829 · _check_reviews_affected_is_return_gap · debug
+- scripts/debug/marketplace_probe.gd:846 · _check_assignment_waits_a_close · debug
+- scripts/debug/marketplace_probe.gd:872 · _check_waive_zeroes_one_close · debug
+- scripts/debug/marketplace_probe.gd:912 · _check_outage_row_and_cost · debug
+- scripts/debug/marketplace_probe.gd:969 · _check_lost_commission_weighted · debug
+- scripts/debug/marketplace_probe.gd:988 · _check_backup_mult_tiers · debug
+- scripts/debug/marketplace_probe.gd:998 · _check_open_topic_report_row · debug
+- scripts/debug/marketplace_probe.gd:1040 · _check_cfg_reads_constants · debug
+- scripts/debug/marketplace_probe.gd:1057 · _check_funnel_sums_categories · debug
+- scripts/debug/marketplace_probe.gd:1080 · _check_step_hint_matches_gain · debug
+- scripts/debug/marketplace_probe.gd:1118 · _check_ledger_worst_picks_heaviest · debug
+- scripts/debug/marketplace_probe.gd:1149 · _check_crew_follows_assignment · debug
+- scripts/debug/marketplace_probe.gd:1211 · _check_returning_orders_follow_frequency · debug
+- scripts/debug/marketplace_probe.gd:1251 · _check_word_of_mouth_brings_users · debug
 - scripts/debug/office_crowd_probe.gd:48 · _log_error · debug
 - scripts/events/present/papers.gd:145 · arc_of
 - scripts/main/game_shell.gd:163 · debug_force_vc_meeting · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)

@@ -193,7 +193,7 @@ kapanışında dolar; okumak onu doldurmaz ve pazaryeri koşusu olmayan oyunda (
 - **Seçenek:** `seçenek = min(1; mağaza ÷ seçenek için gereken mağaza)`. Ayrı bir gösterge olarak çizilmez; mağaza sayısından
   ve "Sepete ekledi" adımından okunur.
 
-| Kategori | Sepet | Ziyaret sıklığı | Kâr payı | Sektör iade ortalaması | Seçenek için mağaza | Başlangıç komisyonu | Taban ilgi (haftalık ziyaret) | Büyük sepet payı | Reklam havuzu (haftalık arama) |
+| Kategori | Sepet | Sipariş sıklığı | Kâr payı | Sektör iade ortalaması | Seçenek için mağaza | Başlangıç komisyonu | Taban ilgi (haftalık ziyaret) | Büyük sepet payı | Reklam havuzu (haftalık arama) |
 |---|---|---|---|---|---|---|---|---|---|
 | Moda | $38 | 0,30 | %22 | %20 | 30 | %10 | 450 | 0,25 | 82.000 |
 | Elektronik | $95 | 0,14 | %13 | %9 | 30 | %6 | 250 | 0,80 | 46.000 |
@@ -201,6 +201,7 @@ kapanışında dolar; okumak onu doldurmaz ve pazaryeri koşusu olmayan oyunda (
 | Kozmetik ve Kişisel Bakım | $22 | 0,35 | %25 | %5 | 20 | %11 | 150 | 0,10 | 27.000 |
 | Anne ve Bebek | $28 | 0,40 | %18 | %8 | 20 | %8 | 120 | 0,15 | 22.000 |
 | Spor ve Outdoor | $45 | 0,15 | %20 | %12 | 25 | %9 | 120 | 0,40 | 22.000 |
+- **Sipariş sıklığı**, yol kusursuzken (bütün adım çarpanları 1) bir kullanıcının haftalık siparişidir; ziyarete §3.5 çevirir.
 - Sepet, sıklık, kâr payı ve gereken mağaza ilk üç satırda kâğıt simülasyonunun ayar adayıdır
   (`tur4_ekranlar_2026-11-13/pazaryeri/sim/pazaryeri_sim.py` `CATS`); son üç satır ve son üç sütun varsayımdır. "Reklam havuzu" Pazarlama'nın reklam doyumunu hesapladığı sayıdır (o
   kategorideki haftalık arama; Pazarlama okur). Ziyaretle aynı ölçekte değildir; payı Pazarlama hesaplar (kuralı
@@ -208,8 +209,9 @@ kapanışında dolar; okumak onu doldurmaz ve pazaryeri koşusu olmayan oyunda (
   pazaryerlerinin 2012 ve bugünkü menülerinden (`arastirma/d_kategori_iade.md`). İade sıralaması kaynaklı, sayılar düşük
   güvenlidir (Moda için Türkiye 2024 verisi yüzde 19,84; Anne ve Bebek için kaynak bulunamadı). "Büyük sepet payı", kargo
   kuralındaki eşiğin ($50) üstünde kalan siparişin payıdır.
-- **Her kategoriyi birden açmanın bedeli:** emek kategori başına bölünür (§3.4), pazarlama bütçesi kategori başına ayrıdır ve
-  mağazası az olan açık kategori kullanıcı defterine satır yazar (§3.8, "Seçenek az").
+- **Her kategoriyi birden açmanın bedeli:** emek kategori başına bölünür (§3.4), pazarlama bütçesi kategori başına ayrıdır,
+  mağazası az olan açık kategori kullanıcı defterine satır yazar (§3.8, "Seçenek az") ve geri gelen kullanıcı sıklığını açık
+  kategoriler arasında böler (§3.5, kategorinin payı).
 
 ### 3.3 Haftalık kapanış (sıra bağlayıcıdır)
 1. Mağaza akışı (§3.4). 2. Ziyaret ve dört adım, kategori kategori (§3.5). 3. İade (§3.6). 4. Kullanıcı (§3.7). 5. Gelir ve
@@ -250,10 +252,21 @@ Kapanış yalnız ürün yayındayken koşar; kategori açmak yayından önce de
 - `joined` her hafta kaydırılır: yeni katılan başa yazılır, sekizinci hafta düşer.
 
 ### 3.5 Ziyaretten teslimata (kategori başına)
-- `geri gelen = (aktif − üye + üye × 1,4) × ziyaret sıklığı × (1 + MarketingSystem.return_lift())`
-- `organik = aktif × 0,065 × memnuniyet katsayısı × seçenek × ilgi payı + taban ilgi × seçenek`
+- `geri gelen = (aktif − üye + üye × 1,4) × sipariş sıklığı × sipariş başına ziyaret × kategorinin payı
+  × (1 + MarketingSystem.return_lift())`
+- `organik = (aktif × 0,065 × sipariş başına ziyaret × memnuniyet katsayısı × ilgi payı + taban ilgi) × seçenek`
   Memnuniyet katsayısı `sınırla((kullanıcı memnuniyeti − 55) ÷ 45; 0; 1)`. İlgi payı, kategorinin taban ilgisi ÷ açık
   kategorilerin taban ilgisi toplamı.
+- **Birim:** sipariş sıklığı ve tavsiye oranı (0,065) sipariş ve kullanıcı birimindedir: yol kusursuzken bir kullanıcının
+  haftalık siparişi ve memnun bir kullanıcının haftada getirdiği yeni kullanıcı. `sipariş başına ziyaret = 1 ÷ dört adımın
+  ulaşılabilir oranlarının çarpımı` (bugünkü sabitlerle 1 ÷ 0,0896 = 11,16) onları ziyarete çevirir; dört adım ziyareti
+  yeniden siparişe indirir. Geri gelen kullanıcının siparişi böylece `aktif × sipariş sıklığı × kategorinin payı × adım
+  çarpanlarının çarpımı` kadardır; ulaşılabilir oranlar değişse de değişmez.
+- **Kategorinin payı:** `taban ilgi × seçenek ÷ açık kategorilerin (taban ilgi × seçenek) toplamı`; mağazası olmayan kategori
+  pay almaz. Paylar 1'e toplanır: kullanıcı sıklığını açık kategoriler arasında böler. Kategori açmak kullanıcının haftalık
+  siparişini çarpmaz; yeni ziyaretçi (taban ilgi, reklam havuzu) getirir. Sıklığı düşük bir kategori dolunca geri gelen
+  kullanıcının toplam siparişi düşer (Moda'nın yanında Elektronik: bin kullanıcıda 300'den 243'e); bunu kategorinin getirdiği
+  yeni ziyaretçi karşılar.
 - `kanal = MarketingSystem.channel_visits(kategori)`; `ziyaret = geri gelen + organik + kanal`. Organik ve kanal ayrı saklanır.
 - Dört adım:
 
@@ -376,7 +389,7 @@ Dört kural. `set_policy(kural, seçenek)` kuralı değiştirir ve dört hafta k
 - **Üye:** `hedef = aktif × 0,012 × çekim ÷ (1 + 0,25 × (ücret − 4))`; her hafta `üye += (hedef − üye) × 0,10`. "30 gün
   ücretsiz dene" açıkken oran 0,20 olur ve son dört haftada katılan üye ücret ödemez (`premium.joined`). Çekim, aşağıdaki
   tablodaki puanların toplamıdır.
-- **Üye siparişi:** `sipariş × üye × 1,4 ÷ (aktif − üye + üye × 1,4)`. Üyenin ziyaret sıklığı 1,4 kattır; sepeti büyümez.
+- **Üye siparişi:** `sipariş × üye × 1,4 ÷ (aktif − üye + üye × 1,4)`. Üyenin sıklığı 1,4 kattır; sepeti büyümez.
 - **"Bu ay"** son dört haftadır (aylık gelirle aynı pencere). Her ayrıcalık son dört haftanın kullanımını ve bedelini saklar.
 
 | Ayrıcalık | Seçenekler (ilki varsayılan) | Çekim | Etkisi ve bedeli | Şartı |
@@ -433,8 +446,9 @@ satırı; kapanış aynı işlevi uygular. Formülün sayıları Pazarlama'nın 
 commit'inde bağlanır, yedek dal yazılmaz.
 
 `channel_read`'in tanımları: dönüşüm, bugünkü durumla bir ziyaretin teslim edilen siparişe dönme oranıdır (dört adımın
-çarpımı; mağazası olmayan kategoride 0). Bir kullanıcının aylık komisyonu `ziyaret sıklığı × 4,33 × dönüşüm × (1 − iade oranı)
-× sepet × komisyon` çarpımıdır (üyenin sıklığı, yeni mağaza şartı ve indirim hesaba girmez). `source_revenue`'da i hafta önce
+çarpımı; mağazası olmayan kategoride 0). Bir kullanıcının aylık komisyonu `sipariş sıklığı × sipariş başına ziyaret × 4,33 × dönüşüm
+× (1 − iade oranı) × sepet × komisyon` çarpımıdır: alışverişini bu kategoride yapan kullanıcının bıraktığıdır (kategorinin payı,
+üyenin sıklığı, yeni mağaza şartı ve indirim hesaba girmez). `source_revenue`'da i hafta önce
 gelen kullanıcı `elde tutma^i` ile küçülür; kullanıcı başına net komisyon, son dört haftanın net komisyonu ÷ aktif kullanıcıdır.
 Kullanıcı o dört haftanın yalnız burada olduğu kadarıyla sayılır (`min(i + 1; 4) ÷ 4`: bu hafta gelen dörtte bir, dördüncü
 haftasından itibaren tam); yeni açılan kanalın satırı bu yüzden küçük başlar. Organik kaynak da aynı formülle hesaplanır
@@ -631,7 +645,8 @@ metinleri ARAYUZ'un PRD'sindedir.
 
 Kategori sabitleri `data/product/categories.json`'da (§3.2'nin tablosu), modüller `data/product/lines/marketplace.json`'da,
 öbür bütün sabitler ve konu kataloğu `data/product/marketplace.json`'da durur. §12 soru 10 bu değerlerle kurulmasının onayıdır.
-- **Ziyaret ve kullanıcı:** organik oran 0,065; memnuniyet katsayısının tabanı 55 ve aralığı 45; elde tutma tabanı 0,94,
+- **Ziyaret ve kullanıcı:** tavsiye oranı 0,065 (memnun kullanıcının haftada getirdiği kullanıcı, yol kusursuzken); memnuniyet
+  katsayısının tabanı 55 ve aralığı 45; elde tutma tabanı 0,94,
   memnuniyet puanı başına 0,0005, üye payı katsayısı 0,03, sınırları 0,85 ve 0,99; üyenin sıklık çarpanı 1,4.
 - **Adımlar:** ulaşılabilir oranlar %15, %70, %88, %97; yayın şartı modüllerinin kademe çarpanı 0,83, 0,96, 1; destek
   modüllerinin 0,90, 0,95, 0,98, 1; açık hata başına 0,027 (en çok 10); en zayıf adım tanımı §3.5'te.

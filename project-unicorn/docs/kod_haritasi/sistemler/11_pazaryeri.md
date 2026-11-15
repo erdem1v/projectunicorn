@@ -6,10 +6,10 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 
 ## Dosyalar
 
-- `systems/marketplace_model.gd` (1080): `MarketplaceModel`; yalnız `static` işlevler. `state` ve `world` sözlüklerinin alanları dosya başındaki yorumda.
+- `systems/marketplace_model.gd` (1111): `MarketplaceModel`; yalnız `static` işlevler. `state` ve `world` sözlüklerinin alanları dosya başındaki yorumda.
 - `systems/marketplace_system.gd` (231): `MarketplaceSystem`; yalnız `static` işlevler. `GameState.marketplace`'in tek yazarı, yazan seam'ler, sözleşme okuyucuları, `world()` ve haftalık kapanış.
-- `debug/marketplace_probe.gd` (1179): `-s` betiği; oynanan çizelge ve 42 mekanik denetimi, `MPPROBE ...` satırları.
-- `data/product/categories.json` (16): altı kategori ve sütunları: sepet, ziyaret sıklığı, kâr payı, sektör iadesi, gereken mağaza, başlangıç komisyonu, taban ilgi, büyük sepet payı, reklam havuzu (`ad_pool`, haftalık arama).
+- `debug/marketplace_probe.gd` (1258): `-s` betiği; oynanan çizelge ve 44 mekanik denetimi, `MPPROBE ...` satırları.
+- `data/product/categories.json` (16): altı kategori ve sütunları: sepet, sipariş sıklığı (`order_freq`: yol kusursuzken kullanıcının haftalık siparişi), kâr payı, sektör iadesi, gereken mağaza, başlangıç komisyonu, taban ilgi, büyük sepet payı, reklam havuzu (`ad_pool`, haftalık arama).
 - `data/product/lines/marketplace.json` (153): modül verisi; 5 kimlik hattı (Ürün Yükleme, Vitrin, Sepet ve Ödeme, Siparişler, Yorum ve Güvence)
   ↳ Mobil, Entegrasyonlar, Kullanıcılar ve Yetki, Yedekleme `shared.json`'dan; Üyelik, Gelir alanının `cap_paid_plan`'ı.
   ↳ Yayın şartının dört adlı modülü (Ürün Yükleme, Vitrin, Sepet ve Ödeme, Siparişler) `sprint.json` `mvp_named["marketplace"]`'da.
@@ -43,7 +43,7 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
   ↳ Genel'in okuyucuları: `funnel(state)` açık kategorilerin geçen haftaki toplamı (`visits`, `organic`, `channel`, `returning`, `cart`, `checkout`, `order`, `delivered`; ilk kapanışını bekleyen kategori 0 katar);
   ↳ `step_hint(state, world, adım)` = `module` (adımın ilk modülü, son kademedeyse sonraki), `tier`, `next_tier` (son kademede 0), `next_gain` (sıradaki kademenin açık kategorilerdeki `gain` toplamı), `bugs` (adımı kısan açık hata: `BUG_STEPS`'teki adımda modüllerindeki açık hata, Sepete ekledi ve Ödemeye geçti adımında 0), `bug_gain` (onların düzelmesinin `gain` toplamı);
   ↳ `ledger_worst(state, taraf)` tarafın en ağır olumsuz defter satırı (eşitlikte koşul sürdükçe duran, o da eşitse listede önce gelen), olumsuz satır yoksa `{}`.
-- Pazarlama'nın okuması: `channel_read(state, world, kategori)` = `conversion` (ziyaretten teslim edilen siparişe), `monthly_commission` (bir kullanıcının aylık net komisyonu),
+- Pazarlama'nın okuması: `channel_read(state, world, kategori)` = `conversion` (ziyaretten teslim edilen siparişe), `monthly_commission` (alışverişini bu kategoride yapan kullanıcının aylık net komisyonu; kategorinin payı hesaba girmez),
   ↳ `organic` (kendiliğinden haftalık ziyaret), `margin`, `base_interest`, `ad_pool`;
   ↳ `source_revenue(state, world, kaynak)` = kaynaktan son on iki haftada gelenlerin (elde tutmayla küçülmüş) son dört haftada bıraktığı net komisyon;
   ↳ kullanıcı o dört haftanın burada olduğu kadarıyla sayılır (bu hafta gelen dörtte bir), yani yeni kanalın satırı küçük başlar;
@@ -98,7 +98,9 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
   ↳ `gain_and_weakest`, `acquisition_multipliers`, `store_terms_discount`, `premium_members`, `zone_rows_need_stores`, `add_users_bounds`, `lost_counters`, `channel_read_values`, `source_revenue_values`, `state_survives_codec`,
   ↳ `topic_rows_known`, `topic_ticket_gates`, `topic_ledger_rows`, `feature_gain_matches_close`, `reviews_affected_is_return_gap`, `assignment_waits_a_close`,
   ↳ `waive_zeroes_one_close`, `outage_row_and_cost`, `lost_commission_weighted`, `backup_mult_tiers`, `open_topic_report_row`, `cfg_reads_constants` (okuyanın boşalttığı kopya sabiti değiştirmez),
-  ↳ `funnel_sums_categories`, `step_hint_matches_gain`, `ledger_worst_picks_heaviest`, `crew_follows_assignment`.
+  ↳ `funnel_sums_categories`, `step_hint_matches_gain`, `ledger_worst_picks_heaviest`, `crew_follows_assignment`,
+  ↳ `returning_orders_follow_frequency` (geri gelen kullanıcı sipariş sıklığı kadar sipariş verir; sıklık açık kategoriler arasında
+  ↳ bölünür), `word_of_mouth_brings_users` (memnun kullanıcı tavsiye oranı kadar kullanıcı getirir).
 
 ## Dikkat
 
