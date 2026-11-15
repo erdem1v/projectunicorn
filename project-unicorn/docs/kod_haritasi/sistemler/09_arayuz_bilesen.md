@@ -24,7 +24,7 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 - `scripts/ui/components/window_layer.gd` (247): `CenterViewport`un betiği; bir birincil ve bir ayrıntı pencereyi ofisin üstünde sabit yuvalarda açar
 - `scripts/ui/components/window_frame.gd` (119): pencere kabuğu (`WindowPanel`, kapatma glifi, ortak başlık bandı, karar beklerken salt okunur şerit)
 - `scripts/ui/components/gate_strip.gd` (53): karar beklerken pencerenin üstündeki "geri dön" şeridi
-- `scripts/ui/components/inbox.gd` (565): gelen kutusunun tek görünüm modeli (statik, durumsuz); Olaylar penceresi, bildirim yığını, kapı yuvası ve rozet bunu okur
+- `scripts/ui/components/inbox.gd` (572): gelen kutusunun tek görünüm modeli (statik, durumsuz); Olaylar penceresi, bildirim yığını, kapı yuvası ve rozet bunu okur
 - `scripts/ui/components/toast.gd` (94): kabuğun tek toast'ı (grup `toast`); son ekranda raya gömülü ve eylemli sürüm
 - `scripts/ui/components/news_ticker.gd` (237): alt haber şeridi; gerçek zamanda sola kayar, oyun duraklasa da akar, aç/kapa hücresi
 - `scripts/ui/components/build_hud_panel.gd` (108): sağ üstteki yüzen kart yığınının taşıyıcısı; görünürlük, sürükleme, pencere altında gizlenme
@@ -75,7 +75,8 @@ Sahipler (Görüşme paneli): `MeetingPanel`, `MeetingRuler`, `VcMeetingAdapter`
 - `LeftTabs._ready()` `left_tabs.gd:63`, `_paint()` `:142`, `_is_locked()` `:265`, `set_bottom_clearance()` `:278`: ray satırı durumları ve rozetleri · `game_shell.gd` düzeni, EventBus sinyalleri
 - `TopBar._paint_ladder(goal)` `top_bar.gd:344`, `_step_size()` `:393`, `_paint_card()` `:468`: hedefin merdiveni (her adıma bir çentik, sırasız biten de dolu; yeni biten kısa bir dolmayla yanar), adımların dil ve yuva genişliği başına tek boyu, üzerine gelince açılan kart (Frank, listenin adımları, adımın sekmesine düğme; kart kendi CanvasLayer'ında, `_input` imleç yuvadan ve karttan çıkınca kapatır) · `ChequeRead`
 - `Toast.show_toast(head, sub, glyph, tone)` `toast.gd:75` ve `set_action()` `:58`: toast gösterir · `get_tree().call_group(&"toast", &"show_toast", ...)`: main.gd, game_shell.gd:130, ending_scene, mail_pane, office_hud
-- `Inbox.show(item_id)` `inbox.gd:29`, `items()` `:40`, `desk()` `:74`, `counts()` `:159`, `mark_read()` `:183`: gelen kutusu · TopBar `top_bar.gd:187`, WindowFrame, `events_tab.gd`, `mail_pane.gd`, ofis bildirim yığını
+- `Inbox.show(item_id)` `inbox.gd:30`, `items()` `:44`, `desk()` `:78`, `counts()` `:167`, `mark_read()` `:191`: gelen kutusu · TopBar `top_bar.gd:187`, WindowFrame, `events_tab.gd`, `mail_pane.gd`, ofis bildirim yığını
+  ↳ `r:mp_no_category` (Pazaryeri koşusunda yayındaki ürünün açık kategorisi yokken `MailClock.reminders()`in `mp_no_category` hatırlatıcısı; gönderen "Pazaryeri" masası, konu ÜRÜN, sekmesi `sales`) `show`da okunacak mail değil gidilecek yerdir: yalnız `tab_changed("sales")`; Olaylar penceresinde öğenin düğmesi `mail_pane._go` ile aynı sekmeyi açar. Pencere her açılışta yeniden kurulur ve kategori yokken Kategoriler'de açılır. Kategori açılınca satır kalksın diye `connect_changes` `marketplace_changed`i de dinler
 - `NewsTicker.set_open(value)` `news_ticker.gd:97`: şeridi açar/kapar, `Settings.ticker_open` yazar · aç/kapa hücresi ve Ayarlar (`settings_modal.gd:281`)
 - `BuildHUDPanel.set_map_open()` `build_hud_panel.gd:59` ve `set_window_cover()` `:65`: grup `office_overlays`; kartlar `fingerprint()` boşsa yığın gizli · `office_view.gd`, `window_layer.gd:237`
 - `MeetingPanel.open(adapter, cast)` `meeting_panel.gd:124`, `pick(id)` `:145`, `proceed()` `:168`, sinyal `closed` `:19`: panel oynatır, seçimi adaptöre iletir · `main.gd:5376`

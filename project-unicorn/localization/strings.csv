@@ -3638,3 +3638,4 @@ MP_ZONE_LEAVING,ayrılır,leaving
 MP_TIP_STORE_EARNINGS,Mağazaya komisyon ve kargodan sonra kalan.,What the store keeps after commission and shipping.
 MP_TIP_PREVIEW,Dört hafta sonraki fark.,The difference four weeks from now.
 MP_SECTOR_AVERAGE_CAPTION,sektör ortalaması,sector average
+MP_REMINDER_NO_CATEGORY,Açık kategori yok,No open category

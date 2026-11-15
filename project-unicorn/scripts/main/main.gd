@@ -2113,10 +2113,12 @@ func _run_sales_shot(kind: String) -> void:
 ## `commission` Moda's rate, `channel` a marketing specialist hired to run that channel on Moda at a budget of 1,000, `campaign` a
 ## discount-days campaign the company pays for, run by the founder (its week of preparation is the next close, the campaign the
 ## one after it); `tab` the sub-page's key pressed on the strip, `pick` the category row the Kategoriler page is on, `raise`
-## the plus key pressed once on the commission stepper.
+## the plus key pressed once on the commission stepper; `no_category` leaves every category closed and shoots the office's
+## notice stack, then the window its reminder opens.
 const _MP_WORLDS := {
 	"mp_pre": {"day": 3, "pick": "electronics"},
 	"mp_launch": {"closes": 4},
+	"mp_reminder": {"closes": 4, "no_category": true},
 	"mp_growth": {"until": 42, "crew": [HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER], "bugs": 3},
 	"mp_growth_tip": {"until": 42, "crew": [HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER], "bugs": 3, "tip": "MP_STEP_ORDER"},
 	"mp_campaign": {"until": 42, "crew": [HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER], "bugs": 3,
@@ -2132,22 +2134,29 @@ const _MP_WORLDS := {
 const _MP_SPRINTS := 12
 
 
-## --sales-shot=mp_<pre|launch|growth|growth_tip|campaign|campaign_tip|campaign_visits|cat>: the Pazaryeri window of a company the engine played
-## (`_seed_marketplace_world`). `pre` is week 3 with the founder alone and Moda open, before the MVP, the page on Elektronik; `launch`
+## --sales-shot=mp_<pre|launch|reminder|growth|growth_tip|campaign|campaign_tip|campaign_visits|cat>: the Pazaryeri window of a company the
+## engine played (`_seed_marketplace_world`). `pre` is week 3 with the founder alone and Moda open, before the MVP, the page on Elektronik; `launch`
 ## the week the engine ships the MVP and four closes after it, the founder on Moda; `growth` week 42 with two hires and three open
 ## bugs on Cart and Checkout, `growth_tip` the same with the pointer on the Placed an order row; `campaign` the same world with a
 ## marketing specialist running search ads on Moda since week 30, in the week of a discount-days campaign the company called in week
 ## 40, `campaign_tip` with the pointer on the Added to cart row, `campaign_visits` on the Visits row; `cat` week 60 with a sales rep hired in week 20 on Moda, whose rate
-## went to 12% in week 30, and Elektronik open since week 40, the page on Moda with 13% chosen. Prints the world's figures as
-## `SHOT|mp_world`.
+## went to 12% in week 30, and Elektronik open since week 40, the page on Moda with 13% chosen; `reminder` is `launch` with no
+## category open and the founder on none: frame `_01` is the office's notice stack with the reminder, `_02` the window its
+## click opens, on Kategoriler. Prints the world's figures as `SHOT|mp_world`.
 func _run_marketplace_shot(kind: String) -> void:
 	if not _MP_WORLDS.has(kind):
 		_shot_fail("[SalesShot] unknown marketplace shot: %s" % kind)
 		return
 	if not _seed_marketplace_world(_MP_WORLDS[kind]):
 		return
+	var world: Dictionary = _MP_WORLDS[kind]
+	if world.has("no_category"):
+		# The reminder took its arrival hour among the workday's first hours (MailClock): the frame is after them.
+		GameState.current_hour = WorkHoursSystem.start_hour() + MailClock.SPREAD_HOURS
+		TimeManager.sync_to_current_hour()
 	await _mount_shot_shell()
-	EventBus.tab_changed.emit("sales")
+	if not world.has("no_category"):
+		EventBus.tab_changed.emit("sales")
 	var state: Dictionary = MarketplaceSystem.read_state()
 	print("SHOT|mp_world kind=%s week=%d launch=%d cash=%d mrr=%d users=%d stores=%d orders=%d" % [kind, GameState.day,
 		int(GameState.get_flag("mvp_launch_day", -1)), GameState.cash, GameState.mrr, roundi(state.users),
@@ -2160,8 +2169,22 @@ func _run_marketplace_shot(kind: String) -> void:
 	if absf(sources - funnel.visits) > 0.01:
 		_shot_fail("[SalesShot] %s: the visits' sources add up to %.1f, the visits are %.1f" % [kind, sources, funnel.visits])
 		return
-	var world: Dictionary = _MP_WORLDS[kind]
 	await get_tree().process_frame
+	if world.has("no_category"):
+		await get_tree().create_timer(0.6).timeout
+		_save_shot("sales_shot_%s_01" % kind)
+		var card: Control = get_tree().get_first_node_in_group(&"notice_stack").get_children().filter(
+			func(c: Control) -> bool: return c.find_children("*", "Label", true, false).any(
+				func(l: Label) -> bool: return l.text == tr("MP_REMINDER_NO_CATEGORY"))).pop_front()
+		if card == null:
+			_shot_fail("[SalesShot] %s: no reminder row on the notice stack" % kind)
+			return
+		var press := InputEventMouseButton.new()
+		press.button_index = MOUSE_BUTTON_LEFT
+		press.pressed = true
+		card.gui_input.emit(press)
+		await _finish_shot("sales_shot_%s_02" % kind, 0.6)
+		return
 	if world.has("tab") and not _press_button_labelled(_shell, Fmt.upper(tr(world.tab))):
 		_shot_fail("[SalesShot] %s: no sub-page key %s on the strip" % [kind, world.tab])
 		return
@@ -2198,12 +2221,14 @@ func _run_marketplace_shot(kind: String) -> void:
 ## and plays that many weeks after it; the world's `later` moves are made on the way (`_mp_move`); the last of them is played after
 ## the world's `crew` is hired (`_mp_hire`, in the smallest office that seats it) and its `bugs` are open. Every week is the clock's daily dispatch, so stores, users, orders and MRR come
 ## from the engine; a hired crew moves into the office that seats it and its cash is written after (`_a4_books`: six months of the
-## company's loss, the rent in it), or the shutter would close on a 42-week world. False (the shot is failed) when the gate is not reached.
+## company's loss, the rent in it), or the shutter would close on a 42-week world. `no_category` opens no category and assigns no
+## one. False (the shot is failed) when the gate is not reached.
 func _seed_marketplace_world(world: Dictionary) -> bool:
 	_seed_run_reproducible()
 	GameState.founder_portrait = "founder_01"
 	SprintSystem.choose_type(MarketplaceSystem.TYPE_ID, "Çarşım")   # LOC-DATA debug seed / id
-	MarketplaceSystem.open_category("fashion")
+	if not world.has("no_category"):
+		MarketplaceSystem.open_category("fashion")
 	if world.has("day"):
 		while GameState.day < world.day:
 			_play_week()
@@ -2217,7 +2242,8 @@ func _seed_marketplace_world(world: Dictionary) -> bool:
 	if not GameState.product.release.get("gate", false):
 		_shot_fail("[SalesShot] the marketplace's MVP gate is not reached in %d sprints" % _MP_SPRINTS)
 		return false
-	MarketplaceSystem.assign(CharacterRegistry.get_founder().id, "fashion")
+	if not world.has("no_category"):
+		MarketplaceSystem.assign(CharacterRegistry.get_founder().id, "fashion")
 	_play_week()
 	SprintSystem.publish()
 	var closes: int = world.closes if world.has("closes") else world.until - GameState.day

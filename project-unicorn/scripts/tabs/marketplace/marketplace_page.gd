@@ -10,8 +10,8 @@ const PAGES := [["MP_TAB_OVERVIEW", preload("res://scripts/tabs/marketplace/mp_o
 const PARTS := preload("res://scripts/tabs/marketplace/mp_parts.gd")
 
 var _pages: Array[Control] = []
-## The page the window opens on, an index into PAGES: Kategoriler before the MVP ships, Genel after.
-var _active := 0 if ProductState.is_live() else 1
+## The page the window opens on, an index into PAGES: Genel once the MVP is on sale with a category open, else Kategoriler.
+var _active := 0 if ProductState.is_live() and not MarketplaceModel.open_ids(MarketplaceSystem.read_state()).is_empty() else 1
 
 
 func _init() -> void:

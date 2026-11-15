@@ -63,6 +63,8 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 
 `EventBus.marketplace_changed()`: tek yayıncı `MarketplaceSystem`; uygulanan her yazan seam ve her haftalık kapanış bir kez yayar, reddedilen çağrı yaymaz.
 
+Hatırlatıcı: `MailClock.reminders()` pazaryeri türünde (`SalesSystem.is_marketplace()`), ürün yayındayken ve `MarketplaceModel.open_ids(read_state())` boşken `mp_no_category` satırını verir (kimliği ve türü aynı; ilk kategori açılınca kalkar, geliş saati öbür hatırlatıcılar gibi `MailClock`tan). Gelen kutusu onu gönderen "Pazaryeri" ve konu ÜRÜN olarak listeler; tıkı Satış penceresini açar, pencere kategori yokken Kategoriler'de açılır (`marketplace_page.gd` `_active`); vaka `marketplace_no_category_reminder`.
+
 ## Durum ve veri
 
 - Durumun evi `GameState.marketplace` (`initialize_run` boşaltır, ERP koşusunda boş kalır; kodlayıcı `GameState` alanlarını kendisi bulur, göç yok: şema 20); `marketplace_save_roundtrip` `retention`'ın bölmesini, `marketplace_save_fills_missing` silinmiş anahtarların yüklemede tamamlanmasını gerçek kayıt yolunda sınar.
@@ -88,7 +90,7 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 
 ## Metin anahtarları
 
-- Çekirdek oyuncuya görünen metin üretmez; arayüz kimlikten kurar. İki kaydın adı `MP_STORES_RECORD` ve `MP_USERS_RECORD` (`{product}` ürün adı).
+- Çekirdek oyuncuya görünen metin üretmez; arayüz kimlikten kurar. İki kaydın adı `MP_STORES_RECORD` ve `MP_USERS_RECORD` (`{product}` ürün adı); hatırlatıcının konusu `MP_REMINDER_NO_CATEGORY`.
 - Tür ve modül verisi: `PROD_TYPE_MARKETPLACE_*`, `PROD_DESK_*` (beş masa), `PROD_CONCEPT_*` (ağ etkisi, tavuk ve yumurta), `PROD_LINE_MARKETPLACE_*`, `PROD_STEP_MARKETPLACE_*`, paylaşılan hatların `_MARKETPLACE_DESC` satırları.
 
 ## Testler

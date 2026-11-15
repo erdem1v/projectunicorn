@@ -486,7 +486,10 @@ Kareler `tur4_ekranlar_2026-11-13/pazaryeri/kareler/` altında; her bölümün k
 ### 4.2 Genel (PY4a, PY4b, PY5a, PY5b)
 - **DÖNÜŞÜM** bölümü. Başlık satırının sağında tek cümle: "Geçen hafta ziyaretin %4,7 kadarı sipariş verdi".
 - Sütun başlıkları: "GEÇEN HAFTA" (sayı) ve "ÖNCEKİ ADIMDAN GEÇEN" (yüzde ve çubuk). Beş satır: Ziyaret, Sepete ekledi,
-  Ödemeye geçti, Sipariş verdi, Teslim edildi. Ziyaret satırı iki renklidir (Organik, Kanal) ve yüzdesi yoktur.
+  Ödemeye geçti, Sipariş verdi, Teslim edildi. Ziyaret satırı tek çubukta dört kaynağı gösterir (Geri dönen,
+  Organik, Kanal, Kampanya; şirketin kazandığından para verdiğine, açıktan koyuya) ve yüzdesi yoktur; o hafta ziyaret
+  getirmeyen kaynağın parçası çizilmez. Dar parça adını taşıyamadığı için satırın ipucu her kaynağın adını, sayısını ve
+  payını listeler.
 - Çubuğun tam boyu adımın ulaşılabilir oranıdır; dolu kısmı bugünkü oran; kalanı taralıdır. En zayıf adımın taraması ve
   yüzdesi uyarı rengindedir. Çubuk sütununun sağ ucunda tek soluk etiket: "ulaşılabilir".
 - Altında iki küçük oran: Geri dönen kullanıcı, İade.
@@ -541,6 +544,9 @@ Kareler `tur4_ekranlar_2026-11-13/pazaryeri/kareler/` altında; her bölümün k
 ### 4.7 Açık kategori yokken
 Ürün yayınlandığında hiç açık kategori yoksa bildirim yığınına bir hatırlatıcı düşer ("Açık kategori yok"); tıklanınca
 Pazaryeri › Kategoriler açılır. Hatırlatıcı bugünkü masa hatırlatıcılarının kalıbıdır (`MailClock`, `desk_arrivals`).
+Pencere ürün yayındayken ve en az bir kategori açıkken Genel'de, yoksa Kategoriler'de açılır: açık kategori yokken
+hatırlatıcıdan, soldaki raydan ya da Olaylar'daki düğmeden açılan pencere oyuncuyu yapılacak işe götürür (yeni sinyal
+yok; yardımcı yönetmenin onayı, 15 Kasım). İlk kategori açılınca hatırlatıcı kalkar.
 
 ## 5. Olaylar ve kâğıtlar
 
@@ -624,7 +630,7 @@ Anahtar öneki `MP_`. Araya giren değer ek almaz; bu yüzden cümleler değeri 
 |---|---|---|
 | Pencere | Pazaryeri · Aktif kullanıcı · Mağaza · Haftalık sipariş · Genel · Kategoriler · Politikalar · Premium · Üyelik Programı çıkınca | Marketplace · Active users · Stores · Weekly orders · Overview · Categories · Policies · Premium · After Membership Programme ships |
 | Genel, başlık | Dönüşüm · Geçen hafta ziyaretin {oran} kadarı sipariş verdi · Geçen hafta · Önceki adımdan geçen · ulaşılabilir | Conversion · Last week {rate} of visits placed an order · Last week · Passed from the previous step · reachable |
-| Genel, adımlar | Ziyaret · Organik · Kanal · Sepete ekledi · Ödemeye geçti · Sipariş verdi · Teslim edildi · Geri dönen kullanıcı · İade | Visits · Organic · Channels · Added to cart · Reached checkout · Placed an order · Delivered · Returning users · Returns |
+| Genel, adımlar | Ziyaret · Geri dönen · Organik · Kanal · Kampanya · Sepete ekledi · Ödemeye geçti · Sipariş verdi · Teslim edildi · Geri dönen kullanıcı · İade | Visits · Returning · Organic · Channels · Campaign · Added to cart · Reached checkout · Placed an order · Delivered · Returning users · Returns |
 | Genel, ipucu | Sepete ekledi · ziyaretin {oran} kadarı · en çok {tavan} · Ödemeye geçti · sepete ekleyenin {oran} kadarı · en çok {tavan} · Sipariş verdi · ödemeye geçenin {oran} kadarı · en çok {tavan} · Teslim edildi · siparişin {oran} kadarı · en çok {tavan} · {modül} · {kademe} · {kademe} çıkarsa haftada +{n} sipariş · {n} açık hata düzelirse haftada +{m} sipariş | Added to cart · {rate} of visits · at most {cap} · Reached checkout · {rate} of carts · at most {cap} · Placed an order · {rate} of checkouts · at most {cap} · Delivered · {rate} of orders · at most {cap} · {module} · {tier} · Ship {tier} for +{n} orders a week · Fix {n} open bugs for +{m} orders a week |
 | Genel, sağ | Memnuniyet · Kullanıcılar · Mağazalar · Talepler · {n} konu bekliyor · Talepleri aç | Satisfaction · Users · Stores · Requests · {n} topics waiting · Open requests |
 | Kategoriler | Kategori · Açık · Kapalı · Sipariş · Komisyon · İade · sektör ortalaması {oran} · Satış hacmi · {tutar} / hafta · Reklam doyumu · Kategoriyi aç · Mağaza kazanımı · haftada {n} mağaza · Değiştir · Ata · v1.0 yayınlanınca başlar | Category · Open · Closed · Orders · Commission · Returns · sector average {rate} · Sales volume · {amount} / week · Ad saturation · Open category · Store acquisition · {n} stores a week · Change · Assign · Starts when v1.0 ships |

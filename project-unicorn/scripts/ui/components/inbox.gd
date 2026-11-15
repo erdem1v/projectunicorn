@@ -26,8 +26,11 @@ const CATEGORY_OUTLETS := {"world": "WORLD_OUTLET_SEKTOR", "rival": "WORLD_OUTLE
 
 
 ## Opens the inbox on `item_id` (Olaylar comes up if it is not the open window; an open one keeps
-## its filter and scroll).
+## its filter and scroll). The marketplace's reminder has no mail to read: it opens the Pazaryeri window.
 static func show(item_id: String) -> void:
+	if item_id == "r:mp_no_category":
+		EventBus.tab_changed.emit("sales")
+		return
 	var tree := Engine.get_main_loop() as SceneTree
 	if tree.get_first_node_in_group(GROUP) == null:
 		EventBus.tab_changed.emit("events")
@@ -126,6 +129,9 @@ static func desk() -> Array:
 						"state": TranslationServer.translate("HR_BADGE_FLIGHT_RISK"),
 						"line": HRConstants.role_label(e.role)}, true)
 					out.append(r)
+			"mp_no_category":
+				out.append(_reminder("mp_no_category", "EVENT_TAG_PRODUCT", _desk(TranslationServer.translate("TAB_MARKETPLACE")),
+					TranslationServer.translate("MP_REMINDER_NO_CATEGORY"), "sales"))
 	return out
 
 
@@ -152,7 +158,8 @@ static func connect_changes(c: Callable) -> void:
 			EventBus.day_tick_completed, EventBus.sheet_granted, EventBus.sheet_expired,
 			EventBus.sheet_walked, EventBus.customer_added, EventBus.customer_removed,
 			EventBus.customer_health_changed, EventBus.morale_changed, EventBus.character_removed,
-			EventBus.sprint_planned, EventBus.sprint_started, EventBus.version_shipped, EventBus.seed_round_closed]:
+			EventBus.sprint_planned, EventBus.sprint_started, EventBus.version_shipped, EventBus.seed_round_closed,
+			EventBus.marketplace_changed]:
 		sig.connect(c)
 
 

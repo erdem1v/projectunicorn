@@ -75,8 +75,9 @@ static func hourly_tick() -> void:
 # --- Reminders -------------------------------------------------------------
 
 ## What stands on the desk as a reminder, from the live state, in the order the desk lists it: the open gate, a
-## term sheet, candidate files, an account in Risk or Expansion, an employee about to leave. `id` is what its
-## arrival time is kept under; `card` is the gate's card, `ref` the account or the employee.
+## term sheet, candidate files, an account in Risk or Expansion, an employee about to leave, a marketplace on sale
+## with no category open. `id` is what its arrival time is kept under; `card` is the gate's card, `ref` the account
+## or the employee.
 static func reminders() -> Array:
 	var out: Array = []
 	if GameState.phase_gate_ready:
@@ -93,6 +94,9 @@ static func reminders() -> Array:
 	for e in CharacterRegistry.get_employees():
 		if HRConstants.is_flight_risk(e.morale):
 			out.append({"id": "employee:" + e.id, "kind": "employee", "ref": e})
+	if SalesSystem.is_marketplace() and ProductState.is_live() \
+			and MarketplaceModel.open_ids(MarketplaceSystem.read_state()).is_empty():
+		out.append({"id": "mp_no_category", "kind": "mp_no_category"})
 	return out
 
 

@@ -685,6 +685,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"marketplace_cheque_first_order":    fail = _case_marketplace_cheque_first_order()
 		"marketplace_paid_plan_waits_for_premium": fail = _case_marketplace_paid_plan_waits_for_premium()
 		"marketplace_audience_seams_redirect": fail = _case_marketplace_audience_seams_redirect(pinned)
+		"marketplace_no_category_reminder":  fail = _case_marketplace_no_category_reminder()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -32143,3 +32144,54 @@ static func _case_marketplace_audience_seams_redirect(payload: Dictionary) -> St
 		return "an ERP run reads %s users, %d paying and %s lost, want 0 and no marketplace state" % [
 			SalesSystem.b2c_audience(), SalesSystem.b2c_paying_users(), SalesSystem.b2c_users_lost()]
 	return ""
+
+
+## Pazaryeri koşusunda ürün yayındayken hiç açık kategori yoksa "Açık kategori yok" hatırlatıcısı durur ve gelen kutusunun masasında
+## listelenir: yayından önce, bir kategori açıkken ve ERP koşusunda durmaz. Geliş saatini öbür hatırlatıcılar gibi MailClock'tan
+## alır: mesai dışında durduğunda masada mesainin ilk saatlerinden birinde görünür, daha önce görünmez.
+##
+## FALSİFİKASYON: `MailClock.reminders`ta `ProductState.is_live()` terimini sil → yayından önceki satır FAIL; `SalesSystem.is_marketplace()`
+## terimini sil → ERP satırı FAIL; `open_ids(...).is_empty()` terimini sil → Moda açıkken satırı FAIL; `Inbox.desk`in `mp_no_category`
+## kolunu sil → yayındaki satır FAIL; `Inbox.desk`te `MailClock.delivered` süzgecini kaldır → geliş saatinden önceki satır FAIL.
+static func _case_marketplace_no_category_reminder() -> String:
+	_seed_sprint(MarketplaceSystem.TYPE_ID)
+	if _no_category_reminder() != [false, false]:
+		return "before the launch the reminder stands or is listed (want neither): %s" % str(_no_category_reminder())
+	GameState.set_flag("mvp_shipped", true)
+	if _no_category_reminder() != [true, true]:
+		return "launched with no category open the reminder stands or is listed (want both): %s" % str(_no_category_reminder())
+
+	MailClock.instant = false
+	GameState.current_hour = WorkHoursSystem.start_hour() - 1
+	TimeManager.sync_to_current_hour()
+	MailClock.sync_desk()
+	var early_now: int = MailClock.now()
+	var at: int = MailClock.reminder_at("mp_no_category")
+	var early: Array = _no_category_reminder()
+	GameState.current_hour = WorkHoursSystem.start_hour() + MailClock.SPREAD_HOURS
+	TimeManager.sync_to_current_hour()
+	var late: Array = _no_category_reminder()
+	MailClock.instant = true
+	if at <= early_now:
+		return "stood up before the workday, the reminder takes no later arrival time (at %d)" % at
+	if early != [true, false] or late != [true, true]:
+		return "before its arrival time the desk shows %s, after it %s; want [true, false] then [true, true]" % [str(early), str(late)]
+
+	if not MarketplaceSystem.open_category("fashion"):
+		return "fixture: Moda did not open"
+	if _no_category_reminder() != [false, false]:
+		return "with Moda open the reminder stands or is listed (want neither): %s" % str(_no_category_reminder())
+
+	SaveManager.reset_all_owners()
+	GameState.initialize_run({"seed": 424242})
+	_seed_sprint_live("erp")
+	if _no_category_reminder() != [false, false]:
+		return "a live ERP product: the reminder stands or is listed (want neither): %s" % str(_no_category_reminder())
+	return ""
+
+
+## [MailClock stands the reminder up, the inbox's desk lists it].
+static func _no_category_reminder() -> Array:
+	const INBOX := preload("res://scripts/ui/components/inbox.gd")
+	return [MailClock.reminders().any(func(r: Dictionary) -> bool: return r.kind == "mp_no_category"),
+		INBOX.desk().any(func(it: Dictionary) -> bool: return it.id == "r:mp_no_category")]
