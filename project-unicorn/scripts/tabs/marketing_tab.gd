@@ -24,8 +24,8 @@ const CHEVRON := "res://assets/icons/util/chevron_down.svg"
 const EMPTY_GLYPH := "res://assets/icons/rail/marketing.svg"
 const KIND_GLYPHS := {"content_seo": "res://assets/icons/util/doc.svg", "search_ads": "res://assets/icons/dept/marketing.svg",
 	"referral": "res://assets/icons/dept/customer_success.svg", "target_sector": "res://assets/icons/util/flag.svg",
-	"social_ads": "res://assets/icons/util/globe.svg", "display_ads": "res://assets/icons/util/news.svg",
-	"price_compare": "res://assets/icons/util/queue.svg", "affiliate": "res://assets/icons/util/move.svg",
+	"social_ads": "res://assets/icons/product/voices.svg", "display_ads": "res://assets/icons/util/news.svg",
+	"price_compare": "res://assets/icons/channel/price_compare.svg", "affiliate": "res://assets/icons/channel/affiliate.svg",
 	"email": "res://assets/icons/util/mail_open.svg", "influencer": "res://assets/icons/util/sparkle.svg"}
 const ORGANIC_GLYPH := "res://assets/icons/type/erp.svg"
 const ORGANIC_GLYPH_MP := "res://assets/icons/type/marketplace.svg"
@@ -260,7 +260,11 @@ func _row_card(r: Dictionary, off: bool) -> PanelContainer:
 	title.add_theme_constant_override("separation", UiTokens.SPACE_M)
 	title.add_child(UiFactory.make_glyph(KIND_GLYPHS[r.kind], UiTokens.D_ICON_LINE, UiTokens.D_INK_3))
 	title.add_child(_line(MarketingSystem.row_label(r), &"DataStrong"))
-	name_col.add_child(title)
+	# A gap before the budget column: a name that just fits wraps short of the − button instead of touching it.
+	var title_box := MarginContainer.new()
+	title_box.add_theme_constant_override("margin_right", UiTokens.SPACE_M)
+	title_box.add_child(title)
+	name_col.add_child(title_box)
 	if _mp:
 		if float(r.get("share", 0.0)) >= float(MarketingSystem.cfg("market.warn_share")):
 			name_col.add_child(_saturation(r))
@@ -317,10 +321,9 @@ func _mrr_cell(mrr: int) -> Label:
 	return cell
 
 
-## A marketplace row's cost per new user at the last close; empty with no spend or no user. Its tip names the kind's traffic in
-## a word (intent to buy or browsing: why a cheap click can make a dear user). Dearer than the week before, an
-## up arrow in the warning ink beside it (a cost's language in Pazaryeri; red is for danger), and its tip the week before's figure and the row's saturation: the budget a
-## player raised buys the dearer slots, and the row says so where its cost is read.
+## A marketplace row's cost per new user at the last close; empty with no spend or no user. Dearer than the week before, an
+## up arrow in the warning ink beside it (a cost's language in Pazaryeri; red is for danger), and its tip the week before's
+## figure and the row's saturation: the budget a player raised buys the dearer slots, and the row says so where its cost is read.
 func _per_user(r: Dictionary) -> Control:
 	var cell := HBoxContainer.new()
 	cell.custom_minimum_size.x = W[3]
@@ -329,15 +332,13 @@ func _per_user(r: Dictionary) -> Control:
 	if now < 0.0:
 		return cell
 	cell.add_child(UiFactory.make_label(Fmt.money_exact(roundi(now)), &"DataText"))
-	var kind_word: String = tr("MKT_INTENT_HIGH" if MarketingSystem.intent(String(r.kind)) else "MKT_INTENT_LOW")
-	cell.tooltip_text = kind_word
-	cell.mouse_filter = Control.MOUSE_FILTER_STOP
 	var before: float = MarketingSystem.row_per_user_before(r)
 	if before > 0.0 and roundi(now) > roundi(before):
 		var up := UiFactory.make_glyph(UP, UiTokens.D_ICON_LINE, UiTokens.D_warn())
 		up.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		cell.add_child(up)
 		# Dearer than last week, the tip says why: last week's cost and the slots it now pays for.
+		cell.mouse_filter = Control.MOUSE_FILTER_STOP
 		cell.tooltip_text = tr("MKT_PER_USER_UP_TIP").format({"was": Fmt.money_exact(roundi(before)),
 			"pct": Fmt.percent(float(r.get("share", 0.0)) * 100.0, 0)})
 	return cell

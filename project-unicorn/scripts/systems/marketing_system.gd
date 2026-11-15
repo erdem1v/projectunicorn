@@ -535,11 +535,6 @@ static func quality(kind: String) -> float:
 	return float(cfg("market.content.quality" if kind == "content_seo" else "market.kinds.%s.quality" % kind))
 
 
-## Whether a marketplace kind's visitors come with the intent to buy: the one word its per-user tip carries.
-static func intent(kind: String) -> bool:
-	return bool(cfg("market.content.intent" if kind == "content_seo" else "market.kinds.%s.intent" % kind))
-
-
 ## The new users the row's visits brought at the last close.
 static func row_new_users(r: Dictionary) -> float:
 	return MarketplaceSystem.source_new_users(source_key(r))

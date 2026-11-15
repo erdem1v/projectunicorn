@@ -2195,8 +2195,6 @@ MKT_SATURATION,Reklam doyumu {pct},Ad saturation {pct}
 MKT_SATURATION_TIP_SEARCH,{cat} aramalarında haftalık reklam yeri: {pool} · gösterildiğin: {shown},Weekly ad slots in {cat} searches: {pool} · shown in: {shown}
 MKT_SATURATION_TIP,{cat} için haftalık reklam yeri: {pool} · gösterildiğin: {shown},Weekly ad slots for {cat}: {pool} · shown in: {shown}
 MKT_PER_USER_UP_TIP,Geçen hafta {was} · reklam doyumu {pct},Last week {was} · ad saturation {pct}
-MKT_INTENT_HIGH,Niyetli,High-intent
-MKT_INTENT_LOW,Niyetsiz,Low-intent
 MKT_EMAIL_LIFT,Geri dönen ziyaret +{pct},Returning visits +{pct}
 MAIL_SENDER_MARKETING,Pazarlama,Marketing
 SECTOR_CONSTRUCTION,İnşaat,Construction

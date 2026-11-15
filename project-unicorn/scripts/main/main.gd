@@ -3111,17 +3111,18 @@ func _run_office_crowd_probe(spec: String) -> void:
 # $18M post-money signed) · ipo (week 20, the social network's listing week, its card) · filtre (My sector
 # on an erp run, the sector giant's card) · sektor (the erp league leader's card, the list scrolled to it).
 # cheque or seed opens any tab on the goal lists' week 1 (_seed_goal) in place of the theme seed.
-## --marketing-shot=<erp|empty|pazaryeri|pazaryeri_up>: Pazarlama's window. `erp` is P3_kanallar_erp's company (PRD_PAZARLAMA §11):
+## --marketing-shot=<erp|empty|pazaryeri|pazaryeri_up|pazaryeri_kinds>: Pazarlama's window. `erp` is P3_kanallar_erp's company (PRD_PAZARLAMA §11):
 ## the theme seed's live ERP, a marketing specialist beside the founder, İçerik ve SEO at $500 (the founder) and Arama reklamı at
 ## $1.000 (the specialist) four weeks into the 2★ threshold; `empty` a new ERP company before v1.0 (no accounts, no MRR): the
 ## page's condition. `pazaryeri` is P1_kanallar_pazaryeri's company; `pazaryeri_up` the same with Arama reklamı at $500 until its
 ## last week, then $1.000: a user costs more than the week before, and a second frame rests the pointer on that cost (its tip).
+## `pazaryeri_kinds` puts the six paid kinds in Moda, two to each of three specialists: every kind's glyph on its row.
 func _run_marketing_shot(kind: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
 	if kind == "empty":   # LOC-DATA debug fixture id
 		SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
-	elif kind in ["pazaryeri", "pazaryeri_up"]:   # LOC-DATA debug fixture id
+	elif kind in ["pazaryeri", "pazaryeri_up", "pazaryeri_kinds"]:   # LOC-DATA debug fixture id
 		# P1_kanallar_pazaryeri's company: a marketplace the engine plays to its launch with Moda open, a specialist, Arama
 		# reklamı and İçerik in Moda and E-posta, then six weeks the clock turns (every close real). The books are the frame
 		# worlds' (_a4_office, _a4_books): a crew of one moves to the office that seats it and keeps six months of its loss,
@@ -3130,13 +3131,25 @@ func _run_marketing_shot(kind: String) -> void:
 			return
 		var spec: Character = _shot_employee("char_mkt_shot", "Zeynep Koç", HRConstants.ROLE_MARKETING_SPECIALIST, 20)   # LOC-DATA debug seed / name
 		CharacterRegistry.assign_job(spec.id, HRConstants.JOB_MARKETING)
+		var crew: Array = [spec]
+		if kind == "pazaryeri_kinds":   # LOC-DATA debug fixture id
+			crew.append(_shot_employee("char_mkt_shot2", "Can Demir", HRConstants.ROLE_MARKETING_SPECIALIST, 20))   # LOC-DATA debug seed / name
+			crew.append(_shot_employee("char_mkt_shot3", "Elif Şahin", HRConstants.ROLE_MARKETING_SPECIALIST, 20))   # LOC-DATA debug seed / name
+			for c: Character in crew.slice(1):
+				CharacterRegistry.assign_job(c.id, HRConstants.JOB_MARKETING)
 		GameState.set_cash(1_000_000)   # the move's up-front rent; _a4_books writes the books after it
-		_a4_office(1)
-		_a4_books(1, 0)
+		_a4_office(crew.size())
+		_a4_books(crew.size(), 0)
 		var search: int = 500 if kind == "pazaryeri_up" else 1000
+		var plan: Array = [["search_ads", "fashion", search, spec.id], ["content_seo", "fashion", 500, CharacterRegistry.get_founder().id],
+				["email", "", 0, spec.id]]
+		if kind == "pazaryeri_kinds":   # LOC-DATA debug fixture id
+			plan = []
+			for i in 6:
+				plan.append([["search_ads", "price_compare", "social_ads", "display_ads", "affiliate", "influencer"][i], "fashion", 500,
+					(crew[i >> 1] as Character).id])
 		var rows: Array = []
-		for row in [["search_ads", "fashion", search, spec.id], ["content_seo", "fashion", 500, CharacterRegistry.get_founder().id],
-				["email", "", 0, spec.id]]:
+		for row in plan:
 			var r: Dictionary = MarketingSystem.add_row(row[0], row[1], row[3])
 			MarketingSystem.set_budget(int(r.id), row[2])
 			rows.append(r)
