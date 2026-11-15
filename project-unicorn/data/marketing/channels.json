@@ -1,6 +1,7 @@
 {
 	"budget_ladder": [0, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000],
 	"founder_share_pct": 50,
+	"boost": {"pct_max": 90, "weeks_max": 26},
 	"erp": {
 		"leads_cap_per_week": 14,
 		"mrr_window_weeks": 26,

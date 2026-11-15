@@ -12,7 +12,7 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **324** |
+| Seams (read) | **344** |
 | Effect verbs (write) | **87** |
 | Cards in the catalogue | 182 |
 | Arcs | 3 |
@@ -115,7 +115,7 @@ Barred from ambient origins entirely; on expiry, allowed only in the negative.
 - `b2b_expand`
 - `b2b_retain_discount`
 - `b2b_month_discount`
-- `marketing_push`
+- `marketing_boost`
 - `incident`
 - `promise_break`
 - `account_notice`
@@ -294,6 +294,31 @@ slot of that type (§17.12).
 | `investor.rejections` | global | int | Funding | WRAPPER; three closed tables reach the cascade |
 | `investor.series_a_closed` | global | bool | Funding | WRAPPER |
 | `investor.sheets_live` | global | int | Funding | WRAPPER; term sheets in hand |
+
+### `marketing.`
+
+| seam | scope | type | owner | note |
+|---|---|---|---|---|
+| `marketing.channel_weekly_spend.affiliate` | global | int | Finance | the weekly budget of the company's affiliate rows |
+| `marketing.channel_weekly_spend.content_seo` | global | int | Finance | the weekly budget of the company's content_seo rows |
+| `marketing.channel_weekly_spend.display_ads` | global | int | Finance | the weekly budget of the company's display_ads rows |
+| `marketing.channel_weekly_spend.email` | global | int | Finance | the weekly budget of the company's email rows |
+| `marketing.channel_weekly_spend.influencer` | global | int | Finance | the weekly budget of the company's influencer rows |
+| `marketing.channel_weekly_spend.price_compare` | global | int | Finance | the weekly budget of the company's price_compare rows |
+| `marketing.channel_weekly_spend.referral` | global | int | Finance | the weekly budget of the company's referral rows |
+| `marketing.channel_weekly_spend.search_ads` | global | int | Finance | the weekly budget of the company's search_ads rows |
+| `marketing.channel_weekly_spend.social_ads` | global | int | Finance | the weekly budget of the company's social_ads rows |
+| `marketing.channel_weekly_spend.target_sector` | global | int | Finance | the weekly budget of the company's target_sector rows |
+| `marketing.runs_channel.affiliate` | global | bool | Finance | the company runs a affiliate row (a budget, or a budgetless kind) |
+| `marketing.runs_channel.content_seo` | global | bool | Finance | the company runs a content_seo row (a budget, or a budgetless kind) |
+| `marketing.runs_channel.display_ads` | global | bool | Finance | the company runs a display_ads row (a budget, or a budgetless kind) |
+| `marketing.runs_channel.email` | global | bool | Finance | the company runs a email row (a budget, or a budgetless kind) |
+| `marketing.runs_channel.influencer` | global | bool | Finance | the company runs a influencer row (a budget, or a budgetless kind) |
+| `marketing.runs_channel.price_compare` | global | bool | Finance | the company runs a price_compare row (a budget, or a budgetless kind) |
+| `marketing.runs_channel.referral` | global | bool | Finance | the company runs a referral row (a budget, or a budgetless kind) |
+| `marketing.runs_channel.search_ads` | global | bool | Finance | the company runs a search_ads row (a budget, or a budgetless kind) |
+| `marketing.runs_channel.social_ads` | global | bool | Finance | the company runs a social_ads row (a budget, or a budgetless kind) |
+| `marketing.runs_channel.target_sector` | global | bool | Finance | the company runs a target_sector row (a budget, or a budgetless kind) |
 
 ### `musteri.`
 
@@ -800,7 +825,7 @@ is what the player is shown and what lands.
 - `cancel_scheduled`
 - `productivity_mod`
 - `investor_strain`
-- `marketing_push`
+- `marketing_boost`
 - `send_on_leave`
 - `summer_leave`
 - `sick_leave`
@@ -835,7 +860,7 @@ decision and to no other card (§17.14, V3). A module verb spends a page the bui
 not have opened: never in a demo card, and past the demo only in an option whose
 `requires` names the module as open (§17.15, O5).
 
-- `marketing_push` — needs `build.module_unlocked.marketing`
+- `marketing_boost` — needs `build.module_unlocked.marketing`
 
 ### Reserved (21) — a `system` card only
 

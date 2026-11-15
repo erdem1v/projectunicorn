@@ -2227,21 +2227,20 @@ toplanmaz: bugünkü cezayla yenisinin büyüğü, iki bitişin geç olanına ka
 
 *Neden.* Reddedilen yatırımcıyla ilişki süreli soğur (portfolio_vendor_trial notu).
 
-**3. `marketing_push` (ekonomik).**
+**3. `marketing_boost` (ekonomik).**
 
 *Belge ne diyordu.* `FinanceSystem`'in `marketing` gider kalemi sıfır değerli bir kancaydı; §8.3'ün `on_expire`
 istisnası negatif deltayı tanır, harcamayla büyüme alan bir fiili tanımaz.
 
-*Ne yapıldı.* `{"verb": "marketing_push", "burn_pct": 25, "growth_pct": 15, "weeks": 8}` `marketing` kalemini
-seçim anındaki pazarlama hariç burn'ün `burn_pct`'i kadar sabit bir tutara çeker; aynı süre B2C kitlesinin büyüme
-terimi (taban kazanım ve ağızdan ağıza artı yönü; erime değil) `1 + growth_pct/100` ile çarpılır
-(`FinanceSystem.marketing_growth_mult`). Durum `GameState.marketing_push`'tadır (`{growth_pct, until_day}`, boş
-sözlük kampanya yok demektir), tutar gider kalemindedir. Kampanya son haftasını tahsil eden finans tikinde biter;
-yenisi süren kampanyanın yerini alır. Sınırlar `FinanceSystem.MARKETING_*`: burn %5 ile %50, büyüme %5 ile %50, 2
-ile 12 hafta. `on_expire`'da motor reddeder (`EvEffects._is_negative`) ve lint §17.3 hata verir. Çip iki parçadır:
-`EFFECT_MARKETING_BURN` (bedel) ve `EFFECT_MARKETING_GROWTH` (kazanç).
+*Ne yapıldı.* `{"verb": "marketing_boost", "channel": "search_ads", "pct": 20, "weeks": 4}` Pazarlama'nın bir kanal türünü
+`weeks` hafta boyunca `pct` yüzde ucuzlatır (`MarketingSystem.boost`; okuyucu `cost_mult`, ERP satırının aday bedeli). Durum
+`GameState.marketing.boosts`'tadır (tür başına `{pct, until_day}`); aynı türe ikinci itki öncekinin yerine geçer, itki son
+haftasını harcayan tikten sonra düşer. Sınırlar `data/marketing/channels.json` `boost`: %1 ile %90, 1 ile 26 hafta. Seçenek
+kanalın yürütülmesini ister (`marketing.runs_channel.<tür>`); bedel kartın kendi `add_cash`'idir (`marketing.channel_weekly_spend
+.<tür>` × `amount_mult`). `on_expire`'da uygulanmaz (`EvEffects.NOT_ONLY_COST`). Lint türü, bütçesini, kartın pazarını, `pct`'yi ve
+`weeks`'i denetler. Çip tek parçadır: `EFFECT_MARKETING_BOOST` (kazanç). `marketing` gider kalemi yalnız Pazarlama defterinindir.
 
-*Neden.* Pazarlama harcaması ekonomiyi oynatır ve şirketle ölçeklenmelidir (shutdown_notice notu).
+*Neden.* Pazarlama harcaması oyuncunun kanallarındadır; kart bir kanalı ucuzlatır, ayrı bir gider kalemi açmaz.
 
 **4. Yatırım teklifi tetikleri.**
 

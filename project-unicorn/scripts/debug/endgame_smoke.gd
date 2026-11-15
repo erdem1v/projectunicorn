@@ -127,7 +127,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"burn_refresh_same_tick": fail = _case_burn_refresh_same_tick()
 		"burn_lines_visible":   fail = _case_burn_lines_visible()
 		"add_cash_writes_ledger": fail = _case_add_cash_writes_ledger()
-		"marketing_push_burns_and_ends": fail = _case_marketing_push_burns_and_ends()  # EXPECT-ERROR refused 'marketing_push' from expire
+		"marketing_boost_cuts_cost_and_ends": fail = _case_marketing_boost_cuts_cost_and_ends()
 		"marketing_burn_written_weekly": fail = _case_marketing_burn_written_weekly()
 		"marketing_runner_and_load": fail = _case_marketing_runner_and_load()
 		"marketing_save_roundtrip": fail = _case_marketing_save_roundtrip()
@@ -1466,6 +1466,20 @@ static func _case_speed_preserve() -> String:
 
 # --- Month-End Summary ---
 
+## A cost that runs, through the only writer of Finance's marketing line: a Search ads row the founder runs at
+## `per_day` × a week's days, and the line at that rate from now. The row is written as add_row writes it, without
+## add_row's open-market check, because the cases that need it run before any market opens.
+static func _running_ad_cost(per_day: int) -> void:
+	var m: Dictionary = GameState.marketing
+	var r := {"id": int(m.get("next_id", 1)), "kind": "search_ads", "target": "",
+		"budget": per_day * TimeModel.DAYS_PER_TICK, "runner": CharacterRegistry.get_founder().id}
+	m["next_id"] = int(r.id) + 1
+	if not m.has("rows"):
+		m["rows"] = []
+	m.rows.append(r)
+	FinanceSystem.set_burn_category("marketing", per_day)
+
+
 static func _case_month_summary() -> String:
 	# The inbox opens on summary_ready; month_ended only carries the month_history entry.
 	var summaries: Array = []
@@ -1485,10 +1499,10 @@ static func _case_month_summary() -> String:
 	GameState.month_highlight_priority = -1
 
 	# Quiet January with one known delta: brand 50 → 60. No customers, no mvp flags → gates
-	# stay closed, MRR stays 0, cash falls by burn only (a company starts with none; the marketing line is the
-	# $50 a day this month is read against). Ticks 1-5 are the Sundays of January.
+	# stay closed, MRR stays 0, cash falls by burn only (a company starts with none; a Search ads row at $350 a
+	# week is the $50 a day this month is read against). Ticks 1-5 are the Sundays of January.
 	GameState.set_brand(60)
-	FinanceSystem.set_burn_category("marketing", 50)
+	_running_ad_cost(50)
 	for i in 4:
 		_sim_day()  # ticks 2..5
 	if not summaries.is_empty() or not closes.is_empty():
@@ -3055,47 +3069,45 @@ static func _case_add_cash_writes_ledger() -> String:
 	return ""
 
 
-## A marketing push (marketing_push) sets the marketing line to its share of the burn without
-## marketing, lifts B2C audience growth, is replaced by a newer push, charges its weeks and ends on
-## the tick that charged the last one. An expiry cannot buy one.
-##
-## FALSIFICATION: drop the end-of-push block from FinanceSystem.daily_tick; the line outlives its weeks.
-static func _case_marketing_push_burns_and_ends() -> String:
-	GameState.set_cash(100000)
-	_seed_b2c()
-	_make_employee("char_mkt_dev", "Dev", HRConstants.ROLE_DEVELOPER, SEED_PACE, 6000)
-	FinanceSystem.daily_tick()
-	var base: int = FinanceSystem.compute_total_burn()
-	var grow0: float = SalesSystem._audience_delta_per_hour()
-	EvEffects.run_played([{"verb": "marketing_push", "burn_pct": 25, "growth_pct": 15, "weeks": 2}], {})
-	var line: int = int(FinanceSystem.get_burn_breakdown()["marketing"])
-	if line != roundi(base * 0.25) or GameState.daily_burn != base + line:
-		return "a 25%% push on a %d burn set the line to %d (burn %d), want %d" % [base, line,
-			GameState.daily_burn, roundi(base * 0.25)]
-	if SalesSystem._audience_delta_per_hour() <= grow0:
-		return "the push left audience growth at %.4f (was %.4f)" % [SalesSystem._audience_delta_per_hour(), grow0]
-	EvEffects.run_played([{"verb": "marketing_push", "burn_pct": 10, "growth_pct": 20, "weeks": 2}], {})
-	line = int(FinanceSystem.get_burn_breakdown()["marketing"])
-	if line != roundi(base * 0.1) or not is_equal_approx(FinanceSystem.marketing_growth_mult(), 1.2):
-		return "a second push did not replace the first: line %d, growth x%.2f" % [line,
-			FinanceSystem.marketing_growth_mult()]
-	var cash0: int = GameState.cash
-	var week: int = int(TimeModel.per_tick(GameState.get_daily_revenue())) - int(TimeModel.per_tick(base + line))
-	for _i in 2:
-		GameState.advance_day()
-		FinanceSystem.daily_tick()
-	if GameState.cash != cash0 + 2 * week:
-		return "two weeks of the push moved the cash %d, want %d" % [GameState.cash - cash0, 2 * week]
-	if int(FinanceSystem.get_burn_breakdown()["marketing"]) != 0 or not GameState.marketing_push.is_empty() \
-			or GameState.daily_burn != base or FinanceSystem.marketing_growth_mult() != 1.0:
-		return "the push outlived its weeks: line %d, state %s" % [
-			int(FinanceSystem.get_burn_breakdown()["marketing"]), str(GameState.marketing_push)]
-	var log: Array = EvEffects.run_expire([{"verb": "marketing_push", "burn_pct": 25, "growth_pct": 15,
-		"weeks": 2}], {})
-	if not (log[0] as Dictionary).has("refused") or not GameState.marketing_push.is_empty():
-		return "an expiry bought a marketing push"
+## A card's marketing_boost cuts the kind's cost for its weeks: an ERP search row's lead costs 20% less, a second boost replaces
+## the first, its last week is cut and the week after is not, the tick after its last week drops it, and a running boost survives
+## a save. The option needs the channel run: the seam reads false with no search row and true with one.
+## FALSIFICATION: drop `cost_mult` from `lead_cost` → the boosted lead costs the same FAIL; drop the until_day test in `cost_mult`
+## → the week after the boost is still cut FAIL; drop the pruning in `daily_tick` → the spent boost stays FAIL.
+static func _case_marketing_boost_cuts_cost_and_ends() -> String:
+	_seed_b2b(10000)
+	if bool(EvSeams.read("marketing.runs_channel.search_ads")):
+		return "the search channel reads run before any row"
+	var r: Dictionary = MarketingSystem.add_row("search_ads", "", CharacterRegistry.get_founder().id)
+	MarketingSystem.set_budget(int(r.id), 1000)
+	if not bool(EvSeams.read("marketing.runs_channel.search_ads")) or int(EvSeams.read("marketing.channel_weekly_spend.search_ads")) != 1000:
+		return "the seams do not read the $1.000 search row"
+	var base: float = MarketingSystem.lead_cost(r)
+	var log: Array = EvEffects.run_played([{"verb": "marketing_boost", "channel": "search_ads", "pct": 20, "weeks": 4}], {})
+	if log.is_empty() or (log[0] as Dictionary).get("pct") != 20 or (log[0] as Dictionary).get("weeks") != 4:
+		return "the boost logged %s, want channel, pct 20, weeks 4" % [log]
+	if not is_equal_approx(MarketingSystem.lead_cost(r), base * 0.8):
+		return "a 20%% boost reads a lead at %.1f, want %.1f" % [MarketingSystem.lead_cost(r), base * 0.8]
+	EvEffects.run_played([{"verb": "marketing_boost", "channel": "search_ads", "pct": 10, "weeks": 2}], {})
+	if not is_equal_approx(MarketingSystem.lead_cost(r), base * 0.9):
+		return "a second boost did not replace the first (lead %.1f, want %.1f)" % [MarketingSystem.lead_cost(r), base * 0.9]
+	var saved: Dictionary = SaveCodec.capture_game_state()
+	GameState.marketing.erase("boosts")
+	SaveCodec.apply_game_state(saved)
+	if not is_equal_approx(MarketingSystem.lead_cost(r), base * 0.9):
+		return "the boost did not survive a save"
+	var day0: int = GameState.day
+	GameState.day = day0 + TimeModel.ticks(2)
+	if not is_equal_approx(MarketingSystem.lead_cost(r), base * 0.9):
+		return "the two week boost does not cut its last week (lead %.1f, want %.1f)" % [MarketingSystem.lead_cost(r), base * 0.9]
+	GameState.day = day0 + TimeModel.ticks(2) + 1
+	if not is_equal_approx(MarketingSystem.lead_cost(r), base):
+		return "the week after a two week boost is still cut (lead %.1f, want %.1f)" % [MarketingSystem.lead_cost(r), base]
+	GameState.day = day0 + TimeModel.ticks(2)
+	MarketingSystem.daily_tick()
+	if (GameState.marketing.boosts as Dictionary).has("search_ads"):
+		return "the tick that spent the boost's last week left it in place"
 	return ""
-
 
 ## Pazarlama's ledger writes the Finance line every week, zero included: a row's budget is charged the week it runs, as
 ## the daily rate the line holds, and a closed row stops costing at once. The − / + ladder walks 0, 100, 200, 500, 1.000.
@@ -26713,7 +26725,7 @@ static func _case_quiet_cards_fill_empty_floor() -> String:
 	_seed_sprint()
 	SprintCatalog._data.decision.sprint_chance = chance
 	SprintCatalog._data.decision.max_dry_sprints = max_dry
-	FinanceSystem.set_burn_category("marketing", 50)
+	_running_ad_cost(50)  # savings that run down: founder.savings_note needs a cost
 	var worst: int = 0
 	var weeks: int = 0
 	while weeks < 12:

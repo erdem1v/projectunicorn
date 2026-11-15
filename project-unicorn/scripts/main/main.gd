@@ -1,5 +1,7 @@
 extends Node
 
+const MarketingSystem := preload("res://scripts/systems/marketing_system.gd")
+
 # Main scene root — owns the launch lifecycle:
 #   1. Pause the clock (TimeManager auto-starts at 1x in its own _ready) so onboarding keeps
 #      day/hour at 1/08:00.
@@ -804,7 +806,8 @@ func _run_b2b_shot(kind: String) -> void:
 ## company does not meet binds the selector's pick without it. The company stages what a selector needs, shaped by the
 ## slot's own `where` (_seed_company_world, _stage_unmet_wheres; 07_olay_motoru.md lists them). `long=1` (not a slot, like
 ## `runway`) gives every bound employee, account, lead and rival a long proper noun before the frame; `bare=1` (not a slot
-## either) keeps the bare seed's world, no company staged, where a card with no slot has no accounts to count. The EVENTSHOT* lines
+## either) keeps the bare seed's world, no company staged, where a card with no slot has no accounts to count; `run=<kind>` (not a
+## slot) opens a Pazarlama row of that kind at $1.000 a week, so a marketing_boost option shows open. The EVENTSHOT* lines
 ## (_event_shot_lines) name what each slot bound, `where=skipped` when a `where` was not met, the text and each option's chips.
 func _run_event_shot(spec: String) -> void:
 	_begin_shot()
@@ -826,6 +829,8 @@ func _run_event_shot(spec: String) -> void:
 	given.erase("long")
 	var bare: bool = given.get("bare", "") == "1"   # the bare seed's world, no company staged (no accounts)
 	given.erase("bare")
+	var run_kind: String = String(given.get("run", ""))   # a Pazarlama row of that kind, for a marketing_boost option
+	given.erase("run")
 	var card: Dictionary = EvCatalog.card(event_id)
 	var scope: Dictionary = card.get("scope", {})
 	var selects: Array = scope.values().map(func(slot: Dictionary) -> String: return String(slot.get("select", "")))
@@ -871,6 +876,12 @@ func _run_event_shot(spec: String) -> void:
 	else:
 		GameState.day = maxi(GameState.day, floor_day)
 	_stage_unmet_wheres(scope, given)
+	if run_kind != "":
+		var run_row: Dictionary = MarketingSystem.add_row(run_kind, "", CharacterRegistry.get_founder().id)
+		if run_row.is_empty():
+			_shot_fail("[EventShot] no %s row opens in this world" % run_kind)
+			return
+		MarketingSystem.set_budget(int(run_row.id), 1000)   # LOC-DATA debug seed / budget
 	var ctx: Dictionary = EventGate.bind_scope(event_id, given)
 	var without_where := false   # the world or a given slot did not meet a `where`: the slots bound without it
 	if ctx.is_empty() and not scope.is_empty():
@@ -3910,7 +3921,7 @@ func _audit_color(c: Color) -> String:
 #   kepenk — uyari'nin akışı, kasa eksiye düşüp kepenk sayacı bir hafta işleyene kadar: BAND 2
 #   signal — artida'nın akışı, faz 2'de ayları takvimle kapanarak dört ay artıda kapanana kadar: yatırımcı iştahı
 #            + artıda ay sayısı
-#   gider  — on saatlik mesai, MVP'nin bulut sunucusu, İş hanı'na taşınma, bir kartın pazarlama kampanyası: gider dağılımının
+#   gider  — on saatlik mesai, MVP'nin bulut sunucusu, İş hanı'na taşınma, Pazarlama'nın bir Arama reklamı satırı: gider dağılımının
 #            beş kalemi (Ofis'in ipucu `FINSHOT|office_tip=` satırında); son işlemlerde ofisin iki aylık peşin kirası, kartların
 #            hukuk, veri alımı ve maaş indirimi satırı
 #   gider_empty — taze şirket, ekip ve sunucu yok: gider dağılımının boş hâli
@@ -3968,8 +3979,11 @@ func _run_finance_shot(kind: String) -> void:
 			FinanceSystem.daily_tick()
 			EndingsSystem._tick_shutter()
 	if kind == "gider":   # LOC-DATA debug seed / id
-		EvEffects.run_played([{"verb": "marketing_push", "burn_pct": 25, "growth_pct": 15, "weeks": 8},
-			{"verb": "add_cash", "amount": -1800, "label": "legal"},
+		var ad_row: Dictionary = MarketingSystem.add_row("search_ads", "", CharacterRegistry.get_founder().id)
+		if not ad_row.is_empty():
+			MarketingSystem.set_budget(int(ad_row.id), 2000)   # LOC-DATA debug seed / budget
+		MarketingSystem.daily_tick()
+		EvEffects.run_played([{"verb": "add_cash", "amount": -1800, "label": "legal"},
 			{"verb": "add_cash", "amount": -900, "label": "data_purchase"},
 			{"verb": "add_cash", "amount": 2400, "label": "pay_cut"}], {})
 	if kind == "signal":   # LOC-DATA debug seed / id

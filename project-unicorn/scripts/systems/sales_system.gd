@@ -209,8 +209,6 @@ static func _audience_delta_per_hour(quality: float = b2c_quality()) -> float:
 	if ub != null:
 		grow *= clampf(ub.satisfaction / WOM_MULT_PIVOT, WOM_MULT_MIN, 1.0)
 		grow += audience * WOM_COEF * maxf(0.0, ub.satisfaction - WOM_SAT_GATE) / 100.0
-	# A card's marketing push lifts the whole intake, word of mouth included; erosion is untouched.
-	grow *= FinanceSystem.marketing_growth_mult()
 	# Price-independent, so the loss sits outside the multiplier.
 	return grow - _audience_loss_per_hour(quality)
 

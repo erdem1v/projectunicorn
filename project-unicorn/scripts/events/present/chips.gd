@@ -1,6 +1,8 @@
 class_name EvChips
 extends RefCounted
 
+const MarketingSystem := preload("res://scripts/systems/marketing_system.gd")
+
 # THE ONE CHIP BUILDER (EFFECT-VISIBILITY RULE). An effect a card offers, or a delta a history row
 # recorded, becomes signed parts here and nowhere else:
 #
@@ -237,15 +239,12 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 			return [_part(_t("EFFECT_INVESTOR_STRAIN").format({
 				"investor": String(InvestorRegistry.get_investor(vc).get("display_name", "")),
 				"v": _num(-int(strain.amount)), "n": int(strain.weeks)}), "", "cost")]
-		# Spend for growth: the burn is the cost, the audience the gain, over the same weeks.
-		"marketing_push":
-			var push: Dictionary = item if is_delta else FinanceSystem.marketing_terms(
-				int(item.get("burn_pct", 0)), int(item.get("growth_pct", 0)), int(item.get("weeks", 0)))
-			var span: String = Fmt.weeks(int(push.weeks))
-			return [_part(_t("EFFECT_MARKETING_BURN").format({"pct": Fmt.signed_percent(int(push.burn_pct)),
-					"weeks": span}), "", "cost"),
-				_part(_t("EFFECT_MARKETING_GROWTH").format({"pct": Fmt.signed_percent(int(push.growth_pct)),
-					"weeks": span}), "", "gain")]
+		# A channel cheaper for some weeks ("Arama reklamı 4 hafta %20 ucuz"): the gain only; what landed, or the terms it lands at.
+		"marketing_boost":
+			var boost: Dictionary = item if is_delta else MarketingSystem.boost_terms(String(item.get("channel", "")),
+				int(item.get("pct", 0)), int(item.get("weeks", 0)))
+			return [_part(_t("EFFECT_MARKETING_BOOST").format({"channel": _t("MKT_KIND_" + String(boost.channel).to_upper()),
+				"pct": int(boost.pct), "weeks": Fmt.weeks(int(boost.weeks))}), "", "gain")]
 		"audience_delta":
 			if item.has("pct"):
 				var tenths: int = roundi(float(item["pct"]) * 1000.0)

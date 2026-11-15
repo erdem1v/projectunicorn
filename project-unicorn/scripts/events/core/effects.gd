@@ -1,6 +1,8 @@
 class_name EvEffects
 extends RefCounted
 
+const MarketingSystem := preload("res://scripts/systems/marketing_system.gd")
+
 # THE EFFECT EXECUTOR (GDD §8). The one place an effect verb becomes a state change.
 #
 # I2 ("an economic delta arises only from a played decision") is STRUCTURAL here, not only a
@@ -80,14 +82,14 @@ const ECONOMIC_VERBS := [
 	"add_customer", "churn_customer", "customer_mrr_delta", "seats",
 	"audience_delta",
 	"change_salary", "fire_employee", "employee_leaves", "promote", "start_training",
-	"add_prospect", "angel_accept", "b2b_expand", "b2b_retain_discount", "b2b_month_discount", "marketing_push", "incident",
+	"add_prospect", "angel_accept", "b2b_expand", "b2b_retain_discount", "b2b_month_discount", "marketing_boost", "incident",
 	"promise_break", "account_notice", "prospect_offer", "drop_prospect", "server_price", "server_enterprise",
 ]
 
-## Economic verbs that are never only a cost, so no expiry applies them: a marketing push spends money to buy growth, a
+## Economic verbs that are never only a cost, so no expiry applies them: a marketing boost only cuts a channel's cost, a
 ## training to buy a skill, a dismissal pays a severance to stop a salary, a signature only gains an account, Enterprise servers
 ## raise the bill to keep the accounts their clause holds.
-const NOT_ONLY_COST := ["marketing_push", "start_training", "fire_employee", "add_customer", "server_enterprise"]
+const NOT_ONLY_COST := ["marketing_boost", "start_training", "fire_employee", "add_customer", "server_enterprise"]
 
 ## Ends the run. Played decisions only — never a dice branch (I6), never an expiry, never an
 ## ambient tick.
@@ -308,11 +310,11 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 			SalesFaucetSystem.spawn_prospect(String(e.get("archetype", "small")),
 				String(e.get("source", "event")))
 			return {"verb": verb, "archetype": e.get("archetype", "small")}
-		"marketing_push":
-			var push: Dictionary = FinanceSystem.start_marketing_push(int(e.get("burn_pct", 0)),
-				int(e.get("growth_pct", 0)), int(e.get("weeks", 0)))
-			push["verb"] = verb
-			return push
+		"marketing_boost":
+			var boost: Dictionary = MarketingSystem.boost(String(e.get("channel", "")), int(e.get("pct", 0)),
+				int(e.get("weeks", 0)))
+			boost["verb"] = verb
+			return boost
 		# An emergency's answer: when the service is back, and what the accounts or the audience are given and lose.
 		"incident":
 			return IncidentSystem.resolve(String(e.get("act", "")))

@@ -1,26 +1,26 @@
 # Kod haritası · KALITE
 
-Üretildi: git cc20ecc7 · 2026-11-15 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git 15b217c7 · 2026-11-15 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 265 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
 
-- scripts/debug/endgame_smoke.gd · 31401 satır · 714 func
-- scripts/main/main.gd · 6519 satır · 236 func
+- scripts/debug/endgame_smoke.gd · 31413 satır · 715 func
+- scripts/main/main.gd · 6533 satır · 236 func
 - scripts/debug/run_probe.gd · 2446 satır · 95 func
 - scripts/systems/sprint_system.gd · 2139 satır · 173 func
 - scripts/theme/build_theme.gd · 1663 satır · 31 func
-- scripts/events/tools/lint.gd · 1357 satır · 47 func
+- scripts/events/tools/lint.gd · 1378 satır · 48 func
 - scripts/systems/vc_pitch_system.gd · 1317 satır · 91 func
 - scripts/autoload/save_manager.gd · 1295 satır · 60 func
 - scripts/tabs/product/product_model.gd · 1288 satır · 68 func
 - scripts/systems/hr_constants.gd · 1186 satır · 90 func
 - scripts/debug/marketplace_probe.gd · 1179 satır · 58 func
-- scripts/events/core/effects.gd · 1147 satır · 35 func
+- scripts/events/core/effects.gd · 1149 satır · 35 func
 - scripts/ui/office/office_person.gd · 1128 satır · 51 func
 - scripts/theme/ui_tokens.gd · 1081 satır · 45 func
 - scripts/systems/marketplace_model.gd · 1080 satır · 89 func
-- scripts/autoload/game_state.gd · 1079 satır · 57 func
+- scripts/autoload/game_state.gd · 1075 satır · 57 func
 - scripts/systems/sprint_catalog.gd · 988 satır · 91 func
 - scripts/systems/term_sheet_table_system.gd · 980 satır · 57 func
 - scripts/ui/office/office_people.gd · 853 satır · 50 func
@@ -36,44 +36,44 @@ Kapsam: scripts/ altındaki 265 .gd (tools/ hariç). Kod temizliği ve kıdemli 
 Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları arada sayılır).
 - scripts/theme/build_theme.gd:421 · _menajer · 901 satır
 - scripts/debug/endgame_smoke.gd:52 · run_case · 626 satır
-- scripts/events/core/effects.gd:242 · _apply · 610 satır
+- scripts/events/core/effects.gd:244 · _apply · 610 satır
 - scripts/events/tools/vocab_gen.gd:20 · run · 322 satır
 - scripts/theme/build_theme.gd:46 · _initialize · 320 satır
-- scripts/events/present/chips.gd:72 · describe · 311 satır
-- scripts/main/main.gd:4057 · _run_hr_shot · 276 satır
-- scripts/debug/endgame_smoke.gd:24241 · _case_sprint_timeline_matches_play_out · 266 satır
-- scripts/debug/endgame_smoke.gd:8779 · _case_hr_constants_contract · 220 satır
-- scripts/debug/endgame_smoke.gd:2284 · _case_save_v13_day_stamps_migrate · 209 satır
-- scripts/main/main.gd:1533 · _run_inbox_shot · 201 satır
-- scripts/autoload/game_state.gd:833 · initialize_run · 200 satır
+- scripts/events/present/chips.gd:74 · describe · 308 satır
+- scripts/main/main.gd:4071 · _run_hr_shot · 276 satır
+- scripts/debug/endgame_smoke.gd:24253 · _case_sprint_timeline_matches_play_out · 266 satır
+- scripts/debug/endgame_smoke.gd:8791 · _case_hr_constants_contract · 220 satır
+- scripts/debug/endgame_smoke.gd:2298 · _case_save_v13_day_stamps_migrate · 209 satır
+- scripts/main/main.gd:1544 · _run_inbox_shot · 201 satır
+- scripts/autoload/game_state.gd:830 · initialize_run · 199 satır
 - scripts/events/seams/seams_ported.gd:8 · install · 180 satır
-- scripts/main/main.gd:2358 · _run_office_shot · 180 satır
-- scripts/debug/endgame_smoke.gd:17124 · _case_fit_star_context · 166 satır
+- scripts/main/main.gd:2369 · _run_office_shot · 180 satır
+- scripts/debug/endgame_smoke.gd:17136 · _case_fit_star_context · 166 satır
 - scripts/events/seams/seams_sales.gd:26 · install · 160 satır
-- scripts/debug/endgame_smoke.gd:2503 · _case_legacy_v12_save_opens_live_table · 157 satır
-- scripts/main/main.gd:1933 · _run_sales_shot · 156 satır
+- scripts/debug/endgame_smoke.gd:2517 · _case_legacy_v12_save_opens_live_table · 157 satır
+- scripts/main/main.gd:1944 · _run_sales_shot · 156 satır
 - scripts/onboarding/first_week_doc.gd:20 · lay_out · 154 satır
-- scripts/debug/endgame_smoke.gd:8324 · _case_hr_leave_shift · 149 satır
-- scripts/debug/endgame_smoke.gd:7576 · _case_hr_candidate_invariants · 145 satır
-- scripts/debug/endgame_smoke.gd:16419 · _case_sales_offer_signing · 144 satır
-- scripts/debug/endgame_smoke.gd:12047 · _case_job_assignment_and_idle · 140 satır
-- scripts/debug/endgame_smoke.gd:17959 · _case_rnd_tree_loads_and_validates · 140 satır
-- scripts/debug/endgame_smoke.gd:14742 · _case_clock_resumes_only_by_player · 135 satır
+- scripts/debug/endgame_smoke.gd:8336 · _case_hr_leave_shift · 149 satır
+- scripts/debug/endgame_smoke.gd:7588 · _case_hr_candidate_invariants · 145 satır
+- scripts/debug/endgame_smoke.gd:16431 · _case_sales_offer_signing · 144 satır
+- scripts/debug/endgame_smoke.gd:12059 · _case_job_assignment_and_idle · 140 satır
+- scripts/debug/endgame_smoke.gd:17971 · _case_rnd_tree_loads_and_validates · 140 satır
+- scripts/debug/endgame_smoke.gd:14754 · _case_clock_resumes_only_by_player · 135 satır
 - scripts/ui/office/office_map_card.gd:17 · _init · 134 satır
-- scripts/debug/endgame_smoke.gd:12510 · _case_effective_skill_formula · 132 satır
-- scripts/debug/endgame_smoke.gd:18586 · _case_rnd_note_author_and_lines · 129 satır
-- scripts/debug/endgame_smoke.gd:23163 · _case_sprint_founder_share_frozen · 128 satır
-- scripts/debug/endgame_smoke.gd:28443 · _case_save_v15_tickets_become_open_bugs · 128 satır
+- scripts/debug/endgame_smoke.gd:12522 · _case_effective_skill_formula · 132 satır
+- scripts/debug/endgame_smoke.gd:18598 · _case_rnd_note_author_and_lines · 129 satır
+- scripts/debug/endgame_smoke.gd:23175 · _case_sprint_founder_share_frozen · 128 satır
+- scripts/debug/endgame_smoke.gd:28455 · _case_save_v15_tickets_become_open_bugs · 128 satır
 - scripts/debug/endgame_smoke.gd:1077 · _case_gate_decline_reminder · 125 satır
-- scripts/debug/endgame_smoke.gd:21080 · _thesis_presenter_body · 124 satır
-- scripts/debug/endgame_smoke.gd:21313 · _case_sales_meeting_time_skip_founder_share · 124 satır
+- scripts/debug/endgame_smoke.gd:21092 · _thesis_presenter_body · 124 satır
+- scripts/debug/endgame_smoke.gd:21325 · _case_sales_meeting_time_skip_founder_share · 124 satır
 - scripts/events/seams/seams_product.gd:15 · _install_product · 123 satır
 - scripts/events/tools/why.gd:28 · report · 121 satır
 - scripts/events/tools/engine_probe.gd:582 · _check_invalidation · 119 satır
-- scripts/main/main.gd:4710 · _seed_product_live · 119 satır
-- scripts/events/tools/lint.gd:229 · _lint_effects · 118 satır
+- scripts/events/tools/lint.gd:231 · _lint_effects · 119 satır
+- scripts/main/main.gd:4724 · _seed_product_live · 119 satır
 - scripts/debug/run_probe.gd:363 · run · 117 satır
-- scripts/debug/endgame_smoke.gd:1469 · _case_month_summary · 116 satır
+- scripts/debug/endgame_smoke.gd:1483 · _case_month_summary · 116 satır
 
 ## Ölü kod adayları (62)
 
@@ -124,16 +124,16 @@ UYARI: call("a"+b) gibi kurulmuş adlar, sinyal adıyla bağlama, harness bayrak
 - scripts/debug/office_crowd_probe.gd:48 · _log_error · debug
 - scripts/events/present/papers.gd:145 · arc_of
 - scripts/main/game_shell.gd:163 · debug_force_vc_meeting · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/main/main.gd:6460 · _dbg_close_request · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/main/main.gd:6465 · _dbg_onb_random_x20 · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/main/main.gd:6478 · _dbg_finish_run · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
+- scripts/main/main.gd:6474 · _dbg_close_request · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
+- scripts/main/main.gd:6479 · _dbg_onb_random_x20 · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
+- scripts/main/main.gd:6492 · _dbg_finish_run · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
 - scripts/systems/line_gates.gd:126 · speed_bonus_for
 - scripts/systems/rnd_system.gd:707 · family_root_done
 - scripts/systems/sales_ledger.gd:34 · lead_star
 - scripts/systems/sales_ledger.gd:39 · lead_weeks_left
 - scripts/systems/sales_ledger.gd:244 · deal_count
 - scripts/systems/sales_ledger.gd:252 · last_signed_star
-- scripts/systems/sales_system.gd:511 · estimate_price_change
+- scripts/systems/sales_system.gd:509 · estimate_price_change
 - scripts/tabs/rnd/rnd_ui_shared.gd:112 · percent_text
 - scripts/tabs/rnd/rnd_ui_shared.gd:234 · legend_item
 - scripts/theme/ui_factory.gd:41 · make_badge
@@ -165,7 +165,8 @@ emit'i ya da connect'i bulunamayan sinyal (ada göre). Dizi içi bağ, await ve 
 ## Birden çok dosyada tanımlı const (97 ad)
 
 Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: elle bakılmalı.
-- INBOX · 16 dosya · scripts/main/game_shell.gd:7, scripts/main/main.gd:20, scripts/modals/save_load_modal.gd:19, scripts/modals/system_menu_modal.gd:22, scripts/tabs/events/mail_pane.gd:19, scripts/tabs/events_tab.gd:8 +10
+- INBOX · 16 dosya · scripts/main/game_shell.gd:7, scripts/main/main.gd:22, scripts/modals/save_load_modal.gd:19, scripts/modals/system_menu_modal.gd:22, scripts/tabs/events/mail_pane.gd:19, scripts/tabs/events_tab.gd:8 +10
+- MarketingSystem · 8 dosya · scripts/autoload/time_manager.gd:3, scripts/events/core/effects.gd:4, scripts/events/present/chips.gd:4, scripts/events/seams/seams_finance.gd:4, scripts/events/tools/lint.gd:4, scripts/main/main.gd:3 +2
 - WIDTH · 6 dosya · scripts/modals/hr_action_modal.gd:18, scripts/modals/training_modal.gd:19, scripts/modals/work_hours_modal.gd:22, scripts/ui/components/left_tabs.gd:29, scripts/ui/office/office_map_card.gd:11 +1
 - ChequeRead · 5 dosya · scripts/tabs/finance/finance_ozet_view.gd:34, scripts/tabs/personal_tab.gd:13, scripts/ui/components/top_bar.gd:23, scripts/ui/office/office_notice_stack.gd:14, scripts/debug/endgame_smoke.gd:34
 - DATA_PATH · 5 dosya · scripts/menu/credits.gd:9, scripts/systems/graphics_settings.gd:18, scripts/systems/marketing_system.gd:9, scripts/systems/marketplace_model.gd:42, scripts/systems/sprint_catalog.gd:11
@@ -184,7 +185,6 @@ Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: 
 - GROUP · 3 dosya · scripts/ui/components/inbox.gd:14, scripts/ui/components/toast.gd:10, scripts/ui/components/window_layer.gd:45
 - INFO · 3 dosya · scripts/tabs/rnd/rnd_detail_panel.gd:18, scripts/tabs/sales_tab.gd:32, scripts/ui/meeting/meeting_panel.gd:23
 - LOCK_ICON · 3 dosya · scripts/modals/ending_scene.gd:36, scripts/theme/ui_factory.gd:10, scripts/ui/components/left_tabs.gd:42
-- MarketingSystem · 3 dosya · scripts/autoload/time_manager.gd:3, scripts/tabs/sales_tab.gd:3, scripts/debug/endgame_smoke.gd:35
 - PANE · 3 dosya · scripts/tabs/events_tab.gd:9, scripts/tabs/rnd/rnd_history.gd:10, scripts/ui/office/meeting_invite.gd:23
 - PARTS · 3 dosya · scripts/tabs/marketplace/marketplace_page.gd:9, scripts/tabs/marketplace/mp_overview.gd:6, scripts/ui/office/office_body.gd:11
 - RISE · 3 dosya · scripts/tabs/piyasa_tab.gd:21, scripts/ui/components/toast.gd:14, scripts/ui/office/person_bust.gd:16
@@ -196,7 +196,7 @@ Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: 
 - BAND_H · 2 dosya · scripts/modals/work_hours_modal.gd:34, scripts/tabs/events_tab.gd:15
 - BAR_W · 2 dosya · scripts/onboarding/first_week_doc.gd:12, scripts/onboarding/steps/origin_traits_step.gd:16
 - BarKit · 2 dosya · scripts/ui/components/build_bar.gd:14, scripts/ui/components/research_bar.gd:26
-- CONFIRM_MODAL · 2 dosya · scripts/main/main.gd:23, scripts/onboarding/onboarding_flow.gd:20
+- CONFIRM_MODAL · 2 dosya · scripts/main/main.gd:25, scripts/onboarding/onboarding_flow.gd:20
 - CONV_BASE · 2 dosya · scripts/systems/pitch_constants.gd:18, scripts/systems/seed_constants.gd:83
 - CONV_BRAND_FLOOR · 2 dosya · scripts/systems/pitch_constants.gd:24, scripts/systems/seed_constants.gd:87
 - CONV_BRAND_MAX · 2 dosya · scripts/systems/pitch_constants.gd:25, scripts/systems/seed_constants.gd:88
@@ -221,14 +221,14 @@ Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: 
 - FRAME · 2 dosya · scripts/ui/components/window_layer.gd:28, scripts/ui/office/person_bust.gd:14
 - GATE_STRIP · 2 dosya · scripts/modals/save_load_modal.gd:18, scripts/ui/components/window_frame.gd:12
 - GLASSES · 2 dosya · scripts/systems/look_system.gd:12, scripts/systems/people_parts.gd:157
-- GLYPHS · 2 dosya · scripts/events/present/chips.gd:59, scripts/tabs/events/mail_pane.gd:22
+- GLYPHS · 2 dosya · scripts/events/present/chips.gd:61, scripts/tabs/events/mail_pane.gd:22
 - KEYBOARD · 2 dosya · scripts/ui/office/office_notice_stack.gd:16, scripts/ui/office/office_travel.gd:25
 - KEY_W · 2 dosya · scripts/onboarding/first_week_doc.gd:11, scripts/tabs/hr/hr_dossier.gd:14
 - KINDS · 2 dosya · scripts/systems/people_parts.gd:11, scripts/tabs/rnd/rnd_history.gd:11
 - LEAD · 2 dosya · scripts/ui/meeting/sales_meeting_adapter.gd:19, scripts/ui/meeting/vc_meeting_adapter.gd:17
 - LICENSES · 2 dosya · scripts/menu/credits.gd:8, scripts/modals/settings_modal.gd:20
 - LOCKUP_S · 2 dosya · scripts/menu/main_menu.gd:22, scripts/onboarding/onboarding_flow.gd:29
-- MAIN_MENU_SCRIPT · 2 dosya · scripts/main/main.gd:17, scripts/onboarding/onboarding_flow.gd:13
+- MAIN_MENU_SCRIPT · 2 dosya · scripts/main/main.gd:19, scripts/onboarding/onboarding_flow.gd:13
 - MARKET_B2B · 2 dosya · scripts/systems/infra_system.gd:33, scripts/systems/support_system.gd:87
 - MIX_INCREMENT · 2 dosya · scripts/systems/hr_candidate_generator.gd:32, scripts/systems/sales_constants.gd:273
 - MIX_MODULUS · 2 dosya · scripts/systems/hr_candidate_generator.gd:30, scripts/systems/sales_constants.gd:271
@@ -246,7 +246,7 @@ Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: 
 - ROWS · 2 dosya · scripts/tabs/rnd/rnd_tree_view.gd:44, scripts/debug/kit_probe.gd:12
 - ROW_H · 2 dosya · scripts/modals/settings_modal.gd:65, scripts/tabs/events_tab.gd:13
 - SALT_STAR · 2 dosya · scripts/systems/marketing_system.gd:18, scripts/systems/sales_faucet_system.gd:25
-- SAVED_GLYPH · 2 dosya · scripts/main/main.gd:31, scripts/modals/ending_scene.gd:38
+- SAVED_GLYPH · 2 dosya · scripts/main/main.gd:33, scripts/modals/ending_scene.gd:38
 - SCHEMA_VERSION · 2 dosya · scripts/autoload/save_manager.gd:16, scripts/autoload/settings.gd:11
 - SEP · 2 dosya · scripts/systems/sprint_catalog.gd:23, scripts/tabs/product/sprint_ui_shared.gd:7
 - SEPARATOR · 2 dosya · scripts/theme/ui_tokens.gd:132, scripts/ui/components/news_ticker.gd:36

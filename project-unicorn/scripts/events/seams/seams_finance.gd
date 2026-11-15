@@ -1,11 +1,23 @@
 class_name EvSeamsFinance
 extends RefCounted
 
+const MarketingSystem := preload("res://scripts/systems/marketing_system.gd")
+
 # The `finance.` namespace. Finance has no named read surface — its numbers are public vars on
 # GameState — so most rows are WRAPPERS that name the field they stand in front of.
 
 static func install() -> void:
 	var G := EvSeams.Kind.GLOBAL
+
+	# Pazarlama's channels, one seam a kind: a boost card's option requires the channel it cuts (marketing_boost), a card that
+	# spends on it reads its weekly budget.
+	for kind: String in (MarketingSystem.cfg("kinds") as Dictionary).keys():
+		EvSeams.register("marketing.runs_channel." + kind, G, TYPE_BOOL,   # LOC-DATA seam namespace, not copy
+			func() -> bool: return MarketingSystem.runs_channel(kind),
+			"Finance", "the company runs a %s row (a budget, or a budgetless kind)" % kind)
+		EvSeams.register("marketing.channel_weekly_spend." + kind, G, TYPE_INT,   # LOC-DATA seam namespace, not copy
+			func() -> int: return MarketingSystem.channel_weekly_spend(kind),
+			"Finance", "the weekly budget of the company's %s rows" % kind)
 
 	EvSeams.register("finance.cash", G, TYPE_INT,
 		func() -> int: return GameState.cash,

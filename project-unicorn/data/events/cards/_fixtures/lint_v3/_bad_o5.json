@@ -32,9 +32,9 @@
       "outcome_id": "done",
       "effects": [
         {
-          "verb": "marketing_push",
-          "burn_pct": 20,
-          "growth_pct": 15,
+          "verb": "marketing_boost",
+          "channel": "search_ads",
+          "pct": 20,
           "weeks": 4
         }
       ]

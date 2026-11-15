@@ -347,10 +347,6 @@ static func _known_absurd(card: Dictionary, context: Dictionary) -> String:
 			var weeks: int = _tenure(context, "employee")
 			if weeks < CONFERENCE_TENURE_WEEKS:
 				return "employee=%dw want>=%dw" % [weeks, CONFERENCE_TENURE_WEEKS]
-		"rival.shutdown_notice", "funding.portfolio_vendor":
-			var option: String = _open_marketing(card, context)
-			if option != "":
-				return "marketing option '%s' is open" % option
 		"world.b2c_creator_feature":
 			var audience: int = int(EvSeams.read("sales.b2c_audience"))
 			if audience < AUDIENCE_CREATOR:
@@ -378,17 +374,6 @@ static func _is_generic_voice(customer_id: String) -> bool:
 		if TranslationServer.translate(String(key)) == voice:
 			return true
 	return false
-
-
-## The option that answers with a marketing spend, when nothing locks it.
-static func _open_marketing(card: Dictionary, context: Dictionary) -> String:
-	for opt in (card["options"] as Array):
-		var option: Dictionary = opt
-		for effect in (option.get("effects", []) as Array):
-			if String((effect as Dictionary).get("verb", "")) == "marketing_push" \
-					and EvCondition.eval(option.get("requires", {}), context):
-				return String(option["id"])
-	return ""
 
 
 static func _fail(rule: String, detail: String) -> void:

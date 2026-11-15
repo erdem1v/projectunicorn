@@ -2144,6 +2144,19 @@ SALES_SOURCE_ADS,Reklam,Ads
 SALES_SOURCE_REFERRAL,Referans,Referral
 SALES_SOURCE_TARGET,Hedef sektör,Target sector
 SALES_SOURCE_EVENT,Fuar,Trade fair
+EFFECT_MARKETING_BOOST,{channel} {weeks} %{pct} ucuz,{channel} {pct}% cheaper for {weeks}
+EV_LOCK_RUNS_SEARCH_ADS,Arama reklamı gerekli,Search ads required
+FIN_ONETIME_AD_BUY,Reklam alanı alımı,Ad slot purchase
+MKT_KIND_SEARCH_ADS,Arama reklamı,Search ads
+MKT_KIND_CONTENT_SEO,İçerik ve SEO,Content and SEO
+MKT_KIND_REFERRAL,Referans,Referral
+MKT_KIND_TARGET_SECTOR,Hedef sektör,Target sector
+MKT_KIND_SOCIAL_ADS,Sosyal medya reklamı,Social media ads
+MKT_KIND_DISPLAY_ADS,Görüntülü reklam,Display ads
+MKT_KIND_PRICE_COMPARE,Fiyat karşılaştırma,Price comparison
+MKT_KIND_AFFILIATE,Satış ortaklığı,Affiliate
+MKT_KIND_EMAIL,E-posta,Email
+MKT_KIND_INFLUENCER,Fenomen,Influencer
 SALES_TAG_FRANK_INTRO,Frank'in tanıştırdığı,Frank's introduction
 SALES_ROUTE_NO_REP,Temsilci yok,No rep to take it
 SALES_ABOVE_LEAGUE,Bu masa liginin üstünde.,This table is above your league.
@@ -2919,7 +2932,6 @@ FIN_ONETIME_SIDE_WORK,Yan iş,Side contract
 FIN_ONETIME_MEETUP,Topluluk buluşması,Meetup
 FIN_ONETIME_SPONSOR,Sponsorluk,Sponsorship
 EV_LOCK_NO_SPRINT,Süren bir sprint yok.,No sprint is running.
-EV_LOCK_MARKETING_EA,Pazarlama Erken Erişim'de açılır.,Marketing opens in Early Access.
 B2B_LOCK_PROMISE_BROKEN,Bu hesaba verdiğin son söz tutulmadı.,Your last promise to them was not kept.
 EV_FOUNDER_MEETUP_TITLE,Konuşma daveti,A speaking slot
 EV_FOUNDER_MEETUP_BODY,"Şehirdeki kurucu buluşmasında bir konuşma aralığı boş kalmış, organizatörler sana soruyor. Konuşursan baskı ve küçük bir stant gerekir, bir haftanın akşamları da ürün yerine sunuma gider. Arka sırada oturmanın bedeli yalnız bilet.","The founders' meetup in town has an open speaking slot and the organisers asked if you want it. Speaking means printing, a small stand and a week of evenings spent on slides instead of the product. A seat at the back costs only the ticket."
@@ -3230,8 +3242,6 @@ EFFECT_PACE_TEAM,Ekibin verimi {pct} · {weeks},Team pace {pct} · {weeks}
 EFFECT_LEAVE,{name} izinde · {weeks},{name} on leave · {weeks}
 EFFECT_WORK_HOURS,{name} günde {n} saat,{name}: {n} hours a day
 EFFECT_INVESTOR_STRAIN,{investor} ile ilişki {v} · {n} haftada geçer,{investor}: relationship {v} · fades over {n} weeks
-EFFECT_MARKETING_BURN,Pazarlama: burn {pct} · {weeks},Marketing: burn {pct} · {weeks}
-EFFECT_MARKETING_GROWTH,Kitle büyümesi {pct} · {weeks},Audience growth {pct} · {weeks}
 EFFECT_TRUST_ACCOUNT,{customer}: memnuniyet {from} → {to},{customer}: satisfaction {from} → {to}
 EFFECT_TRUST_ACCOUNTS,{n} hesap: memnuniyet {v} · {customer} {from} → {to},{n} accounts: satisfaction {v} · {customer} {from} → {to}
 EFFECT_MORALE_NAMES,{names}: moral {v},{names}: morale {v}
@@ -3426,7 +3436,7 @@ EV_RIVAL_FALSE_PARTNER_EXPIRED,{customer} cevap alamayınca bir ekibini onlara t
 EV_RIVAL_SHUTDOWN_NOTICE_TITLE,Veda yazısı,The farewell post
 EV_RIVAL_SHUTDOWN_NOTICE_BODY,Seninle aynı işi yapan küçük bir uygulama kapanıyor. Kullanıcılarına verilerini indirmeleri için iki hafta tanındı. Dosyayı başka hiçbir uygulama açamıyor. Kurucusunun veda yazısına dört yüz yorum geldi. Çoğu nereye gideceğini soruyor.,"A smaller app in your space is closing. Its users were given two weeks to download their data, in a file no other app can open. The founder's farewell post has four hundred comments. Most ask where to go."
 EV_RIVAL_SHUTDOWN_NOTICE_BUY_DATA,Verileri kurucusundan satın al,Pay the founder for the data
-EV_RIVAL_SHUTDOWN_NOTICE_MORE_MARKETING,Pazarlama harcamasını iki ay artır,Raise marketing spend for two months
+EV_RIVAL_SHUTDOWN_NOTICE_MORE_MARKETING,Reklam alanlarını satın al,Buy up their ad slots
 EV_RIVAL_SHUTDOWN_NOTICE_COMPARISON_POST,Karşılaştırma yazısını kendin yaz,Write a comparison post yourself
 EV_RIVAL_SHUTDOWN_NOTICE_EXPIRED,Alternatif listelerinin hepsinde başka adlar vardı.,Every list of alternatives named other apps.
 EV_LOCK_REQUEST_CLOSED,Tabloya aktarma bu hesap için şimdi sıraya girmez.,Spreadsheet export can't be queued for this account right now.

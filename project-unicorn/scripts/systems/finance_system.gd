@@ -10,13 +10,13 @@ extends RefCounted
 # STARTING_BURN_BREAKDOWN is the single home of the category list: burn_breakdown starts as a mutable
 # copy and GameState's starting daily_burn derives from it (starting_daily_burn()).
 # A category is here because a system WRITES it: salaries and overtime are daily_tick's pulls,
-# marketing is an event card's campaign (start_marketing_push), servers is InfraSystem's
+# marketing is Pazarlama's ledger (MarketingSystem.daily_tick), servers is InfraSystem's
 # set_burn_category, office is OfficeSystem's rent, pazaryeri is MarketplaceSystem's weekly close
 # (get_burn_breakdown_pct skips zero rows). No invented fixed line.
 const STARTING_BURN_BREAKDOWN := {
 	"salaries": 0,     # Overwritten every tick by pull from CharacterRegistry
 	"overtime": 0,     # Overwritten every tick by pull from WorkHoursSystem; 0 when nobody is over 8h
-	"marketing": 0,    # A card's marketing push while it runs (start_marketing_push); 0 otherwise
+	"marketing": 0,    # Pazarlama's rows: the week's budgets as a daily rate (MarketingSystem.daily_tick)
 	"office": 0,       # OfficeSystem writes the rent of the office the company works in; 0 at home
 	"servers": 0,      # InfraSystem writes the monthly bill / 30 every day; 0 until the product ships
 	"pazaryeri": 0,    # MarketplaceSystem writes the last close's monthly cost / 30 every week; 0 outside a marketplace run
@@ -58,19 +58,11 @@ const ONE_TIME_LABELS := {
 	# A positive add_cash: the one-time saving of a salary cut.
 	"pay_cut": "FIN_ONETIME_PAY_CUT",
 	"data_purchase": "FIN_ONETIME_DATA_PURCHASE",
+	# A card that buys a rival's ad slots with weeks of a channel's budget.
+	"ad_buy": "FIN_ONETIME_AD_BUY",
 	# A positive add_cash: prize money.
 	"award": "FIN_ONETIME_AWARD",
 }
-
-# A card's marketing push (marketing_push) [WORKING]: for `weeks` the marketing line costs `burn_pct`
-# of the burn without marketing at the moment of the choice, and B2C audience growth runs at
-# 1 + growth_pct/100.
-const MARKETING_BURN_PCT_MIN := 5
-const MARKETING_BURN_PCT_MAX := 50
-const MARKETING_GROWTH_PCT_MIN := 5
-const MARKETING_GROWTH_PCT_MAX := 50
-const MARKETING_WEEKS_MIN := 2
-const MARKETING_WEEKS_MAX := 12
 
 # Runway thresholds (months), highest first. The Finance tab badge lights under the first; the
 # ticker announces each one once on the way down (SummarySystem) and re-arms it when runway
@@ -150,34 +142,6 @@ static func daily_tick() -> void:
 	# write site needs no ordering assumptions on slots 6-10.
 	GameState.append_cash_sample(new_cash)
 	GameState.set_cash(new_cash)
-	# A push ends on the tick that charged its last week.
-	if not GameState.marketing_push.is_empty() and int(GameState.marketing_push.until_day) <= GameState.day:
-		GameState.marketing_push.clear()
-		set_burn_category("marketing", 0)
-
-
-# --- A card's marketing push ---
-
-## What a marketing_push card lands at: {burn_pct, growth_pct, weeks} inside the bounds above.
-static func marketing_terms(burn_pct: int, growth_pct: int, weeks: int) -> Dictionary:
-	return {"burn_pct": clampi(burn_pct, MARKETING_BURN_PCT_MIN, MARKETING_BURN_PCT_MAX),
-		"growth_pct": clampi(growth_pct, MARKETING_GROWTH_PCT_MIN, MARKETING_GROWTH_PCT_MAX),
-		"weeks": clampi(weeks, MARKETING_WEEKS_MIN, MARKETING_WEEKS_MAX)}
-
-
-## Starts a push, replacing a running one. The marketing line is a fixed share of the burn without
-## marketing at this moment, so it scales with the company and does not chase later hires.
-static func start_marketing_push(burn_pct: int, growth_pct: int, weeks: int) -> Dictionary:
-	var t: Dictionary = marketing_terms(burn_pct, growth_pct, weeks)
-	var base: int = compute_total_burn() - int(burn_breakdown["marketing"])
-	GameState.marketing_push = {"growth_pct": t.growth_pct, "until_day": GameState.day + TimeModel.ticks(t.weeks)}
-	set_burn_category("marketing", roundi(float(base) * t.burn_pct / 100.0))
-	return t
-
-
-## B2C audience growth under a running push (SalesSystem); 1.0 without one.
-static func marketing_growth_mult() -> float:
-	return 1.0 + float(GameState.marketing_push.get("growth_pct", 0)) / 100.0
 
 
 # --- One-time cash movements (Write-Through: Finance owns cash) ---

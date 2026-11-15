@@ -98,17 +98,22 @@
       "id": "own_ads",
       "outcome_id": "own_ads_instead",
       "requires": {
-        "seam": "build.module_unlocked.marketing",
+        "seam": "marketing.runs_channel.search_ads",
         "op": "==",
         "value": true,
-        "reason": "EV_LOCK_MARKETING_EA"
+        "reason": "EV_LOCK_RUNS_SEARCH_ADS"
       },
       "effects": [
         {
-          "verb": "marketing_push",
-          "burn_pct": 25,
-          "growth_pct": 15,
-          "weeks": 8
+          "verb": "marketing_boost",
+          "channel": "search_ads",
+          "pct": 20,
+          "weeks": 4
+        },
+        {
+          "verb": "add_cash",
+          "amount": -18000,
+          "label": "ad_buy"
         },
         {
           "verb": "investor_strain",
@@ -142,7 +147,7 @@
         "decline": "EV_FUNDING_PORTFOLIO_VENDOR_DECLINE"
       },
       "locked_reasons": {
-        "own_ads": "EV_LOCK_MARKETING_EA"
+        "own_ads": "EV_LOCK_RUNS_SEARCH_ADS"
       },
       "expire_note": "EV_FUNDING_PORTFOLIO_VENDOR_EXPIRED"
     },
@@ -156,7 +161,7 @@
         "decline": "EV_FUNDING_PORTFOLIO_VENDOR_DECLINE"
       },
       "locked_reasons": {
-        "own_ads": "EV_LOCK_MARKETING_EA"
+        "own_ads": "EV_LOCK_RUNS_SEARCH_ADS"
       },
       "expire_note": "EV_FUNDING_PORTFOLIO_VENDOR_EXPIRED"
     }

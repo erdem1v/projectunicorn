@@ -1,6 +1,8 @@
 class_name EvLint
 extends RefCounted
 
+const MarketingSystem := preload("res://scripts/systems/marketing_system.gd")
+
 # THE CONTENT LINTER (GDD §17). Every rule class the spec names, plus three the build added.
 #
 #     godot --headless --path . --event-lint
@@ -334,6 +336,7 @@ static func _lint_effects(where: String, effects: Array, context: String, card: 
 			_lint_trust_delta(where, effect, card)
 		_lint_sales_effect(where, effect, card)
 		_lint_server_effect(where, effect)
+		_lint_marketing_effect(where, effect, card)
 		_lint_sprint_effect(where, effect, card)
 		if verb == "morale_crew" and String(effect.get("crew", "")) not in MORALE_CREWS:
 			_add(SEVERITY_ERROR, "17.1", where, "morale_crew crew '%s' is not one of %s"
@@ -370,6 +373,23 @@ static func _lint_sales_effect(where: String, effect: Dictionary, card: Dictiona
 			_add(SEVERITY_ERROR, "17.1", where, "prospect_offer promise_step '%s' is a step of no product" % step)
 	if verb == "pitch_focus" and not ProductQuality.weights("b2b", "").has(String(effect.get("area", ""))):
 		_add(SEVERITY_ERROR, "17.1", where, "pitch_focus needs a ProductQuality area")
+
+
+## marketing_boost's arguments: a channel Pazarlama knows, with a budget to cut, run in the card's market; a cut and weeks above 0.
+static func _lint_marketing_effect(where: String, effect: Dictionary, card: Dictionary) -> void:
+	if String(effect.get("verb", "")) != "marketing_boost":
+		return
+	var kind: String = String(effect.get("channel", ""))
+	var market: String = String(card.get("guards", {}).get("market", ""))
+	if not (MarketingSystem.cfg("kinds") as Dictionary).has(kind):
+		_add(SEVERITY_ERROR, "17.1", where, "marketing_boost channel '%s' is no Pazarlama kind" % kind)
+	elif not bool(MarketingSystem.cfg("kinds.%s.budgeted" % kind)):
+		_add(SEVERITY_ERROR, "17.1", where, "marketing_boost channel '%s' has no budget to cut" % kind)
+	elif market != "" and market not in (MarketingSystem.cfg("kinds.%s.markets" % kind) as Array):
+		_add(SEVERITY_ERROR, "17.1", where, "marketing_boost channel '%s' does not run in the card's %s market" % [kind, market])
+	for key in ["pct", "weeks"]:
+		if typeof(effect.get(key)) not in [TYPE_INT, TYPE_FLOAT] or int(effect.get(key)) < 1 or float(effect.get(key)) != int(effect.get(key)):
+			_add(SEVERITY_ERROR, "17.1", where, "marketing_boost needs a whole %s of 1 or more" % key)
 
 
 ## The server verbs' arguments: a price scales by a multiplier above 0, the tier form is the Standard and Enterprise pair
@@ -481,7 +501,7 @@ const WRITER_VERBS := [
 	"change_morale", "morale_all", "morale_crew", "satisfaction_delta", "trust_delta", "promise_create", "sprint_hours",
 	"sprint_card_effort", "sprint_card_progress", "sprint_card_carry",
 	"b2b_retain_delay", "b2b_retain_ignore", "b2b_expand_decline", "set_flag", "stamp_day",
-	"schedule_event", "cancel_scheduled", "productivity_mod", "investor_strain", "marketing_push",
+	"schedule_event", "cancel_scheduled", "productivity_mod", "investor_strain", "marketing_boost",
 	"send_on_leave", "summer_leave", "sick_leave", "promote", "work_hours",
 	"damage_product", "line_harden", "sprint_card_test", "sprint_fix_first",
 	"sprint_card_trim", "sprint_card_outlook", "sprint_card_first", "b2b_month_discount",
@@ -523,7 +543,7 @@ const SUBJECT_VERBS := {
 }
 
 ## O5: a verb that spends a module the build may not have opened.
-const MODULE_VERBS := {"marketing_push": "marketing"}
+const MODULE_VERBS := {"marketing_boost": "marketing"}
 
 ## P3: the demo's window in weeks. A card that cannot arrive inside it is content nobody plays.
 const DEMO_WINDOW_WEEKS := 130
@@ -697,7 +717,8 @@ static func _lint_v3_options(id: String, card: Dictionary, where: String) -> voi
 				_v3(id, "O5", where, "option '%s' spends %s, which the demo never opens"
 					% [opt_id, module])
 			elif EvCondition.leaves_named(opt.get("requires", {}), "seam",
-					"build.module_unlocked." + module).is_empty():
+					"build.module_unlocked." + module).is_empty() and (verb != "marketing_boost" or EvCondition.leaves_named(
+					opt.get("requires", {}), "seam", "marketing.runs_channel." + String(effect.get("channel", ""))).is_empty()):
 				_v3(id, "O5", where, "option '%s' spends %s without requiring the module to be open"
 					% [opt_id, module])
 

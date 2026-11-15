@@ -102,13 +102,13 @@ static func load_pct(char_id: String) -> int:
 
 
 ## An ERP row's cost per lead this week: its kind's lead_cost (İçerik ve SEO falls from start_cost over its first
-## mature_weeks of spend), times the runner's load past 100%.
+## mature_weeks of spend), times the runner's load past 100%, times a card's boost on the kind (cost_mult).
 static func lead_cost(r: Dictionary) -> float:
 	var c: Dictionary = cfg("erp.%s" % r.kind)
 	var cost: float = float(c.lead_cost)
 	if c.has("start_cost"):
 		cost = lerpf(float(c.start_cost), cost, minf(float(r.get("weeks", 0)) / float(c.mature_weeks), 1.0))
-	return cost * maxf(load_pct(String(r.runner)) / 100.0, 1.0)
+	return cost * maxf(load_pct(String(r.runner)) / 100.0, 1.0) * cost_mult(String(r.kind))
 
 
 ## Leads a week the ERP row brings: budget ÷ cost per lead × the product's strength; Referans has no budget and brings
@@ -192,19 +192,57 @@ static func row_mrr(r: Dictionary) -> int:
 	return sum
 
 
+## What a card's marketing_boost lands at: {channel, pct, weeks}, the cut and the weeks inside channels.json's boost bounds.
+static func boost_terms(kind: String, pct: int, weeks: int) -> Dictionary:
+	return {"channel": kind, "pct": clampi(pct, 1, int(cfg("boost.pct_max"))), "weeks": clampi(weeks, 1, int(cfg("boost.weeks_max")))}
+
+
+## A card's marketing_boost: for `weeks` the kind costs `pct` percent less (an ERP row's lead reads it, lead_cost).
+## A second boost on the same kind replaces the first, cut and weeks both. Returns what landed, for the chip and the history.
+static func boost(kind: String, pct: int, weeks: int) -> Dictionary:
+	var t: Dictionary = boost_terms(kind, pct, weeks)
+	GameState.marketing.get_or_add("boosts", {})[kind] = {"pct": t.pct, "until_day": GameState.day + TimeModel.ticks(t.weeks)}
+	return t
+
+
+## The cost multiplier a running boost puts on the kind; 1.0 without one. One boost per kind: the latest replaced any other.
+static func cost_mult(kind: String) -> float:
+	var b: Dictionary = (GameState.marketing.get("boosts", {}) as Dictionary).get(kind, {})
+	if b.is_empty() or int(b.until_day) < GameState.day:
+		return 1.0
+	return 1.0 - float(b.pct) / 100.0
+
+
+## Whether the company runs the kind: a row of it with a budget, or a budgetless row (Referans). The seam a boost card's
+## option requires (`marketing.runs_channel.<kind>`).
+static func runs_channel(kind: String) -> bool:
+	return rows().any(func(r: Dictionary) -> bool:
+		return r.kind == kind and (int(r.budget) > 0 or not bool(cfg("kinds.%s.budgeted" % kind))))
+
+
+## The kind's weekly spend across its rows (`marketing.channel_weekly_spend.<kind>`).
+static func channel_weekly_spend(kind: String) -> int:
+	var sum: int = 0
+	for r: Dictionary in rows():
+		if r.kind == kind:
+			sum += int(r.budget)
+	return sum
+
+
 ## Weekly, before Finance: a row whose runner left passes to the founder (past the share, if need be), and the Finance
-## line carries this week's spend as the daily rate it holds, zero included, so a closed row stops costing at once. Until
-## a row has run the line belongs to the card's marketing push, so the ledger leaves it alone. While the company's market is
-## open the ERP rows bring their leads.
+## line carries this week's spend as the daily rate it holds, zero included, so a closed row stops costing at once; the
+## line is the ledger's alone. While the company's market is open the ERP rows bring their leads; a boost is dropped after
+## the tick that spent its last week.
 static func daily_tick() -> void:
-	if not GameState.marketing.has("rows"):
-		return
-	var founder_id: String = CharacterRegistry.get_founder().id
 	var spend: int = 0
 	for r: Dictionary in rows():
 		if not can_run(String(r.runner)):
-			r.runner = founder_id
+			r.runner = CharacterRegistry.get_founder().id
 		spend += int(r.budget)
 	if SalesFaucetSystem.market_open():
 		_spawn_leads()
 	FinanceSystem.set_burn_category("marketing", roundi(spend / float(TimeModel.DAYS_PER_TICK)))
+	var boosts: Dictionary = GameState.marketing.get("boosts", {})
+	for kind: String in boosts.keys():
+		if int(boosts[kind].until_day) <= GameState.day:
+			boosts.erase(kind)

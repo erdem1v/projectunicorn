@@ -61,7 +61,9 @@ Finans:
 - `FinanceSystem.apply_one_time_cost()` `finance_system.gd:179` ve `apply_one_time_income()` `:189`: önce işlem satırı, en son `set_cash` · `events/core/effects.gd:238`, `systems/hr_actions.gd:15`, `office_system.gd:66`,
   `rnd_system.gd:25`, `sprint_system.gd:170`, `incident_system.gd:521`.
 - `FinanceSystem.set_burn_category()` `:224`: kalemi yazar, `daily_burn`ü hemen tazeler · `infra_system.gd:286`, `office_system.gd:91`; altıncı kalem `pazaryeri` (pazaryeri koşusunun gideri: `MarketplaceSystem.daily_tick` her kapanışta, sıfır dahil, `daily_rate(monthly_cost)` yazar; sıfırken Finans'ta çizilmez, eski kayıtta 0'la açılır).
-- `FinanceSystem.start_marketing_push()` `:162`: kartın pazarlama kampanyasını başlatır · `events/core/effects.gd:299`; çarpan `marketing_growth_mult()` `finance_system.gd:171` · `sales_system.gd:204`.
+- `MarketingSystem.boost()/cost_mult()` : kartın `marketing_boost`'u bir kanal türünü süre boyunca ucuzlatır (ikinci itki öncekinin
+  ↳ yerine geçer) · `events/core/effects.gd`; `runs_channel()`/`channel_weekly_spend()` seam'leri `marketing.runs_channel.<tür>`,
+  ↳ `marketing.channel_weekly_spend.<tür>` (`events/seams/seams_finance.gd`); `marketing` kalemi yalnız defterin.
 - `MarketingSystem.add_row()/remove_row()/set_budget()/step_budget()` `marketing_system.gd:42/:56/:61/:68`: satır yazma kapıları (kurucu
   ↳ Pazarlama payı doluyken yeni satır açamaz); `load_pct()` `:83` (kurucunun payı `founder_share_pct`); `daily_tick()` `:96` HR'den sonra,
   ↳ Finans'tan önce: yürüteni gitmiş satır kurucuya geçer, `marketing` kalemi haftanın harcamasını günlük oran olarak taşır (bir satır
@@ -142,7 +144,7 @@ Hepsi `EventBus`te (`autoload/event_bus.gd`); satır numarası tanım satırı.
 ## Durum ve veri
 
 GameState alanları (`autoload/game_state.gd`):
-- Kasa: `cash` `:30`, `mrr` `:31`, `daily_burn` `:32`, `transactions` `:152` (üst sınır `TRANSACTIONS_CAP` 50 `:151`), `marketing_push` `:155`, `marketing` (Pazarlama defteri: `rows`, `next_id`), `cash_history`, `month_ledger`, `month_history`.
+- Kasa: `cash` `:30`, `mrr` `:31`, `daily_burn` `:32`, `transactions` `:152` (üst sınır `TRANSACTIONS_CAP` 50 `:151`), `marketing` (Pazarlama'nın durumu, yazarı `MarketingSystem`), `cash_history`, `month_ledger`, `month_history`.
 - Faz ve son: `phase` `:37`, `phase_gate_ready` `:134`, `pending_next_phase` `:135`, `run_active` `:132`, `ending_id` `:133`, `series_a_closed` `:136`, `shutter_weeks_left` `:137`.
 - Son sayaçları: `vc_rejections` `:138`, `pivot_used` `:139`, `active_scandal` `:140`, `unmanaged_major_scandal` `:141`, `brand_low_since_day` `:142`, `faced_series_a(_by)` `:272`, `acq_road_over_day` `:274`,
   `bootstrap_milestone_day` `:277`.
@@ -194,7 +196,7 @@ Sabitler:
 
 Tek koşturucu `bash tools/smoke_run.sh <vaka>`; vaka listesi `scripts/debug/endgame_smoke.gd` `match case_name:` tablosudur (dosya ~25.950 satır). `export GODOT=...` gerekir; `--all` yalnız push öncesi.
 - Finans: `month_summary`, `month_history_close_and_cap`, `burn_refresh_same_tick`, `burn_lines_visible`, `runway_net_status`, `runway_weeks_seam`, `runway_days_and_negative_cash`, `gross_runway_months`,
-  `add_cash_writes_ledger`, `marketing_push_burns_and_ends`, `run_ledger`.
+  `add_cash_writes_ledger`, `run_ledger`.
 - Pazarlama: `marketing_burn_written_weekly`, `marketing_runner_and_load`, `marketing_save_roundtrip`, `marketing_erp_lead_source`,
   `marketing_target_sector_leads`, `marketing_referral_counts_happy_accounts`, `marketing_row_mrr_counts_recent_signings`.
 - Çek ve turlar: `cheque_read_steps`, `angel_fires_at_crossing`, `angel_never_pre_ship`, `angel_not_below_threshold`, `angel_accept_is_atomic`, `angel_locked_choice_inert`, `angel_decline_opens_on_hard`, `angel_one_shot_falsified`,

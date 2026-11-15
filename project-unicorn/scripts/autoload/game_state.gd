@@ -154,10 +154,7 @@ var cash_history: Array = []           # [{day: int, cash: int}]
 # Labels stored RAW; FinanceSystem.one_time_label_display maps registered ids for display.
 const TRANSACTIONS_CAP := 50
 var transactions: Array = []           # [{day: int, label: String, amount: int}]
-# A card's marketing push while it runs: {growth_pct, until_day}; empty = none. Its weekly cost is
-# FinanceSystem's marketing burn line. Sole writer FinanceSystem.
-var marketing_push: Dictionary = {}
-# Pazarlama's ledger (MarketingSystem): rows, next row id. Empty until the company runs a row.
+# Pazarlama's state (MarketingSystem's alone): its rows and what they carry from week to week. Empty until the company runs a row.
 var marketing: Dictionary = {}
 # Pazaryeri's state (sole writer MarketplaceSystem): empty outside a marketplace run.
 var marketplace: Dictionary = {}
@@ -883,7 +880,6 @@ func initialize_run(payload: Dictionary) -> void:
 	cash_history.clear()
 	cash_history.append({"day": 1, "cash": cash})
 	transactions.clear()
-	marketing_push.clear()
 	marketing.clear()
 	marketplace.clear()
 	sales_log.clear()
