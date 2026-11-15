@@ -345,6 +345,16 @@ static func row_label(r: Dictionary) -> String:
 		("MP_CAT_" if SalesSystem.is_marketplace() else "SECTOR_") + String(r.target).to_upper())
 
 
+## A campaign's or a window's weeks on screen, from its first tick's Sunday to its last week's Saturday: "16 ile 29 Aralık
+## arası", the month named once when both days are in it.
+static func window_dates(start: int, weeks: int) -> String:
+	var first: Dictionary = GameState.get_date_dict(start)
+	var last: Dictionary = Time.get_datetime_dict_from_unix_time(
+		int(Time.get_unix_time_from_datetime_dict(GameState.get_date_dict(start + weeks))) - 86400)
+	return TranslationServer.translate("MKT_DATES").format({"from": str(int(first.day)) if int(first.month) == int(last.month)
+		else Fmt.day_month(first), "to": Fmt.day_month(last)})
+
+
 ## The stars a row's leads usually are: its mix's expected star, rounded.
 static func typical_star(r: Dictionary) -> int:
 	var mix: Array = _star_mix(String(r.kind))

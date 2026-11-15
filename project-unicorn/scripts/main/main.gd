@@ -3117,12 +3117,16 @@ func _run_office_crowd_probe(spec: String) -> void:
 ## page's condition. `pazaryeri` is P1_kanallar_pazaryeri's company; `pazaryeri_up` the same with Arama reklamı at $500 until its
 ## last week, then $1.000: a user costs more than the week before, and a second frame rests the pointer on that cost (its tip).
 ## `pazaryeri_kinds` puts the six paid kinds in Moda, two to each of three specialists: every kind's glyph on its row.
+## `pazaryeri_kampanya`, `pazaryeri_bekliyor`, `pazaryeri_cukur` and `kampanya_kur` are `pazaryeri`'s company with a finished
+## campaign behind it (`_play_marketing_campaigns`), its books written again after it: İndirim günleri in its second week of
+## preparation, İndirim günleri set for Yılbaşı before its preparation starts, İlk siparişe özel in its dip, and the Kampanya kur
+## panel open on İndirim günleri.
 func _run_marketing_shot(kind: String) -> void:
 	_begin_shot()
 	_seed_run_reproducible()
 	if kind == "empty":   # LOC-DATA debug fixture id
 		SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
-	elif kind in ["pazaryeri", "pazaryeri_up", "pazaryeri_kinds"]:   # LOC-DATA debug fixture id
+	elif kind.begins_with("pazaryeri") or kind == "kampanya_kur":   # LOC-DATA debug fixture id
 		# P1_kanallar_pazaryeri's company: a marketplace the engine plays to its launch with Moda open, a specialist, Arama
 		# reklamı and İçerik in Moda and E-posta, then six weeks the clock turns (every close real). The books are the frame
 		# worlds' (_a4_office, _a4_books): a crew of one moves to the office that seats it and keeps six months of its loss,
@@ -3157,6 +3161,10 @@ func _run_marketing_shot(kind: String) -> void:
 			if week == 5 and kind == "pazaryeri_up":
 				MarketingSystem.set_budget(int(rows[0].id), 1000)
 			_play_week()
+		if kind in ["pazaryeri_kampanya", "pazaryeri_bekliyor", "pazaryeri_cukur", "kampanya_kur"]:   # LOC-DATA debug fixture id
+			if not _play_marketing_campaigns(kind, spec.id):
+				return
+			_a4_books(crew.size(), 0)   # the campaigns' weeks spent the books' six months
 	else:
 		_seed_theme_surface()
 		var mkt: Character = _shot_employee("char_mkt_shot", "Zeynep Koç", HRConstants.ROLE_MARKETING_SPECIALIST, 20)   # LOC-DATA debug seed / name
@@ -3180,7 +3188,57 @@ func _run_marketing_shot(kind: String) -> void:
 		await _rest_pointer_on(dearer)
 		await _finish_shot("marketing_shot_%s_tip" % kind, 1.2)
 		return
-	await _finish_shot("marketing_shot_%s" % kind)
+	if kind == "kampanya_kur":   # LOC-DATA debug fixture id
+		await get_tree().process_frame
+		if not _press_button_labelled(_shell, tr("MKT_CAMPAIGN_NEW")):
+			_shot_fail("[MarketingShot] no open Kampanya kur button")
+			return
+		await get_tree().process_frame
+		var card := _shell.get_node("PanelLayer").find_child("discount_days", true, false) as Control
+		if card == null:
+			_shot_fail("[MarketingShot] the panel has no discount_days card")
+			return
+		var click := InputEventMouseButton.new()
+		click.button_index = MOUSE_BUTTON_LEFT
+		click.pressed = true
+		card.gui_input.emit(click)
+	await _finish_shot("marketing_shot_%s" % kind, 0.6 if kind == "kampanya_kur" else 0.4)
+
+
+## The campaign frames' campaigns, every week the clock's: a coupon run now goes through its weeks and its dip into the history,
+## and the weeks go on until MRR is back above 0 (the coupons the company paid come off the commission of the closes MRR reads,
+## and a negative MRR reads $0); then `pazaryeri_kampanya` prepares İndirim günleri in the soonest calendar window to its second
+## week of preparation, `pazaryeri_bekliyor` sets it for Yılbaşı, whose preparation starts weeks later, and `pazaryeri_cukur` runs
+## İlk siparişe özel now into its dip. False (the shot is failed) when a campaign is refused.
+func _play_marketing_campaigns(kind: String, runner: String) -> bool:
+	GameState.set_cash(1_000_000)   # the setup's weeks never reach the shutter; the books are written after them
+	if not _shot_campaign("coupon", "now", {"amount": 10, "count": 1000}, "company", runner):
+		return false
+	while not MarketingSystem.campaign().is_empty() or GameState.mrr <= 0:
+		_play_week()
+	match kind:
+		"pazaryeri_bekliyor":   # LOC-DATA debug fixture id
+			return _shot_campaign("discount_days", "new_year", {"depth": 20, "shipping": "free"}, "half", runner)
+		"pazaryeri_kampanya":   # LOC-DATA debug fixture id
+			if not _shot_campaign("discount_days", MarketingSystem.windows_ahead()[1].id, {"depth": 20, "shipping": "free"}, "half",
+					runner):
+				return false
+			while int(MarketingSystem.campaign().prep.done) < 2:
+				_play_week()
+		"pazaryeri_cukur":   # LOC-DATA debug fixture id
+			if not _shot_campaign("first_order", "now", {"depth": 15, "weeks": 2}, "company", runner):
+				return false
+			while MarketingSystem.campaign().stage != "after":
+				_play_week()
+	return true
+
+
+## A frame's campaign through the seam a player's start takes; a refusal fails the shot.
+func _shot_campaign(kind: String, window: String, settings: Dictionary, payer: String, runner: String) -> bool:
+	if MarketingSystem.start_campaign(kind, window, settings, payer, runner):
+		return true
+	_shot_fail("[MarketingShot] the %s campaign was refused" % kind)
+	return false
 
 
 ## The per-user cell of a marketplace row dearer than the week before: the one whose tip carries the week before's cost.

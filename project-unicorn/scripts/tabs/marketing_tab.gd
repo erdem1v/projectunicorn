@@ -6,7 +6,9 @@ extends Control
 # aday, aday başı, MRR katkısı, yürüten), kanal ekle ve Satış'ın kendi akışı (Organik). Pazaryeri: başlıkta yeni kullanıcı,
 # ücretli pay ve haftalık harcama (altında satışlara oranı); şeritte ekip; satır kategoride yürür ve dört sayısını yazar
 # (bütçe, yeni kullanıcı, kullanıcı başı, MRR katkısı), doyum yüksekken uyarı etiketi, kullanıcı başı geçen haftadan pahalıysa
-# yukarı ok. Ürün canlı değilken gövde tek boş hâldir ve şartını yazar.
+# yukarı ok; satır iki katlıdır (adı ve yürüteni, altında sayıları). Sağ sütunda kampanya (evresi, tarihleri, hazırlığı ya da
+# kalan haftası; hazırlıktayken iptali), "Kampanya kur" ve biten kampanyalar. Ürün canlı değilken gövde tek boş hâldir ve
+# şartını yazar.
 #
 # Sayfa durumu okur ve MarketingSystem'in kapılarını tetikler, kendisi yazmaz (WRITE-THROUGH LAW). Karar beklerken
 # denetimleri kapalıdır. PROCESS_MODE_ALWAYS (.tscn): duraklatılmış düğüm çizilir ama tıklama almaz.
@@ -30,6 +32,11 @@ const KIND_GLYPHS := {"content_seo": "res://assets/icons/util/doc.svg", "search_
 const ORGANIC_GLYPH := "res://assets/icons/type/erp.svg"
 const ORGANIC_GLYPH_MP := "res://assets/icons/type/marketplace.svg"
 const UP := "res://assets/icons/util/tri_up.svg"
+const CALENDAR := "res://assets/icons/util/calendar.svg"
+const CAMPAIGN_MODAL := "res://scenes/modals/CampaignModal.tscn"
+## A marketplace page's right column (the campaign and the history); the channel table takes the rest.
+const SIDE := 360
+const STAGE_TAGS := {"prep": &"outline", "run": &"pos", "after": &"warn"}
 ## The handoff threshold's three positions, as MarketingSystem.HANDOFFS names them.
 const HANDOFF_KEYS := ["MKT_HANDOFF_ALL", "MKT_HANDOFF_2", "MKT_HANDOFF_3"]
 ## Column widths of a channel row [name, budget, leads a week, per lead, MRR]; the runner takes the rest.
@@ -45,6 +52,7 @@ var _ctl: PanelContainer
 var _team: HBoxContainer
 var _handoff: HBoxContainer
 var _rows: VBoxContainer
+var _side: VBoxContainer   # a marketplace's campaign column; null on an ERP page
 var _empty: VBoxContainer
 var _signals: Array = []
 
@@ -108,10 +116,20 @@ func _build() -> void:
 	var stack := VBoxContainer.new()
 	stack.add_theme_constant_override("separation", 0)
 	body.add_child(stack)
+	var cols := HBoxContainer.new()
+	cols.add_theme_constant_override("separation", UiTokens.SPACE_XL)
+	stack.add_child(cols)
 	_rows = VBoxContainer.new()
+	_rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_rows.add_theme_constant_override("separation", UiTokens.SPACE_M)
 	_rows.minimum_size_changed.connect(fit_changed.emit)
-	stack.add_child(_rows)
+	cols.add_child(_rows)
+	if _mp:
+		_side = VBoxContainer.new()
+		_side.custom_minimum_size.x = SIDE
+		_side.add_theme_constant_override("separation", UiTokens.SPACE_M)
+		_side.minimum_size_changed.connect(fit_changed.emit)
+		cols.add_child(_side)
 	_empty = VBoxContainer.new()
 	_empty.custom_minimum_size.y = UiTokens.D_H_EMPTY_STATE
 	_empty.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -130,6 +148,8 @@ func _refresh() -> void:
 	var off: bool = EventGate.active_id() != ""
 	_ctl.visible = open
 	_rows.visible = open
+	if _side != null:
+		_side.visible = open
 	_empty.visible = not open
 	for kpi: Control in _kpis:
 		kpi.visible = open
@@ -144,6 +164,8 @@ func _refresh() -> void:
 		if not _mp:
 			_paint_handoff(off)
 		_paint_rows(off)
+		if _mp:
+			_paint_side(off)
 	else:
 		_paint_empty()
 	fit_changed.emit()
@@ -247,32 +269,130 @@ func _paint_rows(off: bool) -> void:
 	_rows.add_child(_card(&"DealDoc", organic))
 
 
+## KAMPANYA: the campaign in preparation, running or in its dip, and Kampanya kur, shut while one is on (one at a time) or while
+## nobody can run it; GEÇMİŞ: the finished campaigns, the latest first.
+func _paint_side(off: bool) -> void:
+	UiFactory.clear(_side)
+	_side.add_child(_side_head("MP_VISITS_CAMPAIGN"))
+	var camp: Dictionary = MarketingSystem.campaign()
+	if not camp.is_empty():
+		_side.add_child(_campaign_card(camp, off))
+	var nobody: bool = MarketingSystem.free_runner() == ""
+	var setup := _button(tr("MKT_CAMPAIGN_NEW"), off or nobody or not camp.is_empty(), PLUS)
+	setup.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	setup.tooltip_text = tr("MKT_CAMPAIGN_NEW_TIP") if not camp.is_empty() else (tr("MKT_NEEDS_SPECIALIST") if nobody else "")
+	setup.pressed.connect(func() -> void: HRUiShared.mount_panel_modal(self, CAMPAIGN_MODAL, _refresh))
+	_side.add_child(setup)
+	var history: Array = GameState.marketing.get("history", [])
+	if history.is_empty():
+		return
+	var head := MarginContainer.new()
+	head.add_theme_constant_override("margin_top", UiTokens.SPACE_XL)
+	head.add_child(_side_head("MKT_HISTORY"))
+	_side.add_child(head)
+	for i in range(history.size() - 1, -1, -1):
+		var done := VBoxContainer.new()
+		done.add_theme_constant_override("separation", UiTokens.SPACE_XXS)
+		done.add_child(_line(_campaign_name(history[i]), &"DataText"))
+		done.add_child(UiFactory.make_label(MarketingSystem.window_dates(int(history[i].start), int(history[i].weeks)), &"Caption"))
+		var pad := MarginContainer.new()
+		pad.add_theme_constant_override("margin_bottom", UiTokens.SPACE_M)
+		pad.add_child(done)
+		_side.add_child(_card(&"TableRow", pad))
+
+
+## A caps key over the column's rule, as the channel table's head.
+func _side_head(key: String) -> PanelContainer:
+	return _card(&"TableHead", UiFactory.make_label(Fmt.upper(tr(key)), &"KeyLabel"))
+
+
+## The campaign: its name and its stage, its weeks as dates; in preparation the weeks prepared of those it needs (or the day the
+## preparation starts) and the way to call it off; running or in its dip, the weeks left of that stage.
+func _campaign_card(c: Dictionary, off: bool) -> PanelContainer:
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", UiTokens.SPACE_S)
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", UiTokens.SPACE_M)
+	head.add_child(_line(_campaign_name(c), &"DataStrong"))
+	head.add_child(UiFactory.D_tag(tr("MKT_STAGE_" + String(c.stage).to_upper()), STAGE_TAGS[c.stage]))
+	col.add_child(head)
+	var when := HBoxContainer.new()
+	when.add_theme_constant_override("separation", UiTokens.SPACE_S)
+	var glyph := UiFactory.make_glyph(CALENDAR, UiTokens.D_ICON_LINE, UiTokens.D_INK_3)
+	glyph.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	when.add_child(glyph)
+	when.add_child(UiFactory.make_label(MarketingSystem.window_dates(int(c.start), int(c.weeks)), &"Caption"))
+	col.add_child(when)
+	if c.stage != "prep":
+		var left: int = int(c.weeks_left if c.stage == "run" else c.dip_left)
+		col.add_child(UiFactory.make_label(tr(Fmt.count_key("MKT_CAMPAIGN_LEFT", left)).format({"n": left}), &"Caption"))
+		return _card(&"DealDoc", col)
+	var total: int = int(c.prep.total)
+	if MarketingSystem._preparing(c):
+		var prep := HBoxContainer.new()
+		prep.add_theme_constant_override("separation", UiTokens.SPACE_M)
+		prep.add_child(UiFactory.make_label(tr(Fmt.count_key("MKT_CAMPAIGN_PREP", total)).format({"done": int(c.prep.done),
+			"total": total}), &"Caption"))
+		prep.add_child(HRUiShared.D_bar(UiTokens.D_LOAD_BAR, int(c.prep.done) / float(total), UiTokens.D_BAR_FILL))
+		col.add_child(prep)
+	else:   # it only waits until its last prep weeks before the start
+		col.add_child(UiFactory.make_label(tr("MKT_CAMPAIGN_PREP_STARTS").format(
+			{"date": Fmt.day_month(GameState.get_date_dict(int(c.start) - total))}), &"Caption"))
+	# Only a campaign still in preparation can be called off; the tip says what that costs.
+	var cancel := _button(tr("MKT_CAMPAIGN_CANCEL"), off)
+	cancel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	cancel.tooltip_text = tr("MKT_CAMPAIGN_CANCEL_TIP")
+	cancel.pressed.connect(func() -> void:
+		MarketingSystem.cancel_campaign()
+		_refresh())
+	col.add_child(cancel)
+	return _card(&"DealDoc", col)
+
+
+## A campaign as the page names it: its window and its template; one run now (outside the calendar) names its template only.
+func _campaign_name(c: Dictionary) -> String:
+	var template: String = tr("MKT_TEMPLATE_" + String(c.kind).to_upper())
+	return template if c.window == "now" else tr("MKT_WINDOW_" + String(c.window).to_upper()) + SprintUiShared.SEP + template
+
+
 ## One channel: its name, the stars its leads usually are and its last four weeks of leads; the budget's − and +; its leads a
-## week, what a lead costs and the MRR its signings bring; its runner, whose menu also closes the row. A marketplace row:
-## the saturation tag while high and its last four weeks of new users; its new users, per user and MRR contribution.
+## week, what a lead costs and the MRR its signings bring; its runner, whose menu also closes the row. A marketplace row is two
+## lines: its name, the saturation tag while high and its runner over its last four weeks of new users, its budget, new users,
+## per user and MRR contribution (the column head reads over the second line).
 func _row_card(r: Dictionary, off: bool) -> PanelContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 0)
-	var name_col := VBoxContainer.new()
-	name_col.custom_minimum_size.x = W[0]
-	name_col.add_theme_constant_override("separation", UiTokens.SPACE_XS)
 	var title := HBoxContainer.new()
 	title.add_theme_constant_override("separation", UiTokens.SPACE_M)
 	title.add_child(UiFactory.make_glyph(KIND_GLYPHS[r.kind], UiTokens.D_ICON_LINE, UiTokens.D_INK_3))
-	title.add_child(_line(MarketingSystem.row_label(r), &"DataStrong"))
-	# A gap before the budget column: a name that just fits wraps short of the − button instead of touching it.
-	var title_box := MarginContainer.new()
-	title_box.add_theme_constant_override("margin_right", UiTokens.SPACE_M)
-	title_box.add_child(title)
-	name_col.add_child(title_box)
+	var runner: Character = CharacterRegistry.get_character(String(r.runner))
+	var pick := _button(_who(runner), off, CHEVRON)
+	pick.size_flags_horizontal = Control.SIZE_EXPAND | Control.SIZE_SHRINK_END
+	pick.icon_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	pick.pressed.connect(_open_runner_menu.bind(r, pick))
 	if _mp:
+		title.add_child(UiFactory.make_label(MarketingSystem.row_label(r), &"DataStrong"))
 		if float(r.get("share", 0.0)) >= float(MarketingSystem.cfg("market.warn_share")):
-			name_col.add_child(_saturation(r))
-		name_col.add_child(_bars((r.get("weeks", []) as Array).slice(-4).map(func(w: Dictionary) -> int: return roundi(float(w.users)))))
+			title.add_child(_saturation(r))
+		title.add_child(pick)
+		for part: Control in title.get_children():
+			part.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		var bars := _bars((r.get("weeks", []) as Array).slice(-4).map(func(w: Dictionary) -> int: return roundi(float(w.users))))
+		bars.custom_minimum_size.x = W[0]
+		row.add_child(bars)
 	else:
+		var name_col := VBoxContainer.new()
+		name_col.custom_minimum_size.x = W[0]
+		name_col.add_theme_constant_override("separation", UiTokens.SPACE_XS)
+		title.add_child(_line(MarketingSystem.row_label(r), &"DataStrong"))
+		# A gap before the budget column: a name that just fits wraps short of the − button instead of touching it.
+		var title_box := MarginContainer.new()
+		title_box.add_theme_constant_override("margin_right", UiTokens.SPACE_M)
+		title_box.add_child(title)
+		name_col.add_child(title_box)
 		name_col.add_child(UiFactory.D_stars(MarketingSystem.typical_star(r)))
 		name_col.add_child(_bars(r.get("hist", [])))
-	row.add_child(name_col)
+		row.add_child(name_col)
 	var budget := HBoxContainer.new()
 	budget.custom_minimum_size.x = W[1]
 	budget.add_theme_constant_override("separation", UiTokens.SPACE_S)
@@ -300,15 +420,17 @@ func _row_card(r: Dictionary, off: bool) -> PanelContainer:
 		row.add_child(_cell(Fmt.money_exact(roundi(int(r.budget) / rate)) if rate > 0.0 and int(r.budget) > 0 else "", W[3]))
 	if not (_mp and r.kind == "email"):
 		row.add_child(_mrr_cell(MarketingSystem.row_mrr(r)))
-	var runner: Character = CharacterRegistry.get_character(String(r.runner))
-	var pick := _button(_who(runner), off, CHEVRON)
-	pick.size_flags_horizontal = Control.SIZE_EXPAND | Control.SIZE_SHRINK_END
-	pick.icon_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	pick.pressed.connect(_open_runner_menu.bind(r, pick))
-	row.add_child(pick)
+	if not _mp:
+		row.add_child(pick)
 	for part: Control in row.get_children():
 		part.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	return _card(&"DealDoc", row)
+	if not _mp:
+		return _card(&"DealDoc", row)
+	var lines := VBoxContainer.new()
+	lines.add_theme_constant_override("separation", UiTokens.SPACE_S)
+	lines.add_child(title)
+	lines.add_child(row)
+	return _card(&"DealDoc", lines)
 
 
 ## A channel with no signing yet reads $0, muted; per lead stays empty with no leads (it has no value then).

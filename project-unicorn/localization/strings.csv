@@ -2197,6 +2197,62 @@ MKT_SATURATION_TIP_SEARCH,{cat} aramalarında haftalık reklam yeri: {pool} · g
 MKT_SATURATION_TIP,{cat} için haftalık reklam yeri: {pool} · gösterildiğin: {shown},Weekly ad slots for {cat}: {pool} · shown in: {shown}
 MKT_PER_USER_UP_TIP,Geçen hafta {was} · reklam doyumu {pct},Last week {was} · ad saturation {pct}
 MKT_EMAIL_LIFT,Geri dönen ziyaret +{pct},Returning visits +{pct}
+MKT_WINDOW_NOW,Hemen,Now
+MKT_WINDOW_JAN_SALE,Ocak sezon sonu,January sale
+MKT_WINDOW_VALENTINES,Sevgililer Günü,Valentine's Day
+MKT_WINDOW_MOTHERS_DAY,Anneler Günü,Mother's Day
+MKT_WINDOW_SUMMER_SALE,Yaz sezon sonu,Summer sale
+MKT_WINDOW_RAMAZAN,Ramazan Bayramı,Eid al-Fitr
+MKT_WINDOW_BACK_TO_SCHOOL,Okula dönüş,Back to school
+MKT_WINDOW_KURBAN,Kurban Bayramı,Eid al-Adha
+MKT_WINDOW_NEW_YEAR,Yılbaşı,New Year
+MKT_TEMPLATE_FIRST_ORDER,İlk siparişe özel,First order offer
+MKT_TEMPLATE_DISCOUNT_DAYS,İndirim günleri,Discount days
+MKT_TEMPLATE_BUY_X_PAY_Y,X Al Y Öde,Buy X Pay Y
+MKT_TEMPLATE_COUPON,Kupon,Coupon
+MKT_STAGE_PREP,Hazırlıkta,Preparing
+MKT_STAGE_RUN,Sürüyor,Running
+MKT_STAGE_AFTER,Çukur,Dip
+MKT_DATES,{from} ile {to} arası,{from} to {to}
+MKT_CAMPAIGN_PREP,Hazırlık {done}/{total} hafta,Preparation {done}/{total} weeks
+MKT_CAMPAIGN_PREP_ONE,Hazırlık {done}/{total} hafta,Preparation {done}/{total} week
+MKT_CAMPAIGN_NEW,Kampanya kur,Set up a campaign
+MKT_CAMPAIGN_NEW_TIP,Aynı anda tek kampanya yürür; yenisi bu kampanya bitince kurulur.,One campaign runs at a time; the next one can be set up when this one ends.
+MKT_HISTORY,Geçmiş,History
+MKT_SET_WINDOW,Pencere,Window
+MKT_SET_DEPTH,İndirim,Discount
+MKT_SET_WEEKS,Süre,Duration
+MKT_SET_SHIPPING,Kargo,Shipping
+MKT_SHIPPING_RULE,Kurala göre,By the rule
+MKT_SHIPPING_FREE,Bedava,Free
+MKT_SET_RATIO,Oran,Ratio
+MKT_RATIO_3_2,3 al 2 öde,Buy 3 pay 2
+MKT_RATIO_2_1,2 al 1 öde,Buy 2 pay 1
+MKT_SET_AMOUNT,Tutar,Amount
+MKT_SET_COUNT,Adet,Coupons
+MKT_SET_PAYER,İndirimi kim karşılar,Who covers the discount
+MKT_PAYER_STORES,Mağazalar,Stores
+MKT_PAYER_HALF,Yarı yarıya,Half and half
+MKT_PAYER_COMPANY,Şirket,Company
+MKT_EXPECT_HEAD,Beklenen · geçmiş {n} kampanyaya göre,Expected · based on {n} past campaigns
+MKT_EXPECT_HEAD_ONE,Beklenen · geçmiş {n} kampanyaya göre,Expected · based on {n} past campaign
+MKT_EXPECT_FIRST,Beklenen · ilk kampanya,Expected · first campaign
+MKT_EXPECT_NET,"Net, {span}","Net, {span}"
+MKT_RANGE,{low} ile {high},{low} to {high}
+MKT_JOIN_NONE,{cat}: mağazaların hiçbiri katılmaz,{cat}: no store joins
+MKT_JOIN_FEW,{cat}: mağazaların azı katılır,{cat}: a few stores join
+MKT_JOIN_HALF,{cat}: mağazaların yaklaşık yarısı katılır,{cat}: about half the stores join
+MKT_JOIN_MOST,{cat}: mağazaların çoğu katılır,{cat}: most stores join
+MKT_JOIN_ALL,{cat}: mağazaların hepsi katılır,{cat}: every store joins
+MKT_JOIN_LOSS,Katılan mağazalar zarar eder,The stores that join lose money
+MKT_EXPECT_LOAD,Yük: {name} {from} → {to},Load: {name} {from} → {to}
+MKT_CAMPAIGN_START,Kampanyayı başlat,Start the campaign
+MKT_CAMPAIGN_PREP_STARTS,Hazırlık başlangıcı: {date},Preparation starts {date}
+MKT_CAMPAIGN_LEFT,{n} hafta kaldı,{n} weeks left
+MKT_CAMPAIGN_LEFT_ONE,{n} hafta kaldı,{n} week left
+MKT_CAMPAIGN_CANCEL,Kampanyayı iptal et,Cancel campaign
+MKT_CAMPAIGN_CANCEL_TIP,Hazırlıkta harcanan emek geri gelmez.,The preparation work already spent is not given back.
+MKT_SET_RUNNER,Yürüten,Runner
 MAIL_SENDER_MARKETING,Pazarlama,Marketing
 SECTOR_CONSTRUCTION,İnşaat,Construction
 SECTOR_MANUFACTURING,Üretim,Manufacturing

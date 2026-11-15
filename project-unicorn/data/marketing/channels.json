@@ -22,7 +22,7 @@
 		"weeks_kept": 12
 	},
 	"campaigns": {
-		"_note": "[WORKING] PRD_PAZARLAMA §5 K1, K4, K5. Pencereler perakende kalıbıdır (2012 e-ticaret kaynağı yok, K4); bayramlar yılın takvimiyle. depth yüzde; X Al Y Öde'nin oranı derinliğe çevrilir (3 al 2 öde %33, 2 al 1 öde %50).",
+		"_note": "[WORKING] PRD_PAZARLAMA §5 K1, K4, K5. Pencereler perakende kalıbıdır (2012 e-ticaret kaynağı yok, K4); bayramlar yılın takvimiyle. depth yüzde; X Al Y Öde'nin oranı derinliğe çevrilir (3 al 2 öde %33, 2 al 1 öde %50). expect_spread Beklenen kartının aralığıdır (K2): geçmiş n kampanyayla uçlar değerin expect_spread / sqrt(1 + n) katı kadar iki yanındadır.",
 		"templates": {
 			"first_order": {"payer": "company", "windowed": false, "depth": [5, 50, 15], "weeks": [1, 4, 2]},
 			"discount_days": {"payer": "company", "windowed": true, "depth": [5, 50, 10], "shipping": ["rule", "free"]},
@@ -47,7 +47,8 @@
 		"now_participation": 0.5,
 		"prep_load_pct": 40,
 		"run_load_pct": 10,
-		"horizon": 12
+		"horizon": 12,
+		"expect_spread": 0.4
 	},
 	"erp": {
 		"leads_cap_per_week": 14,
