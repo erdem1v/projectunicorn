@@ -94,6 +94,16 @@
     }
   },
   "income": {"window_weeks": 4, "month_weeks": 4.33},
+  "campaign": {
+    "_note": "[WORKING] Kampanyanın etkisi (PRD_PAZARYERI §3.12, PRD_PAZARLAMA §5). store_elasticity: mağazalar arası elastikiyet, indirim yapan mağazanın yapmayana karşı hacmi (1 − derinlik)^−e; keep_spread: mağazaların kalanı kategorinin kalanının ± bu payına yayılır; loss_below: katılanların kazancı kampanyasız haftanın bu oranının altına inerse zarar satırı; attention: kampanyanın kendi ziyaretçisi, organik ziyaretin payı; dip: kampanyadan sonra sepet adımının öne çekilen talep kadar düşüşü; prep_drop: hazırlık eksikken sipariş dalgasının teslim edilemeyen payı; coupon_checkout: kuponun ödeme adımına etkisi, kupon yettiği kadar.",
+    "store_elasticity": 6.0,
+    "keep_spread": 0.5,
+    "loss_below": 0.8,
+    "attention": {"first_order": 0.2, "discount_days": 0.6, "buy_x_pay_y": 0.3, "coupon": 0.3},
+    "dip": 0.3,
+    "prep_drop": 0.25,
+    "coupon_checkout": 0.1
+  },
   "preview": {"weeks": 4},
   "topics": {
     "window_weeks": 4,

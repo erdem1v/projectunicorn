@@ -21,6 +21,34 @@
 		"paid": ["search_ads", "social_ads", "display_ads", "price_compare", "affiliate", "influencer"],
 		"weeks_kept": 12
 	},
+	"campaigns": {
+		"_note": "[WORKING] PRD_PAZARLAMA §5 K1, K4, K5. Pencereler perakende kalıbıdır (2012 e-ticaret kaynağı yok, K4); bayramlar yılın takvimiyle. depth yüzde; X Al Y Öde'nin oranı derinliğe çevrilir (3 al 2 öde %33, 2 al 1 öde %50).",
+		"templates": {
+			"first_order": {"payer": "company", "windowed": false, "depth": [5, 50, 15], "weeks": [1, 4, 2]},
+			"discount_days": {"payer": "company", "windowed": true, "depth": [5, 50, 10], "shipping": ["rule", "free"]},
+			"buy_x_pay_y": {"payer": "half", "windowed": true, "ratio": {"3_2": 33, "2_1": 50}},
+			"coupon": {"payer": "company", "windowed": false, "amount": [5, 50, 10], "count": [100, 5000, 1000], "weeks": 2}
+		},
+		"payers": {"stores": 0.0, "half": 0.5, "company": 1.0},
+		"windows": [
+			{"id": "jan_sale", "start": [1, 8], "weeks": 3, "size": "big"},
+			{"id": "valentines", "event": [2, 14], "weeks": 1, "size": "small"},
+			{"id": "mothers_day", "event": "may_second_sunday", "weeks": 1, "size": "small"},
+			{"id": "summer_sale", "start": [7, 15], "weeks": 3, "size": "big"},
+			{"id": "ramazan", "event": "ramazan", "weeks": 1, "size": "small"},
+			{"id": "back_to_school", "start": [9, 1], "weeks": 2, "size": "small"},
+			{"id": "kurban", "event": "kurban", "weeks": 1, "size": "small"},
+			{"id": "new_year", "start": [12, 17], "weeks": 2, "size": "big"}
+		],
+		"bayram": {"ramazan": {"2012": [8, 19], "2013": [8, 8], "2014": [7, 28], "2015": [7, 17]},
+			"kurban": {"2012": [10, 25], "2013": [10, 15], "2014": [10, 4], "2015": [9, 24]}},
+		"prep_weeks": {"big": 6, "small": 3, "now": 1},
+		"dip_weeks": {"big": 2, "small": 1, "now": 1},
+		"now_participation": 0.5,
+		"prep_load_pct": 40,
+		"run_load_pct": 10,
+		"horizon": 12
+	},
 	"erp": {
 		"leads_cap_per_week": 14,
 		"mrr_window_weeks": 26,

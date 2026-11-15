@@ -7,7 +7,7 @@ extends RefCounted
 # kaydına ve Finans'ın `pazaryeri` giderine yansıtır. Durum yalnız yazan seam'lerde ve kapanışta doğar; okuyanlar boş durumu
 # saklamadan modelin ilk durumuyla okur, böylece pazaryeri koşusu olmayan oyun sözlüğü hiç doldurmaz.
 
-## Pazarlama's week, which the close reads (ORTAK_ARAYUZLER): its visits by category and source, E-posta's lift.
+## Pazarlama's week, which the close reads (ORTAK_ARAYUZLER): its visits by category and source, E-posta's lift, the campaign.
 const MarketingSystem := preload("res://scripts/systems/marketing_system.gd")
 const TYPE_ID := "marketplace"
 const STORES_ID := "co_mp_stores"
@@ -63,7 +63,8 @@ static func world() -> Dictionary:
 			stars[person] = 1 if c.category == "founder" else int(HRConstants.stars_for(HRSystem.skill(c, HRConstants.AREA_SALES)))
 	return {"week": GameState.day, "published": ProductState.is_live(), "tiers": tiers, "bugs": bugs, "stars": stars,
 		"unanswered": SupportSystem.unanswered_share(), "planned": _planned(),
-		"channel": MarketingSystem.market_visits(), "return_lift": MarketingSystem.return_lift()}
+		"channel": MarketingSystem.market_visits(), "return_lift": MarketingSystem.return_lift(),
+		"campaign": MarketingSystem.active_campaign()}
 
 
 # --- Yazan seam'ler -----------------------------------------------------------------------------

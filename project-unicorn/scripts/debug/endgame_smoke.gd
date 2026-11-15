@@ -143,6 +143,9 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"marketing_market_content_builds_and_fades": fail = _case_marketing_market_content_builds_and_fades()
 		"marketing_market_email_lifts_return": fail = _case_marketing_market_email_lifts_return()
 		"marketing_market_quality_weighs_visits": fail = _case_marketing_market_quality_weighs_visits()
+		"marketing_campaign_lifecycle": fail = _case_marketing_campaign_lifecycle()
+		"marketplace_campaign_lifts_close": fail = _case_marketplace_campaign_lifts_close()
+		"marketplace_campaign_store_loss": fail = _case_marketplace_campaign_store_loss()
 		"investor_strain_fades_from_the_room": fail = _case_investor_strain_fades_from_the_room()
 		# --- İterasyon döngüsü (player-gated restore) + ekip kalite tavanı ---
 		"runway_net_status":    fail = _case_runway_net_status()
@@ -3603,6 +3606,153 @@ static func _case_marketing_market_quality_weighs_visits() -> String:
 			or float(channel["display_ads:fashion"]) >= float(channel["search_ads:fashion"]):
 		return "display: %s clicks, %s to the close; search: %s clicks, %s to the close (want more clicks, fewer buyers)" \
 			% [clicks[1], channel["display_ads:fashion"], clicks[0], channel["search_ads:fashion"]]
+	return ""
+
+
+## Kampanya (PRD_PAZARLAMA §5 K4, K5): yayındaki pazaryerinde İndirim günleri yaklaşan ilk takvim penceresine kurulur; pencereye
+## kadar bekler, son hazırlık haftalarında hazırlık her hafta bir ilerler ve yürütenin yükünü artırır (öncesinde artırmaz);
+## başlangıç tikinde kampanya sürer ve Kargo: Bedava kargo kuralını ezer; haftaları
+## bitince çukur başlar ve ezme kalkar; çukur bitince kampanya Geçmiş'e girer. Kampanya varken ikincisi kurulmaz; hazırlıktaki kampanya
+## iptal edilir, süren edilmez.
+##
+## FALSİFİKASYON: `_tick_campaign`te hazırlığı sayma → hazırlık satırı FAIL; `_overrides`'tan evre koşulunu sil → çukur satırı FAIL;
+## `load_pct`'tan kampanyanın payını sil → yük satırı FAIL.
+static func _case_marketing_campaign_lifecycle() -> String:
+	_seed_marketplace_world()
+	var founder: String = CharacterRegistry.get_founder().id
+	var ahead: Array = MarketingSystem.windows_ahead()
+	if ahead.size() < 2 or ahead[0].id != "now":
+		return "windows ahead: %s" % str(ahead)
+	var w: Dictionary = ahead[1]
+	var load_before: int = MarketingSystem.load_pct(founder)
+	if not MarketingSystem.start_campaign("discount_days", String(w.id), {"depth": 20, "shipping": "free"}, "half", founder):
+		return "İndirim günleri did not start in %s" % w.id
+	if MarketingSystem.start_campaign("coupon", "now", {"amount": 10, "count": 100}, "company", founder):
+		return "a second campaign started beside the first"
+	var total: int = int(MarketingSystem.active_campaign().prep.total)
+	if total != int(MarketingSystem.cfg("campaigns.prep_weeks.%s" % w.size)):
+		return "preparation of %d weeks, want the %s window's" % [total, w.size]
+	if int(w.start) - total > GameState.day and MarketingSystem.load_pct(founder) != load_before:
+		return "the campaign loaded its runner before its preparation weeks"
+	while GameState.day < int(w.start) - 1:
+		GameState.day += 1
+		MarketingSystem.daily_tick()
+	if MarketingSystem.load_pct(founder) <= load_before:
+		return "the preparation added no load (%d → %d)" % [load_before, MarketingSystem.load_pct(founder)]
+	var c: Dictionary = MarketingSystem.active_campaign()
+	if c.stage != "prep" or int(c.prep.done) != total or not (c.overrides as Dictionary).is_empty():
+		return "the day before its start: %s (want prep %d/%d, no override)" % [str(c), total, total]
+	GameState.day += 1
+	MarketingSystem.daily_tick()
+	c = MarketingSystem.active_campaign()
+	if c.stage != "run" or c.overrides != {"shipping": "free"} or MarketplaceSystem.policy_value("shipping") != "free":
+		return "on its start tick: %s, shipping %s" % [str(c), MarketplaceSystem.policy_value("shipping")]
+	if MarketingSystem.cancel_campaign():
+		return "a running campaign was called off"
+	for i in int(w.weeks):
+		GameState.day += 1
+		MarketingSystem.daily_tick()
+	c = MarketingSystem.active_campaign()
+	if c.stage != "after" or not (c.overrides as Dictionary).is_empty():
+		return "after its %d weeks: %s (want the dip, no override)" % [w.weeks, str(c)]
+	for i in int(c.dip_left):
+		GameState.day += 1
+		MarketingSystem.daily_tick()
+	var history: Array = GameState.marketing.get("history", [])
+	if not MarketingSystem.campaign().is_empty() or history.size() != 1 or history[0].kind != "discount_days":
+		return "after the dip: campaign %s, history %s" % [str(MarketingSystem.campaign()), str(history)]
+	if not MarketingSystem.start_campaign("coupon", "now", {"amount": 10, "count": 100}, "company", founder) \
+			or not MarketingSystem.cancel_campaign() or not MarketingSystem.campaign().is_empty():
+		return "a coupon in preparation was not called off"
+	return ""
+
+
+## Kampanya kapanışta (PRD_PAZARYERI §3.12): Moda'da süren İndirim günleri (%20, şirket karşılar) sepet adımını katılan payın fiyat düşüşü
+## kadar elastikiyetle artırır, kendi ziyaretçisini getirir ve onların yeni kullanıcısını `campaign:discount_days`'e yazar; şirketin
+## payını teslim edilen sepetten öder; uyguladığı çarpanı haftanın kaydına yazar ve `step_reach` onu okur. Hazırlığı eksik kampanya
+## teslimi düşürür; çukur sepeti düşürür; önizleme kampanyayı koşmaz.
+##
+## FALSİFİKASYON: `step_factors`'ta kampanya çarpanını uygulama → sepet satırı FAIL; `_close_category`'de `covered`'ı netten düşme →
+## net satırı FAIL; `funnel`'dan `campaign` anahtarını çıkar → kaynak satırı FAIL; `project()`'te kampanyayı boşaltma → önizleme
+## satırı FAIL.
+static func _case_marketplace_campaign_lifts_close() -> String:
+	_seed_marketplace_world()
+	var world: Dictionary = MarketplaceSystem.world()
+	var camp := {"kind": "discount_days", "stage": "run", "weeks_left": 2, "weeks": 2, "prep": {"done": 3, "total": 3},
+		"cats": ["fashion"], "depth": 0.2, "company_share": 1.0, "participation_mult": 1.0, "settings": {"shipping": "rule"},
+		"overrides": {}}
+	var on: Dictionary = world.merged({"campaign": camp}, true)
+	var base: Dictionary = GameState.marketplace.duplicate(true)
+	var joined: float = MarketplaceModel.participation(base, on, "fashion", camp)
+	var plain: Dictionary = base.duplicate(true)
+	MarketplaceModel.close_week(plain, world)
+	var ran: Dictionary = base.duplicate(true)
+	MarketplaceModel.close_week(ran, on)
+	var wk: Dictionary = ran.cats.fashion.week
+	var want_cart: float = pow(1.0 - 0.2 * joined, -float(MarketplaceModel.cfg("commission.elasticity")))
+	if joined <= 0.0 or not is_equal_approx(float(wk.get("lift", {}).get("cart", 0.0)), want_cart) or wk.cart <= plain.cats.fashion.week.cart:
+		return "joined %s, cart lift %s (want %s), carts %s vs %s" % [joined, wk.get("lift"), want_cart, wk.cart, plain.cats.fashion.week.cart]
+	var basket: float = float(MarketplaceModel.cat_def("fashion").basket)
+	var paid: float = wk.delivered * basket * 0.2 * joined
+	if not is_equal_approx(float(wk.covered), paid) or paid <= 0.0:
+		return "the company paid %s, want %s" % [wk.covered, paid]
+	if base.cats.fashion.terms.is_empty() and not is_equal_approx(float(wk.net),
+			(wk.delivered - wk.returns) * basket * float(base.cats.fashion.commission) / 100.0 - paid):
+		return "the week's net %s is not its commission less the %s the company covered" % [wk.net, paid]
+	if float(ran.sources.get("campaign:discount_days", [0.0])[0]) <= 0.0 or float(wk.campaign) <= 0.0 \
+			or float(MarketplaceModel.funnel(ran).campaign) != float(wk.campaign):
+		return "the campaign's visitors brought no new user (%s)" % str(ran.sources.get("campaign:discount_days"))
+	var reach: float = float(MarketplaceModel.cfg("steps.reach.cart"))
+	if not is_equal_approx(MarketplaceModel.step_reach(ran, "fashion", "cart"), reach * want_cart) \
+			or not is_equal_approx(MarketplaceModel.step_reach(plain, "fashion", "cart"), reach):
+		return "step_reach %s / %s, want %s / %s" % [MarketplaceModel.step_reach(ran, "fashion", "cart"),
+			MarketplaceModel.step_reach(plain, "fashion", "cart"), reach * want_cart, reach]
+	var short: Dictionary = camp.merged({"prep": {"done": 1, "total": 3}}, true)
+	if float(MarketplaceModel.campaign_lift(base, world.merged({"campaign": short}, true), "fashion").get("delivered", 1.0)) >= 1.0:
+		return "an unfinished preparation kept every delivery"
+	var dip: Dictionary = MarketplaceModel.campaign_lift(base, world.merged({"campaign": camp.merged({"stage": "after"}, true)}, true), "fashion")
+	if float(dip.get("cart", 1.0)) >= 1.0:
+		return "the weeks after the run did not dip: %s" % str(dip)
+	if JSON.stringify(MarketplaceModel.project(base, on)) != JSON.stringify(MarketplaceModel.project(base, world)):
+		return "the preview ran the campaign"
+	return ""
+
+
+## Katılım ve mağaza zararı (yardımcı yönetmen, 15 Kasım; PAZARYERI'nin modeli): mağaza, katılmayan rakipten kapacağı hacim indirimin
+## taşıdığı payını karşılıyorsa katılır. Tohum dünyada Moda'nın kalanı ≈ 0,104: %10 yarı yarıya kampanyaya mağazaların ≈ 0,47'si
+## katılır (elle: e = 0,9^−6 = 1,882; eşik 0,05 × e ÷ (e − 1) = 0,1067; kalanlar 0,052 ile 0,156 arası; (0,156 − 0,1067) ÷ 0,104);
+## şirket tamamını karşılarsa hepsi katılır; mağazalar %50'yi tek başına taşırsa hiçbiri. Zarar eşiği vakada 1'e çekilir: yarı
+## yarıya katılanların kazancı ≈ 0,9 → son haftada "İndirim günlerinde zarar"; şirket karşılayınca kazanç ≈ 1,17 → satır yok;
+## katılan yoksa satır yok.
+##
+## FALSİFİKASYON: `_close_category`'de `joined > 0.0` koşulunu sil → katılımsız satırı FAIL; `_joining_keep`'te `e ÷ (e − 1)`'i
+## sil → katılım satırı FAIL.
+static func _case_marketplace_campaign_store_loss() -> String:
+	_seed_marketplace_world()
+	var world: Dictionary = MarketplaceSystem.world()
+	var last := {"kind": "discount_days", "stage": "run", "weeks_left": 1, "weeks": 2, "prep": {"done": 3, "total": 3},
+		"cats": ["fashion"], "depth": 0.1, "company_share": 0.5, "participation_mult": 1.0, "settings": {"shipping": "rule"},
+		"overrides": {}}
+	var rows := func(s: Dictionary) -> Array:
+		return (s.ledger.stores as Array).filter(func(r: Dictionary) -> bool: return r.key == "sale_loss")
+	# [campaign, sale_loss rows, joining share]
+	var cases := [[last, 1, 0.474], [last.merged({"company_share": 1.0}, true), 0, 1.0],
+		[last.merged({"depth": 0.5, "company_share": 0.0}, true), 0, 0.0]]
+	var threshold: float = MarketplaceModel._c.campaign.loss_below
+	MarketplaceModel._c.campaign.loss_below = 1.0
+	for pair: Array in cases:
+		var s: Dictionary = GameState.marketplace.duplicate(true)
+		var on: Dictionary = world.merged({"campaign": pair[0]}, true)
+		var joined: float = MarketplaceModel.participation(s, on, "fashion", pair[0])
+		if absf(joined - float(pair[2])) > 0.02:
+			MarketplaceModel._c.campaign.loss_below = threshold
+			return "depth %s, company %s: joining share %s (want %s)" % [pair[0].depth, pair[0].company_share, joined, pair[2]]
+		MarketplaceModel.close_week(s, on)
+		if rows.call(s).size() != int(pair[1]):
+			MarketplaceModel._c.campaign.loss_below = threshold
+			return "depth %s, company %s, joined %s: %d sale_loss rows (want %d)" % [pair[0].depth, pair[0].company_share, joined,
+				rows.call(s).size(), pair[1]]
+	MarketplaceModel._c.campaign.loss_below = threshold
 	return ""
 
 

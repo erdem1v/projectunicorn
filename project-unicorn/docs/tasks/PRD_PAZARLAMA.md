@@ -286,9 +286,12 @@ Görsel kabul arayüze dokunan commit'lerde (4–11); 2 ve 3 mantıktır (§11 m
    çeki satar, uzman kullanıcı bulur. Demet satışçı alırsa her hafta mağaza kazanır, kullanıcı organik büyür; uzman alırsa kullanıcı
    hızlı gelir, mağaza yavaş. Bu seçim kalsın mı?
 2. **Kampanyada indirimi kim karşılar seçimi oyuncuda kalsın mı?** Önerimiz: şablonun varsayılanıyla gelir (İlk siparişe özel: Şirket;
-   İndirim günleri: Yarı yarıya; X Al Y Öde: Mağazalar), oyuncu değiştirebilir. Demet Ocak sezon sonunda %20'nin yarısını karşılarsa
-   mağazaların çoğu katılır ama o haftanın geliri büyümez; hiç karşılamazsa modada mağazaların yarısı katılır, elektronikte neredeyse
-   hiçbiri.
+   İndirim günleri: Şirket, %10; X Al Y Öde: Yarı yarıya), oyuncu değiştirebilir. Mağaza, katılmayan rakibinden kapacağı satış
+   indirimin kendi taşıdığı payını karşılıyorsa katılır; kalanı geniş mağaza önce katılır. Demet Ocak sezon sonunda %10'luk indirimin
+   hepsini karşılarsa Moda'da bütün mağazalar katılır ve şirket her siparişin indirimini öder; yarısını karşılarsa mağazaların
+   yaklaşık yarısı katılır, artış küçülür, bedel yarıya iner; hiç karşılamazsa Moda'da da Elektronik'te de mağaza katılmaz, kampanya
+   ziyaret getirir ama satış artmaz. %20'de yarı yarıya Moda'da beşte bir katılır, Elektronik'te hiçbiri. (Yardımcı yönetmen, 15
+   Kasım: katılım mağazanın kendi kazancından; şablon varsayılanları buna göre; Erdem'in onayı bekleniyor.)
 3. **Derinlik listesinden (§14) hangileri demoya?** Önerimiz: kampanya haftasının trafiği ve sunucu, indirimde fiyat şişirme kuralı, B2B
    vaka çalışması. Üçü de var olan sistemlere bağlanır.
 4. **Pazarlamacının yıldızı neyi ölçsün?** Bugün altı beceri var (Ürün, Tasarım, Yazılım, Test, Satış, Müşteri İlişkileri) ve kural

@@ -92,9 +92,9 @@ func _world(week: int) -> Dictionary:
 	if week >= 11:
 		world.channel.electronics = {"ads": 800.0}
 	if week == 14 or week == 15:
-		world.overrides = {"shipping": "free"}
-		world.channel.fashion.sale_days = 5000.0
-		world.campaign_discount = {"fashion": 150.0}
+		world.campaign = {"kind": "discount_days", "stage": "run", "weeks_left": 15 - week + 1, "weeks": 2,
+			"prep": {"done": 6, "total": 6}, "cats": ["fashion"], "depth": 0.2, "company_share": 0.5,
+			"participation_mult": 1.0, "settings": {"shipping": "free"}, "overrides": {"shipping": "free"}}
 	return world
 
 
@@ -269,7 +269,7 @@ func _check_campaign_override_expires() -> Array:
 	var world := _live_world(10)
 	MarketplaceModel.set_policy(state, world, "shipping", "big_basket")
 	var stored := MarketplaceModel.store_keep(state, world, "fashion", 10)
-	var campaign := world.merged({"overrides": {"shipping": "free"}}, true)
+	var campaign := world.merged({"campaign": {"overrides": {"shipping": "free"}}}, true)
 	var during := MarketplaceModel.policy_value(state, campaign, "shipping")
 	var keep_during := MarketplaceModel.store_keep(state, campaign, "fashion", 10)
 	var mult_during := MarketplaceModel.ship_mult(state, campaign, "fashion")
@@ -321,7 +321,7 @@ func _check_premium_closed_no_perk_cost() -> Array:
 func _check_campaign_free_shipping_single_write() -> Array:
 	var world := _live_world().merged({"tiers": {"listing": 1, "storefront": 1, "checkout": 1, "orders": 1, "integrations": 1,
 		"membership": 1}}, true)
-	var campaign := world.merged({"overrides": {"shipping": "free"}}, true)
+	var campaign := world.merged({"campaign": {"overrides": {"shipping": "free"}}}, true)
 	var fee: float = MarketplaceModel._c.rules.shipping.fee
 	var freq: float = MarketplaceModel._c.visits.member_freq
 	var big_share: float = MarketplaceModel.cat_def("fashion").big_basket_share
@@ -871,7 +871,9 @@ func _check_assignment_waits_a_close() -> Array:
 ## toplanır, önizleme bekleyeni görmez. Elle: Moda sepeti 38, komisyonu %10; Elektronik sepeti 95, komisyonu %6.
 func _check_waive_zeroes_one_close() -> Array:
 	var world := _live_world()
-	var discount := world.merged({"campaign_discount": {"fashion": 20.0}}, true)
+	var discount := world.merged({"campaign": {"kind": "coupon", "stage": "run", "weeks_left": 1, "weeks": 1, "prep": {"done": 1, "total": 1},
+		"cats": ["fashion"], "depth": 0.0, "company_share": 1.0, "participation_mult": 1.0, "settings": {"amount": 10, "count": 2},
+		"overrides": {}}}, true)
 	var start := _store_state(["fashion", "electronics"], 3000.0)
 	var normal := func(s: Dictionary) -> float:
 		var f: Dictionary = s.cats.fashion.week
@@ -946,7 +948,9 @@ func _check_outage_row_and_cost() -> Array:
 	var cost_ok: bool = _near(first_revenue, plain_net - 50.0) and split_kept and first_revenue < plain_net
 	var preview_blind: bool = pending.outage.cost == 50.0 and _equal(MarketplaceModel.project(pending, world), MarketplaceModel.project(start, world))
 	# Komisyonsuz hafta ile kesinti aynı kapanışta: bedel düşmez (komisyon zaten 0), satır yazılır, izleyen kapanış normal.
-	var covered := world.merged({"campaign_discount": {"fashion": 20.0}}, true)
+	var covered := world.merged({"campaign": {"kind": "coupon", "stage": "run", "weeks_left": 1, "weeks": 1, "prep": {"done": 1, "total": 1},
+		"cats": ["fashion"], "depth": 0.0, "company_share": 1.0, "participation_mult": 1.0, "settings": {"amount": 10, "count": 2},
+		"overrides": {}}}, true)
 	var both := start.duplicate(true)
 	MarketplaceModel.waive_commission(both, 1)
 	MarketplaceModel.note_outage(both, 3.0, 40.0)
@@ -1059,11 +1063,11 @@ func _check_funnel_sums_categories() -> Array:
 	var total := MarketplaceModel.funnel(state)
 	var fashion: Dictionary = state.cats.fashion.week
 	var electronics: Dictionary = state.cats.electronics.week
-	var keys := ["visits", "organic", "channel", "returning", "cart", "checkout", "order", "delivered"]
+	var keys := ["visits", "organic", "channel", "campaign", "returning", "cart", "checkout", "order", "delivered"]
 	var summed := total.size() == keys.size()
 	for key in keys:
-		summed = summed and _near(total[key], fashion[key] + electronics[key])
-	var parts: float = total.organic + total.channel + total.returning
+		summed = summed and _near(total[key], fashion.get(key, 0.0) + electronics.get(key, 0.0))
+	var parts: float = total.organic + total.channel + total.campaign + total.returning
 	var waiting := MarketplaceModel.new_state()
 	MarketplaceModel.open_category(waiting, _live_world(), "fashion")
 	var nothing_open := MarketplaceModel.funnel(MarketplaceModel.new_state())

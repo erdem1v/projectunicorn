@@ -94,13 +94,17 @@ static func can_run(char_id: String) -> bool:
 	return c != null and (c.category == "founder" or c.assigned_job_ids.has(HRConstants.JOB_MARKETING))
 
 
-## The runner's week, in percent: each row they run costs its kind's load_pct of a full week; the founder has only
-## founder_share_pct of a week for Marketing, so one paid row is a full founder load.
+## The runner's week, in percent: each row they run costs its kind's load_pct of a full week, a campaign in preparation
+## prep_load_pct and a running one run_load_pct (E3); the founder has only founder_share_pct of a week for Marketing, so
+## one paid row is a full founder load.
 static func load_pct(char_id: String) -> int:
 	var sum: int = 0
 	for r: Dictionary in rows():
 		if r.runner == char_id:
 			sum += int(cfg("kinds.%s.load_pct" % r.kind))
+	var camp: Dictionary = campaign()
+	if not camp.is_empty() and String(camp.runner) == char_id and (camp.stage == "run" or _preparing(camp)):
+		sum += int(cfg("campaigns.prep_load_pct" if camp.stage == "prep" else "campaigns.run_load_pct"))
 	var c: Character = CharacterRegistry.get_character(char_id)
 	var share: int = int(cfg("founder_share_pct")) if c != null and c.category == "founder" else 100
 	return roundi(sum * 100.0 / share)
@@ -430,6 +434,7 @@ static func daily_tick() -> void:
 		_spawn_leads()
 	if SalesSystem.is_marketplace():
 		spend = _tick_market()
+		_tick_campaign()
 	FinanceSystem.set_burn_category("marketing", roundi(spend / float(TimeModel.DAYS_PER_TICK)))
 	var boosts: Dictionary = GameState.marketing.get("boosts", {})
 	for kind: String in boosts.keys():
@@ -609,3 +614,173 @@ static func paid_share() -> float:
 		if (cfg("market.paid") as Array).has(key.get_slice(":", 0)):
 			paid += n
 	return paid / total if total > 0.0 else -1.0
+
+
+# --- Kampanyalar -------------------------------------------------------------------------------------
+
+## The campaign in preparation, running or in its dip; {} when there is none. One at a time.
+static func campaign() -> Dictionary:
+	return GameState.marketing.get("campaign", {})
+
+
+## What Pazaryeri's close reads of the campaign (its world key `campaign`): kind, stage, weeks left and in all, the preparation's
+## done and total weeks, categories, depth, the company's share, the participation multiplier, the dip's weeks, the settings
+## and the rule it overrides. {} without a campaign.
+static func active_campaign() -> Dictionary:
+	return {} if campaign().is_empty() else _shape(campaign())
+
+
+## A stored campaign in the shape Pazaryeri's close reads.
+static func _shape(c: Dictionary) -> Dictionary:
+	return {"kind": c.kind, "window": c.window, "stage": c.stage, "weeks_left": int(c.weeks_left), "weeks": int(c.weeks),
+		"prep": c.prep.duplicate(),
+		"cats": (c.cats as Array).duplicate(), "depth": float(c.depth), "company_share": float(cfg("campaigns.payers.%s" % c.payer)),
+		"participation_mult": float(c.participation_mult), "dip_left": int(c.dip_left), "settings": (c.settings as Dictionary).duplicate(),
+		"overrides": _overrides(c)}
+
+
+## The one rule a campaign suspends: İndirim günleri with free shipping, while it runs (ORTAK_ARAYUZLER).
+static func _overrides(c: Dictionary) -> Dictionary:
+	if c.kind == "discount_days" and c.stage == "run" and String(c.settings.get("shipping", "rule")) == "free":
+		return {"shipping": "free"}
+	return {}
+
+
+## The tick whose week holds the calendar day, `back` days earlier: tick N is the run's start Sunday + 7(N − 1) days.
+static func _tick_of(year: int, month: int, day: int, back := 0) -> int:
+	var start: int = int(Time.get_unix_time_from_datetime_dict(GameState.START_DATE))
+	var at: int = int(Time.get_unix_time_from_datetime_dict({"year": year, "month": month, "day": day})) - back * 86400
+	return 1 + floori(float(at - start) / (TimeModel.DAYS_PER_TICK * 86400.0))
+
+
+## A window's first tick in `year`: a sale season from its start day; an event's window ends on the tick that holds the day
+## before it (the shopping comes before the day). -1 when the year has no date for it (a bayram past the table).
+static func _window_start(w: Dictionary, year: int) -> int:
+	if w.has("start"):
+		return _tick_of(year, int(w.start[0]), int(w.start[1]))
+	var md: Array = []
+	if w.event is Array:
+		md = w.event
+	elif w.event == "may_second_sunday":
+		var first: Dictionary = Time.get_datetime_dict_from_unix_time(
+			int(Time.get_unix_time_from_datetime_dict({"year": year, "month": 5, "day": 1})))
+		md = [5, 1 + (7 - int(first.weekday)) % 7 + 7]
+	else:
+		md = (cfg("campaigns.bayram.%s" % w.event) as Dictionary).get(str(year), [])
+	if md.is_empty():
+		return -1
+	return _tick_of(year, int(md[0]), int(md[1]), 1) - int(w.weeks) + 1
+
+
+## The windows a windowed template can still prepare in time, soonest first: [{id, start, weeks, size}], their preparation
+## fitting before their start; "now" (outside the calendar) starts after a week's preparation.
+static func windows_ahead() -> Array:
+	var out: Array = []
+	var year: int = int(GameState.get_date_dict().year)
+	for y in [year, year + 1]:
+		for w: Dictionary in cfg("campaigns.windows"):
+			var start: int = _window_start(w, y)
+			if start > 0 and start - int(cfg("campaigns.prep_weeks.%s" % w.size)) > GameState.day:
+				out.append({"id": w.id, "start": start, "weeks": int(w.weeks), "size": w.size})
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a.start) < int(b.start))
+	out.push_front({"id": "now", "start": GameState.day + 1 + int(cfg("campaigns.prep_weeks.now")), "weeks": 1, "size": "now"})
+	return out
+
+
+## The depth a template's settings come to: İlk siparişe özel and İndirim günleri their percent; X Al Y Öde its ratio's; a
+## coupon none (its money is its amount × the coupons used).
+static func _depth(kind: String, settings: Dictionary) -> float:
+	match kind:
+		"first_order", "discount_days":
+			return float(settings.depth) / 100.0
+		"buy_x_pay_y":
+			return float(cfg("campaigns.templates.buy_x_pay_y.ratio.%s" % settings.ratio)) / 100.0
+	return 0.0
+
+
+## The campaign a template makes in a window (or "now"), with its settings and who covers the discount: what start_campaign
+## stores, before its runner. {} for an unknown template or payer, or a window windows_ahead does not offer. An unwindowed
+## template runs its weeks after a week's preparation, as "now" does.
+static func plan_campaign(kind: String, window_id: String, settings: Dictionary, payer: String) -> Dictionary:
+	if not (cfg("campaigns.templates") as Dictionary).has(kind) or not (cfg("campaigns.payers") as Dictionary).has(payer):
+		return {}
+	var tpl: Dictionary = cfg("campaigns.templates.%s" % kind)
+	var w: Dictionary = {}
+	for cand: Dictionary in windows_ahead():   # soonest first: a window's next occurrence
+		if cand.id == (window_id if bool(tpl.windowed) else "now"):
+			w = cand
+			break
+	if w.is_empty():
+		return {}
+	var weeks: int = int(w.weeks) if bool(tpl.windowed) else int(settings.get("weeks", tpl.get("weeks", 1)))
+	return {"kind": kind, "window": w.id, "stage": "prep", "start": int(w.start), "weeks_left": weeks, "weeks": weeks,
+		"prep": {"done": 0, "total": int(cfg("campaigns.prep_weeks.%s" % w.size))}, "cats": open_categories(),
+		"depth": _depth(kind, settings), "payer": payer, "settings": settings.duplicate(),
+		"participation_mult": float(cfg("campaigns.now_participation")) if w.id == "now" else 1.0,
+		"dip_left": int(cfg("campaigns.dip_weeks.%s" % w.size)), "size": w.size}
+
+
+## Kampanyayı başlat: plan_campaign's campaign, run by `runner_id`. False when a campaign is on already, the marketplace is not
+## live or has no open category, the runner cannot run it (the founder past the share too), or there is no such plan.
+static func start_campaign(kind: String, window_id: String, settings: Dictionary, payer: String, runner_id: String) -> bool:
+	if not campaign().is_empty() or not SalesSystem.is_marketplace() or not ProductState.is_live() \
+			or open_categories().is_empty() or not can_run(runner_id) \
+			or (CharacterRegistry.get_character(runner_id).category == "founder" and load_pct(runner_id) >= 100):
+		return false
+	var plan := plan_campaign(kind, window_id, settings, payer)
+	if plan.is_empty():
+		return false
+	plan.runner = runner_id
+	GameState.marketing["campaign"] = plan
+	return true
+
+
+## The Beklenen card's figures for a plan (PRD_PAZARLAMA §5 K2), prepared in full: Pazaryeri's preview over campaigns.horizon
+## weeks (new users, orders, cost, MRR, net). {} without such a plan.
+static func preview(kind: String, window_id: String, settings: Dictionary, payer: String) -> Dictionary:
+	var plan := plan_campaign(kind, window_id, settings, payer)
+	if plan.is_empty():
+		return {}
+	plan.prep.done = plan.prep.total
+	return MarketplaceModel.preview_campaign(MarketplaceSystem.read_state(), MarketplaceSystem.world(), _shape(plan),
+		int(cfg("campaigns.horizon")))
+
+
+## Whether the campaign is in its preparation weeks: its last prep weeks before the start (before them it only waits).
+static func _preparing(c: Dictionary) -> bool:
+	return c.stage == "prep" and GameState.day >= int(c.start) - int(c.prep.total)
+
+
+## A campaign still in preparation can be called off; one that runs cannot.
+static func cancel_campaign() -> bool:
+	if campaign().is_empty() or campaign().stage != "prep":
+		return false
+	GameState.marketing.erase("campaign")
+	return true
+
+
+## The campaign's week, after the rows': in its preparation weeks preparation counts a week (a runner who left passes the
+## campaign to the founder, as a row does); on its start tick it runs, prepared or not; a run counts down its weeks, then
+## the dip its; after the dip the campaign joins the history.
+static func _tick_campaign() -> void:
+	var c: Dictionary = campaign()
+	if c.is_empty():
+		return
+	if not can_run(String(c.runner)):
+		c.runner = CharacterRegistry.get_founder().id
+	match String(c.stage):
+		"prep":
+			if GameState.day >= int(c.start):
+				c.stage = "run"
+			elif _preparing(c):
+				c.prep.done = mini(int(c.prep.done) + 1, int(c.prep.total))
+		"run":
+			c.weeks_left = int(c.weeks_left) - 1
+			if int(c.weeks_left) <= 0:
+				c.stage = "after"
+		"after":
+			c.dip_left = int(c.dip_left) - 1
+			if int(c.dip_left) <= 0:
+				GameState.marketing.get_or_add("history", []).append({"kind": c.kind, "window": c.window, "start": int(c.start),
+					"weeks": int(c.weeks), "ended": GameState.day, "settings": c.settings.duplicate(), "payer": c.payer})
+				GameState.marketing.erase("campaign")

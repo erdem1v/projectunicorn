@@ -30,9 +30,9 @@ extends RefCounted
 # Rapordan açılan konuda ayrıca `topics[konu].affected` (verilen haftalık etkilenen sipariş).
 #
 # `world`: `week`, `published`, `tiers[modül]` (0 = yok), `bugs[modül]` (açık hata), `stars[kişi]` (işbaşındaki atananın Satış
-# yıldızı; olmayan kazandırmaz), `channel[kategori][kaynak]` (Pazarlama'nın kanal ziyareti), `return_lift`, `overrides[kural]`
-# (kampanyanın ezmesi),
-# `campaign_discount[kategori]` (şirketin karşıladığı haftalık indirim), `campaign_loss` (kampanya bitti, katılan mağaza zarar etti),
+# yıldızı; olmayan kazandırmaz), `channel[kategori][kaynak]` (Pazarlama'nın kanal ziyareti), `return_lift`, `campaign`
+# (Pazarlama'nın `active_campaign()`'i: tür, evre, kalan hafta, hazırlık, kategoriler, derinlik, şirketin payı, katılım çarpanı,
+# ayarlar ve ezdiği kural `overrides`; yoksa boş),
 # `unanswered` (Destek'in cevapsız bildirim payı), `features` (yayındaki ek özellik konularının kimliği: yayında olmayan
 # kullanıcı özelliği bağlı adımı `missing_mult` kadar kısar), `planned` (sprint planındaki konuların kimliği).
 #
@@ -61,8 +61,8 @@ const TABLE_FROM_TIER_1 := ["storefront", "checkout", "orders"]
 const RELATIVE := ["store_earnings"]
 const NO_OUTAGE := {"points": 0.0, "cost": 0.0}
 const WORLD := {
-	"week": 0, "published": false, "tiers": {}, "bugs": {}, "stars": {}, "channel": {}, "return_lift": 0.0, "overrides": {},
-	"campaign_discount": {}, "campaign_loss": false, "unanswered": 0.0, "features": [],
+	"week": 0, "published": false, "tiers": {}, "bugs": {}, "stars": {}, "channel": {}, "return_lift": 0.0, "campaign": {},
+	"unanswered": 0.0, "features": [],
 	"planned": [],
 }
 
@@ -160,7 +160,7 @@ static func _bug_mult(world: Dictionary, modules: Array) -> float:
 
 ## Kampanyanın ezdiği ya da saklı seçim; kampanya kargoyu bedava yapınca `free`.
 static func policy_value(state: Dictionary, world: Dictionary, rule: String) -> String:
-	return _w(world, "overrides").get(rule, state.policy[rule].pick)
+	return (_w(world, "campaign") as Dictionary).get("overrides", {}).get(rule, state.policy[rule].pick)
 
 
 static func policy_open(world: Dictionary, rule: String) -> bool:
@@ -348,6 +348,9 @@ static func step_factors(state: Dictionary, world: Dictionary, cat: String) -> D
 		factors[step] *= _bug_mult(world, STEP_MODULES[step])
 	for step in STEPS:
 		factors[step] *= _feature_mult(world, step)
+	var lift := campaign_lift(state, world, cat)
+	for step in lift:
+		factors[step] *= lift[step]
 	return factors
 
 
@@ -390,8 +393,8 @@ static func gain(state: Dictionary, world: Dictionary, cat: String, change: Dict
 ## Açık kategorilerin geçen haftaki toplamı: ziyaret ve üç kaynağı (`organic`, `channel`, `returning`) ile dört adım; ilk kapanışını
 ## bekleyen kategori 0 katar.
 static func funnel(state: Dictionary) -> Dictionary:
-	var total := {"visits": 0.0, "organic": 0.0, "channel": 0.0, "returning": 0.0, "cart": 0.0, "checkout": 0.0, "order": 0.0,
-		"delivered": 0.0}
+	var total := {"visits": 0.0, "organic": 0.0, "channel": 0.0, "campaign": 0.0, "returning": 0.0, "cart": 0.0, "checkout": 0.0,
+		"order": 0.0, "delivered": 0.0}
 	for id in open_ids(state):
 		for key in total:
 			total[key] += state.cats[id].week.get(key, 0.0)
@@ -532,7 +535,8 @@ static func monthly_cost(state: Dictionary) -> float:
 static func channel_read(state: Dictionary, world: Dictionary, cat: String) -> Dictionary:
 	var d: Dictionary = _cats[cat]
 	var cs: Dictionary = state.cats[cat]
-	var conversion: float = _funnel(1.0, step_factors(state, world, cat)).delivered
+	# Kampanyasız dünyayla: kanal satırının değeri kampanya haftasında şişip çukurda düşmez.
+	var conversion: float = _funnel(1.0, step_factors(state, _quiet(world), cat)).delivered
 	var order_commission: float = (1.0 - return_rate(state, world, cat)) * d.basket * cs.commission / 100.0
 	return {"conversion": conversion,
 		"monthly_commission": d.order_freq * _visits_per_order() * _c.income.month_weeks * conversion * order_commission,
@@ -754,7 +758,7 @@ static func _settle(state: Dictionary, world: Dictionary, totals: Dictionary) ->
 		var late := _late_topic(state, world, side)
 		if late != "":
 			_add(state, side, "late_topic", late, rows.late_topic.points, WHILE)
-	if _w(world, "campaign_loss"):
+	if totals.get("sale_loss", false):
 		_add(state, "stores", "sale_loss", "", rows.sale_loss.points, int(rows.sale_loss.weeks))
 	if state.outage.points > 0.0:
 		_add(state, "users", "outage", "", -state.outage.points, int(rows.outage.weeks))
@@ -955,7 +959,13 @@ static func _close_category(state: Dictionary, world: Dictionary, cat: String, m
 	var perks: Dictionary = state.premium.perks
 	var fee: float = _c.rules.shipping.fee
 	var vis := _visits(state, world, cat)
-	var visits: float = vis.returning + vis.organic + vis.channel
+	var camp := _campaign(world, cat)
+	var running: bool = not camp.is_empty() and camp.stage == "run"
+	var joined: float = participation(state, world, cat, camp) if running else 0.0
+	# Kampanya kendi ziyaretçisini getirir; yenidirler, siparişleri kampanyanın kaynağına yeni kullanıcı yazar.
+	var camp_visits: float = vis.organic * float(_c.campaign.attention[camp.kind]) * joined if running else 0.0
+	var visits: float = vis.returning + vis.organic + vis.channel + camp_visits
+	var lift := campaign_lift(state, world, cat)
 	var n := _funnel(visits, step_factors(state, world, cat))
 	var returns: float = n.delivered * return_rate(state, world, cat)
 	var member_orders: float = n.delivered * member_share
@@ -995,9 +1005,22 @@ static func _close_category(state: Dictionary, world: Dictionary, cat: String, m
 	var terms_cut := 0.0
 	if not cs.terms.is_empty() and cs.stores > 0.0:
 		terms_cut = gross * minf(1.0, _sum(cs.joined.slice(0, int(cs.terms.weeks))) / cs.stores) * (1.0 - cs.terms.share)
-	var net: float = gross - terms_cut - _w(world, "campaign_discount").get(cat, 0.0) - discount
+	var covered: float = campaign_cost(state, world, cat, n.delivered) if running else 0.0
+	var net: float = gross - terms_cut - covered - discount
 	cs.week = {"returning": vis.returning, "organic": vis.organic, "channel": vis.channel, "visits": visits, "cart": n.cart,
 		"checkout": n.checkout, "order": n.order, "delivered": n.delivered, "returns": returns, "net": net}
+	# Kampanyanın haftaya yaptığı: geçen haftayı çizen okuyucular (`step_reach`, `funnel`) ve kampanyanın sonucu için. Kampanya
+	# ziyareti haftanın dördüncü kaynağıdır.
+	if not lift.is_empty():
+		cs.week.lift = lift
+	if running:
+		cs.week.campaign = camp_visits
+		cs.week.covered = covered
+		cs.week.joined = joined
+		var volume: float = visits / (visits - camp_visits) if visits > camp_visits else 1.0
+		if int(camp.weeks_left) <= 1 and camp.kind != "coupon" and joined > 0.0 \
+				and _stores_lost(state, world, cat, camp, joined, lift, volume):
+			totals.sale_loss = true
 	totals.placed += n.order
 	totals.delivered += n.delivered
 	totals.net += net
@@ -1007,6 +1030,9 @@ static func _close_category(state: Dictionary, world: Dictionary, cat: String, m
 		var by_source: Dictionary = _w(world, "channel").get(cat, {})
 		for source in by_source:
 			totals.new[source] = totals.new.get(source, 0.0) + n.delivered * by_source[source] / visits
+		if camp_visits > 0.0:
+			var key: String = "campaign:" + String(camp.kind)
+			totals.new[key] = totals.new.get(key, 0.0) + n.delivered * camp_visits / visits
 
 
 ## Yeni değer başa girer; dizi en çok `size` hafta tutar.
@@ -1024,13 +1050,13 @@ static func _sum(values: Array) -> float:
 
 # --- Önizleme --------------------------------------------------------------------------------
 
-## Durumun kopyasında kapanışı önizleme süresince ileri koşar: Pazarlama'nın değerleri aynı kalır, olay, acil durum, bekleyen kesinti
-## ve komisyonsuz hafta yoktur.
+## Durumun kopyasında kapanışı önizleme süresince ileri koşar: Pazarlama'nın kanalları aynı kalır, kampanya, olay, acil durum, bekleyen
+## kesinti ve komisyonsuz hafta yoktur.
 static func project(state: Dictionary, world: Dictionary) -> Dictionary:
 	var ahead := state.duplicate(true)
 	ahead.waive = 0
 	ahead.outage = NO_OUTAGE.duplicate()
-	var quiet := world.merged({"campaign_loss": false}, true)
+	var quiet := _quiet(world)
 	for i in int(_c.preview.weeks):
 		close_week(ahead, quiet.merged({"week": int(_w(world, "week")) + i}, true))
 	return ahead
@@ -1080,8 +1106,8 @@ static func _preview(state: Dictionary, world: Dictionary, cat: String, apply: C
 	var changed := state.duplicate(true)
 	if not apply.call(changed):
 		return {}
-	var before := metrics(project(state, world), world, cat)
-	var after := metrics(project(changed, world), world, cat)
+	var before := metrics(project(state, world), _quiet(world), cat)
+	var after := metrics(project(changed, world), _quiet(world), cat)
 	var diff := {}
 	for key in before:
 		if key in RELATIVE:
@@ -1109,3 +1135,190 @@ static func preview_premium(state: Dictionary, world: Dictionary, change: Dictio
 	else:
 		apply = func(s: Dictionary) -> bool: return set_trial(s, change.trial)
 	return _preview(state, world, "", apply)
+
+
+# --- Kampanya ----------------------------------------------------------------------------------
+
+## Kampanyasız dünya: önizlemeler ve kanalın okuması kampanyayı koşmaz.
+static func _quiet(world: Dictionary) -> Dictionary:
+	return world.merged({"campaign": {}}, true)
+
+
+## Kapanışın kategoride oynadığı kampanya: Pazarlama'nınki (`world.campaign`); yoksa ya da kategori kampanyada değilse boş.
+static func _campaign(world: Dictionary, cat: String) -> Dictionary:
+	var c: Dictionary = _w(world, "campaign")
+	return c if (c.get("cats", []) as Array).has(cat) else {}
+
+
+## Kategorinin yeni ziyaretçi payı: organik ve kanal ziyaretinin bütün ziyarete oranı. İlk siparişe özel'in artışı da bedeli de
+## bu paya düşer.
+static func _new_share(state: Dictionary, world: Dictionary, cat: String) -> float:
+	var v := _visits(state, world, cat)
+	var all: float = v.returning + v.organic + v.channel
+	return (v.organic + v.channel) / all if all > 0.0 else 1.0
+
+
+## Kategorinin, kampanyanın açık kategorileri arasındaki geçen haftaki ziyaret payı (ziyaret yoksa eşit): kuponun adedi buna göre
+## yayılır.
+static func _campaign_share(state: Dictionary, c: Dictionary, cat: String) -> float:
+	var cats: Array = (c.cats as Array).filter(func(id: String) -> bool: return state.cats[id].open)
+	var total := 0.0
+	for id: String in cats:
+		total += float(state.cats[id].get("week", {}).get("visits", 0.0))
+	return float(state.cats[cat].get("week", {}).get("visits", 0.0)) / total if total > 0.0 else 1.0 / cats.size()
+
+
+## İndirim yapan mağazanın, yapmayan rakibine karşı hacmi: mağazalar arası elastikiyetle `(1 − derinlik)^−e`.
+static func _edge(c: Dictionary) -> float:
+	return pow(1.0 - float(c.depth), -float(_c.campaign.store_elasticity))
+
+
+## Katılan mağazanın en düşük kalanı: indirimin taşıdığı payını, katılmayandan kapılan hacimle (`_edge`) karşılayan mağaza katılır,
+## yani kalanı `taşınan × e ÷ (e − 1)` ve üstü olan.
+static func _joining_keep(c: Dictionary) -> float:
+	var carried: float = float(c.depth) * (1.0 - float(c.company_share))
+	var edge := _edge(c)
+	return 0.0 if carried <= 0.0 else carried * edge / (edge - 1.0)
+
+
+## Kategorinin katılan mağaza payı. Mağazaların kalanı kategorinin kalanının ± `keep_spread` payına düzgün yayılır; payı, kalanı
+## katılma eşiğinin (`_joining_keep`) üstündeki mağazalardır. Şirket indirimin tamamını karşılarsa hepsi; "Hemen" kurulan
+## kampanyaya `participation_mult` kadarı.
+static func participation(state: Dictionary, world: Dictionary, cat: String, c: Dictionary) -> float:
+	var keep: float = store_keep(state, world, cat, state.cats[cat].commission)
+	var spread: float = keep * float(_c.campaign.keep_spread)
+	var joined: float = 1.0
+	if _joining_keep(c) > 0.0:
+		joined = 0.0 if keep <= 0.0 else clampf((keep + spread - _joining_keep(c)) / (2.0 * spread), 0.0, 1.0)
+	return joined * float(c.participation_mult)
+
+
+## Katılan mağazaların kampanya haftasındaki kazancının kampanyasız haftaya oranı: kategorinin büyümesi (`volume`) × katılmayandan
+## kapılan pay `e ÷ (p × e + 1 − p)` × katılanların ortalama kalanından indirimin taşıdıkları payı düşünce kalan oran. Herkes
+## katılınca kapılan pay kalmaz; indirimin hepsini şirket karşılarsa kalan oran 1'dir.
+static func joiner_gain(state: Dictionary, world: Dictionary, cat: String, c: Dictionary, joined: float, volume: float) -> float:
+	var edge := _edge(c)
+	var share: float = edge / (joined * edge + 1.0 - joined)
+	var carried: float = float(c.depth) * (1.0 - float(c.company_share))
+	if carried <= 0.0:
+		return volume * share
+	var keep: float = store_keep(state, world, cat, state.cats[cat].commission)
+	var top: float = keep * (1.0 + float(_c.campaign.keep_spread))
+	var mean: float = (maxf(_joining_keep(c), keep * (1.0 - float(_c.campaign.keep_spread))) + top) / 2.0
+	return volume * share * (mean - carried) / mean
+
+
+## Kampanyanın bu haftaki adım çarpanları. Sürerken katılan payın fiyatı derinlik kadar düşer ve sepet adımı komisyon
+## elastikiyetiyle artar (İlk siparişe özel'de yalnız yeni ziyaretçi payında); kupon bunun yerine ödeme adımını, kupon yettiği
+## kadar, artırır. Hazırlığı eksik kampanyada sipariş dalgasının bir payı teslim edilemez. Çukur haftalarında sepet adımı, sürenin
+## öne çektiği talep kadar düşer. Kampanya hiçbir adıma dokunmuyorsa boş.
+static func campaign_lift(state: Dictionary, world: Dictionary, cat: String) -> Dictionary:
+	var c := _campaign(world, cat)
+	if c.is_empty() or c.kind == "coupon" and c.stage != "run" or c.stage == "prep":
+		return {}
+	var k: Dictionary = _c.campaign
+	var cart: float = pow(1.0 - float(c.depth) * participation(state, world, cat, c), -float(_c.commission.elasticity))
+	if c.kind == "first_order":
+		cart = 1.0 + (cart - 1.0) * _new_share(state, world, cat)
+	if c.stage == "after":
+		return {"cart": 1.0 - k.dip * (cart - 1.0)}
+	var lift := {"cart": cart}
+	if c.kind == "coupon":
+		var last: float = float(state.cats[cat].get("week", {}).get("delivered", 0.0))
+		var reach: float = 1.0 if last <= 0.0 else minf(1.0, float(c.settings.count) / float(c.weeks) * _campaign_share(state, c, cat) / last)
+		lift = {"checkout": 1.0 + k.coupon_checkout * reach}
+	var prep: Dictionary = c.prep
+	if int(prep.done) < int(prep.total):
+		var wave: float = lift.values()[0]
+		lift.delivered = 1.0 - k.prep_drop * (1.0 - float(prep.done) / float(prep.total)) * (wave - 1.0) / wave
+	return lift
+
+
+## Şirketin bu süren haftada kategoride ödediği: kuponun her kullanılanına tutarı (adedi haftalarına ve kampanyanın kategorileri
+## arasında ziyaret payına yayılır, siparişte en çok bir); indirimin şirket payı, katılan mağazaların teslim edilen sepetinde (İlk
+## siparişe özel'de yeni ziyaretçi payında).
+static func campaign_cost(state: Dictionary, world: Dictionary, cat: String, delivered: float) -> float:
+	var c := _campaign(world, cat)
+	if c.kind == "coupon":
+		return minf(float(c.settings.count) / float(c.weeks) * _campaign_share(state, c, cat), delivered) * float(c.settings.amount)
+	var orders: float = delivered * (_new_share(state, world, cat) if c.kind == "first_order" else 1.0)
+	return orders * _cats[cat].basket * float(c.depth) * float(c.company_share) * participation(state, world, cat, c)
+
+
+## Sürenin son haftasında katılan mağazalar zarar etti mi: gerçekleşen kazançları (adım çarpanı ve kampanyanın kendi ziyaretçisiyle
+## büyüme, `volume`) `loss_below`'un altına indiyse.
+static func _stores_lost(state: Dictionary, world: Dictionary, cat: String, c: Dictionary, joined: float, lift: Dictionary,
+		volume: float) -> bool:
+	var times: float = volume
+	for step in lift:
+		times *= lift[step]
+	return joiner_gain(state, world, cat, c, joined, times) < _c.campaign.loss_below
+
+
+## Adımın geçen haftaki kapanışın çizdiği ulaşılabilir oranı: verinin oranı, o kapanış adımı yükselttiyse kampanyanın çarpanıyla
+## (`week.lift`). `""` açık kategorileri adıma girenle ağırlıklı okur.
+static func step_reach(state: Dictionary, cat: String, step: String) -> float:
+	var before := {"cart": "visits", "checkout": "cart", "order": "checkout", "delivered": "order"}
+	var sum := 0.0
+	var weight := 0.0
+	for id: String in (open_ids(state) if cat == "" else [cat]):
+		var week: Dictionary = state.cats[id].get("week", {})
+		var entered: float = float(week.get(before[step], 0.0))
+		sum += entered * maxf(1.0, float((week.get("lift", {}) as Dictionary).get(step, 1.0)))
+		weight += entered
+	return float(_c.steps.reach[step]) * (sum / weight if weight > 0.0 else 1.0)
+
+
+## Pazarlama'nın Beklenen kartının sayıları (PRD_PAZARLAMA §5 K2): kapanış durumun iki kopyasında `horizon` hafta koşar, biri
+## kampanyalı (süresi, sonra çukuru), biri kampanyasız; kampanyanın kattığı: yeni kullanıcı, teslim edilen sipariş, şirketin bedeli
+## (karşıladığı indirim ve ödediği kargo), sondaki aylık komisyon ve net (komisyondan o kargo düşünce). Kategori başına katılan
+## mağaza payı (`joined`) ve katılanların beklenen kazancı (`store_gain`; `loss_below`'un altı zarar satırı demektir). `project()`
+## gibi olay, acil durum, bekleyen kesinti ve komisyonsuz hafta yoktur; Pazarlama'nın kanalları olduğu gibidir.
+static func preview_campaign(state: Dictionary, world: Dictionary, campaign: Dictionary, horizon: int) -> Dictionary:
+	var copies := [state.duplicate(true), state.duplicate(true)]
+	for s: Dictionary in copies:
+		s.waive = 0
+		s.outage = NO_OUTAGE.duplicate()
+	var c := campaign.duplicate(true)
+	c.stage = "run"
+	c.weeks_left = int(c.weeks)
+	var on := world.merged({"campaign": c}, true)
+	var joined := {}
+	var store_gain := {}
+	for cat: String in campaign.cats:
+		if state.cats[cat].open:
+			joined[cat] = participation(state, on, cat, c)
+			var times: float = 1.0
+			var lift := campaign_lift(state, on, cat)
+			for step in lift:
+				times *= lift[step]
+			store_gain[cat] = joiner_gain(state, on, cat, c, joined[cat], times)
+	var sums := [{"users": 0.0, "orders": 0.0, "covered": 0.0, "shipping": 0.0, "commission": 0.0}, {}]
+	sums[1] = sums[0].duplicate()
+	for i in horizon:
+		var week := world.merged({"week": int(_w(world, "week")) + i}, true)
+		for k in 2:
+			var s: Dictionary = copies[k]
+			close_week(s, week.merged({"campaign": c if k == 0 else {}}, true))
+			var sum: Dictionary = sums[k]
+			for source: String in s.sources:
+				sum.users += float((s.sources[source] as Array)[0])
+			for cat: String in open_ids(s):
+				sum.orders += float(s.cats[cat].week.delivered)
+				sum.covered += float(s.cats[cat].week.get("covered", 0.0))
+			sum.shipping += float(s.burn.campaign_shipping)
+			sum.commission += float(s.revenue_weeks[0])
+		if c.is_empty():
+			continue
+		if c.stage == "run":
+			c.weeks_left = int(c.weeks_left) - 1
+			if int(c.weeks_left) <= 0:
+				c.stage = "after"
+		else:
+			c.dip_left = int(c.dip_left) - 1
+			if int(c.dip_left) <= 0:
+				c = {}
+	var gain: Callable = func(key: String) -> float: return float(sums[0][key]) - float(sums[1][key])
+	return {"new_users": gain.call("users"), "orders": gain.call("orders"), "cost": float(sums[0].covered) + gain.call("shipping"),
+		"mrr": float(monthly_revenue(copies[0]).commission) - float(monthly_revenue(copies[1]).commission),
+		"net": gain.call("commission") - gain.call("shipping"), "joined": joined, "store_gain": store_gain}
