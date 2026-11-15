@@ -27,8 +27,6 @@ const ATTENTION_RANK := {"risk": 2, "expansion": 1}
 ## A phase's tag on its account; any other phase reads healthy.
 const PHASE_TAGS := {"risk": ["SALES_CHIP_RISK", &"risk"], "expansion": ["SALES_CHIP_EXPANSION", &"pos"],
 	"onboarding": ["SALES_CHIP_ONBOARDING", &"neutral"]}
-## Under SAT_MID the satisfaction meter reads as a warning [WORKING]; danger is the Risk phase's alone.
-const SAT_MID := 50
 const CLOCK := "res://assets/icons/util/clock.svg"
 const CALENDAR := "res://assets/icons/util/calendar.svg"
 const INFO := "res://assets/icons/util/info.svg"
@@ -589,13 +587,13 @@ func _add_promise(col: VBoxContainer, c: Customer) -> void:
 
 
 ## Memnuniyetin görünen katmanı (tolerans gizli kalır): Risk'te, değeri ne olursa olsun, tehlike renginde;
-## değilse SAT_MID'in altında uyarı. Risk'teki hesapta sağda churn sayacı, kalan haftası dolu kare.
+## değilse SalesConstants.SAT_MID'in altında uyarı. Risk'teki hesapta sağda churn sayacı, kalan haftası dolu kare.
 func _satisfaction_row(c: Customer) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", UiTokens.SPACE_L)
 	row.add_child(UiFactory.make_label(Fmt.upper(tr("SALES_ACCOUNT_SATISFACTION")), &"KeyLabel"))
 	var ink: Color = UiTokens.D_neg() if c.lifecycle_phase == "risk" \
-		else (UiTokens.D_warn() if c.satisfaction < SAT_MID else UiTokens.D_pos())
+		else (UiTokens.D_warn() if c.satisfaction < SalesConstants.SAT_MID else UiTokens.D_pos())
 	var value := UiFactory.make_label(str(c.satisfaction), &"SatValue", ink)
 	value.custom_minimum_size.x = UiTokens.D_W_SAT
 	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT

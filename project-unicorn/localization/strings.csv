@@ -3435,3 +3435,65 @@ MP_USERS_RECORD,{product} kullanıcıları,{product} users
 MP_KPI_USERS,Aktif kullanıcı,Active users
 MP_KPI_STORES,Mağaza,Stores
 MP_KPI_ORDERS,Haftalık sipariş,Weekly orders
+MP_TAB_OVERVIEW,Genel,Overview
+MP_CONVERSION,Dönüşüm,Conversion
+MP_CONVERSION_LINE,Geçen hafta ziyaretin {rate} kadarı sipariş verdi,Last week {rate} of visits placed an order
+MP_COL_LAST_WEEK,Geçen hafta,Last week
+MP_COL_FROM_PREV,Önceki adımdan geçen,Passed from the previous step
+MP_REACHABLE,Ulaşılabilir,Reachable
+MP_STEP_VISITS,Ziyaret,Visits
+MP_VISITS_ORGANIC,Organik,Organic
+MP_VISITS_CHANNEL,Kanal,Channels
+MP_STEP_CART,Sepete ekledi,Added to cart
+MP_STEP_CHECKOUT,Ödemeye geçti,Reached checkout
+MP_STEP_ORDER,Sipariş verdi,Placed an order
+MP_STEP_DELIVERED,Teslim edildi,Delivered
+MP_RETURNING,Geri dönen kullanıcı,Returning users
+MP_RETURNS,İade,Returns
+MP_TIP_CART,Sepete ekledi · ziyaretin {rate} kadarı · en çok {cap},Added to cart · {rate} of visits · at most {cap}
+MP_TIP_CHECKOUT,Ödemeye geçti · sepete ekleyenin {rate} kadarı · en çok {cap},Reached checkout · {rate} of carts · at most {cap}
+MP_TIP_ORDER,Sipariş verdi · ödemeye geçenin {rate} kadarı · en çok {cap},Placed an order · {rate} of checkouts · at most {cap}
+MP_TIP_DELIVERED,Teslim edildi · siparişin {rate} kadarı · en çok {cap},Delivered · {rate} of orders · at most {cap}
+MP_TIP_MODULE,{module} · {tier},{module} · {tier}
+MP_TIP_NEXT,{tier} çıkarsa haftada +{n} sipariş,Ship {tier} for +{n} orders a week
+MP_TIP_BUGS,{n} açık hata düzelirse haftada +{m} sipariş,Fix {n} open bugs for +{m} orders a week
+MP_TIP_BUGS_ONE,1 açık hata düzelirse haftada +{m} sipariş,Fix 1 open bug for +{m} orders a week
+MP_TIP_ROW,{row} {v},{row} {v}
+MP_SATISFACTION,Memnuniyet,Satisfaction
+MP_SIDE_USERS,Kullanıcılar,Users
+MP_SIDE_STORES,Mağazalar,Stores
+MP_ROW_COMMISSION_RAISED,Komisyon artışı: {category},Commission raised: {category}
+MP_ROW_COMMISSION_RAISED_SHORT,Komisyon artışı,Commission raised
+MP_ROW_STRAINED,Zorlanıyor: {category},Strained: {category}
+MP_ROW_STRAINED_SHORT,Zorlanıyor,Strained
+MP_ROW_EARNINGS_THIN,Kazancı yetmiyor: {category},Earnings too thin: {category}
+MP_ROW_EARNINGS_THIN_SHORT,Kazancı yetmiyor,Earnings too thin
+MP_ROW_RETURN_WINDOW,İade süresi,Return window
+MP_ROW_RETURN_SHIPPING_PAID,İade kargosunu biz ödüyoruz,We pay return shipping
+MP_ROW_REGISTERED_STORES,Vergi levhalı mağazalar,Registered stores only
+MP_ROW_THIN_SELECTION,Seçenek az: {category},Thin selection: {category}
+MP_ROW_THIN_SELECTION_SHORT,Seçenek az,Thin selection
+MP_ROW_LATE_DELIVERY,Geç teslimat,Late delivery
+MP_ROW_SUPPORT_BACKLOG,Destek yığını,Support backlog
+MP_ROW_WEAK_SECURITY,Hesap güvenliği zayıf,Weak account security
+MP_ROW_MET,Karşılandı: {topic},Delivered: {topic}
+MP_ROW_LATE_TOPIC,Geciken talep: {topic},Overdue request: {topic}
+MP_ROW_LATE_TOPIC_SHORT,Geciken talep,Overdue request
+MP_ROW_SALE_LOSS,İndirim günlerinde zarar,Loss on sale days
+MP_ROW_FAST_MEMBERS_ONLY,Hızlı teslimat yalnız üyeye,Fast delivery now members only
+MP_ROW_FAST_DELIVERY,Hızlı teslimat,Fast delivery
+MP_ROW_DOORSTEP_RETURNS,Adresten iade,Doorstep returns
+MP_ROW_OUTAGE,Kesinti,Outage
+MP_CAT_FASHION,Moda,Fashion
+MP_CAT_ELECTRONICS,Elektronik,Electronics
+MP_CAT_HOME,Ev ve Yaşam,Home and Living
+MP_CAT_BEAUTY,Kozmetik ve Kişisel Bakım,Beauty and Personal Care
+MP_CAT_BABY,Anne ve Bebek,Mother and Baby
+MP_CAT_SPORTS,Spor ve Outdoor,Sports and Outdoors
+MP_TOPIC_SIZE_CHART,Beden tablosu,Size chart
+MP_TOPIC_FAVORITES,Favoriler,Favorites
+MP_TOPIC_GUEST_CHECKOUT,Üyeliksiz alışveriş,Guest checkout
+MP_TOPIC_COLOR_SIZE_OPTIONS,Renk ve beden seçeneği,Color and size options
+MP_TOPIC_SHIPPING_LABEL,Kargo etiketi,Shipping label
+MP_TOPIC_PAYOUT_STATEMENT,Hakediş ekstresi,Payout statement
+MP_TOPIC_COUPON_ABUSE,Kupon suistimali,Coupon abuse

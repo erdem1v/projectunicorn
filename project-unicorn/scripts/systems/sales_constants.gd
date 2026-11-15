@@ -55,6 +55,9 @@ const REP_LOST := 3                      # [WORKING] onay bekliyor: kaybedilen h
 const REP_ESCAPED := 1                   # [WORKING] onay bekliyor: sürümden kaçan hata (en az bir hesaba dokunan), hesap sayısından bağımsız
 const REP_LOG_MAX := 6                   # nedeniyle saklanan son değişim
 
+## Under this a satisfaction meter reads as a warning; danger is the Risk phase's alone.
+const SAT_MID := 50                      # [WORKING] onay bekliyor
+
 
 # ============================ §4 · Pipeline ==================================
 const LEAD_LIFE_WEEKS := 1               # [K] an unworked lead waits this long

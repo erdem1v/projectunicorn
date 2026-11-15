@@ -1904,7 +1904,7 @@ func _shot_pane(card_id: String, ctx: Dictionary, names := {}) -> void:
 
 
 ## --sales-shot=<pipeline|desk|picker|inbox|edge|edge_end|stretched|empty|b2b_pre|untyped|morning|evening|
-## norep|discounted|frank|risk_stability|deals|returning|clause|offer|sources|mp_pre|mp_launch>. `desk` puts a rep mid-processing on the desk;
+## norep|discounted|frank|risk_stability|deals|returning|clause|offer|sources|mp_pre|mp_launch|mp_growth|mp_growth_tip>. `desk` puts a rep mid-processing on the desk;
 ## `picker` opens the steward
 ## picker on the first account, `inbox` presses its İlgilen (Olaylar opens on the account's mail); `edge` draws the
 ## rarer lines (a reserved lead, one given to a rep, a whale's condition, tables above the founder's league, the
@@ -2088,18 +2088,23 @@ func _run_sales_shot(kind: String) -> void:
 	await _finish_shot("sales_shot_%s" % kind, 0.6)
 
 
-## The marketplace shots' worlds: `day` is the week a world stops at before the MVP; `closes` the weeks played after the MVP ships.
+## The marketplace shots' worlds: `day` is the week a world stops at before the MVP; `closes` the weeks played after the MVP ships,
+## `until` the week the last of them ends in; `crew` the roles hired before the last week (`_mp_hire`), `bugs` the open bugs of the
+## Cart and Checkout line that week's close reads; `tip` the key of the step row the pointer rests on.
 const _MP_WORLDS := {
 	"mp_pre": {"day": 3},
 	"mp_launch": {"closes": 4},
+	"mp_growth": {"until": 42, "crew": [HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER], "bugs": 3},
+	"mp_growth_tip": {"until": 42, "crew": [HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER], "bugs": 3, "tip": "MP_STEP_ORDER"},
 }
 ## The sprints a world may play to reach the MVP gate, as `_seed_product_live`.
 const _MP_SPRINTS := 12
 
 
-## --sales-shot=mp_<pre|launch>: the Pazaryeri window of a company the engine played (`_seed_marketplace_world`). `pre` is week 3
-## with the founder alone and Moda open, before the MVP; `launch` the week the engine ships the MVP and four closes after it,
-## the founder on Moda. Prints the world's figures as `SHOT|mp_world`.
+## --sales-shot=mp_<pre|launch|growth|growth_tip>: the Pazaryeri window of a company the engine played (`_seed_marketplace_world`).
+## `pre` is week 3 with the founder alone and Moda open, before the MVP; `launch` the week the engine ships the MVP and four closes
+## after it, the founder on Moda; `growth` week 42 with two hires and three open bugs on Cart and Checkout, `growth_tip` the same with
+## the pointer on the Placed an order row. Prints the world's figures as `SHOT|mp_world`.
 func _run_marketplace_shot(kind: String) -> void:
 	if not _MP_WORLDS.has(kind):
 		_shot_fail("[SalesShot] unknown marketplace shot: %s" % kind)
@@ -2112,13 +2117,24 @@ func _run_marketplace_shot(kind: String) -> void:
 	print("SHOT|mp_world kind=%s week=%d launch=%d cash=%d mrr=%d users=%d stores=%d orders=%d" % [kind, GameState.day,
 		int(GameState.get_flag("mvp_launch_day", -1)), GameState.cash, GameState.mrr, roundi(state.users),
 		roundi(MarketplaceSystem.stores()), roundi(MarketplaceModel.metrics(state, MarketplaceSystem.world()).orders)])
-	await _finish_shot("sales_shot_%s" % kind, 0.6)
+	var tip: String = _MP_WORLDS[kind].get("tip", "")
+	if tip != "":
+		await get_tree().create_timer(0.5).timeout
+		var hits: Array = _shell.find_children("*", "Control", true, false).filter(
+			func(c: Control) -> bool: return c.is_visible_in_tree() and c.tooltip_text == tr(tip))
+		if hits.is_empty():
+			_shot_fail("[SalesShot] %s: no control carries %s" % [kind, tip])
+			return
+		await _rest_pointer_on(hits[0])
+	await _finish_shot("sales_shot_%s" % kind, 1.2 if tip != "" else 0.6)
 
 
 ## A marketplace run the engine plays: the type chosen at the start and Moda open. `day` stops it before the MVP; `closes` plays
 ## the founder's sprints to the MVP gate, assigns the founder to Moda, lets a week pass, ships through `SprintSystem.publish`
-## and plays that many weeks after it. Every week is the clock's daily dispatch, so stores, users, orders, MRR and cash come from
-## the engine. False (the shot is failed) when the gate is not reached.
+## and plays that many weeks after it; the last of them is played after the world's `crew` is hired (`_mp_hire`, in the smallest
+## office that seats it) and its `bugs` are open. Every week is the clock's daily dispatch, so stores, users, orders and MRR come
+## from the engine; a hired crew's cash is written before its office (`_a4_books`: six months of the company's loss, the office's up-front rent
+## paid from it), or the shutter would close on a 42-week world. False (the shot is failed) when the gate is not reached.
 func _seed_marketplace_world(world: Dictionary) -> bool:
 	_seed_run_reproducible()
 	GameState.founder_portrait = "founder_01"
@@ -2140,9 +2156,26 @@ func _seed_marketplace_world(world: Dictionary) -> bool:
 	MarketplaceSystem.assign(CharacterRegistry.get_founder().id, "fashion")
 	_play_week()
 	SprintSystem.publish()
-	for i in world.closes:
+	var closes: int = world.closes if world.has("closes") else world.until - GameState.day
+	for i in closes - 1:
 		_play_week()
+	var crew: Array = world.get("crew", [])
+	for role: String in crew:
+		_mp_hire(role, HRConstants.LEVEL_MID)
+	if not crew.is_empty():
+		_a4_books(crew.size(), 0)
+		_a4_office(crew.size())
+	if world.has("bugs"):
+		ProductState.add_bugs("line_marketplace_checkout", world.bugs)
+	_play_week()
 	return true
+
+
+## The first file of the generator's table for `role_id` at `level`, hired the way a search's hire lands (`HRSearchSystem.hire`).
+func _mp_hire(role_id: String, level: int) -> void:
+	GameState.hr_search = {HRSearchSystem.KEY_STATE: HRConstants.SEARCH_FILES_READY, HRSearchSystem.KEY_LEVEL: level,
+		HRSearchSystem.KEY_FILES: HRCandidateGenerator.generate(role_id, level, GameState.run_seed, GameState.name_lang).slice(0, 1)}
+	HRSearchSystem.hire(0)
 
 
 ## One week the way the clock turns it: the day moves and every system's daily step runs in the dispatcher's order.
@@ -4596,6 +4629,12 @@ func _product_tip_shot(tip: String, kind: String, stem: String) -> void:
 		return
 	await get_tree().create_timer(0.5).timeout
 	_save_shot(stem)
+	await _rest_pointer_on(target)
+	await _finish_shot(stem + "_tip", 1.2)
+
+
+## The pointer rests on `target` as a player's would, the control scrolled into view first; its tip opens a moment later.
+func _rest_pointer_on(target: Control) -> void:
 	var scroll: Node = target.get_parent()
 	while scroll != null and not scroll is ScrollContainer:
 		scroll = scroll.get_parent()
@@ -4606,7 +4645,6 @@ func _product_tip_shot(tip: String, kind: String, stem: String) -> void:
 	move.position = target.get_global_rect().get_center()
 	move.global_position = move.position
 	get_viewport().push_input(move)
-	await _finish_shot(stem + "_tip", 1.2)
 
 
 ## The control a tip frame points at, or null: "card" the name of the first board row with a due date (else of the first row), "fix"

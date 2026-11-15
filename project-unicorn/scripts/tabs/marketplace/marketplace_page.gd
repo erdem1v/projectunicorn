@@ -5,9 +5,11 @@ extends VBoxContainer
 # değişimde yalnız etkin olan kendini yeniden çizer.
 
 ## The sub-pages in the strip's order: [tab key, script]. A script is a VBoxContainer that repaints itself in `refresh()`.
-const PAGES := []
+const PAGES := [["MP_TAB_OVERVIEW", preload("res://scripts/tabs/marketplace/mp_overview.gd")]]
+const PARTS := preload("res://scripts/tabs/marketplace/mp_parts.gd")
 
 var _pages: Array[Control] = []
+## The page the window opens on, an index into PAGES: Genel.
 var _active := 0
 
 
@@ -24,12 +26,12 @@ static func header_cells() -> Array:
 		func(key: String) -> Control: return UiFactory.D_kpi(TranslationServer.translate(key), ""))
 
 
-## Active users, stores and last week's delivered orders, from the stored state.
+## Active users and stores, whole; last week's delivered orders written as Genel writes its weekly counts.
 static func paint_header(cells: Array) -> void:
 	var state := MarketplaceSystem.read_state()
-	var orders: float = MarketplaceModel.metrics(state, MarketplaceSystem.world()).orders
-	for pair in [[cells[0], state.users], [cells[1], MarketplaceSystem.stores()], [cells[2], orders]]:
-		UiFactory.D_kpi_value(pair[0]).text = Fmt.group(roundi(pair[1]))
+	UiFactory.D_kpi_value(cells[0]).text = Fmt.group(roundi(state.users))
+	UiFactory.D_kpi_value(cells[1]).text = Fmt.group(roundi(MarketplaceSystem.stores()))
+	UiFactory.D_kpi_value(cells[2]).text = PARTS.count(MarketplaceModel.metrics(state, MarketplaceSystem.world()).orders)
 
 
 ## The sub-page strip.
