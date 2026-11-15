@@ -3502,8 +3502,10 @@ MP_COL_LAST_WEEK,Geçen hafta,Last week
 MP_COL_FROM_PREV,Önceki adımdan geçen,Passed from the previous step
 MP_REACHABLE,Ulaşılabilir,Reachable
 MP_STEP_VISITS,Ziyaret,Visits
+MP_VISITS_RETURNING,Geri dönen,Returning
 MP_VISITS_ORGANIC,Organik,Organic
 MP_VISITS_CHANNEL,Kanal,Channels
+MP_VISITS_CAMPAIGN,Kampanya,Campaign
 MP_STEP_CART,Sepete ekledi,Added to cart
 MP_STEP_CHECKOUT,Ödemeye geçti,Reached checkout
 MP_STEP_ORDER,Sipariş verdi,Placed an order

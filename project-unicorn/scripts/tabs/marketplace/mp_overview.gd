@@ -7,6 +7,13 @@ const PARTS := preload("res://scripts/tabs/marketplace/mp_parts.gd")
 const STEPS := ["visits", "cart", "checkout", "order", "delivered"]
 const STEP_KEYS := ["MP_STEP_VISITS", "MP_STEP_CART", "MP_STEP_CHECKOUT", "MP_STEP_ORDER", "MP_STEP_DELIVERED"]
 const TIP_KEYS := ["", "MP_TIP_CART", "MP_TIP_CHECKOUT", "MP_TIP_ORDER", "MP_TIP_DELIVERED"]
+## The visits' sources as the week's close counts them, [funnel key, name, ground, ink], lightest first.
+const VISIT_SOURCES := [
+	["returning", "MP_VISITS_RETURNING", UiTokens.D_INK_3, UiTokens.D_SURFACE_2],
+	["organic", "MP_VISITS_ORGANIC", UiTokens.D_INK_4, UiTokens.D_SURFACE_2],
+	["channel", "MP_VISITS_CHANNEL", UiTokens.D_LINE_3, UiTokens.D_INK_2],
+	["campaign", "MP_VISITS_CAMPAIGN", UiTokens.D_LINE_2, UiTokens.D_INK_2],
+]
 ## The ledger rows whose argument is a Talepler topic; the others' is a category.
 const TOPIC_ROWS := ["met", "late_topic"]
 const STEP := 136
@@ -52,8 +59,8 @@ class StepBar extends Control:
 		draw_rect(Rect2(bar.end.x, 0.0, UiTokens.D_BAR_TICK.x, size.y), UiTokens.D_INK_1)
 
 
-## The visits' bar: one track in two neutral tones, the organic visits and the ones a channel brought. A part wide enough to
-## hold its word carries it.
+## The visits' bar: one track, a neutral tone per source, lightest for the visits the company earned and darkest for the ones it
+## paid for; a hairline of the ground between two parts. A part wide enough to hold its word carries it.
 class SourceBar extends Control:
 	var parts: Array   # [{text, share, ground, ink}]
 
@@ -70,9 +77,13 @@ class SourceBar extends Control:
 		var top: float = UiTokens.SPACE_XS
 		var height: float = size.y - 2.0 * top
 		var x := 0.0
-		for part: Dictionary in parts:
+		var last := parts.size() - 1
+		while last > 0 and float(parts[last].share) <= 0.0:
+			last -= 1
+		for n in parts.size():
+			var part: Dictionary = parts[n]
 			var width: float = size.x * float(part.share)
-			draw_rect(Rect2(x, top, width, height), part.ground)
+			draw_rect(Rect2(x, top, maxf(width - (float(UiTokens.BORDER_HAIRLINE) if n < last else 0.0), 0.0), height), part.ground)
 			var word: float = font.get_string_size(part.text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
 			if width >= word + 2.0 * UiTokens.SPACE_M:
 				draw_string(font, Vector2(x + UiTokens.SPACE_M, top + (height + font.get_ascent(font_size) - font.get_descent(font_size)) / 2.0),
@@ -207,14 +218,16 @@ func _funnel_row(i: int, weak: bool) -> PanelContainer:
 	return row
 
 
-## The visits' two sources: what no channel brought is organic. Both parts have no width before the first visit.
+## The visits' sources, from what the company earned to what it paid for: the users who come back, the organic visits, the ones a
+## channel brought and, in a campaign's week, the campaign's. A part has no width before the first visit and in a week its source
+## brought none.
 func _visits_bar() -> SourceBar:
 	var visits := _count(0)
-	var channel: float = _funnel.channel / visits if visits > 0.0 else 0.0
-	return SourceBar.new([
-		{"text": tr("MP_VISITS_ORGANIC"), "share": 1.0 - channel if visits > 0.0 else 0.0, "ground": UiTokens.D_INK_4,
-			"ink": UiTokens.D_SURFACE_2},
-		{"text": tr("MP_VISITS_CHANNEL"), "share": channel, "ground": UiTokens.D_LINE_3, "ink": UiTokens.D_INK_2}])
+	var parts := []
+	for source: Array in VISIT_SOURCES:
+		parts.append({"text": tr(source[1]), "share": float(_funnel.get(source[0], 0.0)) / visits if visits > 0.0 else 0.0,
+			"ground": source[2], "ink": source[3]})
+	return SourceBar.new(parts)
 
 
 ## The tip of a step, a line each saying what it is of: the step, its rate of the step before it and the most it can reach; the

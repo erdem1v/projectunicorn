@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git 493d1ad8 · 2026-11-15 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 2feea115 · 2026-11-15 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -261,10 +261,10 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/tabs/hr/hr_popover.gd · 113 · HRPopover · Control · 0 sinyal · 8 func
 - scripts/tabs/hr/hr_ui_shared.gd · 506 · HRUiShared · RefCounted · 0 sinyal · 32 func
 
-### scripts/tabs/marketplace/ (4 dosya, 803 satır)
+### scripts/tabs/marketplace/ (4 dosya, 816 satır)
 - scripts/tabs/marketplace/marketplace_page.gd · 49 · - · VBoxContainer · 0 sinyal · 5 func
 - scripts/tabs/marketplace/mp_categories.gd · 290 · - · VBoxContainer · 0 sinyal · 23 func
-- scripts/tabs/marketplace/mp_overview.gd · 325 · - · VBoxContainer · 0 sinyal · 23 func
+- scripts/tabs/marketplace/mp_overview.gd · 338 · - · VBoxContainer · 0 sinyal · 23 func
 - scripts/tabs/marketplace/mp_parts.gd · 139 · - · RefCounted · 0 sinyal · 12 func
 
 ### scripts/tabs/product/ (18 dosya, 5885 satır)
@@ -1152,7 +1152,7 @@ Biçim: yol · boyut · üst düzey anahtarlar (en çok 10)
 - data/product/sprint.json · 9.5 KB · {sprint_weeks, quarter_weeks, mvp_lines, mvp_named, effort, fix_effort, limit_k, need, roles, role_areas, +27}
 - data/techtree/rnd_tree.json · 6.3 KB · {_doc, _stars, _cross, _areas, k_arge, report_period_weeks, nodes, _hidden_doc, _hidden_k3_doc, hidden_lines}
 
-## Metin anahtarı aileleri (885 aile, 3439 anahtar)
+## Metin anahtarı aileleri (885 aile, 3441 anahtar)
 
 Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak geçiren .gd/.json (en çok 5). '-' = dinamik kurulmuş olabilir ya da kullanılmıyor.
 - ANGEL_CAP_* · 1 · scripts/tabs/finance/finance_ozet_view.gd
@@ -1528,7 +1528,7 @@ Aile = anahtarın ilk iki '_' parçası. Dosyalar: aile önekini metin olarak ge
 - MP_TIP_* · 12 · scripts/tabs/marketplace/mp_categories.gd, scripts/tabs/marketplace/mp_overview.gd
 - MP_TOPIC_* · 7 · scripts/systems/marketplace_system.gd, scripts/debug/endgame_smoke.gd
 - MP_USERS_* · 1 · scripts/systems/marketplace_system.gd, scripts/debug/endgame_smoke.gd
-- MP_VISITS_* · 2 · scripts/tabs/marketplace/mp_overview.gd
+- MP_VISITS_* · 4 · scripts/tabs/marketplace/mp_overview.gd
 - MP_VOLUME_* · 2 · scripts/tabs/marketplace/mp_categories.gd
 - MP_ZONE_* · 3 · scripts/tabs/marketplace/mp_categories.gd
 - NEG_ACCEPT_* · 1 · scripts/ui/meeting/sales_meeting_adapter.gd
