@@ -31410,10 +31410,11 @@ static func _case_marketplace_tick_waits_for_launch() -> String:
 ## İki toplu kayıt yayından sonraki ilk kapanışta doğar ve durumun görüntüsüdür: komisyon mağazalar kaydının, üyelik kullanıcılar
 ## kaydının MRR'ına yazılır; toplam MRR `reflect_mrr` ile kayıtların toplamıdır; eksi net komisyonda mağazalar kaydının MRR'ı 0'da
 ## durur ve `revenue_weeks` eksiyi saklar; koltuk mağaza sayısı ve ücret ödeyen üyedir; memnuniyet modelin `sat`'ının tam sayısıdır.
+## Sonun defteri (`get_run_ledger`) mağaza sayısını taşır.
 ##
 ## FALSİFİKASYON: `_reflect`te komisyonu kullanıcılar kaydına yaz → MRR satırı FAIL; kullanıcılar kaydının koltuğuna `members`ı
 ## yaz → deneme satırı FAIL; `reflect_mrr` çağrısını sil → toplam MRR satırı FAIL; komisyonu `absf` ile yaz → eksi
-## komisyon satırı FAIL.
+## komisyon satırı FAIL; defterin `stores`'unu hep -1 yaz → defter satırı FAIL.
 static func _case_marketplace_revenue_two_records() -> String:
 	_seed_marketplace_world()
 	GameState.set_flag("mvp_shipped", false)
@@ -31449,6 +31450,8 @@ static func _case_marketplace_revenue_two_records() -> String:
 	if stores_record.seats != roundi(MarketplaceSystem.stores()) or users_record.seats != roundi(state.members):
 		return "seats read %d and %d, want stores %d and members %d" \
 			% [stores_record.seats, users_record.seats, roundi(MarketplaceSystem.stores()), roundi(state.members)]
+	if int(GameState.get_run_ledger().stores) != roundi(MarketplaceSystem.stores()):
+		return "the run ledger reads %d stores, want %d" % [int(GameState.get_run_ledger().stores), roundi(MarketplaceSystem.stores())]
 	if stores_record.satisfaction != roundi(state.sat.stores) or users_record.satisfaction != roundi(state.sat.users):
 		return "satisfaction reads %d and %d, want %d and %d" \
 			% [stores_record.satisfaction, users_record.satisfaction, roundi(state.sat.stores), roundi(state.sat.users)]

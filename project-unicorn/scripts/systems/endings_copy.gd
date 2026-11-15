@@ -402,8 +402,12 @@ static func _people_line(ledger: Dictionary, b2b_key: String, b2c_key: String,
 	return _t(Fmt.count_key(b2c_key if _is_b2c(ledger) else b2b_key, n)).format({"n": n})
 
 
-## The population CELL for the stat row: accounts on a B2B run, paying users on a B2C one.
+## The population CELL for the stat row: accounts on a B2B run, paying users on a B2C one, on a marketplace
+## the stores that pay its commission (the ledger's `stores`, -1 on any other run).
 static func _people_stat(ledger: Dictionary) -> Dictionary:
+	var stores := int(ledger.get("stores", -1))
+	if stores >= 0:
+		return _stat(str(stores), _t("END_STAT_STORES"))
 	return _stat(str(_people_count(ledger)), _t("END_STAT_PAYING" if _is_b2c(ledger) else "END_STAT_CUSTOMERS"))
 
 

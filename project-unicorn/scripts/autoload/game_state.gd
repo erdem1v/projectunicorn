@@ -753,6 +753,8 @@ func get_run_ledger() -> Dictionary:
 		"market": String(get_flag("mvp_market_type", "b2c")),
 		"audience": int(round(SalesSystem.b2c_audience())),
 		"paying_users": SalesSystem.b2c_paying_users(),
+		# A marketplace is paid by its stores (commission); -1 on any other run.
+		"stores": roundi(MarketplaceSystem.stores()) if SalesSystem.is_marketplace() else -1,
 		# customers (B2B discrete sign/churn; B2C is one aggregate record)
 		"customers_active": CustomerRegistry.get_active().size(),
 		"customers_signed": run_customers_signed,

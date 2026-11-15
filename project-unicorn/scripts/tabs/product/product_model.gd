@@ -15,7 +15,7 @@ extends RefCounted
 #
 # model = {
 #   header: {name, live_version: "1.4" or "" (MVP öncesi), market: "B2C"|"B2B" or "" (tür yok), type_text,
-#            users, paying (canlı B2C'de kitle ve ödeyen; -1 = yok)},
+#            users, payers (canlı B2C'de kitle ve ödeyen, pazaryerinde mağaza; -1 = yok), payers_key (ödeyenin etiketi)},
 #   versions: [{label: "v1.4", sprint: int or -1, shipped_count: int or -1,   # -1 çizilmez
 #               result: {kind: "expected"|"actual", text} or null}],
 #   quarter: {state: "locked_no_pm"|"open",
@@ -139,6 +139,7 @@ static func live() -> Dictionary:
 				"shipped_count": -1 if int(r.sprint) < 0 else r.shipped.size(), "result": _result(r)})
 	var live_now: bool = ProductState.is_live()
 	var b2c_live: bool = live_now and ProductState.market_type() == "b2c"
+	var mp: bool = SalesSystem.is_marketplace()
 	var n: int = SprintSystem.sprint_number()
 	# Plan ekranı motorun oynatmasını söyler: kim kaç hafta, devreden, başlamayan, SPRINT SONUNDA ve sonraki
 	# sütunun hazır payı. Zaman ekseni (koşan sprintte de) aynı oynatmadır: plan bir kez oynanır.
@@ -176,7 +177,9 @@ static func live() -> Dictionary:
 			"market": ProductState.market_type().to_upper(),
 			"type_text": ProductCatalog.type_name(ProductState.subtype()),
 			"users": int(SalesSystem.b2c_audience()) if b2c_live else -1,
-			"paying": SalesSystem.b2c_paying_users() if b2c_live else -1,
+			# Ödeyen pazaryerinde komisyon ödeyen mağazadır: ücret ödeyen üye yalnız Premium'la doğar.
+			"payers_key": "MP_KPI_STORES" if mp else "PRODUCT_KPI_PAYING",
+			"payers": -1 if not b2c_live else (roundi(MarketplaceSystem.stores()) if mp else SalesSystem.b2c_paying_users()),
 		},
 		"versions": versions,
 		"quarter": _quarter(center, next),

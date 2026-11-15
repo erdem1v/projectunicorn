@@ -792,6 +792,7 @@ HR_ROLE_HINT_DESIGNER,Ürünün nasıl göründüğünü ve nasıl kullanıldı�
 HR_ROLE_HINT_DEVELOPER,Ürünü yazar. Kod tabanı ondan çıkar.,Writes the product. The codebase comes from them.
 HR_ROLE_HINT_TESTER,Ürünü kırmaya çalışır. Bulduğu her hata müşteriye gitmeyen hatadır.,Tries to break the product. Every bug they find is one the customer never sees.
 HR_ROLE_HINT_SALES_REP,"Aday müşteri bulur, anlaşmayı kapatır.",Finds prospects and closes them.
+HR_ROLE_HINT_SALES_REP_MARKETPLACE,Atandığı kategoriye mağaza kazandırır.,Wins stores for the category they are assigned to.
 HR_ROLE_HINT_CUSTOMER_REP,Mevcut müşterileri elde tutar. Müşteriden gelen her şey önce ona uğrar.,Keeps existing customers. Everything from a customer reaches them first.
 HR_ROLE_HINT_MARKETING_SPECIALIST,Ürünü duyurur ve talebi büyütür.,Gets the product heard and grows demand.
 HR_ROLE_HINT_MARKETING_MANAGER,"Pazarlama bütçesini kanallara dağıtır, büyük ekibi bir arada tutar.",Splits the marketing budget across channels and keeps a large team in step.
@@ -2508,6 +2509,7 @@ ENDING_CARD_IPO_TITLE,Halka arz,IPO
 ENDING_CARD_IPO_BODY,"Değerleme eşiği geçildiğinde kapı görünür olur. Ardındaki oyun başka bir oyundur: regülasyon, kamu gözü, devlerle aynı pazar.","Cross the valuation threshold and the door becomes visible. What is behind it is a different game: regulation, public scrutiny, the same market as the giants."
 END_STAT_AUDIENCE,KİTLE,AUDIENCE
 END_STAT_PAYING,ÖDEYEN,PAYING
+END_STAT_STORES,MAĞAZA,STORES
 END_SA_AUDIENCE,Turun kapandığı gün ürünü {n} kişi ödeyerek kullanıyordu.,"On the day the round closed, {n} people were paying to use the product."
 END_SA_AUDIENCE_ONE,Turun kapandığı gün ürünü {n} kişi ödeyerek kullanıyordu.,"On the day the round closed, {n} person was paying to use the product."
 END_ACQ_AUDIENCE,Devredilen kullanıcı tabanında {n} ödeyen hesap vardı.,The user base that changed hands held {n} paying accounts.

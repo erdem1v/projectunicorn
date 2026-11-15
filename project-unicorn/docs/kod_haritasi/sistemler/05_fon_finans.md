@@ -29,7 +29,7 @@ Kapsam içi (`scripts/`):
 - `systems/quality_model.gd` (37): `QualityModel`, rakibin üç boyutunun azalan getirili büyümesi `grow` `:22` ve bileşik kalite `composite_quality` `:29`.
   ↳ okuyan `RivalRegistry.advance_all` (`rival_registry.gd:78-80`) ve `Rival.composite()`; oyuncunun ürün kalitesi değil (o `ProductQuality`, 02_urun_sprint.md).
 - `systems/endings_system.gd` (527): terminal taraması, kepenk, bitiş ve kilometre taşı kapıları, satın alma teklifinin sayıları, build kapsamı.
-- `systems/endings_copy.gd` (536): bitiş gazetesinin satırlarını kuran saf okuyucu; `EndingScene` yalnız onu boyar.
+- `systems/endings_copy.gd` (536): bitiş gazetesinin satırlarını kuran saf okuyucu; `EndingScene` yalnız onu boyar. Nüfus hücresi (`_people_stat`) B2B'de hesap, B2C'de ödeyen, pazaryerinde mağaza okur (defterin `stores`'u, öbür koşularda -1).
 - `systems/mail_clock.gd` (121): mail, kâğıt, not, hatırlatıcının geliş saati; mesai penceresi dışı üretileni pencereye taşır.
 - `systems/message_system.gd` (77): gelen kutusunun motor kartı olmayan mesajları; `GameState.messages` ve `mail_outbox`un tek yazarı.
 - `systems/news_feed_system.gd` (429): şeridin veri kaynağı; sektör, rakip, piyasa ve biz satırlarının haftalık kotalı akışı.
@@ -239,7 +239,7 @@ Tek koşturucu `bash tools/smoke_run.sh <vaka>`; vaka listesi `scripts/debug/end
   ↳ `hunt_callback` ürün fonunun müşteri kaybı geri dönüşü ve itibarı tabana indiren ihmal; `hunt_seed` Traction'da açık seed kapısı.
   ↳ Masa türlerine `:shell` eklenince masa oyundaki gibi kabuğun ModalLayer'ına takılır (`vc_shot_<tür>_shell`); `k10` süresi dolmuş teklifin karar kartı; görüşme kareleri 09_arayuz_bilesen.md (Görüşme paneli)
 - Görsel (Dünya, Sonlar, Teslim saati): `--tab-shot=piyasa[:<seed_oncesi|seed_sonrasi|series_a|ipo|filtre|sektor>]`, `--theme-audit=piyasa`; şerit her kabuk karesinde görünür,
-  ↳ rakip adları Finans'ın pazar payı kartında (`--finance-shot=ozet`); `--ending-shot=<ending_id>` (takma adlar dahil; sonda gazeteyi paylaşır ve toast'lı ikinci kareyi `_share` ekiyle çeker). EA ve full akışı `--build=ea|full` ile;
+  ↳ rakip adları Finans'ın pazar payı kartında (`--finance-shot=ozet`); `--ending-shot=<ending_id>` (takma adlar dahil; `series_a_mp` Series A gazetesi `--sales-shot=mp_launch`'ın pazaryerinde; sonda gazeteyi paylaşır ve toast'lı ikinci kareyi `_share` ekiyle çeker). EA ve full akışı `--build=ea|full` ile;
   ↳ `--inbox-shot=morning` gece 00:00'dan sonra gelen kutusunu gerçek saatlik yolla çeker (08_sekmeler.md)
 - Kart tarafı: `--why-fire=funding.frank_cheque` (kapı kartı neden gelmiyor), `--event-lint`; ekran kapısı `--tab-shot=finance|piyasa[:...]`, `--finance-shot=<tür>`, `--vc-shot=<tür>[:shell]`, `--ending-shot=<anahtar>`.
 - Debug tuşları `main/game_shell.gd:194`: F1 kapıyı aç, F2 faz atla, F3 Series A kapat, F5 kepenk (kasa -1000), F6 marka çöküşü ön şartı, F7 kaskad ön şartı, F8 kârlılık fikstürü.

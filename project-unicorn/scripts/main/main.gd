@@ -4714,40 +4714,44 @@ func _seed_hr_roster() -> void:
 
 # --ending-shot=<key>: a representative Run Ledger on the newspaper EndingScene. <key> is an
 # ending_id, plus bankruptcy1/2/3 (phase-layered), series_a_agg (Aggressive terms) and
-# bootstrap_milestone (the EA / full milestone paper). Also runs the real share export, so
-# every shot verifies the paper crop bounds.
+# bootstrap_milestone (the EA / full milestone paper), series_a_mp (series_a_close on the marketplace of
+# --sales-shot=mp_launch, `_seed_marketplace_world`: its stores, users and MRR are the engine's). Also runs the real
+# share export, so every shot verifies the paper crop bounds.
 func _run_ending_shot(key: String) -> void:
 	_begin_shot()
-	_seed_run_reproducible()
-	GameState.company_name = "PromptPilot"
-	GameState.founder_name = "Deniz"
-	GameState.day = 23
-	GameState.set_flag("mvp_version", 3)
-	GameState.set_flag("mvp_version_history", [{"version": 1, "day": 6}, {"version": 2, "day": 13}, {"version": 3, "day": 20}])
-	GameState.run_customers_lost = 3
+	if key == "series_a_mp":
+		if not _seed_marketplace_world(_MP_WORLDS.mp_launch):
+			return
+	else:
+		_seed_run_reproducible()
+		GameState.company_name = "PromptPilot"
+		GameState.founder_name = "Deniz"
+		GameState.day = 23
+		GameState.set_flag("mvp_version", 3)
+		GameState.set_flag("mvp_version_history", [{"version": 1, "day": 6}, {"version": 2, "day": 13}, {"version": 3, "day": 20}])
+		GameState.run_customers_lost = 3
+		GameState.run_peak_mrr = 8200
+		# The market flag is what makes the paper count accounts instead of paying users.
+		GameState.set_flag("mvp_market_type", "b2b")
+		# The MÜŞTERİ and ÇALIŞAN cells read live registries, not the run counters. The customer
+		# seam bumps run_customers_signed and reflects MRR, so both are written after it.
+		var companies := [_pool_name("logistics", 2), _pool_name("logistics")]
+		for ci in companies.size():
+			var pr := Prospect.new()
+			pr.id = "shot_cust_%d" % ci
+			pr.company_name = companies[ci]
+			pr.industry = "logistics"
+			pr.star = 1
+			pr.pain_feature_id = "ai_vec_filter"
+			SalesSystem.add_b2b_customer(pr, 20, 50, 70)   # 20 seats x $50 = $1.000
+		# Gazetenin "kazanıldı" satırı MÜŞTERİ ve KAYBEDİLEN hücreleriyle tutsun.
+		GameState.run_customers_signed = companies.size() + GameState.run_customers_lost
+		GameState.mrr = 6400
 	GameState.run_hires = 4
 	GameState.run_pitches = 2
 	GameState.run_sheets_won = 1
 	GameState.vc_rejections = 1
-	GameState.run_peak_mrr = 8200
 	GameState.cash = 24000
-	# The market flag is what makes the paper count accounts instead of paying users.
-	GameState.set_flag("mvp_market_type", "b2b")
-
-	# The MÜŞTERİ and ÇALIŞAN cells read live registries, not the run counters. The customer
-	# seam bumps run_customers_signed and reflects MRR, so both are written after it.
-	var companies := [_pool_name("logistics", 2), _pool_name("logistics")]
-	for ci in companies.size():
-		var pr := Prospect.new()
-		pr.id = "shot_cust_%d" % ci
-		pr.company_name = companies[ci]
-		pr.industry = "logistics"
-		pr.star = 1
-		pr.pain_feature_id = "ai_vec_filter"
-		SalesSystem.add_b2b_customer(pr, 20, 50, 70)   # 20 seats x $50 = $1.000
-	# Gazetenin "kazanıldı" satırı MÜŞTERİ ve KAYBEDİLEN hücreleriyle tutsun.
-	GameState.run_customers_signed = companies.size() + GameState.run_customers_lost
-	GameState.mrr = 6400
 	var emp_names := ["Burcu Çetin", "Mert Aydın", "Selin Koç"]   # LOC-DATA debug seed / id
 	for i in emp_names.size():
 		var emp := Character.new()
@@ -4766,7 +4770,7 @@ func _run_ending_shot(key: String) -> void:
 		"bankruptcy1", "bankruptcy2", "bankruptcy3":
 			ending_id = "bankruptcy"
 			GameState.phase = int(key.right(1))
-		"series_a_close", "series_a_agg":
+		"series_a_close", "series_a_agg", "series_a_mp":
 			ending_id = "series_a_close"
 			var aggressive := key == "series_a_agg"
 			GameState.run_valuation_m = 22
@@ -4991,7 +4995,8 @@ func _tip_target(page: Control, tip: String) -> Control:
 
 ## live:<pick|pick_named|pick_relang|plan|active|decision_paper|b2c_mvp|b2c_live|b2c_goal|b2b_mvp|b2b_mature|b2b_quarter|
 ## b2b_requests|gate|rnd|delegate|delegate_rehire|solo15|solo15_tip|solo12_active|b2b_solo15|overview_pre|server_80|server_94|server_104|server_growth|
-## server_auto|server_tier|server_final|server_clause|server_lock|server_b2c>. The pick ones leave the product untyped (the type picker). The solo ones
+## server_auto|server_tier|server_final|server_clause|server_lock|server_b2c|mp_live>. The pick ones leave the product untyped (the type picker).
+## mp_live is the marketplace of --sales-shot=mp_launch (four closes after its launch, `_seed_marketplace_world`). The solo ones
 ## leave the founder alone from 09:00: solo15 and solo15_tip stop in Sprint 1 planning at 15 hours, solo15 with
 ## the lead's plan applied, solo15_tip with the plan only offered; solo12_active
 ## starts the lead's plan at 12 hours, two cards over capacity (30/28); b2b_solo15 is solo15 on the ERP. The rest choose
@@ -5017,6 +5022,9 @@ const REQ_RUNS := {"req_solo": "full_run_staff1:16", "req_w60": "full_run_staff6
 
 func _seed_product_live(scenario: String) -> void:
 	if scenario.begins_with("pick"):
+		return
+	if scenario == "mp_live":
+		_seed_marketplace_world(_MP_WORLDS.mp_launch)
 		return
 	if REQ_RUNS.has(scenario):
 		RunProbe.run(REQ_RUNS[scenario] + ":sim", _debug_payload())

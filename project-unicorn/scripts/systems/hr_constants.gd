@@ -378,10 +378,13 @@ static func group_label(group_id: String) -> String:
 	return _derived("HR_GROUP_", group_id)
 
 
-## Bu rolü işe almanın kurucu sesiyle tek satırlık getirisi; kurucu/mentor için boş.
+## Bu rolü işe almanın kurucu sesiyle tek satırlık getirisi; kurucu/mentor için boş. Pazaryerinde Satış Temsilcisi
+## aday değil, atandığı kategoriye mağaza kazanır.
 static func role_phase_hint(role_id: String) -> String:
 	if not is_employee_role(role_id):
 		return ""
+	if role_id == ROLE_SALES_REP and SalesSystem.is_marketplace():
+		return TranslationServer.translate("HR_ROLE_HINT_SALES_REP_MARKETPLACE")
 	return _derived("HR_ROLE_HINT_", role_id)
 
 

@@ -553,6 +553,8 @@ Kareler `tur4_ekranlar_2026-11-13/pazaryeri/kareler/` altında; her bölümün k
 ### 4.6 Ürün penceresi (PY1a, PY1b, PY1c, PY1d)
 - Yayın şartı şeridi ve düz modül listesi ERP'nin ortak işidir (`MODUL_SEMASI.md`; `ORTAK_ARAYUZLER.md` dalga 2). Pazaryeri
   yalnız verisini verir: dört adlı modül ve §2.2'nin listesi.
+- Canlı üründe başlığın iki ölçüsü Kullanıcı ve Mağaza'dır (öbür B2C türündeki "Ödeyen"in yeri: pazaryerinde ücret ödeyen
+  üye yalnız Premium'la doğar, komisyonu ödeyen mağazadır). Mağaza, pencerenin başlığındaki sayıyla aynıdır.
 - Sıradaki kademe kapıya takılıyorsa satır şartını yazar ("Arama ve Filtre · 1★ tasarımcı gerekli").
 
 ### 4.7 Açık kategori yokken
@@ -613,7 +615,7 @@ başlar, kartıyla tek commit'te iner; kol yalnız `MarketplaceSystem`'in işlev
 | Yer | Bugün | Olacak |
 |---|---|---|
 | `cheque_read.gd` `steps` | Dördüncü adım "İlk ödeyen müşteri" | Pazaryerinde "İlk sipariş": geçen haftanın teslim edilen siparişi yuvarlanınca en az 1 olunca tamamlanır (pencerenin başlığındaki sayı); sipariş sıfıra inerse öbür canlı adımlar gibi yeniden açılır. Öbür dört adım aynı |
-| `endings_copy.gd:384-426`, `game_state.gd:736-738` | Son kâğıdında kitle ve ödeyen; 12 cümle | Aktif kullanıcı, mağaza, haftalık sipariş; cümleler yeniden yazılır (onay bekler) |
+| `endings_copy.gd:384-426`, `game_state.gd:736-738` | Son kâğıdında kitle ve ödeyen; 12 cümle | Aktif kullanıcı, mağaza, haftalık sipariş; cümleler yeniden yazılır (onay bekler). İndi: nüfus hücresi mağaza sayısıdır ("MAĞAZA"), kitle hücresi aktif kullanıcıyı okur; cümleler sonra |
 | `sprint_bridges.gd:298-333`, `sprint.json` yorum bloğu | Sürüm notunun yorumları (28 metin, yarısı not uygulaması dili) | Pazaryeri yorumları (onay bekler) |
 | `infra_system.gd:126`, `support_system.gd:164-167`, `product_quality.gd:198, 287` | Kitle | Aktif kullanıcı |
 | `vc_pitch_system.gd:511, 522` | Kayıp sorusu kitle kaybını okur | Kullanıcı ve mağaza kaybını okur |
@@ -659,7 +661,7 @@ Anahtar öneki `MP_`. Araya giren değer ek almaz; bu yüzden cümleler değeri 
 | Premium | Üye · Üye siparişi · Üyelik geliri · Ayrıcalık gideri · Ücret · {tutar}/ay · 30 gün ücretsiz dene · Ayrıcalıklar · Bu ay · Kapalı · Herkese · Premium'a · Kargo bedava · Hızlı teslimat · Adresten iade · Üyelere özel indirim · {n} üye siparişi · {tutar} · {n} iade · {tutar} · Kural zaten veriyor | Members · Member orders · Membership revenue · Perk cost · Fee · {amount}/mo · 30-day free trial · Perks · This month · Off · Everyone · Premium only · Free shipping · Fast delivery · Doorstep returns · Member-only discount · {n} member orders · {amount} · {n} returns · {amount} · The rule already grants it |
 | Defter satırları | §3.8'in tablosundaki adlar: Komisyon artışı: {kategori} · Zorlanıyor: {kategori} · Kazancı yetmiyor: {kategori} · İade süresi · İade kargosunu biz ödüyoruz · Vergi levhalı mağazalar · Seçenek az: {kategori} · Geç teslimat · Destek yığını · Hesap güvenliği zayıf · Karşılandı: {konu} · Geciken talep: {konu} · İndirim günlerinde zarar · Hızlı teslimat yalnız üyeye · Hızlı teslimat · Adresten iade · Kesinti | Commission raised: {category} · Strained: {category} · Earnings too thin: {category} · Return window · We pay return shipping · Registered stores only · Thin selection: {category} · Late delivery · Support backlog · Weak account security · Delivered: {topic} · Overdue request: {topic} · Loss on sale days · Fast delivery now members only · Fast delivery · Doorstep returns · Outage |
 | Olay 5.1 çipleri | {kategori}: haftada +{n} mağaza · Aylık gelir {tutar} · {konuşan}: moral {v} | {category}: +{n} stores a week · Monthly revenue {amount} · {speaker}: morale {v} |
-| Öbür | İlk sipariş (çek adımı) · Açık kategori yok (hatırlatıcı) · Bu kayıt oyundan kalkan bir ürünle yapılmış. (kayıt reddi) | First order · No open category · This save was made with a product that is no longer in the game. |
+| Öbür | İlk sipariş (çek adımı) · Açık kategori yok (hatırlatıcı) · Bu kayıt oyundan kalkan bir ürünle yapılmış. (kayıt reddi) · MAĞAZA (gazetenin hücresi) · Atandığı kategoriye mağaza kazandırır. (Satış Temsilcisinin ipucu) | First order · No open category · This save was made with a product that is no longer in the game. · STORES · Wins stores for the category they are assigned to. |
 Olayın metni §5.1'de. Modül ve kademe adları §2.2'de (EN: Listing, Storefront, Cart and Checkout, Orders, Reviews and
 Protection, Membership; kademelerin EN taslakları prototip yamasının CSV satırlarında, `kareler/fikstur/`). Tür seçim ekranının
 metinleri ARAYUZ'un PRD'sindedir.

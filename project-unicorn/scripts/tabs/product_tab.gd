@@ -218,7 +218,7 @@ func _scroll_to_open_area() -> void:
 
 
 ## Başlığın ölçüleri, ürün kurulunca: tür anahtarıyla ürün adı ve sürüm (MVP öncesi yazıyla); canlı B2C'de
-## kullanıcı ve ödeyen.
+## kullanıcı ve ödeyen (pazaryerinde mağaza).
 func _build_head(h: Dictionary) -> void:
 	UiFactory.clear(_kpis)
 	if h.market == "":   # ürün kurulmadan pazar ve tür boş gelir
@@ -233,7 +233,7 @@ func _build_head(h: Dictionary) -> void:
 	_kpis.add_child(version)
 	if h.users >= 0:
 		_kpis.add_child(UiFactory.D_kpi(tr("PRODUCT_KPI_USERS"), Fmt.group(h.users)))
-		_kpis.add_child(UiFactory.D_kpi(tr("PRODUCT_KPI_PAYING"), Fmt.group(h.paying)))
+		_kpis.add_child(UiFactory.D_kpi(tr(h.payers_key), Fmt.group(h.payers)))
 
 
 ## GENEL BAKIŞ | SPRINT | ÇEYREK (v1.0'dan önce GENEL BAKIŞ, PM yokken ÇEYREK kilitli; kilidin yanında şartı) ...

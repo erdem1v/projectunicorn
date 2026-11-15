@@ -5,8 +5,8 @@ Kapsam: scripts/ altındaki 269 .gd (tools/ hariç). Kod temizliği ve kıdemli 
 
 ## En büyük 25 .gd
 
-- scripts/debug/endgame_smoke.gd · 32337 satır · 735 func
-- scripts/main/main.gd · 6827 satır · 241 func
+- scripts/debug/endgame_smoke.gd · 32340 satır · 735 func
+- scripts/main/main.gd · 6835 satır · 241 func
 - scripts/debug/run_probe.gd · 2446 satır · 95 func
 - scripts/systems/sprint_system.gd · 2139 satır · 173 func
 - scripts/theme/build_theme.gd · 1663 satır · 31 func
@@ -15,12 +15,12 @@ Kapsam: scripts/ altındaki 269 .gd (tools/ hariç). Kod temizliği ve kıdemli 
 - scripts/systems/vc_pitch_system.gd · 1317 satır · 91 func
 - scripts/debug/marketplace_probe.gd · 1313 satır · 65 func
 - scripts/autoload/save_manager.gd · 1295 satır · 60 func
-- scripts/tabs/product/product_model.gd · 1288 satır · 68 func
-- scripts/systems/hr_constants.gd · 1186 satır · 90 func
+- scripts/tabs/product/product_model.gd · 1291 satır · 68 func
+- scripts/systems/hr_constants.gd · 1189 satır · 90 func
 - scripts/events/core/effects.gd · 1149 satır · 35 func
 - scripts/ui/office/office_person.gd · 1128 satır · 51 func
 - scripts/theme/ui_tokens.gd · 1081 satır · 45 func
-- scripts/autoload/game_state.gd · 1075 satır · 57 func
+- scripts/autoload/game_state.gd · 1077 satır · 57 func
 - scripts/systems/sprint_catalog.gd · 990 satır · 91 func
 - scripts/systems/term_sheet_table_system.gd · 980 satır · 57 func
 - scripts/ui/office/office_people.gd · 853 satır · 50 func
@@ -45,7 +45,7 @@ Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları
 - scripts/debug/endgame_smoke.gd:9248 · _case_hr_constants_contract · 220 satır
 - scripts/debug/endgame_smoke.gd:2317 · _case_save_v13_day_stamps_migrate · 209 satır
 - scripts/main/main.gd:1547 · _run_inbox_shot · 205 satır
-- scripts/autoload/game_state.gd:830 · initialize_run · 199 satır
+- scripts/autoload/game_state.gd:832 · initialize_run · 199 satır
 - scripts/events/seams/seams_ported.gd:8 · install · 180 satır
 - scripts/main/main.gd:2522 · _run_office_shot · 180 satır
 - scripts/debug/endgame_smoke.gd:17631 · _case_fit_star_context · 166 satır
@@ -68,10 +68,10 @@ Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları
 - scripts/debug/endgame_smoke.gd:21581 · _thesis_presenter_body · 124 satır
 - scripts/debug/endgame_smoke.gd:21814 · _case_sales_meeting_time_skip_founder_share · 124 satır
 - scripts/events/seams/seams_product.gd:15 · _install_product · 123 satır
+- scripts/main/main.gd:5023 · _seed_product_live · 122 satır
 - scripts/events/tools/why.gd:28 · report · 121 satır
 - scripts/events/tools/engine_probe.gd:582 · _check_invalidation · 119 satır
 - scripts/events/tools/lint.gd:231 · _lint_effects · 119 satır
-- scripts/main/main.gd:5018 · _seed_product_live · 119 satır
 - scripts/debug/run_probe.gd:363 · run · 117 satır
 - scripts/debug/endgame_smoke.gd:1502 · _case_month_summary · 116 satır
 
@@ -127,9 +127,9 @@ UYARI: call("a"+b) gibi kurulmuş adlar, sinyal adıyla bağlama, harness bayrak
 - scripts/debug/office_crowd_probe.gd:48 · _log_error · debug
 - scripts/events/present/papers.gd:145 · arc_of
 - scripts/main/game_shell.gd:163 · debug_force_vc_meeting · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/main/main.gd:6768 · _dbg_close_request · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/main/main.gd:6773 · _dbg_onb_random_x20 · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/main/main.gd:6786 · _dbg_finish_run · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
+- scripts/main/main.gd:6776 · _dbg_close_request · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
+- scripts/main/main.gd:6781 · _dbg_onb_random_x20 · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
+- scripts/main/main.gd:6794 · _dbg_finish_run · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
 - scripts/systems/line_gates.gd:126 · speed_bonus_for
 - scripts/systems/rnd_system.gd:707 · family_root_done
 - scripts/systems/sales_ledger.gd:34 · lead_star
@@ -266,7 +266,7 @@ Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: 
 - TOAST · 2 dosya · scripts/modals/ending_scene.gd:37, scripts/debug/kit_probe.gd:7
 - TOON · 2 dosya · scripts/ui/office/office_body.gd:12, scripts/ui/office/office_materials.gd:9
 - TRAINING_MODAL · 2 dosya · scripts/tabs/hr/hr_ledger.gd:31, scripts/tabs/personal_tab.gd:8
-- TRAITS · 2 dosya · scripts/systems/founder_constants.gd:44, scripts/systems/hr_constants.gd:436
+- TRAITS · 2 dosya · scripts/systems/founder_constants.gd:44, scripts/systems/hr_constants.gd:439
 - TX_LABEL · 2 dosya · scripts/systems/angel_round_system.gd:30, scripts/systems/seed_constants.gd:122
 - WARN · 2 dosya · scripts/tabs/product/sprint_ui_shared.gd:18, scripts/tabs/rnd/rnd_detail_panel.gd:19
 
