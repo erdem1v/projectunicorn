@@ -2103,21 +2103,28 @@ func _run_sales_shot(kind: String) -> void:
 
 ## The marketplace shots' worlds: `day` is the week a world stops at before the MVP; `closes` the weeks played after the MVP ships,
 ## `until` the week the last of them ends in; `crew` the roles hired before the last week (`_mp_hire`), `bugs` the open bugs of the
-## Cart and Checkout line that week's close reads; `tip` the key of the step row the pointer rests on.
+## Cart and Checkout line that week's close reads; `tip` the key of the step row the pointer rests on; `later` the player's moves on
+## the way, each [week, move, argument] and made the first week at or after it: `hire` a role (seated on Moda), `open` a category,
+## `commission` Moda's rate; `tab` the sub-page's key pressed on the strip, `pick` the category row the Kategoriler page is on, `raise`
+## the plus key pressed once on the commission stepper.
 const _MP_WORLDS := {
-	"mp_pre": {"day": 3},
+	"mp_pre": {"day": 3, "pick": "electronics"},
 	"mp_launch": {"closes": 4},
 	"mp_growth": {"until": 42, "crew": [HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER], "bugs": 3},
 	"mp_growth_tip": {"until": 42, "crew": [HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER], "bugs": 3, "tip": "MP_STEP_ORDER"},
+	"mp_cat": {"until": 60, "tab": "MP_TAB_CATEGORIES", "raise": true,
+		"later": [[20, "hire", HRConstants.ROLE_SALES_REP], [30, "commission", 12], [40, "open", "electronics"]]},
 }
 ## The sprints a world may play to reach the MVP gate, as `_seed_product_live`.
 const _MP_SPRINTS := 12
 
 
-## --sales-shot=mp_<pre|launch|growth|growth_tip>: the Pazaryeri window of a company the engine played (`_seed_marketplace_world`).
-## `pre` is week 3 with the founder alone and Moda open, before the MVP; `launch` the week the engine ships the MVP and four closes
-## after it, the founder on Moda; `growth` week 42 with two hires and three open bugs on Cart and Checkout, `growth_tip` the same with
-## the pointer on the Placed an order row. Prints the world's figures as `SHOT|mp_world`.
+## --sales-shot=mp_<pre|launch|growth|growth_tip|cat>: the Pazaryeri window of a company the engine played (`_seed_marketplace_world`).
+## `pre` is week 3 with the founder alone and Moda open, before the MVP, the page on Elektronik; `launch` the week the engine ships
+## the MVP and four closes after it, the founder on Moda; `growth` week 42 with two hires and three open bugs on Cart and Checkout,
+## `growth_tip` the same with the pointer on the Placed an order row; `cat` week 60 with a sales rep hired in week 20 on Moda, whose
+## rate went to 12% in week 30, and Elektronik open since week 40, the page on Moda with 13% chosen. Prints the world's figures as
+## `SHOT|mp_world`.
 func _run_marketplace_shot(kind: String) -> void:
 	if not _MP_WORLDS.has(kind):
 		_shot_fail("[SalesShot] unknown marketplace shot: %s" % kind)
@@ -2130,7 +2137,28 @@ func _run_marketplace_shot(kind: String) -> void:
 	print("SHOT|mp_world kind=%s week=%d launch=%d cash=%d mrr=%d users=%d stores=%d orders=%d" % [kind, GameState.day,
 		int(GameState.get_flag("mvp_launch_day", -1)), GameState.cash, GameState.mrr, roundi(state.users),
 		roundi(MarketplaceSystem.stores()), roundi(MarketplaceModel.metrics(state, MarketplaceSystem.world()).orders)])
-	var tip: String = _MP_WORLDS[kind].get("tip", "")
+	var world: Dictionary = _MP_WORLDS[kind]
+	await get_tree().process_frame
+	if world.has("tab") and not _press_button_labelled(_shell, Fmt.upper(tr(world.tab))):
+		_shot_fail("[SalesShot] %s: no sub-page key %s on the strip" % [kind, world.tab])
+		return
+	if world.has("pick"):
+		var row := _shell.find_child(world.pick, true, false) as Control
+		if row == null:
+			_shot_fail("[SalesShot] %s: no category row named %s" % [kind, world.pick])
+			return
+		var click := InputEventMouseButton.new()
+		click.button_index = MOUSE_BUTTON_LEFT
+		click.pressed = true
+		row.gui_input.emit(click)
+	if world.has("raise"):
+		var keys: Array = _shell.find_children("*", "Button", true, false).filter(
+			func(b: Button) -> bool: return b.is_visible_in_tree() and not b.disabled and b.tooltip_text == tr("MP_MORE"))
+		if keys.is_empty():
+			_shot_fail("[SalesShot] %s: no open plus key on the commission stepper" % kind)
+			return
+		keys[0].pressed.emit()
+	var tip: String = world.get("tip", "")
 	if tip != "":
 		await get_tree().create_timer(0.5).timeout
 		var hits: Array = _shell.find_children("*", "Control", true, false).filter(
@@ -2144,10 +2172,10 @@ func _run_marketplace_shot(kind: String) -> void:
 
 ## A marketplace run the engine plays: the type chosen at the start and Moda open. `day` stops it before the MVP; `closes` plays
 ## the founder's sprints to the MVP gate, assigns the founder to Moda, lets a week pass, ships through `SprintSystem.publish`
-## and plays that many weeks after it; the last of them is played after the world's `crew` is hired (`_mp_hire`, in the smallest
-## office that seats it) and its `bugs` are open. Every week is the clock's daily dispatch, so stores, users, orders and MRR come
-## from the engine; a hired crew's cash is written before its office (`_a4_books`: six months of the company's loss, the office's up-front rent
-## paid from it), or the shutter would close on a 42-week world. False (the shot is failed) when the gate is not reached.
+## and plays that many weeks after it; the world's `later` moves are made on the way (`_mp_move`); the last of them is played after
+## the world's `crew` is hired (`_mp_hire`, in the smallest office that seats it) and its `bugs` are open. Every week is the clock's daily dispatch, so stores, users, orders and MRR come
+## from the engine; a hired crew moves into the office that seats it and its cash is written after (`_a4_books`: six months of the
+## company's loss, the rent in it), or the shutter would close on a 42-week world. False (the shot is failed) when the gate is not reached.
 func _seed_marketplace_world(world: Dictionary) -> bool:
 	_seed_run_reproducible()
 	GameState.founder_portrait = "founder_01"
@@ -2170,25 +2198,44 @@ func _seed_marketplace_world(world: Dictionary) -> bool:
 	_play_week()
 	SprintSystem.publish()
 	var closes: int = world.closes if world.has("closes") else world.until - GameState.day
+	var later: Array = world.get("later", []).duplicate()
 	for i in closes - 1:
+		while not later.is_empty() and GameState.day >= later[0][0]:
+			var move: Array = later.pop_front()
+			if not _mp_move(move):
+				_shot_fail("[SalesShot] the world's move %s was refused" % [move])
+				return false
 		_play_week()
-	var crew: Array = world.get("crew", [])
-	for role: String in crew:
+	for role: String in world.get("crew", []):
 		_mp_hire(role, HRConstants.LEVEL_MID)
-	if not crew.is_empty():
-		_a4_books(crew.size(), 0)
-		_a4_office(crew.size())
+	var staff := CharacterRegistry.count_employees()
+	if staff > 0:
+		GameState.set_cash(1_000_000)   # the move's up-front rent; _a4_books writes the world's cash after it
+		_a4_office(staff)
+		_a4_books(staff, 0)
 	if world.has("bugs"):
 		ProductState.add_bugs("line_marketplace_checkout", world.bugs)
 	_play_week()
 	return true
 
 
+## A move of a marketplace world's player: [week, move, argument] (`_MP_WORLDS`). A hired role is seated on Moda. False when the
+## seam refuses the move.
+func _mp_move(move: Array) -> bool:
+	match move[1]:
+		"hire":
+			GameState.set_cash(1_000_000)   # the setup's weeks never reach the shutter; the books are written before the world's last week
+			return MarketplaceSystem.assign(_mp_hire(move[2], HRConstants.LEVEL_MID).id, "fashion")
+		"open":
+			return MarketplaceSystem.open_category(move[2])
+	return MarketplaceSystem.set_commission("fashion", move[2])
+
+
 ## The first file of the generator's table for `role_id` at `level`, hired the way a search's hire lands (`HRSearchSystem.hire`).
-func _mp_hire(role_id: String, level: int) -> void:
+func _mp_hire(role_id: String, level: int) -> Character:
 	GameState.hr_search = {HRSearchSystem.KEY_STATE: HRConstants.SEARCH_FILES_READY, HRSearchSystem.KEY_LEVEL: level,
 		HRSearchSystem.KEY_FILES: HRCandidateGenerator.generate(role_id, level, GameState.run_seed, GameState.name_lang).slice(0, 1)}
-	HRSearchSystem.hire(0)
+	return HRSearchSystem.hire(0)
 
 
 ## One week the way the clock turns it: the day moves and every system's daily step runs in the dispatcher's order.

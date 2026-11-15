@@ -5,12 +5,13 @@ extends VBoxContainer
 # değişimde yalnız etkin olan kendini yeniden çizer.
 
 ## The sub-pages in the strip's order: [tab key, script]. A script is a VBoxContainer that repaints itself in `refresh()`.
-const PAGES := [["MP_TAB_OVERVIEW", preload("res://scripts/tabs/marketplace/mp_overview.gd")]]
+const PAGES := [["MP_TAB_OVERVIEW", preload("res://scripts/tabs/marketplace/mp_overview.gd")],
+	["MP_TAB_CATEGORIES", preload("res://scripts/tabs/marketplace/mp_categories.gd")]]
 const PARTS := preload("res://scripts/tabs/marketplace/mp_parts.gd")
 
 var _pages: Array[Control] = []
-## The page the window opens on, an index into PAGES: Genel.
-var _active := 0
+## The page the window opens on, an index into PAGES: Kategoriler before the MVP ships, Genel after.
+var _active := 0 if ProductState.is_live() else 1
 
 
 func _init() -> void:

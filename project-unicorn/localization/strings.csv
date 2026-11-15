@@ -3542,3 +3542,28 @@ MP_TOPIC_COLOR_SIZE_OPTIONS,Renk ve beden seçeneği,Color and size options
 MP_TOPIC_SHIPPING_LABEL,Kargo etiketi,Shipping label
 MP_TOPIC_PAYOUT_STATEMENT,Hakediş ekstresi,Payout statement
 MP_TOPIC_COUPON_ABUSE,Kupon suistimali,Coupon abuse
+MP_TAB_CATEGORIES,Kategoriler,Categories
+MP_LESS,Azalt,Lower
+MP_MORE,Artır,Raise
+MP_APPLY,Uygula,Apply
+MP_LOCK_FOR,{weeks} değişmez,Locked for {weeks}
+MP_COL_CATEGORY,Kategori,Category
+MP_STATE_OPEN,Açık,Open
+MP_STATE_CLOSED,Kapalı,Closed
+MP_COL_ORDERS,Sipariş,Orders
+MP_COL_COMMISSION,Komisyon,Commission
+MP_SECTOR_AVERAGE,sektör ortalaması {rate},sector average {rate}
+MP_VOLUME,Satış hacmi,Sales volume
+MP_VOLUME_WEEK,{amount} / hafta,{amount} / week
+MP_OPEN_CATEGORY,Kategoriyi aç,Open category
+MP_TIP_OPEN_CATEGORY,Açılan kategori kapatılamaz,An open category cannot be closed
+MP_CHIP_STORE_EARNINGS,Mağazanın kazancı {v},Store earnings {v}
+MP_CHIP_STORE_PRICES,Mağaza fiyatları {v},Store prices {v}
+MP_CHIP_ORDERS,Haftalık sipariş {v},Weekly orders {v}
+MP_CHIP_REVENUE,Aylık gelir {v},Monthly revenue {v}
+MP_ZONE_COMFORTABLE,rahat,comfortable
+MP_ZONE_STRAINED,zorlanır,strained
+MP_ZONE_LEAVING,ayrılır,leaving
+MP_TIP_STORE_EARNINGS,Mağazaya komisyon ve kargodan sonra kalan.,What the store keeps after commission and shipping.
+MP_TIP_PREVIEW,Dört hafta sonraki fark.,The difference four weeks from now.
+MP_SECTOR_AVERAGE_CAPTION,sektör ortalaması,sector average
