@@ -44,14 +44,13 @@ const SUB_PRODUCT_TYPES := {
 			"market_type": "b2b", "price_tendency": "neutral"},
 		{"id": "marketplace",
 			"market_type": "b2c",
-			"desks": ["product_dev", "categories", "policies", "premium", "campaigns"],
+			"desks": ["product_dev", "categories", "policies", "campaigns"],
 			"plus": "network_effect", "minus": "chicken_egg"},
 	],
 }
 
-## §12.11 — demo tip ekranı. `playable` hat içeriği olan alt-tiplerdir. B2C'nin oynanabilir türü yok: pazaryerinin tür
-## ekranı arayüzü henüz yok; hattı olup burada olmayan tür `type_screen_matches_line_content`'in `waiting` listesinde
-## adıyla durur.
+## §12.11 — demo tip ekranı. `playable` hat içeriği olan alt-tiplerdir; hattı olup burada olmayan tür
+## `type_screen_matches_line_content`'in `waiting` listesinde adıyla durur.
 ## Kilitli kartlar düz katalogdan seçilir, §12.11 pazar başına üç der. B2B'nin üçüncüsü
 ## bir ürün değil §12.11'in AÇIK SLOT'udur: dördüncü B2B alt-tipi gelene kadar kilitli
 ## kart olarak durur.
@@ -59,7 +58,7 @@ const TYPE_SCREEN_SLOT := "b2b_open_slot"
 
 const TYPE_SCREEN := {
 	"b2c": {
-		"playable": [],
+		"playable": ["marketplace"],
 		"locked": ["ai_code_copilot", "ai_photo_editor", "ai_assistant"],
 	},
 	"b2b": {

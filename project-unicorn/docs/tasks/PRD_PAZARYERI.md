@@ -98,6 +98,9 @@ görsel kabul). Bu PRD'ye özgü olanlar:
 - Bilinmeyen tür kimliği bugün sessizce "b2c" okunuyor (`product_catalog.gd:198`); bu PRD'yle hata verir.
 - Tür seçim ekranı ARAYUZ'undur; tür ona kimliğini ve metin anahtarlarını verir. Pencerenin ve rayın adı "Pazaryeri"dir
   (`left_tabs.gd:144-147`).
+- Tür ekranı yalnız oyunda var olanı vaat eder (yardımcı yönetmenin ilkesi, 15 Kasım): pazaryerinin dosyası dört masa sayar
+  (ürün geliştirme, kategoriler, politikalar, kampanyalar); Premium masası Premium inene kadar gösterilmez. Gelir satırı
+  yalnız komisyonu söyler ("Mağazaların her satışından komisyon"); Kampanyalar masasının ipucu var olan şablonları sayar.
 
 ### 2.2 Modüller
 Modül, işleviyle adlandırılmış tek bir özellik ailesidir: bugünkü hattın kendisi, üç adlı kademesiyle. Üstünde grup yoktur;

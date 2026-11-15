@@ -1023,7 +1023,7 @@ PROD_TYPE_ERP_WHO,"İnşaat, üretim, tekstil, toptan ticaret, lojistik, peraken
 PROD_TYPE_MARKETPLACE_NAME,Pazaryeri,Marketplace
 PROD_TYPE_MARKETPLACE_SHORT,Çok mağazalı e-ticaret sitesi,A multi-store e-commerce site
 PROD_TYPE_MARKETPLACE_DEF,Birçok mağazanın ürünlerini tek bir sitede sattığı e-ticaret türü.,A type of e-commerce site where many third-party stores sell their products.
-PROD_TYPE_MARKETPLACE_EARN,"Mağazadan komisyon, kullanıcıdan üyelik","Commission from stores, membership from users"
+PROD_TYPE_MARKETPLACE_EARN,Mağazaların her satışından komisyon,Commission on every sale a store makes
 PROD_TYPE_MARKETPLACE_WHO,Mağazalar ve kullanıcılar,Stores and users
 PROD_DESK_MODULES,Modüller,Modules
 PROD_DESK_MODULES_TIP,Modülleri sırayla çıkarırsın; her kademe bir beceri ister,You ship the modules one by one; each tier needs a skill
@@ -1042,7 +1042,7 @@ PROD_DESK_POLICIES_TIP,"Kargo, iade ve mağaza kuralları","Shipping, returns an
 PROD_DESK_PREMIUM,Premium üyelik,Premium membership
 PROD_DESK_PREMIUM_TIP,"Hangi ayrıcalık ücretli, sen seçersin",You choose which perk is paid
 PROD_DESK_CAMPAIGNS,Kampanyalar,Campaigns
-PROD_DESK_CAMPAIGNS_TIP,"İndirim günleri, kupon, hediye çeki","Sale days, coupons, gift cards"
+PROD_DESK_CAMPAIGNS_TIP,"İndirim günleri, kupon, X Al Y Öde","Discount days, coupons, Buy X Pay Y"
 PROD_CONCEPT_SWITCHING_COST,Geçiş maliyeti yüksek,High switching cost
 PROD_CONCEPT_SWITCHING_COST_TIP,Kurulan ERP kolay değiştirilmez; memnun müşteri kalır,An installed ERP is hard to replace; a happy customer stays
 PROD_CONCEPT_LONG_SALES_CYCLE,Uzun satış döngüsü,Long sales cycle

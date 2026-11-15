@@ -15628,7 +15628,7 @@ static func _case_type_screen_matches_line_content() -> String:
 				return "%s is playable on the type screen but has no line content" % pid
 			playable.append(pid)
 	# Bekleyen tür: hattı var, kartı yok. Tür ekrana girince ya da hat verisi silinince vaka düşer ve türü listeden çıkarır.
-	var waiting: Array[String] = ["marketplace", "note_tool", "video_clip"]
+	var waiting: Array[String] = ["note_tool", "video_clip"]
 	for pid in waiting:
 		if playable.has(pid):
 			return "%s is on the type screen; drop it from waiting" % pid

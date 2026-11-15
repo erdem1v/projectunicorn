@@ -4811,6 +4811,7 @@ func _run_ending_shot(key: String) -> void:
 
 # --product-shot=live:<scenario>: the Product tab drawn from ProductModel.live() over a run seeded through SprintSystem
 # (_seed_product_live); any other kind fails the shot. live:pick_named is the type picker with ERP and a name picked,
+# live:pick_mp the same with the marketplace,
 # live:pick_relang saves it and switches this run to English (<stem>_rebuilt: the rebuilt picker keeps the picks);
 # live:decision_paper presses the asking card's "?", so the frame is Olaylar on the sprint paper; live:gate saves the MVP gate,
 # presses its Yayınla and saves the v1.0 note (<stem>_publish); live:b2c_goal saves the planning with the lead's plan offered, applies
@@ -4835,10 +4836,11 @@ func _run_product_shot(id: String) -> void:
 	if id == "live:overview_pre" or id.begins_with("live:server"):
 		await _product_overview_shot(id.trim_prefix("live:"), stem)
 		return
-	if id in ["live:pick_named", "live:pick_relang"]:
+	if id in ["live:pick_named", "live:pick_relang", "live:pick_mp"]:
 		var picker: TypePicker = _shell.find_children("*", "TypePicker", true, false)[0]
-		picker._pick_type("erp")
-		picker._name = "Defter"   # LOC-DATA debug seed / name
+		var mp := id == "live:pick_mp"
+		picker._pick_type("marketplace" if mp else "erp")
+		picker._name = "Çarşım" if mp else "Defter"   # LOC-DATA debug seed / name
 		picker._save_draft()
 	if id.begins_with("live:decision_paper"):
 		await get_tree().process_frame
@@ -4995,7 +4997,7 @@ func _tip_target(page: Control, tip: String) -> Control:
 	return row.find_children("*", "Label", true, false).filter(func(l: Label) -> bool: return l.text == String(row.card.name))[0]
 
 
-## live:<pick|pick_named|pick_relang|plan|active|decision_paper|b2c_mvp|b2c_live|b2c_goal|b2b_mvp|b2b_mature|b2b_quarter|
+## live:<pick|pick_named|pick_mp|pick_relang|plan|active|decision_paper|b2c_mvp|b2c_live|b2c_goal|b2b_mvp|b2b_mature|b2b_quarter|
 ## b2b_requests|gate|rnd|delegate|delegate_rehire|solo15|solo15_tip|solo12_active|b2b_solo15|overview_pre|server_80|server_94|server_104|server_growth|
 ## server_auto|server_tier|server_final|server_clause|server_lock|server_b2c|mp_live>. The pick ones leave the product untyped (the type picker).
 ## mp_live is the marketplace of --sales-shot=mp_launch (four closes after its launch, `_seed_marketplace_world`). The solo ones

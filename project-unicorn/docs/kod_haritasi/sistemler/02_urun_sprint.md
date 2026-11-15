@@ -28,7 +28,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `scripts/systems/product_lines.gd` (432): hat/kademe tablosunu `data/product/lines/*.json`'dan yükler, doğrular; Ar-Ge katsayıları (lisans, tasarım eforu, AI ağırlığı); gizli hat kaydı
 - `scripts/systems/product_quality.gd` (394): ürünün tek kalitesi: alan seviyesi, beklenti, sözcük, uyum U (0-100), satışçı kapanış ihtimali, hesap uyumu
 - `scripts/systems/product_catalog.gd` (241): alt-tür tablosu (`marketplace` `saas` havuzunun sonunda; `desks`, `plus`, `minus` tür seçim ekranının alanları), demo tür ekranı (hangi tür oynanır/kilitli), eski düz özellik havuzları
-  ↳ B2C yolunun oynanabilir türü yok (pazaryerinin tür ekranı arayüzü henüz yok); `get_market_type` katalogda olmayan kimlikte (boş dahil) hata verip "" döner
+  ↳ B2C yolunun oynanabilir türü pazaryeridir (masaları ürün geliştirme, kategoriler, politikalar, kampanyalar); `get_market_type` katalogda olmayan kimlikte (boş dahil) hata verip "" döner
 - `scripts/systems/line_gates.gd` (130): kademe gereksinim doğrulayıcı (Ar-Ge düğümü, kişi ★, şirket toplamı ★); kart, tooltip ve satış aynı fonksiyonu okur
 - `scripts/systems/module_locks.gd` (35): sekme/modül sayfası bu yapıda açık mı; `UiTokens.TABS` satırındaki `lock` adı kilitler
 - `scripts/systems/incident_system.gd` (664): gecenin acil durumları: zar, tür, damga, kart isteği, saat tutuşu, cevabın bedeli (`plan`) ve uygulaması (`resolve`)
@@ -201,7 +201,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `data/product/sprint.json` blokları: effort :5, need :7, roles :16, request :40, pm :41, decision :42, paper :43, incident :50, paid_plan :79, impact :80, thanks :82, reviews :83, areas :132
 - `data/product/lines/*.json`: `subtype`, `lines[]` (id, profile design|dev|test, 3 kademe: effort, usage_weight, license_cost, requires{research,person,total}); `shared.json` 4 hat
 - Pazaryeri (`marketplace`): `lines/marketplace.json` 5 kimlik hattı (Ürün Yükleme, Vitrin, Sepet ve Ödeme, Siparişler, Yorum ve Güvence; tasarım 2, geliştirme 2, test 1), öbür dört modül `shared.json`'dan
-  ↳ Üyelik hat değil, Gelir alanındaki `cap_paid_plan`'dır; pazaryerinde Gelir alanı yoktur (`areas_for`): Ücretli planın sayfası pazaryerinde yok. Hat verisi var ama `TYPE_SCREEN`'de yok: tür seçilemez, `ProductLines.subtypes()` onu sayar
+  ↳ Üyelik hat değil, Gelir alanındaki `cap_paid_plan`'dır; pazaryerinde Gelir alanı yoktur (`areas_for`): Ücretli planın sayfası pazaryerinde yok. Tür ekranında B2C'nin oynanabilir türüdür (`TYPE_SCREEN`)
   ↳ Rakip adları `RivalCatalog.NAMES`, Piyasa yuvaları `companies.json` `sector_slots`; yayın şartı `sprint.json` `mvp_named["marketplace"]` (ilk dört hat)
 - `data/techtree/rnd_tree.json`: `k_arge` :7, `report_period_weeks` :8, `nodes` :10 (19 düğüm), `hidden_lines` :38 (4 hat, yalnız `line_hidden_self_serve` yazılı)
 - Sabitler: `SprintSystem` :14-24 (`HOLD_PLAN`, `CRUNCH_MULT`, `MVP_HORIZON`); `ProductQuality` :10-44 (`FIT_SCALE`, `RATIO_CAP`, `CLOSE_CURVE`, `AUDIENCE_STARS`)
@@ -311,8 +311,8 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
   ↳ sürüm kaydının `overflow`'u, sprintin bilgisi olduğu için sprintin her kartının satırında aynıdır, karşılaştırılmaz; `mvp_eta` yalnız `PRED`'in son alanında basılır, gerçek MVP tiki `MVP` satırındadır; adsız uyuşmazlıkta çıkış 1
 - Harness: `--product-shot=live:<tür>` (`main.gd:258`), `--rnd-shot=<tür>` (:265), `--inbox-shot=rnd_note` (:253), `--event-shot=<sprint kâğıdı>`
 - `--product-shot=live:<tür>` (`live:` olmayan tür hata basıp 1 ile çıkar) sprint motoruyla kurulan koşuda (`main.gd` `_seed_product_live` `:4388`):
-  `pick`, `pick_named`, `pick_relang`, `plan`, `active`, `decision_paper`, `b2c_mvp`, `b2c_live`, `b2c_goal`, `b2b_mvp`, `b2b_mature`,
-  ↳ `b2b_quarter`, `b2b_requests`, `gate`, `delegate`, `delegate_rehire`, `rnd`, `solo15`, `solo15_tip`, `solo12_active`, `b2b_solo15`, `overview_pre`, `server_*`, `a4_*`, `mp_live`; `mp_live` `--sales-shot=mp_launch`'ın pazaryeri (yayından sonra dört kapanış); `pick*` ürünü türsüz bırakır (tür seçici); `pick_named` ERP ve adla;
+  `pick`, `pick_named`, `pick_mp`, `pick_relang`, `plan`, `active`, `decision_paper`, `b2c_mvp`, `b2c_live`, `b2c_goal`, `b2b_mvp`, `b2b_mature`,
+  ↳ `b2b_quarter`, `b2b_requests`, `gate`, `delegate`, `delegate_rehire`, `rnd`, `solo15`, `solo15_tip`, `solo12_active`, `b2b_solo15`, `overview_pre`, `server_*`, `a4_*`, `mp_live`; `mp_live` `--sales-shot=mp_launch`'ın pazaryeri (yayından sonra dört kapanış); `pick*` ürünü türsüz bırakır (tür seçici); `pick_named` ERP ve adla, `pick_mp` pazaryeri ve adla;
   ↳ `pick_relang` aynısı, sonra koşu İngilizceye geçer ve yeniden kurulan seçici seçimi korur (`<kök>_rebuilt`). Tek kurucunun dünyaları (09:00'dan yalnız kurucu):
   ↳ `solo15` ve `solo15_tip` 15 saatte Sprint 1 planı (`solo15` liderin planı uygulanmış; `solo15_tip` yalnız önerilmiş), `solo12_active` 12 saatte liderin iki kartı koşarken (30/28, biri Sırada); `b2b_solo15` `solo15`'in ERP'lisi.
   ↳ Kalan türler HR shot kadrosuyla ve onun kasası ve bordrosuyla kurulur (`gate` ve `rnd` kurucu tek): `plan` Sprint 1 planlaması, liderin planı uygulanmış ve sonraki sütunda ilk açık kart (tasarım ona önden gider, PM hazırlar),
