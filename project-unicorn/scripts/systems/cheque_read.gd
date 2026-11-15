@@ -27,20 +27,24 @@ static func list() -> String:
 
 ## `which` listesinin (verilmezse etkin listenin) adımları sırayla, [{id, done, text_key, tab}]; MRR adımları canlı
 ## `value` ve `target` da taşır. Ödeyen ve gelir adımları canlıdır: müşteri giderse ya da MRR düşerse adım yeniden
-## açılır. Üst barın merdiveni adımların tek yazı boyunu üç listenin bütün adımlarından ölçer.
+## açılır. Dördüncü adım ERP'de hesabı, pazaryerinde geçen haftanın teslim edilen siparişini (yuvarlanmış en az 1), öbür
+## türlerde ödeyen kullanıcıyı okur. Üst barın merdiveni adımların tek yazı boyunu üç listenin bütün adımlarından ölçer.
 static func steps(which: String = "") -> Array:
 	match which if which != "" else list():
 		"cheque":
 			# Tür seçimi Sprint 1'i planlamada açar; sonraki her kip ya da sprint ilkinin başladığını söyler.
 			var started: bool = SprintSystem.is_typed() \
 				and (SprintSystem.mode() != "plan" or SprintSystem.sprint_number() > 1)
-			var paying: bool = CustomerRegistry.account_count() > 0 if SalesSystem.is_b2b_market() \
+			var marketplace: bool = SalesSystem.is_marketplace()
+			var paying: bool = roundi(MarketplaceModel.funnel(MarketplaceSystem.read_state()).delivered) >= 1 if marketplace \
+				else CustomerRegistry.account_count() > 0 if SalesSystem.is_b2b_market() \
 				else SalesSystem.b2c_paying_users() > 0
 			return [
 				{"id": "type", "done": SprintSystem.is_typed(), "text_key": "CHEQUE_STEP_TYPE", "tab": "product"},
 				{"id": "sprint", "done": started, "text_key": "CHEQUE_STEP_SPRINT", "tab": "product"},
 				{"id": "ship", "done": ProductState.is_live(), "text_key": "CHEQUE_STEP_SHIP", "tab": "product"},
-				{"id": "paying", "done": paying, "text_key": "CHEQUE_STEP_PAYING", "tab": "sales"},
+				{"id": "paying", "done": paying, "tab": "sales",
+					"text_key": "CHEQUE_STEP_FIRST_ORDER" if marketplace else "CHEQUE_STEP_PAYING"},
 				{"id": "mrr", "done": GameState.mrr >= AngelRoundSystem.MRR_THRESHOLD, "text_key": "CHEQUE_STEP_MRR",
 					"tab": "sales", "value": GameState.mrr, "target": AngelRoundSystem.MRR_THRESHOLD},
 			]

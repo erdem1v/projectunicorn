@@ -575,7 +575,7 @@ başlar, kartıyla tek commit'te iner; kol yalnız `MarketplaceSystem`'in işlev
 
 | Yer | Bugün | Olacak |
 |---|---|---|
-| `cheque_read.gd:34-40` | Dördüncü adım "İlk ödeyen müşteri" | Pazaryerinde "İlk sipariş" (ilk teslim edilen sipariş); öbür dört adım aynı |
+| `cheque_read.gd` `steps` | Dördüncü adım "İlk ödeyen müşteri" | Pazaryerinde "İlk sipariş": geçen haftanın teslim edilen siparişi yuvarlanınca en az 1 olunca tamamlanır (pencerenin başlığındaki sayı); sipariş sıfıra inerse öbür canlı adımlar gibi yeniden açılır. Öbür dört adım aynı |
 | `endings_copy.gd:384-426`, `game_state.gd:736-738` | Son kâğıdında kitle ve ödeyen; 12 cümle | Aktif kullanıcı, mağaza, haftalık sipariş; cümleler yeniden yazılır (onay bekler) |
 | `sprint_bridges.gd:298-333`, `sprint.json` yorum bloğu | Sürüm notunun yorumları (28 metin, yarısı not uygulaması dili) | Pazaryeri yorumları (onay bekler) |
 | `infra_system.gd:126`, `support_system.gd:164-167`, `product_quality.gd:198, 287` | Kitle | Aktif kullanıcı |

@@ -19,7 +19,7 @@ Kapsam içi (`scripts/`):
 - `systems/marketing_system.gd` (105): Pazarlama defteri: kanal satırları, haftalık bütçe, yürüten, yük ve Finans'ın `marketing` kalemi;
   ↳ katalog ve [WORKING] sayılar `data/marketing/channels.json`. `class_name` yok, okuyanlar preload eder.
 - `systems/angel_round_system.gd` (52): Frank'in çeki. `accept_offer` kasayı, hisse tablosunu ve sürümü tek adımda yazar.
-- `systems/cheque_read.gd` (73): koşunun adlı hedef listesi (çek, sonra seed, sonra Series A). `class_name` yok, okuyanlar preload eder.
+- `systems/cheque_read.gd` (77): koşunun adlı hedef listesi (çek, sonra seed, sonra Series A). `class_name` yok, okuyanlar preload eder. Çekin dördüncü adımı (`paying`, Satış sekmesi) ERP'de hesap sayısını, pazaryerinde geçen haftanın teslim edilen siparişini (yuvarlanınca en az 1; metin `CHEQUE_STEP_FIRST_ORDER`), öbür türlerde ödeyen kullanıcıyı okur.
 - `systems/phase_gate_system.gd` (178): faz kapısı mandalı (Traction ve Series A), Series A sinyali ve yaklaşma adımı.
 - `systems/vc_pitch_system.gd` (1327): VC görüşmesi (5 vuruş), inanç, teklif üretimi, term sheet sonuçları, geri arama, görüşme takvimi.
 - `systems/pitch_constants.gd` (187): VC odasının ve masanın ayar sabitleri; `class_name PitchConstants`.
@@ -81,7 +81,7 @@ Finans:
 
 Fon merdiveni:
 - `AngelRoundSystem.accept_offer()` `angel_round_system.gd:37`: çekin kabulü · `events/core/effects.gd:566` (`angel_accept` fiili, kart `funding.frank_cheque`).
-- `ChequeRead.list()/steps()/summary()` `cheque_read.gd:18/:31/:66`: hedef listesi; `steps(which)` adı verilen listeyi de okur (üst barın adım boyu üç listenin en uzun adımına göre) · `finance_ozet_view.gd:300`, `personal_tab.gd:198`, `top_bar.gd:344`, `inbox.gd`, `office_notice_stack.gd:130`.
+- `ChequeRead.list()/steps()/summary()` `cheque_read.gd:18/:32/:70`: hedef listesi; `steps(which)` adı verilen listeyi de okur (üst barın adım boyu üç listenin en uzun adımına göre) · `finance_ozet_view.gd:300`, `personal_tab.gd:198`, `top_bar.gd:344`, `inbox.gd`, `office_notice_stack.gd:130`.
 - `PhaseGateSystem.on_gate_declined()` `phase_gate_system.gd:94`: "Henüz değil" · `events/core/effects.gd:563` (`phase_gate_decline` fiili).
 - `PhaseGateSystem.on_shutter_started()` `:102`: sıradaki kapı kartlarını kuyruktan çeker · `EndingsSystem._tick_shutter` `endings_system.gd:119`.
 - `PhaseGateSystem.series_a_signal()/series_a_approach()` `:135/:157`: kapalı, ısınıyor, açık okuması · `seams_world.gd:37`, `finance_ozet_view.gd:328`, `investor_appetite_ui.gd`.
@@ -209,7 +209,7 @@ Tek koşturucu `bash tools/smoke_run.sh <vaka>`; vaka listesi `scripts/debug/end
   ↳ (`runners()`, `set_runner()`, `addable()`, `free_runner()`, `row_label()`, `typical_star()`); ERP canlı değilken şartını yazar.
   ↳ Kare `--marketing-shot=<erp|empty>`. Sıkı eşikte düşen aday satırın yürütenine moral (`_charge_drop`), haftalık mail
   ↳ `mkt_dropped`.
-- Çek ve turlar: `cheque_read_steps`, `angel_fires_at_crossing`, `angel_never_pre_ship`, `angel_not_below_threshold`, `angel_accept_is_atomic`, `angel_locked_choice_inert`, `angel_decline_opens_on_hard`, `angel_one_shot_falsified`,
+- Çek ve turlar: `cheque_read_steps`, `marketplace_cheque_first_order`, `angel_fires_at_crossing`, `angel_never_pre_ship`, `angel_not_below_threshold`, `angel_accept_is_atomic`, `angel_locked_choice_inert`, `angel_decline_opens_on_hard`, `angel_one_shot_falsified`,
   `angel_survives_series_a`, `angel_hire_nudge`, `seed_*`, `valuation_*`.
 - Kapılar ve görüşme: `gate1_b2b`, `gate1_b2c`, `gate2`, `gate_decline_reminder`, `gate_scope_and_halves`, `traction_gate_one_option`, `series_a_gate_mrr_only`, `series_a_signal_states`, `series_a_sheet_derives_from_arr`,
   `frank_approach_lines_once`.

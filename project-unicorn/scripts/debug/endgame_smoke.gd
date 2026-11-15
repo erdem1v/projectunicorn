@@ -678,6 +678,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"marketplace_save_fills_missing":    fail = _case_marketplace_save_fills_missing()
 		"marketplace_pitch_skips_aggregates": fail = _case_marketplace_pitch_skips_aggregates()
 		"marketplace_week_gmv":              fail = _case_marketplace_week_gmv()
+		"marketplace_cheque_first_order":    fail = _case_marketplace_cheque_first_order()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -31738,3 +31739,58 @@ static func _case_marketplace_week_gmv() -> String:
 	if not is_equal_approx(MarketplaceSystem.week_gmv(), total):
 		return "the week's volume reads %.2f, the two categories sum to %.2f" % [MarketplaceSystem.week_gmv(), total]
 	return ""
+
+
+## Pazaryeri koşusunda çekin dördüncü adımı "İlk sipariş" okunur ve geçen haftanın teslim edilen siparişi yuvarlanınca en az 1 olunca
+## tamamdır; sayı Pazaryeri penceresinin başlığındaki sayıdır. Adım yayından önce (mağaza ve kullanıcı varken de) ve siparişsiz
+## haftada açıktır, sipariş sıfıra inince yeniden açılır. ERP koşusunda adım "İlk ödeyen müşteri" okunur ve hesap sayısına bakar.
+##
+## FALSİFİKASYON: `ChequeRead.steps`te `marketplace`i `false` yap → metin satırı FAIL; pazaryerinde koşulu `MarketplaceSystem.stores() > 0`
+## yap → yayından önceki satır FAIL; koşulu `state.revenue_weeks`in toplamı > 0 yap → sıfıra inen haftanın satırı FAIL; siparişi yuvarlamadan
+## `> 0.0` ile oku → yuvarlanınca sıfır olan haftanın satırı FAIL; `marketplace`i `ProductState.subtype() != ""` yap ya da metin anahtarını
+## her türde `CHEQUE_STEP_FIRST_ORDER` yap → ERP satırları FAIL.
+static func _case_marketplace_cheque_first_order() -> String:
+	var check := func(when: String, want_done: bool) -> String:
+		var step: Dictionary = ChequeRead.steps("cheque")[3]
+		var shown: int = roundi(MarketplaceModel.metrics(MarketplaceSystem.read_state(), MarketplaceSystem.world()).orders)
+		if [step.id, step.text_key, step.tab] != ["paying", "CHEQUE_STEP_FIRST_ORDER", "sales"]:
+			return "%s: the fourth step reads %s, want paying, CHEQUE_STEP_FIRST_ORDER, sales" % [when, str(step)]
+		if step.done != want_done or (shown >= 1) != want_done:
+			return "%s: the step reads done %s with %d orders in the header, want done %s" % [when, step.done, shown, want_done]
+		return ""
+	var close := func() -> void:
+		GameState.advance_day()
+		MarketplaceSystem.daily_tick()
+	_seed_marketplace_world()
+	if not SalesSystem.is_marketplace():
+		return "fixture: the run is not a marketplace run"
+	GameState.set_flag("mvp_shipped", false)
+	close.call()
+	var bad: Array[String] = []
+	bad.append(check.call("before the launch, with stores and users", false))
+	GameState.set_flag("mvp_shipped", true)
+	close.call()
+	bad.append(check.call("after the first close", true))
+	GameState.marketplace.cats.fashion.stores = 0.0
+	MarketplaceSystem.add_users(-GameState.marketplace.users)
+	close.call()
+	bad.append(check.call("after every store and user left", false))
+	GameState.marketplace.cats.fashion.stores = 1.0
+	close.call()
+	var fraction: float = MarketplaceModel.funnel(GameState.marketplace).delivered
+	if fraction <= 0.0 or fraction >= 0.5:
+		return "fixture: a single store wrote %.3f orders, want a fraction under one half" % fraction
+	bad.append(check.call("after a week of orders that round to zero", false))
+
+	SaveManager.reset_all_owners()
+	GameState.initialize_run({"seed": 424242})
+	_seed_sprint("erp")
+	GameState.set_flag("mvp_market_type", "b2b")
+	var erp: Dictionary = ChequeRead.steps("cheque")[3]
+	if erp.text_key != "CHEQUE_STEP_PAYING" or erp.done:
+		bad.append("ERP without an account reads %s" % str(erp))
+	_seed_b2b(AngelRoundSystem.MRR_THRESHOLD - 1)
+	erp = ChequeRead.steps("cheque")[3]
+	if erp.text_key != "CHEQUE_STEP_PAYING" or not erp.done:
+		bad.append("ERP with an account reads %s" % str(erp))
+	return "; ".join(bad.filter(func(s: String) -> bool: return s != ""))
