@@ -683,6 +683,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"marketplace_week_gmv":              fail = _case_marketplace_week_gmv()
 		"marketplace_cheque_first_order":    fail = _case_marketplace_cheque_first_order()
 		"marketplace_paid_plan_waits_for_premium": fail = _case_marketplace_paid_plan_waits_for_premium()
+		"marketplace_audience_seams_redirect": fail = _case_marketplace_audience_seams_redirect(pinned)
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -31536,8 +31537,8 @@ static func _case_marketplace_close_week_wires() -> String:
 	var cost: int = FinanceSystem.daily_rate(roundi(MarketplaceModel.monthly_cost(state)))
 	if cost <= 0 or FinanceSystem.get_burn_breakdown().pazaryeri != cost:
 		return "the pazaryeri line reads %s, want %d (the close's monthly cost over 30)" % [FinanceSystem.get_burn_breakdown().pazaryeri, cost]
-	if SalesSystem.b2c_audience() != 0.0 or CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID) != null:
-		return "the old B2C audience ran in a marketplace week (audience %.2f)" % SalesSystem.b2c_audience()
+	if GameState.get_flag("b2c_audience", 0.0) != 0.0 or CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID) != null:
+		return "the old B2C audience ran in a marketplace week (audience %.2f)" % GameState.get_flag("b2c_audience", 0.0)
 	return ""
 
 
@@ -31587,18 +31588,12 @@ static func _case_marketplace_erp_run_untouched() -> String:
 
 
 ## Cevapsız bildirim varken pazaryerinin kapanışı kullanıcı defterine "Destek yığını" yazar; satır koşul sürdükçe sonraki haftalarda da
-## durur (Destek'in haftalık raporu haftanın sayacını Satış yuvasından önce sıfırlasa da) ve bildirimler cevaplanınca düşer. Pazaryerinde
-## Destek müşteri kaydına memnuniyet zararı yazmaz: Üyelik kartının eski yoldan açtığı B2C kaydı değişmez.
+## durur (Destek'in haftalık raporu haftanın sayacını Satış yuvasından önce sıfırlasa da) ve bildirimler cevaplanınca düşer.
 ##
 ## FALSİFİKASYON: `MarketplaceSystem.world`den `unanswered`ı sil → satır FAIL; `SupportSystem.unanswered_share`i haftanın sayacından
-## (`ProductState.REPORT_WEEK`) oku → satır FAIL; `apply_daily_satisfaction_damage`ten `is_marketplace()` koşulunu sil → eski B2C kaydı FAIL.
+## (`ProductState.REPORT_WEEK`) oku → satır FAIL.
 static func _case_support_backlog_row_survives() -> String:
 	_seed_marketplace_world()
-	SalesSystem.open_b2c_paid_tier(15)
-	var old_record: Customer = CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID)
-	if old_record == null:
-		return "fixture: the paid plan did not open the old B2C record"
-	var old_satisfaction: int = old_record.satisfaction
 	var backlog := func() -> Array:
 		return GameState.marketplace.ledger.users.filter(func(r: Dictionary) -> bool: return r.key == "support_backlog")
 	GameState.set_flag(ProductState.REPORTS_INCOMING, 40)
@@ -31608,8 +31603,6 @@ static func _case_support_backlog_row_survives() -> String:
 		var rows: Array = backlog.call()
 		if rows.size() != 1 or rows[0].points != -10.0:
 			return "week %d with 40 reports waiting: the users' ledger holds %s, want one Support backlog row of -10" % [week + 1, str(rows)]
-	if old_record.satisfaction != old_satisfaction:
-		return "Support wrote satisfaction damage to the old B2C record in a marketplace run (%d -> %d)" % [old_satisfaction, old_record.satisfaction]
 	GameState.set_flag(ProductState.REPORTS_INCOMING, 0)
 	_sim_day()
 	if not backlog.call().is_empty():
@@ -31992,4 +31985,122 @@ static func _case_marketplace_paid_plan_waits_for_premium() -> String:
 	if not SprintCatalog.pm_plans().any(func(plan: Dictionary) -> bool: return plan_id in plan.cards):
 		return "the note app's PM plans %s, want the paid plan in one of them" % str(SprintCatalog.pm_plans().map(
 			func(plan: Dictionary) -> Array: return plan.cards))
+	return ""
+
+
+## Pazaryeri koşusunda kitle okumaları pazaryerinin sayılarını döndürür: aktif kullanıcı, geçen haftanın yeni kullanıcısı (kaynakların
+## ilk haftası), ücret ödeyen üye (denemedekiler sayılmaz), kaybedilen kullanıcının toplamı; `growth_band` akıştan okunur: yeni kullanıcı
+## eksi elde tutulamayan kullanıcı (kullanıcı × (1 − elde tutma)), takvim saati başına, -0,1 / 0,15 / 0,6 eşikleriyle. 1.000 kullanıcıya
+## kadar eşikler mutlak kullanıcıdır (haftada -16,8 / +25,2 / +100,8); üstünde akış kullanıcı sayısına oranlanır, aynı yüzde değişim aynı
+## bandı verir (20.000 kullanıcıda haftada -336 / +504 / +2.016). `add_b2c_audience` ve olay fiilleri (`audience_delta` sayı ve yüzde,
+## kullanıcı kaydına `churn_customer`) kullanıcı ekler ve çıkarır, her biri sinyali bir kez yayar; eski kitle bayrağı ve eski toplu kayıt
+## değişmez. Destek'in cevapsız payı ve Altyapı'nın yükü bu kullanıcıyı görür: kullanıcı çok olunca bildirim akışı büyür, bekleyen bildirimin
+## payı küçülür, aynı kullanıcı sunucuyu doldurur. Not koşusunda eski kaynak okunur ve pazaryeri durumu doğmaz; ERP'de kitle, ödeyen ve
+## kayıp 0'dır.
+##
+## FALSİFİKASYON: `SalesSystem.b2c_audience`ta `is_marketplace()` dalını sil → kullanıcı satırı FAIL (Destek ve Altyapı satırları da bu
+## dalla düşer: `SupportSystem.usage_multiplier`ta ve `InfraSystem.served_count`ta `b2c_audience()` yerine eski bayrağı oku → o satır
+## FAIL); `add_b2c_audience`ta dalı sil → yazma ve olay fiili satırları FAIL; `weekly_new_users`ta `new_users`ı `users` yap → yeni
+## kullanıcı satırı FAIL; `b2c_paying_users`ta dalı sil → seam satırı FAIL; `b2c_users_lost`ta dalı sil → seam satırı FAIL;
+## `growth_band`ta `is_marketplace()` dalını sil → bant satırları FAIL; `MarketplaceSystem.users_change_per_hour`da `new_users()`ı çıkar ya
+## da kullanıcı × (1 − elde tutma) kaybını çıkar → bant satırları FAIL; `growth_band`ta ölçeği kaldır (`MP_BAND_PER_USERS / maxf(...)`
+## çarpanını sil) → 20.000 kullanıcı satırları FAIL; `maxf`in tabanını 1,0 yap (1.000'in altında da oranla) → 500 kullanıcı satırı FAIL;
+## `paying_members`ı `members` yap → deneme satırı FAIL; `_derive_b2c_mrr`daki `is_marketplace()` koşulunu sil → eski kayıt satırı FAIL.
+static func _case_marketplace_audience_seams_redirect(payload: Dictionary) -> String:
+	_seed_marketplace_world()
+	var state: Dictionary = GameState.marketplace
+	var emits: Array[int] = [0]
+	EventBus.marketplace_changed.connect(func() -> void: emits[0] += 1)
+	if SalesSystem.b2c_audience() != 2000.0:
+		return "the audience seam reads %s, want the marketplace's 2000 users" % SalesSystem.b2c_audience()
+	for i in 3:
+		GameState.advance_day()
+		MarketplaceSystem.daily_tick()
+	var fresh := 0.0
+	for weeks: Array in state.sources.values():
+		fresh += weeks[0]
+	if fresh <= 0.0 or state.lost.users <= 0.0:
+		return "fixture: the closes brought %s new users and lost %s" % [fresh, state.lost.users]
+	state.members = 300.0
+	state.premium.joined = [50.0]
+	if SalesSystem.b2c_audience() != state.users or SalesSystem.weekly_new_users() != roundi(fresh) \
+			or SalesSystem.b2c_paying_users() != 250 or SalesSystem.b2c_users_lost() != state.lost.users:
+		return "the seams read %s users, %d new, %d paying, %s lost; want %s, %d, 250 (50 are in their trial), %s" % [
+			SalesSystem.b2c_audience(), SalesSystem.weekly_new_users(), SalesSystem.b2c_paying_users(), SalesSystem.b2c_users_lost(),
+			state.users, roundi(fresh), state.lost.users]
+	var old_untouched := func() -> bool:
+		return GameState.get_flag("b2c_audience", 0.0) == 0.0 and GameState.get_flag("b2c_users_lost", 0.0) == 0.0 \
+			and CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID) == null
+	SalesSystem.open_b2c_paid_tier(15)
+	var moved := func(write: Callable, ctx: Dictionary, delta: int) -> String:
+		var before: float = state.users
+		emits[0] = 0
+		write.call(ctx)
+		if state.users != maxf(0.0, before + delta) or emits[0] != 1 or not old_untouched.call():
+			return "a write moved the users %s -> %s with %d emits, want %+d and one, and the old audience untouched" % [
+				before, state.users, emits[0], delta]
+		return ""
+	var event := func(effect: Dictionary) -> Callable:
+		return func(ctx: Dictionary) -> void: EvEffects.run_played([effect], ctx)
+	var users_record: Customer = CustomerRegistry.get_customer(MarketplaceSystem.USERS_ID)
+	var fail: String = moved.call(func(_ctx: Dictionary) -> void: SalesSystem.add_b2c_audience(500), {}, 500)
+	if fail == "":
+		fail = moved.call(event.call({"verb": "audience_delta", "amount": 300}), {}, 300)
+	if fail == "":
+		fail = moved.call(event.call({"verb": "audience_delta", "pct": -0.1}), {}, roundi(state.users * -0.1))
+	if fail == "":
+		fail = moved.call(event.call({"verb": "churn_customer"}), _ctx_customer(users_record), -roundi(state.users * EvEffects.B2C_CHURN_PCT))
+	if fail != "":
+		return fail
+	emits[0] = 0
+	SalesSystem.add_b2c_audience(0)
+	if emits[0] != 0:
+		return "a write of no users emitted"
+	state.members = 0.0
+	state.premium.joined = []
+	# Satır: kullanıcı, haftalık akış c = yeni - kullanıcı × (1 - elde tutma) (fikstür yeniyi bu c'yi verecek kadar kurar), beklenen bant.
+	# Saatlik = c / 168; okunan = saatlik × 1.000 / en az 1.000 kullanıcı; eşikler -0,1 / 0,15 / 0,6.
+	# 500 kullanıcı (çarpan 1): -20 → -0,119 melting; 3 → 0,018 flat; 60 → 0,357 steady (kullanıcıya oranlansa %12, fast okunurdu);
+	# 120 → 0,714 fast.
+	# 20.000 kullanıcı (çarpan 0,05): -400 → -2,381 × 0,05 = -0,119 melting; 160 → 0,952 × 0,05 = 0,048 flat; 1.200 → 7,143 × 0,05 = 0,357
+	# steady; 2.400 → 14,286 × 0,05 = 0,714 fast; 60 → 0,357 × 0,05 = 0,018 flat (çarpansız 0,357, steady okunurdu).
+	var keep: float = MarketplaceModel.retention(state, MarketplaceSystem.world())
+	for row: Array in [[500.0, -20.0, "melting"], [500.0, 3.0, "flat"], [500.0, 60.0, "steady"], [500.0, 120.0, "fast"],
+			[20000.0, -400.0, "melting"], [20000.0, 160.0, "flat"], [20000.0, 1200.0, "steady"], [20000.0, 2400.0, "fast"],
+			[20000.0, 60.0, "flat"]]:
+		state.users = row[0]
+		state.sources = {"organic": [row[1] + row[0] * (1.0 - keep)]}
+		if SalesSystem.growth_band() != row[2]:
+			return "%d users and a week that moved them by %+d read the band '%s', want '%s'" % [
+				row[0], row[1], SalesSystem.growth_band(), row[2]]
+	GameState.set_flag(ProductState.REPORTS_INCOMING, 10)
+	state.users = 2000.0
+	var inflow: float = SupportSystem.reports_per_day()
+	var share: float = SupportSystem.unanswered_share()
+	MarketplaceSystem.add_users(198000.0)
+	if SupportSystem.reports_per_day() <= inflow or SupportSystem.unanswered_share() >= share:
+		return "200,000 users instead of 2,000 move the report inflow %.2f -> %.2f a day and the unanswered share %.2f -> %.2f, want a larger inflow and a smaller share" % [
+			inflow, SupportSystem.reports_per_day(), share, SupportSystem.unanswered_share()]
+	InfraSystem.set_provider(InfraSystem.PROVIDER_CLOUD)
+	InfraSystem.set_capacity(4)
+	state.users = 2000.0
+	var load_before: int = InfraSystem.load_percent()
+	MarketplaceSystem.add_users(1000.0)
+	if InfraSystem.served_count() != 3000 or load_before != 50 or InfraSystem.load_percent() != 75:
+		return "2,000 and 3,000 users on 4,000 seats load the servers %d%% and %d%%, serving %d; want 50, 75 and 3000" % [
+			load_before, InfraSystem.load_percent(), InfraSystem.served_count()]
+	SaveManager.reset_all_owners()
+	GameState.initialize_run(payload)
+	_seed_b2c()
+	SalesSystem.add_b2c_audience(100)
+	if SalesSystem.b2c_audience() != 300.0 or GameState.get_flag("b2c_audience", 0.0) != 300.0 or not GameState.marketplace.is_empty():
+		return "a note run reads %s users (flag %s) and left the marketplace state %s, want the old flag's 300 and no marketplace state" % [
+			SalesSystem.b2c_audience(), GameState.get_flag("b2c_audience", 0.0), str(GameState.marketplace.keys())]
+	SaveManager.reset_all_owners()
+	GameState.initialize_run(payload)
+	_seed_sprint_live("erp")
+	if SalesSystem.b2c_audience() != 0.0 or SalesSystem.b2c_paying_users() != 0 or SalesSystem.b2c_users_lost() != 0.0 \
+			or not GameState.marketplace.is_empty():
+		return "an ERP run reads %s users, %d paying and %s lost, want 0 and no marketplace state" % [
+			SalesSystem.b2c_audience(), SalesSystem.b2c_paying_users(), SalesSystem.b2c_users_lost()]
 	return ""

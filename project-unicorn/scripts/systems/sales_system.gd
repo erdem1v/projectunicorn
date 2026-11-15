@@ -14,7 +14,9 @@ extends RefCounted
 #   - B2B: closed at the founder's table or by a rep (add_b2b_customer); fixed MRR
 #          (seats × seat price), no hourly derivation.
 #   - Marketplace: neither. The daily tick calls MarketplaceSystem.daily_tick (the weekly close, which writes the two
-#          aggregate records); the audience flow, the satisfaction drift and the derived MRR below do not run for it.
+#          aggregate records); the audience flow, the satisfaction drift and the derived MRR below do not run for it, and the
+#          audience seams (b2c_audience, add_b2c_audience, weekly_new_users, b2c_paying_users, b2c_users_lost, growth_band)
+#          read and write MarketplaceSystem's users.
 #   - Both (B2C, B2B): daily customer-satisfaction drift → health band.
 # Canonical MRR bridge (aggregate active customers → GameState.mrr) is the sink.
 #
@@ -50,6 +52,10 @@ const TRACTION_MRR_TARGET := 120_000
 # WORKING: optimistic close-rate weight on the open pipeline — feeds only the Finance
 # tab's "satış hedefi tutarsa" projection (FinanceSystem.get_optimistic_daily_net).
 const PIPELINE_WEIGHT := 0.5
+
+# A marketplace's growth band reads its flow as a share of its users once it has more than this many (the band's thresholds are
+# absolute users per hour, which at 20,000 users is noise); below it they read the absolute flow.
+const MP_BAND_PER_USERS := 1000.0           # [WORKING] onay bekliyor
 
 # --- Hourly audience flow (bidirectional, MRR derives from it) ---
 # Per-hour coefficients are ~1/24 of a daily rate. The delta is NOT clamped to ≥ 0: erosion
@@ -232,8 +238,8 @@ static func b2c_quality() -> float:
 # MRR derives from the live audience + price. Sets the aggregate B2C record absolutely
 # (seats = paying users, mrr = paying × price). No-op until a price has been set.
 static func _derive_b2c_mrr(quality: float = b2c_quality()) -> void:
-	if not GameState.get_flag("b2c_paid_tier_open", false):
-		return  # no price yet → no paying users (audience still builds on the tick)
+	if not GameState.get_flag("b2c_paid_tier_open", false) or is_marketplace():
+		return  # no price yet → no paying users (audience still builds on the tick); a marketplace earns at its weekly close
 	var price: int = int(GameState.get_flag("b2c_price", B2C_PRICE_DEFAULT))
 	var paying: int = int(round(int(b2c_audience()) * conversion_rate(price, quality)))
 	_ensure_b2c_record()
@@ -272,14 +278,20 @@ static func open_b2c_paid_tier(price: int) -> void:
 
 
 ## The users the B2C audience has lost to erosion and bug churn so far; the Series A product fund's callback counts a window of it.
+## A marketplace's are the users its weekly closes have lost.
 static func b2c_users_lost() -> float:
+	if is_marketplace():
+		return MarketplaceSystem.lost_users()
 	return maxf(0.0, float(GameState.get_flag("b2c_users_lost", 0.0)))
 
 
 ## THE read seam for the live B2C audience. Satış bu sayının sahibidir; Ürün §9'un kullanım
 ## çarpanı ve §10'un doluluk hesabı buradan okur. Sahibi olan modülde adlı bir okuma varken
 ## kimsenin bayrak adını bilmesi gerekmez; float döner, çünkü saatlik erozyon kesirde yaşıyor.
+## A marketplace's audience is its active users.
 static func b2c_audience() -> float:
+	if is_marketplace():
+		return MarketplaceSystem.users()
 	return maxf(0.0, float(GameState.get_flag("b2c_audience", 0.0)))
 
 
@@ -287,22 +299,29 @@ static func b2c_audience() -> float:
 ## _derive_b2c_mrr writes them (seats = paying, mrr = paying x price). Ch. 13 §2: a consumer
 ## run reports audience and paying users; this is the second half of that pair, and naming it
 ## here keeps the aggregate-record id out of every caller. 0 before the paid tier opens:
-## nobody is paying.
+## nobody is paying. A marketplace's are its paying members.
 static func b2c_paying_users() -> int:
+	if is_marketplace():
+		return roundi(MarketplaceSystem.paying_members())
 	var ub: Customer = CustomerRegistry.get_customer(B2C_USERBASE_ID)
 	return int(ub.seats) if ub != null else 0
 
 
 ## New users a week brings, before erosion takes any (a card prices what it keeps from them by it).
 static func weekly_new_users() -> int:
+	if is_marketplace():
+		return roundi(MarketplaceSystem.new_users())
 	var quality: float = b2c_quality()
 	return roundi(float(TimeModel.HOURS_PER_DAY) * TimeModel.per_tick(
 		_audience_delta_per_hour(quality) + _audience_loss_per_hour(quality)))
 
 
 # Event audience lever (`audience_delta`, and `churn_customer` on the B2C aggregate): moves the
-# live audience by n and re-derives MRR at once.
+# live audience by n and re-derives MRR at once. A marketplace adds users, and earns at its weekly close.
 static func add_b2c_audience(n: int) -> void:
+	if is_marketplace():
+		MarketplaceSystem.add_users(float(n))
+		return
 	# FLOAT, not int: the stored audience is _tick_b2c_audience's fractional accumulator, and
 	# truncating it here would throw away the erosion it carries. The delta `n` stays an int
 	# (callers count whole people). GameState.FLAG_TYPES pins the type.
@@ -544,8 +563,13 @@ static func apply_b2c_price(new_price: int) -> void:
 
 static func growth_band() -> String:
 	# Band id for the audience flow DIRECTION: melting | flat | steady | fast. Uses the SAME shared
-	# delta as _tick_b2c_audience so the band can never contradict the motion.
-	var delta: float = _audience_delta_per_hour()
+	# delta as _tick_b2c_audience so the band can never contradict the motion. A marketplace reads its flow (new users minus the
+	# users it could not keep), scaled to MP_BAND_PER_USERS users once it has more.
+	var delta: float
+	if is_marketplace():
+		delta = MarketplaceSystem.users_change_per_hour() * MP_BAND_PER_USERS / maxf(MarketplaceSystem.users(), MP_BAND_PER_USERS)
+	else:
+		delta = _audience_delta_per_hour()
 	if delta <= -0.1:
 		return "melting"
 	if delta < 0.15:

@@ -595,7 +595,7 @@ başlar, kartıyla tek commit'te iner; kol yalnız `MarketplaceSystem`'in işlev
 | `infra_system.gd:126`, `support_system.gd:164-167`, `product_quality.gd:198, 287` | Kitle | Aktif kullanıcı |
 | `vc_pitch_system.gd:511, 522` | Kayıp sorusu kitle kaybını okur | Kullanıcı ve mağaza kaybını okur |
 | `vc_pitch_system.gd` `_b2b_concentration` | "Tek müşteri gelirin yarısından fazlası mı" sorusu bütün aktif kayıtlara bakar | Yalnız B2B hesaplarına bakar; pazaryerinin iki toplu kaydı müşteri değildir |
-| `effects.gd:291-305`, `seams_sales.gd:155-162`, `seams_product.gd:239-245, 320-323` | Kitle seam'leri | Kullanıcıya bağlanır; adlar değişmez |
+| `effects.gd:291-305`, `seams_sales.gd:155-162`, `seams_product.gd:239-245, 320-323` | Kitle seam'leri | Kullanıcıya bağlanır; adlar değişmez. Büyüme bandı kullanıcı akışından okunur (geçen haftanın yeni kullanıcısı eksi elde tutulamayan kullanıcı); 1.000 kullanıcının üstünde akış kullanıcı sayısına oranlanır (`MP_BAND_PER_USERS`, [WORKING]) |
 `olay.payers` seam'i ödeyen kullanıcı değil, bedeli ödeyen ekip üyesidir; dokunulmaz.
 
 ## 7. Kayıt

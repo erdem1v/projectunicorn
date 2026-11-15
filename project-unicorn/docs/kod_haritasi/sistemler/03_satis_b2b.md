@@ -10,7 +10,7 @@ Sahipler: autoload `CustomerRegistry`, `ProspectRegistry`, `PromiseRegistry`; mo
   ↳ `SalesRepSystem`, `CustomerRepSystem`, `SalesLedger`, `SalesProbes`, `SalesFinalizer`, `SalesConstants`, `SalesArchetypes`, `SalesNamePool`, `B2BConstants`, `CompanyCatalog`.
 
 ## Dosyalar
-- `scripts/systems/sales_system.gd` (556): giriş kapısı; B2C kitle/MRR/fiyat formülleri, `add_b2b_customer` (tek B2B imza yolu), `reflect_mrr` (tek MRR köprüsü), satış günlüğü
+- `scripts/systems/sales_system.gd` (591): giriş kapısı; B2C kitle/MRR/fiyat formülleri, `add_b2b_customer` (tek B2B imza yolu), `reflect_mrr` (tek MRR köprüsü), satış günlüğü
 - `scripts/systems/b2b_sales_system.gd` (735): hesap yaşam döngüsü motoru; iki katmanlı memnuniyet, risk/churn sayacı, genişleme (yalnız zamanında tutulan sözden: `offer_expansion`, haftada en çok `thanks.max` hesap; kâğıdın bedelli şıkları: "Koltukları ekle" sorumlunun kurulum haftası `account_time`, "İndirimle ekle" indirim satırı `b2b_retain_discount` `growth` (kurtarma değil, memnuniyet oynamaz), hak dolunca kilitli), söz sonuçları, güven defteri, sunucu maddesi
 - `scripts/systems/b2b_constants.gd` (290): hesap makinesinin ayar bloğu (yaşam döngüsü, tolerans, söz, müşteri masası, genişleme, sektör kimlikleri)
 - `scripts/systems/sales_constants.gd` (297): satış modülünün ayar bloğu (şelale, yıldız, görüşme eşikleri, pazarlık, anlaşma planı, kayıp nedenleri, karıştırıcı sabitleri)
@@ -42,8 +42,9 @@ Sahipler: autoload `CustomerRegistry`, `ProspectRegistry`, `PromiseRegistry`; mo
 - Satış olay içeriği: `data/events/cards/customer/*.json` (17 dosya; retention, expansion, cs_escalation, request_*, frank_intro); sprint tarafı `data/events/cards/product/support_overflow.json`
 
 ## Giriş noktaları
-- `SalesSystem.daily_tick()` `scripts/systems/sales_system.gd:127`: günlük yuva 4 (pazaryeri türünde haftalık kapanış `MarketplaceSystem.daily_tick`, B2B'de B2B masası, öbüründe B2C memnuniyet tiki) · `TimeManager._dispatch_daily_tick` `scripts/autoload/time_manager.gd:403`
-- `SalesSystem.hourly_tick()` `scripts/systems/sales_system.gd:161`: B2C'de saatlik kitle/MRR (pazaryerinde yok: yalnız `reflect_mrr`), B2B'de 12:00 süpürmesi `sign_due` · `time_manager.gd:443`
+- `SalesSystem.daily_tick()` `scripts/systems/sales_system.gd:133`: günlük yuva 4 (pazaryeri türünde haftalık kapanış `MarketplaceSystem.daily_tick`, B2B'de B2B masası, öbüründe B2C memnuniyet tiki) · `TimeManager._dispatch_daily_tick` `scripts/autoload/time_manager.gd:403`
+- `SalesSystem.hourly_tick()` `scripts/systems/sales_system.gd:167`: B2C'de saatlik kitle/MRR (pazaryerinde yok: yalnız `reflect_mrr`), B2B'de 12:00 süpürmesi `sign_due` · `time_manager.gd:443`
+- Kitle seam'leri `b2c_audience()` `scripts/systems/sales_system.gd:294`, `add_b2c_audience`, `weekly_new_users`, `b2c_paying_users`, `b2c_users_lost` ve `growth_band()` `:566`: pazaryeri türünde (`is_marketplace()`) `MarketplaceSystem`'in aktif kullanıcısını, yeni kullanıcısını, ücret ödeyen üyesini ve kayıp toplamını okur, `add_b2c_audience` kullanıcı ekler; `growth_band` kullanıcının akışını (yeni kullanıcı eksi elde tutulamayan kullanıcı) okur ve 1.000 kullanıcının (`MP_BAND_PER_USERS`) üstünde kullanıcı sayısına oranlar; öbür türlerde eski B2C kitlesi. `_derive_b2c_mrr` pazaryerinde koşmaz (eski toplu kayıt doğmaz).
 - `B2BSalesSystem.daily_tick()` `scripts/systems/b2b_sales_system.gd:20`: sıra yüklü; söz vadesi, devir, hesap süpürmesi, müşteri masası, şelale, satış masası, lead ömrü · `SalesSystem.daily_tick` (yalnız B2B ürün)
 - `B2BSalesSystem._tick_customer()` `scripts/systems/b2b_sales_system.gd:48`: bir hesabın günü (madde, güven affı, memnuniyet, risk ya da sağlıklı)
 - `B2BSalesSystem.satisfaction_target()` `scripts/systems/b2b_sales_system.gd:159`: ürün uyumu eksi hata bedeli artı güven izi · `_tick_satisfaction`, Satış sekmesi, olay çipleri

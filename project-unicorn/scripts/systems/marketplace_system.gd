@@ -163,6 +163,34 @@ static func stores() -> float:
 	return total
 
 
+## Aktif kullanıcı.
+static func users() -> float:
+	return read_state().users
+
+
+## Geçen haftanın yeni kullanıcısı: bütün kaynakların ilk haftası.
+static func new_users() -> float:
+	return read_state().sources.values().reduce(func(total: float, weeks: Array) -> float: return total + weeks[0], 0.0)
+
+
+## Ücret ödeyen üye.
+static func paying_members() -> float:
+	return MarketplaceModel.paying_members(read_state())
+
+
+## Kapanışlarda kaybedilen kullanıcının birikmiş toplamı.
+static func lost_users() -> float:
+	return read_state().lost.users
+
+
+## Aktif kullanıcının akışı, takvim saati başına: geçen haftanın yeni kullanıcısı eksi elde tutulamayan kullanıcı
+## (kullanıcı × (1 − elde tutma)); kayıp bugünkü kullanıcıyla orantılıdır.
+static func users_change_per_hour() -> float:
+	var state := read_state()
+	var lost: float = state.users * (1.0 - MarketplaceModel.retention(state, world()))
+	return (new_users() - lost) / float(TimeModel.HOURS_PER_DAY * TimeModel.DAYS_PER_TICK)
+
+
 ## Talepler'in satırları: modelin satırları ve her satırın kartının kimliği; kademe konusunda modülün o kademesinin özellik kartı
 ## (`feat:<adım>`), ek özellikte `ext:<konu>`.
 static func request_topics() -> Array:
