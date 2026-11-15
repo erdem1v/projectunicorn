@@ -44,11 +44,13 @@ static func cfg(path: String) -> Variant:
 
 # --- Alanlar ve yetenekler ------------------------------------------------------
 
-## Pazarın alanları sırasıyla. Tür seçilmeden alan yoktur.
+## Pazarın alanları sırasıyla. Tür seçilmeden alan yoktur. Pazaryerinde Gelir alanı yoktur: tek yeteneği Ücretli plan,
+## onun sayfası pazaryerinde yok.
 static func areas_for(subtype: String, market: String) -> Array:
 	if subtype == "":
 		return []
-	var out: Array = (cfg("areas") as Array).filter(func(a: Dictionary) -> bool: return market in a.markets)
+	var out: Array = (cfg("areas") as Array).filter(func(a: Dictionary) -> bool:
+		return market in a.markets and not (PAID_PLAN in a.lines and subtype == MarketplaceSystem.TYPE_ID))
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.order < b.order)
 	return out.map(func(a: Dictionary) -> Dictionary: return a.duplicate(true))
 

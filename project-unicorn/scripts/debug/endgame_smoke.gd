@@ -679,6 +679,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"marketplace_pitch_skips_aggregates": fail = _case_marketplace_pitch_skips_aggregates()
 		"marketplace_week_gmv":              fail = _case_marketplace_week_gmv()
 		"marketplace_cheque_first_order":    fail = _case_marketplace_cheque_first_order()
+		"marketplace_paid_plan_waits_for_premium": fail = _case_marketplace_paid_plan_waits_for_premium()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -31794,3 +31795,51 @@ static func _case_marketplace_cheque_first_order() -> String:
 	if erp.text_key != "CHEQUE_STEP_PAYING" or not erp.done:
 		bad.append("ERP with an account reads %s" % str(erp))
 	return "; ".join(bad.filter(func(s: String) -> bool: return s != ""))
+
+
+## Pazaryerinde Gelir alanı yoktur (tek yeteneği Ücretli plan, onun sayfası pazaryerinde yok): yayındaki pazaryeri ürününde Ürün
+## penceresinin alan ve modül listesinde, hiçbir alanın yeteneğinde ve adayında Ücretli plan çıkmaz, liderin önerisi ve PM'in planı
+## onu görmez. Aynı fikstür not türüyle kurulunca Gelir alanı, kartı, liderin önerisi ve PM'in planı eskisi gibidir.
+##
+## FALSİFİKASYON: `SprintCatalog.areas_for`taki pazaryeri koşulunu sil → pazaryeri satırı FAIL; koşuldan `subtype ==
+## MarketplaceSystem.TYPE_ID`yi at (her B2C türüne yay) → not türü satırı FAIL; koşulu `areas_for` yerine `_capabilities_of`ta tut
+## (Gelir alanı boş kalır) → Gelir alanı satırı FAIL.
+static func _case_marketplace_paid_plan_waits_for_premium() -> String:
+	var paid: String = SprintCatalog.PAID_PLAN
+	var plan_id: String = "plan:" + paid
+	_seed_sprint(MarketplaceSystem.TYPE_ID)
+	_make_employee("e_pm", "Deniz", HRConstants.ROLE_PRODUCT_MANAGER)
+	_seed_mvp_lines()
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_version", 1)
+	if SprintCatalog.gate_reason(paid) != "":
+		return "fixture: the paid plan is still locked, so the lead and PM lines prove nothing"
+	var model: Dictionary = ProductModel.live()
+	if model.areas.any(func(a: Dictionary) -> bool: return a.id == "revenue") \
+			or model.modules.any(func(m: Dictionary) -> bool: return m.id == paid):
+		return "the Product window lists the Gelir area or the paid plan module"
+	for area in SprintCatalog.area_ids():
+		if paid in SprintCatalog.capabilities(area):
+			return "area %s reads the paid plan among its capabilities" % area
+		if SprintCatalog.candidates(area).any(func(c: Dictionary) -> bool: return c.line == paid):
+			return "area %s offers the paid plan card" % area
+	var offer: Dictionary = SprintCatalog.lead_suggestion()
+	if plan_id in offer.this or plan_id in offer.next:
+		return "the lead suggests the paid plan: %s" % str(offer)
+	for plan in SprintCatalog.pm_plans():
+		if plan_id in plan.cards:
+			return "the PM plans the paid plan: %s" % str(plan.cards)
+	SaveManager.reset_all_owners()
+	GameState.initialize_run({"seed": 424242})
+	_seed_sprint_live("note_tool")
+	_make_employee("e_pm", "Deniz", HRConstants.ROLE_PRODUCT_MANAGER)
+	if "revenue" not in SprintCatalog.area_ids() or not SprintCatalog.candidates("revenue").any(
+			func(c: Dictionary) -> bool: return c.id == plan_id):
+		return "the note app lost the Gelir area or its paid plan card"
+	var lead: Dictionary = SprintCatalog.lead_suggestion()
+	if plan_id not in lead.this:
+		return "the note app's lead suggests %s, want the paid plan among them" % str(lead.this)
+	if not SprintCatalog.pm_plans().any(func(plan: Dictionary) -> bool: return plan_id in plan.cards):
+		return "the note app's PM plans %s, want the paid plan in one of them" % str(SprintCatalog.pm_plans().map(
+			func(plan: Dictionary) -> Array: return plan.cards))
+	return ""

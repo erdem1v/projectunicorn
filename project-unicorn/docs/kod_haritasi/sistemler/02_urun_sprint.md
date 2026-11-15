@@ -19,7 +19,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `scripts/systems/sprint_bugs.gd` (176): `SprintBugs` (RefCounted), kartın hata modeli: beklenen hata yükü, testin yakalama oranı, testi biten kartın tohumlu zarı, sürüme bırakılan hata;
   ↳ sayılar `data/product/sprint.json` `bugs` bloğunda [WORKING]
 - `scripts/systems/sprint_prep.gd` (134): `SprintPrep`, PM'in sonraki sütunu önden hazırlaması: hazırlık işi, PM hızı, kart sahipliği (kural A), hız ve hata kazancı; sayılar `sprint.json` `prep` bloğunda [WORKING]
-- `scripts/systems/sprint_catalog.gd` (988): salt okur katalog: alanlar, aday kartlar, kilit gerekçesi, etki/öngörü satırları, lider ve PM planı, rakipler, `cfg("a.b")` ile sprint.json
+- `scripts/systems/sprint_catalog.gd` (990): salt okur katalog: alanlar, aday kartlar, kilit gerekçesi, etki/öngörü satırları, lider ve PM planı, rakipler, `cfg("a.b")` ile sprint.json
 - `scripts/systems/sprint_timeline.gd` (326): sprint ekranının zaman ekseni: motorun oynatma günlüğünden aşama yerleşimi, bekleme, kurucunun görüşme taraması, kişi parçaları, kapasite satırı kuralı; yalnız okur
 - `scripts/systems/sprint_bridges.gd` (378): B2B talepleri (günlük doğan ve olayın açtığı), rakip çıkışları, basın satırı, MVP/ücretli plan ekonomisi, sürüm notu cümleleri, teşekkür notu ve B2C yorumları
 - `scripts/systems/product_state.gd` (341): `mvp_*` bayraklarının evi: kimlik, hat kademeleri, açık hata deposu, sürüm yaşı/ilgi, sunucu sağlayıcı ve kapasite yazma yolu
@@ -110,6 +110,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `SprintSystem.plan_outcome()/mvp_eta()/team()/payers()` `sprint_system.gd:814`/`:844`/`:745`/`:767`: plan önizlemesi, MVP tahmini, ekip, bedel ödeyenler · ProductModel, effects.gd
 - `SprintCatalog.cfg()` `scripts/systems/sprint_catalog.gd:29`: sprint.json okuması (yoksa yükler) · yaklaşık her sistem; `load_data()` :23 → `main.gd:4981`
 - `SprintCatalog.candidates()` `sprint_catalog.gd:194`: alanın aday kartları (feat:/plan:/fix:/res:; talebin konusu kademenin feat: kartıdır, bekleyenleri `SprintCatalog.askers`) · ProductModel, `SprintSystem`
+  ↳ `areas_for` pazaryerinde Gelir alanını (tek yeteneği `cap_paid_plan`; onun sayfası pazaryerinde yok) vermez: Ücretli plan kartı sprint adayında, liderin ve PM'in önerisinde, Ürün penceresinin alan ve modül listesinde ve çeyrek hedefi menüsünde çıkmaz; ERP ve öbür B2C türleri aynı; koşul tek yerdedir (smoke `marketplace_paid_plan_waits_for_premium`)
 - `SprintCatalog.lead_suggestion()/pm_plans()` `sprint_catalog.gd:509`/`:658`: lider `{this, next}` (bu sprint, sonraki sütun) ve PM planı (`_suggest` :1007); PM planı Ürün puanından bağımsız tam kart taşır · `apply_lead`, ÇEYREK
 - `SprintCatalog._lead_picks()` `sprint_catalog.gd:532`: iki sütunun ortak alım döngüsü; sütunda tavan `room` = kapasite − sütunun kalanı − `SprintSystem.carried_points` `sprint_system.gd:859` · `lead_suggestion`
 - `SprintCatalog.gate_reason()` `sprint_catalog.gd:278`: kilitli kademenin gerekçesi (`LineGates.unmet_parts`) · `_begin`, `product_model.gd:644`
@@ -199,7 +200,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `data/product/sprint.json` blokları: effort :5, need :7, roles :16, request :40, pm :41, decision :42, paper :43, incident :50, paid_plan :79, impact :80, thanks :82, reviews :83, areas :132
 - `data/product/lines/*.json`: `subtype`, `lines[]` (id, profile design|dev|test, 3 kademe: effort, usage_weight, license_cost, requires{research,person,total}); `shared.json` 4 hat
 - Pazaryeri (`marketplace`): `lines/marketplace.json` 5 kimlik hattı (Ürün Yükleme, Vitrin, Sepet ve Ödeme, Siparişler, Yorum ve Güvence; tasarım 2, geliştirme 2, test 1), öbür dört modül `shared.json`'dan
-  ↳ Üyelik hat değil, Gelir alanındaki `cap_paid_plan`'dır. Hat verisi var ama `TYPE_SCREEN`'de yok: tür seçilemez, `ProductLines.subtypes()` onu sayar
+  ↳ Üyelik hat değil, Gelir alanındaki `cap_paid_plan`'dır; pazaryerinde Gelir alanı yoktur (`areas_for`): Ücretli planın sayfası pazaryerinde yok. Hat verisi var ama `TYPE_SCREEN`'de yok: tür seçilemez, `ProductLines.subtypes()` onu sayar
   ↳ Rakip adları `RivalCatalog.NAMES`, Piyasa yuvaları `companies.json` `sector_slots`; yayın şartı `sprint.json` `mvp_named["marketplace"]` (ilk dört hat)
 - `data/techtree/rnd_tree.json`: `k_arge` :7, `report_period_weeks` :8, `nodes` :10 (19 düğüm), `hidden_lines` :38 (4 hat, yalnız `line_hidden_self_serve` yazılı)
 - Sabitler: `SprintSystem` :14-24 (`HOLD_PLAN`, `CRUNCH_MULT`, `MVP_HORIZON`); `ProductQuality` :10-44 (`FIT_SCALE`, `RATIO_CAP`, `CLOSE_CURVE`, `AUDIENCE_STARS`)
