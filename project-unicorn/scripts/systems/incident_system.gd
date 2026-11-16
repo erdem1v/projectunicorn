@@ -52,8 +52,10 @@ static var rolls := true
 
 ## The answers that leave an outage's fix to the workday's start: the accounts pay for the hours they could not work.
 const MORNING_ACTS := ["morning", "morning_credit", "morning_free_month"]
-## The answers that give the people it hurt a free month.
+## The answers that give the people it hurt a free month; on a marketplace, a week without commission.
 const FREE_MONTH_ACTS := ["morning_free_month", "defer_free_month"]
+## The weeks a marketplace's free month takes no commission for (PRD_PAZARYERI §5.2).
+const WAIVE_WEEKS := 1
 ## The answers that fix it at once: an account that lived through it thanks for it (SprintBridges.thank).
 const QUICK_ACTS := ["now", "founder", "evening"]
 
@@ -463,7 +465,8 @@ static func quick_fix() -> Dictionary:
 ## What an act costs and does, worked out the way `resolve` applies it, in figures only: when the fix lands (`back`, an
 ## absolute minute, and `tomorrow` if it waits for another day's workday: a fix past midnight is still tonight's), and
 ## by market what the accounts keep (`trust` rows, `per_sprint`, `credit`) or what the audience is spared and loses
-## (`audience`, `drain`, `free`). A chip, a history row and the application read this one dict.
+## (`audience`, `drain`, `free`; on a marketplace `waive` in place of `free`). A chip, a history row and the application
+## read this one dict.
 ## The acts: `now` (the team fixes it at once), `founder` (the founder does, slower), `evening` (the team, after the
 ## workday), `morning` (the team at the workday's start), `morning_credit` and `morning_free_month` (an outage's
 ## morning, with every account credited or the audience that tried the app given a month), `defer` (the fix waits for
@@ -498,7 +501,10 @@ static func plan(act: String) -> Dictionary:
 			"checkout":
 				out["audience"] = -_give_up(hours)
 		if act in FREE_MONTH_ACTS:
-			out["free"] = _free_month(_affected())
+			if SalesSystem.is_marketplace():
+				out["waive"] = {"weeks": WAIVE_WEEKS, "amount": MarketplaceSystem.week_commission()}
+			else:
+				out["free"] = _free_month(_affected())
 		if act.begins_with("defer"):
 			out["drain"] = float(_cfg("defer.free_month_audience" if act == "defer_free_month" else "defer.audience"))
 	return out
@@ -519,6 +525,8 @@ static func resolve(act: String) -> Dictionary:
 		FinanceSystem.apply_one_time_cost(int(plan_done.credit.amount), "outage_credit")
 	if plan_done.has("free"):
 		FinanceSystem.apply_one_time_cost(int(plan_done.free.amount), "refunds")
+	if plan_done.has("waive"):
+		MarketplaceSystem.waive_commission(int(plan_done.waive.weeks))
 	if int(plan_done.get("audience", 0)) != 0:
 		SalesSystem.add_b2c_audience(int(plan_done.audience))
 	if plan_done.has("drain"):
@@ -653,6 +661,13 @@ static func _affected() -> int:
 	if String(GameState.incident.get("open", {}).get("kind", "")) in ["outage", "checkout"]:
 		return tried()
 	return SprintCatalog.line_users(hit_line())
+
+
+## What the free month costs now: the paying users' month, or on a marketplace a normal week's commission. 0 locks the
+## answer: an answer that costs nothing would always be the best one.
+static func free_month_cost() -> int:
+	var p: Dictionary = plan("defer_free_month")
+	return int((p.waive if p.has("waive") else p.get("free", {})).get("amount", 0))
 
 
 ## A free month for these people: only those among them who pay cost anything.

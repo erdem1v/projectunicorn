@@ -152,6 +152,9 @@ static func install() -> void:
 	EvSeams.register("sales.is_b2b", G, TYPE_BOOL,
 		func() -> bool: return SalesSystem.is_b2b_market(),
 		"Sales", "reads the SHIPPED market, not one being built")
+	EvSeams.register("sales.is_marketplace", G, TYPE_BOOL,
+		func() -> bool: return SalesSystem.is_marketplace(),
+		"Sales", "the product is a marketplace; a line's marketplace arm is variant 1")
 	EvSeams.register("sales.b2c_audience", G, TYPE_FLOAT,
 		func() -> float: return SalesSystem.b2c_audience(),
 		"Sales", "float: it carries a sub-unit accumulator")

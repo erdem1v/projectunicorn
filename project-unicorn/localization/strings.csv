@@ -3371,6 +3371,8 @@ EFFECT_APP_BACK,Uygulama {clock} sularında açılır,App back around {clock}
 EFFECT_OUTAGE_CREDIT,Kesinti kredisi · {n} hesap · %{pct} {v},Outage credit · {n} accounts · {pct}% {v}
 EFFECT_OUTAGE_CREDIT_ONE,Kesinti kredisi · {n} hesap · %{pct} {v},Outage credit · {n} account · {pct}% {v}
 EFFECT_FREE_MONTH,Bir ay ücretsiz · {n} kişi · ödeyen {paying} {v},Free month · {n} people · {paying} paying {v}
+EFFECT_WAIVE_COMMISSION,{n} hafta komisyon yok {v},{n} weeks without commission {v}
+EFFECT_WAIVE_COMMISSION_ONE,Bir hafta komisyon yok {v},A week without commission {v}
 EFFECT_TRUST_NIGHT_ACCOUNTS,{n} gece vardiyalı hesap: memnuniyet {v} · {customer} {from} → {to},{n} night shift accounts: satisfaction {v} · {customer} {from} → {to}
 EFFECT_TRUST_OTHER_ACCOUNTS,Öbür {n} hesap: memnuniyet {v},Other {n} accounts: satisfaction {v}
 EFFECT_TRUST_NEW_ACCOUNTS,Yeni hesapların memnuniyeti {v},New accounts' satisfaction {v}

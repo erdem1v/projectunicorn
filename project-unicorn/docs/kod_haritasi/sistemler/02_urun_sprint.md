@@ -31,7 +31,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
   ↳ B2C yolunun oynanabilir türü pazaryeridir (masaları ürün geliştirme, kategoriler, politikalar, kampanyalar); `get_market_type` katalogda olmayan kimlikte (boş dahil) hata verip "" döner
 - `scripts/systems/line_gates.gd` (130): kademe gereksinim doğrulayıcı (Ar-Ge düğümü, kişi ★, şirket toplamı ★); kart, tooltip ve satış aynı fonksiyonu okur
 - `scripts/systems/module_locks.gd` (35): sekme/modül sayfası bu yapıda açık mı; `UiTokens.TABS` satırındaki `lock` adı kilitler
-- `scripts/systems/incident_system.gd` (664): gecenin acil durumları: zar, tür, damga, kart isteği, saat tutuşu, cevabın bedeli (`plan`) ve uygulaması (`resolve`)
+- `scripts/systems/incident_system.gd` (677): gecenin acil durumları: zar, tür, damga, kart isteği, saat tutuşu, cevabın bedeli (`plan`) ve uygulaması (`resolve`)
 - `scripts/systems/infra_system.gd` (290): sunucu sağlayıcı kademesi, kapasite birimi, yük yüzdesi, otomatik ayar, fatura, olayların fiyat çarpanı ve sözleşme kilidi; durumu `ProductState`'te tutar
 - `scripts/systems/rnd_system.gd` (814): Ar-Ge motoru: başlat/duraklat/vazgeç, atananlar, birikim, donma, tamamlama, gizli hat, aylık ürün notu, kayıt
 - `scripts/systems/research_tree.gd` (449): `rnd_tree.json` yükleyici ve doğrulayıcı: efor/nakit/yıldız bantları, çapraz koşul, 8 katsayı, gizli hat profilleri
@@ -97,7 +97,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `SprintSystem.sync_plan_hold()` `sprint_system.gd:1922`: plan beklerken ve saat şirketin mesai başlangıcına (`WorkHoursSystem.start_hour()`) gelmişken `TimeManager.hold_clock("sprint_plan")` ·
   ↳ `scripts/main/game_shell.gd:24`, `_changed`; gece kapanan sprintin planı 08:00'de saati tutmaz, 08:00 ile mesai başlangıcı arasında saat akar ve `_on_hour` (`hour_changed`) o saatte tutuşu alır;
   ↳ toplu adımda `clock_batch_ended`e ertelenir
-- `SprintSystem.record_interrupt()` `sprint_system.gd:691`: sprintin kesinti kaydı (incident|promise|paper) · `IncidentSystem._ask` `incident_system.gd:272`
+- `SprintSystem.record_interrupt()` `sprint_system.gd:691`: sprintin kesinti kaydı (incident|promise|paper) · `IncidentSystem._ask` `incident_system.gd:274`
 - `SprintSystem.timeline(extra)` `sprint_system.gd:889`: planlamada plan (artı `extra` aday) ya da koşan sprintin kalanı tek oynatmayla `SprintTimeline.build`e girer; planlamada `outcome` = `plan_outcome` biçimi · `ProductModel.live`
 - `SprintSystem.prep_gains(weeks)` `sprint_system.gd:909`: sonraki sütunun kartlarının `weeks` hafta sonraki hazırlık kazancı (kopyalarda yalnız PM'lerin haftaları) · `ProductModel._next`
 - `SprintSystem.away()` `sprint_system.gd:790`: ekip dışı kişiler [{id, reason}]: `training`, `leave`, `research`, kurucu `meetings` · `ProductModel._crew`
@@ -121,7 +121,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `SprintBridges.thank()/pick_reviews()` `sprint_bridges.gd:189`/`:263`: sürüm teşekkür notu ve B2C yorumları · `SprintSystem._close`
 - `ProductState.add_bugs()/clear_line_bugs()` `scripts/systems/product_state.gd:199`/`:207`: açık hata deposunun tek yazarları · `support_system.gd:128`, `_close`, `effects.gd:531`
 - `ProductState.worst_bug_line()/lines_by_bugs()` `product_state.gd:178`/`:165`: en çok hatalı hat (eşitlikte en çok kullanıcıyı etkileyen hat, o da eşitse küçük kimlik; `defter` varsayılan olarak şimdiki depo)
-  ↳ · `IncidentSystem._worst` `incident_system.gd:351` ve `SprintBridges._unhappy` `sprint_bridges.gd:311` kritik hat süzgecinden sonra bunu çağırır
+  ↳ · `IncidentSystem._worst` `incident_system.gd:353` ve `SprintBridges._unhappy` `sprint_bridges.gd:311` kritik hat süzgecinden sonra bunu çağırır
 - `ProductState.set_line_tier()` `product_state.gd:92`: kademe yazma (merdiveni sormaz) · `SprintSystem._close` :1430
 - `ProductState.set_infra_provider()/set_infra_units()/set_infra_price()/set_infra_lock()` `product_state.gd:299`/`:306`/`:350`/`:364`: sunucu durumu yazma, `infra_changed` yayar · `InfraSystem` tek çağıran
 - `ProductSystem.daily_tick()/reset()` `scripts/systems/product_system.gd:29`/`:11`: açık hata görüntüsü; koşu sınırı · TimeManager, `save_manager.gd:357`
@@ -140,10 +140,10 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `InfraSystem.is_economy()` `infra_system.gd:83`: seçili sağlayıcı Ekonomik mi; satış masasının `provider_not_economy` olgusunun, kayıp engelinin ve `report_inflow_multiplier`'ın tek okuması · `sales_probes.gd`,
   ↳ `sales_meeting_system.gd`, `sales_ledger.gd`
 - `InfraSystem.scale_price()/lock()/lock_reason()/lock_weeks_left()/capacity_floor()` `infra_system.gd:225`/`:236`/`:242`/`:246`/`:251`: olay fiilleri `server_price` / `server_lock` ve onların kuralı · `effects.gd:752-760`, `mail_pane.gd:159`, `run_probe.gd` (`_run_the_servers`, `_answer_the_clause`)
-- `IncidentSystem.daily_tick()` `scripts/systems/incident_system.gd:121`: 00:00 zarı (yalnız karar verir) · `time_manager.gd:419` (EventGate'ten sonra)
-- `IncidentSystem.hourly_tick()` `incident_system.gd:219`: damgadan sonraki ilk tam saatte kartı ister (`_ask` :254) · `time_manager.gd:449`
-- `IncidentSystem.plan()/resolve()` `incident_system.gd:473`/`:510`: cevabın bedeli ve uygulaması · çip, geçmiş, olay fiili `incident` `effects.gd:302`
-- `IncidentSystem.force_on()` `incident_system.gd:228`: debug, o tikin zarını zorlar · `sprint_probe.gd` (`incident=<tür>@<tik>`)
+- `IncidentSystem.daily_tick()` `scripts/systems/incident_system.gd:123`: 00:00 zarı (yalnız karar verir) · `time_manager.gd:419` (EventGate'ten sonra)
+- `IncidentSystem.hourly_tick()` `incident_system.gd:221`: damgadan sonraki ilk tam saatte kartı ister (`_ask` :256) · `time_manager.gd:449`
+- `IncidentSystem.plan()/resolve()` `incident_system.gd:476`/`:516`: cevabın bedeli ve uygulaması · çip, geçmiş, olay fiili `incident` `effects.gd:302`
+- `IncidentSystem.force_on()` `incident_system.gd:230`: debug, o tikin zarını zorlar · `sprint_probe.gd` (`incident=<tür>@<tik>`)
 - `RnDSystem.daily_tick()` `scripts/systems/rnd_system.gd:101`: birikim, donma, aylık not · `time_manager.gd:399`; ağaç v1.0'dan önce kapalı (`tree_open` rnd_system.gd:62)
 - `RnDSystem.start()/set_assignees()/pause()/abandon()` `rnd_system.gd:246`/`:284`/`:314`/`:325`: Ar-Ge eylemleri · `rnd_assign_panel.gd:229-231`, `research_bar.gd:186`
 - `RnDSystem.drop_assignee()` `rnd_system.gd:335`: kişi işten çekilince atamadan düşer · `character_registry.gd:253`, `:309`
@@ -180,7 +180,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `headline_added`, `ticker_live_line`, `mentor_advisory_changed`: yayan `sprint_bridges.gd:117`, `:83`, `:134` · haber bandı ve Frank satırı
 - `module_unlocked`: yayan `scripts/events/core/engine.gd:270` (`EvDelays.module_openings`, ModuleLocks'u okur) · olay motoru `signals.gd:41`
 - Dinlenenler: `sprint_system.gd:1332-1350` (`event_resolved`, `hr_day_processed`, `character_removed`, `assignment_changed`, `employee_hired`, `training_started`, `TimeManager.speed_changed`)
-- Dinlenenler: `incident_system.gd:313-314` (`event_resolved`, `clock_batch_ended`); `sprint_system.gd:1906` (`clock_batch_ended`, tek seferlik)
+- Dinlenenler: `incident_system.gd:315-316` (`event_resolved`, `clock_batch_ended`); `sprint_system.gd:1906` (`clock_batch_ended`, tek seferlik)
 
 ## Durum ve veri
 
@@ -412,10 +412,10 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
   ↳ `set_provider` Kurumsal dahil her kademeyi reddeder ve `set_capacity` imzadaki birimin altına inmez (`capacity_floor()`), büyütmek ve Otomatik ayar serbesttir; sözleşme `mvp_infra_lock_until`
   ↳ tikinde kendiliğinden biter. Kilidin gerekçesi `PRODUCT_SERVER_LOCK_REASON`dır, `{weeks}`i çağıran `Fmt.weeks(lock_weeks_left())` ile doldurur; sözleşmeyi imzalatan kart canlı üründedir (MVP'deki
   ↳ `set_provider` kilitten önce olur)
-- Sunucu kapasitesini yalnız oyuncu ve Otomatik ayar değiştirir; `SprintBridges.on_release` ona dokunmaz (`sprint_bridges.gd:61`); dolu sunucunun tek bedeli kesinti ihtimalidir (`IncidentSystem.load_mult` incident_system.gd:75)
+- Sunucu kapasitesini yalnız oyuncu ve Otomatik ayar değiştirir; `SprintBridges.on_release` ona dokunmaz (`sprint_bridges.gd:61`); dolu sunucunun tek bedeli kesinti ihtimalidir (`IncidentSystem.load_mult` incident_system.gd:77)
 - Saat tutuşları: `sprint_plan` (`sprint_system.gd:22`), `incident` (`incident_system.gd:48`), `product_release_note` (`product_tab.gd:19`); toplu adımda `clock_batch_ended`'e ertelenir; harness zarı kapatmazsa saat takılır
 - Kesinti sırası: söz olayı veya acil durum gelen sprintte kâğıt gelmez; kâğıtlı sprintte yalnız `SERVICE_DOWN` (outage, checkout) gelir, öbürü `incident.shifted`'e kalır (`sprint_system.gd:1300`)
-- Reddedilen acil durum başlamamış sayılır: `last_day` yazılmaz, tutuş yok (`incident_system.gd:254`); zar yalnız karar verir, kart bir sonraki tam saatte istenir
+- Reddedilen acil durum başlamamış sayılır: `last_day` yazılmaz, tutuş yok (`incident_system.gd:256`); zar yalnız karar verir, kart bir sonraki tam saatte istenir
 - Ar-Ge ile Ürün kapıları farklı soru sorar: `LineGates` ham `HRSystem.skill` (izindeki de sayılır), `RnDSystem.area_has_star` etkin çıktı (:387); tek fonksiyona birleştirme
 - `ResearchSeam.completed()` adı sözleşmedir (yeniden adlandırma); bilinmeyen kimlik `push_error` + false. `RnDSystem._complete` (:437) önce DONE yazar: gizli hat kaydı yeniden girebilir
 - Yükleme sırası: `ProductSystem.from_dict` sonra `RnDSystem.from_dict`; gizli hatlar `ProductState.subtype()`'a bakar (`save_manager.gd:405-408`); çalışma anı hatları kayıt dışıdır

@@ -113,6 +113,11 @@
     {
       "id": "free_month_defer",
       "outcome_id": "free_month_defer",
+      "requires": {
+        "seam": "olay.free_month_cost",
+        "op": ">=",
+        "value": 1
+      },
       "effects": [
         {
           "verb": "incident",
@@ -151,13 +156,26 @@
         "sprint_stop": "Sprinti durdur, şimdi düzelt",
         "evening": "Ekip bu akşam kalsın",
         "founder_fix": "Kendin düzelt",
-        "free_month_defer": "Bir ay ücretsiz ver, sonraki sprinte bırak",
+        "free_month_defer": {
+          "by_seam": "sales.is_marketplace",
+          "variants": {
+            "0": "Bir ay ücretsiz ver, sonraki sprinte bırak",
+            "1": "Bir hafta komisyon alma, sonraki sprinte bırak"
+          }
+        },
         "silent_defer": "Sessiz kal, sonraki sprinte bırak"
       },
       "locked_reasons": {
         "sprint_stop": "Şu anda koşan bir sprint yok.",
         "evening": "Ekipte yazılım ya da test yapan kimse yok.",
-        "founder_fix": "Ekip iki kişiyi geçti."
+        "founder_fix": "Ekip iki kişiyi geçti.",
+        "free_month_defer": {
+          "by_seam": "sales.is_marketplace",
+          "variants": {
+            "0": "Etkilenenlerin hiçbiri ücret ödemiyor.",
+            "1": "Henüz komisyon alınmadı."
+          }
+        }
       },
       "expire_note": "Karar verilmedi, gönderi paylaşılmaya devam etti."
     },
@@ -176,13 +194,26 @@
         "sprint_stop": "Stop the sprint, fix it now",
         "evening": "Have the team stay late tonight",
         "founder_fix": "Fix it yourself",
-        "free_month_defer": "Give a free month, fix it next sprint",
+        "free_month_defer": {
+          "by_seam": "sales.is_marketplace",
+          "variants": {
+            "0": "Give a free month, fix it next sprint",
+            "1": "Take no commission for a week, fix it next sprint"
+          }
+        },
         "silent_defer": "Stay quiet, fix it next sprint"
       },
       "locked_reasons": {
         "sprint_stop": "No sprint is running right now.",
         "evening": "Nobody on the team builds or tests.",
-        "founder_fix": "The team has grown past two people."
+        "founder_fix": "The team has grown past two people.",
+        "free_month_defer": {
+          "by_seam": "sales.is_marketplace",
+          "variants": {
+            "0": "None of the people it hit pay.",
+            "1": "No commission has been taken yet."
+          }
+        }
       },
       "expire_note": "No decision came, and the post kept getting shared."
     }

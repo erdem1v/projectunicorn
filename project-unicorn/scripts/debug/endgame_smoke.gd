@@ -393,6 +393,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"incident_checkout_fix_card":     fail = _case_incident_checkout_fix_card()
 		"incident_defer_ends_with_line":  fail = _case_incident_defer_ends_with_line(pinned)
 		"incident_sprint_stop_moves_the_card": fail = _case_incident_sprint_stop_moves_the_card()
+		"incident_free_month_by_market":  fail = _case_incident_free_month_by_market()
 		"release_thanks_each_kind":       fail = _case_release_thanks_each_kind()
 		"release_thanks_limits":          fail = _case_release_thanks_limits()
 		"release_thanks_incident_scope":  fail = _case_release_thanks_incident_scope()
@@ -20307,6 +20308,65 @@ static func _case_incident_scale(payload: Dictionary) -> String:
 		return "with no team the morning fix ends at minute %d, want the founder's, 4 h 30 after the workday begins" % int(
 			IncidentSystem.plan("morning").back)
 	return _incident_scale_audience(payload)
+
+
+## The free month costs something or it locks: an answer that costs nothing would always be the best one. On a marketplace it
+## is a week without commission (PRD_PAZARYERI §5.2): on both incident cards locked before the first close takes any, with the
+## marketplace's reason, then open; the option reads the week, its chip names a normal week's commission, and the answer waives
+## the next close's commission and moves no cash.
+## FALSIFICATION: drop the marketplace branch in `IncidentSystem.plan` → the free month costs the marketplace's 0 paying users
+## and the week stays locked after a close FAIL; drop a card's `requires` → the week is open before any commission FAIL; drop
+## the reason's variants → the locked option gives the note app's reason FAIL; drop the label's variants → it offers a month FAIL.
+static func _case_incident_free_month_by_market() -> String:
+	EvCatalog.ensure_loaded()
+	_seed_marketplace_world()
+	MailClock.instant = true
+	GameState.set_current_hour(3)
+	TimeManager.sync_to_current_hour()
+	IncidentSystem.stage("outage", 130)
+	var card: Dictionary = EvCatalog.card(OUTAGE_B2C)
+	var at: int = -1
+	var locks: Dictionary = {}   # card id -> the free month option's requires
+	for pair in [[OUTAGE_B2C, "morning_free_month"], ["product.incident_review_storm", "free_month_defer"]]:
+		var c: Dictionary = EvCatalog.card(pair[0])
+		for i in c.get("options", []).size():
+			if c.options[i].id == pair[1]:
+				locks[pair[0]] = c.options[i].get("requires", {})
+				if pair[0] == OUTAGE_B2C:
+					at = i
+		if not locks.has(pair[0]):
+			return "%s has no '%s' option" % pair
+		if locks[pair[0]].is_empty() or EventGate.condition_met(locks[pair[0]]):
+			return "before the first close no commission is taken, yet %s's week without it is open" % pair[0]
+	var reason: String = EvPresenter.build_view(OUTAGE_B2C, {}).choices[at].unlock_reason_text
+	var want_reason: String = String(EvPresenter.text_block(card).get("locked_reasons", {}).get("morning_free_month", {}) \
+		.get("variants", {}).get("1", ""))
+	if want_reason == "" or reason != want_reason:
+		return "the locked week reads '%s', want the marketplace's reason '%s'" % [reason, want_reason]
+	MarketplaceSystem.daily_tick()
+	var week: int = MarketplaceSystem.week_commission()
+	if week < 1:
+		return "after a close with 40 stores a week's commission reads $%d" % week
+	for id in locks:
+		if not EventGate.condition_met(locks[id]):
+			return "a week's commission is $%d, yet %s's week without it is locked" % [week, id]
+	var plan: Dictionary = IncidentSystem.plan("morning_free_month")
+	if plan.has("free") or int(plan.get("waive", {}).get("weeks", 0)) != 1 or int(plan.waive.amount) != week:
+		return "the answer reads %s, want a week without $%d of commission and no free month" % [str(plan), week]
+	var label: String = EvPresenter.build_view(OUTAGE_B2C, {}).choices[at].label
+	var want: String = String(EvPresenter.text_block(card).options.morning_free_month.get("variants", {}).get("1", ""))
+	if want == "" or label != want:
+		return "the option reads '%s', want '%s'" % [label, want]
+	var effect: Dictionary = {"verb": "incident", "act": "morning_free_month"}
+	var shown: String = ",".join(EvChips.describe(effect, {}, {}, false).map(EvChips.text))
+	if not shown.contains("-" + Fmt.money_chip(week)):
+		return "the chip '%s' does not name the week's commission of $%d" % [shown, week]
+	var cash: int = GameState.cash
+	EvEffects.run_played([effect], {})
+	if int(GameState.marketplace.waive) != 1 or GameState.cash != cash:
+		return "the answer left %d weeks without commission and moved the cash by %d, want 1 and 0" % [
+			int(GameState.marketplace.waive), cash - GameState.cash]
+	return ""
 
 
 ## The B2C half of `_case_incident_scale`.

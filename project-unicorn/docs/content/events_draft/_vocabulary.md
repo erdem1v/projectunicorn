@@ -12,9 +12,9 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **344** |
+| Seams (read) | **346** |
 | Effect verbs (write) | **87** |
-| Cards in the catalogue | 182 |
+| Cards in the catalogue | 172 |
 | Arcs | 3 |
 
 ## a · Effect verbs
@@ -408,6 +408,7 @@ slot of that type (§17.12).
 | `olay.award_live_odds` | global | float | Events | the award's live demo lands: odds fall with the product's open bugs |
 | `olay.award_live_slip` | global | int | Events | the brand a lost live demo moves: a clean product slips less, a buggy one loses |
 | `olay.clock` | global | string | Incident | when the open emergency began, 02:10; a history row reads the latest emergency's |
+| `olay.free_month_cost` | global | int | Incident | B2C: what the free month costs now (IncidentSystem.free_month_cost): the paying users' month, a marketplace's week of commission; 0 locks it |
 | `olay.line_users` | global | int | Incident | people the line the emergency hit reaches each day (B2C: the audience's share of it) |
 | `olay.night_accounts` | global | int | Incident | active B2B accounts of a night-shift sector |
 | `olay.odds_10` | global | float | Events | a fixed dice odds, EvTuning.ODDS |
@@ -453,6 +454,7 @@ slot of that type (§17.12).
 | `sales.big_accounts` | global | int | Sales | B2B accounts of the server clause's size (CLAUSE_STAR stars and up) |
 | `sales.growth_band` | global | string | Sales | melting | flat | steady | fast |
 | `sales.is_b2b` | global | bool | Sales | reads the SHIPPED market, not one being built |
+| `sales.is_marketplace` | global | bool | Sales | the product is a marketplace; a line's marketplace arm is variant 1 |
 | `sales.market_share_pct` | global | float | Sales | one global figure; per-segment share does not exist yet |
 | `sales.pipeline_count` | global | int | Sales | live prospects |
 
@@ -690,7 +692,7 @@ the catalogue already uses, and the gap each pays:
 | `customer_escalation` | 6 | 1 |
 | `customer_feedback` | 6 | 1 |
 | `customer_growth` | 6 | 1 |
-| `customer_money_dispute` | 6 | 2 |
+| `customer_money_dispute` | 6 | 1 |
 | `customer_onboarding` | 6 | 2 |
 | `customer_ownership` | 6 | 2 |
 | `customer_requests` | 6 | 3 |
@@ -703,22 +705,20 @@ the catalogue already uses, and the gap each pays:
 | `founder_network` | 4 | 2 |
 | `founder_setup` | 6 | 1 |
 | `founder_solitude` | 3 | 2 |
-| `frank_mentor` | 6 | 10 |
+| `frank_mentor` | 6 | 9 |
 | `funding_paperwork` | 6 | 3 |
 | `hr_departure` | 6 | 1 |
 | `incident` | 6 | 6 |
 | `infra_cost` | 6 | 2 |
-| `investor_favor` | 6 | 2 |
 | `investor_pressure` | 6 | 1 |
 | `leak_story` | 6 | 2 |
 | `phase_gate` | 6 | 2 |
-| `product_floor` | 4 | 2 |
 | `product_progress` | 6 | 1 |
 | `product_security` | 6 | 5 |
 | `product_support` | 6 | 1 |
 | `promise` | 6 | 1 |
 | `release_thanks` | 6 | 1 |
-| `rival_exit` | 6 | 2 |
+| `rival_exit` | 6 | 1 |
 | `rival_funding` | 6 | 1 |
 | `rival_imitation` | 6 | 2 |
 | `rival_poaching` | 6 | 3 |
@@ -743,7 +743,6 @@ the catalogue already uses, and the gap each pays:
 | `team_summer_leave` | 52 | 3 |
 | `world_bulletin` | 6 | 1 |
 | `world_offer_b2b` | 8 | 2 |
-| `world_offer_b2c` | 8 | 3 |
 
 A family absent from `EvTuning.FAMILY_GAP_WEEKS` pays the default, 6 weeks.
 

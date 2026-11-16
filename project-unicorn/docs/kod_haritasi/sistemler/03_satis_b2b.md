@@ -38,7 +38,7 @@ Sahipler: autoload `CustomerRegistry`, `ProspectRegistry`, `PromiseRegistry`; mo
 - `scripts/data_models/prospect.gd` (111): `Prospect` Resource (lead + anlaşma planı + balina + hafıza alanları)
 - `scripts/data_models/promise.gd` (22): `Promise` Resource (`due_sprint`, `extended`, `status`)
 - `data/market/companies.json` (1571 satır, 56 şirket) ve `data/market/people.json` (327 satır, 46 kişi): Piyasa listesi verisi; `meta.sector_slots` sektörün 3 şirketini bağlar
-- Dışarıda ama ayrılmaz: `scripts/tabs/sales_tab.gd` (817), `scripts/ui/meeting/sales_meeting_adapter.gd` (320), `scripts/events/seams/seams_sales.gd` (132), `seams_ported.gd` (199), `scripts/tabs/piyasa_tab.gd` (681)
+- Dışarıda ama ayrılmaz: `scripts/tabs/sales_tab.gd` (817), `scripts/ui/meeting/sales_meeting_adapter.gd` (320), `scripts/events/seams/seams_sales.gd` (188), `seams_ported.gd` (199), `scripts/tabs/piyasa_tab.gd` (681)
 - Satış olay içeriği: `data/events/cards/customer/*.json` (17 dosya; retention, expansion, cs_escalation, request_*, frank_intro); sprint tarafı `data/events/cards/product/support_overflow.json`
 
 ## Giriş noktaları
@@ -210,7 +210,7 @@ Hepsi `tools/smoke_run.sh <vaka>` ile (komutlar `project-unicorn/`'dan, `GODOT` 
 - Destek: `support_desk_rates_stack`, `support_inflow_is_bug_free`, `support_report_quiet_week`, `neglect_reputation_below_zero`
 - Piyasa: `market_catalog_lint`, `market_value_deterministic`, `market_value_texture`, `market_price_band`, `market_listed_week_gating`, `market_year_end_follows_anchors`, `market_share_tracks_mrr`, `market_save_roundtrip`
 - Kayıt: `sales_save_roundtrip_rev6`, `save_v17_market_ref`; yerelleştirme: `loc_sales_derived_keys`, `loc_b2b_derived_keys`, `loc_csv_integrity`
-- Pazarlık için ayrı vaka yok; Perde 2 `b2b_pitch_meeting_signs` (`endgame_smoke.gd:3642`) içinde `NegotiationSystem.open/offer` ile ve ekran vakası `--negotiation-shot` ile gezilir
+- Pazarlık için ayrı vaka yok; Perde 2 `b2b_pitch_meeting_signs` (`endgame_smoke.gd:3643`) içinde `NegotiationSystem.open/offer` ile ve ekran vakası `--negotiation-shot` ile gezilir
 - Ekran: `--sales-shot=<pipeline|desk|picker|inbox|edge|edge_end|stretched|empty|b2c|b2c_live|b2b_pre|untyped|morning|evening|norep|discounted|frank|risk_stability|deals|returning|clause|offer>` (`main.gd:1906`)
   ↳ `offer` bir kartın adaya yazdığı teklifi ve hesaba verdiği süreli indirimi çizer: üç lead'e teklif (kartın `prospect_offer` fiiliyle: 1★ indirim, 2★ bir kademede söz, 3★ ikisi) ve Nordica'ya 26 hafta %10 süreli indirim
   ↳ (`B2BSalesSystem.apply_timed_discount`); lead kartında `SALES_OFFER_DISCOUNT` / `SALES_OFFER_PROMISE` satırları, hesap kartının künye satırında `SALES_TIMED_DISCOUNT`; her biri `SHOTLINE|offer|<satır>` olarak basılır (başsız çekimde kare yok);
@@ -266,7 +266,7 @@ Hepsi `tools/smoke_run.sh <vaka>` ile (komutlar `project-unicorn/`'dan, `GODOT` 
   ↳ `drop_prospect` satışın kayıp yolundan (`SalesFinalizer.lose`) sebep `event` ile geçer; geri dönen şirketin hafızası `SALES_MEMORY_EVENT`
 - Kart gövdesinde yalnız `{slot}` ve `{seam:ns.ad}` çözülür; `customer/*.json` yazarken süslü parantezli başka belirteç ekrana olduğu gibi çıkar (hafıza: unresolvable-card-token-class).
 - Bazı `EventBus` sinyallerinin kodda dinleyeni yok (`KALITE.md` "yarım sinyaller"); olay motoru yalnız `signals.gd:22` izin listesindekileri dinler, yeni tetik sinyali oraya da yazılmalıdır.
-- `MarketCatalog` önbelleği `static var` ve bilerek `reset_all_owners` dışında (dosya verisi); `GameState.market_shocks` üretimde yazılmıyor, yalnız smoke yazıyor (`endgame_smoke.gd:24618`).
+- `MarketCatalog` önbelleği `static var` ve bilerek `reset_all_owners` dışında (dosya verisi); `GameState.market_shocks` üretimde yazılmıyor, yalnız smoke yazıyor (`endgame_smoke.gd:24678`).
 - `SalesNamePool._pools` `sales_name_pool.gd:61` de önbellektir ve geçersiz kılınmaz; `STEMS` ya da `COMPANIES` çalışma zamanında değişmez, kod değişikliği yeni süreç ister.
 - `erp.json` `buyer_sectors` sırası yüklüdür (`SalesFaucetSystem.spawn`'ın sektör çekimi `% size`); yeni sektör sona eklenir. Sektör kimlikleri kayıtlıdır (`Customer.industry`): yeniden adlandırma ya da listeden çıkarma kayıt göçü ister; tabloda olmayan kimlik `ProductQuality.FALLBACK_SECTOR` satırını okur.
 - Kurucuya otomatik hesap verilmez (`CustomerRepSystem.ranked_reps` yalnız `employee` döner) ve bu MÜHÜRLÜ bir hükümdür; "boştaki kurucuya hesap ver" diye değiştirilmez.

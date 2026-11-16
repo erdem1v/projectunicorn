@@ -599,6 +599,10 @@ static func _incident_parts(plan: Dictionary) -> Array:
 	if plan.has("free"):
 		var free: Dictionary = plan.free
 		parts.append(_figure("EFFECT_FREE_MONTH", _money(-int(free.amount)), "cost", {"n": free.n, "paying": free.paying}))
+	if plan.has("waive"):
+		var waive: Dictionary = plan.waive
+		parts.append(_figure(Fmt.count_key("EFFECT_WAIVE_COMMISSION", int(waive.weeks)), _money(-int(waive.amount)), "cost",
+			{"n": int(waive.weeks)}))
 	for row in plan.get("trust", []):
 		parts.append(_trust_part(String(row.group), int(row.n), int(row.delta), row))
 	if int(plan.get("per_sprint", 0)) != 0:

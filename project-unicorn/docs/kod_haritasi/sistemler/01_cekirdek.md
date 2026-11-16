@@ -51,7 +51,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - `TimeManager.advance_hours(n, meeting)` `time_manager.gd:173` · `scripts/main/main.gd:1293,1317,1321,2167`, `scripts/systems/sales_meeting_system.gd:117`, `term_sheet_table_system.gd:574`
 - `TimeManager.skip_night()` `time_manager.gd:183`: gecenin saatlerini tek toplu adımda koşar · `_advance_real` içinden; `scripts/main/main.gd:1290` (gece probe'u)
 - `TimeManager.hold_clock/release_clock` `time_manager.gd:350,359` · `main.gd:2307,4767,5284` (milestone_paper, event),
-  ↳ `incident_system.gd:311`, `sprint_system.gd:1909` (plan bekliyor ve saat mesai başlangıcında), `scripts/tabs/product_tab.gd:347,355`
+  ↳ `incident_system.gd:313`, `sprint_system.gd:1909` (plan bekliyor ve saat mesai başlangıcında), `scripts/tabs/product_tab.gd:347,355`
 - `TimeManager.freeze_clock/thaw_clock` `time_manager.gd:250,256` · yolculuk için `main.gd:5297,4997` (`tree_runs` true), çekimlerde `main.gd:2028,2133`
 - `TimeManager.register_night_gate/unregister_night_gate` `time_manager.gd:264,269` · `scripts/ui/office/office_people.gd:100,104` (ofis boşalma yüklemi)
 - `TimeManager._dispatch_daily_tick` `time_manager.gd:385` ve `_dispatch_hourly_tick` `:439`: sistem sırası burada; yeni sistem tiki buraya takılır. Günlük sıra: `SummarySystem.begin_day` (yuva 0),
@@ -82,7 +82,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - `EventBus.hour_changed(hour)` `event_bus.gd:13`: yayan `game_state.gd:394` · `top_bar.gd:153`, `news_ticker.gd:74`, `sales_tab.gd:87`
 - `EventBus.day_tick_completed(day)` `event_bus.gd:286`: yayan `time_manager.gd:432` (günlük dağıtımın sonu) · `save_manager.gd:65` autosave sınırı, `office_city.gd:102`, `plausibility.gd:159`
 - `EventBus.night_skipped()` `event_bus.gd:23`: yayan `time_manager.gd:190` · `main.gd:492,2902`, `office_view.gd:64`, `office_people.gd:86`
-- `EventBus.clock_batch_ended()` `event_bus.gd:25`: yayan `time_manager.gd:203` · `scripts/events/core/signals.gd:54`, `incident_system.gd:314`, `sprint_system.gd:1906`
+- `EventBus.clock_batch_ended()` `event_bus.gd:25`: yayan `time_manager.gd:203` · `scripts/events/core/signals.gd:54`, `incident_system.gd:316`, `sprint_system.gd:1906`
 - `EventBus.cash_changed/mrr_changed/burn_changed/brand_changed/reputation_changed/phase_changed/runway_recalculated` `event_bus.gd:7-15`: yayan `game_state.gd:345-395,781` · `top_bar.gd:146-154`
 - `EventBus.language_changed(locale)` `event_bus.gd:43`: yayan `localization.gd:88`, `main.gd:4022` · `character_registry.gd:16` ve 10'dan fazla arayüz
 - `EventBus.palette_changed(colorblind)` `event_bus.gd:47`: yayan `settings_modal.gd:251,282` · `left_tabs.gd:132`, `top_bar.gd:157`, `news_ticker.gd:81`
@@ -128,7 +128,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - Anahtar ailesi dökümü: `DIZIN.md` "Metin anahtarı aileleri"; CSV'ye elle dokunma kuralı için `strings-csv-surgery` hafıza notu (bayt-aralığı ekleme)
 
 ## Testler
-- Koşturucu: `bash tools/smoke_run.sh <vaka>` (tüm süit `--all`, yalnız push öncesi); bayrak `--endgame-smoke=<vaka>` `--` ayracından ÖNCE; vaka tablosu `scripts/debug/endgame_smoke.gd:78-596` (`match case_name`)
+- Koşturucu: `bash tools/smoke_run.sh <vaka>` (tüm süit `--all`, yalnız push öncesi); bayrak `--endgame-smoke=<vaka>` `--` ayracından ÖNCE; vaka tablosu `scripts/debug/endgame_smoke.gd:78-597` (`match case_name`)
 - Zaman: `speed_preserve` `:94`, `speed_ladder` `:220`, `speed_day_invariant` `:221`, `speed_save_clamps_to_ladder` `:402`, `clock_resumes_only_by_player` `:400`, `milestone_clock_hold` `:397`, `event_gate_holds_clock` `:399`
 - Zaman devamı: `incident_night_hold_resumes` `:340`, `smoke_seed_pinned` `:404`, `sales_meeting_time_skip_founder_share` `:158`, `month_history_*` `:376,381`, `run_ledger`, `growth_streak_semantics`
 - Kayıt: `save_roundtrip_fingerprint` `:298`, `save_continuity_seeded` `:299`, `save_double_load_no_residue` `:300`, `save_backup_fallback` `:301`, `autosave_writes_off_thread` `:302`, `menu_state_machine`
@@ -166,7 +166,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 
 ## Dikkat
 - Göç adı ve koşulu aynı N'dir (`_migrate_N` `version < N`, `save_manager.gd:198-211`); yeni göçte `SCHEMA_VERSION`, koşul, adı ve belgeyi birlikte yaz
-- `_migrate_character_areas` `:1112`, `_migrate_assignments_to_areas` `:1172`, `_migrate_to_rev11` `:1212` zincirde YOK (`MIN_LOADABLE_VERSION` 10); yalnız `endgame_smoke.gd:12166-12400` çağırır
+- `_migrate_character_areas` `:1112`, `_migrate_assignments_to_areas` `:1172`, `_migrate_to_rev11` `:1212` zincirde YOK (`MIN_LOADABLE_VERSION` 10); yalnız `endgame_smoke.gd:12167-12401` çağırır
 - Göç her yuva listelemesinde koşar (`list_slots` her dosyayı `_read_file`dan geçirir): saf, ucuz, canlı durumdan bağımsız olmalı; `_migrate_18` bu yüzden kaydın kendi ürün alt türünü okur
 - `_migrate_15` kartı v18 biçiminde yazar (`_V14_EFFORT`, `_V14_SHARES` `save_manager.gd:831-832`); ×5 ve `need` dönüşümünü yalnız `_migrate_19` yapar. `list_slots` ve `read_slot` her yuvada tam zinciri tekrar koşar
 - `SaveCodec.game_state_fields()` `save_codec.gd:192` `GameState`in HER script `var`ını kaydeder; kaydedilmemesi gereken geçici alan eklenemez. Yeni alan makul varsayılan taşımalı (varsayılan = göç)

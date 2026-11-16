@@ -30,7 +30,7 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - `scripts/events/gate/gate.gd` (288): `EvGate`, tek kabul kapısı `propose` (G1-G8), `revalidate`, `Verdict`, başlangıç bağışıklığı
 - `scripts/events/gate/scope.gd` (414): `EvScope`, adlı kapsam slotları (employee/founder/customer/prospect/rival/investor) ve seçiciler
 - `scripts/events/present/presenter.gd` (306): `EvPresenter`, kart sözlüğünden `GameEvent` görünümü, metin çözme, ad ve seam dondurma, masa satırları
-- `scripts/events/present/chips.gd` (708): `EvChips`, etki ve delta çiplerinin tek kurucusu (`describe`), kaynak rozeti `source_tag`;
+- `scripts/events/present/chips.gd` (711): `EvChips`, etki ve delta çiplerinin tek kurucusu (`describe`), kaynak rozeti `source_tag`;
   ↳ `describe(..., live := true)` kartın kendi dünyasında hedefi boş etkiyi çizmez (`_aims_at_no_one`: bağlanmamış `scope`/`other`/`amount_slot`, hesap ya da ekip grubu boş; bağlamsız okuma lint ve `event_chip_coverage` için hâlâ her fiile çip verir),
   ↳ `merge_same` bir şıkta bayt bayt aynı çipleri ilkinde " ×n" ile katlar (figürde değerin yanına; sayılı çip, `_counted` ile `count` taşıyan `EFFECT_NEW_BUGS`, `EFFECT_CARD_POINTS`, `EFFECT_WORK_LOST`, `EFFECT_SHIP_BUGS`, `EFFECT_NEXT_SPRINT_WORK`, toplamı kendi sayılı anahtarıyla okur: "1 yeni açık hata" iki kez "2 yeni açık hata"), `option_parts` okuma bölmesinin ve `--event-shot`'ın ortak şık çipi (canlı etkiler + katlama + zarın çipleri)
 - `scripts/events/present/papers.gd` (194): `EvPapers`, masa (süreli kâğıtlar); süre dolumu, `desk_changed`
@@ -53,7 +53,7 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 
 ## Giriş noktaları
 - `EventGate.request(id, ctx, immediate, stamp)` `scripts/events/event_gate.gd:19` -> `EvEngine.request` `core/engine.gd:715`: bir sistem kartı adıyla ister; masada beklenen örnek varsa onu açar · kim çağırır:
-  ↳ `customer_rep_system.gd:308`, `hr_morale_system.gd:93,341`, `incident_system.gd:268`
+  ↳ `customer_rep_system.gd:308`, `hr_morale_system.gd:93,341`, `incident_system.gd:270`
 - `EventGate.request` çağıranlar devamı: `sprint_system.gd:1029,1144,1274`, `sprint_bridges.gd:199`, `endings_system.gd:121` (SHUTTER_CARD), `main.gd:1163`, `mail_pane.gd:800` (immediate=true, oyuncunun isteği)
 - `EventGate.daily_tick()` `event_gate.gd:178` -> `EvEngine.daily_tick` `engine.gd:68` · `TimeManager` günlük dağıtım, Finans ve Faz kapısından sonra, `IncidentSystem`'den önce (`scripts/autoload/time_manager.gd:417`)
 - `EventGate.hourly_tick(hour)` `event_gate.gd:182` -> `EvEngine.hourly_tick` `engine.gd:90` · `TimeManager._dispatch_hourly_tick`, `MailClock.hourly_tick`'ten sonra (`time_manager.gd:451`)
@@ -78,7 +78,7 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - `event_triggered(event_id)` `scripts/autoload/event_bus.gd:118`: yayan `core/engine.gd:565` (not geldi), `engine.gd:606` (kart gösterildi) · dinleyen: `top_bar.gd:159`, `left_tabs.gd:112`, `research_bar.gd:60`,
   ↳ `window_frame.gd:56`, `office_hud.gd:58`
 - `event_resolved(event_id, choice_index)` `event_bus.gd:119`: yayan `engine.gd:631` (-1: varlık gitti), `engine.gd:672` · dinleyen: `main.gd:5051` (kapı kapanır), `save_manager.gd:67` (kirli işareti),
-  ↳ `incident_system.gd:313`, `sprint_system.gd:1332`, `game_shell.gd:29`
+  ↳ `incident_system.gd:315`, `sprint_system.gd:1332`, `game_shell.gd:29`
 - `modal_requested(event: GameEvent)` `event_bus.gd:120`: yayan `engine.gd:607` · dinleyen `main.gd:5050` (`_on_event_modal_requested` `main.gd:5086`), `harness.gd:99`
 - `event_set_aside(event_id)` `event_bus.gd:122`: yayan `engine.gd:792` · dinleyen `main.gd:5052`, `save_manager.gd:70`, `top_bar.gd:160`, `left_tabs.gd:114`
 - `desk_changed()` `event_bus.gd:125`: yayan `present/papers.gd:44,49,60,98` ve `systems/mail_clock.gd:72,108` · dinleyen `top_bar.gd:162`, `left_tabs.gd:115`, `product_tab.gd:116` (`_on_desk`)
@@ -122,7 +122,7 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - Makullük defteri: `--event-plausibility=<spec>` kabuk içinden ya da `tools/plausibility_run.sh` (koşu başına süreç ve kullanıcı dizini; `PLAUS FIRE/FAIL/RATE/SUMMARY`); spec `seeds=<N|A-B>:weeks=<N>:variant=<plain|early|both>:preset=`
 - Smoke (`tools/smoke_run.sh <vaka>`, vakalar `scripts/debug/endgame_smoke.gd`): `event_*` 33 vaka (ör. `event_i1_single_gate` `:325`, `event_critical_drop_refunds_latch` `:294`, `event_lint_v3_rules` `:583`, `event_delay_window` `:587`)
 - Smoke devamı: `event_check_with_effects` (şıkta etki ve zar birlikte, zar çipi, yükle-tekrar aynı dal), `event_after_test` (testi bekleyen etki: hata bulunursa iner ve `<sonuç>_tested` satırı yazılır, bulunmazsa düşer, izleme kayıttan geçer), `event_year_roll` (yıl zarı, tohumlu `random` ve rakip seçicileri, `{rival}` adı),
-  ↳ `card_body_tokens_resolve` `endgame_smoke.gd:499`, `loc_event_en_coverage` `:321`, `event_chip_coverage` `:338`, `quiet_cards_fill_empty_floor` `:551`, `event_no_double_resolution_after_load` `:361`,
+  ↳ `card_body_tokens_resolve` `endgame_smoke.gd:500`, `loc_event_en_coverage` `:321`, `event_chip_coverage` `:338`, `quiet_cards_fill_empty_floor` `:552`, `event_no_double_resolution_after_load` `:361`,
   ↳ `event_thesis_day10_to_day90` `:333`, `harness_sniffer_matches_run_log` `:371`
 - Oynanan koşu: `--run-log=<preset>:<hafta>:sim` `PROBE FIRE/PICK/TALLY/WEEK` basar (`run_probe.gd:30-99`); `tools/run_gate.sh` üç koşu; görsel: `--event-shot=<kart id>[:<slot>=<varlık id>][:long=1]` (`main.gd:796`, pencereli)
 - Probe kayıt türleri: `FIRE`, `PICK`, `TALLY_BEGIN` / `TALLY` / `TALLY_END`, `WEEK`, `ERROR` (drain koruması, kilitsiz seçeneği olmayan kart)

@@ -95,6 +95,11 @@
     {
       "id": "morning_free_month",
       "outcome_id": "morning_free_month",
+      "requires": {
+        "seam": "olay.free_month_cost",
+        "op": ">=",
+        "value": 1
+      },
       "effects": [
         {
           "verb": "incident",
@@ -136,13 +141,26 @@
       "options": {
         "night_fix": "Ekip şimdi düzeltsin",
         "founder_fix": "Kendin düzelt",
-        "morning_free_month": "Sabah düzelt, bir ay ücretsiz ver",
+        "morning_free_month": {
+          "by_seam": "sales.is_marketplace",
+          "variants": {
+            "0": "Sabah düzelt, bir ay ücretsiz ver",
+            "1": "Sabah düzelt, bir hafta komisyon alma"
+          }
+        },
         "morning": "Sabah düzelt",
         "defer": "Sonraki sprinte bırak"
       },
       "locked_reasons": {
         "night_fix": "Ekipte yazılım ya da test yapan kimse yok.",
         "founder_fix": "Ekip iki kişiyi geçti.",
+        "morning_free_month": {
+          "by_seam": "sales.is_marketplace",
+          "variants": {
+            "0": "Etkilenenlerin hiçbiri ücret ödemiyor.",
+            "1": "Henüz komisyon alınmadı."
+          }
+        },
         "defer": "Uygulama şu anda kimseye açılmıyor."
       },
       "expire_note": "Karar verilmedi, uygulama sabah düzeltildi."
@@ -159,13 +177,26 @@
       "options": {
         "night_fix": "Have the team fix it now",
         "founder_fix": "Fix it yourself",
-        "morning_free_month": "Fix it in the morning, give a free month",
+        "morning_free_month": {
+          "by_seam": "sales.is_marketplace",
+          "variants": {
+            "0": "Fix it in the morning, give a free month",
+            "1": "Fix it in the morning, take no commission for a week"
+          }
+        },
         "morning": "Fix it in the morning",
         "defer": "Leave it for the next sprint"
       },
       "locked_reasons": {
         "night_fix": "Nobody on the team builds or tests.",
         "founder_fix": "The team has grown past two people.",
+        "morning_free_month": {
+          "by_seam": "sales.is_marketplace",
+          "variants": {
+            "0": "None of the people it hit pay.",
+            "1": "No commission has been taken yet."
+          }
+        },
         "defer": "The app isn't opening for anyone right now."
       },
       "expire_note": "No decision came, so the app was fixed in the morning."

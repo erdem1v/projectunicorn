@@ -23,6 +23,9 @@ static func install() -> void:
 	EvSeams.register("olay.payers", G, TYPE_INT,
 		func() -> int: return SprintSystem.payers(IncidentSystem.hit_line()).size(),
 		"Incident", "people a fix outside the sprint costs morale (SprintSystem.payers, on the line the emergency hit); 0 locks the option")
+	EvSeams.register("olay.free_month_cost", G, TYPE_INT,
+		func() -> int: return IncidentSystem.free_month_cost(),
+		"Incident", "B2C: what the free month costs now (IncidentSystem.free_month_cost): the paying users' month, a marketplace's week of commission; 0 locks it")
 	EvSeams.register("olay.service_up", G, TYPE_BOOL,
 		func() -> bool: return IncidentSystem.service_up(),
 		"Incident", "no emergency is open, or the fix it was answered with is done")

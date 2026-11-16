@@ -59,7 +59,7 @@ Günlük dağıtım sırası `TimeManager._dispatch_daily_tick` (`autoload/time_
 
 Finans:
 - `FinanceSystem.apply_one_time_cost()` `finance_system.gd:179` ve `apply_one_time_income()` `:189`: önce işlem satırı, en son `set_cash` · `events/core/effects.gd:238`, `systems/hr_actions.gd:15`, `office_system.gd:66`,
-  `rnd_system.gd:25`, `sprint_system.gd:170`, `incident_system.gd:521`.
+  `rnd_system.gd:25`, `sprint_system.gd:170`, `incident_system.gd:527`.
 - `FinanceSystem.set_burn_category()` `:224`: kalemi yazar, `daily_burn`ü hemen tazeler · `infra_system.gd:286`, `office_system.gd:91`; altıncı kalem `pazaryeri` (pazaryeri koşusunun gideri: `MarketplaceSystem.daily_tick` her kapanışta, sıfır dahil, `daily_rate(monthly_cost)` yazar; sıfırken Finans'ta çizilmez, eski kayıtta 0'la açılır).
 - `MarketingSystem.boost()/cost_mult()` : kartın `marketing_boost`'u bir kanal türünü süre boyunca ucuzlatır (ikinci itki öncekinin
   ↳ yerine geçer) · `events/core/effects.gd`; `runs_channel()`/`channel_weekly_spend()` seam'leri `marketing.runs_channel.<tür>`,
