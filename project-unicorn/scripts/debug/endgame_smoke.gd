@@ -174,6 +174,9 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"account_uses_area_rule": fail = _case_account_uses_area_rule()
 		"requests_one_open_per_account": fail = _case_requests_one_open_per_account()
 		"save_request_cards_become_topics": fail = _case_save_request_cards_become_topics()
+		"request_wait_mark_once_and_cleared_on_ship": fail = _case_request_wait_mark_once_and_cleared_on_ship()
+		"request_closed_topic_not_reasked": fail = _case_request_closed_topic_not_reasked()
+		"request_close_marks_each_asker": fail = _case_request_close_marks_each_asker()
 		"sales_faucet_guard_b2c": fail = _case_sales_faucet_guard_b2c()
 		"sales_lead_expiry_and_return_lock": fail = _case_sales_lead_expiry_and_return_lock()
 		"sales_meeting_time_skip_founder_share": fail = _case_sales_meeting_time_skip_founder_share()
@@ -10579,6 +10582,164 @@ static func _case_save_request_cards_become_topics() -> String:
 				or p.sprint.cards.has(old_id) or p.requests.back().card_id != topic:
 			return "load %d left cards %s, the sprint %s and the request %s" % [load, str(p.cards.keys()), str(p.sprint.cards),
 				str(p.requests.back())]
+	return ""
+
+
+## Bekleme bedeli (PRD_TALEPLER §5, soru 6 B): sözsüz açık istek
+## `request.wait_weeks` haftayı geçmiş ve hesabın yenilemesine `request.risk_renew_weeks` haftadan az kalmışsa isteğin kademesine
+## bir kez memnuniyet −`request.wait_cost` yazılır ve hedefe ayrı terim olarak girer. Yenilemesi uzak hesaba ve sözlü isteğe yazılmaz,
+## sonradan söz verilince silinir, istek sürdükçe büyümez, kayıttan aynı döner; kart yayına çıkınca istek karşılanır ve iz silinir.
+## FALSIFICATION: `tick_requests`te `renews_in(...) < soon` koşulunu sil → 50. gün iz yazılır FAIL; izi her tik var olanın üstüne
+## ekleyerek yaz → iz bir kez değil FAIL; `overdue`dan söz koşulunu sil → sözlü hesaba iz FAIL; `_target_on`dan izlerin toplamını
+## çıkar → hedef iddiası FAIL; `on_release`teki `clear_request_mark`ı sil → yayından sonra iz kalır FAIL; `tick_requests`te sözün izi
+## silen dalını sil → 56. gün sözlü hesapta iz kalır FAIL.
+static func _case_request_wait_mark_once_and_cleared_on_ship() -> String:
+	_seed_sprint_live("erp")
+	var step: String = B2BSalesSystem.pick_pain_feature(ProductState.subtype(), 0)
+	if ProductLines.step(step).is_empty():
+		return "fixture: the product has no step an account could ask for"
+	var cost: int = int(SprintCatalog.cfg("request.wait_cost"))
+	for id in ["co_wait", "co_word", "co_late"]:
+		var c: Customer = _incident_account(id, "Wait " + id, "manufacturing", 40, 1800)
+		c.acquired_on_day = 10   # asks on day 12, overdue from day 21; the renewal of day 62 is under 12 weeks away from day 51
+		CustomerRegistry.set_pain_feature(id, step)
+	GameState.product.requests.clear()
+	GameState.day = 12
+	SprintBridges.tick_requests()
+	PromiseRegistry.create("co_word", step, 52)
+	var wait: Customer = CustomerRegistry.get_customer("co_wait")
+	for day in range(13, 51):
+		GameState.day = day
+		SprintBridges.tick_requests()
+	if not wait.request_marks.is_empty():
+		return "on day 50 the account (overdue since day 21, renewing in 12 weeks) carries %s, want no mark yet" % wait.request_marks
+	var bare: int = B2BSalesSystem.satisfaction_target(wait)
+	if bare <= cost:
+		return "fixture: the account's target is %d, too low to show a cost of %d" % [bare, cost]
+	for day in range(51, 56):
+		GameState.day = day
+		SprintBridges.tick_requests()
+	if wait.request_marks != {step: -cost}:
+		return "from day 51 to 55 the account came to carry %s, want one waiting mark %s" % [wait.request_marks, {step: -cost}]
+	if B2BSalesSystem.satisfaction_target(wait) != bare - cost:
+		return "the marked account's target is %d, want %d (%d less the mark)" % [B2BSalesSystem.satisfaction_target(wait),
+			bare - cost, bare]
+	if not CustomerRegistry.get_customer("co_word").request_marks.is_empty():
+		return "the account with a promise on the step carries %s, want no mark" % CustomerRegistry.get_customer("co_word").request_marks
+	var late: Customer = CustomerRegistry.get_customer("co_late")
+	if late.request_marks != {step: -cost}:
+		return "fixture: the second waiting account carries %s on day 55, want %s" % [late.request_marks, {step: -cost}]
+	PromiseRegistry.create("co_late", step, 52)
+	GameState.day = 56
+	SprintBridges.tick_requests()
+	if not late.request_marks.is_empty() or wait.request_marks != {step: -cost}:
+		return "a day after a promise the promised account carries %s and the other %s, want none and %s" % [late.request_marks,
+			wait.request_marks, {step: -cost}]
+	var back: Customer = SaveCodec.res_from_dict(JSON.parse_string(JSON.stringify(SaveCodec.res_to_dict(wait)))) as Customer
+	if back.request_marks != {step: -cost} or typeof(back.request_marks[step]) != TYPE_INT:
+		return "the mark came back from a save as %s" % back.request_marks
+	var s: Dictionary = ProductLines.step(step)
+	ProductState.set_line_tier(String(s.line_id), int(s.tier))
+	SprintBridges.on_release()
+	var row: Dictionary = GameState.product.requests.filter(func(r: Dictionary) -> bool: return r.customer_id == "co_wait")[0]
+	if row.status != "met" or not wait.request_marks.is_empty():
+		return "after the step shipped the request reads '%s' and the account carries %s, want met and no mark" % [row.status,
+			wait.request_marks]
+	return ""
+
+
+## Şimdilik olmaz (PRD_TALEPLER §1, §5): kapatılan isteğin satırı `declined` olur ve `closed_day` taşır. Hesap kapattığı pencerede
+## yeniden istemez (önceki pencerede açılmış istek bu pencerede kapansa da) ve o kademeyi olay yoluyla da istemez (`request_step`);
+## sonraki pencerede acısı başka bir konuya geçer ve yeni isteği o konudadır. Kapatma izi hesabın kapatmadan sonraki ilk yenilemesine
+## dek durur, o gün silinir.
+## FALSIFICATION: `tick_requests`in pencere koşulundan `closed_day` dalını sil → hesap 56. gün yeniden ister FAIL; `tick_requests`ten
+## acının yeniden seçimini sil → 102. günün isteği kapatılan konuda FAIL; `request_step`ten kapatma dalını sil → olay kapatılan kademeyi
+## açar FAIL; kapatma izinin silinme gününü `closed + term` yap → 62. gün iz kalır FAIL.
+static func _case_request_closed_topic_not_reasked() -> String:
+	_seed_sprint_live("erp")
+	var step: String = B2BSalesSystem.pick_pain_feature(ProductState.subtype(), 0)
+	if ProductLines.step(step).is_empty() or B2BSalesSystem.pick_pain_feature(ProductState.subtype(), 0, step) == "":
+		return "fixture: the product has fewer than two steps an account could ask for"
+	var line: String = ProductLines.step(step).line_id
+	var c: Customer = _incident_account("co_closed", "Closed Co", "manufacturing", 40, 1800)
+	c.acquired_on_day = 10   # windows open on days 12, 50 and 102; renewals on days 62 and 114
+	CustomerRegistry.set_pain_feature(c.id, step)
+	_incident_account("co_fresh", "Fresh Co", "manufacturing", 40, 1800)   # no pain: never asks on its own
+	if SprintBridges.request_step("co_fresh", line).get("id", "") != step:
+		return "fixture: an account with no request cannot be asked %s through its line" % step
+	GameState.product.requests.clear()
+	for day in range(12, 56):
+		GameState.day = day
+		SprintBridges.tick_requests()
+	SprintBridges.close_topic(step)   # day 55: asked in the window of day 12, declined in the window of day 50
+	var rows: Array = GameState.product.requests.filter(func(r: Dictionary) -> bool: return r.customer_id == c.id)
+	var close: int = int(SprintCatalog.cfg("request.close_cost"))
+	if rows.size() != 1 or rows[0].status != "declined" or int(rows[0].closed_day) != 55 or c.request_marks != {"x:" + step: -close}:
+		return "after the decline the account holds %s and carries %s, want one declined request closed on day 55 and %s" % [rows,
+			c.request_marks, {"x:" + step: -close}]
+	if not SprintBridges.request_step(c.id, line).is_empty():
+		return "an event can ask the declined step for the account in the same window"
+	for day in range(56, 102):
+		GameState.day = day
+		SprintBridges.tick_requests()
+		if c.request_marks.has("x:" + step) != (day < 62):
+			return "on day %d the account carries %s; the decline's mark lasts until the renewal of day 62" % [day, c.request_marks]
+		if GameState.product.requests.size() != 1:
+			return "the account asked again on day %d, inside the window it declined in" % day
+	GameState.day = 102
+	SprintBridges.tick_requests()
+	rows = GameState.product.requests.filter(func(r: Dictionary) -> bool: return r.customer_id == c.id)
+	if rows.size() != 2 or rows[1].status != "open" or rows[1].step == step or rows[1].step != c.pain_feature_id:
+		return "in the next window the account holds %s with the pain %s, want a new open request on a topic other than %s" % [rows,
+			c.pain_feature_id, step]
+	return ""
+
+
+## "Şimdilik olmaz"un bedeli (PRD_TALEPLER §3.4, §5): konunun her açık isteyeni kapatma izini alır (`x:<kademe>`,
+## −`request.close_cost`); bekleme izi ve hesabın öbür kapatma izi silinir (hesapta en çok bir kapatma izi, en yenisi). Başka konuyu
+## isteyen hesaba ve o konunun bekleme izine dokunulmaz; hedef izlerin toplamını okur.
+## FALSIFICATION: `close_topic`te öbür `x:` izlerini silme → ikinci kapatma izi kalır FAIL; bekleme izini silme → −5 kalır FAIL; konu
+## süzgecini (`r.step != step`) sil → öbür konunun isteyeni de kapanır FAIL. Ardında kapatılmış istek olmayan kapatma izi ertesi tikte
+## silinir (okunmaz). FALSIFICATION: `tick_requests`te boş süzgeç dalını sil → tik boş dizinin sonunu okur FAIL.
+static func _case_request_close_marks_each_asker() -> String:
+	_seed_sprint_live("erp")
+	var step: String = B2BSalesSystem.pick_pain_feature(ProductState.subtype(), 0)
+	var other: String = B2BSalesSystem.pick_pain_feature(ProductState.subtype(), 0, step)
+	if ProductLines.step(step).is_empty() or other == "":
+		return "fixture: the product has fewer than two steps an account could ask for"
+	var close: int = int(SprintCatalog.cfg("request.close_cost"))
+	var wait: int = int(SprintCatalog.cfg("request.wait_cost"))
+	GameState.product.requests.clear()
+	for row in [["co_close_a", step], ["co_close_b", step], ["co_keep", other]]:
+		_incident_account(row[0], "Close " + row[0], "manufacturing", 40, 1800)
+		GameState.product.requests.append({"id": row[0] + ".1", "customer_id": row[0], "step": row[1],
+			"line": ProductLines.step(row[1]).line_id, "status": "open", "created_sprint": 1, "value": 21600,
+			"card_id": "feat:" + row[1], "day": GameState.day})
+	var a: Customer = CustomerRegistry.get_customer("co_close_a")
+	var bare: int = B2BSalesSystem.satisfaction_target(a)
+	if bare <= close:
+		return "fixture: the account's target is %d, too low to show a cost of %d" % [bare, close]
+	CustomerRegistry.set_request_mark("co_close_a", step, -wait)
+	CustomerRegistry.set_request_mark("co_close_b", "x:" + other, -close)   # an earlier decline
+	CustomerRegistry.set_request_mark("co_keep", other, -wait)
+	SprintBridges.close_topic(step)
+	for id in ["co_close_a", "co_close_b"]:
+		var marks: Dictionary = CustomerRegistry.get_customer(id).request_marks
+		if marks != {"x:" + step: -close}:
+			return "%s carries %s after the decline, want only the decline's mark %s" % [id, marks, {"x:" + step: -close}]
+	if B2BSalesSystem.satisfaction_target(a) != bare - close:
+		return "the declined account's target is %d, want %d (%d less the decline's mark)" % [B2BSalesSystem.satisfaction_target(a),
+			bare - close, bare]
+	var keep: Customer = CustomerRegistry.get_customer("co_keep")
+	var statuses: Array = GameState.product.requests.map(func(r: Dictionary) -> String: return r.status)
+	if statuses != ["declined", "declined", "open"] or keep.request_marks != {other: -wait} \
+			or GameState.product.requests.slice(0, 2).any(func(r: Dictionary) -> bool: return int(r.closed_day) != GameState.day):
+		return "after the decline the requests read %s and the other topic's asker carries %s, want the two askers declined today and %s untouched" % [
+			statuses, keep.request_marks, {other: -wait}]
+	CustomerRegistry.set_request_mark("co_keep", "x:" + step, -close)   # no declined request of co_keep's is behind it
+	SprintBridges.tick_requests()
+	if keep.request_marks.has("x:" + step):
+		return "a decline mark with no declined request behind it is still there after a tick: %s" % keep.request_marks
 	return ""
 
 

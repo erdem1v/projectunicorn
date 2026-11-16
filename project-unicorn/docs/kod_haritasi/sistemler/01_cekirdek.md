@@ -19,13 +19,13 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - `scripts/autoload/localization.gd` (114): `strings.csv`'yi Translation'a yükler, `--lang=`, ilk açılışta dil seçimi, `pick`
 - `scripts/autoload/audio_manager.gd` (172): Music/SFX bus'ları, tek döngü parçası, ses ayarlarını uygular ve geri yazar, odak kaybında susturur
 - `scripts/autoload/character_registry.gd` (627): çalışan, kurucu, mentor ve NPC tek doğruluk kaynağı; yazma yalnız buradan (write-through)
-- `scripts/autoload/customer_registry.gd` (354): müşteri hesapları; MRR, koltuk, memnuniyet yazımı sinyal yayar
+- `scripts/autoload/customer_registry.gd` (371): müşteri hesapları; MRR, koltuk, memnuniyet yazımı sinyal yayar
 - `scripts/autoload/prospect_registry.gd` (73): imzasız B2B adaylar; imzada Customer olur ve buradan çıkar
 - `scripts/autoload/promise_registry.gd` (185): müşteriye verilen sözler; `build_phase_changed` ve `customer_removed` dinler
 - `scripts/autoload/rival_registry.gd` (210): rakip alanı; `RivalCatalog`tan tohumlanır, `advance_all` günlük tikte
 - `scripts/autoload/investor_registry.gd` (146): Seri A fon tablosu (const); koşu durumu `GameState.vc_states`te
 - `scripts/data_models/character.gd` (106): `Character` Resource (kimlik, maaş, moral, `role_stats`, atama, izin, eğitim, verim satırları)
-- `scripts/data_models/customer.gd` (133): `Customer` Resource (B2B/B2C hesap, iki katmanlı memnuniyet, churn sayacı, `market_ref`)
+- `scripts/data_models/customer.gd` (140): `Customer` Resource (B2B/B2C hesap, iki katmanlı memnuniyet, churn sayacı, `market_ref`)
 - `scripts/data_models/prospect.gd` (111): `Prospect` Resource (aday, yıldız, arketip, anlaşma alanları)
 - `scripts/data_models/promise.gd` (22): `Promise` Resource (söz: müşteri, özellik, vade, durum)
 - `scripts/data_models/rival.gd` (38): `Rival` Resource (tier, üç boyut, momentum, `composite()`)
@@ -51,7 +51,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - `TimeManager.advance_hours(n, meeting)` `time_manager.gd:173` · `scripts/main/main.gd:1293,1317,1321,2167`, `scripts/systems/sales_meeting_system.gd:117`, `term_sheet_table_system.gd:574`
 - `TimeManager.skip_night()` `time_manager.gd:183`: gecenin saatlerini tek toplu adımda koşar · `_advance_real` içinden; `scripts/main/main.gd:1290` (gece probe'u)
 - `TimeManager.hold_clock/release_clock` `time_manager.gd:350,359` · `main.gd:2307,4767,5284` (milestone_paper, event),
-  ↳ `incident_system.gd:313`, `sprint_system.gd:1909` (plan bekliyor ve saat mesai başlangıcında), `scripts/tabs/product_tab.gd:347,355`
+  ↳ `incident_system.gd:313`, `sprint_system.gd:1909` (plan bekliyor ve saat mesai başlangıcında), `scripts/tabs/product_tab.gd:348,356`
 - `TimeManager.freeze_clock/thaw_clock` `time_manager.gd:250,256` · yolculuk için `main.gd:5297,4997` (`tree_runs` true), çekimlerde `main.gd:2028,2133`
 - `TimeManager.register_night_gate/unregister_night_gate` `time_manager.gd:264,269` · `scripts/ui/office/office_people.gd:100,104` (ofis boşalma yüklemi)
 - `TimeManager._dispatch_daily_tick` `time_manager.gd:385` ve `_dispatch_hourly_tick` `:439`: sistem sırası burada; yeni sistem tiki buraya takılır. Günlük sıra: `SummarySystem.begin_day` (yuva 0),
@@ -128,7 +128,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - Anahtar ailesi dökümü: `DIZIN.md` "Metin anahtarı aileleri"; CSV'ye elle dokunma kuralı için `strings-csv-surgery` hafıza notu (bayt-aralığı ekleme)
 
 ## Testler
-- Koşturucu: `bash tools/smoke_run.sh <vaka>` (tüm süit `--all`, yalnız push öncesi); bayrak `--endgame-smoke=<vaka>` `--` ayracından ÖNCE; vaka tablosu `scripts/debug/endgame_smoke.gd:78-597` (`match case_name`)
+- Koşturucu: `bash tools/smoke_run.sh <vaka>` (tüm süit `--all`, yalnız push öncesi); bayrak `--endgame-smoke=<vaka>` `--` ayracından ÖNCE; vaka tablosu `scripts/debug/endgame_smoke.gd:78-600` (`match case_name`)
 - Zaman: `speed_preserve` `:94`, `speed_ladder` `:220`, `speed_day_invariant` `:221`, `speed_save_clamps_to_ladder` `:402`, `clock_resumes_only_by_player` `:400`, `milestone_clock_hold` `:397`, `event_gate_holds_clock` `:399`
 - Zaman devamı: `incident_night_hold_resumes` `:340`, `smoke_seed_pinned` `:404`, `sales_meeting_time_skip_founder_share` `:158`, `month_history_*` `:376,381`, `run_ledger`, `growth_streak_semantics`
 - Kayıt: `save_roundtrip_fingerprint` `:298`, `save_continuity_seeded` `:299`, `save_double_load_no_residue` `:300`, `save_backup_fallback` `:301`, `autosave_writes_off_thread` `:302`, `menu_state_machine`
@@ -166,7 +166,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 
 ## Dikkat
 - Göç adı ve koşulu aynı N'dir (`_migrate_N` `version < N`, `save_manager.gd:198-211`); yeni göçte `SCHEMA_VERSION`, koşul, adı ve belgeyi birlikte yaz
-- `_migrate_character_areas` `:1112`, `_migrate_assignments_to_areas` `:1172`, `_migrate_to_rev11` `:1212` zincirde YOK (`MIN_LOADABLE_VERSION` 10); yalnız `endgame_smoke.gd:12167-12401` çağırır
+- `_migrate_character_areas` `:1112`, `_migrate_assignments_to_areas` `:1172`, `_migrate_to_rev11` `:1212` zincirde YOK (`MIN_LOADABLE_VERSION` 10); yalnız `endgame_smoke.gd:12328-12562` çağırır
 - Göç her yuva listelemesinde koşar (`list_slots` her dosyayı `_read_file`dan geçirir): saf, ucuz, canlı durumdan bağımsız olmalı; `_migrate_18` bu yüzden kaydın kendi ürün alt türünü okur
 - `_migrate_15` kartı v18 biçiminde yazar (`_V14_EFFORT`, `_V14_SHARES` `save_manager.gd:831-832`); ×5 ve `need` dönüşümünü yalnız `_migrate_19` yapar. `list_slots` ve `read_slot` her yuvada tam zinciri tekrar koşar
 - `SaveCodec.game_state_fields()` `save_codec.gd:192` `GameState`in HER script `var`ını kaydeder; kaydedilmemesi gereken geçici alan eklenemez. Yeni alan makul varsayılan taşımalı (varsayılan = göç)

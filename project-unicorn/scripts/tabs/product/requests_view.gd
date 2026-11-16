@@ -1,8 +1,8 @@
 class_name RequestsView
 extends HBoxContainer
 
-## Ürün › Talepler (B2B): solda konular (modül, isteyen, risk altındaki gelir, süre, durum; çok konuda sıralama ve süzgeç), sağda
-## seçili konunun ayrıntısı (üç sayı, eylem, isteyenler). Veri `ProductModel.topics()`; sıralama, süzgeç ve seçili konu sayfanın
+## Ürün › Talepler (B2B): solda konular (modül, isteyen, risk altındaki gelir, süre, durum, geciken; çok konuda sıralama ve süzgeç),
+## sağda seçili konunun ayrıntısı (üç sayı, eylem, isteyenler). Veri `ProductModel.topics()`; sıralama, süzgeç ve seçili konu sayfanın
 ## yerel durumudur (`ui.requests_*`).
 
 signal action(kind: String, args: Dictionary)
@@ -17,7 +17,8 @@ const FEW := 3
 const COLUMNS := [["REQ_COL_COUNT", UiTokens.D_W_REQUEST_FIGURE, HORIZONTAL_ALIGNMENT_RIGHT],
 	["REQ_COL_RISK", UiTokens.D_W_REQUEST_FIGURE, HORIZONTAL_ALIGNMENT_RIGHT],
 	["REQ_COL_SIZE", UiTokens.D_W_REQUEST_FIGURE, HORIZONTAL_ALIGNMENT_RIGHT],
-	["REQ_COL_STATUS", UiTokens.D_W_REQUEST_STATUS, HORIZONTAL_ALIGNMENT_LEFT]]
+	["REQ_COL_STATUS", UiTokens.D_W_REQUEST_STATUS, HORIZONTAL_ALIGNMENT_LEFT],
+	["REQ_COL_WAIT", UiTokens.D_W_REQUEST_FIGURE, HORIZONTAL_ALIGNMENT_RIGHT]]
 
 var _topics: Array
 var _next: int
@@ -150,7 +151,29 @@ func _row(t: Dictionary) -> PanelContainer:
 	status.custom_minimum_size.x = COLUMNS[3][1]
 	status.add_child(_status_tag(t))
 	line.add_child(status)
+	line.add_child(_wait_cell(t))
 	return row
+
+
+## Geciken: isteği `request.wait_weeks` haftayı geçen sözsüz hesap sayısı, kum saatiyle (bedel yazılmışsa uyarı renginde); ipucu kaçına
+## bedel yazıldığını söyler. Yayındaki konuda ve geciken yokken boş; sözlü konuda sözü olmayan isteyenleri sayar.
+func _wait_cell(t: Dictionary) -> HBoxContainer:
+	var cell := SprintUiShared.box(UiTokens.SPACE_XS)
+	cell.custom_minimum_size.x = COLUMNS[4][1]
+	cell.alignment = BoxContainer.ALIGNMENT_END
+	if t.overdue == 0 or t.status == "shipped":
+		return cell
+	var args := {"topic": t.name, "n": t.overdue, "weeks": int(SprintCatalog.cfg("request.wait_weeks")),
+		"renew": int(SprintCatalog.cfg("request.risk_renew_weeks")), "v": int(SprintCatalog.cfg("request.wait_cost"))}
+	var marked: String = tr(Fmt.count_key("REQ_WAIT_MARKED", t.marked)).format(args.merged({"n": t.marked}, true)) if t.marked > 0 \
+		else tr("REQ_WAIT_UNMARKED").format(args)
+	cell.tooltip_text = tr(Fmt.count_key("REQ_WAIT_TIP", t.overdue)).format(args) + "\n" + marked
+	cell.mouse_filter = Control.MOUSE_FILTER_PASS
+	cell.add_child(_glyph(SprintUiShared.HOURGLASS, UiTokens.D_warn() if t.marked > 0 else UiTokens.D_INK_3))
+	var n := SprintUiShared.label(str(t.overdue), &"DataText")
+	n.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	cell.add_child(n)
+	return cell
 
 
 func _status_tag(t: Dictionary) -> Control:
@@ -211,19 +234,29 @@ func _detail(t: Dictionary) -> PanelContainer:
 
 
 ## Konunun eylemi: bekleyen konuda "Plana al · Sprint N" (sonraki sprintin planı; söz değil, geri çekilir), planda ya da sözlüde
-## "Planda gör" (durumu başlıkta), yayındakinde "Karşılandı" satırı; kilitli konuda eylem yok.
+## "Planda gör" (durumu başlıkta), yayındakinde "Karşılandı" satırı. Bekleyen ve kilitli konuda "Şimdilik olmaz" ve bedeli: her
+## isteyene kapatma izi (`SprintBridges.close_topic`); ne olacağı ipucunda.
 func _action(t: Dictionary) -> Control:
 	match String(t.status):
 		"shipped":
 			return SprintUiShared.prose(SprintUiShared.count("REQ_DELIVERED_LINE", t.count).format({"topic": t.name}), &"Caption")
 		"planned", "promised":
 			return _button(tr("REQ_ACT_SEE_PLAN"), &"SecondaryButtonSmall", func() -> void: ui_changed.emit("view", "sprint"))
-		"locked":
-			return null
-	if _next < 0:
-		return null
-	return _button(tr("REQ_ACT_PLAN").format({"n": _next}), &"PrimaryButtonDark",
-		func() -> void: action.emit("send_next", {"card_id": t.card_id}))
+	var col := SprintUiShared.column(UiTokens.SPACE_M)
+	if t.status != "locked" and _next >= 0:
+		col.add_child(_button(tr("REQ_ACT_PLAN").format({"n": _next}), &"PrimaryButtonDark",
+			func() -> void: action.emit("send_next", {"card_id": t.card_id})))
+	var close := SprintUiShared.box(UiTokens.SPACE_L)
+	var button := SprintUiShared.button(tr("REQ_ACT_CLOSE"), &"GhostButtonSmall",
+		func() -> void: action.emit("close_topic", {"step": t.id}))
+	button.tooltip_text = tr("REQ_CLOSE_TIP").format({"topic": t.name})
+	close.add_child(button)
+	var cost := UiFactory.D_cost(SprintUiShared.count("REQ_CLOSE_COST", t.count).format(
+		{"v": int(SprintCatalog.cfg("request.close_cost"))}), &"Caption")
+	cost.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	close.add_child(cost)
+	col.add_child(close)
+	return col
 
 
 func _button(text: String, variation: StringName, on_press: Callable) -> Button:
@@ -267,10 +300,15 @@ func _askers(t: Dictionary) -> VBoxContainer:
 		line.add_child(account)
 		if a.promise >= 0:   # tarih ipucunda, sütunlar ayrıntının içinde kalır
 			line.add_child(_glyph(CALENDAR, UiTokens.D_warn(), tr("REQ_STATUS_PROMISED").format({"n": a.promise})))
-		for cell: Array in [[_money(a.mrr), false], [str(a.sat), a.at_risk], [Fmt.weeks(a.renew), a.soon], [Fmt.weeks(a.waited), false]]:
+		# Geciken isteğin beklemesi kırmızı; bedeli yazılmışsa adı ipucunda.
+		var mark: String = tr("SALES_REQ_MARK_WAIT").format({"topic": t.name}) if a.marked else ""
+		for cell: Array in [[_money(a.mrr), false, ""], [str(a.sat), a.at_risk, ""], [Fmt.weeks(a.renew), a.soon, ""],
+				[Fmt.weeks(a.waited), a.overdue, mark]]:
 			var label := SprintUiShared.label(cell[0], &"DataText", UiTokens.D_neg_ink() if cell[1] else null)
 			label.custom_minimum_size.x = UiTokens.D_W_CAP_NUMBER
 			label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			label.tooltip_text = cell[2]
+			label.mouse_filter = Control.MOUSE_FILTER_STOP if cell[2] != "" else Control.MOUSE_FILTER_IGNORE
 			line.add_child(label)
 		list.add_child(row)
 	return col

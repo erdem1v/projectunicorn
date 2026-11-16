@@ -41,6 +41,7 @@ extends RefCounted
 #           rnd_node: {id (araştırdığı düğüm), text ("Kurucu Ar-Ge'de: …")} or null (kurucu Ar-Ge'de değil),
 #           release: {version: "v5" or "" (sürüm çıkmadı), gate (MVP kapısı: Yayınla / Bir sprint daha;
 #                     başlık ve gövde mvp'den), rnd_open (v1.0 notu: Ar-Ge açıldı), shipped: [card],
+#                     met: [String] (karşılanan talepler, konu başına "Karşılandı: <konu> · N hesap"),
 #                     carried: [{name, kind, done (kesirli), total, to_sprint}], velocity: {done, total} (kesirli),
 #                     result: {kind: "expected"|"actual", text} or null, press: {outlet (anahtar), text} or {},
 #                     reviews: [{source, text}] (B2C güncellemesinin öne çıkan yorumları, gelene dek boş),
@@ -219,12 +220,13 @@ static func _tags() -> Dictionary:
 
 ## Talepler görünümü (B2B; B2C'de null) {topics, next (sonraki sprintin numarası)}. Açık talebi olan her kademe bir konudur, ardından
 ## bu ürün çeyreğinde karşılananlar (`_met_in`); Ar-Ge'nin açmadığı hat konu doğurmaz. Konu {id (kademe), card_id, name, line, area,
-## module, status, sprint, lock, lock_full, rival, count, risk, value, size, askers}. status: "promised" (kademede söz; sprint en yakın
+## module, status, sprint, lock, lock_full, rival, count, risk, overdue, marked, value, size, askers}. status: "promised" (kademede söz; sprint en yakın
 ## sözün son sprinti) · "locked" (kapı: lock ilk şart, lock_full bütünü) · "planned" (kart bir sprintte ya da onaylı planda;
 ## `_request_status`) · "new" (ilk isteği bu hafta) · "waiting" · "shipped". risk Risk evresindeki ya da yenilemesine
-## `request.risk_renew_weeks` haftadan az kalan isteyenlerin (yayındakinde 0), value bütün isteyenlerin aylık geliridir; size kartın
+## `request.risk_renew_weeks` haftadan az kalan isteyenlerin (yayındakinde 0), value bütün isteyenlerin aylık geliridir; overdue geciken
+## isteyen (`SprintBridges.overdue`), marked bekleme izi yazılmış isteyen sayısıdır; size kartın
 ## kalan işinin (hazırlığın hızıyla) ekibin sprint kapasitesine oranı (kapasite yoksa -1). askers en riskliden: {name, mrr, sat,
-## renew (hafta), soon, at_risk, waited (hafta), promise (sprint ya da -1)}.
+## renew (hafta), soon, at_risk, waited (hafta), promise (sprint ya da -1), overdue, marked (hesapta konunun bekleme izi)}.
 static func topics() -> Variant:
 	if ProductState.market_type() != "b2b":
 		return null
@@ -258,7 +260,8 @@ static func topics() -> Variant:
 			var renew: int = SprintBridges.renews_in(c)
 			askers.append({"name": c.display_name(), "mrr": c.mrr, "sat": c.satisfaction, "renew": renew, "soon": renew < soon,
 				"at_risk": c.lifecycle_phase == "risk", "promise": int(promised.get(c.id + "|" + step, -1)),
-				"waited": (int(a.met.day) if shipped else GameState.day) - int(a.r.day)})
+				"waited": (int(a.met.day) if shipped else GameState.day) - int(a.r.day), "overdue": SprintBridges.overdue(a.r),
+				"marked": c.request_marks.has(step)})
 		askers.sort_custom(func(x: Dictionary, y: Dictionary) -> bool:
 			var rx: int = int(x.at_risk or x.soon)
 			var ry: int = int(y.at_risk or y.soon)
@@ -279,6 +282,8 @@ static func topics() -> Variant:
 			"lock": lock.get_slice(SprintCatalog.SEP, 0), "lock_full": lock, "rival": SprintCatalog.rival_has(step),
 			"count": askers.size(), "value": askers.reduce(func(s: int, a: Dictionary) -> int: return s + a.mrr, 0),
 			"risk": 0 if shipped else askers.reduce(func(s: int, a: Dictionary) -> int: return s + (a.mrr if a.at_risk or a.soon else 0), 0),
+			"overdue": askers.filter(func(a: Dictionary) -> bool: return a.overdue).size(),
+			"marked": askers.filter(func(a: Dictionary) -> bool: return a.marked).size(),
 			"size": left / capacity if capacity > 0.0 else -1.0, "askers": askers})
 	return {"topics": out, "next": int(p.get("next", {}).get("number", -1))}
 
@@ -543,15 +548,24 @@ static func _center(mode: String, release: Dictionary, outcome: Dictionary) -> D
 	}
 
 
-## Sürüm notu: çıkanlar bitmiş kart, devredenler ilerlemesiyle; sonuç ertesi gün gerçekleşene döner.
+## Sürüm notu: çıkanlar bitmiş kart, devredenler ilerlemesiyle, karşılanan talepler konu başına ("Karşılandı: Döviz Kurları · 18
+## hesap"); sonuç ertesi gün gerçekleşene döner.
 static func _release(r: Dictionary, lead: Character) -> Dictionary:
 	var press: Dictionary = r.get("press", {})
+	var met: Array = []
+	for c: Dictionary in r.shipped:
+		# A paper's follow card ships the rest of a tier an earlier release already delivered.
+		var n: int = 0 if c.get("follow", false) else GameState.product.requests.filter(func(q: Dictionary) -> bool:
+			return q.status == "met" and q.step == c.step).size()
+		if n > 0:
+			met.append(SprintUiShared.count("REQ_DELIVERED_LINE", n).format({"topic": SprintCatalog.step_name(c.step)}))
 	return {
 		"version": SprintSystem.version_label(int(r.number)),
 		"gate": r.get("gate", false),
 		# Ar-Ge ağacı v1.0 ile açılır.
 		"rnd_open": int(r.number) == 1,
 		"shipped": r.shipped.map(_shipped),
+		"met": met,
 		"carried": r.carried.map(func(item: Dictionary) -> Dictionary:
 			var c: Dictionary = SprintCatalog.card_by_id(item.id)
 			return {"name": SprintCatalog.card_name(c), "kind": c.kind, "done": item.done, "total": item.total,

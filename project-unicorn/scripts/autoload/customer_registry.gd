@@ -237,6 +237,22 @@ func set_market_ref(customer_id: String, ref: Dictionary) -> void:
 	c.market_ref = ref
 
 
+func set_request_mark(customer_id: String, key: String, points: int) -> void:
+	# A request's named mark on the account (SprintBridges), no signal: the satisfaction target reads it on the day's tick.
+	# An account that left takes its marks with it, so an unknown id is not an error.
+	var c: Customer = _customers.get(customer_id, null)
+	if c == null:
+		return
+	c.request_marks[key] = points
+
+
+func clear_request_mark(customer_id: String, key: String) -> void:
+	var c: Customer = _customers.get(customer_id, null)
+	if c == null:
+		return
+	c.request_marks.erase(key)
+
+
 func set_clause(customer_id: String, due_day: int, notice_end_day: int) -> void:
 	# The Kurumsal sunucu maddesi's state (B2BSalesSystem), no signal: its readers repaint on the day's tick.
 	# -1 = no clause / no notice.

@@ -16,38 +16,105 @@ extends RefCounted
 ## ve her yenilemeden `before_renewal_weeks` önce açılan pencerede bir kez doğar, kaçırılan eski
 ## pencere atlanır. Talebin konusu hesabın acısıdır (`Customer.pain_feature_id`: bir hattın sonraki kademesi, kilitli de olabilir);
 ## acısı yayında ya da bir kademe değilse pencere sürdükçe her tik yeniden bakılır. Aynı konuyu birçok hesap isteyebilir. Talep sessizce düşmez:
-## yayına çıkınca karşılanır (on_release), hesap gidince biter. Yenileme penceresinin açıldığı gün hesap pazar referansını yeniden
+## yayına çıkınca karşılanır (on_release), oyuncu kapatır (close_topic) ya da hesap gidince biter. Kapatılan konunun hesabı pencerede
+## yeniden istemez; sonraki pencerede acısı başka bir konuya geçer. Yenileme penceresinin açıldığı gün hesap pazar referansını yeniden
 ## kopyalar (`Customer.market_ref`).
+## İzler (`Customer.request_marks`): geciken (`overdue`) isteğin hesabı yenilemesine `request.risk_renew_weeks` haftadan az kalmışsa
+## isteğin kademesine sabit bir iz yazılır, memnuniyet −`request.wait_cost` [WORKING]; süreyle büyümez, istek bitince ya da
+## hesaba kademe için söz verilince silinir. Kapatma izi hesabın kapatmadan sonraki ilk yenilemesinde silinir.
 static func tick_requests() -> void:
 	var accounts: Array[Customer] = CustomerRegistry.get_by_market("b2b")
 	var account_ids: Array = accounts.map(func(c: Customer) -> String: return c.id)
 	var requests: Array = _p().requests
+	var soon: int = TimeModel.ticks(int(SprintCatalog.cfg("request.risk_renew_weeks")))
+	var rows_of: Dictionary = {}   # hesap → talepleri, eskiden yeniye
 	for r in requests:
 		if r.status == "open" and not account_ids.has(r.customer_id):
 			r.status = "gone"
+		elif r.status == "open" and _promised(r):
+			CustomerRegistry.clear_request_mark(String(r.customer_id), r.step)   # a promise answers the request
+		elif overdue(r) and renews_in(CustomerRegistry.get_customer(String(r.customer_id))) < soon:
+			CustomerRegistry.set_request_mark(String(r.customer_id), r.step, -int(SprintCatalog.cfg("request.wait_cost")))
+		rows_of.get_or_add(r.customer_id, []).append(r)
 	var lead: int = TimeModel.ticks(int(SprintCatalog.cfg("request.before_renewal_weeks")))
-	var first: int = TimeModel.ticks(int(SprintCatalog.cfg("request.first_after_weeks")))
+	var term: int = TimeModel.ticks(int(SprintCatalog.cfg("request.contract_weeks")))
 	for c in accounts:
-		var renewal: int = next_renewal_day(c)
-		if GameState.day == renewal - lead:
+		if GameState.day == next_renewal_day(c) - lead:
 			CustomerRegistry.set_market_ref(c.id, ProductQuality.market_ref_for(c.scale, c.industry))
-		var window: int = renewal - lead if GameState.day >= renewal - lead else c.acquired_on_day + first
-		if GameState.day < window or requests.any(func(r: Dictionary) -> bool:
-				return r.customer_id == c.id and (r.status == "open" or int(r.day) >= window)):
+		var mine: Array = rows_of.get(c.id, [])
+		for key: String in c.request_marks.keys().filter(func(k: String) -> bool: return k.begins_with("x:")):
+			var declined: Array = mine.filter(func(r: Dictionary) -> bool: return r.status == "declined" and "x:" + r.step == key)
+			if declined.is_empty():   # a mark with no declined request behind it has nothing to last for
+				CustomerRegistry.clear_request_mark(c.id, key)
+				continue
+			var closed: int = int(declined.back().closed_day)
+			if GameState.day >= closed + term - posmod(closed - c.acquired_on_day, term):
+				CustomerRegistry.clear_request_mark(c.id, key)
+		var window: int = _window(c)
+		if GameState.day < window or mine.any(func(r: Dictionary) -> bool:
+				return r.status == "open" or int(r.day) >= window or (r.status == "declined" and int(r.closed_day) >= window)):
 			continue
+		if not mine.is_empty() and mine.back().status == "declined" and mine.back().step == c.pain_feature_id:
+			# With no other topic left the pain stays, and the account may ask the declined topic again.
+			var moved: String = B2BSalesSystem.pick_pain_feature(ProductState.subtype(), c.scale + GameState.day, c.pain_feature_id)
+			if moved != "":
+				CustomerRegistry.set_pain_feature(c.id, moved)
 		var step: Dictionary = ProductLines.step(c.pain_feature_id)
 		if not step.is_empty() and not ProductState.is_feature_live(step.id):
 			_append_request(c, step, "%s.%d" % [c.id, window])
 
 
+## Geciken istek: açık, hesabın kademeye açık sözü yok ve `request.wait_weeks` [WORKING] haftadan uzun bekliyor (plan ve kilit söz
+## değildir). Talepler'in Geciken sütunu ve bekleme bedeli bunu sayar.
+static func overdue(r: Dictionary) -> bool:
+	return r.status == "open" and GameState.day - int(r.day) > TimeModel.ticks(int(SprintCatalog.cfg("request.wait_weeks"))) \
+		and not _promised(r)
+
+
+## Hesabın isteğin kademesine açık sözü var mı.
+static func _promised(r: Dictionary) -> bool:
+	return PromiseRegistry.get_open_for(String(r.customer_id)).any(func(p: Promise) -> bool: return p.feature_id == r.step)
+
+
+## "Şimdilik olmaz": konunun (kademenin) açık istekleri kapanır (`declined`, `closed_day`); her isteyenin bekleme izi silinir ve
+## öbür kapatma izinin yerine konunun kapatma izi yazılır (`x:<kademe>`, memnuniyet −`request.close_cost` [WORKING]).
+static func close_topic(step: String) -> void:
+	for r in SprintCatalog.open_requests():
+		if r.step != step:
+			continue
+		r.status = "declined"
+		r.closed_day = GameState.day
+		var c: Customer = CustomerRegistry.get_customer(String(r.customer_id))
+		for key: String in c.request_marks.keys():
+			if key == step or key.begins_with("x:"):
+				CustomerRegistry.clear_request_mark(c.id, key)
+		CustomerRegistry.set_request_mark(c.id, "x:" + step, -int(SprintCatalog.cfg("request.close_cost")))
+
+
+## Hesabın içinde bulunduğu istek penceresinin ilk günü: ilk pencere imzadan `request.first_after_weeks` sonra, sonrakiler
+## yenilemeden `request.before_renewal_weeks` önce açılır. İlk pencereden önce gelecekteki gündür.
+static func _window(c: Customer) -> int:
+	var opens: int = next_renewal_day(c) - TimeModel.ticks(int(SprintCatalog.cfg("request.before_renewal_weeks")))
+	return opens if GameState.day >= opens \
+		else c.acquired_on_day + TimeModel.ticks(int(SprintCatalog.cfg("request.first_after_weeks")))
+
+
+## Kapatmanın tuttuğu pencerenin ilk günü: içinde bulunulan pencere; ilk pencere açılmadan önce imza günü.
+static func _held_from(c: Customer) -> int:
+	var window: int = _window(c)
+	return window if GameState.day >= window else c.acquired_on_day
+
+
 ## Hesabın `line` hattında talep edebileceği sonraki kademe; hesap yoksa, hat bittiyse, kademenin kartı sprintte ya da saklıysa,
-## kapısı kapalıysa ya da hesabın açık talebi varsa {}. Tek açık talep kuralı `tick_requests`'in kuralıdır.
+## kapısı kapalıysa, hesabın açık talebi varsa ya da hesap bu kademeyi bu pencerede kapattıysa {}. Tek açık talep kuralı
+## `tick_requests`'in kuralıdır.
 static func request_step(customer_id: String, line: String) -> Dictionary:
 	var own: String = SprintCatalog.in_product(line)
 	var step: Dictionary = ProductLines.step_at(own, ProductState.line_tier(own) + 1)
-	if step.is_empty() or CustomerRegistry.get_customer(customer_id) == null or SprintCatalog.gate_reason(step.id) != "" \
-			or _p().cards.has("feat:" + step.id) \
-			or SprintCatalog.open_requests().any(func(r: Dictionary) -> bool: return r.customer_id == customer_id):
+	var c: Customer = CustomerRegistry.get_customer(customer_id)
+	if step.is_empty() or c == null or SprintCatalog.gate_reason(step.id) != "" or _p().cards.has("feat:" + step.id) \
+			or _p().requests.any(func(r: Dictionary) -> bool: return r.customer_id == customer_id and (r.status == "open"
+				or (r.status == "declined" and r.step == step.id and int(r.closed_day) >= _held_from(c)))):
 		return {}
 	return step
 
@@ -101,12 +168,13 @@ static func renews_in(c: Customer) -> int:
 	return term - posmod(GameState.day - c.acquired_on_day, term)
 
 
-## Herkese açık sürüm, kademeler yazıldıktan sonra: kademesi canlıya geçen açık talep karşılanmıştır. Sunucuya dokunulmaz:
-## kapasiteyi yalnız oyuncu ve açtığı otomatik ayar değiştirir.
+## Herkese açık sürüm, kademeler yazıldıktan sonra: kademesi canlıya geçen açık talep karşılanmıştır ve hesabın o kademedeki bekleme
+## izi silinir. Sunucuya dokunulmaz: kapasiteyi yalnız oyuncu ve açtığı otomatik ayar değiştirir.
 static func on_release() -> void:
 	for r in _p().requests:
 		if r.status == "open" and ProductState.is_feature_live(r.step):
 			r.status = "met"
+			CustomerRegistry.clear_request_mark(String(r.customer_id), r.step)
 
 
 # --- Rakipler ---------------------------------------------------------------------------

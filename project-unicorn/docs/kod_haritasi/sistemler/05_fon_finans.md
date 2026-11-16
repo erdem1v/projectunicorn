@@ -114,7 +114,7 @@ Rakip, haber, Piyasa:
 - `RivalRegistry.get_player_share_pct()` `:161` ve `format_share()` `:165`: seam `rival.player_share_pct` (`seams_world.gd:76`), haber `fmt: share`.
 - `NewsFeedSystem.on_headline_added(source, line)` `news_feed_system.gd:172`: "biz" tamponu · `EventBus.headline_added` bağı `time_manager.gd:85`.
 - `NewsFeedSystem.get_stream()/get_lines_for_day()/read()/line_text()` `:197/:205/:240/:215`: şeridin okuma sözleşmesi · `ui/components/news_ticker.gd`, `events/present/ticker.gd`.
-- `NewsFeedSystem.outlet_key()` `:424`: yayın adı anahtarı · `sprint_bridges.gd:83`, `news_ticker.gd`.
+- `NewsFeedSystem.outlet_key()` `:424`: yayın adı anahtarı · `sprint_bridges.gd:150`, `news_ticker.gd`.
 - `MarketCatalog.companies()/value()/listed()/sector_slots()` `market_catalog.gd:47/:84/:110/:78`: Piyasa okuması · `piyasa_tab.gd`, `rival_catalog.gd:build_all`, `news_feed_system.gd:395`.
 
 ## Sinyaller
@@ -141,8 +141,8 @@ Hepsi `EventBus`te (`autoload/event_bus.gd`); satır numarası tanım satırı.
 - `summary_ready` `event_bus.gd:256` ve `product_note_issued` `:179`: yayan `message_system.gd:58`, `:60` (teslimde) · `main.gd:5056`, `:4767`.
 - `desk_changed` `event_bus.gd:125`: yayan `mail_clock.gd:72`, `:108`, `events/present/papers.gd` · `top_bar.gd:162`, `left_tabs.gd:115`, `product_tab.gd:116` (`_on_desk`).
 - `news_stream_changed` `event_bus.gd:94`: yayan `news_feed_system.gd:169` · `news_ticker.gd:77`.
-- `headline_added` `event_bus.gd:236`: yayan `hr_system.gd:100`, `sales_ledger.gd:280`, `sprint_bridges.gd:117`, `events/present/ticker.gd:25` · `news_ticker.gd:72`, `NewsFeedSystem.on_headline_added`.
-- `ticker_live_line` `event_bus.gd:239`: yayan `news_feed_system.gd:405` (halka arz), `summary_system.gd:88`, `:92`, `sprint_bridges.gd:83` · `news_ticker.gd:73`.
+- `headline_added` `event_bus.gd:236`: yayan `hr_system.gd:100`, `sales_ledger.gd:280`, `sprint_bridges.gd:185`, `events/present/ticker.gd:25` · `news_ticker.gd:72`, `NewsFeedSystem.on_headline_added`.
+- `ticker_live_line` `event_bus.gd:239`: yayan `news_feed_system.gd:405` (halka arz), `summary_system.gd:88`, `:92`, `sprint_bridges.gd:150` · `news_ticker.gd:73`.
 - `rival_status_changed` `event_bus.gd:194` / `rival_advanced` `:195`: yayan `rival_registry.gd:84`, `:87` · yalnız `finance_ozet_view.gd:78-79` (liste biçimli bağ; KALITE.md "connect yok" der, yanlış alarm).
 
 ## Durum ve veri

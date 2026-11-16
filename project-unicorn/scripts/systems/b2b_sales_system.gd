@@ -174,7 +174,14 @@ static func _target_on(c: Customer, day: int, trust: float, bar: int = -1) -> in
 	# ledger lands on top of it, so a word broken inside the window still bites.
 	if day < onboarding_floor_until(c):
 		health = maxf(health, (c.tolerance if bar < 0 else bar) + B2BConstants.ONBOARDING_GRACE_MARGIN)
-	return clampi(int(round(health + trust)), 0, 100)
+	# The request marks (an overdue request's waiting cost, a declined topic) are their own term: they do not forgive with
+	# the ledger and do not share its limit; each lasts until its own end (ship, decline, renewal).
+	return clampi(int(round(health + trust)) + request_marks_total(c), 0, 100)
+
+
+## The sum of the account's request marks (Customer.request_marks), a term of its satisfaction target.
+static func request_marks_total(c: Customer) -> int:
+	return c.request_marks.values().reduce(func(s: int, v: int) -> int: return s + v, 0)
 
 
 ## The trust ledger one tick on: each tick forgives a little before its target is read.
@@ -642,13 +649,14 @@ static func on_promise_resolved(p: Promise) -> void:
 
 # --- Feature-pool binding: the pain a prospect/customer voices maps to a
 #     feature that EXISTS in the active product's pool (so a promise is buildable). ---
-static func pick_pain_feature(sub_id: String, index: int) -> String:
+## `skip`: a topic the account declined, which it does not ask for in the window after (SprintBridges.tick_requests).
+static func pick_pain_feature(sub_id: String, index: int, skip := "") -> String:
 	if sub_id == "":
 		return ""
 	# LINE MODEL (Ürün rev 6.1 §12): a line subtype (the playable erp among them) has no flat
 	# pool; its accounts want the next line step instead.
 	if ProductLines.has_subtype(sub_id):
-		return _pick_line_pain(sub_id, index)
+		return _pick_line_pain(sub_id, index, skip)
 	var pool: Array = ProductCatalog.get_feature_pool(sub_id)
 	if pool.is_empty():
 		return ""
@@ -671,7 +679,7 @@ static func pick_pain_feature(sub_id: String, index: int) -> String:
 ## already build (LineGates open) are preferred, so a promise is a schedule question and
 ## not a trap; a gated step is only chosen when nothing open is left. Deterministic by
 ## `index`, like the flat picker, so two accounts signed the same day differ.
-static func _pick_line_pain(sub_id: String, index: int) -> String:
+static func _pick_line_pain(sub_id: String, index: int, skip: String) -> String:
 	# Wants CLUSTER, the way real requests do: first the next step on a line the product
 	# already has, lowest tier first; only then the opening step of a line it lacks. One
 	# version that ships the common ask therefore keeps several accounts' words at once.
@@ -682,7 +690,7 @@ static func _pick_line_pain(sub_id: String, index: int) -> String:
 		var line_id: String = String(raw_line)
 		var have: int = ProductState.line_tier(line_id)
 		var nxt: Dictionary = ProductLines.step_at(line_id, have + 1)
-		if nxt.is_empty():
+		if nxt.is_empty() or nxt.id == skip:
 			continue
 		var sid: String = String(nxt.get("id", ""))
 		if not LineGates.is_unlocked(sid):

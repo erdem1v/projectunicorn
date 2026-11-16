@@ -211,6 +211,8 @@ func _release(col: Column, c: Dictionary, next_sprint: int) -> void:
 		pts.custom_minimum_size.x = UiTokens.D_W_PTS
 		pts.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		row.add_child(pts)
+	for line: String in r.met:
+		col.stack.add_child(_note(SprintUiShared.BUILDING, line, UiTokens.D_INK_2))
 
 	if not r.carried.is_empty():
 		col.stack.add_child(SprintUiShared.section("PRODUCT_CARRIED_OVER"))

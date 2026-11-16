@@ -49,12 +49,12 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - `data/events/cards/<kategori>/*.json`: 146 yüklenen kart (customer 17, founder 7, funding 25, product 57, rival 6, team 9, world 8, `_fixtures` 17 üst düzey); `unwired/` 3 kart yüklenmez
 - `data/events/arcs/*.json`: 3 ark (`fixture_subject`, `fixture_thesis`, `soft_cap_stretch`); `cards/_fixtures/README.md` motor test içeriğini anlatır
 - `tools/lint_baseline.json` (kabul edilmiş bulgular, 10 kayıt), `tools/lint_v3_frozen.json` (v3 öncesi hikâye kartları), `tools/plausibility_run.sh`, `tools/gen_signal_manifest.py` (-> `docs/EVENT_SIGNAL_MANIFEST.md`)
-- Tüketiciler (başka sistem sayfasında): `scripts/tabs/events/mail_pane.gd` (885, okuma bölmesi), `scripts/ui/components/inbox.gd` (565), `scripts/tabs/events_tab.gd` (369), `scripts/systems/mail_clock.gd` (121)
+- Tüketiciler (başka sistem sayfasında): `scripts/tabs/events/mail_pane.gd` (885, okuma bölmesi), `scripts/ui/components/inbox.gd` (589), `scripts/tabs/events_tab.gd` (369), `scripts/systems/mail_clock.gd` (121)
 
 ## Giriş noktaları
 - `EventGate.request(id, ctx, immediate, stamp)` `scripts/events/event_gate.gd:19` -> `EvEngine.request` `core/engine.gd:715`: bir sistem kartı adıyla ister; masada beklenen örnek varsa onu açar · kim çağırır:
   ↳ `customer_rep_system.gd:308`, `hr_morale_system.gd:93,341`, `incident_system.gd:270`
-- `EventGate.request` çağıranlar devamı: `sprint_system.gd:1029,1144,1274`, `sprint_bridges.gd:199`, `endings_system.gd:121` (SHUTTER_CARD), `main.gd:1163`, `mail_pane.gd:800` (immediate=true, oyuncunun isteği)
+- `EventGate.request` çağıranlar devamı: `sprint_system.gd:1029,1144,1274`, `sprint_bridges.gd:267`, `endings_system.gd:121` (SHUTTER_CARD), `main.gd:1163`, `mail_pane.gd:800` (immediate=true, oyuncunun isteği)
 - `EventGate.daily_tick()` `event_gate.gd:178` -> `EvEngine.daily_tick` `engine.gd:68` · `TimeManager` günlük dağıtım, Finans ve Faz kapısından sonra, `IncidentSystem`'den önce (`scripts/autoload/time_manager.gd:417`)
 - `EventGate.hourly_tick(hour)` `event_gate.gd:182` -> `EvEngine.hourly_tick` `engine.gd:90` · `TimeManager._dispatch_hourly_tick`, `MailClock.hourly_tick`'ten sonra (`time_manager.gd:451`)
 - `EvEngine.pump()` `engine.gd:554`: kuyruktaki en önemli kartı §4.4 yeniden doğrulamasından (`EvGate.revalidate`) geçirip gösterir · tik sonu, `resolve`, `clock_batch_ended` (`signals.gd:54`), `main.gd:5589` (yükleme sonrası)
@@ -87,7 +87,7 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - Motorun DİNLEDİĞİ sinyaller `EvSignals.BINDINGS` `core/signals.gd:22` (17 ad, izin listesi): customer_added/_health_changed/_churned/_expanded, employee_hired/_departed, promise_broken, version_shipped, build_phase_changed
 - BINDINGS devamı: sheet_expired, sheet_granted, seed_sheet_granted, meeting_day (investor slotu), phase_gate_reached, axis_floor_warning, axis_floor_crossed, module_unlocked;
   ↳ listede olmayan sinyal kartı tetikleyemez (`EvLint._lint_signals` `lint.gd:1140` EventBus'ta var mı diye bakar)
-- Yayanlar: `customer_registry.gd:102,186`, `b2b_sales_system.gd:318,470`, `character_registry.gd:462,561`, `promise_registry.gd:181`, `sprint_system.gd:315,316,1549,1550`, `vc_pitch_system.gd:405,417,644,872,903`,
+- Yayanlar: `customer_registry.gd:102,186`, `b2b_sales_system.gd:325,477`, `character_registry.gd:462,561`, `promise_registry.gd:181`, `sprint_system.gd:315,316,1549,1550`, `vc_pitch_system.gd:405,417,644,872,903`,
   ↳ `phase_gate_system.gd:85`, `product_read.gd:165,167`
 - `clock_batch_ended()` `event_bus.gd:25`: yayan `time_manager.gd:203` · `EvSignals.install` `EvEngine.pump`'a bağlar (`signals.gd:54`); tam liste `docs/EVENT_SIGNAL_MANIFEST.md` (`tools/gen_signal_manifest.py` üretir)
 
@@ -122,7 +122,7 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - Makullük defteri: `--event-plausibility=<spec>` kabuk içinden ya da `tools/plausibility_run.sh` (koşu başına süreç ve kullanıcı dizini; `PLAUS FIRE/FAIL/RATE/SUMMARY`); spec `seeds=<N|A-B>:weeks=<N>:variant=<plain|early|both>:preset=`
 - Smoke (`tools/smoke_run.sh <vaka>`, vakalar `scripts/debug/endgame_smoke.gd`): `event_*` 33 vaka (ör. `event_i1_single_gate` `:325`, `event_critical_drop_refunds_latch` `:294`, `event_lint_v3_rules` `:583`, `event_delay_window` `:587`)
 - Smoke devamı: `event_check_with_effects` (şıkta etki ve zar birlikte, zar çipi, yükle-tekrar aynı dal), `event_after_test` (testi bekleyen etki: hata bulunursa iner ve `<sonuç>_tested` satırı yazılır, bulunmazsa düşer, izleme kayıttan geçer), `event_year_roll` (yıl zarı, tohumlu `random` ve rakip seçicileri, `{rival}` adı),
-  ↳ `card_body_tokens_resolve` `endgame_smoke.gd:500`, `loc_event_en_coverage` `:321`, `event_chip_coverage` `:338`, `quiet_cards_fill_empty_floor` `:552`, `event_no_double_resolution_after_load` `:361`,
+  ↳ `card_body_tokens_resolve` `endgame_smoke.gd:503`, `loc_event_en_coverage` `:324`, `event_chip_coverage` `:341`, `quiet_cards_fill_empty_floor` `:555`, `event_no_double_resolution_after_load` `:364`,
   ↳ `event_thesis_day10_to_day90` `:333`, `harness_sniffer_matches_run_log` `:371`
 - Oynanan koşu: `--run-log=<preset>:<hafta>:sim` `PROBE FIRE/PICK/TALLY/WEEK` basar (`run_probe.gd:30-99`); `tools/run_gate.sh` üç koşu; görsel: `--event-shot=<kart id>[:<slot>=<varlık id>][:long=1]` (`main.gd:796`, pencereli)
 - Probe kayıt türleri: `FIRE`, `PICK`, `TALLY_BEGIN` / `TALLY` / `TALLY_END`, `WEEK`, `ERROR` (drain koruması, kilitsiz seçeneği olmayan kart)

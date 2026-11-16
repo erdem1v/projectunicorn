@@ -72,7 +72,7 @@ Sahipler: autoload `CharacterRegistry`; sınıf `Character`, `HRSystem`, `HRCons
 - `LookSystem.for_person()` `look_system.gd:123`, `founder(portrait_id)` `:116` · `character_registry.gd:530-536`, `hr_search_system.gd:296`, `counterpart_system.gd:101`, onboarding
 - `FounderConstants.validate_alloc/validate_traits` `founder_constants.gd:137/152` · `game_state.gd:981,1007`, `origin_traits_step.gd`, `main.gd:5739`
 - `FounderConstants.to_ruler(points)` `founder_constants.gd:33`: onboarding birimi → 0-10 cetvel (×2) · `game_state.gd:1002` (`_build_founder` `:975`)
-- `FounderConstants.starting_cash(origin, difficulty)` `founder_constants.gd:187` · `first_week_doc.gd`; `portrait_path()` `founder_constants.gd:192` · `ui_factory.gd:113`, `inbox.gd:458`, `personal_tab.gd:87`, onboarding
+- `FounderConstants.starting_cash(origin, difficulty)` `founder_constants.gd:187` · `first_week_doc.gd`; `portrait_path()` `founder_constants.gd:192` · `ui_factory.gd:113`, `inbox.gd:466`, `personal_tab.gd:87`, onboarding
 - İzin alanı yazıcıları: `CharacterRegistry.set_away(id, kind, until_day)` `character_registry.gd:613` (hastalık), `set_leave_override(id, week, year)` `:623` (kaydırılmış yaz izni haftası)
 - Eğitim durumu yazıcıları: `CharacterRegistry.begin_training` `character_registry.gd:142`, `tick_training` `:158`, `add_experience` `:122`, `training_fee_for` `:134`
 

@@ -2304,6 +2304,8 @@ SALES_STANCE_HINT_PREMIUM,Koltuk fiyatı bandın üstünde. Temsilcinin işlemes
 SALES_SEAT_PRICE,{price}/koltuk,{price}/seat
 SALES_SIGNING_DISCOUNT,imza indirimi %{pct},signing discount {pct}%
 SALES_TIMED_DISCOUNT,{date} tarihine kadar indirimli,Discounted until {date}
+SALES_REQ_MARK_WAIT,Geciken talep: {topic},Overdue request: {topic}
+SALES_REQ_MARK_CLOSED,Talep kapatıldı: {topic},Request declined: {topic}
 SALES_MEETING_SKIP,Teklife geç,Skip to the offer
 SALES_MEETING_OPEN_OFFER,Rakamı konuş,Talk numbers
 SALES_MEETING_OBJECTION,"Açık konuşayım, ürün {area} konusunda bize yetmiyor.","To be frank, the product falls short on {area} for us."
@@ -2789,6 +2791,16 @@ REQ_COL_MRR,Gelir,Revenue
 REQ_COL_SAT,Memnuniyet,Satisfaction
 REQ_COL_RENEW,Yenilemeye,To renewal
 REQ_COL_SINCE,Bekliyor,Waiting
+REQ_COL_WAIT,Geciken,Overdue
+REQ_WAIT_TIP,Geciken talep: {topic}. {n} hesabın isteği {weeks} haftayı geçti.,Overdue request: {topic}. {n} accounts have waited more than {weeks} weeks.
+REQ_WAIT_TIP_ONE,Geciken talep: {topic}. {n} hesabın isteği {weeks} haftayı geçti.,Overdue request: {topic}. {n} account has waited more than {weeks} weeks.
+REQ_WAIT_MARKED,Yenilemesine {renew} haftadan az kalan {n} hesabın memnuniyeti bir kez {v} puan düştü. Talep yayına çıkınca bu düşüş geri alınır.,{n} accounts renewing within {renew} weeks lost {v} satisfaction points once. The drop is given back when the request ships.
+REQ_WAIT_MARKED_ONE,Yenilemesine {renew} haftadan az kalan {n} hesabın memnuniyeti bir kez {v} puan düştü. Talep yayına çıkınca bu düşüş geri alınır.,{n} account renewing within {renew} weeks lost {v} satisfaction points once. The drop is given back when the request ships.
+REQ_WAIT_UNMARKED,Hesabın yenilemesine {renew} haftadan az kalınca memnuniyeti bir kez {v} puan düşer.,An account's satisfaction drops {v} points once when its renewal is fewer than {renew} weeks away.
+REQ_ACT_CLOSE,Şimdilik olmaz,Not for now
+REQ_CLOSE_COST,{n} hesap · her birine memnuniyet −{v},{n} accounts · satisfaction −{v} each
+REQ_CLOSE_COST_ONE,{n} hesap · memnuniyet −{v},{n} account · satisfaction −{v}
+REQ_CLOSE_TIP,"Konu kapanır, bekleme bedeli geri alınır. Hesap bu konuyu bir sonraki yenileme penceresine kadar istemez. Kayıtlarına yazılır: Talep kapatıldı: {topic}. Bu iz hesabın bir sonraki yenilemesinde silinir.",The topic closes and the waiting cost is given back. The accounts do not ask for it again before their next renewal window. Their records show: Request declined: {topic}. The mark clears at each account's next renewal.
 PRODUCT_QUARTER_NEED_PM,PM işe alınca,Once you hire a PM
 PRODUCT_OV_TAB_OVERVIEW,Genel Bakış,Overview
 PRODUCT_OV_LOCKED,v1.0 yayınlanınca açılır.,Opens when v1.0 ships.

@@ -77,6 +77,12 @@ extends Resource
 # ProductQuality.account_fit reads today's row instead.
 @export var market_ref: Dictionary = {}
 
+# --- Talepler: the named marks a request leaves on the account (no signal) ---
+# {key: points (negative int)}, a separate term of the satisfaction target (B2BSalesSystem._target_on) that does not forgive
+# on its own: `<step>` the waiting cost of an overdue request, `x:<step>` the mark of a topic the player declined (at most
+# one). Written and cleared by SprintBridges through CustomerRegistry.set_request_mark / clear_request_mark.
+@export var request_marks: Dictionary = {}
+
 # --- SATIŞ rev 6 §5.4 · the price trail -------------------------------------
 # THE ACCOUNT CARRIES ITS OWN SEAT PRICE, stamped at the signature; expansion adds seats at
 # this price, which is what makes the stance dial (§7.5) a decision with a tail rather than a

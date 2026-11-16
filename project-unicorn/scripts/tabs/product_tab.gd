@@ -312,6 +312,7 @@ func _act(kind: String, args: Dictionary) -> void:
 	match kind:
 		"add", "pull": SprintSystem.add(args.card_id)
 		"send_next": SprintSystem.send_next(args.card_id)
+		"close_topic": SprintBridges.close_topic(args.step)
 		"remove": SprintSystem.remove(args.card_id)
 		"founder": SprintSystem.set_founder_in_sprint(args.on)
 		"start": SprintSystem.begin_planned()   # kartsız planda boş sprint

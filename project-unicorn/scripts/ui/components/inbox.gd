@@ -209,11 +209,19 @@ static func account_item(customer_id: String) -> String:
 	return "r:customer:" + customer_id
 
 
-## Why an account is in Risk, as the Sales tab says it: the open bugs on the lines it uses; else the product's stability,
-## while no promise it was given has let it down; else its falling satisfaction.
+## Why an account is in Risk, as the Sales tab says it: the open bugs on the lines it uses; else a request mark (an overdue or a
+## declined request, by its topic) when the target would clear the bar without the marks; else the product's stability, while no
+## promise it was given has let it down; else its falling satisfaction.
 static func risk_reason(c: Customer) -> String:
 	if B2BSalesSystem.account_bugs(c) > B2BConstants.COMPLAINT_BUG_GATE:
 		return TranslationServer.translate("SALES_REASON_OUTAGE")
+	var marks: int = B2BSalesSystem.request_marks_total(c)
+	if marks < 0 and B2BSalesSystem.satisfaction_target(c) - marks >= c.tolerance:
+		var keys: Array = c.request_marks.keys()
+		keys.sort_custom(func(a: String, b: String) -> bool: return int(c.request_marks[a]) < int(c.request_marks[b]))
+		var key: String = keys[0]
+		return TranslationServer.translate("SALES_REQ_MARK_CLOSED" if key.begins_with("x:") else "SALES_REQ_MARK_WAIT").format(
+			{"topic": SprintCatalog.step_name(key.trim_prefix("x:"))})
 	return TranslationServer.translate("SALES_REASON_STABILITY" if c.trust_offset >= 0.0 else "SALES_REASON_SATISFACTION")
 
 

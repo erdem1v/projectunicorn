@@ -545,7 +545,7 @@ func _account_card(c: Customer, off: bool) -> PanelContainer:
 	return _card(UiTokens.D_variation(&"DealRisk") if risk else &"DealDoc", col)
 
 
-## Hesabın indirimleri: imza indirimi (§5.4) ve süreli indirimin bitişi; indirimsiz hesapta boş. Ölçek, koltuk ve
+## Hesabın indirimleri (imza indirimi §5.4, süreli indirimin bitişi) ve memnuniyetini tutan talep izleri; ikisi de yoksa boş. Ölçek, koltuk ve
 ## kıdem kartta yazmaz (envanter, Erdem 2026-11-12).
 func _meta_line(c: Customer) -> String:
 	var parts: Array[String] = []
@@ -554,6 +554,10 @@ func _meta_line(c: Customer) -> String:
 	if c.timed_discount_until >= 0:
 		parts.append(tr("SALES_TIMED_DISCOUNT").format({
 			"date": Fmt.day_month(GameState.get_date_dict(c.timed_discount_until), true)}))
+	# The request marks that hold the account's satisfaction down, by the topic's name.
+	for key: String in c.request_marks:
+		parts.append(tr("SALES_REQ_MARK_CLOSED" if key.begins_with("x:") else "SALES_REQ_MARK_WAIT").format(
+			{"topic": SprintCatalog.step_name(key.trim_prefix("x:"))}))
 	return " · ".join(parts)
 
 
