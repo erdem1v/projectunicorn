@@ -9747,7 +9747,7 @@ static func _add_prospect(pid: String, star: int, pain: String,
 ## Akış (PRD_ERP §4.3): yayındaki ürün satışçısız haftada `FLOW_LIVE_PER_WEEK` adayla tanışır ve on tikte aday gelir; İtibar
 ## `REP_FULL`'un yarısındayken `FLOW_REP_MAX`'ın yarısı eklenir, üstünde tavanda kalır, sıfırın altında eklenmez; taze sürümün
 ## ilgisi ve evre akışı oynatmaz; atanmış satışçı tam bir satışçı payı ekler.
-## FALSİFİKASYON: `lead_rate_per_week`'te `clampf`'ın üst sınırını kaldır → tavan iddiası FAIL; `interest_mult` çarpanını geri
+## FALSİFİKASYON: `flow_parts`'ta `clampf`'ın üst sınırını kaldır → tavan iddiası FAIL; `interest_mult` çarpanını geri
 ## koy → İtibar 0 satırı FAIL (taze sürümde ilgi 100, ×1,3); `phase_mult`'u geri koy → evre iddiası FAIL.
 static func _case_sales_pipeline_rate_by_pace() -> String:
 	GameState.set_flag("mvp_shipped", true)

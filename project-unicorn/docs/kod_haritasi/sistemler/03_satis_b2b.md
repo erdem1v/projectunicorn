@@ -65,7 +65,7 @@ Sahipler: autoload `CustomerRegistry`, `ProspectRegistry`, `PromiseRegistry`; mo
 - `B2BSalesSystem.apply_timed_discount()` `scripts/systems/b2b_sales_system.gd:417` (bitişi `_tick_customer`) ve `apply_offer()` `:427`: adaya yazılmış teklif imzada hesaba geçer · `SalesSystem.add_b2b_customer`
 - `SalesSystem.add_b2b_customer()` `scripts/systems/sales_system.gd:343`: tek B2B imza yolu · `SalesFinalizer.sign_deal` `sales_finalizer.gd:84`, `SalesFinalizer.sign_now` `:118` (olayın `add_customer` fiili; koşullar `event_terms` `:108`: süren masa anlaşmasınınki, yoksa masada kapanışınki `SalesRepSystem.desk_terms` `sales_rep_system.gd:276`, eksi adaya yazılmış teklifin indirimi) ve `SalesRepSystem._close` `sales_rep_system.gd:258`
 - `SalesSystem.reflect_mrr()` `scripts/systems/sales_system.gd:166`: toplam MRR'ı `GameState.set_mrr`'a yansıtan tek yer · MRR değiştiren her çağıran
-- `SalesFaucetSystem.lead_rate_per_week()` `scripts/systems/sales_faucet_system.gd`: haftalık aday = yayında 1 +
+- `SalesFaucetSystem.lead_rate_per_week()`, `flow_parts()` `scripts/systems/sales_faucet_system.gd`: haftalık aday = yayında 1 +
   İtibar'ın payı (`REP_FULL`'da `FLOW_REP_MAX`) + Satış'a atanmış kişi başına 2 · `_tick_inflow`, Satış başlığı
 - `SalesFaucetSystem.star_mix_now()`, `top_band()`: yıldız bandı, s★ `ProductQuality.market_fit(s)` beklentiyi karşılayınca
   açılır, kapalı bandın payı açık en yüksek banda düşer · `_tick_inflow`, `MarketingSystem._star_mix`

@@ -174,6 +174,29 @@ static func weakest_area(ctx: Dictionary = {}) -> String:
 	return lowest(ratios.keys(), ratios)
 
 
+## s★ şirketin beklentisinin (alanın sektörlerdeki en yüksek beklentisi, rakip penceresi dahil) altında kalan alanların
+## kartları, en zayıf alan önde: alanın hatlarından kademesi beklentiye varmayanların sıradaki adımı (step kimliği). Hepsi
+## yayına çıkınca bant açılır; bant sektörlerin ortalamasını okuduğu için daha önce de açılabilir. Satış başlığının ipucu okur.
+static func needs_for(star: int) -> Array:
+	var ctx := {"star": star, "rivals": true}
+	var expect: Dictionary = {}
+	var ratios: Dictionary = {}
+	for area in SprintCatalog.area_ids():
+		expect[area] = expectation(area, ctx)
+		if level(area) < expect[area]:
+			ratios[area] = ratio(area, expect[area])
+	var short: Array = ratios.keys()
+	short.sort_custom(func(a: String, b: String) -> bool: return ratios[a] < ratios[b])
+	var out: Array = []
+	for area in short:
+		var want: int = ceili(expect[area])
+		for line_id in SprintCatalog.capabilities(area):
+			var tier: int = SprintCatalog.tier(line_id)
+			if tier < want and tier < SprintCatalog.max_tier(line_id):
+				out.append(String(ProductLines.step_at(line_id, tier + 1).id))
+	return out
+
+
 ## {alan: beklenti} (beklentisi 0 olan alan yok): yıldızın ve sektörün satırı, rakipsiz. Hesap bunu imzada ve her yenileme
 ## penceresinin açılışında kopyalar (`Customer.market_ref`).
 static func market_ref_for(star: int, sector: String, subtype: String = ProductState.subtype()) -> Dictionary:

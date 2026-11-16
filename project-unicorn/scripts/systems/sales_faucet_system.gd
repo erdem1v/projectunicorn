@@ -114,12 +114,18 @@ static func is_return_locked(company_name: String) -> bool:
 #  §3 — the flow
 # ============================================================================
 
-## Haftada gelen aday (tik sınırından önce): yayındaki ürün, İtibar'ın payı (sıfırın altında 0, `REP_FULL`'da `FLOW_REP_MAX`) ve
-## Satış'a atanmış kişiler; kurucu da atanınca sayılır (Ekip §12.0). Satış başlığı, tik ve smoke aynı sayıyı okur.
+## Haftada gelen aday (tik sınırından önce): `flow_parts`'ın toplamı. Tik, Satış başlığı ve smoke aynı sayıyı okur.
 static func lead_rate_per_week() -> float:
-	return (SalesConstants.FLOW_LIVE_PER_WEEK
-		+ SalesConstants.FLOW_REP_MAX * clampf(float(GameState.reputation) / SalesConstants.REP_FULL, 0.0, 1.0)
-		+ SalesConstants.FAUCET_PER_REP_PER_WEEK * float(HRSystem.assigned_to(HRConstants.AREA_SALES).size()))
+	var parts: Dictionary = flow_parts()
+	return parts.live + parts.reputation + parts.sales
+
+
+## Akışın parçaları (aday/hafta), Satış başlığının ipucu dökümünü yazar: `live` yayındaki ürün, `reputation` İtibar'ın payı
+## (sıfırın altında 0, `REP_FULL`'da `FLOW_REP_MAX`), `sales` Satış'a atanmış kişiler; kurucu da atanınca sayılır (Ekip §12.0).
+static func flow_parts() -> Dictionary:
+	return {"live": SalesConstants.FLOW_LIVE_PER_WEEK,
+		"reputation": SalesConstants.FLOW_REP_MAX * clampf(float(GameState.reputation) / SalesConstants.REP_FULL, 0.0, 1.0),
+		"sales": SalesConstants.FAUCET_PER_REP_PER_WEEK * float(HRSystem.assigned_to(HRConstants.AREA_SALES).size())}
 
 
 static func _tick_inflow() -> void:

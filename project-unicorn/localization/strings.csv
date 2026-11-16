@@ -2128,7 +2128,18 @@ SALES_LOCKED_NO_B2B,Canlı B2B ürün yok.,No live B2B product.
 SALES_EMPTY_UNTYPED,Önce Ürün'de yolunu seç.,Pick your path in Product first.
 SALES_EMPTY_B2B_PRE,{version} yayınlanınca adaylar gelir.,Leads arrive once {version} ships.
 SALES_GO_PRODUCT,Ürün'e git,Go to Product
-SALES_FLOW_RATE,Akış: {n}/hafta,Flow: {n}/week
+SALES_FLOW_HEAD,Akış: {n}/hafta · Gelen:,Flow: {n}/week · Incoming:
+SALES_FLOW_TIP,"Haftada {n} aday: yayındaki ürün {live}, İtibar ({rep}) {rep_part}, satış ekibi {sales}","{n} leads a week: live product {live}, Reputation ({rep}) {rep_part}, sales team {sales}"
+SALES_FLOW_NEEDS,{stars} için: {cards},For {stars}: {cards}
+REPUTATION_RECENT,İtibarın son değişimleri:,Recent reputation changes:
+REPUTATION_ROW,"{reason}: İtibar {delta}","{reason}: Reputation {delta}"
+REPUTATION_TIER,{step} yayına çıktı,{step} went live
+REPUTATION_KEPT,{customer} hesabına verilen söz tutuldu,Promise to {customer} kept
+REPUTATION_PARTIAL,{customer} hesabına verilen söz geç tutuldu,Promise to {customer} kept late
+REPUTATION_BROKEN,{customer} hesabına verilen söz bozuldu,Promise to {customer} broken
+REPUTATION_LOST,{customer} ayrıldı,{customer} left
+REPUTATION_ESCAPED,{module} modülünden kaçan hata {n} hesaba dokundu,A bug that escaped from {module} reached {n} accounts
+REPUTATION_ESCAPED_ONE,{module} modülünden kaçan hata {n} hesaba dokundu,A bug that escaped from {module} reached {n} account
 SALES_DAYS_LEFT,{n} hafta,{n} weeks
 SALES_DAYS_LEFT_ONE,{n} hafta,{n} week
 SALES_ACTION_MEET,Görüşmeye git,Go to the meeting

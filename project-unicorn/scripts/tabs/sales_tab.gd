@@ -31,6 +31,7 @@ const CLOCK := "res://assets/icons/util/clock.svg"
 const CALENDAR := "res://assets/icons/util/calendar.svg"
 const INFO := "res://assets/icons/util/info.svg"
 const ARROW := "res://assets/icons/util/arrow_right.svg"
+const LOCK := "res://assets/icons/util/lock.svg"
 const MAIL := "res://assets/icons/util/mail_open.svg"
 const STAR := "res://assets/icons/util/star_full.svg"
 const SALES_GLYPH := "res://assets/icons/rail/sales.svg"
@@ -280,10 +281,7 @@ func _paint_pipeline(off: bool) -> void:
 		if a.star != b.star:
 			return a.star > b.star
 		return a.expires_on_day < b.expires_on_day)
-	# §3: akış oyuncuya görünen bir sayıdır; temsilci almak onu büyütür ve karşılığı burada okunur.
-	var rate: float = SalesFaucetSystem.lead_rate_per_week()
-	var lane := _lane(_left, "SALES_PIPELINE_HEADER", tr("SALES_FLOW_RATE").format(
-		{"n": "<1" if rate > 0.0 and rate < 1.0 else str(roundi(rate))}))
+	var lane := _lane(_left, "SALES_PIPELINE_HEADER", _flow_head())
 	if leads.is_empty():
 		lane.add_child(UiFactory.make_label(tr("SALES_PROSPECTS_EMPTY"), &"NoteMuted"))
 	for lead in leads:
@@ -717,22 +715,54 @@ func _steward_option(pop: HRPopover, c: Customer, steward_id: String, steward_na
 # --- Küçük yapı taşları -----------------------------------------------------
 
 ## A lane: its caps head over a rule, a figure at its right when given; its cards follow.
-func _lane(parent: VBoxContainer, key: String, figure := "") -> VBoxContainer:
+func _lane(parent: VBoxContainer, key: String, right: Control = null) -> VBoxContainer:
 	var lane := VBoxContainer.new()
 	lane.add_theme_constant_override("separation", UiTokens.SPACE_M)
 	var head := PanelContainer.new()
 	head.theme_type_variation = &"TableHead"
 	var row := HBoxContainer.new()
 	row.add_child(UiFactory.make_label(Fmt.upper(tr(key)), &"KeyLabel"))
-	if figure != "":
-		var right := UiFactory.make_label(figure, &"Caption")
-		right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		right.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	if right != null:
 		row.add_child(right)
 	head.add_child(row)
 	lane.add_child(head)
 	parent.add_child(lane)
 	return lane
+
+
+## Aday sütununun başlığının sağı (PRD_ERP §4.3): haftalık akış ve beş yıldızlık ölçek; açık en yüksek yıldıza kadar dolu, sıradaki
+## yıldızın yerinde kilit. İpucu sayının dökümünü, İtibar'ın son değişimlerini ve sıradaki yıldızın eksik kartlarını yazar.
+func _flow_head() -> HBoxContainer:
+	var parts: Dictionary = SalesFaucetSystem.flow_parts()
+	var rate: String = Fmt.number(parts.live + parts.reputation + parts.sales)
+	var changes: Array = Reputation.recent()
+	var top: int = SalesFaucetSystem.top_band()
+	var row := HBoxContainer.new()
+	row.name = "FlowHead"   # --sales-shot=flow imleci buraya koyar
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.alignment = BoxContainer.ALIGNMENT_END
+	row.add_theme_constant_override("separation", UiTokens.SPACE_S)
+	row.add_child(UiFactory.make_label(tr("SALES_FLOW_HEAD").format({"n": rate}), &"Caption"))
+	var stars := UiFactory.D_stars(top)
+	if top < SalesConstants.STAR_MAX:
+		var lock := UiFactory.make_glyph(LOCK, UiTokens.D_ICON_STAR, UiTokens.D_INK_3)
+		stars.add_child(lock)
+		stars.move_child(lock, top)
+		stars.get_child(top + 1).queue_free()
+	row.add_child(stars)
+	var tip: Array = [tr("SALES_FLOW_TIP").format({"n": rate,
+		"live": Fmt.number(parts.live), "rep": GameState.reputation, "rep_part": "+" + Fmt.number(parts.reputation),
+		"sales": "+" + Fmt.number(parts.sales)})]
+	if not changes.is_empty():
+		tip.append(tr("REPUTATION_RECENT"))
+		tip.append_array(changes.map(func(r: Dictionary) -> String: return NewsFeedSystem.line_text(Reputation.line(r))))
+	var needs: Array = [] if top == SalesConstants.STAR_MAX else ProductQuality.needs_for(top + 1)
+	if not needs.is_empty():
+		tip.append(tr("SALES_FLOW_NEEDS").format({"stars": SprintCatalog.STAR.repeat(top + 1),
+			"cards": ", ".join(needs.map(func(id: String) -> String: return SprintCatalog.step_name(id)))}))
+	row.mouse_filter = Control.MOUSE_FILTER_STOP
+	row.tooltip_text = "\n".join(tip)
+	return row
 
 
 ## A menu's head or rule, inset from the menu's sides as its rows are; `top` above it, SPACE_XS under it.

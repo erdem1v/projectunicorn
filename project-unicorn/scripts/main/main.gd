@@ -1922,7 +1922,7 @@ func _shot_pane(card_id: String, ctx: Dictionary, names := {}) -> void:
 
 
 ## --sales-shot=<pipeline|desk|picker|inbox|edge|edge_end|stretched|empty|b2b_pre|untyped|morning|evening|
-## norep|discounted|frank|risk_stability|deals|returning|clause|offer|sources|mp_pre|mp_launch|mp_growth|mp_growth_tip|mp_cat|mp_policy|mp_policy_locked|mp_assign|mp_assign_first>. `desk` puts a rep mid-processing on the desk;
+## norep|discounted|frank|risk_stability|deals|returning|clause|offer|sources|mp_pre|mp_launch|mp_growth|mp_growth_tip|mp_cat|mp_policy|mp_policy_locked|mp_assign|mp_assign_first|flow>. `desk` puts a rep mid-processing on the desk;
 ## `picker` opens the steward
 ## picker on the first account, `inbox` presses its İlgilen (Olaylar opens on the account's mail); `edge` draws the
 ## rarer lines (a reserved lead, one given to a rep, a whale's condition, tables above the founder's league, the
@@ -1948,6 +1948,8 @@ func _shot_pane(card_id: String, ctx: Dictionary, names := {}) -> void:
 ## (`B2BSalesSystem.apply_timed_discount`, 26 weeks of 10%): the offer lines of the lead cards and the "discounted until"
 ## part of the account's meta line. A SHOTLINE|offer line prints each label of the page that carries one of them (a
 ## headless shot has no frame to read).
+## `flow` gives İtibar three changes (a step goes live, Kuzey's word breaks, Ege leaves) and shoots the pipeline head, then
+## rests the pointer on it: the tip's frame (`sales_shot_flow_tip`) reads the flow's parts, the changes and the next star's cards.
 func _run_sales_shot(kind: String) -> void:
 	_begin_shot()
 	if kind.begins_with("mp_"):
@@ -2051,6 +2053,14 @@ func _run_sales_shot(kind: String) -> void:
 		# Nordica signed its 20 seats at $100; the discount takes MRR down while the stamp stays.
 		CustomerRegistry.get_customer("co_nordica").seat_price = 100
 		B2BSalesSystem.apply_discount("co_nordica", -roundi(2000 * B2BConstants.RETAIN_DISCOUNT_PCT))
+	if kind == "flow":
+		SprintSystem.choose_type("erp", "Fatura")   # LOC-DATA debug seed / id
+		GameState.set_reputation(14)
+		var tier: int = ProductState.line_tier("line_erp_stock") + 1
+		ProductState.set_line_tier("line_erp_stock", tier)
+		EventBus.line_upgraded.emit("line_erp_stock", tier)
+		PromiseRegistry.break_promise(PromiseRegistry.create("co_kuzey", CustomerRegistry.get_customer("co_kuzey").pain_feature_id, 1).id)
+		B2BSalesSystem._churn(CustomerRegistry.get_customer("co_ege"))
 	if kind == "offer":
 		var offered: Array = ProspectRegistry.get_all()
 		offered.sort_custom(func(x: Prospect, y: Prospect) -> bool: return x.star < y.star)
@@ -2103,6 +2113,16 @@ func _run_sales_shot(kind: String) -> void:
 		_print_shot_lines(get_tree().get_first_node_in_group(&"window_layer").get_current_page_body(), "offer",
 			[tr("SALES_OFFER_DISCOUNT").get_slice("{", 0), tr("SALES_OFFER_PROMISE").get_slice("{", 0),
 			tr("SALES_TIMED_DISCOUNT").get_slice("{", 1).get_slice("}", 1)])
+	if kind == "flow":
+		await get_tree().create_timer(0.5).timeout
+		_save_shot("sales_shot_flow")
+		var head: Control = get_tree().get_first_node_in_group(&"window_layer").get_current_page_body().find_child("FlowHead", true, false)
+		var move := InputEventMouseMotion.new()
+		move.position = head.get_global_rect().get_center()
+		move.global_position = move.position
+		get_viewport().push_input(move)
+		await _finish_shot("sales_shot_flow_tip", 1.2)
+		return
 	await _finish_shot("sales_shot_%s" % kind, 0.6)
 
 
