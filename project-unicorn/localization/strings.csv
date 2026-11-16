@@ -2922,6 +2922,7 @@ PRODUCT_REQUEST_DONE_Q,{q}. çeyrekte tamamlandı,Completed in Q{q}
 PRODUCT_MODULES,Modüller,Modules
 PRODUCT_IN_PLAN_TIP,Bu sprintte kartı var,Has a card in this sprint
 PRODUCT_CAND_IN_PLAN_TIP,Bu sprintin planında,In this sprint's plan
+PRODUCT_BAND_TIP,{stars} şirketlerin beklediği kartlardan biri,One of the cards {stars} companies expect
 PRODUCT_ADD_TO_PLAN,Plana ekle,Add to plan
 PRODUCT_EFFORT_TIP,efor {n},effort {n}
 PRODUCT_EARLY_END_TIP,Bütün kartlar {w}. haftada biter,All cards done in week {w}

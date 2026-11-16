@@ -269,7 +269,7 @@ func _module_row(m: Dictionary) -> PanelContainer:
 	return row
 
 
-## Aday kart: ad, efor ve "+" (planda tik, başka sprintte damga); altında düzeltme kartının hata metni (sarar) ve aşama payları.
+## Aday kart: ad, sıradaki yıldız bandının eksiğiyse yıldız çipi, efor ve "+" (planda tik, başka sprintte damga); altında düzeltme kartının hata metni (sarar) ve aşama payları.
 func _candidate(c: Dictionary) -> PanelContainer:
 	var card := PanelContainer.new()
 	card.theme_type_variation = &"ModuleCandidate"
@@ -277,6 +277,11 @@ func _candidate(c: Dictionary) -> PanelContainer:
 	card.add_child(col)
 	var top := SprintUiShared.box(UiTokens.SPACE_M)
 	top.add_child(_name(String(c.name), &"CaptionName", UiTokens.D_INK_2))
+	if int(c.band) > 0:
+		var band := UiFactory.D_tag("★".repeat(int(c.band)), &"outline")
+		band.mouse_filter = Control.MOUSE_FILTER_PASS
+		band.tooltip_text = tr("PRODUCT_BAND_TIP").format({"stars": "★".repeat(int(c.band))})
+		top.add_child(band)
 	top.add_child(SprintUiShared.label(str(c.effort), &"CaptionName", UiTokens.D_INK_1))
 	if c.planned:
 		var tick := UiFactory.make_glyph(SprintUiShared.CHECK, UiTokens.D_ICON_ROW, UiTokens.D_ST_TEST)

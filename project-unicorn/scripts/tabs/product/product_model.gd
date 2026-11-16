@@ -154,6 +154,13 @@ static func live() -> Dictionary:
 	var modules: Array = []
 	var research: Array = []
 	var pool: Dictionary = {}
+	# Sıradaki yıldız bandının eksik kartları (Satış başlığının ipucuyla aynı liste): {step: yıldız}.
+	var wanted: Dictionary = {}
+	if SalesFaucetSystem.market_open():
+		var band: int = SalesFaucetSystem.top_band() + 1
+		if band <= SalesConstants.STAR_MAX:
+			for step in ProductQuality.needs_for(band):
+				wanted[step] = band
 	for a in SprintCatalog.areas_for(ProductState.subtype(), ProductState.market_type()):
 		var cards: Array = SprintCatalog.candidates(a.id)
 		for c in cards:
@@ -161,11 +168,11 @@ static func live() -> Dictionary:
 		areas.append({"id": a.id, "name": SprintCatalog.area_name(a.id), "goal_text": goal_text(a.id)})
 		for line: String in SprintCatalog.capabilities(a.id):
 			var module: Variant = _module(line, a.id, cards.filter(func(c: Dictionary) -> bool: return c.line == line),
-				line in planned, n, tags)
+				line in planned, n, tags, wanted)
 			if module != null:
 				modules.append(module)
 		research.append_array(cards.filter(func(c: Dictionary) -> bool: return c.kind == "research").map(
-			func(c: Dictionary) -> Dictionary: return _module_card(c, int(tags.get(c.id, -1)), n)))
+			func(c: Dictionary) -> Dictionary: return _module_card(c, int(tags.get(c.id, -1)), n, wanted)))
 	var center: Dictionary = _center(mode, release, outcome)
 	center.merge(_plan_view(mode, run, suggestion, pool), true)
 	var next: Dictionary = _next(mode, run)
@@ -332,8 +339,10 @@ static func bug_row_of(line_name: String, part: Dictionary, delta: int) -> Dicti
 
 ## Sol sütunun modülü (modül hattın kendisidir, `area_id` yalnız ikonunu verir): kilitli aday `locked`ta şartıyla durur. Adayı ve
 ## kilitli adayı olmayan (bitmiş) modül listelenmez. `cards` hattın ham adayları, `planned`
-## modülün bu sprintin planında kartı olması, `sprint` bu sprintin numarası, `tags` bu ve sonraki sprintin kartlarının sprint numarası.
-static func _module(line_id: String, area_id: String, cards: Array, planned: bool, sprint: int, tags: Dictionary) -> Variant:
+## modülün bu sprintin planında kartı olması, `sprint` bu sprintin numarası, `tags` bu ve sonraki sprintin kartlarının sprint numarası,
+## `wanted` sıradaki yıldız bandının eksik kartları ({step: yıldız}).
+static func _module(line_id: String, area_id: String, cards: Array, planned: bool, sprint: int, tags: Dictionary,
+		wanted: Dictionary) -> Variant:
 	var listed: Array = []
 	var locked: Variant = null
 	for c: Dictionary in cards:
@@ -350,14 +359,15 @@ static func _module(line_id: String, area_id: String, cards: Array, planned: boo
 		return null
 	return {"id": line_id, "area": area_id, "name": SprintCatalog.cap_name(line_id), "planned": planned,
 		"launch": line_id in SprintCatalog.mvp_named() and not ProductState.is_live(),
-		"candidates": listed.map(func(c: Dictionary) -> Dictionary: return _module_card(c, int(tags.get(c.id, -1)), sprint)),
+		"candidates": listed.map(func(c: Dictionary) -> Dictionary: return _module_card(c, int(tags.get(c.id, -1)), sprint, wanted)),
 		"locked": locked}
 
 
 ## Modülün adayı: sıfırdan büyük aşama paylarının eforu (kalan ihtiyaç ÷ hazırlık kazancı, aşama kartın türünün rolünden), bu
 ## sprintin planında mı (tik) ya da hangi başka sprintte (damga; `tag` bu ve sonraki sprintin kartının sprint numarası, yoksa -1),
-## düzeltme kartında hata sayısı ile metni. Adaylıktan çıkmış kartın (sprintte, sonrakinde) "+"ı yoktur (`addable` false), adayınki bilinmez.
-static func _module_card(c: Dictionary, tag: int, sprint: int) -> Dictionary:
+## düzeltme kartında hata sayısı ile metni, özellik kartı sıradaki yıldız bandının eksiklerindense o yıldız (`band`, yoksa 0).
+## Adaylıktan çıkmış kartın (sprintte, sonrakinde) "+"ı yoktur (`addable` false), adayınki bilinmez.
+static func _module_card(c: Dictionary, tag: int, sprint: int, wanted: Dictionary) -> Dictionary:
 	var parts: Array = _parts(c)
 	var roles: Array = SprintCatalog.cfg("roles." + String(c.kind))
 	var fix: bool = c.kind == "fix"
@@ -365,7 +375,8 @@ static func _module_card(c: Dictionary, tag: int, sprint: int) -> Dictionary:
 		"parts": range(3).filter(func(i: int) -> bool: return parts[i] > SprintSystem.EPS).map(
 			func(i: int) -> Dictionary: return {"stage": roles[i], "effort": parts[i]}),
 		"planned": tag == sprint, "stamp": tag if tag != sprint else -1, "addable": null if c.state == "candidate" else false,
-		"bugs": c.bugs if fix else 0, "fix_text": SprintUiShared.bugs_text(SprintCatalog.bugs_part(c.line, c.bugs)) if fix else ""}
+		"bugs": c.bugs if fix else 0, "fix_text": SprintUiShared.bugs_text(SprintCatalog.bugs_part(c.line, c.bugs)) if fix else "",
+		"band": int(wanted.get(c.step, 0)) if c.kind == "feature" else 0}
 
 
 ## Müşteri talepleri (B2B; B2C'de null): her açık talep bir satır, altında bu ürün çeyreğinde karşılananlar. Tarih yalnız sözün

@@ -1,6 +1,6 @@
 # Kod haritası · KALITE
 
-Üretildi: git 447cc6a2 · 2026-11-16 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git 46ed9efc · 2026-11-16 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 269 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
@@ -14,8 +14,8 @@ Kapsam: scripts/ altındaki 269 .gd (tools/ hariç). Kod temizliği ve kıdemli 
 - scripts/systems/marketplace_model.gd · 1342 satır · 107 func
 - scripts/systems/vc_pitch_system.gd · 1317 satır · 91 func
 - scripts/debug/marketplace_probe.gd · 1313 satır · 65 func
+- scripts/tabs/product/product_model.gd · 1303 satır · 68 func
 - scripts/autoload/save_manager.gd · 1295 satır · 60 func
-- scripts/tabs/product/product_model.gd · 1292 satır · 68 func
 - scripts/systems/hr_constants.gd · 1189 satır · 90 func
 - scripts/events/core/effects.gd · 1147 satır · 35 func
 - scripts/ui/office/office_person.gd · 1128 satır · 51 func
