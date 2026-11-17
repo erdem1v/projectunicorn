@@ -34,7 +34,8 @@ extends RefCounted
 # (Pazarlama'nın `active_campaign()`'i: tür, evre, kalan hafta, hazırlık, kategoriler, derinlik, şirketin payı, katılım çarpanı,
 # ayarlar ve ezdiği kural `overrides`; yoksa boş),
 # `unanswered` (Destek'in cevapsız bildirim payı), `features` (yayındaki ek özellik konularının kimliği: yayında olmayan
-# kullanıcı özelliği bağlı adımı `missing_mult` kadar kısar), `planned` (sprint planındaki konuların kimliği).
+# kullanıcı özelliği bağlı adımı `missing_mult` kadar kısar), `planned` (sprint planındaki konuların kimliği), `cardless` (sprint
+# kartı olmayan konuların kimliği: bilet almaz ve gecikmiş sayılmaz).
 #
 # "Sipariş" teslim edilen siparişin adıdır (gain, haftalık sipariş, mağaza başına sipariş, üye siparişi, kargo ve iade
 # sayıları); "Sipariş verdi" adımı `order` ayrı sayılır.
@@ -63,7 +64,7 @@ const NO_OUTAGE := {"points": 0.0, "cost": 0.0}
 const WORLD := {
 	"week": 0, "published": false, "tiers": {}, "bugs": {}, "stars": {}, "channel": {}, "return_lift": 0.0, "campaign": {},
 	"unanswered": 0.0, "features": [],
-	"planned": [],
+	"planned": [], "cardless": [],
 }
 
 static var _c: Dictionary = _read(DATA_PATH)
@@ -800,6 +801,12 @@ static func tier_topics() -> Dictionary:
 	return out
 
 
+## Ek özellik konularının kimliği: kademesi olmayanlar.
+static func extra_topics() -> Array:
+	return _c.topics.catalog.filter(func(topic: Dictionary) -> bool: return not topic.has("tier")).map(
+		func(topic: Dictionary) -> String: return topic.id)
+
+
 ## Konunun özelliği yayında mı: kademe konusunda modülün kademesi yetiyor, ek özellikte dünyanın yayındaki listesinde.
 static func _topic_live(world: Dictionary, topic: Dictionary) -> bool:
 	if topic.has("tier"):
@@ -819,12 +826,13 @@ static func _refresh_topics(state: Dictionary, world: Dictionary) -> void:
 
 
 ## Tarafın en eski gecikmiş konusu: yayında olmayan (planda olan dahil) ve ilk isteğinden bu yana eşikten çok hafta geçmiş; yoksa "".
+## Sprint kartı olmayan konu sayılmaz: oyuncu onu karşılayamaz.
 static func _late_topic(state: Dictionary, world: Dictionary, side: String) -> String:
 	var oldest := ""
 	var since := 0
 	for topic in _c.topics.catalog:
 		var ts: Dictionary = state.topics[topic.id]
-		if topic.side != side or ts.status == "shipped" or ts.since_day == NEVER \
+		if topic.side != side or ts.status == "shipped" or ts.since_day == NEVER or topic.id in _w(world, "cardless") \
 				or int(_w(world, "week")) - int(ts.since_day) <= int(_c.topics.late_weeks):
 			continue
 		if oldest == "" or ts.since_day < since:
@@ -860,12 +868,12 @@ static func _tickets(state: Dictionary, topic: Dictionary) -> float:
 	return total
 
 
-## Kapanıştan sonra haftada bir: her konunun o haftaki biletini son dört haftaya yazar (yayındaki konuya bilet gelmez); ilk bileti
-## gelen konunun yaşı o haftadan başlar.
+## Kapanıştan sonra haftada bir: her konunun o haftaki biletini son dört haftaya yazar (yayındaki ve sprint kartı olmayan konuya
+## bilet gelmez); ilk bileti gelen konunun yaşı o haftadan başlar.
 static func tick_topics(state: Dictionary, world: Dictionary) -> void:
 	for topic in _c.topics.catalog:
 		var ts: Dictionary = state.topics[topic.id]
-		var tickets := 0.0 if _topic_live(world, topic) else _tickets(state, topic)
+		var tickets := 0.0 if _topic_live(world, topic) or topic.id in _w(world, "cardless") else _tickets(state, topic)
 		_push(ts.tickets, tickets, int(_c.topics.window_weeks))
 		if tickets > 0.0 and ts.since_day == NEVER:
 			ts.since_day = int(_w(world, "week"))

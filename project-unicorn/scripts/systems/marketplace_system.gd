@@ -64,8 +64,9 @@ static func world() -> Dictionary:
 		var c: Character = CharacterRegistry.get_character(person)
 		if _can_work(c) and HRConstants.JOB_SALES in c.assigned_job_ids:
 			stars[person] = int(sales_stars(c))
+	# Ek özelliklerin sprint kartı yok: oyuncu onları karşılayamaz.
 	return {"week": GameState.day, "published": ProductState.is_live(), "tiers": tiers, "bugs": bugs, "stars": stars,
-		"unanswered": SupportSystem.unanswered_share(), "planned": _planned(),
+		"unanswered": SupportSystem.unanswered_share(), "planned": _planned(), "cardless": MarketplaceModel.extra_topics(),
 		"channel": MarketingSystem.market_visits(), "return_lift": MarketingSystem.return_lift(),
 		"campaign": MarketingSystem.active_campaign()}
 

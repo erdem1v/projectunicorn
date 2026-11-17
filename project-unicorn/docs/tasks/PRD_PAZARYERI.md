@@ -185,9 +185,10 @@ kapanışında dolar; okumak onu doldurmaz ve pazaryeri koşusu olmayan oyunda (
   `burn` (haftalık `pazaryeri` gider kalemleri) ve `premium.orders` (üye siparişi). Sistem `sat`'ı iki kaydın memnuniyetine
   yansıtır.
   Çekirdek oyunun geri kalanını `world` sözlüğünden okur; onu her kapanışta sistem kurar: hafta, ürünün yayında olup
-  olmadığı, modül kademeleri ve açık hataları, yayındaki ek özellikler (`features`) ve sprint planındaki konular (`planned`;
-  ikisi de konu kataloğunun kimliğiyle: sistem ürünün kartını bu kimliğe eşler), Pazarlama'nın değerleri ve cevapsız
-  bildirimin payı. Kesinti dünyadan gelmez: acil durum onu duruma yazar (`outage`), izleyen kapanış uygular.
+  olmadığı, modül kademeleri ve açık hataları, yayındaki ek özellikler (`features`), sprint planındaki konular (`planned`) ve
+  sprint kartı olmayan konular (`cardless`; üçü de konu kataloğunun kimliğiyle: sistem ürünün kartını bu kimliğe eşler),
+  Pazarlama'nın değerleri ve cevapsız bildirimin payı. Kesinti dünyadan gelmez: acil durum onu duruma yazar (`outage`), izleyen
+  kapanış uygular.
 
 ### 3.2 Kategoriler
 - Altı kategori, veri `data/product/categories.json`. Tanıtım metni yoktur.
@@ -356,7 +357,7 @@ yazıldığı haftadan sayılır ve süresi dolunca düşer.
 | Destek yığını | kullanıcı | cevapsız bildirimin payı × −20, en çok −10 | sürdükçe | Destek'te cevapsız bildirim varken |
 | Hesap güvenliği zayıf | kullanıcı | −3 | sürdükçe | Aktif kullanıcı 1.000'i geçmiş ve Kullanıcılar ve Yetki modülü yokken |
 | Karşılandı: {konu} | konunun tarafı | +3 | 8 hafta | Konunun özelliği yayına çıkınca |
-| Geciken talep: {konu} | konunun tarafı | −4 | sürdükçe | Taraf başına tek satır: sekiz haftayı geçmiş en eski konunun adıyla; planda olan konu da yayına çıkana kadar sayılır |
+| Geciken talep: {konu} | konunun tarafı | −4 | sürdükçe | Taraf başına tek satır: sekiz haftayı geçmiş en eski konunun adıyla; planda olan konu da yayına çıkana kadar sayılır, sprint kartı olmayan konu sayılmaz |
 | İndirim günlerinde zarar | mağaza | −4 | 6 hafta | Kampanya bitince, katılan mağazaların kazancı eksiye düştüyse |
 | Hızlı teslimat yalnız üyeye | kullanıcı | −3 | 8 hafta | Hızlı teslimat "Herkese"den "Premium'a" alınınca |
 | Hızlı teslimat | kullanıcı | +3 | sürdükçe | Hızlı teslimat "Herkese" |
@@ -427,8 +428,10 @@ Dört kural. `set_policy(kural, seçenek)` kuralı değiştirir ve dört hafta k
   %8'i; siparişin %1'i). **Mağaza bileti:** derdi olan mağazaların payı × konunun oranı (50'den çok ürünü olan mağazaların
   %8'i; haftada 10'dan çok sipariş alanların %6'sı; mağazaların %2'si). Derdi olan mağazaların payı sabittir: mağazaların
   0,34'ünün 50'den çok ürünü vardır, 0,22'si haftada 10'dan çok sipariş alır. Konunun özelliği yayındaysa bilet gelmez: kademe
-  konusu modül o kademeye varınca, ek özellik çıkınca yayındadır. Haftanın bileti kapanıştan sonra yazılır; konunun yaşı ilk
-  biletin haftasından sayılır. Hata bileti talep değildir.
+  konusu modül o kademeye varınca, ek özellik çıkınca yayındadır. Sprint kartı olmayan konuya da bilet gelmez ve konu gecikmiş
+  sayılmaz: oyuncunun karşılayamayacağı istek ceza yazmaz (ek özellik kartları gelene kadar ek özelliklerin hepsi; adım
+  çarpanları aynen uygulanır). Haftanın bileti kapanıştan sonra yazılır; konunun yaşı ilk biletin haftasından sayılır. Hata
+  bileti talep değildir.
 - **Etkilenen sipariş:** kullanıcı konusunda konu yayına çıkınca kazanılan haftalık sipariştir (`gain`, §3.5: sıradaki kademe
   ya da ek özellik); Yorum ve Puan'da kademe çıkınca haftada iade edilmeyecek sipariştir (`teslim × (bugünkü iade oranı −
   kademeyle iade oranı)`); mağaza konusunda derdi olan mağazaların siparişi × o hafta ayrılma olasılığıdır (§3.4; sipariş
@@ -436,14 +439,14 @@ Dört kural. `set_policy(kural, seçenek)` kuralı değiştirir ve dört hafta k
 - "Plana al" konunun kartını bugünkü sprint yolundan ekler. Kapanış konunun durumunu okur (bekliyor, planda, yayında):
   kademe konusunda modülün kademesinden, ek özellikte ürünün yayındaki ek özelliklerinden, plandaki konuda sprint planından.
   İsteği gelmiş bir konu yayına çıkınca tarafına bir kez "Karşılandı: {konu}" yazılır; isteği hiç gelmemiş konu satır yazmaz.
-  "Geciken talep" taraf başına tek satırdır (§3.8): ilk isteğinden bu yana sekiz haftadan çok geçmiş, yayında olmayan en eski
-  konu.
+  "Geciken talep" taraf başına tek satırdır (§3.8): ilk isteğinden bu yana sekiz haftadan çok geçmiş, yayında olmayan, sprint
+  kartı olan en eski konu.
 - `open_topic(kimlik, etkilenen)` satırı henüz açılmamış bir konuyu rapordan açar: kaynağı `report`, ilk isteği o hafta,
   haftalık etkilenen siparişi raporun verdiği sayıdır. Konu katalogda yoksa ya da satırı zaten açıksa reddedilir.
   Pazarlama'nın kupon raporundaki "Ürüne doğrulama ekle" düğmesi bunu `coupon_abuse` konusuyla çağırır. Bu konu kataloğun on
   üçüncü kaydıdır (kullanıcı tarafı, Ödeme modülü): bilet oranı ve adım çarpanı yoktur, bilet almaz, yalnız rapordan açılır.
-  Rapordan açılan konu yayına çıkınca öbür konular gibi "Karşılandı" yazar ve etkilenen siparişi 0 olur; sekiz haftayı
-  geçerse "Geciken talep"e girer.
+  Rapordan açılan konu yayına çıkınca öbür konular gibi "Karşılandı" yazar ve etkilenen siparişi 0 olur; sprint kartı
+  olmadığı için gecikmiş sayılmaz.
 
 ### 3.12 Pazarlama ile arayüz
 `ORTAK_ARAYUZLER.md` §1. Pazaryeri kapanışta `channel_visits`, `return_lift`, `impression_share` ve `active_campaign`'i okur.

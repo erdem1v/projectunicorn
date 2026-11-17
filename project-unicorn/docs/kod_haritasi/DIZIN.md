@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git 50715a3b · 2026-11-16 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 6f8dadee · 2026-11-17 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -55,13 +55,13 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/data_models/rival.gd · 33 · Rival · Resource · 0 sinyal · 1 func
 - scripts/data_models/term_sheet.gd · 63 · TermSheet · Resource · 0 sinyal · 3 func
 
-### scripts/debug/ (13 dosya, 39070 satır)
-- scripts/debug/endgame_smoke.gd · 32659 · EndgameSmoke · RefCounted · 0 sinyal · 742 func
+### scripts/debug/ (13 dosya, 39087 satır)
+- scripts/debug/endgame_smoke.gd · 32660 · EndgameSmoke · RefCounted · 0 sinyal · 742 func
 - scripts/debug/glyph_audit.gd · 109 · - · SceneTree · 0 sinyal · 6 func
 - scripts/debug/k0_check.gd · 110 · K0Check · RefCounted · 0 sinyal · 6 func
 - scripts/debug/kit_probe.gd · 298 · - · RefCounted · 0 sinyal · 10 func
 - scripts/debug/loc_residue.gd · 265 · - · SceneTree · 0 sinyal · 9 func
-- scripts/debug/marketplace_probe.gd · 1313 · - · SceneTree · 0 sinyal · 65 func
+- scripts/debug/marketplace_probe.gd · 1329 · - · SceneTree · 0 sinyal · 67 func
 - scripts/debug/office_crowd_probe.gd · 326 · OfficeCrowdProbe · Node · 0 sinyal · 15 func
 - scripts/debug/office_pan_probe.gd · 398 · - · RefCounted · 0 sinyal · 17 func
 - scripts/debug/player_paths.gd · 444 · PlayerPaths · RefCounted · 0 sinyal · 19 func
@@ -157,7 +157,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/onboarding/steps/origin_traits_step.gd · 329 · - · OnboardingStep · 0 sinyal · 18 func
 - scripts/onboarding/steps/step_base.gd · 119 · OnboardingStep · Control · 1 sinyal · 10 func
 
-### scripts/systems/ (76 dosya, 27510 satır)
+### scripts/systems/ (76 dosya, 27519 satır)
 - scripts/systems/angel_round_system.gd · 52 · AngelRoundSystem · RefCounted · 0 sinyal · 1 func
 - scripts/systems/b2b_constants.gd · 279 · B2BConstants · RefCounted · 0 sinyal · 9 func
 - scripts/systems/b2b_sales_system.gd · 743 · B2BSalesSystem · RefCounted · 0 sinyal · 49 func
@@ -184,8 +184,8 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/systems/mail_clock.gd · 125 · MailClock · RefCounted · 0 sinyal · 10 func
 - scripts/systems/market_catalog.gd · 217 · MarketCatalog · RefCounted · 0 sinyal · 25 func
 - scripts/systems/marketing_system.gd · 795 · - · RefCounted · 0 sinyal · 73 func
-- scripts/systems/marketplace_model.gd · 1342 · MarketplaceModel · RefCounted · 0 sinyal · 107 func
-- scripts/systems/marketplace_system.gd · 339 · MarketplaceSystem · RefCounted · 0 sinyal · 44 func
+- scripts/systems/marketplace_model.gd · 1350 · MarketplaceModel · RefCounted · 0 sinyal · 108 func
+- scripts/systems/marketplace_system.gd · 340 · MarketplaceSystem · RefCounted · 0 sinyal · 44 func
 - scripts/systems/message_system.gd · 77 · MessageSystem · RefCounted · 0 sinyal · 5 func
 - scripts/systems/module_locks.gd · 35 · - · RefCounted · 0 sinyal · 4 func
 - scripts/systems/negotiation_system.gd · 276 · NegotiationSystem · RefCounted · 0 sinyal · 13 func
@@ -419,7 +419,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
   ↳ character_added connect: scripts/tabs/hr_tab.gd:74, scripts/ui/components/left_tabs.gd:109, scripts/ui/office/office_people.gd:87
 - character_removed(character_id: String) · scripts/autoload/event_bus.gd:51
   ↳ character_removed emit: scripts/autoload/character_registry.gd:552
-  ↳ character_removed connect: scripts/systems/marketplace_system.gd:180, scripts/systems/sprint_system.gd:1643, scripts/tabs/hr/hr_dossier.gd:55, scripts/tabs/hr_tab.gd:74, scripts/ui/components/inbox.gd:160 +2
+  ↳ character_removed connect: scripts/systems/marketplace_system.gd:181, scripts/systems/sprint_system.gd:1643, scripts/tabs/hr/hr_dossier.gd:55, scripts/tabs/hr_tab.gd:74, scripts/ui/components/inbox.gd:160 +2
 - morale_changed(character_id: String, new_morale: int) · scripts/autoload/event_bus.gd:52
   ↳ morale_changed emit: scripts/autoload/character_registry.gd:636
   ↳ morale_changed connect: scripts/tabs/hr/hr_dossier.gd:49, scripts/tabs/hr_tab.gd:74, scripts/ui/components/inbox.gd:160, scripts/ui/components/left_tabs.gd:108
@@ -442,7 +442,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - training_completed(character_id: String, area_key: String) · scripts/autoload/event_bus.gd:84 · emit: scripts/autoload/character_registry.gd:182 · connect: -
 - assignment_changed(character_id: String) · scripts/autoload/event_bus.gd:88
   ↳ assignment_changed emit: scripts/autoload/character_registry.gd:244,285,294,311, scripts/systems/work_hours_system.gd:275,280 +5
-  ↳ assignment_changed connect: scripts/systems/marketplace_system.gd:179, scripts/systems/sprint_system.gd:1644, scripts/tabs/hr/hr_dossier.gd:51, scripts/tabs/hunt_tab.gd:60, scripts/tabs/marketing_tab.gd:74, scripts/tabs/rnd_tab.gd:69 +4
+  ↳ assignment_changed connect: scripts/systems/marketplace_system.gd:180, scripts/systems/sprint_system.gd:1644, scripts/tabs/hr/hr_dossier.gd:51, scripts/tabs/hunt_tab.gd:60, scripts/tabs/marketing_tab.gd:74, scripts/tabs/rnd_tab.gd:69 +4
 - hr_day_processed() · scripts/autoload/event_bus.gd:91
   ↳ hr_day_processed emit: scripts/main/main.gd:4602,4632, scripts/systems/hr_system.gd:51, scripts/debug/endgame_smoke.gd:26580,27390,27395 +2
   ↳ hr_day_processed connect: scripts/systems/sprint_system.gd:1642, scripts/tabs/hr/hr_dossier.gd:54, scripts/tabs/hr_tab.gd:76, scripts/tabs/personal_tab.gd:49
@@ -607,8 +607,8 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
 - office_move_started(office_id: String, arrival_day: int) · scripts/autoload/event_bus.gd:280 · emit: scripts/systems/office_system.gd:69 · connect: scripts/ui/office/office_hud.gd:61
 - office_changed(office_id: String) · scripts/autoload/event_bus.gd:281 · emit: scripts/systems/office_system.gd:85 · connect: scripts/ui/office/office_hud.gd:55,62, scripts/ui/office/office_view.gd:63, scripts/debug/endgame_smoke.gd:23550
 - marketplace_changed() · scripts/autoload/event_bus.gd:285
-  ↳ marketplace_changed emit: scripts/systems/marketplace_system.gd:77,311
-  ↳ marketplace_changed connect: scripts/tabs/sales_tab.gd:83, scripts/ui/components/inbox.gd:162, scripts/debug/endgame_smoke.gd:31597,31712,31803,31875 +4
+  ↳ marketplace_changed emit: scripts/systems/marketplace_system.gd:78,312
+  ↳ marketplace_changed connect: scripts/tabs/sales_tab.gd:83, scripts/ui/components/inbox.gd:162, scripts/debug/endgame_smoke.gd:31597,31714,31807,31879 +4
 - day_tick_completed(day: int) · scripts/autoload/event_bus.gd:290
   ↳ day_tick_completed emit: scripts/autoload/time_manager.gd:442
   ↳ day_tick_completed connect: scripts/autoload/save_manager.gd:65, scripts/events/tools/plausibility.gd:159, scripts/modals/campaign_modal.gd:30, scripts/tabs/marketing_tab.gd:74, scripts/tabs/sales_tab.gd:82 +6

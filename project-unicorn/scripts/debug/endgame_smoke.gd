@@ -31701,10 +31701,12 @@ static func _case_marketplace_world_reads_owners() -> String:
 
 
 ## Yayından önce `daily_tick` durumu değiştirmez ve sinyal yaymaz; yayından sonra bir kapanış koşar: geçen haftanın sayıları yazılır,
-## o haftanın bileti kapanıştan sonra yazılır (kapanışın yazdığı haftadan doğar), sinyal bir kez yayılır.
+## o haftanın bileti kapanıştan sonra yazılır (kapanışın yazdığı haftadan doğar; sprint kartı olmayan ek özellik bilet almaz), sinyal
+## bir kez yayılır.
 ##
 ## FALSİFİKASYON: `daily_tick`in başındaki yayın kapısını kaldır → yayından önceki çağrı FAIL; `tick_topics`i `close_week`ten önce
-## çağır → bilet satırı FAIL; sinyali `close_week`ten önce ve sonra yay → sinyal sayısı FAIL.
+## çağır → bilet satırı FAIL; sinyali `close_week`ten önce ve sonra yay → sinyal sayısı FAIL; `MarketplaceSystem.world`de
+## `cardless`i boş bırak → kartsız konu iddiası FAIL.
 static func _case_marketplace_tick_waits_for_launch() -> String:
 	_seed_marketplace_world()
 	GameState.set_flag("mvp_shipped", false)
@@ -31721,8 +31723,10 @@ static func _case_marketplace_tick_waits_for_launch() -> String:
 		return "the first close emitted %d times" % emits[0]
 	if state.cats.fashion.week.get("visits", 0.0) <= 0.0 or state.users == 2000.0:
 		return "the close wrote no week figures (visits %s, users %s)" % [state.cats.fashion.week.get("visits"), state.users]
-	if state.topics.size_chart.tickets.size() != 1 or state.topics.size_chart.tickets[0] <= 0.0:
-		return "the topic tick did not read the week the close wrote: %s" % str(state.topics.size_chart.tickets)
+	if state.topics.search_filter.tickets.size() != 1 or state.topics.search_filter.tickets[0] <= 0.0:
+		return "the topic tick did not read the week the close wrote: %s" % str(state.topics.search_filter.tickets)
+	if state.topics.size_chart.tickets[0] != 0.0:
+		return "an extra feature has no sprint card and still took tickets: %s" % str(state.topics.size_chart.tickets)
 	return ""
 
 
@@ -32039,8 +32043,7 @@ static func _case_support_backlog_row_survives() -> String:
 
 ## Talepler satırının durumu kapanışta ürünün kademesinden ve sprint planından okunur: kademe konusunun kartı koşan sprintte ya da sonraki
 ## sütunda duruyorsa `planned`, plandan çıkınca `waiting`, modül o kademeye varınca `shipped` ve isteği gelmiş konuda kullanıcı tarafının
-## defterine "Karşılandı" yazılır. Her kademe konusunun `card_id`'si modülün o kademesinin gerçek aday kartıdır; ek özelliğin
-## `ext:<konu>`'dur.
+## defterine "Karşılandı" yazılır. Her kademe konusunun `card_id`'si modülün o kademesinin gerçek aday kartıdır.
 ##
 ## FALSİFİKASYON: `MarketplaceSystem.world`de `planned`i boş bırak → `planned` iddiaları FAIL; `_planned`ta yalnız koşan sprinti oku →
 ## sonraki sütun iddiası FAIL, yalnız sonraki sütunu oku → koşan sprint iddiası FAIL; `_tier_card`ı modülün hat kimliğiyle kur
@@ -32057,8 +32060,6 @@ static func _case_marketplace_topic_planned() -> String:
 			var card: Dictionary = SprintCatalog.card_by_id(r.card_id)
 			if card.is_empty() or card.line != MarketplaceSystem.MODULE_LINES[tiers[r.id].module] or card.target_tier != tiers[r.id].tier:
 				return "tier topic %s names card %s, not its module's next tier card (%s)" % [r.id, r.card_id, str(card.get("id"))]
-		elif r.card_id != "ext:" + r.id:
-			return "extra feature %s names card %s, want ext:%s" % [r.id, r.card_id, r.id]
 	var topic := "reviews_ratings"
 	var card_id := "feat:line_marketplace_reviews_k1"
 	var status := func() -> String:

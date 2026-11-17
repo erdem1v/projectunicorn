@@ -28,7 +28,7 @@ const CHECKS := ["empty_category_no_orders", "acquisition_waits_for_publish", "l
 	"reviews_affected_is_return_gap", "assignment_waits_a_close", "waive_zeroes_one_close", "outage_row_and_cost",
 	"lost_commission_weighted", "backup_mult_tiers", "open_topic_report_row", "cfg_reads_constants", "funnel_sums_categories",
 	"step_hint_matches_gain", "ledger_worst_picks_heaviest", "crew_follows_assignment", "returning_orders_follow_frequency",
-	"word_of_mouth_brings_users", "decision_row_drifts"]
+	"word_of_mouth_brings_users", "decision_row_drifts", "cardless_topics_stay_quiet"]
 
 var _weeks := DEFAULT_WEEKS
 var _printing := false
@@ -742,6 +742,12 @@ func _tickets_of(state: Dictionary, world: Dictionary) -> Dictionary:
 	return out
 
 
+## Tarafın defterindeki "Geciken talep" satırlarının konuları.
+func _late_args(state: Dictionary, side: String) -> Array:
+	var late_rows: Array = state.ledger[side].filter(func(r: Dictionary) -> bool: return r.key == "late_topic")
+	return late_rows.map(func(r: Dictionary) -> String: return r.arg)
+
+
 func _check_topic_rows_known() -> Array:
 	var state := _topic_state()
 	for week in range(1, 6):
@@ -812,19 +818,16 @@ func _check_topic_ledger_rows() -> Array:
 	var raised := {"size_chart": 1, "favorites": 3, "bulk_upload": 2, "payout_statement": 5}
 	for id in raised:
 		state.topics[id].since_day = raised[id]
-	var late := func(side: String) -> Array:
-		var late_rows: Array = state.ledger[side].filter(func(r: Dictionary) -> bool: return r.key == "late_topic")
-		return late_rows.map(func(r: Dictionary) -> String: return r.arg)
 	var met := func(side: String) -> Array:
 		var met_rows: Array = state.ledger[side].filter(func(r: Dictionary) -> bool: return r.key == "met")
 		return met_rows.map(func(r: Dictionary) -> Dictionary: return r.duplicate())
 	var world := _live_world(12).merged({"planned": ["size_chart"]}, true)
 	_run(state, world, 1)
-	var week12 := [late.call("users"), late.call("stores"), met.call("users").size()]
+	var week12 := [_late_args(state, "users"), _late_args(state, "stores"), met.call("users").size()]
 	_run(state, world.merged({"week": 13, "planned": [], "features": ["size_chart", "guest_checkout"]}, true), 1)
-	var week13 := [late.call("users"), late.call("stores"), met.call("users")]
+	var week13 := [_late_args(state, "users"), _late_args(state, "stores"), met.call("users")]
 	_run(state, world.merged({"week": 14, "features": ["size_chart", "guest_checkout"]}, true), 1)
-	var week14 := [late.call("users"), late.call("stores")]
+	var week14 := [_late_args(state, "users"), _late_args(state, "stores")]
 	var rows := MarketplaceModel.topic_rows(state, world.merged({"week": 14}, true))
 	var shipped: Array = rows.filter(func(r: Dictionary) -> bool: return r.id == "size_chart")
 	var met13: Array = week13[2]
@@ -835,6 +838,22 @@ func _check_topic_ledger_rows() -> Array:
 	return [ok, "week 12 late rows users %s stores %s (size_chart is planned and still counts, payout_statement is not yet overdue); week 13 after size_chart ships: users %s, met rows %d; "
 		% [week12[0], week12[1], week13[0], met13.size()] + "week 14 with two overdue store topics: stores %s; size_chart row %s age %d"
 		% [week14[1], shipped_row.get("status", "missing"), shipped_row.get("age", -1)]]
+
+
+## Sprint kartı olmayan konu bilet almaz ve gecikmiş sayılmaz; kartı olan konu aynı dünyada alır ve gecikir.
+func _check_cardless_topics_stay_quiet() -> Array:
+	var world := _live_world(12).merged({"cardless": ["size_chart", "color_size_options"]}, true)
+	var state := _topic_state()
+	var tickets := _tickets_of(state, world)
+	for id in ["size_chart", "favorites", "color_size_options"]:
+		state.topics[id].since_day = 1
+	_run(state, world, 1)
+	var late := [_late_args(state, "users"), _late_args(state, "stores")]
+	var ok: bool = tickets.size_chart == 0.0 and tickets.color_size_options == 0.0 and _near(tickets.favorites, 8.8) \
+		and _near(tickets.shipping_label, 30.0 * 0.22 * 0.06) and late == [["favorites"], []]
+	return [ok, "size_chart and color_size_options have no card: weekly tickets %.1f and %.1f, favorites %.1f and shipping_label %.3f still tick; "
+		% [tickets.size_chart, tickets.color_size_options, tickets.favorites, tickets.shipping_label]
+		+ "all three asked in week 1, week 12 late rows users %s stores %s" % late]
 
 
 ## Üç kullanıcı ek özelliği ayrı sayı verir; yayına çıkınca adım tam bu `gain` kadar artar (aynı durumdan iki gerçek kapanış).
@@ -1068,18 +1087,15 @@ func _check_open_topic_report_row() -> Array:
 	var ticks_ok: bool = size_chart.size() == 1 and size_chart[0].source == "tickets" and size_chart[0].tickets > 0.0 and not state.topics.has("no_such_topic")
 	var live := _store_state(["fashion"], 3000.0)
 	MarketplaceModel.open_topic(live, world, "coupon_abuse", 42.0)
-	var late := func(s: Dictionary) -> Array:
-		var late_rows: Array = s.ledger.users.filter(func(r: Dictionary) -> bool: return r.key == "late_topic")
-		return late_rows.map(func(r: Dictionary) -> String: return r.arg)
 	_run(live, world.merged({"week": 18}, true), 1)
-	var week18: Array = late.call(live)
+	var week18: Array = _late_args(live, "users")
 	var planned := world.merged({"week": 19, "planned": ["coupon_abuse"]}, true)
 	_run(live, planned, 1)
-	var week19: Array = late.call(live)
+	var week19: Array = _late_args(live, "users")
 	var waiting: Array = MarketplaceModel.topic_rows(live, planned)
 	var shipped_world := world.merged({"week": 20, "features": ["coupon_abuse"]}, true)
 	_run(live, shipped_world, 1)
-	var week20: Array = late.call(live)
+	var week20: Array = _late_args(live, "users")
 	var met: Array = live.ledger.users.filter(func(r: Dictionary) -> bool: return r.key == "met")
 	var done: Array = MarketplaceModel.topic_rows(live, shipped_world)
 	var life_ok: bool = week18 == [] and week19 == ["coupon_abuse"] and waiting.size() == 1 and waiting[0].status == "planned" \
