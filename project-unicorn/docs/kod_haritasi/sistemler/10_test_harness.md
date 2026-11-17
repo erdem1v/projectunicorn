@@ -9,7 +9,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 
 - `scripts/main/main.gd` (6693): ana sahne; debug bayrak dağıtıcısı (`_run_debug_harness`), tüm `--*-shot` ve ölçüm koşucuları, fikstür tohumlayıcıları
 - `scripts/debug/endgame_smoke.gd` (32659): `EndgameSmoke`; 475 vakalı smoke süiti, tek süreç = tek vaka, `SMOKE PASS/FAIL` basar
-- `scripts/debug/run_probe.gd` (2443): `RunProbe`; botun oynadığı koşu defteri (`--run-log`), 54 preset, `PROBE ...` satırları
+- `scripts/debug/run_probe.gd` (2458): `RunProbe`; botun oynadığı koşu defteri (`--run-log`), 39 preset, `PROBE ...` satırları
 - `scripts/debug/sprint_probe.gd` (425): `--sprint-probe`; Ürün ekranının sprint planını (`plan_outcome`) kapanışla karşılaştırır, uyuşmazlıkta 1
 - `scripts/debug/tick_probe.gd` (133): `--tick-probe`; gerçek saatte kare maliyeti (gece, saat adımı, otomatik kayıt) `TICK` satırları
 - `scripts/debug/office_crowd_probe.gd` (326): `OfficeCrowdProbe`; ofis kalabalığı sağlığı (`CROWD` satırları) ve ofis çekimlerinin yardımcıları
@@ -142,22 +142,27 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
   ↳ `TIERS` (her sprint kapanışında pazarın her yeteneğinin kademesi), `POOL` (her başlatma denemesinde, `--tick-probe`'unkinde de: her
   ↳ yeteneğin kademesi ve sonraki adımı açık `o`, kilitli `l` (karşılanmayan parçaları `+` ile: Ar-Ge düğümü, `p<alan><yıldız>` kişi,
   ↳ `t<alan><yıldız>` toplam, alan üç harfe kısalır) ya da bitmiş `d`; sayıları, planın kartları ve `started=`; kart tükenmesi bundan okunur),
-  ↳ `MONTH_BURN`, `PLAY`, `FIXTURE` (b2b_* fikstürünün niyeti: her hesabın hedefi hata açıkken ve kapalıyken çıtasına karşı, `under_live`, `under_clear`, `slack`), `WEEK`, `B2C` (sonunda `u=` kitle bağlamındaki uyum ve `aud_star=`),
+  ↳ `MONTH_BURN`, `PLAY`, `FIXTURE` (b2b_* fikstürünün niyeti: her hesabın hedefi hata açıkken ve kapalıyken çıtasına karşı, `under_live`, `under_clear`, `slack`), `WEEK`,
+  ↳ `B2C` (pazaryerinin haftası: `users=`, `stores=`, `orders=`, `user_sat=`, `store_sat=`, `revenue=`, `paying=`, `lost=`; sonunda `u=` kitle bağlamındaki uyum ve `aud_star=`),
   ↳ `SERVER` (canlı ürün varken her hafta: birim, kademe, yük yüzdesi, aylık fatura, anahtar; `END`'de `server_clicks`, `auto_grows` ve kademe başına gece kesintisi `outage_eko`, `outage_std`, `outage_kur`); `TALLY*`,
   ↳ `END` (destek raporunun sıklığı dahil: `support_reports=`, `support_news=`), `HR`, `VC_*`, `ERROR`; probe hep 0 ile çıkar,
   ↳ kapı kabuktadır (`tools/run_gate.sh`: üç oynanan koşuda tek `PROBE END`, dolu `ending=` ve sıfır `ERROR` / `PROBE ERROR` satırı arar)
 - Probe preset aileleri (`RunProbe.PRESETS` alanlarıyla):
-  ↳ `full_run*` oynanan koşu (alt-tür, cevap politikası, Series A politikası, kadro tavanı, K1 sınırı ve düzeltme kolu; bot sprintte liderin önerisini uygular, K1 sınırı ve düzeltme kolları onu düzenler);
-  ↳ `full_run_fix_*` ve `full_run_b2c_fix_*` (`none`, `worst`, `due`, `off`); `none` sprintte düzeltme kartı yok, `worst` en çok hatalı hat,
+  ↳ `full_run*` oynanan koşu (alt-tür, cevap politikası, Series A politikası, kadro tavanı ve düzeltme kolu; bot sprintte liderin önerisini uygular, düzeltme kolları onu düzenler,
+  ↳ onların dışında öneriyle başlatılamayan plana açık kartların hepsi girer);
+  ↳ `full_run_fix_*` (`none`, `worst`, `due`, `off`); `none` sprintte düzeltme kartı yok, `worst` en çok hatalı hat,
   ↳ `due` en az `DUE_BUGS` × k (2 × k) hatalı her hat (B2B'de bir hesabın kullandığı; k `SprintCatalog.limit_k`, `PROBE FIX` satırı sonunda `k=` basar), `off` `worst` ve bedeller kapalı; liderin planı, tüm düzeltme kartları çıkar,
   ↳ kolun kartları önce, lider doldurur; `full_run_fix_worst_desk`, `full_run_quality_core`, `full_run_quality_core_desk`:
   ↳ preset anahtarı `desk` masada temsilci varken kurucuyu yalnız temsilcilerin yıldız bandının üstündeki adaylarla görüştürür (`_desk_ceiling`), `core_only` sprintte Çekirdek dışı özellik kartı bırakmaz,
-  ↳ düzeltme ve araştırma kartları kalır (`_outside_core`); `full_run_vc_*` ve `*_vc_walk` Series A masası, yalnız `sim` (`walk` ilk masadan kalkar; `product` seed'de ve Series A'da önce ürün fonuyla oturur);
-  ↳ `full_run_server_*` ve `full_run_b2c_server_*` (`lean`, `wide`, `auto`: kurucunun sunucu alışkanlığı; `lean` yükü %95'te, `wide` %60'ta tutar, `auto` Otomatik ayarla'yı açar ve hiç basmaz; `_run_the_servers`);
-  ↳ `full_run_cash_{spend,hoard}` ve `full_run_b2c_cash_{spend,hoard}` (`spend` ilk çalışanı kasa iki aylık giderini karşılayınca alır, `hoard` 6,7 aylık gideri bekler ve hiç taşınmaz, öbür kollar altı ayda alır;
+  ↳ düzeltme ve araştırma kartları kalır (`_outside_core`); `full_run_vc_*` ve `full_run_lean` Series A masası, yalnız `sim` (`full_run_lean` ilk masadan kalkar; `product` seed'de ve Series A'da önce ürün fonuyla oturur);
+  ↳ `full_run_server_*` (`lean`, `wide`, `auto`: kurucunun sunucu alışkanlığı; `lean` yükü %95'te, `wide` %60'ta tutar, `auto` Otomatik ayarla'yı açar ve hiç basmaz; `_run_the_servers`);
+  ↳ `full_run_cash_{spend,hoard}` (`spend` ilk çalışanı kasa iki aylık giderini karşılayınca alır, `hoard` 6,7 aylık gideri bekler ve hiç taşınmaz, öbür kollar altı ayda alır;
   ↳ şirket seed'den sonra kasa peşin kira ile giderin altı ayını karşılayınca bir üst ofise taşınır; `_hire_the_team`, `_move_the_company`; `PROBE END` `first_hire_week=`, `first_hire_runway=`, `move_weeks=`); `full_run_lean` (B2B,
-  ↳ kadro 7'de durur, masadan kalkar), `full_run_b2c`, `full_run_b2c_video`, `full_run_b2c_vc_cautious`, `full_run_b2c_vc_walk`, `full_run_b2c_k1` (tüketici koşuları; ödeyen gelince kurucu destek masasına geçer,
-  ↳ `B2C_LADDER` ile işe alır), `b2b_*` ve `b2c*` fikstür dünyası (`b2b_solo`, `b2b_reps`, `b2b_risk`,
+  ↳ kadro 7'de durur, masadan kalkar), `full_run_b2c` (tüketici koşusu, pazaryeri: kurucu açık kategoriler mağazasını bulunca sıradakini açar, kendini ve Satış Temsilcilerini mağazası eksik kategorilere dağıtır, `_run_the_marketplace`;
+  ↳ tek bir arama reklamı koşar, `_run_the_ad`: kolun haftalık bütçesi `MP_AD_BUDGET`, geçen haftanın komisyonunun `MP_AD_SHARE` payı daha yüksek bir basamak alıyorsa o, kasa `MP_AD_CASH_FLOOR` altındayken durur;
+  ↳ kullanıcı gelince kurucu destek masasına geçer, `B2C_LADDER` ile işe alır (merdivende Satış Temsilcisi vardır); kolları preset anahtarı `mp`:
+  ↳ `full_run_b2c_idle` yalnız ilk kategoriyi açar, kurucu ve aldığı Satış Temsilcileri orada kalır, reklam koşmaz; `full_run_b2c_no_ads` reklam koşmaz,
+  ↳ `full_run_b2c_ads_lean` ve `full_run_b2c_ads_push` reklamın haftalık bütçesini değiştirir), `b2b_*` fikstür dünyası (`b2b_solo`, `b2b_reps`, `b2b_risk`,
   ↳ `b2b_slip` ERP'yi `B2B_PRODUCTS`'ın hat kademelerinde kurar ve sprint başlatmaz). Oynanan her koşu seed turunu kapısı açıldığı hafta alır (`_take_the_seed`);
   ↳ `sim` modunda gece atlaması acil durumda onun saatinde durur ve bot kartı cevaplar (`_run_sim`); gerçek saat modu acil durum zarı atmaz (`IncidentSystem.rolls`)
 - Ölçek ölçümü (ekip ve plan süresi): `--sprint-probe` anahtarlarının anlamı 02_urun_sprint.md'de; `--tick-probe` `team=<n>`;

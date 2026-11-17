@@ -228,9 +228,10 @@ Hepsi `tools/smoke_run.sh <vaka>` ile (komutlar `project-unicorn/`'dan, `GODOT` 
   ↳ `returning` iki lead bir alan yüzünden kaybedilmiş geri geldi: 2★ lead'in Entegrasyonlar'ı hâlâ boş, kapısı kapalı ve gerekçesi düğmelerin altında,
   ↳ 1★ lead'in Çekirdek'i 1★ masaya yetiyor, kapısı açık. Ayrıca `--inbox-shot=sales_read_only` (karar beklerken Satış, 08_sekmeler.md), `--tab-shot=sales`
 - Ekran: `--meeting-shot=<kind>` (`main.gd:4771`), `--negotiation-shot=<open|countered|insult|last|confirm>` (`main.gd:4897`), `--b2b-shot=<retention|retention_capped|escalation|expansion|expansion_capped|deal|angel|chips>` (`main.gd:683`), `--inbox-shot=`
-- Probe: `--run-log=<preset>:<hafta>:sim[:<seed>]` ile `b2b_solo`, `b2b_reps`, `b2b_risk`, `b2b_slip`, `b2b_book20`, `b2b_book330`, `full_run*` (`run_probe.gd:197-247`); preset aileleri `b2b_*`, `b2c*`, `full_run_b2c*`. Kayıt türleri:
+- Probe: `--run-log=<preset>:<hafta>:sim[:<seed>]` ile `b2b_solo`, `b2b_reps`, `b2b_risk`, `b2b_slip`, `b2b_book20`, `b2b_book330`, `full_run*` (`run_probe.gd:198-235`);
+  ↳ preset aileleri `b2b_*`, `full_run*` (tüketici koşusu `full_run_b2c`, pazaryeri). Kayıt türleri:
   ↳ `STATE` (içinde `mrr=`, `cust=`, `promises=`, `aud=`, `sat=`), `SIGN` (her B2B imzası: gün, saat, kurucu ya da temsilci, yıldız, planın haftası, MRR),
-  ↳ `B2C` (tüketici ürünü canlıyken haftalık: kitle, ödeyen, fiyat, dönüşüm, memnuniyet ve hedefi (Çekirdek ile Onboarding uyumu), açık hata, kitleden giden kullanıcı toplamı `lost=`, `q=` B2C kalite terimi, ilgi, doluluk, masa, gelen,
+  ↳ `B2C` (tüketici ürünü canlıyken haftalık, pazaryerinin sayıları: aktif kullanıcı, mağaza, haftalık sipariş, iki memnuniyet, aylık gelir, ödeyen üye, kayıp kullanıcı toplamı `lost=`, açık hata, ilgi, doluluk, masa, gelen,
   ↳ akış ve doğrulama hızı), `CUST` (`target=` hesabın `B2BSalesSystem.satisfaction_target`'i, taban dahil; `bugs=` hesabın kullandığı hatlardaki açık hata), `SAT` (çıtasının üstündeki hesap sayısı;
   ↳ `target=` defterin hesap uyumlarının ortalaması,
   ↳ ürün terimi tek başına); `CHURN`, `PROMISE`, `DISCOUNT`, `PLAY` (`_meet`); elde tutma politikası preset alanıdır. Bot maddesi açık hesapların MRR'ı Kurumsal'ın ek faturasını geçince Kurumsal'a geçer (`_answer_the_clause`);

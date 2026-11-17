@@ -1,13 +1,13 @@
 # Kod haritası · KALITE
 
-Üretildi: git 6f8dadee · 2026-11-17 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git a988ee9b · 2026-11-17 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 269 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
 
 - scripts/debug/endgame_smoke.gd · 32660 satır · 742 func
 - scripts/main/main.gd · 6869 satır · 241 func
-- scripts/debug/run_probe.gd · 2446 satır · 95 func
+- scripts/debug/run_probe.gd · 2458 satır · 94 func
 - scripts/systems/sprint_system.gd · 2141 satır · 173 func
 - scripts/theme/build_theme.gd · 1663 satır · 31 func
 - scripts/events/tools/lint.gd · 1378 satır · 48 func
@@ -73,7 +73,7 @@ Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları
 - scripts/events/tools/why.gd:28 · report · 121 satır
 - scripts/events/tools/engine_probe.gd:582 · _check_invalidation · 119 satır
 - scripts/events/tools/lint.gd:231 · _lint_effects · 119 satır
-- scripts/debug/run_probe.gd:363 · run · 117 satır
+- scripts/debug/run_probe.gd:356 · run · 118 satır
 
 ## Ölü kod adayları (66)
 
@@ -170,7 +170,7 @@ emit'i ya da connect'i bulunamayan sinyal (ada göre). Dizi içi bağ, await ve 
 
 Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: elle bakılmalı.
 - INBOX · 16 dosya · scripts/main/game_shell.gd:7, scripts/main/main.gd:22, scripts/modals/save_load_modal.gd:19, scripts/modals/system_menu_modal.gd:22, scripts/tabs/events/mail_pane.gd:19, scripts/tabs/events_tab.gd:8 +10
-- MarketingSystem · 12 dosya · scripts/autoload/time_manager.gd:3, scripts/events/core/effects.gd:4, scripts/events/present/chips.gd:4, scripts/events/seams/seams_finance.gd:4, scripts/events/tools/lint.gd:4, scripts/main/main.gd:3 +6
+- MarketingSystem · 13 dosya · scripts/autoload/time_manager.gd:3, scripts/events/core/effects.gd:4, scripts/events/present/chips.gd:4, scripts/events/seams/seams_finance.gd:4, scripts/events/tools/lint.gd:4, scripts/main/main.gd:3 +7
 - WIDTH · 7 dosya · scripts/modals/campaign_modal.gd:13, scripts/modals/hr_action_modal.gd:18, scripts/modals/training_modal.gd:19, scripts/modals/work_hours_modal.gd:22, scripts/ui/components/left_tabs.gd:29 +2
 - CHEVRON · 6 dosya · scripts/modals/campaign_modal.gd:16, scripts/tabs/marketing_tab.gd:25, scripts/tabs/product/quarter_view.gd:14, scripts/tabs/product/sprint_head.gd:10, scripts/tabs/rnd/rnd_assign_panel.gd:22 +1
 - ChequeRead · 5 dosya · scripts/tabs/finance/finance_ozet_view.gd:34, scripts/tabs/personal_tab.gd:13, scripts/ui/components/top_bar.gd:23, scripts/ui/office/office_notice_stack.gd:14, scripts/debug/endgame_smoke.gd:34

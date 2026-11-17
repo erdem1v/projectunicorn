@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Played-run gate: three full runs must each reach an ending and carry no error line.
 #
-# RunProbe prints a ledger and exits 0 whatever happened, and its fixture presets (b2b_*, b2c*)
+# RunProbe prints a ledger and exits 0 whatever happened, and its fixture presets (b2b_*)
 # legitimately finish with no ending, so "the run ended cleanly" is judged here, on the output.
 # The ending id itself is not asserted; any ending is a finished run.
 #

@@ -378,7 +378,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
   ↳ `history_empty`, `read_only` (karar beklerken), `closed` (v1 öncesi). Pencere yokken araştırma kartı: `card`, `card_frozen`, `card_build`, `card_none`, `card_gate`, `discovery` (16. hafta, keşif not yığınında),
   ↳ `discovery_design` (Tasarım Sistemi kimse yokken tamamlanır, kurucunun kendi keşfi not yığınından açılır) ve `first_note` (koşunun ilk aylık notu motordan gelir ve kutuda kendiliğinden açılır);
   ↳ `--inbox-shot=rnd_note|rnd_note_demand|rnd_discovery`
-- Harness: `bash tools/run_gate.sh` presetleri `full_run_fix_{none,worst,due,off}` ve `full_run_b2c_fix_*` (`PROBE FIX/BUGS/STOP` satırları); `--why-fire=<kart>`, `--event-lint`
+- Harness: `--run-log` presetleri `full_run_fix_{none,worst,due,off}` (`PROBE FIX/BUGS/STOP` satırları); `--why-fire=<kart>`, `--event-lint`
 - Fikstürler: `data/events/cards/_fixtures/paper_{dev,design,pm,founder,plain,crunch}.json`; smoke acil durum zarını kapatır (`endgame_smoke.gd:71`)
 
 ## Dikkat

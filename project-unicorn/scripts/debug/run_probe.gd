@@ -1,6 +1,8 @@
 class_name RunProbe
 extends RefCounted
 
+const MarketingSystem := preload("res://scripts/systems/marketing_system.gd")
+
 # Headless RUN LOG harness — event fire log, churn-chain autopsy and the played run.
 # Debug builds only; main.gd runs it for --run-log=<preset>:<weeks>:<mode>.
 #
@@ -30,16 +32,16 @@ extends RefCounted
 #   PROBE FIRE  day=<d> hour=<h> id=<id> src=<src>
 #   PROBE PICK  day=<d> id=<id> choice=<i> label=<label>
 #   PROBE STATE day=<d> cash=<n> mrr=<n> brand=<n> burn=<n> runway=<f|INF> cust=<n> emp=<n> promises=<n>
-#   PROBE B2C   day=<d> aud=<f> paying=<n> price=<n> conv=<f> sat=<n> sat_target=<n> open_bugs=<n>
-#               lost=<f> q=<f> interest=<f> occ=<f> desk=<n> incoming=<n> inflow_day=<f>
+#   PROBE B2C   day=<d> users=<f> stores=<f> orders=<f> user_sat=<n> store_sat=<n> revenue=<n> paying=<n>
+#               lost=<f> open_bugs=<n> interest=<f> occ=<f> desk=<n> incoming=<n> inflow_day=<f>
 #               validation_day=<f> u=<n> aud_star=<f>
-#                                           (every week a consumer product is live; desk = the
-#                                           support desk's roster, inflow and validation per day;
-#                                           lost = the users the audience has lost to erosion and bug churn;
-#                                           sat_target = the fit of the core and the way in, the number the
-#                                           record drifts toward; q = the B2C quality term the audience and the
-#                                           price read, the product's fit to its audience x 5/7; u = that fit
-#                                           itself, 0-100; aud_star = where the audience stands on the star rows,
+#                                           (every week a consumer product is live; the marketplace's own numbers:
+#                                           users = the active users, stores = the open categories' stores,
+#                                           orders = last week's delivered orders, the two satisfactions, revenue =
+#                                           the month's commission and membership, paying = the paying members,
+#                                           lost = the users its closes have lost; desk = the support desk's roster,
+#                                           inflow and validation per day; u = the product's fit to its audience,
+#                                           0-100; aud_star = where the audience stands on the star rows,
 #                                           1.00-3.00; occ = the servers' load as a ratio)
 #   PROBE SERVER day=<d> units=<n> tier=<local|cloud|enterprise> load=<pct> bill=<monthly $> auto=<0|1>
 #                                           (every week a product is live: the servers the founder runs, the units
@@ -171,7 +173,6 @@ extends RefCounted
 ##   staff_cap — the employees the B2B staffing ladder stops at (default: its thirteen STAFF_LADDER rungs; full_run_staff1, 3, 6
 ##               and 12 stop at 0, 2, 5 and 11, full_run_staff25 and full_run_staff50 go on up the growth rungs to 24 and 49:
 ##               the number in the name is the people with the founder);
-##   k1_only   — the founder never plans a K2 or K3 step;
 ##   fix       — the sprint's fix cards (default: whatever the lead plans): "none" takes no fix card, "worst" the
 ##               line with the most open bugs, "due" every line with DUE_BUGS × k or more (B2B: a line an active or
 ##               trial account uses), "off" is "worst" with the cost of open bugs switched off (the baseline).
@@ -195,47 +196,34 @@ extends RefCounted
 ##               many people (the founder among them) on the sprint engine, which the lead plans from the first morning
 ##               (_seed_book); their morale stays where it was seeded (_pin_the_morale), or the unmanaged roster would resign in one week.
 const PRESETS := {
-	"b2b_reps": {}, "b2b_solo": {}, "b2b_risk": {}, "b2b_slip": {}, "b2c": {}, "b2c_neglect": {},
+	"b2b_reps": {}, "b2b_solo": {}, "b2b_risk": {}, "b2b_slip": {},
 	"full_run": {"subtype": "erp"},
 	"full_run_naive": {"subtype": "erp", "policy": "naive"},
 	"full_run_discount": {"subtype": "erp", "policy": "discount"},
 	"full_run_vc_naive": {"subtype": "erp", "vc": "naive"},
 	"full_run_vc_cautious": {"subtype": "erp", "vc": "cautious"},
 	"full_run_lean": {"subtype": "erp", "vc": "walk", "staff_cap": 7},
-	"full_run_b2c": {"subtype": "note_tool"},
-	"full_run_b2c_video": {"subtype": "video_clip"},
-	"full_run_b2c_vc_cautious": {"subtype": "note_tool", "vc": "cautious"},
-	"full_run_b2c_vc_walk": {"subtype": "note_tool", "vc": "walk"},
-	"full_run_b2c_k1": {"subtype": "note_tool", "k1_only": true},
+	"full_run_b2c": {"subtype": "marketplace"},
+	"full_run_b2c_idle": {"subtype": "marketplace", "mp": "idle"},
+	"full_run_b2c_no_ads": {"subtype": "marketplace", "mp": "no_ads"},
+	"full_run_b2c_ads_lean": {"subtype": "marketplace", "mp": "lean"},
+	"full_run_b2c_ads_push": {"subtype": "marketplace", "mp": "push"},
 	"full_run_fix_none": {"subtype": "erp", "fix": "none"},
 	"full_run_fix_worst": {"subtype": "erp", "fix": "worst"},
 	"full_run_fix_due": {"subtype": "erp", "fix": "due"},
 	"full_run_fix_off": {"subtype": "erp", "fix": "off"},
-	"full_run_b2c_fix_none": {"subtype": "note_tool", "fix": "none"},
-	"full_run_b2c_fix_worst": {"subtype": "note_tool", "fix": "worst"},
-	"full_run_b2c_fix_due": {"subtype": "note_tool", "fix": "due"},
-	"full_run_b2c_fix_off": {"subtype": "note_tool", "fix": "off"},
 	"full_run_fix_worst_free": {"subtype": "erp", "fix": "worst", "no_stop": true},
 	"full_run_fix_due_free": {"subtype": "erp", "fix": "due", "no_stop": true},
 	"full_run_fix_off_free": {"subtype": "erp", "fix": "off", "no_stop": true},
-	"full_run_b2c_fix_worst_free": {"subtype": "note_tool", "fix": "worst", "no_stop": true},
-	"full_run_b2c_fix_due_free": {"subtype": "note_tool", "fix": "due", "no_stop": true},
-	"full_run_b2c_fix_off_free": {"subtype": "note_tool", "fix": "off", "no_stop": true},
 	"full_run_fix_worst_desk": {"subtype": "erp", "fix": "worst", "desk": true},
 	"full_run_quality_core": {"subtype": "erp", "fix": "worst", "core_only": true},
 	"full_run_quality_core_desk": {"subtype": "erp", "fix": "worst", "core_only": true, "desk": true},
 	"full_run_vc_product": {"subtype": "erp", "vc": "product"},
-	"full_run_b2c_vc_product": {"subtype": "note_tool", "vc": "product"},
 	"full_run_server_lean": {"subtype": "erp", "server": "lean"},
 	"full_run_server_wide": {"subtype": "erp", "server": "wide"},
 	"full_run_server_auto": {"subtype": "erp", "server": "auto"},
-	"full_run_b2c_server_lean": {"subtype": "note_tool", "server": "lean"},
-	"full_run_b2c_server_wide": {"subtype": "note_tool", "server": "wide"},
-	"full_run_b2c_server_auto": {"subtype": "note_tool", "server": "auto"},
 	"full_run_cash_spend": {"subtype": "erp", "cash": "spend"},
 	"full_run_cash_hoard": {"subtype": "erp", "cash": "hoard"},
-	"full_run_b2c_cash_spend": {"subtype": "note_tool", "cash": "spend"},
-	"full_run_b2c_cash_hoard": {"subtype": "note_tool", "cash": "hoard"},
 	"full_run_staff1": {"subtype": "erp", "staff_cap": 0},
 	"full_run_staff3": {"subtype": "erp", "staff_cap": 2},
 	"full_run_staff6": {"subtype": "erp", "staff_cap": 5},
@@ -256,7 +244,13 @@ const FIRST_HIRE_MONTHS := {"spend": 2.0, "hoard": 6.7}    # [WORKING]
 ## move goes up to.
 const MOVE_MONTHS := {"": 6.0, "spend": 2.0}               # [WORKING]
 const NEXT_OFFICE := {"home": "ishani", "ishani": "plaza", "plaza": "loft"}
-const PRODUCT_NAMES := {"erp": "Sahra", "note_tool": "Notly", "video_clip": "Klipo"}
+## A marketplace founder's one ad, by the marketplace arm (an arm that is not here runs none): the weekly budget until
+## MP_AD_SHARE of last week's commission buys a higher rung, and the cash under which the ad is paused.
+const MP_AD_BUDGET := {"": 200, "lean": 100, "push": 500}   # [WORKING]
+const MP_AD_SHARE := 0.30                                   # [WORKING]
+const MP_AD_CASH_FLOOR := 3000                              # [WORKING]
+const MP_AD_KIND := "search_ads"
+const PRODUCT_NAMES := {"erp": "Sahra", "note_tool": "Notly", "marketplace": "Carsi"}
 ## The employees of a probe company up to six people (the founder is the n-th), in turn.
 const SMALL_CREW := [HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_DESIGNER, HRConstants.ROLE_TESTER,
 	HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_PRODUCT_MANAGER]
@@ -277,17 +271,16 @@ const STAT_SPREAD := [6, 4, 8, 5, 3, 6, 7, 4, 5, 6]
 # sets the naive table's per-fund replays (default 20; 0 turns them off).
 #   full_run_lean     — B2B that stops hiring at seven people and walks the table: the bootstrap
 #                       road, since profitable_bootstrap needs the Series A decision faced.
-#   full_run_b2c*     — the consumer runs: the founder takes the support desk once anyone pays,
-#                       and hires on B2C_LADDER beside the reps the desk needs.
-#   full_run_b2c_k1   — the consumer run that stops at the K1 steps: how far K1 alone carries.
+#   full_run_b2c      — the consumer run, a marketplace: the founder opens a category whenever the open ones have their
+#                       stores, keeps himself and every Sales rep on the categories short of stores, runs one search ad
+#                       and hires on B2C_LADDER beside the reps the desk needs. Its arms (key `mp`): full_run_b2c_idle
+#                       opens the first category alone and moves nobody off it (the founder and every Sales rep it
+#                       hires stay there) and runs no ad; _no_ads runs no ad; _ads_lean and _ads_push change the
+#                       ad's weekly budget (MP_AD_BUDGET).
 # Every played run takes the seed round the week its door opens — see "The seed round".
 # The fixtures:
-#   b2c           — a consumer product the sprint engine builds itself, the lead planning every
-#                   sprint; its MVP release brings the launch audience and opens the paid tier.
-#   b2c_neglect   — a note app nobody tends, at its MVP with a bug backlog: it grows until its audience
-#                   expects more than the MVP gives, then erodes.
 #   The B2B fixtures seed the live ERP at a fixed ladder of line tiers (B2B_PRODUCTS) and start no sprint, so the
-#   product alone decides the book; b2c_neglect has the lines but starts none.
+#   product alone decides the book.
 
 static var _fires: Dictionary = {}      # id -> fire count
 static var _picks: Dictionary = {}      # id -> resolve count
@@ -303,7 +296,6 @@ static var _discount_uses: Dictionary = {}  # customer id -> discounts taken
 static var _policy: String = "sensible"     # full_run answer policy: sensible | naive | discount
 static var _subtype: String = ""            # full_run*: the product chosen on the first morning
 static var _staff_cap: int = 0              # full_run*: the headcount the B2B ladder stops at
-static var _k1_only: bool = false           # full_run*: never plan a K2 or K3 step
 static var _fix_arm: String = ""            # full_run*: "" | none | worst | due | off (see PRESETS)
 static var _no_stop: bool = false           # full_run*: an emergency never stops the sprint for its fix
 static var _core_only: bool = false         # full_run*: the sprint keeps no feature card outside the core
@@ -319,6 +311,7 @@ static var _units_seen: int = 0             # the units bought at the last chang
 static var _outages: Dictionary = {}        # PROBE END: tier -> night outages
 static var _clause_ended: int = 0           # PROBE END: the contracts the server clause ended
 static var _cash_arm: String = ""            # full_run*: "" | spend | hoard (see PRESETS)
+static var _mp_arm: String = ""             # full_run_b2c*: "" | idle | no_ads | lean | push (see PRESETS)
 static var _first_hire_day: int = -1        # PROBE END: the tick of the first hire
 static var _first_hire_runway: float = 0.0  # PROBE END: the months of that week's costs the cash covered
 static var _move_days: Array[int] = []      # PROBE END: the ticks a move was decided on
@@ -361,7 +354,7 @@ const FIXTURE_BUG_LINE := "line_erp_ledger"   # the ERP core line the fixture pr
 # ============================================================================
 
 static func run(spec: String, payload: Dictionary) -> void:
-	# spec = "<preset>:<weeks>:<mode>", e.g. "b2b_solo:13:sim" or "b2c:9:3".
+	# spec = "<preset>:<weeks>:<mode>", e.g. "b2b_solo:13:sim" or "full_run_b2c:9:3".
 	var parts: PackedStringArray = spec.split(":", false)
 	if parts.size() < 2:
 		print("PROBE ERROR bad spec '%s' (want <preset>:<weeks>[:<mode>])" % spec)
@@ -410,6 +403,7 @@ static func run(spec: String, payload: Dictionary) -> void:
 	_outages = {}
 	_clause_ended = 0
 	_cash_arm = ""
+	_mp_arm = ""
 	_first_hire_day = -1
 	_first_hire_runway = 0.0
 	_move_days = []
@@ -815,10 +809,9 @@ static func _log_state() -> void:
 	_runway_weeks[GameState.phase] = _runway_weeks.get(GameState.phase, Vector2i.ZERO) + Vector2i(int(not is_inf(runway)), 1)
 	if GameState.seed_closed_day < 0:
 		_min_cash_pre_seed = mini(_min_cash_pre_seed, GameState.cash)
-	# The B2C aggregate (audience, its satisfaction, open bugs) and the quality term q that the
-	# audience formula actually reads — the numbers the B2C growth verdicts are read from. q is -1
-	# off a live consumer product (nothing to read).
-	var ub: Customer = CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID)
+	# The consumer audience (the marketplace's users, their satisfaction, open bugs) and the quality term q.
+	# q is -1 off a live consumer product (nothing to read).
+	var ub: Customer = CustomerRegistry.get_customer(MarketplaceSystem.USERS_ID)
 	var q: float = SalesSystem.b2c_quality() if ProductState.is_live() and not SalesSystem.is_b2b_market() else -1.0
 	var sig: Dictionary = PhaseGateSystem.series_a_signal()
 	var appetite: String = String(sig.get("state", "closed"))
@@ -831,7 +824,7 @@ static func _log_state() -> void:
 		("INF" if is_inf(runway) else "%.2f" % runway),
 		CustomerRegistry.get_all().size(), CharacterRegistry.get_employees().size(),
 		PromiseRegistry.get_all().size(), GameState.phase,
-		int(GameState.get_flag("b2c_audience", 0)), (ub.satisfaction if ub != null else -1),
+		int(SalesSystem.b2c_audience()), (ub.satisfaction if ub != null else -1),
 		ProductState.open_bugs(), q,
 		appetite, int(sig.get("approach", 0)), str(GameState.phase_gate_ready), GameState.get_profitable_month_streak(),
 		GameState.run_customers_lost])
@@ -897,22 +890,18 @@ static func _log_uflux() -> void:
 	_account_u = now
 
 
-## PROBE B2C — the consumer week: the audience and who pays it at what price, the userbase's
-## satisfaction beside the target it drifts toward, open bugs, the users lost so far, the
-## quality term q the audience formula reads (and the fit u it is made of, with the audience's
-## place on the star rows), interest, server occupancy, and the support desk: who is on it, the
-## reports waiting, and how many arrive and get validated a day.
+## PROBE B2C — the consumer week, a marketplace's: the active users, the stores, last week's delivered orders, the two
+## satisfactions, the month's revenue, the paying members and the users lost so far, open bugs, interest, server
+## occupancy, and the support desk: who is on it, the reports waiting, and how many arrive and get validated a day
+## (and the fit u the audience reads, with its place on the star rows).
 static func _log_b2c() -> void:
 	if not ProductState.is_live() or ProductState.market_type() != "b2c":
 		return
-	var ub: Customer = CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID)
-	var price: int = int(GameState.get_flag("b2c_price", 0)) if GameState.get_flag("b2c_paid_tier_open", false) else 0
-	print("PROBE B2C day=%d aud=%.1f paying=%d price=%d conv=%.3f sat=%d sat_target=%d open_bugs=%d lost=%.1f q=%.1f interest=%.1f occ=%.2f desk=%d incoming=%d inflow_day=%.2f validation_day=%.2f u=%d aud_star=%.2f" % [
-		GameState.day, SalesSystem.b2c_audience(), SalesSystem.b2c_paying_users(), price,
-		SalesSystem.conversion_rate(price) if price > 0 else 0.0, ub.satisfaction if ub != null else -1,
-		SalesSystem.b2c_satisfaction_target(),
-		ProductState.open_bugs(), SalesSystem.b2c_users_lost(),
-		SalesSystem.b2c_quality(), ProductRead.interest(),
+	var m: Dictionary = MarketplaceModel.metrics(MarketplaceSystem.read_state(), MarketplaceSystem.world())
+	print("PROBE B2C day=%d users=%.1f stores=%.1f orders=%.1f user_sat=%d store_sat=%d revenue=%d paying=%d lost=%.1f open_bugs=%d interest=%.1f occ=%.2f desk=%d incoming=%d inflow_day=%.2f validation_day=%.2f u=%d aud_star=%.2f" % [
+		GameState.day, MarketplaceSystem.users(), MarketplaceSystem.stores(), m.orders, roundi(m.user_sat), roundi(m.store_sat),
+		roundi(m.monthly_revenue), SalesSystem.b2c_paying_users(), MarketplaceSystem.lost_users(),
+		ProductState.open_bugs(), ProductRead.interest(),
 		InfraSystem.load_percent() / 100.0, SupportSystem.desk_roster().size(), ProductState.reports_incoming(),
 		SupportSystem.reports_per_day(), SupportSystem.validation_per_day(),
 		ProductQuality.fit(SalesSystem.B2C_FIT_CTX).value, ProductQuality._audience_star()])
@@ -1296,8 +1285,67 @@ static func _play_the_week() -> void:
 		_run_the_servers()
 		_answer_the_clause()
 		_work_the_pipeline()
+		_run_the_marketplace()
 	if _vc_policy != "":
 		_play_the_hunt()
+
+
+## A marketplace at the week's open, as its founder tends it: the first category the week it launches and the next one in
+## the catalogue's order once every open category has the stores its variety asks; whoever wins stores (the founder, the
+## Sales reps) and holds no category takes the open one with the fewest people among those short of stores, and whoever
+## holds a category that has its stores moves to one that is short and has nobody; then the founder's ad. The "idle" arm
+## opens the first category alone: whoever wins stores is set on it once and never moved, and it runs no ad.
+static func _run_the_marketplace() -> void:
+	if _subtype != MarketplaceSystem.TYPE_ID:
+		return
+	var state: Dictionary = MarketplaceSystem.read_state()
+	var full := func(id: String) -> bool: return MarketplaceModel.variety(state, id) >= 1.0
+	var open: Array = MarketplaceModel.open_ids(state)
+	var closed: Array = MarketplaceModel.cat_ids().filter(func(id: String) -> bool: return not open.has(id))
+	if open.is_empty() or (_mp_arm != "idle" and not closed.is_empty() and open.all(full)):
+		MarketplaceSystem.open_category(closed[0])
+		open.append(closed[0])
+		print("PROBE PLAY day=%d marketplace opens %s" % [GameState.day, closed[0]])
+	var people: Dictionary = {}
+	for id: String in open:
+		people[id] = 0
+	for held: Dictionary in state.assign.values():
+		people[held.cat] += 1
+	for c: Character in MarketplaceSystem.assignable():
+		var cat: String = state.assign.get(c.id, {}).get("cat", "")
+		if cat != "" and (_mp_arm == "idle" or not full.call(cat)):
+			continue
+		var short: Array = open.filter(func(id: String) -> bool:
+			return id != cat and not full.call(id) and (cat == "" or people[id] == 0))
+		if short.is_empty():
+			if cat != "":
+				continue
+			short = open.duplicate()
+		short.sort_custom(func(a: String, b: String) -> bool: return people[a] < people[b])
+		if MarketplaceSystem.assign(c.id, short[0]):
+			people[short[0]] += 1
+			if cat != "":
+				people[cat] -= 1
+			print("PROBE PLAY day=%d marketplace sets %s on %s" % [
+				GameState.day, "founder" if c.category == "founder" else c.role, short[0]])
+	if MP_AD_BUDGET.has(_mp_arm):
+		_run_the_ad(open[0])
+
+
+## The founder's one ad, a search ad on `cat`: the arm's weekly budget, or the ladder rung under MP_AD_SHARE of last
+## week's commission once that is more; paused while the cash is under MP_AD_CASH_FLOOR.
+static func _run_the_ad(cat: String) -> void:
+	var rows: Array = MarketingSystem.rows().filter(func(r: Dictionary) -> bool: return r.kind == MP_AD_KIND)
+	var row: Dictionary = rows[0] if not rows.is_empty() \
+		else MarketingSystem.add_row(MP_AD_KIND, cat, CharacterRegistry.get_founder().id)
+	if row.is_empty():
+		return
+	var ladder: Array = MarketingSystem.cfg("budget_ladder")
+	var share: int = int(ladder[ladder.bsearch(int(MP_AD_SHARE * MarketplaceSystem.week_commission()), false) - 1])
+	var budget: int = 0 if GameState.cash < MP_AD_CASH_FLOOR else maxi(int(MP_AD_BUDGET[_mp_arm]), share)
+	if budget != int(row.budget):
+		MarketingSystem.set_budget(int(row.id), budget)
+		print("PROBE PLAY day=%d marketplace ad %s budget=%d" % [GameState.day, cat, budget])
 
 
 ## Every visible hour: the desk decisions a player takes whenever a gate opens — a hire,
@@ -1314,9 +1362,9 @@ static func _play_the_hour() -> void:
 
 ## The Product tab at the week's 08:00. Sprints close in the night's daily tick, so the morning
 ## finds either a running sprint or the release note: at the MVP gate the founder ships, then the
-## note is read, the next sprint planned on the lead's suggestion alone (promised steps and the paid plan
-## are its first steps) and started; the arms below edit it. A decision paper waiting on a card was already
-## answered off the desk (_drain_modals).
+## note is read, the next sprint planned on the lead's suggestion (promised steps and the paid plan are its
+## first steps) and started; the fix arms edit it, and off them a plan the suggestion left unstartable takes
+## every open card. A decision paper waiting on a card was already answered off the desk (_drain_modals).
 static func _plan_the_sprint() -> void:
 	if not SprintSystem.is_typed():
 		SprintSystem.choose_type(_subtype, PRODUCT_NAMES[_subtype])
@@ -1332,20 +1380,13 @@ static func _plan_the_sprint() -> void:
 	_plan_actions = 1
 	if _fix_arm != "":
 		_plan_fix_arm()
-	if _k1_only:
-		for id in GameState.product.sprint.cards.duplicate():
-			if not _plannable(GameState.product.cards[id]):
-				SprintSystem.remove(id)
-				_plan_actions += 1
-	# With no K1 step or fix left to plan, the product's one research card; while it rests (a close after it ran) the
-	# lead's plan, so the sprint still starts.
-	if _k1_only and not SprintSystem.can_start():
-		var research: Array = SprintCatalog.open_cards([]).filter(func(c: Dictionary) -> bool: return c.kind == "research")
-		if research.is_empty():
-			SprintSystem.apply_lead()
-		else:
-			SprintSystem.add(research[0].id)
-		_plan_actions += 1
+	# The lead's suggestion is applied once a plan: a card that opened since (the fix of a bug that fell this week) the
+	# founder adds himself. A fix arm keeps its own plan: the cards it parked stay out.
+	if _fix_arm == "" and not SprintSystem.can_start():
+		var planned: int = GameState.product.sprint.cards.size()
+		for c: Dictionary in SprintCatalog.open_cards([]):
+			SprintSystem.add(c.id)
+		_plan_actions += GameState.product.sprint.cards.size() - planned
 	_plan_actions += 1
 	if _start_logged():
 		print("PROBE PLAY day=%d sprint %d start cards=%s used=%.2f capacity=%.2f actions=%d" % [GameState.day,
@@ -1438,11 +1479,6 @@ static func _market_lines() -> Array:
 	for area_id in SprintCatalog.area_ids():
 		out.append_array(SprintCatalog.capabilities(area_id))
 	return out
-
-
-## The K1-only founder plans no step past K1: fixes, research and the paid plan stay open.
-static func _plannable(c: Dictionary) -> bool:
-	return not _k1_only or int(c.target_tier) <= 1
 
 
 static func _work_the_pipeline() -> void:
@@ -1546,13 +1582,17 @@ const STAFF_LADDER := [
 	{"role": "customer_rep", "min_customers": 25, "min_mrr": 0},
 	{"role": "sales_rep", "min_customers": 0, "min_mrr": 80000},
 ]
-## The consumer run's ladder: no sales desk to staff, so the rungs follow MRR alone, and beside
-## them the support reps the desk needs.
+## The consumer run's ladder, a marketplace's: the rungs follow MRR alone, a Sales rep first and again between the
+## builders (people win the stores), and beside them the support reps the desk needs.
 const B2C_LADDER := [
+	{"role": "sales_rep", "min_mrr": 0},
 	{"role": "developer", "min_mrr": 0},
+	{"role": "sales_rep", "min_mrr": 6000},
 	{"role": "designer", "min_mrr": 8000},
+	{"role": "sales_rep", "min_mrr": 12000},
 	{"role": "tester", "min_mrr": 15000},
 	{"role": "developer", "min_mrr": 25000},
+	{"role": "sales_rep", "min_mrr": 30000},
 	{"role": "product_manager", "min_mrr": 40000},
 ]
 ## Past STAFF_LADDER (the presets with a staff_cap above its thirteen rungs) the B2B run hires the mix of a larger
@@ -1571,7 +1611,7 @@ static func _rung(heads: int) -> Dictionary:
 
 
 ## The role the ladder hires next, or "" while it waits. B2B climbs the rungs (_rung) by headcount up
-## to the preset's cap. B2C first hires a support rep whenever someone pays, reports are waiting
+## to the preset's cap. B2C first hires a support rep whenever the product has users, reports are waiting
 ## and the desk validates fewer a day than arrive: the release-to-release swing in the inflow
 ## alone does not hire while the desk keeps the queue empty, and a rep away on leave or in
 ## training is waited for, not replaced. Then the first B2C_LADDER rung whose role the staff is
@@ -1586,7 +1626,7 @@ static func _next_role() -> String:
 			return ""
 		return String(want.role)
 	var reps: Array = staff.filter(func(c: Character) -> bool: return c.role == HRConstants.ROLE_CUSTOMER_REP)
-	if SalesSystem.b2c_paying_users() > 0 and ProductState.reports_incoming() > 0 \
+	if SalesSystem.b2c_audience() >= 1.0 and ProductState.reports_incoming() > 0 \
 			and reps.all(func(c: Character) -> bool: return c.status == HRConstants.STATUS_ACTIVE) \
 			and SupportSystem.validation_per_day() < SupportSystem.reports_per_day():
 		return HRConstants.ROLE_CUSTOMER_REP
@@ -1711,12 +1751,12 @@ static func _answer_the_clause() -> void:
 static func _run_the_company() -> void:
 	if not ProductState.is_live():
 		return
-	# Once anyone pays for the consumer product the founder takes the support desk (§8.2) next to
+	# Once the consumer product has users the founder takes the support desk (§8.2) next to
 	# his build job: the two jobs split his focus, so the sprint counts him at half a share and the
 	# desk gets half his customer_success for validation (0 in the debug payload, so the first rep
 	# is still needed).
 	var founder: Character = CharacterRegistry.get_founder()
-	if ProductState.market_type() == "b2c" and SalesSystem.b2c_paying_users() > 0 \
+	if ProductState.market_type() == "b2c" and SalesSystem.b2c_audience() >= 1.0 \
 			and not founder.assigned_job_ids.has(HRConstants.JOB_SUPPORT):
 		if CharacterRegistry.assign_job(founder.id, HRConstants.JOB_SUPPORT) == "":
 			print("PROBE PLAY day=%d founder takes the support desk" % GameState.day)
@@ -2187,61 +2227,33 @@ static func _seed_world(preset: String) -> void:
 		_policy = String(spec.get("policy", "sensible"))
 		_vc_policy = String(spec.get("vc", ""))
 		_staff_cap = int(spec.get("staff_cap", STAFF_LADDER.size()))
-		_k1_only = bool(spec.get("k1_only", false))
 		_fix_arm = String(spec.get("fix", ""))
 		_no_stop = bool(spec.get("no_stop", false))
 		_core_only = bool(spec.get("core_only", false))
 		_desk = bool(spec.get("desk", false))
 		_server_policy = String(spec.get("server", ""))
 		_cash_arm = String(spec.get("cash", ""))
+		_mp_arm = String(spec.get("mp", ""))
 		ProductState.bugs_free = _fix_arm == "off"
 		return
 	GameState.set_cash(60000)   # deep enough that the Kepenk shutter never confounds a 90-day log
 	match preset:
-		"b2c":
-			_seed_b2c_world()
-		"b2c_neglect":
-			_seed_b2c_neglect()
 		"b2b_solo", "b2b_reps", "b2b_risk", "b2b_slip":
 			_seed_b2b_world(preset)
 		"b2b_book20", "b2b_book330":
 			_seed_book(PRESETS[preset])
 
 
-## A product already live on day 1. mvp_launch_day is stamped here because the fixture skips
+## The ERP already live on day 1. mvp_launch_day is stamped here because the fixture skips
 ## the sprint close, its only writer, and every weeks_since_flag trigger reading it would
 ## otherwise stay false forever.
-static func _seed_live_product(market: String, subtype: String, product_name: String) -> void:
+static func _seed_live_product() -> void:
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_launch_day", GameState.day)
-	GameState.set_flag("mvp_market_type", market)
-	GameState.set_flag("mvp_sub_product_type_id", subtype)
+	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.set_flag("mvp_sub_product_type_id", "erp")
 	GameState.set_flag("mvp_version", 1)
-	GameState.set_flag("mvp_product_name", product_name)
-
-
-## The tended consumer product, built by the sprint engine itself: the note app and the founder
-## alone, Sprint 1 started on the lead's plan; every later sprint is started on it by _start_on_lead.
-## The release brings the launch audience and opens the paid tier.
-static func _seed_b2c_world() -> void:
-	SprintSystem.choose_type("note_tool", PRODUCT_NAMES["note_tool"])
-	SprintSystem.apply_lead()
-	SprintSystem.start()
-	EventBus.version_shipped.connect(func(_n: int) -> void:
-		SalesSystem.add_b2c_audience(200)
-		SalesSystem.open_b2c_paid_tier(15), CONNECT_ONE_SHOT)
-
-
-## The UNTENDED consumer product: the note app at its MVP (its first Core lines at K1), a bug backlog eating the
-## audience, and nobody sprints. The audience outgrows what the MVP gives and the product falls behind it: the
-## "declining" arm of the B2C growth measurement.
-static func _seed_b2c_neglect() -> void:
-	_seed_live_product("b2c", "note_tool", "Nova")
-	for line_id in SprintCatalog.mvp_lines():
-		ProductState.set_line_tier(line_id, 1)
-	ProductState.add_bugs(FIXTURE_BUG_LINE, 12)
-	SalesSystem.add_b2c_audience(200)
-	SalesSystem.open_b2c_paid_tier(15)
+	GameState.set_flag("mvp_product_name", PRODUCT_NAMES["erp"])
 
 
 # --- The B2B presets' world ---
@@ -2307,7 +2319,7 @@ static func _ship_erp_lines(spec: Dictionary) -> void:
 
 static func _seed_b2b_world(preset: String) -> void:
 	var spec: Dictionary = B2B_PRODUCTS[preset]
-	_seed_live_product("b2b", "erp", "Sahra")
+	_seed_live_product()
 	_ship_erp_lines(spec)
 	ProductState.add_bugs(FIXTURE_BUG_LINE, int(spec.bugs))
 
@@ -2379,7 +2391,7 @@ const SEED_MORALE := 60
 ## morning.
 static func _seed_book(spec: Dictionary) -> void:
 	SprintSystem.choose_type("erp", PRODUCT_NAMES["erp"])
-	_seed_live_product("b2b", "erp", PRODUCT_NAMES["erp"])
+	_seed_live_product()
 	_ship_erp_lines(B2B_PRODUCTS["b2b_solo"])
 	var sectors: Array = B2BConstants.SECTORS
 	for i in int(spec.accounts):
