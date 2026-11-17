@@ -292,24 +292,28 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   24:00 kurar; `build=` yalnız `sim`'de, EA'da bootstrap zaferi koşuyu bitirmez, `PROBE MILESTONE` basar), preset'ler `RunProbe.PRESETS`'te (ölçek fikstürleri
   `full_run_staff25/50` (B2B merdiveni kurucuyla 25 ve 50 kişiye uzar) ve `b2b_book20/330` (canlı ERP, 20 ve 330 hesap, 6 ve 50 kişi,
   moral sabit); düzeltme kolları
-  `full_run_fix_{none,worst,due,off}` ve `full_run_b2c_fix_*`, preset anahtarı `fix`; her sprint başında `PROBE FIX`,
+  `full_run_fix_{none,worst,due,off}`, preset anahtarı `fix`; her sprint başında `PROBE FIX`,
   her hafta `PROBE BUGS` basar; bot acil durum kartını fiile göre cevaplar, `fix_none` erteler, öbürleri sprinti durdurur ve
   durdurduğu anda `PROBE STOP` basar; `*_free` kolları sprinti hiç durdurmaz; `*_desk` kollarında (anahtar `desk`)
   masada temsilci varken kurucu yalnız temsilcilerin yıldız bandının üstündeki adaylarla görüşür; `full_run_quality_core[_desk]`
   (anahtar `core_only`) sprintte Çekirdek dışı özellik ve talep kartı bırakmaz, düzeltme ve araştırma kartları kalır;
-  `full_run_vc_product` ve `full_run_b2c_vc_product` seed'de ve Series A'da önce ürün fonuyla (Meridian) oturur; lead'li her
+  `full_run_vc_product` seed'de ve Series A'da önce ürün fonuyla (Meridian) oturur; lead'li her
   B2B imzada `PROBE FIT`, satışçının kaybettiği her adayda `PROBE REPLOSS`, kurucunun görüşme ve pazarlıkta kaybettiği her adayda
   `PROBE MLOSS`, her hafta `PROBE UFLUX` basılır;
-  `full_run_server_{lean,wide,auto}` ve `full_run_b2c_server_*` kollarında (anahtar `server`) kurucu sunucuyu her
+  `full_run_server_{lean,wide,auto}` kollarında (anahtar `server`) kurucu sunucuyu her
   haftanın açılışında Artır ve Azalt ile yönetir ya da Otomatik ayarla'yı açar, her hafta `PROBE SERVER` basılır); `full_run*`
   botu sunucu maddesi açık hesapların MRR'ı Kurumsal'ın ek faturasını geçince Kurumsal'a geçer, `PROBE END`'in `clause_ended=`
-  alanı maddenin bitirdiği sözleşmeleri sayar; `full_run_cash_{spend,hoard}` ve `full_run_b2c_cash_*` kollarında (anahtar
+  alanı maddenin bitirdiği sözleşmeleri sayar; `full_run_cash_{spend,hoard}` kollarında (anahtar
   `cash`) ilk çalışan kasa iki aylık gidere (`spend`) ya da 6,7 aylık gidere (`hoard`, hiç taşınmaz) varınca alınır, öbür kollar
   altı ayda alır ve `full_run*` botu seed'den sonra kasa peşin kira ile bugünkü giderin altı ayını (`spend` iki ayını) karşılayınca bir
   üst ofise taşınır; her karar `PROBE DECISION` satırıdır (masa dolu ofiste bekleyen işe alım bir kez `hire desks_full`)
   ve `PROBE END` `first_hire_week=`, `first_hire_runway=`, `move_weeks=` basar); her koşunun `PROBE END`'i destek raporunun
   sıklığını da basar: `support_reports=` (rapor gelen hafta / canlı üründe temsilcisi olan hafta), `support_news=` (her haber
-  türü kaç raporda).
+  türü kaç raporda). Tüketici koşusu `full_run_b2c` pazaryerini oynar: kurucu açık kategoriler mağazasını bulunca sıradakini
+  açar, kendini ve Satış Temsilcilerini mağazası eksik kategorilere dağıtır, tek bir arama reklamı koşar ve her hafta
+  `PROBE B2C` basar; kolları (anahtar `mp`) `full_run_b2c_idle` (yalnız ilk kategori, reklamsız), `full_run_b2c_no_ads`
+  (reklamsız) ve reklamın haftalık bütçesini değiştiren `full_run_b2c_ads_{lean,push}`; düzeltme, fon, sunucu ve kasa kolları
+  yalnız ERP'yi oynar.
   Karar değil defter basar;
   `^PROBE` satırları aynı seed, aynı binary ve `--lang=tr` ile bayt-deterministiktir. Oynanan üç koşunun kapısı
   `bash tools/run_gate.sh` (`full_run`, `full_run_b2c`, `full_run_vc_cautious`; `WEEKS` varsayılan 730): her koşu bir
