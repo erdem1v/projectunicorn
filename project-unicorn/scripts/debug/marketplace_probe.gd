@@ -769,7 +769,7 @@ func _check_topic_rows_known() -> Array:
 	var wrong := []
 	for row in rows:
 		var good: bool = want.has(row.id) and _near(row.tickets, 4.0 * want[row.id][0]) and _near(row.affected, want[row.id][1]) \
-			and row.age == 4 and row.status == "waiting" and row.source == "tickets"
+			and row.age == 4 and row.status == "waiting" and row.source == "tickets" and _near(row.share, row.affected / 560.0)
 		if not good:
 			wrong.append(row.id)
 		ok = ok and good
@@ -828,7 +828,7 @@ func _check_topic_ledger_rows() -> Array:
 	var week13 := [_late_args(state, "users"), _late_args(state, "stores"), met.call("users")]
 	_run(state, world.merged({"week": 14, "features": ["size_chart", "guest_checkout"]}, true), 1)
 	var week14 := [_late_args(state, "users"), _late_args(state, "stores")]
-	var rows := MarketplaceModel.topic_rows(state, world.merged({"week": 14}, true))
+	var rows := MarketplaceModel.topic_rows(state, world.merged({"week": 14, "features": ["size_chart", "guest_checkout"]}, true))
 	var shipped: Array = rows.filter(func(r: Dictionary) -> bool: return r.id == "size_chart")
 	var met13: Array = week13[2]
 	var shipped_row: Dictionary = shipped[0] if shipped else {}
@@ -1067,8 +1067,9 @@ func _check_backup_mult_tiers() -> Array:
 	return [_equal(got, [1.0, 0.7, 0.5, 0.3, 1.0, 1.0]), "outage multiplier without Backup, tiers 1-3, other modules only, default world: %s" % [got]]
 
 
-## Rapordan açılan konu: bileti olmadan satır olur, verilen etkilenen sipariş durur; ikinci çağrı, bilinmeyen kimlik ve bileti başlamış konu
-## reddedilir. Sekiz haftayı geçince "Geciken talep" konunun adıyla yazılır (planda olsa da), yayına çıkınca "Karşılandı" yazılır ve etkilenen 0 olur.
+## Rapordan açılan konu: bileti olmadan satır olur, verilen etkilenen sipariş durur ve payı geçen haftanın teslim edilenine bölünür (teslim
+## yokken 0); ikinci çağrı, bilinmeyen kimlik ve bileti başlamış konu reddedilir. Sekiz haftayı geçince "Geciken talep" konunun adıyla
+## yazılır (planda olsa da), yayına çıkınca "Karşılandı" yazılır ve etkilenen 0 olur.
 func _check_open_topic_report_row() -> Array:
 	var state := _topic_state()
 	var world := _live_world(10)
@@ -1083,8 +1084,13 @@ func _check_open_topic_report_row() -> Array:
 	var row: Dictionary = coupon[0] if coupon.size() == 1 else {}
 	var size_chart: Array = rows.filter(func(r: Dictionary) -> bool: return r.id == "size_chart")
 	var row_ok: bool = row.get("side") == "users" and row.get("module") == "checkout" and row.get("source") == "report" \
-		and row.get("tickets") == 0.0 and row.get("affected") == 42.0 and row.get("age") == 2 and row.get("status") == "waiting"
+		and row.get("tickets") == 0.0 and row.get("affected") == 42.0 and row.get("age") == 2 and row.get("status") == "waiting" \
+		and _near(row.get("share", -1.0), 42.0 / 560.0)
 	var ticks_ok: bool = size_chart.size() == 1 and size_chart[0].source == "tickets" and size_chart[0].tickets > 0.0 and not state.topics.has("no_such_topic")
+	var idle := MarketplaceModel.new_state()
+	MarketplaceModel.open_topic(idle, world, "coupon_abuse", 42.0)
+	var idle_rows := MarketplaceModel.topic_rows(idle, world)
+	var idle_ok: bool = idle_rows.size() == 1 and idle_rows[0].share == 0.0
 	var live := _store_state(["fashion"], 3000.0)
 	MarketplaceModel.open_topic(live, world, "coupon_abuse", 42.0)
 	_run(live, world.merged({"week": 18}, true), 1)
@@ -1101,10 +1107,10 @@ func _check_open_topic_report_row() -> Array:
 	var life_ok: bool = week18 == [] and week19 == ["coupon_abuse"] and waiting.size() == 1 and waiting[0].status == "planned" \
 		and waiting[0].affected == 42.0 and week20 == [] and met.size() == 1 and met[0].arg == "coupon_abuse" and met[0].points == 3.0 \
 		and done.size() == 1 and done[0].status == "shipped" and done[0].affected == 0.0 and done[0].tickets == 0.0 and done[0].age == 10
-	return [silent and opened and not again and not unknown and not ticketed and row_ok and ticks_ok and life_ok,
+	return [silent and opened and not again and not unknown and not ticketed and row_ok and ticks_ok and idle_ok and life_ok,
 		"unopened topics are silent=%s; opened at week 10 with 42 affected=%s, second call %s, unknown id %s, topic already ticketed %s; row at week 12 %s; "
-		% [silent, opened, again, unknown, ticketed, row] + "size_chart keeps its own tickets=%s; late rows week 18 %s, week 19 (planned) %s, week 20 (shipped) %s; met rows %d; shipped row %s"
-		% [ticks_ok, week18, week19, week20, met.size(), done]]
+		% [silent, opened, again, unknown, ticketed, row] + "share is 0 before any delivered order=%s; size_chart keeps its own tickets=%s; " % [idle_ok, ticks_ok]
+		+ "late rows week 18 %s, week 19 (planned) %s, week 20 (shipped) %s; met rows %d; shipped row %s" % [week18, week19, week20, met.size(), done]]
 
 
 ## `cfg` marketplace.json'u nokta yoluyla okur; sözlük ve dizi kopya döner: okuyanın boşalttığı kopya sabiti değiştirmez.

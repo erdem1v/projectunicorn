@@ -814,15 +814,22 @@ static func _topic_live(world: Dictionary, topic: Dictionary) -> bool:
 	return topic.id in _w(world, "features")
 
 
+## Konunun durumu dünyadan: yayında, sprint planında ya da bekliyor.
+static func _status(world: Dictionary, topic: Dictionary) -> String:
+	if _topic_live(world, topic):
+		return "shipped"
+	return "planned" if topic.id in _w(world, "planned") else "waiting"
+
+
 ## Konu durumunu dünyadan okur; isteği gelmiş bir konu ilk kez yayına çıkınca tarafına "Karşılandı" satırı yazar.
 static func _refresh_topics(state: Dictionary, world: Dictionary) -> void:
 	var met: Dictionary = _c.ledger.rows.met
 	for topic in _c.topics.catalog:
 		var ts: Dictionary = state.topics[topic.id]
-		var live := _topic_live(world, topic)
-		if live and ts.status != "shipped" and ts.since_day != NEVER:
+		var status := _status(world, topic)
+		if status == "shipped" and ts.status != "shipped" and ts.since_day != NEVER:
 			_add(state, topic.side, "met", topic.id, met.points, int(met.weeks))
-		ts.status = "shipped" if live else ("planned" if topic.id in _w(world, "planned") else "waiting")
+		ts.status = status
 
 
 ## Tarafın en eski gecikmiş konusu: yayında olmayan (planda olan dahil) ve ilk isteğinden bu yana eşikten çok hafta geçmiş; yoksa "".
@@ -916,15 +923,18 @@ static func _affected(state: Dictionary, world: Dictionary, topic: Dictionary) -
 
 
 ## Talepler'in satırları, ilk isteği gelmiş her konu için: `tickets` son dört haftanın toplamı, `affected` haftada etkilenen sipariş,
-## `reason` konunun bağlı adımı ya da mağaza derdi, `age` ilk istekten bu yana hafta.
+## `share` onun geçen haftanın teslim edilen siparişindeki payı, `reason` konunun bağlı adımı ya da mağaza derdi, `status` verilen
+## dünyadan (plana alınan konu kapanışı beklemeden `planned` okunur), `age` ilk istekten bu yana hafta.
 static func topic_rows(state: Dictionary, world: Dictionary) -> Array:
+	var delivered: float = funnel(state).delivered
 	var rows := []
 	for topic in _c.topics.catalog:
 		var ts: Dictionary = state.topics[topic.id]
 		if ts.since_day != NEVER:
+			var affected := _affected(state, world, topic)
 			rows.append({"id": topic.id, "side": topic.side, "module": topic.module, "tickets": _sum(ts.tickets),
-				"affected": _affected(state, world, topic), "reason": topic.link, "status": ts.status,
-				"age": int(_w(world, "week")) - int(ts.since_day), "source": ts.source})
+				"affected": affected, "share": affected / delivered if delivered > 0.0 else 0.0, "reason": topic.link,
+				"status": _status(world, topic), "age": int(_w(world, "week")) - int(ts.since_day), "source": ts.source})
 	return rows
 
 

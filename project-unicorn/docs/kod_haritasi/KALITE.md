@@ -5,14 +5,14 @@ Kapsam: scripts/ altındaki 269 .gd (tools/ hariç). Kod temizliği ve kıdemli 
 
 ## En büyük 25 .gd
 
-- scripts/debug/endgame_smoke.gd · 32660 satır · 742 func
+- scripts/debug/endgame_smoke.gd · 32663 satır · 742 func
 - scripts/main/main.gd · 6869 satır · 241 func
 - scripts/debug/run_probe.gd · 2458 satır · 94 func
 - scripts/systems/sprint_system.gd · 2141 satır · 173 func
 - scripts/theme/build_theme.gd · 1663 satır · 31 func
 - scripts/events/tools/lint.gd · 1378 satır · 48 func
-- scripts/systems/marketplace_model.gd · 1350 satır · 108 func
-- scripts/debug/marketplace_probe.gd · 1329 satır · 67 func
+- scripts/systems/marketplace_model.gd · 1360 satır · 109 func
+- scripts/debug/marketplace_probe.gd · 1335 satır · 67 func
 - scripts/systems/vc_pitch_system.gd · 1317 satır · 91 func
 - scripts/tabs/product/product_model.gd · 1317 satır · 68 func
 - scripts/autoload/save_manager.gd · 1295 satır · 60 func
@@ -117,14 +117,14 @@ UYARI: call("a"+b) gibi kurulmuş adlar, sinyal adıyla bağlama, harness bayrak
 - scripts/debug/marketplace_probe.gd:982 · _check_outage_row_and_cost · debug
 - scripts/debug/marketplace_probe.gd:1043 · _check_lost_commission_weighted · debug
 - scripts/debug/marketplace_probe.gd:1062 · _check_backup_mult_tiers · debug
-- scripts/debug/marketplace_probe.gd:1072 · _check_open_topic_report_row · debug
-- scripts/debug/marketplace_probe.gd:1111 · _check_cfg_reads_constants · debug
-- scripts/debug/marketplace_probe.gd:1128 · _check_funnel_sums_categories · debug
-- scripts/debug/marketplace_probe.gd:1151 · _check_step_hint_matches_gain · debug
-- scripts/debug/marketplace_probe.gd:1189 · _check_ledger_worst_picks_heaviest · debug
-- scripts/debug/marketplace_probe.gd:1220 · _check_crew_follows_assignment · debug
-- scripts/debug/marketplace_probe.gd:1282 · _check_returning_orders_follow_frequency · debug
-- scripts/debug/marketplace_probe.gd:1322 · _check_word_of_mouth_brings_users · debug
+- scripts/debug/marketplace_probe.gd:1073 · _check_open_topic_report_row · debug
+- scripts/debug/marketplace_probe.gd:1117 · _check_cfg_reads_constants · debug
+- scripts/debug/marketplace_probe.gd:1134 · _check_funnel_sums_categories · debug
+- scripts/debug/marketplace_probe.gd:1157 · _check_step_hint_matches_gain · debug
+- scripts/debug/marketplace_probe.gd:1195 · _check_ledger_worst_picks_heaviest · debug
+- scripts/debug/marketplace_probe.gd:1226 · _check_crew_follows_assignment · debug
+- scripts/debug/marketplace_probe.gd:1288 · _check_returning_orders_follow_frequency · debug
+- scripts/debug/marketplace_probe.gd:1328 · _check_word_of_mouth_brings_users · debug
 - scripts/debug/office_crowd_probe.gd:48 · _log_error · debug
 - scripts/events/present/papers.gd:145 · arc_of
 - scripts/main/game_shell.gd:163 · debug_force_vc_meeting · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)

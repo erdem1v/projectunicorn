@@ -32041,13 +32041,15 @@ static func _case_support_backlog_row_survives() -> String:
 	return ""
 
 
-## Talepler satırının durumu kapanışta ürünün kademesinden ve sprint planından okunur: kademe konusunun kartı koşan sprintte ya da sonraki
-## sütunda duruyorsa `planned`, plandan çıkınca `waiting`, modül o kademeye varınca `shipped` ve isteği gelmiş konuda kullanıcı tarafının
-## defterine "Karşılandı" yazılır. Her kademe konusunun `card_id`'si modülün o kademesinin gerçek aday kartıdır.
+## Talepler satırının durumu okunduğu anda ürünün kademesinden ve sprint planından gelir, kapanışı beklemez: kademe konusunun kartı koşan
+## sprintte ya da sonraki sütunda duruyorsa `planned`, plandan çıkınca `waiting`, modül o kademeye varınca `shipped`; isteği gelmiş
+## konuda kullanıcı tarafının defterine "Karşılandı" izleyen kapanışta yazılır. Her kademe konusunun `card_id`'si modülün o kademesinin
+## gerçek aday kartıdır.
 ##
 ## FALSİFİKASYON: `MarketplaceSystem.world`de `planned`i boş bırak → `planned` iddiaları FAIL; `_planned`ta yalnız koşan sprinti oku →
 ## sonraki sütun iddiası FAIL, yalnız sonraki sütunu oku → koşan sprint iddiası FAIL; `_tier_card`ı modülün hat kimliğiyle kur
-## ("feat:" + hat) → kart iddiası FAIL; `_tier_step`te kademeyi bir artır → kart iddiası FAIL.
+## ("feat:" + hat) → kart iddiası FAIL; `_tier_step`te kademeyi bir artır → kart iddiası FAIL; `topic_rows`ta durumu saklanandan
+## (`ts.status`) oku → kapanıştan önceki durum iddiaları FAIL.
 static func _case_marketplace_topic_planned() -> String:
 	_seed_marketplace_world()
 	MarketplaceSystem.daily_tick()
@@ -32077,25 +32079,26 @@ static func _case_marketplace_topic_planned() -> String:
 	SprintSystem.add(card_id)
 	if card_id not in GameState.product.sprint.cards:
 		return "fixture: the card did not enter this sprint"
-	close.call()
 	if status.call() != "planned":
 		return "the card is in this sprint and the topic reads '%s', want 'planned'" % status.call()
 	SprintSystem.remove(card_id)
-	close.call()
 	if status.call() != "waiting":
 		return "the card left the plan and the topic reads '%s', want 'waiting'" % status.call()
 	SprintSystem.send_next(card_id)
 	if card_id not in GameState.product.next.cards:
 		return "fixture: the card did not enter the next column"
-	close.call()
 	if status.call() != "planned":
 		return "the card is in the next column and the topic reads '%s', want 'planned'" % status.call()
+	close.call()
 	if not met.call().is_empty():
 		return "a 'Met' row was written before the topic shipped"
 	ProductState.set_line_tier("line_marketplace_reviews", 1)
+	if status.call() != "shipped" or not met.call().is_empty():
+		return "the module reached the tier before a close: the topic reads '%s' with %d 'Met' rows, want 'shipped' and none" % [
+			status.call(), met.call().size()]
 	close.call()
-	if status.call() != "shipped" or met.call().size() != 1:
-		return "the module reached the tier: the topic reads '%s' with %d 'Met' rows, want 'shipped' and one" % [status.call(), met.call().size()]
+	if met.call().size() != 1:
+		return "the close after the tier wrote %d 'Met' rows, want one" % met.call().size()
 	return ""
 
 

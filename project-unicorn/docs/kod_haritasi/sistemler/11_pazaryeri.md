@@ -6,9 +6,9 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 
 ## Dosyalar
 
-- `systems/marketplace_model.gd` (1350): `MarketplaceModel`; yalnız `static` işlevler. `state` ve `world` sözlüklerinin alanları dosya başındaki yorumda.
+- `systems/marketplace_model.gd` (1360): `MarketplaceModel`; yalnız `static` işlevler. `state` ve `world` sözlüklerinin alanları dosya başındaki yorumda.
 - `systems/marketplace_system.gd` (340): `MarketplaceSystem`; yalnız `static` işlevler. `GameState.marketplace`'in tek yazarı, yazan seam'ler, sözleşme okuyucuları, `world()` ve haftalık kapanış.
-- `debug/marketplace_probe.gd` (1329): `-s` betiği; oynanan çizelge ve 46 mekanik denetimi, `MPPROBE ...` satırları.
+- `debug/marketplace_probe.gd` (1335): `-s` betiği; oynanan çizelge ve 46 mekanik denetimi, `MPPROBE ...` satırları.
 - `data/product/categories.json` (16): altı kategori ve sütunları: sepet, sipariş sıklığı (`order_freq`: yol kusursuzken kullanıcının haftalık siparişi), kâr payı, sektör iadesi, gereken mağaza, başlangıç komisyonu, taban ilgi, büyük sepet payı, reklam havuzu (`ad_pool`, haftalık arama).
 - `data/product/lines/marketplace.json` (153): modül verisi; 5 kimlik hattı (Ürün Yükleme, Vitrin, Sepet ve Ödeme, Siparişler, Yorum ve Güvence)
   ↳ Mobil, Entegrasyonlar, Kullanıcılar ve Yetki, Yedekleme `shared.json`'dan; Üyelik, Gelir alanının `cap_paid_plan`'ı.
@@ -37,7 +37,8 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
   ↳ `cfg("steps.reach")` `marketplace.json`'u nokta yoluyla okur (olmayan yol motor hatası verir, varsayılan dönmez; sözlük ve dizi kopya döner; arayüz ulaşılabilir oranı, komisyon sınırını ve kural seçeneklerini buradan alır).
 - Haftalık kapanış: `close_week(state, world)` bağlayıcı sırayla `state`'i değiştirir (mağaza akışı, ziyaret ve adımlar, iade, kullanıcı, gelir ve gider, Premium, defter); sinyal ve kayıt çağıranındır.
   ↳ Kapanış `state.lost`'a kaybı ekler (`users` += kullanıcı × (1 − elde tutma), `stores` += ayrılan mağaza); iki sayı birikmiş toplamdır.
-- Biletler: `tick_topics(state, world)` kapanıştan sonra, haftada bir koşar; her konunun o haftaki biletini son dört haftaya yazar. Konu durumu (`waiting`, `planned`, `shipped`) ve defter satırları kapanışın 7. adımında dünyadan okunur.
+- Biletler: `tick_topics(state, world)` kapanıştan sonra, haftada bir koşar; her konunun o haftaki biletini son dört haftaya yazar.
+  ↳ Konu durumu (`waiting`, `planned`, `shipped`) kapanışın 7. adımında dünyadan duruma yazılır (`_status`), defter satırları oradan çıkar.
 - Yazan işlevler (`true` uygulandı, `false` reddedildi): `open_category`, `set_commission`, `set_policy`, `set_fee`, `set_perk`, `set_trial`, `open_premium`, `set_store_terms`,
   ↳ `add_users(state, n)` (olayın kullanıcı ekleyişi ya da çıkarışı, `n` eksi olabilir; kullanıcı sayısı değişmediyse false); kilit `lock_left(gün, world)`.
   ↳ `assign(state, kişi, kategori)` `state.assign[kişi] = {cat, live: false}` yazar (kapalı kategori ya da kişi orada zaten çalışıyorsa false; başka kategoriye taşıma `live`'ı sıfırlar), `unassign(state, kişi)`; `close_week` kazanımı hesaplayınca her atamayı `live` yapar, `acquisition` yalnız `live` ve `stars`ta olan kişiyi sayar (atamadan sonraki ilk kapanış atlar).
@@ -57,9 +58,12 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
   ↳ `source_new_users(state, kaynak)` = kaynağın geçen kapanışta getirdiği yeni kullanıcı (`sources[kaynak]`'ın ilk hücresi; hiç ziyaret getirmemiş kaynakta 0); vaka `marketplace_source_new_users`.
   ↳ `gmv(state, kategori)` = kategorinin geçen haftaki satış hacmi (teslim edilen sipariş × sepet; iade düşülmez); sistemde `week_gmv()` açık kategorilerin toplamı (Pazarlama reklam harcamasının satışlara oranını bununla yazar); vaka `marketplace_week_gmv`.
 - Talepler (sistem): `request_topics()` modelin `topic_rows`'u ve her satıra `card_id`: kademe konusunda modülün o kademesinin adım kimliğiyle `feat:<adım>` (hat `MODULE_LINES`'tan, adım `ProductLines.step_at`ten; `SprintCatalog` adayının kimliğiyle aynı kalıp), ek özellikte `ext:<konu>` (kartı sonraki pakette doğar);
-  ↳ `open_topic(kimlik, etkilenen)` modelin `open_topic`ini çağıran yazan seam (uygulanınca sinyal, reddedilen çağrı yaymaz). Konu durumu (`waiting`, `planned`, `shipped`) kapanışta ürünün kademesinden ve sprint planından okunur; `MarketplaceModel.tier_topics()` kademe konularının modülünü ve kademesini verir.
+  ↳ `open_topic(kimlik, etkilenen)` modelin `open_topic`ini çağıran yazan seam (uygulanınca sinyal, reddedilen çağrı yaymaz).
+  ↳ Satırın durumu (`waiting`, `planned`, `shipped`) okunduğu anda ürünün kademesinden ve sprint planından gelir, "Karşılandı" kapanışta yazılır.
+  ↳ `MarketplaceModel.tier_topics()` kademe konularının modülünü ve kademesini verir.
   ↳ `topic_name(kimlik)` konunun oyuncuya görünen adının tek okuyucusu: kademe konusunda modülün o kademesinin adı (`SprintCatalog.step_name`), ek özellikte `MP_TOPIC_<KİMLİK>` metni; defter satırının konusu ve Talepler adı buradan okuyacak (bugün çağıranı yalnız vaka `marketplace_topic_names`).
-- Talepler (model): `topic_rows(state, world)` ilk isteği gelmiş her konunun satırı (`id`, `side`, `module`, `tickets`, `affected`, `reason`, `status`, `age`, `source`); konu kimlikleri `marketplace.json` `topics.catalog`'ta, metin yok.
+- Talepler (model): `topic_rows(state, world)` ilk isteği gelmiş her konunun satırı (`id`, `side`, `module`, `tickets`, `affected`, `share`, `reason`, `status`, `age`, `source`);
+  ↳ konu kimlikleri `marketplace.json` `topics.catalog`'ta, metin yok. `share` etkilenen siparişin geçen haftanın teslim edilenindeki payıdır; `status` verilen dünyadan okunur (`_status`).
 - Rapordan açılan konu: `open_topic(state, world, kimlik, etkilenen)` bileti olmayan konunun satırını açar (`since_day` = hafta, `source` = `report`, haftalık etkilenen sipariş `topics[konu].affected`); katalogda olmayan ya da satırı açık konuda false.
 - Önizleme: `project(state, world)` kopyada dört kapanış koşar; `preview_commission`, `preview_policy`, `preview_premium` değişiklikli ve değişiklikssiz farkı döndürür (`metrics` anahtarları; `store_earnings` oran, öbürleri fark);
   ↳ reddedilen değişiklikte `{}`.

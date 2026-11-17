@@ -415,10 +415,11 @@ Dört kural. `set_policy(kural, seçenek)` kuralı değiştirir ve dört hafta k
 - Varsayılan "Kapalı" olduğu için Premium açılmadan hiçbir ayrıcalık gider yazmaz.
 
 ### 3.11 Talepler
-- `request_topics()` satırları döndürür: konu, taraf, modül, son dört haftanın bileti, haftada etkilenen sipariş, neden,
-  durum, konunun yaşı, kaynak ve konunun kartının kimliği (`card_id`: kademe konusunda modülün o kademesinin özellik kartı,
-  ek özellikte `ext:<konu>`). Yalnız ilk isteği gelmiş konu satır olur; durum kapanışta yazılır (hafta içinde plana alınan
-  konu sonraki kapanışa kadar "bekliyor" okunur). Demodaki konu kataloğu ve bilet oranları `tur4_ekranlar_2026-11-13/pazaryeri/
+- `request_topics()` satırları döndürür: konu, taraf, modül, son dört haftanın bileti, haftada etkilenen sipariş ve onun geçen
+  haftanın teslim edilen siparişindeki payı (`share`), neden, durum, konunun yaşı, kaynak ve konunun kartının kimliği (`card_id`:
+  kademe konusunda modülün o kademesinin özellik kartı, ek özellikte `ext:<konu>`). Yalnız ilk isteği gelmiş konu satır olur;
+  durum satır okunduğu anda okunur, kapanışı beklemez (plana alınan konu hemen "planda" okunur; durumun kaynakları ve
+  "Karşılandı" satırı aşağıda). Demodaki konu kataloğu ve bilet oranları `tur4_ekranlar_2026-11-13/pazaryeri/
   TALEPLER_ICERIK.md` §2 ve §3'teki on iki konudur; katalog `data/product/marketplace.json`'a girer (konu, taraf, modül, sıradaki
   kademe ya da ek özellik, bağlı adım, bilet oranı; kullanıcı tarafındaki ek özellikte eksikken adım çarpanı).
 - `topic_name(kimlik)` konunun oyuncuya görünen adının tek okuyucusudur: kademe konusunda modülün o kademesinin adı, ek
@@ -436,9 +437,10 @@ Dört kural. `set_policy(kural, seçenek)` kuralı değiştirir ve dört hafta k
   ya da ek özellik); Yorum ve Puan'da kademe çıkınca haftada iade edilmeyecek sipariştir (`teslim × (bugünkü iade oranı −
   kademeyle iade oranı)`); mağaza konusunda derdi olan mağazaların siparişi × o hafta ayrılma olasılığıdır (§3.4; sipariş
   mağaza payıyla orantılı sayılır). Yayındaki konuda 0'dır. Gösterilen sayı, konu çıkınca gerçekleşen sayıdır.
-- "Plana al" konunun kartını bugünkü sprint yolundan ekler. Kapanış konunun durumunu okur (bekliyor, planda, yayında):
-  kademe konusunda modülün kademesinden, ek özellikte ürünün yayındaki ek özelliklerinden, plandaki konuda sprint planından.
-  İsteği gelmiş bir konu yayına çıkınca tarafına bir kez "Karşılandı: {konu}" yazılır; isteği hiç gelmemiş konu satır yazmaz.
+- "Plana al" konunun kartını bugünkü sprint yolundan ekler. Konunun durumu (bekliyor, planda, yayında) kademe konusunda
+  modülün kademesinden, ek özellikte ürünün yayındaki ek özelliklerinden, plandaki konuda sprint planından okunur: satır
+  okunduğu anda, defter kapanışta. İsteği gelmiş bir konu yayına çıkınca izleyen kapanışta tarafına bir kez
+  "Karşılandı: {konu}" yazılır; isteği hiç gelmemiş konu satır yazmaz.
   "Geciken talep" taraf başına tek satırdır (§3.8): ilk isteğinden bu yana sekiz haftadan çok geçmiş, yayında olmayan, sprint
   kartı olan en eski konu.
 - `open_topic(kimlik, etkilenen)` satırı henüz açılmamış bir konuyu rapordan açar: kaynağı `report`, ilk isteği o hafta,
