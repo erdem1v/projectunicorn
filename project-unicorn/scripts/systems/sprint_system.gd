@@ -118,30 +118,45 @@ static func plan_card(card_id: String) -> void:
 		_changed()
 
 
-## "↑": kart planlamada bu sprinte elle girer (`sprint.manual`). Başlayacak kartların yükü tavanı (`cap_ceiling`) aşarsa
-## sprintin en altındaki, elle konmamış planlı kart sonraki sprintin başına iner, sırası korunur; devreden ve kâğıdın takip
-## kartı inmez. Elle konan kartlar tavanı kendi başlarına aşarsa kart yine girer, işi devreder.
+## "↑" ve sürükleme: kart planlamada bu sprinte elle girer (`sprint.manual`), `pull_bumps`'ın kartları sonraki sprintin başına
+## iner, sıraları korunur.
 static func pull(card_id: String) -> void:
 	var card: Dictionary = SprintCatalog.card_by_id(card_id)
 	if mode() != "plan" or not _movable(card):
 		return
+	var bumped: Array = pull_bumps(card_id)
 	_place(card, true)
 	var p: Dictionary = _p()
 	var manual: Array = p.sprint.get_or_add("manual", [])
 	if card_id not in manual:
 		manual.append(card_id)
+	for id: String in bumped:
+		_place(p.cards[id], false)
+		p.next.cards.erase(id)
+		p.next.cards.push_front(id)
+	_changed()
+
+
+## Kart bu sprinte elle girince inecek kartlar, en alttaki önce: başlayacak kartların yükü tavanı (`cap_ceiling`) aştıkça
+## sprintin en altındaki, elle konmamış planlı kart; devreden ve kâğıdın takip kartı inmez. Elle konan kartlar tavanı kendi
+## başlarına aşarsa liste kısa kalır, kart yine girer ve işi devreder. Plan değişmez: `pull` ve sürüklemenin önizlemesi okur.
+static func pull_bumps(card_id: String) -> Array:
+	var p: Dictionary = _p()
 	var ceiling: float = capacity() * float(SprintCatalog.cfg("cap_ceiling"))
+	var card: Dictionary = SprintCatalog.card_by_id(card_id)
+	var load: float = load_of(starting()) + (remaining(card) if _starts(card) else 0.0)
+	var manual: Array = p.sprint.get("manual", []) + [card_id]
 	var below: Array = (p.sprint.cards as Array).duplicate()
 	below.reverse()
+	var out: Array = []
 	for id: String in below:
-		if ceiling <= 0.0 or load_of(starting()) <= ceiling + EPS:
+		if ceiling <= 0.0 or load <= ceiling + EPS:
 			break
 		var c: Dictionary = p.cards[id]
 		if id not in manual and c.state == "planned" and not c.get("follow", false) and _starts(c):
-			_place(c, false)
-			p.next.cards.erase(id)
-			p.next.cards.push_front(id)
-	_changed()
+			out.append(id)
+			load -= remaining(c)
+	return out
 
 
 ## Kart adaylara döner; ilerlemesi, ödenmiş lisansı ya da bekleyen kararı varsa saklanır ve yeniden

@@ -24279,6 +24279,7 @@ static func _case_sprint_plus_fills_in_order() -> String:
 	# "↑": sonrakinin ilk kartı elle girer; tavan aşılınca alttaki elle konmamış kartlar sırasıyla sonrakinin başına iner.
 	var pulled: String = p.next.cards[0]
 	var before: Array = p.sprint.cards.duplicate()
+	var predicted: Array = SprintSystem.pull_bumps(pulled)
 	SprintSystem.pull(pulled)
 	if not p.sprint.cards.has(pulled) or pulled not in p.sprint.get("manual", []):
 		return "↑ left %s out of the sprint or unmarked (manual %s)" % [pulled, p.sprint.get("manual", [])]
@@ -24290,6 +24291,9 @@ static func _case_sprint_plus_fills_in_order() -> String:
 		return "after ↑ the plan loads %.2f over the ceiling %.2f" % [load, ceiling]
 	if p.next.cards.slice(0, bumped.size()) != bumped:
 		return "↑ bumped %s, next starts %s" % [bumped, p.next.cards]
+	predicted.reverse()
+	if predicted != bumped:
+		return "pull_bumps foretold %s, ↑ bumped %s (the drag preview fades the foretold rows)" % [predicted, bumped]
 	# Geçiş: sonraki sütun sprint olur, sığmayanlar sırasıyla geri iner.
 	var queued: Array = p.next.cards.duplicate()
 	if not SprintSystem.start():

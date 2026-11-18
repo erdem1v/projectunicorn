@@ -4853,7 +4853,8 @@ func _run_ending_shot(key: String) -> void:
 # "{n} bekliyor" and Pazaryeri > Genel's number) and each topic as id:status:tickets:affected:share:late.
 # live:b2b_spill_one is the founder's ERP Sprint 1 plan built with "+", every open card but the last (what fits goes to this
 # sprint, the rest to Sonraki; a card that will not finish reads "n puan devreder"), then <stem>_plus: "+" sends the last open
-# card to Sonraki, where it glows (the shot fails if it fit this sprint).
+# card to Sonraki, where it glows (the shot fails if it fit this sprint). live:b2b_drag_one plans every open card, then
+# <stem>_drag: Sonraki's first card is dragged over the board; the cards dropping it would send to Sonraki fade.
 func _run_product_shot(id: String) -> void:
 	if not id.begins_with("live:"):
 		_shot_fail("[ProductShot] unknown kind '%s', want live:<scenario>" % id)
@@ -4915,8 +4916,18 @@ func _run_product_shot(id: String) -> void:
 		get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()._on_action("add", {"card_id": card_id})
 		if not GameState.product.next.cards.has(card_id):
 			_shot_fail("[ProductShot] b2b_spill_one: the last card fit this sprint, nothing glows in Sonraki")
+	var drag_first := func() -> void:
+		var card_id: String = GameState.product.next.cards[0]
+		var board: SprintBoard = _shell.find_children("*", "SprintBoard", true, false)[0]
+		board.force_drag({"card_id": card_id, "from": "next"},
+			SprintUiShared.drag_preview(SprintCatalog.card_name(SprintCatalog.card_by_id(card_id))))
+		var move := InputEventMouseMotion.new()
+		move.position = board.get_global_rect().get_center()
+		move.global_position = move.position
+		get_viewport().push_input(move, true)
 	var then: Dictionary = {"live:gate": [[press.call("PROD_SHIP_PUBLISH"), "_publish"]],
 		"live:b2b_spill_one": [[plus_last, "_plus"]],
+		"live:b2b_drag_one": [[drag_first, "_drag"]],
 		"live:req_mp": [[SprintUiShared.open_requests.bind(get_tree(), {"side": "stores"}), "_stores"]],
 		"live:a4_run_w2": [[two_hours_on, "_02"]],
 		"live:plan": [[press.call("PRODUCT_START_SPRINT"), "_start"]],
@@ -5096,9 +5107,10 @@ func _seed_product_live(scenario: String) -> void:
 	if scenario.begins_with("a4_"):
 		_seed_product_a4(scenario)
 		return
-	if scenario == "b2b_spill_one":
+	if scenario in ["b2b_spill_one", "b2b_drag_one"]:
 		SprintSystem.choose_type("erp", "Fatura")
-		for c: Dictionary in SprintCatalog.open_cards([]).slice(0, -1):
+		var open: Array = SprintCatalog.open_cards([])
+		for c: Dictionary in (open.slice(0, -1) if scenario == "b2b_spill_one" else open):
 			SprintSystem.plan_card(c.id)
 		return
 	var b2b: bool = scenario.begins_with("b2b") or (scenario.begins_with("server") and scenario != "server_b2c") \

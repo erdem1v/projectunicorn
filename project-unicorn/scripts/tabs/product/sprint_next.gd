@@ -138,6 +138,7 @@ func _no_pm() -> PanelContainer:
 func _box(next: Dictionary) -> PanelContainer:
 	var box := PanelContainer.new()
 	box.theme_type_variation = &"NextBox"
+	box.set_drag_forwarding(Callable(), _can_drop, _drop)
 	box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	HRUiShared.D_dashed(box, UiTokens.D_LINE_3)
 	var col := SprintUiShared.column(UiTokens.SPACE_M)
@@ -254,6 +255,7 @@ func _figure(text: String, variation: StringName, ink: Variant = null) -> Label:
 func _card(card: Dictionary) -> PanelContainer:
 	var row := PanelContainer.new()
 	row.theme_type_variation = &"NextCard"
+	row.set_drag_forwarding(_drag.bind(card), _can_drop, _drop)
 	if card.id == _flash:
 		var glow := ColorRect.new()
 		glow.color = UiTokens.D_ACCENT_GLOW
@@ -286,6 +288,23 @@ func _card(card: Dictionary) -> PanelContainer:
 		col.add_child(_prep(card))
 	row.add_child(_keys(row, card))
 	return row
+
+
+## Sürükleme: planlamada "↑"su olan kart panoya sürüklenir (bırakma `pull`).
+func _drag(_at: Vector2, card: Dictionary) -> Variant:
+	if "pull" not in card.buttons:
+		return null
+	set_drag_preview(SprintUiShared.drag_preview(String(card.name)))
+	return {"card_id": String(card.id), "from": "next"}
+
+
+## Sütun panonun kartını alır: bırakma "→" (`send_next`).
+func _can_drop(_at: Vector2, data: Variant) -> bool:
+	return data is Dictionary and data.get("from", "") == "sprint"
+
+
+func _drop(_at: Vector2, data: Variant) -> void:
+	action.emit("send_next", {"card_id": data.card_id})
 
 
 ## Aşama payının ipucu: "{aşama} · efor {n}", önden yapılan kısım (bittiyse "önden bitti", yoksa yüzdesi) ve önden çalışanların adları.

@@ -458,6 +458,14 @@ static func due_chip(text: String, soon := false, glyph := HOURGLASS) -> PanelCo
 	return chip
 
 
+## Sürüklenen kartın önizlemesi: kartın adı, yükseltilmiş zeminde.
+static func drag_preview(text: String) -> Control:
+	var box := PanelContainer.new()
+	box.theme_type_variation = &"SprintRowHover"
+	box.add_child(pad(label(text, &"CaptionStrong"), Vector4i(UiTokens.SPACE_M, UiTokens.SPACE_S, UiTokens.SPACE_M, UiTokens.SPACE_S)))
+	return box
+
+
 ## Adayın "+" tuşu; kapalıyken de görünür.
 static func add_key() -> Button:
 	var b := Button.new()

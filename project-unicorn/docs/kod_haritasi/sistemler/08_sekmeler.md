@@ -54,6 +54,8 @@ Alt klasörler:
   ↳ PM satırında ad, hazırlıktaysa altında "hazırlıkta" (hazırladığı kartların sayısı yazılmaz; panodaki satırın hazırlayan yüzü ve ipucu söyler); kart ve devreden yoksa yalnız başlık ve aşama yükü.
   ↳ İpuçları: PM satırı (ad, yıldız, hazırladığı kartlar), "PM yok", aşama yükü, devreden satırı ve "+{n} kart"ın kalanları, kartın adı, aşama payı ve yüzleri (`_part_tip`), hazırlayan PM.
 - `scripts/tabs/product/sprint_board.gd` (349): `SprintBoard`: panonun sabit başlığı ("{n} KART", erken kapanış bayrağı, hafta etiketleri),
+  sürükle-bırak (satır `BoardRow._get_drag_data` ile Sonraki'ye, Sonraki'nin kartı panoya: kaydırma alanı ve Sonraki'nin kutusu ve kartları `set_drag_forwarding`,
+  bırakma `pull` / `send_next`; Sonraki'nin kartı sürüklenirken `SprintSystem.pull_bumps`'ın kartları `D_AWAY_ALPHA` ile soluk),
   zaman ekseninin genişliği (`model.axis`: gövde eksi bilgi sütunu ve kaydırma çubuğu, en az `D_W_TIMELINE`; ölçüm kurulandan ayrılınca
   `axis_wanted`, sekme sayfayı o genişlikle yeniden kurar), kayan gövdesi (ızgara, kart satırları, "EKLENEBİLİR",
   hayalet satır, şimdiki an çizgisi), "aşağıda {n} kart daha" hapı (katlamanın altında yetişmeyen kart varsa tehlike renginde ve ipucu "{n} kart yetişmez", yalnız o zaman imleci tutar ve tekerleği panoya iletir; sona kaydırınca gizlenir);

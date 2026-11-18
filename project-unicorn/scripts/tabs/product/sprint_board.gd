@@ -58,6 +58,7 @@ func setup(model: Dictionary, nobody: Control) -> void:
 	scroll = ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	scroll.set_drag_forwarding(Callable(), _can_drop, _drop)   # satırlar (PASS) bırakmayı buraya geçirir
 	holder.add_child(scroll)
 	if nobody != null:
 		nobody.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -197,6 +198,27 @@ func _row(card: Dictionary, ctx: Dictionary) -> BoardRow:
 	row.setup(card, ctx)
 	row.action.connect(action.emit)
 	return row
+
+
+## Pano Sonraki'nin kartını alır: bırakma "↑" (`pull`).
+func _can_drop(_at: Vector2, data: Variant) -> bool:
+	return data is Dictionary and data.get("from", "") == "next"
+
+
+func _drop(_at: Vector2, data: Variant) -> void:
+	action.emit("pull", {"card_id": data.card_id})
+
+
+## Sonraki'nin kartı sürüklenirken bırakılınca inecek kartlar (`SprintSystem.pull_bumps`) soluk durur; sürükleme bitince geri gelir.
+## Aday satırların kendi solukluğu vardır, dokunulmaz.
+func _notification(what: int) -> void:
+	if what != NOTIFICATION_DRAG_BEGIN and what != NOTIFICATION_DRAG_END:
+		return
+	var data: Variant = get_viewport().gui_get_drag_data()
+	var bumped: Array = SprintSystem.pull_bumps(data.card_id) if what == NOTIFICATION_DRAG_BEGIN and _can_drop(Vector2.ZERO, data) else []
+	for row: BoardRow in _rows:
+		if not row.is_candidate():
+			row.modulate.a = UiTokens.D_AWAY_ALPHA if row.card.id in bumped else 1.0
 
 
 ## Kartsız planın tek hayalet satırı: "+ Kart ekle" ve altında "← MODÜLLER".

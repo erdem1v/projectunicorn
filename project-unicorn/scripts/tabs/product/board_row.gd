@@ -92,6 +92,14 @@ func _gated_tip() -> String:
 	return "" if card.gate == "" else "\n".join([card.gate, tr("PRODUCT_GATE_MOVES")])
 
 
+## Sürükleme: planlamada "→"su olan kart Sonraki'ye sürüklenir (bırakma `send_next`).
+func _get_drag_data(_at: Vector2) -> Variant:
+	if not _has_keys() or "send_next" not in card.buttons:
+		return null
+	set_drag_preview(SprintUiShared.drag_preview(String(card.name)))
+	return {"card_id": String(card.id), "from": "sprint"}
+
+
 ## Satırın üstüne gelme: zemin açılır, solda çizgi; planlamada "→" ve "×" görünür; aday satırı tam görünür.
 func _hover(on: bool) -> void:
 	var ground: String = "SprintRowCand" if _ctx.candidate else "SprintRow"
