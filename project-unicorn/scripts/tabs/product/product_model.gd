@@ -99,7 +99,7 @@ extends RefCounted
 # Kart satırı (pano) = {id, kind, name, effort, raw_effort, module_name (modülün adı, ipucunda; kullanıcıyla görüşte ""), fix_text
 #   (düzeltme kartında hata sayısı, etkilenenler ve en büyük hesap), slot: {kind: "due" (+ text, soon, customer, value, promise: söz mü talep mi; yalnız kartın ipucu okur, yuvada çip yok) | "carried" |
 #   "late"} ya da {}, carried (devreden kart), pm, ask, risk, risk_raw (0..1: beklenen hatanın tavana oranı, hazırlanmamış hâli), late, finishes (sprint sonuna
-#   yetişir), founder, gate (başlamayacak kartın kapı gerekçesi, yoksa ""), buttons, stages (SprintTimeline aşamaları)}. Planlamada
+#   yetişir), spill (bitmeyecek kartın sonraki sprinte devreden işi, görünen efor biriminde, yukarı yuvarlı; yoksa 0), founder, gate (başlamayacak kartın kapı gerekçesi, yoksa ""), buttons, stages (SprintTimeline aşamaları)}. Planlamada
 #   düğmeler "→" ve "×", koşarken yok; kapısı sonradan kapanıp başlamayacak kart zaman ekseninde yoktur: `stages` boş, `gate` dolu,
 #   yalnız "×". `effort` kartın sprintteki yüküdür (`SprintSystem.card_load` ÷ hazırlık kazancı),
 #   `raw_effort` bölünmemiş hâli: sprintin başındaki kalan ihtiyaç; koşarken yalnız testin bulduğu düzeltme işi onu büyütür.
@@ -914,7 +914,9 @@ static func _row(c: Dictionary, t: Dictionary, buttons: Array) -> Dictionary:
 		"fix_text": SprintUiShared.bugs_text(bugs) if fix else "",
 		"slot": slot, "pm": null if preparer == null else _face(preparer, HRConstants.AREA_PRODUCT), "ask": _ask(c),
 		"risk": minf(1.0, t.get("h", 0.0) / ref) if ref > 0.0 else 0.0, "risk_raw": minf(1.0, t.get("h0", 0.0) / ref) if ref > 0.0 else 0.0,
-		"carried": c.state == "carried", "late": late, "finishes": t.get("finishes", false), "founder": t.get("founder", false),
+		"carried": c.state == "carried", "late": late, "finishes": t.get("finishes", false),
+		"spill": ceili((t.get("stages", []) as Array).reduce(func(sum: float, s: Dictionary) -> float: return sum + s.out, 0.0)
+			- SprintSystem.EPS), "founder": t.get("founder", false),
 		"gate": SprintCatalog.gate_reason(c.step) if t.is_empty() else "",
 		"buttons": buttons.filter(func(b: String) -> bool: return b != "remove" or not c.get("follow", false)),
 		"stages": t.get("stages", [])}

@@ -2924,6 +2924,9 @@ PRODUCT_MORE_BELOW,aşağıda {n} kart daha,{n} more cards below
 PRODUCT_MORE_BELOW_ONE,aşağıda {n} kart daha,{n} more card below
 PRODUCT_CAP_STREAK_TIP,{n} sprinttir üst üste sığmıyor,Has not fit for {n} sprints in a row
 PRODUCT_LATE,yetişmez,late
+PRODUCT_SPILL,{n} puan devreder,{n} points carry over
+PRODUCT_SPILL_ONE,{n} puan devreder,{n} point carries over
+PRODUCT_SPILL_TIP,Bu sprintte bitmez: işi ilerlemesiyle sonraki sprintin başına geçer.,"Will not finish this sprint: its work moves to the top of the next sprint, progress kept."
 PRODUCT_TO_NEXT,Sonraki sprinte,To the next sprint
 PRODUCT_TO_THIS,Bu sprinte,To this sprint
 PRODUCT_MORE_BELOW_LATE,{n} kart yetişmez,{n} cards will not finish

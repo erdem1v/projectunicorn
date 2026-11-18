@@ -68,7 +68,14 @@ class FaceCell extends Control:
 				(UiTokens.D_AVATAR_ROW_SM - _more.size.y) / 2.0)
 
 
+## "+"nın sonraki sprinte koyduğu kart (`ui.flash`, tek kurulumda) bu kadar saniyede söner.
+const FLASH_S := 1.2
+
+var _flash := ""
+
+
 func setup(model: Dictionary) -> void:
+	_flash = String(model.ui.get("flash", ""))
 	horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	custom_minimum_size.x = UiTokens.D_W_NEXT
 	size_flags_horizontal = Control.SIZE_SHRINK_END
@@ -243,10 +250,16 @@ func _figure(text: String, variation: StringName, ink: Variant = null) -> Label:
 # --- Kart -----------------------------------------------------------------------------------
 
 ## Sonraki sütunun kartı: tür ikonu, ad, efor; altında aşama şeridi, önden çalışanların yüzleri ve hazırlayan PM. Planlamada üstüne
-## gelince "↑" ve "×" (sürüm notunda ve sprint sürerken yalnız "×").
+## gelince "↑" ve "×" (sürüm notunda ve sprint sürerken yalnız "×"). "+"nın buraya koyduğu kartın zemini bir an parlar.
 func _card(card: Dictionary) -> PanelContainer:
 	var row := PanelContainer.new()
 	row.theme_type_variation = &"NextCard"
+	if card.id == _flash:
+		var glow := ColorRect.new()
+		glow.color = UiTokens.D_ACCENT_GLOW
+		glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(glow)
+		glow.create_tween().tween_property(glow, "modulate:a", 0.0, FLASH_S)
 	var col := SprintUiShared.column(UiTokens.SPACE_S)
 	row.add_child(col)
 	var tip: PackedStringArray = [card.name, SprintUiShared.effort_tip(card.effort)]

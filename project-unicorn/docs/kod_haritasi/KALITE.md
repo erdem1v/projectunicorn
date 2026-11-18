@@ -1,19 +1,19 @@
 # Kod haritası · KALITE
 
-Üretildi: git af54fad1 · 2026-11-18 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git c1542cf0 · 2026-11-18 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 269 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
 
 - scripts/debug/endgame_smoke.gd · 32761 satır · 744 func
-- scripts/main/main.gd · 6889 satır · 241 func
+- scripts/main/main.gd · 6903 satır · 241 func
 - scripts/debug/run_probe.gd · 2458 satır · 94 func
 - scripts/systems/sprint_system.gd · 2209 satır · 177 func
 - scripts/theme/build_theme.gd · 1663 satır · 31 func
 - scripts/events/tools/lint.gd · 1378 satır · 48 func
 - scripts/systems/marketplace_model.gd · 1369 satır · 110 func
 - scripts/debug/marketplace_probe.gd · 1341 satır · 67 func
-- scripts/tabs/product/product_model.gd · 1335 satır · 69 func
+- scripts/tabs/product/product_model.gd · 1337 satır · 69 func
 - scripts/systems/vc_pitch_system.gd · 1317 satır · 91 func
 - scripts/autoload/save_manager.gd · 1295 satır · 60 func
 - scripts/systems/hr_constants.gd · 1189 satır · 90 func
@@ -58,8 +58,8 @@ Uzunluk = imza satırından gövdenin son kod satırına (boş/yorum satırları
 - scripts/debug/endgame_smoke.gd:17098 · _case_sales_offer_signing · 144 satır
 - scripts/debug/endgame_smoke.gd:12726 · _case_job_assignment_and_idle · 140 satır
 - scripts/debug/endgame_smoke.gd:18676 · _case_rnd_tree_loads_and_validates · 140 satır
+- scripts/main/main.gd:5074 · _seed_product_live · 139 satır
 - scripts/debug/endgame_smoke.gd:15421 · _case_clock_resumes_only_by_player · 135 satır
-- scripts/main/main.gd:5065 · _seed_product_live · 134 satır
 - scripts/ui/office/office_map_card.gd:17 · _init · 134 satır
 - scripts/debug/endgame_smoke.gd:13189 · _case_effective_skill_formula · 132 satır
 - scripts/debug/endgame_smoke.gd:19297 · _case_rnd_note_author_and_lines · 129 satır
@@ -128,9 +128,9 @@ UYARI: call("a"+b) gibi kurulmuş adlar, sinyal adıyla bağlama, harness bayrak
 - scripts/debug/office_crowd_probe.gd:48 · _log_error · debug
 - scripts/events/present/papers.gd:145 · arc_of
 - scripts/main/game_shell.gd:163 · debug_force_vc_meeting · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/main/main.gd:6830 · _dbg_close_request · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/main/main.gd:6835 · _dbg_onb_random_x20 · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
-- scripts/main/main.gd:6848 · _dbg_finish_run · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
+- scripts/main/main.gd:6844 · _dbg_close_request · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
+- scripts/main/main.gd:6849 · _dbg_onb_random_x20 · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
+- scripts/main/main.gd:6862 · _dbg_finish_run · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)
 - scripts/systems/line_gates.gd:126 · speed_bonus_for
 - scripts/systems/rnd_system.gd:707 · family_root_done
 - scripts/systems/sales_ledger.gd:34 · lead_star
@@ -166,7 +166,7 @@ emit'i ya da connect'i bulunamayan sinyal (ada göre). Dizi içi bağ, await ve 
 - scripts/autoload/event_bus.gd:224 · whale_condition_met · connect yok
 - scripts/modals/confirm_modal.gd:12 · alt_selected · emit yok
 
-## Birden çok dosyada tanımlı const (104 ad)
+## Birden çok dosyada tanımlı const (105 ad)
 
 Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: elle bakılmalı.
 - INBOX · 16 dosya · scripts/main/game_shell.gd:7, scripts/main/main.gd:22, scripts/modals/save_load_modal.gd:19, scripts/modals/system_menu_modal.gd:22, scripts/tabs/events/mail_pane.gd:19, scripts/tabs/events_tab.gd:8 +10
@@ -222,6 +222,7 @@ Enum üyeleri hariç. Aynı değer mi, kopya mı, yalnız ad çakışması mı: 
 - FERRY_SPEED · 2 dosya · scripts/ui/office/office_city.gd:41, scripts/ui/office/office_lighting.gd:61
 - FERRY_TURN · 2 dosya · scripts/ui/office/office_city.gd:42, scripts/ui/office/office_lighting.gd:60
 - FLAG · 2 dosya · scripts/systems/graphics_settings.gd:23, scripts/tabs/product/sprint_ui_shared.gd:21
+- FLASH_S · 2 dosya · scripts/tabs/product/sprint_next.gd:72, scripts/ui/meeting/meeting_panel.gd:37
 - FOCUS_ZOOM · 2 dosya · scripts/ui/office/meeting_invite.gd:27, scripts/ui/office/office_city.gd:25
 - FRAME · 2 dosya · scripts/ui/components/window_layer.gd:29, scripts/ui/office/person_bust.gd:14
 - GATE_STRIP · 2 dosya · scripts/modals/save_load_modal.gd:18, scripts/ui/components/window_frame.gd:12

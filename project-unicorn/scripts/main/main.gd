@@ -4851,6 +4851,9 @@ func _run_ending_shot(key: String) -> void:
 # Talepler on the week-42 marketplace (mp_growth) with one waiting topic planned, opened as the player's opener does, and
 # <stem>_stores on the stores' side; its REQSHOT line carries the waiting count (ProductModel.waiting_topics, the header's
 # "{n} bekliyor" and Pazaryeri > Genel's number) and each topic as id:status:tickets:affected:share:late.
+# live:b2b_spill_one is the founder's ERP Sprint 1 plan built with "+", every open card but the last (what fits goes to this
+# sprint, the rest to Sonraki; a card that will not finish reads "n puan devreder"), then <stem>_plus: "+" sends the last open
+# card to Sonraki, where it glows (the shot fails if it fit this sprint).
 func _run_product_shot(id: String) -> void:
 	if not id.begins_with("live:"):
 		_shot_fail("[ProductShot] unknown kind '%s', want live:<scenario>" % id)
@@ -4907,7 +4910,13 @@ func _run_product_shot(id: String) -> void:
 	var two_hours_on := func() -> void:
 		TimeManager.advance_hours(2)
 		print(_productshot_line("a4_run_w2"))
+	var plus_last := func() -> void:
+		var card_id: String = SprintCatalog.open_cards([]).back().id
+		get_tree().get_first_node_in_group(&"window_layer").get_current_page_body()._on_action("add", {"card_id": card_id})
+		if not GameState.product.next.cards.has(card_id):
+			_shot_fail("[ProductShot] b2b_spill_one: the last card fit this sprint, nothing glows in Sonraki")
 	var then: Dictionary = {"live:gate": [[press.call("PROD_SHIP_PUBLISH"), "_publish"]],
+		"live:b2b_spill_one": [[plus_last, "_plus"]],
 		"live:req_mp": [[SprintUiShared.open_requests.bind(get_tree(), {"side": "stores"}), "_stores"]],
 		"live:a4_run_w2": [[two_hours_on, "_02"]],
 		"live:plan": [[press.call("PRODUCT_START_SPRINT"), "_start"]],
@@ -5086,6 +5095,11 @@ func _seed_product_live(scenario: String) -> void:
 		return
 	if scenario.begins_with("a4_"):
 		_seed_product_a4(scenario)
+		return
+	if scenario == "b2b_spill_one":
+		SprintSystem.choose_type("erp", "Fatura")
+		for c: Dictionary in SprintCatalog.open_cards([]).slice(0, -1):
+			SprintSystem.plan_card(c.id)
 		return
 	var b2b: bool = scenario.begins_with("b2b") or (scenario.begins_with("server") and scenario != "server_b2c") \
 		or scenario == "overview_pre"

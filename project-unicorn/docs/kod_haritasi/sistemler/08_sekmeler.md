@@ -48,7 +48,7 @@ Alt klasörler:
   ↳ `SprintSystem.begin_planned`) ya da sprint sürerken ilerleme (`set_progress`). Devirde iki kipte de solda PM'in yüzü, "{PM} planlıyor" ve "Planlamayı geri al";
   ↳ sağda planlamada "Kendiliğinden başlar" (kartlı planda ekip yokken onun yerine çıkış yolu), sprint sürerken ilerleme
   ↳ (çubuğu `D_W_PROGRESS_BAR_TIGHT`e kadar kısalır, ad kesilmez); kutunun ipucu "Efor {biten}/{toplam}" `set_progress`ta sayfa kurulmadan yenilenir.
-- `scripts/tabs/product/sprint_next.gd` (344): `SprintNext`: sağ sütun: HAZIRLIK (PM satırları ya da eksik rolün biçiminde boş koltuk ve "PM YOK" etiketi), sonraki sprint kutusu (kesikli): aşama yükü (`StagePaint` `load`), DEVREDEN (en çok 4 satır ve "+{n} kart"), KARTLAR
+- `scripts/tabs/product/sprint_next.gd` (344): `SprintNext`: sağ sütun: HAZIRLIK (PM satırları ya da eksik rolün biçiminde boş koltuk ve "PM YOK" etiketi), sonraki sprint kutusu (kesikli): aşama yükü (`StagePaint` `load`), DEVREDEN (en çok 4 satır ve "+{n} kart"), KARTLAR ("+"nın buraya koyduğu kart `ui.flash` ile parlar, `FLASH_S` saniyede söner; bayrağı `ProductTab._rebuild` bir kez okutup siler)
   ↳ (tür ikonu, ad, efor, aşama şeridi `seg`, önden çalışanların yüzleri, hazırlayan PM: hazırsa yalnız tik, ipucu "Hazır"; üstüne gelince "↑" ve "×"); her aşama kendi payıdır, önden biten pay kendi renginde dolar;
   ↳ yüzler `FaceCell`te (sığmayanlar "+{n}", hücre en az bir yüz ve "+{n}" kadar geniştir); kart adı kesilmez, sarar ve satır büyür;
   ↳ PM satırında ad, hazırlıktaysa altında "hazırlıkta" (hazırladığı kartların sayısı yazılmaz; panodaki satırın hazırlayan yüzü ve ipucu söyler); kart ve devreden yoksa yalnız başlık ve aşama yükü.
@@ -59,7 +59,7 @@ Alt klasörler:
   hayalet satır, şimdiki an çizgisi), "aşağıda {n} kart daha" hapı (katlamanın altında yetişmeyen kart varsa tehlike renginde ve ipucu "{n} kart yetişmez", yalnız o zaman imleci tutar ve tekerleği panoya iletir; sona kaydırınca gizlenir);
   ↳ erken kapanışın bayrağı, yazısı ve taralı alanı "Bütün kartlar {w}. haftada biter" ipucunu taşır (alan yalnız satırların altında kalan boşlukta imleci alır).
 - `scripts/tabs/product/board_row.gd` (551): `BoardRow`: panonun bir kart satırı: bilgi sütunu (tür ikonu ve ad, "→" ve "×"e yer ayrılmış; efor, hata riski, modül kart ipucunda; durum yuvası (koşan sprintte tek şey:
-  "yetişmez", devreden kartın oku (yazısı ipucunda); son tarih yalnız sözlü talebin sol sütundaki satırında), PM ya da "?" yuvası, "→" ve "×"; aday satırında "+", imlecin hayalet satırında boş yer),
+  "yetişmez", devreden kartın oku (yazısı ipucunda), bitmeyecek kartta soluk "n puan devreder" (`spill`); son tarih yalnız sözlü talebin sol sütundaki satırında), PM ya da "?" yuvası, "→" ve "×"; aday satırında "+", imlecin hayalet satırında boş yer),
   zaman ekseni (çubuk, bekleme, gölge, tarama, tik kutusu (art arda önden biten aşamalar tek kutu, son bitenin renginde), sprint dışı pay, yüzler); `set_now`;
   kart adı (taban iki satır, 22 karakterden uzun adda) ve düzeltme kartının hata metni (en büyük hesapla) kesilmeden sarar, tabandan fazla satır satırı büyütür (`_wraps`, `_fit`), zaman ekseni satırda dikey ortalı.
   ↳ İpuçları: zengin kart ipucu yalnız adda (`CardName`, `CardTip`); çubuğun düz ipucu açılırken okunur (`_bar_tip`, `StagePaint.tip`); bekleme, gölge, tarama, tik kutusu, yuvalar düz ipucu taşır;

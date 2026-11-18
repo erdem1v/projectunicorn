@@ -207,8 +207,9 @@ func _second_line() -> HBoxContainer:
 	return line
 
 
-## Durum yuvası. Planlamada en az `D_W_CARD_SLOT` geniş (sütunlar hizalı kalsın): devreden kartın geri oku (adı ipucunda) ya da
-## kırmızı "yetişmez"; yoksa boş. Koşan sprintte tek şey, sırayla: kırmızı "yetişmez", devreden oku; hiçbiri yoksa gizlenir. Söz ve
+## Durum yuvası. Planlamada en az `D_W_CARD_SLOT` geniş (sütunlar hizalı kalsın): devreden kartın geri oku (adı ipucunda),
+## kırmızı "yetişmez" (kurucunun kaybettiği saat kartı sprinte yetiştirmiyor) ya da soluk "n puan devreder" (kart bu sprintte
+## bitmez); yoksa boş. Koşan sprintte tek şey, sırayla: kırmızı "yetişmez", devreden oku, devreden puan; hiçbiri yoksa gizlenir. Söz ve
 ## talep tarihi burada yazmaz: tek yeri sol sütundaki talep satırıdır (kartın ipucunda müşteri ve söz yine durur). "Yetişmez"
 ## kesilmez: sığmazsa yuva genişler.
 func _status() -> Control:
@@ -218,6 +219,8 @@ func _status() -> Control:
 		shown = "carried" if card.carried else ("late" if card.late else "")
 	if active and card.late:
 		shown = "late"
+	if shown == "" and card.spill > 0:
+		shown = "spill"
 	var cell := SprintUiShared.box(UiTokens.SPACE_S)
 	cell.custom_minimum_size.x = UiTokens.D_W_CARD_SLOT
 	cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -233,6 +236,11 @@ func _status() -> Control:
 			cell.add_child(SprintUiShared.label(tr("PRODUCT_LATE"), &"CaptionName", UiTokens.D_neg_ink()))
 			cell.mouse_filter = Control.MOUSE_FILTER_PASS
 			cell.tooltip_text = _late_tip()
+		"spill":
+			cell.add_child(SprintUiShared.label(tr(Fmt.count_key("PRODUCT_SPILL", card.spill)).format({"n": card.spill}),
+				&"CaptionName", UiTokens.D_INK_3))
+			cell.mouse_filter = Control.MOUSE_FILTER_PASS
+			cell.tooltip_text = tr("PRODUCT_SPILL_TIP")
 	return cell
 
 
