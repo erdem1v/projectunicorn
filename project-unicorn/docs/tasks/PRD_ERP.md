@@ -175,7 +175,8 @@ Gizli Kendi Kendine Destek hattı Ar-Ge'den açılırsa 13. modül olur. İkonla
 
 ### 2.5 Kademesiz istek kartı (PLAN_ERP_BUYUME §2.3; ER4)
 
-- Hesap, modülün K3'ü çıktıktan sonra o modülden küçük bir özellik ister: 16 kart × 11 puan. Liste PLAN_ERP_BUYUME §3'te; adları
+- Hesap, modülün K3'ü çıktıktan sonra o modülden küçük bir özellik ister: 16 kart × 11 puan (K1 eforu). Kart `ext:<konu>`, konular
+  erp.json'un `extras`'ında; kart yalnız isteyen ya da söz varken görünür, kalite ve uyum yazmaz (yardımcı yönetmen 2026-11-18). Liste PLAN_ERP_BUYUME §3'te; adları
   MODUL_SEMASI'na göre ("Hesap Eşleme").
 - İstek, söz ve büyüme kurallarının tek yeri PRD_TALEPLER'dir. Bu PRD yalnız kademesiz kartın kendisini tanımlar.
   - Kıtlık söz payındadır (PRD_TALEPLER §1, §4).

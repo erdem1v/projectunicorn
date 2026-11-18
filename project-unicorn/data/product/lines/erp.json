@@ -2,6 +2,12 @@
   "subtype": "erp",
   "buyer_sectors": ["construction", "manufacturing", "textile", "wholesale", "logistics", "retail", "ecommerce",
     "auto_parts", "food"],
+  "extras": {
+    "line_erp_cashflow": ["statement_upload", "currency_rates", "due_reminders"],
+    "line_erp_intake": ["supplier_fields", "order_templates", "partial_delivery"],
+    "line_erp_ledger": ["period_lock", "journal_export", "cost_centres"],
+    "line_erp_stock": ["barcode_labels", "low_stock_alert", "count_variance"],
+    "line_erp_invoicing": ["recurring_invoices", "invoice_template", "credit_notes", "bulk_sending"]},
   "_doc": "GDD URUN rev 6 §12.11 — ERP (B2B). Kanca: v1 yayın şartıdır (sprint.json mvp_named); sürümlerle tam ERP'ye büyür. K3 yönü: AI nakit akışı öngörüsü (analytics_engine). Ürün kendi adıyla anılır; küçük işletme kısaltması ne adda ne chip'te geçer.",
   "_anchor": "line_erp_cashflow_k3 is §12.10's anchor K3: research node (analytics_engine) + engineering ★2 + product ★2.",
   "_telegraph": "§12.10 ekip telegrafı: ERP 'buna ekip lazım' diyen alt-tiptir. Paylaşılan Kullanıcılar ve Yetki K3'ü YALNIZ ERP'de yükselir (toplam Yazılım ★5). Denetim izi ve şifreleme, tek başına kurucunun uzanamayacağı kademedir; iskelet ve kademe adı ortak kalır, değişen yalnız kapıdır.",

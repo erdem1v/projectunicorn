@@ -1871,6 +1871,22 @@ PROD_STEP_ERP_STOCK_K3,El Terminali,Handheld Scanner
 PROD_STEP_ERP_INVOICING_K1,Fatura Kesme,Issuing Invoices
 PROD_STEP_ERP_INVOICING_K2,Toplu Fatura,Batch Invoicing
 PROD_STEP_ERP_INVOICING_K3,Tahsilat Döngüsü,Collection Cycle
+PROD_EXT_STATEMENT_UPLOAD,Ekstre Yükleme,Statement Upload
+PROD_EXT_CURRENCY_RATES,Döviz Kurları,Currency Rates
+PROD_EXT_DUE_REMINDERS,Vade Hatırlatma,Due Date Reminders
+PROD_EXT_SUPPLIER_FIELDS,Tedarikçi Alanları,Supplier Fields
+PROD_EXT_ORDER_TEMPLATES,Sipariş Şablonu,Order Templates
+PROD_EXT_PARTIAL_DELIVERY,Kısmi Teslim,Partial Delivery
+PROD_EXT_PERIOD_LOCK,Dönem Kilidi,Period Lock
+PROD_EXT_JOURNAL_EXPORT,Yevmiye Dışa Aktarma,Journal Export
+PROD_EXT_COST_CENTRES,Masraf Merkezleri,Cost Centres
+PROD_EXT_BARCODE_LABELS,Barkod Etiketi,Barcode Labels
+PROD_EXT_LOW_STOCK_ALERT,Asgari Stok Uyarısı,Low Stock Alert
+PROD_EXT_COUNT_VARIANCE,Sayım Farkı,Count Variance
+PROD_EXT_RECURRING_INVOICES,Tekrarlayan Fatura,Recurring Invoices
+PROD_EXT_INVOICE_TEMPLATE,Fatura Şablonu,Invoice Template
+PROD_EXT_CREDIT_NOTES,İade Faturası,Credit Notes
+PROD_EXT_BULK_SENDING,Toplu Gönderim,Bulk Sending
 PROD_STEP_ERP_CASHFLOW_K1_DESC,Giren ve çıkan para tarih sırasına dizilir; bakiye günün sonunda bellidir.,"Money in and money out, filed by date; the balance is known when the day closes."
 PROD_STEP_ERP_CASHFLOW_K2_DESC,Alacaklar ve borçlar vadeleriyle tabloya girer; önümüzdeki haftalar bir sütun olur.,Receivables and debts enter the table with their due dates; the coming weeks become a column.
 PROD_STEP_ERP_CASHFLOW_K3_DESC,Geçmiş tahsilat ritmi okunur ve kasanın hangi hafta daralacağı önceden söylenir.,"The rhythm of past collections is read, and the week the treasury tightens is named in advance."

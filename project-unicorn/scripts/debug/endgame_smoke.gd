@@ -561,6 +561,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sprint_founder_switch_off":             fail = _case_sprint_founder_switch_off()
 		"productivity_mod_paces_the_sprint":     fail = _case_productivity_mod_paces_the_sprint()  # EXPECT-ERROR 'productivity_mod' found no target
 		"sprint_ceiling_125_blocks_add":         fail = _case_sprint_ceiling_125_blocks_add()
+		"sprint_ext_card_ships":                 fail = _case_sprint_ext_card_ships()
 		"sprint_plus_fills_in_order":            fail = _case_sprint_plus_fills_in_order()
 		"sprint_intake_uses_applied_plan":       fail = _case_sprint_intake_uses_applied_plan()
 		"sprint_overflow_phase_recorded":        fail = _case_sprint_overflow_phase_recorded()
@@ -24313,6 +24314,62 @@ static func _case_sprint_plus_fills_in_order() -> String:
 	for id: String in back:
 		if SprintSystem.can_add(id):
 			return "%s went back to next though sprint 2 takes it" % id
+	return ""
+
+
+## Kademesiz istek kartı (PRD_ERP §2.5): K3'ü çıkmış hattın konusu kimse istemezken kart değildir; bir hesap isteyince kart olur
+## (`ext:<konu>`, K1 eforu), Sonraki'de duran ikinci konu sprint geçişinden sağ çıkar, sürüm konuyu yayına yazar (`is_feature_live`)
+## ve isteği karşılar; alanın seviyesi değişmez (kademesiz kart kalite yazmaz).
+## FALSİFİKASYON: candidates'ta kademesiz dalın isteyen koşulunu sil → "nobody asking" FAIL; plan_next'teki kademesiz koşulu sil
+## → geçiş FAIL; _close'taki ship_feature dalını sil → yayın FAIL.
+static func _case_sprint_ext_card_ships() -> String:
+	_seed_sprint_live("erp")
+	WorkHoursSystem.set_company_hours(12)
+	var line := "line_erp_invoicing"
+	var topics: Array = ProductLines.extras(line)
+	var area: String = SprintCatalog.area_of_line(line)
+	ProductState.set_line_tier(line, ProductLines.TIER_MAX)
+	var offered := func(id: String) -> bool:
+		return SprintCatalog.candidates(area).any(func(c: Dictionary) -> bool: return c.id == id)
+	if topics.size() < 2 or offered.call("ext:" + topics[0]):
+		return "the K3 line offers a tierless card with nobody asking (topics %s)" % [topics]
+	var lead := Prospect.new()
+	lead.id = "lead_ext"
+	lead.company_name = "Ext Corp"
+	lead.industry = "logistics"
+	lead.star = 1
+	var account: Customer = _sign_fixture(lead, 500, 70)
+	for topic: String in topics.slice(0, 2):
+		GameState.product.requests.append({"id": "req_" + topic, "customer_id": account.id, "line": line, "step": topic,
+			"created_sprint": SprintSystem.plannable_sprint(), "value": account.mrr * 12, "status": "open", "card_id": "ext:" + topic,
+			"day": GameState.day})
+	var id: String = "ext:" + topics[0]
+	var later: String = "ext:" + topics[1]
+	if not offered.call(id) or not offered.call(later):
+		return "the asked topics %s are not among %s's candidates" % [topics.slice(0, 2), area]
+	var card: Dictionary = SprintCatalog.card_by_id(id)
+	if card.kind != "feature" or int(card.target_tier) != 0 \
+			or not is_equal_approx(SprintSystem.total(card), float(SprintCatalog.cfg("effort.k1"))):
+		return "%s reads kind %s, tier %d, effort %.1f; want a tierless feature at the K1 effort" % [
+			id, card.kind, int(card.target_tier), SprintSystem.total(card)]
+	var level: float = ProductQuality.level(area)
+	SprintSystem.plan_card(id)
+	SprintSystem.send_next(later)
+	if not SprintSystem.start():
+		return "fixture: the sprint did not start"
+	while SprintSystem.mode() == "active":
+		_sim_day()
+	if not ProductState.is_feature_live(topics[0]):
+		return "the release did not put %s live" % topics[0]
+	var met: Array = GameState.product.requests.filter(func(r: Dictionary) -> bool: return r.step == topics[0])
+	if met.is_empty() or met[0].status != "met":
+		return "the shipped topic's request reads %s, want met" % [met]
+	if not is_equal_approx(ProductQuality.level(area), level):
+		return "a tierless card moved %s's level %.3f to %.3f" % [area, level, ProductQuality.level(area)]
+	SprintSystem.plan_next()
+	if not GameState.product.sprint.cards.has(later) or offered.call(id):
+		return "after the turn sprint 2 holds %s (want %s in it) and %s offered %s" % [
+			GameState.product.sprint.cards, later, id, offered.call(id)]
 	return ""
 
 

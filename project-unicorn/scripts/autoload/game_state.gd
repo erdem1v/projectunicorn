@@ -58,7 +58,7 @@ const FLAG_TYPES := {
 	"critical_bug_unfixed": TYPE_BOOL,
 	"tech_debt_birikti": TYPE_BOOL,
 	# --- Ürün rev 6.1 · HAT MODELİ ve DESTEK (§12, §8, §9, §10) ---
-	# mvp_components (düz özellik listesi) Satış ve söz kaydı okuduğu için duruyor.
+	# mvp_components (düz özellik listesi): yayındaki kademesiz istek konuları (`ProductState.ship_feature`); Satış ve söz kaydı okur.
 	"mvp_line_tiers": TYPE_DICTIONARY,          # {hat kimliği: 0|1|2|3} — §12.1
 	"mvp_hidden_lines": TYPE_ARRAY,             # Ar-Ge'nin açtığı gizli hatlar — §12.1
 	# --- DESTEK: GELEN BİLDİRİM sayacı, mühürlü ad (§8.1), ve ürünün açık hata deposu ---

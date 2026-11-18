@@ -257,14 +257,15 @@ static func _begin() -> void:
 
 ## Sürüm notundan sonraki sprintin planlamasına: sonraki sütun (devredenler önde) bu sprint olur, sığmayanları sonraki
 ## sütuna geri iner (`_fit_plan`), yeni sonraki sütuna onaylı PM planı geçer. Çeyreğin haftaları sprintlerle dolunca çeyrek döner, hedef
-## boşalır (PM'in planı en zayıf alana bakar). Kademesine başka bir kartla varılmış saklı kart düşer; kâğıdın takip kartı
+## boşalır (PM'in planı en zayıf alana bakar). Kademesine (kademesiz kartta konusu yayına) başka bir kartla varılmış saklı kart düşer; kâğıdın takip kartı
 ## (`follow`) kalır.
 static func plan_next() -> void:
 	if mode() != "release":
 		return
 	var p: Dictionary = _p()
 	for c in p.cards.values():
-		if c.kind == "feature" and not c.get("follow", false) and int(c.target_tier) <= SprintCatalog.tier(c.line):
+		if c.kind == "feature" and not c.get("follow", false) and (ProductState.is_feature_live(c.step) if int(c.target_tier) == 0
+				else int(c.target_tier) <= SprintCatalog.tier(c.line)):
 			p.cards.erase(c.id)
 			p.next.cards.erase(c.id)
 	var number: int = int(p.next.number)
@@ -1856,6 +1857,8 @@ static func _close() -> void:
 			_:
 				if c.line == SprintCatalog.PAID_PLAN:
 					SprintBridges.open_paid_plan()
+				elif int(c.target_tier) == 0:
+					ProductState.ship_feature(c.step)
 				elif int(c.target_tier) > ProductState.line_tier(c.line):
 					# Kademe düşmez: aynı kademeye başka bir kartla varılmışsa bu kart bir şey yazmaz.
 					var tier: int = int(c.target_tier)

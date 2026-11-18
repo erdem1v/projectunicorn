@@ -47,6 +47,8 @@ static var _steps: Dictionary = {}        # step_id -> step record
 static var _by_subtype: Dictionary = {}   # subtype -> Array of line ids
 static var _subtypes: Array[String] = []
 static var _buyer_sectors: Dictionary = {}   # subtype -> the sectors that buy it (B2B)
+static var _extras: Dictionary = {}         # line_id -> its tierless request topics in order (PRD_ERP §2.5)
+static var _extra_topics: Dictionary = {}   # topic -> true (every subtype's tierless topics)
 static var _loaded := false
 static var _load_errors: Array[String] = []
 ## Hat kümesinden türeyen sorguların önbelleği (`SprintCatalog.capabilities`): çalışma anı hattı eklenince ve yeniden yüklemede
@@ -70,6 +72,8 @@ static func reload() -> void:
 	_by_subtype.clear()
 	_subtypes.clear()
 	_buyer_sectors.clear()
+	_extras.clear()
+	_extra_topics.clear()
 	_load_errors.clear()
 	_loaded = false
 	memo.clear()
@@ -80,6 +84,18 @@ static func reload() -> void:
 static func buyer_sectors(subtype: String) -> Array:
 	ensure_loaded()
 	return (_buyer_sectors.get(subtype, []) as Array).duplicate()
+
+
+## Hattın kademesiz istek konuları sırasıyla (hat verisinin `extras`'ı, PRD_ERP §2.5); yoksa [].
+static func extras(line_id: String) -> Array:
+	ensure_loaded()
+	return (_extras.get(line_id, []) as Array).duplicate()
+
+
+## Kademesiz istek konusu mu.
+static func is_extra(topic: String) -> bool:
+	ensure_loaded()
+	return _extra_topics.has(topic)
 
 
 static func load_errors() -> Array[String]:
@@ -99,6 +115,9 @@ static func _load_all() -> void:
 	for f in files:
 		if f.ends_with(".json") and f != SHARED_FILE:
 			_load_subtype(LINES_DIR + f, shared)
+	for topic: String in _extra_topics:
+		if _steps.has(topic):
+			_fail("extra topic %s is also a step id" % topic)
 
 
 static func _load_subtype(path: String, shared: Dictionary) -> void:
@@ -144,6 +163,17 @@ static func _load_subtype(path: String, shared: Dictionary) -> void:
 		_fail("%s resolved %d lines, expected %d" % [subtype, ids.size(), LINES_PER_SUBTYPE])
 		return
 
+	var extras: Dictionary = doc.get("extras", {}) as Dictionary
+	for line_id: String in extras:
+		if line_id not in ids:
+			_fail("%s extras name %s, not one of its lines" % [subtype, line_id])
+			return
+		for topic: String in extras[line_id]:
+			if _extra_topics.has(topic):
+				_fail("%s extra topic %s is listed twice" % [subtype, topic])
+				return
+			_extra_topics[topic] = true
+		_extras[line_id] = extras[line_id]
 	_by_subtype[subtype] = ids
 	_subtypes.append(subtype)
 

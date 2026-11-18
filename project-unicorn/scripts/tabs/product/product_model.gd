@@ -268,7 +268,7 @@ static func topics() -> Variant:
 			var rx: int = int(x.at_risk or x.soon)
 			var ry: int = int(y.at_risk or y.soon)
 			return rx > ry if rx != ry else x.renew < y.renew)
-		var card_id: String = "feat:" + step
+		var card_id: String = ("ext:" if ProductLines.is_extra(step) else "feat:") + step
 		var plan: Dictionary = _request_status(card_id, tags, SprintSystem.mode(), {})
 		var lock: String = SprintCatalog.gate_reason(step)
 		var first: int = asked.reduce(func(m: int, a: Dictionary) -> int: return mini(m, int(a.r.day)), GameState.day)

@@ -68,7 +68,7 @@ static func product_name() -> String:
 
 
 ## Is this feature live in the product? The ONE answer for both id kinds: a flat
-## feature id (only fixtures still write those) is live when it sits in
+## feature id (a tierless request topic, `ship_feature`) is live when it sits in
 ## `mvp_components`; a LINE STEP id is live when its line has reached the step's tier.
 static func is_feature_live(feature_id: String) -> bool:
 	if feature_id == "":
@@ -77,6 +77,14 @@ static func is_feature_live(feature_id: String) -> bool:
 		return true
 	var s: Dictionary = ProductLines.step(feature_id)
 	return not s.is_empty() and line_tier(String(s["line_id"])) >= int(s["tier"])
+
+
+## Kademesiz istek kartının konusu yayına çıkar (PRD_ERP §2.5): `mvp_components`'e yazılır, `is_feature_live` okur; istek ve söz
+## bugünkü yoldan karşılanır.
+static func ship_feature(feature_id: String) -> void:
+	var live: Array = GameState.get_flag("mvp_components", [])
+	if feature_id not in live:
+		GameState.set_flag("mvp_components", live + [feature_id])
 
 
 # ------------------------------------------------------- §12 line tiers

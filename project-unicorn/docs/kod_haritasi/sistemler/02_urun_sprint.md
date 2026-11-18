@@ -190,7 +190,9 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - Koşan kartta `progress_at_start`: sprintin başındaki `progress` (`_begin`, `put_first`; eski kayıtta `progress` okunur)
 - Çeyrekte `quarter.start_day`: çeyreğin başladığı gün (`new_state`, `plan_next`; eski kayıtta sprintin başından geri sayılır)
 - Kart `SprintCatalog.new_card` `sprint_catalog.gd:244`: id, kind(feature|fix|research), line, step, target_tier, area, need[3], progress[3], state, assignees, bugs, decision, cut
-- Kart kimlik önekleri `sprint_catalog.gd:194-219`: `feat:<kademe>` (talebin konusu da), `plan:cap_paid_plan`, `fix:<hat>`, `res:<alan>`; kart `need`/`progress` sırası [Tasarım, Geliştirme, Test]
+- Kart kimlik önekleri `sprint_catalog.gd:194-219`: `feat:<kademe>` (talebin konusu da), `ext:<konu>` (kademesiz istek kartı: hattın K3'ü çıkınca, isteyen ya da söz varken; `target_tier` 0,
+  K1 eforu, profilsiz pay; konu listesi hat verisinin `extras`'ı, `ProductLines.extras` / `is_extra`; kapanışta `ProductState.ship_feature`),
+  `plan:cap_paid_plan`, `fix:<hat>`, `res:<alan>`; kart `need`/`progress` sırası [Tasarım, Geliştirme, Test]
 - Sürüm kaydı `sprint_system.gd:1532-1526`: number, sprint, shipped, carried, velocity, expected, actual, press, gate, day, changed_areas, alerts_cleared, faulty (+ `thanks`, `reviews`)
 - `GameState.incident` `game_state.gd:332`: last_day, pending, shifted, open, drains, forced (şema başlığı `incident_system.gd:32-34`)
 - `GameState.flags` `mvp_*` (`FLAG_TYPES` `game_state.gd:48-91`; adlar `product_state.gd:11-39`): mvp_shipped, mvp_version, mvp_line_tiers, mvp_open_bugs, mvp_infra_*, mvp_interest…

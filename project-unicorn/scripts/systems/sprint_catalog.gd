@@ -194,6 +194,8 @@ static func limit_k() -> float:
 static func step_effort(step_id: String) -> int:
 	if step_id == PAID_PLAN:
 		return int(cfg("paid_plan.effort"))
+	if ProductLines.is_extra(step_id):   # kademesiz istek kartı K1 eforudur
+		return int(cfg("effort.k1"))
 	var step: Dictionary = ProductLines.step(step_id)
 	var effort: int = int(cfg("effort.k%d" % int(step.tier)))
 	if int(step.tier) == 1 and step.line_id in mvp_named():
@@ -214,7 +216,8 @@ static func card_need(kind: String, line: String, tier: int, effort: float) -> A
 
 ## Alanın aday kartları (PRD §3.2): yetenek başına sonraki kademe (kapısı kapalıysa da görünür; talebin konusu da budur,
 ## isteyenleri `askers`), açık hatası olan yetenek başına düzeltme, kimlik alanında
-## ürünün tek araştırma kartı (kullanıcıyla görüş; yapıldığı sprintin ardından bir kapanış gizli). Sprintte ya da sonrakinde duran kart
+## ürünün tek araştırma kartı (kullanıcıyla görüş; yapıldığı sprintin ardından bir kapanış gizli). K3'ü çıkmış yetenekte, isteyeni ya da
+## verilmiş sözü olan, yayında olmayan her kademesiz konu kart olur (`ext:<konu>`, PRD_ERP §2.5). Sprintte ya da sonrakinde duran kart
 ## saklanan hâliyle döner. Sıra: öncelikli önde, kilitsiz önde, sonra etki/efor azalan.
 static func candidates(area_id: String) -> Array:
 	var stored: Dictionary = _p().get("cards", {})
@@ -227,6 +230,9 @@ static func candidates(area_id: String) -> Array:
 			continue
 		var next: int = ProductLines.next_tier(tier(line_id))
 		if next == 0:
+			for topic: String in ProductLines.extras(line_id):
+				if not ProductState.is_feature_live(topic) and (not askers(topic).is_empty() or not _promises_on(topic).is_empty()):
+					out.append(new_card("ext:" + topic, "feature", area_id, step_effort(topic), line_id, topic, 0))
 			continue
 		var step: String = ProductLines.step_at(line_id, next).id
 		out.append(new_card("feat:" + step, "feature", area_id, step_effort(step), line_id, step, next))
@@ -339,18 +345,19 @@ static func card_effect(card: Dictionary) -> Array:
 			return parts
 		"research":
 			return [{"k": "research", "area": area_short(area)}]
-	var level: Dictionary = _level_part(area, {card.line: card.target_tier})
 	var out: Array = []
-	if level.to != level.from:
-		out.append(level)
-	else:
-		var cap_max: float = max_tier(card.line)
-		var expect: float = ProductQuality.expectation(area)
-		var cap_from: float = minf(tier(card.line) + polish(card.line), cap_max)
-		var cap_to: float = minf(card.target_tier + polish(card.line), cap_max)
-		out.append({"k": "holds", "area": area_short(area), "word": level.to_word})
-		out.append({"k": "cap", "name": cap_name(card.line), "from": cap_from, "to": cap_to,
-			"from_word": ProductQuality.word_for(cap_from, expect), "to_word": ProductQuality.word_for(cap_to, expect)})
+	if int(card.target_tier) > 0:   # kademesiz istek kartı kalite ve uyum yazmaz
+		var level: Dictionary = _level_part(area, {card.line: card.target_tier})
+		if level.to != level.from:
+			out.append(level)
+		else:
+			var cap_max: float = max_tier(card.line)
+			var expect: float = ProductQuality.expectation(area)
+			var cap_from: float = minf(tier(card.line) + polish(card.line), cap_max)
+			var cap_to: float = minf(card.target_tier + polish(card.line), cap_max)
+			out.append({"k": "holds", "area": area_short(area), "word": level.to_word})
+			out.append({"k": "cap", "name": cap_name(card.line), "from": cap_from, "to": cap_to,
+				"from_word": ProductQuality.word_for(cap_from, expect), "to_word": ProductQuality.word_for(cap_to, expect)})
 	var asked: Array = askers(card.step)
 	if not asked.is_empty():
 		out.append({"k": "request", "customer": asked[0].display_name()})
@@ -767,6 +774,8 @@ static func step_name(step_id: String) -> String:
 
 
 static func step_name_key(step_id: String) -> String:
+	if ProductLines.is_extra(step_id):
+		return "PROD_EXT_" + step_id.to_upper()
 	return PAID_PLAN_NAME_KEY if step_id == PAID_PLAN else ProductLines.step(step_id).name_key
 
 
@@ -799,7 +808,7 @@ static func _rival_tier(rival: int, line_id: String) -> int:
 ## Rakiplerden biri bu kademeye ya da üstüne varmış (rakip tablosu ve çıkışları).
 static func rival_has(step_id: String) -> bool:
 	var s: Dictionary = ProductLines.step(step_id)
-	return range(rival_table().rivals.size()).any(func(i: int) -> bool: return _rival_tier(i, s.line_id) >= int(s.tier))
+	return not s.is_empty() and range(rival_table().rivals.size()).any(func(i: int) -> bool: return _rival_tier(i, s.line_id) >= int(s.tier))
 
 
 ## Rakiplerden biri bu kademeye ya da üstüne varmış ve kart oyuncuyu ona yetiştiriyor.
@@ -864,8 +873,9 @@ static func _impact(card: Dictionary) -> float:
 			return w.bug * card.bugs + (w.alert if _clears_alert(card) else 0.0)
 		"research":
 			return w.research
-	var v: float = w.step + w.level * (
-		ProductQuality.level(card.area, {card.line: card.target_tier}) - ProductQuality.level(card.area))
+	var v: float = w.step
+	if int(card.target_tier) > 0:   # kademesiz istek kartı kalite ve uyum yazmaz
+		v += w.level * (ProductQuality.level(card.area, {card.line: card.target_tier}) - ProductQuality.level(card.area))
 	if _closes_rival_gap(card):
 		v += w.rival_gap
 	if not askers(card.step).is_empty():
