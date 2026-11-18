@@ -966,12 +966,38 @@ static func _next(mode: String, run: Dictionary) -> Dictionary:
 	else:
 		for id in run.people:
 			of[id] = run.people[id].row
-	var power: Dictionary = SprintTimeline.row_power(SprintSystem.team(), of)
 	var ahead: Dictionary = {} if released else run.ahead
 	var gains: Dictionary = {} if released else SprintSystem.prep_gains(int(run.close_at) - run.start)
+	var load: Array = _load(shares, planned, ahead, gains)
+	var power: Dictionary = _next_power(of, load)
+	for row: Dictionary in load:
+		row.team = float(power.get(row.stage, 0.0))
 	return {"sprint": int(next.number),
 		"cards": planned.map(func(id: String) -> Dictionary: return _next_card(p.cards[id], mode, gains, ahead.get(id, {}))),
-		"load": _load(shares, planned, ahead, power, gains), "carried": _carried(shares)}
+		"load": load, "carried": _carried(shares)}
+
+
+## Sonraki sprintin aşama başına ekip puanı. Tek aşamalı kişinin puanı çizildiği satıra (`of`, `SprintTimeline.row_power`);
+## Tasarım, Geliştirme ve Test'ten birden çoğunda çalışabilenin (kurucu, ikinci becerisi olan) puanı o aşamalara sonraki sprintin
+## yükü oranında, o aşamalarda yük yoksa çizildiği satıra.
+static func _next_power(of: Dictionary, load: Array) -> Dictionary:
+	var need: Dictionary = {}
+	for row: Dictionary in load:
+		need[row.stage] = row.carried + row.planned
+	var single: Array = []
+	var power: Dictionary = {}
+	for person: Dictionary in SprintSystem.team():
+		var stages: Array = need.keys().filter(func(s: String) -> bool: return s in person.fits)
+		var total: float = stages.reduce(func(sum: float, s: String) -> float: return sum + need[s], 0.0)
+		if stages.size() < 2 or total <= SprintSystem.EPS:
+			single.append(person)
+			continue
+		for s: String in stages:
+			power[s] = power.get(s, 0.0) + SprintSystem.capacity_of([person]) * need[s] / total
+	var drawn: Dictionary = SprintTimeline.row_power(single, of)
+	for row: String in drawn:
+		power[row] = power.get(row, 0.0) + drawn[row]
+	return power
 
 
 ## Sağ sütunun kartı: aşama payları (kalan ihtiyaç ÷ sprint sonundaki hazırlık kazancı `gains`), her payın bu sprintte önden yapılan
@@ -998,11 +1024,10 @@ static func _next_card(c: Dictionary, mode: String, gains: Dictionary, seat: Dic
 		"buttons": keys.filter(func(key: String) -> bool: return key != "remove" or not c.get("follow", false))}
 
 
-## Sonraki sprintin aşama yükü [{stage, carried, planned, team}], görünen eforla. `shares` bu sprintten devreden paylar
+## Sonraki sprintin aşama yükü [{stage, carried, planned}], görünen eforla (ekip puanını `_next` ekler). `shares` bu sprintten devreden paylar
 ## (`_out_shares` ya da `_shares`), `ids` sonraki sütunun planlı kartları: kalan ihtiyaçları sprint sonundaki hazırlık kazancına
 ## (`gains`) bölünür ve sprintte önden yapılacak iş (`ahead`, aynı kazançla) düşülür, çünkü kart sonraki sprinte o hâliyle girer.
-## `power` satır başına ekibin sprint boyunca puanı (`SprintTimeline.row_power`).
-static func _load(shares: Array, ids: Array, ahead: Dictionary, power: Dictionary, gains: Dictionary) -> Array:
+static func _load(shares: Array, ids: Array, ahead: Dictionary, gains: Dictionary) -> Array:
 	var planned: Array = _shares(ids, gains)
 	var out: Array = []
 	for stage in ["design", "dev", "test"]:
@@ -1014,7 +1039,7 @@ static func _load(shares: Array, ids: Array, ahead: Dictionary, power: Dictionar
 		for s in planned:
 			if s.stage == stage:
 				left += maxf(0.0, s.effort - float(ahead.get(s.card_id, {}).get(stage, {}).get("done", 0.0)))
-		out.append({"stage": stage, "carried": carried, "planned": left, "team": float(power.get(stage, 0.0))})
+		out.append({"stage": stage, "carried": carried, "planned": left})
 	return out
 
 

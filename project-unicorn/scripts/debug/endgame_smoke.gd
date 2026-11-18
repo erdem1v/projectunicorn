@@ -25075,7 +25075,8 @@ static func _case_sprint_away_lists_who_cannot_work() -> String:
 ## bugünkünden; sprintin başındaki iş `progress_at_start`tır (kayıtsız eski kayıtta `progress`); kartlar erken biterse eksen o
 ## haftanın sonunda kapanır ve motor orada kapatır. Kartın eforu testin bulduğu düzeltmeyi sayar, oynatmanın öngördüğünü saymaz
 ## (E1); aşamanın oluğu öngörüleni de sayar (E2); koşan sprintte eksenden önce biten aşama `before` taşır; zaman ekseninin
-## anahtarları sözleşmedeki gibidir; sürüm notunda sonraki sütunun yükü planlamayla aynı işlevlerden gelir.
+## anahtarları sözleşmedeki gibidir; sürüm notunda sonraki sütunun yükü planlamayla aynı işlevlerden gelir, ekip puanı tek aşamalı
+## kişide oturduğu satırda, birden çok aşamada çalışabilende o aşamalara yük oranında.
 ## FALSİFİKASYON: SprintTimeline._lay'de `at = piece.to` satırını `at = first` yap (aşamalar üst üste biner) → "Z2" FAIL; _span'da
 ## `_wait` eklemesini sil → "Z3" FAIL; SprintTimeline.row_gaps'te `waits` öğelerini çıkar → "Z3" FAIL ve `live:a4_*` karelerinde
 ## row_gaps > 0; SprintSystem._finish_sprint'te bu haftanın kartlara harcamasını sil (`_work` çağrısını `pass` yap) → "Z5" FAIL;
@@ -25495,7 +25496,7 @@ static func _found_fix_flaws(id: String) -> String:
 
 ## Sonraki sütunun aşama yükü motorun kendi oynatmasının kopyalarından ölçülür, modelin formülünden değil: devreden = sprintin
 ## oynanmış kartlarının kalan ihtiyacı (düzeltme işi Geliştirme'de), planlı = sonraki sütunun kartlarının sprint sonundaki kalan
-## ihtiyacı (önden iş yapılmış, sprint sonundaki hazırlık kazancına bölünmüş), ekip = satır başına haftalık puan x sprint haftası;
+## ihtiyacı (önden iş yapılmış, sprint sonundaki hazırlık kazancına bölünmüş), ekip = `_next_team_due`;
 ## devreden satırlarında kartın aynı aşaması tek satırdır; zaman ekseninin önden işi motorun kopyasındaki iştir, sprint sonundaki
 ## kazançla.
 ## FALSİFİKASYON: ProductModel._load'ta `ahead` düşümünü sil → "E2" FAIL; ProductModel._next'te `gains`i {} yap (bugünkü kazanç)
@@ -25536,9 +25537,13 @@ static func _next_load_flaws(tl: Dictionary, label: String) -> String:
 	for id in p.next.cards:
 		left.call(ended.get(id, p.cards[id]), planned)
 	var next: Dictionary = ProductModel.live().next
-	var seated: Dictionary = {}
+	var rows: Dictionary = {}
+	var need: Dictionary = {}
 	for t in SprintSystem.team():
-		(seated.get_or_add(tl.people[t.id].row, []) as Array).append(t)
+		rows[t.id] = tl.people[t.id].row
+	for s: String in out:
+		need[s] = out[s] + planned[s]
+	var team_due: Dictionary = _next_team_due(rows, need)
 	var seen: Dictionary = {}
 	for row in next.carried:
 		var key: String = row.card_id + "|" + row.stage
@@ -25547,14 +25552,28 @@ static func _next_load_flaws(tl: Dictionary, label: String) -> String:
 		seen[key] = true
 		listed[row.stage] += row.effort
 	for row in next.load:
-		var team: float = SprintSystem.capacity_of(seated.get(row.stage, []))
 		var read := [row.carried, listed[row.stage], row.planned, row.team]
-		var want := [out[row.stage], out[row.stage], planned[row.stage], team]
+		var want := [out[row.stage], out[row.stage], planned[row.stage], float(team_due.get(row.stage, 0.0))]
 		for i in 4:
 			if absf(read[i] - want[i]) > SprintSystem.EPS:
 				return "E2 (%s): the %s load reads carried %.3f, listed %.3f, planned %.3f, team %.3f; want %.3f, %.3f, %.3f, %.3f" % [
 					label, row.stage, read[0], read[1], read[2], read[3], want[0], want[1], want[2], want[3]]
 	return ""
+
+
+## Sonraki sütunun beklenen ekip puanı: tek aşamalı kişi `rows`taki satırında; Tasarım, Geliştirme ve Test'ten birden çoğunda
+## çalışabilen o aşamalara `need`in (devreden + planlı) oranında, o aşamalarda yük yoksa satırında.
+static func _next_team_due(rows: Dictionary, need: Dictionary) -> Dictionary:
+	var due: Dictionary = {}
+	for t in SprintSystem.team():
+		var fits: Array = need.keys().filter(func(s: String) -> bool: return s in t.fits)
+		var total: float = fits.reduce(func(sum: float, s: String) -> float: return sum + need[s], 0.0)
+		if fits.size() < 2 or total <= SprintSystem.EPS:
+			due[rows[t.id]] = due.get(rows[t.id], 0.0) + SprintSystem.capacity_of([t])
+		else:
+			for s: String in fits:
+				due[s] = due.get(s, 0.0) + SprintSystem.capacity_of([t]) * need[s] / total
+	return due
 
 
 ## Sürüm notunda sonraki sütun: devreden kartın kalan ihtiyacı (E1) planlamanın işlevlerinden gelir, ekip aynı satır kuralından;
@@ -25575,32 +25594,31 @@ static func _release_load_flaws(side: String) -> String:
 		for i in 3:
 			if group.has(roles[i]):
 				group[roles[i]] += maxf(0.0, float(c.need[i]) - float(c.progress[i])) / (1.0 + float(c.get("prep_gain", 0.0)))
-	var of: Dictionary = SprintTimeline.capacity_rows(SprintSystem.team()).of
-	var seated: Dictionary = {}
-	for t in SprintSystem.team():
-		(seated.get_or_add(of[t.id], []) as Array).append(t)
-	var power: Dictionary = SprintTimeline.row_power(SprintSystem.team(), of)
+	var need: Dictionary = {}
+	for s: String in want.carried:
+		need[s] = want.carried[s] + want.planned[s]
+	var team_due: Dictionary = _next_team_due(SprintTimeline.capacity_rows(SprintSystem.team()).of, need)
 	var next: Dictionary = ProductModel.live().next
 	if next.load.size() != 3 or next.carried.is_empty():
 		return "R3: the release note's next column reads %d stage rows and %d carried rows, want 3 and some" % [
 			next.load.size(), next.carried.size()]
 	for row in next.load:
-		var team: float = SprintSystem.capacity_of(seated.get(row.stage, []))
 		var read := [row.carried, row.planned, row.team]
-		var due := [want.carried[row.stage], want.planned[row.stage], team]
+		var due := [want.carried[row.stage], want.planned[row.stage], float(team_due.get(row.stage, 0.0))]
 		for i in 3:
 			if absf(read[i] - due[i]) > SprintSystem.EPS:
 				return "R3: the release note's %s load reads carried %.3f, planned %.3f, team %.3f; want %.3f, %.3f, %.3f" % [
 					row.stage, read[0], read[1], read[2], due[0], due[1], due[2]]
 	var shares: Array = ProductModel._shares(carried)
-	if next.load != ProductModel._load(shares, planned, {}, power, {}) or next.carried != ProductModel._carried(shares):
+	var loads: Array = next.load.map(func(r: Dictionary) -> Dictionary: return {"stage": r.stage, "carried": r.carried, "planned": r.planned})
+	if loads != ProductModel._load(shares, planned, {}, {}) or next.carried != ProductModel._carried(shares):
 		return "R3: the release note's next column differs from what the planning functions return for the same inputs"
 	var twice: Array = ProductModel._carried([{"card_id": carried[0], "stage": "dev", "effort": 2.0},
 		{"card_id": carried[0], "stage": "dev", "effort": 3.0}, {"card_id": carried[0], "stage": "product", "effort": 9.0}])
 	if twice.size() != 1 or not is_equal_approx(twice[0].effort, 5.0):
 		return "R4: a card's two shares of one stage read %s, want one row of 5 (and no research stage)" % str(twice)
 	var fix_run := {"cards": {carried[0]: {"stages": [{"stage": "dev", "fix": false, "out": 2.0}, {"stage": "dev", "fix": true, "out": 3.0}]}}}
-	var dev: Dictionary = ProductModel._load(ProductModel._out_shares(fix_run), [], {}, {}, {})[1]
+	var dev: Dictionary = ProductModel._load(ProductModel._out_shares(fix_run), [], {}, {})[1]
 	if not is_equal_approx(dev.carried, 5.0):
 		return "E2: a base dev share of 2 and a fix share of 3 load the dev row with %.3f, want 5" % dev.carried
 	return ""
