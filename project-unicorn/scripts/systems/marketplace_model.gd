@@ -437,14 +437,22 @@ static func _visits_per_order() -> float:
 	return 1.0 / reach
 
 
-## Kategorinin geri gelen kullanıcıdan payı: çekiciliği × seçeneği, açık kategorilerin toplamına oranla. Paylar 1'e toplanır:
-## kullanıcı sıklığını açık kategoriler arasında böler, kategori açmak kullanıcının haftalık siparişini çarpmaz; mağazasız
-## kategori pay almaz.
+## Kategorinin geri gelen kullanıcıdan payı: sipariş sıklığı × seçeneği, açık kategorilerin toplamına oranla. Paylar 1'e toplanır:
+## kullanıcı siparişini sık alışveriş yapılan kategoriye daha çok verir; mağazasız kategori pay almaz.
 static func _shopper_share(state: Dictionary, cat: String) -> float:
 	var total := 0.0
 	for id in open_ids(state):
-		total += _cats[id].base_interest * variety(state, id)
-	return _cats[cat].base_interest * variety(state, cat) / total if total > 0.0 else 0.0
+		total += _cats[id].order_freq * variety(state, id)
+	return _cats[cat].order_freq * variety(state, cat) / total if total > 0.0 else 0.0
+
+
+## Kategori genişliği kullanıcının haftalık siparişini büyütür: açık kategorilerin seçenek toplamının `breadth_power` üssü
+## (mağazası az kategori seçeneği kadar sayılır); toplam 1'in altındayken 1.
+static func _breadth(state: Dictionary) -> float:
+	var stocked := 0.0
+	for id in open_ids(state):
+		stocked += variety(state, id)
+	return pow(maxf(1.0, stocked), _c.visits.breadth_power)
 
 
 ## Kategorinin haftalık ziyareti, üç kaynağıyla. Sipariş sıklığı ve tavsiye oranı sipariş ve kullanıcı birimindedir (yol
@@ -463,7 +471,7 @@ static func _visits(state: Dictionary, world: Dictionary, cat: String) -> Dictio
 	var visits_per_order := _visits_per_order()
 	return {
 		"returning": (state.users - state.members + state.members * v.member_freq) * d.order_freq * visits_per_order
-			* _shopper_share(state, cat) * (1.0 + _w(world, "return_lift")),
+			* _shopper_share(state, cat) * _breadth(state) * (1.0 + _w(world, "return_lift")),
 		"organic": (state.users * v.referral_rate * visits_per_order * sat_coef * d.base_interest / base_total + d.base_interest)
 			* variety(state, cat),
 		"channel": channel,

@@ -11,9 +11,9 @@ Kapsam: scripts/ altındaki 269 .gd (tools/ hariç). Kod temizliği ve kıdemli 
 - scripts/systems/sprint_system.gd · 2141 satır · 173 func
 - scripts/theme/build_theme.gd · 1663 satır · 31 func
 - scripts/events/tools/lint.gd · 1378 satır · 48 func
+- scripts/systems/marketplace_model.gd · 1369 satır · 110 func
 - scripts/tabs/product/product_model.gd · 1362 satır · 71 func
-- scripts/systems/marketplace_model.gd · 1361 satır · 109 func
-- scripts/debug/marketplace_probe.gd · 1340 satır · 67 func
+- scripts/debug/marketplace_probe.gd · 1341 satır · 67 func
 - scripts/systems/vc_pitch_system.gd · 1317 satır · 91 func
 - scripts/autoload/save_manager.gd · 1295 satır · 60 func
 - scripts/systems/hr_constants.gd · 1189 satır · 90 func
@@ -124,7 +124,7 @@ UYARI: call("a"+b) gibi kurulmuş adlar, sinyal adıyla bağlama, harness bayrak
 - scripts/debug/marketplace_probe.gd:1200 · _check_ledger_worst_picks_heaviest · debug
 - scripts/debug/marketplace_probe.gd:1231 · _check_crew_follows_assignment · debug
 - scripts/debug/marketplace_probe.gd:1293 · _check_returning_orders_follow_frequency · debug
-- scripts/debug/marketplace_probe.gd:1333 · _check_word_of_mouth_brings_users · debug
+- scripts/debug/marketplace_probe.gd:1334 · _check_word_of_mouth_brings_users · debug
 - scripts/debug/office_crowd_probe.gd:48 · _log_error · debug
 - scripts/events/present/papers.gd:145 · arc_of
 - scripts/main/game_shell.gd:163 · debug_force_vc_meeting · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)

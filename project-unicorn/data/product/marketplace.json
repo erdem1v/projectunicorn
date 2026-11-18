@@ -1,8 +1,9 @@
 {
   "visits": {
     "referral_rate": 0.065,
-    "sat_floor": 55,
-    "sat_span": 45,
+    "breadth_power": 0.3333,
+    "sat_floor": 40,
+    "sat_span": 40,
     "member_freq": 1.4,
     "retention": {"base": 0.94, "per_sat": 0.0005, "sat_ref": 70, "member_share": 0.03, "min": 0.85, "max": 0.99},
     "source_weeks": 12

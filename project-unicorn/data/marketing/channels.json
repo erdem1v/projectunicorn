@@ -5,12 +5,12 @@
 	"market": {
 		"_note": "[WORKING] Pazaryeri kanalları (PRD_PAZARLAMA §3 M4, M5, M8, M9). 2012 Türkiye tıklama bedeli bulunamadı (PRD_PAZARLAMA M1 [DEĞERLENDİREMEM]): taban bedel, tıklama oranı ve yer çarpanı playtest kalibrasyon girdisidir. cpc: doyumsuz tıklama bedeli ($); ctr: gösterimden tıklamaya oran; pool: kategorinin haftalık aramasına (ad_pool) göre türün haftalık yeri; quality: tıklamanın alıcı niteliği, Pazaryeri'ne ziyaret × quality gider (niyetli arama ve fiyat karşılaştırma yüksek, görüntülü ve sosyal düşük; yardımcı yönetmen 15 Kasım, onay bekliyor).",
 		"kinds": {
-			"search_ads": {"cpc": 0.3, "ctr": 0.03, "pool": 1.0, "quality": 1.0},
-			"social_ads": {"cpc": 0.25, "ctr": 0.01, "pool": 3.0, "quality": 0.5},
-			"display_ads": {"cpc": 0.15, "ctr": 0.004, "pool": 12.0, "quality": 0.3},
-			"price_compare": {"cpc": 0.35, "ctr": 0.05, "pool": 0.3, "quality": 1.2},
-			"affiliate": {"cpc": 0.3, "ctr": 0.01, "pool": 2.0, "quality": 0.8},
-			"influencer": {"cpc": 0.5, "ctr": 0.015, "pool": 1.0, "quality": 0.6}
+			"search_ads": {"cpc": 0.1, "ctr": 0.03, "pool": 1.0, "quality": 1.0},
+			"social_ads": {"cpc": 0.083, "ctr": 0.01, "pool": 3.0, "quality": 0.5},
+			"display_ads": {"cpc": 0.05, "ctr": 0.004, "pool": 12.0, "quality": 0.3},
+			"price_compare": {"cpc": 0.117, "ctr": 0.05, "pool": 0.3, "quality": 1.2},
+			"affiliate": {"cpc": 0.1, "ctr": 0.01, "pool": 2.0, "quality": 0.8},
+			"influencer": {"cpc": 0.167, "ctr": 0.015, "pool": 1.0, "quality": 0.6}
 		},
 		"category_cpc": {"fashion": 1.0, "electronics": 1.4, "home": 0.9, "beauty": 0.8, "baby": 0.9, "sports": 1.0},
 		"saturation_k": 2.0,

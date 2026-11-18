@@ -646,16 +646,16 @@ func _check_channel_read_values() -> Array:
 	var reach := 0.15 * 0.70 * 0.88 * 0.97
 	# Üç kullanıcı ek özelliği yayında değil: Sepete ekledi 0,97 x 0,99, Ödemeye geçti 0,95.
 	var conversion := reach * (0.97 * 0.99) * 0.95
-	var pools := {"fashion": 82000.0, "electronics": 46000.0, "home": 38000.0, "beauty": 27000.0, "baby": 22000.0, "sports": 22000.0}
+	var pools := {"fashion": 246000.0, "electronics": 138000.0, "home": 114000.0, "beauty": 81000.0, "baby": 66000.0, "sports": 66000.0}
 	var pools_ok := true
 	for cat in pools:
 		pools_ok = pools_ok and _near(MarketplaceModel.channel_read(state, world, cat).ad_pool, pools[cat])
 	var ok: bool = _near(fashion.conversion, conversion) and _near(featured.conversion, reach) \
 		and _near(fashion.monthly_commission, 0.30 / reach * 4.33 * conversion * (1.0 - 0.20) * 38.0 * 0.10) \
-		and _near(fashion.organic, 3000.0 * 0.065 / reach * (15.0 / 45.0) + 450.0) and _near(fashion.margin, 0.22) \
-		and _near(fashion.base_interest, 450.0) and closed.conversion == 0.0 and closed.organic == 0.0 \
-		and closed.monthly_commission == 0.0 and _near(closed.margin, 0.13) and _near(closed.base_interest, 250.0) and pools_ok
-	return [ok, "fashion with three user features missing: conversion %.6f (%.6f), all three live %.6f (0.089628), monthly commission per user %.4f, organic visits %.1f (1175.2); "
+		and _near(fashion.organic, 3000.0 * 0.065 / reach * (30.0 / 40.0) + 1350.0) and _near(fashion.margin, 0.22) \
+		and _near(fashion.base_interest, 1350.0) and closed.conversion == 0.0 and closed.organic == 0.0 \
+		and closed.monthly_commission == 0.0 and _near(closed.margin, 0.13) and _near(closed.base_interest, 750.0) and pools_ok
+	return [ok, "fashion with three user features missing: conversion %.6f (%.6f), all three live %.6f (0.089628), monthly commission per user %.4f, organic visits %.1f (2981.7); "
 		% [fashion.conversion, conversion, featured.conversion, fashion.monthly_commission, fashion.organic]
 		+ "closed electronics conversion %.1f organic %.1f; six ad pools match=%s" % [closed.conversion, closed.organic, pools_ok]]
 
@@ -1288,8 +1288,8 @@ func _returning_orders(state: Dictionary, cats: Array) -> float:
 
 ## Geri gelen kullanıcı sipariş verir: yol kusursuzken bin kullanıcı Moda'da haftada sipariş sıklığı kadar (300) sipariş bırakır;
 ## Pazarlama'nın yüzde 10'luk geri dönüş katkısıyla 330, yüz üyeyle 312 (üyenin sıklığı 1,4 kat). Ev ve Yaşam da açık ve doluyken
-## toplam, iki sıklığın çekicilik ağırlıklı ortalamasıdır (290,45), toplamı (570) değil. Ev ve Yaşam'ın mağazası azken payı
-## seçeneğiyle küçülür.
+## toplam, iki sıklığın kendi sıklığıyla ağırlıklı ortalaması çarpı iki kategorinin genişliğidir (285,79 × 2'nin küp kökü =
+## 360,1), toplamı (570) değil. Ev ve Yaşam'ın mağazası azken payı da genişliğe katkısı da seçeneğiyle küçülür.
 func _check_returning_orders_follow_frequency() -> Array:
 	var world := _perfect_world()
 	var one := _busy_state(["fashion"], 1000.0)
@@ -1303,20 +1303,21 @@ func _check_returning_orders_follow_frequency() -> Array:
 	var two := _busy_state(["fashion", "home"], 1000.0)
 	_run(two, world, 1)
 	var both := _returning_orders(two, ["fashion", "home"])
-	var mixed := 1000.0 * (0.30 * 450.0 + 0.27 * 210.0) / (450.0 + 210.0)
+	var mixed := 1000.0 * (0.30 * 0.30 + 0.27 * 0.27) / (0.30 + 0.27) * pow(2.0, 0.3333)
 	var thin := _busy_state(["fashion", "home"], 1000.0)
 	thin.cats.home.stores = 3.0
 	_run(thin, world, 1)
 	var shelf: float = thin.cats.home.stores / 17.0
-	var home_share: float = 210.0 * shelf / (450.0 + 210.0 * shelf)
-	var home_visits: float = 1000.0 * 0.27 / (0.15 * 0.70 * 0.88 * 0.97) * home_share
+	var home_share: float = 0.27 * shelf / (0.30 + 0.27 * shelf)
+	var breadth: float = pow(1.0 + shelf, 0.3333)
+	var home_visits: float = 1000.0 * 0.27 / (0.15 * 0.70 * 0.88 * 0.97) * home_share * breadth
 	var ok: bool = _near(alone, 300.0, 1e-6) and _near(_returning_orders(lifted, ["fashion"]), 330.0, 1e-6) \
 		and _near(_returning_orders(members, ["fashion"]), 312.0, 1e-6) and _near(both, mixed, 1e-6) and shelf < 0.5 \
 		and _near(thin.cats.home.week.returning, home_visits, 1e-6) \
-		and _near(_returning_orders(thin, ["fashion"]), 1000.0 * 0.30 * (1.0 - home_share), 1e-6)
+		and _near(_returning_orders(thin, ["fashion"]), 1000.0 * 0.30 * (1.0 - home_share) * breadth, 1e-6)
 	return [ok, "1000 users on a perfect path: Fashion alone %.2f orders a week from returning users (300 = 0.30 each), %.2f with a 10%% return lift (330), %.2f with 100 members (312); "
 		% [alone, _returning_orders(lifted, ["fashion"]), _returning_orders(members, ["fashion"])]
-		+ "Fashion and Home, both stocked, %.2f (%.2f, the interest-weighted mean, not 570); Home at %.2f of its stores takes %.4f of the returning users: %.1f visits (%.1f)"
+		+ "Fashion and Home, both stocked, %.2f (%.2f, the frequency-weighted mean times the breadth of two categories, not 570); Home at %.2f of its stores takes %.4f of the returning users: %.1f visits (%.1f)"
 		% [both, mixed, shelf, home_share, thin.cats.home.week.returning, home_visits]]
 
 
@@ -1329,12 +1330,12 @@ func _organic_newcomers(users: float, sat: float) -> float:
 
 
 ## Memnun kullanıcı kullanıcı getirir: yol kusursuz ve seçenek tamken, memnuniyeti 100 olan bin kullanıcı bir haftada tavsiye oranı
-## kadar (65) yeni kullanıcı getirir, memnuniyet 77,5'te (katsayı 0,5) yarısını; taban ilginin getirdiği bunun dışındadır.
+## kadar (65) yeni kullanıcı getirir, memnuniyet 60'ta (katsayı 0,5) yarısını; taban ilginin getirdiği bunun dışındadır.
 func _check_word_of_mouth_brings_users() -> Array:
 	var base := _organic_newcomers(0.0, 100.0)
 	var happy := _organic_newcomers(1000.0, 100.0) - base
-	var half := _organic_newcomers(1000.0, 77.5) - base
-	var interest := 450.0 * 0.15 * 0.70 * 0.88 * 0.97
+	var half := _organic_newcomers(1000.0, 60.0) - base
+	var interest := 1350.0 * 0.15 * 0.70 * 0.88 * 0.97
 	return [_near(happy, 65.0, 1e-6) and _near(half, 32.5, 1e-6) and _near(base, interest, 1e-6),
-		"1000 users on a perfect path bring %.2f new users a week at satisfaction 100 (65 = 0.065 each) and %.2f at 77.5 (32.5); the base interest alone brings %.2f (%.2f)"
+		"1000 users on a perfect path bring %.2f new users a week at satisfaction 100 (65 = 0.065 each) and %.2f at 60 (32.5); the base interest alone brings %.2f (%.2f)"
 		% [happy, half, base, interest]]

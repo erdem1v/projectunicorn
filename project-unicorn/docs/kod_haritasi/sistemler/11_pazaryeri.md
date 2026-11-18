@@ -6,15 +6,15 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 
 ## Dosyalar
 
-- `systems/marketplace_model.gd` (1361): `MarketplaceModel`; yalnız `static` işlevler. `state` ve `world` sözlüklerinin alanları dosya başındaki yorumda.
+- `systems/marketplace_model.gd` (1369): `MarketplaceModel`; yalnız `static` işlevler. `state` ve `world` sözlüklerinin alanları dosya başındaki yorumda.
 - `systems/marketplace_system.gd` (340): `MarketplaceSystem`; yalnız `static` işlevler. `GameState.marketplace`'in tek yazarı, yazan seam'ler, sözleşme okuyucuları, `world()` ve haftalık kapanış.
-- `debug/marketplace_probe.gd` (1340): `-s` betiği; oynanan çizelge ve 46 mekanik denetimi, `MPPROBE ...` satırları.
+- `debug/marketplace_probe.gd` (1341): `-s` betiği; oynanan çizelge ve 46 mekanik denetimi, `MPPROBE ...` satırları.
 - `data/product/categories.json` (16): altı kategori ve sütunları: sepet, sipariş sıklığı (`order_freq`: yol kusursuzken kullanıcının haftalık siparişi), kâr payı, sektör iadesi, gereken mağaza, başlangıç komisyonu, taban ilgi, büyük sepet payı, reklam havuzu (`ad_pool`, haftalık arama).
 - `data/product/lines/marketplace.json` (153): modül verisi; 5 kimlik hattı (Ürün Yükleme, Vitrin, Sepet ve Ödeme, Siparişler, Yorum ve Güvence)
   ↳ Mobil, Entegrasyonlar, Kullanıcılar ve Yetki, Yedekleme `shared.json`'dan; Üyelik, Gelir alanının `cap_paid_plan`'ı.
   ↳ Yayın şartının dört adlı modülü (Ürün Yükleme, Vitrin, Sepet ve Ödeme, Siparişler) `sprint.json` `mvp_named["marketplace"]`'da.
   ↳ Tür ekranında (`ProductCatalog.TYPE_SCREEN` `b2c.playable`) dört masa sayılır: ürün geliştirme, kategoriler, politikalar, kampanyalar; Premium masasının metni CSV'de durur. Rakipler `RivalCatalog.NAMES` ve `rivals.json`, Piyasa yuvaları (Orinoco, Bidwell, Dealflock) `companies.json` `sector_slots`.
-- `data/product/marketplace.json` (130): öbür bütün sabitler, gruplu: `visits`, `steps`, `stores`, `rules`, `commission`, `store_terms`, `premium`, `ledger`, `income`, `preview`, `topics` (konu kataloğu ve mağaza dertleri).
+- `data/product/marketplace.json` (131): öbür bütün sabitler, gruplu: `visits`, `steps`, `stores`, `rules`, `commission`, `store_terms`, `premium`, `ledger`, `income`, `preview`, `topics` (konu kataloğu ve mağaza dertleri).
 
 ## Giriş noktaları
 
@@ -115,7 +115,7 @@ Hatırlatıcı: `MailClock.reminders()` pazaryeri türünde (`SalesSystem.is_mar
   ↳ `waive_zeroes_one_close`, `outage_row_and_cost`, `lost_commission_weighted`, `backup_mult_tiers`, `open_topic_report_row`, `cfg_reads_constants` (okuyanın boşalttığı kopya sabiti değiştirmez),
   ↳ `funnel_sums_categories`, `step_hint_matches_gain`, `ledger_worst_picks_heaviest`, `crew_follows_assignment`,
   ↳ `returning_orders_follow_frequency` (geri gelen kullanıcı sipariş sıklığı kadar sipariş verir; sıklık açık kategoriler arasında
-  ↳ bölünür), `word_of_mouth_brings_users` (memnun kullanıcı tavsiye oranı kadar kullanıcı getirir), `decision_row_drifts` (kararın satırı, hedefe yürüyüş, süre sonu).
+  ↳ bölünür ve kategori genişliğiyle büyür), `word_of_mouth_brings_users` (memnun kullanıcı tavsiye oranı kadar kullanıcı getirir), `decision_row_drifts` (kararın satırı, hedefe yürüyüş, süre sonu).
 
 ## Dikkat
 

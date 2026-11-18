@@ -199,12 +199,12 @@ kapanışında dolar; okumak onu doldurmaz ve pazaryeri koşusu olmayan oyunda (
 
 | Kategori | Sepet | Sipariş sıklığı | Kâr payı | Sektör iade ortalaması | Seçenek için mağaza | Başlangıç komisyonu | Taban ilgi (haftalık ziyaret) | Büyük sepet payı | Reklam havuzu (haftalık arama) |
 |---|---|---|---|---|---|---|---|---|---|
-| Moda | $38 | 0,30 | %22 | %20 | 30 | %10 | 450 | 0,25 | 82.000 |
-| Elektronik | $95 | 0,14 | %13 | %9 | 30 | %6 | 250 | 0,80 | 46.000 |
-| Ev ve Yaşam | $32 | 0,27 | %19 | %12 | 17 | %9 | 210 | 0,20 | 38.000 |
-| Kozmetik ve Kişisel Bakım | $22 | 0,35 | %25 | %5 | 20 | %11 | 150 | 0,10 | 27.000 |
-| Anne ve Bebek | $28 | 0,40 | %18 | %8 | 20 | %8 | 120 | 0,15 | 22.000 |
-| Spor ve Outdoor | $45 | 0,15 | %20 | %12 | 25 | %9 | 120 | 0,40 | 22.000 |
+| Moda | $38 | 0,30 | %22 | %20 | 30 | %10 | 1.350 | 0,25 | 246.000 |
+| Elektronik | $95 | 0,14 | %13 | %9 | 30 | %6 | 750 | 0,80 | 138.000 |
+| Ev ve Yaşam | $32 | 0,27 | %19 | %12 | 17 | %9 | 630 | 0,20 | 114.000 |
+| Kozmetik ve Kişisel Bakım | $22 | 0,35 | %25 | %5 | 20 | %11 | 450 | 0,10 | 81.000 |
+| Anne ve Bebek | $28 | 0,40 | %18 | %8 | 20 | %8 | 360 | 0,15 | 66.000 |
+| Spor ve Outdoor | $45 | 0,15 | %20 | %12 | 25 | %9 | 360 | 0,40 | 66.000 |
 - **Sipariş sıklığı**, yol kusursuzken (bütün adım çarpanları 1) bir kullanıcının haftalık siparişidir; ziyarete §3.5 çevirir.
 - Sepet, sıklık, kâr payı ve gereken mağaza ilk üç satırda kâğıt simülasyonunun ayar adayıdır
   (`tur4_ekranlar_2026-11-13/pazaryeri/sim/pazaryeri_sim.py` `CATS`); son üç satır ve son üç sütun varsayımdır. "Reklam havuzu" Pazarlama'nın reklam doyumunu hesapladığı sayıdır (o
@@ -213,6 +213,9 @@ kapanışında dolar; okumak onu doldurmaz ve pazaryeri koşusu olmayan oyunda (
   pazaryerlerinin 2012 ve bugünkü menülerinden (`arastirma/d_kategori_iade.md`). İade sıralaması kaynaklı, sayılar düşük
   güvenlidir (Moda için Türkiye 2024 verisi yüzde 19,84; Anne ve Bebek için kaynak bulunamadı). "Büyük sepet payı", kargo
   kuralındaki eşiğin ($50) üstünde kalan siparişin payıdır.
+- **Taban ilgi ve reklam havuzu** playtest ayarıdır [WORKING, onay bekliyor] ve birlikte ölçeklenir: reklam havuzunu okuyan
+  İçerik ve SEO'nun dolar başına ziyareti onunla büyür; ücretli altı reklam türünün tıklama bedeli (`channels.json`
+  `market.kinds`) havuzla ters orantılı tutulur ki bir kanalı dolduran bütçe aynı kalsın.
 - **Her kategoriyi birden açmanın bedeli:** emek kategori başına bölünür (§3.4), pazarlama bütçesi kategori başına ayrıdır,
   mağazası az olan açık kategori kullanıcı defterine satır yazar (§3.8, "Seçenek az") ve geri gelen kullanıcı sıklığını açık
   kategoriler arasında böler (§3.5, kategorinin payı).
@@ -260,21 +263,24 @@ Kapanış yalnız ürün yayındayken koşar; kategori açmak yayından önce de
 - `joined` her hafta kaydırılır: yeni katılan başa yazılır, sekizinci hafta düşer.
 
 ### 3.5 Ziyaretten teslimata (kategori başına)
-- `geri gelen = (aktif − üye + üye × 1,4) × sipariş sıklığı × sipariş başına ziyaret × kategorinin payı
+- `geri gelen = (aktif − üye + üye × 1,4) × sipariş sıklığı × sipariş başına ziyaret × kategorinin payı × kategori genişliği
   × (1 + MarketingSystem.return_lift())`
 - `organik = (aktif × 0,065 × sipariş başına ziyaret × memnuniyet katsayısı × ilgi payı + taban ilgi) × seçenek`
-  Memnuniyet katsayısı `sınırla((kullanıcı memnuniyeti − 55) ÷ 45; 0; 1)`. İlgi payı, kategorinin taban ilgisi ÷ açık
-  kategorilerin taban ilgisi toplamı.
+  Memnuniyet katsayısı `sınırla((kullanıcı memnuniyeti − 40) ÷ 40; 0; 1)`: tavsiye memnuniyet 40'ta sıfır, 80'de tamdır.
+  İlgi payı, kategorinin taban ilgisi ÷ açık kategorilerin taban ilgisi toplamı.
 - **Birim:** sipariş sıklığı ve tavsiye oranı (0,065) sipariş ve kullanıcı birimindedir: yol kusursuzken bir kullanıcının
   haftalık siparişi ve memnun bir kullanıcının haftada getirdiği yeni kullanıcı. `sipariş başına ziyaret = 1 ÷ dört adımın
   ulaşılabilir oranlarının çarpımı` (bugünkü sabitlerle 1 ÷ 0,0896 = 11,16) onları ziyarete çevirir; dört adım ziyareti
   yeniden siparişe indirir. Geri gelen kullanıcının siparişi böylece `aktif × sipariş sıklığı × kategorinin payı × adım
   çarpanlarının çarpımı` kadardır; ulaşılabilir oranlar değişse de değişmez.
-- **Kategorinin payı:** `taban ilgi × seçenek ÷ açık kategorilerin (taban ilgi × seçenek) toplamı`; mağazası olmayan kategori
-  pay almaz. Paylar 1'e toplanır: kullanıcı sıklığını açık kategoriler arasında böler. Kategori açmak kullanıcının haftalık
-  siparişini çarpmaz; yeni ziyaretçi (taban ilgi, reklam havuzu) getirir. Sıklığı düşük bir kategori dolunca geri gelen
-  kullanıcının toplam siparişi düşer (Moda'nın yanında Elektronik: bin kullanıcıda 300'den 243'e); bunu kategorinin getirdiği
-  yeni ziyaretçi karşılar.
+- **Kategorinin payı:** `sipariş sıklığı × seçenek ÷ açık kategorilerin (sipariş sıklığı × seçenek) toplamı`; mağazası olmayan kategori
+  pay almaz. Paylar 1'e toplanır: kullanıcı sıklığını açık kategoriler arasında böler.
+- **Kategori genişliği:** `max(1; açık kategorilerin seçenek toplamı)^(1/3)`. Dolu ikinci kategori ortalama sıklığı 1,26 ile,
+  altıncısı 1,8 ile çarpar. Küp kök, bu payla, dolu kategorilerde hangisi hangi sırayla eklenirse eklensin toplam siparişin
+  düşmediği en küçük yuvarlak üstür (Moda'nın yanında Elektronik: bin kullanıcıda 300'den 314'e). Yeni açılan kategori dolana
+  kadar toplamı aşağı çekebilir: kullanıcı siparişinin bir kısmını seçeneği az kategoriye verir ve orada sepet adımı seçenekle
+  çarpılır (Moda doluyken Elektronik dolarken en çok yüzde 2,5, Ev ve Yaşam dolarken yüzde 8; seçenek 0,65 ile 0,75 arasına
+  varınca toplam başladığı yeri geçer).
 - `kanal = MarketingSystem.channel_visits(kategori)`; `ziyaret = geri gelen + organik + kanal`. Organik ve kanal ayrı saklanır.
 - Dört adım:
 
@@ -680,8 +686,8 @@ metinleri ARAYUZ'un PRD'sindedir.
 
 Kategori sabitleri `data/product/categories.json`'da (§3.2'nin tablosu), modüller `data/product/lines/marketplace.json`'da,
 öbür bütün sabitler ve konu kataloğu `data/product/marketplace.json`'da durur. §12 soru 10 bu değerlerle kurulmasının onayıdır.
-- **Ziyaret ve kullanıcı:** tavsiye oranı 0,065 (memnun kullanıcının haftada getirdiği kullanıcı, yol kusursuzken); memnuniyet
-  katsayısının tabanı 55 ve aralığı 45; elde tutma tabanı 0,94,
+- **Ziyaret ve kullanıcı:** tavsiye oranı 0,065 (memnun kullanıcının haftada getirdiği kullanıcı, yol kusursuzken); kategori
+  genişliğinin üssü 1/3 (config'te 0,3333); memnuniyet katsayısının tabanı 40 ve aralığı 40; elde tutma tabanı 0,94,
   memnuniyet puanı başına 0,0005, üye payı katsayısı 0,03, sınırları 0,85 ve 0,99; üyenin sıklık çarpanı 1,4.
 - **Adımlar:** ulaşılabilir oranlar %15, %70, %88, %97; yayın şartı modüllerinin kademe çarpanı 0,83, 0,96, 1; destek
   modüllerinin 0,90, 0,95, 0,98, 1; açık hata başına 0,027 (en çok 10); en zayıf adım tanımı §3.5'te.
