@@ -22,8 +22,8 @@ extends RefCounted
 # `cost` (son dört hafta); `ledger[taraf]` = satırlar
 # (`key`, `arg`, `points`, `weeks`; WHILE koşul sürdükçe); `revenue_weeks`; `sat[taraf]` (iki memnuniyet); `burn[kalem]` (son
 # kapanışın haftalık `pazaryeri` gideri); `lost` (kapanışlarda kaybedilen `users` ve `stores`, birikir); `topics[konu]` =
-# `tickets` (son dört haftanın bileti, yeni önde), `since_day` (ilk biletin ya da isteğin haftası), `status`, `source` (`tickets`
-# ya da `report`).
+# `tickets` (son dört haftanın bileti, yeni önde), `since_day` (konunun açıldığı hafta: son dört haftanın bileti
+# `topics.open_tickets`'a vardığında ya da rapordan), `status`, `source` (`tickets` ya da `report`).
 # `waive` (komisyonsuz kalan hafta; kapanış brüt komisyonu 0 yapar ve birer azaltır), `outage` (bekleyen kesinti: `points` kullanıcı
 # defterine "Kesinti" satırı olarak yazılır, `cost` o haftanın toplam net komisyonundan düşer, komisyonsuz haftada düşmez; kapanış
 # ikisini sıfırlar).
@@ -841,7 +841,7 @@ static func _status(world: Dictionary, topic: Dictionary) -> String:
 	return "planned" if topic.id in _w(world, "planned") else "waiting"
 
 
-## Konu durumunu dünyadan okur; isteği gelmiş bir konu ilk kez yayına çıkınca tarafına "Karşılandı" satırı yazar.
+## Konu durumunu dünyadan okur; açılmış bir konu ilk kez yayına çıkınca tarafına "Karşılandı" satırı yazar.
 static func _refresh_topics(state: Dictionary, world: Dictionary) -> void:
 	var met: Dictionary = _c.ledger.rows.met
 	for topic in _c.topics.catalog:
@@ -852,7 +852,7 @@ static func _refresh_topics(state: Dictionary, world: Dictionary) -> void:
 		ts.status = status
 
 
-## Tarafın en eski gecikmiş konusu: yayında olmayan (planda olan dahil) ve ilk isteğinden bu yana eşikten çok hafta geçmiş; yoksa "".
+## Tarafın en eski gecikmiş konusu: yayında olmayan (planda olan dahil) ve açıldığı haftadan bu yana eşikten çok hafta geçmiş; yoksa "".
 ## Sprint kartı olmayan konu sayılmaz: oyuncu onu karşılayamaz.
 static func _late_topic(state: Dictionary, world: Dictionary, side: String) -> String:
 	var oldest := ""
@@ -897,18 +897,20 @@ static func _tickets(state: Dictionary, topic: Dictionary) -> float:
 
 
 ## Kapanıştan sonra haftada bir: her konunun o haftaki biletini son dört haftaya yazar (yayındaki ve sprint kartı olmayan konuya
-## bilet gelmez); ilk bileti gelen konunun yaşı o haftadan başlar.
+## bilet gelmez). Konu, son dört haftanın bileti `topics.open_tickets`'a vardığı hafta açılır ve yaşı o haftadan başlar: kesirli
+## bilet konu açmaz. Açılan konu, bileti sonradan eşiğin altına düşse de açık kalır. Eşik sıfırdan büyüktür: sıfırda biletsiz
+## konu da ilk hafta açılırdı.
 static func tick_topics(state: Dictionary, world: Dictionary) -> void:
 	for topic in _c.topics.catalog:
 		var ts: Dictionary = state.topics[topic.id]
 		var tickets := 0.0 if _topic_live(world, topic) or topic.id in _w(world, "cardless") else _tickets(state, topic)
 		_push(ts.tickets, tickets, int(_c.topics.window_weeks))
-		if tickets > 0.0 and ts.since_day == NEVER:
+		if ts.since_day == NEVER and _sum(ts.tickets) >= _c.topics.open_tickets:
 			ts.since_day = int(_w(world, "week"))
 
 
-## Bileti olmayan konuyu rapordan açar: ilk isteği bu hafta, haftalık etkilenen sipariş `affected`. Konu katalogda yoksa ya da satırı
-## zaten açıksa false.
+## Açılmamış konuyu rapordan açar, bilet eşiğini beklemeden: açıldığı hafta bu hafta, haftalık etkilenen sipariş `affected`. Konu
+## katalogda yoksa ya da satırı zaten açıksa false.
 static func open_topic(state: Dictionary, world: Dictionary, id: String, affected: float) -> bool:
 	var ts: Dictionary = state.topics.get(id, {})
 	if ts.is_empty() or ts.since_day != NEVER:
@@ -943,9 +945,9 @@ static func _affected(state: Dictionary, world: Dictionary, topic: Dictionary) -
 	return total
 
 
-## Talepler'in satırları, ilk isteği gelmiş her konu için: `tickets` son dört haftanın toplamı, `affected` haftada etkilenen sipariş,
+## Talepler'in satırları, açılmış her konu için: `tickets` son dört haftanın toplamı, `affected` haftada etkilenen sipariş,
 ## `share` onun geçen haftanın teslim edilen siparişindeki payı, `reason` konunun bağlı adımı ya da mağaza derdi, `status` verilen
-## dünyadan (plana alınan konu kapanışı beklemeden `planned` okunur), `age` ilk istekten bu yana hafta.
+## dünyadan (plana alınan konu kapanışı beklemeden `planned` okunur), `age` açıldığı haftadan bu yana hafta.
 static func topic_rows(state: Dictionary, world: Dictionary) -> Array:
 	var delivered: float = funnel(state).delivered
 	var rows := []

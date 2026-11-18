@@ -6,16 +6,16 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 
 ## Dosyalar
 
-- `systems/marketplace_model.gd` (1381): `MarketplaceModel`; yalnız `static` işlevler. `state` ve `world` sözlüklerinin alanları dosya başındaki yorumda.
+- `systems/marketplace_model.gd` (1383): `MarketplaceModel`; yalnız `static` işlevler. `state` ve `world` sözlüklerinin alanları dosya başındaki yorumda.
 - `systems/marketplace_system.gd` (352): `MarketplaceSystem`; yalnız `static` işlevler. `GameState.marketplace`'in tek yazarı, yazan seam'ler, sözleşme okuyucuları, `world()` ve haftalık kapanış.
-- `debug/marketplace_probe.gd` (1341): `-s` betiği; oynanan çizelge ve 46 mekanik denetimi, `MPPROBE ...` satırları.
+- `debug/marketplace_probe.gd` (1394): `-s` betiği; oynanan çizelge ve 47 mekanik denetimi, `MPPROBE ...` satırları.
 - `data/product/categories.json` (16): altı kategori ve sütunları: sepet, sipariş sıklığı (`order_freq`: yol kusursuzken kullanıcının haftalık siparişi), kâr payı, sektör iadesi, gereken mağaza, başlangıç komisyonu, taban ilgi, büyük sepet payı, reklam havuzu (`ad_pool`, haftalık arama).
 - `data/product/lines/marketplace.json` (153): modül verisi; 5 kimlik hattı (Ürün Yükleme, Vitrin, Sepet ve Ödeme, Siparişler, Yorum ve Güvence)
   ↳ Mobil, Entegrasyonlar, Kullanıcılar ve Yetki, Yedekleme `shared.json`'dan; Üyelik, Gelir alanının `cap_paid_plan`'ı.
   ↳ Yayın şartının dört adlı modülü (Ürün Yükleme, Vitrin, Sepet ve Ödeme, Siparişler) `sprint.json` `mvp_named["marketplace"]`'da.
   ↳ Dördünün ilk kademesi sıradan K1'in `mvp_k1_share` katı eforludur (`SprintCatalog.step_effort`; vaka `marketplace_mvp_cards_cost_less`).
   ↳ Tür ekranında (`ProductCatalog.TYPE_SCREEN` `b2c.playable`) dört masa sayılır: ürün geliştirme, kategoriler, politikalar, kampanyalar; Premium masasının metni CSV'de durur. Rakipler `RivalCatalog.NAMES` ve `rivals.json`, Piyasa yuvaları (Orinoco, Bidwell, Dealflock) `companies.json` `sector_slots`.
-- `data/product/marketplace.json` (131): öbür bütün sabitler, gruplu: `visits`, `steps`, `stores`, `rules`, `commission`, `store_terms`, `premium`, `ledger`, `income`, `preview`, `topics` (konu kataloğu ve mağaza dertleri).
+- `data/product/marketplace.json` (132): öbür bütün sabitler, gruplu: `visits`, `steps`, `stores`, `rules`, `commission`, `store_terms`, `premium`, `ledger`, `income`, `preview`, `topics` (konu kataloğu ve mağaza dertleri).
 
 ## Giriş noktaları
 
@@ -43,7 +43,8 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
   ↳ `cfg("steps.reach")` `marketplace.json`'u nokta yoluyla okur (olmayan yol motor hatası verir, varsayılan dönmez; sözlük ve dizi kopya döner; arayüz ulaşılabilir oranı, komisyon sınırını ve kural seçeneklerini buradan alır).
 - Haftalık kapanış: `close_week(state, world)` bağlayıcı sırayla `state`'i değiştirir (mağaza akışı, ziyaret ve adımlar, iade, kullanıcı, gelir ve gider, Premium, defter); sinyal ve kayıt çağıranındır.
   ↳ Kapanış `state.lost`'a kaybı ekler (`users` += kullanıcı × (1 − elde tutma), `stores` += ayrılan mağaza); iki sayı birikmiş toplamdır.
-- Biletler: `tick_topics(state, world)` kapanıştan sonra, haftada bir koşar; her konunun o haftaki biletini son dört haftaya yazar.
+- Biletler: `tick_topics(state, world)` kapanıştan sonra, haftada bir koşar; her konunun o haftaki biletini son dört haftaya yazar;
+  ↳ son dört haftanın toplamı `topics.open_tickets`'a (1) varınca konuyu açar (`since_day` = o hafta); açılan konu bileti düşse de açık kalır.
   ↳ Konu durumu (`waiting`, `planned`, `shipped`) kapanışın 7. adımında dünyadan duruma yazılır (`_status`), defter satırları oradan çıkar.
 - Yazan işlevler (`true` uygulandı, `false` reddedildi): `open_category`, `set_commission`, `set_policy`, `set_fee`, `set_perk`, `set_trial`, `open_premium`, `set_store_terms`,
   ↳ `add_users(state, n)` (olayın kullanıcı ekleyişi ya da çıkarışı, `n` eksi olabilir; kullanıcı sayısı değişmediyse false); kilit `lock_left(gün, world)`.
@@ -70,9 +71,10 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
   ↳ Satırın durumu (`waiting`, `planned`, `shipped`) okunduğu anda ürünün kademesinden ve sprint planından gelir, "Karşılandı" kapanışta yazılır.
   ↳ `MarketplaceModel.tier_topics()` kademe konularının modülünü ve kademesini verir.
   ↳ `topic_name(kimlik)` konunun oyuncuya görünen adının tek okuyucusu: kademe konusunda modülün o kademesinin adı (`SprintCatalog.step_name`), ek özellikte `MP_TOPIC_<KİMLİK>` metni; defter satırının konusu ve Talepler'in adı (`ProductModel._market_topics`) buradan okur.
-- Talepler (model): `topic_rows(state, world)` ilk isteği gelmiş her konunun satırı (`id`, `side`, `module`, `tickets`, `affected`, `share`, `reason`, `status`, `age`, `source`);
+- Talepler (model): `topic_rows(state, world)` açılmış her konunun satırı (`id`, `side`, `module`, `tickets`, `affected`, `share`, `reason`, `status`, `age`, `source`);
   ↳ konu kimlikleri `marketplace.json` `topics.catalog`'ta, metin yok. `share` etkilenen siparişin geçen haftanın teslim edilenindeki payıdır; `status` verilen dünyadan okunur (`_status`).
-- Rapordan açılan konu: `open_topic(state, world, kimlik, etkilenen)` bileti olmayan konunun satırını açar (`since_day` = hafta, `source` = `report`, haftalık etkilenen sipariş `topics[konu].affected`); katalogda olmayan ya da satırı açık konuda false.
+- Rapordan açılan konu: `open_topic(state, world, kimlik, etkilenen)` açılmamış konunun satırını bilet eşiğini beklemeden açar (`since_day` = hafta, `source` = `report`,
+  ↳ haftalık etkilenen sipariş `topics[konu].affected`); katalogda olmayan ya da satırı açık konuda false.
 - Önizleme: `project(state, world)` kopyada dört kapanış koşar; `preview_commission`, `preview_policy`, `preview_premium` değişiklikli ve değişiklikssiz farkı döndürür (`metrics` anahtarları; `store_earnings` oran, öbürleri fark);
   ↳ reddedilen değişiklikte `{}`.
 
@@ -89,7 +91,7 @@ Hatırlatıcı: `MailClock.reminders()` pazaryeri türünde (`SalesSystem.is_mar
   ↳ `premium.orders` son dört haftanın üye siparişidir, `lost` birikmiş kayıp, `topics[konu]` (`tickets` son dört hafta yeni önde, `since_day`, `status`, `source`).
 - Talepler: bilet kullanıcı konusunda bağlı adımda sayılan büyüklük × oran, mağaza konusunda derdi olan mağazaların payı × oran; yayındaki konuya ve `world.cardless`'taki konuya bilet gelmez.
   ↳ Kademe konusu `tier`'ı modülün kademesi tutunca yayındadır, ek özellik `world.features`'ta adı geçince. `world.planned` planda olanı işaretler.
-  ↳ Konu ilk biletiyle ya da isteğiyle satır olur (`since_day`); yaşı o haftadan sayılır.
+  ↳ Konu penceresi bir tam bilete varınca ya da rapordan (`open_topic`, eşiksiz) satır olur (`since_day`); yaşı ve gecikmesi o haftadan sayılır.
 - Ek özellik adım çarpanıdır: kullanıcı özelliği (`missing_mult` alanı, bağlı adım `link`) yayında değilken adımı o kadar kısar (`_feature_mult`, `step_factors`);
   ↳ `world.cardless`'taki özellik kısmaz. Kartı olan her kullanıcı konusu yayına çıkana kadar adımı kıstığı için, adım ulaşılabilir oranda iken kartı olan konuların hepsi yayındadır.
 - Bilet oranı (`rate`) olmayan konu bilet almaz (`_tickets`): `coupon_abuse` (kullanıcı, Sepet ve Ödeme, ek özellik, adım çarpanı yok) yalnız `open_topic` ile satır olur; satırın `affected`'ı verilen sayıdır ve konu
@@ -123,7 +125,8 @@ Hatırlatıcı: `MailClock.reminders()` pazaryeri türünde (`SalesSystem.is_mar
   ↳ `waive_zeroes_one_close`, `outage_row_and_cost`, `lost_commission_weighted`, `backup_mult_tiers`, `open_topic_report_row`, `cfg_reads_constants` (okuyanın boşalttığı kopya sabiti değiştirmez),
   ↳ `funnel_sums_categories`, `step_hint_matches_gain`, `ledger_worst_picks_heaviest`, `crew_follows_assignment`,
   ↳ `returning_orders_follow_frequency` (geri gelen kullanıcı sipariş sıklığı kadar sipariş verir; sıklık açık kategoriler arasında
-  ↳ bölünür ve kategori genişliğiyle büyür), `word_of_mouth_brings_users` (memnun kullanıcı tavsiye oranı kadar kullanıcı getirir), `decision_row_drifts` (kararın satırı, hedefe yürüyüş, süre sonu).
+  ↳ bölünür ve kategori genişliğiyle büyür), `word_of_mouth_brings_users` (memnun kullanıcı tavsiye oranı kadar kullanıcı getirir), `decision_row_drifts` (kararın satırı, hedefe yürüyüş, süre sonu),
+  ↳ `cardless_topics_stay_quiet`, `topics_open_with_first_whole_ticket` (konu pencere bir tam bilete varınca açılır, gecikme o haftadan sayılır).
 
 ## Dikkat
 

@@ -110,6 +110,7 @@
   "topics": {
     "window_weeks": 4,
     "late_weeks": 8,
+    "open_tickets": 1,
     "pains": {"upload": 0.34, "ship": 0.22, "payout": 1.0},
     "catalog": [
       {"id": "search_filter", "side": "users", "module": "storefront", "tier": 2, "link": "cart", "base": "lost", "rate": 0.001},

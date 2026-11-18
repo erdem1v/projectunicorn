@@ -291,10 +291,10 @@ static func topics() -> Variant:
 
 
 ## Pazaryerinin konuları (`MarketplaceSystem.request_topics`): yalnız sprint kartı olan konu; kartsız konu kartıyla gelir. Konu {id,
-## card_id, name, side ("users" | "stores"), line, area, module, status ("shipped" · "locked" · "planned" · "new" (ilk bileti bu
-## hafta) · "waiting"; B2B'deki gibi), sprint, lock, lock_full, count (son dört haftanın bileti), affected (haftada etkilenen
+## card_id, name, side ("users" | "stores"), line, area, module, status ("shipped" · "locked" · "planned" · "new" (bu hafta
+## açıldı) · "waiting"; B2B'deki gibi), sprint, lock, lock_full, count (son dört haftanın bileti), affected (haftada etkilenen
 ## sipariş), share (onun geçen haftanın teslimine oranı), reason (bağ: kullanıcıda huninin adımı ya da iade, mağazada dert), late
-## (yayında değilken ilk bileti `topics.late_weeks`'i geçtiyse yaşı, yoksa 0)}.
+## (yayında değilken açıldığı haftadan bu yana `topics.late_weeks`'i geçtiyse yaşı, yoksa 0)}.
 static func _market_topics() -> Dictionary:
 	var p: Dictionary = GameState.product
 	var tags: Dictionary = _tags()

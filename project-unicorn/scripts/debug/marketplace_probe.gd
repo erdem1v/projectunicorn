@@ -28,7 +28,7 @@ const CHECKS := ["empty_category_no_orders", "acquisition_waits_for_publish", "l
 	"reviews_affected_is_return_gap", "assignment_waits_a_close", "waive_zeroes_one_close", "outage_row_and_cost",
 	"lost_commission_weighted", "backup_mult_tiers", "open_topic_report_row", "cfg_reads_constants", "funnel_sums_categories",
 	"step_hint_matches_gain", "ledger_worst_picks_heaviest", "crew_follows_assignment", "returning_orders_follow_frequency",
-	"word_of_mouth_brings_users", "decision_row_drifts", "cardless_topics_stay_quiet"]
+	"word_of_mouth_brings_users", "decision_row_drifts", "cardless_topics_stay_quiet", "topics_open_with_first_whole_ticket"]
 
 var _weeks := DEFAULT_WEEKS
 var _printing := false
@@ -768,14 +768,18 @@ func _check_topic_rows_known() -> Array:
 	var ok := rows.size() == want.size()
 	var wrong := []
 	for row in rows:
+		# Konu, penceresi bir tam bilete vardığı hafta açılır: haftada 1'den az bilet alan mağaza konuları 2. ya da 3. haftada.
 		var good: bool = want.has(row.id) and _near(row.tickets, 4.0 * want[row.id][0]) and _near(row.affected, want[row.id][1]) \
-			and row.age == 4 and row.status == "waiting" and row.source == "tickets" and _near(row.share, row.affected / 560.0)
+			and row.age == 5 - ceili(1.0 / want[row.id][0]) and row.status == "waiting" and row.source == "tickets" \
+			and _near(row.share, row.affected / 560.0)
 		if not good:
 			wrong.append(row.id)
 		ok = ok and good
 	return [ok, "five weekly ticks of a fixed week: %d of 12 ticketed topics listed, tickets over the last four weeks = 4 x weekly, affected orders: "
-		% rows.size() + "tier gain %.2f, size_chart %.2f, favorites %.2f, guest_checkout %.2f, single_connection %.2f, reviews_ratings %.2f; age 4; wrong: %s"
-		% [tier, want.size_chart[1], want.favorites[1], want.guest_checkout[1], want.single_connection[1], want.reviews_ratings[1], wrong]]
+		% rows.size() + "tier gain %.2f, size_chart %.2f, favorites %.2f, guest_checkout %.2f, single_connection %.2f, reviews_ratings %.2f; "
+		% [tier, want.size_chart[1], want.favorites[1], want.guest_checkout[1], want.single_connection[1], want.reviews_ratings[1]]
+		+ "age counts from the week the window reached one ticket (user topics 4, store topics 3, shipping_label 2); wrong: %s"
+		% [wrong]]
 
 
 func _check_topic_ticket_gates() -> Array:
@@ -859,6 +863,55 @@ func _check_cardless_topics_stay_quiet() -> Array:
 		% [tickets.size_chart, tickets.color_size_options, tickets.favorites, tickets.shipping_label]
 		+ "all three asked in week 1, week 12 late rows users %s stores %s; " % late
 		+ "the cart step keeps %.4f of its rate (0.99, favorites alone) and %.4f once size_chart has a card too (0.9603)" % [cart, carded]]
+
+
+## Konu, son dört haftanın bileti bir tam bilete varınca açılır. 10 mağazalı Moda'da Toplu Yükleme'nin bileti haftada 10 × 0,34 ×
+## 0,08 = 0,272: pencere 1., 2. ve 3. haftada 0,272, 0,544, 0,816 (konu kapalı, satırı yok), 4. haftada 1,088 (açılır, satırı yaşı 0,
+## en az bir bilet). Mağaza kalmayınca bilet 0'a iner, konu açık kalır: 8. haftada pencere 0, yaşı 4. Rapordan açılan konu eşiği
+## beklemez: bileti olmayan Kupon Suistimali 3. haftada açılır. "Geciken talep" açılıştan sekiz hafta sonra başlar: 12. haftada
+## yok, 13. haftada var (ilk kesirli biletten sayılsa 10. haftada başlardı).
+##
+## FALSİFİKASYON: `tick_topics`te koşulu `tickets > 0.0 and ts.since_day == NEVER` yap → konu 1. haftada açılır, FAIL.
+## FALSİFİKASYON: `tick_topics`te pencere toplamı yerine bu haftanın biletine bak (`tickets >= _c.topics.open_tickets`) → konu hiç
+## açılmaz, FAIL.
+## FALSİFİKASYON: `tick_topics`te pencere eşiğin altına inince `since_day`'i `NEVER` yap → 8. haftanın satırı FAIL.
+func _check_topics_open_with_first_whole_ticket() -> Array:
+	var state := _topic_state()
+	state.cats.fashion.stores = 10.0
+	var weekly := 10.0 * 0.34 * 0.08
+	var bulk := func(week: int) -> Array:
+		return MarketplaceModel.topic_rows(state, _live_world(week)).filter(func(r: Dictionary) -> bool: return r.id == "bulk_upload")
+	var windows := []
+	var closed := true
+	for week in range(1, 4):
+		MarketplaceModel.tick_topics(state, _live_world(week))
+		windows.append(MarketplaceModel._sum(state.topics.bulk_upload.tickets))
+		closed = closed and state.topics.bulk_upload.since_day == MarketplaceModel.NEVER and bulk.call(week).is_empty()
+	var reported := MarketplaceModel.open_topic(state, _live_world(3), "coupon_abuse", 5.0)
+	var report_rows: Array = MarketplaceModel.topic_rows(state, _live_world(3)).filter(func(r: Dictionary) -> bool: return r.id == "coupon_abuse")
+	MarketplaceModel.tick_topics(state, _live_world(4))
+	var opened: Array = bulk.call(4)
+	var at_open := state.duplicate(true)
+	state.cats.fashion.stores = 0.0
+	for week in range(5, 9):
+		MarketplaceModel.tick_topics(state, _live_world(week))
+	var kept: Array = bulk.call(8)
+	var late := func(week: int) -> Array:
+		var closing := at_open.duplicate(true)
+		_run(closing, _live_world(week), 1)
+		return _late_args(closing, "stores")
+	var late12: Array = late.call(12)
+	var late13: Array = late.call(13)
+	var open_row: Dictionary = opened[0] if opened.size() == 1 else {}
+	var kept_row: Dictionary = kept[0] if kept.size() == 1 else {}
+	var ok: bool = closed and _near(windows[2], 3.0 * weekly) and at_open.topics.bulk_upload.since_day == 4 \
+		and open_row.get("age") == 0 and open_row.get("tickets", 0.0) >= 1.0 and _near(open_row.get("tickets", 0.0), 4.0 * weekly) \
+		and state.topics.bulk_upload.since_day == 4 and kept_row.get("tickets") == 0.0 and kept_row.get("age") == 4 \
+		and reported and report_rows.size() == 1 and report_rows[0].tickets == 0.0 and report_rows[0].age == 0 \
+		and late12 == [] and late13 == ["bulk_upload"]
+	return [ok, "bulk_upload %.3f tickets a week: window %s in weeks 1-3, closed with no row=%s; week 4 row %s; no stores, week 8 row %s; "
+		% [weekly, windows, closed, open_row, kept_row] + "coupon_abuse opened by its report in week 3 with no ticket=%s (%d rows); " % [reported, report_rows.size()]
+		+ "store late rows week 12 %s, week 13 %s" % [late12, late13]]
 
 
 ## Üç kullanıcı ek özelliği ayrı sayı verir; yayına çıkınca adım tam bu `gain` kadar artar (aynı durumdan iki gerçek kapanış).

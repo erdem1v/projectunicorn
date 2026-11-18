@@ -194,7 +194,7 @@ func _row(t: Dictionary) -> PanelContainer:
 	return row
 
 
-## Pazaryerinde geciken: konu yayında değilken ilk biletinden bu yana `topics.late_weeks`'i geçtiyse haftası, kum saatiyle. Bedeli
+## Pazaryerinde geciken: konu yayında değilken açıldığı haftadan bu yana `topics.late_weeks`'i geçtiyse haftası, kum saatiyle. Bedeli
 ## Pazaryeri › Genel'in memnuniyet satırındadır; ipucu yalnız gözlem.
 func _late_cell(t: Dictionary) -> HBoxContainer:
 	var cell := SprintUiShared.box(UiTokens.SPACE_XS)

@@ -166,7 +166,7 @@ kapanışında dolar; okumak onu doldurmaz ve pazaryeri koşusu olmayan oyunda (
 | `premium` | `open`, `fee`, `fee_day`, `trial`, `joined` (son dört haftada katılan üye), `perks[ayrıcalık]` (`pick`, `day`, son dört haftanın kullanımı ve bedeli) |
 | `ledger` | `users` ve `stores`: adlı satırlar (`key`, `arg`, `points`, `weeks`) |
 | `revenue_weeks` | Son dört haftanın net komisyonu |
-| `topics[kimlik]` | `tickets` (son dört haftanın bileti, hafta hafta), `since_day` (ilk isteğin haftası), `status` (`waiting`, `planned`, `shipped`), `source` (`tickets` ya da `report`); rapordan açılan konuda `affected` (raporun verdiği haftalık etkilenen sipariş) |
+| `topics[kimlik]` | `tickets` (son dört haftanın bileti, hafta hafta), `since_day` (konunun açıldığı hafta), `status` (`waiting`, `planned`, `shipped`), `source` (`tickets` ya da `report`); rapordan açılan konuda `affected` (raporun verdiği haftalık etkilenen sipariş) |
 | `lost` | `users` ve `stores`: kaybedilen kullanıcının ve ayrılan mağazanın birikmiş toplamı |
 | `waive` | Komisyonun alınmayacağı kalan hafta sayısı (acil durumun "bir hafta komisyon almamak" şıkkı; §5.2) |
 | `outage` | Bekleyen kesinti: `points` (kullanıcı defterine yazılacak düşüş) ve `cost` (net komisyondan düşecek tutar); izleyen kapanış uygular ve sıfırlar |
@@ -432,7 +432,7 @@ Dört kural. `set_policy(kural, seçenek)` kuralı değiştirir ve dört hafta k
 ### 3.11 Talepler
 - `request_topics()` satırları döndürür: konu, taraf, modül, son dört haftanın bileti, haftada etkilenen sipariş ve onun geçen
   haftanın teslim edilen siparişindeki payı (`share`), neden, durum, konunun yaşı, kaynak ve konunun kartının kimliği (`card_id`:
-  kademe konusunda modülün o kademesinin özellik kartı, ek özellikte `ext:<konu>`). Yalnız ilk isteği gelmiş konu satır olur;
+  kademe konusunda modülün o kademesinin özellik kartı, ek özellikte `ext:<konu>`). Yalnız açılmış konu satır olur;
   durum satır okunduğu anda okunur, kapanışı beklemez (plana alınan konu hemen "planda" okunur; durumun kaynakları ve
   "Karşılandı" satırı aşağıda). Demodaki konu kataloğu ve bilet oranları `tur4_ekranlar_2026-11-13/pazaryeri/
   TALEPLER_ICERIK.md` §2 ve §3'teki on iki konudur; katalog `data/product/marketplace.json`'a girer (konu, taraf, modül, sıradaki
@@ -446,20 +446,22 @@ Dört kural. `set_policy(kural, seçenek)` kuralı değiştirir ve dört hafta k
   0,34'ünün 50'den çok ürünü vardır, 0,22'si haftada 10'dan çok sipariş alır. Konunun özelliği yayındaysa bilet gelmez: kademe
   konusu modül o kademeye varınca, ek özellik çıkınca yayındadır. Sprint kartı olmayan konuya da bilet gelmez ve konu gecikmiş
   sayılmaz: oyuncunun karşılayamayacağı istek ceza yazmaz (ek özellik kartları gelene kadar ek özelliklerin hepsi; adımı da
-  kısmaz, §3.5). Haftanın bileti kapanıştan sonra yazılır; konunun yaşı ilk biletin haftasından sayılır. Hata bileti talep
-  değildir.
+  kısmaz, §3.5). Haftanın bileti kapanıştan sonra yazılır. Konu, son dört haftanın bileti bir tam bilete vardığı hafta açılır
+  (`topics.open_tickets` = 1 [WORKING, onay bekliyor]): kesirli bilet konu açmaz, konunun satırı açıldığı hafta en az bir bilet yazar.
+  Konunun yaşı açıldığı haftadan sayılır; bileti sonradan 1'in altına düşse de konu açık kalır. Hata bileti talep değildir.
 - **Etkilenen sipariş:** kullanıcı konusunda konu yayına çıkınca kazanılan haftalık sipariştir (`gain`, §3.5: sıradaki kademe
   ya da ek özellik); Yorum ve Puan'da kademe çıkınca haftada iade edilmeyecek sipariştir (`teslim × (bugünkü iade oranı −
   kademeyle iade oranı)`); mağaza konusunda derdi olan mağazaların siparişi × o hafta ayrılma olasılığıdır (§3.4; sipariş
   mağaza payıyla orantılı sayılır). Yayındaki konuda 0'dır. Gösterilen sayı, konu çıkınca gerçekleşen sayıdır.
 - "Plana al" konunun kartını bugünkü sprint yolundan ekler. Konunun durumu (bekliyor, planda, yayında) kademe konusunda
   modülün kademesinden, ek özellikte ürünün yayındaki ek özelliklerinden, plandaki konuda sprint planından okunur: satır
-  okunduğu anda, defter kapanışta. İsteği gelmiş bir konu yayına çıkınca izleyen kapanışta tarafına bir kez
-  "Karşılandı: {konu}" yazılır; isteği hiç gelmemiş konu satır yazmaz.
-  "Geciken talep" taraf başına tek satırdır (§3.8): ilk isteğinden bu yana sekiz haftadan çok geçmiş, yayında olmayan, sprint
+  okunduğu anda, defter kapanışta. Açılmış bir konu yayına çıkınca izleyen kapanışta tarafına bir kez
+  "Karşılandı: {konu}" yazılır; hiç açılmamış konu satır yazmaz.
+  "Geciken talep" taraf başına tek satırdır (§3.8): açıldığı haftadan bu yana sekiz haftadan çok geçmiş, yayında olmayan, sprint
   kartı olan en eski konu.
-- `open_topic(kimlik, etkilenen)` satırı henüz açılmamış bir konuyu rapordan açar: kaynağı `report`, ilk isteği o hafta,
-  haftalık etkilenen siparişi raporun verdiği sayıdır. Konu katalogda yoksa ya da satırı zaten açıksa reddedilir.
+- `open_topic(kimlik, etkilenen)` satırı henüz açılmamış bir konuyu rapordan, bilet eşiğini beklemeden açar: kaynağı `report`,
+  açıldığı hafta o hafta, haftalık etkilenen siparişi raporun verdiği sayıdır. Konu katalogda yoksa ya da satırı zaten açıksa
+  reddedilir.
   Pazarlama'nın kupon raporundaki "Ürüne doğrulama ekle" düğmesi bunu `coupon_abuse` konusuyla çağırır. Bu konu kataloğun on
   üçüncü kaydıdır (kullanıcı tarafı, Ödeme modülü): bilet oranı ve adım çarpanı yoktur, bilet almaz, yalnız rapordan açılır.
   Rapordan açılan konu yayına çıkınca öbür konular gibi "Karşılandı" yazar ve etkilenen siparişi 0 olur; sprint kartı
@@ -712,8 +714,8 @@ Kategori sabitleri `data/product/categories.json`'da (§3.2'nin tablosu), modül
 - **Memnuniyet:** taban 70; haftada en çok 5 puan; §3.8'in tablosundaki puanlar, süreler ve eşikler; Yedekleme'nin kesinti
   çarpanı 0,7, 0,5, 0,3.
 - **Gelir:** ay 4,33 hafta; pencere 4 hafta. **Önizleme:** 4 hafta ileri.
-- **Talepler:** §3.11'deki bilet oranları ve derdi olan mağaza payları (0,34; 0,22; 1); bilet penceresi 4 hafta; geciken talep
-  eşiği 8 hafta; ek özellik çarpanları 0,97; 0,99; 0,95 (§3.5).
+- **Talepler:** §3.11'deki bilet oranları ve derdi olan mağaza payları (0,34; 0,22; 1); bilet penceresi 4 hafta; konu açan bilet 1
+  (penceredeki toplam); geciken talep eşiği 8 hafta; ek özellik çarpanları 0,97; 0,99; 0,95 (§3.5).
 - **Olay 5.1:** en az 4 hafta atanmış temsilci; şart çarpanları 1,4 ve 1,8; paylar 0,5 ve 0; süre 8 hafta; moral −4.
 
 ## 10. Test ve kapılar
@@ -832,5 +834,5 @@ birim bedel) bu PRD ile tutar; modelin kendi çıktısı §3.13'ün probe'undan 
 Çekirdek Talepler'in ve Pazarlama'nın okumalarıyla genişlerken (14 Kasım sabahı; bir Opus incelemesi, tek tur) şunlar netleşti:
 kullanıcı tarafındaki ek özellik bağlı adımı gerçekten oynatır ve "etkilenen sipariş" o özelliğin kazancıdır, yani gösterilen
 sayı konu çıkınca gerçekleşir (§3.5, §3.11); Yorum ve Puan'ın etkilenen siparişi iade farkıdır; konu kataloğu on iki konudur;
-kayıp sayaçları birikir (§3.1); "Karşılandı" yalnız isteği gelmiş konuya yazılır (§3.11). Hepsi PAZARYERI oturumunun kararıdır,
+kayıp sayaçları birikir (§3.1); "Karşılandı" yalnız açılmış konuya yazılır (§3.11). Hepsi PAZARYERI oturumunun kararıdır,
 onay bekliyor.

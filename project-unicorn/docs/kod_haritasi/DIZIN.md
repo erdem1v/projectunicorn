@@ -55,13 +55,13 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/data_models/rival.gd · 33 · Rival · Resource · 0 sinyal · 1 func
 - scripts/data_models/term_sheet.gd · 63 · TermSheet · Resource · 0 sinyal · 3 func
 
-### scripts/debug/ (13 dosya, 39289 satır)
+### scripts/debug/ (13 dosya, 39342 satır)
 - scripts/debug/endgame_smoke.gd · 32864 · EndgameSmoke · RefCounted · 0 sinyal · 746 func
 - scripts/debug/glyph_audit.gd · 109 · - · SceneTree · 0 sinyal · 6 func
 - scripts/debug/k0_check.gd · 110 · K0Check · RefCounted · 0 sinyal · 6 func
 - scripts/debug/kit_probe.gd · 298 · - · RefCounted · 0 sinyal · 10 func
 - scripts/debug/loc_residue.gd · 265 · - · SceneTree · 0 sinyal · 9 func
-- scripts/debug/marketplace_probe.gd · 1341 · - · SceneTree · 0 sinyal · 67 func
+- scripts/debug/marketplace_probe.gd · 1394 · - · SceneTree · 0 sinyal · 68 func
 - scripts/debug/office_crowd_probe.gd · 326 · OfficeCrowdProbe · Node · 0 sinyal · 15 func
 - scripts/debug/office_pan_probe.gd · 398 · - · RefCounted · 0 sinyal · 17 func
 - scripts/debug/player_paths.gd · 444 · PlayerPaths · RefCounted · 0 sinyal · 19 func
@@ -157,7 +157,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/onboarding/steps/origin_traits_step.gd · 329 · - · OnboardingStep · 0 sinyal · 18 func
 - scripts/onboarding/steps/step_base.gd · 119 · OnboardingStep · Control · 1 sinyal · 10 func
 
-### scripts/systems/ (76 dosya, 27648 satır)
+### scripts/systems/ (76 dosya, 27650 satır)
 - scripts/systems/angel_round_system.gd · 52 · AngelRoundSystem · RefCounted · 0 sinyal · 1 func
 - scripts/systems/b2b_constants.gd · 279 · B2BConstants · RefCounted · 0 sinyal · 9 func
 - scripts/systems/b2b_sales_system.gd · 743 · B2BSalesSystem · RefCounted · 0 sinyal · 49 func
@@ -184,7 +184,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/systems/mail_clock.gd · 125 · MailClock · RefCounted · 0 sinyal · 10 func
 - scripts/systems/market_catalog.gd · 217 · MarketCatalog · RefCounted · 0 sinyal · 25 func
 - scripts/systems/marketing_system.gd · 795 · - · RefCounted · 0 sinyal · 73 func
-- scripts/systems/marketplace_model.gd · 1381 · MarketplaceModel · RefCounted · 0 sinyal · 112 func
+- scripts/systems/marketplace_model.gd · 1383 · MarketplaceModel · RefCounted · 0 sinyal · 112 func
 - scripts/systems/marketplace_system.gd · 352 · MarketplaceSystem · RefCounted · 0 sinyal · 45 func
 - scripts/systems/message_system.gd · 77 · MessageSystem · RefCounted · 0 sinyal · 5 func
 - scripts/systems/module_locks.gd · 35 · - · RefCounted · 0 sinyal · 4 func
