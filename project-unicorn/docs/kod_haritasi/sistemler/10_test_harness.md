@@ -174,7 +174,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
   ↳ `--render-probe[=<sekme>[:<kişi>[:<hız>]]]` ve `--backdrop-probe` alanları 09_arayuz_bilesen.md'de; `--office-crowd-probe` 06_ofis.md'de
 - `RunProbe` yalnız defter basar, her zaman 0 çıkar; `^PROBE` satırları aynı tohum, binary ve `--lang=tr` ile bayt-deterministiktir. Hata `PROBE ERROR`dır. Gerçek saat modları `1|2|3`.
 - Sprint planı: `--sprint-probe=hours=<h>:cards=<1|2>:ticks=<t>[:team=][:market=][:fixture=][:build=][:planms=1]`; `SPRINTPROBE PRED/CLOSE/SKIP/MVP/LOAD/SUMMARY/PAPER/PLANMS`; adsız uyuşmazlıkta 1.
-  ↳ `planms=1` ekran için iki satır basar: `screen` (ilk kare, "+" ertelenmiş) ve `screen_total` (ilk kare ve ertelenen bütün `can_add`'ler); sonra her ertelenen değeri `can_add(id)` ile karşılaştırır, uyuşmazlıkta 1.
+  ↳ `planms=1` ekran için `screen` satırını basar (`ProductModel.live`).
 - Ölçüm: `--tempo-probe=<hız>[:shell]` (`TEMPO`), `--tick-probe=<hız>[:<pencere>][:accounts=][:team=]` (`TICK`, ayrı `APPDATA` ister), `--render-probe[=<sekme>:...]`, `--office-crowd-probe=<ofis>:<kişi>:<hız>`.
 - Çekim ailesi (pencereli, `valued` tablosu `main.gd:242-276`): `--tab-shot`, `--modal-shot`, `--onboard-shot`, `--office-shot=<ofis>:<saat>[:ek]`, `--event-shot`, `--ending-shot`,
   `--vc-shot`, `--sales-shot` (`offer`: aday teklifi ve süreli indirim), `--negotiation-shot`, `--meeting-shot` (`focus`: "Bu çeyreğin vurgusu" ipucu),

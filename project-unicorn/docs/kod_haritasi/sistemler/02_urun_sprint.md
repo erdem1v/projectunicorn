@@ -51,7 +51,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `SprintSystem.daily_tick()` `scripts/systems/sprint_system.gd:27`: her günlük tik = bir oyun haftası; moda göre `_end_week` (active), `_auto_start` (plan/release) · TimeManager
 - `SprintSystem.choose_type()` `sprint_system.gd:51`: tür/pazar/ad yazar, Sprint 1'i planlamada açar · `scripts/tabs/product_tab.gd:108`, `main.gd:505`
 - `SprintSystem.new_state()` `sprint_system.gd:74`: `GameState.product` ilk durumu · `choose_type`, `scripts/autoload/save_manager.gd:898` (v14→v15 göçü)
-- `SprintSystem.add()/send_next()/remove()` `sprint_system.gd:95`/`:103`/`:114`: "+", "→", kartı adaya döndür · `ProductTab._act` `product_tab.gd:314`
+- `SprintSystem.plan_card()/pull()/send_next()/remove()`: "+" (sprint alıyorsa bu sprinte, almıyorsa sonrakine; sırayla, sığmayan atlanır), "↑" (elle, `sprint.manual`; tavan aşılınca alttaki elle konmamış kart sonrakinin başına iner), "→", kartı adaya döndür · `add()` bot ve fikstürlerin (yalnız sprint alıyorsa) · sprint geçişinde `_fit_plan` sonraki sütundan geleni aynı sınamadan geçirir · `ProductTab._act`
 - `SprintSystem.pin_card()` `sprint_system.gd:135`: kişiyi sprintin kartına `until_day` gününe dek kilitler (`c.pinned`), koşan sprintte haftayı yeniden atar · `effects.gd:584` (`assign_to`)
 - `SprintSystem.start()` `sprint_system.gd:134` (`_begin` :158): sprinti başlatır, lisansı keser, plan tutuşunu kaldırır · `begin_planned`, probe'lar
 - `SprintSystem.begin_planned()` `sprint_system.gd:145`: alt şeridin "Sprinti başlat"ı (KR26): başlayacak kart varsa `start`, yoksa `skip` (boş sprint); ekip yokken bir şey yapmaz · `ProductTab._act` `product_tab.gd:320`
@@ -300,8 +300,8 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
   ↳ en çok n satış görüşmesine oturur; `queue=<n>` her sprint planlanınca n açık kartı sonraki sütuna gönderir (PM'ler hazırlar);
   ↳ `fixture=iz1|iz1b|iz2` küçük ekibi elle kurar (iz1: 4, 3, 3 yıldızlı üç geliştirici, kurucusuz, bir büyük ve iki küçük kart, `ticks=4`; iz1b büyük kart sonda; iz2 kurucu, 3★ geliştirici, 2★ tasarımcı, 4 kart);
   ↳ `build=demo|ea|full` o yapının kartları ve sonları; `planms=1` tik oynamaz, `SPRINTPROBE PLANMS|team=|cards=|what=|n=|median_ms=|max_ms=` basar: `what` `plan_outcome`, `can_add` (açık aday başına), `mvp_eta`, `lead`,
-  ↳ `screen` (`ProductModel.live`, "+" ertelenmiş), `screen_total` (ilk kare ve ertelenen bütün `can_add`'ler), `ghost` (aday başına `timeline([aday])`). İlk çağrı ısınma, sonra 9 çağrı;
-  ↳ ertelenen her değer `can_add(id)` ile karşılaştırılır, uyuşmazlıkta `PLANMS|ADDABLE` basılır ve çıkış 1; `fill=1` en dolu plan
+  ↳ `screen` (`ProductModel.live`), `ghost` (aday başına `timeline([aday])`). İlk çağrı ısınma, sonra 9 çağrı;
+  ↳ `fill=1` en dolu plan
 - Harness: `SPRINTPROBE` kayıtları: `PRED` ve `CLOSE` kartın testinin hatasını `bugs=<n>/<F>/<K>/<düzeltme işi>` taşır (testi bitmemişse `-`); `SKIP` (`full|ceiling|empty`), `MVP`,
   ↳ `LOAD` (kapanan sprint: planlanan, biten kart, boşta kalan kişi-hafta, planın durduğu yer `ceiling|full|pool|cards|lead`), `SUMMARY` (`match=`, `mvp_days=`),
   ↳ `LOADSUM` (koşunun `LOAD` toplamı; `team=` oturan sprint ekibi), `PAPER|<tohum>|<sprint>|<kâğıt>|<konuşan>` (istenen karar kâğıdı; konuşansız kâğıtta `-`) ve
@@ -402,7 +402,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `remove()` kâğıdın takip kartını (`follow`) reddeder; `ProductModel._row` ve `_next_card` ona Kaldır düğmesi vermez
 - Sol sütun `live()`ın `requests`, `modules` ve `research` alanlarını okur. Modül hattın kendisidir (`id` hattın kimliği, `area` yalnız ikonun alanı; alan başlığı çizilmez); kullanıcıyla görüş ürün başına tektir (kimlik alanında doğar, `research`) ve listenin altında durur. `areas` yalnız çeyrek hedef menüsünün listesidir (`{id, name, goal_text}`), `customers` ve hat başına hata listesi yoktur (`bug_row_of` Destek raporunundur)
 - `open_area` açık modülün hattını taşır; `ProductTab.open_area` alan alırsa (Destek kartı, gelen kutusu) alanın en çok açık hatası olan hattını açar (`SprintCatalog.area_module`)
-- Adayın `addable`ı `live()`da `null`dır: `ProductModel.resolve_addable` her karede en az bir `can_add` (8 ms) ister, `ghost` imleç "+"a gelince `timeline([aday])` kurar; ikisinin önbelleği her `live()`da atılır
+- Adayın "+"ı hep açıktır (`addable` true); `ghost` imleç "+"a gelince `can_add` ve `timeline([aday])` kurar (sprintin almadığı adayın hayaleti yok), önbelleği her `live()`da atılır
 - İki ayrı efor tablosu: hat JSON `effort` (bant 5-7/7-9/9-12, `ProductLines.effort_of`, yalnız yeni-kod terimi ve doğrulama) ile sprint.json `effort` (kademe kartının eforu; yayın şartının adlı K1'i bunun `mvp_k1_share` katı; `SprintCatalog.step_effort`). Karıştırma
 - `SprintCatalog.cfg()` (:29) eksik anahtarda sert hata verir (`v[key]`); sprint.json bozuksa `JSON.parse_string` null döner. Yeni anahtar eklerken okuyan her çağrı yerini birlikte ekle
 - Tik sırası bir sözleşmedir (`time_manager.gd:383-432`): Ar-Ge bir tik gecikmeli okur (`rnd_system.gd:94-100`); IncidentSystem EventGate'ten sonra koşar; sırayı değiştirme

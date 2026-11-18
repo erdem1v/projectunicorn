@@ -561,6 +561,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sprint_founder_switch_off":             fail = _case_sprint_founder_switch_off()
 		"productivity_mod_paces_the_sprint":     fail = _case_productivity_mod_paces_the_sprint()  # EXPECT-ERROR 'productivity_mod' found no target
 		"sprint_ceiling_125_blocks_add":         fail = _case_sprint_ceiling_125_blocks_add()
+		"sprint_plus_fills_in_order":            fail = _case_sprint_plus_fills_in_order()
 		"sprint_intake_uses_applied_plan":       fail = _case_sprint_intake_uses_applied_plan()
 		"sprint_overflow_phase_recorded":        fail = _case_sprint_overflow_phase_recorded()
 		"sprint_carry_keeps_progress":           fail = _case_sprint_carry_keeps_progress()
@@ -24242,6 +24243,71 @@ static func _case_sprint_ceiling_125_blocks_add() -> String:
 	if refused.full == 0 or refused.ceiling == 0:
 		return "fixture: the core cards never met both closures (refused %s, load %.2f, ceiling %.2f)" % [
 			refused, SprintSystem.used(), ceiling]
+	return ""
+
+
+## "+" sırayla doldurur (`SprintSystem.plan_card`): sprintin aldığı kart (`can_add`) bu sprintin sonuna, almadığı sonraki sprinte
+## girer; sığmayan atlanır, arkasından eklenen küçük kart yine girer. "↑" (`pull`) elle çeker: tavan aşılınca en alttaki elle
+## konmamış kart sonraki sprintin başına iner. Sprint geçişinde sonraki sütundan gelen kartlar aynı sınamadan geçer, alınmayan
+## sırasıyla sonraki sprinte döner; hiçbir kart iki sütunun dışına düşmez.
+## FALSİFİKASYON: plan_card'da `can_add(card_id)`'i `true` yap → "+" iddiası FAIL; pull'daki indirme döngüsünü sil → "↑"
+## iddiası FAIL; plan_next'teki `_fit_plan()` çağrısını sil → geçiş iddiası FAIL.
+static func _case_sprint_plus_fills_in_order() -> String:
+	_seed_sprint()
+	var p: Dictionary = GameState.product
+	var ceiling: float = SprintSystem.capacity() * float(SprintCatalog.cfg("cap_ceiling"))
+	# Çekirdek'in K1'leri, sonra küçük bir görüş kartı: sığmayan büyük kartların arkasından küçük kart girer.
+	var small: Dictionary = SprintCatalog.new_card("res:onboarding", "research", "onboarding", int(SprintCatalog.cfg("effort.research")))
+	p.cards[small.id] = small
+	var later: Array = []
+	var skipped := false
+	for c in SprintCatalog.candidates("core") + [small]:
+		if SprintCatalog.gate_reason(c.step) != "":
+			continue
+		var takes: bool = SprintSystem.can_add(c.id)
+		SprintSystem.plan_card(c.id)
+		if p.sprint.cards.has(c.id) != takes or p.next.cards.has(c.id) == takes:
+			return "+ put %s in %s while can_add read %s" % [c.id, "this sprint" if p.sprint.cards.has(c.id) else "next", takes]
+		if not takes:
+			later.append(c.id)
+		elif not later.is_empty():
+			skipped = true
+	if later.is_empty() or not skipped:
+		return "fixture: + never skipped a card for a smaller one (next %s, load %.2f, ceiling %.2f)" % [later, SprintSystem.used(), ceiling]
+	if p.next.cards != later:
+		return "next holds %s, want the refused cards in their order %s" % [p.next.cards, later]
+	# "↑": sonrakinin ilk kartı elle girer; tavan aşılınca alttaki elle konmamış kartlar sırasıyla sonrakinin başına iner.
+	var pulled: String = p.next.cards[0]
+	var before: Array = p.sprint.cards.duplicate()
+	SprintSystem.pull(pulled)
+	if not p.sprint.cards.has(pulled) or pulled not in p.sprint.get("manual", []):
+		return "↑ left %s out of the sprint or unmarked (manual %s)" % [pulled, p.sprint.get("manual", [])]
+	var bumped: Array = before.filter(func(id: String) -> bool: return not p.sprint.cards.has(id))
+	if bumped.is_empty():
+		return "fixture: ↑ bumped nothing (load %.2f, ceiling %.2f)" % [SprintSystem.used(), ceiling]
+	var load: float = SprintSystem.load_of(SprintSystem.starting())
+	if load > ceiling + SprintSystem.EPS:
+		return "after ↑ the plan loads %.2f over the ceiling %.2f" % [load, ceiling]
+	if p.next.cards.slice(0, bumped.size()) != bumped:
+		return "↑ bumped %s, next starts %s" % [bumped, p.next.cards]
+	# Geçiş: sonraki sütun sprint olur, sığmayanlar sırasıyla geri iner.
+	var queued: Array = p.next.cards.duplicate()
+	if not SprintSystem.start():
+		return "fixture: sprint 1 did not start"
+	while SprintSystem.mode() == "active":
+		_sim_day()
+	SprintSystem.plan_next()
+	var back: Array = p.next.cards
+	if back.is_empty():
+		return "nothing went back to next at the turn (sprint 2 holds %s)" % [p.sprint.cards]
+	for id: String in queued:
+		if not p.sprint.cards.has(id) and not back.has(id) and p.cards.has(id) and p.cards[id].state != "done":
+			return "%s fell out of both columns at the turn" % id
+	if back != queued.filter(func(id: String) -> bool: return back.has(id)):
+		return "next after the turn holds %s out of the queued order %s" % [back, queued]
+	for id: String in back:
+		if SprintSystem.can_add(id):
+			return "%s went back to next though sprint 2 takes it" % id
 	return ""
 
 

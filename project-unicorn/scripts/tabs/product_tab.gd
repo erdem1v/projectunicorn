@@ -317,7 +317,8 @@ func _on_action(kind: String, args: Dictionary) -> void:
 ## Eylem sprint motoruna gider. Karar kartta cevaplanmaz: Olaylar kâğıdı seçili açılır.
 func _act(kind: String, args: Dictionary) -> void:
 	match kind:
-		"add", "pull": SprintSystem.add(args.card_id)
+		"add": SprintSystem.plan_card(args.card_id)
+		"pull": SprintSystem.pull(args.card_id)
 		"send_next": SprintSystem.send_next(args.card_id)
 		"close_topic": SprintBridges.close_topic(args.step)
 		"remove": SprintSystem.remove(args.card_id)

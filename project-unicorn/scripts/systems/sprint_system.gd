@@ -91,7 +91,8 @@ static func new_state(day: int) -> Dictionary:
 
 # --- Eylemler (arayüz ve bot) -------------------------------------------------------
 
-## "+" ve "↑": kart yerinden oynayabiliyor ve "+" onun için açıksa (can_add) bu sprinte girer.
+## Bot ve fikstürler: kart yerinden oynayabiliyor ve sprint onu alıyorsa (`can_add`) bu sprinte girer, almıyorsa bir şey
+## olmaz. Oyuncunun "+"ı `plan_card`, "↑"ı `pull`.
 static func add(card_id: String) -> void:
 	var card: Dictionary = SprintCatalog.card_by_id(card_id)
 	if _movable(card) and can_add(card_id):
@@ -107,6 +108,42 @@ static func send_next(card_id: String) -> void:
 		_changed()
 
 
+## "+": kart, planlamada sprint onu alıyorsa (`can_add`) bu sprintin sonuna, almıyorsa sonraki sprinte girer; sprint sürerken
+## ve sürüm notunda sonraki sprinte. Sıra bozulmaz: sığmayan kart atlanır, arkasından eklenen küçük kart yine girebilir; en
+## çok kartı seçen hesap büyük kartı hiç almazdı.
+static func plan_card(card_id: String) -> void:
+	var card: Dictionary = SprintCatalog.card_by_id(card_id)
+	if _movable(card):
+		_place(card, can_add(card_id))
+		_changed()
+
+
+## "↑": kart planlamada bu sprinte elle girer (`sprint.manual`). Başlayacak kartların yükü tavanı (`cap_ceiling`) aşarsa
+## sprintin en altındaki, elle konmamış planlı kart sonraki sprintin başına iner, sırası korunur; devreden ve kâğıdın takip
+## kartı inmez. Elle konan kartlar tavanı kendi başlarına aşarsa kart yine girer, işi devreder.
+static func pull(card_id: String) -> void:
+	var card: Dictionary = SprintCatalog.card_by_id(card_id)
+	if mode() != "plan" or not _movable(card):
+		return
+	_place(card, true)
+	var p: Dictionary = _p()
+	var manual: Array = p.sprint.get_or_add("manual", [])
+	if card_id not in manual:
+		manual.append(card_id)
+	var ceiling: float = capacity() * float(SprintCatalog.cfg("cap_ceiling"))
+	var below: Array = (p.sprint.cards as Array).duplicate()
+	below.reverse()
+	for id: String in below:
+		if ceiling <= 0.0 or load_of(starting()) <= ceiling + EPS:
+			break
+		var c: Dictionary = p.cards[id]
+		if id not in manual and c.state == "planned" and not c.get("follow", false) and _starts(c):
+			_place(c, false)
+			p.next.cards.erase(id)
+			p.next.cards.push_front(id)
+	_changed()
+
+
 ## Kart adaylara döner; ilerlemesi, ödenmiş lisansı ya da bekleyen kararı varsa saklanır ve yeniden
 ## alındığında kaldığı yerden, bedeli yeniden kesilmeden sürer; kilidi (`pin_card`) saklanmaz. Koşan sprintte kartın kişileri
 ## haftanın kalanında kimsesiz kartlara geçer. Kâğıdın takip kartı (`follow`) çıkmaz: kâğıdın bedeli onda durur ve aday
@@ -118,6 +155,7 @@ static func remove(card_id: String) -> void:
 		return
 	p.sprint.cards.erase(card_id)
 	p.next.cards.erase(card_id)
+	(p.sprint.get("manual", []) as Array).erase(card_id)
 	p.sprint.lead_applied = false
 	if _worked(card) > EPS or card.get("paid", false) or card.decision:
 		card.state = "candidate"
@@ -202,8 +240,8 @@ static func _begin() -> void:
 	_changed()
 
 
-## Sürüm notundan sonraki sprintin planlamasına: sonraki sütun (devredenler önde) bu sprint olur,
-## yeni sonraki sütuna onaylı PM planı geçer. Çeyreğin haftaları sprintlerle dolunca çeyrek döner, hedef
+## Sürüm notundan sonraki sprintin planlamasına: sonraki sütun (devredenler önde) bu sprint olur, sığmayanları sonraki
+## sütuna geri iner (`_fit_plan`), yeni sonraki sütuna onaylı PM planı geçer. Çeyreğin haftaları sprintlerle dolunca çeyrek döner, hedef
 ## boşalır (PM'in planı en zayıf alana bakar). Kademesine başka bir kartla varılmış saklı kart düşer; kâğıdın takip kartı
 ## (`follow`) kalır.
 static func plan_next() -> void:
@@ -220,6 +258,7 @@ static func plan_next() -> void:
 	p.next = {"number": number + 1, "cards": []}
 	p.release = {}
 	p.mode = "plan"
+	_fit_plan()
 	var quarter: Dictionary = p.quarter
 	if number >= int(quarter.start_sprint) + sprints_in(int(SprintCatalog.cfg("quarter_weeks"))):
 		quarter.start_sprint = number
@@ -900,8 +939,8 @@ static func payers(line: String) -> Array:
 	return paying.map(func(t: Dictionary) -> String: return t.id)
 
 
-## "+" yalnız planlamada ve kapasite varken açıktır, sonra sprint kartı alıyor mu (`intake`). Kart verilmezse
-## sorulan, boş puanın kalıp kalmadığıdır.
+## Sprint kartı bu planda alıyor mu: yalnız planlamada ve kapasite varken, `intake` ile. Kart verilmezse sorulan, boş
+## puanın kalıp kalmadığıdır.
 static func can_add(card_id := "") -> bool:
 	return mode() == "plan" and capacity() > 0 and intake(starting(),
 		SprintCatalog.card_by_id(card_id) if card_id != "" else {}, team()).takes
@@ -914,7 +953,7 @@ static func can_add(card_id := "") -> bool:
 ## boş puanın kalıp kalmadığıdır. {takes, cards: oynatmanın kart başına sonucu (`_outcome`)}; yük tavanı aşıldıysa
 ## oynatılmaz ve `cards` boştur.
 static func intake(cards: Array, card: Dictionary, people: Array) -> Dictionary:
-	var load: float = cards.reduce(func(sum: float, c: Dictionary) -> float: return sum + remaining(c), 0.0)
+	var load: float = load_of(cards)
 	var cap: float = capacity_of(people)
 	if load > EPS and load + (0.0 if card.is_empty() else remaining(card)) > cap * float(SprintCatalog.cfg("cap_ceiling")):
 		return {"takes": false, "cards": {}}
@@ -2024,12 +2063,13 @@ static func _carried_out() -> Array:
 
 
 ## Kartı bu sprinte ya da sonrakine koyar; adaysa saklanan kart olur, devreden damgası kalır. Sprintten çıkan kartın kilidi
-## (`pin_card`) düşer.
+## (`pin_card`) ve elle konma işareti (`sprint.manual`) düşer.
 static func _place(c: Dictionary, this_sprint: bool) -> void:
 	var p: Dictionary = _p()
 	p.sprint.lead_applied = false
 	if not this_sprint and c.id in p.sprint.cards:
 		c.erase("pinned")
+		(p.sprint.get("manual", []) as Array).erase(c.id)
 	p.sprint.cards.erase(c.id)
 	p.next.cards.erase(c.id)
 	(p.sprint.cards if this_sprint else p.next.cards).append(c.id)
@@ -2037,6 +2077,34 @@ static func _place(c: Dictionary, this_sprint: bool) -> void:
 		c.state = "planned"
 	c.merge({"paid": false, "base": 0.0})
 	p.cards[c.id] = c
+
+
+## Sprint geçişi: sonraki sütundan gelen kartlar sırasıyla alım sınamasından (`intake`) geçer, alınmayanlar sonraki sprintin
+## sütununa sırasıyla geri iner. Devreden ve kâğıdın takip kartı kalır; kapısı kapalı kart yerinde durur (başlatma onu sonraki
+## sütuna geçirir). Ekipsiz planda yerleşim yapılmaz.
+static func _fit_plan() -> void:
+	var p: Dictionary = _p()
+	var people: Array = team()
+	if capacity_of(people) <= 0.0:
+		return
+	var kept: Array = []
+	var back: Array = []
+	for id: String in p.sprint.cards:
+		var c: Dictionary = p.cards[id]
+		if not _starts(c):
+			continue
+		if c.state == "carried" or c.get("follow", false) or intake(kept, c, people).takes:
+			kept.append(c)
+		else:
+			back.append(id)
+	for id: String in back:
+		p.sprint.cards.erase(id)
+	p.next.cards = back
+
+
+## Kartların kalan puanı: alım sınamasının yükü (`intake`, "↑").
+static func load_of(cards: Array) -> float:
+	return cards.reduce(func(sum: float, c: Dictionary) -> float: return sum + remaining(c), 0.0)
 
 
 static func _keep_plan(plan: Dictionary) -> void:

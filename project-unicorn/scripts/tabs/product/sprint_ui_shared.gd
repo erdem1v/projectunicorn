@@ -458,15 +458,10 @@ static func due_chip(text: String, soon := false, glyph := HOURGLASS) -> PanelCo
 	return chip
 
 
-## Adayın "+" tuşunun tema görünümü: parlak, ya da değeri henüz bilinmiyorsa sönük.
-static func add_look(lit: bool) -> StringName:
-	return &"IconKey" if lit else &"IconKeyIdle"
-
-
 ## Adayın "+" tuşu; kapalıyken de görünür.
 static func add_key() -> Button:
 	var b := Button.new()
-	b.theme_type_variation = add_look(true)
+	b.theme_type_variation = &"IconKey"
 	b.icon = load(PLUS)
 	b.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	b.custom_minimum_size = Vector2.ONE * UiTokens.D_H_KEY_SM

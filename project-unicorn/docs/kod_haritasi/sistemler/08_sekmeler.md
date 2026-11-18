@@ -34,7 +34,7 @@ Alt klasörler:
 - `scripts/tabs/hr/hr_ui_shared.gd` (511): `HRUiShared`: koyu tablo kiti (`D_*`), rozetler, moral, deneyim, durum hücresi, `mount_panel_modal`; tabloların dışında da kullanılır.
 - `scripts/tabs/product/product_model.gd` (1362): `ProductModel`: sprint ekranının görünüm sözleşmesi; `live()` GameState/SprintSystem'den Dictionary kurar.
   Başlık yorumu yeni ekranın alanlarını da tanımlar: `founder`, `requests`, `modules`, `prep`, çeyreğin saati, merkez ve sonraki sütun eklemeleri, kart satırı; düzeltme işinin efora girişi ve gösterim kuralı.
-  Sol sütunun "+" değerleri ve hayalet hesabı `live()`dan ayrıdır: `addable`, `resolve_addable`, `ghost` (kart kimliğiyle sayfanın bir sonraki kurulumuna kadar saklanır).
+  Hayalet hesabı `live()`dan ayrıdır: `ghost` (kart kimliğiyle sayfanın bir sonraki kurulumuna kadar saklanır; sprintin almadığı adayınki boş).
   ↳ Kart satırı ipucunun verisini taşır (`module_name`, `finishes`, `gate`, söz yuvasında müşteri, değer, söz mü; `carried`);
   ↳ talep satırı `status` taşır (`_request_status`: "plan" kartı en erken tutan sprint, "dev" koşan sprintte başlanmış kartın aşaması,
   ↳ "met" bu ürün çeyreğinde çıkmış talep ve sürümün takvim çeyreği, `_met_in`; kayıt alanı eklenmez);
@@ -85,7 +85,6 @@ Alt klasörler:
   ↳ sözcüğü ipucunda), `flag()` şartın modülünün sol sütundaki bayrağı.
 - `scripts/tabs/product/area_panel.gd` (411): `AreaPanel`: sol sütun (SPRINT ve ÇEYREK): Geçmiş, MÜŞTERİ TALEPLERİ, MODÜLLER ve açık modülün adayları (düzeltme adayı tam hata metnini sarar yazar,
   ↳ başka sprintin adayı "Sprint {n}" damgası taşır); adayların sonunda kilitli kartlar (`_locked_card`: soluk ad ve altında şartı, efor ve şerit yok; araştırma kilidinde Ar-Ge ikonu ve tık Ar-Ge'yi o düğümde açar, kişi kilidinde tık işe alım atlasını açar, canlı ürün kilidi yalnız okunur); kapalı modülün yapılacak kartı yoksa ilk kilidin şartı adının altında;
-  ↳ "+" değerleri sonraki karelerde gelir; imleç ya da tık sırayı beklemez, o "+"nın değeri o an hesaplanır (`_learn`).
   ↳ Talep satırı üç satır: müşteri ve son tarih çipi, modül ve kart, durum (`_status_line`: tik ve "Sprint {n}", aşamanın renginde halka
   ↳ (`StageRing`) ve adı, tik ve "{q}. çeyrekte tamamlandı"); biten talepler katın dışında, sayıya girmez. Planlı modülün başlığında tik.
   ↳ Modül başlığı ve talep satırı modülün ikonunu `MonoBox` kutusunda taşır (`_module_mark`: `MODULE_ICON` hattın kimliğiyle, `@tür` olmadan; dosyası yoksa `AREA_ICONS`; talep satırında ipucu modülün adı).
@@ -122,11 +121,9 @@ Sekme sözleşmesi (sayfanın taşıdığı, çerçevenin çağırdığı):
 - `ProductModel.live()` `scripts/tabs/product/product_model.gd:121`: GameState.product + SprintSystem/ProductState'ten model · product_tab.gd:142, sprint_probe.gd:295.
 - `ProductModel.topics()` `product_model.gd:233`: TALEPLER'in konuları `{kind, topics, next}`: B2B'de açık talebi olan kademe ve bu çeyrekte karşılananlar (durum, risk altındaki gelir, süre, isteyenler); pazaryerinde `_market_topics` `MarketplaceSystem.request_topics()`'in kartı olan satırları (bilet, etkilenen sipariş, `share`, bağ, geciken hafta) · requests_view.gd:59.
   Planlamada ve koşarken tek oynatma (`SprintSystem.timeline`) merkezin `close_at`, `progress`, `crew`, `suggest`, `candidates` ve sonraki sütunun `load`, `carried` alanlarını besler.
-  Sol sütunu `requests` (B2B'de, B2C'de `null`) ve `modules` besler; adayların `addable`ı `null` gelir ve `live()` önbelleği (`_addable`, `_ghosts`) atar.
+  Sol sütunu `requests` (B2B'de, B2C'de `null`) ve `modules` besler; adayların `addable`ı true gelir ve `live()` hayalet önbelleğini (`_ghosts`) atar.
 - `ProductModel.waiting_topics()/is_waiting(t)` `product_model.gd:325`: bekleyen konular, iki tarafta (PRD_TALEPLER §1: Yeni, Bekliyor, Kilitli; `topics()`'in satırlarından, B2C'de boş).
   ↳ Okuyanlar: `RequestsView._in` (başlık ve Bekleyen süzgeci); Pazaryeri › Genel'in TALEPLER sayısı (`scripts/tabs/marketplace/mp_overview.gd` `_paint_requests`).
-- `ProductModel.resolve_addable(ids)` `product_model.gd:284`: bilinmeyen "+" değerlerini sırayla hesaplar (`SprintSystem.can_add`; en az bir kart, `ADDABLE_FRAME_MS` 8 dolunca durur)
-  ↳ çağıran `AreaPanel._process` (sıra) ve `AreaPanel._learn` (imleç ya da tık gelen "+", tek kimlik) ve `sprint_probe.gd` `_resolve_all`.
 - `ProductTab._on_action(kind, args)` `product_tab.gd:302`: kart/panel eylemlerini `_act` (:314) ile SprintSystem/InfraSystem'e verir · tüm alt panellerin `action` sinyali.
 - `ProductTab.open_area(area_id)` `product_tab.gd:282`: DESTEK kartı ve talep satırı modülü açık açar; görünümü `_set_ui` ile SPRINT yapar (son açık sayfa hatırlanır, "edit" eylemi de)
   ↳ çağıran `SprintUiShared.open_product_area` ve `AreaPanel.request_picked`.
@@ -274,8 +271,7 @@ Smoke (tek vaka: `bash tools/smoke_run.sh <vaka>`; tam süit yalnız push önces
 - Dil ve palet değişince WindowLayer sayfayı yıkıp yeniden kurar (`window_layer.gd:66-67`); sekmeden ayrıca bağlanma, yoksa çift kurulum olur (rnd_tab.gd:20-21). Yerel durum kaybolur; korunacaksa bayrak ya da static gerekir.
 - Ürün sekmesi `fit_height()` ÇEYREK dışında `INF` döner (product_tab.gd:132-135). Sayfa boyunu `SPECS` ve `fit_height` birlikte belirler; yeni sayfada ikisine de bak.
 - Ürün sol sütunu `AreaPanel` SPRINT'te (`product_tab.gd`) ve ÇEYREK'te (`quarter_view.gd`) aynı panel; açık modül `ui.open_area`, talep listesinin açıklığı `ui.requests_open` (yerel, kayda girmez).
-- Adayın "+"ı kurulumda hesaplanmaz: `live()` `addable: null` verir, bilinmeyen "+" nötr durur ve tıkı alır (`AreaPanel._learn` değeri o an hesaplar), değerler `ProductModel.resolve_addable` ile kare kare gelir (kare 8 ms)
-  ↳ yeni bir "+" okuyucusu değeri `ProductModel.addable`'dan okur.
+- Adayın "+"ı hep açıktır: basış `SprintSystem.plan_card`'a gider, kart sprint alıyorsa bu sprinte, almıyorsa sonraki sprinte girer; "↑" `pull`'a.
 - `ProductModel.bug_row_of` Destek raporunun hat satırıdır (`mail_pane.gd`); sol sütunda hata satırı yoktur, düzeltme adayı hata sayısını (`bugs`) ve tam metnini (`fix_text`, adayın altında sarar) taşır.
 - Statik fonksiyonlarda `tr()` çalışmaz; SprintUiShared, RnDUiShared, MailPane statikleri `TranslationServer.translate` kullanır. Çözülmeyen anahtar kendine döner ve ham token olarak görünür.
 - `HBoxContainer` bir çocuğun asgari boyutunu kırpmaz; sabit sütun için hücreyi düz `Control` + `clip_contents` yap
@@ -295,7 +291,7 @@ Smoke (tek vaka: `bash tools/smoke_run.sh <vaka>`; tam süit yalnız push önces
 ## Bir değişiklik yaparken
 
 - Yeni sekme ya da pencere boyu: `UiTokens.TABS` (ui_tokens.gd:294), `WindowLayer.TAB_SCENES` (window_layer.gd:13) ve `SPECS` (:38), `scenes/tabs/<Ad>Tab.tscn`, `TAB_<AD>` anahtarı, `left_tabs.gd`, smoke `rail_tabs_match_scene_order`.
-- Sol sütuna alan: `ProductModel._module_card`/`_requests` (sözleşme başlığı) + `AreaPanel` + `build_theme.gd` varyasyonu + `PRODUCT_*` anahtarı; "+" değeri `ProductModel.resolve_addable`'dan gelir.
+- Sol sütuna alan: `ProductModel._module_card`/`_requests` (sözleşme başlığı) + `AreaPanel` + `build_theme.gd` varyasyonu + `PRODUCT_*` anahtarı.
 - Kapasite bölümü: sayılar `ProductModel._capacity` (E1/E2 kuralı başlıkta), çizim `CapacityView` + `StagePaint`, ölçüler `UiTokens.D_*CAP*`, varyasyonlar `build_theme.gd` (`Cap*`).
 - Pano satırı alanı ya da düğmesi (bu sprintin kartı): `ProductModel._row` (kart satırı biçimi başlıkta; `follow` kartı Kaldır almaz) + `BoardRow` + `ProductTab._act` + ilgili `PRODUCT_*` anahtarları; sonraki sprintin kartı (sağ sütun):
   `ProductModel._next_card` + `SprintNext._card` + `PLAN_KEYS` ve `NEXT_KEYS`; ÇEYREK kartı: `ProductModel._card`, `_planned` + `SprintCard.setup`.

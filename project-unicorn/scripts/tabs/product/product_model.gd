@@ -35,8 +35,7 @@ extends RefCounted
 #           mvp: {version, area, need, done (bu sprintte biten dahil), sprint (-1 = tahmin yok), week,
 #                 parts: [{name, state: "done"|"sprint"|"next"|"waiting"}] (adlı yayın şartının şeridi; adsız türde boş)}
 #                     or null (canlıda),
-#           spare (planda hiçbir karta gitmeyen puan var), ceiling_pct (yükün "+" kapanan eşiği, yüzde), can_start (planlamada ve
-#           ekip varken; kartsız plan da başlar),
+#           can_start (planlamada ve ekip varken; kartsız plan da başlar),
 #           start_reason: "" or String (ekip yokken başlatı kapatan koşul),
 #           rnd_node: {id (araştırdığı düğüm), text ("Kurucu Ar-Ge'de: …")} or null (kurucu Ar-Ge'de değil),
 #           release: {version: "v5" or "" (sürüm çıkmadı), gate (MVP kapısı: Yayınla / Bir sprint daha;
@@ -68,7 +67,7 @@ extends RefCounted
 #             (açıklar önde: planda olmayan önde, bu çeyrek önde, sonra son tarih; karşılananlar altta, en yeni önde),
 #   modules: [{id (hattın kimliği: modül hattın kendisidir), area (ikonunun alanı), name, launch (yayın şartının modülü, v1.0'a dek), planned (bu sprintte kartı var), candidates: [{id, name, effort, parts: [{stage, effort}] (sıfırdan
 #             büyük aşama payları, eforu kesirli), planned (bu sprintin planında), stamp (başka sprintte: sprint numarası, yoksa
-#             -1), addable (null: "+"nın değeri henüz istenmedi, `resolve_addable` ister; false: adaylıktan çıkmış kartın "+"ı yok),
+#             -1), addable (adayda true: "+" hep açık, kart sığarsa bu sprinte, sığmazsa sonrakine; adaylıktan çıkmış kartta false),
 #             bugs, fix_text}], locked: null | {name, reason (kilidin şartı), node (araştırılacak Ar-Ge düğümü ya da ""), action: "rnd" (tek eksiği
 #             araştırma) | "hire" | "" (canlı ürün gerekli)} (sıradaki kademenin kilitli kartı; o kademeyi müşteri istemişse talep
 #             kartı)}] (bitmiş modül listelenmez),
@@ -127,7 +126,6 @@ const NEXT_KEYS := ["pull", "remove"]
 ## Sekmenin okuduğu model: ürün durumundan (GameState.product) ve sprint
 ## sistemlerinden kurulur. Tür seçilmeden alan ve kart yoktur; sekme o zaman tür seçiciyi açar.
 static func live() -> Dictionary:
-	_addable.clear()
 	_ghosts.clear()
 	var p: Dictionary = GameState.product
 	var mode: String = SprintSystem.mode()
@@ -146,7 +144,6 @@ static func live() -> Dictionary:
 	# Plan ekranı motorun oynatmasını söyler: kim kaç hafta, devreden, başlamayan, SPRINT SONUNDA ve sonraki
 	# sütunun hazır payı. Zaman ekseni (koşan sprintte de) aynı oynatmadır: plan bir kez oynanır.
 	var run: Dictionary = SprintSystem.timeline() if n > 0 and mode != "release" else {}
-	var outcome: Dictionary = run.outcome if mode == "plan" and not run.is_empty() else {}
 	# Liderin önerisi yalnız planlamada, devir kapalıyken ve uygulanmamışken (plan değişince bayrak düşer) okunur.
 	var suggestion: Dictionary = SprintCatalog.NO_LEAD
 	if mode == "plan" and n > 0 and not SprintSystem.delegated() and not p.sprint.get("lead_applied", false):
@@ -175,7 +172,7 @@ static func live() -> Dictionary:
 				modules.append(module)
 		research.append_array(cards.filter(func(c: Dictionary) -> bool: return c.kind == "research").map(
 			func(c: Dictionary) -> Dictionary: return _module_card(c, int(tags.get(c.id, -1)), n, wanted)))
-	var center: Dictionary = _center(mode, release, outcome)
+	var center: Dictionary = _center(mode, release)
 	center.merge(_plan_view(mode, run, suggestion, pool), true)
 	var next: Dictionary = _next(mode, run)
 	return {
@@ -332,47 +329,24 @@ static func is_waiting(t: Dictionary) -> bool:
 	return t.status in ["new", "waiting", "locked"]
 
 
-## "+"nın değeri ve hayalet hesabı (`SprintSystem.timeline([aday])`) sayfanın bir sonraki kurulumuna kadar kart kimliğiyle burada
-## durur: `live()` atar, `addable` ve `ghost` ister.
-static var _addable: Dictionary = {}
+## Hayalet hesabı sayfanın bir sonraki kurulumuna kadar kart kimliğiyle burada durur: `live()` atar, `ghost` ister.
 static var _ghosts: Dictionary = {}
-## Bir karede "+" değerlerine harcanan süre: en az bir kart hesaplanır, süre dolunca kare biter.
-const ADDABLE_FRAME_MS := 8.0
 
 
-## Kartın "+" değeri (`SprintSystem.can_add`); henüz istenmediyse null. `live()` adayların değerini vermez: sayfa ekrandaki
-## sırayla `resolve_addable` ister.
-static func addable(card_id: String) -> Variant:
-	return _addable.get(card_id)
-
-
-## `ids` sırasıyla, değeri bilinmeyen kartların "+" değerini hesaplar ve en az biri hesaplandıktan sonra `ADDABLE_FRAME_MS`
-## dolunca durur. Döner: bu çağrıda değeri öğrenilenler.
-static func resolve_addable(ids: Array) -> Array:
-	var started: int = Time.get_ticks_usec()
-	var learned: Array = []
-	for id: String in ids:
-		if _addable.has(id):
-			continue
-		_addable[id] = SprintSystem.can_add(id)
-		learned.append(id)
-		if (Time.get_ticks_usec() - started) / 1000.0 >= ADDABLE_FRAME_MS:
-			break
-	return learned
-
-
-## Adayın "+"ına gelince kurulan hayalet: planın bu kart eklenmiş oynatması (`SprintSystem.timeline`); üstüne gelme başına bir kez.
+## Adayın "+"ına gelince kurulan hayalet: sprint kartı alıyorsa (`SprintSystem.can_add`) planın bu kart eklenmiş oynatması
+## (`SprintSystem.timeline`); kart sonraki sprinte gidecekse ya da yeniden kurulumda havuzdan düşmüşse (süresi dolan talep,
+## kapanan hata) boş. Üstüne gelme başına bir kez.
 static func ghost(card_id: String) -> Dictionary:
 	if not _ghosts.has(card_id):
-		_ghosts[card_id] = SprintSystem.timeline([SprintCatalog.card_by_id(card_id)])
+		var card: Dictionary = SprintCatalog.card_by_id(card_id)
+		_ghosts[card_id] = {} if card.is_empty() or not SprintSystem.can_add(card_id) else SprintSystem.timeline([card])
 	return _ghosts[card_id]
 
 
-## Hayaletin pano satırı: adayın düşeceği yerde (planın sonunda, planla birlikte oynatılmış).
-## İmleçteki aday yeniden kurulumda havuzdan düşmüş olabilir (süresi dolan talep, kapanan hata): satır vermez.
+## Hayaletin pano satırı: adayın düşeceği yerde (planın sonunda, planla birlikte oynatılmış); hayalet boşsa satır yok.
 static func ghost_row(card_id: String) -> Dictionary:
-	var c: Dictionary = SprintCatalog.card_by_id(card_id)
-	return {} if c.is_empty() else _row(c, ghost(card_id).cards[card_id], ["add"])
+	var played: Dictionary = ghost(card_id)
+	return {} if played.is_empty() else _row(SprintCatalog.card_by_id(card_id), played.cards[card_id], ["add"])
 
 
 ## Hat satırı: metni hata parçasından (`SprintCatalog.bugs_part`) ve geçen haftaya göre değişimden kurulur (Destek raporunun tablosu).
@@ -416,7 +390,7 @@ static func _module(line_id: String, area_id: String, cards: Array, planned: boo
 ## Modülün adayı: sıfırdan büyük aşama paylarının eforu (kalan ihtiyaç ÷ hazırlık kazancı, aşama kartın türünün rolünden), bu
 ## sprintin planında mı (tik) ya da hangi başka sprintte (damga; `tag` bu ve sonraki sprintin kartının sprint numarası, yoksa -1),
 ## düzeltme kartında hata sayısı ile metni, özellik kartı sıradaki yıldız bandının eksiklerindense o yıldız (`band`, yoksa 0).
-## Adaylıktan çıkmış kartın (sprintte, sonrakinde) "+"ı yoktur (`addable` false), adayınki bilinmez.
+## Adayın "+"ı hep açıktır (`addable` true), adaylıktan çıkmış kartınki (sprintte, sonrakinde) yoktur.
 static func _module_card(c: Dictionary, tag: int, sprint: int, wanted: Dictionary) -> Dictionary:
 	var parts: Array = _parts(c)
 	var roles: Array = SprintCatalog.cfg("roles." + String(c.kind))
@@ -424,7 +398,7 @@ static func _module_card(c: Dictionary, tag: int, sprint: int, wanted: Dictionar
 	return {"id": c.id, "name": SprintCatalog.card_name(c), "effort": roundi(parts[0] + parts[1] + parts[2]),
 		"parts": range(3).filter(func(i: int) -> bool: return parts[i] > SprintSystem.EPS).map(
 			func(i: int) -> Dictionary: return {"stage": roles[i], "effort": parts[i]}),
-		"planned": tag == sprint, "stamp": tag if tag != sprint else -1, "addable": null if c.state == "candidate" else false,
+		"planned": tag == sprint, "stamp": tag if tag != sprint else -1, "addable": c.state == "candidate",
 		"bugs": c.bugs if fix else 0, "fix_text": SprintUiShared.bugs_text(SprintCatalog.bugs_part(c.line, c.bugs)) if fix else "",
 		"band": int(wanted.get(c.step, 0)) if c.kind == "feature" else 0}
 
@@ -555,7 +529,7 @@ static func _prep() -> Dictionary:
 
 # --- Bu sprint ------------------------------------------------------------------------
 
-static func _center(mode: String, release: Dictionary, outcome: Dictionary) -> Dictionary:
+static func _center(mode: String, release: Dictionary) -> Dictionary:
 	var p: Dictionary = GameState.product
 	var sprint: Dictionary = p.get("sprint", {})
 	var n: int = SprintSystem.sprint_number()
@@ -584,8 +558,6 @@ static func _center(mode: String, release: Dictionary, outcome: Dictionary) -> D
 			"sprint": eta.get("sprint", -1), "week": eta.get("week", -1),
 			"parts": SprintCatalog.mvp_parts(p.get("next", {}).get("cards", []), "next") if mode == "release"
 				else SprintCatalog.mvp_parts(sprint_cards)},
-		"spare": outcome.get("spare", 0.0) > SprintSystem.EPS,
-		"ceiling_pct": roundi(float(SprintCatalog.cfg("cap_ceiling")) * 100.0),
 		"can_start": mode == "plan" and total > 0.0,
 		"start_reason": (_t("PRODUCT_TEAM_NOBODY_JOBS") if rnd == null else rnd.text) if mode == "plan" and total == 0.0 else "",
 		"rnd_node": rnd, "delegate": {"on": SprintSystem.delegated(), "pm": null if pm == null else _face(pm, HRConstants.AREA_PRODUCT)},
@@ -880,13 +852,14 @@ static func _cluster(seat: Dictionary) -> Variant:
 		"away": away.keys().map(func(r: String) -> Dictionary: return {"reason": r, "n": away[r].size(), "person": away[r][0]})}
 
 
-## Adayın bu aşamalarda sprinte ekleyeceği efor {aşama: efor} (hayalet): planın o kartla oynatmasında kartın aşama ihtiyacı.
-## İmleçteki aday yeniden kurulumda havuzdan düşmüş olabilir (süresi dolan talep, kapanan hata): hayalet vermez.
+## Adayın bu aşamalarda sprinte ekleyeceği efor {aşama: efor} (hayalet): planın o kartla oynatmasında kartın aşama ihtiyacı;
+## hayalet boşsa boş.
 static func ghost_effort(card_id: String) -> Dictionary:
 	var out: Dictionary = {}
-	if SprintCatalog.card_by_id(card_id).is_empty():
+	var played: Dictionary = ghost(card_id)
+	if played.is_empty():
 		return out
-	for s in ghost(card_id).cards[card_id].stages:
+	for s in played.cards[card_id].stages:
 		if s.stage in SprintSystem.STAGES:
 			out[s.stage] = out.get(s.stage, 0.0) + s.need
 	return out

@@ -3064,8 +3064,6 @@ PRODUCT_VERSION_KEY,Sürüm,Version
 PRODUCT_KPI_USERS,Kullanıcı,Users
 PRODUCT_KPI_PAYING,Ödeyen,Paying
 PRODUCT_RELEASE_HOLD,Sürüm notu açıkken oyun durur,Paused while the release note is open
-PRODUCT_ADD_CLOSED,{pct} üstünde kart eklenmez,Adding closes above {pct}
-PRODUCT_ADD_CLOSED_FULL,Bu sprintte boş efor kalmadı,No effort left to fill this sprint
 PRODUCT_GO_TEAM,Ekip'e git,Go to Team
 PRODUCT_GO_RND,Ar-Ge'ye git,Go to R&D
 SALES_PROMISE_OPEN_SPRINT,Açık söz: {feature} · Sprint {n} sonuna kadar,Open promise: {feature} · by the end of sprint {n}
