@@ -47,7 +47,7 @@ static func expected(c: Dictionary) -> Dictionary:
 	return {"h": h0 * (1.0 - float(c.get("prep_cut", 0.0))), "h0": h0}
 
 
-## Hata göstergesinin tavanı: 40 eforluk (`effort.k3`), gereksinimi 5★, Δ = 0, PM'siz ve TİTİZ'siz özellik kartının beklenen
+## Hata göstergesinin tavanı: K3 eforluk (`effort.k3`), gereksinimi 5★, Δ = 0, PM'siz ve TİTİZ'siz özellik kartının beklenen
 ## hatası, yani standart bir kartın ulaşabileceği en yüksek yük.
 static func ceiling() -> float:
 	var cfg: Dictionary = SprintCatalog.cfg("bugs")

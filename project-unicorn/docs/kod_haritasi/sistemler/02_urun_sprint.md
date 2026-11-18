@@ -36,7 +36,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - `scripts/systems/rnd_system.gd` (814): Ar-Ge motoru: başlat/duraklat/vazgeç, atananlar, birikim, donma, tamamlama, gizli hat, aylık ürün notu, kayıt
 - `scripts/systems/research_tree.gd` (449): `rnd_tree.json` yükleyici ve doğrulayıcı: efor/nakit/yıldız bantları, çapraz koşul, 8 katsayı, gizli hat profilleri
 - `scripts/systems/research_seam.gd` (100): Ürün tarafının Ar-Ge'ye açılan kapısı: 19 düğüm kimliği tablosu, `completed()`, yerleşim ve aile
-- `data/product/sprint.json` (140): tüm sprint/acil durum/kâğıt/rapor sayıları ve alan tanımları ([WORKING] değerler)
+- `data/product/sprint.json` (151): tüm sprint/acil durum/kâğıt/rapor sayıları ve alan tanımları ([WORKING] değerler)
 - `data/product/rivals.json` (114): alt-tür başına 3 rakip, başlangıç kademeleri ve çıkış takvimi
 - `data/product/lines/{erp,marketplace,note_tool,video_clip,shared}.json` (169, 154, 158, 160, 128): alt-tür hatları ve 4 paylaşılan platform hattı
 - `data/techtree/rnd_tree.json` (57): düğüm başına efor, nakit, alan, yıldız, ebeveyn, çapraz koşul, etki; 4 gizli hat
@@ -403,7 +403,7 @@ Sahipler (Ar-Ge): `RnDSystem`, `ResearchTree`, `ResearchSeam`; arayüz `RnDUiSha
 - Sol sütun `live()`ın `requests`, `modules` ve `research` alanlarını okur. Modül hattın kendisidir (`id` hattın kimliği, `area` yalnız ikonun alanı; alan başlığı çizilmez); kullanıcıyla görüş ürün başına tektir (kimlik alanında doğar, `research`) ve listenin altında durur. `areas` yalnız çeyrek hedef menüsünün listesidir (`{id, name, goal_text}`), `customers` ve hat başına hata listesi yoktur (`bug_row_of` Destek raporunundur)
 - `open_area` açık modülün hattını taşır; `ProductTab.open_area` alan alırsa (Destek kartı, gelen kutusu) alanın en çok açık hatası olan hattını açar (`SprintCatalog.area_module`)
 - Adayın `addable`ı `live()`da `null`dır: `ProductModel.resolve_addable` her karede en az bir `can_add` (8 ms) ister, `ghost` imleç "+"a gelince `timeline([aday])` kurar; ikisinin önbelleği her `live()`da atılır
-- İki ayrı efor tablosu: hat JSON `effort` (bant 5-7/7-9/9-12, `ProductLines.effort_of`, yalnız yeni-kod terimi ve doğrulama) ile sprint.json `effort` k1 15·k2 25·k3 40 (`SprintCatalog.step_effort` :171, kart eforu). Karıştırma
+- İki ayrı efor tablosu: hat JSON `effort` (bant 5-7/7-9/9-12, `ProductLines.effort_of`, yalnız yeni-kod terimi ve doğrulama) ile sprint.json `effort` (kademe kartının eforu; yayın şartının adlı K1'i bunun `mvp_k1_share` katı; `SprintCatalog.step_effort`). Karıştırma
 - `SprintCatalog.cfg()` (:29) eksik anahtarda sert hata verir (`v[key]`); sprint.json bozuksa `JSON.parse_string` null döner. Yeni anahtar eklerken okuyan her çağrı yerini birlikte ekle
 - Tik sırası bir sözleşmedir (`time_manager.gd:383-432`): Ar-Ge bir tik gecikmeli okur (`rnd_system.gd:94-100`); IncidentSystem EventGate'ten sonra koşar; sırayı değiştirme
 - Tek yazıcı: `GameState.product` → SprintSystem (SprintBridges yalnız `requests`, `rival_hits`, `thanks`); açık hata → `add_bugs`/`clear_line_bugs`; `GameState.incident` → IncidentSystem; sunucu → `ProductState.set_infra_*`

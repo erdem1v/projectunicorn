@@ -23593,11 +23593,16 @@ static func _case_office_brand_once() -> String:
 ## kepenk sayacını başlatmayacak kadar derin; ekipte yalnız kurucu var. Kâğıt ihtimali 0'dır (test
 ## sabiti): sprint karar kartları destededir, kararı ölçen vaka ihtimali kendisi açar. Hata modelinin c'si de 0'dır
 ## (test sabiti): kartlar yalnız kendi işini yapar, testin bulduğu düzeltme işi eklemez; modeli ölçen vaka `_bugs_c` ile açar.
+## Kart puanları test sabitidir (K1 15 · K2 25 · K3 40, ücretli plan 15, `mvp_k1_share` 1): sprint vakalarının aritmetiği
+## (geride kalan kart, devreden puan, kâğıdı alan geç kart) bu tabloyla yazıldı.
 static func _seed_sprint(subtype: String = "erp") -> void:
 	ProductLines.reload()
 	GameState.set_cash(500000)
 	_paper_chance(0.0)
 	_bugs_c(0.0)
+	SprintCatalog._data.effort.merge({"k1": 15, "k2": 25, "k3": 40}, true)
+	SprintCatalog._data.paid_plan.effort = 15
+	SprintCatalog._data.mvp_k1_share = 1.0
 	SprintSystem.choose_type(subtype, "Notly")
 
 

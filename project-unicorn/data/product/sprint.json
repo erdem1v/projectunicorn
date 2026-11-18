@@ -4,7 +4,8 @@
   "mvp_lines": 3,
   "mvp_named": {"erp": ["line_erp_ledger", "line_erp_invoicing", "line_erp_cashflow", "line_shared_security@erp"],
     "marketplace": ["line_marketplace_listing", "line_marketplace_storefront", "line_marketplace_checkout", "line_marketplace_orders"]},
-  "effort": {"k1": 15, "k2": 25, "k3": 40, "research": 5},
+  "effort": {"k1": 11, "k2": 19, "k3": 30, "research": 5},
+  "mvp_k1_share": 0.5,
   "fix_effort": {"per_bug": 2, "priority": 5},
   "limit_k": {"lines": 9, "delivery": 55, "weeks": 8},
   "need": {
@@ -86,7 +87,7 @@
     },
     "defer": {"trust": -6, "per_sprint": -3, "audience": 0.02, "free_month_audience": 0.01}
   },
-  "paid_plan": {"effort": 15, "tiers": 1},
+  "paid_plan": {"effort": 11, "tiers": 1},
   "impact": {"step": 1.0, "level": 2.0, "rival_gap": 1.0, "request": 2.0, "mvp": 3.0, "bug": 0.5, "alert": 2.0, "research": 0.0},
   "content": {"press_core": 2, "press_area": 2, "rival_news": 2},
   "thanks": {"max": 3},

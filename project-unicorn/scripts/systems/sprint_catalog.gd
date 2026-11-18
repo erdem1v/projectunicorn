@@ -189,12 +189,15 @@ static func limit_k() -> float:
 	return maxf(1.0, maxf(ProductState.live_lines().size() / float(k.lines), sqrt(weekly / float(k.delivery))))
 
 
-## K1 15 · K2 25 · K3 40; Ar-Ge "design_system" tasarım profilli hatların kademe eforunu %20 indirir.
+## Kademe eforu `effort.k*`; yayın şartının adlı K1'i bunun `mvp_k1_share` katı; Ar-Ge "design_system" tasarım profilli
+## hatların kademe eforunu %20 indirir.
 static func step_effort(step_id: String) -> int:
 	if step_id == PAID_PLAN:
 		return int(cfg("paid_plan.effort"))
 	var step: Dictionary = ProductLines.step(step_id)
 	var effort: int = int(cfg("effort.k%d" % int(step.tier)))
+	if int(step.tier) == 1 and step.line_id in mvp_named():
+		effort = roundi(effort * float(cfg("mvp_k1_share")))
 	if ProductLines.work_profile(step.line_id) == "design" and ResearchSeam.completed("design_system"):
 		return maxi(1, roundi(effort * ProductLines.RND_DESIGN_EFFORT_MULT))
 	return effort
