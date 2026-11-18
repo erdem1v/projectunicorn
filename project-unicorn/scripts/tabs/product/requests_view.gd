@@ -1,8 +1,8 @@
 class_name RequestsView
 extends HBoxContainer
 
-## Ürün › Talepler: solda konular (B2B'de modül, isteyen, risk altındaki gelir, süre, durum, geciken; pazaryerinde bilet, haftada
-## etkilenen sipariş, durum, geciken; çok konuda sıralama, süzgeç ve pazaryerinde taraf), sağda seçili konunun ayrıntısı (sayılar,
+## Ürün › Talepler: solda konular (B2B'de modül, isteyen, risk altındaki gelir, süre, durum, geciken; pazaryerinde tarafın glifi, bilet,
+## haftada etkilenen sipariş, durum, geciken; çok konuda sıralama, süzgeç ve pazaryerinde taraf), sağda seçili konunun ayrıntısı (sayılar,
 ## pazaryerinde neden satırı, eylem, B2B'de isteyenler). Veri `ProductModel.topics()`; sıralama, süzgeç, taraf ve seçili konu sayfanın
 ## yerel durumudur (`ui.requests_*`).
 
@@ -10,6 +10,7 @@ signal action(kind: String, args: Dictionary)
 signal ui_changed(key: String, value: Variant)
 
 const CALENDAR := "res://assets/icons/util/calendar.svg"
+const SIDE_ICON := "res://assets/icons/side/%s.svg"
 ## Pazaryeri penceresinin ortak parçaları: haftalık sipariş sayısı onun kuralıyla (`count`).
 const MpParts := preload("res://scripts/tabs/marketplace/mp_parts.gd")
 ## Türün sıralamaları (ilki varsayılan) ve süzgeçleri.
@@ -165,7 +166,7 @@ func _row(t: Dictionary) -> PanelContainer:
 	var line := SprintUiShared.box(UiTokens.SPACE_L)
 	line.custom_minimum_size.y = UiTokens.D_H_ROW_SM
 	row.add_child(line)
-	line.add_child(_mark(t))
+	line.add_child(_side_mark(t) if _market and _side == "all" else _mark(t))
 	var topic := SprintUiShared.box(UiTokens.SPACE_M)
 	topic.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var title := SprintUiShared.prose(t.name, &"DataStrong")
@@ -403,6 +404,16 @@ func _glyph(path: String, ink: Color = UiTokens.D_INK_3, tip := "") -> TextureRe
 ## Konunun modülü: ikon kutusu, yeri (`_where`) ipucunda; tık satıra geçer.
 func _mark(t: Dictionary) -> PanelContainer:
 	var box := AreaPanel.module_mark(t.line, t.area)
+	box.tooltip_text = _where(t)
+	box.mouse_filter = Control.MOUSE_FILTER_PASS
+	return box
+
+
+## İki taraf birlikteyken pazaryeri satırının işareti konunun tarafıdır (PRD_TALEPLER §3.2): kullanıcılar ya da mağazalar glifi,
+## yeri ipucunda. Bir taraf seçiliyken her satır aynı glifi taşırdı; orada ve ayrıntının başlığında modülün ikonu kalır.
+func _side_mark(t: Dictionary) -> PanelContainer:
+	var glyph := UiFactory.make_glyph(SIDE_ICON % t.side, UiTokens.D_ICON_ROW, UiTokens.D_INK_2)
+	var box := HRUiShared.D_mono_box(UiTokens.D_BOX_MONO, glyph)
 	box.tooltip_text = _where(t)
 	box.mouse_filter = Control.MOUSE_FILTER_PASS
 	return box

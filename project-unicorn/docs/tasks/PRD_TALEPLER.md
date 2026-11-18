@@ -119,7 +119,7 @@ PAZARYERI `PRD_PAZARYERI.md` ve `tur4_ekranlar_2026-11-13/pazaryeri/TALEPLER_ICE
 ### 3.2 Liste
 | Sütun | ERP | Pazaryeri |
 |---|---|---|
-| Konu | modül ikonu (adı ipucunda), kartın adı, gerekirse "Rakipte var" | taraf ikonu ve adı (taraf glifi gelene dek modül ikonu, taraf ipucunda) |
+| Konu | modül ikonu (adı ipucunda), kartın adı, gerekirse "Rakipte var" | iki taraf birlikteyken taraf ikonu (`side/users`, `side/stores`; yeri ipucunda), bir taraf seçiliyken modül ikonu; ve adı |
 | İsteyen | "12 hesap" | "61 bilet" (son dört hafta) |
 | Risk altında | isteyenlerden yenilemesine 12 haftadan az kalan ya da Risk evresindeki hesapların aylık geliri | yok |
 | Kayıp satış | bu konunun modülü eksik diye son 12 haftada kaybedilen aday | yok |

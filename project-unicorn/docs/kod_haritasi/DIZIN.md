@@ -1,6 +1,6 @@
 # Kod haritası · DIZIN
 
-Üretildi: git f798a5e9 · 2026-11-18 · betik `tools/kod_haritasi/uret.py`
+Üretildi: git 9317445d · 2026-11-18 · betik `tools/kod_haritasi/uret.py`
 Yeniden üret (project-unicorn içinden): `python -I tools/kod_haritasi/uret.py` (<30 sn)
 Dosyalar diskteki halidir (kirli ağaç dahil). Elle düzenleme; betiği koş.
 
@@ -269,7 +269,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/tabs/marketplace/mp_parts.gd · 161 · - · RefCounted · 0 sinyal · 14 func
 - scripts/tabs/marketplace/mp_policies.gd · 181 · - · VBoxContainer · 0 sinyal · 12 func
 
-### scripts/tabs/product/ (18 dosya, 6098 satır)
+### scripts/tabs/product/ (18 dosya, 6109 satır)
 - scripts/tabs/product/area_panel.gd · 416 · AreaPanel · MarginContainer · 4 sinyal · 25 func
 - scripts/tabs/product/board_row.gd · 551 · BoardRow · PanelContainer · 1 sinyal · 32 func
 - scripts/tabs/product/capacity_view.gd · 364 · CapacityView · PanelContainer · 1 sinyal · 22 func
@@ -278,7 +278,7 @@ Biçim: yol · satır · class_name · extends · sinyal · func (iç sınıflar
 - scripts/tabs/product/overview_view.gd · 101 · - · HBoxContainer · 1 sinyal · 6 func
 - scripts/tabs/product/product_model.gd · 1362 · ProductModel · RefCounted · 0 sinyal · 71 func
 - scripts/tabs/product/quarter_view.gd · 195 · QuarterView · VBoxContainer · 2 sinyal · 7 func
-- scripts/tabs/product/requests_view.gd · 471 · RequestsView · HBoxContainer · 2 sinyal · 23 func
+- scripts/tabs/product/requests_view.gd · 482 · RequestsView · HBoxContainer · 2 sinyal · 24 func
 - scripts/tabs/product/sprint_board.gd · 349 · SprintBoard · VBoxContainer · 2 sinyal · 16 func
 - scripts/tabs/product/sprint_card.gd · 32 · SprintCard · PanelContainer · 0 sinyal · 1 func
 - scripts/tabs/product/sprint_foot.gd · 150 · SprintFoot · HBoxContainer · 1 sinyal · 10 func
@@ -734,7 +734,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
   ↳ action emit: scripts/main/main.gd:4876, scripts/tabs/product/area_panel.gd:327,388, scripts/tabs/product/board_row.gd:181,268,302 +30
   ↳ action connect: scripts/tabs/product/quarter_view.gd:63, scripts/tabs/product/sprint_board.gd:198, scripts/tabs/product/sprint_panel.gd:90,133,139,145 +6
 - ui_changed(key: String, value: Variant) · scripts/tabs/product/area_panel.gd:11 · (ad 3 yerde tanımlı)
-  ↳ ui_changed emit: scripts/tabs/product/area_panel.gd:146,268, scripts/tabs/product/quarter_view.gd:64,65, scripts/tabs/product/requests_view.gd:114,117 +3
+  ↳ ui_changed emit: scripts/tabs/product/area_panel.gd:146,268, scripts/tabs/product/quarter_view.gd:64,65, scripts/tabs/product/requests_view.gd:115,118 +3
   ↳ ui_changed connect: scripts/tabs/product/quarter_view.gd:64, scripts/tabs/product_tab.gd:78,88,91
 - request_picked(line_id: String) · scripts/tabs/product/area_panel.gd:13 · emit: scripts/tabs/product/area_panel.gd:186 · connect: scripts/tabs/product/quarter_view.gd:65, scripts/tabs/product_tab.gd:79
 - hovered(card_id: String) · scripts/tabs/product/area_panel.gd:15 · (ad 2 yerde tanımlı)
@@ -761,7 +761,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
   ↳ action emit: scripts/main/main.gd:4876, scripts/tabs/product/area_panel.gd:327,388, scripts/tabs/product/board_row.gd:181,268,302 +30
   ↳ action connect: scripts/tabs/product/quarter_view.gd:63, scripts/tabs/product/sprint_board.gd:198, scripts/tabs/product/sprint_panel.gd:90,133,139,145 +6
 - ui_changed(key: String, value: Variant) · scripts/tabs/product/quarter_view.gd:10 · (ad 3 yerde tanımlı)
-  ↳ ui_changed emit: scripts/tabs/product/area_panel.gd:146,268, scripts/tabs/product/quarter_view.gd:64,65, scripts/tabs/product/requests_view.gd:114,117 +3
+  ↳ ui_changed emit: scripts/tabs/product/area_panel.gd:146,268, scripts/tabs/product/quarter_view.gd:64,65, scripts/tabs/product/requests_view.gd:115,118 +3
   ↳ ui_changed connect: scripts/tabs/product/quarter_view.gd:64, scripts/tabs/product_tab.gd:78,88,91
 
 ### scripts/tabs/product/requests_view.gd
@@ -769,7 +769,7 @@ Eşleme ada göredir (alıcı nesne çözülmez); aynı adlı iki sinyal varsa y
   ↳ action emit: scripts/main/main.gd:4876, scripts/tabs/product/area_panel.gd:327,388, scripts/tabs/product/board_row.gd:181,268,302 +30
   ↳ action connect: scripts/tabs/product/quarter_view.gd:63, scripts/tabs/product/sprint_board.gd:198, scripts/tabs/product/sprint_panel.gd:90,133,139,145 +6
 - ui_changed(key: String, value: Variant) · scripts/tabs/product/requests_view.gd:10 · (ad 3 yerde tanımlı)
-  ↳ ui_changed emit: scripts/tabs/product/area_panel.gd:146,268, scripts/tabs/product/quarter_view.gd:64,65, scripts/tabs/product/requests_view.gd:114,117 +3
+  ↳ ui_changed emit: scripts/tabs/product/area_panel.gd:146,268, scripts/tabs/product/quarter_view.gd:64,65, scripts/tabs/product/requests_view.gd:115,118 +3
   ↳ ui_changed connect: scripts/tabs/product/quarter_view.gd:64, scripts/tabs/product_tab.gd:78,88,91
 
 ### scripts/tabs/product/sprint_board.gd

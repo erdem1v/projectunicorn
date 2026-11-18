@@ -1119,6 +1119,63 @@ def _():
     return S(tag, gap(U(h, b), tag))
 
 
+@glyph("channel/radio")
+def _():
+    # a radio spot: the set solid, its speaker grille knocked out as dots, the dial a knocked-out ring, the antenna rising from
+    # the top with a gap where it meets the set
+    body = R(2.4, 8.4, 19.2, 12.8, 2.0)
+    body = cut(body, *[C(5.8 + 2.6 * i, 11.8 + 2.6 * j, 0.85) for i in range(3) for j in range(3)])
+    body = cut(body, ring(16.6, 14.8, 2.6, w=1.8))
+    ant = L((7.0, 8.4), (16.8, 2.4), w=2.0)
+    return S(U(gap(ant, body), body))
+
+
+@glyph("channel/tv")
+def _():
+    # a television spot: the bezel solid, the screen in tone inside it, the antenna's two arms over it (the icon convention;
+    # without them the set reads as dept/development's window or a computer screen)
+    bezel = cut(R(2.4, 8.0, 19.2, 13.2, 1.8), R(4.6, 10.2, 14.8, 8.8, 0.8))
+    ant = U(L((12.0, 7.0), (7.6, 2.6), w=2.0), L((12.0, 7.0), (16.4, 2.6), w=2.0))
+    solid = U(bezel, gap(ant, bezel))
+    return S(solid, gap(R(5.0, 10.6, 14.0, 8.0, 0.6), solid))
+
+
+# ================================================================ SIDE (the marketplace's two sides: Talepler's rows, PRD_TALEPLER §3.2)
+def shopping_bag(x, y, w, h, hw=2.0):
+    """A shopping bag: the body a little wider at the bottom, its handle an arc over the mouth."""
+    body = soften(P((x + 0.6, y), (x + w - 0.6, y), (x + w, y + h), (x, y + h)), 0.8)
+    return U(body, A(x + w / 2, y, w * 0.26, 180, 360, w=hw))
+
+
+def pennant_awning(x0, x1, y0, h, teeth):
+    """A flat awning whose lower edge is a row of points: a market stall's, not type/marketplace's scalloped shop front."""
+    w = (x1 - x0) / teeth
+    pts = [(x0, y0), (x1, y0), (x1, y0 + h)]
+    for i in range(teeth, 0, -1):
+        pts += [(x0 + (i - 0.5) * w, y0 + h + w * 0.55), (x0 + (i - 1) * w, y0 + h)]
+    return soften(P(*pts), 0.5)
+
+
+@glyph("side/users")
+def _():
+    # a buyer: the person solid, a smaller shopping bag solid at their side, a wide gap so the two never merge at 16 px
+    # (the bag is what tells it from rail/personal's single person)
+    shopper = U(*person(9.0, 6.4, 3.8, 13.6, 21.6))
+    bag = shopping_bag(14.2, 12.4, 7.4, 9.2)
+    return S(U(gap(shopper, bag), bag))
+
+
+@glyph("side/stores")
+def _():
+    # a seller: a market stall, the awning's band and its points split by a knocked-out line, two posts, the open front and
+    # the counter (stripes through the points read as arrows at 96 px)
+    awn = pennant_awning(2.4, 21.6, 2.4, 4.4, 3)
+    awn = ko(awn, [(2.4, 5.0), (21.6, 5.0)], cap="flat")
+    posts = U(L((4.2, 10.0), (4.2, 15.6), w=2.4), L((19.8, 10.0), (19.8, 15.6), w=2.4))
+    counter = R(2.4, 15.2, 19.2, 6.4, 1.2)
+    return S(U(awn, gap(U(posts, counter), awn)))
+
+
 # ---------------------------------------------------------------- head icon map (office_actor.gd ICONS)
 HEAD = {"code": "skill/engineering", "design": "skill/design", "test": "skill/qa", "research": "util/search",
         "phone": "office/phone", "meeting": "rail/hr", "coffee": "office/coffee", "food": "office/food",
