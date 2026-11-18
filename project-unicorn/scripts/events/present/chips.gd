@@ -85,7 +85,13 @@ static func describe(item: Dictionary, ctx: Dictionary, names: Dictionary, is_de
 		"add_brand": return [_figure("EFFECT_BRAND", _num(d), _signed(d))]
 		"add_reputation": return [_figure("EFFECT_REPUTATION", _num(d), _signed(d))]
 		"customer_mrr_delta": return [_figure("EFFECT_CUSTOMER_MRR", _money(d), _signed(d))]
-		"satisfaction_delta": return [_figure("EFFECT_SATISFACTION", _num(d), _signed(d))]
+		# A marketplace side (`accounts`) reads like one account's trust hit: the side's satisfaction now and with the row's
+		# own share (EvEffects.satisfaction_plan).
+		"satisfaction_delta":
+			if not item.has("accounts"):
+				return [_figure("EFFECT_SATISFACTION", _num(d), _signed(d))]
+			var side_sat: Dictionary = item if is_delta else EvEffects.satisfaction_plan(item, ctx)
+			return [_trust_part("all", 1, d, side_sat.merged({"name": _t("MP_SIDE_" + String(item.get("side", "users")).to_upper())}))]
 		"seats":
 			var seats: int = int(item.get("seats", d))
 			return [_figure("EFFECT_SEATS", _num(seats), _signed(seats))]
@@ -445,12 +451,15 @@ static func merge_same(parts: Array) -> Array:
 
 ## Does this card effect, read against `ctx`, land on no one in the world the card is painted in? A slot it names
 ## (`scope`, `other`, `amount_slot`) the world did not bind, an account group, crew or promise list that resolves
-## to nobody, or a person the dossier would refuse the training or the dismissal (the arm lands on no one there,
-## EvEffects._apply). Only a live card asks: the effect keeps its chip in the
-## context-free reads (lint, coverage), which expect every verb to draw one.
+## to nobody, a marketplace side outside the marketplace game, or a person the dossier would refuse the training or
+## the dismissal (the arm lands on no one there, EvEffects._apply). Only a live card asks: the effect keeps its chip
+## in the context-free reads (lint, coverage), which expect every verb to draw one.
 static func _aims_at_no_one(verb: String, item: Dictionary, ctx: Dictionary) -> bool:
 	match verb:
 		"trust_delta": return EvEffects.trust_accounts(item, ctx).is_empty()
+		"satisfaction_delta":
+			if item.has("accounts"):
+				return EvEffects.satisfaction_plan(item, ctx).is_empty()
 		"promise_break": return EvEffects.promise_accounts(EvEffects.promises_of(item, ctx)).is_empty()
 		"morale_crew": return EvEffects.crew_of(item, ctx).is_empty()
 		"start_training": return EvEffects.training_plan(item, ctx).has("refused")

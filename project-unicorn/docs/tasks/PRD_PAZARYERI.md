@@ -382,7 +382,11 @@ yazıldığı haftadan sayılır ve süresi dolunca düşer.
   siparişi azaltır: yokken × 1; kademeleriyle × 0,7; × 0,5; × 0,3 (`backup_mult`).
 - Olayın memnuniyet etkisi kaydın sayısını oynatmaz (kapanış sayıyı defterden yeniden yazar): deftere "Verdiğimiz karar"
   adıyla süreli satır olarak girer (`note_decision`), memnuniyet izleyen kapanışlarda hedefe yürür. Çağıran seam
-  `MarketplaceSystem.add_satisfaction(kayıt, puan)`; süre [WORKING], satırın adı TR ve EN onay bekliyor.
+  `MarketplaceSystem.add_satisfaction(kayıt, puan)`; süre [WORKING], satırın adı TR ve EN onay bekliyor. Kartta çağıran fiil
+  `{"verb": "satisfaction_delta", "accounts": "all", "amount": -4}` (kullanıcılar; mağazalar için `"side": "stores"`); çipi
+  "Kullanıcılar: memnuniyet 71 → 67" okur: bugünkü sayı ve satırın hedefte yaptığı kayma (hedef sınıra yakınsa ya da
+  sınırdaysa kayma küçülür; satır yine yazılır ve süresince defterde durur). ERP oyununda bu seçici kimseyi seçmez: yazma da çip de olmaz; iki oyunda oynanan seçenek yanında ERP için
+  `trust_delta` `accounts: "all"` taşır.
 - Genel sayfası iki satırın yanında en ağır olumsuz satırın kısa adını gösterir ("Geciken talep", "Geç teslimat"; konunun ve
   kategorinin adı ipucunda); ipucu bütün satırları tam adıyla ve puanıyla listeler.
 - Etkisi: kullanıcı memnuniyeti organik ziyareti ve elde tutmayı (§3.5, §3.7), mağaza memnuniyeti mağazanın kalışını (§3.4) oynatır.
@@ -623,7 +627,8 @@ başlar, kartıyla tek commit'te iner; kol yalnız `MarketplaceSystem`'in işlev
   eşit ağırlık; iade düşülmez; `lost_commission`) ve izleyen kapanışın net komisyonundan düşer. "Bir hafta komisyon
   almamak" izleyen kapanışta brüt komisyonu sıfırlar (`waive_commission`): çağıran seam
   `MarketplaceSystem.waive_commission(1)`, çipin bedeli `MarketplaceSystem.week_commission()`'dır; kartın memnuniyet
-  etkisi pazaryerinin kaydında `MarketplaceSystem.add_satisfaction(kayıt, puan)` ile defter satırı olur (§3.8).
+  etkisi pazaryerinin kaydında `MarketplaceSystem.add_satisfaction(kayıt, puan)` ile defter satırı olur (§3.8; kartta
+  `satisfaction_delta` `accounts: "all"`, mağazalar için `side: "stores"`).
   İkisi aynı kapanışa düşerse kesintinin bedeli
   ayrıca düşülmez: o hafta kaçan siparişin komisyonu da alınmayacaktı; "Kesinti" satırı yine yazılır (onay bekliyor).
   Önizleme bekleyen kesintiyi ve komisyonsuz haftayı saymaz (§3.13).

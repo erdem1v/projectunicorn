@@ -137,6 +137,9 @@ Requires `requires_telegraph` naming a card or flag that has already fired (I3).
 - `schedule_event.delay_weeks` is a number or a window `[lo, hi]`; a window's week is drawn from the day, the
   scheduling card and the scheduled one, so the same day gives the same week.
 - An option may carry `effects` and a `check` together: the effects land first, then the branch the dice picks.
+- `satisfaction_delta` writes the slot's account; with `accounts: "all"` it writes a marketplace side's ledger instead,
+  a row that lasts some weeks (`side` is `users`, the default, or `stores`). In the ERP game that selector names no one:
+  nothing lands and no chip shows, so an option for both games carries a `trust_delta` with `accounts: "all"` beside it.
 
 ## b · Seams — everything a condition may read
 

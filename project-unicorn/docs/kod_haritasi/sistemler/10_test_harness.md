@@ -8,7 +8,7 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 ## Dosyalar
 
 - `scripts/main/main.gd` (6889): ana sahne; debug bayrak dağıtıcısı (`_run_debug_harness`), tüm `--*-shot` ve ölçüm koşucuları, fikstür tohumlayıcıları
-- `scripts/debug/endgame_smoke.gd` (32695): `EndgameSmoke`; 585 vakalı smoke süiti, tek süreç = tek vaka, `SMOKE PASS/FAIL` basar
+- `scripts/debug/endgame_smoke.gd` (32864): `EndgameSmoke`; 587 vakalı smoke süiti, tek süreç = tek vaka, `SMOKE PASS/FAIL` basar
 - `scripts/debug/run_probe.gd` (2458): `RunProbe`; botun oynadığı koşu defteri (`--run-log`), 39 preset, `PROBE ...` satırları
 - `scripts/debug/sprint_probe.gd` (425): `--sprint-probe`; Ürün ekranının sprint planını (`plan_outcome`) kapanışla karşılaştırır, uyuşmazlıkta 1
 - `scripts/debug/tick_probe.gd` (133): `--tick-probe`; gerçek saatte kare maliyeti (gece, saat adımı, otomatik kayıt) `TICK` satırları
@@ -103,10 +103,11 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 
 - Ortam: `export GODOT=/c/Users/erdem/Desktop/Godot_v4.6.2-stable_win64_console.exe`; komutlar `project-unicorn/` içinden. `gate_common.sh` `GODOT` yoksa PATH'te ve Masaüstü'nde arar, yoksa çıkış 2.
 - Bayrak `--` ayıracının ARKASINA konmaz (`smoke_run.sh:10`): `main.gd` `OS.get_cmdline_args()` okur, ayıraçtan sonrası ulaşmaz ve süreç oyunu açıp asılı kalır. İstisna: `-s` girişleri (`--event-plausibility-probe=`) kullanıcı argümanıdır.
-- Smoke tek vaka: `bash tools/smoke_run.sh <vaka>`; hepsi: `bash tools/smoke_run.sh --all` (585 vaka, saatler sürer; yalnız push/entegrasyon öncesi). Çıkış 0 yeşil, 1 vaka düştü, 2 harness sorunu. `CASE_TIMEOUT` varsayılan 120 sn.
+- Smoke tek vaka: `bash tools/smoke_run.sh <vaka>`; hepsi: `bash tools/smoke_run.sh --all` (587 vaka, saatler sürer; yalnız push/entegrasyon öncesi). Çıkış 0 yeşil, 1 vaka düştü, 2 harness sorunu. `CASE_TIMEOUT` varsayılan 120 sn.
 - Smoke karar kuralı (`smoke_run.sh:38-66`): satırlarda `^ERROR:|SCRIPT ERROR|Parse Error|Compile Error` varsa vaka düşer, `SMOKE PASS` yazsa da; hiç verdict yoksa ya da süre aşıldıysa düşer.
 - `# EXPECT-ERROR <ileti parçası>` match kolunda kuralı bilerek bozan vakayı bağışlar; parça hiç basılmazsa "stale marker" ile düşer (örnek: `founder_5skill_init`, `endgame_smoke.gd:171`).
-- Vaka ailesi önekleri (474 vaka): sales 34, event 33, sprint 25, hr 23, save 21, b2b 19, seed 14, paper 14, loc 13, promise 13, incident 10, product 9, cs 9; kalan 237 vaka daha küçük ailelerde (market, hotfix, angel, research ...).
+- Vaka ailesi önekleri (587 vaka): event 48, sprint 46, sales 37, marketplace 27, hr 26, save 23, b2b 21, marketing 17, paper 15, seed 15, loc 13, promise 13, incident 11, product 10, angel 9, cs 9;
+  ↳ kalan 247 vaka daha küçük ailelerde (hotfix, market, b2c, research ...).
 - Smoke önek → sistem sayfası (kaba eşleşme: bir vaka iki sistemi birden sınayabilir, liste başlangıç noktasıdır, tam seçim değildir). 01 Çekirdek: `speed_*`, `smoke_seed_pinned`, `run_ledger`, `growth_streak_semantics`,
   ↳ `month_history_*`; Kayıt: `save_*`, `menu_state_machine`, `autosave_writes_off_thread`, `legacy_v12_save_opens_live_table`, `sales_save_roundtrip_rev6`, `sales_check_replays_after_load`, `seed_sheet_round_trips`;
   ↳ Platform: `loc_*`, `locale_switch`, `ui_scale_ladder_fits_settings`, `borderless_note_key_exists`. 09 Tema, menü, kabuk, onboarding: `build_percent_single_source`, `star_ruler_contract`,
@@ -205,8 +206,8 @@ Ne yapar: Oyunun kendi içinde koşan (debug build) smoke süiti, oynanan-koşu 
 - Görsel çekim headless'ta no-op olur; `_begin_shot` pencere moduna geçer (varsayılan kenarlıksız mod boyut atamasını yutar). Çekim kare yazmadan önce `settle` (0.4 sn) bekler; `--shot-scale` 0.15 sn sonra uygulanır.
 - Tam smoke bellek baskısı altında yarıda kalabilir (Faz A raporu); arka plan kabuğu biçilirse Godot alt ağacı yetim kalır (hafıza: bg-shell-memory-reap). Erdem 2026-10-06: "push et" = doğrudan push, öncesinde tam smoke yok.
 - Paylaşılan ağaçta ikinci oturum yazabilir: harness koşusu `user://`ı ve ağacı paylaşır; sahipsiz değişikliği commit etmeyin, `git checkout -- <yol>` kullanmayın (hafıza: shared-tree-revert-rule).
-- `endgame_smoke.gd` 25951 satırdır; okurken `grep -n "_case_<ad>"` ile gidin, tam dosyayı okumayın. `SEMBOLLER.tsv` vaka fonksiyonlarını (`_case_*`) listeler.
-- `.githooks/pre-commit` yalnız lint ve `loc_residue` koşar, `git config core.hooksPath .githooks` ile elle açılır; smoke'u commit kancasına koymayın (kanca yorumu bunu zaten söyler; yorumdaki "278-case" sayısı bayat, süit 585 vakadır).
+- `endgame_smoke.gd` 32864 satırdır; okurken `grep -n "_case_<ad>"` ile gidin, tam dosyayı okumayın. `SEMBOLLER.tsv` vaka fonksiyonlarını (`_case_*`) listeler.
+- `.githooks/pre-commit` yalnız lint ve `loc_residue` koşar, `git config core.hooksPath .githooks` ile elle açılır; smoke'u commit kancasına koymayın (kanca yorumu bunu zaten söyler; yorumdaki "278-case" sayısı bayat, süit 587 vakadır).
 
 ## Bir değişiklik yaparken
 

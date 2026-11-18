@@ -730,10 +730,22 @@ static func note_decision(state: Dictionary, side: String, points: float) -> boo
 
 ## Hedef: taban artı satırların toplamı, 0 ile 100 arası.
 static func target_sat(state: Dictionary, side: String) -> float:
-	var points := 0.0
+	return clampf(_ledger_total(state, side), 0.0, 100.0)
+
+
+## `points` puanlık yeni bir satırın tarafın hedefini oynattığı kadar. Hedef sınırdaysa ya da satırlar toplamı sınırın ötesine
+## taşımışsa kayma `points`'ten küçüktür, 0 olabilir.
+static func decision_shift(state: Dictionary, side: String, points: float) -> float:
+	var total := _ledger_total(state, side)
+	return clampf(total + points, 0.0, 100.0) - clampf(total, 0.0, 100.0)
+
+
+## Taban artı tarafın satırlarının toplamı, sınırlanmadan.
+static func _ledger_total(state: Dictionary, side: String) -> float:
+	var total: float = _c.ledger.base
 	for row in state.ledger[side]:
-		points += row.points
-	return clampf(_c.ledger.base + points, 0.0, 100.0)
+		total += row.points
+	return total
 
 
 ## Tarafın en ağır olumsuz satırı (en küçük `points`); eşitlikte koşul sürdükçe duran satır, o da eşitse listede önce gelen. Olumsuz satır

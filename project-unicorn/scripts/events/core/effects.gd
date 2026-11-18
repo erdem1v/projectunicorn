@@ -482,7 +482,16 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary, card_id: String
 			return {"verb": verb, "employee": lid, "reason": e.get("reason", ""), "team": payers}
 
 		# --- customers --------------------------------------------------------
+		# With `accounts` a marketplace side: its number is the weekly close's reflection of its ledger, so the hit is a ledger
+		# row. The ERP game has no side, and there the selector names no one.
 		"satisfaction_delta":
+			if e.has("accounts"):
+				var side_plan: Dictionary = satisfaction_plan(e, ctx)
+				if side_plan.is_empty():
+					return {}
+				MarketplaceSystem.add_satisfaction(side_plan.record, side_plan.amount)
+				# The row keeps the selector: it tells the chip the side's form from the slot's.
+				return side_plan.merged({"verb": verb, "accounts": e.accounts})
 			var scid: String = entity_of(e, ctx, EvScope.TYPE_CUSTOMER)
 			var sat_c: Customer = CustomerRegistry.get_customer(scid)
 			if sat_c == null:
@@ -906,6 +915,18 @@ static func trust_plan(e: Dictionary, ctx: Dictionary) -> Dictionary:
 	return {"amount": delta, "per_sprint": int(e.get("per_sprint", 0)), "accounts": rows,
 		"until": _until(e) if e.has("until") else {},
 		"group": {"others": "other", "onboarding": "new"}.get(String(e.get("accounts", "slot")), "all")}
+
+
+## What a `satisfaction_delta` over a marketplace side (`accounts` "all") writes and what the player reads for it: the side
+## (`side` "users", the default, or "stores") and its record, the figure, and the side's satisfaction now and with the row's
+## own share (MarketplaceSystem.satisfaction_with). {} where nothing lands: outside the marketplace game, or a figure of 0.
+static func satisfaction_plan(e: Dictionary, ctx: Dictionary) -> Dictionary:
+	var delta: int = amount(e, ctx)
+	if delta == 0 or not SalesSystem.is_marketplace():
+		return {}
+	var side: String = String(e.get("side", "users"))
+	var record: String = String(MarketplaceSystem.RECORD_SIDES.find_key(side))
+	return MarketplaceSystem.satisfaction_with(record, delta).merged({"side": side, "record": record, "amount": delta})
 
 
 ## What a `sprint_card_trim` gives up and what the player reads for it (SprintSystem.trim_plan): `share` takes the

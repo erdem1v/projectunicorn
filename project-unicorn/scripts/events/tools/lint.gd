@@ -334,6 +334,13 @@ static func _lint_effects(where: String, effects: Array, context: String, card: 
 				_add(SEVERITY_ERROR, "17.1", where, "summer_leave other '%s' is not an employee slot of the card" % effect.get("other", ""))
 		if verb == "trust_delta":
 			_lint_trust_delta(where, effect, card)
+		# A satisfaction_delta lands on the slot's account, or with `accounts` "all" on a marketplace side's ledger.
+		if verb == "satisfaction_delta" and effect.has("accounts") and String(effect["accounts"]) != "all":
+			_add(SEVERITY_ERROR, "17.1", where, "satisfaction_delta accounts '%s' is 'all' (a marketplace side) or absent (the slot's account)"
+				% effect["accounts"])
+		if verb == "satisfaction_delta" and effect.has("side") and (not effect.has("accounts") or String(effect["side"]) not in MarketplaceModel.SIDES):
+			_add(SEVERITY_ERROR, "17.1", where, "satisfaction_delta side '%s' is not one of %s, or comes without accounts 'all'"
+				% [effect["side"], str(MarketplaceModel.SIDES)])
 		_lint_sales_effect(where, effect, card)
 		_lint_server_effect(where, effect)
 		_lint_marketing_effect(where, effect, card)
@@ -864,7 +871,7 @@ static func _touched_slots(effects: Array, slots: Dictionary, card_id: String) -
 				if slots.has(slot) and not out.has(slot):
 					out.append(slot)
 			continue
-		# A crew or a decision line's accounts are no slot: only the speaker and the slot's account are.
+		# A crew or a group of accounts (a decision line's, a marketplace side) is no slot: only the speaker and the slot's account are.
 		if type_id == "" or String(effect.get("crew", "speaker")) != "speaker" \
 				or String(effect.get("accounts", "slot")) != "slot":
 			continue

@@ -12,6 +12,8 @@ const MarketingSystem := preload("res://scripts/systems/marketing_system.gd")
 const TYPE_ID := "marketplace"
 const STORES_ID := "co_mp_stores"
 const USERS_ID := "co_mp_users"
+## Toplu kaydın memnuniyet defterindeki tarafı.
+const RECORD_SIDES := {USERS_ID: "users", STORES_ID: "stores"}
 ## Modelin modül kimliğinden oyundaki hat kimliğine; paylaşılan hatlar türün son ekini taşır.
 const MODULE_LINES := {
 	"listing": "line_marketplace_listing", "storefront": "line_marketplace_storefront",
@@ -118,7 +120,7 @@ static func waive_commission(weeks: int) -> bool:
 ## Olayın memnuniyet etkisi bir toplu kayıtta: tarafın defterine süreli bir satır (`note_decision`). Satır hemen görünür, sayı
 ## izleyen kapanışlarda hedefe yürür; kaydın memnuniyeti kapanışın yansımasıdır. Pazaryerinin kaydı değilse false.
 static func add_satisfaction(record_id: String, amount: int) -> bool:
-	var side: String = {USERS_ID: "users", STORES_ID: "stores"}.get(record_id, "")
+	var side: String = RECORD_SIDES.get(record_id, "")
 	return side != "" and _written(MarketplaceModel.note_decision(_s(), side, amount))
 
 
@@ -194,6 +196,16 @@ static func _on_staffing_changed(_id: String) -> void:
 
 
 # --- Okuyucular: saklanan durumdan okur, kapanış koşturmaz --------------------------------------
+
+## Olayın `amount` puanlık satırının pazaryeri kaydını bıraktığı memnuniyet, yalnız satırın kendi payıyla: `from` tarafın bugünkü
+## sayısı (kapanışın kayda yuvarlayarak yazdığı), `to` ona satırın hedefte yaptığı kayma (`decision_shift`) eklenmiş hâli, 0 ile 100
+## arası. Hedefe yürüyüş ve öbür satırların değişimi dışarıda kalır; çip bunu okur.
+static func satisfaction_with(record_id: String, amount: int) -> Dictionary:
+	var state := read_state()
+	var side: String = RECORD_SIDES[record_id]
+	var now: int = roundi(state.sat[side])
+	return {"from": now, "to": clampi(now + roundi(MarketplaceModel.decision_shift(state, side, amount)), 0, 100)}
+
 
 static func policy_value(rule: String) -> String:
 	return MarketplaceModel.policy_value(read_state(), world(), rule)

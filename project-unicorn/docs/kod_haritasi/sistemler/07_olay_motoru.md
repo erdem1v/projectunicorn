@@ -13,7 +13,7 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - `scripts/events/event_gate.gd` (238): `EventGate`, motorun tek dış cephesi (statik); her çağrıyı `EvEngine/EvQueue/EvPapers/EvPresenter`'a iletir
 - `scripts/events/catalog/catalog.gd` (309): `EvCatalog`, kart ve ark JSON'larını yükler, varsayılanları doldurur, şema v3 `plausibility` bloğunu koşul yapraklarına derler
 - `scripts/events/core/engine.gd` (794): `EvEngine`, günlük/saatlik tik sırası (a-l adımları), `_admit`, `pump`, `resolve`, `request`, `force_fire`, `open_paper`, `set_aside`
-- `scripts/events/core/effects.gd` (1147): `EvEffects`, fiil sözlüğü (NEUTRAL/ECONOMIC/TERMINAL) ve `_apply`; I2/I3/I6 kuralları köken başına (`_permitted`)
+- `scripts/events/core/effects.gd` (1168): `EvEffects`, fiil sözlüğü (NEUTRAL/ECONOMIC/TERMINAL) ve `_apply`; I2/I3/I6 kuralları köken başına (`_permitted`)
 - `scripts/events/core/condition.gd` (377): `EvCondition`, koşul ağacı (`all/any/none/not` + seam, flag, history, arc, entity yaprakları); `eval`, `explain`
 - `scripts/events/core/queue.gd` (252): `EvQueue`, kabul edilmiş ama gösterilmemiş kartlar ve etkin kart; öncelik `PRIORITY`, görünürlük süzgeci `_shown`
 - `scripts/events/core/history.gd` (200): `EvHistory`, çözüm satırları (chosen/expired/dropped), yalnız kimlik saklar; geriye bakan sorgular
@@ -30,8 +30,9 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - `scripts/events/gate/gate.gd` (288): `EvGate`, tek kabul kapısı `propose` (G1-G8), `revalidate`, `Verdict`, başlangıç bağışıklığı
 - `scripts/events/gate/scope.gd` (414): `EvScope`, adlı kapsam slotları (employee/founder/customer/prospect/rival/investor) ve seçiciler
 - `scripts/events/present/presenter.gd` (306): `EvPresenter`, kart sözlüğünden `GameEvent` görünümü, metin çözme, ad ve seam dondurma, masa satırları
-- `scripts/events/present/chips.gd` (711): `EvChips`, etki ve delta çiplerinin tek kurucusu (`describe`), kaynak rozeti `source_tag`;
+- `scripts/events/present/chips.gd` (720): `EvChips`, etki ve delta çiplerinin tek kurucusu (`describe`), kaynak rozeti `source_tag`;
   ↳ `describe(..., live := true)` kartın kendi dünyasında hedefi boş etkiyi çizmez (`_aims_at_no_one`: bağlanmamış `scope`/`other`/`amount_slot`, hesap ya da ekip grubu boş; bağlamsız okuma lint ve `event_chip_coverage` için hâlâ her fiile çip verir),
+  ↳ pazaryeri oyunu dışında pazaryeri tarafına yazan `satisfaction_delta` (`accounts: "all"`) da hedefi boş sayılır (`EvEffects.satisfaction_plan` `{}`),
   ↳ `merge_same` bir şıkta bayt bayt aynı çipleri ilkinde " ×n" ile katlar (figürde değerin yanına; sayılı çip, `_counted` ile `count` taşıyan `EFFECT_NEW_BUGS`, `EFFECT_CARD_POINTS`, `EFFECT_WORK_LOST`, `EFFECT_SHIP_BUGS`, `EFFECT_NEXT_SPRINT_WORK`, toplamı kendi sayılı anahtarıyla okur: "1 yeni açık hata" iki kez "2 yeni açık hata"), `option_parts` okuma bölmesinin ve `--event-shot`'ın ortak şık çipi (canlı etkiler + katlama + zarın çipleri)
 - `scripts/events/present/papers.gd` (194): `EvPapers`, masa (süreli kâğıtlar); süre dolumu, `desk_changed`
 - `scripts/events/present/tempo.gd` (321): `EvTempo`, dört katmanlı fren (kart, aile, konu, kategori kotası), sınıf atama `assign`
@@ -39,11 +40,11 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - `scripts/events/seams/seams.gd` (161): `EvSeams`, adlı salt okunur sorgular kaydı; `register`, `read`, `read_for`, `mock`
 - `scripts/events/seams/seams_{hr,product,finance,sales,world,ported,incident}.gd` (191/343/66/132/160/194/45): seam alanları (hr+founder, urun+arge+paper, finance, musteri+sales+destek,
   ↳ phase+rival+investor+time+office+build, funding+port, olay)
-- `scripts/events/tools/lint.gd` (1357): `EvLint`, içerik denetçisi (§17: yapı, marka, tire, saat, v3 kuralları P/C/V/O/T, ulaşılabilirlik, sinyal)
+- `scripts/events/tools/lint.gd` (1385): `EvLint`, içerik denetçisi (§17: yapı, marka, tire, saat, v3 kuralları P/C/V/O/T, ulaşılabilirlik, sinyal)
 - `scripts/events/tools/engine_probe.gd` (700): `EvProbe`, motor öz denetimi tek açılışta (seam, koşul, bayrak, geçmiş, mandal, kapsam, kuyruk, etki, kayıt, tez testi, ark)
 - `scripts/events/tools/harness.gd` (424): `EvHarness`, otomatik oynatma (random ve guided), her 7 haftada kayıt/yükle
 - `scripts/events/tools/why.gd` (266): `EvWhy`, "bu kart neden gelmedi" raporu; kapıyla aynı `EvGate.propose` yolunu çağırır
-- `scripts/events/tools/vocab_gen.gd` (376): `EvVocabGen`, `docs/content/events_draft/_vocabulary.md`'yi motordan üretir (KEEP bloğu elle kalır)
+- `scripts/events/tools/vocab_gen.gd` (379): `EvVocabGen`, `docs/content/events_draft/_vocabulary.md`'yi motordan üretir (KEEP bloğu elle kalır)
 - `scripts/events/tools/plausibility.gd` (396, class_name yok) ve `plausibility_main.gd` (41, SceneTree girişi): makullük defteri, oynanan koşularda ekrana gelen her kartı v3 kurallarına göre yargılar
 - `scripts/data_models/event.gd` (21) `GameEvent`, `event_choice.gd` (11) `EventChoice`: kartın çizilebilir görünümü, kaydedilmez; `scripts/systems/module_locks.gd` (35): `ModuleLocks` (delays ve seams_world okur)
 - `data/events/cards/<kategori>/*.json`: 146 yüklenen kart (customer 17, founder 7, funding 25, product 57, rival 6, team 9, world 8, `_fixtures` 17 üst düzey); `unwired/` 3 kart yüklenmez
@@ -224,6 +225,12 @@ Sahipler (motor): sınıf `EventGate` (statik cephe, autoload değil), `EvCatalo
 - `trust_delta accounts`: `slots` (+ `slots: [yuva...]`), `others` (kartın müşteri yuvaları dışındaki bütün B2B hesaplar; `line` verilirse o hattı kullananlar), `all`, `onboarding` (`day < onboarding_until`);
   ↳ çip grubu plan satırının `group` alanı (`all` / `other` / `new`); çipin `from → to` sayısı kartın kendi payıdır (`B2BSalesSystem.satisfaction_with_trust`: hedefin defter `trust_offset + amount`la kayması, 0-100; kayma ve öbür etkiler karışmaz)
   ↳ `all`, `others` ve `onboarding` boş bir gruba düşerse uygulama sessizce hiçbir şey yazmaz (`GROUP_ACCOUNTS`); adlı ya da türetilmiş hesap yoksa `_no_target` konuşur
+- `satisfaction_delta` (`scripts/events/core/effects.gd:487`): `accounts`suz yuvadaki hesabın memnuniyetine yazar; `accounts: "all"` pazaryeri tarafıdır (`side` `users` varsayılan ya da `stores`):
+  ↳ `EvEffects.satisfaction_plan()` `:923` (`{side, record, amount, from, to}`) `MarketplaceSystem.add_satisfaction`la tarafın defterine süreli "decision" satırı yazar, satır planı ve `accounts`u tutar;
+  ↳ çip `EFFECT_TRUST_ACCOUNT`, ad `MP_SIDE_*` (`scripts/events/present/chips.gd:90`),
+  ↳ `from → to` `MarketplaceSystem.satisfaction_with()` `scripts/systems/marketplace_system.gd:203` (bugünkü sayı + `MarketplaceModel.decision_shift`, hedef sınırda kırpılır).
+  ↳ ERP'de ve 0 puanda plan `{}`: yazma, satır, çip yok (`_aims_at_no_one` `scripts/events/present/chips.gd:460`); iki oyunluk seçenek yanında `trust_delta` `accounts: "all"` taşır.
+  ↳ Lint (`scripts/events/tools/lint.gd:338`): `accounts` yalnız `all`, `side` yalnız `MarketplaceModel.SIDES` ve `accounts`la; vaka `event_satisfaction_all_marketplace`
 - Aday ve hesap seam'leri: `aday.sector` (ad alanı `aday` → `prospect` yuvası), `musteri.sector`, `musteri.bugs`, `musteri.onboarding_short`, `musteri.promise_late` (en eski açık sözün kademesi koşan sprintte ve hiçbir kartı yetişmiyor;
   ↳ kartlar `SprintBridges.promise_cards`tan), `musteri.promise_extended`, `musteri.promise_card` (kademenin ad ANAHTARI: geçmiş satırı donar, ekran çevirir), `musteri.has_notice`, `sales.big_accounts`,
   ↳ `time.quarter_start`. Seçiciler `rep_lead` (bir çalışanın işlediği aday) ve `lead_rep` (bağlı adayı işleyen çalışan; kurucunun masasındaki aday kimseyi adlandırmaz). Sprint seçicileri `decision_dev` (bekleyen karar kartının atananlarından ilk geliştirici; kâğıt kart doluyken istenir)

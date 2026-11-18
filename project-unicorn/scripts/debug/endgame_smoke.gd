@@ -697,6 +697,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"marketplace_audience_seams_redirect": fail = _case_marketplace_audience_seams_redirect(pinned)
 		"marketplace_no_category_reminder":  fail = _case_marketplace_no_category_reminder()
 		"marketplace_event_seams":           fail = _case_marketplace_event_seams()
+		"event_satisfaction_all_marketplace": fail = _case_event_satisfaction_all_marketplace()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -32780,4 +32781,84 @@ static func _case_marketplace_event_seams() -> String:
 				state.ledger[other].size(), others]
 	if state.sat != sat:
 		return "the satisfaction moved before a close: %s, was %s" % [state.sat, sat]
+	return ""
+
+
+## Olayın pazaryeri tarafına memnuniyet etkisi (`satisfaction_delta` `accounts: "all"`). Pazaryerinde kullanıcı defterine (`side:
+## "stores"` ile mağaza defterine) tam o puanla tek "decision" satırı yazar, öbür defter kıpırdamaz; seçeneğin çipi ve geçmiş satırı
+## "Kullanıcılar: memnuniyet {kayıttaki sayı} → {sayı + hedef kayması}" okur, yanındaki `trust_delta` `accounts: "all"` B2B hesabı
+## olmayan pazaryerinde çip çizmez; 0 puanlık efekt satır, kayıt ve çip bırakmaz; hedef sınırdayken kayma kırpılır (defter toplamı
+## 98'de +5 yalnız +2, 110'da -4 hiç). ERP'de aynı
+## efekt boş döner, hiçbir hesabın memnuniyetini ya da güvenini oynatmaz, pazaryeri durumunu doğurmaz ve çip çizmez (seçenekte yalnız
+## güven çipi kalır); `accounts` vermeyen `satisfaction_delta` yuvadaki hesaba yazar.
+##
+## FALSİFİKASYON: `EvEffects.satisfaction_plan`da `side` varsayılanını "stores" yap → kullanıcı tarafının seçenek satırı FAIL;
+## `MarketplaceModel.decision_shift`te `points` döndür → toplam 98 satırı FAIL; `decision_shift`te toplam yerine `target_sat` kullan
+## → toplam 110 satırı FAIL; `satisfaction_plan`daki `is_marketplace()` kapısını kaldır → ERP'nin boş dönüş satırı FAIL;
+## `EvChips._aims_at_no_one`taki `satisfaction_delta` kolunu kaldır → ERP'nin seçenek satırı FAIL; `EvEffects._apply`daki
+## `accounts` dalını kaldır → ERP'nin boş dönüş satırı FAIL; `satisfaction_plan`daki `delta == 0` kapısını kaldır → sıfır satırı FAIL.
+static func _case_event_satisfaction_all_marketplace() -> String:
+	var texts := func(parts: Array) -> Array: return parts.map(func(p: Dictionary) -> String: return EvChips.text(p))
+	var chip := func(side: String, from: int, to: int) -> String: return TranslationServer.translate("EFFECT_TRUST_ACCOUNT").format(
+		{"customer": TranslationServer.translate("MP_SIDE_" + side.to_upper()), "from": from, "to": to})
+	var trust_all: Dictionary = {"verb": "trust_delta", "accounts": "all", "amount": -4}
+	var hit: Dictionary = {"verb": "satisfaction_delta", "accounts": "all", "amount": -4}
+
+	_seed_b2b(1000)
+	var c: Customer = CustomerRegistry.get_customer("co_lead_smoke")
+	var ctx: Dictionary = _ctx_customer(c)
+	var sat: int = c.satisfaction
+	var trust: float = c.trust_offset
+	var logged: Array = EvEffects.run_played([hit], ctx)
+	if not logged.is_empty() or c.satisfaction != sat or c.trust_offset != trust or not GameState.marketplace.is_empty():
+		return "ERP: the side's hit logged %s, left the account at satisfaction %d (was %d) and trust %.1f (was %.1f), the marketplace state %s" % [
+			str(logged), c.satisfaction, sat, c.trust_offset, trust, str(GameState.marketplace.keys())]
+	var both: Array = texts.call(EvChips.option_parts([trust_all, hit], {}, ctx))
+	var trust_only: Array = texts.call(EvChips.option_parts([trust_all], {}, ctx))
+	if trust_only.size() != 1 or both != trust_only:
+		return "ERP: the option with both effects reads %s, want the trust chip alone %s" % [str(both), str(trust_only)]
+	var slot_rows: Array = EvEffects.run_played([{"verb": "satisfaction_delta", "amount": 6, "scope": "customer"}], ctx)
+	if c.satisfaction != sat + 6 or slot_rows.size() != 1 or String(slot_rows[0].get("customer", "")) != c.id:
+		return "ERP: the slot's hit of +6 left the account at %d (was %d) and logged %s" % [c.satisfaction, sat, str(slot_rows)]
+
+	SaveManager.reset_all_owners()
+	GameState.initialize_run({"seed": 424242})
+	_seed_marketplace_world()
+	MarketplaceSystem.daily_tick()
+	var state: Dictionary = GameState.marketplace
+	var weeks: int = int(MarketplaceModel.cfg("ledger.rows.decision.weeks"))
+	for side: String in ["users", "stores"]:
+		var other: String = "stores" if side == "users" else "users"
+		var record: Customer = CustomerRegistry.get_customer(MarketplaceSystem.USERS_ID if side == "users" else MarketplaceSystem.STORES_ID)
+		if record == null:
+			return "fixture: the close bore no %s record" % side
+		var total: float = MarketplaceModel._ledger_total(state, side)
+		if total < 10.0 or total > 90.0:
+			return "fixture: the %s ledger totals %.1f, no room for a hit of -4" % [side, total]
+		var side_hit: Dictionary = hit.merged({"side": "stores"}) if side == "stores" else hit
+		var want: String = chip.call(side, record.satisfaction, record.satisfaction - 4)
+		var shown: Array = texts.call(EvChips.option_parts([trust_all, side_hit], {}, {}))
+		if shown != [want] or EvChips.option_parts([side_hit], {}, {})[0].polarity != "cost":
+			return "%s: the option reads %s, want only '%s' as a cost" % [side, str(shown), want]
+		var rows: int = state.ledger[side].size()
+		var others: Array = state.ledger[other].duplicate(true)
+		var deltas: Array = EvEffects.run_played([side_hit], {})
+		var row := {"key": "decision", "arg": "", "points": -4.0, "weeks": weeks}
+		if state.ledger[side].size() != rows + 1 or state.ledger[side].back() != row or state.ledger[other] != others:
+			return "%s: the ledger holds %d rows (had %d), the last %s; the %s ledger is %s (was %s)" % [side,
+				state.ledger[side].size(), rows, str(state.ledger[side].back()), other, str(state.ledger[other]), str(others)]
+		if deltas.size() != 1 or texts.call(EvChips.describe(deltas[0], {}, {}, true)) != [want]:
+			return "%s: the run logged %s, the card showed '%s'" % [side, str(deltas), want]
+	var none: Dictionary = hit.merged({"amount": 0}, true)
+	var held: int = state.ledger.users.size()
+	if not EvEffects.run_played([none], {}).is_empty() or state.ledger.users.size() != held or not EvChips.option_parts([none], {}, {}).is_empty():
+		return "a hit of 0 logged a row, wrote the ledger (%d rows, had %d) or drew a chip" % [state.ledger.users.size(), held]
+	# Hedef sınırda: defter toplamı 98'deyken +5'in yalnız 2'si, 110'dayken -4'ün hiçbiri hedefi oynatır.
+	var users: Customer = CustomerRegistry.get_customer(MarketplaceSystem.USERS_ID)
+	for edge in [[98.0, 5, 2], [110.0, -4, 0]]:
+		state.ledger.users = [{"key": "decision", "arg": "", "points": edge[0] - float(MarketplaceModel.cfg("ledger.base")), "weeks": weeks}]
+		var read: String = EvChips.text(EvChips.describe({"verb": "satisfaction_delta", "accounts": "all", "amount": edge[1]}, {}, {}, false)[0])
+		var want: String = chip.call("users", users.satisfaction, users.satisfaction + edge[2])
+		if read != want:
+			return "with the users ledger totalling %.0f a hit of %d reads '%s', want '%s'" % [edge[0], edge[1], read, want]
 	return ""
