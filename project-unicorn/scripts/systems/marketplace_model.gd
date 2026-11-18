@@ -34,8 +34,8 @@ extends RefCounted
 # (Pazarlama'nın `active_campaign()`'i: tür, evre, kalan hafta, hazırlık, kategoriler, derinlik, şirketin payı, katılım çarpanı,
 # ayarlar ve ezdiği kural `overrides`; yoksa boş),
 # `unanswered` (Destek'in cevapsız bildirim payı), `features` (yayındaki ek özellik konularının kimliği: yayında olmayan
-# kullanıcı özelliği bağlı adımı `missing_mult` kadar kısar), `planned` (sprint planındaki konuların kimliği), `cardless` (sprint
-# kartı olmayan konuların kimliği: bilet almaz ve gecikmiş sayılmaz).
+# ve kartı olan kullanıcı özelliği bağlı adımı `missing_mult` kadar kısar), `planned` (sprint planındaki konuların kimliği), `cardless` (sprint
+# kartı olmayan konuların kimliği: bilet almaz, gecikmiş sayılmaz ve adımı kısmaz).
 #
 # "Sipariş" teslim edilen siparişin adıdır (gain, haftalık sipariş, mağaza başına sipariş, üye siparişi, kargo ve iade
 # sayıları); "Sipariş verdi" adımı `order` ayrı sayılır.
@@ -326,11 +326,11 @@ static func _store_flow(state: Dictionary, world: Dictionary, cat: String) -> fl
 
 # --- Ziyaretten teslimata --------------------------------------------------------------------
 
-## Bağlı adımı kısan, yayında olmayan ek özelliklerin çarpanı.
+## Bağlı adımı kısan, yayında olmayan ek özelliklerin çarpanı; sprint kartı olmayan özellik (oyuncu onu çıkaramaz) kısmaz.
 static func _feature_mult(world: Dictionary, step: String) -> float:
 	var mult := 1.0
 	for topic in _c.topics.catalog:
-		if topic.has("missing_mult") and topic.link == step and not _topic_live(world, topic):
+		if topic.has("missing_mult") and topic.link == step and not _topic_live(world, topic) and not topic.id in _w(world, "cardless"):
 			mult *= topic.missing_mult
 	return mult
 
@@ -861,7 +861,8 @@ static func _ticket_base(week: Dictionary, topic: Dictionary) -> float:
 
 
 ## Konunun bu haftaki bileti: kullanıcı konusunda bağlı adımda sayılan büyüklük × oran, mağaza konusunda derdi olan mağazaların payı ×
-## oran. Yayında olmayan her kullanıcı konusu bağlı adımı kısar, yani adım ulaşılabilir oranda iken konu zaten yayındadır.
+## oran. Kartı olan her kullanıcı konusu yayına çıkana kadar bağlı adımı kısar, yani adım ulaşılabilir oranda iken kartı olan
+## konular yayındadır.
 ## Oranı olmayan konu (yalnız rapordan açılır) bilet almaz.
 static func _tickets(state: Dictionary, topic: Dictionary) -> float:
 	if not topic.has("rate"):

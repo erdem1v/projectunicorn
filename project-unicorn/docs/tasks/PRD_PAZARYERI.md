@@ -289,7 +289,9 @@ Kapanış yalnız ürün yayındayken koşar; kategori açmak yayından önce de
 - **Hata çarpanı:** `1 − 0,027 × min(10; adımın modüllerindeki açık hata)`.
 - **Ek özellik çarpanı.** Kullanıcı tarafındaki ek özellik (§3.11) yayında değilken bağlı olduğu adımı çarpar: Beden tablosu
   "Sepete ekledi" adımını 0,97; Favoriler "Sepete ekledi" adımını 0,99; Üyeliksiz alışveriş "Ödemeye geçti" adımını 0,95.
-  Yayına çıkan özelliğin çarpanı 1'dir. Mağaza tarafındaki ek özellik adım çarpanı taşımaz.
+  Yayına çıkan özelliğin çarpanı 1'dir. Sprint kartı olmayan ek özelliğin çarpanı da 1'dir: oyuncunun çıkaramayacağı özellik
+  sipariş kısmaz (ek özellik kartları gelene kadar ek özelliklerin hepsi; Erdem 2026-11-18). Mağaza tarafındaki ek özellik
+  adım çarpanı taşımaz.
 - **Kargo çarpanı:** "Kullanıcı öder" 0,83; "Büyük sepette mağaza öder" `0,83 + 0,17 × büyük sepet payı`; "Hep mağaza öder" ya
   da kampanya kargoyu bedava yapmışsa 1.
 - Çarpanların hepsi 1 olduğunda adım **ulaşılabilir oranındadır** (%15, %70, %88, %97). Teslim edilmeyen sipariş iptaldir.
@@ -430,9 +432,9 @@ Dört kural. `set_policy(kural, seçenek)` kuralı değiştirir ve dört hafta k
   %8'i; haftada 10'dan çok sipariş alanların %6'sı; mağazaların %2'si). Derdi olan mağazaların payı sabittir: mağazaların
   0,34'ünün 50'den çok ürünü vardır, 0,22'si haftada 10'dan çok sipariş alır. Konunun özelliği yayındaysa bilet gelmez: kademe
   konusu modül o kademeye varınca, ek özellik çıkınca yayındadır. Sprint kartı olmayan konuya da bilet gelmez ve konu gecikmiş
-  sayılmaz: oyuncunun karşılayamayacağı istek ceza yazmaz (ek özellik kartları gelene kadar ek özelliklerin hepsi; adım
-  çarpanları aynen uygulanır). Haftanın bileti kapanıştan sonra yazılır; konunun yaşı ilk biletin haftasından sayılır. Hata
-  bileti talep değildir.
+  sayılmaz: oyuncunun karşılayamayacağı istek ceza yazmaz (ek özellik kartları gelene kadar ek özelliklerin hepsi; adımı da
+  kısmaz, §3.5). Haftanın bileti kapanıştan sonra yazılır; konunun yaşı ilk biletin haftasından sayılır. Hata bileti talep
+  değildir.
 - **Etkilenen sipariş:** kullanıcı konusunda konu yayına çıkınca kazanılan haftalık sipariştir (`gain`, §3.5: sıradaki kademe
   ya da ek özellik); Yorum ve Puan'da kademe çıkınca haftada iade edilmeyecek sipariştir (`teslim × (bugünkü iade oranı −
   kademeyle iade oranı)`); mağaza konusunda derdi olan mağazaların siparişi × o hafta ayrılma olasılığıdır (§3.4; sipariş

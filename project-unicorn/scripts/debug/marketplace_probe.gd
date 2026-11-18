@@ -840,20 +840,25 @@ func _check_topic_ledger_rows() -> Array:
 		% [week14[1], shipped_row.get("status", "missing"), shipped_row.get("age", -1)]]
 
 
-## Sprint kartı olmayan konu bilet almaz ve gecikmiş sayılmaz; kartı olan konu aynı dünyada alır ve gecikir.
+## Sprint kartı olmayan konu bilet almaz, gecikmiş sayılmaz ve adımını kısmaz; kartı olan konu aynı dünyada alır, gecikir ve kısar:
+## Beden tablosu kartsızken "Sepete ekledi" adımını yalnız Favoriler kısar (0,99), ikisinin de kartı varken ikisi (0,97 x 0,99).
 func _check_cardless_topics_stay_quiet() -> Array:
 	var world := _live_world(12).merged({"cardless": ["size_chart", "color_size_options"]}, true)
 	var state := _topic_state()
 	var tickets := _tickets_of(state, world)
+	var full: float = MarketplaceModel.step_factors(state, world.merged({"features": ["size_chart", "favorites"]}, true), "fashion").cart
+	var cart: float = MarketplaceModel.step_factors(state, world, "fashion").cart / full
+	var carded: float = MarketplaceModel.step_factors(state, _live_world(12), "fashion").cart / full
 	for id in ["size_chart", "favorites", "color_size_options"]:
 		state.topics[id].since_day = 1
 	_run(state, world, 1)
 	var late := [_late_args(state, "users"), _late_args(state, "stores")]
 	var ok: bool = tickets.size_chart == 0.0 and tickets.color_size_options == 0.0 and _near(tickets.favorites, 8.8) \
-		and _near(tickets.shipping_label, 30.0 * 0.22 * 0.06) and late == [["favorites"], []]
+		and _near(tickets.shipping_label, 30.0 * 0.22 * 0.06) and late == [["favorites"], []] and _near(cart, 0.99) and _near(carded, 0.97 * 0.99)
 	return [ok, "size_chart and color_size_options have no card: weekly tickets %.1f and %.1f, favorites %.1f and shipping_label %.3f still tick; "
 		% [tickets.size_chart, tickets.color_size_options, tickets.favorites, tickets.shipping_label]
-		+ "all three asked in week 1, week 12 late rows users %s stores %s" % late]
+		+ "all three asked in week 1, week 12 late rows users %s stores %s; " % late
+		+ "the cart step keeps %.4f of its rate (0.99, favorites alone) and %.4f once size_chart has a card too (0.9603)" % [cart, carded]]
 
 
 ## Üç kullanıcı ek özelliği ayrı sayı verir; yayına çıkınca adım tam bu `gain` kadar artar (aynı durumdan iki gerçek kapanış).

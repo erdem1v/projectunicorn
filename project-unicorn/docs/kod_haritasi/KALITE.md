@@ -1,6 +1,6 @@
 # Kod haritası · KALITE
 
-Üretildi: git e3d7a23e · 2026-11-18 · `python -I tools/kod_haritasi/uret.py`
+Üretildi: git 7b571030 · 2026-11-18 · `python -I tools/kod_haritasi/uret.py`
 Kapsam: scripts/ altındaki 269 .gd (tools/ hariç). Kod temizliği ve kıdemli denetimde başlangıç listesi; kanıt değil, aday.
 
 ## En büyük 25 .gd
@@ -12,8 +12,8 @@ Kapsam: scripts/ altındaki 269 .gd (tools/ hariç). Kod temizliği ve kıdemli 
 - scripts/theme/build_theme.gd · 1663 satır · 31 func
 - scripts/events/tools/lint.gd · 1378 satır · 48 func
 - scripts/tabs/product/product_model.gd · 1362 satır · 71 func
-- scripts/systems/marketplace_model.gd · 1360 satır · 109 func
-- scripts/debug/marketplace_probe.gd · 1335 satır · 67 func
+- scripts/systems/marketplace_model.gd · 1361 satır · 109 func
+- scripts/debug/marketplace_probe.gd · 1340 satır · 67 func
 - scripts/systems/vc_pitch_system.gd · 1317 satır · 91 func
 - scripts/autoload/save_manager.gd · 1295 satır · 60 func
 - scripts/systems/hr_constants.gd · 1189 satır · 90 func
@@ -109,22 +109,22 @@ UYARI: call("a"+b) gibi kurulmuş adlar, sinyal adıyla bağlama, harness bayrak
 - scripts/debug/marketplace_probe.gd:751 · _check_topic_rows_known · debug
 - scripts/debug/marketplace_probe.gd:781 · _check_topic_ticket_gates · debug
 - scripts/debug/marketplace_probe.gd:816 · _check_topic_ledger_rows · debug
-- scripts/debug/marketplace_probe.gd:844 · _check_cardless_topics_stay_quiet · debug
-- scripts/debug/marketplace_probe.gd:860 · _check_feature_gain_matches_close · debug
-- scripts/debug/marketplace_probe.gd:886 · _check_reviews_affected_is_return_gap · debug
-- scripts/debug/marketplace_probe.gd:903 · _check_assignment_waits_a_close · debug
-- scripts/debug/marketplace_probe.gd:929 · _check_waive_zeroes_one_close · debug
-- scripts/debug/marketplace_probe.gd:982 · _check_outage_row_and_cost · debug
-- scripts/debug/marketplace_probe.gd:1043 · _check_lost_commission_weighted · debug
-- scripts/debug/marketplace_probe.gd:1062 · _check_backup_mult_tiers · debug
-- scripts/debug/marketplace_probe.gd:1073 · _check_open_topic_report_row · debug
-- scripts/debug/marketplace_probe.gd:1117 · _check_cfg_reads_constants · debug
-- scripts/debug/marketplace_probe.gd:1134 · _check_funnel_sums_categories · debug
-- scripts/debug/marketplace_probe.gd:1157 · _check_step_hint_matches_gain · debug
-- scripts/debug/marketplace_probe.gd:1195 · _check_ledger_worst_picks_heaviest · debug
-- scripts/debug/marketplace_probe.gd:1226 · _check_crew_follows_assignment · debug
-- scripts/debug/marketplace_probe.gd:1288 · _check_returning_orders_follow_frequency · debug
-- scripts/debug/marketplace_probe.gd:1328 · _check_word_of_mouth_brings_users · debug
+- scripts/debug/marketplace_probe.gd:845 · _check_cardless_topics_stay_quiet · debug
+- scripts/debug/marketplace_probe.gd:865 · _check_feature_gain_matches_close · debug
+- scripts/debug/marketplace_probe.gd:891 · _check_reviews_affected_is_return_gap · debug
+- scripts/debug/marketplace_probe.gd:908 · _check_assignment_waits_a_close · debug
+- scripts/debug/marketplace_probe.gd:934 · _check_waive_zeroes_one_close · debug
+- scripts/debug/marketplace_probe.gd:987 · _check_outage_row_and_cost · debug
+- scripts/debug/marketplace_probe.gd:1048 · _check_lost_commission_weighted · debug
+- scripts/debug/marketplace_probe.gd:1067 · _check_backup_mult_tiers · debug
+- scripts/debug/marketplace_probe.gd:1078 · _check_open_topic_report_row · debug
+- scripts/debug/marketplace_probe.gd:1122 · _check_cfg_reads_constants · debug
+- scripts/debug/marketplace_probe.gd:1139 · _check_funnel_sums_categories · debug
+- scripts/debug/marketplace_probe.gd:1162 · _check_step_hint_matches_gain · debug
+- scripts/debug/marketplace_probe.gd:1200 · _check_ledger_worst_picks_heaviest · debug
+- scripts/debug/marketplace_probe.gd:1231 · _check_crew_follows_assignment · debug
+- scripts/debug/marketplace_probe.gd:1293 · _check_returning_orders_follow_frequency · debug
+- scripts/debug/marketplace_probe.gd:1333 · _check_word_of_mouth_brings_users · debug
 - scripts/debug/office_crowd_probe.gd:48 · _log_error · debug
 - scripts/events/present/papers.gd:145 · arc_of
 - scripts/main/game_shell.gd:163 · debug_force_vc_meeting · MCP seam (_dbg_*/debug_*, Godot MCP adla çağırır)

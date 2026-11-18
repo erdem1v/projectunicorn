@@ -6,9 +6,9 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 
 ## Dosyalar
 
-- `systems/marketplace_model.gd` (1360): `MarketplaceModel`; yalnız `static` işlevler. `state` ve `world` sözlüklerinin alanları dosya başındaki yorumda.
+- `systems/marketplace_model.gd` (1361): `MarketplaceModel`; yalnız `static` işlevler. `state` ve `world` sözlüklerinin alanları dosya başındaki yorumda.
 - `systems/marketplace_system.gd` (340): `MarketplaceSystem`; yalnız `static` işlevler. `GameState.marketplace`'in tek yazarı, yazan seam'ler, sözleşme okuyucuları, `world()` ve haftalık kapanış.
-- `debug/marketplace_probe.gd` (1335): `-s` betiği; oynanan çizelge ve 46 mekanik denetimi, `MPPROBE ...` satırları.
+- `debug/marketplace_probe.gd` (1340): `-s` betiği; oynanan çizelge ve 46 mekanik denetimi, `MPPROBE ...` satırları.
 - `data/product/categories.json` (16): altı kategori ve sütunları: sepet, sipariş sıklığı (`order_freq`: yol kusursuzken kullanıcının haftalık siparişi), kâr payı, sektör iadesi, gereken mağaza, başlangıç komisyonu, taban ilgi, büyük sepet payı, reklam havuzu (`ad_pool`, haftalık arama).
 - `data/product/lines/marketplace.json` (153): modül verisi; 5 kimlik hattı (Ürün Yükleme, Vitrin, Sepet ve Ödeme, Siparişler, Yorum ve Güvence)
   ↳ Mobil, Entegrasyonlar, Kullanıcılar ve Yetki, Yedekleme `shared.json`'dan; Üyelik, Gelir alanının `cap_paid_plan`'ı.
@@ -20,7 +20,7 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 
 - Sistem (`MarketplaceSystem`): `TYPE_ID` ("marketplace"), `MODULE_LINES` (modelin dokuz modülünden oyundaki hat kimliğine; paylaşılan dört hat `@marketplace` son ekiyle; Üyelik hattı değil `SprintCatalog.PAID_PLAN`).
   ↳ `world()` her çağrıda sahiplerden kurulur: `week` `GameState.day`, `published` `ProductState.is_live()`, `tiers` ve `bugs` hat kimliğiyle, `stars` atanmışların Satış yıldızı (kurucu 1), `unanswered` Destek'in cevapsız bildirim payı (`SupportSystem.unanswered_share`), `planned` kartı koşan sprintte ya da sonraki sütunda duran kademe konularının kimliği (`_planned`); `features` bağlı değil (ek özellik kartları sonraki pakette); kalan alan modelin varsayılanında.
-  ↳ `cardless` sprint kartı olmayan konuların kimliğidir (`MarketplaceModel.extra_topics()`: ek özelliklerin hepsi); model bu konulara bilet yazmaz, onları gecikmiş saymaz.
+  ↳ `cardless` sprint kartı olmayan konuların kimliğidir (`MarketplaceModel.extra_topics()`: ek özelliklerin hepsi); model bu konulara bilet yazmaz, onları gecikmiş saymaz, adımlarını kısmaz.
   ↳ Yazan seam'ler (`true` uygulandı ve sinyal yayıldı, `false` reddedildi): `open_category`, `set_commission`, `set_policy`, `set_fee`, `set_perk`, `set_trial`, `set_store_terms`, `add_users`, `open_topic`, `assign`, `unassign`.
   ↳ Olay motorunun iki yazan seam'i (oyunda çağıranı henüz yok): `waive_commission(hafta)` (izleyen kapanışların brüt komisyonu 0; 1'den azı false), `add_satisfaction(kayıt, puan)` (kullanıcı kaydında `users`, mağaza kaydında `stores` defterine modelin `note_decision`'ıyla süreli "decision" satırı; başka kimlikte false, durum doğmaz; kaydın memnuniyeti hemen oynamaz, izleyen kapanışlarda hedefe yürür); vaka `marketplace_event_seams`.
   ↳ `assign(kişi, kategori)`: yalnız işbaşındaki (`STATUS_ACTIVE`) kurucu ya da Satış Temsilcisi (`assignable()`) ve açık kategori. Atama kişiye Ekip'te Satış işini de verir (`CharacterRegistry.assign_job`, modelden önce; iş tavanında atama reddedilir, model reddederse bu çağrının verdiği iş geri alınır); kurucunun sprint payı Satış işindeki kadar azalır. `at_job_cap(kişi)` seçicinin tavan kuralıdır (Satış yok, sürekli işler duraklamışlarla birlikte dolu; Ekip'in kaydı gibi).
@@ -83,7 +83,7 @@ Hatırlatıcı: `MailClock.reminders()` pazaryeri türünde (`SalesSystem.is_mar
   ↳ Kademe konusu `tier`'ı modülün kademesi tutunca yayındadır, ek özellik `world.features`'ta adı geçince. `world.planned` planda olanı işaretler.
   ↳ Konu ilk biletiyle ya da isteğiyle satır olur (`since_day`); yaşı o haftadan sayılır.
 - Ek özellik adım çarpanıdır: kullanıcı özelliği (`missing_mult` alanı, bağlı adım `link`) yayında değilken adımı o kadar kısar (`_feature_mult`, `step_factors`);
-  ↳ yayında olmayan her kullanıcı konusu adımı kıstığı için, adım ulaşılabilir oranda iken konu zaten yayındadır.
+  ↳ `world.cardless`'taki özellik kısmaz. Kartı olan her kullanıcı konusu yayına çıkana kadar adımı kıstığı için, adım ulaşılabilir oranda iken kartı olan konuların hepsi yayındadır.
 - Bilet oranı (`rate`) olmayan konu bilet almaz (`_tickets`): `coupon_abuse` (kullanıcı, Sepet ve Ödeme, ek özellik, adım çarpanı yok) yalnız `open_topic` ile satır olur; satırın `affected`'ı verilen sayıdır ve konu
   ↳ `world.features`'ta adı geçince yayına çıkar (etkilenen 0; "Karşılandı" öbür konular gibi; kartı olmadığından `world.cardless`'tadır, gecikmez).
   ↳ Model eksik konuyu varsayılanla okumaz: yükleme `fill_missing_state` ile eksik konuyu `new_state`'ten tamamlar.
@@ -129,8 +129,8 @@ Hatırlatıcı: `MailClock.reminders()` pazaryeri türünde (`SalesSystem.is_mar
   ↳ kampanya satırına yazılır; iki satırın toplamı her zaman teslim × kargo bedelidir.
 - "Zorlanıyor" ve "Kazancı yetmiyor" defter satırları yalnız mağazası olan kategoriye yazılır; "Seçenek az" tersine mağazası azken yanar.
 - Önizleme çipleri `world.week`'ten başlayan dört kapanışın sonudur (kilit süresi); olay, acil durum (bekleyen kesinti ve komisyonsuz hafta dahil) ve kampanya kaybı koşulmaz, Pazarlama'nın değerleri sabit kalır.
-- `world.features` katalogdaki konu kimliğini taşır; sistem ürünün ek özellik kartını bu kimliğe eşler (sistem henüz bağlamadı, boş kalır). Kimlikler eşleşmezse konu hiç yayına çıkmış sayılmaz,
-  ↳ adımı kısmaya devam eder; `world.cardless`'tan çıkarılmış bir konuda "Geciken talep" satırı da kalıcı olur.
+- `world.features` katalogdaki konu kimliğini taşır; sistem ürünün ek özellik kartını bu kimliğe eşler (sistem henüz bağlamadı, boş kalır). Kimlikler eşleşmezse konu hiç yayına çıkmış sayılmaz:
+  ↳ `world.cardless`'tan çıkarılmış bir konu adımı kısmaya devam eder ve "Geciken talep" satırı kalıcı olur.
 - JSON turundan sayılar float, anahtarlar metin döner; model gün ve sayaçları `int(...)` ile okur. Kişi kimlikleri `assign` ve `stars` anahtarıdır, metin olmalı.
 - Kodlayıcı tam değerli ondalığı tam sayıya çevirir (`SaveCodec._normalize_number`): iki durum değerini bölen yer bir tarafı `float(...)` okur (`retention`, `returning_share`, `_leave_rate`);
   ↳ yeni bölme de öyle yazılır, `state_survives_codec` (probe) ve `marketplace_save_roundtrip` (`retention`'ın bölmesi, gerçek kayıt yolu) sınar.
