@@ -157,7 +157,7 @@ func _rebuild() -> void:
 		view = "sprint"
 		_ui.view = view
 		_last_view = view
-	if m.center.mode == "release" or (view == "quarter" and m.quarter.state != "open") or (view == "requests" and m.requests == null):
+	if m.center.mode == "release" or (view == "quarter" and m.quarter.state != "open") or (view == "requests" and not m.requests_tab):
 		view = "sprint"
 	var picking: bool = not SprintSystem.is_typed()
 	_build_head(m.header)
@@ -248,8 +248,8 @@ func _build_ctl(m: Dictionary, view: String) -> void:
 		open_views.find(view), func(i: int) -> void: _set_ui(open_views[i], "view")))
 	if "quarter" not in open_views:
 		_add_locked_view("quarter", "PRODUCT_NEED_PM", "PRODUCT_QUARTER_NEED_PM")
-	# Talepler ayrı bir sekme grubudur (B2B): Çeyrek'in kilidi onu etkilemez.
-	if m.requests != null:
+	# Talepler ayrı bir sekme grubudur: Çeyrek'in kilidi onu etkilemez.
+	if m.requests_tab:
 		_ctl_row.add_child(UiFactory.D_seg_tabs([tr(VIEW_KEYS.requests)], 0 if view == "requests" else -1,
 			func(_i: int) -> void: _set_ui("requests", "view")))
 	_ctl_row.add_child(RnDUiShared.spacer())
@@ -287,6 +287,13 @@ func open_area(id: String) -> void:
 	_set_ui("sprint", "view")
 	_reveal_open = true
 	_set_ui(SprintCatalog.area_module(id) if id in SprintCatalog.area_ids() else id, "open_area")
+
+
+## TALEPLER açık; `opts`'un süzgeci (`status`), tarafı, sıralaması ve konusu sayfanın yerel durumuna yazılır.
+func open_requests(opts: Dictionary) -> void:
+	for key: String in opts:
+		_ui["requests_" + ("filter" if key == "status" else key)] = opts[key]
+	_set_ui("requests", "view")
 
 
 ## İmleç bir adayın "+"ında: sayfa kurulmaz, kartın kimliği `ui.hover_card` olur, hayaletin hesabı kurulur (sayfanın bir sonraki

@@ -23,8 +23,8 @@ extends RefCounted
 #             null (yalnız alan hedefinde)} or null (sprint yok), columns: [column]},
 #   ui: {view: "overview"|"sprint"|"quarter"|"requests", open_area: açık modülün hattı or "", history_open, hover_card: card id or ""
 #         (imleç bir adayın "+"ında), server_preview: kademe id or "" (açık geçiş önizlemesi), requests_open (talep listesinin fazlası
-#         açık), requests_sort ("count"|"risk"|"due"), requests_filter ("all"|"waiting"|"planned"|"promised"|"shipped"), requests_topic
-#         (TALEPLER'de seçili kademe or "")},
+#         açık), requests_sort ("" türün ilk sıralaması |"count"|"risk"|"due"|"affected"), requests_filter ("all"|"waiting"|"planned"|
+#         "promised"|"shipped"), requests_side ("all"|"users"|"stores"; pazaryeri), requests_topic (TALEPLER'de seçili konu or "")},
 #   overview: {server: server} or null (v1.0'dan önce: GENEL BAKIŞ kilitli),
 #   areas: [{id, name, goal_text}],
 #   center: center,
@@ -60,6 +60,7 @@ extends RefCounted
 #
 # Yeni ekranın okuma yüzeyi, yukarıdakilerin yanında (efor sayıları görünen eforudur: kalan ihtiyaç ÷ hazırlık kazancı):
 #   founder: {on (kurucu sprint kartı alır), locked: "" | "running" | "rnd", rnd_text},
+#   requests_tab: TALEPLER sekmesi var mı (B2B ve pazaryeri),
 #   requests: null (B2C) | [{customer, card_id, card_name, module_id (hattın kimliği), area (ikonunun alanı), value (yıllık), due_text (sözün, yoksa talebin son sprinti:
 #             "bu çeyrek", "gelecek çeyrek" ya da "{q}. çeyrek"; karşılanmışta ""), soon (bu çeyrek; karşılanmışta false), status: {kind: "" (planda değil) | "plan" (kartı bir
 #             sprintin planında: `sprint` en erken olanın numarası) | "dev" (koşan sprintte aşamada: `stage`; yüzde yok) | "met" (kartı
@@ -193,10 +194,11 @@ static func live() -> Dictionary:
 		"versions": versions,
 		"quarter": _quarter(center, next),
 		"ui": {"view": "sprint", "open_area": "", "history_open": false, "hover_card": "", "server_preview": "",
-			"requests_open": false, "requests_sort": "count", "requests_filter": "all", "requests_topic": ""},
+			"requests_open": false, "requests_sort": "", "requests_filter": "all", "requests_side": "all", "requests_topic": ""},
 		"overview": {"server": _server()} if live_now else null,
 		"areas": areas,
 		"founder": _founder(mode, center.rnd_node),
+		"requests_tab": ProductState.market_type() == "b2b" or SalesSystem.is_marketplace(),
 		"requests": _requests(tags, mode),
 		"modules": modules,
 		"research": research,
@@ -218,7 +220,8 @@ static func _tags() -> Dictionary:
 	return tags
 
 
-## Talepler görünümü (B2B; B2C'de null) {topics, next (sonraki sprintin numarası)}. Açık talebi olan her kademe bir konudur, ardından
+## Talepler görünümü {kind ("b2b" | "market"), topics, next (sonraki sprintin numarası)}; öbür B2C'de null. Pazaryerinde `_market_topics`.
+## B2B: Açık talebi olan her kademe bir konudur, ardından
 ## bu ürün çeyreğinde karşılananlar (`_met_in`); Ar-Ge'nin açmadığı hat konu doğurmaz. Konu {id (kademe), card_id, name, line, area,
 ## module, status, sprint, lock, lock_full, rival, count, risk, overdue, marked, value, size, askers}. status: "promised" (kademede söz; sprint en yakın
 ## sözün son sprinti) · "locked" (kapı: lock ilk şart, lock_full bütünü) · "planned" (kart bir sprintte ya da onaylı planda;
@@ -228,6 +231,8 @@ static func _tags() -> Dictionary:
 ## kalan işinin (hazırlığın hızıyla) ekibin sprint kapasitesine oranı (kapasite yoksa -1). askers en riskliden: {name, mrr, sat,
 ## renew (hafta), soon, at_risk, waited (hafta), promise (sprint ya da -1), overdue, marked (hesapta konunun bekleme izi)}.
 static func topics() -> Variant:
+	if SalesSystem.is_marketplace():
+		return _market_topics()
 	if ProductState.market_type() != "b2b":
 		return null
 	var p: Dictionary = GameState.product
@@ -285,7 +290,47 @@ static func topics() -> Variant:
 			"overdue": askers.filter(func(a: Dictionary) -> bool: return a.overdue).size(),
 			"marked": askers.filter(func(a: Dictionary) -> bool: return a.marked).size(),
 			"size": left / capacity if capacity > 0.0 else -1.0, "askers": askers})
-	return {"topics": out, "next": int(p.get("next", {}).get("number", -1))}
+	return {"kind": "b2b", "topics": out, "next": int(p.get("next", {}).get("number", -1))}
+
+
+## Pazaryerinin konuları (`MarketplaceSystem.request_topics`): yalnız sprint kartı olan konu; kartsız konu kartıyla gelir. Konu {id,
+## card_id, name, side ("users" | "stores"), line, area, module, status ("shipped" · "locked" · "planned" · "new" (ilk bileti bu
+## hafta) · "waiting"; B2B'deki gibi), sprint, lock, lock_full, count (son dört haftanın bileti), affected (haftada etkilenen
+## sipariş), share (onun geçen haftanın teslimine oranı), reason (bağ: kullanıcıda huninin adımı ya da iade, mağazada dert), late
+## (yayında değilken ilk bileti `topics.late_weeks`'i geçtiyse yaşı, yoksa 0)}.
+static func _market_topics() -> Dictionary:
+	var p: Dictionary = GameState.product
+	var tags: Dictionary = _tags()
+	var late: int = int(MarketplaceModel.cfg("topics.late_weeks"))
+	var out: Array = []
+	for r: Dictionary in MarketplaceSystem.request_topics():
+		if SprintCatalog.card_by_id(r.card_id).is_empty():
+			continue
+		var step: String = String(r.card_id).trim_prefix("feat:")
+		var line: String = MarketplaceSystem.MODULE_LINES[r.module]
+		var lock: String = SprintCatalog.gate_reason(step)
+		var plan: Dictionary = _request_status(r.card_id, tags, SprintSystem.mode(), {})
+		var status: String = "shipped" if r.status == "shipped" else "locked" if lock != "" else "planned" if plan.kind != "" \
+			else "new" if r.age == 0 else "waiting"
+		out.append({"id": r.id, "card_id": r.card_id, "name": MarketplaceSystem.topic_name(r.id), "side": r.side, "line": line,
+			"area": SprintCatalog.area_of_line(line), "module": SprintCatalog.cap_name(line), "status": status,
+			"sprint": int(plan.get("sprint", p.sprint.get("number", -1))), "lock": lock.get_slice(SprintCatalog.SEP, 0),
+			"lock_full": lock, "count": roundi(r.tickets), "affected": float(r.affected), "share": float(r.share),
+			"reason": r.reason, "late": int(r.age) if status != "shipped" and int(r.age) > late else 0})
+	return {"kind": "market", "topics": out, "next": int(p.get("next", {}).get("number", -1))}
+
+
+## Bekleyen konular, iki tarafta (`topics()`'in satırları, `is_waiting`); TALEPLER yokken (B2C) boş. Pazaryeri › Genel'in sayısı
+## bunu okur: TALEPLER'in başlığı ve Bekleyen süzgeciyle aynı tanım (PRD_TALEPLER §1).
+static func waiting_topics() -> Array:
+	var data: Variant = topics()
+	return [] if data == null else data.topics.filter(func(t: Dictionary) -> bool: return is_waiting(t))
+
+
+## Bekleyen konu (PRD_TALEPLER §1): planda, sözlü ya da yayında olmayan; Yeni, Bekliyor, Kilitli.
+static func is_waiting(t: Dictionary) -> bool:
+	return t.status in ["new", "waiting", "locked"]
+
 
 ## "+"nın değeri ve hayalet hesabı (`SprintSystem.timeline([aday])`) sayfanın bir sonraki kurulumuna kadar kart kimliğiyle burada
 ## durur: `live()` atar, `addable` ve `ghost` ister.

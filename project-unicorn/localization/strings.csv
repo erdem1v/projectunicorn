@@ -2792,6 +2792,21 @@ REQ_COL_SAT,Memnuniyet,Satisfaction
 REQ_COL_RENEW,Yenilemeye,To renewal
 REQ_COL_SINCE,Bekliyor,Waiting
 REQ_COL_WAIT,Geciken,Overdue
+REQ_SUMMARY_WAITING_TOPICS,{n} bekliyor,{n} waiting
+REQ_SUMMARY_WAITING_TOPICS_ONE,{n} bekliyor,{n} waiting
+REQ_SUMMARY_TICKETS,son {weeks} haftada {n} bilet,{n} tickets in {weeks} weeks
+REQ_SUMMARY_TICKETS_ONE,son {weeks} haftada {n} bilet,{n} ticket in {weeks} weeks
+REQ_COUNT_TICKETS,{n} bilet,{n} tickets
+REQ_COUNT_TICKETS_ONE,{n} bilet,{n} ticket
+REQ_COL_TICKETS,Bilet,Tickets
+REQ_COL_ORDERS,Sipariş / hafta,Orders / week
+REQ_COL_ORDERS_TIP,Kullanıcı konusunda: adım ulaşılabilir orana çıksa haftada kazanılacak siparişin bu konuya düşen payı. Mağaza konusunda: derdi olan mağazaların ayrılma riski altındaki haftalık siparişi.,For a users' topic: its share of the weekly orders won if the step reached its reachable rate. For a stores' topic: the weekly orders of the stores at risk of leaving over it.
+REQ_SORT_AFFECTED,Etkilenen sipariş,Orders affected
+REQ_SIDE_ALL,İki taraf,Both sides
+REQ_MP_LOST,Kayıp: {step} · haftalık siparişin %{pct} kadarı,Lost: {step} · {pct}% of weekly orders
+REQ_MP_RISK,Risk: {step} · haftalık siparişin %{pct} kadarı,At risk: {step} · {pct}% of weekly orders
+REQ_MP_ISSUE_UPLOAD,Ürün yükleme,Product upload
+REQ_MP_LATE_TIP,{topic}: ilk biletinden bu yana {weeks} hafta.,{topic}: {weeks} weeks since its first ticket.
 REQ_WAIT_TIP,Geciken talep: {topic}. {n} hesabın isteği {weeks} haftayı geçti.,Overdue request: {topic}. {n} accounts have waited more than {weeks} weeks.
 REQ_WAIT_TIP_ONE,Geciken talep: {topic}. {n} hesabın isteği {weeks} haftayı geçti.,Overdue request: {topic}. {n} account has waited more than {weeks} weeks.
 REQ_WAIT_MARKED,Yenilemesine {renew} haftadan az kalan {n} hesabın memnuniyeti bir kez {v} puan düştü. Talep yayına çıkınca bu düşüş geri alınır.,{n} accounts renewing within {renew} weeks lost {v} satisfaction points once. The drop is given back when the request ships.

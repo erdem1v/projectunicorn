@@ -119,7 +119,7 @@ PAZARYERI `PRD_PAZARYERI.md` ve `tur4_ekranlar_2026-11-13/pazaryeri/TALEPLER_ICE
 ### 3.2 Liste
 | Sütun | ERP | Pazaryeri |
 |---|---|---|
-| Konu | modül ikonu (adı ipucunda), kartın adı, gerekirse "Rakipte var" | taraf ikonu ve adı |
+| Konu | modül ikonu (adı ipucunda), kartın adı, gerekirse "Rakipte var" | taraf ikonu ve adı (taraf glifi gelene dek modül ikonu, taraf ipucunda) |
 | İsteyen | "12 hesap" | "61 bilet" (son dört hafta) |
 | Risk altında | isteyenlerden yenilemesine 12 haftadan az kalan ya da Risk evresindeki hesapların aylık geliri | yok |
 | Kayıp satış | bu konunun modülü eksik diye son 12 haftada kaybedilen aday | yok |
@@ -146,7 +146,10 @@ PAZARYERI `PRD_PAZARYERI.md` ve `tur4_ekranlar_2026-11-13/pazaryeri/TALEPLER_ICE
 ### 3.3 Ayrıntı (sağda)
 - Modülün adı, ikon ve konunun adı, durum.
 - Üç sayı: ERP'de İsteyen · Hesapların geliri (aylık) · Süre; pazaryerinde Bilet · Sipariş/hafta. Eğilim yok.
-- Pazaryerinde tek "neden" satırı: kaybın olduğu adım ("Siparişlerin %19 kadarı iade ediliyor"). ERP'de neden satırı yok.
+- Pazaryerinde tek "neden" satırı: kullanıcı konusunda kaybın olduğu huni adımı (Genel'deki adıyla; Yorum ve Puan'ın `returning` bağı iadeyi ölçer, adı İade), mağaza
+  konusunda riskin derdi, ve konunun haftada etkilediği siparişin geçen haftanın teslimine oranı ("Kayıp: Sipariş verdi · haftalık
+  siparişin %17 kadarı"). Adımın kendi oranı yazılmaz: o, adımın bütün kaybıdır ve aynı adımdaki iki konuda aynı çıkar. ERP'de neden
+  satırı yok.
 - Kilitli konuda kilidin bütün şartı ve düğmesi (§3.5).
 - Eylemler (§3.4), sonra isteyen hesaplar: Gelir · Memnuniyet · Yenilemeye · Bekliyor; en riskliden. Sözü alacak hesap seçili
   satırdır; oyuncu başka satıra tıklayarak seçer. Sözlü hesabın satırında takvim ikonu, tarihi ipucunda. Uzun hesap adı sarar.
@@ -255,7 +258,8 @@ ya da bu hesapla bozulan sözün 8 haftalık kilidi sürüyor (`b2b_constants.gd
 ## 7. Pazaryeri
 
 - Satırlar `MarketplaceSystem.request_topics()`'ten gelir (PAZARYERI, `TALEPLER_ICERIK.md`): konu, taraf, modül, son dört haftanın
-  bileti, haftada etkilenen sipariş, neden, durum, konunun yaşı, kaynak (`tickets` ya da `report`). Eğilim alanı yok.
+  bileti, haftada etkilenen sipariş, onun geçen haftanın teslimine oranı (`share`), neden, durum, konunun yaşı, kaynak (`tickets` ya
+  da `report`). Eğilim alanı yok. Sprint kartı olmayan konu (ek özellik, rapordan açılan) Talepler'e kartıyla gelir.
 - Söz yok, Şimdilik olmaz yok; tek düğme Plana al. Kaynağı `report` olan konuda İsteyen sütunu raporun adını yazar.
 - "Plana al" bugünkü sprint yolundan yazar; "Karşılandı" ve "Geciken talep" satırlarını Pazaryeri yazar (PRD_PAZARYERI §3.11).
 

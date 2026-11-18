@@ -61,7 +61,7 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
   ↳ `open_topic(kimlik, etkilenen)` modelin `open_topic`ini çağıran yazan seam (uygulanınca sinyal, reddedilen çağrı yaymaz).
   ↳ Satırın durumu (`waiting`, `planned`, `shipped`) okunduğu anda ürünün kademesinden ve sprint planından gelir, "Karşılandı" kapanışta yazılır.
   ↳ `MarketplaceModel.tier_topics()` kademe konularının modülünü ve kademesini verir.
-  ↳ `topic_name(kimlik)` konunun oyuncuya görünen adının tek okuyucusu: kademe konusunda modülün o kademesinin adı (`SprintCatalog.step_name`), ek özellikte `MP_TOPIC_<KİMLİK>` metni; defter satırının konusu ve Talepler adı buradan okuyacak (bugün çağıranı yalnız vaka `marketplace_topic_names`).
+  ↳ `topic_name(kimlik)` konunun oyuncuya görünen adının tek okuyucusu: kademe konusunda modülün o kademesinin adı (`SprintCatalog.step_name`), ek özellikte `MP_TOPIC_<KİMLİK>` metni; defter satırının konusu ve Talepler'in adı (`ProductModel._market_topics`) buradan okur.
 - Talepler (model): `topic_rows(state, world)` ilk isteği gelmiş her konunun satırı (`id`, `side`, `module`, `tickets`, `affected`, `share`, `reason`, `status`, `age`, `source`);
   ↳ konu kimlikleri `marketplace.json` `topics.catalog`'ta, metin yok. `share` etkilenen siparişin geçen haftanın teslim edilenindeki payıdır; `status` verilen dünyadan okunur (`_status`).
 - Rapordan açılan konu: `open_topic(state, world, kimlik, etkilenen)` bileti olmayan konunun satırını açar (`since_day` = hafta, `source` = `report`, haftalık etkilenen sipariş `topics[konu].affected`); katalogda olmayan ya da satırı açık konuda false.

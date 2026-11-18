@@ -570,6 +570,13 @@ static func open_product_area(tree: SceneTree, id: String) -> void:
 	tree.get_first_node_in_group(&"window_layer").get_current_page_body().open_area(id)
 
 
+## Ürün penceresi TALEPLER'de; `opts` isteğe bağlı: `status` (all, waiting, planned, promised, shipped), `side` (all, users,
+## stores), `sort`, `topic`.
+static func open_requests(tree: SceneTree, opts := {}) -> void:
+	EventBus.tab_changed.emit("product")
+	tree.get_first_node_in_group(&"window_layer").get_current_page_body().open_requests(opts)
+
+
 ## Sayılan anahtarın metni: `n` 1 ise tekili, binlik ayraçlı.
 static func count(key: String, n: int) -> String:
 	return RnDUiShared.t(Fmt.count_key(key, n)).format({"n": Fmt.group(n)})

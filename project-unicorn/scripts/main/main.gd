@@ -4846,7 +4846,10 @@ func _run_ending_shot(key: String) -> void:
 # live ERP (see _seed_server), the plain frame and, for the states that have a tip to read, <stem>_tip with the pointer
 # on the control it belongs to. live:a4_<frame> are the Ürün > Sprint frame worlds (_seed_product_a4), each printing
 # its PRODUCTSHOT line. live:req_solo, live:req_w60 and live:req_w98 are Ürün > Talepler over the bot's own run (REQ_RUNS),
-# printing a REQSHOT line: the week, the people, the team's capacity and each topic (step:status:askers:size).
+# printing a REQSHOT line: the week, the people, the team's capacity and each topic (step:status:askers:size). live:req_mp is
+# Talepler on the week-42 marketplace (mp_growth) with one waiting topic planned, opened as the player's opener does, and
+# <stem>_stores on the stores' side; its REQSHOT line carries the waiting count (ProductModel.waiting_topics, the header's
+# "{n} bekliyor" and Pazaryeri > Genel's number) and each topic as id:status:tickets:affected:share:late.
 func _run_product_shot(id: String) -> void:
 	if not id.begins_with("live:"):
 		_shot_fail("[ProductShot] unknown kind '%s', want live:<scenario>" % id)
@@ -4881,6 +4884,8 @@ func _run_product_shot(id: String) -> void:
 	if tip != "":
 		await _product_tip_shot(tip, id.trim_prefix("live:"), stem)
 		return
+	if id == "live:req_mp":
+		SprintUiShared.open_requests(get_tree())
 	# A frame before each action, the last one after them (stem + the action's suffix). English for this
 	# run only: Localization.set_language would also store it as the player's language.
 	var press := func(key: String) -> Callable: return _press_button_labelled.bind(_shell, tr(key))
@@ -4902,6 +4907,7 @@ func _run_product_shot(id: String) -> void:
 		TimeManager.advance_hours(2)
 		print(_productshot_line("a4_run_w2"))
 	var then: Dictionary = {"live:gate": [[press.call("PROD_SHIP_PUBLISH"), "_publish"]],
+		"live:req_mp": [[SprintUiShared.open_requests.bind(get_tree(), {"side": "stores"}), "_stores"]],
 		"live:a4_run_w2": [[two_hours_on, "_02"]],
 		"live:plan": [[press.call("PRODUCT_START_SPRINT"), "_start"]],
 		"live:rnd": [[press.call("PRODUCT_GO_RND"), "_go"]],
@@ -4926,6 +4932,11 @@ func _run_product_shot(id: String) -> void:
 			rows.append("%s:%s:%d:%.2f" % [topic.id, topic.status, topic.count, topic.size])
 		print("REQSHOT|%s|week=%d|people=%d|capacity=%.1f|topics=%s" % [id, GameState.day, SprintSystem.team().size(),
 			SprintSystem.capacity(), ",".join(rows)])
+	if id == "live:req_mp":
+		var rows: PackedStringArray = []
+		for topic: Dictionary in ProductModel.topics().topics:
+			rows.append("%s:%s:%d:%.1f:%.2f:%d" % [topic.id, topic.status, topic.count, topic.affected, topic.share, topic.late])
+		print("REQSHOT|%s|week=%d|waiting=%d|topics=%s" % [id, GameState.day, ProductModel.waiting_topics().size(), ",".join(rows)])
 	await _finish_shot(stem)
 
 
@@ -5059,6 +5070,14 @@ func _seed_product_live(scenario: String) -> void:
 			# Oyuncu notu sonraki sprintin planıyla kapatır; ertesi gün v1.0'ın Gerçekleşen satırı Geçmiş'tedir.
 			_start_next_sprint()
 			_play_week()
+		return
+	if scenario == "req_mp":
+		if _seed_marketplace_world(_MP_WORLDS.mp_growth):
+			# The world's week 42 opens on the release note, which holds the window on SPRINT: it is closed as its button does.
+			SprintSystem.plan_next()
+			var waiting: Array = ProductModel.topics().topics.filter(func(t: Dictionary) -> bool: return t.status in ["new", "waiting"])
+			if not waiting.is_empty():
+				SprintSystem.send_next(waiting[0].card_id)
 		return
 	if REQ_RUNS.has(scenario):
 		RunProbe.run(REQ_RUNS[scenario] + ":sim", _debug_payload())
