@@ -13,6 +13,7 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
 - `data/product/lines/marketplace.json` (153): modül verisi; 5 kimlik hattı (Ürün Yükleme, Vitrin, Sepet ve Ödeme, Siparişler, Yorum ve Güvence)
   ↳ Mobil, Entegrasyonlar, Kullanıcılar ve Yetki, Yedekleme `shared.json`'dan; Üyelik, Gelir alanının `cap_paid_plan`'ı.
   ↳ Yayın şartının dört adlı modülü (Ürün Yükleme, Vitrin, Sepet ve Ödeme, Siparişler) `sprint.json` `mvp_named["marketplace"]`'da.
+  ↳ Dördünün ilk kademesi sıradan K1'in `mvp_k1_share` katı eforludur (`SprintCatalog.step_effort`; vaka `marketplace_mvp_cards_cost_less`).
   ↳ Tür ekranında (`ProductCatalog.TYPE_SCREEN` `b2c.playable`) dört masa sayılır: ürün geliştirme, kategoriler, politikalar, kampanyalar; Premium masasının metni CSV'de durur. Rakipler `RivalCatalog.NAMES` ve `rivals.json`, Piyasa yuvaları (Orinoco, Bidwell, Dealflock) `companies.json` `sector_slots`.
 - `data/product/marketplace.json` (131): öbür bütün sabitler, gruplu: `visits`, `steps`, `stores`, `rules`, `commission`, `store_terms`, `premium`, `ledger`, `income`, `preview`, `topics` (konu kataloğu ve mağaza dertleri).
 

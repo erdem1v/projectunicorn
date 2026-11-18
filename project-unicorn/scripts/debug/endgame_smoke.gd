@@ -690,6 +690,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"marketplace_save_fills_missing":    fail = _case_marketplace_save_fills_missing()
 		"marketplace_pitch_skips_aggregates": fail = _case_marketplace_pitch_skips_aggregates()
 		"marketplace_week_gmv":              fail = _case_marketplace_week_gmv()
+		"marketplace_mvp_cards_cost_less":   fail = _case_marketplace_mvp_cards_cost_less()
 		"marketplace_cheque_first_order":    fail = _case_marketplace_cheque_first_order()
 		"marketplace_paid_plan_waits_for_premium": fail = _case_marketplace_paid_plan_waits_for_premium()
 		"marketplace_audience_seams_redirect": fail = _case_marketplace_audience_seams_redirect(pinned)
@@ -31588,6 +31589,32 @@ static func _seed_marketplace_world() -> void:
 	MarketplaceSystem.open_category("fashion")
 	MarketplaceSystem.add_users(2000.0)
 	GameState.marketplace.cats.fashion.stores = 40.0
+
+
+## Pazaryerinin yayın şartındaki dört modülün ilk kademesi oyunun kendi verisiyle sıradan bir ilk kademenin `mvp_k1_share` katı
+## eforludur ve ondan ucuzdur; yayın şartında olmayan modülün ilk kademesi ve adlı modülün ikinci kademesi tam eforludur.
+##
+## FALSİFİKASYON: `SprintCatalog.step_effort`ta `mvp_named()` koşulunu kaldır → dört kart tam efor döner, FAIL; `sprint.json`
+## `mvp_named.marketplace`ten bir modülü çıkar → liste dört değildir, FAIL.
+static func _case_marketplace_mvp_cards_cost_less() -> String:
+	_seed_sprint(MarketplaceSystem.TYPE_ID)
+	# _seed_sprint'in kart puanı test sabitlerini oyunun verisiyle değiştirir.
+	SprintCatalog.load_data()
+	var full: int = int(SprintCatalog.cfg("effort.k1"))
+	var launch: int = roundi(full * float(SprintCatalog.cfg("mvp_k1_share")))
+	var named: Array = SprintCatalog.mvp_named()
+	if named.size() != 4 or launch >= full:
+		return "%d launch modules (4), their first tier at %d against a plain %d" % [named.size(), launch, full]
+	for line: String in named:
+		var cost: int = SprintCatalog.step_effort(String(ProductLines.step_at(line, 1).id))
+		if cost != launch:
+			return "%s's first tier costs %d, expected %d" % [line, cost, launch]
+	var outside: int = SprintCatalog.step_effort("line_marketplace_reviews_k1")
+	var second: int = SprintCatalog.step_effort(String(ProductLines.step_at(named[0], 2).id))
+	if outside != full or second != int(SprintCatalog.cfg("effort.k2")):
+		return "a first tier outside the launch list costs %d (%d), a launch module's second tier %d (%d)" % [
+			outside, full, second, int(SprintCatalog.cfg("effort.k2"))]
+	return ""
 
 
 ## Yazan her seam uygulanınca sinyali bir kez yayar ve true döner; reddedilen çağrı (kapalı Premium'da ayrıcalık, deneme ve ücret,

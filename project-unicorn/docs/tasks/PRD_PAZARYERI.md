@@ -128,6 +128,9 @@ Modül, işleviyle adlandırılmış tek bir özellik ailesidir: bugünkü hatt�
 ### 2.3 Yayın şartı
 - v1.0, ilk dört modülün ilk kademesidir (`sprint.json` `mvp_named`; 1★ beklentisi de bu listedir). Sprint ekranında dört parçalı
   şerit olarak durur: bitti, bu sprintte, bekliyor. Şerit ERP'nin ortak bileşenidir; pazaryeri kendi parçalarını veri olarak verir.
+- Bu dört kartın eforu sıradan bir ilk kademenin `mvp_k1_share` katıdır (`sprint.json`; bugün 11 puanın 6'sı; Erdem
+  2026-11-18: "hem %25 ucuzlasın hem de MVP'de MVP kartları yarı eforla yapılsın"). Bot ölçümünde (2026-11-18) kurucu tek
+  başına iki sprintte, 5. haftada yayına çıkar.
 - Şeritte yayın tahmini ("tahmin … hafta") ve mağaza notu yoktur.
 - Pazaryerinde yayın günü mağaza sayısı sıfırdır; mağaza kazanımı yayınla başlar (§3.4, §12 soru 5).
 - Mobil ve Entegrasyonlar yayın şartında değildir; yokken ilgili adım düşük çarpanla çalışır (§3.5).
