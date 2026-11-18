@@ -1,6 +1,7 @@
 extends VBoxContainer
 
-# Pazaryeri'nin Genel sayfası: ziyaretten teslime dönüşüm (beş satır, adımın ipucu, iki küçük oran) ve iki tarafın memnuniyeti.
+# Pazaryeri'nin Genel sayfası: ziyaretten teslime dönüşüm (beş satır, adımın ipucu, iki küçük oran), iki tarafın memnuniyeti ve
+# bekleyen talepler.
 # Her değer saklanan durumdan ve modelin saf okuyucularından gelir; sayfa hiçbir seam'e yazmaz.
 
 const PARTS := preload("res://scripts/tabs/marketplace/mp_parts.gd")
@@ -110,6 +111,7 @@ func refresh() -> void:
 	add_child(cols)
 	_paint_conversion(left)
 	_paint_satisfaction(right)
+	_paint_requests(right)
 
 
 # --- Dönüşüm --------------------------------------------------------------------------------------------
@@ -370,4 +372,27 @@ func _row_name(row: Dictionary, short: bool) -> String:
 		return tr(key + "_SHORT")
 	var named := MarketplaceSystem.topic_name(row.arg) if row.key in TOPIC_ROWS else tr("MP_CAT_" + String(row.arg).to_upper())
 	return tr(key).format({"category": named, "topic": named})
+
+
+# --- Talepler ----------------------------------------------------------------------------------------------
+
+## Bekleyen konuların sayısı, Talepler'in Bekleyen süzgeciyle aynı tanımdan, ve Talepler'i o süzgeçte açan düğme. Bekleyen konu
+## yokken oyuncunun açacağı bir şey olmadığından bölüm hiç çizilmez.
+func _paint_requests(col: VBoxContainer) -> void:
+	var waiting := ProductModel.waiting_topics().size()
+	if waiting == 0:
+		return
+	var block := SprintUiShared.column(UiTokens.SPACE_M)
+	block.add_child(SprintUiShared.section("PRODUCT_VIEW_REQUESTS"))
+	var row := PanelContainer.new()
+	row.theme_type_variation = &"TableRow"
+	row.custom_minimum_size.y = UiTokens.D_H_ROW_LG
+	var line := SprintUiShared.box(UiTokens.SPACE_L)
+	line.add_child(SprintUiShared.label(SprintUiShared.count("MP_REQUESTS_WAITING", waiting), &"DataText"))
+	line.add_child(RnDUiShared.spacer())
+	line.add_child(SprintUiShared.button(tr("MP_REQUESTS_OPEN"), &"SecondaryButtonSmall",
+		func() -> void: SprintUiShared.open_requests(get_tree(), {"status": "waiting"})))
+	row.add_child(SprintUiShared.pad(line, Vector4i(UiTokens.SPACE_M, 0, UiTokens.SPACE_M, 0)))
+	block.add_child(row)
+	col.add_child(block)
 

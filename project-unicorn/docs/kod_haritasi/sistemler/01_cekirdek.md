@@ -34,7 +34,7 @@ Sahipler (Platform): autoload `Settings`, `Localization`, `AudioManager`; sını
 - `scripts/util/fmt.gd` (263): `Fmt` para, yüzde, tarih, ay adı, büyük harf, `cap_first`; yerel veri strings.csv'dedir
 - `scripts/systems/display_settings.gd` (350): `DisplaySettings`, pencere kipi, çözünürlük, vsync, UI ölçeği; durumsuz, `Settings` saklar bu uygular; `is_inert()` harness pencereyi sahiplenince her çağrıyı keser
 - `scripts/systems/graphics_settings.gd` (211): class_name yok (`Settings` preload eder); 3B görüntü kalitesi, 4 ön ayar `data/graphics/presets.json`, `OfficeView.apply_graphics`; `--gfx=<ön ayar>`
-- `scripts/main/main.gd` (6888): ana sahne kökü; açılış (Godot kartı → menü → onboarding → kabuk), modal montajı, karar kapısı (`hold_clock("event")`), kayıt/yükleme ve yolculuk akışı
+- `scripts/main/main.gd` (6889): ana sahne kökü; açılış (Godot kartı → menü → onboarding → kabuk), modal montajı, karar kapısı (`hold_clock("event")`), kayıt/yükleme ve yolculuk akışı
   ↳ modal ve menü giriş noktaları 09_arayuz_bilesen.md'de, debug bayrak dağıtıcısı ve `--*-shot` koşucuları 10_test_harness.md'de
 - `scripts/main/game_shell.gd` (240): `GameShell.tscn` kökü (grup `game_shell`, ALWAYS); Esc zinciri `_input` `game_shell.gd:55`, `request_speed` `:114`, `say_held` `:126`, şerit yerleşimi, sprint kapanınca Ürün'ü açar
   ↳ debug F tuşları `_debug_fkey` `:138`, `_debug_endgame_key` `:192` (10_test_harness.md, 05_fon_finans.md)

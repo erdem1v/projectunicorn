@@ -3623,6 +3623,9 @@ MP_TIP_ROW,{row} {v},{row} {v}
 MP_SATISFACTION,Memnuniyet,Satisfaction
 MP_SIDE_USERS,Kullanıcılar,Users
 MP_SIDE_STORES,Mağazalar,Stores
+MP_REQUESTS_WAITING,{n} konu bekliyor,{n} topics waiting
+MP_REQUESTS_WAITING_ONE,{n} konu bekliyor,{n} topic waiting
+MP_REQUESTS_OPEN,Talepleri aç,Open requests
 MP_ROW_COMMISSION_RAISED,Komisyon artışı: {category},Commission raised: {category}
 MP_ROW_COMMISSION_RAISED_SHORT,Komisyon artışı,Commission raised
 MP_ROW_STRAINED,Zorlanıyor: {category},Strained: {category}

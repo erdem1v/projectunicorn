@@ -52,6 +52,8 @@ Kaynak: `docs/tasks/PRD_PAZARYERI.md` §3 (ekonomi), §9 (sabitler), §10 (test)
   ↳ Genel'in okuyucuları: `funnel(state)` açık kategorilerin geçen haftaki toplamı (`visits`, `organic`, `channel`, `returning`, `cart`, `checkout`, `order`, `delivered`; ilk kapanışını bekleyen kategori 0 katar);
   ↳ `step_hint(state, world, adım)` = `module` (adımın ilk modülü, son kademedeyse sonraki), `tier`, `next_tier` (son kademede 0), `next_gain` (sıradaki kademenin açık kategorilerdeki `gain` toplamı), `bugs` (adımı kısan açık hata: `BUG_STEPS`'teki adımda modüllerindeki açık hata, Sepete ekledi ve Ödemeye geçti adımında 0), `bug_gain` (onların düzelmesinin `gain` toplamı);
   ↳ `ledger_worst(state, taraf)` tarafın en ağır olumsuz defter satırı (eşitlikte koşul sürdükçe duran, o da eşitse listede önce gelen), olumsuz satır yoksa `{}`.
+  ↳ Genel'in TALEPLER bölümü (`scripts/tabs/marketplace/mp_overview.gd` `_paint_requests`): `ProductModel.waiting_topics()`'in sayısı, sıfırken çizilmez; düğmesi `SprintUiShared.open_requests` ile Talepler'i Bekleyen süzgecinde açar.
+  ↳ Sayı sayfanın yenilenişiyle güncellenir (`SalesTab._on_state_changed`'in sinyalleri ve öğlen saati); ayrı pencere olan Ürün'de yapılan plan Pazaryeri yeniden açılınca okunur.
 - Pazarlama'nın okuması: `channel_read(state, world, kategori)` = `conversion` (ziyaretten teslim edilen siparişe), `monthly_commission` (alışverişini bu kategoride yapan kullanıcının aylık net komisyonu; kategorinin payı hesaba girmez),
   ↳ `organic` (kendiliğinden haftalık ziyaret), `margin`, `base_interest`, `ad_pool`;
   ↳ `source_revenue(state, world, kaynak)` = kaynaktan son on iki haftada gelenlerin (elde tutmayla küçülmüş) son dört haftada bıraktığı net komisyon;

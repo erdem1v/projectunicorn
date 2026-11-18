@@ -2194,9 +2194,10 @@ func _run_marketplace_shot(kind: String) -> void:
 	if not world.has("no_category"):
 		EventBus.tab_changed.emit("sales")
 	var state: Dictionary = MarketplaceSystem.read_state()
-	print("SHOT|mp_world kind=%s week=%d launch=%d cash=%d mrr=%d users=%d stores=%d orders=%d" % [kind, GameState.day,
+	print("SHOT|mp_world kind=%s week=%d launch=%d cash=%d mrr=%d users=%d stores=%d orders=%d waiting=%d" % [kind, GameState.day,
 		int(GameState.get_flag("mvp_launch_day", -1)), GameState.cash, GameState.mrr, roundi(state.users),
-		roundi(MarketplaceSystem.stores()), roundi(MarketplaceModel.metrics(state, MarketplaceSystem.world()).orders)])
+		roundi(MarketplaceSystem.stores()), roundi(MarketplaceModel.metrics(state, MarketplaceSystem.world()).orders),
+		ProductModel.waiting_topics().size()])
 	# the visits' bar reads its parts as shares of the visits: its sources must add up to them, a campaign's week too
 	var funnel := MarketplaceModel.funnel(state)
 	var sources: float = funnel.returning + funnel.organic + funnel.channel + funnel.get("campaign", 0.0)
